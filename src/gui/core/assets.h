@@ -43,11 +43,16 @@ private:
     std::unordered_map<std::string,nonstd::variant<int,float>>mDimensions;
     std::unordered_map<std::string,std::shared_ptr<ColorStateList>>mStateColors;
     ResTable* mResTable;   // loaded from resources.arsc in pak (null if no arsc)
+    ResTable::Theme* mArscTheme = nullptr;  // theme built from arsc (null if none)
     // arsc identifier lookup: tries the given package first, then "android"
     // (framework arsc compiled with package="android" via aapt2 -x, but pak
     // registered under "cdroid" — the names don't match, so we fall back).
     uint32_t arscGetIdentifier(const std::string& name, const std::string& type, const std::string& pkg) const;
     bool arscResolveHexRef(const std::string& s, Res_value* out) const;
+    // If resid is a "?type/key" theme-attribute reference, resolve it through
+    // the arsc Theme to a concrete value string ("#color", "@drawable/...", a
+    // dimension); otherwise return resid unchanged.
+    std::string resolveThemeRef(const std::string& resid) const;
     const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
@@ -70,6 +75,10 @@ public:
     // "@drawable/bg", "@string/hello") matching text-XML form, so CDROID's
     // existing string-based resolvers consume binary-AXML references unchanged.
     std::string arscReferenceName(uint32_t resId) const;
+    // Resolve a theme-attribute reference (?attr/<id>) through the arsc Theme:
+    // getAttribute + resolveAttributeReference, so ?android:colorPrimary etc.
+    // flatten to a concrete value. Returns true if the theme had the attr.
+    bool arscThemeAttribute(uint32_t attrId, Res_value* out) const;
     int loadStyles(const std::string&resid);
     void clearStyles();
     const std::string getPackageName()const override;

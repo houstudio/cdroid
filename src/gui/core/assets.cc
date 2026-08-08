@@ -37,6 +37,8 @@
 using namespace Cairo;
 namespace cdroid {
 
+static std::string renderResValue(const Assets* a, const Res_value& v);  // fwd
+
 // Resolve a resource ID through the loaded arsc.
 bool Assets::arscResolveId(uint32_t resId, Res_value* out) const {
     if (!mResTable || resId == 0 || resId == 0xFFFFFFFF) return false;
@@ -63,6 +65,34 @@ std::string Assets::arscReferenceName(uint32_t resId) const {
         return "@" + type + "/" + key;
     }
     return "";
+}
+
+// Resolve a theme-attribute reference (?attr/<id>) through the arsc Theme.
+bool Assets::arscThemeAttribute(uint32_t attrId, Res_value* out) const {    if (!mArscTheme || !out) return false;
+    Res_value v;
+    ssize_t blk = mArscTheme->getAttribute(attrId, &v);
+    if (blk < 0) return false;
+    // Flatten ?attr / @ref chains to a concrete value.
+    blk = mArscTheme->resolveAttributeReference(&v, blk);
+    if (blk < 0) return false;
+    *out = v;
+    return true;
+}
+
+// Resolve a "?type/key" theme-attribute reference to a concrete value string.
+std::string Assets::resolveThemeRef(const std::string& resid) const {
+    if (resid.empty() || resid[0] != '?' || !mArscTheme) return resid;
+    std::string pkg, name = resid.substr(1);  // strip '?'
+    parseResource(name, &name, &pkg);
+    size_t slash = name.find('/');
+    std::string type = (slash != std::string::npos) ? name.substr(0, slash) : "attr";
+    std::string key  = (slash != std::string::npos) ? name.substr(slash + 1) : name;
+    uint32_t attrId = arscGetIdentifier(key, type, pkg);
+    if (!attrId) return resid;
+    Res_value v;
+    if (!arscThemeAttribute(attrId, &v)) return resid;
+    std::string rendered = renderResValue(this, v);
+    return rendered.empty() ? resid : rendered;
 }
 
 // Try to resolve a "@0xPPtteeee" hex resource ID string through the arsc.
@@ -115,6 +145,34 @@ static float complexToFloat(uint32_t data) {
     }
 }
 
+// Render a Res_value to the same string form renderTypedValue produces, so a
+// theme-resolved value can flow through the string-based getters. Only the
+// types a theme attribute realistically resolves to (color/int/dimension/ref).
+static std::string renderResValue(const Assets* a, const Res_value& v) {
+    char buf[32];
+    switch (v.dataType) {
+        case Res_value::TYPE_INT_COLOR_ARGB8:
+        case Res_value::TYPE_INT_COLOR_RGB8:
+        case Res_value::TYPE_INT_COLOR_ARGB4:
+        case Res_value::TYPE_INT_COLOR_RGB4:
+            snprintf(buf, sizeof(buf), "#%08x", v.data); return buf;
+        case Res_value::TYPE_INT_DEC:  snprintf(buf, sizeof(buf), "%d", (int)v.data); return buf;
+        case Res_value::TYPE_INT_HEX:  snprintf(buf, sizeof(buf), "0x%x", v.data); return buf;
+        case Res_value::TYPE_INT_BOOLEAN: return v.data ? "true" : "false";
+        case Res_value::TYPE_DIMENSION: {
+            float mag = complexToFloat(v.data);
+            int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
+            const char* u = unit == Res_value::COMPLEX_UNIT_SP ? "sp"
+                          : unit == Res_value::COMPLEX_UNIT_DIP ? "dp" : "px";
+            snprintf(buf, sizeof(buf), "%d%s", (int)mag, u); return buf;
+        }
+        case Res_value::TYPE_REFERENCE:
+        case Res_value::TYPE_DYNAMIC_REFERENCE:
+            return a->arscReferenceName(v.data);
+        default: return std::string();
+    }
+}
+
 // char16_t -> UTF-8 (for ResTable string values).
 static std::string u16toUtf8(const char16_t* s, size_t len) {
     std::string out;
@@ -140,6 +198,7 @@ Assets::Assets(const std::string&path):Assets() {
 }
 
 Assets::~Assets() {
+    delete mArscTheme;
     delete mResTable;
     for(auto& cls:mStateColors){
         //delete cls.second;
@@ -183,6 +242,28 @@ void Assets::setTheme(const std::string&theme) {
     } else {
         LOGE("Theme %s not found,[cdroid.pak %s] must be copied to your work directory!",theme.c_str(),
              mName.empty()?"":(mName+".pak").c_str());
+    }
+    // (Re)build the arsc-backed Theme for ?attr resolution. The text mTheme
+    // above stays for the existing string path; mArscTheme adds typed theme
+    // lookups (?android:colorPrimary etc.) via ResTable::Theme.
+    delete mArscTheme;
+    mArscTheme = nullptr;
+    if (mResTable) {
+        std::string pkg, name = theme;
+        parseResource(theme, &name, &pkg);
+        size_t slash = name.rfind('/');
+        std::string styleName = (slash != std::string::npos) ? name.substr(slash + 1) : name;
+        uint32_t styleId = arscGetIdentifier(styleName, "style", pkg);
+        if (styleId) {
+            mArscTheme = new ResTable::Theme(*mResTable);
+            if (mArscTheme->applyStyle(styleId) != 0) {
+                LOGW("arsc Theme applyStyle(%s) failed", theme.c_str());
+                delete mArscTheme;
+                mArscTheme = nullptr;
+            } else {
+                LOGD("arsc Theme built from %s (resId=0x%08x)", theme.c_str(), styleId);
+            }
+        }
     }
 }
 
@@ -397,8 +478,8 @@ int Assets::addResource(const std::string&path,const std::string&name) {
              path.c_str(), data.size(), mResTable->getError());
     }
     if(name.compare("cdroid")==0){
-        setTheme("cdroid:style/Theme");
-        //setTheme("cdroid:style/Theme.Material");
+        //setTheme("cdroid:style/Theme");
+        setTheme("cdroid:style/Theme.Material");
     }
 
     while (!pending.colors.empty()) {
@@ -523,8 +604,15 @@ ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeR
 }
 
 std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid,std::string*outpkg) {
+    // A theme-attribute reference isn't a streamable resource — resolve it
+    // first. If it resolves to a color/literal (not a file), fall through to
+    // the not-found path rather than leaking "?..." to zip lookup.
+    std::string rid = (!fullresid.empty() && fullresid[0] == '?') ? resolveThemeRef(fullresid) : fullresid;
+    if (rid != fullresid && (rid.empty() || rid[0] == '#' || rid.compare(0,2,"0x")==0))
+        return nullptr;  // resolved to a non-stream value (color/int)
+    const std::string& effective = (rid != fullresid) ? rid : fullresid;
     std::string resname,package;
-    ZIPArchive*pak = getResource(fullresid,&resname,&package);
+    ZIPArchive*pak = getResource(effective,&resname,&package);
     if(outpkg)*outpkg = package;
     if(pak){
         std::istream*stream = pak->getInputStream(resname);
@@ -598,6 +686,11 @@ int Assets::getNextAutofillId(){
 }
 
 const std::string Assets::getString(const std::string& resid,const std::string&lan) {
+    // Theme-attribute reference "?type/key" → resolve through arsc Theme.
+    if (!resid.empty() && resid[0] == '?') {
+        std::string r = resolveThemeRef(resid);
+        if (r != resid) return getString(r, lan);
+    }
     // Binary AXML hex reference "@0xPPtteeee" → resolve the resource ID to a
     // string via arsc. (getResourceString takes a resId and does getResource
     // internally; do NOT pass the resolved Res_value.data, which for strings is
@@ -678,6 +771,11 @@ size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
 
 
 Drawable* Assets::getDrawable(const std::string&resid) {
+    // Theme-attribute reference "?type/key" → resolve through arsc Theme.
+    if (!resid.empty() && resid[0] == '?') {
+        std::string r = resolveThemeRef(resid);
+        if (r != resid) return getDrawable(r);
+    }
     Drawable* d = nullptr;
     // Binary AXML hex reference → resolve path via arsc.
     {
@@ -783,6 +881,10 @@ Drawable* Assets::getDrawable(const std::string&resid) {
 }
 
 int Assets::getDimension(const std::string&refid)const{
+    if (!refid.empty() && refid[0] == '?') {
+        std::string r = resolveThemeRef(refid);
+        if (r != refid) return getDimension(r);
+    }
     std::string pkg,name = refid;
     parseResource(name,nullptr,&pkg);
     name = resolveAttrValue(refid);
@@ -885,6 +987,11 @@ float Assets::getFloat(const std::string&refid,float def)const{
 #pragma GCC optimize("O0")
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
 int Assets::getColor(const std::string&refid) {
+    // Theme-attribute reference "?type/key" → resolve through arsc Theme.
+    if (!refid.empty() && refid[0] == '?') {
+        std::string r = resolveThemeRef(refid);
+        if (r != refid) return getColor(r);
+    }
     // Binary AXML hex reference: "@0x01060373" → resolve via arsc.
     {
         Res_value rv;

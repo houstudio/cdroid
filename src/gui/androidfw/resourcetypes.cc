@@ -2555,10 +2555,17 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
         // 2. style / defStyleAttr / defStyleRes chain.
         Res_value v;
         ssize_t blk = chain.getAttribute(a, &v);
-        if (blk >= 0) { out[i].value = v; out[i].stringBlock = blk; out[i].set = true; continue; }
+        if (blk >= 0) {
+            // Flatten ?attr (TYPE_ATTRIBUTE) / @ref (TYPE_REFERENCE) chains to a
+            // concrete value before storing, so callers see the resolved value.
+            blk = chain.resolveAttributeReference(&v, blk);
+            out[i].value = v; out[i].stringBlock = blk; out[i].set = true; continue;
+        }
         // 3. Theme direct value.
         if (theme && theme->getAttribute(a, &v) >= 0) {
-            out[i].value = v; out[i].stringBlock = 0; out[i].set = true; continue;
+            ssize_t tblk = 0;
+            tblk = theme->resolveAttributeReference(&v, tblk);
+            out[i].value = v; out[i].stringBlock = tblk; out[i].set = true; continue;
         }
     }
 }

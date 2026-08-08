@@ -243,11 +243,38 @@ struct Private{
                 if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
                     Assets* assets = dynamic_cast<Assets*>(ctx);
                     if(assets){
-                        std::string ref = assets->arscReferenceName(v.data);
-                        if(!ref.empty()){
-                            if(ref[0] == '@') ref[0] = '?';
-                            return ref;
+                        Res_value tv;
+                        if(assets->arscThemeAttribute(v.data, &tv)){
+                            switch(tv.dataType){
+                                case Res_value::TYPE_INT_COLOR_ARGB8:
+                                case Res_value::TYPE_INT_COLOR_RGB8:
+                                case Res_value::TYPE_INT_COLOR_ARGB4:
+                                case Res_value::TYPE_INT_COLOR_RGB4:
+                                    snprintf(buf, sizeof(buf), "#%08x", tv.data); return buf;
+                                case Res_value::TYPE_INT_DEC:
+                                    snprintf(buf, sizeof(buf), "%d", (int)tv.data); return buf;
+                                case Res_value::TYPE_INT_HEX:
+                                    snprintf(buf, sizeof(buf), "0x%x", tv.data); return buf;
+                                case Res_value::TYPE_INT_BOOLEAN:
+                                    return tv.data ? "true" : "false";
+                                case Res_value::TYPE_DIMENSION:{
+                                    float mag = axmlComplexToFloat(tv.data);
+                                    int unit = (tv.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
+                                    const char* u = unit == Res_value::COMPLEX_UNIT_SP ? "sp"
+                                                  : unit == Res_value::COMPLEX_UNIT_DIP ? "dp" : "px";
+                                    snprintf(buf, sizeof(buf), "%d%s", (int)mag, u); return buf;
+                                }
+                                case Res_value::TYPE_REFERENCE:
+                                case Res_value::TYPE_DYNAMIC_REFERENCE:{
+                                    std::string ref = assets->arscReferenceName(tv.data);
+                                    if(!ref.empty()) return ref;
+                                    break;
+                                }
+                                default: break;  // STRING etc. — fall through to ?type/key
+                            }
                         }
+                        std::string ref = assets->arscReferenceName(v.data);
+                        if(!ref.empty()){ if(ref[0] == '@') ref[0] = '?'; return ref; }
                     }
                 }
                 snprintf(buf, sizeof(buf), "?0x%08x", v.data);
