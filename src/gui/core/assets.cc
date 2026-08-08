@@ -35,6 +35,21 @@
 using namespace Cairo;
 namespace cdroid {
 
+// char16_t -> UTF-8 (for ResTable string values).
+static std::string u16toUtf8(const char16_t* s, size_t len) {
+    std::string out;
+    for (size_t i = 0; s && i < len; i++) {
+        uint32_t c = s[i];
+        if (c >= 0xD800 && c <= 0xDBFF && i + 1 < len && s[i+1] >= 0xDC00)
+            c = 0x10000 + ((c - 0xD800) << 10) + (s[++i] - 0xDC00);
+        if (c < 0x80) out += (char)c;
+        else if (c < 0x800) { out += (char)(0xC0|(c>>6)); out += (char)(0x80|(c&0x3F)); }
+        else if (c < 0x10000) { out += (char)(0xE0|(c>>12)); out += (char)(0x80|((c>>6)&0x3F)); out += (char)(0x80|(c&0x3F)); }
+        else { out += (char)(0xF0|(c>>18)); out += (char)(0x80|((c>>12)&0x3F)); out += (char)(0x80|((c>>6)&0x3F)); out += (char)(0x80|(c&0x3F)); }
+    }
+    return out;
+}
+
 Assets::Assets() {
     mNextAutofillViewId=100000;
     mResTable = nullptr;
@@ -488,10 +503,19 @@ const std::string Assets::getString(const std::string& resid,const std::string&l
     std::string str = resid;
     std::string pkg,name = resid;
     parseResource(resid,&name,&pkg);
+    std::string rawName = name; // save before normalize for arsc lookup
     name = AttributeSet::normalize(pkg,resid);
     auto itr = mStrings.find(name);
     if(itr != mStrings.end()) {
         str = itr->second;
+    } else if (mResTable) {
+        // Fallback: resolve from resources.arsc via ResTable.
+        uint32_t id = mResTable->getIdentifier(rawName, "string", pkg);
+        if (id != 0) {
+            size_t len = 0;
+            const char16_t* s = mResTable->getResourceString(id, &len);
+            if (s && len > 0) str = u16toUtf8(s, len);
+        }
     }
     TextUtils::replace(str,"\\n","\n");
     return str;
@@ -651,7 +675,20 @@ int Assets::getColor(const std::string&refid) {
     auto it = mColors.find(name);
     if(it != mColors.end()) {
         return it->second;
-    } if(relname.compare(0,4,"attr")==0){
+    }
+    // Fallback: resolve from resources.arsc via ResTable.
+    if (mResTable) {
+        uint32_t id = mResTable->getIdentifier(relname, "color", pkg);
+        if (id != 0) {
+            Res_value v;
+            if (mResTable->getResource(id, &v) >= 0 &&
+                v.dataType >= Res_value::TYPE_FIRST_COLOR_INT &&
+                v.dataType <= Res_value::TYPE_LAST_COLOR_INT) {
+                return v.data;
+            }
+        }
+    }
+    if(relname.compare(0,4,"attr")==0){
         relname=relname.substr(5);
         name =  mTheme.getString(relname);
         return getColor(name);
