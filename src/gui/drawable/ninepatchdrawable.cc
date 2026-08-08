@@ -302,6 +302,13 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
         Rect padding ,opticalInsets;
         Cairo::RefPtr<Cairo::ImageSurface> bitmap;
         auto is= a.getContext()->getInputStream(srcResId);
+        if (!is || !*is) {
+            // src didn't resolve to a stream (e.g. a ?attr that flattened to a
+            // non-stream value, or an unresolvable reference under binary AXML).
+            // Skip rather than dereferencing a null stream and crashing.
+            LOGW("<nine-patch> src stream unavailable: %s", srcResId.c_str());
+            return;
+        }
         bitmap = ImageDecoder::loadImage(*is,-1,-1);
         if (bitmap == nullptr) {
             throw std::logic_error(//a.getPositionDescription() +
