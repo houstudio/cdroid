@@ -337,6 +337,12 @@ int AttributeSet::getGravity(const std::string&key,int defvalue)const{
         auto it = gravitykvs.find(s);
         if(it!=gravitykvs.end()){
             gravity|=it->second;
+        }else if(!s.empty() && (s[0]=='-' || (s[0]>='0' && s[0]<='9'))){
+            // Binary AXML: aapt2 already resolved flag values to an integer
+            // (e.g. "0x11" for center). OR the parsed value directly — bitwise
+            // OR of integers is always valid for flags.
+            int base = (s.size()>2 && (s[1]=='x'||s[1]=='X')) ? 16 : 10;
+            gravity |= (int)std::strtol(s.c_str(), nullptr, base);
         }
     }
     return gs.size()?gravity:defvalue;
