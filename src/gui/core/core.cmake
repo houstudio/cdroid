@@ -3,6 +3,7 @@ SET(CORE_SOURCES
     core/assets.cc
     core/attributeset.cc
     core/framework_styleable.cc
+    core/typedarray.cc      # TypedArray (cdroid-side typed attr view over a styleable set)
     #core/basebundle.cc
     #core/bundle.cc
     core/transform.cc

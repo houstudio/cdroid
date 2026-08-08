@@ -16,6 +16,8 @@
 + * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 + *********************************************************************************/
 #include <widget/adapterviewanimator.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <animation/animatorinflater.h>
 namespace cdroid{
 
@@ -24,21 +26,27 @@ DECLARE_WIDGET(AdapterViewAnimator)
 AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet& attrs)
     :AdapterView(context,attrs){
     initViewAnimator();
-    std::string res = attrs.getString("inAnimation");
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::AdapterViewAnimator::IDS, styleable::AdapterViewAnimator::COUNT) : nullptr;
+    namespace SAV = styleable::AdapterViewAnimator;
+
+    std::string res = ta&&ta->hasValue(SAV::inAnimation) ? ta->getString(SAV::inAnimation) : attrs.getString("inAnimation");
     if(res.empty())
         setInAnimation(getDefaultInAnimation());
     else
         setInAnimation(context,res);
-    res = attrs.getString("outAnimation");
+    res = ta&&ta->hasValue(SAV::outAnimation) ? ta->getString(SAV::outAnimation) : attrs.getString("outAnimation");
 
     if(res.empty())
         setOutAnimation(getDefaultOutAnimation());
     else
         setOutAnimation(context,res);
 
-    const bool flag = attrs.getBoolean("animateFirstView",true);
+    const bool flag = ta&&ta->hasValue(SAV::animateFirstView) ? ta->getBoolean(SAV::animateFirstView,true) : attrs.getBoolean("animateFirstView",true);
     setAnimateFirstView(flag);
-    mLoopViews = attrs.getBoolean("loopViews",false);
+    mLoopViews = ta&&ta->hasValue(SAV::loopViews) ? ta->getBoolean(SAV::loopViews,false) : attrs.getBoolean("loopViews",false);
     initViewAnimator();
 }
 

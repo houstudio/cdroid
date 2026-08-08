@@ -28,6 +28,7 @@
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
+#include <core/framework_styleable.h>
 #include <text/layout.h>
 #include <text/selection.h>
 #include <text/spannablestringbuilder.h>
@@ -144,17 +145,30 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initView();
 
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML
+    // fallback. aapt2 already resolved enums/flags at compile time, so TypedArray
+    // getters return integers directly — no string→enum map on the binary path.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::TextView::IDS, styleable::TextView::COUNT) : nullptr;
+    namespace STV = styleable::TextView;
+
+    // text/hint keep the ctx->getString ref-resolution path: the AttributeSet
+    // bridge already renders binary typed values to strings for both modes.
     setText(ctx->getString(attrs.getString("text")));
     setHint(ctx->getString(attrs.getString("hint")));
-    setHorizontallyScrolling(attrs.getBoolean("scrollHorizontally",mHorizontallyScrolling));
+    setHorizontallyScrolling(ta&&ta->hasValue(STV::scrollHorizontally) ? ta->getBoolean(STV::scrollHorizontally,mHorizontallyScrolling) : attrs.getBoolean("scrollHorizontally",mHorizontallyScrolling));
 
-    Drawable* left = attrs.getDrawable("drawableLeft");
-    Drawable*right = attrs.getDrawable("drawableRight");
-    Drawable*  top = attrs.getDrawable("drawableTop");
-    Drawable*bottom= attrs.getDrawable("drawableBottom");
-    Drawable*start = attrs.getDrawable("drawableStart");
-    Drawable*  end = attrs.getDrawable("drawableEnd");
-    const bool selectallonfocus = attrs.getBoolean("selectAllOnFocus");
+    Drawable* left  = ta&&ta->hasValue(STV::drawableLeft)  ? ta->getDrawable(STV::drawableLeft)  : attrs.getDrawable("drawableLeft");
+    Drawable* right = ta&&ta->hasValue(STV::drawableRight) ? ta->getDrawable(STV::drawableRight) : attrs.getDrawable("drawableRight");
+    Drawable* top   = ta&&ta->hasValue(STV::drawableTop)   ? ta->getDrawable(STV::drawableTop)   : attrs.getDrawable("drawableTop");
+    Drawable* bottom= ta&&ta->hasValue(STV::drawableBottom)? ta->getDrawable(STV::drawableBottom): attrs.getDrawable("drawableBottom");
+    // Relative drawables: resolved against layoutDirection in
+    // Drawables::resolveWithLayoutDirection (start<->left/right). MUST stay
+    // separate locals from drawableLeft/Right — do not collapse the reads.
+    Drawable* start = ta&&ta->hasValue(STV::drawableStart) ? ta->getDrawable(STV::drawableStart) : attrs.getDrawable("drawableStart");
+    Drawable* end   = ta&&ta->hasValue(STV::drawableEnd)   ? ta->getDrawable(STV::drawableEnd)   : attrs.getDrawable("drawableEnd");
+    const bool selectallonfocus = ta&&ta->hasValue(STV::selectAllOnFocus) ? ta->getBoolean(STV::selectAllOnFocus,false) : attrs.getBoolean("selectAllOnFocus");
 
     setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);
     if(mDrawables){
@@ -164,24 +178,24 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     applyCompoundDrawableTint();
     setRelativeDrawablesIfNeeded(start, end);
 
-    setCompoundDrawablePadding(attrs.getDimensionPixelSize("drawablePadding",0));
-    setMaxLines(attrs.getInt("maxLines",-1));
-    setMinLines(attrs.getInt("minLines",-1));
-    setLines(attrs.getInt("lines",-1));
-    setHeight(attrs.getDimensionPixelSize("height",-1));
-    setMinHeight(attrs.getDimensionPixelSize("minHeight", -1));
-    setMaxHeight(attrs.getDimensionPixelSize("maxHeight", mMaximum));
-    setTextScaleX(attrs.getFloat("textScaleX",1.f));
+    setCompoundDrawablePadding(ta&&ta->hasValue(STV::drawablePadding) ? ta->getDimensionPixelSize(STV::drawablePadding,0) : attrs.getDimensionPixelSize("drawablePadding",0));
+    setMaxLines(ta&&ta->hasValue(STV::maxLines) ? ta->getInt(STV::maxLines,-1) : attrs.getInt("maxLines",-1));
+    setMinLines(ta&&ta->hasValue(STV::minLines) ? ta->getInt(STV::minLines,-1) : attrs.getInt("minLines",-1));
+    setLines(ta&&ta->hasValue(STV::lines) ? ta->getInt(STV::lines,-1) : attrs.getInt("lines",-1));
+    setHeight(ta&&ta->hasValue(STV::height) ? ta->getDimensionPixelSize(STV::height,-1) : attrs.getDimensionPixelSize("height",-1));
+    setMinHeight(ta&&ta->hasValue(STV::minHeight) ? ta->getDimensionPixelSize(STV::minHeight, -1) : attrs.getDimensionPixelSize("minHeight", -1));
+    setMaxHeight(ta&&ta->hasValue(STV::maxHeight) ? ta->getDimensionPixelSize(STV::maxHeight, mMaximum) : attrs.getDimensionPixelSize("maxHeight", mMaximum));
+    setTextScaleX(ta&&ta->hasValue(STV::textScaleX) ? ta->getFloat(STV::textScaleX,1.f) : attrs.getFloat("textScaleX",1.f));
 
-    setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
-    setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
-    setSingleLine(attrs.getBoolean("singleLine",mSingleLine));
-    setGravity(attrs.getGravity("gravity",Gravity::TOP|Gravity::START));
-    const int maxLength = attrs.getInt("maxLength",-1);
+    setMinWidth(ta&&ta->hasValue(STV::minWidth) ? ta->getDimensionPixelSize(STV::minWidth, INT_MIN) : attrs.getDimensionPixelSize("minWidth", INT_MIN));
+    setMaxWidth(ta&&ta->hasValue(STV::maxWidth) ? ta->getDimensionPixelSize(STV::maxWidth, INT_MAX) : attrs.getDimensionPixelSize("maxWidth", INT_MAX));
+    setSingleLine(ta&&ta->hasValue(STV::singleLine) ? ta->getBoolean(STV::singleLine,mSingleLine) : attrs.getBoolean("singleLine",mSingleLine));
+    setGravity(ta&&ta->hasValue(STV::gravity) ? ta->getInt(STV::gravity,Gravity::TOP|Gravity::START) : attrs.getGravity("gravity",Gravity::TOP|Gravity::START));
+    const int maxLength = ta&&ta->hasValue(STV::maxLength) ? ta->getInt(STV::maxLength,-1) : attrs.getInt("maxLength",-1);
 
-    setLineSpacing( attrs.getDimensionPixelSize("lineSpacingExtra",0),
-             attrs.getFloat("lineSpacingMultiplier",1.f) );
-    int inputType =attrs.getInt("inputType",std::unordered_map<std::string,int>{
+    setLineSpacing( ta&&ta->hasValue(STV::lineSpacingExtra) ? ta->getDimensionPixelSize(STV::lineSpacingExtra,0) : attrs.getDimensionPixelSize("lineSpacingExtra",0),
+             ta&&ta->hasValue(STV::lineSpacingMultiplier) ? ta->getFloat(STV::lineSpacingMultiplier,1.f) : attrs.getFloat("lineSpacingMultiplier",1.f) );
+    int inputType = ta&&ta->hasValue(STV::inputType) ? ta->getInt(STV::inputType,EditorInfo::TYPE_NULL) : attrs.getInt("inputType",std::unordered_map<std::string,int>{
             {"none", (int)InputType::TYPE_NULL},
             {"text", (int)InputType::TYPE_CLASS_TEXT},
             {"textCapCharacters", (int)InputType::TYPE_TEXT_FLAG_CAP_CHARACTERS},
@@ -216,7 +230,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
             {"time", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_TIME},
             {"datetime", (int)InputType::TYPE_CLASS_DATETIME}
         },EditorInfo::TYPE_NULL);
-    const int breakStrategy = attrs.getInt("breakStrategy",std::unordered_map<std::string,int>{
+    const int breakStrategy = ta&&ta->hasValue(STV::breakStrategy) ? ta->getInt(STV::breakStrategy,Layout::BREAK_STRATEGY_SIMPLE) : attrs.getInt("breakStrategy",std::unordered_map<std::string,int>{
         {"simple"  ,(int)Layout::BREAK_STRATEGY_SIMPLE},
         {"balanced",(int)Layout::BREAK_STRATEGY_BALANCED},
         {"high_quality",(int)Layout::BREAK_STRATEGY_HIGH_QUALITY},
@@ -234,10 +248,10 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         attributes.readTextAppearance(ctx,attrs);
     }
     applyTextAppearance(&attributes);
-    setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",std::unordered_map<std::string,int>{
+    setMarqueeRepeatLimit(ta&&ta->hasValue(STV::marqueeRepeatLimit) ? ta->getInt(STV::marqueeRepeatLimit,mMarqueeRepeatLimit) : attrs.getInt("marqueeRepeatLimit",std::unordered_map<std::string,int>{
             {"marquee_forever",-1}
         },mMarqueeRepeatLimit));
-    auto ellipsize = attrs.getInt("ellipsize",std::unordered_map<std::string,int>{
+    auto ellipsize = ta&&ta->hasValue(STV::ellipsize) ? ta->getInt(STV::ellipsize,(int)ELLIPSIZE_NOT_SET) : attrs.getInt("ellipsize",std::unordered_map<std::string,int>{
         {"none", (int)ELLIPSIZE_NONE},
         {"start",(int)ELLIPSIZE_START},{"middle",(int)ELLIPSIZE_MIDDLE},
         {"end" ,(int)ELLIPSIZE_END},{"marquee",(int)ELLIPSIZE_MARQUEE}
@@ -250,36 +264,40 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     // Attributes handled by Android's TextView styled-attr switch but not previously
     // wired. ems/width setters don't guard -1, so only apply when the attribute is
     // present (Android fires them only inside the switch case for a present attr).
-    if (attrs.hasAttribute("maxEms")) setMaxEms(attrs.getInt("maxEms", -1));
-    if (attrs.hasAttribute("ems"))   setEms(attrs.getInt("ems", -1));
-    if (attrs.hasAttribute("minEms"))setMinEms(attrs.getInt("minEms", -1));
-    if (attrs.hasAttribute("width")) setWidth(attrs.getDimensionPixelSize("width", -1));
+    if (ta&&ta->hasValue(STV::maxEms))      setMaxEms(ta->getInt(STV::maxEms, -1));
+    else if (attrs.hasAttribute("maxEms"))  setMaxEms(attrs.getInt("maxEms", -1));
+    if (ta&&ta->hasValue(STV::ems))         setEms(ta->getInt(STV::ems, -1));
+    else if (attrs.hasAttribute("ems"))     setEms(attrs.getInt("ems", -1));
+    if (ta&&ta->hasValue(STV::minEms))      setMinEms(ta->getInt(STV::minEms, -1));
+    else if (attrs.hasAttribute("minEms"))  setMinEms(attrs.getInt("minEms", -1));
+    if (ta&&ta->hasValue(STV::width))       setWidth(ta->getDimensionPixelSize(STV::width, -1));
+    else if (attrs.hasAttribute("width"))   setWidth(attrs.getDimensionPixelSize("width", -1));
 
-    if (!attrs.getBoolean("includeFontPadding", true)) setIncludeFontPadding(false);
-    if (!attrs.getBoolean("cursorVisible", true)) setCursorVisible(false);
-    setEnabled(attrs.getBoolean("enabled", isEnabled()));
-    setAutoLinkMask(attrs.getInt("autoLink", std::unordered_map<std::string,int>{
+    if (!(ta&&ta->hasValue(STV::includeFontPadding) ? ta->getBoolean(STV::includeFontPadding,true) : attrs.getBoolean("includeFontPadding", true))) setIncludeFontPadding(false);
+    if (!(ta&&ta->hasValue(STV::cursorVisible) ? ta->getBoolean(STV::cursorVisible,true) : attrs.getBoolean("cursorVisible", true))) setCursorVisible(false);
+    setEnabled(ta&&ta->hasValue(STV::enabled) ? ta->getBoolean(STV::enabled, isEnabled()) : attrs.getBoolean("enabled", isEnabled()));
+    setAutoLinkMask(ta&&ta->hasValue(STV::autoLink) ? ta->getInt(STV::autoLink, mAutoLinkMask) : attrs.getInt("autoLink", std::unordered_map<std::string,int>{
         {"none", 0}, {"web", 0x01}, {"email", 0x02},
         {"phone", 0x04}, {"map", 0x08}, {"all", 0x0f}
     }, mAutoLinkMask));
-    setLinksClickable(attrs.getBoolean("linksClickable", true));
-    setHyphenationFrequency(attrs.getInt("hyphenationFrequency", std::unordered_map<std::string,int>{
+    setLinksClickable(ta&&ta->hasValue(STV::linksClickable) ? ta->getBoolean(STV::linksClickable,true) : attrs.getBoolean("linksClickable", true));
+    setHyphenationFrequency(ta&&ta->hasValue(STV::hyphenationFrequency) ? ta->getInt(STV::hyphenationFrequency, mHyphenationFrequency) : attrs.getInt("hyphenationFrequency", std::unordered_map<std::string,int>{
         {"none",   Layout::HYPHENATION_FREQUENCY_NONE},
         {"normal", Layout::HYPHENATION_FREQUENCY_NORMAL},
         {"full",   Layout::HYPHENATION_FREQUENCY_FULL}
     }, mHyphenationFrequency));
-    setJustificationMode(attrs.getInt("justificationMode", std::unordered_map<std::string,int>{
+    setJustificationMode(ta&&ta->hasValue(STV::justificationMode) ? ta->getInt(STV::justificationMode, mJustificationMode) : attrs.getInt("justificationMode", std::unordered_map<std::string,int>{
         {"none",            Layout::JUSTIFICATION_MODE_NONE},
         {"inter_word",      Layout::JUSTIFICATION_MODE_INTER_WORD},
         {"inter_character", Layout::JUSTIFICATION_MODE_INTER_CHARACTER}
     }, mJustificationMode));
-    setTextIsSelectable(attrs.getBoolean("textIsSelectable", false));
-    if (attrs.hasAttribute("imeOptions"))
+    setTextIsSelectable(ta&&ta->hasValue(STV::textIsSelectable) ? ta->getBoolean(STV::textIsSelectable,false) : attrs.getBoolean("textIsSelectable", false));
+    if ((ta&&ta->hasValue(STV::imeOptions)) || attrs.hasAttribute("imeOptions"))
         // Decode android:imeOptions flag names (AOSP attrs.xml) — action*/flag*
         // — to EditorInfo constants, OR-ing "|" combinations like inputType.
         // getInt(map) returns IME_NULL when the attribute is absent, but we only
         // call setImeOptions (which lazily creates the Editor) when present.
-        setImeOptions(attrs.getInt("imeOptions", std::unordered_map<std::string,int>{
+        setImeOptions(ta&&ta->hasValue(STV::imeOptions) ? ta->getInt(STV::imeOptions, EditorInfo::IME_NULL) : attrs.getInt("imeOptions", std::unordered_map<std::string,int>{
             {"normal",                     (int)EditorInfo::IME_ACTION_UNSPECIFIED},
             {"actionUnspecified",          (int)EditorInfo::IME_ACTION_UNSPECIFIED},
             {"actionNone",                 (int)EditorInfo::IME_ACTION_NONE},
@@ -307,18 +325,18 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     bool singleLine = mSingleLine;
     // Editor / input-method configuration (Android TextView ctor ~1253-1269, 1685-1790).
     // Android gathers these into locals first, then resolves a KeyListener below.
-    const std::string inputMethod = attrs.getString("inputMethod");
-    const std::string digits = attrs.getString("digits");
-    const bool phone = attrs.getBoolean("phoneNumber", false);
-    const int numeric = attrs.getInt("numeric", std::unordered_map<std::string,int>{
+    const std::string inputMethod = ta&&ta->hasValue(STV::inputMethod) ? ta->getString(STV::inputMethod) : attrs.getString("inputMethod");
+    const std::string digits = ta&&ta->hasValue(STV::digits) ? ta->getString(STV::digits) : attrs.getString("digits");
+    const bool phone = ta&&ta->hasValue(STV::phoneNumber) ? ta->getBoolean(STV::phoneNumber,false) : attrs.getBoolean("phoneNumber", false);
+    const int numeric = ta&&ta->hasValue(STV::numeric) ? ta->getInt(STV::numeric,0) : attrs.getInt("numeric", std::unordered_map<std::string,int>{
         {"signed", (int)SIGNED}, {"decimal", (int)DECIMAL} }, 0);
-    const bool autotext = attrs.getBoolean("autoText", false);
-    const int autocap = attrs.getInt("capitalize", std::unordered_map<std::string,int>{
+    const bool autotext = ta&&ta->hasValue(STV::autoText) ? ta->getBoolean(STV::autoText,false) : attrs.getBoolean("autoText", false);
+    const int autocap = ta&&ta->hasValue(STV::capitalize) ? ta->getInt(STV::capitalize,-1) : attrs.getInt("capitalize", std::unordered_map<std::string,int>{
         {"sentences", 1}, {"words", 2}, {"characters", 3} }, -1);
-    const bool editable = attrs.getBoolean("editable", getDefaultEditable());
-    const int buffertype = attrs.getInt("bufferType", std::unordered_map<std::string,int>{
+    const bool editable = ta&&ta->hasValue(STV::editable) ? ta->getBoolean(STV::editable,getDefaultEditable()) : attrs.getBoolean("editable", getDefaultEditable());
+    const int buffertype = ta&&ta->hasValue(STV::bufferType) ? ta->getInt(STV::bufferType,0) : attrs.getInt("bufferType", std::unordered_map<std::string,int>{
         {"normal", 0}, {"spannable", 1}, {"editable", 2} }, 0);
-    const bool password = attrs.getBoolean("password", false);
+    const bool password = ta&&ta->hasValue(STV::password) ? ta->getBoolean(STV::password,false) : attrs.getBoolean("password", false);
     mUseFallbackLineSpacing = true; // Android: targetSdk >= P (BORINGLAYOUT_FALLBACK_LINESPACING)
 
     // CDROID has no reflection, so Android's inputMethod branch —
@@ -440,9 +458,9 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     } else {
         setFilters({}); // NO_FILTERS
     }
-    const int lineHeight = attrs.getDimensionPixelSize("lineHeight",-1);
-    const int firstBaselineToTopHeight = attrs.getDimensionPixelSize("firstBaselineToTopHeight",-1);
-    const int lastBaselineToBottomHeight = attrs.getDimensionPixelSize("lastBaselineToBottomHeight", -1);
+    const int lineHeight = ta&&ta->hasValue(STV::lineHeight) ? ta->getDimensionPixelSize(STV::lineHeight,-1) : attrs.getDimensionPixelSize("lineHeight",-1);
+    const int firstBaselineToTopHeight = ta&&ta->hasValue(STV::firstBaselineToTopHeight) ? ta->getDimensionPixelSize(STV::firstBaselineToTopHeight,-1) : attrs.getDimensionPixelSize("firstBaselineToTopHeight",-1);
+    const int lastBaselineToBottomHeight = ta&&ta->hasValue(STV::lastBaselineToBottomHeight) ? ta->getDimensionPixelSize(STV::lastBaselineToBottomHeight,-1) : attrs.getDimensionPixelSize("lastBaselineToBottomHeight", -1);
     if (firstBaselineToTopHeight >= 0){
         setFirstBaselineToTopHeight(firstBaselineToTopHeight);
     }

@@ -23,7 +23,8 @@
 #include <unordered_map>
 #include <core/variant.h>
 #include <drawable/drawable.h>
-#include "androidfw/resourcetypes.h"   // ResTable: arsc resource resolution
+#include "androidfw/restable.h"   // ResTable: arsc resource resolution
+#include "core/typedarray.h"      // TypedArray: consumer-side typed attr view
 
 namespace cdroid{
 

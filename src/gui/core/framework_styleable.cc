@@ -90,5 +90,207 @@ namespace styleable {
             fw_attr::LinearLayout::measureAllChildren, 0 /* foreground */, 0 /* foregroundInsidePadding */,
         };
     }
+    namespace TextView {
+        const uint32_t IDS[] = {
+            fw_attr::TextView::bufferType,
+            fw_attr::TextView::text,
+            fw_attr::TextView::hint,
+            fw_attr::TextView::textColor,
+            fw_attr::TextView::textColorHighlight,
+            fw_attr::TextView::searchResultHighlightColor,
+            fw_attr::TextView::focusedSearchResultHighlightColor,
+            fw_attr::TextView::textColorHint,
+            fw_attr::TextView::textAppearance,
+            fw_attr::TextView::textSize,
+            fw_attr::TextView::textScaleX,
+            fw_attr::TextView::typeface,
+            fw_attr::TextView::textStyle,
+            fw_attr::TextView::textFontWeight,
+            fw_attr::TextView::fontFamily,
+            fw_attr::TextView::textLocale,
+            fw_attr::TextView::textColorLink,
+            fw_attr::TextView::cursorVisible,
+            fw_attr::TextView::maxLines,
+            fw_attr::TextView::maxHeight,
+            fw_attr::TextView::lines,
+            fw_attr::TextView::height,
+            fw_attr::TextView::minLines,
+            fw_attr::TextView::minHeight,
+            fw_attr::TextView::maxEms,
+            fw_attr::TextView::maxWidth,
+            fw_attr::TextView::ems,
+            fw_attr::TextView::width,
+            fw_attr::TextView::minEms,
+            fw_attr::TextView::minWidth,
+            fw_attr::TextView::gravity,
+            fw_attr::TextView::scrollHorizontally,
+            fw_attr::TextView::password,
+            fw_attr::TextView::singleLine,
+            fw_attr::TextView::enabled,
+            fw_attr::TextView::selectAllOnFocus,
+            fw_attr::TextView::includeFontPadding,
+            fw_attr::TextView::maxLength,
+            fw_attr::TextView::shadowColor,
+            fw_attr::TextView::shadowDx,
+            fw_attr::TextView::shadowDy,
+            fw_attr::TextView::shadowRadius,
+            fw_attr::TextView::autoLink,
+            fw_attr::TextView::linksClickable,
+            fw_attr::TextView::numeric,
+            fw_attr::TextView::digits,
+            fw_attr::TextView::phoneNumber,
+            fw_attr::TextView::inputMethod,
+            fw_attr::TextView::capitalize,
+            fw_attr::TextView::autoText,
+            fw_attr::TextView::editable,
+            fw_attr::TextView::freezesText,
+            fw_attr::TextView::ellipsize,
+            fw_attr::TextView::drawableTop,
+            fw_attr::TextView::drawableBottom,
+            fw_attr::TextView::drawableLeft,
+            fw_attr::TextView::drawableRight,
+            fw_attr::TextView::drawableStart,
+            fw_attr::TextView::drawableEnd,
+            fw_attr::TextView::drawablePadding,
+            fw_attr::TextView::drawableTint,
+            fw_attr::TextView::drawableTintMode,
+            fw_attr::TextView::lineSpacingExtra,
+            fw_attr::TextView::lineSpacingMultiplier,
+            fw_attr::TextView::lineHeight,
+            fw_attr::TextView::firstBaselineToTopHeight,
+            fw_attr::TextView::lastBaselineToBottomHeight,
+            fw_attr::TextView::marqueeRepeatLimit,
+            fw_attr::TextView::inputType,
+            fw_attr::TextView::allowUndo,
+            fw_attr::TextView::imeOptions,
+            fw_attr::TextView::privateImeOptions,
+            fw_attr::TextView::imeActionLabel,
+            fw_attr::TextView::imeActionId,
+            fw_attr::TextView::editorExtras,
+            fw_attr::TextView::textSelectHandleLeft,
+            fw_attr::TextView::textSelectHandleRight,
+            fw_attr::TextView::textSelectHandle,
+            fw_attr::TextView::textEditPasteWindowLayout,
+            fw_attr::TextView::textEditNoPasteWindowLayout,
+            fw_attr::TextView::textEditSidePasteWindowLayout,
+            fw_attr::TextView::textEditSideNoPasteWindowLayout,
+            fw_attr::TextView::textEditSuggestionItemLayout,
+            fw_attr::TextView::textEditSuggestionContainerLayout,
+            fw_attr::TextView::textEditSuggestionHighlightStyle,
+            fw_attr::TextView::textCursorDrawable,
+            fw_attr::TextView::textIsSelectable,
+            fw_attr::TextView::textAllCaps,
+            fw_attr::TextView::elegantTextHeight,
+            fw_attr::TextView::fallbackLineSpacing,
+            fw_attr::TextView::letterSpacing,
+            fw_attr::TextView::fontFeatureSettings,
+            fw_attr::TextView::fontVariationSettings,
+            fw_attr::TextView::breakStrategy,
+            fw_attr::TextView::hyphenationFrequency,
+            fw_attr::TextView::lineBreakStyle,
+            fw_attr::TextView::lineBreakWordStyle,
+            fw_attr::TextView::autoSizeTextType,
+            fw_attr::TextView::autoSizeStepGranularity,
+            fw_attr::TextView::autoSizePresetSizes,
+            fw_attr::TextView::autoSizeMinTextSize,
+            fw_attr::TextView::autoSizeMaxTextSize,
+            fw_attr::TextView::justificationMode,
+            fw_attr::TextView::useBoundsForWidth,
+            fw_attr::TextView::shiftDrawingOffsetForStartOverhang,
+            fw_attr::TextView::useLocalePreferredLineHeightForMinimum,
+        };
+    }
+    namespace ProgressBar {
+        const uint32_t IDS[] = {
+            fw_attr::ProgressBar::min,
+            fw_attr::ProgressBar::max,
+            fw_attr::ProgressBar::progress,
+            fw_attr::ProgressBar::secondaryProgress,
+            fw_attr::ProgressBar::indeterminate,
+            fw_attr::ProgressBar::indeterminateOnly,
+            fw_attr::ProgressBar::indeterminateDrawable,
+            fw_attr::ProgressBar::progressDrawable,
+            fw_attr::ProgressBar::indeterminateDuration,
+            fw_attr::ProgressBar::indeterminateBehavior,
+            fw_attr::ProgressBar::minWidth,
+            fw_attr::ProgressBar::maxWidth,
+            fw_attr::ProgressBar::minHeight,
+            fw_attr::ProgressBar::maxHeight,
+            fw_attr::ProgressBar::interpolator,
+            fw_attr::ProgressBar::animationResolution,
+            fw_attr::ProgressBar::mirrorForRtl,
+            fw_attr::ProgressBar::progressTint,
+            fw_attr::ProgressBar::progressTintMode,
+            fw_attr::ProgressBar::progressBackgroundTint,
+            fw_attr::ProgressBar::progressBackgroundTintMode,
+            fw_attr::ProgressBar::secondaryProgressTint,
+            fw_attr::ProgressBar::secondaryProgressTintMode,
+            fw_attr::ProgressBar::indeterminateTint,
+            fw_attr::ProgressBar::indeterminateTintMode,
+            fw_attr::ProgressBar::backgroundTint,
+            fw_attr::ProgressBar::backgroundTintMode,
+        };
+    }
+    namespace Switch {
+        const uint32_t IDS[] = {
+            fw_attr::Switch::thumb,
+            fw_attr::Switch::thumbTint,
+            fw_attr::Switch::thumbTintMode,
+            fw_attr::Switch::track,
+            fw_attr::Switch::trackTint,
+            fw_attr::Switch::trackTintMode,
+            fw_attr::Switch::textOn,
+            fw_attr::Switch::textOff,
+            fw_attr::Switch::thumbTextPadding,
+            fw_attr::Switch::switchTextAppearance,
+            fw_attr::Switch::switchMinWidth,
+            fw_attr::Switch::switchPadding,
+            fw_attr::Switch::splitTrack,
+            fw_attr::Switch::showText,
+        };
+    }
+    namespace SeekBar {
+        const uint32_t IDS[] = {
+            fw_attr::SeekBar::thumb, fw_attr::SeekBar::thumbOffset,
+            fw_attr::SeekBar::splitTrack, fw_attr::SeekBar::disabledAlpha,
+            fw_attr::SeekBar::thumbTint, fw_attr::SeekBar::tickMark,
+            fw_attr::SeekBar::tickMarkTint,
+        };
+    }
+    namespace ToggleButton {
+        const uint32_t IDS[] = {
+            fw_attr::ToggleButton::textOn, fw_attr::ToggleButton::textOff,
+            fw_attr::ToggleButton::disabledAlpha,
+        };
+    }
+    namespace CheckedTextView {
+        const uint32_t IDS[] = {
+            fw_attr::CheckedTextView::checked, fw_attr::CheckedTextView::checkMark,
+            fw_attr::CheckedTextView::checkMarkTint, fw_attr::CheckedTextView::checkMarkTintMode,
+        };
+    }
+    namespace ListView {
+        const uint32_t IDS[] = {
+            fw_attr::ListView::divider, fw_attr::ListView::dividerHeight,
+            fw_attr::ListView::headerDividersEnabled, fw_attr::ListView::footerDividersEnabled,
+            fw_attr::ListView::overScrollHeader, fw_attr::ListView::overScrollFooter,
+        };
+    }
+    namespace RadioGroup {
+        const uint32_t IDS[] = {
+            fw_attr::RadioGroup::checkedButton, fw_attr::View::orientation,
+        };
+    }
+    namespace NestedScrollView {
+        const uint32_t IDS[] = { fw_attr::NestedScrollView::fillViewport };
+    }
+    namespace AdapterViewAnimator {
+        const uint32_t IDS[] = {
+            fw_attr::AdapterViewAnimator::inAnimation,
+            fw_attr::AdapterViewAnimator::outAnimation,
+            fw_attr::AdapterViewAnimator::animateFirstView,
+            fw_attr::AdapterViewAnimator::loopViews,
+        };
+    }
 }
 }

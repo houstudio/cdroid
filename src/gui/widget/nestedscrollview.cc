@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/nestedscrollview.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <widget/nestedscrollinghelper.h>
 #include <view/focusfinder.h>
 #include <view/hapticscrollfeedbackprovider.h>
@@ -53,7 +55,12 @@ NestedScrollView::NestedScrollView(int w,int h):FrameLayout(w,h){
 
 NestedScrollView::NestedScrollView(Context* context,const AttributeSet&attrs):FrameLayout(context,attrs){
     initScrollView(&attrs);
-    setFillViewport(attrs.getBoolean("fillViewport",false));
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::NestedScrollView::IDS, styleable::NestedScrollView::COUNT) : nullptr;
+    namespace SNS = styleable::NestedScrollView;
+    setFillViewport(ta&&ta->hasValue(SNS::fillViewport) ? ta->getBoolean(SNS::fillViewport,false) : attrs.getBoolean("fillViewport",false));
 }
 
 NestedScrollView::~NestedScrollView(){

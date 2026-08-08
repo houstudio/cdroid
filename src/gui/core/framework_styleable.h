@@ -161,55 +161,216 @@ namespace fw_attr {
         constexpr uint32_t drawablePadding    = 0x01010171;
         constexpr uint32_t baseline           = 0x01010122;
     }
+    // Full <declare-styleable name="TextView"> from AOSP attrs.xml, in canonical
+    // index order. Indices MUST stay aligned with styleable::TextView below so
+    // the switch-loop in TextView::TextView references the same positions AOSP's
+    // com.android.internal.R.styleable.TextView_* uses.
     namespace TextView {
-        constexpr uint32_t textAppearance     = 0x01010034;
-        constexpr uint32_t textColorHighlight = 0x01010099;
-        constexpr uint32_t textColorLink      = 0x0101009b;
-        constexpr uint32_t textAllCaps        = 0x0101038c;
-        constexpr uint32_t textScaleX         = 0x01010151;
-        constexpr uint32_t lineSpacingExtra   = 0x01010217;
+        constexpr uint32_t bufferType        = 0x0101014e;
+        constexpr uint32_t text              = 0x0101014f;
+        constexpr uint32_t hint              = 0x01010150;
+        constexpr uint32_t textColor         = 0x01010098;
+        constexpr uint32_t textColorHighlight= 0x01010099;
+        constexpr uint32_t searchResultHighlightColor = 0x01010682;
+        constexpr uint32_t focusedSearchResultHighlightColor = 0x01010683;
+        constexpr uint32_t textColorHint     = 0x0101009a;
+        constexpr uint32_t textAppearance    = 0x01010034;
+        constexpr uint32_t textSize          = 0x01010095;
+        constexpr uint32_t textScaleX        = 0x01010151;
+        constexpr uint32_t typeface          = 0x01010096;
+        constexpr uint32_t textStyle         = 0x01010097;
+        constexpr uint32_t textFontWeight    = 0x01010585;
+        constexpr uint32_t fontFamily        = 0x010103ac;
+        constexpr uint32_t textLocale        = 0x01010592;
+        constexpr uint32_t textColorLink     = 0x0101009b;
+        constexpr uint32_t cursorVisible     = 0x01010152;
+        constexpr uint32_t maxLines          = 0x01010153;
+        constexpr uint32_t maxHeight         = 0x01010120;
+        constexpr uint32_t lines             = 0x01010154;
+        constexpr uint32_t height            = 0x01010155;
+        constexpr uint32_t minLines          = 0x01010156;
+        constexpr uint32_t minHeight         = 0x01010140;
+        constexpr uint32_t maxEms            = 0x01010157;
+        constexpr uint32_t maxWidth          = 0x0101011f;
+        constexpr uint32_t ems               = 0x01010158;
+        constexpr uint32_t width             = 0x01010159;
+        constexpr uint32_t minEms            = 0x0101015a;
+        constexpr uint32_t minWidth          = 0x0101013f;
+        constexpr uint32_t gravity           = 0x010100af;
+        constexpr uint32_t scrollHorizontally= 0x0101015b;
+        constexpr uint32_t password          = 0x0101015c;
+        constexpr uint32_t singleLine        = 0x0101015d;
+        constexpr uint32_t enabled           = 0x0101000e;
+        constexpr uint32_t selectAllOnFocus  = 0x0101015e;
+        constexpr uint32_t includeFontPadding= 0x0101015f;
+        constexpr uint32_t maxLength         = 0x01010160;
+        constexpr uint32_t shadowColor       = 0x01010161;
+        constexpr uint32_t shadowDx          = 0x01010162;
+        constexpr uint32_t shadowDy          = 0x01010163;
+        constexpr uint32_t shadowRadius      = 0x01010164;
+        constexpr uint32_t autoLink          = 0x010100b0;
+        constexpr uint32_t linksClickable    = 0x010100b1;
+        constexpr uint32_t numeric           = 0x01010165;
+        constexpr uint32_t digits            = 0x01010166;
+        constexpr uint32_t phoneNumber       = 0x01010167;
+        constexpr uint32_t inputMethod       = 0x01010168;
+        constexpr uint32_t capitalize        = 0x01010169;
+        constexpr uint32_t autoText          = 0x0101016a;
+        constexpr uint32_t editable          = 0x0101016b;
+        constexpr uint32_t freezesText       = 0x0101016c;
+        constexpr uint32_t ellipsize         = 0x010100ab;
+        constexpr uint32_t drawableTop       = 0x0101016d;
+        constexpr uint32_t drawableBottom    = 0x0101016e;
+        constexpr uint32_t drawableLeft      = 0x0101016f;
+        constexpr uint32_t drawableRight     = 0x01010170;
+        // Relative drawables: resolved against layoutDirection (start<->left/right
+        // in Drawables::resolveWithLayoutDirection). MUST stay separate from
+        // drawableLeft/Right — do not collapse the two reads.
+        constexpr uint32_t drawableStart     = 0x01010392;
+        constexpr uint32_t drawableEnd       = 0x01010393;
+        constexpr uint32_t drawablePadding   = 0x01010171;
+        constexpr uint32_t drawableTint      = 0x010104d6;
+        constexpr uint32_t drawableTintMode  = 0x010104d7;
+        constexpr uint32_t lineSpacingExtra  = 0x01010217;
         constexpr uint32_t lineSpacingMultiplier = 0x01010218;
-        constexpr uint32_t capitalize         = 0x01010169;
-        constexpr uint32_t bufferType         = 0x0101014e;
-        constexpr uint32_t selectAllOnFocus   = 0x0101015e;
+        constexpr uint32_t lineHeight        = 0x0101057f;
+        constexpr uint32_t firstBaselineToTopHeight = 0x0101057d;
+        constexpr uint32_t lastBaselineToBottomHeight = 0x0101057e;
+        constexpr uint32_t marqueeRepeatLimit= 0x0101021d;
+        constexpr uint32_t inputType         = 0x01010220;
+        constexpr uint32_t allowUndo         = 0x010104df;
+        constexpr uint32_t imeOptions        = 0x01010264;
+        constexpr uint32_t privateImeOptions = 0x01010223;
+        constexpr uint32_t imeActionLabel    = 0x01010265;
+        constexpr uint32_t imeActionId       = 0x01010266;
+        constexpr uint32_t editorExtras      = 0x01010224;
+        constexpr uint32_t textSelectHandleLeft = 0x010102c5;
+        constexpr uint32_t textSelectHandleRight= 0x010102c6;
+        constexpr uint32_t textSelectHandle  = 0x010102c7;
+        // textEdit* paste/suggestion-window layouts (IME): present for index parity
+        // with AOSP; CDROID's IME/InputConnection is out of scope (DEFERRED).
+        constexpr uint32_t textEditPasteWindowLayout = 0x01010314;
+        constexpr uint32_t textEditNoPasteWindowLayout = 0x01010315;
+        constexpr uint32_t textEditSidePasteWindowLayout = 0x0101035e;
+        constexpr uint32_t textEditSideNoPasteWindowLayout = 0x0101035f;
+        constexpr uint32_t textEditSuggestionItemLayout = 0x01010374;
+        constexpr uint32_t textEditSuggestionContainerLayout = 0x01120109; // attr-private
+        constexpr uint32_t textEditSuggestionHighlightStyle = 0x0112010a;  // attr-private
+        constexpr uint32_t textCursorDrawable = 0x01010362;
         constexpr uint32_t textIsSelectable   = 0x01010316;
-        constexpr uint32_t editable           = 0x0101016b;
-        constexpr uint32_t password           = 0x0101015c;
-        constexpr uint32_t imeOptions         = 0x01010264;
-        constexpr uint32_t editorExtras       = 0x01010224;
-        constexpr uint32_t autoLink           = 0x010100b0;
-        constexpr uint32_t linksClickable     = 0x010100b1;
+        constexpr uint32_t textAllCaps        = 0x0101038c;
+        constexpr uint32_t elegantTextHeight  = 0x0101045d;
+        constexpr uint32_t fallbackLineSpacing= 0x0101057b;
+        constexpr uint32_t letterSpacing      = 0x010104b6;
+        constexpr uint32_t fontFeatureSettings= 0x010104b7;
+        constexpr uint32_t fontVariationSettings = 0x01010570;
+        constexpr uint32_t breakStrategy      = 0x010104dd;
+        constexpr uint32_t hyphenationFrequency = 0x010104de;
+        constexpr uint32_t lineBreakStyle     = 0x0101066e;
+        constexpr uint32_t lineBreakWordStyle = 0x0101066f;
+        constexpr uint32_t autoSizeTextType   = 0x01010535;
+        constexpr uint32_t autoSizeStepGranularity = 0x01010536;
+        constexpr uint32_t autoSizePresetSizes= 0x01010537;
+        constexpr uint32_t autoSizeMinTextSize= 0x01010538;
+        constexpr uint32_t autoSizeMaxTextSize= 0x01010546;
+        constexpr uint32_t justificationMode  = 0x01010567;
+        constexpr uint32_t useBoundsForWidth  = 0x01010698;
+        constexpr uint32_t shiftDrawingOffsetForStartOverhang = 0x010106a2;
+        constexpr uint32_t useLocalePreferredLineHeightForMinimum = 0x0101069d;
     }
+    // <declare-styleable name="ProgressBar"> from AOSP attrs.xml, canonical order.
     namespace ProgressBar {
-        constexpr uint32_t max                = 0x01010136;
-        constexpr uint32_t progress           = 0x01010137;
-        constexpr uint32_t secondaryProgress  = 0x01010138;
-        constexpr uint32_t indeterminate      = 0x01010139;
-        constexpr uint32_t indeterminateOnly  = 0x0101013a;
-        constexpr uint32_t indeterminateDrawable = 0x0101013b;
-        constexpr uint32_t progressDrawable   = 0x0101013c;
-        constexpr uint32_t indeterminateDuration = 0x0101013d;
-        constexpr uint32_t indeterminateBehavior = 0x0101013e;
-        constexpr uint32_t progressTint       = 0x01010463;
-        constexpr uint32_t progressTintMode   = 0x01010464;
-        constexpr uint32_t indeterminateTint  = 0x01010469;
-        constexpr uint32_t indeterminateTintMode = 0x0101046a;
-        constexpr uint32_t progressBarStyle   = 0x01010077;
-        constexpr uint32_t progressBarPadding = 0x01010319;
+        constexpr uint32_t min                     = 0x01010539;
+        constexpr uint32_t max                     = 0x01010136;
+        constexpr uint32_t progress                = 0x01010137;
+        constexpr uint32_t secondaryProgress       = 0x01010138;
+        constexpr uint32_t indeterminate           = 0x01010139;
+        constexpr uint32_t indeterminateOnly       = 0x0101013a;
+        constexpr uint32_t indeterminateDrawable   = 0x0101013b;
+        constexpr uint32_t progressDrawable        = 0x0101013c;
+        constexpr uint32_t indeterminateDuration   = 0x0101013d;
+        constexpr uint32_t indeterminateBehavior   = 0x0101013e;
+        constexpr uint32_t minWidth                = 0x0101013f;
+        constexpr uint32_t maxWidth                = 0x0101011f;
+        constexpr uint32_t minHeight               = 0x01010140;
+        constexpr uint32_t maxHeight               = 0x01010120;
+        constexpr uint32_t interpolator            = 0x01010141;
+        constexpr uint32_t animationResolution     = 0x0101031a;
+        constexpr uint32_t mirrorForRtl            = 0x010103ce;
+        constexpr uint32_t progressTint            = 0x01010463;
+        constexpr uint32_t progressTintMode        = 0x01010464;
+        constexpr uint32_t progressBackgroundTint  = 0x01010465;
+        constexpr uint32_t progressBackgroundTintMode = 0x01010466;
+        constexpr uint32_t secondaryProgressTint   = 0x01010467;
+        constexpr uint32_t secondaryProgressTintMode = 0x01010468;
+        constexpr uint32_t indeterminateTint       = 0x01010469;
+        constexpr uint32_t indeterminateTintMode   = 0x0101046a;
+        constexpr uint32_t backgroundTint          = 0x0101046b;
+        constexpr uint32_t backgroundTintMode      = 0x0101046c;
     }
     namespace CompoundButton {
         constexpr uint32_t checked            = 0x01010106;
         constexpr uint32_t button             = 0x01010107;
     }
+    // <declare-styleable name="Switch"> from AOSP attrs.xml, canonical order.
     namespace Switch {
-        constexpr uint32_t thumb              = 0x01010142;
-        constexpr uint32_t switchTextAppearance = 0x0101036e;
-        constexpr uint32_t switchTextOn       = 0x0101036b;
-        constexpr uint32_t switchTextOff      = 0x0101036c;
-        constexpr uint32_t showText           = 0x010104ad;
-        constexpr uint32_t splitTrack         = 0x0101044c;
-        constexpr uint32_t thumbTint          = 0x01010471;
-        constexpr uint32_t thumbTintMode      = 0x01010472;
+        constexpr uint32_t thumb                = 0x01010142;
+        constexpr uint32_t thumbTint           = 0x01010471;
+        constexpr uint32_t thumbTintMode       = 0x01010472;
+        constexpr uint32_t track               = 0x0101036f;
+        constexpr uint32_t trackTint           = 0x010104d9;
+        constexpr uint32_t trackTintMode       = 0x010104da;
+        constexpr uint32_t textOn              = 0x01010124;
+        constexpr uint32_t textOff             = 0x01010125;
+        constexpr uint32_t thumbTextPadding    = 0x01010372;
+        constexpr uint32_t switchTextAppearance= 0x0101036e;
+        constexpr uint32_t switchMinWidth      = 0x01010370;
+        constexpr uint32_t switchPadding       = 0x01010371;
+        constexpr uint32_t splitTrack          = 0x0101044c;
+        constexpr uint32_t showText            = 0x010104ad;
+    }
+    // Attrs read by each widget's ctor (IDs from aapt2 dump resources). Several IDs
+    // are shared across widgets (e.g. textOn/textOff, disabledAlpha, splitTrack) —
+    // each widget keeps its own namespace for readability.
+    namespace SeekBar {
+        constexpr uint32_t thumb            = 0x01010142;
+        constexpr uint32_t thumbOffset      = 0x01010143;
+        constexpr uint32_t splitTrack       = 0x0101044c;
+        constexpr uint32_t disabledAlpha    = 0x01010033;
+        constexpr uint32_t thumbTint        = 0x01010471;
+        constexpr uint32_t tickMark         = 0x0101050a;
+        constexpr uint32_t tickMarkTint     = 0x0101050b;
+    }
+    namespace ToggleButton {
+        constexpr uint32_t textOn           = 0x01010124;
+        constexpr uint32_t textOff          = 0x01010125;
+        constexpr uint32_t disabledAlpha    = 0x01010033;
+    }
+    namespace CheckedTextView {
+        constexpr uint32_t checked          = 0x01010106;
+        constexpr uint32_t checkMark        = 0x01010108;
+        constexpr uint32_t checkMarkTint    = 0x010104a7;
+        constexpr uint32_t checkMarkTintMode= 0x010104a8;
+    }
+    namespace ListView {
+        constexpr uint32_t divider              = 0x01010129;
+        constexpr uint32_t dividerHeight        = 0x0101012a;
+        constexpr uint32_t headerDividersEnabled= 0x0101022e;
+        constexpr uint32_t footerDividersEnabled= 0x0101022f;
+        constexpr uint32_t overScrollHeader     = 0x010102c2;
+        constexpr uint32_t overScrollFooter     = 0x010102c3;
+    }
+    namespace RadioGroup {
+        constexpr uint32_t checkedButton        = 0x01010148;
+    }
+    namespace NestedScrollView {
+        constexpr uint32_t fillViewport         = 0x0101017a;
+    }
+    namespace AdapterViewAnimator {
+        constexpr uint32_t inAnimation          = 0x01010177;
+        constexpr uint32_t outAnimation         = 0x01010178;
+        constexpr uint32_t animateFirstView     = 0x010102d5;
+        constexpr uint32_t loopViews            = 0x01010307;
     }
 }
 
@@ -271,6 +432,106 @@ namespace styleable {
     }
     namespace FrameLayout {
         enum { measureAllChildren, foreground, foregroundInsidePadding, COUNT };
+        extern const uint32_t IDS[];
+    }
+    // Mirrors AOSP <declare-styleable name="TextView"> index-for-index (106 attrs).
+    // Enum names are positional — keep order identical to fw_attr::TextView above.
+    namespace TextView {
+        enum {
+            bufferType, text, hint, textColor, textColorHighlight,
+            searchResultHighlightColor, focusedSearchResultHighlightColor,
+            textColorHint, textAppearance, textSize, textScaleX, typeface, textStyle,
+            textFontWeight, fontFamily, textLocale, textColorLink, cursorVisible,
+            maxLines, maxHeight, lines, height, minLines, minHeight,
+            maxEms, maxWidth, ems, width, minEms, minWidth,
+            gravity, scrollHorizontally, password, singleLine, enabled,
+            selectAllOnFocus, includeFontPadding, maxLength,
+            shadowColor, shadowDx, shadowDy, shadowRadius,
+            autoLink, linksClickable, numeric, digits, phoneNumber, inputMethod,
+            capitalize, autoText, editable, freezesText, ellipsize,
+            drawableTop, drawableBottom, drawableLeft, drawableRight,
+            drawableStart, drawableEnd, drawablePadding, drawableTint, drawableTintMode,
+            lineSpacingExtra, lineSpacingMultiplier, lineHeight,
+            firstBaselineToTopHeight, lastBaselineToBottomHeight, marqueeRepeatLimit,
+            inputType, allowUndo, imeOptions, privateImeOptions,
+            imeActionLabel, imeActionId, editorExtras,
+            textSelectHandleLeft, textSelectHandleRight, textSelectHandle,
+            textEditPasteWindowLayout, textEditNoPasteWindowLayout,
+            textEditSidePasteWindowLayout, textEditSideNoPasteWindowLayout,
+            textEditSuggestionItemLayout, textEditSuggestionContainerLayout,
+            textEditSuggestionHighlightStyle,
+            textCursorDrawable, textIsSelectable, textAllCaps,
+            elegantTextHeight, fallbackLineSpacing, letterSpacing,
+            fontFeatureSettings, fontVariationSettings,
+            breakStrategy, hyphenationFrequency, lineBreakStyle, lineBreakWordStyle,
+            autoSizeTextType, autoSizeStepGranularity, autoSizePresetSizes,
+            autoSizeMinTextSize, autoSizeMaxTextSize,
+            justificationMode, useBoundsForWidth,
+            shiftDrawingOffsetForStartOverhang,
+            useLocalePreferredLineHeightForMinimum,
+            COUNT
+        };
+        extern const uint32_t IDS[];
+    }
+    // Mirrors AOSP <declare-styleable name="ProgressBar"> (27 attrs).
+    namespace ProgressBar {
+        enum {
+            min, max, progress, secondaryProgress,
+            indeterminate, indeterminateOnly,
+            indeterminateDrawable, progressDrawable,
+            indeterminateDuration, indeterminateBehavior,
+            minWidth, maxWidth, minHeight, maxHeight,
+            interpolator, animationResolution, mirrorForRtl,
+            progressTint, progressTintMode,
+            progressBackgroundTint, progressBackgroundTintMode,
+            secondaryProgressTint, secondaryProgressTintMode,
+            indeterminateTint, indeterminateTintMode,
+            backgroundTint, backgroundTintMode,
+            COUNT
+        };
+        extern const uint32_t IDS[];
+    }
+    // Mirrors AOSP <declare-styleable name="Switch"> (14 attrs).
+    namespace Switch {
+        enum {
+            thumb, thumbTint, thumbTintMode,
+            track, trackTint, trackTintMode,
+            textOn, textOff,
+            thumbTextPadding, switchTextAppearance,
+            switchMinWidth, switchPadding,
+            splitTrack, showText,
+            COUNT
+        };
+        extern const uint32_t IDS[];
+    }
+    namespace SeekBar {
+        enum { thumb, thumbOffset, splitTrack, disabledAlpha,
+               thumbTint, tickMark, tickMarkTint, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace ToggleButton {
+        enum { textOn, textOff, disabledAlpha, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace CheckedTextView {
+        enum { checked, checkMark, checkMarkTint, checkMarkTintMode, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace ListView {
+        enum { divider, dividerHeight, headerDividersEnabled,
+               footerDividersEnabled, overScrollHeader, overScrollFooter, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace RadioGroup {
+        enum { checkedButton, orientation, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace NestedScrollView {
+        enum { fillViewport, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace AdapterViewAnimator {
+        enum { inAnimation, outAnimation, animateFirstView, loopViews, COUNT };
         extern const uint32_t IDS[];
     }
 }

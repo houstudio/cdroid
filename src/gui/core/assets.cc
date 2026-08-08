@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <assets.h>
+#include <core/typedarray.h>   // TypedArray (constructed in obtainStyledAttributesTyped)
 #include <algorithm>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -133,17 +134,7 @@ uint32_t Assets::arscGetIdentifier(const std::string& name, const std::string& t
     return mResTable->getIdentifier(cleanName, type, "");  // any package
 }
 
-// Decode a TYPE_DIMENSION complex value to its float magnitude.
-static float complexToFloat(uint32_t data) {
-    const uint32_t radix = (data >> Res_value::COMPLEX_RADIX_SHIFT) & Res_value::COMPLEX_RADIX_MASK;
-    const uint32_t mantissa = (data >> Res_value::COMPLEX_MANTISSA_SHIFT) & Res_value::COMPLEX_MANTISSA_MASK;
-    switch (radix) {
-        case Res_value::COMPLEX_RADIX_23p0: return (float)(int32_t)mantissa;
-        case Res_value::COMPLEX_RADIX_16p7: return mantissa * (1.0f / (1 << 7));
-        case Res_value::COMPLEX_RADIX_8p15: return mantissa * (1.0f / (1 << 15));
-        default: return mantissa * (1.0f / (1 << 23));
-    }
-}
+// complexToFloat is provided inline by <androidfw/resourcetypes.h>.
 
 // Render a Res_value to the same string form renderTypedValue produces, so a
 // theme-resolved value can flow through the string-based getters. Only the
@@ -1214,33 +1205,5 @@ std::unique_ptr<TypedArray> Assets::obtainStyledAttributesTyped(
                                         mDisplayMetrics.density, this);
 }
 
-// TypedArray high-level getters (implemented here — need Context/Assets).
-Drawable* TypedArray::getDrawable(size_t idx) const {
-    if (!mContext) return nullptr;
-    Assets* a = static_cast<Assets*>(mContext);
-    Res_value v;
-    if (!peekValue(idx, &v)) return nullptr;
-    if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
-        return new ColorDrawable(v.data);
-    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE) {
-        std::string name = a->arscReferenceName(v.data);
-        if (!name.empty()) return a->getDrawable(name);
-    }
-    return nullptr;
-}
-
-ColorStateList* TypedArray::getColorStateList(size_t idx) const {
-    if (!mContext) return nullptr;
-    Assets* a = static_cast<Assets*>(mContext);
-    Res_value v;
-    if (!peekValue(idx, &v)) return nullptr;
-    if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
-        return ColorStateList::valueOf(v.data).get();
-    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE) {
-        std::string name = a->arscReferenceName(v.data);
-        if (!name.empty()) return a->getColorStateList(name).get();
-    }
-    return nullptr;
-}
 }//namespace
 

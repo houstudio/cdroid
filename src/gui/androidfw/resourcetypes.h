@@ -92,6 +92,14 @@ struct ResChunk_header {
     // of any data associated with the chunk. Adding this value to the chunk
     // allows you to completely skip its contents (including any child chunks).
     uint32_t size;
+
+    // Validate this chunk header: headerSize/size sane, 4-byte aligned, in bounds.
+    // Static member so it is owned by the type it validates and shared by every
+    // chunk-loading path (ResStringPool, ResXMLTree in resourcetypes.cc; ResTable
+    // in restable.cc). A static method does not affect the POD layout of this
+    // AOSP-faithful binary struct.
+    static status_t validate_chunk(const ResChunk_header* chunk, size_t minSize,
+                                   const uint8_t* dataEnd, const char* name);
 };
 
 enum {
@@ -329,6 +337,20 @@ struct Res_value {
     // Copies a device-endian Res_value to host-endian (identity on LE host).
     void copyFrom_dtoh(const Res_value& src);
 };
+
+// Decode a Res_value COMPLEX_* (dimension/fraction) payload to its float
+// magnitude. Faithful to AOSP Res_value::complexToFloat. Inline header helper
+// so both androidfw (restable.cc) and the cdroid layer (typedarray.cc) share it.
+inline float complexToFloat(uint32_t data) {
+    const uint32_t radix = (data >> Res_value::COMPLEX_RADIX_SHIFT) & Res_value::COMPLEX_RADIX_MASK;
+    const uint32_t mantissa = (data >> Res_value::COMPLEX_MANTISSA_SHIFT) & Res_value::COMPLEX_MANTISSA_MASK;
+    switch (radix) {
+        case Res_value::COMPLEX_RADIX_23p0: return (float)(int32_t)mantissa;
+        case Res_value::COMPLEX_RADIX_16p7: return mantissa * (1.0f / (1 << 7));
+        case Res_value::COMPLEX_RADIX_8p15: return mantissa * (1.0f / (1 << 15));
+        default:                            return mantissa * (1.0f / (1 << 23));
+    }
+}
 
 // ---------------------------------------------------------------------------
 // ResTable_config — a resource configuration descriptor (port of
@@ -911,225 +933,6 @@ struct ResTable_map {
     Res_value value;
 };
 
-class ResTable {
-public:
-    ResTable();
-    ~ResTable();
-
-    // Load a resources.arsc blob (appAsLib=false). Multiple add() calls
-    // accumulate into one table (multi-package); the blockIndex getResource
-    // returns identifies the owning Header. Returns NO_ERROR / BAD_TYPE.
-    status_t add(const void* data, size_t size, int32_t cookie = -1, bool copyData = false);
-    // Load a blob as a shared library (appAsLib=true): a package built with the
-    // app id (0x7f) is reassigned a runtime id and its self-references are
-    // translated via its DynamicRefTable (the IME / add-on package case).
-    status_t add(const void* data, size_t size, bool appAsLib, int32_t cookie, bool copyData);
-    status_t getError() const;
-    void uninit();
-
-    // Set the request configuration used by getResource() (host-endian; copies).
-    // Returns NO_ERROR (matches AOSP signature).
-    status_t setParameters(const ResTable_config* params);
-    void getParameters(ResTable_config* params) const;
-
-    // The global value string pool of the FIRST loaded arsc (TYPE_STRING values
-    // index into their owning arsc's pool; for the common single-arsc case this
-    // is it). For multi-arsc, resolve via getResource.
-    const ResStringPool& getStringPool() const;
-
-    // Resolve resID to a value for the current parameters. Faithful to AOSP:
-    // returns the owning asset's blockIndex (>= 0) on success, or a negative
-    // error (BAD_INDEX / BAD_VALUE / NAME_NOT_FOUND). `density` (>0) overrides
-    // mParams.density for this call; `outSpecFlags` receives the aggregated
-    // TypeSpec flags; `outConfig` receives the matched variant. A complex (bag)
-    // entry yields BAD_VALUE unless mayBeBag is set (it only silences the log).
-    ssize_t getResource(uint32_t resID, Res_value* outValue, bool mayBeBag = false,
-                        uint16_t density = 0, uint32_t* outSpecFlags = nullptr,
-                        ResTable_config* outConfig = nullptr) const;
-
-    // Follow TYPE_REFERENCE/ATTRIBUTE chains (bounded, count < 20 — matches
-    // AOSP). Returns the final blockIndex (>= 0) or a negative error; on a
-    // reference into a non-resolvable (e.g. style) target, returns the last good
-    // blockIndex and leaves *value as the reference.
-    ssize_t resolveReference(Res_value* value, ssize_t blockIndex,
-                             uint32_t* outLastRef = nullptr,
-                             uint32_t* inoutTypeSpecFlags = nullptr,
-                             ResTable_config* outConfig = nullptr) const;
-
-    // Convenience: resolve a string resource to its UTF-16 text (follows refs).
-    // Returns nullptr if the resource is not a (string-resolvable) string.
-    const char16_t* getResourceString(uint32_t resId, size_t* outLen) const;
-
-    // Read a bag (complex) entry: fills outCount and returns a pointer to the
-    // first ResTable_map (count entries), or nullptr if not a bag / not found.
-    const ResTable_map* getBag(uint32_t resId, size_t* outCount,
-                               ResTable_config* outConfig = nullptr,
-                               ssize_t* outBlock = nullptr,
-                               uint32_t* outSpecFlags = nullptr) const;
-
-    // Look up a package's type/key name pools for diagnostics.
-    bool getResourceName(uint32_t resId, std::string* outPackage,
-                         std::string* outType, std::string* outKey) const;
-
-    // --- AssetManager2 management surface ---
-    // Resolve a resource name to its id (0 if not found). package=="" searches
-    // all packages. e.g. getIdentifier("hello","string","com.example.verify").
-    uint32_t getIdentifier(const std::string& name, const std::string& type,
-                           const std::string& package) const;
-    // Every distinct configuration present in the table (for introspection).
-    void getConfigurations(std::vector<ResTable_config>* out) const;
-    // Names of all loaded packages.
-    std::vector<std::string> listPackageNames() const;
-
-    // Enumerate EVERY existing resource in the table — the runtime equivalent of
-    // dumping the R class from an arsc. For each present entry yields its id
-    // (0xpptteeee), type name and key name. Returns the count.
-    struct ResourceRef {
-        uint32_t    resId;
-        uint8_t     packageId;
-        std::string type;
-        std::string key;
-    };
-    size_t listAllResources(std::vector<ResourceRef>* out) const;
-
-    // Style parent resource id of a bag (style) entry, or 0 if none / not a bag.
-    uint32_t getBagParent(uint32_t resId, ResTable_config* outConfig = nullptr) const;
-
-    // A Theme holds a set of applied styles; attributes resolve against it (with
-    // parent inheritance + force/TYPE_NULL override semantics). Port of AOSP
-    // ResTable::Theme, minus the per-type bag_set locking cache (a plain map is
-    // semantically equivalent). applyStyle follows the style's parent chain so a
-    // child style overrides its parent.
-    class Theme {
-    public:
-        explicit Theme(const ResTable& table);
-        ~Theme();
-
-        const ResTable& getResTable() const { return mTable; }
-
-        status_t applyStyle(uint32_t resID, bool force = false);
-        status_t setTo(const Theme& other);
-        status_t clear();
-
-        // Retrieve a themed attribute. Returns the owning-asset blockIndex (>= 0)
-        // and fills outValue, or a negative error if not set. Does NOT follow
-        // references — call resolveAttributeReference() for that.
-        ssize_t getAttribute(uint32_t resID, Res_value* outValue,
-                             uint32_t* outTypeSpecFlags = nullptr) const;
-
-        // Like ResTable::resolveReference, but TYPE_ATTRIBUTE is resolved via
-        // this theme (getAttribute) rather than the table.
-        ssize_t resolveAttributeReference(Res_value* inOutValue, ssize_t blockIndex,
-                                         uint32_t* outLastRef = nullptr,
-                                         uint32_t* inoutTypeSpecFlags = nullptr,
-                                         ResTable_config* inoutConfig = nullptr) const;
-
-        // Bit mask of CONFIG_* changes that would impact this theme (so it must
-        // be rebuilt when the configuration changes).
-        uint32_t getChangingConfigurations() const;
-
-    private:
-        const ResTable& mTable;
-        struct ThemedItem {
-            Res_value value;
-            ssize_t   stringBlock;   // owning header index (for string values)
-            uint32_t  typeSpecFlags;
-            bool      set;
-        };
-        std::map<uint32_t, ThemedItem> mEntries;  // attr resID -> item
-        uint32_t mTypeSpecFlags = 0;
-        status_t applyStyleChain(uint32_t resID, bool force, int depth);
-    };
-
-private:
-    // One loaded resources.arsc blob (AOSP Header). Owns its global value string
-    // pool — TYPE_STRING values index into the pool of the arsc they came from.
-    struct Header {
-        int32_t              index = 0;
-        int32_t              cookie = -1;
-        const uint8_t*       data = nullptr;
-        size_t               size = 0;
-        const uint8_t*       dataEnd = nullptr;
-        void*                ownedData = nullptr;  // malloc'd copy when copyData
-        ~Header() { free(ownedData); }
-        Header() = default;
-        Header(Header&& o) noexcept : index(o.index), cookie(o.cookie),
-            data(o.data), size(o.size), dataEnd(o.dataEnd), ownedData(o.ownedData),
-            values(std::move(o.values)) { o.ownedData = nullptr; o.data = nullptr; }
-        Header& operator=(Header&& o) noexcept {
-            if (this != &o) {
-                free(ownedData);
-                index = o.index; cookie = o.cookie; data = o.data; size = o.size;
-                dataEnd = o.dataEnd; ownedData = o.ownedData; values = std::move(o.values);
-                o.ownedData = nullptr; o.data = nullptr;
-            }
-            return *this;
-        }
-        ResStringPool        values;      // this arsc's global value string pool
-    };
-    // A config variant group for one type id (from a TypeSpec + its type chunks).
-    struct TypeGroup {
-        uint32_t             entryCount = 0;
-        const uint32_t*      specFlags = nullptr;
-        std::vector<const ResTable_type*> configs;
-    };
-    // One ResTable_package chunk (AOSP Package). Belongs to a Header + a
-    // (runtime) id; carries its DynamicRefTable for build->runtime id translation.
-    struct Package {
-        size_t               headerIndex = 0;  // index into mHeaders (NOT a pointer:
-                                               // mHeaders reallocs on each add())
-        uint8_t              id = 0;          // RUNTIME package id
-        uint8_t              buildId = 0;     // id as declared in the arsc
-        bool                 isDynamic = false;
-        std::string          name;            // package name (UTF-8)
-        DynamicRefTable      dynamicRefTable;
-        ResStringPool        typeStrings;
-        ResStringPool        keyStrings;
-        std::vector<TypeGroup> types;         // indexed [typeId - 1]
-    };
-
-    // addInternal mirrors AOSP: appAsLib makes an app-id (0x7f) package be
-    // reassigned a runtime id (shared-library / IME / add-on package case).
-    status_t addInternal(const void* data, size_t size, bool appAsLib,
-                         int32_t cookie, bool copyData);
-    status_t parsePackage(const ResTable_package* pkg, Header* header,
-                          bool appAsLib, uint8_t* outRuntimeId);
-    Package* packageForId(uint32_t pkgId);
-    const Package* packageForId(uint32_t pkgId) const;
-    // Core selection (mirrors AOSP getEntry): over configs of (typeId) pick the
-    // one matching `desired` that isBetterThan the rest. Fills outEntry.
-    const ResTable_entry* getBestEntry(const Package& pkg, uint8_t typeId, uint32_t entryId,
-                                       const ResTable_config& desired,
-                                       ResTable_config* outConfig,
-                                       uint32_t* outSpecFlags) const;
-    // First present entry for (typeId, entryId) across any config (for enumeration).
-    const ResTable_entry* anyEntry(const Package& pkg, uint8_t typeId, uint32_t entryId) const;
-    // Decode a string-pool entry to UTF-8 regardless of pool encoding.
-    static std::string poolString(const ResStringPool& pool, uint32_t idx);
-    // Find a string index in a pool by content (linear).
-    static int32_t poolIndexOf(const ResStringPool& pool, const std::string& needle);
-
-    status_t              mError;
-    int32_t               mCookie;
-    std::vector<Header>   mHeaders;
-    std::vector<Package>  mPackages;  // Package holds ResStringPool with raw
-                                      // pointers into mHeaders[x].owned; mHeaders
-                                      // MUST NOT reallocate after Packages are parsed
-                                      // (use reserve or unique_ptr if multi-add needed)
-    std::vector<int>      mPackageMap;     // runtime package id -> index+1 into mPackages
-    uint8_t               mNextPackageId;  // next runtime id for dynamic packages (starts at 2)
-    ResTable_config       mParams;         // current request config (host-endian)
-};
-
-// ---------------------------------------------------------------------------
-// Full attribute resolution (AssetManager.applyStyle merge) + TypedArray.
-// obtainStyledAttributes resolves each attr in a styleable set through the
-// Android priority chain: the XML element's own value, then the element's
-// style=, then defStyleAttr (via the theme), then defStyleRes, then the theme's
-// direct value. TypedArray is the typed getter view over the result (indexed by
-// position in the attrs[] array), matching the Android TypedArray shape.
-// ---------------------------------------------------------------------------
-
 // One resolved attribute. stringBlock is the owning header index for TYPE_STRING
 // values sourced from a style/theme (element-sourced strings use the AXML pool).
 struct StyledAttr {
@@ -1137,71 +940,6 @@ struct StyledAttr {
     ssize_t   stringBlock;
     bool      set;
 };
-
-void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
-                            const ResTable::Theme* theme,
-                            const uint32_t* attrs, size_t attrCount,
-                            uint32_t defStyleAttr, uint32_t defStyleRes,
-                            StyledAttr* out);
-
-class TypedArray {
-public:
-    // Non-owning (StyledAttr* must outlive this TypedArray).
-    TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
-               const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
-               void* ctx = nullptr)
-        : mTable(table), mVals(vals), mCount(count), mXml(xmlSrc),
-          mDensity(density), mContext(ctx) {}
-    // Owning (StyledAttr vector moved in; mVals points into mOwned).
-    TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
-               const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
-               void* ctx = nullptr)
-        : mTable(table), mOwned(std::move(vals)),
-          mVals(mOwned.data()), mCount(mOwned.size()),
-          mXml(xmlSrc), mDensity(density), mContext(ctx) {}
-    size_t size() const { return mCount; }
-    bool hasValue(size_t idx) const { return idx < mCount && mVals[idx].set; }
-    bool hasValueOrEmpty(size_t idx) const;
-    // AOSP TypedArray pattern: iterate only over SET indices (not all COUNT).
-    size_t getIndexCount() const;
-    size_t getIndex(size_t n) const;  // nth set index (0..getIndexCount()-1)
-
-    // Typed value getters (low-level; aligned with Android.util.TypedArray).
-    int32_t  getInt(size_t idx, int32_t def) const;
-    int32_t  getInteger(size_t idx, int32_t def) const;  // Android alias of getInt
-    bool     getBoolean(size_t idx, bool def) const;
-    float    getFloat(size_t idx, float def) const;
-    uint32_t getColor(size_t idx, uint32_t def) const;
-    float    getDimension(size_t idx, float def) const;
-    int32_t  getDimensionPixelOffset(size_t idx, int32_t def) const;
-    int32_t  getDimensionPixelSize(size_t idx, int32_t def) const;
-    int32_t  getLayoutDimension(size_t idx, int32_t def) const;
-    float    getFraction(size_t idx, int base, int pbase, float def) const;
-    uint32_t getResourceId(size_t idx, uint32_t def) const;
-    std::string getString(size_t idx) const;
-    std::string getText(size_t idx) const;     // alias of getString for now
-    int       getType(size_t idx) const;        // Res_value dataType, or -1
-    bool      peekValue(size_t idx, Res_value* out) const;
-    // High-level resource access (needs Context — passed as void* to keep
-    // androidfw independent of cdroid::Context; cast in the .cc).
-    // Return raw pointers; caller wraps in RefPtr as needed.
-    class Drawable* getDrawable(size_t idx) const;
-    class ColorStateList* getColorStateList(size_t idx) const;
-private:
-    bool get(size_t idx, Res_value* v) const {
-        if (!hasValue(idx)) return false;
-        *v = mVals[idx].value;
-        return true;
-    }
-    const ResTable&         mTable;
-    std::vector<StyledAttr> mOwned;  // empty for non-owning mode
-    const StyledAttr*       mVals;
-    size_t                  mCount;
-    const ResXMLTree*       mXml;
-    float                   mDensity;
-    void*                   mContext; // cdroid::Context* (opaque to androidfw)
-};
-
 } // namespace cdroid
 
 #endif // __CDROID_ANDROIDFW_RESOURCETYPES_H

@@ -1,4 +1,6 @@
 #include <widget/radiogroup.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <widget/radiobutton.h>
 #include <porting/cdlog.h>
 #include <utils/textutils.h>
@@ -15,12 +17,18 @@ RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
 RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
     :LinearLayout(context,attrs){
     init();
-    const int value = attrs.getResourceId("checkedButton",View::NO_ID);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::RadioGroup::IDS, styleable::RadioGroup::COUNT) : nullptr;
+    namespace SRG = styleable::RadioGroup;
+
+    const int value = ta&&ta->hasValue(SRG::checkedButton) ? (int)ta->getResourceId(SRG::checkedButton,(uint32_t)View::NO_ID) : attrs.getResourceId("checkedButton",View::NO_ID);
     if(value!=View::NO_ID){
         mCheckedId = value;
         mInitialCheckedId = value;
     }
-    const int index = attrs.getInt("orientation",std::unordered_map<std::string,int>{
+    const int index = ta&&ta->hasValue(SRG::orientation) ? ta->getInt(SRG::orientation,VERTICAL) : attrs.getInt("orientation",std::unordered_map<std::string,int>{
              {"horizontal",HORIZONTAL},
              {"vertical",VERTICAL} },VERTICAL);
     setOrientation(index);

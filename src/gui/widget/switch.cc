@@ -1,4 +1,6 @@
 #include <widget/switch.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <utils/mathutils.h>
 #include <text/textutils.h>
 #include <view/viewgroup.h>
@@ -15,21 +17,27 @@ Switch::Switch(int w,int h):CompoundButton(std::string(),w,h){
 Switch::Switch(Context* context,const AttributeSet& a)
   :CompoundButton(context,a){
     init();
-    mThumbDrawable = a.getDrawable("thumb");
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        a, styleable::Switch::IDS, styleable::Switch::COUNT) : nullptr;
+    namespace SW = styleable::Switch;
+
+    mThumbDrawable = ta&&ta->hasValue(SW::thumb) ? ta->getDrawable(SW::thumb) : a.getDrawable("thumb");
     if (mThumbDrawable) {
         mThumbDrawable->setCallback(this);
     }
-    mTrackDrawable = a.getDrawable("track");
+    mTrackDrawable = ta&&ta->hasValue(SW::track) ? ta->getDrawable(SW::track) : a.getDrawable("track");
     if (mTrackDrawable) {
         mTrackDrawable->setCallback(this);
     }
-    mTextOn = a.getString("textOn");
-    mTextOff = a.getString("textOff");
-    mShowText = a.getBoolean("showText", true);
-    mThumbTextPadding = a.getDimensionPixelSize("thumbTextPadding", 0);
-    mSwitchMinWidth = a.getDimensionPixelSize("switchMinWidth", 0);
-    mSwitchPadding = a.getDimensionPixelSize("switchPadding", 0);
-    mSplitTrack = a.getBoolean("splitTrack", false);
+    mTextOn = ta&&ta->hasValue(SW::textOn) ? ta->getString(SW::textOn) : a.getString("textOn");
+    mTextOff = ta&&ta->hasValue(SW::textOff) ? ta->getString(SW::textOff) : a.getString("textOff");
+    mShowText = ta&&ta->hasValue(SW::showText) ? ta->getBoolean(SW::showText, true) : a.getBoolean("showText", true);
+    mThumbTextPadding = ta&&ta->hasValue(SW::thumbTextPadding) ? ta->getDimensionPixelSize(SW::thumbTextPadding, 0) : a.getDimensionPixelSize("thumbTextPadding", 0);
+    mSwitchMinWidth = ta&&ta->hasValue(SW::switchMinWidth) ? ta->getDimensionPixelSize(SW::switchMinWidth, 0) : a.getDimensionPixelSize("switchMinWidth", 0);
+    mSwitchPadding = ta&&ta->hasValue(SW::switchPadding) ? ta->getDimensionPixelSize(SW::switchPadding, 0) : a.getDimensionPixelSize("switchPadding", 0);
+    mSplitTrack = ta&&ta->hasValue(SW::splitTrack) ? ta->getBoolean(SW::splitTrack, false) : a.getBoolean("splitTrack", false);
 
     mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
 
@@ -57,7 +65,7 @@ Switch::Switch(Context* context,const AttributeSet& a)
         applyTrackTint();
     }
 
-    const std::string appearance = a.getString("switchTextAppearance");
+    const std::string appearance = ta&&ta->hasValue(SW::switchTextAppearance) ? ta->getString(SW::switchTextAppearance) : a.getString("switchTextAppearance");
     if (!appearance.empty()){
         setSwitchTextAppearance(context, appearance);
     }

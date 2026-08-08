@@ -14,7 +14,8 @@
 project(androidfw CXX)
 
 set(ANDROIDFW_SOURCES
-    resourcetypes.cc
+    resourcetypes.cc        # foundational binary-format types + ResStringPool/ResXMLTree/ResTable_config
+    restable.cc             # ResTable engine (arsc load/getResource) + obtainStyledAttributes
     LocaleData.cpp          # vendored locale matching engine (CLDR tables)
 )
 

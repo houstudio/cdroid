@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/togglebutton.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <cdlog.h>
 #include <widget/R.h>
 
@@ -27,9 +29,15 @@ DECLARE_WIDGET2(ToggleButton,"cdroid:attr/buttonStyleToggle")
 ToggleButton::ToggleButton(Context*ctx,const AttributeSet& attrs)
   :CompoundButton(ctx,attrs){
     mIndicatorDrawable=nullptr;
-    setTextOn(ctx->getString(attrs.getString("textOn")));
-    setTextOff(ctx->getString(attrs.getString("textOff")));
-    mDisabledAlpha=attrs.getFloat("disabledAlpha",0.5f);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::ToggleButton::IDS, styleable::ToggleButton::COUNT) : nullptr;
+    namespace STB = styleable::ToggleButton;
+
+    setTextOn(ctx->getString(ta&&ta->hasValue(STB::textOn) ? ta->getString(STB::textOn) : attrs.getString("textOn")));
+    setTextOff(ctx->getString(ta&&ta->hasValue(STB::textOff) ? ta->getString(STB::textOff) : attrs.getString("textOff")));
+    mDisabledAlpha= ta&&ta->hasValue(STB::disabledAlpha) ? ta->getFloat(STB::disabledAlpha,0.5f) : attrs.getFloat("disabledAlpha",0.5f);
 }
 
 ToggleButton::ToggleButton(int w,int h):CompoundButton(std::string(),w,h){

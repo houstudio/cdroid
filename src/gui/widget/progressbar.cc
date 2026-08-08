@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/progressbar.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/objectanimator.h>
 #include <utils/mathutils.h>
@@ -72,7 +74,13 @@ DECLARE_WIDGET(ProgressBar)
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initProgressBar();
-    Drawable* progressDrawable = attrs.getDrawable("progressDrawable");
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::ProgressBar::IDS, styleable::ProgressBar::COUNT) : nullptr;
+    namespace SPB = styleable::ProgressBar;
+
+    Drawable* progressDrawable = ta&&ta->hasValue(SPB::progressDrawable) ? ta->getDrawable(SPB::progressDrawable) : attrs.getDrawable("progressDrawable");
     if(progressDrawable){
         if(needsTileify(progressDrawable))
             setProgressDrawableTiled(progressDrawable);
@@ -80,7 +88,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
             setProgressDrawable(progressDrawable);
     }
 
-    Drawable* indeterminateDrawable = attrs.getDrawable("indeterminateDrawable");
+    Drawable* indeterminateDrawable = ta&&ta->hasValue(SPB::indeterminateDrawable) ? ta->getDrawable(SPB::indeterminateDrawable) : attrs.getDrawable("indeterminateDrawable");
     if(indeterminateDrawable){
         if(needsTileify(indeterminateDrawable))
             setIndeterminateDrawableTiled(indeterminateDrawable);
@@ -88,25 +96,25 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
             setIndeterminateDrawable(indeterminateDrawable);
     }
 
-    mDuration = attrs.getInt("indeterminateDuration",mDuration);
-    mMinWidth = attrs.getDimensionPixelSize("minWidth", mMinWidth);
-    mMaxWidth = attrs.getDimensionPixelSize("maxWidth", mMaxWidth);
-    mMinHeight= attrs.getDimensionPixelSize("minHeight", mMinHeight);
-    mMaxHeight= attrs.getDimensionPixelSize("maxHeight", mMaxHeight);
-    mBehavior = attrs.getInt("inteterminateBehavior",std::unordered_map<std::string,int>{
+    mDuration = ta&&ta->hasValue(SPB::indeterminateDuration) ? ta->getInt(SPB::indeterminateDuration,mDuration) : attrs.getInt("indeterminateDuration",mDuration);
+    mMinWidth = ta&&ta->hasValue(SPB::minWidth) ? ta->getDimensionPixelSize(SPB::minWidth, mMinWidth) : attrs.getDimensionPixelSize("minWidth", mMinWidth);
+    mMaxWidth = ta&&ta->hasValue(SPB::maxWidth) ? ta->getDimensionPixelSize(SPB::maxWidth, mMaxWidth) : attrs.getDimensionPixelSize("maxWidth", mMaxWidth);
+    mMinHeight= ta&&ta->hasValue(SPB::minHeight) ? ta->getDimensionPixelSize(SPB::minHeight, mMinHeight) : attrs.getDimensionPixelSize("minHeight", mMinHeight);
+    mMaxHeight= ta&&ta->hasValue(SPB::maxHeight) ? ta->getDimensionPixelSize(SPB::maxHeight, mMaxHeight) : attrs.getDimensionPixelSize("maxHeight", mMaxHeight);
+    mBehavior = ta&&ta->hasValue(SPB::indeterminateBehavior) ? ta->getInt(SPB::indeterminateBehavior,mBehavior) : attrs.getInt("inteterminateBehavior",std::unordered_map<std::string,int>{
        {"none",0},{"repeat",(int)Animation::RESTART},{"cycle",(int)Animation::INFINITE} },mBehavior);
 
-    mOnlyIndeterminate=attrs.getBoolean("indeterminateOnly",mOnlyIndeterminate);
+    mOnlyIndeterminate= (ta&&ta->hasValue(SPB::indeterminateOnly) ? ta->getBoolean(SPB::indeterminateOnly,mOnlyIndeterminate) : attrs.getBoolean("indeterminateOnly",mOnlyIndeterminate));
     mNoInvalidate = false;
-    setIndeterminate(mOnlyIndeterminate||attrs.getBoolean("indeterminate",mIndeterminate));
+    setIndeterminate(mOnlyIndeterminate|| (ta&&ta->hasValue(SPB::indeterminate) ? ta->getBoolean(SPB::indeterminate,mIndeterminate) : attrs.getBoolean("indeterminate",mIndeterminate)));
 
-    mMirrorForRtl = attrs.getBoolean("mirrorForRtl",false); 
+    mMirrorForRtl = ta&&ta->hasValue(SPB::mirrorForRtl) ? ta->getBoolean(SPB::mirrorForRtl,false) : attrs.getBoolean("mirrorForRtl",false);
 
-    setMin(attrs.getInt("min",mMin));
-    setMax(attrs.getInt("max",mMax));
+    setMin(ta&&ta->hasValue(SPB::min) ? ta->getInt(SPB::min,mMin) : attrs.getInt("min",mMin));
+    setMax(ta&&ta->hasValue(SPB::max) ? ta->getInt(SPB::max,mMax) : attrs.getInt("max",mMax));
 
-    setProgress(attrs.getInt("progress",mProgress));
-    setSecondaryProgress(attrs.getInt("secondaryProgress",mSecondaryProgress));
+    setProgress(ta&&ta->hasValue(SPB::progress) ? ta->getInt(SPB::progress,mProgress) : attrs.getInt("progress",mProgress));
+    setSecondaryProgress(ta&&ta->hasValue(SPB::secondaryProgress) ? ta->getInt(SPB::secondaryProgress,mSecondaryProgress) : attrs.getInt("secondaryProgress",mSecondaryProgress));
 
     if(attrs.hasAttribute("progressTintMode")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();

@@ -1,31 +1,39 @@
 #include <widget/checkedtextview.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 namespace cdroid{
 
 DECLARE_WIDGET(CheckedTextView)
 
 CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextView(context,a){
-    Drawable* d = context->getDrawable(a.getString("checkMark"));
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        a, styleable::CheckedTextView::IDS, styleable::CheckedTextView::COUNT) : nullptr;
+    namespace SCT = styleable::CheckedTextView;
+
+    Drawable* d = context->getDrawable(ta&&ta->hasValue(SCT::checkMark) ? ta->getString(SCT::checkMark) : a.getString("checkMark"));
     mCheckMarkDrawable = nullptr;
     mCheckMarkTintList = nullptr;
     mHasCheckMarkTintMode=false;
     mHasCheckMarkTint = false;
     if (d)setCheckMarkDrawable(d);
 
-    if (a.hasAttribute("checkMarkTintMode")) {
+    if ((ta&&ta->hasValue(SCT::checkMarkTintMode)) || a.hasAttribute("checkMarkTintMode")) {
         /* getTintMode decodes the 6-value tintMode enum; the value is valid as a
          * BlendMode (PorterDuff and BlendMode coincide for these 6). */
         mCheckMarkBlendMode = a.getTintMode("checkMarkTintMode", -1);
         mHasCheckMarkTintMode = true;
     }
 
-    if (a.hasAttribute("checkMarkTint")) {
+    if ((ta&&ta->hasValue(SCT::checkMarkTint)) || a.hasAttribute("checkMarkTint")) {
         mCheckMarkTintList = a.getColorStateList("checkMarkTint");
         mHasCheckMarkTint = (mCheckMarkTintList!=nullptr);
     }
     mChecked = false;
     mCheckMarkGravity = a.getGravity("checkMarkGravity", Gravity::END);
 
-    const bool checked = a.getBoolean("checked", false);
+    const bool checked = ta&&ta->hasValue(SCT::checked) ? ta->getBoolean(SCT::checked, false) : a.getBoolean("checked", false);
     setChecked(checked);
     applyCheckMarkTint();
 }
