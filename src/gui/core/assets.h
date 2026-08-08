@@ -102,6 +102,11 @@ public:
     size_t getArray(const std::string&resid,std::vector<std::string>&)override;
     RefPtr<ColorStateList> getColorStateList(const std::string&resid)override;
     AttributeSet obtainStyledAttributes(const std::string&)override;
+    // Phase 2 TypedArray bridge: extract typed attr values from binary AXML.
+    // Returns null for text XML. styleable/count = R.styleable.View[] equivalent.
+    std::unique_ptr<TypedArray> obtainStyledAttributesTyped(
+        const AttributeSet& attrs, const uint32_t* styleable, size_t count,
+        uint32_t defStyleAttr = 0, uint32_t defStyleRes = 0);
 };
 
 }//namespace

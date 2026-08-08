@@ -1146,9 +1146,16 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
 
 class TypedArray {
 public:
+    // Non-owning (StyledAttr* must outlive this TypedArray).
     TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f)
         : mTable(table), mVals(vals), mCount(count), mXml(xmlSrc), mDensity(density) {}
+    // Owning (StyledAttr vector moved in; mVals points into mOwned).
+    TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
+               const ResXMLTree* xmlSrc = nullptr, float density = 1.0f)
+        : mTable(table), mOwned(std::move(vals)),
+          mVals(mOwned.data()), mCount(mOwned.size()),
+          mXml(xmlSrc), mDensity(density) {}
     size_t size() const { return mCount; }
     bool hasValue(size_t idx) const { return idx < mCount && mVals[idx].set; }
     bool hasValueOrEmpty(size_t idx) const;
@@ -1175,11 +1182,12 @@ private:
         *v = mVals[idx].value;
         return true;
     }
-    const ResTable&    mTable;
-    const StyledAttr*  mVals;
-    size_t             mCount;
-    const ResXMLTree*  mXml;     // for element-sourced TYPE_STRING values
-    float              mDensity;
+    const ResTable&         mTable;
+    std::vector<StyledAttr> mOwned;  // empty for non-owning mode
+    const StyledAttr*       mVals;
+    size_t                  mCount;
+    const ResXMLTree*       mXml;
+    float                   mDensity;
 };
 
 } // namespace cdroid

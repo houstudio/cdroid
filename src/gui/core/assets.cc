@@ -1195,5 +1195,23 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
     }
     return atts;
 }
+
+// Phase 2 TypedArray bridge: resolve binary AXML attrs to typed values via
+// androidfw obtainStyledAttributes. Returns null for text XML or no arsc.
+std::unique_ptr<TypedArray> Assets::obtainStyledAttributesTyped(
+    const AttributeSet& attrs, const uint32_t* styleable, size_t count,
+    uint32_t defStyleAttr, uint32_t defStyleRes)
+{
+    if (!mResTable) return nullptr;
+    const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(&attrs);
+    if (!parser || !parser->isBinaryAXML()) return nullptr;
+    const ResXMLTree* xml = static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree());
+    if (!xml) return nullptr;
+    std::vector<StyledAttr> styled(count);
+    cdroid::obtainStyledAttributes(*xml, *mResTable, mArscTheme, styleable, count,
+                                    defStyleAttr, defStyleRes, styled.data());
+    return std::make_unique<TypedArray>(*mResTable, std::move(styled), xml,
+                                        mDisplayMetrics.density);
+}
 }//namespace
 
