@@ -1556,8 +1556,27 @@ ResXMLParser::event_code_t ResXMLParser::nextNode() {
     }
 
     do {
+        static thread_local int sNodeIters = 0;
+        if (++sNodeIters > 100000) {
+            LOGW("nextNode spun >100k iters at offset %d type=0x%x — aborting",
+                 (int)(((const uint8_t*)mCurNode) - ((const uint8_t*)mTree.mHeader)),
+                 (int)dtohs(mCurNode->header.type));
+            mCurNode = nullptr;
+            return (mEventCode = BAD_DOCUMENT);
+        }
+        const uint32_t curSize = dtohl(mCurNode->header.size);
         const ResXMLTree_node* nextNode = (const ResXMLTree_node*)
-            (((const uint8_t*)mCurNode) + dtohl(mCurNode->header.size));
+            (((const uint8_t*)mCurNode) + curSize);
+
+        // Guard against a zero-size (or otherwise non-advancing) node, which
+        // would loop forever re-reading the same node. Seen on self-closing
+        // AXML elements with attributes; fail the document instead of spinning.
+        if (curSize < sizeof(ResChunk_header)) {
+            LOGW("Bad XML node: zero/invalid size %u at offset %d — aborting parse",
+                 curSize, (int)(((const uint8_t*)mCurNode) - ((const uint8_t*)mTree.mHeader)));
+            mCurNode = nullptr;
+            return (mEventCode = BAD_DOCUMENT);
+        }
 
         if (((const uint8_t*)nextNode) >= mTree.mDataEnd) {
             mCurNode = nullptr;

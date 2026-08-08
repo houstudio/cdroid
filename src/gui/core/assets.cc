@@ -93,6 +93,10 @@ uint32_t Assets::arscGetIdentifier(const std::string& name, const std::string& t
     if (!pkg.empty()) {
         uint32_t id = mResTable->getIdentifier(cleanName, type, pkg);
         if (id) return id;
+        // aapt2 forces a dotted package name ("cdroid.<ns>"); try that prefix
+        // before the expensive all-package scan.
+        id = mResTable->getIdentifier(cleanName, type, "cdroid." + pkg);
+        if (id) return id;
     }
     uint32_t id = mResTable->getIdentifier(cleanName, type, "android");
     if (id) return id;

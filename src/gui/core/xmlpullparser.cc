@@ -121,8 +121,10 @@ struct Private{
     // CDROID's pull model doesn't use). Returns false at END_DOCUMENT.
     bool feedFromAxml(const std::string& pkg, Context* ctx){
         if(!axmlTree) return false;
+        size_t iters = 0;
         while(true){
             ResXMLParser::event_code_t ev = axmlTree->next();
+            if(++iters > 200){ LOGE("feedFromAxml spin (iter>200) ev=%d — aborting element", (int)ev); return false; }
             switch(ev){
                 case ResXMLParser::START_TAG:{
                     size_t nl = 0;
