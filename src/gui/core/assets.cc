@@ -489,7 +489,13 @@ int Assets::getId(const std::string&resname)const {
     parseResource(key,&resid,&pkg);
 
     auto it = mIDS.find(pkg+":"+resid);
-    return (it == mIDS.end())?-1:it->second;
+    if(it != mIDS.end()) return it->second;
+    // Fallback: resolve from resources.arsc via ResTable.
+    if (mResTable) {
+        uint32_t id = mResTable->getIdentifier(resid, "id", pkg);
+        if (id != 0) return (int)id;
+    }
+    return -1;
 }
 
 int Assets::getNextAutofillId(){
