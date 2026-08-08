@@ -248,10 +248,11 @@ private:
     uint32_t                    mStringPoolSize;  // element count (uint16_t, or uint8_t for UTF-8)
     const uint32_t*             mStyles;          // style data region
     uint32_t                    mStylePoolSize;   // uint32_t count
-    // No decode cache: AOSP's ResStringPool has none (UTF-8 callers use
-    // string8At for a raw pool pointer). stringAt decodes UTF-8 fresh into a
-    // per-thread buffer on each call — a shared mutable cache raced across
-    // threads (input vs main) and dangled c_str()s.
+    // Lazy per-index UTF-8→UTF-16 decode cache. Per-index storage means
+    // consecutive stringAt() results (e.g. getAttributeName then
+    // getAttributeStringValue) don't overwrite each other. Reserved at setTo
+    // so the vector never reallocs and cached c_str()s stay stable.
+    mutable std::vector<std::u16string> mCache;
 };
 
 // ---------------------------------------------------------------------------

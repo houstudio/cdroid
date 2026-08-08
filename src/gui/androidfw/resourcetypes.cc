@@ -336,6 +336,10 @@ status_t ResStringPool::setTo(const void* data, size_t size, bool copyData) {
         mStylePoolSize = 0;
     }
 
+    // Reserve capacity (no construction) so the lazy UTF-8 decode cache never
+    // reallocates: a realloc would dangle every cached c_str() a caller holds.
+    mCache.reserve(mHeader->stringCount);
+
     return (mError = NO_ERROR);
 }
 
@@ -345,6 +349,7 @@ status_t ResStringPool::getError() const {
 
 void ResStringPool::uninit() {
     mError = NO_INIT;
+    mCache.clear();
     if (mOwnedData) {
         free(mOwnedData);
         mOwnedData = nullptr;
@@ -391,23 +396,20 @@ const char16_t* ResStringPool::stringAt(size_t idx, size_t* outLen) const {
                 size_t u8len = decodeLength(&u8str);  // UTF-8 byte count
 
                 if ((uint32_t)(u8str + u8len - strings) < mStringPoolSize) {
-                    // Decode fresh into a per-thread buffer. AOSP's ResStringPool
-                    // has no shared decode cache (UTF-8 callers use string8At for
-                    // a raw pool pointer); a shared mutable cache races when the
-                    // input thread and main thread resolve resources
-                    // concurrently — a realloc dangles every c_str() a caller
-                    // holds, producing garbage reads. Per-thread storage removes
-                    // the cross-thread race. The buffer is overwritten on the
-                    // next stringAt on the same thread, so callers MUST copy
-                    // before then (poolString / u16toUtf8 all copy immediately).
-                    static thread_local std::u16string tlsBuf;
+                    // Cache hit (per-index). Each index is decoded once and stored
+                    // in mCache, so concurrent stringAt() results (getAttributeName
+                    // + getAttributeStringValue) don't overwrite each other — a
+                    // single shared buffer (thread_local) did overwrite them and
+                    // made attribute names read as their values.
+                    if (idx < mCache.size() && !mCache[idx].empty()) {
+                        if (outLen) *outLen = mCache[idx].size();
+                        return mCache[idx].c_str();
+                    }
 
                     size_t decodedLen = 0;
                     const char* decoded = stringDecodeAt(idx, u8str, u8len, &decodedLen);
                     if (!decoded) return nullptr;
 
-                    // Since AAPT truncated lengths longer than 0x7FFF, check that the
-                    // bits remaining after truncation at least match the actual length.
                     ssize_t actualLen = utf8_to_utf16_length((const uint8_t*)decoded, decodedLen);
                     if (actualLen < 0 || ((size_t)actualLen & 0x7FFFU) != u16len) {
                         LOGW("Bad string block: string #%zu decoded length is not correct %zd vs %zu",
@@ -415,12 +417,13 @@ const char16_t* ResStringPool::stringAt(size_t idx, size_t* outLen) const {
                         return nullptr;
                     }
 
-                    tlsBuf.resize((size_t)actualLen);
+                    if (idx >= mCache.size()) mCache.resize(mHeader->stringCount);
+                    mCache[idx].resize((size_t)actualLen);
                     utf8_to_utf16((const uint8_t*)decoded, decodedLen,
-                                  &tlsBuf[0], (size_t)actualLen);
+                                  &mCache[idx][0], (size_t)actualLen);
 
                     if (outLen) *outLen = (size_t)actualLen;
-                    return tlsBuf.c_str();
+                    return mCache[idx].c_str();
                 } else {
                     LOGW("Bad string block: string #%zu extends to %tu, past end at %u",
                             idx, u8str + u8len - strings, (unsigned)mStringPoolSize);
