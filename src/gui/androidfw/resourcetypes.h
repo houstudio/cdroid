@@ -1148,14 +1148,17 @@ class TypedArray {
 public:
     // Non-owning (StyledAttr* must outlive this TypedArray).
     TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
-               const ResXMLTree* xmlSrc = nullptr, float density = 1.0f)
-        : mTable(table), mVals(vals), mCount(count), mXml(xmlSrc), mDensity(density) {}
+               const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
+               void* ctx = nullptr)
+        : mTable(table), mVals(vals), mCount(count), mXml(xmlSrc),
+          mDensity(density), mContext(ctx) {}
     // Owning (StyledAttr vector moved in; mVals points into mOwned).
     TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
-               const ResXMLTree* xmlSrc = nullptr, float density = 1.0f)
+               const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
+               void* ctx = nullptr)
         : mTable(table), mOwned(std::move(vals)),
           mVals(mOwned.data()), mCount(mOwned.size()),
-          mXml(xmlSrc), mDensity(density) {}
+          mXml(xmlSrc), mDensity(density), mContext(ctx) {}
     size_t size() const { return mCount; }
     bool hasValue(size_t idx) const { return idx < mCount && mVals[idx].set; }
     bool hasValueOrEmpty(size_t idx) const;
@@ -1176,6 +1179,11 @@ public:
     std::string getText(size_t idx) const;     // alias of getString for now
     int       getType(size_t idx) const;        // Res_value dataType, or -1
     bool      peekValue(size_t idx, Res_value* out) const;
+    // High-level resource access (needs Context — passed as void* to keep
+    // androidfw independent of cdroid::Context; cast in the .cc).
+    // Return raw pointers; caller wraps in RefPtr as needed.
+    class Drawable* getDrawable(size_t idx) const;
+    class ColorStateList* getColorStateList(size_t idx) const;
 private:
     bool get(size_t idx, Res_value* v) const {
         if (!hasValue(idx)) return false;
@@ -1188,6 +1196,7 @@ private:
     size_t                  mCount;
     const ResXMLTree*       mXml;
     float                   mDensity;
+    void*                   mContext; // cdroid::Context* (opaque to androidfw)
 };
 
 } // namespace cdroid

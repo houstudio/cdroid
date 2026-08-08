@@ -1211,7 +1211,36 @@ std::unique_ptr<TypedArray> Assets::obtainStyledAttributesTyped(
     cdroid::obtainStyledAttributes(*xml, *mResTable, mArscTheme, styleable, count,
                                     defStyleAttr, defStyleRes, styled.data());
     return std::make_unique<TypedArray>(*mResTable, std::move(styled), xml,
-                                        mDisplayMetrics.density);
+                                        mDisplayMetrics.density, this);
+}
+
+// TypedArray high-level getters (implemented here — need Context/Assets).
+Drawable* TypedArray::getDrawable(size_t idx) const {
+    if (!mContext) return nullptr;
+    Assets* a = static_cast<Assets*>(mContext);
+    Res_value v;
+    if (!peekValue(idx, &v)) return nullptr;
+    if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
+        return new ColorDrawable(v.data);
+    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE) {
+        std::string name = a->arscReferenceName(v.data);
+        if (!name.empty()) return a->getDrawable(name);
+    }
+    return nullptr;
+}
+
+ColorStateList* TypedArray::getColorStateList(size_t idx) const {
+    if (!mContext) return nullptr;
+    Assets* a = static_cast<Assets*>(mContext);
+    Res_value v;
+    if (!peekValue(idx, &v)) return nullptr;
+    if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
+        return ColorStateList::valueOf(v.data).get();
+    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE) {
+        std::string name = a->arscReferenceName(v.data);
+        if (!name.empty()) return a->getColorStateList(name).get();
+    }
+    return nullptr;
 }
 }//namespace
 
