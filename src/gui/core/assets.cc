@@ -821,7 +821,22 @@ cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullr
         auto cls = ColorStateList::valueOf(itc->second);
         mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
         return cls;
-    }else if( name.size()&&(fullresid.find("attr")==std::string::npos) ) {
+    }
+    // Fallback: resolve from resources.arsc via ResTable.
+    if (mResTable) {
+        uint32_t id = mResTable->getIdentifier(relname, "color", pkg);
+        if (id != 0) {
+            Res_value v;
+            if (mResTable->getResource(id, &v) >= 0 &&
+                v.dataType >= Res_value::TYPE_FIRST_COLOR_INT &&
+                v.dataType <= Res_value::TYPE_LAST_COLOR_INT) {
+                auto cls = ColorStateList::valueOf(v.data);
+                mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
+                return cls;
+            }
+        }
+    }
+    if( name.size()&&(fullresid.find("attr")==std::string::npos) ) {
         const size_t slashpos = fullresid.find("/");
         try{
             cdroid::RefPtr<ColorStateList>cls;
