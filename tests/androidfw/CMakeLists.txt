@@ -7,7 +7,9 @@ file(GLOB SRCS CONFIGURE_DEPENDS *.cpp)
 add_executable(androidfw_test ${SRCS})
 target_include_directories(androidfw_test PRIVATE
     ${CMAKE_SOURCE_DIR}/src/gui/androidfw
+    ${CMAKE_SOURCE_DIR}/src/gui
+    ${CMAKE_BINARY_DIR}/include/gui
     ${GTEST_INCLUDE_DIRS})
-target_link_libraries(androidfw_test PRIVATE androidfw ${GTEST_LIBRARIES})
+target_link_libraries(androidfw_test PRIVATE cdroid ${GTEST_LIBRARIES})
 
 install(TARGETS androidfw_test DESTINATION bin/tests)

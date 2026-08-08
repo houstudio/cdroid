@@ -277,14 +277,21 @@ BIN_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".apng", ".webp", ".ttf", ".otf", "
 
 class PakBuilder(idgen.IDGenerater):
     """One-shot resource compiler: generates R.h/ID.xml (via inherited idgen) and
-    builds the .pak zip (stripped XML + aapt-compiled 9-patch + verbatim binaries)."""
+    builds the .pak zip (stripped XML + aapt-compiled 9-patch + verbatim binaries).
 
-    def __init__(self, namespace, res_dir, pak_path, rh_path):
+    When aapt2_path + android_jar are provided, layout/drawable XML is compiled
+    to binary AXML via aapt2 (opt-in; default is the existing text-XML path)."""
+
+    def __init__(self, namespace, res_dir, pak_path, rh_path,
+                 aapt2_path=None, android_jar=None):
         idstart = 1000 if namespace == "cdroid" else 10000   # preserve idgen __main__ rule
         super().__init__(idstart, namespace)                 # wires self.Handler/scanxml/dict2ID/dict2RH
         self.res_dir = res_dir
         self.pak_path = pak_path
         self.rh_path = rh_path
+        self.aapt2_path = aapt2_path
+        self.android_jar = android_jar
+        self.use_aapt2 = bool(aapt2_path and android_jar)
 
     # ----- ID generation: drive inherited idgen, with its filecmp change gate -----
     def generate_ids(self):
@@ -330,8 +337,48 @@ class PakBuilder(idgen.IDGenerater):
         im.crop((1, 1, W - 1, H - 1)).save(buf, format="PNG")
         return _insert_chunk_before_iend(buf.getvalue(), b"cdNp", cdNp)
 
+    # ----- aapt2 compile: compile res/ to binary AXML, return {rel_path: bytes} -----
+    def _compile_aapt2(self):
+        """Run aapt2 compile+link on res/, return a dict mapping relative XML
+        paths (e.g. 'layout/main.xml') to their binary AXML bytes."""
+        import subprocess, shutil
+        tmpdir = tempfile.mkdtemp(prefix="aapt2_")
+        try:
+            # Synthesize a minimal manifest (package name = namespace).
+            pkg = self.namespace if "." in self.namespace else "com." + self.namespace
+            manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
+                        '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
+                        ' package="%s">'
+                        '<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>'
+                        '</manifest>' % pkg)
+            mpath = os.path.join(tmpdir, "AndroidManifest.xml")
+            with open(mpath, "w") as fh:
+                fh.write(manifest)
+            compiled = os.path.join(tmpdir, "compiled.zip")
+            out_apk = os.path.join(tmpdir, "out.apk")
+            subprocess.run([self.aapt2_path, "compile", "--dir", self.res_dir, "-o", compiled],
+                           check=True, capture_output=True)
+            subprocess.run([self.aapt2_path, "link", "-I", self.android_jar,
+                            "--manifest", mpath, "-o", out_apk, compiled],
+                           check=True, capture_output=True)
+            # Extract binary XML from the apk (paths like res/layout/main.xml).
+            result = {}
+            with zipfile.ZipFile(out_apk) as zf:
+                for name in zf.namelist():
+                    if name.startswith("res/") and name.endswith(".xml"):
+                        rel = name[4:]  # strip "res/" prefix -> layout/main.xml
+                        result[rel] = zf.read(name)
+            return result
+        except Exception as e:
+            sys.stderr.write("aapt2 compile failed (%s); falling back to text XML\n" % e)
+            return {}
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
     # ----- packaging: one walk, XML deflated / binaries stored -----
     def build(self):
+        # When aapt2 is enabled, pre-compile binary AXML for layouts/drawables.
+        binary_xmls = self._compile_aapt2() if self.use_aapt2 else {}
         with zipfile.ZipFile(self.pak_path, "w") as zf:
             for root, dirs, files in os.walk(self.res_dir):
                 dirs.sort(); files.sort()
@@ -339,7 +386,11 @@ class PakBuilder(idgen.IDGenerater):
                     p = os.path.join(root, f)
                     rel = os.path.relpath(p, self.res_dir).replace(os.sep, "/")
                     if f.endswith(".xml"):
-                        zf.writestr(rel, self._strip_xml(p), zipfile.ZIP_DEFLATED)
+                        if rel in binary_xmls:
+                            # Binary AXML from aapt2 (detected at runtime by XmlPullParser).
+                            zf.writestr(rel, binary_xmls[rel], zipfile.ZIP_DEFLATED)
+                        else:
+                            zf.writestr(rel, self._strip_xml(p), zipfile.ZIP_DEFLATED)
                     elif f.endswith(".9.png"):               # MUST precede the .png branch
                         arc = rel[:-6] + ".png"              # foo.9.png -> foo.png
                         try:
@@ -356,7 +407,9 @@ class PakBuilder(idgen.IDGenerater):
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath>")
-    pb = PakBuilder(*sys.argv[1:5])   # extra args (e.g. PIXMAN_INCLUDE_DIRS) ignored
+        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar]")
+    aapt2 = sys.argv[5] if len(sys.argv) > 5 else None
+    ajar  = sys.argv[6] if len(sys.argv) > 6 else None
+    pb = PakBuilder(*sys.argv[1:5], aapt2_path=aapt2, android_jar=ajar)
     pb.generate_ids()
     pb.build()
