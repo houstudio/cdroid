@@ -35,6 +35,18 @@
 using namespace Cairo;
 namespace cdroid {
 
+// Decode a TYPE_DIMENSION complex value to its float magnitude.
+static float complexToFloat(uint32_t data) {
+    const uint32_t radix = (data >> Res_value::COMPLEX_RADIX_SHIFT) & Res_value::COMPLEX_RADIX_MASK;
+    const uint32_t mantissa = (data >> Res_value::COMPLEX_MANTISSA_SHIFT) & Res_value::COMPLEX_MANTISSA_MASK;
+    switch (radix) {
+        case Res_value::COMPLEX_RADIX_23p0: return (float)(int32_t)mantissa;
+        case Res_value::COMPLEX_RADIX_16p7: return mantissa * (1.0f / (1 << 7));
+        case Res_value::COMPLEX_RADIX_8p15: return mantissa * (1.0f / (1 << 15));
+        default: return mantissa * (1.0f / (1 << 23));
+    }
+}
+
 // char16_t -> UTF-8 (for ResTable string values).
 static std::string u16toUtf8(const char16_t* s, size_t len) {
     std::string out;
@@ -638,8 +650,29 @@ int Assets::getDimension(const std::string&refid)const{
     name = resolveAttrValue(refid);
     //name = AttributeSet::normalize(pkg,name);
     auto it = mDimensions.find(name);
-    if(it != mDimensions.end()) 
+    if(it != mDimensions.end())
         return GET_VARIANT(it->second,int);
+    // Fallback: resolve from resources.arsc via ResTable.
+    if (mResTable) {
+        std::string rawName;
+        parseResource(refid, &rawName, nullptr);
+        uint32_t id = mResTable->getIdentifier(rawName, "dimen", pkg);
+        if (id != 0) {
+            Res_value v;
+            if (mResTable->getResource(id, &v) >= 0) {
+                if (v.dataType == Res_value::TYPE_DIMENSION) {
+                    float mag = complexToFloat(v.data);
+                    int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
+                    const auto& dm = getDisplayMetrics();
+                    if (unit == Res_value::COMPLEX_UNIT_DIP) return (int)(dm.density * mag);
+                    if (unit == Res_value::COMPLEX_UNIT_SP)  return (int)(dm.scaledDensity * mag);
+                    return (int)mag;
+                }
+                if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)
+                    return (int)v.data;
+            }
+        }
+    }
     LOGW("Resource not found:%s",refid.c_str());
     return 0;
 }
@@ -667,6 +700,25 @@ float Assets::getFloat(const std::string&refid,float def)const{
     auto it = mDimensions.find(name);
     if(it != mDimensions.end()){
         return GET_VARIANT(it->second,float);
+    }
+    // Fallback: resolve from resources.arsc via ResTable.
+    if (mResTable) {
+        std::string rawName;
+        parseResource(refid, &rawName, nullptr);
+        uint32_t id = mResTable->getIdentifier(rawName, "dimen", pkg);
+        if (id != 0) {
+            Res_value v;
+            if (mResTable->getResource(id, &v) >= 0) {
+                if (v.dataType == Res_value::TYPE_FLOAT) {
+                    float f; memcpy(&f, &v.data, sizeof(f));
+                    return f;
+                }
+                if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)
+                    return (float)(int)v.data;
+                if (v.dataType == Res_value::TYPE_DIMENSION)
+                    return complexToFloat(v.data);
+            }
+        }
     }
     return def;
 }
