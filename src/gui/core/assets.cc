@@ -614,10 +614,32 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
     std::string resname,package;
     ZIPArchive*pak = getResource(effective,&resname,&package);
     if(outpkg)*outpkg = package;
-    if(pak){
-        std::istream*stream = pak->getInputStream(resname);
-        if(stream)return std::unique_ptr<std::istream>(stream);
+    std::istream*stream = pak ? pak->getInputStream(resname) : nullptr;
+    // Fallback: a "@drawable/..." reference names a resource, not a file —
+    // resolve it through the arsc to the qualified PNG path (e.g.
+    // drawable-hdpi-v4/foo.9.png), like getDrawable does. Needed for 9-patch
+    // src and other image loads that go through getInputStream.
+    if(!stream && mResTable && effective.find("drawable/") != std::string::npos){
+        std::string rawName;
+        parseResource(effective, &rawName, &package);
+        uint32_t id = arscGetIdentifier(rawName, "drawable", package);
+        if(id != 0){
+            Res_value v;
+            if(mResTable->getResource(id, &v) >= 0 && v.dataType == Res_value::TYPE_STRING){
+                size_t len = 0;
+                const char16_t* s = mResTable->getResourceString(id, &len);
+                if(s && len > 0){
+                    std::string path = u16toUtf8(s, len);
+                    if(path.substr(0, 4) == "res/") path = path.substr(4);
+                    if(!path.empty()){
+                        ZIPArchive* pak2 = getResource(package + ":" + path, &resname, &package);
+                        if(pak2) stream = pak2->getInputStream(resname);
+                    }
+                }
+            }
+        }
     }
+    if(stream)return std::unique_ptr<std::istream>(stream);
     if( fullresid.empty() || resname.empty() || (access(fullresid.c_str(),F_OK)<0)){
         LOGD("resoure:\"%s\" not found",fullresid.c_str());
         return nullptr;
