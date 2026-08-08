@@ -219,9 +219,7 @@ struct Private{
                 return buf;
             }
             case Res_value::TYPE_REFERENCE:
-            case Res_value::TYPE_ATTRIBUTE:
             case Res_value::TYPE_DYNAMIC_REFERENCE:
-            case Res_value::TYPE_DYNAMIC_ATTRIBUTE:
                 // Render as an "@type/key" reference string (e.g. "@drawable/bg",
                 // "@string/hello", "@android:color/holo_orange") — the same form
                 // text XML uses — so the consuming widget's resolver
@@ -235,6 +233,24 @@ struct Private{
                     }
                 }
                 snprintf(buf, sizeof(buf), "@0x%08x", v.data);
+                return buf;
+            case Res_value::TYPE_ATTRIBUTE:
+            case Res_value::TYPE_DYNAMIC_ATTRIBUTE:
+                // A theme-attribute reference "?type/key" (e.g. "?android:attr/
+                // colorPrimary"). Rendered with '?' so AttributeSet routes it to
+                // obtainStyledAttributes (theme lookup) instead of treating it as
+                // a plain resource reference and handing it to getInputStream.
+                if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
+                    Assets* assets = dynamic_cast<Assets*>(ctx);
+                    if(assets){
+                        std::string ref = assets->arscReferenceName(v.data);
+                        if(!ref.empty()){
+                            if(ref[0] == '@') ref[0] = '?';
+                            return ref;
+                        }
+                    }
+                }
+                snprintf(buf, sizeof(buf), "?0x%08x", v.data);
                 return buf;
             default:
                 snprintf(buf, sizeof(buf), "0x%08x", v.data);
