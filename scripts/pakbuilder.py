@@ -439,6 +439,22 @@ class PakBuilder(idgen.IDGenerater):
 
     # ----- packaging: one walk, XML deflated / binaries stored -----
     def build(self):
+        # Skip rebuild if pak exists and is newer than all inputs.
+        if os.path.exists(self.pak_path):
+            pak_mtime = os.path.getmtime(self.pak_path)
+            newest = 0
+            for root, dirs, files in os.walk(self.res_dir):
+                for f in files:
+                    m = os.path.getmtime(os.path.join(root, f))
+                    if m > newest: newest = m
+            # SDK res dir: just check directory mtime (installed once, never
+            # changes; scanning 4869 files would be slow).
+            if self.sdk_res and os.path.isdir(self.sdk_res):
+                sdk_mtime = os.path.getmtime(self.sdk_res)
+                if sdk_mtime > newest: newest = sdk_mtime
+            if pak_mtime > newest:
+                sys.stderr.write("pak up to date, skipping rebuild\n")
+                return
         # SDK mode: build complete framework from SDK data/res/ via aapt2 -x.
         sdk_data = self._compile_sdk_res() if self.use_sdk else {}
         # App mode: compile cdroid's own res/ via aapt2 (optional).
