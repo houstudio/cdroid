@@ -1096,7 +1096,10 @@ private:
     status_t              mError;
     int32_t               mCookie;
     std::vector<Header>   mHeaders;
-    std::vector<Package>  mPackages;
+    std::vector<Package>  mPackages;  // Package holds ResStringPool with raw
+                                      // pointers into mHeaders[x].owned; mHeaders
+                                      // MUST NOT reallocate after Packages are parsed
+                                      // (use reserve or unique_ptr if multi-add needed)
     std::vector<int>      mPackageMap;     // runtime package id -> index+1 into mPackages
     uint8_t               mNextPackageId;  // next runtime id for dynamic packages (starts at 2)
     ResTable_config       mParams;         // current request config (host-endian)

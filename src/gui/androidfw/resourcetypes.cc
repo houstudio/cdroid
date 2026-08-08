@@ -1822,6 +1822,10 @@ status_t ResTable::addInternal(const void* data, size_t size, bool appAsLib,
     if (!data || !size) return (mError = BAD_TYPE);
 
     // Each add() is one loaded arsc = one Header (owns its global value pool).
+    // Reserve to prevent reallocation: Package's ResStringPool stores raw
+    // pointers into Header's owned data; if mHeaders reallocates, those
+    // pointers dangle. 8 is plenty for any realistic multi-pak scenario.
+    if (mHeaders.capacity() == mHeaders.size()) mHeaders.reserve(mHeaders.size() + 8);
     size_t hdrIdx = mHeaders.size();
     mHeaders.push_back(Header());
     Header* hdr = &mHeaders[hdrIdx];

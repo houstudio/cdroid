@@ -537,8 +537,10 @@ const std::string Assets::getString(const std::string& resid,const std::string&l
     auto itr = mStrings.find(name);
     if(itr != mStrings.end()) {
         str = itr->second;
-    } else if (mResTable) {
+    } else if (mResTable && mResTable->getError() == 0
+               && rawName.find('/') == std::string::npos) {
         // Fallback: resolve from resources.arsc via ResTable.
+        // Only for bare string names (no type prefix like "attr/xxx").
         uint32_t id = arscGetIdentifier(rawName, "string", pkg);
         if (id != 0) {
             size_t len = 0;
