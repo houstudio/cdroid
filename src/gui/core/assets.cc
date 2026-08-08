@@ -581,6 +581,26 @@ Drawable* Assets::getDrawable(const std::string&resid) {
         return nullptr;
     }
     fullresid = parseResource(resid,&resname,&package);
+    // arsc: if the resource resolves to a string (file path), use that path.
+    if (mResTable && resname.find("drawable/") != std::string::npos) {
+        std::string rawName;
+        parseResource(resid, &rawName, &package);
+        uint32_t id = mResTable->getIdentifier(rawName, "drawable", package);
+        if (id != 0) {
+            Res_value v;
+            if (mResTable->getResource(id, &v) >= 0 && v.dataType == Res_value::TYPE_STRING) {
+                size_t len = 0;
+                const char16_t* s = mResTable->getResourceString(id, &len);
+                if (s && len > 0) {
+                    std::string path = u16toUtf8(s, len);
+                    if (!path.empty()) {
+                        resname = path;
+                        fullresid = package + ":" + path;
+                    }
+                }
+            }
+        }
+    }
     ZIPArchive* pak = getResource(fullresid,&resname,nullptr);
     {
         auto it = mDrawables.find(fullresid);
