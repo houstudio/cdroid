@@ -306,12 +306,20 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     int count=0;
     PENDINGRESOURCE pending;
     auto sttm = SystemClock::uptimeMillis();
-    pak->forEachEntry([this,package,&count,&pending](const std::string&res) {
+    pak->forEachEntry([this,package,pak,&count,&pending](const std::string&res) {
         count++;
         if((res.size()>6)&&(TextUtils::startWith(res,"values")||TextUtils::startWith(res,"color"))) {
+            // Skip binary AXML entries (SDK framework res — already in arsc).
+            // Binary color/selector files have <selector> root, not <resources>;
+            // parsing them as text corrupts mColors/mStateColors.
+            std::istream* s = pak->getInputStream(res);
+            if (s) {
+                char magic[2] = {0};
+                s->read(magic, 2);
+                delete s;
+                if ((uint8_t)magic[0] == 0x03) return 0; // binary AXML — skip
+            }
             LOGV("LoadKeyValues from:%s",res.c_str());
-            std::string resid = AttributeSet::normalize(package,res);//package+":"+res;
-            resid = resid.substr(0,resid.find(".xml"));
             loadKeyValues(package,package+":"+res,&pending);
         }
         return 0;
@@ -616,6 +624,8 @@ Drawable* Assets::getDrawable(const std::string&resid) {
                 const char16_t* s = mResTable->getResourceString(id, &len);
                 if (s && len > 0) {
                     std::string path = u16toUtf8(s, len);
+                    // arsc paths have "res/" prefix; pak stores without it.
+                    if (path.substr(0, 4) == "res/") path = path.substr(4);
                     if (!path.empty()) {
                         resname = path;
                         fullresid = package + ":" + path;

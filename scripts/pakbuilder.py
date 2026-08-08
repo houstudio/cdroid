@@ -485,6 +485,12 @@ class PakBuilder(idgen.IDGenerater):
         import subprocess, shutil
         tmpdir = tempfile.mkdtemp(prefix="aapt2_")
         try:
+            # Copy res/ to temp and remove ID.xml (CDROID-specific format, aapt2 rejects).
+            tmpres = os.path.join(tmpdir, "res")
+            shutil.copytree(self.res_dir, tmpres)
+            id_xml = os.path.join(tmpres, "values", "ID.xml")
+            if os.path.exists(id_xml):
+                os.remove(id_xml)
             # Synthesize a minimal manifest (package name = namespace).
             pkg = self.namespace if "." in self.namespace else "com." + self.namespace
             manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
@@ -497,7 +503,7 @@ class PakBuilder(idgen.IDGenerater):
                 fh.write(manifest)
             compiled = os.path.join(tmpdir, "compiled.zip")
             out_apk = os.path.join(tmpdir, "out.apk")
-            subprocess.run([self.aapt2_path, "compile", "--dir", self.res_dir, "-o", compiled],
+            subprocess.run([self.aapt2_path, "compile", "--dir", tmpres, "-o", compiled],
                            check=True, capture_output=True)
             subprocess.run([self.aapt2_path, "link", "-I", self.android_jar,
                             "--manifest", mpath, "-o", out_apk, compiled],
@@ -549,7 +555,11 @@ class PakBuilder(idgen.IDGenerater):
                     p = os.path.join(root, f)
                     rel = os.path.relpath(p, self.res_dir).replace(os.sep, "/")
                     if self.use_sdk and rel in sdk_data:
-                        continue  # SDK already provides this entry
+                        # SDK binary replaces layout/drawable (inflation targets).
+                        # But keep cdroid's own values/color text — loadKeyValues
+                        # needs them (binary selectors can't be parsed as text).
+                        if not (rel.startswith("values/") or rel.startswith("color/")):
+                            continue
                     if f.endswith(".xml"):
                         if rel in binary_xmls:
                             zf.writestr(rel, binary_xmls[rel], zipfile.ZIP_DEFLATED)

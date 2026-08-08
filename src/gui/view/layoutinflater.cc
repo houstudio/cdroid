@@ -309,6 +309,7 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
         }
         return view;
     }catch(std::exception&e){
+        LOGE("%s:Error %s",name.c_str(),e.what());
         throw e;
     }
 #else
