@@ -23,6 +23,8 @@
 #include <view/ghostview.h>
 #include <view/viewgroup.h>
 #include <view/floatingactionmode.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
 #include <view/handleractionqueue.h>
@@ -78,9 +80,21 @@ View::View(Context*ctx,const AttributeSet&attrs){
     initView();
 
     mContext = ctx;
-    mID = attrs.getResourceId("id",View::NO_ID);
-    mMinWidth  = attrs.getDimensionPixelSize("minWidth",0);
-    mMinHeight = attrs.getDimensionPixelSize("minHeight",0);
+    // Phase 2 TypedArray: try binary AXML typed resolution first (by attr
+    // resource ID, not string key). Falls back to AttributeSet for text XML.
+    // Note: `id` stays on AttributeSet until R.h is aapt2-generated (idgen IDs
+    // don't match arsc IDs yet). Other attrs use TypedArray when available.
+    Assets* assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = assets ? assets->obtainStyledAttributesTyped(
+        attrs, styleable::View::IDS, styleable::View::COUNT) : nullptr;
+
+    mID = attrs.getResourceId("id", View::NO_ID);
+    mMinWidth = (ta && ta->hasValue(styleable::View::minWidth))
+        ? ta->getDimensionPixelSize(styleable::View::minWidth, 0)
+        : attrs.getDimensionPixelSize("minWidth", 0);
+    mMinHeight = (ta && ta->hasValue(styleable::View::minHeight))
+        ? ta->getDimensionPixelSize(styleable::View::minHeight, 0)
+        : attrs.getDimensionPixelSize("minHeight", 0);
     setLayerType(attrs.getInt("layerType",std::unordered_map<std::string,int>{
            {"software",(int)LAYER_TYPE_SOFTWARE},{"hardware",(int)LAYER_TYPE_HARDWARE}
         },LAYER_TYPE_NONE));

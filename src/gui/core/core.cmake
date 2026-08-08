@@ -2,6 +2,7 @@ SET(CORE_SOURCES
     core/app.cc
     core/assets.cc
     core/attributeset.cc
+    core/framework_styleable.cc
     #core/basebundle.cc
     #core/bundle.cc
     core/transform.cc
