@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/viewgroup.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <view/focusfinder.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/layouttransition.h>
@@ -200,34 +202,55 @@ void ViewGroup::initGroup(){
 }
 
 void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
-    setClipChildren(atts.getBoolean("clipChildren",true));
-    setClipToPadding(atts.getBoolean("clipToPadding",true));
-    //setAnimationCacheEnabled
-    std::string resid = atts.getString("layoutAnimation");
-    if(!resid.empty()){
-        setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,resid));
+    Assets* assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = assets ? assets->obtainStyledAttributesTyped(
+        atts, styleable::ViewGroup::IDS, styleable::ViewGroup::COUNT) : nullptr;
+
+    setClipChildren(true);
+    setClipToPadding(true);
+    setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
+    setLayoutMode(LAYOUT_MODE_UNDEFINED);
+
+    if (ta) {
+        for (size_t n = ta->getIndexCount(); n > 0; ) {
+            size_t i = ta->getIndex(--n);
+            switch (i) {
+            case styleable::ViewGroup::clipChildren:          setClipChildren(ta->getBoolean(i, true)); break;
+            case styleable::ViewGroup::clipToPadding:         setClipToPadding(ta->getBoolean(i, true)); break;
+            case styleable::ViewGroup::layoutAnimation:       { std::string r=ta->getString(i); if(!r.empty()) setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,r)); } break;
+            case styleable::ViewGroup::descendantFocusability: setDescendantFocusability(ta->getInt(i, (int)FOCUS_BEFORE_DESCENDANTS)); break;
+            case styleable::ViewGroup::animateLayoutChanges:  if(ta->getBoolean(i,false)) setLayoutTransition(new LayoutTransition()); break;
+            case styleable::ViewGroup::layoutMode:            setLayoutMode(ta->getInt(i, (int)LAYOUT_MODE_UNDEFINED)); break;
+            case styleable::ViewGroup::addStatesFromChildren: setAddStatesFromChildren(ta->getBoolean(i, false)); break;
+            case styleable::ViewGroup::splitMotionEvents:     setMotionEventSplittingEnabled(ta->getBoolean(i, false)); break;
+            case styleable::ViewGroup::alwaysDrawnWithCache:  setAlwaysDrawnWithCacheEnabled(ta->getBoolean(i, false)); break;
+            case styleable::ViewGroup::transitionGroup:       setTransitionGroup(ta->getBoolean(i, false)); break;
+            case styleable::ViewGroup::touchscreenBlocksFocus: setTouchscreenBlocksFocus(ta->getBoolean(i, false)); break;
+            default: break;
+            }
+        }
+    } else {
+        setClipChildren(atts.getBoolean("clipChildren", true));
+        setClipToPadding(atts.getBoolean("clipToPadding", true));
+        std::string resid = atts.getString("layoutAnimation");
+        if(!resid.empty()) setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx, resid));
+        setDescendantFocusability(atts.getInt("descendantFocusability", std::unordered_map<std::string,int>{
+            {"beforeDescendants",(int)FOCUS_BEFORE_DESCENDANTS},
+            {"afterDescendants",(int)FOCUS_AFTER_DESCENDANTS},
+            {"blocksDescendants",(int)FOCUS_BLOCK_DESCENDANTS}
+        }, FOCUS_BEFORE_DESCENDANTS));
+        if(atts.getBoolean("animateLayoutChanges", false)) setLayoutTransition(new LayoutTransition());
+        setLayoutMode(atts.getInt("layoutMode", std::unordered_map<std::string,int>{
+            {"undefined",(int)LAYOUT_MODE_UNDEFINED},
+            {"clipBounds",(int)LAYOUT_MODE_CLIP_BOUNDS},
+            {"opticalBounds",(int)LAYOUT_MODE_OPTICAL_BOUNDS}
+        }, LAYOUT_MODE_UNDEFINED));
+        setAddStatesFromChildren(atts.getBoolean("addStatesFromChildren", false));
+        setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents", false));
+        setAlwaysDrawnWithCacheEnabled(atts.getBoolean("alwaysDrawnWithCache", false));
+        setTransitionGroup(atts.getBoolean("transitionGroup", false));
+        setTouchscreenBlocksFocus(atts.getBoolean("touchscreenBlocksFocus", false));
     }
-
-    const int flags=atts.getInt("descendantFocusability",std::unordered_map<std::string,int>{
-        {"beforeDescendants",(int)FOCUS_BEFORE_DESCENDANTS},
-        {"afterDescendants" ,(int)FOCUS_AFTER_DESCENDANTS},
-        {"blocksDescendants",(int)FOCUS_BLOCK_DESCENDANTS}
-    },FOCUS_BEFORE_DESCENDANTS);
-    setDescendantFocusability(flags);
-
-    if(atts.getBoolean("animateLayoutChanges",false))
-        setLayoutTransition(new LayoutTransition());
-    const int layoutMode = atts.getInt("layoutMode",std::unordered_map<std::string,int>{
-        {"undefined" ,(int)LAYOUT_MODE_UNDEFINED},
-        {"clipBounds",(int)LAYOUT_MODE_CLIP_BOUNDS},
-        {"opticalBounds",(int)LAYOUT_MODE_OPTICAL_BOUNDS}
-    },LAYOUT_MODE_UNDEFINED);
-    setAddStatesFromChildren(atts.getBoolean("addStatesFromChildren",false));
-    setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents",false));
-    setAlwaysDrawnWithCacheEnabled(atts.getBoolean("alwaysDrawnWithCache",false));
-    setLayoutMode(layoutMode);
-    setTransitionGroup(atts.getBoolean("transitionGroup",false));
-    setTouchscreenBlocksFocus(atts.getBoolean("touchscreenBlocksFocus",false));
 }
 
 ViewGroup::~ViewGroup() {

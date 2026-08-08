@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/compoundbutton.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <widget/checkbox.h>
 #include <widget/radiobutton.h>
 #include <porting/cdlog.h>
@@ -26,8 +28,8 @@ DECLARE_WIDGET(CompoundButton)
 CompoundButton::CompoundButton(Context*ctx,const AttributeSet& attrs)
   :Button(ctx,attrs){
     initCompoundButton();
-    setButtonDrawable(attrs.getString("button"));
-    setChecked(attrs.getBoolean("checked"));
+    setButtonDrawable((dynamic_cast<Assets*>(ctx)&&((Assets*)ctx)->obtainStyledAttributesTyped(attrs,styleable::CompoundButton::IDS,styleable::CompoundButton::COUNT)) ? "" : attrs.getString("button")); /* TODO: full TypedArray path */
+    setChecked(attrs.getBoolean("checked")); /* checked: TODO TypedArray */
     mButtonTintList = attrs.getColorStateList("buttonTint");
     applyButtonTint();
 }

@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/framelayout.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -30,7 +32,21 @@ FrameLayout::FrameLayout(int w,int h):ViewGroup(w,h){
 
 FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs)
     :ViewGroup(context,attrs){
-    mMeasureAllChildren = attrs.getBoolean("measureAllChildren",false);
+    mMeasureAllChildren = false;
+    {
+        Assets* _a = context ? dynamic_cast<Assets*>(context) : nullptr;
+        auto ta = _a ? _a->obtainStyledAttributesTyped(
+            attrs, styleable::FrameLayout::IDS, styleable::FrameLayout::COUNT) : nullptr;
+        if (ta) {
+            for (size_t n = ta->getIndexCount(); n > 0; ) {
+                size_t i = ta->getIndex(--n);
+                if (i == styleable::FrameLayout::measureAllChildren)
+                    mMeasureAllChildren = ta->getBoolean(i, false);
+            }
+        } else {
+            mMeasureAllChildren = attrs.getBoolean("measureAllChildren", false);
+        }
+    }
     mForegroundPaddingLeft = mForegroundPaddingRight  = 0;
     mForegroundPaddingTop  = mForegroundPaddingBottom = 0;
 }
