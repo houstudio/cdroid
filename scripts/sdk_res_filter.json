@@ -1,5 +1,5 @@
 {
     "_comment": "SDK framework resource filter for aapt2 -c. densities/locales kept (default config always kept). Empty = keep all.",
     "densities": ["hdpi"],
-    "locales": ["zh"]
+    "locales": []
 }
