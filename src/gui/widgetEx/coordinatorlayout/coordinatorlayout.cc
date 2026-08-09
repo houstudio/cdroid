@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/coordinatorlayout/coordinatorlayout.h>
+#include <widgetEx/widgetex_styleable.h>
+#include <core/assets.h>
 #include <widgetEx/viewgrouputils.h>
 #include <porting/cdlog.h>
 
@@ -30,12 +32,12 @@ CoordinatorLayout::CoordinatorLayout(int w, int h) :ViewGroup(w, h) {
 CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
     :ViewGroup(context, attrs){
     initView();
-    /*final TypedArray a = (defStyleAttr == 0)
-            ? context.obtainStyledAttributes(attrs, R.styleable.CoordinatorLayout,
-                0, R.style.Widget_Support_CoordinatorLayout)
-            : context.obtainStyledAttributes(attrs, R.styleable.CoordinatorLayout,
-                defStyleAttr, 0);*/
-    std::string keylineArrayRes = attrs.getString("keylines");
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::CoordinatorLayout::IDS, styleable::CoordinatorLayout::COUNT) : nullptr;
+    namespace SCL = styleable::CoordinatorLayout;
+    std::string keylineArrayRes = ta&&ta->hasValue(SCL::keylines) ? ta->getString(SCL::keylines) : attrs.getString("keylines");
     if (!keylineArrayRes.empty()) {
         context->getArray(keylineArrayRes,mKeylines);
         const float density = context->getDisplayMetrics().density;
@@ -44,7 +46,7 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
             mKeylines[i] = (int) (mKeylines[i] * density);
         }
     }
-    mStatusBarBackground = attrs.getDrawable("statusBarBackground");
+    mStatusBarBackground = ta&&ta->hasValue(SCL::statusBarBackground) ? ta->getDrawable(SCL::statusBarBackground) : attrs.getDrawable("statusBarBackground");
 }
 
 void CoordinatorLayout::initView() {
@@ -1684,20 +1686,23 @@ CoordinatorLayout::LayoutParams::~LayoutParams() {
 CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet& attrs)
     :MarginLayoutParams(context, attrs){
     init();
-    //final TypedArray a = context.obtainStyledAttributes(attrs,
-    //        R.styleable.CoordinatorLayout_Layout);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::CoordinatorLayoutLayout::IDS, styleable::CoordinatorLayoutLayout::COUNT) : nullptr;
+    namespace SCL = styleable::CoordinatorLayoutLayout;
 
-    this->gravity = attrs.getGravity("layout_gravity",Gravity::NO_GRAVITY);
-    mAnchorId = attrs.getResourceId("layout_anchor",View::NO_ID);
-    anchorGravity = attrs.getGravity("layout_anchorGravity",Gravity::NO_GRAVITY);
+    this->gravity = ta&&ta->hasValue(SCL::layout_gravity) ? ta->getInt(SCL::layout_gravity,Gravity::NO_GRAVITY) : attrs.getGravity("layout_gravity",Gravity::NO_GRAVITY);
+    mAnchorId = ta&&ta->hasValue(SCL::layout_anchor) ? (int)ta->getResourceId(SCL::layout_anchor,(uint32_t)View::NO_ID) : attrs.getResourceId("layout_anchor",View::NO_ID);
+    anchorGravity = ta&&ta->hasValue(SCL::layout_anchorGravity) ? ta->getInt(SCL::layout_anchorGravity,Gravity::NO_GRAVITY) : attrs.getGravity("layout_anchorGravity",Gravity::NO_GRAVITY);
 
-    this->keyline = attrs.getInt("layout_keyline", -1);
+    this->keyline = ta&&ta->hasValue(SCL::layout_keyline) ? ta->getInt(SCL::layout_keyline, -1) : attrs.getInt("layout_keyline", -1);
 
-    insetEdge = attrs.getGravity("layout_insetEdge", Gravity::NO_GRAVITY);
-    dodgeInsetEdges = attrs.getGravity("layout_dodgeInsetEdges", Gravity::NO_GRAVITY);
-    mBehaviorResolved = attrs.hasAttribute("layout_behavior");
+    insetEdge = ta&&ta->hasValue(SCL::layout_insetEdge) ? ta->getInt(SCL::layout_insetEdge, Gravity::NO_GRAVITY) : attrs.getGravity("layout_insetEdge", Gravity::NO_GRAVITY);
+    dodgeInsetEdges = ta&&ta->hasValue(SCL::layout_dodgeInsetEdges) ? ta->getInt(SCL::layout_dodgeInsetEdges, Gravity::NO_GRAVITY) : attrs.getGravity("layout_dodgeInsetEdges", Gravity::NO_GRAVITY);
+    mBehaviorResolved = (ta&&ta->hasValue(SCL::layout_behavior)) || attrs.hasAttribute("layout_behavior");
     if (mBehaviorResolved) {
-        mBehavior = parseBehavior(context, attrs, attrs.getString("layout_behavior"));
+        mBehavior = parseBehavior(context, attrs, ta&&ta->hasValue(SCL::layout_behavior) ? ta->getString(SCL::layout_behavior) : attrs.getString("layout_behavior"));
     }
 
     if (mBehavior != nullptr) {

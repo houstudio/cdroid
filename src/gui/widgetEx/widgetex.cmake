@@ -1,5 +1,6 @@
-if(ENABLE_WEAR_WIDGETS OR ENABLE_RECYCLERVIEW) 
+if(ENABLE_WEAR_WIDGETS OR ENABLE_RECYCLERVIEW)
 SET(WIDGETEX_SOURCES
+    widgetEx/widgetex_styleable.cc
     widgetEx/recyclerview/viewinfostore.cc
     widgetEx/recyclerview/viewboundscheck.cc
     widgetEx/recyclerview/snaphelper.cc

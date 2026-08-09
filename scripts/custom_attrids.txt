@@ -1,0 +1,23 @@
+# Custom (app/cdroid) attr name -> resource ID. Append-only stable.
+# Single source of truth; aapt2 public.xml will pin the same IDs.
+# Format: 0xID NAME
+
+0x7f010000 keylines
+0x7f010001 statusBarBackground
+0x7f010002 layout_behavior
+0x7f010003 layout_anchor
+0x7f010004 layout_keyline
+0x7f010005 layout_anchorGravity
+0x7f010006 layout_insetEdge
+0x7f010007 layout_dodgeInsetEdges
+0x7f010008 flexDirection
+0x7f010009 flexWrap
+0x7f01000a justifyContent
+0x7f01000b alignItems
+0x7f01000c alignContent
+0x7f01000d layout_order
+0x7f01000e layout_flexBasisPercent
+0x7f01000f layout_flexGrow
+0x7f010010 layout_flexShrink
+0x7f010011 layout_alignSelf
+0x7f010012 layout_wrapBefore

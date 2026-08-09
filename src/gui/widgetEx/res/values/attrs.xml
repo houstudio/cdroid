@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CDROID widgetEx custom attrs (androidx ports). Source for gen_styleable.py
+     -> widgetex_styleable.h. `android:xxx` attrs resolve to framework IDs;
+     unprefixed attrs are CDROID custom (0x7f010000+ in custom_attrids.txt). -->
+<resources>
+    <!-- ===== CoordinatorLayout (from androidx coordinatorlayout) ===== -->
+    <declare-styleable name="CoordinatorLayout">
+        <attr name="keylines" format="reference"/>
+        <attr name="statusBarBackground" format="color|reference"/>
+    </declare-styleable>
+
+    <declare-styleable name="CoordinatorLayout_Layout">
+        <attr name="android:layout_gravity"/>
+        <attr name="layout_behavior" format="string"/>
+        <attr name="layout_anchor" format="reference"/>
+        <attr name="layout_keyline" format="integer"/>
+        <attr name="layout_anchorGravity"/>
+        <attr name="layout_insetEdge" format="enum"/>
+        <attr name="layout_dodgeInsetEdges"/>
+    </declare-styleable>
+
+    <!-- ===== FlexboxLayout (attr set CDROID reads) ===== -->
+    <declare-styleable name="FlexboxLayout">
+        <attr name="flexDirection" format="enum"/>
+        <attr name="flexWrap" format="enum"/>
+        <attr name="justifyContent" format="enum"/>
+        <attr name="alignItems" format="enum"/>
+        <attr name="alignContent" format="enum"/>
+    </declare-styleable>
+
+    <declare-styleable name="FlexboxLayout_Layout">
+        <attr name="android:layout_order"/>
+        <attr name="layout_flexBasisPercent" format="fraction"/>
+        <attr name="layout_flexGrow" format="float"/>
+        <attr name="layout_flexShrink" format="float"/>
+        <attr name="layout_alignSelf" format="enum"/>
+        <attr name="layout_wrapBefore" format="boolean"/>
+    </declare-styleable>
+</resources>

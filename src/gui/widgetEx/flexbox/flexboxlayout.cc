@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/flexbox/flexboxlayout.h>
+#include <widgetEx/widgetex_styleable.h>
+#include <core/assets.h>
 //REF:https://github.com/google/flexbox-layout/tree/main
 namespace cdroid{
 
@@ -27,18 +29,23 @@ FlexboxLayout::FlexboxLayout(int w,int h):ViewGroup(w,h){
 
 FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGroup(context,attrs){
     init();
-    mFlexDirection = attrs.getInt("flexDirection",std::unordered_map<std::string,int>{
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::FlexboxLayout::IDS, styleable::FlexboxLayout::COUNT) : nullptr;
+    namespace SFB = styleable::FlexboxLayout;
+    mFlexDirection = ta&&ta->hasValue(SFB::flexDirection) ? ta->getInt(SFB::flexDirection,(int)FlexDirection::ROW) : attrs.getInt("flexDirection",std::unordered_map<std::string,int>{
             {"column",FlexDirection::COLUMN},
             {"column_reverse",FlexDirection::COLUMN_REVERSE},
             {"row",FlexDirection::ROW},
             {"row_reverse",FlexDirection::ROW_REVERSE},
         }, (int)FlexDirection::ROW);
-    mFlexWrap = attrs.getInt("flexWrap",std::unordered_map<std::string,int>{
+    mFlexWrap = ta&&ta->hasValue(SFB::flexWrap) ? ta->getInt(SFB::flexWrap,(int)FlexWrap::NOWRAP) : attrs.getInt("flexWrap",std::unordered_map<std::string,int>{
             {"nowrap" , FlexWrap::NOWRAP},
             {"wrap" , FlexWrap::WRAP},
             {"wrap_reverse" , FlexWrap::WRAP_REVERSE}
         }, (int)FlexWrap::NOWRAP);
-    mJustifyContent = attrs.getInt("justifyContent",std::unordered_map<std::string,int>{
+    mJustifyContent = ta&&ta->hasValue(SFB::justifyContent) ? ta->getInt(SFB::justifyContent,(int)JustifyContent::FLEX_START) : attrs.getInt("justifyContent",std::unordered_map<std::string,int>{
             {"flex_start",(int)JustifyContent::FLEX_START},
             {"flex_end", (int)JustifyContent::FLEX_END},
             {"center"  , (int)JustifyContent::CENTER},
@@ -46,14 +53,14 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
             {"space_around" , (int)JustifyContent::SPACE_AROUND},
             {"space_evenly" , (int)JustifyContent::SPACE_EVENLY}
         }, (int)JustifyContent::FLEX_START);
-    mAlignItems = attrs.getInt("alignItems",std::unordered_map<std::string,int>{
+    mAlignItems = ta&&ta->hasValue(SFB::alignItems) ? ta->getInt(SFB::alignItems,(int)AlignItems::FLEX_START) : attrs.getInt("alignItems",std::unordered_map<std::string,int>{
             {"flex_start",(int)AlignItems::FLEX_START},
             {"flex_end", (int)AlignItems::FLEX_END},
             {"center"  , (int)AlignItems::CENTER},
             {"baseline", (int)AlignItems::BASELINE},
             {"stretch" , (int)AlignItems::STRETCH}
         }, (int)AlignItems::FLEX_START);
-    mAlignContent = attrs.getInt("alignContent",std::unordered_map<std::string,int>{
+    mAlignContent = ta&&ta->hasValue(SFB::alignContent) ? ta->getInt(SFB::alignContent,(int)AlignContent::FLEX_START) : attrs.getInt("alignContent",std::unordered_map<std::string,int>{
             {"flex_start", (int)AlignContent::FLEX_START},
             {"flex_end"  , (int)AlignContent::FLEX_END},
             {"center" , (int)AlignContent::CENTER},
@@ -1195,11 +1202,16 @@ int FlexboxLayout::getPaddingEnd() {
 
 FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
     :ViewGroup::MarginLayoutParams(context,attrs){
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::FlexboxLayoutLayout::IDS, styleable::FlexboxLayoutLayout::COUNT) : nullptr;
+    namespace SFL = styleable::FlexboxLayoutLayout;
 
-    mOrder = attrs.getInt("layout_order", (int)ORDER_DEFAULT);
-    mFlexGrow = attrs.getFloat("layout_flexGrow", (int)FLEX_GROW_DEFAULT);
-    mFlexShrink = attrs.getFloat("layout_flexShrink",(float)FLEX_SHRINK_DEFAULT);
-    mAlignSelf = attrs.getInt("layout_alignSelf",std::unordered_map<std::string,int>{
+    mOrder = ta&&ta->hasValue(SFL::layout_order) ? ta->getInt(SFL::layout_order, (int)ORDER_DEFAULT) : attrs.getInt("layout_order", (int)ORDER_DEFAULT);
+    mFlexGrow = ta&&ta->hasValue(SFL::layout_flexGrow) ? ta->getFloat(SFL::layout_flexGrow, (int)FLEX_GROW_DEFAULT) : attrs.getFloat("layout_flexGrow", (int)FLEX_GROW_DEFAULT);
+    mFlexShrink = ta&&ta->hasValue(SFL::layout_flexShrink) ? ta->getFloat(SFL::layout_flexShrink,(float)FLEX_SHRINK_DEFAULT) : attrs.getFloat("layout_flexShrink",(float)FLEX_SHRINK_DEFAULT);
+    mAlignSelf = ta&&ta->hasValue(SFL::layout_alignSelf) ? ta->getInt(SFL::layout_alignSelf,(int)AlignSelf::AUTO) : attrs.getInt("layout_alignSelf",std::unordered_map<std::string,int>{
             {"auto" , (int)AlignSelf::AUTO},
             {"flex_start",(int)AlignSelf::FLEX_START},
             {"flex_end", (int)AlignSelf::FLEX_END},
@@ -1207,12 +1219,12 @@ FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& a
             {"baseline", (int)AlignSelf::BASELINE},
             {"stretch" , (int)AlignSelf::STRETCH},
         }, (int)AlignSelf::AUTO);
-    mFlexBasisPercent = attrs.getFraction("layout_flexBasisPercent", 1, 1,(float)FLEX_BASIS_PERCENT_DEFAULT);
+    mFlexBasisPercent = ta&&ta->hasValue(SFL::layout_flexBasisPercent) ? ta->getFraction(SFL::layout_flexBasisPercent, 1, 1,(float)FLEX_BASIS_PERCENT_DEFAULT) : attrs.getFraction("layout_flexBasisPercent", 1, 1,(float)FLEX_BASIS_PERCENT_DEFAULT);
     mMinWidth = attrs.getDimensionPixelSize("layout_minWidth"  ,(int)NOT_SET);
     mMinHeight = attrs.getDimensionPixelSize("layout_minHeight",(int)NOT_SET);
     mMaxWidth  = attrs.getDimensionPixelSize("layout_maxWidth" ,(int)MAX_SIZE);
     mMaxHeight = attrs.getDimensionPixelSize("layout_maxHeight",(int)MAX_SIZE);
-    mWrapBefore= attrs.getBoolean("layout_wrapBefore", false);
+    mWrapBefore= ta&&ta->hasValue(SFL::layout_wrapBefore) ? ta->getBoolean(SFL::layout_wrapBefore, false) : attrs.getBoolean("layout_wrapBefore", false);
 }
 
 FlexboxLayout::LayoutParams::LayoutParams(const LayoutParams& source):ViewGroup::MarginLayoutParams(source){
