@@ -384,5 +384,10 @@ namespace styleable {
             fw_attr::RelativeLayoutLayout::layout_alignParentStart, fw_attr::RelativeLayoutLayout::layout_alignParentEnd,
         };
     }
+    namespace TableRowLayout {
+        const uint32_t IDS[] = {
+            fw_attr::TableRowLayout::layout_column, fw_attr::TableRowLayout::layout_span,
+        };
+    }
 }
 }

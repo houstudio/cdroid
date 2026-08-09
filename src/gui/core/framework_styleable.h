@@ -473,6 +473,11 @@ namespace fw_attr {
         constexpr uint32_t layout_alignParentStart = 0x010103bb;
         constexpr uint32_t layout_alignParentEnd   = 0x010103bc;
     }
+    // TableRow.LayoutParams: layout_column + layout_span.
+    namespace TableRowLayout {
+        constexpr uint32_t layout_column           = 0x0101014c;
+        constexpr uint32_t layout_span             = 0x0101014d;
+    }
 }
 
 // R.styleable arrays: index → framework attr ID. Used by obtainStyledAttributesTyped.
@@ -701,6 +706,10 @@ namespace styleable {
                layout_centerVertical, layout_toStartOf, layout_toEndOf,
                layout_alignStart, layout_alignEnd, layout_alignParentStart,
                layout_alignParentEnd, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace TableRowLayout {
+        enum { layout_column, layout_span, COUNT };
         extern const uint32_t IDS[];
     }
 }
