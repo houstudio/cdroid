@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/recyclerview/recyclerview.h>
+#include <widgetEx/widgetex_styleable.h>
+#include <core/assets.h>
 #include <widgetEx/recyclerview/gapworker.h>
 #include <widgetEx/recyclerview/childhelper.h>
 #include <widgetEx/recyclerview/viewinfostore.h>
@@ -84,12 +86,17 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
 
 RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
    :ViewGroup(context, attrs){
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::RecyclerView::IDS, styleable::RecyclerView::COUNT) : nullptr;
+    namespace SRV = styleable::RecyclerView;
 
     initRecyclerView();
     initAdapterManager();
     initChildrenHelper();
     initAutofill();
-    mClipToPadding = attrs.getBoolean("clipToPadding", true);
+    mClipToPadding = ta&&ta->hasValue(SRV::clipToPadding) ? ta->getBoolean(SRV::clipToPadding, true) : attrs.getBoolean("clipToPadding", true);
     // If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -97,24 +104,24 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
     setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
     // Create the layoutManager if specified.
 
-    std::string layoutManagerName = attrs.getString("layoutManager");
-    const int descendantFocusability = attrs.getInt("descendantFocusability", -1);
+    std::string layoutManagerName = ta&&ta->hasValue(SRV::layoutManager) ? ta->getString(SRV::layoutManager) : attrs.getString("layoutManager");
+    const int descendantFocusability = ta&&ta->hasValue(SRV::descendantFocusability) ? ta->getInt(SRV::descendantFocusability, -1) : attrs.getInt("descendantFocusability", -1);
     if (descendantFocusability == -1) {
         setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
     }
-    mEnableFastScroller = attrs.getBoolean("fastScrollEnabled", false);
+    mEnableFastScroller = ta&&ta->hasValue(SRV::fastScrollEnabled) ? ta->getBoolean(SRV::fastScrollEnabled, false) : attrs.getBoolean("fastScrollEnabled", false);
     if (mEnableFastScroller) {
-        StateListDrawable* verticalThumbDrawable = (StateListDrawable*) attrs.getDrawable("fastScrollVerticalThumbDrawable");
-        Drawable* verticalTrackDrawable = attrs.getDrawable("fastScrollVerticalTrackDrawable");
-        StateListDrawable* horizontalThumbDrawable = (StateListDrawable*) attrs.getDrawable("fastScrollHorizontalThumbDrawable");
-        Drawable* horizontalTrackDrawable = attrs.getDrawable("fastScrollHorizontalTrackDrawable");
+        StateListDrawable* verticalThumbDrawable = (StateListDrawable*) (ta&&ta->hasValue(SRV::fastScrollVerticalThumbDrawable) ? ta->getDrawable(SRV::fastScrollVerticalThumbDrawable) : attrs.getDrawable("fastScrollVerticalThumbDrawable"));
+        Drawable* verticalTrackDrawable = ta&&ta->hasValue(SRV::fastScrollVerticalTrackDrawable) ? ta->getDrawable(SRV::fastScrollVerticalTrackDrawable) : attrs.getDrawable("fastScrollVerticalTrackDrawable");
+        StateListDrawable* horizontalThumbDrawable = (StateListDrawable*) (ta&&ta->hasValue(SRV::fastScrollHorizontalThumbDrawable) ? ta->getDrawable(SRV::fastScrollHorizontalThumbDrawable) : attrs.getDrawable("fastScrollHorizontalThumbDrawable"));
+        Drawable* horizontalTrackDrawable = ta&&ta->hasValue(SRV::fastScrollHorizontalTrackDrawable) ? ta->getDrawable(SRV::fastScrollHorizontalTrackDrawable) : attrs.getDrawable("fastScrollHorizontalTrackDrawable");
         initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable,attrs);
     }
     createLayoutManager(context, layoutManagerName, attrs);//, defStyle, defStyleRes);
     setDescendantFocusability(descendantFocusability==-1?ViewGroup::FOCUS_AFTER_DESCENDANTS:ViewGroup::FOCUS_AFTER_DESCENDANTS);
 
     // Re-set whether nested scrolling is enabled so that it is set on all API levels
-    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled", true));
+    setNestedScrollingEnabled(ta&&ta->hasValue(SRV::nestedScrollingEnabled) ? ta->getBoolean(SRV::nestedScrollingEnabled, true) : attrs.getBoolean("nestedScrollingEnabled", true));
     setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 

@@ -53,5 +53,8 @@ namespace styleable {
     namespace MotionEffect {
         const uint32_t IDS[] = { fw_attr::MotionEffect::motionEffect_start, fw_attr::MotionEffect::motionEffect_end, fw_attr::MotionEffect::motionEffect_translationX, fw_attr::MotionEffect::motionEffect_translationY, fw_attr::MotionEffect::motionEffect_alpha, fw_attr::MotionEffect::motionEffect_viewTransition, fw_attr::MotionEffect::motionEffect_move, fw_attr::MotionEffect::motionEffect_strict };
     }
+    namespace RecyclerView {
+        const uint32_t IDS[] = { fw_attr::RecyclerView::orientation, fw_attr::RecyclerView::clipToPadding, fw_attr::RecyclerView::descendantFocusability, fw_attr::RecyclerView::nestedScrollingEnabled, fw_attr::RecyclerView::layoutManager, fw_attr::RecyclerView::spanCount, fw_attr::RecyclerView::reverseLayout, fw_attr::RecyclerView::stackFromEnd, fw_attr::RecyclerView::fastScrollEnabled, fw_attr::RecyclerView::fastScrollVerticalThumbDrawable, fw_attr::RecyclerView::fastScrollVerticalTrackDrawable, fw_attr::RecyclerView::fastScrollHorizontalThumbDrawable, fw_attr::RecyclerView::fastScrollHorizontalTrackDrawable };
+    }
 } // namespace styleable
 } // namespace cdroid

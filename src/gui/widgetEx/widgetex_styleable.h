@@ -450,6 +450,21 @@ namespace fw_attr {
         constexpr uint32_t motionEffect_move = 0x7f0100c2;
         constexpr uint32_t motionEffect_strict = 0x7f0100c3;
     }
+    namespace RecyclerView {
+        constexpr uint32_t orientation = 0x010100c4;
+        constexpr uint32_t clipToPadding = 0x010100eb;
+        constexpr uint32_t descendantFocusability = 0x010100f1;
+        constexpr uint32_t nestedScrollingEnabled = 0x01010436;
+        constexpr uint32_t layoutManager = 0x7f0100c4;
+        constexpr uint32_t spanCount = 0x7f0100c5;
+        constexpr uint32_t reverseLayout = 0x7f0100c6;
+        constexpr uint32_t stackFromEnd = 0x7f0100c7;
+        constexpr uint32_t fastScrollEnabled = 0x01010226;
+        constexpr uint32_t fastScrollVerticalThumbDrawable = 0x7f0100c8;
+        constexpr uint32_t fastScrollVerticalTrackDrawable = 0x7f0100c9;
+        constexpr uint32_t fastScrollHorizontalThumbDrawable = 0x7f0100ca;
+        constexpr uint32_t fastScrollHorizontalTrackDrawable = 0x7f0100cb;
+    }
 } // namespace fw_attr
 
 namespace styleable {
@@ -519,6 +534,10 @@ namespace styleable {
     }
     namespace MotionEffect {
         enum { motionEffect_start, motionEffect_end, motionEffect_translationX, motionEffect_translationY, motionEffect_alpha, motionEffect_viewTransition, motionEffect_move, motionEffect_strict, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace RecyclerView {
+        enum { orientation, clipToPadding, descendantFocusability, nestedScrollingEnabled, layoutManager, spanCount, reverseLayout, stackFromEnd, fastScrollEnabled, fastScrollVerticalThumbDrawable, fastScrollVerticalTrackDrawable, fastScrollHorizontalThumbDrawable, fastScrollHorizontalTrackDrawable, COUNT };
         extern const uint32_t IDS[];
     }
 } // namespace styleable
