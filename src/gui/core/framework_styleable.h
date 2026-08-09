@@ -426,6 +426,23 @@ namespace fw_attr {
     namespace RelativeLayout {
         constexpr uint32_t ignoreGravity       = 0x010101ff;
     }
+    // ViewGroup.LayoutParams / MarginLayoutParams styleables (read for every child
+    // during inflation). layout_width/height are MATCH_PARENT(-1)/WRAP_CONTENT(-2).
+    namespace Layout {
+        constexpr uint32_t layout_width        = 0x010100f4;
+        constexpr uint32_t layout_height       = 0x010100f5;
+    }
+    namespace MarginLayout {
+        constexpr uint32_t layout_margin           = 0x010100f6;
+        constexpr uint32_t layout_marginLeft       = 0x010100f7;
+        constexpr uint32_t layout_marginTop        = 0x010100f8;
+        constexpr uint32_t layout_marginRight      = 0x010100f9;
+        constexpr uint32_t layout_marginBottom     = 0x010100fa;
+        constexpr uint32_t layout_marginStart      = 0x010103b5;
+        constexpr uint32_t layout_marginEnd        = 0x010103b6;
+        constexpr uint32_t layout_marginHorizontal = 0x0101053b;
+        constexpr uint32_t layout_marginVertical   = 0x0101053c;
+    }
 }
 
 // R.styleable arrays: index → framework attr ID. Used by obtainStyledAttributesTyped.
@@ -629,6 +646,16 @@ namespace styleable {
     }
     namespace RelativeLayout {
         enum { ignoreGravity, gravity, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace Layout {
+        enum { layout_width, layout_height, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace MarginLayout {
+        enum { layout_margin, layout_marginLeft, layout_marginTop,
+               layout_marginRight, layout_marginBottom, layout_marginStart,
+               layout_marginEnd, layout_marginHorizontal, layout_marginVertical, COUNT };
         extern const uint32_t IDS[];
     }
 }

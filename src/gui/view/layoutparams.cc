@@ -1,4 +1,6 @@
 #include <view/layoutparams.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <view/viewgroup.h>
 #include <cdlog.h>
 namespace cdroid{
@@ -8,8 +10,13 @@ LayoutParams::LayoutParams(){
 }
 
 LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs):LayoutParams(){
-    width =attrs.getLayoutDimension("layout_width" ,WRAP_CONTENT);
-    height=attrs.getLayoutDimension("layout_height",WRAP_CONTENT);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::Layout::IDS, styleable::Layout::COUNT) : nullptr;
+    namespace SL = styleable::Layout;
+    width = ta&&ta->hasValue(SL::layout_width)  ? ta->getLayoutDimension(SL::layout_width ,WRAP_CONTENT) : attrs.getLayoutDimension("layout_width" ,WRAP_CONTENT);
+    height= ta&&ta->hasValue(SL::layout_height) ? ta->getLayoutDimension(SL::layout_height,WRAP_CONTENT) : attrs.getLayoutDimension("layout_height",WRAP_CONTENT);
 }
 
 LayoutParams::LayoutParams(int w, int h):LayoutParams(){
@@ -48,19 +55,24 @@ const std::string LayoutParams::sizeToString(int size) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
    :LayoutParams(c,attrs){
-    const int margin=attrs.getDimensionPixelSize("layout_margin",-1);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::MarginLayout::IDS, styleable::MarginLayout::COUNT) : nullptr;
+    namespace SML = styleable::MarginLayout;
+    const int margin = ta&&ta->hasValue(SML::layout_margin) ? ta->getDimensionPixelSize(SML::layout_margin,-1) : attrs.getDimensionPixelSize("layout_margin",-1);
     mMarginFlags = 0;
     if(margin>=0){
         leftMargin = topMargin = rightMargin = bottomMargin = margin;
         startMargin= endMargin = DEFAULT_MARGIN_RELATIVE;
     }else{
-        int horizontalMargin = attrs.getDimensionPixelSize("layout_marginHorizontal",-1);
-        int verticalMargin = attrs.getDimensionPixelSize("layout_marginVertical",-1);
+        int horizontalMargin = ta&&ta->hasValue(SML::layout_marginHorizontal) ? ta->getDimensionPixelSize(SML::layout_marginHorizontal,-1) : attrs.getDimensionPixelSize("layout_marginHorizontal",-1);
+        int verticalMargin = ta&&ta->hasValue(SML::layout_marginVertical) ? ta->getDimensionPixelSize(SML::layout_marginVertical,-1) : attrs.getDimensionPixelSize("layout_marginVertical",-1);
         if(horizontalMargin>=0){
             leftMargin= rightMargin = horizontalMargin;
         }else{
-            leftMargin = attrs.getDimensionPixelSize("layout_marginLeft", UNDEFINED_MARGIN);
-            rightMargin= attrs.getDimensionPixelSize("layout_marginRight",UNDEFINED_MARGIN);
+            leftMargin = ta&&ta->hasValue(SML::layout_marginLeft) ? ta->getDimensionPixelSize(SML::layout_marginLeft, UNDEFINED_MARGIN) : attrs.getDimensionPixelSize("layout_marginLeft", UNDEFINED_MARGIN);
+            rightMargin= ta&&ta->hasValue(SML::layout_marginRight) ? ta->getDimensionPixelSize(SML::layout_marginRight, UNDEFINED_MARGIN) : attrs.getDimensionPixelSize("layout_marginRight",UNDEFINED_MARGIN);
             if(leftMargin==UNDEFINED_MARGIN){
                 mMarginFlags |= LEFT_MARGIN_UNDEFINED_MASK;
                 leftMargin = DEFAULT_MARGIN_RESOLVED;
@@ -70,13 +82,13 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
                 rightMargin = DEFAULT_MARGIN_RESOLVED;
             }
         }
-        startMargin = attrs.getDimensionPixelSize("layout_marginStart",DEFAULT_MARGIN_RELATIVE);
-        endMargin   = attrs.getDimensionPixelSize("layout_marginEnd",DEFAULT_MARGIN_RELATIVE);
+        startMargin = ta&&ta->hasValue(SML::layout_marginStart) ? ta->getDimensionPixelSize(SML::layout_marginStart,DEFAULT_MARGIN_RELATIVE) : attrs.getDimensionPixelSize("layout_marginStart",DEFAULT_MARGIN_RELATIVE);
+        endMargin   = ta&&ta->hasValue(SML::layout_marginEnd) ? ta->getDimensionPixelSize(SML::layout_marginEnd,DEFAULT_MARGIN_RELATIVE) : attrs.getDimensionPixelSize("layout_marginEnd",DEFAULT_MARGIN_RELATIVE);
         if(verticalMargin >=0 ){
             topMargin = bottomMargin = verticalMargin;
         }else{
-            topMargin   = attrs.getDimensionPixelSize("layout_marginTop",DEFAULT_MARGIN_RESOLVED);
-            bottomMargin= attrs.getDimensionPixelSize("layout_marginBottom",DEFAULT_MARGIN_RESOLVED);
+            topMargin   = ta&&ta->hasValue(SML::layout_marginTop) ? ta->getDimensionPixelSize(SML::layout_marginTop,DEFAULT_MARGIN_RESOLVED) : attrs.getDimensionPixelSize("layout_marginTop",DEFAULT_MARGIN_RESOLVED);
+            bottomMargin= ta&&ta->hasValue(SML::layout_marginBottom) ? ta->getDimensionPixelSize(SML::layout_marginBottom,DEFAULT_MARGIN_RESOLVED) : attrs.getDimensionPixelSize("layout_marginBottom",DEFAULT_MARGIN_RESOLVED);
         }
         if (isMarginRelative()) {
             mMarginFlags |= NEED_RESOLUTION_MASK;

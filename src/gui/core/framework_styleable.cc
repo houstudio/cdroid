@@ -351,5 +351,17 @@ namespace styleable {
     namespace RelativeLayout {
         const uint32_t IDS[] = { fw_attr::RelativeLayout::ignoreGravity, fw_attr::View::gravity };
     }
+    namespace Layout {
+        const uint32_t IDS[] = { fw_attr::Layout::layout_width, fw_attr::Layout::layout_height };
+    }
+    namespace MarginLayout {
+        const uint32_t IDS[] = {
+            fw_attr::MarginLayout::layout_margin,
+            fw_attr::MarginLayout::layout_marginLeft, fw_attr::MarginLayout::layout_marginTop,
+            fw_attr::MarginLayout::layout_marginRight, fw_attr::MarginLayout::layout_marginBottom,
+            fw_attr::MarginLayout::layout_marginStart, fw_attr::MarginLayout::layout_marginEnd,
+            fw_attr::MarginLayout::layout_marginHorizontal, fw_attr::MarginLayout::layout_marginVertical,
+        };
+    }
 }
 }
