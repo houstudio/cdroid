@@ -778,6 +778,22 @@ const std::string Assets::getString(const std::string& resid,const std::string&l
 size_t Assets::getArray(const std::string&resid,std::vector<int>&out) {
     std::string pkg,name = resid;
     std::string fullname = parseResource(resid,&name,&pkg);
+    // arsc-first: read integer-array bag from resources.arsc.
+    if (mResTable) {
+        uint32_t id = arscGetIdentifier(name, "array", pkg);
+        if (id != 0) {
+            size_t count = 0; ssize_t block = -1;
+            const ResTable_map* map = mResTable->getBag(id, &count, nullptr, &block);
+            if (map && count) {
+                for (size_t i = 0; i < count; i++) {
+                    const Res_value& v = map[i].value;
+                    if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)
+                        out.emplace_back((int)v.data);
+                }
+                return count;
+            }
+        }
+    }
     auto it = mArraies.find(fullname);
     if(it != mArraies.end()) {
         for(auto itm:it->second)
@@ -790,6 +806,27 @@ size_t Assets::getArray(const std::string&resid,std::vector<int>&out) {
 size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
     std::string pkg,name = resid;
     std::string fullname = parseResource(resid,&name,&pkg);
+    // arsc-first: read string-array bag from resources.arsc.
+    if (mResTable) {
+        uint32_t id = arscGetIdentifier(name, "array", pkg);
+        if (id != 0) {
+            size_t count = 0; ssize_t block = -1;
+            const ResTable_map* map = mResTable->getBag(id, &count, nullptr, &block);
+            if (map && count) {
+                for (size_t i = 0; i < count; i++) {
+                    const Res_value& v = map[i].value;
+                    if (v.dataType == Res_value::TYPE_STRING) {
+                        size_t len = 0;
+                        const char16_t* s = mResTable->stringAtBlock(block, v.data, &len);
+                        if (s && len) out.emplace_back(u16toUtf8(s, len));
+                    } else {
+                        out.emplace_back(renderResValue(this, v));
+                    }
+                }
+                return count;
+            }
+        }
+    }
     auto it = mArraies.find(fullname);
     if(it != mArraies.end()) {
         for(auto itm:it->second){
@@ -995,12 +1032,7 @@ bool Assets::getBoolean(const std::string&refid)const{
 float Assets::getFloat(const std::string&refid,float def)const{
     std::string pkg,name = refid;
     parseResource(name,nullptr,&pkg);
-    name = AttributeSet::normalize(pkg,name);
-    auto it = mDimensions.find(name);
-    if(it != mDimensions.end()){
-        return GET_VARIANT(it->second,float);
-    }
-    // Fallback: resolve from resources.arsc via ResTable.
+    // arsc is the single dimen/float source for binary apps (mDimensions text is fallback).
     if (mResTable) {
         std::string rawName;
         parseResource(refid, &rawName, nullptr);
@@ -1018,6 +1050,11 @@ float Assets::getFloat(const std::string&refid,float def)const{
                     return complexToFloat(v.data);
             }
         }
+    }
+    name = AttributeSet::normalize(pkg,name);
+    auto it = mDimensions.find(name);
+    if(it != mDimensions.end()){
+        return GET_VARIANT(it->second,float);
     }
     return def;
 }
