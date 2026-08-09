@@ -735,20 +735,19 @@ const std::string Assets::getString(const std::string& resid,const std::string&l
     parseResource(resid,&name,&pkg);
     std::string rawName = name; // save before normalize for arsc lookup
     name = AttributeSet::normalize(pkg,resid);
-    auto itr = mStrings.find(name);
-    if(itr != mStrings.end()) {
-        str = itr->second;
-    } else if (mResTable && mResTable->getError() == 0) {
-        // Fallback: resolve from resources.arsc via ResTable. arscGetIdentifier
-        // handles both bare names ("cancel") and "type/name" forms
-        // ("string/cancel") — it strips the type prefix and searches type
-        // "string", so non-string resources (e.g. "attr/foo") won't match.
+    // arsc is the single string source for binary apps (mStrings text is fallback).
+    bool resolved = false;
+    if (mResTable && mResTable->getError() == 0) {
         uint32_t id = arscGetIdentifier(rawName, "string", pkg);
         if (id != 0) {
             size_t len = 0;
             const char16_t* s = mResTable->getResourceString(id, &len);
-            if (s && len > 0) str = u16toUtf8(s, len);
+            if (s && len > 0) { str = u16toUtf8(s, len); resolved = true; }
         }
+    }
+    if (!resolved) {
+        auto itr = mStrings.find(name);
+        if(itr != mStrings.end()) str = itr->second;
     }
     TextUtils::replace(str,"\\n","\n");
     return str;
@@ -906,12 +905,7 @@ int Assets::getDimension(const std::string&refid)const{
     }
     std::string pkg,name = refid;
     parseResource(name,nullptr,&pkg);
-    name = resolveAttrValue(refid);
-    //name = AttributeSet::normalize(pkg,name);
-    auto it = mDimensions.find(name);
-    if(it != mDimensions.end())
-        return GET_VARIANT(it->second,int);
-    // Fallback: resolve from resources.arsc via ResTable.
+    // arsc is the single dimen source for binary apps (mDimensions text is fallback).
     if (mResTable) {
         std::string rawName;
         parseResource(refid, &rawName, nullptr);
@@ -932,6 +926,10 @@ int Assets::getDimension(const std::string&refid)const{
             }
         }
     }
+    name = resolveAttrValue(refid);
+    auto it = mDimensions.find(name);
+    if(it != mDimensions.end())
+        return GET_VARIANT(it->second,int);
     LOGW("Resource not found:%s",refid.c_str());
     return 0;
 }
@@ -939,12 +937,7 @@ int Assets::getDimension(const std::string&refid)const{
 int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
     std::string pkg,name = refid;
     parseResource(name,nullptr,&pkg);
-    name = AttributeSet::normalize(pkg,name);
-    auto it = mDimensions.find(name);
-    if(it != mDimensions.end()){
-        return GET_VARIANT(it->second,int);
-    }
-    // Fallback: resolve from resources.arsc via ResTable.
+    // arsc is the single dimen source for binary apps (mDimensions text is fallback).
     if (mResTable) {
         std::string rawName;
         parseResource(refid, &rawName, nullptr);
@@ -964,6 +957,11 @@ int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
                     return (int)v.data;
             }
         }
+    }
+    name = AttributeSet::normalize(pkg,name);
+    auto it = mDimensions.find(name);
+    if(it != mDimensions.end()){
+        return GET_VARIANT(it->second,int);
     }
     return def;
 }
@@ -1021,12 +1019,7 @@ int Assets::getColor(const std::string&refid) {
     }
     std::string pkg,relname,name = refid;
     parseResource(name,&relname,&pkg);
-    name = AttributeSet::normalize(pkg,name);
-    auto it = mColors.find(name);
-    if(it != mColors.end()) {
-        return it->second;
-    }
-    // Fallback: resolve from resources.arsc via ResTable.
+    // arsc is the single color source for binary apps (mColors text is fallback).
     if (mResTable) {
         uint32_t id = arscGetIdentifier(relname, "color", pkg);
         if (id != 0) {
@@ -1037,6 +1030,11 @@ int Assets::getColor(const std::string&refid) {
                 return v.data;
             }
         }
+    }
+    name = AttributeSet::normalize(pkg,name);
+    auto it = mColors.find(name);
+    if(it != mColors.end()) {
+        return it->second;
     }
     if(relname.compare(0,4,"attr")==0){
         relname=relname.substr(5);
@@ -1176,6 +1174,42 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
             name.erase(pos,1);
     }
     name = parseResource(name,nullptr,&pkg);
+    // arsc-first: resolve the style from resources.arsc (binary apps). Falls back
+    // to the text mStyles table below when no arsc / style not found.
+    if (mResTable) {
+        uint32_t styleId = arscGetIdentifier(name, "style", pkg);
+        if (styleId != 0) {
+            size_t count = 0; ssize_t block = -1;
+            const ResTable_map* map = mResTable->getBag(styleId, &count, nullptr, &block);
+            if (map) {
+                for (size_t i = 0; i < count; i++) {
+                    std::string attrName;
+                    mResTable->getResourceName(map[i].name.ident, nullptr, nullptr, &attrName);
+                    if (attrName.empty() || attrName == "parent") continue;
+                    const Res_value& v = map[i].value;
+                    std::string valStr;
+                    if (v.dataType == Res_value::TYPE_STRING) {
+                        size_t len = 0;
+                        const char16_t* s = mResTable->stringAtBlock(block, v.data, &len);
+                        if (s && len) valStr = u16toUtf8(s, len);
+                    } else {
+                        valStr = renderResValue(this, v);
+                    }
+                    atts.add(attrName, valStr);
+                }
+                atts.setContext(this, pkg);
+                uint32_t parentId = mResTable->getBagParent(styleId);
+                if (parentId != 0) {
+                    std::string pp, pn;
+                    if (mResTable->getResourceName(parentId, &pp, nullptr, &pn) && !pn.empty()) {
+                        AttributeSet parentAtts = obtainStyledAttributes(pp + ":style/" + pn);
+                        atts.inherit(parentAtts);
+                    }
+                }
+                return atts;
+            }
+        }
+    }
     auto it = mStyles.find(name);
     if(it != mStyles.end()){
         atts = it->second;

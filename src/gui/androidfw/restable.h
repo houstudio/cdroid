@@ -80,6 +80,13 @@ public:
     // Returns nullptr if the resource is not a (string-resolvable) string.
     const char16_t* getResourceString(uint32_t resId, size_t* outLen) const;
 
+    // Read a TYPE_STRING bag value: a style/array bag entry's value.data is an
+    // index into the OWNING header's global string pool (the header that holds
+    // this bag, given by getBag's outBlock = package headerIndex). getResourceString
+    // resolves by resId, but bag string values are pool indices, not resIds — so
+    // expose the (block, index) lookup directly.
+    const char16_t* stringAtBlock(ssize_t block, uint32_t index, size_t* outLen) const;
+
     // Read a bag (complex) entry: fills outCount and returns a pointer to the
     // first ResTable_map (count entries), or nullptr if not a bag / not found.
     const ResTable_map* getBag(uint32_t resId, size_t* outCount,

@@ -408,6 +408,16 @@ const char16_t* ResTable::getResourceString(uint32_t resId, size_t* outLen) cons
     return s;
 }
 
+const char16_t* ResTable::stringAtBlock(ssize_t block, uint32_t index, size_t* outLen) const {
+    // TYPE_STRING bag values index into their owning arsc's global pool
+    // (mHeaders[block].values), mirroring the pool lookup in getResourceString.
+    if (block < 0 || (size_t)block >= mHeaders.size()) return nullptr;
+    size_t len = 0;
+    const char16_t* s = mHeaders[block].values.stringAt(index, &len);
+    if (outLen) *outLen = len;
+    return s;
+}
+
 const ResTable_map* ResTable::getBag(uint32_t resId, size_t* outCount,
                                      ResTable_config* outConfig,
                                      ssize_t* outBlock,
