@@ -21,6 +21,8 @@
  */
 #include <widgetEx/constraintlayout/motion/keyframes.h>
 
+#include <widgetEx/widgetex_styleable.h>
+#include <core/assets.h>
 #include <core/xmlpullparser.h>
 
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
@@ -54,21 +56,26 @@ void loadCommon(MotionKey& k, const AttributeSet& a) {
 std::unique_ptr<MotionKey> makeKeyAttribute(const AttributeSet& a) {
     auto k = std::make_unique<MotionKeyAttributes>();
     loadCommon(*k, a);
-    k->mAlpha       = a.getFloat("alpha", k->mAlpha);
-    k->mElevation   = a.getFloat("elevation", k->mElevation);
-    k->mRotation    = a.getFloat("rotation", k->mRotation);
-    k->mRotationX   = a.getFloat("rotationX", k->mRotationX);
-    k->mRotationY   = a.getFloat("rotationY", k->mRotationY);
-    k->mPivotX      = a.getFloat("transformPivotX", k->mPivotX);
-    k->mPivotY      = a.getFloat("transformPivotY", k->mPivotY);
-    k->mScaleX      = a.getFloat("scaleX", k->mScaleX);
-    k->mScaleY      = a.getFloat("scaleY", k->mScaleY);
-    k->mTranslationX = a.getFloat("translationX", k->mTranslationX);
-    k->mTranslationY = a.getFloat("translationY", k->mTranslationY);
-    k->mTranslationZ = a.getFloat("translationZ", k->mTranslationZ);
-    k->mTransitionPathRotate = a.getFloat("transitionPathRotate", k->mTransitionPathRotate);
-    k->mProgress    = a.getFloat("motionProgress", k->mProgress);
-    k->mCurveFit    = a.getInt("curveFit", k->mCurveFit);
+    Context* ctx = a.getContext();
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        a, styleable::KeyAttribute::IDS, styleable::KeyAttribute::COUNT) : nullptr;
+    namespace SKA = styleable::KeyAttribute;
+    k->mAlpha       = ta&&ta->hasValue(SKA::alpha) ? ta->getFloat(SKA::alpha, k->mAlpha) : a.getFloat("alpha", k->mAlpha);
+    k->mElevation   = ta&&ta->hasValue(SKA::elevation) ? ta->getFloat(SKA::elevation, k->mElevation) : a.getFloat("elevation", k->mElevation);
+    k->mRotation    = ta&&ta->hasValue(SKA::rotation) ? ta->getFloat(SKA::rotation, k->mRotation) : a.getFloat("rotation", k->mRotation);
+    k->mRotationX   = ta&&ta->hasValue(SKA::rotationX) ? ta->getFloat(SKA::rotationX, k->mRotationX) : a.getFloat("rotationX", k->mRotationX);
+    k->mRotationY   = ta&&ta->hasValue(SKA::rotationY) ? ta->getFloat(SKA::rotationY, k->mRotationY) : a.getFloat("rotationY", k->mRotationY);
+    k->mPivotX      = ta&&ta->hasValue(SKA::transformPivotX) ? ta->getFloat(SKA::transformPivotX, k->mPivotX) : a.getFloat("transformPivotX", k->mPivotX);
+    k->mPivotY      = ta&&ta->hasValue(SKA::transformPivotY) ? ta->getFloat(SKA::transformPivotY, k->mPivotY) : a.getFloat("transformPivotY", k->mPivotY);
+    k->mScaleX      = ta&&ta->hasValue(SKA::scaleX) ? ta->getFloat(SKA::scaleX, k->mScaleX) : a.getFloat("scaleX", k->mScaleX);
+    k->mScaleY      = ta&&ta->hasValue(SKA::scaleY) ? ta->getFloat(SKA::scaleY, k->mScaleY) : a.getFloat("scaleY", k->mScaleY);
+    k->mTranslationX = ta&&ta->hasValue(SKA::translationX) ? ta->getFloat(SKA::translationX, k->mTranslationX) : a.getFloat("translationX", k->mTranslationX);
+    k->mTranslationY = ta&&ta->hasValue(SKA::translationY) ? ta->getFloat(SKA::translationY, k->mTranslationY) : a.getFloat("translationY", k->mTranslationY);
+    k->mTranslationZ = ta&&ta->hasValue(SKA::translationZ) ? ta->getFloat(SKA::translationZ, k->mTranslationZ) : a.getFloat("translationZ", k->mTranslationZ);
+    k->mTransitionPathRotate = ta&&ta->hasValue(SKA::transitionPathRotate) ? ta->getFloat(SKA::transitionPathRotate, k->mTransitionPathRotate) : a.getFloat("transitionPathRotate", k->mTransitionPathRotate);
+    k->mProgress    = ta&&ta->hasValue(SKA::motionProgress) ? ta->getFloat(SKA::motionProgress, k->mProgress) : a.getFloat("motionProgress", k->mProgress);
+    k->mCurveFit    = ta&&ta->hasValue(SKA::curveFit) ? ta->getInt(SKA::curveFit, k->mCurveFit) : a.getInt("curveFit", k->mCurveFit);
     k->mVisibility  = a.getBoolean("visibility", k->mVisibility != 0) ? 1 : 0;
     return k;
 }
@@ -76,15 +83,20 @@ std::unique_ptr<MotionKey> makeKeyAttribute(const AttributeSet& a) {
 std::unique_ptr<MotionKey> makeKeyPosition(const AttributeSet& a) {
     auto k = std::make_unique<MotionKeyPosition>();
     loadCommon(*k, a);
-    k->mTransitionEasing = a.getString("transitionEasing", k->mTransitionEasing);
-    k->mDrawPath       = a.getInt("drawPath", k->mDrawPath);
-    k->mPercentX       = a.getFloat("percentX", k->mPercentX);
-    k->mPercentY       = a.getFloat("percentY", k->mPercentY);
-    k->mPercentWidth   = a.getFloat("percentWidth", k->mPercentWidth);
-    k->mPercentHeight  = a.getFloat("percentHeight", k->mPercentHeight);
-    k->mAltPercentX    = a.getFloat("sizePercent", k->mAltPercentX);
-    k->mPathMotionArc  = a.getInt("pathMotionArc", k->mPathMotionArc);
-    k->mPositionType   = a.getInt("keyPositionType", kPositionType, k->mPositionType);
+    Context* ctx = a.getContext();
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        a, styleable::KeyPosition::IDS, styleable::KeyPosition::COUNT) : nullptr;
+    namespace SKP = styleable::KeyPosition;
+    k->mTransitionEasing = ta&&ta->hasValue(SKP::transitionEasing) ? ta->getString(SKP::transitionEasing) : a.getString("transitionEasing", k->mTransitionEasing);
+    k->mDrawPath       = ta&&ta->hasValue(SKP::drawPath) ? ta->getInt(SKP::drawPath, k->mDrawPath) : a.getInt("drawPath", k->mDrawPath);
+    k->mPercentX       = ta&&ta->hasValue(SKP::percentX) ? ta->getFloat(SKP::percentX, k->mPercentX) : a.getFloat("percentX", k->mPercentX);
+    k->mPercentY       = ta&&ta->hasValue(SKP::percentY) ? ta->getFloat(SKP::percentY, k->mPercentY) : a.getFloat("percentY", k->mPercentY);
+    k->mPercentWidth   = ta&&ta->hasValue(SKP::percentWidth) ? ta->getFloat(SKP::percentWidth, k->mPercentWidth) : a.getFloat("percentWidth", k->mPercentWidth);
+    k->mPercentHeight  = ta&&ta->hasValue(SKP::percentHeight) ? ta->getFloat(SKP::percentHeight, k->mPercentHeight) : a.getFloat("percentHeight", k->mPercentHeight);
+    k->mAltPercentX    = ta&&ta->hasValue(SKP::sizePercent) ? ta->getFloat(SKP::sizePercent, k->mAltPercentX) : a.getFloat("sizePercent", k->mAltPercentX);
+    k->mPathMotionArc  = ta&&ta->hasValue(SKP::pathMotionArc) ? ta->getInt(SKP::pathMotionArc, k->mPathMotionArc) : a.getInt("pathMotionArc", k->mPathMotionArc);
+    k->mPositionType   = ta&&ta->hasValue(SKP::keyPositionType) ? ta->getInt(SKP::keyPositionType, k->mPositionType) : a.getInt("keyPositionType", kPositionType, k->mPositionType);
     return k;
 }
 
@@ -93,33 +105,43 @@ template <typename KeyT>
 std::unique_ptr<MotionKey> makeKeyCycle(const AttributeSet& a) {
     auto k = std::make_unique<KeyT>();
     loadCommon(*k, a);
-    k->mWaveShape  = a.getInt("waveShape", k->mWaveShape);
-    k->mWavePeriod = a.getFloat("wavePeriod", k->mWavePeriod);
-    k->mWaveOffset = a.getFloat("waveOffset", k->mWaveOffset);
-    k->mAlpha       = a.getFloat("alpha", k->mAlpha);
-    k->mElevation   = a.getFloat("elevation", k->mElevation);
-    k->mRotation    = a.getFloat("rotation", k->mRotation);
-    k->mRotationX   = a.getFloat("rotationX", k->mRotationX);
-    k->mRotationY   = a.getFloat("rotationY", k->mRotationY);
-    k->mScaleX      = a.getFloat("scaleX", k->mScaleX);
-    k->mScaleY      = a.getFloat("scaleY", k->mScaleY);
-    k->mTranslationX = a.getFloat("translationX", k->mTranslationX);
-    k->mTranslationY = a.getFloat("translationY", k->mTranslationY);
-    k->mTranslationZ = a.getFloat("translationZ", k->mTranslationZ);
-    k->mTransitionPathRotate = a.getFloat("transitionPathRotate", k->mTransitionPathRotate);
-    k->mProgress    = a.getFloat("motionProgress", k->mProgress);
+    Context* ctx = a.getContext();
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        a, styleable::KeyCycle::IDS, styleable::KeyCycle::COUNT) : nullptr;
+    namespace SKC = styleable::KeyCycle;
+    k->mWaveShape  = ta&&ta->hasValue(SKC::waveShape) ? ta->getInt(SKC::waveShape, k->mWaveShape) : a.getInt("waveShape", k->mWaveShape);
+    k->mWavePeriod = ta&&ta->hasValue(SKC::wavePeriod) ? ta->getFloat(SKC::wavePeriod, k->mWavePeriod) : a.getFloat("wavePeriod", k->mWavePeriod);
+    k->mWaveOffset = ta&&ta->hasValue(SKC::waveOffset) ? ta->getFloat(SKC::waveOffset, k->mWaveOffset) : a.getFloat("waveOffset", k->mWaveOffset);
+    k->mAlpha       = ta&&ta->hasValue(SKC::alpha) ? ta->getFloat(SKC::alpha, k->mAlpha) : a.getFloat("alpha", k->mAlpha);
+    k->mElevation   = ta&&ta->hasValue(SKC::elevation) ? ta->getFloat(SKC::elevation, k->mElevation) : a.getFloat("elevation", k->mElevation);
+    k->mRotation    = ta&&ta->hasValue(SKC::rotation) ? ta->getFloat(SKC::rotation, k->mRotation) : a.getFloat("rotation", k->mRotation);
+    k->mRotationX   = ta&&ta->hasValue(SKC::rotationX) ? ta->getFloat(SKC::rotationX, k->mRotationX) : a.getFloat("rotationX", k->mRotationX);
+    k->mRotationY   = ta&&ta->hasValue(SKC::rotationY) ? ta->getFloat(SKC::rotationY, k->mRotationY) : a.getFloat("rotationY", k->mRotationY);
+    k->mScaleX      = ta&&ta->hasValue(SKC::scaleX) ? ta->getFloat(SKC::scaleX, k->mScaleX) : a.getFloat("scaleX", k->mScaleX);
+    k->mScaleY      = ta&&ta->hasValue(SKC::scaleY) ? ta->getFloat(SKC::scaleY, k->mScaleY) : a.getFloat("scaleY", k->mScaleY);
+    k->mTranslationX = ta&&ta->hasValue(SKC::translationX) ? ta->getFloat(SKC::translationX, k->mTranslationX) : a.getFloat("translationX", k->mTranslationX);
+    k->mTranslationY = ta&&ta->hasValue(SKC::translationY) ? ta->getFloat(SKC::translationY, k->mTranslationY) : a.getFloat("translationY", k->mTranslationY);
+    k->mTranslationZ = ta&&ta->hasValue(SKC::translationZ) ? ta->getFloat(SKC::translationZ, k->mTranslationZ) : a.getFloat("translationZ", k->mTranslationZ);
+    k->mTransitionPathRotate = ta&&ta->hasValue(SKC::transitionPathRotate) ? ta->getFloat(SKC::transitionPathRotate, k->mTransitionPathRotate) : a.getFloat("transitionPathRotate", k->mTransitionPathRotate);
+    k->mProgress    = ta&&ta->hasValue(SKC::motionProgress) ? ta->getFloat(SKC::motionProgress, k->mProgress) : a.getFloat("motionProgress", k->mProgress);
     return k;
 }
 
 std::unique_ptr<MotionKey> makeKeyTrigger(const AttributeSet& a) {
     auto k = std::make_unique<MotionKeyTrigger>();
     loadCommon(*k, a);
-    k->mCross         = a.getString("onCross", k->mCross);
-    k->mPositiveCross = a.getString("onPositiveCross", k->mPositiveCross);
-    k->mNegativeCross = a.getString("onNegativeCross", k->mNegativeCross);
-    k->mTriggerID     = a.getResourceId("triggerId", k->mTriggerID);
-    k->mTriggerReceiver = a.getResourceId("triggerReceiver", k->mTriggerReceiver);
-    k->mTriggerSlack  = a.getFloat("triggerSlack", k->mTriggerSlack);
+    Context* ctx = a.getContext();
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        a, styleable::KeyTrigger::IDS, styleable::KeyTrigger::COUNT) : nullptr;
+    namespace SKT = styleable::KeyTrigger;
+    k->mCross         = ta&&ta->hasValue(SKT::onCross) ? ta->getString(SKT::onCross) : a.getString("onCross", k->mCross);
+    k->mPositiveCross = ta&&ta->hasValue(SKT::onPositiveCross) ? ta->getString(SKT::onPositiveCross) : a.getString("onPositiveCross", k->mPositiveCross);
+    k->mNegativeCross = ta&&ta->hasValue(SKT::onNegativeCross) ? ta->getString(SKT::onNegativeCross) : a.getString("onNegativeCross", k->mNegativeCross);
+    k->mTriggerID     = ta&&ta->hasValue(SKT::triggerId) ? (int)ta->getResourceId(SKT::triggerId, k->mTriggerID) : a.getResourceId("triggerId", k->mTriggerID);
+    k->mTriggerReceiver = ta&&ta->hasValue(SKT::triggerReceiver) ? (int)ta->getResourceId(SKT::triggerReceiver, k->mTriggerReceiver) : a.getResourceId("triggerReceiver", k->mTriggerReceiver);
+    k->mTriggerSlack  = ta&&ta->hasValue(SKT::triggerSlack) ? ta->getFloat(SKT::triggerSlack, k->mTriggerSlack) : a.getFloat("triggerSlack", k->mTriggerSlack);
     return k;
 }
 } // namespace

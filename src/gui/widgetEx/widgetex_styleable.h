@@ -277,6 +277,169 @@ namespace fw_attr {
         constexpr uint32_t quantizeMotionPhase = 0x7f01007a;
         constexpr uint32_t quantizeMotionInterpolator = 0x7f01007b;
     }
+    namespace Transition {
+        constexpr uint32_t id = 0x010100d0;
+        constexpr uint32_t constraintSetStart = 0x7f01007c;
+        constexpr uint32_t constraintSetEnd = 0x7f01007d;
+        constexpr uint32_t transitionDisable = 0x7f01007e;
+        constexpr uint32_t layoutDuringTransition = 0x7f01007f;
+        constexpr uint32_t pathMotionArc = 0x7f010073;
+        constexpr uint32_t autoTransition = 0x7f010080;
+        constexpr uint32_t motionInterpolator = 0x7f010081;
+        constexpr uint32_t duration = 0x01010198;
+        constexpr uint32_t staggered = 0x7f010082;
+        constexpr uint32_t transitionFlags = 0x7f010083;
+    }
+    namespace OnSwipe {
+        constexpr uint32_t dragScale = 0x7f010084;
+        constexpr uint32_t dragThreshold = 0x7f010085;
+        constexpr uint32_t autoCompleteMode = 0x7f010086;
+        constexpr uint32_t maxVelocity = 0x7f010087;
+        constexpr uint32_t maxAcceleration = 0x7f010088;
+        constexpr uint32_t springMass = 0x7f010089;
+        constexpr uint32_t springStiffness = 0x7f01008a;
+        constexpr uint32_t springDamping = 0x7f01008b;
+        constexpr uint32_t springStopThreshold = 0x7f01008c;
+        constexpr uint32_t springBoundary = 0x7f01008d;
+        constexpr uint32_t dragDirection = 0x7f01008e;
+        constexpr uint32_t touchAnchorId = 0x7f01008f;
+        constexpr uint32_t touchAnchorSide = 0x7f010090;
+        constexpr uint32_t rotationCenterId = 0x7f010091;
+        constexpr uint32_t touchRegionId = 0x7f010092;
+        constexpr uint32_t limitBoundsTo = 0x7f010093;
+        constexpr uint32_t nestedScrollFlags = 0x7f010094;
+        constexpr uint32_t moveWhenScrollAtTop = 0x7f010095;
+        constexpr uint32_t onTouchUp = 0x7f010096;
+    }
+    namespace KeyAttribute {
+        constexpr uint32_t framePosition = 0x7f010097;
+        constexpr uint32_t motionTarget = 0x7f010098;
+        constexpr uint32_t transitionEasing = 0x7f010072;
+        constexpr uint32_t curveFit = 0x7f010099;
+        constexpr uint32_t motionProgress = 0x7f010077;
+        constexpr uint32_t alpha = 0x0101031f;
+        constexpr uint32_t elevation = 0x01010440;
+        constexpr uint32_t rotation = 0x01010326;
+        constexpr uint32_t rotationX = 0x01010327;
+        constexpr uint32_t rotationY = 0x01010328;
+        constexpr uint32_t transformPivotX = 0x01010320;
+        constexpr uint32_t transformPivotY = 0x01010321;
+        constexpr uint32_t transformPivotTarget = 0x7f01006f;
+        constexpr uint32_t transitionPathRotate = 0x7f010075;
+        constexpr uint32_t scaleX = 0x01010324;
+        constexpr uint32_t scaleY = 0x01010325;
+        constexpr uint32_t translationX = 0x01010322;
+        constexpr uint32_t translationY = 0x01010323;
+        constexpr uint32_t translationZ = 0x010103fa;
+    }
+    namespace KeyPosition {
+        constexpr uint32_t keyPositionType = 0x7f01009a;
+        constexpr uint32_t percentX = 0x7f01009b;
+        constexpr uint32_t percentY = 0x7f01009c;
+        constexpr uint32_t percentWidth = 0x7f01009d;
+        constexpr uint32_t percentHeight = 0x7f01009e;
+        constexpr uint32_t framePosition = 0x7f010097;
+        constexpr uint32_t motionTarget = 0x7f010098;
+        constexpr uint32_t transitionEasing = 0x7f010072;
+        constexpr uint32_t pathMotionArc = 0x7f010073;
+        constexpr uint32_t curveFit = 0x7f010099;
+        constexpr uint32_t drawPath = 0x7f010076;
+        constexpr uint32_t sizePercent = 0x7f01009f;
+    }
+    namespace KeyCycle {
+        constexpr uint32_t motionTarget = 0x7f010098;
+        constexpr uint32_t curveFit = 0x7f010099;
+        constexpr uint32_t framePosition = 0x7f010097;
+        constexpr uint32_t transitionEasing = 0x7f010072;
+        constexpr uint32_t motionProgress = 0x7f010077;
+        constexpr uint32_t waveShape = 0x7f0100a0;
+        constexpr uint32_t wavePhase = 0x7f0100a1;
+        constexpr uint32_t wavePeriod = 0x7f0100a2;
+        constexpr uint32_t waveOffset = 0x7f0100a3;
+        constexpr uint32_t waveVariesBy = 0x7f0100a4;
+        constexpr uint32_t transitionPathRotate = 0x7f010075;
+        constexpr uint32_t alpha = 0x0101031f;
+        constexpr uint32_t elevation = 0x01010440;
+        constexpr uint32_t rotation = 0x01010326;
+        constexpr uint32_t rotationX = 0x01010327;
+        constexpr uint32_t rotationY = 0x01010328;
+        constexpr uint32_t scaleX = 0x01010324;
+        constexpr uint32_t scaleY = 0x01010325;
+        constexpr uint32_t translationX = 0x01010322;
+        constexpr uint32_t translationY = 0x01010323;
+        constexpr uint32_t translationZ = 0x010103fa;
+    }
+    namespace KeyTimeCycle {
+        constexpr uint32_t framePosition = 0x7f010097;
+        constexpr uint32_t motionTarget = 0x7f010098;
+        constexpr uint32_t transitionEasing = 0x7f010072;
+        constexpr uint32_t curveFit = 0x7f010099;
+        constexpr uint32_t waveShape = 0x7f0100a0;
+        constexpr uint32_t wavePeriod = 0x7f0100a2;
+        constexpr uint32_t motionProgress = 0x7f010077;
+        constexpr uint32_t waveOffset = 0x7f0100a3;
+        constexpr uint32_t wavePhase = 0x7f0100a1;
+        constexpr uint32_t waveDecay = 0x7f0100a5;
+        constexpr uint32_t alpha = 0x0101031f;
+        constexpr uint32_t elevation = 0x01010440;
+        constexpr uint32_t rotation = 0x01010326;
+        constexpr uint32_t rotationX = 0x01010327;
+        constexpr uint32_t rotationY = 0x01010328;
+        constexpr uint32_t transitionPathRotate = 0x7f010075;
+        constexpr uint32_t scaleX = 0x01010324;
+        constexpr uint32_t scaleY = 0x01010325;
+        constexpr uint32_t translationX = 0x01010322;
+        constexpr uint32_t translationY = 0x01010323;
+        constexpr uint32_t translationZ = 0x010103fa;
+    }
+    namespace KeyTrigger {
+        constexpr uint32_t framePosition = 0x7f010097;
+        constexpr uint32_t motionTarget = 0x7f010098;
+        constexpr uint32_t triggerReceiver = 0x7f0100a6;
+        constexpr uint32_t onNegativeCross = 0x7f0100a7;
+        constexpr uint32_t onPositiveCross = 0x7f0100a8;
+        constexpr uint32_t onCross = 0x7f0100a9;
+        constexpr uint32_t viewTransitionOnNegativeCross = 0x7f0100aa;
+        constexpr uint32_t viewTransitionOnPositiveCross = 0x7f0100ab;
+        constexpr uint32_t viewTransitionOnCross = 0x7f0100ac;
+        constexpr uint32_t triggerSlack = 0x7f0100ad;
+        constexpr uint32_t triggerId = 0x7f0100ae;
+        constexpr uint32_t motion_postLayoutCollision = 0x7f0100af;
+        constexpr uint32_t motion_triggerOnCollision = 0x7f0100b0;
+    }
+    namespace ViewTransition {
+        constexpr uint32_t id = 0x010100d0;
+        constexpr uint32_t motionTarget = 0x7f010098;
+        constexpr uint32_t viewTransitionMode = 0x7f0100b1;
+        constexpr uint32_t onStateTransition = 0x7f0100b2;
+        constexpr uint32_t duration = 0x01010198;
+        constexpr uint32_t upDuration = 0x7f0100b3;
+        constexpr uint32_t transitionDisable = 0x7f01007e;
+        constexpr uint32_t pathMotionArc = 0x7f010073;
+        constexpr uint32_t motionInterpolator = 0x7f010081;
+        constexpr uint32_t SharedValueId = 0x7f0100b4;
+        constexpr uint32_t SharedValue = 0x7f0100b5;
+        constexpr uint32_t setsTag = 0x7f0100b6;
+        constexpr uint32_t clearsTag = 0x7f0100b7;
+        constexpr uint32_t ifTagSet = 0x7f0100b8;
+        constexpr uint32_t ifTagNotSet = 0x7f0100b9;
+    }
+    namespace Motion {
+        constexpr uint32_t animateRelativeTo = 0x7f010070;
+        constexpr uint32_t animateCircleAngleTo = 0x7f010071;
+        constexpr uint32_t transitionEasing = 0x7f010072;
+        constexpr uint32_t pathMotionArc = 0x7f010073;
+        constexpr uint32_t motionPathRotate = 0x7f0100ba;
+        constexpr uint32_t motionStagger = 0x7f010078;
+        constexpr uint32_t drawPath = 0x7f010076;
+        constexpr uint32_t quantizeMotionSteps = 0x7f010079;
+        constexpr uint32_t quantizeMotionPhase = 0x7f01007a;
+        constexpr uint32_t quantizeMotionInterpolator = 0x7f01007b;
+    }
+    namespace MotionScene {
+        constexpr uint32_t defaultDuration = 0x7f0100bb;
+        constexpr uint32_t layoutDuringTransition = 0x7f01007f;
+    }
 } // namespace fw_attr
 
 namespace styleable {
@@ -302,6 +465,46 @@ namespace styleable {
     }
     namespace Constraint {
         enum { orientation, id, visibility, visibilityMode, alpha, elevation, rotation, rotationX, rotationY, scaleX, scaleY, pivotAnchor, transformPivotX, transformPivotY, transformPivotTarget, translationX, translationY, translationZ, layout_width, layout_height, layout_constraintWidth, layout_constraintHeight, layout_marginStart, layout_marginBottom, layout_marginTop, layout_marginEnd, layout_marginLeft, layout_marginRight, layout_constraintCircle, layout_constraintCircleRadius, layout_constraintCircleAngle, layout_constraintGuide_begin, layout_constraintGuide_end, layout_constraintGuide_percent, guidelineUseRtl, layout_constraintLeft_toLeftOf, layout_constraintLeft_toRightOf, layout_constraintRight_toLeftOf, layout_constraintRight_toRightOf, layout_constraintTop_toTopOf, layout_constraintTop_toBottomOf, layout_constraintBottom_toTopOf, layout_constraintBottom_toBottomOf, layout_constraintBaseline_toBaselineOf, layout_constraintBaseline_toTopOf, layout_constraintBaseline_toBottomOf, layout_constraintStart_toEndOf, layout_constraintStart_toStartOf, layout_constraintEnd_toStartOf, layout_constraintEnd_toEndOf, layout_goneMarginLeft, layout_goneMarginTop, layout_goneMarginRight, layout_goneMarginBottom, layout_goneMarginStart, layout_goneMarginEnd, layout_goneMarginBaseline, layout_marginBaseline, layout_constrainedWidth, layout_constrainedHeight, layout_constraintHorizontal_bias, layout_constraintVertical_bias, layout_constraintWidth_default, layout_constraintHeight_default, layout_constraintWidth_min, layout_constraintWidth_max, layout_constraintWidth_percent, layout_constraintHeight_min, layout_constraintHeight_max, layout_constraintHeight_percent, layout_constraintLeft_creator, layout_constraintTop_creator, layout_constraintRight_creator, layout_constraintBottom_creator, layout_constraintBaseline_creator, layout_constraintDimensionRatio, layout_constraintHorizontal_weight, layout_constraintVertical_weight, layout_constraintHorizontal_chainStyle, layout_constraintVertical_chainStyle, layout_editor_absoluteX, layout_editor_absoluteY, layout_wrapBehaviorInParent, barrierDirection, barrierMargin, constraint_referenced_ids, constraint_referenced_tags, maxHeight, maxWidth, minHeight, minWidth, barrierAllowsGoneWidgets, chainUseRtl, flow_horizontalStyle, flow_verticalStyle, flow_verticalAlign, flow_horizontalAlign, flow_verticalBias, flow_horizontalBias, flow_wrapMode, flow_maxElementsWrap, flow_horizontalGap, flow_verticalGap, flow_firstHorizontalStyle, flow_firstVerticalStyle, flow_firstHorizontalBias, flow_firstVerticalBias, flow_lastHorizontalStyle, flow_lastVerticalStyle, flow_lastHorizontalBias, flow_lastVerticalBias, animateRelativeTo, animateCircleAngleTo, transitionEasing, pathMotionArc, polarRelativeTo, transitionPathRotate, drawPath, motionProgress, layout_constraintTag, motionStagger, quantizeMotionSteps, quantizeMotionPhase, quantizeMotionInterpolator, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace Transition {
+        enum { id, constraintSetStart, constraintSetEnd, transitionDisable, layoutDuringTransition, pathMotionArc, autoTransition, motionInterpolator, duration, staggered, transitionFlags, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace OnSwipe {
+        enum { dragScale, dragThreshold, autoCompleteMode, maxVelocity, maxAcceleration, springMass, springStiffness, springDamping, springStopThreshold, springBoundary, dragDirection, touchAnchorId, touchAnchorSide, rotationCenterId, touchRegionId, limitBoundsTo, nestedScrollFlags, moveWhenScrollAtTop, onTouchUp, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace KeyAttribute {
+        enum { framePosition, motionTarget, transitionEasing, curveFit, motionProgress, alpha, elevation, rotation, rotationX, rotationY, transformPivotX, transformPivotY, transformPivotTarget, transitionPathRotate, scaleX, scaleY, translationX, translationY, translationZ, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace KeyPosition {
+        enum { keyPositionType, percentX, percentY, percentWidth, percentHeight, framePosition, motionTarget, transitionEasing, pathMotionArc, curveFit, drawPath, sizePercent, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace KeyCycle {
+        enum { motionTarget, curveFit, framePosition, transitionEasing, motionProgress, waveShape, wavePhase, wavePeriod, waveOffset, waveVariesBy, transitionPathRotate, alpha, elevation, rotation, rotationX, rotationY, scaleX, scaleY, translationX, translationY, translationZ, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace KeyTimeCycle {
+        enum { framePosition, motionTarget, transitionEasing, curveFit, waveShape, wavePeriod, motionProgress, waveOffset, wavePhase, waveDecay, alpha, elevation, rotation, rotationX, rotationY, transitionPathRotate, scaleX, scaleY, translationX, translationY, translationZ, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace KeyTrigger {
+        enum { framePosition, motionTarget, triggerReceiver, onNegativeCross, onPositiveCross, onCross, viewTransitionOnNegativeCross, viewTransitionOnPositiveCross, viewTransitionOnCross, triggerSlack, triggerId, motion_postLayoutCollision, motion_triggerOnCollision, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace ViewTransition {
+        enum { id, motionTarget, viewTransitionMode, onStateTransition, duration, upDuration, transitionDisable, pathMotionArc, motionInterpolator, SharedValueId, SharedValue, setsTag, clearsTag, ifTagSet, ifTagNotSet, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace Motion {
+        enum { animateRelativeTo, animateCircleAngleTo, transitionEasing, pathMotionArc, motionPathRotate, motionStagger, drawPath, quantizeMotionSteps, quantizeMotionPhase, quantizeMotionInterpolator, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace MotionScene {
+        enum { defaultDuration, layoutDuringTransition, COUNT };
         extern const uint32_t IDS[];
     }
 } // namespace styleable

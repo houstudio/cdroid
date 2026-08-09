@@ -462,8 +462,12 @@ AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransit
 
 AnimatedStateListDrawable::AnimationDrawableTransition::~AnimationDrawableTransition(){
     delete mFrameInterpolator;
-	delete mAnim;
-	delete mDrawable;
+    delete mAnim;
+    // mDrawable is the container's own child (mDrawables[transitionIndex] == getCurrent()),
+    // owned and freed by DrawableContainer's ConstantState (~DrawableContainer). Do NOT delete
+    // here: matches AOSP (GC owns it) and the sibling AnimatedVectorDrawableTransition (no dtor).
+    // Deleting here freed mCurrDrawable mid-flight (jumpToCurrentState UAF via selectDrawable)
+    // and double-freed the same child when ~DrawableContainer ran afterwards.
 }
 
 bool AnimatedStateListDrawable::AnimationDrawableTransition::canReverse() {

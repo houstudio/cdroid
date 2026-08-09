@@ -20,6 +20,8 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.MotionScene.
  */
 #include <widgetEx/constraintlayout/motion/motionscene.h>
+#include <widgetEx/widgetex_styleable.h>
+#include <core/assets.h>
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/motion/touchresponse.h>
 #include <widgetEx/constraintlayout/motion/viewtransition.h>
@@ -88,15 +90,21 @@ const std::unordered_map<std::string, int> kAutoTransition = {
 // ===========================================================================
 MotionScene::Transition::Transition(MotionScene& scene, const AttributeSet& a)
     : mDuration(scene.mDefaultDuration) {
-    mId = scene.getId(a.getString("id", "")); // <Transition android:id="@+id/...">
-    mConstraintSetStart = scene.getId(a.getString("constraintSetStart", ""));
-    mConstraintSetEnd   = scene.getId(a.getString("constraintSetEnd", ""));
-    mDuration = a.getInt("duration", mDuration);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Context* ctx = a.getContext();
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        a, styleable::Transition::IDS, styleable::Transition::COUNT) : nullptr;
+    namespace STR = styleable::Transition;
+    mId = scene.getId(ta&&ta->hasValue(STR::id) ? ta->getString(STR::id) : a.getString("id", "")); // <Transition android:id="@+id/...">
+    mConstraintSetStart = scene.getId(ta&&ta->hasValue(STR::constraintSetStart) ? ta->getString(STR::constraintSetStart) : a.getString("constraintSetStart", ""));
+    mConstraintSetEnd   = scene.getId(ta&&ta->hasValue(STR::constraintSetEnd) ? ta->getString(STR::constraintSetEnd) : a.getString("constraintSetEnd", ""));
+    mDuration = ta&&ta->hasValue(STR::duration) ? ta->getInt(STR::duration, mDuration) : a.getInt("duration", mDuration);
     if (mDuration < 8) mDuration = 8;
-    mStagger = a.getFloat("staggered", mStagger);
-    mDefaultInterpolatorString = a.getString("motionInterpolator", mDefaultInterpolatorString);
-    mPathMotionArc = a.getInt("pathMotionArc", mPathMotionArc);
-    mAutoTransition = a.getInt("autoTransition", kAutoTransition, mAutoTransition);
+    mStagger = ta&&ta->hasValue(STR::staggered) ? ta->getFloat(STR::staggered, mStagger) : a.getFloat("staggered", mStagger);
+    mDefaultInterpolatorString = ta&&ta->hasValue(STR::motionInterpolator) ? ta->getString(STR::motionInterpolator) : a.getString("motionInterpolator", mDefaultInterpolatorString);
+    mPathMotionArc = ta&&ta->hasValue(STR::pathMotionArc) ? ta->getInt(STR::pathMotionArc, mPathMotionArc) : a.getInt("pathMotionArc", mPathMotionArc);
+    mAutoTransition = ta&&ta->hasValue(STR::autoTransition) ? ta->getInt(STR::autoTransition, mAutoTransition) : a.getInt("autoTransition", kAutoTransition, mAutoTransition);
     if (mConstraintSetStart == UNSET) mIsAbstract = true;
 }
 

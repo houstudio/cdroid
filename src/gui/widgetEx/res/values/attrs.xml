@@ -283,4 +283,169 @@
         <attr name="quantizeMotionPhase"/>
         <attr name="quantizeMotionInterpolator"/>
     </declare-styleable>
+
+    <!-- ===== Motion scene styleables (from androidx constraintlayout) ===== -->
+    <declare-styleable name="Transition">
+        <attr name="android:id"/>
+        <attr name="constraintSetStart" format="reference"/>
+        <attr name="constraintSetEnd" format="reference"/>
+        <attr name="transitionDisable"/>
+        <attr name="layoutDuringTransition"/>
+        <attr name="pathMotionArc"/>
+        <attr name="autoTransition" format="enum"/>
+        <attr name="motionInterpolator" format="string|reference|enum"/>
+        <attr name="duration"/>
+        <attr name="staggered" format="float"/>
+        <attr name="transitionFlags"/>
+    </declare-styleable>
+    <declare-styleable name="MotionScene">
+        <attr name="defaultDuration"/>
+        <attr name="layoutDuringTransition"/>
+    </declare-styleable>
+    <declare-styleable name="OnSwipe">
+        <attr name="dragScale" format="float"/>
+        <attr name="dragThreshold" format="float"/>
+        <attr name="autoCompleteMode" format="enum"/>
+        <attr name="maxVelocity" format="float"/>
+        <attr name="maxAcceleration" format="float"/>
+        <attr name="springMass" format="float"/>
+        <attr name="springStiffness" format="float"/>
+        <attr name="springDamping" format="float"/>
+        <attr name="springStopThreshold" format="float"/>
+        <attr name="springBoundary" format="flags"/>
+        <attr name="dragDirection"/>
+        <attr name="touchAnchorId"/>
+        <attr name="touchAnchorSide"/>
+        <attr name="rotationCenterId" format="reference"/>
+        <attr name="touchRegionId" format="reference"/>
+        <attr name="limitBoundsTo" format="reference"/>
+        <attr name="nestedScrollFlags" format="flags"/>
+        <attr name="moveWhenScrollAtTop" format="boolean"/>
+        <attr name="onTouchUp" format="enum"/>
+    </declare-styleable>
+    <declare-styleable name="KeyAttribute">
+        <attr name="framePosition"/>
+        <attr name="motionTarget"/>
+        <attr name="transitionEasing"/>
+        <attr name="curveFit"/>
+        <attr name="motionProgress"/>
+        <attr name="android:alpha"/>
+        <attr name="android:elevation"/>
+        <attr name="android:rotation"/>
+        <attr name="android:rotationX"/>
+        <attr name="android:rotationY"/>
+        <attr name="android:transformPivotX"/>
+        <attr name="android:transformPivotY"/>
+        <attr name="transformPivotTarget"/>
+        <attr name="transitionPathRotate"/>
+        <attr name="android:scaleX"/>
+        <attr name="android:scaleY"/>
+        <attr name="android:translationX"/>
+        <attr name="android:translationY"/>
+        <attr name="android:translationZ"/>
+    </declare-styleable>
+    <declare-styleable name="KeyPosition">
+        <attr name="keyPositionType" format="enum"/>
+        <attr name="percentX" format="float"/>
+        <attr name="percentY" format="float"/>
+        <attr name="percentWidth" format="float"/>
+        <attr name="percentHeight" format="float"/>
+        <attr name="framePosition"/>
+        <attr name="motionTarget"/>
+        <attr name="transitionEasing"/>
+        <attr name="pathMotionArc"/>
+        <attr name="curveFit"/>
+        <attr name="drawPath"/>
+        <attr name="sizePercent"/>
+    </declare-styleable>
+    <declare-styleable name="KeyCycle">
+        <attr name="motionTarget"/>
+        <attr name="curveFit"/>
+        <attr name="framePosition"/>
+        <attr name="transitionEasing"/>
+        <attr name="motionProgress"/>
+        <attr name="waveShape"/>
+        <attr name="wavePhase"/>
+        <attr name="wavePeriod"/>
+        <attr name="waveOffset"/>
+        <attr name="waveVariesBy"/>
+        <attr name="transitionPathRotate"/>
+        <attr name="android:alpha"/>
+        <attr name="android:elevation"/>
+        <attr name="android:rotation"/>
+        <attr name="android:rotationX"/>
+        <attr name="android:rotationY"/>
+        <attr name="android:scaleX"/>
+        <attr name="android:scaleY"/>
+        <attr name="android:translationX"/>
+        <attr name="android:translationY"/>
+        <attr name="android:translationZ"/>
+    </declare-styleable>
+    <declare-styleable name="KeyTimeCycle">
+        <attr name="framePosition"/>
+        <attr name="motionTarget"/>
+        <attr name="transitionEasing"/>
+        <attr name="curveFit"/>
+        <attr name="waveShape"/>
+        <attr name="wavePeriod"/>
+        <attr name="motionProgress"/>
+        <attr name="waveOffset"/>
+        <attr name="wavePhase"/>
+        <attr name="waveDecay"/>
+        <attr name="android:alpha"/>
+        <attr name="android:elevation"/>
+        <attr name="android:rotation"/>
+        <attr name="android:rotationX"/>
+        <attr name="android:rotationY"/>
+        <attr name="transitionPathRotate"/>
+        <attr name="android:scaleX"/>
+        <attr name="android:scaleY"/>
+        <attr name="android:translationX"/>
+        <attr name="android:translationY"/>
+        <attr name="android:translationZ"/>
+    </declare-styleable>
+    <declare-styleable name="Motion">
+        <attr name="animateRelativeTo"/>
+        <attr name="animateCircleAngleTo"/>
+        <attr name="transitionEasing"/>
+        <attr name="pathMotionArc"/>
+        <attr name="motionPathRotate"/>
+        <attr name="motionStagger"/>
+        <attr name="drawPath"/>
+        <attr name="quantizeMotionSteps"/>
+        <attr name="quantizeMotionPhase"/>
+        <attr name="quantizeMotionInterpolator"/>
+    </declare-styleable>
+    <declare-styleable name="KeyTrigger">
+        <attr name="framePosition"/>
+        <attr name="motionTarget"/>
+        <attr name="triggerReceiver" format="reference"/>
+        <attr name="onNegativeCross" format="string"/>
+        <attr name="onPositiveCross" format="string"/>
+        <attr name="onCross" format="string"/>
+        <attr name="viewTransitionOnNegativeCross" format="reference"/>
+        <attr name="viewTransitionOnPositiveCross" format="reference"/>
+        <attr name="viewTransitionOnCross" format="reference"/>
+        <attr name="triggerSlack" format="float"/>
+        <attr name="triggerId" format="reference"/>
+        <attr name="motion_postLayoutCollision" format="boolean"/>
+        <attr name="motion_triggerOnCollision" format="reference"/>
+    </declare-styleable>
+    <declare-styleable name="ViewTransition">
+        <attr name="android:id"/>
+        <attr name="motionTarget"/>
+        <attr name="viewTransitionMode"/>
+        <attr name="onStateTransition"/>
+        <attr name="duration"/>
+        <attr name="upDuration" format="integer"/>
+        <attr name="transitionDisable"/>
+        <attr name="pathMotionArc"/>
+        <attr name="motionInterpolator"/>
+        <attr name="SharedValueId" format="reference"/>
+        <attr name="SharedValue" format="integer"/>
+        <attr name="setsTag" format="reference"/>
+        <attr name="clearsTag" format="reference"/>
+        <attr name="ifTagSet" format="reference"/>
+        <attr name="ifTagNotSet" format="reference"/>
+    </declare-styleable>
 </resources>
