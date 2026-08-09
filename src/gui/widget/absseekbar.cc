@@ -47,7 +47,9 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,att
     setThumbOffset(thumbOffset);
 
     const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
-    mDisabledAlpha = useDisabledAlpha? (ta&&ta->hasValue(SSB::disabledAlpha) ? ta->getFloat(SSB::disabledAlpha, 0.5f) : attrs.getFloat("disabledAlpha", 0.5f)) :1.f;
+    // disabledAlpha is not in the SeekBar styleable (only ToggleButton's), so
+    // read it via the AttributeSet bridge for both modes.
+    mDisabledAlpha = useDisabledAlpha? attrs.getFloat("disabledAlpha", 0.5f) :1.f;
     mSplitTrack = ta&&ta->hasValue(SSB::splitTrack) ? ta->getBoolean(SSB::splitTrack,false) : attrs.getBoolean("splitTrack",false);
     mThumbExclusionMaxSize = ctx->getDimension("cdroid:dimen/seekbar_thumb_exclusion_max_size");
 

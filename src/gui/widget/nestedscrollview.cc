@@ -58,8 +58,8 @@ NestedScrollView::NestedScrollView(Context* context,const AttributeSet&attrs):Fr
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::NestedScrollView::IDS, styleable::NestedScrollView::COUNT) : nullptr;
-    namespace SNS = styleable::NestedScrollView;
+        attrs, styleable::ScrollView::IDS, styleable::ScrollView::COUNT) : nullptr;
+    namespace SNS = styleable::ScrollView;
     setFillViewport(ta&&ta->hasValue(SNS::fillViewport) ? ta->getBoolean(SNS::fillViewport,false) : attrs.getBoolean("fillViewport",false));
 }
 

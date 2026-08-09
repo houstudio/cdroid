@@ -1,0 +1,8 @@
+# attrs.xml declare-styleable name -> output C++ styleable name
+# (the layout styleables use nested names in AOSP; CDROID uses concatenated names)
+ViewGroup_Layout Layout
+ViewGroup_MarginLayout MarginLayout
+LinearLayout_Layout LinearLayoutLayout
+GridLayout_Layout GridLayoutLayout
+TableRow_Cell TableRowLayout
+RelativeLayout_Layout RelativeLayoutLayout

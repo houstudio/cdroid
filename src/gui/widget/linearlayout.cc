@@ -133,8 +133,6 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
                 setDividerDrawable(ta->getDrawable(i)); break;
             case styleable::LinearLayout::dividerPadding:
                 mDividerPadding = ta->getInt(i, 0); break;
-            case styleable::LinearLayout::measureAllChildren:
-                { /* TODO: setMeasureAllChildren not ported */ } break;
             default: break;
             }
         }
