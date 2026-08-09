@@ -120,8 +120,8 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
     createLayoutManager(context, layoutManagerName, attrs);//, defStyle, defStyleRes);
     setDescendantFocusability(descendantFocusability==-1?ViewGroup::FOCUS_AFTER_DESCENDANTS:ViewGroup::FOCUS_AFTER_DESCENDANTS);
 
-    // Re-set whether nested scrolling is enabled so that it is set on all API levels
-    setNestedScrollingEnabled(ta&&ta->hasValue(SRV::nestedScrollingEnabled) ? ta->getBoolean(SRV::nestedScrollingEnabled, true) : attrs.getBoolean("nestedScrollingEnabled", true));
+    // nestedScrollingEnabled is a framework View attr (not in the RecyclerView styleable) — attrs bridge.
+    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled", true));
     setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 

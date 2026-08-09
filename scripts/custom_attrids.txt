@@ -206,3 +206,4 @@
 0x7f0100c9 fastScrollVerticalTrackDrawable
 0x7f0100ca fastScrollHorizontalThumbDrawable
 0x7f0100cb fastScrollHorizontalTrackDrawable
+0x7f0100cc isScrollToTopEnabled

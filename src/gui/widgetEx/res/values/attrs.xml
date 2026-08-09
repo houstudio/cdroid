@@ -461,13 +461,12 @@
         <attr name="motionEffect_strict" format="boolean"/>
     </declare-styleable>
 
-    <!-- RecyclerView (attr set CDROID reads; from androidx recyclerview) -->
+    <!-- RecyclerView (verbatim from androidx recyclerview attrs.xml) -->
     <declare-styleable name="RecyclerView">
-        <attr name="android:orientation"/>
-        <attr name="android:clipToPadding"/>
-        <attr name="android:descendantFocusability"/>
-        <attr name="android:nestedScrollingEnabled"/>
         <attr name="layoutManager" format="string"/>
+        <attr name="android:orientation"/>
+        <attr name="android:descendantFocusability"/>
+        <attr name="android:clipToPadding"/>
         <attr name="spanCount" format="integer"/>
         <attr name="reverseLayout" format="boolean"/>
         <attr name="stackFromEnd" format="boolean"/>
@@ -476,5 +475,6 @@
         <attr name="fastScrollVerticalTrackDrawable" format="reference"/>
         <attr name="fastScrollHorizontalThumbDrawable" format="reference"/>
         <attr name="fastScrollHorizontalTrackDrawable" format="reference"/>
+        <attr name="isScrollToTopEnabled" format="boolean"/>
     </declare-styleable>
 </resources>
