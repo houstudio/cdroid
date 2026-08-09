@@ -45,7 +45,7 @@ option(ENABLE_COORDINATORLAYOUT "Enable CoordinatorLayout(use MotionLayout inste
 option(ENABLE_CONSTRAINTLAYOUT "Enable ConstraintLayout(contains MotionLayout)" ON)
 option(ENABLE_I18N "Enable I18N" OFF)
 option(ENABLE_MENU "Enable MENU(Experience)" ON)
-option(ENABLE_WEARABLE_WIDGETS "Enable wearable Widgets(Experience)" ON)
+option(ENABLE_WEARABLE_WIDGETS "Enable wearable Widgets(Experience)" OFF)
 option(ENABLE_KPLOT "Enable QT KPlot " ON)
 option(ENABLE_ACHART "Enable AChartEngine " ON)
 

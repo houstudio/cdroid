@@ -71,4 +71,6 @@ if(ENABLE_BARCODE)
     list(APPEND WIDGETEX_SOURCES widgetEx/barcodeview.cc)
 endif(ENABLE_BARCODE)
 
-# wearable (widgetEx/wear) removed — depended on CDROID layout ids not in slim res
+if(ENABLE_WEARABLE_WIDGETS)
+    include(widgetEx/wear/wear.cmake)
+endif()
