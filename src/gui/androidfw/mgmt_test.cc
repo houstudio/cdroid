@@ -4,6 +4,7 @@
 //   array/names=0x7f010000, string/{chain,greeting,hello}=0x7f02000x, style/AppStyle=0x7f030000,
 //   hello has locale variants (default/fil/en/en-rGB/en-rUS).
 #include "resourcetypes.h"
+#include "restable.h"
 #include "arsc_verify_fixture.h"
 
 #include <cstdio>

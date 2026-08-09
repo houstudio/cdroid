@@ -8,6 +8,7 @@
 //   A: string/greeting=@string/hello, string/hello="Hi"
 //   B: string/kb=@string/kb_val,      string/kb_val="Keyboard"
 #include "resourcetypes.h"
+#include "restable.h"
 #include "arsc_multipkg_A_fixture.h"
 #include "arsc_multipkg_B_fixture.h"
 

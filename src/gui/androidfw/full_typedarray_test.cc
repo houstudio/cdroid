@@ -1,5 +1,7 @@
-// Full TypedArray test (phase 3): the applyStyle priority merge — element's own
-// attribute wins; attributes the element omits fall back to its style=.
+// obtainStyledAttributes priority-merge test: the element's own attribute wins;
+// attributes the element omits fall back to its style=. Verifies the StyledAttr[]
+// output directly (TypedArray, the libcdroid consumer wrapper + px conversion,
+// was split out of androidfw into core/typedarray.h).
 //
 // Fixtures:
 //   arsc_typedarray_fixture.h (kARSTA): style/BtnStyle=0x7f020000
@@ -9,6 +11,7 @@
 // So: textSize <- element (20sp, overrides style's 12sp);
 //     textColor <- style (element omits it) -> #ffffaa00.
 #include "resourcetypes.h"
+#include "restable.h"
 #include "arsc_typedarray_fixture.h"
 #include "axml_typedarray_fixture.h"
 
@@ -26,7 +29,6 @@ using cdroid::ResXMLTree;
 using cdroid::ResXMLParser;
 using cdroid::Res_value;
 using cdroid::StyledAttr;
-using cdroid::TypedArray;
 
 static const uint32_t ATTR_TEXT_COLOR = 0x01010098;
 static const uint32_t ATTR_TEXT_SIZE  = 0x01010095;
@@ -51,24 +53,24 @@ int main() {
     cdroid::obtainStyledAttributes(xml, table, /*theme*/nullptr, attrs, 2,
                                    /*defStyleAttr*/0, /*defStyleRes*/0, vals);
 
-    TypedArray ta(table, vals, 2, &xml, /*density*/2.0f);
-    C(ta.hasValue(0));  // textColor <- style
-    C(ta.hasValue(1));  // textSize <- element
+    // Verify obtainStyledAttributes filled StyledAttr[] (TypedArray, the
+    // libcdroid consumer wrapper + dp/sp px conversion, is out of scope here).
+    // textColor (vals[0]) <- style (element omits it): #ffffaa00.
+    C(vals[0].set);
+    C(vals[0].value.dataType >= Res_value::TYPE_FIRST_COLOR_INT &&
+      vals[0].value.dataType <= Res_value::TYPE_LAST_COLOR_INT);
+    C(vals[0].value.data == 0xFFFFAA00u);
 
-    // textColor from the style (element omits it): #ffffaa00.
-    C(ta.getColor(0, 0) == 0xFFFFAA00u);
+    // textSize (vals[1]) <- ELEMENT (20sp), overriding the style's 12sp.
+    C(vals[1].set);
+    C(vals[1].value.dataType == Res_value::TYPE_DIMENSION);
+    C(cdroid::complexToFloat(vals[1].value.data) == 20.0f);
 
-    // textSize from the ELEMENT (20sp), overriding the style's 12sp.
-    C(ta.getDimension(1, 0) == 20.0f);
-    C(ta.getDimensionPixelSize(1, 0) == 40);  // 20 * density(2.0)
-
-    // An attr nobody provides -> not set; getter returns default.
+    // An attr nobody provides -> not set.
     const uint32_t attrs2[] = { 0x01010099 /* some other attr */ };
     StyledAttr vals2[1];
     cdroid::obtainStyledAttributes(xml, table, nullptr, attrs2, 1, 0, 0, vals2);
-    TypedArray ta2(table, vals2, 1, &xml);
-    C(!ta2.hasValue(0));
-    C(ta2.getInt(0, 7) == 7);
+    C(!vals2[0].set);
 
     std::printf("full_typedarray: %d checks, %d failures\n", g_checks, g_failures);
     return g_failures ? 1 : 0;

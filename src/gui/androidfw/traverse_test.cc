@@ -10,6 +10,7 @@
 //   string/hello  = Default | zh=你好 | es=Hola | en=English | en-rUS=American | en-rGB=British | fil=Filipino
 //   style/AppStyle = parent 0x01030012 + {0x01010095=16sp, 0x01010098=#ffff0000}  (bag)
 #include "resourcetypes.h"
+#include "restable.h"
 #include "arsc_verify_fixture.h"
 #include "LocaleData.h"
 

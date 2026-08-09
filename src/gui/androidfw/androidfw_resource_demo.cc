@@ -6,6 +6,7 @@
 //   make -C outX64-Debug androidfw_resource_demo
 //   ./outX64-Debug/src/gui/androidfw/androidfw_resource_demo
 #include "resourcetypes.h"
+#include "restable.h"
 #include "arsc_fixture.h"
 #include "LocaleData.h"
 

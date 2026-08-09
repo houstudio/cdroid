@@ -5,6 +5,7 @@
 // After applyStyle(Child): textColor <- child (#ff00ff00, override),
 // textSize <- parent (10sp, inherited).
 #include "resourcetypes.h"
+#include "restable.h"
 #include "arsc_theme_fixture.h"
 
 #include <cstdio>
