@@ -429,6 +429,13 @@ class PakBuilder(idgen.IDGenerater):
             _idxml = os.path.join(tmpres, "values", "ID.xml")
             if os.path.exists(_idxml):
                 os.remove(_idxml)
+            # remove symbols.xml / public-staging.xml: these are full-framework symbol
+            # tables declaring ids that the slim res subset doesn't define → dangling
+            # symbol link errors. framework -x locks IDs via public.xml, not symbols.
+            for _sf in ("values/symbols.xml", "values/public-staging.xml"):
+                _p = os.path.join(tmpres, _sf)
+                if os.path.exists(_p):
+                    os.remove(_p)
 
             # Density/locale trimming via aapt2 -c (config mode). Unlike folder
             # deletion (which left dangling symbol declarations and broke link),
@@ -505,6 +512,17 @@ class PakBuilder(idgen.IDGenerater):
                     rel = name[4:] if name.startswith("res/") else name
                     result[rel] = zf.read(name)
             sys.stderr.write("SDK res: %d entries (binary AXML + arsc + drawables)\n" % len(result))
+            # idgen retirement: R.h from aapt2 dump of framework.apk (real arsc IDs,
+            # not idgen sequential ints). aapt2 dump needs the apk (has manifest),
+            # NOT cdroid.pak (no manifest → "could not identify format").
+            if getattr(self, 'rh_path', None) and self.rh_path:
+                _gen = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aapt2_gen_rh.py')
+                _r = subprocess.run([sys.executable, _gen, out_apk,
+                                '--aapt2', self.aapt2_path,
+                                '--namespace', self.namespace, '-o', self.rh_path],
+                               capture_output=True, text=True)
+                sys.stderr.write("aapt2_gen_rh: rc=%d %s\n"
+                                 % (_r.returncode, (_r.stderr or _r.stdout)[:200]))
             return result
         except Exception as e:
             sys.stderr.write("SDK res compile failed (%s); falling back\n" % e)
