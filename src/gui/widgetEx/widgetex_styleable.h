@@ -25,13 +25,24 @@ namespace fw_attr {
         constexpr uint32_t justifyContent = 0x7f01000a;
         constexpr uint32_t alignItems = 0x7f01000b;
         constexpr uint32_t alignContent = 0x7f01000c;
+        constexpr uint32_t dividerDrawable = 0x7f0100cd;
+        constexpr uint32_t dividerDrawableHorizontal = 0x7f0100ce;
+        constexpr uint32_t dividerDrawableVertical = 0x7f0100cf;
+        constexpr uint32_t showDivider = 0x7f0100d0;
+        constexpr uint32_t showDividerHorizontal = 0x7f0100d1;
+        constexpr uint32_t showDividerVertical = 0x7f0100d2;
+        constexpr uint32_t maxLine = 0x7f0100d3;
     }
     namespace FlexboxLayoutLayout {
         constexpr uint32_t layout_order = 0x7f01000d;
-        constexpr uint32_t layout_flexBasisPercent = 0x7f01000e;
         constexpr uint32_t layout_flexGrow = 0x7f01000f;
         constexpr uint32_t layout_flexShrink = 0x7f010010;
+        constexpr uint32_t layout_flexBasisPercent = 0x7f01000e;
         constexpr uint32_t layout_alignSelf = 0x7f010011;
+        constexpr uint32_t layout_minWidth = 0x7f0100d4;
+        constexpr uint32_t layout_minHeight = 0x7f0100d5;
+        constexpr uint32_t layout_maxWidth = 0x7f0100d6;
+        constexpr uint32_t layout_maxHeight = 0x7f0100d7;
         constexpr uint32_t layout_wrapBefore = 0x7f010012;
     }
     namespace ConstraintLayoutLayout {
@@ -290,6 +301,10 @@ namespace fw_attr {
         constexpr uint32_t staggered = 0x7f010082;
         constexpr uint32_t transitionFlags = 0x7f010083;
     }
+    namespace MotionScene {
+        constexpr uint32_t defaultDuration = 0x7f0100bb;
+        constexpr uint32_t layoutDuringTransition = 0x7f01007f;
+    }
     namespace OnSwipe {
         constexpr uint32_t dragScale = 0x7f010084;
         constexpr uint32_t dragThreshold = 0x7f010085;
@@ -392,6 +407,18 @@ namespace fw_attr {
         constexpr uint32_t translationY = 0x01010323;
         constexpr uint32_t translationZ = 0x010103fa;
     }
+    namespace Motion {
+        constexpr uint32_t animateRelativeTo = 0x7f010070;
+        constexpr uint32_t animateCircleAngleTo = 0x7f010071;
+        constexpr uint32_t transitionEasing = 0x7f010072;
+        constexpr uint32_t pathMotionArc = 0x7f010073;
+        constexpr uint32_t motionPathRotate = 0x7f0100ba;
+        constexpr uint32_t motionStagger = 0x7f010078;
+        constexpr uint32_t drawPath = 0x7f010076;
+        constexpr uint32_t quantizeMotionSteps = 0x7f010079;
+        constexpr uint32_t quantizeMotionPhase = 0x7f01007a;
+        constexpr uint32_t quantizeMotionInterpolator = 0x7f01007b;
+    }
     namespace KeyTrigger {
         constexpr uint32_t framePosition = 0x7f010097;
         constexpr uint32_t motionTarget = 0x7f010098;
@@ -423,22 +450,6 @@ namespace fw_attr {
         constexpr uint32_t clearsTag = 0x7f0100b7;
         constexpr uint32_t ifTagSet = 0x7f0100b8;
         constexpr uint32_t ifTagNotSet = 0x7f0100b9;
-    }
-    namespace Motion {
-        constexpr uint32_t animateRelativeTo = 0x7f010070;
-        constexpr uint32_t animateCircleAngleTo = 0x7f010071;
-        constexpr uint32_t transitionEasing = 0x7f010072;
-        constexpr uint32_t pathMotionArc = 0x7f010073;
-        constexpr uint32_t motionPathRotate = 0x7f0100ba;
-        constexpr uint32_t motionStagger = 0x7f010078;
-        constexpr uint32_t drawPath = 0x7f010076;
-        constexpr uint32_t quantizeMotionSteps = 0x7f010079;
-        constexpr uint32_t quantizeMotionPhase = 0x7f01007a;
-        constexpr uint32_t quantizeMotionInterpolator = 0x7f01007b;
-    }
-    namespace MotionScene {
-        constexpr uint32_t defaultDuration = 0x7f0100bb;
-        constexpr uint32_t layoutDuringTransition = 0x7f01007f;
     }
     namespace MotionEffect {
         constexpr uint32_t motionEffect_start = 0x7f0100bc;
@@ -477,11 +488,11 @@ namespace styleable {
         extern const uint32_t IDS[];
     }
     namespace FlexboxLayout {
-        enum { flexDirection, flexWrap, justifyContent, alignItems, alignContent, COUNT };
+        enum { flexDirection, flexWrap, justifyContent, alignItems, alignContent, dividerDrawable, dividerDrawableHorizontal, dividerDrawableVertical, showDivider, showDividerHorizontal, showDividerVertical, maxLine, COUNT };
         extern const uint32_t IDS[];
     }
     namespace FlexboxLayoutLayout {
-        enum { layout_order, layout_flexBasisPercent, layout_flexGrow, layout_flexShrink, layout_alignSelf, layout_wrapBefore, COUNT };
+        enum { layout_order, layout_flexGrow, layout_flexShrink, layout_flexBasisPercent, layout_alignSelf, layout_minWidth, layout_minHeight, layout_maxWidth, layout_maxHeight, layout_wrapBefore, COUNT };
         extern const uint32_t IDS[];
     }
     namespace ConstraintLayoutLayout {
@@ -494,6 +505,10 @@ namespace styleable {
     }
     namespace Transition {
         enum { id, constraintSetStart, constraintSetEnd, transitionDisable, layoutDuringTransition, pathMotionArc, autoTransition, motionInterpolator, duration, staggered, transitionFlags, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace MotionScene {
+        enum { defaultDuration, layoutDuringTransition, COUNT };
         extern const uint32_t IDS[];
     }
     namespace OnSwipe {
@@ -516,20 +531,16 @@ namespace styleable {
         enum { framePosition, motionTarget, transitionEasing, curveFit, waveShape, wavePeriod, motionProgress, waveOffset, wavePhase, waveDecay, alpha, elevation, rotation, rotationX, rotationY, transitionPathRotate, scaleX, scaleY, translationX, translationY, translationZ, COUNT };
         extern const uint32_t IDS[];
     }
+    namespace Motion {
+        enum { animateRelativeTo, animateCircleAngleTo, transitionEasing, pathMotionArc, motionPathRotate, motionStagger, drawPath, quantizeMotionSteps, quantizeMotionPhase, quantizeMotionInterpolator, COUNT };
+        extern const uint32_t IDS[];
+    }
     namespace KeyTrigger {
         enum { framePosition, motionTarget, triggerReceiver, onNegativeCross, onPositiveCross, onCross, viewTransitionOnNegativeCross, viewTransitionOnPositiveCross, viewTransitionOnCross, triggerSlack, triggerId, motion_postLayoutCollision, motion_triggerOnCollision, COUNT };
         extern const uint32_t IDS[];
     }
     namespace ViewTransition {
         enum { id, motionTarget, viewTransitionMode, onStateTransition, duration, upDuration, transitionDisable, pathMotionArc, motionInterpolator, SharedValueId, SharedValue, setsTag, clearsTag, ifTagSet, ifTagNotSet, COUNT };
-        extern const uint32_t IDS[];
-    }
-    namespace Motion {
-        enum { animateRelativeTo, animateCircleAngleTo, transitionEasing, pathMotionArc, motionPathRotate, motionStagger, drawPath, quantizeMotionSteps, quantizeMotionPhase, quantizeMotionInterpolator, COUNT };
-        extern const uint32_t IDS[];
-    }
-    namespace MotionScene {
-        enum { defaultDuration, layoutDuringTransition, COUNT };
         extern const uint32_t IDS[];
     }
     namespace MotionEffect {

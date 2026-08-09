@@ -68,17 +68,17 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
             {"space_around" ,(int)AlignContent::SPACE_AROUND},
             {"stretch" , (int)AlignContent::STRETCH}
         }, (int)AlignContent::FLEX_START);
-    mMaxLine = attrs.getInt("maxLine", NOT_SET);
-    Drawable* drawable = attrs.getDrawable("dividerDrawable");
+    mMaxLine = ta&&ta->hasValue(SFB::maxLine) ? ta->getInt(SFB::maxLine, NOT_SET) : attrs.getInt("maxLine", NOT_SET);
+    Drawable* drawable = ta&&ta->hasValue(SFB::dividerDrawable) ? ta->getDrawable(SFB::dividerDrawable) : attrs.getDrawable("dividerDrawable");
     if (drawable != nullptr) {
         setDividerDrawableHorizontal(drawable);
         setDividerDrawableVertical(drawable);
     }
-    Drawable* drawableHorizontal = attrs.getDrawable("dividerDrawableHorizontal");
+    Drawable* drawableHorizontal = ta&&ta->hasValue(SFB::dividerDrawableHorizontal) ? ta->getDrawable(SFB::dividerDrawableHorizontal) : attrs.getDrawable("dividerDrawableHorizontal");
     if (drawableHorizontal != nullptr) {
         setDividerDrawableHorizontal(drawableHorizontal);
     }
-    Drawable* drawableVertical = attrs.getDrawable("dividerDrawableVertical");
+    Drawable* drawableVertical = ta&&ta->hasValue(SFB::dividerDrawableVertical) ? ta->getDrawable(SFB::dividerDrawableVertical) : attrs.getDrawable("dividerDrawableVertical");
     if (drawableVertical != nullptr) {
         setDividerDrawableVertical(drawableVertical);
     }
@@ -88,16 +88,18 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
             {"end",(int)SHOW_DIVIDER_END},
             {"none",(int)SHOW_DIVIDER_NONE}
         };
-    int dividerMode = attrs.getInt("showDivider",divs,SHOW_DIVIDER_NONE);
+    // showDivider flags: binary path aapt2 has already resolved them to ints
+    // (ta->getInt); text path resolves via the flag-name map.
+    int dividerMode = ta&&ta->hasValue(SFB::showDivider) ? ta->getInt(SFB::showDivider,SHOW_DIVIDER_NONE) : attrs.getInt("showDivider",divs,SHOW_DIVIDER_NONE);
     if (dividerMode != SHOW_DIVIDER_NONE) {
         mShowDividerVertical = dividerMode;
         mShowDividerHorizontal = dividerMode;
     }
-    int dividerModeVertical = attrs.getInt("showDividerVertical",divs, SHOW_DIVIDER_NONE);
+    int dividerModeVertical = ta&&ta->hasValue(SFB::showDividerVertical) ? ta->getInt(SFB::showDividerVertical,SHOW_DIVIDER_NONE) : attrs.getInt("showDividerVertical",divs, SHOW_DIVIDER_NONE);
     if (dividerModeVertical != SHOW_DIVIDER_NONE) {
         mShowDividerVertical = dividerModeVertical;
     }
-    int dividerModeHorizontal = attrs.getInt("showDividerHorizontal",divs, SHOW_DIVIDER_NONE);
+    int dividerModeHorizontal = ta&&ta->hasValue(SFB::showDividerHorizontal) ? ta->getInt(SFB::showDividerHorizontal,SHOW_DIVIDER_NONE) : attrs.getInt("showDividerHorizontal",divs, SHOW_DIVIDER_NONE);
     if (dividerModeHorizontal != SHOW_DIVIDER_NONE) {
         mShowDividerHorizontal = dividerModeHorizontal;
     }
@@ -1220,10 +1222,10 @@ FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& a
             {"stretch" , (int)AlignSelf::STRETCH},
         }, (int)AlignSelf::AUTO);
     mFlexBasisPercent = ta&&ta->hasValue(SFL::layout_flexBasisPercent) ? ta->getFraction(SFL::layout_flexBasisPercent, 1, 1,(float)FLEX_BASIS_PERCENT_DEFAULT) : attrs.getFraction("layout_flexBasisPercent", 1, 1,(float)FLEX_BASIS_PERCENT_DEFAULT);
-    mMinWidth = attrs.getDimensionPixelSize("layout_minWidth"  ,(int)NOT_SET);
-    mMinHeight = attrs.getDimensionPixelSize("layout_minHeight",(int)NOT_SET);
-    mMaxWidth  = attrs.getDimensionPixelSize("layout_maxWidth" ,(int)MAX_SIZE);
-    mMaxHeight = attrs.getDimensionPixelSize("layout_maxHeight",(int)MAX_SIZE);
+    mMinWidth = ta&&ta->hasValue(SFL::layout_minWidth)  ? ta->getDimensionPixelSize(SFL::layout_minWidth,  (int)NOT_SET) : attrs.getDimensionPixelSize("layout_minWidth"  ,(int)NOT_SET);
+    mMinHeight = ta&&ta->hasValue(SFL::layout_minHeight) ? ta->getDimensionPixelSize(SFL::layout_minHeight, (int)NOT_SET) : attrs.getDimensionPixelSize("layout_minHeight",(int)NOT_SET);
+    mMaxWidth  = ta&&ta->hasValue(SFL::layout_maxWidth)  ? ta->getDimensionPixelSize(SFL::layout_maxWidth,  (int)MAX_SIZE) : attrs.getDimensionPixelSize("layout_maxWidth" ,(int)MAX_SIZE);
+    mMaxHeight = ta&&ta->hasValue(SFL::layout_maxHeight) ? ta->getDimensionPixelSize(SFL::layout_maxHeight, (int)MAX_SIZE) : attrs.getDimensionPixelSize("layout_maxHeight",(int)MAX_SIZE);
     mWrapBefore= ta&&ta->hasValue(SFL::layout_wrapBefore) ? ta->getBoolean(SFL::layout_wrapBefore, false) : attrs.getBoolean("layout_wrapBefore", false);
 }
 

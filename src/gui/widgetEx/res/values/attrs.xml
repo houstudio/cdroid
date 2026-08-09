@@ -19,22 +19,84 @@
         <attr name="layout_dodgeInsetEdges"/>
     </declare-styleable>
 
-    <!-- ===== FlexboxLayout (attr set CDROID reads) ===== -->
+    <!-- ===== FlexboxLayout (verbatim from Google flexbox-layout attrs.xml) ===== -->
     <declare-styleable name="FlexboxLayout">
-        <attr name="flexDirection" format="enum"/>
-        <attr name="flexWrap" format="enum"/>
-        <attr name="justifyContent" format="enum"/>
-        <attr name="alignItems" format="enum"/>
-        <attr name="alignContent" format="enum"/>
+        <attr name="flexDirection">
+            <enum name="row" value="0" />
+            <enum name="row_reverse" value="1" />
+            <enum name="column" value="2" />
+            <enum name="column_reverse" value="3" />
+        </attr>
+        <attr name="flexWrap">
+            <enum name="nowrap" value="0" />
+            <enum name="wrap" value="1" />
+            <enum name="wrap_reverse" value="2" />
+        </attr>
+        <attr name="justifyContent">
+            <enum name="flex_start" value="0" />
+            <enum name="flex_end" value="1" />
+            <enum name="center" value="2" />
+            <enum name="space_between" value="3" />
+            <enum name="space_around" value="4" />
+            <enum name="space_evenly" value="5" />
+        </attr>
+        <attr name="alignItems">
+            <enum name="flex_start" value="0" />
+            <enum name="flex_end" value="1" />
+            <enum name="center" value="2" />
+            <enum name="baseline" value="3" />
+            <enum name="stretch" value="4" />
+        </attr>
+        <attr name="alignContent">
+            <enum name="flex_start" value="0" />
+            <enum name="flex_end" value="1" />
+            <enum name="center" value="2" />
+            <enum name="space_between" value="3" />
+            <enum name="space_around" value="4" />
+            <enum name="stretch" value="5" />
+        </attr>
+        <attr name="dividerDrawable" format="reference" />
+        <attr name="dividerDrawableHorizontal" format="reference" />
+        <attr name="dividerDrawableVertical" format="reference" />
+        <attr name="showDivider">
+            <flag name="none" value="0" />
+            <flag name="beginning" value="1" />
+            <flag name="middle" value="2" />
+            <flag name="end" value="4" />
+        </attr>
+        <attr name="showDividerHorizontal">
+            <flag name="none" value="0" />
+            <flag name="beginning" value="1" />
+            <flag name="middle" value="2" />
+            <flag name="end" value="4" />
+        </attr>
+        <attr name="showDividerVertical">
+            <flag name="none" value="0" />
+            <flag name="beginning" value="1" />
+            <flag name="middle" value="2" />
+            <flag name="end" value="4" />
+        </attr>
+        <attr name="maxLine" format="integer" />
     </declare-styleable>
 
     <declare-styleable name="FlexboxLayout_Layout">
-        <attr name="android:layout_order"/>
-        <attr name="layout_flexBasisPercent" format="fraction"/>
-        <attr name="layout_flexGrow" format="float"/>
-        <attr name="layout_flexShrink" format="float"/>
-        <attr name="layout_alignSelf" format="enum"/>
-        <attr name="layout_wrapBefore" format="boolean"/>
+        <attr name="layout_order" format="integer" />
+        <attr name="layout_flexGrow" format="float" />
+        <attr name="layout_flexShrink" format="float" />
+        <attr name="layout_flexBasisPercent" format="fraction" />
+        <attr name="layout_alignSelf">
+            <enum name="auto" value="-1" />
+            <enum name="flex_start" value="0" />
+            <enum name="flex_end" value="1" />
+            <enum name="center" value="2" />
+            <enum name="baseline" value="3" />
+            <enum name="stretch" value="4" />
+        </attr>
+        <attr name="layout_minWidth" format="dimension" />
+        <attr name="layout_minHeight" format="dimension" />
+        <attr name="layout_maxWidth" format="dimension" />
+        <attr name="layout_maxHeight" format="dimension" />
+        <attr name="layout_wrapBefore" format="boolean" />
     </declare-styleable>
 
     <!-- ===== ConstraintLayout_Layout (from androidx constraintlayout; 115 attrs) ===== -->
