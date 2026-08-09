@@ -76,16 +76,22 @@ void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet&
     bottomMargin = attrs.getDimensionPixelSize("layout_marginBottom", margin);
 }
 void GridLayout::LayoutParams::init(Context* context,const AttributeSet& attrs){
-    const int gravity = attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
- 
-    const int column = attrs.getInt("layout_column", DEFAULT_COLUMN);
-    const int colSpan = attrs.getInt("layout_columnSpan", DEFAULT_SPAN_SIZE);
-    const float colWeight = attrs.getFloat("layout_columnWeight", Spec::DEFAULT_WEIGHT);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::GridLayoutLayout::IDS, styleable::GridLayoutLayout::COUNT) : nullptr;
+    namespace SGL = styleable::GridLayoutLayout;
+
+    const int gravity = ta&&ta->hasValue(SGL::layout_gravity) ? ta->getInt(SGL::layout_gravity, Gravity::NO_GRAVITY) : attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
+
+    const int column = ta&&ta->hasValue(SGL::layout_column) ? ta->getInt(SGL::layout_column, DEFAULT_COLUMN) : attrs.getInt("layout_column", DEFAULT_COLUMN);
+    const int colSpan = ta&&ta->hasValue(SGL::layout_columnSpan) ? ta->getInt(SGL::layout_columnSpan, DEFAULT_SPAN_SIZE) : attrs.getInt("layout_columnSpan", DEFAULT_SPAN_SIZE);
+    const float colWeight = ta&&ta->hasValue(SGL::layout_columnWeight) ? ta->getFloat(SGL::layout_columnWeight, Spec::DEFAULT_WEIGHT) : attrs.getFloat("layout_columnWeight", Spec::DEFAULT_WEIGHT);
     this->columnSpec = spec(column, colSpan, getAlignment(gravity, true), colWeight);
- 
-    const int row = attrs.getInt("layout_row", DEFAULT_ROW);
-    const int rowSpan = attrs.getInt("layout_rowSpan", DEFAULT_SPAN_SIZE);
-    const float rowWeight = attrs.getFloat("layout_rowWeight", Spec::DEFAULT_WEIGHT);
+
+    const int row = ta&&ta->hasValue(SGL::layout_row) ? ta->getInt(SGL::layout_row, DEFAULT_ROW) : attrs.getInt("layout_row", DEFAULT_ROW);
+    const int rowSpan = ta&&ta->hasValue(SGL::layout_rowSpan) ? ta->getInt(SGL::layout_rowSpan, DEFAULT_SPAN_SIZE) : attrs.getInt("layout_rowSpan", DEFAULT_SPAN_SIZE);
+    const float rowWeight = ta&&ta->hasValue(SGL::layout_rowWeight) ? ta->getFloat(SGL::layout_rowWeight, Spec::DEFAULT_WEIGHT) : attrs.getFloat("layout_rowWeight", Spec::DEFAULT_WEIGHT);
     this->rowSpec = spec(row, rowSpan, getAlignment(gravity, false), rowWeight);
 }
 

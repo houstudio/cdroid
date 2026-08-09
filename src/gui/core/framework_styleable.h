@@ -478,6 +478,16 @@ namespace fw_attr {
         constexpr uint32_t layout_column           = 0x0101014c;
         constexpr uint32_t layout_span             = 0x0101014d;
     }
+    // GridLayout.LayoutParams: row/column + span + weight + gravity.
+    namespace GridLayoutLayout {
+        constexpr uint32_t layout_row              = 0x0101037b;
+        constexpr uint32_t layout_rowSpan          = 0x0101037c;
+        constexpr uint32_t layout_column           = 0x0101014c;
+        constexpr uint32_t layout_columnSpan       = 0x0101037d;
+        constexpr uint32_t layout_rowWeight        = 0x01010458;
+        constexpr uint32_t layout_columnWeight     = 0x01010459;
+        constexpr uint32_t layout_gravity          = 0x010100b3;
+    }
 }
 
 // R.styleable arrays: index → framework attr ID. Used by obtainStyledAttributesTyped.
@@ -710,6 +720,11 @@ namespace styleable {
     }
     namespace TableRowLayout {
         enum { layout_column, layout_span, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace GridLayoutLayout {
+        enum { layout_row, layout_rowSpan, layout_column, layout_columnSpan,
+               layout_rowWeight, layout_columnWeight, layout_gravity, COUNT };
         extern const uint32_t IDS[];
     }
 }

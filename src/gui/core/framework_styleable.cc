@@ -389,5 +389,13 @@ namespace styleable {
             fw_attr::TableRowLayout::layout_column, fw_attr::TableRowLayout::layout_span,
         };
     }
+    namespace GridLayoutLayout {
+        const uint32_t IDS[] = {
+            fw_attr::GridLayoutLayout::layout_row, fw_attr::GridLayoutLayout::layout_rowSpan,
+            fw_attr::GridLayoutLayout::layout_column, fw_attr::GridLayoutLayout::layout_columnSpan,
+            fw_attr::GridLayoutLayout::layout_rowWeight, fw_attr::GridLayoutLayout::layout_columnWeight,
+            fw_attr::GridLayoutLayout::layout_gravity,
+        };
+    }
 }
 }
