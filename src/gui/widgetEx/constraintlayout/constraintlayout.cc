@@ -21,6 +21,8 @@
  * Faithful port — see header for the supported feature surface.
  */
 #include <widgetEx/constraintlayout/constraintlayout.h>
+#include <widgetEx/widgetex_styleable.h>
+#include <core/assets.h>
 #include <core/xmlpullparser.h>
 #include <widgetEx/constraintlayout/constraintlayoutstates.h>
 #include <widgetEx/constraintlayout/sharedvalues.h>
@@ -77,62 +79,67 @@ void parseDimensionRatio(const std::string& str, float& ratio, int& side) {
 // ===========================================================================
 ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& attrs)
     : MarginLayoutParams(c, attrs) {
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::ConstraintLayoutLayout::IDS, styleable::ConstraintLayoutLayout::COUNT) : nullptr;
+    namespace SCC = styleable::ConstraintLayoutLayout;
     // Anchor targets — accept either a resource id ("parent" -> PARENT_ID=0) or an int.
-    leftToLeft   = attrs.getResourceId("layout_constraintLeft_toLeftOf",   UNSET);
-    leftToRight  = attrs.getResourceId("layout_constraintLeft_toRightOf",  UNSET);
-    rightToLeft  = attrs.getResourceId("layout_constraintRight_toLeftOf",  UNSET);
-    rightToRight = attrs.getResourceId("layout_constraintRight_toRightOf", UNSET);
+    leftToLeft   = ta&&ta->hasValue(SCC::layout_constraintLeft_toLeftOf)   ? (int)ta->getResourceId(SCC::layout_constraintLeft_toLeftOf,   UNSET) : attrs.getResourceId("layout_constraintLeft_toLeftOf",   UNSET);
+    leftToRight  = ta&&ta->hasValue(SCC::layout_constraintLeft_toRightOf)  ? (int)ta->getResourceId(SCC::layout_constraintLeft_toRightOf,  UNSET) : attrs.getResourceId("layout_constraintLeft_toRightOf",  UNSET);
+    rightToLeft  = ta&&ta->hasValue(SCC::layout_constraintRight_toLeftOf)  ? (int)ta->getResourceId(SCC::layout_constraintRight_toLeftOf,  UNSET) : attrs.getResourceId("layout_constraintRight_toLeftOf",  UNSET);
+    rightToRight = ta&&ta->hasValue(SCC::layout_constraintRight_toRightOf) ? (int)ta->getResourceId(SCC::layout_constraintRight_toRightOf, UNSET) : attrs.getResourceId("layout_constraintRight_toRightOf", UNSET);
     // Start/End (RTL-aware) — stored raw; resolved to Left/Right at measure time in
     // applyConstraintsFromLayoutParams based on the container's isRtl(). Explicit Left/Right
     // overrides these. Modern layouts emit Start/End, so without reading them a 0dp view
     // constrained only via Start/End gets no horizontal anchor → collapses to 0 width.
-    startToStart = attrs.getResourceId("layout_constraintStart_toStartOf", UNSET);
-    startToEnd   = attrs.getResourceId("layout_constraintStart_toEndOf",   UNSET);
-    endToStart   = attrs.getResourceId("layout_constraintEnd_toStartOf",   UNSET);
-    endToEnd     = attrs.getResourceId("layout_constraintEnd_toEndOf",     UNSET);
-    topToTop     = attrs.getResourceId("layout_constraintTop_toTopOf",     UNSET);
-    topToBottom  = attrs.getResourceId("layout_constraintTop_toBottomOf",  UNSET);
-    bottomToTop  = attrs.getResourceId("layout_constraintBottom_toTopOf",  UNSET);
-    bottomToBottom = attrs.getResourceId("layout_constraintBottom_toBottomOf", UNSET);
+    startToStart = ta&&ta->hasValue(SCC::layout_constraintStart_toStartOf) ? (int)ta->getResourceId(SCC::layout_constraintStart_toStartOf, UNSET) : attrs.getResourceId("layout_constraintStart_toStartOf", UNSET);
+    startToEnd   = ta&&ta->hasValue(SCC::layout_constraintStart_toEndOf)   ? (int)ta->getResourceId(SCC::layout_constraintStart_toEndOf,   UNSET) : attrs.getResourceId("layout_constraintStart_toEndOf",   UNSET);
+    endToStart   = ta&&ta->hasValue(SCC::layout_constraintEnd_toStartOf)   ? (int)ta->getResourceId(SCC::layout_constraintEnd_toStartOf,   UNSET) : attrs.getResourceId("layout_constraintEnd_toStartOf",   UNSET);
+    endToEnd     = ta&&ta->hasValue(SCC::layout_constraintEnd_toEndOf)     ? (int)ta->getResourceId(SCC::layout_constraintEnd_toEndOf,     UNSET) : attrs.getResourceId("layout_constraintEnd_toEndOf",     UNSET);
+    topToTop     = ta&&ta->hasValue(SCC::layout_constraintTop_toTopOf)     ? (int)ta->getResourceId(SCC::layout_constraintTop_toTopOf,     UNSET) : attrs.getResourceId("layout_constraintTop_toTopOf",     UNSET);
+    topToBottom  = ta&&ta->hasValue(SCC::layout_constraintTop_toBottomOf)  ? (int)ta->getResourceId(SCC::layout_constraintTop_toBottomOf,  UNSET) : attrs.getResourceId("layout_constraintTop_toBottomOf",  UNSET);
+    bottomToTop  = ta&&ta->hasValue(SCC::layout_constraintBottom_toTopOf)  ? (int)ta->getResourceId(SCC::layout_constraintBottom_toTopOf,  UNSET) : attrs.getResourceId("layout_constraintBottom_toTopOf",  UNSET);
+    bottomToBottom = ta&&ta->hasValue(SCC::layout_constraintBottom_toBottomOf) ? (int)ta->getResourceId(SCC::layout_constraintBottom_toBottomOf, UNSET) : attrs.getResourceId("layout_constraintBottom_toBottomOf", UNSET);
 
-    horizontalBias = attrs.getFloat("layout_constraintHorizontal_bias", 0.5f);
-    verticalBias   = attrs.getFloat("layout_constraintVertical_bias",   0.5f);
+    horizontalBias = ta&&ta->hasValue(SCC::layout_constraintHorizontal_bias) ? ta->getFloat(SCC::layout_constraintHorizontal_bias, 0.5f) : attrs.getFloat("layout_constraintHorizontal_bias", 0.5f);
+    verticalBias   = ta&&ta->hasValue(SCC::layout_constraintVertical_bias)   ? ta->getFloat(SCC::layout_constraintVertical_bias,   0.5f) : attrs.getFloat("layout_constraintVertical_bias",   0.5f);
 
-    constraintTag = attrs.getString("constraintTag", "");
+    constraintTag = (ta&&ta->hasValue(SCC::layout_constraintTag)) ? ta->getString(SCC::layout_constraintTag) : attrs.getString("constraintTag", "");
 
-    goneLeftMargin   = attrs.getDimensionPixelSize("layout_goneMarginLeft",   GONE_UNSET);
-    goneTopMargin    = attrs.getDimensionPixelSize("layout_goneMarginTop",    GONE_UNSET);
-    goneRightMargin  = attrs.getDimensionPixelSize("layout_goneMarginRight",  GONE_UNSET);
-    goneBottomMargin = attrs.getDimensionPixelSize("layout_goneMarginBottom", GONE_UNSET);
+    goneLeftMargin   = ta&&ta->hasValue(SCC::layout_goneMarginLeft)   ? ta->getDimensionPixelSize(SCC::layout_goneMarginLeft,   GONE_UNSET) : attrs.getDimensionPixelSize("layout_goneMarginLeft",   GONE_UNSET);
+    goneTopMargin    = ta&&ta->hasValue(SCC::layout_goneMarginTop)    ? ta->getDimensionPixelSize(SCC::layout_goneMarginTop,    GONE_UNSET) : attrs.getDimensionPixelSize("layout_goneMarginTop",    GONE_UNSET);
+    goneRightMargin  = ta&&ta->hasValue(SCC::layout_goneMarginRight)  ? ta->getDimensionPixelSize(SCC::layout_goneMarginRight,  GONE_UNSET) : attrs.getDimensionPixelSize("layout_goneMarginRight",  GONE_UNSET);
+    goneBottomMargin = ta&&ta->hasValue(SCC::layout_goneMarginBottom) ? ta->getDimensionPixelSize(SCC::layout_goneMarginBottom, GONE_UNSET) : attrs.getDimensionPixelSize("layout_goneMarginBottom", GONE_UNSET);
     // RTL-aware gone margins (resolved to goneLeft/goneRight at measure time per layout direction).
-    goneStartMargin  = attrs.getDimensionPixelSize("layout_goneMarginStart", GONE_UNSET);
-    goneEndMargin    = attrs.getDimensionPixelSize("layout_goneMarginEnd",   GONE_UNSET);
+    goneStartMargin  = ta&&ta->hasValue(SCC::layout_goneMarginStart) ? ta->getDimensionPixelSize(SCC::layout_goneMarginStart, GONE_UNSET) : attrs.getDimensionPixelSize("layout_goneMarginStart", GONE_UNSET);
+    goneEndMargin    = ta&&ta->hasValue(SCC::layout_goneMarginEnd)   ? ta->getDimensionPixelSize(SCC::layout_goneMarginEnd,   GONE_UNSET) : attrs.getDimensionPixelSize("layout_goneMarginEnd",   GONE_UNSET);
 
     // Guideline
-    guideBegin   = attrs.getDimensionPixelSize("layout_constraintGuide_begin", UNSET);
-    guideEnd     = attrs.getDimensionPixelSize("layout_constraintGuide_end",   UNSET);
-    guidePercent = attrs.getFloat("layout_constraintGuide_percent", UNSET_FLOAT);
-    guidelineUseRtl = attrs.getBoolean("layout_guidelineUseRtl", true);
+    guideBegin   = ta&&ta->hasValue(SCC::layout_constraintGuide_begin) ? ta->getDimensionPixelSize(SCC::layout_constraintGuide_begin, UNSET) : attrs.getDimensionPixelSize("layout_constraintGuide_begin", UNSET);
+    guideEnd     = ta&&ta->hasValue(SCC::layout_constraintGuide_end)   ? ta->getDimensionPixelSize(SCC::layout_constraintGuide_end,   UNSET) : attrs.getDimensionPixelSize("layout_constraintGuide_end",   UNSET);
+    guidePercent = ta&&ta->hasValue(SCC::layout_constraintGuide_percent) ? ta->getFloat(SCC::layout_constraintGuide_percent, UNSET_FLOAT) : attrs.getFloat("layout_constraintGuide_percent", UNSET_FLOAT);
+    guidelineUseRtl = (ta&&ta->hasValue(SCC::guidelineUseRtl)) ? ta->getBoolean(SCC::guidelineUseRtl, true) : attrs.getBoolean("layout_guidelineUseRtl", true);
     // Orientation: bare key (namespace stripped) + map so "vertical"/"horizontal"
     // resolve (plain getInt treats a leading letter as non-numeric → def).
     // Mirrors LinearLayout; -1 (absent) falls back to HORIZONTAL in validate().
-    orientation  = attrs.getInt("orientation", std::unordered_map<std::string,int>{
+    orientation  = (ta&&ta->hasValue(SCC::orientation)) ? ta->getInt(SCC::orientation, -1) : attrs.getInt("orientation", std::unordered_map<std::string,int>{
         {"horizontal", (int)ConstraintWidget::HORIZONTAL},
         {"vertical",   (int)ConstraintWidget::VERTICAL}}, -1);
 
     // Ratio (parse "16:9", "1.5", "W,16:9", "H,3:2")
-    std::string ratioStr = attrs.getString("layout_constraintDimensionRatio", "");
+    std::string ratioStr = (ta&&ta->hasValue(SCC::layout_constraintDimensionRatio)) ? ta->getString(SCC::layout_constraintDimensionRatio) : attrs.getString("layout_constraintDimensionRatio", "");
     if (!ratioStr.empty()) {
         parseDimensionRatio(ratioStr, dimensionRatio, dimensionRatioSide);
     }
 
     // Baseline
-    baselineToBaseline = attrs.getResourceId("layout_constraintBaseline_toBaselineOf", UNSET);
+    baselineToBaseline = ta&&ta->hasValue(SCC::layout_constraintBaseline_toBaselineOf) ? (int)ta->getResourceId(SCC::layout_constraintBaseline_toBaselineOf, UNSET) : attrs.getResourceId("layout_constraintBaseline_toBaselineOf", UNSET);
 
     // Circular constraint
-    circleConstraint = attrs.getResourceId("layout_constraintCircle", UNSET);
-    circleAngle      = attrs.getFloat("layout_constraintCircleAngle", 0);
-    circleRadius     = attrs.getDimensionPixelSize("layout_constraintCircleRadius", 0);
+    circleConstraint = ta&&ta->hasValue(SCC::layout_constraintCircle) ? (int)ta->getResourceId(SCC::layout_constraintCircle, UNSET) : attrs.getResourceId("layout_constraintCircle", UNSET);
+    circleAngle      = ta&&ta->hasValue(SCC::layout_constraintCircleAngle) ? ta->getFloat(SCC::layout_constraintCircleAngle, 0) : attrs.getFloat("layout_constraintCircleAngle", 0);
+    circleRadius     = ta&&ta->hasValue(SCC::layout_constraintCircleRadius) ? ta->getDimensionPixelSize(SCC::layout_constraintCircleRadius, 0) : attrs.getDimensionPixelSize("layout_constraintCircleRadius", 0);
 
     // Chain styles
     static const std::unordered_map<std::string,int> chainStyles = {
@@ -140,12 +147,12 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
         {"spread_inside", (int)ConstraintWidget::CHAIN_SPREAD_INSIDE},
         {"packed", (int)ConstraintWidget::CHAIN_PACKED}
     };
-    horizontalChainStyle = attrs.getInt("layout_constraintHorizontal_chainStyle", chainStyles, (int)ConstraintWidget::CHAIN_SPREAD);
-    verticalChainStyle   = attrs.getInt("layout_constraintVertical_chainStyle", chainStyles, (int)ConstraintWidget::CHAIN_SPREAD);
+    horizontalChainStyle = ta&&ta->hasValue(SCC::layout_constraintHorizontal_chainStyle) ? ta->getInt(SCC::layout_constraintHorizontal_chainStyle, (int)ConstraintWidget::CHAIN_SPREAD) : attrs.getInt("layout_constraintHorizontal_chainStyle", chainStyles, (int)ConstraintWidget::CHAIN_SPREAD);
+    verticalChainStyle   = ta&&ta->hasValue(SCC::layout_constraintVertical_chainStyle)   ? ta->getInt(SCC::layout_constraintVertical_chainStyle,   (int)ConstraintWidget::CHAIN_SPREAD) : attrs.getInt("layout_constraintVertical_chainStyle", chainStyles, (int)ConstraintWidget::CHAIN_SPREAD);
 
     // chain weights (layout_constraintHorizontal/Vertical_weight).
-    horizontalWeight = attrs.getFloat("layout_constraintHorizontal_weight", ConstraintWidget::UNKNOWN);
-    verticalWeight   = attrs.getFloat("layout_constraintVertical_weight",   ConstraintWidget::UNKNOWN);
+    horizontalWeight = ta&&ta->hasValue(SCC::layout_constraintHorizontal_weight) ? ta->getFloat(SCC::layout_constraintHorizontal_weight, ConstraintWidget::UNKNOWN) : attrs.getFloat("layout_constraintHorizontal_weight", ConstraintWidget::UNKNOWN);
+    verticalWeight   = ta&&ta->hasValue(SCC::layout_constraintVertical_weight)   ? ta->getFloat(SCC::layout_constraintVertical_weight,   ConstraintWidget::UNKNOWN) : attrs.getFloat("layout_constraintVertical_weight",   ConstraintWidget::UNKNOWN);
 
     // match_constraint (0dp) sizing: default spread/wrap/percent + percent value + min/max.
     static const std::unordered_map<std::string,int> matchDefault = {
@@ -153,14 +160,14 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
         {"wrap",    (int)ConstraintWidget::MATCH_CONSTRAINT_WRAP},
         {"percent", (int)ConstraintWidget::MATCH_CONSTRAINT_PERCENT}
     };
-    matchConstraintDefaultWidth  = attrs.getInt("layout_constraintWidth_default",  matchDefault, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
-    matchConstraintDefaultHeight = attrs.getInt("layout_constraintHeight_default", matchDefault, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
-    matchConstraintPercentWidth  = attrs.getFloat("layout_constraintWidth_percent",  1.0f);
-    matchConstraintPercentHeight = attrs.getFloat("layout_constraintHeight_percent", 1.0f);
-    matchConstraintMinWidth   = attrs.getDimensionPixelSize("layout_constraintWidth_min",  0);
-    matchConstraintMaxWidth   = attrs.getDimensionPixelSize("layout_constraintWidth_max",  0);
-    matchConstraintMinHeight  = attrs.getDimensionPixelSize("layout_constraintHeight_min", 0);
-    matchConstraintMaxHeight  = attrs.getDimensionPixelSize("layout_constraintHeight_max", 0);
+    matchConstraintDefaultWidth  = ta&&ta->hasValue(SCC::layout_constraintWidth_default)  ? ta->getInt(SCC::layout_constraintWidth_default,  (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD) : attrs.getInt("layout_constraintWidth_default",  matchDefault, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
+    matchConstraintDefaultHeight = ta&&ta->hasValue(SCC::layout_constraintHeight_default) ? ta->getInt(SCC::layout_constraintHeight_default, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD) : attrs.getInt("layout_constraintHeight_default", matchDefault, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
+    matchConstraintPercentWidth  = ta&&ta->hasValue(SCC::layout_constraintWidth_percent)  ? ta->getFloat(SCC::layout_constraintWidth_percent,  1.0f) : attrs.getFloat("layout_constraintWidth_percent",  1.0f);
+    matchConstraintPercentHeight = ta&&ta->hasValue(SCC::layout_constraintHeight_percent) ? ta->getFloat(SCC::layout_constraintHeight_percent, 1.0f) : attrs.getFloat("layout_constraintHeight_percent", 1.0f);
+    matchConstraintMinWidth   = ta&&ta->hasValue(SCC::layout_constraintWidth_min)  ? ta->getDimensionPixelSize(SCC::layout_constraintWidth_min,  0) : attrs.getDimensionPixelSize("layout_constraintWidth_min",  0);
+    matchConstraintMaxWidth   = ta&&ta->hasValue(SCC::layout_constraintWidth_max)  ? ta->getDimensionPixelSize(SCC::layout_constraintWidth_max,  0) : attrs.getDimensionPixelSize("layout_constraintWidth_max",  0);
+    matchConstraintMinHeight  = ta&&ta->hasValue(SCC::layout_constraintHeight_min) ? ta->getDimensionPixelSize(SCC::layout_constraintHeight_min, 0) : attrs.getDimensionPixelSize("layout_constraintHeight_min", 0);
+    matchConstraintMaxHeight  = ta&&ta->hasValue(SCC::layout_constraintHeight_max) ? ta->getDimensionPixelSize(SCC::layout_constraintHeight_max, 0) : attrs.getDimensionPixelSize("layout_constraintHeight_max", 0);
 
     validate();
 }

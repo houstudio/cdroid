@@ -1,3 +1,4 @@
 # widgetEx declare-styleable name -> output C++ styleable name (X_Layout -> XLayout)
 CoordinatorLayout_Layout CoordinatorLayoutLayout
 FlexboxLayout_Layout FlexboxLayoutLayout
+ConstraintLayout_Layout ConstraintLayoutLayout

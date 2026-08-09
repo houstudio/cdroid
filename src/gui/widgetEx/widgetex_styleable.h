@@ -34,6 +34,123 @@ namespace fw_attr {
         constexpr uint32_t layout_alignSelf = 0x7f010011;
         constexpr uint32_t layout_wrapBefore = 0x7f010012;
     }
+    namespace ConstraintLayoutLayout {
+        constexpr uint32_t orientation = 0x010100c4;
+        constexpr uint32_t minWidth = 0x0101013f;
+        constexpr uint32_t minHeight = 0x01010140;
+        constexpr uint32_t maxWidth = 0x0101011f;
+        constexpr uint32_t maxHeight = 0x01010120;
+        constexpr uint32_t visibility = 0x010100dc;
+        constexpr uint32_t elevation = 0x01010440;
+        constexpr uint32_t layout_optimizationLevel = 0x7f010013;
+        constexpr uint32_t layoutDescription = 0x7f010014;
+        constexpr uint32_t constraintSet = 0x7f010015;
+        constexpr uint32_t barrierDirection = 0x7f010016;
+        constexpr uint32_t barrierAllowsGoneWidgets = 0x7f010017;
+        constexpr uint32_t barrierMargin = 0x7f010018;
+        constexpr uint32_t constraint_referenced_ids = 0x7f010019;
+        constexpr uint32_t constraint_referenced_tags = 0x7f01001a;
+        constexpr uint32_t chainUseRtl = 0x7f01001b;
+        constexpr uint32_t flow_horizontalStyle = 0x7f01001c;
+        constexpr uint32_t flow_verticalStyle = 0x7f01001d;
+        constexpr uint32_t flow_wrapMode = 0x7f01001e;
+        constexpr uint32_t flow_maxElementsWrap = 0x7f01001f;
+        constexpr uint32_t flow_horizontalGap = 0x7f010020;
+        constexpr uint32_t flow_verticalGap = 0x7f010021;
+        constexpr uint32_t padding = 0x010100d5;
+        constexpr uint32_t paddingTop = 0x010100d7;
+        constexpr uint32_t paddingBottom = 0x010100d9;
+        constexpr uint32_t paddingLeft = 0x010100d6;
+        constexpr uint32_t paddingRight = 0x010100d8;
+        constexpr uint32_t paddingStart = 0x010103b3;
+        constexpr uint32_t paddingEnd = 0x010103b4;
+        constexpr uint32_t flow_verticalAlign = 0x7f010022;
+        constexpr uint32_t flow_horizontalAlign = 0x7f010023;
+        constexpr uint32_t flow_verticalBias = 0x7f010024;
+        constexpr uint32_t flow_horizontalBias = 0x7f010025;
+        constexpr uint32_t flow_firstHorizontalStyle = 0x7f010026;
+        constexpr uint32_t flow_firstVerticalStyle = 0x7f010027;
+        constexpr uint32_t flow_firstHorizontalBias = 0x7f010028;
+        constexpr uint32_t flow_firstVerticalBias = 0x7f010029;
+        constexpr uint32_t flow_lastHorizontalStyle = 0x7f01002a;
+        constexpr uint32_t flow_lastVerticalStyle = 0x7f01002b;
+        constexpr uint32_t flow_lastHorizontalBias = 0x7f01002c;
+        constexpr uint32_t flow_lastVerticalBias = 0x7f01002d;
+        constexpr uint32_t circularflow_radiusInDP = 0x7f01002e;
+        constexpr uint32_t circularflow_angles = 0x7f01002f;
+        constexpr uint32_t circularflow_viewCenter = 0x7f010030;
+        constexpr uint32_t circularflow_defaultRadius = 0x7f010031;
+        constexpr uint32_t circularflow_defaultAngle = 0x7f010032;
+        constexpr uint32_t layout_constraintCircle = 0x7f010033;
+        constexpr uint32_t layout_constraintCircleRadius = 0x7f010034;
+        constexpr uint32_t layout_constraintCircleAngle = 0x7f010035;
+        constexpr uint32_t layout_constraintGuide_begin = 0x7f010036;
+        constexpr uint32_t layout_constraintGuide_end = 0x7f010037;
+        constexpr uint32_t layout_constraintGuide_percent = 0x7f010038;
+        constexpr uint32_t guidelineUseRtl = 0x7f010039;
+        constexpr uint32_t layout_constraintLeft_toLeftOf = 0x7f01003a;
+        constexpr uint32_t layout_constraintLeft_toRightOf = 0x7f01003b;
+        constexpr uint32_t layout_constraintRight_toLeftOf = 0x7f01003c;
+        constexpr uint32_t layout_constraintRight_toRightOf = 0x7f01003d;
+        constexpr uint32_t layout_constraintTop_toTopOf = 0x7f01003e;
+        constexpr uint32_t layout_constraintTop_toBottomOf = 0x7f01003f;
+        constexpr uint32_t layout_constraintBottom_toTopOf = 0x7f010040;
+        constexpr uint32_t layout_constraintBottom_toBottomOf = 0x7f010041;
+        constexpr uint32_t layout_constraintBaseline_toBaselineOf = 0x7f010042;
+        constexpr uint32_t layout_constraintBaseline_toTopOf = 0x7f010043;
+        constexpr uint32_t layout_constraintBaseline_toBottomOf = 0x7f010044;
+        constexpr uint32_t layout_constraintStart_toEndOf = 0x7f010045;
+        constexpr uint32_t layout_constraintStart_toStartOf = 0x7f010046;
+        constexpr uint32_t layout_constraintEnd_toStartOf = 0x7f010047;
+        constexpr uint32_t layout_constraintEnd_toEndOf = 0x7f010048;
+        constexpr uint32_t layout_goneMarginLeft = 0x7f010049;
+        constexpr uint32_t layout_goneMarginTop = 0x7f01004a;
+        constexpr uint32_t layout_goneMarginRight = 0x7f01004b;
+        constexpr uint32_t layout_goneMarginBottom = 0x7f01004c;
+        constexpr uint32_t layout_goneMarginStart = 0x7f01004d;
+        constexpr uint32_t layout_goneMarginEnd = 0x7f01004e;
+        constexpr uint32_t layout_goneMarginBaseline = 0x7f01004f;
+        constexpr uint32_t layout_marginBaseline = 0x7f010050;
+        constexpr uint32_t layout_constraintWidth = 0x7f010051;
+        constexpr uint32_t layout_constraintHeight = 0x7f010052;
+        constexpr uint32_t layout_width = 0x010100f4;
+        constexpr uint32_t layout_height = 0x010100f5;
+        constexpr uint32_t layout_margin = 0x010100f6;
+        constexpr uint32_t layout_marginHorizontal = 0x0101053b;
+        constexpr uint32_t layout_marginVertical = 0x0101053c;
+        constexpr uint32_t layout_marginLeft = 0x010100f7;
+        constexpr uint32_t layout_marginRight = 0x010100f9;
+        constexpr uint32_t layout_marginTop = 0x010100f8;
+        constexpr uint32_t layout_marginBottom = 0x010100fa;
+        constexpr uint32_t layout_marginStart = 0x010103b5;
+        constexpr uint32_t layout_marginEnd = 0x010103b6;
+        constexpr uint32_t layout_constrainedWidth = 0x7f010053;
+        constexpr uint32_t layout_constrainedHeight = 0x7f010054;
+        constexpr uint32_t layout_constraintHorizontal_bias = 0x7f010055;
+        constexpr uint32_t layout_constraintVertical_bias = 0x7f010056;
+        constexpr uint32_t layout_constraintWidth_default = 0x7f010057;
+        constexpr uint32_t layout_constraintHeight_default = 0x7f010058;
+        constexpr uint32_t layout_constraintWidth_min = 0x7f010059;
+        constexpr uint32_t layout_constraintWidth_max = 0x7f01005a;
+        constexpr uint32_t layout_constraintWidth_percent = 0x7f01005b;
+        constexpr uint32_t layout_constraintHeight_min = 0x7f01005c;
+        constexpr uint32_t layout_constraintHeight_max = 0x7f01005d;
+        constexpr uint32_t layout_constraintHeight_percent = 0x7f01005e;
+        constexpr uint32_t layout_constraintLeft_creator = 0x7f01005f;
+        constexpr uint32_t layout_constraintTop_creator = 0x7f010060;
+        constexpr uint32_t layout_constraintRight_creator = 0x7f010061;
+        constexpr uint32_t layout_constraintBottom_creator = 0x7f010062;
+        constexpr uint32_t layout_constraintBaseline_creator = 0x7f010063;
+        constexpr uint32_t layout_constraintDimensionRatio = 0x7f010064;
+        constexpr uint32_t layout_constraintHorizontal_weight = 0x7f010065;
+        constexpr uint32_t layout_constraintVertical_weight = 0x7f010066;
+        constexpr uint32_t layout_constraintHorizontal_chainStyle = 0x7f010067;
+        constexpr uint32_t layout_constraintVertical_chainStyle = 0x7f010068;
+        constexpr uint32_t layout_editor_absoluteX = 0x7f010069;
+        constexpr uint32_t layout_editor_absoluteY = 0x7f01006a;
+        constexpr uint32_t layout_constraintTag = 0x7f01006b;
+        constexpr uint32_t layout_wrapBehaviorInParent = 0x7f01006c;
+    }
 } // namespace fw_attr
 
 namespace styleable {
@@ -51,6 +168,10 @@ namespace styleable {
     }
     namespace FlexboxLayoutLayout {
         enum { layout_order, layout_flexBasisPercent, layout_flexGrow, layout_flexShrink, layout_alignSelf, layout_wrapBefore, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace ConstraintLayoutLayout {
+        enum { orientation, minWidth, minHeight, maxWidth, maxHeight, visibility, elevation, layout_optimizationLevel, layoutDescription, constraintSet, barrierDirection, barrierAllowsGoneWidgets, barrierMargin, constraint_referenced_ids, constraint_referenced_tags, chainUseRtl, flow_horizontalStyle, flow_verticalStyle, flow_wrapMode, flow_maxElementsWrap, flow_horizontalGap, flow_verticalGap, padding, paddingTop, paddingBottom, paddingLeft, paddingRight, paddingStart, paddingEnd, flow_verticalAlign, flow_horizontalAlign, flow_verticalBias, flow_horizontalBias, flow_firstHorizontalStyle, flow_firstVerticalStyle, flow_firstHorizontalBias, flow_firstVerticalBias, flow_lastHorizontalStyle, flow_lastVerticalStyle, flow_lastHorizontalBias, flow_lastVerticalBias, circularflow_radiusInDP, circularflow_angles, circularflow_viewCenter, circularflow_defaultRadius, circularflow_defaultAngle, layout_constraintCircle, layout_constraintCircleRadius, layout_constraintCircleAngle, layout_constraintGuide_begin, layout_constraintGuide_end, layout_constraintGuide_percent, guidelineUseRtl, layout_constraintLeft_toLeftOf, layout_constraintLeft_toRightOf, layout_constraintRight_toLeftOf, layout_constraintRight_toRightOf, layout_constraintTop_toTopOf, layout_constraintTop_toBottomOf, layout_constraintBottom_toTopOf, layout_constraintBottom_toBottomOf, layout_constraintBaseline_toBaselineOf, layout_constraintBaseline_toTopOf, layout_constraintBaseline_toBottomOf, layout_constraintStart_toEndOf, layout_constraintStart_toStartOf, layout_constraintEnd_toStartOf, layout_constraintEnd_toEndOf, layout_goneMarginLeft, layout_goneMarginTop, layout_goneMarginRight, layout_goneMarginBottom, layout_goneMarginStart, layout_goneMarginEnd, layout_goneMarginBaseline, layout_marginBaseline, layout_constraintWidth, layout_constraintHeight, layout_width, layout_height, layout_margin, layout_marginHorizontal, layout_marginVertical, layout_marginLeft, layout_marginRight, layout_marginTop, layout_marginBottom, layout_marginStart, layout_marginEnd, layout_constrainedWidth, layout_constrainedHeight, layout_constraintHorizontal_bias, layout_constraintVertical_bias, layout_constraintWidth_default, layout_constraintHeight_default, layout_constraintWidth_min, layout_constraintWidth_max, layout_constraintWidth_percent, layout_constraintHeight_min, layout_constraintHeight_max, layout_constraintHeight_percent, layout_constraintLeft_creator, layout_constraintTop_creator, layout_constraintRight_creator, layout_constraintBottom_creator, layout_constraintBaseline_creator, layout_constraintDimensionRatio, layout_constraintHorizontal_weight, layout_constraintVertical_weight, layout_constraintHorizontal_chainStyle, layout_constraintVertical_chainStyle, layout_editor_absoluteX, layout_editor_absoluteY, layout_constraintTag, layout_wrapBehaviorInParent, COUNT };
         extern const uint32_t IDS[];
     }
 } // namespace styleable
