@@ -524,6 +524,15 @@ class PakBuilder(idgen.IDGenerater):
                 sys.stderr.write("aapt2_gen_rh: rc=%d %s\n"
                                  % (_r.returncode, (_r.stderr or _r.stdout)[:200]))
             return result
+        except subprocess.CalledProcessError as e:
+            # aapt2's own diagnostics are in e.stderr/e.stdout — surface them
+            # instead of the bare "non-zero exit" so link/compile errors (e.g.
+            # "attribute xxx not found") are visible.
+            err = (e.stderr or b"").decode("utf-8", "replace").strip()
+            out = (e.stdout or b"").decode("utf-8", "replace").strip()
+            sys.stderr.write("SDK res aapt2 failed (rc=%d):\n%s\n%s\nfalling back\n"
+                             % (e.returncode, err, out))
+            return {}
         except Exception as e:
             sys.stderr.write("SDK res compile failed (%s); falling back\n" % e)
             return {}
@@ -628,6 +637,14 @@ class PakBuilder(idgen.IDGenerater):
                 sys.stderr.write("aapt2_gen_rh (app): rc=%d %s\n"
                                  % (_r.returncode, (_r.stderr or _r.stdout)[:200]))
             return result, arsc
+        except subprocess.CalledProcessError as e:
+            # Surface aapt2's own stderr/stdout (attribute-not-found, etc.) so
+            # the actual link/compile error is visible, not just "non-zero exit".
+            err = (e.stderr or b"").decode("utf-8", "replace").strip()
+            out = (e.stdout or b"").decode("utf-8", "replace").strip()
+            sys.stderr.write("aapt2 failed (rc=%d):\n%s\n%s\nfalling back to text XML\n"
+                             % (e.returncode, err, out))
+            return {}, None
         except Exception as e:
             sys.stderr.write("aapt2 compile failed (%s); falling back to text XML\n" % e)
             return {}, None
