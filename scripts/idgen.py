@@ -10,6 +10,10 @@ import tempfile
 import filecmp
 import shutil
 
+# Reuse the C++ keyword + identifier escaping from aapt2_gen_rh so text-fallback
+# apps (idgen path) get the same `int default` -> `int default_` fix.
+from aapt2_gen_rh import cident
+
 class CDROIDHandler( xml.sax.ContentHandler ):
     def __init__(self,namespace):
         self.idlist=[]
@@ -96,8 +100,8 @@ class IDGenerater(object):
         #print(self.Handler.idlist)
         #print(self.Handler.strings)
         for k in self.Handler.idlist:
-            fr.write("%8s static constexpr int %-24s= 0x%08X ;/*%d*/\n"%('',k,self.idstart+i,self.idstart+i))
-            i+=1 
+            fr.write("%8s static constexpr int %-24s= 0x%08X ;/*%d %s*/\n"%('',cident(k),self.idstart+i,self.idstart+i,k))
+            i+=1
         fr.write("%4s};/*namespace id*/\n\n"%(''))
         
         fr.write("    namespace strings{\n")

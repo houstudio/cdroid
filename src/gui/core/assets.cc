@@ -684,13 +684,15 @@ int Assets::getId(const std::string&resname)const {
         key.erase(pos,1);
     parseResource(key,&resid,&pkg);
 
-    auto it = mIDS.find(pkg+":"+resid);
-    if(it != mIDS.end()) return it->second;
-    // Fallback: resolve from resources.arsc via ResTable.
+    // arsc is the single id source for binary apps: R.h is dumped from the same
+    // arsc (aapt2_gen_rh), so the resolved id matches View::getId(). mIDS (idgen's
+    // values/ID.xml) is the text-fallback for apps whose aapt2 link failed.
     if (mResTable) {
         uint32_t id = arscGetIdentifier(resid, "id", pkg);
         if (id != 0) return (int)id;
     }
+    auto it = mIDS.find(pkg+":"+resid);
+    if(it != mIDS.end()) return it->second;
     return -1;
 }
 

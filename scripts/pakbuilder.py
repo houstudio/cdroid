@@ -577,6 +577,19 @@ class PakBuilder(idgen.IDGenerater):
                     elif name.startswith("res/") and name.endswith(".xml"):
                         rel = name[4:]  # strip "res/" prefix -> layout/main.xml
                         result[rel] = zf.read(name)
+            # Write app R.h from the app's own arsc (real 0x7f IDs), mirroring
+            # _compile_sdk_res. Skip when use_sdk: cdroid's framework R.h is
+            # already written by _compile_sdk_res from the full framework apk,
+            # and writing here would clobber it with cdroid's slim-subset arsc.
+            if (arsc is not None and not self.use_sdk
+                    and getattr(self, 'rh_path', None) and self.rh_path):
+                _gen = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aapt2_gen_rh.py')
+                _r = subprocess.run([sys.executable, _gen, out_apk,
+                                     '--aapt2', self.aapt2_path,
+                                     '--namespace', self.namespace, '-o', self.rh_path],
+                                    capture_output=True, text=True)
+                sys.stderr.write("aapt2_gen_rh (app): rc=%d %s\n"
+                                 % (_r.returncode, (_r.stderr or _r.stdout)[:200]))
             return result, arsc
         except Exception as e:
             sys.stderr.write("aapt2 compile failed (%s); falling back to text XML\n" % e)
@@ -599,13 +612,20 @@ class PakBuilder(idgen.IDGenerater):
             if self.sdk_res and os.path.isdir(self.sdk_res):
                 sdk_mtime = os.path.getmtime(self.sdk_res)
                 if sdk_mtime > newest: newest = sdk_mtime
-            if pak_mtime > newest:
+            # Also require R.h present: it is produced during a real rebuild, so
+            # a missing/stale R.h must not be skipped (else builds with no R.h).
+            if pak_mtime > newest and os.path.exists(self.rh_path):
                 sys.stderr.write("pak up to date, skipping rebuild\n")
                 return
         # SDK mode: build complete framework from SDK data/res/ via aapt2 -x.
         sdk_data = self._compile_sdk_res() if self.use_sdk else {}
         # App mode: compile cdroid's own res/ via aapt2 (optional).
         binary_xmls, app_arsc = self._compile_aapt2() if self.use_aapt2 else ({}, None)
+        # binary apps get their R.h from aapt2 dump (above) and need no ID.xml;
+        # only the text fallback (aapt2 off / link failed) uses idgen (R.h+ID.xml).
+        binary_ok = bool(sdk_data) or (app_arsc is not None)
+        if not binary_ok:
+            self.generate_ids()
         with zipfile.ZipFile(self.pak_path, "w") as zf:
             # SDK framework: store binary AXML + arsc + drawables. Skip values/
             # and color/ here — cdroid ships its own TEXT versions of those
@@ -627,6 +647,9 @@ class PakBuilder(idgen.IDGenerater):
                 for f in files:
                     p = os.path.join(root, f)
                     rel = os.path.relpath(p, self.res_dir).replace(os.sep, "/")
+                    # binary apps: arsc is the id source, don't ship idgen's ID.xml
+                    if binary_ok and rel == "values/ID.xml":
+                        continue
                     if self.use_sdk and rel in sdk_data:
                         # SDK binary replaces layout/drawable (inflation targets).
                         # But keep cdroid's own values/color text — loadKeyValues
@@ -662,5 +685,4 @@ if __name__ == "__main__":
     sres  = sys.argv[7] if len(sys.argv) > 7 else None
     sflt  = sys.argv[8] if len(sys.argv) > 8 else None
     pb = PakBuilder(*sys.argv[1:5], aapt2_path=aapt2, android_jar=ajar, sdk_res=sres, sdk_filter=sflt)
-    pb.generate_ids()
     pb.build()
