@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <assets.h>
 #include <core/typedarray.h>   // TypedArray (constructed in obtainStyledAttributesTyped)
+#include "androidfw/LocaleData.h"  // localeDataComputeScript (arsc locale config)
 #include <algorithm>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -642,6 +643,25 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
     return std::make_unique<std::ifstream>(fullresid);
 }
 
+// Set the arsc request locale so getResource/getResourceString pick the matching
+// locale variant (mirrors the test config construction: packLanguage/Region +
+// localeDataComputeScript). Binary apps read localized strings from arsc; text
+// apps still use loadStrings for their app-local values.
+void Assets::applyLocale(const std::string& lan) {
+    if (!mResTable || lan.empty()) return;
+    std::string lang = lan, region;
+    size_t sep = lan.find_first_of("_-");
+    if (sep != std::string::npos) { lang = lan.substr(0, sep); region = lan.substr(sep + 1); }
+    ResTable_config cfg = {};
+    if (lang.size() >= 2) cfg.packLanguage(lang.substr(0, 2).c_str());
+    if (region.size() >= 2) cfg.packRegion(region.substr(0, 2).c_str());
+    char script[4] = {0, 0, 0, 0};
+    android::localeDataComputeScript(script, cfg.language, cfg.country);
+    memcpy(cfg.localeScript, script, 4);
+    cfg.localeScriptWasComputed = true;
+    mResTable->setParameters(&cfg);
+}
+
 void Assets::loadStrings(const std::string&lan) {
     const std::string suffix = "/strings-"+lan+".xml";
     for(auto& a:mResources) {
@@ -728,7 +748,9 @@ const std::string Assets::getString(const std::string& resid,const std::string&l
         }
     }
     if((!lan.empty())&&(mLanguage!=lan)) {
-        loadStrings(lan);
+        applyLocale(lan);     // arsc locale (setParameters) — binary apps
+        loadStrings(lan);     // text fallback (no-op for apps with no text values)
+        mLanguage = lan;      // track current locale (was never assigned before)
     }
     std::string str = resid;
     std::string pkg,name = resid;

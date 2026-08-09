@@ -687,6 +687,13 @@ class PakBuilder(idgen.IDGenerater):
                     # binary apps: arsc is the id source, don't ship idgen's ID.xml
                     if binary_ok and rel == "values/ID.xml":
                         continue
+                    # binary apps/framework: values/ (dimen/string/style/attrs/...)
+                    # resolve from arsc (string/color/dimen getters + style bag +
+                    # locale setParameters). Skip the text copies — also avoids text
+                    # parse bugs (e.g. values-ko XmlPullParser multi-byte error).
+                    # color/ ColorStateLists stay text (parsed by loadKeyValues).
+                    if binary_ok and (rel.startswith("values/") or rel.startswith("values-")):
+                        continue
                     if self.use_sdk and rel in sdk_data:
                         # SDK binary replaces layout/drawable (inflation targets).
                         # But keep cdroid's own values/color text — loadKeyValues
