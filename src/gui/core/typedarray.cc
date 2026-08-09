@@ -71,7 +71,23 @@ int32_t TypedArray::getDimensionPixelSize(size_t idx, int32_t def) const {
 }
 uint32_t TypedArray::getResourceId(size_t idx, uint32_t def) const {
     Res_value v; if (!get(idx, &v)) return def;
-    return (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE) ? v.data : def;
+    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
+        v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+        // Binary-AXML references carry the aapt2 resource id (0x7fxxxxxx), but CDROID's runtime
+        // uses the idgen id space (R.h / View::getId() — AttributeSet.getResourceId resolves the
+        // rendered "@id/<name>" via Assets::getId). Bridge the two so view-id / anchor lookups
+        // match View::getId(); fall back to the raw arsc id when the name can't be resolved.
+        if (mContext) {
+            const Assets* a = static_cast<const Assets*>(mContext);
+            std::string name = a->arscReferenceName(v.data);
+            if (!name.empty()) {
+                int idgen = a->getId(name);
+                if (idgen != -1) return (uint32_t)idgen;
+            }
+        }
+        return v.data;
+    }
+    return def;
 }
 std::string TypedArray::getString(size_t idx) const {
     Res_value v; if (!get(idx, &v) || v.dataType != Res_value::TYPE_STRING) return "";
