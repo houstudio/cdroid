@@ -888,34 +888,68 @@ RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& s
 }
 
 RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):MarginLayoutParams(ctx,atts){
-    alignWithParent = atts.getBoolean("alignWithParentIfMissing",false);
+    alignWithParent = atts.getBoolean("alignWithParentIfMissing",false); // not in styleable; bridge handles both
     mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
-    mRules[LEFT_OF] = atts.getResourceId("layout_toLeftOf",0);
-    mRules[RIGHT_OF]= atts.getResourceId("layout_toRightOf",0);
-    mRules[ABOVE]   = atts.getResourceId("layout_above",0);
-    mRules[BELOW]   = atts.getResourceId("layout_below",0);
-    mRules[ALIGN_BASELINE]= atts.getResourceId("layout_alignBaseline",0);
-    mRules[ALIGN_LEFT]    = atts.getResourceId("layout_alignLeft",0);
-    mRules[ALIGN_TOP]     = atts.getResourceId("layout_alignTop",0);
-    mRules[ALIGN_RIGHT]   = atts.getResourceId("layout_alignRight",0);
-    mRules[ALIGN_BOTTOM]  = atts.getResourceId("layout_alignBottom",0);
+    memset(mRules, 0, sizeof(mRules)); // absent rules stay 0 (binary switch only fires present attrs)
+    // Phase 2: TypedArray switch-loop (22 rules = many attrs → loop, AOSP pattern).
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        atts, styleable::RelativeLayoutLayout::IDS, styleable::RelativeLayoutLayout::COUNT) : nullptr;
+    namespace SRL = styleable::RelativeLayoutLayout;
 
-    mRules[ALIGN_PARENT_LEFT]  = atts.getBoolean("layout_alignParentLeft"  , false) ? LTRUE : 0;
-    mRules[ALIGN_PARENT_TOP]   = atts.getBoolean("layout_alignParentTop"   , false) ? LTRUE : 0;    
-    mRules[ALIGN_PARENT_RIGHT] = atts.getBoolean("layout_alignParentRight" , false) ? LTRUE : 0;    
-    mRules[ALIGN_PARENT_BOTTOM]= atts.getBoolean("layout_alignParentBottom", false) ? LTRUE : 0;    
-    
-    mRules[CENTER_IN_PARENT] = atts.getBoolean("layout_centerInParent"  , false) ? LTRUE : 0;
-    mRules[CENTER_HORIZONTAL]= atts.getBoolean("layout_centerHorizontal", false) ? LTRUE : 0;
-    mRules[CENTER_VERTICAL]  = atts.getBoolean("layout_centerVertical"  , false) ? LTRUE : 0;
-
-    mRules[START_OF]   = atts.getResourceId("layout_toStartOf",0);
-    mRules[END_OF]     = atts.getResourceId("layout_toEndOf",0);
-    mRules[ALIGN_START]= atts.getResourceId("layout_alignStart",0);
-    mRules[ALIGN_END]  = atts.getResourceId("layout_alignEnd",0);
-
-    mRules[ALIGN_PARENT_START] = atts.getBoolean("layout_alignParentStart", false) ? LTRUE : 0;
-    mRules[ALIGN_PARENT_END]   = atts.getBoolean("layout_alignParentEnd"  , false) ? LTRUE : 0;
+    if (ta) {
+        for (size_t n = ta->getIndexCount(); n > 0; ) {
+            size_t i = ta->getIndex(--n);
+            switch (i) {
+            case SRL::layout_toLeftOf:        mRules[LEFT_OF]          = ta->getResourceId(i,0); break;
+            case SRL::layout_toRightOf:       mRules[RIGHT_OF]         = ta->getResourceId(i,0); break;
+            case SRL::layout_above:           mRules[ABOVE]            = ta->getResourceId(i,0); break;
+            case SRL::layout_below:           mRules[BELOW]            = ta->getResourceId(i,0); break;
+            case SRL::layout_alignBaseline:   mRules[ALIGN_BASELINE]   = ta->getResourceId(i,0); break;
+            case SRL::layout_alignLeft:       mRules[ALIGN_LEFT]       = ta->getResourceId(i,0); break;
+            case SRL::layout_alignTop:        mRules[ALIGN_TOP]        = ta->getResourceId(i,0); break;
+            case SRL::layout_alignRight:      mRules[ALIGN_RIGHT]      = ta->getResourceId(i,0); break;
+            case SRL::layout_alignBottom:     mRules[ALIGN_BOTTOM]     = ta->getResourceId(i,0); break;
+            case SRL::layout_alignParentLeft: mRules[ALIGN_PARENT_LEFT]  = ta->getBoolean(i,false)?LTRUE:0; break;
+            case SRL::layout_alignParentTop:  mRules[ALIGN_PARENT_TOP]   = ta->getBoolean(i,false)?LTRUE:0; break;
+            case SRL::layout_alignParentRight:mRules[ALIGN_PARENT_RIGHT] = ta->getBoolean(i,false)?LTRUE:0; break;
+            case SRL::layout_alignParentBottom:mRules[ALIGN_PARENT_BOTTOM]= ta->getBoolean(i,false)?LTRUE:0; break;
+            case SRL::layout_centerInParent:  mRules[CENTER_IN_PARENT]   = ta->getBoolean(i,false)?LTRUE:0; break;
+            case SRL::layout_centerHorizontal:mRules[CENTER_HORIZONTAL]  = ta->getBoolean(i,false)?LTRUE:0; break;
+            case SRL::layout_centerVertical:  mRules[CENTER_VERTICAL]    = ta->getBoolean(i,false)?LTRUE:0; break;
+            case SRL::layout_toStartOf:       mRules[START_OF]           = ta->getResourceId(i,0); break;
+            case SRL::layout_toEndOf:         mRules[END_OF]             = ta->getResourceId(i,0); break;
+            case SRL::layout_alignStart:      mRules[ALIGN_START]        = ta->getResourceId(i,0); break;
+            case SRL::layout_alignEnd:        mRules[ALIGN_END]          = ta->getResourceId(i,0); break;
+            case SRL::layout_alignParentStart:mRules[ALIGN_PARENT_START] = ta->getBoolean(i,false)?LTRUE:0; break;
+            case SRL::layout_alignParentEnd:  mRules[ALIGN_PARENT_END]   = ta->getBoolean(i,false)?LTRUE:0; break;
+            default: break;
+            }
+        }
+    } else {
+        mRules[LEFT_OF] = atts.getResourceId("layout_toLeftOf",0);
+        mRules[RIGHT_OF]= atts.getResourceId("layout_toRightOf",0);
+        mRules[ABOVE]   = atts.getResourceId("layout_above",0);
+        mRules[BELOW]   = atts.getResourceId("layout_below",0);
+        mRules[ALIGN_BASELINE]= atts.getResourceId("layout_alignBaseline",0);
+        mRules[ALIGN_LEFT]    = atts.getResourceId("layout_alignLeft",0);
+        mRules[ALIGN_TOP]     = atts.getResourceId("layout_alignTop",0);
+        mRules[ALIGN_RIGHT]   = atts.getResourceId("layout_alignRight",0);
+        mRules[ALIGN_BOTTOM]  = atts.getResourceId("layout_alignBottom",0);
+        mRules[ALIGN_PARENT_LEFT]  = atts.getBoolean("layout_alignParentLeft"  , false) ? LTRUE : 0;
+        mRules[ALIGN_PARENT_TOP]   = atts.getBoolean("layout_alignParentTop"   , false) ? LTRUE : 0;
+        mRules[ALIGN_PARENT_RIGHT] = atts.getBoolean("layout_alignParentRight" , false) ? LTRUE : 0;
+        mRules[ALIGN_PARENT_BOTTOM]= atts.getBoolean("layout_alignParentBottom", false) ? LTRUE : 0;
+        mRules[CENTER_IN_PARENT] = atts.getBoolean("layout_centerInParent"  , false) ? LTRUE : 0;
+        mRules[CENTER_HORIZONTAL]= atts.getBoolean("layout_centerHorizontal", false) ? LTRUE : 0;
+        mRules[CENTER_VERTICAL]  = atts.getBoolean("layout_centerVertical"  , false) ? LTRUE : 0;
+        mRules[START_OF]   = atts.getResourceId("layout_toStartOf",0);
+        mRules[END_OF]     = atts.getResourceId("layout_toEndOf",0);
+        mRules[ALIGN_START]= atts.getResourceId("layout_alignStart",0);
+        mRules[ALIGN_END]  = atts.getResourceId("layout_alignEnd",0);
+        mRules[ALIGN_PARENT_START] = atts.getBoolean("layout_alignParentStart", false) ? LTRUE : 0;
+        mRules[ALIGN_PARENT_END]   = atts.getBoolean("layout_alignParentEnd"  , false) ? LTRUE : 0;
+    }
     mRulesChanged = true;
     mNeedsLayoutResolution = false;
     memcpy(mInitialRules,mRules,sizeof(mRules));

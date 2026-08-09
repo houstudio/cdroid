@@ -443,6 +443,36 @@ namespace fw_attr {
         constexpr uint32_t layout_marginHorizontal = 0x0101053b;
         constexpr uint32_t layout_marginVertical   = 0x0101053c;
     }
+    // LinearLayout.LayoutParams: layout_weight + layout_gravity.
+    namespace LinearLayoutLayout {
+        constexpr uint32_t layout_weight           = 0x01010181;
+        constexpr uint32_t layout_gravity          = 0x010100b3;
+    }
+    // RelativeLayout.LayoutParams rules (referenced-view ids + parent-boolean rules).
+    namespace RelativeLayoutLayout {
+        constexpr uint32_t layout_toLeftOf         = 0x01010182;
+        constexpr uint32_t layout_toRightOf        = 0x01010183;
+        constexpr uint32_t layout_above            = 0x01010184;
+        constexpr uint32_t layout_below            = 0x01010185;
+        constexpr uint32_t layout_alignBaseline    = 0x01010186;
+        constexpr uint32_t layout_alignLeft        = 0x01010187;
+        constexpr uint32_t layout_alignTop         = 0x01010188;
+        constexpr uint32_t layout_alignRight       = 0x01010189;
+        constexpr uint32_t layout_alignBottom      = 0x0101018a;
+        constexpr uint32_t layout_alignParentLeft  = 0x0101018b;
+        constexpr uint32_t layout_alignParentTop   = 0x0101018c;
+        constexpr uint32_t layout_alignParentRight = 0x0101018d;
+        constexpr uint32_t layout_alignParentBottom= 0x0101018e;
+        constexpr uint32_t layout_centerInParent   = 0x0101018f;
+        constexpr uint32_t layout_centerHorizontal = 0x01010190;
+        constexpr uint32_t layout_centerVertical   = 0x01010191;
+        constexpr uint32_t layout_toStartOf        = 0x010103b7;
+        constexpr uint32_t layout_toEndOf          = 0x010103b8;
+        constexpr uint32_t layout_alignStart       = 0x010103b9;
+        constexpr uint32_t layout_alignEnd         = 0x010103ba;
+        constexpr uint32_t layout_alignParentStart = 0x010103bb;
+        constexpr uint32_t layout_alignParentEnd   = 0x010103bc;
+    }
 }
 
 // R.styleable arrays: index → framework attr ID. Used by obtainStyledAttributesTyped.
@@ -656,6 +686,21 @@ namespace styleable {
         enum { layout_margin, layout_marginLeft, layout_marginTop,
                layout_marginRight, layout_marginBottom, layout_marginStart,
                layout_marginEnd, layout_marginHorizontal, layout_marginVertical, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace LinearLayoutLayout {
+        enum { layout_weight, layout_gravity, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace RelativeLayoutLayout {
+        enum { layout_toLeftOf, layout_toRightOf, layout_above, layout_below,
+               layout_alignBaseline, layout_alignLeft, layout_alignTop,
+               layout_alignRight, layout_alignBottom,
+               layout_alignParentLeft, layout_alignParentTop, layout_alignParentRight,
+               layout_alignParentBottom, layout_centerInParent, layout_centerHorizontal,
+               layout_centerVertical, layout_toStartOf, layout_toEndOf,
+               layout_alignStart, layout_alignEnd, layout_alignParentStart,
+               layout_alignParentEnd, COUNT };
         extern const uint32_t IDS[];
     }
 }

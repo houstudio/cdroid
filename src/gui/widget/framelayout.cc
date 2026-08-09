@@ -283,7 +283,12 @@ std::string FrameLayout::getAccessibilityClassName()const{
 
 FrameLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     :MarginLayoutParams(c,attrs){
-    gravity = attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    // layout_gravity is shared with LinearLayout's styleable (same framework attr).
+    Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::LinearLayoutLayout::IDS, styleable::LinearLayoutLayout::COUNT) : nullptr;
+    gravity = ta&&ta->hasValue(styleable::LinearLayoutLayout::layout_gravity) ? ta->getInt(styleable::LinearLayoutLayout::layout_gravity,UNSPECIFIED_GRAVITY) : attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
 }
 
 FrameLayout::LayoutParams::LayoutParams(int width, int height)

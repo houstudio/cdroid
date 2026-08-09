@@ -26,8 +26,13 @@ DECLARE_WIDGET(LinearLayout)
 
 LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :ViewGroup::MarginLayoutParams(c,attrs){
-    weight = attrs.getFloat("layout_weight", 0);
-    gravity= attrs.getGravity("layout_gravity", -1);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::LinearLayoutLayout::IDS, styleable::LinearLayoutLayout::COUNT) : nullptr;
+    namespace SLL = styleable::LinearLayoutLayout;
+    weight = ta&&ta->hasValue(SLL::layout_weight) ? ta->getFloat(SLL::layout_weight, 0) : attrs.getFloat("layout_weight", 0);
+    gravity= ta&&ta->hasValue(SLL::layout_gravity) ? ta->getInt(SLL::layout_gravity, -1) : attrs.getGravity("layout_gravity", -1);
     LOGV("width=%d,height=%d weight=%.2f gravity=%x margin=%d,%d,%d,%d",width,height,
 	    weight,gravity,topMargin,bottomMargin,leftMargin,rightMargin);
 }

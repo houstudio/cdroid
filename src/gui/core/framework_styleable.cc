@@ -363,5 +363,26 @@ namespace styleable {
             fw_attr::MarginLayout::layout_marginHorizontal, fw_attr::MarginLayout::layout_marginVertical,
         };
     }
+    namespace LinearLayoutLayout {
+        const uint32_t IDS[] = {
+            fw_attr::LinearLayoutLayout::layout_weight, fw_attr::LinearLayoutLayout::layout_gravity,
+        };
+    }
+    namespace RelativeLayoutLayout {
+        const uint32_t IDS[] = {
+            fw_attr::RelativeLayoutLayout::layout_toLeftOf, fw_attr::RelativeLayoutLayout::layout_toRightOf,
+            fw_attr::RelativeLayoutLayout::layout_above, fw_attr::RelativeLayoutLayout::layout_below,
+            fw_attr::RelativeLayoutLayout::layout_alignBaseline, fw_attr::RelativeLayoutLayout::layout_alignLeft,
+            fw_attr::RelativeLayoutLayout::layout_alignTop, fw_attr::RelativeLayoutLayout::layout_alignRight,
+            fw_attr::RelativeLayoutLayout::layout_alignBottom,
+            fw_attr::RelativeLayoutLayout::layout_alignParentLeft, fw_attr::RelativeLayoutLayout::layout_alignParentTop,
+            fw_attr::RelativeLayoutLayout::layout_alignParentRight, fw_attr::RelativeLayoutLayout::layout_alignParentBottom,
+            fw_attr::RelativeLayoutLayout::layout_centerInParent, fw_attr::RelativeLayoutLayout::layout_centerHorizontal,
+            fw_attr::RelativeLayoutLayout::layout_centerVertical,
+            fw_attr::RelativeLayoutLayout::layout_toStartOf, fw_attr::RelativeLayoutLayout::layout_toEndOf,
+            fw_attr::RelativeLayoutLayout::layout_alignStart, fw_attr::RelativeLayoutLayout::layout_alignEnd,
+            fw_attr::RelativeLayoutLayout::layout_alignParentStart, fw_attr::RelativeLayoutLayout::layout_alignParentEnd,
+        };
+    }
 }
 }
