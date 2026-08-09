@@ -448,4 +448,16 @@
         <attr name="ifTagSet" format="reference"/>
         <attr name="ifTagNotSet" format="reference"/>
     </declare-styleable>
+
+    <!-- MotionEffect (from androidx constraintlayout) -->
+    <declare-styleable name="MotionEffect">
+        <attr name="motionEffect_start" format="integer"/>
+        <attr name="motionEffect_end" format="integer"/>
+        <attr name="motionEffect_translationX" format="dimension"/>
+        <attr name="motionEffect_translationY" format="dimension"/>
+        <attr name="motionEffect_alpha" format="float"/>
+        <attr name="motionEffect_viewTransition" format="reference"/>
+        <attr name="motionEffect_move" format="enum"/>
+        <attr name="motionEffect_strict" format="boolean"/>
+    </declare-styleable>
 </resources>

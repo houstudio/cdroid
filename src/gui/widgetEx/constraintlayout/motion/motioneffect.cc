@@ -20,6 +20,8 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.helper.widget.MotionEffect.
  */
 #include <widgetEx/constraintlayout/motion/motioneffect.h>
+#include <widgetEx/widgetex_styleable.h>
+#include <core/assets.h>
 
 #include <cmath>
 
@@ -43,14 +45,20 @@ MotionEffect::MotionEffect(int width, int height)
 
 void MotionEffect::init(const AttributeSet& attrs) {
     ConstraintHelper::init(attrs);
-    mMotionEffectStart = std::max(0, std::min(99, attrs.getInt("motionEffect_start", mMotionEffectStart)));
-    mMotionEffectEnd   = std::max(0, std::min(99, attrs.getInt("motionEffect_end", mMotionEffectEnd)));
-    mMotionEffectTranslationX = attrs.getDimensionPixelOffset("motionEffect_translationX", mMotionEffectTranslationX);
-    mMotionEffectTranslationY = attrs.getDimensionPixelOffset("motionEffect_translationY", mMotionEffectTranslationY);
-    mMotionEffectAlpha  = attrs.getFloat("motionEffect_alpha", mMotionEffectAlpha);
-    mMotionEffectStrictMove = attrs.getBoolean("motionEffect_strict", mMotionEffectStrictMove);
-    mViewTransitionId  = attrs.getResourceId("motionEffect_viewTransition", UNSET);
-    mFadeMove = attrs.getInt("motionEffect_move", std::unordered_map<std::string,int>{
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Context* ctx = attrs.getContext();
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::MotionEffect::IDS, styleable::MotionEffect::COUNT) : nullptr;
+    namespace SME = styleable::MotionEffect;
+    mMotionEffectStart = std::max(0, std::min(99, ta&&ta->hasValue(SME::motionEffect_start) ? ta->getInt(SME::motionEffect_start, mMotionEffectStart) : attrs.getInt("motionEffect_start", mMotionEffectStart)));
+    mMotionEffectEnd   = std::max(0, std::min(99, ta&&ta->hasValue(SME::motionEffect_end) ? ta->getInt(SME::motionEffect_end, mMotionEffectEnd) : attrs.getInt("motionEffect_end", mMotionEffectEnd)));
+    mMotionEffectTranslationX = ta&&ta->hasValue(SME::motionEffect_translationX) ? ta->getDimensionPixelOffset(SME::motionEffect_translationX, mMotionEffectTranslationX) : attrs.getDimensionPixelOffset("motionEffect_translationX", mMotionEffectTranslationX);
+    mMotionEffectTranslationY = ta&&ta->hasValue(SME::motionEffect_translationY) ? ta->getDimensionPixelOffset(SME::motionEffect_translationY, mMotionEffectTranslationY) : attrs.getDimensionPixelOffset("motionEffect_translationY", mMotionEffectTranslationY);
+    mMotionEffectAlpha  = ta&&ta->hasValue(SME::motionEffect_alpha) ? ta->getFloat(SME::motionEffect_alpha, mMotionEffectAlpha) : attrs.getFloat("motionEffect_alpha", mMotionEffectAlpha);
+    mMotionEffectStrictMove = ta&&ta->hasValue(SME::motionEffect_strict) ? ta->getBoolean(SME::motionEffect_strict, mMotionEffectStrictMove) : attrs.getBoolean("motionEffect_strict", mMotionEffectStrictMove);
+    mViewTransitionId  = ta&&ta->hasValue(SME::motionEffect_viewTransition) ? (int)ta->getResourceId(SME::motionEffect_viewTransition, UNSET) : attrs.getResourceId("motionEffect_viewTransition", UNSET);
+    mFadeMove = ta&&ta->hasValue(SME::motionEffect_move) ? ta->getInt(SME::motionEffect_move, mFadeMove) : attrs.getInt("motionEffect_move", std::unordered_map<std::string,int>{
         {"auto", (int) AUTO}, {"north", (int) NORTH}, {"south", (int) SOUTH},
         {"east", (int) EAST}, {"west", (int) WEST}
     }, mFadeMove);

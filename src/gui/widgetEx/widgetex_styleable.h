@@ -440,6 +440,16 @@ namespace fw_attr {
         constexpr uint32_t defaultDuration = 0x7f0100bb;
         constexpr uint32_t layoutDuringTransition = 0x7f01007f;
     }
+    namespace MotionEffect {
+        constexpr uint32_t motionEffect_start = 0x7f0100bc;
+        constexpr uint32_t motionEffect_end = 0x7f0100bd;
+        constexpr uint32_t motionEffect_translationX = 0x7f0100be;
+        constexpr uint32_t motionEffect_translationY = 0x7f0100bf;
+        constexpr uint32_t motionEffect_alpha = 0x7f0100c0;
+        constexpr uint32_t motionEffect_viewTransition = 0x7f0100c1;
+        constexpr uint32_t motionEffect_move = 0x7f0100c2;
+        constexpr uint32_t motionEffect_strict = 0x7f0100c3;
+    }
 } // namespace fw_attr
 
 namespace styleable {
@@ -505,6 +515,10 @@ namespace styleable {
     }
     namespace MotionScene {
         enum { defaultDuration, layoutDuringTransition, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace MotionEffect {
+        enum { motionEffect_start, motionEffect_end, motionEffect_translationX, motionEffect_translationY, motionEffect_alpha, motionEffect_viewTransition, motionEffect_move, motionEffect_strict, COUNT };
         extern const uint32_t IDS[];
     }
 } // namespace styleable

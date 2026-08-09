@@ -50,5 +50,8 @@ namespace styleable {
     namespace MotionScene {
         const uint32_t IDS[] = { fw_attr::MotionScene::defaultDuration, fw_attr::MotionScene::layoutDuringTransition };
     }
+    namespace MotionEffect {
+        const uint32_t IDS[] = { fw_attr::MotionEffect::motionEffect_start, fw_attr::MotionEffect::motionEffect_end, fw_attr::MotionEffect::motionEffect_translationX, fw_attr::MotionEffect::motionEffect_translationY, fw_attr::MotionEffect::motionEffect_alpha, fw_attr::MotionEffect::motionEffect_viewTransition, fw_attr::MotionEffect::motionEffect_move, fw_attr::MotionEffect::motionEffect_strict };
+    }
 } // namespace styleable
 } // namespace cdroid

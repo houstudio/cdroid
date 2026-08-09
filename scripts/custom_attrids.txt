@@ -190,3 +190,11 @@
 0x7f0100b9 ifTagNotSet
 0x7f0100ba motionPathRotate
 0x7f0100bb defaultDuration
+0x7f0100bc motionEffect_start
+0x7f0100bd motionEffect_end
+0x7f0100be motionEffect_translationX
+0x7f0100bf motionEffect_translationY
+0x7f0100c0 motionEffect_alpha
+0x7f0100c1 motionEffect_viewTransition
+0x7f0100c2 motionEffect_move
+0x7f0100c3 motionEffect_strict
