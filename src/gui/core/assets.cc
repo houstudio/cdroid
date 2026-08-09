@@ -364,8 +364,12 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                     const int32_t v = std::stol(value);
                     mDimensions.insert({resUri,v});
                 }
-            }else if(type.compare("id")){
-                LOGD("CANT REACHED---------%s depth=%d %s",type.c_str(),parser.getDepth(),attrs.getString("name").c_str());
+            }else if(type.compare("id")==0){
+                // <item type="id" name="x">value</item> declares an id resource,
+                // the item-form equivalent of the <id> tag above.
+                std::string key = package+":id/"+attrs.getString("name");
+                std::string value = getTrimedValue(parser);
+                mIDS[key] = TextUtils::strtol(value);
             }
         }else if(tag.compare("selector")==0){//for colorstatelist
             std::string key = attrs.getString("name");

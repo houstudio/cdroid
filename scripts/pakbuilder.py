@@ -531,6 +531,38 @@ class PakBuilder(idgen.IDGenerater):
             shutil.rmtree(tmpdir, ignore_errors=True)
 
     # ----- aapt2 compile: compile res/ to binary AXML, return {rel_path: bytes} -----
+    def _merge_widgetex_attrs(self, tmpres):
+        """Merge src/gui/widgetEx/res/values/attrs.xml + a generated public.xml
+        (from scripts/custom_attrids.txt) into the app's temp res/. widgetEx
+        custom attrs (app:xxx) aren't declared in the app's own res, so aapt2
+        link fails with "attribute not found"; declaring them fixes link, and
+        public.xml pins each attr's resource ID to the stable custom_attrids.txt
+        value so binary AXML attr IDs match the runtime styleable IDS[]
+        (widgetex_styleable.h) — obtainStyledAttributes resolves by attr ID."""
+        sdir = os.path.dirname(os.path.abspath(__file__))
+        repo = os.path.dirname(sdir)
+        values = os.path.join(tmpres, "values")
+        # Declare the styleables/attrs (aapt2 link needs the declarations).
+        attrs_src = os.path.join(repo, "src", "gui", "widgetEx", "res", "values", "attrs.xml")
+        if os.path.exists(attrs_src):
+            shutil.copyfile(attrs_src, os.path.join(values, "widgetex_attrs.xml"))
+        # Pin each attr's ID to its stable custom_attrids.txt value.
+        ids_src = os.path.join(sdir, "custom_attrids.txt")
+        if os.path.exists(ids_src):
+            lines = ['<?xml version="1.0" encoding="utf-8"?>', '<resources>']
+            with open(ids_src) as f:
+                for ln in f:
+                    ln = ln.strip()
+                    if not ln or ln.startswith("#"):
+                        continue
+                    parts = ln.split()
+                    if len(parts) == 2:
+                        lines.append('  <public type="attr" name="%s" id="%s"/>'
+                                     % (parts[1], parts[0]))
+            lines.append('</resources>')
+            with open(os.path.join(values, "public.xml"), "w") as fh:
+                fh.write("\n".join(lines) + "\n")
+
     def _compile_aapt2(self):
         """Run aapt2 compile+link on res/, return (binary_xmls, arsc) where
         binary_xmls maps relative XML paths (e.g. 'layout/main.xml') to their
@@ -546,6 +578,11 @@ class PakBuilder(idgen.IDGenerater):
             id_xml = os.path.join(tmpres, "values", "ID.xml")
             if os.path.exists(id_xml):
                 os.remove(id_xml)
+            # Apps using widgetEx custom attrs (ConstraintLayout/Flexbox/... app:xxx)
+            # need them declared + ID-pinned to link and resolve at runtime. Framework
+            # (use_sdk) doesn't use widgetEx, so merge only for real apps.
+            if not self.use_sdk:
+                self._merge_widgetex_attrs(tmpres)
             # Synthesize a minimal manifest. aapt2 rejects a non-dotted package
             # name, so qualify the namespace (e.g. "axmlapp" -> "cdroid.axmlapp").
             # The arsc package name won't match CDROID's pak name ("axmlapp"),
