@@ -27,4 +27,3 @@
         android:interpolator="@interpolator/standard"
         android:duration="@android:integer/config_activityDefaultDur" />
 </set>
-

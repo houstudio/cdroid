@@ -424,6 +424,11 @@ class PakBuilder(idgen.IDGenerater):
         try:
             tmpres = os.path.join(tmpdir, "res")
             shutil.copytree(self.sdk_res, tmpres)
+            # remove ID.xml (idgen product) — aapt2 rejects it. Only relevant when
+            # sdk_res is the CDROID res tree (slim base), not vanilla SDK data/res.
+            _idxml = os.path.join(tmpres, "values", "ID.xml")
+            if os.path.exists(_idxml):
+                os.remove(_idxml)
 
             # Density/locale trimming via aapt2 -c (config mode). Unlike folder
             # deletion (which left dangling symbol declarations and broke link),
@@ -442,19 +447,24 @@ class PakBuilder(idgen.IDGenerater):
                 with open(dimens) as f: lines = f.readlines()
                 with open(dimens, "w") as f:
                     f.writelines(l for l in lines if "android:featureFlag" not in l)
-            # Fix 2: add widget dimen stubs + remove their public-final declarations.
-            with open(os.path.join(tmpres, "values", "_sdk_fixes.xml"), "w") as f:
-                f.write('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
-                        '  <dimen name="system_app_widget_background_radius">0dp</dimen>\n'
-                        '  <dimen name="system_app_widget_inner_radius">0dp</dimen>\n'
-                        '</resources>\n')
-            pf = os.path.join(tmpres, "values", "public-final.xml")
-            if os.path.exists(pf):
-                with open(pf) as f: lines = f.readlines()
-                with open(pf, "w") as f:
-                    f.writelines(l for l in lines
-                                 if "system_app_widget_background_radius" not in l
-                                 and "system_app_widget_inner_radius" not in l)
+            # Fix 2: stub widget radii ONLY if not already defined. SDK data/res
+            # needs the stub (Fix1 stripped its featureFlag'd originals); a slim
+            # base like src/gui/assets may already define them (would conflict).
+            dimens_path = os.path.join(tmpres, "values", "dimens.xml")
+            dimens_text = open(dimens_path).read() if os.path.exists(dimens_path) else ""
+            if "system_app_widget_background_radius" not in dimens_text:
+                with open(os.path.join(tmpres, "values", "_sdk_fixes.xml"), "w") as f:
+                    f.write('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
+                            '  <dimen name="system_app_widget_background_radius">0dp</dimen>\n'
+                            '  <dimen name="system_app_widget_inner_radius">0dp</dimen>\n'
+                            '</resources>\n')
+                pf = os.path.join(tmpres, "values", "public-final.xml")
+                if os.path.exists(pf):
+                    with open(pf) as f: lines = f.readlines()
+                    with open(pf, "w") as f:
+                        f.writelines(l for l in lines
+                                     if "system_app_widget_background_radius" not in l
+                                     and "system_app_widget_inner_radius" not in l)
             # Synthesize manifest (framework: package=android).
             manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
                         '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
@@ -483,7 +493,10 @@ class PakBuilder(idgen.IDGenerater):
                 link_cmd += ["--preferred-density", pref_dens]
                 sys.stderr.write("SDK res: preferred density %s (strips others)\n" % pref_dens)
             link_cmd += [compiled]
-            subprocess.run(link_cmd, check=True, capture_output=True)
+            _r = subprocess.run(link_cmd, capture_output=True)
+            if _r.returncode != 0:
+                sys.stderr.write("SDK res link FAILED stderr:\n%s\n" % _r.stderr.decode()[:3000])
+                raise subprocess.CalledProcessError(_r.returncode, link_cmd)
             # Extract everything, stripping 'res/' prefix to match pak convention.
             result = {}
             with zipfile.ZipFile(out_apk) as zf:

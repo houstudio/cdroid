@@ -140,7 +140,6 @@ struct Private{
                         const char16_t* av = axmlTree->getAttributeStringValue(i, &avl);
                         std::string attrName = u16toUtf8(an, anl);
                         std::string attrValue = av ? u16toUtf8(av, avl) : renderTypedValue(i, ctx);
-                        LOGD("AXML attr: %s = %s (raw=%d)", attrName.c_str(), attrValue.c_str(), av ? 1 : 0);
                         event->atts->insert({attrName, AttributeSet::normalize(pkg, attrValue)});
                     }
                     // Note: aapt2 emits `style="@style/..."` as a regular
