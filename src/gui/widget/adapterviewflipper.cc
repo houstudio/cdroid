@@ -16,15 +16,22 @@
 + * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 + *********************************************************************************/
 #include <widget/adapterviewflipper.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 namespace cdroid{
 
 DECLARE_WIDGET(AdapterViewFlipper);
 
 AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet& attrs)
     :AdapterViewAnimator(context, attrs){
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::AdapterViewFlipper::IDS, styleable::AdapterViewFlipper::COUNT) : nullptr;
+    namespace SAF = styleable::AdapterViewFlipper;
 
-    mFlipInterval = attrs.getInt("flipInterval", DEFAULT_INTERVAL);
-    mAutoStart = attrs.getBoolean("autoStart", false);
+    mFlipInterval = ta&&ta->hasValue(SAF::flipInterval) ? ta->getInt(SAF::flipInterval, DEFAULT_INTERVAL) : attrs.getInt("flipInterval", DEFAULT_INTERVAL);
+    mAutoStart = ta&&ta->hasValue(SAF::autoStart) ? ta->getBoolean(SAF::autoStart, false) : attrs.getBoolean("autoStart", false);
 
     // A view flipper should cycle through the views
     mLoopViews = true;

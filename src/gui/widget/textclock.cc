@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/textclock.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <core/systemclock.h>
 #include <utils/textutils.h>
 
@@ -56,9 +58,14 @@ DECLARE_WIDGET(TextClock)
 TextClock::TextClock(Context* context,const AttributeSet& attrs)
     :TextView(context, attrs){
     init();
-    mFormat12 = attrs.getString("format12Hour");
-    mFormat24 = attrs.getString("format24Hour");
-    mTimeZone = attrs.getString("timeZone");
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::TextClock::IDS, styleable::TextClock::COUNT) : nullptr;
+    namespace STC = styleable::TextClock;
+    mFormat12 = ta&&ta->hasValue(STC::format12Hour) ? ta->getString(STC::format12Hour) : attrs.getString("format12Hour");
+    mFormat24 = ta&&ta->hasValue(STC::format24Hour) ? ta->getString(STC::format24Hour) : attrs.getString("format24Hour");
+    mTimeZone = ta&&ta->hasValue(STC::timeZone) ? ta->getString(STC::timeZone) : attrs.getString("timeZone");
 }
 
 void TextClock::init() {

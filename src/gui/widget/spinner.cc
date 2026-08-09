@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/spinner.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <widget/listview.h>
 #include <widget/dropdownlistview.h>
 #include <widget/forwardinglistener.h>
@@ -74,9 +76,15 @@ Spinner::Spinner(Context*ctx,const AttributeSet&atts)
   :AbsSpinner(ctx,atts){
     mTempAdapter = nullptr;
     mForwardingListener = nullptr;
-    mGravity = atts.getGravity("gravity",Gravity::CENTER);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        atts, styleable::Spinner::IDS, styleable::Spinner::COUNT) : nullptr;
+    namespace SSP = styleable::Spinner;
+
+    mGravity = ta&&ta->hasValue(SSP::gravity) ? ta->getInt(SSP::gravity,Gravity::CENTER) : atts.getGravity("gravity",Gravity::CENTER);
     mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);
-    const int mode = atts.getInt("spinnerMode",std::unordered_map<std::string,int>{
+    const int mode = ta&&ta->hasValue(SSP::spinnerMode) ? ta->getInt(SSP::spinnerMode,MODE_DIALOG) : atts.getInt("spinnerMode",std::unordered_map<std::string,int>{
         {"dialog",(int)MODE_DIALOG},{"dropdown",(int)MODE_DROPDOWN}
     },MODE_DIALOG);
 
@@ -85,20 +93,20 @@ Spinner::Spinner(Context*ctx,const AttributeSet&atts)
     switch(mode){
     case MODE_DIALOG:
          mPopup = new DialogPopup(this);
-         mPopup->setPromptText(atts.getString("propmt"));
+         mPopup->setPromptText(ta&&ta->hasValue(SSP::prompt) ? ta->getString(SSP::prompt) : atts.getString("propmt"));
          break;
     case MODE_DROPDOWN:
          popup = new DropdownPopup(ctx,this,"cdroid:attr/spinnerStyle");
-         mDropDownWidth = atts.getLayoutDimension("dropDownWidth",LayoutParams::WRAP_CONTENT);
-         dr = atts.getDrawable("dropDownSelector");
+         mDropDownWidth = ta&&ta->hasValue(SSP::dropDownWidth) ? ta->getLayoutDimension(SSP::dropDownWidth,LayoutParams::WRAP_CONTENT) : atts.getLayoutDimension("dropDownWidth",LayoutParams::WRAP_CONTENT);
+         dr = ta&&ta->hasValue(SSP::dropDownSelector) ? ta->getDrawable(SSP::dropDownSelector) : atts.getDrawable("dropDownSelector");
          if(dr)popup->setListSelector(dr);
-         dr = mContext->getDrawable(atts.getString("popupBackground"));
+         dr = mContext->getDrawable(ta&&ta->hasValue(SSP::popupBackground) ? ta->getString(SSP::popupBackground) : atts.getString("popupBackground"));
          if(dr)popup->setBackgroundDrawable(dr);
-         popup->setPromptText(atts.getString("propmt"));
+         popup->setPromptText(ta&&ta->hasValue(SSP::prompt) ? ta->getString(SSP::prompt) : atts.getString("propmt"));
          mPopup = popup;
-         mForwardingListener = new SpinnerForwardingListener(this,popup); 
+         mForwardingListener = new SpinnerForwardingListener(this,popup);
          break;
-    } 
+    }
     // Base constructor can call setAdapter before we initialize mPopup.
     // Finish setting things up if this happened.
     if (mTempAdapter != nullptr) {

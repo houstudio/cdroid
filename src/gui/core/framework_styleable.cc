@@ -292,5 +292,64 @@ namespace styleable {
             fw_attr::AdapterViewAnimator::loopViews,
         };
     }
+    namespace AdapterViewFlipper {
+        const uint32_t IDS[] = {
+            fw_attr::AdapterViewFlipper::flipInterval,
+            fw_attr::AdapterViewFlipper::autoStart,
+        };
+    }
+    namespace TextClock {
+        const uint32_t IDS[] = {
+            fw_attr::TextClock::format12Hour,
+            fw_attr::TextClock::format24Hour,
+            fw_attr::TextClock::timeZone,
+        };
+    }
+    namespace AnalogClock {
+        const uint32_t IDS[] = {
+            fw_attr::AnalogClock::dial,
+            fw_attr::AnalogClock::hand_hour,
+            fw_attr::AnalogClock::hand_minute,
+            fw_attr::AnalogClock::hand_second,
+        };
+    }
+    namespace GridView {
+        const uint32_t IDS[] = {
+            fw_attr::GridView::horizontalSpacing, fw_attr::GridView::verticalSpacing,
+            fw_attr::GridView::stretchMode, fw_attr::GridView::columnWidth,
+            fw_attr::GridView::numColumns, fw_attr::View::gravity,
+        };
+    }
+    namespace GridLayout {
+        const uint32_t IDS[] = {
+            fw_attr::View::orientation, fw_attr::GridLayout::rowCount,
+            fw_attr::GridLayout::columnCount, fw_attr::GridLayout::useDefaultMargins,
+            fw_attr::GridLayout::alignmentMode, fw_attr::GridLayout::rowOrderPreserved,
+            fw_attr::GridLayout::columnOrderPreserved,
+        };
+    }
+    namespace Spinner {
+        const uint32_t IDS[] = {
+            fw_attr::Spinner::spinnerMode, fw_attr::Spinner::prompt,
+            fw_attr::Spinner::popupBackground, fw_attr::Spinner::dropDownSelector,
+            fw_attr::Spinner::dropDownWidth, fw_attr::Spinner::dropDownAnchor,
+            fw_attr::View::gravity,
+        };
+    }
+    namespace RatingBar {
+        const uint32_t IDS[] = {
+            fw_attr::RatingBar::numStars, fw_attr::RatingBar::rating,
+            fw_attr::RatingBar::stepSize, fw_attr::RatingBar::isIndicator,
+        };
+    }
+    namespace Chronometer {
+        const uint32_t IDS[] = { fw_attr::Chronometer::format, fw_attr::Chronometer::countDown };
+    }
+    namespace ScrollView {
+        const uint32_t IDS[] = { fw_attr::ScrollView::fillViewport };
+    }
+    namespace RelativeLayout {
+        const uint32_t IDS[] = { fw_attr::RelativeLayout::ignoreGravity, fw_attr::View::gravity };
+    }
 }
 }

@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/horizontalscrollview.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <focusfinder.h>
 #include <systemclock.h>
 #include <cdlog.h>
@@ -31,7 +33,12 @@ HorizontalScrollView::HorizontalScrollView(int w,int h):FrameLayout(w,h){
 HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet&atts)
   :FrameLayout(ctx,atts){
     initScrollView(&atts);
-    setFillViewport(atts.getBoolean("fillViewport", false));
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        atts, styleable::ScrollView::IDS, styleable::ScrollView::COUNT) : nullptr;
+    namespace SSV = styleable::ScrollView;
+    setFillViewport(ta&&ta->hasValue(SSV::fillViewport) ? ta->getBoolean(SSV::fillViewport, false) : atts.getBoolean("fillViewport", false));
     mScrollDuration=atts.getInt("scrollDuration",300);
 }
 

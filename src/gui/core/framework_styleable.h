@@ -372,6 +372,60 @@ namespace fw_attr {
         constexpr uint32_t animateFirstView     = 0x010102d5;
         constexpr uint32_t loopViews            = 0x01010307;
     }
+    namespace AdapterViewFlipper {
+        constexpr uint32_t flipInterval         = 0x01010179;
+        constexpr uint32_t autoStart            = 0x010102b5;
+    }
+    namespace TextClock {
+        constexpr uint32_t format12Hour         = 0x010103ca;
+        constexpr uint32_t format24Hour         = 0x010103cb;
+        constexpr uint32_t timeZone             = 0x010103cc;
+    }
+    namespace AnalogClock {
+        constexpr uint32_t dial                 = 0x01010102;
+        constexpr uint32_t hand_hour            = 0x01010103;
+        constexpr uint32_t hand_minute          = 0x01010104;
+        constexpr uint32_t hand_second          = 0x01010623;
+    }
+    namespace GridView {
+        constexpr uint32_t horizontalSpacing    = 0x01010114;
+        constexpr uint32_t verticalSpacing      = 0x01010115;
+        constexpr uint32_t stretchMode          = 0x01010116;
+        constexpr uint32_t columnWidth          = 0x01010117;
+        constexpr uint32_t numColumns           = 0x01010118;
+    }
+    namespace GridLayout {
+        constexpr uint32_t rowCount             = 0x01010375;
+        constexpr uint32_t columnCount          = 0x01010377;
+        constexpr uint32_t useDefaultMargins    = 0x01010379;
+        constexpr uint32_t alignmentMode        = 0x0101037a;
+        constexpr uint32_t rowOrderPreserved    = 0x01010376;
+        constexpr uint32_t columnOrderPreserved = 0x01010378;
+    }
+    namespace Spinner {
+        constexpr uint32_t spinnerMode          = 0x010102f1;
+        constexpr uint32_t prompt               = 0x0101017b;
+        constexpr uint32_t popupBackground      = 0x01010176;
+        constexpr uint32_t dropDownSelector     = 0x01010175;
+        constexpr uint32_t dropDownWidth        = 0x01010262;
+        constexpr uint32_t dropDownAnchor       = 0x01010263;
+    }
+    namespace RatingBar {
+        constexpr uint32_t numStars             = 0x01010144;
+        constexpr uint32_t rating               = 0x01010145;
+        constexpr uint32_t stepSize             = 0x01010146;
+        constexpr uint32_t isIndicator          = 0x01010147;
+    }
+    namespace Chronometer {
+        constexpr uint32_t format               = 0x01010105;
+        constexpr uint32_t countDown            = 0x0101051b;
+    }
+    namespace ScrollView {
+        constexpr uint32_t fillViewport         = 0x0101017a;
+    }
+    namespace RelativeLayout {
+        constexpr uint32_t ignoreGravity       = 0x010101ff;
+    }
 }
 
 // R.styleable arrays: index → framework attr ID. Used by obtainStyledAttributesTyped.
@@ -532,6 +586,49 @@ namespace styleable {
     }
     namespace AdapterViewAnimator {
         enum { inAnimation, outAnimation, animateFirstView, loopViews, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace AdapterViewFlipper {
+        enum { flipInterval, autoStart, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace TextClock {
+        enum { format12Hour, format24Hour, timeZone, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace AnalogClock {
+        enum { dial, hand_hour, hand_minute, hand_second, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace GridView {
+        enum { horizontalSpacing, verticalSpacing, stretchMode, columnWidth,
+               numColumns, gravity, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace GridLayout {
+        enum { orientation, rowCount, columnCount, useDefaultMargins,
+               alignmentMode, rowOrderPreserved, columnOrderPreserved, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace Spinner {
+        enum { spinnerMode, prompt, popupBackground, dropDownSelector,
+               dropDownWidth, dropDownAnchor, gravity, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace RatingBar {
+        enum { numStars, rating, stepSize, isIndicator, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace Chronometer {
+        enum { format, countDown, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace ScrollView {
+        enum { fillViewport, COUNT };
+        extern const uint32_t IDS[];
+    }
+    namespace RelativeLayout {
+        enum { ignoreGravity, gravity, COUNT };
         extern const uint32_t IDS[];
     }
 }

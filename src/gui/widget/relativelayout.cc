@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/relativelayout.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <cstring>
 #include <porting/cdlog.h>
 namespace cdroid{
@@ -50,8 +52,13 @@ RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
 RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
  :ViewGroup(context,attrs){
     mDirtyHierarchy = true;
-    mIgnoreGravity = attrs.getResourceId("ignoreGravity", View::NO_ID);
-    mGravity=attrs.getGravity("gravity",mGravity);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::RelativeLayout::IDS, styleable::RelativeLayout::COUNT) : nullptr;
+    namespace SRL = styleable::RelativeLayout;
+    mIgnoreGravity = ta&&ta->hasValue(SRL::ignoreGravity) ? (int)ta->getResourceId(SRL::ignoreGravity,(uint32_t)View::NO_ID) : attrs.getResourceId("ignoreGravity", View::NO_ID);
+    mGravity = ta&&ta->hasValue(SRL::gravity) ? ta->getInt(SRL::gravity,mGravity) : attrs.getGravity("gravity",mGravity);
     mGraph = new DependencyGraph();
 }
 

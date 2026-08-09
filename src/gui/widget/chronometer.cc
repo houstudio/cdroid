@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/chronometer.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <systemclock.h>
 namespace cdroid{
 
@@ -28,8 +30,13 @@ Chronometer::Chronometer(int w,int h):TextView(std::string(),w,h){
 Chronometer::Chronometer(Context*ctx,const AttributeSet&atts)
   :TextView(ctx,atts){
     init();
-    setFormat(atts.getString("format",mFormat));
-    setCountDown(atts.getBoolean("countDown",false));
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        atts, styleable::Chronometer::IDS, styleable::Chronometer::COUNT) : nullptr;
+    namespace SCH = styleable::Chronometer;
+    setFormat(ta&&ta->hasValue(SCH::format) ? ta->getString(SCH::format) : atts.getString("format",mFormat));
+    setCountDown(ta&&ta->hasValue(SCH::countDown) ? ta->getBoolean(SCH::countDown,false) : atts.getBoolean("countDown",false));
     mColonBlinking = atts.getBoolean("colonBlinking",mColonBlinking);
 }
 

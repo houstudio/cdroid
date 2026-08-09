@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/ratingbar.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 
 namespace cdroid{
 
@@ -34,11 +36,16 @@ RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
     mNumStars = 5;
     mIsUserSeekable = true;
     mProgressOnStartTracking =0;
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        atts, styleable::RatingBar::IDS, styleable::RatingBar::COUNT) : nullptr;
+    namespace SRB = styleable::RatingBar;
 
-    setIsIndicator(atts.getBoolean("isIndicator",!mIsUserSeekable));
-    const int numStars  = atts.getInt("numStars",mNumStars);
-    const float rating  = atts.getFloat("rating",-1);
-    const float stepSize= atts.getFloat("stepSize",-1);
+    setIsIndicator(ta&&ta->hasValue(SRB::isIndicator) ? ta->getBoolean(SRB::isIndicator,!mIsUserSeekable) : atts.getBoolean("isIndicator",!mIsUserSeekable));
+    const int numStars  = ta&&ta->hasValue(SRB::numStars) ? ta->getInt(SRB::numStars,mNumStars) : atts.getInt("numStars",mNumStars);
+    const float rating  = ta&&ta->hasValue(SRB::rating) ? ta->getFloat(SRB::rating,-1) : atts.getFloat("rating",-1);
+    const float stepSize= ta&&ta->hasValue(SRB::stepSize) ? ta->getFloat(SRB::stepSize,-1) : atts.getFloat("stepSize",-1);
     if( (numStars>0) && (numStars!=mNumStars) )
         setNumStars(numStars);
     setStepSize((stepSize>=0)?stepSize:0.5f);

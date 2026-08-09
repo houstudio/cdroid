@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/gridlayout.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <widget/space.h>
 #include <porting/cdlog.h>
 #include <sstream>
@@ -128,19 +130,25 @@ GridLayout::GridLayout(int w,int h)
 GridLayout::GridLayout(Context*ctx,const AttributeSet&attrs)
     :ViewGroup(ctx,attrs){
     initGridLayout();
-    setOrientation(attrs.getInt("orientation",std::unordered_map<std::string,int>{
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::GridLayout::IDS, styleable::GridLayout::COUNT) : nullptr;
+    namespace SGL = styleable::GridLayout;
+
+    setOrientation(ta&&ta->hasValue(SGL::orientation) ? ta->getInt(SGL::orientation,DEFAULT_ORIENTATION) : attrs.getInt("orientation",std::unordered_map<std::string,int>{
         {"horizontal",(int)HORIZONTAL},
         {"vertical",(int)VERTICAL}//
     },DEFAULT_ORIENTATION));
-    setRowCount(attrs.getInt("rowCount", DEFAULT_COUNT));
-    setColumnCount(attrs.getInt("columnCount", DEFAULT_COUNT));
-    setUseDefaultMargins(attrs.getBoolean("useDefaultMargins", DEFAULT_USE_DEFAULT_MARGINS));
-    setAlignmentMode(attrs.getInt("alignmentMode",std::unordered_map<std::string,int>{
+    setRowCount(ta&&ta->hasValue(SGL::rowCount) ? ta->getInt(SGL::rowCount, DEFAULT_COUNT) : attrs.getInt("rowCount", DEFAULT_COUNT));
+    setColumnCount(ta&&ta->hasValue(SGL::columnCount) ? ta->getInt(SGL::columnCount, DEFAULT_COUNT) : attrs.getInt("columnCount", DEFAULT_COUNT));
+    setUseDefaultMargins(ta&&ta->hasValue(SGL::useDefaultMargins) ? ta->getBoolean(SGL::useDefaultMargins, DEFAULT_USE_DEFAULT_MARGINS) : attrs.getBoolean("useDefaultMargins", DEFAULT_USE_DEFAULT_MARGINS));
+    setAlignmentMode(ta&&ta->hasValue(SGL::alignmentMode) ? ta->getInt(SGL::alignmentMode,DEFAULT_ALIGNMENT_MODE) : attrs.getInt("alignmentMode",std::unordered_map<std::string,int>{
         {"alignBounds",(int)ALIGN_BOUNDS},
         {"alignMargins",(int)ALIGN_MARGINS}//
     },DEFAULT_ALIGNMENT_MODE));
-    setRowOrderPreserved(attrs.getBoolean("rowOrderPreserved", DEFAULT_ORDER_PRESERVED));
-    setColumnOrderPreserved(attrs.getBoolean("columnOrderPreserved", DEFAULT_ORDER_PRESERVED));
+    setRowOrderPreserved(ta&&ta->hasValue(SGL::rowOrderPreserved) ? ta->getBoolean(SGL::rowOrderPreserved, DEFAULT_ORDER_PRESERVED) : attrs.getBoolean("rowOrderPreserved", DEFAULT_ORDER_PRESERVED));
+    setColumnOrderPreserved(ta&&ta->hasValue(SGL::columnOrderPreserved) ? ta->getBoolean(SGL::columnOrderPreserved, DEFAULT_ORDER_PRESERVED) : attrs.getBoolean("columnOrderPreserved", DEFAULT_ORDER_PRESERVED));
 }
 
 GridLayout::~GridLayout(){

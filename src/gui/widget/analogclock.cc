@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/analogclock.h>
+#include <core/framework_styleable.h>
+#include <core/assets.h>
 #include <systemclock.h>
 #include <core/calendar.h>
 #include <cdlog.h>
@@ -30,11 +32,16 @@ DECLARE_WIDGET(AnalogClock)
 AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initAnalog();
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::AnalogClock::IDS, styleable::AnalogClock::COUNT) : nullptr;
+    namespace SAC = styleable::AnalogClock;
 
-    setDial (attrs.getDrawable("dial"));
-    setHourHand( attrs.getDrawable("hand_hour"));
-    setMinuteHand( attrs.getDrawable("hand_minute"));
-    setSecondHand( attrs.getDrawable("hand_second"));
+    setDial (ta&&ta->hasValue(SAC::dial)        ? ta->getDrawable(SAC::dial)        : attrs.getDrawable("dial"));
+    setHourHand( ta&&ta->hasValue(SAC::hand_hour)   ? ta->getDrawable(SAC::hand_hour)   : attrs.getDrawable("hand_hour"));
+    setMinuteHand( ta&&ta->hasValue(SAC::hand_minute) ? ta->getDrawable(SAC::hand_minute) : attrs.getDrawable("hand_minute"));
+    setSecondHand( ta&&ta->hasValue(SAC::hand_second) ? ta->getDrawable(SAC::hand_second) : attrs.getDrawable("hand_second"));
 }
 
 AnalogClock::AnalogClock(int w,int h):View(w,h){
