@@ -473,6 +473,15 @@ class PakBuilder(idgen.IDGenerater):
             if configs:
                 link_cmd += ["-c", ",".join(configs)]
                 sys.stderr.write("SDK res: trimming to configs %s\n" % ",".join(configs))
+            # --preferred-density strips non-matching density entries (aapt2 keeps
+            # the closest match for density-only resources, so no dangling symbols —
+            # unlike dir-level deletion which breaks link via public-final.xml).
+            # -c does NOT trim density for framework -x; --preferred-density does.
+            density_quals = {"ldpi","mdpi","hdpi","tvdpi","xhdpi","xxhdpi","xxxhdpi"}
+            pref_dens = next((c for c in configs if c in density_quals), None)
+            if pref_dens:
+                link_cmd += ["--preferred-density", pref_dens]
+                sys.stderr.write("SDK res: preferred density %s (strips others)\n" % pref_dens)
             link_cmd += [compiled]
             subprocess.run(link_cmd, check=True, capture_output=True)
             # Extract everything, stripping 'res/' prefix to match pak convention.
