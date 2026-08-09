@@ -96,13 +96,15 @@ class IDGenerater(object):
         fr.write("namespace %s{\n\n"%(self.namespace))
         fr.write("namespace R{\n")
         fr.write("    namespace id{\n")
+        # enum : int (not static constexpr int): enumerators are constants, not
+        # objects, so no ODR-use/linker errors and no (int) casts at use sites.
+        fr.write("        enum : int {\n")
         i=0
-        #print(self.Handler.idlist)
-        #print(self.Handler.strings)
         for k in self.Handler.idlist:
-            fr.write("%8s static constexpr int %-24s= 0x%08X ;/*%d %s*/\n"%('',cident(k),self.idstart+i,self.idstart+i,k))
+            fr.write("            %s = 0x%08X, /*%d %s*/\n"%(cident(k),self.idstart+i,self.idstart+i,k))
             i+=1
-        fr.write("%4s};/*namespace id*/\n\n"%(''))
+        fr.write("        };\n")
+        fr.write("    }/*namespace id*/\n\n")
         
         fr.write("    namespace strings{\n")
         i=0

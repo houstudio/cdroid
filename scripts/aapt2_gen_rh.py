@@ -100,9 +100,15 @@ def main():
         f.write('namespace %s{\n\n' % args.namespace)
         f.write('namespace R{\n')
         for tns in sorted(by_type):
+            # enum : int (not static constexpr int): enumerators are constants,
+            # not objects, so they have no address and are never ODR-used -> no
+            # linker errors and no need for (int) casts at use sites (C++14 has
+            # no inline constexpr). All resource IDs fit in int (0x01../0x7f..).
             f.write('    namespace %s{\n' % tns)
+            f.write('        enum : int {\n')
             for key, rid in sorted(by_type[tns].items()):
-                f.write('         static constexpr int %-32s= %s ;\n' % (key, rid))
+                f.write('            %s = %s,\n' % (key, rid))
+            f.write('        };\n')
             f.write('    }/*namespace %s*/\n\n' % tns)
         f.write('};//endof namespace R\n\n')
         f.write('}//endof namespace\n')
