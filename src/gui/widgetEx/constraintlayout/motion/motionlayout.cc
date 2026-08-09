@@ -20,6 +20,8 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.MotionLayout.
  */
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
+#include <widgetEx/widgetex_styleable.h>
+#include <core/assets.h>
 
 #include <algorithm> // std::find (removeTransitionListener)
 #include <porting/cdlog.h>
@@ -44,9 +46,16 @@ namespace cdroid {
 
 MotionLayout::MotionLayout(Context* ctx, const AttributeSet& attrs)
     : ConstraintLayout(ctx, attrs) {
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    // layoutDescription is declared in the ConstraintLayout_Layout styleable.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+        attrs, styleable::ConstraintLayoutLayout::IDS, styleable::ConstraintLayoutLayout::COUNT) : nullptr;
     // app:layoutDescription="@xml/..." points at a <MotionScene> resource (bare localname after the
     // XmlPullParser namespace strip). Resolved into a MotionScene on first measure (buildScene).
-    mSceneResource = attrs.getString("layoutDescription", "");
+    mSceneResource = (ta&&ta->hasValue(styleable::ConstraintLayoutLayout::layoutDescription))
+        ? ta->getString(styleable::ConstraintLayoutLayout::layoutDescription)
+        : attrs.getString("layoutDescription", "");
 }
 
 MotionLayout::MotionLayout(int width, int height)
