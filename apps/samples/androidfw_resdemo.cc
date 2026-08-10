@@ -18,6 +18,7 @@
 #include "assetmanager.h"   // android::AssetManager
 
 #include <string>
+#include <vector>
 #include <cstdio>
 
 int main(int argc, const char* argv[]) {
@@ -77,6 +78,35 @@ int main(int argc, const char* argv[]) {
     }
     addLine("App Resources packages: " + (pkgs.empty() ? std::string("(none / text-mode pak)") : pkgs));
     addLine("App now exposes the AOSP Context face: getResources/getAssets/getString(int)/...");
+
+    // --- Demo 3: Theme + obtainStyledAttributes (AOSP ID face) ---
+    addLine("== App.getTheme() + obtainStyledAttributes ==");
+    const int colorPrimaryAttr = app.getId("cdroid:attr/colorPrimary");
+    snprintf(buf, sizeof(buf), "attr colorPrimary id = 0x%08x", (unsigned)colorPrimaryAttr);
+    addLine(buf);
+    if (colorPrimaryAttr) {
+        // Single themed attribute via Theme.resolveAttribute (AOSP API).
+        android::Resources::Theme& theme = app.getTheme();
+        cdroid::Res_value rv;
+        if (theme.resolveAttribute((uint32_t)colorPrimaryAttr, &rv, true)) {
+            snprintf(buf, sizeof(buf), "theme.colorPrimary = 0x%08x (type 0x%02x)", rv.data, rv.dataType);
+            addLine(buf);
+        } else {
+            addLine("colorPrimary not resolved in theme");
+        }
+        // Bulk resolve via the ID-based obtainStyledAttributes(vector<int>).
+        auto ta = app.obtainStyledAttributes(std::vector<int>{ colorPrimaryAttr });
+        if (ta && ta->hasValue(0)) {
+            snprintf(buf, sizeof(buf), "obtainStyledAttributes[colorPrimary].getColor = 0x%08x", ta->getColor(0, 0));
+            addLine(buf);
+        } else {
+            addLine("obtainStyledAttributes returned no value");
+        }
+    }
+    // Resources.newTheme(): a fresh (empty) theme over the same table.
+    auto freshTheme = appRes.newTheme();
+    snprintf(buf, sizeof(buf), "Resources.newTheme() = %s", freshTheme ? "ok" : "null");
+    addLine(buf);
 
     return app.exec();
 }

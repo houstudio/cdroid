@@ -25,6 +25,7 @@
 #include <core/variant.h>
 #include <drawable/drawable.h>
 #include "androidfw/restable.h"   // ResTable: arsc resource resolution
+#include "androidfw/resources.h"  // android::Resources (+ Resources::Theme)
 #include "core/typedarray.h"      // TypedArray: consumer-side typed attr view
 
 namespace cdroid{
@@ -100,8 +101,10 @@ public:
     int loadStyles(const std::string&resid);
     void clearStyles();
     const std::string getPackageName()const override;
-    const std::string getTheme()const override;
+    android::Resources::Theme& getTheme() override;
+    const std::string getThemeName() const override;
     void setTheme(const std::string&theme)override;
+    void setTheme(int resid) override;
     const DisplayMetrics&getDisplayMetrics()const override;
     int getId(const std::string&)const override;
     int getNextAutofillId()override;
@@ -124,6 +127,10 @@ public:
     size_t getArray(const std::string&resid,std::vector<int>&)override;
     size_t getArray(const std::string&resid,std::vector<std::string>&)override;
     RefPtr<ColorStateList> getColorStateList(const std::string&resid)override;
+    // Bring the ID-based obtainStyledAttributes(vector<int>) overloads from
+    // Context into Assets scope; otherwise the string overload above hides them
+    // (C++ name hiding).
+    using Context::obtainStyledAttributes;
     AttributeSet obtainStyledAttributes(const std::string&)override;
     // Phase 2 TypedArray bridge: extract typed attr values from binary AXML.
     // Returns null for text XML. styleable/count = R.styleable.View[] equivalent.

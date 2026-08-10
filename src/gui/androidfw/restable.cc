@@ -688,6 +688,20 @@ ssize_t ResTable::Theme::getAttribute(uint32_t resID, Res_value* outValue,
     return it->second.stringBlock;  // owning header index (for string values)
 }
 
+// AOSP Resources.Theme.resolveAttribute: getAttribute + (optional) reference
+// flattening, as a single boolean-returning call.
+bool ResTable::Theme::resolveAttribute(uint32_t resID, Res_value* outValue, bool resolveRefs) const {
+    Res_value v;
+    ssize_t blk = getAttribute(resID, &v);
+    if (blk < 0) return false;
+    if (resolveRefs) {
+        blk = resolveAttributeReference(&v, blk);
+        if (blk < 0) return false;
+    }
+    if (outValue) *outValue = v;
+    return true;
+}
+
 // Like ResTable::resolveReference, but TYPE_ATTRIBUTE resolves against this
 // theme (getAttribute) rather than the table. Returns the final blockIndex or a
 // negative error; bounded to < 20 iterations.
@@ -783,6 +797,46 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
             out[i].value = v; out[i].stringBlock = blk; out[i].set = true; continue;
         }
         // 3. Theme direct value.
+        if (theme && theme->getAttribute(a, &v) >= 0) {
+            ssize_t tblk = 0;
+            tblk = theme->resolveAttributeReference(&v, tblk);
+            out[i].value = v; out[i].stringBlock = tblk; out[i].set = true; continue;
+        }
+    }
+}
+
+// Theme-only variant (no XML element). Mirrors the 4-way merge above with the
+// element-attribute step dropped: build the chain from defStyleRes + defStyle-
+// Attr (resolved via theme), then for each attr prefer the chain, falling back
+// to the theme base value. Used by AOSP Resources.Theme.obtainStyledAttributes.
+void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
+                            const uint32_t* attrs, size_t attrCount,
+                            uint32_t defStyleAttr, uint32_t defStyleRes,
+                            StyledAttr* out) {
+    for (size_t i = 0; i < attrCount; i++) { out[i].set = false; out[i].stringBlock = -1; }
+
+    // Style/theme fallback chain. Lowest priority is applied first so the
+    // sticky "first-set wins" rule yields the right precedence.
+    ResTable::Theme chain(table);
+    if (defStyleRes) chain.applyStyle(defStyleRes);
+    if (defStyleAttr && theme) {
+        Res_value dv;
+        if (theme->getAttribute(defStyleAttr, &dv) >= 0 &&
+            (dv.dataType == Res_value::TYPE_REFERENCE || dv.dataType == Res_value::TYPE_ATTRIBUTE)) {
+            chain.applyStyle(dv.data);
+        }
+    }
+
+    for (size_t i = 0; i < attrCount; i++) {
+        const uint32_t a = attrs[i];
+        // 1. style / defStyleAttr / defStyleRes chain.
+        Res_value v;
+        ssize_t blk = chain.getAttribute(a, &v);
+        if (blk >= 0) {
+            blk = chain.resolveAttributeReference(&v, blk);
+            out[i].value = v; out[i].stringBlock = blk; out[i].set = true; continue;
+        }
+        // 2. Theme direct value.
         if (theme && theme->getAttribute(a, &v) >= 0) {
             ssize_t tblk = 0;
             tblk = theme->resolveAttributeReference(&v, tblk);

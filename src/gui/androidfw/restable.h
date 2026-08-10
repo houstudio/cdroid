@@ -144,6 +144,11 @@ public:
         ssize_t getAttribute(uint32_t resID, Res_value* outValue,
                              uint32_t* outTypeSpecFlags = nullptr) const;
 
+        // AOSP Resources.Theme.resolveAttribute(resid, outValue, resolveRefs):
+        // resolve a single attribute against this theme. Returns false if unset;
+        // when resolveRefs is true, REFERENCE/ATTRIBUTE chains are followed.
+        bool resolveAttribute(uint32_t resID, Res_value* outValue, bool resolveRefs) const;
+
         // Like ResTable::resolveReference, but TYPE_ATTRIBUTE is resolved via
         // this theme (getAttribute) rather than the table.
         ssize_t resolveAttributeReference(Res_value* inOutValue, ssize_t blockIndex,
@@ -262,6 +267,17 @@ private:
 
 void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
                             const ResTable::Theme* theme,
+                            const uint32_t* attrs, size_t attrCount,
+                            uint32_t defStyleAttr, uint32_t defStyleRes,
+                            StyledAttr* out);
+
+// Theme-only obtainStyledAttributes (no XML element): resolves attrs purely
+// against the style/theme fallback chain (defStyleRes -> defStyleAttr via theme
+// -> theme base values). The AOSP Resources.Theme.obtainStyledAttributes
+// counterpart (AttributeSet == null): Theme.obtainStyledAttributes(attrs) maps
+// to (defStyleAttr=0, defStyleRes=0); Theme.obtainStyledAttributes(resId, attrs)
+// maps to (defStyleAttr=0, defStyleRes=resId).
+void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
                             const uint32_t* attrs, size_t attrCount,
                             uint32_t defStyleAttr, uint32_t defStyleRes,
                             StyledAttr* out);

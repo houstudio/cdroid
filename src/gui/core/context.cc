@@ -6,6 +6,7 @@
 
 #include "context.h"
 #include "androidfw/resources.h"   // android::Resources (full def)
+#include <core/typedarray.h>       // TypedArray (constructed below)
 
 namespace cdroid {
 
@@ -49,6 +50,31 @@ android::Asset* Context::openRawResource(int id) {
 Typeface* Context::getFont(int id) {
     (void)id;
     return nullptr;
+}
+
+// AOSP Resources.Theme.obtainStyledAttributes(attrs): resolve each attr against
+// the live theme (defStyleAttr=0, defStyleRes=0). Delegates to getTheme() like
+// the Java final in android.content.Context.
+std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const std::vector<int>& attrs) {
+    android::Resources::Theme& theme = getTheme();
+    const ResTable& table = theme.getResTable();
+    std::vector<uint32_t> ids(attrs.begin(), attrs.end());  // int[] -> uint32_t[] for the resolver
+    std::vector<StyledAttr> styled(ids.size());
+    cdroid::obtainStyledAttributes(table, &theme, ids.data(), ids.size(), 0, 0, styled.data());
+    return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
+                                        getResources().getDisplayMetrics().density, this);
+}
+
+// AOSP Theme.obtainStyledAttributes(resId, attrs): resolve against a style on
+// top of the theme (defStyleAttr=0, defStyleRes=resId).
+std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const std::vector<int>& attrs) {
+    android::Resources::Theme& theme = getTheme();
+    const ResTable& table = theme.getResTable();
+    std::vector<uint32_t> ids(attrs.begin(), attrs.end());
+    std::vector<StyledAttr> styled(ids.size());
+    cdroid::obtainStyledAttributes(table, &theme, ids.data(), ids.size(), 0, (uint32_t)resid, styled.data());
+    return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
+                                        getResources().getDisplayMetrics().density, this);
 }
 
 } // namespace cdroid

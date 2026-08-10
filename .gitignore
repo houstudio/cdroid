@@ -1,4 +1,5 @@
 out*
+/build/
 apps/*
 !apps/createPrj.py
 !apps/samples

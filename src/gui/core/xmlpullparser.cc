@@ -370,6 +370,29 @@ XmlPullParser::XmlPullParser(Context*ctx,const std::string&resid):XmlPullParser(
     mData->eventQueue.push(event);
 }
 
+XmlPullParser::XmlPullParser(Context*ctx,int resid):XmlPullParser(){
+    if(ctx){
+        mContext = ctx;
+        // ID-based path: fetch the binary AXML bytes via the resource face.
+        // Text paks have no arsc -> getXml returns null -> empty parser.
+        android::Asset* asset = ctx->getResources().getXml(resid);
+        if(asset){
+            const off64_t sz = asset->getLength();
+            std::string buf((size_t)(sz > 0 ? sz : 0), '\0');
+            if (sz > 0) asset->read(&buf[0], (size_t)sz);
+            delete asset;
+            mData->stream = std::make_unique<std::istringstream>(buf);
+        }
+    }
+    mData->detectBinary(mData->stream);
+    mData->resourceId = std::to_string(resid);
+    auto event = mData->acquire((mData->isBinary||(mData->stream&&mData->stream->good()))?START_DOCUMENT:END_DOCUMENT);
+    event->depth= mData->depth++;
+    event->lineNumber = 0;
+    mAttrs = event->atts;
+    mData->eventQueue.push(event);
+}
+
 XmlPullParser::operator bool()const{
    if(mData->isBinary) return mData->axmlTree && mData->axmlTree->getError()==0;
    return (mData->stream!=nullptr)&&(*mData->stream);

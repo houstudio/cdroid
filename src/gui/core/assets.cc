@@ -272,8 +272,21 @@ const std::string Assets::getPackageName()const {
     return mName;
 }
 
-const std::string Assets::getTheme()const {
+const std::string Assets::getThemeName() const {
     return mThemeName;
+}
+
+android::Resources::Theme& Assets::getTheme() {
+    // Lazily build an arsc theme if none has been applied yet, so the returned
+    // reference is always valid (AOSP getTheme() never returns null). Binary
+    // mode always has mResTable; the static fallback covers text-only paks.
+    if (!mArscTheme && mResTable) {
+        mArscTheme = new ResTable::Theme(*mResTable);
+    }
+    if (mArscTheme) return *mArscTheme;
+    static ResTable sEmptyTable;
+    static ResTable::Theme sEmptyTheme(sEmptyTable);
+    return sEmptyTheme;
 }
 
 void Assets::setTheme(const std::string&theme) {
@@ -308,6 +321,24 @@ void Assets::setTheme(const std::string&theme) {
             } else {
                 LOGD("arsc Theme built from %s (resId=0x%08x)", theme.c_str(), styleId);
             }
+        }
+    }
+}
+
+void Assets::setTheme(int resid) {
+    // ID-based theme apply (AOSP Context.setTheme(int @StyleRes)): rebuild the
+    // arsc-backed theme directly from a style resource id, skipping the name
+    // lookup the string overload performs.
+    delete mArscTheme;
+    mArscTheme = nullptr;
+    if (mResTable && resid) {
+        mArscTheme = new ResTable::Theme(*mResTable);
+        if (mArscTheme->applyStyle((uint32_t)resid) != 0) {
+            LOGW("arsc Theme applyStyle(resId=0x%08x) failed", resid);
+            delete mArscTheme;
+            mArscTheme = nullptr;
+        } else {
+            LOGD("arsc Theme built from resId=0x%08x", resid);
         }
     }
 }

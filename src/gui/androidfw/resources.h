@@ -92,6 +92,11 @@ public:
     Resources& operator=(const Resources&) = delete;
 
     AssetManager* getAssets() { return mAssets; }
+
+    // AOSP Resources.Theme — the engine is the already-ported ResTable::Theme
+    // (applyStyle/getAttribute/resolveAttributeReference/clear/...).
+    using Theme = cdroid::ResTable::Theme;
+    std::unique_ptr<Theme> newTheme();   // a Theme over this Resources' AssetManager table
     const ResTable_config& getConfiguration() const { return mConfig; }
     const DisplayMetrics& getDisplayMetrics() const { return mMetrics; }
     void setConfiguration(const ResTable_config& config) { mConfig = config; }

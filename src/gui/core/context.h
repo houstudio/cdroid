@@ -20,11 +20,14 @@
 #include <string>
 #include <iostream>
 #include <functional>
+#include <memory>
+#include <vector>
 #include <cairomm/refptr.h>
 #include <cairomm/surface.h>
 #include <core/callbackbase.h>
 #include <core/attributeset.h>
 #include <core/displaymetrics.h>
+#include <androidfw/resources.h>   // android::Resources (+ Resources::Theme)
 
 #define USE(FEATURE) (defined(USE_##FEATURE) && USE_##FEATURE)
 #define ENABLE(FEATURE) (defined(ENABLE_##FEATURE) && ENABLE_##FEATURE)
@@ -42,6 +45,7 @@ class Drawable;
 class ColorStateList;
 class Typeface;
 class Intent;
+class TypedArray;
 class Context{
 public:
     virtual ~Context() = default;
@@ -51,8 +55,14 @@ public:
     // so the default is a no-op. Wiring (className -> Window factory + show) is deferred; override
     // (e.g. on App) to actually launch. Kept as Context* so Navigator's mContext->startActivity compiles.
     virtual void startActivity(const Intent& /*intent*/) = 0;
-    virtual const std::string getTheme() const = 0;
+    // AOSP-aligned Theme access. getTheme() returns the live Resources::Theme
+    // (engine = cdroid::ResTable::Theme); the legacy text-XML theme name is
+    // getThemeName(). setTheme(int) applies a style resource; setTheme(const
+    // std::string&) remains for text-XML compatibility.
+    virtual android::Resources::Theme& getTheme() = 0;
+    virtual const std::string getThemeName() const = 0;
     virtual void setTheme(const std::string&theme) = 0;
+    virtual void setTheme(int resid) = 0;
     virtual const DisplayMetrics&getDisplayMetrics() const = 0;
     virtual int getId(const std::string&) const = 0;
     virtual int getNextAutofillId() = 0;
@@ -78,6 +88,11 @@ public:
     virtual size_t getArray(const std::string&resname,std::vector<int>&) = 0;
     virtual RefPtr<ColorStateList> getColorStateList(const std::string&resid) = 0;
     virtual AttributeSet obtainStyledAttributes(const std::string&resid) = 0;
+    // AOSP Resources.Theme.obtainStyledAttributes with AttributeSet == null.
+    // Default impls delegate to getTheme() (see context.cc); the 4-arg
+    // AttributeSet form is obtainStyledAttributesTyped on Assets (binary AXML).
+    virtual std::unique_ptr<TypedArray> obtainStyledAttributes(const std::vector<int>& attrs);
+    virtual std::unique_ptr<TypedArray> obtainStyledAttributes(int resid, const std::vector<int>& attrs);
 
     // --- AOSP-aligned ID-based resource face (android.content.Context) ---
     // Coexists with the string-based legacy methods above (overloads differ by

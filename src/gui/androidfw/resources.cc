@@ -9,6 +9,7 @@
 #include <porting/cdlog.h>
 
 #include <cstring>
+#include <memory>
 #include <string>
 
 using namespace android;
@@ -95,6 +96,14 @@ Resources::Resources(AssetManager* am, const ResTable_config* config,
 }
 
 Resources::~Resources() {
+}
+
+// AOSP Resources.newTheme(): a Theme over this Resources' AssetManager table.
+// The engine is cdroid::ResTable::Theme (aliased as Resources::Theme); it owns
+// no state until applyStyle() is called on it.
+std::unique_ptr<Resources::Theme> Resources::newTheme() {
+    if (mAssets == nullptr) return nullptr;
+    return std::make_unique<Theme>(mAssets->getResources(false));
 }
 
 int Resources::getIdentifier(const std::string& name, const std::string& type,

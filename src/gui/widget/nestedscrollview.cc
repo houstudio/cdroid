@@ -904,13 +904,19 @@ bool NestedScrollView::onGenericMotionEvent(MotionEvent& event) {
 
 float NestedScrollView::getVerticalScrollFactorCompat() {
     if (mVerticalScrollFactor == 0) {
-        /*TypedValue outValue = new TypedValue();
+        // AOSP reads ?android:attr/listPreferredItemHeight from the theme; fall
+        // back to 1.f when the attr/theme/metrics are unavailable.
         Context* context = getContext();
-        if (!context->getTheme().resolveAttribute(android.R.attr.listPreferredItemHeight, outValue, true)) {
-            throw std::runtime_error("Expected theme to define listPreferredItemHeight.");
+        const int attr = context ? context->getId("android:attr/listPreferredItemHeight") : 0;
+        Res_value v;
+        if (attr && context->getTheme().resolveAttribute((uint32_t)attr, &v, true) &&
+            v.dataType == Res_value::TYPE_DIMENSION) {
+            android::TypedValue tv;
+            tv.type = v.dataType;
+            tv.data = v.data;
+            mVerticalScrollFactor = tv.complexToDimension(context->getResources().getDisplayMetrics());
         }
-        mVerticalScrollFactor = outValue.getDimension(context->getResources().getDisplayMetrics());*/
-        mVerticalScrollFactor=1.f;
+        if (mVerticalScrollFactor == 0) mVerticalScrollFactor = 1.f;
     }
     return mVerticalScrollFactor;
 }

@@ -40,6 +40,7 @@ private:
     XmlPullParser();
 public:
     XmlPullParser(Context*ctx,const std::string&resid);
+    XmlPullParser(Context*ctx,int resid);
     XmlPullParser(Context*,std::unique_ptr<std::istream>);
     ~XmlPullParser()override;
     int getDepth()const;

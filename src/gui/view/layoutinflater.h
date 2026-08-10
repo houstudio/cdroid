@@ -78,6 +78,9 @@ public:
     [[deprecated("This function is deprecated")]]
     View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
     View* inflate(XmlPullParser& parser,ViewGroup* root);
+
+    View* inflate(int resource, ViewGroup* root);
+    View* inflate(int resource, ViewGroup* root, bool attachToRoot);
     /**
       * Inflate a new view hierarchy from the specified xml resource. Throws
       * {@link InflateException} if there is an error.
