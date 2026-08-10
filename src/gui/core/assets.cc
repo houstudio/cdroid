@@ -1213,6 +1213,11 @@ std::string Assets::resolveAttrValue(const std::string&attrResId)const{
 AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
     AttributeSet atts;
     std::string pkg,name = resname;
+    // Package prefix of the reference (e.g. "android" in "android:attr/..."). In
+    // SDK/binary mode values live only in resources.arsc, so the text mTheme is
+    // empty and theme-attribute lookups must go through the arsc Theme below.
+    size_t colonAt = resname.find(':');
+    std::string resPkg = (colonAt != std::string::npos) ? resname.substr(0, colonAt) : "";
     size_t pos = name.find("attr/");
     if(pos!=std::string::npos){
         do {
@@ -1223,6 +1228,17 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
                 name=name.substr(pos+1);
             key = name;
             name= mTheme.getString(key);
+            // Binary/arsc fallback: when the text theme lacks this attribute,
+            // resolve the theme attribute through the arsc Theme (e.g.
+            // actionOverflowButtonStyle -> @style/Widget...Overflow). This is what
+            // makes obtainStyledAttributes("?android:attr/xxx") work in binary mode.
+            if (name.empty() && mArscTheme && mResTable) {
+                uint32_t attrId = arscGetIdentifier(key, "attr", resPkg);
+                Res_value tv;
+                if (attrId && arscThemeAttribute(attrId, &tv) && tv.data != 0) {
+                    name = renderResValue(this, tv);
+                }
+            }
             atts.add(key,name);
             if((pos=name.find('@'))!=std::string::npos)
                 name.erase(pos,1);

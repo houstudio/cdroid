@@ -673,8 +673,14 @@ class PakBuilder(idgen.IDGenerater):
                 return
         # SDK mode: build complete framework from SDK data/res/ via aapt2 -x.
         sdk_data = self._compile_sdk_res() if self.use_sdk else {}
-        # App mode: compile cdroid's own res/ via aapt2 (optional).
-        binary_xmls, app_arsc = self._compile_aapt2() if self.use_aapt2 else ({}, None)
+        # App mode: compile the app's own res/ via aapt2 (optional).
+        # Skip when use_sdk: cdroid.pak's res_dir IS the framework res
+        # (src/gui/res, carrying public-final.xml 0x01 IDs), already built as
+        # framework -x by _compile_sdk_res. Running app-mode link on it collides
+        # (framework package-1 IDs vs app 0x7f space → "can't assign ID
+        # 0x010a0004 ... package already has ID 1"). _compile_aapt2 is for real
+        # app paks only (use_aapt2 and not use_sdk).
+        binary_xmls, app_arsc = self._compile_aapt2() if (self.use_aapt2 and not self.use_sdk) else ({}, None)
         # binary apps get their R.h from aapt2 dump (above) and need no ID.xml;
         # only the text fallback (aapt2 off / link failed) uses idgen (R.h+ID.xml).
         binary_ok = bool(sdk_data) or (app_arsc is not None)
