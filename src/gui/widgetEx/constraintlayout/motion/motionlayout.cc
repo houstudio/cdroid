@@ -56,6 +56,11 @@ MotionLayout::MotionLayout(Context* ctx, const AttributeSet& attrs)
     mSceneResource = (ta&&ta->hasValue(styleable::ConstraintLayoutLayout::layoutDescription))
         ? ta->getString(styleable::ConstraintLayoutLayout::layoutDescription)
         : attrs.getString("layoutDescription", "");
+    // Binary AXML stores @xml/... as TYPE_REFERENCE; TypedArray::getString only
+    // returns TYPE_STRING, so it yields "" here. Fall back to the AttributeSet,
+    // whose binary path renders the reference to "@xml/scene_scan".
+    if (mSceneResource.empty())
+        mSceneResource = attrs.getString("layoutDescription", "");
 }
 
 MotionLayout::MotionLayout(int width, int height)

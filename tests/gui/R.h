@@ -6,19 +6,21 @@ namespace gui_test{
 
 namespace R{
     namespace id{
-         static constexpr int nav_args                = 0x00002710 ;/*10000*/
-         static constexpr int args_test               = 0x00002711 ;/*10001*/
-         static constexpr int nav_host_test           = 0x00002712 ;/*10002*/
-         static constexpr int start_fragment          = 0x00002713 ;/*10003*/
-         static constexpr int second_fragment         = 0x00002714 ;/*10004*/
-         static constexpr int nav_root                = 0x00002715 ;/*10005*/
-         static constexpr int start_test              = 0x00002716 ;/*10006*/
-         static constexpr int second                  = 0x00002717 ;/*10007*/
-         static constexpr int second_test             = 0x00002718 ;/*10008*/
-         static constexpr int self                    = 0x00002719 ;/*10009*/
-         static constexpr int finish                  = 0x0000271A ;/*10010*/
-         static constexpr int finish_self             = 0x0000271B ;/*10011*/
-    };/*namespace id*/
+        enum : int {
+            nav_args = 0x00002710, /*10000 nav_args*/
+            args_test = 0x00002711, /*10001 args_test*/
+            nav_host_test = 0x00002712, /*10002 nav_host_test*/
+            start_fragment = 0x00002713, /*10003 start_fragment*/
+            second_fragment = 0x00002714, /*10004 second_fragment*/
+            nav_root = 0x00002715, /*10005 nav_root*/
+            start_test = 0x00002716, /*10006 start_test*/
+            second = 0x00002717, /*10007 second*/
+            second_test = 0x00002718, /*10008 second_test*/
+            self = 0x00002719, /*10009 self*/
+            finish = 0x0000271A, /*10010 finish*/
+            finish_self = 0x0000271B, /*10011 finish_self*/
+        };
+    }/*namespace id*/
 
     namespace strings{
     };/*namespace strings*/
