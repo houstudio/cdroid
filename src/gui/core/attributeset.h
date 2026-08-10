@@ -49,6 +49,10 @@ public:
     Context*getContext()const;
     void setContext(Context*,const std::string&package);
     bool add(const std::string&,const std::string&value);
+    // CDROID bridge: record an attribute's resource id (its OWN id, for the AOSP
+    // getAttributeNameResource). Used when this AttributeSet is built from a typed
+    // source (arsc style bag) so the id-interface works for style-derived sets.
+    void setAttributeResourceId(const std::string& name, int resId);
     bool hasAttribute(const std::string&key)const;
     size_t getAttributeCount()const;
     // Single-pass KV iteration over the present attributes (map order). Templated and header-only so

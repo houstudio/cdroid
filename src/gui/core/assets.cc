@@ -1354,6 +1354,7 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
                         valStr = renderResValue(this, v);
                     }
                     atts.add(attrName, valStr);
+                    atts.setAttributeResourceId(attrName, (int)map[i].name.ident);
                 }
                 atts.setContext(this, pkg);
                 uint32_t parentId = mResTable->getBagParent(styleId);
