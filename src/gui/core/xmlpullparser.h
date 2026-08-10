@@ -58,6 +58,27 @@ public:
     // Returns the ResXMLTree* (as void* to avoid the heavy androidfw include here).
     // Null for text XML. Caller (which has androidfw) casts to const ResXMLTree*.
     const void* getBinaryAXMLTree() const;
+
+    // AOSP AttributeSet id-interface — binary overrides. For binary AXML the
+    // index is the ResXMLTree attribute order and values are the typed Res_value
+    // (aapt2-pre-resolved), so these return real attr resIds / typed data instead
+    // of the base impl's string parsing. Non-binary falls through to AttributeSet.
+    // The using-declarations keep AttributeSet's string-key overloads visible
+    // (the (int) overrides would otherwise hide them — C++ name hiding).
+    using AttributeSet::getAttributeValue;
+    using AttributeSet::getAttributeBooleanValue;
+    using AttributeSet::getAttributeIntValue;
+    using AttributeSet::getAttributeResourceValue;
+    using AttributeSet::getAttributeUnsignedIntValue;
+    using AttributeSet::getAttributeFloatValue;
+    std::string getAttributeName(int index) const override;
+    std::string getAttributeValue(int index) const override;
+    int getAttributeNameResource(int index) const override;
+    bool getAttributeBooleanValue(int index, bool defaultValue) const override;
+    int getAttributeResourceValue(int index, int defaultValue) const override;
+    int getAttributeIntValue(int index, int defaultValue) const override;
+    int getAttributeUnsignedIntValue(int index, int defaultValue) const override;
+    float getAttributeFloatValue(int index, float defaultValue) const override;
 };
 }
 #endif /*__XML_PULLPARSER_H__*/

@@ -181,7 +181,7 @@ struct Private{
     }
     // Render a typed Res_value to a string when no rawValue is available.
     // ctx: the Context (App/Assets) for resolving references through arsc.
-    std::string renderTypedValue(size_t attrIdx, Context* ctx){
+    std::string renderTypedValue(size_t attrIdx, Context* ctx) const {
         Res_value v;
         if(axmlTree->getAttributeValue(attrIdx, &v) != sizeof(Res_value)) return "";
         char buf[32];
@@ -405,6 +405,81 @@ bool XmlPullParser::isBinaryAXML() const {
 
 const void* XmlPullParser::getBinaryAXMLTree() const {
     return isBinaryAXML() ? static_cast<const void*>(mData->axmlTree) : nullptr;
+}
+
+// AOSP AttributeSet id-interface — binary AXML overrides. Index = ResXMLTree
+// attribute order; values come straight from the typed Res_value (aapt2 already
+// resolved enums/refs). Non-binary parsers fall through to AttributeSet's text impl.
+std::string XmlPullParser::getAttributeName(int index) const {
+    if (isBinaryAXML()) {
+        size_t len = 0;
+        const char16_t* n = mData->axmlTree->getAttributeName((size_t)index, &len);
+        return n ? mData->u16toUtf8(n, len) : std::string();
+    }
+    return AttributeSet::getAttributeName(index);
+}
+
+std::string XmlPullParser::getAttributeValue(int index) const {
+    if (isBinaryAXML()) return mData->renderTypedValue((size_t)index, mContext);
+    return AttributeSet::getAttributeValue(index);
+}
+
+int XmlPullParser::getAttributeNameResource(int index) const {
+    if (isBinaryAXML()) return (int)mData->axmlTree->getAttributeNameResID((size_t)index);
+    return AttributeSet::getAttributeNameResource(index);
+}
+
+bool XmlPullParser::getAttributeBooleanValue(int index, bool defaultValue) const {
+    if (isBinaryAXML()) {
+        Res_value v;
+        if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
+            && v.dataType == Res_value::TYPE_INT_BOOLEAN) return v.data != 0;
+        return defaultValue;
+    }
+    return AttributeSet::getAttributeBooleanValue(index, defaultValue);
+}
+
+int XmlPullParser::getAttributeResourceValue(int index, int defaultValue) const {
+    if (isBinaryAXML()) {
+        Res_value v;
+        if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
+            && (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE
+                || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE)) return (int)v.data;
+        return defaultValue;
+    }
+    return AttributeSet::getAttributeResourceValue(index, defaultValue);
+}
+
+int XmlPullParser::getAttributeIntValue(int index, int defaultValue) const {
+    if (isBinaryAXML()) {
+        Res_value v;
+        if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
+            && (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)) return (int)v.data;
+        return defaultValue;
+    }
+    return AttributeSet::getAttributeIntValue(index, defaultValue);
+}
+
+int XmlPullParser::getAttributeUnsignedIntValue(int index, int defaultValue) const {
+    if (isBinaryAXML()) {
+        Res_value v;
+        if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
+            && (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)) return (int)v.data;
+        return defaultValue;
+    }
+    return AttributeSet::getAttributeUnsignedIntValue(index, defaultValue);
+}
+
+float XmlPullParser::getAttributeFloatValue(int index, float defaultValue) const {
+    if (isBinaryAXML()) {
+        Res_value v;
+        if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
+            && v.dataType == Res_value::TYPE_FLOAT) {
+            float f; memcpy(&f, &v.data, sizeof(f)); return f;
+        }
+        return defaultValue;
+    }
+    return AttributeSet::getAttributeFloatValue(index, defaultValue);
 }
 
 XmlPullParser::~XmlPullParser() {

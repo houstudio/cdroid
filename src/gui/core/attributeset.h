@@ -35,6 +35,12 @@ protected:
     std::string mPackage;
     Context*mContext;
     std::shared_ptr<std::unordered_map<std::string,std::string>>mAttrs;
+    // Optional attribute-NAME -> resource-id map (each attr's OWN id, for the
+    // AOSP getAttributeNameResource). Populated when this AttributeSet is built
+    // from a typed source (e.g. an arsc style bag); empty for plain string-built
+    // sets (getAttributeNameResource then returns 0). Index methods iterate mAttrs
+    // (small N; resolution matches by id/name, not position).
+    std::shared_ptr<std::unordered_map<std::string,int>>mAttrResIds;
 public:
     AttributeSet();
     AttributeSet(const AttributeSet&);
@@ -59,6 +65,7 @@ public:
     int inherit(const AttributeSet&other);
     int Override(const AttributeSet&other);
     const std::string getAttributeValue(const std::string&key)const;
+    const std::string getAttributeValue(const char*key)const;   // const char* overload (binds before the AOSP int-index overload)
     bool getBoolean(const std::string&key,bool def=false)const;
     int getInt(const std::string&key,int def=0)const;
     int getInt(const std::string&key,const std::unordered_map<std::string,int>&keyvaluemaps,int def=0)const;
@@ -80,6 +87,52 @@ public:
     Drawable*getDrawable(const std::string&key)const;
     int getArray(const std::string&key,std::vector<std::string>&array)const;
     int getArray(const std::string&key,std::vector<int>&array)const;
+
+    // --- AOSP android.util.AttributeSet interface (index/id-based) -------------
+    // Ported verbatim from frameworks/base/core/java/android/util/AttributeSet.java.
+    // Coexists with the string-key getters above (CDROID additions); these are the
+    // index/namespace-based, typed, AOSP-faithful methods. Virtual so XmlPullParser
+    // (binary AXML) overrides them via ResXMLTree; the base impl works off mAttrs.
+    // String return values use std::string (empty == AOSP null).
+    virtual std::string getAttributeNamespace(int index) const;          // default ""
+    virtual std::string getAttributeName(int index) const;               // "" if not found
+    virtual std::string getAttributeValue(int index) const;              // "" if not found
+    virtual std::string getAttributeValue(const std::string& namespace_,
+                                          const std::string& name) const;
+    virtual std::string getPositionDescription() const;
+    // Resource id associated with the attribute NAME (the attr's own id), 0 if none.
+    virtual int getAttributeNameResource(int index) const;
+    virtual int getAttributeListValue(int index, const std::vector<std::string>& options,
+                                      int defaultValue) const;
+    virtual bool getAttributeBooleanValue(int index, bool defaultValue) const;
+    // The attribute's VALUE as a resource id ("@type/key"), 0 if none.
+    virtual int getAttributeResourceValue(int index, int defaultValue) const;
+    virtual int getAttributeIntValue(int index, int defaultValue) const;
+    virtual int getAttributeUnsignedIntValue(int index, int defaultValue) const;
+    virtual float getAttributeFloatValue(int index, float defaultValue) const;
+    virtual int getAttributeListValue(const std::string& namespace_,
+                                      const std::string& attribute,
+                                      const std::vector<std::string>& options,
+                                      int defaultValue) const;
+    virtual bool getAttributeBooleanValue(const std::string& namespace_,
+                                          const std::string& attribute,
+                                          bool defaultValue) const;
+    virtual int getAttributeResourceValue(const std::string& namespace_,
+                                          const std::string& attribute,
+                                          int defaultValue) const;
+    virtual int getAttributeIntValue(const std::string& namespace_,
+                                     const std::string& attribute, int defaultValue) const;
+    virtual int getAttributeUnsignedIntValue(const std::string& namespace_,
+                                             const std::string& attribute,
+                                             int defaultValue) const;
+    virtual float getAttributeFloatValue(const std::string& namespace_,
+                                         const std::string& attribute,
+                                         float defaultValue) const;
+    // The "id"/"class"/"style" special attributes (AOSP semantics).
+    virtual std::string getIdAttribute() const;             // == getAttributeValue("id")
+    virtual std::string getClassAttribute() const;          // == getAttributeValue("class")
+    virtual int getIdAttributeResourceValue(int defaultValue) const;
+    virtual int getStyleAttribute() const;                  // getAttributeResourceValue("style")
     AttributeSet& operator =(const AttributeSet&other);
     void dump()const;
 };

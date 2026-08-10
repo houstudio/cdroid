@@ -23,6 +23,7 @@
 #include <core/color.h>
 #include <vector>
 #include <cstring>
+#include <cstdlib>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -50,6 +51,7 @@ AttributeSet::AttributeSet(const AttributeSet&other):AttributeSet(other.mContext
     for(auto& a:*other.mAttrs){
         mAttrs->insert({a.first,a.second});
     }
+    mAttrResIds = other.mAttrResIds;   // share the name->resId map (if any)
 }
 
 AttributeSet& AttributeSet::operator =(const AttributeSet&other){
@@ -58,6 +60,7 @@ AttributeSet& AttributeSet::operator =(const AttributeSet&other){
     for(auto& a:*other.mAttrs){
         mAttrs->insert({a.first,a.second});
     }
+    mAttrResIds = other.mAttrResIds;
     return *this;
 }
 
@@ -175,6 +178,9 @@ const std::string AttributeSet::getAttributeValue(const std::string&key)const{
     if(it != mAttrs->end())
         return it->second;
     return std::string();
+}
+const std::string AttributeSet::getAttributeValue(const char*key)const{
+    return getAttributeValue(std::string(key));
 }
 
 bool AttributeSet::getBoolean(const std::string&key,bool def)const{
@@ -436,6 +442,144 @@ Drawable* AttributeSet::getDrawable(const std::string&key)const{
     const std::string resid = getString(key);
     return mContext->getDrawable(resid);
 }
+
+// ----------------------------------------------------------------------------
+// AOSP android.util.AttributeSet — index/id-based methods (base / text impl).
+// Ported from frameworks/base/core/java/android/util/AttributeSet.java. Index
+// iterates mAttrs (small N; resolution matches by resId/name, not position, so
+// the unordered order is fine). Each typed getter delegates to the existing
+// string-key getter (reusing the parsing). Binary XmlPullParser overrides these
+// via ResXMLTree (stable AXML order + typed Res_value + real attr resIds); the
+// text/style path stays here.
+// ----------------------------------------------------------------------------
+namespace {
+bool keyAt(const std::unordered_map<std::string,std::string>& m, size_t idx, std::string* out) {
+    if (idx >= m.size()) return false;
+    size_t i = 0;
+    for (const auto& kv : m) { if (i == idx) { *out = kv.first; return true; } i++; }
+    return false;
+}
+}
+
+std::string AttributeSet::getAttributeNamespace(int /*index*/) const {
+    return std::string();   // text AttributeSet carries no namespace (bare localname keys)
+}
+
+std::string AttributeSet::getAttributeName(int index) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? k : std::string();
+}
+
+std::string AttributeSet::getAttributeValue(int index) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeValue(k) : std::string();
+}
+
+std::string AttributeSet::getAttributeValue(const std::string& /*namespace_*/,
+                                            const std::string& name) const {
+    return getAttributeValue(name);   // namespace-agnostic for text (bare localname)
+}
+
+std::string AttributeSet::getPositionDescription() const {
+    return std::string();
+}
+
+int AttributeSet::getAttributeNameResource(int index) const {
+    std::string k;
+    if (!keyAt(*mAttrs, (size_t)index, &k) || !mAttrResIds) return 0;
+    auto it = mAttrResIds->find(k);
+    return it != mAttrResIds->end() ? it->second : 0;
+}
+
+int AttributeSet::getAttributeListValue(int index, const std::vector<std::string>& options,
+                                        int defaultValue) const {
+    const std::string v = getAttributeValue(index);
+    for (size_t i = 0; i < options.size(); i++) if (options[i] == v) return (int)i;
+    return defaultValue;
+}
+
+bool AttributeSet::getAttributeBooleanValue(int index, bool defaultValue) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getBoolean(k, defaultValue) : defaultValue;
+}
+
+int AttributeSet::getAttributeResourceValue(int index, int defaultValue) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getResourceId(k, defaultValue) : defaultValue;
+}
+
+int AttributeSet::getAttributeIntValue(int index, int defaultValue) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getInt(k, defaultValue) : defaultValue;
+}
+
+int AttributeSet::getAttributeUnsignedIntValue(int index, int defaultValue) const {
+    std::string k;
+    if (!keyAt(*mAttrs, (size_t)index, &k)) return defaultValue;
+    const std::string v = getAttributeValue(k);
+    if (!v.empty()) {
+        if (v[0] == '#') return (int)Color::parseColor(v);
+        if (v.size() >= 2 && v[0] == '0' && (v[1] == 'x' || v[1] == 'X'))
+            return (int)strtoul(v.c_str() + 2, nullptr, 16);
+    }
+    return getInt(k, defaultValue);
+}
+
+float AttributeSet::getAttributeFloatValue(int index, float defaultValue) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getFloat(k, defaultValue) : defaultValue;
+}
+
+int AttributeSet::getAttributeListValue(const std::string& /*namespace_*/,
+                                        const std::string& attribute,
+                                        const std::vector<std::string>& options,
+                                        int defaultValue) const {
+    const std::string v = getAttributeValue(attribute);
+    for (size_t i = 0; i < options.size(); i++) if (options[i] == v) return (int)i;
+    return defaultValue;
+}
+
+bool AttributeSet::getAttributeBooleanValue(const std::string& /*namespace_*/,
+                                            const std::string& attribute,
+                                            bool defaultValue) const {
+    return getBoolean(attribute, defaultValue);
+}
+
+int AttributeSet::getAttributeResourceValue(const std::string& /*namespace_*/,
+                                            const std::string& attribute,
+                                            int defaultValue) const {
+    return getResourceId(attribute, defaultValue);
+}
+
+int AttributeSet::getAttributeIntValue(const std::string& /*namespace_*/,
+                                       const std::string& attribute, int defaultValue) const {
+    return getInt(attribute, defaultValue);
+}
+
+int AttributeSet::getAttributeUnsignedIntValue(const std::string& /*namespace_*/,
+                                               const std::string& attribute,
+                                               int defaultValue) const {
+    const std::string v = getAttributeValue(attribute);
+    if (!v.empty()) {
+        if (v[0] == '#') return (int)Color::parseColor(v);
+        if (v.size() >= 2 && v[0] == '0' && (v[1] == 'x' || v[1] == 'X'))
+            return (int)strtoul(v.c_str() + 2, nullptr, 16);
+    }
+    return getInt(attribute, defaultValue);
+}
+
+float AttributeSet::getAttributeFloatValue(const std::string& /*namespace_*/,
+                                           const std::string& attribute,
+                                           float defaultValue) const {
+    return getFloat(attribute, defaultValue);
+}
+
+std::string AttributeSet::getIdAttribute() const { return getAttributeValue("id"); }
+std::string AttributeSet::getClassAttribute() const { return getAttributeValue("class"); }
+int AttributeSet::getIdAttributeResourceValue(int defaultValue) const {
+    return getResourceId("id", defaultValue);
+}
+int AttributeSet::getStyleAttribute() const { return getResourceId("style", 0); }
 
 void AttributeSet::dump()const{
     for(auto it = mAttrs->begin();it != mAttrs->end();it++){
