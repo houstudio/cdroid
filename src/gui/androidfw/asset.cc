@@ -26,7 +26,7 @@
 # define O_BINARY 0
 #endif
 
-using namespace android;
+using namespace cdroid;
 
 static const bool kIsDebug = false;
 

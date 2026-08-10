@@ -5,7 +5,8 @@
 // getColorStateList(int). Header stays declaration-only.
 
 #include "context.h"
-#include "androidfw/resources.h"   // android::Resources (full def)
+#include "androidfw/resourcesimpl.h"   // cdroid::ResourcesImpl (+ Theme)
+#include "resources.h"      // cdroid::Resources (full def — getResources() returns it)
 #include <core/typedarray.h>       // TypedArray (constructed below)
 
 namespace cdroid {
@@ -42,7 +43,7 @@ int Context::getDimensionPixelSize(int id) {
     return getResources().getDimensionPixelSize(id);
 }
 
-android::Asset* Context::openRawResource(int id) {
+Asset* Context::openRawResource(int id) {
     return getResources().openRawResource(id);
 }
 
@@ -56,7 +57,7 @@ Typeface* Context::getFont(int id) {
 // the live theme (defStyleAttr=0, defStyleRes=0). Delegates to getTheme() like
 // the Java final in android.content.Context.
 std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const std::vector<int>& attrs) {
-    android::Resources::Theme& theme = getTheme();
+    ResTable::Theme& theme = getTheme();
     const ResTable& table = theme.getResTable();
     std::vector<uint32_t> ids(attrs.begin(), attrs.end());  // int[] -> uint32_t[] for the resolver
     std::vector<StyledAttr> styled(ids.size());
@@ -68,7 +69,7 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const std::vector<in
 // AOSP Theme.obtainStyledAttributes(resId, attrs): resolve against a style on
 // top of the theme (defStyleAttr=0, defStyleRes=resId).
 std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const std::vector<int>& attrs) {
-    android::Resources::Theme& theme = getTheme();
+    ResTable::Theme& theme = getTheme();
     const ResTable& table = theme.getResTable();
     std::vector<uint32_t> ids(attrs.begin(), attrs.end());
     std::vector<StyledAttr> styled(ids.size());

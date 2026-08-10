@@ -1,9 +1,9 @@
-// androidfw_resdemo — integration sample: drives android::Resources (the androidfw
+// androidfw_resdemo — integration sample: drives cdroid::ResourcesImpl (the androidfw
 // ID-based facade) inside the cdroid runtime, and verifies cdroid::App exposes the
 // AOSP Context resource face (app.getResources()).
 //
 // Two demos:
-//   1. Standalone: android::AssetManager + android::Resources over the testdata
+//   1. Standalone: cdroid::AssetManager + cdroid::ResourcesImpl over the testdata
 //      arsc apk — value methods (getString/getInteger/getResourceName/getValue).
 //   2. App integration: app.getResources() (cdroid::Resources, built lazily from
 //      App's paks) — getAssets() wired, ID-based getters available.
@@ -14,8 +14,8 @@
 #include <cdroid.h>
 #include <cdlog.h>
 
-#include "resources.h"      // android::Resources
-#include "assetmanager.h"   // android::AssetManager
+#include <androidfw/resourcesimpl.h>  // cdroid::ResourcesImpl
+#include <androidfw/assetmanager.h>   // cdroid::AssetManager
 
 #include <string>
 #include <vector>
@@ -45,13 +45,13 @@ int main(int argc, const char* argv[]) {
     };
     char buf[256];
 
-    // --- Demo 1: standalone android::Resources over a known apk ---
-    addLine("== android::Resources over: " + apkPath + " ==");
+    // --- Demo 1: standalone cdroid::ResourcesImpl over a known apk ---
+    addLine("== cdroid::ResourcesImpl over: " + apkPath + " ==");
     static const char* kPkg = "com.example.restbl";
-    android::AssetManager am;
+    cdroid::AssetManager am;
     int32_t cookie = 0;
     if (am.addAssetPath(apkPath, &cookie)) {
-        android::Resources res(&am);
+        cdroid::ResourcesImpl res(&am);
         const int helloId = res.getIdentifier("hello", "string", kPkg);
         const int gridId  = res.getIdentifier("grid", "integer", kPkg);
         snprintf(buf, sizeof(buf), "getIdentifier(hello) = 0x%08x", helloId); addLine(buf);
@@ -59,7 +59,7 @@ int main(int argc, const char* argv[]) {
         if (res.getResourceName(helloId, &name)) addLine("getResourceName = " + name);
         addLine("getString(hello) = " + res.getString(helloId));
         snprintf(buf, sizeof(buf), "getInteger(grid) = %d", res.getInteger(gridId)); addLine(buf);
-        android::TypedValue tv;
+        cdroid::TypedValue tv;
         if (res.getValue(helloId, &tv, true)) {
             snprintf(buf, sizeof(buf), "getValue(hello): type=0x%02x data=0x%08x", tv.type, tv.data);
             addLine(buf);
@@ -70,8 +70,8 @@ int main(int argc, const char* argv[]) {
 
     // --- Demo 2: App integration — cdroid::Context::getResources() ---
     addLine("== App.getResources() (cdroid::Context ID face) ==");
-    android::Resources& appRes = app.getResources();   // cdroid::Resources, lazily built
-    android::AssetManager* appAm = appRes.getAssets();
+    cdroid::Resources& appRes = app.getResources();   // cdroid::Resources (GUI subclass), lazily built
+    cdroid::AssetManager* appAm = appRes.getAssets();
     std::string pkgs;
     if (appAm != nullptr) {
         for (const auto& p : appAm->getResources().listPackageNames()) { pkgs += p; pkgs += " "; }
@@ -86,7 +86,7 @@ int main(int argc, const char* argv[]) {
     addLine(buf);
     if (colorPrimaryAttr) {
         // Single themed attribute via Theme.resolveAttribute (AOSP API).
-        android::Resources::Theme& theme = app.getTheme();
+        cdroid::ResTable::Theme& theme = app.getTheme();
         cdroid::Res_value rv;
         if (theme.resolveAttribute((uint32_t)colorPrimaryAttr, &rv, true)) {
             snprintf(buf, sizeof(buf), "theme.colorPrimary = 0x%08x (type 0x%02x)", rv.data, rv.dataType);

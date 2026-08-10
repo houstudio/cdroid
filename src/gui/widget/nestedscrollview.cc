@@ -911,7 +911,7 @@ float NestedScrollView::getVerticalScrollFactorCompat() {
         Res_value v;
         if (attr && context->getTheme().resolveAttribute((uint32_t)attr, &v, true) &&
             v.dataType == Res_value::TYPE_DIMENSION) {
-            android::TypedValue tv;
+            TypedValue tv;
             tv.type = v.dataType;
             tv.data = v.data;
             mVerticalScrollFactor = tv.complexToDimension(context->getResources().getDisplayMetrics());

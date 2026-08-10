@@ -20,7 +20,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace android {
+namespace cdroid {
 
 int localeDataCompareRegions(
         const char* left_region, const char* right_region,
@@ -31,6 +31,6 @@ void localeDataComputeScript(char out[4], const char* language, const char* regi
 
 bool localeDataIsCloseToUsEnglish(const char* region);
 
-} // namespace android
+} // namespace cdroid
 
 #endif // _LIBS_UTILS_LOCALE_DATA_H

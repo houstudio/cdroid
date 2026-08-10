@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-namespace android {
+namespace cdroid {
 
 // static. Binary-search a sorted vector of FileInfo for fileName.
 /*static*/ int AssetDir::FileInfo::findEntry(const std::vector<AssetDir::FileInfo>* vec,
@@ -20,4 +20,4 @@ namespace android {
     return -1;
 }
 
-} // namespace android
+} // namespace cdroid

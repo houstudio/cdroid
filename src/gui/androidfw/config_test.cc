@@ -50,7 +50,7 @@ void setLocale(ResTable_config& c, const char* lang, const char* region = nullpt
     c.packLanguage(lang);
     if (region && region[0]) c.packRegion(region);
     char script[4] = {0, 0, 0, 0};
-    android::localeDataComputeScript(script, c.language, c.country);
+    cdroid::localeDataComputeScript(script, c.language, c.country);
     memcpy(c.localeScript, script, 4);
     c.localeScriptWasComputed = true;
 }

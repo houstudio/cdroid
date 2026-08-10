@@ -11,7 +11,7 @@
 //   - idmap / runtime-resource-overlay machinery stubbed (no RRO in CDROID).
 //   - Mutex/AutoMutex dropped (single-threaded UI resource access).
 //
-// Lives in namespace android (isolated from cdroid::Assets). The wrapped engine
+// Lives in namespace cdroid (isolated from cdroid::Assets). The wrapped engine
 // types are brought in from the existing cdroid:: port via using-declarations.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ struct AAssetManager { };
 // so `struct zip*` here must refer to ::zip, not android::zip.
 struct zip;
 
-namespace android {
+namespace cdroid {
 
 using cdroid::ResTable;
 using cdroid::ResTable_config;
@@ -157,5 +157,5 @@ private:
     ResTable_config*        mConfig;
 };
 
-} // namespace android
+} // namespace cdroid
 #endif // __CDROID_ANDROIDFW_ASSETMANAGER_H__

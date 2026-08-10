@@ -10,7 +10,7 @@
 #include <cstdio>
 #include <cstring>
 
-using namespace android;
+using namespace cdroid;
 using cdroid::ResTable;
 using cdroid::ResTable_config;
 using cdroid::ResXMLTree;

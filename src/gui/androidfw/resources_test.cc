@@ -1,15 +1,15 @@
-// Resources isolated-port test: ID-based value/meta resolution over an
+// ResourcesImpl isolated-port test: ID-based value/meta resolution over an
 // AssetManager loaded with the arsc testdata apk (package com.example.restbl;
 // string/hello = "Hello", integer/grid ∈ {8,12,16} across densities). Exercises
 // every fully-implemented getter; GUI factories are asserted stubbed.
 
-#include "resources.h"
+#include "resourcesimpl.h"
 
 #include <memory>
 #include <string>
 #include <cstdio>
 
-using namespace android;
+using namespace cdroid;
 using cdroid::Res_value;
 
 static std::string tpath(const std::string& s) {
@@ -26,7 +26,7 @@ int main() {
     CHECK(am.addAssetPath(tpath("_gen/arsc/out.apk"), &cookie));
 
     DisplayMetrics metrics;   // default density=1
-    Resources res(&am, nullptr, &metrics);
+    ResourcesImpl res(&am, nullptr, &metrics);
 
     static const char* kPkg = "com.example.restbl";
 

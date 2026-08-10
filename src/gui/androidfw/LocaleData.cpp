@@ -24,7 +24,7 @@
 
 #include "LocaleData.h"
 
-namespace android {
+namespace cdroid {
 
 #include "LocaleDataTables.cpp"
 
@@ -239,4 +239,4 @@ bool localeDataIsCloseToUsEnglish(const char* region) {
     return stop_list_index == 0; // 'en' is first in ENGLISH_STOP_LIST
 }
 
-} // namespace android
+} // namespace cdroid

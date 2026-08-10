@@ -20,7 +20,8 @@ set(ANDROIDFW_SOURCES
     asset.cc                # Asset / _FileAsset / _CompressedAsset (read-only byte stream)
     assetdir.cc             # AssetDir (directory listing)
     assetmanager.cc         # legacy AssetManager (wraps ResTable; zip backend via libzip)
-    resources.cc            # Resources: ID-based value/meta/asset facade over AssetManager
+    resourcesimpl.cc        # ResourcesImpl: ID-based value/meta/asset facade over AssetManager
+    typedvalue.cc           # TypedValue (AOSP android.util.TypedValue) + applyDimension
 )
 
 # libzip is the zip backend for AssetManager (replaces AOSP ZipFileRO/libziparchive);
@@ -41,6 +42,7 @@ set_target_properties(androidfw PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # the cdlog LogMessage backend is pulled in for this lib and for the test targets.
 target_include_directories(androidfw
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+           ${CMAKE_CURRENT_SOURCE_DIR}/..   # src/gui: for <core/displaymetrics.h> (TypedValue)
            ${CMAKE_BINARY_DIR}/include
     PRIVATE ${ZIP_INCLUDE_DIRS})
 target_link_libraries(androidfw PUBLIC tvhal ${ZIP_LIBRARIES} ZLIB::ZLIB)

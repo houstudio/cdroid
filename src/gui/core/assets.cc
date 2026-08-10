@@ -18,8 +18,8 @@
 #include <assets.h>
 #include <core/typedarray.h>   // TypedArray (constructed in obtainStyledAttributesTyped)
 #include "androidfw/LocaleData.h"  // localeDataComputeScript (arsc locale config)
-#include "androidfw/assetmanager.h"   // android::AssetManager
-#include "resources_cdroid.h"         // cdroid::Resources
+#include "androidfw/assetmanager.h"   // AssetManager
+#include "resources.h"         // cdroid::Resources
 #include <algorithm>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -228,13 +228,13 @@ Assets::~Assets() {
     LOGD("~Assets %p!",this);
 }
 
-// --- Lazy ID-based resource layer (AOSP android::Resources/AssetManager) ---
+// --- Lazy ID-based resource layer (AOSP Resources/AssetManager) ---
 // Built on first use from the pak paths recorded in addResource(); the legacy
 // string-based mResTable path is untouched.
 void Assets::ensureCdroidResources() const {
     if (mCdroidResources != nullptr) return;
     if (mAssetManager == nullptr) {
-        mAssetManager = new android::AssetManager();
+        mAssetManager = new AssetManager();
         for (const auto& p : mPakPaths) {
             mAssetManager->addAssetPath(p, nullptr);
         }
@@ -242,12 +242,12 @@ void Assets::ensureCdroidResources() const {
     mCdroidResources = new cdroid::Resources(mAssetManager, const_cast<Assets*>(this));
 }
 
-android::Resources& Assets::getResources() {
+Resources& Assets::getResources() {
     ensureCdroidResources();
     return *mCdroidResources;
 }
 
-android::AssetManager& Assets::getAssets() {
+AssetManager& Assets::getAssets() {
     ensureCdroidResources();
     return *mAssetManager;
 }
@@ -276,7 +276,7 @@ const std::string Assets::getThemeName() const {
     return mThemeName;
 }
 
-android::Resources::Theme& Assets::getTheme() {
+ResTable::Theme& Assets::getTheme() {
     // Lazily build an arsc theme if none has been applied yet, so the returned
     // reference is always valid (AOSP getTheme() never returns null). Binary
     // mode always has mResTable; the static fallback covers text-only paks.
@@ -741,7 +741,7 @@ void Assets::applyLocale(const std::string& lan) {
     if (lang.size() >= 2) cfg.packLanguage(lang.substr(0, 2).c_str());
     if (region.size() >= 2) cfg.packRegion(region.substr(0, 2).c_str());
     char script[4] = {0, 0, 0, 0};
-    android::localeDataComputeScript(script, cfg.language, cfg.country);
+    localeDataComputeScript(script, cfg.language, cfg.country);
     memcpy(cfg.localeScript, script, 4);
     cfg.localeScriptWasComputed = true;
     mResTable->setParameters(&cfg);

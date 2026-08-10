@@ -2,7 +2,7 @@
 //
 // Vector-style access to a slice of the asset hierarchy. Faithful public API;
 // String8 -> std::string, SortedVector -> a sorted std::vector. Lives in
-// namespace android (isolated from cdroid::Assets).
+// namespace cdroid (isolated from cdroid::Assets).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 #include "misc.h"
 
-namespace android {
+namespace cdroid {
 
 // Access a chunk of the asset hierarchy as if it were a single directory. The
 // list of files is sorted ascending by ASCII name. Populated by AssetManager.
@@ -79,5 +79,5 @@ private:
     std::vector<FileInfo> mFileInfo;
 };
 
-} // namespace android
+} // namespace cdroid
 #endif // __CDROID_ANDROIDFW_ASSETDIR_H__

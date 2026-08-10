@@ -11,7 +11,7 @@
 //   - StreamingZipInflater is not ported; compressed data is inflated eagerly
 //     into a heap buffer with zlib (same observable read/seek/getBuffer behavior).
 //
-// Lives in namespace android (AOSP-faithful) to isolate it from the unrelated
+// Lives in namespace cdroid (AOSP-faithful) to isolate it from the unrelated
 // cdroid::Assets (core/assets.h). The shared status_t / error codes are brought
 // in from the existing cdroid:: resourcetypes port via using-declarations.
 //
@@ -29,7 +29,7 @@
 
 #include "resourcetypes.h"   // cdroid::status_t + error codes
 
-namespace android {
+namespace cdroid {
 
 // Shared AOSP-style status codes live in cdroid:: (see resourcetypes.h). Bring
 // them into android:: so the Asset code reads like the AOSP original.
@@ -187,5 +187,5 @@ private:
     unsigned char*        mBuf = nullptr;    // inflated buffer
 };
 
-} // namespace android
+} // namespace cdroid
 #endif // __CDROID_ANDROIDFW_ASSET_H__

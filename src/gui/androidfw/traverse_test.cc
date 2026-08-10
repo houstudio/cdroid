@@ -63,7 +63,7 @@ static ResTable_config locCfg(const char* lang, const char* region = nullptr) {
     if (lang && lang[0]) {
         c.packLanguage(lang);
         if (region && region[0]) c.packRegion(region);
-        char sc[4] = {0,0,0,0}; android::localeDataComputeScript(sc, c.language, c.country);
+        char sc[4] = {0,0,0,0}; cdroid::localeDataComputeScript(sc, c.language, c.country);
         memcpy(c.localeScript, sc, 4); c.localeScriptWasComputed = true;
     }
     return c;

@@ -21,6 +21,7 @@
 #include <core/context.h>
 #include <core/app.h>
 #include <core/assets.h>
+#include <core/resources.h>  // cdroid::Resources (full def — getResources().getXml())
 #include <expat.h>
 #include <array>
 #include <fstream>
@@ -375,7 +376,7 @@ XmlPullParser::XmlPullParser(Context*ctx,int resid):XmlPullParser(){
         mContext = ctx;
         // ID-based path: fetch the binary AXML bytes via the resource face.
         // Text paks have no arsc -> getXml returns null -> empty parser.
-        android::Asset* asset = ctx->getResources().getXml(resid);
+        Asset* asset = ctx->getResources().getXml(resid);
         if(asset){
             const off64_t sz = asset->getLength();
             std::string buf((size_t)(sz > 0 ? sz : 0), '\0');

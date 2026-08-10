@@ -30,7 +30,7 @@ static ResTable_config reqLocale(const char* lang, const char* region = nullptr)
     if (region && region[0]) c.packRegion(region);
     if (lang && lang[0]) {
         char script[4] = {0, 0, 0, 0};
-        android::localeDataComputeScript(script, c.language, c.country);
+        cdroid::localeDataComputeScript(script, c.language, c.country);
         memcpy(c.localeScript, script, 4);
         c.localeScriptWasComputed = true;
     }

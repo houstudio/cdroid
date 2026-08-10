@@ -1,17 +1,17 @@
 // cdroid::Resources — GUI factory overrides. The value/meta methods are all
-// inherited from android::Resources (see androidfw/resources.{h,cc}); these two
+// inherited from ResourcesImpl (see androidfw/resources.{h,cc}); these two
 // overrides bridge the ID-based lookup to cdroid's existing string-based
 // Drawable / ColorStateList inflation.
 
-#include "resources_cdroid.h"
+#include "resources.h"
 #include "context.h"               // cdroid::Context
 #include <drawable/drawable.h>     // cdroid::Drawable
 #include <drawable/colorstatelist.h>  // cdroid::ColorStateList (+ RefPtr)
 
 namespace cdroid {
 
-Resources::Resources(android::AssetManager* am, cdroid::Context* ctx)
-    : android::Resources(am), mCtx(ctx) {
+Resources::Resources(AssetManager* am, cdroid::Context* ctx)
+    : ResourcesImpl(am), mCtx(ctx) {
 }
 
 cdroid::Drawable* Resources::getDrawable(int id, int /*density*/) const {

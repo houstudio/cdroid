@@ -5,7 +5,7 @@ SET(CORE_SOURCES
     core/framework_styleable.cc
     core/typedarray.cc      # TypedArray (cdroid-side typed attr view over a styleable set)
     core/context.cc         # cdroid::Context AOSP ID-based resource getters (defaults)
-    core/resources_cdroid.cc # cdroid::Resources: GUI factories over android::Resources
+    core/resources.cc # cdroid::Resources: GUI factories over ResourcesImpl
     #core/basebundle.cc
     #core/bundle.cc
     core/transform.cc
@@ -63,7 +63,6 @@ SET(CORE_SOURCES
     core/systemclock.cc
     core/tokenizer.cc
     core/xmlpullparser.cc
-    core/typedvalue.cc
     core/typeface.cc
     core/fontlistparser.cc
     #core/uieventsource.cc

@@ -29,7 +29,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-using namespace android;
+using namespace cdroid;
 
 static const bool kIsDebug = false;
 

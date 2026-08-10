@@ -18,7 +18,7 @@
 #include <animation/animatorset.h>
 #include <animation/animatorinflater.h>
 #include <animation/animationutils.h>
-#include <core/typedvalue.h>
+#include <androidfw/typedvalue.h>
 #include <drawable/pathparser.h>
 #include <porting/cdlog.h>
 

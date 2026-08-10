@@ -1,0 +1,120 @@
+// Port of AOSP android.content.res.ResourcesImpl — the ID-based resource
+// facade that sits on top of AssetManager.
+//
+// Named ResourcesImpl (AOSP's internal ResourcesImpl layer) to avoid clashing
+// with the cdroid::Resources subclass (resources.h) which fills in the
+// GUI-object factories. This is the value/meta/asset layer; GUI factories
+// (getDrawable/getColorStateList/getFont/...) are virtual and stubbed (return
+// nullptr) here — overridden by cdroid::Resources.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+#ifndef __CDROID_ANDROIDFW_RESOURCES_H__
+#define __CDROID_ANDROIDFW_RESOURCES_H__
+
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "restable.h"             // cdroid::ResTable, ResTable_config, Res_value
+#include "assetmanager.h"         // cdroid::AssetManager
+#include "asset.h"                // cdroid::Asset
+#include "typedvalue.h"           // cdroid::TypedValue, applyDimension
+#include <core/displaymetrics.h>  // cdroid::DisplayMetrics
+
+// Forward declarations of cdroid GUI object types — returned by pointer only,
+// so the full GUI headers are NOT needed to compile this. Their factory
+// methods are stubbed (return nullptr) until the cdroid::Resources subclass
+// overrides them.
+namespace cdroid {
+class Drawable;
+class ColorStateList;
+class Typeface;
+class ComplexColor;
+class Movie;
+}  // namespace cdroid
+
+namespace cdroid {
+
+// ResourcesImpl: the ID-based resource facade over an AssetManager. AOSP's
+// internal ResourcesImpl layer; cdroid::Resources (resources.h) is the
+// public Resources subclass that overrides the GUI factories.
+class ResourcesImpl {
+public:
+    // `am` is NOT owned (must outlive this ResourcesImpl). If config/metrics are
+    // null, defaults (zeroed config, density=1) are used.
+    ResourcesImpl(AssetManager* am, const ResTable_config* config = nullptr,
+                  const DisplayMetrics* metrics = nullptr);
+    virtual ~ResourcesImpl();
+
+    ResourcesImpl(const ResourcesImpl&) = delete;
+    ResourcesImpl& operator=(const ResourcesImpl&) = delete;
+
+    AssetManager* getAssets() { return mAssets; }
+
+    // AOSP Resources.Theme — the engine is ResTable::Theme (applyStyle/
+    // getAttribute/resolveAttribute/clear/...).
+    using Theme = ResTable::Theme;
+    std::unique_ptr<Theme> newTheme();   // a Theme over this ResourcesImpl's table
+    const ResTable_config& getConfiguration() const { return mConfig; }
+    const DisplayMetrics& getDisplayMetrics() const { return mMetrics; }
+    void setConfiguration(const ResTable_config& config) { mConfig = config; }
+    void setDisplayMetrics(const DisplayMetrics& m) { mMetrics = m; }
+
+    // --- identifier / naming ---
+    int  getIdentifier(const std::string& name, const std::string& type,
+                       const std::string& package) const;
+    bool getResourceName(int id, std::string* out) const;             // "pkg:type/key"
+    bool getResourceEntryName(int id, std::string* out) const;        // "key"
+    bool getResourceTypeName(int id, std::string* out) const;         // "type"
+    bool getResourcePackageName(int id, std::string* out) const;      // "pkg"
+
+    // --- value resolution ---
+    bool getValue(int id, TypedValue* outValue, bool resolveRefs) const;
+    bool getValue(const std::string& name, TypedValue* outValue, bool resolveRefs) const;
+
+    // --- typed getters (return defaults / 0 / "" on wrong type or not found) ---
+    std::string getString(int id) const;        // UTF-8
+    std::u16string getText(int id) const;        // UTF-16
+    int   getInteger(int id) const;
+    bool  getBoolean(int id) const;
+    float getFloat(int id) const;
+    int   getColor(int id) const;               // a packed ARGB color value
+    float getDimension(int id) const;           // px
+    int   getDimensionPixelOffset(int id) const;
+    int   getDimensionPixelSize(int id) const;
+    float getFraction(int id, float base, float pbase) const;
+    std::string getQuantityString(int id, int quantity) const;
+    std::u16string getQuantityText(int id, int quantity) const;
+
+    // --- raw / xml assets ---
+    Asset* openRawResource(int id, TypedValue* outValue = nullptr) const;
+    Asset* getXml(int id) const;        // binary AXML bytes (wrap in ResXMLTree)
+    Asset* getLayout(int id) const { return getXml(id); }
+    Asset* getAnimation(int id) const { return getXml(id); }
+
+    // --- GUI-object factories (virtual so cdroid::Resources can override;
+    // STUBBED returning nullptr here). ---
+    virtual Drawable*       getDrawable(int id, int density = 0) const;
+    virtual Drawable*       getDrawableForDensity(int id, int density) const;
+    virtual ColorStateList* getColorStateList(int id) const;
+    virtual Typeface*       getFont(int id) const;
+    virtual ComplexColor*   loadComplexColor(int id) const;
+    virtual Movie*          getMovie(int id) const;
+
+private:
+    Asset* openByStringId(int id) const;
+    bool   pathOf(int id, std::string* out) const;
+
+    AssetManager*       mAssets;
+    ResTable_config     mConfig;
+    DisplayMetrics      mMetrics;
+};
+
+} // namespace cdroid
+#endif // __CDROID_ANDROIDFW_RESOURCES_H__

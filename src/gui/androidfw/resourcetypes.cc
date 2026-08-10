@@ -27,7 +27,7 @@
 #include <porting/cdlog.h>   // unified project logging (LOGW/LOGD/...); backed by libtvhal
 #include <sys/types.h> // ssize_t
 #include <algorithm>   // std::lower_bound (sparse type entries)
-#include "LocaleData.h"   // vendored android::localeData* (locale matching engine)
+#include "LocaleData.h"   // vendored cdroid::localeData* (locale matching engine)
 
 namespace cdroid {
 
@@ -936,18 +936,18 @@ bool ResTable_config::isLocaleBetterThan(const ResTable_config& o,
                 } else {
                     return !(o.country[0] == '\0' || areIdentical(o.country, kUnitedStates));
                 }
-            } else if (android::localeDataIsCloseToUsEnglish(requested->country)) {
+            } else if (cdroid::localeDataIsCloseToUsEnglish(requested->country)) {
                 if (language[0] != '\0') {
-                    return android::localeDataIsCloseToUsEnglish(country);
+                    return cdroid::localeDataIsCloseToUsEnglish(country);
                 } else {
-                    return !android::localeDataIsCloseToUsEnglish(o.country);
+                    return !cdroid::localeDataIsCloseToUsEnglish(o.country);
                 }
             }
         }
         return (language[0] != '\0');
     }
 
-    const int region_comparison = android::localeDataCompareRegions(
+    const int region_comparison = cdroid::localeDataCompareRegions(
             country, o.country,
             requested->language, requested->localeScript, requested->country);
     if (region_comparison != 0) {
@@ -1151,7 +1151,7 @@ bool ResTable_config::match(const ResTable_config& settings) const {
             countriesMustMatch = true;
         } else {
             if (localeScript[0] == '\0' && !localeScriptWasComputed) {
-                android::localeDataComputeScript(computed_script, language, country);
+                cdroid::localeDataComputeScript(computed_script, language, country);
                 if (computed_script[0] == '\0') {
                     countriesMustMatch = true;
                 } else {

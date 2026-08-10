@@ -27,25 +27,22 @@
 #include <core/callbackbase.h>
 #include <core/attributeset.h>
 #include <core/displaymetrics.h>
-#include <androidfw/resources.h>   // android::Resources (+ Resources::Theme)
+#include <androidfw/resourcesimpl.h>   // cdroid::ResourcesImpl (+ Theme)
+#include <core/resources.h> // cdroid::Resources (full def — getResources() returns it)
 
 #define USE(FEATURE) (defined(USE_##FEATURE) && USE_##FEATURE)
 #define ENABLE(FEATURE) (defined(ENABLE_##FEATURE) && ENABLE_##FEATURE)
 
-// AOSP-aligned resource types (defined in the androidfw sub-library, now compiled
-// into cdroid.so). Forward-declared at GLOBAL scope so cdroid::Context can expose
-// the ID-based AOSP Context resource face; their full headers are included only
-// where needed (core/context.cc, assets.cc). Must NOT be nested in cdroid (would
-// create cdroid::android and shadow the real ::android used elsewhere, e.g.
-// android::localeDataComputeScript).
-namespace android { class Resources; class AssetManager; class Asset; }
-
+// AOSP-aligned resource types live in namespace cdroid (androidfw sub-library,
+// compiled into cdroid.so). Their full definitions come via <androidfw/resourcesimpl.h>
+// included above (ResourcesImpl / AssetManager / Asset / ResTable::Theme / TypedValue).
 namespace cdroid{
 class Drawable;
 class ColorStateList;
 class Typeface;
 class Intent;
 class TypedArray;
+class Resources;       // cdroid::Resources (resources.h) — the GUI subclass
 class Context{
 public:
     virtual ~Context() = default;
@@ -59,7 +56,7 @@ public:
     // (engine = cdroid::ResTable::Theme); the legacy text-XML theme name is
     // getThemeName(). setTheme(int) applies a style resource; setTheme(const
     // std::string&) remains for text-XML compatibility.
-    virtual android::Resources::Theme& getTheme() = 0;
+    virtual ResTable::Theme& getTheme() = 0;
     virtual const std::string getThemeName() const = 0;
     virtual void setTheme(const std::string&theme) = 0;
     virtual void setTheme(int resid) = 0;
@@ -99,8 +96,8 @@ public:
     // int vs std::string). Default implementations live in core/context.cc and
     // delegate to getResources(); pure-virtual ones (getResources/getAssets/
     // getDrawable(int)/getColorStateList(int)) are implemented by Assets.
-    virtual android::Resources&      getResources() = 0;
-    virtual android::AssetManager&   getAssets() = 0;
+    virtual Resources&      getResources() = 0;
+    virtual AssetManager&   getAssets() = 0;
     virtual std::string    getString(int id);
     virtual std::u16string getText(int id);
     virtual std::string    getQuantityString(int id, int quantity);
@@ -109,7 +106,7 @@ public:
     virtual int            getInteger(int id);
     virtual float          getDimension(int id);
     virtual int            getDimensionPixelSize(int id);
-    virtual android::Asset* openRawResource(int id);
+    virtual Asset* openRawResource(int id);
     virtual Drawable*       getDrawable(int id) = 0;
     virtual ColorStateList* getColorStateList(int id) = 0;
     virtual Typeface*       getFont(int id);   // default nullptr (deferred)
