@@ -541,20 +541,37 @@ class PakBuilder(idgen.IDGenerater):
 
     # ----- aapt2 compile: compile res/ to binary AXML, return {rel_path: bytes} -----
     def _merge_widgetex_attrs(self, tmpres):
-        """Merge src/gui/widgetEx/res/values/attrs.xml + a generated public.xml
-        (from scripts/custom_attrids.txt) into the app's temp res/. widgetEx
-        custom attrs (app:xxx) aren't declared in the app's own res, so aapt2
-        link fails with "attribute not found"; declaring them fixes link, and
-        public.xml pins each attr's resource ID to the stable custom_attrids.txt
-        value so binary AXML attr IDs match the runtime styleable IDS[]
-        (widgetex_styleable.h) — obtainStyledAttributes resolves by attr ID."""
+        """Merge src/gui/widgetEx/res/ (the whole tree) + a generated public.xml
+        (from scripts/custom_attrids.txt) into the app's temp res/. Every app pak
+        (use_aapt2, not use_sdk) gets widgetEx resources this way so
+        ConstraintLayout/Flexbox/... app:xxx attrs link and resolve at runtime.
+        widgetEx attrs aren't declared in the app's own res, so aapt2 link would
+        fail "attribute not found"; declaring them fixes link, and public.xml
+        pins each attr's resource ID to the stable custom_attrids.txt value so
+        binary AXML attr IDs match the runtime styleable IDS[]
+        (widgetex_styleable.h) — obtainStyledAttributes resolves by attr ID.
+        widgetEx/res currently holds only attrs.xml, but walking the whole tree
+        means any future drawable/layout/values added there auto-merge too."""
         sdir = os.path.dirname(os.path.abspath(__file__))
         repo = os.path.dirname(sdir)
         values = os.path.join(tmpres, "values")
-        # Declare the styleables/attrs (aapt2 link needs the declarations).
-        attrs_src = os.path.join(repo, "src", "gui", "widgetEx", "res", "values", "attrs.xml")
-        if os.path.exists(attrs_src):
-            shutil.copyfile(attrs_src, os.path.join(values, "widgetex_attrs.xml"))
+        wres = os.path.join(repo, "src", "gui", "widgetEx", "res")
+        # Copy the whole widgetEx/res/ tree into tmpres/. values/attrs.xml is
+        # renamed to widgetex_attrs.xml so it doesn't clobber the app's own
+        # values/attrs.xml; every other file keeps its relative path.
+        if os.path.isdir(wres):
+            for root, dirs, files in os.walk(wres):
+                dirs.sort(); files.sort()
+                for f in files:
+                    src = os.path.join(root, f)
+                    rel = os.path.relpath(src, wres).replace(os.sep, "/")
+                    if rel == "values/attrs.xml":
+                        dst = os.path.join(values, "widgetex_attrs.xml")
+                    else:
+                        dst = os.path.join(tmpres, rel)
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    shutil.copyfile(src, dst)
+        os.makedirs(values, exist_ok=True)
         # Pin each attr's ID to its stable custom_attrids.txt value.
         ids_src = os.path.join(sdir, "custom_attrids.txt")
         if os.path.exists(ids_src):
