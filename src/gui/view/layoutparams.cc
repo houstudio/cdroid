@@ -1,5 +1,5 @@
 #include <view/layoutparams.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <view/viewgroup.h>
 #include <cdlog.h>
@@ -13,7 +13,7 @@ LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs):LayoutParams(){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::Layout::IDS, styleable::Layout::COUNT) : nullptr;
+        attrs, styleable::Layout::IDS) : nullptr;
     namespace SL = styleable::Layout;
     width = ta&&ta->hasValue(SL::layout_width)  ? ta->getLayoutDimension(SL::layout_width ,WRAP_CONTENT) : attrs.getLayoutDimension("layout_width" ,WRAP_CONTENT);
     height= ta&&ta->hasValue(SL::layout_height) ? ta->getLayoutDimension(SL::layout_height,WRAP_CONTENT) : attrs.getLayoutDimension("layout_height",WRAP_CONTENT);
@@ -58,7 +58,7 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::MarginLayout::IDS, styleable::MarginLayout::COUNT) : nullptr;
+        attrs, styleable::MarginLayout::IDS) : nullptr;
     namespace SML = styleable::MarginLayout;
     const int margin = ta&&ta->hasValue(SML::layout_margin) ? ta->getDimensionPixelSize(SML::layout_margin,-1) : attrs.getDimensionPixelSize("layout_margin",-1);
     mMarginFlags = 0;

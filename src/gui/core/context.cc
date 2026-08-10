@@ -55,25 +55,26 @@ Typeface* Context::getFont(int id) {
 
 // AOSP Resources.Theme.obtainStyledAttributes(attrs): resolve each attr against
 // the live theme (defStyleAttr=0, defStyleRes=0). Delegates to getTheme() like
-// the Java final in android.content.Context.
-std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const std::vector<int>& attrs) {
+// the Java final in android.content.Context. `attrs` is sentinel-terminated.
+std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const uint32_t* attrs) {
     ResTable::Theme& theme = getTheme();
     const ResTable& table = theme.getResTable();
-    std::vector<uint32_t> ids(attrs.begin(), attrs.end());  // int[] -> uint32_t[] for the resolver
-    std::vector<StyledAttr> styled(ids.size());
-    cdroid::obtainStyledAttributes(table, &theme, ids.data(), ids.size(), 0, 0, styled.data());
+    size_t n = 0; while (attrs[n]) n;   // count up to the trailing-0 sentinel
+    std::vector<StyledAttr> styled(n);
+    cdroid::obtainStyledAttributes(table, &theme, attrs, 0, 0, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
                                         getResources().getDisplayMetrics().density, this);
 }
 
 // AOSP Theme.obtainStyledAttributes(resId, attrs): resolve against a style on
-// top of the theme (defStyleAttr=0, defStyleRes=resId).
-std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const std::vector<int>& attrs) {
+// top of the theme (defStyleAttr=0, defStyleRes=resId). `attrs` is sentinel-
+// terminated.
+std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const uint32_t* attrs) {
     ResTable::Theme& theme = getTheme();
     const ResTable& table = theme.getResTable();
-    std::vector<uint32_t> ids(attrs.begin(), attrs.end());
-    std::vector<StyledAttr> styled(ids.size());
-    cdroid::obtainStyledAttributes(table, &theme, ids.data(), ids.size(), 0, (uint32_t)resid, styled.data());
+    size_t n = 0; while (attrs[n]) n;
+    std::vector<StyledAttr> styled(n);
+    cdroid::obtainStyledAttributes(table, &theme, attrs, 0, (uint32_t)resid, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
                                         getResources().getDisplayMetrics().density, this);
 }

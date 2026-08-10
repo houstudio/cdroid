@@ -21,7 +21,7 @@
  * Faithful port — see header for the supported feature surface.
  */
 #include <widgetEx/constraintlayout/constraintlayout.h>
-#include <widgetEx/widgetex_styleable.h>
+#include <widget/widgetex_styleable.h>
 #include <core/assets.h>
 #include <core/xmlpullparser.h>
 #include <widgetEx/constraintlayout/constraintlayoutstates.h>
@@ -82,7 +82,7 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::ConstraintLayoutLayout::IDS, styleable::ConstraintLayoutLayout::COUNT) : nullptr;
+        attrs, styleable::ConstraintLayoutLayout::IDS) : nullptr;
     namespace SCC = styleable::ConstraintLayoutLayout;
     // Anchor targets — accept either a resource id ("parent" -> PARENT_ID=0) or an int.
     leftToLeft   = ta&&ta->hasValue(SCC::layout_constraintLeft_toLeftOf)   ? (int)ta->getResourceId(SCC::layout_constraintLeft_toLeftOf,   UNSET) : attrs.getResourceId("layout_constraintLeft_toLeftOf",   UNSET);

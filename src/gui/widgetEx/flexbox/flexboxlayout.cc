@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/flexbox/flexboxlayout.h>
-#include <widgetEx/widgetex_styleable.h>
+#include <widget/widgetex_styleable.h>
 #include <core/assets.h>
 //REF:https://github.com/google/flexbox-layout/tree/main
 namespace cdroid{
@@ -32,7 +32,7 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::FlexboxLayout::IDS, styleable::FlexboxLayout::COUNT) : nullptr;
+        attrs, styleable::FlexboxLayout::IDS) : nullptr;
     namespace SFB = styleable::FlexboxLayout;
     mFlexDirection = ta&&ta->hasValue(SFB::flexDirection) ? ta->getInt(SFB::flexDirection,(int)FlexDirection::ROW) : attrs.getInt("flexDirection",std::unordered_map<std::string,int>{
             {"column",FlexDirection::COLUMN},
@@ -1207,7 +1207,7 @@ FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& a
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::FlexboxLayoutLayout::IDS, styleable::FlexboxLayoutLayout::COUNT) : nullptr;
+        attrs, styleable::FlexboxLayoutLayout::IDS) : nullptr;
     namespace SFL = styleable::FlexboxLayoutLayout;
 
     mOrder = ta&&ta->hasValue(SFL::layout_order) ? ta->getInt(SFL::layout_order, (int)ORDER_DEFAULT) : attrs.getInt("layout_order", (int)ORDER_DEFAULT);

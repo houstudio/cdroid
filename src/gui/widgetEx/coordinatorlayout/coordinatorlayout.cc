@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/coordinatorlayout/coordinatorlayout.h>
-#include <widgetEx/widgetex_styleable.h>
+#include <widget/widgetex_styleable.h>
 #include <core/assets.h>
 #include <widgetEx/viewgrouputils.h>
 #include <porting/cdlog.h>
@@ -35,7 +35,7 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::CoordinatorLayout::IDS, styleable::CoordinatorLayout::COUNT) : nullptr;
+        attrs, styleable::CoordinatorLayout::IDS) : nullptr;
     namespace SCL = styleable::CoordinatorLayout;
     std::string keylineArrayRes = ta&&ta->hasValue(SCL::keylines) ? ta->getString(SCL::keylines) : attrs.getString("keylines");
     if (!keylineArrayRes.empty()) {
@@ -1689,7 +1689,7 @@ CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeS
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::CoordinatorLayoutLayout::IDS, styleable::CoordinatorLayoutLayout::COUNT) : nullptr;
+        attrs, styleable::CoordinatorLayoutLayout::IDS) : nullptr;
     namespace SCL = styleable::CoordinatorLayoutLayout;
 
     this->gravity = ta&&ta->hasValue(SCL::layout_gravity) ? ta->getInt(SCL::layout_gravity,Gravity::NO_GRAVITY) : attrs.getGravity("layout_gravity",Gravity::NO_GRAVITY);

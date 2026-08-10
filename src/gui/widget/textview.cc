@@ -28,7 +28,7 @@
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <text/layout.h>
 #include <text/selection.h>
 #include <text/spannablestringbuilder.h>
@@ -153,7 +153,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     // int directly (no string→enum map on that path); text XML still needs maps.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::TextView::IDS, styleable::TextView::COUNT) : nullptr;
+        attrs, styleable::TextView::IDS) : nullptr;
     namespace STV = styleable::TextView;
 
     // --- gather phase: locals filled by the switch (binary) or attrs (text) ---

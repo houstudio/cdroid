@@ -1,5 +1,5 @@
 #include <widget/tablerow.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <cdlog.h>
 namespace cdroid{
@@ -21,7 +21,7 @@ TableRow::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::TableRowLayout::IDS, styleable::TableRowLayout::COUNT) : nullptr;
+        attrs, styleable::TableRowLayout::IDS) : nullptr;
     namespace STR = styleable::TableRowLayout;
     column= ta&&ta->hasValue(STR::layout_column) ? ta->getInt(STR::layout_column,-1) : attrs.getInt("layout_column",-1);
     span  = ta&&ta->hasValue(STR::layout_span)   ? ta->getInt(STR::layout_span,1)    : attrs.getInt("layout_span",1);

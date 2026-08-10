@@ -20,7 +20,7 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.MotionScene.
  */
 #include <widgetEx/constraintlayout/motion/motionscene.h>
-#include <widgetEx/widgetex_styleable.h>
+#include <widget/widgetex_styleable.h>
 #include <core/assets.h>
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/motion/touchresponse.h>
@@ -94,7 +94,7 @@ MotionScene::Transition::Transition(MotionScene& scene, const AttributeSet& a)
     Context* ctx = a.getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        a, styleable::Transition::IDS, styleable::Transition::COUNT) : nullptr;
+        a, styleable::Transition::IDS) : nullptr;
     namespace STR = styleable::Transition;
     mId = scene.getId(ta&&ta->hasValue(STR::id) ? ta->getString(STR::id) : a.getString("id", "")); // <Transition android:id="@+id/...">
     mConstraintSetStart = scene.getId(ta&&ta->hasValue(STR::constraintSetStart) ? ta->getString(STR::constraintSetStart) : a.getString("constraintSetStart", ""));

@@ -16,7 +16,7 @@
 + * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 + *********************************************************************************/
 #include <widget/adapterviewflipper.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 namespace cdroid{
 
@@ -27,7 +27,7 @@ AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet& attr
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::AdapterViewFlipper::IDS, styleable::AdapterViewFlipper::COUNT) : nullptr;
+        attrs, styleable::AdapterViewFlipper::IDS) : nullptr;
     namespace SAF = styleable::AdapterViewFlipper;
 
     mFlipInterval = ta&&ta->hasValue(SAF::flipInterval) ? ta->getInt(SAF::flipInterval, DEFAULT_INTERVAL) : attrs.getInt("flipInterval", DEFAULT_INTERVAL);

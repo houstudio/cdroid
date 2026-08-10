@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/linearlayout.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <cdlog.h>
  
@@ -29,7 +29,7 @@ LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::LinearLayoutLayout::IDS, styleable::LinearLayoutLayout::COUNT) : nullptr;
+        attrs, styleable::LinearLayoutLayout::IDS) : nullptr;
     namespace SLL = styleable::LinearLayoutLayout;
     weight = ta&&ta->hasValue(SLL::layout_weight) ? ta->getFloat(SLL::layout_weight, 0) : attrs.getFloat("layout_weight", 0);
     gravity= ta&&ta->hasValue(SLL::layout_gravity) ? ta->getInt(SLL::layout_gravity, -1) : attrs.getGravity("layout_gravity", -1);
@@ -101,7 +101,7 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
 
     Assets* assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = assets ? assets->obtainStyledAttributesTyped(
-        attrs, styleable::LinearLayout::IDS, styleable::LinearLayout::COUNT) : nullptr;
+        attrs, styleable::LinearLayout::IDS) : nullptr;
 
     // Defaults
     setBaselineAligned(true);

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/listview.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/checkable.h>
 #include <widget/R.h>
@@ -54,7 +54,7 @@ void ListView::initListView(const AttributeSet&attrs) {
     Context* ctx = getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::ListView::IDS, styleable::ListView::COUNT) : nullptr;
+        attrs, styleable::ListView::IDS) : nullptr;
     namespace SLV = styleable::ListView;
 
     Drawable* d = ctx->getDrawable(ta&&ta->hasValue(SLV::divider) ? ta->getString(SLV::divider) : attrs.getString("divider"));

@@ -47,10 +47,10 @@ int main() {
         if (xml.getEventType() == ResXMLParser::END_DOCUMENT) return 1;
     }
 
-    // attrs[] (a styleable set): [textColor, textSize].
-    const uint32_t attrs[] = { ATTR_TEXT_COLOR, ATTR_TEXT_SIZE };
+    // attrs[] (a styleable set): [textColor, textSize], sentinel-terminated.
+    const uint32_t attrs[] = { ATTR_TEXT_COLOR, ATTR_TEXT_SIZE, 0 };
     StyledAttr vals[2];
-    cdroid::obtainStyledAttributes(xml, table, /*theme*/nullptr, attrs, 2,
+    cdroid::obtainStyledAttributes(xml, table, /*theme*/nullptr, attrs,
                                    /*defStyleAttr*/0, /*defStyleRes*/0, vals);
 
     // Verify obtainStyledAttributes filled StyledAttr[] (TypedArray, the
@@ -67,9 +67,9 @@ int main() {
     C(cdroid::complexToFloat(vals[1].value.data) == 20.0f);
 
     // An attr nobody provides -> not set.
-    const uint32_t attrs2[] = { 0x01010099 /* some other attr */ };
+    const uint32_t attrs2[] = { 0x01010099 /* some other attr */, 0 };
     StyledAttr vals2[1];
-    cdroid::obtainStyledAttributes(xml, table, nullptr, attrs2, 1, 0, 0, vals2);
+    cdroid::obtainStyledAttributes(xml, table, nullptr, attrs2, 0, 0, vals2);
     C(!vals2[0].set);
 
     std::printf("full_typedarray: %d checks, %d failures\n", g_checks, g_failures);

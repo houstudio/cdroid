@@ -1,5 +1,5 @@
 #include <widget/radiogroup.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/radiobutton.h>
 #include <porting/cdlog.h>
@@ -20,7 +20,7 @@ RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::RadioGroup::IDS, styleable::RadioGroup::COUNT) : nullptr;
+        attrs, styleable::RadioGroup::IDS) : nullptr;
     namespace SRG = styleable::RadioGroup;
 
     const int value = ta&&ta->hasValue(SRG::checkedButton) ? (int)ta->getResourceId(SRG::checkedButton,(uint32_t)View::NO_ID) : attrs.getResourceId("checkedButton",View::NO_ID);

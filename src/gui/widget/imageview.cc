@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/imageview.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
@@ -30,7 +30,7 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     initImageView();
     Assets* _a = getContext() ? dynamic_cast<Assets*>(getContext()) : nullptr;
     auto ta = _a ? _a->obtainStyledAttributesTyped(
-        attrs, styleable::ImageView::IDS, styleable::ImageView::COUNT) : nullptr;
+        attrs, styleable::ImageView::IDS) : nullptr;
 
     mBaselineAlignBottom = attrs.getBoolean("baselineAlignBottom",false);
     mBaseline = (ta&&ta->hasValue(styleable::ImageView::baseline)) ? ta->getDimensionPixelSize(styleable::ImageView::baseline,-1) : attrs.getDimensionPixelSize("baseline",-1);

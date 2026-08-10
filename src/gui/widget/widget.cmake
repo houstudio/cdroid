@@ -1,5 +1,31 @@
 
+# --- Generated styleable headers (R.styleable.X[] equivalent) -----------------
+# gen_styleable.py emits framework_styleable.{h,cc} into widget/, alongside R.h
+# (which CreatePAK generates into widget/R.h). The files are checked in for
+# IDE/clangd and regenerated whenever their inputs change. To grow the framework
+# styleable set, edit src/gui/res/values/attrs.xml + the --include list below.
+set(_FW_STYLEABLE_GEN ${CMAKE_SOURCE_DIR}/scripts/gen_styleable.py)
+add_custom_command(
+    OUTPUT  ${PROJECT_SOURCE_DIR}/widget/framework_styleable.h
+            ${PROJECT_SOURCE_DIR}/widget/framework_styleable.cc
+    COMMAND ${Python_EXECUTABLE} ${_FW_STYLEABLE_GEN}
+            --attrs ${PROJECT_SOURCE_DIR}/res/values/attrs.xml
+            --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
+            --name-map ${CMAKE_SOURCE_DIR}/scripts/framework_namemap.txt
+            --include "AdapterViewAnimator,AdapterViewFlipper,AnalogClock,CheckedTextView,Chronometer,CompoundButton,FrameLayout,GridLayout,GridLayoutLayout,GridView,ImageView,Layout,LinearLayout,LinearLayoutLayout,ListView,MarginLayout,ProgressBar,RadioGroup,RatingBar,RelativeLayout,RelativeLayoutLayout,ScrollView,SeekBar,Spinner,Switch,TableRowLayout,TextClock,TextView,ToggleButton,View,ViewGroup"
+            --out-h  ${PROJECT_SOURCE_DIR}/widget/framework_styleable.h
+            --out-cc ${PROJECT_SOURCE_DIR}/widget/framework_styleable.cc
+            --guard __FRAMEWORK_STYLEABLE_H__ --header framework_styleable.h
+    DEPENDS ${PROJECT_SOURCE_DIR}/res/values/attrs.xml
+            ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
+            ${CMAKE_SOURCE_DIR}/scripts/framework_namemap.txt
+            ${_FW_STYLEABLE_GEN}
+    COMMENT "Generating widget/framework_styleable.{h,cc}"
+    VERBATIM
+)
+
 list(APPEND WIDGET_SOURCES
+    widget/framework_styleable.cc
     widget/edgeeffect.cc
     widget/scroller.cc
     widget/fastscroller.cc

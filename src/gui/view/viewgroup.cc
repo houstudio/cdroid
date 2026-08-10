@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/viewgroup.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <view/focusfinder.h>
 #include <view/accessibility/accessibilitymanager.h>
@@ -204,7 +204,7 @@ void ViewGroup::initGroup(){
 void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
     Assets* assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = assets ? assets->obtainStyledAttributesTyped(
-        atts, styleable::ViewGroup::IDS, styleable::ViewGroup::COUNT) : nullptr;
+        atts, styleable::ViewGroup::IDS) : nullptr;
 
     setClipChildren(true);
     setClipToPadding(true);

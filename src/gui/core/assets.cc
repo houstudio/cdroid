@@ -238,6 +238,15 @@ void Assets::ensureCdroidResources() const {
         for (const auto& p : mPakPaths) {
             mAssetManager->addAssetPath(p, nullptr);
         }
+        // Share the arsc table Assets already parsed (addResource reads each
+        // pak's resources.arsc into mResTable once). Without this, the lazy
+        // AssetManager would re-read and re-parse the very same arsc a second
+        // time when getResources() first touches it. mResTable is borrowed here
+        // and freed by ~Assets after the AssetManager is destroyed. The Header
+        // cookie differs (-1 here vs 1-based in appendPathToResTable) but the
+        // engine never reads the cookie, and raw files are opened by path
+        // (no-cookie openNonAsset), so sharing is safe.
+        if (mResTable) mAssetManager->setResTable(mResTable);
     }
     mCdroidResources = new cdroid::Resources(mAssetManager, const_cast<Assets*>(this));
 }
@@ -1378,8 +1387,9 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
 
 // Phase 2 TypedArray bridge: resolve binary AXML attrs to typed values via
 // androidfw obtainStyledAttributes. Returns null for text XML or no arsc.
+// `styleable` is sentinel-terminated; its length is read off the trailing 0.
 std::unique_ptr<TypedArray> Assets::obtainStyledAttributesTyped(
-    const AttributeSet& attrs, const uint32_t* styleable, size_t count,
+    const AttributeSet& attrs, const uint32_t* styleable,
     uint32_t defStyleAttr, uint32_t defStyleRes)
 {
     if (!mResTable) return nullptr;
@@ -1387,8 +1397,9 @@ std::unique_ptr<TypedArray> Assets::obtainStyledAttributesTyped(
     if (!parser || !parser->isBinaryAXML()) return nullptr;
     const ResXMLTree* xml = static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree());
     if (!xml) return nullptr;
+    size_t count = 0; while (styleable[count]) count++;   // sentinel-terminated
     std::vector<StyledAttr> styled(count);
-    cdroid::obtainStyledAttributes(*xml, *mResTable, mArscTheme, styleable, count,
+    cdroid::obtainStyledAttributes(*xml, *mResTable, mArscTheme, styleable,
                                     defStyleAttr, defStyleRes, styled.data());
     return std::make_unique<TypedArray>(*mResTable, std::move(styled), xml,
                                         mDisplayMetrics.density, this);

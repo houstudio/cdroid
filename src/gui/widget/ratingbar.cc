@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/ratingbar.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 
 namespace cdroid{
@@ -39,7 +39,7 @@ RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        atts, styleable::RatingBar::IDS, styleable::RatingBar::COUNT) : nullptr;
+        atts, styleable::RatingBar::IDS) : nullptr;
     namespace SRB = styleable::RatingBar;
 
     setIsIndicator(ta&&ta->hasValue(SRB::isIndicator) ? ta->getBoolean(SRB::isIndicator,!mIsUserSeekable) : atts.getBoolean("isIndicator",!mIsUserSeekable));

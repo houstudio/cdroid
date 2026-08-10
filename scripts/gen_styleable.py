@@ -111,6 +111,26 @@ def cident(name):
     return re.sub(r'[^0-9A-Za-z_]', '_', name)
 
 
+def wrap_items(items, width=88):
+    """Join `items` into comma-separated line strings, wrapping so each line's
+    item text stays <= `width` chars. Yields ~2-3 short entries per line (1-2 for
+    long qualified names) instead of one unreadable giant line. Returns a list of
+    line strings (no trailing commas — the caller adds them)."""
+    lines = []
+    cur = ''
+    for it in items:
+        if not cur:
+            cur = it
+        elif len(cur) + 2 + len(it) <= width:   # +2 for ', '
+            cur = cur + ', ' + it
+        else:
+            lines.append(cur)
+            cur = it
+    if cur:
+        lines.append(cur)
+    return lines
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--attrs', required=True)
@@ -191,7 +211,22 @@ def main():
     L.append('namespace styleable {')
     for out_name, resolved in styleables:
         L.append(f'    namespace {cident(out_name)} {{')
-        L.append('        enum { ' + ', '.join(cident(an) for an, _ in resolved) + ', COUNT };')
+        # Sentinel-terminated IDS[] (trailing 0) replaces the COUNT enumerator:
+        # the resolver loops while attrs[i] != 0, matching AOSP's single-param
+        # obtainStyledAttributes(int[]). The index enums keep 0..N-1 so widget
+        # code still indexes TypedArray by attr name. An empty styleable would
+        # yield an illegal empty enum, so guard with a placeholder enumerator.
+        if resolved:
+            wl = wrap_items([cident(an) for an, _ in resolved])
+            if len(wl) == 1:
+                L.append(f'        enum {{ {wl[0]} }};')
+            else:
+                L.append('        enum {')
+                for bl in wl[:-1]:
+                    L.append(f'            {bl},')
+                L.append(f'            {wl[-1]} }};')
+        else:
+            L.append('        enum { _none = 0 };')
         L.append('        extern const uint32_t IDS[];')
         L.append('    }')
     L.append('} // namespace styleable')
@@ -208,8 +243,16 @@ def main():
     C.append('namespace styleable {')
     for out_name, resolved in styleables:
         C.append(f'    namespace {cident(out_name)} {{')
-        ids = ', '.join(f'fw_attr::{cident(out_name)}::{cident(an)}' for an, _ in resolved)
-        C.append(f'        const uint32_t IDS[] = {{ {ids} }};')
+        entries = [f'fw_attr::{cident(out_name)}::{cident(an)}' for an, _ in resolved]
+        entries.append('0')   # trailing sentinel
+        wl = wrap_items(entries)
+        if len(wl) == 1:
+            C.append(f'        const uint32_t IDS[] = {{ {wl[0]} }};')
+        else:
+            C.append('        const uint32_t IDS[] = {')
+            for bl in wl[:-1]:
+                C.append(f'            {bl},')
+            C.append(f'            {wl[-1]} }};')
         C.append('    }')
     C.append('} // namespace styleable')
     C.append('} // namespace cdroid')

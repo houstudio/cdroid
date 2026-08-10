@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/spinner.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/listview.h>
 #include <widget/dropdownlistview.h>
@@ -79,7 +79,7 @@ Spinner::Spinner(Context*ctx,const AttributeSet&atts)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        atts, styleable::Spinner::IDS, styleable::Spinner::COUNT) : nullptr;
+        atts, styleable::Spinner::IDS) : nullptr;
     namespace SSP = styleable::Spinner;
 
     mGravity = ta&&ta->hasValue(SSP::gravity) ? ta->getInt(SSP::gravity,Gravity::CENTER) : atts.getGravity("gravity",Gravity::CENTER);

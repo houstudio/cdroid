@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/gridlayout.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/space.h>
 #include <porting/cdlog.h>
@@ -79,7 +79,7 @@ void GridLayout::LayoutParams::init(Context* context,const AttributeSet& attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::GridLayoutLayout::IDS, styleable::GridLayoutLayout::COUNT) : nullptr;
+        attrs, styleable::GridLayoutLayout::IDS) : nullptr;
     namespace SGL = styleable::GridLayoutLayout;
 
     const int gravity = ta&&ta->hasValue(SGL::layout_gravity) ? ta->getInt(SGL::layout_gravity, Gravity::NO_GRAVITY) : attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
@@ -139,7 +139,7 @@ GridLayout::GridLayout(Context*ctx,const AttributeSet&attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::GridLayout::IDS, styleable::GridLayout::COUNT) : nullptr;
+        attrs, styleable::GridLayout::IDS) : nullptr;
     namespace SGL = styleable::GridLayout;
 
     setOrientation(ta&&ta->hasValue(SGL::orientation) ? ta->getInt(SGL::orientation,DEFAULT_ORIENTATION) : attrs.getInt("orientation",std::unordered_map<std::string,int>{

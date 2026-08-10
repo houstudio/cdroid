@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/recyclerview/recyclerview.h>
-#include <widgetEx/widgetex_styleable.h>
+#include <widget/widgetex_styleable.h>
 #include <core/assets.h>
 #include <widgetEx/recyclerview/gapworker.h>
 #include <widgetEx/recyclerview/childhelper.h>
@@ -89,7 +89,7 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::RecyclerView::IDS, styleable::RecyclerView::COUNT) : nullptr;
+        attrs, styleable::RecyclerView::IDS) : nullptr;
     namespace SRV = styleable::RecyclerView;
 
     initRecyclerView();

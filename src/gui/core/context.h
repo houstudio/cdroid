@@ -88,8 +88,10 @@ public:
     // AOSP Resources.Theme.obtainStyledAttributes with AttributeSet == null.
     // Default impls delegate to getTheme() (see context.cc); the 4-arg
     // AttributeSet form is obtainStyledAttributesTyped on Assets (binary AXML).
-    virtual std::unique_ptr<TypedArray> obtainStyledAttributes(const std::vector<int>& attrs);
-    virtual std::unique_ptr<TypedArray> obtainStyledAttributes(int resid, const std::vector<int>& attrs);
+    // `attrs` is a sentinel-terminated attr-id array (trailing 0), matching
+    // styleable::X::IDS — the C++ analog of AOSP's int[] (no COUNT param).
+    virtual std::unique_ptr<TypedArray> obtainStyledAttributes(const uint32_t* attrs);
+    virtual std::unique_ptr<TypedArray> obtainStyledAttributes(int resid, const uint32_t* attrs);
 
     // --- AOSP-aligned ID-based resource face (android.content.Context) ---
     // Coexists with the string-based legacy methods above (overloads differ by

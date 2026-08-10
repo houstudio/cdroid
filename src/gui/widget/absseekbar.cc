@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <view/viewgroup.h>
 #include <widget/absseekbar.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/R.h>
 #include <math.h>
@@ -34,7 +34,7 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,att
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::SeekBar::IDS, styleable::SeekBar::COUNT) : nullptr;
+        attrs, styleable::SeekBar::IDS) : nullptr;
     namespace SSB = styleable::SeekBar;
 
     setThumb(ta&&ta->hasValue(SSB::thumb) ? ta->getDrawable(SSB::thumb) : attrs.getDrawable("thumb"));

@@ -1,6 +1,29 @@
 if(ENABLE_WEAR_WIDGETS OR ENABLE_RECYCLERVIEW)
+
+# --- Generated widgetEx styleable header (alongside R.h in widget/) -----------
+# Run gen_styleable.py by hand with --custom-ids to assign new custom attr ids
+# (append-only, stable); the build uses it read-only here.
+add_custom_command(
+    OUTPUT  ${PROJECT_SOURCE_DIR}/widget/widgetex_styleable.h
+            ${PROJECT_SOURCE_DIR}/widget/widgetex_styleable.cc
+    COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/gen_styleable.py
+            --attrs ${PROJECT_SOURCE_DIR}/widgetEx/res/values/attrs.xml
+            --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
+            --custom-ids ${CMAKE_SOURCE_DIR}/scripts/custom_attrids.txt
+            --name-map ${CMAKE_SOURCE_DIR}/scripts/widgetex_namemap.txt
+            --out-h  ${PROJECT_SOURCE_DIR}/widget/widgetex_styleable.h
+            --out-cc ${PROJECT_SOURCE_DIR}/widget/widgetex_styleable.cc
+            --guard __WIDGETEX_STYLEABLE_H__ --header widgetex_styleable.h
+    DEPENDS ${PROJECT_SOURCE_DIR}/widgetEx/res/values/attrs.xml
+            ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
+            ${CMAKE_SOURCE_DIR}/scripts/widgetex_namemap.txt
+            ${CMAKE_SOURCE_DIR}/scripts/gen_styleable.py
+    COMMENT "Generating widget/widgetex_styleable.{h,cc}"
+    VERBATIM
+)
+
 SET(WIDGETEX_SOURCES
-    widgetEx/widgetex_styleable.cc
+    widget/widgetex_styleable.cc
     widgetEx/recyclerview/viewinfostore.cc
     widgetEx/recyclerview/viewboundscheck.cc
     widgetEx/recyclerview/snaphelper.cc

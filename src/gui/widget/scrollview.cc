@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/scrollview.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/R.h>
 #include <view/focusfinder.h>
@@ -40,7 +40,7 @@ ScrollView::ScrollView(Context*context,const AttributeSet&atts)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        atts, styleable::ScrollView::IDS, styleable::ScrollView::COUNT) : nullptr;
+        atts, styleable::ScrollView::IDS) : nullptr;
     namespace SSV = styleable::ScrollView;
     setFillViewport(ta&&ta->hasValue(SSV::fillViewport) ? ta->getBoolean(SSV::fillViewport, false) : atts.getBoolean("fillViewport", false));
     mScrollDuration = atts.getInt("scrollDuration",400);

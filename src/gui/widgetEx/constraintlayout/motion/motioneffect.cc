@@ -20,7 +20,7 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.helper.widget.MotionEffect.
  */
 #include <widgetEx/constraintlayout/motion/motioneffect.h>
-#include <widgetEx/widgetex_styleable.h>
+#include <widget/widgetex_styleable.h>
 #include <core/assets.h>
 
 #include <cmath>
@@ -49,7 +49,7 @@ void MotionEffect::init(const AttributeSet& attrs) {
     Context* ctx = attrs.getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::MotionEffect::IDS, styleable::MotionEffect::COUNT) : nullptr;
+        attrs, styleable::MotionEffect::IDS) : nullptr;
     namespace SME = styleable::MotionEffect;
     mMotionEffectStart = std::max(0, std::min(99, ta&&ta->hasValue(SME::motionEffect_start) ? ta->getInt(SME::motionEffect_start, mMotionEffectStart) : attrs.getInt("motionEffect_start", mMotionEffectStart)));
     mMotionEffectEnd   = std::max(0, std::min(99, ta&&ta->hasValue(SME::motionEffect_end) ? ta->getInt(SME::motionEffect_end, mMotionEffectEnd) : attrs.getInt("motionEffect_end", mMotionEffectEnd)));

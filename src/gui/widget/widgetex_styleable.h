@@ -480,75 +480,195 @@ namespace fw_attr {
 
 namespace styleable {
     namespace CoordinatorLayout {
-        enum { keylines, statusBarBackground, COUNT };
+        enum { keylines, statusBarBackground };
         extern const uint32_t IDS[];
     }
     namespace CoordinatorLayoutLayout {
-        enum { layout_gravity, layout_behavior, layout_anchor, layout_keyline, layout_anchorGravity, layout_insetEdge, layout_dodgeInsetEdges, COUNT };
+        enum {
+            layout_gravity, layout_behavior, layout_anchor, layout_keyline, layout_anchorGravity,
+            layout_insetEdge, layout_dodgeInsetEdges };
         extern const uint32_t IDS[];
     }
     namespace FlexboxLayout {
-        enum { flexDirection, flexWrap, justifyContent, alignItems, alignContent, dividerDrawable, dividerDrawableHorizontal, dividerDrawableVertical, showDivider, showDividerHorizontal, showDividerVertical, maxLine, COUNT };
+        enum {
+            flexDirection, flexWrap, justifyContent, alignItems, alignContent, dividerDrawable,
+            dividerDrawableHorizontal, dividerDrawableVertical, showDivider, showDividerHorizontal,
+            showDividerVertical, maxLine };
         extern const uint32_t IDS[];
     }
     namespace FlexboxLayoutLayout {
-        enum { layout_order, layout_flexGrow, layout_flexShrink, layout_flexBasisPercent, layout_alignSelf, layout_minWidth, layout_minHeight, layout_maxWidth, layout_maxHeight, layout_wrapBefore, COUNT };
+        enum {
+            layout_order, layout_flexGrow, layout_flexShrink, layout_flexBasisPercent,
+            layout_alignSelf, layout_minWidth, layout_minHeight, layout_maxWidth, layout_maxHeight,
+            layout_wrapBefore };
         extern const uint32_t IDS[];
     }
     namespace ConstraintLayoutLayout {
-        enum { orientation, minWidth, minHeight, maxWidth, maxHeight, visibility, elevation, layout_optimizationLevel, layoutDescription, constraintSet, barrierDirection, barrierAllowsGoneWidgets, barrierMargin, constraint_referenced_ids, constraint_referenced_tags, chainUseRtl, flow_horizontalStyle, flow_verticalStyle, flow_wrapMode, flow_maxElementsWrap, flow_horizontalGap, flow_verticalGap, padding, paddingTop, paddingBottom, paddingLeft, paddingRight, paddingStart, paddingEnd, flow_verticalAlign, flow_horizontalAlign, flow_verticalBias, flow_horizontalBias, flow_firstHorizontalStyle, flow_firstVerticalStyle, flow_firstHorizontalBias, flow_firstVerticalBias, flow_lastHorizontalStyle, flow_lastVerticalStyle, flow_lastHorizontalBias, flow_lastVerticalBias, circularflow_radiusInDP, circularflow_angles, circularflow_viewCenter, circularflow_defaultRadius, circularflow_defaultAngle, layout_constraintCircle, layout_constraintCircleRadius, layout_constraintCircleAngle, layout_constraintGuide_begin, layout_constraintGuide_end, layout_constraintGuide_percent, guidelineUseRtl, layout_constraintLeft_toLeftOf, layout_constraintLeft_toRightOf, layout_constraintRight_toLeftOf, layout_constraintRight_toRightOf, layout_constraintTop_toTopOf, layout_constraintTop_toBottomOf, layout_constraintBottom_toTopOf, layout_constraintBottom_toBottomOf, layout_constraintBaseline_toBaselineOf, layout_constraintBaseline_toTopOf, layout_constraintBaseline_toBottomOf, layout_constraintStart_toEndOf, layout_constraintStart_toStartOf, layout_constraintEnd_toStartOf, layout_constraintEnd_toEndOf, layout_goneMarginLeft, layout_goneMarginTop, layout_goneMarginRight, layout_goneMarginBottom, layout_goneMarginStart, layout_goneMarginEnd, layout_goneMarginBaseline, layout_marginBaseline, layout_constraintWidth, layout_constraintHeight, layout_width, layout_height, layout_margin, layout_marginHorizontal, layout_marginVertical, layout_marginLeft, layout_marginRight, layout_marginTop, layout_marginBottom, layout_marginStart, layout_marginEnd, layout_constrainedWidth, layout_constrainedHeight, layout_constraintHorizontal_bias, layout_constraintVertical_bias, layout_constraintWidth_default, layout_constraintHeight_default, layout_constraintWidth_min, layout_constraintWidth_max, layout_constraintWidth_percent, layout_constraintHeight_min, layout_constraintHeight_max, layout_constraintHeight_percent, layout_constraintLeft_creator, layout_constraintTop_creator, layout_constraintRight_creator, layout_constraintBottom_creator, layout_constraintBaseline_creator, layout_constraintDimensionRatio, layout_constraintHorizontal_weight, layout_constraintVertical_weight, layout_constraintHorizontal_chainStyle, layout_constraintVertical_chainStyle, layout_editor_absoluteX, layout_editor_absoluteY, layout_constraintTag, layout_wrapBehaviorInParent, COUNT };
+        enum {
+            orientation, minWidth, minHeight, maxWidth, maxHeight, visibility, elevation,
+            layout_optimizationLevel, layoutDescription, constraintSet, barrierDirection,
+            barrierAllowsGoneWidgets, barrierMargin, constraint_referenced_ids,
+            constraint_referenced_tags, chainUseRtl, flow_horizontalStyle, flow_verticalStyle,
+            flow_wrapMode, flow_maxElementsWrap, flow_horizontalGap, flow_verticalGap, padding,
+            paddingTop, paddingBottom, paddingLeft, paddingRight, paddingStart, paddingEnd,
+            flow_verticalAlign, flow_horizontalAlign, flow_verticalBias, flow_horizontalBias,
+            flow_firstHorizontalStyle, flow_firstVerticalStyle, flow_firstHorizontalBias,
+            flow_firstVerticalBias, flow_lastHorizontalStyle, flow_lastVerticalStyle,
+            flow_lastHorizontalBias, flow_lastVerticalBias, circularflow_radiusInDP,
+            circularflow_angles, circularflow_viewCenter, circularflow_defaultRadius,
+            circularflow_defaultAngle, layout_constraintCircle, layout_constraintCircleRadius,
+            layout_constraintCircleAngle, layout_constraintGuide_begin, layout_constraintGuide_end,
+            layout_constraintGuide_percent, guidelineUseRtl, layout_constraintLeft_toLeftOf,
+            layout_constraintLeft_toRightOf, layout_constraintRight_toLeftOf,
+            layout_constraintRight_toRightOf, layout_constraintTop_toTopOf,
+            layout_constraintTop_toBottomOf, layout_constraintBottom_toTopOf,
+            layout_constraintBottom_toBottomOf, layout_constraintBaseline_toBaselineOf,
+            layout_constraintBaseline_toTopOf, layout_constraintBaseline_toBottomOf,
+            layout_constraintStart_toEndOf, layout_constraintStart_toStartOf,
+            layout_constraintEnd_toStartOf, layout_constraintEnd_toEndOf, layout_goneMarginLeft,
+            layout_goneMarginTop, layout_goneMarginRight, layout_goneMarginBottom,
+            layout_goneMarginStart, layout_goneMarginEnd, layout_goneMarginBaseline,
+            layout_marginBaseline, layout_constraintWidth, layout_constraintHeight, layout_width,
+            layout_height, layout_margin, layout_marginHorizontal, layout_marginVertical,
+            layout_marginLeft, layout_marginRight, layout_marginTop, layout_marginBottom,
+            layout_marginStart, layout_marginEnd, layout_constrainedWidth, layout_constrainedHeight,
+            layout_constraintHorizontal_bias, layout_constraintVertical_bias,
+            layout_constraintWidth_default, layout_constraintHeight_default,
+            layout_constraintWidth_min, layout_constraintWidth_max, layout_constraintWidth_percent,
+            layout_constraintHeight_min, layout_constraintHeight_max,
+            layout_constraintHeight_percent, layout_constraintLeft_creator,
+            layout_constraintTop_creator, layout_constraintRight_creator,
+            layout_constraintBottom_creator, layout_constraintBaseline_creator,
+            layout_constraintDimensionRatio, layout_constraintHorizontal_weight,
+            layout_constraintVertical_weight, layout_constraintHorizontal_chainStyle,
+            layout_constraintVertical_chainStyle, layout_editor_absoluteX, layout_editor_absoluteY,
+            layout_constraintTag, layout_wrapBehaviorInParent };
         extern const uint32_t IDS[];
     }
     namespace Constraint {
-        enum { orientation, id, visibility, visibilityMode, alpha, elevation, rotation, rotationX, rotationY, scaleX, scaleY, pivotAnchor, transformPivotX, transformPivotY, transformPivotTarget, translationX, translationY, translationZ, layout_width, layout_height, layout_constraintWidth, layout_constraintHeight, layout_marginStart, layout_marginBottom, layout_marginTop, layout_marginEnd, layout_marginLeft, layout_marginRight, layout_constraintCircle, layout_constraintCircleRadius, layout_constraintCircleAngle, layout_constraintGuide_begin, layout_constraintGuide_end, layout_constraintGuide_percent, guidelineUseRtl, layout_constraintLeft_toLeftOf, layout_constraintLeft_toRightOf, layout_constraintRight_toLeftOf, layout_constraintRight_toRightOf, layout_constraintTop_toTopOf, layout_constraintTop_toBottomOf, layout_constraintBottom_toTopOf, layout_constraintBottom_toBottomOf, layout_constraintBaseline_toBaselineOf, layout_constraintBaseline_toTopOf, layout_constraintBaseline_toBottomOf, layout_constraintStart_toEndOf, layout_constraintStart_toStartOf, layout_constraintEnd_toStartOf, layout_constraintEnd_toEndOf, layout_goneMarginLeft, layout_goneMarginTop, layout_goneMarginRight, layout_goneMarginBottom, layout_goneMarginStart, layout_goneMarginEnd, layout_goneMarginBaseline, layout_marginBaseline, layout_constrainedWidth, layout_constrainedHeight, layout_constraintHorizontal_bias, layout_constraintVertical_bias, layout_constraintWidth_default, layout_constraintHeight_default, layout_constraintWidth_min, layout_constraintWidth_max, layout_constraintWidth_percent, layout_constraintHeight_min, layout_constraintHeight_max, layout_constraintHeight_percent, layout_constraintLeft_creator, layout_constraintTop_creator, layout_constraintRight_creator, layout_constraintBottom_creator, layout_constraintBaseline_creator, layout_constraintDimensionRatio, layout_constraintHorizontal_weight, layout_constraintVertical_weight, layout_constraintHorizontal_chainStyle, layout_constraintVertical_chainStyle, layout_editor_absoluteX, layout_editor_absoluteY, layout_wrapBehaviorInParent, barrierDirection, barrierMargin, constraint_referenced_ids, constraint_referenced_tags, maxHeight, maxWidth, minHeight, minWidth, barrierAllowsGoneWidgets, chainUseRtl, flow_horizontalStyle, flow_verticalStyle, flow_verticalAlign, flow_horizontalAlign, flow_verticalBias, flow_horizontalBias, flow_wrapMode, flow_maxElementsWrap, flow_horizontalGap, flow_verticalGap, flow_firstHorizontalStyle, flow_firstVerticalStyle, flow_firstHorizontalBias, flow_firstVerticalBias, flow_lastHorizontalStyle, flow_lastVerticalStyle, flow_lastHorizontalBias, flow_lastVerticalBias, animateRelativeTo, animateCircleAngleTo, transitionEasing, pathMotionArc, polarRelativeTo, transitionPathRotate, drawPath, motionProgress, layout_constraintTag, motionStagger, quantizeMotionSteps, quantizeMotionPhase, quantizeMotionInterpolator, COUNT };
+        enum {
+            orientation, id, visibility, visibilityMode, alpha, elevation, rotation, rotationX,
+            rotationY, scaleX, scaleY, pivotAnchor, transformPivotX, transformPivotY,
+            transformPivotTarget, translationX, translationY, translationZ, layout_width,
+            layout_height, layout_constraintWidth, layout_constraintHeight, layout_marginStart,
+            layout_marginBottom, layout_marginTop, layout_marginEnd, layout_marginLeft,
+            layout_marginRight, layout_constraintCircle, layout_constraintCircleRadius,
+            layout_constraintCircleAngle, layout_constraintGuide_begin, layout_constraintGuide_end,
+            layout_constraintGuide_percent, guidelineUseRtl, layout_constraintLeft_toLeftOf,
+            layout_constraintLeft_toRightOf, layout_constraintRight_toLeftOf,
+            layout_constraintRight_toRightOf, layout_constraintTop_toTopOf,
+            layout_constraintTop_toBottomOf, layout_constraintBottom_toTopOf,
+            layout_constraintBottom_toBottomOf, layout_constraintBaseline_toBaselineOf,
+            layout_constraintBaseline_toTopOf, layout_constraintBaseline_toBottomOf,
+            layout_constraintStart_toEndOf, layout_constraintStart_toStartOf,
+            layout_constraintEnd_toStartOf, layout_constraintEnd_toEndOf, layout_goneMarginLeft,
+            layout_goneMarginTop, layout_goneMarginRight, layout_goneMarginBottom,
+            layout_goneMarginStart, layout_goneMarginEnd, layout_goneMarginBaseline,
+            layout_marginBaseline, layout_constrainedWidth, layout_constrainedHeight,
+            layout_constraintHorizontal_bias, layout_constraintVertical_bias,
+            layout_constraintWidth_default, layout_constraintHeight_default,
+            layout_constraintWidth_min, layout_constraintWidth_max, layout_constraintWidth_percent,
+            layout_constraintHeight_min, layout_constraintHeight_max,
+            layout_constraintHeight_percent, layout_constraintLeft_creator,
+            layout_constraintTop_creator, layout_constraintRight_creator,
+            layout_constraintBottom_creator, layout_constraintBaseline_creator,
+            layout_constraintDimensionRatio, layout_constraintHorizontal_weight,
+            layout_constraintVertical_weight, layout_constraintHorizontal_chainStyle,
+            layout_constraintVertical_chainStyle, layout_editor_absoluteX, layout_editor_absoluteY,
+            layout_wrapBehaviorInParent, barrierDirection, barrierMargin, constraint_referenced_ids,
+            constraint_referenced_tags, maxHeight, maxWidth, minHeight, minWidth,
+            barrierAllowsGoneWidgets, chainUseRtl, flow_horizontalStyle, flow_verticalStyle,
+            flow_verticalAlign, flow_horizontalAlign, flow_verticalBias, flow_horizontalBias,
+            flow_wrapMode, flow_maxElementsWrap, flow_horizontalGap, flow_verticalGap,
+            flow_firstHorizontalStyle, flow_firstVerticalStyle, flow_firstHorizontalBias,
+            flow_firstVerticalBias, flow_lastHorizontalStyle, flow_lastVerticalStyle,
+            flow_lastHorizontalBias, flow_lastVerticalBias, animateRelativeTo, animateCircleAngleTo,
+            transitionEasing, pathMotionArc, polarRelativeTo, transitionPathRotate, drawPath,
+            motionProgress, layout_constraintTag, motionStagger, quantizeMotionSteps,
+            quantizeMotionPhase, quantizeMotionInterpolator };
         extern const uint32_t IDS[];
     }
     namespace Transition {
-        enum { id, constraintSetStart, constraintSetEnd, transitionDisable, layoutDuringTransition, pathMotionArc, autoTransition, motionInterpolator, duration, staggered, transitionFlags, COUNT };
+        enum {
+            id, constraintSetStart, constraintSetEnd, transitionDisable, layoutDuringTransition,
+            pathMotionArc, autoTransition, motionInterpolator, duration, staggered, transitionFlags };
         extern const uint32_t IDS[];
     }
     namespace MotionScene {
-        enum { defaultDuration, layoutDuringTransition, COUNT };
+        enum { defaultDuration, layoutDuringTransition };
         extern const uint32_t IDS[];
     }
     namespace OnSwipe {
-        enum { dragScale, dragThreshold, autoCompleteMode, maxVelocity, maxAcceleration, springMass, springStiffness, springDamping, springStopThreshold, springBoundary, dragDirection, touchAnchorId, touchAnchorSide, rotationCenterId, touchRegionId, limitBoundsTo, nestedScrollFlags, moveWhenScrollAtTop, onTouchUp, COUNT };
+        enum {
+            dragScale, dragThreshold, autoCompleteMode, maxVelocity, maxAcceleration, springMass,
+            springStiffness, springDamping, springStopThreshold, springBoundary, dragDirection,
+            touchAnchorId, touchAnchorSide, rotationCenterId, touchRegionId, limitBoundsTo,
+            nestedScrollFlags, moveWhenScrollAtTop, onTouchUp };
         extern const uint32_t IDS[];
     }
     namespace KeyAttribute {
-        enum { framePosition, motionTarget, transitionEasing, curveFit, motionProgress, alpha, elevation, rotation, rotationX, rotationY, transformPivotX, transformPivotY, transformPivotTarget, transitionPathRotate, scaleX, scaleY, translationX, translationY, translationZ, COUNT };
+        enum {
+            framePosition, motionTarget, transitionEasing, curveFit, motionProgress, alpha,
+            elevation, rotation, rotationX, rotationY, transformPivotX, transformPivotY,
+            transformPivotTarget, transitionPathRotate, scaleX, scaleY, translationX, translationY,
+            translationZ };
         extern const uint32_t IDS[];
     }
     namespace KeyPosition {
-        enum { keyPositionType, percentX, percentY, percentWidth, percentHeight, framePosition, motionTarget, transitionEasing, pathMotionArc, curveFit, drawPath, sizePercent, COUNT };
+        enum {
+            keyPositionType, percentX, percentY, percentWidth, percentHeight, framePosition,
+            motionTarget, transitionEasing, pathMotionArc, curveFit, drawPath, sizePercent };
         extern const uint32_t IDS[];
     }
     namespace KeyCycle {
-        enum { motionTarget, curveFit, framePosition, transitionEasing, motionProgress, waveShape, wavePhase, wavePeriod, waveOffset, waveVariesBy, transitionPathRotate, alpha, elevation, rotation, rotationX, rotationY, scaleX, scaleY, translationX, translationY, translationZ, COUNT };
+        enum {
+            motionTarget, curveFit, framePosition, transitionEasing, motionProgress, waveShape,
+            wavePhase, wavePeriod, waveOffset, waveVariesBy, transitionPathRotate, alpha, elevation,
+            rotation, rotationX, rotationY, scaleX, scaleY, translationX, translationY, translationZ };
         extern const uint32_t IDS[];
     }
     namespace KeyTimeCycle {
-        enum { framePosition, motionTarget, transitionEasing, curveFit, waveShape, wavePeriod, motionProgress, waveOffset, wavePhase, waveDecay, alpha, elevation, rotation, rotationX, rotationY, transitionPathRotate, scaleX, scaleY, translationX, translationY, translationZ, COUNT };
+        enum {
+            framePosition, motionTarget, transitionEasing, curveFit, waveShape, wavePeriod,
+            motionProgress, waveOffset, wavePhase, waveDecay, alpha, elevation, rotation, rotationX,
+            rotationY, transitionPathRotate, scaleX, scaleY, translationX, translationY,
+            translationZ };
         extern const uint32_t IDS[];
     }
     namespace Motion {
-        enum { animateRelativeTo, animateCircleAngleTo, transitionEasing, pathMotionArc, motionPathRotate, motionStagger, drawPath, quantizeMotionSteps, quantizeMotionPhase, quantizeMotionInterpolator, COUNT };
+        enum {
+            animateRelativeTo, animateCircleAngleTo, transitionEasing, pathMotionArc,
+            motionPathRotate, motionStagger, drawPath, quantizeMotionSteps, quantizeMotionPhase,
+            quantizeMotionInterpolator };
         extern const uint32_t IDS[];
     }
     namespace KeyTrigger {
-        enum { framePosition, motionTarget, triggerReceiver, onNegativeCross, onPositiveCross, onCross, viewTransitionOnNegativeCross, viewTransitionOnPositiveCross, viewTransitionOnCross, triggerSlack, triggerId, motion_postLayoutCollision, motion_triggerOnCollision, COUNT };
+        enum {
+            framePosition, motionTarget, triggerReceiver, onNegativeCross, onPositiveCross, onCross,
+            viewTransitionOnNegativeCross, viewTransitionOnPositiveCross, viewTransitionOnCross,
+            triggerSlack, triggerId, motion_postLayoutCollision, motion_triggerOnCollision };
         extern const uint32_t IDS[];
     }
     namespace ViewTransition {
-        enum { id, motionTarget, viewTransitionMode, onStateTransition, duration, upDuration, transitionDisable, pathMotionArc, motionInterpolator, SharedValueId, SharedValue, setsTag, clearsTag, ifTagSet, ifTagNotSet, COUNT };
+        enum {
+            id, motionTarget, viewTransitionMode, onStateTransition, duration, upDuration,
+            transitionDisable, pathMotionArc, motionInterpolator, SharedValueId, SharedValue,
+            setsTag, clearsTag, ifTagSet, ifTagNotSet };
         extern const uint32_t IDS[];
     }
     namespace MotionEffect {
-        enum { motionEffect_start, motionEffect_end, motionEffect_translationX, motionEffect_translationY, motionEffect_alpha, motionEffect_viewTransition, motionEffect_move, motionEffect_strict, COUNT };
+        enum {
+            motionEffect_start, motionEffect_end, motionEffect_translationX,
+            motionEffect_translationY, motionEffect_alpha, motionEffect_viewTransition,
+            motionEffect_move, motionEffect_strict };
         extern const uint32_t IDS[];
     }
     namespace RecyclerView {
-        enum { layoutManager, orientation, descendantFocusability, clipToPadding, spanCount, reverseLayout, stackFromEnd, fastScrollEnabled, fastScrollVerticalThumbDrawable, fastScrollVerticalTrackDrawable, fastScrollHorizontalThumbDrawable, fastScrollHorizontalTrackDrawable, isScrollToTopEnabled, COUNT };
+        enum {
+            layoutManager, orientation, descendantFocusability, clipToPadding, spanCount,
+            reverseLayout, stackFromEnd, fastScrollEnabled, fastScrollVerticalThumbDrawable,
+            fastScrollVerticalTrackDrawable, fastScrollHorizontalThumbDrawable,
+            fastScrollHorizontalTrackDrawable, isScrollToTopEnabled };
         extern const uint32_t IDS[];
     }
 } // namespace styleable

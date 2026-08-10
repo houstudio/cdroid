@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/analogclock.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <systemclock.h>
 #include <core/calendar.h>
@@ -35,7 +35,7 @@ AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::AnalogClock::IDS, styleable::AnalogClock::COUNT) : nullptr;
+        attrs, styleable::AnalogClock::IDS) : nullptr;
     namespace SAC = styleable::AnalogClock;
 
     setDial (ta&&ta->hasValue(SAC::dial)        ? ta->getDrawable(SAC::dial)        : attrs.getDrawable("dial"));

@@ -264,10 +264,15 @@ private:
 // One resolved attribute. stringBlock is the owning header index for TYPE_STRING
 // values sourced from a style/theme (element-sourced strings use the AXML pool).
 // (Declared in resourcetypes.h as part of the foundational types.)
+//
+// `attrs` is a SENTINEL-terminated array of attribute resource ids (trailing 0),
+// matching AOSP's single-parameter obtainStyledAttributes(int[]) and CDROID's
+// styleable::X::IDS (which gen_styleable.py emits with a trailing 0). The
+// resolver loops while attrs[i] != 0; `out` must hold at least that many slots.
 
 void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
                             const ResTable::Theme* theme,
-                            const uint32_t* attrs, size_t attrCount,
+                            const uint32_t* attrs,
                             uint32_t defStyleAttr, uint32_t defStyleRes,
                             StyledAttr* out);
 
@@ -278,7 +283,7 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
 // to (defStyleAttr=0, defStyleRes=0); Theme.obtainStyledAttributes(resId, attrs)
 // maps to (defStyleAttr=0, defStyleRes=resId).
 void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
-                            const uint32_t* attrs, size_t attrCount,
+                            const uint32_t* attrs,
                             uint32_t defStyleAttr, uint32_t defStyleRes,
                             StyledAttr* out);
 

@@ -127,15 +127,16 @@ public:
     size_t getArray(const std::string&resid,std::vector<int>&)override;
     size_t getArray(const std::string&resid,std::vector<std::string>&)override;
     RefPtr<ColorStateList> getColorStateList(const std::string&resid)override;
-    // Bring the ID-based obtainStyledAttributes(vector<int>) overloads from
+    // Bring the ID-based obtainStyledAttributes(const uint32_t*) overloads from
     // Context into Assets scope; otherwise the string overload above hides them
     // (C++ name hiding).
     using Context::obtainStyledAttributes;
     AttributeSet obtainStyledAttributes(const std::string&)override;
     // Phase 2 TypedArray bridge: extract typed attr values from binary AXML.
-    // Returns null for text XML. styleable/count = R.styleable.View[] equivalent.
+    // Returns null for text XML. `styleable` is a sentinel-terminated attr-id
+    // array (trailing 0) = R.styleable.View[] equivalent.
     std::unique_ptr<TypedArray> obtainStyledAttributesTyped(
-        const AttributeSet& attrs, const uint32_t* styleable, size_t count,
+        const AttributeSet& attrs, const uint32_t* styleable,
         uint32_t defStyleAttr = 0, uint32_t defStyleRes = 0);
 };
 

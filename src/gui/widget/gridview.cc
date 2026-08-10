@@ -1,5 +1,5 @@
 #include <widget/gridview.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/checkable.h>
 #include <widget/R.h>
@@ -20,7 +20,7 @@ GridView::GridView(Context*ctx,const AttributeSet&atts)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        atts, styleable::GridView::IDS, styleable::GridView::COUNT) : nullptr;
+        atts, styleable::GridView::IDS) : nullptr;
     namespace SGV = styleable::GridView;
 
     setHorizontalSpacing(ta&&ta->hasValue(SGV::horizontalSpacing) ? ta->getDimensionPixelOffset(SGV::horizontalSpacing,10) : atts.getDimensionPixelOffset("horizontalSpacing",10));

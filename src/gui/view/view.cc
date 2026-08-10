@@ -23,7 +23,7 @@
 #include <view/ghostview.h>
 #include <view/viewgroup.h>
 #include <view/floatingactionmode.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
@@ -85,7 +85,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     // return integers directly — no string→enum map needed.
     Assets* assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = assets ? assets->obtainStyledAttributesTyped(
-        attrs, styleable::View::IDS, styleable::View::COUNT) : nullptr;
+        attrs, styleable::View::IDS) : nullptr;
     // (namespace alias not allowed in function body in C++14)
     // Phase 2: TypedArray switch loop (AOSP View.java pattern).
     // Binary AXML: single-pass over set indices. Text XML: AttributeSet fallback.

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/relativelayout.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <cstring>
 #include <porting/cdlog.h>
@@ -55,7 +55,7 @@ RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::RelativeLayout::IDS, styleable::RelativeLayout::COUNT) : nullptr;
+        attrs, styleable::RelativeLayout::IDS) : nullptr;
     namespace SRL = styleable::RelativeLayout;
     mIgnoreGravity = ta&&ta->hasValue(SRL::ignoreGravity) ? (int)ta->getResourceId(SRL::ignoreGravity,(uint32_t)View::NO_ID) : attrs.getResourceId("ignoreGravity", View::NO_ID);
     mGravity = ta&&ta->hasValue(SRL::gravity) ? ta->getInt(SRL::gravity,mGravity) : attrs.getGravity("gravity",mGravity);
@@ -894,7 +894,7 @@ RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):
     // Phase 2: TypedArray switch-loop (22 rules = many attrs → loop, AOSP pattern).
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        atts, styleable::RelativeLayoutLayout::IDS, styleable::RelativeLayoutLayout::COUNT) : nullptr;
+        atts, styleable::RelativeLayoutLayout::IDS) : nullptr;
     namespace SRL = styleable::RelativeLayoutLayout;
 
     if (ta) {

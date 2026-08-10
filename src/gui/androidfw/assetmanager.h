@@ -104,6 +104,15 @@ public:
     // The complete resource table (lazily built from each path's resources.arsc).
     const ResTable& getResources(bool required = true) const;
 
+    // Inject a pre-built ResTable so getResources()/getResTable() return it
+    // verbatim instead of re-reading and re-parsing resources.arsc from each
+    // asset path. The table is BORROWED (non-owning): the caller owns it and it
+    // must outlive this AssetManager. This lets a host that already parsed the
+    // arsc (e.g. cdroid::Assets::mResTable) share its table with this AOSP layer,
+    // avoiding a duplicate parse of the same data. If this manager had already
+    // built its own table, that owned copy is released first.
+    void setResTable(ResTable* table);
+
     // True if no referenced file has changed since this manager was created.
     bool isUpToDate();
 
@@ -154,6 +163,7 @@ private:
     std::vector<asset_path> mAssetPaths;
     char*                   mLocale = nullptr;
     mutable ResTable*       mResources = nullptr;
+    mutable bool            mOwnsResources = false;   // true when getResTable() new'd mResources
     ResTable_config*        mConfig;
 };
 

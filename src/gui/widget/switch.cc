@@ -1,5 +1,5 @@
 #include <widget/switch.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <utils/mathutils.h>
 #include <text/textutils.h>
@@ -20,7 +20,7 @@ Switch::Switch(Context* context,const AttributeSet& a)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        a, styleable::Switch::IDS, styleable::Switch::COUNT) : nullptr;
+        a, styleable::Switch::IDS) : nullptr;
     namespace SW = styleable::Switch;
 
     mThumbDrawable = ta&&ta->hasValue(SW::thumb) ? ta->getDrawable(SW::thumb) : a.getDrawable("thumb");

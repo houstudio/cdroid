@@ -72,7 +72,7 @@ int32_t AssetManager::getGlobalCount() {
     return gAmCount;
 }
 
-AssetManager::AssetManager() : mLocale(nullptr), mResources(nullptr), mConfig(new ResTable_config) {
+AssetManager::AssetManager() : mLocale(nullptr), mResources(nullptr), mOwnsResources(false), mConfig(new ResTable_config) {
     gAmCount++;
     memset(mConfig, 0, sizeof(ResTable_config));
     if (kIsDebug) LOGI("Creating AssetManager %p #%d", this, gAmCount);
@@ -88,7 +88,9 @@ AssetManager::~AssetManager() {
         }
     }
     delete mConfig;
-    delete mResources;
+    // Only free the table this manager actually owns. An injected (setResTable)
+    // table is borrowed from the host and freed by the host.
+    if (mOwnsResources) delete mResources;
     delete[] mLocale;
 }
 
@@ -266,6 +268,7 @@ const ResTable* AssetManager::getResTable(bool required) const {
     }
 
     mResources = new ResTable();
+    mOwnsResources = true;
     self->updateResourceParams();
 
     bool onlyEmptyResources = true;
@@ -279,8 +282,20 @@ const ResTable* AssetManager::getResTable(bool required) const {
         LOGW("Unable to find resources file resources.arsc");
         delete mResources;
         mResources = nullptr;
+        mOwnsResources = false;
     }
     return mResources;
+}
+
+// Borrowed-table injection (see header). getResTable() then short-circuits on
+// the early `mResources != nullptr` return, so the per-path arsc is never
+// re-parsed. updateResourceParams() is NOT run on an injected table: the host
+// owns the request configuration (e.g. cdroid::Assets::applyLocale sets it).
+void AssetManager::setResTable(ResTable* table) {
+    if (table == mResources) return;          // nothing to do (same pointer)
+    if (mOwnsResources) delete mResources;    // release a self-built table
+    mResources = table;
+    mOwnsResources = false;                   // borrowed; freed by the host
 }
 
 void AssetManager::updateResourceParams() const {

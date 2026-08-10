@@ -16,7 +16,7 @@
 + * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 + *********************************************************************************/
 #include <widget/adapterviewanimator.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <animation/animatorinflater.h>
 namespace cdroid{
@@ -29,7 +29,7 @@ AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet& at
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::AdapterViewAnimator::IDS, styleable::AdapterViewAnimator::COUNT) : nullptr;
+        attrs, styleable::AdapterViewAnimator::IDS) : nullptr;
     namespace SAV = styleable::AdapterViewAnimator;
 
     std::string res = ta&&ta->hasValue(SAV::inAnimation) ? ta->getString(SAV::inAnimation) : attrs.getString("inAnimation");

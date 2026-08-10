@@ -742,10 +742,10 @@ ssize_t ResTable::Theme::resolveAttributeReference(Res_value* inOutValue, ssize_
 
 void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
                             const ResTable::Theme* theme,
-                            const uint32_t* attrs, size_t attrCount,
+                            const uint32_t* attrs,
                             uint32_t defStyleAttr, uint32_t defStyleRes,
                             StyledAttr* out) {
-    for (size_t i = 0; i < attrCount; i++) { out[i].set = false; out[i].stringBlock = -1; }
+    for (size_t i = 0; attrs[i] != 0; i++) { out[i].set = false; out[i].stringBlock = -1; }
     if (xml.getEventType() != ResXMLParser::START_TAG) return;
 
     // The element's style= attribute (no namespace, name "style") -> style resId.
@@ -773,7 +773,7 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
     if (styleRes) chain.applyStyle(styleRes);
 
     const size_t elemCount = xml.getAttributeCount();
-    for (size_t i = 0; i < attrCount; i++) {
+    for (size_t i = 0; attrs[i] != 0; i++) {
         const uint32_t a = attrs[i];
         // 1. Element's own attribute (matched by resource id).
         bool found = false;
@@ -810,10 +810,10 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
 // Attr (resolved via theme), then for each attr prefer the chain, falling back
 // to the theme base value. Used by AOSP Resources.Theme.obtainStyledAttributes.
 void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
-                            const uint32_t* attrs, size_t attrCount,
+                            const uint32_t* attrs,
                             uint32_t defStyleAttr, uint32_t defStyleRes,
                             StyledAttr* out) {
-    for (size_t i = 0; i < attrCount; i++) { out[i].set = false; out[i].stringBlock = -1; }
+    for (size_t i = 0; attrs[i] != 0; i++) { out[i].set = false; out[i].stringBlock = -1; }
 
     // Style/theme fallback chain. Lowest priority is applied first so the
     // sticky "first-set wins" rule yields the right precedence.
@@ -827,7 +827,7 @@ void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
         }
     }
 
-    for (size_t i = 0; i < attrCount; i++) {
+    for (size_t i = 0; attrs[i] != 0; i++) {
         const uint32_t a = attrs[i];
         // 1. style / defStyleAttr / defStyleRes chain.
         Res_value v;

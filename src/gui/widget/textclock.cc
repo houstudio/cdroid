@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/textclock.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <core/systemclock.h>
 #include <utils/textutils.h>
@@ -61,7 +61,7 @@ TextClock::TextClock(Context* context,const AttributeSet& attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::TextClock::IDS, styleable::TextClock::COUNT) : nullptr;
+        attrs, styleable::TextClock::IDS) : nullptr;
     namespace STC = styleable::TextClock;
     mFormat12 = ta&&ta->hasValue(STC::format12Hour) ? ta->getString(STC::format12Hour) : attrs.getString("format12Hour");
     mFormat24 = ta&&ta->hasValue(STC::format24Hour) ? ta->getString(STC::format24Hour) : attrs.getString("format24Hour");

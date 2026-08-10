@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/progressbar.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/objectanimator.h>
@@ -77,7 +77,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::ProgressBar::IDS, styleable::ProgressBar::COUNT) : nullptr;
+        attrs, styleable::ProgressBar::IDS) : nullptr;
     namespace SPB = styleable::ProgressBar;
 
     Drawable* progressDrawable = ta&&ta->hasValue(SPB::progressDrawable) ? ta->getDrawable(SPB::progressDrawable) : attrs.getDrawable("progressDrawable");

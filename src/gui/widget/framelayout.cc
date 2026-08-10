@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/framelayout.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <porting/cdlog.h>
 
@@ -36,7 +36,7 @@ FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs)
     {
         Assets* _a = context ? dynamic_cast<Assets*>(context) : nullptr;
         auto ta = _a ? _a->obtainStyledAttributesTyped(
-            attrs, styleable::FrameLayout::IDS, styleable::FrameLayout::COUNT) : nullptr;
+            attrs, styleable::FrameLayout::IDS) : nullptr;
         if (ta) {
             for (size_t n = ta->getIndexCount(); n > 0; ) {
                 size_t i = ta->getIndex(--n);
@@ -287,7 +287,7 @@ FrameLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     // layout_gravity is shared with LinearLayout's styleable (same framework attr).
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        attrs, styleable::LinearLayoutLayout::IDS, styleable::LinearLayoutLayout::COUNT) : nullptr;
+        attrs, styleable::LinearLayoutLayout::IDS) : nullptr;
     gravity = ta&&ta->hasValue(styleable::LinearLayoutLayout::layout_gravity) ? ta->getInt(styleable::LinearLayoutLayout::layout_gravity,UNSPECIFIED_GRAVITY) : attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
 }
 

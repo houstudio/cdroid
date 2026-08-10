@@ -103,6 +103,40 @@ int main() {
         CHECK(b[0] == 0x03 && b[1] == 0x00);
     }
 
+    // --- setResTable injection: share a host-owned table so getResources()
+    // returns it verbatim (no re-parse of resources.arsc) and the AssetManager
+    // does NOT take ownership — the borrowed table outlives the manager. This is
+    // the cdroid::Assets path (Assets::mResTable shared with its AssetManager). ---
+    {
+        ResTable prebuilt;
+        {
+            std::unique_ptr<Asset> arsc(am.openNonAsset("resources.arsc", Asset::ACCESS_BUFFER));
+            CHECK(arsc != nullptr);
+            CHECK(prebuilt.add(arsc->getBuffer(false), (size_t)arsc->getLength(),
+                               /*cookie*/-1, /*copyData*/true) == NO_ERROR);
+        }
+        const uint32_t helloDirect = prebuilt.getIdentifier("hello", "string", "com.example.restbl");
+        CHECK(helloDirect != 0);
+        CHECK(helloDirect == helloId);   // equivalent to the manager-built table
+
+        {
+            AssetManager am3;
+            int32_t c3 = 0;
+            CHECK(am3.addAssetPath(arscApk, &c3));
+            am3.setResTable(&prebuilt);               // borrowed
+            // getResources() returns the SAME table object — no second parse.
+            CHECK(&am3.getResources() == &prebuilt);
+            CHECK(am3.getResources().getIdentifier("hello", "string",
+                                                   "com.example.restbl") == helloDirect);
+            // Asset paths are still registered for file opening.
+            std::unique_ptr<Asset> again(am3.openNonAsset("resources.arsc", Asset::ACCESS_BUFFER));
+            CHECK(again != nullptr);
+        }   // ~am3 must NOT delete the borrowed table
+
+        // The host table survived the AssetManager (no double-free / UAF).
+        CHECK(prebuilt.getIdentifier("hello", "string", "com.example.restbl") == helloDirect);
+    }
+
     // --- setConfiguration / getConfiguration round-trip + getLocales ---
     {
         ResTable_config cfg;

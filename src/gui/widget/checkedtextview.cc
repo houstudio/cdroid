@@ -1,5 +1,5 @@
 #include <widget/checkedtextview.h>
-#include <core/framework_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 namespace cdroid{
 
@@ -9,7 +9,7 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextVie
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        a, styleable::CheckedTextView::IDS, styleable::CheckedTextView::COUNT) : nullptr;
+        a, styleable::CheckedTextView::IDS) : nullptr;
     namespace SCT = styleable::CheckedTextView;
 
     Drawable* d = context->getDrawable(ta&&ta->hasValue(SCT::checkMark) ? ta->getString(SCT::checkMark) : a.getString("checkMark"));

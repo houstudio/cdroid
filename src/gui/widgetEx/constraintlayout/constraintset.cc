@@ -27,7 +27,7 @@
 #include <view/layoutinflater.h>
 #include <view/view.h>
 #include <widgetEx/constraintlayout/constraintset.h>
-#include <widgetEx/widgetex_styleable.h>
+#include <widget/widgetex_styleable.h>
 #include <core/assets.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 
@@ -681,7 +681,7 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     Context* ctx = a.getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
-        a, styleable::Constraint::IDS, styleable::Constraint::COUNT) : nullptr;
+        a, styleable::Constraint::IDS) : nullptr;
     namespace SCN = styleable::Constraint;
 
     // --- id + anchor targets (resolve "parent"/"@id/x" -> int via Context) ---
