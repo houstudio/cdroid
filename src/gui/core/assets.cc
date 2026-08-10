@@ -18,6 +18,8 @@
 #include <assets.h>
 #include <core/typedarray.h>   // TypedArray (constructed in obtainStyledAttributesTyped)
 #include "androidfw/LocaleData.h"  // localeDataComputeScript (arsc locale config)
+#include "androidfw/assetmanager.h"   // android::AssetManager
+#include "resources_cdroid.h"         // cdroid::Resources
 #include <algorithm>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -203,6 +205,8 @@ Assets::Assets(const std::string&path):Assets() {
 }
 
 Assets::~Assets() {
+    delete mCdroidResources;   // holds mAssetManager as a borrowed pointer
+    delete mAssetManager;
     delete mArscTheme;
     delete mResTable;
     for(auto& cls:mStateColors){
@@ -222,6 +226,42 @@ Assets::~Assets() {
     mStrings.clear();
     mStyles.clear();
     LOGD("~Assets %p!",this);
+}
+
+// --- Lazy ID-based resource layer (AOSP android::Resources/AssetManager) ---
+// Built on first use from the pak paths recorded in addResource(); the legacy
+// string-based mResTable path is untouched.
+void Assets::ensureCdroidResources() const {
+    if (mCdroidResources != nullptr) return;
+    if (mAssetManager == nullptr) {
+        mAssetManager = new android::AssetManager();
+        for (const auto& p : mPakPaths) {
+            mAssetManager->addAssetPath(p, nullptr);
+        }
+    }
+    mCdroidResources = new cdroid::Resources(mAssetManager, const_cast<Assets*>(this));
+}
+
+android::Resources& Assets::getResources() {
+    ensureCdroidResources();
+    return *mCdroidResources;
+}
+
+android::AssetManager& Assets::getAssets() {
+    ensureCdroidResources();
+    return *mAssetManager;
+}
+
+Drawable* Assets::getDrawable(int id) {
+    ensureCdroidResources();
+    if (mCdroidResources == nullptr) return nullptr;
+    return mCdroidResources->getDrawable(id, 0);   // delegates back to getDrawable(string)
+}
+
+ColorStateList* Assets::getColorStateList(int id) {
+    ensureCdroidResources();
+    if (mCdroidResources == nullptr) return nullptr;
+    return mCdroidResources->getColorStateList(id);
 }
 
 const DisplayMetrics& Assets::getDisplayMetrics()const{
@@ -434,6 +474,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
 }
 
 int Assets::addResource(const std::string&path,const std::string&name) {
+    mPakPaths.push_back(path);   // recorded for the lazy ID-based AssetManager
     ZIPArchive*pak = new ZIPArchive(path);
     std::string package = name;
     if(name.empty()) {

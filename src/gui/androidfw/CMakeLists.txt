@@ -17,17 +17,36 @@ set(ANDROIDFW_SOURCES
     resourcetypes.cc        # foundational binary-format types + ResStringPool/ResXMLTree/ResTable_config
     restable.cc             # ResTable engine (arsc load/getResource) + obtainStyledAttributes
     LocaleData.cpp          # vendored locale matching engine (CLDR tables)
+    asset.cc                # Asset / _FileAsset / _CompressedAsset (read-only byte stream)
+    assetdir.cc             # AssetDir (directory listing)
+    assetmanager.cc         # legacy AssetManager (wraps ResTable; zip backend via libzip)
+    resources.cc            # Resources: ID-based value/meta/asset facade over AssetManager
 )
 
-add_library(androidfw STATIC ${ANDROIDFW_SOURCES})
-# Own headers (PUBLIC so consumers/tests find resourcetypes.h) + the generated
-# porting include tree for <porting/cdlog.h>. Link tvhal (PUBLIC) so the cdlog
-# LogMessage backend is pulled in for this lib and for the test target below.
+# libzip is the zip backend for AssetManager (replaces AOSP ZipFileRO/libziparchive);
+# zlib is used directly by asset.cc for gzip inflate. ZIP is already found project-wide
+# (cmake/options.cmake); find again here so this module is self-contained.
+find_package(ZIP REQUIRED)
+find_package(ZLIB REQUIRED)
+
+# OBJECT library: androidfw's compiled objects are linked directly into cdroid.so
+# (cdroid target links `androidfw`) AND reused by the standalone unit-test targets
+# below — compiled once, shared. This makes androidfw "participate in cdroid.so as
+# source" without a separate .a archive. POSITION_INDEPENDENT_CODE is required so the
+# same objects can link into the cdroid SHARED lib.
+add_library(androidfw OBJECT ${ANDROIDFW_SOURCES})
+set_target_properties(androidfw PROPERTIES POSITION_INDEPENDENT_CODE ON)
+# Own headers (PUBLIC so consumers/tests find resourcetypes.h / assetmanager.h) +
+# the generated porting include tree for <porting/cdlog.h>. Link tvhal (PUBLIC) so
+# the cdlog LogMessage backend is pulled in for this lib and for the test targets.
 target_include_directories(androidfw
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
-           ${CMAKE_BINARY_DIR}/include)
-target_link_libraries(androidfw PUBLIC tvhal)
+           ${CMAKE_BINARY_DIR}/include
+    PRIVATE ${ZIP_INCLUDE_DIRS})
+target_link_libraries(androidfw PUBLIC tvhal ${ZIP_LIBRARIES} ZLIB::ZLIB)
 target_compile_options(androidfw PRIVATE -Wall -Wextra -Werror)
+# Asset public API uses off64_t/lseek64 (AOSP-faithful); expose LFS to consumers too.
+target_compile_definitions(androidfw PUBLIC _LARGEFILE64_SOURCE)
 
 # --- Unit tests (no GUI / runtime deps; link the static lib) ---
 enable_testing()
@@ -73,6 +92,22 @@ add_test(NAME mgmt COMMAND androidfw_mgmt_test)
 add_executable(androidfw_traverse_test traverse_test.cc)
 target_link_libraries(androidfw_traverse_test PRIVATE androidfw)
 add_test(NAME traverse COMMAND androidfw_traverse_test)
+
+# Legacy AssetManager: addAssetPath/open/openNonAsset/openDir + ResTable wiring,
+# exercising real apks in testdata/_gen.
+add_executable(androidfw_assetmanager_test assetmanager_test.cc)
+target_link_libraries(androidfw_assetmanager_test PRIVATE androidfw)
+target_compile_definitions(androidfw_assetmanager_test PRIVATE
+    ANDROIDFW_TESTDATA="${CMAKE_CURRENT_SOURCE_DIR}/testdata")
+add_test(NAME assetmanager COMMAND androidfw_assetmanager_test)
+
+# Resources: ID-based value/meta/asset resolution over an AssetManager (isolated;
+# GUI factories are stubbed). Uses the arsc testdata apk.
+add_executable(androidfw_resources_test resources_test.cc)
+target_link_libraries(androidfw_resources_test PRIVATE androidfw)
+target_compile_definitions(androidfw_resources_test PRIVATE
+    ANDROIDFW_TESTDATA="${CMAKE_CURRENT_SOURCE_DIR}/testdata")
+add_test(NAME resources COMMAND androidfw_resources_test)
 
 # Closed-loop demo: dump a binary AXML tree (fixture or any file arg), like
 # `aapt2 dump xmltree`. Verifies the parser end to end.

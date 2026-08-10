@@ -19,6 +19,7 @@
 #define __ASSETS_H__
 #include <memory>
 #include <string>
+#include <vector>
 #include <functional>
 #include <unordered_map>
 #include <core/variant.h>
@@ -27,9 +28,19 @@
 #include "core/typedarray.h"      // TypedArray: consumer-side typed attr view
 
 namespace cdroid{
+class Resources;  // cdroid::Resources (resources_cdroid.h) — lazy ID-based facade
+// android::AssetManager is forward-declared at global scope in context.h.
 
 class Assets:public Context{
 private:
+    // Lazy ID-based resource layer (AOSP android::Resources/AssetManager), built
+    // on first getResources()/getAssets() from the pak paths recorded in
+    // addResource(). Coexists with the legacy string-based members below.
+    std::vector<std::string>        mPakPaths;
+    mutable android::AssetManager*  mAssetManager = nullptr;
+    mutable cdroid::Resources*      mCdroidResources = nullptr;
+    void ensureCdroidResources() const;
+
     int mNextAutofillViewId;
     std::string mLanguage;
     std::string mThemeName;
@@ -100,6 +111,11 @@ public:
     std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;
     std::unique_ptr<std::istream> getInputStream(const std::string&resname,std::string*outpkg=nullptr)override;
     Drawable * getDrawable(const std::string&resid)override;
+    // AOSP ID-based overrides (cdroid::Context resource face).
+    android::Resources&      getResources() override;
+    android::AssetManager&   getAssets() override;
+    Drawable*                getDrawable(int id) override;
+    ColorStateList*          getColorStateList(int id) override;
     bool getBoolean(const std::string&resid)const override;
     int getColor(const std::string&resid)override;
     int getDimension(const std::string&resid)const override;

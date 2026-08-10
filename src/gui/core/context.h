@@ -29,9 +29,18 @@
 #define USE(FEATURE) (defined(USE_##FEATURE) && USE_##FEATURE)
 #define ENABLE(FEATURE) (defined(ENABLE_##FEATURE) && ENABLE_##FEATURE)
 
+// AOSP-aligned resource types (defined in the androidfw sub-library, now compiled
+// into cdroid.so). Forward-declared at GLOBAL scope so cdroid::Context can expose
+// the ID-based AOSP Context resource face; their full headers are included only
+// where needed (core/context.cc, assets.cc). Must NOT be nested in cdroid (would
+// create cdroid::android and shadow the real ::android used elsewhere, e.g.
+// android::localeDataComputeScript).
+namespace android { class Resources; class AssetManager; class Asset; }
+
 namespace cdroid{
 class Drawable;
 class ColorStateList;
+class Typeface;
 class Intent;
 class Context{
 public:
@@ -69,6 +78,26 @@ public:
     virtual size_t getArray(const std::string&resname,std::vector<int>&) = 0;
     virtual RefPtr<ColorStateList> getColorStateList(const std::string&resid) = 0;
     virtual AttributeSet obtainStyledAttributes(const std::string&resid) = 0;
+
+    // --- AOSP-aligned ID-based resource face (android.content.Context) ---
+    // Coexists with the string-based legacy methods above (overloads differ by
+    // int vs std::string). Default implementations live in core/context.cc and
+    // delegate to getResources(); pure-virtual ones (getResources/getAssets/
+    // getDrawable(int)/getColorStateList(int)) are implemented by Assets.
+    virtual android::Resources&      getResources() = 0;
+    virtual android::AssetManager&   getAssets() = 0;
+    virtual std::string    getString(int id);
+    virtual std::u16string getText(int id);
+    virtual std::string    getQuantityString(int id, int quantity);
+    virtual int            getColor(int id);
+    virtual bool           getBoolean(int id);
+    virtual int            getInteger(int id);
+    virtual float          getDimension(int id);
+    virtual int            getDimensionPixelSize(int id);
+    virtual android::Asset* openRawResource(int id);
+    virtual Drawable*       getDrawable(int id) = 0;
+    virtual ColorStateList* getColorStateList(int id) = 0;
+    virtual Typeface*       getFont(int id);   // default nullptr (deferred)
 };
 
 }
