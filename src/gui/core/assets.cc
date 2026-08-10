@@ -1323,6 +1323,19 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
             key = name;
             name= themeString(key, resPkg);
             atts.add(key,name);
+            // A theme attr that resolves to a style reference: capture the style
+            // resId directly (the themeString -> name -> arscGetIdentifier round-
+            // trip below can fail to recover it). Lets obtainStyledAttributesTyped
+            // re-resolve the style through the arsc theme resolver.
+            if (mResTable) {
+                uint32_t attrId = arscGetIdentifier(key, "attr", resPkg);
+                Res_value tv;
+                if (attrId && arscThemeAttribute(attrId, &tv) &&
+                    (tv.dataType == Res_value::TYPE_REFERENCE ||
+                     tv.dataType == Res_value::TYPE_DYNAMIC_REFERENCE)) {
+                    atts.setStyleResourceId((int)tv.data);
+                }
+            }
             if((pos=name.find('@'))!=std::string::npos)
                 name.erase(pos,1);
             pos = name.find("attr");

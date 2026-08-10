@@ -202,9 +202,33 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
     if (!peekValue(idx, &v)) return nullptr;
     if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
         return new ColorDrawable(v.data);
-    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE) {
+    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
+        v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
         std::string name = a->arscReferenceName(v.data);
         if (!name.empty()) return a->getDrawable(name);
+        return nullptr;
+    }
+    // Style-sourced drawables are stored as TYPE_STRING (the file path, e.g.
+    // "res/drawable/ic_menu_moreoverflow_material.xml") rather than a reference
+    // id; load the drawable from that path. (AOSP's TypedArray.getDrawable loads
+    // via the string value the same way.)
+    if (v.dataType == Res_value::TYPE_STRING) {
+        std::string s = getString(idx);
+        // Style-sourced drawables come as a framework file path
+        // "res/drawable/<name>.<ext>" (aapt2 stores style bag drawable values as
+        // TYPE_STRING paths, not reference ids). Re-resolve it as a framework
+        // drawable ref so getDrawable looks in the framework pak (cdroid.pak),
+        // not the app's; fall back to the raw path.
+        if (s.compare(0, 4, "res/") == 0) {
+            size_t sl = s.find_last_of('/');
+            size_t dot = s.find_last_of('.');
+            std::string base = (sl != std::string::npos)
+                ? s.substr(sl + 1, (dot != std::string::npos && dot > sl) ? dot - sl - 1 : std::string::npos)
+                : s;
+            Drawable* d = a->getDrawable("@android:drawable/" + base);
+            if (d) return d;
+        }
+        if (!s.empty()) return a->getDrawable(s);
     }
     return nullptr;
 }
