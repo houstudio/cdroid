@@ -36,12 +36,14 @@ AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs)
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::AnalogClock::IDS) : nullptr;
+    if (ta) {
     namespace SAC = styleable::AnalogClock;
 
-    setDial (ta&&ta->hasValue(SAC::dial)        ? ta->getDrawable(SAC::dial)        : attrs.getDrawable("dial"));
-    setHourHand( ta&&ta->hasValue(SAC::hand_hour)   ? ta->getDrawable(SAC::hand_hour)   : attrs.getDrawable("hand_hour"));
-    setMinuteHand( ta&&ta->hasValue(SAC::hand_minute) ? ta->getDrawable(SAC::hand_minute) : attrs.getDrawable("hand_minute"));
-    setSecondHand( ta&&ta->hasValue(SAC::hand_second) ? ta->getDrawable(SAC::hand_second) : attrs.getDrawable("hand_second"));
+    setDial (ta->getDrawable(SAC::dial));
+    setHourHand( ta->getDrawable(SAC::hand_hour));
+    setMinuteHand( ta->getDrawable(SAC::hand_minute));
+    setSecondHand( ta->getDrawable(SAC::hand_second));
+    }
 }
 
 AnalogClock::AnalogClock(int w,int h):View(w,h){

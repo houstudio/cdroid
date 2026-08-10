@@ -41,9 +41,11 @@ ScrollView::ScrollView(Context*context,const AttributeSet&atts)
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         atts, styleable::ScrollView::IDS) : nullptr;
+    if (ta) {
     namespace SSV = styleable::ScrollView;
-    setFillViewport(ta&&ta->hasValue(SSV::fillViewport) ? ta->getBoolean(SSV::fillViewport, false) : atts.getBoolean("fillViewport", false));
+    setFillViewport(ta->getBoolean(SSV::fillViewport, false));
     mScrollDuration = atts.getInt("scrollDuration",400);
+    }
 }
 
 ScrollView::~ScrollView(){

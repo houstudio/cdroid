@@ -40,12 +40,13 @@ RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         atts, styleable::RatingBar::IDS) : nullptr;
+    if (ta) {
     namespace SRB = styleable::RatingBar;
 
-    setIsIndicator(ta&&ta->hasValue(SRB::isIndicator) ? ta->getBoolean(SRB::isIndicator,!mIsUserSeekable) : atts.getBoolean("isIndicator",!mIsUserSeekable));
-    const int numStars  = ta&&ta->hasValue(SRB::numStars) ? ta->getInt(SRB::numStars,mNumStars) : atts.getInt("numStars",mNumStars);
-    const float rating  = ta&&ta->hasValue(SRB::rating) ? ta->getFloat(SRB::rating,-1) : atts.getFloat("rating",-1);
-    const float stepSize= ta&&ta->hasValue(SRB::stepSize) ? ta->getFloat(SRB::stepSize,-1) : atts.getFloat("stepSize",-1);
+    setIsIndicator(ta->getBoolean(SRB::isIndicator,!mIsUserSeekable));
+    const int numStars  = ta->getInt(SRB::numStars,mNumStars);
+    const float rating  = ta->getFloat(SRB::rating,-1);
+    const float stepSize= ta->getFloat(SRB::stepSize,-1);
     if( (numStars>0) && (numStars!=mNumStars) )
         setNumStars(numStars);
     setStepSize((stepSize>=0)?stepSize:0.5f);
@@ -54,6 +55,7 @@ RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
     // A touch inside a star fill up to that fractional area (slightly more
     // than 0.5 so boundaries round up).
     mTouchProgressOffset = 0.6f;
+    }
 }
 
 void RatingBar::setOnRatingBarChangeListener(const OnRatingBarChangeListener& listener){

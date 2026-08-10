@@ -21,17 +21,17 @@ RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::RadioGroup::IDS) : nullptr;
+    if (ta) {
     namespace SRG = styleable::RadioGroup;
 
-    const int value = ta&&ta->hasValue(SRG::checkedButton) ? (int)ta->getResourceId(SRG::checkedButton,(uint32_t)View::NO_ID) : attrs.getResourceId("checkedButton",View::NO_ID);
+    const int value = (int)ta->getResourceId(SRG::checkedButton,(uint32_t)View::NO_ID);
     if(value!=View::NO_ID){
         mCheckedId = value;
         mInitialCheckedId = value;
     }
-    const int index = ta&&ta->hasValue(SRG::orientation) ? ta->getInt(SRG::orientation,VERTICAL) : attrs.getInt("orientation",std::unordered_map<std::string,int>{
-             {"horizontal",HORIZONTAL},
-             {"vertical",VERTICAL} },VERTICAL);
+    const int index = ta->getInt(SRG::orientation,VERTICAL);
     setOrientation(index);
+    }
 }
 
 LinearLayout::LayoutParams* RadioGroup::generateLayoutParams(const AttributeSet& attrs)const {

@@ -30,11 +30,13 @@ LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::LinearLayoutLayout::IDS) : nullptr;
+    if (ta) {
     namespace SLL = styleable::LinearLayoutLayout;
-    weight = ta&&ta->hasValue(SLL::layout_weight) ? ta->getFloat(SLL::layout_weight, 0) : attrs.getFloat("layout_weight", 0);
-    gravity= ta&&ta->hasValue(SLL::layout_gravity) ? ta->getInt(SLL::layout_gravity, -1) : attrs.getGravity("layout_gravity", -1);
+    weight = ta->getFloat(SLL::layout_weight, 0);
+    gravity= ta->getInt(SLL::layout_gravity, -1);
     LOGV("width=%d,height=%d weight=%.2f gravity=%x margin=%d,%d,%d,%d",width,height,
 	    weight,gravity,topMargin,bottomMargin,leftMargin,rightMargin);
+    }
 }
 
 LinearLayout::LayoutParams::LayoutParams(int width, int height)

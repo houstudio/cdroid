@@ -80,19 +80,21 @@ void GridLayout::LayoutParams::init(Context* context,const AttributeSet& attrs){
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::GridLayoutLayout::IDS) : nullptr;
+    if (ta) {
     namespace SGL = styleable::GridLayoutLayout;
 
-    const int gravity = ta&&ta->hasValue(SGL::layout_gravity) ? ta->getInt(SGL::layout_gravity, Gravity::NO_GRAVITY) : attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
+    const int gravity = ta->getInt(SGL::layout_gravity, Gravity::NO_GRAVITY);
 
-    const int column = ta&&ta->hasValue(SGL::layout_column) ? ta->getInt(SGL::layout_column, DEFAULT_COLUMN) : attrs.getInt("layout_column", DEFAULT_COLUMN);
-    const int colSpan = ta&&ta->hasValue(SGL::layout_columnSpan) ? ta->getInt(SGL::layout_columnSpan, DEFAULT_SPAN_SIZE) : attrs.getInt("layout_columnSpan", DEFAULT_SPAN_SIZE);
-    const float colWeight = ta&&ta->hasValue(SGL::layout_columnWeight) ? ta->getFloat(SGL::layout_columnWeight, Spec::DEFAULT_WEIGHT) : attrs.getFloat("layout_columnWeight", Spec::DEFAULT_WEIGHT);
+    const int column = ta->getInt(SGL::layout_column, DEFAULT_COLUMN);
+    const int colSpan = ta->getInt(SGL::layout_columnSpan, DEFAULT_SPAN_SIZE);
+    const float colWeight = ta->getFloat(SGL::layout_columnWeight, Spec::DEFAULT_WEIGHT);
     this->columnSpec = spec(column, colSpan, getAlignment(gravity, true), colWeight);
 
-    const int row = ta&&ta->hasValue(SGL::layout_row) ? ta->getInt(SGL::layout_row, DEFAULT_ROW) : attrs.getInt("layout_row", DEFAULT_ROW);
-    const int rowSpan = ta&&ta->hasValue(SGL::layout_rowSpan) ? ta->getInt(SGL::layout_rowSpan, DEFAULT_SPAN_SIZE) : attrs.getInt("layout_rowSpan", DEFAULT_SPAN_SIZE);
-    const float rowWeight = ta&&ta->hasValue(SGL::layout_rowWeight) ? ta->getFloat(SGL::layout_rowWeight, Spec::DEFAULT_WEIGHT) : attrs.getFloat("layout_rowWeight", Spec::DEFAULT_WEIGHT);
+    const int row = ta->getInt(SGL::layout_row, DEFAULT_ROW);
+    const int rowSpan = ta->getInt(SGL::layout_rowSpan, DEFAULT_SPAN_SIZE);
+    const float rowWeight = ta->getFloat(SGL::layout_rowWeight, Spec::DEFAULT_WEIGHT);
     this->rowSpec = spec(row, rowSpan, getAlignment(gravity, false), rowWeight);
+    }
 }
 
 GridLayout::LayoutParams::LayoutParams(const MarginLayoutParams& params)

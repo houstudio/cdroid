@@ -22,10 +22,12 @@ TableRow::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::TableRowLayout::IDS) : nullptr;
+    if (ta) {
     namespace STR = styleable::TableRowLayout;
-    column= ta&&ta->hasValue(STR::layout_column) ? ta->getInt(STR::layout_column,-1) : attrs.getInt("layout_column",-1);
-    span  = ta&&ta->hasValue(STR::layout_span)   ? ta->getInt(STR::layout_span,1)    : attrs.getInt("layout_span",1);
+    column= ta->getInt(STR::layout_column,-1);
+    span  = ta->getInt(STR::layout_span,1);
     if(span<1)span=1;
+    }
 }
 
 TableRow::LayoutParams::LayoutParams(int w, int h)

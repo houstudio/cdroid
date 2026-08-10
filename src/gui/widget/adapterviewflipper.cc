@@ -28,16 +28,18 @@ AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet& attr
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::AdapterViewFlipper::IDS) : nullptr;
+    if (ta) {
     namespace SAF = styleable::AdapterViewFlipper;
 
-    mFlipInterval = ta&&ta->hasValue(SAF::flipInterval) ? ta->getInt(SAF::flipInterval, DEFAULT_INTERVAL) : attrs.getInt("flipInterval", DEFAULT_INTERVAL);
-    mAutoStart = ta&&ta->hasValue(SAF::autoStart) ? ta->getBoolean(SAF::autoStart, false) : attrs.getBoolean("autoStart", false);
+    mFlipInterval = ta->getInt(SAF::flipInterval, DEFAULT_INTERVAL);
+    mAutoStart = ta->getBoolean(SAF::autoStart, false);
 
     // A view flipper should cycle through the views
     mLoopViews = true;
     mFlipRunnable = [this](){
         if (mRunning) showNext();
     };
+    }
 }
 
 void AdapterViewFlipper::onAttachedToWindow() {

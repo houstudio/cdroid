@@ -55,18 +55,20 @@ void ListView::initListView(const AttributeSet&attrs) {
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::ListView::IDS) : nullptr;
+    if (ta) {
     namespace SLV = styleable::ListView;
 
-    Drawable* d = ctx->getDrawable(ta&&ta->hasValue(SLV::divider) ? ta->getString(SLV::divider) : attrs.getString("divider"));
-    Drawable* osHeader = ctx->getDrawable(ta&&ta->hasValue(SLV::overScrollHeader) ? ta->getString(SLV::overScrollHeader) : attrs.getString("overScrollHeader"));
-    Drawable* osFooter = ctx->getDrawable(ta&&ta->hasValue(SLV::overScrollFooter) ? ta->getString(SLV::overScrollFooter) : attrs.getString("overScrollFooter"));
+    Drawable* d = ctx->getDrawable(ta->getString(SLV::divider));
+    Drawable* osHeader = ctx->getDrawable(ta->getString(SLV::overScrollHeader));
+    Drawable* osFooter = ctx->getDrawable(ta->getString(SLV::overScrollFooter));
 
     setOverscrollHeader(osHeader);
     setOverscrollHeader(osFooter);
     setDivider(d);
-    mHeaderDividersEnabled = ta&&ta->hasValue(SLV::headerDividersEnabled) ? ta->getBoolean(SLV::headerDividersEnabled,true) : attrs.getBoolean("headerDividersEnabled",true);
-    mFooterDividersEnabled = ta&&ta->hasValue(SLV::footerDividersEnabled) ? ta->getBoolean(SLV::footerDividersEnabled, true) : attrs.getBoolean("footerDividersEnabled", true);
-    setDividerHeight(ta&&ta->hasValue(SLV::dividerHeight) ? ta->getDimensionPixelSize(SLV::dividerHeight,0) : attrs.getDimensionPixelSize("dividerHeight",0));
+    mHeaderDividersEnabled = ta->getBoolean(SLV::headerDividersEnabled,true);
+    mFooterDividersEnabled = ta->getBoolean(SLV::footerDividersEnabled, true);
+    setDividerHeight(ta->getDimensionPixelSize(SLV::dividerHeight,0));
+    }
 }
 
 ListView::~ListView() {

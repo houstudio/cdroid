@@ -31,30 +31,26 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     Assets* _a = getContext() ? dynamic_cast<Assets*>(getContext()) : nullptr;
     auto ta = _a ? _a->obtainStyledAttributesTyped(
         attrs, styleable::ImageView::IDS) : nullptr;
+    if (ta) {
 
     mBaselineAlignBottom = attrs.getBoolean("baselineAlignBottom",false);
-    mBaseline = (ta&&ta->hasValue(styleable::ImageView::baseline)) ? ta->getDimensionPixelSize(styleable::ImageView::baseline,-1) : attrs.getDimensionPixelSize("baseline",-1);
-    setAdjustViewBounds(ta&&ta->hasValue(styleable::ImageView::adjustViewBounds) ? ta->getBoolean(styleable::ImageView::adjustViewBounds,false) : attrs.getBoolean("adjustViewBounds",false));
-    mCropToPadding = ta&&ta->hasValue(styleable::ImageView::cropToPadding) ? ta->getBoolean(styleable::ImageView::cropToPadding,false) : attrs.getBoolean("cropToPadding",false);
-    const int scaleType = (ta&&ta->hasValue(styleable::ImageView::scaleType)) ? ta->getInt(styleable::ImageView::scaleType,0) : attrs.getInt("scaleType",std::unordered_map<std::string,int>{
-            {"matrix",ScaleType::MATRIX}, {"fitXY",ScaleType::FIT_XY},
-            {"fitStart",ScaleType::FIT_START},{"fitCenter",ScaleType::FIT_CENTER},
-            {"fitEnd",ScaleType::FIT_END},   {"center",ScaleType::CENTER},
-            {"centerCrop",ScaleType::CENTER_CROP},{"centerInside",ScaleType::CENTER_INSIDE}
-         },-1);
+    mBaseline = ta->getDimensionPixelSize(styleable::ImageView::baseline,-1);
+    setAdjustViewBounds(ta->getBoolean(styleable::ImageView::adjustViewBounds,false));
+    mCropToPadding = ta->getBoolean(styleable::ImageView::cropToPadding,false);
+    const int scaleType = ta->getInt(styleable::ImageView::scaleType,0);
     if(scaleType>=0)setScaleType(scaleType);
-    Drawable*d = (ta&&ta->hasValue(styleable::ImageView::src)) ? ta->getDrawable(styleable::ImageView::src) : attrs.getDrawable("src");
+    Drawable*d = ta->getDrawable(styleable::ImageView::src);
     if(d)setImageDrawable(d);
-    { ColorStateList* csl = (ta&&ta->hasValue(styleable::ImageView::tint)) ? ta->getColorStateList(styleable::ImageView::tint) : attrs.getColorStateList("tint").get();
+    { ColorStateList* csl = ta->getColorStateList(styleable::ImageView::tint);
       if(csl) mDrawableTintList = RefPtr<ColorStateList>(csl); }
     mHasDrawableTint = mDrawableTintList!=nullptr;
     if(mDrawableTintList){
         /* ImageView's default tint mode is SRC_ATOP once a tint is applied. */
         mDrawableTintMode = attrs.getTintMode("tintMode",PorterDuff::SRC_ATOP);
     }
-    setMaxWidth ((ta&&ta->hasValue(styleable::ImageView::maxWidth)) ? ta->getDimensionPixelSize(styleable::ImageView::maxWidth,INT_MAX) : attrs.getDimensionPixelSize("maxWidth" ,INT_MAX));
-    setMaxHeight((ta&&ta->hasValue(styleable::ImageView::maxHeight)) ? ta->getDimensionPixelSize(styleable::ImageView::maxHeight,INT_MAX) : attrs.getDimensionPixelSize("maxHeight",INT_MAX));
-    setImageAlpha((ta&&ta->hasValue(styleable::View::alpha)) ? ta->getInt(styleable::View::alpha,255) : attrs.getInt("alpha",255));
+    setMaxWidth (ta->getDimensionPixelSize(styleable::ImageView::maxWidth,INT_MAX));
+    setMaxHeight(ta->getDimensionPixelSize(styleable::ImageView::maxHeight,INT_MAX));
+    setImageAlpha(ta->getInt(styleable::View::alpha,255));
     const int radii = attrs.getInt("radius",0);
     mRadii[0] = attrs.getInt("topLeftRadius",radii);
     mRadii[1] = attrs.getInt("topRightRadius",radii);
@@ -62,6 +58,7 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     mRadii[3] = attrs.getInt("bottomLeftRadius",radii);
     mCropToPadding = attrs.getBoolean("cropToPadding",false);
     applyImageTint();
+    }
 }
 
 ImageView::ImageView(int w, int h)

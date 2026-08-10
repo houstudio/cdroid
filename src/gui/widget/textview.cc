@@ -154,6 +154,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::TextView::IDS) : nullptr;
+    if (ta) {
     namespace STV = styleable::TextView;
 
     // --- gather phase: locals filled by the switch (binary) or attrs (text) ---
@@ -581,6 +582,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     }
     if(lineHeight>=0){
         setLineHeight(lineHeight);
+    }
     }
 }
 

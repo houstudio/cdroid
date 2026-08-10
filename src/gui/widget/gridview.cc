@@ -21,25 +21,24 @@ GridView::GridView(Context*ctx,const AttributeSet&atts)
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         atts, styleable::GridView::IDS) : nullptr;
+    if (ta) {
+    if (ta) {
     namespace SGV = styleable::GridView;
 
-    setHorizontalSpacing(ta&&ta->hasValue(SGV::horizontalSpacing) ? ta->getDimensionPixelOffset(SGV::horizontalSpacing,10) : atts.getDimensionPixelOffset("horizontalSpacing",10));
-    setVerticalSpacing(ta&&ta->hasValue(SGV::verticalSpacing) ? ta->getDimensionPixelOffset(SGV::verticalSpacing,0) : atts.getDimensionPixelOffset("verticalSpacing",0));
-    int index = ta&&ta->hasValue(SGV::stretchMode) ? ta->getInt(SGV::stretchMode,STRETCH_COLUMN_WIDTH) : atts.getInt("strechMode",std::unordered_map<std::string,int> {
-        {"none", NO_STRETCH},
-        {"spacingWidth",STRETCH_SPACING},
-        {"columnWidth", STRETCH_COLUMN_WIDTH},
-        {"spacingWidthUniform",STRETCH_SPACING_UNIFORM}
-    },STRETCH_COLUMN_WIDTH);
+    setHorizontalSpacing(ta->getDimensionPixelOffset(SGV::horizontalSpacing,10));
+    setVerticalSpacing(ta->getDimensionPixelOffset(SGV::verticalSpacing,0));
+    int index = ta->getInt(SGV::stretchMode,STRETCH_COLUMN_WIDTH);
     if(index>=0)setStretchMode(index);
-    const int columnWidth = ta&&ta->hasValue(SGV::columnWidth) ? ta->getDimensionPixelOffset(SGV::columnWidth, -1) : atts.getDimensionPixelOffset("columnWidth", -1);
+    const int columnWidth = ta->getDimensionPixelOffset(SGV::columnWidth, -1);
     if (columnWidth > 0)
         setColumnWidth(columnWidth);
-    const int numColumns = ta&&ta->hasValue(SGV::numColumns) ? ta->getInt(SGV::numColumns, 1) : atts.getInt("numColumns", 1);
+    const int numColumns = ta->getInt(SGV::numColumns, 1);
     setNumColumns(numColumns);
-    index = ta&&ta->hasValue(SGV::gravity) ? ta->getInt(SGV::gravity, -1) : atts.getGravity("gravity", -1);
+    index = ta->getInt(SGV::gravity, -1);
     if (index >= 0) {
         setGravity(index);
+    }
+    }
     }
 }
 

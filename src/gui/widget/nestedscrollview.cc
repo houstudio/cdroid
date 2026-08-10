@@ -59,8 +59,10 @@ NestedScrollView::NestedScrollView(Context* context,const AttributeSet&attrs):Fr
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::ScrollView::IDS) : nullptr;
+    if (ta) {
     namespace SNS = styleable::ScrollView;
-    setFillViewport(ta&&ta->hasValue(SNS::fillViewport) ? ta->getBoolean(SNS::fillViewport,false) : attrs.getBoolean("fillViewport",false));
+    setFillViewport(ta->getBoolean(SNS::fillViewport,false));
+    }
 }
 
 NestedScrollView::~NestedScrollView(){

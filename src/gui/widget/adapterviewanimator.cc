@@ -30,24 +30,26 @@ AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet& at
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::AdapterViewAnimator::IDS) : nullptr;
+    if (ta) {
     namespace SAV = styleable::AdapterViewAnimator;
 
-    std::string res = ta&&ta->hasValue(SAV::inAnimation) ? ta->getString(SAV::inAnimation) : attrs.getString("inAnimation");
+    std::string res = ta->getString(SAV::inAnimation);
     if(res.empty())
         setInAnimation(getDefaultInAnimation());
     else
         setInAnimation(context,res);
-    res = ta&&ta->hasValue(SAV::outAnimation) ? ta->getString(SAV::outAnimation) : attrs.getString("outAnimation");
+    res = ta->getString(SAV::outAnimation);
 
     if(res.empty())
         setOutAnimation(getDefaultOutAnimation());
     else
         setOutAnimation(context,res);
 
-    const bool flag = ta&&ta->hasValue(SAV::animateFirstView) ? ta->getBoolean(SAV::animateFirstView,true) : attrs.getBoolean("animateFirstView",true);
+    const bool flag = ta->getBoolean(SAV::animateFirstView,true);
     setAnimateFirstView(flag);
-    mLoopViews = ta&&ta->hasValue(SAV::loopViews) ? ta->getBoolean(SAV::loopViews,false) : attrs.getBoolean("loopViews",false);
+    mLoopViews = ta->getBoolean(SAV::loopViews,false);
     initViewAnimator();
+    }
 }
 
 AdapterViewAnimator::~AdapterViewAnimator(){

@@ -80,29 +80,28 @@ Spinner::Spinner(Context*ctx,const AttributeSet&atts)
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         atts, styleable::Spinner::IDS) : nullptr;
+    if (ta) {
     namespace SSP = styleable::Spinner;
 
-    mGravity = ta&&ta->hasValue(SSP::gravity) ? ta->getInt(SSP::gravity,Gravity::CENTER) : atts.getGravity("gravity",Gravity::CENTER);
+    mGravity = ta->getInt(SSP::gravity,Gravity::CENTER);
     mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);
-    const int mode = ta&&ta->hasValue(SSP::spinnerMode) ? ta->getInt(SSP::spinnerMode,MODE_DIALOG) : atts.getInt("spinnerMode",std::unordered_map<std::string,int>{
-        {"dialog",(int)MODE_DIALOG},{"dropdown",(int)MODE_DROPDOWN}
-    },MODE_DIALOG);
+    const int mode = ta->getInt(SSP::spinnerMode,MODE_DIALOG);
 
     Drawable*dr;
     DropdownPopup* popup;
     switch(mode){
     case MODE_DIALOG:
          mPopup = new DialogPopup(this);
-         mPopup->setPromptText(ta&&ta->hasValue(SSP::prompt) ? ta->getString(SSP::prompt) : atts.getString("propmt"));
+         mPopup->setPromptText(ta->getString(SSP::prompt));
          break;
     case MODE_DROPDOWN:
          popup = new DropdownPopup(ctx,this,"cdroid:attr/spinnerStyle");
-         mDropDownWidth = ta&&ta->hasValue(SSP::dropDownWidth) ? ta->getLayoutDimension(SSP::dropDownWidth,LayoutParams::WRAP_CONTENT) : atts.getLayoutDimension("dropDownWidth",LayoutParams::WRAP_CONTENT);
-         dr = ta&&ta->hasValue(SSP::dropDownSelector) ? ta->getDrawable(SSP::dropDownSelector) : atts.getDrawable("dropDownSelector");
+         mDropDownWidth = ta->getLayoutDimension(SSP::dropDownWidth,LayoutParams::WRAP_CONTENT);
+         dr = ta->getDrawable(SSP::dropDownSelector);
          if(dr)popup->setListSelector(dr);
-         dr = mContext->getDrawable(ta&&ta->hasValue(SSP::popupBackground) ? ta->getString(SSP::popupBackground) : atts.getString("popupBackground"));
+         dr = mContext->getDrawable(ta->getString(SSP::popupBackground));
          if(dr)popup->setBackgroundDrawable(dr);
-         popup->setPromptText(ta&&ta->hasValue(SSP::prompt) ? ta->getString(SSP::prompt) : atts.getString("propmt"));
+         popup->setPromptText(ta->getString(SSP::prompt));
          mPopup = popup;
          mForwardingListener = new SpinnerForwardingListener(this,popup);
          break;
@@ -112,6 +111,7 @@ Spinner::Spinner(Context*ctx,const AttributeSet&atts)
     if (mTempAdapter != nullptr) {
         setAdapter(mTempAdapter);
         mTempAdapter = nullptr;
+    }
     }
 }
 

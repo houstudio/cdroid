@@ -35,26 +35,28 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,att
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::SeekBar::IDS) : nullptr;
+    if (ta) {
     namespace SSB = styleable::SeekBar;
 
-    setThumb(ta&&ta->hasValue(SSB::thumb) ? ta->getDrawable(SSB::thumb) : attrs.getDrawable("thumb"));
-    setTickMark(ta&&ta->hasValue(SSB::tickMark) ? ta->getDrawable(SSB::tickMark) : attrs.getDrawable("tickMark"));
-    { ColorStateList* csl = ta&&ta->hasValue(SSB::thumbTint) ? ta->getColorStateList(SSB::thumbTint) : attrs.getColorStateList("thumbTint").get();
+    setThumb(ta->getDrawable(SSB::thumb));
+    setTickMark(ta->getDrawable(SSB::tickMark));
+    { ColorStateList* csl = ta->getColorStateList(SSB::thumbTint);
       if(csl) mThumbTintList = RefPtr<ColorStateList>(csl); }
-    { ColorStateList* csl = ta&&ta->hasValue(SSB::tickMarkTint) ? ta->getColorStateList(SSB::tickMarkTint) : attrs.getColorStateList("tickMarkTint").get();
+    { ColorStateList* csl = ta->getColorStateList(SSB::tickMarkTint);
       if(csl) mTickMarkTintList = RefPtr<ColorStateList>(csl); }
-    const int thumbOffset = ta&&ta->hasValue(SSB::thumbOffset) ? ta->getDimensionPixelOffset(SSB::thumbOffset,getThumbOffset()) : attrs.getDimensionPixelOffset("thumbOffset",getThumbOffset());
+    const int thumbOffset = ta->getDimensionPixelOffset(SSB::thumbOffset,getThumbOffset());
     setThumbOffset(thumbOffset);
 
     const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
     // disabledAlpha is not in the SeekBar styleable (only ToggleButton's), so
     // read it via the AttributeSet bridge for both modes.
     mDisabledAlpha = useDisabledAlpha? attrs.getFloat("disabledAlpha", 0.5f) :1.f;
-    mSplitTrack = ta&&ta->hasValue(SSB::splitTrack) ? ta->getBoolean(SSB::splitTrack,false) : attrs.getBoolean("splitTrack",false);
+    mSplitTrack = ta->getBoolean(SSB::splitTrack,false);
     mThumbExclusionMaxSize = ctx->getDimension("cdroid:dimen/seekbar_thumb_exclusion_max_size");
 
     applyThumbTint();
     applyTickMarkTint();
+    }
 }
 
 AbsSeekBar::AbsSeekBar(int w,int h):ProgressBar(w,h){

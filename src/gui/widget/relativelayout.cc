@@ -56,10 +56,12 @@ RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::RelativeLayout::IDS) : nullptr;
+    if (ta) {
     namespace SRL = styleable::RelativeLayout;
-    mIgnoreGravity = ta&&ta->hasValue(SRL::ignoreGravity) ? (int)ta->getResourceId(SRL::ignoreGravity,(uint32_t)View::NO_ID) : attrs.getResourceId("ignoreGravity", View::NO_ID);
-    mGravity = ta&&ta->hasValue(SRL::gravity) ? ta->getInt(SRL::gravity,mGravity) : attrs.getGravity("gravity",mGravity);
+    mIgnoreGravity = (int)ta->getResourceId(SRL::ignoreGravity,(uint32_t)View::NO_ID);
+    mGravity = ta->getInt(SRL::gravity,mGravity);
     mGraph = new DependencyGraph();
+    }
 }
 
 RelativeLayout::~RelativeLayout(){

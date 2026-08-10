@@ -37,6 +37,7 @@ FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs)
         Assets* _a = context ? dynamic_cast<Assets*>(context) : nullptr;
         auto ta = _a ? _a->obtainStyledAttributesTyped(
             attrs, styleable::FrameLayout::IDS) : nullptr;
+    if (ta) {
         if (ta) {
             for (size_t n = ta->getIndexCount(); n > 0; ) {
                 size_t i = ta->getIndex(--n);
@@ -49,6 +50,7 @@ FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs)
     }
     mForegroundPaddingLeft = mForegroundPaddingRight  = 0;
     mForegroundPaddingTop  = mForegroundPaddingBottom = 0;
+    }
 }
 
 //@android.view.RemotableViewMethod

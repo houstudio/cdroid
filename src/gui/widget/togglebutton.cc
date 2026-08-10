@@ -33,11 +33,13 @@ ToggleButton::ToggleButton(Context*ctx,const AttributeSet& attrs)
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::ToggleButton::IDS) : nullptr;
+    if (ta) {
     namespace STB = styleable::ToggleButton;
 
-    setTextOn(ctx->getString(ta&&ta->hasValue(STB::textOn) ? ta->getString(STB::textOn) : attrs.getString("textOn")));
-    setTextOff(ctx->getString(ta&&ta->hasValue(STB::textOff) ? ta->getString(STB::textOff) : attrs.getString("textOff")));
-    mDisabledAlpha= ta&&ta->hasValue(STB::disabledAlpha) ? ta->getFloat(STB::disabledAlpha,0.5f) : attrs.getFloat("disabledAlpha",0.5f);
+    setTextOn(ctx->getString(ta->getString(STB::textOn)));
+    setTextOff(ctx->getString(ta->getString(STB::textOff)));
+    mDisabledAlpha= ta->getFloat(STB::disabledAlpha,0.5f);
+    }
 }
 
 ToggleButton::ToggleButton(int w,int h):CompoundButton(std::string(),w,h){

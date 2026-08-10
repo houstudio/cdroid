@@ -62,10 +62,12 @@ TextClock::TextClock(Context* context,const AttributeSet& attrs)
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::TextClock::IDS) : nullptr;
+    if (ta) {
     namespace STC = styleable::TextClock;
-    mFormat12 = ta&&ta->hasValue(STC::format12Hour) ? ta->getString(STC::format12Hour) : attrs.getString("format12Hour");
-    mFormat24 = ta&&ta->hasValue(STC::format24Hour) ? ta->getString(STC::format24Hour) : attrs.getString("format24Hour");
-    mTimeZone = ta&&ta->hasValue(STC::timeZone) ? ta->getString(STC::timeZone) : attrs.getString("timeZone");
+    mFormat12 = ta->getString(STC::format12Hour);
+    mFormat24 = ta->getString(STC::format24Hour);
+    mTimeZone = ta->getString(STC::timeZone);
+    }
 }
 
 void TextClock::init() {

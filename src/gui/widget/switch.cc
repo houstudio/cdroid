@@ -21,23 +21,24 @@ Switch::Switch(Context* context,const AttributeSet& a)
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         a, styleable::Switch::IDS) : nullptr;
+    if (ta) {
     namespace SW = styleable::Switch;
 
-    mThumbDrawable = ta&&ta->hasValue(SW::thumb) ? ta->getDrawable(SW::thumb) : a.getDrawable("thumb");
+    mThumbDrawable = ta->getDrawable(SW::thumb);
     if (mThumbDrawable) {
         mThumbDrawable->setCallback(this);
     }
-    mTrackDrawable = ta&&ta->hasValue(SW::track) ? ta->getDrawable(SW::track) : a.getDrawable("track");
+    mTrackDrawable = ta->getDrawable(SW::track);
     if (mTrackDrawable) {
         mTrackDrawable->setCallback(this);
     }
-    mTextOn = ta&&ta->hasValue(SW::textOn) ? ta->getString(SW::textOn) : a.getString("textOn");
-    mTextOff = ta&&ta->hasValue(SW::textOff) ? ta->getString(SW::textOff) : a.getString("textOff");
-    mShowText = ta&&ta->hasValue(SW::showText) ? ta->getBoolean(SW::showText, true) : a.getBoolean("showText", true);
-    mThumbTextPadding = ta&&ta->hasValue(SW::thumbTextPadding) ? ta->getDimensionPixelSize(SW::thumbTextPadding, 0) : a.getDimensionPixelSize("thumbTextPadding", 0);
-    mSwitchMinWidth = ta&&ta->hasValue(SW::switchMinWidth) ? ta->getDimensionPixelSize(SW::switchMinWidth, 0) : a.getDimensionPixelSize("switchMinWidth", 0);
-    mSwitchPadding = ta&&ta->hasValue(SW::switchPadding) ? ta->getDimensionPixelSize(SW::switchPadding, 0) : a.getDimensionPixelSize("switchPadding", 0);
-    mSplitTrack = ta&&ta->hasValue(SW::splitTrack) ? ta->getBoolean(SW::splitTrack, false) : a.getBoolean("splitTrack", false);
+    mTextOn = ta->getString(SW::textOn);
+    mTextOff = ta->getString(SW::textOff);
+    mShowText = ta->getBoolean(SW::showText, true);
+    mThumbTextPadding = ta->getDimensionPixelSize(SW::thumbTextPadding, 0);
+    mSwitchMinWidth = ta->getDimensionPixelSize(SW::switchMinWidth, 0);
+    mSwitchPadding = ta->getDimensionPixelSize(SW::switchPadding, 0);
+    mSplitTrack = ta->getBoolean(SW::splitTrack, false);
 
     mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
 
@@ -65,7 +66,7 @@ Switch::Switch(Context* context,const AttributeSet& a)
         applyTrackTint();
     }
 
-    const std::string appearance = ta&&ta->hasValue(SW::switchTextAppearance) ? ta->getString(SW::switchTextAppearance) : a.getString("switchTextAppearance");
+    const std::string appearance = ta->getString(SW::switchTextAppearance);
     if (!appearance.empty()){
         setSwitchTextAppearance(context, appearance);
     }
@@ -79,6 +80,7 @@ Switch::Switch(Context* context,const AttributeSet& a)
     // are updated.
     //setDefaultStateDescription();
     setChecked(isChecked());
+    }
 }
 
 class THUMB_POS:public FloatProperty{

@@ -78,9 +78,10 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         attrs, styleable::ProgressBar::IDS) : nullptr;
+    if (ta) {
     namespace SPB = styleable::ProgressBar;
 
-    Drawable* progressDrawable = ta&&ta->hasValue(SPB::progressDrawable) ? ta->getDrawable(SPB::progressDrawable) : attrs.getDrawable("progressDrawable");
+    Drawable* progressDrawable = ta->getDrawable(SPB::progressDrawable);
     if(progressDrawable){
         if(needsTileify(progressDrawable))
             setProgressDrawableTiled(progressDrawable);
@@ -88,7 +89,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
             setProgressDrawable(progressDrawable);
     }
 
-    Drawable* indeterminateDrawable = ta&&ta->hasValue(SPB::indeterminateDrawable) ? ta->getDrawable(SPB::indeterminateDrawable) : attrs.getDrawable("indeterminateDrawable");
+    Drawable* indeterminateDrawable = ta->getDrawable(SPB::indeterminateDrawable);
     if(indeterminateDrawable){
         if(needsTileify(indeterminateDrawable))
             setIndeterminateDrawableTiled(indeterminateDrawable);
@@ -96,25 +97,24 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
             setIndeterminateDrawable(indeterminateDrawable);
     }
 
-    mDuration = ta&&ta->hasValue(SPB::indeterminateDuration) ? ta->getInt(SPB::indeterminateDuration,mDuration) : attrs.getInt("indeterminateDuration",mDuration);
-    mMinWidth = ta&&ta->hasValue(SPB::minWidth) ? ta->getDimensionPixelSize(SPB::minWidth, mMinWidth) : attrs.getDimensionPixelSize("minWidth", mMinWidth);
-    mMaxWidth = ta&&ta->hasValue(SPB::maxWidth) ? ta->getDimensionPixelSize(SPB::maxWidth, mMaxWidth) : attrs.getDimensionPixelSize("maxWidth", mMaxWidth);
-    mMinHeight= ta&&ta->hasValue(SPB::minHeight) ? ta->getDimensionPixelSize(SPB::minHeight, mMinHeight) : attrs.getDimensionPixelSize("minHeight", mMinHeight);
-    mMaxHeight= ta&&ta->hasValue(SPB::maxHeight) ? ta->getDimensionPixelSize(SPB::maxHeight, mMaxHeight) : attrs.getDimensionPixelSize("maxHeight", mMaxHeight);
-    mBehavior = ta&&ta->hasValue(SPB::indeterminateBehavior) ? ta->getInt(SPB::indeterminateBehavior,mBehavior) : attrs.getInt("inteterminateBehavior",std::unordered_map<std::string,int>{
-       {"none",0},{"repeat",(int)Animation::RESTART},{"cycle",(int)Animation::INFINITE} },mBehavior);
+    mDuration = ta->getInt(SPB::indeterminateDuration,mDuration);
+    mMinWidth = ta->getDimensionPixelSize(SPB::minWidth, mMinWidth);
+    mMaxWidth = ta->getDimensionPixelSize(SPB::maxWidth, mMaxWidth);
+    mMinHeight= ta->getDimensionPixelSize(SPB::minHeight, mMinHeight);
+    mMaxHeight= ta->getDimensionPixelSize(SPB::maxHeight, mMaxHeight);
+    mBehavior = ta->getInt(SPB::indeterminateBehavior,mBehavior);
 
-    mOnlyIndeterminate= (ta&&ta->hasValue(SPB::indeterminateOnly) ? ta->getBoolean(SPB::indeterminateOnly,mOnlyIndeterminate) : attrs.getBoolean("indeterminateOnly",mOnlyIndeterminate));
+    mOnlyIndeterminate= (ta->getBoolean(SPB::indeterminateOnly,mOnlyIndeterminate));
     mNoInvalidate = false;
-    setIndeterminate(mOnlyIndeterminate|| (ta&&ta->hasValue(SPB::indeterminate) ? ta->getBoolean(SPB::indeterminate,mIndeterminate) : attrs.getBoolean("indeterminate",mIndeterminate)));
+    setIndeterminate(mOnlyIndeterminate|| (ta->getBoolean(SPB::indeterminate,mIndeterminate)));
 
-    mMirrorForRtl = ta&&ta->hasValue(SPB::mirrorForRtl) ? ta->getBoolean(SPB::mirrorForRtl,false) : attrs.getBoolean("mirrorForRtl",false);
+    mMirrorForRtl = ta->getBoolean(SPB::mirrorForRtl,false);
 
-    setMin(ta&&ta->hasValue(SPB::min) ? ta->getInt(SPB::min,mMin) : attrs.getInt("min",mMin));
-    setMax(ta&&ta->hasValue(SPB::max) ? ta->getInt(SPB::max,mMax) : attrs.getInt("max",mMax));
+    setMin(ta->getInt(SPB::min,mMin));
+    setMax(ta->getInt(SPB::max,mMax));
 
-    setProgress(ta&&ta->hasValue(SPB::progress) ? ta->getInt(SPB::progress,mProgress) : attrs.getInt("progress",mProgress));
-    setSecondaryProgress(ta&&ta->hasValue(SPB::secondaryProgress) ? ta->getInt(SPB::secondaryProgress,mSecondaryProgress) : attrs.getInt("secondaryProgress",mSecondaryProgress));
+    setProgress(ta->getInt(SPB::progress,mProgress));
+    setSecondaryProgress(ta->getInt(SPB::secondaryProgress,mSecondaryProgress));
 
     if(attrs.hasAttribute("progressTintMode")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
@@ -169,6 +169,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     // If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
     }
 }
 

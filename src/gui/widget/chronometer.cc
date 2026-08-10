@@ -34,10 +34,12 @@ Chronometer::Chronometer(Context*ctx,const AttributeSet&atts)
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(
         atts, styleable::Chronometer::IDS) : nullptr;
+    if (ta) {
     namespace SCH = styleable::Chronometer;
-    setFormat(ta&&ta->hasValue(SCH::format) ? ta->getString(SCH::format) : atts.getString("format",mFormat));
-    setCountDown(ta&&ta->hasValue(SCH::countDown) ? ta->getBoolean(SCH::countDown,false) : atts.getBoolean("countDown",false));
+    setFormat(ta->getString(SCH::format));
+    setCountDown(ta->getBoolean(SCH::countDown,false));
     mColonBlinking = atts.getBoolean("colonBlinking",mColonBlinking);
+    }
 }
 
 void Chronometer::init(){
