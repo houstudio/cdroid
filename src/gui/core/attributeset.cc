@@ -52,6 +52,7 @@ AttributeSet::AttributeSet(const AttributeSet&other):AttributeSet(other.mContext
         mAttrs->insert({a.first,a.second});
     }
     mAttrResIds = other.mAttrResIds;   // share the name->resId map (if any)
+    mStyleResId = other.mStyleResId;
 }
 
 AttributeSet& AttributeSet::operator =(const AttributeSet&other){
@@ -61,6 +62,7 @@ AttributeSet& AttributeSet::operator =(const AttributeSet&other){
         mAttrs->insert({a.first,a.second});
     }
     mAttrResIds = other.mAttrResIds;
+    mStyleResId = other.mStyleResId;
     return *this;
 }
 

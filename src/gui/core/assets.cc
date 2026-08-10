@@ -1356,6 +1356,7 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
                     atts.add(attrName, valStr);
                     atts.setAttributeResourceId(attrName, (int)map[i].name.ident);
                 }
+                atts.setStyleResourceId((int)styleId);   // mark as a resolved style
                 atts.setContext(this, pkg);
                 uint32_t parentId = mResTable->getBagParent(styleId);
                 if (parentId != 0) {
@@ -1394,15 +1395,31 @@ std::unique_ptr<TypedArray> Assets::obtainStyledAttributesTyped(
     uint32_t defStyleAttr, uint32_t defStyleRes)
 {
     if (!mResTable) return nullptr;
-    const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(&attrs);
-    if (!parser || !parser->isBinaryAXML()) return nullptr;
-    const ResXMLTree* xml = static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree());
-    if (!xml) return nullptr;
     size_t count = 0; while (styleable[count]) count++;   // sentinel-terminated
     std::vector<StyledAttr> styled(count);
-    cdroid::obtainStyledAttributes(*xml, *mResTable, mArscTheme, styleable,
-                                    defStyleAttr, defStyleRes, styled.data());
-    return std::make_unique<TypedArray>(*mResTable, std::move(styled), xml,
+
+    const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(&attrs);
+    const bool isBinary = parser && parser->isBinaryAXML();
+    if (isBinary) {
+        const ResXMLTree* xml = static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree());
+        if (!xml) return nullptr;
+        // Binary AXML element: resolve through the AXML + theme + style chain.
+        cdroid::obtainStyledAttributes(*xml, *mResTable, mArscTheme, styleable,
+                                        defStyleAttr, defStyleRes, styled.data());
+        return std::make_unique<TypedArray>(*mResTable, std::move(styled), xml,
+                                            mDisplayMetrics.density, this);
+    }
+    // Non-binary AttributeSet: a widget ctor handed a runtime-resolved *style*
+    // AttributeSet (e.g. the action-bar overflow button created from
+    // actionOverflowButtonStyle). Re-resolve that style through the arsc theme
+    // resolver (defStyleRes = the style's resId) to get raw Res_values — no
+    // string<->Res_value conversion. Text-XML element AttributeSets (no style
+    // resId) are dropped (text ctor path retired on this branch).
+    const int styleResId = attrs.getStyleResourceId();
+    if (styleResId == 0) return nullptr;
+    cdroid::obtainStyledAttributes(*mResTable, mArscTheme, styleable,
+                                    defStyleAttr, (uint32_t)styleResId, styled.data());
+    return std::make_unique<TypedArray>(*mResTable, std::move(styled), nullptr,
                                         mDisplayMetrics.density, this);
 }
 

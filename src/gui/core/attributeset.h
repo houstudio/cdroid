@@ -41,6 +41,11 @@ protected:
     // sets (getAttributeNameResource then returns 0). Index methods iterate mAttrs
     // (small N; resolution matches by id/name, not position).
     std::shared_ptr<std::unordered_map<std::string,int>>mAttrResIds;
+    // When this AttributeSet is a *style* resolved from the arsc (built by
+    // obtainStyledAttributes(styleName)), the source style's resource id — so
+    // obtainStyledAttributesTyped can re-resolve it through the arsc theme
+    // resolver (raw Res_values) instead of string-parsing. 0 = not a style set.
+    int mStyleResId = 0;
 public:
     AttributeSet();
     AttributeSet(const AttributeSet&);
@@ -53,6 +58,9 @@ public:
     // getAttributeNameResource). Used when this AttributeSet is built from a typed
     // source (arsc style bag) so the id-interface works for style-derived sets.
     void setAttributeResourceId(const std::string& name, int resId);
+    // The source style resId if this AttributeSet is a resolved style (else 0).
+    int getStyleResourceId() const { return mStyleResId; }
+    void setStyleResourceId(int resId) { mStyleResId = resId; }
     bool hasAttribute(const std::string&key)const;
     size_t getAttributeCount()const;
     // Single-pass KV iteration over the present attributes (map order). Templated and header-only so
