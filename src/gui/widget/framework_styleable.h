@@ -6,6 +6,20 @@
 #include <cstddef>
 namespace cdroid {
 namespace fw_attr {
+    namespace AbsListView {
+        constexpr uint32_t listSelector = 0x010100fb;
+        constexpr uint32_t drawSelectorOnTop = 0x010100fc;
+        constexpr uint32_t stackFromBottom = 0x010100fd;
+        constexpr uint32_t scrollingCache = 0x010100fe;
+        constexpr uint32_t textFilterEnabled = 0x010100ff;
+        constexpr uint32_t transcriptMode = 0x01010100;
+        constexpr uint32_t cacheColorHint = 0x01010101;
+        constexpr uint32_t fastScrollEnabled = 0x01010226;
+        constexpr uint32_t fastScrollStyle = 0x010103f7;
+        constexpr uint32_t smoothScrollbar = 0x01010231;
+        constexpr uint32_t choiceMode = 0x0101012b;
+        constexpr uint32_t fastScrollAlwaysVisible = 0x01010335;
+    }
     namespace AdapterViewAnimator {
         constexpr uint32_t inAnimation = 0x01010177;
         constexpr uint32_t outAnimation = 0x01010178;
@@ -360,6 +374,35 @@ namespace fw_attr {
         constexpr uint32_t textOff = 0x01010125;
         constexpr uint32_t disabledAlpha = 0x01010033;
     }
+    namespace Toolbar {
+        constexpr uint32_t titleTextAppearance = 0x0101042e;
+        constexpr uint32_t subtitleTextAppearance = 0x0101042f;
+        constexpr uint32_t title = 0x010101e1;
+        constexpr uint32_t subtitle = 0x010102d1;
+        constexpr uint32_t gravity = 0x010100af;
+        constexpr uint32_t titleMargin = 0x010104f8;
+        constexpr uint32_t titleMarginStart = 0x010104f9;
+        constexpr uint32_t titleMarginEnd = 0x010104fa;
+        constexpr uint32_t titleMarginTop = 0x010104fb;
+        constexpr uint32_t titleMarginBottom = 0x010104fc;
+        constexpr uint32_t contentInsetStart = 0x01010453;
+        constexpr uint32_t contentInsetEnd = 0x01010454;
+        constexpr uint32_t contentInsetLeft = 0x01010455;
+        constexpr uint32_t contentInsetRight = 0x01010456;
+        constexpr uint32_t contentInsetStartWithNavigation = 0x01010522;
+        constexpr uint32_t contentInsetEndWithActions = 0x01010523;
+        constexpr uint32_t maxButtonHeight = 0x010104fd;
+        constexpr uint32_t buttonGravity = 0x010104fe;
+        constexpr uint32_t collapseIcon = 0x010104ff;
+        constexpr uint32_t collapseContentDescription = 0x010104d0;
+        constexpr uint32_t popupTheme = 0x010104a9;
+        constexpr uint32_t navigationIcon = 0x010104c0;
+        constexpr uint32_t navigationContentDescription = 0x010104c1;
+        constexpr uint32_t logo = 0x010102be;
+        constexpr uint32_t logoDescription = 0x010104e9;
+        constexpr uint32_t titleTextColor = 0x010104e3;
+        constexpr uint32_t subtitleTextColor = 0x010104e4;
+    }
     namespace View {
         constexpr uint32_t id = 0x010100d0;
         constexpr uint32_t tag = 0x010100d1;
@@ -496,6 +539,13 @@ namespace fw_attr {
 } // namespace fw_attr
 
 namespace styleable {
+    namespace AbsListView {
+        enum {
+            listSelector, drawSelectorOnTop, stackFromBottom, scrollingCache, textFilterEnabled,
+            transcriptMode, cacheColorHint, fastScrollEnabled, fastScrollStyle, smoothScrollbar,
+            choiceMode, fastScrollAlwaysVisible };
+        extern const uint32_t IDS[];
+    }
     namespace AdapterViewAnimator {
         enum { inAnimation, outAnimation, loopViews, animateFirstView };
         extern const uint32_t IDS[];
@@ -667,6 +717,16 @@ namespace styleable {
     }
     namespace ToggleButton {
         enum { textOn, textOff, disabledAlpha };
+        extern const uint32_t IDS[];
+    }
+    namespace Toolbar {
+        enum {
+            titleTextAppearance, subtitleTextAppearance, title, subtitle, gravity, titleMargin,
+            titleMarginStart, titleMarginEnd, titleMarginTop, titleMarginBottom, contentInsetStart,
+            contentInsetEnd, contentInsetLeft, contentInsetRight, contentInsetStartWithNavigation,
+            contentInsetEndWithActions, maxButtonHeight, buttonGravity, collapseIcon,
+            collapseContentDescription, popupTheme, navigationIcon, navigationContentDescription,
+            logo, logoDescription, titleTextColor, subtitleTextColor };
         extern const uint32_t IDS[];
     }
     namespace View {

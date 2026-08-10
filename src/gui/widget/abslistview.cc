@@ -1,4 +1,6 @@
 #include <widget/abslistview.h>
+#include <widget/framework_styleable.h>
+#include <core/assets.h>
 #include <widget/checkable.h>
 #include <widget/recyclebin.h>
 #include <widget/fastscroller.h>
@@ -13,15 +15,19 @@
 namespace cdroid {
 
 AbsListView::AbsListView(int w,int h):AdapterView(w,h) {
-    AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/absListViewStyle");
-    initAbsListView(atts);
+    mEdgeGlowBottom = new EdgeEffect(mContext);
+    mEdgeGlowTop = new EdgeEffect(mContext);
+    initAbsListView();
 }
 
 AbsListView::AbsListView(Context*ctx,const AttributeSet&atts):AdapterView(ctx,atts) {
-    initAbsListView(atts);
+    mEdgeGlowBottom = new EdgeEffect(mContext,&atts);
+    mEdgeGlowTop = new EdgeEffect(mContext,&atts);
+    initAbsListView();
+    readAbsListViewAttrs(atts);
 }
 
-void AbsListView::initAbsListView(const AttributeSet&atts) {
+void AbsListView::initAbsListView() {
     setClickable(true);
     setFocusableInTouchMode(true);
     setWillNotDraw(false);
@@ -53,9 +59,6 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mScrollOffset[0] = mScrollOffset[1] = 0;
     mOnScrollListener.onScroll = nullptr;
     mOnScrollListener.onScrollStateChanged = nullptr;
-
-    mEdgeGlowBottom = new EdgeEffect(mContext,&atts);
-    mEdgeGlowTop = new EdgeEffect(mContext,&atts);
 
     mPendingCheckForLongPress = new CheckForLongPress(this);
     mPendingCheckForTap = new CheckForTap(this);;
@@ -105,33 +108,37 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mIsScrap[0] = mIsScrap[1] = 0;
     mDensityScale = getContext()->getDisplayMetrics().density;
 
-    Drawable* selector = atts.getDrawable("listSelector");
+}
+
+// Styled-attribute reads (AOSP AbsListView ctor body, verbatim order/methods).
+// Text-XML ctor path is dropped: this resolves only through the binary-AXML
+// TypedArray; a==null (text XML / no arsc) leaves the widget at its defaults.
+void AbsListView::readAbsListViewAttrs(const AttributeSet& atts) {
+    Assets* _assets = mContext ? dynamic_cast<Assets*>(mContext) : nullptr;
+    auto a = _assets ? _assets->obtainStyledAttributesTyped(
+        atts, styleable::AbsListView::IDS) : nullptr;
+    if (!a) return;
+    namespace SA = styleable::AbsListView;
+
+    Drawable* selector = a->getDrawable(SA::listSelector);
     if (selector != nullptr) {
         setSelector(selector);
     }
-    mDrawSelectorOnTop = atts.getBoolean("drawSelectorOnTop",false);
-    setStackFromBottom(atts.getBoolean("stackFromBottom",false));
-    setScrollingCacheEnabled(atts.getBoolean("scrollingCache",true));
-    setSmoothScrollbarEnabled(atts.getBoolean("smoothScrollbar",true));
-    setTextFilterEnabled(atts.getBoolean("textFilterEnabled",false));
-    setChoiceMode(atts.getInt("choiceMode",std::unordered_map<std::string,int> {
-        {"none",(int)CHOICE_MODE_NONE},
-        {"singleChoice",(int)CHOICE_MODE_SINGLE},
-        {"multipleChoice",(int)CHOICE_MODE_MULTIPLE}
-    },(int)CHOICE_MODE_NONE));
-    setTranscriptMode(atts.getInt("transcriptMode",std::unordered_map<std::string,int>{
-        {"disabled",(int)TRANSCRIPT_MODE_DISABLED},
-        {"normal",(int)TRANSCRIPT_MODE_NORMAL},
-        {"alwaysScroll",(int)TRANSCRIPT_MODE_ALWAYS_SCROLL}},(int)TRANSCRIPT_MODE_DISABLED));
-    setFastScrollEnabled(atts.getBoolean("fastScrollEnabled",false));
-    setFastScrollStyle(atts.getString("fastScrollStyle"));
-    setFastScrollAlwaysVisible(atts.getBoolean("fastScrollAlwaysVisible",false));
-    mGlobalLayoutListener = [this](){
-        onGlobalLayout();
-    };
-    mTouchModeChangeListener = [this](bool isInTouchMode){
-        onTouchModeChanged(isInTouchMode);
-    };
+
+    mDrawSelectorOnTop = a->getBoolean(SA::drawSelectorOnTop, false);
+    setStackFromBottom(a->getBoolean(SA::stackFromBottom, false));
+    setScrollingCacheEnabled(a->getBoolean(SA::scrollingCache, true));
+    setTextFilterEnabled(a->getBoolean(SA::textFilterEnabled, false));
+    setTranscriptMode(a->getInt(SA::transcriptMode, (int)TRANSCRIPT_MODE_DISABLED));
+    setCacheColorHint(a->getColor(SA::cacheColorHint, 0));
+    setSmoothScrollbarEnabled(a->getBoolean(SA::smoothScrollbar, true));
+    setChoiceMode(a->getInt(SA::choiceMode, (int)CHOICE_MODE_NONE));
+    setFastScrollEnabled(a->getBoolean(SA::fastScrollEnabled, false));
+    // AOSP: setFastScrollStyle(a.getResourceId(...)). CDROID's setter takes a
+    // style string, so bridge the @StyleRes id -> "@type/key" via arscReferenceName.
+    uint32_t fsStyle = a->getResourceId(SA::fastScrollStyle, 0);
+    if (fsStyle != 0) setFastScrollStyle(_assets->arscReferenceName(fsStyle));
+    setFastScrollAlwaysVisible(a->getBoolean(SA::fastScrollAlwaysVisible, false));
 }
 
 AbsListView::~AbsListView() {

@@ -17,6 +17,8 @@
  *********************************************************************************/
 #include <text/textutils.h>
 #include <widget/toolbar.h>
+#include <widget/framework_styleable.h>
+#include <core/assets.h>
 #include <menu/actionmenupresenter.h>
 #include <gui_features.h>
 
@@ -26,32 +28,47 @@ DECLARE_WIDGET(Toolbar)
 
 Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
     initToolbar();
-    
-    mTitleTextAppearance = atts.getString("titleTextAppearance");
-    mSubtitleTextAppearance = atts.getString("subtitleTextAppearance");
-    mNavButtonStyle= atts.getString("navigationButtonStyle");
-    mGravity = atts.getGravity("gravity",mGravity);
-    mButtonGravity = atts.getGravity("buttonGravity",Gravity::TOP);
+
+    // Styled-attribute reads (AOSP Toolbar ctor body, verbatim order/methods).
+    // Text-XML ctor path dropped: resolves only through the binary-AXML
+    // TypedArray; a==null (text XML / no arsc) leaves the toolbar at defaults.
+    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto a = _assets ? _assets->obtainStyledAttributesTyped(
+        atts, styleable::Toolbar::IDS) : nullptr;
+    if (a) {
+    namespace ST = styleable::Toolbar;
+    // AOSP reads these via getResourceId(@StyleRes int); CDROID holds style
+    // strings, so bridge the id -> "@type/key" via arscReferenceName.
+    auto styleName = [&](size_t idx)->std::string{
+        uint32_t rid = a->getResourceId(idx, 0);
+        return rid ? _assets->arscReferenceName(rid) : std::string();
+    };
+    mTitleTextAppearance = styleName(ST::titleTextAppearance);
+    mSubtitleTextAppearance = styleName(ST::subtitleTextAppearance);
+    // navigationButtonStyle is a private framework attr with no resource id
+    // (skipped by gen_styleable) — not readable through the TypedArray.
+    mGravity = a->getInteger(ST::gravity, mGravity);
+    mButtonGravity = a->getInteger(ST::buttonGravity, Gravity::TOP);
     mTitleMarginStart = mTitleMarginEnd = mTitleMarginTop = mTitleMarginBottom =
-              atts.getDimensionPixelOffset("titleMargin", 0);
-    const int marginStart = atts.getDimensionPixelOffset("titleMarginStart", -1);
+              a->getDimensionPixelOffset(ST::titleMargin, 0);
+    const int marginStart = a->getDimensionPixelOffset(ST::titleMarginStart, -1);
     if (marginStart >= 0) { mTitleMarginStart = marginStart; }
 
-    const int marginEnd = atts.getDimensionPixelOffset("titleMarginEnd", -1);
+    const int marginEnd = a->getDimensionPixelOffset(ST::titleMarginEnd, -1);
     if (marginEnd >= 0) { mTitleMarginEnd = marginEnd; }
 
-    const int marginTop = atts.getDimensionPixelOffset("titleMarginTop", -1);
+    const int marginTop = a->getDimensionPixelOffset(ST::titleMarginTop, -1);
     if (marginTop >= 0) { mTitleMarginTop = marginTop; }
 
-    const int marginBottom = atts.getDimensionPixelOffset("titleMarginBottom", -1);
+    const int marginBottom = a->getDimensionPixelOffset(ST::titleMarginBottom, -1);
     if (marginBottom >= 0) { mTitleMarginBottom = marginBottom; }
 
-    mMaxButtonHeight = atts.getDimensionPixelSize("maxButtonHeight", -1);
+    mMaxButtonHeight = a->getDimensionPixelSize(ST::maxButtonHeight, -1);
 
-    const int contentInsetStart= atts.getDimensionPixelOffset("contentInsetStart",RtlSpacingHelper::UNDEFINED);
-    const int contentInsetEnd  = atts.getDimensionPixelOffset("contentInsetEnd", RtlSpacingHelper::UNDEFINED);
-    const int contentInsetLeft = atts.getDimensionPixelSize("contentInsetLeft", 0);
-    const int contentInsetRight= atts.getDimensionPixelSize("contentInsetRight", 0);
+    const int contentInsetStart= a->getDimensionPixelOffset(ST::contentInsetStart,RtlSpacingHelper::UNDEFINED);
+    const int contentInsetEnd  = a->getDimensionPixelOffset(ST::contentInsetEnd, RtlSpacingHelper::UNDEFINED);
+    const int contentInsetLeft = a->getDimensionPixelSize(ST::contentInsetLeft, 0);
+    const int contentInsetRight= a->getDimensionPixelSize(ST::contentInsetRight, 0);
 
     ensureContentInsets();
     mContentInsets->setAbsolute(contentInsetLeft, contentInsetRight);
@@ -61,53 +78,54 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
         mContentInsets->setRelative(contentInsetStart, contentInsetEnd);
     }
 
-    mContentInsetStartWithNavigation = atts.getDimensionPixelOffset("contentInsetStartWithNavigation", RtlSpacingHelper::UNDEFINED);
-    mContentInsetEndWithActions = atts.getDimensionPixelOffset("contentInsetEndWithActions", RtlSpacingHelper::UNDEFINED);
+    mContentInsetStartWithNavigation = a->getDimensionPixelOffset(ST::contentInsetStartWithNavigation, RtlSpacingHelper::UNDEFINED);
+    mContentInsetEndWithActions = a->getDimensionPixelOffset(ST::contentInsetEndWithActions, RtlSpacingHelper::UNDEFINED);
 
-    mCollapseIcon = atts.getDrawable("collapseIcon");
-    mCollapseDescription = atts.getString("collapseContentDescription");
+    mCollapseIcon = a->getDrawable(ST::collapseIcon);
+    mCollapseDescription = a->getText(ST::collapseContentDescription);
 
-    std::string title = atts.getString("title");
+    std::string title = a->getText(ST::title);
     if (!title.empty()){
         setTitle(title);
     }
 
-    std::string subtitle = atts.getString("subtitle");
+    std::string subtitle = a->getText(ST::subtitle);
     if (!subtitle.empty()) {
         setSubtitle(subtitle);
     }
 
-    // Set the default context, since setPopupTheme() may be a no-op.
-    mPopupContext = mContext;
-    //setPopupTheme(atts.getResourceId(R.styleable.Toolbar_popupTheme, 0));
-
-    Drawable* navIcon = atts.getDrawable("navigationIcon");
+    Drawable* navIcon = a->getDrawable(ST::navigationIcon);
     if (navIcon != nullptr) {
         setNavigationIcon(navIcon);
     }
 
-    std::string navDesc = atts.getString("navigationContentDescription");
+    std::string navDesc = a->getText(ST::navigationContentDescription);
     if (!navDesc.empty()) {
         setNavigationContentDescription(navDesc);
     }
 
-    Drawable* logo = atts.getDrawable("logo");
+    Drawable* logo = a->getDrawable(ST::logo);
     if (logo != nullptr) {
         setLogo(logo);
     }
 
-    std::string logoDesc = atts.getString("logoDescription");
+    std::string logoDesc = a->getText(ST::logoDescription);
     if (!logoDesc.empty()) {
         setLogoDescription(logoDesc);
     }
 
-    if (atts.hasAttribute("titleTextColor")) {
-        setTitleTextColor(atts.getColor("titleTextColor", 0xffffffff));
+    if (a->hasValue(ST::titleTextColor)) {
+        setTitleTextColor(a->getColor(ST::titleTextColor, 0xffffffff));
     }
 
-    if (atts.hasAttribute("subtitleTextColor")) {
-        setSubtitleTextColor(atts.getColor("subtitleTextColor", 0xffffffff));
+    if (a->hasValue(ST::subtitleTextColor)) {
+        setSubtitleTextColor(a->getColor(ST::subtitleTextColor, 0xffffffff));
     }
+    }
+
+    // Set the default context, since setPopupTheme() may be a no-op.
+    mPopupContext = mContext;
+    //setPopupTheme(a.getResourceId(R.styleable.Toolbar_popupTheme, 0));
 }
 
 void Toolbar::initToolbar(){

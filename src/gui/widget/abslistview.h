@@ -175,7 +175,12 @@ private:
     class EditText* mTextFilter;
     OnScrollListener mOnScrollListener;
 private:
-    void initAbsListView(const AttributeSet&atts);
+    void initAbsListView();
+    // AOSP places the styled-attribute reads in the ctor after initAbsListView();
+    // extracted here so both ctors (XML element attrs + the programmatic style-
+    // ref path) share one AOSP-aligned read sequence (binary TypedArray with a
+    // text-XML AttributeSet fallback).
+    void readAbsListViewAttrs(const AttributeSet& atts);
     void useDefaultSelector();
     std::vector<int>getDrawableStateForSelector();
     void setItemViewLayoutParams(View* child, int position);

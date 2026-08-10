@@ -2,6 +2,15 @@
 #include "framework_styleable.h"
 namespace cdroid {
 namespace styleable {
+    namespace AbsListView {
+        const uint32_t IDS[] = {
+            fw_attr::AbsListView::listSelector, fw_attr::AbsListView::drawSelectorOnTop,
+            fw_attr::AbsListView::stackFromBottom, fw_attr::AbsListView::scrollingCache,
+            fw_attr::AbsListView::textFilterEnabled, fw_attr::AbsListView::transcriptMode,
+            fw_attr::AbsListView::cacheColorHint, fw_attr::AbsListView::fastScrollEnabled,
+            fw_attr::AbsListView::fastScrollStyle, fw_attr::AbsListView::smoothScrollbar,
+            fw_attr::AbsListView::choiceMode, fw_attr::AbsListView::fastScrollAlwaysVisible, 0 };
+    }
     namespace AdapterViewAnimator {
         const uint32_t IDS[] = {
             fw_attr::AdapterViewAnimator::inAnimation, fw_attr::AdapterViewAnimator::outAnimation,
@@ -247,6 +256,22 @@ namespace styleable {
         const uint32_t IDS[] = {
             fw_attr::ToggleButton::textOn, fw_attr::ToggleButton::textOff,
             fw_attr::ToggleButton::disabledAlpha, 0 };
+    }
+    namespace Toolbar {
+        const uint32_t IDS[] = {
+            fw_attr::Toolbar::titleTextAppearance, fw_attr::Toolbar::subtitleTextAppearance,
+            fw_attr::Toolbar::title, fw_attr::Toolbar::subtitle, fw_attr::Toolbar::gravity,
+            fw_attr::Toolbar::titleMargin, fw_attr::Toolbar::titleMarginStart,
+            fw_attr::Toolbar::titleMarginEnd, fw_attr::Toolbar::titleMarginTop,
+            fw_attr::Toolbar::titleMarginBottom, fw_attr::Toolbar::contentInsetStart,
+            fw_attr::Toolbar::contentInsetEnd, fw_attr::Toolbar::contentInsetLeft,
+            fw_attr::Toolbar::contentInsetRight, fw_attr::Toolbar::contentInsetStartWithNavigation,
+            fw_attr::Toolbar::contentInsetEndWithActions, fw_attr::Toolbar::maxButtonHeight,
+            fw_attr::Toolbar::buttonGravity, fw_attr::Toolbar::collapseIcon,
+            fw_attr::Toolbar::collapseContentDescription, fw_attr::Toolbar::popupTheme,
+            fw_attr::Toolbar::navigationIcon, fw_attr::Toolbar::navigationContentDescription,
+            fw_attr::Toolbar::logo, fw_attr::Toolbar::logoDescription,
+            fw_attr::Toolbar::titleTextColor, fw_attr::Toolbar::subtitleTextColor, 0 };
     }
     namespace View {
         const uint32_t IDS[] = {
