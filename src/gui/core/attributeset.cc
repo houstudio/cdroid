@@ -230,6 +230,12 @@ int AttributeSet::getInt(const std::string&key,const std::unordered_map<std::str
 int AttributeSet::getResourceId(const std::string&key,int def)const{
     const std::string str = getString(key);
     if(!str.empty()){
+        // "parent" is the ConstraintLayout/RelativeLayout anchor sentinel meaning
+        // the parent view (id 0) — NOT a named resource. Return 0 directly; routing
+        // it through getId() wrongly resolves to an unrelated arsc entry named
+        // "parent" (aapt2's full framework dump puts one there) and breaks every
+        // parent-anchored constraint.
+        if (str == "parent") return 0;
         const int value = mContext->getId(str);
         return value == -1 ? def : value;
     }

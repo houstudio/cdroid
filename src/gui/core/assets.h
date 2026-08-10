@@ -81,6 +81,11 @@ public:
     // getAttribute + resolveAttributeReference, so ?android:colorPrimary etc.
     // flatten to a concrete value. Returns true if the theme had the attr.
     bool arscThemeAttribute(uint32_t attrId, Res_value* out) const;
+    // Resolve a theme attribute NAME to its value string. Uses the text mTheme
+    // first; in SDK/binary mode mTheme is empty (values only in resources.arsc),
+    // so it falls back to the arsc Theme. pkg is a package hint (arscGetIdentifier
+    // also tries "android" and any package).
+    std::string themeString(const std::string& key, const std::string& pkg) const;
     int loadStyles(const std::string&resid);
     void clearStyles();
     const std::string getPackageName()const override;

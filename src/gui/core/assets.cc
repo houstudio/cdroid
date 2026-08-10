@@ -81,6 +81,19 @@ bool Assets::arscThemeAttribute(uint32_t attrId, Res_value* out) const {    if (
     return true;
 }
 
+// Resolve a theme attribute NAME to its value string. Text mTheme first; in
+// SDK/binary mode mTheme is empty (values only in resources.arsc), so fall back
+// to the arsc Theme. pkg is a hint (arscGetIdentifier also tries android/any).
+std::string Assets::themeString(const std::string& key, const std::string& pkg) const {
+    std::string v = mTheme.getString(key);
+    if (!v.empty() || !mArscTheme || !mResTable) return v;
+    uint32_t attrId = arscGetIdentifier(key, "attr", pkg);
+    Res_value tv;
+    if (attrId && arscThemeAttribute(attrId, &tv) && tv.data != 0)
+        return renderResValue(this, tv);
+    return std::string();
+}
+
 // Resolve a "?type/key" theme-attribute reference to a concrete value string.
 std::string Assets::resolveThemeRef(const std::string& resid) const {
     if (resid.empty() || resid[0] != '?' || !mArscTheme) return resid;
@@ -935,7 +948,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
     }
 
     if(resname.find("attr/")!=std::string::npos) {//for reference resource
-        resname = mTheme.getString(resname.substr(5));
+        resname = themeString(resname.substr(5), package);
         d = getDrawable(resname);
     } else if(resname.find("color/")!=std::string::npos) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
@@ -1097,7 +1110,7 @@ int Assets::getColor(const std::string&refid) {
     }
     if(relname.compare(0,4,"attr")==0){
         relname=relname.substr(5);
-        name =  mTheme.getString(relname);
+        name =  themeString(relname, pkg);
         return getColor(name);
     }else if(refid.find("?")!=std::string::npos){
         std::string clrRef = name;//mTheme.getString(name.substr(6));
@@ -1106,13 +1119,13 @@ int Assets::getColor(const std::string&refid) {
         if(it != mColors.end())
             return it->second;
         name = name.substr(name.find_last_of(":?/")+1);
-        clrRef = mTheme.getString(name);
+        clrRef = themeString(name, pkg);
         return getColor(clrRef);
     }else if((refid[0]=='#')||refid.find(':')==std::string::npos) {
         return Color::parseColor(refid);
     } else if(refid.find("color/")==std::string::npos) { //refid is defined as an color reference
         parseResource(refid,&name,nullptr);
-        name = mTheme.getString(name);
+        name = themeString(name, pkg);
         return getColor(name);
     }
     throw std::runtime_error("Resource not found:" + refid);
@@ -1161,7 +1174,7 @@ cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullr
             std::string realName;
             parseResource(fullresid,&realName,nullptr);
             if(realName.find("?")!=std::string::npos)
-            realName = mTheme.getString(realName);
+            realName = themeString(realName, pkg);
             itc = mColors.find(realName);
             if(itc != mColors.end()){
                 auto cls = ColorStateList::valueOf(itc->second);
@@ -1172,7 +1185,7 @@ cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullr
     } else if(fullresid.find("attr")!=std::string::npos) {
         const size_t slashpos = fullresid.find("/");
         std::string name = fullresid.substr(slashpos+1);
-        name = mTheme.getString(name);
+        name = themeString(name, pkg);
         if(!name.empty())return getColorStateList(name);
     }
     LOGD_IF(!fullresid.empty(),"%s not found",fullresid.c_str());
@@ -1197,7 +1210,7 @@ std::string Assets::resolveAttrValue(const std::string&attrResId)const{
             if((pos =name.find('/'))!=std::string::npos)
                 name=name.substr(pos+1);
             key = name;
-            name= mTheme.getString(key);
+            name= themeString(key, "");
             atts.add(key,name);
             if((pos=name.find('@'))!=std::string::npos)
                 name.erase(pos,1);
@@ -1227,18 +1240,7 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
             if((pos =name.find('/'))!=std::string::npos)
                 name=name.substr(pos+1);
             key = name;
-            name= mTheme.getString(key);
-            // Binary/arsc fallback: when the text theme lacks this attribute,
-            // resolve the theme attribute through the arsc Theme (e.g.
-            // actionOverflowButtonStyle -> @style/Widget...Overflow). This is what
-            // makes obtainStyledAttributes("?android:attr/xxx") work in binary mode.
-            if (name.empty() && mArscTheme && mResTable) {
-                uint32_t attrId = arscGetIdentifier(key, "attr", resPkg);
-                Res_value tv;
-                if (attrId && arscThemeAttribute(attrId, &tv) && tv.data != 0) {
-                    name = renderResValue(this, tv);
-                }
-            }
+            name= themeString(key, resPkg);
             atts.add(key,name);
             if((pos=name.find('@'))!=std::string::npos)
                 name.erase(pos,1);

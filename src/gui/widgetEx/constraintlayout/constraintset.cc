@@ -705,12 +705,6 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     l.endToStart   = ta&&ta->hasValue(SCN::layout_constraintEnd_toStartOf)   ? (int)ta->getResourceId(SCN::layout_constraintEnd_toStartOf,   l.endToStart)   : a.getResourceId("layout_constraintEnd_toStartOf",   l.endToStart);
     l.endToEnd     = ta&&ta->hasValue(SCN::layout_constraintEnd_toEndOf)     ? (int)ta->getResourceId(SCN::layout_constraintEnd_toEndOf,     l.endToEnd)     : a.getResourceId("layout_constraintEnd_toEndOf",     l.endToEnd);
     l.circleConstraint = ta&&ta->hasValue(SCN::layout_constraintCircle) ? (int)ta->getResourceId(SCN::layout_constraintCircle, l.circleConstraint) : a.getResourceId("layout_constraintCircle", l.circleConstraint);
-    LOGD("CSfill mView=0x%x topToTop{has=%d v=%d} topToBot=%d botToTop=%d botToBot{has=%d v=%d} L=%d",
-         mViewId,
-         ta&&ta->hasValue(SCN::layout_constraintTop_toTopOf), l.topToTop,
-         l.topToBottom, l.bottomToTop,
-         ta&&ta->hasValue(SCN::layout_constraintBottom_toBottomOf), l.bottomToBottom,
-         l.leftToLeft);
 
     // --- guideline / editor absolute ---
     l.guideBegin   = ta&&ta->hasValue(SCN::layout_constraintGuide_begin) ? ta->getDimensionPixelOffset(SCN::layout_constraintGuide_begin, l.guideBegin) : a.getDimensionPixelOffset("layout_constraintGuide_begin", l.guideBegin);
