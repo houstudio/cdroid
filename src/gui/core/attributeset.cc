@@ -53,7 +53,6 @@ AttributeSet::AttributeSet(const AttributeSet&other):AttributeSet(other.mContext
     }
     mAttrResIds = other.mAttrResIds;   // share the name->resId map (if any)
     mStyleResId = other.mStyleResId;
-    mDefStyleAttr = other.mDefStyleAttr;
 }
 
 AttributeSet& AttributeSet::operator =(const AttributeSet&other){
@@ -64,7 +63,6 @@ AttributeSet& AttributeSet::operator =(const AttributeSet&other){
     }
     mAttrResIds = other.mAttrResIds;
     mStyleResId = other.mStyleResId;
-    mDefStyleAttr = other.mDefStyleAttr;
     return *this;
 }
 

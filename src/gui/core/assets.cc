@@ -1433,11 +1433,6 @@ std::unique_ptr<TypedArray> Assets::obtainStyledAttributes(
         return std::make_unique<TypedArray>(*mResTable, std::move(styled), nullptr,
                                             mDisplayMetrics.density, this);
     }
-    // The widget's default-style attribute (defStyleAttr) may be recorded on the
-    // AttributeSet by LayoutInflater (DECLARE_WIDGET default style); use it when the
-    // caller didn't pass one explicitly.
-    if (defStyleAttr == 0) defStyleAttr = (uint32_t)attrs->getDefStyleAttr();
-
     const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(attrs);
     const bool isBinary = parser && parser->isBinaryAXML();
     if (isBinary) {
