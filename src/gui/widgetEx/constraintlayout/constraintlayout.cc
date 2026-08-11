@@ -81,8 +81,7 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
     : MarginLayoutParams(c, attrs) {
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::ConstraintLayoutLayout::IDS) : nullptr;
+    auto ta = c->obtainStyledAttributes(attrs, styleable::ConstraintLayoutLayout::IDS);
     namespace SCC = styleable::ConstraintLayoutLayout;
     // Anchor targets — accept either a resource id ("parent" -> PARENT_ID=0) or an int.
     leftToLeft   = ta&&ta->hasValue(SCC::layout_constraintLeft_toLeftOf)   ? (int)ta->getResourceId(SCC::layout_constraintLeft_toLeftOf,   UNSET) : attrs.getResourceId("layout_constraintLeft_toLeftOf",   UNSET);

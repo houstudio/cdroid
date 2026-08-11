@@ -58,8 +58,7 @@ std::unique_ptr<MotionKey> makeKeyAttribute(const AttributeSet& a) {
     loadCommon(*k, a);
     Context* ctx = a.getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        a, styleable::KeyAttribute::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(a, styleable::KeyAttribute::IDS);
     namespace SKA = styleable::KeyAttribute;
     k->mAlpha       = ta&&ta->hasValue(SKA::alpha) ? ta->getFloat(SKA::alpha, k->mAlpha) : a.getFloat("alpha", k->mAlpha);
     k->mElevation   = ta&&ta->hasValue(SKA::elevation) ? ta->getFloat(SKA::elevation, k->mElevation) : a.getFloat("elevation", k->mElevation);
@@ -85,8 +84,7 @@ std::unique_ptr<MotionKey> makeKeyPosition(const AttributeSet& a) {
     loadCommon(*k, a);
     Context* ctx = a.getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        a, styleable::KeyPosition::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(a, styleable::KeyPosition::IDS);
     namespace SKP = styleable::KeyPosition;
     k->mTransitionEasing = ta&&ta->hasValue(SKP::transitionEasing) ? ta->getString(SKP::transitionEasing) : a.getString("transitionEasing", k->mTransitionEasing);
     k->mDrawPath       = ta&&ta->hasValue(SKP::drawPath) ? ta->getInt(SKP::drawPath, k->mDrawPath) : a.getInt("drawPath", k->mDrawPath);
@@ -107,8 +105,7 @@ std::unique_ptr<MotionKey> makeKeyCycle(const AttributeSet& a) {
     loadCommon(*k, a);
     Context* ctx = a.getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        a, styleable::KeyCycle::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(a, styleable::KeyCycle::IDS);
     namespace SKC = styleable::KeyCycle;
     k->mWaveShape  = ta&&ta->hasValue(SKC::waveShape) ? ta->getInt(SKC::waveShape, k->mWaveShape) : a.getInt("waveShape", k->mWaveShape);
     k->mWavePeriod = ta&&ta->hasValue(SKC::wavePeriod) ? ta->getFloat(SKC::wavePeriod, k->mWavePeriod) : a.getFloat("wavePeriod", k->mWavePeriod);
@@ -133,8 +130,7 @@ std::unique_ptr<MotionKey> makeKeyTrigger(const AttributeSet& a) {
     loadCommon(*k, a);
     Context* ctx = a.getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        a, styleable::KeyTrigger::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(a, styleable::KeyTrigger::IDS);
     namespace SKT = styleable::KeyTrigger;
     k->mCross         = ta&&ta->hasValue(SKT::onCross) ? ta->getString(SKT::onCross) : a.getString("onCross", k->mCross);
     k->mPositiveCross = ta&&ta->hasValue(SKT::onPositiveCross) ? ta->getString(SKT::onPositiveCross) : a.getString("onPositiveCross", k->mPositiveCross);

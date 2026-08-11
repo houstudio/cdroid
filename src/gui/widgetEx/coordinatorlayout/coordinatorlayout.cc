@@ -1689,8 +1689,7 @@ CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeS
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::CoordinatorLayoutLayout::IDS) : nullptr;
+    auto ta = context->obtainStyledAttributes(attrs, styleable::CoordinatorLayoutLayout::IDS);
     namespace SCL = styleable::CoordinatorLayoutLayout;
 
     this->gravity = ta&&ta->hasValue(SCL::layout_gravity) ? ta->getInt(SCL::layout_gravity,Gravity::NO_GRAVITY) : attrs.getGravity("layout_gravity",Gravity::NO_GRAVITY);

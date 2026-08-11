@@ -56,8 +56,7 @@ void ListView::initListView(const AttributeSet&attrs) {
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::ListView::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(attrs, styleable::ListView::IDS);
     if (ta) {
     namespace SLV = styleable::ListView;
 

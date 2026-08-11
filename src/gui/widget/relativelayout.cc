@@ -896,8 +896,7 @@ RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):
     memset(mRules, 0, sizeof(mRules)); // absent rules stay 0 (binary switch only fires present attrs)
     // Phase 2: TypedArray switch-loop (22 rules = many attrs → loop, AOSP pattern).
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        atts, styleable::RelativeLayoutLayout::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(atts, styleable::RelativeLayoutLayout::IDS);
     namespace SRL = styleable::RelativeLayoutLayout;
 
     

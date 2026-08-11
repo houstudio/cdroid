@@ -1207,8 +1207,7 @@ FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& a
     :ViewGroup::MarginLayoutParams(context,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::FlexboxLayoutLayout::IDS) : nullptr;
+    auto ta = context->obtainStyledAttributes(attrs, styleable::FlexboxLayoutLayout::IDS);
     namespace SFL = styleable::FlexboxLayoutLayout;
 
     mOrder = ta&&ta->hasValue(SFL::layout_order) ? ta->getInt(SFL::layout_order, (int)ORDER_DEFAULT) : attrs.getInt("layout_order", (int)ORDER_DEFAULT);

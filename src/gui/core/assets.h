@@ -88,7 +88,7 @@ public:
     // Render a resource ID as an "@type/key" reference string (e.g.
     // "@drawable/bg", "@string/hello") matching text-XML form, so CDROID's
     // existing string-based resolvers consume binary-AXML references unchanged.
-    std::string arscReferenceName(uint32_t resId) const;
+    std::string arscReferenceName(uint32_t resId) const override;
     // Resolve a theme-attribute reference (?attr/<id>) through the arsc Theme:
     // getAttribute + resolveAttributeReference, so ?android:colorPrimary etc.
     // flatten to a concrete value. Returns true if the theme had the attr.

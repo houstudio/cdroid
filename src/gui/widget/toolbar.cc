@@ -43,7 +43,7 @@ namespace ST = styleable::Toolbar;
 // strings, so bridge the id -> "@type/key" via arscReferenceName.
 auto styleName = [&](size_t idx)->std::string{
     uint32_t rid = a->getResourceId(idx, 0);
-    return rid ? _assets->arscReferenceName(rid) : std::string();
+    return rid ? ctx->arscReferenceName(rid) : std::string();
 };
 mTitleTextAppearance = styleName(ST::titleTextAppearance);
 mSubtitleTextAppearance = styleName(ST::subtitleTextAppearance);

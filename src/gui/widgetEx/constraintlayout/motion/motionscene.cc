@@ -93,8 +93,7 @@ MotionScene::Transition::Transition(MotionScene& scene, const AttributeSet& a)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = a.getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        a, styleable::Transition::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(a, styleable::Transition::IDS);
     namespace STR = styleable::Transition;
     mId = scene.getId(ta&&ta->hasValue(STR::id) ? ta->getString(STR::id) : a.getString("id", "")); // <Transition android:id="@+id/...">
     mConstraintSetStart = scene.getId(ta&&ta->hasValue(STR::constraintSetStart) ? ta->getString(STR::constraintSetStart) : a.getString("constraintSetStart", ""));

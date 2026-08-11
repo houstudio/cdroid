@@ -28,8 +28,7 @@ LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :ViewGroup::MarginLayoutParams(c,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::LinearLayoutLayout::IDS) : nullptr;
+    auto ta = c->obtainStyledAttributes(attrs, styleable::LinearLayoutLayout::IDS);
     if (ta) {
     namespace SLL = styleable::LinearLayoutLayout;
     weight = ta->getFloat(SLL::layout_weight, 0);

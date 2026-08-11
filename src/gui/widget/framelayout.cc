@@ -287,8 +287,7 @@ FrameLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     // layout_gravity is shared with LinearLayout's styleable (same framework attr).
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::LinearLayoutLayout::IDS) : nullptr;
+    auto ta = c->obtainStyledAttributes(attrs, styleable::LinearLayoutLayout::IDS);
     gravity = ta&&ta->hasValue(styleable::LinearLayoutLayout::layout_gravity) ? ta->getInt(styleable::LinearLayoutLayout::layout_gravity,UNSPECIFIED_GRAVITY) : attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
 }
 

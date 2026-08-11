@@ -98,6 +98,10 @@ public:
     // AOSP's int[]). Default returns nullptr; Assets overrides with arsc resolution.
     virtual std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet* attrs,
         const uint32_t* styleable, int32_t defStyleAttr=0, int32_t defStyleRes=0)=0;
+    // Resolve a resource id to its "@type/key" (or "@pkg:type/key") reference name —
+    // the CDROID counterpart of AOSP Resources.getResourceName(resId). Default
+    // empty; Assets overrides with arsc resolution.
+    virtual std::string arscReferenceName(uint32_t resId) const { return std::string(); }
     // Convenience overload for a non-null AttributeSet& (delegates to the pointer
     // form). Defined out-of-line (context.cc) since it returns unique_ptr<TypedArray>.
     std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet& attrs,

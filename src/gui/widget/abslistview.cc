@@ -118,8 +118,7 @@ void AbsListView::initAbsListView() {
 // TypedArray; a==null (text XML / no arsc) leaves the widget at its defaults.
 void AbsListView::readAbsListViewAttrs(const AttributeSet& atts) {
     Assets* _assets = mContext ? dynamic_cast<Assets*>(mContext) : nullptr;
-    auto a = _assets ? _assets->obtainStyledAttributes(
-        atts, styleable::AbsListView::IDS) : nullptr;
+    auto a = mContext->obtainStyledAttributes(atts, styleable::AbsListView::IDS);
     if (!a) return;
     namespace SA = styleable::AbsListView;
 
@@ -140,7 +139,7 @@ void AbsListView::readAbsListViewAttrs(const AttributeSet& atts) {
     // AOSP: setFastScrollStyle(a.getResourceId(...)). CDROID's setter takes a
     // style string, so bridge the @StyleRes id -> "@type/key" via arscReferenceName.
     uint32_t fsStyle = a->getResourceId(SA::fastScrollStyle, 0);
-    if (fsStyle != 0) setFastScrollStyle(_assets->arscReferenceName(fsStyle));
+    if (fsStyle != 0) setFastScrollStyle(mContext->arscReferenceName(fsStyle));
     setFastScrollAlwaysVisible(a->getBoolean(SA::fastScrollAlwaysVisible, false));
 }
 
