@@ -1206,7 +1206,6 @@ int FlexboxLayout::getPaddingEnd() {
 FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
     :ViewGroup::MarginLayoutParams(context,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = context->obtainStyledAttributes(attrs, styleable::FlexboxLayoutLayout::IDS);
     namespace SFL = styleable::FlexboxLayoutLayout;
 

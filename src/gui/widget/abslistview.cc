@@ -117,7 +117,6 @@ void AbsListView::initAbsListView() {
 // Text-XML ctor path is dropped: this resolves only through the binary-AXML
 // TypedArray; a==null (text XML / no arsc) leaves the widget at its defaults.
 void AbsListView::readAbsListViewAttrs(const AttributeSet& atts) {
-    Assets* _assets = mContext ? dynamic_cast<Assets*>(mContext) : nullptr;
     auto a = mContext->obtainStyledAttributes(atts, styleable::AbsListView::IDS);
     if (!a) return;
     namespace SA = styleable::AbsListView;

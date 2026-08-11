@@ -50,7 +50,6 @@ void MotionEffect::init(const AttributeSet& attrs) {
     ConstraintHelper::init(attrs);
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = attrs.getContext();
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = ctx->obtainStyledAttributes(attrs, styleable::MotionEffect::IDS);
     namespace SME = styleable::MotionEffect;
     mMotionEffectStart = std::max(0, std::min(99, ta&&ta->hasValue(SME::motionEffect_start) ? ta->getInt(SME::motionEffect_start, mMotionEffectStart) : attrs.getInt("motionEffect_start", mMotionEffectStart)));

@@ -11,7 +11,6 @@ LayoutParams::LayoutParams(){
 
 LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs):LayoutParams(){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
     auto ta = c->obtainStyledAttributes(attrs, styleable::Layout::IDS);
     namespace SL = styleable::Layout;
     width = ta&&ta->hasValue(SL::layout_width)  ? ta->getLayoutDimension(SL::layout_width ,WRAP_CONTENT) : attrs.getLayoutDimension("layout_width" ,WRAP_CONTENT);
@@ -55,7 +54,6 @@ const std::string LayoutParams::sizeToString(int size) {
 MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
    :LayoutParams(c,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
     auto ta = c->obtainStyledAttributes(attrs, styleable::MarginLayout::IDS);
     namespace SML = styleable::MarginLayout;
     const int margin = ta&&ta->hasValue(SML::layout_margin) ? ta->getDimensionPixelSize(SML::layout_margin,-1) : attrs.getDimensionPixelSize("layout_margin",-1);

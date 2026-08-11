@@ -77,7 +77,6 @@ void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet&
 }
 void GridLayout::LayoutParams::init(Context* context,const AttributeSet& attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = context->obtainStyledAttributes(attrs, styleable::GridLayoutLayout::IDS);
     if (ta) {
     namespace SGL = styleable::GridLayoutLayout;

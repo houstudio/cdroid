@@ -57,7 +57,6 @@ std::unique_ptr<MotionKey> makeKeyAttribute(const AttributeSet& a) {
     auto k = std::make_unique<MotionKeyAttributes>();
     loadCommon(*k, a);
     Context* ctx = a.getContext();
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = ctx->obtainStyledAttributes(a, styleable::KeyAttribute::IDS);
     namespace SKA = styleable::KeyAttribute;
     k->mAlpha       = ta&&ta->hasValue(SKA::alpha) ? ta->getFloat(SKA::alpha, k->mAlpha) : a.getFloat("alpha", k->mAlpha);
@@ -83,7 +82,6 @@ std::unique_ptr<MotionKey> makeKeyPosition(const AttributeSet& a) {
     auto k = std::make_unique<MotionKeyPosition>();
     loadCommon(*k, a);
     Context* ctx = a.getContext();
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = ctx->obtainStyledAttributes(a, styleable::KeyPosition::IDS);
     namespace SKP = styleable::KeyPosition;
     k->mTransitionEasing = ta&&ta->hasValue(SKP::transitionEasing) ? ta->getString(SKP::transitionEasing) : a.getString("transitionEasing", k->mTransitionEasing);
@@ -104,7 +102,6 @@ std::unique_ptr<MotionKey> makeKeyCycle(const AttributeSet& a) {
     auto k = std::make_unique<KeyT>();
     loadCommon(*k, a);
     Context* ctx = a.getContext();
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = ctx->obtainStyledAttributes(a, styleable::KeyCycle::IDS);
     namespace SKC = styleable::KeyCycle;
     k->mWaveShape  = ta&&ta->hasValue(SKC::waveShape) ? ta->getInt(SKC::waveShape, k->mWaveShape) : a.getInt("waveShape", k->mWaveShape);
@@ -129,7 +126,6 @@ std::unique_ptr<MotionKey> makeKeyTrigger(const AttributeSet& a) {
     auto k = std::make_unique<MotionKeyTrigger>();
     loadCommon(*k, a);
     Context* ctx = a.getContext();
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = ctx->obtainStyledAttributes(a, styleable::KeyTrigger::IDS);
     namespace SKT = styleable::KeyTrigger;
     k->mCross         = ta&&ta->hasValue(SKT::onCross) ? ta->getString(SKT::onCross) : a.getString("onCross", k->mCross);

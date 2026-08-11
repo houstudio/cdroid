@@ -55,7 +55,6 @@ void ListView::initListView(const AttributeSet&attrs) {
     mDividerIsOpaque = true;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = getContext();
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = ctx->obtainStyledAttributes(attrs, styleable::ListView::IDS);
     if (ta) {
     namespace SLV = styleable::ListView;
