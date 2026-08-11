@@ -223,7 +223,7 @@ struct Private{
                 if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
                     Assets* assets = dynamic_cast<Assets*>(ctx);
                     if(assets){
-                        std::string ref = ctx->arscReferenceName(v.data);
+                        std::string ref = ctx->getResourceName(v.data);
                         if(!ref.empty()) return ref;
                     }
                 }
@@ -261,14 +261,14 @@ struct Private{
                                 }
                                 case Res_value::TYPE_REFERENCE:
                                 case Res_value::TYPE_DYNAMIC_REFERENCE:{
-                                    std::string ref = ctx->arscReferenceName(tv.data);
+                                    std::string ref = ctx->getResourceName(tv.data);
                                     if(!ref.empty()) return ref;
                                     break;
                                 }
                                 default: break;  // STRING etc. — fall through to ?type/key
                             }
                         }
-                        std::string ref = ctx->arscReferenceName(v.data);
+                        std::string ref = ctx->getResourceName(v.data);
                         if(!ref.empty()){ if(ref[0] == '@') ref[0] = '?'; return ref; }
                     }
                 }

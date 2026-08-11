@@ -117,7 +117,7 @@ uint32_t TypedArray::getResourceId(size_t idx, uint32_t def) const {
         // match View::getId(); fall back to the raw arsc id when the name can't be resolved.
         if (mContext) {
             const Assets* a = static_cast<const Assets*>(mContext);
-            std::string name = a->arscReferenceName(v.data);
+            std::string name = a->getResourceName(v.data);
             if (!name.empty()) {
                 int idgen = a->getId(name);
                 if (idgen != -1) return (uint32_t)idgen;
@@ -243,7 +243,7 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
         return new ColorDrawable(v.data);
     if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
         v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
-        std::string name = a->arscReferenceName(v.data);
+        std::string name = a->getResourceName(v.data);
         if (!name.empty()) return a->getDrawable(name);
         return nullptr;
     }
@@ -273,7 +273,7 @@ std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const 
         return ColorStateList::valueOf(v.data);
     if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
         v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
-        std::string name = a->arscReferenceName(v.data);
+        std::string name = a->getResourceName(v.data);
         if (!name.empty()) return a->getColorStateList(name);
         return nullptr;
     }

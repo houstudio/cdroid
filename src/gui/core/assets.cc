@@ -59,7 +59,7 @@ const char16_t* Assets::arscStringAt(uint32_t resId, size_t* outLen) const {
 // Render a resource ID as "@type/key" (text-XML reference form) so binary-AXML
 // references flow through the same resolution paths as text XML. Returns "" if
 // the arsc can't name the resource (caller falls back to "@0x..").
-std::string Assets::arscReferenceName(uint32_t resId) const {
+std::string Assets::getResourceName(uint32_t resId) const {
     if (!mResTable || resId == 0) return "";
     std::string pkg, type, key;
     if (mResTable->getResourceName(resId, &pkg, &type, &key) && !type.empty() && !key.empty()) {
@@ -189,7 +189,7 @@ static std::string renderResValue(const Assets* a, const Res_value& v) {
         }
         case Res_value::TYPE_REFERENCE:
         case Res_value::TYPE_DYNAMIC_REFERENCE:
-            return a->arscReferenceName(v.data);
+            return a->getResourceName(v.data);
         default: return std::string();
     }
 }

@@ -136,9 +136,9 @@ void AbsListView::readAbsListViewAttrs(const AttributeSet& atts) {
     setChoiceMode(a->getInt(SA::choiceMode, (int)CHOICE_MODE_NONE));
     setFastScrollEnabled(a->getBoolean(SA::fastScrollEnabled, false));
     // AOSP: setFastScrollStyle(a.getResourceId(...)). CDROID's setter takes a
-    // style string, so bridge the @StyleRes id -> "@type/key" via arscReferenceName.
+    // style string, so bridge the @StyleRes id -> "@type/key" via getResourceName.
     uint32_t fsStyle = a->getResourceId(SA::fastScrollStyle, 0);
-    if (fsStyle != 0) setFastScrollStyle(mContext->arscReferenceName(fsStyle));
+    if (fsStyle != 0) setFastScrollStyle(mContext->getResourceName(fsStyle));
     setFastScrollAlwaysVisible(a->getBoolean(SA::fastScrollAlwaysVisible, false));
 }
 

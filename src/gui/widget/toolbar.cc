@@ -39,10 +39,10 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ViewGr
     
 namespace ST = styleable::Toolbar;
 // AOSP reads these via getResourceId(@StyleRes int); CDROID holds style
-// strings, so bridge the id -> "@type/key" via arscReferenceName.
+// strings, so bridge the id -> "@type/key" via getResourceName.
 auto styleName = [&](size_t idx)->std::string{
     uint32_t rid = a->getResourceId(idx, 0);
-    return rid ? ctx->arscReferenceName(rid) : std::string();
+    return rid ? ctx->getResourceName(rid) : std::string();
 };
 mTitleTextAppearance = styleName(ST::titleTextAppearance);
 mSubtitleTextAppearance = styleName(ST::subtitleTextAppearance);
