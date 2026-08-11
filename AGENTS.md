@@ -26,4 +26,5 @@
 
 ## 参考路径
 - Android SDK 来源：/opt/android-sdk/sources/android-36/
-- AndroidX /home/houzh/research/androidx
+- AndroidX $HOME/research/androidx
+- material-components-android $HOME/research/material-components-android/
