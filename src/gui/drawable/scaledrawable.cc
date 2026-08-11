@@ -125,15 +125,15 @@ void ScaleDrawable::draw(Canvas& canvas) {
 extern int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def);
 
 void ScaleDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
-    // scaleWidth/scaleHeight rely on CDROID's getDimensionOrFraction helper
-    // (base=100, CDROID-specific percent semantics) which has no TypedArray
-    // equivalent, so they stay on the string AttributeSet bridge.
-    mState->mScaleWidth = getDimensionOrFraction(atts,"scaleWidth", 100, mState->mScaleWidth);
-    mState->mScaleHeight = getDimensionOrFraction(atts,"scaleHeight", 100, mState->mScaleHeight);
-
     auto ta = r.obtainStyledAttributes(atts, styleable::ScaleDrawable::IDS);
-    if (ta) updateStateFromTypedArray(*ta);
-
+    if (ta) {
+        namespace SS = styleable::ScaleDrawable;
+        // AOSP a.getFraction(scaleWidth, ...) — base=100 preserves CDROID's
+        // percent semantics (100% = 100.0, not AOSP's 1.0).
+        mState->mScaleWidth = ta->getFraction(SS::scaleWidth, 100, 100, mState->mScaleWidth);
+        mState->mScaleHeight = ta->getFraction(SS::scaleHeight, 100, 100, mState->mScaleHeight);
+        updateStateFromTypedArray(*ta);
+    }
     DrawableWrapper::inflate(r,parser,atts);
 }
 
