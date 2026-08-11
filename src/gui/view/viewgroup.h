@@ -305,6 +305,7 @@ public:
     ViewGroup(int w,int h);
     ViewGroup(int x,int y,int w,int h);
     ViewGroup(Context*ctx,const AttributeSet& attrs);
+    ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     virtual ~ViewGroup();
     virtual bool ensureTouchMode(bool);
     bool getTouchscreenBlocksFocus()const;

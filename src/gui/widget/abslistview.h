@@ -369,6 +369,7 @@ protected:
 public:
     AbsListView(int w,int h);
     AbsListView(Context*,const AttributeSet&atts);
+    AbsListView(Context*,const AttributeSet* attrs,int defStyleAttr=0);
     ~AbsListView()override;
     void setAdapter(Adapter*adapter)override;
     int getCheckedItemCount()const;

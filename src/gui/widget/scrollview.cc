@@ -34,8 +34,11 @@ ScrollView::ScrollView(int w,int h):FrameLayout(w,h){
     mActivePointerId=INVALID_POINTER;
 }
 
-ScrollView::ScrollView(Context*context,const AttributeSet&atts)
-  :FrameLayout(context,atts){
+ScrollView::ScrollView(Context*context,const AttributeSet& atts):ScrollView(context,&atts,0){}
+
+ScrollView::ScrollView(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
+  :FrameLayout(context,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initScrollView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;

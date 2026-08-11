@@ -21,7 +21,10 @@ namespace cdroid{
 
 DECLARE_WIDGET2(Button,"cdroid:attr/buttonStyle")
 
-Button::Button(Context*ctx,const AttributeSet& attrs):TextView(ctx,attrs){
+Button::Button(Context*ctx,const AttributeSet& attrs):Button(ctx,&attrs,0){}
+
+Button::Button(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):TextView(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 }
 
 Button::Button(int32_t w, int32_t h):Button(std::string(),w,h){

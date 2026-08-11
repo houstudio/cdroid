@@ -152,6 +152,7 @@ protected:
 public:
     RelativeLayout(int w,int h);
     RelativeLayout(Context* context,const AttributeSet& attrs);
+    RelativeLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~RelativeLayout()override;
     bool shouldDelayChildPressedState()override;
     void setIgnoreGravity(int viewId);

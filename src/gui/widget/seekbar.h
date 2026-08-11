@@ -35,6 +35,7 @@ protected:
 public:
     SeekBar(int w,int h);
     SeekBar(Context*ctx,const AttributeSet& attrs);
+    SeekBar(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     void setOnSeekBarChangeListener(const OnSeekBarChangeListener& l);
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;

@@ -108,6 +108,7 @@ protected:
 public:
     Switch(int w,int h);
     Switch(Context* context,const AttributeSet& attrs);
+    Switch(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~Switch()override;
     void setSwitchTextAppearance(Context* context,const std::string&resid);
     void setSwitchTypeface(Typeface* tf, int style);

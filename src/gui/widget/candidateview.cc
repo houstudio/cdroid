@@ -33,7 +33,10 @@ CandidateView::CandidateView(int w,int h):View(w,h){
     initView();
 }
 
-CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts){
+CandidateView::CandidateView(Context*ctx,const AttributeSet& atts):CandidateView(ctx,&atts,0){}
+
+CandidateView::CandidateView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
      mSelectionHighlight = atts.getDrawable("list_selector_background");
      setBackgroundColor(atts.getColor("candidate_background"));
      mColorNormal = atts.getColor("candidate_normal");

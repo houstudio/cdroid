@@ -69,6 +69,7 @@ protected:
 public:
     GridView(int w,int h);
     GridView(Context*ctx,const AttributeSet&atts);
+    GridView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     Adapter*getAdapter()override;
     void setAdapter(Adapter* adapter)override;
     void setSelection(int position)override;

@@ -186,6 +186,7 @@ protected:
 public:
     PatternLockView(int,int);
     PatternLockView(Context* context,const AttributeSet& attrs);
+    PatternLockView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~PatternLockView()override;
     bool onHoverEvent(MotionEvent& event)override;
     bool onTouchEvent(MotionEvent& event)override;

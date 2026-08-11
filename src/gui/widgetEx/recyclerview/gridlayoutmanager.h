@@ -105,6 +105,7 @@ protected:
             LayoutState& layoutState, LayoutChunkResult& result)override;
 public:
     GridLayoutManager(Context* context, const AttributeSet& attrs);
+    GridLayoutManager(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     GridLayoutManager(Context* context, int spanCount);
     GridLayoutManager(Context* context, int spanCount,int orientation, bool reverseLayout);
     ~GridLayoutManager()override;

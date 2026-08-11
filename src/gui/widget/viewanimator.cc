@@ -28,8 +28,11 @@ ViewAnimator::ViewAnimator(int w,int h):FrameLayout(w,h){
     setMeasureAllChildren(true);
 }
 
-ViewAnimator::ViewAnimator(Context* context,const AttributeSet& attrs)
-  :FrameLayout(context,attrs){
+ViewAnimator::ViewAnimator(Context* context,const AttributeSet& attrs):ViewAnimator(context,&attrs,0){}
+
+ViewAnimator::ViewAnimator(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :FrameLayout(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     mInAnimation = nullptr;
     mOutAnimation= nullptr;
 }

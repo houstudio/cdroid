@@ -112,8 +112,11 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     setFocusableInTouchMode(true);
 }
 
-NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
-  :LinearLayout(context,atts){
+NumberPicker::NumberPicker(Context* context,const AttributeSet& atts):NumberPicker(context,&atts,0){}
+
+NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :LinearLayout(context,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initView();
     // Standard public framework attrs resolved typed via the NumberPicker styleable.
     // The CDROID-specific attrs read below (selectionDivider/internal*/wheelItemCount/

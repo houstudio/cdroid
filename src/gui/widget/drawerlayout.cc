@@ -75,8 +75,11 @@ void DrawerLayout::initView(){
     mDrawerElevation = DRAWER_ELEVATION * density;
 }
 
-DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet&atts)
-  :ViewGroup(ctx,atts){
+DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet& atts):DrawerLayout(ctx,&atts,0){}
+
+DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :ViewGroup(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initView();
 }
 

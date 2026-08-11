@@ -31,8 +31,11 @@ RatingBar::RatingBar(int w,int h):AbsSeekBar(w,h){
     setStepSize(0.5f);
 }
 
-RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
-    :AbsSeekBar(ctx,atts){
+RatingBar::RatingBar(Context*ctx,const AttributeSet& atts):RatingBar(ctx,&atts,0){}
+
+RatingBar::RatingBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    :AbsSeekBar(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     mNumStars = 5;
     mIsUserSeekable = true;
     mProgressOnStartTracking =0;

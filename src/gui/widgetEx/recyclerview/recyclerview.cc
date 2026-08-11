@@ -84,8 +84,11 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
     setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 
-RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
-   :ViewGroup(context, attrs){
+RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs):RecyclerView(context,&attrs,0){}
+
+RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+   :ViewGroup(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(

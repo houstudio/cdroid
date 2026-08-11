@@ -29,8 +29,11 @@ namespace cdroid{
 
 DECLARE_WIDGET(AnalogClock)
 
-AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs)
-  :View(ctx,attrs){
+AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs):AnalogClock(ctx,&attrs,0){}
+
+AnalogClock::AnalogClock(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :View(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initAnalog();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;

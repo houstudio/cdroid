@@ -41,6 +41,7 @@ protected:
 public:
     WearableRecyclerView(int w,int h);
     WearableRecyclerView(Context* context, const AttributeSet& attrs);
+    WearableRecyclerView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~WearableRecyclerView()override;
     void setupCenteredPadding();
 

@@ -49,8 +49,11 @@ RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
     mGraph = new DependencyGraph();
 }
 
-RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
- :ViewGroup(context,attrs){
+RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs):RelativeLayout(context,&attrs,0){}
+
+RelativeLayout::RelativeLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+ :ViewGroup(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     mDirtyHierarchy = true;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;

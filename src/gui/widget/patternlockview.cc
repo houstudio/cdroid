@@ -25,8 +25,11 @@ PatternLockView::PatternLockView(int w,int h):View(w,h){
     setDotCount(DEFAULT_PATTERN_DOT_COUNT);
 }
 
-PatternLockView::PatternLockView(Context* context,const AttributeSet& attrs)
-   :View::View(context,attrs){
+PatternLockView::PatternLockView(Context* context,const AttributeSet& attrs):PatternLockView(context,&attrs,0){}
+
+PatternLockView::PatternLockView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+   :View::View(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     mDotCount = attrs.getInt("dotCount",DEFAULT_PATTERN_DOT_COUNT);
     mAspectRatioEnabled = attrs.getBoolean("aspectRatioEnabled",false);
     mAspectRatio = attrs.getInt("aspectRatio",ASPECT_RATIO_SQUARE);

@@ -27,8 +27,11 @@ Chronometer::Chronometer(int w,int h):TextView(std::string(),w,h){
     init();
 }
 
-Chronometer::Chronometer(Context*ctx,const AttributeSet&atts)
-  :TextView(ctx,atts){
+Chronometer::Chronometer(Context*ctx,const AttributeSet& atts):Chronometer(ctx,&atts,0){}
+
+Chronometer::Chronometer(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :TextView(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;

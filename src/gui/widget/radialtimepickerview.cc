@@ -138,8 +138,11 @@ int RadialTimePickerView::snapOnly30s(int degrees, int forceHigherOrLower) {
 
 DECLARE_WIDGET(RadialTimePickerView);
 
-RadialTimePickerView::RadialTimePickerView(Context* context, const AttributeSet& attrs)
-    : View(context, attrs) {
+RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet& attrs):RadialTimePickerView(context,&attrs,0){}
+
+RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    : View(context, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     staticInit();
 
     mHours12Texts.resize(12);

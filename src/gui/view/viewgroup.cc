@@ -128,9 +128,12 @@ HoverTarget*HoverTarget::sRecycleBin = nullptr;
 int TouchTarget::sRecycledCount = 0;
 int HoverTarget::sRecycledCount = 0;
 
-ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
+ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):ViewGroup(ctx,&attrs,0){
+}
+
+ViewGroup::ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr):View(ctx,attrs,defStyleAttr){
     initGroup();
-    initFromAttributes(ctx,attrs);
+    initFromAttributes(ctx,*attrs);
 }
 
 ViewGroup::ViewGroup(int w,int h)

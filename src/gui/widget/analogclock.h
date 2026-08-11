@@ -59,6 +59,7 @@ protected:
 public:
     AnalogClock(int w,int h);
     AnalogClock(Context*ctx,const AttributeSet& attrs);
+    AnalogClock(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~AnalogClock();
     void setDial(Icon icon);
     void setDialTintList(const cdroid::RefPtr<ColorStateList>&);

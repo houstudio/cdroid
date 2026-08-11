@@ -56,8 +56,11 @@ TableLayout::TableLayout(int w,int h):LinearLayout(w,h){
     initTableLayout();
 }
 
-TableLayout::TableLayout(Context*ctx,const AttributeSet&atts)
-  :LinearLayout(ctx,atts){
+TableLayout::TableLayout(Context*ctx,const AttributeSet& atts):TableLayout(ctx,&atts,0){}
+
+TableLayout::TableLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :LinearLayout(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initTableLayout();
 }
 

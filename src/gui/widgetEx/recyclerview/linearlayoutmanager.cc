@@ -46,8 +46,11 @@ LinearLayoutManager::LinearLayoutManager(Context* context,int orientation,bool r
     setReverseLayout(reverseLayout);
 }
 
-LinearLayoutManager::LinearLayoutManager(Context* context, const AttributeSet& attrs)
+LinearLayoutManager::LinearLayoutManager(Context* context,const AttributeSet& attrs):LinearLayoutManager(context,&attrs,0){}
+
+LinearLayoutManager::LinearLayoutManager(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
      :LinearLayoutManager(context){
+    const AttributeSet& attrs = *pAttrs;
     Properties properties = getProperties(context, attrs,0,0);//, defStyleAttr, defStyleRes);
     setOrientation(properties.orientation);
     setReverseLayout(properties.reverseLayout);

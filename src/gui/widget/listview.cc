@@ -34,8 +34,11 @@ ListView::ListView(int w,int h):AbsListView(w,h) {
     initListView(attrs);
 }
 
-ListView::ListView(Context* context,const AttributeSet& attrs)
-    :AbsListView(context,attrs) {
+ListView::ListView(Context* context,const AttributeSet& attrs):ListView(context,&attrs,0){}
+
+ListView::ListView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :AbsListView(context,pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     initListView(attrs);
 }
 

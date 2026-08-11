@@ -20,8 +20,11 @@
 namespace cdroid{
 
 DECLARE_WIDGET(DayPickerViewPager);
-DayPickerViewPager::DayPickerViewPager(Context* context, const AttributeSet& attrs)
-    :ViewPager(context,attrs){
+DayPickerViewPager::DayPickerViewPager(Context* context,const AttributeSet& attrs):DayPickerViewPager(context,&attrs,0){}
+
+DayPickerViewPager::DayPickerViewPager(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewPager(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 }
 
 void DayPickerViewPager::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {

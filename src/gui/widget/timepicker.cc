@@ -20,8 +20,11 @@
 #include <widget/timepickerclockdelegate.h>
 #include <widget/timepickerspinnerdelegate.h>
 namespace cdroid{
-TimePicker::TimePicker(Context* context,const AttributeSet& attrs)
-    :FrameLayout(context, attrs){
+TimePicker::TimePicker(Context* context,const AttributeSet& attrs):TimePicker(context,&attrs,0){}
+
+TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :FrameLayout(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     // DatePicker is important by default, unless app developer overrode attribute.
     if (getImportantForAutofill() == IMPORTANT_FOR_AUTOFILL_AUTO) {

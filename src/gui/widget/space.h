@@ -29,6 +29,7 @@ protected:
 public:
     Space(int w,int h);
     Space(Context*context,const AttributeSet& attrs);
+    Space(Context*context,const AttributeSet* attrs,int defStyleAttr=0);
     void draw(Canvas&)override;
 };
 

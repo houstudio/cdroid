@@ -26,8 +26,11 @@ Space::Space(int w,int h):View(w,h){
     }
 }
 
-Space::Space(Context*context,const AttributeSet& attrs)
-  :View(context,attrs){
+Space::Space(Context*context,const AttributeSet& attrs):Space(context,&attrs,0){}
+
+Space::Space(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
+  :View(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     if (getVisibility() == VISIBLE) {
         setVisibility(INVISIBLE);
     }

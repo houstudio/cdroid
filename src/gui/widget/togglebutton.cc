@@ -26,8 +26,11 @@ namespace cdroid{
 
 DECLARE_WIDGET2(ToggleButton,"cdroid:attr/buttonStyleToggle")
 
-ToggleButton::ToggleButton(Context*ctx,const AttributeSet& attrs)
-  :CompoundButton(ctx,attrs){
+ToggleButton::ToggleButton(Context*ctx,const AttributeSet& attrs):ToggleButton(ctx,&attrs,0){}
+
+ToggleButton::ToggleButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :CompoundButton(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     mIndicatorDrawable=nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;

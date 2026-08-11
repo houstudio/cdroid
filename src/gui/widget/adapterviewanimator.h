@@ -93,6 +93,7 @@ protected:
     void onLayout(bool changed, int left, int top, int width, int height)override;
 public:
     AdapterViewAnimator(Context* context,const AttributeSet& attrs);
+    AdapterViewAnimator(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~AdapterViewAnimator()override;
     void setDisplayedChild(int whichChild);
     int getDisplayedChild();

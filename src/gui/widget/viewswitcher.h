@@ -30,6 +30,7 @@ private:
 public:
     ViewSwitcher(int w,int h);
     ViewSwitcher(Context*ctx,const AttributeSet&atts);
+    ViewSwitcher(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
     View* getNextView();
     void setFactory(ViewFactory factory);

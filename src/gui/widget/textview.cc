@@ -168,8 +168,11 @@ static constexpr int ELLIPSIZE_START = 1;
 static constexpr int ELLIPSIZE_MIDDLE = 2;
 static constexpr int ELLIPSIZE_END = 3;
 static constexpr int ELLIPSIZE_MARQUEE = 4;
-TextView::TextView(Context*ctx,const AttributeSet& attrs)
-  :View(ctx,attrs){
+TextView::TextView(Context*ctx,const AttributeSet& attrs):TextView(ctx,&attrs,0){}
+
+TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :View(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initView();
 
     // Phase 2: TypedArray switch-loop (AOSP TextView ctor pattern). Binary AXML

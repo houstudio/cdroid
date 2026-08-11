@@ -55,8 +55,11 @@ private final BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
 
 DECLARE_WIDGET(TextClock)
 
-TextClock::TextClock(Context* context,const AttributeSet& attrs)
-    :TextView(context, attrs){
+TextClock::TextClock(Context* context,const AttributeSet& attrs):TextClock(context,&attrs,0){}
+
+TextClock::TextClock(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :TextView(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;

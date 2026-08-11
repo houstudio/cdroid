@@ -131,6 +131,7 @@ protected:
 public:
     SimpleMonthView(int,int);
     SimpleMonthView(Context*,const AttributeSet&atts);
+    SimpleMonthView(Context*,const AttributeSet* attrs,int defStyleAttr=0);
     ~SimpleMonthView()override;
     int getMonthHeight()const;
     int getCellWidth()const;

@@ -21,8 +21,11 @@
 namespace cdroid{
 
 DECLARE_WIDGET(DatePicker);
-DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
-    :FrameLayout(context, attrs){
+DatePicker::DatePicker(Context* context,const AttributeSet& attrs):DatePicker(context,&attrs,0){}
+
+DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :FrameLayout(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     if (getImportantForAutofill() == IMPORTANT_FOR_AUTOFILL_AUTO) {
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);

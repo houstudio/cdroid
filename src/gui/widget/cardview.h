@@ -40,6 +40,7 @@ protected:
 public:
     CardView(int w,int h);
     CardView(Context* context,const AttributeSet& attrs);
+    CardView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~CardView()override;
     void setPadding(int left, int top, int right, int bottom)override;
     void setPaddingRelative(int start, int top, int end, int bottom)override;

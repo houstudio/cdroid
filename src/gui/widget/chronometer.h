@@ -48,6 +48,7 @@ protected:
 public:
     Chronometer(int w,int h);
     Chronometer(Context*ctx,const AttributeSet&);
+    Chronometer(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     void setCountDown(bool countDown);
     bool isCountDown()const;
     bool isTheFinalCountDown()const;

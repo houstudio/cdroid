@@ -37,6 +37,7 @@ protected:
     void drawableHotspotChanged(float x, float y)override;
 public:
     CheckedTextView(Context* context,const AttributeSet& attrs);
+    CheckedTextView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~CheckedTextView()override;
 
     void toggle()override;

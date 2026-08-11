@@ -27,6 +27,7 @@ protected:
     void onFocusChanged(bool focused, int direction,Rect* previouslyFocusedRect)override;
 public:
     NumericTextView(Context* context,const AttributeSet& attrs);
+    NumericTextView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
 
     /**
      * Sets the currently displayed value.

@@ -51,6 +51,7 @@ protected:
 public:
     TabWidget(int w,int h);
     TabWidget(Context*ctx,const AttributeSet&atts);
+    TabWidget(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~TabWidget()override;
     View*getChildTabViewAt(int index);
     int getTabCount()const;

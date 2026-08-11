@@ -322,6 +322,7 @@ protected:
         Layout::Alignment alignment, bool shouldEllipsize, TextUtils::TruncateAt effectiveEllipsize, bool useSaved);
 public:
     TextView(Context*ctx,const AttributeSet&attrs);
+    TextView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     TextView(int width, int height);
     TextView(const std::string& text, int width, int height);
     ~TextView()override;

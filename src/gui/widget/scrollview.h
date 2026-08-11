@@ -107,6 +107,7 @@ protected:
 public:
     ScrollView(int w,int h);
     ScrollView(Context*ctx,const AttributeSet&atts);
+    ScrollView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~ScrollView()override;
     int getMaxScrollAmount();
     std::string getAccessibilityClassName() const override;

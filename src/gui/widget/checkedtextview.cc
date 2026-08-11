@@ -5,7 +5,10 @@ namespace cdroid{
 
 DECLARE_WIDGET(CheckedTextView)
 
-CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextView(context,a){
+CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):CheckedTextView(context,&a,0){}
+
+CheckedTextView::CheckedTextView(Context* context,const AttributeSet* pAttrs,int defStyleAttr):TextView(context,pAttrs, defStyleAttr){
+    const AttributeSet& a = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(

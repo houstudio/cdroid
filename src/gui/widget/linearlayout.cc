@@ -97,8 +97,11 @@ void LinearLayout::initView(){
     mAllowInconsistentMeasurement= false;//version <= Build::VERSION_CODES::M;
 }
 
-LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
-  :ViewGroup(context,attrs){
+LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs):LinearLayout(context,&attrs,0){}
+
+LinearLayout::LinearLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :ViewGroup(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initView();
 
     Assets* assets = context ? dynamic_cast<Assets*>(context) : nullptr;

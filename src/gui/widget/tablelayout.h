@@ -61,6 +61,7 @@ protected:
 public:
     TableLayout(int w,int h);
     TableLayout(Context*,const AttributeSet&atts);
+    TableLayout(Context*,const AttributeSet* attrs,int defStyleAttr=0);
     void requestLayout()override;
 
     bool isShrinkAllColumns()const;

@@ -173,6 +173,7 @@ protected:
 public:
     ListView(int w,int h);
     ListView(Context* context,const AttributeSet& attrs);
+    ListView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~ListView()override;
     void setAdapter(Adapter* adapter)override;
     void setSelection(int position)override;

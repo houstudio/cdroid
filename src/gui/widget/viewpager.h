@@ -222,6 +222,7 @@ protected:
 public:
     ViewPager(int w,int h);
     ViewPager(Context* context,const AttributeSet& attrs);
+    ViewPager(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~ViewPager()override;
     void setAdapter(PagerAdapter* adapter);
     PagerAdapter* getAdapter();

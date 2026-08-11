@@ -106,6 +106,7 @@ public:
     LinearLayout(int w,int h);
     LinearLayout(int x,int y,int w,int h);
     LinearLayout(Context* context,const AttributeSet& attrs);
+    LinearLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~LinearLayout()override;
     LayoutParams* generateLayoutParams(const AttributeSet&)const override;
     void setShowDividers(int showDividers);

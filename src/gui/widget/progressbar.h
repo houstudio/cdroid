@@ -111,6 +111,7 @@ protected:
 public:
     ProgressBar(int width, int height);
     ProgressBar(Context*ctx,const AttributeSet&attrs);
+    ProgressBar(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~ProgressBar()override;
     void setMin(int value);
     void setMax(int value);

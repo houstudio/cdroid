@@ -22,8 +22,11 @@
 
 namespace cdroid{
 
-GridLayoutManager::GridLayoutManager(Context* context,const AttributeSet& attrs)
-   :LinearLayoutManager(context, attrs){
+GridLayoutManager::GridLayoutManager(Context* context,const AttributeSet& attrs):GridLayoutManager(context,&attrs,0){}
+
+GridLayoutManager::GridLayoutManager(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+   :LinearLayoutManager(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     Properties properties = getProperties(context, attrs,0,0);// defStyleAttr, defStyleRes);
     mSpanSizeLookup = new DefaultSpanSizeLookup();
     setSpanCount(properties.spanCount);

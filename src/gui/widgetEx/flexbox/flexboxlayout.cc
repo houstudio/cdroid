@@ -27,7 +27,10 @@ FlexboxLayout::FlexboxLayout(int w,int h):ViewGroup(w,h){
     init();
 }
 
-FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGroup(context,attrs){
+FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):FlexboxLayout(context,&attrs,0){}
+
+FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr):ViewGroup(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;

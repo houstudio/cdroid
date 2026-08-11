@@ -27,8 +27,11 @@
 namespace cdroid {
 
 DECLARE_WIDGET(TextInputTimePickerView);
-TextInputTimePickerView::TextInputTimePickerView(Context* context,const AttributeSet& attrs)
-    :RelativeLayout(context, attrs){
+TextInputTimePickerView::TextInputTimePickerView(Context* context,const AttributeSet& attrs):TextInputTimePickerView(context,&attrs,0){}
+
+TextInputTimePickerView::TextInputTimePickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :RelativeLayout(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     LayoutInflater::from(context)->inflate("cdroid:layout/time_picker_text_input_material", this);
 

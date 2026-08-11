@@ -127,7 +127,10 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-YearPickerView::YearPickerView(Context*ctx,const AttributeSet&attrs):ListView(ctx,attrs){
+YearPickerView::YearPickerView(Context*ctx,const AttributeSet& attrs):YearPickerView(ctx,&attrs,0){}
+
+YearPickerView::YearPickerView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ListView(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     mViewSize = attrs.getDimensionPixelOffset("animator_height");
     mChildSize= attrs.getDimensionPixelOffset("year_label_height");
     mAdapter = new YearAdapter(ctx);

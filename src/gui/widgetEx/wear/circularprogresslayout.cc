@@ -29,8 +29,11 @@ CircularProgressLayout::CircularProgressLayout(int w,int h)
     initCircularProgressLayout();
 }
 
-CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet& attrs)
-    :FrameLayout(context, attrs){
+CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet& attrs):CircularProgressLayout(context,&attrs,0){}
+
+CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :FrameLayout(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     initCircularProgressLayout();
     //Resources r = context.getResources();

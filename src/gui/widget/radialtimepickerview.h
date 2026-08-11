@@ -141,6 +141,7 @@ protected:
     void onDraw(Canvas& canvas)override;
 public:
     RadialTimePickerView(Context* context,const AttributeSet& attrs);
+    RadialTimePickerView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~RadialTimePickerView()override;
     void applyAttributes(const AttributeSet& attrs);
     void initialize(int hour, int minute, bool is24HourMode);

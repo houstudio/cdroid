@@ -71,8 +71,11 @@ public:
 
 DECLARE_WIDGET(ProgressBar)
 
-ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
-  :View(ctx,attrs){
+ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs):ProgressBar(ctx,&attrs,0){}
+
+ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :View(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initProgressBar();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;

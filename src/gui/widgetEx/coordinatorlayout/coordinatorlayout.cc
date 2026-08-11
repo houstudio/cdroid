@@ -29,8 +29,11 @@ CoordinatorLayout::CoordinatorLayout(int w, int h) :ViewGroup(w, h) {
     initView();
 }
 
-CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
-    :ViewGroup(context, attrs){
+CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs):CoordinatorLayout(context,&attrs,0){}
+
+CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;

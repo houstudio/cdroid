@@ -214,7 +214,8 @@ protected:
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 public:
     DrawerLayout(int w,int h);
-    DrawerLayout(Context*ctx,const AttributeSet&atts); 
+    DrawerLayout(Context*ctx,const AttributeSet&atts);
+    DrawerLayout(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0); 
     ~DrawerLayout()override;
     void setDrawerElevation(float elevation);
     float getDrawerElevation()const;

@@ -37,6 +37,7 @@ protected:
     void performDismissCanceledCallbacks() override;
 public:
     SwipeDismissFrameLayout(Context* context,const AttributeSet& attrs);
+    SwipeDismissFrameLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
 
     void addCallback(const Callback& callback);
     void removeCallback(const Callback& callback);

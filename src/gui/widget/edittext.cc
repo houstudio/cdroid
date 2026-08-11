@@ -31,8 +31,11 @@ DECLARE_WIDGET2(EditText,"cdroid:attr/editTextStyle")
 EditText::EditText(int w,int h):EditText(std::string(),w,h){
 }
 
-EditText::EditText(Context*ctx,const AttributeSet& attrs)
-  :TextView(ctx,attrs){
+EditText::EditText(Context*ctx,const AttributeSet& attrs):EditText(ctx,&attrs,0){}
+
+EditText::EditText(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :TextView(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initEditText();
     setInputType(attrs.getInt("inputType",std::unordered_map<std::string,int>{
 		    {"none",  (int)InputType::TYPE_NULL},

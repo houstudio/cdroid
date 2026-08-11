@@ -22,8 +22,11 @@ namespace cdroid{
 
 DECLARE_WIDGET(AdapterViewFlipper);
 
-AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet& attrs)
-    :AdapterViewAnimator(context, attrs){
+AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet& attrs):AdapterViewFlipper(context,&attrs,0){}
+
+AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :AdapterViewAnimator(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
     auto ta = _assets ? _assets->obtainStyledAttributesTyped(

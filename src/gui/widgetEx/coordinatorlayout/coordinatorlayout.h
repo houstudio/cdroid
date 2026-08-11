@@ -165,6 +165,7 @@ protected:
 public:
     CoordinatorLayout(int w, int h);
     CoordinatorLayout(Context* context,const AttributeSet& attrs);
+    CoordinatorLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~CoordinatorLayout()override;
     void setOnHierarchyChangeListener(const OnHierarchyChangeListener& onHierarchyChangeListener)override;
     void onAttachedToWindow()override;

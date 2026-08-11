@@ -37,6 +37,7 @@ protected:
     void onWindowVisibilityChanged(int visibility) override;
 public:
     AdapterViewFlipper(Context* context,const AttributeSet& attrs);
+    AdapterViewFlipper(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     
     void setAdapter(Adapter* adapter) override;
 

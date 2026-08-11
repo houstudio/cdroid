@@ -28,8 +28,11 @@ TabWidget::TabWidget(int w,int h):LinearLayout(w,h){
     initTab();
 }
 
-TabWidget::TabWidget(Context*ctx,const AttributeSet&atts)
-  :LinearLayout(ctx,atts){
+TabWidget::TabWidget(Context*ctx,const AttributeSet& atts):TabWidget(ctx,&atts,0){}
+
+TabWidget::TabWidget(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :LinearLayout(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initTab();
     Assets* _a = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _a ? _a->obtainStyledAttributesTyped(atts, styleable::TabWidget::IDS) : nullptr;

@@ -47,8 +47,11 @@ AbsSpinner::AbsSpinner(int w,int h):AdapterView(w,h){
     initAbsSpinner();
 }
 
-AbsSpinner::AbsSpinner(Context*ctx,const AttributeSet&atts)
-  :AdapterView(ctx,atts){
+AbsSpinner::AbsSpinner(Context*ctx,const AttributeSet& atts):AbsSpinner(ctx,&atts,0){}
+
+AbsSpinner::AbsSpinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :AdapterView(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initAbsSpinner();
 }
 

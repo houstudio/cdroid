@@ -61,6 +61,7 @@ protected:
 
 public:
     DayPickerView(Context* context,const AttributeSet&atts);
+    DayPickerView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~DayPickerView()override;
     void setDayOfWeekTextAppearance(const std::string& resId);
     const std::string getDayOfWeekTextAppearance();

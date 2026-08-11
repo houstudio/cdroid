@@ -129,6 +129,7 @@ protected:
 public:
     SlidingPaneLayout(int w,int h);
     SlidingPaneLayout(Context* context, const AttributeSet& attrs);
+    SlidingPaneLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~SlidingPaneLayout()override;
 
     void setLockMode(int);

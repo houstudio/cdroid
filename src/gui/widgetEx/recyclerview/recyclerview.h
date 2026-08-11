@@ -427,6 +427,7 @@ protected:
 public:
     RecyclerView(int w,int h);
     RecyclerView(Context* context,const AttributeSet& attrs);
+    RecyclerView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~RecyclerView()override;
     RecyclerViewAccessibilityDelegate* getCompatAccessibilityDelegate();
     void setAccessibilityDelegate(RecyclerViewAccessibilityDelegate* accessibilityDelegate);

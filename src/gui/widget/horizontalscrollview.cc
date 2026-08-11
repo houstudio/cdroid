@@ -30,8 +30,11 @@ HorizontalScrollView::HorizontalScrollView(int w,int h):FrameLayout(w,h){
     initScrollView(nullptr);
 }
 
-HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet&atts)
-  :FrameLayout(ctx,atts){
+HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet& atts):HorizontalScrollView(ctx,&atts,0){}
+
+HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :FrameLayout(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initScrollView(&atts);
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;

@@ -58,6 +58,7 @@ private:
     int getHourOfDayFromLocalizedHour(int localizedHour);
 public:
     TextInputTimePickerView(Context* context,const AttributeSet& attrs);
+    TextInputTimePickerView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~TextInputTimePickerView()override;
     void setListener(const OnValueTypedListener& listener);
 

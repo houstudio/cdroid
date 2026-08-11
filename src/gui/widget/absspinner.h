@@ -52,6 +52,7 @@ protected:
 public:
     AbsSpinner(int w,int h);
     AbsSpinner(Context*,const AttributeSet&atts);
+    AbsSpinner(Context*,const AttributeSet* attrs,int defStyleAttr=0);
     virtual ~AbsSpinner();
     int getCount()override;
     View* getSelectedView()override;

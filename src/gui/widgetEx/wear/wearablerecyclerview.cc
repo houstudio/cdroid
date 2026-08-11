@@ -26,8 +26,11 @@ WearableRecyclerView::WearableRecyclerView(int w,int h)
     mScrollManager = new ScrollManager();
 }
 
-WearableRecyclerView::WearableRecyclerView(Context* context, const AttributeSet& attrs)
-    :RecyclerView(context, attrs){
+WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet& attrs):WearableRecyclerView(context,&attrs,0){}
+
+WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :RecyclerView(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     mScrollManager = new ScrollManager();
     setHasFixedSize(true);
     // Padding is used to center the top and bottom items in the list, don't clip to padding to

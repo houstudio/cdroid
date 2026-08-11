@@ -53,7 +53,10 @@ NestedScrollView::NestedScrollView(int w,int h):FrameLayout(w,h){
     initScrollView(nullptr);
 }
 
-NestedScrollView::NestedScrollView(Context* context,const AttributeSet&attrs):FrameLayout(context,attrs){
+NestedScrollView::NestedScrollView(Context* context,const AttributeSet& attrs):NestedScrollView(context,&attrs,0){}
+
+NestedScrollView::NestedScrollView(Context* context,const AttributeSet* pAttrs,int defStyleAttr):FrameLayout(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initScrollView(&attrs);
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;

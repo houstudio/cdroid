@@ -25,8 +25,11 @@ namespace cdroid{
 
 DECLARE_WIDGET(ImageView)
 
-ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
-  :View(ctx,attrs){
+ImageView::ImageView(Context*ctx,const AttributeSet& attrs):ImageView(ctx,&attrs,0){}
+
+ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :View(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initImageView();
     Assets* _a = getContext() ? dynamic_cast<Assets*>(getContext()) : nullptr;
     auto ta = _a ? _a->obtainStyledAttributesTyped(

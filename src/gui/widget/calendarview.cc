@@ -26,8 +26,11 @@ CalendarView::CalendarView(int w,int h):FrameLayout(w,h){
     LOGD("%p",this);
 }
 
-CalendarView::CalendarView(Context*context,const AttributeSet&attrs)
-  :FrameLayout(context,attrs){
+CalendarView::CalendarView(Context*context,const AttributeSet& attrs):CalendarView(context,&attrs,0){}
+
+CalendarView::CalendarView(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
+  :FrameLayout(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     const int mode = attrs.getInt("calendarViewMode",std::unordered_map<std::string,int>{
             {"holo",(int)MODE_HOLO},{"material",(int)MODE_MATERIAL}
             }, MODE_HOLO);

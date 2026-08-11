@@ -34,6 +34,7 @@ private:
 public:
     CalendarView(int w,int h);
     CalendarView(Context*,const AttributeSet&atts);
+    CalendarView(Context*,const AttributeSet* attrs,int defStyleAttr=0);
     ~CalendarView()override;
 
     void setShownWeekCount(int count);

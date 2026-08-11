@@ -25,8 +25,11 @@ namespace cdroid{
 
 DECLARE_WIDGET(DayPickerView);
 
-DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
-    :ViewGroup(context, attrs){
+DayPickerView::DayPickerView(Context* context,const AttributeSet& attrs):DayPickerView(context,&attrs,0){}
+
+DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     Calendar tempDate;
     const int firstDayOfWeek = attrs.getInt("firstDayOfWeek", tempDate.getFirstDayOfWeek());

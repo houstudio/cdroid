@@ -61,6 +61,7 @@ protected:
 public:
     CandidateView(int,int);
     CandidateView(Context*ctx,const AttributeSet&atts);
+    CandidateView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~CandidateView()override;
     int computeHorizontalScrollRange()override;
     void setMaxSuggestion(int max);

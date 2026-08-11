@@ -91,6 +91,7 @@ public:
     class LayoutParams;
     FlexboxLayout(int w,int h);
     FlexboxLayout(Context* context,const AttributeSet& attrs);
+    FlexboxLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~FlexboxLayout()override;
     void addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;

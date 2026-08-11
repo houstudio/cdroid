@@ -44,6 +44,7 @@ private:
 public:
     HideBottomViewOnScrollBehavior();
     HideBottomViewOnScrollBehavior(Context* context,const AttributeSet& attrs);
+    HideBottomViewOnScrollBehavior(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~HideBottomViewOnScrollBehavior()override;
     bool onLayoutChild(CoordinatorLayout& parent, View& child, int layoutDirection)override;
 

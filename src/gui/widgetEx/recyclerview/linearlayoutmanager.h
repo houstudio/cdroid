@@ -124,6 +124,7 @@ public:
     LinearLayoutManager(Context* context);
     LinearLayoutManager(Context* context,int orientation,bool reverseLayout);
     LinearLayoutManager(Context* context, const AttributeSet& attrs);
+    LinearLayoutManager(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
 	~LinearLayoutManager()override;
     bool isAutoMeasureEnabled()const override;
     RecyclerView::LayoutParams* generateDefaultLayoutParams()const override;

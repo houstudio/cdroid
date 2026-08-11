@@ -72,8 +72,11 @@ Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
     mForwardingListener = new SpinnerForwardingListener(this,(DropdownPopup*)mPopup); 
 }
 
-Spinner::Spinner(Context*ctx,const AttributeSet&atts)
-  :AbsSpinner(ctx,atts){
+Spinner::Spinner(Context*ctx,const AttributeSet& atts):Spinner(ctx,&atts,0){}
+
+Spinner::Spinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :AbsSpinner(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     mTempAdapter = nullptr;
     mForwardingListener = nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.

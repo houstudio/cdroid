@@ -55,8 +55,11 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
     mDaySelectorRadius = std::min(mDesiredDaySelectorRadius,std::min(maxSelectorWidth, maxSelectorHeight));
 }
 
-SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
-   :View(ctx,atts){
+SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet& atts):SimpleMonthView(ctx,&atts,0){}
+
+SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+   :View(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initMonthView();
     // Faithful to AOSP SimpleMonthView: the desired dimensions come from
     // R.dimen.date_picker_* resources, NOT from XML attributes (the month-item

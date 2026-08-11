@@ -14,8 +14,11 @@ RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
     setOrientation(VERTICAL);
 }
 
-RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
-    :LinearLayout(context,attrs){
+RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs):RadioGroup(context,&attrs,0){}
+
+RadioGroup::RadioGroup(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :LinearLayout(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;

@@ -78,6 +78,7 @@ protected:
 public:
     AbsSeekBar(int w,int h);
     AbsSeekBar(Context*ctx,const AttributeSet&attrs);
+    AbsSeekBar(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~AbsSeekBar();
     void setKeyProgressIncrement(int increment);
     int getKeyProgressIncrement()const;

@@ -14,8 +14,11 @@ Switch::Switch(int w,int h):CompoundButton(std::string(),w,h){
     init();
 }
 
-Switch::Switch(Context* context,const AttributeSet& a)
-  :CompoundButton(context,a){
+Switch::Switch(Context* context,const AttributeSet& a):Switch(context,&a,0){}
+
+Switch::Switch(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :CompoundButton(context,pAttrs, defStyleAttr){
+    const AttributeSet& a = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;

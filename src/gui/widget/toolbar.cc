@@ -26,7 +26,10 @@ namespace cdroid{
 
 DECLARE_WIDGET(Toolbar)
 
-Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
+Toolbar::Toolbar(Context*ctx,const AttributeSet& atts):Toolbar(ctx,&atts,0){}
+
+Toolbar::Toolbar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ViewGroup(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initToolbar();
 
     // Styled-attribute reads (AOSP Toolbar ctor body, verbatim order/methods).

@@ -26,8 +26,11 @@ KeyboardView::KeyboardView(int w,int h):View(w,h){
     resetMultiTap();
 }
 
-KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts)
-  :View(ctx,atts){
+KeyboardView::KeyboardView(Context*ctx,const AttributeSet& atts):KeyboardView(ctx,&atts,0){}
+
+KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :View(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     init();
     Assets* _a = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = _a ? _a->obtainStyledAttributesTyped(atts, styleable::KeyboardView::IDS) : nullptr;

@@ -42,6 +42,7 @@ protected:
     void onRestoreInstanceState(Parcelable&state)override;
 public:
     DatePicker(Context* context,const AttributeSet& attrs);
+    DatePicker(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     int getMode();
 
     void init(int year, int monthOfYear, int dayOfMonth,const OnDateChangedListener& onDateChangedListener);

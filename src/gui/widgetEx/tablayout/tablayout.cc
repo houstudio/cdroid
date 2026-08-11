@@ -40,8 +40,11 @@ TabLayout::TabLayout(int w,int h):HorizontalScrollView(w,h){
     applyModeAndGravity();
 }
 
-TabLayout::TabLayout(Context*context,const AttributeSet&atts)
-  :HorizontalScrollView(context,atts){
+TabLayout::TabLayout(Context*context,const AttributeSet& atts):TabLayout(context,&atts,0){}
+
+TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
+  :HorizontalScrollView(context,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initTabLayout();
 
     // Phase 2: pure TypedArray (binary AXML typed resolution). ta=null → text XML

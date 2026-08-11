@@ -38,6 +38,7 @@ protected:
     void onRestoreInstanceState(Parcelable& state) override;
 public:
     TimePicker(Context* context,const AttributeSet& attrs);
+    TimePicker(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~TimePicker()override;
     int getMode() const;
 

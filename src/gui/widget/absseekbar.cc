@@ -29,7 +29,10 @@ namespace cdroid{
 
 DECLARE_WIDGET(AbsSeekBar)
 
-AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,attrs){
+AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet& attrs):AbsSeekBar(ctx,&attrs,0){}
+
+AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ProgressBar(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initSeekBar();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;

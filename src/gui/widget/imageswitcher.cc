@@ -26,8 +26,11 @@ ImageSwitcher::ImageSwitcher(int w,int h)
     :ViewSwitcher(w,h){
 }
 
-ImageSwitcher::ImageSwitcher(Context*ctx,const AttributeSet&atts)
-  :ViewSwitcher(ctx,atts){
+ImageSwitcher::ImageSwitcher(Context*ctx,const AttributeSet& atts):ImageSwitcher(ctx,&atts,0){}
+
+ImageSwitcher::ImageSwitcher(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :ViewSwitcher(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
 }
 
 void ImageSwitcher::setImageResource(const std::string&resid){

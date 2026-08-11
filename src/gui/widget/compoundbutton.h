@@ -46,6 +46,7 @@ protected:
 public:
     CompoundButton(const std::string&txt,int width,int height);
     CompoundButton(Context*ctx,const AttributeSet&attrs);
+    CompoundButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~CompoundButton()override;
     void setButtonDrawable(const std::string&resid);
     void setButtonDrawable(Drawable*d);

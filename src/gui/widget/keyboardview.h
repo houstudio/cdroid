@@ -201,6 +201,7 @@ protected:
 public:
     KeyboardView(int w,int h);
     KeyboardView(Context*context,const AttributeSet&atts);
+    KeyboardView(Context*context,const AttributeSet* attrs,int defStyleAttr=0);
     ~KeyboardView()override;
     void setOnKeyboardActionListener(const OnKeyboardActionListener& listener);
     Keyboard*getKeyboard();

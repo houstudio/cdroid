@@ -34,6 +34,7 @@ public:
     EditText(int w,int h);
     EditText(const std::string&txt,int w,int h);
     EditText(Context*ctx,const AttributeSet&attrs);
+    EditText(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     void setText(const std::string&txt)override;
     void setPattern(const std::string&pattern);
     void setSelection(int start, int stop);

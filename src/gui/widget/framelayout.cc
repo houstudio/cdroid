@@ -30,8 +30,11 @@ FrameLayout::FrameLayout(int w,int h):ViewGroup(w,h){
     mForegroundPaddingTop = mForegroundPaddingBottom= 0;
 }
 
-FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs)
-    :ViewGroup(context,attrs){
+FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs):FrameLayout(context,&attrs,0){}
+
+FrameLayout::FrameLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     mMeasureAllChildren = false;
     {
         Assets* _a = context ? dynamic_cast<Assets*>(context) : nullptr;

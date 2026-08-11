@@ -313,6 +313,7 @@ protected:
 public:
     TabLayout(int w,int h);
     TabLayout(Context*context,const AttributeSet&atts);
+    TabLayout(Context*context,const AttributeSet* attrs,int defStyleAttr=0);
     ~TabLayout()override;
     void setSelectedTabIndicatorColor( int color);
     void setSelectedTabIndicatorHeight(int height);

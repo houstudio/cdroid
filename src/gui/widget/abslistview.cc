@@ -20,7 +20,10 @@ AbsListView::AbsListView(int w,int h):AdapterView(w,h) {
     initAbsListView();
 }
 
-AbsListView::AbsListView(Context*ctx,const AttributeSet&atts):AdapterView(ctx,atts) {
+AbsListView::AbsListView(Context*ctx,const AttributeSet& atts):AbsListView(ctx,&atts,0){}
+
+AbsListView::AbsListView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):AdapterView(ctx,pAttrs, defStyleAttr) {
+    const AttributeSet& atts = *pAttrs;
     mEdgeGlowBottom = new EdgeEffect(mContext,&atts);
     mEdgeGlowTop = new EdgeEffect(mContext,&atts);
     initAbsListView();

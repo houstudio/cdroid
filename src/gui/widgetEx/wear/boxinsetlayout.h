@@ -85,6 +85,7 @@ public:
      *                 defaults.
      */
     BoxInsetLayout(Context* context,const AttributeSet& attrs);
+    BoxInsetLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
 
     void setForeground(Drawable* drawable) override;
 

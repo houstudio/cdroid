@@ -27,6 +27,7 @@ protected:
 public:
     ImageButton(int w,int h);
     ImageButton(Context*ctx,const AttributeSet& attrs);
+    ImageButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
     std::string getAccessibilityClassName()const override;
 };

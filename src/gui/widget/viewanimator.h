@@ -35,6 +35,7 @@ protected:
 public:
     ViewAnimator(int w,int h);
     ViewAnimator(Context* context,const AttributeSet& attrs);
+    ViewAnimator(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~ViewAnimator();
     void setDisplayedChild(int whichChild);
     int getDisplayedChild()const;

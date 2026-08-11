@@ -83,8 +83,11 @@ CardView::CardView(int w,int h):FrameLayout(w,h){
     IMPL->initialize(mCardViewDelegate, mContext, 0, 0, 0, 0);
 }
 
-CardView::CardView(Context* context, const AttributeSet& attrs)
-    :FrameLayout(context, attrs){
+CardView::CardView(Context* context,const AttributeSet& attrs):CardView(context,&attrs,0){}
+
+CardView::CardView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :FrameLayout(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     mCardViewDelegate = new CardViewDelegateInternal(this);
     //TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CardView, defStyleAttr,R.style.CardView);
     cdroid::RefPtr<ColorStateList> backgroundColor;

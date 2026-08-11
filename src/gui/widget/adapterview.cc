@@ -63,8 +63,11 @@ void AdapterView::initAdapterView(){
     }
 }
 
-AdapterView::AdapterView(Context*ctx,const AttributeSet&atts)
-  :ViewGroup(ctx,atts){
+AdapterView::AdapterView(Context*ctx,const AttributeSet& atts):AdapterView(ctx,&atts,0){}
+
+AdapterView::AdapterView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :ViewGroup(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& atts = *pAttrs;
     initAdapterView();
 }
 

@@ -25,8 +25,11 @@ namespace cdroid{
 
 DECLARE_WIDGET(CompoundButton)
 
-CompoundButton::CompoundButton(Context*ctx,const AttributeSet& attrs)
-  :Button(ctx,attrs){
+CompoundButton::CompoundButton(Context*ctx,const AttributeSet& attrs):CompoundButton(ctx,&attrs,0){}
+
+CompoundButton::CompoundButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :Button(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initCompoundButton();
     setButtonDrawable((dynamic_cast<Assets*>(ctx)&&((Assets*)ctx)->obtainStyledAttributesTyped(attrs,styleable::CompoundButton::IDS)) ? "" : attrs.getString("button")); /* TODO: full TypedArray path */
     setChecked(attrs.getBoolean("checked")); /* checked: TODO TypedArray */

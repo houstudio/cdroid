@@ -28,8 +28,11 @@ HideViewOnScrollBehavior::HideViewOnScrollBehavior(int viewEdge):HideViewOnScrol
     setViewEdge(viewEdge);
 }
 
-HideViewOnScrollBehavior::HideViewOnScrollBehavior(Context* context, const AttributeSet& attrs)
-    :CoordinatorLayout::Behavior(context, attrs){
+HideViewOnScrollBehavior::HideViewOnScrollBehavior(Context* context,const AttributeSet& attrs):HideViewOnScrollBehavior(context,&attrs,0){}
+
+HideViewOnScrollBehavior::HideViewOnScrollBehavior(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :CoordinatorLayout::Behavior(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 }
 
 HideViewOnScrollBehavior::~HideViewOnScrollBehavior(){

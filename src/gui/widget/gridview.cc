@@ -14,8 +14,11 @@ GridView::GridView(int w,int h):AbsListView(w,h) {
     initGridView();
 }
 
-GridView::GridView(Context*ctx,const AttributeSet&atts)
-    :AbsListView(ctx,atts) {
+GridView::GridView(Context*ctx,const AttributeSet& atts):GridView(ctx,&atts,0){}
+
+GridView::GridView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    :AbsListView(ctx,pAttrs, defStyleAttr) {
+    const AttributeSet& atts = *pAttrs;
     initGridView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
