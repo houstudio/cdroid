@@ -22,7 +22,7 @@ Switch::Switch(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         a, styleable::Switch::IDS) : nullptr;
     if (ta) {
     namespace SW = styleable::Switch;
@@ -132,7 +132,7 @@ Switch::~Switch(){
 void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
     AttributeSet atts = context->obtainStyledAttributes(resid);
     Assets* a = dynamic_cast<Assets*>(context);
-    auto ta = a ? a->obtainStyledAttributesTyped(atts, styleable::TextAppearance::IDS) : nullptr;
+    auto ta = a ? a->obtainStyledAttributes(atts, styleable::TextAppearance::IDS) : nullptr;
     namespace ST = styleable::TextAppearance;
 
     auto colors = ta ? ta->getColorStateList(ST::textColor) : nullptr;

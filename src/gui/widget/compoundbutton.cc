@@ -31,7 +31,7 @@ CompoundButton::CompoundButton(Context*ctx,const AttributeSet* pAttrs,int defSty
   :Button(ctx,pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
     initCompoundButton();
-    setButtonDrawable((dynamic_cast<Assets*>(ctx)&&((Assets*)ctx)->obtainStyledAttributesTyped(attrs,styleable::CompoundButton::IDS)) ? "" : attrs.getString("button")); /* TODO: full TypedArray path */
+    setButtonDrawable((dynamic_cast<Assets*>(ctx)&&((Assets*)ctx)->obtainStyledAttributes(attrs,styleable::CompoundButton::IDS)) ? "" : attrs.getString("button")); /* TODO: full TypedArray path */
     setChecked(attrs.getBoolean("checked")); /* checked: TODO TypedArray */
     mButtonTintList = attrs.getColorStateList("buttonTint");
     applyButtonTint();

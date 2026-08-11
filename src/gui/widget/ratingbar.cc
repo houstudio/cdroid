@@ -41,7 +41,7 @@ RatingBar::RatingBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mProgressOnStartTracking =0;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         atts, styleable::RatingBar::IDS) : nullptr;
     if (ta) {
     namespace SRB = styleable::RatingBar;

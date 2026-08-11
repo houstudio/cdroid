@@ -88,7 +88,7 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
     // aapt2 already resolved enums/flags at compile time, so TypedArray getters
     // return integers directly — no string→enum map needed.
     Assets* assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = assets ? assets->obtainStyledAttributesTyped(
+    auto ta = assets ? assets->obtainStyledAttributes(
         attrs, styleable::View::IDS, defStyleAttr) : nullptr;
     // (namespace alias not allowed in function body in C++14)
     // Phase 2: TypedArray switch loop (AOSP View.java pattern).
@@ -101,9 +101,10 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
     int scrollIndicators = 0;
 
     if (ta) {
+        const auto N = ta->getIndexCount();
         mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK | PFLAG2_TEXT_ALIGNMENT_MASK);
-        for (size_t n = ta->getIndexCount(); n > 0; ) {
-            size_t i = ta->getIndex(--n);
+        for (size_t n=0;n < N;n++ ) {
+            size_t i = ta->getIndex(n);
             switch (i) {
             case SV::minWidth:       mMinWidth = ta->getDimensionPixelSize(i, 0); break;
             case SV::minHeight:      mMinHeight = ta->getDimensionPixelSize(i, 0); break;

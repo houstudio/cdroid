@@ -37,7 +37,7 @@ AnalogClock::AnalogClock(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
     initAnalog();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::AnalogClock::IDS) : nullptr;
     if (ta) {
     namespace SAC = styleable::AnalogClock;

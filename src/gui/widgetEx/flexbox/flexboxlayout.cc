@@ -34,7 +34,7 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet* pAttrs,int def
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::FlexboxLayout::IDS) : nullptr;
     namespace SFB = styleable::FlexboxLayout;
     mFlexDirection = ta&&ta->hasValue(SFB::flexDirection) ? ta->getInt(SFB::flexDirection,(int)FlexDirection::ROW) : attrs.getInt("flexDirection",std::unordered_map<std::string,int>{
@@ -1209,7 +1209,7 @@ FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& a
     :ViewGroup::MarginLayoutParams(context,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::FlexboxLayoutLayout::IDS) : nullptr;
     namespace SFL = styleable::FlexboxLayoutLayout;
 

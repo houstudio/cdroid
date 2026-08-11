@@ -32,7 +32,7 @@ ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     const AttributeSet& attrs = *pAttrs;
     initImageView();
     Assets* _a = getContext() ? dynamic_cast<Assets*>(getContext()) : nullptr;
-    auto ta = _a ? _a->obtainStyledAttributesTyped(
+    auto ta = _a ? _a->obtainStyledAttributes(
         attrs, styleable::ImageView::IDS) : nullptr;
     if (ta) {
 

@@ -182,7 +182,7 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     // aapt2 pre-resolves enums/flags at compile time → binary getInt returns the
     // int directly (no string→enum map on that path); text XML still needs maps.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::TextView::IDS) : nullptr;
     if (ta) {
     namespace STV = styleable::TextView;
@@ -446,19 +446,19 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     // TextAppearance style TypedArray FIRST, then read the element's own text
     // appearance attrs to OVERRIDE (readTextAppearance(a, attributes, true)). No
     // element/style AttributeSet merge (the old tmp.inherit(attrs2) is gone) — each
-    // source is resolved independently through obtainStyledAttributesTyped, and the
+    // source is resolved independently through obtainStyledAttributes, and the
     // readTextAppearance switch only iterates SET indices so unset element attrs
     // don't clobber values taken from the style.
     TextAppearanceAttributes attributes;
     const std::string appearance = attrs.getString("textAppearance");
     if(appearance.empty()==false){
         AttributeSet styleAttrs = ctx->obtainStyledAttributes(appearance);
-        auto taStyle = _assets ? _assets->obtainStyledAttributesTyped(
+        auto taStyle = _assets ? _assets->obtainStyledAttributes(
             styleAttrs, styleable::TextAppearance::IDS) : nullptr;
         attributes.readTextAppearance(ctx, taStyle.get());
     }
     {
-        auto taElem = _assets ? _assets->obtainStyledAttributesTyped(
+        auto taElem = _assets ? _assets->obtainStyledAttributes(
             attrs, styleable::TextAppearance::IDS) : nullptr;
         attributes.readTextAppearance(ctx, taElem.get());
     }
@@ -1523,7 +1523,7 @@ void TextView::setTextAppearance(Context*context,const std::string&appearance){
         AttributeSet attrs = context->obtainStyledAttributes(appearance);
         if(attrs.getAttributeCount()){
             Assets* a = dynamic_cast<Assets*>(context);
-            auto ta = a ? a->obtainStyledAttributesTyped(
+            auto ta = a ? a->obtainStyledAttributes(
                 attrs, styleable::TextAppearance::IDS) : nullptr;
             attributes.readTextAppearance(mContext, ta.get());
             applyTextAppearance(&attributes);

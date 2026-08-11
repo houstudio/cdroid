@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <assets.h>
-#include <core/typedarray.h>   // TypedArray (constructed in obtainStyledAttributesTyped)
+#include <core/typedarray.h>   // TypedArray (constructed in obtainStyledAttributes)
 #include "androidfw/LocaleData.h"  // localeDataComputeScript (arsc locale config)
 #include "androidfw/assetmanager.h"   // AssetManager
 #include "resources.h"         // cdroid::Resources
@@ -1339,7 +1339,7 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
             atts.add(key,name);
             // A theme attr that resolves to a style reference: capture the style
             // resId directly (the themeString -> name -> arscGetIdentifier round-
-            // trip below can fail to recover it). Lets obtainStyledAttributesTyped
+            // trip below can fail to recover it). Lets obtainStyledAttributes
             // re-resolve the style through the arsc theme resolver.
             if (mResTable) {
                 uint32_t attrId = arscGetIdentifier(key, "attr", resPkg);
@@ -1417,9 +1417,9 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
 // Phase 2 TypedArray bridge: resolve binary AXML attrs to typed values via
 // androidfw obtainStyledAttributes. Returns null for text XML or no arsc.
 // `styleable` is sentinel-terminated; its length is read off the trailing 0.
-std::unique_ptr<TypedArray> Assets::obtainStyledAttributesTyped(
+std::unique_ptr<TypedArray> Assets::obtainStyledAttributes(
     const AttributeSet* attrs, const uint32_t* styleable,
-    uint32_t defStyleAttr, uint32_t defStyleRes)
+    int32_t defStyleAttr, int32_t defStyleRes)
 {
     if (!mResTable) return nullptr;
     size_t count = 0; while (styleable[count]) count++;   // sentinel-terminated

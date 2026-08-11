@@ -118,7 +118,7 @@ void AbsListView::initAbsListView() {
 // TypedArray; a==null (text XML / no arsc) leaves the widget at its defaults.
 void AbsListView::readAbsListViewAttrs(const AttributeSet& atts) {
     Assets* _assets = mContext ? dynamic_cast<Assets*>(mContext) : nullptr;
-    auto a = _assets ? _assets->obtainStyledAttributesTyped(
+    auto a = _assets ? _assets->obtainStyledAttributes(
         atts, styleable::AbsListView::IDS) : nullptr;
     if (!a) return;
     namespace SA = styleable::AbsListView;

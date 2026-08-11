@@ -60,7 +60,7 @@ NestedScrollView::NestedScrollView(Context* context,const AttributeSet* pAttrs,i
     initScrollView(&attrs);
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::ScrollView::IDS) : nullptr;
     if (ta) {
     namespace SNS = styleable::ScrollView;

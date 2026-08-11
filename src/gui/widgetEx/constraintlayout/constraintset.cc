@@ -683,7 +683,7 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = a.getContext();
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         a, styleable::Constraint::IDS) : nullptr;
     namespace SCN = styleable::Constraint;
 

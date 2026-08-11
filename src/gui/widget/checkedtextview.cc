@@ -11,7 +11,7 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet* pAttrs,int
     const AttributeSet& a = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         a, styleable::CheckedTextView::IDS) : nullptr;
     if (ta) {
     namespace SCT = styleable::CheckedTextView;

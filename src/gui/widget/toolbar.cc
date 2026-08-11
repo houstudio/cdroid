@@ -36,7 +36,7 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ViewGr
     // Text-XML ctor path dropped: resolves only through the binary-AXML
     // TypedArray; a==null (text XML / no arsc) leaves the toolbar at defaults.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto a = _assets ? _assets->obtainStyledAttributesTyped(
+    auto a = _assets ? _assets->obtainStyledAttributes(
         atts, styleable::Toolbar::IDS) : nullptr;
     if (a) {
     namespace ST = styleable::Toolbar;

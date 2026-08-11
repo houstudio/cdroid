@@ -20,7 +20,7 @@ TableRow::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :LinearLayout::LayoutParams(c,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = c ? dynamic_cast<Assets*>(c) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::TableRowLayout::IDS) : nullptr;
     if (ta) {
     namespace STR = styleable::TableRowLayout;

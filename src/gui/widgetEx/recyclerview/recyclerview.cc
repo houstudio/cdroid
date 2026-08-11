@@ -91,7 +91,7 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defSt
     const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::RecyclerView::IDS) : nullptr;
     namespace SRV = styleable::RecyclerView;
 

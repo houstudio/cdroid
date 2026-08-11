@@ -79,4 +79,10 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const uin
                                         getResources().getDisplayMetrics().density, this);
 }
 
+// Convenience overload: non-null AttributeSet& delegates to the pointer form.
+std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const AttributeSet& attrs,
+        const uint32_t* styleable, int32_t defStyleAttr, int32_t defStyleRes) {
+    return obtainStyledAttributes(&attrs, styleable, defStyleAttr, defStyleRes);
+}
+
 } // namespace cdroid

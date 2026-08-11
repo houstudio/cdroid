@@ -33,7 +33,7 @@ KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAt
     const AttributeSet& atts = *pAttrs;
     init();
     Assets* _a = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _a ? _a->obtainStyledAttributesTyped(atts, styleable::KeyboardView::IDS) : nullptr;
+    auto ta = _a ? _a->obtainStyledAttributes(atts, styleable::KeyboardView::IDS) : nullptr;
     namespace SKV = styleable::KeyboardView;
     Drawable *dr = ta ? ta->getDrawable(SKV::keyBackground) : nullptr;
     mKeyBackground = dr ? dr:new ColorDrawable(0xFF889988);

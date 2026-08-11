@@ -123,7 +123,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     // etc.) aren't in the framework arsc, so they stay on the string bridge — apps
     // can't set them in binary mode, so those reads return defaults (harmless).
     Assets* _a = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _a ? _a->obtainStyledAttributesTyped(atts, styleable::NumberPicker::IDS) : nullptr;
+    auto ta = _a ? _a->obtainStyledAttributes(atts, styleable::NumberPicker::IDS) : nullptr;
     namespace SN = styleable::NumberPicker;
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
     mWrapSelectorWheelPreferred= atts.getBoolean("wrapSelectorWheel",mWrapSelectorWheelPreferred);

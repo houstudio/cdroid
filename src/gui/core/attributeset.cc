@@ -154,7 +154,7 @@ int AttributeSet::inherit(const AttributeSet&other){
     }
     // Carry the source style resId: when a base AttributeSet inherits a resolved
     // style (e.g. TextView merges its textAppearance style into the element set),
-    // the merged set must keep the style's resId so obtainStyledAttributesTyped
+    // the merged set must keep the style's resId so obtainStyledAttributes
     // routes it through the arsc theme resolver (non-binary styleResId branch).
     if (mStyleResId == 0) mStyleResId = other.mStyleResId;
     return inheritedCount;

@@ -31,7 +31,7 @@ AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet* pA
     initViewAnimator();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::AdapterViewAnimator::IDS) : nullptr;
     if (ta) {
     namespace SAV = styleable::AdapterViewAnimator;

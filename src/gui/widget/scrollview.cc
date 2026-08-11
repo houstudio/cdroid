@@ -42,7 +42,7 @@ ScrollView::ScrollView(Context*context,const AttributeSet* pAttrs,int defStyleAt
     initScrollView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         atts, styleable::ScrollView::IDS) : nullptr;
     if (ta) {
     namespace SSV = styleable::ScrollView;

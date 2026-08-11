@@ -63,7 +63,7 @@ TextClock::TextClock(Context* context,const AttributeSet* pAttrs,int defStyleAtt
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::TextClock::IDS) : nullptr;
     if (ta) {
     namespace STC = styleable::TextClock;

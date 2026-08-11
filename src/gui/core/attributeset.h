@@ -43,12 +43,12 @@ protected:
     std::shared_ptr<std::unordered_map<std::string,int>>mAttrResIds;
     // When this AttributeSet is a *style* resolved from the arsc (built by
     // obtainStyledAttributes(styleName)), the source style's resource id — so
-    // obtainStyledAttributesTyped can re-resolve it through the arsc theme
+    // obtainStyledAttributes can re-resolve it through the arsc theme
     // resolver (raw Res_values) instead of string-parsing. 0 = not a style set.
     int mStyleResId = 0;
     // The widget's default-style attr id (defStyleAttr), set by LayoutInflater from
     // the DECLARE_WIDGET2/3-registered default style; consumed by
-    // obtainStyledAttributesTyped. 0 = none.
+    // obtainStyledAttributes. 0 = none.
     int mDefStyleAttr = 0;
 public:
     AttributeSet();
@@ -73,7 +73,7 @@ public:
     // buttonStyle) recorded by DECLARE_WIDGET2/3. AOSP flows this through the ctor
     // into obtainStyledAttributes(attrs, styleable, defStyleAttr, 0); CDROID records
     // it on the AttributeSet (LayoutInflater::createView sets it from the registered
-    // default style) so obtainStyledAttributesTyped can apply it without a 3-arg ctor
+    // default style) so obtainStyledAttributes can apply it without a 3-arg ctor
     // signature. 0 = no default-style attribute.
     int getDefStyleAttr() const { return mDefStyleAttr; }
     void setDefStyleAttr(int attrId) { mDefStyleAttr = attrId; }

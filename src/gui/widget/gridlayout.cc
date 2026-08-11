@@ -78,7 +78,7 @@ void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet&
 void GridLayout::LayoutParams::init(Context* context,const AttributeSet& attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::GridLayoutLayout::IDS) : nullptr;
     if (ta) {
     namespace SGL = styleable::GridLayoutLayout;
@@ -143,7 +143,7 @@ GridLayout::GridLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     initGridLayout();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::GridLayout::IDS) : nullptr;
     namespace SGL = styleable::GridLayout;
 

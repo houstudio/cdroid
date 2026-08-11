@@ -57,7 +57,7 @@ RelativeLayout::RelativeLayout(Context* context,const AttributeSet* pAttrs,int d
     mDirtyHierarchy = true;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         attrs, styleable::RelativeLayout::IDS) : nullptr;
     if (ta) {
     namespace SRL = styleable::RelativeLayout;
@@ -898,7 +898,7 @@ RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):
     memset(mRules, 0, sizeof(mRules)); // absent rules stay 0 (binary switch only fires present attrs)
     // Phase 2: TypedArray switch-loop (22 rules = many attrs → loop, AOSP pattern).
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributesTyped(
+    auto ta = _assets ? _assets->obtainStyledAttributes(
         atts, styleable::RelativeLayoutLayout::IDS) : nullptr;
     namespace SRL = styleable::RelativeLayoutLayout;
 
