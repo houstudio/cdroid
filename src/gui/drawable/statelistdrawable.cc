@@ -17,6 +17,9 @@
  *********************************************************************************/
 #include <drawable/statelistdrawable.h>
 #include <drawable/colordrawable.h>
+#include <core/context.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdtypes.h>
 #include <porting/cdlog.h>
 namespace cdroid{
@@ -144,12 +147,15 @@ bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
 
 void StateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflateWithAttributes(parser,atts);
-    updateStateFromTypedArray(atts);
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::StateListDrawable::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
     inflateChildElements(parser,atts);
     onStateChange(getState());
 }
 
-void StateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
+void StateListDrawable::updateStateFromTypedArray(const TypedArray& a) {
+    namespace SX = styleable::StateListDrawable;
     auto state = mStateListState;
 
     // Account for any configuration changes.
@@ -157,15 +163,16 @@ void StateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
     // Extract the theme attributes, if any.
     //state->mThemeAttrs = a.extractThemeAttrs();
 
-    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
-    state->mConstantSize = atts.getBoolean("constantSize", state->mConstantSize);
-    state->mEnterFadeDuration = atts.getInt("enterFadeDuration", state->mEnterFadeDuration);
-    state->mExitFadeDuration = atts.getInt("exitFadeDuration", state->mExitFadeDuration);
-    state->mDither = atts.getBoolean("dither", state->mDither);
-    state->mAutoMirrored = atts.getBoolean("autoMirrored", state->mAutoMirrored);
+    state->mVariablePadding = a.getBoolean(SX::variablePadding, state->mVariablePadding);
+    state->mConstantSize = a.getBoolean(SX::constantSize, state->mConstantSize);
+    state->mEnterFadeDuration = a.getInt(SX::enterFadeDuration, state->mEnterFadeDuration);
+    state->mExitFadeDuration = a.getInt(SX::exitFadeDuration, state->mExitFadeDuration);
+    state->mDither = a.getBoolean(SX::dither, state->mDither);
+    state->mAutoMirrored = a.getBoolean(SX::autoMirrored, state->mAutoMirrored);
 }
 
 void StateListDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
+    namespace SXI = styleable::StateListDrawableItem;
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
     while( ((type=parser.next())!=XmlPullParser::END_DOCUMENT)
@@ -174,7 +181,9 @@ void StateListDrawable::inflateChildElements(XmlPullParser&parser,const Attribut
         if((depth>innerDepth)||parser.getName().compare("item"))continue;
 
         std::vector<int>states;
-        Drawable*dr = atts.getDrawable("drawable");
+        Context* ctx = atts.getContext();
+        auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::StateListDrawableItem::IDS) : nullptr;
+        Drawable*dr = ta ? ta->getDrawable(SXI::drawable) : atts.getDrawable("drawable");
         StateSet::parseState(states,atts);
         if(dr==nullptr){
             while((type=parser.next())==XmlPullParser::TEXT){}

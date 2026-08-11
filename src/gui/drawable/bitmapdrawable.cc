@@ -17,6 +17,8 @@
  *********************************************************************************/
 #include <drawable/bitmapdrawable.h>
 #include <image-decoders/imagedecoder.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <fstream>
 #include <app.h>
 #include <cdlog.h>
@@ -471,31 +473,35 @@ void BitmapDrawable::getOutline(Outline& outline) {
     outline.setAlpha(opaqueOverShape ? getAlpha() / 255.0f : 0.0f);
 }
 
-void BitmapDrawable::updateStateFromTypedArray(const AttributeSet&atts){
+void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a){
+    namespace SX = styleable::BitmapDrawable;
+    // aapt2 pre-resolves the tileMode enum (disabled=-1/clamp=0/repeat=1/mirror=2)
+    // and the tintMode enum to the PorterDuff.Mode constructor ordinals, so the
+    // string->int maps used by the AttributeSet path are no longer needed.
+    const int tileMode = a.getInt(SX::tileMode, TileMode::DISABLED);
+    mBitmapState->mTileModeX = a.getInt(SX::tileModeX, tileMode);
+    mBitmapState->mTileModeY = a.getInt(SX::tileModeY, tileMode);
+    mBitmapState->mDither = a.getBoolean(SX::dither, true);
+    mBitmapState->mFilterBitmap = a.getBoolean(SX::filter, false);
+    mBitmapState->mAntiAlias = a.getBoolean(SX::antialias, true);
+    mBitmapState->mGravity = a.getInt(SX::gravity, Gravity::CENTER);
+    mBitmapState->mTint = a.getColorStateList(SX::tint);
+    const int tintMode = a.getInt(SX::tintMode, -1);
+    if (tintMode != -1) {
+        mBitmapState->mTintMode = parseTintMode(tintMode, PorterDuff::Mode::SRC_IN);
+    }
 }
 
 void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(parser,atts);
-    auto bmp = ImageDecoder::loadImage(atts.getContext(),atts.getString("src"));
-    mBitmapState->mBitmap = bmp;
-    static std::unordered_map<std::string,int>kvs={
-          {"disabled",TileMode::DISABLED},
-          {"clamp",TileMode::CLAMP},
-          {"repeat",TileMode::REPEAT},
-          {"mirror",TileMode::MIRROR}};
-    const int tileMode=atts.getInt("tileMode",kvs,-1);
-    mBitmapState->mDither =atts.getBoolean("dither",true);
-    mBitmapState->mTint = atts.getColorStateList("tint");
-    const int tintMode = atts.getTintMode("tintMode", PorterDuff::NOOP);
-    if (tintMode != PorterDuff::NOOP) {
-        mBitmapState->mTintMode = tintMode;
-    }
-    mBitmapState->mTileModeX =atts.getInt("tileModeX",kvs,tileMode);
-    mBitmapState->mTileModeY =atts.getInt("tileModeY",kvs,tileMode);
-    mBitmapState->mGravity = atts.getGravity("gravity",Gravity::CENTER);
-    mBitmapState->mFilterBitmap=atts.getBoolean("filter",false);
-    mBitmapState->mAntiAlias=atts.getBoolean("antialias",true);
-    setBitmap(bmp);//computeBitmapSize();
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::BitmapDrawable::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
+    // 'src' is an image reference; load it via the string bridge because CDROID's
+    // image loader takes a resource name (not an arsc resource id) and TypedArray
+    // has no accessor that resolves a reference attr back to its resource name.
+    auto bmp = ImageDecoder::loadImage(ctx, atts.getString("src"));
+    setBitmap(bmp);
 }
 
 }

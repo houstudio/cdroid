@@ -18,6 +18,7 @@
 #ifndef __NINEPATCH_DRAWABLE_H__
 #define __NINEPATCH_DRAWABLE_H__
 #include <drawable/drawable.h>
+#include <core/typedarray.h>
 
 namespace cdroid{
 class NinePatchRenderer;
@@ -57,7 +58,7 @@ private:
     std::shared_ptr<NinePatchState>mNinePatchState;
     cdroid::RefPtr<PorterDuffColorFilter>mTintFilter;
     NinePatchDrawable(std::shared_ptr<NinePatchState>state);
-    void updateStateFromTypedArray(const AttributeSet&a);
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
 public:

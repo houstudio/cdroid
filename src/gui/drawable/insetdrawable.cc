@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawable/insetdrawable.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 namespace cdroid{
 
@@ -165,7 +166,9 @@ std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){
 
 void InsetDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     // Inset attribute may be overridden by more specific attributes.
-    updateStateFromTypedArray(atts);
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::InsetDrawable::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
     DrawableWrapper::inflate(parser,atts);
     verifyRequiredAttributes();
 }
@@ -178,18 +181,19 @@ void InsetDrawable::verifyRequiredAttributes(){
     }
 }
 
-void InsetDrawable::updateStateFromTypedArray(const AttributeSet&atts){
-    if (atts.hasAttribute("inset")) {
-        const float inset = atts.getFloat("inset", 0);
+void InsetDrawable::updateStateFromTypedArray(const TypedArray& a){
+    namespace SI = styleable::InsetDrawable;
+    if (a.hasValue(SI::inset)) {
+        const float inset = a.getFloat(SI::inset, 0);
         mState->mInsetLeft.set(inset);
         mState->mInsetTop.set(inset);
         mState->mInsetRight.set(inset);
         mState->mInsetBottom.set(inset);
     }
-    mState->mInsetLeft.set(atts.getFloat("insetLeft", 0.f));
-    mState->mInsetTop.set(atts.getFloat("insetTop", 0.f));
-    mState->mInsetRight.set(atts.getFloat("insetRight", 0.f));
-    mState->mInsetBottom.set(atts.getFloat("insetBottom", 0.f));
+    mState->mInsetLeft.set(a.getFloat(SI::insetLeft, 0.f));
+    mState->mInsetTop.set(a.getFloat(SI::insetTop, 0.f));
+    mState->mInsetRight.set(a.getFloat(SI::insetRight, 0.f));
+    mState->mInsetBottom.set(a.getFloat(SI::insetBottom, 0.f));
 }
 }/*endof namespace*/
 

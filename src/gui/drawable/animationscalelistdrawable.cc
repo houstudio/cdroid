@@ -18,6 +18,7 @@
 #include <drawable/drawables.h>
 #include <animation/valueanimator.h>
 #include <drawable/animationscalelistdrawable.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
 AnimationScaleListDrawable::AnimationScaleListDrawable():AnimationScaleListDrawable(nullptr){
 }
@@ -50,6 +51,7 @@ void AnimationScaleListDrawable::inflate(XmlPullParser& parser,const AttributeSe
  * Inflates child elements from XML.
  */
 void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& attrs){
+    namespace SXI = styleable::AnimationScaleListDrawableItem;
     auto state = mAnimationScaleListState;
     int type, depth;
     const int innerDepth = parser.getDepth()+1;
@@ -64,7 +66,9 @@ void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,cons
         }
 
         // Either pick up the android:drawable attribute.
-        Drawable* dr = attrs.getDrawable("drawable");
+        Context* ctx = attrs.getContext();
+        auto ta = ctx ? ctx->obtainStyledAttributes(attrs, styleable::AnimationScaleListDrawableItem::IDS) : nullptr;
+        Drawable* dr = ta ? ta->getDrawable(SXI::drawable) : attrs.getDrawable("drawable");
 
         // Or parse the child element under <item>.
         if (dr == nullptr) {

@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <core/systemclock.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 #include <animation/animatorinflater.h>
 #include <drawable/animatedvectordrawable.h>
@@ -197,6 +199,8 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
 }
 
 void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&attrs){
+    namespace SXV = styleable::AnimatedVectorDrawable;
+    namespace SXT = styleable::AnimatedVectorDrawableTarget;
     auto state = mAnimatedVectorState;
     int eventType= parser.getEventType();//XmlPullParser::START_TAG;
     float pathErrorScale = 1;
@@ -208,10 +212,11 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tagName = parser.getName();
             if (tagName.compare(ANIMATED_VECTOR)==0) {
-                std::string drawableRes = attrs.getString("drawable");
-                LOGV("drawable=%s",drawableRes.c_str());
-                if (!drawableRes.empty()) {
-                    VectorDrawable* vectorDrawable = (VectorDrawable*) ctx->getDrawable(drawableRes)->mutate();
+                // AOSP obtains R.styleable.AnimatedVectorDrawable per <animated-vector>.
+                auto ta = ctx ? ctx->obtainStyledAttributes(attrs, SXV::IDS) : nullptr;
+                Drawable* dr = ta ? ta->getDrawable(SXV::drawable) : nullptr;
+                if (dr != nullptr) {
+                    VectorDrawable* vectorDrawable = (VectorDrawable*) dr->mutate();
                     vectorDrawable->setAllowCaching(false);
                     vectorDrawable->setCallback(mCallback);
                     pathErrorScale = vectorDrawable->getPixelSize();
@@ -225,8 +230,22 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
                     state->mVectorDrawable = vectorDrawable;
                 }
             } else if (tagName.compare(TARGET)==0) {
-                const std::string target = attrs.getString("name");
-                const std::string animResId = attrs.getString("animation");
+                // AOSP obtains R.styleable.AnimatedVectorDrawableTarget per <target>.
+                auto ta = ctx ? ctx->obtainStyledAttributes(attrs, SXT::IDS) : nullptr;
+                const std::string target = ta ? ta->getString(SXT::name) : attrs.getString("name");
+                // animation is a @animator reference; TypedArray exposes no Animator
+                // getter, so resolve the reference to its resource name (the same form
+                // TypedArray.getDrawable and XmlPullParser consume) and hand it to
+                // AnimatorInflater. Fall back to the string bridge for text XML.
+                std::string animResId;
+                Res_value v;
+                if (ta && ta->peekValue(SXT::animation, &v)) {
+                    animResId = (v.dataType == Res_value::TYPE_STRING)
+                              ? ta->getString(SXT::animation)
+                              : ctx->getResourceName(v.data);
+                } else {
+                    animResId = attrs.getString("animation");
+                }
                 if (!animResId.empty()) {
                     if (true/*theme != nullptr*/) {
                         // The animator here could be ObjectAnimator or AnimatorSet.

@@ -19,6 +19,7 @@
 #define __RIPPLE_DRAWABLE_H__
 #include <drawable/layerdrawable.h>
 #include <drawable/rippleforeground.h>
+#include <core/typedarray.h>
 
 namespace cdroid{
 
@@ -95,6 +96,7 @@ private:
     void exitPatternedAnimation();
     void enterPatternedBackgroundAnimation(bool focused, bool hovered);
     void startBackgroundAnimation();
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void onBoundsChange(const Rect& bounds)override;

@@ -40,7 +40,7 @@ private:
 private:
     void setFrame(int frame,bool unschedule,bool animate);
     AnimationDrawable(std::shared_ptr<AnimationState>);
-    void updateStateFromTypedArray(const AttributeSet&a);
+    void updateStateFromTypedArray(const TypedArray& a);
     void inflateChildElements(XmlPullParser& parser,const AttributeSet& atts);
 protected:
     void setConstantState(std::shared_ptr<DrawableContainerState>state)override;

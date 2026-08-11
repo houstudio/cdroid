@@ -22,6 +22,7 @@
 #include <drawable/drawable.h>
 #include <drawable/pathparser.h>
 #include <animation/property.h>
+#include <core/typedarray.h>
 namespace cdroid{
 namespace hwui{
     class Group;
@@ -63,7 +64,7 @@ private:
     VectorDrawable(std::shared_ptr<VectorDrawableState> state);
     void updateLocalState();
     bool needMirroring();
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
     void inflateChildElements(XmlPullParser&parser,const AttributeSet&);
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
@@ -319,7 +320,7 @@ public:
     bool onStateChange(const std::vector<int>& stateSet) override;
     bool isStateful() const override;
     bool hasFocusStateSpecified() const override;
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
     void inflate(XmlPullParser&,const AttributeSet& attrs)override;
 };
 
@@ -364,7 +365,7 @@ private:
     static const FloatProperty*const TRIM_PATH_END;
     static const FloatProperty*const TRIM_PATH_OFFSET;
 private:
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
     bool canComplexColorApplyTheme(const RefPtr<ComplexColor>& complexColor);
     void inflateGradients(XmlPullParser&,const AttributeSet&atts);
 public:

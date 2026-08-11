@@ -19,6 +19,7 @@
 #include <drawable/colorstatelist.h>
 #include <stdexcept>
 #include <widget/R.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
 
 RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner)
@@ -599,20 +600,38 @@ Rect RippleDrawable::getDirtyBounds() const{
 }
 
 void RippleDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    // Snapshot the <ripple> root-element attrs into a TypedArray BEFORE LayerDrawable::inflate
+    // advances the parser into the child <item>s. obtainStyledAttributes resolves and caches the
+    // values up front (AOSP obtainAttributes semantics), so updateStateFromTypedArray is safe to
+    // call after super.inflate() — the earlier read-order constraint was specific to CDROID's lazy
+    // string-keyed AttributeSet reads.
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::RippleDrawable::IDS) : nullptr;
 
     // Force padding default to STACK before inflating.
     setPaddingMode(PADDING_MODE_STACK);
-    // Read our own root-element attrs BEFORE LayerDrawable::inflate advances the parser into the
-    // child <item>s. The AttributeSet reads the parser's current tag lazily, so reading "color" /
-    // "radius" after super.inflate() (which calls parser.next()) would miss the <ripple> tag's
-    // attributes and silently fall back to the defaults (AOSP takes an attributes snapshot first;
-    // CDROID's AttributeSet has no snapshot, so the read order must precede super.inflate()).
-    mState->mColor = atts.getColorStateList("color");
-    const RefPtr<ColorStateList> effectColor = atts.getColorStateList("effectColor");
-    if(effectColor) mState->mEffectColor = effectColor;
-    mState->mMaxRadius = atts.getDimensionPixelSize("radius", mState->mMaxRadius);
+
     LayerDrawable::inflate(parser,atts);
+
+    if (ta) updateStateFromTypedArray(*ta);
+
     updateLocalState();
+}
+
+void RippleDrawable::updateStateFromTypedArray(const TypedArray& a) {
+    namespace SX = styleable::RippleDrawable;
+
+    // AOSP RippleDrawable.updateStateFromTypedArray: the mChangingConfigurations |=
+    // getChangingConfigurations() and extractThemeAttrs() lines are omitted — CDROID's TypedArray
+    // port has no theme-attr bookkeeping (no getChangingConfigurations / extractThemeAttrs).
+
+    const RefPtr<ColorStateList> color = a.getColorStateList(SX::color);
+    if (color) mState->mColor = color;
+
+    const RefPtr<ColorStateList> effectColor = a.getColorStateList(SX::effectColor);
+    if (effectColor) mState->mEffectColor = effectColor;
+
+    mState->mMaxRadius = a.getDimensionPixelSize(SX::radius, mState->mMaxRadius);
 }
 
 void RippleDrawable::updateLocalState() {

@@ -18,6 +18,7 @@
 #ifndef __BITMAP_DRAWABLE_H__
 #define __BITMAP_DRAWABLE_H__
 #include <drawable/drawable.h>
+#include <core/typedarray.h>
 #include <cairomm/surface.h>
 #include <cairomm/refptr.h>
 namespace cdroid{
@@ -66,7 +67,7 @@ private:
     void computeBitmapSize();
     void updateDstRectAndInsetsIfDirty();
     BitmapDrawable(std::shared_ptr<BitmapState>state);
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
     bool mMutated;
     Rect mDstRect;

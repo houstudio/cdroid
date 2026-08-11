@@ -18,6 +18,7 @@
 #ifndef __LAYER_DRAWABLE_H__
 #define __LAYER_DRAWABLE_H__
 #include <drawable/drawable.h>
+#include <core/typedarray.h>
 namespace cdroid{
 
 class LayerDrawable:public Drawable,public Drawable::Callback {
@@ -95,8 +96,8 @@ private:
     ChildDrawable* createLayer(Drawable* dr);
     Drawable* getFirstNonNullDrawable()const;
     void inflateLayers(XmlPullParser& parser,const AttributeSet& atts);
-    void updateStateFromTypedArray(const AttributeSet&atts);
-    void updateLayerFromTypedArray(ChildDrawable*layer,const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
+    void updateLayerFromTypedArray(ChildDrawable*layer,const TypedArray& a);
 protected:
     virtual std::shared_ptr<LayerState> createConstantState(LayerState* state,const AttributeSet*);
     void onBoundsChange(const Rect& bounds)override;

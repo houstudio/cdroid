@@ -19,6 +19,7 @@
 #ifndef __DRAWABLE_WRAPPER_H__
 #define __DRAWABLE_WRAPPER_H__
 #include <drawable/drawable.h>
+#include <core/typedarray.h>
 namespace cdroid{
 
 class DrawableWrapper:public Drawable,public Drawable::Callback{
@@ -44,7 +45,7 @@ protected:
     Drawable*mDrawable;
     std::shared_ptr<DrawableWrapperState>mState;
     void updateLocalState();
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
     void inflateChildDrawable(XmlPullParser& parser,const AttributeSet& attrs);
 protected:
     virtual std::shared_ptr<DrawableWrapperState> mutateConstantState();

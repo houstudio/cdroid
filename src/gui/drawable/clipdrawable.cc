@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawable/clipdrawable.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -116,16 +117,16 @@ void ClipDrawable::draw(Canvas& canvas){
 }
 
 void ClipDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    updateStateFromTypedArray(atts);
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::ClipDrawable::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
     DrawableWrapper::inflate(parser,atts);
 }
 
-void ClipDrawable::updateStateFromTypedArray(const AttributeSet&atts){
-    mState->mOrientation = atts.getInt("clipOrientation",std::unordered_map<std::string,int>{
-            {"horizontal",(int)HORIZONTAL},
-            {"vertical",(int)VERTICAL}
-        }, mState->mOrientation);
-    mState->mGravity = atts.getGravity("gravity", mState->mGravity);
+void ClipDrawable::updateStateFromTypedArray(const TypedArray& a){
+    namespace SC = styleable::ClipDrawable;
+    mState->mOrientation = a.getInt(SC::clipOrientation, mState->mOrientation);
+    mState->mGravity = a.getInt(SC::gravity, mState->mGravity);
 }
 
 }/*endof namespace*/

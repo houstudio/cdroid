@@ -44,7 +44,7 @@ private:
     void updateLocalState();
     std::shared_ptr<AnimatedRotateState>mState;
     AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateState> state);
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
 public:

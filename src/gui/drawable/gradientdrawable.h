@@ -18,6 +18,7 @@
 #ifndef __GRADIENT_DRAWABLE_H__
 #define __GRADIENT_DRAWABLE_H__
 #include <drawable/drawable.h>
+#include <core/typedarray.h>
 //#include <core/path.h>
 namespace cdroid{
 
@@ -152,14 +153,14 @@ private:
     void updateLocalState();
     void prepareStrokeProps(Canvas&canvas);
     void getPatternAlpha(int& strokeAlpha,int& fillApha);
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
     void inflateChildElements(XmlPullParser&,const AttributeSet&);
-    void updateGradientDrawableSize(const AttributeSet&);
-    void updateGradientDrawableGradient(const AttributeSet&);
-    void updateGradientDrawableSolid(const AttributeSet&);
-    void updateGradientDrawableStroke(const AttributeSet&);
-    void updateDrawableCorners(const AttributeSet&);
-    void updateGradientDrawablePadding(const AttributeSet&);
+    void updateGradientDrawableSize(const TypedArray& a);
+    void updateGradientDrawableGradient(const TypedArray& a);
+    void updateGradientDrawableSolid(const TypedArray& a);
+    void updateGradientDrawableStroke(const TypedArray& a);
+    void updateDrawableCorners(const TypedArray& a);
+    void updateGradientDrawablePadding(const TypedArray& a);
 protected:
     void onBoundsChange(const Rect& r)override;
     bool onLevelChange(int level)override;

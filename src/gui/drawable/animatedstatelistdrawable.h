@@ -49,7 +49,7 @@ private:
     bool selectTransition(int toIndex);
     AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListState> state);
     void init();
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
     void inflateChildElement(XmlPullParser&,const AttributeSet&);
     int parseItem(XmlPullParser&,const AttributeSet&);
     int parseTransition(XmlPullParser&,const AttributeSet&);

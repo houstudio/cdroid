@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawable/scaledrawable.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
 
@@ -124,16 +125,24 @@ void ScaleDrawable::draw(Canvas& canvas) {
 extern int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def);
 
 void ScaleDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    updateStateFromTypedArray(atts);
+    // scaleWidth/scaleHeight rely on CDROID's getDimensionOrFraction helper
+    // (base=100, CDROID-specific percent semantics) which has no TypedArray
+    // equivalent, so they stay on the string AttributeSet bridge.
+    mState->mScaleWidth = getDimensionOrFraction(atts,"scaleWidth", 100, mState->mScaleWidth);
+    mState->mScaleHeight = getDimensionOrFraction(atts,"scaleHeight", 100, mState->mScaleHeight);
+
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::ScaleDrawable::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
+
     DrawableWrapper::inflate(parser,atts);
 }
 
-void ScaleDrawable::updateStateFromTypedArray(const AttributeSet&atts){
-    mState->mScaleWidth = getDimensionOrFraction(atts,"scaleWidth", 100, mState->mScaleWidth);
-    mState->mScaleHeight = getDimensionOrFraction(atts,"scaleHeight", 100, mState->mScaleHeight);
-    mState->mGravity = atts.getGravity("scaleGravity", mState->mGravity);
-    mState->mUseIntrinsicSizeAsMin = atts.getBoolean("useIntrinsicSizeAsMinimum", mState->mUseIntrinsicSizeAsMin);
-    mState->mInitialLevel = atts.getInt("level", mState->mInitialLevel);
+void ScaleDrawable::updateStateFromTypedArray(const TypedArray& a){
+    namespace SX = styleable::ScaleDrawable;
+    mState->mGravity = a.getInt(SX::scaleGravity, mState->mGravity);
+    mState->mUseIntrinsicSizeAsMin = a.getBoolean(SX::useIntrinsicSizeAsMinimum, mState->mUseIntrinsicSizeAsMin);
+    mState->mInitialLevel = a.getInt(SX::level, mState->mInitialLevel);
 }
 
 }

@@ -18,6 +18,8 @@
 #include <drawable/drawable.h>
 #include <porting/cdlog.h>
 #include <core/windowmanager.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <drawable/drawableinflater.h>
 
 using namespace Cairo;
@@ -85,7 +87,10 @@ void Drawable::clearMutated() {
 }
 
 void Drawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    mVisible = atts.getBoolean("visible", mVisible);
+    // AOSP Drawable.inflate: obtainAttributes(R.styleable.Drawable) -> visible.
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::Drawable::IDS) : nullptr;
+    mVisible = ta ? ta->getBoolean(styleable::Drawable::visible, mVisible) : mVisible;
 }
 
 void Drawable::inflateWithAttributes(XmlPullParser&parser,const AttributeSet&atts){

@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <drawable/layerdrawable.h>
 #include <drawable/ninepatchdrawable.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 #include <limits.h>
 
@@ -1110,7 +1111,11 @@ void LayerDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     const int density = Drawable::resolveDensity( 0);
     mLayerState->setDensity(density);
 
-    updateStateFromTypedArray(atts);
+    // AOSP LayerDrawable.inflate: obtainAttributes(R.styleable.LayerDrawable).
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::LayerDrawable::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
+
     for (ChildDrawable*layer:mLayerState->mChildren) {
         layer->setDensity(density);
     }
@@ -1133,7 +1138,10 @@ void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts
         }
 
         ChildDrawable*layer = new ChildDrawable(mLayerState->mDensity);
-        updateLayerFromTypedArray(layer,atts);
+        // AOSP inflateLayers: obtainAttributes(R.styleable.LayerDrawableItem) per <item>.
+        Context* ctx = atts.getContext();
+        auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::LayerDrawableItem::IDS) : nullptr;
+        if (ta) updateLayerFromTypedArray(layer, *ta);
 
         if (layer->mDrawable==nullptr) {
             while ((type = parser.next()) == XmlPullParser::TEXT) {
@@ -1150,7 +1158,7 @@ void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts
     }
 }
 
-void LayerDrawable::updateStateFromTypedArray(const AttributeSet&a) {
+void LayerDrawable::updateStateFromTypedArray(const TypedArray& a) {
     auto state = mLayerState;
 
     // Account for any configuration changes.
@@ -1158,36 +1166,40 @@ void LayerDrawable::updateStateFromTypedArray(const AttributeSet&a) {
     // Extract the theme attributes, if any.
     //state->mThemeAttrs = a.extractThemeAttrs();
 
-    state->mOpacityOverride = a.getInt("opacity", state->mOpacityOverride);
-    state->mPaddingTop = a.getDimensionPixelOffset("paddingTop", state->mPaddingTop);
-    state->mPaddingBottom = a.getDimensionPixelOffset("paddingBottom", state->mPaddingBottom);
-    state->mPaddingLeft = a.getDimensionPixelOffset("paddingLeft", state->mPaddingLeft);
-    state->mPaddingRight = a.getDimensionPixelOffset("paddingRight", state->mPaddingRight);
-    state->mPaddingStart = a.getDimensionPixelOffset("paddingStart", state->mPaddingStart);
-    state->mPaddingEnd = a.getDimensionPixelOffset("paddingEnd", state->mPaddingEnd);
-    state->mAutoMirrored = a.getBoolean("autoMirrored", state->mAutoMirrored);
-    state->mPaddingMode = a.getInt("paddingMode", state->mPaddingMode);
+    namespace SX = styleable::LayerDrawable;
+    state->mOpacityOverride = a.getInt(SX::opacity, state->mOpacityOverride);
+    state->mPaddingTop = a.getDimensionPixelOffset(SX::paddingTop, state->mPaddingTop);
+    state->mPaddingBottom = a.getDimensionPixelOffset(SX::paddingBottom, state->mPaddingBottom);
+    state->mPaddingLeft = a.getDimensionPixelOffset(SX::paddingLeft, state->mPaddingLeft);
+    state->mPaddingRight = a.getDimensionPixelOffset(SX::paddingRight, state->mPaddingRight);
+    state->mPaddingStart = a.getDimensionPixelOffset(SX::paddingStart, state->mPaddingStart);
+    state->mPaddingEnd = a.getDimensionPixelOffset(SX::paddingEnd, state->mPaddingEnd);
+    state->mAutoMirrored = a.getBoolean(SX::autoMirrored, state->mAutoMirrored);
+    state->mPaddingMode = a.getInt(SX::paddingMode, state->mPaddingMode);
 }
 
-void LayerDrawable::updateLayerFromTypedArray(ChildDrawable*layer,const AttributeSet&atts){
+void LayerDrawable::updateLayerFromTypedArray(ChildDrawable*layer,const TypedArray& a){
     auto state = mLayerState;
 
     // Account for any configuration changes.
     //state->mChildrenChangingConfigurations |= a.getChangingConfigurations();
     //layer->mThemeAttrs = a.extractThemeAttrs();
 
-    layer->mInsetL = atts.getDimensionPixelOffset("left", layer->mInsetL);
-    layer->mInsetT = atts.getDimensionPixelOffset("top", layer->mInsetT);
-    layer->mInsetR = atts.getDimensionPixelOffset("right", layer->mInsetR);
-    layer->mInsetB = atts.getDimensionPixelOffset("bottom", layer->mInsetB);
-    layer->mInsetS = atts.getDimensionPixelOffset("start", layer->mInsetS);
-    layer->mInsetE = atts.getDimensionPixelOffset("end", layer->mInsetE);
-    layer->mWidth  = atts.getDimensionPixelSize("width", layer->mWidth);
-    layer->mHeight = atts.getDimensionPixelSize("height", layer->mHeight);
-    layer->mGravity= atts.getGravity("gravity", layer->mGravity);
-    layer->mId = atts.getResourceId("id", layer->mId);
+    namespace SX = styleable::LayerDrawableItem;
+    layer->mInsetL = a.getDimensionPixelOffset(SX::left, layer->mInsetL);
+    layer->mInsetT = a.getDimensionPixelOffset(SX::top, layer->mInsetT);
+    layer->mInsetR = a.getDimensionPixelOffset(SX::right, layer->mInsetR);
+    layer->mInsetB = a.getDimensionPixelOffset(SX::bottom, layer->mInsetB);
+    layer->mInsetS = a.getDimensionPixelOffset(SX::start, layer->mInsetS);
+    layer->mInsetE = a.getDimensionPixelOffset(SX::end, layer->mInsetE);
+    layer->mWidth  = a.getDimensionPixelSize(SX::width, layer->mWidth);
+    layer->mHeight = a.getDimensionPixelSize(SX::height, layer->mHeight);
+    // TypedArray has no getGravity; aapt2 pre-resolves Gravity flag enums,
+    // matching AOSP updateLayerFromTypedArray (a.getInteger).
+    layer->mGravity= a.getInteger(SX::gravity, layer->mGravity);
+    layer->mId = a.getResourceId(SX::id, layer->mId);
 
-    Drawable* dr = atts.getDrawable("drawable");
+    Drawable* dr = a.getDrawable(SX::drawable);
     if (dr != nullptr) {
         if (layer->mDrawable != nullptr) {
             // It's possible that a drawable was already set, in which case

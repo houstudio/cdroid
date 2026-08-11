@@ -19,6 +19,7 @@
 #include <drawable/animatedrotatedrawable.h>
 #include <drawable/animatedimagedrawable.h>
 #include <drawable/animatedvectordrawable.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 
 namespace cdroid{
@@ -196,13 +197,16 @@ void AnimatedStateListDrawable::setConstantState(std::shared_ptr<DrawableContain
 void AnimatedStateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     StateListDrawable::inflateWithAttributes(parser,atts);
 
-    updateStateFromTypedArray(atts);
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedStateListDrawable::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
     //updateDensity();
     inflateChildElement(parser,atts);
     init();
 }
 
-void AnimatedStateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
+void AnimatedStateListDrawable::updateStateFromTypedArray(const TypedArray& a) {
+    namespace SX = styleable::AnimatedStateListDrawable;
     auto state = mState;
 
     // Account for any configuration changes.
@@ -210,12 +214,12 @@ void AnimatedStateListDrawable::updateStateFromTypedArray(const AttributeSet&att
     // Extract the theme attributes, if any.
     //state->mThemeAttrs = a.extractThemeAttrs();
 
-    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
-    state->mConstantSize = atts.getBoolean("constantSize", state->mConstantSize);
-    state->mEnterFadeDuration = atts.getInt("enterFadeDuration", state->mEnterFadeDuration);
-    state->mExitFadeDuration = atts.getInt("exitFadeDuration", state->mExitFadeDuration);
-    state->mDither = atts.getBoolean("dither", state->mDither);
-    state->mAutoMirrored = atts.getBoolean("autoMirrored", state->mAutoMirrored);
+    state->mVariablePadding = a.getBoolean(SX::variablePadding, state->mVariablePadding);
+    state->mConstantSize = a.getBoolean(SX::constantSize, state->mConstantSize);
+    state->mEnterFadeDuration = a.getInt(SX::enterFadeDuration, state->mEnterFadeDuration);
+    state->mExitFadeDuration = a.getInt(SX::exitFadeDuration, state->mExitFadeDuration);
+    state->mDither = a.getBoolean(SX::dither, state->mDither);
+    state->mAutoMirrored = a.getBoolean(SX::autoMirrored, state->mAutoMirrored);
 }
 
 void AnimatedStateListDrawable::init(){
@@ -240,8 +244,11 @@ void AnimatedStateListDrawable::inflateChildElement(XmlPullParser&parser,const A
 }
 
 int AnimatedStateListDrawable::parseItem(XmlPullParser&parser,const AttributeSet&atts){
-    const int keyframeId = atts.getResourceId("id", 0);
-    Drawable* dr = atts.getDrawable("drawable");
+    namespace SXI = styleable::AnimatedStateListDrawableItem;
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedStateListDrawableItem::IDS) : nullptr;
+    const int keyframeId = ta ? ta->getResourceId(SXI::id, 0) : atts.getResourceId("id", 0);
+    Drawable* dr = ta ? ta->getDrawable(SXI::drawable) : atts.getDrawable("drawable");
 
     std::vector<int> states;
     StateSet::parseState(states,atts);
@@ -264,10 +271,13 @@ int AnimatedStateListDrawable::parseItem(XmlPullParser&parser,const AttributeSet
 }
 
 int AnimatedStateListDrawable::parseTransition(XmlPullParser&parser,const AttributeSet&atts){
-    const int fromId = atts.getResourceId("fromId", 0);
-    const int toId = atts.getResourceId("toId", 0);
-    const bool reversible = atts.getBoolean("reversible", false);
-    Drawable* dr = atts.getDrawable("drawable");
+    namespace SXT = styleable::AnimatedStateListDrawableTransition;
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedStateListDrawableTransition::IDS) : nullptr;
+    const int fromId = ta ? ta->getResourceId(SXT::fromId, 0) : atts.getResourceId("fromId", 0);
+    const int toId = ta ? ta->getResourceId(SXT::toId, 0) : atts.getResourceId("toId", 0);
+    const bool reversible = ta ? ta->getBoolean(SXT::reversible, false) : atts.getBoolean("reversible", false);
+    Drawable* dr = ta ? ta->getDrawable(SXT::drawable) : atts.getDrawable("drawable");
 
     // Loading child elements modifies the state of the AttributeSet's
     // underlying parser, so it needs to happen after obtaining

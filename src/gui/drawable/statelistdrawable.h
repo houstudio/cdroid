@@ -18,6 +18,7 @@
 #ifndef __STATELIST_DRAWABLE_H__
 #define __STATELIST_DRAWABLE_H__
 #include <drawable/drawablecontainer.h>
+#include <core/typedarray.h>
 namespace cdroid{
 
 class StateListDrawable:public DrawableContainer{
@@ -34,7 +35,7 @@ protected:
     };
 private:
     std::shared_ptr<StateListState>mStateListState;
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
     StateListDrawable(std::shared_ptr<StateListState>state);
     int indexOfStateSet(const std::vector<int>&states)const;

@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawable/levellistdrawable.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 
 namespace cdroid{
@@ -121,9 +123,11 @@ void LevelListDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
         if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-        low = atts.getInt("minLevel", 0);
-        int high = atts.getInt("maxLevel", 0);
-        Drawable*dr = atts.getDrawable("drawable");
+        Context* ctx = atts.getContext();
+        auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::LevelListDrawableItem::IDS) : nullptr;
+        low = ta ? ta->getInt(styleable::LevelListDrawableItem::minLevel, 0) : atts.getInt("minLevel", 0);
+        int high = ta ? ta->getInt(styleable::LevelListDrawableItem::maxLevel, 0) : atts.getInt("maxLevel", 0);
+        Drawable*dr = ta ? ta->getDrawable(styleable::LevelListDrawableItem::drawable) : atts.getDrawable("drawable");
 
         if (high < 0) {
             throw std::logic_error(parser.getPositionDescription()+

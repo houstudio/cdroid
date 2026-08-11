@@ -17,6 +17,9 @@
  *********************************************************************************/
 #include <drawable/colordrawable.h>
 #include <drawable/colormatrix.h>
+#include <core/context.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 
 
@@ -66,7 +69,10 @@ ColorDrawable::~ColorDrawable(){
 }
 
 void ColorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    mColorState->mBaseColor = atts.getColor("color", mColorState->mBaseColor);
+    // AOSP ColorDrawable.inflate: obtainAttributes(R.styleable.ColorDrawable) -> color.
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::ColorDrawable::IDS) : nullptr;
+    if (ta) mColorState->mBaseColor = ta->getColor(styleable::ColorDrawable::color, mColorState->mBaseColor);
     mColorState->mUseColor = mColorState->mBaseColor;
 }
 

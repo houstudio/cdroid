@@ -17,6 +17,8 @@
  *********************************************************************************/
 #include <drawable/animationdrawable.h>
 #include <core/systemclock.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 namespace cdroid{
 #pragma GCC push_options
@@ -157,18 +159,21 @@ void AnimationDrawable::clearMutated(){
 }
 
 void AnimationDrawable::inflate(XmlPullParser& parser,const AttributeSet& atts){
+    // AOSP AnimationDrawable.inflate: obtainAttributes(R.styleable.AnimationDrawable).
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimationDrawable::IDS) : nullptr;
     DrawableContainer::inflateWithAttributes(parser,atts);
-    updateStateFromTypedArray(atts);
+    if (ta) updateStateFromTypedArray(*ta);
 
     //updateDensity();
     inflateChildElements(parser,atts);
     setFrame(0,true,false);
 }
 
-void AnimationDrawable::updateStateFromTypedArray(const AttributeSet&atts){
+void AnimationDrawable::updateStateFromTypedArray(const TypedArray& a){
     auto state = mAnimationState;
-    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
-    state->mOneShot = atts.getBoolean("oneshot", state->mOneShot);
+    state->mVariablePadding = a.getBoolean(styleable::AnimationDrawable::variablePadding, state->mVariablePadding);
+    state->mOneShot = a.getBoolean(styleable::AnimationDrawable::oneshot, state->mOneShot);
 }
 
 void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& atts){
@@ -183,12 +188,17 @@ void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
         if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-        const int duration = atts.getInt("duration", -1);
+        // AOSP obtains R.styleable.AnimationDrawableItem per <item>.
+        Context* ctx = atts.getContext();
+        auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimationDrawableItem::IDS) : nullptr;
+        const int duration = ta ? ta->getInt(styleable::AnimationDrawableItem::duration, -1)
+                                : atts.getInt("duration", -1);
         if (duration < 0) {
             throw std::logic_error(parser.getPositionDescription()+": <item> tag requires a 'duration' attribute");
         }
 
-        Drawable* dr = atts.getDrawable("drawable");
+        Drawable* dr = ta ? ta->getDrawable(styleable::AnimationDrawableItem::drawable)
+                          : atts.getDrawable("drawable");
 
         if (dr == nullptr) {
             while ((type=parser.next()) == XmlPullParser::TEXT) {

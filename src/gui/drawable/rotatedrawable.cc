@@ -17,10 +17,13 @@
  *********************************************************************************/
 #include <drawable/rotatedrawable.h>
 #include <utils/mathutils.h>
+#include <androidfw/typedvalue.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 
 using namespace Cairo;
 namespace cdroid{
+namespace SX = styleable::RotateDrawable;
 
 RotateDrawable::RotateState::RotateState()
     :DrawableWrapperState(){
@@ -167,19 +170,32 @@ void RotateDrawable::draw(Canvas& canvas) {
 }
 
 void RotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    updateStateFromTypedArray(atts);
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::RotateDrawable::IDS) : nullptr;
     DrawableWrapper::inflate(parser,atts);
+    if (ta) updateStateFromTypedArray(*ta);
 }
 
-void RotateDrawable::updateStateFromTypedArray(const AttributeSet&atts){
-    mState->mPivotX = atts.getFraction("pivotX",1,1,mState->mPivotX);
-    mState->mPivotXRel = (mState->mPivotX <=1.f);
+void RotateDrawable::updateStateFromTypedArray(const TypedArray& a){
+    // AOSP fidelity: pivotX/pivotY are relative fractions when the raw value
+    // is TYPE_FRACTION, absolute pixels when TYPE_FLOAT. Avoids the prior
+    // "<=1.f" heuristic that misclassified small absolute pivots.
+    if (a.hasValue(SX::pivotX)) {
+        const bool rel = (a.getType(SX::pivotX) == TypedValue::TYPE_FRACTION);
+        mState->mPivotXRel = rel;
+        mState->mPivotX = rel ? a.getFraction(SX::pivotX, 1, 1, mState->mPivotX)
+                              : a.getFloat(SX::pivotX, mState->mPivotX);
+    }
 
-    mState->mPivotY = atts.getFraction("pivotY",1,1.0f,mState->mPivotY);
-    mState->mPivotYRel = (mState->mPivotY <=1.0f);
+    if (a.hasValue(SX::pivotY)) {
+        const bool rel = (a.getType(SX::pivotY) == TypedValue::TYPE_FRACTION);
+        mState->mPivotYRel = rel;
+        mState->mPivotY = rel ? a.getFraction(SX::pivotY, 1, 1, mState->mPivotY)
+                              : a.getFloat(SX::pivotY, mState->mPivotY);
+    }
 
-    mState->mFromDegrees = atts.getFloat("fromDegrees", mState->mFromDegrees);
-    mState->mToDegrees = atts.getFloat("toDegrees", mState->mToDegrees);
+    mState->mFromDegrees = a.getFloat(SX::fromDegrees, mState->mFromDegrees);
+    mState->mToDegrees = a.getFloat(SX::toDegrees, mState->mToDegrees);
     mState->mCurrentDegrees = mState->mFromDegrees;
 }
 }/*endof namespace*/

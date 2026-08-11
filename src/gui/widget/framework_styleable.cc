@@ -375,5 +375,244 @@ namespace styleable {
             fw_attr::ViewGroup::splitMotionEvents, fw_attr::ViewGroup::layoutMode,
             fw_attr::ViewGroup::transitionGroup, 0 };
     }
+    namespace AdaptiveIconDrawableLayer {
+        const uint32_t IDS[] = { fw_attr::AdaptiveIconDrawableLayer::drawable, 0 };
+    }
+    namespace AnimatedImageDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::AnimatedImageDrawable::src, fw_attr::AnimatedImageDrawable::autoMirrored,
+            fw_attr::AnimatedImageDrawable::repeatCount, fw_attr::AnimatedImageDrawable::autoStart,
+            0 };
+    }
+    namespace AnimatedRotateDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::AnimatedRotateDrawable::visible, fw_attr::AnimatedRotateDrawable::pivotX,
+            fw_attr::AnimatedRotateDrawable::pivotY, fw_attr::AnimatedRotateDrawable::drawable, 0 };
+    }
+    namespace AnimatedStateListDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::AnimatedStateListDrawable::visible,
+            fw_attr::AnimatedStateListDrawable::variablePadding,
+            fw_attr::AnimatedStateListDrawable::constantSize,
+            fw_attr::AnimatedStateListDrawable::dither,
+            fw_attr::AnimatedStateListDrawable::enterFadeDuration,
+            fw_attr::AnimatedStateListDrawable::exitFadeDuration,
+            fw_attr::AnimatedStateListDrawable::autoMirrored, 0 };
+    }
+    namespace AnimatedStateListDrawableItem {
+        const uint32_t IDS[] = {
+            fw_attr::AnimatedStateListDrawableItem::drawable,
+            fw_attr::AnimatedStateListDrawableItem::id, 0 };
+    }
+    namespace AnimatedStateListDrawableTransition {
+        const uint32_t IDS[] = {
+            fw_attr::AnimatedStateListDrawableTransition::fromId,
+            fw_attr::AnimatedStateListDrawableTransition::toId,
+            fw_attr::AnimatedStateListDrawableTransition::drawable,
+            fw_attr::AnimatedStateListDrawableTransition::reversible, 0 };
+    }
+    namespace AnimatedVectorDrawable {
+        const uint32_t IDS[] = { fw_attr::AnimatedVectorDrawable::drawable, 0 };
+    }
+    namespace AnimatedVectorDrawableTarget {
+        const uint32_t IDS[] = {
+            fw_attr::AnimatedVectorDrawableTarget::name,
+            fw_attr::AnimatedVectorDrawableTarget::animation, 0 };
+    }
+    namespace AnimationDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::AnimationDrawable::visible, fw_attr::AnimationDrawable::variablePadding,
+            fw_attr::AnimationDrawable::oneshot, 0 };
+    }
+    namespace AnimationDrawableItem {
+        const uint32_t IDS[] = { fw_attr::AnimationDrawableItem::duration, fw_attr::AnimationDrawableItem::drawable, 0 };
+    }
+    namespace AnimationScaleListDrawable {
+        const uint32_t IDS[] = { 0 };
+    }
+    namespace AnimationScaleListDrawableItem {
+        const uint32_t IDS[] = { fw_attr::AnimationScaleListDrawableItem::drawable, 0 };
+    }
+    namespace BitmapDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::BitmapDrawable::src, fw_attr::BitmapDrawable::antialias,
+            fw_attr::BitmapDrawable::filter, fw_attr::BitmapDrawable::dither,
+            fw_attr::BitmapDrawable::gravity, fw_attr::BitmapDrawable::tileMode,
+            fw_attr::BitmapDrawable::tileModeX, fw_attr::BitmapDrawable::tileModeY,
+            fw_attr::BitmapDrawable::mipMap, fw_attr::BitmapDrawable::autoMirrored,
+            fw_attr::BitmapDrawable::tint, fw_attr::BitmapDrawable::tintMode,
+            fw_attr::BitmapDrawable::alpha, 0 };
+    }
+    namespace ClipDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::ClipDrawable::clipOrientation, fw_attr::ClipDrawable::gravity,
+            fw_attr::ClipDrawable::drawable, 0 };
+    }
+    namespace ColorDrawable {
+        const uint32_t IDS[] = { fw_attr::ColorDrawable::color, 0 };
+    }
+    namespace ColorStateListItem {
+        const uint32_t IDS[] = {
+            fw_attr::ColorStateListItem::color, fw_attr::ColorStateListItem::alpha,
+            fw_attr::ColorStateListItem::lStar, 0 };
+    }
+    namespace Drawable {
+        const uint32_t IDS[] = { fw_attr::Drawable::visible, fw_attr::Drawable::autoMirrored, 0 };
+    }
+    namespace DrawableCorners {
+        const uint32_t IDS[] = {
+            fw_attr::DrawableCorners::radius, fw_attr::DrawableCorners::topLeftRadius,
+            fw_attr::DrawableCorners::topRightRadius, fw_attr::DrawableCorners::bottomLeftRadius,
+            fw_attr::DrawableCorners::bottomRightRadius, 0 };
+    }
+    namespace DrawableWrapper {
+        const uint32_t IDS[] = { fw_attr::DrawableWrapper::drawable, 0 };
+    }
+    namespace GradientDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::GradientDrawable::visible, fw_attr::GradientDrawable::dither,
+            fw_attr::GradientDrawable::shape, fw_attr::GradientDrawable::innerRadiusRatio,
+            fw_attr::GradientDrawable::thicknessRatio, fw_attr::GradientDrawable::innerRadius,
+            fw_attr::GradientDrawable::thickness, fw_attr::GradientDrawable::useLevel,
+            fw_attr::GradientDrawable::tint, fw_attr::GradientDrawable::tintMode,
+            fw_attr::GradientDrawable::opticalInsetLeft, fw_attr::GradientDrawable::opticalInsetTop,
+            fw_attr::GradientDrawable::opticalInsetRight,
+            fw_attr::GradientDrawable::opticalInsetBottom, 0 };
+    }
+    namespace GradientDrawableGradient {
+        const uint32_t IDS[] = {
+            fw_attr::GradientDrawableGradient::startColor,
+            fw_attr::GradientDrawableGradient::centerColor,
+            fw_attr::GradientDrawableGradient::endColor, fw_attr::GradientDrawableGradient::useLevel,
+            fw_attr::GradientDrawableGradient::angle, fw_attr::GradientDrawableGradient::type,
+            fw_attr::GradientDrawableGradient::centerX, fw_attr::GradientDrawableGradient::centerY,
+            fw_attr::GradientDrawableGradient::gradientRadius, 0 };
+    }
+    namespace GradientDrawablePadding {
+        const uint32_t IDS[] = {
+            fw_attr::GradientDrawablePadding::left, fw_attr::GradientDrawablePadding::top,
+            fw_attr::GradientDrawablePadding::right, fw_attr::GradientDrawablePadding::bottom, 0 };
+    }
+    namespace GradientDrawableSize {
+        const uint32_t IDS[] = { fw_attr::GradientDrawableSize::width, fw_attr::GradientDrawableSize::height, 0 };
+    }
+    namespace GradientDrawableSolid {
+        const uint32_t IDS[] = { fw_attr::GradientDrawableSolid::color, 0 };
+    }
+    namespace GradientDrawableStroke {
+        const uint32_t IDS[] = {
+            fw_attr::GradientDrawableStroke::width, fw_attr::GradientDrawableStroke::color,
+            fw_attr::GradientDrawableStroke::dashWidth, fw_attr::GradientDrawableStroke::dashGap, 0 };
+    }
+    namespace InsetDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::InsetDrawable::visible, fw_attr::InsetDrawable::drawable,
+            fw_attr::InsetDrawable::inset, fw_attr::InsetDrawable::insetLeft,
+            fw_attr::InsetDrawable::insetRight, fw_attr::InsetDrawable::insetTop,
+            fw_attr::InsetDrawable::insetBottom, 0 };
+    }
+    namespace LayerDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::LayerDrawable::opacity, fw_attr::LayerDrawable::autoMirrored,
+            fw_attr::LayerDrawable::paddingMode, fw_attr::LayerDrawable::paddingTop,
+            fw_attr::LayerDrawable::paddingBottom, fw_attr::LayerDrawable::paddingLeft,
+            fw_attr::LayerDrawable::paddingRight, fw_attr::LayerDrawable::paddingStart,
+            fw_attr::LayerDrawable::paddingEnd, 0 };
+    }
+    namespace LayerDrawableItem {
+        const uint32_t IDS[] = {
+            fw_attr::LayerDrawableItem::left, fw_attr::LayerDrawableItem::top,
+            fw_attr::LayerDrawableItem::right, fw_attr::LayerDrawableItem::bottom,
+            fw_attr::LayerDrawableItem::start, fw_attr::LayerDrawableItem::end,
+            fw_attr::LayerDrawableItem::width, fw_attr::LayerDrawableItem::height,
+            fw_attr::LayerDrawableItem::gravity, fw_attr::LayerDrawableItem::drawable,
+            fw_attr::LayerDrawableItem::id, 0 };
+    }
+    namespace LevelListDrawableItem {
+        const uint32_t IDS[] = {
+            fw_attr::LevelListDrawableItem::minLevel, fw_attr::LevelListDrawableItem::maxLevel,
+            fw_attr::LevelListDrawableItem::drawable, 0 };
+    }
+    namespace MaterialProgressDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::MaterialProgressDrawable::visible, fw_attr::MaterialProgressDrawable::thickness,
+            fw_attr::MaterialProgressDrawable::innerRadius, fw_attr::MaterialProgressDrawable::width,
+            fw_attr::MaterialProgressDrawable::height, fw_attr::MaterialProgressDrawable::color, 0 };
+    }
+    namespace NinePatchDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::NinePatchDrawable::src, fw_attr::NinePatchDrawable::dither,
+            fw_attr::NinePatchDrawable::autoMirrored, fw_attr::NinePatchDrawable::tint,
+            fw_attr::NinePatchDrawable::tintMode, fw_attr::NinePatchDrawable::alpha, 0 };
+    }
+    namespace RippleDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::RippleDrawable::color, fw_attr::RippleDrawable::radius,
+            fw_attr::RippleDrawable::effectColor, 0 };
+    }
+    namespace RotateDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::RotateDrawable::visible, fw_attr::RotateDrawable::fromDegrees,
+            fw_attr::RotateDrawable::toDegrees, fw_attr::RotateDrawable::pivotX,
+            fw_attr::RotateDrawable::pivotY, fw_attr::RotateDrawable::drawable, 0 };
+    }
+    namespace ScaleDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::ScaleDrawable::scaleWidth, fw_attr::ScaleDrawable::scaleHeight,
+            fw_attr::ScaleDrawable::scaleGravity, fw_attr::ScaleDrawable::level,
+            fw_attr::ScaleDrawable::drawable, fw_attr::ScaleDrawable::useIntrinsicSizeAsMinimum, 0 };
+    }
+    namespace ShapeDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::ShapeDrawable::color, fw_attr::ShapeDrawable::width,
+            fw_attr::ShapeDrawable::height, fw_attr::ShapeDrawable::dither,
+            fw_attr::ShapeDrawable::tint, fw_attr::ShapeDrawable::tintMode, 0 };
+    }
+    namespace ShapeDrawablePadding {
+        const uint32_t IDS[] = {
+            fw_attr::ShapeDrawablePadding::left, fw_attr::ShapeDrawablePadding::top,
+            fw_attr::ShapeDrawablePadding::right, fw_attr::ShapeDrawablePadding::bottom, 0 };
+    }
+    namespace StateListDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::StateListDrawable::visible, fw_attr::StateListDrawable::variablePadding,
+            fw_attr::StateListDrawable::constantSize, fw_attr::StateListDrawable::dither,
+            fw_attr::StateListDrawable::enterFadeDuration,
+            fw_attr::StateListDrawable::exitFadeDuration, fw_attr::StateListDrawable::autoMirrored,
+            0 };
+    }
+    namespace StateListDrawableItem {
+        const uint32_t IDS[] = { fw_attr::StateListDrawableItem::drawable, 0 };
+    }
+    namespace VectorDrawable {
+        const uint32_t IDS[] = {
+            fw_attr::VectorDrawable::tint, fw_attr::VectorDrawable::tintMode,
+            fw_attr::VectorDrawable::autoMirrored, fw_attr::VectorDrawable::width,
+            fw_attr::VectorDrawable::height, fw_attr::VectorDrawable::viewportWidth,
+            fw_attr::VectorDrawable::viewportHeight, fw_attr::VectorDrawable::name,
+            fw_attr::VectorDrawable::alpha, fw_attr::VectorDrawable::opticalInsetLeft,
+            fw_attr::VectorDrawable::opticalInsetTop, fw_attr::VectorDrawable::opticalInsetRight,
+            fw_attr::VectorDrawable::opticalInsetBottom, 0 };
+    }
+    namespace VectorDrawableClipPath {
+        const uint32_t IDS[] = { fw_attr::VectorDrawableClipPath::name, fw_attr::VectorDrawableClipPath::pathData, 0 };
+    }
+    namespace VectorDrawableGroup {
+        const uint32_t IDS[] = {
+            fw_attr::VectorDrawableGroup::name, fw_attr::VectorDrawableGroup::rotation,
+            fw_attr::VectorDrawableGroup::pivotX, fw_attr::VectorDrawableGroup::pivotY,
+            fw_attr::VectorDrawableGroup::translateX, fw_attr::VectorDrawableGroup::translateY,
+            fw_attr::VectorDrawableGroup::scaleX, fw_attr::VectorDrawableGroup::scaleY, 0 };
+    }
+    namespace VectorDrawablePath {
+        const uint32_t IDS[] = {
+            fw_attr::VectorDrawablePath::name, fw_attr::VectorDrawablePath::strokeWidth,
+            fw_attr::VectorDrawablePath::strokeColor, fw_attr::VectorDrawablePath::strokeAlpha,
+            fw_attr::VectorDrawablePath::fillColor, fw_attr::VectorDrawablePath::fillAlpha,
+            fw_attr::VectorDrawablePath::pathData, fw_attr::VectorDrawablePath::trimPathStart,
+            fw_attr::VectorDrawablePath::trimPathEnd, fw_attr::VectorDrawablePath::trimPathOffset,
+            fw_attr::VectorDrawablePath::strokeLineCap, fw_attr::VectorDrawablePath::strokeLineJoin,
+            fw_attr::VectorDrawablePath::strokeMiterLimit, fw_attr::VectorDrawablePath::fillType, 0 };
+    }
 } // namespace styleable
 } // namespace cdroid

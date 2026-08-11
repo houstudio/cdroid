@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawable/drawablewrapper.h>
+#include <core/context.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -286,11 +288,14 @@ void DrawableWrapper::inflate(XmlPullParser&parser,const AttributeSet&atts){
     //state->setDensity(targetDensity);
     //state->mSrcDensityOverride = mSrcDensityOverride;
 
-    updateStateFromTypedArray(atts);
+    // AOSP DrawableWrapper.inflate: obtainAttributes(R.styleable.DrawableWrapper).
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::DrawableWrapper::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
     inflateChildDrawable(parser, atts);
 }
 
-void DrawableWrapper::updateStateFromTypedArray(const AttributeSet&atts) {
+void DrawableWrapper::updateStateFromTypedArray(const TypedArray& a) {
     auto state = mState;
     if (state == nullptr) {
         return;
@@ -301,8 +306,9 @@ void DrawableWrapper::updateStateFromTypedArray(const AttributeSet&atts) {
 
     // Extract the theme attributes, if any.
     //state.mThemeAttrs = a.extractThemeAttrs();
-    if (atts.hasAttribute("drawable")) {
-        setDrawable(atts.getDrawable("drawable"));
+    namespace SW = styleable::DrawableWrapper;
+    if (a.hasValue(SW::drawable)) {
+        setDrawable(a.getDrawable(SW::drawable));
     }
 }
 

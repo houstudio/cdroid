@@ -17,6 +17,8 @@
  *********************************************************************************/
 #include <drawable/adaptiveicondrawable.h>
 #include <drawable/pathparser.h>
+#include <core/context.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
 using namespace Cairo;
 
@@ -298,8 +300,13 @@ void AdaptiveIconDrawable::inflateLayers(XmlPullParser& parser,AttributeSet& att
         }
 
         ChildDrawable* layer = new ChildDrawable(state->mDensity);
-        //final TypedArray a = obtainAttributes(r, theme, attrs,R.styleable.AdaptiveIconDrawableLayer);
-        updateLayerFromTypedArray(layer, attrs);
+        // Resolve this child tag's attributes against the framework arsc,
+        // matching AOSP's obtainAttributes(r, theme, attrs, R.styleable.AdaptiveIconDrawableLayer).
+        Context* ctx = attrs.getContext();
+        auto a = ctx ? ctx->obtainStyledAttributes(attrs, styleable::AdaptiveIconDrawableLayer::IDS) : nullptr;
+        if (a) {
+            updateLayerFromTypedArray(layer, *a);
+        }
 
         // If the layer doesn't have a drawable or unresolved theme
         // attribute for a drawable, attempt to parse one from the child
@@ -323,7 +330,8 @@ void AdaptiveIconDrawable::inflateLayers(XmlPullParser& parser,AttributeSet& att
     }
 }
 
-void AdaptiveIconDrawable::updateLayerFromTypedArray(ChildDrawable* layer,AttributeSet& a) {
+void AdaptiveIconDrawable::updateLayerFromTypedArray(ChildDrawable* layer,const TypedArray& a) {
+    namespace SX = styleable::AdaptiveIconDrawableLayer;
     auto state = mLayerState;
 
     // Account for any configuration changes.
@@ -332,7 +340,7 @@ void AdaptiveIconDrawable::updateLayerFromTypedArray(ChildDrawable* layer,Attrib
     // Extract the theme attributes, if any.
     //layer->mThemeAttrs = a.extractThemeAttrs();
 
-    Drawable* dr = a.getDrawable("drawable");//a.getDrawableForDensity("drawable",state->mSrcDensityOverride);
+    Drawable* dr = a.getDrawable(SX::drawable);//a.getDrawableForDensity(SX::drawable, state->mSrcDensityOverride);
     if (dr != nullptr) {
         if (layer->mDrawable != nullptr) {
             // It's possible that a drawable was already set, in which case

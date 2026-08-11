@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <porting/cdlog.h>
 #include <drawable/shapedrawable.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
 
 ShapeDrawable::ShapeState::ShapeState(){
@@ -235,10 +236,16 @@ void ShapeDrawable::draw(Canvas&canvas){
 
 int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const AttributeSet&a){
     if (name.compare("padding")==0) {
-        setPadding(a.getDimensionPixelOffset("left", 0),
-                a.getDimensionPixelOffset("top", 0),
-                a.getDimensionPixelOffset("right", 0),
-                a.getDimensionPixelOffset("bottom", 0));
+        // AOSP ShapeDrawable.inflateTag: r.obtainAttributes(attrs, R.styleable.ShapeDrawablePadding).
+        namespace SP = styleable::ShapeDrawablePadding;
+        Context* ctx = a.getContext();
+        auto ta = ctx ? ctx->obtainStyledAttributes(a, SP::IDS) : nullptr;
+        if (ta) {
+            setPadding(ta->getDimensionPixelOffset(SP::left, 0),
+                    ta->getDimensionPixelOffset(SP::top, 0),
+                    ta->getDimensionPixelOffset(SP::right, 0),
+                    ta->getDimensionPixelOffset(SP::bottom, 0));
+        }
         return true;
     }
     return false;
@@ -247,7 +254,11 @@ int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const 
 
 void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(parser,atts);
-    updateStateFromTypedArray(atts);
+
+    // AOSP ShapeDrawable.inflate: obtainAttributes(R.styleable.ShapeDrawable) -> updateStateFromTypedArray.
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::ShapeDrawable::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
 
     int type;
     const int outerDepth = parser.getDepth();
@@ -268,30 +279,26 @@ void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     updateLocalState();
 }
 
-void ShapeDrawable::updateStateFromTypedArray(const AttributeSet&a) {
+void ShapeDrawable::updateStateFromTypedArray(const TypedArray& a) {
+    // AOSP ShapeDrawable.updateStateFromTypedArray: index-based reads against R.styleable.ShapeDrawable.
+    namespace SX = styleable::ShapeDrawable;
     auto state = mShapeState;
 
-    // Account for any configuration changes.
-    //state.mChangingConfigurations |= a.getChangingConfigurations();
+    // CDROID's ShapeState has no Paint (the Shape owns drawing), so the AOSP paint color/dither
+    // pair reduces to just dither here. dither is read via the styleable index.
+    state->mDither = a.getBoolean(SX::dither, state->mDither);
 
-    // Extract the theme attributes, if any.
-    //state.mThemeAttrs = a.extractThemeAttrs();
+    state->mIntrinsicWidth = (int) a.getDimension(SX::width, state->mIntrinsicWidth);
+    state->mIntrinsicHeight = (int) a.getDimension(SX::height, state->mIntrinsicHeight);
 
-    //int color = paint.getColor();
-    //color = a.getColor("color", color);
-
-    //boolean dither = paint.isDither();
-    state->mDither = a.getBoolean("dither", state->mDither);
-
-    state->mIntrinsicWidth = (int) a.getDimension("width", state->mIntrinsicWidth);
-    state->mIntrinsicHeight = (int) a.getDimension("height", state->mIntrinsicHeight);
-
-    const int tintMode = a.getTintMode("tintMode", PorterDuff::NOOP);
-    if (tintMode != PorterDuff::NOOP) {
+    // tintMode is a flag enum aapt2 pre-resolves to a PorterDuff::Mode value; getInt replaces the
+    // AttributeSet::getTintMode string decoder. NOOP (-1) sentinel == "not specified".
+    const int tintMode = a.getInt(SX::tintMode, PorterDuff::Mode::NOOP);
+    if (tintMode != PorterDuff::Mode::NOOP) {
         state->mTintMode = tintMode;
     }
 
-    auto tint = a.getColorStateList("tint");
+    auto tint = a.getColorStateList(SX::tint);
     if (tint != nullptr) {
         state->mTint = tint;
     }

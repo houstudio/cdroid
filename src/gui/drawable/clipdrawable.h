@@ -37,7 +37,7 @@ private:
     };
     std::shared_ptr<ClipState>mState;
     ClipDrawable(std::shared_ptr<ClipState>state);
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;

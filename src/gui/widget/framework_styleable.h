@@ -592,6 +592,295 @@ namespace fw_attr {
         constexpr uint32_t layoutMode = 0x010103da;
         constexpr uint32_t transitionGroup = 0x01010401;
     }
+    namespace AdaptiveIconDrawableLayer {
+        constexpr uint32_t drawable = 0x01010199;
+    }
+    namespace AnimatedImageDrawable {
+        constexpr uint32_t src = 0x01010119;
+        constexpr uint32_t autoMirrored = 0x010103ea;
+        constexpr uint32_t repeatCount = 0x010101bf;
+        constexpr uint32_t autoStart = 0x010102b5;
+    }
+    namespace AnimatedRotateDrawable {
+        constexpr uint32_t visible = 0x01010194;
+        constexpr uint32_t pivotX = 0x010101b5;
+        constexpr uint32_t pivotY = 0x010101b6;
+        constexpr uint32_t drawable = 0x01010199;
+    }
+    namespace AnimatedStateListDrawable {
+        constexpr uint32_t visible = 0x01010194;
+        constexpr uint32_t variablePadding = 0x01010195;
+        constexpr uint32_t constantSize = 0x01010196;
+        constexpr uint32_t dither = 0x0101011c;
+        constexpr uint32_t enterFadeDuration = 0x0101030c;
+        constexpr uint32_t exitFadeDuration = 0x0101030d;
+        constexpr uint32_t autoMirrored = 0x010103ea;
+    }
+    namespace AnimatedStateListDrawableItem {
+        constexpr uint32_t drawable = 0x01010199;
+        constexpr uint32_t id = 0x010100d0;
+    }
+    namespace AnimatedStateListDrawableTransition {
+        constexpr uint32_t fromId = 0x0101044a;
+        constexpr uint32_t toId = 0x01010449;
+        constexpr uint32_t drawable = 0x01010199;
+        constexpr uint32_t reversible = 0x0101044b;
+    }
+    namespace AnimatedVectorDrawable {
+        constexpr uint32_t drawable = 0x01010199;
+    }
+    namespace AnimatedVectorDrawableTarget {
+        constexpr uint32_t name = 0x01010003;
+        constexpr uint32_t animation = 0x010101cd;
+    }
+    namespace AnimationDrawable {
+        constexpr uint32_t visible = 0x01010194;
+        constexpr uint32_t variablePadding = 0x01010195;
+        constexpr uint32_t oneshot = 0x01010197;
+    }
+    namespace AnimationDrawableItem {
+        constexpr uint32_t duration = 0x01010198;
+        constexpr uint32_t drawable = 0x01010199;
+    }
+    namespace AnimationScaleListDrawable {
+    }
+    namespace AnimationScaleListDrawableItem {
+        constexpr uint32_t drawable = 0x01010199;
+    }
+    namespace BitmapDrawable {
+        constexpr uint32_t src = 0x01010119;
+        constexpr uint32_t antialias = 0x0101011a;
+        constexpr uint32_t filter = 0x0101011b;
+        constexpr uint32_t dither = 0x0101011c;
+        constexpr uint32_t gravity = 0x010100af;
+        constexpr uint32_t tileMode = 0x01010201;
+        constexpr uint32_t tileModeX = 0x01010477;
+        constexpr uint32_t tileModeY = 0x01010478;
+        constexpr uint32_t mipMap = 0x010103cd;
+        constexpr uint32_t autoMirrored = 0x010103ea;
+        constexpr uint32_t tint = 0x01010121;
+        constexpr uint32_t tintMode = 0x010103fb;
+        constexpr uint32_t alpha = 0x0101031f;
+    }
+    namespace ClipDrawable {
+        constexpr uint32_t clipOrientation = 0x0101020a;
+        constexpr uint32_t gravity = 0x010100af;
+        constexpr uint32_t drawable = 0x01010199;
+    }
+    namespace ColorDrawable {
+        constexpr uint32_t color = 0x010101a5;
+    }
+    namespace ColorStateListItem {
+        constexpr uint32_t color = 0x010101a5;
+        constexpr uint32_t alpha = 0x0101031f;
+        constexpr uint32_t lStar = 0x01010647;
+    }
+    namespace Drawable {
+        constexpr uint32_t visible = 0x01010194;
+        constexpr uint32_t autoMirrored = 0x010103ea;
+    }
+    namespace DrawableCorners {
+        constexpr uint32_t radius = 0x010101a8;
+        constexpr uint32_t topLeftRadius = 0x010101a9;
+        constexpr uint32_t topRightRadius = 0x010101aa;
+        constexpr uint32_t bottomLeftRadius = 0x010101ab;
+        constexpr uint32_t bottomRightRadius = 0x010101ac;
+    }
+    namespace DrawableWrapper {
+        constexpr uint32_t drawable = 0x01010199;
+    }
+    namespace GradientDrawable {
+        constexpr uint32_t visible = 0x01010194;
+        constexpr uint32_t dither = 0x0101011c;
+        constexpr uint32_t shape = 0x0101019a;
+        constexpr uint32_t innerRadiusRatio = 0x0101019b;
+        constexpr uint32_t thicknessRatio = 0x0101019c;
+        constexpr uint32_t innerRadius = 0x0101025f;
+        constexpr uint32_t thickness = 0x01010260;
+        constexpr uint32_t useLevel = 0x0101019f;
+        constexpr uint32_t tint = 0x01010121;
+        constexpr uint32_t tintMode = 0x010103fb;
+        constexpr uint32_t opticalInsetLeft = 0x01010588;
+        constexpr uint32_t opticalInsetTop = 0x01010589;
+        constexpr uint32_t opticalInsetRight = 0x0101058a;
+        constexpr uint32_t opticalInsetBottom = 0x0101058b;
+    }
+    namespace GradientDrawableGradient {
+        constexpr uint32_t startColor = 0x0101019d;
+        constexpr uint32_t centerColor = 0x0101020b;
+        constexpr uint32_t endColor = 0x0101019e;
+        constexpr uint32_t useLevel = 0x0101019f;
+        constexpr uint32_t angle = 0x010101a0;
+        constexpr uint32_t type = 0x010101a1;
+        constexpr uint32_t centerX = 0x010101a2;
+        constexpr uint32_t centerY = 0x010101a3;
+        constexpr uint32_t gradientRadius = 0x010101a4;
+    }
+    namespace GradientDrawablePadding {
+        constexpr uint32_t left = 0x010101ad;
+        constexpr uint32_t top = 0x010101ae;
+        constexpr uint32_t right = 0x010101af;
+        constexpr uint32_t bottom = 0x010101b0;
+    }
+    namespace GradientDrawableSize {
+        constexpr uint32_t width = 0x01010159;
+        constexpr uint32_t height = 0x01010155;
+    }
+    namespace GradientDrawableSolid {
+        constexpr uint32_t color = 0x010101a5;
+    }
+    namespace GradientDrawableStroke {
+        constexpr uint32_t width = 0x01010159;
+        constexpr uint32_t color = 0x010101a5;
+        constexpr uint32_t dashWidth = 0x010101a6;
+        constexpr uint32_t dashGap = 0x010101a7;
+    }
+    namespace InsetDrawable {
+        constexpr uint32_t visible = 0x01010194;
+        constexpr uint32_t drawable = 0x01010199;
+        constexpr uint32_t inset = 0x010104b5;
+        constexpr uint32_t insetLeft = 0x010101b7;
+        constexpr uint32_t insetRight = 0x010101b8;
+        constexpr uint32_t insetTop = 0x010101b9;
+        constexpr uint32_t insetBottom = 0x010101ba;
+    }
+    namespace LayerDrawable {
+        constexpr uint32_t opacity = 0x0101031e;
+        constexpr uint32_t autoMirrored = 0x010103ea;
+        constexpr uint32_t paddingMode = 0x01010457;
+        constexpr uint32_t paddingTop = 0x010100d7;
+        constexpr uint32_t paddingBottom = 0x010100d9;
+        constexpr uint32_t paddingLeft = 0x010100d6;
+        constexpr uint32_t paddingRight = 0x010100d8;
+        constexpr uint32_t paddingStart = 0x010103b3;
+        constexpr uint32_t paddingEnd = 0x010103b4;
+    }
+    namespace LayerDrawableItem {
+        constexpr uint32_t left = 0x010101ad;
+        constexpr uint32_t top = 0x010101ae;
+        constexpr uint32_t right = 0x010101af;
+        constexpr uint32_t bottom = 0x010101b0;
+        constexpr uint32_t start = 0x010104db;
+        constexpr uint32_t end = 0x010104dc;
+        constexpr uint32_t width = 0x01010159;
+        constexpr uint32_t height = 0x01010155;
+        constexpr uint32_t gravity = 0x010100af;
+        constexpr uint32_t drawable = 0x01010199;
+        constexpr uint32_t id = 0x010100d0;
+    }
+    namespace LevelListDrawableItem {
+        constexpr uint32_t minLevel = 0x010101b1;
+        constexpr uint32_t maxLevel = 0x010101b2;
+        constexpr uint32_t drawable = 0x01010199;
+    }
+    namespace MaterialProgressDrawable {
+        constexpr uint32_t visible = 0x01010194;
+        constexpr uint32_t thickness = 0x01010260;
+        constexpr uint32_t innerRadius = 0x0101025f;
+        constexpr uint32_t width = 0x01010159;
+        constexpr uint32_t height = 0x01010155;
+        constexpr uint32_t color = 0x010101a5;
+    }
+    namespace NinePatchDrawable {
+        constexpr uint32_t src = 0x01010119;
+        constexpr uint32_t dither = 0x0101011c;
+        constexpr uint32_t autoMirrored = 0x010103ea;
+        constexpr uint32_t tint = 0x01010121;
+        constexpr uint32_t tintMode = 0x010103fb;
+        constexpr uint32_t alpha = 0x0101031f;
+    }
+    namespace RippleDrawable {
+        constexpr uint32_t color = 0x010101a5;
+        constexpr uint32_t radius = 0x010101a8;
+        constexpr uint32_t effectColor = 0x01010649;
+    }
+    namespace RotateDrawable {
+        constexpr uint32_t visible = 0x01010194;
+        constexpr uint32_t fromDegrees = 0x010101b3;
+        constexpr uint32_t toDegrees = 0x010101b4;
+        constexpr uint32_t pivotX = 0x010101b5;
+        constexpr uint32_t pivotY = 0x010101b6;
+        constexpr uint32_t drawable = 0x01010199;
+    }
+    namespace ScaleDrawable {
+        constexpr uint32_t scaleWidth = 0x010101fc;
+        constexpr uint32_t scaleHeight = 0x010101fd;
+        constexpr uint32_t scaleGravity = 0x010101fe;
+        constexpr uint32_t level = 0x01010500;
+        constexpr uint32_t drawable = 0x01010199;
+        constexpr uint32_t useIntrinsicSizeAsMinimum = 0x01010310;
+    }
+    namespace ShapeDrawable {
+        constexpr uint32_t color = 0x010101a5;
+        constexpr uint32_t width = 0x01010159;
+        constexpr uint32_t height = 0x01010155;
+        constexpr uint32_t dither = 0x0101011c;
+        constexpr uint32_t tint = 0x01010121;
+        constexpr uint32_t tintMode = 0x010103fb;
+    }
+    namespace ShapeDrawablePadding {
+        constexpr uint32_t left = 0x010101ad;
+        constexpr uint32_t top = 0x010101ae;
+        constexpr uint32_t right = 0x010101af;
+        constexpr uint32_t bottom = 0x010101b0;
+    }
+    namespace StateListDrawable {
+        constexpr uint32_t visible = 0x01010194;
+        constexpr uint32_t variablePadding = 0x01010195;
+        constexpr uint32_t constantSize = 0x01010196;
+        constexpr uint32_t dither = 0x0101011c;
+        constexpr uint32_t enterFadeDuration = 0x0101030c;
+        constexpr uint32_t exitFadeDuration = 0x0101030d;
+        constexpr uint32_t autoMirrored = 0x010103ea;
+    }
+    namespace StateListDrawableItem {
+        constexpr uint32_t drawable = 0x01010199;
+    }
+    namespace VectorDrawable {
+        constexpr uint32_t tint = 0x01010121;
+        constexpr uint32_t tintMode = 0x010103fb;
+        constexpr uint32_t autoMirrored = 0x010103ea;
+        constexpr uint32_t width = 0x01010159;
+        constexpr uint32_t height = 0x01010155;
+        constexpr uint32_t viewportWidth = 0x01010402;
+        constexpr uint32_t viewportHeight = 0x01010403;
+        constexpr uint32_t name = 0x01010003;
+        constexpr uint32_t alpha = 0x0101031f;
+        constexpr uint32_t opticalInsetLeft = 0x01010588;
+        constexpr uint32_t opticalInsetTop = 0x01010589;
+        constexpr uint32_t opticalInsetRight = 0x0101058a;
+        constexpr uint32_t opticalInsetBottom = 0x0101058b;
+    }
+    namespace VectorDrawableClipPath {
+        constexpr uint32_t name = 0x01010003;
+        constexpr uint32_t pathData = 0x01010405;
+    }
+    namespace VectorDrawableGroup {
+        constexpr uint32_t name = 0x01010003;
+        constexpr uint32_t rotation = 0x01010326;
+        constexpr uint32_t pivotX = 0x010101b5;
+        constexpr uint32_t pivotY = 0x010101b6;
+        constexpr uint32_t translateX = 0x0101045a;
+        constexpr uint32_t translateY = 0x0101045b;
+        constexpr uint32_t scaleX = 0x01010324;
+        constexpr uint32_t scaleY = 0x01010325;
+    }
+    namespace VectorDrawablePath {
+        constexpr uint32_t name = 0x01010003;
+        constexpr uint32_t strokeWidth = 0x01010407;
+        constexpr uint32_t strokeColor = 0x01010406;
+        constexpr uint32_t strokeAlpha = 0x010104cb;
+        constexpr uint32_t fillColor = 0x01010404;
+        constexpr uint32_t fillAlpha = 0x010104cc;
+        constexpr uint32_t pathData = 0x01010405;
+        constexpr uint32_t trimPathStart = 0x01010408;
+        constexpr uint32_t trimPathEnd = 0x01010409;
+        constexpr uint32_t trimPathOffset = 0x0101040a;
+        constexpr uint32_t strokeLineCap = 0x0101040b;
+        constexpr uint32_t strokeLineJoin = 0x0101040c;
+        constexpr uint32_t strokeMiterLimit = 0x0101040d;
+        constexpr uint32_t fillType = 0x0101051e;
+    }
 } // namespace fw_attr
 
 namespace styleable {
@@ -847,6 +1136,192 @@ namespace styleable {
             persistentDrawingCache, alwaysDrawnWithCache, addStatesFromChildren,
             descendantFocusability, touchscreenBlocksFocus, splitMotionEvents, layoutMode,
             transitionGroup };
+        extern const uint32_t IDS[];
+    }
+    namespace AdaptiveIconDrawableLayer {
+        enum { drawable };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimatedImageDrawable {
+        enum { src, autoMirrored, repeatCount, autoStart };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimatedRotateDrawable {
+        enum { visible, pivotX, pivotY, drawable };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimatedStateListDrawable {
+        enum {
+            visible, variablePadding, constantSize, dither, enterFadeDuration, exitFadeDuration,
+            autoMirrored };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimatedStateListDrawableItem {
+        enum { drawable, id };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimatedStateListDrawableTransition {
+        enum { fromId, toId, drawable, reversible };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimatedVectorDrawable {
+        enum { drawable };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimatedVectorDrawableTarget {
+        enum { name, animation };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimationDrawable {
+        enum { visible, variablePadding, oneshot };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimationDrawableItem {
+        enum { duration, drawable };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimationScaleListDrawable {
+        enum { _none = 0 };
+        extern const uint32_t IDS[];
+    }
+    namespace AnimationScaleListDrawableItem {
+        enum { drawable };
+        extern const uint32_t IDS[];
+    }
+    namespace BitmapDrawable {
+        enum {
+            src, antialias, filter, dither, gravity, tileMode, tileModeX, tileModeY, mipMap,
+            autoMirrored, tint, tintMode, alpha };
+        extern const uint32_t IDS[];
+    }
+    namespace ClipDrawable {
+        enum { clipOrientation, gravity, drawable };
+        extern const uint32_t IDS[];
+    }
+    namespace ColorDrawable {
+        enum { color };
+        extern const uint32_t IDS[];
+    }
+    namespace ColorStateListItem {
+        enum { color, alpha, lStar };
+        extern const uint32_t IDS[];
+    }
+    namespace Drawable {
+        enum { visible, autoMirrored };
+        extern const uint32_t IDS[];
+    }
+    namespace DrawableCorners {
+        enum { radius, topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius };
+        extern const uint32_t IDS[];
+    }
+    namespace DrawableWrapper {
+        enum { drawable };
+        extern const uint32_t IDS[];
+    }
+    namespace GradientDrawable {
+        enum {
+            visible, dither, shape, innerRadiusRatio, thicknessRatio, innerRadius, thickness,
+            useLevel, tint, tintMode, opticalInsetLeft, opticalInsetTop, opticalInsetRight,
+            opticalInsetBottom };
+        extern const uint32_t IDS[];
+    }
+    namespace GradientDrawableGradient {
+        enum {
+            startColor, centerColor, endColor, useLevel, angle, type, centerX, centerY,
+            gradientRadius };
+        extern const uint32_t IDS[];
+    }
+    namespace GradientDrawablePadding {
+        enum { left, top, right, bottom };
+        extern const uint32_t IDS[];
+    }
+    namespace GradientDrawableSize {
+        enum { width, height };
+        extern const uint32_t IDS[];
+    }
+    namespace GradientDrawableSolid {
+        enum { color };
+        extern const uint32_t IDS[];
+    }
+    namespace GradientDrawableStroke {
+        enum { width, color, dashWidth, dashGap };
+        extern const uint32_t IDS[];
+    }
+    namespace InsetDrawable {
+        enum { visible, drawable, inset, insetLeft, insetRight, insetTop, insetBottom };
+        extern const uint32_t IDS[];
+    }
+    namespace LayerDrawable {
+        enum {
+            opacity, autoMirrored, paddingMode, paddingTop, paddingBottom, paddingLeft, paddingRight,
+            paddingStart, paddingEnd };
+        extern const uint32_t IDS[];
+    }
+    namespace LayerDrawableItem {
+        enum { left, top, right, bottom, start, end, width, height, gravity, drawable, id };
+        extern const uint32_t IDS[];
+    }
+    namespace LevelListDrawableItem {
+        enum { minLevel, maxLevel, drawable };
+        extern const uint32_t IDS[];
+    }
+    namespace MaterialProgressDrawable {
+        enum { visible, thickness, innerRadius, width, height, color };
+        extern const uint32_t IDS[];
+    }
+    namespace NinePatchDrawable {
+        enum { src, dither, autoMirrored, tint, tintMode, alpha };
+        extern const uint32_t IDS[];
+    }
+    namespace RippleDrawable {
+        enum { color, radius, effectColor };
+        extern const uint32_t IDS[];
+    }
+    namespace RotateDrawable {
+        enum { visible, fromDegrees, toDegrees, pivotX, pivotY, drawable };
+        extern const uint32_t IDS[];
+    }
+    namespace ScaleDrawable {
+        enum { scaleWidth, scaleHeight, scaleGravity, level, drawable, useIntrinsicSizeAsMinimum };
+        extern const uint32_t IDS[];
+    }
+    namespace ShapeDrawable {
+        enum { color, width, height, dither, tint, tintMode };
+        extern const uint32_t IDS[];
+    }
+    namespace ShapeDrawablePadding {
+        enum { left, top, right, bottom };
+        extern const uint32_t IDS[];
+    }
+    namespace StateListDrawable {
+        enum {
+            visible, variablePadding, constantSize, dither, enterFadeDuration, exitFadeDuration,
+            autoMirrored };
+        extern const uint32_t IDS[];
+    }
+    namespace StateListDrawableItem {
+        enum { drawable };
+        extern const uint32_t IDS[];
+    }
+    namespace VectorDrawable {
+        enum {
+            tint, tintMode, autoMirrored, width, height, viewportWidth, viewportHeight, name, alpha,
+            opticalInsetLeft, opticalInsetTop, opticalInsetRight, opticalInsetBottom };
+        extern const uint32_t IDS[];
+    }
+    namespace VectorDrawableClipPath {
+        enum { name, pathData };
+        extern const uint32_t IDS[];
+    }
+    namespace VectorDrawableGroup {
+        enum { name, rotation, pivotX, pivotY, translateX, translateY, scaleX, scaleY };
+        extern const uint32_t IDS[];
+    }
+    namespace VectorDrawablePath {
+        enum {
+            name, strokeWidth, strokeColor, strokeAlpha, fillColor, fillAlpha, pathData,
+            trimPathStart, trimPathEnd, trimPathOffset, strokeLineCap, strokeLineJoin,
+            strokeMiterLimit, fillType };
         extern const uint32_t IDS[];
     }
 } // namespace styleable

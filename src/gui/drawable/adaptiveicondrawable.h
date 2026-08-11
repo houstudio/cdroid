@@ -18,6 +18,7 @@
 #ifndef __ADAPTIVE_ICON_DRAWABLE_H__
 #define __ADAPTIVE_ICON_DRAWABLE_H__
 #include <drawable/drawable.h>
+#include <core/typedarray.h>
 namespace cdroid{
 class AdaptiveIconDrawable:public Drawable,public Drawable::Callback {
 private:
@@ -58,7 +59,7 @@ private:
     void updateLayerBoundsInternal(const Rect& bounds);
     void updateMaskBoundsInternal(const Rect& b);
     void inflateLayers(XmlPullParser& parser,AttributeSet& attrs);
-    void updateLayerFromTypedArray(ChildDrawable* layer,AttributeSet& attrs);
+    void updateLayerFromTypedArray(ChildDrawable* layer,const TypedArray& a);
     void suspendChildInvalidation();
     void resumeChildInvalidation();
     int getMaxIntrinsicWidth();

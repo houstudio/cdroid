@@ -24,6 +24,7 @@
 #include <drawable/vectordrawable.h>
 #include <drawable/hwvectordrawable.h>
 #include <drawable/drawableinflater.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
 
 VectorDrawable::VectorDrawable()
@@ -326,7 +327,10 @@ void VectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     auto state = mVectorState;
     mVectorState->setDensity(Drawable::resolveDensity(0));
 
-    updateStateFromTypedArray(atts);
+    // AOSP VectorDrawable.inflate: obtainAttributes(R.styleable.VectorDrawable).
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::VectorDrawable::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
     mDpiScaledDirty = true;
     mVectorState->mCacheDirty = true;
 
@@ -336,29 +340,30 @@ void VectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     updateLocalState();
 }
 
-void VectorDrawable::updateStateFromTypedArray(const AttributeSet&atts){
+void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
     auto state = mVectorState;
+    namespace SX = styleable::VectorDrawable;
 
     // Account for any configuration changes.
     state->mChangingConfigurations = 0;//|= a.getChangingConfigurations();
 
     // Extract the theme attributes, if any.
-    //state->mThemeAttrs = atts.extractThemeAttrs();
+    //state->mThemeAttrs = a.extractThemeAttrs();
 
-    const int tintMode = atts.getTintMode("tintMode", PorterDuff::NOOP);
+    const int tintMode = a.getInt(SX::tintMode, PorterDuff::NOOP);
     if (tintMode != PorterDuff::NOOP) {
         state->mTintMode = tintMode;
     }
 
-    auto tint = atts.getColorStateList("tint");
+    auto tint = a.getColorStateList(SX::tint);
     if (tint != nullptr) {
         state->mTint = tint;
     }
 
-    state->mAutoMirrored = atts.getBoolean("autoMirrored", state->mAutoMirrored);
+    state->mAutoMirrored = a.getBoolean(SX::autoMirrored, state->mAutoMirrored);
 
-    const float viewportWidth = atts.getFloat("viewportWidth", state->mViewportWidth);
-    const float viewportHeight = atts.getFloat("viewportHeight", state->mViewportHeight);
+    const float viewportWidth = a.getFloat(SX::viewportWidth, state->mViewportWidth);
+    const float viewportHeight = a.getFloat(SX::viewportHeight, state->mViewportHeight);
     state->setViewportSize(viewportWidth, viewportHeight);
 
     if (state->mViewportWidth <= 0) {
@@ -367,8 +372,8 @@ void VectorDrawable::updateStateFromTypedArray(const AttributeSet&atts){
         LOGE("<vector> tag requires viewportHeight > 0");
     }
 
-    state->mBaseWidth = atts.getDimensionPixelSize("width", state->mBaseWidth);
-    state->mBaseHeight = atts.getDimensionPixelSize("height", state->mBaseHeight);
+    state->mBaseWidth = a.getDimensionPixelSize(SX::width, state->mBaseWidth);
+    state->mBaseHeight = a.getDimensionPixelSize(SX::height, state->mBaseHeight);
 
     if (state->mBaseWidth <= 0) {
         LOGE("<vector> tag requires width > 0");
@@ -376,16 +381,16 @@ void VectorDrawable::updateStateFromTypedArray(const AttributeSet&atts){
         LOGE("<vector> tag requires height > 0");
     }
 
-    const int insetLeft = atts.getDimensionPixelOffset("opticalInsetLeft", state->mOpticalInsets.left);
-    const int insetTop = atts.getDimensionPixelOffset("opticalInsetTop", state->mOpticalInsets.top);
-    const int insetRight = atts.getDimensionPixelOffset("opticalInsetRight", state->mOpticalInsets.right);
-    const int insetBottom = atts.getDimensionPixelOffset("opticalInsetBottom", state->mOpticalInsets.bottom);
+    const int insetLeft = a.getDimensionPixelOffset(SX::opticalInsetLeft, state->mOpticalInsets.left);
+    const int insetTop = a.getDimensionPixelOffset(SX::opticalInsetTop, state->mOpticalInsets.top);
+    const int insetRight = a.getDimensionPixelOffset(SX::opticalInsetRight, state->mOpticalInsets.right);
+    const int insetBottom = a.getDimensionPixelOffset(SX::opticalInsetBottom, state->mOpticalInsets.bottom);
     state->mOpticalInsets = Insets::of(insetLeft, insetTop, insetRight, insetBottom);
 
-    const float alphaInFloat = atts.getFloat("alpha", state->getAlpha());
+    const float alphaInFloat = a.getFloat(SX::alpha, state->getAlpha());
     state->setAlpha(alphaInFloat);
 
-    const std::string name = atts.getString("name");
+    const std::string name = a.getString(SX::name);
     if (!name.empty()) {
         state->mRootName = name;
         state->mRootGroup->mGroupName = name;
@@ -835,15 +840,21 @@ long VectorDrawable::VGroup::getNativePtr() {
 
 
 void VectorDrawable::VGroup::inflate(XmlPullParser&parser,const AttributeSet&atts) {
+    // AOSP VGroup.inflate: obtainAttributes(R.styleable.VectorDrawableGroup).
+    namespace SX = styleable::VectorDrawableGroup;
+    Context* ctx = atts.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(atts, SX::IDS) : nullptr;
+    if (!ta) return;
+    const TypedArray& a = *ta;
     const auto properties=mNativePtr->stagingProperties();
-    float rotate = atts.getFloat("rotation",properties->getRotation());
-    float pivotX = atts.getFloat("pivotX",properties->getPivotX());
-    float pivotY = atts.getFloat("pivotY",properties->getPivotY());
-    float scaleX = atts.getFloat("scaleX",properties->getScaleX());
-    float scaleY = atts.getFloat("scaleY",properties->getScaleY());
-    float translateX = atts.getFloat("translateX",properties->getTranslateX());
-    float translateY = atts.getFloat("translateY",properties->getTranslateY());
-    mGroupName = atts.getString("name");
+    float rotate = a.getFloat(SX::rotation,properties->getRotation());
+    float pivotX = a.getFloat(SX::pivotX,properties->getPivotX());
+    float pivotY = a.getFloat(SX::pivotY,properties->getPivotY());
+    float scaleX = a.getFloat(SX::scaleX,properties->getScaleX());
+    float scaleY = a.getFloat(SX::scaleY,properties->getScaleY());
+    float translateX = a.getFloat(SX::translateX,properties->getTranslateX());
+    float translateY = a.getFloat(SX::translateY,properties->getTranslateY());
+    mGroupName = a.getString(SX::name);
     if (!mGroupName.empty()) {
         //nSetName(mNativePtr, mGroupName);
         mNativePtr->setName(mGroupName.c_str());
@@ -1089,7 +1100,10 @@ long VectorDrawable::VClipPath::getNativePtr() {
 
 
 void VectorDrawable::VClipPath::inflate(XmlPullParser&,const AttributeSet& attrs) {
-    updateStateFromTypedArray(attrs);
+    // AOSP VClipPath.inflate: obtainAttributes(R.styleable.VectorDrawableClipPath).
+    Context* ctx = attrs.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(attrs, styleable::VectorDrawableClipPath::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
 }
 
 bool VectorDrawable::VClipPath::canApplyTheme() {
@@ -1112,18 +1126,19 @@ bool VectorDrawable::VClipPath::hasFocusStateSpecified()const {
     return false;
 }
 
-void VectorDrawable::VClipPath::updateStateFromTypedArray(const AttributeSet&atts) {
+void VectorDrawable::VClipPath::updateStateFromTypedArray(const TypedArray& a) {
+    namespace SX = styleable::VectorDrawableClipPath;
     // Account for any configuration changes.
     mChangingConfigurations =0;//|= a.getChangingConfigurations();
 
-    const std::string pathName = atts.getString("name");
+    const std::string pathName = a.getString(SX::name);
     if (!pathName.empty()) {
         mPathName = pathName;
         //nSetName(mNativePtr, mPathName);
         mNativePtr->setName(mPathName.c_str());
     }
 
-    const std::string pathDataString = atts.getString("pathData");
+    const std::string pathDataString = a.getString(SX::pathData);
     if (!pathDataString.empty()) {
         mPathData = new PathParser::PathData(pathDataString);
         //nSetPathString(mNativePtr, pathDataString, pathDataString.length());
@@ -1256,14 +1271,15 @@ long VectorDrawable::VFullPath::getNativePtr() {
 }
 
 void VectorDrawable::VFullPath::inflate(XmlPullParser&parser,const AttributeSet& attrs) {
-    /*final TypedArray a = obtainAttributes(r, theme, attrs,R.styleable.VectorDrawablePath);
-    updateStateFromTypedArray(a);
-    a.recycle();*/
-    updateStateFromTypedArray(attrs);
+    // AOSP VFullPath.inflate: obtainAttributes(R.styleable.VectorDrawablePath).
+    Context* ctx = attrs.getContext();
+    auto ta = ctx ? ctx->obtainStyledAttributes(attrs, styleable::VectorDrawablePath::IDS) : nullptr;
+    if (ta) updateStateFromTypedArray(*ta);
     inflateGradients(parser,attrs);
 }
 
-void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& atts) {
+void VectorDrawable::VFullPath::updateStateFromTypedArray(const TypedArray& a) {
+    namespace SXP = styleable::VectorDrawablePath;
     auto properties = mNativePtr->stagingProperties();
     float strokeWidth = properties->getStrokeWidth();
     int strokeColor = properties->getStrokeColor();
@@ -1280,19 +1296,19 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
     //Shader fillGradient = null;
     //Shader strokeGradient = null;
     // Account for any configuration changes.
-    mChangingConfigurations = 0;//!=atts.getChangingConfigurations();
+    mChangingConfigurations = 0;//!=a.getChangingConfigurations();
 
     // Extract the theme attributes, if any.
     //mThemeAttrs = a.extractThemeAttrs();
 
-    const std::string pathName = atts.getString("name");
+    const std::string pathName = a.getString(SXP::name);
     if (!pathName.empty()) {
         mPathName = pathName;
         //nSetName(mNativePtr, mPathName);
         mNativePtr->setName(mPathName.c_str());
     }
 
-    const std::string pathString = atts.getString("pathData");
+    const std::string pathString = a.getString(SXP::pathData);
     if (!pathString.empty()) {
         mPathData = new PathParser::PathData(pathString);
         //nSetPathString(mNativePtr, pathString, pathString.length());
@@ -1302,7 +1318,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
         ((hwui::Path*)mNativePtr)->mutateStagingProperties()->setData(data);
     }
 #if 10
-    auto fillColors = atts.getColorStateList("fillColor");
+    auto fillColors = a.getColorStateList(SXP::fillColor);
     if (fillColors != nullptr) {
         // If the colors is a gradient color, or the color state list is stateful, keep the
         // colors information. Otherwise, discard the colors and keep the default color.
@@ -1317,7 +1333,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
         fillColor = fillColors->getDefaultColor();
     }
 
-    auto strokeColors = atts.getColorStateList("strokeColor");
+    auto strokeColors = a.getColorStateList(SXP::strokeColor);
     if (strokeColors != nullptr) {
         // If the colors is a gradient color, or the color state list is stateful, keep the
         // colors information. Otherwise, discard the colors and keep the default color.
@@ -1339,24 +1355,19 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
     //mNativePtr->mutateStagingProperties()->setStrokeGradient(strokeGradient);
     //LOGD("path %p gradient=%p,%p",this,mStrokeGradient.get(),mFillGradient.get());
 #endif
-    fillAlpha = atts.getFloat("fillAlpha", fillAlpha);
-    strokeLineCap = atts.getInt("strokeLineCap",std::unordered_map<std::string,int>{
-            {"butt", (int)Cairo::Context::LineCap::BUTT},
-            {"round",(int)Cairo::Context::LineCap::ROUND},
-            {"square",(int)Cairo::Context::LineCap::SQUARE} }, strokeLineCap);
-    strokeLineJoin = atts.getInt("strokeLineJoin",std::unordered_map<std::string,int>{
-            {"bevel",(int)Cairo::Context::LineJoin::BEVEL},
-            {"miter",(int)Cairo::Context::LineJoin::MITER}, 
-            {"round",(int)Cairo::Context::LineJoin::ROUND} }, strokeLineJoin);
-    strokeMiterLimit = atts.getFloat("strokeMiterLimit", strokeMiterLimit);
-    strokeAlpha = atts.getFloat("strokeAlpha",strokeAlpha);
-    strokeWidth = atts.getFloat("strokeWidth",strokeWidth);
-    trimPathEnd = atts.getFloat("trimPathEnd",trimPathEnd);
-    trimPathOffset = atts.getFloat("trimPathOffset", trimPathOffset);
-    trimPathStart = atts.getFloat("trimPathStart", trimPathStart);
-    fillType = atts.getInt("fillType",std::unordered_map<std::string,int>{
-            {"evenOdd",(int)Cairo::Context::FillRule::EVEN_ODD},
-            {"nonZero",(int)Cairo::Context::FillRule::WINDING} }, fillType);
+    fillAlpha = a.getFloat(SXP::fillAlpha, fillAlpha);
+    // aapt2 resolves the strokeLineCap/strokeLineJoin/fillType enum names to the
+    // same int values Cairo expects (BUTT/ROUND/SQUARE, MITER/ROUND/BEVEL,
+    // WINDING/EVEN_ODD), so a.getInt reads them directly.
+    strokeLineCap = a.getInt(SXP::strokeLineCap, strokeLineCap);
+    strokeLineJoin = a.getInt(SXP::strokeLineJoin, strokeLineJoin);
+    strokeMiterLimit = a.getFloat(SXP::strokeMiterLimit, strokeMiterLimit);
+    strokeAlpha = a.getFloat(SXP::strokeAlpha,strokeAlpha);
+    strokeWidth = a.getFloat(SXP::strokeWidth,strokeWidth);
+    trimPathEnd = a.getFloat(SXP::trimPathEnd,trimPathEnd);
+    trimPathOffset = a.getFloat(SXP::trimPathOffset, trimPathOffset);
+    trimPathStart = a.getFloat(SXP::trimPathStart, trimPathStart);
+    fillType = a.getInt(SXP::fillType, fillType);
 
     //nUpdateFullPathProperties(
     mNativePtr->mutateStagingProperties()->updateProperties(strokeWidth, strokeColor, strokeAlpha,
