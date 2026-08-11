@@ -9,6 +9,8 @@
 #define __RESOURCES_CDROID_H__
 
 #include <string>
+#include <memory>
+#include <cstdint>
 #include "androidfw/resourcesimpl.h"   // ResourcesImpl
 
 namespace cdroid {
@@ -16,6 +18,8 @@ namespace cdroid {
 class Context;
 class Drawable;
 class ColorStateList;
+class AttributeSet;
+class TypedArray;
 
 class Resources : public ResourcesImpl {
 public:
@@ -26,6 +30,17 @@ public:
     cdroid::Drawable*       getDrawable(int id, int density) const override;
     cdroid::ColorStateList* getColorStateList(int id) const override;
     // getFont is inherited (returns nullptr); font resource resolution is deferred.
+
+    // AOSP Resources.obtainStyledAttributes(...) — resolve a styleable attr set
+    // against an XML element (binary AXML), the live theme, or a style resId.
+    // (AttributeSet, attrs[], defStyleAttr, defStyleRes): the element-attr path;
+    // null when the AttributeSet is neither a binary element nor a resolved style.
+    std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet& set,
+        const uint32_t* attrs, int defStyleAttr = 0, int defStyleRes = 0) const;
+    // (attrs[]): theme only.
+    std::unique_ptr<TypedArray> obtainStyledAttributes(const uint32_t* attrs) const;
+    // (resid, attrs[]): apply a style resId on top of the theme.
+    std::unique_ptr<TypedArray> obtainStyledAttributes(int resid, const uint32_t* attrs) const;
 
 private:
     cdroid::Context* mCtx;

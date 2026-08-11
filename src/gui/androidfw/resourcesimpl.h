@@ -55,7 +55,7 @@ public:
     ResourcesImpl(const ResourcesImpl&) = delete;
     ResourcesImpl& operator=(const ResourcesImpl&) = delete;
 
-    AssetManager* getAssets() { return mAssets; }
+    AssetManager* getAssets() const { return mAssets; }
 
     // AOSP Resources.Theme — the engine is ResTable::Theme (applyStyle/
     // getAttribute/resolveAttribute/clear/...).
