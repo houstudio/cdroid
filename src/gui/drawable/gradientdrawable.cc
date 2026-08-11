@@ -1153,8 +1153,7 @@ void GradientDrawable::draw(Canvas&canvas) {
 void GradientDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(r, parser, atts);
     mGradientState->setDensity(Drawable::resolveDensity( 0));
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::GradientDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(atts, styleable::GradientDrawable::IDS);
     if (ta) updateStateFromTypedArray(*ta);
     inflateChildElements(r,parser,atts);
     updateLocalState();
@@ -1219,24 +1218,24 @@ void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,co
 
         const std::string name = parser.getName();
         if (name.compare("size")==0) {
-            auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::GradientDrawableSize::IDS) : nullptr;
+            auto ta = r.obtainStyledAttributes(&atts, styleable::GradientDrawableSize::IDS);
             if (ta) updateGradientDrawableSize(*ta);
         } else if (name.compare("gradient")==0) {
-            auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::GradientDrawableGradient::IDS) : nullptr;
+            auto ta = r.obtainStyledAttributes(&atts, styleable::GradientDrawableGradient::IDS);
             if (ta) updateGradientDrawableGradient(*ta);
             // Private "bitmap" attr lacks a framework arsc id; read via the string bridge (text-XML only).
             setImagePattern(atts.getContext(),atts.getString("bitmap"));
         } else if (name.compare("solid")==0) {
-            auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::GradientDrawableSolid::IDS) : nullptr;
+            auto ta = r.obtainStyledAttributes(&atts, styleable::GradientDrawableSolid::IDS);
             if (ta) updateGradientDrawableSolid(*ta);
         } else if (name.compare("stroke")==0) {
-            auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::GradientDrawableStroke::IDS) : nullptr;
+            auto ta = r.obtainStyledAttributes(&atts, styleable::GradientDrawableStroke::IDS);
             if (ta) updateGradientDrawableStroke(*ta);
         } else if (name.compare("corners")==0) {
-            auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::DrawableCorners::IDS) : nullptr;
+            auto ta = r.obtainStyledAttributes(&atts, styleable::DrawableCorners::IDS);
             if (ta) updateDrawableCorners(*ta);
         } else if (name.compare("padding")==0) {
-            auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::GradientDrawablePadding::IDS) : nullptr;
+            auto ta = r.obtainStyledAttributes(&atts, styleable::GradientDrawablePadding::IDS);
             if (ta) updateGradientDrawablePadding(*ta);
         } else {
             LOGW("drawable", "Bad element %s under <shape>: ",name.c_str());

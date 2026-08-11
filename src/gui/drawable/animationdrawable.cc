@@ -159,10 +159,7 @@ void AnimationDrawable::clearMutated(){
 }
 
 void AnimationDrawable::inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts){
-    (void)r;
-    // AOSP AnimationDrawable.inflate: obtainAttributes(R.styleable.AnimationDrawable).
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimationDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(atts, styleable::AnimationDrawable::IDS);
     DrawableContainer::inflateWithAttributes(parser,atts);
     if (ta) updateStateFromTypedArray(*ta);
 
@@ -191,7 +188,7 @@ void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
         }
         // AOSP obtains R.styleable.AnimationDrawableItem per <item>.
         Context* ctx = atts.getContext();
-        auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimationDrawableItem::IDS) : nullptr;
+        auto ta = r.obtainStyledAttributes(&atts, styleable::AnimationDrawableItem::IDS);
         const int duration = ta ? ta->getInt(styleable::AnimationDrawableItem::duration, -1)
                                 : atts.getInt("duration", -1);
         if (duration < 0) {

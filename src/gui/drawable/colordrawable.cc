@@ -69,10 +69,7 @@ ColorDrawable::~ColorDrawable(){
 }
 
 void ColorDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
-    (void)r;
-    // AOSP ColorDrawable.inflate: obtainAttributes(R.styleable.ColorDrawable) -> color.
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::ColorDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(&atts, styleable::ColorDrawable::IDS);
     if (ta) mColorState->mBaseColor = ta->getColor(styleable::ColorDrawable::color, mColorState->mBaseColor);
     mColorState->mUseColor = mColorState->mBaseColor;
 }

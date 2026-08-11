@@ -289,8 +289,7 @@ void DrawableWrapper::inflate(Resources& r,XmlPullParser&parser,const AttributeS
     //state->mSrcDensityOverride = mSrcDensityOverride;
 
     // AOSP DrawableWrapper.inflate: obtainAttributes(R.styleable.DrawableWrapper).
-    Context*ctx=atts.getContext();
-    auto ta = ctx?ctx->obtainStyledAttributes(atts, styleable::DrawableWrapper::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(&atts, styleable::DrawableWrapper::IDS);
     if (ta) updateStateFromTypedArray(*ta);
     inflateChildDrawable(parser, atts);
 }

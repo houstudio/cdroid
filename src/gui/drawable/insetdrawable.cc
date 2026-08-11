@@ -166,8 +166,7 @@ std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){
 
 void InsetDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     // Inset attribute may be overridden by more specific attributes.
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::InsetDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(atts, styleable::InsetDrawable::IDS);
     if (ta) updateStateFromTypedArray(*ta);
     DrawableWrapper::inflate(r,parser,atts);
     verifyRequiredAttributes();

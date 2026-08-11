@@ -303,7 +303,7 @@ void AdaptiveIconDrawable::inflateLayers(Resources& r,XmlPullParser& parser,Attr
         // Resolve this child tag's attributes against the framework arsc,
         // matching AOSP's obtainAttributes(r, theme, attrs, R.styleable.AdaptiveIconDrawableLayer).
         Context* ctx = attrs.getContext();
-        auto a = ctx ? ctx->obtainStyledAttributes(attrs, styleable::AdaptiveIconDrawableLayer::IDS) : nullptr;
+        auto a = r.obtainStyledAttributes(&attrs, styleable::AdaptiveIconDrawableLayer::IDS);
         if (a) {
             updateLayerFromTypedArray(layer, *a);
         }

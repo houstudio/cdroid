@@ -123,9 +123,8 @@ void LevelListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
         if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-        Context* ctx = atts.getContext();
         namespace SLI = styleable::LevelListDrawableItem;
-        auto ta = ctx ? ctx->obtainStyledAttributes(atts, SLI::IDS) : nullptr;
+        auto ta = r.obtainStyledAttributes(&atts, SLI::IDS);
         low = ta ? ta->getInt(SLI::minLevel, 0) : atts.getInt("minLevel", 0);
         int high = ta ? ta->getInt(SLI::maxLevel, 0) : atts.getInt("maxLevel", 0);
         Drawable* dr = ta ? ta->getDrawable(SLI::drawable) : atts.getDrawable("drawable");

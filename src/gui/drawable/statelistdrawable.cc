@@ -149,7 +149,7 @@ void StateListDrawable::inflate(Resources& r,XmlPullParser&parser,const Attribut
     (void)r;
     Drawable::inflateWithAttributes(parser,atts);
     Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::StateListDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(&atts, styleable::StateListDrawable::IDS);
     if (ta) updateStateFromTypedArray(*ta);
     inflateChildElements(r,parser,atts);
     onStateChange(getState());
@@ -183,7 +183,7 @@ void StateListDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,c
 
         std::vector<int>states;
         Context* ctx = atts.getContext();
-        auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::StateListDrawableItem::IDS) : nullptr;
+        auto ta = r.obtainStyledAttributes(&atts, styleable::StateListDrawableItem::IDS);
         Drawable*dr = ta ? ta->getDrawable(SXI::drawable) : atts.getDrawable("drawable");
         StateSet::parseState(states,atts);
         if(dr==nullptr){

@@ -257,7 +257,7 @@ void ShapeDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet
 
     // AOSP ShapeDrawable.inflate: obtainAttributes(R.styleable.ShapeDrawable) -> updateStateFromTypedArray.
     Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::ShapeDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(&atts, styleable::ShapeDrawable::IDS);
     if (ta) updateStateFromTypedArray(*ta);
 
     int type;

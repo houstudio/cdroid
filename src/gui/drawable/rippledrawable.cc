@@ -600,13 +600,7 @@ Rect RippleDrawable::getDirtyBounds() const{
 }
 
 void RippleDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    // Snapshot the <ripple> root-element attrs into a TypedArray BEFORE LayerDrawable::inflate
-    // advances the parser into the child <item>s. obtainStyledAttributes resolves and caches the
-    // values up front (AOSP obtainAttributes semantics), so updateStateFromTypedArray is safe to
-    // call after super.inflate() — the earlier read-order constraint was specific to CDROID's lazy
-    // string-keyed AttributeSet reads.
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::RippleDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(atts, styleable::RippleDrawable::IDS);
 
     // Force padding default to STACK before inflating.
     setPaddingMode(PADDING_MODE_STACK);

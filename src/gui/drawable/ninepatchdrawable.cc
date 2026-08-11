@@ -284,8 +284,7 @@ void NinePatchDrawable::draw(Canvas&canvas){
 void NinePatchDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
    Drawable::inflate(r,parser,atts);
 
-   Context* ctx = atts.getContext();
-   auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::NinePatchDrawable::IDS) : nullptr;
+   auto ta = r.obtainStyledAttributes(&atts, styleable::NinePatchDrawable::IDS);
    if (ta) updateStateFromTypedArray(*ta);
 
    // src is a resource reference consumed by the string-based getInputStream

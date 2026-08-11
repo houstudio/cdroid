@@ -214,7 +214,7 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
             const std::string tagName = parser.getName();
             if (tagName.compare(ANIMATED_VECTOR)==0) {
                 // AOSP obtains R.styleable.AnimatedVectorDrawable per <animated-vector>.
-                auto ta = ctx ? ctx->obtainStyledAttributes(attrs, SXV::IDS) : nullptr;
+                auto ta = r.obtainStyledAttributes(&attrs, SXV::IDS);
                 Drawable* dr = ta ? ta->getDrawable(SXV::drawable) : nullptr;
                 if (dr != nullptr) {
                     VectorDrawable* vectorDrawable = (VectorDrawable*) dr->mutate();
@@ -232,7 +232,7 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
                 }
             } else if (tagName.compare(TARGET)==0) {
                 // AOSP obtains R.styleable.AnimatedVectorDrawableTarget per <target>.
-                auto ta = ctx ? ctx->obtainStyledAttributes(attrs, SXT::IDS) : nullptr;
+                auto ta = r.obtainStyledAttributes(&attrs, SXT::IDS);
                 const std::string target = ta ? ta->getString(SXT::name) : attrs.getString("name");
                 // animation is a @animator reference; TypedArray exposes no Animator
                 // getter, so resolve the reference to its resource name (the same form

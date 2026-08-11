@@ -495,7 +495,7 @@ void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a){
 void BitmapDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(r,parser,atts);
     Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::BitmapDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(&atts, styleable::BitmapDrawable::IDS);
     if (ta) updateStateFromTypedArray(*ta);
     // 'src' is an image reference; load it via the string bridge because CDROID's
     // image loader takes a resource name (not an arsc resource id) and TypedArray

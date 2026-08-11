@@ -329,8 +329,7 @@ void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSe
     mVectorState->setDensity(Drawable::resolveDensity(0));
 
     // AOSP VectorDrawable.inflate: obtainAttributes(R.styleable.VectorDrawable).
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::VectorDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(&atts, styleable::VectorDrawable::IDS);
     if (ta) updateStateFromTypedArray(*ta);
     mDpiScaledDirty = true;
     mVectorState->mCacheDirty = true;
@@ -844,7 +843,7 @@ void VectorDrawable::VGroup::inflate(XmlPullParser&parser,const AttributeSet&att
     // AOSP VGroup.inflate: obtainAttributes(R.styleable.VectorDrawableGroup).
     namespace SX = styleable::VectorDrawableGroup;
     Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, SX::IDS) : nullptr;
+    auto ta = atts.getContext() ? atts.getContext()->obtainStyledAttributes(atts, SX::IDS) : nullptr;
     if (!ta) return;
     const TypedArray& a = *ta;
     const auto properties=mNativePtr->stagingProperties();
@@ -1103,7 +1102,7 @@ long VectorDrawable::VClipPath::getNativePtr() {
 void VectorDrawable::VClipPath::inflate(XmlPullParser&,const AttributeSet& attrs) {
     // AOSP VClipPath.inflate: obtainAttributes(R.styleable.VectorDrawableClipPath).
     Context* ctx = attrs.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(attrs, styleable::VectorDrawableClipPath::IDS) : nullptr;
+    auto ta = attrs.getContext() ? attrs.getContext()->obtainStyledAttributes(attrs, styleable::VectorDrawableClipPath::IDS) : nullptr;
     if (ta) updateStateFromTypedArray(*ta);
 }
 
@@ -1274,7 +1273,7 @@ long VectorDrawable::VFullPath::getNativePtr() {
 void VectorDrawable::VFullPath::inflate(XmlPullParser&parser,const AttributeSet& attrs) {
     // AOSP VFullPath.inflate: obtainAttributes(R.styleable.VectorDrawablePath).
     Context* ctx = attrs.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(attrs, styleable::VectorDrawablePath::IDS) : nullptr;
+    auto ta = attrs.getContext() ? attrs.getContext()->obtainStyledAttributes(attrs, styleable::VectorDrawablePath::IDS) : nullptr;
     if (ta) updateStateFromTypedArray(*ta);
     inflateGradients(parser,attrs);
 }

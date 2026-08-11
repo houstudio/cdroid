@@ -170,8 +170,7 @@ void RotateDrawable::draw(Canvas& canvas) {
 }
 
 void RotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::RotateDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(atts, styleable::RotateDrawable::IDS);
     DrawableWrapper::inflate(r,parser,atts);
     if (ta) updateStateFromTypedArray(*ta);
 }

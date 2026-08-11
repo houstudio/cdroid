@@ -457,7 +457,7 @@ void AnimatedImageDrawable::inflate(Resources& r,XmlPullParser&parser,const Attr
 void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride){
     Context* ctx = atts.getContext();
     namespace SA = styleable::AnimatedImageDrawable;
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, SA::IDS) : nullptr;
+    auto ta = atts.getContext() ? atts.getContext()->obtainStyledAttributes(atts, SA::IDS) : nullptr;
     std::string srcResid =atts.getString("src");
     if(!srcResid.empty()){
         Drawable* drawable = nullptr;

@@ -199,7 +199,7 @@ void AnimatedStateListDrawable::inflate(Resources& r,XmlPullParser&parser,const 
     StateListDrawable::inflateWithAttributes(parser,atts);
 
     Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedStateListDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(&atts, styleable::AnimatedStateListDrawable::IDS);
     if (ta) updateStateFromTypedArray(*ta);
     //updateDensity();
     inflateChildElement(r,parser,atts);
@@ -247,7 +247,7 @@ void AnimatedStateListDrawable::inflateChildElement(Resources& r,XmlPullParser&p
 int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     namespace SXI = styleable::AnimatedStateListDrawableItem;
     Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedStateListDrawableItem::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(&atts, styleable::AnimatedStateListDrawableItem::IDS);
     const int keyframeId = ta ? ta->getResourceId(SXI::id, 0) : atts.getResourceId("id", 0);
     Drawable* dr = ta ? ta->getDrawable(SXI::drawable) : atts.getDrawable("drawable");
 
@@ -274,7 +274,7 @@ int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const
 int AnimatedStateListDrawable::parseTransition(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     namespace SXT = styleable::AnimatedStateListDrawableTransition;
     Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedStateListDrawableTransition::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(&atts, styleable::AnimatedStateListDrawableTransition::IDS);
     const int fromId = ta ? ta->getResourceId(SXT::fromId, 0) : atts.getResourceId("fromId", 0);
     const int toId = ta ? ta->getResourceId(SXT::toId, 0) : atts.getResourceId("toId", 0);
     const bool reversible = ta ? ta->getBoolean(SXT::reversible, false) : atts.getBoolean("reversible", false);

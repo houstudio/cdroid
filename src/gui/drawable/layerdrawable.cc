@@ -1111,9 +1111,7 @@ void LayerDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&
     const int density = Drawable::resolveDensity( 0);
     mLayerState->setDensity(density);
 
-    // AOSP LayerDrawable.inflate: obtainAttributes(R.styleable.LayerDrawable).
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::LayerDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(atts, styleable::LayerDrawable::IDS);
     if (ta) updateStateFromTypedArray(*ta);
 
     for (ChildDrawable*layer:mLayerState->mChildren) {
@@ -1140,7 +1138,7 @@ void LayerDrawable::inflateLayers(Resources& r,XmlPullParser& parser,const Attri
         ChildDrawable*layer = new ChildDrawable(mLayerState->mDensity);
         // AOSP inflateLayers: obtainAttributes(R.styleable.LayerDrawableItem) per <item>.
         Context* ctx = atts.getContext();
-        auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::LayerDrawableItem::IDS) : nullptr;
+        auto ta = r.obtainStyledAttributes(&atts, styleable::LayerDrawableItem::IDS);
         if (ta) updateLayerFromTypedArray(layer, *ta);
 
         if (layer->mDrawable==nullptr) {

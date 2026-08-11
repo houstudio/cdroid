@@ -131,8 +131,7 @@ void ScaleDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&
     mState->mScaleWidth = getDimensionOrFraction(atts,"scaleWidth", 100, mState->mScaleWidth);
     mState->mScaleHeight = getDimensionOrFraction(atts,"scaleHeight", 100, mState->mScaleHeight);
 
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::ScaleDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(atts, styleable::ScaleDrawable::IDS);
     if (ta) updateStateFromTypedArray(*ta);
 
     DrawableWrapper::inflate(r,parser,atts);
