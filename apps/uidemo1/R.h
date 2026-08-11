@@ -6,31 +6,33 @@ namespace uidemo1{
 
 namespace R{
     namespace id{
-         static constexpr int idno                    = 0x00002710 ;/*10000*/
-         static constexpr int filename                = 0x00002711 ;/*10001*/
-         static constexpr int filesize                = 0x00002712 ;/*10002*/
-         static constexpr int icon                    = 0x00002713 ;/*10003*/
-         static constexpr int address                 = 0x00002714 ;/*10004*/
-         static constexpr int BtnGo                   = 0x00002715 ;/*10005*/
-         static constexpr int TextUrl                 = 0x00002716 ;/*10006*/
-         static constexpr int toolbar                 = 0x00002717 ;/*10007*/
-         static constexpr int WebView01               = 0x00002718 ;/*10008*/
-         static constexpr int editText1               = 0x00002719 ;/*10009*/
-         static constexpr int editText2               = 0x0000271A ;/*10010*/
-         static constexpr int textcontainer           = 0x0000271B ;/*10011*/
-         static constexpr int button1                 = 0x0000271C ;/*10012*/
-         static constexpr int textview1               = 0x0000271D ;/*10013*/
-         static constexpr int light                   = 0x0000271E ;/*10014*/
-         static constexpr int tv1                     = 0x0000271F ;/*10015*/
-         static constexpr int et1                     = 0x00002720 ;/*10016*/
-         static constexpr int tv2                     = 0x00002721 ;/*10017*/
-         static constexpr int et2                     = 0x00002722 ;/*10018*/
-         static constexpr int btnadd                  = 0x00002723 ;/*10019*/
-         static constexpr int table                   = 0x00002724 ;/*10020*/
-         static constexpr int exitbutton              = 0x00002725 ;/*10021*/
-         static constexpr int tablayout               = 0x00002726 ;/*10022*/
-         static constexpr int viewpager               = 0x00002727 ;/*10023*/
-    };/*namespace id*/
+        enum : int {
+            idno = 0x00002710, /*10000 idno*/
+            filename = 0x00002711, /*10001 filename*/
+            filesize = 0x00002712, /*10002 filesize*/
+            icon = 0x00002713, /*10003 icon*/
+            address = 0x00002714, /*10004 address*/
+            BtnGo = 0x00002715, /*10005 BtnGo*/
+            TextUrl = 0x00002716, /*10006 TextUrl*/
+            toolbar = 0x00002717, /*10007 toolbar*/
+            WebView01 = 0x00002718, /*10008 WebView01*/
+            editText1 = 0x00002719, /*10009 editText1*/
+            editText2 = 0x0000271A, /*10010 editText2*/
+            textcontainer = 0x0000271B, /*10011 textcontainer*/
+            button1 = 0x0000271C, /*10012 button1*/
+            textview1 = 0x0000271D, /*10013 textview1*/
+            light = 0x0000271E, /*10014 light*/
+            tv1 = 0x0000271F, /*10015 tv1*/
+            et1 = 0x00002720, /*10016 et1*/
+            tv2 = 0x00002721, /*10017 tv2*/
+            et2 = 0x00002722, /*10018 et2*/
+            btnadd = 0x00002723, /*10019 btnadd*/
+            table = 0x00002724, /*10020 table*/
+            exitbutton = 0x00002725, /*10021 exitbutton*/
+            tablayout = 0x00002726, /*10022 tablayout*/
+            viewpager = 0x00002727, /*10023 viewpager*/
+        };
+    }/*namespace id*/
 
     namespace strings{
     };/*namespace strings*/
