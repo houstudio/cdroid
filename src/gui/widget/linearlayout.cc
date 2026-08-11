@@ -104,9 +104,7 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet* pAttrs,int defSt
     const AttributeSet& attrs = *pAttrs;
     initView();
 
-    Assets* assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = assets ? assets->obtainStyledAttributes(
-        attrs, styleable::LinearLayout::IDS) : nullptr;
+    auto ta = context->obtainStyledAttributes(attrs, styleable::LinearLayout::IDS, defStyleAttr);
 
     // Defaults
     setBaselineAligned(true);

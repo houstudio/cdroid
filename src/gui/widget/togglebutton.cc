@@ -33,9 +33,7 @@ ToggleButton::ToggleButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAt
     const AttributeSet& attrs = *pAttrs;
     mIndicatorDrawable=nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::ToggleButton::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(attrs, styleable::ToggleButton::IDS, defStyleAttr);
     if (ta) {
     namespace STB = styleable::ToggleButton;
 

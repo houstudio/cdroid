@@ -33,9 +33,7 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet* pAttrs,int def
     const AttributeSet& attrs = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::FlexboxLayout::IDS) : nullptr;
+    auto ta = context->obtainStyledAttributes(attrs, styleable::FlexboxLayout::IDS, defStyleAttr);
     namespace SFB = styleable::FlexboxLayout;
     mFlexDirection = ta&&ta->hasValue(SFB::flexDirection) ? ta->getInt(SFB::flexDirection,(int)FlexDirection::ROW) : attrs.getInt("flexDirection",std::unordered_map<std::string,int>{
             {"column",FlexDirection::COLUMN},

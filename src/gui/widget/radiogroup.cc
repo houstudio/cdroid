@@ -21,9 +21,7 @@ RadioGroup::RadioGroup(Context* context,const AttributeSet* pAttrs,int defStyleA
     const AttributeSet& attrs = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::RadioGroup::IDS) : nullptr;
+    auto ta = context->obtainStyledAttributes(attrs, styleable::RadioGroup::IDS, defStyleAttr);
     if (ta) {
     namespace SRG = styleable::RadioGroup;
 

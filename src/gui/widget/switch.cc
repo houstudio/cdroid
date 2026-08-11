@@ -21,9 +21,7 @@ Switch::Switch(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     const AttributeSet& a = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        a, styleable::Switch::IDS) : nullptr;
+    auto ta = context->obtainStyledAttributes(a, styleable::Switch::IDS, defStyleAttr);
     if (ta) {
     namespace SW = styleable::Switch;
 

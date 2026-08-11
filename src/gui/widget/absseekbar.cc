@@ -35,9 +35,7 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):
     const AttributeSet& attrs = *pAttrs;
     initSeekBar();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::SeekBar::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(attrs, styleable::SeekBar::IDS, defStyleAttr);
     if (ta) {
     namespace SSB = styleable::SeekBar;
 

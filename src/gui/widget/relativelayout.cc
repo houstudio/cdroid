@@ -56,9 +56,7 @@ RelativeLayout::RelativeLayout(Context* context,const AttributeSet* pAttrs,int d
     const AttributeSet& attrs = *pAttrs;
     mDirtyHierarchy = true;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::RelativeLayout::IDS) : nullptr;
+    auto ta = context->obtainStyledAttributes(attrs, styleable::RelativeLayout::IDS, defStyleAttr);
     if (ta) {
     namespace SRL = styleable::RelativeLayout;
     mIgnoreGravity = (int)ta->getResourceId(SRL::ignoreGravity,(uint32_t)View::NO_ID);

@@ -34,9 +34,7 @@ Chronometer::Chronometer(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
     const AttributeSet& atts = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        atts, styleable::Chronometer::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(atts, styleable::Chronometer::IDS, defStyleAttr);
     if (ta) {
     namespace SCH = styleable::Chronometer;
     setFormat(ta->getString(SCH::format));

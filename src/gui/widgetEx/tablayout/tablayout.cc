@@ -52,8 +52,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
     // aapt2 has already resolved the enum attrs (tabIndicatorAnimationMode /
     // tabIndicatorGravity / tabMode / tabGravity) at compile time, so getInt reads
     // them directly — no runtime enum map needed.
-    Assets* _a = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _a ? _a->obtainStyledAttributes(atts, styleable::TabLayout::IDS) : nullptr;
+    auto ta = context->obtainStyledAttributes(atts, styleable::TabLayout::IDS, defStyleAttr);
     if (ta) {
         namespace ST = styleable::TabLayout;
 
@@ -80,7 +79,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
         // reading the framework textSize/textColor sub-attrs typed. Keep the
         // initTabLayout() defaults when the style is unset/unresolvable — a 0 text
         // size makes TabView::onMeasure force setTextSize(0) (invisible labels).
-        auto taaTa = _a ? _a->obtainStyledAttributes(taa, styleable::TextAppearance::IDS) : nullptr;
+        auto taaTa = context->obtainStyledAttributes(taa, styleable::TextAppearance::IDS, defStyleAttr);
         namespace STA = styleable::TextAppearance;
         mTabTextSize  = taaTa ? taaTa->getDimensionPixelSize(STA::textSize, mTabTextSize) : mTabTextSize;
         mTabTextColors= taaTa ? taaTa->getColorStateList(STA::textColor) : mTabTextColors;
@@ -90,7 +89,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
         }
         if(!mSelectedTabTextAppearance.empty()){
             const AttributeSet sa=context->obtainStyledAttributes(mSelectedTabTextAppearance);
-            auto saTa = _a ? _a->obtainStyledAttributes(sa, styleable::TextAppearance::IDS) : nullptr;
+            auto saTa = context->obtainStyledAttributes(sa, styleable::TextAppearance::IDS, defStyleAttr);
             mSelectedTabTextSize = saTa ? saTa->getDimensionPixelSize(STA::textSize, 0) : 0;
             auto selectedTabTextColor = saTa ? saTa->getColorStateList(STA::textColor) : nullptr;
             if(selectedTabTextColor!=nullptr){

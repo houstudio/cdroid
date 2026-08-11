@@ -78,9 +78,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
     const AttributeSet& attrs = *pAttrs;
     initProgressBar();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::ProgressBar::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(attrs, styleable::ProgressBar::IDS, defStyleAttr);
     if (ta) {
     namespace SPB = styleable::ProgressBar;
 

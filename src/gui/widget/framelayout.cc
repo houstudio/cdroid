@@ -37,9 +37,7 @@ FrameLayout::FrameLayout(Context* context,const AttributeSet* pAttrs,int defStyl
     const AttributeSet& attrs = *pAttrs;
     mMeasureAllChildren = false;
     {
-        Assets* _a = context ? dynamic_cast<Assets*>(context) : nullptr;
-        auto ta = _a ? _a->obtainStyledAttributes(
-            attrs, styleable::FrameLayout::IDS) : nullptr;
+        auto ta = context->obtainStyledAttributes(attrs, styleable::FrameLayout::IDS, defStyleAttr);
     if (ta) {
         if (ta) {
             for (size_t n = ta->getIndexCount(); n > 0; ) {

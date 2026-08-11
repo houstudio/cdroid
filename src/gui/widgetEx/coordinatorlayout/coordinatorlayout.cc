@@ -36,9 +36,7 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* pAttrs
     const AttributeSet& attrs = *pAttrs;
     initView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::CoordinatorLayout::IDS) : nullptr;
+    auto ta = context->obtainStyledAttributes(attrs, styleable::CoordinatorLayout::IDS, defStyleAttr);
     namespace SCL = styleable::CoordinatorLayout;
     std::string keylineArrayRes = ta&&ta->hasValue(SCL::keylines) ? ta->getString(SCL::keylines) : attrs.getString("keylines");
     if (!keylineArrayRes.empty()) {

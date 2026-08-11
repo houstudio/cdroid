@@ -34,8 +34,7 @@ TabWidget::TabWidget(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :LinearLayout(ctx,pAttrs, defStyleAttr){
     const AttributeSet& atts = *pAttrs;
     initTab();
-    Assets* _a = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _a ? _a->obtainStyledAttributes(atts, styleable::TabWidget::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(atts, styleable::TabWidget::IDS, defStyleAttr);
     namespace STW = styleable::TabWidget;
     const bool hasExplicitLeft = ta && ta->hasValue(STW::tabStripLeft);
     if(hasExplicitLeft)

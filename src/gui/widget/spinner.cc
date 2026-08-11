@@ -80,9 +80,7 @@ Spinner::Spinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mTempAdapter = nullptr;
     mForwardingListener = nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        atts, styleable::Spinner::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(atts, styleable::Spinner::IDS, defStyleAttr);
     if (ta) {
     namespace SSP = styleable::Spinner;
 

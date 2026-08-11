@@ -21,9 +21,7 @@ GridView::GridView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     const AttributeSet& atts = *pAttrs;
     initGridView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        atts, styleable::GridView::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(atts, styleable::GridView::IDS, defStyleAttr);
     if (ta) {
     if (ta) {
     namespace SGV = styleable::GridView;

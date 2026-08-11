@@ -181,9 +181,7 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     // sequence below preserves the original order so behaviour is unchanged.
     // aapt2 pre-resolves enums/flags at compile time → binary getInt returns the
     // int directly (no string→enum map on that path); text XML still needs maps.
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::TextView::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(attrs, styleable::TextView::IDS, defStyleAttr);
     if (ta) {
     namespace STV = styleable::TextView;
 
@@ -453,13 +451,11 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     const std::string appearance = attrs.getString("textAppearance");
     if(appearance.empty()==false){
         AttributeSet styleAttrs = ctx->obtainStyledAttributes(appearance);
-        auto taStyle = _assets ? _assets->obtainStyledAttributes(
-            styleAttrs, styleable::TextAppearance::IDS) : nullptr;
+        auto taStyle = ctx->obtainStyledAttributes(styleAttrs, styleable::TextAppearance::IDS, defStyleAttr);
         attributes.readTextAppearance(ctx, taStyle.get());
     }
     {
-        auto taElem = _assets ? _assets->obtainStyledAttributes(
-            attrs, styleable::TextAppearance::IDS) : nullptr;
+        auto taElem = ctx->obtainStyledAttributes(attrs, styleable::TextAppearance::IDS, defStyleAttr);
         attributes.readTextAppearance(ctx, taElem.get());
     }
     applyTextAppearance(&attributes);

@@ -142,9 +142,7 @@ GridLayout::GridLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     const AttributeSet& attrs = *pAttrs;
     initGridLayout();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::GridLayout::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(attrs, styleable::GridLayout::IDS, defStyleAttr);
     namespace SGL = styleable::GridLayout;
 
     setOrientation(ta&&ta->hasValue(SGL::orientation) ? ta->getInt(SGL::orientation,DEFAULT_ORIENTATION) : attrs.getInt("orientation",std::unordered_map<std::string,int>{

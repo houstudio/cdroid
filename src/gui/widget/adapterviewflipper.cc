@@ -28,9 +28,7 @@ AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet* pAtt
     :AdapterViewAnimator(context, pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Assets* _assets = context ? dynamic_cast<Assets*>(context) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::AdapterViewFlipper::IDS) : nullptr;
+    auto ta = context->obtainStyledAttributes(attrs, styleable::AdapterViewFlipper::IDS, defStyleAttr);
     if (ta) {
     namespace SAF = styleable::AdapterViewFlipper;
 

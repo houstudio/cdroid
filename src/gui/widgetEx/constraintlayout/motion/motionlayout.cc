@@ -51,9 +51,7 @@ MotionLayout::MotionLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleA
     const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     // layoutDescription is declared in the ConstraintLayout_Layout styleable.
-    Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = _assets ? _assets->obtainStyledAttributes(
-        attrs, styleable::ConstraintLayoutLayout::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(attrs, styleable::ConstraintLayoutLayout::IDS, defStyleAttr);
     // app:layoutDescription="@xml/..." points at a <MotionScene> resource (bare localname after the
     // XmlPullParser namespace strip). Resolved into a MotionScene on first measure (buildScene).
     mSceneResource = (ta&&ta->hasValue(styleable::ConstraintLayoutLayout::layoutDescription))
