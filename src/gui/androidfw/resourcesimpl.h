@@ -82,6 +82,7 @@ public:
     // --- typed getters (return defaults / 0 / "" on wrong type or not found) ---
     std::string getString(int id) const;        // UTF-8
     std::u16string getText(int id) const;        // UTF-16
+    std::u16string getText(int id, const std::u16string& def) const;  // AOSP getText(id, def)
     int   getInteger(int id) const;
     bool  getBoolean(int id) const;
     float getFloat(int id) const;

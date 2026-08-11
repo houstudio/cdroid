@@ -153,6 +153,11 @@ std::u16string ResourcesImpl::getText(int id) const {
     return std::u16string(tv.string, tv.stringLen);
 }
 
+std::u16string ResourcesImpl::getText(int id, const std::u16string& def) const {
+    std::u16string s = getText(id);
+    return s.empty() ? def : s;
+}
+
 // AOSP Resources.getStringArray/getIntArray/getTextArray — a typed array
 // resource (<string-array>/<integer-array>) is stored as a bag; each map entry
 // is one element. Reads raw values; reference entries (@string/...) are left
