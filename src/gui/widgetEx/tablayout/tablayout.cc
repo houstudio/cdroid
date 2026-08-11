@@ -72,7 +72,11 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
         // resolved style AttributeSet — not the TabLayout styleable).
         mTabTextAppearance = ta->getString(ST::tabTextAppearance);
         const AttributeSet taa = context->obtainStyledAttributes(mTabTextAppearance);
-        mTabTextSize  = taa.getDimensionPixelSize("textSize",0);
+        // AOSP defaults tabTextAppearance to TextAppearance.Design.Tab (never null);
+        // when unset/unresolvable, keep the initTabLayout() default instead of
+        // clobbering to 0 — a 0 text size makes TabView::onMeasure force
+        // setTextSize(0) and the tab labels render invisible.
+        mTabTextSize  = taa.getDimensionPixelSize("textSize", mTabTextSize);
         mTabTextColors= taa.getColorStateList("textColor");
 
         if(ta->hasValue(ST::tabSelectedTextAppearance)){
@@ -155,7 +159,10 @@ void TabLayout::initTabLayout(){
     mTabIndicatorFullWidth = true;
     mSetupViewPagerImplicitly = false;
     mTabIndicatorAnimationDuration = ANIMATION_DURATION;
-    mDefaultTabTextAppearance ="cdroid:attr/textAppearanceTitleSmall";
+    // material's Base.Widget.Design.Tab uses TextAppearance.Design.Tab; CDROID has
+    // no Material3 text appearances (textAppearanceTitleSmall is absent from the
+    // framework), so fall back to the existing framework textAppearanceButton.
+    mDefaultTabTextAppearance ="cdroid:attr/textAppearanceButton";
     mViewPagerScrollState = ViewPager::SCROLL_STATE_IDLE;
     mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
     mSlidingTabIndicator = new SlidingTabIndicator(getContext(),atts,this);

@@ -92,7 +92,9 @@ public:
     // Resolve a theme-attribute reference (?attr/<id>) through the arsc Theme:
     // getAttribute + resolveAttributeReference, so ?android:colorPrimary etc.
     // flatten to a concrete value. Returns true if the theme had the attr.
-    bool arscThemeAttribute(uint32_t attrId, Res_value* out) const;
+    // When outBlock != null, *outBlock receives the owning string-pool block of
+    // the resolved value (needed to resolve TYPE_STRING values via stringAtBlock).
+    bool arscThemeAttribute(uint32_t attrId, Res_value* out, ssize_t* outBlock = nullptr) const;
     // Resolve a theme attribute NAME to its value string. Uses the text mTheme
     // first; in SDK/binary mode mTheme is empty (values only in resources.arsc),
     // so it falls back to the arsc Theme. pkg is a package hint (arscGetIdentifier

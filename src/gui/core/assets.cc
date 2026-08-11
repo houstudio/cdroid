@@ -42,6 +42,7 @@ using namespace Cairo;
 namespace cdroid {
 
 static std::string renderResValue(const Assets* a, const Res_value& v);  // fwd
+static std::string u16toUtf8(const char16_t* s, size_t len);  // fwd (def below)
 
 // Resolve a resource ID through the loaded arsc.
 bool Assets::arscResolveId(uint32_t resId, Res_value* out) const {
@@ -72,7 +73,8 @@ std::string Assets::arscReferenceName(uint32_t resId) const {
 }
 
 // Resolve a theme-attribute reference (?attr/<id>) through the arsc Theme.
-bool Assets::arscThemeAttribute(uint32_t attrId, Res_value* out) const {    if (!mArscTheme || !out) return false;
+bool Assets::arscThemeAttribute(uint32_t attrId, Res_value* out, ssize_t* outBlock) const {
+    if (!mArscTheme || !out) return false;
     Res_value v;
     ssize_t blk = mArscTheme->getAttribute(attrId, &v);
     if (blk < 0) return false;
@@ -80,6 +82,7 @@ bool Assets::arscThemeAttribute(uint32_t attrId, Res_value* out) const {    if (
     blk = mArscTheme->resolveAttributeReference(&v, blk);
     if (blk < 0) return false;
     *out = v;
+    if (outBlock) *outBlock = blk;
     return true;
 }
 
@@ -91,8 +94,19 @@ std::string Assets::themeString(const std::string& key, const std::string& pkg) 
     if (!v.empty() || !mArscTheme || !mResTable) return v;
     uint32_t attrId = arscGetIdentifier(key, "attr", pkg);
     Res_value tv;
-    if (attrId && arscThemeAttribute(attrId, &tv) && tv.data != 0)
+    ssize_t blk = -1;
+    if (attrId && arscThemeAttribute(attrId, &tv, &blk) && tv.data != 0) {
+        // aapt2 stores color/drawable theme values as the file path (TYPE_STRING),
+        // not a reference id; resolve the string from the owning pool block so the
+        // caller (e.g. getColorStateList) can re-resolve it. renderResValue returns
+        // empty for TYPE_STRING, so handle it here.
+        if (tv.dataType == Res_value::TYPE_STRING && blk >= 0) {
+            size_t len = 0;
+            const char16_t* s = mResTable->stringAtBlock(blk, tv.data, &len);
+            if (s && len) return u16toUtf8(s, len);
+        }
         return renderResValue(this, tv);
+    }
     return std::string();
 }
 
