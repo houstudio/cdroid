@@ -37,12 +37,13 @@ cdroid::ColorStateList* Resources::getColorStateList(int id) const {
 }
 
 // AOSP Resources.obtainStyledAttributes(AttributeSet, int[], int, int).
-// Binary-AXML element -> the ResXMLTree resolver; a runtime-resolved style
-// AttributeSet (widget-from-style) -> re-resolve its source style through the
-// arsc theme resolver; a text-XML element set (no style resId) -> null (text
-// ctor path retired on this branch).
+// AttributeSet is nullable (AOSP @Nullable). Binary-AXML element -> the
+// ResXMLTree resolver; a runtime-resolved style AttributeSet (widget-from-style)
+// -> re-resolve its source style through the arsc theme resolver; null or a
+// text-XML element set -> theme + defStyleAttr/defStyleRes only (AOSP
+// obtainStyledAttributes(null, attrs, defStyleAttr, defStyleRes)).
 std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(
-    const AttributeSet& set, const uint32_t* attrs, int defStyleAttr, int defStyleRes) const
+    const AttributeSet* set, const uint32_t* attrs, int defStyleAttr, int defStyleRes) const
 {
     if (mCtx == nullptr) return nullptr;
     const ResTable& rt = getAssets()->getResources(false);
@@ -50,18 +51,28 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(
     size_t count = 0; while (attrs[count]) count++;   // sentinel-terminated
     std::vector<StyledAttr> styled(count);
 
-    const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(&set);
-    if (parser && parser->isBinaryAXML()) {
-        const ResXMLTree* xml = static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree());
-        if (!xml) return nullptr;
-        cdroid::obtainStyledAttributes(*xml, rt, theme, attrs,
-                                        (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
-        return std::make_unique<TypedArray>(rt, std::move(styled), xml, getDisplayMetrics().density, mCtx);
+    if (set != nullptr) {
+        const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(set);
+        if (parser && parser->isBinaryAXML()) {
+            const ResXMLTree* xml = static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree());
+            if (xml) {
+                cdroid::obtainStyledAttributes(*xml, rt, theme, attrs,
+                                                (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
+                return std::make_unique<TypedArray>(rt, std::move(styled), xml, getDisplayMetrics().density, mCtx);
+            }
+        }
+        // widget-from-style: a runtime-resolved style AttributeSet.
+        const int styleResId = set->getStyleResourceId();
+        if (styleResId != 0) {
+            cdroid::obtainStyledAttributes(rt, theme, attrs,
+                                            (uint32_t)defStyleAttr, (uint32_t)styleResId, styled.data());
+            return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, mCtx);
+        }
     }
-    const int styleResId = set.getStyleResourceId();
-    if (styleResId == 0) return nullptr;
+    // null AttributeSet (AOSP new View(ctx, null, defStyleAttr)) or text-XML
+    // element: resolve attrs against the theme + defStyleAttr/defStyleRes only.
     cdroid::obtainStyledAttributes(rt, theme, attrs,
-                                    (uint32_t)defStyleAttr, (uint32_t)styleResId, styled.data());
+                                    (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
     return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, mCtx);
 }
 

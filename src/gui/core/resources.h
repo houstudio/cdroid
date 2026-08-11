@@ -33,9 +33,10 @@ public:
 
     // AOSP Resources.obtainStyledAttributes(...) — resolve a styleable attr set
     // against an XML element (binary AXML), the live theme, or a style resId.
-    // (AttributeSet, attrs[], defStyleAttr, defStyleRes): the element-attr path;
-    // null when the AttributeSet is neither a binary element nor a resolved style.
-    std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet& set,
+    // (AttributeSet, attrs[], defStyleAttr, defStyleRes): AttributeSet is NULLABLE
+    // (AOSP @Nullable — new View(ctx, null, defStyleAttr)); null/text-XML falls
+    // through to theme + defStyleAttr/defStyleRes resolution.
+    std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet* set,
         const uint32_t* attrs, int defStyleAttr = 0, int defStyleRes = 0) const;
     // (attrs[]): theme only.
     std::unique_ptr<TypedArray> obtainStyledAttributes(const uint32_t* attrs) const;
