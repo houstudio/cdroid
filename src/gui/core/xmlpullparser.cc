@@ -482,6 +482,38 @@ float XmlPullParser::getAttributeFloatValue(int index, float defaultValue) const
     return AttributeSet::getAttributeFloatValue(index, defaultValue);
 }
 
+// Find a binary-AXML attribute by bare localname (iterate ResXMLTree attrs).
+int XmlPullParser::binaryAttrIndex(const std::string& name) const {
+    if (!isBinaryAXML()) return -1;
+    const size_t ac = mData->axmlTree->getAttributeCount();
+    for (size_t i = 0; i < ac; i++) {
+        size_t nl = 0;
+        const char16_t* n = mData->axmlTree->getAttributeName(i, &nl);
+        if (n && mData->u16toUtf8(n, nl) == name) return (int)i;
+    }
+    return -1;
+}
+
+// String-key value lookup: binary resolves by name from ResXMLTree (rendered),
+// so name-based reads (attrs.getString/getInt/getColor/...) work without mAttrs.
+const std::string XmlPullParser::getAttributeValue(const std::string& key) const {
+    if (isBinaryAXML()) {
+        const int i = binaryAttrIndex(key);
+        return i >= 0 ? getAttributeValue(i) : std::string();
+    }
+    return AttributeSet::getAttributeValue(key);
+}
+
+bool XmlPullParser::hasAttribute(const std::string& key) const {
+    if (isBinaryAXML()) return binaryAttrIndex(key) >= 0;
+    return AttributeSet::hasAttribute(key);
+}
+
+size_t XmlPullParser::getAttributeCount() const {
+    if (isBinaryAXML()) return mData->axmlTree->getAttributeCount();
+    return AttributeSet::getAttributeCount();
+}
+
 XmlPullParser::~XmlPullParser() {
     XML_ParserFree(mData->parser);
     delete mData;

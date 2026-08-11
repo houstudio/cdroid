@@ -73,8 +73,8 @@ public:
     // signature. 0 = no default-style attribute.
     int getDefStyleAttr() const { return mDefStyleAttr; }
     void setDefStyleAttr(int attrId) { mDefStyleAttr = attrId; }
-    bool hasAttribute(const std::string&key)const;
-    size_t getAttributeCount()const;
+    virtual bool hasAttribute(const std::string&key)const;
+    virtual size_t getAttributeCount()const;
     // Single-pass KV iteration over the present attributes (map order). Templated and header-only so
     // the callback inlines — O(n) with no std::function overhead (index-probing an unordered_map
     // would be O(n) per call → O(n²) for a full sweep).
@@ -88,7 +88,10 @@ public:
     static std::string normalize(const std::string&pkg,const std::string&property);
     int inherit(const AttributeSet&other);
     int Override(const AttributeSet&other);
-    const std::string getAttributeValue(const std::string&key)const;
+    // String-key value lookup. Virtual so a binary XmlPullParser can resolve by
+    // name straight from its ResXMLTree (no mAttrs bridge). The const char*
+    // overload below delegates here.
+    virtual const std::string getAttributeValue(const std::string&key)const;
     const std::string getAttributeValue(const char*key)const;   // const char* overload (binds before the AOSP int-index overload)
     bool getBoolean(const std::string&key,bool def=false)const;
     int getInt(const std::string&key,int def=0)const;

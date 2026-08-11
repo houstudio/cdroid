@@ -669,9 +669,12 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     // applyDelta overlays precisely (only the authored fields) instead of guessing by default-difference.
     // copyAuthoredField maps the known field names; structural attrs (id/motionTarget) are recorded
     // too but ignored by copyAuthoredField's no-op default.
-    a.forEachAttribute([&](const std::string& name, const std::string&) {
-        mAuthored.insert(name);
-    });
+    // Iterate via the virtual index interface (getAttributeCount + getAttributeName)
+    // so this works on a binary XmlPullParser whose mAttrs is no longer populated
+    // (forEachAttribute is a template over mAttrs and can't be overridden).
+    for (size_t i = 0, n = a.getAttributeCount(); i < n; i++) {
+        mAuthored.insert(a.getAttributeName(i));
+    }
 
     Layout& l = layout;
     Transform& t = transform;

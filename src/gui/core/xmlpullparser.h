@@ -79,6 +79,16 @@ public:
     int getAttributeIntValue(int index, int defaultValue) const override;
     int getAttributeUnsignedIntValue(int index, int defaultValue) const override;
     float getAttributeFloatValue(int index, float defaultValue) const override;
+    // String-key value / count / presence — resolve straight from ResXMLTree on
+    // binary AXML (no mAttrs bridge). Lets the binary parser serve name-based
+    // lookups (attrs.getString/hasAttribute/getAttributeCount) after the eager
+    // mAttrs populate is retired.
+    const std::string getAttributeValue(const std::string& key) const override;
+    bool hasAttribute(const std::string& key) const override;
+    size_t getAttributeCount() const override;
+private:
+    // Find a binary-AXML attribute by bare localname; returns its index or -1.
+    int binaryAttrIndex(const std::string& name) const;
 };
-}
+}/*endof namespace*/
 #endif /*__XML_PULLPARSER_H__*/
