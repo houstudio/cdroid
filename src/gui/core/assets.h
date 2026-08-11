@@ -138,8 +138,15 @@ public:
     // Returns null for text XML. `styleable` is a sentinel-terminated attr-id
     // array (trailing 0) = R.styleable.View[] equivalent.
     std::unique_ptr<TypedArray> obtainStyledAttributesTyped(
-        const AttributeSet& attrs, const uint32_t* styleable,
+        const AttributeSet* attrs, const uint32_t* styleable,
         uint32_t defStyleAttr = 0, uint32_t defStyleRes = 0);
+    // Convenience overload for callers holding a non-null AttributeSet& (delegates
+    // to the pointer form). The pointer form above accepts null (AOSP rule).
+    std::unique_ptr<TypedArray> obtainStyledAttributesTyped(
+        const AttributeSet& attrs, const uint32_t* styleable,
+        uint32_t defStyleAttr = 0, uint32_t defStyleRes = 0) {
+        return obtainStyledAttributesTyped(&attrs, styleable, defStyleAttr, defStyleRes);
+    }
 };
 
 }//namespace
