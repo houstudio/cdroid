@@ -153,6 +153,60 @@ std::u16string ResourcesImpl::getText(int id) const {
     return std::u16string(tv.string, tv.stringLen);
 }
 
+// AOSP Resources.getStringArray/getIntArray/getTextArray — a typed array
+// resource (<string-array>/<integer-array>) is stored as a bag; each map entry
+// is one element. Reads raw values; reference entries (@string/...) are left
+// for the caller to follow (rare in arrays).
+std::vector<std::string> ResourcesImpl::getStringArray(int id) const {
+    std::vector<std::string> out;
+    const ResTable& rt = getAssets()->getResources(false);
+    size_t count = 0; ssize_t block = -1;
+    const ResTable_map* map = rt.getBag((uint32_t)id, &count, nullptr, &block);
+    if (!map) return out;
+    for (size_t i = 0; i < count; i++) {
+        const Res_value& v = map[i].value;
+        if (v.dataType == Res_value::TYPE_STRING) {
+            size_t len = 0;
+            const char16_t* s = rt.stringAtBlock(block, v.data, &len);
+            if (s && len) out.push_back(u16to8(s, len));
+        }
+    }
+    return out;
+}
+
+std::vector<std::u16string> ResourcesImpl::getTextArray(int id) const {
+    std::vector<std::u16string> out;
+    const ResTable& rt = getAssets()->getResources(false);
+    size_t count = 0; ssize_t block = -1;
+    const ResTable_map* map = rt.getBag((uint32_t)id, &count, nullptr, &block);
+    if (!map) return out;
+    for (size_t i = 0; i < count; i++) {
+        const Res_value& v = map[i].value;
+        if (v.dataType == Res_value::TYPE_STRING) {
+            size_t len = 0;
+            const char16_t* s = rt.stringAtBlock(block, v.data, &len);
+            if (s && len) out.emplace_back(s, len);
+        }
+    }
+    return out;
+}
+
+std::vector<int> ResourcesImpl::getIntArray(int id) const {
+    std::vector<int> out;
+    const ResTable& rt = getAssets()->getResources(false);
+    size_t count = 0; ssize_t block = -1;
+    const ResTable_map* map = rt.getBag((uint32_t)id, &count, nullptr, &block);
+    if (!map) return out;
+    for (size_t i = 0; i < count; i++) {
+        const Res_value& v = map[i].value;
+        if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX
+            || v.dataType == Res_value::TYPE_INT_BOOLEAN) {
+            out.push_back((int)v.data);
+        }
+    }
+    return out;
+}
+
 int ResourcesImpl::getInteger(int id) const {
     TypedValue tv;
     if (!getValue(id, &tv, true)) return 0;

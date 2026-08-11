@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "restable.h"             // cdroid::ResTable, ResTable_config, Res_value
 #include "assetmanager.h"         // cdroid::AssetManager
@@ -91,6 +92,13 @@ public:
     float getFraction(int id, float base, float pbase) const;
     std::string getQuantityString(int id, int quantity) const;
     std::u16string getQuantityText(int id, int quantity) const;
+
+    // AOSP Resources.getStringArray/getIntArray/getTextArray — read a typed
+    // array resource (<string-array>/<integer-array>) by id. Returns an empty
+    // vector when the id is not an array.
+    std::vector<std::string>   getStringArray(int id) const;   // UTF-8
+    std::vector<std::u16string> getTextArray(int id) const;    // UTF-16 (CharSequence)
+    std::vector<int>           getIntArray(int id) const;
 
     // --- raw / xml assets ---
     Asset* openRawResource(int id, TypedValue* outValue = nullptr) const;
