@@ -45,7 +45,9 @@ namespace {
 class NumberPickerCustomEditText : public EditText {
 public:
     NumberPickerCustomEditText(Context* context, const AttributeSet& attrs)
-        : EditText(context, attrs) {}
+        : NumberPickerCustomEditText(context, &attrs, 0) {}
+    NumberPickerCustomEditText(Context* context, const AttributeSet* pAttrs, int defStyleAttr)
+        : EditText(context, pAttrs, defStyleAttr) {}
 };
 } // namespace
 static InflaterRegister<NumberPickerCustomEditText>

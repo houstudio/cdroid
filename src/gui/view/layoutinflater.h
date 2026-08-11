@@ -114,10 +114,9 @@ public:
     virtual View* onCreateView(Context* viewContext, View* parent, const std::string& name,AttributeSet& attrs);
 };
 
-// SFINAE factory: prefer the AOSP pointer ctor (Context*, const AttributeSet*, int)
-// when T has one (so defStyleAttr flows in); otherwise fall back to the legacy
-// (Context*, const AttributeSet&) ref ctor. Lets widgets migrate to the pointer
-// ctor incrementally without a big-bang factory switch.
+// SFINAE factory: prefer the AOSP pointer ctor when T has one; otherwise fall
+// back to the ref ctor (a few niche widgets — StackView/PlotView — are not yet
+// converted; they need the arsc layer fully ready first).
 namespace detail {
 template<typename T>
 inline View* makeView(Context*ctx,const AttributeSet&attr,int da,std::true_type){
