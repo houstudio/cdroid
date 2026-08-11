@@ -1422,6 +1422,13 @@ std::unique_ptr<TypedArray> Assets::obtainStyledAttributesTyped(
     uint32_t defStyleAttr, uint32_t defStyleRes)
 {
     if (!mResTable) return nullptr;
+    // AOSP: the widget's default-style attribute (defStyleAttr) flows through the
+    // ctor into obtainStyledAttributes. CDROID records it on the AttributeSet
+    // (LayoutInflater::createView sets it from the DECLARE_WIDGET-registered default
+    // style); use it when the caller didn't pass one explicitly, so binary TypedArray
+    // resolution picks up the widget's default style (restable resolves element >
+    // style= > defStyleAttr > defStyleRes).
+    if (defStyleAttr == 0) defStyleAttr = (uint32_t)attrs.getDefStyleAttr();
     size_t count = 0; while (styleable[count]) count++;   // sentinel-terminated
     std::vector<StyledAttr> styled(count);
 

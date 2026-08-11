@@ -273,6 +273,14 @@ View* LayoutInflater::createView(Context* viewContext, const std::string& name, 
     }
     styleName = LayoutInflater::from(viewContext)->getDefaultStyle(name);
     if(!styleName.empty()) {
+        // Record the default-style attribute (defStyleAttr) so the widget ctor's
+        // obtainStyledAttributesTyped applies it (AOSP ctor defStyleAttr flow).
+        // Resolve the DECLARE_WIDGET-registered "pkg:attr/name" to its attr resId.
+        std::string dn = styleName; std::string dpkg;
+        size_t dc = dn.find(':'); if (dc != std::string::npos) dpkg = dn.substr(0, dc);
+        size_t ds = dn.find('/');  if (ds != std::string::npos) dn = dn.substr(ds + 1);
+        int defAttrId = viewContext->getResources().getIdentifier(dn, "attr", dpkg);
+        if (defAttrId) attrs.setDefStyleAttr(defAttrId);
         AttributeSet defstyle = viewContext->obtainStyledAttributes(styleName);
         attrs.inherit(defstyle);
     }

@@ -46,6 +46,10 @@ protected:
     // obtainStyledAttributesTyped can re-resolve it through the arsc theme
     // resolver (raw Res_values) instead of string-parsing. 0 = not a style set.
     int mStyleResId = 0;
+    // The widget's default-style attr id (defStyleAttr), set by LayoutInflater from
+    // the DECLARE_WIDGET2/3-registered default style; consumed by
+    // obtainStyledAttributesTyped. 0 = none.
+    int mDefStyleAttr = 0;
 public:
     AttributeSet();
     AttributeSet(const AttributeSet&);
@@ -61,6 +65,14 @@ public:
     // The source style resId if this AttributeSet is a resolved style (else 0).
     int getStyleResourceId() const { return mStyleResId; }
     void setStyleResourceId(int resId) { mStyleResId = resId; }
+    // The widget's default-style attribute (defStyleAttr, e.g. android.R.attr#
+    // buttonStyle) recorded by DECLARE_WIDGET2/3. AOSP flows this through the ctor
+    // into obtainStyledAttributes(attrs, styleable, defStyleAttr, 0); CDROID records
+    // it on the AttributeSet (LayoutInflater::createView sets it from the registered
+    // default style) so obtainStyledAttributesTyped can apply it without a 3-arg ctor
+    // signature. 0 = no default-style attribute.
+    int getDefStyleAttr() const { return mDefStyleAttr; }
+    void setDefStyleAttr(int attrId) { mDefStyleAttr = attrId; }
     bool hasAttribute(const std::string&key)const;
     size_t getAttributeCount()const;
     // Single-pass KV iteration over the present attributes (map order). Templated and header-only so
