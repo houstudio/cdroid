@@ -289,8 +289,8 @@ setHorizontallyScrolling(scrollHorizontally);
 
 setCompoundDrawablesWithIntrinsicBounds(drawableLeft, drawableTop, drawableRight, drawableBottom);
 if(mDrawables){
-    mDrawables->mTintList = attrs.getColorStateList("drawableTint");
-    mDrawables->mTintMode = attrs.getTintMode("drawableTintMode",PorterDuff::NOOP);
+    mDrawables->mTintList = ta->getColorStateList(STV::drawableTint);
+    mDrawables->mTintMode = (PorterDuff::Mode)ta->getInt(STV::drawableTintMode, PorterDuff::NOOP);
 }
 applyCompoundDrawableTint();
 setRelativeDrawablesIfNeeded(drawableStart, drawableEnd);
