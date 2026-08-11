@@ -210,8 +210,7 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
 }
 
 void AnimatedRotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedRotateDrawable::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(atts, styleable::AnimatedRotateDrawable::IDS);
     if (ta) updateStateFromTypedArray(*ta);
     // frameDuration/framesCount lack a framework arsc id (CDROID-private): read via
     // the string bridge (text-XML works; binary returns the default — harmless).
