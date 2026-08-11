@@ -81,39 +81,39 @@ Spinner::Spinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mForwardingListener = nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = ctx->obtainStyledAttributes(atts, styleable::Spinner::IDS, defStyleAttr);
-    if (ta) {
-    namespace SSP = styleable::Spinner;
+    
+namespace SSP = styleable::Spinner;
 
-    mGravity = ta->getInt(SSP::gravity,Gravity::CENTER);
-    mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);
-    const int mode = ta->getInt(SSP::spinnerMode,MODE_DIALOG);
+mGravity = ta->getInt(SSP::gravity,Gravity::CENTER);
+mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);
+const int mode = ta->getInt(SSP::spinnerMode,MODE_DIALOG);
 
-    Drawable*dr;
-    DropdownPopup* popup;
-    switch(mode){
-    case MODE_DIALOG:
-         mPopup = new DialogPopup(this);
-         mPopup->setPromptText(ta->getString(SSP::prompt));
-         break;
-    case MODE_DROPDOWN:
-         popup = new DropdownPopup(ctx,this,"cdroid:attr/spinnerStyle");
-         mDropDownWidth = ta->getLayoutDimension(SSP::dropDownWidth,LayoutParams::WRAP_CONTENT);
-         dr = ta->getDrawable(SSP::dropDownSelector);
-         if(dr)popup->setListSelector(dr);
-         dr = mContext->getDrawable(ta->getString(SSP::popupBackground));
-         if(dr)popup->setBackgroundDrawable(dr);
-         popup->setPromptText(ta->getString(SSP::prompt));
-         mPopup = popup;
-         mForwardingListener = new SpinnerForwardingListener(this,popup);
-         break;
-    }
-    // Base constructor can call setAdapter before we initialize mPopup.
-    // Finish setting things up if this happened.
-    if (mTempAdapter != nullptr) {
-        setAdapter(mTempAdapter);
-        mTempAdapter = nullptr;
-    }
-    }
+Drawable*dr;
+DropdownPopup* popup;
+switch(mode){
+case MODE_DIALOG:
+     mPopup = new DialogPopup(this);
+     mPopup->setPromptText(ta->getString(SSP::prompt));
+     break;
+case MODE_DROPDOWN:
+     popup = new DropdownPopup(ctx,this,"cdroid:attr/spinnerStyle");
+     mDropDownWidth = ta->getLayoutDimension(SSP::dropDownWidth,LayoutParams::WRAP_CONTENT);
+     dr = ta->getDrawable(SSP::dropDownSelector);
+     if(dr)popup->setListSelector(dr);
+     dr = mContext->getDrawable(ta->getString(SSP::popupBackground));
+     if(dr)popup->setBackgroundDrawable(dr);
+     popup->setPromptText(ta->getString(SSP::prompt));
+     mPopup = popup;
+     mForwardingListener = new SpinnerForwardingListener(this,popup);
+     break;
+}
+// Base constructor can call setAdapter before we initialize mPopup.
+// Finish setting things up if this happened.
+if (mTempAdapter != nullptr) {
+    setAdapter(mTempAdapter);
+    mTempAdapter = nullptr;
+}
+
 }
 
 Spinner::~Spinner(){

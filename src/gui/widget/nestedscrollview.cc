@@ -60,10 +60,10 @@ NestedScrollView::NestedScrollView(Context* context,const AttributeSet* pAttrs,i
     initScrollView(&attrs);
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(attrs, styleable::ScrollView::IDS, defStyleAttr);
-    if (ta) {
-    namespace SNS = styleable::ScrollView;
-    setFillViewport(ta->getBoolean(SNS::fillViewport,false));
-    }
+    
+namespace SNS = styleable::ScrollView;
+setFillViewport(ta->getBoolean(SNS::fillViewport,false));
+
 }
 
 NestedScrollView::~NestedScrollView(){

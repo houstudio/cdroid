@@ -22,25 +22,25 @@ GridView::GridView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     initGridView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = ctx->obtainStyledAttributes(atts, styleable::GridView::IDS, defStyleAttr);
-    if (ta) {
-    if (ta) {
-    namespace SGV = styleable::GridView;
+    
 
-    setHorizontalSpacing(ta->getDimensionPixelOffset(SGV::horizontalSpacing,10));
-    setVerticalSpacing(ta->getDimensionPixelOffset(SGV::verticalSpacing,0));
-    int index = ta->getInt(SGV::stretchMode,STRETCH_COLUMN_WIDTH);
-    if(index>=0)setStretchMode(index);
-    const int columnWidth = ta->getDimensionPixelOffset(SGV::columnWidth, -1);
-    if (columnWidth > 0)
-        setColumnWidth(columnWidth);
-    const int numColumns = ta->getInt(SGV::numColumns, 1);
-    setNumColumns(numColumns);
-    index = ta->getInt(SGV::gravity, -1);
-    if (index >= 0) {
-        setGravity(index);
-    }
-    }
-    }
+namespace SGV = styleable::GridView;
+
+setHorizontalSpacing(ta->getDimensionPixelOffset(SGV::horizontalSpacing,10));
+setVerticalSpacing(ta->getDimensionPixelOffset(SGV::verticalSpacing,0));
+int index = ta->getInt(SGV::stretchMode,STRETCH_COLUMN_WIDTH);
+if(index>=0)setStretchMode(index);
+const int columnWidth = ta->getDimensionPixelOffset(SGV::columnWidth, -1);
+if (columnWidth > 0)
+setColumnWidth(columnWidth);
+const int numColumns = ta->getInt(SGV::numColumns, 1);
+setNumColumns(numColumns);
+index = ta->getInt(SGV::gravity, -1);
+if (index >= 0) {
+setGravity(index);
+}
+
+
 }
 
 void GridView::initGridView() {

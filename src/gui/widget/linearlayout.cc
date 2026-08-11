@@ -114,52 +114,32 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet* pAttrs,int defSt
     mShowDividers = SHOW_DIVIDER_NONE;
     mDividerPadding = 0;
 
-    if (ta) {
-        for (size_t n = ta->getIndexCount(); n > 0; ) {
-            size_t i = ta->getIndex(--n);
-            switch (i) {
-            case styleable::LinearLayout::orientation:
-                setOrientation(ta->getInt(i, (int)HORIZONTAL)); break;
-            case styleable::LinearLayout::gravity:
-                setGravity(ta->getInt(i, Gravity::NO_GRAVITY)); break;
-            case styleable::LinearLayout::baselineAligned:
-                setBaselineAligned(ta->getBoolean(i, true)); break;
-            case styleable::LinearLayout::baselineAlignedChildIndex:
-                mBaselineAlignedChildIndex = ta->getInt(i, -1); break;
-            case styleable::LinearLayout::weightSum:
-                mWeightSum = ta->getFloat(i, -1.f); break;
-            case styleable::LinearLayout::measureWithLargestChild:
-                mUseLargestChild = ta->getBoolean(i, false); break;
-            case styleable::LinearLayout::showDividers:
-                mShowDividers = ta->getInt(i, SHOW_DIVIDER_NONE); break;
-            case styleable::LinearLayout::divider:
-                setDividerDrawable(ta->getDrawable(i)); break;
-            case styleable::LinearLayout::dividerPadding:
-                mDividerPadding = ta->getInt(i, 0); break;
-            default: break;
-            }
+    
+    for (size_t n = ta->getIndexCount(); n > 0; ) {
+        size_t i = ta->getIndex(--n);
+        switch (i) {
+        case styleable::LinearLayout::orientation:
+            setOrientation(ta->getInt(i, (int)HORIZONTAL)); break;
+        case styleable::LinearLayout::gravity:
+            setGravity(ta->getInt(i, Gravity::NO_GRAVITY)); break;
+        case styleable::LinearLayout::baselineAligned:
+            setBaselineAligned(ta->getBoolean(i, true)); break;
+        case styleable::LinearLayout::baselineAlignedChildIndex:
+            mBaselineAlignedChildIndex = ta->getInt(i, -1); break;
+        case styleable::LinearLayout::weightSum:
+            mWeightSum = ta->getFloat(i, -1.f); break;
+        case styleable::LinearLayout::measureWithLargestChild:
+            mUseLargestChild = ta->getBoolean(i, false); break;
+        case styleable::LinearLayout::showDividers:
+            mShowDividers = ta->getInt(i, SHOW_DIVIDER_NONE); break;
+        case styleable::LinearLayout::divider:
+            setDividerDrawable(ta->getDrawable(i)); break;
+        case styleable::LinearLayout::dividerPadding:
+            mDividerPadding = ta->getInt(i, 0); break;
+        default: break;
         }
-    } else {
-        // Text XML fallback.
-        int index = attrs.getInt("orientation", std::unordered_map<std::string,int>{
-            {"horizontal",LinearLayout::HORIZONTAL},
-            {"vertical",LinearLayout::VERTICAL}
-        }, -1);
-        if (index < 0) index = attrs.getInt("orientation", -1);
-        if(index >= 0) setOrientation(index);
-        index = attrs.getGravity("gravity", -1);
-        if(index >= 0) setGravity(index);
-        setBaselineAligned(attrs.getBoolean("baselineAligned", true));
-        mWeightSum = attrs.getFloat("weightSum", -1.f);
-        mBaselineAlignedChildIndex = attrs.getInt("baselineAlignedChildIndex", -1);
-        mUseLargestChild = attrs.getBoolean("measureWithLargestChild", false);
-        mShowDividers = attrs.getInt("showDividers", std::unordered_map<std::string,int>{
-            {"none",SHOW_DIVIDER_NONE}, {"beginning",SHOW_DIVIDER_BEGINNING},
-            {"middle",SHOW_DIVIDER_MIDDLE}, {"end",SHOW_DIVIDER_END}
-        }, SHOW_DIVIDER_NONE);
-        mDividerPadding = attrs.getInt("dividerPadding", 0);
-        setDividerDrawable(attrs.getDrawable("divider"));
     }
+
 }
 
 LinearLayout::~LinearLayout() {

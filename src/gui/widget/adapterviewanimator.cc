@@ -31,26 +31,26 @@ AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet* pA
     initViewAnimator();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(attrs, styleable::AdapterViewAnimator::IDS, defStyleAttr);
-    if (ta) {
-    namespace SAV = styleable::AdapterViewAnimator;
+    
+namespace SAV = styleable::AdapterViewAnimator;
 
-    std::string res = ta->getString(SAV::inAnimation);
-    if(res.empty())
-        setInAnimation(getDefaultInAnimation());
-    else
-        setInAnimation(context,res);
-    res = ta->getString(SAV::outAnimation);
+std::string res = ta->getString(SAV::inAnimation);
+if(res.empty())
+    setInAnimation(getDefaultInAnimation());
+else
+    setInAnimation(context,res);
+res = ta->getString(SAV::outAnimation);
 
-    if(res.empty())
-        setOutAnimation(getDefaultOutAnimation());
-    else
-        setOutAnimation(context,res);
+if(res.empty())
+    setOutAnimation(getDefaultOutAnimation());
+else
+    setOutAnimation(context,res);
 
-    const bool flag = ta->getBoolean(SAV::animateFirstView,true);
-    setAnimateFirstView(flag);
-    mLoopViews = ta->getBoolean(SAV::loopViews,false);
-    initViewAnimator();
-    }
+const bool flag = ta->getBoolean(SAV::animateFirstView,true);
+setAnimateFirstView(flag);
+mLoopViews = ta->getBoolean(SAV::loopViews,false);
+initViewAnimator();
+
 }
 
 AdapterViewAnimator::~AdapterViewAnimator(){

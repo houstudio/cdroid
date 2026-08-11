@@ -35,12 +35,12 @@ Chronometer::Chronometer(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = ctx->obtainStyledAttributes(atts, styleable::Chronometer::IDS, defStyleAttr);
-    if (ta) {
-    namespace SCH = styleable::Chronometer;
-    setFormat(ta->getString(SCH::format));
-    setCountDown(ta->getBoolean(SCH::countDown,false));
-    mColonBlinking = atts.getBoolean("colonBlinking",mColonBlinking);
-    }
+    
+namespace SCH = styleable::Chronometer;
+setFormat(ta->getString(SCH::format));
+setCountDown(ta->getBoolean(SCH::countDown,false));
+mColonBlinking = atts.getBoolean("colonBlinking",mColonBlinking);
+
 }
 
 void Chronometer::init(){

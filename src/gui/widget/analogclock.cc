@@ -37,14 +37,14 @@ AnalogClock::AnalogClock(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
     initAnalog();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = ctx->obtainStyledAttributes(attrs, styleable::AnalogClock::IDS, defStyleAttr);
-    if (ta) {
-    namespace SAC = styleable::AnalogClock;
+    
+namespace SAC = styleable::AnalogClock;
 
-    setDial (ta->getDrawable(SAC::dial));
-    setHourHand( ta->getDrawable(SAC::hand_hour));
-    setMinuteHand( ta->getDrawable(SAC::hand_minute));
-    setSecondHand( ta->getDrawable(SAC::hand_second));
-    }
+setDial (ta->getDrawable(SAC::dial));
+setHourHand( ta->getDrawable(SAC::hand_hour));
+setMinuteHand( ta->getDrawable(SAC::hand_minute));
+setSecondHand( ta->getDrawable(SAC::hand_second));
+
 }
 
 AnalogClock::AnalogClock(int w,int h):View(w,h){

@@ -29,18 +29,18 @@ AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet* pAtt
     const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(attrs, styleable::AdapterViewFlipper::IDS, defStyleAttr);
-    if (ta) {
-    namespace SAF = styleable::AdapterViewFlipper;
+    
+namespace SAF = styleable::AdapterViewFlipper;
 
-    mFlipInterval = ta->getInt(SAF::flipInterval, DEFAULT_INTERVAL);
-    mAutoStart = ta->getBoolean(SAF::autoStart, false);
+mFlipInterval = ta->getInt(SAF::flipInterval, DEFAULT_INTERVAL);
+mAutoStart = ta->getBoolean(SAF::autoStart, false);
 
-    // A view flipper should cycle through the views
-    mLoopViews = true;
-    mFlipRunnable = [this](){
-        if (mRunning) showNext();
-    };
-    }
+// A view flipper should cycle through the views
+mLoopViews = true;
+mFlipRunnable = [this](){
+    if (mRunning) showNext();
+};
+
 }
 
 void AdapterViewFlipper::onAttachedToWindow() {

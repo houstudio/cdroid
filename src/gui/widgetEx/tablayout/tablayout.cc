@@ -53,75 +53,75 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
     // tabIndicatorGravity / tabMode / tabGravity) at compile time, so getInt reads
     // them directly — no runtime enum map needed.
     auto ta = context->obtainStyledAttributes(atts, styleable::TabLayout::IDS, defStyleAttr);
-    if (ta) {
-        namespace ST = styleable::TabLayout;
+    
+    namespace ST = styleable::TabLayout;
 
-        setTabIndicatorAnimationMode(ta->getInt(ST::tabIndicatorAnimationMode, INDICATOR_ANIMATION_MODE_LINEAR));
-        setSelectedTabIndicator(ta->getDrawable(ST::tabIndicator));
-        setSelectedTabIndicatorColor(ta->getColor(ST::tabIndicatorColor, 0));
-        mSlidingTabIndicator->setSelectedIndicatorHeight(ta->getDimensionPixelSize(ST::tabIndicatorHeight, 2));
-        setSelectedTabIndicatorGravity(ta->getInt(ST::tabIndicatorGravity, INDICATOR_GRAVITY_BOTTOM));
-        setTabIndicatorFullWidth(ta->getBoolean(ST::tabIndicatorFullWidth, true));
+    setTabIndicatorAnimationMode(ta->getInt(ST::tabIndicatorAnimationMode, INDICATOR_ANIMATION_MODE_LINEAR));
+    setSelectedTabIndicator(ta->getDrawable(ST::tabIndicator));
+    setSelectedTabIndicatorColor(ta->getColor(ST::tabIndicatorColor, 0));
+    mSlidingTabIndicator->setSelectedIndicatorHeight(ta->getDimensionPixelSize(ST::tabIndicatorHeight, 2));
+    setSelectedTabIndicatorGravity(ta->getInt(ST::tabIndicatorGravity, INDICATOR_GRAVITY_BOTTOM));
+    setTabIndicatorFullWidth(ta->getBoolean(ST::tabIndicatorFullWidth, true));
 
-        mTabPaddingStart = mTabPaddingTop = mTabPaddingEnd =
-            mPaddingBottom = ta->getDimensionPixelSize(ST::tabPadding, 0);
-        mTabPaddingStart = ta->getDimensionPixelSize(ST::tabPaddingStart, mTabPaddingStart);
-        mTabPaddingEnd   = ta->getDimensionPixelSize(ST::tabPaddingEnd, mTabPaddingEnd);
-        mTabPaddingTop   = ta->getDimensionPixelSize(ST::tabPaddingTop, mTabPaddingTop);
-        mTabPaddingBottom= ta->getDimensionPixelSize(ST::tabPaddingBottom, mTabPaddingBottom);
+    mTabPaddingStart = mTabPaddingTop = mTabPaddingEnd =
+        mPaddingBottom = ta->getDimensionPixelSize(ST::tabPadding, 0);
+    mTabPaddingStart = ta->getDimensionPixelSize(ST::tabPaddingStart, mTabPaddingStart);
+    mTabPaddingEnd   = ta->getDimensionPixelSize(ST::tabPaddingEnd, mTabPaddingEnd);
+    mTabPaddingTop   = ta->getDimensionPixelSize(ST::tabPaddingTop, mTabPaddingTop);
+    mTabPaddingBottom= ta->getDimensionPixelSize(ST::tabPaddingBottom, mTabPaddingBottom);
 
-        // tabTextAppearance references a style; resolve it for the framework
-        // textSize/textColor sub-attrs (these are framework attrs, read off the
-        // resolved style AttributeSet — not the TabLayout styleable).
-        mTabTextAppearance = ta->getString(ST::tabTextAppearance);
-        const AttributeSet taa = context->obtainStyledAttributes(mTabTextAppearance);
-        // Resolve the TextAppearance style through the arsc (styleable::TextAppearance),
-        // reading the framework textSize/textColor sub-attrs typed. Keep the
-        // initTabLayout() defaults when the style is unset/unresolvable — a 0 text
-        // size makes TabView::onMeasure force setTextSize(0) (invisible labels).
-        auto taaTa = context->obtainStyledAttributes(taa, styleable::TextAppearance::IDS, defStyleAttr);
-        namespace STA = styleable::TextAppearance;
-        mTabTextSize  = taaTa ? taaTa->getDimensionPixelSize(STA::textSize, mTabTextSize) : mTabTextSize;
-        mTabTextColors= taaTa ? taaTa->getColorStateList(STA::textColor) : mTabTextColors;
+    // tabTextAppearance references a style; resolve it for the framework
+    // textSize/textColor sub-attrs (these are framework attrs, read off the
+    // resolved style AttributeSet — not the TabLayout styleable).
+    mTabTextAppearance = ta->getString(ST::tabTextAppearance);
+    const AttributeSet taa = context->obtainStyledAttributes(mTabTextAppearance);
+    // Resolve the TextAppearance style through the arsc (styleable::TextAppearance),
+    // reading the framework textSize/textColor sub-attrs typed. Keep the
+    // initTabLayout() defaults when the style is unset/unresolvable — a 0 text
+    // size makes TabView::onMeasure force setTextSize(0) (invisible labels).
+    auto taaTa = context->obtainStyledAttributes(taa, styleable::TextAppearance::IDS, defStyleAttr);
+    namespace STA = styleable::TextAppearance;
+    mTabTextSize  = taaTa ? taaTa->getDimensionPixelSize(STA::textSize, mTabTextSize) : mTabTextSize;
+    mTabTextColors= taaTa ? taaTa->getColorStateList(STA::textColor) : mTabTextColors;
 
-        if(ta->hasValue(ST::tabSelectedTextAppearance)){
-            mSelectedTabTextAppearance = ta->getString(ST::tabSelectedTextAppearance);
-        }
-        if(!mSelectedTabTextAppearance.empty()){
-            const AttributeSet sa=context->obtainStyledAttributes(mSelectedTabTextAppearance);
-            auto saTa = context->obtainStyledAttributes(sa, styleable::TextAppearance::IDS, defStyleAttr);
-            mSelectedTabTextSize = saTa ? saTa->getDimensionPixelSize(STA::textSize, 0) : 0;
-            auto selectedTabTextColor = saTa ? saTa->getColorStateList(STA::textColor) : nullptr;
-            if(selectedTabTextColor!=nullptr){
-                mTabTextColors = createColorStateList(mTabTextColors->getDefaultColor(),
-                        selectedTabTextColor->getColorForState({StateSet::VIEW_STATE_SELECTED}, selectedTabTextColor->getDefaultColor()));
-            }
-        }
-
-        if(ta->hasValue(ST::tabTextColor)) {
-            auto csl = ta->getColorStateList(ST::tabTextColor);
-            if (csl) mTabTextColors = csl;
-        } else{
-            mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
-        }
-
-        if(ta->hasValue(ST::tabSelectedTextColor)){
-            const int selected = ta->getColor(ST::tabSelectedTextColor,0);
-            const int defColor = mTabTextColors->getDefaultColor();
-            mTabTextColors = createColorStateList(defColor, selected);
-        }
-
-        mTabIndicatorAnimationDuration = ta->getInt(ST::tabIndicatorAnimationDuration,ANIMATION_DURATION);
-        mRequestedTabMinWidth = ta->getDimensionPixelSize(ST::tabMinWidth, -1);
-        mRequestedTabMaxWidth = ta->getDimensionPixelSize(ST::tabMaxWidth, -1);
-
-        mTabBackgroundResId= ta->getString(ST::tabBackground);
-        mContentInsetStart  = ta->getDimensionPixelSize(ST::tabContentStart, 0);
-        mMode = ta->getInt(ST::tabMode, mMode);
-        mSmoothScroll = ta->getBoolean(ST::smoothScroll,true);
-        mTabGravity = ta->getInt(ST::tabGravity,GRAVITY_FILL);
-        mInlineLabel= ta->getBoolean(ST::tabInlineLabel,false);
+    if(ta->hasValue(ST::tabSelectedTextAppearance)){
+        mSelectedTabTextAppearance = ta->getString(ST::tabSelectedTextAppearance);
     }
+    if(!mSelectedTabTextAppearance.empty()){
+        const AttributeSet sa=context->obtainStyledAttributes(mSelectedTabTextAppearance);
+        auto saTa = context->obtainStyledAttributes(sa, styleable::TextAppearance::IDS, defStyleAttr);
+        mSelectedTabTextSize = saTa ? saTa->getDimensionPixelSize(STA::textSize, 0) : 0;
+        auto selectedTabTextColor = saTa ? saTa->getColorStateList(STA::textColor) : nullptr;
+        if(selectedTabTextColor!=nullptr){
+            mTabTextColors = createColorStateList(mTabTextColors->getDefaultColor(),
+                    selectedTabTextColor->getColorForState({StateSet::VIEW_STATE_SELECTED}, selectedTabTextColor->getDefaultColor()));
+        }
+    }
+
+    if(ta->hasValue(ST::tabTextColor)) {
+        auto csl = ta->getColorStateList(ST::tabTextColor);
+        if (csl) mTabTextColors = csl;
+    } else{
+        mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
+    }
+
+    if(ta->hasValue(ST::tabSelectedTextColor)){
+        const int selected = ta->getColor(ST::tabSelectedTextColor,0);
+        const int defColor = mTabTextColors->getDefaultColor();
+        mTabTextColors = createColorStateList(defColor, selected);
+    }
+
+    mTabIndicatorAnimationDuration = ta->getInt(ST::tabIndicatorAnimationDuration,ANIMATION_DURATION);
+    mRequestedTabMinWidth = ta->getDimensionPixelSize(ST::tabMinWidth, -1);
+    mRequestedTabMaxWidth = ta->getDimensionPixelSize(ST::tabMaxWidth, -1);
+
+    mTabBackgroundResId= ta->getString(ST::tabBackground);
+    mContentInsetStart  = ta->getDimensionPixelSize(ST::tabContentStart, 0);
+    mMode = ta->getInt(ST::tabMode, mMode);
+    mSmoothScroll = ta->getBoolean(ST::smoothScroll,true);
+    mTabGravity = ta->getInt(ST::tabGravity,GRAVITY_FILL);
+    mInlineLabel= ta->getBoolean(ST::tabInlineLabel,false);
+
     applyModeAndGravity();
 }
 

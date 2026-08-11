@@ -38,17 +38,15 @@ FrameLayout::FrameLayout(Context* context,const AttributeSet* pAttrs,int defStyl
     mMeasureAllChildren = false;
     {
         auto ta = context->obtainStyledAttributes(attrs, styleable::FrameLayout::IDS, defStyleAttr);
-    if (ta) {
-        if (ta) {
-            for (size_t n = ta->getIndexCount(); n > 0; ) {
-                size_t i = ta->getIndex(--n);
-                if (i == styleable::FrameLayout::measureAllChildren)
-                    mMeasureAllChildren = ta->getBoolean(i, false);
-            }
-        } else {
-            mMeasureAllChildren = attrs.getBoolean("measureAllChildren", false);
-        }
+    
+    
+    for (size_t n = ta->getIndexCount(); n > 0; ) {
+        size_t i = ta->getIndex(--n);
+        if (i == styleable::FrameLayout::measureAllChildren)
+            mMeasureAllChildren = ta->getBoolean(i, false);
     }
+
+
     mForegroundPaddingLeft = mForegroundPaddingRight  = 0;
     mForegroundPaddingTop  = mForegroundPaddingBottom = 0;
     }

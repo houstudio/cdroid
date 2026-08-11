@@ -182,444 +182,314 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     // aapt2 pre-resolves enums/flags at compile time → binary getInt returns the
     // int directly (no string→enum map on that path); text XML still needs maps.
     auto ta = ctx->obtainStyledAttributes(attrs, styleable::TextView::IDS, defStyleAttr);
-    if (ta) {
-    namespace STV = styleable::TextView;
+    
+namespace STV = styleable::TextView;
 
-    // --- gather phase: locals filled by the switch (binary) or attrs (text) ---
-    bool scrollHorizontally = mHorizontallyScrolling;
-    Drawable *drawableLeft=nullptr,*drawableTop=nullptr,*drawableRight=nullptr,
-             *drawableBottom=nullptr,*drawableStart=nullptr,*drawableEnd=nullptr;
-    bool selectallonfocus = false;
-    int drawablePadding = 0;
-    int maxLines=-1, minLines=-1, lines=-1;
-    int heightV=-1, minHeightV=-1, maxHeightV=mMaximum;
-    float textScaleX = 1.f;
-    int minWidthV=INT_MIN, maxWidthV=INT_MAX;
-    bool singleLineAttr = mSingleLine;
-    int gravity = Gravity::TOP|Gravity::START;
-    int maxLength = -1;
-    int lineSpacingExtra = 0; float lineSpacingMultiplier = 1.f;
-    int inputType = EditorInfo::TYPE_NULL;
-    int breakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
-    int marqueeRepeatLimit = mMarqueeRepeatLimit;
-    int ellipsize = ELLIPSIZE_NOT_SET;
-    bool hasMaxEms=false,hasEms=false,hasMinEms=false,hasWidth=false;
-    int maxEmsV=-1,emsV=-1,minEmsV=-1,widthV=-1;
-    bool includeFontPadding=true, cursorVisible=true, enabledAttr=isEnabled();
-    int autoLink = mAutoLinkMask;
-    bool linksClickable = true;
-    int hyphenationFrequency = mHyphenationFrequency;
-    int justificationMode = mJustificationMode;
-    bool textIsSelectable = false;
-    bool hasImeOptions=false; int imeOptions=EditorInfo::IME_NULL;
-    std::string inputMethod, digits;
-    bool phone=false; int numeric=0; bool autotext=false; int autocap=-1;
-    bool editable=getDefaultEditable(); int buffertype=0; bool password=false;
-    int lineHeight=-1, firstBaselineToTopHeight=-1, lastBaselineToBottomHeight=-1;
+// --- gather phase: locals filled by the switch (binary) or attrs (text) ---
+bool scrollHorizontally = mHorizontallyScrolling;
+Drawable *drawableLeft=nullptr,*drawableTop=nullptr,*drawableRight=nullptr,
+         *drawableBottom=nullptr,*drawableStart=nullptr,*drawableEnd=nullptr;
+bool selectallonfocus = false;
+int drawablePadding = 0;
+int maxLines=-1, minLines=-1, lines=-1;
+int heightV=-1, minHeightV=-1, maxHeightV=mMaximum;
+float textScaleX = 1.f;
+int minWidthV=INT_MIN, maxWidthV=INT_MAX;
+bool singleLineAttr = mSingleLine;
+int gravity = Gravity::TOP|Gravity::START;
+int maxLength = -1;
+int lineSpacingExtra = 0; float lineSpacingMultiplier = 1.f;
+int inputType = EditorInfo::TYPE_NULL;
+int breakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
+int marqueeRepeatLimit = mMarqueeRepeatLimit;
+int ellipsize = ELLIPSIZE_NOT_SET;
+bool hasMaxEms=false,hasEms=false,hasMinEms=false,hasWidth=false;
+int maxEmsV=-1,emsV=-1,minEmsV=-1,widthV=-1;
+bool includeFontPadding=true, cursorVisible=true, enabledAttr=isEnabled();
+int autoLink = mAutoLinkMask;
+bool linksClickable = true;
+int hyphenationFrequency = mHyphenationFrequency;
+int justificationMode = mJustificationMode;
+bool textIsSelectable = false;
+bool hasImeOptions=false; int imeOptions=EditorInfo::IME_NULL;
+std::string inputMethod, digits;
+bool phone=false; int numeric=0; bool autotext=false; int autocap=-1;
+bool editable=getDefaultEditable(); int buffertype=0; bool password=false;
+int lineHeight=-1, firstBaselineToTopHeight=-1, lastBaselineToBottomHeight=-1;
 
-    if (ta) {
-        for (size_t n = ta->getIndexCount(); n > 0; ) {
-            size_t i = ta->getIndex(--n);
-            switch (i) {
-            case STV::scrollHorizontally: scrollHorizontally = ta->getBoolean(i, false); break;
-            case STV::drawableLeft:   drawableLeft = ta->getDrawable(i); break;
-            case STV::drawableTop:    drawableTop = ta->getDrawable(i); break;
-            case STV::drawableRight:  drawableRight = ta->getDrawable(i); break;
-            case STV::drawableBottom: drawableBottom = ta->getDrawable(i); break;
-            // Relative drawables: resolved against layoutDirection later
-            // (Drawables::resolveWithLayoutDirection). Kept separate from L/R.
-            case STV::drawableStart:  drawableStart = ta->getDrawable(i); break;
-            case STV::drawableEnd:    drawableEnd = ta->getDrawable(i); break;
-            case STV::selectAllOnFocus: selectallonfocus = ta->getBoolean(i, false); break;
-            case STV::drawablePadding: drawablePadding = ta->getDimensionPixelSize(i, 0); break;
-            case STV::maxLines: maxLines = ta->getInt(i, -1); break;
-            case STV::minLines: minLines = ta->getInt(i, -1); break;
-            case STV::lines: lines = ta->getInt(i, -1); break;
-            case STV::height: heightV = ta->getDimensionPixelSize(i, -1); break;
-            case STV::minHeight: minHeightV = ta->getDimensionPixelSize(i, -1); break;
-            case STV::maxHeight: maxHeightV = ta->getDimensionPixelSize(i, mMaximum); break;
-            case STV::textScaleX: textScaleX = ta->getFloat(i, 1.f); break;
-            case STV::minWidth: minWidthV = ta->getDimensionPixelSize(i, INT_MIN); break;
-            case STV::maxWidth: maxWidthV = ta->getDimensionPixelSize(i, INT_MAX); break;
-            case STV::singleLine: singleLineAttr = ta->getBoolean(i, mSingleLine); break;
-            case STV::gravity: gravity = ta->getInt(i, Gravity::TOP|Gravity::START); break;
-            case STV::maxLength: maxLength = ta->getInt(i, -1); break;
-            case STV::lineSpacingExtra: lineSpacingExtra = ta->getDimensionPixelSize(i, 0); break;
-            case STV::lineSpacingMultiplier: lineSpacingMultiplier = ta->getFloat(i, 1.f); break;
-            case STV::inputType: inputType = ta->getInt(i, EditorInfo::TYPE_NULL); break;
-            case STV::breakStrategy: breakStrategy = ta->getInt(i, Layout::BREAK_STRATEGY_SIMPLE); break;
-            case STV::marqueeRepeatLimit: marqueeRepeatLimit = ta->getInt(i, mMarqueeRepeatLimit); break;
-            case STV::ellipsize: ellipsize = ta->getInt(i, ELLIPSIZE_NOT_SET); break;
-            case STV::maxEms: hasMaxEms=true; maxEmsV=ta->getInt(i,-1); break;
-            case STV::ems: hasEms=true; emsV=ta->getInt(i,-1); break;
-            case STV::minEms: hasMinEms=true; minEmsV=ta->getInt(i,-1); break;
-            case STV::width: hasWidth=true; widthV=ta->getDimensionPixelSize(i,-1); break;
-            case STV::includeFontPadding: includeFontPadding = ta->getBoolean(i, true); break;
-            case STV::cursorVisible: cursorVisible = ta->getBoolean(i, true); break;
-            case STV::enabled: enabledAttr = ta->getBoolean(i, isEnabled()); break;
-            case STV::autoLink: autoLink = ta->getInt(i, mAutoLinkMask); break;
-            case STV::linksClickable: linksClickable = ta->getBoolean(i, true); break;
-            case STV::hyphenationFrequency: hyphenationFrequency = ta->getInt(i, mHyphenationFrequency); break;
-            case STV::justificationMode: justificationMode = ta->getInt(i, mJustificationMode); break;
-            case STV::textIsSelectable: textIsSelectable = ta->getBoolean(i, false); break;
-            case STV::imeOptions: hasImeOptions=true; imeOptions=ta->getInt(i, EditorInfo::IME_NULL); break;
-            case STV::inputMethod: inputMethod = ta->getString(i); break;
-            case STV::digits: digits = ta->getString(i); break;
-            case STV::phoneNumber: phone = ta->getBoolean(i, false); break;
-            case STV::numeric: numeric = ta->getInt(i, 0); break;
-            case STV::autoText: autotext = ta->getBoolean(i, false); break;
-            case STV::capitalize: autocap = ta->getInt(i, -1); break;
-            case STV::editable: editable = ta->getBoolean(i, getDefaultEditable()); break;
-            case STV::bufferType: buffertype = ta->getInt(i, 0); break;
-            case STV::password: password = ta->getBoolean(i, false); break;
-            case STV::lineHeight: lineHeight = ta->getDimensionPixelSize(i, -1); break;
-            case STV::firstBaselineToTopHeight: firstBaselineToTopHeight = ta->getDimensionPixelSize(i, -1); break;
-            case STV::lastBaselineToBottomHeight: lastBaselineToBottomHeight = ta->getDimensionPixelSize(i, -1); break;
-            default: break;
-            }
+
+for (size_t n = ta->getIndexCount(); n > 0; ) {
+    size_t i = ta->getIndex(--n);
+    switch (i) {
+    case STV::scrollHorizontally: scrollHorizontally = ta->getBoolean(i, false); break;
+    case STV::drawableLeft:   drawableLeft = ta->getDrawable(i); break;
+    case STV::drawableTop:    drawableTop = ta->getDrawable(i); break;
+    case STV::drawableRight:  drawableRight = ta->getDrawable(i); break;
+    case STV::drawableBottom: drawableBottom = ta->getDrawable(i); break;
+    // Relative drawables: resolved against layoutDirection later
+    // (Drawables::resolveWithLayoutDirection). Kept separate from L/R.
+    case STV::drawableStart:  drawableStart = ta->getDrawable(i); break;
+    case STV::drawableEnd:    drawableEnd = ta->getDrawable(i); break;
+    case STV::selectAllOnFocus: selectallonfocus = ta->getBoolean(i, false); break;
+    case STV::drawablePadding: drawablePadding = ta->getDimensionPixelSize(i, 0); break;
+    case STV::maxLines: maxLines = ta->getInt(i, -1); break;
+    case STV::minLines: minLines = ta->getInt(i, -1); break;
+    case STV::lines: lines = ta->getInt(i, -1); break;
+    case STV::height: heightV = ta->getDimensionPixelSize(i, -1); break;
+    case STV::minHeight: minHeightV = ta->getDimensionPixelSize(i, -1); break;
+    case STV::maxHeight: maxHeightV = ta->getDimensionPixelSize(i, mMaximum); break;
+    case STV::textScaleX: textScaleX = ta->getFloat(i, 1.f); break;
+    case STV::minWidth: minWidthV = ta->getDimensionPixelSize(i, INT_MIN); break;
+    case STV::maxWidth: maxWidthV = ta->getDimensionPixelSize(i, INT_MAX); break;
+    case STV::singleLine: singleLineAttr = ta->getBoolean(i, mSingleLine); break;
+    case STV::gravity: gravity = ta->getInt(i, Gravity::TOP|Gravity::START); break;
+    case STV::maxLength: maxLength = ta->getInt(i, -1); break;
+    case STV::lineSpacingExtra: lineSpacingExtra = ta->getDimensionPixelSize(i, 0); break;
+    case STV::lineSpacingMultiplier: lineSpacingMultiplier = ta->getFloat(i, 1.f); break;
+    case STV::inputType: inputType = ta->getInt(i, EditorInfo::TYPE_NULL); break;
+    case STV::breakStrategy: breakStrategy = ta->getInt(i, Layout::BREAK_STRATEGY_SIMPLE); break;
+    case STV::marqueeRepeatLimit: marqueeRepeatLimit = ta->getInt(i, mMarqueeRepeatLimit); break;
+    case STV::ellipsize: ellipsize = ta->getInt(i, ELLIPSIZE_NOT_SET); break;
+    case STV::maxEms: hasMaxEms=true; maxEmsV=ta->getInt(i,-1); break;
+    case STV::ems: hasEms=true; emsV=ta->getInt(i,-1); break;
+    case STV::minEms: hasMinEms=true; minEmsV=ta->getInt(i,-1); break;
+    case STV::width: hasWidth=true; widthV=ta->getDimensionPixelSize(i,-1); break;
+    case STV::includeFontPadding: includeFontPadding = ta->getBoolean(i, true); break;
+    case STV::cursorVisible: cursorVisible = ta->getBoolean(i, true); break;
+    case STV::enabled: enabledAttr = ta->getBoolean(i, isEnabled()); break;
+    case STV::autoLink: autoLink = ta->getInt(i, mAutoLinkMask); break;
+    case STV::linksClickable: linksClickable = ta->getBoolean(i, true); break;
+    case STV::hyphenationFrequency: hyphenationFrequency = ta->getInt(i, mHyphenationFrequency); break;
+    case STV::justificationMode: justificationMode = ta->getInt(i, mJustificationMode); break;
+    case STV::textIsSelectable: textIsSelectable = ta->getBoolean(i, false); break;
+    case STV::imeOptions: hasImeOptions=true; imeOptions=ta->getInt(i, EditorInfo::IME_NULL); break;
+    case STV::inputMethod: inputMethod = ta->getString(i); break;
+    case STV::digits: digits = ta->getString(i); break;
+    case STV::phoneNumber: phone = ta->getBoolean(i, false); break;
+    case STV::numeric: numeric = ta->getInt(i, 0); break;
+    case STV::autoText: autotext = ta->getBoolean(i, false); break;
+    case STV::capitalize: autocap = ta->getInt(i, -1); break;
+    case STV::editable: editable = ta->getBoolean(i, getDefaultEditable()); break;
+    case STV::bufferType: buffertype = ta->getInt(i, 0); break;
+    case STV::password: password = ta->getBoolean(i, false); break;
+    case STV::lineHeight: lineHeight = ta->getDimensionPixelSize(i, -1); break;
+    case STV::firstBaselineToTopHeight: firstBaselineToTopHeight = ta->getDimensionPixelSize(i, -1); break;
+    case STV::lastBaselineToBottomHeight: lastBaselineToBottomHeight = ta->getDimensionPixelSize(i, -1); break;
+    default: break;
+    }
+}
+
+
+// --- shared apply + resolve (original order; uses gathered locals) ---
+// text/hint keep the ctx->getString ref-resolution path (AttributeSet bridge
+// renders binary typed values to strings for both modes).
+setText(ctx->getString(attrs.getString("text")));
+setHint(ctx->getString(attrs.getString("hint")));
+setHorizontallyScrolling(scrollHorizontally);
+
+setCompoundDrawablesWithIntrinsicBounds(drawableLeft, drawableTop, drawableRight, drawableBottom);
+if(mDrawables){
+    mDrawables->mTintList = attrs.getColorStateList("drawableTint");
+    mDrawables->mTintMode = attrs.getTintMode("drawableTintMode",PorterDuff::NOOP);
+}
+applyCompoundDrawableTint();
+setRelativeDrawablesIfNeeded(drawableStart, drawableEnd);
+
+setCompoundDrawablePadding(drawablePadding);
+setMaxLines(maxLines);
+setMinLines(minLines);
+setLines(lines);
+setHeight(heightV);
+setMinHeight(minHeightV);
+setMaxHeight(maxHeightV);
+setTextScaleX(textScaleX);
+setMinWidth(minWidthV);
+setMaxWidth(maxWidthV);
+setSingleLine(singleLineAttr);
+setGravity(gravity);
+setLineSpacing(lineSpacingExtra, lineSpacingMultiplier);
+setBreakStrategy(breakStrategy);
+
+// AOSP TextView ctor (TextView.java:1237-1287): resolve textAppearance as a
+// TextAppearance style TypedArray FIRST, then read the element's own text
+// appearance attrs to OVERRIDE (readTextAppearance(a, attributes, true)). No
+// element/style AttributeSet merge (the old tmp.inherit(attrs2) is gone) — each
+// source is resolved independently through obtainStyledAttributes, and the
+// readTextAppearance switch only iterates SET indices so unset element attrs
+// don't clobber values taken from the style.
+TextAppearanceAttributes attributes;
+const std::string appearance = attrs.getString("textAppearance");
+if(appearance.empty()==false){
+    AttributeSet styleAttrs = ctx->obtainStyledAttributes(appearance);
+    auto taStyle = ctx->obtainStyledAttributes(styleAttrs, styleable::TextAppearance::IDS, defStyleAttr);
+    attributes.readTextAppearance(ctx, taStyle.get());
+}
+{
+    auto taElem = ctx->obtainStyledAttributes(attrs, styleable::TextAppearance::IDS, defStyleAttr);
+    attributes.readTextAppearance(ctx, taElem.get());
+}
+applyTextAppearance(&attributes);
+setMarqueeRepeatLimit(marqueeRepeatLimit);
+// If not explicitly specified this view is important for accessibility.
+if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+    setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+}
+
+// ems/width setters don't guard -1, so only apply when the attr is present.
+if (hasMaxEms) setMaxEms(maxEmsV);
+if (hasEms)    setEms(emsV);
+if (hasMinEms) setMinEms(minEmsV);
+if (hasWidth)  setWidth(widthV);
+
+if (!includeFontPadding) setIncludeFontPadding(false);
+if (!cursorVisible) setCursorVisible(false);
+setEnabled(enabledAttr);
+setAutoLinkMask(autoLink);
+setLinksClickable(linksClickable);
+setHyphenationFrequency(hyphenationFrequency);
+setJustificationMode(justificationMode);
+setTextIsSelectable(textIsSelectable);
+if (hasImeOptions) setImeOptions(imeOptions); // lazily creates the Editor
+mUseFallbackLineSpacing = true; // Android: targetSdk >= P (BORINGLAYOUT_FALLBACK_LINESPACING)
+
+BufferType bufferType = BufferType::EDITABLE;
+const int variation = inputType & (EditorInfo::TYPE_MASK_CLASS | EditorInfo::TYPE_MASK_VARIATION);
+const bool passwordInputType = variation== (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_PASSWORD);
+const bool webPasswordInputType = variation == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_WEB_PASSWORD);
+const bool numberPasswordInputType = variation == (EditorInfo::TYPE_CLASS_NUMBER | EditorInfo::TYPE_NUMBER_VARIATION_PASSWORD);
+bool singleLine = mSingleLine;
+// Editor / input-method configuration (Android TextView ctor ~1253-1269, 1685-1790).
+// Android gathers these into locals first, then resolves a KeyListener below.
+
+// CDROID has no reflection, so Android's inputMethod branch —
+//   c = Class.forName(inputMethod); mEditor.mKeyListener = c.newInstance();
+// — cannot be honored. We still record the requested input type and DEFER the
+//   KeyListener instantiation.
+// TODO(DEFERRED): port inputMethod KeyListener instantiation.
+if (!inputMethod.empty()) {
+    createEditorIfNeeded();
+    mEditor->mInputType = (inputType != EditorInfo::TYPE_NULL)
+            ? inputType : EditorInfo::TYPE_CLASS_TEXT;
+} else if (!digits.empty()) {
+    createEditorIfNeeded();
+    mEditor->mKeyListener = DigitsKeyListener::getInstance(
+            std::u16string(digits.begin(), digits.end()));
+    // If no input type was specified, we will default to generic
+    // text, since we can't tell the IME about the set of digits that was selected.
+    mEditor->mInputType = (inputType != EditorInfo::TYPE_NULL)
+            ? inputType : EditorInfo::TYPE_CLASS_TEXT;
+} else if (inputType != EditorInfo::TYPE_NULL) {
+    setInputType(inputType); // builds the per-class KeyListener (TEXT/NUMBER/DATE/PHONE)
+    // If set, the input type overrides what was set using the deprecated singleLine flag.
+    singleLine = !isMultilineInputType(inputType);
+} else if (phone) {
+    createEditorIfNeeded();
+    mEditor->mKeyListener = DialerKeyListener::getInstance();
+    mEditor->mInputType = inputType = EditorInfo::TYPE_CLASS_PHONE;
+} else if (numeric != 0) {
+    createEditorIfNeeded();
+    mEditor->mKeyListener = DigitsKeyListener::getInstance(
+            (numeric & SIGNED) != 0, (numeric & DECIMAL) != 0);
+    inputType = mEditor->mKeyListener->getInputType();
+    mEditor->mInputType = inputType;
+} else if (autotext || autocap != -1) {
+    TextKeyListener::Capitalize cap;
+    inputType = EditorInfo::TYPE_CLASS_TEXT;
+    switch (autocap) {
+    case 1: cap = TextKeyListener::Capitalize::SENTENCES;  inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_SENTENCES;  break;
+    case 2: cap = TextKeyListener::Capitalize::WORDS;      inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_WORDS;      break;
+    case 3: cap = TextKeyListener::Capitalize::CHARACTERS; inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_CHARACTERS; break;
+    default: cap = TextKeyListener::Capitalize::NONE; break;
+    }
+    createEditorIfNeeded();
+    mEditor->mKeyListener = TextKeyListener::getInstance(autotext, cap);
+    mEditor->mInputType = inputType;
+} else if (editable) {
+    createEditorIfNeeded();
+    mEditor->mKeyListener = TextKeyListener::getInstance();
+    mEditor->mInputType = EditorInfo::TYPE_CLASS_TEXT;
+} else if (isTextSelectable()) {
+    // Prevent text changes from keyboard.
+    if (mEditor != nullptr) {
+        mEditor->mKeyListener = nullptr;
+        mEditor->mInputType = EditorInfo::TYPE_NULL;
+    }
+    bufferType = BufferType::SPANNABLE;
+    // So that selection can be changed using arrow keys and touch is handled.
+    setMovementMethod(ArrowKeyMovementMethod::getInstance());
+} else {
+    if (mEditor != nullptr) mEditor->mKeyListener = nullptr;
+    switch (buffertype) {
+    case 0: bufferType = BufferType::NORMAL;   break;
+    case 1: bufferType = BufferType::SPANNABLE; break;
+    case 2: bufferType = BufferType::EDITABLE;  break;
+    }
+}
+
+if(mEditor!=nullptr){
+    mEditor->adjustInputType(password, passwordInputType, webPasswordInputType,
+            numberPasswordInputType);
+}
+
+//setInputTypeSingleLine(singleLine);
+//applySingleLine(singleLine, singleLine, singleLine,false);
+if (singleLine &&(getKeyListener()==nullptr) && (ellipsize==ELLIPSIZE_NOT_SET)) {
+    //ellipsize = ELLIPSIZE_END;
+}
+switch(ellipsize){
+case ELLIPSIZE_START: setEllipsize(TextUtils::TruncateAt::START);break;
+case ELLIPSIZE_MIDDLE:setEllipsize(TextUtils::TruncateAt::MIDDLE);break;
+case ELLIPSIZE_END:   setEllipsize(TextUtils::TruncateAt::END);break;
+case ELLIPSIZE_MARQUEE:
+    if(ellipsize==TextUtils::TruncateAt::MARQUEE){
+        if(ViewConfiguration::get(mContext).isFadingMarqueeEnabled()){
+            setHorizontalFadingEdgeEnabled(true);
+            mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
+        }else{
+            setHorizontalFadingEdgeEnabled(false);
+            mMarqueeFadeMode = MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
         }
-    } else {
-        scrollHorizontally = attrs.getBoolean("scrollHorizontally", mHorizontallyScrolling);
-        drawableLeft = attrs.getDrawable("drawableLeft");
-        drawableRight = attrs.getDrawable("drawableRight");
-        drawableTop = attrs.getDrawable("drawableTop");
-        drawableBottom = attrs.getDrawable("drawableBottom");
-        drawableStart = attrs.getDrawable("drawableStart");
-        drawableEnd = attrs.getDrawable("drawableEnd");
-        selectallonfocus = attrs.getBoolean("selectAllOnFocus");
-        drawablePadding = attrs.getDimensionPixelSize("drawablePadding", 0);
-        maxLines = attrs.getInt("maxLines", -1);
-        minLines = attrs.getInt("minLines", -1);
-        lines = attrs.getInt("lines", -1);
-        heightV = attrs.getDimensionPixelSize("height", -1);
-        minHeightV = attrs.getDimensionPixelSize("minHeight", -1);
-        maxHeightV = attrs.getDimensionPixelSize("maxHeight", mMaximum);
-        textScaleX = attrs.getFloat("textScaleX", 1.f);
-        minWidthV = attrs.getDimensionPixelSize("minWidth", INT_MIN);
-        maxWidthV = attrs.getDimensionPixelSize("maxWidth", INT_MAX);
-        singleLineAttr = attrs.getBoolean("singleLine", mSingleLine);
-        gravity = attrs.getGravity("gravity", Gravity::TOP|Gravity::START);
-        maxLength = attrs.getInt("maxLength", -1);
-        lineSpacingExtra = attrs.getDimensionPixelSize("lineSpacingExtra", 0);
-        lineSpacingMultiplier = attrs.getFloat("lineSpacingMultiplier", 1.f);
-        inputType = attrs.getInt("inputType",std::unordered_map<std::string,int>{
-            {"none", (int)InputType::TYPE_NULL},
-            {"text", (int)InputType::TYPE_CLASS_TEXT},
-            {"textCapCharacters", (int)InputType::TYPE_TEXT_FLAG_CAP_CHARACTERS},
-            {"textCapWords", (int)InputType::TYPE_TEXT_FLAG_CAP_WORDS},
-            {"textCapSentences", (int)InputType::TYPE_TEXT_FLAG_CAP_SENTENCES},
-            {"textAutoCorrect", (int)InputType::TYPE_TEXT_FLAG_AUTO_CORRECT},
-            {"textPassword", (int)InputType::TYPE_TEXT_VARIATION_PASSWORD},
-            {"textVisiblePassword", (int)InputType::TYPE_TEXT_VARIATION_VISIBLE_PASSWORD},
-            {"textEmailAddress", (int)InputType::TYPE_TEXT_VARIATION_EMAIL_ADDRESS},
-            {"textUri", (int)InputType::TYPE_TEXT_VARIATION_URI},
-            {"textPersonName", (int)InputType::TYPE_TEXT_VARIATION_PERSON_NAME},
-            {"textShortMessage", (int)InputType::TYPE_TEXT_VARIATION_SHORT_MESSAGE},
-            {"textLongMessage", (int)InputType::TYPE_TEXT_VARIATION_LONG_MESSAGE},
-            {"textMultiLine", (int)InputType::TYPE_TEXT_FLAG_MULTI_LINE},
-            {"textNoSuggestions", (int)InputType::TYPE_TEXT_FLAG_NO_SUGGESTIONS},
-            {"textWebEditText", (int)InputType::TYPE_TEXT_VARIATION_WEB_EDIT_TEXT},
-            {"textFilter", (int)InputType::TYPE_TEXT_VARIATION_FILTER},
-            {"textPhonetic", (int)InputType::TYPE_TEXT_VARIATION_PHONETIC},
-            {"textEmailSubject", (int)InputType::TYPE_TEXT_VARIATION_EMAIL_SUBJECT},
-            {"textPostalAddress", (int)InputType::TYPE_TEXT_VARIATION_POSTAL_ADDRESS},
-            {"number", (int)InputType::TYPE_CLASS_NUMBER},
-            // Number variants carry the class bit too (Android's attr constants are
-            // pre-OR'd); without it the TYPE_MASK_CLASS decode in IMM would miss them.
-            {"numberDecimal", (int)InputType::TYPE_CLASS_NUMBER | (int)InputType::TYPE_NUMBER_FLAG_DECIMAL},
-            {"numberSigned", (int)InputType::TYPE_CLASS_NUMBER | (int)InputType::TYPE_NUMBER_FLAG_SIGNED},
-            {"numberPassword", (int)InputType::TYPE_CLASS_NUMBER | (int)InputType::TYPE_NUMBER_VARIATION_PASSWORD},
-            {"phone", (int)InputType::TYPE_CLASS_PHONE},
-            {"date", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_DATE},
-            {"time", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_TIME},
-            {"datetime", (int)InputType::TYPE_CLASS_DATETIME}
-        },EditorInfo::TYPE_NULL);
-        breakStrategy = attrs.getInt("breakStrategy",std::unordered_map<std::string,int>{
-            {"simple"  ,(int)Layout::BREAK_STRATEGY_SIMPLE},
-            {"balanced",(int)Layout::BREAK_STRATEGY_BALANCED},
-            {"high_quality",(int)Layout::BREAK_STRATEGY_HIGH_QUALITY},
-        },Layout::BREAK_STRATEGY_SIMPLE);
-        marqueeRepeatLimit = attrs.getInt("marqueeRepeatLimit",std::unordered_map<std::string,int>{
-            {"marquee_forever",-1}
-        },mMarqueeRepeatLimit);
-        ellipsize = attrs.getInt("ellipsize",std::unordered_map<std::string,int>{
-            {"none", (int)ELLIPSIZE_NONE},
-            {"start",(int)ELLIPSIZE_START},{"middle",(int)ELLIPSIZE_MIDDLE},
-            {"end" ,(int)ELLIPSIZE_END},{"marquee",(int)ELLIPSIZE_MARQUEE}
-        },(int)ELLIPSIZE_NOT_SET);
-        if (attrs.hasAttribute("maxEms")) { hasMaxEms=true; maxEmsV=attrs.getInt("maxEms",-1); }
-        if (attrs.hasAttribute("ems"))    { hasEms=true; emsV=attrs.getInt("ems",-1); }
-        if (attrs.hasAttribute("minEms")) { hasMinEms=true; minEmsV=attrs.getInt("minEms",-1); }
-        if (attrs.hasAttribute("width"))  { hasWidth=true; widthV=attrs.getDimensionPixelSize("width",-1); }
-        includeFontPadding = attrs.getBoolean("includeFontPadding", true);
-        cursorVisible = attrs.getBoolean("cursorVisible", true);
-        enabledAttr = attrs.getBoolean("enabled", isEnabled());
-        autoLink = attrs.getInt("autoLink", std::unordered_map<std::string,int>{
-            {"none", 0}, {"web", 0x01}, {"email", 0x02},
-            {"phone", 0x04}, {"map", 0x08}, {"all", 0x0f}
-        }, mAutoLinkMask);
-        linksClickable = attrs.getBoolean("linksClickable", true);
-        hyphenationFrequency = attrs.getInt("hyphenationFrequency", std::unordered_map<std::string,int>{
-            {"none",   Layout::HYPHENATION_FREQUENCY_NONE},
-            {"normal", Layout::HYPHENATION_FREQUENCY_NORMAL},
-            {"full",   Layout::HYPHENATION_FREQUENCY_FULL}
-        }, mHyphenationFrequency);
-        justificationMode = attrs.getInt("justificationMode", std::unordered_map<std::string,int>{
-            {"none",            Layout::JUSTIFICATION_MODE_NONE},
-            {"inter_word",      Layout::JUSTIFICATION_MODE_INTER_WORD},
-            {"inter_character", Layout::JUSTIFICATION_MODE_INTER_CHARACTER}
-        }, mJustificationMode);
-        textIsSelectable = attrs.getBoolean("textIsSelectable", false);
-        if (attrs.hasAttribute("imeOptions")) {
-            hasImeOptions=true;
-            // Decode android:imeOptions flag names (action*/flag*) to EditorInfo.
-            imeOptions = attrs.getInt("imeOptions", std::unordered_map<std::string,int>{
-                {"normal",                     (int)EditorInfo::IME_ACTION_UNSPECIFIED},
-                {"actionUnspecified",          (int)EditorInfo::IME_ACTION_UNSPECIFIED},
-                {"actionNone",                 (int)EditorInfo::IME_ACTION_NONE},
-                {"actionGo",                   (int)EditorInfo::IME_ACTION_GO},
-                {"actionSearch",               (int)EditorInfo::IME_ACTION_SEARCH},
-                {"actionSend",                 (int)EditorInfo::IME_ACTION_SEND},
-                {"actionNext",                 (int)EditorInfo::IME_ACTION_NEXT},
-                {"actionDone",                 (int)EditorInfo::IME_ACTION_DONE},
-                {"actionPrevious",             (int)EditorInfo::IME_ACTION_PREVIOUS},
-                {"flagNoPersonalizedLearning", (int)EditorInfo::IME_FLAG_NO_PERSONALIZED_LEARNING},
-                {"flagNoFullscreen",           (int)EditorInfo::IME_FLAG_NO_FULLSCREEN},
-                {"flagNavigatePrevious",       (int)EditorInfo::IME_FLAG_NAVIGATE_PREVIOUS},
-                {"flagNavigateNext",           (int)EditorInfo::IME_FLAG_NAVIGATE_NEXT},
-                {"flagNoExtractUi",            (int)EditorInfo::IME_FLAG_NO_EXTRACT_UI},
-                {"flagNoAccessoryAction",      (int)EditorInfo::IME_FLAG_NO_ACCESSORY_ACTION},
-                {"flagNoEnterAction",          (int)EditorInfo::IME_FLAG_NO_ENTER_ACTION},
-                {"flagForceAscii",             (int)EditorInfo::IME_FLAG_FORCE_ASCII},
-            }, EditorInfo::IME_NULL);
-        }
-        inputMethod = attrs.getString("inputMethod");
-        digits = attrs.getString("digits");
-        phone = attrs.getBoolean("phoneNumber", false);
-        numeric = attrs.getInt("numeric", std::unordered_map<std::string,int>{
-            {"signed", (int)SIGNED}, {"decimal", (int)DECIMAL} }, 0);
-        autotext = attrs.getBoolean("autoText", false);
-        autocap = attrs.getInt("capitalize", std::unordered_map<std::string,int>{
-            {"sentences", 1}, {"words", 2}, {"characters", 3} }, -1);
-        editable = attrs.getBoolean("editable", getDefaultEditable());
-        buffertype = attrs.getInt("bufferType", std::unordered_map<std::string,int>{
-            {"normal", 0}, {"spannable", 1}, {"editable", 2} }, 0);
-        password = attrs.getBoolean("password", false);
-        lineHeight = attrs.getDimensionPixelSize("lineHeight", -1);
-        firstBaselineToTopHeight = attrs.getDimensionPixelSize("firstBaselineToTopHeight", -1);
-        lastBaselineToBottomHeight = attrs.getDimensionPixelSize("lastBaselineToBottomHeight", -1);
     }
-
-    // --- shared apply + resolve (original order; uses gathered locals) ---
-    // text/hint keep the ctx->getString ref-resolution path (AttributeSet bridge
-    // renders binary typed values to strings for both modes).
-    setText(ctx->getString(attrs.getString("text")));
-    setHint(ctx->getString(attrs.getString("hint")));
-    setHorizontallyScrolling(scrollHorizontally);
-
-    setCompoundDrawablesWithIntrinsicBounds(drawableLeft, drawableTop, drawableRight, drawableBottom);
-    if(mDrawables){
-        mDrawables->mTintList = attrs.getColorStateList("drawableTint");
-        mDrawables->mTintMode = attrs.getTintMode("drawableTintMode",PorterDuff::NOOP);
-    }
-    applyCompoundDrawableTint();
-    setRelativeDrawablesIfNeeded(drawableStart, drawableEnd);
-
-    setCompoundDrawablePadding(drawablePadding);
-    setMaxLines(maxLines);
-    setMinLines(minLines);
-    setLines(lines);
-    setHeight(heightV);
-    setMinHeight(minHeightV);
-    setMaxHeight(maxHeightV);
-    setTextScaleX(textScaleX);
-    setMinWidth(minWidthV);
-    setMaxWidth(maxWidthV);
-    setSingleLine(singleLineAttr);
-    setGravity(gravity);
-    setLineSpacing(lineSpacingExtra, lineSpacingMultiplier);
-    setBreakStrategy(breakStrategy);
-
-    // AOSP TextView ctor (TextView.java:1237-1287): resolve textAppearance as a
-    // TextAppearance style TypedArray FIRST, then read the element's own text
-    // appearance attrs to OVERRIDE (readTextAppearance(a, attributes, true)). No
-    // element/style AttributeSet merge (the old tmp.inherit(attrs2) is gone) — each
-    // source is resolved independently through obtainStyledAttributes, and the
-    // readTextAppearance switch only iterates SET indices so unset element attrs
-    // don't clobber values taken from the style.
-    TextAppearanceAttributes attributes;
-    const std::string appearance = attrs.getString("textAppearance");
-    if(appearance.empty()==false){
-        AttributeSet styleAttrs = ctx->obtainStyledAttributes(appearance);
-        auto taStyle = ctx->obtainStyledAttributes(styleAttrs, styleable::TextAppearance::IDS, defStyleAttr);
-        attributes.readTextAppearance(ctx, taStyle.get());
-    }
-    {
-        auto taElem = ctx->obtainStyledAttributes(attrs, styleable::TextAppearance::IDS, defStyleAttr);
-        attributes.readTextAppearance(ctx, taElem.get());
-    }
-    applyTextAppearance(&attributes);
-    setMarqueeRepeatLimit(marqueeRepeatLimit);
-    // If not explicitly specified this view is important for accessibility.
-    if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
-        setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
-    }
-
-    // ems/width setters don't guard -1, so only apply when the attr is present.
-    if (hasMaxEms) setMaxEms(maxEmsV);
-    if (hasEms)    setEms(emsV);
-    if (hasMinEms) setMinEms(minEmsV);
-    if (hasWidth)  setWidth(widthV);
-
-    if (!includeFontPadding) setIncludeFontPadding(false);
-    if (!cursorVisible) setCursorVisible(false);
-    setEnabled(enabledAttr);
-    setAutoLinkMask(autoLink);
-    setLinksClickable(linksClickable);
-    setHyphenationFrequency(hyphenationFrequency);
-    setJustificationMode(justificationMode);
-    setTextIsSelectable(textIsSelectable);
-    if (hasImeOptions) setImeOptions(imeOptions); // lazily creates the Editor
-    mUseFallbackLineSpacing = true; // Android: targetSdk >= P (BORINGLAYOUT_FALLBACK_LINESPACING)
-
-    BufferType bufferType = BufferType::EDITABLE;
-    const int variation = inputType & (EditorInfo::TYPE_MASK_CLASS | EditorInfo::TYPE_MASK_VARIATION);
-    const bool passwordInputType = variation== (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_PASSWORD);
-    const bool webPasswordInputType = variation == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_WEB_PASSWORD);
-    const bool numberPasswordInputType = variation == (EditorInfo::TYPE_CLASS_NUMBER | EditorInfo::TYPE_NUMBER_VARIATION_PASSWORD);
-    bool singleLine = mSingleLine;
-    // Editor / input-method configuration (Android TextView ctor ~1253-1269, 1685-1790).
-    // Android gathers these into locals first, then resolves a KeyListener below.
-
-    // CDROID has no reflection, so Android's inputMethod branch —
-    //   c = Class.forName(inputMethod); mEditor.mKeyListener = c.newInstance();
-    // — cannot be honored. We still record the requested input type and DEFER the
-    //   KeyListener instantiation.
-    // TODO(DEFERRED): port inputMethod KeyListener instantiation.
-    if (!inputMethod.empty()) {
-        createEditorIfNeeded();
-        mEditor->mInputType = (inputType != EditorInfo::TYPE_NULL)
-                ? inputType : EditorInfo::TYPE_CLASS_TEXT;
-    } else if (!digits.empty()) {
-        createEditorIfNeeded();
-        mEditor->mKeyListener = DigitsKeyListener::getInstance(
-                std::u16string(digits.begin(), digits.end()));
-        // If no input type was specified, we will default to generic
-        // text, since we can't tell the IME about the set of digits that was selected.
-        mEditor->mInputType = (inputType != EditorInfo::TYPE_NULL)
-                ? inputType : EditorInfo::TYPE_CLASS_TEXT;
-    } else if (inputType != EditorInfo::TYPE_NULL) {
-        setInputType(inputType); // builds the per-class KeyListener (TEXT/NUMBER/DATE/PHONE)
-        // If set, the input type overrides what was set using the deprecated singleLine flag.
-        singleLine = !isMultilineInputType(inputType);
-    } else if (phone) {
-        createEditorIfNeeded();
-        mEditor->mKeyListener = DialerKeyListener::getInstance();
-        mEditor->mInputType = inputType = EditorInfo::TYPE_CLASS_PHONE;
-    } else if (numeric != 0) {
-        createEditorIfNeeded();
-        mEditor->mKeyListener = DigitsKeyListener::getInstance(
-                (numeric & SIGNED) != 0, (numeric & DECIMAL) != 0);
-        inputType = mEditor->mKeyListener->getInputType();
-        mEditor->mInputType = inputType;
-    } else if (autotext || autocap != -1) {
-        TextKeyListener::Capitalize cap;
-        inputType = EditorInfo::TYPE_CLASS_TEXT;
-        switch (autocap) {
-        case 1: cap = TextKeyListener::Capitalize::SENTENCES;  inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_SENTENCES;  break;
-        case 2: cap = TextKeyListener::Capitalize::WORDS;      inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_WORDS;      break;
-        case 3: cap = TextKeyListener::Capitalize::CHARACTERS; inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_CHARACTERS; break;
-        default: cap = TextKeyListener::Capitalize::NONE; break;
-        }
-        createEditorIfNeeded();
-        mEditor->mKeyListener = TextKeyListener::getInstance(autotext, cap);
-        mEditor->mInputType = inputType;
-    } else if (editable) {
-        createEditorIfNeeded();
-        mEditor->mKeyListener = TextKeyListener::getInstance();
-        mEditor->mInputType = EditorInfo::TYPE_CLASS_TEXT;
-    } else if (isTextSelectable()) {
-        // Prevent text changes from keyboard.
-        if (mEditor != nullptr) {
-            mEditor->mKeyListener = nullptr;
-            mEditor->mInputType = EditorInfo::TYPE_NULL;
-        }
+    setEllipsize(TextUtils::TruncateAt::MARQUEE);
+    break;
+}
+if (selectallonfocus) {
+    createEditorIfNeeded();
+    mEditor->mSelectAllOnFocus = true;
+    if (bufferType == BufferType::NORMAL) {
         bufferType = BufferType::SPANNABLE;
-        // So that selection can be changed using arrow keys and touch is handled.
-        setMovementMethod(ArrowKeyMovementMethod::getInstance());
-    } else {
-        if (mEditor != nullptr) mEditor->mKeyListener = nullptr;
-        switch (buffertype) {
-        case 0: bufferType = BufferType::NORMAL;   break;
-        case 1: bufferType = BufferType::SPANNABLE; break;
-        case 2: bufferType = BufferType::EDITABLE;  break;
-        }
     }
+}
 
-    if(mEditor!=nullptr){
-        mEditor->adjustInputType(password, passwordInputType, webPasswordInputType,
-                numberPasswordInputType);
-    }
+// Android applies the resolved buffer type via setText(text, bufferType) at the end of
+// the ctor. mText was already set above; record the type so later setText() upgrades
+// the buffer correctly. (TODO: move the initial setText after this for full fidelity.)
+mBufferType = bufferType;
 
-    //setInputTypeSingleLine(singleLine);
-    //applySingleLine(singleLine, singleLine, singleLine,false);
-    if (singleLine &&(getKeyListener()==nullptr) && (ellipsize==ELLIPSIZE_NOT_SET)) {
-        //ellipsize = ELLIPSIZE_END;
-    }
-    switch(ellipsize){
-    case ELLIPSIZE_START: setEllipsize(TextUtils::TruncateAt::START);break;
-    case ELLIPSIZE_MIDDLE:setEllipsize(TextUtils::TruncateAt::MIDDLE);break;
-    case ELLIPSIZE_END:   setEllipsize(TextUtils::TruncateAt::END);break;
-    case ELLIPSIZE_MARQUEE:
-        if(ellipsize==TextUtils::TruncateAt::MARQUEE){
-            if(ViewConfiguration::get(mContext).isFadingMarqueeEnabled()){
-                setHorizontalFadingEdgeEnabled(true);
-                mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
-            }else{
-                setHorizontalFadingEdgeEnabled(false);
-                mMarqueeFadeMode = MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
-            }
-        }
-        setEllipsize(TextUtils::TruncateAt::MARQUEE);
-        break;
-    }
-    if (selectallonfocus) {
-        createEditorIfNeeded();
-        mEditor->mSelectAllOnFocus = true;
-        if (bufferType == BufferType::NORMAL) {
-            bufferType = BufferType::SPANNABLE;
-        }
-    }
+// Apply android:maxLength as an InputFilter (Android ctor ~1883-1891). The single-line
+// auto LengthFilter (MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT) is DEFERRED (needs the
+// mSingleLineLengthFilter machinery; see applySingleLine). The initial text is filtered
+// on the next edit, not retroactively (Android filters it inside setText — TODO).
+if ((bufferType==BufferType::EDITABLE)&&singleLine&&maxLength ==-1) {
+    mSingleLineLengthFilter = new InputFilter::LengthFilter(MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT);
+}
+if (mSingleLineLengthFilter != nullptr) {
+    setFilters({ mSingleLineLengthFilter });
+} else if (maxLength >= 0) {
+     setFilters({ new InputFilter::LengthFilter(maxLength) });
+} else {
+    setFilters({}); // NO_FILTERS
+}
+if (firstBaselineToTopHeight >= 0){
+    setFirstBaselineToTopHeight(firstBaselineToTopHeight);
+}
+if (lastBaselineToBottomHeight >= 0){
+    setLastBaselineToBottomHeight(lastBaselineToBottomHeight);
+}
+if(lineHeight>=0){
+    setLineHeight(lineHeight);
+}
 
-    // Android applies the resolved buffer type via setText(text, bufferType) at the end of
-    // the ctor. mText was already set above; record the type so later setText() upgrades
-    // the buffer correctly. (TODO: move the initial setText after this for full fidelity.)
-    mBufferType = bufferType;
-
-    // Apply android:maxLength as an InputFilter (Android ctor ~1883-1891). The single-line
-    // auto LengthFilter (MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT) is DEFERRED (needs the
-    // mSingleLineLengthFilter machinery; see applySingleLine). The initial text is filtered
-    // on the next edit, not retroactively (Android filters it inside setText — TODO).
-    if ((bufferType==BufferType::EDITABLE)&&singleLine&&maxLength ==-1) {
-        mSingleLineLengthFilter = new InputFilter::LengthFilter(MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT);
-    }
-    if (mSingleLineLengthFilter != nullptr) {
-        setFilters({ mSingleLineLengthFilter });
-    } else if (maxLength >= 0) {
-         setFilters({ new InputFilter::LengthFilter(maxLength) });
-    } else {
-        setFilters({}); // NO_FILTERS
-    }
-    if (firstBaselineToTopHeight >= 0){
-        setFirstBaselineToTopHeight(firstBaselineToTopHeight);
-    }
-    if (lastBaselineToBottomHeight >= 0){
-        setLastBaselineToBottomHeight(lastBaselineToBottomHeight);
-    }
-    if(lineHeight>=0){
-        setLineHeight(lineHeight);
-    }
-    }
 }
 
 TextView::TextView(int width, int height):TextView(std::string(),width,height){

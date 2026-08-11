@@ -22,17 +22,17 @@ RadioGroup::RadioGroup(Context* context,const AttributeSet* pAttrs,int defStyleA
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(attrs, styleable::RadioGroup::IDS, defStyleAttr);
-    if (ta) {
-    namespace SRG = styleable::RadioGroup;
+    
+namespace SRG = styleable::RadioGroup;
 
-    const int value = (int)ta->getResourceId(SRG::checkedButton,(uint32_t)View::NO_ID);
-    if(value!=View::NO_ID){
-        mCheckedId = value;
-        mInitialCheckedId = value;
-    }
-    const int index = ta->getInt(SRG::orientation,VERTICAL);
-    setOrientation(index);
-    }
+const int value = (int)ta->getResourceId(SRG::checkedButton,(uint32_t)View::NO_ID);
+if(value!=View::NO_ID){
+    mCheckedId = value;
+    mInitialCheckedId = value;
+}
+const int index = ta->getInt(SRG::orientation,VERTICAL);
+setOrientation(index);
+
 }
 
 LinearLayout::LayoutParams* RadioGroup::generateLayoutParams(const AttributeSet& attrs)const {

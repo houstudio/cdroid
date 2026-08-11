@@ -37,93 +37,93 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ViewGr
     // TypedArray; a==null (text XML / no arsc) leaves the toolbar at defaults.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto a = ctx->obtainStyledAttributes(atts, styleable::Toolbar::IDS, defStyleAttr);
-    if (a) {
-    namespace ST = styleable::Toolbar;
-    // AOSP reads these via getResourceId(@StyleRes int); CDROID holds style
-    // strings, so bridge the id -> "@type/key" via arscReferenceName.
-    auto styleName = [&](size_t idx)->std::string{
-        uint32_t rid = a->getResourceId(idx, 0);
-        return rid ? _assets->arscReferenceName(rid) : std::string();
-    };
-    mTitleTextAppearance = styleName(ST::titleTextAppearance);
-    mSubtitleTextAppearance = styleName(ST::subtitleTextAppearance);
-    // navigationButtonStyle is a private framework attr with no resource id
-    // (skipped by gen_styleable) — not readable through the TypedArray.
-    mGravity = a->getInteger(ST::gravity, mGravity);
-    mButtonGravity = a->getInteger(ST::buttonGravity, Gravity::TOP);
-    mTitleMarginStart = mTitleMarginEnd = mTitleMarginTop = mTitleMarginBottom =
-              a->getDimensionPixelOffset(ST::titleMargin, 0);
-    const int marginStart = a->getDimensionPixelOffset(ST::titleMarginStart, -1);
-    if (marginStart >= 0) { mTitleMarginStart = marginStart; }
+    
+namespace ST = styleable::Toolbar;
+// AOSP reads these via getResourceId(@StyleRes int); CDROID holds style
+// strings, so bridge the id -> "@type/key" via arscReferenceName.
+auto styleName = [&](size_t idx)->std::string{
+    uint32_t rid = a->getResourceId(idx, 0);
+    return rid ? _assets->arscReferenceName(rid) : std::string();
+};
+mTitleTextAppearance = styleName(ST::titleTextAppearance);
+mSubtitleTextAppearance = styleName(ST::subtitleTextAppearance);
+// navigationButtonStyle is a private framework attr with no resource id
+// (skipped by gen_styleable) — not readable through the TypedArray.
+mGravity = a->getInteger(ST::gravity, mGravity);
+mButtonGravity = a->getInteger(ST::buttonGravity, Gravity::TOP);
+mTitleMarginStart = mTitleMarginEnd = mTitleMarginTop = mTitleMarginBottom =
+          a->getDimensionPixelOffset(ST::titleMargin, 0);
+const int marginStart = a->getDimensionPixelOffset(ST::titleMarginStart, -1);
+if (marginStart >= 0) { mTitleMarginStart = marginStart; }
 
-    const int marginEnd = a->getDimensionPixelOffset(ST::titleMarginEnd, -1);
-    if (marginEnd >= 0) { mTitleMarginEnd = marginEnd; }
+const int marginEnd = a->getDimensionPixelOffset(ST::titleMarginEnd, -1);
+if (marginEnd >= 0) { mTitleMarginEnd = marginEnd; }
 
-    const int marginTop = a->getDimensionPixelOffset(ST::titleMarginTop, -1);
-    if (marginTop >= 0) { mTitleMarginTop = marginTop; }
+const int marginTop = a->getDimensionPixelOffset(ST::titleMarginTop, -1);
+if (marginTop >= 0) { mTitleMarginTop = marginTop; }
 
-    const int marginBottom = a->getDimensionPixelOffset(ST::titleMarginBottom, -1);
-    if (marginBottom >= 0) { mTitleMarginBottom = marginBottom; }
+const int marginBottom = a->getDimensionPixelOffset(ST::titleMarginBottom, -1);
+if (marginBottom >= 0) { mTitleMarginBottom = marginBottom; }
 
-    mMaxButtonHeight = a->getDimensionPixelSize(ST::maxButtonHeight, -1);
+mMaxButtonHeight = a->getDimensionPixelSize(ST::maxButtonHeight, -1);
 
-    const int contentInsetStart= a->getDimensionPixelOffset(ST::contentInsetStart,RtlSpacingHelper::UNDEFINED);
-    const int contentInsetEnd  = a->getDimensionPixelOffset(ST::contentInsetEnd, RtlSpacingHelper::UNDEFINED);
-    const int contentInsetLeft = a->getDimensionPixelSize(ST::contentInsetLeft, 0);
-    const int contentInsetRight= a->getDimensionPixelSize(ST::contentInsetRight, 0);
+const int contentInsetStart= a->getDimensionPixelOffset(ST::contentInsetStart,RtlSpacingHelper::UNDEFINED);
+const int contentInsetEnd  = a->getDimensionPixelOffset(ST::contentInsetEnd, RtlSpacingHelper::UNDEFINED);
+const int contentInsetLeft = a->getDimensionPixelSize(ST::contentInsetLeft, 0);
+const int contentInsetRight= a->getDimensionPixelSize(ST::contentInsetRight, 0);
 
-    ensureContentInsets();
-    mContentInsets->setAbsolute(contentInsetLeft, contentInsetRight);
+ensureContentInsets();
+mContentInsets->setAbsolute(contentInsetLeft, contentInsetRight);
 
-    if (contentInsetStart != RtlSpacingHelper::UNDEFINED ||
-            contentInsetEnd != RtlSpacingHelper::UNDEFINED) {
-        mContentInsets->setRelative(contentInsetStart, contentInsetEnd);
-    }
+if (contentInsetStart != RtlSpacingHelper::UNDEFINED ||
+        contentInsetEnd != RtlSpacingHelper::UNDEFINED) {
+    mContentInsets->setRelative(contentInsetStart, contentInsetEnd);
+}
 
-    mContentInsetStartWithNavigation = a->getDimensionPixelOffset(ST::contentInsetStartWithNavigation, RtlSpacingHelper::UNDEFINED);
-    mContentInsetEndWithActions = a->getDimensionPixelOffset(ST::contentInsetEndWithActions, RtlSpacingHelper::UNDEFINED);
+mContentInsetStartWithNavigation = a->getDimensionPixelOffset(ST::contentInsetStartWithNavigation, RtlSpacingHelper::UNDEFINED);
+mContentInsetEndWithActions = a->getDimensionPixelOffset(ST::contentInsetEndWithActions, RtlSpacingHelper::UNDEFINED);
 
-    mCollapseIcon = a->getDrawable(ST::collapseIcon);
-    mCollapseDescription = a->getText(ST::collapseContentDescription);
+mCollapseIcon = a->getDrawable(ST::collapseIcon);
+mCollapseDescription = a->getText(ST::collapseContentDescription);
 
-    std::string title = a->getText(ST::title);
-    if (!title.empty()){
-        setTitle(title);
-    }
+std::string title = a->getText(ST::title);
+if (!title.empty()){
+    setTitle(title);
+}
 
-    std::string subtitle = a->getText(ST::subtitle);
-    if (!subtitle.empty()) {
-        setSubtitle(subtitle);
-    }
+std::string subtitle = a->getText(ST::subtitle);
+if (!subtitle.empty()) {
+    setSubtitle(subtitle);
+}
 
-    Drawable* navIcon = a->getDrawable(ST::navigationIcon);
-    if (navIcon != nullptr) {
-        setNavigationIcon(navIcon);
-    }
+Drawable* navIcon = a->getDrawable(ST::navigationIcon);
+if (navIcon != nullptr) {
+    setNavigationIcon(navIcon);
+}
 
-    std::string navDesc = a->getText(ST::navigationContentDescription);
-    if (!navDesc.empty()) {
-        setNavigationContentDescription(navDesc);
-    }
+std::string navDesc = a->getText(ST::navigationContentDescription);
+if (!navDesc.empty()) {
+    setNavigationContentDescription(navDesc);
+}
 
-    Drawable* logo = a->getDrawable(ST::logo);
-    if (logo != nullptr) {
-        setLogo(logo);
-    }
+Drawable* logo = a->getDrawable(ST::logo);
+if (logo != nullptr) {
+    setLogo(logo);
+}
 
-    std::string logoDesc = a->getText(ST::logoDescription);
-    if (!logoDesc.empty()) {
-        setLogoDescription(logoDesc);
-    }
+std::string logoDesc = a->getText(ST::logoDescription);
+if (!logoDesc.empty()) {
+    setLogoDescription(logoDesc);
+}
 
-    if (a->hasValue(ST::titleTextColor)) {
-        setTitleTextColor(a->getColor(ST::titleTextColor, 0xffffffff));
-    }
+if (a->hasValue(ST::titleTextColor)) {
+    setTitleTextColor(a->getColor(ST::titleTextColor, 0xffffffff));
+}
 
-    if (a->hasValue(ST::subtitleTextColor)) {
-        setSubtitleTextColor(a->getColor(ST::subtitleTextColor, 0xffffffff));
-    }
-    }
+if (a->hasValue(ST::subtitleTextColor)) {
+    setSubtitleTextColor(a->getColor(ST::subtitleTextColor, 0xffffffff));
+}
+
 
     // Set the default context, since setPopupTheme() may be a no-op.
     mPopupContext = mContext;

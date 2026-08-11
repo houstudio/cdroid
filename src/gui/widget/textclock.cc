@@ -63,12 +63,12 @@ TextClock::TextClock(Context* context,const AttributeSet* pAttrs,int defStyleAtt
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(attrs, styleable::TextClock::IDS, defStyleAttr);
-    if (ta) {
-    namespace STC = styleable::TextClock;
-    mFormat12 = ta->getString(STC::format12Hour);
-    mFormat24 = ta->getString(STC::format24Hour);
-    mTimeZone = ta->getString(STC::timeZone);
-    }
+    
+namespace STC = styleable::TextClock;
+mFormat12 = ta->getString(STC::format12Hour);
+mFormat24 = ta->getString(STC::format24Hour);
+mTimeZone = ta->getString(STC::timeZone);
+
 }
 
 void TextClock::init() {

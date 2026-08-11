@@ -11,34 +11,34 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet* pAttrs,int
     const AttributeSet& a = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(a, styleable::CheckedTextView::IDS, defStyleAttr);
-    if (ta) {
-    namespace SCT = styleable::CheckedTextView;
+    
+namespace SCT = styleable::CheckedTextView;
 
-    Drawable* d = context->getDrawable(ta->getString(SCT::checkMark));
-    mCheckMarkDrawable = nullptr;
-    mCheckMarkTintList = nullptr;
-    mHasCheckMarkTintMode=false;
-    mHasCheckMarkTint = false;
-    if (d)setCheckMarkDrawable(d);
+Drawable* d = context->getDrawable(ta->getString(SCT::checkMark));
+mCheckMarkDrawable = nullptr;
+mCheckMarkTintList = nullptr;
+mHasCheckMarkTintMode=false;
+mHasCheckMarkTint = false;
+if (d)setCheckMarkDrawable(d);
 
-    if ((ta&&ta->hasValue(SCT::checkMarkTintMode)) || a.hasAttribute("checkMarkTintMode")) {
-        /* getTintMode decodes the 6-value tintMode enum; the value is valid as a
-         * BlendMode (PorterDuff and BlendMode coincide for these 6). */
-        mCheckMarkBlendMode = a.getTintMode("checkMarkTintMode", -1);
-        mHasCheckMarkTintMode = true;
-    }
+if ((ta&&ta->hasValue(SCT::checkMarkTintMode)) || a.hasAttribute("checkMarkTintMode")) {
+    /* getTintMode decodes the 6-value tintMode enum; the value is valid as a
+     * BlendMode (PorterDuff and BlendMode coincide for these 6). */
+    mCheckMarkBlendMode = a.getTintMode("checkMarkTintMode", -1);
+    mHasCheckMarkTintMode = true;
+}
 
-    if ((ta&&ta->hasValue(SCT::checkMarkTint)) || a.hasAttribute("checkMarkTint")) {
-        mCheckMarkTintList = a.getColorStateList("checkMarkTint");
-        mHasCheckMarkTint = (mCheckMarkTintList!=nullptr);
-    }
-    mChecked = false;
-    mCheckMarkGravity = a.getGravity("checkMarkGravity", Gravity::END);
+if ((ta&&ta->hasValue(SCT::checkMarkTint)) || a.hasAttribute("checkMarkTint")) {
+    mCheckMarkTintList = a.getColorStateList("checkMarkTint");
+    mHasCheckMarkTint = (mCheckMarkTintList!=nullptr);
+}
+mChecked = false;
+mCheckMarkGravity = a.getGravity("checkMarkGravity", Gravity::END);
 
-    const bool checked = ta->getBoolean(SCT::checked, false);
-    setChecked(checked);
-    applyCheckMarkTint();
-    }
+const bool checked = ta->getBoolean(SCT::checked, false);
+setChecked(checked);
+applyCheckMarkTint();
+
 }
 
 CheckedTextView::~CheckedTextView(){

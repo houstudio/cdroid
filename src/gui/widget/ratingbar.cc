@@ -41,22 +41,22 @@ RatingBar::RatingBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mProgressOnStartTracking =0;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = ctx->obtainStyledAttributes(atts, styleable::RatingBar::IDS, defStyleAttr);
-    if (ta) {
-    namespace SRB = styleable::RatingBar;
+    
+namespace SRB = styleable::RatingBar;
 
-    setIsIndicator(ta->getBoolean(SRB::isIndicator,!mIsUserSeekable));
-    const int numStars  = ta->getInt(SRB::numStars,mNumStars);
-    const float rating  = ta->getFloat(SRB::rating,-1);
-    const float stepSize= ta->getFloat(SRB::stepSize,-1);
-    if( (numStars>0) && (numStars!=mNumStars) )
-        setNumStars(numStars);
-    setStepSize((stepSize>=0)?stepSize:0.5f);
-    if(rating>=0)setRating(rating);
+setIsIndicator(ta->getBoolean(SRB::isIndicator,!mIsUserSeekable));
+const int numStars  = ta->getInt(SRB::numStars,mNumStars);
+const float rating  = ta->getFloat(SRB::rating,-1);
+const float stepSize= ta->getFloat(SRB::stepSize,-1);
+if( (numStars>0) && (numStars!=mNumStars) )
+    setNumStars(numStars);
+setStepSize((stepSize>=0)?stepSize:0.5f);
+if(rating>=0)setRating(rating);
 
-    // A touch inside a star fill up to that fractional area (slightly more
-    // than 0.5 so boundaries round up).
-    mTouchProgressOffset = 0.6f;
-    }
+// A touch inside a star fill up to that fractional area (slightly more
+// than 0.5 so boundaries round up).
+mTouchProgressOffset = 0.6f;
+
 }
 
 void RatingBar::setOnRatingBarChangeListener(const OnRatingBarChangeListener& listener){

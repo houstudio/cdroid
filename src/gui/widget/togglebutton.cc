@@ -34,13 +34,13 @@ ToggleButton::ToggleButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAt
     mIndicatorDrawable=nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = ctx->obtainStyledAttributes(attrs, styleable::ToggleButton::IDS, defStyleAttr);
-    if (ta) {
-    namespace STB = styleable::ToggleButton;
+    
+namespace STB = styleable::ToggleButton;
 
-    setTextOn(ctx->getString(ta->getString(STB::textOn)));
-    setTextOff(ctx->getString(ta->getString(STB::textOff)));
-    mDisabledAlpha= ta->getFloat(STB::disabledAlpha,0.5f);
-    }
+setTextOn(ctx->getString(ta->getString(STB::textOn)));
+setTextOff(ctx->getString(ta->getString(STB::textOff)));
+mDisabledAlpha= ta->getFloat(STB::disabledAlpha,0.5f);
+
 }
 
 ToggleButton::ToggleButton(int w,int h):CompoundButton(std::string(),w,h){

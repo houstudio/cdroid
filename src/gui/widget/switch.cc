@@ -22,66 +22,66 @@ Switch::Switch(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(a, styleable::Switch::IDS, defStyleAttr);
-    if (ta) {
-    namespace SW = styleable::Switch;
+    
+namespace SW = styleable::Switch;
 
-    mThumbDrawable = ta->getDrawable(SW::thumb);
-    if (mThumbDrawable) {
-        mThumbDrawable->setCallback(this);
-    }
-    mTrackDrawable = ta->getDrawable(SW::track);
-    if (mTrackDrawable) {
-        mTrackDrawable->setCallback(this);
-    }
-    mTextOn = ta->getString(SW::textOn);
-    mTextOff = ta->getString(SW::textOff);
-    mShowText = ta->getBoolean(SW::showText, true);
-    mThumbTextPadding = ta->getDimensionPixelSize(SW::thumbTextPadding, 0);
-    mSwitchMinWidth = ta->getDimensionPixelSize(SW::switchMinWidth, 0);
-    mSwitchPadding = ta->getDimensionPixelSize(SW::switchPadding, 0);
-    mSplitTrack = ta->getBoolean(SW::splitTrack, false);
+mThumbDrawable = ta->getDrawable(SW::thumb);
+if (mThumbDrawable) {
+    mThumbDrawable->setCallback(this);
+}
+mTrackDrawable = ta->getDrawable(SW::track);
+if (mTrackDrawable) {
+    mTrackDrawable->setCallback(this);
+}
+mTextOn = ta->getString(SW::textOn);
+mTextOff = ta->getString(SW::textOff);
+mShowText = ta->getBoolean(SW::showText, true);
+mThumbTextPadding = ta->getDimensionPixelSize(SW::thumbTextPadding, 0);
+mSwitchMinWidth = ta->getDimensionPixelSize(SW::switchMinWidth, 0);
+mSwitchPadding = ta->getDimensionPixelSize(SW::switchPadding, 0);
+mSplitTrack = ta->getBoolean(SW::splitTrack, false);
 
-    mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
+mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
 
-    mThumbTintList = a.getColorStateList("thumbTint");
-    mHasThumbTint = (mThumbTintList!=nullptr);
+mThumbTintList = a.getColorStateList("thumbTint");
+mHasThumbTint = (mThumbTintList!=nullptr);
 
-    const int thumbTintMode = a.getTintMode("thumbTintMode", -1);
-    if (mThumbBlendMode != thumbTintMode) {
-        mThumbBlendMode = thumbTintMode;
-        mHasThumbTintMode = true;
-    }
-    if (mHasThumbTint || mHasThumbTintMode) {
-        applyThumbTint();
-    }
+const int thumbTintMode = a.getTintMode("thumbTintMode", -1);
+if (mThumbBlendMode != thumbTintMode) {
+    mThumbBlendMode = thumbTintMode;
+    mHasThumbTintMode = true;
+}
+if (mHasThumbTint || mHasThumbTintMode) {
+    applyThumbTint();
+}
 
-    mTrackTintList = a.getColorStateList("trackTint");
-    mHasTrackTint = (mTrackTintList!=nullptr);
+mTrackTintList = a.getColorStateList("trackTint");
+mHasTrackTint = (mTrackTintList!=nullptr);
 
-    const int trackTintMode = a.getTintMode("trackTintMode", -1);
-    if (mTrackBlendMode != trackTintMode) {
-        mTrackBlendMode = trackTintMode;
-        mHasTrackTintMode = true;
-    }
-    if (mHasTrackTint || mHasTrackTintMode) {
-        applyTrackTint();
-    }
+const int trackTintMode = a.getTintMode("trackTintMode", -1);
+if (mTrackBlendMode != trackTintMode) {
+    mTrackBlendMode = trackTintMode;
+    mHasTrackTintMode = true;
+}
+if (mHasTrackTint || mHasTrackTintMode) {
+    applyTrackTint();
+}
 
-    const std::string appearance = ta->getString(SW::switchTextAppearance);
-    if (!appearance.empty()){
-        setSwitchTextAppearance(context, appearance);
-    }
-    ViewConfiguration& config = ViewConfiguration::get(context);
-    mTouchSlop = config.getScaledTouchSlop();
-    mMinFlingVelocity = config.getScaledMinimumFlingVelocity();
+const std::string appearance = ta->getString(SW::switchTextAppearance);
+if (!appearance.empty()){
+    setSwitchTextAppearance(context, appearance);
+}
+ViewConfiguration& config = ViewConfiguration::get(context);
+mTouchSlop = config.getScaledTouchSlop();
+mMinFlingVelocity = config.getScaledMinimumFlingVelocity();
 
-    // Refresh display with current params
-    refreshDrawableState();
-    // Default state is derived from on/off-text, so state has to be updated when on/off-text
-    // are updated.
-    //setDefaultStateDescription();
-    setChecked(isChecked());
-    }
+// Refresh display with current params
+refreshDrawableState();
+// Default state is derived from on/off-text, so state has to be updated when on/off-text
+// are updated.
+//setDefaultStateDescription();
+setChecked(isChecked());
+
 }
 
 class THUMB_POS:public FloatProperty{

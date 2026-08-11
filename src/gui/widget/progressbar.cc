@@ -79,99 +79,99 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
     initProgressBar();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = ctx->obtainStyledAttributes(attrs, styleable::ProgressBar::IDS, defStyleAttr);
-    if (ta) {
-    namespace SPB = styleable::ProgressBar;
+    
+namespace SPB = styleable::ProgressBar;
 
-    Drawable* progressDrawable = ta->getDrawable(SPB::progressDrawable);
-    if(progressDrawable){
-        if(needsTileify(progressDrawable))
-            setProgressDrawableTiled(progressDrawable);
-        else
-            setProgressDrawable(progressDrawable);
-    }
+Drawable* progressDrawable = ta->getDrawable(SPB::progressDrawable);
+if(progressDrawable){
+    if(needsTileify(progressDrawable))
+        setProgressDrawableTiled(progressDrawable);
+    else
+        setProgressDrawable(progressDrawable);
+}
 
-    Drawable* indeterminateDrawable = ta->getDrawable(SPB::indeterminateDrawable);
-    if(indeterminateDrawable){
-        if(needsTileify(indeterminateDrawable))
-            setIndeterminateDrawableTiled(indeterminateDrawable);
-        else
-            setIndeterminateDrawable(indeterminateDrawable);
-    }
+Drawable* indeterminateDrawable = ta->getDrawable(SPB::indeterminateDrawable);
+if(indeterminateDrawable){
+    if(needsTileify(indeterminateDrawable))
+        setIndeterminateDrawableTiled(indeterminateDrawable);
+    else
+        setIndeterminateDrawable(indeterminateDrawable);
+}
 
-    mDuration = ta->getInt(SPB::indeterminateDuration,mDuration);
-    mMinWidth = ta->getDimensionPixelSize(SPB::minWidth, mMinWidth);
-    mMaxWidth = ta->getDimensionPixelSize(SPB::maxWidth, mMaxWidth);
-    mMinHeight= ta->getDimensionPixelSize(SPB::minHeight, mMinHeight);
-    mMaxHeight= ta->getDimensionPixelSize(SPB::maxHeight, mMaxHeight);
-    mBehavior = ta->getInt(SPB::indeterminateBehavior,mBehavior);
+mDuration = ta->getInt(SPB::indeterminateDuration,mDuration);
+mMinWidth = ta->getDimensionPixelSize(SPB::minWidth, mMinWidth);
+mMaxWidth = ta->getDimensionPixelSize(SPB::maxWidth, mMaxWidth);
+mMinHeight= ta->getDimensionPixelSize(SPB::minHeight, mMinHeight);
+mMaxHeight= ta->getDimensionPixelSize(SPB::maxHeight, mMaxHeight);
+mBehavior = ta->getInt(SPB::indeterminateBehavior,mBehavior);
 
-    mOnlyIndeterminate= (ta->getBoolean(SPB::indeterminateOnly,mOnlyIndeterminate));
-    mNoInvalidate = false;
-    setIndeterminate(mOnlyIndeterminate|| (ta->getBoolean(SPB::indeterminate,mIndeterminate)));
+mOnlyIndeterminate= (ta->getBoolean(SPB::indeterminateOnly,mOnlyIndeterminate));
+mNoInvalidate = false;
+setIndeterminate(mOnlyIndeterminate|| (ta->getBoolean(SPB::indeterminate,mIndeterminate)));
 
-    mMirrorForRtl = ta->getBoolean(SPB::mirrorForRtl,false);
+mMirrorForRtl = ta->getBoolean(SPB::mirrorForRtl,false);
 
-    setMin(ta->getInt(SPB::min,mMin));
-    setMax(ta->getInt(SPB::max,mMax));
+setMin(ta->getInt(SPB::min,mMin));
+setMax(ta->getInt(SPB::max,mMax));
 
-    setProgress(ta->getInt(SPB::progress,mProgress));
-    setSecondaryProgress(ta->getInt(SPB::secondaryProgress,mSecondaryProgress));
+setProgress(ta->getInt(SPB::progress,mProgress));
+setSecondaryProgress(ta->getInt(SPB::secondaryProgress,mSecondaryProgress));
 
-    if(attrs.hasAttribute("progressTintMode")){
-        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressTintMode = attrs.getTintMode("progressTintMode", PorterDuff::Mode::NOOP);
-        mProgressTintInfo->mHasProgressTintMode=true;
-    }
+if(attrs.hasAttribute("progressTintMode")){
+    if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+    mProgressTintInfo->mProgressTintMode = attrs.getTintMode("progressTintMode", PorterDuff::Mode::NOOP);
+    mProgressTintInfo->mHasProgressTintMode=true;
+}
 
-    if(attrs.hasAttribute("progressTint")){
-        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressTintList= ta ? ta->getColorStateList(SPB::progressTint) : nullptr;
-        mProgressTintInfo->mHasProgressTint = true;
-    }
+if(attrs.hasAttribute("progressTint")){
+    if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+    mProgressTintInfo->mProgressTintList= ta ? ta->getColorStateList(SPB::progressTint) : nullptr;
+    mProgressTintInfo->mHasProgressTint = true;
+}
 
-    if(attrs.hasAttribute("progressBackgroundTintMode")){
-        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressBackgroundTintMode = attrs.getTintMode("progressBackgroundTintMode", PorterDuff::Mode::NOOP);
-        mProgressTintInfo->mHasProgressBackgroundTintMode = true;
-    }
+if(attrs.hasAttribute("progressBackgroundTintMode")){
+    if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+    mProgressTintInfo->mProgressBackgroundTintMode = attrs.getTintMode("progressBackgroundTintMode", PorterDuff::Mode::NOOP);
+    mProgressTintInfo->mHasProgressBackgroundTintMode = true;
+}
 
-    if(attrs.hasAttribute("progressBackgroundTint")){
-        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressBackgroundTintList = ta ? ta->getColorStateList(SPB::progressBackgroundTint) : nullptr;
-        mProgressTintInfo->mHasProgressBackgroundTint = true;
-    }
+if(attrs.hasAttribute("progressBackgroundTint")){
+    if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+    mProgressTintInfo->mProgressBackgroundTintList = ta ? ta->getColorStateList(SPB::progressBackgroundTint) : nullptr;
+    mProgressTintInfo->mHasProgressBackgroundTint = true;
+}
 
-    if(attrs.hasAttribute("secondaryProgressTintMode")){
-        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mSecondaryProgressTintMode = attrs.getTintMode("secondaryProgressTintMode", PorterDuff::Mode::NOOP);
-        mProgressTintInfo->mHasSecondaryProgressTintMode = true;
-    }
+if(attrs.hasAttribute("secondaryProgressTintMode")){
+    if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+    mProgressTintInfo->mSecondaryProgressTintMode = attrs.getTintMode("secondaryProgressTintMode", PorterDuff::Mode::NOOP);
+    mProgressTintInfo->mHasSecondaryProgressTintMode = true;
+}
 
-    if(attrs.hasAttribute("secondaryProgressTint")){
-        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mSecondaryProgressTintList = ta ? ta->getColorStateList(SPB::secondaryProgressTint) : nullptr;
-        mProgressTintInfo->mHasSecondaryProgressTint=true;
-    }
+if(attrs.hasAttribute("secondaryProgressTint")){
+    if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+    mProgressTintInfo->mSecondaryProgressTintList = ta ? ta->getColorStateList(SPB::secondaryProgressTint) : nullptr;
+    mProgressTintInfo->mHasSecondaryProgressTint=true;
+}
 
-    if (attrs.hasAttribute("indeterminateTintMode")) {
-        if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
-        mProgressTintInfo->mIndeterminateTintMode = attrs.getTintMode("indeterminateTintMode", PorterDuff::Mode::NOOP);
-        mProgressTintInfo->mHasIndeterminateTintMode = true;
-    }
+if (attrs.hasAttribute("indeterminateTintMode")) {
+    if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
+    mProgressTintInfo->mIndeterminateTintMode = attrs.getTintMode("indeterminateTintMode", PorterDuff::Mode::NOOP);
+    mProgressTintInfo->mHasIndeterminateTintMode = true;
+}
 
-    if (attrs.hasAttribute("indeterminateTint")) {
-        if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
-        mProgressTintInfo->mIndeterminateTintList = ta ? ta->getColorStateList(SPB::indeterminateTint) : nullptr;
-        mProgressTintInfo->mHasIndeterminateTint = true;
-    }
-    applyProgressTints();
-    applyIndeterminateTint();
+if (attrs.hasAttribute("indeterminateTint")) {
+    if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
+    mProgressTintInfo->mIndeterminateTintList = ta ? ta->getColorStateList(SPB::indeterminateTint) : nullptr;
+    mProgressTintInfo->mHasIndeterminateTint = true;
+}
+applyProgressTints();
+applyIndeterminateTint();
 
-    // If not explicitly specified this view is important for accessibility.
-    if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
-        setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
-    }
-    }
+// If not explicitly specified this view is important for accessibility.
+if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+    setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
+}
+
 }
 
 ProgressBar::ProgressBar(int width, int height):View(width,height){

@@ -42,11 +42,11 @@ ScrollView::ScrollView(Context*context,const AttributeSet* pAttrs,int defStyleAt
     initScrollView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(atts, styleable::ScrollView::IDS, defStyleAttr);
-    if (ta) {
-    namespace SSV = styleable::ScrollView;
-    setFillViewport(ta->getBoolean(SSV::fillViewport, false));
-    mScrollDuration = atts.getInt("scrollDuration",400);
-    }
+    
+namespace SSV = styleable::ScrollView;
+setFillViewport(ta->getBoolean(SSV::fillViewport, false));
+mScrollDuration = atts.getInt("scrollDuration",400);
+
 }
 
 ScrollView::~ScrollView(){
