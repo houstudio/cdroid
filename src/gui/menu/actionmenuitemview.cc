@@ -21,8 +21,11 @@
 namespace cdroid{
 
 DECLARE_WIDGET(ActionMenuItemView)
-ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet& attrs)
-    :TextView(context, attrs){//, defStyleAttr, defStyleRes){
+ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet& attrs):ActionMenuItemView(context,&attrs,0){}
+
+ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :TextView(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;//, defStyleAttr, defStyleRes){
     mIcon = nullptr;
     mItemData = nullptr;
     mExpandedFormat = false;

@@ -75,6 +75,7 @@ protected:
     View* makeControllerView();
 public:
     MediaController(Context* context,const AttributeSet& attrs);
+    MediaController(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     MediaController(Context* context, bool useFastForward);
     void onFinishInflate()override;
     void setMediaPlayer(MediaPlayerControl player);

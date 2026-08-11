@@ -41,6 +41,7 @@ protected:
 public:
     AbsoluteLayout(int w,int h);
     AbsoluteLayout(Context* context,const AttributeSet& attrs);
+    AbsoluteLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     std::string getAccessibilityClassName()const override;
 };

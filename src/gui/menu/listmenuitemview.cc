@@ -25,8 +25,11 @@
 namespace cdroid{
 
 DECLARE_WIDGET2(ListMenuItemView,"cdroid:attr/listMenuViewStyle")
-ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs)
-    :LinearLayout(context, attrs){
+ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs):ListMenuItemView(context,&attrs,0){}
+
+ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :LinearLayout(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     mBackground = attrs.getDrawable("itemBackground");
     mTextAppearance = attrs.getString("itemTextAppearance");

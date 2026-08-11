@@ -66,6 +66,10 @@ public:
     static ViewInflater getInflater(const std::string&);
     static bool registerInflater(const std::string&name,const std::string&,ViewInflater fun);
     const std::string getDefaultStyle(const std::string&name)const;
+    // Resolve a DECLARE_WIDGET-registered default-style attribute ("pkg:attr/name")
+    // to its attr resource id (defStyleAttr), or 0 if unresolvable. The inflater
+    // factory passes this to each widget's AOSP ctor.
+    static int resolveDefStyleAttr(Context*ctx,const std::string&defstyle);
     Context*getContext()const;
     Factory getFactory()const;
     Factory2 getFactory2()const;
@@ -110,11 +114,30 @@ public:
     virtual View* onCreateView(Context* viewContext, View* parent, const std::string& name,AttributeSet& attrs);
 };
 
+// SFINAE factory: prefer the AOSP pointer ctor (Context*, const AttributeSet*, int)
+// when T has one (so defStyleAttr flows in); otherwise fall back to the legacy
+// (Context*, const AttributeSet&) ref ctor. Lets widgets migrate to the pointer
+// ctor incrementally without a big-bang factory switch.
+namespace detail {
+template<typename T>
+inline View* makeView(Context*ctx,const AttributeSet&attr,int da,std::true_type){
+    return new T(ctx,&attr,da);
+}
+template<typename T>
+inline View* makeView(Context*ctx,const AttributeSet&attr,int,std::false_type){
+    return new T(ctx,attr);
+}
+}
+
 template<typename T>
 class InflaterRegister{
 public:
     InflaterRegister(const std::string&name,const std::string&defstyle){
-        LayoutInflater::registerInflater(name,defstyle,[](Context*ctx,const AttributeSet&attr)->View*{return new T(ctx,attr);});
+        LayoutInflater::registerInflater(name,defstyle,[defstyle](Context*ctx,const AttributeSet&attr)->View*{
+            const int da=LayoutInflater::resolveDefStyleAttr(ctx,defstyle);
+            return detail::makeView<T>(ctx,attr,da,
+                std::is_constructible<T,Context*,const AttributeSet*,int>{});
+        });
     }
 };
 

@@ -17,6 +17,7 @@ protected:
     void dispatchDraw(Canvas& canvas)override;
 public:
     ViewStub(Context* context,const AttributeSet& attrs);
+    ViewStub(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     int getInflatedId()const;
     const std::string& getLayoutResource()const;
     void draw(Canvas&)override;

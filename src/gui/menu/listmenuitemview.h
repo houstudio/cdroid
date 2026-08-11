@@ -58,6 +58,7 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
 public:
     ListMenuItemView(Context* context,const AttributeSet& attrs);
+    ListMenuItemView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
 
     void initialize(MenuItemImpl* itemData, int menuType)override;
 

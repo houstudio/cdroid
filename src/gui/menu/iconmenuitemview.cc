@@ -21,8 +21,11 @@ namespace cdroid{
 
 DECLARE_WIDGET(IconMenuItemView)
 std::string IconMenuItemView::sPrependShortcutLabel;
-IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet& attrs)
-    :TextView(context, attrs){
+IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet& attrs):IconMenuItemView(context,&attrs,0){}
+
+IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :TextView(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     if (sPrependShortcutLabel.empty()) {
         /*

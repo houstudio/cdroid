@@ -55,6 +55,15 @@ const std::string LayoutInflater::getDefaultStyle(const std::string&name)const {
     return it==maps.end()?std::string():it->second;
 }
 
+int LayoutInflater::resolveDefStyleAttr(Context*ctx,const std::string&defstyle) {
+    // DECLARE_WIDGET registers "pkg:attr/name"; resolve to the attr resource id
+    // (defStyleAttr) the widget ctor passes to obtainStyledAttributesTyped.
+    std::string dn = defstyle; std::string dpkg;
+    size_t dc = dn.find(':'); if (dc != std::string::npos) dpkg = dn.substr(0, dc);
+    size_t ds = dn.find('/');  if (ds != std::string::npos) dn = dn.substr(ds + 1);
+    return ctx->getResources().getIdentifier(dn, "attr", dpkg);
+}
+
 LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name) {
     const size_t  pt = name.rfind('.');
     auto &maps = mFlateMapper;
@@ -275,11 +284,7 @@ View* LayoutInflater::createView(Context* viewContext, const std::string& name, 
     if(!styleName.empty()) {
         // Record the default-style attribute (defStyleAttr) so the widget ctor's
         // obtainStyledAttributesTyped applies it (AOSP ctor defStyleAttr flow).
-        // Resolve the DECLARE_WIDGET-registered "pkg:attr/name" to its attr resId.
-        std::string dn = styleName; std::string dpkg;
-        size_t dc = dn.find(':'); if (dc != std::string::npos) dpkg = dn.substr(0, dc);
-        size_t ds = dn.find('/');  if (ds != std::string::npos) dn = dn.substr(ds + 1);
-        int defAttrId = viewContext->getResources().getIdentifier(dn, "attr", dpkg);
+        int defAttrId = LayoutInflater::resolveDefStyleAttr(viewContext, styleName);
         if (defAttrId) attrs.setDefStyleAttr(defAttrId);
         AttributeSet defstyle = viewContext->obtainStyledAttributes(styleName);
         attrs.inherit(defstyle);

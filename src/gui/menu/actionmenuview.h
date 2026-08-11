@@ -61,6 +61,7 @@ protected:
     bool hasDividerBeforeChildAt(int childIndex)override;
 public:
     ActionMenuView(Context* context,const AttributeSet& attrs);
+    ActionMenuView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~ActionMenuView()override;
     void setPopupTheme(int resId);
     int getPopupTheme();

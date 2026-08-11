@@ -60,8 +60,11 @@ TableRow::TableRow(int w,int h):LinearLayout(w,h){
     initTableRow();
 }
 
-TableRow::TableRow(Context* context,const AttributeSet& attrs)
-  :LinearLayout(context, attrs){
+TableRow::TableRow(Context* context,const AttributeSet& attrs):TableRow(context,&attrs,0){}
+
+TableRow::TableRow(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :LinearLayout(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initTableRow();
 }
 

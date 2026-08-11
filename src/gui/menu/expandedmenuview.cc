@@ -20,8 +20,11 @@
 namespace cdroid{
 
 DECLARE_WIDGET(ExpandedMenuView)
-ExpandedMenuView::ExpandedMenuView(Context* context,const AttributeSet& attrs)
-    :ListView(context, attrs){
+ExpandedMenuView::ExpandedMenuView(Context* context,const AttributeSet& attrs):ExpandedMenuView(context,&attrs,0){}
+
+ExpandedMenuView::ExpandedMenuView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ListView(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     //TypedArray a = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.MenuView, 0, 0);
     //mAnimations = attrs.getResourceId(com.android.internal.R.styleable.MenuView_windowAnimationStyle, 0);

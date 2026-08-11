@@ -5,7 +5,10 @@ namespace cdroid{
 
 DECLARE_WIDGET(ViewStub)
 
-ViewStub::ViewStub(Context* context,const AttributeSet& attrs):View(context,attrs){
+ViewStub::ViewStub(Context* context,const AttributeSet& attrs):ViewStub(context,&attrs,0){}
+
+ViewStub::ViewStub(Context* context,const AttributeSet* pAttrs,int defStyleAttr):View(context,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     mInflatedId = attrs.getResourceId("inflatedId",View::NO_ID);
     mLayoutResource  = attrs.getString("layout");
     mInflatedViewRef = nullptr;

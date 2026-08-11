@@ -355,6 +355,7 @@ protected:
 public:
     GridLayout(int w,int h);
     GridLayout(Context*ctx,const AttributeSet&attrs);
+    GridLayout(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~GridLayout()override;
     int getOrientation()const;
     void setOrientation(int);

@@ -69,6 +69,7 @@ protected:
     void notifyZoomResetListeners();
 public:
     GraphicalView(Context*,const AttributeSet&);
+    GraphicalView(Context*,const AttributeSet* attrs,int defStyleAttr=0);
     ~GraphicalView()override;
     /**
      * Creates a new graphical view.

@@ -310,7 +310,11 @@ void CompoundButton::onDraw(Canvas&canvas){
 ///////////////////////////////////////////////////////////////////////////////////////////
 DECLARE_WIDGET2(CheckBox,"cdroid:attr/checkboxStyle")
 CheckBox::CheckBox(Context*ctx,const AttributeSet& attrs)
-    :CompoundButton(ctx,attrs){
+    :CheckBox(ctx,&attrs,0){
+}
+
+CheckBox::CheckBox(Context*ctx,const AttributeSet* attrs,int defStyleAttr)
+    :CompoundButton(ctx,attrs,defStyleAttr){
 }
 
 CheckBox::CheckBox(const std::string&txt,int w,int h)
@@ -330,7 +334,11 @@ RadioButton::RadioButton(const std::string&txt,int w,int h)
 }
 
 RadioButton::RadioButton(Context*ctx,const AttributeSet& attrs)
-   :CompoundButton(ctx,attrs){
+   :RadioButton(ctx,&attrs,0){
+}
+
+RadioButton::RadioButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr)
+   :CompoundButton(ctx,attrs,defStyleAttr){
 }
 
 void RadioButton::toggle(){

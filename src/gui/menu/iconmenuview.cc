@@ -21,8 +21,11 @@
 namespace cdroid{
 
 DECLARE_WIDGET(IconMenuView)
-IconMenuView::IconMenuView(Context* context,const AttributeSet& attrs)
-  :ViewGroup(context, attrs){
+IconMenuView::IconMenuView(Context* context,const AttributeSet& attrs):IconMenuView(context,&attrs,0){}
+
+IconMenuView::IconMenuView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :ViewGroup(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     mRowHeight= attrs.getDimensionPixelSize("rowHeight", 64);
     mMaxRows  = attrs.getInt("maxRows", 2);

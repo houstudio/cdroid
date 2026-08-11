@@ -23,6 +23,7 @@ class RadioButton:public CompoundButton{
 public:
     RadioButton(const std::string&,int w,int h);
     RadioButton(Context*ctx,const AttributeSet& attrs);
+    RadioButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     void toggle()override;
     std::string getAccessibilityClassName()const override;
 };

@@ -135,8 +135,11 @@ GridLayout::GridLayout(int w,int h)
     initGridLayout();
 }
 
-GridLayout::GridLayout(Context*ctx,const AttributeSet&attrs)
-    :ViewGroup(ctx,attrs){
+GridLayout::GridLayout(Context*ctx,const AttributeSet& attrs):GridLayout(ctx,&attrs,0){}
+
+GridLayout::GridLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initGridLayout();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;

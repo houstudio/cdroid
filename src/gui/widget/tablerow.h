@@ -54,6 +54,7 @@ protected:
 public:
     TableRow(int w,int h);
     TableRow(Context* context,const AttributeSet&attrs);
+    TableRow(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     void setOnHierarchyChangeListener(const OnHierarchyChangeListener& listener)override;
     void setColumnCollapsed(int columnIndex, bool collapsed);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
