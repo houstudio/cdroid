@@ -1414,59 +1414,15 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
     return atts;
 }
 
-// Phase 2 TypedArray bridge: resolve binary AXML attrs to typed values via
-// androidfw obtainStyledAttributes. Returns null for text XML or no arsc.
-// `styleable` is sentinel-terminated; its length is read off the trailing 0.
+// AOSP Context.obtainStyledAttributes(AttributeSet, int[], defStyleAttr,
+// defStyleRes) — delegates to Resources.obtainStyledAttributes (the AOSP
+// Resources surface; the resolver logic lives there now). AttributeSet is
+// nullable (AOSP @Nullable).
 std::unique_ptr<TypedArray> Assets::obtainStyledAttributes(
     const AttributeSet* attrs, const uint32_t* styleable,
     int32_t defStyleAttr, int32_t defStyleRes)
 {
-    if (!mResTable) return nullptr;
-    size_t count = 0; while (styleable[count]) count++;   // sentinel-terminated
-    std::vector<StyledAttr> styled(count);
-    // AOSP obtainStyledAttributes accepts a null AttributeSet (new View(ctx, null,
-    // defStyleAttr)): resolve theme-only (defStyleAttr + defStyleRes + theme, no
-    // element attrs) so a null-attrs widget still gets its default style.
-    if (!attrs) {
-        cdroid::obtainStyledAttributes(*mResTable, mArscTheme, styleable,
-                                        defStyleAttr, defStyleRes, styled.data());
-        return std::make_unique<TypedArray>(*mResTable, std::move(styled), nullptr,
-                                            mDisplayMetrics.density, this);
-    }
-    const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(attrs);
-    const bool isBinary = parser && parser->isBinaryAXML();
-    if (isBinary) {
-        const ResXMLTree* xml = static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree());
-        if (!xml) return nullptr;
-        // Binary AXML element: resolve through the AXML + theme + style chain.
-        cdroid::obtainStyledAttributes(*xml, *mResTable, mArscTheme, styleable,
-                                        defStyleAttr, defStyleRes, styled.data());
-        return std::make_unique<TypedArray>(*mResTable, std::move(styled), xml,
-                                            mDisplayMetrics.density, this);
-    }
-    // Non-binary AttributeSet: a widget ctor handed a runtime-resolved *style*
-    // AttributeSet (e.g. the action-bar overflow button created from
-    // actionOverflowButtonStyle). Re-resolve that style through the arsc theme
-    // resolver (defStyleRes = the style's resId) to get raw Res_values — no
-    // string<->Res_value conversion. Text-XML element AttributeSets (no style
-    // resId) are dropped (text ctor path retired on this branch).
-    const int styleResId = attrs->getStyleResourceId();
-    if (styleResId == 0) {
-        // No style AttributeSet — null/empty attrs (AOSP new View(ctx, null,
-        // defStyleAttr): programmatic styled construction with no XML element) or a
-        // retired text-XML element. Resolve theme-only: defStyleAttr + defStyleRes +
-        // theme, with no element attrs, so a null-attrs widget still gets its default
-        // style. The arsc resolver honours defStyleAttr (theme attr -> style) and
-        // defStyleRes (style resId) exactly like AOSP's obtainStyledAttributes(null,...).
-        cdroid::obtainStyledAttributes(*mResTable, mArscTheme, styleable,
-                                        defStyleAttr, defStyleRes, styled.data());
-        return std::make_unique<TypedArray>(*mResTable, std::move(styled), nullptr,
-                                            mDisplayMetrics.density, this);
-    }
-    cdroid::obtainStyledAttributes(*mResTable, mArscTheme, styleable,
-                                    defStyleAttr, (uint32_t)styleResId, styled.data());
-    return std::make_unique<TypedArray>(*mResTable, std::move(styled), nullptr,
-                                        mDisplayMetrics.density, this);
+    return getResources().obtainStyledAttributes(attrs, styleable, defStyleAttr, defStyleRes);
 }
 
 }//namespace
