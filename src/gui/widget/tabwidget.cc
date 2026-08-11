@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/tabwidget.h>
+#include <widget/framework_styleable.h>
+#include <core/assets.h>
 #include <cdlog.h>
 
 namespace cdroid{
@@ -29,15 +31,18 @@ TabWidget::TabWidget(int w,int h):LinearLayout(w,h){
 TabWidget::TabWidget(Context*ctx,const AttributeSet&atts)
   :LinearLayout(ctx,atts){
     initTab();
-    const bool hasExplicitLeft = atts.hasAttribute("tabStripLeft");
+    Assets* _a = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _a ? _a->obtainStyledAttributesTyped(atts, styleable::TabWidget::IDS) : nullptr;
+    namespace STW = styleable::TabWidget;
+    const bool hasExplicitLeft = ta && ta->hasValue(STW::tabStripLeft);
     if(hasExplicitLeft)
-        mLeftStrip = atts.getDrawable("tabStripLeft");
+        mLeftStrip = ta->getDrawable(STW::tabStripLeft);
     else
         mLeftStrip = atts.getDrawable("tab_bottom_left");
 
-    const bool hasExplicitRight = atts.hasAttribute("tabStripRight");
+    const bool hasExplicitRight = ta && ta->hasValue(STW::tabStripRight);
     if(hasExplicitRight)
-        mRightStrip = atts.getDrawable("tabStripRight");
+        mRightStrip = ta->getDrawable(STW::tabStripRight);
     else
         mRightStrip = atts.getDrawable("tab_bottom_right");
     setChildrenDrawingOrderEnabled(true);

@@ -1,4 +1,6 @@
 #include <widget/keyboardview.h>
+#include <widget/framework_styleable.h>
+#include <core/assets.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
 #include <widget/popupwindow.h>
@@ -27,15 +29,18 @@ KeyboardView::KeyboardView(int w,int h):View(w,h){
 KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts)
   :View(ctx,atts){
     init();
-    Drawable *dr = atts.getDrawable("keyBackground");
+    Assets* _a = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
+    auto ta = _a ? _a->obtainStyledAttributesTyped(atts, styleable::KeyboardView::IDS) : nullptr;
+    namespace SKV = styleable::KeyboardView;
+    Drawable *dr = ta ? ta->getDrawable(SKV::keyBackground) : nullptr;
     mKeyBackground = dr ? dr:new ColorDrawable(0xFF889988);
-    mVerticalCorrection= atts.getDimensionPixelOffset("verticalCorrection",0);
-    mPreviewOffset     = atts.getDimensionPixelOffset("keyPreviewOffset",0);
-    mPreviewHeight     = atts.getDimensionPixelOffset("keyPreviewHeight",0);
-    mKeyTextSize       = atts.getDimensionPixelOffset("keyTextSize",20);
-    mKeyTextColor      = atts.getColor("keyTextColor",0xFF000000);
-    mLabelTextSize     = atts.getDimensionPixelOffset("labelTextSize",20);
-    mPopupLayout       = atts.getString("popupLayout");
+    mVerticalCorrection= ta ? ta->getDimensionPixelOffset(SKV::verticalCorrection,0) : 0;
+    mPreviewOffset     = ta ? ta->getDimensionPixelOffset(SKV::keyPreviewOffset,0) : 0;
+    mPreviewHeight     = ta ? ta->getDimensionPixelOffset(SKV::keyPreviewHeight,0) : 0;
+    mKeyTextSize       = ta ? ta->getDimensionPixelOffset(SKV::keyTextSize,20) : 20;
+    mKeyTextColor      = ta ? ta->getColor(SKV::keyTextColor,0xFF000000) : 0xFF000000;
+    mLabelTextSize     = ta ? ta->getDimensionPixelOffset(SKV::labelTextSize,20) : 20;
+    mPopupLayout       = ta ? ta->getString(SKV::popupLayout) : std::string();
     mPaint.setTextSize(mLabelTextSize);
     mPaint.setTextAlign(Paint::Align::CENTER);
     resetMultiTap();

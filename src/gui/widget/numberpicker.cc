@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/numberpicker.h>
+#include <widget/framework_styleable.h>
+#include <core/assets.h>
 #include <text/inputtype.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <widget/R.h>
@@ -113,6 +115,13 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
 NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
   :LinearLayout(context,atts){
     initView();
+    // Standard public framework attrs resolved typed via the NumberPicker styleable.
+    // The CDROID-specific attrs read below (selectionDivider/internal*/wheelItemCount/
+    // etc.) aren't in the framework arsc, so they stay on the string bridge — apps
+    // can't set them in binary mode, so those reads return defaults (harmless).
+    Assets* _a = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _a ? _a->obtainStyledAttributesTyped(atts, styleable::NumberPicker::IDS) : nullptr;
+    namespace SN = styleable::NumberPicker;
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
     mWrapSelectorWheelPreferred= atts.getBoolean("wrapSelectorWheel",mWrapSelectorWheelPreferred);
     mDividerDrawable = atts.getDrawable("selectionDivider");
@@ -124,14 +133,14 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
             mDividerDrawable->setState(getDrawableState());
         }
     }
-    mItemBackground =  atts.getDrawable("itemBackground");
+    mItemBackground =  ta ? ta->getDrawable(SN::itemBackground) : nullptr;
     if(mItemBackground){
         mItemBackground->setCallback(this);
         mItemBackground->setLayoutDirection(getLayoutDirection());
     }
     mOrder = ASCENDING;
     if(!isHorizontalMode()){
-        mDividerThickness= atts.getDimensionPixelSize("selectionDividerHeight",UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT);
+        mDividerThickness= ta ? ta->getDimensionPixelSize(SN::selectionDividerHeight,UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT) : UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
         mDividerDistance = atts.getDimensionPixelSize("selectionDividersDistance",UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
     }else{
         mDividerThickness= atts.getDimensionPixelSize("selectionDividerWidth",UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT);
@@ -198,20 +207,20 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mUpdateInputTextInFling = atts.getBoolean("updateInputTextInFling",mUpdateInputTextInFling);
     mTextAlign = mInputText->getGravity();
     mTextSize2 = mInputText->getTextSize();
-    mTypeface = Typeface::create(atts.getString("fontFamily"),Typeface::NORMAL);
+    mTypeface = Typeface::create(ta ? ta->getString(SN::fontFamily) : std::string(),Typeface::NORMAL);
     auto selectedTypeface = Typeface::create(atts.getString("selectedfontFamily"),Typeface::NORMAL);
     if(selectedTypeface!=nullptr){
         setSelectedTypeface(selectedTypeface);
     }
     //ViewConfiguration configuration = ViewConfiguration::get(context);
-    setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
+    setTextSize(ta ? ta->getDimensionPixelSize(SN::textSize,mTextSize) : mTextSize);
     mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
     if(atts.hasAttribute("selectedTextSize"))
         mTextSize2 = atts.getDimensionPixelSize("selectedTextSize");
     else if(!atts.hasAttribute("internalLayout"))
         mTextSize2 =std::max(mTextSize2,mTextSize);
     setSelectedTextSize(mTextSize2);
-    setTextColor(atts.getColor("textColor"));
+    setTextColor(ta ? ta->getColor(SN::textColor, 0xFFFFFFFF) : 0xFFFFFFFF);
     setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
     auto colors = mInputText->getTextColors();
@@ -226,9 +235,9 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     updateInputTextView();
 
     //setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
-    setValue(atts.getInt("value",0));
-    setMinValue(atts.getInt("min",0));
-    setMaxValue(atts.getInt("max",0));
+    setValue(ta ? ta->getInt(SN::value, 0) : 0);
+    setMinValue(ta ? ta->getInt(SN::min, 0) : 0);
+    setMaxValue(ta ? ta->getInt(SN::max, 0) : 0);
 
     std::vector<std::string>displayedValues;
     atts.getArray("displayedValues",displayedValues);

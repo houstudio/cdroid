@@ -102,6 +102,19 @@ namespace fw_attr {
         constexpr uint32_t baseline = 0x0101031c;
         constexpr uint32_t tintMode = 0x010103fb;
     }
+    namespace KeyboardView {
+        constexpr uint32_t keyBackground = 0x01010233;
+        constexpr uint32_t keyTextSize = 0x01010234;
+        constexpr uint32_t labelTextSize = 0x01010235;
+        constexpr uint32_t keyTextColor = 0x01010236;
+        constexpr uint32_t keyPreviewLayout = 0x01010237;
+        constexpr uint32_t keyPreviewOffset = 0x01010238;
+        constexpr uint32_t keyPreviewHeight = 0x01010239;
+        constexpr uint32_t verticalCorrection = 0x0101023a;
+        constexpr uint32_t popupLayout = 0x0101023b;
+        constexpr uint32_t shadowColor = 0x01010161;
+        constexpr uint32_t shadowRadius = 0x01010164;
+    }
     namespace Layout {
         constexpr uint32_t layout_width = 0x010100f4;
         constexpr uint32_t layout_height = 0x010100f5;
@@ -144,6 +157,17 @@ namespace fw_attr {
         constexpr uint32_t layout_marginEnd = 0x010103b6;
         constexpr uint32_t layout_marginHorizontal = 0x0101053b;
         constexpr uint32_t layout_marginVertical = 0x0101053c;
+    }
+    namespace NumberPicker {
+        constexpr uint32_t solidColor = 0x0101034a;
+        constexpr uint32_t selectionDividerHeight = 0x01010598;
+        constexpr uint32_t min = 0x01010539;
+        constexpr uint32_t max = 0x01010136;
+        constexpr uint32_t value = 0x01010024;
+        constexpr uint32_t textColor = 0x01010098;
+        constexpr uint32_t textSize = 0x01010095;
+        constexpr uint32_t fontFamily = 0x010103ac;
+        constexpr uint32_t itemBackground = 0x01010130;
     }
     namespace ProgressBar {
         constexpr uint32_t min = 0x01010539;
@@ -252,9 +276,41 @@ namespace fw_attr {
         constexpr uint32_t splitTrack = 0x0101044c;
         constexpr uint32_t showText = 0x010104ad;
     }
+    namespace TabWidget {
+        constexpr uint32_t divider = 0x01010129;
+        constexpr uint32_t tabStripEnabled = 0x010102bd;
+        constexpr uint32_t tabStripLeft = 0x010102bb;
+        constexpr uint32_t tabStripRight = 0x010102bc;
+    }
     namespace TableRowLayout {
         constexpr uint32_t layout_column = 0x0101014c;
         constexpr uint32_t layout_span = 0x0101014d;
+    }
+    namespace TextAppearance {
+        constexpr uint32_t textColor = 0x01010098;
+        constexpr uint32_t textSize = 0x01010095;
+        constexpr uint32_t textStyle = 0x01010097;
+        constexpr uint32_t textFontWeight = 0x01010585;
+        constexpr uint32_t typeface = 0x01010096;
+        constexpr uint32_t fontFamily = 0x010103ac;
+        constexpr uint32_t textLocale = 0x01010592;
+        constexpr uint32_t textColorHighlight = 0x01010099;
+        constexpr uint32_t searchResultHighlightColor = 0x01010682;
+        constexpr uint32_t focusedSearchResultHighlightColor = 0x01010683;
+        constexpr uint32_t textColorHint = 0x0101009a;
+        constexpr uint32_t textColorLink = 0x0101009b;
+        constexpr uint32_t textAllCaps = 0x0101038c;
+        constexpr uint32_t shadowColor = 0x01010161;
+        constexpr uint32_t shadowDx = 0x01010162;
+        constexpr uint32_t shadowDy = 0x01010163;
+        constexpr uint32_t shadowRadius = 0x01010164;
+        constexpr uint32_t elegantTextHeight = 0x0101045d;
+        constexpr uint32_t fallbackLineSpacing = 0x0101057b;
+        constexpr uint32_t letterSpacing = 0x010104b6;
+        constexpr uint32_t fontFeatureSettings = 0x010104b7;
+        constexpr uint32_t fontVariationSettings = 0x01010570;
+        constexpr uint32_t lineBreakStyle = 0x0101066e;
+        constexpr uint32_t lineBreakWordStyle = 0x0101066f;
     }
     namespace TextClock {
         constexpr uint32_t format12Hour = 0x010103ca;
@@ -599,6 +655,13 @@ namespace styleable {
             cropToPadding, baseline, tintMode };
         extern const uint32_t IDS[];
     }
+    namespace KeyboardView {
+        enum {
+            keyBackground, keyTextSize, labelTextSize, keyTextColor, keyPreviewLayout,
+            keyPreviewOffset, keyPreviewHeight, verticalCorrection, popupLayout, shadowColor,
+            shadowRadius };
+        extern const uint32_t IDS[];
+    }
     namespace Layout {
         enum { layout_width, layout_height };
         extern const uint32_t IDS[];
@@ -624,6 +687,12 @@ namespace styleable {
             layout_width, layout_height, layout_margin, layout_marginLeft, layout_marginTop,
             layout_marginRight, layout_marginBottom, layout_marginStart, layout_marginEnd,
             layout_marginHorizontal, layout_marginVertical };
+        extern const uint32_t IDS[];
+    }
+    namespace NumberPicker {
+        enum {
+            solidColor, selectionDividerHeight, min, max, value, textColor, textSize, fontFamily,
+            itemBackground };
         extern const uint32_t IDS[];
     }
     namespace ProgressBar {
@@ -681,8 +750,21 @@ namespace styleable {
             showText };
         extern const uint32_t IDS[];
     }
+    namespace TabWidget {
+        enum { divider, tabStripEnabled, tabStripLeft, tabStripRight };
+        extern const uint32_t IDS[];
+    }
     namespace TableRowLayout {
         enum { layout_column, layout_span };
+        extern const uint32_t IDS[];
+    }
+    namespace TextAppearance {
+        enum {
+            textColor, textSize, textStyle, textFontWeight, typeface, fontFamily, textLocale,
+            textColorHighlight, searchResultHighlightColor, focusedSearchResultHighlightColor,
+            textColorHint, textColorLink, textAllCaps, shadowColor, shadowDx, shadowDy, shadowRadius,
+            elegantTextHeight, fallbackLineSpacing, letterSpacing, fontFeatureSettings,
+            fontVariationSettings, lineBreakStyle, lineBreakWordStyle };
         extern const uint32_t IDS[];
     }
     namespace TextClock {

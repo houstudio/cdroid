@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/simplemonthview.h>
+#include <widget/framework_styleable.h>
+#include <core/assets.h>
 #include <cmath>
 #include <text/paint.h>
 #include <text/textutils.h>
@@ -156,12 +158,16 @@ void SimpleMonthView::updateDayOfWeekLabels(){
 
 const cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Paint& p, const std::string& resId){
     AttributeSet attrs = mContext->obtainStyledAttributes(resId);
-    const std::string fontFamily = attrs.getString("fontFamily");
+    Assets* a = dynamic_cast<Assets*>(mContext);
+    auto ta = a ? a->obtainStyledAttributesTyped(attrs, styleable::TextAppearance::IDS) : nullptr;
+    namespace ST = styleable::TextAppearance;
+    if (!ta) return nullptr;
+    const std::string fontFamily = ta->getString(ST::fontFamily);
     if (!fontFamily.empty()) {
         p.setTypeface(Typeface::create(fontFamily, 0));
     }
-    p.setTextSize(attrs.getDimensionPixelSize("textSize", (int) p.getTextSize()));
-    const auto textColor = attrs.getColorStateList("textColor");
+    p.setTextSize(ta->getDimensionPixelSize(ST::textSize, (int) p.getTextSize()));
+    const auto textColor = ta->getColorStateList(ST::textColor);
     if (textColor != nullptr) {
         const int enabledColor = textColor->getColorForState(
                 StateSet::get(StateSet::VIEW_STATE_ENABLED), 0);

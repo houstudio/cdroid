@@ -124,7 +124,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if(attrs.hasAttribute("progressTint")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressTintList=attrs.getColorStateList("progressTint");
+        mProgressTintInfo->mProgressTintList= ta ? ta->getColorStateList(SPB::progressTint) : nullptr;
         mProgressTintInfo->mHasProgressTint = true;
     }
 
@@ -136,7 +136,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if(attrs.hasAttribute("progressBackgroundTint")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressBackgroundTintList = attrs.getColorStateList("progressBackgroundTint");
+        mProgressTintInfo->mProgressBackgroundTintList = ta ? ta->getColorStateList(SPB::progressBackgroundTint) : nullptr;
         mProgressTintInfo->mHasProgressBackgroundTint = true;
     }
 
@@ -148,7 +148,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if(attrs.hasAttribute("secondaryProgressTint")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mSecondaryProgressTintList = attrs.getColorStateList("secondaryProgressTint");
+        mProgressTintInfo->mSecondaryProgressTintList = ta ? ta->getColorStateList(SPB::secondaryProgressTint) : nullptr;
         mProgressTintInfo->mHasSecondaryProgressTint=true;
     }
 
@@ -160,7 +160,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if (attrs.hasAttribute("indeterminateTint")) {
         if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
-        mProgressTintInfo->mIndeterminateTintList = attrs.getColorStateList("indeterminateTint");
+        mProgressTintInfo->mIndeterminateTintList = ta ? ta->getColorStateList(SPB::indeterminateTint) : nullptr;
         mProgressTintInfo->mHasIndeterminateTint = true;
     }
     applyProgressTints();

@@ -127,9 +127,12 @@ Switch::~Switch(){
 }
 
 void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
-    AttributeSet atts = context->obtainStyledAttributes(resid);//com.android.internal.R.styleable.TextAppearance);
+    AttributeSet atts = context->obtainStyledAttributes(resid);
+    Assets* a = dynamic_cast<Assets*>(context);
+    auto ta = a ? a->obtainStyledAttributesTyped(atts, styleable::TextAppearance::IDS) : nullptr;
+    namespace ST = styleable::TextAppearance;
 
-    auto colors = atts.getColorStateList("textColor");//com.android.internal.R.styleable.TextAppearance_textColor);
+    auto colors = ta ? ta->getColorStateList(ST::textColor) : nullptr;
     if (colors) {
         mTextColors = colors;
     } else {
@@ -137,7 +140,7 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
         mTextColors = getTextColors();
     }
 
-    int ts = atts.getDimensionPixelSize("textSize", 0);
+    int ts = ta ? ta->getDimensionPixelSize(ST::textSize, 0) : 0;
     if (ts != 0) {
         if (ts != mTextPaint.getTextSize()) {
             mTextPaint.setTextSize(ts);
@@ -145,14 +148,12 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
         }
     }
 
-    int typefaceIndex, styleIndex;
-
-    typefaceIndex = atts.getInt("typeface",-1);//com.android.internal.R.styleable.TextAppearance_typeface, -1);
-    styleIndex = atts.getInt("textStyle",-1);//com.android.internal.R.styleable.TextAppearance_textStyle, -1);
+    int typefaceIndex = ta ? ta->getInt(ST::typeface, -1) : -1;
+    int styleIndex    = ta ? ta->getInt(ST::textStyle, -1) : -1;
 
     setSwitchTypefaceByIndex(typefaceIndex, styleIndex);
 
-    const bool allCaps = atts.getBoolean("textAllCaps", false);
+    const bool allCaps = ta && ta->getBoolean(ST::textAllCaps, false);
     if (allCaps) {
         mSwitchTransformationMethod = new AllCapsTransformationMethod(getContext());
         mSwitchTransformationMethod->setLengthChangesAllowed(true);

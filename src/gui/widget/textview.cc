@@ -91,45 +91,72 @@ public:
     bool mHasLetterSpacing = false;
 public:
     TextAppearanceAttributes();
-    void readTextAppearance(Context*ctx,const AttributeSet&atts);
+    void readTextAppearance(Context*ctx,const TypedArray*a);
 };
 
 TextAppearanceAttributes::TextAppearanceAttributes(){
     mTextStyle = Typeface::NORMAL;
 }
 
-void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&atts){
-    if(atts.hasAttribute("textColorHighlight"))
-        mTextColorHighlight = atts.getColor("textColorHighlight",mTextColorHighlight);
-
-    mTextColor = atts.getColorStateList("textColor");
-    mTextColorHint = atts.getColorStateList("textColorHint");
-    mTextColorLink = atts.getColorStateList("textColorLink");
-    mTextSize = atts.getDimensionPixelSize("textSize",mTextSize);
-    mTextStyle= atts.getInt("textStyle",std::unordered_map<std::string,int>{
-	   {"normal",(int)Typeface::NORMAL},
-	   {"bold"  ,(int)Typeface::BOLD},
-	   {"italic",(int)Typeface::ITALIC}
-	},Typeface::NORMAL);
-    mFontWeight  = atts.getInt("textfontWeight",-1);
-    mShadowColor = atts.getColor("shadowColor",mShadowColor);
-    mShadowDx = atts.getFloat("shadowDx",mShadowDx);
-    mShadowDy = atts.getFloat("shadowDy",mShadowDy);
-    mShadowRadius = atts.getFloat("shadowRadius",mShadowRadius);
-    mTypefaceIndex= atts.getInt("typeface",-1);
-    mFontFamily   = atts.getString("fontFamily","");
-    mFontTypeface = Typeface::create(mFontFamily,mTextStyle);
-    mAllCaps   = atts.getBoolean("textAllCaps",false);
-
-    // The mHas* flags mirror Android's "explicitly set" semantics so applyTextAppearance
-    // only applies the value when the attribute was actually present.
-    mHasElegant          = atts.hasAttribute("elegantTextHeight");
-    mElegant             = atts.getBoolean("elegantTextHeight", false);
-    mHasFallbackLineSpacing = atts.hasAttribute("fallbackLineSpacing");
-    mFallbackLineSpacing    = atts.getBoolean("fallbackLineSpacing", false);
-    mHasLetterSpacing    = atts.hasAttribute("letterSpacing");
-    mLetterSpacing       = atts.getFloat("letterSpacing", 0.f);   // Android: plain float, not a dimension
-    mFontFeatureSettings = atts.getString("fontFeatureSettings", "");
+void TextAppearanceAttributes::readTextAppearance(Context*ctx,const TypedArray*a){
+    // AOSP TextView.readTextAppearance (TextView.java:4325): iterate only SET
+    // indices (getIndexCount/getIndex) over R.styleable.TextAppearance and switch.
+    // Because unset attrs are skipped, this is safe to call twice — first on the
+    // textAppearance style, then on the element (override) — without clobbering.
+    // aapt2 pre-resolves enums at compile time, so textStyle is read as a plain int
+    // (no string->enum map). String values (fontFamily/fontFeatureSettings) come
+    // through TypedArray::getString.
+    (void)ctx;
+    if(!a) return;
+    namespace ST = styleable::TextAppearance;
+    const size_t n = a->getIndexCount();
+    for (size_t k = 0; k < n; k++) {
+        const size_t i = a->getIndex(k);
+        switch (i) {
+        case ST::textColorHighlight:
+            mTextColorHighlight = a->getColor(i, mTextColorHighlight); break;
+        case ST::textColor:
+            mTextColor = a->getColorStateList(i); break;
+        case ST::textColorHint:
+            mTextColorHint = a->getColorStateList(i); break;
+        case ST::textColorLink:
+            mTextColorLink = a->getColorStateList(i); break;
+        case ST::textSize:
+            mTextSize = a->getDimensionPixelSize(i, mTextSize); break;
+        case ST::textStyle:
+            mTextStyle = a->getInt(i, Typeface::NORMAL); break;
+        case ST::textFontWeight:
+            mFontWeight = a->getInt(i, -1); break;
+        case ST::typeface:
+            mTypefaceIndex = a->getInt(i, -1);
+            if (mTypefaceIndex != -1 && !mFontFamilyExplicit) mFontFamily.clear();
+            break;
+        case ST::fontFamily:
+            mFontFamily = a->getString(i);
+            mFontFamilyExplicit = true;
+            break;
+        case ST::shadowColor:
+            mShadowColor = a->getColor(i, mShadowColor); break;
+        case ST::shadowDx:
+            mShadowDx = a->getFloat(i, mShadowDx); break;
+        case ST::shadowDy:
+            mShadowDy = a->getFloat(i, mShadowDy); break;
+        case ST::shadowRadius:
+            mShadowRadius = a->getFloat(i, mShadowRadius); break;
+        case ST::textAllCaps:
+            mAllCaps = a->getBoolean(i, false); break;
+        case ST::elegantTextHeight:
+            mHasElegant = true; mElegant = a->getBoolean(i, false); break;
+        case ST::fallbackLineSpacing:
+            mHasFallbackLineSpacing = true; mFallbackLineSpacing = a->getBoolean(i, false); break;
+        case ST::letterSpacing:
+            mHasLetterSpacing = true; mLetterSpacing = a->getFloat(i, 0.f); break;
+        case ST::fontFeatureSettings:
+            mFontFeatureSettings = a->getString(i); break;
+        default: break;
+        }
+    }
+    mFontTypeface = Typeface::create(mFontFamily, mTextStyle);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -412,15 +439,25 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setLineSpacing(lineSpacingExtra, lineSpacingMultiplier);
     setBreakStrategy(breakStrategy);
 
+    // AOSP TextView ctor (TextView.java:1237-1287): resolve textAppearance as a
+    // TextAppearance style TypedArray FIRST, then read the element's own text
+    // appearance attrs to OVERRIDE (readTextAppearance(a, attributes, true)). No
+    // element/style AttributeSet merge (the old tmp.inherit(attrs2) is gone) — each
+    // source is resolved independently through obtainStyledAttributesTyped, and the
+    // readTextAppearance switch only iterates SET indices so unset element attrs
+    // don't clobber values taken from the style.
     TextAppearanceAttributes attributes;
     const std::string appearance = attrs.getString("textAppearance");
     if(appearance.empty()==false){
-        AttributeSet tmp = attrs;
-        AttributeSet attrs2 = ctx->obtainStyledAttributes(appearance);
-        tmp.inherit(attrs2);
-        attributes.readTextAppearance(ctx,tmp);
-    }else{
-        attributes.readTextAppearance(ctx,attrs);
+        AttributeSet styleAttrs = ctx->obtainStyledAttributes(appearance);
+        auto taStyle = _assets ? _assets->obtainStyledAttributesTyped(
+            styleAttrs, styleable::TextAppearance::IDS) : nullptr;
+        attributes.readTextAppearance(ctx, taStyle.get());
+    }
+    {
+        auto taElem = _assets ? _assets->obtainStyledAttributesTyped(
+            attrs, styleable::TextAppearance::IDS) : nullptr;
+        attributes.readTextAppearance(ctx, taElem.get());
     }
     applyTextAppearance(&attributes);
     setMarqueeRepeatLimit(marqueeRepeatLimit);
@@ -1482,7 +1519,10 @@ void TextView::setTextAppearance(Context*context,const std::string&appearance){
     if(appearance.empty()==false){
         AttributeSet attrs = context->obtainStyledAttributes(appearance);
         if(attrs.getAttributeCount()){
-            attributes.readTextAppearance(mContext,attrs);
+            Assets* a = dynamic_cast<Assets*>(context);
+            auto ta = a ? a->obtainStyledAttributesTyped(
+                attrs, styleable::TextAppearance::IDS) : nullptr;
+            attributes.readTextAppearance(mContext, ta.get());
             applyTextAppearance(&attributes);
         }
     }

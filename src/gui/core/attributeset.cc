@@ -111,7 +111,15 @@ int AttributeSet::set(const char*atts[],int size){
         const char* key = strrchr(atts[i],' ');
         if(key) key++;
         else key = atts[i];
-        mAttrs->insert({std::string(key),normalize(mPackage,std::string(atts[i+1]))});
+        const std::string k(key);
+        mAttrs->insert({k,normalize(mPackage,std::string(atts[i+1]))});
+        // Record the attribute's own resource id (for getAttributeNameResource)
+        // via the Android-aligned Resources.getIdentifier. No-op without a Context
+        // or when already known; absent/unknown attrs stay at 0 (id interface returns 0).
+        if (mContext && !(mAttrResIds && mAttrResIds->count(k))) {
+            const int rid = mContext->getResources().getIdentifier(k, "attr", mPackage);
+            if (rid) setAttributeResourceId(k, rid);
+        }
     }
     return (int)mAttrs->size();
 }
@@ -135,6 +143,11 @@ int AttributeSet::inherit(const AttributeSet&other){
             }
         }
     }
+    // Carry the source style resId: when a base AttributeSet inherits a resolved
+    // style (e.g. TextView merges its textAppearance style into the element set),
+    // the merged set must keep the style's resId so obtainStyledAttributesTyped
+    // routes it through the arsc theme resolver (non-binary styleResId branch).
+    if (mStyleResId == 0) mStyleResId = other.mStyleResId;
     return inheritedCount;
 }
 
@@ -166,10 +179,16 @@ bool AttributeSet::add(const std::string&key,const std::string&value){
     std::string ks = key;
     size_t pos = ks.find(' ');
     if( pos != std::string::npos )ks = ks.substr(pos+1);
-    if(itr == mAttrs->end())
+    if(itr == mAttrs->end()) {
         mAttrs->insert({(std::string)ks,normalize(mPackage,value)});
-    else
+        // Record the attribute's own resource id (see set()).
+        if (mContext && !(mAttrResIds && mAttrResIds->count(ks))) {
+            const int rid = mContext->getResources().getIdentifier(ks, "attr", mPackage);
+            if (rid) setAttributeResourceId(ks, rid);
+        }
+    } else {
         itr->second = value;
+    }
     return true;
 }
 

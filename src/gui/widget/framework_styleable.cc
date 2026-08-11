@@ -75,6 +75,15 @@ namespace styleable {
             fw_attr::ImageView::baselineAlignBottom, fw_attr::ImageView::cropToPadding,
             fw_attr::ImageView::baseline, fw_attr::ImageView::tintMode, 0 };
     }
+    namespace KeyboardView {
+        const uint32_t IDS[] = {
+            fw_attr::KeyboardView::keyBackground, fw_attr::KeyboardView::keyTextSize,
+            fw_attr::KeyboardView::labelTextSize, fw_attr::KeyboardView::keyTextColor,
+            fw_attr::KeyboardView::keyPreviewLayout, fw_attr::KeyboardView::keyPreviewOffset,
+            fw_attr::KeyboardView::keyPreviewHeight, fw_attr::KeyboardView::verticalCorrection,
+            fw_attr::KeyboardView::popupLayout, fw_attr::KeyboardView::shadowColor,
+            fw_attr::KeyboardView::shadowRadius, 0 };
+    }
     namespace Layout {
         const uint32_t IDS[] = { fw_attr::Layout::layout_width, fw_attr::Layout::layout_height, 0 };
     }
@@ -106,6 +115,13 @@ namespace styleable {
             fw_attr::MarginLayout::layout_marginBottom, fw_attr::MarginLayout::layout_marginStart,
             fw_attr::MarginLayout::layout_marginEnd, fw_attr::MarginLayout::layout_marginHorizontal,
             fw_attr::MarginLayout::layout_marginVertical, 0 };
+    }
+    namespace NumberPicker {
+        const uint32_t IDS[] = {
+            fw_attr::NumberPicker::solidColor, fw_attr::NumberPicker::selectionDividerHeight,
+            fw_attr::NumberPicker::min, fw_attr::NumberPicker::max, fw_attr::NumberPicker::value,
+            fw_attr::NumberPicker::textColor, fw_attr::NumberPicker::textSize,
+            fw_attr::NumberPicker::fontFamily, fw_attr::NumberPicker::itemBackground, 0 };
     }
     namespace ProgressBar {
         const uint32_t IDS[] = {
@@ -186,8 +202,30 @@ namespace styleable {
             fw_attr::Switch::switchPadding, fw_attr::Switch::splitTrack, fw_attr::Switch::showText,
             0 };
     }
+    namespace TabWidget {
+        const uint32_t IDS[] = {
+            fw_attr::TabWidget::divider, fw_attr::TabWidget::tabStripEnabled,
+            fw_attr::TabWidget::tabStripLeft, fw_attr::TabWidget::tabStripRight, 0 };
+    }
     namespace TableRowLayout {
         const uint32_t IDS[] = { fw_attr::TableRowLayout::layout_column, fw_attr::TableRowLayout::layout_span, 0 };
+    }
+    namespace TextAppearance {
+        const uint32_t IDS[] = {
+            fw_attr::TextAppearance::textColor, fw_attr::TextAppearance::textSize,
+            fw_attr::TextAppearance::textStyle, fw_attr::TextAppearance::textFontWeight,
+            fw_attr::TextAppearance::typeface, fw_attr::TextAppearance::fontFamily,
+            fw_attr::TextAppearance::textLocale, fw_attr::TextAppearance::textColorHighlight,
+            fw_attr::TextAppearance::searchResultHighlightColor,
+            fw_attr::TextAppearance::focusedSearchResultHighlightColor,
+            fw_attr::TextAppearance::textColorHint, fw_attr::TextAppearance::textColorLink,
+            fw_attr::TextAppearance::textAllCaps, fw_attr::TextAppearance::shadowColor,
+            fw_attr::TextAppearance::shadowDx, fw_attr::TextAppearance::shadowDy,
+            fw_attr::TextAppearance::shadowRadius, fw_attr::TextAppearance::elegantTextHeight,
+            fw_attr::TextAppearance::fallbackLineSpacing, fw_attr::TextAppearance::letterSpacing,
+            fw_attr::TextAppearance::fontFeatureSettings,
+            fw_attr::TextAppearance::fontVariationSettings, fw_attr::TextAppearance::lineBreakStyle,
+            fw_attr::TextAppearance::lineBreakWordStyle, 0 };
     }
     namespace TextClock {
         const uint32_t IDS[] = {

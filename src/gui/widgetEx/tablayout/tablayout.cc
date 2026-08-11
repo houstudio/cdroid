@@ -18,6 +18,7 @@
 #include <widgetEx/tablayout/tablayout.h>
 #include <widget/R.h>
 #include <widgetEx/widgetex_styleable.h>
+#include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <core/build.h>
 #include <utils/textutils.h>
@@ -72,20 +73,23 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
         // resolved style AttributeSet — not the TabLayout styleable).
         mTabTextAppearance = ta->getString(ST::tabTextAppearance);
         const AttributeSet taa = context->obtainStyledAttributes(mTabTextAppearance);
-        // AOSP defaults tabTextAppearance to TextAppearance.Design.Tab (never null);
-        // when unset/unresolvable, keep the initTabLayout() default instead of
-        // clobbering to 0 — a 0 text size makes TabView::onMeasure force
-        // setTextSize(0) and the tab labels render invisible.
-        mTabTextSize  = taa.getDimensionPixelSize("textSize", mTabTextSize);
-        mTabTextColors= taa.getColorStateList("textColor");
+        // Resolve the TextAppearance style through the arsc (styleable::TextAppearance),
+        // reading the framework textSize/textColor sub-attrs typed. Keep the
+        // initTabLayout() defaults when the style is unset/unresolvable — a 0 text
+        // size makes TabView::onMeasure force setTextSize(0) (invisible labels).
+        auto taaTa = _a ? _a->obtainStyledAttributesTyped(taa, styleable::TextAppearance::IDS) : nullptr;
+        namespace STA = styleable::TextAppearance;
+        mTabTextSize  = taaTa ? taaTa->getDimensionPixelSize(STA::textSize, mTabTextSize) : mTabTextSize;
+        mTabTextColors= taaTa ? taaTa->getColorStateList(STA::textColor) : mTabTextColors;
 
         if(ta->hasValue(ST::tabSelectedTextAppearance)){
             mSelectedTabTextAppearance = ta->getString(ST::tabSelectedTextAppearance);
         }
         if(!mSelectedTabTextAppearance.empty()){
             const AttributeSet sa=context->obtainStyledAttributes(mSelectedTabTextAppearance);
-            mSelectedTabTextSize =sa.getDimensionPixelSize("textSize");
-            auto selectedTabTextColor =sa.getColorStateList("textColor");
+            auto saTa = _a ? _a->obtainStyledAttributesTyped(sa, styleable::TextAppearance::IDS) : nullptr;
+            mSelectedTabTextSize = saTa ? saTa->getDimensionPixelSize(STA::textSize, 0) : 0;
+            auto selectedTabTextColor = saTa ? saTa->getColorStateList(STA::textColor) : nullptr;
             if(selectedTabTextColor!=nullptr){
                 mTabTextColors = createColorStateList(mTabTextColors->getDefaultColor(),
                         selectedTabTextColor->getColorForState({StateSet::VIEW_STATE_SELECTED}, selectedTabTextColor->getDefaultColor()));

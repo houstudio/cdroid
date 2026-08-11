@@ -12,7 +12,7 @@ add_custom_command(
             --attrs ${PROJECT_SOURCE_DIR}/res/values/attrs.xml
             --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
             --name-map ${CMAKE_SOURCE_DIR}/scripts/framework_namemap.txt
-            --include "AbsListView,AdapterViewAnimator,AdapterViewFlipper,AnalogClock,CheckedTextView,Chronometer,CompoundButton,FrameLayout,GridLayout,GridLayoutLayout,GridView,ImageView,Layout,LinearLayout,LinearLayoutLayout,ListView,MarginLayout,ProgressBar,RadioGroup,RatingBar,RelativeLayout,RelativeLayoutLayout,ScrollView,SeekBar,Spinner,Switch,TableRowLayout,TextClock,TextView,ToggleButton,Toolbar,View,ViewGroup"
+            --include "AbsListView,AdapterViewAnimator,AdapterViewFlipper,AnalogClock,CheckedTextView,Chronometer,CompoundButton,FrameLayout,GridLayout,GridLayoutLayout,GridView,ImageView,KeyboardView,Layout,LinearLayout,LinearLayoutLayout,ListView,MarginLayout,NumberPicker,ProgressBar,RadioGroup,RatingBar,RelativeLayout,RelativeLayoutLayout,ScrollView,SeekBar,Spinner,Switch,TabWidget,TableRowLayout,TextAppearance,TextClock,TextView,ToggleButton,Toolbar,View,ViewGroup"
             --out-h  ${PROJECT_SOURCE_DIR}/widget/framework_styleable.h
             --out-cc ${PROJECT_SOURCE_DIR}/widget/framework_styleable.cc
             --guard __FRAMEWORK_STYLEABLE_H__ --header framework_styleable.h
