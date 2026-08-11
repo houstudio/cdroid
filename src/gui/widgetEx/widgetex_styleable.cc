@@ -368,5 +368,26 @@ namespace styleable {
             fw_attr::RecyclerView::fastScrollHorizontalTrackDrawable,
             fw_attr::RecyclerView::isScrollToTopEnabled, 0 };
     }
+    namespace TabLayout {
+        const uint32_t IDS[] = {
+            fw_attr::TabLayout::tabIndicatorColor, fw_attr::TabLayout::tabIndicatorHeight,
+            fw_attr::TabLayout::tabContentStart, fw_attr::TabLayout::tabBackground,
+            fw_attr::TabLayout::tabIndicator, fw_attr::TabLayout::tabIndicatorGravity,
+            fw_attr::TabLayout::tabIndicatorAnimationDuration,
+            fw_attr::TabLayout::tabIndicatorFullWidth, fw_attr::TabLayout::tabIndicatorAnimationMode,
+            fw_attr::TabLayout::tabMode, fw_attr::TabLayout::tabGravity,
+            fw_attr::TabLayout::tabInlineLabel, fw_attr::TabLayout::tabMinWidth,
+            fw_attr::TabLayout::tabMaxWidth, fw_attr::TabLayout::tabTextAppearance,
+            fw_attr::TabLayout::tabTextColor, fw_attr::TabLayout::tabSelectedTextColor,
+            fw_attr::TabLayout::tabSelectedTextAppearance, fw_attr::TabLayout::tabPaddingStart,
+            fw_attr::TabLayout::tabPaddingTop, fw_attr::TabLayout::tabPaddingEnd,
+            fw_attr::TabLayout::tabPaddingBottom, fw_attr::TabLayout::tabPadding,
+            fw_attr::TabLayout::tabIconTint, fw_attr::TabLayout::tabIconTintMode,
+            fw_attr::TabLayout::tabRippleColor, fw_attr::TabLayout::tabUnboundedRipple,
+            fw_attr::TabLayout::smoothScroll, 0 };
+    }
+    namespace TabItem {
+        const uint32_t IDS[] = { fw_attr::TabItem::text, fw_attr::TabItem::icon, fw_attr::TabItem::layout, 0 };
+    }
 } // namespace styleable
 } // namespace cdroid

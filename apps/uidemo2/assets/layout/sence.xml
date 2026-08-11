@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/right_panel"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,10 +12,10 @@
         android:layout_height="wrap_content"
         android:background="#111111"
         android:layout_gravity="center_horizontal"
-        android:tabIndicatorHeight="5dp"
-        android:tabSelectedTextColor="#00FF00"
-        android:tabIndicatorColor="#00FF00"
-        > 
+        app:tabIndicatorHeight="5dp"
+        app:tabSelectedTextColor="#00FF00"
+        app:tabIndicatorColor="#00FF00"
+        >
        <TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

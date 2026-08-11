@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- CDROID widgetEx custom attrs (androidx ports). Source for gen_styleable.py
-     -> widgetex_styleable.h. `android:xxx` attrs resolve to framework IDs;
-     unprefixed attrs are CDROID custom (0x7f010000+ in custom_attrids.txt). -->
+<!-- ConstraintLayout / Motion custom attrs (androidx port). Source for gen_styleable.py. -->
 <resources>
     <!-- standalone attr definitions (ported from androidx) — referenced by declare-styleable -->
     <attr name="animateCircleAngleTo" format="enum">
@@ -120,36 +118,6 @@
         <enum name="callMeasure" value="2" />
 
     </attr>
-    <attr name="layout_anchorGravity">
-            
-            <flag name="top" value="0x30" />
-            
-            <flag name="bottom" value="0x50" />
-            
-            <flag name="left" value="0x03" />
-            
-            <flag name="right" value="0x05" />
-            
-            <flag name="center_vertical" value="0x10" />
-            
-            <flag name="fill_vertical" value="0x70" />
-            
-            <flag name="center_horizontal" value="0x01" />
-            
-            <flag name="fill_horizontal" value="0x07" />
-            
-            <flag name="center" value="0x11" />
-            
-            <flag name="fill" value="0x77" />
-            
-            <flag name="clip_vertical" value="0x80" />
-            
-            <flag name="clip_horizontal" value="0x08" />
-            
-            <flag name="start" value="0x00800003" />
-            
-            <flag name="end" value="0x00800005" />
-        </attr>
     <attr name="layout_constrainedHeight" format="boolean" />
     <attr name="layout_constrainedWidth" format="boolean" />
     <attr name="layout_constraintBaseline_creator" format="integer" />
@@ -260,24 +228,6 @@
         <enum name="wrap" value="-2" />
     </attr>
     <attr name="layout_constraintWidth_percent" format="float" />
-    <attr name="layout_dodgeInsetEdges">
-            
-            <flag name="none" value="0x0" />
-            
-            <flag name="top" value="0x30" />
-            
-            <flag name="bottom" value="0x50" />
-            
-            <flag name="left" value="0x03" />
-            
-            <flag name="right" value="0x05" />
-            
-            <flag name="start" value="0x00800003" />
-            
-            <flag name="end" value="0x00800005" />
-            
-            <flag name="all" value="0x77" />
-        </attr>
     <attr name="layout_editor_absoluteX" format="dimension" />
     <attr name="layout_editor_absoluteY" format="dimension" />
     <attr name="layout_goneMarginBaseline" format="dimension" />
@@ -396,103 +346,6 @@
         <enum name="position" value="0" />
         <enum name="path" value="1" />
     </attr>
-
-    <!-- ===== CoordinatorLayout (from androidx coordinatorlayout) ===== -->
-    <declare-styleable name="CoordinatorLayout">
-        <attr name="keylines" format="reference"/>
-        <attr name="statusBarBackground" format="color|reference"/>
-    </declare-styleable>
-
-    <declare-styleable name="CoordinatorLayout_Layout">
-        <attr name="android:layout_gravity"/>
-        <attr name="layout_behavior" format="string"/>
-        <attr name="layout_anchor" format="reference"/>
-        <attr name="layout_keyline" format="integer"/>
-        <attr name="layout_anchorGravity"/>
-        <attr name="layout_insetEdge" format="enum"/>
-        <attr name="layout_dodgeInsetEdges"/>
-    </declare-styleable>
-
-    <!-- ===== FlexboxLayout (verbatim from Google flexbox-layout attrs.xml) ===== -->
-    <declare-styleable name="FlexboxLayout">
-        <attr name="flexDirection">
-            <enum name="row" value="0" />
-            <enum name="row_reverse" value="1" />
-            <enum name="column" value="2" />
-            <enum name="column_reverse" value="3" />
-        </attr>
-        <attr name="flexWrap">
-            <enum name="nowrap" value="0" />
-            <enum name="wrap" value="1" />
-            <enum name="wrap_reverse" value="2" />
-        </attr>
-        <attr name="justifyContent">
-            <enum name="flex_start" value="0" />
-            <enum name="flex_end" value="1" />
-            <enum name="center" value="2" />
-            <enum name="space_between" value="3" />
-            <enum name="space_around" value="4" />
-            <enum name="space_evenly" value="5" />
-        </attr>
-        <attr name="alignItems">
-            <enum name="flex_start" value="0" />
-            <enum name="flex_end" value="1" />
-            <enum name="center" value="2" />
-            <enum name="baseline" value="3" />
-            <enum name="stretch" value="4" />
-        </attr>
-        <attr name="alignContent">
-            <enum name="flex_start" value="0" />
-            <enum name="flex_end" value="1" />
-            <enum name="center" value="2" />
-            <enum name="space_between" value="3" />
-            <enum name="space_around" value="4" />
-            <enum name="stretch" value="5" />
-        </attr>
-        <attr name="dividerDrawable" format="reference" />
-        <attr name="dividerDrawableHorizontal" format="reference" />
-        <attr name="dividerDrawableVertical" format="reference" />
-        <attr name="showDivider">
-            <flag name="none" value="0" />
-            <flag name="beginning" value="1" />
-            <flag name="middle" value="2" />
-            <flag name="end" value="4" />
-        </attr>
-        <attr name="showDividerHorizontal">
-            <flag name="none" value="0" />
-            <flag name="beginning" value="1" />
-            <flag name="middle" value="2" />
-            <flag name="end" value="4" />
-        </attr>
-        <attr name="showDividerVertical">
-            <flag name="none" value="0" />
-            <flag name="beginning" value="1" />
-            <flag name="middle" value="2" />
-            <flag name="end" value="4" />
-        </attr>
-        <attr name="maxLine" format="integer" />
-    </declare-styleable>
-
-    <declare-styleable name="FlexboxLayout_Layout">
-        <attr name="layout_order" format="integer" />
-        <attr name="layout_flexGrow" format="float" />
-        <attr name="layout_flexShrink" format="float" />
-        <attr name="layout_flexBasisPercent" format="fraction" />
-        <attr name="layout_alignSelf">
-            <enum name="auto" value="-1" />
-            <enum name="flex_start" value="0" />
-            <enum name="flex_end" value="1" />
-            <enum name="center" value="2" />
-            <enum name="baseline" value="3" />
-            <enum name="stretch" value="4" />
-        </attr>
-        <attr name="layout_minWidth" format="dimension" />
-        <attr name="layout_minHeight" format="dimension" />
-        <attr name="layout_maxWidth" format="dimension" />
-        <attr name="layout_maxHeight" format="dimension" />
-        <attr name="layout_wrapBefore" format="boolean" />
-    </declare-styleable>
-
     <!-- ===== ConstraintLayout_Layout (from androidx constraintlayout; 115 attrs) ===== -->
     <declare-styleable name="ConstraintLayout_Layout">
         <attr name="android:orientation"/>
@@ -611,7 +464,6 @@
         <attr name="layout_constraintTag"/>
         <attr name="layout_wrapBehaviorInParent"/>
     </declare-styleable>
-
     <!-- ===== Constraint (ConstraintSet fillFromAttributeList; from androidx) ===== -->
     <declare-styleable name="Constraint">
         <attr name="android:orientation"/>
@@ -739,7 +591,6 @@
         <attr name="quantizeMotionPhase"/>
         <attr name="quantizeMotionInterpolator"/>
     </declare-styleable>
-
     <!-- ===== Motion scene styleables (from androidx constraintlayout) ===== -->
     <declare-styleable name="Transition">
         <attr name="android:id"/>
@@ -904,7 +755,6 @@
         <attr name="ifTagSet" format="reference"/>
         <attr name="ifTagNotSet" format="reference"/>
     </declare-styleable>
-
     <!-- MotionEffect (from androidx constraintlayout) -->
     <declare-styleable name="MotionEffect">
         <attr name="motionEffect_start" format="integer"/>
@@ -915,22 +765,5 @@
         <attr name="motionEffect_viewTransition" format="reference"/>
         <attr name="motionEffect_move" format="enum"/>
         <attr name="motionEffect_strict" format="boolean"/>
-    </declare-styleable>
-
-    <!-- RecyclerView (verbatim from androidx recyclerview attrs.xml) -->
-    <declare-styleable name="RecyclerView">
-        <attr name="layoutManager" format="string"/>
-        <attr name="android:orientation"/>
-        <attr name="android:descendantFocusability"/>
-        <attr name="android:clipToPadding"/>
-        <attr name="spanCount" format="integer"/>
-        <attr name="reverseLayout" format="boolean"/>
-        <attr name="stackFromEnd" format="boolean"/>
-        <attr name="fastScrollEnabled" format="boolean"/>
-        <attr name="fastScrollVerticalThumbDrawable" format="reference"/>
-        <attr name="fastScrollVerticalTrackDrawable" format="reference"/>
-        <attr name="fastScrollHorizontalThumbDrawable" format="reference"/>
-        <attr name="fastScrollHorizontalTrackDrawable" format="reference"/>
-        <attr name="isScrollToTopEnabled" format="boolean"/>
     </declare-styleable>
 </resources>

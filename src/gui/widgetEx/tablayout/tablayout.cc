@@ -15,8 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/tablayout.h>
+#include <widgetEx/tablayout/tablayout.h>
 #include <widget/R.h>
+#include <widgetEx/widgetex_styleable.h>
+#include <core/assets.h>
 #include <core/build.h>
 #include <utils/textutils.h>
 #include <utils/mathutils.h>
@@ -41,77 +43,75 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
   :HorizontalScrollView(context,atts){
     initTabLayout();
 
-    const int animationMode = atts.getInt("tabIndicatorAnimationMode",std::unordered_map<std::string,int>{
-            {"linear" ,INDICATOR_ANIMATION_MODE_LINEAR},
-            {"elastic",INDICATOR_ANIMATION_MODE_ELASTIC},
-            {"fade",INDICATOR_ANIMATION_MODE_FADE},
-            },INDICATOR_ANIMATION_MODE_LINEAR);
-    setTabIndicatorAnimationMode(animationMode);
+    // Phase 2: pure TypedArray (binary AXML typed resolution). ta=null → text XML
+    // path, defaults from initTabLayout() stand (text ctor retired on this branch).
+    // aapt2 has already resolved the enum attrs (tabIndicatorAnimationMode /
+    // tabIndicatorGravity / tabMode / tabGravity) at compile time, so getInt reads
+    // them directly — no runtime enum map needed.
+    Assets* _a = context ? dynamic_cast<Assets*>(context) : nullptr;
+    auto ta = _a ? _a->obtainStyledAttributesTyped(atts, styleable::TabLayout::IDS) : nullptr;
+    if (ta) {
+        namespace ST = styleable::TabLayout;
 
-    setSelectedTabIndicator(atts.getDrawable("tabIndicator"));
-    setSelectedTabIndicatorColor(atts.getColor("tabIndicatorColor",0));
-    mSlidingTabIndicator->setSelectedIndicatorHeight(atts.getDimensionPixelSize("tabIndicatorHeight",2));
-    const int tabIndicatorGravity=atts.getInt("tabIndicatorGravity",std::unordered_map<std::string,int>{
-            {"bottom",INDICATOR_GRAVITY_BOTTOM},  {"center" ,INDICATOR_GRAVITY_CENTER},
-            {"top",INDICATOR_GRAVITY_TOP},        {"stretch",INDICATOR_GRAVITY_STRETCH}
-            },INDICATOR_GRAVITY_BOTTOM);
-    setSelectedTabIndicatorGravity(tabIndicatorGravity);
-    setTabIndicatorFullWidth(atts.getBoolean("tabIndicatorFullWidth",true));
+        setTabIndicatorAnimationMode(ta->getInt(ST::tabIndicatorAnimationMode, INDICATOR_ANIMATION_MODE_LINEAR));
+        setSelectedTabIndicator(ta->getDrawable(ST::tabIndicator));
+        setSelectedTabIndicatorColor(ta->getColor(ST::tabIndicatorColor, 0));
+        mSlidingTabIndicator->setSelectedIndicatorHeight(ta->getDimensionPixelSize(ST::tabIndicatorHeight, 2));
+        setSelectedTabIndicatorGravity(ta->getInt(ST::tabIndicatorGravity, INDICATOR_GRAVITY_BOTTOM));
+        setTabIndicatorFullWidth(ta->getBoolean(ST::tabIndicatorFullWidth, true));
 
-    mTabPaddingStart = mTabPaddingTop = mTabPaddingEnd =
-        mPaddingBottom = atts.getDimensionPixelSize("tabPadding",0);
-    mTabPaddingStart = atts.getDimensionPixelSize("tabPaddingStart",mTabPaddingStart);
-    mTabPaddingEnd   = atts.getDimensionPixelSize("tabPaddingEnd",mTabPaddingEnd);
-    mTabPaddingTop   = atts.getDimensionPixelSize("tabPaddingTop",mTabPaddingTop);
-    mTabPaddingBottom= atts.getDimensionPixelSize("tabPaddingBottom",mTabPaddingBottom); 
-    mTabTextSize  = atts.getDimensionPixelSize("tabTextSize",mTabTextSize);
+        mTabPaddingStart = mTabPaddingTop = mTabPaddingEnd =
+            mPaddingBottom = ta->getDimensionPixelSize(ST::tabPadding, 0);
+        mTabPaddingStart = ta->getDimensionPixelSize(ST::tabPaddingStart, mTabPaddingStart);
+        mTabPaddingEnd   = ta->getDimensionPixelSize(ST::tabPaddingEnd, mTabPaddingEnd);
+        mTabPaddingTop   = ta->getDimensionPixelSize(ST::tabPaddingTop, mTabPaddingTop);
+        mTabPaddingBottom= ta->getDimensionPixelSize(ST::tabPaddingBottom, mTabPaddingBottom);
 
-    mTabTextAppearance = atts.getString("tabTextAppearance");
-    const AttributeSet ta = context->obtainStyledAttributes(mTabTextAppearance);
-    mTabTextSize  = ta.getDimensionPixelSize("textSize",0);
-    mTabTextColors= ta.getColorStateList("textColor");
-    
-    if(atts.hasAttribute("tabSelectedTextAppearance")){
-        mSelectedTabTextAppearance = atts.getString("tabSelectedTextAppearance",mTabTextAppearance);
-    }
-    if(!mSelectedTabTextAppearance.empty()){
-        const AttributeSet sa=context->obtainStyledAttributes(mSelectedTabTextAppearance);
-        mSelectedTabTextSize =sa.getDimensionPixelSize("textSize");
-        auto selectedTabTextColor =sa.getColorStateList("textColor");
-        if(selectedTabTextColor!=nullptr){
-            mTabTextColors = createColorStateList(mTabTextColors->getDefaultColor(),
-                    selectedTabTextColor->getColorForState({StateSet::VIEW_STATE_SELECTED}, selectedTabTextColor->getDefaultColor()));
+        // tabTextAppearance references a style; resolve it for the framework
+        // textSize/textColor sub-attrs (these are framework attrs, read off the
+        // resolved style AttributeSet — not the TabLayout styleable).
+        mTabTextAppearance = ta->getString(ST::tabTextAppearance);
+        const AttributeSet taa = context->obtainStyledAttributes(mTabTextAppearance);
+        mTabTextSize  = taa.getDimensionPixelSize("textSize",0);
+        mTabTextColors= taa.getColorStateList("textColor");
+
+        if(ta->hasValue(ST::tabSelectedTextAppearance)){
+            mSelectedTabTextAppearance = ta->getString(ST::tabSelectedTextAppearance);
         }
+        if(!mSelectedTabTextAppearance.empty()){
+            const AttributeSet sa=context->obtainStyledAttributes(mSelectedTabTextAppearance);
+            mSelectedTabTextSize =sa.getDimensionPixelSize("textSize");
+            auto selectedTabTextColor =sa.getColorStateList("textColor");
+            if(selectedTabTextColor!=nullptr){
+                mTabTextColors = createColorStateList(mTabTextColors->getDefaultColor(),
+                        selectedTabTextColor->getColorForState({StateSet::VIEW_STATE_SELECTED}, selectedTabTextColor->getDefaultColor()));
+            }
+        }
+
+        if(ta->hasValue(ST::tabTextColor)) {
+            auto csl = ta->getColorStateList(ST::tabTextColor);
+            if (csl) mTabTextColors = csl;
+        } else{
+            mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
+        }
+
+        if(ta->hasValue(ST::tabSelectedTextColor)){
+            const int selected = ta->getColor(ST::tabSelectedTextColor,0);
+            const int defColor = mTabTextColors->getDefaultColor();
+            mTabTextColors = createColorStateList(defColor, selected);
+        }
+
+        mTabIndicatorAnimationDuration = ta->getInt(ST::tabIndicatorAnimationDuration,ANIMATION_DURATION);
+        mRequestedTabMinWidth = ta->getDimensionPixelSize(ST::tabMinWidth, -1);
+        mRequestedTabMaxWidth = ta->getDimensionPixelSize(ST::tabMaxWidth, -1);
+
+        mTabBackgroundResId= ta->getString(ST::tabBackground);
+        mContentInsetStart  = ta->getDimensionPixelSize(ST::tabContentStart, 0);
+        mMode = ta->getInt(ST::tabMode, mMode);
+        mSmoothScroll = ta->getBoolean(ST::smoothScroll,true);
+        mTabGravity = ta->getInt(ST::tabGravity,GRAVITY_FILL);
+        mInlineLabel= ta->getBoolean(ST::tabInlineLabel,false);
     }
-
-    if(atts.hasAttribute("tabTextColor"))
-        mTabTextColors = context->getColorStateList(atts.getString("tabTextColor"));
-    else{ 
-        mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
-    }
-
-    if(atts.hasAttribute("tabSelectedTextColor")){
-        const int selected = atts.getColor("tabSelectedTextColor",0);
-        const int defColor = mTabTextColors->getDefaultColor();
-        mTabTextColors = createColorStateList(defColor, selected);
-    }
-
-    mTabIndicatorAnimationDuration = atts.getInt("tabIndicatorAnimationDuration",ANIMATION_DURATION);
-    mRequestedTabMinWidth = atts.getDimensionPixelSize("tabMinWidth", -1);
-    mRequestedTabMaxWidth = atts.getDimensionPixelSize("tabMaxWidth", -1);
-
-    mTabBackgroundResId= atts.getString("tabBackground");
-    mContentInsetStart  = atts.getDimensionPixelSize("tabContentStart", 0);
-    mMode = atts.getInt("tabMode",std::unordered_map<std::string,int>{
-            {"scrollable", MODE_SCROLLABLE},
-            {"fixed", MODE_FIXED},
-            {"auto", MODE_AUTO}},mMode);
-    mSmoothScroll = atts.getBoolean("smoothScroll",true);
-    mTabGravity = atts.getInt("tabGravity",std::unordered_map<std::string,int>{
-            {"fill" ,GRAVITY_FILL},
-            {"center",GRAVITY_CENTER},
-            {"start",GRAVITY_START}},GRAVITY_FILL);
-    mInlineLabel= atts.getBoolean("tabInlineLabel",false);
     applyModeAndGravity();
 }
 

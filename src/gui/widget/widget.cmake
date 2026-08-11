@@ -102,7 +102,6 @@ list(APPEND WIDGET_SOURCES
     widget/tabwidget.cc
     widget/gridlayout.cc
     widget/tablerow.cc
-    widget/tablayout.cc
     widget/tablelayout.cc
     widget/drawerlayout.cc
 )

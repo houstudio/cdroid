@@ -32,6 +32,23 @@ DECLARE_WIDGET2(NumberPicker,"cdroid:attr/numberPickerStyle")
 const std::string DEFAULT_LAYOUT_VERT="cdroid:layout/number_picker";
 const std::string DEFAULT_LAYOUT_HORZ="cdroid:layout/number_picker_horz";
 
+// AOSP's NumberPicker$CustomEditText (a static inner EditText subclass; AOSP also
+// overrides onEditorAction to clearFocus() on IME_ACTION_DONE, which CDROID's
+// EditText has no dispatch path for, so this is a plain EditText). Kept file-local
+// (not in the header): it exists only so the <view class="android.widget.NumberPicker
+// $CustomEditText"> tag in number_picker_material.xml / number_picker_with_selector_wheel.xml
+// resolves. Registered under "NumberPicker$CustomEditText" — getInflater() strips the
+// package prefix (text after the last '.') from "android.widget.NumberPicker$CustomEditText".
+namespace {
+class NumberPickerCustomEditText : public EditText {
+public:
+    NumberPickerCustomEditText(Context* context, const AttributeSet& attrs)
+        : EditText(context, attrs) {}
+};
+} // namespace
+static InflaterRegister<NumberPickerCustomEditText>
+    g_numberpicker_customedittext("NumberPicker$CustomEditText", "");
+
 namespace {
     static NumberPicker::Formatter sTwoDigitFormatter=[](int value){
         return TextUtils::stringPrintf("%02d",value);

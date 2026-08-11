@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/coordinatorlayout/coordinatorlayout.h>
-#include <widget/widgetex_styleable.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <core/assets.h>
 #include <widgetEx/viewgrouputils.h>
 #include <porting/cdlog.h>

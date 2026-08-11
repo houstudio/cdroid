@@ -34,6 +34,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <memory>
 #include <androidfw/resourcetypes.h>  // Res_value, StyledAttr, ResXMLTree
 
 namespace cdroid {
@@ -77,9 +78,12 @@ public:
     bool      peekValue(size_t idx, Res_value* out) const;
     // High-level resource access (needs Context — passed as void* to keep
     // androidfw independent of cdroid::Context; cast in the .cc).
-    // Return raw pointers; caller wraps in RefPtr as needed.
+    // getDrawable returns a raw Drawable* (freshly new'd, caller takes ownership).
+    // getColorStateList returns a shared_ptr (RefPtr): ColorStateList is a
+    // shared/cached resource, so the returned shared_ptr shares ownership with
+    // the loader/valueOf cache — callers store it directly into RefPtr members.
     Drawable* getDrawable(size_t idx) const;
-    ColorStateList* getColorStateList(size_t idx) const;
+    std::shared_ptr<ColorStateList> getColorStateList(size_t idx) const;
 private:
     bool get(size_t idx, Res_value* v) const {
         if (!hasValue(idx)) return false;

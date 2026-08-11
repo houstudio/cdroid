@@ -40,10 +40,10 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,att
 
     setThumb(ta->getDrawable(SSB::thumb));
     setTickMark(ta->getDrawable(SSB::tickMark));
-    { ColorStateList* csl = ta->getColorStateList(SSB::thumbTint);
-      if(csl) mThumbTintList = RefPtr<ColorStateList>(csl); }
-    { ColorStateList* csl = ta->getColorStateList(SSB::tickMarkTint);
-      if(csl) mTickMarkTintList = RefPtr<ColorStateList>(csl); }
+    { auto csl = ta->getColorStateList(SSB::thumbTint);
+      if(csl) mThumbTintList = csl; }
+    { auto csl = ta->getColorStateList(SSB::tickMarkTint);
+      if(csl) mTickMarkTintList = csl; }
     const int thumbOffset = ta->getDimensionPixelOffset(SSB::thumbOffset,getThumbOffset());
     setThumbOffset(thumbOffset);
 

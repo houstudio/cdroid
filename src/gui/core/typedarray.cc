@@ -28,6 +28,30 @@
 #include <drawable/colorstatelist.h>   // ColorStateList
 #include <cstring>
 
+// Re-resolve a style-sourced TYPE_STRING resource path (e.g.
+// "res/drawable/ic_menu.xml", "res/color/primary_text.xml",
+// "res/drawable-xxhdpi/foo.png") into a framework resource reference
+// "@android:<type>/<name>" so Assets loads it from the framework pak
+// (cdroid.pak) rather than the app's. aapt2 stores style-bag drawable/color
+// values as the file path (TYPE_STRING), not as a reference id, so the high-
+// level getters must turn the path back into a ref. Returns empty when the
+// path isn't under "res/" or the name can't be extracted; density/config
+// qualifiers on the directory ("-xxhdpi") are stripped, matching how a
+// resource ref is spelled.
+static std::string frameworkResourceRef(const std::string& path) {
+    if (path.compare(0, 4, "res/") != 0) return std::string();
+    size_t sl = path.find_last_of('/');
+    if (sl == std::string::npos || sl <= 4) return std::string();
+    std::string type = path.substr(4, sl - 4);  // "drawable" / "color" / "drawable-xxhdpi"
+    size_t dash = type.find('-');
+    if (dash != std::string::npos) type = type.substr(0, dash);  // drop qualifiers
+    size_t dot = path.find_last_of('.');
+    std::string base = path.substr(sl + 1,
+        (dot != std::string::npos && dot > sl) ? dot - sl - 1 : std::string::npos);
+    if (type.empty() || base.empty()) return std::string();
+    return "@android:" + type + "/" + base;
+}
+
 namespace cdroid {
 
 // --- Constructors (out-of-line so typedarray.h need not include restable.h) ---
@@ -49,18 +73,31 @@ int32_t TypedArray::getInt(size_t idx, int32_t def) const {
     Res_value v; if (!get(idx, &v)) return def;
     return (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX) ? (int32_t)v.data : def;
 }
+
 bool TypedArray::getBoolean(size_t idx, bool def) const {
     Res_value v; if (!get(idx, &v)) return def;
     return v.dataType == Res_value::TYPE_INT_BOOLEAN ? (v.data != 0) : def;
 }
+
 uint32_t TypedArray::getColor(size_t idx, uint32_t def) const {
     Res_value v; if (!get(idx, &v)) return def;
-    return (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT) ? v.data : def;
+    if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
+        return v.data;
+    // Style-sourced color stored as the file path (TYPE_STRING): load the
+    // ColorStateList and return its default color, matching AOSP getColor.
+    if (v.dataType == Res_value::TYPE_STRING) {
+        auto csl = getColorStateList(idx);
+        if (csl) return csl->getDefaultColor();
+        return def;
+    }
+    return def;
 }
+
 float TypedArray::getDimension(size_t idx, float def) const {
     Res_value v; if (!get(idx, &v)) return def;
     return v.dataType == Res_value::TYPE_DIMENSION ? complexToFloat(v.data) : def;
 }
+
 int32_t TypedArray::getDimensionPixelSize(size_t idx, int32_t def) const {
     Res_value v; if (!get(idx, &v)) return def;
     if (v.dataType != Res_value::TYPE_DIMENSION) return def;
@@ -69,6 +106,7 @@ int32_t TypedArray::getDimensionPixelSize(size_t idx, int32_t def) const {
     float px = (unit == Res_value::COMPLEX_UNIT_PX) ? mag : mag * mDensity;
     return (int32_t)(px + 0.5f);
 }
+
 uint32_t TypedArray::getResourceId(size_t idx, uint32_t def) const {
     Res_value v; if (!get(idx, &v)) return def;
     if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
@@ -89,6 +127,7 @@ uint32_t TypedArray::getResourceId(size_t idx, uint32_t def) const {
     }
     return def;
 }
+
 std::string TypedArray::getString(size_t idx) const {
     Res_value v; if (!get(idx, &v) || v.dataType != Res_value::TYPE_STRING) return "";
     const ResStringPool* pool = nullptr;
@@ -211,21 +250,13 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
     // Style-sourced drawables are stored as TYPE_STRING (the file path, e.g.
     // "res/drawable/ic_menu_moreoverflow_material.xml") rather than a reference
     // id; load the drawable from that path. (AOSP's TypedArray.getDrawable loads
-    // via the string value the same way.)
+    // via the string value the same way.) Re-resolve a framework path as a ref
+    // so the lookup hits the framework pak; fall back to the raw path.
     if (v.dataType == Res_value::TYPE_STRING) {
         std::string s = getString(idx);
-        // Style-sourced drawables come as a framework file path
-        // "res/drawable/<name>.<ext>" (aapt2 stores style bag drawable values as
-        // TYPE_STRING paths, not reference ids). Re-resolve it as a framework
-        // drawable ref so getDrawable looks in the framework pak (cdroid.pak),
-        // not the app's; fall back to the raw path.
-        if (s.compare(0, 4, "res/") == 0) {
-            size_t sl = s.find_last_of('/');
-            size_t dot = s.find_last_of('.');
-            std::string base = (sl != std::string::npos)
-                ? s.substr(sl + 1, (dot != std::string::npos && dot > sl) ? dot - sl - 1 : std::string::npos)
-                : s;
-            Drawable* d = a->getDrawable("@android:drawable/" + base);
+        std::string ref = frameworkResourceRef(s);
+        if (!ref.empty()) {
+            Drawable* d = a->getDrawable(ref);
             if (d) return d;
         }
         if (!s.empty()) return a->getDrawable(s);
@@ -233,16 +264,32 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
     return nullptr;
 }
 
-ColorStateList* TypedArray::getColorStateList(size_t idx) const {
+std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const {
     if (!mContext) return nullptr;
     Assets* a = static_cast<Assets*>(mContext);
     Res_value v;
     if (!peekValue(idx, &v)) return nullptr;
     if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
-        return ColorStateList::valueOf(v.data).get();
-    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE) {
+        return ColorStateList::valueOf(v.data);
+    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
+        v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
         std::string name = a->arscReferenceName(v.data);
-        if (!name.empty()) return a->getColorStateList(name).get();
+        if (!name.empty()) return a->getColorStateList(name);
+        return nullptr;
+    }
+    // Style-sourced colors are stored as TYPE_STRING (the file path, e.g.
+    // "res/color/primary_text_dark.xml") rather than a reference id, just like
+    // drawables; re-resolve as a framework color ref and load. (AOSP delegates
+    // to Resources.loadColorStateList, which handles the string path the same
+    // way.) Fall back to the raw path.
+    if (v.dataType == Res_value::TYPE_STRING) {
+        std::string s = getString(idx);
+        std::string ref = frameworkResourceRef(s);
+        if (!ref.empty()) {
+            auto csl = a->getColorStateList(ref);
+            if (csl) return csl;
+        }
+        if (!s.empty()) return a->getColorStateList(s);
     }
     return nullptr;
 }

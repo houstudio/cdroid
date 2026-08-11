@@ -20,7 +20,7 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.MotionLayout.
  */
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
-#include <widget/widgetex_styleable.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <core/assets.h>
 
 #include <algorithm> // std::find (removeTransitionListener)

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/recyclerview/recyclerview.h>
-#include <widget/widgetex_styleable.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <core/assets.h>
 #include <widgetEx/recyclerview/gapworker.h>
 #include <widgetEx/recyclerview/childhelper.h>

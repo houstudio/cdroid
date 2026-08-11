@@ -21,7 +21,7 @@
  */
 #include <widgetEx/constraintlayout/motion/keyframes.h>
 
-#include <widget/widgetex_styleable.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <core/assets.h>
 #include <core/xmlpullparser.h>
 

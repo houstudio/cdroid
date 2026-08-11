@@ -27,7 +27,7 @@
 #include <view/layoutinflater.h>
 #include <view/view.h>
 #include <widgetEx/constraintlayout/constraintset.h>
-#include <widget/widgetex_styleable.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <core/assets.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 

@@ -41,8 +41,8 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     if(scaleType>=0)setScaleType(scaleType);
     Drawable*d = ta->getDrawable(styleable::ImageView::src);
     if(d)setImageDrawable(d);
-    { ColorStateList* csl = ta->getColorStateList(styleable::ImageView::tint);
-      if(csl) mDrawableTintList = RefPtr<ColorStateList>(csl); }
+    { auto csl = ta->getColorStateList(styleable::ImageView::tint);
+      if(csl) mDrawableTintList = csl; }
     mHasDrawableTint = mDrawableTintList!=nullptr;
     if(mDrawableTintList){
         /* ImageView's default tint mode is SRC_ATOP once a tint is applied. */

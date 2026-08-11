@@ -541,37 +541,51 @@ class PakBuilder(idgen.IDGenerater):
 
     # ----- aapt2 compile: compile res/ to binary AXML, return {rel_path: bytes} -----
     def _merge_widgetex_attrs(self, tmpres):
-        """Merge src/gui/widgetEx/res/ (the whole tree) + a generated public.xml
-        (from scripts/custom_attrids.txt) into the app's temp res/. Every app pak
-        (use_aapt2, not use_sdk) gets widgetEx resources this way so
-        ConstraintLayout/Flexbox/... app:xxx attrs link and resolve at runtime.
-        widgetEx attrs aren't declared in the app's own res, so aapt2 link would
-        fail "attribute not found"; declaring them fixes link, and public.xml
-        pins each attr's resource ID to the stable custom_attrids.txt value so
-        binary AXML attr IDs match the runtime styleable IDS[]
+        """Merge each widgetEx component's res/ tree (src/gui/widgetEx/<comp>/res/)
+        + a generated public.xml (from scripts/custom_attrids.txt) into the app's
+        temp res/. Every app pak (use_aapt2, not use_sdk) gets widgetEx resources
+        this way so ConstraintLayout/Flexbox/TabLayout/... app:xxx attrs link and
+        resolve at runtime. widgetEx attrs aren't declared in the app's own res,
+        so aapt2 link would fail "attribute not found"; declaring them fixes link,
+        and public.xml pins each attr's resource ID to the stable custom_attrids.txt
+        value so binary AXML attr IDs match the runtime styleable IDS[]
         (widgetex_styleable.h) — obtainStyledAttributes resolves by attr ID.
-        widgetEx/res currently holds only attrs.xml, but walking the whole tree
-        means any future drawable/layout/values added there auto-merge too."""
+
+        Per-component layout: each widgetEx/<comp>/res/ tree is walked; its
+        values/* files are copied to tmpres/values/<comp>_<basename> (aapt2 merges
+        all values/*.xml by resource name, so renaming avoids clobbering the app's
+        own values/attrs.xml/dimens.xml/...). Non-values files keep their relative
+        path. A residual shared src/gui/widgetEx/res/ tree (legacy) is merged with
+        the 'widgetex' component label if present."""
         sdir = os.path.dirname(os.path.abspath(__file__))
         repo = os.path.dirname(sdir)
         values = os.path.join(tmpres, "values")
-        wres = os.path.join(repo, "src", "gui", "widgetEx", "res")
-        # Copy the whole widgetEx/res/ tree into tmpres/. values/attrs.xml is
-        # renamed to widgetex_attrs.xml so it doesn't clobber the app's own
-        # values/attrs.xml; every other file keeps its relative path.
-        if os.path.isdir(wres):
-            for root, dirs, files in os.walk(wres):
+        os.makedirs(values, exist_ok=True)
+        wroot = os.path.join(repo, "src", "gui", "widgetEx")
+        # Collect component res trees: widgetEx/<comp>/res/ (+ legacy widgetEx/res/).
+        res_trees = []  # (component_label, tree_path)
+        if os.path.isdir(wroot):
+            for name in sorted(os.listdir(wroot)):
+                comp_res = os.path.join(wroot, name, "res")
+                if name != "res" and os.path.isdir(comp_res):
+                    res_trees.append((name, comp_res))
+            legacy = os.path.join(wroot, "res")
+            if os.path.isdir(legacy):
+                res_trees.append(("widgetex", legacy))
+        for comp, tree in res_trees:
+            for root, dirs, files in os.walk(tree):
                 dirs.sort(); files.sort()
                 for f in files:
                     src = os.path.join(root, f)
-                    rel = os.path.relpath(src, wres).replace(os.sep, "/")
-                    if rel == "values/attrs.xml":
-                        dst = os.path.join(values, "widgetex_attrs.xml")
+                    rel = os.path.relpath(src, tree).replace(os.sep, "/")
+                    head = rel.split("/", 1)
+                    if len(head) == 2 and head[0] == "values":
+                        # values/<file> -> values/<comp>_<file> (aapt2 merges; no clobber)
+                        dst = os.path.join(values, "%s_%s" % (comp, head[1]))
                     else:
                         dst = os.path.join(tmpres, rel)
                     os.makedirs(os.path.dirname(dst), exist_ok=True)
                     shutil.copyfile(src, dst)
-        os.makedirs(values, exist_ok=True)
         # Pin each attr's ID to its stable custom_attrids.txt value.
         ids_src = os.path.join(sdir, "custom_attrids.txt")
         if os.path.exists(ids_src):
