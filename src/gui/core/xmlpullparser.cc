@@ -133,19 +133,14 @@ struct Private{
                     auto event = acquire(XmlPullParser::START_TAG, u16toUtf8(n16, nl));
                     event->depth = depth++;
                     event->lineNumber = axmlTree->getLineNumber();
-                    const size_t ac = axmlTree->getAttributeCount();
-                    for(size_t i = 0; i < ac; i++){
-                        size_t anl = 0;
-                        const char16_t* an = axmlTree->getAttributeName(i, &anl);
-                        size_t avl = 0;
-                        const char16_t* av = axmlTree->getAttributeStringValue(i, &avl);
-                        std::string attrName = u16toUtf8(an, anl);
-                        std::string attrValue = av ? u16toUtf8(av, avl) : renderTypedValue(i, ctx);
-                        event->atts->insert({attrName, AttributeSet::normalize(pkg, attrValue)});
-                    }
-                    // Note: aapt2 emits `style="@style/..."` as a regular
-                    // attribute (rendered to "@style/Name" above), so it reaches
-                    // LayoutInflater::getString("style") with no special handling.
+                    // Attribute values are NO LONGER rendered into mAttrs (the
+                    // string bridge is retired). Name-based lookups
+                    // (getString/hasAttribute/getAttributeCount, the AOSP id-
+                    // interface, getStyleAttribute/getIdAttributeResourceValue)
+                    // resolve straight from the ResXMLTree via the binary
+                    // overrides in XmlPullParser; widget TypedArray resolution
+                    // reads the ResXMLTree directly via obtainStyledAttributes.
+                    // aapt2's style= attribute is likewise read by name, not mAttrs.
                     eventQueue.push(event);
                     return true;
                 }
