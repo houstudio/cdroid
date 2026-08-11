@@ -281,10 +281,10 @@ for (size_t n = ta->getIndexCount(); n > 0; ) {
 
 
 // --- shared apply + resolve (original order; uses gathered locals) ---
-// text/hint keep the ctx->getString ref-resolution path (AttributeSet bridge
-// renders binary typed values to strings for both modes).
-setText(ctx->getString(attrs.getString("text")));
-setHint(ctx->getString(attrs.getString("hint")));
+// text/hint via TypedArray.getText: resolves @string references (TYPE_REFERENCE)
+// through Context.getString(resId) and TYPE_STRING via the string pool.
+setText(ta->getText(STV::text));
+setHint(ta->getText(STV::hint));
 setHorizontallyScrolling(scrollHorizontally);
 
 setCompoundDrawablesWithIntrinsicBounds(drawableLeft, drawableTop, drawableRight, drawableBottom);

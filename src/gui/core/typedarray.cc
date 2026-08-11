@@ -213,7 +213,17 @@ float TypedArray::getFraction(size_t idx, int base, int pbase, float def) const 
 }
 
 std::string TypedArray::getText(size_t idx) const {
-    return getString(idx);  // CDROID CharSequence == std::string for now
+    Res_value v;
+    if (!get(idx, &v)) return "";
+    // AOSP TypedArray.getText resolves @string/foo references to their value
+    // (TypedValue.coerceToString). getString only handles TYPE_STRING, so resolve
+    // TYPE_REFERENCE / TYPE_DYNAMIC_REFERENCE through Context.getString(resId).
+    if (v.dataType == Res_value::TYPE_REFERENCE ||
+        v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE) {
+        if (mContext) return static_cast<Context*>(mContext)->getString((int)v.data);
+        return "";
+    }
+    return getString(idx);
 }
 
 int TypedArray::getType(size_t idx) const {
