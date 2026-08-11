@@ -39,6 +39,11 @@ public:
     Resources(AssetManager* am, cdroid::Context* ctx);
     ~Resources();
 
+    // AOSP Resources.getSystem() — the global system Resources singleton.
+    // CDROID's App is the system singleton; its Resources include the framework
+    // arsc (cdroid.pak).
+    static Resources& getSystem();
+
     // --- forwarded to the aggregated ResourcesImpl (AOSP Resources delegates) ---
     AssetManager*       getAssets() const;
     const ResTable_config& getConfiguration() const;
@@ -57,6 +62,7 @@ public:
     bool getValue(const std::string& name, TypedValue* outValue, bool resolveRefs) const;
 
     std::string    getString(int id) const;
+    std::string    getString(int id, const std::vector<std::string>& formatArgs) const;
     std::u16string getText(int id) const;
     std::u16string getText(int id, const std::u16string& def) const;
     int   getInteger(int id) const;
@@ -68,6 +74,7 @@ public:
     int   getDimensionPixelSize(int id) const;
     float getFraction(int id, float base, float pbase) const;
     std::string    getQuantityString(int id, int quantity) const;
+    std::string    getQuantityString(int id, int quantity, const std::vector<std::string>& formatArgs) const;
     std::u16string getQuantityText(int id, int quantity) const;
 
     std::vector<std::string>    getStringArray(int id) const;
@@ -75,6 +82,9 @@ public:
     std::vector<int>            getIntArray(int id) const;
 
     Asset* openRawResource(int id, TypedValue* outValue = nullptr) const;
+    // AOSP Resources.openRawResourceFd — returns AssetFileDescriptor. CDROID has
+    // no AssetFileDescriptor (fd-based assets); stub returns nullptr.
+    Asset* openRawResourceFd(int id) const;
     Asset* getXml(int id) const;
     Asset* getLayout(int id) const;
     Asset* getAnimation(int id) const;
@@ -90,6 +100,9 @@ public:
     // --- AOSP Resources.obtainStyledAttributes(...) ---
     // AttributeSet is nullable (AOSP @Nullable).
     std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet* set,
+        const uint32_t* attrs, int defStyleAttr = 0, int defStyleRes = 0) const;
+    // Convenience overload: AttributeSet& → AttributeSet*.
+    std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet& set,
         const uint32_t* attrs, int defStyleAttr = 0, int defStyleRes = 0) const;
     std::unique_ptr<TypedArray> obtainStyledAttributes(const uint32_t* attrs) const;
     std::unique_ptr<TypedArray> obtainStyledAttributes(int resid, const uint32_t* attrs) const;
