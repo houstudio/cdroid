@@ -16,7 +16,7 @@
 namespace cdroid {
 
 Resources::Resources(AssetManager* am, cdroid::Context* ctx)
-    : ResourcesImpl(am), mCtx(ctx) {
+    : mImpl(am), mCtx(ctx) {
 }
 
 cdroid::Drawable* Resources::getDrawable(int id, int /*density*/) const {
