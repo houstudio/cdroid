@@ -88,7 +88,7 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
     // aapt2 already resolved enums/flags at compile time, so TypedArray getters
     // return integers directly — no string→enum map needed.
     Assets* assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = assets ? assets->obtainStyledAttributes(
+    auto ta = assets ? ctx->obtainStyledAttributes(
         attrs, styleable::View::IDS, defStyleAttr) : nullptr;
     // (namespace alias not allowed in function body in C++14)
     // Phase 2: TypedArray switch loop (AOSP View.java pattern).

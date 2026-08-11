@@ -1389,8 +1389,7 @@ void TextView::setTextAppearance(Context*context,const std::string&appearance){
         AttributeSet attrs = context->obtainStyledAttributes(appearance);
         if(attrs.getAttributeCount()){
             Assets* a = dynamic_cast<Assets*>(context);
-            auto ta = a ? a->obtainStyledAttributes(
-                attrs, styleable::TextAppearance::IDS) : nullptr;
+            auto ta = context->obtainStyledAttributes(attrs, styleable::TextAppearance::IDS);
             attributes.readTextAppearance(mContext, ta.get());
             applyTextAppearance(&attributes);
         }

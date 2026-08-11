@@ -206,8 +206,7 @@ void ViewGroup::initGroup(){
 
 void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
     Assets* assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = assets ? assets->obtainStyledAttributes(
-        atts, styleable::ViewGroup::IDS) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(atts, styleable::ViewGroup::IDS);
 
     setClipChildren(true);
     setClipToPadding(true);
