@@ -420,7 +420,7 @@ void VectorDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,cons
 
             if (tagName.compare(SHAPE_PATH)==0) {
                 VFullPath* path = new VFullPath();
-                path->inflate(parser,atts);
+                path->inflate(r,parser,atts);
                 currentGroup->addChild(path);
                 if (!path->getPathName().empty()) {
                     state->mVGTargetsMap.emplace(path->getPathName(), path);
@@ -429,7 +429,7 @@ void VectorDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,cons
                 state->mChangingConfigurations |= path->mChangingConfigurations;
             } else if (tagName.compare(SHAPE_CLIP_PATH)==0) {
                 VClipPath* path = new VClipPath();
-                path->inflate(parser,atts);
+                path->inflate(r,parser,atts);
                 currentGroup->addChild(path);
                 if (!path->getPathName().empty()) {
                     state->mVGTargetsMap.emplace(path->getPathName(), path);
@@ -437,7 +437,7 @@ void VectorDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,cons
                 state->mChangingConfigurations |= path->mChangingConfigurations;
             } else if (tagName.compare(SHAPE_GROUP)==0) {
                 VGroup* newChildGroup = new VGroup();
-                newChildGroup->inflate(parser,atts);
+                newChildGroup->inflate(r,parser,atts);
                 currentGroup->addChild(newChildGroup);
                 groupStack.push(newChildGroup);
                 if (!newChildGroup->getGroupName().empty()) {
@@ -839,11 +839,10 @@ long VectorDrawable::VGroup::getNativePtr() {
 }
 
 
-void VectorDrawable::VGroup::inflate(XmlPullParser&parser,const AttributeSet&atts) {
+void VectorDrawable::VGroup::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts) {
     // AOSP VGroup.inflate: obtainAttributes(R.styleable.VectorDrawableGroup).
     namespace SX = styleable::VectorDrawableGroup;
-    Context* ctx = atts.getContext();
-    auto ta = atts.getContext() ? atts.getContext()->obtainStyledAttributes(atts, SX::IDS) : nullptr;
+    auto ta = r.obtainStyledAttributes(atts, SX::IDS);
     if (!ta) return;
     const TypedArray& a = *ta;
     const auto properties=mNativePtr->stagingProperties();
@@ -1099,10 +1098,8 @@ long VectorDrawable::VClipPath::getNativePtr() {
 }
 
 
-void VectorDrawable::VClipPath::inflate(XmlPullParser&,const AttributeSet& attrs) {
-    // AOSP VClipPath.inflate: obtainAttributes(R.styleable.VectorDrawableClipPath).
-    Context* ctx = attrs.getContext();
-    auto ta = attrs.getContext() ? attrs.getContext()->obtainStyledAttributes(attrs, styleable::VectorDrawableClipPath::IDS) : nullptr;
+void VectorDrawable::VClipPath::inflate(Resources&r,XmlPullParser&,const AttributeSet& attrs) {
+    auto ta = r.obtainStyledAttributes(attrs, styleable::VectorDrawableClipPath::IDS);
     if (ta) updateStateFromTypedArray(*ta);
 }
 
@@ -1270,10 +1267,8 @@ long VectorDrawable::VFullPath::getNativePtr() {
     return (long)mNativePtr;
 }
 
-void VectorDrawable::VFullPath::inflate(XmlPullParser&parser,const AttributeSet& attrs) {
-    // AOSP VFullPath.inflate: obtainAttributes(R.styleable.VectorDrawablePath).
-    Context* ctx = attrs.getContext();
-    auto ta = attrs.getContext() ? attrs.getContext()->obtainStyledAttributes(attrs, styleable::VectorDrawablePath::IDS) : nullptr;
+void VectorDrawable::VFullPath::inflate(Resources&r,XmlPullParser&parser,const AttributeSet& attrs) {
+    auto ta = r.obtainStyledAttributes(attrs, styleable::VectorDrawablePath::IDS);
     if (ta) updateStateFromTypedArray(*ta);
     inflateGradients(parser,attrs);
 }

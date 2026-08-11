@@ -125,7 +125,7 @@ public:
             mTreePtr = ptr;
         }
         virtual long getNativePtr()=0;
-        virtual void inflate(XmlPullParser&,const AttributeSet& attrs)=0;
+        virtual void inflate(Resources&,XmlPullParser&,const AttributeSet& attrs)=0;
         virtual bool canApplyTheme()=0;
         virtual void applyTheme(Theme t)=0;
         virtual bool onStateChange(const std::vector<int>& state)=0;
@@ -277,7 +277,7 @@ public:
     void setTranslateX(float translateX);
     float getTranslateY();
     void setTranslateY(float translateY);
-    void inflate(XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources&r,XmlPullParser&,const AttributeSet&atts)override;
 };
 
 /**
@@ -321,7 +321,7 @@ public:
     bool isStateful() const override;
     bool hasFocusStateSpecified() const override;
     void updateStateFromTypedArray(const TypedArray& a);
-    void inflate(XmlPullParser&,const AttributeSet& attrs)override;
+    void inflate(Resources&,XmlPullParser&,const AttributeSet& attrs)override;
 };
 
 /**
@@ -378,7 +378,7 @@ public:
     bool isStateful() const override;
     bool hasFocusStateSpecified()const override;
     long getNativePtr() override;
-    void inflate(XmlPullParser&,const AttributeSet& attrs)override;
+    void inflate(Resources&,XmlPullParser&,const AttributeSet& attrs)override;
 
     bool canApplyTheme()override;
     void applyTheme(Theme t)override;
