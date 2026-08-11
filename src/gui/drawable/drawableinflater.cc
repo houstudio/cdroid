@@ -33,18 +33,18 @@ Drawable* DrawableInflater::loadDrawable(Context* context, const std::string&id)
     while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING
     }
-    return inflateFromXml(parser.getName(),parser,attrs);//event.attributes);//loadDrawable(context, id);
+    return inflateFromXml(context->getResources(),parser.getName(),parser,attrs);
 }
 
-Drawable* DrawableInflater::inflateFromXml(const std::string& name,XmlPullParser& parser,const AttributeSet& attrs){
-    return inflateFromXmlForDensity(name, parser, attrs, 0);
+Drawable* DrawableInflater::inflateFromXml(Resources& r,const std::string& name,XmlPullParser& parser,const AttributeSet& attrs){
+    return inflateFromXmlForDensity(r, name, parser, attrs, 0);
 }
 
 /**
  * Version of {@link #inflateFromXml(String, XmlPullParser, AttributeSet, Theme)} that accepts
  * an override density.
  */
-Drawable* DrawableInflater::inflateFromXmlForDensity(const std::string& name,XmlPullParser& parser,const AttributeSet& attrs, int density){
+Drawable* DrawableInflater::inflateFromXmlForDensity(Resources& r,const std::string& name,XmlPullParser& parser,const AttributeSet& attrs, int density){
     // Inner classes must be referenced as Outer$Inner, but XML tag names
     // can't contain $, so the <drawable> tag allows developers to specify
     // the class in an attribute. We'll still run it through inflateFromTag
@@ -61,7 +61,7 @@ Drawable* DrawableInflater::inflateFromXmlForDensity(const std::string& name,Xml
         drawable = inflateFromClass(name);
     }*/
     drawable->setSrcDensityOverride(density);
-    drawable->inflate(parser, attrs);
+    drawable->inflate(r, parser, attrs);
     return drawable;
 }
 

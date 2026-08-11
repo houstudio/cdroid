@@ -135,7 +135,7 @@ public:
     void invalidateSelf(bool invalidateMask);
     void pruneRipples();
     Rect getDirtyBounds() const override;
-    void inflate(XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts)override;
 };
 
 }

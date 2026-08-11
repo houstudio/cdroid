@@ -112,7 +112,7 @@ public:
     void draw(Canvas&canvas)override;
     Insets getOpticalInsets()override;
     void getOutline(Outline&)override;
-    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts)override;
 };
 
 }

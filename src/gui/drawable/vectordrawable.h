@@ -65,7 +65,7 @@ private:
     void updateLocalState();
     bool needMirroring();
     void updateStateFromTypedArray(const TypedArray& a);
-    void inflateChildElements(XmlPullParser&parser,const AttributeSet&);
+    void inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&);
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
     void computeVectorSize();
@@ -110,7 +110,7 @@ public:
     bool isAutoMirrored() const override;
     long getNativeTree();
     void setAntiAlias(bool aa);
-    void inflate(XmlPullParser&,const AttributeSet&)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&)override;
 public:
     class VObject {
         friend VectorDrawableState;

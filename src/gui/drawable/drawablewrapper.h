@@ -82,7 +82,7 @@ public:
     void setTintMode(int)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
-    void inflate(XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts)override;
 };
 
 }

@@ -68,7 +68,8 @@ ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
 ColorDrawable::~ColorDrawable(){
 }
 
-void ColorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void ColorDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
+    (void)r;
     // AOSP ColorDrawable.inflate: obtainAttributes(R.styleable.ColorDrawable) -> color.
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::ColorDrawable::IDS) : nullptr;

@@ -58,7 +58,7 @@ private:
     void updateLayerBounds(const Rect& bounds);
     void updateLayerBoundsInternal(const Rect& bounds);
     void updateMaskBoundsInternal(const Rect& b);
-    void inflateLayers(XmlPullParser& parser,AttributeSet& attrs);
+    void inflateLayers(Resources& r,XmlPullParser& parser,AttributeSet& attrs);
     void updateLayerFromTypedArray(ChildDrawable* layer,const TypedArray& a);
     void suspendChildInvalidation();
     void resumeChildInvalidation();
@@ -74,7 +74,7 @@ public:
     std::shared_ptr<LayerState> createConstantState(LayerState* state);
     AdaptiveIconDrawable(Drawable* backgroundDrawable,Drawable* foregroundDrawable);
     AdaptiveIconDrawable(Drawable* backgroundDrawable, Drawable* foregroundDrawable, Drawable* monochromeDrawable);
-    void inflate(XmlPullParser& parser,AttributeSet& attrs);
+    void inflate(Resources& r, XmlPullParser& parser,AttributeSet& attrs);
     static float getExtraInsetFraction();
     static float getExtraInsetPercentage();
 

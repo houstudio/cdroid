@@ -304,7 +304,8 @@ VectorDrawable* VectorDrawable::create(Context*ctx, const std::string&rid) {
     return drawable;
 }
 
-void VectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+    (void)r; // Resources unused here; no super Drawable::inflate call in this body.
 
     if (mVectorState->mRootGroup != nullptr || mVectorState->mNativeTree != nullptr) {
         // This VD has been used to display other VD resource content, clean up.
@@ -334,7 +335,7 @@ void VectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     mDpiScaledDirty = true;
     mVectorState->mCacheDirty = true;
 
-    inflateChildElements(parser,atts);
+    inflateChildElements(r,parser,atts);
     mVectorState->onTreeConstructionFinished();
     // Update local properties.
     updateLocalState();
@@ -400,7 +401,7 @@ void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
 
 }
 
-void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
+void VectorDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     auto state = mVectorState;
     bool noPathTag = true;
 

@@ -599,7 +599,7 @@ Rect RippleDrawable::getDirtyBounds() const{
     }
 }
 
-void RippleDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void RippleDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     // Snapshot the <ripple> root-element attrs into a TypedArray BEFORE LayerDrawable::inflate
     // advances the parser into the child <item>s. obtainStyledAttributes resolves and caches the
     // values up front (AOSP obtainAttributes semantics), so updateStateFromTypedArray is safe to
@@ -611,7 +611,7 @@ void RippleDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     // Force padding default to STACK before inflating.
     setPaddingMode(PADDING_MODE_STACK);
 
-    LayerDrawable::inflate(parser,atts);
+    LayerDrawable::inflate(r,parser,atts);
 
     if (ta) updateStateFromTypedArray(*ta);
 

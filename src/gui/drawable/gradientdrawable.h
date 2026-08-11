@@ -154,7 +154,7 @@ private:
     void prepareStrokeProps(Canvas&canvas);
     void getPatternAlpha(int& strokeAlpha,int& fillApha);
     void updateStateFromTypedArray(const TypedArray& a);
-    void inflateChildElements(XmlPullParser&,const AttributeSet&);
+    void inflateChildElements(Resources& r,XmlPullParser&,const AttributeSet&);
     void updateGradientDrawableSize(const TypedArray& a);
     void updateGradientDrawableGradient(const TypedArray& a);
     void updateGradientDrawableSolid(const TypedArray& a);
@@ -233,7 +233,7 @@ public:
     GradientDrawable*mutate()override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;
-    void inflate(XmlPullParser&,const AttributeSet&)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&)override;
 };
 
 }/*endof namespace*/

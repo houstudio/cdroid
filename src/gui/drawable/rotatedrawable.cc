@@ -169,10 +169,10 @@ void RotateDrawable::draw(Canvas& canvas) {
     LOGV("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
 }
 
-void RotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void RotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::RotateDrawable::IDS) : nullptr;
-    DrawableWrapper::inflate(parser,atts);
+    DrawableWrapper::inflate(r,parser,atts);
     if (ta) updateStateFromTypedArray(*ta);
 }
 

@@ -95,7 +95,7 @@ private:
     void computeStackedPadding(Rect& padding);
     ChildDrawable* createLayer(Drawable* dr);
     Drawable* getFirstNonNullDrawable()const;
-    void inflateLayers(XmlPullParser& parser,const AttributeSet& atts);
+    void inflateLayers(Resources& r,XmlPullParser& parser,const AttributeSet& atts);
     void updateStateFromTypedArray(const TypedArray& a);
     void updateLayerFromTypedArray(ChildDrawable*layer,const TypedArray& a);
 protected:
@@ -186,7 +186,7 @@ public:
     void scheduleDrawable(Drawable& who,const Runnable& what, int64_t when)override;
     void unscheduleDrawable(Drawable& who,const Runnable& what)override;
     void draw(Canvas&canvas)override;
-    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts)override;
 };
 }
 #endif

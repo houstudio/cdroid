@@ -116,11 +116,11 @@ void ClipDrawable::draw(Canvas& canvas){
     }
 }
 
-void ClipDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void ClipDrawable::inflate(Resources& r, XmlPullParser&parser,const AttributeSet&atts){
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::ClipDrawable::IDS) : nullptr;
     if (ta) updateStateFromTypedArray(*ta);
-    DrawableWrapper::inflate(parser,atts);
+    DrawableWrapper::inflate(r,parser,atts);
 }
 
 void ClipDrawable::updateStateFromTypedArray(const TypedArray& a){

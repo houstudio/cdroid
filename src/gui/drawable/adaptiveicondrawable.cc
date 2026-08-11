@@ -78,8 +78,8 @@ void AdaptiveIconDrawable::addLayer(int index,ChildDrawable* layer) {
     mLayerState->invalidateCache();
 }
 
-void AdaptiveIconDrawable::inflate(XmlPullParser& parser,AttributeSet& attrs){
-    Drawable::inflate(parser, attrs);
+void AdaptiveIconDrawable::inflate(Resources& r, XmlPullParser& parser,AttributeSet& attrs){
+    Drawable::inflate(r, parser, attrs);
 
     auto state = mLayerState;
     if (state == nullptr) {
@@ -98,7 +98,7 @@ void AdaptiveIconDrawable::inflate(XmlPullParser& parser,AttributeSet& attrs){
         array[i]->setDensity(deviceDensity);
     }
 
-    inflateLayers(parser, attrs);
+    inflateLayers(r,parser, attrs);
 }
 
 float AdaptiveIconDrawable::getExtraInsetFraction() {
@@ -268,7 +268,7 @@ int AdaptiveIconDrawable::getSourceDrawableResId() {
     return 0;//mLayerState == nullptr ? Resources.ID_NULL : mLayerState->mSourceDrawableId;
 }
 
-void AdaptiveIconDrawable::inflateLayers(XmlPullParser& parser,AttributeSet& attrs) {
+void AdaptiveIconDrawable::inflateLayers(Resources& r,XmlPullParser& parser,AttributeSet& attrs) {
     auto state = mLayerState;
 
     const int innerDepth = parser.getDepth() + 1;
@@ -322,7 +322,7 @@ void AdaptiveIconDrawable::inflateLayers(XmlPullParser& parser,AttributeSet& att
             }
 
             // We found a child drawable. Take ownership.
-            layer->mDrawable = Drawable::createFromXmlInnerForDensity(parser, attrs, mLayerState->mSrcDensityOverride);
+            layer->mDrawable = Drawable::createFromXmlInnerForDensity(r,parser, attrs, mLayerState->mSrcDensityOverride);
             layer->mDrawable->setCallback(this);
             state->mChildrenChangingConfigurations |= layer->mDrawable->getChangingConfigurations();
         }

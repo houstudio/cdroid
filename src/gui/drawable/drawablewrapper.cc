@@ -275,8 +275,8 @@ void DrawableWrapper::draw(Canvas&canvas){
     }
 }
 
-void DrawableWrapper::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(parser,atts);
+void DrawableWrapper::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflate(r,parser,atts);
     auto state = mState;
     if (state == nullptr) {
         return;
@@ -289,8 +289,8 @@ void DrawableWrapper::inflate(XmlPullParser&parser,const AttributeSet&atts){
     //state->mSrcDensityOverride = mSrcDensityOverride;
 
     // AOSP DrawableWrapper.inflate: obtainAttributes(R.styleable.DrawableWrapper).
-    Context* ctx = atts.getContext();
-    auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::DrawableWrapper::IDS) : nullptr;
+    Context*ctx=atts.getContext();
+    auto ta = ctx?ctx->obtainStyledAttributes(atts, styleable::DrawableWrapper::IDS) : nullptr;
     if (ta) updateStateFromTypedArray(*ta);
     inflateChildDrawable(parser, atts);
 }
@@ -320,7 +320,7 @@ void DrawableWrapper::inflateChildDrawable(XmlPullParser& parser,const Attribute
     while ((type = parser.next()) != XmlPullParser::END_DOCUMENT
             && (type != XmlPullParser::END_TAG || parser.getDepth() > outerDepth)) {
         if (type == XmlPullParser::START_TAG) {
-            dr = Drawable::createFromXmlInnerForDensity(parser,attrs,0/*mState->mSrcDensityOverride*/);
+            dr = Drawable::createFromXmlInnerForDensity(attrs.getContext()->getResources(),parser,attrs,0/*mState->mSrcDensityOverride*/);
         }
     }
 

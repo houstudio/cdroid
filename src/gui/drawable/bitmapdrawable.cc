@@ -492,8 +492,8 @@ void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a){
     }
 }
 
-void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(parser,atts);
+void BitmapDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflate(r,parser,atts);
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::BitmapDrawable::IDS) : nullptr;
     if (ta) updateStateFromTypedArray(*ta);

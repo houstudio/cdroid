@@ -51,13 +51,13 @@ public:
      * @throws XmlPullParserException
      * @throws IOException
      */
-    static Drawable* inflateFromXml(const std::string& name,XmlPullParser& parser,const AttributeSet& attrs);
+    static Drawable* inflateFromXml(Resources& r,const std::string& name,XmlPullParser& parser,const AttributeSet& attrs);
 
     /**
      * Version of {@link #inflateFromXml(String, XmlPullParser, AttributeSet, Theme)} that accepts
      * an override density.
      */
-    static Drawable* inflateFromXmlForDensity(const std::string& name,XmlPullParser& parser,const AttributeSet& attrs, int density);
+    static Drawable* inflateFromXmlForDensity(Resources& r,const std::string& name,XmlPullParser& parser,const AttributeSet& attrs, int density);
 };
 }/*endof namspace*/
 #endif/*__DRAWABLE_INFLATER_H__*/

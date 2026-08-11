@@ -1150,13 +1150,13 @@ void GradientDrawable::draw(Canvas&canvas) {
     canvas.restore();
 }
 
-void GradientDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(parser, atts);
+void GradientDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflate(r, parser, atts);
     mGradientState->setDensity(Drawable::resolveDensity( 0));
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::GradientDrawable::IDS) : nullptr;
     if (ta) updateStateFromTypedArray(*ta);
-    inflateChildElements(parser,atts);
+    inflateChildElements(r,parser,atts);
     updateLocalState();
 }
 
@@ -1206,7 +1206,7 @@ void GradientDrawable::updateStateFromTypedArray(const TypedArray& a) {
     state->mOpticalInsets = Insets::of(insetLeft, insetTop, insetRight, insetBottom);
 }
 
-void GradientDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
+void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
     Context* ctx = atts.getContext();

@@ -51,7 +51,7 @@ public:
     void draw(Canvas& canvas)override;
     int getOpacity()const override;
     int getGravity()const;
-    void inflate(XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources&,XmlPullParser&,const AttributeSet&atts)override;
 };
 
 }

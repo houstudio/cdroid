@@ -194,14 +194,15 @@ void AnimatedStateListDrawable::setConstantState(std::shared_ptr<DrawableContain
     }
 }
 
-void AnimatedStateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void AnimatedStateListDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+    (void)r;
     StateListDrawable::inflateWithAttributes(parser,atts);
 
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedStateListDrawable::IDS) : nullptr;
     if (ta) updateStateFromTypedArray(*ta);
     //updateDensity();
-    inflateChildElement(parser,atts);
+    inflateChildElement(r,parser,atts);
     init();
 }
 
@@ -226,7 +227,7 @@ void AnimatedStateListDrawable::init(){
     onStateChange(getState());
 }
 
-void AnimatedStateListDrawable::inflateChildElement(XmlPullParser&parser,const AttributeSet&atts){
+void AnimatedStateListDrawable::inflateChildElement(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
     while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
@@ -236,14 +237,14 @@ void AnimatedStateListDrawable::inflateChildElement(XmlPullParser&parser,const A
         }
         const std::string tagName = parser.getName();
         if (tagName.compare(ELEMENT_ITEM)==0) {
-            parseItem(parser, atts);
+            parseItem(r,parser, atts);
         } else if (tagName.compare(ELEMENT_TRANSITION)==0) {
-            parseTransition(parser, atts);
+            parseTransition(r,parser, atts);
         }
     }
 }
 
-int AnimatedStateListDrawable::parseItem(XmlPullParser&parser,const AttributeSet&atts){
+int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     namespace SXI = styleable::AnimatedStateListDrawableItem;
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedStateListDrawableItem::IDS) : nullptr;
@@ -264,13 +265,13 @@ int AnimatedStateListDrawable::parseItem(XmlPullParser&parser,const AttributeSet
             throw std::logic_error(parser.getPositionDescription()+
                     ": <item> tag requires a 'drawable' attribute or child tag defining a drawable");
         }
-        dr = Drawable::createFromXmlInner(parser,atts);
+        dr = Drawable::createFromXmlInner(r,parser,atts);
     }
 
     return mState->addStateSet(states, dr, keyframeId);
 }
 
-int AnimatedStateListDrawable::parseTransition(XmlPullParser&parser,const AttributeSet&atts){
+int AnimatedStateListDrawable::parseTransition(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     namespace SXT = styleable::AnimatedStateListDrawableTransition;
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedStateListDrawableTransition::IDS) : nullptr;
@@ -290,7 +291,7 @@ int AnimatedStateListDrawable::parseTransition(XmlPullParser&parser,const Attrib
             throw std::logic_error(parser.getPositionDescription()+
                             ": <transition> tag requires a 'drawable' attribute or child tag defining a drawable");
         }
-        dr = Drawable::createFromXmlInner(parser, atts);
+        dr = Drawable::createFromXmlInner(r,parser, atts);
     }
 
     return mState->addTransition(fromId, toId, dr, reversible);

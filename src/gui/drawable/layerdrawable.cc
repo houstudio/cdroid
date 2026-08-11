@@ -1106,8 +1106,8 @@ void LayerDrawable::draw(Canvas&canvas){
     }
 }
 
-void LayerDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(parser,atts);
+void LayerDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflate(r,parser,atts);
     const int density = Drawable::resolveDensity( 0);
     mLayerState->setDensity(density);
 
@@ -1119,12 +1119,12 @@ void LayerDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     for (ChildDrawable*layer:mLayerState->mChildren) {
         layer->setDensity(density);
     }
-    inflateLayers(parser,atts);
+    inflateLayers(r,parser,atts);
     ensurePadding();
     refreshPadding();
 }
 
-void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts){
+void LayerDrawable::inflateLayers(Resources& r,XmlPullParser& parser,const AttributeSet& atts){
     int type,depth,low = 0;
     const int innerDepth = parser.getDepth()+1;
     while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
@@ -1151,7 +1151,7 @@ void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            layer->mDrawable = Drawable::createFromXmlInner(parser,atts);
+            layer->mDrawable = Drawable::createFromXmlInner(r,parser,atts);
             layer->mDrawable->setCallback(this);
         }
         addLayer(layer);

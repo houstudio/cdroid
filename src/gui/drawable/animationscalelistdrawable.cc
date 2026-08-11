@@ -41,16 +41,17 @@ bool AnimationScaleListDrawable::onStateChange(const std::vector<int>& stateSet)
 }
 
 
-void AnimationScaleListDrawable::inflate(XmlPullParser& parser,const AttributeSet& attrs){
+void AnimationScaleListDrawable::inflate(Resources& r, XmlPullParser& parser,const AttributeSet& attrs){
+    (void)r;
     //updateDensity();
-    inflateChildElements(parser, attrs);
+    inflateChildElements(r,parser, attrs);
     onStateChange(getState());
 }
 
 /**
  * Inflates child elements from XML.
  */
-void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& attrs){
+void AnimationScaleListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& attrs){
     namespace SXI = styleable::AnimationScaleListDrawableItem;
     auto state = mAnimationScaleListState;
     int type, depth;
@@ -79,7 +80,7 @@ void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,cons
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            dr = Drawable::createFromXmlInner(parser,attrs);
+            dr = Drawable::createFromXmlInner(r,parser,attrs);
         }
         state->addDrawable(dr);
     }

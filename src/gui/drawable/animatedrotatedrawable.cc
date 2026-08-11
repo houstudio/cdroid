@@ -209,7 +209,7 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     }
 }
 
-void AnimatedRotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void AnimatedRotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::AnimatedRotateDrawable::IDS) : nullptr;
     if (ta) updateStateFromTypedArray(*ta);
@@ -217,7 +217,7 @@ void AnimatedRotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
     // the string bridge (text-XML works; binary returns the default — harmless).
     mState->mFramesCount  = atts.getInt("framesCount", mState->mFramesCount);
     mState->mFrameDuration= atts.getInt("frameDuration", mState->mFrameDuration);
-    DrawableWrapper::inflate(parser,atts);
+    DrawableWrapper::inflate(r,parser,atts);
     updateLocalState();
 }
 

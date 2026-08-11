@@ -198,7 +198,8 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
     return mAnimatedVectorState->mVectorDrawable->getOpticalInsets();
 }
 
-void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&attrs){
+void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&attrs){
+    (void)r;
     namespace SXV = styleable::AnimatedVectorDrawable;
     namespace SXT = styleable::AnimatedVectorDrawableTarget;
     auto state = mAnimatedVectorState;

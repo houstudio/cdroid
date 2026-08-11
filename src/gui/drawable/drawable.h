@@ -123,10 +123,10 @@ public:
     virtual Rect getDirtyBounds()const;
     virtual Drawable*mutate();
     virtual void clearMutated();
-    virtual void inflate(XmlPullParser&parser,const AttributeSet&);
+    virtual void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&);
     void inflateWithAttributes(XmlPullParser&parser,const AttributeSet&);
-    static Drawable*createFromXmlInner(XmlPullParser&parser,const AttributeSet&);
-    static Drawable*createFromXmlInnerForDensity(XmlPullParser&parser,const AttributeSet&,int);
+    static Drawable*createFromXmlInner(Resources& r,XmlPullParser&parser,const AttributeSet&);
+    static Drawable*createFromXmlInnerForDensity(Resources& r,XmlPullParser&parser,const AttributeSet&,int);
     virtual void setColorFilter(const cdroid::RefPtr<ColorFilter>&);
     virtual const cdroid::RefPtr<ColorFilter>getColorFilter()const;
     void setColorFilter(int color,PorterDuff::Mode mode);

@@ -50,9 +50,9 @@ private:
     AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListState> state);
     void init();
     void updateStateFromTypedArray(const TypedArray& a);
-    void inflateChildElement(XmlPullParser&,const AttributeSet&);
-    int parseItem(XmlPullParser&,const AttributeSet&);
-    int parseTransition(XmlPullParser&,const AttributeSet&);
+    void inflateChildElement(Resources& r,XmlPullParser&,const AttributeSet&);
+    int parseItem(Resources& r,XmlPullParser&,const AttributeSet&);
+    int parseTransition(Resources& r,XmlPullParser&,const AttributeSet&);
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void setConstantState(std::shared_ptr<DrawableContainerState> state)override;
@@ -67,7 +67,7 @@ public:
     void jumpToCurrentState()override;
     AnimatedStateListDrawable* mutate()override;
     void clearMutated()override;
-    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts)override;
 };
 
 class AnimatedStateListDrawable::AnimatedStateListState:public StateListState{

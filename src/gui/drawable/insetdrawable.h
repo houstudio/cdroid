@@ -64,7 +64,7 @@ public:
     bool getPadding(Rect& padding)override;
     int getOpacity()const override;
     Insets getOpticalInsets()override;
-    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts)override;
 };
 
 }//namespace

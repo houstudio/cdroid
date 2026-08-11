@@ -252,8 +252,8 @@ int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const 
 }
 
 
-void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(parser,atts);
+void ShapeDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflate(r,parser,atts);
 
     // AOSP ShapeDrawable.inflate: obtainAttributes(R.styleable.ShapeDrawable) -> updateStateFromTypedArray.
     Context* ctx = atts.getContext();

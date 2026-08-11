@@ -86,8 +86,11 @@ Drawable*Drawable::mutate() {
 void Drawable::clearMutated() {
 }
 
-void Drawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    // AOSP Drawable.inflate: obtainAttributes(R.styleable.Drawable) -> visible.
+void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+    // AOSP Drawable.inflate(Resources r,...): r for resource resolution; CDROID resolves
+    // typed attrs via the AttributeSet's Context (Resources has no obtainStyledAttributes),
+    // so r is accepted for API parity and unused at this base layer.
+    (void)r;
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::Drawable::IDS) : nullptr;
     mVisible = ta ? ta->getBoolean(styleable::Drawable::visible, mVisible) : mVisible;
@@ -97,12 +100,12 @@ void Drawable::inflateWithAttributes(XmlPullParser&parser,const AttributeSet&att
     mVisible = atts.getBoolean("visible",mVisible);
 }
 
-Drawable* Drawable::createFromXmlInner(XmlPullParser&parser,const AttributeSet&atts){
-    return DrawableInflater::inflateFromXml(parser.getName(),parser,atts);
+Drawable* Drawable::createFromXmlInner(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+    return DrawableInflater::inflateFromXml(r,parser.getName(),parser,atts);
 }
 
-Drawable* Drawable::createFromXmlInnerForDensity(XmlPullParser&parser,const AttributeSet&atts,int){
-    return DrawableInflater::inflateFromXml(parser.getName(),parser,atts);
+Drawable* Drawable::createFromXmlInnerForDensity(Resources& r,XmlPullParser&parser,const AttributeSet&atts,int density){
+    return DrawableInflater::inflateFromXmlForDensity(r,parser.getName(),parser,atts,density);
 }
 
 /*int Drawable::getDimensionOrFraction(const std::string&value,int base,int def){

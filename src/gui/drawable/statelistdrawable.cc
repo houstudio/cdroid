@@ -145,12 +145,13 @@ bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
     return selectDrawable(idx)||changed;
 }
 
-void StateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void StateListDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+    (void)r;
     Drawable::inflateWithAttributes(parser,atts);
     Context* ctx = atts.getContext();
     auto ta = ctx ? ctx->obtainStyledAttributes(atts, styleable::StateListDrawable::IDS) : nullptr;
     if (ta) updateStateFromTypedArray(*ta);
-    inflateChildElements(parser,atts);
+    inflateChildElements(r,parser,atts);
     onStateChange(getState());
 }
 
@@ -171,7 +172,7 @@ void StateListDrawable::updateStateFromTypedArray(const TypedArray& a) {
     state->mAutoMirrored = a.getBoolean(SX::autoMirrored, state->mAutoMirrored);
 }
 
-void StateListDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
+void StateListDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     namespace SXI = styleable::StateListDrawableItem;
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
@@ -189,7 +190,7 @@ void StateListDrawable::inflateChildElements(XmlPullParser&parser,const Attribut
             while((type=parser.next())==XmlPullParser::TEXT){}
             if(type!=XmlPullParser::START_TAG)
                 throw std::logic_error("<item> tag requires a 'drawable' attribute or child tag defining a drawable");
-            dr = Drawable::createFromXmlInner(parser,atts);
+            dr = Drawable::createFromXmlInner(r,parser,atts);
         }
         mStateListState->addStateSet(states,dr);
     }

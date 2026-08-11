@@ -48,7 +48,7 @@ public:
     int getGravity()const;
     int getOrientation()const;
     void draw(Canvas& canvas)override;
-    void inflate(XmlPullParser&,const AttributeSet&)override;
+    void inflate(Resources& r, XmlPullParser&,const AttributeSet&)override;
 };
 
 }

@@ -68,7 +68,7 @@ public:
     bool isRunning()override;
     void nextFrame();
     void draw(Canvas& canvas)override;
-    void inflate(XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts)override;
 };
 
 }
