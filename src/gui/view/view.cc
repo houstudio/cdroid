@@ -74,7 +74,11 @@ View::View(int w,int h){
     mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
 }
 
-View::View(Context*ctx,const AttributeSet&attrs){
+View::View(Context*ctx,const AttributeSet&attrs):View(ctx,&attrs,0){
+}
+
+View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     int viewFlagValues= 0;
     int viewFlagMasks = 0;
     initView();
@@ -85,7 +89,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     // return integers directly — no string→enum map needed.
     Assets* assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = assets ? assets->obtainStyledAttributesTyped(
-        attrs, styleable::View::IDS) : nullptr;
+        attrs, styleable::View::IDS, defStyleAttr) : nullptr;
     // (namespace alias not allowed in function body in C++14)
     // Phase 2: TypedArray switch loop (AOSP View.java pattern).
     // Binary AXML: single-pass over set indices. Text XML: AttributeSet fallback.

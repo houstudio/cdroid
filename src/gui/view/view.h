@@ -917,6 +917,11 @@ protected:
     void ensureTransformationInfo();
 public:
     View(Context*ctx,const AttributeSet&attrs);
+    // AOSP ctor: defStyleAttr flows in as a parameter (cdroid:attr/<widget>Style
+    // resolved by the inflater factory). attrs is a nullable pointer (AOSP allows
+    // constructing a styled view without XML attrs). The AttributeSet& ctor above
+    // delegates here.
+    View(Context*ctx,const AttributeSet*attrs,int defStyleAttr=0);
     View(int w,int h);
     virtual ~View();
     bool isShowingLayoutBounds()const;
