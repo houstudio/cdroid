@@ -21,6 +21,8 @@
 #include <text/textutils.h>
 #include <core/systemclock.h>
 #include <widget/R.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 namespace cdroid{
 
 CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs)
@@ -368,8 +370,14 @@ void CalendarViewLegacyDelegate::onConfigurationChanged(int newConfig) {
 }*/
 
 void CalendarViewLegacyDelegate::updateDateTextSize() {
-    AttributeSet attr = mDelegator->getContext()->obtainStyledAttributes(mDateTextAppearanceResId);//, "cdroid:attr/TextAppearance");
-    mDateTextSize = attr.getDimensionPixelSize("textSize", DEFAULT_DATE_TEXT_SIZE);
+    Context* ctx = mDelegator->getContext();
+    const AttributeSet attr = ctx->obtainStyledAttributes(mDateTextAppearanceResId);
+    // Resolve the TextAppearance style typed (framework textSize sub-attr), the
+    // same pattern as switch/simplemonthview/tablayout; keep the init default
+    // when the style is unset or unresolvable.
+    auto ta = ctx->obtainStyledAttributes(attr, styleable::TextAppearance::IDS);
+    mDateTextSize = ta ? ta->getDimensionPixelSize(styleable::TextAppearance::textSize, DEFAULT_DATE_TEXT_SIZE)
+                       : DEFAULT_DATE_TEXT_SIZE;
 }
 
 void CalendarViewLegacyDelegate::invalidateAllWeekViews() {

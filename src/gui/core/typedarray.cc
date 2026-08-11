@@ -30,15 +30,17 @@
 
 // Re-resolve a style-sourced TYPE_STRING resource path (e.g.
 // "res/drawable/ic_menu.xml", "res/color/primary_text.xml",
-// "res/drawable-xxhdpi/foo.png") into a framework resource reference
-// "@android:<type>/<name>" so Assets loads it from the framework pak
-// (cdroid.pak) rather than the app's. aapt2 stores style-bag drawable/color
-// values as the file path (TYPE_STRING), not as a reference id, so the high-
-// level getters must turn the path back into a ref. Returns empty when the
-// path isn't under "res/" or the name can't be extracted; density/config
-// qualifiers on the directory ("-xxhdpi") are stripped, matching how a
-// resource ref is spelled.
-static std::string frameworkResourceRef(const std::string& path) {
+// "res/drawable-xxhdpi/foo.png") into a typed resource reference
+// "@<package>:<type>/<name>" so Assets loads it from whichever pak owns it.
+// aapt2 stores style-bag drawable/color values as the file path (TYPE_STRING),
+// not as a reference id, so the high-level getters must turn the path back into
+// a ref. The owning package is resolved through the ResTable (package="" searches
+// every loaded pak, so it matches the framework pak "android" or an app pak as
+// appropriate), removing the previous hard-coded "@android:" assumption.
+// Returns empty when the path isn't under "res/" or the name isn't found in the
+// table; density/config qualifiers on the directory ("-xxhdpi") are stripped,
+// matching how a resource ref is spelled.
+static std::string resourceRefFromPath(const cdroid::ResTable& table, const std::string& path) {
     if (path.compare(0, 4, "res/") != 0) return std::string();
     size_t sl = path.find_last_of('/');
     if (sl == std::string::npos || sl <= 4) return std::string();
@@ -49,7 +51,14 @@ static std::string frameworkResourceRef(const std::string& path) {
     std::string base = path.substr(sl + 1,
         (dot != std::string::npos && dot > sl) ? dot - sl - 1 : std::string::npos);
     if (type.empty() || base.empty()) return std::string();
-    return "@android:" + type + "/" + base;
+    // Resolve the owning package through the table (package="" -> all packages)
+    // so the ref targets the framework pak ("android") or the app pak, instead
+    // of assuming "android".
+    const uint32_t id = table.getIdentifier(base, type, "");
+    if (id == 0) return std::string();
+    std::string pkg, rtype, key;
+    if (!table.getResourceName(id, &pkg, &rtype, &key)) return std::string();
+    return "@" + pkg + ":" + rtype + "/" + key;
 }
 
 namespace cdroid {
@@ -254,7 +263,7 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
     // so the lookup hits the framework pak; fall back to the raw path.
     if (v.dataType == Res_value::TYPE_STRING) {
         std::string s = getString(idx);
-        std::string ref = frameworkResourceRef(s);
+        std::string ref = resourceRefFromPath(mTable, s);
         if (!ref.empty()) {
             Drawable* d = a->getDrawable(ref);
             if (d) return d;
@@ -284,7 +293,7 @@ std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const 
     // way.) Fall back to the raw path.
     if (v.dataType == Res_value::TYPE_STRING) {
         std::string s = getString(idx);
-        std::string ref = frameworkResourceRef(s);
+        std::string ref = resourceRefFromPath(mTable, s);
         if (!ref.empty()) {
             auto csl = a->getColorStateList(ref);
             if (csl) return csl;
