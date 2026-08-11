@@ -21,7 +21,8 @@ namespace cdroid {
 // ===========================================================================
 
 Resources::Resources(AssetManager* am, cdroid::Context* ctx)
-    : mImpl(std::make_unique<ResourcesImpl>(am)), mCtx(ctx) {
+    : mImpl(std::make_unique<ResourcesImpl>(am, nullptr,
+              ctx ? &ctx->getDisplayMetrics() : nullptr)), mCtx(ctx) {
 }
 
 Resources::~Resources() = default;   // unique_ptr<ResourcesImpl> dtor instantiated here
