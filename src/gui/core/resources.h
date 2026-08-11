@@ -1,11 +1,13 @@
 // cdroid::Resources — the libcdroid Resources. AOSP-aligned: Resources AGGREGATES
-// a ResourcesImpl (HAS-A, not IS-A) and forwards the value/meta/asset surface to
-// it, keeping its own GUI-object factories (getDrawable/getColorStateList, which
-// bridge to cdroid's string-based inflation) and obtainStyledAttributes (which
-// need the Context).
+// a ResourcesImpl (HAS-A) and forwards the value/meta/asset surface to it.
 //
-// Declaration + inline forwarding here; the GUI factories + obtainStyledAttributes
-// are in resources.cc.
+// resources.h uses forward declarations only — the heavy androidfw headers
+// (resourcesimpl.h -> restable.h -> assetmanager.h -> asset.h) are included in
+// resources.cc, NOT here. This keeps resources.h lightweight for the many files
+// that include it (via context.h).
+//
+// Declaration-only; implementations (forwarding + GUI factories + obtainers) in
+// resources.cc.
 #ifndef __RESOURCES_CDROID_H__
 #define __RESOURCES_CDROID_H__
 
@@ -13,72 +15,77 @@
 #include <memory>
 #include <cstdint>
 #include <vector>
-#include "androidfw/resourcesimpl.h"   // ResourcesImpl (aggregated)
 
 namespace cdroid {
 
+// Forward declarations — their full definitions come from includes in resources.cc.
+class ResourcesImpl;
+class AssetManager;
+class ResTable_config;
+class DisplayMetrics;
+class TypedValue;
+class Asset;
 class Context;
 class Drawable;
 class ColorStateList;
+class Typeface;
+class ComplexColor;
+class Movie;
 class AttributeSet;
 class TypedArray;
 
 class Resources {
 public:
-    using Theme = ResourcesImpl::Theme;
-
-    // `am` is NOT owned (must outlive this Resources); `ctx` is the bridge to the
-    // existing string-based Drawable/ColorStateList inflation.
     Resources(AssetManager* am, cdroid::Context* ctx);
+    ~Resources();
 
     // --- forwarded to the aggregated ResourcesImpl (AOSP Resources delegates) ---
-    AssetManager*       getAssets() const { return mImpl.getAssets(); }
-    std::unique_ptr<Theme> newTheme() { return mImpl.newTheme(); }
-    const ResTable_config& getConfiguration() const { return mImpl.getConfiguration(); }
-    const DisplayMetrics&  getDisplayMetrics() const { return mImpl.getDisplayMetrics(); }
-    void setConfiguration(const ResTable_config& c) { mImpl.setConfiguration(c); }
-    void setDisplayMetrics(const DisplayMetrics& m) { mImpl.setDisplayMetrics(m); }
+    AssetManager*       getAssets() const;
+    const ResTable_config& getConfiguration() const;
+    const DisplayMetrics&  getDisplayMetrics() const;
+    void setConfiguration(const ResTable_config& config);
+    void setDisplayMetrics(const DisplayMetrics& metrics);
 
     int  getIdentifier(const std::string& name, const std::string& type,
-                       const std::string& pkg) const { return mImpl.getIdentifier(name, type, pkg); }
-    bool getResourceName(int id, std::string* out) const { return mImpl.getResourceName(id, out); }
-    bool getResourceEntryName(int id, std::string* out) const { return mImpl.getResourceEntryName(id, out); }
-    bool getResourceTypeName(int id, std::string* out) const { return mImpl.getResourceTypeName(id, out); }
-    bool getResourcePackageName(int id, std::string* out) const { return mImpl.getResourcePackageName(id, out); }
+                       const std::string& pkg) const;
+    bool getResourceName(int id, std::string* out) const;
+    bool getResourceEntryName(int id, std::string* out) const;
+    bool getResourceTypeName(int id, std::string* out) const;
+    bool getResourcePackageName(int id, std::string* out) const;
 
-    bool getValue(int id, TypedValue* outValue, bool resolveRefs) const { return mImpl.getValue(id, outValue, resolveRefs); }
-    bool getValue(const std::string& name, TypedValue* outValue, bool resolveRefs) const { return mImpl.getValue(name, outValue, resolveRefs); }
+    bool getValue(int id, TypedValue* outValue, bool resolveRefs) const;
+    bool getValue(const std::string& name, TypedValue* outValue, bool resolveRefs) const;
 
-    std::string    getString(int id) const { return mImpl.getString(id); }
-    std::u16string getText(int id) const { return mImpl.getText(id); }
-    std::u16string getText(int id, const std::u16string& def) const { return mImpl.getText(id, def); }
-    int   getInteger(int id) const { return mImpl.getInteger(id); }
-    bool  getBoolean(int id) const { return mImpl.getBoolean(id); }
-    float getFloat(int id) const { return mImpl.getFloat(id); }
-    int   getColor(int id) const { return mImpl.getColor(id); }
-    float getDimension(int id) const { return mImpl.getDimension(id); }
-    int   getDimensionPixelOffset(int id) const { return mImpl.getDimensionPixelOffset(id); }
-    int   getDimensionPixelSize(int id) const { return mImpl.getDimensionPixelSize(id); }
-    float getFraction(int id, float base, float pbase) const { return mImpl.getFraction(id, base, pbase); }
-    std::string    getQuantityString(int id, int quantity) const { return mImpl.getQuantityString(id, quantity); }
-    std::u16string getQuantityText(int id, int quantity) const { return mImpl.getQuantityText(id, quantity); }
+    std::string    getString(int id) const;
+    std::u16string getText(int id) const;
+    std::u16string getText(int id, const std::u16string& def) const;
+    int   getInteger(int id) const;
+    bool  getBoolean(int id) const;
+    float getFloat(int id) const;
+    int   getColor(int id) const;
+    float getDimension(int id) const;
+    int   getDimensionPixelOffset(int id) const;
+    int   getDimensionPixelSize(int id) const;
+    float getFraction(int id, float base, float pbase) const;
+    std::string    getQuantityString(int id, int quantity) const;
+    std::u16string getQuantityText(int id, int quantity) const;
 
-    std::vector<std::string>    getStringArray(int id) const { return mImpl.getStringArray(id); }
-    std::vector<std::u16string> getTextArray(int id) const { return mImpl.getTextArray(id); }
-    std::vector<int>            getIntArray(int id) const { return mImpl.getIntArray(id); }
+    std::vector<std::string>    getStringArray(int id) const;
+    std::vector<std::u16string> getTextArray(int id) const;
+    std::vector<int>            getIntArray(int id) const;
 
-    Asset* openRawResource(int id, TypedValue* outValue = nullptr) const { return mImpl.openRawResource(id, outValue); }
-    Asset* getXml(int id) const { return mImpl.getXml(id); }
-    Asset* getLayout(int id) const { return mImpl.getLayout(id); }
-    Asset* getAnimation(int id) const { return mImpl.getAnimation(id); }
+    Asset* openRawResource(int id, TypedValue* outValue = nullptr) const;
+    Asset* getXml(int id) const;
+    Asset* getLayout(int id) const;
+    Asset* getAnimation(int id) const;
 
     // --- GUI-object factories (Resources' own; bridge to string-based inflation) ---
     cdroid::Drawable*       getDrawable(int id, int density = 0) const;
-    cdroid::Drawable*       getDrawableForDensity(int id, int density) const { return mImpl.getDrawableForDensity(id, density); }
+    cdroid::Drawable*       getDrawableForDensity(int id, int density) const;
     cdroid::ColorStateList* getColorStateList(int id) const;
-    Typeface*               getFont(int id) const { return mImpl.getFont(id); }
-    ComplexColor*           loadComplexColor(int id) const { return mImpl.loadComplexColor(id); }
-    Movie*                  getMovie(int id) const { return mImpl.getMovie(id); }
+    Typeface*               getFont(int id) const;
+    ComplexColor*           loadComplexColor(int id) const;
+    Movie*                  getMovie(int id) const;
 
     // --- AOSP Resources.obtainStyledAttributes(...) ---
     // AttributeSet is nullable (AOSP @Nullable).
@@ -87,8 +94,11 @@ public:
     std::unique_ptr<TypedArray> obtainStyledAttributes(const uint32_t* attrs) const;
     std::unique_ptr<TypedArray> obtainStyledAttributes(int resid, const uint32_t* attrs) const;
 
+    // AOSP Resources.obtainTypedArray(@ArrayRes int id).
+    std::unique_ptr<TypedArray> obtainTypedArray(int id) const;
+
 private:
-    ResourcesImpl   mImpl;   // aggregated (AOSP Resources -> ResourcesImpl)
+    std::unique_ptr<ResourcesImpl> mImpl;   // aggregated (AOSP Resources -> ResourcesImpl)
     cdroid::Context* mCtx;
 };
 
