@@ -87,9 +87,8 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     // aapt2 already resolved enums/flags at compile time, so TypedArray getters
     // return integers directly — no string→enum map needed.
-    Assets* assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
-    auto ta = assets ? ctx->obtainStyledAttributes(
-        attrs, styleable::View::IDS, defStyleAttr) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(
+        attrs, styleable::View::IDS, defStyleAttr);
     // (namespace alias not allowed in function body in C++14)
     // Phase 2: TypedArray switch loop (AOSP View.java pattern).
     // Binary AXML: single-pass over set indices. Text XML: AttributeSet fallback.
@@ -162,6 +161,7 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
             default: break;
             }
         }
+#if 0
     } else {
         // Text XML fallback: AttributeSet string-keyed reads.
         mMinWidth  = attrs.getDimensionPixelSize("minWidth", 0);
@@ -262,8 +262,8 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
         { std::string a=attrs.getString("stateListAnimator"); if(!a.empty())setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,a)); }
         { Drawable* bg=attrs.getDrawable("background"); if(bg)setBackground(bg); }
         { auto c=attrs.getColorStateList("backgroundTint"); if(!mBackgroundTint&&c){mBackgroundTint=new TintInfo;mBackgroundTint->mTintList=c;mBackgroundTint->mHasTintList=true;} }
+#endif
     }
-
     // Common (both paths).
     mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
     setForegroundGravity(attrs.getGravity("foregroundGravity", Gravity::NO_GRAVITY));

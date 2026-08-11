@@ -161,7 +161,6 @@ void SimpleMonthView::updateDayOfWeekLabels(){
 
 const cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Paint& p, const std::string& resId){
     AttributeSet attrs = mContext->obtainStyledAttributes(resId);
-    Assets* a = dynamic_cast<Assets*>(mContext);
     auto ta = mContext->obtainStyledAttributes(attrs, styleable::TextAppearance::IDS);
     namespace ST = styleable::TextAppearance;
     if (!ta) return nullptr;

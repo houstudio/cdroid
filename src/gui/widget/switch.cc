@@ -129,7 +129,6 @@ Switch::~Switch(){
 
 void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
     AttributeSet atts = context->obtainStyledAttributes(resid);
-    Assets* a = dynamic_cast<Assets*>(context);
     auto ta = context->obtainStyledAttributes(atts, styleable::TextAppearance::IDS);
     namespace ST = styleable::TextAppearance;
 

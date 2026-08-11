@@ -31,9 +31,8 @@ ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :View(ctx,pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
     initImageView();
-    Assets* _a = getContext() ? dynamic_cast<Assets*>(getContext()) : nullptr;
-    auto ta = _a ? _a->obtainStyledAttributes(
-        attrs, styleable::ImageView::IDS) : nullptr;
+    auto ta = getContext()->obtainStyledAttributes(
+        attrs, styleable::ImageView::IDS, defStyleAttr);
     if (ta) {
 
     mBaselineAlignBottom = attrs.getBoolean("baselineAlignBottom",false);
