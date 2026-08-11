@@ -340,6 +340,8 @@ public:
     void setTypeface(Typeface* tf,int style);///
     Typeface* getTypeface()const;
     int getTypefaceStyle() const;
+    void setText(int resid);
+    void setText(int resid, BufferType type);
     virtual void setText(const std::string&txt);
     virtual void setText(CharSequence* txt);
     virtual void setText(CharSequence* text, BufferType type);
@@ -359,6 +361,7 @@ public:
     Drawable* getTextCursorDrawable()const;
     void setTextAppearance(const std::string&);
     void setTextAppearance(Context*,const std::string&);
+    void setHint(int resid);
     virtual void setHint(const std::string&txt);
     virtual void setHint(CharSequence*);
     CharSequence* getHint()const;
@@ -571,6 +574,7 @@ public:
     void invalidateDrawable(Drawable& drawable)override;
     void setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
     void setCompoundDrawablesWithIntrinsicBounds(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
+    void setCompoundDrawablesWithIntrinsicBounds(int left,int top,int right,int bottom);
     void setCompoundDrawablesWithIntrinsicBounds(const std::string& left, const std::string& top,
                 const std::string& right,const std::string& bottom);
     int computeHorizontalScrollRange()override;
