@@ -31,8 +31,11 @@ DECLARE_WIDGET(Layer)
 
 namespace cdroid {
 
-Layer::Layer(Context* ctx, const AttributeSet& attrs)
-    : ConstraintHelper(ctx, attrs) {
+Layer::Layer(Context* ctx,const AttributeSet& attrs):Layer(ctx,&attrs,0){}
+
+Layer::Layer(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
     // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
     // and the visibility/elevation XML attributes are never scanned. Re-invoke init now that *this

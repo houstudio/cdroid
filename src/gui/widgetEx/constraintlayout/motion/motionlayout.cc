@@ -44,8 +44,11 @@ DECLARE_WIDGET(MotionLayout)
 
 namespace cdroid {
 
-MotionLayout::MotionLayout(Context* ctx, const AttributeSet& attrs)
-    : ConstraintLayout(ctx, attrs) {
+MotionLayout::MotionLayout(Context* ctx,const AttributeSet& attrs):MotionLayout(ctx,&attrs,0){}
+
+MotionLayout::MotionLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ConstraintLayout(ctx, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     // layoutDescription is declared in the ConstraintLayout_Layout styleable.
     Assets* _assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;

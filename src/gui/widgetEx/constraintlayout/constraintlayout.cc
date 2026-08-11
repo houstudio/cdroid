@@ -200,8 +200,11 @@ void ConstraintLayout::LayoutParams::validate() {
 // ===========================================================================
 // ConstraintLayout
 // ===========================================================================
-ConstraintLayout::ConstraintLayout(Context* ctx, const AttributeSet& attrs)
-    : ViewGroup(ctx, attrs) {
+ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet& attrs):ConstraintLayout(ctx,&attrs,0){}
+
+ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ViewGroup(ctx, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     mLayoutWidget.setMeasurer(asMeasurer());
     mLayoutWidget.setCompanionWidget(this);
     mMinWidth  = attrs.getDimensionPixelSize("android_minWidth", 0);

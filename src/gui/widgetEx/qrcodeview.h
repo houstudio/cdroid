@@ -60,6 +60,7 @@ protected:
 public:
     QRCodeView(int w,int h);
     QRCodeView(Context*ctx,const AttributeSet&attrs);
+    QRCodeView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~QRCodeView()override;
     void setText(const std::string&text);
     void setEccLevel(int);

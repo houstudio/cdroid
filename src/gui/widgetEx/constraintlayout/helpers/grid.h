@@ -43,6 +43,7 @@ class Grid : public ConstraintHelper {
     static constexpr int VERTICAL   = 1;
 
     Grid(Context* ctx, const AttributeSet& attrs);
+    Grid(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     explicit Grid(int width, int height);
 
     // --- programmatic config (each rebuilds the grid) ---

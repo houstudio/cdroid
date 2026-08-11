@@ -106,6 +106,7 @@ protected:
 public:
     ViewPager2(int w,int h);
     ViewPager2(Context* context, const AttributeSet& attrs);
+    ViewPager2(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~ViewPager2()override;
     void setAdapter(RecyclerView::Adapter* adapter);
     void registerCurrentItemDataSetTracker(RecyclerView::Adapter* adapter);

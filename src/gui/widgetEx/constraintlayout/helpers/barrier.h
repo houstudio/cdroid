@@ -42,6 +42,7 @@ class Barrier : public ConstraintHelper {
     static constexpr int END    = START + 1;
 
     Barrier(Context* ctx, const AttributeSet& attrs);
+    Barrier(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     explicit Barrier(int width, int height);
 
     int  getType() const;

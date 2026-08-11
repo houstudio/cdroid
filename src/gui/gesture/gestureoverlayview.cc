@@ -18,8 +18,11 @@
 #include <gesture/gestureoverlayview.h>
 namespace cdroid{
 DECLARE_WIDGET(GestureOverlayView)
-GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attrs)
-  :FrameLayout(context, attrs){
+GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attrs):GestureOverlayView(context,&attrs,0){}
+
+GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :FrameLayout(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     init();
     mGestureStrokeWidth = attrs.getFloat("gestureStrokeWidth", mGestureStrokeWidth);

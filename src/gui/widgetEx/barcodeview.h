@@ -234,6 +234,7 @@ protected:
 public:
     BarcodeView(int w,int h);
     BarcodeView(Context*ctx,const AttributeSet&attrs);
+    BarcodeView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~BarcodeView()override;
     void setText(const std::string&text);
     std::vector<ZintSeg> getSegs()const;

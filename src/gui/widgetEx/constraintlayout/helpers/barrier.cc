@@ -45,8 +45,11 @@ const std::unordered_map<std::string, int> kBarrierDirection = {
 };
 } // namespace
 
-Barrier::Barrier(Context* ctx, const AttributeSet& attrs)
-    : ConstraintHelper(ctx, attrs) {
+Barrier::Barrier(Context* ctx,const AttributeSet& attrs):Barrier(ctx,&attrs,0){}
+
+Barrier::Barrier(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     setVisibility(View::GONE);
     mHelperWidget = std::make_unique<clcore::Barrier>();
 

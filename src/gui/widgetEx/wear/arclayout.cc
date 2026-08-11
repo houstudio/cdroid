@@ -64,8 +64,11 @@ void ArcLayout::LayoutParams::setWeight(float weight) {
 
 DECLARE_WIDGET(ArcLayout)
 
-ArcLayout::ArcLayout(Context* context,const AttributeSet& attrs)
-    :ViewGroup(context, attrs){
+ArcLayout::ArcLayout(Context* context,const AttributeSet& attrs):ArcLayout(context,&attrs,0){}
+
+ArcLayout::ArcLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
 
     mAnchorType = attrs.getInt("anchorPosition",std::unordered_map<std::string,int>{
             {"start",(int)ANCHOR_START},

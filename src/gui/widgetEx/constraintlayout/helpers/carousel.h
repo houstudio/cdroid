@@ -56,6 +56,7 @@ class Carousel : public MotionHelper {
     };
 
     Carousel(Context* ctx, const AttributeSet& attrs);
+    Carousel(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     explicit Carousel(int width, int height);
 
     void setAdapter(Adapter* adapter) { mAdapter = adapter; }

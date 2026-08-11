@@ -28,8 +28,11 @@
 
 namespace cdroid {
 
-ConstraintHelper::ConstraintHelper(Context* ctx, const AttributeSet& attrs)
-    : View(ctx, attrs) {
+ConstraintHelper::ConstraintHelper(Context* ctx,const AttributeSet& attrs):ConstraintHelper(ctx,&attrs,0){}
+
+ConstraintHelper::ConstraintHelper(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : View(ctx, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     init(attrs);
 }
 

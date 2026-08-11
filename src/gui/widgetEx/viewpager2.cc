@@ -66,8 +66,11 @@ ViewPager2::ViewPager2(int w,int h):ViewGroup(w,h){
     initialize(mContext, AttributeSet(mContext,""));
 }
 
-ViewPager2::ViewPager2(Context* context,const AttributeSet& attrs)
-    :ViewGroup(context, attrs){
+ViewPager2::ViewPager2(Context* context,const AttributeSet& attrs):ViewPager2(context,&attrs,0){}
+
+ViewPager2::ViewPager2(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(context, pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initialize(context, attrs);
 }
 

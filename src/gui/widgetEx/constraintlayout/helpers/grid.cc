@@ -31,8 +31,11 @@ DECLARE_WIDGET(Grid)
 
 namespace cdroid {
 
-Grid::Grid(Context* ctx, const AttributeSet& attrs)
-    : ConstraintHelper(ctx, attrs) {
+Grid::Grid(Context* ctx,const AttributeSet& attrs):Grid(ctx,&attrs,0){}
+
+Grid::Grid(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
     // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
     // and every grid_* attribute stays at its default (rows/columns 0, spans/skips empty, ...).

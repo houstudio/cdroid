@@ -40,7 +40,8 @@ class MotionHelper : public ConstraintHelper {
   public:
     using MotionMap = std::unordered_map<int, Motion*>;
 
-    MotionHelper(Context* ctx, const AttributeSet& attrs) : ConstraintHelper(ctx, attrs) {}
+    MotionHelper(Context* ctx, const AttributeSet& attrs) : MotionHelper(ctx, &attrs, 0) {}
+    MotionHelper(Context* ctx, const AttributeSet* attrs, int defStyleAttr=0) : ConstraintHelper(ctx, attrs, defStyleAttr) {}
     explicit MotionHelper(int width, int height) : ConstraintHelper(width, height) {}
 
     // (TransitionListener is an EventSet callback object nested on MotionLayout; a helper that needs

@@ -129,6 +129,7 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
     };
 
     ConstraintLayout(Context* ctx, const AttributeSet& attrs);
+    ConstraintLayout(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ConstraintLayout(int width, int height);
     ~ConstraintLayout() override;
     static constexpr int PARENT_ID = 0;

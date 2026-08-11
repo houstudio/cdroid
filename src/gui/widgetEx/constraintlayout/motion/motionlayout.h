@@ -61,6 +61,7 @@ class KeyFrames;
 class MotionLayout : public ConstraintLayout {
   public:
     MotionLayout(Context* ctx, const AttributeSet& attrs);
+    MotionLayout(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     explicit MotionLayout(int width, int height);
     ~MotionLayout() override;
 

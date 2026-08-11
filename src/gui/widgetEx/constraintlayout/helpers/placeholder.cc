@@ -29,8 +29,11 @@ DECLARE_WIDGET(Placeholder)
 
 namespace cdroid {
 
-Placeholder::Placeholder(Context* ctx, const AttributeSet& attrs)
-    : View(ctx, attrs) {
+Placeholder::Placeholder(Context* ctx,const AttributeSet& attrs):Placeholder(ctx,&attrs,0){}
+
+Placeholder::Placeholder(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : View(ctx, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     init(attrs);
 }
 

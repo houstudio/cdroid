@@ -32,7 +32,10 @@ QRCodeView::QRCodeView(int w,int h):View(w,h){
     encode();
 };
 
-QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
+QRCodeView::QRCodeView(Context*ctx,const AttributeSet& attrs):QRCodeView(ctx,&attrs,0){}
+
+QRCodeView::QRCodeView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr){
+    const AttributeSet& attrs = *pAttrs;
     initView();
 
     mEccLevel = attrs.getInt("eccLevel",std::unordered_map<std::string,int>{

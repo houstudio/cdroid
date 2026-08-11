@@ -62,8 +62,11 @@ static clcore::Flow* asFlow(HelperWidget* hw) {
     return static_cast<clcore::Flow*>(hw);
 }
 
-Flow::Flow(Context* ctx, const AttributeSet& attrs)
-    : ConstraintHelper(ctx, attrs) {
+Flow::Flow(Context* ctx,const AttributeSet& attrs):Flow(ctx,&attrs,0){}
+
+Flow::Flow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     mHelperWidget = std::make_unique<clcore::Flow>();
     auto* f = asFlow(mHelperWidget.get());
     // AndroidX Flow styleable (ConstraintLayout_flow) reuses the platform

@@ -19,6 +19,7 @@ protected:
 public:
    PLPlotView(int w,int h);
    PLPlotView(Context*,const AttributeSet&attrs);
+    PLPlotView(Context*,const AttributeSet* attrs,int defStyleAttr=0);
    ~PLPlotView();
    void onDraw(Canvas&canvas)override;
    plstream*getStream()const;

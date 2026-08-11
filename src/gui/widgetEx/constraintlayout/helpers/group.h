@@ -32,6 +32,7 @@ namespace cdroid {
 class Group : public ConstraintHelper {
   public:
     Group(Context* ctx, const AttributeSet& attrs);
+    Group(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     explicit Group(int width, int height);
 
     void setVisibility(int visibility) override;

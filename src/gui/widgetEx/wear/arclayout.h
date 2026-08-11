@@ -102,6 +102,7 @@ protected:
     LayoutParams* generateDefaultLayoutParams() const override;
 public:
     ArcLayout(Context* context, const AttributeSet& attrs);
+    ArcLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     void requestLayout() override;
 
     bool onInterceptTouchEvent(MotionEvent& event) override;

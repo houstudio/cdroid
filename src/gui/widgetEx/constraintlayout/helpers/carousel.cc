@@ -31,8 +31,11 @@ DECLARE_WIDGET(Carousel)
 
 namespace cdroid {
 
-Carousel::Carousel(Context* ctx, const AttributeSet& attrs)
-    : MotionHelper(ctx, attrs) {
+Carousel::Carousel(Context* ctx,const AttributeSet& attrs):Carousel(ctx,&attrs,0){}
+
+Carousel::Carousel(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : MotionHelper(ctx, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
     // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
     // and every carousel_* attribute stays at its default (-1): mFirstViewReference missed (mStartIndex

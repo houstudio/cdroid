@@ -46,6 +46,7 @@ class MotionEffect : public MotionHelper {
     static constexpr int WEST  = 3;
 
     MotionEffect(Context* ctx, const AttributeSet& attrs);
+    MotionEffect(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     explicit MotionEffect(int width, int height);
 
     bool isDecorator() const override { return true; }

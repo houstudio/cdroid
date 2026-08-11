@@ -49,6 +49,7 @@ class Flow : public ConstraintHelper {
     static constexpr int VERTICAL_ALIGN_BASELINE = clcore::Flow::VERTICAL_ALIGN_BASELINE;
 
     Flow(Context* ctx, const AttributeSet& attrs);
+    Flow(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     explicit Flow(int width, int height);
 
     // configuration (delegate to the core Flow)

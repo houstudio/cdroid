@@ -31,8 +31,11 @@ DECLARE_WIDGET(CircularFlow)
 
 namespace cdroid {
 
-CircularFlow::CircularFlow(Context* ctx, const AttributeSet& attrs)
-    : ConstraintHelper(ctx, attrs) {
+CircularFlow::CircularFlow(Context* ctx,const AttributeSet& attrs):CircularFlow(ctx,&attrs,0){}
+
+CircularFlow::CircularFlow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
+    const AttributeSet& attrs = *pAttrs;
     // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
     // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
     // and every circularflow_* attribute stays at its default: mAngles/mRadius empty, mDefaultRadius

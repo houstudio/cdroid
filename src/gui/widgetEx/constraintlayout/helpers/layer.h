@@ -37,6 +37,7 @@ namespace cdroid {
 class Layer : public ConstraintHelper {
   public:
     Layer(Context* ctx, const AttributeSet& attrs);
+    Layer(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     explicit Layer(int width, int height);
 
     // --- group transforms (each recomputes & applies the affine transform) ---

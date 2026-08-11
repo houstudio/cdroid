@@ -41,6 +41,7 @@ class ConstraintLayout;
 class ConstraintHelper : public View {
   public:
     ConstraintHelper(Context* ctx, const AttributeSet& attrs);
+    ConstraintHelper(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     explicit ConstraintHelper(int width, int height);
 
     // The owned core helper widget (Barrier/...). getViewWidget() returns this for helper children.
