@@ -40,14 +40,13 @@ RatingBar::RatingBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mIsUserSeekable = true;
     mProgressOnStartTracking =0;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, styleable::RatingBar::IDS, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::RatingBar, defStyleAttr);
     
-namespace SRB = styleable::RatingBar;
 
-setIsIndicator(ta->getBoolean(SRB::isIndicator,!mIsUserSeekable));
-const int numStars  = ta->getInt(SRB::numStars,mNumStars);
-const float rating  = ta->getFloat(SRB::rating,-1);
-const float stepSize= ta->getFloat(SRB::stepSize,-1);
+setIsIndicator(ta->getBoolean(R::styleable::RatingBar_isIndicator,!mIsUserSeekable));
+const int numStars  = ta->getInt(R::styleable::RatingBar_numStars,mNumStars);
+const float rating  = ta->getFloat(R::styleable::RatingBar_rating,-1);
+const float stepSize= ta->getFloat(R::styleable::RatingBar_stepSize,-1);
 if( (numStars>0) && (numStars!=mNumStars) )
     setNumStars(numStars);
 setStepSize((stepSize>=0)?stepSize:0.5f);

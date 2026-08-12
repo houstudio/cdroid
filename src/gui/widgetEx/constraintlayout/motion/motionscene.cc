@@ -92,17 +92,16 @@ MotionScene::Transition::Transition(MotionScene& scene, const AttributeSet& a)
     : mDuration(scene.mDefaultDuration) {
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = a.getContext();
-    auto ta = ctx->obtainStyledAttributes(a, styleable::Transition::IDS);
-    namespace STR = styleable::Transition;
-    mId = scene.getId(ta&&ta->hasValue(STR::id) ? ta->getString(STR::id) : a.getString("id", "")); // <Transition android:id="@+id/...">
-    mConstraintSetStart = scene.getId(ta&&ta->hasValue(STR::constraintSetStart) ? ta->getString(STR::constraintSetStart) : a.getString("constraintSetStart", ""));
-    mConstraintSetEnd   = scene.getId(ta&&ta->hasValue(STR::constraintSetEnd) ? ta->getString(STR::constraintSetEnd) : a.getString("constraintSetEnd", ""));
-    mDuration = ta&&ta->hasValue(STR::duration) ? ta->getInt(STR::duration, mDuration) : a.getInt("duration", mDuration);
+    auto ta = ctx->obtainStyledAttributes(a, R::styleable::Transition);
+    mId = scene.getId(ta&&ta->hasValue(R::styleable::Transition_id) ? ta->getString(R::styleable::Transition_id) : a.getString("id", "")); // <Transition android:id="@+id/...">
+    mConstraintSetStart = scene.getId(ta&&ta->hasValue(R::styleable::Transition_constraintSetStart) ? ta->getString(R::styleable::Transition_constraintSetStart) : a.getString("constraintSetStart", ""));
+    mConstraintSetEnd   = scene.getId(ta&&ta->hasValue(R::styleable::Transition_constraintSetEnd) ? ta->getString(R::styleable::Transition_constraintSetEnd) : a.getString("constraintSetEnd", ""));
+    mDuration = ta&&ta->hasValue(R::styleable::Transition_duration) ? ta->getInt(R::styleable::Transition_duration, mDuration) : a.getInt("duration", mDuration);
     if (mDuration < 8) mDuration = 8;
-    mStagger = ta&&ta->hasValue(STR::staggered) ? ta->getFloat(STR::staggered, mStagger) : a.getFloat("staggered", mStagger);
-    mDefaultInterpolatorString = ta&&ta->hasValue(STR::motionInterpolator) ? ta->getString(STR::motionInterpolator) : a.getString("motionInterpolator", mDefaultInterpolatorString);
-    mPathMotionArc = ta&&ta->hasValue(STR::pathMotionArc) ? ta->getInt(STR::pathMotionArc, mPathMotionArc) : a.getInt("pathMotionArc", mPathMotionArc);
-    mAutoTransition = ta&&ta->hasValue(STR::autoTransition) ? ta->getInt(STR::autoTransition, mAutoTransition) : a.getInt("autoTransition", kAutoTransition, mAutoTransition);
+    mStagger = ta&&ta->hasValue(R::styleable::Transition_staggered) ? ta->getFloat(R::styleable::Transition_staggered, mStagger) : a.getFloat("staggered", mStagger);
+    mDefaultInterpolatorString = ta&&ta->hasValue(R::styleable::Transition_motionInterpolator) ? ta->getString(R::styleable::Transition_motionInterpolator) : a.getString("motionInterpolator", mDefaultInterpolatorString);
+    mPathMotionArc = ta&&ta->hasValue(R::styleable::Transition_pathMotionArc) ? ta->getInt(R::styleable::Transition_pathMotionArc, mPathMotionArc) : a.getInt("pathMotionArc", mPathMotionArc);
+    mAutoTransition = ta&&ta->hasValue(R::styleable::Transition_autoTransition) ? ta->getInt(R::styleable::Transition_autoTransition, mAutoTransition) : a.getInt("autoTransition", kAutoTransition, mAutoTransition);
     if (mConstraintSetStart == UNSET) mIsAbstract = true;
 }
 

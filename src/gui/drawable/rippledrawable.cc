@@ -600,7 +600,7 @@ Rect RippleDrawable::getDirtyBounds() const{
 }
 
 void RippleDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, styleable::RippleDrawable::IDS);
+    auto ta = r.obtainStyledAttributes(atts, R::styleable::RippleDrawable);
 
     // Force padding default to STACK before inflating.
     setPaddingMode(PADDING_MODE_STACK);
@@ -613,19 +613,18 @@ void RippleDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSe
 }
 
 void RippleDrawable::updateStateFromTypedArray(const TypedArray& a) {
-    namespace SX = styleable::RippleDrawable;
 
     // AOSP RippleDrawable.updateStateFromTypedArray: the mChangingConfigurations |=
     // getChangingConfigurations() and extractThemeAttrs() lines are omitted — CDROID's TypedArray
     // port has no theme-attr bookkeeping (no getChangingConfigurations / extractThemeAttrs).
 
-    const RefPtr<ColorStateList> color = a.getColorStateList(SX::color);
+    const RefPtr<ColorStateList> color = a.getColorStateList(R::styleable::RippleDrawable_color);
     if (color) mState->mColor = color;
 
-    const RefPtr<ColorStateList> effectColor = a.getColorStateList(SX::effectColor);
+    const RefPtr<ColorStateList> effectColor = a.getColorStateList(R::styleable::RippleDrawable_effectColor);
     if (effectColor) mState->mEffectColor = effectColor;
 
-    mState->mMaxRadius = a.getDimensionPixelSize(SX::radius, mState->mMaxRadius);
+    mState->mMaxRadius = a.getDimensionPixelSize(R::styleable::RippleDrawable_radius, mState->mMaxRadius);
 }
 
 void RippleDrawable::updateLocalState() {

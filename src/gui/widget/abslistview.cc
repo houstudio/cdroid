@@ -117,29 +117,28 @@ void AbsListView::initAbsListView() {
 // Text-XML ctor path is dropped: this resolves only through the binary-AXML
 // TypedArray; a==null (text XML / no arsc) leaves the widget at its defaults.
 void AbsListView::readAbsListViewAttrs(const AttributeSet& atts) {
-    auto a = mContext->obtainStyledAttributes(atts, styleable::AbsListView::IDS);
+    auto a = mContext->obtainStyledAttributes(atts, R::styleable::AbsListView);
     if (!a) return;
-    namespace SA = styleable::AbsListView;
 
-    Drawable* selector = a->getDrawable(SA::listSelector);
+    Drawable* selector = a->getDrawable(R::styleable::AbsListView_listSelector);
     if (selector != nullptr) {
         setSelector(selector);
     }
 
-    mDrawSelectorOnTop = a->getBoolean(SA::drawSelectorOnTop, false);
-    setStackFromBottom(a->getBoolean(SA::stackFromBottom, false));
-    setScrollingCacheEnabled(a->getBoolean(SA::scrollingCache, true));
-    setTextFilterEnabled(a->getBoolean(SA::textFilterEnabled, false));
-    setTranscriptMode(a->getInt(SA::transcriptMode, (int)TRANSCRIPT_MODE_DISABLED));
-    setCacheColorHint(a->getColor(SA::cacheColorHint, 0));
-    setSmoothScrollbarEnabled(a->getBoolean(SA::smoothScrollbar, true));
-    setChoiceMode(a->getInt(SA::choiceMode, (int)CHOICE_MODE_NONE));
-    setFastScrollEnabled(a->getBoolean(SA::fastScrollEnabled, false));
+    mDrawSelectorOnTop = a->getBoolean(R::styleable::AbsListView_drawSelectorOnTop, false);
+    setStackFromBottom(a->getBoolean(R::styleable::AbsListView_stackFromBottom, false));
+    setScrollingCacheEnabled(a->getBoolean(R::styleable::AbsListView_scrollingCache, true));
+    setTextFilterEnabled(a->getBoolean(R::styleable::AbsListView_textFilterEnabled, false));
+    setTranscriptMode(a->getInt(R::styleable::AbsListView_transcriptMode, (int)TRANSCRIPT_MODE_DISABLED));
+    setCacheColorHint(a->getColor(R::styleable::AbsListView_cacheColorHint, 0));
+    setSmoothScrollbarEnabled(a->getBoolean(R::styleable::AbsListView_smoothScrollbar, true));
+    setChoiceMode(a->getInt(R::styleable::AbsListView_choiceMode, (int)CHOICE_MODE_NONE));
+    setFastScrollEnabled(a->getBoolean(R::styleable::AbsListView_fastScrollEnabled, false));
     // AOSP: setFastScrollStyle(a.getResourceId(...)). CDROID's setter takes a
     // style string, so bridge the @StyleRes id -> "@type/key" via getResourceName.
-    uint32_t fsStyle = a->getResourceId(SA::fastScrollStyle, 0);
+    uint32_t fsStyle = a->getResourceId(R::styleable::AbsListView_fastScrollStyle, 0);
     if (fsStyle != 0) setFastScrollStyle(mContext->getResourceName(fsStyle));
-    setFastScrollAlwaysVisible(a->getBoolean(SA::fastScrollAlwaysVisible, false));
+    setFastScrollAlwaysVisible(a->getBoolean(R::styleable::AbsListView_fastScrollAlwaysVisible, false));
 }
 
 AbsListView::~AbsListView() {

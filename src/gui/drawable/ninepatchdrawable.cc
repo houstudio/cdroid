@@ -284,7 +284,7 @@ void NinePatchDrawable::draw(Canvas&canvas){
 void NinePatchDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
    Drawable::inflate(r,parser,atts);
 
-   auto ta = r.obtainStyledAttributes(&atts, styleable::NinePatchDrawable::IDS);
+   auto ta = r.obtainStyledAttributes(&atts, R::styleable::NinePatchDrawable);
    if (ta) updateStateFromTypedArray(*ta);
 
    // src is a resource reference consumed by the string-based getInputStream
@@ -335,7 +335,6 @@ void NinePatchDrawable::inflate(Resources&r,XmlPullParser&parser,const Attribute
 }
 
 void NinePatchDrawable::updateStateFromTypedArray(const TypedArray& a){
-    namespace SX = styleable::NinePatchDrawable;
     auto state = mNinePatchState;
 
     // Account for any configuration changes.
@@ -344,16 +343,16 @@ void NinePatchDrawable::updateStateFromTypedArray(const TypedArray& a){
     // Extract the theme attributes, if any.
     //state.mThemeAttrs = a.extractThemeAttrs();
 
-    state->mDither = a.getBoolean(SX::dither, state->mDither);
-    state->mAutoMirrored = a.getBoolean(SX::autoMirrored, state->mAutoMirrored);
-    state->mBaseAlpha = a.getFloat(SX::alpha, state->mBaseAlpha);
+    state->mDither = a.getBoolean(R::styleable::NinePatchDrawable_dither, state->mDither);
+    state->mAutoMirrored = a.getBoolean(R::styleable::NinePatchDrawable_autoMirrored, state->mAutoMirrored);
+    state->mBaseAlpha = a.getFloat(R::styleable::NinePatchDrawable_alpha, state->mBaseAlpha);
 
-    const int tintMode = a.getInt(SX::tintMode, PorterDuff::NOOP);
+    const int tintMode = a.getInt(R::styleable::NinePatchDrawable_tintMode, PorterDuff::NOOP);
     if (tintMode != PorterDuff::NOOP) {
         state->mTintMode = tintMode;
     }
 
-    auto tint = a.getColorStateList(SX::tint);
+    auto tint = a.getColorStateList(R::styleable::NinePatchDrawable_tint);
     if (tint != nullptr) {
         state->mTint = tint;
     }

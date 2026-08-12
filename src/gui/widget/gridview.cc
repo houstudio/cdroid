@@ -21,21 +21,20 @@ GridView::GridView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     const AttributeSet& atts = *pAttrs;
     initGridView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, styleable::GridView::IDS, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::GridView, defStyleAttr);
     
 
-namespace SGV = styleable::GridView;
 
-setHorizontalSpacing(ta->getDimensionPixelOffset(SGV::horizontalSpacing,10));
-setVerticalSpacing(ta->getDimensionPixelOffset(SGV::verticalSpacing,0));
-int index = ta->getInt(SGV::stretchMode,STRETCH_COLUMN_WIDTH);
+setHorizontalSpacing(ta->getDimensionPixelOffset(R::styleable::GridView_horizontalSpacing,10));
+setVerticalSpacing(ta->getDimensionPixelOffset(R::styleable::GridView_verticalSpacing,0));
+int index = ta->getInt(R::styleable::GridView_stretchMode,STRETCH_COLUMN_WIDTH);
 if(index>=0)setStretchMode(index);
-const int columnWidth = ta->getDimensionPixelOffset(SGV::columnWidth, -1);
+const int columnWidth = ta->getDimensionPixelOffset(R::styleable::GridView_columnWidth, -1);
 if (columnWidth > 0)
 setColumnWidth(columnWidth);
-const int numColumns = ta->getInt(SGV::numColumns, 1);
+const int numColumns = ta->getInt(R::styleable::GridView_numColumns, 1);
 setNumColumns(numColumns);
-index = ta->getInt(SGV::gravity, -1);
+index = ta->getInt(R::styleable::GridView_gravity, -1);
 if (index >= 0) {
 setGravity(index);
 }

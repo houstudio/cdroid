@@ -56,11 +56,10 @@ RelativeLayout::RelativeLayout(Context* context,const AttributeSet* pAttrs,int d
     const AttributeSet& attrs = *pAttrs;
     mDirtyHierarchy = true;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, styleable::RelativeLayout::IDS, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::RelativeLayout, defStyleAttr);
     
-namespace SRL = styleable::RelativeLayout;
-mIgnoreGravity = (int)ta->getResourceId(SRL::ignoreGravity,(uint32_t)View::NO_ID);
-mGravity = ta->getInt(SRL::gravity,mGravity);
+mIgnoreGravity = (int)ta->getResourceId(R::styleable::RelativeLayout_ignoreGravity,(uint32_t)View::NO_ID);
+mGravity = ta->getInt(R::styleable::RelativeLayout_gravity,mGravity);
 mGraph = new DependencyGraph();
 
 }
@@ -895,35 +894,34 @@ RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):
     mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
     memset(mRules, 0, sizeof(mRules)); // absent rules stay 0 (binary switch only fires present attrs)
     // Phase 2: TypedArray switch-loop (22 rules = many attrs → loop, AOSP pattern).
-    auto ta = ctx->obtainStyledAttributes(atts, styleable::RelativeLayoutLayout::IDS);
-    namespace SRL = styleable::RelativeLayoutLayout;
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::RelativeLayoutLayout);
 
     
     for (size_t n = ta->getIndexCount(); n > 0; ) {
         size_t i = ta->getIndex(--n);
         switch (i) {
-        case SRL::layout_toLeftOf:        mRules[LEFT_OF]          = ta->getResourceId(i,0); break;
-        case SRL::layout_toRightOf:       mRules[RIGHT_OF]         = ta->getResourceId(i,0); break;
-        case SRL::layout_above:           mRules[ABOVE]            = ta->getResourceId(i,0); break;
-        case SRL::layout_below:           mRules[BELOW]            = ta->getResourceId(i,0); break;
-        case SRL::layout_alignBaseline:   mRules[ALIGN_BASELINE]   = ta->getResourceId(i,0); break;
-        case SRL::layout_alignLeft:       mRules[ALIGN_LEFT]       = ta->getResourceId(i,0); break;
-        case SRL::layout_alignTop:        mRules[ALIGN_TOP]        = ta->getResourceId(i,0); break;
-        case SRL::layout_alignRight:      mRules[ALIGN_RIGHT]      = ta->getResourceId(i,0); break;
-        case SRL::layout_alignBottom:     mRules[ALIGN_BOTTOM]     = ta->getResourceId(i,0); break;
-        case SRL::layout_alignParentLeft: mRules[ALIGN_PARENT_LEFT]  = ta->getBoolean(i,false)?LTRUE:0; break;
-        case SRL::layout_alignParentTop:  mRules[ALIGN_PARENT_TOP]   = ta->getBoolean(i,false)?LTRUE:0; break;
-        case SRL::layout_alignParentRight:mRules[ALIGN_PARENT_RIGHT] = ta->getBoolean(i,false)?LTRUE:0; break;
-        case SRL::layout_alignParentBottom:mRules[ALIGN_PARENT_BOTTOM]= ta->getBoolean(i,false)?LTRUE:0; break;
-        case SRL::layout_centerInParent:  mRules[CENTER_IN_PARENT]   = ta->getBoolean(i,false)?LTRUE:0; break;
-        case SRL::layout_centerHorizontal:mRules[CENTER_HORIZONTAL]  = ta->getBoolean(i,false)?LTRUE:0; break;
-        case SRL::layout_centerVertical:  mRules[CENTER_VERTICAL]    = ta->getBoolean(i,false)?LTRUE:0; break;
-        case SRL::layout_toStartOf:       mRules[START_OF]           = ta->getResourceId(i,0); break;
-        case SRL::layout_toEndOf:         mRules[END_OF]             = ta->getResourceId(i,0); break;
-        case SRL::layout_alignStart:      mRules[ALIGN_START]        = ta->getResourceId(i,0); break;
-        case SRL::layout_alignEnd:        mRules[ALIGN_END]          = ta->getResourceId(i,0); break;
-        case SRL::layout_alignParentStart:mRules[ALIGN_PARENT_START] = ta->getBoolean(i,false)?LTRUE:0; break;
-        case SRL::layout_alignParentEnd:  mRules[ALIGN_PARENT_END]   = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_toLeftOf:        mRules[LEFT_OF]          = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_toRightOf:       mRules[RIGHT_OF]         = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_above:           mRules[ABOVE]            = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_below:           mRules[BELOW]            = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignBaseline:   mRules[ALIGN_BASELINE]   = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignLeft:       mRules[ALIGN_LEFT]       = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignTop:        mRules[ALIGN_TOP]        = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignRight:      mRules[ALIGN_RIGHT]      = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignBottom:     mRules[ALIGN_BOTTOM]     = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentLeft: mRules[ALIGN_PARENT_LEFT]  = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentTop:  mRules[ALIGN_PARENT_TOP]   = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentRight:mRules[ALIGN_PARENT_RIGHT] = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentBottom:mRules[ALIGN_PARENT_BOTTOM]= ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_centerInParent:  mRules[CENTER_IN_PARENT]   = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_centerHorizontal:mRules[CENTER_HORIZONTAL]  = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_centerVertical:  mRules[CENTER_VERTICAL]    = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_toStartOf:       mRules[START_OF]           = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_toEndOf:         mRules[END_OF]             = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignStart:      mRules[ALIGN_START]        = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignEnd:        mRules[ALIGN_END]          = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentStart:mRules[ALIGN_PARENT_START] = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentEnd:  mRules[ALIGN_PARENT_END]   = ta->getBoolean(i,false)?LTRUE:0; break;
         default: break;
         }
     }

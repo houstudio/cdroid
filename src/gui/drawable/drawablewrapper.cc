@@ -289,7 +289,7 @@ void DrawableWrapper::inflate(Resources& r,XmlPullParser&parser,const AttributeS
     //state->mSrcDensityOverride = mSrcDensityOverride;
 
     // AOSP DrawableWrapper.inflate: obtainAttributes(R.styleable.DrawableWrapper).
-    auto ta = r.obtainStyledAttributes(&atts, styleable::DrawableWrapper::IDS);
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::DrawableWrapper);
     if (ta) updateStateFromTypedArray(*ta);
     inflateChildDrawable(parser, atts);
 }
@@ -305,9 +305,8 @@ void DrawableWrapper::updateStateFromTypedArray(const TypedArray& a) {
 
     // Extract the theme attributes, if any.
     //state.mThemeAttrs = a.extractThemeAttrs();
-    namespace SW = styleable::DrawableWrapper;
-    if (a.hasValue(SW::drawable)) {
-        setDrawable(a.getDrawable(SW::drawable));
+    if (a.hasValue(R::styleable::DrawableWrapper_drawable)) {
+        setDrawable(a.getDrawable(R::styleable::DrawableWrapper_drawable));
     }
 }
 

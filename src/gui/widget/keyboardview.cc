@@ -32,17 +32,16 @@ KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAt
   :View(ctx,pAttrs, defStyleAttr){
     const AttributeSet& atts = *pAttrs;
     init();
-    auto ta = ctx->obtainStyledAttributes(atts, styleable::KeyboardView::IDS, defStyleAttr);
-    namespace SKV = styleable::KeyboardView;
-    Drawable *dr = ta ? ta->getDrawable(SKV::keyBackground) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::KeyboardView, defStyleAttr);
+    Drawable *dr = ta ? ta->getDrawable(R::styleable::KeyboardView_keyBackground) : nullptr;
     mKeyBackground = dr ? dr:new ColorDrawable(0xFF889988);
-    mVerticalCorrection= ta ? ta->getDimensionPixelOffset(SKV::verticalCorrection,0) : 0;
-    mPreviewOffset     = ta ? ta->getDimensionPixelOffset(SKV::keyPreviewOffset,0) : 0;
-    mPreviewHeight     = ta ? ta->getDimensionPixelOffset(SKV::keyPreviewHeight,0) : 0;
-    mKeyTextSize       = ta ? ta->getDimensionPixelOffset(SKV::keyTextSize,20) : 20;
-    mKeyTextColor      = ta ? ta->getColor(SKV::keyTextColor,0xFF000000) : 0xFF000000;
-    mLabelTextSize     = ta ? ta->getDimensionPixelOffset(SKV::labelTextSize,20) : 20;
-    mPopupLayout       = ta ? ta->getString(SKV::popupLayout) : std::string();
+    mVerticalCorrection= ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_verticalCorrection,0) : 0;
+    mPreviewOffset     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewOffset,0) : 0;
+    mPreviewHeight     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewHeight,0) : 0;
+    mKeyTextSize       = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyTextSize,20) : 20;
+    mKeyTextColor      = ta ? ta->getColor(R::styleable::KeyboardView_keyTextColor,0xFF000000) : 0xFF000000;
+    mLabelTextSize     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_labelTextSize,20) : 20;
+    mPopupLayout       = ta ? ta->getString(R::styleable::KeyboardView_popupLayout) : std::string();
     mPaint.setTextSize(mLabelTextSize);
     mPaint.setTextAlign(Paint::Align::CENTER);
     resetMultiTap();

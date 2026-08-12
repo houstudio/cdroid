@@ -682,118 +682,117 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     Motion& m = motion;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = a.getContext();
-    auto ta = ctx->obtainStyledAttributes(a, styleable::Constraint::IDS);
-    namespace SCN = styleable::Constraint;
+    auto ta = ctx->obtainStyledAttributes(a, R::styleable::Constraint);
 
     // --- id + anchor targets (resolve "parent"/"@id/x" -> int via Context) ---
     // <Constraint> uses android:id; <ConstraintOverride> (ViewTransition delta) uses motionTarget.
-    mViewId      = ta&&ta->hasValue(SCN::id) ? (int)ta->getResourceId(SCN::id, mViewId) : a.getResourceId("id", mViewId);
+    mViewId      = ta&&ta->hasValue(R::styleable::Constraint_id) ? (int)ta->getResourceId(R::styleable::Constraint_id, mViewId) : a.getResourceId("id", mViewId);
     // motionTarget is a ConstraintOverride attr (not in the Constraint styleable) — attrs bridge only.
     if (mViewId == View::NO_ID) mViewId = a.getResourceId("motionTarget", mViewId);
-    l.leftToLeft   = ta&&ta->hasValue(SCN::layout_constraintLeft_toLeftOf)   ? (int)ta->getResourceId(SCN::layout_constraintLeft_toLeftOf,   l.leftToLeft)   : a.getResourceId("layout_constraintLeft_toLeftOf",   l.leftToLeft);
-    l.leftToRight  = ta&&ta->hasValue(SCN::layout_constraintLeft_toRightOf)  ? (int)ta->getResourceId(SCN::layout_constraintLeft_toRightOf,  l.leftToRight)  : a.getResourceId("layout_constraintLeft_toRightOf",  l.leftToRight);
-    l.rightToLeft  = ta&&ta->hasValue(SCN::layout_constraintRight_toLeftOf)  ? (int)ta->getResourceId(SCN::layout_constraintRight_toLeftOf,  l.rightToLeft)  : a.getResourceId("layout_constraintRight_toLeftOf",  l.rightToLeft);
-    l.rightToRight = ta&&ta->hasValue(SCN::layout_constraintRight_toRightOf) ? (int)ta->getResourceId(SCN::layout_constraintRight_toRightOf, l.rightToRight) : a.getResourceId("layout_constraintRight_toRightOf", l.rightToRight);
-    l.topToTop     = ta&&ta->hasValue(SCN::layout_constraintTop_toTopOf)     ? (int)ta->getResourceId(SCN::layout_constraintTop_toTopOf,     l.topToTop)     : a.getResourceId("layout_constraintTop_toTopOf",     l.topToTop);
-    l.topToBottom  = ta&&ta->hasValue(SCN::layout_constraintTop_toBottomOf)  ? (int)ta->getResourceId(SCN::layout_constraintTop_toBottomOf,  l.topToBottom)  : a.getResourceId("layout_constraintTop_toBottomOf",  l.topToBottom);
-    l.bottomToTop  = ta&&ta->hasValue(SCN::layout_constraintBottom_toTopOf)  ? (int)ta->getResourceId(SCN::layout_constraintBottom_toTopOf,  l.bottomToTop)  : a.getResourceId("layout_constraintBottom_toTopOf",  l.bottomToTop);
-    l.bottomToBottom = ta&&ta->hasValue(SCN::layout_constraintBottom_toBottomOf) ? (int)ta->getResourceId(SCN::layout_constraintBottom_toBottomOf, l.bottomToBottom) : a.getResourceId("layout_constraintBottom_toBottomOf", l.bottomToBottom);
-    l.baselineToBaseline = ta&&ta->hasValue(SCN::layout_constraintBaseline_toBaselineOf) ? (int)ta->getResourceId(SCN::layout_constraintBaseline_toBaselineOf, l.baselineToBaseline) : a.getResourceId("layout_constraintBaseline_toBaselineOf", l.baselineToBaseline);
-    l.baselineToTop    = ta&&ta->hasValue(SCN::layout_constraintBaseline_toTopOf)    ? (int)ta->getResourceId(SCN::layout_constraintBaseline_toTopOf,    l.baselineToTop)    : a.getResourceId("layout_constraintBaseline_toTopOf",    l.baselineToTop);
-    l.baselineToBottom = ta&&ta->hasValue(SCN::layout_constraintBaseline_toBottomOf) ? (int)ta->getResourceId(SCN::layout_constraintBaseline_toBottomOf, l.baselineToBottom) : a.getResourceId("layout_constraintBaseline_toBottomOf", l.baselineToBottom);
-    l.startToStart = ta&&ta->hasValue(SCN::layout_constraintStart_toStartOf) ? (int)ta->getResourceId(SCN::layout_constraintStart_toStartOf, l.startToStart) : a.getResourceId("layout_constraintStart_toStartOf", l.startToStart);
-    l.startToEnd   = ta&&ta->hasValue(SCN::layout_constraintStart_toEndOf)   ? (int)ta->getResourceId(SCN::layout_constraintStart_toEndOf,   l.startToEnd)   : a.getResourceId("layout_constraintStart_toEndOf",   l.startToEnd);
-    l.endToStart   = ta&&ta->hasValue(SCN::layout_constraintEnd_toStartOf)   ? (int)ta->getResourceId(SCN::layout_constraintEnd_toStartOf,   l.endToStart)   : a.getResourceId("layout_constraintEnd_toStartOf",   l.endToStart);
-    l.endToEnd     = ta&&ta->hasValue(SCN::layout_constraintEnd_toEndOf)     ? (int)ta->getResourceId(SCN::layout_constraintEnd_toEndOf,     l.endToEnd)     : a.getResourceId("layout_constraintEnd_toEndOf",     l.endToEnd);
-    l.circleConstraint = ta&&ta->hasValue(SCN::layout_constraintCircle) ? (int)ta->getResourceId(SCN::layout_constraintCircle, l.circleConstraint) : a.getResourceId("layout_constraintCircle", l.circleConstraint);
+    l.leftToLeft   = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintLeft_toLeftOf)   ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintLeft_toLeftOf,   l.leftToLeft)   : a.getResourceId("layout_constraintLeft_toLeftOf",   l.leftToLeft);
+    l.leftToRight  = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintLeft_toRightOf)  ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintLeft_toRightOf,  l.leftToRight)  : a.getResourceId("layout_constraintLeft_toRightOf",  l.leftToRight);
+    l.rightToLeft  = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintRight_toLeftOf)  ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintRight_toLeftOf,  l.rightToLeft)  : a.getResourceId("layout_constraintRight_toLeftOf",  l.rightToLeft);
+    l.rightToRight = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintRight_toRightOf) ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintRight_toRightOf, l.rightToRight) : a.getResourceId("layout_constraintRight_toRightOf", l.rightToRight);
+    l.topToTop     = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintTop_toTopOf)     ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintTop_toTopOf,     l.topToTop)     : a.getResourceId("layout_constraintTop_toTopOf",     l.topToTop);
+    l.topToBottom  = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintTop_toBottomOf)  ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintTop_toBottomOf,  l.topToBottom)  : a.getResourceId("layout_constraintTop_toBottomOf",  l.topToBottom);
+    l.bottomToTop  = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintBottom_toTopOf)  ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintBottom_toTopOf,  l.bottomToTop)  : a.getResourceId("layout_constraintBottom_toTopOf",  l.bottomToTop);
+    l.bottomToBottom = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintBottom_toBottomOf) ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintBottom_toBottomOf, l.bottomToBottom) : a.getResourceId("layout_constraintBottom_toBottomOf", l.bottomToBottom);
+    l.baselineToBaseline = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintBaseline_toBaselineOf) ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintBaseline_toBaselineOf, l.baselineToBaseline) : a.getResourceId("layout_constraintBaseline_toBaselineOf", l.baselineToBaseline);
+    l.baselineToTop    = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintBaseline_toTopOf)    ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintBaseline_toTopOf,    l.baselineToTop)    : a.getResourceId("layout_constraintBaseline_toTopOf",    l.baselineToTop);
+    l.baselineToBottom = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintBaseline_toBottomOf) ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintBaseline_toBottomOf, l.baselineToBottom) : a.getResourceId("layout_constraintBaseline_toBottomOf", l.baselineToBottom);
+    l.startToStart = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintStart_toStartOf) ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintStart_toStartOf, l.startToStart) : a.getResourceId("layout_constraintStart_toStartOf", l.startToStart);
+    l.startToEnd   = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintStart_toEndOf)   ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintStart_toEndOf,   l.startToEnd)   : a.getResourceId("layout_constraintStart_toEndOf",   l.startToEnd);
+    l.endToStart   = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintEnd_toStartOf)   ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintEnd_toStartOf,   l.endToStart)   : a.getResourceId("layout_constraintEnd_toStartOf",   l.endToStart);
+    l.endToEnd     = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintEnd_toEndOf)     ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintEnd_toEndOf,     l.endToEnd)     : a.getResourceId("layout_constraintEnd_toEndOf",     l.endToEnd);
+    l.circleConstraint = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintCircle) ? (int)ta->getResourceId(R::styleable::Constraint_layout_constraintCircle, l.circleConstraint) : a.getResourceId("layout_constraintCircle", l.circleConstraint);
 
     // --- guideline / editor absolute ---
-    l.guideBegin   = ta&&ta->hasValue(SCN::layout_constraintGuide_begin) ? ta->getDimensionPixelOffset(SCN::layout_constraintGuide_begin, l.guideBegin) : a.getDimensionPixelOffset("layout_constraintGuide_begin", l.guideBegin);
-    l.guideEnd     = ta&&ta->hasValue(SCN::layout_constraintGuide_end)   ? ta->getDimensionPixelOffset(SCN::layout_constraintGuide_end,   l.guideEnd)   : a.getDimensionPixelOffset("layout_constraintGuide_end",   l.guideEnd);
-    l.guidePercent = ta&&ta->hasValue(SCN::layout_constraintGuide_percent) ? ta->getFloat(SCN::layout_constraintGuide_percent, l.guidePercent) : a.getFloat("layout_constraintGuide_percent", l.guidePercent);
-    l.editorAbsoluteX = ta&&ta->hasValue(SCN::layout_editor_absoluteX) ? ta->getDimensionPixelOffset(SCN::layout_editor_absoluteX, l.editorAbsoluteX) : a.getDimensionPixelOffset("layout_editor_absoluteX", l.editorAbsoluteX);
-    l.editorAbsoluteY = ta&&ta->hasValue(SCN::layout_editor_absoluteY) ? ta->getDimensionPixelOffset(SCN::layout_editor_absoluteY, l.editorAbsoluteY) : a.getDimensionPixelOffset("layout_editor_absoluteY", l.editorAbsoluteY);
-    l.orientation     = ta&&ta->hasValue(SCN::orientation) ? ta->getInt(SCN::orientation, l.orientation) : a.getInt("orientation", l.orientation);
+    l.guideBegin   = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintGuide_begin) ? ta->getDimensionPixelOffset(R::styleable::Constraint_layout_constraintGuide_begin, l.guideBegin) : a.getDimensionPixelOffset("layout_constraintGuide_begin", l.guideBegin);
+    l.guideEnd     = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintGuide_end)   ? ta->getDimensionPixelOffset(R::styleable::Constraint_layout_constraintGuide_end,   l.guideEnd)   : a.getDimensionPixelOffset("layout_constraintGuide_end",   l.guideEnd);
+    l.guidePercent = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintGuide_percent) ? ta->getFloat(R::styleable::Constraint_layout_constraintGuide_percent, l.guidePercent) : a.getFloat("layout_constraintGuide_percent", l.guidePercent);
+    l.editorAbsoluteX = ta&&ta->hasValue(R::styleable::Constraint_layout_editor_absoluteX) ? ta->getDimensionPixelOffset(R::styleable::Constraint_layout_editor_absoluteX, l.editorAbsoluteX) : a.getDimensionPixelOffset("layout_editor_absoluteX", l.editorAbsoluteX);
+    l.editorAbsoluteY = ta&&ta->hasValue(R::styleable::Constraint_layout_editor_absoluteY) ? ta->getDimensionPixelOffset(R::styleable::Constraint_layout_editor_absoluteY, l.editorAbsoluteY) : a.getDimensionPixelOffset("layout_editor_absoluteY", l.editorAbsoluteY);
+    l.orientation     = ta&&ta->hasValue(R::styleable::Constraint_orientation) ? ta->getInt(R::styleable::Constraint_orientation, l.orientation) : a.getInt("orientation", l.orientation);
 
     // --- margins ---
-    l.leftMargin   = ta&&ta->hasValue(SCN::layout_marginLeft)  ? ta->getDimensionPixelSize(SCN::layout_marginLeft,  l.leftMargin)  : a.getDimensionPixelSize("layout_marginLeft",  l.leftMargin);
-    l.rightMargin  = ta&&ta->hasValue(SCN::layout_marginRight) ? ta->getDimensionPixelSize(SCN::layout_marginRight, l.rightMargin) : a.getDimensionPixelSize("layout_marginRight", l.rightMargin);
-    l.topMargin    = ta&&ta->hasValue(SCN::layout_marginTop)   ? ta->getDimensionPixelSize(SCN::layout_marginTop,   l.topMargin)   : a.getDimensionPixelSize("layout_marginTop",   l.topMargin);
-    l.bottomMargin = ta&&ta->hasValue(SCN::layout_marginBottom)? ta->getDimensionPixelSize(SCN::layout_marginBottom,l.bottomMargin): a.getDimensionPixelSize("layout_marginBottom",l.bottomMargin);
-    l.startMargin  = ta&&ta->hasValue(SCN::layout_marginStart) ? ta->getDimensionPixelSize(SCN::layout_marginStart, l.startMargin) : a.getDimensionPixelSize("layout_marginStart", l.startMargin);
-    l.endMargin    = ta&&ta->hasValue(SCN::layout_marginEnd)   ? ta->getDimensionPixelSize(SCN::layout_marginEnd,   l.endMargin)   : a.getDimensionPixelSize("layout_marginEnd",   l.endMargin);
-    l.goneLeftMargin   = ta&&ta->hasValue(SCN::layout_goneMarginLeft)   ? ta->getDimensionPixelSize(SCN::layout_goneMarginLeft,   l.goneLeftMargin)   : a.getDimensionPixelSize("layout_goneMarginLeft",   l.goneLeftMargin);
-    l.goneTopMargin    = ta&&ta->hasValue(SCN::layout_goneMarginTop)    ? ta->getDimensionPixelSize(SCN::layout_goneMarginTop,    l.goneTopMargin)    : a.getDimensionPixelSize("layout_goneMarginTop",    l.goneTopMargin);
-    l.goneRightMargin  = ta&&ta->hasValue(SCN::layout_goneMarginRight)  ? ta->getDimensionPixelSize(SCN::layout_goneMarginRight,  l.goneRightMargin)  : a.getDimensionPixelSize("layout_goneMarginRight",  l.goneRightMargin);
-    l.goneBottomMargin = ta&&ta->hasValue(SCN::layout_goneMarginBottom) ? ta->getDimensionPixelSize(SCN::layout_goneMarginBottom, l.goneBottomMargin) : a.getDimensionPixelSize("layout_goneMarginBottom", l.goneBottomMargin);
-    l.goneStartMargin  = ta&&ta->hasValue(SCN::layout_goneMarginStart)  ? ta->getDimensionPixelSize(SCN::layout_goneMarginStart,  l.goneStartMargin)  : a.getDimensionPixelSize("layout_goneMarginStart",  l.goneStartMargin);
-    l.goneEndMargin    = ta&&ta->hasValue(SCN::layout_goneMarginEnd)    ? ta->getDimensionPixelSize(SCN::layout_goneMarginEnd,    l.goneEndMargin)    : a.getDimensionPixelSize("layout_goneMarginEnd",    l.goneEndMargin);
+    l.leftMargin   = ta&&ta->hasValue(R::styleable::Constraint_layout_marginLeft)  ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginLeft,  l.leftMargin)  : a.getDimensionPixelSize("layout_marginLeft",  l.leftMargin);
+    l.rightMargin  = ta&&ta->hasValue(R::styleable::Constraint_layout_marginRight) ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginRight, l.rightMargin) : a.getDimensionPixelSize("layout_marginRight", l.rightMargin);
+    l.topMargin    = ta&&ta->hasValue(R::styleable::Constraint_layout_marginTop)   ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginTop,   l.topMargin)   : a.getDimensionPixelSize("layout_marginTop",   l.topMargin);
+    l.bottomMargin = ta&&ta->hasValue(R::styleable::Constraint_layout_marginBottom)? ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginBottom,l.bottomMargin): a.getDimensionPixelSize("layout_marginBottom",l.bottomMargin);
+    l.startMargin  = ta&&ta->hasValue(R::styleable::Constraint_layout_marginStart) ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginStart, l.startMargin) : a.getDimensionPixelSize("layout_marginStart", l.startMargin);
+    l.endMargin    = ta&&ta->hasValue(R::styleable::Constraint_layout_marginEnd)   ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginEnd,   l.endMargin)   : a.getDimensionPixelSize("layout_marginEnd",   l.endMargin);
+    l.goneLeftMargin   = ta&&ta->hasValue(R::styleable::Constraint_layout_goneMarginLeft)   ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginLeft,   l.goneLeftMargin)   : a.getDimensionPixelSize("layout_goneMarginLeft",   l.goneLeftMargin);
+    l.goneTopMargin    = ta&&ta->hasValue(R::styleable::Constraint_layout_goneMarginTop)    ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginTop,    l.goneTopMargin)    : a.getDimensionPixelSize("layout_goneMarginTop",    l.goneTopMargin);
+    l.goneRightMargin  = ta&&ta->hasValue(R::styleable::Constraint_layout_goneMarginRight)  ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginRight,  l.goneRightMargin)  : a.getDimensionPixelSize("layout_goneMarginRight",  l.goneRightMargin);
+    l.goneBottomMargin = ta&&ta->hasValue(R::styleable::Constraint_layout_goneMarginBottom) ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginBottom, l.goneBottomMargin) : a.getDimensionPixelSize("layout_goneMarginBottom", l.goneBottomMargin);
+    l.goneStartMargin  = ta&&ta->hasValue(R::styleable::Constraint_layout_goneMarginStart)  ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginStart,  l.goneStartMargin)  : a.getDimensionPixelSize("layout_goneMarginStart",  l.goneStartMargin);
+    l.goneEndMargin    = ta&&ta->hasValue(R::styleable::Constraint_layout_goneMarginEnd)    ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginEnd,    l.goneEndMargin)    : a.getDimensionPixelSize("layout_goneMarginEnd",    l.goneEndMargin);
 
     // --- bias / chain / weight / ratio ---
-    l.horizontalBias = ta&&ta->hasValue(SCN::layout_constraintHorizontal_bias) ? ta->getFloat(SCN::layout_constraintHorizontal_bias, l.horizontalBias) : a.getFloat("layout_constraintHorizontal_bias", l.horizontalBias);
-    l.verticalBias   = ta&&ta->hasValue(SCN::layout_constraintVertical_bias)   ? ta->getFloat(SCN::layout_constraintVertical_bias,   l.verticalBias)   : a.getFloat("layout_constraintVertical_bias",   l.verticalBias);
-    l.horizontalWeight = ta&&ta->hasValue(SCN::layout_constraintHorizontal_weight) ? ta->getFloat(SCN::layout_constraintHorizontal_weight, l.horizontalWeight) : a.getFloat("layout_constraintHorizontal_weight", l.horizontalWeight);
-    l.verticalWeight   = ta&&ta->hasValue(SCN::layout_constraintVertical_weight)   ? ta->getFloat(SCN::layout_constraintVertical_weight,   l.verticalWeight)   : a.getFloat("layout_constraintVertical_weight",   l.verticalWeight);
-    l.horizontalChainStyle = ta&&ta->hasValue(SCN::layout_constraintHorizontal_chainStyle) ? ta->getInt(SCN::layout_constraintHorizontal_chainStyle, l.horizontalChainStyle) : a.getInt("layout_constraintHorizontal_chainStyle", kChainStyles, l.horizontalChainStyle);
-    l.verticalChainStyle   = ta&&ta->hasValue(SCN::layout_constraintVertical_chainStyle)   ? ta->getInt(SCN::layout_constraintVertical_chainStyle,   l.verticalChainStyle)   : a.getInt("layout_constraintVertical_chainStyle",   kChainStyles, l.verticalChainStyle);
-    l.dimensionRatio = ta&&ta->hasValue(SCN::layout_constraintDimensionRatio) ? ta->getString(SCN::layout_constraintDimensionRatio) : a.getString("layout_constraintDimensionRatio", l.dimensionRatio);
+    l.horizontalBias = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintHorizontal_bias) ? ta->getFloat(R::styleable::Constraint_layout_constraintHorizontal_bias, l.horizontalBias) : a.getFloat("layout_constraintHorizontal_bias", l.horizontalBias);
+    l.verticalBias   = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintVertical_bias)   ? ta->getFloat(R::styleable::Constraint_layout_constraintVertical_bias,   l.verticalBias)   : a.getFloat("layout_constraintVertical_bias",   l.verticalBias);
+    l.horizontalWeight = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintHorizontal_weight) ? ta->getFloat(R::styleable::Constraint_layout_constraintHorizontal_weight, l.horizontalWeight) : a.getFloat("layout_constraintHorizontal_weight", l.horizontalWeight);
+    l.verticalWeight   = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintVertical_weight)   ? ta->getFloat(R::styleable::Constraint_layout_constraintVertical_weight,   l.verticalWeight)   : a.getFloat("layout_constraintVertical_weight",   l.verticalWeight);
+    l.horizontalChainStyle = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintHorizontal_chainStyle) ? ta->getInt(R::styleable::Constraint_layout_constraintHorizontal_chainStyle, l.horizontalChainStyle) : a.getInt("layout_constraintHorizontal_chainStyle", kChainStyles, l.horizontalChainStyle);
+    l.verticalChainStyle   = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintVertical_chainStyle)   ? ta->getInt(R::styleable::Constraint_layout_constraintVertical_chainStyle,   l.verticalChainStyle)   : a.getInt("layout_constraintVertical_chainStyle",   kChainStyles, l.verticalChainStyle);
+    l.dimensionRatio = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintDimensionRatio) ? ta->getString(R::styleable::Constraint_layout_constraintDimensionRatio) : a.getString("layout_constraintDimensionRatio", l.dimensionRatio);
 
     // --- dimensions / match_constraint ---
-    l.mWidth  = ta&&ta->hasValue(SCN::layout_width)  ? ta->getLayoutDimension(SCN::layout_width,  l.mWidth)  : a.getLayoutDimension("layout_width",  l.mWidth);
-    l.mHeight = ta&&ta->hasValue(SCN::layout_height) ? ta->getLayoutDimension(SCN::layout_height, l.mHeight) : a.getLayoutDimension("layout_height", l.mHeight);
-    l.widthDefault  = ta&&ta->hasValue(SCN::layout_constraintWidth_default)  ? ta->getInt(SCN::layout_constraintWidth_default,  l.widthDefault)  : a.getInt("layout_constraintWidth_default",  kMatchDefault, l.widthDefault);
-    l.heightDefault = ta&&ta->hasValue(SCN::layout_constraintHeight_default) ? ta->getInt(SCN::layout_constraintHeight_default, l.heightDefault) : a.getInt("layout_constraintHeight_default", kMatchDefault, l.heightDefault);
-    l.widthPercent  = ta&&ta->hasValue(SCN::layout_constraintWidth_percent)  ? ta->getFloat(SCN::layout_constraintWidth_percent,  l.widthPercent)  : a.getFloat("layout_constraintWidth_percent",  l.widthPercent);
-    l.heightPercent = ta&&ta->hasValue(SCN::layout_constraintHeight_percent) ? ta->getFloat(SCN::layout_constraintHeight_percent, l.heightPercent) : a.getFloat("layout_constraintHeight_percent", l.heightPercent);
-    l.widthMin  = ta&&ta->hasValue(SCN::layout_constraintWidth_min)  ? ta->getDimensionPixelSize(SCN::layout_constraintWidth_min,  l.widthMin)  : a.getDimensionPixelSize("layout_constraintWidth_min",  l.widthMin);
-    l.widthMax  = ta&&ta->hasValue(SCN::layout_constraintWidth_max)  ? ta->getDimensionPixelSize(SCN::layout_constraintWidth_max,  l.widthMax)  : a.getDimensionPixelSize("layout_constraintWidth_max",  l.widthMax);
-    l.heightMin = ta&&ta->hasValue(SCN::layout_constraintHeight_min) ? ta->getDimensionPixelSize(SCN::layout_constraintHeight_min, l.heightMin) : a.getDimensionPixelSize("layout_constraintHeight_min", l.heightMin);
-    l.heightMax = ta&&ta->hasValue(SCN::layout_constraintHeight_max) ? ta->getDimensionPixelSize(SCN::layout_constraintHeight_max, l.heightMax) : a.getDimensionPixelSize("layout_constraintHeight_max", l.heightMax);
-    l.constrainedWidth  = ta&&ta->hasValue(SCN::layout_constrainedWidth)  ? ta->getBoolean(SCN::layout_constrainedWidth,  l.constrainedWidth)  : a.getBoolean("layout_constrainedWidth",  l.constrainedWidth);
-    l.constrainedHeight = ta&&ta->hasValue(SCN::layout_constrainedHeight) ? ta->getBoolean(SCN::layout_constrainedHeight, l.constrainedHeight) : a.getBoolean("layout_constrainedHeight", l.constrainedHeight);
-    l.mWrapBehavior = ta&&ta->hasValue(SCN::layout_wrapBehaviorInParent) ? ta->getInt(SCN::layout_wrapBehaviorInParent, l.mWrapBehavior) : a.getInt("layout_wrapBehaviorInParent", kWrapBehavior, l.mWrapBehavior);
+    l.mWidth  = ta&&ta->hasValue(R::styleable::Constraint_layout_width)  ? ta->getLayoutDimension(R::styleable::Constraint_layout_width,  l.mWidth)  : a.getLayoutDimension("layout_width",  l.mWidth);
+    l.mHeight = ta&&ta->hasValue(R::styleable::Constraint_layout_height) ? ta->getLayoutDimension(R::styleable::Constraint_layout_height, l.mHeight) : a.getLayoutDimension("layout_height", l.mHeight);
+    l.widthDefault  = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintWidth_default)  ? ta->getInt(R::styleable::Constraint_layout_constraintWidth_default,  l.widthDefault)  : a.getInt("layout_constraintWidth_default",  kMatchDefault, l.widthDefault);
+    l.heightDefault = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintHeight_default) ? ta->getInt(R::styleable::Constraint_layout_constraintHeight_default, l.heightDefault) : a.getInt("layout_constraintHeight_default", kMatchDefault, l.heightDefault);
+    l.widthPercent  = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintWidth_percent)  ? ta->getFloat(R::styleable::Constraint_layout_constraintWidth_percent,  l.widthPercent)  : a.getFloat("layout_constraintWidth_percent",  l.widthPercent);
+    l.heightPercent = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintHeight_percent) ? ta->getFloat(R::styleable::Constraint_layout_constraintHeight_percent, l.heightPercent) : a.getFloat("layout_constraintHeight_percent", l.heightPercent);
+    l.widthMin  = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintWidth_min)  ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_constraintWidth_min,  l.widthMin)  : a.getDimensionPixelSize("layout_constraintWidth_min",  l.widthMin);
+    l.widthMax  = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintWidth_max)  ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_constraintWidth_max,  l.widthMax)  : a.getDimensionPixelSize("layout_constraintWidth_max",  l.widthMax);
+    l.heightMin = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintHeight_min) ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_constraintHeight_min, l.heightMin) : a.getDimensionPixelSize("layout_constraintHeight_min", l.heightMin);
+    l.heightMax = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintHeight_max) ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_constraintHeight_max, l.heightMax) : a.getDimensionPixelSize("layout_constraintHeight_max", l.heightMax);
+    l.constrainedWidth  = ta&&ta->hasValue(R::styleable::Constraint_layout_constrainedWidth)  ? ta->getBoolean(R::styleable::Constraint_layout_constrainedWidth,  l.constrainedWidth)  : a.getBoolean("layout_constrainedWidth",  l.constrainedWidth);
+    l.constrainedHeight = ta&&ta->hasValue(R::styleable::Constraint_layout_constrainedHeight) ? ta->getBoolean(R::styleable::Constraint_layout_constrainedHeight, l.constrainedHeight) : a.getBoolean("layout_constrainedHeight", l.constrainedHeight);
+    l.mWrapBehavior = ta&&ta->hasValue(R::styleable::Constraint_layout_wrapBehaviorInParent) ? ta->getInt(R::styleable::Constraint_layout_wrapBehaviorInParent, l.mWrapBehavior) : a.getInt("layout_wrapBehaviorInParent", kWrapBehavior, l.mWrapBehavior);
 
     // --- circle / barrier / helper ---
-    l.circleRadius = ta&&ta->hasValue(SCN::layout_constraintCircleRadius) ? ta->getDimensionPixelSize(SCN::layout_constraintCircleRadius, l.circleRadius) : a.getDimensionPixelSize("layout_constraintCircleRadius", l.circleRadius);
-    l.circleAngle  = ta&&ta->hasValue(SCN::layout_constraintCircleAngle)  ? ta->getFloat(SCN::layout_constraintCircleAngle, l.circleAngle) : a.getFloat("layout_constraintCircleAngle", l.circleAngle);
-    l.mBarrierDirection    = ta&&ta->hasValue(SCN::barrierDirection) ? ta->getInt(SCN::barrierDirection, l.mBarrierDirection) : a.getInt("barrierDirection", kBarrierDirection, l.mBarrierDirection);
-    l.mBarrierMargin       = ta&&ta->hasValue(SCN::barrierMargin) ? ta->getDimensionPixelSize(SCN::barrierMargin, l.mBarrierMargin) : a.getDimensionPixelSize("barrierMargin", l.mBarrierMargin);
-    l.mBarrierAllowsGoneWidgets = ta&&ta->hasValue(SCN::barrierAllowsGoneWidgets) ? ta->getBoolean(SCN::barrierAllowsGoneWidgets, l.mBarrierAllowsGoneWidgets) : a.getBoolean("barrierAllowsGoneWidgets", l.mBarrierAllowsGoneWidgets);
-    l.mReferenceIdString   = ta&&ta->hasValue(SCN::constraint_referenced_ids) ? ta->getString(SCN::constraint_referenced_ids) : a.getString("constraint_referenced_ids", l.mReferenceIdString);
-    l.constraintTag        = ta&&ta->hasValue(SCN::layout_constraintTag) ? ta->getString(SCN::layout_constraintTag) : a.getString("layout_constraintTag", l.constraintTag);
+    l.circleRadius = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintCircleRadius) ? ta->getDimensionPixelSize(R::styleable::Constraint_layout_constraintCircleRadius, l.circleRadius) : a.getDimensionPixelSize("layout_constraintCircleRadius", l.circleRadius);
+    l.circleAngle  = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintCircleAngle)  ? ta->getFloat(R::styleable::Constraint_layout_constraintCircleAngle, l.circleAngle) : a.getFloat("layout_constraintCircleAngle", l.circleAngle);
+    l.mBarrierDirection    = ta&&ta->hasValue(R::styleable::Constraint_barrierDirection) ? ta->getInt(R::styleable::Constraint_barrierDirection, l.mBarrierDirection) : a.getInt("barrierDirection", kBarrierDirection, l.mBarrierDirection);
+    l.mBarrierMargin       = ta&&ta->hasValue(R::styleable::Constraint_barrierMargin) ? ta->getDimensionPixelSize(R::styleable::Constraint_barrierMargin, l.mBarrierMargin) : a.getDimensionPixelSize("barrierMargin", l.mBarrierMargin);
+    l.mBarrierAllowsGoneWidgets = ta&&ta->hasValue(R::styleable::Constraint_barrierAllowsGoneWidgets) ? ta->getBoolean(R::styleable::Constraint_barrierAllowsGoneWidgets, l.mBarrierAllowsGoneWidgets) : a.getBoolean("barrierAllowsGoneWidgets", l.mBarrierAllowsGoneWidgets);
+    l.mReferenceIdString   = ta&&ta->hasValue(R::styleable::Constraint_constraint_referenced_ids) ? ta->getString(R::styleable::Constraint_constraint_referenced_ids) : a.getString("constraint_referenced_ids", l.mReferenceIdString);
+    l.constraintTag        = ta&&ta->hasValue(R::styleable::Constraint_layout_constraintTag) ? ta->getString(R::styleable::Constraint_layout_constraintTag) : a.getString("layout_constraintTag", l.constraintTag);
 
     // --- property set (visibility / alpha / progress) ---
-    p.visibility = ta&&ta->hasValue(SCN::visibility) ? ta->getInt(SCN::visibility, p.visibility) : a.getInt("visibility", kVisibility, p.visibility);
-    p.alpha      = ta&&ta->hasValue(SCN::alpha) ? ta->getFloat(SCN::alpha, p.alpha) : a.getFloat("alpha", p.alpha);
-    p.mProgress  = ta&&ta->hasValue(SCN::motionProgress) ? ta->getFloat(SCN::motionProgress, p.mProgress) : a.getFloat("motionProgress", p.mProgress);
-    p.mVisibilityMode = ta&&ta->hasValue(SCN::visibilityMode) ? ta->getInt(SCN::visibilityMode, p.mVisibilityMode) : a.getInt("visibilityMode", kVisibilityMode, p.mVisibilityMode);
+    p.visibility = ta&&ta->hasValue(R::styleable::Constraint_visibility) ? ta->getInt(R::styleable::Constraint_visibility, p.visibility) : a.getInt("visibility", kVisibility, p.visibility);
+    p.alpha      = ta&&ta->hasValue(R::styleable::Constraint_alpha) ? ta->getFloat(R::styleable::Constraint_alpha, p.alpha) : a.getFloat("alpha", p.alpha);
+    p.mProgress  = ta&&ta->hasValue(R::styleable::Constraint_motionProgress) ? ta->getFloat(R::styleable::Constraint_motionProgress, p.mProgress) : a.getFloat("motionProgress", p.mProgress);
+    p.mVisibilityMode = ta&&ta->hasValue(R::styleable::Constraint_visibilityMode) ? ta->getInt(R::styleable::Constraint_visibilityMode, p.mVisibilityMode) : a.getInt("visibilityMode", kVisibilityMode, p.mVisibilityMode);
 
     // --- transforms ---
-    t.rotation    = ta&&ta->hasValue(SCN::rotation)    ? ta->getFloat(SCN::rotation,    t.rotation)    : a.getFloat("rotation",    t.rotation);
-    t.rotationX   = ta&&ta->hasValue(SCN::rotationX)   ? ta->getFloat(SCN::rotationX,   t.rotationX)   : a.getFloat("rotationX",   t.rotationX);
-    t.rotationY   = ta&&ta->hasValue(SCN::rotationY)   ? ta->getFloat(SCN::rotationY,   t.rotationY)   : a.getFloat("rotationY",   t.rotationY);
-    t.scaleX      = ta&&ta->hasValue(SCN::scaleX)      ? ta->getFloat(SCN::scaleX,      t.scaleX)      : a.getFloat("scaleX",      t.scaleX);
-    t.scaleY      = ta&&ta->hasValue(SCN::scaleY)      ? ta->getFloat(SCN::scaleY,      t.scaleY)      : a.getFloat("scaleY",      t.scaleY);
-    t.translationX = ta&&ta->hasValue(SCN::translationX) ? ta->getDimension(SCN::translationX, t.translationX) : a.getDimension("translationX", t.translationX);
-    t.translationY = ta&&ta->hasValue(SCN::translationY) ? ta->getDimension(SCN::translationY, t.translationY) : a.getDimension("translationY", t.translationY);
-    t.translationZ = ta&&ta->hasValue(SCN::translationZ) ? ta->getDimension(SCN::translationZ, t.translationZ) : a.getDimension("translationZ", t.translationZ);
-    t.transformPivotX = ta&&ta->hasValue(SCN::transformPivotX) ? ta->getDimension(SCN::transformPivotX, t.transformPivotX) : a.getDimension("transformPivotX", t.transformPivotX);
-    t.transformPivotY = ta&&ta->hasValue(SCN::transformPivotY) ? ta->getDimension(SCN::transformPivotY, t.transformPivotY) : a.getDimension("transformPivotY", t.transformPivotY);
-    t.transformPivotTarget = ta&&ta->hasValue(SCN::transformPivotTarget) ? (int)ta->getResourceId(SCN::transformPivotTarget, t.transformPivotTarget) : a.getResourceId("transformPivotTarget", t.transformPivotTarget);
-    if ((ta&&ta->hasValue(SCN::elevation)) || a.hasAttribute("elevation")) {
+    t.rotation    = ta&&ta->hasValue(R::styleable::Constraint_rotation)    ? ta->getFloat(R::styleable::Constraint_rotation,    t.rotation)    : a.getFloat("rotation",    t.rotation);
+    t.rotationX   = ta&&ta->hasValue(R::styleable::Constraint_rotationX)   ? ta->getFloat(R::styleable::Constraint_rotationX,   t.rotationX)   : a.getFloat("rotationX",   t.rotationX);
+    t.rotationY   = ta&&ta->hasValue(R::styleable::Constraint_rotationY)   ? ta->getFloat(R::styleable::Constraint_rotationY,   t.rotationY)   : a.getFloat("rotationY",   t.rotationY);
+    t.scaleX      = ta&&ta->hasValue(R::styleable::Constraint_scaleX)      ? ta->getFloat(R::styleable::Constraint_scaleX,      t.scaleX)      : a.getFloat("scaleX",      t.scaleX);
+    t.scaleY      = ta&&ta->hasValue(R::styleable::Constraint_scaleY)      ? ta->getFloat(R::styleable::Constraint_scaleY,      t.scaleY)      : a.getFloat("scaleY",      t.scaleY);
+    t.translationX = ta&&ta->hasValue(R::styleable::Constraint_translationX) ? ta->getDimension(R::styleable::Constraint_translationX, t.translationX) : a.getDimension("translationX", t.translationX);
+    t.translationY = ta&&ta->hasValue(R::styleable::Constraint_translationY) ? ta->getDimension(R::styleable::Constraint_translationY, t.translationY) : a.getDimension("translationY", t.translationY);
+    t.translationZ = ta&&ta->hasValue(R::styleable::Constraint_translationZ) ? ta->getDimension(R::styleable::Constraint_translationZ, t.translationZ) : a.getDimension("translationZ", t.translationZ);
+    t.transformPivotX = ta&&ta->hasValue(R::styleable::Constraint_transformPivotX) ? ta->getDimension(R::styleable::Constraint_transformPivotX, t.transformPivotX) : a.getDimension("transformPivotX", t.transformPivotX);
+    t.transformPivotY = ta&&ta->hasValue(R::styleable::Constraint_transformPivotY) ? ta->getDimension(R::styleable::Constraint_transformPivotY, t.transformPivotY) : a.getDimension("transformPivotY", t.transformPivotY);
+    t.transformPivotTarget = ta&&ta->hasValue(R::styleable::Constraint_transformPivotTarget) ? (int)ta->getResourceId(R::styleable::Constraint_transformPivotTarget, t.transformPivotTarget) : a.getResourceId("transformPivotTarget", t.transformPivotTarget);
+    if ((ta&&ta->hasValue(R::styleable::Constraint_elevation)) || a.hasAttribute("elevation")) {
         t.applyElevation = true;
-        t.elevation = ta&&ta->hasValue(SCN::elevation) ? ta->getDimension(SCN::elevation, t.elevation) : a.getDimension("elevation", t.elevation);
+        t.elevation = ta&&ta->hasValue(R::styleable::Constraint_elevation) ? ta->getDimension(R::styleable::Constraint_elevation, t.elevation) : a.getDimension("elevation", t.elevation);
     }
 
     // --- motion ---
-    m.mAnimateRelativeTo = ta&&ta->hasValue(SCN::animateRelativeTo) ? (int)ta->getResourceId(SCN::animateRelativeTo, m.mAnimateRelativeTo) : a.getResourceId("animateRelativeTo", m.mAnimateRelativeTo);
-    m.mTransitionEasing  = ta&&ta->hasValue(SCN::transitionEasing) ? ta->getString(SCN::transitionEasing) : a.getString("transitionEasing", m.mTransitionEasing);
-    m.mPathMotionArc     = ta&&ta->hasValue(SCN::pathMotionArc) ? ta->getInt(SCN::pathMotionArc, m.mPathMotionArc) : a.getInt("pathMotionArc", kPathMotionArc, m.mPathMotionArc);
-    m.mPathRotate        = ta&&ta->hasValue(SCN::transitionPathRotate) ? ta->getFloat(SCN::transitionPathRotate, m.mPathRotate) : a.getFloat("transitionPathRotate", m.mPathRotate);
-    m.mMotionStagger     = ta&&ta->hasValue(SCN::motionStagger) ? ta->getFloat(SCN::motionStagger, m.mMotionStagger) : a.getFloat("motionStagger", m.mMotionStagger);
-    m.mDrawPath          = ta&&ta->hasValue(SCN::drawPath) ? ta->getInt(SCN::drawPath, m.mDrawPath) : a.getInt("drawPath", m.mDrawPath);
-    m.mQuantizeMotionSteps = ta&&ta->hasValue(SCN::quantizeMotionSteps) ? ta->getInt(SCN::quantizeMotionSteps, m.mQuantizeMotionSteps) : a.getInt("quantizeMotionSteps", m.mQuantizeMotionSteps);
-    m.mQuantizeMotionPhase = ta&&ta->hasValue(SCN::quantizeMotionPhase) ? ta->getFloat(SCN::quantizeMotionPhase, m.mQuantizeMotionPhase) : a.getFloat("quantizeMotionPhase", m.mQuantizeMotionPhase);
+    m.mAnimateRelativeTo = ta&&ta->hasValue(R::styleable::Constraint_animateRelativeTo) ? (int)ta->getResourceId(R::styleable::Constraint_animateRelativeTo, m.mAnimateRelativeTo) : a.getResourceId("animateRelativeTo", m.mAnimateRelativeTo);
+    m.mTransitionEasing  = ta&&ta->hasValue(R::styleable::Constraint_transitionEasing) ? ta->getString(R::styleable::Constraint_transitionEasing) : a.getString("transitionEasing", m.mTransitionEasing);
+    m.mPathMotionArc     = ta&&ta->hasValue(R::styleable::Constraint_pathMotionArc) ? ta->getInt(R::styleable::Constraint_pathMotionArc, m.mPathMotionArc) : a.getInt("pathMotionArc", kPathMotionArc, m.mPathMotionArc);
+    m.mPathRotate        = ta&&ta->hasValue(R::styleable::Constraint_transitionPathRotate) ? ta->getFloat(R::styleable::Constraint_transitionPathRotate, m.mPathRotate) : a.getFloat("transitionPathRotate", m.mPathRotate);
+    m.mMotionStagger     = ta&&ta->hasValue(R::styleable::Constraint_motionStagger) ? ta->getFloat(R::styleable::Constraint_motionStagger, m.mMotionStagger) : a.getFloat("motionStagger", m.mMotionStagger);
+    m.mDrawPath          = ta&&ta->hasValue(R::styleable::Constraint_drawPath) ? ta->getInt(R::styleable::Constraint_drawPath, m.mDrawPath) : a.getInt("drawPath", m.mDrawPath);
+    m.mQuantizeMotionSteps = ta&&ta->hasValue(R::styleable::Constraint_quantizeMotionSteps) ? ta->getInt(R::styleable::Constraint_quantizeMotionSteps, m.mQuantizeMotionSteps) : a.getInt("quantizeMotionSteps", m.mQuantizeMotionSteps);
+    m.mQuantizeMotionPhase = ta&&ta->hasValue(R::styleable::Constraint_quantizeMotionPhase) ? ta->getFloat(R::styleable::Constraint_quantizeMotionPhase, m.mQuantizeMotionPhase) : a.getFloat("quantizeMotionPhase", m.mQuantizeMotionPhase);
 }
 
 void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {

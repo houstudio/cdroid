@@ -123,11 +123,10 @@ void LevelListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
         if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-        namespace SLI = styleable::LevelListDrawableItem;
-        auto ta = r.obtainStyledAttributes(&atts, SLI::IDS);
-        low = ta ? ta->getInt(SLI::minLevel, 0) : atts.getInt("minLevel", 0);
-        int high = ta ? ta->getInt(SLI::maxLevel, 0) : atts.getInt("maxLevel", 0);
-        Drawable* dr = ta ? ta->getDrawable(SLI::drawable) : atts.getDrawable("drawable");
+        auto ta = r.obtainStyledAttributes(&atts, R::styleable::LevelListDrawableItem);
+        low = ta ? ta->getInt(R::styleable::LevelListDrawableItem_minLevel, 0) : atts.getInt("minLevel", 0);
+        int high = ta ? ta->getInt(R::styleable::LevelListDrawableItem_maxLevel, 0) : atts.getInt("maxLevel", 0);
+        Drawable* dr = ta ? ta->getDrawable(R::styleable::LevelListDrawableItem_drawable) : atts.getDrawable("drawable");
 
         if (high < 0) {
             throw std::logic_error(parser.getPositionDescription()+

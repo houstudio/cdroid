@@ -21,25 +21,24 @@ Switch::Switch(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     const AttributeSet& a = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(a, styleable::Switch::IDS, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(a, R::styleable::Switch, defStyleAttr);
     
-namespace SW = styleable::Switch;
 
-mThumbDrawable = ta->getDrawable(SW::thumb);
+mThumbDrawable = ta->getDrawable(R::styleable::Switch_thumb);
 if (mThumbDrawable) {
     mThumbDrawable->setCallback(this);
 }
-mTrackDrawable = ta->getDrawable(SW::track);
+mTrackDrawable = ta->getDrawable(R::styleable::Switch_track);
 if (mTrackDrawable) {
     mTrackDrawable->setCallback(this);
 }
-mTextOn = ta->getString(SW::textOn);
-mTextOff = ta->getString(SW::textOff);
-mShowText = ta->getBoolean(SW::showText, true);
-mThumbTextPadding = ta->getDimensionPixelSize(SW::thumbTextPadding, 0);
-mSwitchMinWidth = ta->getDimensionPixelSize(SW::switchMinWidth, 0);
-mSwitchPadding = ta->getDimensionPixelSize(SW::switchPadding, 0);
-mSplitTrack = ta->getBoolean(SW::splitTrack, false);
+mTextOn = ta->getString(R::styleable::Switch_textOn);
+mTextOff = ta->getString(R::styleable::Switch_textOff);
+mShowText = ta->getBoolean(R::styleable::Switch_showText, true);
+mThumbTextPadding = ta->getDimensionPixelSize(R::styleable::Switch_thumbTextPadding, 0);
+mSwitchMinWidth = ta->getDimensionPixelSize(R::styleable::Switch_switchMinWidth, 0);
+mSwitchPadding = ta->getDimensionPixelSize(R::styleable::Switch_switchPadding, 0);
+mSplitTrack = ta->getBoolean(R::styleable::Switch_splitTrack, false);
 
 mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
 
@@ -67,7 +66,7 @@ if (mHasTrackTint || mHasTrackTintMode) {
     applyTrackTint();
 }
 
-const std::string appearance = ta->getString(SW::switchTextAppearance);
+const std::string appearance = ta->getString(R::styleable::Switch_switchTextAppearance);
 if (!appearance.empty()){
     setSwitchTextAppearance(context, appearance);
 }
@@ -129,10 +128,9 @@ Switch::~Switch(){
 
 void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
     AttributeSet atts = context->obtainStyledAttributes(resid);
-    auto ta = context->obtainStyledAttributes(atts, styleable::TextAppearance::IDS);
-    namespace ST = styleable::TextAppearance;
+    auto ta = context->obtainStyledAttributes(atts, R::styleable::TextAppearance);
 
-    auto colors = ta ? ta->getColorStateList(ST::textColor) : nullptr;
+    auto colors = ta ? ta->getColorStateList(R::styleable::TextAppearance_textColor) : nullptr;
     if (colors) {
         mTextColors = colors;
     } else {
@@ -140,7 +138,7 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
         mTextColors = getTextColors();
     }
 
-    int ts = ta ? ta->getDimensionPixelSize(ST::textSize, 0) : 0;
+    int ts = ta ? ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 0) : 0;
     if (ts != 0) {
         if (ts != mTextPaint.getTextSize()) {
             mTextPaint.setTextSize(ts);
@@ -148,12 +146,12 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
         }
     }
 
-    int typefaceIndex = ta ? ta->getInt(ST::typeface, -1) : -1;
-    int styleIndex    = ta ? ta->getInt(ST::textStyle, -1) : -1;
+    int typefaceIndex = ta ? ta->getInt(R::styleable::TextAppearance_typeface, -1) : -1;
+    int styleIndex    = ta ? ta->getInt(R::styleable::TextAppearance_textStyle, -1) : -1;
 
     setSwitchTypefaceByIndex(typefaceIndex, styleIndex);
 
-    const bool allCaps = ta && ta->getBoolean(ST::textAllCaps, false);
+    const bool allCaps = ta && ta->getBoolean(R::styleable::TextAppearance_textAllCaps, false);
     if (allCaps) {
         mSwitchTransformationMethod = new AllCapsTransformationMethod(getContext());
         mSwitchTransformationMethod->setLengthChangesAllowed(true);

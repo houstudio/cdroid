@@ -52,7 +52,6 @@ void AnimationScaleListDrawable::inflate(Resources& r, XmlPullParser& parser,con
  * Inflates child elements from XML.
  */
 void AnimationScaleListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& attrs){
-    namespace SXI = styleable::AnimationScaleListDrawableItem;
     auto state = mAnimationScaleListState;
     int type, depth;
     const int innerDepth = parser.getDepth()+1;
@@ -68,8 +67,8 @@ void AnimationScaleListDrawable::inflateChildElements(Resources& r,XmlPullParser
 
         // Either pick up the android:drawable attribute.
         Context* ctx = attrs.getContext();
-        auto ta = r.obtainStyledAttributes(&attrs, styleable::AnimationScaleListDrawableItem::IDS);
-        Drawable* dr = ta ? ta->getDrawable(SXI::drawable) : attrs.getDrawable("drawable");
+        auto ta = r.obtainStyledAttributes(&attrs, R::styleable::AnimationScaleListDrawableItem);
+        Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimationScaleListDrawableItem_drawable) : attrs.getDrawable("drawable");
 
         // Or parse the child element under <item>.
         if (dr == nullptr) {

@@ -77,20 +77,19 @@ void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet&
 }
 void GridLayout::LayoutParams::init(Context* context,const AttributeSet& attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, styleable::GridLayoutLayout::IDS);
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::GridLayoutLayout);
     if (ta) {
-    namespace SGL = styleable::GridLayoutLayout;
 
-    const int gravity = ta->getInt(SGL::layout_gravity, Gravity::NO_GRAVITY);
+    const int gravity = ta->getInt(R::styleable::GridLayoutLayout_layout_gravity, Gravity::NO_GRAVITY);
 
-    const int column = ta->getInt(SGL::layout_column, DEFAULT_COLUMN);
-    const int colSpan = ta->getInt(SGL::layout_columnSpan, DEFAULT_SPAN_SIZE);
-    const float colWeight = ta->getFloat(SGL::layout_columnWeight, Spec::DEFAULT_WEIGHT);
+    const int column = ta->getInt(R::styleable::GridLayoutLayout_layout_column, DEFAULT_COLUMN);
+    const int colSpan = ta->getInt(R::styleable::GridLayoutLayout_layout_columnSpan, DEFAULT_SPAN_SIZE);
+    const float colWeight = ta->getFloat(R::styleable::GridLayoutLayout_layout_columnWeight, Spec::DEFAULT_WEIGHT);
     this->columnSpec = spec(column, colSpan, getAlignment(gravity, true), colWeight);
 
-    const int row = ta->getInt(SGL::layout_row, DEFAULT_ROW);
-    const int rowSpan = ta->getInt(SGL::layout_rowSpan, DEFAULT_SPAN_SIZE);
-    const float rowWeight = ta->getFloat(SGL::layout_rowWeight, Spec::DEFAULT_WEIGHT);
+    const int row = ta->getInt(R::styleable::GridLayoutLayout_layout_row, DEFAULT_ROW);
+    const int rowSpan = ta->getInt(R::styleable::GridLayoutLayout_layout_rowSpan, DEFAULT_SPAN_SIZE);
+    const float rowWeight = ta->getFloat(R::styleable::GridLayoutLayout_layout_rowWeight, Spec::DEFAULT_WEIGHT);
     this->rowSpec = spec(row, rowSpan, getAlignment(gravity, false), rowWeight);
     }
 }
@@ -140,22 +139,21 @@ GridLayout::GridLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     const AttributeSet& attrs = *pAttrs;
     initGridLayout();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(attrs, styleable::GridLayout::IDS, defStyleAttr);
-    namespace SGL = styleable::GridLayout;
+    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::GridLayout, defStyleAttr);
 
-    setOrientation(ta&&ta->hasValue(SGL::orientation) ? ta->getInt(SGL::orientation,DEFAULT_ORIENTATION) : attrs.getInt("orientation",std::unordered_map<std::string,int>{
+    setOrientation(ta&&ta->hasValue(R::styleable::GridLayout_orientation) ? ta->getInt(R::styleable::GridLayout_orientation,DEFAULT_ORIENTATION) : attrs.getInt("orientation",std::unordered_map<std::string,int>{
         {"horizontal",(int)HORIZONTAL},
         {"vertical",(int)VERTICAL}//
     },DEFAULT_ORIENTATION));
-    setRowCount(ta&&ta->hasValue(SGL::rowCount) ? ta->getInt(SGL::rowCount, DEFAULT_COUNT) : attrs.getInt("rowCount", DEFAULT_COUNT));
-    setColumnCount(ta&&ta->hasValue(SGL::columnCount) ? ta->getInt(SGL::columnCount, DEFAULT_COUNT) : attrs.getInt("columnCount", DEFAULT_COUNT));
-    setUseDefaultMargins(ta&&ta->hasValue(SGL::useDefaultMargins) ? ta->getBoolean(SGL::useDefaultMargins, DEFAULT_USE_DEFAULT_MARGINS) : attrs.getBoolean("useDefaultMargins", DEFAULT_USE_DEFAULT_MARGINS));
-    setAlignmentMode(ta&&ta->hasValue(SGL::alignmentMode) ? ta->getInt(SGL::alignmentMode,DEFAULT_ALIGNMENT_MODE) : attrs.getInt("alignmentMode",std::unordered_map<std::string,int>{
+    setRowCount(ta&&ta->hasValue(R::styleable::GridLayout_rowCount) ? ta->getInt(R::styleable::GridLayout_rowCount, DEFAULT_COUNT) : attrs.getInt("rowCount", DEFAULT_COUNT));
+    setColumnCount(ta&&ta->hasValue(R::styleable::GridLayout_columnCount) ? ta->getInt(R::styleable::GridLayout_columnCount, DEFAULT_COUNT) : attrs.getInt("columnCount", DEFAULT_COUNT));
+    setUseDefaultMargins(ta&&ta->hasValue(R::styleable::GridLayout_useDefaultMargins) ? ta->getBoolean(R::styleable::GridLayout_useDefaultMargins, DEFAULT_USE_DEFAULT_MARGINS) : attrs.getBoolean("useDefaultMargins", DEFAULT_USE_DEFAULT_MARGINS));
+    setAlignmentMode(ta&&ta->hasValue(R::styleable::GridLayout_alignmentMode) ? ta->getInt(R::styleable::GridLayout_alignmentMode,DEFAULT_ALIGNMENT_MODE) : attrs.getInt("alignmentMode",std::unordered_map<std::string,int>{
         {"alignBounds",(int)ALIGN_BOUNDS},
         {"alignMargins",(int)ALIGN_MARGINS}//
     },DEFAULT_ALIGNMENT_MODE));
-    setRowOrderPreserved(ta&&ta->hasValue(SGL::rowOrderPreserved) ? ta->getBoolean(SGL::rowOrderPreserved, DEFAULT_ORDER_PRESERVED) : attrs.getBoolean("rowOrderPreserved", DEFAULT_ORDER_PRESERVED));
-    setColumnOrderPreserved(ta&&ta->hasValue(SGL::columnOrderPreserved) ? ta->getBoolean(SGL::columnOrderPreserved, DEFAULT_ORDER_PRESERVED) : attrs.getBoolean("columnOrderPreserved", DEFAULT_ORDER_PRESERVED));
+    setRowOrderPreserved(ta&&ta->hasValue(R::styleable::GridLayout_rowOrderPreserved) ? ta->getBoolean(R::styleable::GridLayout_rowOrderPreserved, DEFAULT_ORDER_PRESERVED) : attrs.getBoolean("rowOrderPreserved", DEFAULT_ORDER_PRESERVED));
+    setColumnOrderPreserved(ta&&ta->hasValue(R::styleable::GridLayout_columnOrderPreserved) ? ta->getBoolean(R::styleable::GridLayout_columnOrderPreserved, DEFAULT_ORDER_PRESERVED) : attrs.getBoolean("columnOrderPreserved", DEFAULT_ORDER_PRESERVED));
 }
 
 GridLayout::~GridLayout(){

@@ -5,1325 +5,962 @@
 #include <cstdint>
 #include <cstddef>
 namespace cdroid {
-namespace fw_attr {
-    namespace AbsListView {
-        constexpr uint32_t listSelector = 0x010100fb;
-        constexpr uint32_t drawSelectorOnTop = 0x010100fc;
-        constexpr uint32_t stackFromBottom = 0x010100fd;
-        constexpr uint32_t scrollingCache = 0x010100fe;
-        constexpr uint32_t textFilterEnabled = 0x010100ff;
-        constexpr uint32_t transcriptMode = 0x01010100;
-        constexpr uint32_t cacheColorHint = 0x01010101;
-        constexpr uint32_t fastScrollEnabled = 0x01010226;
-        constexpr uint32_t fastScrollStyle = 0x010103f7;
-        constexpr uint32_t smoothScrollbar = 0x01010231;
-        constexpr uint32_t choiceMode = 0x0101012b;
-        constexpr uint32_t fastScrollAlwaysVisible = 0x01010335;
-    }
-    namespace AdapterViewAnimator {
-        constexpr uint32_t inAnimation = 0x01010177;
-        constexpr uint32_t outAnimation = 0x01010178;
-        constexpr uint32_t loopViews = 0x01010307;
-        constexpr uint32_t animateFirstView = 0x010102d5;
-    }
-    namespace AdapterViewFlipper {
-        constexpr uint32_t flipInterval = 0x01010179;
-        constexpr uint32_t autoStart = 0x010102b5;
-    }
-    namespace AnalogClock {
-        constexpr uint32_t dial = 0x01010102;
-        constexpr uint32_t hand_hour = 0x01010103;
-        constexpr uint32_t hand_minute = 0x01010104;
-        constexpr uint32_t hand_second = 0x01010623;
-        constexpr uint32_t timeZone = 0x010103cc;
-        constexpr uint32_t dialTint = 0x01010636;
-        constexpr uint32_t dialTintMode = 0x01010637;
-        constexpr uint32_t hand_hourTint = 0x01010638;
-        constexpr uint32_t hand_hourTintMode = 0x01010639;
-        constexpr uint32_t hand_minuteTint = 0x0101063a;
-        constexpr uint32_t hand_minuteTintMode = 0x0101063b;
-        constexpr uint32_t hand_secondTint = 0x0101063c;
-        constexpr uint32_t hand_secondTintMode = 0x0101063d;
-    }
-    namespace CheckedTextView {
-        constexpr uint32_t checked = 0x01010106;
-        constexpr uint32_t checkMark = 0x01010108;
-        constexpr uint32_t checkMarkTint = 0x010104a7;
-        constexpr uint32_t checkMarkTintMode = 0x010104a8;
-    }
-    namespace Chronometer {
-        constexpr uint32_t format = 0x01010105;
-        constexpr uint32_t countDown = 0x0101051b;
-    }
-    namespace CompoundButton {
-        constexpr uint32_t checked = 0x01010106;
-        constexpr uint32_t button = 0x01010107;
-        constexpr uint32_t buttonTint = 0x0101046f;
-        constexpr uint32_t buttonTintMode = 0x01010470;
-    }
-    namespace FrameLayout {
-        constexpr uint32_t measureAllChildren = 0x0101010a;
-    }
-    namespace GridLayout {
-        constexpr uint32_t orientation = 0x010100c4;
-        constexpr uint32_t rowCount = 0x01010375;
-        constexpr uint32_t columnCount = 0x01010377;
-        constexpr uint32_t useDefaultMargins = 0x01010379;
-        constexpr uint32_t alignmentMode = 0x0101037a;
-        constexpr uint32_t rowOrderPreserved = 0x01010376;
-        constexpr uint32_t columnOrderPreserved = 0x01010378;
-    }
-    namespace GridLayoutLayout {
-        constexpr uint32_t layout_row = 0x0101037b;
-        constexpr uint32_t layout_rowSpan = 0x0101037c;
-        constexpr uint32_t layout_rowWeight = 0x01010458;
-        constexpr uint32_t layout_column = 0x0101014c;
-        constexpr uint32_t layout_columnSpan = 0x0101037d;
-        constexpr uint32_t layout_columnWeight = 0x01010459;
-        constexpr uint32_t layout_gravity = 0x010100b3;
-    }
-    namespace GridView {
-        constexpr uint32_t horizontalSpacing = 0x01010114;
-        constexpr uint32_t verticalSpacing = 0x01010115;
-        constexpr uint32_t stretchMode = 0x01010116;
-        constexpr uint32_t columnWidth = 0x01010117;
-        constexpr uint32_t numColumns = 0x01010118;
-        constexpr uint32_t gravity = 0x010100af;
-    }
-    namespace ImageView {
-        constexpr uint32_t src = 0x01010119;
-        constexpr uint32_t scaleType = 0x0101011d;
-        constexpr uint32_t adjustViewBounds = 0x0101011e;
-        constexpr uint32_t maxWidth = 0x0101011f;
-        constexpr uint32_t maxHeight = 0x01010120;
-        constexpr uint32_t tint = 0x01010121;
-        constexpr uint32_t baselineAlignBottom = 0x01010122;
-        constexpr uint32_t cropToPadding = 0x01010123;
-        constexpr uint32_t baseline = 0x0101031c;
-        constexpr uint32_t tintMode = 0x010103fb;
-    }
-    namespace KeyboardView {
-        constexpr uint32_t keyBackground = 0x01010233;
-        constexpr uint32_t keyTextSize = 0x01010234;
-        constexpr uint32_t labelTextSize = 0x01010235;
-        constexpr uint32_t keyTextColor = 0x01010236;
-        constexpr uint32_t keyPreviewLayout = 0x01010237;
-        constexpr uint32_t keyPreviewOffset = 0x01010238;
-        constexpr uint32_t keyPreviewHeight = 0x01010239;
-        constexpr uint32_t verticalCorrection = 0x0101023a;
-        constexpr uint32_t popupLayout = 0x0101023b;
-        constexpr uint32_t shadowColor = 0x01010161;
-        constexpr uint32_t shadowRadius = 0x01010164;
-    }
-    namespace Layout {
-        constexpr uint32_t layout_width = 0x010100f4;
-        constexpr uint32_t layout_height = 0x010100f5;
-    }
-    namespace LinearLayout {
-        constexpr uint32_t orientation = 0x010100c4;
-        constexpr uint32_t gravity = 0x010100af;
-        constexpr uint32_t baselineAligned = 0x01010126;
-        constexpr uint32_t baselineAlignedChildIndex = 0x01010127;
-        constexpr uint32_t weightSum = 0x01010128;
-        constexpr uint32_t measureWithLargestChild = 0x010102d4;
-        constexpr uint32_t divider = 0x01010129;
-        constexpr uint32_t showDividers = 0x01010329;
-        constexpr uint32_t dividerPadding = 0x0101032a;
-    }
-    namespace LinearLayoutLayout {
-        constexpr uint32_t layout_width = 0x010100f4;
-        constexpr uint32_t layout_height = 0x010100f5;
-        constexpr uint32_t layout_weight = 0x01010181;
-        constexpr uint32_t layout_gravity = 0x010100b3;
-    }
-    namespace ListView {
-        constexpr uint32_t entries = 0x010100b2;
-        constexpr uint32_t divider = 0x01010129;
-        constexpr uint32_t dividerHeight = 0x0101012a;
-        constexpr uint32_t headerDividersEnabled = 0x0101022e;
-        constexpr uint32_t footerDividersEnabled = 0x0101022f;
-        constexpr uint32_t overScrollHeader = 0x010102c2;
-        constexpr uint32_t overScrollFooter = 0x010102c3;
-    }
-    namespace MarginLayout {
-        constexpr uint32_t layout_width = 0x010100f4;
-        constexpr uint32_t layout_height = 0x010100f5;
-        constexpr uint32_t layout_margin = 0x010100f6;
-        constexpr uint32_t layout_marginLeft = 0x010100f7;
-        constexpr uint32_t layout_marginTop = 0x010100f8;
-        constexpr uint32_t layout_marginRight = 0x010100f9;
-        constexpr uint32_t layout_marginBottom = 0x010100fa;
-        constexpr uint32_t layout_marginStart = 0x010103b5;
-        constexpr uint32_t layout_marginEnd = 0x010103b6;
-        constexpr uint32_t layout_marginHorizontal = 0x0101053b;
-        constexpr uint32_t layout_marginVertical = 0x0101053c;
-    }
-    namespace NumberPicker {
-        constexpr uint32_t solidColor = 0x0101034a;
-        constexpr uint32_t selectionDividerHeight = 0x01010598;
-        constexpr uint32_t min = 0x01010539;
-        constexpr uint32_t max = 0x01010136;
-        constexpr uint32_t value = 0x01010024;
-        constexpr uint32_t textColor = 0x01010098;
-        constexpr uint32_t textSize = 0x01010095;
-        constexpr uint32_t fontFamily = 0x010103ac;
-        constexpr uint32_t itemBackground = 0x01010130;
-    }
-    namespace ProgressBar {
-        constexpr uint32_t min = 0x01010539;
-        constexpr uint32_t max = 0x01010136;
-        constexpr uint32_t progress = 0x01010137;
-        constexpr uint32_t secondaryProgress = 0x01010138;
-        constexpr uint32_t indeterminate = 0x01010139;
-        constexpr uint32_t indeterminateOnly = 0x0101013a;
-        constexpr uint32_t indeterminateDrawable = 0x0101013b;
-        constexpr uint32_t progressDrawable = 0x0101013c;
-        constexpr uint32_t indeterminateDuration = 0x0101013d;
-        constexpr uint32_t indeterminateBehavior = 0x0101013e;
-        constexpr uint32_t minWidth = 0x0101013f;
-        constexpr uint32_t maxWidth = 0x0101011f;
-        constexpr uint32_t minHeight = 0x01010140;
-        constexpr uint32_t maxHeight = 0x01010120;
-        constexpr uint32_t interpolator = 0x01010141;
-        constexpr uint32_t animationResolution = 0x0101031a;
-        constexpr uint32_t mirrorForRtl = 0x010103ce;
-        constexpr uint32_t progressTint = 0x01010463;
-        constexpr uint32_t progressTintMode = 0x01010464;
-        constexpr uint32_t progressBackgroundTint = 0x01010465;
-        constexpr uint32_t progressBackgroundTintMode = 0x01010466;
-        constexpr uint32_t secondaryProgressTint = 0x01010467;
-        constexpr uint32_t secondaryProgressTintMode = 0x01010468;
-        constexpr uint32_t indeterminateTint = 0x01010469;
-        constexpr uint32_t indeterminateTintMode = 0x0101046a;
-        constexpr uint32_t backgroundTint = 0x0101046b;
-        constexpr uint32_t backgroundTintMode = 0x0101046c;
-    }
-    namespace RadioGroup {
-        constexpr uint32_t checkedButton = 0x01010148;
-        constexpr uint32_t orientation = 0x010100c4;
-    }
-    namespace RatingBar {
-        constexpr uint32_t numStars = 0x01010144;
-        constexpr uint32_t rating = 0x01010145;
-        constexpr uint32_t stepSize = 0x01010146;
-        constexpr uint32_t isIndicator = 0x01010147;
-    }
-    namespace RelativeLayout {
-        constexpr uint32_t gravity = 0x010100af;
-        constexpr uint32_t ignoreGravity = 0x010101ff;
-    }
-    namespace RelativeLayoutLayout {
-        constexpr uint32_t layout_toLeftOf = 0x01010182;
-        constexpr uint32_t layout_toRightOf = 0x01010183;
-        constexpr uint32_t layout_above = 0x01010184;
-        constexpr uint32_t layout_below = 0x01010185;
-        constexpr uint32_t layout_alignBaseline = 0x01010186;
-        constexpr uint32_t layout_alignLeft = 0x01010187;
-        constexpr uint32_t layout_alignTop = 0x01010188;
-        constexpr uint32_t layout_alignRight = 0x01010189;
-        constexpr uint32_t layout_alignBottom = 0x0101018a;
-        constexpr uint32_t layout_alignParentLeft = 0x0101018b;
-        constexpr uint32_t layout_alignParentTop = 0x0101018c;
-        constexpr uint32_t layout_alignParentRight = 0x0101018d;
-        constexpr uint32_t layout_alignParentBottom = 0x0101018e;
-        constexpr uint32_t layout_centerInParent = 0x0101018f;
-        constexpr uint32_t layout_centerHorizontal = 0x01010190;
-        constexpr uint32_t layout_centerVertical = 0x01010191;
-        constexpr uint32_t layout_alignWithParentIfMissing = 0x01010192;
-        constexpr uint32_t layout_toStartOf = 0x010103b7;
-        constexpr uint32_t layout_toEndOf = 0x010103b8;
-        constexpr uint32_t layout_alignStart = 0x010103b9;
-        constexpr uint32_t layout_alignEnd = 0x010103ba;
-        constexpr uint32_t layout_alignParentStart = 0x010103bb;
-        constexpr uint32_t layout_alignParentEnd = 0x010103bc;
-    }
-    namespace ScrollView {
-        constexpr uint32_t fillViewport = 0x0101017a;
-    }
-    namespace SeekBar {
-        constexpr uint32_t thumb = 0x01010142;
-        constexpr uint32_t thumbOffset = 0x01010143;
-        constexpr uint32_t splitTrack = 0x0101044c;
-        constexpr uint32_t thumbTint = 0x01010471;
-        constexpr uint32_t thumbTintMode = 0x01010472;
-        constexpr uint32_t tickMark = 0x0101050a;
-        constexpr uint32_t tickMarkTint = 0x0101050b;
-        constexpr uint32_t tickMarkTintMode = 0x0101050c;
-    }
-    namespace Spinner {
-        constexpr uint32_t prompt = 0x0101017b;
-        constexpr uint32_t spinnerMode = 0x010102f1;
-        constexpr uint32_t dropDownSelector = 0x01010175;
-        constexpr uint32_t popupTheme = 0x010104a9;
-        constexpr uint32_t popupBackground = 0x01010176;
-        constexpr uint32_t popupElevation = 0x0101048c;
-        constexpr uint32_t dropDownWidth = 0x01010262;
-        constexpr uint32_t gravity = 0x010100af;
-    }
-    namespace Switch {
-        constexpr uint32_t thumb = 0x01010142;
-        constexpr uint32_t thumbTint = 0x01010471;
-        constexpr uint32_t thumbTintMode = 0x01010472;
-        constexpr uint32_t track = 0x0101036f;
-        constexpr uint32_t trackTint = 0x010104d9;
-        constexpr uint32_t trackTintMode = 0x010104da;
-        constexpr uint32_t textOn = 0x01010124;
-        constexpr uint32_t textOff = 0x01010125;
-        constexpr uint32_t thumbTextPadding = 0x01010372;
-        constexpr uint32_t switchTextAppearance = 0x0101036e;
-        constexpr uint32_t switchMinWidth = 0x01010370;
-        constexpr uint32_t switchPadding = 0x01010371;
-        constexpr uint32_t splitTrack = 0x0101044c;
-        constexpr uint32_t showText = 0x010104ad;
-    }
-    namespace TabWidget {
-        constexpr uint32_t divider = 0x01010129;
-        constexpr uint32_t tabStripEnabled = 0x010102bd;
-        constexpr uint32_t tabStripLeft = 0x010102bb;
-        constexpr uint32_t tabStripRight = 0x010102bc;
-    }
-    namespace TableRowLayout {
-        constexpr uint32_t layout_column = 0x0101014c;
-        constexpr uint32_t layout_span = 0x0101014d;
-    }
-    namespace TextAppearance {
-        constexpr uint32_t textColor = 0x01010098;
-        constexpr uint32_t textSize = 0x01010095;
-        constexpr uint32_t textStyle = 0x01010097;
-        constexpr uint32_t textFontWeight = 0x01010585;
-        constexpr uint32_t typeface = 0x01010096;
-        constexpr uint32_t fontFamily = 0x010103ac;
-        constexpr uint32_t textLocale = 0x01010592;
-        constexpr uint32_t textColorHighlight = 0x01010099;
-        constexpr uint32_t searchResultHighlightColor = 0x01010682;
-        constexpr uint32_t focusedSearchResultHighlightColor = 0x01010683;
-        constexpr uint32_t textColorHint = 0x0101009a;
-        constexpr uint32_t textColorLink = 0x0101009b;
-        constexpr uint32_t textAllCaps = 0x0101038c;
-        constexpr uint32_t shadowColor = 0x01010161;
-        constexpr uint32_t shadowDx = 0x01010162;
-        constexpr uint32_t shadowDy = 0x01010163;
-        constexpr uint32_t shadowRadius = 0x01010164;
-        constexpr uint32_t elegantTextHeight = 0x0101045d;
-        constexpr uint32_t fallbackLineSpacing = 0x0101057b;
-        constexpr uint32_t letterSpacing = 0x010104b6;
-        constexpr uint32_t fontFeatureSettings = 0x010104b7;
-        constexpr uint32_t fontVariationSettings = 0x01010570;
-        constexpr uint32_t lineBreakStyle = 0x0101066e;
-        constexpr uint32_t lineBreakWordStyle = 0x0101066f;
-    }
-    namespace TextClock {
-        constexpr uint32_t format12Hour = 0x010103ca;
-        constexpr uint32_t format24Hour = 0x010103cb;
-        constexpr uint32_t timeZone = 0x010103cc;
-    }
-    namespace TextView {
-        constexpr uint32_t bufferType = 0x0101014e;
-        constexpr uint32_t text = 0x0101014f;
-        constexpr uint32_t hint = 0x01010150;
-        constexpr uint32_t textColor = 0x01010098;
-        constexpr uint32_t textColorHighlight = 0x01010099;
-        constexpr uint32_t searchResultHighlightColor = 0x01010682;
-        constexpr uint32_t focusedSearchResultHighlightColor = 0x01010683;
-        constexpr uint32_t textColorHint = 0x0101009a;
-        constexpr uint32_t textAppearance = 0x01010034;
-        constexpr uint32_t textSize = 0x01010095;
-        constexpr uint32_t textScaleX = 0x01010151;
-        constexpr uint32_t typeface = 0x01010096;
-        constexpr uint32_t textStyle = 0x01010097;
-        constexpr uint32_t textFontWeight = 0x01010585;
-        constexpr uint32_t fontFamily = 0x010103ac;
-        constexpr uint32_t textLocale = 0x01010592;
-        constexpr uint32_t textColorLink = 0x0101009b;
-        constexpr uint32_t cursorVisible = 0x01010152;
-        constexpr uint32_t maxLines = 0x01010153;
-        constexpr uint32_t maxHeight = 0x01010120;
-        constexpr uint32_t lines = 0x01010154;
-        constexpr uint32_t height = 0x01010155;
-        constexpr uint32_t minLines = 0x01010156;
-        constexpr uint32_t minHeight = 0x01010140;
-        constexpr uint32_t maxEms = 0x01010157;
-        constexpr uint32_t maxWidth = 0x0101011f;
-        constexpr uint32_t ems = 0x01010158;
-        constexpr uint32_t width = 0x01010159;
-        constexpr uint32_t minEms = 0x0101015a;
-        constexpr uint32_t minWidth = 0x0101013f;
-        constexpr uint32_t gravity = 0x010100af;
-        constexpr uint32_t scrollHorizontally = 0x0101015b;
-        constexpr uint32_t password = 0x0101015c;
-        constexpr uint32_t singleLine = 0x0101015d;
-        constexpr uint32_t enabled = 0x0101000e;
-        constexpr uint32_t selectAllOnFocus = 0x0101015e;
-        constexpr uint32_t includeFontPadding = 0x0101015f;
-        constexpr uint32_t maxLength = 0x01010160;
-        constexpr uint32_t shadowColor = 0x01010161;
-        constexpr uint32_t shadowDx = 0x01010162;
-        constexpr uint32_t shadowDy = 0x01010163;
-        constexpr uint32_t shadowRadius = 0x01010164;
-        constexpr uint32_t autoLink = 0x010100b0;
-        constexpr uint32_t linksClickable = 0x010100b1;
-        constexpr uint32_t numeric = 0x01010165;
-        constexpr uint32_t digits = 0x01010166;
-        constexpr uint32_t phoneNumber = 0x01010167;
-        constexpr uint32_t inputMethod = 0x01010168;
-        constexpr uint32_t capitalize = 0x01010169;
-        constexpr uint32_t autoText = 0x0101016a;
-        constexpr uint32_t editable = 0x0101016b;
-        constexpr uint32_t freezesText = 0x0101016c;
-        constexpr uint32_t ellipsize = 0x010100ab;
-        constexpr uint32_t drawableTop = 0x0101016d;
-        constexpr uint32_t drawableBottom = 0x0101016e;
-        constexpr uint32_t drawableLeft = 0x0101016f;
-        constexpr uint32_t drawableRight = 0x01010170;
-        constexpr uint32_t drawableStart = 0x01010392;
-        constexpr uint32_t drawableEnd = 0x01010393;
-        constexpr uint32_t drawablePadding = 0x01010171;
-        constexpr uint32_t drawableTint = 0x010104d6;
-        constexpr uint32_t drawableTintMode = 0x010104d7;
-        constexpr uint32_t lineSpacingExtra = 0x01010217;
-        constexpr uint32_t lineSpacingMultiplier = 0x01010218;
-        constexpr uint32_t lineHeight = 0x0101057f;
-        constexpr uint32_t firstBaselineToTopHeight = 0x0101057d;
-        constexpr uint32_t lastBaselineToBottomHeight = 0x0101057e;
-        constexpr uint32_t marqueeRepeatLimit = 0x0101021d;
-        constexpr uint32_t inputType = 0x01010220;
-        constexpr uint32_t allowUndo = 0x010104df;
-        constexpr uint32_t imeOptions = 0x01010264;
-        constexpr uint32_t privateImeOptions = 0x01010223;
-        constexpr uint32_t imeActionLabel = 0x01010265;
-        constexpr uint32_t imeActionId = 0x01010266;
-        constexpr uint32_t editorExtras = 0x01010224;
-        constexpr uint32_t textSelectHandleLeft = 0x010102c5;
-        constexpr uint32_t textSelectHandleRight = 0x010102c6;
-        constexpr uint32_t textSelectHandle = 0x010102c7;
-        constexpr uint32_t textEditPasteWindowLayout = 0x01010314;
-        constexpr uint32_t textEditNoPasteWindowLayout = 0x01010315;
-        constexpr uint32_t textEditSidePasteWindowLayout = 0x0101035e;
-        constexpr uint32_t textEditSideNoPasteWindowLayout = 0x0101035f;
-        constexpr uint32_t textEditSuggestionItemLayout = 0x01010374;
-        constexpr uint32_t textEditSuggestionContainerLayout = 0x01120109;
-        constexpr uint32_t textEditSuggestionHighlightStyle = 0x0112010a;
-        constexpr uint32_t textCursorDrawable = 0x01010362;
-        constexpr uint32_t textIsSelectable = 0x01010316;
-        constexpr uint32_t textAllCaps = 0x0101038c;
-        constexpr uint32_t elegantTextHeight = 0x0101045d;
-        constexpr uint32_t fallbackLineSpacing = 0x0101057b;
-        constexpr uint32_t letterSpacing = 0x010104b6;
-        constexpr uint32_t fontFeatureSettings = 0x010104b7;
-        constexpr uint32_t fontVariationSettings = 0x01010570;
-        constexpr uint32_t breakStrategy = 0x010104dd;
-        constexpr uint32_t hyphenationFrequency = 0x010104de;
-        constexpr uint32_t lineBreakStyle = 0x0101066e;
-        constexpr uint32_t lineBreakWordStyle = 0x0101066f;
-        constexpr uint32_t autoSizeTextType = 0x01010535;
-        constexpr uint32_t autoSizeStepGranularity = 0x01010536;
-        constexpr uint32_t autoSizePresetSizes = 0x01010537;
-        constexpr uint32_t autoSizeMinTextSize = 0x01010538;
-        constexpr uint32_t autoSizeMaxTextSize = 0x01010546;
-        constexpr uint32_t justificationMode = 0x01010567;
-        constexpr uint32_t useBoundsForWidth = 0x01010698;
-        constexpr uint32_t shiftDrawingOffsetForStartOverhang = 0x010106a2;
-        constexpr uint32_t useLocalePreferredLineHeightForMinimum = 0x0101069d;
-    }
-    namespace ToggleButton {
-        constexpr uint32_t textOn = 0x01010124;
-        constexpr uint32_t textOff = 0x01010125;
-        constexpr uint32_t disabledAlpha = 0x01010033;
-    }
-    namespace Toolbar {
-        constexpr uint32_t titleTextAppearance = 0x0101042e;
-        constexpr uint32_t subtitleTextAppearance = 0x0101042f;
-        constexpr uint32_t title = 0x010101e1;
-        constexpr uint32_t subtitle = 0x010102d1;
-        constexpr uint32_t gravity = 0x010100af;
-        constexpr uint32_t titleMargin = 0x010104f8;
-        constexpr uint32_t titleMarginStart = 0x010104f9;
-        constexpr uint32_t titleMarginEnd = 0x010104fa;
-        constexpr uint32_t titleMarginTop = 0x010104fb;
-        constexpr uint32_t titleMarginBottom = 0x010104fc;
-        constexpr uint32_t contentInsetStart = 0x01010453;
-        constexpr uint32_t contentInsetEnd = 0x01010454;
-        constexpr uint32_t contentInsetLeft = 0x01010455;
-        constexpr uint32_t contentInsetRight = 0x01010456;
-        constexpr uint32_t contentInsetStartWithNavigation = 0x01010522;
-        constexpr uint32_t contentInsetEndWithActions = 0x01010523;
-        constexpr uint32_t maxButtonHeight = 0x010104fd;
-        constexpr uint32_t buttonGravity = 0x010104fe;
-        constexpr uint32_t collapseIcon = 0x010104ff;
-        constexpr uint32_t collapseContentDescription = 0x010104d0;
-        constexpr uint32_t popupTheme = 0x010104a9;
-        constexpr uint32_t navigationIcon = 0x010104c0;
-        constexpr uint32_t navigationContentDescription = 0x010104c1;
-        constexpr uint32_t logo = 0x010102be;
-        constexpr uint32_t logoDescription = 0x010104e9;
-        constexpr uint32_t titleTextColor = 0x010104e3;
-        constexpr uint32_t subtitleTextColor = 0x010104e4;
-    }
-    namespace View {
-        constexpr uint32_t id = 0x010100d0;
-        constexpr uint32_t tag = 0x010100d1;
-        constexpr uint32_t scrollX = 0x010100d2;
-        constexpr uint32_t scrollY = 0x010100d3;
-        constexpr uint32_t background = 0x010100d4;
-        constexpr uint32_t padding = 0x010100d5;
-        constexpr uint32_t paddingHorizontal = 0x0101053d;
-        constexpr uint32_t paddingVertical = 0x0101053e;
-        constexpr uint32_t paddingLeft = 0x010100d6;
-        constexpr uint32_t paddingTop = 0x010100d7;
-        constexpr uint32_t paddingRight = 0x010100d8;
-        constexpr uint32_t paddingBottom = 0x010100d9;
-        constexpr uint32_t paddingStart = 0x010103b3;
-        constexpr uint32_t paddingEnd = 0x010103b4;
-        constexpr uint32_t focusable = 0x010100da;
-        constexpr uint32_t autofillHints = 0x01010556;
-        constexpr uint32_t importantForAutofill = 0x01010558;
-        constexpr uint32_t importantForContentCapture = 0x01010607;
-        constexpr uint32_t isCredential = 0x01010681;
-        constexpr uint32_t focusableInTouchMode = 0x010100db;
-        constexpr uint32_t visibility = 0x010100dc;
-        constexpr uint32_t fitsSystemWindows = 0x010100dd;
-        constexpr uint32_t scrollbars = 0x010100de;
-        constexpr uint32_t scrollbarStyle = 0x0101007f;
-        constexpr uint32_t isScrollContainer = 0x0101024e;
-        constexpr uint32_t fadeScrollbars = 0x010102aa;
-        constexpr uint32_t scrollbarFadeDuration = 0x010102a8;
-        constexpr uint32_t scrollbarDefaultDelayBeforeFade = 0x010102a9;
-        constexpr uint32_t scrollbarSize = 0x01010063;
-        constexpr uint32_t scrollbarThumbHorizontal = 0x01010064;
-        constexpr uint32_t scrollbarThumbVertical = 0x01010065;
-        constexpr uint32_t scrollbarTrackHorizontal = 0x01010066;
-        constexpr uint32_t scrollbarTrackVertical = 0x01010067;
-        constexpr uint32_t scrollbarAlwaysDrawHorizontalTrack = 0x01010068;
-        constexpr uint32_t scrollbarAlwaysDrawVerticalTrack = 0x01010069;
-        constexpr uint32_t fadingEdge = 0x010100df;
-        constexpr uint32_t requiresFadingEdge = 0x010103a5;
-        constexpr uint32_t fadingEdgeLength = 0x010100e0;
-        constexpr uint32_t nextFocusLeft = 0x010100e1;
-        constexpr uint32_t nextFocusRight = 0x010100e2;
-        constexpr uint32_t nextFocusUp = 0x010100e3;
-        constexpr uint32_t nextFocusDown = 0x010100e4;
-        constexpr uint32_t nextFocusForward = 0x0101033c;
-        constexpr uint32_t clickable = 0x010100e5;
-        constexpr uint32_t longClickable = 0x010100e6;
-        constexpr uint32_t contextClickable = 0x010104e7;
-        constexpr uint32_t saveEnabled = 0x010100e7;
-        constexpr uint32_t filterTouchesWhenObscured = 0x010102c4;
-        constexpr uint32_t drawingCacheQuality = 0x010100e8;
-        constexpr uint32_t keepScreenOn = 0x01010216;
-        constexpr uint32_t duplicateParentState = 0x010100e9;
-        constexpr uint32_t minHeight = 0x01010140;
-        constexpr uint32_t minWidth = 0x0101013f;
-        constexpr uint32_t soundEffectsEnabled = 0x01010215;
-        constexpr uint32_t hapticFeedbackEnabled = 0x0101025e;
-        constexpr uint32_t contentDescription = 0x01010273;
-        constexpr uint32_t supplementalDescription = 0x010106a8;
-        constexpr uint32_t accessibilityTraversalBefore = 0x010104d1;
-        constexpr uint32_t accessibilityTraversalAfter = 0x010104d2;
-        constexpr uint32_t onClick = 0x0101026f;
-        constexpr uint32_t overScrollMode = 0x010102c1;
-        constexpr uint32_t alpha = 0x0101031f;
-        constexpr uint32_t elevation = 0x01010440;
-        constexpr uint32_t translationX = 0x01010322;
-        constexpr uint32_t translationY = 0x01010323;
-        constexpr uint32_t translationZ = 0x010103fa;
-        constexpr uint32_t transformPivotX = 0x01010320;
-        constexpr uint32_t transformPivotY = 0x01010321;
-        constexpr uint32_t rotation = 0x01010326;
-        constexpr uint32_t rotationX = 0x01010327;
-        constexpr uint32_t rotationY = 0x01010328;
-        constexpr uint32_t scaleX = 0x01010324;
-        constexpr uint32_t scaleY = 0x01010325;
-        constexpr uint32_t verticalScrollbarPosition = 0x01010334;
-        constexpr uint32_t layerType = 0x01010354;
-        constexpr uint32_t layoutDirection = 0x010103b2;
-        constexpr uint32_t textDirection = 0x010103b0;
-        constexpr uint32_t textAlignment = 0x010103b1;
-        constexpr uint32_t importantForAccessibility = 0x010103aa;
-        constexpr uint32_t accessibilityDataSensitive = 0x01010677;
-        constexpr uint32_t accessibilityLiveRegion = 0x010103ee;
-        constexpr uint32_t labelFor = 0x010103c6;
-        constexpr uint32_t theme = 0x01010000;
-        constexpr uint32_t transitionName = 0x01010400;
-        constexpr uint32_t nestedScrollingEnabled = 0x01010436;
-        constexpr uint32_t stateListAnimator = 0x01010448;
-        constexpr uint32_t backgroundTint = 0x0101046b;
-        constexpr uint32_t backgroundTintMode = 0x0101046c;
-        constexpr uint32_t outlineProvider = 0x010104b8;
-        constexpr uint32_t foreground = 0x01010109;
-        constexpr uint32_t foregroundGravity = 0x01010200;
-        constexpr uint32_t foregroundTint = 0x0101046d;
-        constexpr uint32_t foregroundTintMode = 0x0101046e;
-        constexpr uint32_t scrollIndicators = 0x010104e6;
-        constexpr uint32_t pointerIcon = 0x01010509;
-        constexpr uint32_t forceHasOverlappingRendering = 0x01010521;
-        constexpr uint32_t tooltipText = 0x01010534;
-        constexpr uint32_t keyboardNavigationCluster = 0x01010540;
-        constexpr uint32_t nextClusterForward = 0x01010542;
-        constexpr uint32_t focusedByDefault = 0x01010544;
-        constexpr uint32_t defaultFocusHighlightEnabled = 0x01010562;
-        constexpr uint32_t screenReaderFocusable = 0x01010574;
-        constexpr uint32_t accessibilityPaneTitle = 0x0101057c;
-        constexpr uint32_t accessibilityHeading = 0x01010580;
-        constexpr uint32_t allowClickWhenDisabled = 0x01010618;
-        constexpr uint32_t outlineSpotShadowColor = 0x01010581;
-        constexpr uint32_t outlineAmbientShadowColor = 0x01010582;
-        constexpr uint32_t forceDarkAllowed = 0x0101058c;
-        constexpr uint32_t clipToOutline = 0x01010628;
-        constexpr uint32_t preferKeepClear = 0x0101065d;
-        constexpr uint32_t autoHandwritingEnabled = 0x0101065e;
-        constexpr uint32_t handwritingBoundsOffsetLeft = 0x01010673;
-        constexpr uint32_t handwritingBoundsOffsetTop = 0x01010674;
-        constexpr uint32_t handwritingBoundsOffsetRight = 0x01010675;
-        constexpr uint32_t handwritingBoundsOffsetBottom = 0x01010676;
-        constexpr uint32_t contentSensitivity = 0x0101069e;
-    }
-    namespace ViewGroup {
-        constexpr uint32_t animateLayoutChanges = 0x010102f2;
-        constexpr uint32_t clipChildren = 0x010100ea;
-        constexpr uint32_t clipToPadding = 0x010100eb;
-        constexpr uint32_t layoutAnimation = 0x010100ec;
-        constexpr uint32_t animationCache = 0x010100ed;
-        constexpr uint32_t persistentDrawingCache = 0x010100ee;
-        constexpr uint32_t alwaysDrawnWithCache = 0x010100ef;
-        constexpr uint32_t addStatesFromChildren = 0x010100f0;
-        constexpr uint32_t descendantFocusability = 0x010100f1;
-        constexpr uint32_t touchscreenBlocksFocus = 0x0101048f;
-        constexpr uint32_t splitMotionEvents = 0x010102ef;
-        constexpr uint32_t layoutMode = 0x010103da;
-        constexpr uint32_t transitionGroup = 0x01010401;
-    }
-    namespace AdaptiveIconDrawableLayer {
-        constexpr uint32_t drawable = 0x01010199;
-    }
-    namespace AnimatedImageDrawable {
-        constexpr uint32_t src = 0x01010119;
-        constexpr uint32_t autoMirrored = 0x010103ea;
-        constexpr uint32_t repeatCount = 0x010101bf;
-        constexpr uint32_t autoStart = 0x010102b5;
-    }
-    namespace AnimatedRotateDrawable {
-        constexpr uint32_t visible = 0x01010194;
-        constexpr uint32_t pivotX = 0x010101b5;
-        constexpr uint32_t pivotY = 0x010101b6;
-        constexpr uint32_t drawable = 0x01010199;
-    }
-    namespace AnimatedStateListDrawable {
-        constexpr uint32_t visible = 0x01010194;
-        constexpr uint32_t variablePadding = 0x01010195;
-        constexpr uint32_t constantSize = 0x01010196;
-        constexpr uint32_t dither = 0x0101011c;
-        constexpr uint32_t enterFadeDuration = 0x0101030c;
-        constexpr uint32_t exitFadeDuration = 0x0101030d;
-        constexpr uint32_t autoMirrored = 0x010103ea;
-    }
-    namespace AnimatedStateListDrawableItem {
-        constexpr uint32_t drawable = 0x01010199;
-        constexpr uint32_t id = 0x010100d0;
-    }
-    namespace AnimatedStateListDrawableTransition {
-        constexpr uint32_t fromId = 0x0101044a;
-        constexpr uint32_t toId = 0x01010449;
-        constexpr uint32_t drawable = 0x01010199;
-        constexpr uint32_t reversible = 0x0101044b;
-    }
-    namespace AnimatedVectorDrawable {
-        constexpr uint32_t drawable = 0x01010199;
-    }
-    namespace AnimatedVectorDrawableTarget {
-        constexpr uint32_t name = 0x01010003;
-        constexpr uint32_t animation = 0x010101cd;
-    }
-    namespace AnimationDrawable {
-        constexpr uint32_t visible = 0x01010194;
-        constexpr uint32_t variablePadding = 0x01010195;
-        constexpr uint32_t oneshot = 0x01010197;
-    }
-    namespace AnimationDrawableItem {
-        constexpr uint32_t duration = 0x01010198;
-        constexpr uint32_t drawable = 0x01010199;
-    }
-    namespace AnimationScaleListDrawable {
-    }
-    namespace AnimationScaleListDrawableItem {
-        constexpr uint32_t drawable = 0x01010199;
-    }
-    namespace BitmapDrawable {
-        constexpr uint32_t src = 0x01010119;
-        constexpr uint32_t antialias = 0x0101011a;
-        constexpr uint32_t filter = 0x0101011b;
-        constexpr uint32_t dither = 0x0101011c;
-        constexpr uint32_t gravity = 0x010100af;
-        constexpr uint32_t tileMode = 0x01010201;
-        constexpr uint32_t tileModeX = 0x01010477;
-        constexpr uint32_t tileModeY = 0x01010478;
-        constexpr uint32_t mipMap = 0x010103cd;
-        constexpr uint32_t autoMirrored = 0x010103ea;
-        constexpr uint32_t tint = 0x01010121;
-        constexpr uint32_t tintMode = 0x010103fb;
-        constexpr uint32_t alpha = 0x0101031f;
-    }
-    namespace ClipDrawable {
-        constexpr uint32_t clipOrientation = 0x0101020a;
-        constexpr uint32_t gravity = 0x010100af;
-        constexpr uint32_t drawable = 0x01010199;
-    }
-    namespace ColorDrawable {
-        constexpr uint32_t color = 0x010101a5;
-    }
-    namespace ColorStateListItem {
-        constexpr uint32_t color = 0x010101a5;
-        constexpr uint32_t alpha = 0x0101031f;
-        constexpr uint32_t lStar = 0x01010647;
-    }
-    namespace Drawable {
-        constexpr uint32_t visible = 0x01010194;
-        constexpr uint32_t autoMirrored = 0x010103ea;
-    }
-    namespace DrawableCorners {
-        constexpr uint32_t radius = 0x010101a8;
-        constexpr uint32_t topLeftRadius = 0x010101a9;
-        constexpr uint32_t topRightRadius = 0x010101aa;
-        constexpr uint32_t bottomLeftRadius = 0x010101ab;
-        constexpr uint32_t bottomRightRadius = 0x010101ac;
-    }
-    namespace DrawableWrapper {
-        constexpr uint32_t drawable = 0x01010199;
-    }
-    namespace GradientDrawable {
-        constexpr uint32_t visible = 0x01010194;
-        constexpr uint32_t dither = 0x0101011c;
-        constexpr uint32_t shape = 0x0101019a;
-        constexpr uint32_t innerRadiusRatio = 0x0101019b;
-        constexpr uint32_t thicknessRatio = 0x0101019c;
-        constexpr uint32_t innerRadius = 0x0101025f;
-        constexpr uint32_t thickness = 0x01010260;
-        constexpr uint32_t useLevel = 0x0101019f;
-        constexpr uint32_t tint = 0x01010121;
-        constexpr uint32_t tintMode = 0x010103fb;
-        constexpr uint32_t opticalInsetLeft = 0x01010588;
-        constexpr uint32_t opticalInsetTop = 0x01010589;
-        constexpr uint32_t opticalInsetRight = 0x0101058a;
-        constexpr uint32_t opticalInsetBottom = 0x0101058b;
-    }
-    namespace GradientDrawableGradient {
-        constexpr uint32_t startColor = 0x0101019d;
-        constexpr uint32_t centerColor = 0x0101020b;
-        constexpr uint32_t endColor = 0x0101019e;
-        constexpr uint32_t useLevel = 0x0101019f;
-        constexpr uint32_t angle = 0x010101a0;
-        constexpr uint32_t type = 0x010101a1;
-        constexpr uint32_t centerX = 0x010101a2;
-        constexpr uint32_t centerY = 0x010101a3;
-        constexpr uint32_t gradientRadius = 0x010101a4;
-    }
-    namespace GradientDrawablePadding {
-        constexpr uint32_t left = 0x010101ad;
-        constexpr uint32_t top = 0x010101ae;
-        constexpr uint32_t right = 0x010101af;
-        constexpr uint32_t bottom = 0x010101b0;
-    }
-    namespace GradientDrawableSize {
-        constexpr uint32_t width = 0x01010159;
-        constexpr uint32_t height = 0x01010155;
-    }
-    namespace GradientDrawableSolid {
-        constexpr uint32_t color = 0x010101a5;
-    }
-    namespace GradientDrawableStroke {
-        constexpr uint32_t width = 0x01010159;
-        constexpr uint32_t color = 0x010101a5;
-        constexpr uint32_t dashWidth = 0x010101a6;
-        constexpr uint32_t dashGap = 0x010101a7;
-    }
-    namespace InsetDrawable {
-        constexpr uint32_t visible = 0x01010194;
-        constexpr uint32_t drawable = 0x01010199;
-        constexpr uint32_t inset = 0x010104b5;
-        constexpr uint32_t insetLeft = 0x010101b7;
-        constexpr uint32_t insetRight = 0x010101b8;
-        constexpr uint32_t insetTop = 0x010101b9;
-        constexpr uint32_t insetBottom = 0x010101ba;
-    }
-    namespace LayerDrawable {
-        constexpr uint32_t opacity = 0x0101031e;
-        constexpr uint32_t autoMirrored = 0x010103ea;
-        constexpr uint32_t paddingMode = 0x01010457;
-        constexpr uint32_t paddingTop = 0x010100d7;
-        constexpr uint32_t paddingBottom = 0x010100d9;
-        constexpr uint32_t paddingLeft = 0x010100d6;
-        constexpr uint32_t paddingRight = 0x010100d8;
-        constexpr uint32_t paddingStart = 0x010103b3;
-        constexpr uint32_t paddingEnd = 0x010103b4;
-    }
-    namespace LayerDrawableItem {
-        constexpr uint32_t left = 0x010101ad;
-        constexpr uint32_t top = 0x010101ae;
-        constexpr uint32_t right = 0x010101af;
-        constexpr uint32_t bottom = 0x010101b0;
-        constexpr uint32_t start = 0x010104db;
-        constexpr uint32_t end = 0x010104dc;
-        constexpr uint32_t width = 0x01010159;
-        constexpr uint32_t height = 0x01010155;
-        constexpr uint32_t gravity = 0x010100af;
-        constexpr uint32_t drawable = 0x01010199;
-        constexpr uint32_t id = 0x010100d0;
-    }
-    namespace LevelListDrawableItem {
-        constexpr uint32_t minLevel = 0x010101b1;
-        constexpr uint32_t maxLevel = 0x010101b2;
-        constexpr uint32_t drawable = 0x01010199;
-    }
-    namespace MaterialProgressDrawable {
-        constexpr uint32_t visible = 0x01010194;
-        constexpr uint32_t thickness = 0x01010260;
-        constexpr uint32_t innerRadius = 0x0101025f;
-        constexpr uint32_t width = 0x01010159;
-        constexpr uint32_t height = 0x01010155;
-        constexpr uint32_t color = 0x010101a5;
-    }
-    namespace NinePatchDrawable {
-        constexpr uint32_t src = 0x01010119;
-        constexpr uint32_t dither = 0x0101011c;
-        constexpr uint32_t autoMirrored = 0x010103ea;
-        constexpr uint32_t tint = 0x01010121;
-        constexpr uint32_t tintMode = 0x010103fb;
-        constexpr uint32_t alpha = 0x0101031f;
-    }
-    namespace RippleDrawable {
-        constexpr uint32_t color = 0x010101a5;
-        constexpr uint32_t radius = 0x010101a8;
-        constexpr uint32_t effectColor = 0x01010649;
-    }
-    namespace RotateDrawable {
-        constexpr uint32_t visible = 0x01010194;
-        constexpr uint32_t fromDegrees = 0x010101b3;
-        constexpr uint32_t toDegrees = 0x010101b4;
-        constexpr uint32_t pivotX = 0x010101b5;
-        constexpr uint32_t pivotY = 0x010101b6;
-        constexpr uint32_t drawable = 0x01010199;
-    }
-    namespace ScaleDrawable {
-        constexpr uint32_t scaleWidth = 0x010101fc;
-        constexpr uint32_t scaleHeight = 0x010101fd;
-        constexpr uint32_t scaleGravity = 0x010101fe;
-        constexpr uint32_t level = 0x01010500;
-        constexpr uint32_t drawable = 0x01010199;
-        constexpr uint32_t useIntrinsicSizeAsMinimum = 0x01010310;
-    }
-    namespace ShapeDrawable {
-        constexpr uint32_t color = 0x010101a5;
-        constexpr uint32_t width = 0x01010159;
-        constexpr uint32_t height = 0x01010155;
-        constexpr uint32_t dither = 0x0101011c;
-        constexpr uint32_t tint = 0x01010121;
-        constexpr uint32_t tintMode = 0x010103fb;
-    }
-    namespace ShapeDrawablePadding {
-        constexpr uint32_t left = 0x010101ad;
-        constexpr uint32_t top = 0x010101ae;
-        constexpr uint32_t right = 0x010101af;
-        constexpr uint32_t bottom = 0x010101b0;
-    }
-    namespace StateListDrawable {
-        constexpr uint32_t visible = 0x01010194;
-        constexpr uint32_t variablePadding = 0x01010195;
-        constexpr uint32_t constantSize = 0x01010196;
-        constexpr uint32_t dither = 0x0101011c;
-        constexpr uint32_t enterFadeDuration = 0x0101030c;
-        constexpr uint32_t exitFadeDuration = 0x0101030d;
-        constexpr uint32_t autoMirrored = 0x010103ea;
-    }
-    namespace StateListDrawableItem {
-        constexpr uint32_t drawable = 0x01010199;
-    }
-    namespace VectorDrawable {
-        constexpr uint32_t tint = 0x01010121;
-        constexpr uint32_t tintMode = 0x010103fb;
-        constexpr uint32_t autoMirrored = 0x010103ea;
-        constexpr uint32_t width = 0x01010159;
-        constexpr uint32_t height = 0x01010155;
-        constexpr uint32_t viewportWidth = 0x01010402;
-        constexpr uint32_t viewportHeight = 0x01010403;
-        constexpr uint32_t name = 0x01010003;
-        constexpr uint32_t alpha = 0x0101031f;
-        constexpr uint32_t opticalInsetLeft = 0x01010588;
-        constexpr uint32_t opticalInsetTop = 0x01010589;
-        constexpr uint32_t opticalInsetRight = 0x0101058a;
-        constexpr uint32_t opticalInsetBottom = 0x0101058b;
-    }
-    namespace VectorDrawableClipPath {
-        constexpr uint32_t name = 0x01010003;
-        constexpr uint32_t pathData = 0x01010405;
-    }
-    namespace VectorDrawableGroup {
-        constexpr uint32_t name = 0x01010003;
-        constexpr uint32_t rotation = 0x01010326;
-        constexpr uint32_t pivotX = 0x010101b5;
-        constexpr uint32_t pivotY = 0x010101b6;
-        constexpr uint32_t translateX = 0x0101045a;
-        constexpr uint32_t translateY = 0x0101045b;
-        constexpr uint32_t scaleX = 0x01010324;
-        constexpr uint32_t scaleY = 0x01010325;
-    }
-    namespace VectorDrawablePath {
-        constexpr uint32_t name = 0x01010003;
-        constexpr uint32_t strokeWidth = 0x01010407;
-        constexpr uint32_t strokeColor = 0x01010406;
-        constexpr uint32_t strokeAlpha = 0x010104cb;
-        constexpr uint32_t fillColor = 0x01010404;
-        constexpr uint32_t fillAlpha = 0x010104cc;
-        constexpr uint32_t pathData = 0x01010405;
-        constexpr uint32_t trimPathStart = 0x01010408;
-        constexpr uint32_t trimPathEnd = 0x01010409;
-        constexpr uint32_t trimPathOffset = 0x0101040a;
-        constexpr uint32_t strokeLineCap = 0x0101040b;
-        constexpr uint32_t strokeLineJoin = 0x0101040c;
-        constexpr uint32_t strokeMiterLimit = 0x0101040d;
-        constexpr uint32_t fillType = 0x0101051e;
-    }
-} // namespace fw_attr
+namespace R { namespace styleable {
+    // AbsListView (12 attrs)
+    extern const uint32_t AbsListView[];
+    constexpr int AbsListView_listSelector = 0;
+    constexpr int AbsListView_drawSelectorOnTop = 1;
+    constexpr int AbsListView_stackFromBottom = 2;
+    constexpr int AbsListView_scrollingCache = 3;
+    constexpr int AbsListView_textFilterEnabled = 4;
+    constexpr int AbsListView_transcriptMode = 5;
+    constexpr int AbsListView_cacheColorHint = 6;
+    constexpr int AbsListView_fastScrollEnabled = 7;
+    constexpr int AbsListView_fastScrollStyle = 8;
+    constexpr int AbsListView_smoothScrollbar = 9;
+    constexpr int AbsListView_choiceMode = 10;
+    constexpr int AbsListView_fastScrollAlwaysVisible = 11;
 
-namespace styleable {
-    namespace AbsListView {
-        enum {
-            listSelector, drawSelectorOnTop, stackFromBottom, scrollingCache, textFilterEnabled,
-            transcriptMode, cacheColorHint, fastScrollEnabled, fastScrollStyle, smoothScrollbar,
-            choiceMode, fastScrollAlwaysVisible };
-        extern const uint32_t IDS[];
-    }
-    namespace AdapterViewAnimator {
-        enum { inAnimation, outAnimation, loopViews, animateFirstView };
-        extern const uint32_t IDS[];
-    }
-    namespace AdapterViewFlipper {
-        enum { flipInterval, autoStart };
-        extern const uint32_t IDS[];
-    }
-    namespace AnalogClock {
-        enum {
-            dial, hand_hour, hand_minute, hand_second, timeZone, dialTint, dialTintMode,
-            hand_hourTint, hand_hourTintMode, hand_minuteTint, hand_minuteTintMode, hand_secondTint,
-            hand_secondTintMode };
-        extern const uint32_t IDS[];
-    }
-    namespace CheckedTextView {
-        enum { checked, checkMark, checkMarkTint, checkMarkTintMode };
-        extern const uint32_t IDS[];
-    }
-    namespace Chronometer {
-        enum { format, countDown };
-        extern const uint32_t IDS[];
-    }
-    namespace CompoundButton {
-        enum { checked, button, buttonTint, buttonTintMode };
-        extern const uint32_t IDS[];
-    }
-    namespace FrameLayout {
-        enum { measureAllChildren };
-        extern const uint32_t IDS[];
-    }
-    namespace GridLayout {
-        enum {
-            orientation, rowCount, columnCount, useDefaultMargins, alignmentMode, rowOrderPreserved,
-            columnOrderPreserved };
-        extern const uint32_t IDS[];
-    }
-    namespace GridLayoutLayout {
-        enum {
-            layout_row, layout_rowSpan, layout_rowWeight, layout_column, layout_columnSpan,
-            layout_columnWeight, layout_gravity };
-        extern const uint32_t IDS[];
-    }
-    namespace GridView {
-        enum { horizontalSpacing, verticalSpacing, stretchMode, columnWidth, numColumns, gravity };
-        extern const uint32_t IDS[];
-    }
-    namespace ImageView {
-        enum {
-            src, scaleType, adjustViewBounds, maxWidth, maxHeight, tint, baselineAlignBottom,
-            cropToPadding, baseline, tintMode };
-        extern const uint32_t IDS[];
-    }
-    namespace KeyboardView {
-        enum {
-            keyBackground, keyTextSize, labelTextSize, keyTextColor, keyPreviewLayout,
-            keyPreviewOffset, keyPreviewHeight, verticalCorrection, popupLayout, shadowColor,
-            shadowRadius };
-        extern const uint32_t IDS[];
-    }
-    namespace Layout {
-        enum { layout_width, layout_height };
-        extern const uint32_t IDS[];
-    }
-    namespace LinearLayout {
-        enum {
-            orientation, gravity, baselineAligned, baselineAlignedChildIndex, weightSum,
-            measureWithLargestChild, divider, showDividers, dividerPadding };
-        extern const uint32_t IDS[];
-    }
-    namespace LinearLayoutLayout {
-        enum { layout_width, layout_height, layout_weight, layout_gravity };
-        extern const uint32_t IDS[];
-    }
-    namespace ListView {
-        enum {
-            entries, divider, dividerHeight, headerDividersEnabled, footerDividersEnabled,
-            overScrollHeader, overScrollFooter };
-        extern const uint32_t IDS[];
-    }
-    namespace MarginLayout {
-        enum {
-            layout_width, layout_height, layout_margin, layout_marginLeft, layout_marginTop,
-            layout_marginRight, layout_marginBottom, layout_marginStart, layout_marginEnd,
-            layout_marginHorizontal, layout_marginVertical };
-        extern const uint32_t IDS[];
-    }
-    namespace NumberPicker {
-        enum {
-            solidColor, selectionDividerHeight, min, max, value, textColor, textSize, fontFamily,
-            itemBackground };
-        extern const uint32_t IDS[];
-    }
-    namespace ProgressBar {
-        enum {
-            min, max, progress, secondaryProgress, indeterminate, indeterminateOnly,
-            indeterminateDrawable, progressDrawable, indeterminateDuration, indeterminateBehavior,
-            minWidth, maxWidth, minHeight, maxHeight, interpolator, animationResolution,
-            mirrorForRtl, progressTint, progressTintMode, progressBackgroundTint,
-            progressBackgroundTintMode, secondaryProgressTint, secondaryProgressTintMode,
-            indeterminateTint, indeterminateTintMode, backgroundTint, backgroundTintMode };
-        extern const uint32_t IDS[];
-    }
-    namespace RadioGroup {
-        enum { checkedButton, orientation };
-        extern const uint32_t IDS[];
-    }
-    namespace RatingBar {
-        enum { numStars, rating, stepSize, isIndicator };
-        extern const uint32_t IDS[];
-    }
-    namespace RelativeLayout {
-        enum { gravity, ignoreGravity };
-        extern const uint32_t IDS[];
-    }
-    namespace RelativeLayoutLayout {
-        enum {
-            layout_toLeftOf, layout_toRightOf, layout_above, layout_below, layout_alignBaseline,
-            layout_alignLeft, layout_alignTop, layout_alignRight, layout_alignBottom,
-            layout_alignParentLeft, layout_alignParentTop, layout_alignParentRight,
-            layout_alignParentBottom, layout_centerInParent, layout_centerHorizontal,
-            layout_centerVertical, layout_alignWithParentIfMissing, layout_toStartOf, layout_toEndOf,
-            layout_alignStart, layout_alignEnd, layout_alignParentStart, layout_alignParentEnd };
-        extern const uint32_t IDS[];
-    }
-    namespace ScrollView {
-        enum { fillViewport };
-        extern const uint32_t IDS[];
-    }
-    namespace SeekBar {
-        enum {
-            thumb, thumbOffset, splitTrack, thumbTint, thumbTintMode, tickMark, tickMarkTint,
-            tickMarkTintMode };
-        extern const uint32_t IDS[];
-    }
-    namespace Spinner {
-        enum {
-            prompt, spinnerMode, dropDownSelector, popupTheme, popupBackground, popupElevation,
-            dropDownWidth, gravity };
-        extern const uint32_t IDS[];
-    }
-    namespace Switch {
-        enum {
-            thumb, thumbTint, thumbTintMode, track, trackTint, trackTintMode, textOn, textOff,
-            thumbTextPadding, switchTextAppearance, switchMinWidth, switchPadding, splitTrack,
-            showText };
-        extern const uint32_t IDS[];
-    }
-    namespace TabWidget {
-        enum { divider, tabStripEnabled, tabStripLeft, tabStripRight };
-        extern const uint32_t IDS[];
-    }
-    namespace TableRowLayout {
-        enum { layout_column, layout_span };
-        extern const uint32_t IDS[];
-    }
-    namespace TextAppearance {
-        enum {
-            textColor, textSize, textStyle, textFontWeight, typeface, fontFamily, textLocale,
-            textColorHighlight, searchResultHighlightColor, focusedSearchResultHighlightColor,
-            textColorHint, textColorLink, textAllCaps, shadowColor, shadowDx, shadowDy, shadowRadius,
-            elegantTextHeight, fallbackLineSpacing, letterSpacing, fontFeatureSettings,
-            fontVariationSettings, lineBreakStyle, lineBreakWordStyle };
-        extern const uint32_t IDS[];
-    }
-    namespace TextClock {
-        enum { format12Hour, format24Hour, timeZone };
-        extern const uint32_t IDS[];
-    }
-    namespace TextView {
-        enum {
-            bufferType, text, hint, textColor, textColorHighlight, searchResultHighlightColor,
-            focusedSearchResultHighlightColor, textColorHint, textAppearance, textSize, textScaleX,
-            typeface, textStyle, textFontWeight, fontFamily, textLocale, textColorLink,
-            cursorVisible, maxLines, maxHeight, lines, height, minLines, minHeight, maxEms, maxWidth,
-            ems, width, minEms, minWidth, gravity, scrollHorizontally, password, singleLine, enabled,
-            selectAllOnFocus, includeFontPadding, maxLength, shadowColor, shadowDx, shadowDy,
-            shadowRadius, autoLink, linksClickable, numeric, digits, phoneNumber, inputMethod,
-            capitalize, autoText, editable, freezesText, ellipsize, drawableTop, drawableBottom,
-            drawableLeft, drawableRight, drawableStart, drawableEnd, drawablePadding, drawableTint,
-            drawableTintMode, lineSpacingExtra, lineSpacingMultiplier, lineHeight,
-            firstBaselineToTopHeight, lastBaselineToBottomHeight, marqueeRepeatLimit, inputType,
-            allowUndo, imeOptions, privateImeOptions, imeActionLabel, imeActionId, editorExtras,
-            textSelectHandleLeft, textSelectHandleRight, textSelectHandle, textEditPasteWindowLayout,
-            textEditNoPasteWindowLayout, textEditSidePasteWindowLayout,
-            textEditSideNoPasteWindowLayout, textEditSuggestionItemLayout,
-            textEditSuggestionContainerLayout, textEditSuggestionHighlightStyle, textCursorDrawable,
-            textIsSelectable, textAllCaps, elegantTextHeight, fallbackLineSpacing, letterSpacing,
-            fontFeatureSettings, fontVariationSettings, breakStrategy, hyphenationFrequency,
-            lineBreakStyle, lineBreakWordStyle, autoSizeTextType, autoSizeStepGranularity,
-            autoSizePresetSizes, autoSizeMinTextSize, autoSizeMaxTextSize, justificationMode,
-            useBoundsForWidth, shiftDrawingOffsetForStartOverhang,
-            useLocalePreferredLineHeightForMinimum };
-        extern const uint32_t IDS[];
-    }
-    namespace ToggleButton {
-        enum { textOn, textOff, disabledAlpha };
-        extern const uint32_t IDS[];
-    }
-    namespace Toolbar {
-        enum {
-            titleTextAppearance, subtitleTextAppearance, title, subtitle, gravity, titleMargin,
-            titleMarginStart, titleMarginEnd, titleMarginTop, titleMarginBottom, contentInsetStart,
-            contentInsetEnd, contentInsetLeft, contentInsetRight, contentInsetStartWithNavigation,
-            contentInsetEndWithActions, maxButtonHeight, buttonGravity, collapseIcon,
-            collapseContentDescription, popupTheme, navigationIcon, navigationContentDescription,
-            logo, logoDescription, titleTextColor, subtitleTextColor };
-        extern const uint32_t IDS[];
-    }
-    namespace View {
-        enum {
-            id, tag, scrollX, scrollY, background, padding, paddingHorizontal, paddingVertical,
-            paddingLeft, paddingTop, paddingRight, paddingBottom, paddingStart, paddingEnd,
-            focusable, autofillHints, importantForAutofill, importantForContentCapture, isCredential,
-            focusableInTouchMode, visibility, fitsSystemWindows, scrollbars, scrollbarStyle,
-            isScrollContainer, fadeScrollbars, scrollbarFadeDuration,
-            scrollbarDefaultDelayBeforeFade, scrollbarSize, scrollbarThumbHorizontal,
-            scrollbarThumbVertical, scrollbarTrackHorizontal, scrollbarTrackVertical,
-            scrollbarAlwaysDrawHorizontalTrack, scrollbarAlwaysDrawVerticalTrack, fadingEdge,
-            requiresFadingEdge, fadingEdgeLength, nextFocusLeft, nextFocusRight, nextFocusUp,
-            nextFocusDown, nextFocusForward, clickable, longClickable, contextClickable, saveEnabled,
-            filterTouchesWhenObscured, drawingCacheQuality, keepScreenOn, duplicateParentState,
-            minHeight, minWidth, soundEffectsEnabled, hapticFeedbackEnabled, contentDescription,
-            supplementalDescription, accessibilityTraversalBefore, accessibilityTraversalAfter,
-            onClick, overScrollMode, alpha, elevation, translationX, translationY, translationZ,
-            transformPivotX, transformPivotY, rotation, rotationX, rotationY, scaleX, scaleY,
-            verticalScrollbarPosition, layerType, layoutDirection, textDirection, textAlignment,
-            importantForAccessibility, accessibilityDataSensitive, accessibilityLiveRegion, labelFor,
-            theme, transitionName, nestedScrollingEnabled, stateListAnimator, backgroundTint,
-            backgroundTintMode, outlineProvider, foreground, foregroundGravity, foregroundTint,
-            foregroundTintMode, scrollIndicators, pointerIcon, forceHasOverlappingRendering,
-            tooltipText, keyboardNavigationCluster, nextClusterForward, focusedByDefault,
-            defaultFocusHighlightEnabled, screenReaderFocusable, accessibilityPaneTitle,
-            accessibilityHeading, allowClickWhenDisabled, outlineSpotShadowColor,
-            outlineAmbientShadowColor, forceDarkAllowed, clipToOutline, preferKeepClear,
-            autoHandwritingEnabled, handwritingBoundsOffsetLeft, handwritingBoundsOffsetTop,
-            handwritingBoundsOffsetRight, handwritingBoundsOffsetBottom, contentSensitivity };
-        extern const uint32_t IDS[];
-    }
-    namespace ViewGroup {
-        enum {
-            animateLayoutChanges, clipChildren, clipToPadding, layoutAnimation, animationCache,
-            persistentDrawingCache, alwaysDrawnWithCache, addStatesFromChildren,
-            descendantFocusability, touchscreenBlocksFocus, splitMotionEvents, layoutMode,
-            transitionGroup };
-        extern const uint32_t IDS[];
-    }
-    namespace AdaptiveIconDrawableLayer {
-        enum { drawable };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimatedImageDrawable {
-        enum { src, autoMirrored, repeatCount, autoStart };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimatedRotateDrawable {
-        enum { visible, pivotX, pivotY, drawable };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimatedStateListDrawable {
-        enum {
-            visible, variablePadding, constantSize, dither, enterFadeDuration, exitFadeDuration,
-            autoMirrored };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimatedStateListDrawableItem {
-        enum { drawable, id };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimatedStateListDrawableTransition {
-        enum { fromId, toId, drawable, reversible };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimatedVectorDrawable {
-        enum { drawable };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimatedVectorDrawableTarget {
-        enum { name, animation };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimationDrawable {
-        enum { visible, variablePadding, oneshot };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimationDrawableItem {
-        enum { duration, drawable };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimationScaleListDrawable {
-        enum { _none = 0 };
-        extern const uint32_t IDS[];
-    }
-    namespace AnimationScaleListDrawableItem {
-        enum { drawable };
-        extern const uint32_t IDS[];
-    }
-    namespace BitmapDrawable {
-        enum {
-            src, antialias, filter, dither, gravity, tileMode, tileModeX, tileModeY, mipMap,
-            autoMirrored, tint, tintMode, alpha };
-        extern const uint32_t IDS[];
-    }
-    namespace ClipDrawable {
-        enum { clipOrientation, gravity, drawable };
-        extern const uint32_t IDS[];
-    }
-    namespace ColorDrawable {
-        enum { color };
-        extern const uint32_t IDS[];
-    }
-    namespace ColorStateListItem {
-        enum { color, alpha, lStar };
-        extern const uint32_t IDS[];
-    }
-    namespace Drawable {
-        enum { visible, autoMirrored };
-        extern const uint32_t IDS[];
-    }
-    namespace DrawableCorners {
-        enum { radius, topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius };
-        extern const uint32_t IDS[];
-    }
-    namespace DrawableWrapper {
-        enum { drawable };
-        extern const uint32_t IDS[];
-    }
-    namespace GradientDrawable {
-        enum {
-            visible, dither, shape, innerRadiusRatio, thicknessRatio, innerRadius, thickness,
-            useLevel, tint, tintMode, opticalInsetLeft, opticalInsetTop, opticalInsetRight,
-            opticalInsetBottom };
-        extern const uint32_t IDS[];
-    }
-    namespace GradientDrawableGradient {
-        enum {
-            startColor, centerColor, endColor, useLevel, angle, type, centerX, centerY,
-            gradientRadius };
-        extern const uint32_t IDS[];
-    }
-    namespace GradientDrawablePadding {
-        enum { left, top, right, bottom };
-        extern const uint32_t IDS[];
-    }
-    namespace GradientDrawableSize {
-        enum { width, height };
-        extern const uint32_t IDS[];
-    }
-    namespace GradientDrawableSolid {
-        enum { color };
-        extern const uint32_t IDS[];
-    }
-    namespace GradientDrawableStroke {
-        enum { width, color, dashWidth, dashGap };
-        extern const uint32_t IDS[];
-    }
-    namespace InsetDrawable {
-        enum { visible, drawable, inset, insetLeft, insetRight, insetTop, insetBottom };
-        extern const uint32_t IDS[];
-    }
-    namespace LayerDrawable {
-        enum {
-            opacity, autoMirrored, paddingMode, paddingTop, paddingBottom, paddingLeft, paddingRight,
-            paddingStart, paddingEnd };
-        extern const uint32_t IDS[];
-    }
-    namespace LayerDrawableItem {
-        enum { left, top, right, bottom, start, end, width, height, gravity, drawable, id };
-        extern const uint32_t IDS[];
-    }
-    namespace LevelListDrawableItem {
-        enum { minLevel, maxLevel, drawable };
-        extern const uint32_t IDS[];
-    }
-    namespace MaterialProgressDrawable {
-        enum { visible, thickness, innerRadius, width, height, color };
-        extern const uint32_t IDS[];
-    }
-    namespace NinePatchDrawable {
-        enum { src, dither, autoMirrored, tint, tintMode, alpha };
-        extern const uint32_t IDS[];
-    }
-    namespace RippleDrawable {
-        enum { color, radius, effectColor };
-        extern const uint32_t IDS[];
-    }
-    namespace RotateDrawable {
-        enum { visible, fromDegrees, toDegrees, pivotX, pivotY, drawable };
-        extern const uint32_t IDS[];
-    }
-    namespace ScaleDrawable {
-        enum { scaleWidth, scaleHeight, scaleGravity, level, drawable, useIntrinsicSizeAsMinimum };
-        extern const uint32_t IDS[];
-    }
-    namespace ShapeDrawable {
-        enum { color, width, height, dither, tint, tintMode };
-        extern const uint32_t IDS[];
-    }
-    namespace ShapeDrawablePadding {
-        enum { left, top, right, bottom };
-        extern const uint32_t IDS[];
-    }
-    namespace StateListDrawable {
-        enum {
-            visible, variablePadding, constantSize, dither, enterFadeDuration, exitFadeDuration,
-            autoMirrored };
-        extern const uint32_t IDS[];
-    }
-    namespace StateListDrawableItem {
-        enum { drawable };
-        extern const uint32_t IDS[];
-    }
-    namespace VectorDrawable {
-        enum {
-            tint, tintMode, autoMirrored, width, height, viewportWidth, viewportHeight, name, alpha,
-            opticalInsetLeft, opticalInsetTop, opticalInsetRight, opticalInsetBottom };
-        extern const uint32_t IDS[];
-    }
-    namespace VectorDrawableClipPath {
-        enum { name, pathData };
-        extern const uint32_t IDS[];
-    }
-    namespace VectorDrawableGroup {
-        enum { name, rotation, pivotX, pivotY, translateX, translateY, scaleX, scaleY };
-        extern const uint32_t IDS[];
-    }
-    namespace VectorDrawablePath {
-        enum {
-            name, strokeWidth, strokeColor, strokeAlpha, fillColor, fillAlpha, pathData,
-            trimPathStart, trimPathEnd, trimPathOffset, strokeLineCap, strokeLineJoin,
-            strokeMiterLimit, fillType };
-        extern const uint32_t IDS[];
-    }
-} // namespace styleable
+    // AdapterViewAnimator (4 attrs)
+    extern const uint32_t AdapterViewAnimator[];
+    constexpr int AdapterViewAnimator_inAnimation = 0;
+    constexpr int AdapterViewAnimator_outAnimation = 1;
+    constexpr int AdapterViewAnimator_loopViews = 2;
+    constexpr int AdapterViewAnimator_animateFirstView = 3;
+
+    // AdapterViewFlipper (2 attrs)
+    extern const uint32_t AdapterViewFlipper[];
+    constexpr int AdapterViewFlipper_flipInterval = 0;
+    constexpr int AdapterViewFlipper_autoStart = 1;
+
+    // AnalogClock (13 attrs)
+    extern const uint32_t AnalogClock[];
+    constexpr int AnalogClock_dial = 0;
+    constexpr int AnalogClock_hand_hour = 1;
+    constexpr int AnalogClock_hand_minute = 2;
+    constexpr int AnalogClock_hand_second = 3;
+    constexpr int AnalogClock_timeZone = 4;
+    constexpr int AnalogClock_dialTint = 5;
+    constexpr int AnalogClock_dialTintMode = 6;
+    constexpr int AnalogClock_hand_hourTint = 7;
+    constexpr int AnalogClock_hand_hourTintMode = 8;
+    constexpr int AnalogClock_hand_minuteTint = 9;
+    constexpr int AnalogClock_hand_minuteTintMode = 10;
+    constexpr int AnalogClock_hand_secondTint = 11;
+    constexpr int AnalogClock_hand_secondTintMode = 12;
+
+    // CheckedTextView (4 attrs)
+    extern const uint32_t CheckedTextView[];
+    constexpr int CheckedTextView_checked = 0;
+    constexpr int CheckedTextView_checkMark = 1;
+    constexpr int CheckedTextView_checkMarkTint = 2;
+    constexpr int CheckedTextView_checkMarkTintMode = 3;
+
+    // Chronometer (2 attrs)
+    extern const uint32_t Chronometer[];
+    constexpr int Chronometer_format = 0;
+    constexpr int Chronometer_countDown = 1;
+
+    // CompoundButton (4 attrs)
+    extern const uint32_t CompoundButton[];
+    constexpr int CompoundButton_checked = 0;
+    constexpr int CompoundButton_button = 1;
+    constexpr int CompoundButton_buttonTint = 2;
+    constexpr int CompoundButton_buttonTintMode = 3;
+
+    // FrameLayout (1 attrs)
+    extern const uint32_t FrameLayout[];
+    constexpr int FrameLayout_measureAllChildren = 0;
+
+    // GridLayout (7 attrs)
+    extern const uint32_t GridLayout[];
+    constexpr int GridLayout_orientation = 0;
+    constexpr int GridLayout_rowCount = 1;
+    constexpr int GridLayout_columnCount = 2;
+    constexpr int GridLayout_useDefaultMargins = 3;
+    constexpr int GridLayout_alignmentMode = 4;
+    constexpr int GridLayout_rowOrderPreserved = 5;
+    constexpr int GridLayout_columnOrderPreserved = 6;
+
+    // GridLayoutLayout (7 attrs)
+    extern const uint32_t GridLayoutLayout[];
+    constexpr int GridLayoutLayout_layout_row = 0;
+    constexpr int GridLayoutLayout_layout_rowSpan = 1;
+    constexpr int GridLayoutLayout_layout_rowWeight = 2;
+    constexpr int GridLayoutLayout_layout_column = 3;
+    constexpr int GridLayoutLayout_layout_columnSpan = 4;
+    constexpr int GridLayoutLayout_layout_columnWeight = 5;
+    constexpr int GridLayoutLayout_layout_gravity = 6;
+
+    // GridView (6 attrs)
+    extern const uint32_t GridView[];
+    constexpr int GridView_horizontalSpacing = 0;
+    constexpr int GridView_verticalSpacing = 1;
+    constexpr int GridView_stretchMode = 2;
+    constexpr int GridView_columnWidth = 3;
+    constexpr int GridView_numColumns = 4;
+    constexpr int GridView_gravity = 5;
+
+    // ImageView (10 attrs)
+    extern const uint32_t ImageView[];
+    constexpr int ImageView_src = 0;
+    constexpr int ImageView_scaleType = 1;
+    constexpr int ImageView_adjustViewBounds = 2;
+    constexpr int ImageView_maxWidth = 3;
+    constexpr int ImageView_maxHeight = 4;
+    constexpr int ImageView_tint = 5;
+    constexpr int ImageView_baselineAlignBottom = 6;
+    constexpr int ImageView_cropToPadding = 7;
+    constexpr int ImageView_baseline = 8;
+    constexpr int ImageView_tintMode = 9;
+
+    // KeyboardView (11 attrs)
+    extern const uint32_t KeyboardView[];
+    constexpr int KeyboardView_keyBackground = 0;
+    constexpr int KeyboardView_keyTextSize = 1;
+    constexpr int KeyboardView_labelTextSize = 2;
+    constexpr int KeyboardView_keyTextColor = 3;
+    constexpr int KeyboardView_keyPreviewLayout = 4;
+    constexpr int KeyboardView_keyPreviewOffset = 5;
+    constexpr int KeyboardView_keyPreviewHeight = 6;
+    constexpr int KeyboardView_verticalCorrection = 7;
+    constexpr int KeyboardView_popupLayout = 8;
+    constexpr int KeyboardView_shadowColor = 9;
+    constexpr int KeyboardView_shadowRadius = 10;
+
+    // Layout (2 attrs)
+    extern const uint32_t Layout[];
+    constexpr int Layout_layout_width = 0;
+    constexpr int Layout_layout_height = 1;
+
+    // LinearLayout (9 attrs)
+    extern const uint32_t LinearLayout[];
+    constexpr int LinearLayout_orientation = 0;
+    constexpr int LinearLayout_gravity = 1;
+    constexpr int LinearLayout_baselineAligned = 2;
+    constexpr int LinearLayout_baselineAlignedChildIndex = 3;
+    constexpr int LinearLayout_weightSum = 4;
+    constexpr int LinearLayout_measureWithLargestChild = 5;
+    constexpr int LinearLayout_divider = 6;
+    constexpr int LinearLayout_showDividers = 7;
+    constexpr int LinearLayout_dividerPadding = 8;
+
+    // LinearLayoutLayout (4 attrs)
+    extern const uint32_t LinearLayoutLayout[];
+    constexpr int LinearLayoutLayout_layout_width = 0;
+    constexpr int LinearLayoutLayout_layout_height = 1;
+    constexpr int LinearLayoutLayout_layout_weight = 2;
+    constexpr int LinearLayoutLayout_layout_gravity = 3;
+
+    // ListView (7 attrs)
+    extern const uint32_t ListView[];
+    constexpr int ListView_entries = 0;
+    constexpr int ListView_divider = 1;
+    constexpr int ListView_dividerHeight = 2;
+    constexpr int ListView_headerDividersEnabled = 3;
+    constexpr int ListView_footerDividersEnabled = 4;
+    constexpr int ListView_overScrollHeader = 5;
+    constexpr int ListView_overScrollFooter = 6;
+
+    // MarginLayout (11 attrs)
+    extern const uint32_t MarginLayout[];
+    constexpr int MarginLayout_layout_width = 0;
+    constexpr int MarginLayout_layout_height = 1;
+    constexpr int MarginLayout_layout_margin = 2;
+    constexpr int MarginLayout_layout_marginLeft = 3;
+    constexpr int MarginLayout_layout_marginTop = 4;
+    constexpr int MarginLayout_layout_marginRight = 5;
+    constexpr int MarginLayout_layout_marginBottom = 6;
+    constexpr int MarginLayout_layout_marginStart = 7;
+    constexpr int MarginLayout_layout_marginEnd = 8;
+    constexpr int MarginLayout_layout_marginHorizontal = 9;
+    constexpr int MarginLayout_layout_marginVertical = 10;
+
+    // NumberPicker (9 attrs)
+    extern const uint32_t NumberPicker[];
+    constexpr int NumberPicker_solidColor = 0;
+    constexpr int NumberPicker_selectionDividerHeight = 1;
+    constexpr int NumberPicker_min = 2;
+    constexpr int NumberPicker_max = 3;
+    constexpr int NumberPicker_value = 4;
+    constexpr int NumberPicker_textColor = 5;
+    constexpr int NumberPicker_textSize = 6;
+    constexpr int NumberPicker_fontFamily = 7;
+    constexpr int NumberPicker_itemBackground = 8;
+
+    // ProgressBar (27 attrs)
+    extern const uint32_t ProgressBar[];
+    constexpr int ProgressBar_min = 0;
+    constexpr int ProgressBar_max = 1;
+    constexpr int ProgressBar_progress = 2;
+    constexpr int ProgressBar_secondaryProgress = 3;
+    constexpr int ProgressBar_indeterminate = 4;
+    constexpr int ProgressBar_indeterminateOnly = 5;
+    constexpr int ProgressBar_indeterminateDrawable = 6;
+    constexpr int ProgressBar_progressDrawable = 7;
+    constexpr int ProgressBar_indeterminateDuration = 8;
+    constexpr int ProgressBar_indeterminateBehavior = 9;
+    constexpr int ProgressBar_minWidth = 10;
+    constexpr int ProgressBar_maxWidth = 11;
+    constexpr int ProgressBar_minHeight = 12;
+    constexpr int ProgressBar_maxHeight = 13;
+    constexpr int ProgressBar_interpolator = 14;
+    constexpr int ProgressBar_animationResolution = 15;
+    constexpr int ProgressBar_mirrorForRtl = 16;
+    constexpr int ProgressBar_progressTint = 17;
+    constexpr int ProgressBar_progressTintMode = 18;
+    constexpr int ProgressBar_progressBackgroundTint = 19;
+    constexpr int ProgressBar_progressBackgroundTintMode = 20;
+    constexpr int ProgressBar_secondaryProgressTint = 21;
+    constexpr int ProgressBar_secondaryProgressTintMode = 22;
+    constexpr int ProgressBar_indeterminateTint = 23;
+    constexpr int ProgressBar_indeterminateTintMode = 24;
+    constexpr int ProgressBar_backgroundTint = 25;
+    constexpr int ProgressBar_backgroundTintMode = 26;
+
+    // RadioGroup (2 attrs)
+    extern const uint32_t RadioGroup[];
+    constexpr int RadioGroup_checkedButton = 0;
+    constexpr int RadioGroup_orientation = 1;
+
+    // RatingBar (4 attrs)
+    extern const uint32_t RatingBar[];
+    constexpr int RatingBar_numStars = 0;
+    constexpr int RatingBar_rating = 1;
+    constexpr int RatingBar_stepSize = 2;
+    constexpr int RatingBar_isIndicator = 3;
+
+    // RelativeLayout (2 attrs)
+    extern const uint32_t RelativeLayout[];
+    constexpr int RelativeLayout_gravity = 0;
+    constexpr int RelativeLayout_ignoreGravity = 1;
+
+    // RelativeLayoutLayout (23 attrs)
+    extern const uint32_t RelativeLayoutLayout[];
+    constexpr int RelativeLayoutLayout_layout_toLeftOf = 0;
+    constexpr int RelativeLayoutLayout_layout_toRightOf = 1;
+    constexpr int RelativeLayoutLayout_layout_above = 2;
+    constexpr int RelativeLayoutLayout_layout_below = 3;
+    constexpr int RelativeLayoutLayout_layout_alignBaseline = 4;
+    constexpr int RelativeLayoutLayout_layout_alignLeft = 5;
+    constexpr int RelativeLayoutLayout_layout_alignTop = 6;
+    constexpr int RelativeLayoutLayout_layout_alignRight = 7;
+    constexpr int RelativeLayoutLayout_layout_alignBottom = 8;
+    constexpr int RelativeLayoutLayout_layout_alignParentLeft = 9;
+    constexpr int RelativeLayoutLayout_layout_alignParentTop = 10;
+    constexpr int RelativeLayoutLayout_layout_alignParentRight = 11;
+    constexpr int RelativeLayoutLayout_layout_alignParentBottom = 12;
+    constexpr int RelativeLayoutLayout_layout_centerInParent = 13;
+    constexpr int RelativeLayoutLayout_layout_centerHorizontal = 14;
+    constexpr int RelativeLayoutLayout_layout_centerVertical = 15;
+    constexpr int RelativeLayoutLayout_layout_alignWithParentIfMissing = 16;
+    constexpr int RelativeLayoutLayout_layout_toStartOf = 17;
+    constexpr int RelativeLayoutLayout_layout_toEndOf = 18;
+    constexpr int RelativeLayoutLayout_layout_alignStart = 19;
+    constexpr int RelativeLayoutLayout_layout_alignEnd = 20;
+    constexpr int RelativeLayoutLayout_layout_alignParentStart = 21;
+    constexpr int RelativeLayoutLayout_layout_alignParentEnd = 22;
+
+    // ScrollView (1 attrs)
+    extern const uint32_t ScrollView[];
+    constexpr int ScrollView_fillViewport = 0;
+
+    // SeekBar (8 attrs)
+    extern const uint32_t SeekBar[];
+    constexpr int SeekBar_thumb = 0;
+    constexpr int SeekBar_thumbOffset = 1;
+    constexpr int SeekBar_splitTrack = 2;
+    constexpr int SeekBar_thumbTint = 3;
+    constexpr int SeekBar_thumbTintMode = 4;
+    constexpr int SeekBar_tickMark = 5;
+    constexpr int SeekBar_tickMarkTint = 6;
+    constexpr int SeekBar_tickMarkTintMode = 7;
+
+    // Spinner (8 attrs)
+    extern const uint32_t Spinner[];
+    constexpr int Spinner_prompt = 0;
+    constexpr int Spinner_spinnerMode = 1;
+    constexpr int Spinner_dropDownSelector = 2;
+    constexpr int Spinner_popupTheme = 3;
+    constexpr int Spinner_popupBackground = 4;
+    constexpr int Spinner_popupElevation = 5;
+    constexpr int Spinner_dropDownWidth = 6;
+    constexpr int Spinner_gravity = 7;
+
+    // Switch (14 attrs)
+    extern const uint32_t Switch[];
+    constexpr int Switch_thumb = 0;
+    constexpr int Switch_thumbTint = 1;
+    constexpr int Switch_thumbTintMode = 2;
+    constexpr int Switch_track = 3;
+    constexpr int Switch_trackTint = 4;
+    constexpr int Switch_trackTintMode = 5;
+    constexpr int Switch_textOn = 6;
+    constexpr int Switch_textOff = 7;
+    constexpr int Switch_thumbTextPadding = 8;
+    constexpr int Switch_switchTextAppearance = 9;
+    constexpr int Switch_switchMinWidth = 10;
+    constexpr int Switch_switchPadding = 11;
+    constexpr int Switch_splitTrack = 12;
+    constexpr int Switch_showText = 13;
+
+    // TabWidget (4 attrs)
+    extern const uint32_t TabWidget[];
+    constexpr int TabWidget_divider = 0;
+    constexpr int TabWidget_tabStripEnabled = 1;
+    constexpr int TabWidget_tabStripLeft = 2;
+    constexpr int TabWidget_tabStripRight = 3;
+
+    // TableRowLayout (2 attrs)
+    extern const uint32_t TableRowLayout[];
+    constexpr int TableRowLayout_layout_column = 0;
+    constexpr int TableRowLayout_layout_span = 1;
+
+    // TextAppearance (24 attrs)
+    extern const uint32_t TextAppearance[];
+    constexpr int TextAppearance_textColor = 0;
+    constexpr int TextAppearance_textSize = 1;
+    constexpr int TextAppearance_textStyle = 2;
+    constexpr int TextAppearance_textFontWeight = 3;
+    constexpr int TextAppearance_typeface = 4;
+    constexpr int TextAppearance_fontFamily = 5;
+    constexpr int TextAppearance_textLocale = 6;
+    constexpr int TextAppearance_textColorHighlight = 7;
+    constexpr int TextAppearance_searchResultHighlightColor = 8;
+    constexpr int TextAppearance_focusedSearchResultHighlightColor = 9;
+    constexpr int TextAppearance_textColorHint = 10;
+    constexpr int TextAppearance_textColorLink = 11;
+    constexpr int TextAppearance_textAllCaps = 12;
+    constexpr int TextAppearance_shadowColor = 13;
+    constexpr int TextAppearance_shadowDx = 14;
+    constexpr int TextAppearance_shadowDy = 15;
+    constexpr int TextAppearance_shadowRadius = 16;
+    constexpr int TextAppearance_elegantTextHeight = 17;
+    constexpr int TextAppearance_fallbackLineSpacing = 18;
+    constexpr int TextAppearance_letterSpacing = 19;
+    constexpr int TextAppearance_fontFeatureSettings = 20;
+    constexpr int TextAppearance_fontVariationSettings = 21;
+    constexpr int TextAppearance_lineBreakStyle = 22;
+    constexpr int TextAppearance_lineBreakWordStyle = 23;
+
+    // TextClock (3 attrs)
+    extern const uint32_t TextClock[];
+    constexpr int TextClock_format12Hour = 0;
+    constexpr int TextClock_format24Hour = 1;
+    constexpr int TextClock_timeZone = 2;
+
+    // TextView (106 attrs)
+    extern const uint32_t TextView[];
+    constexpr int TextView_bufferType = 0;
+    constexpr int TextView_text = 1;
+    constexpr int TextView_hint = 2;
+    constexpr int TextView_textColor = 3;
+    constexpr int TextView_textColorHighlight = 4;
+    constexpr int TextView_searchResultHighlightColor = 5;
+    constexpr int TextView_focusedSearchResultHighlightColor = 6;
+    constexpr int TextView_textColorHint = 7;
+    constexpr int TextView_textAppearance = 8;
+    constexpr int TextView_textSize = 9;
+    constexpr int TextView_textScaleX = 10;
+    constexpr int TextView_typeface = 11;
+    constexpr int TextView_textStyle = 12;
+    constexpr int TextView_textFontWeight = 13;
+    constexpr int TextView_fontFamily = 14;
+    constexpr int TextView_textLocale = 15;
+    constexpr int TextView_textColorLink = 16;
+    constexpr int TextView_cursorVisible = 17;
+    constexpr int TextView_maxLines = 18;
+    constexpr int TextView_maxHeight = 19;
+    constexpr int TextView_lines = 20;
+    constexpr int TextView_height = 21;
+    constexpr int TextView_minLines = 22;
+    constexpr int TextView_minHeight = 23;
+    constexpr int TextView_maxEms = 24;
+    constexpr int TextView_maxWidth = 25;
+    constexpr int TextView_ems = 26;
+    constexpr int TextView_width = 27;
+    constexpr int TextView_minEms = 28;
+    constexpr int TextView_minWidth = 29;
+    constexpr int TextView_gravity = 30;
+    constexpr int TextView_scrollHorizontally = 31;
+    constexpr int TextView_password = 32;
+    constexpr int TextView_singleLine = 33;
+    constexpr int TextView_enabled = 34;
+    constexpr int TextView_selectAllOnFocus = 35;
+    constexpr int TextView_includeFontPadding = 36;
+    constexpr int TextView_maxLength = 37;
+    constexpr int TextView_shadowColor = 38;
+    constexpr int TextView_shadowDx = 39;
+    constexpr int TextView_shadowDy = 40;
+    constexpr int TextView_shadowRadius = 41;
+    constexpr int TextView_autoLink = 42;
+    constexpr int TextView_linksClickable = 43;
+    constexpr int TextView_numeric = 44;
+    constexpr int TextView_digits = 45;
+    constexpr int TextView_phoneNumber = 46;
+    constexpr int TextView_inputMethod = 47;
+    constexpr int TextView_capitalize = 48;
+    constexpr int TextView_autoText = 49;
+    constexpr int TextView_editable = 50;
+    constexpr int TextView_freezesText = 51;
+    constexpr int TextView_ellipsize = 52;
+    constexpr int TextView_drawableTop = 53;
+    constexpr int TextView_drawableBottom = 54;
+    constexpr int TextView_drawableLeft = 55;
+    constexpr int TextView_drawableRight = 56;
+    constexpr int TextView_drawableStart = 57;
+    constexpr int TextView_drawableEnd = 58;
+    constexpr int TextView_drawablePadding = 59;
+    constexpr int TextView_drawableTint = 60;
+    constexpr int TextView_drawableTintMode = 61;
+    constexpr int TextView_lineSpacingExtra = 62;
+    constexpr int TextView_lineSpacingMultiplier = 63;
+    constexpr int TextView_lineHeight = 64;
+    constexpr int TextView_firstBaselineToTopHeight = 65;
+    constexpr int TextView_lastBaselineToBottomHeight = 66;
+    constexpr int TextView_marqueeRepeatLimit = 67;
+    constexpr int TextView_inputType = 68;
+    constexpr int TextView_allowUndo = 69;
+    constexpr int TextView_imeOptions = 70;
+    constexpr int TextView_privateImeOptions = 71;
+    constexpr int TextView_imeActionLabel = 72;
+    constexpr int TextView_imeActionId = 73;
+    constexpr int TextView_editorExtras = 74;
+    constexpr int TextView_textSelectHandleLeft = 75;
+    constexpr int TextView_textSelectHandleRight = 76;
+    constexpr int TextView_textSelectHandle = 77;
+    constexpr int TextView_textEditPasteWindowLayout = 78;
+    constexpr int TextView_textEditNoPasteWindowLayout = 79;
+    constexpr int TextView_textEditSidePasteWindowLayout = 80;
+    constexpr int TextView_textEditSideNoPasteWindowLayout = 81;
+    constexpr int TextView_textEditSuggestionItemLayout = 82;
+    constexpr int TextView_textEditSuggestionContainerLayout = 83;
+    constexpr int TextView_textEditSuggestionHighlightStyle = 84;
+    constexpr int TextView_textCursorDrawable = 85;
+    constexpr int TextView_textIsSelectable = 86;
+    constexpr int TextView_textAllCaps = 87;
+    constexpr int TextView_elegantTextHeight = 88;
+    constexpr int TextView_fallbackLineSpacing = 89;
+    constexpr int TextView_letterSpacing = 90;
+    constexpr int TextView_fontFeatureSettings = 91;
+    constexpr int TextView_fontVariationSettings = 92;
+    constexpr int TextView_breakStrategy = 93;
+    constexpr int TextView_hyphenationFrequency = 94;
+    constexpr int TextView_lineBreakStyle = 95;
+    constexpr int TextView_lineBreakWordStyle = 96;
+    constexpr int TextView_autoSizeTextType = 97;
+    constexpr int TextView_autoSizeStepGranularity = 98;
+    constexpr int TextView_autoSizePresetSizes = 99;
+    constexpr int TextView_autoSizeMinTextSize = 100;
+    constexpr int TextView_autoSizeMaxTextSize = 101;
+    constexpr int TextView_justificationMode = 102;
+    constexpr int TextView_useBoundsForWidth = 103;
+    constexpr int TextView_shiftDrawingOffsetForStartOverhang = 104;
+    constexpr int TextView_useLocalePreferredLineHeightForMinimum = 105;
+
+    // ToggleButton (3 attrs)
+    extern const uint32_t ToggleButton[];
+    constexpr int ToggleButton_textOn = 0;
+    constexpr int ToggleButton_textOff = 1;
+    constexpr int ToggleButton_disabledAlpha = 2;
+
+    // Toolbar (27 attrs)
+    extern const uint32_t Toolbar[];
+    constexpr int Toolbar_titleTextAppearance = 0;
+    constexpr int Toolbar_subtitleTextAppearance = 1;
+    constexpr int Toolbar_title = 2;
+    constexpr int Toolbar_subtitle = 3;
+    constexpr int Toolbar_gravity = 4;
+    constexpr int Toolbar_titleMargin = 5;
+    constexpr int Toolbar_titleMarginStart = 6;
+    constexpr int Toolbar_titleMarginEnd = 7;
+    constexpr int Toolbar_titleMarginTop = 8;
+    constexpr int Toolbar_titleMarginBottom = 9;
+    constexpr int Toolbar_contentInsetStart = 10;
+    constexpr int Toolbar_contentInsetEnd = 11;
+    constexpr int Toolbar_contentInsetLeft = 12;
+    constexpr int Toolbar_contentInsetRight = 13;
+    constexpr int Toolbar_contentInsetStartWithNavigation = 14;
+    constexpr int Toolbar_contentInsetEndWithActions = 15;
+    constexpr int Toolbar_maxButtonHeight = 16;
+    constexpr int Toolbar_buttonGravity = 17;
+    constexpr int Toolbar_collapseIcon = 18;
+    constexpr int Toolbar_collapseContentDescription = 19;
+    constexpr int Toolbar_popupTheme = 20;
+    constexpr int Toolbar_navigationIcon = 21;
+    constexpr int Toolbar_navigationContentDescription = 22;
+    constexpr int Toolbar_logo = 23;
+    constexpr int Toolbar_logoDescription = 24;
+    constexpr int Toolbar_titleTextColor = 25;
+    constexpr int Toolbar_subtitleTextColor = 26;
+
+    // View (116 attrs)
+    extern const uint32_t View[];
+    constexpr int View_id = 0;
+    constexpr int View_tag = 1;
+    constexpr int View_scrollX = 2;
+    constexpr int View_scrollY = 3;
+    constexpr int View_background = 4;
+    constexpr int View_padding = 5;
+    constexpr int View_paddingHorizontal = 6;
+    constexpr int View_paddingVertical = 7;
+    constexpr int View_paddingLeft = 8;
+    constexpr int View_paddingTop = 9;
+    constexpr int View_paddingRight = 10;
+    constexpr int View_paddingBottom = 11;
+    constexpr int View_paddingStart = 12;
+    constexpr int View_paddingEnd = 13;
+    constexpr int View_focusable = 14;
+    constexpr int View_autofillHints = 15;
+    constexpr int View_importantForAutofill = 16;
+    constexpr int View_importantForContentCapture = 17;
+    constexpr int View_isCredential = 18;
+    constexpr int View_focusableInTouchMode = 19;
+    constexpr int View_visibility = 20;
+    constexpr int View_fitsSystemWindows = 21;
+    constexpr int View_scrollbars = 22;
+    constexpr int View_scrollbarStyle = 23;
+    constexpr int View_isScrollContainer = 24;
+    constexpr int View_fadeScrollbars = 25;
+    constexpr int View_scrollbarFadeDuration = 26;
+    constexpr int View_scrollbarDefaultDelayBeforeFade = 27;
+    constexpr int View_scrollbarSize = 28;
+    constexpr int View_scrollbarThumbHorizontal = 29;
+    constexpr int View_scrollbarThumbVertical = 30;
+    constexpr int View_scrollbarTrackHorizontal = 31;
+    constexpr int View_scrollbarTrackVertical = 32;
+    constexpr int View_scrollbarAlwaysDrawHorizontalTrack = 33;
+    constexpr int View_scrollbarAlwaysDrawVerticalTrack = 34;
+    constexpr int View_fadingEdge = 35;
+    constexpr int View_requiresFadingEdge = 36;
+    constexpr int View_fadingEdgeLength = 37;
+    constexpr int View_nextFocusLeft = 38;
+    constexpr int View_nextFocusRight = 39;
+    constexpr int View_nextFocusUp = 40;
+    constexpr int View_nextFocusDown = 41;
+    constexpr int View_nextFocusForward = 42;
+    constexpr int View_clickable = 43;
+    constexpr int View_longClickable = 44;
+    constexpr int View_contextClickable = 45;
+    constexpr int View_saveEnabled = 46;
+    constexpr int View_filterTouchesWhenObscured = 47;
+    constexpr int View_drawingCacheQuality = 48;
+    constexpr int View_keepScreenOn = 49;
+    constexpr int View_duplicateParentState = 50;
+    constexpr int View_minHeight = 51;
+    constexpr int View_minWidth = 52;
+    constexpr int View_soundEffectsEnabled = 53;
+    constexpr int View_hapticFeedbackEnabled = 54;
+    constexpr int View_contentDescription = 55;
+    constexpr int View_supplementalDescription = 56;
+    constexpr int View_accessibilityTraversalBefore = 57;
+    constexpr int View_accessibilityTraversalAfter = 58;
+    constexpr int View_onClick = 59;
+    constexpr int View_overScrollMode = 60;
+    constexpr int View_alpha = 61;
+    constexpr int View_elevation = 62;
+    constexpr int View_translationX = 63;
+    constexpr int View_translationY = 64;
+    constexpr int View_translationZ = 65;
+    constexpr int View_transformPivotX = 66;
+    constexpr int View_transformPivotY = 67;
+    constexpr int View_rotation = 68;
+    constexpr int View_rotationX = 69;
+    constexpr int View_rotationY = 70;
+    constexpr int View_scaleX = 71;
+    constexpr int View_scaleY = 72;
+    constexpr int View_verticalScrollbarPosition = 73;
+    constexpr int View_layerType = 74;
+    constexpr int View_layoutDirection = 75;
+    constexpr int View_textDirection = 76;
+    constexpr int View_textAlignment = 77;
+    constexpr int View_importantForAccessibility = 78;
+    constexpr int View_accessibilityDataSensitive = 79;
+    constexpr int View_accessibilityLiveRegion = 80;
+    constexpr int View_labelFor = 81;
+    constexpr int View_theme = 82;
+    constexpr int View_transitionName = 83;
+    constexpr int View_nestedScrollingEnabled = 84;
+    constexpr int View_stateListAnimator = 85;
+    constexpr int View_backgroundTint = 86;
+    constexpr int View_backgroundTintMode = 87;
+    constexpr int View_outlineProvider = 88;
+    constexpr int View_foreground = 89;
+    constexpr int View_foregroundGravity = 90;
+    constexpr int View_foregroundTint = 91;
+    constexpr int View_foregroundTintMode = 92;
+    constexpr int View_scrollIndicators = 93;
+    constexpr int View_pointerIcon = 94;
+    constexpr int View_forceHasOverlappingRendering = 95;
+    constexpr int View_tooltipText = 96;
+    constexpr int View_keyboardNavigationCluster = 97;
+    constexpr int View_nextClusterForward = 98;
+    constexpr int View_focusedByDefault = 99;
+    constexpr int View_defaultFocusHighlightEnabled = 100;
+    constexpr int View_screenReaderFocusable = 101;
+    constexpr int View_accessibilityPaneTitle = 102;
+    constexpr int View_accessibilityHeading = 103;
+    constexpr int View_allowClickWhenDisabled = 104;
+    constexpr int View_outlineSpotShadowColor = 105;
+    constexpr int View_outlineAmbientShadowColor = 106;
+    constexpr int View_forceDarkAllowed = 107;
+    constexpr int View_clipToOutline = 108;
+    constexpr int View_preferKeepClear = 109;
+    constexpr int View_autoHandwritingEnabled = 110;
+    constexpr int View_handwritingBoundsOffsetLeft = 111;
+    constexpr int View_handwritingBoundsOffsetTop = 112;
+    constexpr int View_handwritingBoundsOffsetRight = 113;
+    constexpr int View_handwritingBoundsOffsetBottom = 114;
+    constexpr int View_contentSensitivity = 115;
+
+    // ViewGroup (13 attrs)
+    extern const uint32_t ViewGroup[];
+    constexpr int ViewGroup_animateLayoutChanges = 0;
+    constexpr int ViewGroup_clipChildren = 1;
+    constexpr int ViewGroup_clipToPadding = 2;
+    constexpr int ViewGroup_layoutAnimation = 3;
+    constexpr int ViewGroup_animationCache = 4;
+    constexpr int ViewGroup_persistentDrawingCache = 5;
+    constexpr int ViewGroup_alwaysDrawnWithCache = 6;
+    constexpr int ViewGroup_addStatesFromChildren = 7;
+    constexpr int ViewGroup_descendantFocusability = 8;
+    constexpr int ViewGroup_touchscreenBlocksFocus = 9;
+    constexpr int ViewGroup_splitMotionEvents = 10;
+    constexpr int ViewGroup_layoutMode = 11;
+    constexpr int ViewGroup_transitionGroup = 12;
+
+    // AdaptiveIconDrawableLayer (1 attrs)
+    extern const uint32_t AdaptiveIconDrawableLayer[];
+    constexpr int AdaptiveIconDrawableLayer_drawable = 0;
+
+    // AnimatedImageDrawable (4 attrs)
+    extern const uint32_t AnimatedImageDrawable[];
+    constexpr int AnimatedImageDrawable_src = 0;
+    constexpr int AnimatedImageDrawable_autoMirrored = 1;
+    constexpr int AnimatedImageDrawable_repeatCount = 2;
+    constexpr int AnimatedImageDrawable_autoStart = 3;
+
+    // AnimatedRotateDrawable (4 attrs)
+    extern const uint32_t AnimatedRotateDrawable[];
+    constexpr int AnimatedRotateDrawable_visible = 0;
+    constexpr int AnimatedRotateDrawable_pivotX = 1;
+    constexpr int AnimatedRotateDrawable_pivotY = 2;
+    constexpr int AnimatedRotateDrawable_drawable = 3;
+
+    // AnimatedStateListDrawable (7 attrs)
+    extern const uint32_t AnimatedStateListDrawable[];
+    constexpr int AnimatedStateListDrawable_visible = 0;
+    constexpr int AnimatedStateListDrawable_variablePadding = 1;
+    constexpr int AnimatedStateListDrawable_constantSize = 2;
+    constexpr int AnimatedStateListDrawable_dither = 3;
+    constexpr int AnimatedStateListDrawable_enterFadeDuration = 4;
+    constexpr int AnimatedStateListDrawable_exitFadeDuration = 5;
+    constexpr int AnimatedStateListDrawable_autoMirrored = 6;
+
+    // AnimatedStateListDrawableItem (2 attrs)
+    extern const uint32_t AnimatedStateListDrawableItem[];
+    constexpr int AnimatedStateListDrawableItem_drawable = 0;
+    constexpr int AnimatedStateListDrawableItem_id = 1;
+
+    // AnimatedStateListDrawableTransition (4 attrs)
+    extern const uint32_t AnimatedStateListDrawableTransition[];
+    constexpr int AnimatedStateListDrawableTransition_fromId = 0;
+    constexpr int AnimatedStateListDrawableTransition_toId = 1;
+    constexpr int AnimatedStateListDrawableTransition_drawable = 2;
+    constexpr int AnimatedStateListDrawableTransition_reversible = 3;
+
+    // AnimatedVectorDrawable (1 attrs)
+    extern const uint32_t AnimatedVectorDrawable[];
+    constexpr int AnimatedVectorDrawable_drawable = 0;
+
+    // AnimatedVectorDrawableTarget (2 attrs)
+    extern const uint32_t AnimatedVectorDrawableTarget[];
+    constexpr int AnimatedVectorDrawableTarget_name = 0;
+    constexpr int AnimatedVectorDrawableTarget_animation = 1;
+
+    // AnimationDrawable (3 attrs)
+    extern const uint32_t AnimationDrawable[];
+    constexpr int AnimationDrawable_visible = 0;
+    constexpr int AnimationDrawable_variablePadding = 1;
+    constexpr int AnimationDrawable_oneshot = 2;
+
+    // AnimationDrawableItem (2 attrs)
+    extern const uint32_t AnimationDrawableItem[];
+    constexpr int AnimationDrawableItem_duration = 0;
+    constexpr int AnimationDrawableItem_drawable = 1;
+
+    // AnimationScaleListDrawable (0 attrs)
+    extern const uint32_t AnimationScaleListDrawable[];
+    constexpr int AnimationScaleListDrawable___none = 0;
+
+    // AnimationScaleListDrawableItem (1 attrs)
+    extern const uint32_t AnimationScaleListDrawableItem[];
+    constexpr int AnimationScaleListDrawableItem_drawable = 0;
+
+    // BitmapDrawable (13 attrs)
+    extern const uint32_t BitmapDrawable[];
+    constexpr int BitmapDrawable_src = 0;
+    constexpr int BitmapDrawable_antialias = 1;
+    constexpr int BitmapDrawable_filter = 2;
+    constexpr int BitmapDrawable_dither = 3;
+    constexpr int BitmapDrawable_gravity = 4;
+    constexpr int BitmapDrawable_tileMode = 5;
+    constexpr int BitmapDrawable_tileModeX = 6;
+    constexpr int BitmapDrawable_tileModeY = 7;
+    constexpr int BitmapDrawable_mipMap = 8;
+    constexpr int BitmapDrawable_autoMirrored = 9;
+    constexpr int BitmapDrawable_tint = 10;
+    constexpr int BitmapDrawable_tintMode = 11;
+    constexpr int BitmapDrawable_alpha = 12;
+
+    // ClipDrawable (3 attrs)
+    extern const uint32_t ClipDrawable[];
+    constexpr int ClipDrawable_clipOrientation = 0;
+    constexpr int ClipDrawable_gravity = 1;
+    constexpr int ClipDrawable_drawable = 2;
+
+    // ColorDrawable (1 attrs)
+    extern const uint32_t ColorDrawable[];
+    constexpr int ColorDrawable_color = 0;
+
+    // ColorStateListItem (3 attrs)
+    extern const uint32_t ColorStateListItem[];
+    constexpr int ColorStateListItem_color = 0;
+    constexpr int ColorStateListItem_alpha = 1;
+    constexpr int ColorStateListItem_lStar = 2;
+
+    // Drawable (2 attrs)
+    extern const uint32_t Drawable[];
+    constexpr int Drawable_visible = 0;
+    constexpr int Drawable_autoMirrored = 1;
+
+    // DrawableCorners (5 attrs)
+    extern const uint32_t DrawableCorners[];
+    constexpr int DrawableCorners_radius = 0;
+    constexpr int DrawableCorners_topLeftRadius = 1;
+    constexpr int DrawableCorners_topRightRadius = 2;
+    constexpr int DrawableCorners_bottomLeftRadius = 3;
+    constexpr int DrawableCorners_bottomRightRadius = 4;
+
+    // DrawableWrapper (1 attrs)
+    extern const uint32_t DrawableWrapper[];
+    constexpr int DrawableWrapper_drawable = 0;
+
+    // GradientDrawable (14 attrs)
+    extern const uint32_t GradientDrawable[];
+    constexpr int GradientDrawable_visible = 0;
+    constexpr int GradientDrawable_dither = 1;
+    constexpr int GradientDrawable_shape = 2;
+    constexpr int GradientDrawable_innerRadiusRatio = 3;
+    constexpr int GradientDrawable_thicknessRatio = 4;
+    constexpr int GradientDrawable_innerRadius = 5;
+    constexpr int GradientDrawable_thickness = 6;
+    constexpr int GradientDrawable_useLevel = 7;
+    constexpr int GradientDrawable_tint = 8;
+    constexpr int GradientDrawable_tintMode = 9;
+    constexpr int GradientDrawable_opticalInsetLeft = 10;
+    constexpr int GradientDrawable_opticalInsetTop = 11;
+    constexpr int GradientDrawable_opticalInsetRight = 12;
+    constexpr int GradientDrawable_opticalInsetBottom = 13;
+
+    // GradientDrawableGradient (9 attrs)
+    extern const uint32_t GradientDrawableGradient[];
+    constexpr int GradientDrawableGradient_startColor = 0;
+    constexpr int GradientDrawableGradient_centerColor = 1;
+    constexpr int GradientDrawableGradient_endColor = 2;
+    constexpr int GradientDrawableGradient_useLevel = 3;
+    constexpr int GradientDrawableGradient_angle = 4;
+    constexpr int GradientDrawableGradient_type = 5;
+    constexpr int GradientDrawableGradient_centerX = 6;
+    constexpr int GradientDrawableGradient_centerY = 7;
+    constexpr int GradientDrawableGradient_gradientRadius = 8;
+
+    // GradientDrawablePadding (4 attrs)
+    extern const uint32_t GradientDrawablePadding[];
+    constexpr int GradientDrawablePadding_left = 0;
+    constexpr int GradientDrawablePadding_top = 1;
+    constexpr int GradientDrawablePadding_right = 2;
+    constexpr int GradientDrawablePadding_bottom = 3;
+
+    // GradientDrawableSize (2 attrs)
+    extern const uint32_t GradientDrawableSize[];
+    constexpr int GradientDrawableSize_width = 0;
+    constexpr int GradientDrawableSize_height = 1;
+
+    // GradientDrawableSolid (1 attrs)
+    extern const uint32_t GradientDrawableSolid[];
+    constexpr int GradientDrawableSolid_color = 0;
+
+    // GradientDrawableStroke (4 attrs)
+    extern const uint32_t GradientDrawableStroke[];
+    constexpr int GradientDrawableStroke_width = 0;
+    constexpr int GradientDrawableStroke_color = 1;
+    constexpr int GradientDrawableStroke_dashWidth = 2;
+    constexpr int GradientDrawableStroke_dashGap = 3;
+
+    // InsetDrawable (7 attrs)
+    extern const uint32_t InsetDrawable[];
+    constexpr int InsetDrawable_visible = 0;
+    constexpr int InsetDrawable_drawable = 1;
+    constexpr int InsetDrawable_inset = 2;
+    constexpr int InsetDrawable_insetLeft = 3;
+    constexpr int InsetDrawable_insetRight = 4;
+    constexpr int InsetDrawable_insetTop = 5;
+    constexpr int InsetDrawable_insetBottom = 6;
+
+    // LayerDrawable (9 attrs)
+    extern const uint32_t LayerDrawable[];
+    constexpr int LayerDrawable_opacity = 0;
+    constexpr int LayerDrawable_autoMirrored = 1;
+    constexpr int LayerDrawable_paddingMode = 2;
+    constexpr int LayerDrawable_paddingTop = 3;
+    constexpr int LayerDrawable_paddingBottom = 4;
+    constexpr int LayerDrawable_paddingLeft = 5;
+    constexpr int LayerDrawable_paddingRight = 6;
+    constexpr int LayerDrawable_paddingStart = 7;
+    constexpr int LayerDrawable_paddingEnd = 8;
+
+    // LayerDrawableItem (11 attrs)
+    extern const uint32_t LayerDrawableItem[];
+    constexpr int LayerDrawableItem_left = 0;
+    constexpr int LayerDrawableItem_top = 1;
+    constexpr int LayerDrawableItem_right = 2;
+    constexpr int LayerDrawableItem_bottom = 3;
+    constexpr int LayerDrawableItem_start = 4;
+    constexpr int LayerDrawableItem_end = 5;
+    constexpr int LayerDrawableItem_width = 6;
+    constexpr int LayerDrawableItem_height = 7;
+    constexpr int LayerDrawableItem_gravity = 8;
+    constexpr int LayerDrawableItem_drawable = 9;
+    constexpr int LayerDrawableItem_id = 10;
+
+    // LevelListDrawableItem (3 attrs)
+    extern const uint32_t LevelListDrawableItem[];
+    constexpr int LevelListDrawableItem_minLevel = 0;
+    constexpr int LevelListDrawableItem_maxLevel = 1;
+    constexpr int LevelListDrawableItem_drawable = 2;
+
+    // MaterialProgressDrawable (6 attrs)
+    extern const uint32_t MaterialProgressDrawable[];
+    constexpr int MaterialProgressDrawable_visible = 0;
+    constexpr int MaterialProgressDrawable_thickness = 1;
+    constexpr int MaterialProgressDrawable_innerRadius = 2;
+    constexpr int MaterialProgressDrawable_width = 3;
+    constexpr int MaterialProgressDrawable_height = 4;
+    constexpr int MaterialProgressDrawable_color = 5;
+
+    // NinePatchDrawable (6 attrs)
+    extern const uint32_t NinePatchDrawable[];
+    constexpr int NinePatchDrawable_src = 0;
+    constexpr int NinePatchDrawable_dither = 1;
+    constexpr int NinePatchDrawable_autoMirrored = 2;
+    constexpr int NinePatchDrawable_tint = 3;
+    constexpr int NinePatchDrawable_tintMode = 4;
+    constexpr int NinePatchDrawable_alpha = 5;
+
+    // RippleDrawable (3 attrs)
+    extern const uint32_t RippleDrawable[];
+    constexpr int RippleDrawable_color = 0;
+    constexpr int RippleDrawable_radius = 1;
+    constexpr int RippleDrawable_effectColor = 2;
+
+    // RotateDrawable (6 attrs)
+    extern const uint32_t RotateDrawable[];
+    constexpr int RotateDrawable_visible = 0;
+    constexpr int RotateDrawable_fromDegrees = 1;
+    constexpr int RotateDrawable_toDegrees = 2;
+    constexpr int RotateDrawable_pivotX = 3;
+    constexpr int RotateDrawable_pivotY = 4;
+    constexpr int RotateDrawable_drawable = 5;
+
+    // ScaleDrawable (6 attrs)
+    extern const uint32_t ScaleDrawable[];
+    constexpr int ScaleDrawable_scaleWidth = 0;
+    constexpr int ScaleDrawable_scaleHeight = 1;
+    constexpr int ScaleDrawable_scaleGravity = 2;
+    constexpr int ScaleDrawable_level = 3;
+    constexpr int ScaleDrawable_drawable = 4;
+    constexpr int ScaleDrawable_useIntrinsicSizeAsMinimum = 5;
+
+    // ShapeDrawable (6 attrs)
+    extern const uint32_t ShapeDrawable[];
+    constexpr int ShapeDrawable_color = 0;
+    constexpr int ShapeDrawable_width = 1;
+    constexpr int ShapeDrawable_height = 2;
+    constexpr int ShapeDrawable_dither = 3;
+    constexpr int ShapeDrawable_tint = 4;
+    constexpr int ShapeDrawable_tintMode = 5;
+
+    // ShapeDrawablePadding (4 attrs)
+    extern const uint32_t ShapeDrawablePadding[];
+    constexpr int ShapeDrawablePadding_left = 0;
+    constexpr int ShapeDrawablePadding_top = 1;
+    constexpr int ShapeDrawablePadding_right = 2;
+    constexpr int ShapeDrawablePadding_bottom = 3;
+
+    // StateListDrawable (7 attrs)
+    extern const uint32_t StateListDrawable[];
+    constexpr int StateListDrawable_visible = 0;
+    constexpr int StateListDrawable_variablePadding = 1;
+    constexpr int StateListDrawable_constantSize = 2;
+    constexpr int StateListDrawable_dither = 3;
+    constexpr int StateListDrawable_enterFadeDuration = 4;
+    constexpr int StateListDrawable_exitFadeDuration = 5;
+    constexpr int StateListDrawable_autoMirrored = 6;
+
+    // StateListDrawableItem (1 attrs)
+    extern const uint32_t StateListDrawableItem[];
+    constexpr int StateListDrawableItem_drawable = 0;
+
+    // VectorDrawable (13 attrs)
+    extern const uint32_t VectorDrawable[];
+    constexpr int VectorDrawable_tint = 0;
+    constexpr int VectorDrawable_tintMode = 1;
+    constexpr int VectorDrawable_autoMirrored = 2;
+    constexpr int VectorDrawable_width = 3;
+    constexpr int VectorDrawable_height = 4;
+    constexpr int VectorDrawable_viewportWidth = 5;
+    constexpr int VectorDrawable_viewportHeight = 6;
+    constexpr int VectorDrawable_name = 7;
+    constexpr int VectorDrawable_alpha = 8;
+    constexpr int VectorDrawable_opticalInsetLeft = 9;
+    constexpr int VectorDrawable_opticalInsetTop = 10;
+    constexpr int VectorDrawable_opticalInsetRight = 11;
+    constexpr int VectorDrawable_opticalInsetBottom = 12;
+
+    // VectorDrawableClipPath (2 attrs)
+    extern const uint32_t VectorDrawableClipPath[];
+    constexpr int VectorDrawableClipPath_name = 0;
+    constexpr int VectorDrawableClipPath_pathData = 1;
+
+    // VectorDrawableGroup (8 attrs)
+    extern const uint32_t VectorDrawableGroup[];
+    constexpr int VectorDrawableGroup_name = 0;
+    constexpr int VectorDrawableGroup_rotation = 1;
+    constexpr int VectorDrawableGroup_pivotX = 2;
+    constexpr int VectorDrawableGroup_pivotY = 3;
+    constexpr int VectorDrawableGroup_translateX = 4;
+    constexpr int VectorDrawableGroup_translateY = 5;
+    constexpr int VectorDrawableGroup_scaleX = 6;
+    constexpr int VectorDrawableGroup_scaleY = 7;
+
+    // VectorDrawablePath (14 attrs)
+    extern const uint32_t VectorDrawablePath[];
+    constexpr int VectorDrawablePath_name = 0;
+    constexpr int VectorDrawablePath_strokeWidth = 1;
+    constexpr int VectorDrawablePath_strokeColor = 2;
+    constexpr int VectorDrawablePath_strokeAlpha = 3;
+    constexpr int VectorDrawablePath_fillColor = 4;
+    constexpr int VectorDrawablePath_fillAlpha = 5;
+    constexpr int VectorDrawablePath_pathData = 6;
+    constexpr int VectorDrawablePath_trimPathStart = 7;
+    constexpr int VectorDrawablePath_trimPathEnd = 8;
+    constexpr int VectorDrawablePath_trimPathOffset = 9;
+    constexpr int VectorDrawablePath_strokeLineCap = 10;
+    constexpr int VectorDrawablePath_strokeLineJoin = 11;
+    constexpr int VectorDrawablePath_strokeMiterLimit = 12;
+    constexpr int VectorDrawablePath_fillType = 13;
+
+} } // namespace R::styleable
 } // namespace cdroid
 #endif // __FRAMEWORK_STYLEABLE_H__

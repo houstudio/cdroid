@@ -80,29 +80,28 @@ Spinner::Spinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mTempAdapter = nullptr;
     mForwardingListener = nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, styleable::Spinner::IDS, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::Spinner, defStyleAttr);
     
-namespace SSP = styleable::Spinner;
 
-mGravity = ta->getInt(SSP::gravity,Gravity::CENTER);
+mGravity = ta->getInt(R::styleable::Spinner_gravity,Gravity::CENTER);
 mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);
-const int mode = ta->getInt(SSP::spinnerMode,MODE_DIALOG);
+const int mode = ta->getInt(R::styleable::Spinner_spinnerMode,MODE_DIALOG);
 
 Drawable*dr;
 DropdownPopup* popup;
 switch(mode){
 case MODE_DIALOG:
      mPopup = new DialogPopup(this);
-     mPopup->setPromptText(ta->getString(SSP::prompt));
+     mPopup->setPromptText(ta->getString(R::styleable::Spinner_prompt));
      break;
 case MODE_DROPDOWN:
      popup = new DropdownPopup(ctx,this,"cdroid:attr/spinnerStyle");
-     mDropDownWidth = ta->getLayoutDimension(SSP::dropDownWidth,LayoutParams::WRAP_CONTENT);
-     dr = ta->getDrawable(SSP::dropDownSelector);
+     mDropDownWidth = ta->getLayoutDimension(R::styleable::Spinner_dropDownWidth,LayoutParams::WRAP_CONTENT);
+     dr = ta->getDrawable(R::styleable::Spinner_dropDownSelector);
      if(dr)popup->setListSelector(dr);
-     dr = mContext->getDrawable(ta->getString(SSP::popupBackground));
+     dr = mContext->getDrawable(ta->getString(R::styleable::Spinner_popupBackground));
      if(dr)popup->setBackgroundDrawable(dr);
-     popup->setPromptText(ta->getString(SSP::prompt));
+     popup->setPromptText(ta->getString(R::styleable::Spinner_prompt));
      mPopup = popup;
      mForwardingListener = new SpinnerForwardingListener(this,popup);
      break;

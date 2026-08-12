@@ -267,7 +267,7 @@ private:
 //
 // `attrs` is a SENTINEL-terminated array of attribute resource ids (trailing 0),
 // matching AOSP's single-parameter obtainStyledAttributes(int[]) and CDROID's
-// styleable::X::IDS (which gen_styleable.py emits with a trailing 0). The
+// R::styleable::X (which gen_styleable.py emits with a trailing 0). The
 // resolver loops while attrs[i] != 0; `out` must hold at least that many slots.
 
 void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,

@@ -329,7 +329,7 @@ void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSe
     mVectorState->setDensity(Drawable::resolveDensity(0));
 
     // AOSP VectorDrawable.inflate: obtainAttributes(R.styleable.VectorDrawable).
-    auto ta = r.obtainStyledAttributes(&atts, styleable::VectorDrawable::IDS);
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::VectorDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     mDpiScaledDirty = true;
     mVectorState->mCacheDirty = true;
@@ -342,7 +342,6 @@ void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSe
 
 void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
     auto state = mVectorState;
-    namespace SX = styleable::VectorDrawable;
 
     // Account for any configuration changes.
     state->mChangingConfigurations = 0;//|= a.getChangingConfigurations();
@@ -350,20 +349,20 @@ void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
     // Extract the theme attributes, if any.
     //state->mThemeAttrs = a.extractThemeAttrs();
 
-    const int tintMode = a.getInt(SX::tintMode, PorterDuff::NOOP);
+    const int tintMode = a.getInt(R::styleable::VectorDrawable_tintMode, PorterDuff::NOOP);
     if (tintMode != PorterDuff::NOOP) {
         state->mTintMode = tintMode;
     }
 
-    auto tint = a.getColorStateList(SX::tint);
+    auto tint = a.getColorStateList(R::styleable::VectorDrawable_tint);
     if (tint != nullptr) {
         state->mTint = tint;
     }
 
-    state->mAutoMirrored = a.getBoolean(SX::autoMirrored, state->mAutoMirrored);
+    state->mAutoMirrored = a.getBoolean(R::styleable::VectorDrawable_autoMirrored, state->mAutoMirrored);
 
-    const float viewportWidth = a.getFloat(SX::viewportWidth, state->mViewportWidth);
-    const float viewportHeight = a.getFloat(SX::viewportHeight, state->mViewportHeight);
+    const float viewportWidth = a.getFloat(R::styleable::VectorDrawable_viewportWidth, state->mViewportWidth);
+    const float viewportHeight = a.getFloat(R::styleable::VectorDrawable_viewportHeight, state->mViewportHeight);
     state->setViewportSize(viewportWidth, viewportHeight);
 
     if (state->mViewportWidth <= 0) {
@@ -372,8 +371,8 @@ void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
         LOGE("<vector> tag requires viewportHeight > 0");
     }
 
-    state->mBaseWidth = a.getDimensionPixelSize(SX::width, state->mBaseWidth);
-    state->mBaseHeight = a.getDimensionPixelSize(SX::height, state->mBaseHeight);
+    state->mBaseWidth = a.getDimensionPixelSize(R::styleable::VectorDrawable_width, state->mBaseWidth);
+    state->mBaseHeight = a.getDimensionPixelSize(R::styleable::VectorDrawable_height, state->mBaseHeight);
 
     if (state->mBaseWidth <= 0) {
         LOGE("<vector> tag requires width > 0");
@@ -381,16 +380,16 @@ void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
         LOGE("<vector> tag requires height > 0");
     }
 
-    const int insetLeft = a.getDimensionPixelOffset(SX::opticalInsetLeft, state->mOpticalInsets.left);
-    const int insetTop = a.getDimensionPixelOffset(SX::opticalInsetTop, state->mOpticalInsets.top);
-    const int insetRight = a.getDimensionPixelOffset(SX::opticalInsetRight, state->mOpticalInsets.right);
-    const int insetBottom = a.getDimensionPixelOffset(SX::opticalInsetBottom, state->mOpticalInsets.bottom);
+    const int insetLeft = a.getDimensionPixelOffset(R::styleable::VectorDrawable_opticalInsetLeft, state->mOpticalInsets.left);
+    const int insetTop = a.getDimensionPixelOffset(R::styleable::VectorDrawable_opticalInsetTop, state->mOpticalInsets.top);
+    const int insetRight = a.getDimensionPixelOffset(R::styleable::VectorDrawable_opticalInsetRight, state->mOpticalInsets.right);
+    const int insetBottom = a.getDimensionPixelOffset(R::styleable::VectorDrawable_opticalInsetBottom, state->mOpticalInsets.bottom);
     state->mOpticalInsets = Insets::of(insetLeft, insetTop, insetRight, insetBottom);
 
-    const float alphaInFloat = a.getFloat(SX::alpha, state->getAlpha());
+    const float alphaInFloat = a.getFloat(R::styleable::VectorDrawable_alpha, state->getAlpha());
     state->setAlpha(alphaInFloat);
 
-    const std::string name = a.getString(SX::name);
+    const std::string name = a.getString(R::styleable::VectorDrawable_name);
     if (!name.empty()) {
         state->mRootName = name;
         state->mRootGroup->mGroupName = name;
@@ -841,19 +840,18 @@ long VectorDrawable::VGroup::getNativePtr() {
 
 void VectorDrawable::VGroup::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts) {
     // AOSP VGroup.inflate: obtainAttributes(R.styleable.VectorDrawableGroup).
-    namespace SX = styleable::VectorDrawableGroup;
-    auto ta = r.obtainStyledAttributes(atts, SX::IDS);
+    auto ta = r.obtainStyledAttributes(atts, R::styleable::VectorDrawable);
     if (!ta) return;
     const TypedArray& a = *ta;
     const auto properties=mNativePtr->stagingProperties();
-    float rotate = a.getFloat(SX::rotation,properties->getRotation());
-    float pivotX = a.getFloat(SX::pivotX,properties->getPivotX());
-    float pivotY = a.getFloat(SX::pivotY,properties->getPivotY());
-    float scaleX = a.getFloat(SX::scaleX,properties->getScaleX());
-    float scaleY = a.getFloat(SX::scaleY,properties->getScaleY());
-    float translateX = a.getFloat(SX::translateX,properties->getTranslateX());
-    float translateY = a.getFloat(SX::translateY,properties->getTranslateY());
-    mGroupName = a.getString(SX::name);
+    float rotate = a.getFloat(R::styleable::VectorDrawableGroup_rotation,properties->getRotation());
+    float pivotX = a.getFloat(R::styleable::VectorDrawableGroup_pivotX,properties->getPivotX());
+    float pivotY = a.getFloat(R::styleable::VectorDrawableGroup_pivotY,properties->getPivotY());
+    float scaleX = a.getFloat(R::styleable::VectorDrawableGroup_scaleX,properties->getScaleX());
+    float scaleY = a.getFloat(R::styleable::VectorDrawableGroup_scaleY,properties->getScaleY());
+    float translateX = a.getFloat(R::styleable::VectorDrawableGroup_translateX,properties->getTranslateX());
+    float translateY = a.getFloat(R::styleable::VectorDrawableGroup_translateY,properties->getTranslateY());
+    mGroupName = a.getString(R::styleable::VectorDrawable_name);
     if (!mGroupName.empty()) {
         //nSetName(mNativePtr, mGroupName);
         mNativePtr->setName(mGroupName.c_str());
@@ -1099,7 +1097,7 @@ long VectorDrawable::VClipPath::getNativePtr() {
 
 
 void VectorDrawable::VClipPath::inflate(Resources&r,XmlPullParser&,const AttributeSet& attrs) {
-    auto ta = r.obtainStyledAttributes(attrs, styleable::VectorDrawableClipPath::IDS);
+    auto ta = r.obtainStyledAttributes(attrs, R::styleable::VectorDrawableClipPath);
     if (ta) updateStateFromTypedArray(*ta);
 }
 
@@ -1124,18 +1122,17 @@ bool VectorDrawable::VClipPath::hasFocusStateSpecified()const {
 }
 
 void VectorDrawable::VClipPath::updateStateFromTypedArray(const TypedArray& a) {
-    namespace SX = styleable::VectorDrawableClipPath;
     // Account for any configuration changes.
     mChangingConfigurations =0;//|= a.getChangingConfigurations();
 
-    const std::string pathName = a.getString(SX::name);
+    const std::string pathName = a.getString(R::styleable::VectorDrawable_name);
     if (!pathName.empty()) {
         mPathName = pathName;
         //nSetName(mNativePtr, mPathName);
         mNativePtr->setName(mPathName.c_str());
     }
 
-    const std::string pathDataString = a.getString(SX::pathData);
+    const std::string pathDataString = a.getString(R::styleable::VectorDrawablePath_pathData);
     if (!pathDataString.empty()) {
         mPathData = new PathParser::PathData(pathDataString);
         //nSetPathString(mNativePtr, pathDataString, pathDataString.length());
@@ -1268,13 +1265,12 @@ long VectorDrawable::VFullPath::getNativePtr() {
 }
 
 void VectorDrawable::VFullPath::inflate(Resources&r,XmlPullParser&parser,const AttributeSet& attrs) {
-    auto ta = r.obtainStyledAttributes(attrs, styleable::VectorDrawablePath::IDS);
+    auto ta = r.obtainStyledAttributes(attrs, R::styleable::VectorDrawablePath);
     if (ta) updateStateFromTypedArray(*ta);
     inflateGradients(parser,attrs);
 }
 
 void VectorDrawable::VFullPath::updateStateFromTypedArray(const TypedArray& a) {
-    namespace SXP = styleable::VectorDrawablePath;
     auto properties = mNativePtr->stagingProperties();
     float strokeWidth = properties->getStrokeWidth();
     int strokeColor = properties->getStrokeColor();
@@ -1296,14 +1292,14 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const TypedArray& a) {
     // Extract the theme attributes, if any.
     //mThemeAttrs = a.extractThemeAttrs();
 
-    const std::string pathName = a.getString(SXP::name);
+    const std::string pathName = a.getString(R::styleable::VectorDrawablePath_name);
     if (!pathName.empty()) {
         mPathName = pathName;
         //nSetName(mNativePtr, mPathName);
         mNativePtr->setName(mPathName.c_str());
     }
 
-    const std::string pathString = a.getString(SXP::pathData);
+    const std::string pathString = a.getString(R::styleable::VectorDrawablePath_pathData);
     if (!pathString.empty()) {
         mPathData = new PathParser::PathData(pathString);
         //nSetPathString(mNativePtr, pathString, pathString.length());
@@ -1313,7 +1309,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const TypedArray& a) {
         ((hwui::Path*)mNativePtr)->mutateStagingProperties()->setData(data);
     }
 #if 10
-    auto fillColors = a.getColorStateList(SXP::fillColor);
+    auto fillColors = a.getColorStateList(R::styleable::VectorDrawablePath_fillColor);
     if (fillColors != nullptr) {
         // If the colors is a gradient color, or the color state list is stateful, keep the
         // colors information. Otherwise, discard the colors and keep the default color.
@@ -1328,7 +1324,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const TypedArray& a) {
         fillColor = fillColors->getDefaultColor();
     }
 
-    auto strokeColors = a.getColorStateList(SXP::strokeColor);
+    auto strokeColors = a.getColorStateList(R::styleable::VectorDrawablePath_strokeColor);
     if (strokeColors != nullptr) {
         // If the colors is a gradient color, or the color state list is stateful, keep the
         // colors information. Otherwise, discard the colors and keep the default color.
@@ -1350,19 +1346,19 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const TypedArray& a) {
     //mNativePtr->mutateStagingProperties()->setStrokeGradient(strokeGradient);
     //LOGD("path %p gradient=%p,%p",this,mStrokeGradient.get(),mFillGradient.get());
 #endif
-    fillAlpha = a.getFloat(SXP::fillAlpha, fillAlpha);
+    fillAlpha = a.getFloat(R::styleable::VectorDrawablePath_fillAlpha, fillAlpha);
     // aapt2 resolves the strokeLineCap/strokeLineJoin/fillType enum names to the
     // same int values Cairo expects (BUTT/ROUND/SQUARE, MITER/ROUND/BEVEL,
     // WINDING/EVEN_ODD), so a.getInt reads them directly.
-    strokeLineCap = a.getInt(SXP::strokeLineCap, strokeLineCap);
-    strokeLineJoin = a.getInt(SXP::strokeLineJoin, strokeLineJoin);
-    strokeMiterLimit = a.getFloat(SXP::strokeMiterLimit, strokeMiterLimit);
-    strokeAlpha = a.getFloat(SXP::strokeAlpha,strokeAlpha);
-    strokeWidth = a.getFloat(SXP::strokeWidth,strokeWidth);
-    trimPathEnd = a.getFloat(SXP::trimPathEnd,trimPathEnd);
-    trimPathOffset = a.getFloat(SXP::trimPathOffset, trimPathOffset);
-    trimPathStart = a.getFloat(SXP::trimPathStart, trimPathStart);
-    fillType = a.getInt(SXP::fillType, fillType);
+    strokeLineCap = a.getInt(R::styleable::VectorDrawablePath_strokeLineCap, strokeLineCap);
+    strokeLineJoin = a.getInt(R::styleable::VectorDrawablePath_strokeLineJoin, strokeLineJoin);
+    strokeMiterLimit = a.getFloat(R::styleable::VectorDrawablePath_strokeMiterLimit, strokeMiterLimit);
+    strokeAlpha = a.getFloat(R::styleable::VectorDrawablePath_strokeAlpha,strokeAlpha);
+    strokeWidth = a.getFloat(R::styleable::VectorDrawablePath_strokeWidth,strokeWidth);
+    trimPathEnd = a.getFloat(R::styleable::VectorDrawablePath_trimPathEnd,trimPathEnd);
+    trimPathOffset = a.getFloat(R::styleable::VectorDrawablePath_trimPathOffset, trimPathOffset);
+    trimPathStart = a.getFloat(R::styleable::VectorDrawablePath_trimPathStart, trimPathStart);
+    fillType = a.getInt(R::styleable::VectorDrawablePath_fillType, fillType);
 
     //nUpdateFullPathProperties(
     mNativePtr->mutateStagingProperties()->updateProperties(strokeWidth, strokeColor, strokeAlpha,

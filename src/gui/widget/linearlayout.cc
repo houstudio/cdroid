@@ -27,11 +27,10 @@ DECLARE_WIDGET(LinearLayout)
 LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :ViewGroup::MarginLayoutParams(c,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = c->obtainStyledAttributes(attrs, styleable::LinearLayoutLayout::IDS);
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::LinearLayoutLayout);
     if (ta) {
-    namespace SLL = styleable::LinearLayoutLayout;
-    weight = ta->getFloat(SLL::layout_weight, 0);
-    gravity= ta->getInt(SLL::layout_gravity, -1);
+    weight = ta->getFloat(R::styleable::LinearLayoutLayout_layout_weight, 0);
+    gravity= ta->getInt(R::styleable::LinearLayoutLayout_layout_gravity, -1);
     LOGV("width=%d,height=%d weight=%.2f gravity=%x margin=%d,%d,%d,%d",width,height,
 	    weight,gravity,topMargin,bottomMargin,leftMargin,rightMargin);
     }
@@ -102,7 +101,7 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet* pAttrs,int defSt
     const AttributeSet& attrs = *pAttrs;
     initView();
 
-    auto ta = context->obtainStyledAttributes(attrs, styleable::LinearLayout::IDS, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::LinearLayout, defStyleAttr);
 
     // Defaults
     setBaselineAligned(true);
@@ -116,23 +115,23 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet* pAttrs,int defSt
     for (size_t n = ta->getIndexCount(); n > 0; ) {
         size_t i = ta->getIndex(--n);
         switch (i) {
-        case styleable::LinearLayout::orientation:
+        case R::styleable::LinearLayout_orientation:
             setOrientation(ta->getInt(i, (int)HORIZONTAL)); break;
-        case styleable::LinearLayout::gravity:
+        case R::styleable::LinearLayout_gravity:
             setGravity(ta->getInt(i, Gravity::NO_GRAVITY)); break;
-        case styleable::LinearLayout::baselineAligned:
+        case R::styleable::LinearLayout_baselineAligned:
             setBaselineAligned(ta->getBoolean(i, true)); break;
-        case styleable::LinearLayout::baselineAlignedChildIndex:
+        case R::styleable::LinearLayout_baselineAlignedChildIndex:
             mBaselineAlignedChildIndex = ta->getInt(i, -1); break;
-        case styleable::LinearLayout::weightSum:
+        case R::styleable::LinearLayout_weightSum:
             mWeightSum = ta->getFloat(i, -1.f); break;
-        case styleable::LinearLayout::measureWithLargestChild:
+        case R::styleable::LinearLayout_measureWithLargestChild:
             mUseLargestChild = ta->getBoolean(i, false); break;
-        case styleable::LinearLayout::showDividers:
+        case R::styleable::LinearLayout_showDividers:
             mShowDividers = ta->getInt(i, SHOW_DIVIDER_NONE); break;
-        case styleable::LinearLayout::divider:
+        case R::styleable::LinearLayout_divider:
             setDividerDrawable(ta->getDrawable(i)); break;
-        case styleable::LinearLayout::dividerPadding:
+        case R::styleable::LinearLayout_dividerPadding:
             mDividerPadding = ta->getInt(i, 0); break;
         default: break;
         }

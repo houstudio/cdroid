@@ -200,8 +200,6 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
 
 void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&attrs){
     (void)r;
-    namespace SXV = styleable::AnimatedVectorDrawable;
-    namespace SXT = styleable::AnimatedVectorDrawableTarget;
     auto state = mAnimatedVectorState;
     int eventType= parser.getEventType();//XmlPullParser::START_TAG;
     float pathErrorScale = 1;
@@ -214,8 +212,8 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
             const std::string tagName = parser.getName();
             if (tagName.compare(ANIMATED_VECTOR)==0) {
                 // AOSP obtains R.styleable.AnimatedVectorDrawable per <animated-vector>.
-                auto ta = r.obtainStyledAttributes(&attrs, SXV::IDS);
-                Drawable* dr = ta ? ta->getDrawable(SXV::drawable) : nullptr;
+                auto ta = r.obtainStyledAttributes(&attrs, R::styleable::AnimatedVectorDrawable);
+                Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimatedVectorDrawable_drawable) : nullptr;
                 if (dr != nullptr) {
                     VectorDrawable* vectorDrawable = (VectorDrawable*) dr->mutate();
                     vectorDrawable->setAllowCaching(false);
@@ -232,17 +230,17 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
                 }
             } else if (tagName.compare(TARGET)==0) {
                 // AOSP obtains R.styleable.AnimatedVectorDrawableTarget per <target>.
-                auto ta = r.obtainStyledAttributes(&attrs, SXT::IDS);
-                const std::string target = ta ? ta->getString(SXT::name) : attrs.getString("name");
+                auto ta = r.obtainStyledAttributes(&attrs, R::styleable::AnimatedVectorDrawableTarget);
+                const std::string target = ta ? ta->getString(R::styleable::AnimatedVectorDrawableTarget_name) : attrs.getString("name");
                 // animation is a @animator reference; TypedArray exposes no Animator
                 // getter, so resolve the reference to its resource name (the same form
                 // TypedArray.getDrawable and XmlPullParser consume) and hand it to
                 // AnimatorInflater. Fall back to the string bridge for text XML.
                 std::string animResId;
                 Res_value v;
-                if (ta && ta->peekValue(SXT::animation, &v)) {
+                if (ta && ta->peekValue(R::styleable::AnimatedVectorDrawableTarget_animation, &v)) {
                     animResId = (v.dataType == Res_value::TYPE_STRING)
-                              ? ta->getString(SXT::animation)
+                              ? ta->getString(R::styleable::AnimatedVectorDrawableTarget_animation)
                               : ctx->getResourceName(v.data);
                 } else {
                     animResId = attrs.getString("animation");

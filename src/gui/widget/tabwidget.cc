@@ -34,17 +34,16 @@ TabWidget::TabWidget(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :LinearLayout(ctx,pAttrs, defStyleAttr){
     const AttributeSet& atts = *pAttrs;
     initTab();
-    auto ta = ctx->obtainStyledAttributes(atts, styleable::TabWidget::IDS, defStyleAttr);
-    namespace STW = styleable::TabWidget;
-    const bool hasExplicitLeft = ta && ta->hasValue(STW::tabStripLeft);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::TabWidget, defStyleAttr);
+    const bool hasExplicitLeft = ta && ta->hasValue(R::styleable::TabWidget_tabStripLeft);
     if(hasExplicitLeft)
-        mLeftStrip = ta->getDrawable(STW::tabStripLeft);
+        mLeftStrip = ta->getDrawable(R::styleable::TabWidget_tabStripLeft);
     else
         mLeftStrip = atts.getDrawable("tab_bottom_left");
 
-    const bool hasExplicitRight = ta && ta->hasValue(STW::tabStripRight);
+    const bool hasExplicitRight = ta && ta->hasValue(R::styleable::TabWidget_tabStripRight);
     if(hasExplicitRight)
-        mRightStrip = ta->getDrawable(STW::tabStripRight);
+        mRightStrip = ta->getDrawable(R::styleable::TabWidget_tabStripRight);
     else
         mRightStrip = atts.getDrawable("tab_bottom_right");
     setChildrenDrawingOrderEnabled(true);

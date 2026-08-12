@@ -88,11 +88,10 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
     // aapt2 already resolved enums/flags at compile time, so TypedArray getters
     // return integers directly — no string→enum map needed.
     auto ta = ctx->obtainStyledAttributes(
-        attrs, styleable::View::IDS, defStyleAttr);
+        attrs, R::styleable::View, defStyleAttr);
     // (namespace alias not allowed in function body in C++14)
     // Phase 2: TypedArray switch loop (AOSP View.java pattern).
     // Binary AXML: single-pass over set indices. Text XML: AttributeSet fallback.
-    namespace SV = styleable::View;
     mID = attrs.getResourceId("id", View::NO_ID); // id on AttributeSet (idgen vs arsc)
     // Locals needed after the if/else block (set inside both paths).
     int scrollbars = (int)SCROLLBARS_NONE;
@@ -105,59 +104,59 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
         for (size_t n=0;n < N;n++ ) {
             size_t i = ta->getIndex(n);
             switch (i) {
-            case SV::minWidth:       mMinWidth = ta->getDimensionPixelSize(i, 0); break;
-            case SV::minHeight:      mMinHeight = ta->getDimensionPixelSize(i, 0); break;
-            case SV::background:     { Drawable* bg = ta->getDrawable(i); if (bg) setBackground(bg); } break;
-            case SV::visibility:     setVisibility(ta->getInt(i, (int)VISIBLE)); break;
-            case SV::layerType:      setLayerType(ta->getInt(i, (int)LAYER_TYPE_NONE)); break;
-            case SV::drawingCacheQuality: { int q = ta->getInt(i, (int)DRAWING_CACHE_QUALITY_AUTO);
+            case R::styleable::View_minWidth:       mMinWidth = ta->getDimensionPixelSize(i, 0); break;
+            case R::styleable::View_minHeight:      mMinHeight = ta->getDimensionPixelSize(i, 0); break;
+            case R::styleable::View_background:     { Drawable* bg = ta->getDrawable(i); if (bg) setBackground(bg); } break;
+            case R::styleable::View_visibility:     setVisibility(ta->getInt(i, (int)VISIBLE)); break;
+            case R::styleable::View_layerType:      setLayerType(ta->getInt(i, (int)LAYER_TYPE_NONE)); break;
+            case R::styleable::View_drawingCacheQuality: { int q = ta->getInt(i, (int)DRAWING_CACHE_QUALITY_AUTO);
                                        if(q){viewFlagValues|=q;viewFlagMasks|=DRAWING_CACHE_QUALITY_MASK;} } break;
-            case SV::contentDescription: mContentDescription = ta->getString(i); break;
-            case SV::soundEffectsEnabled: if(!ta->getBoolean(i,true)){viewFlagValues&=~SOUND_EFFECTS_ENABLED;viewFlagMasks|=SOUND_EFFECTS_ENABLED;} break;
-            case SV::hapticFeedbackEnabled: if(!ta->getBoolean(i,true)){viewFlagValues&=~HAPTIC_FEEDBACK_ENABLED;viewFlagMasks|=HAPTIC_FEEDBACK_ENABLED;} break;
-            case SV::layoutDirection: mPrivateFlags2 |= (ta->getInt(i,(int)LAYOUT_DIRECTION_DEFAULT)<<PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT); break;
-            case SV::textDirection:  { int td = ta->getInt(i,-1); if(td!=-1) mPrivateFlags2|=td<<PFLAG2_TEXT_DIRECTION_MASK_SHIFT; } break;
-            case SV::textAlignment:  mPrivateFlags2 |= (ta->getInt(i,(int)TEXT_ALIGNMENT_DEFAULT)<<PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT); break;
-            case SV::importantForAccessibility: setImportantForAccessibility(ta->getInt(i,(int)IMPORTANT_FOR_ACCESSIBILITY_DEFAULT)); break;
-            case SV::clickable:      if(ta->getBoolean(i,false)){viewFlagValues|=CLICKABLE;viewFlagMasks|=CLICKABLE;} break;
-            case SV::longClickable:  if(ta->getBoolean(i,false)){viewFlagValues|=LONG_CLICKABLE;viewFlagMasks|=LONG_CLICKABLE;} break;
-            case SV::focusable:      viewFlagValues=(viewFlagValues&~FOCUSABLE_MASK)|ta->getInt(i,0);
+            case R::styleable::View_contentDescription: mContentDescription = ta->getString(i); break;
+            case R::styleable::View_soundEffectsEnabled: if(!ta->getBoolean(i,true)){viewFlagValues&=~SOUND_EFFECTS_ENABLED;viewFlagMasks|=SOUND_EFFECTS_ENABLED;} break;
+            case R::styleable::View_hapticFeedbackEnabled: if(!ta->getBoolean(i,true)){viewFlagValues&=~HAPTIC_FEEDBACK_ENABLED;viewFlagMasks|=HAPTIC_FEEDBACK_ENABLED;} break;
+            case R::styleable::View_layoutDirection: mPrivateFlags2 |= (ta->getInt(i,(int)LAYOUT_DIRECTION_DEFAULT)<<PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT); break;
+            case R::styleable::View_textDirection:  { int td = ta->getInt(i,-1); if(td!=-1) mPrivateFlags2|=td<<PFLAG2_TEXT_DIRECTION_MASK_SHIFT; } break;
+            case R::styleable::View_textAlignment:  mPrivateFlags2 |= (ta->getInt(i,(int)TEXT_ALIGNMENT_DEFAULT)<<PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT); break;
+            case R::styleable::View_importantForAccessibility: setImportantForAccessibility(ta->getInt(i,(int)IMPORTANT_FOR_ACCESSIBILITY_DEFAULT)); break;
+            case R::styleable::View_clickable:      if(ta->getBoolean(i,false)){viewFlagValues|=CLICKABLE;viewFlagMasks|=CLICKABLE;} break;
+            case R::styleable::View_longClickable:  if(ta->getBoolean(i,false)){viewFlagValues|=LONG_CLICKABLE;viewFlagMasks|=LONG_CLICKABLE;} break;
+            case R::styleable::View_focusable:      viewFlagValues=(viewFlagValues&~FOCUSABLE_MASK)|ta->getInt(i,0);
                                      if(!(viewFlagValues&FOCUSABLE_AUTO))viewFlagMasks|=FOCUSABLE_MASK; break;
-            case SV::focusableInTouchMode: if(ta->getBoolean(i,false)){viewFlagValues&=~FOCUSABLE_AUTO;viewFlagValues|=FOCUSABLE_IN_TOUCH_MODE|FOCUSABLE;viewFlagMasks|=FOCUSABLE_IN_TOUCH_MODE|FOCUSABLE_MASK;} break;
-            case SV::saveEnabled:    if(!ta->getBoolean(i,true)){viewFlagValues|=SAVE_DISABLED;viewFlagMasks|=SAVE_DISABLED_MASK;} break;
-            case SV::duplicateParentState: if(ta->getBoolean(i,false)){viewFlagValues|=DUPLICATE_PARENT_STATE;viewFlagMasks|=DUPLICATE_PARENT_STATE;} break;
-            case SV::filterTouchesWhenObscured: if(ta->getBoolean(i,false)){viewFlagValues|=FILTER_TOUCHES_WHEN_OBSCURED;viewFlagMasks|=FILTER_TOUCHES_WHEN_OBSCURED;} break;
-            case SV::isScrollContainer: if(ta->getBoolean(i,false)) setScrollContainer(true); break;
-            case SV::nestedScrollingEnabled: setNestedScrollingEnabled(ta->getBoolean(i,false)); break;
-            case SV::keyboardNavigationCluster: setKeyboardNavigationCluster(ta->getBoolean(i,false)); break;
-            case SV::focusedByDefault: setFocusedByDefault(ta->getBoolean(i,false)); break;
-            case SV::allowClickWhenDisabled: setAllowClickWhenDisabled(ta->getBoolean(i,false)); break;
-            case SV::scrollbars:     { int sb=ta->getInt(i,(int)SCROLLBARS_NONE); if(sb!=SCROLLBARS_NONE){viewFlagValues|=sb;viewFlagMasks|=SCROLLBARS_MASK;} } break;
-            case SV::scrollbarStyle: { int ss=ta->getInt(i,(int)SCROLLBARS_INSIDE_OVERLAY); if(ss!=SCROLLBARS_INSIDE_OVERLAY){viewFlagValues|=ss&SCROLLBARS_STYLE_MASK;viewFlagMasks|=SCROLLBARS_STYLE_MASK;} } break;
-            case SV::overScrollMode: mOverScrollMode=ta->getInt(i,mOverScrollMode); break;
-            case SV::verticalScrollbarPosition: mVerticalScrollbarPosition=ta->getInt(i,(int)SCROLLBAR_POSITION_DEFAULT); break;
-            case SV::requiresFadingEdge: { int fe=ta->getInt(i,(int)FADING_EDGE_NONE); if(fe!=FADING_EDGE_NONE){viewFlagValues|=fe;viewFlagMasks|=FADING_EDGE_MASK;initScrollCache();} } break;
-            case SV::fadingEdgeLength: if(mScrollCache) mScrollCache->fadingEdgeLength=ta->getInt(i,ViewConfiguration::get(mContext).getScaledFadingEdgeLength()); break;
-            case SV::rotation:       setRotation(ta->getFloat(i,0)); break;
-            case SV::rotationX:      setRotationX(ta->getFloat(i,0)); break;
-            case SV::rotationY:      setRotationY(ta->getFloat(i,0)); break;
-            case SV::scaleX:         setScaleX(ta->getFloat(i,1.f)); break;
-            case SV::scaleY:         setScaleY(ta->getFloat(i,1.f)); break;
-            case SV::translationX:   setTranslationX(ta->getDimensionPixelSize(i,0)); break;
-            case SV::translationY:   setTranslationY(ta->getDimensionPixelSize(i,0)); break;
-            case SV::translationZ:   setTranslationZ(ta->getDimensionPixelSize(i,0)); break;
-            case SV::transformPivotX: setPivotX(ta->getDimensionPixelSize(i,0)); break;
-            case SV::transformPivotY: setPivotY(ta->getDimensionPixelSize(i,0)); break;
-            case SV::nextFocusLeft:  mNextFocusLeftId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case SV::nextFocusRight: mNextFocusRightId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case SV::nextFocusUp:    mNextFocusUpId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case SV::nextFocusDown:  mNextFocusDownId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case SV::nextFocusForward: mNextFocusForwardId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case SV::nextClusterForward: mNextClusterForwardId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case SV::transitionName: setTransitionName(ta->getString(i)); break;
-            case SV::stateListAnimator: { std::string a=ta->getString(i); if(!a.empty()) setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,a)); } break;
-            case SV::backgroundTint: { RefPtr<ColorStateList> c(ta->getColorStateList(i)); if(c&&!mBackgroundTint){mBackgroundTint=new TintInfo;mBackgroundTint->mTintList=c;mBackgroundTint->mHasTintList=true;} } break;
-            case SV::outlineProvider: break; // read after loop if set
+            case R::styleable::View_focusableInTouchMode: if(ta->getBoolean(i,false)){viewFlagValues&=~FOCUSABLE_AUTO;viewFlagValues|=FOCUSABLE_IN_TOUCH_MODE|FOCUSABLE;viewFlagMasks|=FOCUSABLE_IN_TOUCH_MODE|FOCUSABLE_MASK;} break;
+            case R::styleable::View_saveEnabled:    if(!ta->getBoolean(i,true)){viewFlagValues|=SAVE_DISABLED;viewFlagMasks|=SAVE_DISABLED_MASK;} break;
+            case R::styleable::View_duplicateParentState: if(ta->getBoolean(i,false)){viewFlagValues|=DUPLICATE_PARENT_STATE;viewFlagMasks|=DUPLICATE_PARENT_STATE;} break;
+            case R::styleable::View_filterTouchesWhenObscured: if(ta->getBoolean(i,false)){viewFlagValues|=FILTER_TOUCHES_WHEN_OBSCURED;viewFlagMasks|=FILTER_TOUCHES_WHEN_OBSCURED;} break;
+            case R::styleable::View_isScrollContainer: if(ta->getBoolean(i,false)) setScrollContainer(true); break;
+            case R::styleable::View_nestedScrollingEnabled: setNestedScrollingEnabled(ta->getBoolean(i,false)); break;
+            case R::styleable::View_keyboardNavigationCluster: setKeyboardNavigationCluster(ta->getBoolean(i,false)); break;
+            case R::styleable::View_focusedByDefault: setFocusedByDefault(ta->getBoolean(i,false)); break;
+            case R::styleable::View_allowClickWhenDisabled: setAllowClickWhenDisabled(ta->getBoolean(i,false)); break;
+            case R::styleable::View_scrollbars:     { int sb=ta->getInt(i,(int)SCROLLBARS_NONE); if(sb!=SCROLLBARS_NONE){viewFlagValues|=sb;viewFlagMasks|=SCROLLBARS_MASK;} } break;
+            case R::styleable::View_scrollbarStyle: { int ss=ta->getInt(i,(int)SCROLLBARS_INSIDE_OVERLAY); if(ss!=SCROLLBARS_INSIDE_OVERLAY){viewFlagValues|=ss&SCROLLBARS_STYLE_MASK;viewFlagMasks|=SCROLLBARS_STYLE_MASK;} } break;
+            case R::styleable::View_overScrollMode: mOverScrollMode=ta->getInt(i,mOverScrollMode); break;
+            case R::styleable::View_verticalScrollbarPosition: mVerticalScrollbarPosition=ta->getInt(i,(int)SCROLLBAR_POSITION_DEFAULT); break;
+            case R::styleable::View_requiresFadingEdge: { int fe=ta->getInt(i,(int)FADING_EDGE_NONE); if(fe!=FADING_EDGE_NONE){viewFlagValues|=fe;viewFlagMasks|=FADING_EDGE_MASK;initScrollCache();} } break;
+            case R::styleable::View_fadingEdgeLength: if(mScrollCache) mScrollCache->fadingEdgeLength=ta->getInt(i,ViewConfiguration::get(mContext).getScaledFadingEdgeLength()); break;
+            case R::styleable::View_rotation:       setRotation(ta->getFloat(i,0)); break;
+            case R::styleable::View_rotationX:      setRotationX(ta->getFloat(i,0)); break;
+            case R::styleable::View_rotationY:      setRotationY(ta->getFloat(i,0)); break;
+            case R::styleable::View_scaleX:         setScaleX(ta->getFloat(i,1.f)); break;
+            case R::styleable::View_scaleY:         setScaleY(ta->getFloat(i,1.f)); break;
+            case R::styleable::View_translationX:   setTranslationX(ta->getDimensionPixelSize(i,0)); break;
+            case R::styleable::View_translationY:   setTranslationY(ta->getDimensionPixelSize(i,0)); break;
+            case R::styleable::View_translationZ:   setTranslationZ(ta->getDimensionPixelSize(i,0)); break;
+            case R::styleable::View_transformPivotX: setPivotX(ta->getDimensionPixelSize(i,0)); break;
+            case R::styleable::View_transformPivotY: setPivotY(ta->getDimensionPixelSize(i,0)); break;
+            case R::styleable::View_nextFocusLeft:  mNextFocusLeftId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
+            case R::styleable::View_nextFocusRight: mNextFocusRightId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
+            case R::styleable::View_nextFocusUp:    mNextFocusUpId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
+            case R::styleable::View_nextFocusDown:  mNextFocusDownId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
+            case R::styleable::View_nextFocusForward: mNextFocusForwardId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
+            case R::styleable::View_nextClusterForward: mNextClusterForwardId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
+            case R::styleable::View_transitionName: setTransitionName(ta->getString(i)); break;
+            case R::styleable::View_stateListAnimator: { std::string a=ta->getString(i); if(!a.empty()) setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,a)); } break;
+            case R::styleable::View_backgroundTint: { RefPtr<ColorStateList> c(ta->getColorStateList(i)); if(c&&!mBackgroundTint){mBackgroundTint=new TintInfo;mBackgroundTint->mTintList=c;mBackgroundTint->mHasTintList=true;} } break;
+            case R::styleable::View_outlineProvider: break; // read after loop if set
             default: break;
             }
         }
@@ -275,8 +274,8 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
         mBackgroundTint->mTintMode = bgTintMode;
         mBackgroundTint->mHasTintMode = true;
     }
-    const int providerInt = (ta&&ta->hasValue(SV::outlineProvider))
-        ? ta->getInt(SV::outlineProvider,(int)PROVIDER_BACKGROUND)
+    const int providerInt = (ta&&ta->hasValue(R::styleable::View_outlineProvider))
+        ? ta->getInt(R::styleable::View_outlineProvider,(int)PROVIDER_BACKGROUND)
         : attrs.getInt("outlineProvider", std::unordered_map<std::string,int>{
               {"none",(int)PROVIDER_NONE},{"background",(int)PROVIDER_BACKGROUND},
               {"bounds",(int)PROVIDER_BOUNDS},{"paddedBounds",(int)PROVIDER_PADDED_BOUNDS}

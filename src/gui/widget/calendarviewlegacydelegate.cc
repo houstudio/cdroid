@@ -375,8 +375,8 @@ void CalendarViewLegacyDelegate::updateDateTextSize() {
     // Resolve the TextAppearance style typed (framework textSize sub-attr), the
     // same pattern as switch/simplemonthview/tablayout; keep the init default
     // when the style is unset or unresolvable.
-    auto ta = ctx->obtainStyledAttributes(attr, styleable::TextAppearance::IDS);
-    mDateTextSize = ta ? ta->getDimensionPixelSize(styleable::TextAppearance::textSize, DEFAULT_DATE_TEXT_SIZE)
+    auto ta = ctx->obtainStyledAttributes(attr, R::styleable::TextAppearance);
+    mDateTextSize = ta ? ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, DEFAULT_DATE_TEXT_SIZE)
                        : DEFAULT_DATE_TEXT_SIZE;
 }
 

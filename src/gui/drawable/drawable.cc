@@ -92,8 +92,8 @@ void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts
     // so r is accepted for API parity and unused at this base layer.
     (void)r;
     Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, styleable::Drawable::IDS);
-    mVisible = ta ? ta->getBoolean(styleable::Drawable::visible, mVisible) : mVisible;
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::Drawable);
+    mVisible = ta ? ta->getBoolean(R::styleable::Drawable_visible, mVisible) : mVisible;
 }
 
 void Drawable::inflateWithAttributes(XmlPullParser&parser,const AttributeSet&atts){

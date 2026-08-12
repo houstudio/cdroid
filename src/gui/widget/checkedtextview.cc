@@ -10,32 +10,31 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):Checked
 CheckedTextView::CheckedTextView(Context* context,const AttributeSet* pAttrs,int defStyleAttr):TextView(context,pAttrs, defStyleAttr){
     const AttributeSet& a = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(a, styleable::CheckedTextView::IDS, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(a, R::styleable::CheckedTextView, defStyleAttr);
     
-namespace SCT = styleable::CheckedTextView;
 
-Drawable* d = context->getDrawable(ta->getString(SCT::checkMark));
+Drawable* d = context->getDrawable(ta->getString(R::styleable::CheckedTextView_checkMark));
 mCheckMarkDrawable = nullptr;
 mCheckMarkTintList = nullptr;
 mHasCheckMarkTintMode=false;
 mHasCheckMarkTint = false;
 if (d)setCheckMarkDrawable(d);
 
-if ((ta&&ta->hasValue(SCT::checkMarkTintMode)) || a.hasAttribute("checkMarkTintMode")) {
+if ((ta&&ta->hasValue(R::styleable::CheckedTextView_checkMarkTintMode)) || a.hasAttribute("checkMarkTintMode")) {
     /* getTintMode decodes the 6-value tintMode enum; the value is valid as a
      * BlendMode (PorterDuff and BlendMode coincide for these 6). */
     mCheckMarkBlendMode = a.getTintMode("checkMarkTintMode", -1);
     mHasCheckMarkTintMode = true;
 }
 
-if ((ta&&ta->hasValue(SCT::checkMarkTint)) || a.hasAttribute("checkMarkTint")) {
+if ((ta&&ta->hasValue(R::styleable::CheckedTextView_checkMarkTint)) || a.hasAttribute("checkMarkTint")) {
     mCheckMarkTintList = a.getColorStateList("checkMarkTint");
     mHasCheckMarkTint = (mCheckMarkTintList!=nullptr);
 }
 mChecked = false;
 mCheckMarkGravity = a.getGravity("checkMarkGravity", Gravity::END);
 
-const bool checked = ta->getBoolean(SCT::checked, false);
+const bool checked = ta->getBoolean(R::styleable::CheckedTextView_checked, false);
 setChecked(checked);
 applyCheckMarkTint();
 

@@ -117,15 +117,14 @@ void ClipDrawable::draw(Canvas& canvas){
 }
 
 void ClipDrawable::inflate(Resources& r, XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, styleable::ClipDrawable::IDS);
+    auto ta = r.obtainStyledAttributes(atts, R::styleable::ClipDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     DrawableWrapper::inflate(r,parser,atts);
 }
 
 void ClipDrawable::updateStateFromTypedArray(const TypedArray& a){
-    namespace SC = styleable::ClipDrawable;
-    mState->mOrientation = a.getInt(SC::clipOrientation, mState->mOrientation);
-    mState->mGravity = a.getInt(SC::gravity, mState->mGravity);
+    mState->mOrientation = a.getInt(R::styleable::ClipDrawable_clipOrientation, mState->mOrientation);
+    mState->mGravity = a.getInt(R::styleable::ClipDrawable_gravity, mState->mGravity);
 }
 
 }/*endof namespace*/

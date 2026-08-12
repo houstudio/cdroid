@@ -1153,7 +1153,7 @@ void GradientDrawable::draw(Canvas&canvas) {
 void GradientDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(r, parser, atts);
     mGradientState->setDensity(Drawable::resolveDensity( 0));
-    auto ta = r.obtainStyledAttributes(atts, styleable::GradientDrawable::IDS);
+    auto ta = r.obtainStyledAttributes(atts, R::styleable::GradientDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     inflateChildElements(r,parser,atts);
     updateLocalState();
@@ -1161,7 +1161,6 @@ void GradientDrawable::inflate(Resources& r,XmlPullParser&parser,const Attribute
 
 void GradientDrawable::updateStateFromTypedArray(const TypedArray& a) {
     auto state = mGradientState;
-    namespace SX = styleable::GradientDrawable;
 
     // Account for any configuration changes.
     //state.mChangingConfigurations |= a.getChangingConfigurations();
@@ -1169,39 +1168,39 @@ void GradientDrawable::updateStateFromTypedArray(const TypedArray& a) {
     //state.mThemeAttrs = a.extractThemeAttrs();
 
     // aapt2 pre-resolves the shape enum (rectangle/oval/line/ring).
-    state->mShape = a.getInt(SX::shape, state->mShape);
+    state->mShape = a.getInt(R::styleable::GradientDrawable_shape, state->mShape);
 
-    state->mDither = a.getBoolean(SX::dither, state->mDither);
+    state->mDither = a.getBoolean(R::styleable::GradientDrawable_dither, state->mDither);
 
     if (state->mShape == GradientDrawable::RING) {
-        state->mInnerRadius = a.getDimensionPixelSize(SX::innerRadius, state->mInnerRadius);
+        state->mInnerRadius = a.getDimensionPixelSize(R::styleable::GradientDrawable_innerRadius, state->mInnerRadius);
         if (state->mInnerRadius == -1) {
-            state->mInnerRadiusRatio = a.getFloat(SX::innerRadiusRatio, state->mInnerRadiusRatio);
+            state->mInnerRadiusRatio = a.getFloat(R::styleable::GradientDrawable_innerRadiusRatio, state->mInnerRadiusRatio);
         }
 
-        state->mThickness = a.getDimensionPixelSize(SX::thickness, state->mThickness);
+        state->mThickness = a.getDimensionPixelSize(R::styleable::GradientDrawable_thickness, state->mThickness);
         if (state->mThickness == -1) {
-            state->mThicknessRatio = a.getFloat(SX::thicknessRatio, state->mThicknessRatio);
+            state->mThicknessRatio = a.getFloat(R::styleable::GradientDrawable_thicknessRatio, state->mThicknessRatio);
         }
 
-        state->mUseLevelForShape = a.getBoolean(SX::useLevel, state->mUseLevelForShape);
+        state->mUseLevelForShape = a.getBoolean(R::styleable::GradientDrawable_useLevel, state->mUseLevelForShape);
     }
 
     // aapt2 pre-resolves the tintMode enum; -1 means "not specified".
-    const int tintMode = a.getInt(SX::tintMode, -1);
+    const int tintMode = a.getInt(R::styleable::GradientDrawable_tintMode, -1);
     if (tintMode != -1) {
         state->mTintMode = tintMode;
     }
 
-    auto tint = a.getColorStateList(SX::tint);
+    auto tint = a.getColorStateList(R::styleable::GradientDrawable_tint);
     if (tint != nullptr) {
         state->mTint = tint;
     }
 
-    const int insetLeft = a.getDimensionPixelSize(SX::opticalInsetLeft, state->mOpticalInsets.left);
-    const int insetTop = a.getDimensionPixelSize(SX::opticalInsetTop, state->mOpticalInsets.top);
-    const int insetRight = a.getDimensionPixelSize(SX::opticalInsetRight, state->mOpticalInsets.right);
-    const int insetBottom = a.getDimensionPixelSize(SX::opticalInsetBottom, state->mOpticalInsets.bottom);
+    const int insetLeft = a.getDimensionPixelSize(R::styleable::GradientDrawable_opticalInsetLeft, state->mOpticalInsets.left);
+    const int insetTop = a.getDimensionPixelSize(R::styleable::GradientDrawable_opticalInsetTop, state->mOpticalInsets.top);
+    const int insetRight = a.getDimensionPixelSize(R::styleable::GradientDrawable_opticalInsetRight, state->mOpticalInsets.right);
+    const int insetBottom = a.getDimensionPixelSize(R::styleable::GradientDrawable_opticalInsetBottom, state->mOpticalInsets.bottom);
     state->mOpticalInsets = Insets::of(insetLeft, insetTop, insetRight, insetBottom);
 }
 
@@ -1218,24 +1217,24 @@ void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,co
 
         const std::string name = parser.getName();
         if (name.compare("size")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, styleable::GradientDrawableSize::IDS);
+            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawableSize);
             if (ta) updateGradientDrawableSize(*ta);
         } else if (name.compare("gradient")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, styleable::GradientDrawableGradient::IDS);
+            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawableGradient);
             if (ta) updateGradientDrawableGradient(*ta);
             // Private "bitmap" attr lacks a framework arsc id; read via the string bridge (text-XML only).
             setImagePattern(atts.getContext(),atts.getString("bitmap"));
         } else if (name.compare("solid")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, styleable::GradientDrawableSolid::IDS);
+            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawableSolid);
             if (ta) updateGradientDrawableSolid(*ta);
         } else if (name.compare("stroke")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, styleable::GradientDrawableStroke::IDS);
+            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawableStroke);
             if (ta) updateGradientDrawableStroke(*ta);
         } else if (name.compare("corners")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, styleable::DrawableCorners::IDS);
+            auto ta = r.obtainStyledAttributes(&atts, R::styleable::DrawableCorners);
             if (ta) updateDrawableCorners(*ta);
         } else if (name.compare("padding")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, styleable::GradientDrawablePadding::IDS);
+            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawablePadding);
             if (ta) updateGradientDrawablePadding(*ta);
         } else {
             LOGW("drawable", "Bad element %s under <shape>: ",name.c_str());
@@ -1245,9 +1244,8 @@ void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,co
     
 void GradientDrawable::updateGradientDrawableSize(const TypedArray& a){
     auto st = mGradientState;
-    namespace SX = styleable::GradientDrawableSize;
-    st->mWidth = a.getDimensionPixelSize(SX::width, st->mWidth);
-    st->mHeight = a.getDimensionPixelSize(SX::height, st->mHeight);
+    st->mWidth = a.getDimensionPixelSize(R::styleable::GradientDrawableSize_width, st->mWidth);
+    st->mHeight = a.getDimensionPixelSize(R::styleable::GradientDrawableSize_height, st->mHeight);
 }
 
 // Faithful port of AOSP GradientDrawable.getFloatOrFraction: a fraction-typed
@@ -1262,23 +1260,22 @@ static float getFloatOrFraction(const TypedArray& a, size_t idx, float defaultVa
 
 void GradientDrawable::updateGradientDrawableGradient(const TypedArray& a){
     auto st = mGradientState;
-    namespace SX = styleable::GradientDrawableGradient;
 
-    st->mCenterX = getFloatOrFraction(a, SX::centerX, st->mCenterX);
-    st->mCenterY = getFloatOrFraction(a, SX::centerY, st->mCenterY);
-    st->mUseLevel = a.getBoolean(SX::useLevel, st->mUseLevel);
+    st->mCenterX = getFloatOrFraction(a, R::styleable::GradientDrawableGradient_centerX, st->mCenterX);
+    st->mCenterY = getFloatOrFraction(a, R::styleable::GradientDrawableGradient_centerY, st->mCenterY);
+    st->mUseLevel = a.getBoolean(R::styleable::GradientDrawable_useLevel, st->mUseLevel);
     // aapt2 pre-resolves the type enum (linear/radial/sweep); "pattern" is a
     // private value with no framework id and is handled via the bitmap string bridge
     // in inflateChildElements().
-    st->mGradient = a.getInt(SX::type, st->mGradient);
+    st->mGradient = a.getInt(R::styleable::GradientDrawableGradient_type, st->mGradient);
 
     // TODO: Update these to be themeable.
-    const int startColor = a.getColor(SX::startColor, 0);
-    const bool hasCenterColor = a.hasValue(SX::centerColor);
-    const bool hasStartColor = a.hasValue(SX::startColor);
-    const bool hasEndColor = a.hasValue(SX::endColor);
-    const int centerColor = a.getColor(SX::centerColor, 0);
-    const int endColor = a.getColor(SX::endColor, 0);
+    const int startColor = a.getColor(R::styleable::GradientDrawableGradient_startColor, 0);
+    const bool hasCenterColor = a.hasValue(R::styleable::GradientDrawableGradient_centerColor);
+    const bool hasStartColor = a.hasValue(R::styleable::GradientDrawableGradient_startColor);
+    const bool hasEndColor = a.hasValue(R::styleable::GradientDrawableGradient_endColor);
+    const int centerColor = a.getColor(R::styleable::GradientDrawableGradient_centerColor, 0);
+    const int endColor = a.getColor(R::styleable::GradientDrawableGradient_endColor, 0);
 
     if (hasCenterColor) {
         st->mGradientColors.resize(3);
@@ -1300,7 +1297,7 @@ void GradientDrawable::updateGradientDrawableGradient(const TypedArray& a){
         st->mPositions[1] = 1.f;
     }
 
-    const int angle = ((int) a.getFloat(SX::angle, st->mAngle))%360;
+    const int angle = ((int) a.getFloat(R::styleable::GradientDrawableGradient_angle, st->mAngle))%360;
     // GradientDrawable historically has not parsed negative angle measurements and always
     // stays on the default orientation for API levels older than Q.
     // Only configure the orientation if the angle is greater than zero.
@@ -1329,19 +1326,19 @@ void GradientDrawable::updateGradientDrawableGradient(const TypedArray& a){
 
     // gradientRadius: dispatch on the raw typed value (AOSP peekValue pattern).
     Res_value tv;
-    if (a.peekValue(SX::gradientRadius, &tv)) {
+    if (a.peekValue(R::styleable::GradientDrawableGradient_gradientRadius, &tv)) {
         float radius;
         int radiusType;
         if (tv.dataType == Res_value::TYPE_FRACTION) {
-            radius = a.getFraction(SX::gradientRadius, 1, 1, 1.0f);
+            radius = a.getFraction(R::styleable::GradientDrawableGradient_gradientRadius, 1, 1, 1.0f);
             const int unit = (tv.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
             radiusType = (unit == Res_value::COMPLEX_UNIT_FRACTION_PARENT)
                          ? RADIUS_TYPE_FRACTION_PARENT : RADIUS_TYPE_FRACTION;
         } else if (tv.dataType == Res_value::TYPE_DIMENSION) {
-            radius = a.getDimension(SX::gradientRadius, 0);
+            radius = a.getDimension(R::styleable::GradientDrawableGradient_gradientRadius, 0);
             radiusType = RADIUS_TYPE_PIXELS;
         } else {
-            radius = a.getFloat(SX::gradientRadius, 0);
+            radius = a.getFloat(R::styleable::GradientDrawableGradient_gradientRadius, 0);
             radiusType = RADIUS_TYPE_PIXELS;
         }
 
@@ -1352,8 +1349,7 @@ void GradientDrawable::updateGradientDrawableGradient(const TypedArray& a){
 }
 
 void GradientDrawable::updateGradientDrawableSolid(const TypedArray& a){
-    namespace SX = styleable::GradientDrawableSolid;
-    auto colorStateList = a.getColorStateList(SX::color);
+    auto colorStateList = a.getColorStateList(R::styleable::GradientDrawableSolid_color);
     if(colorStateList) {
         setColor(colorStateList);
     }
@@ -1361,13 +1357,12 @@ void GradientDrawable::updateGradientDrawableSolid(const TypedArray& a){
 
 void GradientDrawable::updateGradientDrawableStroke(const TypedArray& a){
     auto st = mGradientState;
-    namespace SX = styleable::GradientDrawableStroke;
     const int defaultStrokeWidth = std::max(0,st->mStrokeWidth);
-    const int width = a.getDimensionPixelSize(SX::width, defaultStrokeWidth);
-    const float dashWidth = a.getDimension(SX::dashWidth, st->mStrokeDashWidth);
-    const float dashGap = a.getDimension(SX::dashGap, st->mStrokeDashGap);
+    const int width = a.getDimensionPixelSize(R::styleable::GradientDrawableStroke_width, defaultStrokeWidth);
+    const float dashWidth = a.getDimension(R::styleable::GradientDrawableStroke_dashWidth, st->mStrokeDashWidth);
+    const float dashGap = a.getDimension(R::styleable::GradientDrawableStroke_dashGap, st->mStrokeDashGap);
 
-    auto colorStateList = a.getColorStateList(SX::color);
+    auto colorStateList = a.getColorStateList(R::styleable::GradientDrawableStroke_color);
     if(colorStateList==nullptr){
         colorStateList = st->mStrokeColors;
     }
@@ -1380,15 +1375,14 @@ void GradientDrawable::updateGradientDrawableStroke(const TypedArray& a){
 
 void GradientDrawable::updateDrawableCorners(const TypedArray& a){
     auto st = mGradientState;
-    namespace SX = styleable::DrawableCorners;
-    const int radius = a.getDimensionPixelSize(SX::radius, (int) st->mRadius);
+    const int radius = (int) st->mRadius;
     setCornerRadius(radius);
 
     // TODO: Update these to be themeable.
-    const float topLeftRadius = a.getDimensionPixelSize(SX::topLeftRadius, radius);
-    const float topRightRadius = a.getDimensionPixelSize(SX::topRightRadius, radius);
-    const float bottomLeftRadius = a.getDimensionPixelSize(SX::bottomLeftRadius, radius);
-    const float bottomRightRadius = a.getDimensionPixelSize(SX::bottomRightRadius, radius);
+    const float topLeftRadius = a.getDimensionPixelSize(R::styleable::DrawableCorners_topLeftRadius, radius);
+    const float topRightRadius = a.getDimensionPixelSize(R::styleable::DrawableCorners_topRightRadius, radius);
+    const float bottomLeftRadius = a.getDimensionPixelSize(R::styleable::DrawableCorners_bottomLeftRadius, radius);
+    const float bottomRightRadius = a.getDimensionPixelSize(R::styleable::DrawableCorners_bottomRightRadius, radius);
 
     if ( (topLeftRadius != radius) || (topRightRadius != radius) ||
             (bottomLeftRadius != radius) || (bottomRightRadius != radius)) {
@@ -1399,12 +1393,11 @@ void GradientDrawable::updateDrawableCorners(const TypedArray& a){
 }
 
 void GradientDrawable::updateGradientDrawablePadding(const TypedArray& a){
-    namespace SX = styleable::GradientDrawablePadding;
     Rect pad = mGradientState->mPadding;
-    pad.set(a.getDimensionPixelOffset(SX::left, pad.left),
-            a.getDimensionPixelOffset(SX::top, pad.top),
-            a.getDimensionPixelOffset(SX::right, pad.width),
-            a.getDimensionPixelOffset(SX::bottom, pad.height));
+    pad.set(a.getDimensionPixelOffset(R::styleable::GradientDrawablePadding_left, pad.left),
+            a.getDimensionPixelOffset(R::styleable::GradientDrawablePadding_top, pad.top),
+            a.getDimensionPixelOffset(R::styleable::GradientDrawablePadding_right, pad.width),
+            a.getDimensionPixelOffset(R::styleable::GradientDrawablePadding_bottom, pad.height));
     mGradientState->mPadding = pad;  // androidx: persist into the state so shared/cached instances read it
     mPadding = pad;
 }

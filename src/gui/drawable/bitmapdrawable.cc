@@ -474,19 +474,18 @@ void BitmapDrawable::getOutline(Outline& outline) {
 }
 
 void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a){
-    namespace SX = styleable::BitmapDrawable;
     // aapt2 pre-resolves the tileMode enum (disabled=-1/clamp=0/repeat=1/mirror=2)
     // and the tintMode enum to the PorterDuff.Mode constructor ordinals, so the
     // string->int maps used by the AttributeSet path are no longer needed.
-    const int tileMode = a.getInt(SX::tileMode, TileMode::DISABLED);
-    mBitmapState->mTileModeX = a.getInt(SX::tileModeX, tileMode);
-    mBitmapState->mTileModeY = a.getInt(SX::tileModeY, tileMode);
-    mBitmapState->mDither = a.getBoolean(SX::dither, true);
-    mBitmapState->mFilterBitmap = a.getBoolean(SX::filter, false);
-    mBitmapState->mAntiAlias = a.getBoolean(SX::antialias, true);
-    mBitmapState->mGravity = a.getInt(SX::gravity, Gravity::CENTER);
-    mBitmapState->mTint = a.getColorStateList(SX::tint);
-    const int tintMode = a.getInt(SX::tintMode, -1);
+    const int tileMode = a.getInt(R::styleable::BitmapDrawable_tileMode, TileMode::DISABLED);
+    mBitmapState->mTileModeX = a.getInt(R::styleable::BitmapDrawable_tileModeX, tileMode);
+    mBitmapState->mTileModeY = a.getInt(R::styleable::BitmapDrawable_tileModeY, tileMode);
+    mBitmapState->mDither = a.getBoolean(R::styleable::BitmapDrawable_dither, true);
+    mBitmapState->mFilterBitmap = a.getBoolean(R::styleable::BitmapDrawable_filter, false);
+    mBitmapState->mAntiAlias = a.getBoolean(R::styleable::BitmapDrawable_antialias, true);
+    mBitmapState->mGravity = a.getInt(R::styleable::BitmapDrawable_gravity, Gravity::CENTER);
+    mBitmapState->mTint = a.getColorStateList(R::styleable::BitmapDrawable_tint);
+    const int tintMode = a.getInt(R::styleable::BitmapDrawable_tintMode, -1);
     if (tintMode != -1) {
         mBitmapState->mTintMode = parseTintMode(tintMode, PorterDuff::Mode::SRC_IN);
     }
@@ -495,7 +494,7 @@ void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a){
 void BitmapDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(r,parser,atts);
     Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, styleable::BitmapDrawable::IDS);
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::BitmapDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     // 'src' is an image reference; load it via the string bridge because CDROID's
     // image loader takes a resource name (not an arsc resource id) and TypedArray

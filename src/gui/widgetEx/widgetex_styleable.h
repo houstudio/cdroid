@@ -5,721 +5,532 @@
 #include <cstdint>
 #include <cstddef>
 namespace cdroid {
-namespace fw_attr {
-    namespace CoordinatorLayout {
-        constexpr uint32_t keylines = 0x7f010000;
-        constexpr uint32_t statusBarBackground = 0x7f010001;
-    }
-    namespace CoordinatorLayoutLayout {
-        constexpr uint32_t layout_gravity = 0x010100b3;
-        constexpr uint32_t layout_behavior = 0x7f010002;
-        constexpr uint32_t layout_anchor = 0x7f010003;
-        constexpr uint32_t layout_keyline = 0x7f010004;
-        constexpr uint32_t layout_anchorGravity = 0x7f010005;
-        constexpr uint32_t layout_insetEdge = 0x7f010006;
-        constexpr uint32_t layout_dodgeInsetEdges = 0x7f010007;
-    }
-    namespace FlexboxLayout {
-        constexpr uint32_t flexDirection = 0x7f010008;
-        constexpr uint32_t flexWrap = 0x7f010009;
-        constexpr uint32_t justifyContent = 0x7f01000a;
-        constexpr uint32_t alignItems = 0x7f01000b;
-        constexpr uint32_t alignContent = 0x7f01000c;
-        constexpr uint32_t dividerDrawable = 0x7f0100cd;
-        constexpr uint32_t dividerDrawableHorizontal = 0x7f0100ce;
-        constexpr uint32_t dividerDrawableVertical = 0x7f0100cf;
-        constexpr uint32_t showDivider = 0x7f0100d0;
-        constexpr uint32_t showDividerHorizontal = 0x7f0100d1;
-        constexpr uint32_t showDividerVertical = 0x7f0100d2;
-        constexpr uint32_t maxLine = 0x7f0100d3;
-    }
-    namespace FlexboxLayoutLayout {
-        constexpr uint32_t layout_order = 0x7f01000d;
-        constexpr uint32_t layout_flexGrow = 0x7f01000f;
-        constexpr uint32_t layout_flexShrink = 0x7f010010;
-        constexpr uint32_t layout_flexBasisPercent = 0x7f01000e;
-        constexpr uint32_t layout_alignSelf = 0x7f010011;
-        constexpr uint32_t layout_minWidth = 0x7f0100d4;
-        constexpr uint32_t layout_minHeight = 0x7f0100d5;
-        constexpr uint32_t layout_maxWidth = 0x7f0100d6;
-        constexpr uint32_t layout_maxHeight = 0x7f0100d7;
-        constexpr uint32_t layout_wrapBefore = 0x7f010012;
-    }
-    namespace ConstraintLayoutLayout {
-        constexpr uint32_t orientation = 0x010100c4;
-        constexpr uint32_t minWidth = 0x0101013f;
-        constexpr uint32_t minHeight = 0x01010140;
-        constexpr uint32_t maxWidth = 0x0101011f;
-        constexpr uint32_t maxHeight = 0x01010120;
-        constexpr uint32_t visibility = 0x010100dc;
-        constexpr uint32_t elevation = 0x01010440;
-        constexpr uint32_t layout_optimizationLevel = 0x7f010013;
-        constexpr uint32_t layoutDescription = 0x7f010014;
-        constexpr uint32_t constraintSet = 0x7f010015;
-        constexpr uint32_t barrierDirection = 0x7f010016;
-        constexpr uint32_t barrierAllowsGoneWidgets = 0x7f010017;
-        constexpr uint32_t barrierMargin = 0x7f010018;
-        constexpr uint32_t constraint_referenced_ids = 0x7f010019;
-        constexpr uint32_t constraint_referenced_tags = 0x7f01001a;
-        constexpr uint32_t chainUseRtl = 0x7f01001b;
-        constexpr uint32_t flow_horizontalStyle = 0x7f01001c;
-        constexpr uint32_t flow_verticalStyle = 0x7f01001d;
-        constexpr uint32_t flow_wrapMode = 0x7f01001e;
-        constexpr uint32_t flow_maxElementsWrap = 0x7f01001f;
-        constexpr uint32_t flow_horizontalGap = 0x7f010020;
-        constexpr uint32_t flow_verticalGap = 0x7f010021;
-        constexpr uint32_t padding = 0x010100d5;
-        constexpr uint32_t paddingTop = 0x010100d7;
-        constexpr uint32_t paddingBottom = 0x010100d9;
-        constexpr uint32_t paddingLeft = 0x010100d6;
-        constexpr uint32_t paddingRight = 0x010100d8;
-        constexpr uint32_t paddingStart = 0x010103b3;
-        constexpr uint32_t paddingEnd = 0x010103b4;
-        constexpr uint32_t flow_verticalAlign = 0x7f010022;
-        constexpr uint32_t flow_horizontalAlign = 0x7f010023;
-        constexpr uint32_t flow_verticalBias = 0x7f010024;
-        constexpr uint32_t flow_horizontalBias = 0x7f010025;
-        constexpr uint32_t flow_firstHorizontalStyle = 0x7f010026;
-        constexpr uint32_t flow_firstVerticalStyle = 0x7f010027;
-        constexpr uint32_t flow_firstHorizontalBias = 0x7f010028;
-        constexpr uint32_t flow_firstVerticalBias = 0x7f010029;
-        constexpr uint32_t flow_lastHorizontalStyle = 0x7f01002a;
-        constexpr uint32_t flow_lastVerticalStyle = 0x7f01002b;
-        constexpr uint32_t flow_lastHorizontalBias = 0x7f01002c;
-        constexpr uint32_t flow_lastVerticalBias = 0x7f01002d;
-        constexpr uint32_t circularflow_radiusInDP = 0x7f01002e;
-        constexpr uint32_t circularflow_angles = 0x7f01002f;
-        constexpr uint32_t circularflow_viewCenter = 0x7f010030;
-        constexpr uint32_t circularflow_defaultRadius = 0x7f010031;
-        constexpr uint32_t circularflow_defaultAngle = 0x7f010032;
-        constexpr uint32_t layout_constraintCircle = 0x7f010033;
-        constexpr uint32_t layout_constraintCircleRadius = 0x7f010034;
-        constexpr uint32_t layout_constraintCircleAngle = 0x7f010035;
-        constexpr uint32_t layout_constraintGuide_begin = 0x7f010036;
-        constexpr uint32_t layout_constraintGuide_end = 0x7f010037;
-        constexpr uint32_t layout_constraintGuide_percent = 0x7f010038;
-        constexpr uint32_t guidelineUseRtl = 0x7f010039;
-        constexpr uint32_t layout_constraintLeft_toLeftOf = 0x7f01003a;
-        constexpr uint32_t layout_constraintLeft_toRightOf = 0x7f01003b;
-        constexpr uint32_t layout_constraintRight_toLeftOf = 0x7f01003c;
-        constexpr uint32_t layout_constraintRight_toRightOf = 0x7f01003d;
-        constexpr uint32_t layout_constraintTop_toTopOf = 0x7f01003e;
-        constexpr uint32_t layout_constraintTop_toBottomOf = 0x7f01003f;
-        constexpr uint32_t layout_constraintBottom_toTopOf = 0x7f010040;
-        constexpr uint32_t layout_constraintBottom_toBottomOf = 0x7f010041;
-        constexpr uint32_t layout_constraintBaseline_toBaselineOf = 0x7f010042;
-        constexpr uint32_t layout_constraintBaseline_toTopOf = 0x7f010043;
-        constexpr uint32_t layout_constraintBaseline_toBottomOf = 0x7f010044;
-        constexpr uint32_t layout_constraintStart_toEndOf = 0x7f010045;
-        constexpr uint32_t layout_constraintStart_toStartOf = 0x7f010046;
-        constexpr uint32_t layout_constraintEnd_toStartOf = 0x7f010047;
-        constexpr uint32_t layout_constraintEnd_toEndOf = 0x7f010048;
-        constexpr uint32_t layout_goneMarginLeft = 0x7f010049;
-        constexpr uint32_t layout_goneMarginTop = 0x7f01004a;
-        constexpr uint32_t layout_goneMarginRight = 0x7f01004b;
-        constexpr uint32_t layout_goneMarginBottom = 0x7f01004c;
-        constexpr uint32_t layout_goneMarginStart = 0x7f01004d;
-        constexpr uint32_t layout_goneMarginEnd = 0x7f01004e;
-        constexpr uint32_t layout_goneMarginBaseline = 0x7f01004f;
-        constexpr uint32_t layout_marginBaseline = 0x7f010050;
-        constexpr uint32_t layout_constraintWidth = 0x7f010051;
-        constexpr uint32_t layout_constraintHeight = 0x7f010052;
-        constexpr uint32_t layout_width = 0x010100f4;
-        constexpr uint32_t layout_height = 0x010100f5;
-        constexpr uint32_t layout_margin = 0x010100f6;
-        constexpr uint32_t layout_marginHorizontal = 0x0101053b;
-        constexpr uint32_t layout_marginVertical = 0x0101053c;
-        constexpr uint32_t layout_marginLeft = 0x010100f7;
-        constexpr uint32_t layout_marginRight = 0x010100f9;
-        constexpr uint32_t layout_marginTop = 0x010100f8;
-        constexpr uint32_t layout_marginBottom = 0x010100fa;
-        constexpr uint32_t layout_marginStart = 0x010103b5;
-        constexpr uint32_t layout_marginEnd = 0x010103b6;
-        constexpr uint32_t layout_constrainedWidth = 0x7f010053;
-        constexpr uint32_t layout_constrainedHeight = 0x7f010054;
-        constexpr uint32_t layout_constraintHorizontal_bias = 0x7f010055;
-        constexpr uint32_t layout_constraintVertical_bias = 0x7f010056;
-        constexpr uint32_t layout_constraintWidth_default = 0x7f010057;
-        constexpr uint32_t layout_constraintHeight_default = 0x7f010058;
-        constexpr uint32_t layout_constraintWidth_min = 0x7f010059;
-        constexpr uint32_t layout_constraintWidth_max = 0x7f01005a;
-        constexpr uint32_t layout_constraintWidth_percent = 0x7f01005b;
-        constexpr uint32_t layout_constraintHeight_min = 0x7f01005c;
-        constexpr uint32_t layout_constraintHeight_max = 0x7f01005d;
-        constexpr uint32_t layout_constraintHeight_percent = 0x7f01005e;
-        constexpr uint32_t layout_constraintLeft_creator = 0x7f01005f;
-        constexpr uint32_t layout_constraintTop_creator = 0x7f010060;
-        constexpr uint32_t layout_constraintRight_creator = 0x7f010061;
-        constexpr uint32_t layout_constraintBottom_creator = 0x7f010062;
-        constexpr uint32_t layout_constraintBaseline_creator = 0x7f010063;
-        constexpr uint32_t layout_constraintDimensionRatio = 0x7f010064;
-        constexpr uint32_t layout_constraintHorizontal_weight = 0x7f010065;
-        constexpr uint32_t layout_constraintVertical_weight = 0x7f010066;
-        constexpr uint32_t layout_constraintHorizontal_chainStyle = 0x7f010067;
-        constexpr uint32_t layout_constraintVertical_chainStyle = 0x7f010068;
-        constexpr uint32_t layout_editor_absoluteX = 0x7f010069;
-        constexpr uint32_t layout_editor_absoluteY = 0x7f01006a;
-        constexpr uint32_t layout_constraintTag = 0x7f01006b;
-        constexpr uint32_t layout_wrapBehaviorInParent = 0x7f01006c;
-    }
-    namespace Constraint {
-        constexpr uint32_t orientation = 0x010100c4;
-        constexpr uint32_t id = 0x010100d0;
-        constexpr uint32_t visibility = 0x010100dc;
-        constexpr uint32_t visibilityMode = 0x7f01006d;
-        constexpr uint32_t alpha = 0x0101031f;
-        constexpr uint32_t elevation = 0x01010440;
-        constexpr uint32_t rotation = 0x01010326;
-        constexpr uint32_t rotationX = 0x01010327;
-        constexpr uint32_t rotationY = 0x01010328;
-        constexpr uint32_t scaleX = 0x01010324;
-        constexpr uint32_t scaleY = 0x01010325;
-        constexpr uint32_t pivotAnchor = 0x7f01006e;
-        constexpr uint32_t transformPivotX = 0x01010320;
-        constexpr uint32_t transformPivotY = 0x01010321;
-        constexpr uint32_t transformPivotTarget = 0x7f01006f;
-        constexpr uint32_t translationX = 0x01010322;
-        constexpr uint32_t translationY = 0x01010323;
-        constexpr uint32_t translationZ = 0x010103fa;
-        constexpr uint32_t layout_width = 0x010100f4;
-        constexpr uint32_t layout_height = 0x010100f5;
-        constexpr uint32_t layout_constraintWidth = 0x7f010051;
-        constexpr uint32_t layout_constraintHeight = 0x7f010052;
-        constexpr uint32_t layout_marginStart = 0x010103b5;
-        constexpr uint32_t layout_marginBottom = 0x010100fa;
-        constexpr uint32_t layout_marginTop = 0x010100f8;
-        constexpr uint32_t layout_marginEnd = 0x010103b6;
-        constexpr uint32_t layout_marginLeft = 0x010100f7;
-        constexpr uint32_t layout_marginRight = 0x010100f9;
-        constexpr uint32_t layout_constraintCircle = 0x7f010033;
-        constexpr uint32_t layout_constraintCircleRadius = 0x7f010034;
-        constexpr uint32_t layout_constraintCircleAngle = 0x7f010035;
-        constexpr uint32_t layout_constraintGuide_begin = 0x7f010036;
-        constexpr uint32_t layout_constraintGuide_end = 0x7f010037;
-        constexpr uint32_t layout_constraintGuide_percent = 0x7f010038;
-        constexpr uint32_t guidelineUseRtl = 0x7f010039;
-        constexpr uint32_t layout_constraintLeft_toLeftOf = 0x7f01003a;
-        constexpr uint32_t layout_constraintLeft_toRightOf = 0x7f01003b;
-        constexpr uint32_t layout_constraintRight_toLeftOf = 0x7f01003c;
-        constexpr uint32_t layout_constraintRight_toRightOf = 0x7f01003d;
-        constexpr uint32_t layout_constraintTop_toTopOf = 0x7f01003e;
-        constexpr uint32_t layout_constraintTop_toBottomOf = 0x7f01003f;
-        constexpr uint32_t layout_constraintBottom_toTopOf = 0x7f010040;
-        constexpr uint32_t layout_constraintBottom_toBottomOf = 0x7f010041;
-        constexpr uint32_t layout_constraintBaseline_toBaselineOf = 0x7f010042;
-        constexpr uint32_t layout_constraintBaseline_toTopOf = 0x7f010043;
-        constexpr uint32_t layout_constraintBaseline_toBottomOf = 0x7f010044;
-        constexpr uint32_t layout_constraintStart_toEndOf = 0x7f010045;
-        constexpr uint32_t layout_constraintStart_toStartOf = 0x7f010046;
-        constexpr uint32_t layout_constraintEnd_toStartOf = 0x7f010047;
-        constexpr uint32_t layout_constraintEnd_toEndOf = 0x7f010048;
-        constexpr uint32_t layout_goneMarginLeft = 0x7f010049;
-        constexpr uint32_t layout_goneMarginTop = 0x7f01004a;
-        constexpr uint32_t layout_goneMarginRight = 0x7f01004b;
-        constexpr uint32_t layout_goneMarginBottom = 0x7f01004c;
-        constexpr uint32_t layout_goneMarginStart = 0x7f01004d;
-        constexpr uint32_t layout_goneMarginEnd = 0x7f01004e;
-        constexpr uint32_t layout_goneMarginBaseline = 0x7f01004f;
-        constexpr uint32_t layout_marginBaseline = 0x7f010050;
-        constexpr uint32_t layout_constrainedWidth = 0x7f010053;
-        constexpr uint32_t layout_constrainedHeight = 0x7f010054;
-        constexpr uint32_t layout_constraintHorizontal_bias = 0x7f010055;
-        constexpr uint32_t layout_constraintVertical_bias = 0x7f010056;
-        constexpr uint32_t layout_constraintWidth_default = 0x7f010057;
-        constexpr uint32_t layout_constraintHeight_default = 0x7f010058;
-        constexpr uint32_t layout_constraintWidth_min = 0x7f010059;
-        constexpr uint32_t layout_constraintWidth_max = 0x7f01005a;
-        constexpr uint32_t layout_constraintWidth_percent = 0x7f01005b;
-        constexpr uint32_t layout_constraintHeight_min = 0x7f01005c;
-        constexpr uint32_t layout_constraintHeight_max = 0x7f01005d;
-        constexpr uint32_t layout_constraintHeight_percent = 0x7f01005e;
-        constexpr uint32_t layout_constraintLeft_creator = 0x7f01005f;
-        constexpr uint32_t layout_constraintTop_creator = 0x7f010060;
-        constexpr uint32_t layout_constraintRight_creator = 0x7f010061;
-        constexpr uint32_t layout_constraintBottom_creator = 0x7f010062;
-        constexpr uint32_t layout_constraintBaseline_creator = 0x7f010063;
-        constexpr uint32_t layout_constraintDimensionRatio = 0x7f010064;
-        constexpr uint32_t layout_constraintHorizontal_weight = 0x7f010065;
-        constexpr uint32_t layout_constraintVertical_weight = 0x7f010066;
-        constexpr uint32_t layout_constraintHorizontal_chainStyle = 0x7f010067;
-        constexpr uint32_t layout_constraintVertical_chainStyle = 0x7f010068;
-        constexpr uint32_t layout_editor_absoluteX = 0x7f010069;
-        constexpr uint32_t layout_editor_absoluteY = 0x7f01006a;
-        constexpr uint32_t layout_wrapBehaviorInParent = 0x7f01006c;
-        constexpr uint32_t barrierDirection = 0x7f010016;
-        constexpr uint32_t barrierMargin = 0x7f010018;
-        constexpr uint32_t constraint_referenced_ids = 0x7f010019;
-        constexpr uint32_t constraint_referenced_tags = 0x7f01001a;
-        constexpr uint32_t maxHeight = 0x01010120;
-        constexpr uint32_t maxWidth = 0x0101011f;
-        constexpr uint32_t minHeight = 0x01010140;
-        constexpr uint32_t minWidth = 0x0101013f;
-        constexpr uint32_t barrierAllowsGoneWidgets = 0x7f010017;
-        constexpr uint32_t chainUseRtl = 0x7f01001b;
-        constexpr uint32_t flow_horizontalStyle = 0x7f01001c;
-        constexpr uint32_t flow_verticalStyle = 0x7f01001d;
-        constexpr uint32_t flow_verticalAlign = 0x7f010022;
-        constexpr uint32_t flow_horizontalAlign = 0x7f010023;
-        constexpr uint32_t flow_verticalBias = 0x7f010024;
-        constexpr uint32_t flow_horizontalBias = 0x7f010025;
-        constexpr uint32_t flow_wrapMode = 0x7f01001e;
-        constexpr uint32_t flow_maxElementsWrap = 0x7f01001f;
-        constexpr uint32_t flow_horizontalGap = 0x7f010020;
-        constexpr uint32_t flow_verticalGap = 0x7f010021;
-        constexpr uint32_t flow_firstHorizontalStyle = 0x7f010026;
-        constexpr uint32_t flow_firstVerticalStyle = 0x7f010027;
-        constexpr uint32_t flow_firstHorizontalBias = 0x7f010028;
-        constexpr uint32_t flow_firstVerticalBias = 0x7f010029;
-        constexpr uint32_t flow_lastHorizontalStyle = 0x7f01002a;
-        constexpr uint32_t flow_lastVerticalStyle = 0x7f01002b;
-        constexpr uint32_t flow_lastHorizontalBias = 0x7f01002c;
-        constexpr uint32_t flow_lastVerticalBias = 0x7f01002d;
-        constexpr uint32_t animateRelativeTo = 0x7f010070;
-        constexpr uint32_t animateCircleAngleTo = 0x7f010071;
-        constexpr uint32_t transitionEasing = 0x7f010072;
-        constexpr uint32_t pathMotionArc = 0x7f010073;
-        constexpr uint32_t polarRelativeTo = 0x7f010074;
-        constexpr uint32_t transitionPathRotate = 0x7f010075;
-        constexpr uint32_t drawPath = 0x7f010076;
-        constexpr uint32_t motionProgress = 0x7f010077;
-        constexpr uint32_t layout_constraintTag = 0x7f01006b;
-        constexpr uint32_t motionStagger = 0x7f010078;
-        constexpr uint32_t quantizeMotionSteps = 0x7f010079;
-        constexpr uint32_t quantizeMotionPhase = 0x7f01007a;
-        constexpr uint32_t quantizeMotionInterpolator = 0x7f01007b;
-    }
-    namespace Transition {
-        constexpr uint32_t id = 0x010100d0;
-        constexpr uint32_t constraintSetStart = 0x7f01007c;
-        constexpr uint32_t constraintSetEnd = 0x7f01007d;
-        constexpr uint32_t transitionDisable = 0x7f01007e;
-        constexpr uint32_t layoutDuringTransition = 0x7f01007f;
-        constexpr uint32_t pathMotionArc = 0x7f010073;
-        constexpr uint32_t autoTransition = 0x7f010080;
-        constexpr uint32_t motionInterpolator = 0x7f010081;
-        constexpr uint32_t duration = 0x01010198;
-        constexpr uint32_t staggered = 0x7f010082;
-        constexpr uint32_t transitionFlags = 0x7f010083;
-    }
-    namespace MotionScene {
-        constexpr uint32_t defaultDuration = 0x7f0100bb;
-        constexpr uint32_t layoutDuringTransition = 0x7f01007f;
-    }
-    namespace OnSwipe {
-        constexpr uint32_t dragScale = 0x7f010084;
-        constexpr uint32_t dragThreshold = 0x7f010085;
-        constexpr uint32_t autoCompleteMode = 0x7f010086;
-        constexpr uint32_t maxVelocity = 0x7f010087;
-        constexpr uint32_t maxAcceleration = 0x7f010088;
-        constexpr uint32_t springMass = 0x7f010089;
-        constexpr uint32_t springStiffness = 0x7f01008a;
-        constexpr uint32_t springDamping = 0x7f01008b;
-        constexpr uint32_t springStopThreshold = 0x7f01008c;
-        constexpr uint32_t springBoundary = 0x7f01008d;
-        constexpr uint32_t dragDirection = 0x7f01008e;
-        constexpr uint32_t touchAnchorId = 0x7f01008f;
-        constexpr uint32_t touchAnchorSide = 0x7f010090;
-        constexpr uint32_t rotationCenterId = 0x7f010091;
-        constexpr uint32_t touchRegionId = 0x7f010092;
-        constexpr uint32_t limitBoundsTo = 0x7f010093;
-        constexpr uint32_t nestedScrollFlags = 0x7f010094;
-        constexpr uint32_t moveWhenScrollAtTop = 0x7f010095;
-        constexpr uint32_t onTouchUp = 0x7f010096;
-    }
-    namespace KeyAttribute {
-        constexpr uint32_t framePosition = 0x7f010097;
-        constexpr uint32_t motionTarget = 0x7f010098;
-        constexpr uint32_t transitionEasing = 0x7f010072;
-        constexpr uint32_t curveFit = 0x7f010099;
-        constexpr uint32_t motionProgress = 0x7f010077;
-        constexpr uint32_t alpha = 0x0101031f;
-        constexpr uint32_t elevation = 0x01010440;
-        constexpr uint32_t rotation = 0x01010326;
-        constexpr uint32_t rotationX = 0x01010327;
-        constexpr uint32_t rotationY = 0x01010328;
-        constexpr uint32_t transformPivotX = 0x01010320;
-        constexpr uint32_t transformPivotY = 0x01010321;
-        constexpr uint32_t transformPivotTarget = 0x7f01006f;
-        constexpr uint32_t transitionPathRotate = 0x7f010075;
-        constexpr uint32_t scaleX = 0x01010324;
-        constexpr uint32_t scaleY = 0x01010325;
-        constexpr uint32_t translationX = 0x01010322;
-        constexpr uint32_t translationY = 0x01010323;
-        constexpr uint32_t translationZ = 0x010103fa;
-    }
-    namespace KeyPosition {
-        constexpr uint32_t keyPositionType = 0x7f01009a;
-        constexpr uint32_t percentX = 0x7f01009b;
-        constexpr uint32_t percentY = 0x7f01009c;
-        constexpr uint32_t percentWidth = 0x7f01009d;
-        constexpr uint32_t percentHeight = 0x7f01009e;
-        constexpr uint32_t framePosition = 0x7f010097;
-        constexpr uint32_t motionTarget = 0x7f010098;
-        constexpr uint32_t transitionEasing = 0x7f010072;
-        constexpr uint32_t pathMotionArc = 0x7f010073;
-        constexpr uint32_t curveFit = 0x7f010099;
-        constexpr uint32_t drawPath = 0x7f010076;
-        constexpr uint32_t sizePercent = 0x7f01009f;
-    }
-    namespace KeyCycle {
-        constexpr uint32_t motionTarget = 0x7f010098;
-        constexpr uint32_t curveFit = 0x7f010099;
-        constexpr uint32_t framePosition = 0x7f010097;
-        constexpr uint32_t transitionEasing = 0x7f010072;
-        constexpr uint32_t motionProgress = 0x7f010077;
-        constexpr uint32_t waveShape = 0x7f0100a0;
-        constexpr uint32_t wavePhase = 0x7f0100a1;
-        constexpr uint32_t wavePeriod = 0x7f0100a2;
-        constexpr uint32_t waveOffset = 0x7f0100a3;
-        constexpr uint32_t waveVariesBy = 0x7f0100a4;
-        constexpr uint32_t transitionPathRotate = 0x7f010075;
-        constexpr uint32_t alpha = 0x0101031f;
-        constexpr uint32_t elevation = 0x01010440;
-        constexpr uint32_t rotation = 0x01010326;
-        constexpr uint32_t rotationX = 0x01010327;
-        constexpr uint32_t rotationY = 0x01010328;
-        constexpr uint32_t scaleX = 0x01010324;
-        constexpr uint32_t scaleY = 0x01010325;
-        constexpr uint32_t translationX = 0x01010322;
-        constexpr uint32_t translationY = 0x01010323;
-        constexpr uint32_t translationZ = 0x010103fa;
-    }
-    namespace KeyTimeCycle {
-        constexpr uint32_t framePosition = 0x7f010097;
-        constexpr uint32_t motionTarget = 0x7f010098;
-        constexpr uint32_t transitionEasing = 0x7f010072;
-        constexpr uint32_t curveFit = 0x7f010099;
-        constexpr uint32_t waveShape = 0x7f0100a0;
-        constexpr uint32_t wavePeriod = 0x7f0100a2;
-        constexpr uint32_t motionProgress = 0x7f010077;
-        constexpr uint32_t waveOffset = 0x7f0100a3;
-        constexpr uint32_t wavePhase = 0x7f0100a1;
-        constexpr uint32_t waveDecay = 0x7f0100a5;
-        constexpr uint32_t alpha = 0x0101031f;
-        constexpr uint32_t elevation = 0x01010440;
-        constexpr uint32_t rotation = 0x01010326;
-        constexpr uint32_t rotationX = 0x01010327;
-        constexpr uint32_t rotationY = 0x01010328;
-        constexpr uint32_t transitionPathRotate = 0x7f010075;
-        constexpr uint32_t scaleX = 0x01010324;
-        constexpr uint32_t scaleY = 0x01010325;
-        constexpr uint32_t translationX = 0x01010322;
-        constexpr uint32_t translationY = 0x01010323;
-        constexpr uint32_t translationZ = 0x010103fa;
-    }
-    namespace Motion {
-        constexpr uint32_t animateRelativeTo = 0x7f010070;
-        constexpr uint32_t animateCircleAngleTo = 0x7f010071;
-        constexpr uint32_t transitionEasing = 0x7f010072;
-        constexpr uint32_t pathMotionArc = 0x7f010073;
-        constexpr uint32_t motionPathRotate = 0x7f0100ba;
-        constexpr uint32_t motionStagger = 0x7f010078;
-        constexpr uint32_t drawPath = 0x7f010076;
-        constexpr uint32_t quantizeMotionSteps = 0x7f010079;
-        constexpr uint32_t quantizeMotionPhase = 0x7f01007a;
-        constexpr uint32_t quantizeMotionInterpolator = 0x7f01007b;
-    }
-    namespace KeyTrigger {
-        constexpr uint32_t framePosition = 0x7f010097;
-        constexpr uint32_t motionTarget = 0x7f010098;
-        constexpr uint32_t triggerReceiver = 0x7f0100a6;
-        constexpr uint32_t onNegativeCross = 0x7f0100a7;
-        constexpr uint32_t onPositiveCross = 0x7f0100a8;
-        constexpr uint32_t onCross = 0x7f0100a9;
-        constexpr uint32_t viewTransitionOnNegativeCross = 0x7f0100aa;
-        constexpr uint32_t viewTransitionOnPositiveCross = 0x7f0100ab;
-        constexpr uint32_t viewTransitionOnCross = 0x7f0100ac;
-        constexpr uint32_t triggerSlack = 0x7f0100ad;
-        constexpr uint32_t triggerId = 0x7f0100ae;
-        constexpr uint32_t motion_postLayoutCollision = 0x7f0100af;
-        constexpr uint32_t motion_triggerOnCollision = 0x7f0100b0;
-    }
-    namespace ViewTransition {
-        constexpr uint32_t id = 0x010100d0;
-        constexpr uint32_t motionTarget = 0x7f010098;
-        constexpr uint32_t viewTransitionMode = 0x7f0100b1;
-        constexpr uint32_t onStateTransition = 0x7f0100b2;
-        constexpr uint32_t duration = 0x01010198;
-        constexpr uint32_t upDuration = 0x7f0100b3;
-        constexpr uint32_t transitionDisable = 0x7f01007e;
-        constexpr uint32_t pathMotionArc = 0x7f010073;
-        constexpr uint32_t motionInterpolator = 0x7f010081;
-        constexpr uint32_t SharedValueId = 0x7f0100b4;
-        constexpr uint32_t SharedValue = 0x7f0100b5;
-        constexpr uint32_t setsTag = 0x7f0100b6;
-        constexpr uint32_t clearsTag = 0x7f0100b7;
-        constexpr uint32_t ifTagSet = 0x7f0100b8;
-        constexpr uint32_t ifTagNotSet = 0x7f0100b9;
-    }
-    namespace MotionEffect {
-        constexpr uint32_t motionEffect_start = 0x7f0100bc;
-        constexpr uint32_t motionEffect_end = 0x7f0100bd;
-        constexpr uint32_t motionEffect_translationX = 0x7f0100be;
-        constexpr uint32_t motionEffect_translationY = 0x7f0100bf;
-        constexpr uint32_t motionEffect_alpha = 0x7f0100c0;
-        constexpr uint32_t motionEffect_viewTransition = 0x7f0100c1;
-        constexpr uint32_t motionEffect_move = 0x7f0100c2;
-        constexpr uint32_t motionEffect_strict = 0x7f0100c3;
-    }
-    namespace RecyclerView {
-        constexpr uint32_t layoutManager = 0x7f0100c4;
-        constexpr uint32_t orientation = 0x010100c4;
-        constexpr uint32_t descendantFocusability = 0x010100f1;
-        constexpr uint32_t clipToPadding = 0x010100eb;
-        constexpr uint32_t spanCount = 0x7f0100c5;
-        constexpr uint32_t reverseLayout = 0x7f0100c6;
-        constexpr uint32_t stackFromEnd = 0x7f0100c7;
-        constexpr uint32_t fastScrollEnabled = 0x01010226;
-        constexpr uint32_t fastScrollVerticalThumbDrawable = 0x7f0100c8;
-        constexpr uint32_t fastScrollVerticalTrackDrawable = 0x7f0100c9;
-        constexpr uint32_t fastScrollHorizontalThumbDrawable = 0x7f0100ca;
-        constexpr uint32_t fastScrollHorizontalTrackDrawable = 0x7f0100cb;
-        constexpr uint32_t isScrollToTopEnabled = 0x7f0100cc;
-    }
-    namespace TabLayout {
-        constexpr uint32_t tabIndicatorColor = 0x7f0100d8;
-        constexpr uint32_t tabIndicatorHeight = 0x7f0100d9;
-        constexpr uint32_t tabContentStart = 0x7f0100da;
-        constexpr uint32_t tabBackground = 0x7f0100db;
-        constexpr uint32_t tabIndicator = 0x7f0100dc;
-        constexpr uint32_t tabIndicatorGravity = 0x7f0100dd;
-        constexpr uint32_t tabIndicatorAnimationDuration = 0x7f0100de;
-        constexpr uint32_t tabIndicatorFullWidth = 0x7f0100df;
-        constexpr uint32_t tabIndicatorAnimationMode = 0x7f0100e0;
-        constexpr uint32_t tabMode = 0x7f0100e1;
-        constexpr uint32_t tabGravity = 0x7f0100e2;
-        constexpr uint32_t tabInlineLabel = 0x7f0100e3;
-        constexpr uint32_t tabMinWidth = 0x7f0100e4;
-        constexpr uint32_t tabMaxWidth = 0x7f0100e5;
-        constexpr uint32_t tabTextAppearance = 0x7f0100e6;
-        constexpr uint32_t tabTextColor = 0x7f0100e7;
-        constexpr uint32_t tabSelectedTextColor = 0x7f0100e8;
-        constexpr uint32_t tabSelectedTextAppearance = 0x7f0100f3;
-        constexpr uint32_t tabPaddingStart = 0x7f0100e9;
-        constexpr uint32_t tabPaddingTop = 0x7f0100ea;
-        constexpr uint32_t tabPaddingEnd = 0x7f0100eb;
-        constexpr uint32_t tabPaddingBottom = 0x7f0100ec;
-        constexpr uint32_t tabPadding = 0x7f0100ed;
-        constexpr uint32_t tabIconTint = 0x7f0100ee;
-        constexpr uint32_t tabIconTintMode = 0x7f0100ef;
-        constexpr uint32_t tabRippleColor = 0x7f0100f0;
-        constexpr uint32_t tabUnboundedRipple = 0x7f0100f1;
-        constexpr uint32_t smoothScroll = 0x7f0100f2;
-    }
-    namespace TabItem {
-        constexpr uint32_t text = 0x0101014f;
-        constexpr uint32_t icon = 0x01010002;
-        constexpr uint32_t layout = 0x010100f2;
-    }
-} // namespace fw_attr
+namespace R { namespace styleable {
+    // CoordinatorLayout (2 attrs)
+    extern const uint32_t CoordinatorLayout[];
+    constexpr int CoordinatorLayout_keylines = 0;
+    constexpr int CoordinatorLayout_statusBarBackground = 1;
 
-namespace styleable {
-    namespace CoordinatorLayout {
-        enum { keylines, statusBarBackground };
-        extern const uint32_t IDS[];
-    }
-    namespace CoordinatorLayoutLayout {
-        enum {
-            layout_gravity, layout_behavior, layout_anchor, layout_keyline, layout_anchorGravity,
-            layout_insetEdge, layout_dodgeInsetEdges };
-        extern const uint32_t IDS[];
-    }
-    namespace FlexboxLayout {
-        enum {
-            flexDirection, flexWrap, justifyContent, alignItems, alignContent, dividerDrawable,
-            dividerDrawableHorizontal, dividerDrawableVertical, showDivider, showDividerHorizontal,
-            showDividerVertical, maxLine };
-        extern const uint32_t IDS[];
-    }
-    namespace FlexboxLayoutLayout {
-        enum {
-            layout_order, layout_flexGrow, layout_flexShrink, layout_flexBasisPercent,
-            layout_alignSelf, layout_minWidth, layout_minHeight, layout_maxWidth, layout_maxHeight,
-            layout_wrapBefore };
-        extern const uint32_t IDS[];
-    }
-    namespace ConstraintLayoutLayout {
-        enum {
-            orientation, minWidth, minHeight, maxWidth, maxHeight, visibility, elevation,
-            layout_optimizationLevel, layoutDescription, constraintSet, barrierDirection,
-            barrierAllowsGoneWidgets, barrierMargin, constraint_referenced_ids,
-            constraint_referenced_tags, chainUseRtl, flow_horizontalStyle, flow_verticalStyle,
-            flow_wrapMode, flow_maxElementsWrap, flow_horizontalGap, flow_verticalGap, padding,
-            paddingTop, paddingBottom, paddingLeft, paddingRight, paddingStart, paddingEnd,
-            flow_verticalAlign, flow_horizontalAlign, flow_verticalBias, flow_horizontalBias,
-            flow_firstHorizontalStyle, flow_firstVerticalStyle, flow_firstHorizontalBias,
-            flow_firstVerticalBias, flow_lastHorizontalStyle, flow_lastVerticalStyle,
-            flow_lastHorizontalBias, flow_lastVerticalBias, circularflow_radiusInDP,
-            circularflow_angles, circularflow_viewCenter, circularflow_defaultRadius,
-            circularflow_defaultAngle, layout_constraintCircle, layout_constraintCircleRadius,
-            layout_constraintCircleAngle, layout_constraintGuide_begin, layout_constraintGuide_end,
-            layout_constraintGuide_percent, guidelineUseRtl, layout_constraintLeft_toLeftOf,
-            layout_constraintLeft_toRightOf, layout_constraintRight_toLeftOf,
-            layout_constraintRight_toRightOf, layout_constraintTop_toTopOf,
-            layout_constraintTop_toBottomOf, layout_constraintBottom_toTopOf,
-            layout_constraintBottom_toBottomOf, layout_constraintBaseline_toBaselineOf,
-            layout_constraintBaseline_toTopOf, layout_constraintBaseline_toBottomOf,
-            layout_constraintStart_toEndOf, layout_constraintStart_toStartOf,
-            layout_constraintEnd_toStartOf, layout_constraintEnd_toEndOf, layout_goneMarginLeft,
-            layout_goneMarginTop, layout_goneMarginRight, layout_goneMarginBottom,
-            layout_goneMarginStart, layout_goneMarginEnd, layout_goneMarginBaseline,
-            layout_marginBaseline, layout_constraintWidth, layout_constraintHeight, layout_width,
-            layout_height, layout_margin, layout_marginHorizontal, layout_marginVertical,
-            layout_marginLeft, layout_marginRight, layout_marginTop, layout_marginBottom,
-            layout_marginStart, layout_marginEnd, layout_constrainedWidth, layout_constrainedHeight,
-            layout_constraintHorizontal_bias, layout_constraintVertical_bias,
-            layout_constraintWidth_default, layout_constraintHeight_default,
-            layout_constraintWidth_min, layout_constraintWidth_max, layout_constraintWidth_percent,
-            layout_constraintHeight_min, layout_constraintHeight_max,
-            layout_constraintHeight_percent, layout_constraintLeft_creator,
-            layout_constraintTop_creator, layout_constraintRight_creator,
-            layout_constraintBottom_creator, layout_constraintBaseline_creator,
-            layout_constraintDimensionRatio, layout_constraintHorizontal_weight,
-            layout_constraintVertical_weight, layout_constraintHorizontal_chainStyle,
-            layout_constraintVertical_chainStyle, layout_editor_absoluteX, layout_editor_absoluteY,
-            layout_constraintTag, layout_wrapBehaviorInParent };
-        extern const uint32_t IDS[];
-    }
-    namespace Constraint {
-        enum {
-            orientation, id, visibility, visibilityMode, alpha, elevation, rotation, rotationX,
-            rotationY, scaleX, scaleY, pivotAnchor, transformPivotX, transformPivotY,
-            transformPivotTarget, translationX, translationY, translationZ, layout_width,
-            layout_height, layout_constraintWidth, layout_constraintHeight, layout_marginStart,
-            layout_marginBottom, layout_marginTop, layout_marginEnd, layout_marginLeft,
-            layout_marginRight, layout_constraintCircle, layout_constraintCircleRadius,
-            layout_constraintCircleAngle, layout_constraintGuide_begin, layout_constraintGuide_end,
-            layout_constraintGuide_percent, guidelineUseRtl, layout_constraintLeft_toLeftOf,
-            layout_constraintLeft_toRightOf, layout_constraintRight_toLeftOf,
-            layout_constraintRight_toRightOf, layout_constraintTop_toTopOf,
-            layout_constraintTop_toBottomOf, layout_constraintBottom_toTopOf,
-            layout_constraintBottom_toBottomOf, layout_constraintBaseline_toBaselineOf,
-            layout_constraintBaseline_toTopOf, layout_constraintBaseline_toBottomOf,
-            layout_constraintStart_toEndOf, layout_constraintStart_toStartOf,
-            layout_constraintEnd_toStartOf, layout_constraintEnd_toEndOf, layout_goneMarginLeft,
-            layout_goneMarginTop, layout_goneMarginRight, layout_goneMarginBottom,
-            layout_goneMarginStart, layout_goneMarginEnd, layout_goneMarginBaseline,
-            layout_marginBaseline, layout_constrainedWidth, layout_constrainedHeight,
-            layout_constraintHorizontal_bias, layout_constraintVertical_bias,
-            layout_constraintWidth_default, layout_constraintHeight_default,
-            layout_constraintWidth_min, layout_constraintWidth_max, layout_constraintWidth_percent,
-            layout_constraintHeight_min, layout_constraintHeight_max,
-            layout_constraintHeight_percent, layout_constraintLeft_creator,
-            layout_constraintTop_creator, layout_constraintRight_creator,
-            layout_constraintBottom_creator, layout_constraintBaseline_creator,
-            layout_constraintDimensionRatio, layout_constraintHorizontal_weight,
-            layout_constraintVertical_weight, layout_constraintHorizontal_chainStyle,
-            layout_constraintVertical_chainStyle, layout_editor_absoluteX, layout_editor_absoluteY,
-            layout_wrapBehaviorInParent, barrierDirection, barrierMargin, constraint_referenced_ids,
-            constraint_referenced_tags, maxHeight, maxWidth, minHeight, minWidth,
-            barrierAllowsGoneWidgets, chainUseRtl, flow_horizontalStyle, flow_verticalStyle,
-            flow_verticalAlign, flow_horizontalAlign, flow_verticalBias, flow_horizontalBias,
-            flow_wrapMode, flow_maxElementsWrap, flow_horizontalGap, flow_verticalGap,
-            flow_firstHorizontalStyle, flow_firstVerticalStyle, flow_firstHorizontalBias,
-            flow_firstVerticalBias, flow_lastHorizontalStyle, flow_lastVerticalStyle,
-            flow_lastHorizontalBias, flow_lastVerticalBias, animateRelativeTo, animateCircleAngleTo,
-            transitionEasing, pathMotionArc, polarRelativeTo, transitionPathRotate, drawPath,
-            motionProgress, layout_constraintTag, motionStagger, quantizeMotionSteps,
-            quantizeMotionPhase, quantizeMotionInterpolator };
-        extern const uint32_t IDS[];
-    }
-    namespace Transition {
-        enum {
-            id, constraintSetStart, constraintSetEnd, transitionDisable, layoutDuringTransition,
-            pathMotionArc, autoTransition, motionInterpolator, duration, staggered, transitionFlags };
-        extern const uint32_t IDS[];
-    }
-    namespace MotionScene {
-        enum { defaultDuration, layoutDuringTransition };
-        extern const uint32_t IDS[];
-    }
-    namespace OnSwipe {
-        enum {
-            dragScale, dragThreshold, autoCompleteMode, maxVelocity, maxAcceleration, springMass,
-            springStiffness, springDamping, springStopThreshold, springBoundary, dragDirection,
-            touchAnchorId, touchAnchorSide, rotationCenterId, touchRegionId, limitBoundsTo,
-            nestedScrollFlags, moveWhenScrollAtTop, onTouchUp };
-        extern const uint32_t IDS[];
-    }
-    namespace KeyAttribute {
-        enum {
-            framePosition, motionTarget, transitionEasing, curveFit, motionProgress, alpha,
-            elevation, rotation, rotationX, rotationY, transformPivotX, transformPivotY,
-            transformPivotTarget, transitionPathRotate, scaleX, scaleY, translationX, translationY,
-            translationZ };
-        extern const uint32_t IDS[];
-    }
-    namespace KeyPosition {
-        enum {
-            keyPositionType, percentX, percentY, percentWidth, percentHeight, framePosition,
-            motionTarget, transitionEasing, pathMotionArc, curveFit, drawPath, sizePercent };
-        extern const uint32_t IDS[];
-    }
-    namespace KeyCycle {
-        enum {
-            motionTarget, curveFit, framePosition, transitionEasing, motionProgress, waveShape,
-            wavePhase, wavePeriod, waveOffset, waveVariesBy, transitionPathRotate, alpha, elevation,
-            rotation, rotationX, rotationY, scaleX, scaleY, translationX, translationY, translationZ };
-        extern const uint32_t IDS[];
-    }
-    namespace KeyTimeCycle {
-        enum {
-            framePosition, motionTarget, transitionEasing, curveFit, waveShape, wavePeriod,
-            motionProgress, waveOffset, wavePhase, waveDecay, alpha, elevation, rotation, rotationX,
-            rotationY, transitionPathRotate, scaleX, scaleY, translationX, translationY,
-            translationZ };
-        extern const uint32_t IDS[];
-    }
-    namespace Motion {
-        enum {
-            animateRelativeTo, animateCircleAngleTo, transitionEasing, pathMotionArc,
-            motionPathRotate, motionStagger, drawPath, quantizeMotionSteps, quantizeMotionPhase,
-            quantizeMotionInterpolator };
-        extern const uint32_t IDS[];
-    }
-    namespace KeyTrigger {
-        enum {
-            framePosition, motionTarget, triggerReceiver, onNegativeCross, onPositiveCross, onCross,
-            viewTransitionOnNegativeCross, viewTransitionOnPositiveCross, viewTransitionOnCross,
-            triggerSlack, triggerId, motion_postLayoutCollision, motion_triggerOnCollision };
-        extern const uint32_t IDS[];
-    }
-    namespace ViewTransition {
-        enum {
-            id, motionTarget, viewTransitionMode, onStateTransition, duration, upDuration,
-            transitionDisable, pathMotionArc, motionInterpolator, SharedValueId, SharedValue,
-            setsTag, clearsTag, ifTagSet, ifTagNotSet };
-        extern const uint32_t IDS[];
-    }
-    namespace MotionEffect {
-        enum {
-            motionEffect_start, motionEffect_end, motionEffect_translationX,
-            motionEffect_translationY, motionEffect_alpha, motionEffect_viewTransition,
-            motionEffect_move, motionEffect_strict };
-        extern const uint32_t IDS[];
-    }
-    namespace RecyclerView {
-        enum {
-            layoutManager, orientation, descendantFocusability, clipToPadding, spanCount,
-            reverseLayout, stackFromEnd, fastScrollEnabled, fastScrollVerticalThumbDrawable,
-            fastScrollVerticalTrackDrawable, fastScrollHorizontalThumbDrawable,
-            fastScrollHorizontalTrackDrawable, isScrollToTopEnabled };
-        extern const uint32_t IDS[];
-    }
-    namespace TabLayout {
-        enum {
-            tabIndicatorColor, tabIndicatorHeight, tabContentStart, tabBackground, tabIndicator,
-            tabIndicatorGravity, tabIndicatorAnimationDuration, tabIndicatorFullWidth,
-            tabIndicatorAnimationMode, tabMode, tabGravity, tabInlineLabel, tabMinWidth, tabMaxWidth,
-            tabTextAppearance, tabTextColor, tabSelectedTextColor, tabSelectedTextAppearance,
-            tabPaddingStart, tabPaddingTop, tabPaddingEnd, tabPaddingBottom, tabPadding, tabIconTint,
-            tabIconTintMode, tabRippleColor, tabUnboundedRipple, smoothScroll };
-        extern const uint32_t IDS[];
-    }
-    namespace TabItem {
-        enum { text, icon, layout };
-        extern const uint32_t IDS[];
-    }
-} // namespace styleable
+    // CoordinatorLayoutLayout (7 attrs)
+    extern const uint32_t CoordinatorLayoutLayout[];
+    constexpr int CoordinatorLayoutLayout_layout_gravity = 0;
+    constexpr int CoordinatorLayoutLayout_layout_behavior = 1;
+    constexpr int CoordinatorLayoutLayout_layout_anchor = 2;
+    constexpr int CoordinatorLayoutLayout_layout_keyline = 3;
+    constexpr int CoordinatorLayoutLayout_layout_anchorGravity = 4;
+    constexpr int CoordinatorLayoutLayout_layout_insetEdge = 5;
+    constexpr int CoordinatorLayoutLayout_layout_dodgeInsetEdges = 6;
+
+    // FlexboxLayout (12 attrs)
+    extern const uint32_t FlexboxLayout[];
+    constexpr int FlexboxLayout_flexDirection = 0;
+    constexpr int FlexboxLayout_flexWrap = 1;
+    constexpr int FlexboxLayout_justifyContent = 2;
+    constexpr int FlexboxLayout_alignItems = 3;
+    constexpr int FlexboxLayout_alignContent = 4;
+    constexpr int FlexboxLayout_dividerDrawable = 5;
+    constexpr int FlexboxLayout_dividerDrawableHorizontal = 6;
+    constexpr int FlexboxLayout_dividerDrawableVertical = 7;
+    constexpr int FlexboxLayout_showDivider = 8;
+    constexpr int FlexboxLayout_showDividerHorizontal = 9;
+    constexpr int FlexboxLayout_showDividerVertical = 10;
+    constexpr int FlexboxLayout_maxLine = 11;
+
+    // FlexboxLayoutLayout (10 attrs)
+    extern const uint32_t FlexboxLayoutLayout[];
+    constexpr int FlexboxLayoutLayout_layout_order = 0;
+    constexpr int FlexboxLayoutLayout_layout_flexGrow = 1;
+    constexpr int FlexboxLayoutLayout_layout_flexShrink = 2;
+    constexpr int FlexboxLayoutLayout_layout_flexBasisPercent = 3;
+    constexpr int FlexboxLayoutLayout_layout_alignSelf = 4;
+    constexpr int FlexboxLayoutLayout_layout_minWidth = 5;
+    constexpr int FlexboxLayoutLayout_layout_minHeight = 6;
+    constexpr int FlexboxLayoutLayout_layout_maxWidth = 7;
+    constexpr int FlexboxLayoutLayout_layout_maxHeight = 8;
+    constexpr int FlexboxLayoutLayout_layout_wrapBefore = 9;
+
+    // ConstraintLayoutLayout (115 attrs)
+    extern const uint32_t ConstraintLayoutLayout[];
+    constexpr int ConstraintLayoutLayout_orientation = 0;
+    constexpr int ConstraintLayoutLayout_minWidth = 1;
+    constexpr int ConstraintLayoutLayout_minHeight = 2;
+    constexpr int ConstraintLayoutLayout_maxWidth = 3;
+    constexpr int ConstraintLayoutLayout_maxHeight = 4;
+    constexpr int ConstraintLayoutLayout_visibility = 5;
+    constexpr int ConstraintLayoutLayout_elevation = 6;
+    constexpr int ConstraintLayoutLayout_layout_optimizationLevel = 7;
+    constexpr int ConstraintLayoutLayout_layoutDescription = 8;
+    constexpr int ConstraintLayoutLayout_constraintSet = 9;
+    constexpr int ConstraintLayoutLayout_barrierDirection = 10;
+    constexpr int ConstraintLayoutLayout_barrierAllowsGoneWidgets = 11;
+    constexpr int ConstraintLayoutLayout_barrierMargin = 12;
+    constexpr int ConstraintLayoutLayout_constraint_referenced_ids = 13;
+    constexpr int ConstraintLayoutLayout_constraint_referenced_tags = 14;
+    constexpr int ConstraintLayoutLayout_chainUseRtl = 15;
+    constexpr int ConstraintLayoutLayout_flow_horizontalStyle = 16;
+    constexpr int ConstraintLayoutLayout_flow_verticalStyle = 17;
+    constexpr int ConstraintLayoutLayout_flow_wrapMode = 18;
+    constexpr int ConstraintLayoutLayout_flow_maxElementsWrap = 19;
+    constexpr int ConstraintLayoutLayout_flow_horizontalGap = 20;
+    constexpr int ConstraintLayoutLayout_flow_verticalGap = 21;
+    constexpr int ConstraintLayoutLayout_padding = 22;
+    constexpr int ConstraintLayoutLayout_paddingTop = 23;
+    constexpr int ConstraintLayoutLayout_paddingBottom = 24;
+    constexpr int ConstraintLayoutLayout_paddingLeft = 25;
+    constexpr int ConstraintLayoutLayout_paddingRight = 26;
+    constexpr int ConstraintLayoutLayout_paddingStart = 27;
+    constexpr int ConstraintLayoutLayout_paddingEnd = 28;
+    constexpr int ConstraintLayoutLayout_flow_verticalAlign = 29;
+    constexpr int ConstraintLayoutLayout_flow_horizontalAlign = 30;
+    constexpr int ConstraintLayoutLayout_flow_verticalBias = 31;
+    constexpr int ConstraintLayoutLayout_flow_horizontalBias = 32;
+    constexpr int ConstraintLayoutLayout_flow_firstHorizontalStyle = 33;
+    constexpr int ConstraintLayoutLayout_flow_firstVerticalStyle = 34;
+    constexpr int ConstraintLayoutLayout_flow_firstHorizontalBias = 35;
+    constexpr int ConstraintLayoutLayout_flow_firstVerticalBias = 36;
+    constexpr int ConstraintLayoutLayout_flow_lastHorizontalStyle = 37;
+    constexpr int ConstraintLayoutLayout_flow_lastVerticalStyle = 38;
+    constexpr int ConstraintLayoutLayout_flow_lastHorizontalBias = 39;
+    constexpr int ConstraintLayoutLayout_flow_lastVerticalBias = 40;
+    constexpr int ConstraintLayoutLayout_circularflow_radiusInDP = 41;
+    constexpr int ConstraintLayoutLayout_circularflow_angles = 42;
+    constexpr int ConstraintLayoutLayout_circularflow_viewCenter = 43;
+    constexpr int ConstraintLayoutLayout_circularflow_defaultRadius = 44;
+    constexpr int ConstraintLayoutLayout_circularflow_defaultAngle = 45;
+    constexpr int ConstraintLayoutLayout_layout_constraintCircle = 46;
+    constexpr int ConstraintLayoutLayout_layout_constraintCircleRadius = 47;
+    constexpr int ConstraintLayoutLayout_layout_constraintCircleAngle = 48;
+    constexpr int ConstraintLayoutLayout_layout_constraintGuide_begin = 49;
+    constexpr int ConstraintLayoutLayout_layout_constraintGuide_end = 50;
+    constexpr int ConstraintLayoutLayout_layout_constraintGuide_percent = 51;
+    constexpr int ConstraintLayoutLayout_guidelineUseRtl = 52;
+    constexpr int ConstraintLayoutLayout_layout_constraintLeft_toLeftOf = 53;
+    constexpr int ConstraintLayoutLayout_layout_constraintLeft_toRightOf = 54;
+    constexpr int ConstraintLayoutLayout_layout_constraintRight_toLeftOf = 55;
+    constexpr int ConstraintLayoutLayout_layout_constraintRight_toRightOf = 56;
+    constexpr int ConstraintLayoutLayout_layout_constraintTop_toTopOf = 57;
+    constexpr int ConstraintLayoutLayout_layout_constraintTop_toBottomOf = 58;
+    constexpr int ConstraintLayoutLayout_layout_constraintBottom_toTopOf = 59;
+    constexpr int ConstraintLayoutLayout_layout_constraintBottom_toBottomOf = 60;
+    constexpr int ConstraintLayoutLayout_layout_constraintBaseline_toBaselineOf = 61;
+    constexpr int ConstraintLayoutLayout_layout_constraintBaseline_toTopOf = 62;
+    constexpr int ConstraintLayoutLayout_layout_constraintBaseline_toBottomOf = 63;
+    constexpr int ConstraintLayoutLayout_layout_constraintStart_toEndOf = 64;
+    constexpr int ConstraintLayoutLayout_layout_constraintStart_toStartOf = 65;
+    constexpr int ConstraintLayoutLayout_layout_constraintEnd_toStartOf = 66;
+    constexpr int ConstraintLayoutLayout_layout_constraintEnd_toEndOf = 67;
+    constexpr int ConstraintLayoutLayout_layout_goneMarginLeft = 68;
+    constexpr int ConstraintLayoutLayout_layout_goneMarginTop = 69;
+    constexpr int ConstraintLayoutLayout_layout_goneMarginRight = 70;
+    constexpr int ConstraintLayoutLayout_layout_goneMarginBottom = 71;
+    constexpr int ConstraintLayoutLayout_layout_goneMarginStart = 72;
+    constexpr int ConstraintLayoutLayout_layout_goneMarginEnd = 73;
+    constexpr int ConstraintLayoutLayout_layout_goneMarginBaseline = 74;
+    constexpr int ConstraintLayoutLayout_layout_marginBaseline = 75;
+    constexpr int ConstraintLayoutLayout_layout_constraintWidth = 76;
+    constexpr int ConstraintLayoutLayout_layout_constraintHeight = 77;
+    constexpr int ConstraintLayoutLayout_layout_width = 78;
+    constexpr int ConstraintLayoutLayout_layout_height = 79;
+    constexpr int ConstraintLayoutLayout_layout_margin = 80;
+    constexpr int ConstraintLayoutLayout_layout_marginHorizontal = 81;
+    constexpr int ConstraintLayoutLayout_layout_marginVertical = 82;
+    constexpr int ConstraintLayoutLayout_layout_marginLeft = 83;
+    constexpr int ConstraintLayoutLayout_layout_marginRight = 84;
+    constexpr int ConstraintLayoutLayout_layout_marginTop = 85;
+    constexpr int ConstraintLayoutLayout_layout_marginBottom = 86;
+    constexpr int ConstraintLayoutLayout_layout_marginStart = 87;
+    constexpr int ConstraintLayoutLayout_layout_marginEnd = 88;
+    constexpr int ConstraintLayoutLayout_layout_constrainedWidth = 89;
+    constexpr int ConstraintLayoutLayout_layout_constrainedHeight = 90;
+    constexpr int ConstraintLayoutLayout_layout_constraintHorizontal_bias = 91;
+    constexpr int ConstraintLayoutLayout_layout_constraintVertical_bias = 92;
+    constexpr int ConstraintLayoutLayout_layout_constraintWidth_default = 93;
+    constexpr int ConstraintLayoutLayout_layout_constraintHeight_default = 94;
+    constexpr int ConstraintLayoutLayout_layout_constraintWidth_min = 95;
+    constexpr int ConstraintLayoutLayout_layout_constraintWidth_max = 96;
+    constexpr int ConstraintLayoutLayout_layout_constraintWidth_percent = 97;
+    constexpr int ConstraintLayoutLayout_layout_constraintHeight_min = 98;
+    constexpr int ConstraintLayoutLayout_layout_constraintHeight_max = 99;
+    constexpr int ConstraintLayoutLayout_layout_constraintHeight_percent = 100;
+    constexpr int ConstraintLayoutLayout_layout_constraintLeft_creator = 101;
+    constexpr int ConstraintLayoutLayout_layout_constraintTop_creator = 102;
+    constexpr int ConstraintLayoutLayout_layout_constraintRight_creator = 103;
+    constexpr int ConstraintLayoutLayout_layout_constraintBottom_creator = 104;
+    constexpr int ConstraintLayoutLayout_layout_constraintBaseline_creator = 105;
+    constexpr int ConstraintLayoutLayout_layout_constraintDimensionRatio = 106;
+    constexpr int ConstraintLayoutLayout_layout_constraintHorizontal_weight = 107;
+    constexpr int ConstraintLayoutLayout_layout_constraintVertical_weight = 108;
+    constexpr int ConstraintLayoutLayout_layout_constraintHorizontal_chainStyle = 109;
+    constexpr int ConstraintLayoutLayout_layout_constraintVertical_chainStyle = 110;
+    constexpr int ConstraintLayoutLayout_layout_editor_absoluteX = 111;
+    constexpr int ConstraintLayoutLayout_layout_editor_absoluteY = 112;
+    constexpr int ConstraintLayoutLayout_layout_constraintTag = 113;
+    constexpr int ConstraintLayoutLayout_layout_wrapBehaviorInParent = 114;
+
+    // Constraint (124 attrs)
+    extern const uint32_t Constraint[];
+    constexpr int Constraint_orientation = 0;
+    constexpr int Constraint_id = 1;
+    constexpr int Constraint_visibility = 2;
+    constexpr int Constraint_visibilityMode = 3;
+    constexpr int Constraint_alpha = 4;
+    constexpr int Constraint_elevation = 5;
+    constexpr int Constraint_rotation = 6;
+    constexpr int Constraint_rotationX = 7;
+    constexpr int Constraint_rotationY = 8;
+    constexpr int Constraint_scaleX = 9;
+    constexpr int Constraint_scaleY = 10;
+    constexpr int Constraint_pivotAnchor = 11;
+    constexpr int Constraint_transformPivotX = 12;
+    constexpr int Constraint_transformPivotY = 13;
+    constexpr int Constraint_transformPivotTarget = 14;
+    constexpr int Constraint_translationX = 15;
+    constexpr int Constraint_translationY = 16;
+    constexpr int Constraint_translationZ = 17;
+    constexpr int Constraint_layout_width = 18;
+    constexpr int Constraint_layout_height = 19;
+    constexpr int Constraint_layout_constraintWidth = 20;
+    constexpr int Constraint_layout_constraintHeight = 21;
+    constexpr int Constraint_layout_marginStart = 22;
+    constexpr int Constraint_layout_marginBottom = 23;
+    constexpr int Constraint_layout_marginTop = 24;
+    constexpr int Constraint_layout_marginEnd = 25;
+    constexpr int Constraint_layout_marginLeft = 26;
+    constexpr int Constraint_layout_marginRight = 27;
+    constexpr int Constraint_layout_constraintCircle = 28;
+    constexpr int Constraint_layout_constraintCircleRadius = 29;
+    constexpr int Constraint_layout_constraintCircleAngle = 30;
+    constexpr int Constraint_layout_constraintGuide_begin = 31;
+    constexpr int Constraint_layout_constraintGuide_end = 32;
+    constexpr int Constraint_layout_constraintGuide_percent = 33;
+    constexpr int Constraint_guidelineUseRtl = 34;
+    constexpr int Constraint_layout_constraintLeft_toLeftOf = 35;
+    constexpr int Constraint_layout_constraintLeft_toRightOf = 36;
+    constexpr int Constraint_layout_constraintRight_toLeftOf = 37;
+    constexpr int Constraint_layout_constraintRight_toRightOf = 38;
+    constexpr int Constraint_layout_constraintTop_toTopOf = 39;
+    constexpr int Constraint_layout_constraintTop_toBottomOf = 40;
+    constexpr int Constraint_layout_constraintBottom_toTopOf = 41;
+    constexpr int Constraint_layout_constraintBottom_toBottomOf = 42;
+    constexpr int Constraint_layout_constraintBaseline_toBaselineOf = 43;
+    constexpr int Constraint_layout_constraintBaseline_toTopOf = 44;
+    constexpr int Constraint_layout_constraintBaseline_toBottomOf = 45;
+    constexpr int Constraint_layout_constraintStart_toEndOf = 46;
+    constexpr int Constraint_layout_constraintStart_toStartOf = 47;
+    constexpr int Constraint_layout_constraintEnd_toStartOf = 48;
+    constexpr int Constraint_layout_constraintEnd_toEndOf = 49;
+    constexpr int Constraint_layout_goneMarginLeft = 50;
+    constexpr int Constraint_layout_goneMarginTop = 51;
+    constexpr int Constraint_layout_goneMarginRight = 52;
+    constexpr int Constraint_layout_goneMarginBottom = 53;
+    constexpr int Constraint_layout_goneMarginStart = 54;
+    constexpr int Constraint_layout_goneMarginEnd = 55;
+    constexpr int Constraint_layout_goneMarginBaseline = 56;
+    constexpr int Constraint_layout_marginBaseline = 57;
+    constexpr int Constraint_layout_constrainedWidth = 58;
+    constexpr int Constraint_layout_constrainedHeight = 59;
+    constexpr int Constraint_layout_constraintHorizontal_bias = 60;
+    constexpr int Constraint_layout_constraintVertical_bias = 61;
+    constexpr int Constraint_layout_constraintWidth_default = 62;
+    constexpr int Constraint_layout_constraintHeight_default = 63;
+    constexpr int Constraint_layout_constraintWidth_min = 64;
+    constexpr int Constraint_layout_constraintWidth_max = 65;
+    constexpr int Constraint_layout_constraintWidth_percent = 66;
+    constexpr int Constraint_layout_constraintHeight_min = 67;
+    constexpr int Constraint_layout_constraintHeight_max = 68;
+    constexpr int Constraint_layout_constraintHeight_percent = 69;
+    constexpr int Constraint_layout_constraintLeft_creator = 70;
+    constexpr int Constraint_layout_constraintTop_creator = 71;
+    constexpr int Constraint_layout_constraintRight_creator = 72;
+    constexpr int Constraint_layout_constraintBottom_creator = 73;
+    constexpr int Constraint_layout_constraintBaseline_creator = 74;
+    constexpr int Constraint_layout_constraintDimensionRatio = 75;
+    constexpr int Constraint_layout_constraintHorizontal_weight = 76;
+    constexpr int Constraint_layout_constraintVertical_weight = 77;
+    constexpr int Constraint_layout_constraintHorizontal_chainStyle = 78;
+    constexpr int Constraint_layout_constraintVertical_chainStyle = 79;
+    constexpr int Constraint_layout_editor_absoluteX = 80;
+    constexpr int Constraint_layout_editor_absoluteY = 81;
+    constexpr int Constraint_layout_wrapBehaviorInParent = 82;
+    constexpr int Constraint_barrierDirection = 83;
+    constexpr int Constraint_barrierMargin = 84;
+    constexpr int Constraint_constraint_referenced_ids = 85;
+    constexpr int Constraint_constraint_referenced_tags = 86;
+    constexpr int Constraint_maxHeight = 87;
+    constexpr int Constraint_maxWidth = 88;
+    constexpr int Constraint_minHeight = 89;
+    constexpr int Constraint_minWidth = 90;
+    constexpr int Constraint_barrierAllowsGoneWidgets = 91;
+    constexpr int Constraint_chainUseRtl = 92;
+    constexpr int Constraint_flow_horizontalStyle = 93;
+    constexpr int Constraint_flow_verticalStyle = 94;
+    constexpr int Constraint_flow_verticalAlign = 95;
+    constexpr int Constraint_flow_horizontalAlign = 96;
+    constexpr int Constraint_flow_verticalBias = 97;
+    constexpr int Constraint_flow_horizontalBias = 98;
+    constexpr int Constraint_flow_wrapMode = 99;
+    constexpr int Constraint_flow_maxElementsWrap = 100;
+    constexpr int Constraint_flow_horizontalGap = 101;
+    constexpr int Constraint_flow_verticalGap = 102;
+    constexpr int Constraint_flow_firstHorizontalStyle = 103;
+    constexpr int Constraint_flow_firstVerticalStyle = 104;
+    constexpr int Constraint_flow_firstHorizontalBias = 105;
+    constexpr int Constraint_flow_firstVerticalBias = 106;
+    constexpr int Constraint_flow_lastHorizontalStyle = 107;
+    constexpr int Constraint_flow_lastVerticalStyle = 108;
+    constexpr int Constraint_flow_lastHorizontalBias = 109;
+    constexpr int Constraint_flow_lastVerticalBias = 110;
+    constexpr int Constraint_animateRelativeTo = 111;
+    constexpr int Constraint_animateCircleAngleTo = 112;
+    constexpr int Constraint_transitionEasing = 113;
+    constexpr int Constraint_pathMotionArc = 114;
+    constexpr int Constraint_polarRelativeTo = 115;
+    constexpr int Constraint_transitionPathRotate = 116;
+    constexpr int Constraint_drawPath = 117;
+    constexpr int Constraint_motionProgress = 118;
+    constexpr int Constraint_layout_constraintTag = 119;
+    constexpr int Constraint_motionStagger = 120;
+    constexpr int Constraint_quantizeMotionSteps = 121;
+    constexpr int Constraint_quantizeMotionPhase = 122;
+    constexpr int Constraint_quantizeMotionInterpolator = 123;
+
+    // Transition (11 attrs)
+    extern const uint32_t Transition[];
+    constexpr int Transition_id = 0;
+    constexpr int Transition_constraintSetStart = 1;
+    constexpr int Transition_constraintSetEnd = 2;
+    constexpr int Transition_transitionDisable = 3;
+    constexpr int Transition_layoutDuringTransition = 4;
+    constexpr int Transition_pathMotionArc = 5;
+    constexpr int Transition_autoTransition = 6;
+    constexpr int Transition_motionInterpolator = 7;
+    constexpr int Transition_duration = 8;
+    constexpr int Transition_staggered = 9;
+    constexpr int Transition_transitionFlags = 10;
+
+    // MotionScene (2 attrs)
+    extern const uint32_t MotionScene[];
+    constexpr int MotionScene_defaultDuration = 0;
+    constexpr int MotionScene_layoutDuringTransition = 1;
+
+    // OnSwipe (19 attrs)
+    extern const uint32_t OnSwipe[];
+    constexpr int OnSwipe_dragScale = 0;
+    constexpr int OnSwipe_dragThreshold = 1;
+    constexpr int OnSwipe_autoCompleteMode = 2;
+    constexpr int OnSwipe_maxVelocity = 3;
+    constexpr int OnSwipe_maxAcceleration = 4;
+    constexpr int OnSwipe_springMass = 5;
+    constexpr int OnSwipe_springStiffness = 6;
+    constexpr int OnSwipe_springDamping = 7;
+    constexpr int OnSwipe_springStopThreshold = 8;
+    constexpr int OnSwipe_springBoundary = 9;
+    constexpr int OnSwipe_dragDirection = 10;
+    constexpr int OnSwipe_touchAnchorId = 11;
+    constexpr int OnSwipe_touchAnchorSide = 12;
+    constexpr int OnSwipe_rotationCenterId = 13;
+    constexpr int OnSwipe_touchRegionId = 14;
+    constexpr int OnSwipe_limitBoundsTo = 15;
+    constexpr int OnSwipe_nestedScrollFlags = 16;
+    constexpr int OnSwipe_moveWhenScrollAtTop = 17;
+    constexpr int OnSwipe_onTouchUp = 18;
+
+    // KeyAttribute (19 attrs)
+    extern const uint32_t KeyAttribute[];
+    constexpr int KeyAttribute_framePosition = 0;
+    constexpr int KeyAttribute_motionTarget = 1;
+    constexpr int KeyAttribute_transitionEasing = 2;
+    constexpr int KeyAttribute_curveFit = 3;
+    constexpr int KeyAttribute_motionProgress = 4;
+    constexpr int KeyAttribute_alpha = 5;
+    constexpr int KeyAttribute_elevation = 6;
+    constexpr int KeyAttribute_rotation = 7;
+    constexpr int KeyAttribute_rotationX = 8;
+    constexpr int KeyAttribute_rotationY = 9;
+    constexpr int KeyAttribute_transformPivotX = 10;
+    constexpr int KeyAttribute_transformPivotY = 11;
+    constexpr int KeyAttribute_transformPivotTarget = 12;
+    constexpr int KeyAttribute_transitionPathRotate = 13;
+    constexpr int KeyAttribute_scaleX = 14;
+    constexpr int KeyAttribute_scaleY = 15;
+    constexpr int KeyAttribute_translationX = 16;
+    constexpr int KeyAttribute_translationY = 17;
+    constexpr int KeyAttribute_translationZ = 18;
+
+    // KeyPosition (12 attrs)
+    extern const uint32_t KeyPosition[];
+    constexpr int KeyPosition_keyPositionType = 0;
+    constexpr int KeyPosition_percentX = 1;
+    constexpr int KeyPosition_percentY = 2;
+    constexpr int KeyPosition_percentWidth = 3;
+    constexpr int KeyPosition_percentHeight = 4;
+    constexpr int KeyPosition_framePosition = 5;
+    constexpr int KeyPosition_motionTarget = 6;
+    constexpr int KeyPosition_transitionEasing = 7;
+    constexpr int KeyPosition_pathMotionArc = 8;
+    constexpr int KeyPosition_curveFit = 9;
+    constexpr int KeyPosition_drawPath = 10;
+    constexpr int KeyPosition_sizePercent = 11;
+
+    // KeyCycle (21 attrs)
+    extern const uint32_t KeyCycle[];
+    constexpr int KeyCycle_motionTarget = 0;
+    constexpr int KeyCycle_curveFit = 1;
+    constexpr int KeyCycle_framePosition = 2;
+    constexpr int KeyCycle_transitionEasing = 3;
+    constexpr int KeyCycle_motionProgress = 4;
+    constexpr int KeyCycle_waveShape = 5;
+    constexpr int KeyCycle_wavePhase = 6;
+    constexpr int KeyCycle_wavePeriod = 7;
+    constexpr int KeyCycle_waveOffset = 8;
+    constexpr int KeyCycle_waveVariesBy = 9;
+    constexpr int KeyCycle_transitionPathRotate = 10;
+    constexpr int KeyCycle_alpha = 11;
+    constexpr int KeyCycle_elevation = 12;
+    constexpr int KeyCycle_rotation = 13;
+    constexpr int KeyCycle_rotationX = 14;
+    constexpr int KeyCycle_rotationY = 15;
+    constexpr int KeyCycle_scaleX = 16;
+    constexpr int KeyCycle_scaleY = 17;
+    constexpr int KeyCycle_translationX = 18;
+    constexpr int KeyCycle_translationY = 19;
+    constexpr int KeyCycle_translationZ = 20;
+
+    // KeyTimeCycle (21 attrs)
+    extern const uint32_t KeyTimeCycle[];
+    constexpr int KeyTimeCycle_framePosition = 0;
+    constexpr int KeyTimeCycle_motionTarget = 1;
+    constexpr int KeyTimeCycle_transitionEasing = 2;
+    constexpr int KeyTimeCycle_curveFit = 3;
+    constexpr int KeyTimeCycle_waveShape = 4;
+    constexpr int KeyTimeCycle_wavePeriod = 5;
+    constexpr int KeyTimeCycle_motionProgress = 6;
+    constexpr int KeyTimeCycle_waveOffset = 7;
+    constexpr int KeyTimeCycle_wavePhase = 8;
+    constexpr int KeyTimeCycle_waveDecay = 9;
+    constexpr int KeyTimeCycle_alpha = 10;
+    constexpr int KeyTimeCycle_elevation = 11;
+    constexpr int KeyTimeCycle_rotation = 12;
+    constexpr int KeyTimeCycle_rotationX = 13;
+    constexpr int KeyTimeCycle_rotationY = 14;
+    constexpr int KeyTimeCycle_transitionPathRotate = 15;
+    constexpr int KeyTimeCycle_scaleX = 16;
+    constexpr int KeyTimeCycle_scaleY = 17;
+    constexpr int KeyTimeCycle_translationX = 18;
+    constexpr int KeyTimeCycle_translationY = 19;
+    constexpr int KeyTimeCycle_translationZ = 20;
+
+    // Motion (10 attrs)
+    extern const uint32_t Motion[];
+    constexpr int Motion_animateRelativeTo = 0;
+    constexpr int Motion_animateCircleAngleTo = 1;
+    constexpr int Motion_transitionEasing = 2;
+    constexpr int Motion_pathMotionArc = 3;
+    constexpr int Motion_motionPathRotate = 4;
+    constexpr int Motion_motionStagger = 5;
+    constexpr int Motion_drawPath = 6;
+    constexpr int Motion_quantizeMotionSteps = 7;
+    constexpr int Motion_quantizeMotionPhase = 8;
+    constexpr int Motion_quantizeMotionInterpolator = 9;
+
+    // KeyTrigger (13 attrs)
+    extern const uint32_t KeyTrigger[];
+    constexpr int KeyTrigger_framePosition = 0;
+    constexpr int KeyTrigger_motionTarget = 1;
+    constexpr int KeyTrigger_triggerReceiver = 2;
+    constexpr int KeyTrigger_onNegativeCross = 3;
+    constexpr int KeyTrigger_onPositiveCross = 4;
+    constexpr int KeyTrigger_onCross = 5;
+    constexpr int KeyTrigger_viewTransitionOnNegativeCross = 6;
+    constexpr int KeyTrigger_viewTransitionOnPositiveCross = 7;
+    constexpr int KeyTrigger_viewTransitionOnCross = 8;
+    constexpr int KeyTrigger_triggerSlack = 9;
+    constexpr int KeyTrigger_triggerId = 10;
+    constexpr int KeyTrigger_motion_postLayoutCollision = 11;
+    constexpr int KeyTrigger_motion_triggerOnCollision = 12;
+
+    // ViewTransition (15 attrs)
+    extern const uint32_t ViewTransition[];
+    constexpr int ViewTransition_id = 0;
+    constexpr int ViewTransition_motionTarget = 1;
+    constexpr int ViewTransition_viewTransitionMode = 2;
+    constexpr int ViewTransition_onStateTransition = 3;
+    constexpr int ViewTransition_duration = 4;
+    constexpr int ViewTransition_upDuration = 5;
+    constexpr int ViewTransition_transitionDisable = 6;
+    constexpr int ViewTransition_pathMotionArc = 7;
+    constexpr int ViewTransition_motionInterpolator = 8;
+    constexpr int ViewTransition_SharedValueId = 9;
+    constexpr int ViewTransition_SharedValue = 10;
+    constexpr int ViewTransition_setsTag = 11;
+    constexpr int ViewTransition_clearsTag = 12;
+    constexpr int ViewTransition_ifTagSet = 13;
+    constexpr int ViewTransition_ifTagNotSet = 14;
+
+    // MotionEffect (8 attrs)
+    extern const uint32_t MotionEffect[];
+    constexpr int MotionEffect_motionEffect_start = 0;
+    constexpr int MotionEffect_motionEffect_end = 1;
+    constexpr int MotionEffect_motionEffect_translationX = 2;
+    constexpr int MotionEffect_motionEffect_translationY = 3;
+    constexpr int MotionEffect_motionEffect_alpha = 4;
+    constexpr int MotionEffect_motionEffect_viewTransition = 5;
+    constexpr int MotionEffect_motionEffect_move = 6;
+    constexpr int MotionEffect_motionEffect_strict = 7;
+
+    // RecyclerView (13 attrs)
+    extern const uint32_t RecyclerView[];
+    constexpr int RecyclerView_layoutManager = 0;
+    constexpr int RecyclerView_orientation = 1;
+    constexpr int RecyclerView_descendantFocusability = 2;
+    constexpr int RecyclerView_clipToPadding = 3;
+    constexpr int RecyclerView_spanCount = 4;
+    constexpr int RecyclerView_reverseLayout = 5;
+    constexpr int RecyclerView_stackFromEnd = 6;
+    constexpr int RecyclerView_fastScrollEnabled = 7;
+    constexpr int RecyclerView_fastScrollVerticalThumbDrawable = 8;
+    constexpr int RecyclerView_fastScrollVerticalTrackDrawable = 9;
+    constexpr int RecyclerView_fastScrollHorizontalThumbDrawable = 10;
+    constexpr int RecyclerView_fastScrollHorizontalTrackDrawable = 11;
+    constexpr int RecyclerView_isScrollToTopEnabled = 12;
+
+    // TabLayout (28 attrs)
+    extern const uint32_t TabLayout[];
+    constexpr int TabLayout_tabIndicatorColor = 0;
+    constexpr int TabLayout_tabIndicatorHeight = 1;
+    constexpr int TabLayout_tabContentStart = 2;
+    constexpr int TabLayout_tabBackground = 3;
+    constexpr int TabLayout_tabIndicator = 4;
+    constexpr int TabLayout_tabIndicatorGravity = 5;
+    constexpr int TabLayout_tabIndicatorAnimationDuration = 6;
+    constexpr int TabLayout_tabIndicatorFullWidth = 7;
+    constexpr int TabLayout_tabIndicatorAnimationMode = 8;
+    constexpr int TabLayout_tabMode = 9;
+    constexpr int TabLayout_tabGravity = 10;
+    constexpr int TabLayout_tabInlineLabel = 11;
+    constexpr int TabLayout_tabMinWidth = 12;
+    constexpr int TabLayout_tabMaxWidth = 13;
+    constexpr int TabLayout_tabTextAppearance = 14;
+    constexpr int TabLayout_tabTextColor = 15;
+    constexpr int TabLayout_tabSelectedTextColor = 16;
+    constexpr int TabLayout_tabSelectedTextAppearance = 17;
+    constexpr int TabLayout_tabPaddingStart = 18;
+    constexpr int TabLayout_tabPaddingTop = 19;
+    constexpr int TabLayout_tabPaddingEnd = 20;
+    constexpr int TabLayout_tabPaddingBottom = 21;
+    constexpr int TabLayout_tabPadding = 22;
+    constexpr int TabLayout_tabIconTint = 23;
+    constexpr int TabLayout_tabIconTintMode = 24;
+    constexpr int TabLayout_tabRippleColor = 25;
+    constexpr int TabLayout_tabUnboundedRipple = 26;
+    constexpr int TabLayout_smoothScroll = 27;
+
+    // TabItem (3 attrs)
+    extern const uint32_t TabItem[];
+    constexpr int TabItem_text = 0;
+    constexpr int TabItem_icon = 1;
+    constexpr int TabItem_layout = 2;
+
+} } // namespace R::styleable
 } // namespace cdroid
 #endif // __WIDGETEX_STYLEABLE_H__

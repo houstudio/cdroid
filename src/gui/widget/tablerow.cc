@@ -19,11 +19,10 @@ TableRow::LayoutParams::LayoutParams(int column):LayoutParams(){
 TableRow::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :LinearLayout::LayoutParams(c,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = c->obtainStyledAttributes(attrs, styleable::TableRowLayout::IDS);
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::TableRowLayout);
     if (ta) {
-    namespace STR = styleable::TableRowLayout;
-    column= ta->getInt(STR::layout_column,-1);
-    span  = ta->getInt(STR::layout_span,1);
+    column= ta->getInt(R::styleable::TableRowLayout_layout_column,-1);
+    span  = ta->getInt(R::styleable::TableRowLayout_layout_span,1);
     if(span<1)span=1;
     }
 }

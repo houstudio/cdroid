@@ -108,68 +108,67 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const TypedArray*a
     // through TypedArray::getString.
     (void)ctx;
     if(!a) return;
-    namespace ST = styleable::TextAppearance;
     const size_t n = a->getIndexCount();
     for (size_t k = 0; k < n; k++) {
         const size_t i = a->getIndex(k);
         switch (i) {
-        case ST::textColorHighlight:
+        case R::styleable::TextAppearance_textColorHighlight:
             mTextColorHighlight = a->getColor(i, mTextColorHighlight);
             break;
-        case ST::textColor:
+        case R::styleable::TextAppearance_textColor:
             mTextColor = a->getColorStateList(i);
             break;
-        case ST::textColorHint:
+        case R::styleable::TextAppearance_textColorHint:
             mTextColorHint = a->getColorStateList(i);
             break;
-        case ST::textColorLink:
+        case R::styleable::TextAppearance_textColorLink:
             mTextColorLink = a->getColorStateList(i);
             break;
-        case ST::textSize:
+        case R::styleable::TextAppearance_textSize:
             mTextSize = a->getDimensionPixelSize(i, mTextSize);
             break;
-        case ST::textStyle:
+        case R::styleable::TextAppearance_textStyle:
             mTextStyle = a->getInt(i, Typeface::NORMAL);
             break;
-        case ST::textFontWeight:
+        case R::styleable::TextAppearance_textFontWeight:
             mFontWeight = a->getInt(i, -1);
             break;
-        case ST::typeface:
+        case R::styleable::TextAppearance_typeface:
             mTypefaceIndex = a->getInt(i, -1);
             if (mTypefaceIndex != -1 && !mFontFamilyExplicit) mFontFamily.clear();
             break;
-        case ST::fontFamily:
+        case R::styleable::TextAppearance_fontFamily:
             mFontFamily = a->getString(i);
             mFontFamilyExplicit = true;
             break;
-        case ST::shadowColor:
+        case R::styleable::TextAppearance_shadowColor:
             mShadowColor = a->getColor(i, mShadowColor);
             break;
-        case ST::shadowDx:
+        case R::styleable::TextAppearance_shadowDx:
             mShadowDx = a->getFloat(i, mShadowDx);
             break;
-        case ST::shadowDy:
+        case R::styleable::TextAppearance_shadowDy:
             mShadowDy = a->getFloat(i, mShadowDy);
             break;
-        case ST::shadowRadius:
+        case R::styleable::TextAppearance_shadowRadius:
             mShadowRadius = a->getFloat(i, mShadowRadius);
             break;
-        case ST::textAllCaps:
+        case R::styleable::TextAppearance_textAllCaps:
             mAllCaps = a->getBoolean(i, false);
             break;
-        case ST::elegantTextHeight:
+        case R::styleable::TextAppearance_elegantTextHeight:
             mHasElegant = true;
             mElegant = a->getBoolean(i, false);
             break;
-        case ST::fallbackLineSpacing:
+        case R::styleable::TextAppearance_fallbackLineSpacing:
             mHasFallbackLineSpacing = true;
             mFallbackLineSpacing = a->getBoolean(i, false);
             break;
-        case ST::letterSpacing:
+        case R::styleable::TextAppearance_letterSpacing:
             mHasLetterSpacing = true;
             mLetterSpacing = a->getFloat(i, 0.f);
             break;
-        case ST::fontFeatureSettings:
+        case R::styleable::TextAppearance_fontFeatureSettings:
             mFontFeatureSettings = a->getString(i);
             break;
         default:
@@ -201,9 +200,8 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     // sequence below preserves the original order so behaviour is unchanged.
     // aapt2 pre-resolves enums/flags at compile time → binary getInt returns the
     // int directly (no string→enum map on that path); text XML still needs maps.
-    auto ta = ctx->obtainStyledAttributes(attrs, styleable::TextView::IDS, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::TextView, defStyleAttr);
 
-    namespace STV = styleable::TextView;
 
 // --- gather phase: locals filled by the switch (binary) or attrs (text) ---
     bool scrollHorizontally = mHorizontallyScrolling;
@@ -248,167 +246,167 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     for (size_t n = ta->getIndexCount(); n > 0; ) {
         size_t i = ta->getIndex(--n);
         switch (i) {
-        case STV::scrollHorizontally:
+        case R::styleable::TextView_scrollHorizontally:
             scrollHorizontally = ta->getBoolean(i, false);
             break;
-        case STV::drawableLeft:
+        case R::styleable::TextView_drawableLeft:
             drawableLeft = ta->getDrawable(i);
             break;
-        case STV::drawableTop:
+        case R::styleable::TextView_drawableTop:
             drawableTop = ta->getDrawable(i);
             break;
-        case STV::drawableRight:
+        case R::styleable::TextView_drawableRight:
             drawableRight = ta->getDrawable(i);
             break;
-        case STV::drawableBottom:
+        case R::styleable::TextView_drawableBottom:
             drawableBottom = ta->getDrawable(i);
             break;
         // Relative drawables: resolved against layoutDirection later
         // (Drawables::resolveWithLayoutDirection). Kept separate from L/R.
-        case STV::drawableStart:
+        case R::styleable::TextView_drawableStart:
             drawableStart = ta->getDrawable(i);
             break;
-        case STV::drawableEnd:
+        case R::styleable::TextView_drawableEnd:
             drawableEnd = ta->getDrawable(i);
             break;
-        case STV::selectAllOnFocus:
+        case R::styleable::TextView_selectAllOnFocus:
             selectallonfocus = ta->getBoolean(i, false);
             break;
-        case STV::drawablePadding:
+        case R::styleable::TextView_drawablePadding:
             drawablePadding = ta->getDimensionPixelSize(i, 0);
             break;
-        case STV::maxLines:
+        case R::styleable::TextView_maxLines:
             maxLines = ta->getInt(i, -1);
             break;
-        case STV::minLines:
+        case R::styleable::TextView_minLines:
             minLines = ta->getInt(i, -1);
             break;
-        case STV::lines:
+        case R::styleable::TextView_lines:
             lines = ta->getInt(i, -1);
             break;
-        case STV::height:
+        case R::styleable::TextView_height:
             heightV = ta->getDimensionPixelSize(i, -1);
             break;
-        case STV::minHeight:
+        case R::styleable::TextView_minHeight:
             minHeightV = ta->getDimensionPixelSize(i, -1);
             break;
-        case STV::maxHeight:
+        case R::styleable::TextView_maxHeight:
             maxHeightV = ta->getDimensionPixelSize(i, mMaximum);
             break;
-        case STV::textScaleX:
+        case R::styleable::TextView_textScaleX:
             textScaleX = ta->getFloat(i, 1.f);
             break;
-        case STV::minWidth:
+        case R::styleable::TextView_minWidth:
             minWidthV = ta->getDimensionPixelSize(i, INT_MIN);
             break;
-        case STV::maxWidth:
+        case R::styleable::TextView_maxWidth:
             maxWidthV = ta->getDimensionPixelSize(i, INT_MAX);
             break;
-        case STV::singleLine:
+        case R::styleable::TextView_singleLine:
             singleLineAttr = ta->getBoolean(i, mSingleLine);
             break;
-        case STV::gravity:
+        case R::styleable::TextView_gravity:
             gravity = ta->getInt(i, Gravity::TOP|Gravity::START);
             break;
-        case STV::maxLength:
+        case R::styleable::TextView_maxLength:
             maxLength = ta->getInt(i, -1);
             break;
-        case STV::lineSpacingExtra:
+        case R::styleable::TextView_lineSpacingExtra:
             lineSpacingExtra = ta->getDimensionPixelSize(i, 0);
             break;
-        case STV::lineSpacingMultiplier:
+        case R::styleable::TextView_lineSpacingMultiplier:
             lineSpacingMultiplier = ta->getFloat(i, 1.f);
             break;
-        case STV::inputType:
+        case R::styleable::TextView_inputType:
             inputType = ta->getInt(i, EditorInfo::TYPE_NULL);
             break;
-        case STV::breakStrategy:
+        case R::styleable::TextView_breakStrategy:
             breakStrategy = ta->getInt(i, Layout::BREAK_STRATEGY_SIMPLE);
             break;
-        case STV::marqueeRepeatLimit:
+        case R::styleable::TextView_marqueeRepeatLimit:
             marqueeRepeatLimit = ta->getInt(i, mMarqueeRepeatLimit);
             break;
-        case STV::ellipsize:
+        case R::styleable::TextView_ellipsize:
             ellipsize = ta->getInt(i, ELLIPSIZE_NOT_SET);
             break;
-        case STV::maxEms:
+        case R::styleable::TextView_maxEms:
             hasMaxEms=true;
             maxEmsV=ta->getInt(i,-1);
             break;
-        case STV::ems:
+        case R::styleable::TextView_ems:
             hasEms=true;
             emsV=ta->getInt(i,-1);
             break;
-        case STV::minEms:
+        case R::styleable::TextView_minEms:
             hasMinEms=true;
             minEmsV=ta->getInt(i,-1);
             break;
-        case STV::width:
+        case R::styleable::TextView_width:
             hasWidth=true;
             widthV=ta->getDimensionPixelSize(i,-1);
             break;
-        case STV::includeFontPadding:
+        case R::styleable::TextView_includeFontPadding:
             includeFontPadding = ta->getBoolean(i, true);
             break;
-        case STV::cursorVisible:
+        case R::styleable::TextView_cursorVisible:
             cursorVisible = ta->getBoolean(i, true);
             break;
-        case STV::enabled:
+        case R::styleable::TextView_enabled:
             enabledAttr = ta->getBoolean(i, isEnabled());
             break;
-        case STV::autoLink:
+        case R::styleable::TextView_autoLink:
             autoLink = ta->getInt(i, mAutoLinkMask);
             break;
-        case STV::linksClickable:
+        case R::styleable::TextView_linksClickable:
             linksClickable = ta->getBoolean(i, true);
             break;
-        case STV::hyphenationFrequency:
+        case R::styleable::TextView_hyphenationFrequency:
             hyphenationFrequency = ta->getInt(i, mHyphenationFrequency);
             break;
-        case STV::justificationMode:
+        case R::styleable::TextView_justificationMode:
             justificationMode = ta->getInt(i, mJustificationMode);
             break;
-        case STV::textIsSelectable:
+        case R::styleable::TextView_textIsSelectable:
             textIsSelectable = ta->getBoolean(i, false);
             break;
-        case STV::imeOptions:
+        case R::styleable::TextView_imeOptions:
             hasImeOptions=true;
             imeOptions=ta->getInt(i, EditorInfo::IME_NULL);
             break;
-        case STV::inputMethod:
+        case R::styleable::TextView_inputMethod:
             inputMethod = ta->getString(i);
             break;
-        case STV::digits:
+        case R::styleable::TextView_digits:
             digits = ta->getString(i);
             break;
-        case STV::phoneNumber:
+        case R::styleable::TextView_phoneNumber:
             phone = ta->getBoolean(i, false);
             break;
-        case STV::numeric:
+        case R::styleable::TextView_numeric:
             numeric = ta->getInt(i, 0);
             break;
-        case STV::autoText:
+        case R::styleable::TextView_autoText:
             autotext = ta->getBoolean(i, false);
             break;
-        case STV::capitalize:
+        case R::styleable::TextView_capitalize:
             autocap = ta->getInt(i, -1);
             break;
-        case STV::editable:
+        case R::styleable::TextView_editable:
             editable = ta->getBoolean(i, getDefaultEditable());
             break;
-        case STV::bufferType:
+        case R::styleable::TextView_bufferType:
             buffertype = ta->getInt(i, 0);
             break;
-        case STV::password:
+        case R::styleable::TextView_password:
             password = ta->getBoolean(i, false);
             break;
-        case STV::lineHeight:
+        case R::styleable::TextView_lineHeight:
             lineHeight = ta->getDimensionPixelSize(i, -1);
             break;
-        case STV::firstBaselineToTopHeight:
+        case R::styleable::TextView_firstBaselineToTopHeight:
             firstBaselineToTopHeight = ta->getDimensionPixelSize(i, -1);
             break;
-        case STV::lastBaselineToBottomHeight:
+        case R::styleable::TextView_lastBaselineToBottomHeight:
             lastBaselineToBottomHeight = ta->getDimensionPixelSize(i, -1);
             break;
         default:
@@ -420,14 +418,14 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
 // --- shared apply + resolve (original order; uses gathered locals) ---
 // text/hint via TypedArray.getText: resolves @string references (TYPE_REFERENCE)
 // through Context.getString(resId) and TYPE_STRING via the string pool.
-    setText(ta->getText(STV::text));
-    setHint(ta->getText(STV::hint));
+    setText(ta->getText(R::styleable::TextView_text));
+    setHint(ta->getText(R::styleable::TextView_hint));
     setHorizontallyScrolling(scrollHorizontally);
 
     setCompoundDrawablesWithIntrinsicBounds(drawableLeft, drawableTop, drawableRight, drawableBottom);
     if(mDrawables) {
-        mDrawables->mTintList = ta->getColorStateList(STV::drawableTint);
-        mDrawables->mTintMode = (PorterDuff::Mode)ta->getInt(STV::drawableTintMode, PorterDuff::NOOP);
+        mDrawables->mTintList = ta->getColorStateList(R::styleable::TextView_drawableTint);
+        mDrawables->mTintMode = (PorterDuff::Mode)ta->getInt(R::styleable::TextView_drawableTintMode, PorterDuff::NOOP);
     }
     applyCompoundDrawableTint();
     setRelativeDrawablesIfNeeded(drawableStart, drawableEnd);
@@ -458,11 +456,11 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     const std::string appearance = attrs.getString("textAppearance");
     if(appearance.empty()==false) {
         AttributeSet styleAttrs = ctx->obtainStyledAttributes(appearance);
-        auto taStyle = ctx->obtainStyledAttributes(styleAttrs, styleable::TextAppearance::IDS, defStyleAttr);
+        auto taStyle = ctx->obtainStyledAttributes(styleAttrs, R::styleable::TextAppearance, defStyleAttr);
         attributes.readTextAppearance(ctx, taStyle.get());
     }
     {
-        auto taElem = ctx->obtainStyledAttributes(attrs, styleable::TextAppearance::IDS, defStyleAttr);
+        auto taElem = ctx->obtainStyledAttributes(attrs, R::styleable::TextAppearance, defStyleAttr);
         attributes.readTextAppearance(ctx, taElem.get());
     }
     applyTextAppearance(&attributes);
@@ -1586,7 +1584,7 @@ void TextView::setTextAppearance(Context*context,const std::string&appearance) {
     if(appearance.empty()==false) {
         AttributeSet attrs = context->obtainStyledAttributes(appearance);
         if(attrs.getAttributeCount()) {
-            auto ta = context->obtainStyledAttributes(attrs, styleable::TextAppearance::IDS);
+            auto ta = context->obtainStyledAttributes(attrs, R::styleable::TextAppearance);
             attributes.readTextAppearance(mContext, ta.get());
             applyTextAppearance(&attributes);
         }
