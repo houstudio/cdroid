@@ -1,7 +1,9 @@
+#include <widget/internal_R.h>
 #include <widget/checkedtextview.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(CheckedTextView)
 
@@ -9,28 +11,28 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):Checked
 
 CheckedTextView::CheckedTextView(Context* context,const AttributeSet* pAttrs,int defStyleAttr):TextView(context,pAttrs, defStyleAttr){
     const AttributeSet& a = *pAttrs;
-    auto ta = context->obtainStyledAttributes(a, internal::R::styleable::CheckedTextView, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(a, R::styleable::CheckedTextView, defStyleAttr);
 
     mCheckMarkDrawable = nullptr;
     mCheckMarkTintList = nullptr;
     mHasCheckMarkTintMode = false;
     mHasCheckMarkTint = false;
 
-    Drawable* d = ta->getDrawable(internal::R::styleable::CheckedTextView_checkMark);
+    Drawable* d = ta->getDrawable(R::styleable::CheckedTextView_checkMark);
     if (d) setCheckMarkDrawable(d);
 
-    if (ta->hasValue(internal::R::styleable::CheckedTextView_checkMarkTintMode)) {
-        mCheckMarkBlendMode = ta->getInt(internal::R::styleable::CheckedTextView_checkMarkTintMode, -1);
+    if (ta->hasValue(R::styleable::CheckedTextView_checkMarkTintMode)) {
+        mCheckMarkBlendMode = ta->getInt(R::styleable::CheckedTextView_checkMarkTintMode, -1);
         mHasCheckMarkTintMode = true;
     }
-    if (ta->hasValue(internal::R::styleable::CheckedTextView_checkMarkTint)) {
-        mCheckMarkTintList = ta->getColorStateList(internal::R::styleable::CheckedTextView_checkMarkTint);
+    if (ta->hasValue(R::styleable::CheckedTextView_checkMarkTint)) {
+        mCheckMarkTintList = ta->getColorStateList(R::styleable::CheckedTextView_checkMarkTint);
         mHasCheckMarkTint = (mCheckMarkTintList != nullptr);
     }
     mChecked = false;
-    mCheckMarkGravity = ta->getInt(internal::R::styleable::CheckedTextView_checkMarkGravity, Gravity::END);
+    mCheckMarkGravity = ta->getInt(R::styleable::CheckedTextView_checkMarkGravity, Gravity::END);
 
-    const bool checked = ta->getBoolean(internal::R::styleable::CheckedTextView_checked, false);
+    const bool checked = ta->getBoolean(R::styleable::CheckedTextView_checked, false);
     setChecked(checked);
     applyCheckMarkTint();
 

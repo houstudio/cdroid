@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/textclock.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
@@ -22,6 +23,7 @@
 #include <utils/textutils.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 #if 0
 private class FormatChangeObserver extends ContentObserver {
     public FormatChangeObserver(Handler handler) {
@@ -62,11 +64,11 @@ TextClock::TextClock(Context* context,const AttributeSet* pAttrs,int defStyleAtt
     const AttributeSet& attrs = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, internal::R::styleable::TextClock, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::TextClock, defStyleAttr);
     
-mFormat12 = ta->getString(internal::R::styleable::TextClock_format12Hour);
-mFormat24 = ta->getString(internal::R::styleable::TextClock_format24Hour);
-mTimeZone = ta->getString(internal::R::styleable::TextClock_timeZone);
+mFormat12 = ta->getString(R::styleable::TextClock_format12Hour);
+mFormat24 = ta->getString(R::styleable::TextClock_format24Hour);
+mTimeZone = ta->getString(R::styleable::TextClock_timeZone);
 
 }
 

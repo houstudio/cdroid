@@ -15,17 +15,18 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <view/viewgroup.h>
 #include <widget/absseekbar.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
-#include <widget/R.h>
 #include <math.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 
 #define NO_ALPHA 0xFF
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(AbsSeekBar)
 
@@ -35,23 +36,23 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):
     const AttributeSet& attrs = *pAttrs;
     initSeekBar();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(attrs, internal::R::styleable::SeekBar, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::SeekBar, defStyleAttr);
     
 
-setThumb(ta->getDrawable(internal::R::styleable::SeekBar_thumb));
-setTickMark(ta->getDrawable(internal::R::styleable::SeekBar_tickMark));
-{ auto csl = ta->getColorStateList(internal::R::styleable::SeekBar_thumbTint);
+setThumb(ta->getDrawable(R::styleable::SeekBar_thumb));
+setTickMark(ta->getDrawable(R::styleable::SeekBar_tickMark));
+{ auto csl = ta->getColorStateList(R::styleable::SeekBar_thumbTint);
   if(csl) mThumbTintList = csl; }
-{ auto csl = ta->getColorStateList(internal::R::styleable::SeekBar_tickMarkTint);
+{ auto csl = ta->getColorStateList(R::styleable::SeekBar_tickMarkTint);
   if(csl) mTickMarkTintList = csl; }
-const int thumbOffset = ta->getDimensionPixelOffset(internal::R::styleable::SeekBar_thumbOffset,getThumbOffset());
+const int thumbOffset = ta->getDimensionPixelOffset(R::styleable::SeekBar_thumbOffset,getThumbOffset());
 setThumbOffset(thumbOffset);
 
 const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
 // disabledAlpha is not in the SeekBar styleable (only ToggleButton's), so
 // read it via the AttributeSet bridge for both modes.
 mDisabledAlpha = useDisabledAlpha? attrs.getFloat("disabledAlpha", 0.5f) :1.f;
-mSplitTrack = ta->getBoolean(internal::R::styleable::SeekBar_splitTrack,false);
+mSplitTrack = ta->getBoolean(R::styleable::SeekBar_splitTrack,false);
 mThumbExclusionMaxSize = ctx->getDimension("cdroid:dimen/seekbar_thumb_exclusion_max_size");
 
 applyThumbTint();

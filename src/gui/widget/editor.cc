@@ -15,7 +15,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
 #include <widget/internal_R.h>
 #include <widget/editor.h>
 #include <widget/textview.h>
@@ -42,6 +41,7 @@
 #include <menu/menuitem.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 namespace {
 // Cursor blink period, in milliseconds (matches Android's Editor.BLINK).
@@ -234,11 +234,11 @@ void Editor::invalidateTextActionMode() {
 
 // 对齐 AOSP Editor.populateMenuWithItems (Editor.java:4751)。条件 add (不 setVisible)。
 void Editor::populateTextActionModeMenu(Menu& menu, bool /*hasSelection*/) {
-    if (mTextView->canCut()) menu.add(0, cdroid::R::id::cut,   ORDER_CUT,        "Cut");
-    if (mTextView->canCopy())  menu.add(0, cdroid::R::id::copy,  ORDER_COPY,       "Copy");
-    if (mTextView->canPaste()) menu.add(0, cdroid::R::id::paste, ORDER_PASTE,      "Paste");
+    if (mTextView->canCut()) menu.add(0, R::id::cut,   ORDER_CUT,        "Cut");
+    if (mTextView->canCopy())  menu.add(0, R::id::copy,  ORDER_COPY,       "Copy");
+    if (mTextView->canPaste()) menu.add(0, R::id::paste, ORDER_PASTE,      "Paste");
     if (mTextView->canSelectAllText())
-        menu.add(0, cdroid::internal::R::id::select_all, ORDER_SELECT_ALL, "Select all");
+        menu.add(0, R::id::select_all, ORDER_SELECT_ALL, "Select all");
 }
 
 // 对齐 AOSP Editor.onGetContentRect (Editor.java:4886)。简化: 用 selStart/selEnd 的行

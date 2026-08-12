@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/spinner.h>
-#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/listview.h>
@@ -28,6 +28,7 @@
 #include <porting/cdlog.h>
 #define MAX_ITEMS_MEASURED  15
 namespace cdroid{
+using namespace cdroid::internal;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -81,28 +82,28 @@ Spinner::Spinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mTempAdapter = nullptr;
     mForwardingListener = nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, internal::R::styleable::Spinner, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::Spinner, defStyleAttr);
     
 
-mGravity = ta->getInt(internal::R::styleable::Spinner_gravity,Gravity::CENTER);
+mGravity = ta->getInt(R::styleable::Spinner_gravity,Gravity::CENTER);
 mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);
-const int mode = ta->getInt(internal::R::styleable::Spinner_spinnerMode,MODE_DIALOG);
+const int mode = ta->getInt(R::styleable::Spinner_spinnerMode,MODE_DIALOG);
 
 Drawable*dr;
 DropdownPopup* popup;
 switch(mode){
 case MODE_DIALOG:
      mPopup = new DialogPopup(this);
-     mPopup->setPromptText(ta->getString(internal::R::styleable::Spinner_prompt));
+     mPopup->setPromptText(ta->getString(R::styleable::Spinner_prompt));
      break;
 case MODE_DROPDOWN:
      popup = new DropdownPopup(ctx,this,defStyleAttr);
-     mDropDownWidth = ta->getLayoutDimension(internal::R::styleable::Spinner_dropDownWidth,LayoutParams::WRAP_CONTENT);
-     dr = ta->getDrawable(internal::R::styleable::Spinner_dropDownSelector);
+     mDropDownWidth = ta->getLayoutDimension(R::styleable::Spinner_dropDownWidth,LayoutParams::WRAP_CONTENT);
+     dr = ta->getDrawable(R::styleable::Spinner_dropDownSelector);
      if(dr)popup->setListSelector(dr);
-     dr = mContext->getDrawable(ta->getString(internal::R::styleable::Spinner_popupBackground));
+     dr = mContext->getDrawable(ta->getString(R::styleable::Spinner_popupBackground));
      if(dr)popup->setBackgroundDrawable(dr);
-     popup->setPromptText(ta->getString(internal::R::styleable::Spinner_prompt));
+     popup->setPromptText(ta->getString(R::styleable::Spinner_prompt));
      mPopup = popup;
      mForwardingListener = new SpinnerForwardingListener(this,popup);
      break;

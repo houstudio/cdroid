@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/animatedstatelistdrawable.h>
 #include <drawable/animatedrotatedrawable.h>
 #include <drawable/animatedimagedrawable.h>
@@ -23,6 +24,7 @@
 #include <cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 AnimatedStateListDrawable::AnimatedStateListDrawable():StateListDrawable(){
     std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(nullptr,this);
@@ -199,7 +201,7 @@ void AnimatedStateListDrawable::inflate(Resources& r,XmlPullParser&parser,const 
     StateListDrawable::inflateWithAttributes(parser,atts);
 
     Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, internal::R::styleable::AnimatedStateListDrawable);
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimatedStateListDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     //updateDensity();
     inflateChildElement(r,parser,atts);
@@ -214,12 +216,12 @@ void AnimatedStateListDrawable::updateStateFromTypedArray(const TypedArray& a) {
     // Extract the theme attributes, if any.
     //state->mThemeAttrs = a.extractThemeAttrs();
 
-    state->mVariablePadding = a.getBoolean(internal::R::styleable::AnimatedStateListDrawable_variablePadding, state->mVariablePadding);
-    state->mConstantSize = a.getBoolean(internal::R::styleable::AnimatedStateListDrawable_constantSize, state->mConstantSize);
-    state->mEnterFadeDuration = a.getInt(internal::R::styleable::AnimatedStateListDrawable_enterFadeDuration, state->mEnterFadeDuration);
-    state->mExitFadeDuration = a.getInt(internal::R::styleable::AnimatedStateListDrawable_exitFadeDuration, state->mExitFadeDuration);
-    state->mDither = a.getBoolean(internal::R::styleable::AnimatedStateListDrawable_dither, state->mDither);
-    state->mAutoMirrored = a.getBoolean(internal::R::styleable::AnimatedStateListDrawable_autoMirrored, state->mAutoMirrored);
+    state->mVariablePadding = a.getBoolean(R::styleable::AnimatedStateListDrawable_variablePadding, state->mVariablePadding);
+    state->mConstantSize = a.getBoolean(R::styleable::AnimatedStateListDrawable_constantSize, state->mConstantSize);
+    state->mEnterFadeDuration = a.getInt(R::styleable::AnimatedStateListDrawable_enterFadeDuration, state->mEnterFadeDuration);
+    state->mExitFadeDuration = a.getInt(R::styleable::AnimatedStateListDrawable_exitFadeDuration, state->mExitFadeDuration);
+    state->mDither = a.getBoolean(R::styleable::AnimatedStateListDrawable_dither, state->mDither);
+    state->mAutoMirrored = a.getBoolean(R::styleable::AnimatedStateListDrawable_autoMirrored, state->mAutoMirrored);
 }
 
 void AnimatedStateListDrawable::init(){
@@ -245,9 +247,9 @@ void AnimatedStateListDrawable::inflateChildElement(Resources& r,XmlPullParser&p
 
 int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, internal::R::styleable::AnimatedStateListDrawableItem);
-    const int keyframeId = ta ? ta->getResourceId(internal::R::styleable::AnimatedStateListDrawableItem_id, 0) : atts.getResourceId("id", 0);
-    Drawable* dr = ta ? ta->getDrawable(internal::R::styleable::AnimatedStateListDrawableItem_drawable) : atts.getDrawable("drawable");
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimatedStateListDrawableItem);
+    const int keyframeId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableItem_id, 0) : atts.getResourceId("id", 0);
+    Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimatedStateListDrawableItem_drawable) : atts.getDrawable("drawable");
 
     std::vector<int> states;
     StateSet::parseState(states,atts);
@@ -271,11 +273,11 @@ int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const
 
 int AnimatedStateListDrawable::parseTransition(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, internal::R::styleable::AnimatedStateListDrawableTransition);
-    const int fromId = ta ? ta->getResourceId(internal::R::styleable::AnimatedStateListDrawableTransition_fromId, 0) : atts.getResourceId("fromId", 0);
-    const int toId = ta ? ta->getResourceId(internal::R::styleable::AnimatedStateListDrawableTransition_toId, 0) : atts.getResourceId("toId", 0);
-    const bool reversible = ta ? ta->getBoolean(internal::R::styleable::AnimatedStateListDrawableTransition_reversible, false) : atts.getBoolean("reversible", false);
-    Drawable* dr = ta ? ta->getDrawable(internal::R::styleable::AnimatedStateListDrawableTransition_drawable) : atts.getDrawable("drawable");
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimatedStateListDrawableTransition);
+    const int fromId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableTransition_fromId, 0) : atts.getResourceId("fromId", 0);
+    const int toId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableTransition_toId, 0) : atts.getResourceId("toId", 0);
+    const bool reversible = ta ? ta->getBoolean(R::styleable::AnimatedStateListDrawableTransition_reversible, false) : atts.getBoolean("reversible", false);
+    Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimatedStateListDrawableTransition_drawable) : atts.getDrawable("drawable");
 
     // Loading child elements modifies the state of the AttributeSet's
     // underlying parser, so it needs to happen after obtaining

@@ -15,11 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/clipdrawable.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 ClipDrawable::ClipState::ClipState():DrawableWrapperState(){
     mGravity = Gravity::LEFT;
@@ -117,14 +119,14 @@ void ClipDrawable::draw(Canvas& canvas){
 }
 
 void ClipDrawable::inflate(Resources& r, XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, internal::R::styleable::ClipDrawable);
+    auto ta = r.obtainStyledAttributes(atts, R::styleable::ClipDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     DrawableWrapper::inflate(r,parser,atts);
 }
 
 void ClipDrawable::updateStateFromTypedArray(const TypedArray& a){
-    mState->mOrientation = a.getInt(internal::R::styleable::ClipDrawable_clipOrientation, mState->mOrientation);
-    mState->mGravity = a.getInt(internal::R::styleable::ClipDrawable_gravity, mState->mGravity);
+    mState->mOrientation = a.getInt(R::styleable::ClipDrawable_clipOrientation, mState->mOrientation);
+    mState->mGravity = a.getInt(R::styleable::ClipDrawable_gravity, mState->mGravity);
 }
 
 }/*endof namespace*/

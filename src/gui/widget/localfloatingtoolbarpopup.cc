@@ -28,7 +28,6 @@
 #include <widget/popupwindow.h>
 #include <widget/textview.h>
 #include <widget/imageview.h>
-#include <widget/R.h>
 #include <widget/internal_R.h>
 #include <view/layoutinflater.h>
 #include <view/view.h>
@@ -43,6 +42,7 @@
 #include <cmath>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 // Out-of-line definitions for the odr-used static constexpr members (C++14:
 // std::min/max take them by const reference).
@@ -852,7 +852,7 @@ View* LocalFloatingToolbarPopup::createMenuItemButton(
 
 void LocalFloatingToolbarPopup::updateMenuItemButton(
         View* menuItemButton, MenuItem* menuItem, int iconTextSpacing, bool showIcon) {
-    TextView* buttonText = (TextView*) menuItemButton->findViewById(cdroid::internal::R::id::floating_toolbar_menu_item_text);
+    TextView* buttonText = (TextView*) menuItemButton->findViewById(R::id::floating_toolbar_menu_item_text);
     if (buttonText) buttonText->setEllipsize(TextUtils::TruncateAt::NONE);
     if (menuItem->getTitle().empty()) {
         if (buttonText) buttonText->setVisibility(View::GONE);
@@ -865,7 +865,7 @@ void LocalFloatingToolbarPopup::updateMenuItemButton(
             buttonText->setTextColor(0xFFFFFFFF);
         }
     }
-    ImageView* buttonIcon = (ImageView*) menuItemButton->findViewById(cdroid::internal::R::id::floating_toolbar_menu_item_image);
+    ImageView* buttonIcon = (ImageView*) menuItemButton->findViewById(R::id::floating_toolbar_menu_item_image);
     if (menuItem->getIcon() == nullptr || !showIcon) {
         if (buttonIcon) buttonIcon->setVisibility(View::GONE);
         if (buttonText) buttonText->setPaddingRelative(0, 0, 0, 0);

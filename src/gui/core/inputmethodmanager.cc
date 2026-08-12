@@ -24,7 +24,6 @@
 #include <keycharactermap.h>
 #include <utils/textutils.h>
 #include <widget/candidateview.h>
-#include <widget/R.h>
 #include <widget/internal_R.h>
 #include <core/app.h>
 #include <core/englishinputmethod.h>
@@ -33,6 +32,7 @@
 #include <core/windowmanager.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 #define NOW std::chrono::steady_clock::now().time_since_epoch().count()
 class IMEWindow:public Window{
@@ -113,8 +113,8 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     KeyboardView::OnKeyboardActionListener listener;
     InputMethodManager&imm = InputMethodManager::getInstance();
     View*vg=LayoutInflater::from(mContext)->inflate("@cdroid:layout/ime_pinyin_keyboard",this,false);
-    kbdView = (KeyboardView*)vg->findViewById(cdroid::internal::R::id::keyboardview);
-    candidateView = (CandidateView*)vg->findViewById(cdroid::internal::R::id::predict2);
+    kbdView = (KeyboardView*)vg->findViewById(R::id::keyboardview);
+    candidateView = (CandidateView*)vg->findViewById(R::id::predict2);
     // The controller owns the 1/2-level selection logic; the committer delivers
     // each committed phrase/word to the focused editor via this->commitText.
     mController = new ImeSelectionController(candidateView,
@@ -122,7 +122,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     candidateView->setPredictListener([this](CandidateView&,const std::string&s,int id){
         mController->onCandidateSelected(s,id);
     });
-    View* closeKbd = vg->findViewById(cdroid::internal::R::id::closekeyboard);
+    View* closeKbd = vg->findViewById(R::id::closekeyboard);
     closeKbd->setOnClickListener(std::bind(&IMEWindow::onCloseKeyboard,this,std::placeholders::_1));
     addView(vg);//layout(0,0,getWidth(),h);
     vg->requestLayout();

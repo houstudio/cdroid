@@ -16,15 +16,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <menu/listmenuitemview.h>
-#include <widget/R.h>
 #include <widget/internal_R.h>
 #include <menu/menuitemimpl.h>
 #include <widget/textview.h>
 #include <widget/checkbox.h>
 #include <widget/imageview.h>
 #include <widget/radiobutton.h>
-#include <widget/R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET2(ListMenuItemView,R::attr::listMenuViewStyle)
 ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs):ListMenuItemView(context,&attrs,0){}
@@ -56,19 +55,19 @@ void ListMenuItemView::onFinishInflate() {
 
     setBackground(mBackground);
 
-    mTitleView = (TextView*)findViewById(cdroid::R::id::title);
+    mTitleView = (TextView*)findViewById(R::id::title);
     if (!mTextAppearance.empty()) {
         mTitleView->setTextAppearance(mTextAppearanceContext,mTextAppearance);
     }
 
-    mShortcutView = (TextView*)findViewById(cdroid::internal::R::id::shortcut);
-    mSubMenuArrowView = (ImageView*)findViewById(cdroid::internal::R::id::submenuarrow);
+    mShortcutView = (TextView*)findViewById(R::id::shortcut);
+    mSubMenuArrowView = (ImageView*)findViewById(R::id::submenuarrow);
     if (mSubMenuArrowView != nullptr) {
         mSubMenuArrowView->setImageDrawable(mSubMenuArrow);
     }
-    mGroupDivider = (ImageView*)findViewById(cdroid::internal::R::id::group_divider);
+    mGroupDivider = (ImageView*)findViewById(R::id::group_divider);
 
-    mContent = (LinearLayout*)findViewById(cdroid::R::id::content);
+    mContent = (LinearLayout*)findViewById(R::id::content);
 }
 
 void ListMenuItemView::initialize(MenuItemImpl* itemData, int menuType) {

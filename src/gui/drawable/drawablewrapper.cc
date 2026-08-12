@@ -15,12 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/drawablewrapper.h>
 #include <core/context.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DrawableWrapper::DrawableWrapperState::DrawableWrapperState(){
     mDensity = DisplayMetrics::DENSITY_DEFAULT;
@@ -289,7 +291,7 @@ void DrawableWrapper::inflate(Resources& r,XmlPullParser&parser,const AttributeS
     //state->mSrcDensityOverride = mSrcDensityOverride;
 
     // AOSP DrawableWrapper.inflate: obtainAttributes(R.styleable.DrawableWrapper).
-    auto ta = r.obtainStyledAttributes(&atts, internal::R::styleable::DrawableWrapper);
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::DrawableWrapper);
     if (ta) updateStateFromTypedArray(*ta);
     inflateChildDrawable(parser, atts);
 }
@@ -305,8 +307,8 @@ void DrawableWrapper::updateStateFromTypedArray(const TypedArray& a) {
 
     // Extract the theme attributes, if any.
     //state.mThemeAttrs = a.extractThemeAttrs();
-    if (a.hasValue(internal::R::styleable::DrawableWrapper_drawable)) {
-        setDrawable(a.getDrawable(internal::R::styleable::DrawableWrapper_drawable));
+    if (a.hasValue(R::styleable::DrawableWrapper_drawable)) {
+        setDrawable(a.getDrawable(R::styleable::DrawableWrapper_drawable));
     }
 }
 

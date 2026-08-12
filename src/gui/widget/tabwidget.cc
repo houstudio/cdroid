@@ -15,13 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/tabwidget.h>
-#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET2(TabWidget,R::attr::tabWidgetStyle)
 
@@ -35,16 +36,16 @@ TabWidget::TabWidget(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :LinearLayout(ctx,pAttrs, defStyleAttr){
     const AttributeSet& atts = *pAttrs;
     initTab();
-    auto ta = ctx->obtainStyledAttributes(atts, internal::R::styleable::TabWidget, defStyleAttr);
-    const bool hasExplicitLeft = ta && ta->hasValue(internal::R::styleable::TabWidget_tabStripLeft);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::TabWidget, defStyleAttr);
+    const bool hasExplicitLeft = ta && ta->hasValue(R::styleable::TabWidget_tabStripLeft);
     if(hasExplicitLeft)
-        mLeftStrip = ta->getDrawable(internal::R::styleable::TabWidget_tabStripLeft);
+        mLeftStrip = ta->getDrawable(R::styleable::TabWidget_tabStripLeft);
     else
         mLeftStrip = atts.getDrawable("tab_bottom_left");
 
-    const bool hasExplicitRight = ta && ta->hasValue(internal::R::styleable::TabWidget_tabStripRight);
+    const bool hasExplicitRight = ta && ta->hasValue(R::styleable::TabWidget_tabStripRight);
     if(hasExplicitRight)
-        mRightStrip = ta->getDrawable(internal::R::styleable::TabWidget_tabStripRight);
+        mRightStrip = ta->getDrawable(R::styleable::TabWidget_tabStripRight);
     else
         mRightStrip = atts.getDrawable("tab_bottom_right");
     setChildrenDrawingOrderEnabled(true);

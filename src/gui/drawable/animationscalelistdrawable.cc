@@ -15,11 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/drawables.h>
 #include <animation/valueanimator.h>
 #include <drawable/animationscalelistdrawable.h>
 #include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 AnimationScaleListDrawable::AnimationScaleListDrawable():AnimationScaleListDrawable(nullptr){
 }
 
@@ -67,8 +69,8 @@ void AnimationScaleListDrawable::inflateChildElements(Resources& r,XmlPullParser
 
         // Either pick up the android:drawable attribute.
         Context* ctx = attrs.getContext();
-        auto ta = r.obtainStyledAttributes(&attrs, internal::R::styleable::AnimationScaleListDrawableItem);
-        Drawable* dr = ta ? ta->getDrawable(internal::R::styleable::AnimationScaleListDrawableItem_drawable) : attrs.getDrawable("drawable");
+        auto ta = r.obtainStyledAttributes(&attrs, R::styleable::AnimationScaleListDrawableItem);
+        Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimationScaleListDrawableItem_drawable) : attrs.getDrawable("drawable");
 
         // Or parse the child element under <item>.
         if (dr == nullptr) {

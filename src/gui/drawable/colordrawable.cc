@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/colordrawable.h>
 #include <drawable/colormatrix.h>
 #include <core/context.h>
@@ -24,6 +25,7 @@
 
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 ColorDrawable::ColorState::ColorState(){
     mTint = nullptr;
@@ -69,8 +71,8 @@ ColorDrawable::~ColorDrawable(){
 }
 
 void ColorDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, internal::R::styleable::ColorDrawable);
-    if (ta) mColorState->mBaseColor = ta->getColor(internal::R::styleable::ColorDrawable_color, mColorState->mBaseColor);
+    auto ta = r.obtainStyledAttributes(atts, R::styleable::ColorDrawable);
+    if (ta) mColorState->mBaseColor = ta->getColor(R::styleable::ColorDrawable_color, mColorState->mBaseColor);
     mColorState->mUseColor = mColorState->mBaseColor;
 }
 

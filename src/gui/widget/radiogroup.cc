@@ -1,3 +1,4 @@
+#include <widget/internal_R.h>
 #include <widget/radiogroup.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
@@ -6,6 +7,7 @@
 #include <utils/textutils.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(RadioGroup)
 
@@ -21,15 +23,15 @@ RadioGroup::RadioGroup(Context* context,const AttributeSet* pAttrs,int defStyleA
     const AttributeSet& attrs = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, internal::R::styleable::RadioGroup, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::RadioGroup, defStyleAttr);
     
 
-const int value = (int)ta->getResourceId(internal::R::styleable::RadioGroup_checkedButton,(uint32_t)View::NO_ID);
+const int value = (int)ta->getResourceId(R::styleable::RadioGroup_checkedButton,(uint32_t)View::NO_ID);
 if(value!=View::NO_ID){
     mCheckedId = value;
     mInitialCheckedId = value;
 }
-const int index = ta->getInt(internal::R::styleable::RadioGroup_orientation,VERTICAL);
+const int index = ta->getInt(R::styleable::RadioGroup_orientation,VERTICAL);
 setOrientation(index);
 
 }

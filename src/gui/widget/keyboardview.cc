@@ -1,11 +1,10 @@
+#include <widget/internal_R.h>
 #include <widget/keyboardview.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
 #include <widget/popupwindow.h>
-#include <widget/R.h>
-#include <widget/internal_R.h>
 #include <view/layoutinflater.h>
 #include <view/gravity.h>
 #include <fstream>
@@ -18,6 +17,7 @@
 #endif
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(KeyboardView)
 
@@ -33,16 +33,16 @@ KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAt
   :View(ctx,pAttrs, defStyleAttr){
     const AttributeSet& atts = *pAttrs;
     init();
-    auto ta = ctx->obtainStyledAttributes(atts, internal::R::styleable::KeyboardView, defStyleAttr);
-    Drawable *dr = ta ? ta->getDrawable(internal::R::styleable::KeyboardView_keyBackground) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::KeyboardView, defStyleAttr);
+    Drawable *dr = ta ? ta->getDrawable(R::styleable::KeyboardView_keyBackground) : nullptr;
     mKeyBackground = dr ? dr:new ColorDrawable(0xFF889988);
-    mVerticalCorrection= ta ? ta->getDimensionPixelOffset(internal::R::styleable::KeyboardView_verticalCorrection,0) : 0;
-    mPreviewOffset     = ta ? ta->getDimensionPixelOffset(internal::R::styleable::KeyboardView_keyPreviewOffset,0) : 0;
-    mPreviewHeight     = ta ? ta->getDimensionPixelOffset(internal::R::styleable::KeyboardView_keyPreviewHeight,0) : 0;
-    mKeyTextSize       = ta ? ta->getDimensionPixelOffset(internal::R::styleable::KeyboardView_keyTextSize,20) : 20;
-    mKeyTextColor      = ta ? ta->getColor(internal::R::styleable::KeyboardView_keyTextColor,0xFF000000) : 0xFF000000;
-    mLabelTextSize     = ta ? ta->getDimensionPixelOffset(internal::R::styleable::KeyboardView_labelTextSize,20) : 20;
-    mPopupLayout       = ta ? ta->getString(internal::R::styleable::KeyboardView_popupLayout) : std::string();
+    mVerticalCorrection= ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_verticalCorrection,0) : 0;
+    mPreviewOffset     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewOffset,0) : 0;
+    mPreviewHeight     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewHeight,0) : 0;
+    mKeyTextSize       = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyTextSize,20) : 20;
+    mKeyTextColor      = ta ? ta->getColor(R::styleable::KeyboardView_keyTextColor,0xFF000000) : 0xFF000000;
+    mLabelTextSize     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_labelTextSize,20) : 20;
+    mPopupLayout       = ta ? ta->getString(R::styleable::KeyboardView_popupLayout) : std::string();
     mPaint.setTextSize(mLabelTextSize);
     mPaint.setTextAlign(Paint::Align::CENTER);
     resetMultiTap();
@@ -487,7 +487,7 @@ bool KeyboardView::onLongPress(Keyboard::Key* popupKey){
         mMiniKeyboardContainer = cached->second;
     } else {
         mMiniKeyboardContainer = LayoutInflater::from(getContext())->inflate(mPopupLayout,nullptr);
-        mMiniKeyboard = (KeyboardView*)mMiniKeyboardContainer->findViewById(cdroid::internal::R::id::keyboardview);
+        mMiniKeyboard = (KeyboardView*)mMiniKeyboardContainer->findViewById(R::id::keyboardview);
         View* closeButton = mMiniKeyboardContainer->findViewById(R::id::closeButton);
         if(closeButton) closeButton->setOnClickListener(std::bind(&KeyboardView::onClick,this,std::placeholders::_1));
 
@@ -526,7 +526,7 @@ bool KeyboardView::onLongPress(Keyboard::Key* popupKey){
         mMiniKeyboardCache[popupKey] = mMiniKeyboardContainer;
     }
 
-    mMiniKeyboard = (KeyboardView*)mMiniKeyboardContainer->findViewById(cdroid::internal::R::id::keyboardview);
+    mMiniKeyboard = (KeyboardView*)mMiniKeyboardContainer->findViewById(R::id::keyboardview);
     int coords[2] = {0,0};
     getLocationInWindow(coords);
     /* Center the popup on the long-pressed key, so the finger -- already on the

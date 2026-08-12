@@ -1,6 +1,5 @@
-#include <climits>
-#include <widget/R.h>
 #include <widget/internal_R.h>
+#include <climits>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
 #include <widget/framework_styleable.h>
@@ -13,6 +12,7 @@
 #include <utils/textutils.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 namespace {
 // Ported from Java private static class NearestTouchDelegate implements View.OnTouchListener.
@@ -81,18 +81,18 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
 
     LayoutInflater* inflater = LayoutInflater::from(mContext);
 
-    auto a = mContext->obtainStyledAttributes(attrs, internal::R::styleable::TimePicker, 0, 0);
-    const std::string layoutResourceId = a ? a->getString(internal::R::styleable::TimePicker_internalLayout)
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);
+    const std::string layoutResourceId = a ? a->getString(R::styleable::TimePicker_internalLayout)
             : std::string("cdroid:layout/time_picker_material");
     const std::string layoutRes = layoutResourceId.empty()
             ? std::string("cdroid:layout/time_picker_material") : layoutResourceId;
     View* mainView = inflater->inflate(layoutRes, delegator);
     mainView->setSaveFromParentEnabled(false);
-    mRadialTimePickerHeader = mainView->findViewById(cdroid::internal::R::id::time_header);
+    mRadialTimePickerHeader = mainView->findViewById(R::id::time_header);
     mRadialTimePickerHeader->setOnTouchListener(NearestTouchDelegate());
 
     // Set up hour/minute labels.
-    mHourView = (NumericTextView*) mainView->findViewById(cdroid::internal::R::id::hours);
+    mHourView = (NumericTextView*) mainView->findViewById(R::id::hours);
 
     mClickListener = [this](View& v){
         onViewClick(v);
@@ -187,8 +187,8 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     mHourView->setOnDigitEnteredListener(mDigitEnteredListener);
     // DEFERRED: mHourView->setAccessibilityDelegate(new ClickActionDelegate(context, R.string.select_hours));
     mHourView->setAccessibilityLiveRegion(View::ACCESSIBILITY_LIVE_REGION_POLITE);
-    mSeparatorView = (TextView*) mainView->findViewById(cdroid::internal::R::id::separator);
-    mMinuteView = (NumericTextView*) mainView->findViewById(cdroid::internal::R::id::minutes);
+    mSeparatorView = (TextView*) mainView->findViewById(R::id::separator);
+    mMinuteView = (NumericTextView*) mainView->findViewById(R::id::minutes);
     mMinuteView->setOnClickListener(mClickListener);
     mMinuteView->setOnFocusChangeListener(mFocusListener);
     mMinuteView->setOnDigitEnteredListener(mDigitEnteredListener);
@@ -197,16 +197,16 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     mMinuteView->setRange(0, 59);
 
     // Set up AM/PM labels.
-    mAmPmLayout = mainView->findViewById(cdroid::internal::R::id::ampm_layout);
+    mAmPmLayout = mainView->findViewById(R::id::ampm_layout);
     mAmPmLayout->setOnTouchListener(NearestTouchDelegate());
 
     const std::vector<std::string> amPmStrings = TimePicker::getAmPmStrings(context);
-    mAmLabel = (RadioButton*) mAmPmLayout->findViewById(cdroid::internal::R::id::am_label);
+    mAmLabel = (RadioButton*) mAmPmLayout->findViewById(R::id::am_label);
     mAmLabel->setText(obtainVerbatim(amPmStrings[0]));
     mAmLabel->setOnClickListener(mClickListener);
     ensureMinimumTextWidth(mAmLabel);
 
-    mPmLabel = (RadioButton*) mAmPmLayout->findViewById(cdroid::internal::R::id::pm_label);
+    mPmLabel = (RadioButton*) mAmPmLayout->findViewById(R::id::pm_label);
     mPmLabel->setText(obtainVerbatim(amPmStrings[1]));
     mPmLabel->setOnClickListener(mClickListener);
     ensureMinimumTextWidth(mPmLabel);
@@ -214,16 +214,16 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     // DEFERRED: legacy header text color extracted from headerTimeTextAppearance and
     // R.styleable.TimePicker_headerTextColor / headerBackground styling. Depends on
     // ColorStateList / obtainStyledAttributes not wired; views keep their XML styling.
-    mTextInputPickerHeader = mainView->findViewById(cdroid::internal::R::id::input_header);
+    mTextInputPickerHeader = mainView->findViewById(R::id::input_header);
 
-    mRadialTimePickerView = (RadialTimePickerView*) mainView->findViewById(cdroid::internal::R::id::radial_picker);
+    mRadialTimePickerView = (RadialTimePickerView*) mainView->findViewById(R::id::radial_picker);
     mRadialTimePickerView->applyAttributes(attrs);
     mRadialTimePickerView->setOnValueSelectedListener(mOnValueSelectedListener);
 
-    mTextInputPickerView = (TextInputTimePickerView*) mainView->findViewById(cdroid::internal::R::id::input_mode);
+    mTextInputPickerView = (TextInputTimePickerView*) mainView->findViewById(R::id::input_mode);
     mTextInputPickerView->setListener(mOnValueTypedListener);
 
-    mRadialTimePickerModeButton = (ImageButton*) mainView->findViewById(cdroid::internal::R::id::toggle_mode);
+    mRadialTimePickerModeButton = (ImageButton*) mainView->findViewById(R::id::toggle_mode);
     mRadialTimePickerModeButton->setOnClickListener([this](View& /*v*/) {
          toggleRadialPickerMode();
     });
@@ -714,12 +714,12 @@ void TimePickerClockDelegate::setAmOrPm(int amOrPm) {
 void TimePickerClockDelegate::onViewFocusChange(View& v, bool focused) {
     if (focused) {
         switch (v.getId()) {
-        case cdroid::internal::R::id::am_label: setAmOrPm(AM); break;
-        case cdroid::internal::R::id::pm_label: setAmOrPm(PM); break;
-        case cdroid::internal::R::id::hours:
+        case R::id::am_label: setAmOrPm(AM); break;
+        case R::id::pm_label: setAmOrPm(PM); break;
+        case R::id::hours:
             setCurrentItemShowing(HOUR_INDEX, true);
             break;
-        case cdroid::internal::R::id::minutes:
+        case R::id::minutes:
             setCurrentItemShowing(MINUTE_INDEX, true);
             break;
         default:
@@ -732,12 +732,12 @@ void TimePickerClockDelegate::onViewFocusChange(View& v, bool focused) {
 
 void TimePickerClockDelegate::onViewClick(View& v) {
     switch (v.getId()) {
-    case cdroid::internal::R::id::am_label: setAmOrPm(AM);  break;
-    case cdroid::internal::R::id::pm_label: setAmOrPm(PM);  break;
-    case cdroid::internal::R::id::hours:
+    case R::id::am_label: setAmOrPm(AM);  break;
+    case R::id::pm_label: setAmOrPm(PM);  break;
+    case R::id::hours:
         setCurrentItemShowing(HOUR_INDEX, true);
         break;
-    case cdroid::internal::R::id::minutes:
+    case R::id::minutes:
         setCurrentItemShowing(MINUTE_INDEX, true);
         break;
     default:

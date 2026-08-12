@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/nestedscrollview.h>
-#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/nestedscrollinghelper.h>
@@ -25,6 +25,7 @@
 #include <core/build.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 // Port of androidx NestedScrollView.DifferentialMotionFlingTargetImpl (inner class).
 // Holds a back-pointer to the outer NestedScrollView. Friend of NestedScrollView so it can reach
@@ -60,9 +61,9 @@ NestedScrollView::NestedScrollView(Context* context,const AttributeSet* pAttrs,i
     const AttributeSet& attrs = *pAttrs;
     initScrollView(&attrs);
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, internal::R::styleable::ScrollView, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::ScrollView, defStyleAttr);
     
-setFillViewport(ta->getBoolean(internal::R::styleable::ScrollView_fillViewport,false));
+setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport,false));
 
 }
 

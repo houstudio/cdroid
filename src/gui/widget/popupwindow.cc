@@ -15,11 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/popupwindow.h>
-#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs)
     :PopupWindow(context,attrs,R::attr::popupWindowStyle){
@@ -35,11 +36,11 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, int defStyl
     // AOSP: context.obtainStyledAttributes(attrs, R.styleable.PopupWindow, defStyleAttr,
     // defStyleRes). Read the consumed attrs (popupBackground/popupElevation/overlapAnchor)
     // via R.styleable.PopupWindow named indices (no more hand-cobbled attr-id array).
-    auto ta = context->obtainStyledAttributes(&attrs, internal::R::styleable::PopupWindow, defStyleAttr, defStyleRes);
+    auto ta = context->obtainStyledAttributes(&attrs, R::styleable::PopupWindow, defStyleAttr, defStyleRes);
     if (ta) {
-        Drawable* bg = ta->getDrawable(internal::R::styleable::PopupWindow_popupBackground);
-        mElevation = ta->getFloat(internal::R::styleable::PopupWindow_popupElevation, 0);
-        mOverlapAnchor = ta->getBoolean(internal::R::styleable::PopupWindow_overlapAnchor, false);
+        Drawable* bg = ta->getDrawable(R::styleable::PopupWindow_popupBackground);
+        mElevation = ta->getFloat(R::styleable::PopupWindow_popupElevation, 0);
+        mOverlapAnchor = ta->getBoolean(R::styleable::PopupWindow_overlapAnchor, false);
         setBackgroundDrawable(bg);
     }
     LOGD("create PopupWindow %p background=%p",this,mBackground);

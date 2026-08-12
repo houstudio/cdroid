@@ -15,12 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/listpopupwindow.h>
-#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <widget/linearlayout.h>
 #include <cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 class PopupDataSetObserver:public DataSetObserver{
 private:
@@ -53,10 +54,10 @@ ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, int 
     initPopupWindow();
     // AOSP: resolve dropDownHorizontalOffset/VerticalOffset through the defStyle
     // chain via R.styleable.ListPopupWindow (no more hand-cobbled attr-id array).
-    auto ta = context->obtainStyledAttributes(&atts, internal::R::styleable::ListPopupWindow, defStyleAttr, defStyleRes);
+    auto ta = context->obtainStyledAttributes(&atts, R::styleable::ListPopupWindow, defStyleAttr, defStyleRes);
     if (ta) {
-        mDropDownHorizontalOffset = ta->getDimensionPixelOffset(internal::R::styleable::ListPopupWindow_dropDownHorizontalOffset, 0);
-        mDropDownVerticalOffset   = ta->getDimensionPixelOffset(internal::R::styleable::ListPopupWindow_dropDownVerticalOffset, 0);
+        mDropDownHorizontalOffset = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownHorizontalOffset, 0);
+        mDropDownVerticalOffset   = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownVerticalOffset, 0);
     }
     mPopup = new PopupWindow(mContext,atts,defStyleAttr,defStyleRes);
     mResizePopupRunnable =[this](){

@@ -15,16 +15,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/listview.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/checkable.h>
-#include <widget/R.h>
 #include <view/focusfinder.h>
 #include <utils/mathutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 DECLARE_WIDGET2(ListView,R::attr::listViewStyle)
 
@@ -56,19 +57,19 @@ void ListView::initListView(const AttributeSet&attrs,int defStyleAttr) {
     mDividerIsOpaque = true;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = getContext();
-    auto ta = ctx->obtainStyledAttributes(attrs, internal::R::styleable::ListView, defStyleAttr, 0);
+    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ListView, defStyleAttr, 0);
     if (ta) {
 
-    Drawable* d = ctx->getDrawable(ta->getString(internal::R::styleable::ListView_divider));
-    Drawable* osHeader = ctx->getDrawable(ta->getString(internal::R::styleable::ListView_overScrollHeader));
-    Drawable* osFooter = ctx->getDrawable(ta->getString(internal::R::styleable::ListView_overScrollFooter));
+    Drawable* d = ctx->getDrawable(ta->getString(R::styleable::ListView_divider));
+    Drawable* osHeader = ctx->getDrawable(ta->getString(R::styleable::ListView_overScrollHeader));
+    Drawable* osFooter = ctx->getDrawable(ta->getString(R::styleable::ListView_overScrollFooter));
 
     setOverscrollHeader(osHeader);
     setOverscrollHeader(osFooter);
     setDivider(d);
-    mHeaderDividersEnabled = ta->getBoolean(internal::R::styleable::ListView_headerDividersEnabled,true);
-    mFooterDividersEnabled = ta->getBoolean(internal::R::styleable::ListView_footerDividersEnabled, true);
-    setDividerHeight(ta->getDimensionPixelSize(internal::R::styleable::ListView_dividerHeight,0));
+    mHeaderDividersEnabled = ta->getBoolean(R::styleable::ListView_headerDividersEnabled,true);
+    mFooterDividersEnabled = ta->getBoolean(R::styleable::ListView_footerDividersEnabled, true);
+    setDividerHeight(ta->getDimensionPixelSize(R::styleable::ListView_dividerHeight,0));
     }
 }
 

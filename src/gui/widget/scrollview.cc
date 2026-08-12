@@ -15,15 +15,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/scrollview.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
-#include <widget/R.h>
 #include <view/focusfinder.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
 #include <view/hapticscrollfeedbackprovider.h>
 #include <porting/cdlog.h>
 namespace cdroid {
+using namespace cdroid::internal;
 
 DECLARE_WIDGET2(ScrollView,R::attr::scrollViewStyle)
 
@@ -41,9 +42,9 @@ ScrollView::ScrollView(Context*context,const AttributeSet* pAttrs,int defStyleAt
     const AttributeSet& atts = *pAttrs;
     initScrollView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(atts, internal::R::styleable::ScrollView, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(atts, R::styleable::ScrollView, defStyleAttr);
     
-setFillViewport(ta->getBoolean(internal::R::styleable::ScrollView_fillViewport, false));
+setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport, false));
 mScrollDuration = atts.getInt("scrollDuration",400);
 
 }

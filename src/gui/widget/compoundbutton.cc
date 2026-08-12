@@ -15,14 +15,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/compoundbutton.h>
-#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/checkbox.h>
 #include <widget/radiobutton.h>
 #include <porting/cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(CompoundButton)
 
@@ -34,12 +35,12 @@ CompoundButton::CompoundButton(Context*ctx,const AttributeSet* pAttrs,int defSty
     initCompoundButton();
     // AOSP CompoundButton ctor: obtainStyledAttributes(attrs, styleable, defStyleAttr, 0),
     // then a.getDrawable(button) / getBoolean(checked) / getColorStateList(buttonTint).
-    auto ta = ctx->obtainStyledAttributes(&attrs, internal::R::styleable::CompoundButton, defStyleAttr, 0);
-    Drawable* d = ta->getDrawable(internal::R::styleable::CompoundButton_button);
+    auto ta = ctx->obtainStyledAttributes(&attrs, R::styleable::CompoundButton, defStyleAttr, 0);
+    Drawable* d = ta->getDrawable(R::styleable::CompoundButton_button);
     if (d) setButtonDrawable(d);
-    setChecked(ta->getBoolean(internal::R::styleable::CompoundButton_checked, false));
-    if (ta->hasValue(internal::R::styleable::CompoundButton_buttonTint))
-        mButtonTintList = ta->getColorStateList(internal::R::styleable::CompoundButton_buttonTint);
+    setChecked(ta->getBoolean(R::styleable::CompoundButton_checked, false));
+    if (ta->hasValue(R::styleable::CompoundButton_buttonTint))
+        mButtonTintList = ta->getColorStateList(R::styleable::CompoundButton_buttonTint);
     applyButtonTint();
 }
 

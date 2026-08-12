@@ -1,9 +1,11 @@
+#include <widget/internal_R.h>
 #include <view/layoutparams.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <view/viewgroup.h>
 #include <cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 LayoutParams::LayoutParams(){
     layoutAnimationParameters =nullptr;
@@ -11,9 +13,9 @@ LayoutParams::LayoutParams(){
 
 LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs):LayoutParams(){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = c->obtainStyledAttributes(attrs, internal::R::styleable::Layout);
-    width = ta&&ta->hasValue(internal::R::styleable::Layout_layout_width)  ? ta->getLayoutDimension(internal::R::styleable::Layout_layout_width ,WRAP_CONTENT) : attrs.getLayoutDimension("layout_width" ,WRAP_CONTENT);
-    height= ta&&ta->hasValue(internal::R::styleable::Layout_layout_height) ? ta->getLayoutDimension(internal::R::styleable::Layout_layout_height,WRAP_CONTENT) : attrs.getLayoutDimension("layout_height",WRAP_CONTENT);
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::Layout);
+    width = ta&&ta->hasValue(R::styleable::Layout_layout_width)  ? ta->getLayoutDimension(R::styleable::Layout_layout_width ,WRAP_CONTENT) : attrs.getLayoutDimension("layout_width" ,WRAP_CONTENT);
+    height= ta&&ta->hasValue(R::styleable::Layout_layout_height) ? ta->getLayoutDimension(R::styleable::Layout_layout_height,WRAP_CONTENT) : attrs.getLayoutDimension("layout_height",WRAP_CONTENT);
 }
 
 LayoutParams::LayoutParams(int w, int h):LayoutParams(){
@@ -53,20 +55,20 @@ const std::string LayoutParams::sizeToString(int size) {
 MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
    :LayoutParams(c,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = c->obtainStyledAttributes(attrs, internal::R::styleable::MarginLayout);
-    const int margin = ta&&ta->hasValue(internal::R::styleable::MarginLayout_layout_margin) ? ta->getDimensionPixelSize(internal::R::styleable::MarginLayout_layout_margin,-1) : attrs.getDimensionPixelSize("layout_margin",-1);
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::MarginLayout);
+    const int margin = ta&&ta->hasValue(R::styleable::MarginLayout_layout_margin) ? ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_margin,-1) : attrs.getDimensionPixelSize("layout_margin",-1);
     mMarginFlags = 0;
     if(margin>=0){
         leftMargin = topMargin = rightMargin = bottomMargin = margin;
         startMargin= endMargin = DEFAULT_MARGIN_RELATIVE;
     }else{
-        int horizontalMargin = ta&&ta->hasValue(internal::R::styleable::MarginLayout_layout_marginHorizontal) ? ta->getDimensionPixelSize(internal::R::styleable::MarginLayout_layout_marginHorizontal,-1) : attrs.getDimensionPixelSize("layout_marginHorizontal",-1);
-        int verticalMargin = ta&&ta->hasValue(internal::R::styleable::MarginLayout_layout_marginVertical) ? ta->getDimensionPixelSize(internal::R::styleable::MarginLayout_layout_marginVertical,-1) : attrs.getDimensionPixelSize("layout_marginVertical",-1);
+        int horizontalMargin = ta&&ta->hasValue(R::styleable::MarginLayout_layout_marginHorizontal) ? ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginHorizontal,-1) : attrs.getDimensionPixelSize("layout_marginHorizontal",-1);
+        int verticalMargin = ta&&ta->hasValue(R::styleable::MarginLayout_layout_marginVertical) ? ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginVertical,-1) : attrs.getDimensionPixelSize("layout_marginVertical",-1);
         if(horizontalMargin>=0){
             leftMargin= rightMargin = horizontalMargin;
         }else{
-            leftMargin = ta&&ta->hasValue(internal::R::styleable::MarginLayout_layout_marginLeft) ? ta->getDimensionPixelSize(internal::R::styleable::MarginLayout_layout_marginLeft, UNDEFINED_MARGIN) : attrs.getDimensionPixelSize("layout_marginLeft", UNDEFINED_MARGIN);
-            rightMargin= ta&&ta->hasValue(internal::R::styleable::MarginLayout_layout_marginRight) ? ta->getDimensionPixelSize(internal::R::styleable::MarginLayout_layout_marginRight, UNDEFINED_MARGIN) : attrs.getDimensionPixelSize("layout_marginRight",UNDEFINED_MARGIN);
+            leftMargin = ta&&ta->hasValue(R::styleable::MarginLayout_layout_marginLeft) ? ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginLeft, UNDEFINED_MARGIN) : attrs.getDimensionPixelSize("layout_marginLeft", UNDEFINED_MARGIN);
+            rightMargin= ta&&ta->hasValue(R::styleable::MarginLayout_layout_marginRight) ? ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginRight, UNDEFINED_MARGIN) : attrs.getDimensionPixelSize("layout_marginRight",UNDEFINED_MARGIN);
             if(leftMargin==UNDEFINED_MARGIN){
                 mMarginFlags |= LEFT_MARGIN_UNDEFINED_MASK;
                 leftMargin = DEFAULT_MARGIN_RESOLVED;
@@ -76,13 +78,13 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
                 rightMargin = DEFAULT_MARGIN_RESOLVED;
             }
         }
-        startMargin = ta&&ta->hasValue(internal::R::styleable::MarginLayout_layout_marginStart) ? ta->getDimensionPixelSize(internal::R::styleable::MarginLayout_layout_marginStart,DEFAULT_MARGIN_RELATIVE) : attrs.getDimensionPixelSize("layout_marginStart",DEFAULT_MARGIN_RELATIVE);
-        endMargin   = ta&&ta->hasValue(internal::R::styleable::MarginLayout_layout_marginEnd) ? ta->getDimensionPixelSize(internal::R::styleable::MarginLayout_layout_marginEnd,DEFAULT_MARGIN_RELATIVE) : attrs.getDimensionPixelSize("layout_marginEnd",DEFAULT_MARGIN_RELATIVE);
+        startMargin = ta&&ta->hasValue(R::styleable::MarginLayout_layout_marginStart) ? ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginStart,DEFAULT_MARGIN_RELATIVE) : attrs.getDimensionPixelSize("layout_marginStart",DEFAULT_MARGIN_RELATIVE);
+        endMargin   = ta&&ta->hasValue(R::styleable::MarginLayout_layout_marginEnd) ? ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginEnd,DEFAULT_MARGIN_RELATIVE) : attrs.getDimensionPixelSize("layout_marginEnd",DEFAULT_MARGIN_RELATIVE);
         if(verticalMargin >=0 ){
             topMargin = bottomMargin = verticalMargin;
         }else{
-            topMargin   = ta&&ta->hasValue(internal::R::styleable::MarginLayout_layout_marginTop) ? ta->getDimensionPixelSize(internal::R::styleable::MarginLayout_layout_marginTop,DEFAULT_MARGIN_RESOLVED) : attrs.getDimensionPixelSize("layout_marginTop",DEFAULT_MARGIN_RESOLVED);
-            bottomMargin= ta&&ta->hasValue(internal::R::styleable::MarginLayout_layout_marginBottom) ? ta->getDimensionPixelSize(internal::R::styleable::MarginLayout_layout_marginBottom,DEFAULT_MARGIN_RESOLVED) : attrs.getDimensionPixelSize("layout_marginBottom",DEFAULT_MARGIN_RESOLVED);
+            topMargin   = ta&&ta->hasValue(R::styleable::MarginLayout_layout_marginTop) ? ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginTop,DEFAULT_MARGIN_RESOLVED) : attrs.getDimensionPixelSize("layout_marginTop",DEFAULT_MARGIN_RESOLVED);
+            bottomMargin= ta&&ta->hasValue(R::styleable::MarginLayout_layout_marginBottom) ? ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginBottom,DEFAULT_MARGIN_RESOLVED) : attrs.getDimensionPixelSize("layout_marginBottom",DEFAULT_MARGIN_RESOLVED);
         }
         if (isMarginRelative()) {
             mMarginFlags |= NEED_RESOLUTION_MASK;

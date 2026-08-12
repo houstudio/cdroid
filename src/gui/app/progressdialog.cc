@@ -15,12 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <app/progressdialog.h>
-#include <widget/R.h>
 #include <widget/internal_R.h>
+#include <app/progressdialog.h>
 #include <widget/framework_styleable.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 ProgressDialog::ProgressDialog(cdroid::Context*context):AlertDialog(context){
     mProgressStyle = STYLE_SPINNER;
@@ -68,7 +68,7 @@ void ProgressDialog::show(){
 void ProgressDialog::onCreate() {
     LayoutInflater* inflater = LayoutInflater::from(getContext());
     // AOSP: obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0).
-    auto a = getContext()->obtainStyledAttributes(nullptr, internal::R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
+    auto a = getContext()->obtainStyledAttributes(nullptr, R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
     if (mProgressStyle == STYLE_HORIZONTAL) {
           
         /* Use a separate handler to update the text views as they
@@ -97,14 +97,14 @@ void ProgressDialog::onCreate() {
                 }
             }
         };*/
-        int hLayout = a ? a->getResourceId(internal::R::styleable::AlertDialog_horizontalProgressLayout, cdroid::internal::R::layout::alert_dialog_progress) : cdroid::internal::R::layout::alert_dialog_progress;
+        int hLayout = a ? a->getResourceId(R::styleable::AlertDialog_horizontalProgressLayout, R::layout::alert_dialog_progress) : R::layout::alert_dialog_progress;
         View* view = inflater->inflate(hLayout,nullptr,false);
         mProgress = (ProgressBar*) view->findViewById(R::id::progress);
-        mProgressNumber = (TextView*) view->findViewById(cdroid::internal::R::id::progress_number);
-        mProgressPercent = (TextView*) view->findViewById(cdroid::internal::R::id::progress_percent);
+        mProgressNumber = (TextView*) view->findViewById(R::id::progress_number);
+        mProgressPercent = (TextView*) view->findViewById(R::id::progress_percent);
         setView(view);
     } else {
-        int pLayout = a ? a->getResourceId(internal::R::styleable::AlertDialog_progressLayout, cdroid::internal::R::layout::progress_dialog) : cdroid::internal::R::layout::progress_dialog;
+        int pLayout = a ? a->getResourceId(R::styleable::AlertDialog_progressLayout, R::layout::progress_dialog) : R::layout::progress_dialog;
         View* view = inflater->inflate(pLayout,nullptr,false);
         mProgress = (ProgressBar*) view->findViewById(R::id::progress);
         mMessageView = (TextView*) view->findViewById(R::id::message);

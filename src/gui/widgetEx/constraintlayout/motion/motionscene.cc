@@ -19,6 +19,7 @@
 /*
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.MotionScene.
  */
+#include <widget/internal_R.h>
 #include <widgetEx/constraintlayout/motion/motionscene.h>
 #include <widgetEx/widgetex_styleable.h>
 #include <core/assets.h>
@@ -31,6 +32,7 @@
 #include <porting/cdlog.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 namespace {
 // clickAction flag-name -> value map. The static constexpr flags are cast to int inline at the use
@@ -92,16 +94,16 @@ MotionScene::Transition::Transition(MotionScene& scene, const AttributeSet& a)
     : mDuration(scene.mDefaultDuration) {
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = a.getContext();
-    auto ta = ctx->obtainStyledAttributes(a, internal::R::styleable::Transition);
-    mId = scene.getId(ta&&ta->hasValue(internal::R::styleable::Transition_id) ? ta->getString(internal::R::styleable::Transition_id) : a.getString("id", "")); // <Transition android:id="@+id/...">
-    mConstraintSetStart = scene.getId(ta&&ta->hasValue(internal::R::styleable::Transition_constraintSetStart) ? ta->getString(internal::R::styleable::Transition_constraintSetStart) : a.getString("constraintSetStart", ""));
-    mConstraintSetEnd   = scene.getId(ta&&ta->hasValue(internal::R::styleable::Transition_constraintSetEnd) ? ta->getString(internal::R::styleable::Transition_constraintSetEnd) : a.getString("constraintSetEnd", ""));
-    mDuration = ta&&ta->hasValue(internal::R::styleable::Transition_duration) ? ta->getInt(internal::R::styleable::Transition_duration, mDuration) : a.getInt("duration", mDuration);
+    auto ta = ctx->obtainStyledAttributes(a, R::styleable::Transition);
+    mId = scene.getId(ta&&ta->hasValue(R::styleable::Transition_id) ? ta->getString(R::styleable::Transition_id) : a.getString("id", "")); // <Transition android:id="@+id/...">
+    mConstraintSetStart = scene.getId(ta&&ta->hasValue(R::styleable::Transition_constraintSetStart) ? ta->getString(R::styleable::Transition_constraintSetStart) : a.getString("constraintSetStart", ""));
+    mConstraintSetEnd   = scene.getId(ta&&ta->hasValue(R::styleable::Transition_constraintSetEnd) ? ta->getString(R::styleable::Transition_constraintSetEnd) : a.getString("constraintSetEnd", ""));
+    mDuration = ta&&ta->hasValue(R::styleable::Transition_duration) ? ta->getInt(R::styleable::Transition_duration, mDuration) : a.getInt("duration", mDuration);
     if (mDuration < 8) mDuration = 8;
-    mStagger = ta&&ta->hasValue(internal::R::styleable::Transition_staggered) ? ta->getFloat(internal::R::styleable::Transition_staggered, mStagger) : a.getFloat("staggered", mStagger);
-    mDefaultInterpolatorString = ta&&ta->hasValue(internal::R::styleable::Transition_motionInterpolator) ? ta->getString(internal::R::styleable::Transition_motionInterpolator) : a.getString("motionInterpolator", mDefaultInterpolatorString);
-    mPathMotionArc = ta&&ta->hasValue(internal::R::styleable::Transition_pathMotionArc) ? ta->getInt(internal::R::styleable::Transition_pathMotionArc, mPathMotionArc) : a.getInt("pathMotionArc", mPathMotionArc);
-    mAutoTransition = ta&&ta->hasValue(internal::R::styleable::Transition_autoTransition) ? ta->getInt(internal::R::styleable::Transition_autoTransition, mAutoTransition) : a.getInt("autoTransition", kAutoTransition, mAutoTransition);
+    mStagger = ta&&ta->hasValue(R::styleable::Transition_staggered) ? ta->getFloat(R::styleable::Transition_staggered, mStagger) : a.getFloat("staggered", mStagger);
+    mDefaultInterpolatorString = ta&&ta->hasValue(R::styleable::Transition_motionInterpolator) ? ta->getString(R::styleable::Transition_motionInterpolator) : a.getString("motionInterpolator", mDefaultInterpolatorString);
+    mPathMotionArc = ta&&ta->hasValue(R::styleable::Transition_pathMotionArc) ? ta->getInt(R::styleable::Transition_pathMotionArc, mPathMotionArc) : a.getInt("pathMotionArc", mPathMotionArc);
+    mAutoTransition = ta&&ta->hasValue(R::styleable::Transition_autoTransition) ? ta->getInt(R::styleable::Transition_autoTransition, mAutoTransition) : a.getInt("autoTransition", kAutoTransition, mAutoTransition);
     if (mConstraintSetStart == UNSET) mIsAbstract = true;
 }
 

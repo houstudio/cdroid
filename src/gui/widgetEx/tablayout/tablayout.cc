@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widgetEx/tablayout/tablayout.h>
-#include <widget/R.h>
 #include <widgetEx/widgetex_styleable.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
@@ -30,6 +30,7 @@
  * */
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(TabLayout)
 
@@ -52,72 +53,72 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
     // aapt2 has already resolved the enum attrs (tabIndicatorAnimationMode /
     // tabIndicatorGravity / tabMode / tabGravity) at compile time, so getInt reads
     // them directly — no runtime enum map needed.
-    auto ta = context->obtainStyledAttributes(atts, internal::R::styleable::TabLayout, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(atts, R::styleable::TabLayout, defStyleAttr);
     
 
-    setTabIndicatorAnimationMode(ta->getInt(internal::R::styleable::TabLayout_tabIndicatorAnimationMode, INDICATOR_ANIMATION_MODE_LINEAR));
-    setSelectedTabIndicator(ta->getDrawable(internal::R::styleable::TabLayout_tabIndicator));
-    setSelectedTabIndicatorColor(ta->getColor(internal::R::styleable::TabLayout_tabIndicatorColor, 0));
-    mSlidingTabIndicator->setSelectedIndicatorHeight(ta->getDimensionPixelSize(internal::R::styleable::TabLayout_tabIndicatorHeight, 2));
-    setSelectedTabIndicatorGravity(ta->getInt(internal::R::styleable::TabLayout_tabIndicatorGravity, INDICATOR_GRAVITY_BOTTOM));
-    setTabIndicatorFullWidth(ta->getBoolean(internal::R::styleable::TabLayout_tabIndicatorFullWidth, true));
+    setTabIndicatorAnimationMode(ta->getInt(R::styleable::TabLayout_tabIndicatorAnimationMode, INDICATOR_ANIMATION_MODE_LINEAR));
+    setSelectedTabIndicator(ta->getDrawable(R::styleable::TabLayout_tabIndicator));
+    setSelectedTabIndicatorColor(ta->getColor(R::styleable::TabLayout_tabIndicatorColor, 0));
+    mSlidingTabIndicator->setSelectedIndicatorHeight(ta->getDimensionPixelSize(R::styleable::TabLayout_tabIndicatorHeight, 2));
+    setSelectedTabIndicatorGravity(ta->getInt(R::styleable::TabLayout_tabIndicatorGravity, INDICATOR_GRAVITY_BOTTOM));
+    setTabIndicatorFullWidth(ta->getBoolean(R::styleable::TabLayout_tabIndicatorFullWidth, true));
 
     mTabPaddingStart = mTabPaddingTop = mTabPaddingEnd =
-        mPaddingBottom = ta->getDimensionPixelSize(internal::R::styleable::TabLayout_tabPadding, 0);
-    mTabPaddingStart = ta->getDimensionPixelSize(internal::R::styleable::TabLayout_tabPaddingStart, mTabPaddingStart);
-    mTabPaddingEnd   = ta->getDimensionPixelSize(internal::R::styleable::TabLayout_tabPaddingEnd, mTabPaddingEnd);
-    mTabPaddingTop   = ta->getDimensionPixelSize(internal::R::styleable::TabLayout_tabPaddingTop, mTabPaddingTop);
-    mTabPaddingBottom= ta->getDimensionPixelSize(internal::R::styleable::TabLayout_tabPaddingBottom, mTabPaddingBottom);
+        mPaddingBottom = ta->getDimensionPixelSize(R::styleable::TabLayout_tabPadding, 0);
+    mTabPaddingStart = ta->getDimensionPixelSize(R::styleable::TabLayout_tabPaddingStart, mTabPaddingStart);
+    mTabPaddingEnd   = ta->getDimensionPixelSize(R::styleable::TabLayout_tabPaddingEnd, mTabPaddingEnd);
+    mTabPaddingTop   = ta->getDimensionPixelSize(R::styleable::TabLayout_tabPaddingTop, mTabPaddingTop);
+    mTabPaddingBottom= ta->getDimensionPixelSize(R::styleable::TabLayout_tabPaddingBottom, mTabPaddingBottom);
 
     // tabTextAppearance references a style; resolve it for the framework
     // textSize/textColor sub-attrs (these are framework attrs, read off the
     // resolved style AttributeSet — not the TabLayout styleable).
-    mTabTextAppearance = ta->getResourceId(internal::R::styleable::TabLayout_tabTextAppearance,
+    mTabTextAppearance = ta->getResourceId(R::styleable::TabLayout_tabTextAppearance,
             R::style::TextAppearance_Material_Button);
-    // Resolve the TextAppearance style through the arsc (styleable::TextAppearance),
+    // Resolve the TextAppearance style through the arsc (R::styleable::TextAppearance),
     // reading the framework textSize/textColor sub-attrs typed. Keep the
     // initTabLayout() defaults when the style is unset/unresolvable — a 0 text
     // size makes TabView::onMeasure force setTextSize(0) (invisible labels).
-    auto taaTa = context->obtainStyledAttributes(mTabTextAppearance, internal::R::styleable::TextAppearance);
-    mTabTextSize  = taaTa ? taaTa->getDimensionPixelSize(internal::R::styleable::TextAppearance_textSize, mTabTextSize) : mTabTextSize;
-    mTabTextColors= taaTa ? taaTa->getColorStateList(internal::R::styleable::TextAppearance_textColor) : mTabTextColors;
+    auto taaTa = context->obtainStyledAttributes(mTabTextAppearance, R::styleable::TextAppearance);
+    mTabTextSize  = taaTa ? taaTa->getDimensionPixelSize(R::styleable::TextAppearance_textSize, mTabTextSize) : mTabTextSize;
+    mTabTextColors= taaTa ? taaTa->getColorStateList(R::styleable::TextAppearance_textColor) : mTabTextColors;
 
-    if(ta->hasValue(internal::R::styleable::TabLayout_tabSelectedTextAppearance)){
-        mSelectedTabTextAppearance = ta->getResourceId(internal::R::styleable::TabLayout_tabSelectedTextAppearance, 0);
+    if(ta->hasValue(R::styleable::TabLayout_tabSelectedTextAppearance)){
+        mSelectedTabTextAppearance = ta->getResourceId(R::styleable::TabLayout_tabSelectedTextAppearance, 0);
     }
     if(mSelectedTabTextAppearance != 0){
-        auto saTa = context->obtainStyledAttributes(mSelectedTabTextAppearance, internal::R::styleable::TextAppearance);
-        mSelectedTabTextSize = saTa ? saTa->getDimensionPixelSize(internal::R::styleable::TextAppearance_textSize, 0) : 0;
-        auto selectedTabTextColor = saTa ? saTa->getColorStateList(internal::R::styleable::TextAppearance_textColor) : nullptr;
+        auto saTa = context->obtainStyledAttributes(mSelectedTabTextAppearance, R::styleable::TextAppearance);
+        mSelectedTabTextSize = saTa ? saTa->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 0) : 0;
+        auto selectedTabTextColor = saTa ? saTa->getColorStateList(R::styleable::TextAppearance_textColor) : nullptr;
         if(selectedTabTextColor!=nullptr){
             mTabTextColors = createColorStateList(mTabTextColors->getDefaultColor(),
                     selectedTabTextColor->getColorForState({StateSet::VIEW_STATE_SELECTED}, selectedTabTextColor->getDefaultColor()));
         }
     }
 
-    if(ta->hasValue(internal::R::styleable::TabLayout_tabTextColor)) {
-        auto csl = ta->getColorStateList(internal::R::styleable::TabLayout_tabTextColor);
+    if(ta->hasValue(R::styleable::TabLayout_tabTextColor)) {
+        auto csl = ta->getColorStateList(R::styleable::TabLayout_tabTextColor);
         if (csl) mTabTextColors = csl;
     } else{
         mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
     }
 
-    if(ta->hasValue(internal::R::styleable::TabLayout_tabSelectedTextColor)){
-        const int selected = ta->getColor(internal::R::styleable::TabLayout_tabSelectedTextColor,0);
+    if(ta->hasValue(R::styleable::TabLayout_tabSelectedTextColor)){
+        const int selected = ta->getColor(R::styleable::TabLayout_tabSelectedTextColor,0);
         const int defColor = mTabTextColors->getDefaultColor();
         mTabTextColors = createColorStateList(defColor, selected);
     }
 
-    mTabIndicatorAnimationDuration = ta->getInt(internal::R::styleable::TabLayout_tabIndicatorAnimationDuration,ANIMATION_DURATION);
-    mRequestedTabMinWidth = ta->getDimensionPixelSize(internal::R::styleable::TabLayout_tabMinWidth, -1);
-    mRequestedTabMaxWidth = ta->getDimensionPixelSize(internal::R::styleable::TabLayout_tabMaxWidth, -1);
+    mTabIndicatorAnimationDuration = ta->getInt(R::styleable::TabLayout_tabIndicatorAnimationDuration,ANIMATION_DURATION);
+    mRequestedTabMinWidth = ta->getDimensionPixelSize(R::styleable::TabLayout_tabMinWidth, -1);
+    mRequestedTabMaxWidth = ta->getDimensionPixelSize(R::styleable::TabLayout_tabMaxWidth, -1);
 
-    mTabBackgroundResId= ta->getString(internal::R::styleable::TabLayout_tabBackground);
-    mContentInsetStart  = ta->getDimensionPixelSize(internal::R::styleable::TabLayout_tabContentStart, 0);
-    mMode = ta->getInt(internal::R::styleable::TabLayout_tabMode, mMode);
-    mSmoothScroll = ta->getBoolean(internal::R::styleable::TabLayout_smoothScroll,true);
-    mTabGravity = ta->getInt(internal::R::styleable::TabLayout_tabGravity,GRAVITY_FILL);
-    mInlineLabel= ta->getBoolean(internal::R::styleable::TabLayout_tabInlineLabel,false);
+    mTabBackgroundResId= ta->getString(R::styleable::TabLayout_tabBackground);
+    mContentInsetStart  = ta->getDimensionPixelSize(R::styleable::TabLayout_tabContentStart, 0);
+    mMode = ta->getInt(R::styleable::TabLayout_tabMode, mMode);
+    mSmoothScroll = ta->getBoolean(R::styleable::TabLayout_smoothScroll,true);
+    mTabGravity = ta->getInt(R::styleable::TabLayout_tabGravity,GRAVITY_FILL);
+    mInlineLabel= ta->getBoolean(R::styleable::TabLayout_tabInlineLabel,false);
 
     applyModeAndGravity();
 }

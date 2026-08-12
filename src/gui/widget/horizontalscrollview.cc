@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/horizontalscrollview.h>
-#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <focusfinder.h>
@@ -24,6 +24,7 @@
 #include <cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET2(HorizontalScrollView,R::attr::horizontalScrollViewStyle)
  
@@ -38,9 +39,9 @@ HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet* pAttr
     const AttributeSet& atts = *pAttrs;
     initScrollView(&atts);
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, internal::R::styleable::ScrollView, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::ScrollView, defStyleAttr);
     
-setFillViewport(ta->getBoolean(internal::R::styleable::ScrollView_fillViewport, false));
+setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport, false));
 mScrollDuration=atts.getInt("scrollDuration",300);
 
 }

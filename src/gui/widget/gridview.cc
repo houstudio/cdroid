@@ -1,12 +1,13 @@
+#include <widget/internal_R.h>
 #include <widget/gridview.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/checkable.h>
-#include <widget/R.h>
 #include <utils/mathutils.h>
 #include <cdlog.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 DECLARE_WIDGET2(GridView,R::attr::gridViewStyle)
 
@@ -21,20 +22,20 @@ GridView::GridView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     const AttributeSet& atts = *pAttrs;
     initGridView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, internal::R::styleable::GridView, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::GridView, defStyleAttr);
     
 
 
-setHorizontalSpacing(ta->getDimensionPixelOffset(internal::R::styleable::GridView_horizontalSpacing,10));
-setVerticalSpacing(ta->getDimensionPixelOffset(internal::R::styleable::GridView_verticalSpacing,0));
-int index = ta->getInt(internal::R::styleable::GridView_stretchMode,STRETCH_COLUMN_WIDTH);
+setHorizontalSpacing(ta->getDimensionPixelOffset(R::styleable::GridView_horizontalSpacing,10));
+setVerticalSpacing(ta->getDimensionPixelOffset(R::styleable::GridView_verticalSpacing,0));
+int index = ta->getInt(R::styleable::GridView_stretchMode,STRETCH_COLUMN_WIDTH);
 if(index>=0)setStretchMode(index);
-const int columnWidth = ta->getDimensionPixelOffset(internal::R::styleable::GridView_columnWidth, -1);
+const int columnWidth = ta->getDimensionPixelOffset(R::styleable::GridView_columnWidth, -1);
 if (columnWidth > 0)
 setColumnWidth(columnWidth);
-const int numColumns = ta->getInt(internal::R::styleable::GridView_numColumns, 1);
+const int numColumns = ta->getInt(R::styleable::GridView_numColumns, 1);
 setNumColumns(numColumns);
-index = ta->getInt(internal::R::styleable::GridView_gravity, -1);
+index = ta->getInt(R::styleable::GridView_gravity, -1);
 if (index >= 0) {
 setGravity(index);
 }

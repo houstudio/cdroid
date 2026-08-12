@@ -23,9 +23,9 @@
 #include <core/xmlpullparser.h>
 #include <core/typeface.h>
 #include <text/textutils.h>
-#include <widget/R.h>
 #include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 BadgeState::State*BadgeDrawable::getSavedState()const{
     return mState->getOverridingState();
@@ -138,7 +138,7 @@ FrameLayout* BadgeDrawable::getCustomBadgeParent() {
 
 void BadgeDrawable::tryWrapAnchorInCompatParent(View* anchorView) {
     ViewGroup* anchorViewParent = (ViewGroup*) anchorView->getParent();
-    if ((anchorViewParent != nullptr && anchorViewParent->getId() == cdroid::internal::R::id::mtrl_anchor_parent)
+    if ((anchorViewParent != nullptr && anchorViewParent->getId() == R::id::mtrl_anchor_parent)
         || (mCustomBadgeParent != nullptr && mCustomBadgeParent == anchorViewParent)) {
         return;
     }
@@ -147,7 +147,7 @@ void BadgeDrawable::tryWrapAnchorInCompatParent(View* anchorView) {
   
     // Create FrameLayout and configure it to wrap the anchor.
     FrameLayout* frameLayout = new FrameLayout(-1,-1);//anchorView->getContext());
-    frameLayout->setId(cdroid::internal::R::id::mtrl_anchor_parent);
+    frameLayout->setId(R::id::mtrl_anchor_parent);
     frameLayout->setClipChildren(false);
     frameLayout->setClipToPadding(false);
     frameLayout->setLayoutParams(anchorView->getLayoutParams());/*maybe caused double free in cdroid*/

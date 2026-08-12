@@ -15,12 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/rippledrawable.h>
 #include <drawable/colorstatelist.h>
 #include <stdexcept>
-#include <widget/R.h>
 #include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner)
     :LayerDrawable::LayerState(orig,owner){
@@ -87,7 +88,7 @@ RippleDrawable::RippleDrawable():RippleDrawable(std::make_shared<RippleState>(nu
 RippleDrawable::RippleDrawable(const RefPtr<ColorStateList>& color,Drawable* content,Drawable* mask)
   :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr)){
     if(content)addLayer(content,{0},-1,0,0,0,0);
-    if(mask)addLayer(mask,{0},cdroid::R::id::mask,0,0,0,0);
+    if(mask)addLayer(mask,{0},R::id::mask,0,0,0,0);
     setColor(color);
     ensurePadding();
     refreshPadding();
@@ -122,7 +123,7 @@ RippleDrawable* RippleDrawable::mutate(){
     LayerDrawable::mutate();
     mState = std::dynamic_pointer_cast<RippleState>(mLayerState);
     // AOSP: the locally cached mask drawable may have changed after the state rebuild.
-    mMask = findDrawableByLayerId(cdroid::R::id::mask);
+    mMask = findDrawableByLayerId(R::id::mask);
     return this;
 }
 
@@ -309,7 +310,7 @@ RefPtr<ColorStateList> RippleDrawable::getEffectColor()const{
 
 bool RippleDrawable::setDrawableByLayerId(int id, Drawable* drawable){
     if (LayerDrawable::setDrawableByLayerId(id, drawable)) {
-        if (id == cdroid::R::id::mask) {
+        if (id == R::id::mask) {
             mMask = drawable;
             mHasValidMask = false;
         }
@@ -465,7 +466,7 @@ void RippleDrawable::drawContent(Canvas& canvas) {
     std::vector<ChildDrawable*> &array = mLayerState->mChildren;
     const int count = (int)mLayerState->mChildren.size();
     for (int i = 0; i < count; i++) {
-        if (array[i]->mId != cdroid::R::id::mask) {
+        if (array[i]->mId != R::id::mask) {
             array[i]->mDrawable->draw(canvas);
         }
     }
@@ -600,7 +601,7 @@ Rect RippleDrawable::getDirtyBounds() const{
 }
 
 void RippleDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, internal::R::styleable::RippleDrawable);
+    auto ta = r.obtainStyledAttributes(atts, R::styleable::RippleDrawable);
 
     // Force padding default to STACK before inflating.
     setPaddingMode(PADDING_MODE_STACK);
@@ -618,17 +619,17 @@ void RippleDrawable::updateStateFromTypedArray(const TypedArray& a) {
     // getChangingConfigurations() and extractThemeAttrs() lines are omitted — CDROID's TypedArray
     // port has no theme-attr bookkeeping (no getChangingConfigurations / extractThemeAttrs).
 
-    const RefPtr<ColorStateList> color = a.getColorStateList(internal::R::styleable::RippleDrawable_color);
+    const RefPtr<ColorStateList> color = a.getColorStateList(R::styleable::RippleDrawable_color);
     if (color) mState->mColor = color;
 
-    const RefPtr<ColorStateList> effectColor = a.getColorStateList(internal::R::styleable::RippleDrawable_effectColor);
+    const RefPtr<ColorStateList> effectColor = a.getColorStateList(R::styleable::RippleDrawable_effectColor);
     if (effectColor) mState->mEffectColor = effectColor;
 
-    mState->mMaxRadius = a.getDimensionPixelSize(internal::R::styleable::RippleDrawable_radius, mState->mMaxRadius);
+    mState->mMaxRadius = a.getDimensionPixelSize(R::styleable::RippleDrawable_radius, mState->mMaxRadius);
 }
 
 void RippleDrawable::updateLocalState() {
     // Initialize from constant state.
-    mMask = findDrawableByLayerId(cdroid::R::id::mask);
+    mMask = findDrawableByLayerId(R::id::mask);
 }
 }

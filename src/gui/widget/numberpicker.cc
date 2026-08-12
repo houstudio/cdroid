@@ -15,13 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/numberpicker.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <text/inputtype.h>
 #include <view/accessibility/accessibilitymanager.h>
-#include <widget/R.h>
-#include <widget/internal_R.h>
 #include <core/color.h>
 #include <utils/textutils.h>
 #include <utils/mathutils.h>
@@ -30,6 +29,7 @@
 //https://gitee.com/awang/WheelView/blob/master/src/com/wangjie/wheelview/WheelView.java
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET2(NumberPicker,R::attr::numberPickerStyle)
 const std::string DEFAULT_LAYOUT_VERT="cdroid:layout/number_picker";
@@ -66,19 +66,19 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     const std::string layoutres = (getOrientation()==VERTICAL)?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ;
     LayoutInflater::from(mContext)->inflate(layoutres,this,true);
  
-    mInputText =(EditText*)findViewById(cdroid::internal::R::id::numberpicker_input);
+    mInputText =(EditText*)findViewById(R::id::numberpicker_input);
     if(mInputText){
         mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
         mTextSize2 = mInputText->getTextSize();
         mTextSize  = mTextSize2;
         mSelectorElementSize = mTextSize2;
     }
-    mIncrementButton =(ImageButton*)findViewById(cdroid::internal::R::id::increment);
-    mDecrementButton =(ImageButton*)findViewById(cdroid::internal::R::id::decrement);
+    mIncrementButton =(ImageButton*)findViewById(R::id::increment);
+    mDecrementButton =(ImageButton*)findViewById(R::id::decrement);
     const View::OnClickListener onClick= [this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
-        if (v.getId() == cdroid::internal::R::id::increment) {
+        if (v.getId() == R::id::increment) {
             changeValueByOne(true);
         } else {
             changeValueByOne(false);
@@ -87,7 +87,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     const View::OnLongClickListener onLongClick=[this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
-        if (v.getId() == cdroid::internal::R::id::increment) {
+        if (v.getId() == R::id::increment) {
             postChangeCurrentByOneFromLongPress(true, 0);
         } else {
             postChangeCurrentByOneFromLongPress(false, 0);
@@ -125,7 +125,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     // The CDROID-specific attrs read below (selectionDivider/internal*/wheelItemCount/
     // etc.) aren't in the framework arsc, so they stay on the string bridge — apps
     // can't set them in binary mode, so those reads return defaults (harmless).
-    auto ta = context->obtainStyledAttributes(atts, internal::R::styleable::NumberPicker, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(atts, R::styleable::NumberPicker, defStyleAttr);
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
     mWrapSelectorWheelPreferred= atts.getBoolean("wrapSelectorWheel",mWrapSelectorWheelPreferred);
     mDividerDrawable = atts.getDrawable("selectionDivider");
@@ -137,14 +137,14 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
             mDividerDrawable->setState(getDrawableState());
         }
     }
-    mItemBackground =  ta ? ta->getDrawable(internal::R::styleable::NumberPicker_itemBackground) : nullptr;
+    mItemBackground =  ta ? ta->getDrawable(R::styleable::NumberPicker_itemBackground) : nullptr;
     if(mItemBackground){
         mItemBackground->setCallback(this);
         mItemBackground->setLayoutDirection(getLayoutDirection());
     }
     mOrder = ASCENDING;
     if(!isHorizontalMode()){
-        mDividerThickness= ta ? ta->getDimensionPixelSize(internal::R::styleable::NumberPicker_selectionDividerHeight,UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT) : UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
+        mDividerThickness= ta ? ta->getDimensionPixelSize(R::styleable::NumberPicker_selectionDividerHeight,UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT) : UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
         mDividerDistance = atts.getDimensionPixelSize("selectionDividersDistance",UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
     }else{
         mDividerThickness= atts.getDimensionPixelSize("selectionDividerWidth",UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT);
@@ -169,12 +169,12 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     mVirtualButtonPressedDrawable = atts.getDrawable("virtualButtonPressedDrawable");
     setWillNotDraw(false);
 
-    mInputText =(EditText*)findViewById(cdroid::internal::R::id::numberpicker_input);
+    mInputText =(EditText*)findViewById(R::id::numberpicker_input);
 
     View::OnClickListener onClick= [this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
-        if (v.getId() == cdroid::internal::R::id::increment) {
+        if (v.getId() == R::id::increment) {
             changeValueByOne(true);
         } else {
             changeValueByOne(false);
@@ -183,7 +183,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     View::OnLongClickListener onLongClick=[this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
-        if (v.getId() == cdroid::internal::R::id::increment) {
+        if (v.getId() == R::id::increment) {
             postChangeCurrentByOneFromLongPress(true, 0);
         } else {
             postChangeCurrentByOneFromLongPress(false, 0);
@@ -191,8 +191,8 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
         return true;
     };
     if(!mHasSelectorWheel){
-        mIncrementButton =(ImageButton*)findViewById(cdroid::internal::R::id::increment);
-        mDecrementButton =(ImageButton*)findViewById(cdroid::internal::R::id::decrement);
+        mIncrementButton =(ImageButton*)findViewById(R::id::increment);
+        mDecrementButton =(ImageButton*)findViewById(R::id::decrement);
         if(mIncrementButton){
             mIncrementButton->setOnClickListener(onClick);
             mIncrementButton->setOnLongClickListener(onLongClick);
@@ -211,20 +211,20 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     mUpdateInputTextInFling = atts.getBoolean("updateInputTextInFling",mUpdateInputTextInFling);
     mTextAlign = mInputText->getGravity();
     mTextSize2 = mInputText->getTextSize();
-    mTypeface = Typeface::create(ta ? ta->getString(internal::R::styleable::NumberPicker_fontFamily) : std::string(),Typeface::NORMAL);
+    mTypeface = Typeface::create(ta ? ta->getString(R::styleable::NumberPicker_fontFamily) : std::string(),Typeface::NORMAL);
     auto selectedTypeface = Typeface::create(atts.getString("selectedfontFamily"),Typeface::NORMAL);
     if(selectedTypeface!=nullptr){
         setSelectedTypeface(selectedTypeface);
     }
     //ViewConfiguration configuration = ViewConfiguration::get(context);
-    setTextSize(ta ? ta->getDimensionPixelSize(internal::R::styleable::NumberPicker_textSize,mTextSize) : mTextSize);
+    setTextSize(ta ? ta->getDimensionPixelSize(R::styleable::NumberPicker_textSize,mTextSize) : mTextSize);
     mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
     if(atts.hasAttribute("selectedTextSize"))
         mTextSize2 = atts.getDimensionPixelSize("selectedTextSize");
     else if(!atts.hasAttribute("internalLayout"))
         mTextSize2 =std::max(mTextSize2,mTextSize);
     setSelectedTextSize(mTextSize2);
-    setTextColor(ta ? ta->getColor(internal::R::styleable::NumberPicker_textColor, 0xFFFFFFFF) : 0xFFFFFFFF);
+    setTextColor(ta ? ta->getColor(R::styleable::NumberPicker_textColor, 0xFFFFFFFF) : 0xFFFFFFFF);
     setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
     auto colors = mInputText->getTextColors();
@@ -239,9 +239,9 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     updateInputTextView();
 
     //setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
-    setValue(ta ? ta->getInt(internal::R::styleable::NumberPicker_value, 0) : 0);
-    setMinValue(ta ? ta->getInt(internal::R::styleable::NumberPicker_min, 0) : 0);
-    setMaxValue(ta ? ta->getInt(internal::R::styleable::NumberPicker_max, 0) : 0);
+    setValue(ta ? ta->getInt(R::styleable::NumberPicker_value, 0) : 0);
+    setMinValue(ta ? ta->getInt(R::styleable::NumberPicker_min, 0) : 0);
+    setMaxValue(ta ? ta->getInt(R::styleable::NumberPicker_max, 0) : 0);
 
     std::vector<std::string>displayedValues;
     atts.getArray("displayedValues",displayedValues);

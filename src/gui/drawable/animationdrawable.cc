@@ -15,12 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/animationdrawable.h>
 #include <core/systemclock.h>
 #include <core/typedarray.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 AnimationDrawable::AnimationDrawable():AnimationDrawable(nullptr){
@@ -159,7 +161,7 @@ void AnimationDrawable::clearMutated(){
 }
 
 void AnimationDrawable::inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts){
-    auto ta = r.obtainStyledAttributes(atts, internal::R::styleable::AnimationDrawable);
+    auto ta = r.obtainStyledAttributes(atts, R::styleable::AnimationDrawable);
     DrawableContainer::inflateWithAttributes(parser,atts);
     if (ta) updateStateFromTypedArray(*ta);
 
@@ -170,8 +172,8 @@ void AnimationDrawable::inflate(Resources& r,XmlPullParser& parser,const Attribu
 
 void AnimationDrawable::updateStateFromTypedArray(const TypedArray& a){
     auto state = mAnimationState;
-    state->mVariablePadding = a.getBoolean(internal::R::styleable::AnimationDrawable_variablePadding, state->mVariablePadding);
-    state->mOneShot = a.getBoolean(internal::R::styleable::AnimationDrawable_oneshot, state->mOneShot);
+    state->mVariablePadding = a.getBoolean(R::styleable::AnimationDrawable_variablePadding, state->mVariablePadding);
+    state->mOneShot = a.getBoolean(R::styleable::AnimationDrawable_oneshot, state->mOneShot);
 }
 
 void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts){
@@ -188,14 +190,14 @@ void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
         }
         // AOSP obtains R.styleable.AnimationDrawableItem per <item>.
         Context* ctx = atts.getContext();
-        auto ta = r.obtainStyledAttributes(&atts, internal::R::styleable::AnimationDrawableItem);
-        const int duration = ta ? ta->getInt(internal::R::styleable::AnimationDrawableItem_duration, -1)
+        auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimationDrawableItem);
+        const int duration = ta ? ta->getInt(R::styleable::AnimationDrawableItem_duration, -1)
                                 : atts.getInt("duration", -1);
         if (duration < 0) {
             throw std::logic_error(parser.getPositionDescription()+": <item> tag requires a 'duration' attribute");
         }
 
-        Drawable* dr = ta ? ta->getDrawable(internal::R::styleable::AnimationDrawableItem_drawable)
+        Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimationDrawableItem_drawable)
                           : atts.getDrawable("drawable");
 
         if (dr == nullptr) {

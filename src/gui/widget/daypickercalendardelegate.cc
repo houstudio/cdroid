@@ -15,7 +15,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
 #include <widget/internal_R.h>
 #include <widget/daypickercalendardelegate.h>
 #include <widget/daypickerview.h>
@@ -29,6 +28,7 @@
 #include <string>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 namespace {
 // Approximates AOSP DateFormat skeleton "EMMMd" (CDROID has no DateFormat).
@@ -64,20 +64,20 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Co
 
     // Set up and attach container.
     LayoutInflater* inflater = LayoutInflater::from(mContext);
-    mContainer = (ViewGroup*) inflater->inflate(cdroid::internal::R::layout::date_picker_material, nullptr, false);
+    mContainer = (ViewGroup*) inflater->inflate(R::layout::date_picker_material, nullptr, false);
     mContainer->setSaveFromParentEnabled(false);
     mDelegator->addView(mContainer);
 
     // Set up header views.
-    ViewGroup* header = (ViewGroup*) mContainer->findViewById(cdroid::internal::R::id::date_picker_header);
-    mHeaderYear = header ? (TextView*) header->findViewById(cdroid::internal::R::id::date_picker_header_year) : nullptr;
-    mHeaderMonthDay = header ? (TextView*) header->findViewById(cdroid::internal::R::id::date_picker_header_date) : nullptr;
+    ViewGroup* header = (ViewGroup*) mContainer->findViewById(R::id::date_picker_header);
+    mHeaderYear = header ? (TextView*) header->findViewById(R::id::date_picker_header_year) : nullptr;
+    mHeaderMonthDay = header ? (TextView*) header->findViewById(R::id::date_picker_header_date) : nullptr;
 
     View::OnClickListener headerClickListener = [this](View& v) {
         tryVibrate();
-        if (v.getId() == cdroid::internal::R::id::date_picker_header_year) {
+        if (v.getId() == R::id::date_picker_header_year) {
             setCurrentView(VIEW_YEAR);
-        } else if (v.getId() == cdroid::internal::R::id::date_picker_header_date) {
+        } else if (v.getId() == R::id::date_picker_header_date) {
             setCurrentView(VIEW_MONTH_DAY);
         }
     };
@@ -85,10 +85,10 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Co
     if (mHeaderMonthDay) mHeaderMonthDay->setOnClickListener(headerClickListener);
 
     // Set up picker container.
-    mAnimator = (ViewAnimator*) mContainer->findViewById(cdroid::internal::R::id::animator);
+    mAnimator = (ViewAnimator*) mContainer->findViewById(R::id::animator);
 
     // Set up day picker view.
-    mDayPickerView = (DayPickerView*) mContainer->findViewById(cdroid::internal::R::id::date_picker_day_picker);
+    mDayPickerView = (DayPickerView*) mContainer->findViewById(R::id::date_picker_day_picker);
     if (mDayPickerView) {
         mDayPickerView->setFirstDayOfWeek(mFirstDayOfWeek);
         mDayPickerView->setMinDate(mMinDate.getTimeInMillis());
@@ -101,7 +101,7 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Co
     }
 
     // Set up year picker view.
-    mYearPickerView = (YearPickerView*) mContainer->findViewById(cdroid::internal::R::id::date_picker_year_picker);
+    mYearPickerView = (YearPickerView*) mContainer->findViewById(R::id::date_picker_year_picker);
     if (mYearPickerView) {
         mYearPickerView->setRange(mMinDate, mMaxDate);
         mYearPickerView->setOnYearSelectedListener(

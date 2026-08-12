@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <text/textutils.h>
 #include <widget/toolbar.h>
 #include <widget/framework_styleable.h>
@@ -23,6 +24,7 @@
 #include <gui_features.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(Toolbar)
 
@@ -35,7 +37,7 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ViewGr
     // Styled-attribute reads (AOSP Toolbar ctor body, verbatim order/methods).
     // Text-XML ctor path dropped: resolves only through the binary-AXML
     // TypedArray; a==null (text XML / no arsc) leaves the toolbar at defaults.
-    auto a = ctx->obtainStyledAttributes(atts, internal::R::styleable::Toolbar, defStyleAttr);
+    auto a = ctx->obtainStyledAttributes(atts, R::styleable::Toolbar, defStyleAttr);
     
 // AOSP reads these via getResourceId(@StyleRes int); CDROID holds style
 // strings, so bridge the id -> "@type/key" via getResourceName.
@@ -43,32 +45,32 @@ auto styleName = [&](size_t idx)->std::string{
     uint32_t rid = a->getResourceId(idx, 0);
     return rid ? ctx->getResourceName(rid) : std::string();
 };
-mTitleTextAppearance = styleName(internal::R::styleable::Toolbar_titleTextAppearance);
-mSubtitleTextAppearance = styleName(internal::R::styleable::Toolbar_subtitleTextAppearance);
+mTitleTextAppearance = styleName(R::styleable::Toolbar_titleTextAppearance);
+mSubtitleTextAppearance = styleName(R::styleable::Toolbar_subtitleTextAppearance);
 // navigationButtonStyle is a private framework attr with no resource id
 // (skipped by gen_styleable) — not readable through the TypedArray.
-mGravity = a->getInteger(internal::R::styleable::Toolbar_gravity, mGravity);
-mButtonGravity = a->getInteger(internal::R::styleable::Toolbar_buttonGravity, Gravity::TOP);
+mGravity = a->getInteger(R::styleable::Toolbar_gravity, mGravity);
+mButtonGravity = a->getInteger(R::styleable::Toolbar_buttonGravity, Gravity::TOP);
 mTitleMarginStart = mTitleMarginEnd = mTitleMarginTop = mTitleMarginBottom =
-          a->getDimensionPixelOffset(internal::R::styleable::Toolbar_titleMargin, 0);
-const int marginStart = a->getDimensionPixelOffset(internal::R::styleable::Toolbar_titleMarginStart, -1);
+          a->getDimensionPixelOffset(R::styleable::Toolbar_titleMargin, 0);
+const int marginStart = a->getDimensionPixelOffset(R::styleable::Toolbar_titleMarginStart, -1);
 if (marginStart >= 0) { mTitleMarginStart = marginStart; }
 
-const int marginEnd = a->getDimensionPixelOffset(internal::R::styleable::Toolbar_titleMarginEnd, -1);
+const int marginEnd = a->getDimensionPixelOffset(R::styleable::Toolbar_titleMarginEnd, -1);
 if (marginEnd >= 0) { mTitleMarginEnd = marginEnd; }
 
-const int marginTop = a->getDimensionPixelOffset(internal::R::styleable::Toolbar_titleMarginTop, -1);
+const int marginTop = a->getDimensionPixelOffset(R::styleable::Toolbar_titleMarginTop, -1);
 if (marginTop >= 0) { mTitleMarginTop = marginTop; }
 
-const int marginBottom = a->getDimensionPixelOffset(internal::R::styleable::Toolbar_titleMarginBottom, -1);
+const int marginBottom = a->getDimensionPixelOffset(R::styleable::Toolbar_titleMarginBottom, -1);
 if (marginBottom >= 0) { mTitleMarginBottom = marginBottom; }
 
-mMaxButtonHeight = a->getDimensionPixelSize(internal::R::styleable::Toolbar_maxButtonHeight, -1);
+mMaxButtonHeight = a->getDimensionPixelSize(R::styleable::Toolbar_maxButtonHeight, -1);
 
-const int contentInsetStart= a->getDimensionPixelOffset(internal::R::styleable::Toolbar_contentInsetStart,RtlSpacingHelper::UNDEFINED);
-const int contentInsetEnd  = a->getDimensionPixelOffset(internal::R::styleable::Toolbar_contentInsetEnd, RtlSpacingHelper::UNDEFINED);
-const int contentInsetLeft = a->getDimensionPixelSize(internal::R::styleable::Toolbar_contentInsetLeft, 0);
-const int contentInsetRight= a->getDimensionPixelSize(internal::R::styleable::Toolbar_contentInsetRight, 0);
+const int contentInsetStart= a->getDimensionPixelOffset(R::styleable::Toolbar_contentInsetStart,RtlSpacingHelper::UNDEFINED);
+const int contentInsetEnd  = a->getDimensionPixelOffset(R::styleable::Toolbar_contentInsetEnd, RtlSpacingHelper::UNDEFINED);
+const int contentInsetLeft = a->getDimensionPixelSize(R::styleable::Toolbar_contentInsetLeft, 0);
+const int contentInsetRight= a->getDimensionPixelSize(R::styleable::Toolbar_contentInsetRight, 0);
 
 ensureContentInsets();
 mContentInsets->setAbsolute(contentInsetLeft, contentInsetRight);
@@ -78,48 +80,48 @@ if (contentInsetStart != RtlSpacingHelper::UNDEFINED ||
     mContentInsets->setRelative(contentInsetStart, contentInsetEnd);
 }
 
-mContentInsetStartWithNavigation = a->getDimensionPixelOffset(internal::R::styleable::Toolbar_contentInsetStartWithNavigation, RtlSpacingHelper::UNDEFINED);
-mContentInsetEndWithActions = a->getDimensionPixelOffset(internal::R::styleable::Toolbar_contentInsetEndWithActions, RtlSpacingHelper::UNDEFINED);
+mContentInsetStartWithNavigation = a->getDimensionPixelOffset(R::styleable::Toolbar_contentInsetStartWithNavigation, RtlSpacingHelper::UNDEFINED);
+mContentInsetEndWithActions = a->getDimensionPixelOffset(R::styleable::Toolbar_contentInsetEndWithActions, RtlSpacingHelper::UNDEFINED);
 
-mCollapseIcon = a->getDrawable(internal::R::styleable::Toolbar_collapseIcon);
-mCollapseDescription = a->getText(internal::R::styleable::Toolbar_collapseContentDescription);
+mCollapseIcon = a->getDrawable(R::styleable::Toolbar_collapseIcon);
+mCollapseDescription = a->getText(R::styleable::Toolbar_collapseContentDescription);
 
-std::string title = a->getText(internal::R::styleable::Toolbar_title);
+std::string title = a->getText(R::styleable::Toolbar_title);
 if (!title.empty()){
     setTitle(title);
 }
 
-std::string subtitle = a->getText(internal::R::styleable::Toolbar_subtitle);
+std::string subtitle = a->getText(R::styleable::Toolbar_subtitle);
 if (!subtitle.empty()) {
     setSubtitle(subtitle);
 }
 
-Drawable* navIcon = a->getDrawable(internal::R::styleable::Toolbar_navigationIcon);
+Drawable* navIcon = a->getDrawable(R::styleable::Toolbar_navigationIcon);
 if (navIcon != nullptr) {
     setNavigationIcon(navIcon);
 }
 
-std::string navDesc = a->getText(internal::R::styleable::Toolbar_navigationContentDescription);
+std::string navDesc = a->getText(R::styleable::Toolbar_navigationContentDescription);
 if (!navDesc.empty()) {
     setNavigationContentDescription(navDesc);
 }
 
-Drawable* logo = a->getDrawable(internal::R::styleable::Toolbar_logo);
+Drawable* logo = a->getDrawable(R::styleable::Toolbar_logo);
 if (logo != nullptr) {
     setLogo(logo);
 }
 
-std::string logoDesc = a->getText(internal::R::styleable::Toolbar_logoDescription);
+std::string logoDesc = a->getText(R::styleable::Toolbar_logoDescription);
 if (!logoDesc.empty()) {
     setLogoDescription(logoDesc);
 }
 
-if (a->hasValue(internal::R::styleable::Toolbar_titleTextColor)) {
-    setTitleTextColor(a->getColor(internal::R::styleable::Toolbar_titleTextColor, 0xffffffff));
+if (a->hasValue(R::styleable::Toolbar_titleTextColor)) {
+    setTitleTextColor(a->getColor(R::styleable::Toolbar_titleTextColor, 0xffffffff));
 }
 
-if (a->hasValue(internal::R::styleable::Toolbar_subtitleTextColor)) {
-    setSubtitleTextColor(a->getColor(internal::R::styleable::Toolbar_subtitleTextColor, 0xffffffff));
+if (a->hasValue(R::styleable::Toolbar_subtitleTextColor)) {
+    setSubtitleTextColor(a->getColor(R::styleable::Toolbar_subtitleTextColor, 0xffffffff));
 }
 
 

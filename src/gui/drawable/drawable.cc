@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/drawable.h>
 #include <porting/cdlog.h>
 #include <core/windowmanager.h>
@@ -24,6 +25,7 @@
 
 using namespace Cairo;
 namespace cdroid {
+using namespace cdroid::internal;
 
 Drawable::ConstantState::~ConstantState() {
 }
@@ -92,8 +94,8 @@ void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts
     // so r is accepted for API parity and unused at this base layer.
     (void)r;
     Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, internal::R::styleable::Drawable);
-    mVisible = ta ? ta->getBoolean(internal::R::styleable::Drawable_visible, mVisible) : mVisible;
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::Drawable);
+    mVisible = ta ? ta->getBoolean(R::styleable::Drawable_visible, mVisible) : mVisible;
 }
 
 void Drawable::inflateWithAttributes(XmlPullParser&parser,const AttributeSet&atts){

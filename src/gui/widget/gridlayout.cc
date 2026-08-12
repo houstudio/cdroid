@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/gridlayout.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
@@ -24,6 +25,7 @@
 #include <algorithm>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(GridLayout)
 
@@ -77,19 +79,19 @@ void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet&
 }
 void GridLayout::LayoutParams::init(Context* context,const AttributeSet& attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, internal::R::styleable::GridLayoutLayout);
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::GridLayoutLayout);
     if (ta) {
 
-    const int gravity = ta->getInt(internal::R::styleable::GridLayoutLayout_layout_gravity, Gravity::NO_GRAVITY);
+    const int gravity = ta->getInt(R::styleable::GridLayoutLayout_layout_gravity, Gravity::NO_GRAVITY);
 
-    const int column = ta->getInt(internal::R::styleable::GridLayoutLayout_layout_column, DEFAULT_COLUMN);
-    const int colSpan = ta->getInt(internal::R::styleable::GridLayoutLayout_layout_columnSpan, DEFAULT_SPAN_SIZE);
-    const float colWeight = ta->getFloat(internal::R::styleable::GridLayoutLayout_layout_columnWeight, Spec::DEFAULT_WEIGHT);
+    const int column = ta->getInt(R::styleable::GridLayoutLayout_layout_column, DEFAULT_COLUMN);
+    const int colSpan = ta->getInt(R::styleable::GridLayoutLayout_layout_columnSpan, DEFAULT_SPAN_SIZE);
+    const float colWeight = ta->getFloat(R::styleable::GridLayoutLayout_layout_columnWeight, Spec::DEFAULT_WEIGHT);
     this->columnSpec = spec(column, colSpan, getAlignment(gravity, true), colWeight);
 
-    const int row = ta->getInt(internal::R::styleable::GridLayoutLayout_layout_row, DEFAULT_ROW);
-    const int rowSpan = ta->getInt(internal::R::styleable::GridLayoutLayout_layout_rowSpan, DEFAULT_SPAN_SIZE);
-    const float rowWeight = ta->getFloat(internal::R::styleable::GridLayoutLayout_layout_rowWeight, Spec::DEFAULT_WEIGHT);
+    const int row = ta->getInt(R::styleable::GridLayoutLayout_layout_row, DEFAULT_ROW);
+    const int rowSpan = ta->getInt(R::styleable::GridLayoutLayout_layout_rowSpan, DEFAULT_SPAN_SIZE);
+    const float rowWeight = ta->getFloat(R::styleable::GridLayoutLayout_layout_rowWeight, Spec::DEFAULT_WEIGHT);
     this->rowSpec = spec(row, rowSpan, getAlignment(gravity, false), rowWeight);
     }
 }
@@ -139,21 +141,21 @@ GridLayout::GridLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     const AttributeSet& attrs = *pAttrs;
     initGridLayout();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(attrs, internal::R::styleable::GridLayout, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::GridLayout, defStyleAttr);
 
-    setOrientation(ta&&ta->hasValue(internal::R::styleable::GridLayout_orientation) ? ta->getInt(internal::R::styleable::GridLayout_orientation,DEFAULT_ORIENTATION) : attrs.getInt("orientation",std::unordered_map<std::string,int>{
+    setOrientation(ta&&ta->hasValue(R::styleable::GridLayout_orientation) ? ta->getInt(R::styleable::GridLayout_orientation,DEFAULT_ORIENTATION) : attrs.getInt("orientation",std::unordered_map<std::string,int>{
         {"horizontal",(int)HORIZONTAL},
         {"vertical",(int)VERTICAL}//
     },DEFAULT_ORIENTATION));
-    setRowCount(ta&&ta->hasValue(internal::R::styleable::GridLayout_rowCount) ? ta->getInt(internal::R::styleable::GridLayout_rowCount, DEFAULT_COUNT) : attrs.getInt("rowCount", DEFAULT_COUNT));
-    setColumnCount(ta&&ta->hasValue(internal::R::styleable::GridLayout_columnCount) ? ta->getInt(internal::R::styleable::GridLayout_columnCount, DEFAULT_COUNT) : attrs.getInt("columnCount", DEFAULT_COUNT));
-    setUseDefaultMargins(ta&&ta->hasValue(internal::R::styleable::GridLayout_useDefaultMargins) ? ta->getBoolean(internal::R::styleable::GridLayout_useDefaultMargins, DEFAULT_USE_DEFAULT_MARGINS) : attrs.getBoolean("useDefaultMargins", DEFAULT_USE_DEFAULT_MARGINS));
-    setAlignmentMode(ta&&ta->hasValue(internal::R::styleable::GridLayout_alignmentMode) ? ta->getInt(internal::R::styleable::GridLayout_alignmentMode,DEFAULT_ALIGNMENT_MODE) : attrs.getInt("alignmentMode",std::unordered_map<std::string,int>{
+    setRowCount(ta&&ta->hasValue(R::styleable::GridLayout_rowCount) ? ta->getInt(R::styleable::GridLayout_rowCount, DEFAULT_COUNT) : attrs.getInt("rowCount", DEFAULT_COUNT));
+    setColumnCount(ta&&ta->hasValue(R::styleable::GridLayout_columnCount) ? ta->getInt(R::styleable::GridLayout_columnCount, DEFAULT_COUNT) : attrs.getInt("columnCount", DEFAULT_COUNT));
+    setUseDefaultMargins(ta&&ta->hasValue(R::styleable::GridLayout_useDefaultMargins) ? ta->getBoolean(R::styleable::GridLayout_useDefaultMargins, DEFAULT_USE_DEFAULT_MARGINS) : attrs.getBoolean("useDefaultMargins", DEFAULT_USE_DEFAULT_MARGINS));
+    setAlignmentMode(ta&&ta->hasValue(R::styleable::GridLayout_alignmentMode) ? ta->getInt(R::styleable::GridLayout_alignmentMode,DEFAULT_ALIGNMENT_MODE) : attrs.getInt("alignmentMode",std::unordered_map<std::string,int>{
         {"alignBounds",(int)ALIGN_BOUNDS},
         {"alignMargins",(int)ALIGN_MARGINS}//
     },DEFAULT_ALIGNMENT_MODE));
-    setRowOrderPreserved(ta&&ta->hasValue(internal::R::styleable::GridLayout_rowOrderPreserved) ? ta->getBoolean(internal::R::styleable::GridLayout_rowOrderPreserved, DEFAULT_ORDER_PRESERVED) : attrs.getBoolean("rowOrderPreserved", DEFAULT_ORDER_PRESERVED));
-    setColumnOrderPreserved(ta&&ta->hasValue(internal::R::styleable::GridLayout_columnOrderPreserved) ? ta->getBoolean(internal::R::styleable::GridLayout_columnOrderPreserved, DEFAULT_ORDER_PRESERVED) : attrs.getBoolean("columnOrderPreserved", DEFAULT_ORDER_PRESERVED));
+    setRowOrderPreserved(ta&&ta->hasValue(R::styleable::GridLayout_rowOrderPreserved) ? ta->getBoolean(R::styleable::GridLayout_rowOrderPreserved, DEFAULT_ORDER_PRESERVED) : attrs.getBoolean("rowOrderPreserved", DEFAULT_ORDER_PRESERVED));
+    setColumnOrderPreserved(ta&&ta->hasValue(R::styleable::GridLayout_columnOrderPreserved) ? ta->getBoolean(R::styleable::GridLayout_columnOrderPreserved, DEFAULT_ORDER_PRESERVED) : attrs.getBoolean("columnOrderPreserved", DEFAULT_ORDER_PRESERVED));
 }
 
 GridLayout::~GridLayout(){

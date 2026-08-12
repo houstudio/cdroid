@@ -16,20 +16,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/recyclerview/itemtouchuiutil.h>
-#include <widget/R.h>
 #include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 void ItemTouchUIUtilImpl::onDraw(Canvas& c, RecyclerView& recyclerView, View& view, float dX, float dY,
         int actionState, bool isCurrentlyActive){
     if (isCurrentlyActive) {
-        void* tag = view.getTag(cdroid::internal::R::id::item_touch_helper_previous_elevation);
+        void* tag = view.getTag(R::id::item_touch_helper_previous_elevation);
         if (tag == nullptr) {
             int intOriginElevation;
             const float originalElevation = view.getElevation();
             memcpy(&intOriginElevation,&originalElevation,sizeof(int));
             const float newElevation = 1.f + findMaxElevation(recyclerView, view);
             view.setElevation(newElevation);
-            view.setTag(cdroid::internal::R::id::item_touch_helper_previous_elevation, (void*)long(intOriginElevation));
+            view.setTag(R::id::item_touch_helper_previous_elevation, (void*)long(intOriginElevation));
         }
     }
     view.setTranslationX(dX);
@@ -57,14 +57,14 @@ void ItemTouchUIUtilImpl::onDrawOver(Canvas& c, RecyclerView& recyclerView, View
 }
 
 void ItemTouchUIUtilImpl::clearView(View& view){
-    void* tag = view.getTag(cdroid::internal::R::id::item_touch_helper_previous_elevation);
+    void* tag = view.getTag(R::id::item_touch_helper_previous_elevation);
     if (tag!=nullptr) {
         float fltElevation;
         const int intElevation = int((long)tag);
         memcpy(&fltElevation,&intElevation,sizeof(int));
         view.setElevation(fltElevation);
     }
-    view.setTag(cdroid::internal::R::id::item_touch_helper_previous_elevation, nullptr);
+    view.setTag(R::id::item_touch_helper_previous_elevation, nullptr);
 
     view.setTranslationX(0.f);
     view.setTranslationY(0.f);

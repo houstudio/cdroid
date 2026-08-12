@@ -15,12 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/framelayout.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(FrameLayout)
 
@@ -37,12 +39,12 @@ FrameLayout::FrameLayout(Context* context,const AttributeSet* pAttrs,int defStyl
     const AttributeSet& attrs = *pAttrs;
     mMeasureAllChildren = false;
     {
-        auto ta = context->obtainStyledAttributes(attrs, internal::R::styleable::FrameLayout, defStyleAttr);
+        auto ta = context->obtainStyledAttributes(attrs, R::styleable::FrameLayout, defStyleAttr);
     
     
     for (size_t n = ta->getIndexCount(); n > 0; ) {
         size_t i = ta->getIndex(--n);
-        if (i == internal::R::styleable::FrameLayout_measureAllChildren)
+        if (i == R::styleable::FrameLayout_measureAllChildren)
             mMeasureAllChildren = ta->getBoolean(i, false);
     }
 
@@ -286,8 +288,8 @@ FrameLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     :MarginLayoutParams(c,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     // layout_gravity is shared with LinearLayout's styleable (same framework attr).
-    auto ta = c->obtainStyledAttributes(attrs, internal::R::styleable::LinearLayoutLayout);
-    gravity = ta&&ta->hasValue(internal::R::styleable::LinearLayoutLayout_layout_gravity) ? ta->getInt(internal::R::styleable::LinearLayoutLayout_layout_gravity,UNSPECIFIED_GRAVITY) : attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::LinearLayoutLayout);
+    gravity = ta&&ta->hasValue(R::styleable::LinearLayoutLayout_layout_gravity) ? ta->getInt(R::styleable::LinearLayoutLayout_layout_gravity,UNSPECIFIED_GRAVITY) : attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
 }
 
 FrameLayout::LayoutParams::LayoutParams(int width, int height)

@@ -15,12 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/ratingbar.h>
-#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET2(RatingBar,R::attr::ratingBarStyle)
 
@@ -41,13 +42,13 @@ RatingBar::RatingBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mIsUserSeekable = true;
     mProgressOnStartTracking =0;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, internal::R::styleable::RatingBar, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::RatingBar, defStyleAttr);
     
 
-setIsIndicator(ta->getBoolean(internal::R::styleable::RatingBar_isIndicator,!mIsUserSeekable));
-const int numStars  = ta->getInt(internal::R::styleable::RatingBar_numStars,mNumStars);
-const float rating  = ta->getFloat(internal::R::styleable::RatingBar_rating,-1);
-const float stepSize= ta->getFloat(internal::R::styleable::RatingBar_stepSize,-1);
+setIsIndicator(ta->getBoolean(R::styleable::RatingBar_isIndicator,!mIsUserSeekable));
+const int numStars  = ta->getInt(R::styleable::RatingBar_numStars,mNumStars);
+const float rating  = ta->getFloat(R::styleable::RatingBar_rating,-1);
+const float stepSize= ta->getFloat(R::styleable::RatingBar_stepSize,-1);
 if( (numStars>0) && (numStars!=mNumStars) )
     setNumStars(numStars);
 setStepSize((stepSize>=0)?stepSize:0.5f);

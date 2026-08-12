@@ -15,12 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/levellistdrawable.h>
 #include <core/typedarray.h>
 #include <widget/framework_styleable.h>
 #include <cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 LevelListDrawable::LevelListState::LevelListState(const LevelListState*orig,LevelListDrawable*own)
     :DrawableContainerState(orig,own){
@@ -123,10 +125,10 @@ void LevelListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
         if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-        auto ta = r.obtainStyledAttributes(&atts, internal::R::styleable::LevelListDrawableItem);
-        low = ta ? ta->getInt(internal::R::styleable::LevelListDrawableItem_minLevel, 0) : atts.getInt("minLevel", 0);
-        int high = ta ? ta->getInt(internal::R::styleable::LevelListDrawableItem_maxLevel, 0) : atts.getInt("maxLevel", 0);
-        Drawable* dr = ta ? ta->getDrawable(internal::R::styleable::LevelListDrawableItem_drawable) : atts.getDrawable("drawable");
+        auto ta = r.obtainStyledAttributes(&atts, R::styleable::LevelListDrawableItem);
+        low = ta ? ta->getInt(R::styleable::LevelListDrawableItem_minLevel, 0) : atts.getInt("minLevel", 0);
+        int high = ta ? ta->getInt(R::styleable::LevelListDrawableItem_maxLevel, 0) : atts.getInt("maxLevel", 0);
+        Drawable* dr = ta ? ta->getDrawable(R::styleable::LevelListDrawableItem_drawable) : atts.getDrawable("drawable");
 
         if (high < 0) {
             throw std::logic_error(parser.getPositionDescription()+

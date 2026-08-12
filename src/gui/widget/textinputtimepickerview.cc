@@ -18,7 +18,6 @@
 #include <iomanip>
 #include <text/textwatcher.h>
 #include <text/editable.h>
-#include <widget/R.h>
 #include <widget/internal_R.h>
 #include <utils/textutils.h>
 #include <utils/mathutils.h>
@@ -26,6 +25,7 @@
 #include <widget/timepickerclockdelegate.h>
 #include <widget/textinputtimepickerview.h>
 namespace cdroid {
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(TextInputTimePickerView);
 TextInputTimePickerView::TextInputTimePickerView(Context* context,const AttributeSet& attrs):TextInputTimePickerView(context,&attrs,0){}
@@ -36,12 +36,12 @@ TextInputTimePickerView::TextInputTimePickerView(Context* context,const Attribut
 
     LayoutInflater::from(context)->inflate("cdroid:layout/time_picker_text_input_material", this);
 
-    mHourEditText = (EditText*)findViewById(cdroid::internal::R::id::input_hour);
-    mMinuteEditText = (EditText*)findViewById(cdroid::internal::R::id::input_minute);
-    mInputSeparatorView = (TextView*)findViewById(cdroid::internal::R::id::input_separator);
-    mErrorLabel = (TextView*)findViewById(cdroid::internal::R::id::label_error);
-    mHourLabel = (TextView*)findViewById(cdroid::internal::R::id::label_hour);
-    mMinuteLabel = (TextView*)findViewById(cdroid::internal::R::id::label_minute);
+    mHourEditText = (EditText*)findViewById(R::id::input_hour);
+    mMinuteEditText = (EditText*)findViewById(R::id::input_minute);
+    mInputSeparatorView = (TextView*)findViewById(R::id::input_separator);
+    mErrorLabel = (TextView*)findViewById(R::id::label_error);
+    mHourLabel = (TextView*)findViewById(R::id::label_hour);
+    mMinuteLabel = (TextView*)findViewById(R::id::label_minute);
 
     // Wire text input -> parseAndSet*(Editable.toUTF8()), matching AOSP's two
     // TextWatchers (TextInputTimePickerView.java). The hour watcher hands focus
@@ -61,7 +61,7 @@ TextInputTimePickerView::TextInputTimePickerView(Context* context,const Attribut
         parseAndSetMinuteInternal(editable.toUTF8());
     };
     mMinuteEditText->addTextChangedListener(minuteWatcher);
-    mAmPmSpinner = (Spinner*)findViewById(cdroid::internal::R::id::am_pm_spinner);
+    mAmPmSpinner = (Spinner*)findViewById(R::id::am_pm_spinner);
     std::vector<std::string> amPmStrings = TimePicker::getAmPmStrings(context);
     ArrayAdapter<std::string>* adapter = new ArrayAdapter<std::string>(context, "@cdroid:layout/simple_spinner_dropdown_item",0);
     adapter->add(TimePickerClockDelegate::obtainVerbatim(amPmStrings[0]));

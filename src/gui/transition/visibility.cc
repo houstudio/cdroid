@@ -24,12 +24,12 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/viewgroupoverlay.h>
-#include <widget/R.h>
 #include <widget/internal_R.h>
 
 #include <transition/transitionutils.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 // android: anonymous TransitionListener inside onDisappear that removes the overlay view on
 // pause/end and re-adds it on resume. Now wired inline in createAnimator as an EventSet
@@ -203,7 +203,7 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
     View* viewToKeep = nullptr;
     bool reusingOverlayView = false;
 
-    View* savedOverlayView = static_cast<View*>(startView->getTag(cdroid::internal::R::id::transition_overlay_view_tag));
+    View* savedOverlayView = static_cast<View*>(startView->getTag(R::id::transition_overlay_view_tag));
     if (savedOverlayView != nullptr) {
         // We've already created overlay for the start view — applying two visibility
         // transitions for the same view.
@@ -273,7 +273,7 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
             if (animator == nullptr) {
                 overlay->remove(overlayView);
             } else {
-                startView->setTag(cdroid::internal::R::id::transition_overlay_view_tag, overlayView);
+                startView->setTag(R::id::transition_overlay_view_tag, overlayView);
                 Transition::TransitionListener l;
                 l.onTransitionPause = [overlay, overlayView](Transition&) {
                     overlay->remove(overlayView);
@@ -286,7 +286,7 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
                     }
                 };
                 l.onTransitionEnd = [startView, overlay, overlayView](Transition&) {
-                    startView->setTag(cdroid::internal::R::id::transition_overlay_view_tag, nullptr);
+                    startView->setTag(R::id::transition_overlay_view_tag, nullptr);
                     overlay->remove(overlayView);
                 };
                 addListener(l);

@@ -15,13 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/togglebutton.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <cdlog.h>
-#include <widget/R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 #define NO_ALPHA 0xFF
 
 DECLARE_WIDGET2(ToggleButton,R::attr::buttonStyleToggle)
@@ -33,12 +34,12 @@ ToggleButton::ToggleButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAt
     const AttributeSet& attrs = *pAttrs;
     mIndicatorDrawable=nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(attrs, internal::R::styleable::ToggleButton, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ToggleButton, defStyleAttr);
     
 
-setTextOn(ctx->getString(ta->getString(internal::R::styleable::ToggleButton_textOn)));
-setTextOff(ctx->getString(ta->getString(internal::R::styleable::ToggleButton_textOff)));
-mDisabledAlpha= ta->getFloat(internal::R::styleable::ToggleButton_disabledAlpha,0.5f);
+setTextOn(ctx->getString(ta->getString(R::styleable::ToggleButton_textOn)));
+setTextOff(ctx->getString(ta->getString(R::styleable::ToggleButton_textOff)));
+mDisabledAlpha= ta->getFloat(R::styleable::ToggleButton_disabledAlpha,0.5f);
 
 }
 

@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/imageview.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
@@ -22,6 +23,7 @@
 #include <porting/cdlog.h>
 using namespace Cairo;
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(ImageView)
 
@@ -32,25 +34,25 @@ ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     const AttributeSet& attrs = *pAttrs;
     initImageView();
     auto ta = getContext()->obtainStyledAttributes(
-        attrs, internal::R::styleable::ImageView, defStyleAttr);
-    mBaselineAlignBottom = ta->getBoolean(internal::R::styleable::ImageView_baselineAlignBottom,false);
-    mBaseline = ta->getDimensionPixelSize(internal::R::styleable::ImageView_baseline,-1);
-    setAdjustViewBounds(ta->getBoolean(internal::R::styleable::ImageView_adjustViewBounds,false));
-    mCropToPadding = ta->getBoolean(internal::R::styleable::ImageView_cropToPadding,false);
-    const int scaleType = ta->getInt(internal::R::styleable::ImageView_scaleType,0);
+        attrs, R::styleable::ImageView, defStyleAttr);
+    mBaselineAlignBottom = ta->getBoolean(R::styleable::ImageView_baselineAlignBottom,false);
+    mBaseline = ta->getDimensionPixelSize(R::styleable::ImageView_baseline,-1);
+    setAdjustViewBounds(ta->getBoolean(R::styleable::ImageView_adjustViewBounds,false));
+    mCropToPadding = ta->getBoolean(R::styleable::ImageView_cropToPadding,false);
+    const int scaleType = ta->getInt(R::styleable::ImageView_scaleType,0);
     if(scaleType>=0)setScaleType(scaleType);
-    Drawable*d = ta->getDrawable(internal::R::styleable::ImageView_src);
+    Drawable*d = ta->getDrawable(R::styleable::ImageView_src);
     if(d)setImageDrawable(d);
-    { auto csl = ta->getColorStateList(internal::R::styleable::ImageView_tint);
+    { auto csl = ta->getColorStateList(R::styleable::ImageView_tint);
       if(csl) mDrawableTintList = csl; }
     mHasDrawableTint = mDrawableTintList!=nullptr;
     if(mDrawableTintList){
         /* ImageView's default tint mode is SRC_ATOP once a tint is applied. */
-        mDrawableTintMode = ta->getInt(internal::R::styleable::ImageView_tintMode,PorterDuff::SRC_ATOP);
+        mDrawableTintMode = ta->getInt(R::styleable::ImageView_tintMode,PorterDuff::SRC_ATOP);
     }
-    setMaxWidth (ta->getDimensionPixelSize(internal::R::styleable::ImageView_maxWidth,INT_MAX));
-    setMaxHeight(ta->getDimensionPixelSize(internal::R::styleable::ImageView_maxHeight,INT_MAX));
-    setImageAlpha(ta->getInt(internal::R::styleable::View_alpha,255));
+    setMaxWidth (ta->getDimensionPixelSize(R::styleable::ImageView_maxWidth,INT_MAX));
+    setMaxHeight(ta->getDimensionPixelSize(R::styleable::ImageView_maxHeight,INT_MAX));
+    setImageAlpha(ta->getInt(R::styleable::View_alpha,255));
     const int radii = attrs.getInt("radius",0);
     mRadii[0] = attrs.getInt("topLeftRadius",radii);
     mRadii[1] = attrs.getInt("topRightRadius",radii);

@@ -15,10 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/scaledrawable.h>
 #include <widget/framework_styleable.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 ScaleDrawable::ScaleState::ScaleState():DrawableWrapperState(){
     mScaleWidth = DO_NOT_SCALE;
@@ -125,21 +127,21 @@ void ScaleDrawable::draw(Canvas& canvas) {
 extern int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def);
 
 void ScaleDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, internal::R::styleable::ScaleDrawable);
+    auto ta = r.obtainStyledAttributes(atts, R::styleable::ScaleDrawable);
     if (ta) {
         // AOSP a.getFraction(scaleWidth, ...) — base=100 preserves CDROID's
         // percent semantics (100% = 100.0, not AOSP's 1.0).
-        mState->mScaleWidth = ta->getFraction(internal::R::styleable::ScaleDrawable_scaleWidth, 100, 100, mState->mScaleWidth);
-        mState->mScaleHeight = ta->getFraction(internal::R::styleable::ScaleDrawable_scaleHeight, 100, 100, mState->mScaleHeight);
+        mState->mScaleWidth = ta->getFraction(R::styleable::ScaleDrawable_scaleWidth, 100, 100, mState->mScaleWidth);
+        mState->mScaleHeight = ta->getFraction(R::styleable::ScaleDrawable_scaleHeight, 100, 100, mState->mScaleHeight);
         updateStateFromTypedArray(*ta);
     }
     DrawableWrapper::inflate(r,parser,atts);
 }
 
 void ScaleDrawable::updateStateFromTypedArray(const TypedArray& a){
-    mState->mGravity = a.getInt(internal::R::styleable::ScaleDrawable_scaleGravity, mState->mGravity);
-    mState->mUseIntrinsicSizeAsMin = a.getBoolean(internal::R::styleable::ScaleDrawable_useIntrinsicSizeAsMinimum, mState->mUseIntrinsicSizeAsMin);
-    mState->mInitialLevel = a.getInt(internal::R::styleable::ScaleDrawable_level, mState->mInitialLevel);
+    mState->mGravity = a.getInt(R::styleable::ScaleDrawable_scaleGravity, mState->mGravity);
+    mState->mUseIntrinsicSizeAsMin = a.getBoolean(R::styleable::ScaleDrawable_useIntrinsicSizeAsMinimum, mState->mUseIntrinsicSizeAsMin);
+    mState->mInitialLevel = a.getInt(R::styleable::ScaleDrawable_level, mState->mInitialLevel);
 }
 
 }

@@ -15,10 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <porting/cdlog.h>
 #include <drawable/shapedrawable.h>
 #include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 ShapeDrawable::ShapeState::ShapeState(){
     mChangingConfigurations = 0;
@@ -238,12 +240,12 @@ int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const 
     if (name.compare("padding")==0) {
         // AOSP ShapeDrawable.inflateTag: r.obtainAttributes(attrs, R.styleable.ShapeDrawablePadding).
         Context* ctx = a.getContext();
-        auto ta = ctx ? ctx->obtainStyledAttributes(a, internal::R::styleable::ShapeDrawablePadding) : nullptr;
+        auto ta = ctx ? ctx->obtainStyledAttributes(a, R::styleable::ShapeDrawablePadding) : nullptr;
         if (ta) {
-            setPadding(ta->getDimensionPixelOffset(internal::R::styleable::ShapeDrawablePadding_left, 0),
-                    ta->getDimensionPixelOffset(internal::R::styleable::ShapeDrawablePadding_top, 0),
-                    ta->getDimensionPixelOffset(internal::R::styleable::ShapeDrawablePadding_right, 0),
-                    ta->getDimensionPixelOffset(internal::R::styleable::ShapeDrawablePadding_bottom, 0));
+            setPadding(ta->getDimensionPixelOffset(R::styleable::ShapeDrawablePadding_left, 0),
+                    ta->getDimensionPixelOffset(R::styleable::ShapeDrawablePadding_top, 0),
+                    ta->getDimensionPixelOffset(R::styleable::ShapeDrawablePadding_right, 0),
+                    ta->getDimensionPixelOffset(R::styleable::ShapeDrawablePadding_bottom, 0));
         }
         return true;
     }
@@ -254,7 +256,7 @@ int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const 
 void ShapeDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(r,parser,atts);
 
-    auto ta = r.obtainStyledAttributes(&atts, internal::R::styleable::ShapeDrawable);
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::ShapeDrawable);
     if (ta) updateStateFromTypedArray(*ta);
 
     int type;
@@ -282,19 +284,19 @@ void ShapeDrawable::updateStateFromTypedArray(const TypedArray& a) {
 
     // CDROID's ShapeState has no Paint (the Shape owns drawing), so the AOSP paint color/dither
     // pair reduces to just dither here. dither is read via the styleable index.
-    state->mDither = a.getBoolean(internal::R::styleable::ShapeDrawable_dither, state->mDither);
+    state->mDither = a.getBoolean(R::styleable::ShapeDrawable_dither, state->mDither);
 
-    state->mIntrinsicWidth = (int) a.getDimension(internal::R::styleable::ShapeDrawable_width, state->mIntrinsicWidth);
-    state->mIntrinsicHeight = (int) a.getDimension(internal::R::styleable::ShapeDrawable_height, state->mIntrinsicHeight);
+    state->mIntrinsicWidth = (int) a.getDimension(R::styleable::ShapeDrawable_width, state->mIntrinsicWidth);
+    state->mIntrinsicHeight = (int) a.getDimension(R::styleable::ShapeDrawable_height, state->mIntrinsicHeight);
 
     // tintMode is a flag enum aapt2 pre-resolves to a PorterDuff::Mode value; getInt replaces the
     // AttributeSet::getTintMode string decoder. NOOP (-1) sentinel == "not specified".
-    const int tintMode = a.getInt(internal::R::styleable::ShapeDrawable_tintMode, PorterDuff::Mode::NOOP);
+    const int tintMode = a.getInt(R::styleable::ShapeDrawable_tintMode, PorterDuff::Mode::NOOP);
     if (tintMode != PorterDuff::Mode::NOOP) {
         state->mTintMode = tintMode;
     }
 
-    auto tint = a.getColorStateList(internal::R::styleable::ShapeDrawable_tint);
+    auto tint = a.getColorStateList(R::styleable::ShapeDrawable_tint);
     if (tint != nullptr) {
         state->mTint = tint;
     }
