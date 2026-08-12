@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/fastscroller.h>
+#include <widget/framework_styleable.h>
 #include <widget/listview.h>
 #include <widget/headerviewlistadapter.h>
 #include <utils/mathutils.h>
@@ -25,7 +26,7 @@
 
 namespace cdroid{
 
-FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
+FastScroller::FastScroller(AbsListView* listView, int styleResId){
     mList = listView;
     mDecorAnimation  = nullptr;
     mPreviewAnimation= nullptr;
@@ -111,7 +112,7 @@ void FastScroller::updateAppearance() {
     // Account for minimum thumb width.
     mWidth = std::max(width, mThumbMinWidth);
 
-    if (!mTextAppearance.empty()) {
+    if (mTextAppearance != 0) {
         mPrimaryText->setTextAppearance(mTextAppearance);
         mSecondaryText->setTextAppearance(mTextAppearance);
     }
@@ -136,24 +137,28 @@ void FastScroller::updateAppearance() {
     mDeferHide=[this](){setState(STATE_NONE);};
 }
 
-void FastScroller::setStyle(const std::string&styleResId){
+void FastScroller::setStyle(int styleResId) {
+    // AOSP FastScroller.setStyle: obtainStyledAttributes(null, FastScroll,
+    // fastScrollStyle_defStyleAttr, resId) — one step, null AttributeSet,
+    // defStyleAttr + defStyleRes resolve the style chain.
     Context* context = mList->getContext();
-    AttributeSet ta = context->obtainStyledAttributes(styleResId);//R.styleable.FastScroll, R.attr.fastScrollStyle, resId);
-   
-    mOverlayPosition = ta.getInt("position", OVERLAY_FLOATING);
-    mPreviewResId[PREVIEW_LEFT] = ta.getString("backgroundLeft");
-    mPreviewResId[PREVIEW_RIGHT] = ta.getString("backgroundRight");
-    mThumbDrawable = ta.getDrawable("thumbDrawable");
-    mTrackDrawable = ta.getDrawable("trackDrawable");
-    mTextAppearance = ta.getString("textAppearance");//R.styleable.FastScroll_textAppearance
-    mTextColor = ta.getColorStateList("textColor");
-    mTextSize  = ta.getDimensionPixelSize("textSize", 0);
-    mPreviewMinWidth = ta.getDimensionPixelSize("minWidth", 0);
-    mPreviewMinHeight= ta.getDimensionPixelSize("minHeight", 0);
-    mThumbMinWidth  = ta.getDimensionPixelSize("thumbMinWidth", 0);
-    mThumbMinHeight = ta.getDimensionPixelSize("thumbMinHeight", 0);
-    mPreviewPadding = ta.getDimensionPixelSize("padding", 0);
-    mThumbPosition  = ta.getInt("thumbPosition", THUMB_POSITION_MIDPOINT);
+    const uint32_t fastScrollStyle_attr = 0x010103f7;  // android:fastScrollStyle
+    auto ta = context->obtainStyledAttributes(nullptr, R::styleable::FastScroll,
+                                                fastScrollStyle_attr, styleResId);
+    mOverlayPosition = ta->getInt(R::styleable::FastScroll_position, OVERLAY_FLOATING);
+    mPreviewResId[PREVIEW_LEFT] = ta->getResourceId(R::styleable::FastScroll_backgroundLeft, 0);
+    mPreviewResId[PREVIEW_RIGHT] = ta->getResourceId(R::styleable::FastScroll_backgroundRight, 0);
+    mThumbDrawable = ta->getDrawable(R::styleable::FastScroll_thumbDrawable);
+    mTrackDrawable = ta->getDrawable(R::styleable::FastScroll_trackDrawable);
+    mTextAppearance = ta->getResourceId(R::styleable::FastScroll_textAppearance, 0);
+    mTextColor = ta->getColorStateList(R::styleable::FastScroll_textColor);
+    mTextSize = ta->getDimensionPixelSize(R::styleable::FastScroll_textSize, 0);
+    mPreviewMinWidth = ta->getDimensionPixelSize(R::styleable::FastScroll_minWidth, 0);
+    mPreviewMinHeight = ta->getDimensionPixelSize(R::styleable::FastScroll_minHeight, 0);
+    mThumbMinWidth = ta->getDimensionPixelSize(R::styleable::FastScroll_thumbMinWidth, 0);
+    mThumbMinHeight = ta->getDimensionPixelSize(R::styleable::FastScroll_thumbMinHeight, 0);
+    mPreviewPadding = ta->getDimensionPixelSize(R::styleable::FastScroll_padding, 0);
+    mThumbPosition = ta->getInt(R::styleable::FastScroll_thumbPosition, THUMB_POSITION_MIDPOINT);
     updateAppearance();
 }
 
@@ -223,7 +228,7 @@ void FastScroller::setScrollbarPosition(int position){
         mScrollbarPosition = position;
         mLayoutFromRight = position != View::SCROLLBAR_POSITION_LEFT;
 
-        const std::string previewResId = mPreviewResId[mLayoutFromRight ? PREVIEW_RIGHT : PREVIEW_LEFT];
+        int previewResId = mPreviewResId[mLayoutFromRight ? PREVIEW_RIGHT : PREVIEW_LEFT];
         mPreviewImage->setBackgroundResource(previewResId);
 
         // Propagate padding to text min width/height.

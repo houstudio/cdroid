@@ -244,7 +244,7 @@ protected:
     bool mAdapterHasStableIds;
     bool mIsDetaching;
     bool mIsScrap[2]; 
-    std::string mFastScrollStyle;
+    int mFastScrollStyle = 0;
     int mSelectorPosition;
     int mResurrectToPosition;
     int mMinimumVelocity;
@@ -396,7 +396,7 @@ public:
     bool isFastScrollEnabled()const;
     int  getVerticalScrollbarWidth()const override;
     void setVerticalScrollbarPosition(int position)override;
-    void setFastScrollStyle(const std::string& styleid);
+    void setFastScrollStyle(int styleResId);
     void setFastScrollAlwaysVisible(bool alwaysShow);
     bool isFastScrollAlwaysVisible()const;
 

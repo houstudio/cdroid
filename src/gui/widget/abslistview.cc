@@ -134,10 +134,7 @@ void AbsListView::readAbsListViewAttrs(const AttributeSet& atts) {
     setSmoothScrollbarEnabled(a->getBoolean(R::styleable::AbsListView_smoothScrollbar, true));
     setChoiceMode(a->getInt(R::styleable::AbsListView_choiceMode, (int)CHOICE_MODE_NONE));
     setFastScrollEnabled(a->getBoolean(R::styleable::AbsListView_fastScrollEnabled, false));
-    // AOSP: setFastScrollStyle(a.getResourceId(...)). CDROID's setter takes a
-    // style string, so bridge the @StyleRes id -> "@type/key" via getResourceName.
-    uint32_t fsStyle = a->getResourceId(R::styleable::AbsListView_fastScrollStyle, 0);
-    if (fsStyle != 0) setFastScrollStyle(mContext->getResourceName(fsStyle));
+    int fsStyle = a->getResourceId(R::styleable::AbsListView_fastScrollStyle, 0);
     setFastScrollAlwaysVisible(a->getBoolean(R::styleable::AbsListView_fastScrollAlwaysVisible, false));
 }
 
@@ -401,7 +398,7 @@ void AbsListView::setFastScrollEnabled(bool enabled) {
 }
 
 
-void AbsListView::setFastScrollStyle(const std::string& styleResId) {
+void AbsListView::setFastScrollStyle(int styleResId) {
     if (mFastScroll == nullptr) {
         mFastScrollStyle = styleResId;
     } else {
