@@ -82,7 +82,7 @@ void ConfirmationOverlay::animateAndHideAfterDelay() {
  * #mHideRunnable} after {@link #mDurationMillis} milliseconds.
  */
 void ConfirmationOverlay::hide() {
-    Animation* fadeOut = AnimationUtils::loadAnimation(mOverlayView->getContext(), "cdroid:anim/fade_out");
+    Animation* fadeOut = AnimationUtils::loadAnimation(mOverlayView->getContext(), R::anim::fade_out);
     Animation::AnimationListener al;
     mOverlayView->clearAnimation();
     al.onAnimationStart=[this](Animation& animation){

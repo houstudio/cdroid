@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <animation/animationutils.h>
 #include <animation/animations.h>
+#include <widget/R.h>
 #include <core/systemclock.h>
 #include <porting/cdlog.h>
 
@@ -117,21 +118,21 @@ LayoutAnimationController* AnimationUtils::createLayoutAnimationFromXml(Context*
 }
 
 Animation* AnimationUtils::makeInAnimation(Context* c, bool fromLeft){
-    Animation*a = loadAnimation(c,fromLeft?"cdroid:anim/slide_in_left.xml":"cdroid:anim/slide_in_right.xml");
+    Animation*a = loadAnimation(c, fromLeft ? R::anim::slide_in_left : R::anim::slide_in_right);
     a->setInterpolator(DecelerateInterpolator::Instance);
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
 
 Animation* AnimationUtils::makeOutAnimation(Context* c, bool toRight){
-    Animation*a = loadAnimation(c,toRight?"cdroid:anim/slide_out_right.xml":"cdroid:anim/slide_out_left.xml");
+    Animation*a = loadAnimation(c, toRight ? R::anim::slide_out_right : R::anim::slide_out_left);
     a->setInterpolator(AccelerateInterpolator::Instance);
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
 
 Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
-    Animation*a = loadAnimation(c,"cdroid:anim/slide_in_child_bottom.xml");
+    Animation*a = loadAnimation(c, R::anim::slide_in_child_bottom);
     a->setInterpolator(AccelerateInterpolator::Instance);
     a->setStartTime(currentAnimationTimeMillis());
     return a;
