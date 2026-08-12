@@ -138,19 +138,19 @@ private:
 
     int mCheckedItem = -1;
 
-    std::string mAlertDialogLayout;
-    std::string mButtonPanelSideLayout;
-    std::string mListLayout;
-    std::string mMultiChoiceItemLayout;
-    std::string mSingleChoiceItemLayout;
-    std::string mListItemLayout;
+    int mAlertDialogLayout = 0;
+    int mButtonPanelSideLayout = 0;
+    int mListLayout = 0;
+    int mMultiChoiceItemLayout = 0;
+    int mSingleChoiceItemLayout = 0;
+    int mListItemLayout = 0;
 
     bool mShowTitle;
     int mButtonPanelLayoutHint;
 private:
     void onButtonClick(DialogInterface::OnClickListener listener,View&v);
     static bool shouldCenterSingleButton(Context* context);
-    const std::string& selectContentView();
+    int selectContentView();
     ViewGroup* resolvePanel(View* customPanel,View* defaultPanel);
     void setupView();
     void setupCustomContent(ViewGroup* customPanel);

@@ -21,7 +21,10 @@ import re
 import argparse
 import subprocess
 
-RES_RE = re.compile(r'resource (0x[0-9a-fA-F]{8})\s+(\w+)/(\S+)')
+# Match the resource type token up to '/'. Includes '^attr-private' (aapt2's
+# marker for private framework attrs): '^' and '-' aren't word chars, so \w+
+# silently dropped all 302 private attrs — use [^/\s]+ to capture them too.
+RES_RE = re.compile(r'resource (0x[0-9a-fA-F]{8})\s+([^/\s]+)/(\S+)')
 
 # C++ reserved words. aapt2 dumps the FULL framework arsc, which contains
 # resource names that are C++ keywords (e.g. id/auto, id/bool, id/default,
@@ -59,7 +62,9 @@ def cident(name):
 # (R.bool.*), but `bool` is a C++ keyword so `namespace bool{}` is a hard error.
 # Rename it to `boolean` (the only keyword type the framework defines); any other
 # keyword type falls back to cident()'s trailing '_'.
-TYPE_RENAME = {'bool': 'boolean'}
+# '^attr-private' is aapt2's marker for private framework attrs (0x010dxxxx).
+# Map to a valid C++ namespace; cident('^attr-private') would mangle it.
+TYPE_RENAME = {'bool': 'boolean', '^attr-private': 'attr_private'}
 
 
 def ctype(rtype):

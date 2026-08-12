@@ -22,7 +22,7 @@
 namespace cdroid{
 
 DropDownListView::DropDownListView(Context*context,bool hijackfocus)
-    :ListView(context,&AttributeSet::empty(),R::attr::dropDownListViewStyle){
+    :ListView(context,nullptr,R::attr::dropDownListViewStyle){
     mScrollHelper = nullptr;
     mHijackFocus = hijackfocus;
     mDrawsInPressedState = false;

@@ -18,6 +18,7 @@
 #include <app/alertcontroller.h>
 #include <app/alertdialog.h>
 #include <widget/R.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
 
@@ -51,16 +52,17 @@ AlertController::AlertController(Context* context, Dialog* di, Window* window){
     mViewSpacingRight= 0;
     mForceInverseBackground = false;
     mButtonPanelLayoutHint  = AlertDialog::LAYOUT_HINT_NONE;
-    AttributeSet atts=context->obtainStyledAttributes("cdroid:style/AlertDialog");
+    // AOSP: obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0).
+    auto atts = context->obtainStyledAttributes(nullptr, R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
 
-    mAlertDialogLayout = atts.getString("layout","@cdroid:layout/alert_dialog");
-    mButtonPanelSideLayout = atts.getString("buttonPanelSideLayout");
-    mListLayout = atts.getString("listLayout","cdroid:layout/select_dialog");
+    mAlertDialogLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_layout, R::layout::alert_dialog) : R::layout::alert_dialog;
+    mButtonPanelSideLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_buttonPanelSideLayout, 0) : 0;
+    mListLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_listLayout, R::layout::select_dialog) : R::layout::select_dialog;
 
-    mMultiChoiceItemLayout = atts.getString("multiChoiceItemLayout","cdroid:layout/select_dialog_multichoice");
-    mSingleChoiceItemLayout= atts.getString("singleChoiceItemLayout","cdroid:layout/select_dialog_singlechoice");
-    mListItemLayout = atts.getString("listItemLayout","cdroid:layout/select_dialog_item");
-    mShowTitle = atts.getBoolean("showTitle", true);
+    mMultiChoiceItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_multiChoiceItemLayout, R::layout::select_dialog_multichoice) : R::layout::select_dialog_multichoice;
+    mSingleChoiceItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_singleChoiceItemLayout, R::layout::select_dialog_singlechoice) : R::layout::select_dialog_singlechoice;
+    mListItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_listItemLayout, R::layout::select_dialog_item) : R::layout::select_dialog_item;
+    mShowTitle = atts ? atts->getBoolean(R::styleable::AlertDialog_showTitle, true) : true;
 
     //mDialogInterface.OnCancelListener=nullptr;
     /* We use a custom title so never request a window title */
@@ -94,14 +96,14 @@ void AlertController::installContent(AlertParams* params) {
 }
 
 void AlertController::installContent() {
-    const std::string contentView = selectContentView();
+    int contentView = selectContentView();
     //mWindow->setContentView(contentView);
     LayoutInflater::from(mContext)->inflate(contentView,mWindow,true);
     setupView();
 }
 
-const std::string& AlertController::selectContentView() {
-    if (mButtonPanelSideLayout.empty()) {
+int AlertController::selectContentView() {
+    if (mButtonPanelSideLayout == 0) {
         return mAlertDialogLayout;
     }
     if (mButtonPanelLayoutHint == (int)AlertDialog::LAYOUT_HINT_SIDE) {
@@ -109,7 +111,7 @@ const std::string& AlertController::selectContentView() {
     }
     // TODO: use layout hint side for long messages/lists
     return mAlertDialogLayout;
- 
+
 }
 
 void AlertController::setTitle(const std::string& title) {
@@ -698,22 +700,25 @@ class AlertListAdapter:public ArrayAdapter<std::string>{
 private:
     AlertController::AlertParams*mParams;
     ListView*LV;
+    int mLayoutResource;
 public:
-    AlertListAdapter(Context*ctx,const std::string&resource,int field)
-       :ArrayAdapter<std::string>::ArrayAdapter(ctx,resource,field),mParams(nullptr),LV(nullptr){
+    AlertListAdapter(Context*ctx,int resource,int field)
+       :ArrayAdapter<std::string>::ArrayAdapter(ctx,std::string(),field),mParams(nullptr),LV(nullptr),mLayoutResource(resource){
     }
     void setParams(AlertController::AlertParams*param,ListView*lv){
         mParams=param;
         LV=lv;
     }
     View*getView(int position, View* convertView, ViewGroup* parent)override{
-        View* view=ArrayAdapter<std::string>::getView(position, convertView, parent);
+        if(convertView==nullptr){
+            convertView=LayoutInflater::from(mContext)->inflate(mLayoutResource,nullptr,false);
+        }
         if ( (position<mParams->mCheckedItems.size()) && mParams->mCheckedItems[position]){
             LV->setItemChecked(position, true);
         }
-        TextView*tv=(TextView*)view->findViewById(mFieldId);
+        TextView*tv=(TextView*)convertView->findViewById(mFieldId);
         if(tv)tv->setText(getItemAt(position));
-        return view;  
+        return convertView;
     }
 };
 
@@ -747,7 +752,7 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
              };*/
         }
     } else {
-        const std::string layout=mIsSingleChoice?dialog->mSingleChoiceItemLayout:dialog->mListItemLayout;
+        const int layout=mIsSingleChoice?dialog->mSingleChoiceItemLayout:dialog->mListItemLayout;
 
         if (mCursor) {
             //adapter = new SimpleCursorAdapter(mContext, layout, mCursor,

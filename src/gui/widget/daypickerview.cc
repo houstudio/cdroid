@@ -83,8 +83,9 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
 
     // Proxy the month text color into the previous and next buttons.
     if (!monthTextAppearanceResId.empty()) {
-        auto ta = mContext->obtainStyledAttributes("cdroid:attr/textColor");
-        auto monthColor = ta.getColorStateList(0);
+        static const uint32_t kTextColor[] = { R::attr::textColor, 0 };
+        auto ta = mContext->obtainStyledAttributes(kTextColor);
+        auto monthColor = ta ? ta->getColorStateList(0) : nullptr;
         if (monthColor != nullptr) {
             mPrevButton->setImageTintList(monthColor);
             mNextButton->setImageTintList(monthColor);

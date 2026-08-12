@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <app/progressdialog.h>
 #include <widget/R.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
 
@@ -65,8 +66,8 @@ void ProgressDialog::show(){
 
 void ProgressDialog::onCreate() {
     LayoutInflater* inflater = LayoutInflater::from(getContext());
-    AttributeSet a = getContext()->obtainStyledAttributes("cdroid:attr/alertDialogStyle");
-                //com.android.internal.R.styleable.AlertDialog,com.android.internal.R.attr.alertDialogStyle, 0);
+    // AOSP: obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0).
+    auto a = getContext()->obtainStyledAttributes(nullptr, R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
     if (mProgressStyle == STYLE_HORIZONTAL) {
           
         /* Use a separate handler to update the text views as they
@@ -95,13 +96,15 @@ void ProgressDialog::onCreate() {
                 }
             }
         };*/
-        View* view = inflater->inflate(a.getString("horizontalProgressLayout","cdroid:layout/alert_dialog_progress"),nullptr,false);
+        int hLayout = a ? a->getResourceId(R::styleable::AlertDialog_horizontalProgressLayout, R::layout::alert_dialog_progress) : R::layout::alert_dialog_progress;
+        View* view = inflater->inflate(hLayout,nullptr,false);
         mProgress = (ProgressBar*) view->findViewById(R::id::progress);
         mProgressNumber = (TextView*) view->findViewById(R::id::progress_number);
         mProgressPercent = (TextView*) view->findViewById(R::id::progress_percent);
         setView(view);
     } else {
-        View* view = inflater->inflate(a.getString("progressLayout","cdroid:layout/progress_dialog"),nullptr,false);
+        int pLayout = a ? a->getResourceId(R::styleable::AlertDialog_progressLayout, R::layout::progress_dialog) : R::layout::progress_dialog;
+        View* view = inflater->inflate(pLayout,nullptr,false);
         mProgress = (ProgressBar*) view->findViewById(R::id::progress);
         mMessageView = (TextView*) view->findViewById(R::id::message);
         setView(view);
