@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <cstddef>
 namespace cdroid {
-namespace R { namespace styleable {
+namespace internal { namespace R { namespace styleable {
     // CoordinatorLayout (2 attrs)
     extern const uint32_t CoordinatorLayout[];
     constexpr int CoordinatorLayout_keylines = 0;
@@ -531,6 +531,6 @@ namespace R { namespace styleable {
     constexpr int TabItem_icon = 1;
     constexpr int TabItem_layout = 2;
 
-} } // namespace R::styleable
+} } } // namespace internal::R::styleable
 } // namespace cdroid
 #endif // __WIDGETEX_STYLEABLE_H__

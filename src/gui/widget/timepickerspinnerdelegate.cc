@@ -33,8 +33,8 @@ namespace cdroid{
 TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs)
     :AbstractTimePickerDelegate(delegator, context) {
 
-    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);
-    const std::string layoutResourceId = a ? a->getString(R::styleable::TimePicker_legacyLayout)
+    auto a = mContext->obtainStyledAttributes(attrs, internal::R::styleable::TimePicker, 0, 0);
+    const std::string layoutResourceId = a ? a->getString(internal::R::styleable::TimePicker_legacyLayout)
             : std::string();
     const std::string layoutRes = layoutResourceId.empty()
             ? std::string("cdroid:layout/time_picker_legacy") : layoutResourceId;

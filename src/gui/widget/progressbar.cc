@@ -78,10 +78,10 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
     const AttributeSet& attrs = *pAttrs;
     initProgressBar();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ProgressBar, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(attrs, internal::R::styleable::ProgressBar, defStyleAttr);
 
 
-    Drawable* progressDrawable = ta->getDrawable(R::styleable::ProgressBar_progressDrawable);
+    Drawable* progressDrawable = ta->getDrawable(internal::R::styleable::ProgressBar_progressDrawable);
     if(progressDrawable) {
         if(needsTileify(progressDrawable))
             setProgressDrawableTiled(progressDrawable);
@@ -89,7 +89,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
             setProgressDrawable(progressDrawable);
     }
 
-    Drawable* indeterminateDrawable = ta->getDrawable(R::styleable::ProgressBar_indeterminateDrawable);
+    Drawable* indeterminateDrawable = ta->getDrawable(internal::R::styleable::ProgressBar_indeterminateDrawable);
     if(indeterminateDrawable) {
         if(needsTileify(indeterminateDrawable))
             setIndeterminateDrawableTiled(indeterminateDrawable);
@@ -97,70 +97,70 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
             setIndeterminateDrawable(indeterminateDrawable);
     }
 
-    mDuration = ta->getInt(R::styleable::ProgressBar_indeterminateDuration,mDuration);
-    mMinWidth = ta->getDimensionPixelSize(R::styleable::ProgressBar_minWidth, mMinWidth);
-    mMaxWidth = ta->getDimensionPixelSize(R::styleable::ProgressBar_maxWidth, mMaxWidth);
-    mMinHeight= ta->getDimensionPixelSize(R::styleable::ProgressBar_minHeight, mMinHeight);
-    mMaxHeight= ta->getDimensionPixelSize(R::styleable::ProgressBar_maxHeight, mMaxHeight);
-    mBehavior = ta->getInt(R::styleable::ProgressBar_indeterminateBehavior,mBehavior);
+    mDuration = ta->getInt(internal::R::styleable::ProgressBar_indeterminateDuration,mDuration);
+    mMinWidth = ta->getDimensionPixelSize(internal::R::styleable::ProgressBar_minWidth, mMinWidth);
+    mMaxWidth = ta->getDimensionPixelSize(internal::R::styleable::ProgressBar_maxWidth, mMaxWidth);
+    mMinHeight= ta->getDimensionPixelSize(internal::R::styleable::ProgressBar_minHeight, mMinHeight);
+    mMaxHeight= ta->getDimensionPixelSize(internal::R::styleable::ProgressBar_maxHeight, mMaxHeight);
+    mBehavior = ta->getInt(internal::R::styleable::ProgressBar_indeterminateBehavior,mBehavior);
 
-    mOnlyIndeterminate= (ta->getBoolean(R::styleable::ProgressBar_indeterminateOnly,mOnlyIndeterminate));
+    mOnlyIndeterminate= (ta->getBoolean(internal::R::styleable::ProgressBar_indeterminateOnly,mOnlyIndeterminate));
     mNoInvalidate = false;
-    setIndeterminate(mOnlyIndeterminate|| (ta->getBoolean(R::styleable::ProgressBar_indeterminate,mIndeterminate)));
+    setIndeterminate(mOnlyIndeterminate|| (ta->getBoolean(internal::R::styleable::ProgressBar_indeterminate,mIndeterminate)));
 
-    mMirrorForRtl = ta->getBoolean(R::styleable::ProgressBar_mirrorForRtl,false);
+    mMirrorForRtl = ta->getBoolean(internal::R::styleable::ProgressBar_mirrorForRtl,false);
 
-    setMin(ta->getInt(R::styleable::ProgressBar_min,mMin));
-    setMax(ta->getInt(R::styleable::ProgressBar_max,mMax));
+    setMin(ta->getInt(internal::R::styleable::ProgressBar_min,mMin));
+    setMax(ta->getInt(internal::R::styleable::ProgressBar_max,mMax));
 
-    setProgress(ta->getInt(R::styleable::ProgressBar_progress,mProgress));
-    setSecondaryProgress(ta->getInt(R::styleable::ProgressBar_secondaryProgress,mSecondaryProgress));
+    setProgress(ta->getInt(internal::R::styleable::ProgressBar_progress,mProgress));
+    setSecondaryProgress(ta->getInt(internal::R::styleable::ProgressBar_secondaryProgress,mSecondaryProgress));
 
-    if(ta->hasValue(R::styleable::ProgressBar_progressTintMode)) {
+    if(ta->hasValue(internal::R::styleable::ProgressBar_progressTintMode)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressTintMode = ta->getInt(R::styleable::ProgressBar_progressTintMode, PorterDuff::Mode::NOOP);
+        mProgressTintInfo->mProgressTintMode = ta->getInt(internal::R::styleable::ProgressBar_progressTintMode, PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasProgressTintMode=true;
     }
 
-    if(ta->hasValue(R::styleable::ProgressBar_progressTint)) {
+    if(ta->hasValue(internal::R::styleable::ProgressBar_progressTint)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressTintList = ta->getColorStateList(R::styleable::ProgressBar_progressTint);
+        mProgressTintInfo->mProgressTintList = ta->getColorStateList(internal::R::styleable::ProgressBar_progressTint);
         mProgressTintInfo->mHasProgressTint=true;
     }
 
-    if(ta->hasValue(R::styleable::ProgressBar_progressBackgroundTintMode)) {
+    if(ta->hasValue(internal::R::styleable::ProgressBar_progressBackgroundTintMode)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressBackgroundTintMode = ta->getInt(R::styleable::ProgressBar_progressBackgroundTintMode, PorterDuff::Mode::NOOP);
+        mProgressTintInfo->mProgressBackgroundTintMode = ta->getInt(internal::R::styleable::ProgressBar_progressBackgroundTintMode, PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasProgressBackgroundTintMode=true;
     }
 
-    if(ta->hasValue(R::styleable::ProgressBar_progressBackgroundTint)) {
+    if(ta->hasValue(internal::R::styleable::ProgressBar_progressBackgroundTint)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressBackgroundTintList = ta->getColorStateList(R::styleable::ProgressBar_progressBackgroundTint);
+        mProgressTintInfo->mProgressBackgroundTintList = ta->getColorStateList(internal::R::styleable::ProgressBar_progressBackgroundTint);
         mProgressTintInfo->mHasProgressBackgroundTint=true;
     }
 
-    if(ta->hasValue(R::styleable::ProgressBar_secondaryProgressTintMode)) {
+    if(ta->hasValue(internal::R::styleable::ProgressBar_secondaryProgressTintMode)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mSecondaryProgressTintMode = ta->getInt(R::styleable::ProgressBar_secondaryProgressTintMode, PorterDuff::Mode::NOOP);
+        mProgressTintInfo->mSecondaryProgressTintMode = ta->getInt(internal::R::styleable::ProgressBar_secondaryProgressTintMode, PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasSecondaryProgressTintMode=true;
     }
 
-    if(ta->hasValue(R::styleable::ProgressBar_secondaryProgressTint)) {
+    if(ta->hasValue(internal::R::styleable::ProgressBar_secondaryProgressTint)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mSecondaryProgressTintList = ta->getColorStateList(R::styleable::ProgressBar_secondaryProgressTint);
+        mProgressTintInfo->mSecondaryProgressTintList = ta->getColorStateList(internal::R::styleable::ProgressBar_secondaryProgressTint);
         mProgressTintInfo->mHasSecondaryProgressTint=true;
     }
 
-    if(ta->hasValue(R::styleable::ProgressBar_indeterminateTintMode)) {
+    if(ta->hasValue(internal::R::styleable::ProgressBar_indeterminateTintMode)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mIndeterminateTintMode = ta->getInt(R::styleable::ProgressBar_indeterminateTintMode, PorterDuff::Mode::NOOP);
+        mProgressTintInfo->mIndeterminateTintMode = ta->getInt(internal::R::styleable::ProgressBar_indeterminateTintMode, PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasIndeterminateTintMode=true;
     }
 
-    if(ta->hasValue(R::styleable::ProgressBar_indeterminateTint)) {
+    if(ta->hasValue(internal::R::styleable::ProgressBar_indeterminateTint)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mIndeterminateTintList = ta->getColorStateList(R::styleable::ProgressBar_indeterminateTint);
+        mProgressTintInfo->mIndeterminateTintList = ta->getColorStateList(internal::R::styleable::ProgressBar_indeterminateTint);
         mProgressTintInfo->mHasIndeterminateTint=true;
     }
     applyProgressTints();

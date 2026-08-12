@@ -35,17 +35,17 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
     const AttributeSet& attrs = *pAttrs;
 
     Calendar tempDate;
-    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::CalendarView, defStyleAttr);
-    const int firstDayOfWeek = a ? a->getInt(R::styleable::CalendarView_firstDayOfWeek, tempDate.getFirstDayOfWeek()) : tempDate.getFirstDayOfWeek();
+    auto a = mContext->obtainStyledAttributes(attrs, internal::R::styleable::CalendarView, defStyleAttr);
+    const int firstDayOfWeek = a ? a->getInt(internal::R::styleable::CalendarView_firstDayOfWeek, tempDate.getFirstDayOfWeek()) : tempDate.getFirstDayOfWeek();
 
-    const std::string minDate = a ? a->getString(R::styleable::CalendarView_minDate) : std::string();
-    const std::string maxDate = a ? a->getString(R::styleable::CalendarView_maxDate) : std::string();
+    const std::string minDate = a ? a->getString(internal::R::styleable::CalendarView_minDate) : std::string();
+    const std::string maxDate = a ? a->getString(internal::R::styleable::CalendarView_maxDate) : std::string();
 
-    std::string monthTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_monthTextAppearance) : std::string();
-    std::string dayOfWeekTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_weekDayTextAppearance) : std::string();
-    std::string dayTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_dateTextAppearance) : std::string();
+    std::string monthTextAppearanceResId = a ? a->getString(internal::R::styleable::CalendarView_monthTextAppearance) : std::string();
+    std::string dayOfWeekTextAppearanceResId = a ? a->getString(internal::R::styleable::CalendarView_weekDayTextAppearance) : std::string();
+    std::string dayTextAppearanceResId = a ? a->getString(internal::R::styleable::CalendarView_dateTextAppearance) : std::string();
 
-    auto daySelectorColor = a ? a->getColorStateList(R::styleable::CalendarView_daySelectorColor) : nullptr;
+    auto daySelectorColor = a ? a->getColorStateList(internal::R::styleable::CalendarView_daySelectorColor) : nullptr;
 
     // Set up adapter.
     mAdapter = new DayPickerPagerAdapter(context,"cdroid:layout/date_picker_month_item_material", cdroid::internal::R::id::month_view);

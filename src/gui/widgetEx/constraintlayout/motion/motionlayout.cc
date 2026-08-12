@@ -51,11 +51,11 @@ MotionLayout::MotionLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleA
     const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     // layoutDescription is declared in the ConstraintLayout_Layout styleable.
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(attrs, internal::R::styleable::ConstraintLayoutLayout, defStyleAttr);
     // app:layoutDescription="@xml/..." points at a <MotionScene> resource (bare localname after the
     // XmlPullParser namespace strip). Resolved into a MotionScene on first measure (buildScene).
-    mSceneResource = (ta&&ta->hasValue(R::styleable::ConstraintLayoutLayout_layoutDescription))
-        ? ta->getString(R::styleable::ConstraintLayoutLayout_layoutDescription)
+    mSceneResource = (ta&&ta->hasValue(internal::R::styleable::ConstraintLayoutLayout_layoutDescription))
+        ? ta->getString(internal::R::styleable::ConstraintLayoutLayout_layoutDescription)
         : attrs.getString("layoutDescription", "");
     // Binary AXML stores @xml/... as TYPE_REFERENCE; TypedArray::getString only
     // returns TYPE_STRING, so it yields "" here. Fall back to the AttributeSet,

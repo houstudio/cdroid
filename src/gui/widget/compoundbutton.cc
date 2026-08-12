@@ -34,12 +34,12 @@ CompoundButton::CompoundButton(Context*ctx,const AttributeSet* pAttrs,int defSty
     initCompoundButton();
     // AOSP CompoundButton ctor: obtainStyledAttributes(attrs, styleable, defStyleAttr, 0),
     // then a.getDrawable(button) / getBoolean(checked) / getColorStateList(buttonTint).
-    auto ta = ctx->obtainStyledAttributes(&attrs, R::styleable::CompoundButton, defStyleAttr, 0);
-    Drawable* d = ta->getDrawable(R::styleable::CompoundButton_button);
+    auto ta = ctx->obtainStyledAttributes(&attrs, internal::R::styleable::CompoundButton, defStyleAttr, 0);
+    Drawable* d = ta->getDrawable(internal::R::styleable::CompoundButton_button);
     if (d) setButtonDrawable(d);
-    setChecked(ta->getBoolean(R::styleable::CompoundButton_checked, false));
-    if (ta->hasValue(R::styleable::CompoundButton_buttonTint))
-        mButtonTintList = ta->getColorStateList(R::styleable::CompoundButton_buttonTint);
+    setChecked(ta->getBoolean(internal::R::styleable::CompoundButton_checked, false));
+    if (ta->hasValue(internal::R::styleable::CompoundButton_buttonTint))
+        mButtonTintList = ta->getColorStateList(internal::R::styleable::CompoundButton_buttonTint);
     applyButtonTint();
 }
 

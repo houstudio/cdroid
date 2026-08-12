@@ -67,8 +67,8 @@ void AnimationScaleListDrawable::inflateChildElements(Resources& r,XmlPullParser
 
         // Either pick up the android:drawable attribute.
         Context* ctx = attrs.getContext();
-        auto ta = r.obtainStyledAttributes(&attrs, R::styleable::AnimationScaleListDrawableItem);
-        Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimationScaleListDrawableItem_drawable) : attrs.getDrawable("drawable");
+        auto ta = r.obtainStyledAttributes(&attrs, internal::R::styleable::AnimationScaleListDrawableItem);
+        Drawable* dr = ta ? ta->getDrawable(internal::R::styleable::AnimationScaleListDrawableItem_drawable) : attrs.getDrawable("drawable");
 
         // Or parse the child element under <item>.
         if (dr == nullptr) {

@@ -32,36 +32,36 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
     mAdapter = nullptr;
     mPreviousScrollPosition =0;
     mScrollStateChangedRunnable = new ScrollStateRunnable(this);
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::CalendarView, 0, 0);
-    mShowWeekNumber = a ? a->getBoolean(R::styleable::CalendarView_showWeekNumber, DEFAULT_SHOW_WEEK_NUMBER) : DEFAULT_SHOW_WEEK_NUMBER;
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::CalendarView, 0, 0);
+    mShowWeekNumber = a ? a->getBoolean(internal::R::styleable::CalendarView_showWeekNumber, DEFAULT_SHOW_WEEK_NUMBER) : DEFAULT_SHOW_WEEK_NUMBER;
     Calendar cal;
-    mFirstDayOfWeek = a ? a->getInt(R::styleable::CalendarView_firstDayOfWeek, cal.getFirstDayOfWeek()) : cal.getFirstDayOfWeek();
-    const std::string minDate = a ? a->getString(R::styleable::CalendarView_minDate) : std::string();
+    mFirstDayOfWeek = a ? a->getInt(internal::R::styleable::CalendarView_firstDayOfWeek, cal.getFirstDayOfWeek()) : cal.getFirstDayOfWeek();
+    const std::string minDate = a ? a->getString(internal::R::styleable::CalendarView_minDate) : std::string();
     if (!CalendarView::parseDate(minDate, mMinDate)) {
         CalendarView::parseDate(DEFAULT_MIN_DATE, mMinDate);
     }
-    const std::string maxDate = a ? a->getString(R::styleable::CalendarView_maxDate) : std::string();
+    const std::string maxDate = a ? a->getString(internal::R::styleable::CalendarView_maxDate) : std::string();
     if (!CalendarView::parseDate(maxDate, mMaxDate)) {
         CalendarView::parseDate(DEFAULT_MAX_DATE, mMaxDate);
     }
     if (mMaxDate.before(mMinDate)) {
         throw std::invalid_argument("Max date cannot be before min date.");
     }
-    mShownWeekCount = a ? a->getInt(R::styleable::CalendarView_shownWeekCount, DEFAULT_SHOWN_WEEK_COUNT) : DEFAULT_SHOWN_WEEK_COUNT;
+    mShownWeekCount = a ? a->getInt(internal::R::styleable::CalendarView_shownWeekCount, DEFAULT_SHOWN_WEEK_COUNT) : DEFAULT_SHOWN_WEEK_COUNT;
     // CDROID has no theme, so default to visible colors (light text on a dark surface)
     // instead of AOSP's theme-derived values, which would otherwise be 0 (transparent).
-    mSelectedWeekBackgroundColor = a ? a->getColor(R::styleable::CalendarView_selectedWeekBackgroundColor, 0xFF1E2634) : 0xFF1E2634;
-    mFocusedMonthDateColor = a ? a->getColor(R::styleable::CalendarView_focusedMonthDateColor, 0xFFECEFF2) : 0xFFECEFF2;
-    mUnfocusedMonthDateColor = a ? a->getColor(R::styleable::CalendarView_unfocusedMonthDateColor, 0xFF9BA6B2) : 0xFF9BA6B2;
-    mWeekSeparatorLineColor = a ? a->getColor(R::styleable::CalendarView_weekSeparatorLineColor, 0xFF2B3442) : 0xFF2B3442;
-    mWeekNumberColor = a ? a->getColor(R::styleable::CalendarView_weekNumberColor, 0xFF9BA6B2) : 0xFF9BA6B2;
-    mSelectedDateVerticalBar = a ? a->getDrawable(R::styleable::CalendarView_selectedDateVerticalBar) : nullptr;
+    mSelectedWeekBackgroundColor = a ? a->getColor(internal::R::styleable::CalendarView_selectedWeekBackgroundColor, 0xFF1E2634) : 0xFF1E2634;
+    mFocusedMonthDateColor = a ? a->getColor(internal::R::styleable::CalendarView_focusedMonthDateColor, 0xFFECEFF2) : 0xFFECEFF2;
+    mUnfocusedMonthDateColor = a ? a->getColor(internal::R::styleable::CalendarView_unfocusedMonthDateColor, 0xFF9BA6B2) : 0xFF9BA6B2;
+    mWeekSeparatorLineColor = a ? a->getColor(internal::R::styleable::CalendarView_weekSeparatorLineColor, 0xFF2B3442) : 0xFF2B3442;
+    mWeekNumberColor = a ? a->getColor(internal::R::styleable::CalendarView_weekNumberColor, 0xFF9BA6B2) : 0xFF9BA6B2;
+    mSelectedDateVerticalBar = a ? a->getDrawable(internal::R::styleable::CalendarView_selectedDateVerticalBar) : nullptr;
 
-    const std::string dateTextAppearance = a ? a->getString(R::styleable::CalendarView_dateTextAppearance) : std::string();
+    const std::string dateTextAppearance = a ? a->getString(internal::R::styleable::CalendarView_dateTextAppearance) : std::string();
     mDateTextAppearanceResId = dateTextAppearance.empty() ? std::string("cdroid:style/TextAppearance_Small") : dateTextAppearance;
     updateDateTextSize();
 
-    mWeekDayTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_weekDayTextAppearance) : std::string();
+    mWeekDayTextAppearanceResId = a ? a->getString(internal::R::styleable::CalendarView_weekDayTextAppearance) : std::string();
 
     DisplayMetrics displayMetrics = mDelegator->getContext()->getDisplayMetrics();
     mWeekMinVisibleHeight = UNSCALED_WEEK_MIN_VISIBLE_HEIGHT;
@@ -378,8 +378,8 @@ void CalendarViewLegacyDelegate::updateDateTextSize() {
     // Resolve the TextAppearance style typed (framework textSize sub-attr), the
     // same pattern as switch/simplemonthview/tablayout; keep the init default
     // when the style is unset or unresolvable.
-    auto ta = ctx->obtainStyledAttributes(attr, R::styleable::TextAppearance);
-    mDateTextSize = ta ? ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, DEFAULT_DATE_TEXT_SIZE)
+    auto ta = ctx->obtainStyledAttributes(attr, internal::R::styleable::TextAppearance);
+    mDateTextSize = ta ? ta->getDimensionPixelSize(internal::R::styleable::TextAppearance_textSize, DEFAULT_DATE_TEXT_SIZE)
                        : DEFAULT_DATE_TEXT_SIZE;
 }
 

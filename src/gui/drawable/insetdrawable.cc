@@ -166,7 +166,7 @@ std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){
 
 void InsetDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     // Inset attribute may be overridden by more specific attributes.
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::InsetDrawable);
+    auto ta = r.obtainStyledAttributes(atts, internal::R::styleable::InsetDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     DrawableWrapper::inflate(r,parser,atts);
     verifyRequiredAttributes();
@@ -181,17 +181,17 @@ void InsetDrawable::verifyRequiredAttributes(){
 }
 
 void InsetDrawable::updateStateFromTypedArray(const TypedArray& a){
-    if (a.hasValue(R::styleable::InsetDrawable_inset)) {
-        const float inset = a.getFloat(R::styleable::InsetDrawable_inset, 0);
+    if (a.hasValue(internal::R::styleable::InsetDrawable_inset)) {
+        const float inset = a.getFloat(internal::R::styleable::InsetDrawable_inset, 0);
         mState->mInsetLeft.set(inset);
         mState->mInsetTop.set(inset);
         mState->mInsetRight.set(inset);
         mState->mInsetBottom.set(inset);
     }
-    mState->mInsetLeft.set(a.getFloat(R::styleable::InsetDrawable_insetLeft, 0.f));
-    mState->mInsetTop.set(a.getFloat(R::styleable::InsetDrawable_insetTop, 0.f));
-    mState->mInsetRight.set(a.getFloat(R::styleable::InsetDrawable_insetRight, 0.f));
-    mState->mInsetBottom.set(a.getFloat(R::styleable::InsetDrawable_insetBottom, 0.f));
+    mState->mInsetLeft.set(a.getFloat(internal::R::styleable::InsetDrawable_insetLeft, 0.f));
+    mState->mInsetTop.set(a.getFloat(internal::R::styleable::InsetDrawable_insetTop, 0.f));
+    mState->mInsetRight.set(a.getFloat(internal::R::styleable::InsetDrawable_insetRight, 0.f));
+    mState->mInsetBottom.set(a.getFloat(internal::R::styleable::InsetDrawable_insetBottom, 0.f));
 }
 }/*endof namespace*/
 

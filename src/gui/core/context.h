@@ -89,12 +89,12 @@ public:
     // Default impls delegate to getTheme() (see context.cc); the 4-arg
     // AttributeSet form is obtainStyledAttributes on Assets (binary AXML).
     // `attrs` is a sentinel-terminated attr-id array (trailing 0), matching
-    // R::styleable::X — the C++ analog of AOSP's int[] (no COUNT param).
+    // internal::R::styleable::X — the C++ analog of AOSP's int[] (no COUNT param).
     virtual std::unique_ptr<TypedArray> obtainStyledAttributes(const uint32_t* attrs);
     virtual std::unique_ptr<TypedArray> obtainStyledAttributes(int resid, const uint32_t* attrs);
     // AOSP Context.obtainStyledAttributes(AttributeSet, int[] attrs, int defStyleAttr, int defStyleRes).
     // attrs is nullable (AOSP new View(ctx, null, defStyleAttr)); styleable is a
-    // sentinel-terminated attr-id array (R::styleable::X, the C++ analog of
+    // sentinel-terminated attr-id array (internal::R::styleable::X, the C++ analog of
     // AOSP's int[]). Default returns nullptr; Assets overrides with arsc resolution.
     virtual std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet* attrs,
         const uint32_t* styleable, int32_t defStyleAttr=0, int32_t defStyleRes=0)=0;

@@ -28,11 +28,11 @@ AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet* pAtt
     :AdapterViewAnimator(context, pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::AdapterViewFlipper, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(attrs, internal::R::styleable::AdapterViewFlipper, defStyleAttr);
     
 
-mFlipInterval = ta->getInt(R::styleable::AdapterViewFlipper_flipInterval, DEFAULT_INTERVAL);
-mAutoStart = ta->getBoolean(R::styleable::AdapterViewFlipper_autoStart, false);
+mFlipInterval = ta->getInt(internal::R::styleable::AdapterViewFlipper_flipInterval, DEFAULT_INTERVAL);
+mAutoStart = ta->getBoolean(internal::R::styleable::AdapterViewFlipper_autoStart, false);
 
 // A view flipper should cycle through the views
 mLoopViews = true;

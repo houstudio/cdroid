@@ -36,8 +36,8 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* pAttrs
     const AttributeSet& attrs = *pAttrs;
     initView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::CoordinatorLayout, defStyleAttr);
-    std::string keylineArrayRes = ta&&ta->hasValue(R::styleable::CoordinatorLayout_keylines) ? ta->getString(R::styleable::CoordinatorLayout_keylines) : attrs.getString("keylines");
+    auto ta = context->obtainStyledAttributes(attrs, internal::R::styleable::CoordinatorLayout, defStyleAttr);
+    std::string keylineArrayRes = ta&&ta->hasValue(internal::R::styleable::CoordinatorLayout_keylines) ? ta->getString(internal::R::styleable::CoordinatorLayout_keylines) : attrs.getString("keylines");
     if (!keylineArrayRes.empty()) {
         context->getArray(keylineArrayRes,mKeylines);
         const float density = context->getDisplayMetrics().density;
@@ -46,7 +46,7 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* pAttrs
             mKeylines[i] = (int) (mKeylines[i] * density);
         }
     }
-    mStatusBarBackground = ta&&ta->hasValue(R::styleable::CoordinatorLayout_statusBarBackground) ? ta->getDrawable(R::styleable::CoordinatorLayout_statusBarBackground) : attrs.getDrawable("statusBarBackground");
+    mStatusBarBackground = ta&&ta->hasValue(internal::R::styleable::CoordinatorLayout_statusBarBackground) ? ta->getDrawable(internal::R::styleable::CoordinatorLayout_statusBarBackground) : attrs.getDrawable("statusBarBackground");
 }
 
 void CoordinatorLayout::initView() {
@@ -1687,19 +1687,19 @@ CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeS
     :MarginLayoutParams(context, attrs){
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::CoordinatorLayoutLayout);
+    auto ta = context->obtainStyledAttributes(attrs, internal::R::styleable::CoordinatorLayoutLayout);
 
-    this->gravity = ta&&ta->hasValue(R::styleable::CoordinatorLayout_layout_gravity) ? ta->getInt(R::styleable::CoordinatorLayout_layout_gravity,Gravity::NO_GRAVITY) : attrs.getGravity("layout_gravity",Gravity::NO_GRAVITY);
-    mAnchorId = ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_anchor) ? (int)ta->getResourceId(R::styleable::CoordinatorLayoutLayout_layout_anchor,(uint32_t)View::NO_ID) : attrs.getResourceId("layout_anchor",View::NO_ID);
-    anchorGravity = ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_anchorGravity) ? ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_anchorGravity,Gravity::NO_GRAVITY) : attrs.getGravity("layout_anchorGravity",Gravity::NO_GRAVITY);
+    this->gravity = ta&&ta->hasValue(internal::R::styleable::CoordinatorLayout_layout_gravity) ? ta->getInt(internal::R::styleable::CoordinatorLayout_layout_gravity,Gravity::NO_GRAVITY) : attrs.getGravity("layout_gravity",Gravity::NO_GRAVITY);
+    mAnchorId = ta&&ta->hasValue(internal::R::styleable::CoordinatorLayoutLayout_layout_anchor) ? (int)ta->getResourceId(internal::R::styleable::CoordinatorLayoutLayout_layout_anchor,(uint32_t)View::NO_ID) : attrs.getResourceId("layout_anchor",View::NO_ID);
+    anchorGravity = ta&&ta->hasValue(internal::R::styleable::CoordinatorLayoutLayout_layout_anchorGravity) ? ta->getInt(internal::R::styleable::CoordinatorLayoutLayout_layout_anchorGravity,Gravity::NO_GRAVITY) : attrs.getGravity("layout_anchorGravity",Gravity::NO_GRAVITY);
 
-    this->keyline = ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_keyline) ? ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_keyline, -1) : attrs.getInt("layout_keyline", -1);
+    this->keyline = ta&&ta->hasValue(internal::R::styleable::CoordinatorLayoutLayout_layout_keyline) ? ta->getInt(internal::R::styleable::CoordinatorLayoutLayout_layout_keyline, -1) : attrs.getInt("layout_keyline", -1);
 
-    insetEdge = ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_insetEdge) ? ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_insetEdge, Gravity::NO_GRAVITY) : attrs.getGravity("layout_insetEdge", Gravity::NO_GRAVITY);
-    dodgeInsetEdges = ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_dodgeInsetEdges) ? ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_dodgeInsetEdges, Gravity::NO_GRAVITY) : attrs.getGravity("layout_dodgeInsetEdges", Gravity::NO_GRAVITY);
-    mBehaviorResolved = (ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_behavior)) || attrs.hasAttribute("layout_behavior");
+    insetEdge = ta&&ta->hasValue(internal::R::styleable::CoordinatorLayoutLayout_layout_insetEdge) ? ta->getInt(internal::R::styleable::CoordinatorLayoutLayout_layout_insetEdge, Gravity::NO_GRAVITY) : attrs.getGravity("layout_insetEdge", Gravity::NO_GRAVITY);
+    dodgeInsetEdges = ta&&ta->hasValue(internal::R::styleable::CoordinatorLayoutLayout_layout_dodgeInsetEdges) ? ta->getInt(internal::R::styleable::CoordinatorLayoutLayout_layout_dodgeInsetEdges, Gravity::NO_GRAVITY) : attrs.getGravity("layout_dodgeInsetEdges", Gravity::NO_GRAVITY);
+    mBehaviorResolved = (ta&&ta->hasValue(internal::R::styleable::CoordinatorLayoutLayout_layout_behavior)) || attrs.hasAttribute("layout_behavior");
     if (mBehaviorResolved) {
-        mBehavior = parseBehavior(context, attrs, ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_behavior) ? ta->getString(R::styleable::CoordinatorLayoutLayout_layout_behavior) : attrs.getString("layout_behavior"));
+        mBehavior = parseBehavior(context, attrs, ta&&ta->hasValue(internal::R::styleable::CoordinatorLayoutLayout_layout_behavior) ? ta->getString(internal::R::styleable::CoordinatorLayoutLayout_layout_behavior) : attrs.getString("layout_behavior"));
     }
 
     if (mBehavior != nullptr) {

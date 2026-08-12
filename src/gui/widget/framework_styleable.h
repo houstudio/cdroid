@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <cstddef>
 namespace cdroid {
-namespace R { namespace styleable {
+namespace internal { namespace R { namespace styleable {
     // AbsListView (12 attrs)
     extern const uint32_t AbsListView[];
     constexpr int AbsListView_listSelector = 0;
@@ -1106,6 +1106,6 @@ namespace R { namespace styleable {
     constexpr int TimePicker_amPmBackgroundColor = 12;
     constexpr int TimePicker_dialogMode = 13;
 
-} } // namespace R::styleable
+} } } // namespace internal::R::styleable
 } // namespace cdroid
 #endif // __FRAMEWORK_STYLEABLE_H__

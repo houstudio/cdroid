@@ -42,13 +42,13 @@ DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Cont
         mShortMonths.push_back(std::to_string(i + 1)); // TODO: DateFormatSymbols.getShortMonths()
     }
 
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::DatePicker, 0, 0);
-    const bool spinnersShown = a ? a->getBoolean(R::styleable::DatePicker_spinnersShown, DEFAULT_SPINNERS_SHOWN) : DEFAULT_SPINNERS_SHOWN;
-    const bool calendarViewShown = a ? a->getBoolean(R::styleable::DatePicker_calendarViewShown, DEFAULT_CALENDAR_VIEW_SHOWN) : DEFAULT_CALENDAR_VIEW_SHOWN;
-    const int startYear = a ? a->getInt(R::styleable::DatePicker_startYear, DEFAULT_START_YEAR) : DEFAULT_START_YEAR;
-    const int endYear = a ? a->getInt(R::styleable::DatePicker_endYear, DEFAULT_END_YEAR) : DEFAULT_END_YEAR;
-    const std::string minDate = a ? a->getString(R::styleable::DatePicker_minDate) : std::string();
-    const std::string maxDate = a ? a->getString(R::styleable::DatePicker_maxDate) : std::string();
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::DatePicker, 0, 0);
+    const bool spinnersShown = a ? a->getBoolean(internal::R::styleable::DatePicker_spinnersShown, DEFAULT_SPINNERS_SHOWN) : DEFAULT_SPINNERS_SHOWN;
+    const bool calendarViewShown = a ? a->getBoolean(internal::R::styleable::DatePicker_calendarViewShown, DEFAULT_CALENDAR_VIEW_SHOWN) : DEFAULT_CALENDAR_VIEW_SHOWN;
+    const int startYear = a ? a->getInt(internal::R::styleable::DatePicker_startYear, DEFAULT_START_YEAR) : DEFAULT_START_YEAR;
+    const int endYear = a ? a->getInt(internal::R::styleable::DatePicker_endYear, DEFAULT_END_YEAR) : DEFAULT_END_YEAR;
+    const std::string minDate = a ? a->getString(internal::R::styleable::DatePicker_minDate) : std::string();
+    const std::string maxDate = a ? a->getString(internal::R::styleable::DatePicker_maxDate) : std::string();
 
     LayoutInflater* inflater = LayoutInflater::from(mContext);
     View* content = inflater->inflate("cdroid:layout/date_picker_legacy", nullptr, false);

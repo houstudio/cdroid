@@ -161,14 +161,14 @@ void SimpleMonthView::updateDayOfWeekLabels(){
 
 const cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Paint& p, const std::string& resId){
     AttributeSet attrs = mContext->obtainStyledAttributes(resId);
-    auto ta = mContext->obtainStyledAttributes(attrs, R::styleable::TextAppearance);
+    auto ta = mContext->obtainStyledAttributes(attrs, internal::R::styleable::TextAppearance);
     if (!ta) return nullptr;
-    const std::string fontFamily = ta->getString(R::styleable::TextAppearance_fontFamily);
+    const std::string fontFamily = ta->getString(internal::R::styleable::TextAppearance_fontFamily);
     if (!fontFamily.empty()) {
         p.setTypeface(Typeface::create(fontFamily, 0));
     }
-    p.setTextSize(ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, (int) p.getTextSize()));
-    const auto textColor = ta->getColorStateList(R::styleable::TextAppearance_textColor);
+    p.setTextSize(ta->getDimensionPixelSize(internal::R::styleable::TextAppearance_textSize, (int) p.getTextSize()));
+    const auto textColor = ta->getColorStateList(internal::R::styleable::TextAppearance_textColor);
     if (textColor != nullptr) {
         const int enabledColor = textColor->getColorForState(
                 StateSet::get(StateSet::VIEW_STATE_ENABLED), 0);

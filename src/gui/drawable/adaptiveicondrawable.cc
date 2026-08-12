@@ -303,7 +303,7 @@ void AdaptiveIconDrawable::inflateLayers(Resources& r,XmlPullParser& parser,Attr
         // Resolve this child tag's attributes against the framework arsc,
         // matching AOSP's obtainAttributes(r, theme, attrs, R.styleable.AdaptiveIconDrawableLayer).
         Context* ctx = attrs.getContext();
-        auto a = r.obtainStyledAttributes(&attrs, R::styleable::AdaptiveIconDrawableLayer);
+        auto a = r.obtainStyledAttributes(&attrs, internal::R::styleable::AdaptiveIconDrawableLayer);
         if (a) {
             updateLayerFromTypedArray(layer, *a);
         }
@@ -339,7 +339,7 @@ void AdaptiveIconDrawable::updateLayerFromTypedArray(ChildDrawable* layer,const 
     // Extract the theme attributes, if any.
     //layer->mThemeAttrs = a.extractThemeAttrs();
 
-    Drawable* dr = a.getDrawable(R::styleable::AdaptiveIconDrawableLayer_drawable);//a.getDrawableForDensity(R::styleable::AdaptiveIconDrawableLayer_drawable, state->mSrcDensityOverride);
+    Drawable* dr = a.getDrawable(internal::R::styleable::AdaptiveIconDrawableLayer_drawable);//a.getDrawableForDensity(internal::R::styleable::AdaptiveIconDrawableLayer_drawable, state->mSrcDensityOverride);
     if (dr != nullptr) {
         if (layer->mDrawable != nullptr) {
             // It's possible that a drawable was already set, in which case

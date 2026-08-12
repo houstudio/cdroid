@@ -149,7 +149,7 @@ void StateListDrawable::inflate(Resources& r,XmlPullParser&parser,const Attribut
     (void)r;
     Drawable::inflateWithAttributes(parser,atts);
     Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::StateListDrawable);
+    auto ta = r.obtainStyledAttributes(&atts, internal::R::styleable::StateListDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     inflateChildElements(r,parser,atts);
     onStateChange(getState());
@@ -163,12 +163,12 @@ void StateListDrawable::updateStateFromTypedArray(const TypedArray& a) {
     // Extract the theme attributes, if any.
     //state->mThemeAttrs = a.extractThemeAttrs();
 
-    state->mVariablePadding = a.getBoolean(R::styleable::StateListDrawable_variablePadding, state->mVariablePadding);
-    state->mConstantSize = a.getBoolean(R::styleable::StateListDrawable_constantSize, state->mConstantSize);
-    state->mEnterFadeDuration = a.getInt(R::styleable::StateListDrawable_enterFadeDuration, state->mEnterFadeDuration);
-    state->mExitFadeDuration = a.getInt(R::styleable::StateListDrawable_exitFadeDuration, state->mExitFadeDuration);
-    state->mDither = a.getBoolean(R::styleable::StateListDrawable_dither, state->mDither);
-    state->mAutoMirrored = a.getBoolean(R::styleable::StateListDrawable_autoMirrored, state->mAutoMirrored);
+    state->mVariablePadding = a.getBoolean(internal::R::styleable::StateListDrawable_variablePadding, state->mVariablePadding);
+    state->mConstantSize = a.getBoolean(internal::R::styleable::StateListDrawable_constantSize, state->mConstantSize);
+    state->mEnterFadeDuration = a.getInt(internal::R::styleable::StateListDrawable_enterFadeDuration, state->mEnterFadeDuration);
+    state->mExitFadeDuration = a.getInt(internal::R::styleable::StateListDrawable_exitFadeDuration, state->mExitFadeDuration);
+    state->mDither = a.getBoolean(internal::R::styleable::StateListDrawable_dither, state->mDither);
+    state->mAutoMirrored = a.getBoolean(internal::R::styleable::StateListDrawable_autoMirrored, state->mAutoMirrored);
 }
 
 void StateListDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
@@ -181,8 +181,8 @@ void StateListDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,c
 
         std::vector<int>states;
         Context* ctx = atts.getContext();
-        auto ta = r.obtainStyledAttributes(&atts, R::styleable::StateListDrawableItem);
-        Drawable*dr = ta ? ta->getDrawable(R::styleable::StateListDrawableItem_drawable) : atts.getDrawable("drawable");
+        auto ta = r.obtainStyledAttributes(&atts, internal::R::styleable::StateListDrawableItem);
+        Drawable*dr = ta ? ta->getDrawable(internal::R::styleable::StateListDrawableItem_drawable) : atts.getDrawable("drawable");
         StateSet::parseState(states,atts);
         if(dr==nullptr){
             while((type=parser.next())==XmlPullParser::TEXT){}

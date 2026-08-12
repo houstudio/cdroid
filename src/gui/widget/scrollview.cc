@@ -41,9 +41,9 @@ ScrollView::ScrollView(Context*context,const AttributeSet* pAttrs,int defStyleAt
     const AttributeSet& atts = *pAttrs;
     initScrollView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(atts, R::styleable::ScrollView, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(atts, internal::R::styleable::ScrollView, defStyleAttr);
     
-setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport, false));
+setFillViewport(ta->getBoolean(internal::R::styleable::ScrollView_fillViewport, false));
 mScrollDuration = atts.getInt("scrollDuration",400);
 
 }

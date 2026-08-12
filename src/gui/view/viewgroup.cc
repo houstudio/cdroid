@@ -205,7 +205,7 @@ void ViewGroup::initGroup(){
 }
 
 void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::ViewGroup);
+    auto ta = ctx->obtainStyledAttributes(atts, internal::R::styleable::ViewGroup);
 
     setClipChildren(true);
     setClipToPadding(true);
@@ -216,17 +216,17 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
         for (size_t n = ta->getIndexCount(); n > 0; ) {
             size_t i = ta->getIndex(--n);
             switch (i) {
-            case R::styleable::ViewGroup_clipChildren:          setClipChildren(ta->getBoolean(i, true)); break;
-            case R::styleable::ViewGroup_clipToPadding:         setClipToPadding(ta->getBoolean(i, true)); break;
-            case R::styleable::ViewGroup_layoutAnimation:       { const int r=ta->getResourceId(i,0); if(r) setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,r)); } break;
-            case R::styleable::ViewGroup_descendantFocusability: setDescendantFocusability(ta->getInt(i, (int)FOCUS_BEFORE_DESCENDANTS)); break;
-            case R::styleable::ViewGroup_animateLayoutChanges:  if(ta->getBoolean(i,false)) setLayoutTransition(new LayoutTransition()); break;
-            case R::styleable::ViewGroup_layoutMode:            setLayoutMode(ta->getInt(i, (int)LAYOUT_MODE_UNDEFINED)); break;
-            case R::styleable::ViewGroup_addStatesFromChildren: setAddStatesFromChildren(ta->getBoolean(i, false)); break;
-            case R::styleable::ViewGroup_splitMotionEvents:     setMotionEventSplittingEnabled(ta->getBoolean(i, false)); break;
-            case R::styleable::ViewGroup_alwaysDrawnWithCache:  setAlwaysDrawnWithCacheEnabled(ta->getBoolean(i, false)); break;
-            case R::styleable::ViewGroup_transitionGroup:       setTransitionGroup(ta->getBoolean(i, false)); break;
-            case R::styleable::ViewGroup_touchscreenBlocksFocus: setTouchscreenBlocksFocus(ta->getBoolean(i, false)); break;
+            case internal::R::styleable::ViewGroup_clipChildren:          setClipChildren(ta->getBoolean(i, true)); break;
+            case internal::R::styleable::ViewGroup_clipToPadding:         setClipToPadding(ta->getBoolean(i, true)); break;
+            case internal::R::styleable::ViewGroup_layoutAnimation:       { const int r=ta->getResourceId(i,0); if(r) setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,r)); } break;
+            case internal::R::styleable::ViewGroup_descendantFocusability: setDescendantFocusability(ta->getInt(i, (int)FOCUS_BEFORE_DESCENDANTS)); break;
+            case internal::R::styleable::ViewGroup_animateLayoutChanges:  if(ta->getBoolean(i,false)) setLayoutTransition(new LayoutTransition()); break;
+            case internal::R::styleable::ViewGroup_layoutMode:            setLayoutMode(ta->getInt(i, (int)LAYOUT_MODE_UNDEFINED)); break;
+            case internal::R::styleable::ViewGroup_addStatesFromChildren: setAddStatesFromChildren(ta->getBoolean(i, false)); break;
+            case internal::R::styleable::ViewGroup_splitMotionEvents:     setMotionEventSplittingEnabled(ta->getBoolean(i, false)); break;
+            case internal::R::styleable::ViewGroup_alwaysDrawnWithCache:  setAlwaysDrawnWithCacheEnabled(ta->getBoolean(i, false)); break;
+            case internal::R::styleable::ViewGroup_transitionGroup:       setTransitionGroup(ta->getBoolean(i, false)); break;
+            case internal::R::styleable::ViewGroup_touchscreenBlocksFocus: setTouchscreenBlocksFocus(ta->getBoolean(i, false)); break;
             default: break;
             }
         }

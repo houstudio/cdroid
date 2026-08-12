@@ -456,7 +456,7 @@ void AnimatedImageDrawable::inflate(Resources& r,XmlPullParser&parser,const Attr
 
 void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride){
     Context* ctx = atts.getContext();
-    auto ta = atts.getContext() ? atts.getContext()->obtainStyledAttributes(atts, R::styleable::AnimatedImageDrawable) : nullptr;
+    auto ta = atts.getContext() ? atts.getContext()->obtainStyledAttributes(atts, internal::R::styleable::AnimatedImageDrawable) : nullptr;
     std::string srcResid =atts.getString("src");
     if(!srcResid.empty()){
         Drawable* drawable = nullptr;
@@ -490,9 +490,9 @@ void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,in
             mDecodeImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, frmSequence->getWidth(), frmSequence->getHeight());
         }
     }
-    mAnimatedImageState->mAutoMirrored = ta ? ta->getBoolean(R::styleable::AnimatedImageDrawable_autoMirrored, false) : atts.getBoolean("autoMirrored", false);
-    const int repeatCount = ta ? ta->getInt(R::styleable::AnimatedImageDrawable_repeatCount, REPEAT_UNDEFINED) : atts.getInt("repeatCount", REPEAT_UNDEFINED);
-    const bool autoStart = ta ? ta->getBoolean(R::styleable::AnimatedImageDrawable_autoStart, false) : atts.getBoolean("autoStart", false);
+    mAnimatedImageState->mAutoMirrored = ta ? ta->getBoolean(internal::R::styleable::AnimatedImageDrawable_autoMirrored, false) : atts.getBoolean("autoMirrored", false);
+    const int repeatCount = ta ? ta->getInt(internal::R::styleable::AnimatedImageDrawable_repeatCount, REPEAT_UNDEFINED) : atts.getInt("repeatCount", REPEAT_UNDEFINED);
+    const bool autoStart = ta ? ta->getBoolean(internal::R::styleable::AnimatedImageDrawable_autoStart, false) : atts.getBoolean("autoStart", false);
     if(repeatCount!=REPEAT_UNDEFINED)
         setRepeatCount(repeatCount);
     if(autoStart && mFrameSequenceState){

@@ -33,16 +33,16 @@ KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAt
   :View(ctx,pAttrs, defStyleAttr){
     const AttributeSet& atts = *pAttrs;
     init();
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::KeyboardView, defStyleAttr);
-    Drawable *dr = ta ? ta->getDrawable(R::styleable::KeyboardView_keyBackground) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(atts, internal::R::styleable::KeyboardView, defStyleAttr);
+    Drawable *dr = ta ? ta->getDrawable(internal::R::styleable::KeyboardView_keyBackground) : nullptr;
     mKeyBackground = dr ? dr:new ColorDrawable(0xFF889988);
-    mVerticalCorrection= ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_verticalCorrection,0) : 0;
-    mPreviewOffset     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewOffset,0) : 0;
-    mPreviewHeight     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewHeight,0) : 0;
-    mKeyTextSize       = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyTextSize,20) : 20;
-    mKeyTextColor      = ta ? ta->getColor(R::styleable::KeyboardView_keyTextColor,0xFF000000) : 0xFF000000;
-    mLabelTextSize     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_labelTextSize,20) : 20;
-    mPopupLayout       = ta ? ta->getString(R::styleable::KeyboardView_popupLayout) : std::string();
+    mVerticalCorrection= ta ? ta->getDimensionPixelOffset(internal::R::styleable::KeyboardView_verticalCorrection,0) : 0;
+    mPreviewOffset     = ta ? ta->getDimensionPixelOffset(internal::R::styleable::KeyboardView_keyPreviewOffset,0) : 0;
+    mPreviewHeight     = ta ? ta->getDimensionPixelOffset(internal::R::styleable::KeyboardView_keyPreviewHeight,0) : 0;
+    mKeyTextSize       = ta ? ta->getDimensionPixelOffset(internal::R::styleable::KeyboardView_keyTextSize,20) : 20;
+    mKeyTextColor      = ta ? ta->getColor(internal::R::styleable::KeyboardView_keyTextColor,0xFF000000) : 0xFF000000;
+    mLabelTextSize     = ta ? ta->getDimensionPixelOffset(internal::R::styleable::KeyboardView_labelTextSize,20) : 20;
+    mPopupLayout       = ta ? ta->getString(internal::R::styleable::KeyboardView_popupLayout) : std::string();
     mPaint.setTextSize(mLabelTextSize);
     mPaint.setTextAlign(Paint::Align::CENTER);
     resetMultiTap();

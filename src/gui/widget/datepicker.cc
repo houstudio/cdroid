@@ -34,10 +34,10 @@ DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleA
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);
     }
 
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::DatePicker, defStyleAttr);
-    const bool isDialogMode = a ? a->getBoolean(R::styleable::DatePicker_dialogMode, false) : false;
-    const int requestedMode = a ? a->getInt(R::styleable::DatePicker_datePickerMode, MODE_SPINNER) : MODE_SPINNER;
-    const int firstDayOfWeek = a ? a->getInt(R::styleable::DatePicker_firstDayOfWeek, 0) : 0;
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::DatePicker, defStyleAttr);
+    const bool isDialogMode = a ? a->getBoolean(internal::R::styleable::DatePicker_dialogMode, false) : false;
+    const int requestedMode = a ? a->getInt(internal::R::styleable::DatePicker_datePickerMode, MODE_SPINNER) : MODE_SPINNER;
+    const int firstDayOfWeek = a ? a->getInt(internal::R::styleable::DatePicker_firstDayOfWeek, 0) : 0;
 
     if (requestedMode == MODE_CALENDAR && isDialogMode) {
         // You want MODE_CALENDAR? YOU CAN'T HANDLE MODE_CALENDAR! Well,

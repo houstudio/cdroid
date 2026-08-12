@@ -81,8 +81,8 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
     : MarginLayoutParams(c, attrs) {
     // AOSP switch-loop (ConstraintLayout.java:3171): single pass over SET indices.
     // aapt2 pre-resolves enums (orientation/chainStyle/matchDefault) → getInt direct.
-    auto ta = c->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
-    namespace SCL = R::styleable;
+    auto ta = c->obtainStyledAttributes(attrs, internal::R::styleable::ConstraintLayoutLayout);
+    namespace SCL = internal::R::styleable;
     std::string ratioStr;
     for (size_t k = 0, n = ta->getIndexCount(); k < n; k++) {
         size_t i = ta->getIndex(k);
@@ -203,8 +203,8 @@ ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int d
     // AOSP ConstraintLayout.init: read container-level attrs from the SAME
     // ConstraintLayout_Layout styleable as LayoutParams (minWidth/maxHeight/
     // optimizationLevel/layoutDescription/constraintSet).
-    auto ta = ctx->obtainStyledAttributes(*pAttrs, R::styleable::ConstraintLayoutLayout, defStyleAttr);
-    namespace SCL = R::styleable;
+    auto ta = ctx->obtainStyledAttributes(*pAttrs, internal::R::styleable::ConstraintLayoutLayout, defStyleAttr);
+    namespace SCL = internal::R::styleable;
     std::string layoutDesc;
     for (size_t k = 0, n = ta->getIndexCount(); k < n; k++) {
         size_t i = ta->getIndex(k);

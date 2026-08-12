@@ -34,9 +34,9 @@ TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleA
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);
     }
 
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::TimePicker, defStyleAttr);
-    const bool isDialogMode = a ? a->getBoolean(R::styleable::TimePicker_dialogMode, false) : false;
-    const int requestedMode = a ? a->getInt(R::styleable::TimePicker_timePickerMode, MODE_SPINNER) : MODE_SPINNER;
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::TimePicker, defStyleAttr);
+    const bool isDialogMode = a ? a->getBoolean(internal::R::styleable::TimePicker_dialogMode, false) : false;
+    const int requestedMode = a ? a->getInt(internal::R::styleable::TimePicker_timePickerMode, MODE_SPINNER) : MODE_SPINNER;
 
     if (requestedMode == MODE_CLOCK && isDialogMode) {
         // You want MODE_CLOCK? YOU CAN'T HANDLE MODE_CLOCK! Well, maybe

@@ -69,8 +69,8 @@ ColorDrawable::~ColorDrawable(){
 }
 
 void ColorDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::ColorDrawable);
-    if (ta) mColorState->mBaseColor = ta->getColor(R::styleable::ColorDrawable_color, mColorState->mBaseColor);
+    auto ta = r.obtainStyledAttributes(atts, internal::R::styleable::ColorDrawable);
+    if (ta) mColorState->mBaseColor = ta->getColor(internal::R::styleable::ColorDrawable_color, mColorState->mBaseColor);
     mColorState->mUseColor = mColorState->mBaseColor;
 }
 

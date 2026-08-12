@@ -144,22 +144,22 @@ void FastScroller::setStyle(int styleResId) {
     // defStyleAttr + defStyleRes resolve the style chain.
     Context* context = mList->getContext();
     const uint32_t fastScrollStyle_attr = 0x010103f7;  // android:fastScrollStyle
-    auto ta = context->obtainStyledAttributes(nullptr, R::styleable::FastScroll,
+    auto ta = context->obtainStyledAttributes(nullptr, internal::R::styleable::FastScroll,
                                                 fastScrollStyle_attr, styleResId);
-    mOverlayPosition = ta->getInt(R::styleable::FastScroll_position, OVERLAY_FLOATING);
-    mPreviewResId[PREVIEW_LEFT] = ta->getResourceId(R::styleable::FastScroll_backgroundLeft, 0);
-    mPreviewResId[PREVIEW_RIGHT] = ta->getResourceId(R::styleable::FastScroll_backgroundRight, 0);
-    mThumbDrawable = ta->getDrawable(R::styleable::FastScroll_thumbDrawable);
-    mTrackDrawable = ta->getDrawable(R::styleable::FastScroll_trackDrawable);
-    mTextAppearance = ta->getResourceId(R::styleable::FastScroll_textAppearance, 0);
-    mTextColor = ta->getColorStateList(R::styleable::FastScroll_textColor);
-    mTextSize = ta->getDimensionPixelSize(R::styleable::FastScroll_textSize, 0);
-    mPreviewMinWidth = ta->getDimensionPixelSize(R::styleable::FastScroll_minWidth, 0);
-    mPreviewMinHeight = ta->getDimensionPixelSize(R::styleable::FastScroll_minHeight, 0);
-    mThumbMinWidth = ta->getDimensionPixelSize(R::styleable::FastScroll_thumbMinWidth, 0);
-    mThumbMinHeight = ta->getDimensionPixelSize(R::styleable::FastScroll_thumbMinHeight, 0);
-    mPreviewPadding = ta->getDimensionPixelSize(R::styleable::FastScroll_padding, 0);
-    mThumbPosition = ta->getInt(R::styleable::FastScroll_thumbPosition, THUMB_POSITION_MIDPOINT);
+    mOverlayPosition = ta->getInt(internal::R::styleable::FastScroll_position, OVERLAY_FLOATING);
+    mPreviewResId[PREVIEW_LEFT] = ta->getResourceId(internal::R::styleable::FastScroll_backgroundLeft, 0);
+    mPreviewResId[PREVIEW_RIGHT] = ta->getResourceId(internal::R::styleable::FastScroll_backgroundRight, 0);
+    mThumbDrawable = ta->getDrawable(internal::R::styleable::FastScroll_thumbDrawable);
+    mTrackDrawable = ta->getDrawable(internal::R::styleable::FastScroll_trackDrawable);
+    mTextAppearance = ta->getResourceId(internal::R::styleable::FastScroll_textAppearance, 0);
+    mTextColor = ta->getColorStateList(internal::R::styleable::FastScroll_textColor);
+    mTextSize = ta->getDimensionPixelSize(internal::R::styleable::FastScroll_textSize, 0);
+    mPreviewMinWidth = ta->getDimensionPixelSize(internal::R::styleable::FastScroll_minWidth, 0);
+    mPreviewMinHeight = ta->getDimensionPixelSize(internal::R::styleable::FastScroll_minHeight, 0);
+    mThumbMinWidth = ta->getDimensionPixelSize(internal::R::styleable::FastScroll_thumbMinWidth, 0);
+    mThumbMinHeight = ta->getDimensionPixelSize(internal::R::styleable::FastScroll_thumbMinHeight, 0);
+    mPreviewPadding = ta->getDimensionPixelSize(internal::R::styleable::FastScroll_padding, 0);
+    mThumbPosition = ta->getInt(internal::R::styleable::FastScroll_thumbPosition, THUMB_POSITION_MIDPOINT);
     updateAppearance();
 }
 

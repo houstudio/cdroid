@@ -54,16 +54,16 @@ AlertController::AlertController(Context* context, Dialog* di, Window* window){
     mForceInverseBackground = false;
     mButtonPanelLayoutHint  = AlertDialog::LAYOUT_HINT_NONE;
     // AOSP: obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0).
-    auto atts = context->obtainStyledAttributes(nullptr, R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
+    auto atts = context->obtainStyledAttributes(nullptr, internal::R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
 
-    mAlertDialogLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_layout, cdroid::internal::R::layout::alert_dialog) : cdroid::internal::R::layout::alert_dialog;
-    mButtonPanelSideLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_buttonPanelSideLayout, 0) : 0;
-    mListLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_listLayout, cdroid::internal::R::layout::select_dialog) : cdroid::internal::R::layout::select_dialog;
+    mAlertDialogLayout = atts ? atts->getResourceId(internal::R::styleable::AlertDialog_layout, cdroid::internal::R::layout::alert_dialog) : cdroid::internal::R::layout::alert_dialog;
+    mButtonPanelSideLayout = atts ? atts->getResourceId(internal::R::styleable::AlertDialog_buttonPanelSideLayout, 0) : 0;
+    mListLayout = atts ? atts->getResourceId(internal::R::styleable::AlertDialog_listLayout, cdroid::internal::R::layout::select_dialog) : cdroid::internal::R::layout::select_dialog;
 
-    mMultiChoiceItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_multiChoiceItemLayout, R::layout::select_dialog_multichoice) : R::layout::select_dialog_multichoice;
-    mSingleChoiceItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_singleChoiceItemLayout, R::layout::select_dialog_singlechoice) : R::layout::select_dialog_singlechoice;
-    mListItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_listItemLayout, R::layout::select_dialog_item) : R::layout::select_dialog_item;
-    mShowTitle = atts ? atts->getBoolean(R::styleable::AlertDialog_showTitle, true) : true;
+    mMultiChoiceItemLayout = atts ? atts->getResourceId(internal::R::styleable::AlertDialog_multiChoiceItemLayout, R::layout::select_dialog_multichoice) : R::layout::select_dialog_multichoice;
+    mSingleChoiceItemLayout = atts ? atts->getResourceId(internal::R::styleable::AlertDialog_singleChoiceItemLayout, R::layout::select_dialog_singlechoice) : R::layout::select_dialog_singlechoice;
+    mListItemLayout = atts ? atts->getResourceId(internal::R::styleable::AlertDialog_listItemLayout, R::layout::select_dialog_item) : R::layout::select_dialog_item;
+    mShowTitle = atts ? atts->getBoolean(internal::R::styleable::AlertDialog_showTitle, true) : true;
 
     //mDialogInterface.OnCancelListener=nullptr;
     /* We use a custom title so never request a window title */
@@ -334,7 +334,7 @@ void AlertController::setupView() {
     }
 
     // AOSP: obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0).
-    auto atts = mContext->obtainStyledAttributes(nullptr, R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
+    auto atts = mContext->obtainStyledAttributes(nullptr, internal::R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
     setBackground(atts.get(), topPanel, contentPanel, customPanel, buttonPanel,
             hasTopPanel, hasCustomPanel, hasButtonPanel);
 }
@@ -533,7 +533,7 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
 
     // If the needsDefaultBackgrounds attribute is set, we know we're
     // inheriting from a framework style.
-    bool needsDefaultBackgrounds = a ? a->getBoolean(R::styleable::AlertDialog_needsDefaultBackgrounds, true) : true;
+    bool needsDefaultBackgrounds = a ? a->getBoolean(internal::R::styleable::AlertDialog_needsDefaultBackgrounds, true) : true;
     if (needsDefaultBackgrounds) {
         fullDark = cdroid::internal::R::drawable::popup_full_dark;
         topDark = cdroid::internal::R::drawable::popup_top_dark;
@@ -546,10 +546,10 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
         bottomMedium = cdroid::internal::R::drawable::popup_bottom_medium;
     }
 
-    topBright = a ? a->getResourceId(R::styleable::AlertDialog_topBright, topBright) : topBright;
-    topDark   = a ? a->getResourceId(R::styleable::AlertDialog_topDark, topDark) : topDark;
-    centerBright = a ? a->getResourceId(R::styleable::AlertDialog_centerBright, centerBright) : centerBright;
-    centerDark   = a ? a->getResourceId(R::styleable::AlertDialog_centerDark, centerDark) : centerDark;
+    topBright = a ? a->getResourceId(internal::R::styleable::AlertDialog_topBright, topBright) : topBright;
+    topDark   = a ? a->getResourceId(internal::R::styleable::AlertDialog_topDark, topDark) : topDark;
+    centerBright = a ? a->getResourceId(internal::R::styleable::AlertDialog_centerBright, centerBright) : centerBright;
+    centerDark   = a ? a->getResourceId(internal::R::styleable::AlertDialog_centerDark, centerDark) : centerDark;
 
     /* We now set the background of all of the sections of the alert.
      * First collect together each section that is being displayed along
@@ -611,17 +611,17 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
 
     if (lastView) {
         if (setView) {
-            bottomBright = a ? a->getResourceId(R::styleable::AlertDialog_bottomBright, bottomBright) : bottomBright;
-            bottomMedium = a ? a->getResourceId(R::styleable::AlertDialog_bottomMedium, bottomMedium) : bottomMedium;
-            bottomDark   = a ? a->getResourceId(R::styleable::AlertDialog_bottomDark, bottomDark) : bottomDark;
+            bottomBright = a ? a->getResourceId(internal::R::styleable::AlertDialog_bottomBright, bottomBright) : bottomBright;
+            bottomMedium = a ? a->getResourceId(internal::R::styleable::AlertDialog_bottomMedium, bottomMedium) : bottomMedium;
+            bottomDark   = a ? a->getResourceId(internal::R::styleable::AlertDialog_bottomDark, bottomDark) : bottomDark;
 
             // ListViews will use the Bright background, but buttons use the
             // Medium background.
             lastView->setBackgroundResource(
                     lastLight ? (hasButtons ? bottomMedium : bottomBright) : bottomDark);
         } else {
-            fullBright = a ? a->getResourceId(R::styleable::AlertDialog_fullBright, fullBright) : fullBright;
-            fullDark   = a ? a->getResourceId(R::styleable::AlertDialog_fullDark, fullDark) : fullDark;
+            fullBright = a ? a->getResourceId(internal::R::styleable::AlertDialog_fullBright, fullBright) : fullBright;
+            fullDark   = a ? a->getResourceId(internal::R::styleable::AlertDialog_fullDark, fullDark) : fullDark;
 
             lastView->setBackgroundResource(lastLight ? fullBright : fullDark);
         }
@@ -633,7 +633,7 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
         if (mCheckedItem > -1) {
             mListView->setItemChecked(mCheckedItem, true);
             mListView->setSelectionFromTop(mCheckedItem,
-                    a ? a->getDimensionPixelSize(R::styleable::AlertDialog_selectionScrollOffset, 0) : 0);
+                    a ? a->getDimensionPixelSize(internal::R::styleable::AlertDialog_selectionScrollOffset, 0) : 0);
         }
     }
 }

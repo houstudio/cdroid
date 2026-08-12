@@ -169,7 +169,7 @@ void RotateDrawable::draw(Canvas& canvas) {
 }
 
 void RotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::RotateDrawable);
+    auto ta = r.obtainStyledAttributes(atts, internal::R::styleable::RotateDrawable);
     DrawableWrapper::inflate(r,parser,atts);
     if (ta) updateStateFromTypedArray(*ta);
 }
@@ -178,22 +178,22 @@ void RotateDrawable::updateStateFromTypedArray(const TypedArray& a){
     // AOSP fidelity: pivotX/pivotY are relative fractions when the raw value
     // is TYPE_FRACTION, absolute pixels when TYPE_FLOAT. Avoids the prior
     // "<=1.f" heuristic that misclassified small absolute pivots.
-    if (a.hasValue(R::styleable::RotateDrawable_pivotX)) {
-        const bool rel = (a.getType(R::styleable::RotateDrawable_pivotX) == TypedValue::TYPE_FRACTION);
+    if (a.hasValue(internal::R::styleable::RotateDrawable_pivotX)) {
+        const bool rel = (a.getType(internal::R::styleable::RotateDrawable_pivotX) == TypedValue::TYPE_FRACTION);
         mState->mPivotXRel = rel;
-        mState->mPivotX = rel ? a.getFraction(R::styleable::RotateDrawable_pivotX, 1, 1, mState->mPivotX)
-                              : a.getFloat(R::styleable::RotateDrawable_pivotX, mState->mPivotX);
+        mState->mPivotX = rel ? a.getFraction(internal::R::styleable::RotateDrawable_pivotX, 1, 1, mState->mPivotX)
+                              : a.getFloat(internal::R::styleable::RotateDrawable_pivotX, mState->mPivotX);
     }
 
-    if (a.hasValue(R::styleable::RotateDrawable_pivotY)) {
-        const bool rel = (a.getType(R::styleable::RotateDrawable_pivotY) == TypedValue::TYPE_FRACTION);
+    if (a.hasValue(internal::R::styleable::RotateDrawable_pivotY)) {
+        const bool rel = (a.getType(internal::R::styleable::RotateDrawable_pivotY) == TypedValue::TYPE_FRACTION);
         mState->mPivotYRel = rel;
-        mState->mPivotY = rel ? a.getFraction(R::styleable::RotateDrawable_pivotY, 1, 1, mState->mPivotY)
-                              : a.getFloat(R::styleable::RotateDrawable_pivotY, mState->mPivotY);
+        mState->mPivotY = rel ? a.getFraction(internal::R::styleable::RotateDrawable_pivotY, 1, 1, mState->mPivotY)
+                              : a.getFloat(internal::R::styleable::RotateDrawable_pivotY, mState->mPivotY);
     }
 
-    mState->mFromDegrees = a.getFloat(R::styleable::RotateDrawable_fromDegrees, mState->mFromDegrees);
-    mState->mToDegrees = a.getFloat(R::styleable::RotateDrawable_toDegrees, mState->mToDegrees);
+    mState->mFromDegrees = a.getFloat(internal::R::styleable::RotateDrawable_fromDegrees, mState->mFromDegrees);
+    mState->mToDegrees = a.getFloat(internal::R::styleable::RotateDrawable_toDegrees, mState->mToDegrees);
     mState->mCurrentDegrees = mState->mFromDegrees;
 }
 }/*endof namespace*/

@@ -34,10 +34,10 @@ Chronometer::Chronometer(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
     const AttributeSet& atts = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::Chronometer, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(atts, internal::R::styleable::Chronometer, defStyleAttr);
     
-setFormat(ta->getString(R::styleable::Chronometer_format));
-setCountDown(ta->getBoolean(R::styleable::Chronometer_countDown,false));
+setFormat(ta->getString(internal::R::styleable::Chronometer_format));
+setCountDown(ta->getBoolean(internal::R::styleable::Chronometer_countDown,false));
 mColonBlinking = atts.getBoolean("colonBlinking",mColonBlinking);
 
 }

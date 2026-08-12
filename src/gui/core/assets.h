@@ -137,7 +137,7 @@ public:
     // Phase 2 TypedArray bridge: extract typed attr values from binary AXML.
     // AOSP Context.obtainStyledAttributes(AttributeSet, int[], defStyleAttr, defStyleRes).
     // `attrs` is nullable (AOSP new View(ctx, null, defStyleAttr)); `styleable` is a
-    // sentinel-terminated attr-id array (R::styleable::X). Overrides Context's pure
+    // sentinel-terminated attr-id array (internal::R::styleable::X). Overrides Context's pure
     // virtual with arsc resolution (element > style= > defStyleAttr > defStyleRes).
     std::unique_ptr<TypedArray> obtainStyledAttributes(
         const AttributeSet* attrs, const uint32_t* styleable,

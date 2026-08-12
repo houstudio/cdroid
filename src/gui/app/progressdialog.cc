@@ -68,7 +68,7 @@ void ProgressDialog::show(){
 void ProgressDialog::onCreate() {
     LayoutInflater* inflater = LayoutInflater::from(getContext());
     // AOSP: obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0).
-    auto a = getContext()->obtainStyledAttributes(nullptr, R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
+    auto a = getContext()->obtainStyledAttributes(nullptr, internal::R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
     if (mProgressStyle == STYLE_HORIZONTAL) {
           
         /* Use a separate handler to update the text views as they
@@ -97,14 +97,14 @@ void ProgressDialog::onCreate() {
                 }
             }
         };*/
-        int hLayout = a ? a->getResourceId(R::styleable::AlertDialog_horizontalProgressLayout, cdroid::internal::R::layout::alert_dialog_progress) : cdroid::internal::R::layout::alert_dialog_progress;
+        int hLayout = a ? a->getResourceId(internal::R::styleable::AlertDialog_horizontalProgressLayout, cdroid::internal::R::layout::alert_dialog_progress) : cdroid::internal::R::layout::alert_dialog_progress;
         View* view = inflater->inflate(hLayout,nullptr,false);
         mProgress = (ProgressBar*) view->findViewById(R::id::progress);
         mProgressNumber = (TextView*) view->findViewById(cdroid::internal::R::id::progress_number);
         mProgressPercent = (TextView*) view->findViewById(cdroid::internal::R::id::progress_percent);
         setView(view);
     } else {
-        int pLayout = a ? a->getResourceId(R::styleable::AlertDialog_progressLayout, cdroid::internal::R::layout::progress_dialog) : cdroid::internal::R::layout::progress_dialog;
+        int pLayout = a ? a->getResourceId(internal::R::styleable::AlertDialog_progressLayout, cdroid::internal::R::layout::progress_dialog) : cdroid::internal::R::layout::progress_dialog;
         View* view = inflater->inflate(pLayout,nullptr,false);
         mProgress = (ProgressBar*) view->findViewById(R::id::progress);
         mMessageView = (TextView*) view->findViewById(R::id::message);

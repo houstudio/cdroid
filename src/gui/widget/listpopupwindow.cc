@@ -53,10 +53,10 @@ ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, int 
     initPopupWindow();
     // AOSP: resolve dropDownHorizontalOffset/VerticalOffset through the defStyle
     // chain via R.styleable.ListPopupWindow (no more hand-cobbled attr-id array).
-    auto ta = context->obtainStyledAttributes(&atts, R::styleable::ListPopupWindow, defStyleAttr, defStyleRes);
+    auto ta = context->obtainStyledAttributes(&atts, internal::R::styleable::ListPopupWindow, defStyleAttr, defStyleRes);
     if (ta) {
-        mDropDownHorizontalOffset = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownHorizontalOffset, 0);
-        mDropDownVerticalOffset   = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownVerticalOffset, 0);
+        mDropDownHorizontalOffset = ta->getDimensionPixelOffset(internal::R::styleable::ListPopupWindow_dropDownHorizontalOffset, 0);
+        mDropDownVerticalOffset   = ta->getDimensionPixelOffset(internal::R::styleable::ListPopupWindow_dropDownVerticalOffset, 0);
     }
     mPopup = new PopupWindow(mContext,atts,defStyleAttr,defStyleRes);
     mResizePopupRunnable =[this](){

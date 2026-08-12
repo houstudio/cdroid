@@ -27,10 +27,10 @@ DECLARE_WIDGET(LinearLayout)
 LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :ViewGroup::MarginLayoutParams(c,attrs){
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = c->obtainStyledAttributes(attrs, R::styleable::LinearLayoutLayout);
+    auto ta = c->obtainStyledAttributes(attrs, internal::R::styleable::LinearLayoutLayout);
     if (ta) {
-    weight = ta->getFloat(R::styleable::LinearLayoutLayout_layout_weight, 0);
-    gravity= ta->getInt(R::styleable::LinearLayoutLayout_layout_gravity, -1);
+    weight = ta->getFloat(internal::R::styleable::LinearLayoutLayout_layout_weight, 0);
+    gravity= ta->getInt(internal::R::styleable::LinearLayoutLayout_layout_gravity, -1);
     LOGV("width=%d,height=%d weight=%.2f gravity=%x margin=%d,%d,%d,%d",width,height,
 	    weight,gravity,topMargin,bottomMargin,leftMargin,rightMargin);
     }
@@ -101,7 +101,7 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet* pAttrs,int defSt
     const AttributeSet& attrs = *pAttrs;
     initView();
 
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::LinearLayout, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(attrs, internal::R::styleable::LinearLayout, defStyleAttr);
 
     // Defaults
     setBaselineAligned(true);
@@ -115,23 +115,23 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet* pAttrs,int defSt
     for (size_t n = ta->getIndexCount(); n > 0; ) {
         size_t i = ta->getIndex(--n);
         switch (i) {
-        case R::styleable::LinearLayout_orientation:
+        case internal::R::styleable::LinearLayout_orientation:
             setOrientation(ta->getInt(i, (int)HORIZONTAL)); break;
-        case R::styleable::LinearLayout_gravity:
+        case internal::R::styleable::LinearLayout_gravity:
             setGravity(ta->getInt(i, Gravity::NO_GRAVITY)); break;
-        case R::styleable::LinearLayout_baselineAligned:
+        case internal::R::styleable::LinearLayout_baselineAligned:
             setBaselineAligned(ta->getBoolean(i, true)); break;
-        case R::styleable::LinearLayout_baselineAlignedChildIndex:
+        case internal::R::styleable::LinearLayout_baselineAlignedChildIndex:
             mBaselineAlignedChildIndex = ta->getInt(i, -1); break;
-        case R::styleable::LinearLayout_weightSum:
+        case internal::R::styleable::LinearLayout_weightSum:
             mWeightSum = ta->getFloat(i, -1.f); break;
-        case R::styleable::LinearLayout_measureWithLargestChild:
+        case internal::R::styleable::LinearLayout_measureWithLargestChild:
             mUseLargestChild = ta->getBoolean(i, false); break;
-        case R::styleable::LinearLayout_showDividers:
+        case internal::R::styleable::LinearLayout_showDividers:
             mShowDividers = ta->getInt(i, SHOW_DIVIDER_NONE); break;
-        case R::styleable::LinearLayout_divider:
+        case internal::R::styleable::LinearLayout_divider:
             setDividerDrawable(ta->getDrawable(i)); break;
-        case R::styleable::LinearLayout_dividerPadding:
+        case internal::R::styleable::LinearLayout_dividerPadding:
             mDividerPadding = ta->getInt(i, 0); break;
         default: break;
         }

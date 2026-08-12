@@ -117,25 +117,25 @@ void AbsListView::initAbsListView() {
 // Text-XML ctor path is dropped: this resolves only through the binary-AXML
 // TypedArray; a==null (text XML / no arsc) leaves the widget at its defaults.
 void AbsListView::readAbsListViewAttrs(const AttributeSet& atts) {
-    auto a = mContext->obtainStyledAttributes(atts, R::styleable::AbsListView);
+    auto a = mContext->obtainStyledAttributes(atts, internal::R::styleable::AbsListView);
     if (!a) return;
 
-    Drawable* selector = a->getDrawable(R::styleable::AbsListView_listSelector);
+    Drawable* selector = a->getDrawable(internal::R::styleable::AbsListView_listSelector);
     if (selector != nullptr) {
         setSelector(selector);
     }
 
-    mDrawSelectorOnTop = a->getBoolean(R::styleable::AbsListView_drawSelectorOnTop, false);
-    setStackFromBottom(a->getBoolean(R::styleable::AbsListView_stackFromBottom, false));
-    setScrollingCacheEnabled(a->getBoolean(R::styleable::AbsListView_scrollingCache, true));
-    setTextFilterEnabled(a->getBoolean(R::styleable::AbsListView_textFilterEnabled, false));
-    setTranscriptMode(a->getInt(R::styleable::AbsListView_transcriptMode, (int)TRANSCRIPT_MODE_DISABLED));
-    setCacheColorHint(a->getColor(R::styleable::AbsListView_cacheColorHint, 0));
-    setSmoothScrollbarEnabled(a->getBoolean(R::styleable::AbsListView_smoothScrollbar, true));
-    setChoiceMode(a->getInt(R::styleable::AbsListView_choiceMode, (int)CHOICE_MODE_NONE));
-    setFastScrollEnabled(a->getBoolean(R::styleable::AbsListView_fastScrollEnabled, false));
-    int fsStyle = a->getResourceId(R::styleable::AbsListView_fastScrollStyle, 0);
-    setFastScrollAlwaysVisible(a->getBoolean(R::styleable::AbsListView_fastScrollAlwaysVisible, false));
+    mDrawSelectorOnTop = a->getBoolean(internal::R::styleable::AbsListView_drawSelectorOnTop, false);
+    setStackFromBottom(a->getBoolean(internal::R::styleable::AbsListView_stackFromBottom, false));
+    setScrollingCacheEnabled(a->getBoolean(internal::R::styleable::AbsListView_scrollingCache, true));
+    setTextFilterEnabled(a->getBoolean(internal::R::styleable::AbsListView_textFilterEnabled, false));
+    setTranscriptMode(a->getInt(internal::R::styleable::AbsListView_transcriptMode, (int)TRANSCRIPT_MODE_DISABLED));
+    setCacheColorHint(a->getColor(internal::R::styleable::AbsListView_cacheColorHint, 0));
+    setSmoothScrollbarEnabled(a->getBoolean(internal::R::styleable::AbsListView_smoothScrollbar, true));
+    setChoiceMode(a->getInt(internal::R::styleable::AbsListView_choiceMode, (int)CHOICE_MODE_NONE));
+    setFastScrollEnabled(a->getBoolean(internal::R::styleable::AbsListView_fastScrollEnabled, false));
+    int fsStyle = a->getResourceId(internal::R::styleable::AbsListView_fastScrollStyle, 0);
+    setFastScrollAlwaysVisible(a->getBoolean(internal::R::styleable::AbsListView_fastScrollAlwaysVisible, false));
 }
 
 AbsListView::~AbsListView() {

@@ -210,7 +210,7 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
 }
 
 void AnimatedRotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::AnimatedRotateDrawable);
+    auto ta = r.obtainStyledAttributes(atts, internal::R::styleable::AnimatedRotateDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     // frameDuration/framesCount lack a framework arsc id (CDROID-private): read via
     // the string bridge (text-XML works; binary returns the default — harmless).
@@ -221,8 +221,8 @@ void AnimatedRotateDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
 }
 
 void AnimatedRotateDrawable::updateStateFromTypedArray(const TypedArray& a){
-    mState->mPivotX = a.getFraction(R::styleable::AnimatedRotateDrawable_pivotX, 1, 1, mState->mPivotX);
-    mState->mPivotY = a.getFraction(R::styleable::AnimatedRotateDrawable_pivotY, 1, 1, mState->mPivotY);
+    mState->mPivotX = a.getFraction(internal::R::styleable::AnimatedRotateDrawable_pivotX, 1, 1, mState->mPivotX);
+    mState->mPivotY = a.getFraction(internal::R::styleable::AnimatedRotateDrawable_pivotY, 1, 1, mState->mPivotY);
     mState->mPivotXRel = (mState->mPivotX <= 1.f);
     mState->mPivotYRel = (mState->mPivotY <= 1.f);
 }
