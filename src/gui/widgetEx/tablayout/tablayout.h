@@ -272,9 +272,9 @@ protected:
     float mSelectedTabTextSize;
     float mTabTextMultiLineSize;
     std::string mTabBackgroundResId;
-    std::string mTabTextAppearance;
-    std::string mSelectedTabTextAppearance;
-    std::string mDefaultTabTextAppearance;
+    int mTabTextAppearance = 0;
+    int mSelectedTabTextAppearance = 0;
+    int mDefaultTabTextAppearance = 0;
     int  mTabMaxWidth;
 
     int  mTabGravity;

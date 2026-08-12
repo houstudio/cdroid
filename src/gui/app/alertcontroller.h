@@ -30,6 +30,7 @@
 namespace cdroid{
 
 class Cursor;
+class TypedArray;
 
 class AlertController{
 public:
@@ -155,8 +156,8 @@ private:
     void setupView();
     void setupCustomContent(ViewGroup* customPanel);
     void centerButton(Button* button);
-    void setBackground(const AttributeSet&,View* topPanel, View* contentPanel, View* customPanel,
-            View* buttonPanel, bool hasTitle, bool hasCustomView, bool hasButtons); 
+    void setBackground(TypedArray* a,View* topPanel, View* contentPanel, View* customPanel,
+            View* buttonPanel, bool hasTitle, bool hasCustomView, bool hasButtons);
 protected:
     std::string mMessage;
     ListView *  mListView;

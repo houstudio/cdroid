@@ -1594,6 +1594,23 @@ void TextView::setTextAppearance(const std::string&appearance) {
     setTextAppearance(mContext,appearance);
 }
 
+void TextView::setTextAppearance(Context*context,int resId) {
+    // AOSP: obtainStyledAttributes(resId, R.styleable.TextAppearance) directly —
+    // skip the string→AttributeSet round-trip the string overload takes.
+    if (resId != 0) {
+        auto ta = context->obtainStyledAttributes(resId, R::styleable::TextAppearance);
+        if (ta) {
+            TextAppearanceAttributes attributes;
+            attributes.readTextAppearance(context, ta.get());
+            applyTextAppearance(&attributes);
+        }
+    }
+}
+
+void TextView::setTextAppearance(int resId) {
+    setTextAppearance(mContext,resId);
+}
+
 void TextView::setTextSizeInternal(int unit, float size, bool shouldRequestLayout) {
     setRawTextSize(size,shouldRequestLayout);
 }

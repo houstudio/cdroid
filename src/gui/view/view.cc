@@ -5121,6 +5121,11 @@ void View::setBackgroundResource(const std::string&resid){
     return setBackground(d);
 }
 
+void View::setBackgroundResource(int resId){
+    Drawable*d=getContext()->getDrawable(resId);
+    return setBackground(d);
+}
+
 void View::setBackground(Drawable*background){
     computeOpaqueFlags();
     if(background==mBackground)return;

@@ -72,22 +72,21 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
     // tabTextAppearance references a style; resolve it for the framework
     // textSize/textColor sub-attrs (these are framework attrs, read off the
     // resolved style AttributeSet — not the TabLayout styleable).
-    mTabTextAppearance = ta->getString(R::styleable::TabLayout_tabTextAppearance);
-    const AttributeSet taa = context->obtainStyledAttributes(mTabTextAppearance);
+    mTabTextAppearance = ta->getResourceId(R::styleable::TabLayout_tabTextAppearance,
+            R::style::TextAppearance_Material_Button);
     // Resolve the TextAppearance style through the arsc (styleable::TextAppearance),
     // reading the framework textSize/textColor sub-attrs typed. Keep the
     // initTabLayout() defaults when the style is unset/unresolvable — a 0 text
     // size makes TabView::onMeasure force setTextSize(0) (invisible labels).
-    auto taaTa = context->obtainStyledAttributes(taa, R::styleable::TextAppearance, defStyleAttr);
+    auto taaTa = context->obtainStyledAttributes(mTabTextAppearance, R::styleable::TextAppearance);
     mTabTextSize  = taaTa ? taaTa->getDimensionPixelSize(R::styleable::TextAppearance_textSize, mTabTextSize) : mTabTextSize;
     mTabTextColors= taaTa ? taaTa->getColorStateList(R::styleable::TextAppearance_textColor) : mTabTextColors;
 
     if(ta->hasValue(R::styleable::TabLayout_tabSelectedTextAppearance)){
-        mSelectedTabTextAppearance = ta->getString(R::styleable::TabLayout_tabSelectedTextAppearance);
+        mSelectedTabTextAppearance = ta->getResourceId(R::styleable::TabLayout_tabSelectedTextAppearance, 0);
     }
-    if(!mSelectedTabTextAppearance.empty()){
-        const AttributeSet sa=context->obtainStyledAttributes(mSelectedTabTextAppearance);
-        auto saTa = context->obtainStyledAttributes(sa, R::styleable::TextAppearance, defStyleAttr);
+    if(mSelectedTabTextAppearance != 0){
+        auto saTa = context->obtainStyledAttributes(mSelectedTabTextAppearance, R::styleable::TextAppearance);
         mSelectedTabTextSize = saTa ? saTa->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 0) : 0;
         auto selectedTabTextColor = saTa ? saTa->getColorStateList(R::styleable::TextAppearance_textColor) : nullptr;
         if(selectedTabTextColor!=nullptr){
@@ -165,8 +164,10 @@ void TabLayout::initTabLayout(){
     mTabIndicatorAnimationDuration = ANIMATION_DURATION;
     // material's Base.Widget.Design.Tab uses TextAppearance.Design.Tab; CDROID has
     // no Material3 text appearances (textAppearanceTitleSmall is absent from the
-    // framework), so fall back to the existing framework textAppearanceButton.
-    mDefaultTabTextAppearance ="cdroid:attr/textAppearanceButton";
+    // framework), so fall back to the framework TextAppearance.Material.Button
+    // style (0x010301ee). The old attr-string "textAppearanceButton" was a broken
+    // fallback (an attr is not a style).
+    mDefaultTabTextAppearance = R::style::TextAppearance_Material_Button;
     mViewPagerScrollState = ViewPager::SCROLL_STATE_IDLE;
     mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
     mSlidingTabIndicator = new SlidingTabIndicator(getContext(),atts,this);
@@ -1354,7 +1355,7 @@ void TabLayout::TabView::updateTab() {
         }
 
         mTextView->setTextAppearance(mParent->mDefaultTabTextAppearance);
-        if (isSelected() && mParent->mSelectedTabTextAppearance.empty()==false) {
+        if (isSelected() && mParent->mSelectedTabTextAppearance != 0) {
             mTextView->setTextAppearance(mParent->mSelectedTabTextAppearance);
         } else {
             mTextView->setTextAppearance(mParent->mTabTextAppearance);

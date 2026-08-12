@@ -361,6 +361,8 @@ public:
     Drawable* getTextCursorDrawable()const;
     void setTextAppearance(const std::string&);
     void setTextAppearance(Context*,const std::string&);
+    void setTextAppearance(int resId);
+    void setTextAppearance(Context*,int resId);
     void setHint(int resid);
     virtual void setHint(const std::string&txt);
     virtual void setHint(CharSequence*);
