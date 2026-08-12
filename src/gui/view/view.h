@@ -625,7 +625,7 @@ private:
     void setMeasuredDimensionRaw(int measuredWidth, int measuredHeight);
     bool isPerformHapticFeedbackSuppressed(int feedbackConstant, int flags);
     int  computeHapticFeedbackPrivateFlags();
-    void initializeScrollbarsInternal(const AttributeSet&attrs);
+    void initializeScrollbarsInternal(const TypedArray& a);
     void initializeScrollBarDrawable();
     void initScrollCache();
     // AOSP View.getFocusableAttribute: focusable="true/false" is stored as

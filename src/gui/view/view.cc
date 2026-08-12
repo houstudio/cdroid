@@ -102,7 +102,7 @@ int View::getFocusableAttribute(const TypedArray& a) {
 // fallback has been retired (apps are migrated to binary AXML).
 View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr,int defStyleRes){
     initView();                       // == this(context)
-    const AttributeSet& attrs = *pAttrs;  // used by initializeScrollbarsInternal(AttributeSet&)
+    const AttributeSet& attrs = *pAttrs;  // raw attrs; TypedArray `a` is used below
 
     mContext = ctx;
     mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
@@ -696,7 +696,7 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr,int defStyleRe
     }
 
     if (initializeScrollbars) {
-        initializeScrollbarsInternal(attrs);
+        initializeScrollbarsInternal(*a);
     }
 
     if (initializeScrollIndicators) {
@@ -2378,55 +2378,60 @@ bool View::dispatchNestedPreFling(float velocityX, float velocityY) {
     return false;
 }
 
-void View::initializeScrollbarsInternal(const AttributeSet&a){
+void View::initializeScrollbarsInternal(const TypedArray& a) {
     initScrollCache();
 
     ScrollabilityCache* scrollabilityCache = mScrollCache;
- 
+
     if (scrollabilityCache->scrollBar == nullptr) {
         scrollabilityCache->scrollBar = new ScrollBarDrawable();
         scrollabilityCache->scrollBar->setState(getDrawableState());
         scrollabilityCache->scrollBar->setCallback(this);
     }
- 
-    scrollabilityCache->fadeScrollBars = a.getBoolean("fadeScrollbars", true);
- 
-    if (!scrollabilityCache->fadeScrollBars) {
+
+    const bool fadeScrollbars = a.getBoolean(R::styleable::View_fadeScrollbars, true);
+
+    if (!fadeScrollbars) {
         scrollabilityCache->state = ScrollabilityCache::ON;
     }
- 
-    scrollabilityCache->scrollBarFadeDuration = a.getInt("scrollbarFadeDuration", ViewConfiguration::getScrollBarFadeDuration());
-    scrollabilityCache->scrollBarDefaultDelayBeforeFade = a.getInt("scrollbarDefaultDelayBeforeFade",ViewConfiguration::getScrollDefaultDelay());
- 
- 
-    scrollabilityCache->scrollBarSize = a.getDimensionPixelSize("scrollbarSize",ViewConfiguration::get(mContext).getScaledScrollBarSize());
- 
-    Drawable* track = a.getDrawable("scrollbarTrackHorizontal");
+    scrollabilityCache->fadeScrollBars = fadeScrollbars;
+
+    scrollabilityCache->scrollBarFadeDuration = a.getInt(
+            R::styleable::View_scrollbarFadeDuration, ViewConfiguration::getScrollBarFadeDuration());
+    scrollabilityCache->scrollBarDefaultDelayBeforeFade = a.getInt(
+            R::styleable::View_scrollbarDefaultDelayBeforeFade,
+            ViewConfiguration::getScrollDefaultDelay());
+
+    scrollabilityCache->scrollBarSize = a.getDimensionPixelSize(
+            R::styleable::View_scrollbarSize,
+            ViewConfiguration::get(mContext).getScaledScrollBarSize());
+
+    Drawable* track = a.getDrawable(R::styleable::View_scrollbarTrackHorizontal);
     scrollabilityCache->scrollBar->setHorizontalTrackDrawable(track);
- 
-    Drawable* thumb = a.getDrawable("scrollbarThumbHorizontal");
+
+    Drawable* thumb = a.getDrawable(R::styleable::View_scrollbarThumbHorizontal);
     if (thumb) {
         scrollabilityCache->scrollBar->setHorizontalThumbDrawable(thumb);
     }
- 
-    bool alwaysDraw = a.getBoolean("scrollbarAlwaysDrawHorizontalTrack",false);
+
+    bool alwaysDraw = a.getBoolean(R::styleable::View_scrollbarAlwaysDrawHorizontalTrack, false);
     if (alwaysDraw) {
         scrollabilityCache->scrollBar->setAlwaysDrawHorizontalTrack(true);
     }
- 
-    track = a.getDrawable("scrollbarTrackVertical");
+
+    track = a.getDrawable(R::styleable::View_scrollbarTrackVertical);
     scrollabilityCache->scrollBar->setVerticalTrackDrawable(track);
- 
-    thumb = a.getDrawable("scrollbarThumbVertical");
+
+    thumb = a.getDrawable(R::styleable::View_scrollbarThumbVertical);
     if (thumb) {
         scrollabilityCache->scrollBar->setVerticalThumbDrawable(thumb);
     }
- 
-    alwaysDraw = a.getBoolean("scrollbarAlwaysDrawVerticalTrack",false);
+
+    alwaysDraw = a.getBoolean(R::styleable::View_scrollbarAlwaysDrawVerticalTrack, false);
     if (alwaysDraw) {
         scrollabilityCache->scrollBar->setAlwaysDrawVerticalTrack(true);
     }
- 
+
     // Apply layout direction to the new Drawables if needed
     const int layoutDirection = getLayoutDirection();
     if (track) {
@@ -2435,9 +2440,9 @@ void View::initializeScrollbarsInternal(const AttributeSet&a){
     if (thumb) {
         thumb->setLayoutDirection(layoutDirection);
     }
- 
+
     // Re-apply user/background padding so that scrollbar(s) get added
-    resolvePadding(); 
+    resolvePadding();
 }
 
 void View::initScrollCache(){
