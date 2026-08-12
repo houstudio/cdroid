@@ -28,6 +28,24 @@ add_custom_command(
     VERBATIM
 )
 
+# --- internal_R.h: unified framework-internal R (public + private + styleable) --
+# Generated from R.h (CreatePAK) + framework_styleable.h + widgetex_styleable.h.
+# Framework .cc include THIS instead of R.h; CMake ensures correct build order.
+add_custom_command(
+    OUTPUT  ${PROJECT_SOURCE_DIR}/widget/internal_R.h
+    COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/gen_internal_rh.py
+            ${PROJECT_SOURCE_DIR}/widget/R.h
+            ${PROJECT_SOURCE_DIR}/widget/framework_styleable.h
+            ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.h
+            ${PROJECT_SOURCE_DIR}/widget/internal_R.h
+    DEPENDS ${PROJECT_SOURCE_DIR}/widget/R.h
+            ${PROJECT_SOURCE_DIR}/widget/framework_styleable.h
+            ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.h
+            ${CMAKE_SOURCE_DIR}/scripts/gen_internal_rh.py
+    COMMENT "Generating widget/internal_R.h"
+    VERBATIM
+)
+
 list(APPEND WIDGET_SOURCES
     widget/framework_styleable.cc
     widget/edgeeffect.cc
