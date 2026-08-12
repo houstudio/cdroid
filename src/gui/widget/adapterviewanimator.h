@@ -105,8 +105,8 @@ public:
     void setInAnimation(ObjectAnimator* inAnimation);
     ObjectAnimator* getOutAnimation();
     void setOutAnimation(ObjectAnimator* outAnimation);
-    void setInAnimation(Context* context,const std::string& resourceID);
-    void setOutAnimation(Context* context,const std::string& resourceID);
+    void setInAnimation(Context* context,int resourceID);
+    void setOutAnimation(Context* context,int resourceID);
     void setAnimateFirstView(bool animate);
     int getBaseline()override;
     Adapter* getAdapter()override;

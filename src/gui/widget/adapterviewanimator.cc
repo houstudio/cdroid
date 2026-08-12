@@ -33,17 +33,17 @@ AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet* pA
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::AdapterViewAnimator, defStyleAttr);
     
 
-std::string res = ta->getString(R::styleable::AdapterViewAnimator_inAnimation);
-if(res.empty())
-    setInAnimation(getDefaultInAnimation());
-else
+int res = ta->getResourceId(R::styleable::AdapterViewAnimator_inAnimation, 0);
+if(res)
     setInAnimation(context,res);
-res = ta->getString(R::styleable::AdapterViewAnimator_outAnimation);
-
-if(res.empty())
-    setOutAnimation(getDefaultOutAnimation());
 else
+    setInAnimation(getDefaultInAnimation());
+res = ta->getResourceId(R::styleable::AdapterViewAnimator_outAnimation, 0);
+
+if(res)
     setOutAnimation(context,res);
+else
+    setOutAnimation(getDefaultOutAnimation());
 
 const bool flag = ta->getBoolean(R::styleable::AdapterViewAnimator_animateFirstView,true);
 setAnimateFirstView(flag);
@@ -562,11 +562,11 @@ void AdapterViewAnimator::setOutAnimation(ObjectAnimator* outAnimation) {
     mOutAnimation = outAnimation;
 }
 
-void AdapterViewAnimator::setInAnimation(Context* context, const std::string&resourceID) {
+void AdapterViewAnimator::setInAnimation(Context* context, int resourceID) {
     setInAnimation((ObjectAnimator*) AnimatorInflater::loadAnimator(context, resourceID));
 }
 
-void AdapterViewAnimator::setOutAnimation(Context* context, const std::string&resourceID) {
+void AdapterViewAnimator::setOutAnimation(Context* context, int resourceID) {
     setOutAnimation((ObjectAnimator*) AnimatorInflater::loadAnimator(context, resourceID));
 }
 

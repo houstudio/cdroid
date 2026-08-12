@@ -102,7 +102,7 @@ public:
     virtual void initialize(int width, int height, int parentWidth, int parentHeight);
     virtual Animation* clone()const;
     //void setListenerHandler(Handler handler);
-    virtual void setInterpolator(Context* context,const std::string& resID) ;
+    virtual void setInterpolator(Context* context,int resID) ;
     virtual void setInterpolator(const Interpolator* i);
     virtual void setStartOffset(int64_t startOffset) ;
     virtual void setDuration(int64_t durationMillis);

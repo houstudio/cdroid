@@ -70,8 +70,8 @@ Animation::Animation(Context* context, const AttributeSet& attrs){
     setRepeatCount(attrs.getInt("repeatCount",mRepeatCount));
     setRepeatMode (attrs.getInt("repeatMode",RESTART));
     //setBackgroundColor(Color::parseColor(attrs.getString("background")));
-    const std::string resid=attrs.getString("interpolator");
-    if(!resid.empty())setInterpolator(context,resid);else mInterpolator=nullptr;
+    const int resid=attrs.getResourceId("interpolator",0);
+    if(resid)setInterpolator(context,resid);else mInterpolator=nullptr;
 }
 
 Animation::~Animation(){
@@ -145,7 +145,7 @@ void Animation::initialize(int width, int height, int parentWidth, int parentHei
 
 //void Animation::setListenerHandler(Handler handler){}
 
-void Animation::setInterpolator(Context* context,const std::string&resID) {
+void Animation::setInterpolator(Context* context,int resID) {
     setInterpolator(AnimationUtils::loadInterpolator(context, resID));
 }
 

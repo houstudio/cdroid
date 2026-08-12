@@ -30,13 +30,13 @@ LayoutAnimationController::LayoutAnimationController(Context* context, const Att
        {"reverse",(int)ORDER_REVERSE},
        {"random" ,(int)ORDER_RANDOM}
     },ORDER_NORMAL);
-    std::string resource = attrs.getString("animation");
+    int resource = attrs.getResourceId("animation",0);
     mAnimation    = nullptr;
     mInterpolator = nullptr;
     mMaxDelay  = LONG_MIN;
-    setAnimation(context,resource);
-    resource   = attrs.getString("interpolator");
-    setInterpolator(context,resource);
+    if(resource) setAnimation(context,resource);
+    resource   = attrs.getResourceId("interpolator",0);
+    if(resource) setInterpolator(context,resource);
 }
 
 LayoutAnimationController::LayoutAnimationController(Animation* animation,float delay){
@@ -65,7 +65,7 @@ void LayoutAnimationController::setOrder(int order){
     mOrder = order;
 }
 
-void LayoutAnimationController::setAnimation(Context* context,const std::string&resourceID){
+void LayoutAnimationController::setAnimation(Context* context,int resourceID){
     setAnimation(AnimationUtils::loadAnimation(context,resourceID));
 }
 
@@ -79,7 +79,7 @@ Animation* LayoutAnimationController::getAnimation(){
     return mAnimation;
 }
 
-void LayoutAnimationController::setInterpolator(Context* context,const std::string&resourceID){
+void LayoutAnimationController::setInterpolator(Context* context,int resourceID){
     setInterpolator(AnimationUtils::loadInterpolator(context,resourceID));
 }
 

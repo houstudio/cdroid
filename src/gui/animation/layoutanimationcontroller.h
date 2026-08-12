@@ -53,10 +53,10 @@ public:
     virtual ~LayoutAnimationController();
     int getOrder()const;
     void setOrder(int);
-    void setAnimation(Context* context,const std::string&resourceID);
+    void setAnimation(Context* context,int resourceID);
     void setAnimation(Animation* animation);
     Animation* getAnimation();
-    void setInterpolator(Context* context,const std::string&resourceID);
+    void setInterpolator(Context* context,int resourceID);
     void setInterpolator(const Interpolator* interpolator);
     const Interpolator* getInterpolator()const;
     float getDelay()const;
