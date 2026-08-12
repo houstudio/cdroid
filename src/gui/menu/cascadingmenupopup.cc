@@ -107,7 +107,7 @@ void CascadingMenuPopup::onItemHoverEnter(MenuBuilder& menu,MenuItem& item) {
 }
 
 CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
-        const std::string& popupStyleAttr, const std::string& popupStyleRes, bool overflowOnly) {
+        int popupStyleAttr, int popupStyleRes, bool overflowOnly) {
     mContext = context;//Preconditions.checkNotNull(context);
     mAnchorView = anchor;//Preconditions.checkNotNull(anchor);
     mPopupStyleAttr = popupStyleAttr;

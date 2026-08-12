@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/R.h>
 #include <menu/menupopup.h>
 #include <menu/menupopuphelper.h>
 #include <menu/standardmenupopup.h>
@@ -22,20 +23,20 @@
 namespace cdroid{
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu)
-    :MenuPopupHelper(context, menu, nullptr, false,"android:attr/popupMenuStyle",""){
+    :MenuPopupHelper(context, menu, nullptr, false, R::attr::popupMenuStyle, 0){
 }
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu, View* anchorView)
-    :MenuPopupHelper(context, menu, anchorView, false, "android:attr/popupMenuStyle",""){
+    :MenuPopupHelper(context, menu, anchorView, false, R::attr::popupMenuStyle, 0){
 }
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu, View* anchorView,
-        bool overflowOnly,const std::string& popupStyleAttr)
-    :MenuPopupHelper(context, menu, anchorView, overflowOnly, popupStyleAttr,""){
+        bool overflowOnly, int popupStyleAttr)
+    :MenuPopupHelper(context, menu, anchorView, overflowOnly, popupStyleAttr, 0){
 }
 
 MenuPopupHelper::MenuPopupHelper(Context* context,MenuBuilder* menu, View* anchorView, bool overflowOnly,
-        const std::string& popupStyleAttr, const std::string& popupStyleRes) {
+        int popupStyleAttr, int popupStyleRes) {
     mContext = context;
     mMenu = menu;
     mPopup= nullptr;

@@ -6,7 +6,7 @@
 namespace cdroid{
 
 MenuPopupWindow::MenuPopupWindow(Context* context,const AttributeSet& attrs,
-        const std::string&defStyleAttr,const std::string&defStyleRes)
+        int defStyleAttr,int defStyleRes)
     :ListPopupWindow(context, attrs,defStyleAttr,defStyleRes){
 }
 

@@ -16,13 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/flexbox/flexboxitemdecoration.h>
+#include <widget/R.h>
 namespace cdroid{
 
 FlexboxItemDecoration::FlexboxItemDecoration(Context* context) {
-    //final TypedArray a = context.obtainStyledAttributes(LIST_DIVIDER_ATTRS);
-    //mDrawable = a.getDrawable(0);
-    AttributeSet a = context->obtainStyledAttributes("cdroid:attr/listDivider");
-    mDrawable = a.getDrawable("listDivider");
+    // AOSP: a = context.obtainStyledAttributes(new int[]{android.R.attr.listDivider});
+    // mDrawable = a.getDrawable(0).
+    static const uint32_t ATTRS[] = { R::attr::listDivider, 0 };
+    auto a = context->obtainStyledAttributes(ATTRS);
+    mDrawable = a ? a->getDrawable(0) : nullptr;
     LOGW_IF(mDrawable == nullptr,"@android:attr/listDivider was not set in the theme used for this "
                "FlexboxItemDecoration. Please set that attribute all call setDrawable()");
     setOrientation(BOTH);

@@ -33,8 +33,8 @@ private:
 private:
     Context* mContext;
     int mMenuMaxWidth;
-    std::string mPopupStyleAttr;
-    std::string mPopupStyleRes;
+    int mPopupStyleAttr;
+    int mPopupStyleRes;
     Handler* mSubMenuHoverHandler;
     std::vector<MenuBuilder*> mPendingMenus;
     std::vector<CascadingMenuInfo*> mShowingMenus;
@@ -81,7 +81,7 @@ private:
     View* findParentViewForSubmenu(CascadingMenuInfo* parentInfo, MenuBuilder* submenu);
     int findIndexOfAddedMenu(MenuBuilder* menu);
 public:
-    CascadingMenuPopup(Context* context,View* anchor, const std::string& popupStyleAttr, const std::string& popupStyleRes, bool overflowOnly);
+    CascadingMenuPopup(Context* context,View* anchor, int popupStyleAttr, int popupStyleRes, bool overflowOnly);
     ~CascadingMenuPopup()override;
     void setForceShowIcon(bool forceShow)override;
 

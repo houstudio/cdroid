@@ -55,7 +55,7 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
     mWeekNumberColor = attrs.getColor("weekNumberColor", 0xFF9BA6B2);
     mSelectedDateVerticalBar = attrs.getDrawable("selectedDateVerticalBar");
 
-    mDateTextAppearanceResId = attrs.getString("dateTextAppearance", "cdroid:attr/TextAppearance_Small");
+    mDateTextAppearanceResId = attrs.getString("dateTextAppearance", "cdroid:style/TextAppearance_Small");
     updateDateTextSize();
 
     mWeekDayTextAppearanceResId = attrs.getString("weekDayTextAppearance");//,DEFAULT_WEEK_DAY_TEXT_APPEARANCE_RES_ID);

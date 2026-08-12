@@ -16,13 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/recyclerview/divideritemdecoration.h>
+#include <widget/R.h>
 namespace cdroid{
 
 DividerItemDecoration::DividerItemDecoration(Context* context, int orientation) {
-    //final TypedArray a = context.obtainStyledAttributes(ATTRS);
-    //mDivider = a.getDrawable(0);
-    AttributeSet attr = context->obtainStyledAttributes("cdroid:attr/listDivider");
-    mDivider = attr.getDrawable("listDivider");
+    // AOSP: a = context.obtainStyledAttributes(new int[]{android.R.attr.listDivider});
+    // mDivider = a.getDrawable(0);
+    static const uint32_t ATTRS[] = { R::attr::listDivider, 0 };
+    auto a = context->obtainStyledAttributes(ATTRS);
+    mDivider = a ? a->getDrawable(0) : nullptr;
     LOGW_IF(mDivider == nullptr,"@android:attr/listDivider was not set in the theme used for this "
                "DividerItemDecoration. Please set that attribute all call setDrawable()");
     setOrientation(orientation);

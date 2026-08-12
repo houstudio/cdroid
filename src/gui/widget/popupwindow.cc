@@ -16,54 +16,32 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/popupwindow.h>
+#include <widget/R.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 namespace cdroid{
 
 PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs)
-    :PopupWindow(context,attrs,"android:attr/popupWindowStyle"){
+    :PopupWindow(context,attrs,R::attr::popupWindowStyle){
 }
 
-PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::string& defStyleAttr)
-    :PopupWindow(context,attrs,defStyleAttr,""){
+PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, int defStyleAttr)
+    :PopupWindow(context,attrs,defStyleAttr,0){
 }
 
-PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::string& defStyleAttr, const std::string& defStyleRes){
+PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, int defStyleAttr, int defStyleRes){
     init();
     mContext = context;
-    AttributeSet attpop= context->obtainStyledAttributes(defStyleAttr);
-    attpop.Override(attrs);
-    Drawable* bg = attpop.getDrawable("popupBackground");
-    mElevation = attpop.getFloat/*Dimension*/("popupElevation", 0);
-    mOverlapAnchor = attpop.getBoolean("overlapAnchor", false);
-#if 0 
-    // Preserve default behavior from Gingerbread. If the animation is
-    // undefined or explicitly specifies the Gingerbread animation style,
-    // use a sentinel value.
-    if (a.hasValueOrEmpty("popupAnimationStyle")) {
-        int animStyle = a.getResourceId(R.styleable.PopupWindow_popupAnimationStyle, 0);
-        if (animStyle == R.style.Animation_PopupWindow) {
-            mAnimationStyle = ANIMATION_STYLE_DEFAULT;
-        } else {
-            mAnimationStyle = animStyle;
-        }
-    } else {
-        mAnimationStyle = ANIMATION_STYLE_DEFAULT;
+    // AOSP: context.obtainStyledAttributes(attrs, R.styleable.PopupWindow, defStyleAttr,
+    // defStyleRes). Read the consumed attrs (popupBackground/popupElevation/overlapAnchor)
+    // via R.styleable.PopupWindow named indices (no more hand-cobbled attr-id array).
+    auto ta = context->obtainStyledAttributes(&attrs, R::styleable::PopupWindow, defStyleAttr, defStyleRes);
+    if (ta) {
+        Drawable* bg = ta->getDrawable(R::styleable::PopupWindow_popupBackground);
+        mElevation = ta->getFloat(R::styleable::PopupWindow_popupElevation, 0);
+        mOverlapAnchor = ta->getBoolean(R::styleable::PopupWindow_overlapAnchor, false);
+        setBackgroundDrawable(bg);
     }
-
-    Transition enterTransition = getTransition(a.getResourceId(
-            R.styleable.PopupWindow_popupEnterTransition, 0));
-    Transition exitTransition;
-    if (a.hasValueOrEmpty(R.styleable.PopupWindow_popupExitTransition)) {
-        exitTransition = getTransition(a.getResourceId(
-                R.styleable.PopupWindow_popupExitTransition, 0));
-    } else {
-        exitTransition = enterTransition == null ? null : enterTransition.clone();
-    }
-
-    setEnterTransition(enterTransition);
-    setExitTransition(exitTransition);
-#endif
-    setBackgroundDrawable(bg);
     LOGD("create PopupWindow %p background=%p",this,mBackground);
 }
 

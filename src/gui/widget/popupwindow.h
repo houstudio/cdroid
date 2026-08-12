@@ -160,8 +160,8 @@ protected:
      Rect getTransitionEpicenter();
 public:
     PopupWindow(Context* context,const AttributeSet& attrs);
-    PopupWindow(Context* context,const AttributeSet& attrs, const std::string& defStyleAttr);
-    PopupWindow(Context* context,const AttributeSet& attrs, const std::string& defStyleAttr, const std::string& defStyleRes);
+    PopupWindow(Context* context,const AttributeSet& attrs, int defStyleAttr);
+    PopupWindow(Context* context,const AttributeSet& attrs, int defStyleAttr, int defStyleRes);
     PopupWindow(View* contentView, int width, int height,bool focusable=false);
     PopupWindow(int width, int height);
     virtual ~PopupWindow();

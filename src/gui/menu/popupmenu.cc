@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/R.h>
 #include <menu/popupmenu.h>
 #include <menu/menupopup.h>
 #include <menu/menuinflater.h>
@@ -31,7 +32,7 @@ PopupMenu::~PopupMenu(){
 }
 
 PopupMenu::PopupMenu(Context* context, View* anchor, int gravity)
-    :PopupMenu(context, anchor, gravity,"android:attr/popupMenuStyle", ""){
+    :PopupMenu(context, anchor, gravity, R::attr::popupMenuStyle, 0){
 }
 
 /**
@@ -51,7 +52,7 @@ PopupMenu::PopupMenu(Context* context, View* anchor, int gravity)
  *        popupStyleAttr is 0 or can not be found in the theme. Can be 0
  *        to not look for defaults.
  */
-PopupMenu::PopupMenu(Context* context, View* anchor, int gravity, const std::string& popupStyleAttr,const std::string& popupStyleRes) {
+PopupMenu::PopupMenu(Context* context, View* anchor, int gravity, int popupStyleAttr, int popupStyleRes) {
     mContext = context;
     mAnchor = anchor;
     mMenuForwardingListener = nullptr;

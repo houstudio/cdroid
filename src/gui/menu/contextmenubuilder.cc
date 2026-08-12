@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/R.h>
 #include <menu/menuitemimpl.h>
 #include <menu/menupopuphelper.h>
 #include <menu/menudialoghelper.h>
@@ -83,7 +84,7 @@ MenuPopupHelper* ContextMenuBuilder::showPopup(Context* context, View* originalV
 
         MenuPopupHelper* helper = new MenuPopupHelper(
                 context, this, originalView, false /* overflowOnly */,
-                "android:attr/contextPopupMenuStyle");
+                R::attr::contextPopupMenuStyle);
         helper->show(std::round(x), std::round(y));
         return helper;
     }

@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/listpopupwindow.h>
+#include <widget/R.h>
+#include <widget/framework_styleable.h>
 #include <widget/linearlayout.h>
 #include <cdlog.h>
 namespace cdroid{
@@ -39,18 +41,23 @@ public:
 };
 
 ListPopupWindow::ListPopupWindow(Context*context,const AttributeSet&atts)
-    :ListPopupWindow(context,atts,"android:attr/listPopupWindowStyle",""){
+    :ListPopupWindow(context,atts,R::attr::listPopupWindowStyle,0){
 }
 
-ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, const std::string&defStyleAttr)
-    :ListPopupWindow(context,atts,defStyleAttr,""){
+ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, int defStyleAttr)
+    :ListPopupWindow(context,atts,defStyleAttr,0){
 }
 
-ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, const std::string&defStyleAttr, const std::string&defStyleRes){
+ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, int defStyleAttr, int defStyleRes){
     mContext = context;
     initPopupWindow();
-    mDropDownHorizontalOffset = atts.getDimensionPixelOffset("dropDownHorizontalOffet",0);
-    mDropDownVerticalOffset   = atts.getDimensionPixelOffset("dropDownVerticalOffet",0);
+    // AOSP: resolve dropDownHorizontalOffset/VerticalOffset through the defStyle
+    // chain via R.styleable.ListPopupWindow (no more hand-cobbled attr-id array).
+    auto ta = context->obtainStyledAttributes(&atts, R::styleable::ListPopupWindow, defStyleAttr, defStyleRes);
+    if (ta) {
+        mDropDownHorizontalOffset = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownHorizontalOffset, 0);
+        mDropDownVerticalOffset   = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownVerticalOffset, 0);
+    }
     mPopup = new PopupWindow(mContext,atts,defStyleAttr,defStyleRes);
     mResizePopupRunnable =[this](){
         if ((mDropDownList != nullptr) && mDropDownList->isAttachedToWindow()

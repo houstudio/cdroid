@@ -30,8 +30,8 @@ private:
     bool mOverflowOnly;
     bool mForceShowIcon;
     int mDropDownGravity = Gravity::START;
-    std::string mPopupStyleAttr;
-    std::string mPopupStyleRes;
+    int mPopupStyleAttr;
+    int mPopupStyleRes;
 
     View* mAnchorView;
     MenuPresenter::Callback mPresenterCallback;
@@ -56,9 +56,9 @@ public:
     MenuPopupHelper(Context* context, MenuBuilder* menu, View* anchorView);
 
     MenuPopupHelper(Context* context, MenuBuilder* menu,
-            View* anchorView, bool overflowOnly,const std::string& popupStyleAttr);
+            View* anchorView, bool overflowOnly, int popupStyleAttr);
     MenuPopupHelper(Context* context,MenuBuilder* menu, View* anchorView, bool overflowOnly,
-            const std::string& popupStyleAttr,const std::string& popupStyleRes);
+            int popupStyleAttr, int popupStyleRes);
 
     ~MenuPopupHelper()override;
     void setOnDismissListener(const PopupWindow::OnDismissListener& listener);

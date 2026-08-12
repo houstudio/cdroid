@@ -49,7 +49,7 @@ void StandardMenuPopup::onViewDetachedFromWindow(View& v) {
 }
 
 StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* anchorView,
-        const std::string& popupStyleAttr,const std::string& popupStyleRes, bool overflowOnly) {
+        int popupStyleAttr, int popupStyleRes, bool overflowOnly) {
     mContext = context;//Objects.requireNonNull(context);
     mMenu = menu;
     mWasDismissed = false;

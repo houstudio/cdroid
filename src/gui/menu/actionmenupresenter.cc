@@ -23,6 +23,7 @@
 #include <menu/actionmenuview.h>
 #include <menu/actionmenuitemview.h>
 #include <menu/actionmenupresenter.h>
+#include <widget/R.h>
 #include <core/handler.h>
 #include <core/looper.h>
 namespace cdroid{
@@ -812,7 +813,7 @@ bool ActionMenuPresenter::OverflowMenuButton::setFrame(int l, int t, int w, int 
 }
 
 ActionMenuPresenter::OverflowPopup::OverflowPopup(Context* context, MenuBuilder* menu, View* anchorView,ActionMenuPresenter*p,bool overflowOnly)
-    :MenuPopupHelper(context, menu, anchorView, overflowOnly,"android:attr/actionOverflowMenuStyle"){
+    :MenuPopupHelper(context, menu, anchorView, overflowOnly, R::attr::actionOverflowMenuStyle){
     setGravity(Gravity::END);
     mPresenter = p;
     setPresenterCallback(mPresenter->mPopupPresenterCallback);
@@ -840,7 +841,7 @@ void ActionMenuPresenter::OverflowPopup::onDismiss() {
 }
 
 ActionMenuPresenter::ActionButtonSubmenu::ActionButtonSubmenu(Context* context, SubMenuBuilder* subMenu, View* anchorView,ActionMenuPresenter*p)
-    :MenuPopupHelper(context, subMenu, anchorView, false,"android:attr/actionOverflowMenuStyle"){
+    :MenuPopupHelper(context, subMenu, anchorView, false, R::attr::actionOverflowMenuStyle){
     mPresenter= p;
     MenuItemImpl* item = (MenuItemImpl*) subMenu->getInvokerItem();//(MenuItemImpl*) subMenu->getItem();
     if (!item->isActionButton()) {

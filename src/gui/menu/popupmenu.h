@@ -68,7 +68,7 @@ public:
      *        popupStyleAttr is 0 or can not be found in the theme. Can be 0
      *        to not look for defaults.
      */
-    PopupMenu(Context* context, View* anchor, int gravity, const std::string& popupStyleAttr,const std::string& popupStyleRes);
+    PopupMenu(Context* context, View* anchor, int gravity, int popupStyleAttr, int popupStyleRes);
     virtual ~PopupMenu();
 
     /**
