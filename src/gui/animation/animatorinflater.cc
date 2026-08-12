@@ -45,6 +45,21 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,cons
     }
     return new StateListAnimator(*it->second);
 }
+
+StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,int resid){
+    if (resid == 0) return nullptr;  // AOSP: 0 → null
+    // Cache by the int id (string key) and open the resource directly by id via
+    // XmlPullParser(Context, int) (binary AXML through Resources.getXml).
+    const std::string key = std::to_string(resid);
+    auto it = mStateAnimatorMap.find(key);
+    if (it == mStateAnimatorMap.end()) {
+        XmlPullParser parser(context, resid);
+        const AttributeSet& attrs = parser;
+        StateListAnimator* anim = createStateListAnimatorFromXml(context, parser, attrs);
+        it = mStateAnimatorMap.insert({key, std::shared_ptr<StateListAnimator>(anim)}).first;
+    }
+    return new StateListAnimator(*it->second);
+}
 #else
 static std::unordered_map<std::string,std::shared_ptr<ConstantState<Animator*>>>mAnimatorCache;
 Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid,float){

@@ -48,6 +48,9 @@ public:
     static Animator* loadAnimator(Context* context,const std::string&resid);
     static Animator* loadAnimator(Context* context,const std::string&resid,float pathErrorScale);
     static StateListAnimator* loadStateListAnimator(Context*context,const std::string&resid);
+    // AOSP AnimatorInflater.loadStateListAnimator(Context, @AnimatorRes int): the
+    // resource is opened directly by id (binary AXML via Resources.getXml); resid 0 → null.
+    static StateListAnimator* loadStateListAnimator(Context*context,int resid);
 };
 }//endof namespace
 #endif

@@ -24,6 +24,8 @@
 #include <view/viewgroup.h>
 #include <view/floatingactionmode.h>
 #include <widget/framework_styleable.h>
+#include <androidfw/resourcetypes.h>  // Res_value (getFocusableAttribute)
+#include <core/typedarray.h>
 #include <core/assets.h>
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
@@ -77,252 +79,578 @@ View::View(int w,int h){
 View::View(Context*ctx,const AttributeSet&attrs):View(ctx,&attrs,0){
 }
 
-View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
-    int viewFlagValues= 0;
-    int viewFlagMasks = 0;
-    initView();
+// AOSP View.getFocusableAttribute: android:focusable is stored as TYPE_INT_BOOLEAN
+// by aapt2 ("true"/"false") so a plain getInt() would mis-read it; numeric/auto are
+// TYPE_INT_DEC. Mirrors frameworks/base View.java.
+int View::getFocusableAttribute(const TypedArray& a) {
+    Res_value val;
+    if (a.peekValue(R::styleable::View_focusable, &val)) {
+        if (val.dataType == Res_value::TYPE_INT_BOOLEAN) {
+            return (val.data == 0) ? NOT_FOCUSABLE : FOCUSABLE;
+        } else {
+            return val.data;
+        }
+    } else {
+        return FOCUSABLE_AUTO;
+    }
+}
+
+// AOSP View(Context, AttributeSet, int defStyleAttr, int defStyleRes).
+// Line-by-line port of frameworks/base/core/java/android/view/View.java. The single
+// TypedArray switch is the only inflation path; binary AXML is resolved by aapt2 so
+// TypedArray getters return ints directly (no string→enum map). The legacy string-keyed
+// fallback has been retired (apps are migrated to binary AXML).
+View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr,int defStyleRes){
+    initView();                       // == this(context)
+    const AttributeSet& attrs = *pAttrs;  // used by initializeScrollbarsInternal(AttributeSet&)
 
     mContext = ctx;
-    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    // aapt2 already resolved enums/flags at compile time, so TypedArray getters
-    // return integers directly — no string→enum map needed.
-    auto ta = ctx->obtainStyledAttributes(
-        attrs, R::styleable::View, defStyleAttr);
-    // (namespace alias not allowed in function body in C++14)
-    // Phase 2: TypedArray switch loop (AOSP View.java pattern).
-    // Binary AXML: single-pass over set indices. Text XML: AttributeSet fallback.
-    mID = attrs.getResourceId("id", View::NO_ID); // id on AttributeSet (idgen vs arsc)
-    // Locals needed after the if/else block (set inside both paths).
-    int scrollbars = (int)SCROLLBARS_NONE;
-    int scrollbarStyle = (int)SCROLLBARS_INSIDE_OVERLAY;
-    int scrollIndicators = 0;
-
-    if (ta) {
-        const auto N = ta->getIndexCount();
-        mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK | PFLAG2_TEXT_ALIGNMENT_MASK);
-        for (size_t n=0;n < N;n++ ) {
-            size_t i = ta->getIndex(n);
-            switch (i) {
-            case R::styleable::View_minWidth:       mMinWidth = ta->getDimensionPixelSize(i, 0); break;
-            case R::styleable::View_minHeight:      mMinHeight = ta->getDimensionPixelSize(i, 0); break;
-            case R::styleable::View_background:     { Drawable* bg = ta->getDrawable(i); if (bg) setBackground(bg); } break;
-            case R::styleable::View_visibility:     setVisibility(ta->getInt(i, (int)VISIBLE)); break;
-            case R::styleable::View_layerType:      setLayerType(ta->getInt(i, (int)LAYER_TYPE_NONE)); break;
-            case R::styleable::View_drawingCacheQuality: { int q = ta->getInt(i, (int)DRAWING_CACHE_QUALITY_AUTO);
-                                       if(q){viewFlagValues|=q;viewFlagMasks|=DRAWING_CACHE_QUALITY_MASK;} } break;
-            case R::styleable::View_contentDescription: mContentDescription = ta->getString(i); break;
-            case R::styleable::View_soundEffectsEnabled: if(!ta->getBoolean(i,true)){viewFlagValues&=~SOUND_EFFECTS_ENABLED;viewFlagMasks|=SOUND_EFFECTS_ENABLED;} break;
-            case R::styleable::View_hapticFeedbackEnabled: if(!ta->getBoolean(i,true)){viewFlagValues&=~HAPTIC_FEEDBACK_ENABLED;viewFlagMasks|=HAPTIC_FEEDBACK_ENABLED;} break;
-            case R::styleable::View_layoutDirection: mPrivateFlags2 |= (ta->getInt(i,(int)LAYOUT_DIRECTION_DEFAULT)<<PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT); break;
-            case R::styleable::View_textDirection:  { int td = ta->getInt(i,-1); if(td!=-1) mPrivateFlags2|=td<<PFLAG2_TEXT_DIRECTION_MASK_SHIFT; } break;
-            case R::styleable::View_textAlignment:  mPrivateFlags2 |= (ta->getInt(i,(int)TEXT_ALIGNMENT_DEFAULT)<<PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT); break;
-            case R::styleable::View_importantForAccessibility: setImportantForAccessibility(ta->getInt(i,(int)IMPORTANT_FOR_ACCESSIBILITY_DEFAULT)); break;
-            case R::styleable::View_clickable:      if(ta->getBoolean(i,false)){viewFlagValues|=CLICKABLE;viewFlagMasks|=CLICKABLE;} break;
-            case R::styleable::View_longClickable:  if(ta->getBoolean(i,false)){viewFlagValues|=LONG_CLICKABLE;viewFlagMasks|=LONG_CLICKABLE;} break;
-            case R::styleable::View_focusable:      viewFlagValues=(viewFlagValues&~FOCUSABLE_MASK)|ta->getInt(i,0);
-                                     if(!(viewFlagValues&FOCUSABLE_AUTO))viewFlagMasks|=FOCUSABLE_MASK; break;
-            case R::styleable::View_focusableInTouchMode: if(ta->getBoolean(i,false)){viewFlagValues&=~FOCUSABLE_AUTO;viewFlagValues|=FOCUSABLE_IN_TOUCH_MODE|FOCUSABLE;viewFlagMasks|=FOCUSABLE_IN_TOUCH_MODE|FOCUSABLE_MASK;} break;
-            case R::styleable::View_saveEnabled:    if(!ta->getBoolean(i,true)){viewFlagValues|=SAVE_DISABLED;viewFlagMasks|=SAVE_DISABLED_MASK;} break;
-            case R::styleable::View_duplicateParentState: if(ta->getBoolean(i,false)){viewFlagValues|=DUPLICATE_PARENT_STATE;viewFlagMasks|=DUPLICATE_PARENT_STATE;} break;
-            case R::styleable::View_filterTouchesWhenObscured: if(ta->getBoolean(i,false)){viewFlagValues|=FILTER_TOUCHES_WHEN_OBSCURED;viewFlagMasks|=FILTER_TOUCHES_WHEN_OBSCURED;} break;
-            case R::styleable::View_isScrollContainer: if(ta->getBoolean(i,false)) setScrollContainer(true); break;
-            case R::styleable::View_nestedScrollingEnabled: setNestedScrollingEnabled(ta->getBoolean(i,false)); break;
-            case R::styleable::View_keyboardNavigationCluster: setKeyboardNavigationCluster(ta->getBoolean(i,false)); break;
-            case R::styleable::View_focusedByDefault: setFocusedByDefault(ta->getBoolean(i,false)); break;
-            case R::styleable::View_allowClickWhenDisabled: setAllowClickWhenDisabled(ta->getBoolean(i,false)); break;
-            case R::styleable::View_scrollbars:     { int sb=ta->getInt(i,(int)SCROLLBARS_NONE); if(sb!=SCROLLBARS_NONE){viewFlagValues|=sb;viewFlagMasks|=SCROLLBARS_MASK;} } break;
-            case R::styleable::View_scrollbarStyle: { int ss=ta->getInt(i,(int)SCROLLBARS_INSIDE_OVERLAY); if(ss!=SCROLLBARS_INSIDE_OVERLAY){viewFlagValues|=ss&SCROLLBARS_STYLE_MASK;viewFlagMasks|=SCROLLBARS_STYLE_MASK;} } break;
-            case R::styleable::View_overScrollMode: mOverScrollMode=ta->getInt(i,mOverScrollMode); break;
-            case R::styleable::View_verticalScrollbarPosition: mVerticalScrollbarPosition=ta->getInt(i,(int)SCROLLBAR_POSITION_DEFAULT); break;
-            case R::styleable::View_requiresFadingEdge: { int fe=ta->getInt(i,(int)FADING_EDGE_NONE); if(fe!=FADING_EDGE_NONE){viewFlagValues|=fe;viewFlagMasks|=FADING_EDGE_MASK;initScrollCache();} } break;
-            case R::styleable::View_fadingEdgeLength: if(mScrollCache) mScrollCache->fadingEdgeLength=ta->getInt(i,ViewConfiguration::get(mContext).getScaledFadingEdgeLength()); break;
-            case R::styleable::View_rotation:       setRotation(ta->getFloat(i,0)); break;
-            case R::styleable::View_rotationX:      setRotationX(ta->getFloat(i,0)); break;
-            case R::styleable::View_rotationY:      setRotationY(ta->getFloat(i,0)); break;
-            case R::styleable::View_scaleX:         setScaleX(ta->getFloat(i,1.f)); break;
-            case R::styleable::View_scaleY:         setScaleY(ta->getFloat(i,1.f)); break;
-            case R::styleable::View_translationX:   setTranslationX(ta->getDimensionPixelSize(i,0)); break;
-            case R::styleable::View_translationY:   setTranslationY(ta->getDimensionPixelSize(i,0)); break;
-            case R::styleable::View_translationZ:   setTranslationZ(ta->getDimensionPixelSize(i,0)); break;
-            case R::styleable::View_transformPivotX: setPivotX(ta->getDimensionPixelSize(i,0)); break;
-            case R::styleable::View_transformPivotY: setPivotY(ta->getDimensionPixelSize(i,0)); break;
-            case R::styleable::View_nextFocusLeft:  mNextFocusLeftId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case R::styleable::View_nextFocusRight: mNextFocusRightId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case R::styleable::View_nextFocusUp:    mNextFocusUpId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case R::styleable::View_nextFocusDown:  mNextFocusDownId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case R::styleable::View_nextFocusForward: mNextFocusForwardId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case R::styleable::View_nextClusterForward: mNextClusterForwardId=(int)ta->getResourceId(i,(uint32_t)View::NO_ID); break;
-            case R::styleable::View_transitionName: setTransitionName(ta->getString(i)); break;
-            case R::styleable::View_stateListAnimator: { std::string a=ta->getString(i); if(!a.empty()) setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,a)); } break;
-            case R::styleable::View_backgroundTint: { RefPtr<ColorStateList> c(ta->getColorStateList(i)); if(c&&!mBackgroundTint){mBackgroundTint=new TintInfo;mBackgroundTint->mTintList=c;mBackgroundTint->mHasTintList=true;} } break;
-            case R::styleable::View_outlineProvider: break; // read after loop if set
-            default: break;
-            }
-        }
-#if 0
-    } else {
-        // Text XML fallback: AttributeSet string-keyed reads.
-        mMinWidth  = attrs.getDimensionPixelSize("minWidth", 0);
-        mMinHeight = attrs.getDimensionPixelSize("minHeight", 0);
-        setLayerType(attrs.getInt("layerType", std::unordered_map<std::string,int>{
-            {"software",(int)LAYER_TYPE_SOFTWARE},{"hardware",(int)LAYER_TYPE_HARDWARE}
-        }, (int)LAYER_TYPE_NONE));
-        { int quality = attrs.getInt("drawingCacheQuality", std::unordered_map<std::string,int>{
-            {"auto",(int)DRAWING_CACHE_QUALITY_AUTO},{"low",(int)DRAWING_CACHE_QUALITY_LOW},
-            {"high",(int)DRAWING_CACHE_QUALITY_HIGH}
-        }, (int)DRAWING_CACHE_QUALITY_AUTO);
-        if(quality){ viewFlagValues |= quality; viewFlagMasks |= DRAWING_CACHE_QUALITY_MASK; } }
-        mContentDescription = attrs.getString("contentDescription");
-        setVisibility(attrs.getInt("visibility", std::unordered_map<std::string,int>{
-            {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}
-        }, (int)VISIBLE));
-        if(!attrs.getBoolean("soundEffectsEnabled", true)){ viewFlagValues &= ~SOUND_EFFECTS_ENABLED; viewFlagMasks |= SOUND_EFFECTS_ENABLED; }
-        if(!attrs.getBoolean("hapticFeedbackEnabled", true)){ viewFlagValues &= ~HAPTIC_FEEDBACK_ENABLED; viewFlagMasks |= HAPTIC_FEEDBACK_ENABLED; }
-        mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK | PFLAG2_TEXT_ALIGNMENT_MASK);
-        mPrivateFlags2 |= (attrs.getInt("layoutDirection", std::unordered_map<std::string,int>{
-            {"ltr",(int)LAYOUT_DIRECTION_LTR},{"rtl",(int)LAYOUT_DIRECTION_RTL},
-            {"inherit",(int)LAYOUT_DIRECTION_INHERIT},{"local",(int)LAYOUT_DIRECTION_LOCALE}
-        }, (int)LAYOUT_DIRECTION_DEFAULT) << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
-        { int td = attrs.getInt("textDirection", std::unordered_map<std::string,int>{
-            {"inherit",(int)TEXT_DIRECTION_INHERIT},{"locale",(int)TEXT_DIRECTION_LOCALE},
-            {"anyRtl",(int)TEXT_DIRECTION_ANY_RTL},{"ltr",(int)TEXT_DIRECTION_LTR},
-            {"rtl",(int)TEXT_DIRECTION_RTL},{"firstStrong",(int)TEXT_DIRECTION_FIRST_STRONG},
-            {"fisrtStringLtr",(int)TEXT_DIRECTION_FIRST_STRONG_LTR},
-            {"firstStrongRtl",(int)TEXT_DIRECTION_FIRST_STRONG_RTL}}, -1);
-        if(td!=-1) mPrivateFlags2 |= td<<PFLAG2_TEXT_DIRECTION_MASK_SHIFT; }
-        mPrivateFlags2 |= (attrs.getInt("textAlignment", std::unordered_map<std::string,int>{
-            {"inherit",(int)TEXT_ALIGNMENT_INHERIT},{"gravity",(int)TEXT_ALIGNMENT_GRAVITY},
-            {"textStart",(int)TEXT_ALIGNMENT_TEXT_START},{"textEnd",(int)TEXT_ALIGNMENT_TEXT_END},
-            {"center",(int)TEXT_ALIGNMENT_CENTER},{"viewStart",(int)TEXT_ALIGNMENT_VIEW_START},
-            {"viewEnd",(int)TEXT_ALIGNMENT_VIEW_END}
-        }, (int)TEXT_ALIGNMENT_DEFAULT) << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT);
-        setImportantForAccessibility(attrs.getInt("importantForAccessibility", std::unordered_map<std::string,int>{
-            {"auto",(int)IMPORTANT_FOR_ACCESSIBILITY_AUTO},{"yes",(int)IMPORTANT_FOR_ACCESSIBILITY_YES},
-            {"no",(int)IMPORTANT_FOR_ACCESSIBILITY_NO}
-        }, (int)IMPORTANT_FOR_ACCESSIBILITY_DEFAULT));
-        mNextFocusLeftId  = attrs.getResourceId("nextFocusLeft", View::NO_ID);
-        mNextFocusRightId = attrs.getResourceId("nextFocusRight", View::NO_ID);
-        mNextFocusUpId    = attrs.getResourceId("nextFocusUp", View::NO_ID);
-        mNextFocusDownId  = attrs.getResourceId("nextFocusDown", View::NO_ID);
-        mNextFocusForwardId = attrs.getResourceId("nextFocusForward", View::NO_ID);
-        mNextClusterForwardId = attrs.getResourceId("nextClusterFoward", View::NO_ID);
-        setRotation(attrs.getFloat("rotation", 0));
-        setTranslationX(attrs.getDimensionPixelSize("translationX", 0));
-        setTranslationY(attrs.getDimensionPixelSize("translationY", 0));
-        setTranslationZ(attrs.getDimensionPixelSize("translationZ", 0));
-        setRotationX(attrs.getFloat("rotationX", 0));
-        setRotationY(attrs.getFloat("rotationY", 0));
-        setScaleX(attrs.getFloat("scaleX", 1.f));
-        setScaleY(attrs.getFloat("scaleY", 1.f));
-        if(attrs.hasAttribute("transformPivotX")) setPivotX(attrs.getDimensionPixelSize("transformPivotX", 0));
-        if(attrs.hasAttribute("transformPivotY")) setPivotY(attrs.getDimensionPixelSize("transformPivotY", 0));
-        setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster", false));
-        if(attrs.getBoolean("filterTouchesWhenObscured", false)){ viewFlagValues |= FILTER_TOUCHES_WHEN_OBSCURED; viewFlagMasks |= FILTER_TOUCHES_WHEN_OBSCURED; }
-        if(attrs.getBoolean("focusableInTouchMode", false)){ viewFlagValues &= ~FOCUSABLE_AUTO; viewFlagValues |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE; viewFlagMasks |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK; }
-        { int focusable = attrs.getInt("focusable", std::unordered_map<std::string,int>{
-            {"true",(int)FOCUSABLE},{"false",(int)NOT_FOCUSABLE},{"auto",(int)FOCUSABLE_AUTO}}, 0);
-        viewFlagValues = (viewFlagValues & ~FOCUSABLE_MASK) | focusable;
-        if((viewFlagValues & FOCUSABLE_AUTO) == 0) viewFlagMasks |= FOCUSABLE_MASK; }
-        if(attrs.getBoolean("clickable", false)){ viewFlagValues |= CLICKABLE; viewFlagMasks |= CLICKABLE; }
-        if(attrs.getBoolean("longClickable", false)){ viewFlagValues |= LONG_CLICKABLE; viewFlagMasks |= LONG_CLICKABLE; }
-        setAllowClickWhenDisabled(attrs.getBoolean("allowClickWhenDisabled", false));
-        if(!attrs.getBoolean("saveEnabled", true)){ viewFlagValues |= SAVE_DISABLED; viewFlagMasks |= SAVE_DISABLED_MASK; }
-        if(attrs.getBoolean("duplicateParentState", false)){ viewFlagValues |= DUPLICATE_PARENT_STATE; viewFlagMasks |= DUPLICATE_PARENT_STATE; }
-        setFocusedByDefault(attrs.getBoolean("focusedByDefault", false));
-        { int fe = attrs.getInt("requiresFadingEdge", std::unordered_map<std::string,int>{
-            {"none",(int)FADING_EDGE_NONE},{"horizontal",(int)FADING_EDGE_HORIZONTAL},
-            {"vertical",(int)FADING_EDGE_VERTICAL}}, (int)FADING_EDGE_NONE);
-        if(fe!=FADING_EDGE_NONE){ viewFlagValues|=fe;viewFlagMasks|=FADING_EDGE_MASK;initScrollCache();
-            mScrollCache->fadingEdgeLength=attrs.getInt("fadingEdgeLength",ViewConfiguration::get(mContext).getScaledFadingEdgeLength()); } }
-        { int sb=attrs.getInt("scrollbars",std::unordered_map<std::string,int>{
-            {"none",(int)SCROLLBARS_NONE},{"horizontal",(int)SCROLLBARS_HORIZONTAL},
-            {"vertical",(int)SCROLLBARS_VERTICAL}},(int)SCROLLBARS_NONE);
-        if(sb!=SCROLLBARS_NONE){viewFlagValues|=sb;viewFlagMasks|=SCROLLBARS_MASK;} }
-        { int ss=attrs.getInt("scrollbarStyle",std::unordered_map<std::string,int>{
-            {"insideOverlay",(int)SCROLLBARS_INSIDE_OVERLAY},{"insideInset",(int)SCROLLBARS_INSIDE_INSET},
-            {"outsideOverlay",(int)SCROLLBARS_OUTSIDE_OVERLAY},{"outsideInset",(int)SCROLLBARS_OUTSIDE_INSET}
-        },(int)SCROLLBARS_INSIDE_OVERLAY);
-        if(ss!=SCROLLBARS_INSIDE_OVERLAY){viewFlagValues|=ss&SCROLLBARS_STYLE_MASK;viewFlagMasks|=SCROLLBARS_STYLE_MASK;} }
-        mOverScrollMode=attrs.getInt("overScrollMode",std::unordered_map<std::string,int>{
-            {"never",(int)OVER_SCROLL_NEVER},{"always",(int)OVER_SCROLL_ALWAYS},
-            {"ifContentScrolls",(int)OVER_SCROLL_IF_CONTENT_SCROLLS}},mOverScrollMode);
-        mVerticalScrollbarPosition=attrs.getInt("verticalScrollbarPosition",std::unordered_map<std::string,int>{
-            {"defaultPosition",(int)SCROLLBAR_POSITION_DEFAULT},{"left",(int)SCROLLBAR_POSITION_LEFT},
-            {"right",(int)SCROLLBAR_POSITION_RIGHT}},(int)SCROLLBAR_POSITION_DEFAULT);
-        { int si=(attrs.getInt("scrollIndicators",std::unordered_map<std::string,int>{
-            {"top",(int)SCROLL_INDICATOR_TOP},{"left",(int)SCROLL_INDICATOR_LEFT},
-            {"right",(int)SCROLL_INDICATOR_RIGHT},{"bottom",(int)SCROLL_INDICATOR_BOTTOM}},0)
-            <<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
-        if(si)mPrivateFlags3|=si; }
-        if(attrs.getBoolean("isScrollContainer",false))setScrollContainer(true);
-        setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled",false));
-        setTransitionName(attrs.getString("transitionName"));
-        { std::string a=attrs.getString("stateListAnimator"); if(!a.empty())setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,a)); }
-        { Drawable* bg=attrs.getDrawable("background"); if(bg)setBackground(bg); }
-        { auto c=attrs.getColorStateList("backgroundTint"); if(!mBackgroundTint&&c){mBackgroundTint=new TintInfo;mBackgroundTint->mTintList=c;mBackgroundTint->mHasTintList=true;} }
-#endif
-    }
-    // Common (both paths).
     mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
-    setForegroundGravity(attrs.getGravity("foregroundGravity", Gravity::NO_GRAVITY));
-    setForegroundTintList(attrs.getColorStateList("foregroundTint"));
-    if(viewFlagMasks) setFlags(viewFlagValues, viewFlagMasks);
-    const int bgTintMode = attrs.getTintMode("backgroundTintMode", PorterDuff::Mode::NOOP);
-    if(bgTintMode != PorterDuff::Mode::NOOP){
-        if(!mBackgroundTint) mBackgroundTint = new TintInfo;
-        mBackgroundTint->mTintMode = bgTintMode;
-        mBackgroundTint->mHasTintMode = true;
-    }
-    const int providerInt = (ta&&ta->hasValue(R::styleable::View_outlineProvider))
-        ? ta->getInt(R::styleable::View_outlineProvider,(int)PROVIDER_BACKGROUND)
-        : attrs.getInt("outlineProvider", std::unordered_map<std::string,int>{
-              {"none",(int)PROVIDER_NONE},{"background",(int)PROVIDER_BACKGROUND},
-              {"bounds",(int)PROVIDER_BOUNDS},{"paddedBounds",(int)PROVIDER_PADDED_BOUNDS}
-          }, (int)PROVIDER_BACKGROUND);
-    setOutlineProviderFromAttribute(providerInt);
 
-    setForeground(attrs.getDrawable("foreground"));
-    const int fgTintMode = attrs.getTintMode("foregroundTintMode",PorterDuff::Mode::NOOP);
-    setForegroundTintMode(fgTintMode);
-    mForegroundInfo->mInsidePadding = attrs.getBoolean("foregroundInsidePadding",mForegroundInfo->mInsidePadding);
+    auto a = ctx->obtainStyledAttributes(attrs, R::styleable::View, defStyleAttr, defStyleRes);
 
-    int leftPadding,topPadding,rightPadding,bottomPadding;
-    const int padding = attrs.getDimensionPixelSize("padding",-1);
-    if( padding >= 0 ){
-        leftPadding= rightPadding = padding;
-        topPadding = bottomPadding= padding;
-        mUserPaddingLeftInitial   = padding;
-        mUserPaddingRightInitial  = padding;
-        mLeftPaddingDefined = true;
-        mRightPaddingDefined = true;
-    }else{
-        const int paddingHorizontal = attrs.getDimensionPixelSize("paddingHorizontal",-1);
-        const int paddingVertical   = attrs.getDimensionPixelSize("paddingVertical",-1);
-        if( paddingHorizontal >= 0){
-            leftPadding = rightPadding = paddingHorizontal;
-            mLeftPaddingDefined = mRightPaddingDefined = true;
-            mUserPaddingLeftInitial = mUserPaddingRightInitial = paddingHorizontal;
-        }else{
-            leftPadding  = attrs.getDimensionPixelSize("paddingLeft",0);
-            rightPadding = attrs.getDimensionPixelSize("paddingRight",0);
-            mLeftPaddingDefined  = (leftPadding != 0);
-            mRightPaddingDefined = (rightPadding != 0);
-            mUserPaddingLeftInitial = mLeftPaddingDefined?leftPadding:0;
-            mUserPaddingRightInitial= mRightPaddingDefined?rightPadding:0;
+    Drawable* background = nullptr;
+
+    int leftPadding = -1;
+    int topPadding = -1;
+    int rightPadding = -1;
+    int bottomPadding = -1;
+    int startPadding = UNDEFINED_PADDING;
+    int endPadding = UNDEFINED_PADDING;
+
+    int padding = -1;
+    int paddingHorizontal = -1;
+    int paddingVertical = -1;
+
+    int viewFlagValues = 0;
+    int viewFlagMasks = 0;
+
+    // NOTE: named scrollContainerSet (not setScrollContainer) to avoid shadowing
+    // the setScrollContainer(bool) member method that this flag gates.
+    bool scrollContainerSet = false;
+
+    int x = 0;
+    int y = 0;
+
+    float tx = 0;
+    float ty = 0;
+    float tz = 0;
+    float elevation = 0;
+    float rotation = 0;
+    float rotationX = 0;
+    float rotationY = 0;
+    float sx = 1.f;
+    float sy = 1.f;
+    bool transformSet = false;
+
+    int scrollbarStyle = SCROLLBARS_INSIDE_OVERLAY;
+    int overScrollMode = mOverScrollMode;
+    bool initializeScrollbars = false;
+    bool initializeScrollIndicators = false;
+
+    bool startPaddingDefined = false;
+    bool endPaddingDefined = false;
+    bool leftPaddingDefined = false;
+    bool rightPaddingDefined = false;
+
+    // AOSP enum→flag lookup tables (View.java static finals).
+    static constexpr int VISIBILITY_FLAGS[]            = {VISIBLE, INVISIBLE, GONE};
+    static constexpr int DRAWING_CACHE_QUALITY_FLAGS[] = {DRAWING_CACHE_QUALITY_AUTO,
+                                                          DRAWING_CACHE_QUALITY_LOW,
+                                                          DRAWING_CACHE_QUALITY_HIGH};
+    static constexpr int LAYOUT_DIRECTION_FLAGS[]      = {LAYOUT_DIRECTION_LTR,
+                                                          LAYOUT_DIRECTION_RTL,
+                                                          LAYOUT_DIRECTION_INHERIT,
+                                                          LAYOUT_DIRECTION_LOCALE};
+    static constexpr int PFLAG2_TEXT_DIRECTION_FLAGS[] = {
+            TEXT_DIRECTION_INHERIT          << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_FIRST_STRONG     << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_ANY_RTL          << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_LTR              << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_RTL              << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_LOCALE           << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_FIRST_STRONG_LTR << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_FIRST_STRONG_RTL << PFLAG2_TEXT_DIRECTION_MASK_SHIFT};
+    static constexpr int PFLAG2_TEXT_ALIGNMENT_FLAGS[] = {
+            TEXT_ALIGNMENT_INHERIT   << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_GRAVITY   << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_TEXT_START<< PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_TEXT_END  << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_CENTER    << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_VIEW_START<< PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_VIEW_END  << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT};
+
+    // Set default values.
+    viewFlagValues |= FOCUSABLE_AUTO;
+    viewFlagMasks |= FOCUSABLE_AUTO;
+
+    const int N = a ? (int)a->getIndexCount() : 0;
+    for (int i = 0; i < N; i++) {
+        const int attr = (int)a->getIndex(i);
+        switch (attr) {
+        case R::styleable::View_background:
+            background = a->getDrawable(attr);
+            break;
+        case R::styleable::View_padding:
+            padding = a->getDimensionPixelSize(attr, -1);
+            mUserPaddingLeftInitial = padding;
+            mUserPaddingRightInitial = padding;
+            leftPaddingDefined = true;
+            rightPaddingDefined = true;
+            break;
+        case R::styleable::View_paddingHorizontal:
+            paddingHorizontal = a->getDimensionPixelSize(attr, -1);
+            mUserPaddingLeftInitial = paddingHorizontal;
+            mUserPaddingRightInitial = paddingHorizontal;
+            leftPaddingDefined = true;
+            rightPaddingDefined = true;
+            break;
+        case R::styleable::View_paddingVertical:
+            paddingVertical = a->getDimensionPixelSize(attr, -1);
+            break;
+        case R::styleable::View_paddingLeft:
+            leftPadding = a->getDimensionPixelSize(attr, -1);
+            mUserPaddingLeftInitial = leftPadding;
+            leftPaddingDefined = true;
+            break;
+        case R::styleable::View_paddingTop:
+            topPadding = a->getDimensionPixelSize(attr, -1);
+            break;
+        case R::styleable::View_paddingRight:
+            rightPadding = a->getDimensionPixelSize(attr, -1);
+            mUserPaddingRightInitial = rightPadding;
+            rightPaddingDefined = true;
+            break;
+        case R::styleable::View_paddingBottom:
+            bottomPadding = a->getDimensionPixelSize(attr, -1);
+            break;
+        case R::styleable::View_paddingStart:
+            startPadding = a->getDimensionPixelSize(attr, UNDEFINED_PADDING);
+            startPaddingDefined = (startPadding != UNDEFINED_PADDING);
+            break;
+        case R::styleable::View_paddingEnd:
+            endPadding = a->getDimensionPixelSize(attr, UNDEFINED_PADDING);
+            endPaddingDefined = (endPadding != UNDEFINED_PADDING);
+            break;
+        case R::styleable::View_scrollX:
+            x = a->getDimensionPixelOffset(attr, 0);
+            break;
+        case R::styleable::View_scrollY:
+            y = a->getDimensionPixelOffset(attr, 0);
+            break;
+        case R::styleable::View_alpha:
+            setAlpha(a->getFloat(attr, 1.f));
+            break;
+        case R::styleable::View_transformPivotX:
+            setPivotX(a->getDimension(attr, 0));
+            break;
+        case R::styleable::View_transformPivotY:
+            setPivotY(a->getDimension(attr, 0));
+            break;
+        case R::styleable::View_translationX:
+            tx = a->getDimension(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_translationY:
+            ty = a->getDimension(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_translationZ:
+            tz = a->getDimension(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_elevation:
+            elevation = a->getDimension(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_rotation:
+            rotation = a->getFloat(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_rotationX:
+            rotationX = a->getFloat(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_rotationY:
+            rotationY = a->getFloat(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_scaleX:
+            sx = a->getFloat(attr, 1.f);
+            transformSet = true;
+            break;
+        case R::styleable::View_scaleY:
+            sy = a->getFloat(attr, 1.f);
+            transformSet = true;
+            break;
+        case R::styleable::View_id:
+            mID = a->getResourceId(attr, NO_ID);
+            break;
+        case R::styleable::View_tag:
+            // AOSP: mTag = a.getText(attr). CDROID mTag is void* (programmatic setTag);
+            // string-tag storage is TODO.
+            break;
+        case R::styleable::View_fitsSystemWindows:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= FITS_SYSTEM_WINDOWS;
+                viewFlagMasks |= FITS_SYSTEM_WINDOWS;
+            }
+            break;
+        case R::styleable::View_focusable:
+            viewFlagValues = (viewFlagValues & ~FOCUSABLE_MASK) | getFocusableAttribute(*a);
+            if ((viewFlagValues & FOCUSABLE_AUTO) == 0) {
+                viewFlagMasks |= FOCUSABLE_MASK;
+            }
+            break;
+        case R::styleable::View_focusableInTouchMode:
+            if (a->getBoolean(attr, false)) {
+                // unset auto focus since focusableInTouchMode implies explicit focusable
+                viewFlagValues &= ~FOCUSABLE_AUTO;
+                viewFlagValues |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE;
+                viewFlagMasks |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK;
+            }
+            break;
+        case R::styleable::View_clickable:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= CLICKABLE;
+                viewFlagMasks |= CLICKABLE;
+            }
+            break;
+        case R::styleable::View_allowClickWhenDisabled:
+            setAllowClickWhenDisabled(a->getBoolean(attr, false));
+            break;
+        case R::styleable::View_longClickable:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= LONG_CLICKABLE;
+                viewFlagMasks |= LONG_CLICKABLE;
+            }
+            break;
+        case R::styleable::View_contextClickable:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= CONTEXT_CLICKABLE;
+                viewFlagMasks |= CONTEXT_CLICKABLE;
+            }
+            break;
+        case R::styleable::View_saveEnabled:
+            if (!a->getBoolean(attr, true)) {
+                viewFlagValues |= SAVE_DISABLED;
+                viewFlagMasks |= SAVE_DISABLED_MASK;
+            }
+            break;
+        case R::styleable::View_duplicateParentState:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= DUPLICATE_PARENT_STATE;
+                viewFlagMasks |= DUPLICATE_PARENT_STATE;
+            }
+            break;
+        case R::styleable::View_visibility: {
+            const int visibility = a->getInt(attr, 0);
+            if (visibility != 0) {
+                viewFlagValues |= VISIBILITY_FLAGS[visibility];
+                viewFlagMasks |= VISIBILITY_MASK;
+            }
+            break;
         }
-        if( paddingVertical >= 0){
-            topPadding = bottomPadding = paddingVertical;
-        }else{
-            topPadding   = attrs.getDimensionPixelSize("paddingTop",0);
-            bottomPadding= attrs.getDimensionPixelSize("paddingBottom",0);
+        case R::styleable::View_layoutDirection:
+            // Clear any layout direction flags (including resolved bits) already set
+            mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK);
+            {
+                const int layoutDirection = a->getInt(attr, -1);
+                const int value = (layoutDirection != -1)
+                        ? LAYOUT_DIRECTION_FLAGS[layoutDirection] : LAYOUT_DIRECTION_DEFAULT;
+                mPrivateFlags2 |= (value << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
+            }
+            break;
+        case R::styleable::View_drawingCacheQuality: {
+            const int cacheQuality = a->getInt(attr, 0);
+            if (cacheQuality != 0) {
+                viewFlagValues |= DRAWING_CACHE_QUALITY_FLAGS[cacheQuality];
+                viewFlagMasks |= DRAWING_CACHE_QUALITY_MASK;
+            }
+            break;
+        }
+        case R::styleable::View_contentDescription:
+            setContentDescription(a->getString(attr));
+            break;
+        case R::styleable::View_accessibilityTraversalBefore:
+            setAccessibilityTraversalBefore(a->getResourceId(attr, NO_ID));
+            break;
+        case R::styleable::View_accessibilityTraversalAfter:
+            setAccessibilityTraversalAfter(a->getResourceId(attr, NO_ID));
+            break;
+        case R::styleable::View_labelFor:
+            setLabelFor(a->getResourceId(attr, NO_ID));
+            break;
+        case R::styleable::View_soundEffectsEnabled:
+            if (!a->getBoolean(attr, true)) {
+                viewFlagValues &= ~SOUND_EFFECTS_ENABLED;
+                viewFlagMasks |= SOUND_EFFECTS_ENABLED;
+            }
+            break;
+        case R::styleable::View_hapticFeedbackEnabled:
+            if (!a->getBoolean(attr, true)) {
+                viewFlagValues &= ~HAPTIC_FEEDBACK_ENABLED;
+                viewFlagMasks |= HAPTIC_FEEDBACK_ENABLED;
+            }
+            break;
+        case R::styleable::View_scrollbars: {
+            const int scrollbars = a->getInt(attr, SCROLLBARS_NONE);
+            if (scrollbars != SCROLLBARS_NONE) {
+                viewFlagValues |= scrollbars;
+                viewFlagMasks |= SCROLLBARS_MASK;
+                initializeScrollbars = true;
+            }
+            break;
+        }
+        //noinspection deprecation
+        case R::styleable::View_fadingEdge:
+            break;
+        case R::styleable::View_requiresFadingEdge: {
+            const int fadingEdge = a->getInt(attr, FADING_EDGE_NONE);
+            if (fadingEdge != FADING_EDGE_NONE) {
+                viewFlagValues |= fadingEdge;
+                viewFlagMasks |= FADING_EDGE_MASK;
+                // AOSP initializeFadingEdgeInternal(a):
+                initScrollCache();
+                mScrollCache->fadingEdgeLength = a->getDimensionPixelSize(
+                        R::styleable::View_fadingEdgeLength,
+                        ViewConfiguration::get(mContext).getScaledFadingEdgeLength());
+            }
+            break;
+        }
+        case R::styleable::View_scrollbarStyle:
+            scrollbarStyle = a->getInt(attr, SCROLLBARS_INSIDE_OVERLAY);
+            if (scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) {
+                viewFlagValues |= scrollbarStyle & SCROLLBARS_STYLE_MASK;
+                viewFlagMasks |= SCROLLBARS_STYLE_MASK;
+            }
+            break;
+        case R::styleable::View_isScrollContainer:
+            scrollContainerSet = true;
+            if (a->getBoolean(attr, false)) {
+                setScrollContainer(true);
+            }
+            break;
+        case R::styleable::View_keepScreenOn:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= KEEP_SCREEN_ON;
+                viewFlagMasks |= KEEP_SCREEN_ON;
+            }
+            break;
+        case R::styleable::View_filterTouchesWhenObscured:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= FILTER_TOUCHES_WHEN_OBSCURED;
+                viewFlagMasks |= FILTER_TOUCHES_WHEN_OBSCURED;
+            }
+            break;
+        case R::styleable::View_nextFocusLeft:
+            mNextFocusLeftId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_nextFocusRight:
+            mNextFocusRightId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_nextFocusUp:
+            mNextFocusUpId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_nextFocusDown:
+            mNextFocusDownId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_nextFocusForward:
+            mNextFocusForwardId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_nextClusterForward:
+            mNextClusterForwardId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_minWidth:
+            mMinWidth = a->getDimensionPixelSize(attr, 0);
+            break;
+        case R::styleable::View_minHeight:
+            mMinHeight = a->getDimensionPixelSize(attr, 0);
+            break;
+        case R::styleable::View_onClick:
+            // android:onClick uses Java reflection (DeclaredOnClickListener); not
+            // supported in C++. Wire clicks via setOnClickListener in code instead.
+            break;
+        case R::styleable::View_overScrollMode:
+            overScrollMode = a->getInt(attr, OVER_SCROLL_IF_CONTENT_SCROLLS);
+            break;
+        case R::styleable::View_verticalScrollbarPosition:
+            mVerticalScrollbarPosition = a->getInt(attr, SCROLLBAR_POSITION_DEFAULT);
+            break;
+        case R::styleable::View_layerType:
+            setLayerType(a->getInt(attr, LAYER_TYPE_NONE));
+            break;
+        case R::styleable::View_textDirection:
+            // Clear any text direction flag already set
+            mPrivateFlags2 &= ~PFLAG2_TEXT_DIRECTION_MASK;
+            {
+                const int textDirection = a->getInt(attr, -1);
+                if (textDirection != -1) {
+                    mPrivateFlags2 |= PFLAG2_TEXT_DIRECTION_FLAGS[textDirection];
+                }
+            }
+            break;
+        case R::styleable::View_textAlignment:
+            // Clear any text alignment flag already set
+            mPrivateFlags2 &= ~PFLAG2_TEXT_ALIGNMENT_MASK;
+            {
+                const int textAlignment = a->getInt(attr, TEXT_ALIGNMENT_DEFAULT);
+                mPrivateFlags2 |= PFLAG2_TEXT_ALIGNMENT_FLAGS[textAlignment];
+            }
+            break;
+        case R::styleable::View_importantForAccessibility:
+            setImportantForAccessibility(a->getInt(attr, IMPORTANT_FOR_ACCESSIBILITY_DEFAULT));
+            break;
+        case R::styleable::View_transitionName:
+            setTransitionName(a->getString(attr));
+            break;
+        case R::styleable::View_nestedScrollingEnabled:
+            setNestedScrollingEnabled(a->getBoolean(attr, false));
+            break;
+        case R::styleable::View_stateListAnimator:
+            setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,
+                    a->getResourceId(attr, 0)));
+            break;
+        case R::styleable::View_backgroundTint:
+            // This will get applied later during setBackground().
+            if (mBackgroundTint == nullptr) {
+                mBackgroundTint = new TintInfo();
+            }
+            mBackgroundTint->mTintList = a->getColorStateList(R::styleable::View_backgroundTint);
+            mBackgroundTint->mHasTintList = true;
+            break;
+        case R::styleable::View_backgroundTintMode:
+            // This will get applied later during setBackground().
+            if (mBackgroundTint == nullptr) {
+                mBackgroundTint = new TintInfo();
+            }
+            mBackgroundTint->mTintMode = Drawable::parseBlendMode(
+                    a->getInt(R::styleable::View_backgroundTintMode, -1), PorterDuff::Mode::NOOP);
+            mBackgroundTint->mHasTintMode = true;
+            break;
+        case R::styleable::View_outlineProvider:
+            setOutlineProviderFromAttribute(a->getInt(R::styleable::View_outlineProvider,
+                    PROVIDER_BACKGROUND));
+            break;
+        case R::styleable::View_foreground:
+            setForeground(a->getDrawable(attr));
+            break;
+        case R::styleable::View_foregroundGravity:
+            setForegroundGravity(a->getInt(attr, Gravity::NO_GRAVITY));
+            break;
+        case R::styleable::View_foregroundTintMode:
+            setForegroundTintBlendMode(Drawable::parseBlendMode(a->getInt(attr, -1),
+                    PorterDuff::Mode::NOOP));
+            break;
+        case R::styleable::View_foregroundTint:
+            setForegroundTintList(a->getColorStateList(attr));
+            break;
+        // TODO: View_foregroundInsidePadding is not in CDROID's R.styleable.View
+        // (and its auto-assigned framework attr id is absent from public-final.xml,
+        // so the View[] id can't be derived). Add the styleable entry + View[] id
+        // to re-enable. AOSP logic preserved:
+        //   case R::styleable::View_foregroundInsidePadding:
+        //       if (mForegroundInfo == nullptr) {
+        //           mForegroundInfo = new ForegroundInfo();
+        //       }
+        //       mForegroundInfo->mInsidePadding = a->getBoolean(attr, mForegroundInfo->mInsidePadding);
+        //       break;
+        case R::styleable::View_scrollIndicators: {
+            const int scrollIndicators =
+                    (a->getInt(attr, 0) << SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)
+                            & SCROLL_INDICATORS_PFLAG3_MASK;
+            if (scrollIndicators != 0) {
+                mPrivateFlags3 |= scrollIndicators;
+                initializeScrollIndicators = true;
+            }
+            break;
+        }
+        case R::styleable::View_tooltipText:
+            setTooltipText(a->getText(attr));
+            break;
+        case R::styleable::View_keyboardNavigationCluster:
+            setKeyboardNavigationCluster(a->getBoolean(attr, true));
+            break;
+        case R::styleable::View_focusedByDefault:
+            setFocusedByDefault(a->getBoolean(attr, true));
+            break;
+        case R::styleable::View_defaultFocusHighlightEnabled:
+            setDefaultFocusHighlightEnabled(a->getBoolean(attr, true));
+            break;
+        case R::styleable::View_clipToOutline:
+            setClipToOutline(a->getBoolean(attr, false));
+            break;
+        case R::styleable::View_accessibilityHeading:
+            setAccessibilityHeading(a->getBoolean(attr, false));
+            break;
+        // --- not supported (deps not ported): AOSP structure preserved, no-op ---
+        case R::styleable::View_pointerIcon:                 // PointerIcon not ported
+        case R::styleable::View_forceHasOverlappingRendering:// RenderNode
+        case R::styleable::View_outlineSpotShadowColor:      // shadows unsupported
+        case R::styleable::View_outlineAmbientShadowColor:   // shadows unsupported
+        case R::styleable::View_forceDarkAllowed:            // RenderNode
+        case R::styleable::View_autofillHints:               // AutofillManager not ported
+        case R::styleable::View_importantForAutofill:        // AutofillManager not ported
+        case R::styleable::View_importantForContentCapture:  // ContentCapture not ported
+        case R::styleable::View_isCredential:                // credential framework
+        case R::styleable::View_screenReaderFocusable:       // accessibility-only
+        case R::styleable::View_accessibilityPaneTitle:      // accessibility-only
+        case R::styleable::View_accessibilityLiveRegion:     // accessibility-only
+        case R::styleable::View_accessibilityDataSensitive:  // accessibility-only
+        case R::styleable::View_supplementalDescription:     // accessibility-only
+        case R::styleable::View_preferKeepClear:             // KeepClear not ported
+        case R::styleable::View_autoHandwritingEnabled:      // Handwriting not ported
+        case R::styleable::View_handwritingBoundsOffsetLeft:
+        case R::styleable::View_handwritingBoundsOffsetTop:
+        case R::styleable::View_handwritingBoundsOffsetRight:
+        case R::styleable::View_handwritingBoundsOffsetBottom:
+        case R::styleable::View_contentSensitivity:          // content sensitivity
+        case R::styleable::View_theme:                       // internal attr
+            break;
+        default:
+            break;
         }
     }
 
-    mUserPaddingStart= attrs.getDimensionPixelSize("paddingStart",UNDEFINED_PADDING);
-    mUserPaddingEnd  = attrs.getDimensionPixelSize("paddingEnd", UNDEFINED_PADDING);
-    const bool startPaddingDefined= (mUserPaddingStart != UNDEFINED_PADDING);
-    const bool endPaddingDefined  = (mUserPaddingEnd != UNDEFINED_PADDING);
+    setOverScrollMode(overScrollMode);
+
+    // Cache start/end user padding as we cannot fully resolve padding here (we don't have yet
+    // the resolved layout direction). Those cached values will be used later during padding
+    // resolution.
+    mUserPaddingStart = startPadding;
+    mUserPaddingEnd = endPadding;
+
+    if (background != nullptr) {
+        setBackground(background);
+    }
+
+    // setBackground above will record that padding is currently provided by the background.
+    // If we have padding specified via xml, record that here instead and use it.
+    mLeftPaddingDefined = leftPaddingDefined;
+    mRightPaddingDefined = rightPaddingDefined;
+
+    // Valid paddingHorizontal/paddingVertical beats leftPadding, rightPadding, topPadding,
+    // bottomPadding, and padding set by background.  Valid padding beats everything.
+    if (padding >= 0) {
+        leftPadding = padding;
+        topPadding = padding;
+        rightPadding = padding;
+        bottomPadding = padding;
+        mUserPaddingLeftInitial = padding;
+        mUserPaddingRightInitial = padding;
+    } else {
+        if (paddingHorizontal >= 0) {
+            leftPadding = paddingHorizontal;
+            rightPadding = paddingHorizontal;
+            mUserPaddingLeftInitial = paddingHorizontal;
+            mUserPaddingRightInitial = paddingHorizontal;
+        }
+        if (paddingVertical >= 0) {
+            topPadding = paddingVertical;
+            bottomPadding = paddingVertical;
+        }
+    }
+
     if (isRtlCompatibilityMode()) {
         // RTL compatibility mode: pre Jelly Bean MR1 case OR no RTL support case.
         // left / right padding are used if defined (meaning here nothing to do). If they are not
@@ -332,11 +660,11 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
         // and mUserPaddingRightInitial) so drawable padding will be used as ultimate default if
         // defined.
         if (!mLeftPaddingDefined && startPaddingDefined) {
-            leftPadding  = mUserPaddingStart;
+            leftPadding = startPadding;
         }
         mUserPaddingLeftInitial = (leftPadding >= 0) ? leftPadding : mUserPaddingLeftInitial;
         if (!mRightPaddingDefined && endPaddingDefined) {
-            rightPadding = mUserPaddingEnd;
+            rightPadding = endPadding;
         }
         mUserPaddingRightInitial = (rightPadding >= 0) ? rightPadding : mUserPaddingRightInitial;
     } else {
@@ -355,14 +683,53 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr){
         }
     }
 
-    internalSetPadding( mUserPaddingLeftInitial, topPadding > 0 ? topPadding : mPaddingTop,
-                mUserPaddingRightInitial, bottomPadding > 0 ? bottomPadding : mPaddingBottom);
-    const int x = attrs.getInt("scrollX",0);
-    const int y = attrs.getInt("scrollY",0);
-    if( x || y ) scrollTo(x,y);
-    if(scrollbars != SCROLLBARS_NONE) initializeScrollbarsInternal(attrs);
-    if(scrollIndicators) initializeScrollIndicatorsInternal();
-    if(scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) recomputePadding();
+    // mPaddingTop and mPaddingBottom may have been set by setBackground(Drawable) so must pass
+    // them on if topPadding or bottomPadding are not valid.
+    internalSetPadding(
+            mUserPaddingLeftInitial,
+            topPadding >= 0 ? topPadding : mPaddingTop,
+            mUserPaddingRightInitial,
+            bottomPadding >= 0 ? bottomPadding : mPaddingBottom);
+
+    if (viewFlagMasks != 0) {
+        setFlags(viewFlagValues, viewFlagMasks);
+    }
+
+    if (initializeScrollbars) {
+        initializeScrollbarsInternal(attrs);
+    }
+
+    if (initializeScrollIndicators) {
+        initializeScrollIndicatorsInternal();
+    }
+
+    // `a` is a unique_ptr<TypedArray>; reclaimed at scope exit (no recycle()).
+
+    // Needs to be called after mViewFlags is set
+    if (scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) {
+        recomputePadding();
+    }
+
+    if (x != 0 || y != 0) {
+        scrollTo(x, y);
+    }
+
+    if (transformSet) {
+        setTranslationX(tx);
+        setTranslationY(ty);
+        setTranslationZ(tz);
+        setElevation(elevation);
+        setRotation(rotation);
+        setRotationX(rotationX);
+        setRotationY(rotationY);
+        setScaleX(sx);
+        setScaleY(sy);
+    }
+
+    if (!scrollContainerSet && (viewFlagValues & SCROLLBARS_VERTICAL) != 0) {
+        setScrollContainer(true);
+    }
+
     computeOpaqueFlags();
 }
 
@@ -437,7 +804,7 @@ void View::initView(){
     mScrollCache  = nullptr;
     mRoundScrollbarRenderer=nullptr;
     mTop = mLeft = mRight = mBottom = 0;
-    mOverScrollMode = OVER_SCROLL_NEVER;
+    mOverScrollMode = OVER_SCROLL_IF_CONTENT_SCROLLS;
     mVerticalScrollbarPosition = 0;
     mUserPaddingLeft = mUserPaddingRight  = 0;
     mUserPaddingTop  = mUserPaddingBottom = 0;

@@ -72,6 +72,7 @@
 
 namespace cdroid{
 class DragEvent;
+class TypedArray;
 class ViewGroup;
 class ViewOverlay;
 class GhostView;
@@ -627,6 +628,9 @@ private:
     void initializeScrollbarsInternal(const AttributeSet&attrs);
     void initializeScrollBarDrawable();
     void initScrollCache();
+    // AOSP View.getFocusableAttribute: focusable="true/false" is stored as
+    // TYPE_INT_BOOLEAN in binary AXML, so plain getInt would mis-read it.
+    int getFocusableAttribute(const TypedArray& a);
     ScrollabilityCache* getScrollCache();
     bool initialAwakenScrollBars();
     Drawable* getAutofilledDrawable();
@@ -921,7 +925,7 @@ public:
     // resolved by the inflater factory). attrs is a nullable pointer (AOSP allows
     // constructing a styled view without XML attrs). The AttributeSet& ctor above
     // delegates here.
-    View(Context*ctx,const AttributeSet*attrs,int defStyleAttr=0);
+    View(Context*ctx,const AttributeSet*attrs,int defStyleAttr=0,int defStyleRes=0);
     View(int w,int h);
     virtual ~View();
     bool isShowingLayoutBounds()const;
