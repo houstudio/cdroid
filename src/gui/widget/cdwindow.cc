@@ -19,7 +19,7 @@
 #include <widget/cdwindow.h>
 #include <widget/toolbar.h>
 #include <widget/toolbaractionbar.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <menu/menu.h>
 #include <menu/menuitem.h>
 #include <menu/menuinflater.h>
@@ -41,6 +41,7 @@
 
 using namespace Cairo;
 namespace cdroid {
+using namespace cdroid::internal;
 constexpr int FORWARD = 0;
 constexpr int FINISH_HANDLED = 1;
 constexpr int FINISH_NOT_HANDLED = 2;

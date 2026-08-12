@@ -16,10 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include<widget/imagebutton.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include<cdlog.h>
 #include<app.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET2(ImageButton,R::attr::imageButtonStyle)
 

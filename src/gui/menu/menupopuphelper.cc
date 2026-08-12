@@ -15,12 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <menu/menupopup.h>
 #include <menu/menupopuphelper.h>
 #include <menu/standardmenupopup.h>
 #include <menu/cascadingmenupopup.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu)
     :MenuPopupHelper(context, menu, nullptr, false, R::attr::popupMenuStyle, 0){

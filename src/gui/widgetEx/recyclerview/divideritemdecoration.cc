@@ -16,8 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/recyclerview/divideritemdecoration.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DividerItemDecoration::DividerItemDecoration(Context* context, int orientation) {
     // AOSP: a = context.obtainStyledAttributes(new int[]{android.R.attr.listDivider});

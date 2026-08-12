@@ -3,9 +3,10 @@
 #include <view/view.h>
 #include <core/bitset.h>
 #include <utils/mathutils.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 Pools::SimplePool<AccessibilityNodeInfo> AccessibilityNodeInfo::sPool(MAX_POOL_SIZE);
 int AccessibilityNodeInfo::sNumInstancesInUse = 0;
 const AccessibilityNodeInfo AccessibilityNodeInfo::DEFAULT;

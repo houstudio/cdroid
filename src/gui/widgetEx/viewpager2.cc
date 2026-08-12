@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widgetEx/viewpager2.h>
 #include <widgetEx/recyclerview/pagersnaphelper.h>
 #include <widgetEx/scrolleventadapter.h>
@@ -23,6 +23,7 @@
 //#include <widgetEx/compositeonpagechangecallback.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(ViewPager2)
 

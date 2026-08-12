@@ -23,10 +23,11 @@
 #include <menu/actionmenuview.h>
 #include <menu/actionmenuitemview.h>
 #include <menu/actionmenupresenter.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <core/handler.h>
 #include <core/looper.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 ActionMenuPresenter::ActionMenuPresenter(Context* context)
     :BaseMenuPresenter(context, "cdroid:layout/action_menu_layout","cdroid:layout/action_menu_item_layout"){

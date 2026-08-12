@@ -15,13 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widget/menupopupwindow.h>
 #include <menu/menuadapter.h>
 #include <menu/menupopuphelper.h>
 #include <menu/submenubuilder.h>
 #include <menu/standardmenupopup.h>
 namespace cdroid{
+using namespace cdroid::internal;
 //private static final int ITEM_LAYOUT = com.android.internal.R.layout.popup_menu_item_layout;
 static constexpr const char* ITEM_LAYOUT_MATERIAL ="cdroid:layout/popup_menu_item_layout_material";
 
@@ -144,7 +145,7 @@ bool StandardMenuPopup::tryShow() {
     if (mShowTitle && mMenu->getHeaderTitle().size()){// != null) {
         FrameLayout* titleItemView =(FrameLayout*) LayoutInflater::from(mContext)->inflate(
                         "cdroid:layout/popup_menu_header_item_layout",listView, false);
-        TextView* titleView = (TextView*) titleItemView->findViewById(cdroid::R::id::title);
+        TextView* titleView = (TextView*) titleItemView->findViewById(R::id::title);
         if (titleView != nullptr) {
             titleView->setText(mMenu->getHeaderTitle());
         }

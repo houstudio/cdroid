@@ -10,10 +10,11 @@
 #include <menu/menu.h>
 #include <menu/menuitem.h>
 #include <menu/submenu.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <algorithm>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 FloatingToolbar::FloatingToolbar(Window* window)
     : mWindow(window)

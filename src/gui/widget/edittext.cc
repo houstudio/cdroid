@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/edittext.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widget/editor.h>
 #include <text/selection.h>
 #include <text/inputtype.h>
@@ -26,6 +26,7 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET2(EditText,R::attr::editTextStyle)
 

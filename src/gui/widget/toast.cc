@@ -17,11 +17,12 @@
  *********************************************************************************/
 #include <widget/toast.h>
 #include <widget/textview.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <core/app.h>
 #include <core/windowmanager.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 class ToastWindow:public Window{
 private:
@@ -159,7 +160,7 @@ Toast*Toast::makeText(Context*context,const std::string&text,int duration){
     Toast* result = new Toast(context);
     LayoutInflater*inflater=LayoutInflater::from(result->mContext);
     View*v = inflater->inflate("cdroid:layout/transient_notification",nullptr);
-    TextView*tv = (TextView*)v->findViewById(cdroid::R::id::message);
+    TextView*tv = (TextView*)v->findViewById(R::id::message);
     tv->setText(text);
     result->mNextView = v;
     result->mDuration = duration;
@@ -169,7 +170,7 @@ Toast*Toast::makeText(Context*context,const std::string&text,int duration){
 Toast& Toast::setText(const std::string&text){
     TextView* tv = nullptr;
     if(mNextView){
-        tv = (TextView*)mNextView->findViewById(cdroid::R::id::message);
+        tv = (TextView*)mNextView->findViewById(R::id::message);
         if(tv)tv->setText(text);
     }
     LOGE_IF(tv==nullptr,"This Toast was not created by Toast::makeText");

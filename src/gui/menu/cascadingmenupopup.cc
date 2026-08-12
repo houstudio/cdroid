@@ -15,12 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <menu/menuadapter.h>
 #include <menu/cascadingmenupopup.h>
 #include <menu/submenubuilder.h>
 #include <widget/menupopupwindow.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 void CascadingMenuPopup::onGlobalLayout() {
     // Only move the popup if it's showing and non-modal. We don't want

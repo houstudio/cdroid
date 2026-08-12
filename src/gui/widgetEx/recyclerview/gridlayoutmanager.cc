@@ -18,9 +18,10 @@
 #include <widgetEx/recyclerview/gridlayoutmanager.h>
 #include <widgetEx/recyclerview/orientationhelper.h>
 #include <core/build.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 GridLayoutManager::GridLayoutManager(Context* context,const AttributeSet& attrs):GridLayoutManager(context,&attrs,0){}
 

@@ -1,9 +1,10 @@
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widget/textview.h>
 #include <widget/imageview.h>
 #include <widget/cdwindow.h>
 #include <widgetEx/wear/confirmationoverlay.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 ConfirmationOverlay::ConfirmationOverlay(){
     mIsShowing = false;

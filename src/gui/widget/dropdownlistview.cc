@@ -17,9 +17,10 @@
  *********************************************************************************/
 #include <widget/textview.h>
 #include <widget/dropdownlistview.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DropDownListView::DropDownListView(Context*context,bool hijackfocus)
     :ListView(context,nullptr,R::attr::dropDownListViewStyle){
