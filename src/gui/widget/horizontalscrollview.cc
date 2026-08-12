@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/horizontalscrollview.h>
+#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <focusfinder.h>
@@ -24,7 +25,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET2(HorizontalScrollView,"cdroid:attr/horizontalScrollViewStyle")
+DECLARE_WIDGET2(HorizontalScrollView,R::attr::horizontalScrollViewStyle)
  
 HorizontalScrollView::HorizontalScrollView(int w,int h):FrameLayout(w,h){
     initScrollView(nullptr);

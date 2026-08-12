@@ -63,7 +63,7 @@ static constexpr int ID_PASTE      = cdroid::R::id::paste;
 static constexpr int ID_SHARE      = cdroid::R::id::shareText;
 static constexpr int ID_REPLACE    = cdroid::R::id::replaceText;
 
-DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
+DECLARE_WIDGET2(TextView,R::attr::textViewStyle)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TextAppearanceAttributes {

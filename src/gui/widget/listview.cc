@@ -26,23 +26,24 @@
 
 namespace cdroid {
 
-DECLARE_WIDGET2(ListView,"cdroid:attr/listViewStyle")
+DECLARE_WIDGET2(ListView,R::attr::listViewStyle)
 
 ListView::ListView(int w,int h):AbsListView(w,h) {
-    const std::string style=LayoutInflater::from(mContext)->getDefaultStyle("ListView");
-    AttributeSet attrs=mContext->obtainStyledAttributes(style);
-    initListView(attrs);
+    // Programmatic construction: no XML element, but still resolve the default
+    // style (listViewStyle) from the theme, same as the inflate path.
+    initListView(AttributeSet::empty(), R::attr::listViewStyle);
 }
 
-ListView::ListView(Context* context,const AttributeSet& attrs):ListView(context,&attrs,0){}
+ListView::ListView(Context* context,const AttributeSet& attrs)
+    :ListView(context,&attrs,R::attr::listViewStyle){
+}
 
 ListView::ListView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :AbsListView(context,pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
-    initListView(attrs);
+    initListView(*pAttrs, defStyleAttr);
 }
 
-void ListView::initListView(const AttributeSet&attrs) {
+void ListView::initListView(const AttributeSet&attrs,int defStyleAttr) {
     mDividerHeight=0;
     mItemsCanFocus=false;
     mDivider=nullptr;
@@ -55,7 +56,7 @@ void ListView::initListView(const AttributeSet&attrs) {
     mDividerIsOpaque = true;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = getContext();
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ListView);
+    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ListView, defStyleAttr, 0);
     if (ta) {
 
     Drawable* d = ctx->getDrawable(ta->getString(R::styleable::ListView_divider));

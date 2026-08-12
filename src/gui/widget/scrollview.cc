@@ -25,7 +25,7 @@
 #include <porting/cdlog.h>
 namespace cdroid {
 
-DECLARE_WIDGET2(ScrollView,"cdroid:attr/scrollViewStyle")
+DECLARE_WIDGET2(ScrollView,R::attr::scrollViewStyle)
 
 ScrollView::ScrollView(int w,int h):FrameLayout(w,h){
     initScrollView();

@@ -64,12 +64,11 @@ protected:
 public:
     static LayoutInflater*from(Context*context);
     static ViewInflater getInflater(const std::string&);
-    static bool registerInflater(const std::string&name,const std::string&,ViewInflater fun);
-    const std::string getDefaultStyle(const std::string&name)const;
-    // Resolve a DECLARE_WIDGET-registered default-style attribute ("pkg:attr/name")
-    // to its attr resource id (defStyleAttr), or 0 if unresolvable. The inflater
-    // factory passes this to each widget's AOSP ctor.
-    static int resolveDefStyleAttr(Context*ctx,const std::string&defstyle);
+    // defStyleAttr is the framework attr resource id (e.g. R::attr::textViewStyle)
+    // the inflater factory passes straight to each widget's AOSP ctor — no string
+    // resolution (DECLARE_WIDGET2/3 take the int directly).
+    static bool registerInflater(const std::string&name,int defStyleAttr,ViewInflater fun);
+    int getDefaultStyle(const std::string&name)const;
     Context*getContext()const;
     Factory getFactory()const;
     Factory2 getFactory2()const;
@@ -131,16 +130,15 @@ inline View* makeView(Context*ctx,const AttributeSet&attr,int,std::false_type){
 template<typename T>
 class InflaterRegister{
 public:
-    InflaterRegister(const std::string&name,const std::string&defstyle){
-        LayoutInflater::registerInflater(name,defstyle,[defstyle](Context*ctx,const AttributeSet&attr)->View*{
-            const int da=LayoutInflater::resolveDefStyleAttr(ctx,defstyle);
-            return detail::makeView<T>(ctx,attr,da,
+    InflaterRegister(const std::string&name,int defStyleAttr){
+        LayoutInflater::registerInflater(name,defStyleAttr,[defStyleAttr](Context*ctx,const AttributeSet&attr)->View*{
+            return detail::makeView<T>(ctx,attr,defStyleAttr,
                 std::is_constructible<T,Context*,const AttributeSet*,int>{});
         });
     }
 };
 
-#define DECLARE_WIDGET(T) static InflaterRegister<T> widget_inflater_##T(#T,"");
+#define DECLARE_WIDGET(T) static InflaterRegister<T> widget_inflater_##T(#T,0);
 #define DECLARE_WIDGET2(T,style) static InflaterRegister<T> widget_inflater_##T(#T,style);
 #define DECLARE_WIDGET3(T,name,style) static InflaterRegister<T> widget_inflater_##name(#name,style);
 }//endof namespace

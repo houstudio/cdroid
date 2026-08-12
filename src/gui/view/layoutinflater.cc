@@ -30,7 +30,7 @@ static constexpr const char* TAG_REQUEST_FOCUS = "requestFocus";
 static constexpr const char* TAG_TAG = "tag";
 static constexpr const char* ATTR_LAYOUT = "layout";
 
-static std::unordered_map<std::string,std::string> mDefaultStyle;
+static std::unordered_map<std::string,int> mDefaultStyle;
 static std::unordered_map<std::string,LayoutInflater::ViewInflater> mFlateMapper;
 static std::unordered_map<Context*,std::shared_ptr<LayoutInflater>> mInflaters;
 
@@ -49,19 +49,10 @@ LayoutInflater*LayoutInflater::from(Context*context) {
     return it->second.get();
 }
 
-const std::string LayoutInflater::getDefaultStyle(const std::string&name)const {
+int LayoutInflater::getDefaultStyle(const std::string&name)const {
     auto& maps = mDefaultStyle;
     auto it = maps.find(name);
-    return it==maps.end()?std::string():it->second;
-}
-
-int LayoutInflater::resolveDefStyleAttr(Context*ctx,const std::string&defstyle) {
-    // DECLARE_WIDGET registers "pkg:attr/name"; resolve to the attr resource id
-    // (defStyleAttr) the widget ctor passes to obtainStyledAttributes.
-    std::string dn = defstyle; std::string dpkg;
-    size_t dc = dn.find(':'); if (dc != std::string::npos) dpkg = dn.substr(0, dc);
-    size_t ds = dn.find('/');  if (ds != std::string::npos) dn = dn.substr(ds + 1);
-    return ctx->getResources().getIdentifier(dn, "attr", dpkg);
+    return it==maps.end()?0:it->second;
 }
 
 LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name) {
@@ -72,11 +63,10 @@ LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name)
     return (it!=maps.end())?it->second:nullptr;
 }
 
-bool LayoutInflater::registerInflater(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater) {
+bool LayoutInflater::registerInflater(const std::string&name,int defStyleAttr,LayoutInflater::ViewInflater inflater) {
     auto& maps = mFlateMapper;
     auto& smap = mDefaultStyle;
     auto flaterIter = maps.find(name);
-    auto styleIter = smap.find(name);
 
     /*disable widget inflater's hack*/
     if(flaterIter!=maps.end() ){
@@ -84,7 +74,7 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
         return false;
     }
     maps.insert({name,inflater});
-    smap.insert(std::pair<const std::string,const std::string>(name,defstyle));
+    smap.insert({name,defStyleAttr});
     return true;
 }
 

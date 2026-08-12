@@ -48,7 +48,7 @@ bool RecyclerView::sDebugAssertionsEnabled= false;
 bool RecyclerView::sVerboseLoggingEnabled = false;
 static QuinticInterpolator sQuinticInterpolator;
 
-DECLARE_WIDGET2(RecyclerView,"cdroid:attr/recyclerviewStyle")
+DECLARE_WIDGET(RecyclerView)
 
 RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
     initRecyclerView();

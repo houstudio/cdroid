@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <menu/listmenuitemview.h>
+#include <widget/R.h>
 #include <menu/menuitemimpl.h>
 #include <widget/textview.h>
 #include <widget/checkbox.h>
@@ -24,7 +25,7 @@
 #include <widget/R.h>
 namespace cdroid{
 
-DECLARE_WIDGET2(ListMenuItemView,"cdroid:attr/listMenuViewStyle")
+DECLARE_WIDGET2(ListMenuItemView,R::attr::listMenuViewStyle)
 ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs):ListMenuItemView(context,&attrs,0){}
 
 ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)

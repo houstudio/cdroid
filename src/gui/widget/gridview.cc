@@ -8,7 +8,7 @@
 
 namespace cdroid {
 
-DECLARE_WIDGET2(GridView,"cdroid:attr/gridViewStyle")
+DECLARE_WIDGET2(GridView,R::attr::gridViewStyle)
 
 GridView::GridView(int w,int h):AbsListView(w,h) {
     initGridView();

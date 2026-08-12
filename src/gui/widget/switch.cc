@@ -1,4 +1,5 @@
 #include <widget/switch.h>
+#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <utils/mathutils.h>
@@ -8,7 +9,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET2(Switch,"cdroid:attr/switchStyle")
+DECLARE_WIDGET2(Switch,R::attr::switchStyle)
 
 Switch::Switch(int w,int h):CompoundButton(std::string(),w,h){
     init();

@@ -996,7 +996,7 @@ int TabLayout::getTabMaxWidth() const{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-DECLARE_WIDGET3(TabLayout::TabItem,TabItem,"")
+DECLARE_WIDGET3(TabLayout::TabItem,TabItem,0)
 
 TabLayout::TabItem::TabItem():View(0,0){
     mIcon = nullptr;

@@ -85,7 +85,13 @@ def main():
     by_type = {}  # ctype -> {cident_key: hex_id}
     for line in r.stdout.splitlines():
         m = RES_RE.search(line)
-        if m:
+        # Skip aapt2 synthetic inline resources (<aapt:attr> children, e.g. the
+        # nested <aapt:attr name="android:animation"> blocks inside an
+        # animated-vector). aapt2 names them "$$xxx" / "$xxx" and bakes them into
+        # the arsc, but Android's R.java never exports them — no code references an
+        # anonymous inline resource by name. Without this filter, cident() turns
+        # the "$" into "_" and R.h fills up with "__xxx__0__0" garbage.
+        if m and '$' not in m.group(3):
             rid, rtype, rkey = m.group(1), m.group(2), m.group(3)
             tns = ctype(rtype)
             ck = cident(rkey)

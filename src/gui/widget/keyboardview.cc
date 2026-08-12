@@ -18,7 +18,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET2(KeyboardView,"cdroid:attr/keyboardViewStyle")
+DECLARE_WIDGET(KeyboardView)
 
 KeyboardView::KeyboardView(int w,int h):View(w,h){
     init();

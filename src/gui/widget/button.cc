@@ -16,10 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/button.h>
+#include <widget/R.h>
 
 namespace cdroid{
 
-DECLARE_WIDGET2(Button,"cdroid:attr/buttonStyle")
+DECLARE_WIDGET2(Button,R::attr::buttonStyle)
 
 Button::Button(Context*ctx,const AttributeSet& attrs):Button(ctx,&attrs,0){}
 

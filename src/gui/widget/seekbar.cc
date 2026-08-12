@@ -19,7 +19,7 @@
 #include <widget/R.h>
 namespace cdroid{
 
-DECLARE_WIDGET2(SeekBar,"cdroid:attr/seekBarStyle")
+DECLARE_WIDGET2(SeekBar,R::attr::seekBarStyle)
 
 SeekBar::SeekBar(Context*ctx,const AttributeSet& attrs):SeekBar(ctx,&attrs,0){}
 

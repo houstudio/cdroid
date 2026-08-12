@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/compoundbutton.h>
+#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/checkbox.h>
@@ -308,7 +309,7 @@ void CompoundButton::onDraw(Canvas&canvas){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-DECLARE_WIDGET2(CheckBox,"cdroid:attr/checkboxStyle")
+DECLARE_WIDGET2(CheckBox,R::attr::checkboxStyle)
 CheckBox::CheckBox(Context*ctx,const AttributeSet& attrs)
     :CheckBox(ctx,&attrs,0){
 }
@@ -328,7 +329,7 @@ std::string CheckBox::getAccessibilityClassName()const{
 //////////////////////////////////////////////////////////////
 //class RadioButton:public CompoundButton
 
-DECLARE_WIDGET2(RadioButton,"cdroid:attr/radioButtonStyle")
+DECLARE_WIDGET2(RadioButton,R::attr::radioButtonStyle)
 RadioButton::RadioButton(const std::string&txt,int w,int h)
   :CompoundButton(txt,w,h){
 }

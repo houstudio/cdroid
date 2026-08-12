@@ -30,7 +30,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET2(NumberPicker,"cdroid:attr/numberPickerStyle")
+DECLARE_WIDGET2(NumberPicker,R::attr::numberPickerStyle)
 const std::string DEFAULT_LAYOUT_VERT="cdroid:layout/number_picker";
 const std::string DEFAULT_LAYOUT_HORZ="cdroid:layout/number_picker_horz";
 
@@ -51,7 +51,7 @@ public:
 };
 } // namespace
 static InflaterRegister<NumberPickerCustomEditText>
-    g_numberpicker_customedittext("NumberPicker$CustomEditText", "");
+    g_numberpicker_customedittext("NumberPicker$CustomEditText", 0);
 
 namespace {
     static NumberPicker::Formatter sTwoDigitFormatter=[](int value){

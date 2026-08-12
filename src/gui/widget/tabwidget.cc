@@ -16,13 +16,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/tabwidget.h>
+#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <cdlog.h>
 
 namespace cdroid{
 
-DECLARE_WIDGET2(TabWidget,"cdroid:attr/tabWidgetStyle")
+DECLARE_WIDGET2(TabWidget,R::attr::tabWidgetStyle)
 
 TabWidget::TabWidget(int w,int h):LinearLayout(w,h){
     initTab();

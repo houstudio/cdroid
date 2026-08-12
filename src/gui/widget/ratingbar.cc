@@ -16,12 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/ratingbar.h>
+#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 
 namespace cdroid{
 
-DECLARE_WIDGET2(RatingBar,"cdroid:attr/ratingBarStyle")
+DECLARE_WIDGET2(RatingBar,R::attr::ratingBarStyle)
 
 RatingBar::RatingBar(int w,int h):AbsSeekBar(w,h){
     mNumStars = 5;

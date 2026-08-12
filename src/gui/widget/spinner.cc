@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/spinner.h>
+#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/listview.h>
@@ -30,7 +31,7 @@ namespace cdroid{
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-DECLARE_WIDGET2(Spinner,"cdroid:attr/spinnerStyle")
+DECLARE_WIDGET2(Spinner,R::attr::spinnerStyle)
 
 Spinner::SpinnerForwardingListener::SpinnerForwardingListener(View*v,Spinner::DropdownPopup*d)
 :ForwardingListener(v){

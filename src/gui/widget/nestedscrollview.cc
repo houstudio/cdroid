@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/nestedscrollview.h>
+#include <widget/R.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <widget/nestedscrollinghelper.h>
@@ -47,7 +48,7 @@ private:
     NestedScrollView* mOuter;
 };
 
-DECLARE_WIDGET2(NestedScrollView,"cdroid:attr/scrollViewStyle")
+DECLARE_WIDGET2(NestedScrollView,R::attr::scrollViewStyle)
 
 NestedScrollView::NestedScrollView(int w,int h):FrameLayout(w,h){
     initScrollView(nullptr);

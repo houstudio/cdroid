@@ -78,7 +78,7 @@ private:
     ArrowScrollFocusResult mArrowScrollFocusResult;
     FocusSelector* mFocusSelector;
 
-    void initListView(const AttributeSet&attrs);
+    void initListView(const AttributeSet&attrs,int defStyleAttr=0);
     void clearRecycledState(std::vector<FixedViewInfo*>& infos);
     bool showingTopFadingEdge();
     bool showingBottomFadingEdge();
