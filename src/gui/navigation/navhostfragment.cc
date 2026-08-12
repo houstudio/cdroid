@@ -28,7 +28,7 @@
 
 namespace cdroid{
 
-NavHostFragment::NavHostFragment(const std::string& graphRef) : mGraphRef(graphRef){}
+NavHostFragment::NavHostFragment(int graphResId) : mGraphResId(graphResId){}
 
 NavHostFragment::~NavHostFragment(){
     delete mNavController;
@@ -58,9 +58,9 @@ void NavHostFragment::onCreate(Bundle* savedInstanceState){
     // and runs on the next main-loop iteration, by which time onCreateView has built the child
     // container (the parent drives this fragment CREATED -> VIEW_CREATED -> ... synchronously
     // inside its moveToExpectedState, before the looper runs the posted commit).
-    if(!mGraphRef.empty() && !mGraphLoaded && mNavController){
+    if(mGraphResId != 0 && !mGraphLoaded && mNavController){
         mGraphLoaded = true;
-        mNavController->setGraph(mGraphRef);
+        mNavController->setGraph(mGraphResId);
     }
 }
 

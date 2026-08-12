@@ -68,7 +68,7 @@ public:
     // mirrors androidx NavController#setGraph(@NavigationRes int). Used by NavHostFragment
     // so declaring the graph (with its startDestination) loads the first destination with
     // no app-side inflate/navigate code.
-    void setGraph(const std::string& graphRef, Bundle* startDestinationArgs = nullptr);
+    void setGraph(int graphResId, Bundle* startDestinationArgs = nullptr);
 
     NavDestination* getCurrentDestination();
     NavBackStackEntry* getCurrentBackStackEntry() const;

@@ -113,9 +113,9 @@ void NavController::setGraph(NavGraph* graph, Bundle* startDestinationArgs){
     }
 }
 
-void NavController::setGraph(const std::string& graphRef, Bundle* startDestinationArgs){
+void NavController::setGraph(int graphResId, Bundle* startDestinationArgs){
     NavInflater inflater(mContext, mNavigatorProvider);
-    NavGraph* graph = inflater.inflate(graphRef);
+    NavGraph* graph = inflater.inflate(graphResId);
     setGraph(graph, startDestinationArgs);
 }
 

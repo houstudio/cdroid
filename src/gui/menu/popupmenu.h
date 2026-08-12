@@ -124,7 +124,7 @@ public:
      *
      * @param menuRes Menu resource to inflate
      */
-    void inflate(const std::string& menuRes);
+    void inflate(int menuRes);
 
     void show();
     void dismiss();

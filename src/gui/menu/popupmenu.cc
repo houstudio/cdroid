@@ -134,7 +134,7 @@ MenuInflater* PopupMenu::getMenuInflater() {
  *
  * @param menuRes Menu resource to inflate
  */
-void PopupMenu::inflate(const std::string& menuRes) {
+void PopupMenu::inflate(int menuRes) {
     getMenuInflater()->inflate(menuRes, mMenu);
 }
 

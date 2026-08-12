@@ -43,7 +43,7 @@ NavGraph* NavInflater::inflateMetadataGraph() {
     return nullptr;
 }
 
-NavGraph* NavInflater::inflate(const std::string& graphResId) {
+NavGraph* NavInflater::inflate(int graphResId) {
     XmlPullParser parser(mContext,graphResId);
     AttributeSet& attrs = parser;
     int type;
@@ -91,8 +91,8 @@ NavDestination* NavInflater::inflate(XmlPullParser&parser,const AttributeSet& at
         } else if (name.compare("action")==0) {
             inflateAction(*dest, attrs);
         } else if ((name.compare("include")==0) && dynamic_cast<NavGraph*>(dest)) {
-            const std::string id = attrs.getString("graph");
-            ((NavGraph*) dest)->addDestination(inflate(id));
+            const int id = attrs.getResourceId("graph", 0);
+            if (id != 0) ((NavGraph*) dest)->addDestination(inflate(id));
         } else if (dynamic_cast<NavGraph*>(dest)) {
             ((NavGraph*)dest)->addDestination(inflate(parser, attrs));
         }

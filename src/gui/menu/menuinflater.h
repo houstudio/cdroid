@@ -61,7 +61,7 @@ public:
      * @param menu The Menu to inflate into. The items and submenus will be
      *            added to this Menu.
      */
-    void inflate(const std::string&menuRes, Menu* menu);
+    void inflate(int menuRes, Menu* menu);
 
     Context* getContext();
 };/*endof MenuInflater*/

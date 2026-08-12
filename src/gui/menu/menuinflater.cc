@@ -40,7 +40,7 @@ MenuInflater::MenuInflater(Context* context, void* realOwner) {
     //mActionProviderConstructorArguments = mActionViewConstructorArguments;
 }
 
-void MenuInflater::inflate(const std::string&menuRes, Menu* menu) {
+void MenuInflater::inflate(int menuRes, Menu* menu) {
     XmlPullParser parser(mContext,menuRes);
     AttributeSet& attrs = parser;
     parseMenu(parser, attrs, menu);
