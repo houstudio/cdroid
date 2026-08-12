@@ -34,6 +34,16 @@ Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resi
     return animator;
 }
 
+Animator* AnimatorInflater::loadAnimator(Context* context,int resid){
+    return loadAnimator(context,resid,1.f);
+}
+
+Animator* AnimatorInflater::loadAnimator(Context* context,int resid,float){
+    if (resid == 0) return nullptr;  // AOSP: 0 → null
+    XmlPullParser parser(context,resid);
+    return createAnimatorFromXml(context, parser, 1.f/*pathErrorScale*/);
+}
+
 static std::unordered_map<std::string,std::shared_ptr<StateListAnimator>>mStateAnimatorMap;
 StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,const std::string&resid){
     auto it = mStateAnimatorMap.find(resid);
@@ -608,8 +618,8 @@ ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const AttributeSet
 
     parseAnimatorFromTypeArray(anim,attrs, pathErrorScale);
 
-    const std::string resID = attrs.getString("interpolator");
-    if (!resID.empty()) {
+    const int resID = attrs.getResourceId("interpolator", 0);
+    if (resID != 0) {
         Interpolator* interpolator = AnimationUtils::loadInterpolator(context, resID);
         /*if (interpolator instanceof BaseInterpolator) {
             anim.appendChangingConfigurations(((BaseInterpolator) interpolator).getChangingConfiguration());
@@ -628,10 +638,10 @@ ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const Attrib
         },(int)Property::UNDEFINED);
 
     const std::string propertyName = atts.getString("propertyName");
-    const std::string intpResource = atts.getString("interpolator");
-    Interpolator* interpolator= nullptr;
-    if(!intpResource.empty()){
-        AnimationUtils::loadInterpolator(context,intpResource);
+    const int intpResource = atts.getResourceId("interpolator", 0);
+    Interpolator* interpolator = nullptr;
+    if (intpResource != 0) {
+        interpolator = AnimationUtils::loadInterpolator(context, intpResource);
     }
     if(anim==nullptr){
         anim = new ValueAnimator();

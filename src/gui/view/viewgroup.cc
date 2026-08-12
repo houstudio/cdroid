@@ -218,7 +218,7 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
             switch (i) {
             case R::styleable::ViewGroup_clipChildren:          setClipChildren(ta->getBoolean(i, true)); break;
             case R::styleable::ViewGroup_clipToPadding:         setClipToPadding(ta->getBoolean(i, true)); break;
-            case R::styleable::ViewGroup_layoutAnimation:       { std::string r=ta->getString(i); if(!r.empty()) setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,r)); } break;
+            case R::styleable::ViewGroup_layoutAnimation:       { const int r=ta->getResourceId(i,0); if(r) setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,r)); } break;
             case R::styleable::ViewGroup_descendantFocusability: setDescendantFocusability(ta->getInt(i, (int)FOCUS_BEFORE_DESCENDANTS)); break;
             case R::styleable::ViewGroup_animateLayoutChanges:  if(ta->getBoolean(i,false)) setLayoutTransition(new LayoutTransition()); break;
             case R::styleable::ViewGroup_layoutMode:            setLayoutMode(ta->getInt(i, (int)LAYOUT_MODE_UNDEFINED)); break;
