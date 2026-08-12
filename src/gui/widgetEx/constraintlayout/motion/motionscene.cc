@@ -162,16 +162,16 @@ std::string MotionScene::stripId(const std::string& idString) {
 
 int MotionScene::getId(const std::string& idString) const {
     if (idString.empty()) return UNSET;
-    // stripId -> bare name (scene-local cache key). Resolve via the "@id/" reference path, NOT the
-    // bare name: Assets::getId("@id/<name>") queries the id table and returns -1 (UNSET) when
-    // unregistered, so scene-only ids fall through to the allocator below. A bare name hit
-    // strtol()==0==PARENT_ID, collapsing all scene-only ConstraintSet ids onto one key.
+    // stripId -> bare name (scene-local cache key). Resolve as a real resource id via the arsc
+    // (Resources.getIdentifier); when unregistered it returns 0, so scene-only ids fall through
+    // to the allocator below. NB: must check != 0, not -1 — getIdentifier's not-found is 0, and
+    // 0 == PARENT_ID, so returning it would collapse every scene-only ConstraintSet id onto one key.
     const std::string name = stripId(idString);
     if (mMotionLayout != nullptr) {
         Context* ctx = mMotionLayout->getContext();
         if (ctx != nullptr) {
-            const int rid = ctx->getId("@id/" + name);
-            if (rid != -1) return rid;
+            const int rid = ctx->getResources().getIdentifier(name, "id", "");
+            if (rid != 0) return rid;
         }
     }
     auto it = mConstraintSetIdMap.find(name);

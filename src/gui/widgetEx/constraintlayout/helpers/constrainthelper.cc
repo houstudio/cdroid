@@ -90,13 +90,11 @@ void ConstraintHelper::setIds(const AttributeSet& atts, const std::string& idLis
                                  ? idList.substr(begin)
                                  : idList.substr(begin, end - begin));
         if (!token.empty()) {
-            // Android's constraint_referenced_ids holds bare names ("btn1, btn2"), resolved via
-            // Resources.getIdentifier(name, "id", pkg). Context::getId is the CDROID equivalent;
-            // the "id/" type prefix plays the role of the "id" type argument so a bare name
-            // resolves (returns NO_ID/-1 on miss).
-            std::string idname = std::string("id/") + token;
-            int id = atts.getContext()->getId(idname);
-            if (id == View::NO_ID) {
+            // androidx resolves constraint_referenced_ids bare names via
+            // Resources.getIdentifier(name, "id", pkg) — the arsc lookup, not the
+            // text id-table strtol (Context::getId) which missed scene/app ids.
+            int id = atts.getContext()->getResources().getIdentifier(token, "id", "");
+            if (id == 0) { // getIdentifier's not-found is 0, not View::NO_ID (-1)
                 LOGW("ConstraintHelper: could not resolve referenced id \"%s\"", token.c_str());
             }
             addID(id);

@@ -277,12 +277,19 @@ int AttributeSet::getResourceId(const std::string&key,int def)const{
     if(!str.empty()){
         // "parent" is the ConstraintLayout/RelativeLayout anchor sentinel meaning
         // the parent view (id 0) — NOT a named resource. Return 0 directly; routing
-        // it through getId() wrongly resolves to an unrelated arsc entry named
-        // "parent" (aapt2's full framework dump puts one there) and breaks every
-        // parent-anchored constraint.
+        // it through a resolver wrongly hits an unrelated arsc entry named "parent"
+        // and breaks every parent-anchored constraint.
         if (str == "parent") return 0;
-        const int value = mContext->getId(str);
-        return value == -1 ? def : value;
+        // arsc-backed resolve (was mContext->getId strtol). Strip @id/@+id/@android:id
+        // (or any pkg:) prefix to the bare name, then Resources.getIdentifier.
+        std::string name = str;
+        const size_t slash = name.rfind('/');
+        if (slash != std::string::npos) name = name.substr(slash + 1);
+        size_t at = 0;
+        while (at < name.size() && (name[at]=='@'||name[at]=='+')) at++;
+        if (at > 0) name = name.substr(at);
+        const int value = mContext ? mContext->getResources().getIdentifier(name, "id", "") : 0;
+        return value == 0 ? def : value;
     }
     return def;
 }

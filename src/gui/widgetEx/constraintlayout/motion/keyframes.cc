@@ -127,8 +127,8 @@ std::unique_ptr<MotionKey> makeKeyTrigger(const AttributeSet& a) {
     k->mCross         = ta&&ta->hasValue(R::styleable::KeyTrigger_onCross) ? ta->getString(R::styleable::KeyTrigger_onCross) : a.getString("onCross", k->mCross);
     k->mPositiveCross = ta&&ta->hasValue(R::styleable::KeyTrigger_onPositiveCross) ? ta->getString(R::styleable::KeyTrigger_onPositiveCross) : a.getString("onPositiveCross", k->mPositiveCross);
     k->mNegativeCross = ta&&ta->hasValue(R::styleable::KeyTrigger_onNegativeCross) ? ta->getString(R::styleable::KeyTrigger_onNegativeCross) : a.getString("onNegativeCross", k->mNegativeCross);
-    k->mTriggerID     = ta&&ta->hasValue(R::styleable::KeyTrigger_triggerId) ? (int)ta->getResourceId(R::styleable::KeyTrigger_triggerId, k->mTriggerID) : a.getResourceId("triggerId", k->mTriggerID);
-    k->mTriggerReceiver = ta&&ta->hasValue(R::styleable::KeyTrigger_triggerReceiver) ? (int)ta->getResourceId(R::styleable::KeyTrigger_triggerReceiver, k->mTriggerReceiver) : a.getResourceId("triggerReceiver", k->mTriggerReceiver);
+    k->mTriggerID     = ta ? (int)ta->getResourceId(R::styleable::KeyTrigger_triggerId, k->mTriggerID) : k->mTriggerID;
+    k->mTriggerReceiver = ta ? (int)ta->getResourceId(R::styleable::KeyTrigger_triggerReceiver, k->mTriggerReceiver) : k->mTriggerReceiver;
     k->mTriggerSlack  = ta&&ta->hasValue(R::styleable::KeyTrigger_triggerSlack) ? ta->getFloat(R::styleable::KeyTrigger_triggerSlack, k->mTriggerSlack) : a.getFloat("triggerSlack", k->mTriggerSlack);
     return k;
 }

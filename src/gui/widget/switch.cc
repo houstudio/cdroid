@@ -25,62 +25,62 @@ Switch::Switch(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     auto ta = context->obtainStyledAttributes(a, R::styleable::Switch, defStyleAttr);
     
 
-mThumbDrawable = ta->getDrawable(R::styleable::Switch_thumb);
-if (mThumbDrawable) {
-    mThumbDrawable->setCallback(this);
-}
-mTrackDrawable = ta->getDrawable(R::styleable::Switch_track);
-if (mTrackDrawable) {
-    mTrackDrawable->setCallback(this);
-}
-mTextOn = ta->getString(R::styleable::Switch_textOn);
-mTextOff = ta->getString(R::styleable::Switch_textOff);
-mShowText = ta->getBoolean(R::styleable::Switch_showText, true);
-mThumbTextPadding = ta->getDimensionPixelSize(R::styleable::Switch_thumbTextPadding, 0);
-mSwitchMinWidth = ta->getDimensionPixelSize(R::styleable::Switch_switchMinWidth, 0);
-mSwitchPadding = ta->getDimensionPixelSize(R::styleable::Switch_switchPadding, 0);
-mSplitTrack = ta->getBoolean(R::styleable::Switch_splitTrack, false);
+    mThumbDrawable = ta->getDrawable(R::styleable::Switch_thumb);
+    if (mThumbDrawable) {
+        mThumbDrawable->setCallback(this);
+    }
+    mTrackDrawable = ta->getDrawable(R::styleable::Switch_track);
+    if (mTrackDrawable) {
+        mTrackDrawable->setCallback(this);
+    }
+    mTextOn = ta->getString(R::styleable::Switch_textOn);
+    mTextOff = ta->getString(R::styleable::Switch_textOff);
+    mShowText = ta->getBoolean(R::styleable::Switch_showText, true);
+    mThumbTextPadding = ta->getDimensionPixelSize(R::styleable::Switch_thumbTextPadding, 0);
+    mSwitchMinWidth = ta->getDimensionPixelSize(R::styleable::Switch_switchMinWidth, 0);
+    mSwitchPadding = ta->getDimensionPixelSize(R::styleable::Switch_switchPadding, 0);
+    mSplitTrack = ta->getBoolean(R::styleable::Switch_splitTrack, false);
 
-mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
+    mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
 
-mThumbTintList = a.getColorStateList("thumbTint");
-mHasThumbTint = (mThumbTintList!=nullptr);
+    mThumbTintList = ta->getColorStateList(R::styleable::Switch_thumbTint);
+    mHasThumbTint = (mThumbTintList!=nullptr);
 
-const int thumbTintMode = a.getTintMode("thumbTintMode", -1);
-if (mThumbBlendMode != thumbTintMode) {
-    mThumbBlendMode = thumbTintMode;
-    mHasThumbTintMode = true;
-}
-if (mHasThumbTint || mHasThumbTintMode) {
-    applyThumbTint();
-}
+    const int thumbTintMode = ta->getInt(R::styleable::Switch_thumbTintMode, -1);
+    if (mThumbBlendMode != thumbTintMode) {
+        mThumbBlendMode = thumbTintMode;
+        mHasThumbTintMode = true;
+    }
+    if (mHasThumbTint || mHasThumbTintMode) {
+        applyThumbTint();
+    }
 
-mTrackTintList = a.getColorStateList("trackTint");
-mHasTrackTint = (mTrackTintList!=nullptr);
+    mTrackTintList = ta->getColorStateList(R::styleable::Switch_trackTint);
+    mHasTrackTint = (mTrackTintList!=nullptr);
 
-const int trackTintMode = a.getTintMode("trackTintMode", -1);
-if (mTrackBlendMode != trackTintMode) {
-    mTrackBlendMode = trackTintMode;
-    mHasTrackTintMode = true;
-}
-if (mHasTrackTint || mHasTrackTintMode) {
-    applyTrackTint();
-}
+    const int trackTintMode = ta->getInt(R::styleable::Switch_trackTintMode, -1);
+    if (mTrackBlendMode != trackTintMode) {
+        mTrackBlendMode = trackTintMode;
+        mHasTrackTintMode = true;
+    }
+    if (mHasTrackTint || mHasTrackTintMode) {
+        applyTrackTint();
+    }
 
-const std::string appearance = ta->getString(R::styleable::Switch_switchTextAppearance);
-if (!appearance.empty()){
-    setSwitchTextAppearance(context, appearance);
-}
-ViewConfiguration& config = ViewConfiguration::get(context);
-mTouchSlop = config.getScaledTouchSlop();
-mMinFlingVelocity = config.getScaledMinimumFlingVelocity();
+    const std::string appearance = ta->getString(R::styleable::Switch_switchTextAppearance);
+    if (!appearance.empty()){
+        setSwitchTextAppearance(context, appearance);
+    }
+    ViewConfiguration& config = ViewConfiguration::get(context);
+    mTouchSlop = config.getScaledTouchSlop();
+    mMinFlingVelocity = config.getScaledMinimumFlingVelocity();
 
-// Refresh display with current params
-refreshDrawableState();
-// Default state is derived from on/off-text, so state has to be updated when on/off-text
-// are updated.
-//setDefaultStateDescription();
-setChecked(isChecked());
+    // Refresh display with current params
+    refreshDrawableState();
+    // Default state is derived from on/off-text, so state has to be updated when on/off-text
+    // are updated.
+    //setDefaultStateDescription();
+    setChecked(isChecked());
 
 }
 
@@ -489,7 +489,7 @@ Layout* Switch::makeLayout(const std::string& text){
     //layout->setText(text);
     mText = new SpannedString(TextUtils::utf8_utf16(text));
     CharSequence* transformed = mText;
-        //(mSwitchTransformationMethod != null)? mSwitchTransformationMethod.getTransformation(text, this):text;
+        //(mSwitchTransformationMethod != nullptr)? mSwitchTransformationMethod.getTransformation(text, this):text;
 
     const int width = (int) std::ceil(Layout::getDesiredWidth(transformed, 0,
                 transformed->length(), mTextPaint, getTextDirectionHeuristic()));

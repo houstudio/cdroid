@@ -32,9 +32,14 @@ CompoundButton::CompoundButton(Context*ctx,const AttributeSet* pAttrs,int defSty
   :Button(ctx,pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
     initCompoundButton();
-    setButtonDrawable((ctx->obtainStyledAttributes(&attrs,R::styleable::CompoundButton)) ? "" : attrs.getString("button")); /* TODO: full TypedArray path */
-    setChecked(attrs.getBoolean("checked")); /* checked: TODO TypedArray */
-    mButtonTintList = attrs.getColorStateList("buttonTint");
+    // AOSP CompoundButton ctor: obtainStyledAttributes(attrs, styleable, defStyleAttr, 0),
+    // then a.getDrawable(button) / getBoolean(checked) / getColorStateList(buttonTint).
+    auto ta = ctx->obtainStyledAttributes(&attrs, R::styleable::CompoundButton, defStyleAttr, 0);
+    Drawable* d = ta->getDrawable(R::styleable::CompoundButton_button);
+    if (d) setButtonDrawable(d);
+    setChecked(ta->getBoolean(R::styleable::CompoundButton_checked, false));
+    if (ta->hasValue(R::styleable::CompoundButton_buttonTint))
+        mButtonTintList = ta->getColorStateList(R::styleable::CompoundButton_buttonTint);
     applyButtonTint();
 }
 

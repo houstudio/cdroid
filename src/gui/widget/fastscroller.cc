@@ -19,6 +19,7 @@
 #include <widget/framework_styleable.h>
 #include <widget/listview.h>
 #include <widget/headerviewlistadapter.h>
+#include <widget/internal_R.h>
 #include <utils/mathutils.h>
 #include <utils/textutils.h>
 #include <float.h>
@@ -62,7 +63,7 @@ FastScroller::FastScroller(AbsListView* listView, int styleResId){
     mPrimaryText = createPreviewTextView(context);
     mSecondaryText = createPreviewTextView(context);
 
-    mMinimumTouchTarget = context->getDimension("cdroid:dimen/fast_scroller_minimum_touch_target");
+    mMinimumTouchTarget = context->getDimension(cdroid::internal::R::dimen::fast_scroller_minimum_touch_target);
 
     setStyle(styleResId);
 

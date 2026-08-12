@@ -910,9 +910,14 @@ float NestedScrollView::getVerticalScrollFactorCompat() {
         // AOSP reads ?android:attr/listPreferredItemHeight from the theme; fall
         // back to 1.f when the attr/theme/metrics are unavailable.
         Context* context = getContext();
-        const int attr = context ? context->getId("android:attr/listPreferredItemHeight") : 0;
+        // AOSP resolves ?android:attr/listPreferredItemHeight straight from its framework
+        // attr id (com.android.internal.R.attr.listPreferredItemHeight == 0x0101004d).
+        // CDROID's R::attr::listPreferredItemHeight is that same constant — use it directly
+        // rather than a runtime name lookup (getId hardcodes type=id and misses; getIdentifier
+        // works but needlessly re-resolves a compile-time constant).
+        const int attr = R::attr::listPreferredItemHeight;
         Res_value v;
-        if (attr && context->getTheme().resolveAttribute((uint32_t)attr, &v, true) &&
+        if (context && context->getTheme().resolveAttribute((uint32_t)attr, &v, true) &&
             v.dataType == Res_value::TYPE_DIMENSION) {
             TypedValue tv;
             tv.type = v.dataType;

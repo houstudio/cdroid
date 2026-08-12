@@ -64,7 +64,7 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Co
 
     // Set up and attach container.
     LayoutInflater* inflater = LayoutInflater::from(mContext);
-    mContainer = (ViewGroup*) inflater->inflate("cdroid:layout/date_picker_material", nullptr, false);
+    mContainer = (ViewGroup*) inflater->inflate(cdroid::internal::R::layout::date_picker_material, nullptr, false);
     mContainer->setSaveFromParentEnabled(false);
     mDelegator->addView(mContainer);
 

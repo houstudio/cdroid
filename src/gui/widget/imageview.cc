@@ -33,9 +33,7 @@ ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     initImageView();
     auto ta = getContext()->obtainStyledAttributes(
         attrs, R::styleable::ImageView, defStyleAttr);
-    if (ta) {
-
-    mBaselineAlignBottom = attrs.getBoolean("baselineAlignBottom",false);
+    mBaselineAlignBottom = ta->getBoolean(R::styleable::ImageView_baselineAlignBottom,false);
     mBaseline = ta->getDimensionPixelSize(R::styleable::ImageView_baseline,-1);
     setAdjustViewBounds(ta->getBoolean(R::styleable::ImageView_adjustViewBounds,false));
     mCropToPadding = ta->getBoolean(R::styleable::ImageView_cropToPadding,false);
@@ -48,7 +46,7 @@ ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mHasDrawableTint = mDrawableTintList!=nullptr;
     if(mDrawableTintList){
         /* ImageView's default tint mode is SRC_ATOP once a tint is applied. */
-        mDrawableTintMode = attrs.getTintMode("tintMode",PorterDuff::SRC_ATOP);
+        mDrawableTintMode = ta->getInt(R::styleable::ImageView_tintMode,PorterDuff::SRC_ATOP);
     }
     setMaxWidth (ta->getDimensionPixelSize(R::styleable::ImageView_maxWidth,INT_MAX));
     setMaxHeight(ta->getDimensionPixelSize(R::styleable::ImageView_maxHeight,INT_MAX));
@@ -58,9 +56,7 @@ ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mRadii[1] = attrs.getInt("topRightRadius",radii);
     mRadii[2] = attrs.getInt("bottomRightRadius",radii);
     mRadii[3] = attrs.getInt("bottomLeftRadius",radii);
-    mCropToPadding = attrs.getBoolean("cropToPadding",false);
     applyImageTint();
-    }
 }
 
 ImageView::ImageView(int w, int h)
