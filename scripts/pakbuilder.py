@@ -525,14 +525,14 @@ class PakBuilder(idgen.IDGenerater):
                                 '--aapt2', self.aapt2_path,
                                 '--namespace', self.namespace,
                                 '-o', self.rh_path,
-                                '--only-public'],
+                                '--only-public', 'true'],
                                capture_output=True, text=True)
                 _internal_rh = os.path.join(_rh_dir, 'internal_R.h')
                 _r2 = subprocess.run([sys.executable, _gen, out_apk,
                                 '--aapt2', self.aapt2_path,
                                 '--namespace', self.namespace,
                                 '-o', _internal_rh,
-                                '--internal'],
+                                '--only-public', 'false'],
                                capture_output=True, text=True)
                 sys.stderr.write("aapt2_gen_rh R.h: rc=%d %s\n"
                                  % (_r1.returncode, (_r1.stderr or _r1.stdout)[:200]))
