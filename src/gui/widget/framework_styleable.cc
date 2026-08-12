@@ -35,6 +35,7 @@ namespace R { namespace styleable {
     const uint32_t NumberPicker[] = {
         0x0101034a, 0x01010598, 0x01010539, 0x01010136, 0x01010024, 0x01010098, 0x01010095,
         0x010103ac, 0x01010130, 0 };
+    const uint32_t PopupWindow[] = { 0x01010176, 0x0101048c, 0x010102c9, 0x01010462, 0x0101051f, 0x01010520, 0 };
     const uint32_t ProgressBar[] = {
         0x01010539, 0x01010136, 0x01010137, 0x01010138, 0x01010139, 0x0101013a, 0x0101013b,
         0x0101013c, 0x0101013d, 0x0101013e, 0x0101013f, 0x0101011f, 0x01010140, 0x01010120,
@@ -110,6 +111,7 @@ namespace R { namespace styleable {
     const uint32_t ViewGroup[] = {
         0x010102f2, 0x010100ea, 0x010100eb, 0x010100ec, 0x010100ed, 0x010100ee, 0x010100ef,
         0x010100f0, 0x010100f1, 0x0101048f, 0x010102ef, 0x010103da, 0x01010401, 0 };
+    const uint32_t ListPopupWindow[] = { 0x010102ad, 0x010102ac, 0 };
     const uint32_t AdaptiveIconDrawableLayer[] = { 0x01010199, 0 };
     const uint32_t AnimatedImageDrawable[] = { 0x01010119, 0x010103ea, 0x010101bf, 0x010102b5, 0 };
     const uint32_t AnimatedRotateDrawable[] = { 0x01010194, 0x010101b5, 0x010101b6, 0x01010199, 0 };

@@ -188,6 +188,15 @@ namespace R { namespace styleable {
     constexpr int NumberPicker_fontFamily = 7;
     constexpr int NumberPicker_itemBackground = 8;
 
+    // PopupWindow (6 attrs)
+    extern const uint32_t PopupWindow[];
+    constexpr int PopupWindow_popupBackground = 0;
+    constexpr int PopupWindow_popupElevation = 1;
+    constexpr int PopupWindow_popupAnimationStyle = 2;
+    constexpr int PopupWindow_overlapAnchor = 3;
+    constexpr int PopupWindow_popupEnterTransition = 4;
+    constexpr int PopupWindow_popupExitTransition = 5;
+
     // ProgressBar (27 attrs)
     extern const uint32_t ProgressBar[];
     constexpr int ProgressBar_min = 0;
@@ -628,6 +637,11 @@ namespace R { namespace styleable {
     constexpr int ViewGroup_splitMotionEvents = 10;
     constexpr int ViewGroup_layoutMode = 11;
     constexpr int ViewGroup_transitionGroup = 12;
+
+    // ListPopupWindow (2 attrs)
+    extern const uint32_t ListPopupWindow[];
+    constexpr int ListPopupWindow_dropDownVerticalOffset = 0;
+    constexpr int ListPopupWindow_dropDownHorizontalOffset = 1;
 
     // AdaptiveIconDrawableLayer (1 attrs)
     extern const uint32_t AdaptiveIconDrawableLayer[];
