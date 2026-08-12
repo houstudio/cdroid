@@ -49,7 +49,7 @@ namespace R { namespace styleable {
     constexpr int AnalogClock_hand_secondTint = 11;
     constexpr int AnalogClock_hand_secondTintMode = 12;
 
-    // AlertDialog (11 attrs)
+    // AlertDialog (22 attrs)
     extern const uint32_t AlertDialog[];
     constexpr int AlertDialog_fullDark = 0;
     constexpr int AlertDialog_topDark = 1;
@@ -62,13 +62,25 @@ namespace R { namespace styleable {
     constexpr int AlertDialog_bottomMedium = 8;
     constexpr int AlertDialog_centerMedium = 9;
     constexpr int AlertDialog_layout = 10;
+    constexpr int AlertDialog_buttonPanelSideLayout = 11;
+    constexpr int AlertDialog_listLayout = 12;
+    constexpr int AlertDialog_multiChoiceItemLayout = 13;
+    constexpr int AlertDialog_singleChoiceItemLayout = 14;
+    constexpr int AlertDialog_listItemLayout = 15;
+    constexpr int AlertDialog_progressLayout = 16;
+    constexpr int AlertDialog_horizontalProgressLayout = 17;
+    constexpr int AlertDialog_showTitle = 18;
+    constexpr int AlertDialog_needsDefaultBackgrounds = 19;
+    constexpr int AlertDialog_controllerType = 20;
+    constexpr int AlertDialog_selectionScrollOffset = 21;
 
-    // CheckedTextView (4 attrs)
+    // CheckedTextView (5 attrs)
     extern const uint32_t CheckedTextView[];
     constexpr int CheckedTextView_checked = 0;
     constexpr int CheckedTextView_checkMark = 1;
     constexpr int CheckedTextView_checkMarkTint = 2;
     constexpr int CheckedTextView_checkMarkTintMode = 3;
+    constexpr int CheckedTextView_checkMarkGravity = 4;
 
     // Chronometer (2 attrs)
     extern const uint32_t Chronometer[];
@@ -115,7 +127,7 @@ namespace R { namespace styleable {
     constexpr int GridView_numColumns = 4;
     constexpr int GridView_gravity = 5;
 
-    // ImageView (10 attrs)
+    // ImageView (11 attrs)
     extern const uint32_t ImageView[];
     constexpr int ImageView_src = 0;
     constexpr int ImageView_scaleType = 1;
@@ -126,21 +138,23 @@ namespace R { namespace styleable {
     constexpr int ImageView_baselineAlignBottom = 6;
     constexpr int ImageView_cropToPadding = 7;
     constexpr int ImageView_baseline = 8;
-    constexpr int ImageView_tintMode = 9;
+    constexpr int ImageView_drawableAlpha = 9;
+    constexpr int ImageView_tintMode = 10;
 
-    // KeyboardView (11 attrs)
+    // KeyboardView (12 attrs)
     extern const uint32_t KeyboardView[];
-    constexpr int KeyboardView_keyBackground = 0;
-    constexpr int KeyboardView_keyTextSize = 1;
-    constexpr int KeyboardView_labelTextSize = 2;
-    constexpr int KeyboardView_keyTextColor = 3;
-    constexpr int KeyboardView_keyPreviewLayout = 4;
-    constexpr int KeyboardView_keyPreviewOffset = 5;
-    constexpr int KeyboardView_keyPreviewHeight = 6;
-    constexpr int KeyboardView_verticalCorrection = 7;
-    constexpr int KeyboardView_popupLayout = 8;
-    constexpr int KeyboardView_shadowColor = 9;
-    constexpr int KeyboardView_shadowRadius = 10;
+    constexpr int KeyboardView_keyboardViewStyle = 0;
+    constexpr int KeyboardView_keyBackground = 1;
+    constexpr int KeyboardView_keyTextSize = 2;
+    constexpr int KeyboardView_labelTextSize = 3;
+    constexpr int KeyboardView_keyTextColor = 4;
+    constexpr int KeyboardView_keyPreviewLayout = 5;
+    constexpr int KeyboardView_keyPreviewOffset = 6;
+    constexpr int KeyboardView_keyPreviewHeight = 7;
+    constexpr int KeyboardView_verticalCorrection = 8;
+    constexpr int KeyboardView_popupLayout = 9;
+    constexpr int KeyboardView_shadowColor = 10;
+    constexpr int KeyboardView_shadowRadius = 11;
 
     // Layout (2 attrs)
     extern const uint32_t Layout[];
@@ -190,17 +204,26 @@ namespace R { namespace styleable {
     constexpr int MarginLayout_layout_marginHorizontal = 9;
     constexpr int MarginLayout_layout_marginVertical = 10;
 
-    // NumberPicker (9 attrs)
+    // NumberPicker (18 attrs)
     extern const uint32_t NumberPicker[];
     constexpr int NumberPicker_solidColor = 0;
-    constexpr int NumberPicker_selectionDividerHeight = 1;
-    constexpr int NumberPicker_min = 2;
-    constexpr int NumberPicker_max = 3;
-    constexpr int NumberPicker_value = 4;
-    constexpr int NumberPicker_textColor = 5;
-    constexpr int NumberPicker_textSize = 6;
-    constexpr int NumberPicker_fontFamily = 7;
-    constexpr int NumberPicker_itemBackground = 8;
+    constexpr int NumberPicker_selectionDivider = 1;
+    constexpr int NumberPicker_selectionDividerHeight = 2;
+    constexpr int NumberPicker_selectionDividersDistance = 3;
+    constexpr int NumberPicker_internalMinHeight = 4;
+    constexpr int NumberPicker_internalMaxHeight = 5;
+    constexpr int NumberPicker_internalMinWidth = 6;
+    constexpr int NumberPicker_internalMaxWidth = 7;
+    constexpr int NumberPicker_internalLayout = 8;
+    constexpr int NumberPicker_virtualButtonPressedDrawable = 9;
+    constexpr int NumberPicker_hideWheelUntilFocused = 10;
+    constexpr int NumberPicker_min = 11;
+    constexpr int NumberPicker_max = 12;
+    constexpr int NumberPicker_value = 13;
+    constexpr int NumberPicker_textColor = 14;
+    constexpr int NumberPicker_textSize = 15;
+    constexpr int NumberPicker_fontFamily = 16;
+    constexpr int NumberPicker_itemBackground = 17;
 
     // PopupWindow (6 attrs)
     extern const uint32_t PopupWindow[];
@@ -288,18 +311,19 @@ namespace R { namespace styleable {
     extern const uint32_t ScrollView[];
     constexpr int ScrollView_fillViewport = 0;
 
-    // SeekBar (8 attrs)
+    // SeekBar (9 attrs)
     extern const uint32_t SeekBar[];
     constexpr int SeekBar_thumb = 0;
     constexpr int SeekBar_thumbOffset = 1;
     constexpr int SeekBar_splitTrack = 2;
-    constexpr int SeekBar_thumbTint = 3;
-    constexpr int SeekBar_thumbTintMode = 4;
-    constexpr int SeekBar_tickMark = 5;
-    constexpr int SeekBar_tickMarkTint = 6;
-    constexpr int SeekBar_tickMarkTintMode = 7;
+    constexpr int SeekBar_useDisabledAlpha = 3;
+    constexpr int SeekBar_thumbTint = 4;
+    constexpr int SeekBar_thumbTintMode = 5;
+    constexpr int SeekBar_tickMark = 6;
+    constexpr int SeekBar_tickMarkTint = 7;
+    constexpr int SeekBar_tickMarkTintMode = 8;
 
-    // Spinner (8 attrs)
+    // Spinner (10 attrs)
     extern const uint32_t Spinner[];
     constexpr int Spinner_prompt = 0;
     constexpr int Spinner_spinnerMode = 1;
@@ -308,7 +332,9 @@ namespace R { namespace styleable {
     constexpr int Spinner_popupBackground = 4;
     constexpr int Spinner_popupElevation = 5;
     constexpr int Spinner_dropDownWidth = 6;
-    constexpr int Spinner_gravity = 7;
+    constexpr int Spinner_popupPromptView = 7;
+    constexpr int Spinner_gravity = 8;
+    constexpr int Spinner_disableChildrenWhenDisabled = 9;
 
     // Switch (14 attrs)
     extern const uint32_t Switch[];
@@ -327,12 +353,13 @@ namespace R { namespace styleable {
     constexpr int Switch_splitTrack = 12;
     constexpr int Switch_showText = 13;
 
-    // TabWidget (4 attrs)
+    // TabWidget (5 attrs)
     extern const uint32_t TabWidget[];
     constexpr int TabWidget_divider = 0;
     constexpr int TabWidget_tabStripEnabled = 1;
     constexpr int TabWidget_tabStripLeft = 2;
     constexpr int TabWidget_tabStripRight = 3;
+    constexpr int TabWidget_tabLayout = 4;
 
     // TableRowLayout (2 attrs)
     extern const uint32_t TableRowLayout[];
@@ -487,7 +514,7 @@ namespace R { namespace styleable {
     constexpr int ToggleButton_textOff = 1;
     constexpr int ToggleButton_disabledAlpha = 2;
 
-    // Toolbar (27 attrs)
+    // Toolbar (28 attrs)
     extern const uint32_t Toolbar[];
     constexpr int Toolbar_titleTextAppearance = 0;
     constexpr int Toolbar_subtitleTextAppearance = 1;
@@ -506,18 +533,19 @@ namespace R { namespace styleable {
     constexpr int Toolbar_contentInsetStartWithNavigation = 14;
     constexpr int Toolbar_contentInsetEndWithActions = 15;
     constexpr int Toolbar_maxButtonHeight = 16;
-    constexpr int Toolbar_buttonGravity = 17;
-    constexpr int Toolbar_collapseIcon = 18;
-    constexpr int Toolbar_collapseContentDescription = 19;
-    constexpr int Toolbar_popupTheme = 20;
-    constexpr int Toolbar_navigationIcon = 21;
-    constexpr int Toolbar_navigationContentDescription = 22;
-    constexpr int Toolbar_logo = 23;
-    constexpr int Toolbar_logoDescription = 24;
-    constexpr int Toolbar_titleTextColor = 25;
-    constexpr int Toolbar_subtitleTextColor = 26;
+    constexpr int Toolbar_navigationButtonStyle = 17;
+    constexpr int Toolbar_buttonGravity = 18;
+    constexpr int Toolbar_collapseIcon = 19;
+    constexpr int Toolbar_collapseContentDescription = 20;
+    constexpr int Toolbar_popupTheme = 21;
+    constexpr int Toolbar_navigationIcon = 22;
+    constexpr int Toolbar_navigationContentDescription = 23;
+    constexpr int Toolbar_logo = 24;
+    constexpr int Toolbar_logoDescription = 25;
+    constexpr int Toolbar_titleTextColor = 26;
+    constexpr int Toolbar_subtitleTextColor = 27;
 
-    // View (116 attrs)
+    // View (123 attrs)
     extern const uint32_t View[];
     constexpr int View_id = 0;
     constexpr int View_tag = 1;
@@ -534,107 +562,114 @@ namespace R { namespace styleable {
     constexpr int View_paddingStart = 12;
     constexpr int View_paddingEnd = 13;
     constexpr int View_focusable = 14;
-    constexpr int View_autofillHints = 15;
-    constexpr int View_importantForAutofill = 16;
-    constexpr int View_importantForContentCapture = 17;
-    constexpr int View_isCredential = 18;
-    constexpr int View_focusableInTouchMode = 19;
-    constexpr int View_visibility = 20;
-    constexpr int View_fitsSystemWindows = 21;
-    constexpr int View_scrollbars = 22;
-    constexpr int View_scrollbarStyle = 23;
-    constexpr int View_isScrollContainer = 24;
-    constexpr int View_fadeScrollbars = 25;
-    constexpr int View_scrollbarFadeDuration = 26;
-    constexpr int View_scrollbarDefaultDelayBeforeFade = 27;
-    constexpr int View_scrollbarSize = 28;
-    constexpr int View_scrollbarThumbHorizontal = 29;
-    constexpr int View_scrollbarThumbVertical = 30;
-    constexpr int View_scrollbarTrackHorizontal = 31;
-    constexpr int View_scrollbarTrackVertical = 32;
-    constexpr int View_scrollbarAlwaysDrawHorizontalTrack = 33;
-    constexpr int View_scrollbarAlwaysDrawVerticalTrack = 34;
-    constexpr int View_fadingEdge = 35;
-    constexpr int View_requiresFadingEdge = 36;
-    constexpr int View_fadingEdgeLength = 37;
-    constexpr int View_nextFocusLeft = 38;
-    constexpr int View_nextFocusRight = 39;
-    constexpr int View_nextFocusUp = 40;
-    constexpr int View_nextFocusDown = 41;
-    constexpr int View_nextFocusForward = 42;
-    constexpr int View_clickable = 43;
-    constexpr int View_longClickable = 44;
-    constexpr int View_contextClickable = 45;
-    constexpr int View_saveEnabled = 46;
-    constexpr int View_filterTouchesWhenObscured = 47;
-    constexpr int View_drawingCacheQuality = 48;
-    constexpr int View_keepScreenOn = 49;
-    constexpr int View_duplicateParentState = 50;
-    constexpr int View_minHeight = 51;
-    constexpr int View_minWidth = 52;
-    constexpr int View_soundEffectsEnabled = 53;
-    constexpr int View_hapticFeedbackEnabled = 54;
-    constexpr int View_contentDescription = 55;
-    constexpr int View_supplementalDescription = 56;
-    constexpr int View_accessibilityTraversalBefore = 57;
-    constexpr int View_accessibilityTraversalAfter = 58;
-    constexpr int View_onClick = 59;
-    constexpr int View_overScrollMode = 60;
-    constexpr int View_alpha = 61;
-    constexpr int View_elevation = 62;
-    constexpr int View_translationX = 63;
-    constexpr int View_translationY = 64;
-    constexpr int View_translationZ = 65;
-    constexpr int View_transformPivotX = 66;
-    constexpr int View_transformPivotY = 67;
-    constexpr int View_rotation = 68;
-    constexpr int View_rotationX = 69;
-    constexpr int View_rotationY = 70;
-    constexpr int View_scaleX = 71;
-    constexpr int View_scaleY = 72;
-    constexpr int View_verticalScrollbarPosition = 73;
-    constexpr int View_layerType = 74;
-    constexpr int View_layoutDirection = 75;
-    constexpr int View_textDirection = 76;
-    constexpr int View_textAlignment = 77;
-    constexpr int View_importantForAccessibility = 78;
-    constexpr int View_accessibilityDataSensitive = 79;
-    constexpr int View_accessibilityLiveRegion = 80;
-    constexpr int View_labelFor = 81;
-    constexpr int View_theme = 82;
-    constexpr int View_transitionName = 83;
-    constexpr int View_nestedScrollingEnabled = 84;
-    constexpr int View_stateListAnimator = 85;
-    constexpr int View_backgroundTint = 86;
-    constexpr int View_backgroundTintMode = 87;
-    constexpr int View_outlineProvider = 88;
-    constexpr int View_foreground = 89;
-    constexpr int View_foregroundGravity = 90;
-    constexpr int View_foregroundTint = 91;
-    constexpr int View_foregroundTintMode = 92;
-    constexpr int View_scrollIndicators = 93;
-    constexpr int View_pointerIcon = 94;
-    constexpr int View_forceHasOverlappingRendering = 95;
-    constexpr int View_tooltipText = 96;
-    constexpr int View_keyboardNavigationCluster = 97;
-    constexpr int View_nextClusterForward = 98;
-    constexpr int View_focusedByDefault = 99;
-    constexpr int View_defaultFocusHighlightEnabled = 100;
-    constexpr int View_screenReaderFocusable = 101;
-    constexpr int View_accessibilityPaneTitle = 102;
-    constexpr int View_accessibilityHeading = 103;
-    constexpr int View_allowClickWhenDisabled = 104;
-    constexpr int View_outlineSpotShadowColor = 105;
-    constexpr int View_outlineAmbientShadowColor = 106;
-    constexpr int View_forceDarkAllowed = 107;
-    constexpr int View_clipToOutline = 108;
-    constexpr int View_preferKeepClear = 109;
-    constexpr int View_autoHandwritingEnabled = 110;
-    constexpr int View_handwritingBoundsOffsetLeft = 111;
-    constexpr int View_handwritingBoundsOffsetTop = 112;
-    constexpr int View_handwritingBoundsOffsetRight = 113;
-    constexpr int View_handwritingBoundsOffsetBottom = 114;
-    constexpr int View_contentSensitivity = 115;
+    constexpr int View___removed3 = 15;
+    constexpr int View___removed4 = 16;
+    constexpr int View___removed5 = 17;
+    constexpr int View_autofillHints = 18;
+    constexpr int View_importantForAutofill = 19;
+    constexpr int View_importantForContentCapture = 20;
+    constexpr int View_isCredential = 21;
+    constexpr int View_scrollCaptureHint = 22;
+    constexpr int View_focusableInTouchMode = 23;
+    constexpr int View_visibility = 24;
+    constexpr int View_fitsSystemWindows = 25;
+    constexpr int View_scrollbars = 26;
+    constexpr int View_scrollbarStyle = 27;
+    constexpr int View_isScrollContainer = 28;
+    constexpr int View_fadeScrollbars = 29;
+    constexpr int View_scrollbarFadeDuration = 30;
+    constexpr int View_scrollbarDefaultDelayBeforeFade = 31;
+    constexpr int View_scrollbarSize = 32;
+    constexpr int View_scrollbarThumbHorizontal = 33;
+    constexpr int View_scrollbarThumbVertical = 34;
+    constexpr int View_scrollbarTrackHorizontal = 35;
+    constexpr int View_scrollbarTrackVertical = 36;
+    constexpr int View_scrollbarAlwaysDrawHorizontalTrack = 37;
+    constexpr int View_scrollbarAlwaysDrawVerticalTrack = 38;
+    constexpr int View_fadingEdge = 39;
+    constexpr int View_requiresFadingEdge = 40;
+    constexpr int View_fadingEdgeLength = 41;
+    constexpr int View_nextFocusLeft = 42;
+    constexpr int View_nextFocusRight = 43;
+    constexpr int View_nextFocusUp = 44;
+    constexpr int View_nextFocusDown = 45;
+    constexpr int View_nextFocusForward = 46;
+    constexpr int View_clickable = 47;
+    constexpr int View_longClickable = 48;
+    constexpr int View_contextClickable = 49;
+    constexpr int View_saveEnabled = 50;
+    constexpr int View_filterTouchesWhenObscured = 51;
+    constexpr int View_drawingCacheQuality = 52;
+    constexpr int View_keepScreenOn = 53;
+    constexpr int View_duplicateParentState = 54;
+    constexpr int View_minHeight = 55;
+    constexpr int View_minWidth = 56;
+    constexpr int View_soundEffectsEnabled = 57;
+    constexpr int View_hapticFeedbackEnabled = 58;
+    constexpr int View_contentDescription = 59;
+    constexpr int View_supplementalDescription = 60;
+    constexpr int View_accessibilityTraversalBefore = 61;
+    constexpr int View_accessibilityTraversalAfter = 62;
+    constexpr int View_onClick = 63;
+    constexpr int View_overScrollMode = 64;
+    constexpr int View_alpha = 65;
+    constexpr int View_elevation = 66;
+    constexpr int View_translationX = 67;
+    constexpr int View_translationY = 68;
+    constexpr int View_translationZ = 69;
+    constexpr int View_transformPivotX = 70;
+    constexpr int View_transformPivotY = 71;
+    constexpr int View_rotation = 72;
+    constexpr int View_rotationX = 73;
+    constexpr int View_rotationY = 74;
+    constexpr int View_scaleX = 75;
+    constexpr int View_scaleY = 76;
+    constexpr int View_verticalScrollbarPosition = 77;
+    constexpr int View_layerType = 78;
+    constexpr int View_layoutDirection = 79;
+    constexpr int View_textDirection = 80;
+    constexpr int View_textAlignment = 81;
+    constexpr int View_importantForAccessibility = 82;
+    constexpr int View_accessibilityDataSensitive = 83;
+    constexpr int View_accessibilityLiveRegion = 84;
+    constexpr int View_labelFor = 85;
+    constexpr int View_theme = 86;
+    constexpr int View_transitionName = 87;
+    constexpr int View_nestedScrollingEnabled = 88;
+    constexpr int View_stateListAnimator = 89;
+    constexpr int View_backgroundTint = 90;
+    constexpr int View_backgroundTintMode = 91;
+    constexpr int View_outlineProvider = 92;
+    constexpr int View_foreground = 93;
+    constexpr int View_foregroundGravity = 94;
+    constexpr int View_foregroundInsidePadding = 95;
+    constexpr int View_foregroundTint = 96;
+    constexpr int View_foregroundTintMode = 97;
+    constexpr int View_scrollIndicators = 98;
+    constexpr int View_pointerIcon = 99;
+    constexpr int View_forceHasOverlappingRendering = 100;
+    constexpr int View_tooltipText = 101;
+    constexpr int View_keyboardNavigationCluster = 102;
+    constexpr int View___removed0 = 103;
+    constexpr int View_nextClusterForward = 104;
+    constexpr int View___removed1 = 105;
+    constexpr int View_focusedByDefault = 106;
+    constexpr int View_defaultFocusHighlightEnabled = 107;
+    constexpr int View_screenReaderFocusable = 108;
+    constexpr int View_accessibilityPaneTitle = 109;
+    constexpr int View_accessibilityHeading = 110;
+    constexpr int View_allowClickWhenDisabled = 111;
+    constexpr int View_outlineSpotShadowColor = 112;
+    constexpr int View_outlineAmbientShadowColor = 113;
+    constexpr int View_forceDarkAllowed = 114;
+    constexpr int View_clipToOutline = 115;
+    constexpr int View_preferKeepClear = 116;
+    constexpr int View_autoHandwritingEnabled = 117;
+    constexpr int View_handwritingBoundsOffsetLeft = 118;
+    constexpr int View_handwritingBoundsOffsetTop = 119;
+    constexpr int View_handwritingBoundsOffsetRight = 120;
+    constexpr int View_handwritingBoundsOffsetBottom = 121;
+    constexpr int View_contentSensitivity = 122;
 
     // ViewGroup (13 attrs)
     extern const uint32_t ViewGroup[];
@@ -657,6 +692,23 @@ namespace R { namespace styleable {
     constexpr int ListPopupWindow_dropDownVerticalOffset = 0;
     constexpr int ListPopupWindow_dropDownHorizontalOffset = 1;
 
+    // FastScroll (14 attrs)
+    extern const uint32_t FastScroll[];
+    constexpr int FastScroll_thumbDrawable = 0;
+    constexpr int FastScroll_thumbMinWidth = 1;
+    constexpr int FastScroll_thumbMinHeight = 2;
+    constexpr int FastScroll_trackDrawable = 3;
+    constexpr int FastScroll_backgroundRight = 4;
+    constexpr int FastScroll_backgroundLeft = 5;
+    constexpr int FastScroll_position = 6;
+    constexpr int FastScroll_textAppearance = 7;
+    constexpr int FastScroll_textColor = 8;
+    constexpr int FastScroll_textSize = 9;
+    constexpr int FastScroll_minWidth = 10;
+    constexpr int FastScroll_minHeight = 11;
+    constexpr int FastScroll_padding = 12;
+    constexpr int FastScroll_thumbPosition = 13;
+
     // AdaptiveIconDrawableLayer (1 attrs)
     extern const uint32_t AdaptiveIconDrawableLayer[];
     constexpr int AdaptiveIconDrawableLayer_drawable = 0;
@@ -668,12 +720,14 @@ namespace R { namespace styleable {
     constexpr int AnimatedImageDrawable_repeatCount = 2;
     constexpr int AnimatedImageDrawable_autoStart = 3;
 
-    // AnimatedRotateDrawable (4 attrs)
+    // AnimatedRotateDrawable (6 attrs)
     extern const uint32_t AnimatedRotateDrawable[];
     constexpr int AnimatedRotateDrawable_visible = 0;
-    constexpr int AnimatedRotateDrawable_pivotX = 1;
-    constexpr int AnimatedRotateDrawable_pivotY = 2;
-    constexpr int AnimatedRotateDrawable_drawable = 3;
+    constexpr int AnimatedRotateDrawable_frameDuration = 1;
+    constexpr int AnimatedRotateDrawable_framesCount = 2;
+    constexpr int AnimatedRotateDrawable_pivotX = 3;
+    constexpr int AnimatedRotateDrawable_pivotY = 4;
+    constexpr int AnimatedRotateDrawable_drawable = 5;
 
     // AnimatedStateListDrawable (7 attrs)
     extern const uint32_t AnimatedStateListDrawable[];
@@ -774,7 +828,7 @@ namespace R { namespace styleable {
     extern const uint32_t DrawableWrapper[];
     constexpr int DrawableWrapper_drawable = 0;
 
-    // GradientDrawable (14 attrs)
+    // GradientDrawable (15 attrs)
     extern const uint32_t GradientDrawable[];
     constexpr int GradientDrawable_visible = 0;
     constexpr int GradientDrawable_dither = 1;
@@ -790,6 +844,7 @@ namespace R { namespace styleable {
     constexpr int GradientDrawable_opticalInsetTop = 11;
     constexpr int GradientDrawable_opticalInsetRight = 12;
     constexpr int GradientDrawable_opticalInsetBottom = 13;
+    constexpr int GradientDrawable_strokeCap = 14;
 
     // GradientDrawableGradient (9 attrs)
     extern const uint32_t GradientDrawableGradient[];
@@ -989,55 +1044,67 @@ namespace R { namespace styleable {
     constexpr int VectorDrawablePath_strokeMiterLimit = 12;
     constexpr int VectorDrawablePath_fillType = 13;
 
-    // DatePicker (17 attrs)
+    // DatePicker (22 attrs)
     extern const uint32_t DatePicker[];
     constexpr int DatePicker_firstDayOfWeek = 0;
     constexpr int DatePicker_minDate = 1;
     constexpr int DatePicker_maxDate = 2;
     constexpr int DatePicker_spinnersShown = 3;
     constexpr int DatePicker_calendarViewShown = 4;
-    constexpr int DatePicker_headerBackground = 5;
-    constexpr int DatePicker_yearListItemTextAppearance = 6;
-    constexpr int DatePicker_calendarTextColor = 7;
-    constexpr int DatePicker_datePickerMode = 8;
-    constexpr int DatePicker_startYear = 9;
-    constexpr int DatePicker_endYear = 10;
-    constexpr int DatePicker_headerMonthTextAppearance = 11;
-    constexpr int DatePicker_headerDayOfMonthTextAppearance = 12;
-    constexpr int DatePicker_headerYearTextAppearance = 13;
-    constexpr int DatePicker_dayOfWeekBackground = 14;
-    constexpr int DatePicker_dayOfWeekTextAppearance = 15;
-    constexpr int DatePicker_yearListSelectorColor = 16;
+    constexpr int DatePicker_internalLayout = 5;
+    constexpr int DatePicker_legacyLayout = 6;
+    constexpr int DatePicker_headerTextColor = 7;
+    constexpr int DatePicker_headerBackground = 8;
+    constexpr int DatePicker_yearListItemTextAppearance = 9;
+    constexpr int DatePicker_yearListItemActivatedTextAppearance = 10;
+    constexpr int DatePicker_calendarTextColor = 11;
+    constexpr int DatePicker_datePickerMode = 12;
+    constexpr int DatePicker_startYear = 13;
+    constexpr int DatePicker_endYear = 14;
+    constexpr int DatePicker_headerMonthTextAppearance = 15;
+    constexpr int DatePicker_headerDayOfMonthTextAppearance = 16;
+    constexpr int DatePicker_headerYearTextAppearance = 17;
+    constexpr int DatePicker_dayOfWeekBackground = 18;
+    constexpr int DatePicker_dayOfWeekTextAppearance = 19;
+    constexpr int DatePicker_yearListSelectorColor = 20;
+    constexpr int DatePicker_dialogMode = 21;
 
-    // CalendarView (14 attrs)
+    // CalendarView (17 attrs)
     extern const uint32_t CalendarView[];
     constexpr int CalendarView_firstDayOfWeek = 0;
     constexpr int CalendarView_minDate = 1;
     constexpr int CalendarView_maxDate = 2;
-    constexpr int CalendarView_weekDayTextAppearance = 3;
-    constexpr int CalendarView_dateTextAppearance = 4;
-    constexpr int CalendarView_calendarViewMode = 5;
-    constexpr int CalendarView_showWeekNumber = 6;
-    constexpr int CalendarView_shownWeekCount = 7;
-    constexpr int CalendarView_selectedWeekBackgroundColor = 8;
-    constexpr int CalendarView_focusedMonthDateColor = 9;
-    constexpr int CalendarView_unfocusedMonthDateColor = 10;
-    constexpr int CalendarView_weekNumberColor = 11;
-    constexpr int CalendarView_weekSeparatorLineColor = 12;
-    constexpr int CalendarView_selectedDateVerticalBar = 13;
+    constexpr int CalendarView_monthTextAppearance = 3;
+    constexpr int CalendarView_weekDayTextAppearance = 4;
+    constexpr int CalendarView_dateTextAppearance = 5;
+    constexpr int CalendarView_daySelectorColor = 6;
+    constexpr int CalendarView_dayHighlightColor = 7;
+    constexpr int CalendarView_calendarViewMode = 8;
+    constexpr int CalendarView_showWeekNumber = 9;
+    constexpr int CalendarView_shownWeekCount = 10;
+    constexpr int CalendarView_selectedWeekBackgroundColor = 11;
+    constexpr int CalendarView_focusedMonthDateColor = 12;
+    constexpr int CalendarView_unfocusedMonthDateColor = 13;
+    constexpr int CalendarView_weekNumberColor = 14;
+    constexpr int CalendarView_weekSeparatorLineColor = 15;
+    constexpr int CalendarView_selectedDateVerticalBar = 16;
 
-    // TimePicker (10 attrs)
+    // TimePicker (14 attrs)
     extern const uint32_t TimePicker[];
-    constexpr int TimePicker_headerBackground = 0;
-    constexpr int TimePicker_numbersTextColor = 1;
-    constexpr int TimePicker_numbersInnerTextColor = 2;
-    constexpr int TimePicker_numbersBackgroundColor = 3;
-    constexpr int TimePicker_numbersSelectorColor = 4;
-    constexpr int TimePicker_timePickerMode = 5;
-    constexpr int TimePicker_headerAmPmTextAppearance = 6;
-    constexpr int TimePicker_headerTimeTextAppearance = 7;
-    constexpr int TimePicker_amPmTextColor = 8;
-    constexpr int TimePicker_amPmBackgroundColor = 9;
+    constexpr int TimePicker_legacyLayout = 0;
+    constexpr int TimePicker_internalLayout = 1;
+    constexpr int TimePicker_headerTextColor = 2;
+    constexpr int TimePicker_headerBackground = 3;
+    constexpr int TimePicker_numbersTextColor = 4;
+    constexpr int TimePicker_numbersInnerTextColor = 5;
+    constexpr int TimePicker_numbersBackgroundColor = 6;
+    constexpr int TimePicker_numbersSelectorColor = 7;
+    constexpr int TimePicker_timePickerMode = 8;
+    constexpr int TimePicker_headerAmPmTextAppearance = 9;
+    constexpr int TimePicker_headerTimeTextAppearance = 10;
+    constexpr int TimePicker_amPmTextColor = 11;
+    constexpr int TimePicker_amPmBackgroundColor = 12;
+    constexpr int TimePicker_dialogMode = 13;
 
 } } // namespace R::styleable
 } // namespace cdroid
