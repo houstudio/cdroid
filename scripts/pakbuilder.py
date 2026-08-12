@@ -517,16 +517,27 @@ class PakBuilder(idgen.IDGenerater):
             # NOT cdroid.pak (no manifest → "could not identify format").
             if getattr(self, 'rh_path', None) and self.rh_path:
                 _gen = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aapt2_gen_rh.py')
-                # Framework only: split non-PUBLIC resources into internal_R.h
-                # (cdroid::internal::R, the com.android.internal.R equivalent).
-                # Apps must not split — see --split-private in aapt2_gen_rh.py.
-                _r = subprocess.run([sys.executable, _gen, out_apk,
+                _rh_dir = os.path.dirname(os.path.abspath(self.rh_path))
+                # Framework: generate TWO R headers (AOSP android.R / internal.R split):
+                #   R.h           = public only (cdroid::R)         — app-facing
+                #   internal_R.h  = ALL resources (cdroid::internal::R) — framework-internal
+                _r1 = subprocess.run([sys.executable, _gen, out_apk,
                                 '--aapt2', self.aapt2_path,
-                                '--namespace', self.namespace, '-o', self.rh_path,
-                                '--split-private'],
+                                '--namespace', self.namespace,
+                                '-o', self.rh_path,
+                                '--only-public'],
                                capture_output=True, text=True)
-                sys.stderr.write("aapt2_gen_rh: rc=%d %s\n"
-                                 % (_r.returncode, (_r.stderr or _r.stdout)[:200]))
+                _internal_rh = os.path.join(_rh_dir, 'internal_R.h')
+                _r2 = subprocess.run([sys.executable, _gen, out_apk,
+                                '--aapt2', self.aapt2_path,
+                                '--namespace', self.namespace,
+                                '-o', _internal_rh,
+                                '--internal'],
+                               capture_output=True, text=True)
+                sys.stderr.write("aapt2_gen_rh R.h: rc=%d %s\n"
+                                 % (_r1.returncode, (_r1.stderr or _r1.stdout)[:200]))
+                sys.stderr.write("aapt2_gen_rh internal_R.h: rc=%d %s\n"
+                                 % (_r2.returncode, (_r2.stderr or _r2.stdout)[:200]))
             return result
         except subprocess.CalledProcessError as e:
             # aapt2's own diagnostics are in e.stderr/e.stdout — surface them

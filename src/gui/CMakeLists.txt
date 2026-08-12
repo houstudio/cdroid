@@ -34,6 +34,7 @@ set(SOURCES_GUI
 
 add_subdirectory(text)
 add_library(cdroid SHARED ${SOURCES_GUI})
+# cdroid compilation must wait for internal_R.h (generated from R.h + styleables)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_definitions(--include gui_features.h)
