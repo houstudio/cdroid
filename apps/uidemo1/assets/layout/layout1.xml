@@ -30,8 +30,8 @@
             android:titleTextColor="#ffffff"
             android:subtitle="sub title,very long text!"
             android:subtitleTextAppearance="@android:attr/textAppearanceSmall"
-			android:collapseIcon="@mipmap/dev_sync"
-			android:navigationIcon="@mipmap/icon_back"
+			android:collapseIcon="@drawable/dev_sync"
+			android:navigationIcon="@drawable/icon_back"
             android:subtitleTextColor="#ffeedd"
             android:layout_below="@id/TextUrl">
         </android.support.v7.widget.Toolbar>
@@ -47,10 +47,10 @@
     <AnalogClock
         android:layout_width="320dp"
         android:layout_height="320dp"
-        android:dial="@mipmap/dial"
-        android:hand_hour="@mipmap/hour"
-        android:hand_minute="@mipmap/minute"
-        android:hand_second="@mipmap/second"/>
+        android:dial="@drawable/dial"
+        android:hand_hour="@drawable/hour"
+        android:hand_minute="@drawable/minute"
+        android:hand_second="@drawable/second"/>
     <GestureOverlayView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -59,7 +59,7 @@
         >
         <EditText android:id="@+id/WebView01"
         android:layout_width="match_parent"
-        android:layout_height="math_parent"/>
+        android:layout_height="match_parent"/>
 </GestureOverlayView>
      </LinearLayout>
 </LinearLayout>

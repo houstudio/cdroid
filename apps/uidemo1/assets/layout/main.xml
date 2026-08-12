@@ -9,51 +9,51 @@
         android:layout_height="80dp"
         android:background="#FF12151C">
         <ImageButton
-            android:id="@id/exitbutton"
+            android:id="@+id/exitbutton"
             android:layout_width="80dp"
             android:layout_height="match_parent"
             android:scaleType="center"
-            android:src="@mipmap/reback"
-            android:background="#0"
+            android:src="@drawable/reback"
+            android:background="@null"
             >
         </ImageButton>
         <TabLayout
-            android:id="@id/tablayout"
+            android:id="@+id/tablayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="transparent"
+            android:background="@android:color/transparent"
             android:layout_weight="1">
             <!--TabItem
                 android:id="101"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="Tab2"
-                android:icon="@mipmap/dev_sync"/>
+                android:icon="@drawable/dev_sync"/>
             <TabItem
                 android:id="102"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="Tab3"
-                android:icon="@mipmap/dev_sync"/>
+                android:icon="@drawable/dev_sync"/>
             <TabItem
                 android:id="103"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="Tab1"
-                android:icon="@mipmap/dev_sync"/-->
+                android:icon="@drawable/dev_sync"/-->
         </TabLayout>
         <ImageButton
-            android:id="300"
+            android:id="@+id/imgbtn"
             android:layout_width="80dp"
             android:layout_height="match_parent"
             android:scaleType="center"
-            android:src="@mipmap/dev_sync"
-            android:background="#0">
+            android:src="@drawable/dev_sync"
+            android:background="#000000">
 
         </ImageButton>
     </LinearLayout>
     <androidx.viewpager.widget.ViewPager
-        android:id="@id/viewpager"
+        android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="10dp"

@@ -23,7 +23,7 @@ public:
     int getCount()override{return 5;}
     bool isViewFromObject(View* view, void*object)override{ return view==object;}
     void* instantiateItem(ViewGroup* container, int position)override{
-        std::string res[]={"@layout/layout1.xml","@layout/layout2.xml","@layout/layout3.xml"};
+        int res[]={uidemo1::R::layout::layout1, uidemo1::R::layout::layout2, uidemo1::R::layout::layout3};
         switch(position){
         case 2:
         case 3:
@@ -63,7 +63,7 @@ public:
             lv->setVerticalScrollBarEnabled(true);
             lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS); 
             if(adapter1==nullptr){
-                adapter1=new FileAdapter("@layout/fileitem.xml");
+                adapter1=new FileAdapter(uidemo1::R::layout::fileitem);
                 adapter1->loadFiles("/");
             } 
             lv->setAdapter(adapter1);
@@ -87,7 +87,7 @@ public:
         case 1:{//LOGD("===========1111");
             GridView*gv=new GridView(800,480);
             if(adapter2==nullptr)
-                adapter2=new FileAdapter("@layout/fileitem2.xml");
+                adapter2=new FileAdapter(uidemo1::R::layout::fileitem2);
             gv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
                 FileAdapter*adp=(FileAdapter*)lv.getAdapter();
                 FileItem f=adp->getItemAt(pos);
@@ -145,7 +145,7 @@ public:
 };
 
 MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
-    ViewGroup*vg=(ViewGroup*)LayoutInflater::from(getContext())->inflate("layout/main.xml",this);
+    ViewGroup*vg=(ViewGroup*)LayoutInflater::from(getContext())->inflate(uidemo1::R::layout::main,this);
     mAdapter=new FileTypeAdapter();
     mTabLayout=(TabLayout*)vg->findViewById(uidemo1::R::id::tablayout);
     mPager = (ViewPager*)vg->findViewById(uidemo1::R::id::viewpager);

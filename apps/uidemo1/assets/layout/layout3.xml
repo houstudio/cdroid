@@ -48,7 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
 	    android:orientation="horizontal"
-        android:id="@id/textcontainer"
+        android:id="@+id/textcontainer"
         android:background="#202020">
             <Button 
                 android:layout_width="wrap_content"
@@ -74,13 +74,13 @@
     <AnalogClock
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:dial="@mipmap/dial"
+        android:dial="@drawable/dial"
         android:layout_gravity="center_horizontal"
-        android:hand_hour="@mipmap/hour"
-        android:hand_minute="@mipmap/minute"
-        android:hand_second="@mipmap/second"/>
+        android:hand_hour="@drawable/hour"
+        android:hand_minute="@drawable/minute"
+        android:hand_second="@drawable/second"/>
     <TextView
-        android:id="@id/light"
+        android:id="@+id/light"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -88,7 +88,7 @@
         android:text="One Light for test"
         android:textSize="32dp"
         android:background="#111111"
-        android:drawableTop="mipmap/light_on"
+        android:drawableTop="@drawable/light_on"
         />    
 
 </LinearLayout>
