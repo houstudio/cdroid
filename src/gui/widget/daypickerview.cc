@@ -19,6 +19,9 @@
 #include <widget/simplemonthview.h>
 #include <widget/calendarview.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 #include <utils/mathutils.h>
 
 namespace cdroid{
@@ -32,19 +35,20 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
     const AttributeSet& attrs = *pAttrs;
 
     Calendar tempDate;
-    const int firstDayOfWeek = attrs.getInt("firstDayOfWeek", tempDate.getFirstDayOfWeek());
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::CalendarView, defStyleAttr);
+    const int firstDayOfWeek = a ? a->getInt(R::styleable::CalendarView_firstDayOfWeek, tempDate.getFirstDayOfWeek()) : tempDate.getFirstDayOfWeek();
 
-    const std::string minDate = attrs.getString("minDate");
-    const std::string maxDate = attrs.getString("maxDate");
+    const std::string minDate = a ? a->getString(R::styleable::CalendarView_minDate) : std::string();
+    const std::string maxDate = a ? a->getString(R::styleable::CalendarView_maxDate) : std::string();
 
-    std::string monthTextAppearanceResId = attrs.getString("monthTextAppearance");//R.style.TextAppearance_Material_Widget_Calendar_Month);
-    std::string dayOfWeekTextAppearanceResId = attrs.getString("weekDayTextAppearance");//R.style.TextAppearance_Material_Widget_Calendar_DayOfWeek);
-    std::string dayTextAppearanceResId = attrs.getString("dateTextAppearance");//,R.style.TextAppearance_Material_Widget_Calendar_Day);
+    std::string monthTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_monthTextAppearance) : std::string();
+    std::string dayOfWeekTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_weekDayTextAppearance) : std::string();
+    std::string dayTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_dateTextAppearance) : std::string();
 
-    auto daySelectorColor = attrs.getColorStateList("daySelectorColor");
+    auto daySelectorColor = a ? a->getColorStateList(R::styleable::CalendarView_daySelectorColor) : nullptr;
 
     // Set up adapter.
-    mAdapter = new DayPickerPagerAdapter(context,"cdroid:layout/date_picker_month_item_material", R::id::month_view);
+    mAdapter = new DayPickerPagerAdapter(context,"cdroid:layout/date_picker_month_item_material", cdroid::internal::R::id::month_view);
     mAdapter->setMonthTextAppearance(monthTextAppearanceResId);
     mAdapter->setDayOfWeekTextAppearance(dayOfWeekTextAppearanceResId);
     mAdapter->setDayTextAppearance(dayTextAppearanceResId);
@@ -60,14 +64,14 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
         addView(child);
     }
 
-    mPrevButton = (ImageButton*)findViewById(R::id::prev);
+    mPrevButton = (ImageButton*)findViewById(cdroid::internal::R::id::prev);
     auto clickListener =[this](View&view){onButtonClick(view);};
     mPrevButton->setOnClickListener(clickListener);
 
-    mNextButton = (ImageButton*)findViewById(R::id::next);
+    mNextButton = (ImageButton*)findViewById(cdroid::internal::R::id::next);
     mNextButton->setOnClickListener(clickListener);
 
-    mViewPager = (ViewPager*)findViewById(R::id::day_picker_view_pager);
+    mViewPager = (ViewPager*)findViewById(cdroid::internal::R::id::day_picker_view_pager);
     mViewPager->setAdapter(mAdapter);
 
     ViewPager::OnPageChangeListener pcl;

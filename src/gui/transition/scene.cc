@@ -23,6 +23,7 @@
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
 
 namespace cdroid {
 
@@ -48,12 +49,12 @@ Scene::Scene(ViewGroup* sceneRoot, const std::string& layoutResource, Context* c
 
 Scene* Scene::getSceneForLayout(ViewGroup* sceneRoot, int layoutId, Context* context) {
     SparseArray<Scene*>* scenes = static_cast<SparseArray<Scene*>*>(
-                                      sceneRoot->getTag(R::id::scene_layoutid_cache));
+                                      sceneRoot->getTag(cdroid::internal::R::id::scene_layoutid_cache));
     if (scenes == nullptr) {
         scenes = new SparseArray<Scene*>();
         // Own the cache: ~View reclaims it (java would GC). Delete every cached Scene then the
         // SparseArray itself.
-        sceneRoot->setTag(R::id::scene_layoutid_cache, scenes, [](void* p){
+        sceneRoot->setTag(cdroid::internal::R::id::scene_layoutid_cache, scenes, [](void* p){
             auto* sa = static_cast<SparseArray<Scene*>*>(p);
             for(int i = 0; i < sa->size(); i++) delete sa->valueAt(i);
             delete sa;
@@ -114,11 +115,11 @@ void Scene::enter() {
 }
 
 void Scene::setCurrentScene(ViewGroup* sceneRoot, Scene* scene) {
-    sceneRoot->setTag(R::id::current_scene, scene);
+    sceneRoot->setTag(cdroid::internal::R::id::current_scene, scene);
 }
 
 Scene* Scene::getCurrentScene(ViewGroup* sceneRoot) {
-    return static_cast<Scene*>(sceneRoot->getTag(R::id::current_scene));
+    return static_cast<Scene*>(sceneRoot->getTag(cdroid::internal::R::id::current_scene));
 }
 
 void Scene::setEnterAction(const Runnable& action) {

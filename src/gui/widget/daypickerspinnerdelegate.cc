@@ -16,11 +16,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widget/numberpicker.h>
 #include <widget/calendarview.h>
 #include <view/layoutinflater.h>
 #include <core/systemclock.h>
 #include <widget/daypickerspinnerdelegate.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 #include <cstdio>
 
 namespace cdroid{
@@ -39,12 +42,13 @@ DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Cont
         mShortMonths.push_back(std::to_string(i + 1)); // TODO: DateFormatSymbols.getShortMonths()
     }
 
-    const bool spinnersShown = attrs.getBoolean("spinnersShown", DEFAULT_SPINNERS_SHOWN);
-    const bool calendarViewShown = attrs.getBoolean("calendarViewShown", DEFAULT_CALENDAR_VIEW_SHOWN);
-    const int startYear = attrs.getInt("startYear", DEFAULT_START_YEAR);
-    const int endYear = attrs.getInt("endYear", DEFAULT_END_YEAR);
-    const std::string minDate = attrs.getString("minDate");
-    const std::string maxDate = attrs.getString("maxDate");
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::DatePicker, 0, 0);
+    const bool spinnersShown = a ? a->getBoolean(R::styleable::DatePicker_spinnersShown, DEFAULT_SPINNERS_SHOWN) : DEFAULT_SPINNERS_SHOWN;
+    const bool calendarViewShown = a ? a->getBoolean(R::styleable::DatePicker_calendarViewShown, DEFAULT_CALENDAR_VIEW_SHOWN) : DEFAULT_CALENDAR_VIEW_SHOWN;
+    const int startYear = a ? a->getInt(R::styleable::DatePicker_startYear, DEFAULT_START_YEAR) : DEFAULT_START_YEAR;
+    const int endYear = a ? a->getInt(R::styleable::DatePicker_endYear, DEFAULT_END_YEAR) : DEFAULT_END_YEAR;
+    const std::string minDate = a ? a->getString(R::styleable::DatePicker_minDate) : std::string();
+    const std::string maxDate = a ? a->getString(R::styleable::DatePicker_maxDate) : std::string();
 
     LayoutInflater* inflater = LayoutInflater::from(mContext);
     View* content = inflater->inflate("cdroid:layout/date_picker_legacy", nullptr, false);
@@ -82,10 +86,10 @@ DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Cont
             notifyDateChanged();
         };
 
-    mSpinners = (LinearLayout*) mDelegator->findViewById(R::id::pickers);
+    mSpinners = (LinearLayout*) mDelegator->findViewById(cdroid::internal::R::id::pickers);
 
     // calendar view day-picker
-    mCalendarView = (CalendarView*) mDelegator->findViewById(R::id::calendar_view);
+    mCalendarView = (CalendarView*) mDelegator->findViewById(cdroid::internal::R::id::calendar_view);
     mCalendarView->setOnDateChangeListener(
         CalendarView::OnDateChangeListener([this](CalendarView&, int year, int month, int monthDay) {
             setDate(year, month, monthDay);
@@ -94,26 +98,26 @@ DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Cont
         }));
 
     // day
-    mDaySpinner = (NumberPicker*) mDelegator->findViewById(R::id::day);
+    mDaySpinner = (NumberPicker*) mDelegator->findViewById(cdroid::internal::R::id::day);
     mDaySpinner->setFormatter(NumberPicker::getTwoDigitFormatter());
     mDaySpinner->setOnLongPressUpdateInterval(100);
     mDaySpinner->setOnValueChangedListener(onChangeListener);
-    mDaySpinnerInput = (EditText*) mDaySpinner->findViewById(R::id::numberpicker_input);
+    mDaySpinnerInput = (EditText*) mDaySpinner->findViewById(cdroid::internal::R::id::numberpicker_input);
 
     // month
-    mMonthSpinner = (NumberPicker*) mDelegator->findViewById(R::id::month);
+    mMonthSpinner = (NumberPicker*) mDelegator->findViewById(cdroid::internal::R::id::month);
     mMonthSpinner->setMinValue(0);
     mMonthSpinner->setMaxValue(mNumberOfMonths - 1);
     mMonthSpinner->setDisplayedValues(mShortMonths);
     mMonthSpinner->setOnLongPressUpdateInterval(200);
     mMonthSpinner->setOnValueChangedListener(onChangeListener);
-    mMonthSpinnerInput = (EditText*) mMonthSpinner->findViewById(R::id::numberpicker_input);
+    mMonthSpinnerInput = (EditText*) mMonthSpinner->findViewById(cdroid::internal::R::id::numberpicker_input);
 
     // year
-    mYearSpinner = (NumberPicker*) mDelegator->findViewById(R::id::year);
+    mYearSpinner = (NumberPicker*) mDelegator->findViewById(cdroid::internal::R::id::year);
     mYearSpinner->setOnLongPressUpdateInterval(100);
     mYearSpinner->setOnValueChangedListener(onChangeListener);
-    mYearSpinnerInput = (EditText*) mYearSpinner->findViewById(R::id::numberpicker_input);
+    mYearSpinnerInput = (EditText*) mYearSpinner->findViewById(cdroid::internal::R::id::numberpicker_input);
 
     // show only what the user required but make sure we show something and the
     // spinners have higher priority

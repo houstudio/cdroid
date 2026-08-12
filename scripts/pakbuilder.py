@@ -517,9 +517,13 @@ class PakBuilder(idgen.IDGenerater):
             # NOT cdroid.pak (no manifest → "could not identify format").
             if getattr(self, 'rh_path', None) and self.rh_path:
                 _gen = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aapt2_gen_rh.py')
+                # Framework only: split non-PUBLIC resources into internal_R.h
+                # (cdroid::internal::R, the com.android.internal.R equivalent).
+                # Apps must not split — see --split-private in aapt2_gen_rh.py.
                 _r = subprocess.run([sys.executable, _gen, out_apk,
                                 '--aapt2', self.aapt2_path,
-                                '--namespace', self.namespace, '-o', self.rh_path],
+                                '--namespace', self.namespace, '-o', self.rh_path,
+                                '--split-private'],
                                capture_output=True, text=True)
                 sys.stderr.write("aapt2_gen_rh: rc=%d %s\n"
                                  % (_r.returncode, (_r.stderr or _r.stdout)[:200]))

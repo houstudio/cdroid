@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widget/editor.h>
 #include <widget/textview.h>
 #include <text/method/worditerator.h>
@@ -237,7 +238,7 @@ void Editor::populateTextActionModeMenu(Menu& menu, bool /*hasSelection*/) {
     if (mTextView->canCopy())  menu.add(0, cdroid::R::id::copy,  ORDER_COPY,       "Copy");
     if (mTextView->canPaste()) menu.add(0, cdroid::R::id::paste, ORDER_PASTE,      "Paste");
     if (mTextView->canSelectAllText())
-        menu.add(0, R::id::select_all, ORDER_SELECT_ALL, "Select all");
+        menu.add(0, cdroid::internal::R::id::select_all, ORDER_SELECT_ALL, "Select all");
 }
 
 // 对齐 AOSP Editor.onGetContentRect (Editor.java:4886)。简化: 用 selStart/selEnd 的行

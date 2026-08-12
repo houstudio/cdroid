@@ -18,6 +18,7 @@
 #include <app/alertcontroller.h>
 #include <app/alertdialog.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widget/framework_styleable.h>
 
 namespace cdroid{
@@ -55,9 +56,9 @@ AlertController::AlertController(Context* context, Dialog* di, Window* window){
     // AOSP: obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0).
     auto atts = context->obtainStyledAttributes(nullptr, R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
 
-    mAlertDialogLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_layout, R::layout::alert_dialog) : R::layout::alert_dialog;
+    mAlertDialogLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_layout, cdroid::internal::R::layout::alert_dialog) : cdroid::internal::R::layout::alert_dialog;
     mButtonPanelSideLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_buttonPanelSideLayout, 0) : 0;
-    mListLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_listLayout, R::layout::select_dialog) : R::layout::select_dialog;
+    mListLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_listLayout, cdroid::internal::R::layout::select_dialog) : cdroid::internal::R::layout::select_dialog;
 
     mMultiChoiceItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_multiChoiceItemLayout, R::layout::select_dialog_multichoice) : R::layout::select_dialog_multichoice;
     mSingleChoiceItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_singleChoiceItemLayout, R::layout::select_dialog_singlechoice) : R::layout::select_dialog_singlechoice;
@@ -248,19 +249,19 @@ ViewGroup* AlertController::resolvePanel(View* customPanel,View* defaultPanel){
 }
 
 void AlertController::setupView() {
-    View* parentPanel = mWindow->findViewById(R::id::parentPanel);
-    View* defaultTopPanel = parentPanel->findViewById(R::id::topPanel);
-    View* defaultContentPanel= parentPanel->findViewById(R::id::contentPanel);
-    View* defaultButtonPanel = parentPanel->findViewById(R::id::buttonPanel);
+    View* parentPanel = mWindow->findViewById(cdroid::internal::R::id::parentPanel);
+    View* defaultTopPanel = parentPanel->findViewById(cdroid::internal::R::id::topPanel);
+    View* defaultContentPanel= parentPanel->findViewById(cdroid::internal::R::id::contentPanel);
+    View* defaultButtonPanel = parentPanel->findViewById(cdroid::internal::R::id::buttonPanel);
 
     // Install custom content before setting up the title or buttons so
     // that we can handle panel overrides.
-    ViewGroup* customPanel = (ViewGroup*) parentPanel->findViewById(R::id::customPanel);
+    ViewGroup* customPanel = (ViewGroup*) parentPanel->findViewById(cdroid::internal::R::id::customPanel);
     setupCustomContent(customPanel);
 
-    View* customTopPanel    = customPanel->findViewById(R::id::topPanel);
-    View* customContentPanel= customPanel->findViewById(R::id::contentPanel);
-    View* customButtonPanel = customPanel->findViewById(R::id::buttonPanel);
+    View* customTopPanel    = customPanel->findViewById(cdroid::internal::R::id::topPanel);
+    View* customContentPanel= customPanel->findViewById(cdroid::internal::R::id::contentPanel);
+    View* customButtonPanel = customPanel->findViewById(cdroid::internal::R::id::buttonPanel);
 
     // Resolve the correct panels and remove the defaults, if needed.
     ViewGroup* topPanel    = resolvePanel(customTopPanel , defaultTopPanel);
@@ -278,7 +279,7 @@ void AlertController::setupView() {
     // Only display the text spacer if we don't have buttons.
     if (!hasButtonPanel) {
         if (contentPanel != nullptr) {
-            View* spacer = contentPanel->findViewById(R::id::textSpacerNoButtons);
+            View* spacer = contentPanel->findViewById(cdroid::internal::R::id::textSpacerNoButtons);
             if (spacer != nullptr) {
                 spacer->setVisibility(View::VISIBLE);
             }
@@ -296,14 +297,14 @@ void AlertController::setupView() {
         View* divider = nullptr;
         if (mMessage.size() || mListView != nullptr || hasCustomPanel) {
             if (!hasCustomPanel) {
-                divider = topPanel->findViewById(R::id::titleDividerNoCustom);
+                divider = topPanel->findViewById(cdroid::internal::R::id::titleDividerNoCustom);
             }
             if (divider == nullptr) {
-                divider = topPanel->findViewById(R::id::titleDivider);
+                divider = topPanel->findViewById(cdroid::internal::R::id::titleDivider);
             }
 
         } else {
-            divider = topPanel->findViewById(R::id::titleDividerTop);
+            divider = topPanel->findViewById(cdroid::internal::R::id::titleDividerTop);
         }
 
         if (divider != nullptr) {
@@ -311,7 +312,7 @@ void AlertController::setupView() {
         }
     } else {
         if (contentPanel != nullptr) {
-            View* spacer = contentPanel->findViewById(R::id::textSpacerNoTitle);
+            View* spacer = contentPanel->findViewById(cdroid::internal::R::id::textSpacerNoTitle);
             if (spacer != nullptr) {
                 spacer->setVisibility(View::VISIBLE);
             }
@@ -375,7 +376,7 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
         topPanel->addView(mCustomTitleView, 0, lp);
 
             // Hide the title template
-        View* titleTemplate = mWindow->findViewById(cdroid::R::id::title_template);
+        View* titleTemplate = mWindow->findViewById(cdroid::internal::R::id::title_template);
             titleTemplate->setVisibility(View::GONE);
     } else {
         mIconView = (ImageView*) mWindow->findViewById(cdroid::R::id::icon);
@@ -383,7 +384,7 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
         const bool hasTextTitle = mTitle.length();//!TextUtils.isEmpty(mTitle);
         if (hasTextTitle && mShowTitle) {
             // Display the title if a title is supplied, else hide it.
-            mTitleView = (TextView*) mWindow->findViewById(R::id::alertTitle);
+            mTitleView = (TextView*) mWindow->findViewById(cdroid::internal::R::id::alertTitle);
             mTitleView->setText(mTitle);
 
             // Do this last so that if the user has supplied any icons we
@@ -402,7 +403,7 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
             }
         } else {
             // Hide the title template
-            View* titleTemplate = mWindow->findViewById(cdroid::R::id::title_template);
+            View* titleTemplate = mWindow->findViewById(cdroid::internal::R::id::title_template);
             titleTemplate->setVisibility(View::GONE);
             mIconView->setVisibility(View::GONE);
             topPanel->setVisibility(View::GONE);
@@ -411,7 +412,7 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
 }
 
 void AlertController::setupContent(ViewGroup* contentPanel){
-    mScrollView = (ScrollView*) contentPanel->findViewById(R::id::scrollView);
+    mScrollView = (ScrollView*) contentPanel->findViewById(cdroid::internal::R::id::scrollView);
     mScrollView->setFocusable(false);
 
     // Special case for users that only want to display a String
@@ -508,11 +509,11 @@ void AlertController::centerButton(Button* button) {
     params->gravity = Gravity::CENTER_HORIZONTAL;
     params->weight = 0.5f;
     button->setLayoutParams(params);
-    View* leftSpacer = mWindow->findViewById(R::id::leftSpacer);
+    View* leftSpacer = mWindow->findViewById(cdroid::internal::R::id::leftSpacer);
     if (leftSpacer) {
         leftSpacer->setVisibility(View::VISIBLE);
     }
-    View* rightSpacer = mWindow->findViewById(R::id::rightSpacer);
+    View* rightSpacer = mWindow->findViewById(cdroid::internal::R::id::rightSpacer);
     if (rightSpacer) {
         rightSpacer->setVisibility(View::VISIBLE);
     }
@@ -534,15 +535,15 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
     // inheriting from a framework style.
     bool needsDefaultBackgrounds = a ? a->getBoolean(R::styleable::AlertDialog_needsDefaultBackgrounds, true) : true;
     if (needsDefaultBackgrounds) {
-        fullDark = R::drawable::popup_full_dark;
-        topDark = R::drawable::popup_top_dark;
-        centerDark = R::drawable::popup_center_dark;
-        bottomDark = R::drawable::popup_bottom_dark;
-        fullBright = R::drawable::popup_full_bright;
-        topBright = R::drawable::popup_top_bright;
-        centerBright = R::drawable::popup_center_bright;
-        bottomBright = R::drawable::popup_bottom_bright;
-        bottomMedium = R::drawable::popup_bottom_medium;
+        fullDark = cdroid::internal::R::drawable::popup_full_dark;
+        topDark = cdroid::internal::R::drawable::popup_top_dark;
+        centerDark = cdroid::internal::R::drawable::popup_center_dark;
+        bottomDark = cdroid::internal::R::drawable::popup_bottom_dark;
+        fullBright = cdroid::internal::R::drawable::popup_full_bright;
+        topBright = cdroid::internal::R::drawable::popup_top_bright;
+        centerBright = cdroid::internal::R::drawable::popup_center_bright;
+        bottomBright = cdroid::internal::R::drawable::popup_bottom_bright;
+        bottomMedium = cdroid::internal::R::drawable::popup_bottom_medium;
     }
 
     topBright = a ? a->getResourceId(R::styleable::AlertDialog_topBright, topBright) : topBright;

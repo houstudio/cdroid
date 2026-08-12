@@ -19,6 +19,9 @@
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
 #include <widget/timepickerspinnerdelegate.h>
+#include <widget/R.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 namespace cdroid{
 TimePicker::TimePicker(Context* context,const AttributeSet& attrs):TimePicker(context,&attrs,0){}
 
@@ -31,8 +34,9 @@ TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleA
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);
     }
 
-    const bool isDialogMode = attrs.getBoolean("dialogMode", false);
-    const int requestedMode = attrs.getInt("timePickerMode", MODE_SPINNER);
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::TimePicker, defStyleAttr);
+    const bool isDialogMode = a ? a->getBoolean(R::styleable::TimePicker_dialogMode, false) : false;
+    const int requestedMode = a ? a->getInt(R::styleable::TimePicker_timePickerMode, MODE_SPINNER) : MODE_SPINNER;
 
     if (requestedMode == MODE_CLOCK && isDialogMode) {
         // You want MODE_CLOCK? YOU CAN'T HANDLE MODE_CLOCK! Well, maybe
@@ -274,6 +278,6 @@ AutofillValue TimePicker::getAutofillValue() {
     return isEnabled() ? mDelegate->getAutofillValue() : null;
 }
 #endif
-DECLARE_WIDGET(TimePicker);
+DECLARE_WIDGET2(TimePicker, R::attr::timePickerStyle);
 }/*endof namespace*/
 

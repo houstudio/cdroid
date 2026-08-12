@@ -59,7 +59,7 @@ Typeface* Context::getFont(int id) {
 std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const uint32_t* attrs) {
     ResTable::Theme& theme = getTheme();
     const ResTable& table = theme.getResTable();
-    size_t n = 0; while (attrs[n]) n;   // count up to the trailing-0 sentinel
+    size_t n = 0; while (attrs[n]) ++n;  // count up to the trailing-0 sentinel
     std::vector<StyledAttr> styled(n);
     cdroid::obtainStyledAttributes(table, &theme, attrs, 0, 0, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
@@ -72,7 +72,7 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const uint32_t* attr
 std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const uint32_t* attrs) {
     ResTable::Theme& theme = getTheme();
     const ResTable& table = theme.getResTable();
-    size_t n = 0; while (attrs[n]) n;
+    size_t n = 0; while (attrs[n]) ++n;
     std::vector<StyledAttr> styled(n);
     cdroid::obtainStyledAttributes(table, &theme, attrs, 0, (uint32_t)resid, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,

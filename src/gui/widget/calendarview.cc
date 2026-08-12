@@ -18,10 +18,13 @@
 #include <widget/calendarview.h>
 #include <widget/calendarviewlegacydelegate.h>
 #include <widget/calendarviewmaterialdelegate.h>
+#include <widget/R.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 #include <cstdio>
 namespace cdroid{
 
-DECLARE_WIDGET(CalendarView);
+DECLARE_WIDGET2(CalendarView, R::attr::calendarViewStyle);
 CalendarView::CalendarView(int w,int h):FrameLayout(w,h){
     LOGD("%p",this);
 }
@@ -31,9 +34,8 @@ CalendarView::CalendarView(Context*context,const AttributeSet& attrs):CalendarVi
 CalendarView::CalendarView(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
   :FrameLayout(context,pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
-    const int mode = attrs.getInt("calendarViewMode",std::unordered_map<std::string,int>{
-            {"holo",(int)MODE_HOLO},{"material",(int)MODE_MATERIAL}
-            }, MODE_HOLO);
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::CalendarView, defStyleAttr);
+    const int mode = a ? a->getInt(R::styleable::CalendarView_calendarViewMode, (int)MODE_HOLO) : (int)MODE_HOLO;
     switch (mode) {
     case MODE_HOLO:
         mDelegate = new CalendarViewLegacyDelegate(this, context, attrs);

@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <menu/listmenuitemview.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
 #include <menu/menuitemimpl.h>
 #include <widget/textview.h>
 #include <widget/checkbox.h>
@@ -60,12 +61,12 @@ void ListMenuItemView::onFinishInflate() {
         mTitleView->setTextAppearance(mTextAppearanceContext,mTextAppearance);
     }
 
-    mShortcutView = (TextView*)findViewById(cdroid::R::id::shortcut);
-    mSubMenuArrowView = (ImageView*)findViewById(cdroid::R::id::submenuarrow);
+    mShortcutView = (TextView*)findViewById(cdroid::internal::R::id::shortcut);
+    mSubMenuArrowView = (ImageView*)findViewById(cdroid::internal::R::id::submenuarrow);
     if (mSubMenuArrowView != nullptr) {
         mSubMenuArrowView->setImageDrawable(mSubMenuArrow);
     }
-    mGroupDivider = (ImageView*)findViewById(cdroid::R::id::group_divider);
+    mGroupDivider = (ImageView*)findViewById(cdroid::internal::R::id::group_divider);
 
     mContent = (LinearLayout*)findViewById(cdroid::R::id::content);
 }

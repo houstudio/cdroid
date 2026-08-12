@@ -18,9 +18,12 @@
 #include <widget/datepicker.h>
 #include <widget/daypickerspinnerdelegate.h>
 #include <widget/daypickercalendardelegate.h>
+#include <widget/R.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 namespace cdroid{
 
-DECLARE_WIDGET(DatePicker);
+DECLARE_WIDGET2(DatePicker, R::attr::datePickerStyle);
 DatePicker::DatePicker(Context* context,const AttributeSet& attrs):DatePicker(context,&attrs,0){}
 
 DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
@@ -31,9 +34,10 @@ DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleA
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);
     }
 
-    const bool isDialogMode = attrs.getBoolean("dialogMode", false);
-    const int requestedMode = attrs.getInt("datePickerMode", MODE_SPINNER);
-    const int firstDayOfWeek = attrs.getInt("firstDayOfWeek", 0);
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::DatePicker, defStyleAttr);
+    const bool isDialogMode = a ? a->getBoolean(R::styleable::DatePicker_dialogMode, false) : false;
+    const int requestedMode = a ? a->getInt(R::styleable::DatePicker_datePickerMode, MODE_SPINNER) : MODE_SPINNER;
+    const int firstDayOfWeek = a ? a->getInt(R::styleable::DatePicker_firstDayOfWeek, 0) : 0;
 
     if (requestedMode == MODE_CALENDAR && isDialogMode) {
         // You want MODE_CALENDAR? YOU CAN'T HANDLE MODE_CALENDAR! Well,

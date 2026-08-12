@@ -18,6 +18,7 @@
 #include <animation/property.h>
 #include <view/viewgroup.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
 namespace cdroid{
 
 Property::Property(const std::string&name){
@@ -68,7 +69,7 @@ public:
 
     ChildrenAlphaProperty():Property("childrenAlpha",FLOAT_TYPE){}
     AnimateValue get(void*object) const override{
-        void* tag = ((ViewGroup*)object)->getTag(R::id::mtrl_internal_children_alpha_tag);
+        void* tag = ((ViewGroup*)object)->getTag(cdroid::internal::R::id::mtrl_internal_children_alpha_tag);
         if (tag!=0) {
             float fltAlpha;
             const int intTag = (int)long(tag);
@@ -83,7 +84,7 @@ public:
         int intAlpha;
         const float fltAlpha = GET_VARIANT(value,float);
         memcpy(&intAlpha,&fltAlpha,sizeof(int));
-        ((ViewGroup*)object)->setTag(R::id::mtrl_internal_children_alpha_tag, (void*)long(intAlpha));
+        ((ViewGroup*)object)->setTag(cdroid::internal::R::id::mtrl_internal_children_alpha_tag, (void*)long(intAlpha));
         for (int i = 0, count = ((ViewGroup*)object)->getChildCount(); i < count; i++) {
             View* child = ((ViewGroup*)object)->getChildAt(i);
             child->setAlpha(fltAlpha);

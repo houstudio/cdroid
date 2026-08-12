@@ -21,6 +21,7 @@
 #include <text/inputtype.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
 #include <core/color.h>
 #include <utils/textutils.h>
 #include <utils/mathutils.h>
@@ -65,19 +66,19 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     const std::string layoutres = (getOrientation()==VERTICAL)?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ;
     LayoutInflater::from(mContext)->inflate(layoutres,this,true);
  
-    mInputText =(EditText*)findViewById(R::id::numberpicker_input);
+    mInputText =(EditText*)findViewById(cdroid::internal::R::id::numberpicker_input);
     if(mInputText){
         mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
         mTextSize2 = mInputText->getTextSize();
         mTextSize  = mTextSize2;
         mSelectorElementSize = mTextSize2;
     }
-    mIncrementButton =(ImageButton*)findViewById(cdroid::R::id::increment);
-    mDecrementButton =(ImageButton*)findViewById(cdroid::R::id::decrement);
+    mIncrementButton =(ImageButton*)findViewById(cdroid::internal::R::id::increment);
+    mDecrementButton =(ImageButton*)findViewById(cdroid::internal::R::id::decrement);
     const View::OnClickListener onClick= [this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
-        if (v.getId() == R::id::increment) {
+        if (v.getId() == cdroid::internal::R::id::increment) {
             changeValueByOne(true);
         } else {
             changeValueByOne(false);
@@ -86,7 +87,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     const View::OnLongClickListener onLongClick=[this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
-        if (v.getId() == R::id::increment) {
+        if (v.getId() == cdroid::internal::R::id::increment) {
             postChangeCurrentByOneFromLongPress(true, 0);
         } else {
             postChangeCurrentByOneFromLongPress(false, 0);
@@ -168,12 +169,12 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     mVirtualButtonPressedDrawable = atts.getDrawable("virtualButtonPressedDrawable");
     setWillNotDraw(false);
 
-    mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
+    mInputText =(EditText*)findViewById(cdroid::internal::R::id::numberpicker_input);
 
     View::OnClickListener onClick= [this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
-        if (v.getId() == R::id::increment) {
+        if (v.getId() == cdroid::internal::R::id::increment) {
             changeValueByOne(true);
         } else {
             changeValueByOne(false);
@@ -182,7 +183,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     View::OnLongClickListener onLongClick=[this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
-        if (v.getId() == R::id::increment) {
+        if (v.getId() == cdroid::internal::R::id::increment) {
             postChangeCurrentByOneFromLongPress(true, 0);
         } else {
             postChangeCurrentByOneFromLongPress(false, 0);
@@ -190,8 +191,8 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
         return true;
     };
     if(!mHasSelectorWheel){
-        mIncrementButton =(ImageButton*)findViewById(cdroid::R::id::increment);
-        mDecrementButton =(ImageButton*)findViewById(cdroid::R::id::decrement);
+        mIncrementButton =(ImageButton*)findViewById(cdroid::internal::R::id::increment);
+        mDecrementButton =(ImageButton*)findViewById(cdroid::internal::R::id::decrement);
         if(mIncrementButton){
             mIncrementButton->setOnClickListener(onClick);
             mIncrementButton->setOnLongClickListener(onLongClick);

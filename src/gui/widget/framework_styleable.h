@@ -1027,6 +1027,68 @@ namespace R { namespace styleable {
     constexpr int VectorDrawablePath_strokeMiterLimit = 12;
     constexpr int VectorDrawablePath_fillType = 13;
 
+    // DatePicker (22 attrs)
+    extern const uint32_t DatePicker[];
+    constexpr int DatePicker_firstDayOfWeek = 0;
+    constexpr int DatePicker_minDate = 1;
+    constexpr int DatePicker_maxDate = 2;
+    constexpr int DatePicker_spinnersShown = 3;
+    constexpr int DatePicker_calendarViewShown = 4;
+    constexpr int DatePicker_internalLayout = 5;
+    constexpr int DatePicker_legacyLayout = 6;
+    constexpr int DatePicker_headerTextColor = 7;
+    constexpr int DatePicker_headerBackground = 8;
+    constexpr int DatePicker_yearListItemTextAppearance = 9;
+    constexpr int DatePicker_yearListItemActivatedTextAppearance = 10;
+    constexpr int DatePicker_calendarTextColor = 11;
+    constexpr int DatePicker_datePickerMode = 12;
+    constexpr int DatePicker_startYear = 13;
+    constexpr int DatePicker_endYear = 14;
+    constexpr int DatePicker_headerMonthTextAppearance = 15;
+    constexpr int DatePicker_headerDayOfMonthTextAppearance = 16;
+    constexpr int DatePicker_headerYearTextAppearance = 17;
+    constexpr int DatePicker_dayOfWeekBackground = 18;
+    constexpr int DatePicker_dayOfWeekTextAppearance = 19;
+    constexpr int DatePicker_yearListSelectorColor = 20;
+    constexpr int DatePicker_dialogMode = 21;
+
+    // CalendarView (17 attrs)
+    extern const uint32_t CalendarView[];
+    constexpr int CalendarView_firstDayOfWeek = 0;
+    constexpr int CalendarView_minDate = 1;
+    constexpr int CalendarView_maxDate = 2;
+    constexpr int CalendarView_monthTextAppearance = 3;
+    constexpr int CalendarView_weekDayTextAppearance = 4;
+    constexpr int CalendarView_dateTextAppearance = 5;
+    constexpr int CalendarView_daySelectorColor = 6;
+    constexpr int CalendarView_dayHighlightColor = 7;
+    constexpr int CalendarView_calendarViewMode = 8;
+    constexpr int CalendarView_showWeekNumber = 9;
+    constexpr int CalendarView_shownWeekCount = 10;
+    constexpr int CalendarView_selectedWeekBackgroundColor = 11;
+    constexpr int CalendarView_focusedMonthDateColor = 12;
+    constexpr int CalendarView_unfocusedMonthDateColor = 13;
+    constexpr int CalendarView_weekNumberColor = 14;
+    constexpr int CalendarView_weekSeparatorLineColor = 15;
+    constexpr int CalendarView_selectedDateVerticalBar = 16;
+
+    // TimePicker (14 attrs)
+    extern const uint32_t TimePicker[];
+    constexpr int TimePicker_legacyLayout = 0;
+    constexpr int TimePicker_internalLayout = 1;
+    constexpr int TimePicker_headerTextColor = 2;
+    constexpr int TimePicker_headerBackground = 3;
+    constexpr int TimePicker_numbersTextColor = 4;
+    constexpr int TimePicker_numbersInnerTextColor = 5;
+    constexpr int TimePicker_numbersBackgroundColor = 6;
+    constexpr int TimePicker_numbersSelectorColor = 7;
+    constexpr int TimePicker_timePickerMode = 8;
+    constexpr int TimePicker_headerAmPmTextAppearance = 9;
+    constexpr int TimePicker_headerTimeTextAppearance = 10;
+    constexpr int TimePicker_amPmTextColor = 11;
+    constexpr int TimePicker_amPmBackgroundColor = 12;
+    constexpr int TimePicker_dialogMode = 13;
+
 } } // namespace R::styleable
 } // namespace cdroid
 #endif // __FRAMEWORK_STYLEABLE_H__

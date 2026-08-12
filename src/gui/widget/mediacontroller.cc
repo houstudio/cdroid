@@ -2,6 +2,7 @@
 #include <widget/mediacontroller.h>
 #include <widget/cdwindow.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
 namespace cdroid{
 
 DECLARE_WIDGET(MediaController)
@@ -117,13 +118,13 @@ View* MediaController::makeControllerView() {
 void MediaController::initControllerView(View* v) {
     mPlayDescription = mContext->getString("cdroid:string/lockscreen_transport_play_description");
     mPauseDescription = mContext->getString("cdroid:string/lockscreen_transport_pause_description");
-    mPauseButton = (ImageButton*)v->findViewById(cdroid::R::id::pause);
+    mPauseButton = (ImageButton*)v->findViewById(cdroid::internal::R::id::pause);
     if (mPauseButton) {
         mPauseButton->requestFocus();
         mPauseButton->setOnClickListener(mPauseListener);
     }
 
-    mFfwdButton = (ImageButton*)v->findViewById(cdroid::R::id::ffwd);
+    mFfwdButton = (ImageButton*)v->findViewById(cdroid::internal::R::id::ffwd);
     if (mFfwdButton) {
         mFfwdButton->setOnClickListener(mFfwdListener);
         if (!mFromXml) {
@@ -131,7 +132,7 @@ void MediaController::initControllerView(View* v) {
         }
     }
 
-    mRewButton = (ImageButton*)v->findViewById(cdroid::R::id::rew);
+    mRewButton = (ImageButton*)v->findViewById(cdroid::internal::R::id::rew);
     if (mRewButton) {
         mRewButton->setOnClickListener(mRewListener);
         if (!mFromXml) {
@@ -140,16 +141,16 @@ void MediaController::initControllerView(View* v) {
     }
 
     // By default these are hidden. They will be enabled when setPrevNextListeners() is called
-    mNextButton = (ImageButton*)v->findViewById(cdroid::R::id::next);
+    mNextButton = (ImageButton*)v->findViewById(cdroid::internal::R::id::next);
     if (mNextButton && !mFromXml && !mListenersSet) {
         mNextButton->setVisibility(View::GONE);
     }
-    mPrevButton = (ImageButton*)v->findViewById(cdroid::R::id::prev);
+    mPrevButton = (ImageButton*)v->findViewById(cdroid::internal::R::id::prev);
     if (mPrevButton && !mFromXml && !mListenersSet) {
         mPrevButton->setVisibility(View::GONE);
     }
 
-    mProgress = (ProgressBar*)v->findViewById(cdroid::R::id::mediacontroller_progress);
+    mProgress = (ProgressBar*)v->findViewById(cdroid::internal::R::id::mediacontroller_progress);
     if (mProgress) {
         if (dynamic_cast<SeekBar*>(mProgress)) {
             SeekBar* seeker = (SeekBar*) mProgress;
@@ -158,8 +159,8 @@ void MediaController::initControllerView(View* v) {
         mProgress->setMax(1000);
     }
 
-    mEndTime = (TextView*)v->findViewById(cdroid::R::id::time);
-    mCurrentTime = (TextView*)v->findViewById(cdroid::R::id::time_current);
+    mEndTime = (TextView*)v->findViewById(cdroid::internal::R::id::time);
+    mCurrentTime = (TextView*)v->findViewById(cdroid::internal::R::id::time_current);
     //mFormatBuilder = new StringBuilder();
     //mFormatter = new Formatter(mFormatBuilder, Locale.getDefault());
 

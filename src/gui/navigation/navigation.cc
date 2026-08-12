@@ -18,6 +18,7 @@
 #include <navigation/navigation.h>
 #include <navigation/navcontroller.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
 
@@ -109,7 +110,7 @@ View::OnClickListener Navigation::createNavigateOnClickListener(int resId,Bundle
  *                   {@link #findNavController(View)}
  */
 void Navigation::setViewNavController(View* view,/*@Nullable*/ NavController* controller) {
-    view->setTag(R::id::nav_controller_view_tag, controller);
+    view->setTag(cdroid::internal::R::id::nav_controller_view_tag, controller);
 }
 
 /**
@@ -130,7 +131,7 @@ NavController* Navigation::findViewNavController(View* view) {
 }
 
 NavController* Navigation::getViewNavController(View* view) {
-    void* tag = view->getTag(R::id::nav_controller_view_tag);
+    void* tag = view->getTag(cdroid::internal::R::id::nav_controller_view_tag);
     return (NavController*) tag;
 }
 }/*endof namespace*/

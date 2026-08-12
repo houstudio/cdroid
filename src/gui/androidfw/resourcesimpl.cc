@@ -288,7 +288,15 @@ bool ResourcesImpl::pathOf(int id, std::string* out) const {
 Asset* ResourcesImpl::openByStringId(int id) const {
     std::string path;
     if (!pathOf(id, &path) || path.empty()) return nullptr;
-    return mAssets->openNonAsset(path.c_str(), Asset::ACCESS_BUFFER);
+    Asset* a = mAssets->openNonAsset(path.c_str(), Asset::ACCESS_BUFFER);
+    if (a) return a;
+    // arsc records the full "res/..." path, but pakbuilder strips the "res/"
+    // prefix when packing entries (pak holds "layout/main.xml", not
+    // "res/layout/main.xml"). Retry without the prefix so binary getXml(int) /
+    // openRawResource(int) resolve the same way text inflate always has.
+    if (path.compare(0, 4, "res/") == 0)
+        a = mAssets->openNonAsset(path.substr(4).c_str(), Asset::ACCESS_BUFFER);
+    return a;
 }
 
 Asset* ResourcesImpl::openRawResource(int id, TypedValue* outValue) const {
@@ -298,7 +306,12 @@ Asset* ResourcesImpl::openRawResource(int id, TypedValue* outValue) const {
     if (tv.type != Res_value::TYPE_STRING) return nullptr;
     const std::string path = u16to8(tv.string, tv.stringLen);
     if (path.empty()) return nullptr;
-    return mAssets->openNonAsset(path.c_str(), Asset::ACCESS_BUFFER);
+    Asset* a = mAssets->openNonAsset(path.c_str(), Asset::ACCESS_BUFFER);
+    if (a) return a;
+    // Same res/ strip as openByStringId: arsc stores "res/...", pak omits "res/".
+    if (path.compare(0, 4, "res/") == 0)
+        a = mAssets->openNonAsset(path.substr(4).c_str(), Asset::ACCESS_BUFFER);
+    return a;
 }
 
 Asset* ResourcesImpl::getXml(int id) const {

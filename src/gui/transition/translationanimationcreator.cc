@@ -11,6 +11,7 @@
 #include <core/path.h>
 #include <view/view.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
 
 #include <transition/transitionlisteneradapter.h>
 
@@ -41,7 +42,7 @@ Animator* TranslationAnimationCreator::createAnimation(View* view, TransitionVal
         const TimeInterpolator* interpolator, Transition* transition) {
     float terminalX = view->getTranslationX();
     float terminalY = view->getTranslationY();
-    int* startPosition = static_cast<int*>(values->view->getTag(R::id::transitionPosition));
+    int* startPosition = static_cast<int*>(values->view->getTag(cdroid::internal::R::id::transitionPosition));
     if (startPosition != nullptr) {
         startX = startPosition[0] - viewPosX + terminalX;
         startY = startPosition[1] - viewPosY + terminalY;
@@ -68,9 +69,9 @@ Animator* TranslationAnimationCreator::createAnimation(View* view, TransitionVal
     st->mStartY = startPosY - (int)lround(view->getTranslationY());
     st->mTerminalX = terminalX;
     st->mTerminalY = terminalY;
-    st->mTransitionPosition = static_cast<int*>(values->view->getTag(R::id::transitionPosition));
+    st->mTransitionPosition = static_cast<int*>(values->view->getTag(cdroid::internal::R::id::transitionPosition));
     if (st->mTransitionPosition != nullptr) {
-        values->view->setTag(R::id::transitionPosition, nullptr);
+        values->view->setTag(cdroid::internal::R::id::transitionPosition, nullptr);
     }
 
     Transition::TransitionListener listener;
@@ -87,7 +88,7 @@ Animator* TranslationAnimationCreator::createAnimation(View* view, TransitionVal
         }
         st->mTransitionPosition[0] = (int)lround(st->mStartX + st->mMovingView->getTranslationX());
         st->mTransitionPosition[1] = (int)lround(st->mStartY + st->mMovingView->getTranslationY());
-        st->mViewInHierarchy->setTag(R::id::transitionPosition, st->mTransitionPosition,
+        st->mViewInHierarchy->setTag(cdroid::internal::R::id::transitionPosition, st->mTransitionPosition,
             [](void* p){ delete[] static_cast<int*>(p); });
     };
     al.onAnimationEnd = [st](Animator&, bool) {};

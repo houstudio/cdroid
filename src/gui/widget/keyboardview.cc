@@ -5,6 +5,7 @@
 #include <porting/cdlog.h>
 #include <widget/popupwindow.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
 #include <view/layoutinflater.h>
 #include <view/gravity.h>
 #include <fstream>
@@ -486,7 +487,7 @@ bool KeyboardView::onLongPress(Keyboard::Key* popupKey){
         mMiniKeyboardContainer = cached->second;
     } else {
         mMiniKeyboardContainer = LayoutInflater::from(getContext())->inflate(mPopupLayout,nullptr);
-        mMiniKeyboard = (KeyboardView*)mMiniKeyboardContainer->findViewById(R::id::keyboardview);
+        mMiniKeyboard = (KeyboardView*)mMiniKeyboardContainer->findViewById(cdroid::internal::R::id::keyboardview);
         View* closeButton = mMiniKeyboardContainer->findViewById(R::id::closeButton);
         if(closeButton) closeButton->setOnClickListener(std::bind(&KeyboardView::onClick,this,std::placeholders::_1));
 
@@ -525,7 +526,7 @@ bool KeyboardView::onLongPress(Keyboard::Key* popupKey){
         mMiniKeyboardCache[popupKey] = mMiniKeyboardContainer;
     }
 
-    mMiniKeyboard = (KeyboardView*)mMiniKeyboardContainer->findViewById(R::id::keyboardview);
+    mMiniKeyboard = (KeyboardView*)mMiniKeyboardContainer->findViewById(cdroid::internal::R::id::keyboardview);
     int coords[2] = {0,0};
     getLocationInWindow(coords);
     /* Center the popup on the long-pressed key, so the finger -- already on the

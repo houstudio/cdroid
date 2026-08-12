@@ -13,6 +13,9 @@
 #include <vector>
 
 #include <widget/radialtimepickerview.h>
+#include <widget/R.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 #include <core/calendar.h>
 #include <core/typeface.h>
 #include <core/attributeset.h>
@@ -213,15 +216,16 @@ RadialTimePickerView::~RadialTimePickerView() {
 }
 
 void RadialTimePickerView::applyAttributes(const AttributeSet& attrs) {
-    RefPtr<ColorStateList> numbersTextColor = attrs.getColorStateList("numbersTextColor");
-    RefPtr<ColorStateList> numbersInnerTextColor = attrs.getColorStateList("numbersInnerTextColor");
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);
+    RefPtr<ColorStateList> numbersTextColor = a ? a->getColorStateList(R::styleable::TimePicker_numbersTextColor) : nullptr;
+    RefPtr<ColorStateList> numbersInnerTextColor = a ? a->getColorStateList(R::styleable::TimePicker_numbersInnerTextColor) : nullptr;
     mTextColor[HOURS] = numbersTextColor ? numbersTextColor : ColorStateList::valueOf(MISSING_COLOR);
     mTextColor[HOURS_INNER] = numbersInnerTextColor ? numbersInnerTextColor
                                                     : ColorStateList::valueOf(MISSING_COLOR);
     mTextColor[MINUTES] = mTextColor[HOURS];
 
     // Set up various colors derived from the selector "activated" state.
-    RefPtr<ColorStateList> selectorColors = attrs.getColorStateList("numbersSelectorColor");
+    RefPtr<ColorStateList> selectorColors = a ? a->getColorStateList(R::styleable::TimePicker_numbersSelectorColor) : nullptr;
     int selectorActivatedColor;
     if (selectorColors) {
         const std::vector<int> stateSetEnabledActivated = StateSet::get(
@@ -237,7 +241,7 @@ void RadialTimePickerView::applyAttributes(const AttributeSet& attrs) {
     mSelectorColor = selectorActivatedColor;
     mSelectorDotColor = mTextColor[HOURS]->getColorForState(stateSetActivated, 0);
 
-    mBackgroundColor = attrs.getColor("numbersBackgroundColor", 0);
+    mBackgroundColor = a ? a->getColor(R::styleable::TimePicker_numbersBackgroundColor, 0) : 0;
 }
 
 void RadialTimePickerView::initialize(int hour, int minute, bool is24HourMode) {

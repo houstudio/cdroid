@@ -65,6 +65,22 @@ def load_name_map(path):
     return m
 
 
+def load_include_file(path):
+    """Load an include file -> [styleable name, ...] (one per line; '#' lines
+    and blank lines ignored)."""
+    names = []
+    if not path or not os.path.exists(path):
+        return names
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            names.append(line)
+    return names
+
+
+
 def parse_attrs_xml(path):
     """Return {declare-styleable name: [attr names in order]}.
 
@@ -139,6 +155,9 @@ def main():
     ap.add_argument('--name-map', default=None)
     ap.add_argument('--include', default=None,
                     help='comma list of OUTPUT styleable names to emit (default: all)')
+    ap.add_argument('--include-file', default=None,
+                    help='file with one OUTPUT styleable name per line '
+                         '(# comments and blank lines ignored); merged with --include')
     ap.add_argument('--out-h', required=True)
     ap.add_argument('--out-cc', required=True)
     ap.add_argument('--guard', default='__GENERATED_STYLEABLE_H__')
@@ -171,8 +190,14 @@ def main():
     # Determine output styleables: map output-name -> attrs-xml declare-styleable name
     # name_map is {attrsname: outname}; build reverse.
     rev = {v: k for k, v in name_map.items()}
+    # Merge --include-file (one per line) with --include (csv); file first.
+    # When neither is given, emit all declare-styleables (applying name_map).
+    inc_names = load_include_file(args.include_file)
     if args.include:
-        out_names = [s.strip() for s in args.include.split(',') if s.strip()]
+        inc_names += [s.strip() for s in args.include.split(',') if s.strip()]
+    if inc_names:
+        seen = set()
+        out_names = [n for n in inc_names if not (n in seen or seen.add(n))]
     else:
         # all, applying name_map forward
         out_names = [name_map.get(k, k) for k in ds_attrs]

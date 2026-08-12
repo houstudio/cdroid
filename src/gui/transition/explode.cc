@@ -14,6 +14,7 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <widget/R.h>
+#include <widget/internal_R.h>
 
 #include <transition/circularpropagation.h>
 #include <transition/translationanimationcreator.h>
@@ -81,7 +82,7 @@ Animator* Explode::onDisappear(ViewGroup* sceneRoot, View* view,
     float startY = view->getTranslationY();
     float endX = startX;
     float endY = startY;
-    int* interruptedPosition = static_cast<int*>(startValues->view->getTag(R::id::transitionPosition));
+    int* interruptedPosition = static_cast<int*>(startValues->view->getTag(cdroid::internal::R::id::transitionPosition));
     if (interruptedPosition != nullptr) {
         // End position relative to the interrupted position, not the original start.
         endX += interruptedPosition[0] - bounds.left;

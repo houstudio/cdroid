@@ -1,10 +1,13 @@
 
+
 # --- Generated styleable headers (R.styleable.X[] equivalent) -----------------
 # gen_styleable.py emits framework_styleable.{h,cc} into widget/, alongside R.h
 # (which CreatePAK generates into widget/R.h). The files are checked in for
 # IDE/clangd and regenerated whenever their inputs change. To grow the framework
-# styleable set, edit src/gui/res/values/attrs.xml + the --include list below.
+# styleable set, edit src/gui/res/values/attrs.xml + the include list in
+# widget/framework_styleable_include.txt (one styleable name per line).
 set(_FW_STYLEABLE_GEN ${CMAKE_SOURCE_DIR}/scripts/gen_styleable.py)
+set(_FW_STYLEABLE_INCLUDE ${PROJECT_SOURCE_DIR}/widget/framework_styleable_include.txt)
 add_custom_command(
     OUTPUT  ${PROJECT_SOURCE_DIR}/widget/framework_styleable.h
             ${PROJECT_SOURCE_DIR}/widget/framework_styleable.cc
@@ -12,7 +15,7 @@ add_custom_command(
             --attrs ${PROJECT_SOURCE_DIR}/res/values/attrs.xml
             --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
             --name-map ${CMAKE_SOURCE_DIR}/scripts/framework_namemap.txt
-            --include "AbsListView,AdapterViewAnimator,AdapterViewFlipper,AnalogClock,AlertDialog,CheckedTextView,Chronometer,CompoundButton,FrameLayout,GridLayout,GridLayoutLayout,GridView,ImageView,KeyboardView,Layout,LinearLayout,LinearLayoutLayout,ListView,MarginLayout,NumberPicker,PopupWindow,ProgressBar,RadioGroup,RatingBar,RelativeLayout,RelativeLayoutLayout,ScrollView,SeekBar,Spinner,Switch,TabWidget,TableRowLayout,TextAppearance,TextClock,TextView,ToggleButton,Toolbar,View,ViewGroup,ListPopupWindow,AdaptiveIconDrawableLayer,AnimatedImageDrawable,AnimatedRotateDrawable,AnimatedStateListDrawable,AnimatedStateListDrawableItem,AnimatedStateListDrawableTransition,AnimatedVectorDrawable,AnimatedVectorDrawableTarget,AnimationDrawable,AnimationDrawableItem,AnimationScaleListDrawable,AnimationScaleListDrawableItem,BitmapDrawable,ClipDrawable,ColorDrawable,ColorStateListItem,Drawable,DrawableCorners,DrawableWrapper,GradientDrawable,GradientDrawableGradient,GradientDrawablePadding,GradientDrawableSize,GradientDrawableSolid,GradientDrawableStroke,InsetDrawable,LayerDrawable,LayerDrawableItem,LevelListDrawableItem,MaterialProgressDrawable,NinePatchDrawable,RippleDrawable,RotateDrawable,ScaleDrawable,ShapeDrawable,ShapeDrawablePadding,StateListDrawable,StateListDrawableItem,VectorDrawable,VectorDrawableClipPath,VectorDrawableGroup,VectorDrawablePath"
+            --include-file ${_FW_STYLEABLE_INCLUDE}
             --out-h  ${PROJECT_SOURCE_DIR}/widget/framework_styleable.h
             --out-cc ${PROJECT_SOURCE_DIR}/widget/framework_styleable.cc
             --guard __FRAMEWORK_STYLEABLE_H__ --header framework_styleable.h
@@ -20,6 +23,7 @@ add_custom_command(
             ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
             ${CMAKE_SOURCE_DIR}/scripts/framework_namemap.txt
             ${_FW_STYLEABLE_GEN}
+            ${_FW_STYLEABLE_INCLUDE}
     COMMENT "Generating widget/framework_styleable.{h,cc}"
     VERBATIM
 )

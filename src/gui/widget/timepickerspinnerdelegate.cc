@@ -16,7 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widget/timepickerspinnerdelegate.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 #include <widget/numberpicker.h>
 #include <widget/button.h>
 #include <widget/edittext.h>
@@ -30,14 +33,18 @@ namespace cdroid{
 TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs)
     :AbstractTimePickerDelegate(delegator, context) {
 
-    const std::string layoutResourceId = attrs.getString("legacyLayout", "cdroid:layout/time_picker_legacy");
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);
+    const std::string layoutResourceId = a ? a->getString(R::styleable::TimePicker_legacyLayout)
+            : std::string();
+    const std::string layoutRes = layoutResourceId.empty()
+            ? std::string("cdroid:layout/time_picker_legacy") : layoutResourceId;
 
     LayoutInflater* inflater = LayoutInflater::from(mContext);
-    View* view = inflater->inflate(layoutResourceId, mDelegator, true);
+    View* view = inflater->inflate(layoutRes, mDelegator, true);
     view->setSaveFromParentEnabled(false);
 
     // hour
-    mHourSpinner = (NumberPicker*) delegator->findViewById(R::id::hour);
+    mHourSpinner = (NumberPicker*) delegator->findViewById(cdroid::internal::R::id::hour);
     mHourSpinner->setOnValueChangedListener([this](NumberPicker& spinner, int oldVal, int newVal) {
         updateInputState();
         if (!is24Hour()) {
@@ -49,17 +56,17 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
         }
         onTimeChanged();
     });
-    mHourSpinnerInput = (EditText*)mHourSpinner->findViewById(R::id::numberpicker_input);
+    mHourSpinnerInput = (EditText*)mHourSpinner->findViewById(cdroid::internal::R::id::numberpicker_input);
     // DEFERRED: mHourSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_NEXT);
 
     // divider (only for the new widget style)
-    mDivider = (TextView*)mDelegator->findViewById(R::id::divider);
+    mDivider = (TextView*)mDelegator->findViewById(cdroid::internal::R::id::divider);
     if (mDivider != nullptr) {
         setDividerText();
     }
 
     // minute
-    mMinuteSpinner = (NumberPicker*) mDelegator->findViewById(R::id::minute);
+    mMinuteSpinner = (NumberPicker*) mDelegator->findViewById(cdroid::internal::R::id::minute);
     mMinuteSpinner->setMinValue(0);
     mMinuteSpinner->setMaxValue(59);
     mMinuteSpinner->setOnLongPressUpdateInterval(100);
@@ -84,14 +91,14 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
         }
         onTimeChanged();
     });
-    mMinuteSpinnerInput = (EditText*)mMinuteSpinner->findViewById(R::id::numberpicker_input);
+    mMinuteSpinnerInput = (EditText*)mMinuteSpinner->findViewById(cdroid::internal::R::id::numberpicker_input);
     // DEFERRED: mMinuteSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_NEXT);
 
     // Get the am/pm strings and use them in the spinner.
     mAmPmStrings = TimePicker::getAmPmStrings(context);
 
     // am/pm
-    View* amPmView = mDelegator->findViewById(R::id::amPm);
+    View* amPmView = mDelegator->findViewById(cdroid::internal::R::id::amPm);
     if (dynamic_cast<Button*>(amPmView)) {
         mAmPmSpinner = nullptr;
         mAmPmSpinnerInput = nullptr;
@@ -115,7 +122,7 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
             updateAmPmControl();
             onTimeChanged();
         });
-        mAmPmSpinnerInput = (EditText*)mAmPmSpinner->findViewById(R::id::numberpicker_input);
+        mAmPmSpinnerInput = (EditText*)mAmPmSpinner->findViewById(cdroid::internal::R::id::numberpicker_input);
         // DEFERRED: mAmPmSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_DONE);
     }
 
