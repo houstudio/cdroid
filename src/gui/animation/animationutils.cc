@@ -22,7 +22,7 @@
 
 namespace cdroid{
 
-std::unordered_map<std::string,std::shared_ptr<Interpolator>>AnimationUtils::mInterpolators;
+std::unordered_map<int,std::shared_ptr<Interpolator>>AnimationUtils::mInterpolators;
 
 int64_t AnimationUtils::currentAnimationTimeMillis(){
     return SystemClock::uptimeMillis();
@@ -31,6 +31,12 @@ int64_t AnimationUtils::currentAnimationTimeMillis(){
 Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
     Animation*anim = nullptr;
     XmlPullParser parser(context,resid);
+    const AttributeSet& attrs = parser;
+    return createAnimationFromXml(context,parser,nullptr,attrs);
+}
+
+Animation* AnimationUtils::loadAnimation(Context* context,int id){
+    XmlPullParser parser(context,id);
     const AttributeSet& attrs = parser;
     return createAnimationFromXml(context,parser,nullptr,attrs);
 }
@@ -75,6 +81,12 @@ Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& par
 
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
     XmlPullParser parser(context,resid);
+    const AttributeSet& attrs = parser;
+    return createLayoutAnimationFromXml(context,parser,attrs);
+}
+
+LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,int id){
+    XmlPullParser parser(context,id);
     const AttributeSet& attrs = parser;
     return createLayoutAnimationFromXml(context,parser,attrs);
 }
@@ -127,18 +139,26 @@ Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
 
 Interpolator* AnimationUtils::loadInterpolator(Context*context,const std::string& id){
     XmlPullParser parser(context,id);
-    return createInterpolatorFromXml(context, parser,id);
+    // Legacy name-based path: no int cache key, so parse fresh. Callers that
+    // want caching should resolve the resource id and use loadInterpolator(int).
+    return createInterpolatorFromXml(context, parser).get();
 }
 
-static std::unordered_map<std::string,std::shared_ptr<Interpolator>>mInterpolators;
-Interpolator* AnimationUtils::createInterpolatorFromXml(Context* context,XmlPullParser&parser,const std::string&resid){
+Interpolator* AnimationUtils::loadInterpolator(Context*context,int id){
+    if (id == 0) return nullptr;  // AOSP: 0 → null
+    auto it = mInterpolators.find(id);
+    if (it != mInterpolators.end()) return it->second.get();
+    XmlPullParser parser(context, id);
+    std::shared_ptr<Interpolator> interpolator = createInterpolatorFromXml(context, parser);
+    if (interpolator) mInterpolators.emplace(id, interpolator);
+    return interpolator.get();
+}
+
+std::shared_ptr<Interpolator> AnimationUtils::createInterpolatorFromXml(Context* context,XmlPullParser&parser){
     int type;
     const int depth = parser.getDepth();
     std::shared_ptr<BaseInterpolator>interpolator;
     const AttributeSet& attrs = parser;
-    auto it = mInterpolators.find(resid);
-    if(it!=mInterpolators.end())
-        return it->second.get();
     while(((type = parser.next()) != XmlPullParser::END_TAG || parser.getDepth() > depth)
                 && type != XmlPullParser::END_DOCUMENT){
         if (type != XmlPullParser::START_TAG) {
@@ -170,8 +190,7 @@ Interpolator* AnimationUtils::createInterpolatorFromXml(Context* context,XmlPull
             LOGE("Unknown interpolator name: %s",name.c_str());
         }
     }
-    mInterpolators.insert({resid,interpolator});
-    return interpolator.get();
+    return interpolator;
 }
 
 }
