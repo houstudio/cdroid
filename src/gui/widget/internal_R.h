@@ -1,6 +1,5 @@
 // internal_R.h — unified framework-internal R (ALL resources: public + private).
 // Framework .cc include THIS (not widget/R.h) + `using namespace cdroid::internal;`
-// App code uses its own R.h (cdroid::R, public only).
 #pragma once
 
 namespace cdroid{
