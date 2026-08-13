@@ -111,18 +111,8 @@ public:
     std::unique_ptr<TypedArray> obtainTypedArray(int id) const;
 
 private:
-    class DrawableCache;       // id → Drawable::ConstantState (defined in resources.cc)
-    class ColorStateListCache; // id → ColorStateList          (defined in resources.cc)
-
-    std::unique_ptr<ResourcesImpl> mImpl;   // aggregated (AOSP Resources -> ResourcesImpl)
+    std::unique_ptr<ResourcesImpl> mImpl;   // aggregated (AOSP Resources -> ResourcesImpl); owns the drawable/ComplexColor caches
     cdroid::Context* mCtx;
-    // AOSP mDrawableCache / mComplexColorCache — keyed by resource id. They live
-    // here (cdroid::Resources), not in ResourcesImpl, because androidfw is a
-    // cairo-free OBJECT library while Drawable::ConstantState / ColorStateList
-    // headers require cairo (see resourcesimpl.h). mutable: populated from the
-    // const getDrawable/loadComplexColor (AOSP caches are mutable too).
-    mutable std::unique_ptr<DrawableCache>       mDrawableCache;
-    mutable std::unique_ptr<ColorStateListCache> mColorStateListCache;
 };
 
 } // namespace cdroid

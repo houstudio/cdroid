@@ -12,64 +12,23 @@
 #include <androidfw/restable.h>        // obtainStyledAttributes resolver, ResXMLTree, StyledAttr
 #include <core/resourcesimpl.h>   // ResourcesImpl (aggregated)
 #include <drawable/drawable.h>
-#include <drawable/colordrawable.h>
-#include <drawable/colorstatelist.h>
-#include <unordered_map>
+#include <drawable/colorstatelist.h>   // ColorStateList (forward decl in resources.h)
 
 namespace cdroid {
 
 // ===========================================================================
-// DrawableCache / ColorStateListCache — AOSP ResourcesImpl.mDrawableCache /
-// mComplexColorCache equivalents. Defined in the .cc (not resources.h) because
-// they own GUI types the header can only forward-declare (Drawable::ConstantState
-// is a nested type; ColorStateList). They live in cdroid::Resources, not
-// ResourcesImpl, because androidfw is a cairo-free OBJECT library and these GUI
-// headers require cairo (see resourcesimpl.h).
-//
-// Drawable cache holds ConstantState WEAKLY (getDrawable returns a fresh Drawable
-// via ConstantState::newDrawable(), so the cache need not keep it alive).
-// ColorStateList cache holds the instance STRONGLY (getColorStateList returns
-// the SAME instance, so the cache keeps it alive — matches AOSP caching the
-// ComplexColor instance).
-// ===========================================================================
-class Resources::DrawableCache {
-public:
-    std::shared_ptr<Drawable::ConstantState> get(int id) {
-        auto it = mEntries.find(id);
-        if (it == mEntries.end()) return nullptr;
-        if (it->second.expired()) { mEntries.erase(it); return nullptr; }
-        return it->second.lock();
-    }
-    void put(int id, const std::shared_ptr<Drawable::ConstantState>& cs) {
-        if (cs) mEntries[id] = cs;
-    }
-private:
-    std::unordered_map<int, std::weak_ptr<Drawable::ConstantState>> mEntries;
-};
-
-class Resources::ColorStateListCache {
-public:
-    std::shared_ptr<ColorStateList> get(int id) const {
-        auto it = mEntries.find(id);
-        return it == mEntries.end() ? nullptr : it->second;
-    }
-    void put(int id, const std::shared_ptr<ColorStateList>& csl) {
-        if (csl) mEntries[id] = csl;
-    }
-private:
-    std::unordered_map<int, std::shared_ptr<ColorStateList>> mEntries;
-};
-
-// ===========================================================================
-// Construction / destruction (ResourcesImpl complete here)
+// Construction / destruction. Resources is a thin forwarder now: the AOSP
+// mDrawableCache / mComplexColorCache + loadDrawable/loadComplexColor live in
+// the aggregated ResourcesImpl (resourcesimpl.cc). Resources hands its Context
+// to ResourcesImpl once — the inflation bridge (AOSP passes the Resources
+// wrapper into loadDrawable; CDROID's aggregation can't reach it).
 // ===========================================================================
 
 Resources::Resources(AssetManager* am, cdroid::Context* ctx)
     : mImpl(std::make_unique<ResourcesImpl>(am, nullptr,
               ctx ? &ctx->getDisplayMetrics() : nullptr)),
-      mCtx(ctx),
-      mDrawableCache(std::make_unique<DrawableCache>()),
-      mColorStateListCache(std::make_unique<ColorStateListCache>()) {
+      mCtx(ctx) {
+    mImpl->setContext(ctx);
 }
 
 Resources::~Resources() = default;   // unique_ptr<ResourcesImpl> dtor instantiated here
@@ -210,52 +169,10 @@ Typeface* Resources::getFont(int id) const {
     return mImpl->getFont(id);
 }
 
-// AOSP ResourcesImpl.loadComplexColor(Resources, TypedValue, id, Theme).
-//
-//   1. cache hit → return cached instance              (mColorStateListCache)
-//   2. getValue(id) → TypedValue                        (ResourcesImpl.getValue)
-//   3. TYPE_FIRST/LAST_COLOR_INT → valueOf(data)        (getColorStateListFromInt)
-//   4. TYPE_STRING (xml) → createFromXml inline          (loadComplexColorForCookie)
-//   5. cache the instance, return it
-//
-// Returns a shared_ptr so callers (Assets::getColorStateList) can retain the
-// cached instance; getColorStateList(id) unwraps to a raw pointer.
+// AOSP ResourcesImpl.loadComplexColor — owned by the aggregated ResourcesImpl
+// (cache + createFromXml). Resources just forwards.
 std::shared_ptr<ComplexColor> Resources::loadComplexColor(int id) const {
-    if (id == 0 || mCtx == nullptr) return nullptr;
-    // 1. Cache hit (AOSP mComplexColorCache).
-    if (mColorStateListCache) {
-        if (auto csl = mColorStateListCache->get(id)) return csl;
-    }
-    // 2. Resolve the typed value (AOSP ResourcesImpl.getValue).
-    TypedValue value;
-    if (!getValue(id, &value, true)) return nullptr;
-    std::shared_ptr<ColorStateList> csl;
-    // 3. Inline color (AOSP getColorStateListFromInt): a raw color resolves
-    //    straight to a single-color ColorStateList (valueOf caches it).
-    if (value.type >= TypedValue::TYPE_FIRST_COLOR_INT &&
-        value.type <= TypedValue::TYPE_LAST_COLOR_INT) {
-        csl = ColorStateList::valueOf(value.data);
-    } else {
-        // 4. XML color-state-list (AOSP loadComplexColorForCookie): inflate the
-        //    binary AXML INLINE via ColorStateList.createFromXml. Do NOT call
-        //    mCtx->getColorStateList(name) here -- that re-enters
-        //    Assets::getColorStateList, which routes back to loadComplexColor
-        //    and would recurse infinitely.
-        std::string ref;
-        if (getResourceName(id, &ref)) {
-            try {
-                XmlPullParser parser(mCtx, ref);
-                // createFromXml takes a non-const Resources&; route through the
-                // Context (same Resources object) since loadComplexColor is const.
-                csl = ColorStateList::createFromXml(mCtx->getResources(), parser);
-            } catch (const std::exception&) {
-                csl = nullptr;
-            }
-        }
-    }
-    // 5. Cache (AOSP cache.put).
-    if (csl && mColorStateListCache) mColorStateListCache->put(id, csl);
-    return csl;
+    return mImpl->loadComplexColor(id);
 }
 
 Movie* Resources::getMovie(int id) const {
@@ -303,56 +220,21 @@ Asset* Resources::openRawResourceFd(int id) const {
 }
 
 // ===========================================================================
-// GUI factories — own the AOSP mDrawableCache / mComplexColorCache + load logic.
-// These live in cdroid::Resources (not ResourcesImpl) because androidfw is a
-// cairo-free OBJECT library and Drawable/ColorStateList headers require cairo.
+// GUI factories — thin forwarders. The AOSP mDrawableCache / mComplexColorCache
+// + loadDrawable/loadComplexColor live in the aggregated ResourcesImpl (it can
+// use cairo + the Context inflation bridge now that it's in the cdroid target).
 // ===========================================================================
 
-// AOSP Resources.getDrawable(id) → getDrawableForDensity(id, 0).
 cdroid::Drawable* Resources::getDrawable(int id) const {
-    return getDrawableForDensity(id, 0);
+    return mImpl->getDrawable(id, 0);
 }
 
-// AOSP Resources.getDrawableForDensity(id, density) → ResourcesImpl.loadDrawable:
-//   1. cache hit → ConstantState::newDrawable()        (mDrawableCache)
-//   2. getValue(id) → TypedValue
-//   3. TYPE_FIRST/LAST_COLOR_INT → ColorDrawable(data)  (AOSP isColorDrawable)
-//   4. TYPE_STRING (file/xml) → inflate                 (loadDrawableForCookie)
-//   5. cache the ConstantState, return the drawable
-// CDROID has a single density/configuration, so the AOSP density-adjustment of
-// value.density is a no-op here.
-cdroid::Drawable* Resources::getDrawableForDensity(int id, int /*density*/) const {
-    if (id == 0 || mCtx == nullptr) return nullptr;
-    // 1. Cache hit — reuse the inflated ConstantState (AOSP mDrawableCache).
-    if (mDrawableCache) {
-        if (auto cs = mDrawableCache->get(id)) return cs->newDrawable();
-    }
-    // 2. Resolve the typed value (AOSP ResourcesImpl.getValue).
-    TypedValue value;
-    if (!getValue(id, &value, true)) return nullptr;
-    // 3. Color-drawable path (AOSP isColorDrawable): a raw color value resolves
-    //    straight to a ColorDrawable — no file round-trip.
-    Drawable* d = nullptr;
-    if (value.type >= TypedValue::TYPE_FIRST_COLOR_INT &&
-        value.type <= TypedValue::TYPE_LAST_COLOR_INT) {
-        d = new ColorDrawable(value.data);
-    } else {
-        // 4. File/xml drawable (AOSP loadDrawableForCookie): resolve the
-        //    resource name and inflate through the existing string-based loader
-        //    (Assets.getDrawable → DrawableInflater / ImageDecoder), which owns
-        //    the 9-patch / theme-ref / color-state-list edge cases.
-        std::string ref;
-        if (getResourceName(id, &ref)) d = mCtx->getDrawable(ref);
-    }
-    // 5. Cache the ConstantState (AOSP cacheDrawable).
-    if (d && mDrawableCache) mDrawableCache->put(id, d->getConstantState());
-    return d;
+cdroid::Drawable* Resources::getDrawableForDensity(int id, int density) const {
+    return mImpl->getDrawableForDensity(id, density);
 }
 
-// AOSP Resources.getColorStateList(id) → loadColorStateList → loadComplexColor,
-// downcast to ColorStateList (ComplexColor also covers GradientColor).
 cdroid::ColorStateList* Resources::getColorStateList(int id) const {
-    return dynamic_cast<ColorStateList*>(loadComplexColor(id).get());
+    return mImpl->getColorStateList(id);
 }
 
 // ===========================================================================

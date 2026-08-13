@@ -37,6 +37,7 @@ class ColorStateList;
 class Typeface;
 class ComplexColor;
 class Movie;
+class Context;
 }  // namespace cdroid
 
 namespace cdroid {
@@ -107,28 +108,41 @@ public:
     Asset* getLayout(int id) const { return getXml(id); }
     Asset* getAnimation(int id) const { return getXml(id); }
 
-    // --- GUI-object factories (virtual so cdroid::Resources can override;
-    // STUBBED returning nullptr here — see NOTE below). ---
-    // NOTE: the drawable cache (AOSP mDrawableCache) + loadDrawable cannot live
-    // in ResourcesImpl: androidfw is a deliberately cairo-free OBJECT library
-    // (mirrors AOSP libs/androidfw), reused by GUI-less unit tests, while
-    // drawable/ColorStateList headers transitively require cairo. So getDrawable/
-    // getColorStateList/loadComplexColor are implemented in cdroid::Resources
-    // (the cairo-aware layer), which owns the caches.
+    // --- GUI-object factories. ResourcesImpl owns the AOSP mDrawableCache /
+    // mComplexColorCache + loadDrawable/loadComplexColor (it lives in the cdroid
+    // target, so cairo + the Context inflation bridge are available). getFont/
+    // getMovie stay stubbed (out of scope). ---
     virtual Drawable*       getDrawable(int id, int density = 0) const;
     virtual Drawable*       getDrawableForDensity(int id, int density) const;
     virtual ColorStateList* getColorStateList(int id) const;
+    virtual std::shared_ptr<ComplexColor> loadComplexColor(int id) const;
     virtual Typeface*       getFont(int id) const;
-    virtual ComplexColor*   loadComplexColor(int id) const;
     virtual Movie*          getMovie(int id) const;
 
+    // Inflation bridge: AOSP passes the Resources wrapper into loadDrawable so
+    // ResourcesImpl can inflate (Drawable.createFromXml etc.); CDROID's
+    // aggregation can't reach it, so the owning Resources hands its Context (the
+    // DrawableInflater/ImageDecoder/ColorStateList engine) to ResourcesImpl once,
+    // after construction. Null until set → GUI factories that need inflation
+    // return nullptr.
+    void setContext(Context* ctx) { mCtx = ctx; }
+
 private:
+    class DrawableCache;        // id → Drawable::ConstantState (defined in .cc)
+    class ColorStateListCache;  // id → ColorStateList          (defined in .cc)
+
     Asset* openByStringId(int id) const;
     bool   pathOf(int id, std::string* out) const;
 
     AssetManager*       mAssets;
     ResTable_config     mConfig;
     DisplayMetrics      mMetrics;
+    Context*            mCtx = nullptr;   // inflation bridge (see setContext)
+    // AOSP mDrawableCache / mComplexColorCache — keyed by resource id. mutable:
+    // populated from the const getDrawable/loadComplexColor. PImpl (defined in
+    // .cc): they own GUI types (Drawable::ConstantState / ColorStateList).
+    mutable std::unique_ptr<DrawableCache>       mDrawableCache;
+    mutable std::unique_ptr<ColorStateListCache> mColorStateListCache;
 };
 
 } // namespace cdroid
