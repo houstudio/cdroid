@@ -61,4 +61,8 @@
         <attr name="variablePadding" />
     </declare-styleable>
     <!-- CDROID gradient image pattern (CDROID-only attr). -->
+    <!-- CDROID gradient image pattern (replaces "bitmap" attr name clash). -->
+    <declare-styleable name="GradientDrawablePattern">
+        <attr name="pattern" format="reference|color" />
+    </declare-styleable>
 </resources>

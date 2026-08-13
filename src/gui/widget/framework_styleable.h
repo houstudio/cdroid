@@ -1222,6 +1222,10 @@ namespace internal { namespace R { namespace styleable {
     constexpr int DrawableContainerState_constantSize = 0;
     constexpr int DrawableContainerState_variablePadding = 1;
 
+    // GradientDrawablePattern (1 attrs)
+    extern const uint32_t GradientDrawablePattern[];
+    constexpr int GradientDrawablePattern_pattern = 0;
+
 } } } // namespace internal::R::styleable
 } // namespace cdroid
 #endif // __FRAMEWORK_STYLEABLE_H__

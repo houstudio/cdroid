@@ -1224,8 +1224,11 @@ void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,co
         } else if (name.compare("gradient")==0) {
             auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawableGradient);
             if (ta) updateGradientDrawableGradient(*ta);
-            // "bitmap" attr (framework attr name; CDROID-specific usage on <gradient>).
-            setImagePattern(atts.getContext(), atts.getString("bitmap"));
+            // CDROID-private "pattern" attr (image pattern for gradient fill).
+            { auto ta2 = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawablePattern);
+              auto pattern = ta2->getString(R::styleable::GradientDrawablePattern_pattern);
+              if (!pattern.empty()) setImagePattern(atts.getContext(), pattern);
+            }
         } else if (name.compare("solid")==0) {
             auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawableSolid);
             if (ta) updateGradientDrawableSolid(*ta);

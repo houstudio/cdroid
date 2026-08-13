@@ -22,3 +22,4 @@
 0x010d0134 updateInputTextInFling
 0x010d0139 wheelItemCount
 0x010d0140 wrapSelectorWheel
+0x010d00b8 pattern

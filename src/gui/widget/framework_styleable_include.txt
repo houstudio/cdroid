@@ -120,3 +120,4 @@ OvershootInterpolator
 AnticipateOvershootInterpolator
 PathInterpolator
 DrawableContainerState
+GradientDrawablePattern
