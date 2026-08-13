@@ -16,24 +16,24 @@
 #define __CDROID_RESOURCESIMPL_H__
 
 #include <cstdint>
-#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <androidfw/restable.h>       // cdroid::ResTable, ResTable_config, Res_value
-#include <core/assetmanager.h>   // cdroid::AssetManager
-#include <core/asset.h>          // cdroid::Asset
-#include <androidfw/typedvalue.h>     // cdroid::TypedValue, applyDimension
-#include <core/displaymetrics.h>      // cdroid::DisplayMetrics
+#include <core/displaymetrics.h>      // cdroid::DisplayMetrics (value member mMetrics)
 
-// Forward declarations of cdroid GUI object types — returned by pointer only,
-// so the full GUI headers are NOT needed to compile this. Their factory methods
-// are implemented in cdroid::Resources (resources.cc), which owns the caches.
+// ResourcesImpl is the facade that HIDES the androidfw native readers (ResTable,
+// ResTable_config, AssetManager, Asset, TypedValue) — those headers live in the
+// .cc only. So the many files that include this (via context.h) don't transitively
+// pull androidfw.
 namespace cdroid {
-class Drawable;
-class ColorStateList;
+class AssetManager;        // core — opaque (pointer member + params)
+class Asset;               // core — opaque (pointer return)
+class ResTable_config;     // androidfw — opaque (held via unique_ptr)
+class TypedValue;          // androidfw — opaque (pointer params)
+class Drawable;            // GUI — opaque (pointer return)
+class ColorStateList;      // GUI — opaque (pointer return)
 class Typeface;
 class ComplexColor;
 class Movie;
@@ -58,14 +58,11 @@ public:
 
     AssetManager* getAssets() const { return mAssets; }
 
-    // AOSP Resources.Theme — the engine is ResTable::Theme (applyStyle/
-    // getAttribute/resolveAttribute/clear/...). TODO: promote to a Resources.Theme
-    // wrapper class at the Resources level (hides ResTable::Theme from public API).
-    using Theme = ResTable::Theme;
-    std::unique_ptr<Theme> newTheme();   // a Theme over this ResourcesImpl's table
-    const ResTable_config& getConfiguration() const { return mConfig; }
+    // Theme lives at the Resources level now (Resources::Theme; cdroid::Resources
+    // owns the engine view). ResourcesImpl exposes only config/metrics here.
+    const ResTable_config& getConfiguration() const;       // out-of-line (mConfig opaque)
     const DisplayMetrics&  getDisplayMetrics() const { return mMetrics; }
-    void setConfiguration(const ResTable_config& config) { mConfig = config; }
+    void setConfiguration(const ResTable_config& config);  // out-of-line
     void setDisplayMetrics(const DisplayMetrics& m) { mMetrics = m; }
 
     // --- identifier / naming ---
@@ -135,7 +132,7 @@ private:
     bool   pathOf(int id, std::string* out) const;
 
     AssetManager*       mAssets;
-    ResTable_config     mConfig;
+    std::unique_ptr<ResTable_config> mConfig;  // opaque (restable.h hidden in .cc)
     DisplayMetrics      mMetrics;
     Context*            mCtx = nullptr;   // inflation bridge (see setContext)
     // AOSP mDrawableCache / mComplexColorCache — keyed by resource id. mutable:

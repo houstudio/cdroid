@@ -11,6 +11,8 @@
 #include <core/xmlpullparser.h>
 #include <androidfw/restable.h>        // obtainStyledAttributes resolver, ResXMLTree, StyledAttr
 #include <core/resourcesimpl.h>   // ResourcesImpl (aggregated)
+#include <core/assetmanager.h>      // AssetManager (getAssets()->getResources)
+#include <androidfw/typedvalue.h>   // TypedValue (getValue/getColorStateList)
 #include <drawable/drawable.h>
 #include <drawable/colorstatelist.h>   // ColorStateList (forward decl in resources.h)
 

@@ -13,6 +13,12 @@
 #include <string>
 #include <unordered_map>
 
+// androidfw native readers — hidden from resourcesimpl.h (the facade contract).
+#include <androidfw/restable.h>       // ResTable, ResTable_config, Res_value
+#include <core/assetmanager.h>        // AssetManager
+#include <core/asset.h>               // Asset
+#include <androidfw/typedvalue.h>     // TypedValue
+
 #include <drawable/drawable.h>        // Drawable::ConstantState
 #include <drawable/colordrawable.h>   // ColorDrawable (color-drawable path)
 #include <drawable/colorstatelist.h>  // ColorStateList cache + createFromXml
@@ -58,7 +64,9 @@ static std::string u16to8(const char16_t* s, size_t len) {
 
 ResourcesImpl::ResourcesImpl(AssetManager* am, const ResTable_config* config,
                      const DisplayMetrics* metrics) : mAssets(am) {
-    if (config != nullptr) mConfig = *config; else memset(&mConfig, 0, sizeof(mConfig));
+    mConfig = std::make_unique<ResTable_config>();
+    if (config != nullptr) *mConfig = *config;
+    else memset(mConfig.get(), 0, sizeof(ResTable_config));
     if (metrics != nullptr) mMetrics = *metrics;  // else default density=1
     mDrawableCache = std::make_unique<DrawableCache>();
     mColorStateListCache = std::make_unique<ColorStateListCache>();
@@ -67,13 +75,8 @@ ResourcesImpl::ResourcesImpl(AssetManager* am, const ResTable_config* config,
 ResourcesImpl::~ResourcesImpl() {
 }
 
-// AOSP Resources.newTheme(): a Theme over this ResourcesImpl's AssetManager
-// table. The engine is cdroid::ResTable::Theme (aliased as ResourcesImpl::Theme);
-// it owns no state until applyStyle() is called on it.
-std::unique_ptr<ResourcesImpl::Theme> ResourcesImpl::newTheme() {
-    if (mAssets == nullptr) return nullptr;
-    return std::make_unique<Theme>(mAssets->getResources(false));
-}
+const ResTable_config& ResourcesImpl::getConfiguration() const { return *mConfig; }
+void ResourcesImpl::setConfiguration(const ResTable_config& config) { *mConfig = config; }
 
 int ResourcesImpl::getIdentifier(const std::string& name, const std::string& type,
                              const std::string& package) const {

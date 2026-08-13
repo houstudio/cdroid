@@ -4,6 +4,10 @@
 // every fully-implemented getter; GUI factories are asserted stubbed.
 
 #include <core/resourcesimpl.h>
+#include <core/asset.h>
+#include <core/assetmanager.h>
+#include <androidfw/resourcetypes.h>  // Res_value
+#include <androidfw/typedvalue.h>     // TypedValue, applyDimension
 
 #include <memory>
 #include <string>

@@ -22,6 +22,7 @@
 #include <core/app.h>
 #include <core/assets.h>
 #include <core/resources.h>  // cdroid::Resources (full def — getResources().getXml())
+#include <core/asset.h>            // Asset (getXml result: getLength/read)
 #include <expat.h>
 #include <array>
 #include <fstream>

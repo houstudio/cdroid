@@ -8,6 +8,7 @@
 #include "core/resourcesimpl.h"   // cdroid::ResourcesImpl (+ Theme)
 #include "resources.h"      // cdroid::Resources (full def — getResources() returns it)
 #include <core/typedarray.h>       // TypedArray (constructed below)
+#include <androidfw/restable.h>     // ResTable::Theme + obtainStyledAttributes + StyledAttr
 
 namespace cdroid {
 
