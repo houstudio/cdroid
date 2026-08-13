@@ -232,27 +232,6 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
             default: break;
             }
         }
-    } else {
-        setClipChildren(atts.getBoolean("clipChildren", true));
-        setClipToPadding(atts.getBoolean("clipToPadding", true));
-        std::string resid = atts.getString("layoutAnimation");
-        if(!resid.empty()) setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx, resid));
-        setDescendantFocusability(atts.getInt("descendantFocusability", std::unordered_map<std::string,int>{
-            {"beforeDescendants",(int)FOCUS_BEFORE_DESCENDANTS},
-            {"afterDescendants",(int)FOCUS_AFTER_DESCENDANTS},
-            {"blocksDescendants",(int)FOCUS_BLOCK_DESCENDANTS}
-        }, FOCUS_BEFORE_DESCENDANTS));
-        if(atts.getBoolean("animateLayoutChanges", false)) setLayoutTransition(new LayoutTransition());
-        setLayoutMode(atts.getInt("layoutMode", std::unordered_map<std::string,int>{
-            {"undefined",(int)LAYOUT_MODE_UNDEFINED},
-            {"clipBounds",(int)LAYOUT_MODE_CLIP_BOUNDS},
-            {"opticalBounds",(int)LAYOUT_MODE_OPTICAL_BOUNDS}
-        }, LAYOUT_MODE_UNDEFINED));
-        setAddStatesFromChildren(atts.getBoolean("addStatesFromChildren", false));
-        setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents", false));
-        setAlwaysDrawnWithCacheEnabled(atts.getBoolean("alwaysDrawnWithCache", false));
-        setTransitionGroup(atts.getBoolean("transitionGroup", false));
-        setTouchscreenBlocksFocus(atts.getBoolean("touchscreenBlocksFocus", false));
     }
 }
 
