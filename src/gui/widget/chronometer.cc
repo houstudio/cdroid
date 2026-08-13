@@ -40,7 +40,8 @@ Chronometer::Chronometer(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
     
 setFormat(ta->getString(R::styleable::Chronometer_format));
 setCountDown(ta->getBoolean(R::styleable::Chronometer_countDown,false));
-mColonBlinking = atts.getBoolean("colonBlinking",mColonBlinking);
+{ auto ta2 = ctx->obtainStyledAttributes(atts, R::styleable::ChronometerCdroid);
+  mColonBlinking = ta2->getBoolean(R::styleable::ChronometerCdroid_colonBlinking, mColonBlinking); }
 
 }
 

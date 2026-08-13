@@ -1106,33 +1106,46 @@ namespace internal { namespace R { namespace styleable {
     constexpr int TimePicker_amPmBackgroundColor = 12;
     constexpr int TimePicker_dialogMode = 13;
 
-    // CandidateView (0 attrs)
+    // CandidateView (4 attrs)
     extern const uint32_t CandidateView[];
-    constexpr int CandidateView___none = 0;
+    constexpr int CandidateView_candidate_background = 0;
+    constexpr int CandidateView_candidate_normal = 1;
+    constexpr int CandidateView_candidate_other = 2;
+    constexpr int CandidateView_candidate_recommand = 3;
 
-    // PlotView (0 attrs)
+    // PlotView (5 attrs)
     extern const uint32_t PlotView[];
-    constexpr int PlotView___none = 0;
+    constexpr int PlotView_showGrid = 0;
+    constexpr int PlotView_gridColor = 1;
+    constexpr int PlotView_tickLabelSize = 2;
+    constexpr int PlotView_tickMarks = 3;
+    constexpr int PlotView_tickLabels = 4;
 
-    // NumberPickerCdroid (0 attrs)
+    // NumberPickerCdroid (6 attrs)
     extern const uint32_t NumberPickerCdroid[];
-    constexpr int NumberPickerCdroid___none = 0;
+    constexpr int NumberPickerCdroid_selectedfontFamily = 0;
+    constexpr int NumberPickerCdroid_selectedTextColor = 1;
+    constexpr int NumberPickerCdroid_textColor2 = 2;
+    constexpr int NumberPickerCdroid_updateInputTextInFling = 3;
+    constexpr int NumberPickerCdroid_wheelItemCount = 4;
+    constexpr int NumberPickerCdroid_wrapSelectorWheel = 5;
 
-    // ChronometerCdroid (0 attrs)
+    // ChronometerCdroid (1 attrs)
     extern const uint32_t ChronometerCdroid[];
-    constexpr int ChronometerCdroid___none = 0;
+    constexpr int ChronometerCdroid_colonBlinking = 0;
 
-    // SimpleMonthViewCdroid (0 attrs)
+    // SimpleMonthViewCdroid (1 attrs)
     extern const uint32_t SimpleMonthViewCdroid[];
-    constexpr int SimpleMonthViewCdroid___none = 0;
+    constexpr int SimpleMonthViewCdroid_dayTextAppearance = 0;
 
-    // ScrollViewCdroid (0 attrs)
+    // ScrollViewCdroid (1 attrs)
     extern const uint32_t ScrollViewCdroid[];
-    constexpr int ScrollViewCdroid___none = 0;
+    constexpr int ScrollViewCdroid_scrollDuration = 0;
 
-    // StateSetCdroid (0 attrs)
+    // StateSetCdroid (2 attrs)
     extern const uint32_t StateSetCdroid[];
-    constexpr int StateSetCdroid___none = 0;
+    constexpr int StateSetCdroid_state_drag_acceptable = 0;
+    constexpr int StateSetCdroid_state_drag_hoved = 1;
 
 } } } // namespace internal::R::styleable
 } // namespace cdroid

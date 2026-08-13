@@ -6,6 +6,9 @@
 */
 
 #include <widget/plotview.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+using namespace cdroid::internal;
 
 #include <math.h>
 #include <widget/plotaxis.h>
@@ -108,12 +111,12 @@ PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
     d->calcDataRectLimits(0.0, 1.0, 0.0, 1.0);
     const std::unordered_map<std::string,int>dirs={{"left",1},{"top",2},{"right",4},{"bottom",8},
 	    {"horizontal",5},{"vertical",10},{"all",15}};
-    d->showGrid = atts.getBoolean("showGrid",false);
-    d->cGrid = atts.getInt("gridColor",d->cGrid);
-    d->tickLabelSize = atts.getDimensionPixelSize("tickLabelSize",d->tickLabelSize);
-
-    const int tickMarks = atts.getInt("tickMarks",dirs,15);
-    const int tickLabels= atts.getInt("tickLabels",dirs,0);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::PlotView);
+    d->showGrid = ta->getBoolean(R::styleable::PlotView_showGrid, false);
+    d->cGrid = ta->getInt(R::styleable::PlotView_gridColor, d->cGrid);
+    d->tickLabelSize = ta->getDimensionPixelSize(R::styleable::PlotView_tickLabelSize, d->tickLabelSize);
+    const int tickMarks = ta->getInt(R::styleable::PlotView_tickMarks, 15);
+    const int tickLabels = ta->getInt(R::styleable::PlotView_tickLabels, 0);
 
     axis(LeftAxis)->setTickmarkVisible(tickMarks&1);
     axis(TopAxis)->setTickmarkVisible(tickMarks&2);

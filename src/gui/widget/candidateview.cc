@@ -17,6 +17,9 @@
  *********************************************************************************/
 #include <text/textutils.h>
 #include <widget/candidateview.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+using namespace cdroid::internal;
 namespace cdroid{
 
 DECLARE_WIDGET(CandidateView)
@@ -37,11 +40,12 @@ CandidateView::CandidateView(Context*ctx,const AttributeSet& atts):CandidateView
 
 CandidateView::CandidateView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr){
     const AttributeSet& atts = *pAttrs;
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::CandidateView);
      mSelectionHighlight = atts.getDrawable("list_selector_background");
-     setBackgroundColor(atts.getColor("candidate_background"));
-     mColorNormal = atts.getColor("candidate_normal");
-     mColorRecommended = atts.getColor("candidate_recommand");
-     mColorOther = atts.getColor("candidate_other");
+     setBackgroundColor(ta->getColor(R::styleable::CandidateView_candidate_background, 0));
+     mColorNormal = ta->getColor(R::styleable::CandidateView_candidate_normal, 0);
+     mColorRecommended = ta->getColor(R::styleable::CandidateView_candidate_recommand, 0);
+     mColorOther = ta->getColor(R::styleable::CandidateView_candidate_other, 0);
      mVerticalPadding = atts.getDimensionPixelSize("candidate_vertical_padding");
      const int textSize = atts.getDimensionPixelSize("candidate_font_height",20);
      setHorizontalFadingEdgeEnabled(true);

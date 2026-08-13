@@ -193,12 +193,12 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t TimePicker[] = {
         0x010d0083, 0x010d006f, 0x010d0068, 0x0101012f, 0x010104a1, 0x010104e1, 0x010104a2,
         0x010104a3, 0x010104b4, 0x010104a0, 0x0101049f, 0x010104a4, 0x010104a5, 0x010d003b, 0 };
-    const uint32_t CandidateView[] = { 0 };
-    const uint32_t PlotView[] = { 0 };
-    const uint32_t NumberPickerCdroid[] = { 0 };
-    const uint32_t ChronometerCdroid[] = { 0 };
-    const uint32_t SimpleMonthViewCdroid[] = { 0 };
-    const uint32_t ScrollViewCdroid[] = { 0 };
-    const uint32_t StateSetCdroid[] = { 0 };
+    const uint32_t CandidateView[] = { 0x010d0024, 0x010d0025, 0x010d0026, 0x010d0027, 0 };
+    const uint32_t PlotView[] = { 0x010d0101, 0x010d006b, 0x010d0120, 0x010d0122, 0x010d0121, 0 };
+    const uint32_t NumberPickerCdroid[] = { 0x010d00fc, 0x010d00fb, 0x010d0114, 0x010d0134, 0x010d0139, 0x010d0140, 0 };
+    const uint32_t ChronometerCdroid[] = { 0x010d002b, 0 };
+    const uint32_t SimpleMonthViewCdroid[] = { 0x010d003e, 0 };
+    const uint32_t ScrollViewCdroid[] = { 0x010d00f0, 0 };
+    const uint32_t StateSetCdroid[] = { 0x010d010a, 0x010d010b, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid
