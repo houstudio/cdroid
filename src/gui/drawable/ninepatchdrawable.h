@@ -39,7 +39,6 @@ private:
         NinePatchState(const NinePatchState&state);
         void setBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap,const Rect*padding=nullptr,
                        const std::vector<uint8_t>*ninePatchChunk=nullptr);
-        void setBitmap(Context*ctx,const std::string&resid,const Rect*padding=nullptr);
         NinePatchDrawable*newDrawable()override;
         void draw(Canvas&canvas,const Rect&rect,int alpha);
         int getChangingConfigurations()const override;
@@ -63,7 +62,6 @@ protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
 public:
     NinePatchDrawable();
-    NinePatchDrawable(Context*,const std::string&resid);
     NinePatchDrawable(Cairo::RefPtr<Cairo::ImageSurface>bmp,const std::vector<uint8_t>*ninePatchChunk=nullptr);
     ~NinePatchDrawable();
     void setTargetDensity(int density);

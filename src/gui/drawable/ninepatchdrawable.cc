@@ -45,11 +45,6 @@ NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
     computeBitmapSize();
 }
 
-NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid):NinePatchDrawable(){
-    mNinePatchState->setBitmap(ctx,resid);
-    computeBitmapSize();
-}
-
 NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp,const std::vector<uint8_t>*ninePatchChunk):NinePatchDrawable(){
     mNinePatchState->setBitmap(bmp,nullptr,ninePatchChunk);
     computeBitmapSize();
@@ -366,11 +361,6 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
     mAutoMirrored =false;
     mPadding.set(0,0,0,0);
     mOpticalInsets.set(0,0,0,0);
-}
-
-void NinePatchDrawable::NinePatchState::setBitmap(Context*ctx,const std::string&resid,const Rect*padding){
-    auto bitmap = ctx->loadImage(resid,-1,-1);
-    setBitmap(bitmap,padding);
 }
 
 void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,const Rect*padding,
