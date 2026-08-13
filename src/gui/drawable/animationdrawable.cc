@@ -192,13 +192,13 @@ void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
         Context* ctx = atts.getContext();
         auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimationDrawableItem);
         const int duration = ta ? ta->getInt(R::styleable::AnimationDrawableItem_duration, -1)
-                                : atts.getInt("duration", -1);
+                                : -1;
         if (duration < 0) {
             throw std::logic_error(parser.getPositionDescription()+": <item> tag requires a 'duration' attribute");
         }
 
         Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimationDrawableItem_drawable)
-                          : atts.getDrawable("drawable");
+                          : nullptr;
 
         if (dr == nullptr) {
             while ((type=parser.next()) == XmlPullParser::TEXT) {

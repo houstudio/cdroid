@@ -184,7 +184,7 @@ void StateListDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,c
         std::vector<int>states;
         Context* ctx = atts.getContext();
         auto ta = r.obtainStyledAttributes(&atts, R::styleable::StateListDrawableItem);
-        Drawable*dr = ta ? ta->getDrawable(R::styleable::StateListDrawableItem_drawable) : atts.getDrawable("drawable");
+        Drawable*dr = ta ? ta->getDrawable(R::styleable::StateListDrawableItem_drawable) : nullptr;
         StateSet::parseState(states,atts);
         if(dr==nullptr){
             while((type=parser.next())==XmlPullParser::TEXT){}

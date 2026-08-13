@@ -492,9 +492,9 @@ void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,in
             mDecodeImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, frmSequence->getWidth(), frmSequence->getHeight());
         }
     }
-    mAnimatedImageState->mAutoMirrored = ta ? ta->getBoolean(R::styleable::AnimatedImageDrawable_autoMirrored, false) : atts.getBoolean("autoMirrored", false);
-    const int repeatCount = ta ? ta->getInt(R::styleable::AnimatedImageDrawable_repeatCount, REPEAT_UNDEFINED) : atts.getInt("repeatCount", REPEAT_UNDEFINED);
-    const bool autoStart = ta ? ta->getBoolean(R::styleable::AnimatedImageDrawable_autoStart, false) : atts.getBoolean("autoStart", false);
+    mAnimatedImageState->mAutoMirrored = ta ? ta->getBoolean(R::styleable::AnimatedImageDrawable_autoMirrored, false) : false;
+    const int repeatCount = ta ? ta->getInt(R::styleable::AnimatedImageDrawable_repeatCount, REPEAT_UNDEFINED) : REPEAT_UNDEFINED;
+    const bool autoStart = ta ? ta->getBoolean(R::styleable::AnimatedImageDrawable_autoStart, false) : false;
     if(repeatCount!=REPEAT_UNDEFINED)
         setRepeatCount(repeatCount);
     if(autoStart && mFrameSequenceState){

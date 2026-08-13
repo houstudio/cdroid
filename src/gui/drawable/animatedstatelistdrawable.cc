@@ -248,8 +248,8 @@ void AnimatedStateListDrawable::inflateChildElement(Resources& r,XmlPullParser&p
 int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     Context* ctx = atts.getContext();
     auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimatedStateListDrawableItem);
-    const int keyframeId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableItem_id, 0) : atts.getResourceId("id", 0);
-    Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimatedStateListDrawableItem_drawable) : atts.getDrawable("drawable");
+    const int keyframeId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableItem_id, 0) : 0;
+    Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimatedStateListDrawableItem_drawable) : nullptr;
 
     std::vector<int> states;
     StateSet::parseState(states,atts);
@@ -274,10 +274,10 @@ int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const
 int AnimatedStateListDrawable::parseTransition(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
     Context* ctx = atts.getContext();
     auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimatedStateListDrawableTransition);
-    const int fromId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableTransition_fromId, 0) : atts.getResourceId("fromId", 0);
-    const int toId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableTransition_toId, 0) : atts.getResourceId("toId", 0);
-    const bool reversible = ta ? ta->getBoolean(R::styleable::AnimatedStateListDrawableTransition_reversible, false) : atts.getBoolean("reversible", false);
-    Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimatedStateListDrawableTransition_drawable) : atts.getDrawable("drawable");
+    const int fromId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableTransition_fromId, 0) : 0;
+    const int toId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableTransition_toId, 0) : 0;
+    const bool reversible = ta ? ta->getBoolean(R::styleable::AnimatedStateListDrawableTransition_reversible, false) : false;
+    Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimatedStateListDrawableTransition_drawable) : nullptr;
 
     // Loading child elements modifies the state of the AttributeSet's
     // underlying parser, so it needs to happen after obtaining
