@@ -67,11 +67,11 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* pAttrs,int defS
     // R.dimen.date_picker_* resources, NOT from XML attributes (the month-item
     // layout declares none). Reading the missing attrs returned 0, leaving
     // mDayHeight==0 and dividing by zero in getDayAtLocation.
-    mDesiredMonthHeight = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_month_height");
-    mDesiredDayOfWeekHeight = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_of_week_height");
-    mDesiredDayHeight = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_height");
-    mDesiredCellWidth  = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_width");
-    mDesiredDaySelectorRadius = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_selector_radius");
+    mDesiredMonthHeight = mContext->getDimensionPixelSize(R::dimen::date_picker_month_height);
+    mDesiredDayOfWeekHeight = mContext->getDimensionPixelSize(R::dimen::date_picker_day_of_week_height);
+    mDesiredDayHeight = mContext->getDimensionPixelSize(R::dimen::date_picker_day_height);
+    mDesiredCellWidth  = mContext->getDimensionPixelSize(R::dimen::date_picker_day_width);
+    mDesiredDaySelectorRadius = mContext->getDimensionPixelSize(R::dimen::date_picker_day_selector_radius);
 
     // Set up accessibility components.
     setAccessibilityDelegate(mTouchHelper);

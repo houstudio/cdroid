@@ -99,10 +99,10 @@ LocalFloatingToolbarPopup::LocalFloatingToolbarPopup(Context* context, View* par
     mContentContainer = createContentContainer(mContext);
     mPopupWindow = createPopupWindow(mContentContainer);
 
-    mMarginHorizontal = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_horizontal_margin");
-    mMarginVertical   = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_vertical_margin");
-    mLineHeight       = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_height");
-    mIconTextSpacing  = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_icon_text_spacing");
+    mMarginHorizontal = mContext->getDimensionPixelSize(R::dimen::floating_toolbar_horizontal_margin);
+    mMarginVertical   = mContext->getDimensionPixelSize(R::dimen::floating_toolbar_vertical_margin);
+    mLineHeight       = mContext->getDimensionPixelSize(R::dimen::floating_toolbar_height);
+    mIconTextSpacing  = mContext->getDimensionPixelSize(R::dimen::floating_toolbar_icon_text_spacing);
 
     // Views. Drawables are fetched fresh per setImageDrawable (see file header note).
     mOverflowButton = createOverflowButton();
@@ -421,7 +421,7 @@ int LocalFloatingToolbarPopup::getAdjustedToolbarWidth(int suggestedWidth) {
     int maxWidth = mViewPortOnScreen.width - 2 * mMarginHorizontal;
     if (width <= 0) {
         // No suggested width; use the preferred width dimen.
-        width = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_preferred_width");
+        width = mContext->getDimensionPixelSize(R::dimen::floating_toolbar_preferred_width);
     }
     return std::min(width, maxWidth);
 }
