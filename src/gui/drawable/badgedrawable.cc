@@ -20,6 +20,10 @@
 #include <drawable/badgestate.h>
 #include <animation/animationutils.h>
 #include <widget/framelayout.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
+using namespace cdroid::internal;
 #include <core/xmlpullparser.h>
 #include <core/typeface.h>
 #include <text/textutils.h>
@@ -479,20 +483,22 @@ int BadgeDrawable::getAdditionalVerticalOffset() const{
 }
 
 void BadgeDrawable::setTextAppearance(const std::string& id) {
-    const AttributeSet atts = mContext->obtainStyledAttributes(id);
-    const int textSize = atts.getInt("textSize",12);
-    Typeface*tf =Typeface::create(atts.getString("fontFamily"),0);
+    AttributeSet atts = mContext->obtainStyledAttributes(id);
+    auto ta = mContext->obtainStyledAttributes(atts, R::styleable::TextAppearance);
+    const int textSize = ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 12);
+    Typeface* tf = Typeface::create(ta->getString(R::styleable::TextAppearance_fontFamily), 0);
     mTextPaint.setTypeface(tf);
     mTextPaint.setTextSize(textSize);
-    atts.getColor("textColor");
+    ta->getColor(R::styleable::TextAppearance_textColor, 0);
 }
 
 void BadgeDrawable::onBadgeTextAppearanceUpdated() {
     if (mContext == nullptr) {
         return;
     }
-    const AttributeSet atts = mContext->obtainStyledAttributes(mState->getTextAppearanceResId());
-    const int fontSize = atts.getInt("textSize",mTextPaint.getTextSize());
+    AttributeSet atts = mContext->obtainStyledAttributes(mState->getTextAppearanceResId());
+    auto ta = mContext->obtainStyledAttributes(atts, R::styleable::TextAppearance);
+    const int fontSize = ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, mTextPaint.getTextSize());
     mTextPaint.setTextSize(fontSize);
     /*TextAppearance textAppearance = new TextAppearance(context, state.getTextAppearanceResId());
     if (textDrawableHelper.getTextAppearance() == textAppearance) {

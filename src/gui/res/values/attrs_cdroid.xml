@@ -60,4 +60,5 @@
         <attr name="constantSize" />
         <attr name="variablePadding" />
     </declare-styleable>
+    <!-- CDROID gradient image pattern (CDROID-only attr). -->
 </resources>
