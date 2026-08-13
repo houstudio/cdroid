@@ -19,6 +19,7 @@
 #include <drawable/ninepatchdrawable.h>
 #include <drawable/ninepatchrenderer.h>
 #include <image-decoders/imagedecoder.h>
+#include <core/asset.h>
 #include <widget/framework_styleable.h>
 #include <androidfw/typedvalue.h>
 #include <utils/textutils.h>
@@ -287,70 +288,59 @@ void NinePatchDrawable::draw(Canvas&canvas){
 
 void NinePatchDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
    Drawable::inflate(r,parser,atts);
-
+   // AOSP: all attr reads + src loading happen inside updateStateFromTypedArray.
    auto ta = r.obtainStyledAttributes(&atts, R::styleable::NinePatchDrawable);
    if (ta) updateStateFromTypedArray(*ta);
-
-   // AOSP: src is read via ta.getResourceId(R.styleable.NinePatchDrawable_src, 0).
-   auto state = mNinePatchState;
-   const int srcResId = ta->getResourceId(R::styleable::NinePatchDrawable_src, 0);
-   if (srcResId != 0) {
-       TypedValue tv;
-       std::string srcPath;
-       if (atts.getContext()->getResources().getValue(srcResId, &tv, true) && tv.string) {
-           srcPath = TextUtils::utf16_utf8((const uint16_t*)tv.string, tv.stringLen);
-       }
-       Rect padding ,opticalInsets;
-       Cairo::RefPtr<Cairo::ImageSurface> bitmap;
-       std::vector<uint8_t> ninePatchChunk;  // npTc/cdNp extracted from the src PNG
-       try {
-           auto is = atts.getContext()->getInputStream(srcPath);
-           if (!is || !*is) {
-               LOGW("<nine-patch> src stream unavailable: %s", srcPath.c_str());
-               return;
-           }
-           bitmap = ImageDecoder::loadImage(*is,-1,-1, &ninePatchChunk);
-       } catch (const std::exception& e) {
-           LOGW("<nine-patch> src decode threw for %s: %s", srcPath.c_str(), e.what());
-           return;
-       }
-       if (bitmap == nullptr) {
-           LOGW("<nine-patch> src did not decode: %s", srcPath.c_str());
-           return;
-       }else{
-       try {
-           // Pass the extracted chunk so NinePatchRenderer gets stretch regions
-           // (without it, a border-stripped framework 9-patch has no guide to
-           // scan and throws "Not ninepatch image!").
-           const std::vector<uint8_t>* chunkPtr = ninePatchChunk.empty() ? nullptr : &ninePatchChunk;
-           state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap, chunkPtr);
-       } catch (...) {
-           LOGW("<nine-patch> renderer threw for %s", srcPath.c_str());
-           return;
-       }
-       state->mPadding = state->mNinePatch->getPadding();
-           mOutlineRadius = state->mNinePatch->getRadius();
-           const Rect& r=state->mPadding;
-           if((r.left==0)&&(r.top==0)&&(r.width==0)&&(r.height==0)){
-               LOGE("<nine-patch>%s requires a valid 9-patch source image",srcPath.c_str());
-           }
-       }
-       state->mOpticalInsets = state->mNinePatch->getOpticalInsets();
-   }
-
    computeBitmapSize();
 }
 
 void NinePatchDrawable::updateStateFromTypedArray(const TypedArray& a){
     auto state = mNinePatchState;
-
-    // Account for any configuration changes.
-    //state->mChangingConfigurations |= a.getChangingConfigurations();
-
-    // Extract the theme attributes, if any.
-    //state.mThemeAttrs = a.extractThemeAttrs();
+    Resources& r = const_cast<Resources&>(a.getResources());
 
     state->mDither = a.getBoolean(R::styleable::NinePatchDrawable_dither, state->mDither);
+
+    // AOSP: src loading inside updateStateFromTypedArray (only param is TypedArray).
+    const int srcResId = a.getResourceId(R::styleable::NinePatchDrawable_src, 0);
+    if (srcResId != 0) {
+        TypedValue tv;
+        Asset* asset = r.openRawResource(srcResId, &tv);
+        if (asset) {
+            // Density from the TypedValue (AOSP: value.density → display density).
+            int density = DisplayMetrics::DENSITY_DEFAULT;
+            if (tv.density == TypedValue::DENSITY_DEFAULT) {
+                density = DisplayMetrics::DENSITY_DEFAULT;
+            } else if (tv.density != TypedValue::DENSITY_NONE) {
+                density = tv.density;
+            }
+
+            const off64_t sz = asset->getLength();
+            if (sz > 0) {
+                std::string buf((size_t)sz, '\0');
+                asset->read(&buf[0], (size_t)sz);
+                std::vector<uint8_t> ninePatchChunk;
+                auto stream = std::make_unique<std::istringstream>(std::move(buf));
+                auto bitmap = ImageDecoder::loadImage(*stream, -1, -1, &ninePatchChunk);
+                if (bitmap) {
+                    const std::vector<uint8_t>* chunkPtr = ninePatchChunk.empty() ? nullptr : &ninePatchChunk;
+                    try {
+                        state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap, chunkPtr);
+                    } catch (...) {
+                        LOGW("<nine-patch> renderer threw");
+                    }
+                    if (state->mNinePatch) {
+                        state->mPadding = state->mNinePatch->getPadding();
+                        mOutlineRadius = state->mNinePatch->getRadius();
+                        state->mOpticalInsets = state->mNinePatch->getOpticalInsets();
+                    }
+                } else {
+                    LOGW("<nine-patch> src did not decode (0x%x)", srcResId);
+                }
+            }
+            delete asset;
+        }
+    }
+
     state->mAutoMirrored = a.getBoolean(R::styleable::NinePatchDrawable_autoMirrored, state->mAutoMirrored);
     state->mBaseAlpha = a.getFloat(R::styleable::NinePatchDrawable_alpha, state->mBaseAlpha);
 
