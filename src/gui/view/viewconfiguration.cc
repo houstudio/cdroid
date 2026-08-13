@@ -4,6 +4,9 @@
 #include <view/viewconfiguration.h>
 #include <core/displaymetrics.h>
 #include <core/windowmanager.h>
+#include <core/resources.h>
+#include <widget/internal_R.h>
+using namespace cdroid::internal;
 
 namespace cdroid{
 ViewConfiguration*ViewConfiguration::mInst=nullptr;
@@ -39,43 +42,43 @@ ViewConfiguration::ViewConfiguration(){
 
 ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
     DisplayMetrics metrics;
-    AttributeSet atts(context,"");
     WindowManager::getInstance().getDefaultDisplay().getMetrics(metrics);
     const float sizeAndDensity = metrics.density;
-
-    atts = context->obtainStyledAttributes(context->getPackageName()+":style/view_Configuration");
-    if(atts.getAttributeCount()==0)
-        atts = context->obtainStyledAttributes("cdroid:style/view_Configuration");
+    Resources& res = context->getResources();
 
     mEdgeSlop = (int) (sizeAndDensity * EDGE_SLOP + 0.5f);
     mFadingEdgeLength = int(sizeAndDensity*FADING_EDGE_LENGTH + 0.5f);
-	
+
     mDoubleTapSlop = (int) (sizeAndDensity * DOUBLE_TAP_SLOP + 0.5f);
     mWindowTouchSlop = (int) (sizeAndDensity * WINDOW_TOUCH_SLOP + 0.5f);
     mMaximumDrawingCacheSize = 4 * metrics.widthPixels * metrics.heightPixels;
     mOverscrollDistance = (int) (sizeAndDensity * OVERSCROLL_DISTANCE + 0.5f);
     mOverflingDistance = (int) (sizeAndDensity * OVERFLING_DISTANCE + 0.5f);
-    mAmbiguousGestureMultiplier = atts.getFloat("config_ambiguousGestureMultiplier",AMBIGUOUS_GESTURE_MULTIPLIER);
 
-    if(atts.getAttributeCount()){
-        mIsScreenRound = atts.getBoolean("config_isScreenRound",false);
-        mScrollbarSize = atts.getDimensionPixelSize("config_scrollbarSize",mScrollbarSize);
-        mFadingMarqueeEnabled = atts.getBoolean("config_ui_enableFadingMarquee",mFadingMarqueeEnabled);
-        mTouchSlop = atts.getDimensionPixelSize("config_viewConfigurationTouchSlop",mTouchSlop);
-        mHoverSlop = atts.getDimensionPixelSize("config_viewConfigurationHoverSlop",mHoverSlop);
-        mMinScalingSpan=atts.getDimensionPixelSize("config_minScalingSpan",mMinScalingSpan);
-        mMinScrollbarTouchTarget = atts.getDimensionPixelSize("config_minScrollbarTouchTarget",mMinScrollbarTouchTarget);
-        mGlobalActionsKeyTimeout = atts.getInt("config_globalActionsKeyTimeout",mGlobalActionsKeyTimeout);
-    }
+    // AOSP-aligned: config values are resources (dimen/bool/integer), not XML
+    // attributes. Read via Resources.getXxx(R::xxx::config_yyy), not AttributeSet.
+    mScrollbarSize = res.getDimensionPixelSize(R::dimen::config_scrollbarSize);
+
+    TypedValue tv;
+    if (res.getValue(R::dimen::config_ambiguousGestureMultiplier, &tv, true))
+        mAmbiguousGestureMultiplier = std::max(1.0f, tv.getFloat());
+    else
+        mAmbiguousGestureMultiplier = AMBIGUOUS_GESTURE_MULTIPLIER;
+
+    mFadingMarqueeEnabled = res.getBoolean(R::boolean::config_ui_enableFadingMarquee);
+    mTouchSlop = res.getDimensionPixelSize(R::dimen::config_viewConfigurationTouchSlop);
+    mHoverSlop = res.getDimensionPixelSize(R::dimen::config_viewConfigurationHoverSlop);
+    mMinScalingSpan = res.getDimensionPixelSize(R::dimen::config_minScalingSpan);
+    mMinScrollbarTouchTarget = res.getDimensionPixelSize(R::dimen::config_minScrollbarTouchTarget);
+    mGlobalActionsKeyTimeout = res.getInteger(R::integer::config_globalActionsKeyTimeout);
 
     mPagingTouchSlop = mTouchSlop * 2;
     mDoubleTapTouchSlop = mTouchSlop;
-    if(atts.getAttributeCount()){
-        mMinimumFlingVelocity = atts.getDimensionPixelSize("config_viewMinFlingVelocity",mMinimumFlingVelocity);
-        mMaximumFlingVelocity = atts.getDimensionPixelSize("config_viewMaxFlingVelocity",mMaximumFlingVelocity);
-        mHorizontalScrollFactor = atts.getDimensionPixelSize("config_horizontalScrollFactor",mHorizontalScrollFactor);
-        mVerticalScrollFactor = atts.getDimensionPixelSize("config_verticalScrollFactor",mVerticalScrollFactor);
-    }
+
+    mMinimumFlingVelocity = res.getDimensionPixelSize(R::dimen::config_viewMinFlingVelocity);
+    mMaximumFlingVelocity = res.getDimensionPixelSize(R::dimen::config_viewMaxFlingVelocity);
+    mHorizontalScrollFactor = res.getDimensionPixelSize(R::dimen::config_horizontalScrollFactor);
+    mVerticalScrollFactor = res.getDimensionPixelSize(R::dimen::config_verticalScrollFactor);
 }
 
 ViewConfiguration& ViewConfiguration::get(Context*context){
