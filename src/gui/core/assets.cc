@@ -18,7 +18,7 @@
 #include <assets.h>
 #include <core/typedarray.h>   // TypedArray (constructed in obtainStyledAttributes)
 #include "androidfw/LocaleData.h"  // localeDataComputeScript (arsc locale config)
-#include "androidfw/assetmanager.h"   // AssetManager
+#include "core/assetmanager.h"   // AssetManager
 #include "resources.h"         // cdroid::Resources
 #include <algorithm>
 #include <cdtypes.h>

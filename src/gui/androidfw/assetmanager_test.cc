@@ -2,7 +2,7 @@
 // + ResTable wiring against the real aapt2 apks in testdata/_gen. Exercises the
 // Asset/AssetDir/AssetManager port end to end (zip backend via libzip).
 
-#include "assetmanager.h"
+#include "core/assetmanager.h"
 
 #include <memory>
 #include <string>

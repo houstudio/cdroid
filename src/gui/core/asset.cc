@@ -7,7 +7,7 @@
 
 #define LOG_TAG "asset"
 
-#include "asset.h"
+#include "core/asset.h"
 
 #include <porting/cdlog.h>
 

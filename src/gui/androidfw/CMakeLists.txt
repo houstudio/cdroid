@@ -17,9 +17,6 @@ set(ANDROIDFW_SOURCES
     resourcetypes.cc        # foundational binary-format types + ResStringPool/ResXMLTree/ResTable_config
     restable.cc             # ResTable engine (arsc load/getResource) + obtainStyledAttributes
     LocaleData.cpp          # vendored locale matching engine (CLDR tables)
-    asset.cc                # Asset / _FileAsset / _CompressedAsset (read-only byte stream)
-    assetdir.cc             # AssetDir (directory listing)
-    assetmanager.cc         # legacy AssetManager (wraps ResTable; zip backend via libzip)
     typedvalue.cc           # TypedValue (AOSP android.util.TypedValue) + applyDimension
 )
 
@@ -60,7 +57,7 @@ target_link_libraries(androidfw_resxmltree_test PRIVATE androidfw)
 add_test(NAME resxmltree COMMAND androidfw_resxmltree_test)
 
 add_executable(androidfw_config_test config_test.cc)
-target_link_libraries(androidfw_config_test PRIVATE androidfw)
+target_link_libraries(androidfw_config_test PRIVATE cdroid)
 add_test(NAME restable_config COMMAND androidfw_config_test)
 
 add_executable(androidfw_dynamicreftable_test dynamicreftable_test.cc)
@@ -91,13 +88,13 @@ add_test(NAME mgmt COMMAND androidfw_mgmt_test)
 # full info (id, type/key, value or bag entries), with config-selection + bag
 # fidelity assertions. Replaces the former narrow per-feature tests.
 add_executable(androidfw_traverse_test traverse_test.cc)
-target_link_libraries(androidfw_traverse_test PRIVATE androidfw)
+target_link_libraries(androidfw_traverse_test PRIVATE cdroid)
 add_test(NAME traverse COMMAND androidfw_traverse_test)
 
 # Legacy AssetManager: addAssetPath/open/openNonAsset/openDir + ResTable wiring,
 # exercising real apks in testdata/_gen.
 add_executable(androidfw_assetmanager_test assetmanager_test.cc)
-target_link_libraries(androidfw_assetmanager_test PRIVATE androidfw)
+target_link_libraries(androidfw_assetmanager_test PRIVATE cdroid)
 target_compile_definitions(androidfw_assetmanager_test PRIVATE
     ANDROIDFW_TESTDATA="${CMAKE_CURRENT_SOURCE_DIR}/testdata")
 add_test(NAME assetmanager COMMAND androidfw_assetmanager_test)

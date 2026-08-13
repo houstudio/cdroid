@@ -27,7 +27,7 @@
 #include <memory>
 #include <string>
 
-#include "resourcetypes.h"   // cdroid::status_t + error codes
+#include <androidfw/resourcetypes.h>   // cdroid::status_t + error codes
 
 namespace cdroid {
 

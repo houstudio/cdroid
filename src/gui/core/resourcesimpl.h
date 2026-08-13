@@ -23,8 +23,8 @@
 #include <vector>
 
 #include <androidfw/restable.h>       // cdroid::ResTable, ResTable_config, Res_value
-#include <androidfw/assetmanager.h>   // cdroid::AssetManager
-#include <androidfw/asset.h>          // cdroid::Asset
+#include <core/assetmanager.h>   // cdroid::AssetManager
+#include <core/asset.h>          // cdroid::Asset
 #include <androidfw/typedvalue.h>     // cdroid::TypedValue, applyDimension
 #include <core/displaymetrics.h>      // cdroid::DisplayMetrics
 

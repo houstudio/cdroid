@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-#include "misc.h"
+#include <androidfw/misc.h>
 
 namespace cdroid {
 

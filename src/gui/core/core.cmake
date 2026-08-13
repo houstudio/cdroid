@@ -6,6 +6,9 @@ SET(CORE_SOURCES
     core/context.cc         # cdroid::Context AOSP ID-based resource getters (defaults)
     core/resourcesimpl.cc   # cdroid::ResourcesImpl: facade hiding androidfw (ResTable/AssetManager)
     core/resources.cc # cdroid::Resources: GUI factories over ResourcesImpl
+    core/asset.cc           # Asset: read-only byte stream (framework-public)
+    core/assetdir.cc        # AssetDir: directory listing (framework-public)
+    core/assetmanager.cc    # AssetManager: wraps ResTable + zip backend (framework-public)
     #core/basebundle.cc
     #core/bundle.cc
     core/transform.cc

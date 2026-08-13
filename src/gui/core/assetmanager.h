@@ -27,10 +27,10 @@
 #include <string>
 #include <vector>
 
-#include "restable.h"        // cdroid::ResTable (also pulls resourcetypes.h)
-#include "misc.h"
-#include "asset.h"
-#include "assetdir.h"
+#include <androidfw/restable.h>        // cdroid::ResTable (also pulls resourcetypes.h)
+#include <androidfw/misc.h>
+#include "core/asset.h"
+#include "core/assetdir.h"
 
 // Native-app access is via the opaque AAssetManager (C namespace). Matches AOSP.
 struct AAssetManager { };
