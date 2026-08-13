@@ -20,6 +20,8 @@
 #include <drawable/ninepatchrenderer.h>
 #include <image-decoders/imagedecoder.h>
 #include <widget/framework_styleable.h>
+#include <androidfw/typedvalue.h>
+#include <utils/textutils.h>
 #include <porting/cdlog.h>
 #include <fstream>
 using namespace Cairo;
@@ -289,28 +291,31 @@ void NinePatchDrawable::inflate(Resources&r,XmlPullParser&parser,const Attribute
    auto ta = r.obtainStyledAttributes(&atts, R::styleable::NinePatchDrawable);
    if (ta) updateStateFromTypedArray(*ta);
 
-   // src is a resource reference consumed by the string-based getInputStream
-   // path; TypedArray.getString returns "" for reference-typed attrs, so resolve
-   // src through the AttributeSet string bridge (text-XML mode; default in binary).
+   // AOSP: src is read via ta.getResourceId(R.styleable.NinePatchDrawable_src, 0).
    auto state = mNinePatchState;
-   const std::string srcResId = atts.getString("src");
-   if (!srcResId.empty()) {
+   const int srcResId = ta->getResourceId(R::styleable::NinePatchDrawable_src, 0);
+   if (srcResId != 0) {
+       TypedValue tv;
+       std::string srcPath;
+       if (atts.getContext()->getResources().getValue(srcResId, &tv, true) && tv.string) {
+           srcPath = TextUtils::utf16_utf8((const uint16_t*)tv.string, tv.stringLen);
+       }
        Rect padding ,opticalInsets;
        Cairo::RefPtr<Cairo::ImageSurface> bitmap;
        std::vector<uint8_t> ninePatchChunk;  // npTc/cdNp extracted from the src PNG
        try {
-           auto is= atts.getContext()->getInputStream(srcResId);
+           auto is = atts.getContext()->getInputStream(srcPath);
            if (!is || !*is) {
-               LOGW("<nine-patch> src stream unavailable: %s", srcResId.c_str());
+               LOGW("<nine-patch> src stream unavailable: %s", srcPath.c_str());
                return;
            }
            bitmap = ImageDecoder::loadImage(*is,-1,-1, &ninePatchChunk);
        } catch (const std::exception& e) {
-           LOGW("<nine-patch> src decode threw for %s: %s", srcResId.c_str(), e.what());
+           LOGW("<nine-patch> src decode threw for %s: %s", srcPath.c_str(), e.what());
            return;
        }
        if (bitmap == nullptr) {
-           LOGW("<nine-patch> src did not decode: %s", srcResId.c_str());
+           LOGW("<nine-patch> src did not decode: %s", srcPath.c_str());
            return;
        }else{
        try {
@@ -320,14 +325,14 @@ void NinePatchDrawable::inflate(Resources&r,XmlPullParser&parser,const Attribute
            const std::vector<uint8_t>* chunkPtr = ninePatchChunk.empty() ? nullptr : &ninePatchChunk;
            state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap, chunkPtr);
        } catch (...) {
-           LOGW("<nine-patch> renderer threw for %s", srcResId.c_str());
+           LOGW("<nine-patch> renderer threw for %s", srcPath.c_str());
            return;
        }
        state->mPadding = state->mNinePatch->getPadding();
            mOutlineRadius = state->mNinePatch->getRadius();
            const Rect& r=state->mPadding;
            if((r.left==0)&&(r.top==0)&&(r.width==0)&&(r.height==0)){
-               LOGE("<nine-patch>%s requires a valid 9-patch source image",srcResId.c_str());
+               LOGE("<nine-patch>%s requires a valid 9-patch source image",srcPath.c_str());
            }
        }
        state->mOpticalInsets = state->mNinePatch->getOpticalInsets();

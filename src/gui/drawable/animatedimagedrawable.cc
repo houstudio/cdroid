@@ -19,6 +19,8 @@
 #include <drawable/animatedimagedrawable.h>
 #include <core/systemclock.h>
 #include <core/typedarray.h>
+#include <androidfw/typedvalue.h>
+#include <utils/textutils.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 #include <view/view.h>
@@ -458,11 +460,17 @@ void AnimatedImageDrawable::inflate(Resources& r,XmlPullParser&parser,const Attr
 
 void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride){
     Context* ctx = atts.getContext();
-    auto ta = atts.getContext() ? atts.getContext()->obtainStyledAttributes(atts, R::styleable::AnimatedImageDrawable) : nullptr;
-    std::string srcResid =atts.getString("src");
-    if(!srcResid.empty()){
+    auto ta = atts.getContext()->obtainStyledAttributes(atts, R::styleable::AnimatedImageDrawable);
+    const int srcResId = ta->getResourceId(R::styleable::AnimatedImageDrawable_src, 0);
+    if(srcResId != 0){
+        // Resolve the resource ID to the file path, then load.
+        TypedValue tv;
+        std::string srcResid;
+        if (ctx->getResources().getValue(srcResId, &tv, true) && tv.string) {
+            srcResid = TextUtils::utf16_utf8((const uint16_t*)tv.string, tv.stringLen);
+        }
+        if(!srcResid.empty()){
         Drawable* drawable = nullptr;
-        // This may have previously been set without a src if we were waiting for a  theme.
         /*const int repeatCount = mState->mRepeatCount;
         // Transfer the state of other to this one. other will be discarded.
         AnimatedImageDrawable* other = (AnimatedImageDrawable*) drawable;
@@ -491,10 +499,11 @@ void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,in
             mRenderImage = mImage;
             mDecodeImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, frmSequence->getWidth(), frmSequence->getHeight());
         }
+        }
     }
-    mAnimatedImageState->mAutoMirrored = ta ? ta->getBoolean(R::styleable::AnimatedImageDrawable_autoMirrored, false) : false;
-    const int repeatCount = ta ? ta->getInt(R::styleable::AnimatedImageDrawable_repeatCount, REPEAT_UNDEFINED) : REPEAT_UNDEFINED;
-    const bool autoStart = ta ? ta->getBoolean(R::styleable::AnimatedImageDrawable_autoStart, false) : false;
+    mAnimatedImageState->mAutoMirrored = ta->getBoolean(R::styleable::AnimatedImageDrawable_autoMirrored, false);
+    const int repeatCount = ta->getInt(R::styleable::AnimatedImageDrawable_repeatCount, REPEAT_UNDEFINED);
+    const bool autoStart = ta->getBoolean(R::styleable::AnimatedImageDrawable_autoStart, false);
     if(repeatCount!=REPEAT_UNDEFINED)
         setRepeatCount(repeatCount);
     if(autoStart && mFrameSequenceState){

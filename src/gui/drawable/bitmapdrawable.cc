@@ -19,6 +19,8 @@
 #include <drawable/bitmapdrawable.h>
 #include <image-decoders/imagedecoder.h>
 #include <core/typedarray.h>
+#include <androidfw/typedvalue.h>
+#include <utils/textutils.h>
 #include <widget/framework_styleable.h>
 #include <fstream>
 #include <app.h>
@@ -498,11 +500,19 @@ void BitmapDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet
     Context* ctx = atts.getContext();
     auto ta = r.obtainStyledAttributes(&atts, R::styleable::BitmapDrawable);
     if (ta) updateStateFromTypedArray(*ta);
-    // 'src' is an image reference; load it via the string bridge because CDROID's
-    // image loader takes a resource name (not an arsc resource id) and TypedArray
-    // has no accessor that resolves a reference attr back to its resource name.
-    auto bmp = ImageDecoder::loadImage(ctx, atts.getString("src"));
-    setBitmap(bmp);
+    // AOSP: src is read via ta.getResourceId(R.styleable.BitmapDrawable_src, 0).
+    // Resolve the value to get the file path, then decode the image.
+    const int srcResId = ta->getResourceId(R::styleable::BitmapDrawable_src, 0);
+    if (srcResId != 0) {
+        TypedValue tv;
+        if (ctx->getResources().getValue(srcResId, &tv, true) && tv.string) {
+            std::string path = TextUtils::utf16_utf8((const uint16_t*)tv.string, tv.stringLen);
+            if (!path.empty()) {
+                auto bmp = ImageDecoder::loadImage(ctx, path);
+                setBitmap(bmp);
+            }
+        }
+    }
 }
 
 }
