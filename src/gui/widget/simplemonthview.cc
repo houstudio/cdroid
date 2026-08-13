@@ -81,8 +81,10 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* pAttrs,int defS
     if(!res.empty())setMonthTextAppearance(res);
     res = atts.getString("dayOfWeekTextAppearance");
     if(!res.empty())setDayOfWeekTextAppearance(res);
-    res = atts.getString("dayTextAppearance");
-    if(!res.empty())setDayTextAppearance(res);
+    { auto ta2 = mContext->obtainStyledAttributes(atts, R::styleable::SimpleMonthViewCdroid);
+      auto dayTA = ta2->getString(R::styleable::SimpleMonthViewCdroid_dayTextAppearance);
+      if(!dayTA.empty()) setDayTextAppearance(dayTA);
+    }
     updateMonthYearLabel();
     updateDayOfWeekLabels();
 }

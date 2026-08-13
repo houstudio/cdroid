@@ -17,7 +17,9 @@
  *********************************************************************************/
 #include <drawable/stateset.h>
 #include <bitset.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal::R;
 
 const std::vector<int> StateSet::NOTHING = {0};
 const std::vector<int> StateSet::WILD_CARD = {};
@@ -29,8 +31,8 @@ const std::vector<int>StateSet::CHECKED_STATE_SET = {CHECKED};
 
 std::vector<int>StateSet::VIEW_STATE_IDS={
     WINDOW_FOCUSED , VIEW_STATE_WINDOW_FOCUSED,
-    SELECTED       , VIEW_STATE_SELECTED ,
-    FOCUSED        , VIEW_STATE_FOCUSED  ,
+    SELECTED   , VIEW_STATE_SELECTED ,
+    FOCUSED     , VIEW_STATE_FOCUSED  ,
     ENABLED        , VIEW_STATE_ENABLED  ,
     PRESSED        , VIEW_STATE_PRESSED  ,
     ACTIVATED      , VIEW_STATE_ACTIVATED,
@@ -149,8 +151,11 @@ int StateSet::parseState(std::vector<int>&states,const AttributeSet&atts){
     appendState(states,atts.getString("state_hovered") , HOVERED );
     appendState(states,atts.getString("state_activated") , ACTIVATED);
     appendState(states,atts.getString("state_window_focused") , WINDOW_FOCUSED);
-    appendState(states,atts.getString("state_drag_hoved") , DRAG_HOVERED);
-    appendState(states,atts.getString("state_drag_acceptable") , DRAG_ACCPETABLE);
+    // state_drag_hoved / state_drag_acceptable are CDROID-private (StateSetCdroid).
+    if (atts.hasAttribute("state_drag_hoved"))
+        appendState(states, atts.getAttributeValue("state_drag_hoved"), DRAG_HOVERED);
+    if (atts.hasAttribute("state_drag_acceptable"))
+        appendState(states, atts.getAttributeValue("state_drag_acceptable"), DRAG_ACCPETABLE);
 
     appendState(states,atts.getString("state_single") , SINGLE);
     appendState(states,atts.getString("state_first") , FIRST);

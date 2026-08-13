@@ -41,9 +41,9 @@ HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet* pAttr
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = ctx->obtainStyledAttributes(atts, R::styleable::ScrollView, defStyleAttr);
     
-setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport, false));
-mScrollDuration=atts.getInt("scrollDuration",300);
-
+    setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport, false));
+    auto ta2 = ctx->obtainStyledAttributes(atts, R::styleable::ScrollViewCdroid);
+    mScrollDuration = ta2->getInt(R::styleable::ScrollViewCdroid_scrollDuration, 300);
 }
 
 HorizontalScrollView::~HorizontalScrollView(){

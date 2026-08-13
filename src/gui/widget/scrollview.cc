@@ -45,7 +45,8 @@ ScrollView::ScrollView(Context*context,const AttributeSet* pAttrs,int defStyleAt
     auto ta = context->obtainStyledAttributes(atts, R::styleable::ScrollView, defStyleAttr);
     
 setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport, false));
-mScrollDuration = atts.getInt("scrollDuration",400);
+{ auto ta2 = context->obtainStyledAttributes(atts, R::styleable::ScrollViewCdroid);
+  mScrollDuration = ta2->getInt(R::styleable::ScrollViewCdroid_scrollDuration, 400); }
 
 }
 
