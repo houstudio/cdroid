@@ -67,7 +67,7 @@ private:
     void computeBitmapSize();
     void updateDstRectAndInsetsIfDirty();
     BitmapDrawable(std::shared_ptr<BitmapState>state);
-    void updateStateFromTypedArray(Resources& r, const TypedArray& a, int srcDensityOverride, Context* ctx);
+    void updateStateFromTypedArray(const TypedArray& a, int srcDensityOverride);
 protected:
     bool mMutated;
     Rect mDstRect;

@@ -78,6 +78,9 @@ public:
     int       getType(size_t idx) const;        // Res_value dataType, or -1
     bool      peekValue(size_t idx, Res_value* out) const;
     // High-level resource access — delegate to the owning Resources (AOSP
+    // AOSP TypedArray.getResources(): the owning Resources (for openRawResource,
+    // getValue, DisplayMetrics — everything updateStateFromTypedArray needs).
+    const Resources& getResources() const { return *mResources; }
     // TypedArray holds Resources mResources; getters call mResources.loadDrawable/
     // loadComplexColor). getDrawable returns a raw Drawable* (freshly new'd,
     // caller takes ownership). getColorStateList returns a shared_ptr (RefPtr):

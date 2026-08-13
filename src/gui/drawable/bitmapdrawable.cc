@@ -19,7 +19,9 @@
 #include <drawable/bitmapdrawable.h>
 #include <image-decoders/imagedecoder.h>
 #include <core/typedarray.h>
+#include <core/context.h>
 #include <androidfw/typedvalue.h>
+#include <core/asset.h>
 #include <utils/textutils.h>
 #include <widget/framework_styleable.h>
 #include <fstream>
@@ -477,8 +479,9 @@ void BitmapDrawable::getOutline(Outline& outline) {
     outline.setAlpha(opaqueOverShape ? getAlpha() / 255.0f : 0.0f);
 }
 
-void BitmapDrawable::updateStateFromTypedArray(Resources& r, const TypedArray& a, int srcDensityOverride, Context* ctx){
+void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a, int srcDensityOverride){
     auto& state = *mBitmapState;
+    Resources& r = const_cast<Resources&>(a.getResources());
 
     // AOSP: store density override + resolve target density from the display.
     state.mSrcDensityOverride = srcDensityOverride;
@@ -505,15 +508,27 @@ void BitmapDrawable::updateStateFromTypedArray(Resources& r, const TypedArray& a
                         density = (tv.density * dm.densityDpi) / srcDensityOverride;
                     }
                 }
-                auto bmp = ImageDecoder::loadImage(ctx, path);
+                // AOSP: r.openRawResource(srcResId, value) → InputStream → decode.
+                // CDROID Asset has read(), not getInputStream(); slurp into buffer.
+                Asset* asset = r.openRawResource(srcResId, &tv);
+                if (asset) {
+                    const off64_t sz = asset->getLength();
+                    if (sz > 0) {
+                        std::string buf((size_t)sz, '\0');
+                        asset->read(&buf[0], (size_t)sz);
+                        auto stream = std::make_unique<std::istringstream>(std::move(buf));
+                        auto bmp = ImageDecoder::loadImage(*stream);
+                        if (bmp) {
+                            state.mBitmap = bmp;
+                            state.mTransparency = ImageDecoder::getTransparency(bmp);
+                        }
+                    }
+                    delete asset;
+                }
                 // CDROID ImageSurface doesn't carry density metadata; the density
                 // ratio is applied in computeBitmapSize via mTargetDensity. Store
                 // the source density for NinePatchDrawable's scaleFromDensity path.
                 state.mSrcDensityOverride = srcDensityOverride > 0 ? srcDensityOverride : density;
-                if (bmp) {
-                    state.mBitmap = bmp;
-                    state.mTransparency = ImageDecoder::getTransparency(bmp);
-                }
             }
         }
     }
@@ -544,7 +559,7 @@ void BitmapDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet
     Drawable::inflate(r,parser,atts);
     // AOSP: all attr reads + src loading happen inside updateStateFromTypedArray.
     auto ta = r.obtainStyledAttributes(&atts, R::styleable::BitmapDrawable);
-    if (ta) updateStateFromTypedArray(r, *ta, 0, atts.getContext());
+    if (ta) updateStateFromTypedArray(*ta, 0);
 }
 
 }
