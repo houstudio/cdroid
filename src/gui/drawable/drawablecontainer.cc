@@ -18,6 +18,11 @@
 #include <drawable/drawablecontainer.h>
 #include <core/systemclock.h>
 #include <porting/cdlog.h>
+#include <core/context.h>
+#include <core/typedarray.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+using namespace cdroid::internal;
 #include <set>
 namespace cdroid{
 
@@ -422,8 +427,9 @@ DrawableContainer::DrawableContainer(){
 }
 
 DrawableContainer::DrawableContainer(Context*ctx,const AttributeSet&atts):DrawableContainer(){
-    mDrawableContainerState->setConstantSize(atts.getBoolean("constantSize", false));
-    mDrawableContainerState->setVariablePadding(atts.getBoolean("variablePadding", false)); 
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::DrawableContainerState);
+    mDrawableContainerState->setConstantSize(ta->getBoolean(R::styleable::DrawableContainerState_constantSize, false));
+    mDrawableContainerState->setVariablePadding(ta->getBoolean(R::styleable::DrawableContainerState_variablePadding, false));
 }
 
 DrawableContainer::~DrawableContainer(){

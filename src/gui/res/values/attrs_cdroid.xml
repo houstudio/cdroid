@@ -55,4 +55,9 @@
         <attr name="state_drag_hoved" format="boolean" />
     </declare-styleable>
 
+    <!-- DrawableContainer base attrs (framework attrs reused). -->
+    <declare-styleable name="DrawableContainerState">
+        <attr name="constantSize" />
+        <attr name="variablePadding" />
+    </declare-styleable>
 </resources>

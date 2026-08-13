@@ -214,5 +214,6 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t OvershootInterpolator[] = { 0x0101026a, 0 };
     const uint32_t AnticipateOvershootInterpolator[] = { 0x0101026a, 0x0101026b, 0 };
     const uint32_t PathInterpolator[] = { 0x010103fc, 0x010103fd, 0x010103fe, 0x010103ff, 0x01010405, 0 };
+    const uint32_t DrawableContainerState[] = { 0x01010196, 0x01010195, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

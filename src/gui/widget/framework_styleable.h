@@ -1217,6 +1217,11 @@ namespace internal { namespace R { namespace styleable {
     constexpr int PathInterpolator_controlY2 = 3;
     constexpr int PathInterpolator_pathData = 4;
 
+    // DrawableContainerState (2 attrs)
+    extern const uint32_t DrawableContainerState[];
+    constexpr int DrawableContainerState_constantSize = 0;
+    constexpr int DrawableContainerState_variablePadding = 1;
+
 } } } // namespace internal::R::styleable
 } // namespace cdroid
 #endif // __FRAMEWORK_STYLEABLE_H__
