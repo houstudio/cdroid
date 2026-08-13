@@ -165,6 +165,13 @@ void App::onInit(){
         addResource(pak,"cdroid");
     else
         addResource("cdroid.pak","cdroid");
+    // widgetEx shared resource pak (package-id 0x02 — ConstraintLayout/TabLayout/
+    // RecyclerView/etc. custom attrs). Built once, shared by all apps.
+    std::string wpak=getDataPath()+std::string("widgetex.pak");
+    if(0==access(wpak.c_str(),F_OK))
+        addResource(wpak,"widgetex");
+    else if(0==access("widgetex.pak",F_OK))
+        addResource("widgetex.pak","widgetex");
 }
 
 const std::string App::getDataPath()const{

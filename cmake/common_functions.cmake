@@ -61,6 +61,10 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
         WORKING_DIRECTORY ${ResourceDIR}
         COMMENT "Package Assets from ${ResourceDIR} to:${PakPath}")
     add_dependencies(${project} ${project}_assets)
+    # App paks need widgetex.apk (for -I linking); ensure widgetex builds first.
+    if(TARGET widgetex_assets AND NOT "${project}" STREQUAL "widgetex" AND NOT "${project}" STREQUAL "cdroid")
+        add_dependencies(${project}_assets widgetex_assets)
+    endif()
     install(FILES ${PakPath} DESTINATION data)
 endfunction()
 

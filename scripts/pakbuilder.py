@@ -573,22 +573,61 @@ class PakBuilder:
                         dst = os.path.join(tmpres, rel)
                     os.makedirs(os.path.dirname(dst), exist_ok=True)
                     shutil.copyfile(src, dst)
-        # Pin each attr's ID to its stable custom_attrids.txt value.
-        ids_src = os.path.join(sdir, "custom_attrids.txt")
-        if os.path.exists(ids_src):
-            lines = ['<?xml version="1.0" encoding="utf-8"?>', '<resources>']
-            with open(ids_src) as f:
-                for ln in f:
-                    ln = ln.strip()
-                    if not ln or ln.startswith("#"):
-                        continue
-                    parts = ln.split()
-                    if len(parts) == 2:
-                        lines.append('  <public type="attr" name="%s" id="%s"/>'
-                                     % (parts[1], parts[0]))
-            lines.append('</resources>')
-            with open(os.path.join(values, "public.xml"), "w") as fh:
-                fh.write("\n".join(lines) + "\n")
+        # NOTE: NO public.xml ID pinning for app paks — the widgetEx attr IDs in
+        # the app arsc are auto-assigned by aapt2 and UNUSED at runtime (the
+        # runtime resolves widgetEx attrs via widgetex.pak at package-id 0x02).
+        # The public.xml pinning (0x0201xxxx) is done ONLY in _compile_shared_lib
+        # for widgetex.pak. Pinning 0x02 IDs in a 0x7f app pak would fail aapt2.
+
+    def _compile_shared_lib(self):
+        """Build widgetex.pak: a fixed-id 0x02 resource pak (widgetEx attrs only).
+        Collects the 5 widgetEx res/values/attrs.xml trees + generates public.xml
+        at 0x0201xxxx, then aapt2 link --package-id 0x02 --allow-reserved-package-id.
+        Output: widgetex.pak (arsc only) + widgetex.apk (kept for app -I linking)."""
+        import subprocess, shutil
+        tmpdir = tempfile.mkdtemp(prefix="widgetex_")
+        try:
+            tmpres = os.path.join(tmpdir, "res")
+            os.makedirs(tmpres, exist_ok=True)
+            # Collect widgetEx res trees + generate public.xml (0x0201xxxx).
+            self._merge_widgetex_attrs(tmpres)
+            # aapt2 compile.
+            compiled = os.path.join(tmpdir, "compiled.zip")
+            _r = subprocess.run([self.aapt2_path, "compile", "--dir", tmpres, "-o", compiled],
+                                capture_output=True)
+            if _r.returncode != 0:
+                sys.stderr.write("widgetex compile FAILED:\n%s\n" % _r.stderr.decode()[:2000])
+                return False
+            # Manifest.
+            mpath = os.path.join(tmpdir, "AndroidManifest.xml")
+            with open(mpath, "w") as fh:
+                fh.write('<?xml version="1.0" encoding="utf-8"?>\n'
+                         '<manifest xmlns:android="http://schemas.android.com/apk/res/android"\n'
+                         '    package="cdroid.widgetex" android:versionCode="1" android:versionName="1.0"/>\n')
+            # aapt2 link with fixed package-id 0x02.
+            out_apk = os.path.join(tmpdir, "widgetex.apk")
+            link_cmd = [self.aapt2_path, "link",
+                        "--package-id", "0x02", "--allow-reserved-package-id",
+                        "-I", self.android_jar,
+                        "--manifest", mpath, "-o", out_apk, compiled]
+            _r = subprocess.run(link_cmd, capture_output=True)
+            if _r.returncode != 0:
+                sys.stderr.write("widgetex link FAILED:\n%s\n" % _r.stderr.decode()[:2000])
+                return False
+            # Extract resources.arsc → widgetex.pak.
+            arsc = None
+            with zipfile.ZipFile(out_apk) as zf:
+                arsc = zf.read("resources.arsc") if "resources.arsc" in zf.namelist() else None
+            with zipfile.ZipFile(self.pak_path, "w") as zf:
+                if arsc:
+                    zf.writestr("resources.arsc", arsc, zipfile.ZIP_DEFLATED)
+            # Keep the intermediate widgetex.apk for app -I linking.
+            bin_dir = os.path.dirname(self.pak_path)
+            shutil.copyfile(out_apk, os.path.join(bin_dir, "widgetex.apk"))
+            sys.stderr.write("widgetex.pak: built (%d bytes arsc)\n" % (len(arsc) if arsc else 0))
+            return arsc is not None
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
 
     def _compile_aapt2(self):
         """Run aapt2 compile+link on res/, return (binary_xmls, arsc) where
@@ -607,16 +646,13 @@ class PakBuilder:
             _idxml = os.path.join(tmpres, "values", "ID.xml")
             if os.path.exists(_idxml):
                 os.remove(_idxml)
-            # Apps using widgetEx custom attrs (ConstraintLayout/Flexbox/... app:xxx)
-            # need them declared + ID-pinned to link and resolve at runtime. Framework
-            # (use_sdk) doesn't use widgetEx, so merge only for real apps.
+            # Merge widgetEx attrs into app res (for compile-time app:xxx resolution).
+            # No public.xml ID pinning — aapt2 auto-assigns; runtime uses 0x02 from
+            # widgetex.pak.
             if not self.use_sdk:
                 self._merge_widgetex_attrs(tmpres)
             # Synthesize a minimal manifest. aapt2 rejects a non-dotted package
             # name, so qualify the namespace (e.g. "axmlapp" -> "cdroid.axmlapp").
-            # The arsc package name won't match CDROID's pak name ("axmlapp"),
-            # but Assets::arscGetIdentifier resolves by searching ALL loaded
-            # packages, so the name mismatch doesn't matter.
             pkg = self.namespace if "." in self.namespace else "cdroid." + self.namespace
             manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
                         '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
@@ -630,9 +666,9 @@ class PakBuilder:
             out_apk = os.path.join(tmpdir, "out.apk")
             subprocess.run([self.aapt2_path, "compile", "--dir", tmpres, "-o", compiled],
                            check=True, capture_output=True)
-            subprocess.run([self.aapt2_path, "link", "-I", self.android_jar,
-                            "--manifest", mpath, "-o", out_apk, compiled],
-                           check=True, capture_output=True)
+            link_cmd = [self.aapt2_path, "link", "-I", self.android_jar,
+                        "--manifest", mpath, "-o", out_apk, compiled]
+            subprocess.run(link_cmd, check=True, capture_output=True)
             # Extract binary XML (res/layout/*.xml) + the app's resources.arsc.
             result = {}
             arsc = None
@@ -691,6 +727,12 @@ class PakBuilder:
             if pak_mtime > newest and os.path.exists(self.rh_path):
                 sys.stderr.write("pak up to date, skipping rebuild\n")
                 return
+        # widgetex shared-lib mode: build widgetex.pak (fixed-id 0x02, attrs only).
+        if self.namespace == "widgetex":
+            if not self.use_aapt2:
+                sys.exit("widgetex.pak requires aapt2 + android.jar")
+            self._compile_shared_lib()
+            return
         # SDK mode: build complete framework from SDK data/res/ via aapt2 -x.
         sdk_data = self._compile_sdk_res() if self.use_sdk else {}
         # App mode: compile the app's own res/ via aapt2 (optional).

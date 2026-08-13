@@ -24,7 +24,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 
-CUSTOM_ID_BASE = 0x7f010000
+CUSTOM_ID_BASE = 0x02010000
 
 
 def load_id_map(path):

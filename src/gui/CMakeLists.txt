@@ -74,6 +74,15 @@ target_include_directories(
 
 CreatePAK(cdroid ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
 
+# widgetEx shared resource pak (package-id 0x02, attrs only; built once, loaded by all apps).
+add_custom_target(widgetex)
+CreatePAK(widgetex ${PROJECT_SOURCE_DIR}/widgetEx  ${PROJECT_BINARY_DIR}/widgetex.pak ${PROJECT_BINARY_DIR}/widgetex_R.h)
+add_dependencies(cdroid widgetex_assets)
+# Deploy widgetex.apk (intermediate) to binary root so app aapt2 link can use -I.
+add_custom_command(TARGET widgetex_assets POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_BINARY_DIR}/widgetex.apk ${CMAKE_BINARY_DIR}/widgetex.apk
+    COMMENT "Deploy widgetex.apk to binary root for app linking")
+
 file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
 
 SET(exclude_dirs private image-decoders)
