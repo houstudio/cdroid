@@ -77,9 +77,9 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* pAttrs,int defS
     setAccessibilityDelegate(mTouchHelper);
     setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
 
-    std::string res = atts.getString("monthTextAppearance");
+    std::string res = atts.getAttributeValue("monthTextAppearance");
     if(!res.empty())setMonthTextAppearance(res);
-    res = atts.getString("dayOfWeekTextAppearance");
+    res = atts.getAttributeValue("dayOfWeekTextAppearance");
     if(!res.empty())setDayOfWeekTextAppearance(res);
     { auto ta2 = mContext->obtainStyledAttributes(atts, R::styleable::SimpleMonthViewCdroid);
       auto dayTA = ta2->getString(R::styleable::SimpleMonthViewCdroid_dayTextAppearance);

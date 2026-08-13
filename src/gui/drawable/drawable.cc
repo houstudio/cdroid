@@ -99,7 +99,7 @@ void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts
 }
 
 void Drawable::inflateWithAttributes(XmlPullParser&parser,const AttributeSet&atts){
-    mVisible = atts.getBoolean("visible",mVisible);
+    // visible already read from TA in inflate()
 }
 
 Drawable* Drawable::createFromXmlInner(Resources& r,XmlPullParser&parser,const AttributeSet&atts){

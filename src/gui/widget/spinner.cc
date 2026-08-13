@@ -86,7 +86,7 @@ Spinner::Spinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     
 
 mGravity = ta->getInt(R::styleable::Spinner_gravity,Gravity::CENTER);
-mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);
+mDisableChildrenWhenDisabled = ta->getBoolean(R::styleable::Spinner_disableChildrenWhenDisabled, false);
 const int mode = ta->getInt(R::styleable::Spinner_spinnerMode,MODE_DIALOG);
 
 Drawable*dr;

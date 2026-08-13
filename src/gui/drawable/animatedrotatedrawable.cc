@@ -216,8 +216,8 @@ void AnimatedRotateDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
     if (ta) updateStateFromTypedArray(*ta);
     // frameDuration/framesCount lack a framework arsc id (CDROID-private): read via
     // the string bridge (text-XML works; binary returns the default — harmless).
-    mState->mFramesCount  = atts.getInt("framesCount", mState->mFramesCount);
-    mState->mFrameDuration= atts.getInt("frameDuration", mState->mFrameDuration);
+    mState->mFramesCount = ta->getInt(R::styleable::AnimatedRotateDrawable_framesCount, mState->mFramesCount);
+    mState->mFrameDuration = ta->getInt(R::styleable::AnimatedRotateDrawable_frameDuration, mState->mFrameDuration);
     DrawableWrapper::inflate(r,parser,atts);
     updateLocalState();
 }

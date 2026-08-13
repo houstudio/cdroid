@@ -41,7 +41,7 @@ CandidateView::CandidateView(Context*ctx,const AttributeSet& atts):CandidateView
 CandidateView::CandidateView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr){
     const AttributeSet& atts = *pAttrs;
     auto ta = ctx->obtainStyledAttributes(atts, R::styleable::CandidateView);
-     mSelectionHighlight = atts.getDrawable("list_selector_background");
+     mSelectionHighlight = mContext->getDrawable(R::drawable::list_selector_background);
      setBackgroundColor(ta->getColor(R::styleable::CandidateView_candidate_background, 0));
      mColorNormal = ta->getColor(R::styleable::CandidateView_candidate_normal, 0);
      mColorRecommended = ta->getColor(R::styleable::CandidateView_candidate_recommand, 0);

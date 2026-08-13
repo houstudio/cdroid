@@ -422,8 +422,8 @@ DrawableContainer::DrawableContainer(){
 }
 
 DrawableContainer::DrawableContainer(Context*ctx,const AttributeSet&atts):DrawableContainer(){
-    mDrawableContainerState->setConstantSize(atts.getBoolean("constantSize"));
-    mDrawableContainerState->setVariablePadding(atts.getBoolean("variablePadding")); 
+    mDrawableContainerState->setConstantSize(atts.getBoolean("constantSize", false));
+    mDrawableContainerState->setVariablePadding(atts.getBoolean("variablePadding", false)); 
 }
 
 DrawableContainer::~DrawableContainer(){

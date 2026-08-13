@@ -132,23 +132,23 @@ int Keyboard::Key::squaredDistanceFrom(int x, int y){
 }
 
 static std::vector<int> KEY_STATE_NORMAL_ON = { 
-     (int)cdroid::internal::R::attr::state_checkable,//StateSet::android.R.attr.state_checkable, 
+     (int)cdroid::internal::R::attr::state_checkable,//StateSet::android.R.attr.state_checkable,
      (int)cdroid::internal::R::attr::state_checked   //android.R.attr.state_checked
 };
         
 static std::vector<int> KEY_STATE_PRESSED_ON = { 
-     (int)cdroid::internal::R::attr::state_pressed  ,// android.R.attr.state_pressed, 
-     (int)cdroid::internal::R::attr::state_checkable,// android.R.attr.state_checkable, 
-     (int)cdroid::internal::R::attr::state_checked   // android.R.attr.state_checked 
+     (int)cdroid::internal::R::attr::state_pressed  ,// android.R.attr.state_pressed,
+     (int)cdroid::internal::R::attr::state_checkable,// android.R.attr.state_checkable,
+     (int)cdroid::internal::R::attr::state_checked   // android.R.attr.state_checked
 };
         
 static std::vector<int> KEY_STATE_NORMAL_OFF = { 
-     (int)cdroid::internal::R::attr::state_checkable//android.R.attr.state_checkable 
+     (int)cdroid::internal::R::attr::state_checkable//android.R.attr.state_checkable
 };
         
 static std::vector<int> KEY_STATE_PRESSED_OFF = { 
-     (int)cdroid::internal::R::attr::state_pressed,//android.R.attr.state_pressed, 
-     (int)cdroid::internal::R::attr::state_checkable//android.R.attr.state_checkable 
+     (int)cdroid::internal::R::attr::state_pressed,//android.R.attr.state_pressed,
+     (int)cdroid::internal::R::attr::state_checkable//android.R.attr.state_checkable
 };
         
 static std::vector<int> KEY_STATE_NORMAL = {

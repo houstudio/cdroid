@@ -41,13 +41,13 @@ TabWidget::TabWidget(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     if(hasExplicitLeft)
         mLeftStrip = ta->getDrawable(R::styleable::TabWidget_tabStripLeft);
     else
-        mLeftStrip = atts.getDrawable("tab_bottom_left");
+        mLeftStrip = getContext()->getDrawable(R::drawable::tab_bottom_left);
 
     const bool hasExplicitRight = ta && ta->hasValue(R::styleable::TabWidget_tabStripRight);
     if(hasExplicitRight)
         mRightStrip = ta->getDrawable(R::styleable::TabWidget_tabStripRight);
     else
-        mRightStrip = atts.getDrawable("tab_bottom_right");
+        mRightStrip = getContext()->getDrawable(R::drawable::tab_bottom_right);
     setChildrenDrawingOrderEnabled(true);
 }
 
