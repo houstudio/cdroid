@@ -24,8 +24,8 @@ namespace cdroid{
 
 class StateSet{
 private:
+    // AOSP View.java VIEW_STATE_* bits (for getDrawableState's bitmask → state-set).
     static std::vector<int>VIEW_STATE_IDS;
-    static void appendState(std::vector<int>&states,const std::string&s,int value);
 public:
     enum{
         VIEW_STATE_WINDOW_FOCUSED =1<<0 ,
@@ -36,7 +36,7 @@ public:
         VIEW_STATE_ACTIVATED      =1<<5 ,
         VIEW_STATE_HOVERED        =1<<6 ,
         VIEW_STATE_CHECKED        =1<<7 ,
-        VIEW_STATE_CHECKABLE      =1<<8 , 
+        VIEW_STATE_CHECKABLE      =1<<8 ,
         VIEW_STATE_DRAG_CAN_ACCEPT=1<<9 ,
         VIEW_STATE_DRAG_HOVERED   =1<<10,
 
@@ -45,24 +45,10 @@ public:
         VIEW_STATE_MIDDLE         =1<<13,
         VIEW_STATE_LAST           =1<<14
     };
-    enum{
-        WINDOW_FOCUSED = 1 ,
-        SELECTED       = 2 ,
-        FOCUSED        = 3 ,
-        ENABLED        = 4 ,
-        PRESSED        = 5 ,
-        ACTIVATED      = 6 ,
-        HOVERED        = 7 ,
-        CHECKED        = 8 ,
-        CHECKABLE      = 9 ,
-        DRAG_ACCPETABLE= 10,
-        DRAG_HOVERED   = 11,
-
-        SINGLE    = 12,
-        FIRST     = 13,
-        MIDDLE    = 14,
-        LAST      = 15
-    };
+    // AOSP-aligned: state values ARE the R.attr IDs (0x010100xx). StateListDrawable
+    // items carry these IDs; stateSetMatches compares them by equality. CDROID-private
+    // states (drag_hoved/drag_acceptable) use their CDROID-private 0x010dxxxx IDs.
+    // The sequential ints (1-15) are RETIRED — replaced by real resource IDs.
     static const std::vector<int>NOTHING;
     static const std::vector<int>WILD_CARD;
     static const std::vector<int>ENABLED_STATE_SET;
@@ -76,7 +62,7 @@ public:
     static bool stateSetMatches(const std::vector<int>&stateSpec,const std::vector<int>&stateSet);
     static bool stateSetMatches(const std::vector<int>&stateSpec,int state);
     static bool containsAttribute(const std::vector<std::vector<int>>&stateSpecs,int attr);
-    static int parseState(std::vector<int>&states,const AttributeSet&attss);
+    static int parseState(std::vector<int>&states,const AttributeSet&atts);
     static std::vector<int> get(int mask);
 };
 }

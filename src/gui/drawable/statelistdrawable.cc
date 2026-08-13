@@ -57,7 +57,7 @@ int StateListDrawable::StateListState::indexOfStateSet(const std::vector<int>&st
 }
 
 bool StateListDrawable::StateListState::hasFocusStateSpecified()const{
-    return StateSet::containsAttribute(mStateSets,StateSet::FOCUSED);
+    return StateSet::containsAttribute(mStateSets,(int)cdroid::internal::R::attr::state_focused);
 }
 
 StateListDrawable::StateListDrawable(){
@@ -120,7 +120,7 @@ void StateListDrawable::addState(const std::vector<int>&stateSet, Drawable* draw
 }
 
 bool StateListDrawable::hasFocusStateSpecified()const{
-    return StateSet::containsAttribute(mStateListState->mStateSets,StateSet::FOCUSED);
+    return StateSet::containsAttribute(mStateListState->mStateSets,(int)cdroid::internal::R::attr::state_focused);
 }
 
 int StateListDrawable::getStateCount()const{

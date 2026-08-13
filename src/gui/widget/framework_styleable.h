@@ -1147,6 +1147,76 @@ namespace internal { namespace R { namespace styleable {
     constexpr int StateSetCdroid_state_drag_acceptable = 0;
     constexpr int StateSetCdroid_state_drag_hoved = 1;
 
+    // Animator (9 attrs)
+    extern const uint32_t Animator[];
+    constexpr int Animator_interpolator = 0;
+    constexpr int Animator_duration = 1;
+    constexpr int Animator_startOffset = 2;
+    constexpr int Animator_repeatCount = 3;
+    constexpr int Animator_repeatMode = 4;
+    constexpr int Animator_valueFrom = 5;
+    constexpr int Animator_valueTo = 6;
+    constexpr int Animator_valueType = 7;
+    constexpr int Animator_removeBeforeMRelease = 8;
+
+    // PropertyValuesHolder (4 attrs)
+    extern const uint32_t PropertyValuesHolder[];
+    constexpr int PropertyValuesHolder_valueType = 0;
+    constexpr int PropertyValuesHolder_propertyName = 1;
+    constexpr int PropertyValuesHolder_valueFrom = 2;
+    constexpr int PropertyValuesHolder_valueTo = 3;
+
+    // Keyframe (4 attrs)
+    extern const uint32_t Keyframe[];
+    constexpr int Keyframe_valueType = 0;
+    constexpr int Keyframe_value = 1;
+    constexpr int Keyframe_fraction = 2;
+    constexpr int Keyframe_interpolator = 3;
+
+    // PropertyAnimator (4 attrs)
+    extern const uint32_t PropertyAnimator[];
+    constexpr int PropertyAnimator_propertyName = 0;
+    constexpr int PropertyAnimator_propertyXName = 1;
+    constexpr int PropertyAnimator_propertyYName = 2;
+    constexpr int PropertyAnimator_pathData = 3;
+
+    // AnimatorSet (1 attrs)
+    extern const uint32_t AnimatorSet[];
+    constexpr int AnimatorSet_ordering = 0;
+
+    // AccelerateInterpolator (1 attrs)
+    extern const uint32_t AccelerateInterpolator[];
+    constexpr int AccelerateInterpolator_factor = 0;
+
+    // DecelerateInterpolator (1 attrs)
+    extern const uint32_t DecelerateInterpolator[];
+    constexpr int DecelerateInterpolator_factor = 0;
+
+    // CycleInterpolator (1 attrs)
+    extern const uint32_t CycleInterpolator[];
+    constexpr int CycleInterpolator_cycles = 0;
+
+    // AnticipateInterpolator (1 attrs)
+    extern const uint32_t AnticipateInterpolator[];
+    constexpr int AnticipateInterpolator_tension = 0;
+
+    // OvershootInterpolator (1 attrs)
+    extern const uint32_t OvershootInterpolator[];
+    constexpr int OvershootInterpolator_tension = 0;
+
+    // AnticipateOvershootInterpolator (2 attrs)
+    extern const uint32_t AnticipateOvershootInterpolator[];
+    constexpr int AnticipateOvershootInterpolator_tension = 0;
+    constexpr int AnticipateOvershootInterpolator_extraTension = 1;
+
+    // PathInterpolator (5 attrs)
+    extern const uint32_t PathInterpolator[];
+    constexpr int PathInterpolator_controlX1 = 0;
+    constexpr int PathInterpolator_controlY1 = 1;
+    constexpr int PathInterpolator_controlX2 = 2;
+    constexpr int PathInterpolator_controlY2 = 3;
+    constexpr int PathInterpolator_pathData = 4;
+
 } } } // namespace internal::R::styleable
 } // namespace cdroid
 #endif // __FRAMEWORK_STYLEABLE_H__

@@ -34,15 +34,15 @@ private:
     static Animator* createAnimatorFromXml(Context*ctx,XmlPullParser&parser,const AttributeSet& atts,
                          AnimatorSet*parent,int sequenceOrdering,float pixelSize);
     static StateListAnimator* createStateListAnimatorFromXml(Context*ctx,XmlPullParser&,const AttributeSet&);
-    static int inferValueTypeFromPropertyName(const AttributeSet&atts, const std::string& propertyName);
-    static PropertyValuesHolder* getPVH(const AttributeSet&atts, int valueType,const std::string& propertyName);
-    static void parseAnimatorFromTypeArray(ValueAnimator* anim,const AttributeSet&atts, float pixelSize);
-    static TypeEvaluator setupAnimatorForPath(ValueAnimator* anim,const AttributeSet&arrayAnimator);
-    static void setupObjectAnimator(ValueAnimator* anim,const AttributeSet&arrayObjectAnimator,int valueType,float pixelSize);
+    static int inferValueTypeFromPropertyName(Context*ctx,const AttributeSet&atts, const std::string& propertyName);
+    static PropertyValuesHolder* getPVH(Context*ctx,const AttributeSet&atts, int valueType,const std::string& propertyName);
+    static void parseAnimatorFromTypeArray(Context*ctx,ValueAnimator* anim,const AttributeSet&atts, float pixelSize);
+    static TypeEvaluator setupAnimatorForPath(Context*ctx,ValueAnimator* anim,const AttributeSet&arrayAnimator);
+    static void setupObjectAnimator(Context*ctx,ValueAnimator* anim,const AttributeSet&arrayObjectAnimator,int valueType,float pixelSize);
     static ObjectAnimator* loadObjectAnimator(Context*ctx,const AttributeSet& attrs,float );
     static ValueAnimator* loadValueAnimator(Context*context,const AttributeSet& attrs, ValueAnimator*anim,float);
     static ValueAnimator* loadAnimator(Context*ctx,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale);
-    static std::vector<PropertyValuesHolder*> loadValues(XmlPullParser& parser,const  AttributeSet& attrs);
+    static std::vector<PropertyValuesHolder*> loadValues(Context*ctx,XmlPullParser& parser,const  AttributeSet& attrs);
     static PropertyValuesHolder* loadPvh(XmlPullParser& parser,const std::string& propertyName, int valueType);
 public:
     static Animator* loadAnimator(Context* context,const std::string&resid);

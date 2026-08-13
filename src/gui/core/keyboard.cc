@@ -20,6 +20,8 @@
 #include <core/keyboard.h>
 #include <core/tokenizer.h>
 #include <core/xmlpullparser.h>
+#include <widget/internal_R.h>
+using namespace cdroid::internal;
 #include <vector>
 #include <fstream>
 
@@ -130,30 +132,30 @@ int Keyboard::Key::squaredDistanceFrom(int x, int y){
 }
 
 static std::vector<int> KEY_STATE_NORMAL_ON = { 
-     StateSet::CHECKABLE,//StateSet::android.R.attr.state_checkable, 
-     StateSet::CHECKED   //android.R.attr.state_checked
+     (int)cdroid::internal::R::attr::state_checkable,//StateSet::android.R.attr.state_checkable, 
+     (int)cdroid::internal::R::attr::state_checked   //android.R.attr.state_checked
 };
         
 static std::vector<int> KEY_STATE_PRESSED_ON = { 
-     StateSet::PRESSED  ,// android.R.attr.state_pressed, 
-     StateSet::CHECKABLE,// android.R.attr.state_checkable, 
-     StateSet::CHECKED   // android.R.attr.state_checked 
+     (int)cdroid::internal::R::attr::state_pressed  ,// android.R.attr.state_pressed, 
+     (int)cdroid::internal::R::attr::state_checkable,// android.R.attr.state_checkable, 
+     (int)cdroid::internal::R::attr::state_checked   // android.R.attr.state_checked 
 };
         
 static std::vector<int> KEY_STATE_NORMAL_OFF = { 
-     StateSet::CHECKABLE//android.R.attr.state_checkable 
+     (int)cdroid::internal::R::attr::state_checkable//android.R.attr.state_checkable 
 };
         
 static std::vector<int> KEY_STATE_PRESSED_OFF = { 
-     StateSet::PRESSED,//android.R.attr.state_pressed, 
-     StateSet::CHECKABLE//android.R.attr.state_checkable 
+     (int)cdroid::internal::R::attr::state_pressed,//android.R.attr.state_pressed, 
+     (int)cdroid::internal::R::attr::state_checkable//android.R.attr.state_checkable 
 };
         
 static std::vector<int> KEY_STATE_NORMAL = {
 };
         
 static std::vector<int> KEY_STATE_PRESSED = {
-     StateSet::PRESSED//android.R.attr.state_pressed
+     (int)cdroid::internal::R::attr::state_pressed//android.R.attr.state_pressed
 };
 
 std::vector<int>Keyboard::Key::getCurrentDrawableState()const{

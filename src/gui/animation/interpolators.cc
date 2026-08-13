@@ -20,6 +20,11 @@
 #include <cairomm/surface.h>
 #include <core/pathmeasure.h>
 #include <drawable/pathparser.h>
+#include <core/context.h>
+#include <core/typedarray.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+using namespace cdroid::internal;
 
 namespace cdroid{
 BaseInterpolator::BaseInterpolator(){
@@ -35,8 +40,9 @@ int BaseInterpolator::getChangingConfiguration(){
 }
 
 AccelerateInterpolator::AccelerateInterpolator(Context*ctx,const AttributeSet&atts){
-    mFactor = atts.getFloat("factor",1.f);
-    mDoubleFactor = mFactor*2.f;   
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::AccelerateInterpolator);
+    mFactor = ta->getFloat(R::styleable::AccelerateInterpolator_factor, 1.f);
+    mDoubleFactor = mFactor*2.f;
 }
 
 AccelerateInterpolator::AccelerateInterpolator(double f){
@@ -53,7 +59,8 @@ float AccelerateInterpolator::getInterpolation(float input)const{
 }
 
 DecelerateInterpolator::DecelerateInterpolator(Context*ctx,const AttributeSet&atts){
-    mFactor = atts.getFloat("factor",1.f);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::DecelerateInterpolator);
+    mFactor = ta->getFloat(R::styleable::DecelerateInterpolator_factor, 1.f);
 }
 
 DecelerateInterpolator::DecelerateInterpolator(float factor) {
@@ -71,7 +78,8 @@ float DecelerateInterpolator::getInterpolation(float input)const{
 }
 
 AnticipateInterpolator::AnticipateInterpolator(Context*ctx,const AttributeSet&atts){
-    mTension = atts.getFloat("tension",2.f);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::AnticipateInterpolator);
+    mTension = ta->getFloat(R::styleable::AnticipateInterpolator_tension, 2.f);
 }
 
 AnticipateInterpolator::AnticipateInterpolator(float tension){
@@ -83,7 +91,8 @@ float AnticipateInterpolator::getInterpolation(float t)const{
 }
 
 CycleInterpolator::CycleInterpolator(Context*ctx,const AttributeSet&atts){
-    mCycles = atts.getFloat("cycles",1.f);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::CycleInterpolator);
+    mCycles = ta->getFloat(R::styleable::CycleInterpolator_cycles, 1.f);
 }
 
 CycleInterpolator::CycleInterpolator(float cycles) {
@@ -95,7 +104,8 @@ float CycleInterpolator::getInterpolation(float input)const{
 }
 
 OvershootInterpolator::OvershootInterpolator(Context*ctx,const AttributeSet&atts){
-    mTension = atts.getFloat("tension",2.f);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::OvershootInterpolator);
+    mTension = ta->getFloat(R::styleable::OvershootInterpolator_tension, 2.f);
 }
 
 OvershootInterpolator::OvershootInterpolator(float tension) {
@@ -108,7 +118,8 @@ float OvershootInterpolator::getInterpolation(float t)const{
 }
 
 AnticipateOvershootInterpolator::AnticipateOvershootInterpolator(Context*ctx,const AttributeSet&atts){
-    mTension = atts.getFloat("tension",2.f)*atts.getFloat("extraTension",1.5f);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::AnticipateOvershootInterpolator);
+    mTension = ta->getFloat(R::styleable::AnticipateOvershootInterpolator_tension, 2.f) * ta->getFloat(R::styleable::AnticipateOvershootInterpolator_extraTension, 1.5f);
 }
 
 AnticipateOvershootInterpolator::AnticipateOvershootInterpolator(float tension, float extraTension) {

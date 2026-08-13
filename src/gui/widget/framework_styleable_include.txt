@@ -103,3 +103,19 @@ ChronometerCdroid
 SimpleMonthViewCdroid
 ScrollViewCdroid
 StateSetCdroid
+
+# --- animator (framework attrs.xml) ---
+Animator
+PropertyValuesHolder
+Keyframe
+PropertyAnimator
+AnimatorSet
+
+# --- interpolators (framework attrs.xml) ---
+AccelerateInterpolator
+DecelerateInterpolator
+CycleInterpolator
+AnticipateInterpolator
+OvershootInterpolator
+AnticipateOvershootInterpolator
+PathInterpolator

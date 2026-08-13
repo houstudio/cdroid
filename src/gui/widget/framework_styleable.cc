@@ -200,5 +200,19 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t SimpleMonthViewCdroid[] = { 0x010d003e, 0 };
     const uint32_t ScrollViewCdroid[] = { 0x010d00f0, 0 };
     const uint32_t StateSetCdroid[] = { 0x010d010a, 0x010d010b, 0 };
+    const uint32_t Animator[] = {
+        0x01010141, 0x01010198, 0x010101be, 0x010101bf, 0x010101c0, 0x010102de, 0x010102df,
+        0x010102e0, 0x010d00e2, 0 };
+    const uint32_t PropertyValuesHolder[] = { 0x010102e0, 0x010102e1, 0x010102de, 0x010102df, 0 };
+    const uint32_t Keyframe[] = { 0x010102e0, 0x01010024, 0x010104d8, 0x01010141, 0 };
+    const uint32_t PropertyAnimator[] = { 0x010102e1, 0x01010474, 0x01010475, 0x01010405, 0 };
+    const uint32_t AnimatorSet[] = { 0x010102e2, 0 };
+    const uint32_t AccelerateInterpolator[] = { 0x010101d3, 0 };
+    const uint32_t DecelerateInterpolator[] = { 0x010101d3, 0 };
+    const uint32_t CycleInterpolator[] = { 0x010101d4, 0 };
+    const uint32_t AnticipateInterpolator[] = { 0x0101026a, 0 };
+    const uint32_t OvershootInterpolator[] = { 0x0101026a, 0 };
+    const uint32_t AnticipateOvershootInterpolator[] = { 0x0101026a, 0x0101026b, 0 };
+    const uint32_t PathInterpolator[] = { 0x010103fc, 0x010103fd, 0x010103fe, 0x010103ff, 0x01010405, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

@@ -21,6 +21,11 @@
 #include <androidfw/typedvalue.h>
 #include <drawable/pathparser.h>
 #include <porting/cdlog.h>
+#include <core/context.h>
+#include <core/typedarray.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+using namespace cdroid::internal;
 
 namespace cdroid{
 
@@ -142,7 +147,7 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
                     {"together",(int)TOGETHER},{"sequentially",(int)SEQUENTIALLY}}, TOGETHER);
             createAnimatorFromXml(context, parser, attrs, (AnimatorSet*) anim, ordering,pixelSize);
         } else if (name.compare("propertyValuesHolder")==0) {
-            std::vector<PropertyValuesHolder*>values = loadValues(parser,attrs);
+            std::vector<PropertyValuesHolder*>values = loadValues(context,parser,attrs);
             if (values.size() && (dynamic_cast<ValueAnimator*>(anim))) {
                 ((ValueAnimator*) anim)->setValues(values);
             }
@@ -196,7 +201,7 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
     }
 }
  
-std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(XmlPullParser& parser,const  AttributeSet& attrs){
+std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(Context*ctx,XmlPullParser& parser,const AttributeSet& attrs){
     std::vector<PropertyValuesHolder*> values;
     int type = XmlPullParser::START_TAG;
     while ((type != XmlPullParser::END_TAG) && (type != XmlPullParser::END_DOCUMENT)) {
@@ -206,15 +211,13 @@ std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(XmlPullParser& p
         }
         std::string name = parser.getName();
         if (name.compare("propertyValuesHolder")==0) {
-            const std::string propertyName = attrs.getString("propertyName");
-            const int valueType = attrs.getInt("valueType",std::unordered_map<std::string,int>{
-                 {"intType", (int)Property::INT_TYPE},    {"colorType",(int)Property::COLOR_TYPE},
-                 {"floatType",(int)Property::FLOAT_TYPE}, {"pathType",(int)Property::PATH_TYPE}},
-                 Property::UNDEFINED);
+            auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::PropertyValuesHolder);
+            const std::string propertyName = ta->getString(R::styleable::PropertyValuesHolder_propertyName);
+            const int valueType = ta->getInt(R::styleable::PropertyValuesHolder_valueType, Property::UNDEFINED);
             LOGD("propertyValuesHolder.%s type=%d",propertyName.c_str(),valueType);
             PropertyValuesHolder* pvh = loadPvh(parser, propertyName, valueType);
             if (pvh == nullptr) {
-                pvh = getPVH(attrs, valueType,propertyName);
+                pvh = getPVH(ctx, attrs, valueType, propertyName);
             }
             if (pvh != nullptr) {
                 values.push_back(pvh);
@@ -350,13 +353,9 @@ static const std::unordered_map<std::string,int>valueTypes = {
     {"trimPathOffset",(int)Property::FLOAT_TYPE}
 };
 
-int AnimatorInflater::inferValueTypeFromPropertyName(const AttributeSet&atts, const std::string& propertyName) {
-    const int valueType = atts.getInt("valueType",std::unordered_map<std::string,int>{
-         {"intType", (int)Property::INT_TYPE},
-         {"colorType",(int)Property::COLOR_TYPE},
-         {"floatType",(int)Property::FLOAT_TYPE},
-         {"pathType",(int)Property::PATH_TYPE}
-         }, Property::UNDEFINED);
+int AnimatorInflater::inferValueTypeFromPropertyName(Context*ctx, const AttributeSet&atts, const std::string& propertyName) {
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::Animator);
+    const int valueType = ta->getInt(R::styleable::Animator_valueType, Property::UNDEFINED);
     if(valueType==Property::UNDEFINED){
         auto it = valueTypes.find(propertyName);
         if(it != valueTypes.end()) return it->second;
@@ -365,19 +364,20 @@ int AnimatorInflater::inferValueTypeFromPropertyName(const AttributeSet&atts, co
     return valueType;
 }
 
-PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int valueType,const std::string& propertyName){
+PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const AttributeSet&atts, int valueType,const std::string& propertyName){
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::PropertyValuesHolder);
     PropertyValuesHolder* returnValue = nullptr;
-    const std::string sFrom = atts.getString("valueFrom");
-    const std::string sTo = atts.getString("valueTo");
+    const std::string sFrom = ta->getString(R::styleable::PropertyValuesHolder_valueFrom);
+    const std::string sTo = ta->getString(R::styleable::PropertyValuesHolder_valueTo);
     const bool hasFrom = !sFrom.empty();
     const bool hasTo   = !sTo.empty();
-    const int fromType = inferValueTypeFromPropertyName(atts,propertyName);
+    const int fromType = inferValueTypeFromPropertyName(ctx,atts,propertyName);
     const int toType = fromType;
     const bool getFloats = (valueType==Property::FLOAT_TYPE)||(fromType==Property::FLOAT_TYPE);
 
     if (valueType == Property::PATH_TYPE) {
-        const std::string fromString = atts.getString("valueFrom");
-        const std::string toString = atts.getString("valueTo");
+        const std::string fromString = ta->getString(R::styleable::PropertyValuesHolder_valueFrom);
+        const std::string toString = ta->getString(R::styleable::PropertyValuesHolder_valueTo);
         PathParser::PathData nodesFrom = fromString.empty() ? PathParser::PathData() : PathParser::PathData(fromString);
         PathParser::PathData nodesTo = toString.empty()  ? PathParser::PathData() : PathParser::PathData(toString);
 
@@ -410,43 +410,43 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
             float valueFrom,valueTo;
             if (hasFrom) {
                 if(fromType==Property::INT_TYPE) {/*TypedValue::TYPE_DIMENSION*/
-                    valueFrom = atts.getDimension("valueFrom", 0);
+                    valueFrom = ta->getDimension(R::styleable::PropertyValuesHolder_valueFrom, 0);
                 }else{
-                    valueFrom = atts.getFloat("valueFrom",0);
+                    valueFrom = ta->getFloat(R::styleable::PropertyValuesHolder_valueFrom,0);
                 }
                 if (hasTo) {
                     if(toType==Property::INT_TYPE)/*TypedValue::TYPE_DIMENSION*/
-                        valueTo = atts.getDimension("valueTo", 0);
+                        valueTo = ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0);
                     else
-                        valueTo = atts.getFloat("valueTo",0);
+                        valueTo = ta->getFloat(R::styleable::PropertyValuesHolder_valueTo,0);
                     returnValue = PropertyValuesHolder::ofFloat(propertyName,{valueFrom, valueTo});
                 } else {
                     returnValue = PropertyValuesHolder::ofFloat(propertyName,{valueFrom});
                 }
             } else {
                 if(toType==Property::INT_TYPE)/*TypedValue::TYPE_DIMENSION*/
-                    valueTo = atts.getDimension("valueTo", 0);
+                    valueTo = ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0);
                 else
-                    valueTo = atts.getFloat("valueTo",0);
+                    valueTo = ta->getFloat(R::styleable::PropertyValuesHolder_valueTo,0);
                 returnValue = PropertyValuesHolder::ofFloat(propertyName, {valueTo});
             }
         } else {
             int valueFrom,valueTo;
             if (hasFrom) {
                 if (fromType == Property::INT_TYPE) {/*TypedValue::TYPE_DIMENSION*/
-                    valueFrom = (int) atts.getDimension("valueFrom", 0);
+                    valueFrom = (int) ta->getDimension(R::styleable::PropertyValuesHolder_valueFrom, 0);
                 } else if (fromType==Property::COLOR_TYPE) {
-                    valueFrom = atts.getColor("valueFrom", 0);
+                    valueFrom = ta->getColor(R::styleable::PropertyValuesHolder_valueFrom, 0);
                 } else {
-                    valueFrom = atts.getInt("valueFrom", 0);
+                    valueFrom = ta->getInt(R::styleable::PropertyValuesHolder_valueFrom, 0);
                 }
                 if (hasTo) {
                     if (toType == Property::INT_TYPE) {/*TypedValue::TYPE_DIMENSION*/
-                        valueTo = (int) atts.getDimension("valueTo", 0);
+                        valueTo = (int) ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0);
                     } else if (toType==Property::COLOR_TYPE) {
-                        valueTo = atts.getColor("valueTo", 0);
+                        valueTo = ta->getColor(R::styleable::PropertyValuesHolder_valueTo, 0);
                     } else {
-                        valueTo = atts.getInt("valueTo", 0);
+                        valueTo = ta->getInt(R::styleable::PropertyValuesHolder_valueTo, 0);
                     }
                     returnValue = PropertyValuesHolder::ofInt(propertyName, {valueFrom, valueTo});
                 } else {
@@ -455,11 +455,11 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
             } else {
                 if (hasTo) {
                     if (toType == Property::INT_TYPE) {/*TypedValue::TYPE_DIMENSION*/
-                        valueTo = (int) atts.getDimension("valueTo", 0);
+                        valueTo = (int) ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0);
                     } else if (toType==Property::COLOR_TYPE) {
-                        valueTo = atts.getColor("valueTo", 0);
+                        valueTo = ta->getColor(R::styleable::PropertyValuesHolder_valueTo, 0);
                     } else {
-                        valueTo = atts.getInt("valueTo", 0);
+                        valueTo = ta->getInt(R::styleable::PropertyValuesHolder_valueTo, 0);
                     }
                     returnValue = PropertyValuesHolder::ofInt(propertyName, {valueTo});
                 }
@@ -472,14 +472,19 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
     return returnValue;
 }
 
-void AnimatorInflater::parseAnimatorFromTypeArray(ValueAnimator* anim,const AttributeSet&atts, float pixelSize) {
-    const long duration = atts.getInt("duration", 300);
-    const long startDelay = atts.getInt("startOffset", 0);
-    const std::string propertyName = atts.getString("propertyName");
+void AnimatorInflater::parseAnimatorFromTypeArray(Context*ctx, ValueAnimator* anim,const AttributeSet&atts, float pixelSize) {
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::Animator);
+    const long duration = ta->getInt(R::styleable::Animator_duration, 300);
+    const long startDelay = ta->getInt(R::styleable::Animator_startOffset, 0);
+    // propertyName is in PropertyAnimator styleable, not Animator; read via PVH styleable.
+    std::string propertyName;
+    { auto ta2 = ctx->obtainStyledAttributes(atts, R::styleable::PropertyValuesHolder);
+      propertyName = ta2->getString(R::styleable::PropertyValuesHolder_propertyName);
+    }
 
-    const int valueType = inferValueTypeFromPropertyName(atts,propertyName);
+    const int valueType = inferValueTypeFromPropertyName(ctx,atts,propertyName);
 
-    PropertyValuesHolder* pvh = getPVH(atts, valueType,propertyName);
+    PropertyValuesHolder* pvh = getPVH(ctx,atts, valueType,propertyName);
     if (pvh != nullptr) {
         anim->setValues({pvh});
     }
@@ -487,25 +492,15 @@ void AnimatorInflater::parseAnimatorFromTypeArray(ValueAnimator* anim,const Attr
     anim->setDuration(duration);
     anim->setStartDelay(startDelay);
 
-    if (atts.hasAttribute("repeatCount")) {
-        anim->setRepeatCount(atts.getInt("repeatCount", ValueAnimator::INFINITE));
-    }
-    if (atts.hasAttribute("repeatMode")) {
-        anim->setRepeatMode(atts.getInt("repeatMode",std::unordered_map<std::string,int>{
-                    {"restart",(int)ValueAnimator::RESTART},
-                    {"reverse",(int)ValueAnimator::REVERSE}
-            },ValueAnimator::RESTART));
-    }
+    anim->setRepeatCount(ta->getInt(R::styleable::Animator_repeatCount, 0));
+    anim->setRepeatMode(ta->getInt(R::styleable::Animator_repeatMode, ValueAnimator::RESTART));
 
-    /*if (arrayObjectAnimator != nullptr) {
-        setupObjectAnimator(anim, arrayObjectAnimator, valueType, pixelSize);
-    }*/
     if((propertyName.empty()==false)&&dynamic_cast<ObjectAnimator*>(anim)){
        ((ObjectAnimator*)anim)->setPropertyName(propertyName);
     }
 }
 
-TypeEvaluator AnimatorInflater::setupAnimatorForPath(ValueAnimator* anim,const AttributeSet&arrayAnimator){
+TypeEvaluator AnimatorInflater::setupAnimatorForPath(Context*ctx, ValueAnimator* anim,const AttributeSet&arrayAnimator){
     TypeEvaluator evaluator = nullptr;
     const std::string fromString = arrayAnimator.getString("valueFrom");
     const std::string toString = arrayAnimator.getString("valueTo");
@@ -534,9 +529,10 @@ TypeEvaluator AnimatorInflater::setupAnimatorForPath(ValueAnimator* anim,const A
     return evaluator;
 }
 
-void AnimatorInflater::setupObjectAnimator(ValueAnimator* anim, const AttributeSet&arrayObjectAnimator,int valueType, float pixelSize){
+void AnimatorInflater::setupObjectAnimator(Context*ctx, ValueAnimator* anim, const AttributeSet&arrayObjectAnimator,int valueType, float pixelSize){
+    auto ta = ctx->obtainStyledAttributes(arrayObjectAnimator, R::styleable::PropertyAnimator);
     ObjectAnimator* oa = (ObjectAnimator*) anim;
-    std::string pathData = arrayObjectAnimator.getString("pathData");
+    std::string pathData = ta->getString(R::styleable::PropertyAnimator_pathData);
     // Path can be involved in an ObjectAnimator in the following 3 ways:
     // 1) Path morphing: the property to be animated is pathData, and valueFrom and valueTo
     //    are both of pathType. valueType = pathType needs to be explicitly defined.
@@ -546,8 +542,8 @@ void AnimatorInflater::setupObjectAnimator(ValueAnimator* anim, const AttributeS
     // 3) PathInterpolator can also define a path (in pathData) for its interpolation curve.
     // Here we are dealing with case 2:
     if (!pathData.empty()) {
-        std::string propertyXName = arrayObjectAnimator.getString("propertyXName");
-        std::string propertyYName = arrayObjectAnimator.getString("propertyYName");
+        std::string propertyXName = ta->getString(R::styleable::PropertyAnimator_propertyXName);
+        std::string propertyYName = ta->getString(R::styleable::PropertyAnimator_propertyYName);
 
         if (valueType == VALUE_TYPE_PATH || valueType == VALUE_TYPE_UNDEFINED) {
             // When pathData is defined, we are in case #2 mentioned above. ValueType can only
@@ -589,7 +585,7 @@ void AnimatorInflater::setupObjectAnimator(ValueAnimator* anim, const AttributeS
         }
 #endif
     } else {
-        std::string propertyName = arrayObjectAnimator.getString("propertyName");
+        std::string propertyName = ta->getString(R::styleable::PropertyAnimator_propertyName);
         oa->setPropertyName(propertyName);
     }
 }
@@ -616,29 +612,24 @@ ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const AttributeSet
     }
     //anim->appendChangingConfigurations(arrayAnimator.getChangingConfigurations());
 
-    parseAnimatorFromTypeArray(anim,attrs, pathErrorScale);
+    parseAnimatorFromTypeArray(context,anim,attrs, pathErrorScale);
 
-    const int resID = attrs.getResourceId("interpolator", 0);
+    auto taInt = context->obtainStyledAttributes(attrs, R::styleable::Animator);
+    const int resID = taInt->getResourceId(R::styleable::Animator_interpolator, 0);
     if (resID != 0) {
         Interpolator* interpolator = AnimationUtils::loadInterpolator(context, resID);
-        /*if (interpolator instanceof BaseInterpolator) {
-            anim.appendChangingConfigurations(((BaseInterpolator) interpolator).getChangingConfiguration());
-        }*/
         anim->setInterpolator(interpolator);
     }
     return anim;
 }
 
 ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const AttributeSet& atts, ValueAnimator*anim,float){
-    const int valueType = atts.getInt("valueType",std::unordered_map<std::string,int>{
-            {"intType",(int)Property::INT_TYPE},
-            {"floatType",(int)Property::FLOAT_TYPE},
-            {"colorType",(int)Property::COLOR_TYPE},
-            {"pathType",(int)Property::PATH_TYPE}
-        },(int)Property::UNDEFINED);
+    auto ta = context->obtainStyledAttributes(atts, R::styleable::Animator);
+    auto taPvh = context->obtainStyledAttributes(atts, R::styleable::PropertyValuesHolder);
+    const int valueType = ta->getInt(R::styleable::Animator_valueType, Property::UNDEFINED);
 
-    const std::string propertyName = atts.getString("propertyName");
-    const int intpResource = atts.getResourceId("interpolator", 0);
+    const std::string propertyName = taPvh->getString(R::styleable::PropertyValuesHolder_propertyName);
+    const int intpResource = ta->getResourceId(R::styleable::Animator_interpolator, 0);
     Interpolator* interpolator = nullptr;
     if (intpResource != 0) {
         interpolator = AnimationUtils::loadInterpolator(context, intpResource);
@@ -649,16 +640,12 @@ ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const Attrib
     if(interpolator){
         anim->setInterpolator(interpolator);
     }
-    anim->setDuration(atts.getInt("duration",300));
-    anim->setStartDelay(atts.getInt("startOffset",0));
-    anim->setRepeatCount(atts.getInt("repeatCount",0));
-    anim->setRepeatMode(atts.getInt("repeatMode",std::unordered_map<std::string,int>{
-        {"restart" , (int)ValueAnimator::RESTART},
-        {"reverse" , (int)ValueAnimator::REVERSE},
-        {"infinite", (int)ValueAnimator::INFINITE}
-    },ValueAnimator::RESTART));
+    anim->setDuration(ta->getInt(R::styleable::Animator_duration, 300));
+    anim->setStartDelay(ta->getInt(R::styleable::Animator_startOffset, 0));
+    anim->setRepeatCount(ta->getInt(R::styleable::Animator_repeatCount, 0));
+    anim->setRepeatMode(ta->getInt(R::styleable::Animator_repeatMode, ValueAnimator::RESTART));
 
-    PropertyValuesHolder*pvh = getPVH(atts,valueType,propertyName);
+    PropertyValuesHolder* pvh = getPVH(context,atts,valueType,propertyName);
     if(pvh)
         anim->setValues({pvh});
     return anim;

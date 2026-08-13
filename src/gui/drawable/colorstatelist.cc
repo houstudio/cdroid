@@ -190,7 +190,7 @@ bool ColorStateList::isStateful()const{
 }
 
 bool ColorStateList::hasFocusStateSpecified()const{
-    return StateSet::containsAttribute(mStateSpecs,StateSet::FOCUSED);
+    return StateSet::containsAttribute(mStateSpecs,(int)cdroid::internal::R::attr::state_focused);
 }
 
 int ColorStateList::getDefaultColor()const{

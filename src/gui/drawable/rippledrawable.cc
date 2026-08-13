@@ -166,13 +166,13 @@ bool RippleDrawable::onStateChange(const std::vector<int>&stateSet){
     bool hovered = false;
 
     for (int state : stateSet) {
-        if (state == StateSet::ENABLED) {
+        if (state == (int)cdroid::internal::R::attr::state_enabled) {
             enabled = true;
-        } else if (state == StateSet::FOCUSED) {
+        } else if (state == (int)cdroid::internal::R::attr::state_focused) {
             focused = true;
-        } else if (state == StateSet::PRESSED) {
+        } else if (state == (int)cdroid::internal::R::attr::state_pressed) {
             pressed = true;
-        } else if (state == StateSet::HOVERED) {
+        } else if (state == (int)cdroid::internal::R::attr::state_hovered) {
             hovered = true;
         }
     }

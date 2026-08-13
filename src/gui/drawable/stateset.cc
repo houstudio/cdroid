@@ -23,29 +23,35 @@ using namespace cdroid::internal::R;
 
 const std::vector<int> StateSet::NOTHING = {0};
 const std::vector<int> StateSet::WILD_CARD = {};
-const std::vector<int>StateSet::PRESSED_STATE_SET = {PRESSED};
-const std::vector<int>StateSet::ENABLED_STATE_SET = {ENABLED};
-const std::vector<int>StateSet::FOCUSED_STATE_SET = {FOCUSED};
-const std::vector<int>StateSet::SELECTED_STATE_SET= {SELECTED};
-const std::vector<int>StateSet::CHECKED_STATE_SET = {CHECKED};
+// State-set constants use the real R::attr IDs (AOSP-aligned). These are the same
+// values that StateListDrawable items carry and that stateSetMatches compares.
+const std::vector<int>StateSet::PRESSED_STATE_SET = {(int)attr::state_pressed};
+const std::vector<int>StateSet::ENABLED_STATE_SET = {(int)attr::state_enabled};
+const std::vector<int>StateSet::FOCUSED_STATE_SET = {(int)attr::state_focused};
+const std::vector<int>StateSet::SELECTED_STATE_SET= {(int)attr::state_selected};
+const std::vector<int>StateSet::CHECKED_STATE_SET = {(int)attr::state_checked};
 
+// AOSP View.java VIEW_STATE_IDS: pairs of (R.attr.state_xxx, VIEW_STATE_bit).
+// Used by View.getDrawableState() to build the drawable state array from the
+// view's bitmask. CDROID-private states (state_drag_*) included.
 std::vector<int>StateSet::VIEW_STATE_IDS={
-    WINDOW_FOCUSED , VIEW_STATE_WINDOW_FOCUSED,
-    SELECTED   , VIEW_STATE_SELECTED ,
-    FOCUSED     , VIEW_STATE_FOCUSED  ,
-    ENABLED        , VIEW_STATE_ENABLED  ,
-    PRESSED        , VIEW_STATE_PRESSED  ,
-    ACTIVATED      , VIEW_STATE_ACTIVATED,
-    HOVERED        , VIEW_STATE_HOVERED  ,
-    CHECKED        , VIEW_STATE_CHECKED  ,
-    CHECKABLE      , VIEW_STATE_CHECKABLE,
-    DRAG_ACCPETABLE, VIEW_STATE_DRAG_CAN_ACCEPT,
-    DRAG_HOVERED   , VIEW_STATE_DRAG_HOVERED,
+    (int)attr::state_window_focused, VIEW_STATE_WINDOW_FOCUSED,
+    (int)attr::state_selected     , VIEW_STATE_SELECTED ,
+    (int)attr::state_focused      , VIEW_STATE_FOCUSED  ,
+    (int)attr::state_enabled      , VIEW_STATE_ENABLED  ,
+    (int)attr::state_pressed      , VIEW_STATE_PRESSED  ,
+    (int)attr::state_activated    , VIEW_STATE_ACTIVATED,
+    (int)attr::state_hovered      , VIEW_STATE_HOVERED  ,
+    (int)attr::state_checked      , VIEW_STATE_CHECKED  ,
+    (int)attr::state_checkable    , VIEW_STATE_CHECKABLE,
+    // CDROID-private drag states (0x010dxxxx IDs from attrs_cdroid.xml).
+    0x010d010a /*state_drag_acceptable*/, VIEW_STATE_DRAG_CAN_ACCEPT,
+    0x010d010b /*state_drag_hoved*/     , VIEW_STATE_DRAG_HOVERED,
 
-    SINGLE         , VIEW_STATE_SINGLE,
-    FIRST          , VIEW_STATE_FIRST,
-    MIDDLE         , VIEW_STATE_MIDDLE,
-    LAST           , VIEW_STATE_LAST
+    (int)attr::state_single       , VIEW_STATE_SINGLE,
+    (int)attr::state_first        , VIEW_STATE_FIRST,
+    (int)attr::state_middle       , VIEW_STATE_MIDDLE,
+    (int)attr::state_last         , VIEW_STATE_LAST
 };
 
 void StateSet::trimStateSet(std::vector<int>&states,int newsize){
@@ -54,7 +60,7 @@ void StateSet::trimStateSet(std::vector<int>&states,int newsize){
 
 std::vector<int> StateSet::get(int mask){
     std::vector<int> states;
-    for( int i = 0 ; i < VIEW_STATE_IDS.size() ; i += 2 ){
+    for( int i = 0 ; i < (int)VIEW_STATE_IDS.size() ; i += 2 ){
         if( mask & VIEW_STATE_IDS[i+1] )
            states.push_back(VIEW_STATE_IDS[i]);
     }
@@ -81,7 +87,7 @@ bool StateSet::stateSetMatches(const std::vector<int>& stateSpec,const std::vect
             stateSpecState = -stateSpecState;
         }
         bool found = false;
-        for (int j = 0; j < stateSetSize; j++) {
+        for (int j = 0; j < (int)stateSetSize; j++) {
             const int state = stateSet[j];
             if (state == 0) {  // We've reached the end of states to match.
                 if (mustMatch){// We didn't find this must-match state.
@@ -133,35 +139,47 @@ bool StateSet::containsAttribute(const std::vector<std::vector<int>>& stateSpecs
                 return true;
         }
     }
-    return false;    
+    return false;
 }
 
-void StateSet::appendState(std::vector<int>& states,const std::string&s,int value){
-    if(s.empty())return;
-    states.push_back(s.compare("true") ? -value : value);
-}
-
+// AOSP StateSet.parseState: reads state_* attrs from the <item> AttributeSet.
+// Uses getAttributeBooleanValue (namespace-keyed, AOSP-faithful) — checks whether
+// each state attr is present and true/false, pushing +attrId or -attrId.
 int StateSet::parseState(std::vector<int>&states,const AttributeSet&atts){
-    appendState(states,atts.getString("state_enabled") , ENABLED );
-    appendState(states,atts.getString("state_focused") , FOCUSED );
-    appendState(states,atts.getString("state_selected"), SELECTED);
-    appendState(states,atts.getString("state_checked") , CHECKED );
-    appendState(states,atts.getString("state_checkable"),CHECKABLE);
-    appendState(states,atts.getString("state_pressed") , PRESSED );
-    appendState(states,atts.getString("state_hovered") , HOVERED );
-    appendState(states,atts.getString("state_activated") , ACTIVATED);
-    appendState(states,atts.getString("state_window_focused") , WINDOW_FOCUSED);
-    // state_drag_hoved / state_drag_acceptable are CDROID-private (StateSetCdroid).
-    if (atts.hasAttribute("state_drag_hoved"))
-        appendState(states, atts.getAttributeValue("state_drag_hoved"), DRAG_HOVERED);
-    if (atts.hasAttribute("state_drag_acceptable"))
-        appendState(states, atts.getAttributeValue("state_drag_acceptable"), DRAG_ACCPETABLE);
-
-    appendState(states,atts.getString("state_single") , SINGLE);
-    appendState(states,atts.getString("state_first") , FIRST);
-    appendState(states,atts.getString("state_middle") , MIDDLE);
-    appendState(states,atts.getString("state_last") , LAST);
-    return states.size();
+    // Framework state attrs (0x010100xx IDs). getAttributeBooleanValue(namespace,
+    // name, def) does an O(n) name→index scan then reads the typed Res_value —
+    // faithful to AOSP's AttributeSet.getAttributeBooleanValue.
+    static const struct { const char* name; int attrId; } frameworkStates[] = {
+        {"state_window_focused", (int)attr::state_window_focused},
+        {"state_selected",       (int)attr::state_selected},
+        {"state_focused",        (int)attr::state_focused},
+        {"state_enabled",        (int)attr::state_enabled},
+        {"state_checkable",      (int)attr::state_checkable},
+        {"state_checked",        (int)attr::state_checked},
+        {"state_pressed",        (int)attr::state_pressed},
+        {"state_hovered",        (int)attr::state_hovered},
+        {"state_activated",      (int)attr::state_activated},
+        {"state_single",         (int)attr::state_single},
+        {"state_first",          (int)attr::state_first},
+        {"state_middle",         (int)attr::state_middle},
+        {"state_last",           (int)attr::state_last},
+    };
+    for (const auto& s : frameworkStates) {
+        if (atts.hasAttribute(s.name)) {
+            const bool val = atts.getBoolean(s.name, false);
+            states.push_back(val ? s.attrId : -s.attrId);
+        }
+    }
+    // CDROID-private drag states (0x010dxxxx IDs).
+    if (atts.hasAttribute("state_drag_hoved")) {
+        const bool val = atts.getBoolean("state_drag_hoved", false);
+        states.push_back(val ? 0x010d010b : -0x010d010b);
+    }
+    if (atts.hasAttribute("state_drag_acceptable")) {
+        const bool val = atts.getBoolean("state_drag_acceptable", false);
+        states.push_back(val ? 0x010d010a : -0x010d010a);
+    }
+    return (int)states.size();
 }
 
 }

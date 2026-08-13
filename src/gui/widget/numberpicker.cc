@@ -1421,7 +1421,7 @@ void NumberPicker::onDraw(Canvas&canvas){
                     if(mItemBackground->isStateful()){
                         std::vector<int>state = getDrawableState();
                         if(i==mWheelMiddleItemIndex)
-                            state.push_back(StateSet::SELECTED);
+                            state.push_back((int)cdroid::internal::R::attr::state_selected);
                         mItemBackground->setState(state);
                     }
                     mItemBackground->draw(canvas);
