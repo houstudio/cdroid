@@ -347,9 +347,7 @@ ssize_t ResTable::getResource(uint32_t resID, Res_value* outValue, bool mayBeBag
     if (!entry) return NAME_NOT_FOUND;
 
     if (dtohs(entry->flags) & ResTable_entry::FLAG_COMPLEX) {
-        if (!mayBeBag) {
-            LOGW("Requesting resource 0x%08x failed because it is complex", resID);
-        }
+        (void)mayBeBag;
         return BAD_VALUE;
     }
 
