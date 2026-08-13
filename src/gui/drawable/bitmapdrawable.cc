@@ -477,7 +477,7 @@ void BitmapDrawable::getOutline(Outline& outline) {
     outline.setAlpha(opaqueOverShape ? getAlpha() / 255.0f : 0.0f);
 }
 
-void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a){
+void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a, int srcDensityOverride){
     // aapt2 pre-resolves the tileMode enum (disabled=-1/clamp=0/repeat=1/mirror=2)
     // and the tintMode enum to the PorterDuff.Mode constructor ordinals, so the
     // string->int maps used by the AttributeSet path are no longer needed.
@@ -499,7 +499,7 @@ void BitmapDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet
     Drawable::inflate(r,parser,atts);
     Context* ctx = atts.getContext();
     auto ta = r.obtainStyledAttributes(&atts, R::styleable::BitmapDrawable);
-    if (ta) updateStateFromTypedArray(*ta);
+    if (ta) updateStateFromTypedArray(*ta, 0);
     // AOSP: src is read via ta.getResourceId(R.styleable.BitmapDrawable_src, 0).
     // Resolve the value to get the file path, then decode the image.
     const int srcResId = ta->getResourceId(R::styleable::BitmapDrawable_src, 0);
