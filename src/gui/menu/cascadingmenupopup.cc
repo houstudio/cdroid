@@ -130,7 +130,7 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
 
     //final Resources res = context.getResources();
     mMenuMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,
-            context->getDimensionPixelSize("android:dimen/config_prefDialogWidth"));
+            context->getDimensionPixelSize(R::dimen::config_prefDialogWidth));
 
     mSubMenuHoverHandler = new Handler();
 

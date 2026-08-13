@@ -164,7 +164,7 @@ GridLayout::~GridLayout(){
 }
 
 void GridLayout::initGridLayout(){
-    mDefaultGap = getContext()->getDimensionPixelSize("default_gap", 0);
+    mDefaultGap = getContext()->getDimensionPixelSize(R::dimen::default_gap);
     mOrientation    = DEFAULT_ORIENTATION;//HORIZONTAL
     mAlignmentMode  = DEFAULT_ALIGNMENT_MODE;
     mHorizontalAxis = new Axis(this,true);

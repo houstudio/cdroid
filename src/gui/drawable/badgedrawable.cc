@@ -111,10 +111,8 @@ BadgeDrawable::BadgeDrawable(Context* context,const std::string&badgeResId,
     mShapeDrawable = new GradientDrawable();
 
     mState =new BadgeState(context,badgeResId,defStyleAttr,defStyleRes,savedState);
-    mBadgeRadius = context->getDimensionPixelSize("cdroid:dimen/mtrl_badge_radius",mBadgeRadius);
-    mBadgeWidePadding = context->getDimensionPixelSize("cdroid:dimen/mtrl_badge_long_text_horizontal_padding",0);
-    mBadgeWithTextRadius = context->getDimensionPixelSize("cdroid::dimen/mtrl_badge_with_text_radius",mBadgeWithTextRadius);
-  
+    mBadgeWidePadding = context->getDimensionPixelSize(R::dimen::mtrl_badge_long_text_horizontal_padding);
+
     mState = new BadgeState(context,badgeResId,defStyleAttr,defStyleRes,savedState);
     //setBackgroundColor(mState->mBackgroundColor);
     //mTextPaint.setTextAlign(Paint::Align::CENTER);

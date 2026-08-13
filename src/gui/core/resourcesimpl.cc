@@ -77,11 +77,16 @@ ResourcesImpl::ResourcesImpl(AssetManager* am, const ResTable_config* config,
 ResourcesImpl::~ResourcesImpl() {
 }
 
-const ResTable_config& ResourcesImpl::getConfiguration() const { return *mConfig; }
-void ResourcesImpl::setConfiguration(const ResTable_config& config) { *mConfig = config; }
+const ResTable_config& ResourcesImpl::getConfiguration() const {
+    return *mConfig;
+}
 
-int ResourcesImpl::getIdentifier(const std::string& name, const std::string& type,
-                             const std::string& package) const {
+void ResourcesImpl::setConfiguration(const ResTable_config& config) {
+    *mConfig = config;
+}
+
+int ResourcesImpl::getIdentifier(const std::string& name,
+        const std::string& type, const std::string& package) const {
     if (mAssets == nullptr) return 0;
     return (int)mAssets->getResources(false).getIdentifier(name, type, package);
 }
@@ -229,32 +234,48 @@ std::vector<int> ResourcesImpl::getIntArray(int id) const {
 int ResourcesImpl::getInteger(int id) const {
     TypedValue tv;
     if (!getValue(id, &tv, true)) return 0;
-    if (tv.type >= Res_value::TYPE_FIRST_INT && tv.type <= Res_value::TYPE_LAST_INT) return (int)tv.data;
-    if (tv.type == Res_value::TYPE_INT_BOOLEAN) return tv.data != 0 ? 1 : 0;
+    if (tv.type >= Res_value::TYPE_FIRST_INT && tv.type <= Res_value::TYPE_LAST_INT) {
+        return (int)tv.data;
+    }
+    if (tv.type == Res_value::TYPE_INT_BOOLEAN) {
+        return tv.data != 0 ? 1 : 0;
+    }
     return 0;
 }
 
 bool ResourcesImpl::getBoolean(int id) const {
     TypedValue tv;
     if (!getValue(id, &tv, true)) return false;
-    if (tv.type == Res_value::TYPE_INT_BOOLEAN) return tv.data != 0;
-    if (tv.type >= Res_value::TYPE_FIRST_INT && tv.type <= Res_value::TYPE_LAST_INT) return tv.data != 0;
+    if (tv.type == Res_value::TYPE_INT_BOOLEAN) {
+        return tv.data != 0;
+    }
+    if (tv.type >= Res_value::TYPE_FIRST_INT && tv.type <= Res_value::TYPE_LAST_INT) {
+        return tv.data != 0;
+    }
     return false;
 }
 
 float ResourcesImpl::getFloat(int id) const {
     TypedValue tv;
     if (!getValue(id, &tv, true)) return 0.0f;
-    if (tv.type == Res_value::TYPE_FLOAT) return tv.getFloat();
-    if (tv.type >= Res_value::TYPE_FIRST_INT && tv.type <= Res_value::TYPE_LAST_INT) return (float)(int)tv.data;
+    if (tv.type == Res_value::TYPE_FLOAT) {
+        return tv.getFloat();
+    }
+    if (tv.type >= Res_value::TYPE_FIRST_INT && tv.type <= Res_value::TYPE_LAST_INT) {
+        return (float)(int)tv.data;
+    }
     return 0.0f;
 }
 
 int ResourcesImpl::getColor(int id) const {
     TypedValue tv;
     if (!getValue(id, &tv, true)) return 0;
-    if (tv.type >= Res_value::TYPE_FIRST_COLOR_INT && tv.type <= Res_value::TYPE_LAST_COLOR_INT) return (int)tv.data;
-    if (tv.type == Res_value::TYPE_INT_HEX) return (int)tv.data;
+    if (tv.type >= Res_value::TYPE_FIRST_COLOR_INT && tv.type <= Res_value::TYPE_LAST_COLOR_INT){
+        return (int)tv.data;
+    }
+    if (tv.type == Res_value::TYPE_INT_HEX) {
+        return (int)tv.data;
+    }
     return 0;
 }
 
@@ -448,10 +469,17 @@ std::shared_ptr<cdroid::ComplexColor> ResourcesImpl::loadComplexColor(int id) co
             }
         }
     }
-    if (csl && mColorStateListCache) mColorStateListCache->put(id, csl);
+    if (csl && mColorStateListCache) {
+        mColorStateListCache->put(id, csl);
+    }
     return csl;
 }
 
-cdroid::Typeface* ResourcesImpl::getFont(int /*id*/) const { return nullptr; }
-cdroid::Movie* ResourcesImpl::getMovie(int /*id*/) const { return nullptr; }
+cdroid::Typeface* ResourcesImpl::getFont(int /*id*/) const {
+    return nullptr;
+}
+
+cdroid::Movie* ResourcesImpl::getMovie(int /*id*/) const {
+    return nullptr;
+}
 

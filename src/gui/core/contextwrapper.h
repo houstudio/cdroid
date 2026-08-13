@@ -28,7 +28,7 @@ public:
     void setTheme(const std::string& theme) override { mBase->setTheme(theme); }
     void setTheme(int resid) override { mBase->setTheme(resid); }
     const DisplayMetrics& getDisplayMetrics() const override { return mBase->getDisplayMetrics(); }
-    int getId(const std::string& name) const override { return mBase->getId(name); }
+    //int getId(const std::string& name) const override { return mBase->getId(name); } // retired: use R::id::* (int)
     int getNextAutofillId() override { return mBase->getNextAutofillId(); }
     const std::string getString(const std::string& id, const std::string& lan="") override { return mBase->getString(id, lan); }
     std::unique_ptr<std::istream> getInputStream(const std::string& resname, std::string* outpkg=nullptr) override { return mBase->getInputStream(resname, outpkg); }

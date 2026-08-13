@@ -223,10 +223,6 @@ Assets::~Assets() {
     delete mAssetManager;
     delete mArscTheme;
     delete mResTable;
-    for(auto& cls:mStateColors){
-        //delete cls.second;
-    }
-    mStateColors.clear();
 
     for(auto it=mResources.begin(); it!=mResources.end(); it++) {
         delete it->second;
@@ -235,9 +231,7 @@ Assets::~Assets() {
         LOGV_IF(d.second.use_count(),"%s reference=%d",d.first.c_str(),d.second.use_count());
     }
     mDrawables.clear();
-    mIDS.clear();
     mResources.clear();
-    mStrings.clear();
     mStyles.clear();
     LOGD("~Assets %p!",this);
 }
@@ -370,30 +364,6 @@ void Assets::setTheme(int resid) {
 }
 
 
-static std::string convertXmlToCString(const std::string& xml) {
-    static std::unordered_map<std::string, std::string> escapeMap = {
-        {"\\n", "\n"},     {"\\'", "\'"},   {"\\\"", "\""}
-    };
-    std::string result;
-    result.reserve(xml.length());
-
-    for (size_t i = 0; i < xml.length(); ++i) {
-        bool replaced = false;
-        for (const auto& pair : escapeMap) {
-            if (xml.compare(i, pair.first.length(), pair.first) == 0) {
-                result.append(pair.second);
-                i += pair.first.length() - 1;
-                replaced = true;
-                break;
-            }
-        }
-        if (!replaced) {
-            result += xml[i];
-        }
-    }
-    return result;
-}
-
 typedef struct{
     std::unordered_map<std::string,const std::string>colors;
     std::unordered_map<std::string,const std::string>dimens;
@@ -420,69 +390,12 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
     while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
         const std::string tag = parser.getName();
         if(type!=XmlPullParser::START_TAG)continue;
-        if(tag.compare("id")==0){
-            std::string key = package +":id/"+attrs.getString("name");
-            std::string value= getTrimedValue(parser);
-            mIDS[key] = TextUtils::strtol(value);
-        }else if((tag.compare("dimen")==0)||(tag.compare("integer")==0)||(tag.compare("bool")==0)){
-            const std::string resUri = package+":"+tag+"/"+attrs.getString("name");
-            std::string value = getTrimedValue(parser);
-            const std::string dimenRes = AttributeSet::normalize(package,value);
-            auto itc = mDimensions.find(dimenRes);
-            if(value.find("/")==std::string::npos){
-                char*endP;
-                int v = std::strtol(value.c_str(),&endP,10);
-                if(*endP){
-                    const DisplayMetrics& dm = getDisplayMetrics();
-                    if(*endP=='s'/*sp*/) v = int(dm.scaledDensity * v /*+0.5f*/);
-                    else if(*endP=='d'/*dp dip*/)v =int(dm.density * v /*+0.5f*/);
-                }
-                if(tag.compare("bool")==0){
-                    v = value[0]=='t'?true:false;
-                }
-                mDimensions.insert({resUri,v});
-            }else if(itc!=mDimensions.end()){
-                mDimensions.insert({resUri,itc->second});
-            }else{
-                pending->dimens.insert({resUri,dimenRes});
-            }
-        }else if(tag.compare("color")==0){
-            std::string colorUri = package+":color/"+attrs.getString("name");
-            std::string value = getTrimedValue(parser);
-            const std::string colorRef = AttributeSet::normalize(package,value);
-            auto itc = mColors.find(colorRef);
-            if((value[0]=='#')||(itc!=mColors.end())){
-                const uint32_t color = (value[0]=='#')?Color::parseColor(value):itc->second;
-                mColors.insert({colorUri,color});
-            }else if (itc==mColors.end()){
-                pending->colors.insert({colorUri,colorRef});
-            }
-        }else if(tag.compare("string")==0){
-            std::string key = package+":string/"+attrs.getString("name");
-            std::string value = getTrimedValue(parser);
-            mStrings[key] = convertXmlToCString(value);
-        }else if(tag.compare("item")==0){
-            const std::string type = attrs.getString("type");
-            if(type.compare("dimen")==0||type.compare("integer")==0||type.compare("bool")==0||type.compare("fraction")==0){
-                const std::string resUri = package+":dimen/"+attrs.getString("name");
-                const std::string format = attrs.getString("format");
-                std::string value = getTrimedValue(parser);
-                if((format.compare("float")==0)||(type[0]=='f')){
-                    float fv =std::strtof(value.c_str(),nullptr);
-                    if(type[0]=='f') fv/=100.f;
-                    mDimensions.insert({resUri,fv});
-                }else{
-                    const int32_t v = std::stol(value);
-                    mDimensions.insert({resUri,v});
-                }
-            }else if(type.compare("id")==0){
-                // <item type="id" name="x">value</item> declares an id resource,
-                // the item-form equivalent of the <id> tag above.
-                std::string key = package+":id/"+attrs.getString("name");
-                std::string value = getTrimedValue(parser);
-                mIDS[key] = TextUtils::strtol(value);
-            }
-        }else if(tag.compare("selector")==0){//for colorstatelist
+        // id/dimen/integer/bool/color/string/item/array values now live in the
+        // resources.arsc (binary) or are resolved lazily via the id-path; the
+        // retired text caches (mIDS/mColors/mDimensions/mStrings/mArraies) no
+        // longer store them. Only styles and color-state-list selectors still
+        // need text-XML parsing here.
+        if(tag.compare("selector")==0){//for colorstatelist
             std::string key = attrs.getString("name");
             depth = parser.getDepth()+1;
             std::string resUri = resid.substr(0,resid.find(".xml"));
@@ -491,7 +404,6 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
             while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
                 if(type!=XmlPullParser::START_TAG)continue;
                 AttributeSet itemAtts(attrs);
-                //itemAtts = attrs;
                 if(it==pending->colorStateList.end()){
                     it = pending->colorStateList.insert({resUri,{itemAtts}}).first;
                 }else
@@ -515,16 +427,6 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 if(pos!=std::string::npos)key=key.substr(pos+1);
                 its->second.add(key,value);
             }
-        }else if(tag.find("array")!=std::string::npos){
-            const std::string key = package+":array/"+attrs.getString("name");
-            std::vector<std::string>array;
-            depth = parser.getDepth()+1;
-            while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
-                if(type!=XmlPullParser::START_TAG)continue;
-                std::string value= getTrimedValue(parser);
-                array.emplace_back(value);
-            }
-            mArraies.emplace(key,std::move(array));
         }
     }
     return 0;
@@ -596,42 +498,10 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         setTheme("cdroid:style/Theme.Material");
     }
 
-    while (!pending.colors.empty()) {
-        bool resolved = false;
-        for (auto it = pending.colors.begin(); it != pending.colors.end(); ) {
-            auto found = mColors.find(it->second);
-            if (found != mColors.end()) {
-                mColors.insert({it->first, found->second});
-                it = pending.colors.erase(it);
-                resolved = true;
-            } else {
-                ++it;
-            }
-        }
-        if (!resolved) break;
-    }
-
-    while (!pending.dimens.empty()) {
-        bool resolved = false;
-        for (auto it = pending.dimens.begin(); it != pending.dimens.end(); ) {
-            auto found = mDimensions.find(it->second);
-            if (found != mDimensions.end()) {
-                mDimensions.insert({it->first, found->second});
-                it = pending.dimens.erase(it);
-                resolved = true;
-            } else {
-                ++it;
-            }
-        }
-        if (!resolved) break;
-    }
-
-    for (auto& c : pending.colors) {
-        LOGD("color %s-->%s unresolved", c.first.c_str(), c.second.c_str());
-    }
-    for (auto& d : pending.dimens) {
-        LOGD("dimen %s-->%s unresolved", d.first.c_str(), d.second.c_str());
-    }
+    // pending.colors / pending.dimens resolved cross-references into the retired
+    // text caches (mColors/mDimensions); those caches are gone, so nothing feeds
+    // these queues now. Only pending.colorStateList still resolves (via the
+    // arsc-backed getColorStateList(name) → Resources::loadComplexColor(id)).
     while (!pending.colorStateList.empty()) {
         bool resolved = false;
         for (auto it = pending.colorStateList.begin(); it != pending.colorStateList.end(); ) {
@@ -652,10 +522,9 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     for(auto c:pending.colorStateList){
         LOGD("colorStateList %s unresolved", c.first.c_str());
     }
-    const size_t preloadCount = mColors.size()+mDimensions.size()+mStateColors.size()+mArraies.size()+mStyles.size()+mStrings.size();
-    LOGI("[%s] load %d assets from %d files [%d id,%d colors,%d stateColors, %d array,%d style,%d string,%d dimens] mTheme.size=%d used %dms",
-         package.c_str(),preloadCount,count, mIDS.size(),mColors.size(),mStateColors.size(),mArraies.size(), mStyles.size(),
-         mStrings.size(),mDimensions.size(),mTheme.getAttributeCount(),int(SystemClock::uptimeMillis()-sttm));
+    LOGI("[%s] loaded %d files, %d styles, %d theme attrs, used %dms",
+         package.c_str(), count, mStyles.size(), mTheme.getAttributeCount(),
+         int(SystemClock::uptimeMillis()-sttm));
     return pak?0:-1;
 }
 
@@ -800,6 +669,9 @@ Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(const std::string&resname,i
     return nullptr;
 }
 
+#if 0  // retired: Assets::getId(const std::string&) — zero callers. Use R::id::* (int)
+       // or Resources.getIdentifier(name,type,pkg). Kept for reference until AttributeSet
+       // string-key retirement completes the last string-id path.
 int Assets::getId(const std::string&resname)const {
     std::string resid,pkg;
     std::string key = resname;
@@ -822,16 +694,14 @@ int Assets::getId(const std::string&resname)const {
     parseResource(key,&resid,&pkg);
 
     // arsc is the single id source for binary apps: R.h is dumped from the same
-    // arsc (aapt2_gen_rh), so the resolved id matches View::getId(). mIDS (idgen's
-    // values/ID.xml) is the text-fallback for apps whose aapt2 link failed.
+    // arsc (aapt2_gen_rh), so the resolved id matches View::getId().
     if (mResTable) {
         uint32_t id = arscGetIdentifier(resid, "id", pkg);
         if (id != 0) return (int)id;
     }
-    auto it = mIDS.find(pkg+":"+resid);
-    if(it != mIDS.end()) return it->second;
     return -1;
 }
+#endif
 
 int Assets::getNextAutofillId(){
     return mNextAutofillViewId++;
@@ -870,19 +740,14 @@ const std::string Assets::getString(const std::string& resid,const std::string&l
     parseResource(resid,&name,&pkg);
     std::string rawName = name; // save before normalize for arsc lookup
     name = AttributeSet::normalize(pkg,resid);
-    // arsc is the single string source for binary apps (mStrings text is fallback).
-    bool resolved = false;
+    // arsc is the single string source for binary apps.
     if (mResTable && mResTable->getError() == 0) {
         uint32_t id = arscGetIdentifier(rawName, "string", pkg);
         if (id != 0) {
             size_t len = 0;
             const char16_t* s = mResTable->getResourceString(id, &len);
-            if (s && len > 0) { str = u16toUtf8(s, len); resolved = true; }
+            if (s && len > 0) { str = u16toUtf8(s, len); }
         }
-    }
-    if (!resolved) {
-        auto itr = mStrings.find(name);
-        if(itr != mStrings.end()) str = itr->second;
     }
     TextUtils::replace(str,"\\n","\n");
     return str;
@@ -906,12 +771,6 @@ size_t Assets::getArray(const std::string&resid,std::vector<int>&out) {
                 return count;
             }
         }
-    }
-    auto it = mArraies.find(fullname);
-    if(it != mArraies.end()) {
-        for(auto itm:it->second)
-           out.emplace_back(std::stoi(itm));
-        return it->second.size();
     }
     return  0;
 }
@@ -939,14 +798,6 @@ size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
                 return count;
             }
         }
-    }
-    auto it = mArraies.find(fullname);
-    if(it != mArraies.end()) {
-        for(auto itm:it->second){
-            itm = AttributeSet::normalize(pkg,itm);
-            out.emplace_back(itm);
-        }
-        return it->second.size();
     }
     ZIPArchive * pak = getResource(resid,&name,nullptr);
     if(pak)pak->forEachEntry([&out,pkg](const std::string&res){
@@ -1031,19 +882,30 @@ Drawable* Assets::getDrawable(const std::string&resid) {
         return d;
     }
     if(resname.find("color/")!=std::string::npos){
-        auto itc = mColors.find(fullresid);
-        auto its = mStateColors.find(fullresid);
-        if( itc != mColors.end() ){
-            const uint32_t cc = (uint32_t)getColor(fullresid);
-            LOGV("%s use colors as drawable",fullresid.c_str());
-            d = new ColorDrawable(cc);
-            mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
-            return d;
-        } else if(its != mStateColors.end()){
-            LOGV("%s use colorstatelist as drawable",fullresid.c_str());
-            d = new StateListDrawable(*its->second);
-            mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
-            return d;
+        // Resolve a color/ resource as a drawable: a plain color-int becomes a
+        // ColorDrawable; a color-state-list (selector) becomes a StateListDrawable.
+        if (mResTable) {
+            std::string pkg2, rel2;
+            parseResource(fullresid, &rel2, &pkg2);
+            uint32_t id = arscGetIdentifier(rel2, "color", pkg2);
+            if (id != 0) {
+                Res_value v;
+                if (mResTable->getResource(id, &v) >= 0 &&
+                    v.dataType >= Res_value::TYPE_FIRST_COLOR_INT &&
+                    v.dataType <= Res_value::TYPE_LAST_COLOR_INT) {
+                    LOGV("%s use colors as drawable",fullresid.c_str());
+                    d = new ColorDrawable((uint32_t)v.data);
+                    mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
+                    return d;
+                }
+                auto csl = getColorStateList(fullresid);
+                if (csl) {
+                    LOGV("%s use colorstatelist as drawable",fullresid.c_str());
+                    d = new StateListDrawable(*csl);
+                    mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
+                    return d;
+                }
+            }
         }
     }
 
@@ -1098,18 +960,21 @@ int Assets::getDimension(const std::string&refid)const{
             }
         }
     }
-    name = resolveAttrValue(refid);
-    auto it = mDimensions.find(name);
-    if(it != mDimensions.end())
-        return GET_VARIANT(it->second,int);
-    LOGW("Resource not found:%s",refid.c_str());
+    // Resource-not-found is a normal runtime case here, not a fault:
+    // AttributeSet::getDimension() forwards any ':'-bearing attribute value
+    // (e.g. a "@android:color/..." reference) to this method, which only
+    // resolves the "dimen" type — so color/style references legitimately miss.
+    // The trimmed framework arsc also omits many private resources. AOSP's
+    // getDimension throws NotFoundException that the caller catches to use its
+    // default; we mirror that by silently returning 0. LOGD keeps it diagnosable.
+    LOGD("getDimension: %s not a dimen resource", refid.c_str());
     return 0;
 }
 
 int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
     std::string pkg,name = refid;
     parseResource(name,nullptr,&pkg);
-    // arsc is the single dimen source for binary apps (mDimensions text is fallback).
+    // arsc is the single dimen source for binary apps.
     if (mResTable) {
         std::string rawName;
         parseResource(refid, &rawName, nullptr);
@@ -1130,11 +995,6 @@ int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
             }
         }
     }
-    name = AttributeSet::normalize(pkg,name);
-    auto it = mDimensions.find(name);
-    if(it != mDimensions.end()){
-        return GET_VARIANT(it->second,int);
-    }
     return def;
 }
 
@@ -1145,7 +1005,7 @@ bool Assets::getBoolean(const std::string&refid)const{
 float Assets::getFloat(const std::string&refid,float def)const{
     std::string pkg,name = refid;
     parseResource(name,nullptr,&pkg);
-    // arsc is the single dimen/float source for binary apps (mDimensions text is fallback).
+    // arsc is the single dimen/float source for binary apps.
     if (mResTable) {
         std::string rawName;
         parseResource(refid, &rawName, nullptr);
@@ -1163,11 +1023,6 @@ float Assets::getFloat(const std::string&refid,float def)const{
                     return complexToFloat(v.data);
             }
         }
-    }
-    name = AttributeSet::normalize(pkg,name);
-    auto it = mDimensions.find(name);
-    if(it != mDimensions.end()){
-        return GET_VARIANT(it->second,float);
     }
     return def;
 }
@@ -1191,7 +1046,7 @@ int Assets::getColor(const std::string&refid) {
     }
     std::string pkg,relname,name = refid;
     parseResource(name,&relname,&pkg);
-    // arsc is the single color source for binary apps (mColors text is fallback).
+    // arsc is the single color source for binary apps.
     if (mResTable) {
         uint32_t id = arscGetIdentifier(relname, "color", pkg);
         if (id != 0) {
@@ -1203,21 +1058,13 @@ int Assets::getColor(const std::string&refid) {
             }
         }
     }
-    name = AttributeSet::normalize(pkg,name);
-    auto it = mColors.find(name);
-    if(it != mColors.end()) {
-        return it->second;
-    }
     if(relname.compare(0,4,"attr")==0){
         relname=relname.substr(5);
         name =  themeString(relname, pkg);
         return getColor(name);
     }else if(refid.find("?")!=std::string::npos){
-        std::string clrRef = name;//mTheme.getString(name.substr(6));
+        std::string clrRef = name;
         TextUtils::replace(clrRef,"attr","color");
-        it = mColors.find(clrRef);
-        if(it != mColors.end())
-            return it->second;
         name = name.substr(name.find_last_of(":?/")+1);
         clrRef = themeString(name, pkg);
         return getColor(clrRef);
@@ -1235,15 +1082,6 @@ cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullr
     std::string pkg,name = fullresid,relname;
     parseResource(name,&relname,&pkg);
     name = AttributeSet::normalize(pkg,name);
-    auto itc = mColors.find(name);
-    auto its = mStateColors.find(name);
-    if( its != mStateColors.end())
-        return its->second;
-    else if(itc != mColors.end()){
-        auto cls = ColorStateList::valueOf(itc->second);
-        mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
-        return cls;
-    }
     // Fallback: resolve from resources.arsc via ResTable.
     if (mResTable) {
         uint32_t id = arscGetIdentifier(relname, "color", pkg);
@@ -1253,7 +1091,6 @@ cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullr
                 v.dataType >= Res_value::TYPE_FIRST_COLOR_INT &&
                 v.dataType <= Res_value::TYPE_LAST_COLOR_INT) {
                 auto cls = ColorStateList::valueOf(v.data);
-                mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
                 return cls;
             }
         }
@@ -1279,19 +1116,8 @@ cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullr
                     cls = ColorStateList::createFromXml(r, parser);
                 }
             }
-            mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
             return cls;
         }catch(std::exception&e){
-            std::string realName;
-            parseResource(fullresid,&realName,nullptr);
-            if(realName.find("?")!=std::string::npos)
-            realName = themeString(realName, pkg);
-            itc = mColors.find(realName);
-            if(itc != mColors.end()){
-                auto cls = ColorStateList::valueOf(itc->second);
-                mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
-                return cls;
-            }
         }
     } else if(fullresid.find("attr")!=std::string::npos) {
         const size_t slashpos = fullresid.find("/");

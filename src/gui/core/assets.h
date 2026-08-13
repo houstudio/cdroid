@@ -46,15 +46,15 @@ private:
     std::string mLanguage;
     std::string mThemeName;
     AttributeSet mTheme;
-    std::unordered_map<std::string,std::string>mStrings;
-    std::unordered_map<std::string,int>mIDS;
-    std::unordered_map<std::string,std::vector<std::string>>mArraies;
+    //std::unordered_map<std::string,std::string>mStrings; // retired: arsc getString(int)
+    //std::unordered_map<std::string,int>mIDS; // retired: arsc ID path (Resources.getIdentifier)
+    //std::unordered_map<std::string,std::vector<std::string>>mArraies; // retired: arsc getStringArray(int)
     std::unordered_map<std::string,std::weak_ptr<Drawable::ConstantState>>mDrawables;
     std::unordered_map<std::string,class ZIPArchive*>mResources;
     std::unordered_map<std::string,AttributeSet>mStyles;
-    std::unordered_map<std::string,uint32_t>mColors;
-    std::unordered_map<std::string,nonstd::variant<int,float>>mDimensions;
-    std::unordered_map<std::string,std::shared_ptr<ColorStateList>>mStateColors;
+    //std::unordered_map<std::string,uint32_t>mColors; // retired: arsc getColor(int)
+    //std::unordered_map<std::string,nonstd::variant<int,float>>mDimensions; // retired: arsc getDimension(int)
+    //std::unordered_map<std::string,std::shared_ptr<ColorStateList>>mStateColors; // retired: arsc loadComplexColor(int)
     ResTable* mResTable;   // loaded from resources.arsc in pak (null if no arsc)
     ResTable::Theme* mArscTheme = nullptr;  // theme built from arsc (null if none)
     // arsc identifier lookup: tries the given package first, then "android"
@@ -108,7 +108,7 @@ public:
     void setTheme(const std::string&theme)override;
     void setTheme(int resid) override;
     const DisplayMetrics&getDisplayMetrics()const override;
-    int getId(const std::string&)const override;
+    //int getId(const std::string&)const override; // retired: use R::id::* (int) or Resources.getIdentifier
     int getNextAutofillId()override;
     const std::string getString(const std::string&id,const std::string&lan="")override;
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&,int width,int height)override;

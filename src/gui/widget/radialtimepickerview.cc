@@ -168,16 +168,16 @@ RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* 
     mPaint[MINUTES].setTextAlign(Paint::Align::CENTER);
 
     Context* ctx = getContext();
-    mSelectorRadius   = ctx->getDimensionPixelSize("timepicker_selector_radius", 20);
-    mSelectorStroke   = ctx->getDimensionPixelSize("timepicker_selector_stroke", 2);
-    mSelectorDotRadius= ctx->getDimensionPixelSize("timepicker_selector_dot_radius", 4);
-    mCenterDotRadius  = ctx->getDimensionPixelSize("timepicker_center_dot_radius", 3);
-    mTextSize[HOURS]       = ctx->getDimensionPixelSize("timepicker_text_size_normal", 16);
+    mSelectorRadius   = ctx->getDimensionPixelSize(R::dimen::timepicker_selector_radius);
+    mSelectorStroke   = ctx->getDimensionPixelSize(R::dimen::timepicker_selector_stroke);
+    mSelectorDotRadius= ctx->getDimensionPixelSize(R::dimen::timepicker_selector_dot_radius);
+    mCenterDotRadius  = ctx->getDimensionPixelSize(R::dimen::timepicker_center_dot_radius);
+    mTextSize[HOURS]       = ctx->getDimensionPixelSize(R::dimen::timepicker_text_size_normal);
     mTextSize[MINUTES]     = mTextSize[HOURS];
-    mTextSize[HOURS_INNER] = ctx->getDimensionPixelSize("timepicker_text_size_inner", 14);
-    mTextInset[HOURS]      = ctx->getDimensionPixelSize("timepicker_text_inset_normal", 22);
+    mTextSize[HOURS_INNER] = ctx->getDimensionPixelSize(R::dimen::timepicker_text_size_inner);
+    mTextInset[HOURS]      = ctx->getDimensionPixelSize(R::dimen::timepicker_text_inset_normal);
     mTextInset[MINUTES]    = mTextInset[HOURS];
-    mTextInset[HOURS_INNER]= ctx->getDimensionPixelSize("timepicker_text_inset_inner", 10);
+    mTextInset[HOURS_INNER]= ctx->getDimensionPixelSize(R::dimen::timepicker_text_inset_inner);
 
     mShowHours = true;
     mHoursToMinutes = (float) HOURS;

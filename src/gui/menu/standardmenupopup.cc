@@ -68,7 +68,7 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
     mGlobalLayoutListener=[this](){
         onGlobalLayout();
     };
-    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,context->getDimensionPixelSize("cdroid:dimen/config_prefDialogWidth"));
+    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,context->getDimensionPixelSize(R::dimen::config_prefDialogWidth));
     mAnchorView = anchorView;
     mPopup = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"), mPopupStyleAttr, mPopupStyleRes);
 

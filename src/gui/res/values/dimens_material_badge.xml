@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material badge dimens, ported from com.google.android.material.badge
+         (research/material-components-android). Referenced via R::dimen::* so
+         BadgeDrawable/BadgeState/BadgeUtils read them through the arsc id-path
+         instead of the legacy string-key path.
+         mtrl_badge_radius / mtrl_badge_with_text_radius stay string-keyed: they
+         are CDROID-specific global overrides (Material computes radius
+         dynamically); a fixed value would clobber BADGE_RADIUS_NOT_SPECIFIED. -->
+    <dimen name="mtrl_badge_long_text_horizontal_padding">4dp</dimen>
+    <dimen name="mtrl_badge_horizontal_edge_offset">4dp</dimen>
+    <dimen name="mtrl_badge_text_horizontal_edge_offset">6dp</dimen>
+    <dimen name="mtrl_badge_toolbar_action_menu_item_horizontal_offset">12dp</dimen>
+    <dimen name="mtrl_badge_toolbar_action_menu_item_vertical_offset">12dp</dimen>
+    <dimen name="m3_badge_size">6dp</dimen>
+    <dimen name="m3_badge_with_text_size">16dp</dimen>
+    <dimen name="m3_badge_with_text_vertical_padding">2dp</dimen>
+</resources>

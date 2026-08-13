@@ -983,7 +983,7 @@ void LocalFloatingToolbarPopup::OverflowItemAdapter::clear() {
 LocalFloatingToolbarPopup::OverflowPanelViewHelper::OverflowPanelViewHelper(Context* context, int iconTextSpacing)
     : mContext(context)
     , mIconTextSpacing(iconTextSpacing)
-    , mSidePadding(context->getDimensionPixelSize("cdroid:dimen/floating_toolbar_overflow_side_padding"))
+    , mSidePadding(context->getDimensionPixelSize(R::dimen::floating_toolbar_overflow_side_padding))
     , mCalculator(nullptr) {
     mCalculator = createMenuButton(nullptr);
 }

@@ -18,8 +18,10 @@
 #include <porting/cdlog.h>
 #include <drawable/badgedrawable.h>
 #include <drawable/badgestate.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std::string& defStyleAttr,const std::string& defStyleRes,State* storedState) {
     currentState = new State();
     if (storedState == nullptr) {
@@ -40,17 +42,17 @@ BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std:
 
     mBadgeRadius = a.getDimensionPixelSize("badgeRadius", (int)BadgeDrawable::BADGE_RADIUS_NOT_SPECIFIED);
 
-    mHorizontalInset = context->getDimensionPixelSize("@cdroid:dimen/mtrl_badge_horizontal_edge_offset");
+    mHorizontalInset = context->getDimensionPixelSize(R::dimen::mtrl_badge_horizontal_edge_offset);
 
-    mHorizontalInsetWithText =context->getDimensionPixelSize("@cdroid:dimen/mtrl_badge_text_horizontal_edge_offset");
+    mHorizontalInsetWithText =context->getDimensionPixelSize(R::dimen::mtrl_badge_text_horizontal_edge_offset);
 
     mBadgeWithTextRadius = a.getDimensionPixelSize("badgeWithTextRadius", (int)BadgeDrawable::BADGE_RADIUS_NOT_SPECIFIED);
-    mBadgeWidth = a.getDimension("badgeWidth", context->getDimension("@cdroid:dimen/m3_badge_size"));
+    mBadgeWidth = a.getDimension("badgeWidth", context->getDimension(R::dimen::m3_badge_size));
     mBadgeWithTextWidth =a.getDimension("badgeWithTextWidth",
-            context->getDimension("@cdroid:dimen/m3_badge_with_text_size"));
-    mBadgeHeight = a.getDimension("badgeHeight", context->getDimension("@cdroid:dimen/m3_badge_size"));
+            context->getDimension(R::dimen::m3_badge_with_text_size));
+    mBadgeHeight = a.getDimension("badgeHeight", context->getDimension(R::dimen::m3_badge_size));
     mBadgeWithTextHeight = a.getDimension("badgeWithTextHeight",
-            context->getDimension("@cdroid:dimen/m3_badge_with_text_size"));
+            context->getDimension(R::dimen::m3_badge_with_text_size));
 
     mOffsetAlignmentMode = a.getInt("offsetAlignmentMode",std::unordered_map<std::string,int>{
             {"edge" ,(int)BadgeDrawable::OFFSET_ALIGNMENT_MODE_EDGE},
@@ -85,7 +87,7 @@ BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std:
 
     currentState->contentDescriptionNumberless =
         storedState->contentDescriptionNumberless == null
-        ? context->getString("@cdroid:string/mtrl_badge_numberless_content_description")
+        ? context->getString(R::string::mtrl_badge_numberless_content_description)
         : storedState->contentDescriptionNumberless;
 
     currentState->contentDescriptionQuantityStrings =
@@ -163,11 +165,11 @@ BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std:
 
     currentState->badgeHorizontalPadding = (storedState->badgeHorizontalPadding == INT_MIN)
         ? a.getDimensionPixelSize("badgeWidePadding",
-                context->getDimensionPixelSize("cdroid:dimen/mtrl_badge_long_text_horizontal_padding"))
+                context->getDimensionPixelSize(R::dimen::mtrl_badge_long_text_horizontal_padding))
         : storedState->badgeHorizontalPadding;
     currentState->badgeVerticalPadding = (storedState->badgeVerticalPadding == INT_MIN)
         ? a.getDimensionPixelSize("badgeVerticalPadding",
-                context->getDimensionPixelSize("cdroid:dimen/m3_badge_with_text_vertical_padding"))
+                context->getDimensionPixelSize(R::dimen::m3_badge_with_text_vertical_padding))
         : storedState->badgeVerticalPadding;
 
     currentState->horizontalOffsetWithoutText = (storedState->horizontalOffsetWithoutText == INT_MIN)
