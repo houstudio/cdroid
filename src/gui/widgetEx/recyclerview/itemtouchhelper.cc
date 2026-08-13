@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>  // cdroid::internal::R (framework res ids)
 #include <core/build.h>
 #include <utils/mathutils.h>
 #include <view/gesturedetector.h>
@@ -210,8 +211,8 @@ void ItemTouchHelper::attachToRecyclerView(RecyclerView* recyclerView) {
     mRecyclerView = recyclerView;
     if (recyclerView != nullptr) {
         cdroid::Context*ctx = recyclerView->getContext();
-        mSwipeEscapeVelocity = ctx->getDimension("cdroid:dimen/item_touch_helper_swipe_escape_velocity");
-        mMaxSwipeVelocity = ctx->getDimension("cdroid:dimen/item_touch_helper_swipe_escape_max_velocity");
+        mSwipeEscapeVelocity = ctx->getDimension(cdroid::internal::R::dimen::item_touch_helper_swipe_escape_velocity);
+        mMaxSwipeVelocity = ctx->getDimension(cdroid::internal::R::dimen::item_touch_helper_swipe_escape_max_velocity);
         setupCallbacks();
     }
 }

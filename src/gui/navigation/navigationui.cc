@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>  // cdroid::internal::R (framework res ids)
 #include <navigation/navigationui.h>
 #include <navigation/appbarconfiguration.h>
 #include <navigation/navdestination.h>
@@ -85,7 +86,7 @@ void NavigationUI::setupWithNavController(Toolbar* toolbar, NavController* navCo
                 toolbar->setNavigationIcon(nullptr);
             }else{
                 toolbar->setNavigationIcon(
-                    toolbar->getContext()->getDrawable("cdroid:drawable/ic_ab_back_holo_dark"));
+                    toolbar->getContext()->getDrawable(cdroid::internal::R::drawable::ic_ab_back_holo_dark));
             }
         });
     // Wired once, unconditionally — navigateUp itself decides drawer-vs-pop from the configuration.

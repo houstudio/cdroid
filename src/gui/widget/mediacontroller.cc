@@ -116,8 +116,8 @@ View* MediaController::makeControllerView() {
 }
 
 void MediaController::initControllerView(View* v) {
-    mPlayDescription = mContext->getString("cdroid:string/lockscreen_transport_play_description");
-    mPauseDescription = mContext->getString("cdroid:string/lockscreen_transport_pause_description");
+    mPlayDescription = mContext->getString(R::string::lockscreen_transport_play_description);
+    mPauseDescription = mContext->getString(R::string::lockscreen_transport_pause_description);
     mPauseButton = (ImageButton*)v->findViewById(R::id::pause);
     if (mPauseButton) {
         mPauseButton->requestFocus();

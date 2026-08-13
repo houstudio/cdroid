@@ -612,11 +612,11 @@ void LocalFloatingToolbarPopup::setPanelsStatesAtRestingPosition() {
         mOverflowPanel->setVisibility(View::VISIBLE);
         // Overflow button shows the back arrow (AOSP mArrow == ft_avd_tooverflow).
         // Fresh instance: CDROID ImageView owns+deletes it (see file header note).
-        Drawable* arrowIcon = mContext->getDrawable("cdroid:drawable/ft_avd_tooverflow");
+        Drawable* arrowIcon = mContext->getDrawable(R::drawable::ft_avd_tooverflow);
         if (arrowIcon) arrowIcon->setAutoMirrored(true);
         mOverflowButton->setImageDrawable(arrowIcon);
         mOverflowButton->setContentDescription(
-                mContext->getString("cdroid:string/floating_toolbar_close_overflow_description"));
+                mContext->getString(R::string::floating_toolbar_close_overflow_description));
 
         // Update x-coordinates. (TODO 3b-anim: RTL branch.)
         // LTR: align container right; main panel aligns right; overflow button + panel align left.
@@ -647,11 +647,11 @@ void LocalFloatingToolbarPopup::setPanelsStatesAtRestingPosition() {
         mOverflowPanel->setAlpha(0);
         mOverflowPanel->setVisibility(View::INVISIBLE);
         // Overflow button shows the more icon (AOSP mOverflow == ft_avd_toarrow).
-        Drawable* overflowIcon = mContext->getDrawable("cdroid:drawable/ft_avd_toarrow");
+        Drawable* overflowIcon = mContext->getDrawable(R::drawable::ft_avd_toarrow);
         if (overflowIcon) overflowIcon->setAutoMirrored(true);
         mOverflowButton->setImageDrawable(overflowIcon);
         mOverflowButton->setContentDescription(
-                mContext->getString("cdroid:string/floating_toolbar_open_overflow_description"));
+                mContext->getString(R::string::floating_toolbar_open_overflow_description));
 
         if (hasOverflow()) {
             // Update x-coordinates. (TODO 3b-anim: RTL branch.)
@@ -784,7 +784,7 @@ ImageButton* LocalFloatingToolbarPopup::createOverflowButton() {
     ImageButton* overflowButton = (ImageButton*) LayoutInflater::from(mContext)
             ->inflate("cdroid:layout/floating_popup_overflow_button", nullptr);
     // Closed-state icon (AOSP mOverflow == ft_avd_toarrow). Fresh: ImageView owns+deletes it.
-    Drawable* overflowIcon = mContext->getDrawable("cdroid:drawable/ft_avd_toarrow");
+    Drawable* overflowIcon = mContext->getDrawable(R::drawable::ft_avd_toarrow);
     if (overflowIcon) overflowIcon->setAutoMirrored(true);
     overflowButton->setImageDrawable(overflowIcon);
     overflowButton->setOnClickListener([this](View& /*v*/) {

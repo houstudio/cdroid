@@ -24,6 +24,8 @@
 #include <drawable/ninepatchdrawable.h>
 #include <drawable/animatedimagedrawable.h>
 #include <image-decoders/imagedecoder.h>
+#include <androidfw/typedvalue.h>  // TypedValue (id-based createAsDrawable path)
+#include <core/asset.h>            // Asset (openRawResource)
 #include <utils/textutils.h>
 #include <core/context.h>
 #include <png.h>
@@ -247,6 +249,17 @@ Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std:
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
     std::unique_ptr<std::istream> istm = ctx ? ctx->getInputStream(resourceId) : std::make_unique<std::ifstream>(resourceId);
     if((istm==nullptr)||(!*istm)) return nullptr;
+    // Slurp into a seekable in-memory buffer (see decodeStream note).
+    auto seekable = std::make_unique<std::istringstream>(
+        std::string((std::istreambuf_iterator<char>(*istm)), std::istreambuf_iterator<char>()));
+    return decodeDrawableStream(ctx, std::move(seekable), resourceId);
+}
+
+// Shared decode core for createAsDrawable(string) and createAsDrawable(int).
+// `path` is the file path (for 9-patch/.gif/.webp/.png checks + AnimatedImage).
+Drawable* ImageDecoder::decodeDrawableStream(Context* ctx,
+        std::unique_ptr<std::istream> istm, const std::string& path) {
+    if ((istm == nullptr) || (!*istm)) return nullptr;
     // Slurp into a seekable in-memory buffer. getDetector reads the magic then
     // seeks back to 0 (libpng re-reads the signature), but ZipStreamBuf's seek
     // is unreliable on compressed (DEFLATED) pak entries — it works on STORED
@@ -264,30 +277,45 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
         // .png, so the filename no longer carries .9). Keep the .9.png fallback for any
         // bordered source loaded directly without an embedded chunk.
         const std::vector<uint8_t>* npChunk = decoder ? decoder->getNinePatchChunk() : nullptr;
-        if(npChunk != nullptr || TextUtils::endWith(resourceId,".9.png"))
+        if(npChunk != nullptr || TextUtils::endWith(path,".9.png"))
             d = new NinePatchDrawable(image, npChunk);
         else if( (image->get_width() >0) && (image->get_height() > 0) ){
-            //TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(resourceId,".gif"))
             d = new BitmapDrawable(image);
         }
         if(d != nullptr) {
 #if !defined(NDEBUG)
-            d->getConstantState()->mResource=resourceId;
+            d->getConstantState()->mResource=path;
 #endif
             return d;
         }
     }
 
-    if( ((istm!=nullptr)&&(*istm)) && (TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")
-            ||TextUtils::endWith(resourceId,".apng")||TextUtils::endWith(resourceId,".png"))){
-	    Drawable* d = new AnimatedImageDrawable(ctx,resourceId);
-        LOGD_IF(d==nullptr,"%s load failed!",resourceId.c_str());
+    if( ((istm!=nullptr)&&(*istm)) && (TextUtils::endWith(path,".gif")||TextUtils::endWith(path,".webp")
+            ||TextUtils::endWith(path,".apng")||TextUtils::endWith(path,".png"))){
+	    Drawable* d = new AnimatedImageDrawable(ctx,path);
+        LOGD_IF(d==nullptr,"%s load failed!",path.c_str());
         if(d != nullptr){
-            d->getConstantState()->mResource=resourceId;
+            d->getConstantState()->mResource=path;
             return d;
         }
     }
     return nullptr;
+}
+
+Drawable* ImageDecoder::createAsDrawable(Context* ctx, int id) {
+    if (ctx == nullptr) return nullptr;
+    // Resolve the file path (for 9-patch / animated-extension checks) + open the
+    // asset by id. ResourcesImpl self-loads by id, so no string-name round-trip.
+    TypedValue tv;
+    if (!ctx->getResources().getValue(id, &tv, true) || tv.type != TypedValue::TYPE_STRING) return nullptr;
+    std::string path = TextUtils::utf16_utf8(reinterpret_cast<const uint16_t*>(tv.string), tv.stringLen);
+    std::unique_ptr<Asset> asset(ctx->openRawResource(id));
+    if (asset == nullptr) return nullptr;
+    const off64_t sz = asset->getLength();
+    if (sz <= 0) return nullptr;
+    std::string buf((size_t)sz, '\0');
+    asset->read(&buf[0], (size_t)sz);
+    return decodeDrawableStream(ctx, std::make_unique<std::istringstream>(std::move(buf)), path);
 }
 
 }/*endof namespace*/

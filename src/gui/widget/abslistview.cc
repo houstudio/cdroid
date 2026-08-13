@@ -885,7 +885,7 @@ int AbsListView::computeVerticalScrollRange() {
 }
 
 void AbsListView::useDefaultSelector() {
-    setSelector(getContext()->getDrawable("cdroid:drawable/list_selector_background"));
+    setSelector(getContext()->getDrawable(R::drawable::list_selector_background));
 }
 
 bool AbsListView::isStackFromBottom()const {

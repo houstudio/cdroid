@@ -24,7 +24,7 @@ ToolbarWidgetWrapper::ToolbarWidgetWrapper(Toolbar* toolbar, bool style)
     mSubtitle = mToolbar->getSubtitle();
     mTitleSet = !mTitle.empty();
     mNavIcon = mToolbar->getNavigationIcon();
-    mDefaultNavigationIcon = mToolbar->getContext()->getDrawable("cdroid:drawable/ic_ab_back_holo_dark");
+    mDefaultNavigationIcon = mToolbar->getContext()->getDrawable(R::drawable::ic_ab_back_holo_dark);
     // style==true reads the ActionBar style theme attrs; it is intentionally not ported (the only
     // call site, ToolbarActionBar, passes false). For style==false upstream runs detectDisplayOptions().
     if(!style){

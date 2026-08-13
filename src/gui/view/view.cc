@@ -2915,7 +2915,7 @@ bool View::isDraggingScrollBar() const{
 
 void View::initializeScrollIndicatorsInternal(){
     if (mScrollIndicatorDrawable == nullptr) {
-        mScrollIndicatorDrawable = mContext->getDrawable("cdroid:drawable/scroll_indicator_material");
+        mScrollIndicatorDrawable = mContext->getDrawable(R::drawable::scroll_indicator_material);
     }
     if( mScrollIndicatorDrawable == nullptr){
         Shape*sp=new RectShape();

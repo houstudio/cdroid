@@ -22,6 +22,8 @@
 #include <drawable/drawable.h>        // Drawable::ConstantState
 #include <drawable/colordrawable.h>   // ColorDrawable (color-drawable path)
 #include <drawable/colorstatelist.h>  // ColorStateList cache + createFromXml
+#include <drawable/drawableinflater.h>  // DrawableInflater::inflateFromXml (xml drawable self-load)
+#include <image-decoders/imagedecoder.h>  // ImageDecoder::createAsDrawable(id) (image self-load)
 #include <core/context.h>             // inflation bridge (mCtx)
 #include <core/xmlpullparser.h>       // ColorStateList::createFromXml inline inflate
 
@@ -387,9 +389,25 @@ cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/) 
     if (value.type >= TypedValue::TYPE_FIRST_COLOR_INT &&
         value.type <= TypedValue::TYPE_LAST_COLOR_INT) {
         d = new ColorDrawable(value.data);
-    } else {
-        std::string ref;
-        if (getResourceName(id, &ref)) d = mCtx->getDrawable(ref);
+    } else if (value.type == TypedValue::TYPE_STRING) {
+        // AOSP loadDrawableForCookie: ResourcesImpl loads the file drawable ITSELF
+        // (opens by id, inflates) — not via Context.getDrawable(string). value.string
+        // is the file path; .xml → DrawableInflater (id-based parser + inflateFromXml,
+        // which already takes Resources&), else → ImageDecoder::createAsDrawable(id).
+        std::string path = u16to8(value.string, value.stringLen);
+        if (path.find(".xml") != std::string::npos) {
+            XmlPullParser parser(mCtx, id);
+            int type;
+            while ((type = parser.next()) != XmlPullParser::START_TAG &&
+                   type != XmlPullParser::END_DOCUMENT) {}
+            if (type == XmlPullParser::START_TAG) {
+                const AttributeSet& attrs = parser;
+                d = DrawableInflater::inflateFromXml(mCtx->getResources(),
+                                                     parser.getName(), parser, attrs);
+            }
+        } else {
+            d = ImageDecoder::createAsDrawable(mCtx, id);
+        }
     }
     if (d && mDrawableCache) mDrawableCache->put(id, d->getConstantState());
     return d;

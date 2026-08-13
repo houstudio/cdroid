@@ -93,9 +93,9 @@ CompoundButton::~CompoundButton(){
 
 std::string CompoundButton::getButtonStateDescription() {
     if (isChecked()) {
-        return mContext->getString("cdroid:string/checked");
+        return mContext->getString(R::string::checked);
     } else {
-        return mContext->getString("cdroid:string/not_checked");
+        return mContext->getString(R::string::not_checked);
     }
 }
 
