@@ -53,17 +53,14 @@ void MotionEffect::init(const AttributeSet& attrs) {
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     Context* ctx = attrs.getContext();
     auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::MotionEffect);
-    mMotionEffectStart = std::max(0, std::min(99, ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_start) ? ta->getInt(R::styleable::MotionEffect_motionEffect_start, mMotionEffectStart) : attrs.getInt("motionEffect_start", mMotionEffectStart)));
-    mMotionEffectEnd   = std::max(0, std::min(99, ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_end) ? ta->getInt(R::styleable::MotionEffect_motionEffect_end, mMotionEffectEnd) : attrs.getInt("motionEffect_end", mMotionEffectEnd)));
-    mMotionEffectTranslationX = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_translationX) ? ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationX, mMotionEffectTranslationX) : attrs.getDimensionPixelOffset("motionEffect_translationX", mMotionEffectTranslationX);
-    mMotionEffectTranslationY = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_translationY) ? ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationY, mMotionEffectTranslationY) : attrs.getDimensionPixelOffset("motionEffect_translationY", mMotionEffectTranslationY);
-    mMotionEffectAlpha  = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_alpha) ? ta->getFloat(R::styleable::MotionEffect_motionEffect_alpha, mMotionEffectAlpha) : attrs.getFloat("motionEffect_alpha", mMotionEffectAlpha);
-    mMotionEffectStrictMove = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_strict) ? ta->getBoolean(R::styleable::MotionEffect_motionEffect_strict, mMotionEffectStrictMove) : attrs.getBoolean("motionEffect_strict", mMotionEffectStrictMove);
-    mViewTransitionId  = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_viewTransition) ? (int)ta->getResourceId(R::styleable::MotionEffect_motionEffect_viewTransition, UNSET) : attrs.getResourceId("motionEffect_viewTransition", UNSET);
-    mFadeMove = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_move) ? ta->getInt(R::styleable::MotionEffect_motionEffect_move, mFadeMove) : attrs.getInt("motionEffect_move", std::unordered_map<std::string,int>{
-        {"auto", (int) AUTO}, {"north", (int) NORTH}, {"south", (int) SOUTH},
-        {"east", (int) EAST}, {"west", (int) WEST}
-    }, mFadeMove);
+    mMotionEffectStart = std::max(0, std::min(99, ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_start) ? ta->getInt(R::styleable::MotionEffect_motionEffect_start, mMotionEffectStart) : mMotionEffectStart));
+    mMotionEffectEnd   = std::max(0, std::min(99, ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_end) ? ta->getInt(R::styleable::MotionEffect_motionEffect_end, mMotionEffectEnd) : mMotionEffectEnd));
+    mMotionEffectTranslationX = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_translationX) ? ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationX, mMotionEffectTranslationX) : mMotionEffectTranslationX;
+    mMotionEffectTranslationY = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_translationY) ? ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationY, mMotionEffectTranslationY) : mMotionEffectTranslationY;
+    mMotionEffectAlpha  = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_alpha) ? ta->getFloat(R::styleable::MotionEffect_motionEffect_alpha, mMotionEffectAlpha) : mMotionEffectAlpha;
+    mMotionEffectStrictMove = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_strict) ? ta->getBoolean(R::styleable::MotionEffect_motionEffect_strict, mMotionEffectStrictMove) : mMotionEffectStrictMove;
+    mViewTransitionId  = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_viewTransition) ? (int)ta->getResourceId(R::styleable::MotionEffect_motionEffect_viewTransition, UNSET) : UNSET;
+    mFadeMove = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_move) ? ta->getInt(R::styleable::MotionEffect_motionEffect_move, mFadeMove) : mFadeMove;
     if (mMotionEffectStart == mMotionEffectEnd) {
         if (mMotionEffectStart > 0) mMotionEffectStart--;
         else mMotionEffectEnd++;

@@ -58,7 +58,7 @@ MotionLayout::MotionLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleA
     // XmlPullParser namespace strip). Resolved into a MotionScene on first measure (buildScene).
     mSceneResource = (ta&&ta->hasValue(R::styleable::ConstraintLayoutLayout_layoutDescription))
         ? ta->getString(R::styleable::ConstraintLayoutLayout_layoutDescription)
-        : attrs.getString("layoutDescription", "");
+        : "";
     // Binary AXML stores @xml/... as TYPE_REFERENCE; TypedArray::getString only
     // returns TYPE_STRING, so it yields "" here. Fall back to the AttributeSet,
     // whose binary path renders the reference to "@xml/scene_scan".

@@ -98,7 +98,7 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defSt
     initAdapterManager();
     initChildrenHelper();
     initAutofill();
-    mClipToPadding = ta&&ta->hasValue(R::styleable::RecyclerView_clipToPadding) ? ta->getBoolean(R::styleable::RecyclerView_clipToPadding, true) : attrs.getBoolean("clipToPadding", true);
+    mClipToPadding = ta->getBoolean(R::styleable::RecyclerView_clipToPadding, true);
     // If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -106,17 +106,17 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defSt
     setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
     // Create the layoutManager if specified.
 
-    std::string layoutManagerName = ta&&ta->hasValue(R::styleable::RecyclerView_layoutManager) ? ta->getString(R::styleable::RecyclerView_layoutManager) : attrs.getString("layoutManager");
-    const int descendantFocusability = ta&&ta->hasValue(R::styleable::RecyclerView_descendantFocusability) ? ta->getInt(R::styleable::RecyclerView_descendantFocusability, -1) : attrs.getInt("descendantFocusability", -1);
+    std::string layoutManagerName = ta->getString(R::styleable::RecyclerView_layoutManager);
+    const int descendantFocusability = ta->getInt(R::styleable::RecyclerView_descendantFocusability, -1);
     if (descendantFocusability == -1) {
         setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
     }
-    mEnableFastScroller = ta&&ta->hasValue(R::styleable::RecyclerView_fastScrollEnabled) ? ta->getBoolean(R::styleable::RecyclerView_fastScrollEnabled, false) : attrs.getBoolean("fastScrollEnabled", false);
+    mEnableFastScroller = ta->getBoolean(R::styleable::RecyclerView_fastScrollEnabled, false);
     if (mEnableFastScroller) {
-        StateListDrawable* verticalThumbDrawable = (StateListDrawable*) (ta&&ta->hasValue(R::styleable::RecyclerView_fastScrollVerticalThumbDrawable) ? ta->getDrawable(R::styleable::RecyclerView_fastScrollVerticalThumbDrawable) : attrs.getDrawable("fastScrollVerticalThumbDrawable"));
-        Drawable* verticalTrackDrawable = ta&&ta->hasValue(R::styleable::RecyclerView_fastScrollVerticalTrackDrawable) ? ta->getDrawable(R::styleable::RecyclerView_fastScrollVerticalTrackDrawable) : attrs.getDrawable("fastScrollVerticalTrackDrawable");
-        StateListDrawable* horizontalThumbDrawable = (StateListDrawable*) (ta&&ta->hasValue(R::styleable::RecyclerView_fastScrollHorizontalThumbDrawable) ? ta->getDrawable(R::styleable::RecyclerView_fastScrollHorizontalThumbDrawable) : attrs.getDrawable("fastScrollHorizontalThumbDrawable"));
-        Drawable* horizontalTrackDrawable = ta&&ta->hasValue(R::styleable::RecyclerView_fastScrollHorizontalTrackDrawable) ? ta->getDrawable(R::styleable::RecyclerView_fastScrollHorizontalTrackDrawable) : attrs.getDrawable("fastScrollHorizontalTrackDrawable");
+        StateListDrawable* verticalThumbDrawable = (StateListDrawable*) (ta->getDrawable(R::styleable::RecyclerView_fastScrollVerticalThumbDrawable));
+        Drawable* verticalTrackDrawable = ta->getDrawable(R::styleable::RecyclerView_fastScrollVerticalTrackDrawable);
+        StateListDrawable* horizontalThumbDrawable = (StateListDrawable*) (ta->getDrawable(R::styleable::RecyclerView_fastScrollHorizontalThumbDrawable));
+        Drawable* horizontalTrackDrawable = ta->getDrawable(R::styleable::RecyclerView_fastScrollHorizontalTrackDrawable);
         initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable,attrs);
     }
     createLayoutManager(context, layoutManagerName, attrs);//, defStyle, defStyleRes);
