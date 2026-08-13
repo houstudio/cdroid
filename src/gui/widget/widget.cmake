@@ -14,6 +14,7 @@ add_custom_command(
     COMMAND ${Python_EXECUTABLE} ${_FW_STYLEABLE_GEN}
             --attrs ${PROJECT_SOURCE_DIR}/res/values/attrs.xml,${PROJECT_SOURCE_DIR}/res/values/attrs_cdroid.xml
             --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
+            --cdroid-ids ${CMAKE_SOURCE_DIR}/scripts/cdroid_attrids.txt
             --name-map ${CMAKE_SOURCE_DIR}/scripts/framework_namemap.txt
             --include-file ${_FW_STYLEABLE_INCLUDE}
             --out-h  ${PROJECT_SOURCE_DIR}/widget/framework_styleable.h
@@ -22,6 +23,7 @@ add_custom_command(
     DEPENDS ${PROJECT_SOURCE_DIR}/res/values/attrs.xml
             ${PROJECT_SOURCE_DIR}/res/values/attrs_cdroid.xml
             ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
+            ${CMAKE_SOURCE_DIR}/scripts/cdroid_attrids.txt
             ${CMAKE_SOURCE_DIR}/scripts/framework_namemap.txt
             ${_FW_STYLEABLE_GEN}
             ${_FW_STYLEABLE_INCLUDE}

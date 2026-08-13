@@ -151,6 +151,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--attrs', required=True)
     ap.add_argument('--fw-ids', required=True)
+    ap.add_argument('--cdroid-ids', default=None,
+                    help='CDROID-private attr IDs (separate from SDK fw-ids so '
+                         'SDK replacement does not lose them)')
     ap.add_argument('--custom-ids', default=None)
     ap.add_argument('--name-map', default=None)
     ap.add_argument('--include', default=None,
@@ -166,6 +169,8 @@ def main():
     args = ap.parse_args()
 
     fw_ids = load_id_map(args.fw_ids)
+    if args.cdroid_ids:
+        fw_ids.update(load_id_map(args.cdroid_ids))
     name_map = load_name_map(args.name_map)
     # --attrs accepts a comma-separated list (per-component attrs.xml files);
     # merge their declare-styleables. A styleable defined in two files is a

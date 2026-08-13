@@ -1,0 +1,24 @@
+# CDROID-private attrs (from attrs_cdroid.xml → cdroid.pak → internal_R.h).
+# Independent from framework_attrids.txt so SDK replacement does not lose them.
+# Format: 0xID NAME
+
+0x010d0024 candidate_background
+0x010d0025 candidate_normal
+0x010d0026 candidate_other
+0x010d0027 candidate_recommand
+0x010d002b colonBlinking
+0x010d003e dayTextAppearance
+0x010d006b gridColor
+0x010d00f0 scrollDuration
+0x010d00fb selectedTextColor
+0x010d00fc selectedfontFamily
+0x010d0101 showGrid
+0x010d010a state_drag_acceptable
+0x010d010b state_drag_hoved
+0x010d0114 textColor2
+0x010d0120 tickLabelSize
+0x010d0121 tickLabels
+0x010d0122 tickMarks
+0x010d0134 updateInputTextInFling
+0x010d0139 wheelItemCount
+0x010d0140 wrapSelectorWheel
