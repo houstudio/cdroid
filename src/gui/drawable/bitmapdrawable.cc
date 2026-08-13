@@ -477,42 +477,74 @@ void BitmapDrawable::getOutline(Outline& outline) {
     outline.setAlpha(opaqueOverShape ? getAlpha() / 255.0f : 0.0f);
 }
 
-void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a, int srcDensityOverride){
-    // aapt2 pre-resolves the tileMode enum (disabled=-1/clamp=0/repeat=1/mirror=2)
-    // and the tintMode enum to the PorterDuff.Mode constructor ordinals, so the
-    // string->int maps used by the AttributeSet path are no longer needed.
-    const int tileMode = a.getInt(R::styleable::BitmapDrawable_tileMode, TileMode::DISABLED);
-    mBitmapState->mTileModeX = a.getInt(R::styleable::BitmapDrawable_tileModeX, tileMode);
-    mBitmapState->mTileModeY = a.getInt(R::styleable::BitmapDrawable_tileModeY, tileMode);
-    mBitmapState->mDither = a.getBoolean(R::styleable::BitmapDrawable_dither, true);
-    mBitmapState->mFilterBitmap = a.getBoolean(R::styleable::BitmapDrawable_filter, false);
-    mBitmapState->mAntiAlias = a.getBoolean(R::styleable::BitmapDrawable_antialias, true);
-    mBitmapState->mGravity = a.getInt(R::styleable::BitmapDrawable_gravity, Gravity::CENTER);
-    mBitmapState->mTint = a.getColorStateList(R::styleable::BitmapDrawable_tint);
+void BitmapDrawable::updateStateFromTypedArray(Resources& r, const TypedArray& a, int srcDensityOverride, Context* ctx){
+    auto& state = *mBitmapState;
+
+    // AOSP: store density override + resolve target density from the display.
+    state.mSrcDensityOverride = srcDensityOverride;
+    const DisplayMetrics& dm = r.getDisplayMetrics();
+    state.mTargetDensity = Drawable::resolveDensity(dm.densityDpi);
+
+    // AOSP: src is read HERE (inside updateStateFromTypedArray), not in inflate().
+    // Density-aware: getValueForDensity resolves the best config, then the bitmap
+    // is decoded at that density.
+    const int srcResId = a.getResourceId(R::styleable::BitmapDrawable_src, 0);
+    if (srcResId != 0) {
+        TypedValue tv;
+        // CDROID has no getValueForDensity; getValue resolves for the current config.
+        if (r.getValue(srcResId, &tv, true) && tv.string) {
+            std::string path = TextUtils::utf16_utf8((const uint16_t*)tv.string, tv.stringLen);
+            if (!path.empty()) {
+                // Density scaling: if srcDensityOverride is set and the value has a
+                // density, pretend the requested density is the display density so
+                // computeBitmapSize scales correctly downstream.
+                int density = DisplayMetrics::DENSITY_DEFAULT;
+                if (tv.density > 0 && tv.density != TypedValue::DENSITY_NONE) {
+                    density = tv.density;
+                    if (srcDensityOverride > 0 && srcDensityOverride != tv.density) {
+                        density = (tv.density * dm.densityDpi) / srcDensityOverride;
+                    }
+                }
+                auto bmp = ImageDecoder::loadImage(ctx, path);
+                // CDROID ImageSurface doesn't carry density metadata; the density
+                // ratio is applied in computeBitmapSize via mTargetDensity. Store
+                // the source density for NinePatchDrawable's scaleFromDensity path.
+                state.mSrcDensityOverride = srcDensityOverride > 0 ? srcDensityOverride : density;
+                if (bmp) {
+                    state.mBitmap = bmp;
+                    state.mTransparency = ImageDecoder::getTransparency(bmp);
+                }
+            }
+        }
+    }
+
+    state.mAutoMirrored = a.getBoolean(R::styleable::BitmapDrawable_autoMirrored, state.mAutoMirrored);
+    state.mBaseAlpha = a.getFloat(R::styleable::BitmapDrawable_alpha, state.mBaseAlpha);
+
     const int tintMode = a.getInt(R::styleable::BitmapDrawable_tintMode, -1);
     if (tintMode != -1) {
-        mBitmapState->mTintMode = parseTintMode(tintMode, PorterDuff::Mode::SRC_IN);
+        state.mTintMode = parseTintMode(tintMode, PorterDuff::Mode::SRC_IN);
     }
+    auto tint = a.getColorStateList(R::styleable::BitmapDrawable_tint);
+    if (tint) state.mTint = tint;
+
+    state.mAntiAlias = a.getBoolean(R::styleable::BitmapDrawable_antialias, state.mAntiAlias);
+    state.mFilterBitmap = a.getBoolean(R::styleable::BitmapDrawable_filter, state.mFilterBitmap);
+    state.mDither = a.getBoolean(R::styleable::BitmapDrawable_dither, state.mDither);
+    state.mGravity = a.getInt(R::styleable::BitmapDrawable_gravity, state.mGravity);
+
+    const int tileMode = a.getInt(R::styleable::BitmapDrawable_tileMode, TileMode::DISABLED);
+    state.mTileModeX = a.getInt(R::styleable::BitmapDrawable_tileModeX, tileMode);
+    state.mTileModeY = a.getInt(R::styleable::BitmapDrawable_tileModeY, tileMode);
+
+    computeBitmapSize();
 }
 
 void BitmapDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(r,parser,atts);
-    Context* ctx = atts.getContext();
+    // AOSP: all attr reads + src loading happen inside updateStateFromTypedArray.
     auto ta = r.obtainStyledAttributes(&atts, R::styleable::BitmapDrawable);
-    if (ta) updateStateFromTypedArray(*ta, 0);
-    // AOSP: src is read via ta.getResourceId(R.styleable.BitmapDrawable_src, 0).
-    // Resolve the value to get the file path, then decode the image.
-    const int srcResId = ta->getResourceId(R::styleable::BitmapDrawable_src, 0);
-    if (srcResId != 0) {
-        TypedValue tv;
-        if (ctx->getResources().getValue(srcResId, &tv, true) && tv.string) {
-            std::string path = TextUtils::utf16_utf8((const uint16_t*)tv.string, tv.stringLen);
-            if (!path.empty()) {
-                auto bmp = ImageDecoder::loadImage(ctx, path);
-                setBitmap(bmp);
-            }
-        }
-    }
+    if (ta) updateStateFromTypedArray(r, *ta, 0, atts.getContext());
 }
 
 }
