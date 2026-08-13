@@ -126,9 +126,9 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     // etc.) aren't in the framework arsc, so they stay on the string bridge — apps
     // can't set them in binary mode, so those reads return defaults (harmless).
     auto ta = context->obtainStyledAttributes(atts, R::styleable::NumberPicker, defStyleAttr);
-    mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
+    mHideWheelUntilFocused = ta->getBoolean(R::styleable::NumberPicker_hideWheelUntilFocused, false);
     { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); mWrapSelectorWheelPreferred = ta2->getBoolean(R::styleable::NumberPickerCdroid_wrapSelectorWheel, mWrapSelectorWheelPreferred); }
-    mDividerDrawable = atts.getDrawable("selectionDivider");
+    mDividerDrawable = ta->getDrawable(R::styleable::NumberPicker_selectionDivider);
     mTextSize2 = atts.getDimensionPixelSize("selectedTextSize",mTextSize2);
     if (mDividerDrawable) {
         mDividerDrawable->setCallback(this);
@@ -145,28 +145,29 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     mOrder = ASCENDING;
     if(!isHorizontalMode()){
         mDividerThickness= ta ? ta->getDimensionPixelSize(R::styleable::NumberPicker_selectionDividerHeight,UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT) : UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
-        mDividerDistance = atts.getDimensionPixelSize("selectionDividersDistance",UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
+        mDividerDistance = ta->getDimensionPixelSize(R::styleable::NumberPicker_selectionDividersDistance, UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
     }else{
-        mDividerThickness= atts.getDimensionPixelSize("selectionDividerWidth",UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT);
-        mDividerDistance = atts.getDimensionPixelSize("selectionDividersDistance",UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
+        mDividerThickness= ta->getDimensionPixelSize(R::styleable::NumberPicker_selectionDividerHeight, UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT);
+        mDividerDistance = ta->getDimensionPixelSize(R::styleable::NumberPicker_selectionDividersDistance, UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
     }
-    mMinHeight = atts.getDimensionPixelSize("internalMinHeight",SIZE_UNSPECIFIED);
-    mMaxHeight = atts.getDimensionPixelSize("internalMaxHeight",SIZE_UNSPECIFIED);
+    mMinHeight = ta->getDimensionPixelSize(R::styleable::NumberPicker_internalMinHeight, SIZE_UNSPECIFIED);
+    mMaxHeight = ta->getDimensionPixelSize(R::styleable::NumberPicker_internalMaxHeight, SIZE_UNSPECIFIED);
     
-    mMinWidth = atts.getDimensionPixelSize("internalMinWidth", SIZE_UNSPECIFIED);
-    mMaxWidth = atts.getDimensionPixelSize("internalMaxWidth", SIZE_UNSPECIFIED);
+    mMinWidth = ta->getDimensionPixelSize(R::styleable::NumberPicker_internalMinWidth, SIZE_UNSPECIFIED);
+    mMaxWidth = ta->getDimensionPixelSize(R::styleable::NumberPicker_internalMaxWidth, SIZE_UNSPECIFIED);
 
     if ((mMinWidth != SIZE_UNSPECIFIED) && (mMaxWidth != SIZE_UNSPECIFIED) && (mMinWidth > mMaxWidth) ){
         LOGE("minWidth(%d)  > maxWidth(%d)",mMinWidth,mMaxWidth);
     }
     const std::string defaultLayoutRes = (getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ);
-    const std::string layoutRes = atts.getString("internalLayout",defaultLayoutRes);
+    std::string layoutRes = ta->getString(R::styleable::NumberPicker_internalLayout);
+    if(layoutRes.empty()) layoutRes = defaultLayoutRes;
     { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); setWheelItemCount(ta2->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount)); }
     mHasSelectorWheel = (defaultLayoutRes!=layoutRes)||(mWheelItemCount!=DEFAULT_WHEEL_ITEM_COUNT);
     LayoutInflater::from(mContext)->inflate(layoutRes,this);
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
-    mVirtualButtonPressedDrawable = atts.getDrawable("virtualButtonPressedDrawable");
+    mVirtualButtonPressedDrawable = ta->getDrawable(R::styleable::NumberPicker_virtualButtonPressedDrawable);
     setWillNotDraw(false);
 
     mInputText =(EditText*)findViewById(R::id::numberpicker_input);
