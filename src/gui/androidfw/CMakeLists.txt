@@ -20,7 +20,6 @@ set(ANDROIDFW_SOURCES
     asset.cc                # Asset / _FileAsset / _CompressedAsset (read-only byte stream)
     assetdir.cc             # AssetDir (directory listing)
     assetmanager.cc         # legacy AssetManager (wraps ResTable; zip backend via libzip)
-    resourcesimpl.cc        # ResourcesImpl: ID-based value/meta/asset facade over AssetManager
     typedvalue.cc           # TypedValue (AOSP android.util.TypedValue) + applyDimension
 )
 
@@ -44,7 +43,7 @@ target_include_directories(androidfw
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
            ${CMAKE_CURRENT_SOURCE_DIR}/..   # src/gui: for <core/displaymetrics.h> (TypedValue)
            ${CMAKE_BINARY_DIR}/include
-    PRIVATE ${ZIP_INCLUDE_DIRS})
+           PRIVATE ${ZIP_INCLUDE_DIRS})
 target_link_libraries(androidfw PUBLIC tvhal ${ZIP_LIBRARIES} ZLIB::ZLIB)
 target_compile_options(androidfw PRIVATE -Wall -Wextra -Werror)
 # Asset public API uses off64_t/lseek64 (AOSP-faithful); expose LFS to consumers too.
@@ -103,10 +102,11 @@ target_compile_definitions(androidfw_assetmanager_test PRIVATE
     ANDROIDFW_TESTDATA="${CMAKE_CURRENT_SOURCE_DIR}/testdata")
 add_test(NAME assetmanager COMMAND androidfw_assetmanager_test)
 
-# Resources: ID-based value/meta/asset resolution over an AssetManager (isolated;
-# GUI factories are stubbed). Uses the arsc testdata apk.
+# Resources: ID-based value/meta/asset resolution over an AssetManager. Now
+# links cdroid (ResourcesImpl moved to core/, the cairo-aware cdroid layer, so
+# it can own the GUI factories + caches). Uses the arsc testdata apk.
 add_executable(androidfw_resources_test resources_test.cc)
-target_link_libraries(androidfw_resources_test PRIVATE androidfw)
+target_link_libraries(androidfw_resources_test PRIVATE cdroid)
 target_compile_definitions(androidfw_resources_test PRIVATE
     ANDROIDFW_TESTDATA="${CMAKE_CURRENT_SOURCE_DIR}/testdata")
 add_test(NAME resources COMMAND androidfw_resources_test)

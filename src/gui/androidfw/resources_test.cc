@@ -3,7 +3,7 @@
 // string/hello = "Hello", integer/grid ∈ {8,12,16} across densities). Exercises
 // every fully-implemented getter; GUI factories are asserted stubbed.
 
-#include "resourcesimpl.h"
+#include <core/resourcesimpl.h>
 
 #include <memory>
 #include <string>

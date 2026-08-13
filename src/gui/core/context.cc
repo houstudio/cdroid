@@ -5,7 +5,7 @@
 // getColorStateList(int). Header stays declaration-only.
 
 #include "context.h"
-#include "androidfw/resourcesimpl.h"   // cdroid::ResourcesImpl (+ Theme)
+#include "core/resourcesimpl.h"   // cdroid::ResourcesImpl (+ Theme)
 #include "resources.h"      // cdroid::Resources (full def — getResources() returns it)
 #include <core/typedarray.h>       // TypedArray (constructed below)
 
@@ -63,7 +63,7 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const uint32_t* attr
     std::vector<StyledAttr> styled(n);
     cdroid::obtainStyledAttributes(table, &theme, attrs, 0, 0, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
-                                        getResources().getDisplayMetrics().density, this);
+                                        getResources().getDisplayMetrics().density, &getResources());
 }
 
 // AOSP Theme.obtainStyledAttributes(resId, attrs): resolve against a style on
@@ -76,7 +76,7 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const uin
     std::vector<StyledAttr> styled(n);
     cdroid::obtainStyledAttributes(table, &theme, attrs, 0, (uint32_t)resid, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
-                                        getResources().getDisplayMetrics().density, this);
+                                        getResources().getDisplayMetrics().density, &getResources());
 }
 
 // Convenience overload: non-null AttributeSet& delegates to the pointer form.

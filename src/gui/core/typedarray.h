@@ -40,6 +40,7 @@
 namespace cdroid {
 
 class ResTable;      // defined in androidfw/restable.h (reference member only)
+class Resources;     // cdroid::Resources — the AOSP mResources holder (loadDrawable/...)
 class Drawable;
 class ColorStateList;
 
@@ -48,11 +49,11 @@ public:
     // Non-owning (StyledAttr* must outlive this TypedArray).
     TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
-               void* ctx = nullptr);
+               const Resources* res = nullptr);
     // Owning (StyledAttr vector moved in; mVals points into mOwned).
     TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
-               void* ctx = nullptr);
+               const Resources* res = nullptr);
     size_t size() const { return mCount; }
     bool hasValue(size_t idx) const { return idx < mCount && mVals[idx].set; }
     bool hasValueOrEmpty(size_t idx) const;
@@ -76,12 +77,12 @@ public:
     std::string getText(size_t idx) const;     // alias of getString for now
     int       getType(size_t idx) const;        // Res_value dataType, or -1
     bool      peekValue(size_t idx, Res_value* out) const;
-    // High-level resource access (needs Context — passed as void* to keep
-    // androidfw independent of cdroid::Context; cast in the .cc).
-    // getDrawable returns a raw Drawable* (freshly new'd, caller takes ownership).
-    // getColorStateList returns a shared_ptr (RefPtr): ColorStateList is a
-    // shared/cached resource, so the returned shared_ptr shares ownership with
-    // the loader/valueOf cache — callers store it directly into RefPtr members.
+    // High-level resource access — delegate to the owning Resources (AOSP
+    // TypedArray holds Resources mResources; getters call mResources.loadDrawable/
+    // loadComplexColor). getDrawable returns a raw Drawable* (freshly new'd,
+    // caller takes ownership). getColorStateList returns a shared_ptr (RefPtr):
+    // ColorStateList is a shared/cached resource, so the returned shared_ptr
+    // shares ownership with the loader cache.
     Drawable* getDrawable(size_t idx) const;
     std::shared_ptr<ColorStateList> getColorStateList(size_t idx) const;
 private:
@@ -90,13 +91,17 @@ private:
         *v = mVals[idx].value;
         return true;
     }
+    // Resolve TYPE_REFERENCE/ATTRIBUTE/DYNAMIC_* to the referenced resource's
+    // final value via the owning Resources (AOSP TypedArray resolves refs in
+    // getValue). Non-reference values pass through unchanged.
+    bool getResolved(size_t idx, Res_value* out) const;
     const ResTable&         mTable;
     std::vector<StyledAttr> mOwned;  // empty for non-owning mode
     const StyledAttr*       mVals;
     size_t                  mCount;
     const ResXMLTree*       mXml;
     float                   mDensity;
-    void*                   mContext; // cdroid::Context* (opaque to androidfw)
+    Resources const*        mResources; // owning Resources (AOSP mResources); nullable
 };
 
 } // namespace cdroid

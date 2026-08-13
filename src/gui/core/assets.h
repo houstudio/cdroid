@@ -25,7 +25,7 @@
 #include <core/variant.h>
 #include <drawable/drawable.h>
 #include "androidfw/restable.h"   // ResTable: arsc resource resolution
-#include "androidfw/resourcesimpl.h"  // Resources (+ Resources::Theme)
+#include "core/resourcesimpl.h"  // Resources (+ Resources::Theme)
 #include "core/typedarray.h"      // TypedArray: consumer-side typed attr view
 
 namespace cdroid{

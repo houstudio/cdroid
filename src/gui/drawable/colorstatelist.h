@@ -36,33 +36,36 @@ private:
     std::vector<int>mColors;
     std::vector<std::vector<int>>mStateSpecs;
 private:
-    void inflate(XmlPullParser& parser,const AttributeSet&atts);
+    // AOSP private inflate(Resources, XmlPullParser, AttributeSet, Theme). Theme
+    // is threaded for arity but currently a no-op (obtainStyledAttributes(Theme)
+    // is not ported); see the DEFERRED note in the .cc. Resources is taken const
+    // -- inflate only reads from it (obtainStyledAttributes is const).
+    void inflate(const Resources&r,XmlPullParser& parser,const AttributeSet&atts,ResTable::Theme* theme);
     void onColorsChanged();
-    static int modulateColorAlpha(int baseColor, float alphaMod);
+    static int modulateColor(int baseColor, float alphaMod, float lStar);
 public:
+    // AOSP marks the default ctor private ("Not publicly instantiable"); kept
+    // public so createFromXmlInner can std::make_shared it.
     ColorStateList();
-    ColorStateList(int color);
     ColorStateList(const ColorStateList&other);
     ColorStateList(const std::vector<std::vector<int>>&states,const std::vector<int>&colors);
     ~ColorStateList()override;
-    int addStateColor(const std::vector<int>&stateSet,int color);
-    int addStateColor(cdroid::Context*,const AttributeSet&);
     int getDefaultColor()const override;
+    bool canApplyTheme()const override;
     bool isOpaque()const;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const;
     cdroid::RefPtr<ColorStateList>withAlpha(int alpha)const;
-    ColorStateList&operator=(const ColorStateList&other);
-    bool operator!=(const ColorStateList&other)const;
-    bool operator==(const ColorStateList&other)const;
     int getChangingConfigurations()const;
     int getColorForState(const std::vector<int>&stateSet, int defaultColor)const;
     const std::vector<std::vector<int>>& getStates()const;
     const std::vector<int>& getColors()const;
     bool hasState(int state)const ;
-    void dump()const;
+    std::string toString()const;
     static cdroid::RefPtr<ColorStateList> valueOf(int color);
-    static cdroid::RefPtr<ColorStateList> inflate(Context*ctx,const std::string&resname);
+    static cdroid::RefPtr<ColorStateList> createFromXml(const Resources& r,XmlPullParser& parser);
+    static cdroid::RefPtr<ColorStateList> createFromXml(const Resources& r,XmlPullParser& parser,ResTable::Theme* theme);
+    static cdroid::RefPtr<ColorStateList> createFromXmlInner(const Resources& r,XmlPullParser& parser,const AttributeSet& attrs,ResTable::Theme* theme);
 };
 }
 #endif

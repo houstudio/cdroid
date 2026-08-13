@@ -23,7 +23,8 @@
 //
 #include <core/typedarray.h>
 #include <androidfw/restable.h>        // ResTable (complete def for mTable use)
-#include <assets.h>                    // Assets (mContext cast target)
+#include <androidfw/typedvalue.h>      // TypedValue (getResolved reference resolution)
+#include <core/resources.h>            // Resources (mResources: getDrawable/loadComplexColor/getString)
 #include <drawable/colordrawable.h>    // ColorDrawable
 #include <drawable/colorstatelist.h>   // ColorStateList
 #include <cstring>
@@ -40,25 +41,23 @@
 // Returns empty when the path isn't under "res/" or the name isn't found in the
 // table; density/config qualifiers on the directory ("-xxhdpi") are stripped,
 // matching how a resource ref is spelled.
-static std::string resourceRefFromPath(const cdroid::ResTable& table, const std::string& path) {
-    if (path.compare(0, 4, "res/") != 0) return std::string();
+// Reverse-resolve a style-sourced file path (e.g. "res/drawable/foo.xml") to its
+// resource id via the arsc, so TypedArray getters can route through the ID path
+// (Resources.getDrawable/loadComplexColor) instead of the legacy string Assets
+// lookup. Returns 0 if the path isn't a known resource.
+static int pathToResourceId(const cdroid::ResTable& table, const std::string& path) {
+    if (path.compare(0, 4, "res/") != 0) return 0;
     size_t sl = path.find_last_of('/');
-    if (sl == std::string::npos || sl <= 4) return std::string();
+    if (sl == std::string::npos || sl <= 4) return 0;
     std::string type = path.substr(4, sl - 4);  // "drawable" / "color" / "drawable-xxhdpi"
     size_t dash = type.find('-');
     if (dash != std::string::npos) type = type.substr(0, dash);  // drop qualifiers
     size_t dot = path.find_last_of('.');
     std::string base = path.substr(sl + 1,
         (dot != std::string::npos && dot > sl) ? dot - sl - 1 : std::string::npos);
-    if (type.empty() || base.empty()) return std::string();
-    // Resolve the owning package through the table (package="" -> all packages)
-    // so the ref targets the framework pak ("android") or the app pak, instead
-    // of assuming "android".
-    const uint32_t id = table.getIdentifier(base, type, "");
-    if (id == 0) return std::string();
-    std::string pkg, rtype, key;
-    if (!table.getResourceName(id, &pkg, &rtype, &key)) return std::string();
-    return "@" + pkg + ":" + rtype + "/" + key;
+    if (type.empty() || base.empty()) return 0;
+    // package="" -> search all packages (framework "android" + app).
+    return (int)table.getIdentifier(base, type, "");
 }
 
 namespace cdroid {
@@ -66,25 +65,40 @@ namespace cdroid {
 // --- Constructors (out-of-line so typedarray.h need not include restable.h) ---
 
 TypedArray::TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
-                       const ResXMLTree* xmlSrc, float density, void* ctx)
+                       const ResXMLTree* xmlSrc, float density, const Resources* res)
     : mTable(table), mVals(vals), mCount(count), mXml(xmlSrc),
-      mDensity(density), mContext(ctx) {}
+      mDensity(density), mResources(res) {}
 
 TypedArray::TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
-                       const ResXMLTree* xmlSrc, float density, void* ctx)
+                       const ResXMLTree* xmlSrc, float density, const Resources* res)
     : mTable(table), mOwned(std::move(vals)),
       mVals(mOwned.data()), mCount(mOwned.size()),
-      mXml(xmlSrc), mDensity(density), mContext(ctx) {}
+      mXml(xmlSrc), mDensity(density), mResources(res) {}
 
 // --- Low-level typed getters (Res_value decoders) ---
 
+bool TypedArray::getResolved(size_t idx, Res_value* out) const {
+    Res_value v;
+    if (!get(idx, &v)) return false;
+    if ((v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
+         v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE)
+        && mResources) {
+        TypedValue tv;
+        if (!mResources->getValue((int)v.data, &tv, true)) return false;
+        v.dataType = tv.type;
+        v.data = tv.data;
+    }
+    *out = v;
+    return true;
+}
+
 int32_t TypedArray::getInt(size_t idx, int32_t def) const {
-    Res_value v; if (!get(idx, &v)) return def;
+    Res_value v; if (!getResolved(idx, &v)) return def;
     return (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX) ? (int32_t)v.data : def;
 }
 
 bool TypedArray::getBoolean(size_t idx, bool def) const {
-    Res_value v; if (!get(idx, &v)) return def;
+    Res_value v; if (!getResolved(idx, &v)) return def;
     return v.dataType == Res_value::TYPE_INT_BOOLEAN ? (v.data != 0) : def;
 }
 
@@ -92,6 +106,15 @@ uint32_t TypedArray::getColor(size_t idx, uint32_t def) const {
     Res_value v; if (!get(idx, &v)) return def;
     if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
         return v.data;
+    // Reference (@color/foo): resolve the referenced color resource.
+    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
+        v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+        if (mResources) {
+            int c = mResources->getColor((int)v.data);
+            return c;   // getColor returns the packed ARGB color
+        }
+        return def;
+    }
     // Style-sourced color stored as the file path (TYPE_STRING): load the
     // ColorStateList and return its default color, matching AOSP getColor.
     if (v.dataType == Res_value::TYPE_STRING) {
@@ -103,12 +126,12 @@ uint32_t TypedArray::getColor(size_t idx, uint32_t def) const {
 }
 
 float TypedArray::getDimension(size_t idx, float def) const {
-    Res_value v; if (!get(idx, &v)) return def;
+    Res_value v; if (!getResolved(idx, &v)) return def;
     return v.dataType == Res_value::TYPE_DIMENSION ? complexToFloat(v.data) : def;
 }
 
 int32_t TypedArray::getDimensionPixelSize(size_t idx, int32_t def) const {
-    Res_value v; if (!get(idx, &v)) return def;
+    Res_value v; if (!getResolved(idx, &v)) return def;
     if (v.dataType != Res_value::TYPE_DIMENSION) return def;
     float mag = complexToFloat(v.data);
     int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
@@ -120,18 +143,10 @@ uint32_t TypedArray::getResourceId(size_t idx, uint32_t def) const {
     Res_value v; if (!get(idx, &v)) return def;
     if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
         v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
-        // Binary-AXML references carry the aapt2 resource id (0x7fxxxxxx), but CDROID's runtime
-        // uses the idgen id space (R.h / View::getId() — AttributeSet.getResourceId resolves the
-        // rendered "@id/<name>" via Assets::getId). Bridge the two so view-id / anchor lookups
-        // match View::getId(); fall back to the raw arsc id when the name can't be resolved.
-        if (mContext) {
-            const Assets* a = static_cast<const Assets*>(mContext);
-            std::string name = a->getResourceName(v.data);
-            if (!name.empty()) {
-                int idgen = a->getId(name);
-                if (idgen != -1) return (uint32_t)idgen;
-            }
-        }
+        // Binary-AXML references carry the aapt2/arsc resource id, which is the
+        // SAME id space View::getId() uses now that idgen is retired (R.h is
+        // dumped from the arsc). So the reference id resolves directly — no
+        // arsc↔idgen bridge needed.
         return v.data;
     }
     return def;
@@ -176,7 +191,7 @@ bool TypedArray::hasValueOrEmpty(size_t idx) const {
 }
 
 float TypedArray::getFloat(size_t idx, float def) const {
-    Res_value v; if (!get(idx, &v)) return def;
+    Res_value v; if (!getResolved(idx, &v)) return def;
     if (v.dataType == Res_value::TYPE_FLOAT) {
         float f; memcpy(&f, &v.data, sizeof(f)); return f;
     }
@@ -188,7 +203,7 @@ float TypedArray::getFloat(size_t idx, float def) const {
 }
 
 int32_t TypedArray::getDimensionPixelOffset(size_t idx, int32_t def) const {
-    Res_value v; if (!get(idx, &v)) return def;
+    Res_value v; if (!getResolved(idx, &v)) return def;
     if (v.dataType != Res_value::TYPE_DIMENSION) return def;
     float mag = complexToFloat(v.data);
     int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
@@ -205,7 +220,7 @@ int32_t TypedArray::getLayoutDimension(size_t idx, int32_t def) const {
 }
 
 float TypedArray::getFraction(size_t idx, int base, int pbase, float def) const {
-    Res_value v; if (!get(idx, &v)) return def;
+    Res_value v; if (!getResolved(idx, &v)) return def;
     if (v.dataType != Res_value::TYPE_FRACTION) return def;
     float f = complexToFloat(v.data);
     int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
@@ -217,10 +232,10 @@ std::string TypedArray::getText(size_t idx) const {
     if (!get(idx, &v)) return "";
     // AOSP TypedArray.getText resolves @string/foo references to their value
     // (TypedValue.coerceToString). getString only handles TYPE_STRING, so resolve
-    // TYPE_REFERENCE / TYPE_DYNAMIC_REFERENCE through Context.getString(resId).
+    // TYPE_REFERENCE / TYPE_DYNAMIC_REFERENCE through the owning Resources.
     if (v.dataType == Res_value::TYPE_REFERENCE ||
         v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE) {
-        if (mContext) return static_cast<Context*>(mContext)->getString((int)v.data);
+        if (mResources) return mResources->getString((int)v.data);
         return "";
     }
     return getString(idx);
@@ -254,62 +269,45 @@ size_t TypedArray::getIndex(size_t n) const {
 // --- High-level resource access (reach into cdroid::Assets via mContext) ---
 
 Drawable* TypedArray::getDrawable(size_t idx) const {
-    if (!mContext) return nullptr;
-    Assets* a = static_cast<Assets*>(mContext);
+    if (!mResources) return nullptr;
     Res_value v;
     if (!peekValue(idx, &v)) return nullptr;
+    // Inline color → ColorDrawable directly (no resource id).
     if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
         return new ColorDrawable(v.data);
+    // Resolve the resource id, then load through the owning Resources (AOSP
+    // TypedArray -> mResources.loadDrawable). References carry the id in v.data;
+    // style-sourced file paths (TYPE_STRING) are reverse-resolved via the arsc.
+    int id = 0;
     if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
         v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
-        std::string name = a->getResourceName(v.data);
-        if (!name.empty()) return a->getDrawable(name);
-        return nullptr;
+        id = (int)v.data;
+    } else if (v.dataType == Res_value::TYPE_STRING) {
+        id = pathToResourceId(mTable, getString(idx));
     }
-    // Style-sourced drawables are stored as TYPE_STRING (the file path, e.g.
-    // "res/drawable/ic_menu_moreoverflow_material.xml") rather than a reference
-    // id; load the drawable from that path. (AOSP's TypedArray.getDrawable loads
-    // via the string value the same way.) Re-resolve a framework path as a ref
-    // so the lookup hits the framework pak; fall back to the raw path.
-    if (v.dataType == Res_value::TYPE_STRING) {
-        std::string s = getString(idx);
-        std::string ref = resourceRefFromPath(mTable, s);
-        if (!ref.empty()) {
-            Drawable* d = a->getDrawable(ref);
-            if (d) return d;
-        }
-        if (!s.empty()) return a->getDrawable(s);
-    }
+    if (id != 0) return mResources->getDrawable(id);
     return nullptr;
 }
 
 std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const {
-    if (!mContext) return nullptr;
-    Assets* a = static_cast<Assets*>(mContext);
+    if (!mResources) return nullptr;
     Res_value v;
     if (!peekValue(idx, &v)) return nullptr;
+    // Inline color → single-color ColorStateList (valueOf caches it).
     if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
         return ColorStateList::valueOf(v.data);
+    // Load through the owning Resources.loadComplexColor (AOSP TypedArray ->
+    // mResources.loadComplexColor), preserving shared_ptr ownership so the cached
+    // instance is shared with the loader cache.
+    int id = 0;
     if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
         v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
-        std::string name = a->getResourceName(v.data);
-        if (!name.empty()) return a->getColorStateList(name);
-        return nullptr;
+        id = (int)v.data;
+    } else if (v.dataType == Res_value::TYPE_STRING) {
+        id = pathToResourceId(mTable, getString(idx));
     }
-    // Style-sourced colors are stored as TYPE_STRING (the file path, e.g.
-    // "res/color/primary_text_dark.xml") rather than a reference id, just like
-    // drawables; re-resolve as a framework color ref and load. (AOSP delegates
-    // to Resources.loadColorStateList, which handles the string path the same
-    // way.) Fall back to the raw path.
-    if (v.dataType == Res_value::TYPE_STRING) {
-        std::string s = getString(idx);
-        std::string ref = resourceRefFromPath(mTable, s);
-        if (!ref.empty()) {
-            auto csl = a->getColorStateList(ref);
-            if (csl) return csl;
-        }
-        if (!s.empty()) return a->getColorStateList(s);
-    }
+    if (id != 0)
+        return std::dynamic_pointer_cast<ColorStateList>(mResources->loadComplexColor(id));
     return nullptr;
 }
 

@@ -90,11 +90,11 @@ public:
     Asset* getAnimation(int id) const;
 
     // --- GUI-object factories (Resources' own; bridge to string-based inflation) ---
-    cdroid::Drawable*       getDrawable(int id, int density = 0) const;
+    cdroid::Drawable*       getDrawable(int id) const;
     cdroid::Drawable*       getDrawableForDensity(int id, int density) const;
     cdroid::ColorStateList* getColorStateList(int id) const;
     Typeface*               getFont(int id) const;
-    ComplexColor*           loadComplexColor(int id) const;
+    std::shared_ptr<ComplexColor> loadComplexColor(int id) const;
     Movie*                  getMovie(int id) const;
 
     // --- AOSP Resources.obtainStyledAttributes(...) ---
@@ -111,8 +111,18 @@ public:
     std::unique_ptr<TypedArray> obtainTypedArray(int id) const;
 
 private:
+    class DrawableCache;       // id → Drawable::ConstantState (defined in resources.cc)
+    class ColorStateListCache; // id → ColorStateList          (defined in resources.cc)
+
     std::unique_ptr<ResourcesImpl> mImpl;   // aggregated (AOSP Resources -> ResourcesImpl)
     cdroid::Context* mCtx;
+    // AOSP mDrawableCache / mComplexColorCache — keyed by resource id. They live
+    // here (cdroid::Resources), not in ResourcesImpl, because androidfw is a
+    // cairo-free OBJECT library while Drawable::ConstantState / ColorStateList
+    // headers require cairo (see resourcesimpl.h). mutable: populated from the
+    // const getDrawable/loadComplexColor (AOSP caches are mutable too).
+    mutable std::unique_ptr<DrawableCache>       mDrawableCache;
+    mutable std::unique_ptr<ColorStateListCache> mColorStateListCache;
 };
 
 } // namespace cdroid

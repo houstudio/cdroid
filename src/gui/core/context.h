@@ -27,14 +27,14 @@
 #include <core/callbackbase.h>
 #include <core/attributeset.h>
 #include <core/displaymetrics.h>
-#include <androidfw/resourcesimpl.h>   // cdroid::ResourcesImpl (+ Theme)
+#include <core/resourcesimpl.h>   // cdroid::ResourcesImpl (+ Theme)
 #include <core/resources.h> // cdroid::Resources (full def — getResources() returns it)
 
 #define USE(FEATURE) (defined(USE_##FEATURE) && USE_##FEATURE)
 #define ENABLE(FEATURE) (defined(ENABLE_##FEATURE) && ENABLE_##FEATURE)
 
 // AOSP-aligned resource types live in namespace cdroid (androidfw sub-library,
-// compiled into cdroid.so). Their full definitions come via <androidfw/resourcesimpl.h>
+// compiled into cdroid.so). Their full definitions come via <core/resourcesimpl.h>
 // included above (ResourcesImpl / AssetManager / Asset / ResTable::Theme / TypedValue).
 namespace cdroid{
 class Drawable;

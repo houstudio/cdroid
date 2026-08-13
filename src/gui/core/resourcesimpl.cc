@@ -318,8 +318,9 @@ Asset* ResourcesImpl::getXml(int id) const {
     return openByStringId(id);
 }
 
-// ---- GUI-object factory stubs (isolated port; overridden by cdroid::Resources
-// at the cdroid.so merge). ----
+// ---- GUI-object factory stubs. Implemented in cdroid::Resources (the cairo-
+// aware layer), which owns the AOSP mDrawableCache / mComplexColorCache — see
+// the NOTE on the declarations in resourcesimpl.h. ----
 
 cdroid::Drawable* ResourcesImpl::getDrawable(int /*id*/, int /*density*/) const { return nullptr; }
 cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int /*id*/, int /*density*/) const { return nullptr; }

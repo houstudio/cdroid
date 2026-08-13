@@ -12,8 +12,8 @@
 // You may obtain a copy of the License at
 //
 //      http://www.apache.org/licenses/LICENSE-2.0
-#ifndef __CDROID_ANDROIDFW_RESOURCES_H__
-#define __CDROID_ANDROIDFW_RESOURCES_H__
+#ifndef __CDROID_RESOURCESIMPL_H__
+#define __CDROID_RESOURCESIMPL_H__
 
 #include <cstdint>
 #include <cstring>
@@ -22,16 +22,15 @@
 #include <utility>
 #include <vector>
 
-#include "restable.h"             // cdroid::ResTable, ResTable_config, Res_value
-#include "assetmanager.h"         // cdroid::AssetManager
-#include "asset.h"                // cdroid::Asset
-#include "typedvalue.h"           // cdroid::TypedValue, applyDimension
-#include <core/displaymetrics.h>  // cdroid::DisplayMetrics
+#include <androidfw/restable.h>       // cdroid::ResTable, ResTable_config, Res_value
+#include <androidfw/assetmanager.h>   // cdroid::AssetManager
+#include <androidfw/asset.h>          // cdroid::Asset
+#include <androidfw/typedvalue.h>     // cdroid::TypedValue, applyDimension
+#include <core/displaymetrics.h>      // cdroid::DisplayMetrics
 
 // Forward declarations of cdroid GUI object types — returned by pointer only,
-// so the full GUI headers are NOT needed to compile this. Their factory
-// methods are stubbed (return nullptr) until the cdroid::Resources subclass
-// overrides them.
+// so the full GUI headers are NOT needed to compile this. Their factory methods
+// are implemented in cdroid::Resources (resources.cc), which owns the caches.
 namespace cdroid {
 class Drawable;
 class ColorStateList;
@@ -59,11 +58,12 @@ public:
     AssetManager* getAssets() const { return mAssets; }
 
     // AOSP Resources.Theme — the engine is ResTable::Theme (applyStyle/
-    // getAttribute/resolveAttribute/clear/...).
+    // getAttribute/resolveAttribute/clear/...). TODO: promote to a Resources.Theme
+    // wrapper class at the Resources level (hides ResTable::Theme from public API).
     using Theme = ResTable::Theme;
     std::unique_ptr<Theme> newTheme();   // a Theme over this ResourcesImpl's table
     const ResTable_config& getConfiguration() const { return mConfig; }
-    const DisplayMetrics& getDisplayMetrics() const { return mMetrics; }
+    const DisplayMetrics&  getDisplayMetrics() const { return mMetrics; }
     void setConfiguration(const ResTable_config& config) { mConfig = config; }
     void setDisplayMetrics(const DisplayMetrics& m) { mMetrics = m; }
 
@@ -108,7 +108,13 @@ public:
     Asset* getAnimation(int id) const { return getXml(id); }
 
     // --- GUI-object factories (virtual so cdroid::Resources can override;
-    // STUBBED returning nullptr here). ---
+    // STUBBED returning nullptr here — see NOTE below). ---
+    // NOTE: the drawable cache (AOSP mDrawableCache) + loadDrawable cannot live
+    // in ResourcesImpl: androidfw is a deliberately cairo-free OBJECT library
+    // (mirrors AOSP libs/androidfw), reused by GUI-less unit tests, while
+    // drawable/ColorStateList headers transitively require cairo. So getDrawable/
+    // getColorStateList/loadComplexColor are implemented in cdroid::Resources
+    // (the cairo-aware layer), which owns the caches.
     virtual Drawable*       getDrawable(int id, int density = 0) const;
     virtual Drawable*       getDrawableForDensity(int id, int density) const;
     virtual ColorStateList* getColorStateList(int id) const;

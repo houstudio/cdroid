@@ -278,7 +278,7 @@ AssetManager& Assets::getAssets() {
 Drawable* Assets::getDrawable(int id) {
     ensureCdroidResources();
     if (mCdroidResources == nullptr) return nullptr;
-    return mCdroidResources->getDrawable(id, 0);   // delegates back to getDrawable(string)
+    return mCdroidResources->getDrawable(id);   // delegates to the ID path (Assets retirement)
 }
 
 ColorStateList* Assets::getColorStateList(int id) {
@@ -529,6 +529,13 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
 
 int Assets::addResource(const std::string&path,const std::string&name) {
     mPakPaths.push_back(path);   // recorded for the lazy ID-based AssetManager
+    // If the lazy AssetManager was already built — which happens when an earlier
+    // pak's addResource triggered ensureCdroidResources() via the pending
+    // color-state-list resolve (getColorStateList → getResources) — register this
+    // pak with it too. Otherwise files in later paks (e.g. app layouts in
+    // uidemo1.pak, added after cdroid.pak) are invisible to openNonAsset, and
+    // every app layout inflate returns null.
+    if (mAssetManager) mAssetManager->addAssetPath(path, nullptr);
     ZIPArchive*pak = new ZIPArchive(path);
     std::string package = name;
     if(name.empty()) {
@@ -625,20 +632,15 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     while (!pending.colorStateList.empty()) {
         bool resolved = false;
         for (auto it = pending.colorStateList.begin(); it != pending.colorStateList.end(); ) {
-            bool allSuccess = true;
-            auto cls = std::make_shared<ColorStateList>();
-            for (auto& attr : it->second) {
-                if (cls->addStateColor(this, attr) < 0) {
-                    allSuccess = false;
-                    LOGD("%s tobe done",it->first.c_str());
-                    break;
-                }
-            }
-            if (allSuccess) {
-                mStateColors.insert({it->first, cls});
+            // Resolve each pending color-state-list by name through the apk
+            // id-path (Assets::getColorStateList(name) → Resources::loadComplexColor(id),
+            // cached). Forward references that can't resolve yet stay pending for
+            // the next pass.
+            if (getColorStateList(it->first)) {
                 it = pending.colorStateList.erase(it);
                 resolved = true;
             } else {
+                LOGD("%s tobe done", it->first.c_str());
                 ++it;
             }
         }
@@ -1261,11 +1263,22 @@ cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullr
                 const int color = Color::parseColor(fullresid);
                 cls = ColorStateList::valueOf(color);
             }else{
-                cls = ColorStateList::inflate(this,fullresid);
+                // Apk id-path (AOSP loadComplexColor): resolve the resource id and
+                // load through the cached Resources::loadComplexColor; fall back to
+                // parsing the XML by name for resources absent from the arsc.
+                Resources& r = getResources();
+                const uint32_t id = arscGetIdentifier(relname, "color", pkg);
+                if (id != 0) {
+                    cls = std::dynamic_pointer_cast<ColorStateList>(r.loadComplexColor((int)id));
+                }
+                if (!cls) {
+                    XmlPullParser parser(this, fullresid);
+                    cls = ColorStateList::createFromXml(r, parser);
+                }
             }
             mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
             return cls;
-        }catch(std::invalid_argument&e){
+        }catch(std::exception&e){
             std::string realName;
             parseResource(fullresid,&realName,nullptr);
             if(realName.find("?")!=std::string::npos)

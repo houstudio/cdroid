@@ -504,7 +504,11 @@ class PakBuilder(idgen.IDGenerater):
             if _r.returncode != 0:
                 sys.stderr.write("SDK res link FAILED stderr:\n%s\n" % _r.stderr.decode()[:3000])
                 raise subprocess.CalledProcessError(_r.returncode, link_cmd)
-            # Extract everything, stripping 'res/' prefix to match pak convention.
+            # Extract everything, stripping 'res/' prefix to match pak convention
+            # (the legacy string-based resource lookups build no-'res/' names; the
+            # arsc↔pak res/ mismatch is papered over at runtime). Aligning res/
+            # everywhere requires retiring the string-key system first — see the
+            # string-key migration plan (TODO).
             result = {}
             with zipfile.ZipFile(out_apk) as zf:
                 for name in zf.namelist():

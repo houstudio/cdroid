@@ -41,7 +41,7 @@ public:
             if(tb){
                 Menu* menu = tb->getMenu();
                 MenuInflater inflater(container->getContext());
-                inflater.inflate("cdroid:menu/webview_copy", menu);
+                //inflater.inflate("cdroid:menu/webview_copy", menu);
                 tb->setNavigationOnClickListener([](View&){
                     LOGD("Navigation Clicked");
                 });
