@@ -193,5 +193,12 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t TimePicker[] = {
         0x010d0083, 0x010d006f, 0x010d0068, 0x0101012f, 0x010104a1, 0x010104e1, 0x010104a2,
         0x010104a3, 0x010104b4, 0x010104a0, 0x0101049f, 0x010104a4, 0x010104a5, 0x010d003b, 0 };
+    const uint32_t CandidateView[] = { 0 };
+    const uint32_t PlotView[] = { 0 };
+    const uint32_t NumberPickerCdroid[] = { 0 };
+    const uint32_t ChronometerCdroid[] = { 0 };
+    const uint32_t SimpleMonthViewCdroid[] = { 0 };
+    const uint32_t ScrollViewCdroid[] = { 0 };
+    const uint32_t StateSetCdroid[] = { 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

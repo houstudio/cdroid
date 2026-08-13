@@ -94,3 +94,12 @@ VectorDrawablePath
 DatePicker
 CalendarView
 TimePicker
+
+# --- CDROID-private widget attrs (attrs_cdroid.xml) ---
+CandidateView
+PlotView
+NumberPickerCdroid
+ChronometerCdroid
+SimpleMonthViewCdroid
+ScrollViewCdroid
+StateSetCdroid

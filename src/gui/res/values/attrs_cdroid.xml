@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CDROID-private attributes. These are CDROID-original widget attrs not in the
+     AOSP framework subset. Declared here so aapt2 assigns them real 0x01 resource
+     IDs (compiled into cdroid.pak), and gen_styleable generates styleable IDS
+     arrays so widget code can use obtainStyledAttributes instead of the string-key
+     bridge. -->
+<resources>
+
+    <!-- CandidateView (CDROID-original) -->
+    <declare-styleable name="CandidateView">
+        <attr name="candidate_background" format="reference|color" />
+        <attr name="candidate_normal" format="color" />
+        <attr name="candidate_other" format="color" />
+        <attr name="candidate_recommand" format="color" />
+    </declare-styleable>
+
+    <!-- PlotView (CDROID-original) -->
+    <declare-styleable name="PlotView">
+        <attr name="showGrid" format="boolean" />
+        <attr name="gridColor" format="color|reference" />
+        <attr name="tickLabelSize" format="dimension" />
+        <attr name="tickMarks" format="integer" />
+        <attr name="tickLabels" format="string|reference" />
+    </declare-styleable>
+
+    <!-- NumberPicker CDROID-specific additions (separate from the framework
+         NumberPicker styleable to avoid index shift). -->
+    <declare-styleable name="NumberPickerCdroid">
+        <attr name="selectedfontFamily" format="string" />
+        <attr name="selectedTextColor" format="color" />
+        <attr name="textColor2" format="color" />
+        <attr name="updateInputTextInFling" format="boolean" />
+        <attr name="wheelItemCount" format="integer" />
+        <attr name="wrapSelectorWheel" format="boolean" />
+    </declare-styleable>
+
+    <!-- Chronometer CDROID addition -->
+    <declare-styleable name="ChronometerCdroid">
+        <attr name="colonBlinking" format="boolean" />
+    </declare-styleable>
+
+    <!-- SimpleMonthView CDROID addition -->
+    <declare-styleable name="SimpleMonthViewCdroid">
+        <attr name="dayTextAppearance" format="reference" />
+    </declare-styleable>
+
+    <!-- ScrollView CDROID addition -->
+    <declare-styleable name="ScrollViewCdroid">
+        <attr name="scrollDuration" format="integer" />
+    </declare-styleable>
+
+    <!-- StateSet CDROID-specific state flags (separate from framework StateSet) -->
+    <declare-styleable name="StateSetCdroid">
+        <attr name="state_drag_acceptable" format="boolean" />
+        <attr name="state_drag_hoved" format="boolean" />
+    </declare-styleable>
+
+</resources>
