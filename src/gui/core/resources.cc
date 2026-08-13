@@ -245,7 +245,7 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
          const uint32_t* attrs, int defStyleAttr, int defStyleRes) const {
     if (mCtx == nullptr) return nullptr;
     const ResTable& rt = getAssets()->getResources(false);
-    ResTable::Theme* theme = &mCtx->getTheme();
+    Resources::Theme _th = mCtx->getTheme(); ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
     size_t count = 0;
     while (attrs[count]) count++;
     std::vector<StyledAttr> styled(count);
@@ -285,7 +285,7 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const uint32_t* at
 std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(int resid, const uint32_t* attrs) const {
     if (mCtx == nullptr) return nullptr;
     const ResTable& rt = getAssets()->getResources(false);
-    ResTable::Theme* theme = &mCtx->getTheme();
+    Resources::Theme _th = mCtx->getTheme(); ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
     size_t count = 0;
     while (attrs[count]) count++;
     std::vector<StyledAttr> styled(count);
@@ -309,6 +309,22 @@ std::unique_ptr<TypedArray> Resources::obtainTypedArray(int id) const {
         styled[i].set = true;
     }
     return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this);
+}
+
+// --- Resources::Theme (AOSP Resources.Theme; view over ResTable::Theme) ---
+
+void Resources::Theme::applyStyle(int resId, bool force) {
+    if (mEngine) static_cast<ResTable::Theme*>(mEngine)->applyStyle((uint32_t)resId, force);
+}
+
+bool Resources::Theme::resolveAttribute(int resId, TypedValue* out, bool resolveRefs) const {
+    if (mEngine == nullptr || out == nullptr) return false;
+    Res_value v;
+    if (!static_cast<const ResTable::Theme*>(mEngine)->resolveAttribute(
+            (uint32_t)resId, &v, resolveRefs)) return false;
+    out->type = v.dataType;
+    out->data = v.data;
+    return true;
 }
 
 } // namespace cdroid

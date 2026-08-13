@@ -23,7 +23,7 @@ public:
     // --- delegate ALL pure-virtual Context methods to mBase ---
     const std::string getPackageName() const override { return mBase->getPackageName(); }
     void startActivity(const Intent& intent) override { mBase->startActivity(intent); }
-    ResTable::Theme& getTheme() override { return mBase->getTheme(); }
+    Resources::Theme getTheme() override { return mBase->getTheme(); }
     const std::string getThemeName() const override { return mBase->getThemeName(); }
     void setTheme(const std::string& theme) override { mBase->setTheme(theme); }
     void setTheme(int resid) override { mBase->setTheme(resid); }

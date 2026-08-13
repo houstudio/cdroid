@@ -110,9 +110,30 @@ public:
     // AOSP Resources.obtainTypedArray(@ArrayRes int id).
     std::unique_ptr<TypedArray> obtainTypedArray(int id) const;
 
+    class Theme;   // AOSP Resources.Theme — defined below (view over ResTable::Theme)
+
 private:
     std::unique_ptr<ResourcesImpl> mImpl;   // aggregated (AOSP Resources -> ResourcesImpl); owns the drawable/ComplexColor caches
     cdroid::Context* mCtx;
+};
+
+// AOSP Resources.Theme — a framework-level theme handle. A lightweight,
+// non-owning VIEW over the underlying engine (cdroid::ResTable::Theme, owned by
+// Assets); getTheme() returns it by value. Methods are out-of-line (resources.cc)
+// so this header need not include restable.h. _engineHandle() exposes the engine
+// as void* for the resource layer's obtainStyledAttributes (resources.cc /
+// context.cc) — the only places that need the raw ResTable::Theme*.
+class Resources::Theme {
+public:
+    Resources& getResources() const { return mRes; }
+    void applyStyle(int resId, bool force = false);
+    bool resolveAttribute(int resId, TypedValue* outValue, bool resolveRefs) const;
+    void* _engineHandle() const { return mEngine; }   // cdroid::ResTable::Theme* (borrowed)
+private:
+    friend class Assets;          // Assets/App construct it from their engine
+    Theme(Resources& res, void* engine) : mRes(res), mEngine(engine) {}
+    Resources& mRes;
+    void*      mEngine;
 };
 
 } // namespace cdroid

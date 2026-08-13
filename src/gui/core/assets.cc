@@ -299,17 +299,20 @@ const std::string Assets::getThemeName() const {
     return mThemeName;
 }
 
-ResTable::Theme& Assets::getTheme() {
+Resources::Theme Assets::getTheme() {
     // Lazily build an arsc theme if none has been applied yet, so the returned
-    // reference is always valid (AOSP getTheme() never returns null). Binary
+    // view's engine is valid (AOSP getTheme() never returns a null theme). Binary
     // mode always has mResTable; the static fallback covers text-only paks.
     if (!mArscTheme && mResTable) {
         mArscTheme = new ResTable::Theme(*mResTable);
     }
-    if (mArscTheme) return *mArscTheme;
-    static ResTable sEmptyTable;
-    static ResTable::Theme sEmptyTheme(sEmptyTable);
-    return sEmptyTheme;
+    ResTable::Theme* engine = mArscTheme;
+    if (engine == nullptr) {
+        static ResTable sEmptyTable;
+        static ResTable::Theme sEmptyTheme(sEmptyTable);
+        engine = &sEmptyTheme;
+    }
+    return Resources::Theme(getResources(), engine);
 }
 
 void Assets::setTheme(const std::string&theme) {

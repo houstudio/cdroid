@@ -57,11 +57,11 @@ Typeface* Context::getFont(int id) {
 // the live theme (defStyleAttr=0, defStyleRes=0). Delegates to getTheme() like
 // the Java final in android.content.Context. `attrs` is sentinel-terminated.
 std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const uint32_t* attrs) {
-    ResTable::Theme& theme = getTheme();
-    const ResTable& table = theme.getResTable();
+    Resources::Theme _th = getTheme(); ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
+    const ResTable& table = theme->getResTable();
     size_t n = 0; while (attrs[n]) ++n;  // count up to the trailing-0 sentinel
     std::vector<StyledAttr> styled(n);
-    cdroid::obtainStyledAttributes(table, &theme, attrs, 0, 0, styled.data());
+    cdroid::obtainStyledAttributes(table, theme, attrs, 0, 0, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
                                         getResources().getDisplayMetrics().density, &getResources());
 }
@@ -70,11 +70,11 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const uint32_t* attr
 // top of the theme (defStyleAttr=0, defStyleRes=resId). `attrs` is sentinel-
 // terminated.
 std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const uint32_t* attrs) {
-    ResTable::Theme& theme = getTheme();
-    const ResTable& table = theme.getResTable();
+    Resources::Theme _th = getTheme(); ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
+    const ResTable& table = theme->getResTable();
     size_t n = 0; while (attrs[n]) ++n;
     std::vector<StyledAttr> styled(n);
-    cdroid::obtainStyledAttributes(table, &theme, attrs, 0, (uint32_t)resid, styled.data());
+    cdroid::obtainStyledAttributes(table, theme, attrs, 0, (uint32_t)resid, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
                                         getResources().getDisplayMetrics().density, &getResources());
 }

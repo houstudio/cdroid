@@ -917,12 +917,9 @@ float NestedScrollView::getVerticalScrollFactorCompat() {
         // rather than a runtime name lookup (getId hardcodes type=id and misses; getIdentifier
         // works but needlessly re-resolves a compile-time constant).
         const int attr = R::attr::listPreferredItemHeight;
-        Res_value v;
-        if (context && context->getTheme().resolveAttribute((uint32_t)attr, &v, true) &&
-            v.dataType == Res_value::TYPE_DIMENSION) {
-            TypedValue tv;
-            tv.type = v.dataType;
-            tv.data = v.data;
+        TypedValue tv;
+        if (context && context->getTheme().resolveAttribute(attr, &tv, true) &&
+            tv.type == TypedValue::TYPE_DIMENSION) {
             mVerticalScrollFactor = tv.complexToDimension(context->getResources().getDisplayMetrics());
         }
         if (mVerticalScrollFactor == 0) mVerticalScrollFactor = 1.f;

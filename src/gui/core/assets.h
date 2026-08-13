@@ -103,7 +103,7 @@ public:
     int loadStyles(const std::string&resid);
     void clearStyles();
     const std::string getPackageName()const override;
-    ResTable::Theme& getTheme() override;
+    Resources::Theme getTheme() override;
     const std::string getThemeName() const override;
     void setTheme(const std::string&theme)override;
     void setTheme(int resid) override;

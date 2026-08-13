@@ -56,7 +56,7 @@ public:
     // (engine = cdroid::ResTable::Theme); the legacy text-XML theme name is
     // getThemeName(). setTheme(int) applies a style resource; setTheme(const
     // std::string&) remains for text-XML compatibility.
-    virtual ResTable::Theme& getTheme() = 0;
+    virtual Resources::Theme getTheme() = 0;
     virtual const std::string getThemeName() const = 0;
     virtual void setTheme(const std::string&theme) = 0;
     virtual void setTheme(int resid) = 0;
