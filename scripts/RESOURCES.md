@@ -61,15 +61,21 @@ runtime:   obtainStyledAttributes matches AXML attr ids against styleable IDS[]
    `<enum name="parent" value="0"/>`: read `getResourceId`, fall back to
    `getInt` for the parent sentinel (androidx ConstraintLayout.java:3311).
 
-## Known caveat: 0x010d id squatting
+## CDROID framework-extension attrs: pinned at 0x01011000+
 
-18 of the 21 attrs in `cdroid_attrids.txt` (from attrs_cdroid.xml) sit on ids
-that AOSP's private range already assigns to *different* framework attrs
-(e.g. CDROID `candidate_background` = `0x010d0024` = AOSP `checkMarkGravity`).
-Both name→id mappings coexist in styleable generation (lookup is by name), and
-the colliding AOSP names are only referenced from framework declare-styleables,
-so it is latent today — but the two files must NOT be merged, and moving the
-CDROID custom attrs to a non-colliding range is the eventual fix.
+The 21 CDROID-original attrs (attrs_cdroid.xml) plus the 3 AOSP-private refs
+(frameDuration/framesCount/internalLayout) used to be auto-assigned into the
+0x010d private range — sequential by declaration order, so any attrs.xml edit
+shifted them (13 of 21 drifted by one) and no pinning reaches that range
+(aapt2 keeps public attr at type-id 0x01). They are now `<public>` pins in
+`src/gui/res/values/public-final.xml` at the free 0x01011000+ block; `cdroid_attrids.txt`
+and `framework_attrids.txt` mirror those ids for gen_styleable.
+
+Remaining fragility (accepted for now): ~57 AOSP-private attrs referenced by
+framework styleables still carry auto-assigned 0x010d ids that happen to match
+`scripts/private-final.xml` order. They are consistent today; reordering
+attrs.xml private declarations would shift them. If that ever bites, pin them
+the same way (0x01011018+).
 
 ## Note on intermediate files
 

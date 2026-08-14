@@ -98,8 +98,8 @@
   <public type="attr" name="floatingToolbarOpenDrawable" id="0x010d0058" />
   <public type="attr" name="foregroundInsidePadding" id="0x010d0059" />
   <public type="attr" name="fragmentBreadCrumbsStyle" id="0x010d005a" />
-  <public type="attr" name="frameDuration" id="0x010d005b" />
-  <public type="attr" name="framesCount" id="0x010d005c" />
+  <public type="attr" name="frameDuration" id="0x01011015" />
+  <public type="attr" name="framesCount" id="0x01011016" />
   <public type="attr" name="fromBottom" id="0x010d005d" />
   <public type="attr" name="fromLeft" id="0x010d005e" />
   <public type="attr" name="fromRight" id="0x010d005f" />
@@ -118,7 +118,7 @@
   <public type="attr" name="iconfactoryIconSize" id="0x010d006c" />
   <public type="attr" name="ignoreOffsetTopLimit" id="0x010d006d" />
   <public type="attr" name="initialActivityCount" id="0x010d006e" />
-  <public type="attr" name="internalLayout" id="0x010d006f" />
+  <public type="attr" name="internalLayout" id="0x01011017" />
   <public type="attr" name="internalMaxHeight" id="0x010d0070" />
   <public type="attr" name="internalMaxWidth" id="0x010d0071" />
   <public type="attr" name="internalMinHeight" id="0x010d0072" />

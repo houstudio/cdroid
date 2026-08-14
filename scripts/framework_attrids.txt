@@ -1673,8 +1673,8 @@
 0x010d0058 floatingToolbarOpenDrawable
 0x010d0059 foregroundInsidePadding
 0x010d005a fragmentBreadCrumbsStyle
-0x010d005b frameDuration
-0x010d005c framesCount
+0x01011015 frameDuration
+0x01011016 framesCount
 0x010d005d fromBottom
 0x010d005e fromLeft
 0x010d005f fromRight
@@ -1693,7 +1693,7 @@
 0x010d006c iconfactoryIconSize
 0x010d006d ignoreOffsetTopLimit
 0x010d006e initialActivityCount
-0x010d006f internalLayout
+0x01011017 internalLayout
 0x010d0070 internalMaxHeight
 0x010d0071 internalMaxWidth
 0x010d0072 internalMinHeight

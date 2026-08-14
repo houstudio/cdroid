@@ -1,25 +1,27 @@
-# CDROID-private attrs (from attrs_cdroid.xml → cdroid.pak → internal_R.h).
-# Independent from framework_attrids.txt so SDK replacement does not lose them.
-# Format: 0xID NAME
+# CDROID-private attrs (declared in src/gui/res/values/attrs_cdroid.xml).
+# Ids pinned in src/gui/res/values/public-final.xml at the 0x01011000+ public block
+# (the single source of truth) — moved out of the auto-assigned 0x010d private range
+# where they drifted. Independent from framework_attrids.txt so SDK replacement does
+# not lose them. Format: 0xID NAME
 
-0x010d0024 candidate_background
-0x010d0025 candidate_normal
-0x010d0026 candidate_other
-0x010d0027 candidate_recommand
-0x010d002b colonBlinking
-0x010d003e dayTextAppearance
-0x010d006b gridColor
-0x010d00f0 scrollDuration
-0x010d00fb selectedTextColor
-0x010d00fc selectedfontFamily
-0x010d0101 showGrid
-0x010d010a state_drag_acceptable
-0x010d010b state_drag_hoved
-0x010d0114 textColor2
-0x010d0120 tickLabelSize
-0x010d0121 tickLabels
-0x010d0122 tickMarks
-0x010d0134 updateInputTextInFling
-0x010d0139 wheelItemCount
-0x010d0140 wrapSelectorWheel
-0x010d00b8 pattern
+0x01011000 candidate_background
+0x01011001 candidate_normal
+0x01011002 candidate_other
+0x01011003 candidate_recommand
+0x01011004 colonBlinking
+0x01011005 dayTextAppearance
+0x01011006 gridColor
+0x01011007 pattern
+0x01011008 scrollDuration
+0x01011009 selectedTextColor
+0x0101100a selectedfontFamily
+0x0101100b showGrid
+0x0101100c state_drag_acceptable
+0x0101100d state_drag_hoved
+0x0101100e textColor2
+0x0101100f tickLabelSize
+0x01011010 tickLabels
+0x01011011 tickMarks
+0x01011012 updateInputTextInFling
+0x01011013 wheelItemCount
+0x01011014 wrapSelectorWheel

@@ -39,7 +39,7 @@ namespace internal { namespace R { namespace styleable {
         0x010103b5, 0x010103b6, 0x0101053b, 0x0101053c, 0 };
     const uint32_t NumberPicker[] = {
         0x0101034a, 0x010d00f3, 0x01010598, 0x010d00f4, 0x010d0072, 0x010d0070, 0x010d0073,
-        0x010d0071, 0x010d006f, 0x010d0126, 0x010d0069, 0x01010539, 0x01010136, 0x01010024,
+        0x010d0071, 0x01011017, 0x010d0126, 0x010d0069, 0x01010539, 0x01010136, 0x01010024,
         0x01010098, 0x01010095, 0x010103ac, 0x01010130, 0 };
     const uint32_t PopupWindow[] = { 0x01010176, 0x0101048c, 0x010102c9, 0x01010462, 0x0101051f, 0x01010520, 0 };
     const uint32_t ProgressBar[] = {
@@ -124,7 +124,7 @@ namespace internal { namespace R { namespace styleable {
         0x01010034, 0x01010098, 0x01010095, 0x0101013f, 0x01010140, 0x010100d5, 0x010104e5, 0 };
     const uint32_t AdaptiveIconDrawableLayer[] = { 0x01010199, 0 };
     const uint32_t AnimatedImageDrawable[] = { 0x01010119, 0x010103ea, 0x010101bf, 0x010102b5, 0 };
-    const uint32_t AnimatedRotateDrawable[] = { 0x01010194, 0x010d005b, 0x010d005c, 0x010101b5, 0x010101b6, 0x01010199, 0 };
+    const uint32_t AnimatedRotateDrawable[] = { 0x01010194, 0x01011015, 0x01011016, 0x010101b5, 0x010101b6, 0x01010199, 0 };
     const uint32_t AnimatedStateListDrawable[] = { 0x01010194, 0x01010195, 0x01010196, 0x0101011c, 0x0101030c, 0x0101030d, 0x010103ea, 0 };
     const uint32_t AnimatedStateListDrawableItem[] = { 0x01010199, 0x010100d0, 0 };
     const uint32_t AnimatedStateListDrawableTransition[] = { 0x0101044a, 0x01010449, 0x01010199, 0x0101044b, 0 };
@@ -182,7 +182,7 @@ namespace internal { namespace R { namespace styleable {
         0x01010003, 0x01010407, 0x01010406, 0x010104cb, 0x01010404, 0x010104cc, 0x01010405,
         0x01010408, 0x01010409, 0x0101040a, 0x0101040b, 0x0101040c, 0x0101040d, 0x0101051e, 0 };
     const uint32_t DatePicker[] = {
-        0x0101033d, 0x0101033f, 0x01010340, 0x0101034b, 0x0101034c, 0x010d006f, 0x010d0083,
+        0x0101033d, 0x0101033f, 0x01010340, 0x0101034b, 0x0101034c, 0x01011017, 0x010d0083,
         0x010d0068, 0x0101012f, 0x01010499, 0x010d012d, 0x0101049b, 0x010104b3, 0x0101017c,
         0x0101017d, 0x01010496, 0x01010497, 0x01010498, 0x01010494, 0x01010495, 0x0101049a,
         0x010d003b, 0 };
@@ -191,7 +191,7 @@ namespace internal { namespace R { namespace styleable {
         0x010d0037, 0x010d0023, 0x0101033e, 0x01010341, 0x01010342, 0x01010343, 0x01010344,
         0x01010345, 0x01010346, 0x01010347, 0 };
     const uint32_t TimePicker[] = {
-        0x010d0083, 0x010d006f, 0x010d0068, 0x0101012f, 0x010104a1, 0x010104e1, 0x010104a2,
+        0x010d0083, 0x01011017, 0x010d0068, 0x0101012f, 0x010104a1, 0x010104e1, 0x010104a2,
         0x010104a3, 0x010104b4, 0x010104a0, 0x0101049f, 0x010104a4, 0x010104a5, 0x010d003b, 0 };
     const uint32_t IconMenuView[] = { 0x01010132, 0x01010133, 0x01010134, 0x010d0097, 0x01010135, 0 };
     const uint32_t MenuView[] = {
@@ -202,13 +202,13 @@ namespace internal { namespace R { namespace styleable {
         0x0101055f, 0x010101e3, 0x0101054e, 0x010101e4, 0x0101054f, 0x010101e5, 0x01010106,
         0x01010194, 0x0101000e, 0x0101026f, 0x010102d9, 0x010102fb, 0x010102fc, 0x01010389,
         0x01010273, 0x01010534, 0 };
-    const uint32_t CandidateView[] = { 0x010d0024, 0x010d0025, 0x010d0026, 0x010d0027, 0 };
-    const uint32_t PlotView[] = { 0x010d0101, 0x010d006b, 0x010d0120, 0x010d0122, 0x010d0121, 0 };
-    const uint32_t NumberPickerCdroid[] = { 0x010d00fc, 0x010d00fb, 0x010d0114, 0x010d0134, 0x010d0139, 0x010d0140, 0 };
-    const uint32_t ChronometerCdroid[] = { 0x010d002b, 0 };
-    const uint32_t SimpleMonthViewCdroid[] = { 0x010d003e, 0 };
-    const uint32_t ScrollViewCdroid[] = { 0x010d00f0, 0 };
-    const uint32_t StateSetCdroid[] = { 0x010d010a, 0x010d010b, 0 };
+    const uint32_t CandidateView[] = { 0x01011000, 0x01011001, 0x01011002, 0x01011003, 0 };
+    const uint32_t PlotView[] = { 0x0101100b, 0x01011006, 0x0101100f, 0x01011011, 0x01011010, 0 };
+    const uint32_t NumberPickerCdroid[] = { 0x0101100a, 0x01011009, 0x0101100e, 0x01011012, 0x01011013, 0x01011014, 0 };
+    const uint32_t ChronometerCdroid[] = { 0x01011004, 0 };
+    const uint32_t SimpleMonthViewCdroid[] = { 0x01011005, 0 };
+    const uint32_t ScrollViewCdroid[] = { 0x01011008, 0 };
+    const uint32_t StateSetCdroid[] = { 0x0101100c, 0x0101100d, 0 };
     const uint32_t Animator[] = {
         0x01010141, 0x01010198, 0x010101be, 0x010101bf, 0x010101c0, 0x010102de, 0x010102df,
         0x010102e0, 0x010d00e2, 0 };
@@ -228,6 +228,6 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t AnticipateOvershootInterpolator[] = { 0x0101026a, 0x0101026b, 0 };
     const uint32_t PathInterpolator[] = { 0x010103fc, 0x010103fd, 0x010103fe, 0x010103ff, 0x01010405, 0 };
     const uint32_t DrawableContainerState[] = { 0x01010196, 0x01010195, 0 };
-    const uint32_t GradientDrawablePattern[] = { 0x010d00b8, 0 };
+    const uint32_t GradientDrawablePattern[] = { 0x01011007, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

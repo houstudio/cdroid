@@ -3998,4 +3998,35 @@
        @hide @SystemApi -->
   <public type="string" name="config_systemVendorIntelligence" id="0x0104004b" />
 
+  <!-- CDROID framework extension attrs (attrs_cdroid.xml + the AOSP-private
+       frameDuration/framesCount/internalLayout referenced by our subset). Formerly
+       auto-assigned in the 0x010d private range, where ids shifted with declaration
+       order (13 of 21 drifted by one) and no pinning mechanism reaches (aapt2 keeps
+       public attr at type-id 0x01). Pinned here in the free 0x01011000+ public block;
+       scripts/cdroid_attrids.txt + framework_attrids.txt mirror these ids for
+       gen_styleable. -->
+  <public type="attr" name="candidate_background" id="0x01011000" />
+  <public type="attr" name="candidate_normal" id="0x01011001" />
+  <public type="attr" name="candidate_other" id="0x01011002" />
+  <public type="attr" name="candidate_recommand" id="0x01011003" />
+  <public type="attr" name="colonBlinking" id="0x01011004" />
+  <public type="attr" name="dayTextAppearance" id="0x01011005" />
+  <public type="attr" name="gridColor" id="0x01011006" />
+  <public type="attr" name="pattern" id="0x01011007" />
+  <public type="attr" name="scrollDuration" id="0x01011008" />
+  <public type="attr" name="selectedTextColor" id="0x01011009" />
+  <public type="attr" name="selectedfontFamily" id="0x0101100a" />
+  <public type="attr" name="showGrid" id="0x0101100b" />
+  <public type="attr" name="state_drag_acceptable" id="0x0101100c" />
+  <public type="attr" name="state_drag_hoved" id="0x0101100d" />
+  <public type="attr" name="textColor2" id="0x0101100e" />
+  <public type="attr" name="tickLabelSize" id="0x0101100f" />
+  <public type="attr" name="tickLabels" id="0x01011010" />
+  <public type="attr" name="tickMarks" id="0x01011011" />
+  <public type="attr" name="updateInputTextInFling" id="0x01011012" />
+  <public type="attr" name="wheelItemCount" id="0x01011013" />
+  <public type="attr" name="wrapSelectorWheel" id="0x01011014" />
+  <public type="attr" name="frameDuration" id="0x01011015" />
+  <public type="attr" name="framesCount" id="0x01011016" />
+  <public type="attr" name="internalLayout" id="0x01011017" />
 </resources>
