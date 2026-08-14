@@ -101,7 +101,7 @@ void ActivityNavigator::navigate(NavDestination* destination, Bundle* args, NavO
                 last = matchEnd;
             }
             data.append(dataPattern, last, std::string::npos);
-            intent.setData(new Uri(data)); // CDROID has no Uri::parse; Uri(string) ctor
+            intent.setData(Uri::parse(data));
         }
     }
     // navigatorExtras flags (androidx) would be added here; the legacy navigate signature carries no
@@ -160,7 +160,7 @@ void ActivityNavigator::Destination::onInflate(Context* context, const Attribute
     }
     setAction(attrs.getString("action"));
     const std::string data = parseApplicationId(context, attrs.getString("data"));
-    if(!data.empty()) setData(new Uri(data));
+    if(!data.empty()) setData(Uri::parse(data));
     setDataPattern(parseApplicationId(context, attrs.getString("dataPattern")));
 }
 

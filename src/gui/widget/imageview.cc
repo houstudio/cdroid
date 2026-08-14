@@ -116,8 +116,8 @@ void ImageView::resolveUri(){
         if(d==nullptr)
             mResourceId = 0;  // Don't try again.
     } else if (!mUri.empty()) {
-        Uri uri(mUri);
-        d = getDrawableFromUri(uri);
+        std::unique_ptr<Uri> uri(Uri::parse(mUri));
+        d = getDrawableFromUri(*uri);
         LOGW_IF(d==nullptr,"resolveUri failed on bad bitmap uri: %s",mUri.c_str());
         if(d==nullptr)
             mUri.clear();  // Don't try again.
@@ -127,8 +127,8 @@ void ImageView::resolveUri(){
           loads as an image file/asset; "@name" resolves through Context.
           AOSP only has the int/uri pair — this branch is the extension.*/
         if(mResource.find("://")!=std::string::npos){
-            Uri uri(mResource);
-            d = getDrawableFromUri(uri);
+            std::unique_ptr<Uri> uri(Uri::parse(mResource));
+            d = getDrawableFromUri(*uri);
             LOGW_IF(d==nullptr,"resolveUri failed on bad bitmap uri: %s",mResource.c_str());
             if(d==nullptr)
                 mResource.clear();  // Don't try again.
@@ -150,15 +150,14 @@ void ImageView::resolveUri(){
     updateDrawable(d);
 }
 
-Drawable* ImageView::getDrawableFromUri(Uri& uri){
+Drawable* ImageView::getDrawableFromUri(const Uri& uri){
     const std::string scheme = uri.getScheme();
     if(scheme.compare("android.resource")==0){
         /*AOSP routes android.resource://<pkg>/<type>/<name> (or /<typeid>/<name>,
           or a bare /<resid>) through ContentResolver.getResourceId and re-loads
           via the owning Resources. CDROID has no ContentResolver: map the same
           path forms straight onto Context lookups (authority = package).*/
-        std::vector<std::string> segs;
-        uri.getPathSegments(segs);
+        const std::vector<std::string> segs = uri.getPathSegments();
         const std::string authority = uri.getAuthority();
         if(segs.size()==1 && segs[0].find_first_not_of("0123456789")==std::string::npos){
             return getContext()->getDrawable((int)strtoul(segs[0].c_str(),nullptr,10));
@@ -723,8 +722,8 @@ Runnable ImageView::setImageURIAsync(const std::string&uri){
         std::string u = uri;
         Drawable* d = nullptr;
         if(!u.empty()){
-            Uri uobj(u);
-            d = getDrawableFromUri(uobj);
+            std::unique_ptr<Uri> uobj(Uri::parse(u));
+            d = getDrawableFromUri(*uobj);
         }
         if(d == nullptr){
             // Do not set the URI if the drawable couldn't be loaded.

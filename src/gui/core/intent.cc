@@ -118,7 +118,7 @@ Intent* Intent::parseUri(const std::string& uri,int flags) {
     if ((flags&(URI_INTENT_SCHEME|URI_ANDROID_APP_SCHEME)) != 0) {
         if (!uri.compare(0,7,"intent:") && !androidApp) {
             Intent* intent = new Intent(ACTION_VIEW);
-            intent->setData(new Uri(uri));
+            intent->setData(Uri::parse(uri));
             return intent;
         }
     }
@@ -127,7 +127,7 @@ Intent* Intent::parseUri(const std::string& uri,int flags) {
     // simple case
     if (i == std::string::npos) {
         if (!androidApp) {
-            return new Intent(ACTION_VIEW, new Uri(uri));
+            return new Intent(ACTION_VIEW, Uri::parse(uri));
         }
 
     // old format Intent URI
@@ -293,7 +293,7 @@ Intent* Intent::parseUri(const std::string& uri,int flags) {
         }
 
         if (data.length() > 0) {
-            intent->mData = new Uri(data);
+            intent->mData = Uri::parse(data);
         }
     }
 
@@ -445,9 +445,9 @@ Intent* Intent::getIntentOld(const std::string& uri, int flags) {
         }
 
         if (isIntentFragment) {
-            intent->mData = new Uri(uri.substr(0, intentFragmentStart));
+            intent->mData = Uri::parse(uri.substr(0, intentFragmentStart));
         } else {
-            intent->mData = new Uri(uri);
+            intent->mData = Uri::parse(uri);
         }
 
         if (intent->mAction.empty()) {
@@ -456,7 +456,7 @@ Intent* Intent::getIntentOld(const std::string& uri, int flags) {
         }
 
     } else {
-        intent = new Intent(ACTION_VIEW, new Uri(uri));
+        intent = new Intent(ACTION_VIEW, Uri::parse(uri));
     }
 
     return intent;

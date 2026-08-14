@@ -46,9 +46,9 @@ private:
     void initImageView();
     void resolveUri();
     /*AOSP getDrawableFromUri: scheme-dispatched drawable load (android.resource
-      / content / file / plain path). Uri is core/uri.h (non-const ref: its
-      accessors are non-const, AOSP passes by value).*/
-    Drawable* getDrawableFromUri(Uri& uri);
+      / content / file / plain path). Uri is core/uri.h (abstract; const ref
+      stands in for AOSP's pass-by-value).*/
+    Drawable* getDrawableFromUri(const Uri& uri);
     int resolveAdjustedSize(int desiredSize, int maxSize,int measureSpec);
     void applyImageTint();
     void applyColorMod();
