@@ -1,10 +1,19 @@
 cmake_minimum_required (VERSION 3.22)
 project(CDROID C CXX)
 
-# Binary AXML mode: when ON, pakbuilder uses SDK framework resources (aapt2 -x)
-# to produce binary AXML layouts + resources.arsc in the pak. Default OFF (text XML).
-set(CDROID_AAPT2 "/opt/android-sdk/build-tools/36.0.0/aapt2" CACHE PATH "aapt2 binary")
-set(CDROID_ANDROID_JAR "/opt/android-sdk/platforms/android-36/android.jar" CACHE PATH "android.jar")
+# Binary AXML mode: when ON, pakbuilder uses aapt2 to produce binary AXML
+# layouts + resources.arsc in the pak. Default OFF (text XML).
+#
+# aapt2 is auto-located on PATH (Ubuntu's aapt2 2.19 works with the android-34
+# framework jar). No android-sdk dependency: the framework jar ships in-tree at
+# src/gui/res/android.jar (jar is not in pakbuilder's BIN_EXTS, so it is never
+# packed into cdroid.pak — it is a build input only).
+find_program(CDROID_AAPT2_CMD aapt2)
+if(NOT CDROID_AAPT2_CMD)
+    set(CDROID_AAPT2_CMD "/opt/android-sdk/build-tools/36.0.0/aapt2")
+endif()
+set(CDROID_AAPT2 "${CDROID_AAPT2_CMD}" CACHE PATH "aapt2 binary")
+set(CDROID_ANDROID_JAR "${CMAKE_SOURCE_DIR}/src/gui/res/android.jar" CACHE PATH "android.jar")
 set(CDROID_SDK_RES "${CMAKE_SOURCE_DIR}/src/gui/res" CACHE PATH "framework res dir (slim base, ex-gui/assets)")
 set(CDROID_SDK_RES_FILTER "${CMAKE_SOURCE_DIR}/scripts/sdk_res_filter.json" CACHE FILEPATH "JSON filter for SDK res densities/locales")
 

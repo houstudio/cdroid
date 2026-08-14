@@ -410,6 +410,20 @@ class PakBuilder:
                 _p = os.path.join(tmpres, _sf)
                 if os.path.exists(_p):
                     os.remove(_p)
+            # Strip <staging-public-group-final> blocks from public-final.xml: they
+            # hold staging-group symbol ranges (0x01fe/0x01ff...) that only newer
+            # aapt2 understands — Ubuntu's aapt2 2.19 rejects them as an unknown
+            # resource type. They carry no ID pinning (the <public> entries do), so
+            # dropping them is safe for the framework -x link.
+            import re as _re
+            _pf = os.path.join(tmpres, "values", "public-final.xml")
+            if os.path.exists(_pf):
+                with open(_pf, encoding="utf-8") as _fh:
+                    _txt = _fh.read()
+                _txt = _re.sub(r'<staging-public-group-final\b.*?</staging-public-group-final>\s*',
+                               '', _txt, flags=_re.S)
+                with open(_pf, "w", encoding="utf-8") as _fh:
+                    _fh.write(_txt)
 
             # Density/locale trimming via aapt2 -c (config mode). Unlike folder
             # deletion (which left dangling symbol declarations and broke link),
