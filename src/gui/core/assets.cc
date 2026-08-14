@@ -440,6 +440,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     // pak with it too. Otherwise files in later paks (e.g. app layouts in
     // uidemo1.pak, added after cdroid.pak) are invisible to openNonAsset, and
     // every app layout inflate returns null.
+    LOGD("Loaded %s",name.c_str());
     if (mAssetManager) mAssetManager->addAssetPath(path, nullptr);
     ZIPArchive*pak = new ZIPArchive(path);
     std::string package = name;
@@ -456,7 +457,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     int count=0;
     PENDINGRESOURCE pending;
     auto sttm = SystemClock::uptimeMillis();
-    pak->forEachEntry([this,package,pak,&count,&pending](const std::string&res) {
+    /*pak->forEachEntry([this,package,pak,&count,&pending](const std::string&res) {
         count++;
         if((res.size()>6)&&(TextUtils::startWith(res,"values")||TextUtils::startWith(res,"color"))) {
             // Skip binary AXML entries (SDK framework res — already in arsc).
@@ -473,7 +474,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
             loadKeyValues(package,package+":"+res,&pending);
         }
         return 0;
-    });
+    });*/
     // Load resources.arsc if present. Try getInputStream directly rather than
     // hasEntry: cdroid.pak carries duplicate color/ entries (SDK + own), and
     // libzip's zip_name_locate (used by hasEntry) fails to resolve some names
@@ -497,7 +498,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         //setTheme("cdroid:style/Theme");
         setTheme("cdroid:style/Theme.Material");
     }
-
+#if 0
     // pending.colors / pending.dimens resolved cross-references into the retired
     // text caches (mColors/mDimensions); those caches are gone, so nothing feeds
     // these queues now. Only pending.colorStateList still resolves (via the
@@ -522,6 +523,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     for(auto c:pending.colorStateList){
         LOGD("colorStateList %s unresolved", c.first.c_str());
     }
+#endif
     LOGI("[%s] loaded %d files, %d styles, %d theme attrs, used %dms",
          package.c_str(), count, mStyles.size(), mTheme.getAttributeCount(),
          int(SystemClock::uptimeMillis()-sttm));
@@ -966,8 +968,8 @@ int Assets::getDimension(const std::string&refid)const{
     // resolves the "dimen" type — so color/style references legitimately miss.
     // The trimmed framework arsc also omits many private resources. AOSP's
     // getDimension throws NotFoundException that the caller catches to use its
-    // default; we mirror that by silently returning 0. LOGD keeps it diagnosable.
-    LOGD("getDimension: %s not a dimen resource", refid.c_str());
+    // default; we mirror that by silently returning 0. No log: this fires on
+    // every color/style value forwarded here, so logging is pure noise.
     return 0;
 }
 

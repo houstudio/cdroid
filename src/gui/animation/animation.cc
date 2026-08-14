@@ -17,6 +17,8 @@
  *********************************************************************************/
 #include <animation/animation.h>
 #include <animation/animationutils.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 #include <systemclock.h>
 #include <limits>
 #include <cdtypes.h>
@@ -24,6 +26,7 @@
 
 using namespace Cairo;
 namespace cdroid{
+using namespace cdroid::internal;
 
 Animation::Animation() {
     mStartTime    =-1;
@@ -62,15 +65,17 @@ Animation::Animation(const Animation&o){
 }
 
 Animation::Animation(Context* context, const AttributeSet& attrs){
-    setDuration(attrs.getInt("duration",0));
-    setStartOffset(attrs.getInt("startOffset",0));
-    setFillEnabled(attrs.getBoolean("fillEnabled",mFillEnabled));
-    setFillBefore (attrs.getBoolean("fillBefore",mFillBefore));
-    setFillAfter  (attrs.getBoolean("fillAfter",mFillAfter));
-    setRepeatCount(attrs.getInt("repeatCount",mRepeatCount));
-    setRepeatMode (attrs.getInt("repeatMode",RESTART));
+    // AOSP Animation: single obtainStyledAttributes(attrs, Animation).
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::Animation);
+    setDuration(a->getInt(R::styleable::Animation_duration,0));
+    setStartOffset(a->getInt(R::styleable::Animation_startOffset,0));
+    setFillEnabled(a->getBoolean(R::styleable::Animation_fillEnabled,mFillEnabled));
+    setFillBefore (a->getBoolean(R::styleable::Animation_fillBefore,mFillBefore));
+    setFillAfter  (a->getBoolean(R::styleable::Animation_fillAfter,mFillAfter));
+    setRepeatCount(a->getInt(R::styleable::Animation_repeatCount,mRepeatCount));
+    setRepeatMode (a->getInt(R::styleable::Animation_repeatMode,RESTART));
     //setBackgroundColor(Color::parseColor(attrs.getString("background")));
-    const int resid=attrs.getResourceId("interpolator",0);
+    const int resid=a->getResourceId(R::styleable::Animation_interpolator,0);
     if(resid)setInterpolator(context,resid);else mInterpolator=nullptr;
 }
 

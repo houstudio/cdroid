@@ -95,6 +95,11 @@ DatePicker
 CalendarView
 TimePicker
 
+# --- menu (framework attrs.xml) ---
+IconMenuView
+MenuView
+MenuItem
+
 # --- CDROID-private widget attrs (attrs_cdroid.xml) ---
 CandidateView
 PlotView
@@ -112,6 +117,7 @@ PropertyAnimator
 AnimatorSet
 
 # --- interpolators (framework attrs.xml) ---
+Animation
 AccelerateInterpolator
 DecelerateInterpolator
 CycleInterpolator

@@ -18,7 +18,9 @@
 #include <menu/menubuilder.h>
 #include <menu/iconmenuview.h>
 #include <menu/iconmenuitemview.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(IconMenuView)
 IconMenuView::IconMenuView(Context* context,const AttributeSet& attrs):IconMenuView(context,&attrs,0){}
@@ -27,18 +29,22 @@ IconMenuView::IconMenuView(Context* context,const AttributeSet* pAttrs,int defSt
   :ViewGroup(context, pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
 
-    mRowHeight= attrs.getDimensionPixelSize("rowHeight", 64);
-    mMaxRows  = attrs.getInt("maxRows", 2);
-    mMaxItems = attrs.getInt("maxItems", 6);
-    mMaxItemsPerRow = attrs.getInt("maxItemsPerRow", 3);
-    mMoreIcon = attrs.getDrawable("moreIcon");
+    // AOSP IconMenuView: two obtainStyledAttributes (IconMenuView + MenuView),
+    // defStyleAttr=0 (element attrs only, matching the prior raw attrs reads).
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::IconMenuView, 0);
+    mRowHeight = a->getDimensionPixelSize(R::styleable::IconMenuView_rowHeight, 64);
+    mMaxRows   = a->getInt(R::styleable::IconMenuView_maxRows, 2);
+    mMaxItems  = a->getInt(R::styleable::IconMenuView_maxItems, 6);
+    mMaxItemsPerRow = a->getInt(R::styleable::IconMenuView_maxItemsPerRow, 3);
+    mMoreIcon  = a->getDrawable(R::styleable::IconMenuView_moreIcon);
 
-    mItemBackground = attrs.getDrawable("itemBackground");
-    mHorizontalDivider = attrs.getDrawable("horizontalDivider");
+    auto b = context->obtainStyledAttributes(attrs, R::styleable::MenuView, 0);
+    mItemBackground = b->getDrawable(R::styleable::MenuView_itemBackground);
+    mHorizontalDivider = b->getDrawable(R::styleable::MenuView_horizontalDivider);
     //mHorizontalDividerRects = new ArrayList<Rect>();
-    mVerticalDivider =  attrs.getDrawable("verticalDivider");
+    mVerticalDivider =  b->getDrawable(R::styleable::MenuView_verticalDivider);
     //mVerticalDividerRects = new ArrayList<Rect>();
-    mAnimations = attrs.getResourceId("windowAnimationStyle", 0);
+    mAnimations = b->getResourceId(R::styleable::MenuView_windowAnimationStyle, 0);
 
     if (mHorizontalDivider != nullptr) {
         mHorizontalDividerHeight = mHorizontalDivider->getIntrinsicHeight();

@@ -1106,6 +1106,52 @@ namespace internal { namespace R { namespace styleable {
     constexpr int TimePicker_amPmBackgroundColor = 12;
     constexpr int TimePicker_dialogMode = 13;
 
+    // IconMenuView (5 attrs)
+    extern const uint32_t IconMenuView[];
+    constexpr int IconMenuView_rowHeight = 0;
+    constexpr int IconMenuView_maxRows = 1;
+    constexpr int IconMenuView_maxItemsPerRow = 2;
+    constexpr int IconMenuView_maxItems = 3;
+    constexpr int IconMenuView_moreIcon = 4;
+
+    // MenuView (9 attrs)
+    extern const uint32_t MenuView[];
+    constexpr int MenuView_itemTextAppearance = 0;
+    constexpr int MenuView_horizontalDivider = 1;
+    constexpr int MenuView_verticalDivider = 2;
+    constexpr int MenuView_headerBackground = 3;
+    constexpr int MenuView_itemBackground = 4;
+    constexpr int MenuView_windowAnimationStyle = 5;
+    constexpr int MenuView_itemIconDisabledAlpha = 6;
+    constexpr int MenuView_preserveIconSpacing = 7;
+    constexpr int MenuView_subMenuArrow = 8;
+
+    // MenuItem (23 attrs)
+    extern const uint32_t MenuItem[];
+    constexpr int MenuItem_id = 0;
+    constexpr int MenuItem_menuCategory = 1;
+    constexpr int MenuItem_orderInCategory = 2;
+    constexpr int MenuItem_title = 3;
+    constexpr int MenuItem_titleCondensed = 4;
+    constexpr int MenuItem_icon = 5;
+    constexpr int MenuItem_iconTint = 6;
+    constexpr int MenuItem_iconTintMode = 7;
+    constexpr int MenuItem_alphabeticShortcut = 8;
+    constexpr int MenuItem_alphabeticModifiers = 9;
+    constexpr int MenuItem_numericShortcut = 10;
+    constexpr int MenuItem_numericModifiers = 11;
+    constexpr int MenuItem_checkable = 12;
+    constexpr int MenuItem_checked = 13;
+    constexpr int MenuItem_visible = 14;
+    constexpr int MenuItem_enabled = 15;
+    constexpr int MenuItem_onClick = 16;
+    constexpr int MenuItem_showAsAction = 17;
+    constexpr int MenuItem_actionLayout = 18;
+    constexpr int MenuItem_actionViewClass = 19;
+    constexpr int MenuItem_actionProviderClass = 20;
+    constexpr int MenuItem_contentDescription = 21;
+    constexpr int MenuItem_tooltipText = 22;
+
     // CandidateView (4 attrs)
     extern const uint32_t CandidateView[];
     constexpr int CandidateView_candidate_background = 0;
@@ -1183,6 +1229,24 @@ namespace internal { namespace R { namespace styleable {
     // AnimatorSet (1 attrs)
     extern const uint32_t AnimatorSet[];
     constexpr int AnimatorSet_ordering = 0;
+
+    // Animation (15 attrs)
+    extern const uint32_t Animation[];
+    constexpr int Animation_interpolator = 0;
+    constexpr int Animation_fillEnabled = 1;
+    constexpr int Animation_fillBefore = 2;
+    constexpr int Animation_fillAfter = 3;
+    constexpr int Animation_duration = 4;
+    constexpr int Animation_startOffset = 5;
+    constexpr int Animation_repeatCount = 6;
+    constexpr int Animation_repeatMode = 7;
+    constexpr int Animation_zAdjustment = 8;
+    constexpr int Animation_background = 9;
+    constexpr int Animation_detachWallpaper = 10;
+    constexpr int Animation_showWallpaper = 11;
+    constexpr int Animation_hasRoundedCorners = 12;
+    constexpr int Animation_showBackdrop = 13;
+    constexpr int Animation_backdropColor = 14;
 
     // AccelerateInterpolator (1 attrs)
     extern const uint32_t AccelerateInterpolator[];

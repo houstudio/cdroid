@@ -164,6 +164,7 @@ endif(ENABLE_KPLOT)
 
 list(APPEND WIDGET_SOURCES
     widget/viewanimator.cc
+    widget/dialogviewanimator.cc
     widget/viewflipper.cc
     widget/viewswitcher.cc
     widget/textswitcher.cc

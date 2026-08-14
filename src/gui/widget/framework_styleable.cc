@@ -193,6 +193,15 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t TimePicker[] = {
         0x010d0083, 0x010d006f, 0x010d0068, 0x0101012f, 0x010104a1, 0x010104e1, 0x010104a2,
         0x010104a3, 0x010104b4, 0x010104a0, 0x0101049f, 0x010104a4, 0x010104a5, 0x010d003b, 0 };
+    const uint32_t IconMenuView[] = { 0x01010132, 0x01010133, 0x01010134, 0x010d0097, 0x01010135, 0 };
+    const uint32_t MenuView[] = {
+        0x0101012c, 0x0101012d, 0x0101012e, 0x0101012f, 0x01010130, 0x010100ae, 0x01010131,
+        0x010d00d7, 0x010104f3, 0 };
+    const uint32_t MenuItem[] = {
+        0x010100d0, 0x010101de, 0x010101df, 0x010101e1, 0x010101e2, 0x01010002, 0x0101055e,
+        0x0101055f, 0x010101e3, 0x0101054e, 0x010101e4, 0x0101054f, 0x010101e5, 0x01010106,
+        0x01010194, 0x0101000e, 0x0101026f, 0x010102d9, 0x010102fb, 0x010102fc, 0x01010389,
+        0x01010273, 0x01010534, 0 };
     const uint32_t CandidateView[] = { 0x010d0024, 0x010d0025, 0x010d0026, 0x010d0027, 0 };
     const uint32_t PlotView[] = { 0x010d0101, 0x010d006b, 0x010d0120, 0x010d0122, 0x010d0121, 0 };
     const uint32_t NumberPickerCdroid[] = { 0x010d00fc, 0x010d00fb, 0x010d0114, 0x010d0134, 0x010d0139, 0x010d0140, 0 };
@@ -207,6 +216,10 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t Keyframe[] = { 0x010102e0, 0x01010024, 0x010104d8, 0x01010141, 0 };
     const uint32_t PropertyAnimator[] = { 0x010102e1, 0x01010474, 0x01010475, 0x01010405, 0 };
     const uint32_t AnimatorSet[] = { 0x010102e2, 0 };
+    const uint32_t Animation[] = {
+        0x01010141, 0x0101024f, 0x010101bc, 0x010101bd, 0x01010198, 0x010101be, 0x010101bf,
+        0x010101c0, 0x010101c1, 0x010100d4, 0x010102a6, 0x010d00fa, 0x010d0065, 0x0101065c,
+        0x01010672, 0 };
     const uint32_t AccelerateInterpolator[] = { 0x010101d3, 0 };
     const uint32_t DecelerateInterpolator[] = { 0x010101d3, 0 };
     const uint32_t CycleInterpolator[] = { 0x010101d4, 0 };
