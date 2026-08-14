@@ -823,4 +823,82 @@
         </attr>
         <attr name="motionEffect_strict" format="boolean"/>
     </declare-styleable>
+
+    <!-- ===== Standalone helper attrs (Placeholder / Grid / Carousel).
+         These were previously undeclared, so under binary AXML they could not resolve
+         (aapt2 has no resource id for them). Declaring them + pinning ids in public.xml
+         lets the helpers read them via TypedArray. ===== -->
+    <!-- Placeholder -->
+    <attr name="content" format="reference" />
+    <attr name="placeholder_emptyVisibility" format="enum">
+        <enum name="visible" value="0" />
+        <enum name="invisible" value="4" />
+        <enum name="gone" value="8" />
+    </attr>
+    <!-- Grid -->
+    <attr name="grid_rows" format="integer" />
+    <attr name="grid_columns" format="integer" />
+    <attr name="grid_spans" format="string" />
+    <attr name="grid_skips" format="string" />
+    <attr name="grid_rowWeights" format="string" />
+    <attr name="grid_columnWeights" format="string" />
+    <attr name="grid_orientation" format="enum">
+        <enum name="horizontal" value="0" />
+        <enum name="vertical" value="1" />
+    </attr>
+    <attr name="grid_horizontalGaps" format="dimension" />
+    <attr name="grid_verticalGaps" format="dimension" />
+    <attr name="grid_validateInputs" format="boolean" />
+    <attr name="grid_useRtl" format="boolean" />
+    <!-- Carousel -->
+    <attr name="carousel_firstView" format="reference" />
+    <attr name="carousel_backwardTransition" format="reference" />
+    <attr name="carousel_forwardTransition" format="reference" />
+    <attr name="carousel_previousState" format="reference" />
+    <attr name="carousel_nextState" format="reference" />
+    <attr name="carousel_emptyViews_behavior" format="enum">
+        <enum name="visible" value="0" />
+        <enum name="invisible" value="4" />
+        <enum name="gone" value="8" />
+    </attr>
+    <attr name="carousel_touchUp_dampeningFactor" format="float" />
+    <attr name="carousel_touchUpMode" format="enum">
+        <enum name="immediateStop" value="1" />
+        <enum name="carryOn" value="2" />
+    </attr>
+    <attr name="carousel_touchUp_velocityThreshold" format="float" />
+    <attr name="carousel_infinite" format="boolean" />
+
+    <!-- Placeholder (from androidx constraintlayout.widget.Placeholder) -->
+    <declare-styleable name="Placeholder">
+        <attr name="content"/>
+        <attr name="placeholder_emptyVisibility"/>
+    </declare-styleable>
+    <!-- Grid (from androidx constraintlayout.helper.widget.Grid) -->
+    <declare-styleable name="Grid">
+        <attr name="grid_rows"/>
+        <attr name="grid_columns"/>
+        <attr name="grid_spans"/>
+        <attr name="grid_skips"/>
+        <attr name="grid_rowWeights"/>
+        <attr name="grid_columnWeights"/>
+        <attr name="grid_orientation"/>
+        <attr name="grid_horizontalGaps"/>
+        <attr name="grid_verticalGaps"/>
+        <attr name="grid_validateInputs"/>
+        <attr name="grid_useRtl"/>
+    </declare-styleable>
+    <!-- Carousel (from androidx constraintlayout.widget.Carousel) -->
+    <declare-styleable name="Carousel">
+        <attr name="carousel_firstView"/>
+        <attr name="carousel_backwardTransition"/>
+        <attr name="carousel_forwardTransition"/>
+        <attr name="carousel_previousState"/>
+        <attr name="carousel_nextState"/>
+        <attr name="carousel_emptyViews_behavior"/>
+        <attr name="carousel_touchUp_dampeningFactor"/>
+        <attr name="carousel_touchUpMode"/>
+        <attr name="carousel_touchUp_velocityThreshold"/>
+        <attr name="carousel_infinite"/>
+    </declare-styleable>
 </resources>

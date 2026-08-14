@@ -25,40 +25,47 @@
 #include <sstream>
 
 #include <core/displaymetrics.h>
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
 DECLARE_WIDGET(CircularFlow)
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 CircularFlow::CircularFlow(Context* ctx,const AttributeSet& attrs):CircularFlow(ctx,&attrs,0){}
 
 CircularFlow::CircularFlow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
     // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
     // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
-    // and every circularflow_* attribute stays at its default: mAngles/mRadius empty, mDefaultRadius
-    // 0. anchorReferences then assigns every referenced view angle=0 radius=0, so all of them collapse
-    // onto the center point (only the topmost is visible). Re-invoke init now that *this is fully
-    // constructed so it dispatches to CircularFlow::init — same pattern as Carousel/MotionEffect/Placeholder.
-    // ConstraintHelper::init is idempotent on re-run (mIds cleared then refilled).
-    init(attrs);
+    // and every circularflow_* attribute stays at its default. Re-invoke init now that *this is fully
+    // constructed so it dispatches to CircularFlow::init — same pattern as Carousel/MotionEffect/
+    // Placeholder. ConstraintHelper::init is idempotent on re-run (mIds cleared then refilled).
+    init(pAttrs);
 }
 
 CircularFlow::CircularFlow(int width, int height)
     : ConstraintHelper(width, height) {
 }
 
-void CircularFlow::init(const AttributeSet& attrs) {
+void CircularFlow::init(const AttributeSet* attrs) {
     ConstraintHelper::init(attrs);
-    mViewCenter = attrs.getResourceId("circularflow_viewCenter", 0);
-    mReferenceAngles = attrs.getString("circularflow_angles", "");
-    mReferenceRadius = attrs.getString("circularflow_radiusInDP", "");
+    if (attrs == nullptr) return;
+    // TypedArray reads typed binary AXML values directly (AOSP pattern); circularflow_* live in the
+    // ConstraintLayout_Layout styleable. viewCenter is a reference (getResourceId); angles/radius are
+    // comma strings; defaultAngle/defaultRadius are float/dimension.
+    auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
+    if (!ta) return;
+    namespace C = R::styleable;
+    mViewCenter = (int)ta->getResourceId(C::ConstraintLayoutLayout_circularflow_viewCenter, 0);
+    mReferenceAngles = ta->getString(C::ConstraintLayoutLayout_circularflow_angles);
+    mReferenceRadius = ta->getString(C::ConstraintLayoutLayout_circularflow_radiusInDP);
     if (!mReferenceAngles.empty()) setAngles(mReferenceAngles);
     if (!mReferenceRadius.empty()) setRadius(mReferenceRadius);
-    setDefaultAngle(attrs.getFloat("circularflow_defaultAngle", 0));
-    setDefaultRadius(attrs.getDimensionPixelSize("circularflow_defaultRadius", 0));
+    setDefaultAngle(ta->getFloat(C::ConstraintLayoutLayout_circularflow_defaultAngle, 0));
+    setDefaultRadius(ta->getDimensionPixelSize(C::ConstraintLayoutLayout_circularflow_defaultRadius, 0));
 }
 
 std::vector<float> CircularFlow::getAngles() const {

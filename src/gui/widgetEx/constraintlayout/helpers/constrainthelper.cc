@@ -35,8 +35,7 @@ ConstraintHelper::ConstraintHelper(Context* ctx,const AttributeSet& attrs):Const
 
 ConstraintHelper::ConstraintHelper(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : View(ctx, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
-    init(attrs);
+    init(pAttrs);
 }
 
 ConstraintHelper::ConstraintHelper(int width, int height)
@@ -49,20 +48,19 @@ ConstraintHelper::ConstraintHelper(int width, int height)
     setBackground(nullptr);
 }
 
-void ConstraintHelper::init(const AttributeSet& attrs) {
+void ConstraintHelper::init(const AttributeSet* attrs) {
+    if (attrs == nullptr) return;
     // constraint_referenced_ids/tags: read via TypedArray (binary AXML stores them as typed
-    // string values the name-based getString cannot decode). The names are resolved to view
-    // ids in setIds via Resources.getIdentifier (arsc-backed, works for binary).
-    Context* ctx = attrs.getContext();
-    if (ctx) {
-        auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
-        if (ta) {
-            mReferenceIds = ta->getString(R::styleable::ConstraintLayoutLayout_constraint_referenced_ids);
-            mReferenceTags = ta->getString(R::styleable::ConstraintLayoutLayout_constraint_referenced_tags);
-        }
+    // string values the name-based getString cannot decode) — the AOSP getContext()
+    // .obtainStyledAttributes(attrs, styleable) call. Names resolve to view ids in setIds via
+    // Resources.getIdentifier (arsc-backed, works for binary).
+    auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
+    if (ta) {
+        mReferenceIds = ta->getString(R::styleable::ConstraintLayoutLayout_constraint_referenced_ids);
+        mReferenceTags = ta->getString(R::styleable::ConstraintLayoutLayout_constraint_referenced_tags);
     }
     if (!mReferenceIds.empty()) {
-        setIds(attrs, mReferenceIds);
+        setIds(*attrs, mReferenceIds);
     }
 }
 

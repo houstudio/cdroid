@@ -40,19 +40,18 @@ MotionEffect::MotionEffect(Context* ctx,const AttributeSet& attrs):MotionEffect(
 
 MotionEffect::MotionEffect(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : MotionHelper(ctx, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
-    init(attrs);
+    init(pAttrs);
 }
 
 MotionEffect::MotionEffect(int width, int height)
     : MotionHelper(width, height) {
 }
 
-void MotionEffect::init(const AttributeSet& attrs) {
+void MotionEffect::init(const AttributeSet* attrs) {
     ConstraintHelper::init(attrs);
-    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    Context* ctx = attrs.getContext();
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::MotionEffect);
+    if (attrs == nullptr) return;
+    // TypedArray reads typed binary AXML values directly (AOSP getContext().obtainStyledAttributes).
+    auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::MotionEffect);
     mMotionEffectStart = std::max(0, std::min(99, ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_start) ? ta->getInt(R::styleable::MotionEffect_motionEffect_start, mMotionEffectStart) : mMotionEffectStart));
     mMotionEffectEnd   = std::max(0, std::min(99, ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_end) ? ta->getInt(R::styleable::MotionEffect_motionEffect_end, mMotionEffectEnd) : mMotionEffectEnd));
     mMotionEffectTranslationX = ta&&ta->hasValue(R::styleable::MotionEffect_motionEffect_translationX) ? ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationX, mMotionEffectTranslationX) : mMotionEffectTranslationX;

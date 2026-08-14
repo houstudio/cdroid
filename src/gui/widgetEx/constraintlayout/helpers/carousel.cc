@@ -22,50 +22,53 @@
 #include <widgetEx/constraintlayout/helpers/carousel.h>
 
 #include <algorithm>
-#include <unordered_map>
 
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/motion/motionscene.h>
 
 DECLARE_WIDGET(Carousel)
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 Carousel::Carousel(Context* ctx,const AttributeSet& attrs):Carousel(ctx,&attrs,0){}
 
 Carousel::Carousel(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : MotionHelper(ctx, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
     // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
     // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
-    // and every carousel_* attribute stays at its default (-1): mFirstViewReference missed (mStartIndex
-    // stuck at 0), mForwardTransition/mBackwardTransition -1 (updateItems bails before wiring the
-    // transitions -> drag never advances the index). Re-invoke init now that *this is fully
-    // constructed so it dispatches to Carousel::init — same pattern as MotionEffect/Placeholder.
+    // and every carousel_* attribute stays at its default (-1). Re-invoke init now that *this is
+    // fully constructed so it dispatches to Carousel::init — same pattern as MotionEffect/Placeholder.
     // ConstraintHelper::init is idempotent on re-run (mIds cleared then refilled).
-    init(attrs);
+    init(pAttrs);
 }
 
 Carousel::Carousel(int width, int height)
     : MotionHelper(width, height) {
 }
 
-void Carousel::init(const AttributeSet& attrs) {
+void Carousel::init(const AttributeSet* attrs) {
     ConstraintHelper::init(attrs); // resolves constraint_referenced_ids into mIds
-    mFirstViewReference = attrs.getResourceId("carousel_firstView", -1);
-    mBackwardTransition = attrs.getResourceId("carousel_backwardTransition", -1);
-    mForwardTransition  = attrs.getResourceId("carousel_forwardTransition", -1);
-    mPreviousState      = attrs.getResourceId("carousel_previousState", -1);
-    mNextState          = attrs.getResourceId("carousel_nextState", -1);
-    static const std::unordered_map<std::string, int> kEmpty = {
-        {"visible", View::VISIBLE}, {"invisible", View::INVISIBLE}, {"gone", View::GONE}};
-    mEmptyViewBehavior  = attrs.getInt("carousel_emptyViews_behavior", kEmpty, View::INVISIBLE);
-    mDampening          = attrs.getFloat("carousel_touchUp_dampeningFactor", 0.9f);
-    static const std::unordered_map<std::string, int> kTouchUp = {
-        {"immediateStop", (int)TOUCH_UP_IMMEDIATE_STOP}, {"carryOn", (int)TOUCH_UP_CARRY_ON}};
-    mTouchUpMode        = attrs.getInt("carousel_touchUpMode", kTouchUp, TOUCH_UP_IMMEDIATE_STOP);
-    mVelocityThreshold  = attrs.getFloat("carousel_touchUp_velocityThreshold", 2.0f);
-    mInfiniteCarousel   = attrs.getBoolean("carousel_infinite", false);
+    if (attrs == nullptr) return;
+    // TypedArray reads typed binary AXML values directly (AOSP pattern). The carousel_* refs
+    // (firstView/transitions/states) are references; touchUpMode/emptyViews_behavior are enums
+    // compiled by aapt2 to their int, so the string→int maps are gone. getResourceId defaults to
+    // (uint32_t)-1 to match the -1 "unset" sentinel of the int members.
+    auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::Carousel);
+    if (!ta) return;
+    namespace C = R::styleable;
+    mFirstViewReference = (int)ta->getResourceId(C::Carousel_carousel_firstView, (uint32_t)-1);
+    mBackwardTransition = (int)ta->getResourceId(C::Carousel_carousel_backwardTransition, (uint32_t)-1);
+    mForwardTransition  = (int)ta->getResourceId(C::Carousel_carousel_forwardTransition,  (uint32_t)-1);
+    mPreviousState      = (int)ta->getResourceId(C::Carousel_carousel_previousState,     (uint32_t)-1);
+    mNextState          = (int)ta->getResourceId(C::Carousel_carousel_nextState,         (uint32_t)-1);
+    mEmptyViewBehavior  = ta->getInt(C::Carousel_carousel_emptyViews_behavior, View::INVISIBLE);
+    mDampening          = ta->getFloat(C::Carousel_carousel_touchUp_dampeningFactor, 0.9f);
+    mTouchUpMode        = ta->getInt(C::Carousel_carousel_touchUpMode, TOUCH_UP_IMMEDIATE_STOP);
+    mVelocityThreshold  = ta->getFloat(C::Carousel_carousel_touchUp_velocityThreshold, 2.0f);
+    mInfiniteCarousel   = ta->getBoolean(C::Carousel_carousel_infinite, false);
 }
 
 void Carousel::onAttachedToWindow() {

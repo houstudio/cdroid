@@ -79,7 +79,7 @@ class ConstraintHelper : public View {
 
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
-    virtual void init(const AttributeSet& attrs);
+    virtual void init(const AttributeSet* attrs);
 
     std::vector<int> mIds;
     std::unique_ptr<HelperWidget> mHelperWidget;

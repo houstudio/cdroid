@@ -56,7 +56,7 @@ class Placeholder : public View {
     void updatePostMeasure(ConstraintLayout* container);
 
   private:
-    void init(const AttributeSet& attrs);
+    void init(const AttributeSet* attrs);
 
     int   mContentId = -1;
     View* mContent = nullptr;

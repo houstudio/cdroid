@@ -84,6 +84,13 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t MotionEffect[] = {
         0x020100bc, 0x020100bd, 0x020100be, 0x020100bf, 0x020100c0, 0x020100c1, 0x020100c2,
         0x020100c3, 0 };
+    const uint32_t Placeholder[] = { 0x02010104, 0x02010110, 0 };
+    const uint32_t Grid[] = {
+        0x0201010a, 0x02010106, 0x0201010c, 0x0201010b, 0x02010109, 0x02010105, 0x02010108,
+        0x02010107, 0x0201010f, 0x0201010e, 0x0201010d, 0 };
+    const uint32_t Carousel[] = {
+        0x020100fc, 0x020100fa, 0x020100fd, 0x02010100, 0x020100ff, 0x020100fb, 0x02010101,
+        0x02010103, 0x02010102, 0x020100fe, 0 };
     const uint32_t RecyclerView[] = {
         0x020100c4, 0x010100c4, 0x010100f1, 0x010100eb, 0x020100c5, 0x020100c6, 0x020100c7,
         0x020100f5, 0x020100c8, 0x020100c9, 0x020100ca, 0x020100cb, 0x020100cc, 0 };

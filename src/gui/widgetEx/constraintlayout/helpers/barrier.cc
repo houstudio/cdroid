@@ -23,12 +23,15 @@
 
 #include <porting/cdlog.h>
 #include <view/view.h>
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 
 DECLARE_WIDGET(Barrier)
 
 namespace cdroid {
+using namespace cdroid::internal;
 
-// out-of-line definitions (odr-used as map values / runtime args)
+// out-of-line definitions (odr-used as runtime args / defaults)
 constexpr int Barrier::LEFT;
 constexpr int Barrier::TOP;
 constexpr int Barrier::RIGHT;
@@ -36,16 +39,8 @@ constexpr int Barrier::BOTTOM;
 constexpr int Barrier::START;
 constexpr int Barrier::END;
 
-namespace {
-// barrierDirection enum (XML string) -> int. Matches Android's enum order plus start/end.
-const std::unordered_map<std::string, int> kBarrierDirection = {
-    {"left", Barrier::LEFT}, {"top", Barrier::TOP},
-    {"right", Barrier::RIGHT}, {"bottom", Barrier::BOTTOM},
-    {"start", Barrier::START}, {"end", Barrier::END}
-};
-} // namespace
-
-Barrier::Barrier(Context* ctx,const AttributeSet& attrs):Barrier(ctx,&attrs,0){}
+Barrier::Barrier(Context* ctx,const AttributeSet& attrs):Barrier(ctx,&attrs,0){
+}
 
 Barrier::Barrier(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
@@ -53,11 +48,20 @@ Barrier::Barrier(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     setVisibility(View::GONE);
     mHelperWidget = std::make_unique<clcore::Barrier>();
 
-    int dir = attrs.getInt("barrierDirection", kBarrierDirection, LEFT);
+    // TypedArray reads typed binary AXML values directly (AOSP pattern). barrierDirection is an
+    // enum compiled by aapt2 to its int (left/right/top/bottom/start/end == the Barrier::* enum),
+    // so no name-based string→int map is needed.
+    auto ta = ctx ? ctx->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout) : nullptr;
+    int dir = LEFT;
+    bool allowsGone = true;
+    int margin = 0;
+    if (ta) {
+        dir = ta->getInt(R::styleable::ConstraintLayoutLayout_barrierDirection, LEFT);
+        allowsGone = ta->getBoolean(R::styleable::ConstraintLayoutLayout_barrierAllowsGoneWidgets, true);
+        margin = ta->getDimensionPixelSize(R::styleable::ConstraintLayoutLayout_barrierMargin, 0);
+    }
     setType(dir);
-    static_cast<clcore::Barrier*>(mHelperWidget.get())
-    ->setAllowsGoneWidget(attrs.getBoolean("barrierAllowsGoneWidgets", true));
-    int margin = attrs.getDimensionPixelSize("barrierMargin", 0);
+    static_cast<clcore::Barrier*>(mHelperWidget.get())->setAllowsGoneWidget(allowsGone);
     static_cast<clcore::Barrier*>(mHelperWidget.get())->setMargin(margin);
 
     // Default to LTR here (START->LEFT, END->RIGHT); the bridge re-resolves via resolveRtl() with

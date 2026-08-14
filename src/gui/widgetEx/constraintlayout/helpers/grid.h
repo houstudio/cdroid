@@ -62,7 +62,7 @@ class Grid : public ConstraintHelper {
     int  getOrientation() const { return mOrientation; }
 
   protected:
-    void init(const AttributeSet& attrs) override;
+    void init(const AttributeSet* attrs) override;
     void onAttachedToWindow() override;
     void updatePreLayout(ConstraintLayout* container) override;
 

@@ -11,6 +11,16 @@
     <public type="attr" name="barrierAllowsGoneWidgets" id="0x02010017"/>
     <public type="attr" name="barrierDirection" id="0x02010016"/>
     <public type="attr" name="barrierMargin" id="0x02010018"/>
+    <public type="attr" name="carousel_backwardTransition" id="0x020100fa"/>
+    <public type="attr" name="carousel_emptyViews_behavior" id="0x020100fb"/>
+    <public type="attr" name="carousel_firstView" id="0x020100fc"/>
+    <public type="attr" name="carousel_forwardTransition" id="0x020100fd"/>
+    <public type="attr" name="carousel_infinite" id="0x020100fe"/>
+    <public type="attr" name="carousel_nextState" id="0x020100ff"/>
+    <public type="attr" name="carousel_previousState" id="0x02010100"/>
+    <public type="attr" name="carousel_touchUp_dampeningFactor" id="0x02010101"/>
+    <public type="attr" name="carousel_touchUp_velocityThreshold" id="0x02010102"/>
+    <public type="attr" name="carousel_touchUpMode" id="0x02010103"/>
     <public type="attr" name="chainUseRtl" id="0x0201001b"/>
     <public type="attr" name="circularflow_angles" id="0x0201002f"/>
     <public type="attr" name="circularflow_defaultAngle" id="0x02010032"/>
@@ -24,6 +34,7 @@
     <public type="attr" name="constraintSetStart" id="0x0201007c"/>
     <public type="attr" name="constraint_referenced_ids" id="0x02010019"/>
     <public type="attr" name="constraint_referenced_tags" id="0x0201001a"/>
+    <public type="attr" name="content" id="0x02010104"/>
     <public type="attr" name="curveFit" id="0x02010099"/>
     <public type="attr" name="defaultDuration" id="0x020100bb"/>
     <public type="attr" name="dragDirection" id="0x0201008e"/>
@@ -50,6 +61,17 @@
     <public type="attr" name="flow_verticalStyle" id="0x0201001d"/>
     <public type="attr" name="flow_wrapMode" id="0x0201001e"/>
     <public type="attr" name="framePosition" id="0x02010097"/>
+    <public type="attr" name="grid_columnWeights" id="0x02010105"/>
+    <public type="attr" name="grid_columns" id="0x02010106"/>
+    <public type="attr" name="grid_horizontalGaps" id="0x02010107"/>
+    <public type="attr" name="grid_orientation" id="0x02010108"/>
+    <public type="attr" name="grid_rowWeights" id="0x02010109"/>
+    <public type="attr" name="grid_rows" id="0x0201010a"/>
+    <public type="attr" name="grid_skips" id="0x0201010b"/>
+    <public type="attr" name="grid_spans" id="0x0201010c"/>
+    <public type="attr" name="grid_useRtl" id="0x0201010d"/>
+    <public type="attr" name="grid_validateInputs" id="0x0201010e"/>
+    <public type="attr" name="grid_verticalGaps" id="0x0201010f"/>
     <public type="attr" name="guidelineUseRtl" id="0x02010039"/>
     <public type="attr" name="ifTagNotSet" id="0x020100b9"/>
     <public type="attr" name="ifTagSet" id="0x020100b8"/>
@@ -145,6 +167,7 @@
     <public type="attr" name="percentX" id="0x0201009b"/>
     <public type="attr" name="percentY" id="0x0201009c"/>
     <public type="attr" name="pivotAnchor" id="0x0201006e"/>
+    <public type="attr" name="placeholder_emptyVisibility" id="0x02010110"/>
     <public type="attr" name="polarRelativeTo" id="0x02010074"/>
     <public type="attr" name="quantizeMotionInterpolator" id="0x0201007b"/>
     <public type="attr" name="quantizeMotionPhase" id="0x0201007a"/>

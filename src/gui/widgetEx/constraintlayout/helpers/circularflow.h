@@ -54,7 +54,7 @@ class CircularFlow : public ConstraintHelper {
     void addViewToCircularFlow(View* view, int radius, float angle);
 
   protected:
-    void init(const AttributeSet& attrs) override;
+    void init(const AttributeSet* attrs) override;
     void updatePreLayout(ConstraintLayout* container) override;  // = AndroidX anchorReferences
 
   private:

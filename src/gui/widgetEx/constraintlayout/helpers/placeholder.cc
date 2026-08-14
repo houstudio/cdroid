@@ -23,18 +23,20 @@
 
 #include <porting/cdlog.h>
 #include <view/view.h>
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
 DECLARE_WIDGET(Placeholder)
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 Placeholder::Placeholder(Context* ctx,const AttributeSet& attrs):Placeholder(ctx,&attrs,0){}
 
 Placeholder::Placeholder(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : View(ctx, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
-    init(attrs);
+    init(pAttrs);
 }
 
 Placeholder::Placeholder(int width, int height)
@@ -43,17 +45,20 @@ Placeholder::Placeholder(int width, int height)
     mContentId = -1;
 }
 
-void Placeholder::init(const AttributeSet& attrs) {
+void Placeholder::init(const AttributeSet* attrs) {
     setVisibility(mEmptyVisibility);
-    mContentId = attrs.getResourceId("content", -1);
-    int emptyVis = attrs.getInt("placeholder_emptyVisibility",std::unordered_map<std::string,int>{
-        {"visible", View::VISIBLE},
-        { "invisible",View::INVISIBLE },
-        {"gone", View::GONE}
-    }, mEmptyVisibility);
-    if (emptyVis == View::VISIBLE || emptyVis == View::INVISIBLE || emptyVis == View::GONE) {
-        mEmptyVisibility = emptyVis;
-        setVisibility(mEmptyVisibility);
+    if (attrs == nullptr) return;
+    // TypedArray reads typed binary AXML values directly (AOSP pattern). content is a reference;
+    // placeholder_emptyVisibility is an enum (visible/invisible/gone == View visibility ints).
+    auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::Placeholder);
+    if (ta) {
+        namespace P = R::styleable;
+        mContentId = (int)ta->getResourceId(P::Placeholder_content, -1);
+        int emptyVis = ta->getInt(P::Placeholder_placeholder_emptyVisibility, mEmptyVisibility);
+        if (emptyVis == View::VISIBLE || emptyVis == View::INVISIBLE || emptyVis == View::GONE) {
+            mEmptyVisibility = emptyVis;
+            setVisibility(mEmptyVisibility);
+        }
     }
 }
 

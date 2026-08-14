@@ -25,24 +25,25 @@
 #include <cmath>
 #include <sstream>
 
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
 DECLARE_WIDGET(Grid)
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 Grid::Grid(Context* ctx,const AttributeSet& attrs):Grid(ctx,&attrs,0){}
 
 Grid::Grid(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
     // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
     // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
-    // and every grid_* attribute stays at its default (rows/columns 0, spans/skips empty, ...).
-    // Re-invoke init now that *this is fully constructed so it dispatches to Grid::init — same
-    // pattern as Carousel/MotionEffect/Placeholder/CircularFlow. ConstraintHelper::init is
-    // idempotent on re-run (mIds cleared then refilled).
-    init(attrs);
+    // and every grid_* attribute stays at its default. Re-invoke init now that *this is fully
+    // constructed so it dispatches to Grid::init — same pattern as Carousel/MotionEffect/
+    // Placeholder/CircularFlow. ConstraintHelper::init is idempotent on re-run.
+    init(pAttrs);
 }
 
 Grid::Grid(int width, int height)
@@ -52,22 +53,29 @@ Grid::Grid(int width, int height)
 using LP = ConstraintLayout::LayoutParams;
 static LP* gparams(View* v) { return dynamic_cast<LP*>(v->getLayoutParams()); }
 
-void Grid::init(const AttributeSet& attrs) {
+void Grid::init(const AttributeSet* attrs) {
     ConstraintHelper::init(attrs);
     mUseViewMeasure = true;
-    mRowsSet = attrs.getInt("grid_rows", 0);
-    mColumnsSet = attrs.getInt("grid_columns", 0);
-    mStrSpans = attrs.getString("grid_spans", "");
-    mStrSkips = attrs.getString("grid_skips", "");
-    mStrRowWeights = attrs.getString("grid_rowWeights", "");
-    mStrColumnWeights = attrs.getString("grid_columnWeights", "");
-    mOrientation = attrs.getInt("grid_orientation",
-            std::unordered_map<std::string,int>{{"horizontal", (int) HORIZONTAL}, {"vertical", (int) VERTICAL}},
-            HORIZONTAL);
-    mHorizontalGaps = attrs.getDimension("grid_horizontalGaps", 0);
-    mVerticalGaps = attrs.getDimension("grid_verticalGaps", 0);
-    mValidateInputs = attrs.getBoolean("grid_validateInputs", false);
-    mUseRtl = attrs.getBoolean("grid_useRtl", false);
+    if (attrs != nullptr) {
+        // TypedArray reads typed binary AXML values directly (AOSP pattern). grid_orientation is an
+        // enum (horizontal/vertical == Grid::HORIZONTAL/VERTICAL); gaps are dimensions stored as
+        // float (getDimension, not PixelSize — the members are float).
+        auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::Grid);
+        if (ta) {
+            namespace G = R::styleable;
+            mRowsSet          = ta->getInt(G::Grid_grid_rows, 0);
+            mColumnsSet       = ta->getInt(G::Grid_grid_columns, 0);
+            mStrSpans         = ta->getString(G::Grid_grid_spans);
+            mStrSkips         = ta->getString(G::Grid_grid_skips);
+            mStrRowWeights    = ta->getString(G::Grid_grid_rowWeights);
+            mStrColumnWeights = ta->getString(G::Grid_grid_columnWeights);
+            mOrientation      = ta->getInt(G::Grid_grid_orientation, HORIZONTAL);
+            mHorizontalGaps   = ta->getDimension(G::Grid_grid_horizontalGaps, 0);
+            mVerticalGaps     = ta->getDimension(G::Grid_grid_verticalGaps, 0);
+            mValidateInputs   = ta->getBoolean(G::Grid_grid_validateInputs, false);
+            mUseRtl           = ta->getBoolean(G::Grid_grid_useRtl, false);
+        }
+    }
     updateActualRowsAndColumns();
     initVariables();
 }

@@ -70,7 +70,7 @@ class Carousel : public MotionHelper {
     void refresh();
 
   protected:
-    void init(const AttributeSet& attrs) override;
+    void init(const AttributeSet* attrs) override;
     void onAttachedToWindow() override;
     void onDetachedFromWindow() override;
 

@@ -52,7 +52,7 @@ class Layer : public ConstraintHelper {
     void setElevation(float elevation) override;
 
   protected:
-    void init(const AttributeSet& attrs) override;
+    void init(const AttributeSet* attrs) override;
     void onAttachedToWindow() override;
     void updatePreDraw(ConstraintLayout* container) override;
     void updatePostLayout(ConstraintLayout* container) override;

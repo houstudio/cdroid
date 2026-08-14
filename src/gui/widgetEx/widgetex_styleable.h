@@ -483,6 +483,38 @@ namespace internal { namespace R { namespace styleable {
     constexpr int MotionEffect_motionEffect_move = 6;
     constexpr int MotionEffect_motionEffect_strict = 7;
 
+    // Placeholder (2 attrs)
+    extern const uint32_t Placeholder[];
+    constexpr int Placeholder_content = 0;
+    constexpr int Placeholder_placeholder_emptyVisibility = 1;
+
+    // Grid (11 attrs)
+    extern const uint32_t Grid[];
+    constexpr int Grid_grid_rows = 0;
+    constexpr int Grid_grid_columns = 1;
+    constexpr int Grid_grid_spans = 2;
+    constexpr int Grid_grid_skips = 3;
+    constexpr int Grid_grid_rowWeights = 4;
+    constexpr int Grid_grid_columnWeights = 5;
+    constexpr int Grid_grid_orientation = 6;
+    constexpr int Grid_grid_horizontalGaps = 7;
+    constexpr int Grid_grid_verticalGaps = 8;
+    constexpr int Grid_grid_validateInputs = 9;
+    constexpr int Grid_grid_useRtl = 10;
+
+    // Carousel (10 attrs)
+    extern const uint32_t Carousel[];
+    constexpr int Carousel_carousel_firstView = 0;
+    constexpr int Carousel_carousel_backwardTransition = 1;
+    constexpr int Carousel_carousel_forwardTransition = 2;
+    constexpr int Carousel_carousel_previousState = 3;
+    constexpr int Carousel_carousel_nextState = 4;
+    constexpr int Carousel_carousel_emptyViews_behavior = 5;
+    constexpr int Carousel_carousel_touchUp_dampeningFactor = 6;
+    constexpr int Carousel_carousel_touchUpMode = 7;
+    constexpr int Carousel_carousel_touchUp_velocityThreshold = 8;
+    constexpr int Carousel_carousel_infinite = 9;
+
     // RecyclerView (13 attrs)
     extern const uint32_t RecyclerView[];
     constexpr int RecyclerView_layoutManager = 0;

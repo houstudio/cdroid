@@ -57,7 +57,7 @@ class MotionEffect : public MotionHelper {
     static int computeFadeDirection(const std::vector<std::pair<float, float>>& deltas);
 
   protected:
-    void init(const AttributeSet& attrs) override;
+    void init(const AttributeSet* attrs) override;
 
   private:
     float mMotionEffectAlpha = 0.1f;
