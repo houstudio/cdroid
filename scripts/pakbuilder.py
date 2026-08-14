@@ -277,7 +277,7 @@ class PakBuilder:
 
     def __init__(self, namespace, res_dir, pak_path, rh_path,
                  aapt2_path=None, android_jar=None, sdk_res=None, sdk_filter=None,
-                 widgetex_apk=None):
+                 widgetex_apk=None, framework_apk_out=None):
         self.namespace = namespace
         self.res_dir = res_dir
         self.pak_path = pak_path
@@ -292,6 +292,11 @@ class PakBuilder:
         # it so widgetEx attrs resolve to 0x02 (matching the runtime styleable)
         # instead of being re-declared at 0x7f in the app's own arsc.
         self.widgetex_apk = widgetex_apk
+        # When set (cdroid SDK-mode build), the built framework.apk is ALSO copied
+        # here so app paks can aapt2 link -I CDROID's own framework — the public
+        # attr table incl. the 0x010d CDROID extensions (pattern/frameDuration/
+        # wheelItemCount/...) that a stock android.jar doesn't expose.
+        self.framework_apk_out = framework_apk_out
 
     # ----- XML processing (in-memory strip; no temp dir) -----
     def _strip_xml(self, src):
@@ -504,6 +509,11 @@ class PakBuilder:
                     rel = name[4:] if name.startswith("res/") else name
                     result[rel] = zf.read(name)
             sys.stderr.write("SDK res: %d entries (binary AXML + arsc + drawables)\n" % len(result))
+            # Persist the framework apk for app -I linking (see __init__).
+            if getattr(self, 'framework_apk_out', None):
+                shutil.copy(out_apk, self.framework_apk_out)
+                sys.stderr.write("framework.apk saved to %s (app -I framework)\n"
+                                 % self.framework_apk_out)
             # idgen retirement: R.h from aapt2 dump of framework.apk (real arsc IDs,
             # not idgen sequential ints). aapt2 dump needs the apk (has manifest),
             # NOT cdroid.pak (no manifest → "could not identify format").
@@ -832,19 +842,24 @@ class PakBuilder:
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar] [sdk_res] [filter.json] [--widgetex-apk <apk>]")
-    # Pull --widgetex-apk <path> out of argv first: it is a flag (app paks) so it
-    # never collides with the positional sdk_res/filter slots (cdroid SDK mode).
+        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar] [sdk_res] [filter.json] [--widgetex-apk <apk>] [--framework-apk-out <apk>]")
+    # Pull --widgetex-apk / --framework-apk-out <path> out of argv first: they are
+    # flags so they never collide with the positional sdk_res/filter slots.
     args = sys.argv[1:]
     wxapk = None
     if "--widgetex-apk" in args:
         i = args.index("--widgetex-apk")
         wxapk = args[i + 1] if i + 1 < len(args) else None
         args = args[:i] + args[i + 2:]
+    fwout = None
+    if "--framework-apk-out" in args:
+        i = args.index("--framework-apk-out")
+        fwout = args[i + 1] if i + 1 < len(args) else None
+        args = args[:i] + args[i + 2:]
     aapt2 = args[4] if len(args) > 4 else None
     ajar  = args[5] if len(args) > 5 else None
     sres  = args[6] if len(args) > 6 else None
     sflt  = args[7] if len(args) > 7 else None
     pb = PakBuilder(*args[0:4], aapt2_path=aapt2, android_jar=ajar, sdk_res=sres,
-                    sdk_filter=sflt, widgetex_apk=wxapk)
+                    sdk_filter=sflt, widgetex_apk=wxapk, framework_apk_out=fwout)
     pb.build()

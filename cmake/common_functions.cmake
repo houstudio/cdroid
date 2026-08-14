@@ -40,20 +40,29 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
     # 3 extra args (aapt2, android.jar, sdk_res) and produces a hybrid pak:
     # binary AXML layouts (from SDK framework res) + text values/ + resources.arsc.
     set(extra_args "")
+    set(_framework_apk "${CMAKE_BINARY_DIR}/framework.apk")
     if(ENABLE_BINARY_XML AND EXISTS "${CDROID_SDK_RES}")
         if("${project}" STREQUAL "cdroid")
-            # Only cdroid.pak gets the full SDK framework res.
-            set(extra_args "${CDROID_AAPT2}" "${CDROID_ANDROID_JAR}" "${CDROID_SDK_RES}")
+            # Only cdroid.pak gets the full SDK framework res. The built framework.apk
+            # is also persisted (--framework-apk-out) so app paks can -I CDROID's own
+            # framework: package 'android', real public ids, plus the 0x010d CDROID
+            # extension attrs (pattern/frameDuration/wheelItemCount/...) that a stock
+            # android.jar doesn't expose (private or absent).
+            set(extra_args "${CDROID_AAPT2}" "${CDROID_ANDROID_JAR}" "${CDROID_SDK_RES}"
+                           "--framework-apk-out" "${_framework_apk}")
             if(CDROID_SDK_RES_FILTER AND EXISTS "${CDROID_SDK_RES_FILTER}")
                 list(APPEND extra_args "${CDROID_SDK_RES_FILTER}")
             endif()
             message(STATUS "CreatePAK(${project}): SDK framework res mode")
         else()
             # App paks: compile their own XML via aapt2 (binary AXML), no SDK res.
+            # Framework -I = CDROID's own framework.apk (NOT android.jar): it carries
+            # the same public attr table the runtime arsc was built from, including
+            # the 0x010d extensions, so compiled attr ids match the runtime exactly.
             # --widgetex-apk lets app aapt2 link -I the fixed-id 0x02 shared lib so
             # widgetEx attrs resolve to 0x02 (matching the runtime styleable) instead
             # of being re-declared at 0x7f in the app's own arsc.
-            set(extra_args "${CDROID_AAPT2}" "${CDROID_ANDROID_JAR}"
+            set(extra_args "${CDROID_AAPT2}" "${_framework_apk}"
                            "--widgetex-apk" "${CMAKE_BINARY_DIR}/widgetex.apk")
             message(STATUS "CreatePAK(${project}): app binary AXML mode (own res only)")
         endif()
@@ -68,6 +77,10 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
     # App paks need widgetex.apk (for -I linking); ensure widgetex builds first.
     if(TARGET widgetex_assets AND NOT "${project}" STREQUAL "widgetex" AND NOT "${project}" STREQUAL "cdroid")
         add_dependencies(${project}_assets widgetex_assets)
+    endif()
+    # App paks -I framework.apk, which the cdroid SDK pak produces — build it first.
+    if(ENABLE_BINARY_XML AND TARGET cdroid_assets AND NOT "${project}" STREQUAL "cdroid")
+        add_dependencies(${project}_assets cdroid_assets)
     endif()
     install(FILES ${PakPath} DESTINATION data)
 endfunction()
