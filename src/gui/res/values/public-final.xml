@@ -4029,4 +4029,11 @@
   <public type="attr" name="frameDuration" id="0x01011015" />
   <public type="attr" name="framesCount" id="0x01011016" />
   <public type="attr" name="internalLayout" id="0x01011017" />
+  <public type="attr" name="selectedTextSize" id="0x01011018" />
+
+  <!-- id/numberpicker_input: app NumberPicker override layouts reference
+       @android:id/numberpicker_input so the framework NumberPicker finds its
+       input EditText (R::id::numberpicker_input); private ids can't be
+       referenced from app res, so expose it. -->
+  <public type="id" name="numberpicker_input" id="0x01020442" />
 </resources>

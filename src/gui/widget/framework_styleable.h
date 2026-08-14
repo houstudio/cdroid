@@ -1167,7 +1167,7 @@ namespace internal { namespace R { namespace styleable {
     constexpr int PlotView_tickMarks = 3;
     constexpr int PlotView_tickLabels = 4;
 
-    // NumberPickerCdroid (6 attrs)
+    // NumberPickerCdroid (7 attrs)
     extern const uint32_t NumberPickerCdroid[];
     constexpr int NumberPickerCdroid_selectedfontFamily = 0;
     constexpr int NumberPickerCdroid_selectedTextColor = 1;
@@ -1175,6 +1175,7 @@ namespace internal { namespace R { namespace styleable {
     constexpr int NumberPickerCdroid_updateInputTextInFling = 3;
     constexpr int NumberPickerCdroid_wheelItemCount = 4;
     constexpr int NumberPickerCdroid_wrapSelectorWheel = 5;
+    constexpr int NumberPickerCdroid_selectedTextSize = 6;
 
     // ChronometerCdroid (1 attrs)
     extern const uint32_t ChronometerCdroid[];

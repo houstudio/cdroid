@@ -727,10 +727,18 @@ class PakBuilder:
             if (arsc is not None and not self.use_sdk
                     and getattr(self, 'rh_path', None) and self.rh_path):
                 _gen = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aapt2_gen_rh.py')
-                _r = subprocess.run([sys.executable, _gen, out_apk,
-                                     '--aapt2', self.aapt2_path,
-                                     '--namespace', self.namespace, '-o', self.rh_path],
-                                    capture_output=True, text=True)
+                _scripts = os.path.dirname(os.path.abspath(_gen))
+                # When the app declares its own attrs (values/attrs.xml), also emit
+                # R::styleable from them: app attrs resolve from the app arsc dump,
+                # android:-prefixed attrs from the framework id maps.
+                _cmd = [sys.executable, _gen, out_apk,
+                        '--aapt2', self.aapt2_path,
+                        '--namespace', self.namespace, '-o', self.rh_path]
+                _app_attrs = os.path.join(self.res_dir, 'values', 'attrs.xml')
+                if os.path.exists(_app_attrs):
+                    _cmd += ['--attrs', _app_attrs,
+                             '--fw-ids', os.path.join(_scripts, 'framework_attrids.txt')]
+                _r = subprocess.run(_cmd, capture_output=True, text=True)
                 sys.stderr.write("aapt2_gen_rh (app): rc=%d %s\n"
                                  % (_r.returncode, (_r.stderr or _r.stdout)[:200]))
             return result, arsc

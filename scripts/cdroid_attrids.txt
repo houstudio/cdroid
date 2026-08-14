@@ -25,3 +25,7 @@
 0x01011012 updateInputTextInFling
 0x01011013 wheelItemCount
 0x01011014 wrapSelectorWheel
+0x01011015 frameDuration
+0x01011016 framesCount
+0x01011017 internalLayout
+0x01011018 selectedTextSize

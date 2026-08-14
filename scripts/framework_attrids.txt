@@ -1883,5 +1883,5 @@
 0x010d012a windowFixedWidthMajor
 0x010d012b windowFixedWidthMinor
 0x010d012c windowOutsetBottom
-0x010d012d yearListItemActivatedTextAppearance
+0x010d012a yearListItemActivatedTextAppearance
 

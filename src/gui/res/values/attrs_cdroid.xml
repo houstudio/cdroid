@@ -32,6 +32,7 @@
         <attr name="updateInputTextInFling" format="boolean" />
         <attr name="wheelItemCount" format="integer" />
         <attr name="wrapSelectorWheel" format="boolean" />
+        <attr name="selectedTextSize" format="dimension" />
     </declare-styleable>
 
     <!-- Chronometer CDROID addition -->

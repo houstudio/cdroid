@@ -1898,6 +1898,7 @@ namespace R{
             selectableItemBackgroundBorderless = 0x0101045c,
             selectedDateVerticalBar = 0x01010347,
             selectedTextColor = 0x01011009,
+            selectedTextSize = 0x01011018,
             selectedWeekBackgroundColor = 0x01010342,
             selectedfontFamily = 0x0101100a,
             selectionDivider = 0x010d00f0,

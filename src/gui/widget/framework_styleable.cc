@@ -183,7 +183,7 @@ namespace internal { namespace R { namespace styleable {
         0x01010408, 0x01010409, 0x0101040a, 0x0101040b, 0x0101040c, 0x0101040d, 0x0101051e, 0 };
     const uint32_t DatePicker[] = {
         0x0101033d, 0x0101033f, 0x01010340, 0x0101034b, 0x0101034c, 0x01011017, 0x010d0083,
-        0x010d0068, 0x0101012f, 0x01010499, 0x010d012d, 0x0101049b, 0x010104b3, 0x0101017c,
+        0x010d0068, 0x0101012f, 0x01010499, 0x010d012a, 0x0101049b, 0x010104b3, 0x0101017c,
         0x0101017d, 0x01010496, 0x01010497, 0x01010498, 0x01010494, 0x01010495, 0x0101049a,
         0x010d003b, 0 };
     const uint32_t CalendarView[] = {
@@ -204,7 +204,7 @@ namespace internal { namespace R { namespace styleable {
         0x01010273, 0x01010534, 0 };
     const uint32_t CandidateView[] = { 0x01011000, 0x01011001, 0x01011002, 0x01011003, 0 };
     const uint32_t PlotView[] = { 0x0101100b, 0x01011006, 0x0101100f, 0x01011011, 0x01011010, 0 };
-    const uint32_t NumberPickerCdroid[] = { 0x0101100a, 0x01011009, 0x0101100e, 0x01011012, 0x01011013, 0x01011014, 0 };
+    const uint32_t NumberPickerCdroid[] = { 0x0101100a, 0x01011009, 0x0101100e, 0x01011012, 0x01011013, 0x01011014, 0x01011018, 0 };
     const uint32_t ChronometerCdroid[] = { 0x01011004, 0 };
     const uint32_t SimpleMonthViewCdroid[] = { 0x01011005, 0 };
     const uint32_t ScrollViewCdroid[] = { 0x01011008, 0 };
