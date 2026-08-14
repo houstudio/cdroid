@@ -86,24 +86,33 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
     auto ta = c->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
     namespace SCL = R::styleable;
     std::string ratioStr;
+    // Anchor targets are declared format="reference|enum" with <enum name="parent" value="0"/>:
+    // "@id/x" is stored as a reference (resource id), "parent" as an int enum (0). Match androidx
+    // (ConstraintLayout.java:3311) — getResourceId for the @id/x case, getInt fallback for "parent"
+    // — else binary AXML leaves every parent-anchored constraint at UNSET.
+    auto anchor = [&](size_t idx) -> int {
+        int v = (int) ta->getResourceId(idx, UNSET);
+        if (v == UNSET) v = ta->getInt(idx, UNSET);
+        return v;
+    };
     for (size_t k = 0, n = ta->getIndexCount(); k < n; k++) {
         size_t i = ta->getIndex(k);
         switch (i) {
 
-        // --- anchors (resource id; "parent" sentinel → PARENT_ID=0 via bridge) ---
-        case SCL::ConstraintLayoutLayout_layout_constraintLeft_toLeftOf:     leftToLeft   = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintLeft_toRightOf:    leftToRight  = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintRight_toLeftOf:    rightToLeft  = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintRight_toRightOf:   rightToRight = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintStart_toStartOf:   startToStart = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintStart_toEndOf:     startToEnd   = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintEnd_toStartOf:     endToStart   = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintEnd_toEndOf:       endToEnd     = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintTop_toTopOf:       topToTop     = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintTop_toBottomOf:    topToBottom  = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintBottom_toTopOf:    bottomToTop  = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintBottom_toBottomOf: bottomToBottom = (int)ta->getResourceId(i, UNSET); break;
-        case SCL::ConstraintLayoutLayout_layout_constraintBaseline_toBaselineOf: baselineToBaseline = (int)ta->getResourceId(i, UNSET); break;
+        // --- anchors (reference id; "parent" sentinel → 0 via getInt fallback) ---
+        case SCL::ConstraintLayoutLayout_layout_constraintLeft_toLeftOf:     leftToLeft   = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintLeft_toRightOf:    leftToRight  = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintRight_toLeftOf:    rightToLeft  = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintRight_toRightOf:   rightToRight = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintStart_toStartOf:   startToStart = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintStart_toEndOf:     startToEnd   = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintEnd_toStartOf:     endToStart   = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintEnd_toEndOf:       endToEnd     = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintTop_toTopOf:       topToTop     = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintTop_toBottomOf:    topToBottom  = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintBottom_toTopOf:    bottomToTop  = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintBottom_toBottomOf: bottomToBottom = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintBaseline_toBaselineOf: baselineToBaseline = anchor(i); break;
 
         // --- bias ---
         case SCL::ConstraintLayoutLayout_layout_constraintHorizontal_bias: horizontalBias = ta->getFloat(i, 0.5f); break;

@@ -335,6 +335,11 @@ namespace internal { namespace R { namespace styleable {
     constexpr int OnSwipe_moveWhenScrollAtTop = 17;
     constexpr int OnSwipe_onTouchUp = 18;
 
+    // OnClick (2 attrs)
+    extern const uint32_t OnClick[];
+    constexpr int OnClick_targetId = 0;
+    constexpr int OnClick_clickAction = 1;
+
     // KeyAttribute (19 attrs)
     extern const uint32_t KeyAttribute[];
     constexpr int KeyAttribute_framePosition = 0;

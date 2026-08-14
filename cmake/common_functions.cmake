@@ -50,7 +50,11 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
             message(STATUS "CreatePAK(${project}): SDK framework res mode")
         else()
             # App paks: compile their own XML via aapt2 (binary AXML), no SDK res.
-            set(extra_args "${CDROID_AAPT2}" "${CDROID_ANDROID_JAR}")
+            # --widgetex-apk lets app aapt2 link -I the fixed-id 0x02 shared lib so
+            # widgetEx attrs resolve to 0x02 (matching the runtime styleable) instead
+            # of being re-declared at 0x7f in the app's own arsc.
+            set(extra_args "${CDROID_AAPT2}" "${CDROID_ANDROID_JAR}"
+                           "--widgetex-apk" "${CMAKE_BINARY_DIR}/widgetex.apk")
             message(STATUS "CreatePAK(${project}): app binary AXML mode (own res only)")
         endif()
     endif()

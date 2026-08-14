@@ -599,8 +599,22 @@
         <attr name="transitionDisable"/>
         <attr name="layoutDuringTransition"/>
         <attr name="pathMotionArc"/>
-        <attr name="autoTransition" format="enum"/>
-        <attr name="motionInterpolator" format="string|reference|enum"/>
+        <attr name="autoTransition" format="enum">
+            <enum name="none" value="0" />
+            <enum name="jumpToStart" value="1" />
+            <enum name="jumpToEnd" value="2" />
+            <enum name="animateToStart" value="3" />
+            <enum name="animateToEnd" value="4" />
+        </attr>
+        <attr name="motionInterpolator" format="string|reference|enum">
+            <enum name="easeInOut" value="0" />
+            <enum name="easeIn" value="1" />
+            <enum name="easeOut" value="2" />
+            <enum name="linear" value="3" />
+            <enum name="bounce" value="4" />
+            <enum name="overshoot" value="5" />
+            <enum name="anticipate" value="6" />
+        </attr>
         <attr name="duration"/>
         <attr name="staggered" format="float"/>
         <attr name="transitionFlags"/>
@@ -612,23 +626,55 @@
     <declare-styleable name="OnSwipe">
         <attr name="dragScale" format="float"/>
         <attr name="dragThreshold" format="float"/>
-        <attr name="autoCompleteMode" format="enum"/>
+        <attr name="autoCompleteMode" format="enum">
+            <enum name="continuousVelocity" value="0" />
+            <enum name="spring" value="1" />
+        </attr>
         <attr name="maxVelocity" format="float"/>
         <attr name="maxAcceleration" format="float"/>
         <attr name="springMass" format="float"/>
         <attr name="springStiffness" format="float"/>
         <attr name="springDamping" format="float"/>
         <attr name="springStopThreshold" format="float"/>
-        <attr name="springBoundary" format="flags"/>
+        <attr name="springBoundary" format="flags">
+            <flag name="overshoot" value="0" />
+            <flag name="bounceStart" value="1" />
+            <flag name="bounceEnd" value="2" />
+            <flag name="bounceBoth" value="3" />
+        </attr>
         <attr name="dragDirection"/>
         <attr name="touchAnchorId"/>
         <attr name="touchAnchorSide"/>
         <attr name="rotationCenterId" format="reference"/>
         <attr name="touchRegionId" format="reference"/>
         <attr name="limitBoundsTo" format="reference"/>
-        <attr name="nestedScrollFlags" format="flags"/>
+        <attr name="nestedScrollFlags" format="flags">
+            <flag name="none" value="0" />
+            <flag name="disablePostScroll" value="1" />
+            <flag name="disableScroll" value="2" />
+            <flag name="supportScrollUp" value="4" />
+        </attr>
         <attr name="moveWhenScrollAtTop" format="boolean"/>
-        <attr name="onTouchUp" format="enum"/>
+        <attr name="onTouchUp" format="enum">
+            <enum name="autoComplete" value="0" />
+            <enum name="autoCompleteToStart" value="1" />
+            <enum name="autoCompleteToEnd" value="2" />
+            <enum name="stop" value="3" />
+            <enum name="decelerate" value="4" />
+            <enum name="decelerateAndComplete" value="5" />
+            <enum name="neverCompleteToStart" value="6" />
+            <enum name="neverCompleteToEnd" value="7" />
+        </attr>
+    </declare-styleable>
+    <declare-styleable name="OnClick">
+        <attr name="targetId" format="reference" />
+        <attr name="clickAction">
+            <flag name="toggle" value="0x0011" />
+            <flag name="transitionToEnd" value="0x0001" />
+            <flag name="transitionToStart" value="0x0010" />
+            <flag name="jumpToEnd" value="0x100" />
+            <flag name="jumpToStart" value="0x1000" />
+        </attr>
     </declare-styleable>
     <declare-styleable name="KeyAttribute">
         <attr name="framePosition"/>
@@ -652,7 +698,12 @@
         <attr name="android:translationZ"/>
     </declare-styleable>
     <declare-styleable name="KeyPosition">
-        <attr name="keyPositionType" format="enum"/>
+        <attr name="keyPositionType" format="enum">
+            <enum name="deltaRelative" value="0" />
+            <enum name="pathRelative" value="1" />
+            <enum name="parentRelative" value="2" />
+            <enum name="axisRelative" value="3" />
+        </attr>
         <attr name="percentX" format="float"/>
         <attr name="percentY" format="float"/>
         <attr name="percentWidth" format="float"/>
@@ -763,7 +814,13 @@
         <attr name="motionEffect_translationY" format="dimension"/>
         <attr name="motionEffect_alpha" format="float"/>
         <attr name="motionEffect_viewTransition" format="reference"/>
-        <attr name="motionEffect_move" format="enum"/>
+        <attr name="motionEffect_move" format="enum">
+            <enum name="auto" value="-1" />
+            <enum name="north" value="0" />
+            <enum name="south" value="1" />
+            <enum name="east" value="2" />
+            <enum name="west" value="3" />
+        </attr>
         <attr name="motionEffect_strict" format="boolean"/>
     </declare-styleable>
 </resources>

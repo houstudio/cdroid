@@ -324,19 +324,26 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
                 currentTransition->addOnClick(oc);
             } else if (tag == "OnSwipe" && currentTransition != nullptr) {
                 auto os = std::make_unique<OnSwipe>();
-                os->dragDirection = parser.getInt("dragDirection", kDragDirection, os->dragDirection);
-                os->dragScale     = parser.getFloat("dragScale", os->dragScale);
-                os->touchAnchorSide = parser.getInt("touchAnchorSide", kAnchorSide, os->touchAnchorSide);
-                os->touchAnchorId  = parser.getResourceId("touchAnchorId", os->touchAnchorId);
-                os->onTouchUp     = parser.getInt("onTouchUp", kTouchUp, os->onTouchUp);
-                os->maxVelocity   = parser.getFloat("maxVelocity", os->maxVelocity);
-                os->maxAcceleration = parser.getFloat("maxAcceleration", os->maxAcceleration);
-                os->autoCompleteMode    = parser.getInt("autoCompleteMode", kAutoComplete, os->autoCompleteMode);
-                os->springMass          = parser.getFloat("springMass", os->springMass);
-                os->springStiffness     = parser.getFloat("springStiffness", os->springStiffness);
-                os->springDamping       = parser.getFloat("springDamping", os->springDamping);
-                os->springStopThreshold = parser.getFloat("springStopThreshold", os->springStopThreshold);
-                os->springBoundary      = parser.getInt("springBoundary", kSpringBoundary, os->springBoundary);
+                // Binary AXML stores enums/floats/refs as typed Res_values; read them via
+                // TypedArray (AOSP MotionScene pattern). getInt/getFloat/getResourceId return
+                // the passed default when the attr is absent — no name-based fallback needed.
+                auto ta = ctx->obtainStyledAttributes(parser, R::styleable::OnSwipe);
+                if (ta) {
+                    namespace SW = R::styleable;
+                    os->dragDirection    = ta->getInt(SW::OnSwipe_dragDirection, os->dragDirection);
+                    os->dragScale        = ta->getFloat(SW::OnSwipe_dragScale, os->dragScale);
+                    os->touchAnchorSide  = ta->getInt(SW::OnSwipe_touchAnchorSide, os->touchAnchorSide);
+                    os->touchAnchorId    = (int)ta->getResourceId(SW::OnSwipe_touchAnchorId, os->touchAnchorId);
+                    os->onTouchUp        = ta->getInt(SW::OnSwipe_onTouchUp, os->onTouchUp);
+                    os->maxVelocity      = ta->getFloat(SW::OnSwipe_maxVelocity, os->maxVelocity);
+                    os->maxAcceleration  = ta->getFloat(SW::OnSwipe_maxAcceleration, os->maxAcceleration);
+                    os->autoCompleteMode = ta->getInt(SW::OnSwipe_autoCompleteMode, os->autoCompleteMode);
+                    os->springMass          = ta->getFloat(SW::OnSwipe_springMass, os->springMass);
+                    os->springStiffness     = ta->getFloat(SW::OnSwipe_springStiffness, os->springStiffness);
+                    os->springDamping       = ta->getFloat(SW::OnSwipe_springDamping, os->springDamping);
+                    os->springStopThreshold = ta->getFloat(SW::OnSwipe_springStopThreshold, os->springStopThreshold);
+                    os->springBoundary   = ta->getInt(SW::OnSwipe_springBoundary, os->springBoundary);
+                }
                 currentTransition->setOnSwipe(std::move(os));
             } else if (tag == "ViewTransition") {
                 auto vt = std::make_unique<ViewTransition>(*this, ctx, parser);

@@ -664,21 +664,30 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     mViewId      = (int)ta->getResourceId(R::styleable::Constraint_id, mViewId);
     // motionTarget is a ConstraintOverride attr (not in the Constraint styleable) — attrs bridge only.
     if (mViewId == View::NO_ID) mViewId = a.getResourceId("motionTarget", mViewId);
-    l.leftToLeft   = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintLeft_toLeftOf, l.leftToLeft);
-    l.leftToRight  = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintLeft_toRightOf, l.leftToRight);
-    l.rightToLeft  = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintRight_toLeftOf, l.rightToLeft);
-    l.rightToRight = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintRight_toRightOf, l.rightToRight);
-    l.topToTop     = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintTop_toTopOf, l.topToTop);
-    l.topToBottom  = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintTop_toBottomOf, l.topToBottom);
-    l.bottomToTop  = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintBottom_toTopOf, l.bottomToTop);
-    l.bottomToBottom = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintBottom_toBottomOf, l.bottomToBottom);
-    l.baselineToBaseline = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintBaseline_toBaselineOf, l.baselineToBaseline);
-    l.baselineToTop    = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintBaseline_toTopOf, l.baselineToTop);
-    l.baselineToBottom = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintBaseline_toBottomOf, l.baselineToBottom);
-    l.startToStart = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintStart_toStartOf, l.startToStart);
-    l.startToEnd   = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintStart_toEndOf, l.startToEnd);
-    l.endToStart   = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintEnd_toStartOf, l.endToStart);
-    l.endToEnd     = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintEnd_toEndOf, l.endToEnd);
+    // Anchor targets are reference|enum with <enum name="parent" value="0"/>: "@id/x" is stored
+    // as a reference (resource id), "parent" as an int enum (0). Match androidx — getResourceId
+    // for @id/x, getInt fallback for the "parent" sentinel — else binary AXML leaves every
+    // parent-anchored constraint at the member default (UNSET).
+    auto anchor = [&](int idx, int def) -> int {
+        int v = (int) ta->getResourceId(idx, -1);  // -1 = anchor "unset" sentinel
+        if (v == -1) v = ta->getInt(idx, def);
+        return v;
+    };
+    l.leftToLeft   = anchor(R::styleable::Constraint_layout_constraintLeft_toLeftOf, l.leftToLeft);
+    l.leftToRight  = anchor(R::styleable::Constraint_layout_constraintLeft_toRightOf, l.leftToRight);
+    l.rightToLeft  = anchor(R::styleable::Constraint_layout_constraintRight_toLeftOf, l.rightToLeft);
+    l.rightToRight = anchor(R::styleable::Constraint_layout_constraintRight_toRightOf, l.rightToRight);
+    l.topToTop     = anchor(R::styleable::Constraint_layout_constraintTop_toTopOf, l.topToTop);
+    l.topToBottom  = anchor(R::styleable::Constraint_layout_constraintTop_toBottomOf, l.topToBottom);
+    l.bottomToTop  = anchor(R::styleable::Constraint_layout_constraintBottom_toTopOf, l.bottomToTop);
+    l.bottomToBottom = anchor(R::styleable::Constraint_layout_constraintBottom_toBottomOf, l.bottomToBottom);
+    l.baselineToBaseline = anchor(R::styleable::Constraint_layout_constraintBaseline_toBaselineOf, l.baselineToBaseline);
+    l.baselineToTop    = anchor(R::styleable::Constraint_layout_constraintBaseline_toTopOf, l.baselineToTop);
+    l.baselineToBottom = anchor(R::styleable::Constraint_layout_constraintBaseline_toBottomOf, l.baselineToBottom);
+    l.startToStart = anchor(R::styleable::Constraint_layout_constraintStart_toStartOf, l.startToStart);
+    l.startToEnd   = anchor(R::styleable::Constraint_layout_constraintStart_toEndOf, l.startToEnd);
+    l.endToStart   = anchor(R::styleable::Constraint_layout_constraintEnd_toStartOf, l.endToStart);
+    l.endToEnd     = anchor(R::styleable::Constraint_layout_constraintEnd_toEndOf, l.endToEnd);
     l.circleConstraint = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintCircle, l.circleConstraint);
 
     // --- guideline / editor absolute ---

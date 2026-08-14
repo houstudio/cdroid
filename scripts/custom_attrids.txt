@@ -246,3 +246,9 @@
 0x020100f1 tabUnboundedRipple
 0x020100f2 smoothScroll
 0x020100f3 tabSelectedTextAppearance
+0x020100f4 duration
+0x020100f5 fastScrollEnabled
+0x020100f6 tabStyle
+0x020100f7 tabSecondaryStyle
+0x020100f8 clickAction
+0x020100f9 targetId
