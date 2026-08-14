@@ -118,7 +118,7 @@ void CompoundButton::setDefaultStateDescription() {
 std::vector<int>CompoundButton::onCreateDrawableState(int extraSpace){
     std::vector<int>drawableState = Button::onCreateDrawableState(extraSpace);
     if (isChecked()) {
-        mergeDrawableStates(drawableState,StateSet::get(StateSet::VIEW_STATE_CHECKED));
+        mergeDrawableStates(drawableState,{cdroid::internal::R::attr::state_checked});//StateSet::get(StateSet::VIEW_STATE_CHECKED));
     }
     return drawableState;
 }

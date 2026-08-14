@@ -1,6 +1,7 @@
 #include <widget/internal_R.h>
 #include <widget/switch.h>
 #include <widget/framework_styleable.h>
+#include <widget/internal_R.h>
 #include <core/assets.h>
 #include <utils/mathutils.h>
 #include <text/textutils.h>
@@ -922,7 +923,7 @@ int Switch::getThumbScrollRange() {
 std::vector<int> Switch::onCreateDrawableState(int extraSpace){
     std::vector<int> drawableState = CompoundButton::onCreateDrawableState(extraSpace);
     if (isChecked()) {
-        mergeDrawableStates(drawableState,StateSet::get(StateSet::VIEW_STATE_CHECKED));
+        mergeDrawableStates(drawableState,{cdroid::internal::R::attr::state_checked});//StateSet::get(StateSet::VIEW_STATE_CHECKED));
     }
     return drawableState;
 }
