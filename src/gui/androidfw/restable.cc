@@ -843,5 +843,33 @@ void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
     }
 }
 
+void pakPathCandidates(const std::string& arscPath, std::vector<std::string>& out) {
+    out.push_back(arscPath);
+    std::string stripped = arscPath;
+    if (stripped.compare(0, 4, "res/") == 0) {
+        stripped = stripped.substr(4);
+        out.push_back(stripped);
+    }
+    // "-vN"-stripped variant of each directory segment ("drawable-hdpi-v4/t.png"
+    // -> "drawable-hdpi/t.png"); plain segments pass through unchanged.
+    std::string candidate;
+    size_t start = 0;
+    while (start <= stripped.size()) {
+        const size_t slash = stripped.find('/', start);
+        std::string seg = stripped.substr(start,
+                slash == std::string::npos ? std::string::npos : slash - start);
+        const size_t dash = seg.rfind('-');
+        if (dash != std::string::npos && dash + 2 < seg.size()
+                && seg.compare(dash + 1, 1, "v") == 0
+                && seg.find_first_not_of("0123456789", dash + 2) == std::string::npos)
+            seg.resize(dash);
+        candidate += seg;
+        if (slash == std::string::npos) break;
+        candidate += '/';
+        start = slash + 1;
+    }
+    if (candidate != stripped) out.push_back(candidate);
+}
+
 
 } // namespace cdroid

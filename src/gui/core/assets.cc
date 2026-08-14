@@ -485,7 +485,17 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     if (stream && *stream) {
         std::string data((std::istreambuf_iterator<char>(*stream)),
                          std::istreambuf_iterator<char>());
-        if (!mResTable) mResTable = new ResTable();
+        if (!mResTable) {
+            mResTable = new ResTable();
+            // Seed the requested config from the device metrics (AOSP
+            // ResourcesManager applies the device configuration to every
+            // Resources). densityDpi drives config-variant selection (hdpi vs
+            // default buckets); with no LCD_DENSITY override it is 160 and
+            // selection behaves exactly as before.
+            ResTable_config cfg = {};
+            cfg.density = (uint16_t)mDisplayMetrics.densityDpi;
+            mResTable->setParameters(&cfg);
+        }
         // NOTE: the 4-arg form is required so `true` binds to copyData, not to
         // the int32_t cookie of the 3-arg overload — otherwise copyData defaults
         // to false, hdr->data aliases the local buffer, and freeing it on return
@@ -583,6 +593,23 @@ ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeR
     return pak;
 }
 
+ZIPArchive* Assets::findPakForPath(const std::string&package,const std::string&arscPath,
+                                   std::string*outResname)const{
+    std::vector<std::string> cands;
+    pakPathCandidates(arscPath, cands);
+    for (const auto& c : cands) {
+        std::string resname;
+        ZIPArchive* pak = getResource(package.empty() ? c : package + ":" + c, &resname, nullptr);
+        if (!pak) continue;
+        // getResource resolves the PACKAGE only — it never checks the entry
+        // exists. Probe-open to verify (zip_name_locate is unreliable on some
+        // paks, so use getInputStream like the real open would).
+        std::istream* probe = pak->getInputStream(resname);
+        if (probe) { delete probe; if (outResname) *outResname = resname; return pak; }
+    }
+    return nullptr;
+}
+
 std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid,std::string*outpkg) {
     // A theme-attribute reference isn't a streamable resource — resolve it
     // first. If it resolves to a color/literal (not a file), fall through to
@@ -610,13 +637,28 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
                 const char16_t* s = mResTable->getResourceString(id, &len);
                 if(s && len > 0){
                     std::string path = u16toUtf8(s, len);
-                    if(path.substr(0, 4) == "res/") path = path.substr(4);
                     if(!path.empty()){
-                        ZIPArchive* pak2 = getResource(package + ":" + path, &resname, &package);
+                        // arsc path ("res/drawable-hdpi-v4/x.png") -> pak entry
+                        // ("drawable-hdpi/x.png"): res/ strip + "-vN" strip,
+                        // shared with ResourcesImpl::openPakPath.
+                        ZIPArchive* pak2 = findPakForPath(package, path, &resname);
                         if(pak2) stream = pak2->getInputStream(resname);
                     }
                 }
             }
+        }
+    }
+    // Path-form input fallback: callers may pass an already-resolved arsc path
+    // ("kaidu_ms7:res/drawable-hdpi-v4/x.png") — the open above missed because
+    // the pak stores the source dir name. Retry the pakPathCandidates variants
+    // against the resolved pak (probes the zip, unlike getResource).
+    if(!stream && pak && !resname.empty()){
+        std::vector<std::string> cands;
+        pakPathCandidates(resname, cands);
+        for(const auto& c : cands){
+            if(c == resname) continue;
+            std::istream* s2 = pak->getInputStream(c);
+            if(s2){ stream = s2; break; }
         }
     }
     if(stream)return std::unique_ptr<std::istream>(stream);
@@ -636,7 +678,11 @@ void Assets::applyLocale(const std::string& lan) {
     std::string lang = lan, region;
     size_t sep = lan.find_first_of("_-");
     if (sep != std::string::npos) { lang = lan.substr(0, sep); region = lan.substr(sep + 1); }
+    // Read-modify-write: setParameters REPLACES mParams, so start from the
+    // current config (device density etc.) instead of a zeroed one — otherwise
+    // a locale switch would wipe the requested density back to unset.
     ResTable_config cfg = {};
+    mResTable->getParameters(&cfg);
     if (lang.size() >= 2) cfg.packLanguage(lang.substr(0, 2).c_str());
     if (region.size() >= 2) cfg.packRegion(region.substr(0, 2).c_str());
     char script[4] = {0, 0, 0, 0};
@@ -850,11 +896,14 @@ Drawable* Assets::getDrawable(const std::string&resid) {
                 const char16_t* s = mResTable->getResourceString(id, &len);
                 if (s && len > 0) {
                     std::string path = u16toUtf8(s, len);
-                    // arsc paths have "res/" prefix; pak stores without it.
-                    if (path.substr(0, 4) == "res/") path = path.substr(4);
-                    if (!path.empty()) {
-                        resname = path;
-                        fullresid = package + ":" + path;
+                    // arsc path ("res/drawable-hdpi-v4/x.png") -> real pak
+                    // entry name ("drawable-hdpi/x.png"): res/ strip + "-vN"
+                    // strip, shared with ResourcesImpl::openPakPath.
+                    std::string realName;
+                    ZIPArchive* pak = findPakForPath(package, path, &realName);
+                    if (pak && !realName.empty()) {
+                        resname = realName;
+                        fullresid = package.empty() ? realName : package + ":" + realName;
                     }
                 }
             }

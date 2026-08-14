@@ -129,6 +129,9 @@ private:
     class ColorStateListCache;  // id → ColorStateList          (defined in .cc)
 
     Asset* openByStringId(int id) const;
+    // Open an arsc-recorded path against the pak layout (res/ prefix strip +
+    // aapt2 2.19 "-vN" config-dir suffix strip). See resourcesimpl.cc.
+    Asset* openPakPath(const std::string& path) const;
     bool   pathOf(int id, std::string* out) const;
 
     AssetManager*       mAssets;

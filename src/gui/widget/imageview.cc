@@ -19,8 +19,11 @@
 #include <widget/imageview.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
+#include <core/uri.h>
+#include <image-decoders/imagedecoder.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
+#include <fstream>
 using namespace Cairo;
 namespace cdroid{
 using namespace cdroid::internal;
@@ -76,6 +79,7 @@ void ImageView::initImageView(){
     mLevel = INT_MIN;
     mViewAlphaScale= 256;
     mDrawableWidth = mDrawableHeight = -1;
+    mResourceId = 0;
     mScaleType  = FIT_CENTER;
     mHaveFrame  = false;
     mMergeState = false;
@@ -103,20 +107,91 @@ void ImageView::resolveUri(){
     if (mDrawable != nullptr) {
         return;
     }
-    if (!mResource.empty()) {
-        if(strpbrk(mResource.c_str(),"@:")==nullptr){
+
+    Drawable* d = nullptr;
+
+    if (mResourceId != 0) {
+        d = getContext()->getDrawable(mResourceId);
+        LOGW_IF(d==nullptr,"Unable to find resource: 0x%08x",mResourceId);
+        if(d==nullptr)
+            mResourceId = 0;  // Don't try again.
+    } else if (!mUri.empty()) {
+        Uri uri(mUri);
+        d = getDrawableFromUri(uri);
+        LOGW_IF(d==nullptr,"resolveUri failed on bad bitmap uri: %s",mUri.c_str());
+        if(d==nullptr)
+            mUri.clear();  // Don't try again.
+    } else if (!mResource.empty()) {
+        /*CDROID legacy string key (predates int ids): a real URI string
+          ("file://...") dispatches by scheme like mUri above; a bare path
+          loads as an image file/asset; "@name" resolves through Context.
+          AOSP only has the int/uri pair — this branch is the extension.*/
+        if(mResource.find("://")!=std::string::npos){
+            Uri uri(mResource);
+            d = getDrawableFromUri(uri);
+            LOGW_IF(d==nullptr,"resolveUri failed on bad bitmap uri: %s",mResource.c_str());
+            if(d==nullptr)
+                mResource.clear();  // Don't try again.
+        }else if(strpbrk(mResource.c_str(),"@:")==nullptr){
             RefPtr<Cairo::ImageSurface>bitmap = getContext()->loadImage(mResource);
             LOGW_IF(bitmap==nullptr,"Unable to find resource: %s",mResource.c_str());
             setImageBitmap(bitmap);
+            return;
         }else if(mResource.compare("@null")){
-            Drawable* d = getContext()->getDrawable(mResource);
+            d = getContext()->getDrawable(mResource);
             LOGW_IF(d==nullptr,"Unable to find resource: %s",mResource.c_str());
-            updateDrawable(d);
         }else{
             updateDrawable(nullptr);
+            return;
         }
+    } else {
+        return;
     }
-    //updateDrawable(d);
+    updateDrawable(d);
+}
+
+Drawable* ImageView::getDrawableFromUri(Uri& uri){
+    const std::string scheme = uri.getScheme();
+    if(scheme.compare("android.resource")==0){
+        /*AOSP routes android.resource://<pkg>/<type>/<name> (or /<typeid>/<name>,
+          or a bare /<resid>) through ContentResolver.getResourceId and re-loads
+          via the owning Resources. CDROID has no ContentResolver: map the same
+          path forms straight onto Context lookups (authority = package).*/
+        std::vector<std::string> segs;
+        uri.getPathSegments(segs);
+        const std::string authority = uri.getAuthority();
+        if(segs.size()==1 && segs[0].find_first_not_of("0123456789")==std::string::npos){
+            return getContext()->getDrawable((int)strtoul(segs[0].c_str(),nullptr,10));
+        }
+        if(segs.size()>=2){
+            const std::string& type = segs[segs.size()-2];
+            const std::string& name = segs[segs.size()-1];
+            std::string ref = "@" + (authority.empty()?std::string():(authority+":")) + type + "/" + name;
+            Drawable* d = getContext()->getDrawable(ref);
+            if(d) return d;
+            LOGW("Unable to open content: %s",uri.toString().c_str());
+        }
+    } else if((scheme.compare("content")==0)||(scheme.compare("file")==0)){
+        /*content:// needs a ContentProvider (not ported): behave like AOSP's
+          IOException branch and drop to the not-found return. file:// decodes
+          through ImageDecoder with the stream opened from the path — the
+          AOSP ImageDecoder.decodeDrawable equivalent (software allocator,
+          9-patch/animated aware).*/
+        if(scheme.compare("file")==0){
+            const std::string path = uri.getPath();
+            auto istm = std::make_unique<std::ifstream>(path,std::ios::binary);
+            if(istm&&(*istm))
+                return ImageDecoder::decodeDrawableStream(getContext(),std::move(istm),path);
+        }
+        LOGW("Unable to open content: %s",uri.toString().c_str());
+    } else {
+        /*No (or unknown) scheme: plain file/asset path. AOSP calls
+          Drawable.createFromPath(uri.toString()); ImageDecoder::createAsDrawable
+          is its CDROID equivalent (pak name or filesystem path, no density
+          scaling, 9-patch/animated aware).*/
+        return ImageDecoder::createAsDrawable(getContext(),uri.toString());
+    }
+    return nullptr;
 }
 
 int ImageView::resolveAdjustedSize(int desiredSize, int maxSize,int measureSpec){
@@ -538,7 +613,8 @@ void ImageView::invalidateDrawable(Drawable& dr){
 void ImageView::setImageDrawable(Drawable*drawable){
    if (mDrawable != drawable) {
         mResource.clear();
-        //mUri = null;
+        mResourceId = 0;
+        mUri.clear();
 
         const int oldWidth = mDrawableWidth;
         const int oldHeight = mDrawableHeight;
@@ -560,14 +636,17 @@ void ImageView::setImageLevel(int level){
     }
 }
 
-void ImageView::setImageResource(const std::string& resId) {
+void ImageView::setImageResource(int resId) {
     // The resource configuration may have changed, so we should always
     // try to load the resource even if the resId hasn't changed.
     const int oldWidth = mDrawableWidth;
     const int oldHeight = mDrawableHeight;
-    if(mResource==resId)return;
+
     updateDrawable(nullptr);
-    mResource = resId;
+    mResourceId = resId;
+    mResource.clear();
+    mUri.clear();
+
     resolveUri();
 
     if ((oldWidth != mDrawableWidth) || (oldHeight != mDrawableHeight)) {
@@ -576,7 +655,43 @@ void ImageView::setImageResource(const std::string& resId) {
     invalidate(true);
 }
 
-void ImageView::imageDrawableCallback(Drawable*d,const std::string&uri,const std::string resid){
+void ImageView::setImageResource(const std::string& resId) {
+    // Legacy string form (asset name / file path / "@name"): mirrors the int
+    // overload. Kept because CDROID apps predate int resource ids.
+    const int oldWidth = mDrawableWidth;
+    const int oldHeight = mDrawableHeight;
+    if(mResource==resId)return;
+    updateDrawable(nullptr);
+    mResource = resId;
+    mResourceId = 0;
+    mUri.clear();
+    resolveUri();
+
+    if ((oldWidth != mDrawableWidth) || (oldHeight != mDrawableHeight)) {
+        requestLayout();
+    }
+    invalidate(true);
+}
+
+void ImageView::imageDrawableCallback(Drawable*d,const std::string&uri,int resId){
+    /*AOSP ImageDrawableCallback.run(): apply the pre-decoded drawable, then
+      restore the source it came from (uri / resource id). setImageDrawable
+      clears both, so re-assign after it.*/
+    setImageDrawable(d);
+    mUri = uri;
+    mResourceId = resId;
+}
+
+Runnable ImageView::setImageResourceAsync(int resId){
+    Drawable* d = nullptr;
+    if(resId != 0){
+        d = getContext()->getDrawable(resId);
+        LOGW_IF(d==nullptr,"Unable to find resource: 0x%08x",resId);
+        if(d==nullptr) resId = 0;
+    }
+    Runnable r;
+    r = [this,d,resId](){ imageDrawableCallback(d,std::string(),resId); };
+    return r;
 }
 
 Runnable ImageView::setImageResourceAsync(const std::string&resid){
@@ -585,11 +700,41 @@ Runnable ImageView::setImageResourceAsync(const std::string&resid){
 }
 
 void ImageView::setImageURI(const std::string&uri){
+    if ((!mResource.empty()) || mResourceId != 0 || (mUri != uri)) {
+        updateDrawable(nullptr);
+        mResourceId = 0;
+        mResource.clear();
+        mUri = uri;
+
+        const int oldWidth = mDrawableWidth;
+        const int oldHeight = mDrawableHeight;
+
+        resolveUri();
+
+        if ((oldWidth != mDrawableWidth) || (oldHeight != mDrawableHeight)) {
+            requestLayout();
+        }
+        invalidate(true);
+    }
 }
 
 Runnable ImageView::setImageURIAsync(const std::string&uri){
-    Runnable r;
-    return r;
+    if ((!mResource.empty()) || mResourceId != 0 || (mUri != uri)) {
+        std::string u = uri;
+        Drawable* d = nullptr;
+        if(!u.empty()){
+            Uri uobj(u);
+            d = getDrawableFromUri(uobj);
+        }
+        if(d == nullptr){
+            // Do not set the URI if the drawable couldn't be loaded.
+            u.clear();
+        }
+        Runnable r;
+        r = [this,d,u](){ imageDrawableCallback(d,u,0); };
+        return r;
+    }
+    return Runnable();
 }
 
 void ImageView::setImageTintList(const cdroid::RefPtr<ColorStateList>&tint){

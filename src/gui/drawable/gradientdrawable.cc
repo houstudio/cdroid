@@ -1380,7 +1380,10 @@ void GradientDrawable::updateGradientDrawableStroke(const TypedArray& a){
 
 void GradientDrawable::updateDrawableCorners(const TypedArray& a){
     auto st = mGradientState;
-    const int radius = (int) st->mRadius;
+    // AOSP: radius comes from the android:radius attribute (defaulting to the
+    // state's current radius), NOT from the state alone — the state is still 0
+    // during inflate, so skipping the read dropped every <corners android:radius>.
+    const int radius = a.getDimensionPixelSize(R::styleable::DrawableCorners_radius, (int)st->mRadius);
     setCornerRadius(radius);
 
     // TODO: Update these to be themeable.
@@ -1393,7 +1396,7 @@ void GradientDrawable::updateDrawableCorners(const TypedArray& a){
             (bottomLeftRadius != radius) || (bottomRightRadius != radius)) {
         // The corner radii are specified in clockwise order (see Path.addRoundRect())
         setCornerRadii(std::vector<float>{ topLeftRadius, topLeftRadius, topRightRadius, topRightRadius,
-                bottomRightRadius, bottomRightRadius, bottomLeftRadius, bottomLeftRadius });
+                bottomLeftRadius, bottomLeftRadius, bottomRightRadius, bottomRightRadius });
     }
 }
 

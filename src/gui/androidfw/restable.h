@@ -28,6 +28,8 @@
 #define __CDROID_ANDROIDFW_RESTABLE_H__
 
 #include "resourcetypes.h"
+#include <string>
+#include <vector>
 
 namespace cdroid {
 
@@ -286,6 +288,14 @@ void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
                             const uint32_t* attrs,
                             uint32_t defStyleAttr, uint32_t defStyleRes,
                             StyledAttr* out);
+
+// arsc-recorded file path -> pak entry-name candidates, in lookup order:
+// as-is, without the "res/" prefix, then with the aapt2 "-vN" config-dir
+// suffix stripped from directory segments (aapt2 records
+// "res/drawable-hdpi-v4/x.png" — standard apk layout — while paks store the
+// source dir name "drawable-hdpi/x.png"). Shared by every open path
+// (ResourcesImpl id-based opens, Assets string fallbacks).
+void pakPathCandidates(const std::string& arscPath, std::vector<std::string>& out);
 
 } // namespace cdroid
 #endif // __CDROID_ANDROIDFW_RESTABLE_H__
