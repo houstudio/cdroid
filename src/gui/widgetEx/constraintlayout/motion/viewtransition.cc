@@ -147,16 +147,16 @@ void ViewTransition::applyTransition(ViewTransitionController* controller, Motio
         for (View* v : views) applyIndependentTransition(controller, layout, v);
         return;
     }
-    // currentState / allStates: apply mConstraintDelta to the current ConstraintSet and animate the
-    // target views to the resulting state. Android clones the current set, applies the delta, then
-    // drives a temporary Transition (start = current, end = delta'd) via transitionToEnd — which is
-    // exactly CDROID's setTransition(start, end) + transitionToEnd().
+    // currentState / allStates: apply the delta as an independent per-view animation (same
+    // mechanism as noState above) rather than replacing the main transition. The old approach
+    // (setTransition + transitionToEnd) replaced the main start↔end transition with a temporary
+    // current→delta'd one, so the OnClick toggle fired a phantom animateTo that interrupted the
+    // ViewTransition animation and corrupted progress.
     if (current == nullptr || layout == nullptr) return;
-    if (mConstraintDelta.empty()) return; // nothing to apply
 
     // allStates additionally persists the delta into EVERY ConstraintSet (except the from-state) so
     // the change survives a later state switch (Android applyTransition 491-506).
-    if (mViewTransitionMode == VIEWTRANSITIONMODE_ALLSTATES) {
+    if (mViewTransitionMode == VIEWTRANSITIONMODE_ALLSTATES && !mConstraintDelta.empty()) {
         for (int id : layout->getConstraintSetIds()) {
             if (id == fromId) continue;
             ConstraintSet* cSet = layout->getConstraintSet(id);
@@ -168,14 +168,10 @@ void ViewTransition::applyTransition(ViewTransitionController* controller, Motio
         }
     }
 
-    ConstraintSet transformed = *current;               // deep copy (map of Constraint)
     for (View* v : views) {
         if (v == nullptr) continue;
-        mConstraintDelta.applyDelta(transformed.get(v->getId()));
+        applyIndependentTransition(controller, layout, v);
     }
-    layout->setTransition(current, &transformed);
-    // On completion, set/clear the tags (mirrors Android's transitionToEnd Runnable).
-    layout->transitionToEnd([this, views] { applyTagsToViews(views); });
 }
 
 bool ViewTransition::addAllFrames(Motion* mc) const {
