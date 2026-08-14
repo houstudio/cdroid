@@ -5,7 +5,7 @@
      android:startDestination since the framework has no such attr (NavInflater
      reads by local name so the runtime is agnostic, but link is strict). -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
             android:id="@+id/nav_host_test"
             app:startDestination="start_fragment">
 

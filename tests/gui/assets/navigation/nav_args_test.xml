@@ -2,7 +2,7 @@
 <!-- Typed argument defaults — port of androidx nav_default_arguments.xml (subset CDROID
      implements: int/long/float/bool/string/reference; no enum/parcelable/array). -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
             android:id="@+id/nav_args"
             app:startDestination="@+id/args_test">
 

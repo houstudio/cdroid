@@ -120,8 +120,11 @@ def parse_attrs_xml(path):
         attrs = []
         for a in ds.findall('attr'):
             an = a.get('name')
-            if an and ':' in an:
-                an = an.split(':', 1)[1]
+            # Keep 'android:'-qualified names qualified: an EXPLICIT framework
+            # reference must resolve through the framework table even when a
+            # same-named widgetEx attr exists (e.g. android:defaultValue is the
+            # framework 0x010101ed, not the navigation lib's 0x0201012d). Local
+            # (unqualified) names stay unqualified.
             if an:
                 attrs.append(an)
         out[name] = attrs
@@ -129,6 +132,17 @@ def parse_attrs_xml(path):
 
 
 def resolve_id(attr_name, fw_ids, custom_ids, custom_next, auto_custom):
+    # Explicit 'android:' qualification pins the lookup to the framework table
+    # (see parse_attrs_xml) — bypasses the widgetEx custom_ids precedence.
+    fw_only = attr_name.startswith('android:')
+    if fw_only:
+        attr_name = attr_name.split(':', 1)[1]
+        if attr_name in fw_ids:
+            return fw_ids[attr_name], False, custom_next
+        if auto_custom:
+            cid = custom_next
+            return cid, True, custom_next + 1
+        return None, False, custom_next
     """Return (id_int|None, custom_assigned_bool, new_custom_next).
 
     None => skip this attr (e.g. framework placeholder '__removed*' attrs that
@@ -266,7 +280,9 @@ def main():
             if assigned:
                 custom_ids[an] = idv
                 new_custom[an] = idv
-            resolved.append((an, idv))
+            # Strip the namespace for the emitted identifier (android:defaultValue
+            # -> defaultValue); the id was already resolved namespace-aware.
+            resolved.append((an.split(':', 1)[1] if ':' in an else an, idv))
         styleables.append((out_name, resolved))
 
     # Persist newly-assigned custom ids (rewritten below, after .cc emit)

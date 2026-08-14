@@ -1,9 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Navigation component attrs (androidx.navigation port). The parser reads
-     these by NAME (NavGraph/NavDestination), so no declare-styleables — the
-     declarations exist so app nav graphs can reference them through the
+<!-- Navigation component attrs (androidx.navigation port). NavGraph/
+     NavDestination/NavInflater read them through TypedArray with the stable
+     0x02 ids (declare-styleables below -> gen_styleable.py ->
+     widgetex_styleable.h); app nav graphs reference them through the
      cdroid.widgetex shared lib (-I widgetex.apk) under binary AXML. -->
 <resources>
+<!-- declare-styleables for gen_styleable.py -> widgetex_styleable.h (TypedArray
+     reads in NavGraph/NavDestination/NavInflater). Attrs reference the flat
+     declarations above (stable 0x02 ids in sibling public.xml); android: attrs
+     resolve from framework_attrids.txt. -->
+<declare-styleable name="NavGraph">
+    <attr name="startDestination" />
+    <attr name="route" />
+</declare-styleable>
+<declare-styleable name="NavDestination">
+    <attr name="android:id" />
+    <attr name="android:label" />
+    <attr name="route" />
+</declare-styleable>
+<declare-styleable name="NavAction">
+    <attr name="android:id" />
+    <attr name="destination" />
+    <attr name="launchSingleTop" />
+    <attr name="popUpTo" />
+    <attr name="popUpToInclusive" />
+    <attr name="popUpToSaveState" />
+    <attr name="restoreState" />
+    <attr name="enterAnim" />
+    <attr name="exitAnim" />
+    <attr name="popEnterAnim" />
+    <attr name="popExitAnim" />
+</declare-styleable>
+<declare-styleable name="NavArgument">
+    <attr name="android:name" />
+    <attr name="android:defaultValue" />
+    <attr name="argType" />
+    <attr name="nullable" />
+</declare-styleable>
     <attr name="startDestination" format="string|reference" />
     <attr name="route" format="string" />
     <attr name="destination" format="reference" />

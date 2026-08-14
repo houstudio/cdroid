@@ -5,6 +5,7 @@
  * onCreate) must still land the start destination and publish the NavController.
  *********************************************************************************/
 #include <gtest/gtest.h>
+#include "R.h"
 #include <fragment/fragmentactivity.h>
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenttransaction.h>
@@ -47,7 +48,7 @@ TEST(NavHostFragment, SetGraphInOnCreateLoadsStart) {
     auto* activity = new TestFragmentActivity();
     pumpFor(100); // drive the activity's posted onCreate..onResume
 
-    NavHostFragment* host = new NavHostFragment("@navigation/nav_host_test");
+    NavHostFragment* host = new NavHostFragment(gui_test::R::navigation::nav_host_test);
     activity->getSupportFragmentManager()
         ->beginTransaction()->replace(activity->getFragmentContainerId(), host).commit();
     activity->getSupportFragmentManager()->executePendingTransactions();
@@ -65,7 +66,7 @@ TEST(NavHostFragment, FindNavControllerFromHostView) {
     auto* activity = new TestFragmentActivity();
     pumpFor(100);
 
-    NavHostFragment* host = new NavHostFragment("@navigation/nav_host_test");
+    NavHostFragment* host = new NavHostFragment(gui_test::R::navigation::nav_host_test);
     activity->getSupportFragmentManager()
         ->beginTransaction()->replace(activity->getFragmentContainerId(), host).commit();
     activity->getSupportFragmentManager()->executePendingTransactions();

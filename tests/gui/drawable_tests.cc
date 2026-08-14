@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <widget/internal_R.h>
 #include <cdroid.h>
 #include <drawable/drawables.h>
 #include <fstream>
@@ -112,7 +113,7 @@ public:
                attrs.getString("android:drawable").c_str(),
                attrs.getString("cdroid:drawable").c_str());
         parser.dump();
-        return DrawableInflater::inflateFromXml(parser.getName(),parser,attrs);
+        return DrawableInflater::inflateFromXml(App::getInstance().getResources(),parser.getName(),parser,attrs);
     }
 };
 
@@ -151,7 +152,7 @@ TEST_F(DRAWABLE,bitmapalpha){
 }
 
 TEST_F(DRAWABLE,ninepatch1){
-    NinePatchDrawable *d = (NinePatchDrawable*)rm->getDrawable("@cdroid:mipmap/btn_default_transparent_normal");
+    NinePatchDrawable *d = (NinePatchDrawable*)rm->getDrawable(cdroid::internal::R::drawable::btn_default_transparent_normal);
     Outline outline,outline2;
     d->setBounds(0,0,d->getIntrinsicWidth(),d->getIntrinsicHeight());
     d->getOutline(outline);
@@ -169,7 +170,7 @@ TEST_F(DRAWABLE,ninepatch1){
 }
 
 TEST_F(DRAWABLE,ninepatch2){
-    NinePatchDrawable*d = (NinePatchDrawable*)rm->getDrawable("@cdroid:mipmap/btn_default_transparent_normal");
+    NinePatchDrawable*d = (NinePatchDrawable*)rm->getDrawable(cdroid::internal::R::drawable::btn_default_transparent_normal);
     for(int i=0, w=d->getIntrinsicWidth(),h=d->getIntrinsicHeight();w<800;w+=20,i+=2){
         ctx->set_source_rgb(.4,.4,.0);
         ctx->rectangle(200,200,w,h+i);

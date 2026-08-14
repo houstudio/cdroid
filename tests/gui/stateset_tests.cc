@@ -11,6 +11,7 @@
 // Original: cts/tests/tests/util/src/android/util/cts/StateSetTest.java (Apache 2.0)
 #include <gtest/gtest.h>
 #include <drawable/stateset.h>
+#include <widget/internal_R.h>
 #include <vector>
 
 using namespace cdroid;
@@ -45,23 +46,27 @@ TEST(CtsStateSetTest, testIsWildCard) {
 }
 
 TEST(CtsStateSetTest, testStaticStateSets) {
-    EXPECT_EQ((std::vector<int>{StateSet::ENABLED}),  StateSet::ENABLED_STATE_SET);
-    EXPECT_EQ((std::vector<int>{StateSet::PRESSED}),  StateSet::PRESSED_STATE_SET);
-    EXPECT_EQ((std::vector<int>{StateSet::FOCUSED}),  StateSet::FOCUSED_STATE_SET);
-    EXPECT_EQ((std::vector<int>{StateSet::SELECTED}), StateSet::SELECTED_STATE_SET);
-    EXPECT_EQ((std::vector<int>{StateSet::CHECKED}),  StateSet::CHECKED_STATE_SET);
+    /* State values are R.attr ids since the stateset refactor (the sequential
+       cdroid::internal::R::attr::state_enabled.. ints are retired). */
+    namespace ar = cdroid::internal::R::attr;
+    EXPECT_EQ((std::vector<int>{ar::state_enabled}),  StateSet::ENABLED_STATE_SET);
+    EXPECT_EQ((std::vector<int>{ar::state_pressed}),  StateSet::PRESSED_STATE_SET);
+    EXPECT_EQ((std::vector<int>{ar::state_focused}),  StateSet::FOCUSED_STATE_SET);
+    EXPECT_EQ((std::vector<int>{ar::state_selected}), StateSet::SELECTED_STATE_SET);
+    EXPECT_EQ((std::vector<int>{ar::state_checked}),  StateSet::CHECKED_STATE_SET);
 }
 
 TEST(CtsStateSetTest, testContainsAttribute) {
+    namespace ar = cdroid::internal::R::attr;
     std::vector<std::vector<int>> specs = {
-        {StateSet::FOCUSED},
-        {StateSet::PRESSED, -StateSet::SELECTED}
+        {ar::state_focused},
+        {ar::state_pressed, -ar::state_selected}
     };
-    EXPECT_TRUE(StateSet::containsAttribute(specs, StateSet::FOCUSED));
-    EXPECT_TRUE(StateSet::containsAttribute(specs, StateSet::PRESSED));
-    EXPECT_TRUE(StateSet::containsAttribute(specs, StateSet::SELECTED));  // -SELECTED matches attr
-    EXPECT_FALSE(StateSet::containsAttribute(specs, StateSet::CHECKED));
-    EXPECT_FALSE(StateSet::containsAttribute({}, StateSet::FOCUSED));
+    EXPECT_TRUE(StateSet::containsAttribute(specs, ar::state_focused));
+    EXPECT_TRUE(StateSet::containsAttribute(specs, ar::state_pressed));
+    EXPECT_TRUE(StateSet::containsAttribute(specs, cdroid::internal::R::attr::state_selected));  // -SELECTED matches attr
+    EXPECT_FALSE(StateSet::containsAttribute(specs, cdroid::internal::R::attr::state_checked));
+    EXPECT_FALSE(StateSet::containsAttribute({}, cdroid::internal::R::attr::state_focused));
 }
 
 TEST(CtsStateSetTest, testStateSetMatches) {

@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <navigation/navgraph.h>
+#include <core/typedarray.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <navigation/navgraphnavigator.h>
 #include <navigation/navigatorprovider.h>
 namespace cdroid{
@@ -49,9 +51,13 @@ NavGraph::~NavGraph(){
 
 void NavGraph::onInflate(Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
-    const std::string startRoute = attrs.getString("startDestination");
+    // androidx reads R.styleable.NavGraph: startDestination is a route string
+    // or a destination-id reference (0x02 navigation attr).
+    namespace ns = internal::R::styleable;
+    auto ta = context->obtainStyledAttributes(attrs, ns::NavGraph);
+    const std::string startRoute = ta ? ta->getString(ns::NavGraph_startDestination) : "";
     if(!startRoute.empty()) setStartDestination(startRoute);
-    else setStartDestination(attrs.getResourceId("startDestination", 0));
+    else setStartDestination(ta ? ta->getResourceId(ns::NavGraph_startDestination, 0) : 0);
 }
 
 std::pair<NavDestination*, Bundle*>* NavGraph::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {

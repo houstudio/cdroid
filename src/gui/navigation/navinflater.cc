@@ -15,10 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <core/typedarray.h>
 #include <core/xmlpullparser.h>
 #include <navigation/navaction.h>
 #include <navigation/navgraph.h>
 #include <navigation/navinflater.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <navigation/navargument.h>
 #include <navigation/navoptions.h>
 #include <navigation/navtype.h>
@@ -102,10 +104,14 @@ NavDestination* NavInflater::inflate(XmlPullParser&parser,const AttributeSet& at
 }
 
 void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs){
-    const std::string name = attrs.getString("name");
-    const std::string argType = attrs.getString("argType");
-    const std::string defValue = attrs.getString("defaultValue");
-    const bool nullable = (attrs.getString("nullable") == "true");
+    // androidx reads R.styleable.NavArgument (android:name/defaultValue are
+    // framework attrs; argType/nullable are the 0x02 navigation attrs).
+    namespace ns = internal::R::styleable;
+    auto ta = mContext->obtainStyledAttributes(attrs, ns::NavArgument);
+    const std::string name    = ta ? ta->getString(ns::NavArgument_name) : "";
+    const std::string argType = ta ? ta->getString(ns::NavArgument_argType) : "";
+    const std::string defValue= ta ? ta->getString(ns::NavArgument_defaultValue) : "";
+    const bool nullable = ta ? ta->getBoolean(ns::NavArgument_nullable, false) : false;
     NavTypeKind kind = argType.empty() ? NavTypeKind::STRING : navTypeKindFromName(argType);
     NavArgument::Builder builder;
     builder.setType(kind);
@@ -143,21 +149,25 @@ void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attr
 
 void NavInflater::inflateAction(NavDestination& dest,const AttributeSet& attrs) {
     // Mirrors androidx NavInflater.inflateAction: action + destination are int ids; popUpTo is
-    // an int destination id (-1 = none). Anim is kept as a resource name here (androidx uses an
-    // int res id) because CDROID's animation pipeline resolves by name.
-    const int id = attrs.getResourceId("id", 0);
-    const int destId = attrs.getResourceId("destination", 0);
+    // an int destination id (-1 = none). Reads go through R.styleable.NavAction (stable 0x02
+    // ids; android:id from the framework table). Anim stays name-based (androidx uses int res
+    // ids) because CDROID's animation pipeline resolves by name; binary refs render empty
+    // until NavOptions carries ids (TODO).
+    namespace ns = internal::R::styleable;
+    auto ta = mContext->obtainStyledAttributes(attrs, ns::NavAction);
+    const int id = ta ? ta->getResourceId(ns::NavAction_id, 0) : 0;
+    const int destId = ta ? ta->getResourceId(ns::NavAction_destination, 0) : 0;
     NavAction* action = new NavAction(destId);
     NavOptions::Builder builder;
-    builder.setLaunchSingleTop(attrs.getBoolean("launchSingleTop", false));
-    builder.setRestoreState(attrs.getBoolean("restoreState", false));
-    builder.setPopUpTo(attrs.getResourceId("popUpTo", -1),
-            attrs.getBoolean("popUpToInclusive", false),
-            attrs.getBoolean("popUpToSaveState", false));
-    builder.setEnterAnim(attrs.getString("enterAnim"));
-    builder.setExitAnim(attrs.getString("exitAnim"));
-    builder.setPopEnterAnim(attrs.getString("popEnterAnim"));
-    builder.setPopExitAnim(attrs.getString("popExitAnim"));
+    builder.setLaunchSingleTop(ta ? ta->getBoolean(ns::NavAction_launchSingleTop, false) : false);
+    builder.setRestoreState(ta ? ta->getBoolean(ns::NavAction_restoreState, false) : false);
+    builder.setPopUpTo(ta ? ta->getResourceId(ns::NavAction_popUpTo, -1) : -1,
+            ta ? ta->getBoolean(ns::NavAction_popUpToInclusive, false) : false,
+            ta ? ta->getBoolean(ns::NavAction_popUpToSaveState, false) : false);
+    builder.setEnterAnim(ta ? ta->getString(ns::NavAction_enterAnim) : "");
+    builder.setExitAnim(ta ? ta->getString(ns::NavAction_exitAnim) : "");
+    builder.setPopEnterAnim(ta ? ta->getString(ns::NavAction_popEnterAnim) : "");
+    builder.setPopExitAnim(ta ? ta->getString(ns::NavAction_popExitAnim) : "");
     action->setNavOptions(builder.build());
     // TODO: nested <argument> children should populate action defaultArguments (needs SavedState
     // merge); not required for popUpTo/singleTop, deferred.

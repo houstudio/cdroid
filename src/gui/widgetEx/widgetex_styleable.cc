@@ -100,5 +100,11 @@ namespace internal { namespace R { namespace styleable {
         0x020100e6, 0x020100e7, 0x020100e8, 0x020100f3, 0x020100e9, 0x020100ea, 0x020100eb,
         0x020100ec, 0x020100ed, 0x020100ee, 0x020100ef, 0x020100f0, 0x020100f1, 0x020100f2, 0 };
     const uint32_t TabItem[] = { 0x0101014f, 0x01010002, 0x010100f2, 0 };
+    const uint32_t NavGraph[] = { 0x02010120, 0x02010121, 0 };
+    const uint32_t NavDestination[] = { 0x010100d0, 0x01010001, 0x02010121, 0 };
+    const uint32_t NavAction[] = {
+        0x010100d0, 0x02010122, 0x02010127, 0x02010123, 0x02010124, 0x02010125, 0x02010126,
+        0x02010128, 0x02010129, 0x0201012a, 0x0201012b, 0 };
+    const uint32_t NavArgument[] = { 0x01010003, 0x010101ed, 0x0201012e, 0x0201012f, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid
