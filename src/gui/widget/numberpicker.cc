@@ -32,8 +32,8 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 DECLARE_WIDGET2(NumberPicker,R::attr::numberPickerStyle)
-const std::string DEFAULT_LAYOUT_VERT="cdroid:layout/number_picker";
-const std::string DEFAULT_LAYOUT_HORZ="cdroid:layout/number_picker_horz";
+const int DEFAULT_LAYOUT_VERT = R::layout::number_picker;
+const int DEFAULT_LAYOUT_HORZ = R::layout::number_picker; // no horizontal layout exists
 
 // AOSP's NumberPicker$CustomEditText (a static inner EditText subclass; AOSP also
 // overrides onEditorAction to clearFocus() on IME_ACTION_DONE, which CDROID's
@@ -63,7 +63,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     initView();
     setOrientation(h>w?VERTICAL:HORIZONTAL);
 
-    const std::string layoutres = (getOrientation()==VERTICAL)?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ;
+    const int layoutres = (getOrientation()==VERTICAL)?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ;
     LayoutInflater::from(mContext)->inflate(layoutres,this,true);
  
     mInputText =(EditText*)findViewById(R::id::numberpicker_input);
@@ -121,15 +121,13 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
   :LinearLayout(context,pAttrs, defStyleAttr){
     const AttributeSet& atts = *pAttrs;
     initView();
-    // Standard public framework attrs resolved typed via the NumberPicker styleable.
-    // The CDROID-specific attrs read below (selectionDivider/internal*/wheelItemCount/
-    // etc.) aren't in the framework arsc, so they stay on the string bridge — apps
-    // can't set them in binary mode, so those reads return defaults (harmless).
+    // Framework attrs resolve typed via the NumberPicker styleable; CDROID-specific
+    // attrs (textColor2/selectedTextSize/wheelItemCount/...) via NumberPickerCdroid —
+    // both public in the framework arsc (0x01011000+ block), so binary AXML works.
     auto ta = context->obtainStyledAttributes(atts, R::styleable::NumberPicker, defStyleAttr);
     mHideWheelUntilFocused = ta->getBoolean(R::styleable::NumberPicker_hideWheelUntilFocused, false);
     { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); mWrapSelectorWheelPreferred = ta2->getBoolean(R::styleable::NumberPickerCdroid_wrapSelectorWheel, mWrapSelectorWheelPreferred); }
     mDividerDrawable = ta->getDrawable(R::styleable::NumberPicker_selectionDivider);
-    mTextSize2 = atts.getDimensionPixelSize("selectedTextSize",mTextSize2);
     if (mDividerDrawable) {
         mDividerDrawable->setCallback(this);
         mDividerDrawable->setLayoutDirection(getLayoutDirection());
@@ -159,9 +157,13 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     if ((mMinWidth != SIZE_UNSPECIFIED) && (mMaxWidth != SIZE_UNSPECIFIED) && (mMinWidth > mMaxWidth) ){
         LOGE("minWidth(%d)  > maxWidth(%d)",mMinWidth,mMaxWidth);
     }
-    const std::string defaultLayoutRes = (getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ);
-    std::string layoutRes = ta->getString(R::styleable::NumberPicker_internalLayout);
-    if(layoutRes.empty()) layoutRes = defaultLayoutRes;
+    // AOSP reads internalLayout as a resource id and inflates the int. The old
+    // getString path broke under binary AXML: the style item is a reference and
+    // getString rendered it as the arsc file path ("res/layout/..."), which the
+    // string inflate path cannot open.
+    const int defaultLayoutRes = (getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ);
+    int layoutRes = (int)ta->getResourceId(R::styleable::NumberPicker_internalLayout, 0);
+    if (layoutRes == 0) layoutRes = defaultLayoutRes;
     { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); setWheelItemCount(ta2->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount)); }
     mHasSelectorWheel = (defaultLayoutRes!=layoutRes)||(mWheelItemCount!=DEFAULT_WHEEL_ITEM_COUNT);
     LayoutInflater::from(mContext)->inflate(layoutRes,this);
@@ -221,11 +223,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     }
     //ViewConfiguration configuration = ViewConfiguration::get(context);
     setTextSize(ta ? ta->getDimensionPixelSize(R::styleable::NumberPicker_textSize,mTextSize) : mTextSize);
-    mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
-    if(atts.hasAttribute("selectedTextSize"))
-        mTextSize2 = atts.getDimensionPixelSize("selectedTextSize");
-    else if(!atts.hasAttribute("internalLayout"))
-        mTextSize2 =std::max(mTextSize2,mTextSize);
+    // selectedTextSize (NumberPickerCdroid): explicit value wins, else default to textSize
+    // (the old "textSize2" name read was dead — that attr was never declared anywhere).
+    { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid);
+      mTextSize2 = ta2->getDimensionPixelSize(R::styleable::NumberPickerCdroid_selectedTextSize, mTextSize); }
     setSelectedTextSize(mTextSize2);
     setTextColor(ta ? ta->getColor(R::styleable::NumberPicker_textColor, 0xFFFFFFFF) : 0xFFFFFFFF);
     { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); setTextColor(mTextColor, ta2->getColor(R::styleable::NumberPickerCdroid_textColor2, mTextColor)); }
