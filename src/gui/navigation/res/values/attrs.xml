@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Navigation component attrs (androidx.navigation port). The parser reads
+     these by NAME (NavGraph/NavDestination), so no declare-styleables — the
+     declarations exist so app nav graphs can reference them through the
+     cdroid.widgetex shared lib (-I widgetex.apk) under binary AXML. -->
+<resources>
+    <attr name="startDestination" format="string|reference" />
+    <attr name="route" format="string" />
+    <attr name="destination" format="reference" />
+    <attr name="popUpTo" format="string|reference" />
+    <attr name="popUpToInclusive" format="boolean" />
+    <attr name="popUpToSaveState" format="boolean" />
+    <attr name="restoreState" format="boolean" />
+    <attr name="launchSingleTop" format="boolean" />
+    <attr name="enterAnim" format="reference" />
+    <attr name="exitAnim" format="reference" />
+    <attr name="popEnterAnim" format="reference" />
+    <attr name="popExitAnim" format="reference" />
+    <attr name="graph" format="reference" />
+    <attr name="defaultValue" format="string|reference|integer|float|boolean" />
+    <attr name="argType" format="string" />
+    <attr name="nullable" format="boolean" />
+    <attr name="action" format="string" />
+    <attr name="data" format="string" />
+    <attr name="dataPattern" format="string" />
+</resources>

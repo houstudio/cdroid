@@ -589,6 +589,12 @@ class PakBuilder:
             legacy = os.path.join(wroot, "res")
             if os.path.isdir(legacy):
                 res_trees.append(("widgetex", legacy))
+        # Navigation (androidx.navigation port) lives outside widgetEx/ but its
+        # attrs ship in the same 0x02 shared lib so app nav graphs can reference
+        # them via the cdroid.widgetex namespace.
+        navres = os.path.join(repo, "src", "gui", "navigation", "res")
+        if os.path.isdir(navres):
+            res_trees.append(("navigation", navres))
         for comp, tree in res_trees:
             for root, dirs, files in os.walk(tree):
                 dirs.sort(); files.sort()

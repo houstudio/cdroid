@@ -247,8 +247,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     setMinValue(ta ? ta->getInt(R::styleable::NumberPicker_min, 0) : 0);
     setMaxValue(ta ? ta->getInt(R::styleable::NumberPicker_max, 0) : 0);
 
+    // displayedValues has no XML attr (not in AOSP, declared nowhere, no layout uses
+    // it) — set programmatically via setDisplayedValues() only. The old name-based
+    // getArray read is gone (dead under binary AXML).
     std::vector<std::string>displayedValues;
-    atts.getArray("displayedValues",displayedValues);
     const int valueCount = std::abs(getMinValue()-getMaxValue())+1;
     if(displayedValues.size()){
         if(displayedValues.size()==valueCount)

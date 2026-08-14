@@ -10271,6 +10271,9 @@
             <flag name="top" value="0x30" />
             <!-- Push object to the bottom of its container, not changing its size. -->
             <flag name="bottom" value="0x50" />
+            <!-- CDROID extension: Toolbar masks the value with the vertical gravity
+                 mask, so full gravity values are accepted at runtime. -->
+            <flag name="center_vertical" value="0x10" />
         </attr>
         <!-- Icon drawable to use for the collapse button. -->
         <attr name="collapseIcon" format="reference" />
