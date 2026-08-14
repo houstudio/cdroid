@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- StateListAnimator test asset (androidx/aosp shape: selector -> item ->
+     set -> objectAnimator). Loaded by ANIMATORINFLATOR.statelistanimator. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:duration="300"
+                android:valueTo="1.2"/>
+        </set>
+    </item>
+    <item>
+        <objectAnimator
+            android:propertyName="alpha"
+            android:duration="300"
+            android:valueTo="1.0"/>
+    </item>
+</selector>

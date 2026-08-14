@@ -5,44 +5,57 @@
 namespace gui_test{
 
 namespace R{
+    namespace anim{
+        enum : int {
+            slide_in_left = 0x7f010000,
+        };
+    }/*namespace anim*/
+
+    namespace animator{
+        enum : int {
+            fade_in = 0x7f020000,
+            statelist_test = 0x7f020001,
+        };
+    }/*namespace animator*/
+
     namespace drawable{
         enum : int {
-            cts_level_list_correct = 0x7f010000,
-            cts_ripple_effect = 0x7f010001,
-            cts_ripple_radius = 0x7f010002,
-            cts_selector_correct = 0x7f010003,
-            cts_vector_icon = 0x7f010004,
-            cts_vector_size_1 = 0x7f010005,
-            cts_vector_size_2 = 0x7f010006,
-            gradientdrawable = 0x7f010007,
-            nine_patch_odd_insets = 0x7f010008,
-            ninepatch_0 = 0x7f010009,
-            ninepatch_1 = 0x7f01000a,
+            cts_level_list_correct = 0x7f030000,
+            cts_ripple_effect = 0x7f030001,
+            cts_ripple_radius = 0x7f030002,
+            cts_selector_correct = 0x7f030003,
+            cts_vector_icon = 0x7f030004,
+            cts_vector_size_1 = 0x7f030005,
+            cts_vector_size_2 = 0x7f030006,
+            gradientdrawable = 0x7f030007,
+            nine_patch_odd_insets = 0x7f030008,
+            ninepatch_0 = 0x7f030009,
+            ninepatch_1 = 0x7f03000a,
         };
     }/*namespace drawable*/
 
     namespace id{
         enum : int {
-            args_test = 0x7f020000,
-            finish = 0x7f020001,
-            finish_self = 0x7f020002,
-            nav_args = 0x7f020003,
-            nav_host_test = 0x7f020004,
-            nav_root = 0x7f020005,
-            second = 0x7f020006,
-            second_fragment = 0x7f020007,
-            second_test = 0x7f020008,
-            self = 0x7f020009,
-            start_fragment = 0x7f02000a,
-            start_test = 0x7f02000b,
+            args_test = 0x7f040000,
+            finish = 0x7f040001,
+            finish_self = 0x7f040002,
+            nav_args = 0x7f040003,
+            nav_host_test = 0x7f040004,
+            nav_root = 0x7f040005,
+            second = 0x7f040006,
+            second_fragment = 0x7f040007,
+            second_test = 0x7f040008,
+            self = 0x7f040009,
+            start_fragment = 0x7f04000a,
+            start_test = 0x7f04000b,
         };
     }/*namespace id*/
 
     namespace navigation{
         enum : int {
-            nav_args_test = 0x7f030000,
-            nav_host_test = 0x7f030001,
-            nav_simple_test = 0x7f030002,
+            nav_args_test = 0x7f050000,
+            nav_host_test = 0x7f050001,
+            nav_simple_test = 0x7f050002,
         };
     }/*namespace navigation*/
 
