@@ -19,6 +19,8 @@
 /*
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.ViewTransition.
  */
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/motion/viewtransition.h>
 #include <widgetEx/constraintlayout/motion/keyframes.h>
 #include <widgetEx/constraintlayout/motion/motionscene.h>
@@ -47,21 +49,7 @@
 #include <limits>
 
 namespace cdroid {
-
-namespace {
-const std::unordered_map<std::string, int> kOnState = {
-    {"actionDown",      (int) ViewTransition::ONSTATE_ACTION_DOWN},
-    {"actionUp",        (int) ViewTransition::ONSTATE_ACTION_UP},
-    {"actionDownUp",    (int) ViewTransition::ONSTATE_ACTION_DOWN_UP},
-    {"sharedValueSet",  (int) ViewTransition::ONSTATE_SHARED_VALUE_SET},
-    {"sharedValueUnset",(int) ViewTransition::ONSTATE_SHARED_VALUE_UNSET}
-};
-const std::unordered_map<std::string, int> kViewTransitionMode = {
-    {"currentState", (int) ViewTransition::VIEWTRANSITIONMODE_CURRENTSTATE},
-    {"allStates",    (int) ViewTransition::VIEWTRANSITIONMODE_ALLSTATES},
-    {"noState",      (int) ViewTransition::VIEWTRANSITIONMODE_NOSTATE}
-};
-} // namespace
+using namespace cdroid::internal;
 
 ViewTransition::ViewTransition(MotionScene& scene, Context* ctx, XmlPullParser& parser)
     : mScene(scene) {
@@ -71,27 +59,36 @@ ViewTransition::ViewTransition(MotionScene& scene, Context* ctx, XmlPullParser& 
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();
             if (tag == "ViewTransition") {
-                mId = mScene.getId(parser.getAttributeValue("id"));
-                const int targetId = parser.getResourceId("motionTarget", UNSET);
-                if (targetId != UNSET && targetId != 0) {
-                    mTargetId = targetId;
-                } else {
-                    mTargetString = parser.getAttributeValue("motionTarget");
+                // TypedArray reads typed binary AXML values directly (AOSP pattern, same as
+                // MotionScene::Transition/OnClick/OnSwipe); the default arg covers an absent
+                // attr, so no name-based fallback is needed. Enums (onStateTransition,
+                // viewTransitionMode, pathMotionArc) are compiled to their int values by aapt2.
+                auto ta = ctx->obtainStyledAttributes(parser, R::styleable::ViewTransition);
+                if (ta) {
+                    namespace VT = R::styleable;
+                    mId = (int)ta->getResourceId(VT::ViewTransition_id, UNSET);
+                    // motionTarget is reference|string: a @id/... ref resolves to a resource id;
+                    // a bare string is a constraintTag regex matched later in matchesView().
+                    const int targetId = (int)ta->getResourceId(VT::ViewTransition_motionTarget, UNSET);
+                    if (targetId != UNSET && targetId != 0) {
+                        mTargetId = targetId;
+                    } else {
+                        mTargetString = ta->getString(VT::ViewTransition_motionTarget);
+                    }
+                    mOnStateTransition = ta->getInt(VT::ViewTransition_onStateTransition, mOnStateTransition);
+                    mDisabled           = ta->getBoolean(VT::ViewTransition_transitionDisable, mDisabled);
+                    mPathMotionArc      = ta->getInt(VT::ViewTransition_pathMotionArc, mPathMotionArc);
+                    mDuration           = ta->getInt(VT::ViewTransition_duration, mDuration);
+                    mUpDuration         = ta->getInt(VT::ViewTransition_upDuration, mUpDuration);
+                    mViewTransitionMode = ta->getInt(VT::ViewTransition_viewTransitionMode, mViewTransitionMode);
+                    mDefaultInterpolatorString = ta->getString(VT::ViewTransition_motionInterpolator);
+                    mSetsTag     = (int)ta->getResourceId(VT::ViewTransition_setsTag,    mSetsTag);
+                    mClearsTag   = (int)ta->getResourceId(VT::ViewTransition_clearsTag,  mClearsTag);
+                    mIfTagSet    = (int)ta->getResourceId(VT::ViewTransition_ifTagSet,   mIfTagSet);
+                    mIfTagNotSet = (int)ta->getResourceId(VT::ViewTransition_ifTagNotSet,mIfTagNotSet);
+                    mSharedValueID     = (int)ta->getResourceId(VT::ViewTransition_SharedValueId, mSharedValueID);
+                    mSharedValueTarget = ta->getInt(VT::ViewTransition_SharedValue, mSharedValueTarget);
                 }
-                mOnStateTransition = parser.getInt("onStateTransition", kOnState, mOnStateTransition);
-                mDisabled           = parser.getBoolean("transitionDisable", mDisabled);
-                mPathMotionArc      = parser.getInt("pathMotionArc", mPathMotionArc);
-                mDuration           = parser.getInt("duration", mDuration);
-                mUpDuration         = parser.getInt("upDuration", mUpDuration);
-                mViewTransitionMode = parser.getInt("viewTransitionMode", kViewTransitionMode,
-                                                    mViewTransitionMode);
-                mDefaultInterpolatorString = parser.getAttributeValue("motionInterpolator");
-                mSetsTag    = parser.getResourceId("setsTag",    mSetsTag);
-                mClearsTag  = parser.getResourceId("clearsTag",  mClearsTag);
-                mIfTagSet   = parser.getResourceId("ifTagSet",   mIfTagSet);
-                mIfTagNotSet= parser.getResourceId("ifTagNotSet",mIfTagNotSet);
-                mSharedValueID     = parser.getResourceId("SharedValueId", mSharedValueID);
-                mSharedValueTarget = parser.getInt("SharedValue", mSharedValueTarget);
             } else if (tag == "KeyFrameSet") {
                 mKeyFrames = std::make_unique<KeyFrames>(ctx, parser); // consumes through </KeyFrameSet>
             } else if (tag == "Constraint" || tag == "ConstraintOverride") {

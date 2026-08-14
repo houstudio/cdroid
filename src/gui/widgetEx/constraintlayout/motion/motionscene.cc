@@ -34,76 +34,27 @@
 namespace cdroid {
 using namespace cdroid::internal;
 
-namespace {
-// clickAction flag-name -> value map. The static constexpr flags are cast to int inline at the use
-// site (a prvalue) to avoid odr-using them.
-const std::unordered_map<std::string, int> kClickAction = {
-    {"toggle",            (int)MotionScene::Transition::FLAG_TOGGLE},
-    {"transitionToEnd",   (int)MotionScene::Transition::FLAG_TRANSITION_TO_END},
-    {"transitionToStart", (int)MotionScene::Transition::FLAG_TRANSITION_TO_START},
-    {"jumpToEnd",         (int)MotionScene::Transition::FLAG_JUMP_TO_END},
-    {"jumpToStart",       (int)MotionScene::Transition::FLAG_JUMP_TO_START}
-};
-const std::unordered_map<std::string, int> kDragDirection = {
-    {"dragUp",         (int)MotionScene::OnSwipe::DRAG_UP},
-    {"dragDown",       (int)MotionScene::OnSwipe::DRAG_DOWN},
-    {"dragLeft",       (int)MotionScene::OnSwipe::DRAG_LEFT},
-    {"dragRight",      (int)MotionScene::OnSwipe::DRAG_RIGHT},
-    {"dragStart",      (int)MotionScene::OnSwipe::DRAG_START},
-    {"dragEnd",        (int)MotionScene::OnSwipe::DRAG_END}
-};
-const std::unordered_map<std::string, int> kTouchUp = {
-    {"autoComplete",         (int)MotionScene::OnSwipe::ON_UP_AUTOCOMPLETE},
-    {"autoCompleteToStart",  (int)MotionScene::OnSwipe::ON_UP_AUTOCOMPLETE_TO_START},
-    {"autoCompleteToEnd",    (int)MotionScene::OnSwipe::ON_UP_AUTOCOMPLETE_TO_END},
-    {"stop",                 (int)MotionScene::OnSwipe::ON_UP_STOP},
-    {"decelerate",           (int)MotionScene::OnSwipe::ON_UP_DECELERATE}
-};
-const std::unordered_map<std::string, int> kAnchorSide = {
-    {"top",    (int)MotionScene::OnSwipe::SIDE_TOP},
-    {"left",   (int)MotionScene::OnSwipe::SIDE_LEFT},
-    {"right",  (int)MotionScene::OnSwipe::SIDE_RIGHT},
-    {"bottom", (int)MotionScene::OnSwipe::SIDE_BOTTOM},
-    {"middle", (int)MotionScene::OnSwipe::SIDE_MIDDLE},
-    {"start",  (int)MotionScene::OnSwipe::SIDE_START},
-    {"end",    (int)MotionScene::OnSwipe::SIDE_END}
-};
-const std::unordered_map<std::string, int> kAutoComplete = {
-    {"continuousVelocity", (int)MotionScene::OnSwipe::COMPLETE_CONTINUOUS_VELOCITY},
-    {"spring",             (int)MotionScene::OnSwipe::COMPLETE_SPRING}
-};
-const std::unordered_map<std::string, int> kSpringBoundary = {
-    {"overshoot",   (int)MotionScene::OnSwipe::SPRING_OVERSHOOT},
-    {"bounceStart", (int)MotionScene::OnSwipe::SPRING_BOUNCE_START},
-    {"bounceEnd",   (int)MotionScene::OnSwipe::SPRING_BOUNCE_END},
-    {"bounceBoth",  (int)MotionScene::OnSwipe::SPRING_BOUNCE_BOTH}
-};
-const std::unordered_map<std::string, int> kAutoTransition = {
-    {"none",           (int)MotionScene::Transition::AUTO_NONE},
-    {"jumpToStart",    (int)MotionScene::Transition::AUTO_JUMP_TO_START},
-    {"jumpToEnd",      (int)MotionScene::Transition::AUTO_JUMP_TO_END},
-    {"animateToStart", (int)MotionScene::Transition::AUTO_ANIMATE_TO_START},
-    {"animateToEnd",   (int)MotionScene::Transition::AUTO_ANIMATE_TO_END}
-};
-} // namespace
-
 // ===========================================================================
 // MotionScene::Transition
 // ===========================================================================
 MotionScene::Transition::Transition(MotionScene& scene, const AttributeSet& a)
     : mDuration(scene.mDefaultDuration) {
-    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    // TypedArray reads typed binary AXML values directly (AOSP pattern); the default
+    // arg covers an absent attr, so no name-based fallback is needed.
     Context* ctx = a.getContext();
     auto ta = ctx->obtainStyledAttributes(a, R::styleable::Transition);
-    mId = scene.getId(ta&&ta->hasValue(R::styleable::Transition_id) ? ta->getString(R::styleable::Transition_id) : a.getString("id", "")); // <Transition android:id="@+id/...">
-    mConstraintSetStart = scene.getId(ta&&ta->hasValue(R::styleable::Transition_constraintSetStart) ? ta->getString(R::styleable::Transition_constraintSetStart) : a.getString("constraintSetStart", ""));
-    mConstraintSetEnd   = scene.getId(ta&&ta->hasValue(R::styleable::Transition_constraintSetEnd) ? ta->getString(R::styleable::Transition_constraintSetEnd) : a.getString("constraintSetEnd", ""));
-    mDuration = ta&&ta->hasValue(R::styleable::Transition_duration) ? ta->getInt(R::styleable::Transition_duration, mDuration) : a.getInt("duration", mDuration);
-    if (mDuration < 8) mDuration = 8;
-    mStagger = ta&&ta->hasValue(R::styleable::Transition_staggered) ? ta->getFloat(R::styleable::Transition_staggered, mStagger) : a.getFloat("staggered", mStagger);
-    mDefaultInterpolatorString = ta&&ta->hasValue(R::styleable::Transition_motionInterpolator) ? ta->getString(R::styleable::Transition_motionInterpolator) : a.getString("motionInterpolator", mDefaultInterpolatorString);
-    mPathMotionArc = ta&&ta->hasValue(R::styleable::Transition_pathMotionArc) ? ta->getInt(R::styleable::Transition_pathMotionArc, mPathMotionArc) : a.getInt("pathMotionArc", mPathMotionArc);
-    mAutoTransition = ta&&ta->hasValue(R::styleable::Transition_autoTransition) ? ta->getInt(R::styleable::Transition_autoTransition, mAutoTransition) : a.getInt("autoTransition", kAutoTransition, mAutoTransition);
+    if (ta) {
+        namespace TR = R::styleable;
+        mId = (int)ta->getResourceId(TR::Transition_id, UNSET);                     // <Transition android:id="@+id/...">
+        mConstraintSetStart = (int)ta->getResourceId(TR::Transition_constraintSetStart, UNSET);
+        mConstraintSetEnd   = (int)ta->getResourceId(TR::Transition_constraintSetEnd, UNSET);
+        mDuration = ta->getInt(TR::Transition_duration, mDuration);
+        if (mDuration < 8) mDuration = 8;
+        mStagger = ta->getFloat(TR::Transition_staggered, mStagger);
+        mDefaultInterpolatorString = ta->getString(TR::Transition_motionInterpolator);
+        mPathMotionArc = ta->getInt(TR::Transition_pathMotionArc, mPathMotionArc);
+        mAutoTransition = ta->getInt(TR::Transition_autoTransition, mAutoTransition);
+    }
     if (mConstraintSetStart == UNSET) mIsAbstract = true;
 }
 
@@ -114,7 +65,7 @@ MotionScene::MotionScene(MotionLayout* layout)
     : mMotionLayout(layout)
     , mViewTransitionController(std::make_unique<ViewTransitionController>(layout)) {}
 
-MotionScene::MotionScene(Context* ctx, MotionLayout* layout, const std::string& resourceId)
+MotionScene::MotionScene(Context* ctx, MotionLayout* layout, int resourceId)
     : mMotionLayout(layout)
     , mViewTransitionController(std::make_unique<ViewTransitionController>(layout)) {
     load(ctx, resourceId);
@@ -185,17 +136,27 @@ int MotionScene::getId(const std::string& idString) const {
 
 int MotionScene::parseConstraintSet(Context* ctx, XmlPullParser& parser) {
     // <ConstraintSet android:id="@+id/start" deriveConstraintsFrom="@id/..."> ...children... </ConstraintSet>
-    // Read the element's own attributes before load() consumes the tag through its END_TAG.
-    const std::string idStr = parser.getAttributeValue("id");
-    const std::string deriveStr = parser.getAttributeValue("deriveConstraintsFrom");
-    const int id = getId(idStr);
+    // Both are references. Binary AXML stores them as typed values the name-based
+    // getAttributeValue cannot decode, so read the resource id via the index path — this
+    // is the SAME int the Transition's constraintSetStart/End resolve to, so the map keys
+    // match. Text XML falls back to getId(getAttributeValue(name)).
+    int id = UNSET, deriveId = UNSET;
+    const int acount = parser.getAttributeCount();
+    for (int i = 0; i < acount; i++) {
+        const std::string nm = parser.getAttributeName(i);
+        if      (nm == "id")                     id       = parser.getAttributeResourceValue(i, UNSET);
+        else if (nm == "deriveConstraintsFrom")  deriveId = parser.getAttributeResourceValue(i, UNSET);
+    }
+    if (id == UNSET) id = getId(parser.getAttributeValue("id"));          // text-XML fallback
     if (id == UNSET) return UNSET;
     auto set = std::make_unique<ConstraintSet>();
     set->load(ctx, parser); // consumes through </ConstraintSet>
     mConstraintSetMap[id] = std::move(set);
-    if (!deriveStr.empty()) {
-        mDeriveFrom[id] = getId(deriveStr); // base merged lazily in getConstraintSet (order-independent)
+    if (deriveId == UNSET) {
+        const std::string deriveStr = parser.getAttributeValue("deriveConstraintsFrom");
+        if (!deriveStr.empty()) deriveId = getId(deriveStr);
     }
+    if (deriveId != UNSET) mDeriveFrom[id] = deriveId; // base merged lazily in getConstraintSet
     return id;
 }
 
@@ -290,7 +251,7 @@ bool MotionScene::autoTransition(MotionLayout* layout, int currentState) {
     return false;
 }
 
-void MotionScene::load(Context* ctx, const std::string& resourceId) {
+void MotionScene::load(Context* ctx, int resourceId) {
     XmlPullParser parser(ctx, resourceId);
     load(ctx, parser);
 }
@@ -319,8 +280,13 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
                 currentTransition->setKeyFrames(std::make_unique<KeyFrames>(ctx, parser));
             } else if (tag == "OnClick" && currentTransition != nullptr) {
                 OnClick oc;
-                oc.targetId = parser.getResourceId("targetId", UNSET);
-                oc.clickAction = parser.getInt("clickAction", kClickAction, Transition::FLAG_TOGGLE);
+                // TypedArray: binary AXML stores targetId (ref) / clickAction (flags)
+                // as typed values the name-based read cannot decode.
+                auto ta = ctx->obtainStyledAttributes(parser, R::styleable::OnClick);
+                if (ta) {
+                    oc.targetId = (int)ta->getResourceId(R::styleable::OnClick_targetId, UNSET);
+                    oc.clickAction = ta->getInt(R::styleable::OnClick_clickAction, Transition::FLAG_TOGGLE);
+                }
                 currentTransition->addOnClick(oc);
             } else if (tag == "OnSwipe" && currentTransition != nullptr) {
                 auto os = std::make_unique<OnSwipe>();

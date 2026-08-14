@@ -267,7 +267,7 @@ class MotionLayout : public ConstraintLayout {
 
     // Pure-XML MotionScene path (app:layoutDescription="@xml/...").
     std::unique_ptr<MotionScene> mScene;
-    std::string mSceneResource;       // resource path of the <MotionScene> XML
+    int mSceneResource = 0;           // R.xml.* resource id of the <MotionScene> XML
     KeyFrames* mKeyFramesToApply = nullptr; // borrowed from mScene's current transition; applied post-capture
     int mSceneArcMode = -1;            // Transition-level pathMotionArc, propagated to each Motion
     bool mSceneBuilt = false;

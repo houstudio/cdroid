@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widgetEx flexbox attr id pinning (0x02 shared-lib). Source of truth for these ids;
+     consumed by _compile_shared_lib (aapt2 <public id=>) and gen_styleable. -->
+<resources>
+    <public type="attr" name="alignContent" id="0x0201000c"/>
+    <public type="attr" name="alignItems" id="0x0201000b"/>
+    <public type="attr" name="dividerDrawable" id="0x020100cd"/>
+    <public type="attr" name="dividerDrawableHorizontal" id="0x020100ce"/>
+    <public type="attr" name="dividerDrawableVertical" id="0x020100cf"/>
+    <public type="attr" name="flexDirection" id="0x02010008"/>
+    <public type="attr" name="flexWrap" id="0x02010009"/>
+    <public type="attr" name="justifyContent" id="0x0201000a"/>
+    <public type="attr" name="layout_alignSelf" id="0x02010011"/>
+    <public type="attr" name="layout_flexBasisPercent" id="0x0201000e"/>
+    <public type="attr" name="layout_flexGrow" id="0x0201000f"/>
+    <public type="attr" name="layout_flexShrink" id="0x02010010"/>
+    <public type="attr" name="layout_maxHeight" id="0x020100d7"/>
+    <public type="attr" name="layout_maxWidth" id="0x020100d6"/>
+    <public type="attr" name="layout_minHeight" id="0x020100d5"/>
+    <public type="attr" name="layout_minWidth" id="0x020100d4"/>
+    <public type="attr" name="layout_order" id="0x0201000d"/>
+    <public type="attr" name="layout_wrapBefore" id="0x02010012"/>
+    <public type="attr" name="maxLine" id="0x020100d3"/>
+    <public type="attr" name="showDivider" id="0x020100d0"/>
+    <public type="attr" name="showDividerHorizontal" id="0x020100d1"/>
+    <public type="attr" name="showDividerVertical" id="0x020100d2"/>
+</resources>

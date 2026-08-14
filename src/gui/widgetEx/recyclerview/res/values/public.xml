@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widgetEx recyclerview attr id pinning (0x02 shared-lib). Source of truth for these ids;
+     consumed by _compile_shared_lib (aapt2 <public id=>) and gen_styleable. -->
+<resources>
+    <public type="attr" name="fastScrollEnabled" id="0x020100f5"/>
+    <public type="attr" name="fastScrollHorizontalThumbDrawable" id="0x020100ca"/>
+    <public type="attr" name="fastScrollHorizontalTrackDrawable" id="0x020100cb"/>
+    <public type="attr" name="fastScrollVerticalThumbDrawable" id="0x020100c8"/>
+    <public type="attr" name="fastScrollVerticalTrackDrawable" id="0x020100c9"/>
+    <public type="attr" name="isScrollToTopEnabled" id="0x020100cc"/>
+    <public type="attr" name="layoutManager" id="0x020100c4"/>
+    <public type="attr" name="reverseLayout" id="0x020100c6"/>
+    <public type="attr" name="spanCount" id="0x020100c5"/>
+    <public type="attr" name="stackFromEnd" id="0x020100c7"/>
+</resources>

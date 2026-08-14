@@ -534,14 +534,15 @@ class PakBuilder:
     # ----- aapt2 compile: compile res/ to binary AXML, return {rel_path: bytes} -----
     def _merge_widgetex_attrs(self, tmpres):
         """Merge each widgetEx component's res/ tree (src/gui/widgetEx/<comp>/res/)
-        + a generated public.xml (from scripts/custom_attrids.txt) into the app's
-        temp res/. Every app pak (use_aapt2, not use_sdk) gets widgetEx resources
-        this way so ConstraintLayout/Flexbox/TabLayout/... app:xxx attrs link and
-        resolve at runtime. widgetEx attrs aren't declared in the app's own res,
-        so aapt2 link would fail "attribute not found"; declaring them fixes link,
-        and public.xml pins each attr's resource ID to the stable custom_attrids.txt
-        value so binary AXML attr IDs match the runtime styleable IDS[]
-        (widgetex_styleable.h) — obtainStyledAttributes resolves by attr ID.
+        into the app's temp res/. Every app pak (use_aapt2, not use_sdk) gets
+        widgetEx resources this way so ConstraintLayout/Flexbox/TabLayout/...
+        app:xxx attrs link and resolve at runtime. widgetEx attrs aren't declared
+        in the app's own res, so aapt2 link would fail "attribute not found";
+        declaring them fixes link. (Only used when widgetex.apk is NOT -I-linked;
+        with -I the attrs resolve from the shared lib instead.) Each component's
+        res/values/public.xml pins its attrs at stable 0x02 ids, but for app paks
+        that public.xml is irrelevant — the runtime resolves widgetEx attrs via
+        widgetex.pak at package-id 0x02.
 
         Per-component layout: each widgetEx/<comp>/res/ tree is walked; its
         values/* files are copied to tmpres/values/<comp>_<basename> (aapt2 merges
@@ -584,47 +585,6 @@ class PakBuilder:
         # The public.xml pinning (0x0201xxxx) is done ONLY in _compile_shared_lib
         # for widgetex.pak. Pinning 0x02 IDs in a 0x7f app pak would fail aapt2.
 
-    def _gen_public_xml(self, tmpres):
-        """Write res/values/public.xml pinning each widgetEx attr to its stable
-        0x02 resource id, sourced from scripts/custom_attrids.txt. aapt2 link honors
-        <public id=.../> so the built widgetex.apk carries ids that match the
-        styleable IDS[] (widgetex_styleable.h, generated from the same file). Only
-        attrs that are actually declared in the merged widgetEx attrs.xml are emitted
-        (aapt2 rejects <public> for an undeclared attr)."""
-        sdir = os.path.dirname(os.path.abspath(__file__))
-        ids_path = os.path.join(sdir, "custom_attrids.txt")
-        if not os.path.exists(ids_path):
-            return
-        # Attrs actually present in the merged res (so public.xml never references a
-        # name aapt2 hasn't seen — that aborts link with "resource not defined").
-        declared = set()
-        for root, _dirs, files in os.walk(tmpres):
-            for f in files:
-                if not f.endswith(".xml"):
-                    continue
-                try:
-                    txt = open(os.path.join(root, f), encoding="utf-8").read()
-                except Exception:
-                    continue
-                import re as _re
-                for m in _re.finditer(r'<attr\s+name="([^"]+)"', txt):
-                    name = m.group(1)
-                    if not name.startswith("android:"):
-                        declared.add(name)
-        vals = os.path.join(tmpres, "values")
-        os.makedirs(vals, exist_ok=True)
-        with open(ids_path, encoding="utf-8") as fh, \
-             open(os.path.join(vals, "public.xml"), "w", encoding="utf-8") as out:
-            out.write('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n')
-            for line in fh:
-                line = line.strip()
-                if not (line and line.startswith("0x")):
-                    continue
-                idv, name = line.split()
-                if name in declared:
-                    out.write('  <public type="attr" name="%s" id="%s"/>\n' % (name, idv))
-            out.write('</resources>\n')
-
     def _compile_shared_lib(self):
         """Build widgetex.pak: a fixed-id 0x02 resource pak (widgetEx attrs only).
         Collects the 5 widgetEx res/values/attrs.xml trees + generates public.xml
@@ -635,14 +595,11 @@ class PakBuilder:
         try:
             tmpres = os.path.join(tmpdir, "res")
             os.makedirs(tmpres, exist_ok=True)
-            # Collect widgetEx res trees + generate public.xml (0x0201xxxx).
+            # Collect widgetEx res trees. Each component's res/values/public.xml
+            # (src/gui/widgetEx/<comp>/res/values/public.xml — androidx structure) pins
+            # that component's attrs at their stable 0x02 ids; _merge_widgetex_attrs copies
+            # them into tmpres/values/<comp>_public.xml and aapt2 honors <public id=>.
             self._merge_widgetex_attrs(tmpres)
-            # Pin every widgetEx attr to its stable 0x02 id (scripts/custom_attrids.txt)
-            # via a generated res/values/public.xml. Without this aapt2 auto-assigns the
-            # ids and the resulting widgetex.pak no longer matches the styleable IDS[]
-            # (widgetex_styleable.h, generated by gen_styleable.py from the same
-            # custom_attrids.txt) — obtainStyledAttributes would then resolve nothing.
-            self._gen_public_xml(tmpres)
             # aapt2 compile.
             compiled = os.path.join(tmpdir, "compiled.zip")
             _r = subprocess.run([self.aapt2_path, "compile", "--dir", tmpres, "-o", compiled],

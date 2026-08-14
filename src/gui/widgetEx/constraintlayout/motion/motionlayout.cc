@@ -54,16 +54,13 @@ MotionLayout::MotionLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleA
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     // layoutDescription is declared in the ConstraintLayout_Layout styleable.
     auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout, defStyleAttr);
-    // app:layoutDescription="@xml/..." points at a <MotionScene> resource (bare localname after the
-    // XmlPullParser namespace strip). Resolved into a MotionScene on first measure (buildScene).
-    mSceneResource = (ta&&ta->hasValue(R::styleable::ConstraintLayoutLayout_layoutDescription))
-        ? ta->getString(R::styleable::ConstraintLayoutLayout_layoutDescription)
-        : "";
-    // Binary AXML stores @xml/... as TYPE_REFERENCE; TypedArray::getString only
-    // returns TYPE_STRING, so it yields "" here. Fall back to the AttributeSet,
-    // whose binary path renders the reference to "@xml/scene_scan".
-    if (mSceneResource.empty())
-        mSceneResource = attrs.getString("layoutDescription", "");
+    // app:layoutDescription="@xml/..." is a reference to the <MotionScene> xml
+    // resource. Read it as a resource id (AOSP MotionLayout keeps the scene as an
+    // int R.xml.*); binary AXML stores @xml/... as TYPE_REFERENCE, which getString
+    // cannot decode. Resolved into a MotionScene on first measure (buildScene).
+    if (ta) {
+        mSceneResource = (int)ta->getResourceId(R::styleable::ConstraintLayoutLayout_layoutDescription, 0);
+    }
 }
 
 MotionLayout::MotionLayout(int width, int height)
@@ -509,7 +506,7 @@ void MotionLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     mHeightSpec = heightMeasureSpec;
     // Build the MotionScene from layoutDescription on the first measure (idempotent). setTransition
     // then defers the capture to after ConstraintLayout::onMeasure gives us a measured size.
-    if (!mSceneBuilt && !mSceneResource.empty()) buildScene();
+    if (!mSceneBuilt && mSceneResource != 0) buildScene();
     ConstraintLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
     // If setTransition was called before we had a size, run the capture now that we do.
     // Use getMeasuredWidth (set by measure) — getWidth() is 0 until onLayout runs.
@@ -555,7 +552,7 @@ void MotionLayout::applyTransition(MotionScene::Transition* t) {
 }
 
 void MotionLayout::buildScene() {
-    if (mSceneBuilt || mSceneResource.empty()) return;
+    if (mSceneBuilt || mSceneResource == 0) return;
     mSceneBuilt = true; // set first so a parse failure doesn't retry every measure
     mScene = std::make_unique<MotionScene>(getContext(), this, mSceneResource);
     applyTransition(mScene->getCurrentTransition());

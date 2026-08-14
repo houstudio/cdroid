@@ -187,9 +187,9 @@ class MotionScene {
 
     MotionScene(MotionLayout* layout);
     // Load and parse the <MotionScene> at resource `resourceId` (e.g. "xml/my_scene" or "@xml/...").
-    MotionScene(Context* ctx, MotionLayout* layout, const std::string& resourceId);
+    MotionScene(Context* ctx, MotionLayout* layout, int resourceId);
 
-    void load(Context* ctx, const std::string& resourceId);
+    void load(Context* ctx, int resourceId);
     // Parse a <MotionScene> from an already-constructed pull parser (positioned anywhere before the
     // <MotionScene> START_TAG). Test-friendly: lets a unit test feed a stringstream-backed parser.
     void load(Context* ctx, XmlPullParser& parser);

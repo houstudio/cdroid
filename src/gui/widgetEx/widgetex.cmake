@@ -1,8 +1,9 @@
 if(ENABLE_WEAR_WIDGETS OR ENABLE_RECYCLERVIEW)
 
 # --- Generated widgetEx styleable header (alongside R.h in widget/) -----------
-# Run gen_styleable.py by hand with --custom-ids to assign new custom attr ids
-# (append-only, stable); the build uses it read-only here.
+# widgetEx attr ids live in each component's res/values/public.xml (androidx
+# per-component structure). Add a new widgetEx attr there with a stable 0x02 id;
+# gen_styleable.py reads them, _compile_shared_lib pins them via aapt2 <public>.
 #
 # attrs.xml is per-component (widgetEx/<comp>/res/values/attrs.xml); --attrs takes
 # the comma-joined list and gen_styleable merges all declare-styleables. Add a new
@@ -15,18 +16,25 @@ set(_WIDGETEX_ATTR_FILES
     ${PROJECT_SOURCE_DIR}/widgetEx/recyclerview/res/values/attrs.xml
     ${PROJECT_SOURCE_DIR}/widgetEx/tablayout/res/values/attrs.xml)
 string(REPLACE ";" "," _WIDGETEX_ATTRS_CSV "${_WIDGETEX_ATTR_FILES}")
+# Per-component public.xml (sibling of each attrs.xml) — gen_styleable reads the
+# stable 0x02 attr ids from these (androidx per-component source of truth).
+set(_WIDGETEX_PUBLIC_FILES
+    ${PROJECT_SOURCE_DIR}/widgetEx/coordinatorlayout/res/values/public.xml
+    ${PROJECT_SOURCE_DIR}/widgetEx/flexbox/res/values/public.xml
+    ${PROJECT_SOURCE_DIR}/widgetEx/constraintlayout/res/values/public.xml
+    ${PROJECT_SOURCE_DIR}/widgetEx/recyclerview/res/values/public.xml
+    ${PROJECT_SOURCE_DIR}/widgetEx/tablayout/res/values/public.xml)
 add_custom_command(
     OUTPUT  ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.h
             ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.cc
     COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/gen_styleable.py
             --attrs ${_WIDGETEX_ATTRS_CSV}
             --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
-            --custom-ids ${CMAKE_SOURCE_DIR}/scripts/custom_attrids.txt
             --name-map ${CMAKE_SOURCE_DIR}/scripts/widgetex_namemap.txt
             --out-h  ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.h
             --out-cc ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.cc
             --guard __WIDGETEX_STYLEABLE_H__ --header widgetex_styleable.h
-    DEPENDS ${_WIDGETEX_ATTR_FILES}
+    DEPENDS ${_WIDGETEX_ATTR_FILES} ${_WIDGETEX_PUBLIC_FILES}
             ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
             ${CMAKE_SOURCE_DIR}/scripts/widgetex_namemap.txt
             ${CMAKE_SOURCE_DIR}/scripts/gen_styleable.py

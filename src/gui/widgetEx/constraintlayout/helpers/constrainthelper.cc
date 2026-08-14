@@ -24,9 +24,12 @@
 #include <porting/cdlog.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 ConstraintHelper::ConstraintHelper(Context* ctx,const AttributeSet& attrs):ConstraintHelper(ctx,&attrs,0){}
 
@@ -47,13 +50,20 @@ ConstraintHelper::ConstraintHelper(int width, int height)
 }
 
 void ConstraintHelper::init(const AttributeSet& attrs) {
-    mReferenceIds = attrs.getString("constraint_referenced_ids", "");
-    if (!mReferenceIds.empty()) {
-        setIds(attrs,mReferenceIds);
+    // constraint_referenced_ids/tags: read via TypedArray (binary AXML stores them as typed
+    // string values the name-based getString cannot decode). The names are resolved to view
+    // ids in setIds via Resources.getIdentifier (arsc-backed, works for binary).
+    Context* ctx = attrs.getContext();
+    if (ctx) {
+        auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
+        if (ta) {
+            mReferenceIds = ta->getString(R::styleable::ConstraintLayoutLayout_constraint_referenced_ids);
+            mReferenceTags = ta->getString(R::styleable::ConstraintLayoutLayout_constraint_referenced_tags);
+        }
     }
-    // Tags are stored raw and resolved lazily in updatePreLayout (the parent container isn't available
-    // at construction, mirroring AndroidX which resolves in onAttachedToWindow).
-    mReferenceTags = attrs.getString("constraint_referenced_tags", "");
+    if (!mReferenceIds.empty()) {
+        setIds(attrs, mReferenceIds);
+    }
 }
 
 void ConstraintHelper::addRscID(int id) {

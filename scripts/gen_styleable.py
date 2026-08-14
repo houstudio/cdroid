@@ -6,9 +6,10 @@ the fw_attr::* (attr ID constants) + styleable::* (index enums + IDS[] arrays)
 used by CDROID's obtainStyledAttributesTyped / TypedArray path.
 
 ID resolution:
-  * framework (android:) attrs   -> looked up in --fw-ids (android.jar map)
-  * custom (app/cdroid:) attrs   -> looked up / auto-assigned in --custom-ids
-    (0x7f010000+, append-only stable; the aapt2 public.xml equivalent)
+  * framework (android:) attrs   -> looked up in --fw-ids (framework_attrids.txt,
+    itself generated from the SDK framework public.xml by gen_framework_attrids.sh)
+  * widgetEx attrs              -> looked up in each component's res/values/
+    public.xml (stable 0x02 ids, androidx per-component structure)
 
 The fw_attr constants are SELF-CONTAINED per styleable: each styleable's
 fw_attr namespace holds its own attrs (shared attrs like gravity are duplicated
@@ -47,6 +48,28 @@ def load_id_map(path):
                 name, idv = tok[0], tok[1]
             m[name] = int(idv, 16)
     return m
+
+
+def load_public_xml_ids(path):
+    """Load <public type="attr" name="X" id="0xID"/> entries from a res/values/
+    public.xml -> {name: int_id}. Each widgetEx component owns such a file
+    (src/gui/widgetEx/<comp>/res/values/public.xml); it is the source of truth
+    for that component's stable 0x02 attr ids (androidx per-component structure)."""
+    import re as _re
+    m = {}
+    if not path or not os.path.exists(path):
+        return m
+    try:
+        txt = open(path, encoding="utf-8").read()
+    except Exception:
+        return m
+    for name, idv in _re.findall(r'<public\s+[^>]*type="attr"[^>]*name="([^"]+)"[^>]*id="(0x[0-9a-fA-F]+)"', txt):
+        m[name] = int(idv, 16)
+    # also accept name/id in either order
+    for name, idv in _re.findall(r'<public\s+[^>]*name="([^"]+)"[^>]*type="attr"[^>]*id="(0x[0-9a-fA-F]+)"', txt):
+        m[name] = int(idv, 16)
+    return m
+
 
 
 def load_name_map(path):
@@ -112,10 +135,14 @@ def resolve_id(attr_name, fw_ids, custom_ids, custom_next, auto_custom):
     have no resource id) — only happens when auto_custom is False (framework
     mode). When auto_custom is True (custom-ids given), unknown attrs are
     assigned a new custom id rather than skipped."""
-    if attr_name in fw_ids:
-        return fw_ids[attr_name], False, custom_next
+    # widgetEx-declared attrs (in custom_ids, sourced from per-component public.xml)
+    # take precedence over same-named framework attrs — e.g. targetId/duration/
+    # layoutManager are declared by widgetEx and must resolve to the 0x02 id the
+    # runtime widgetex.apk carries, not the framework id.
     if attr_name in custom_ids:
         return custom_ids[attr_name], False, custom_next
+    if attr_name in fw_ids:
+        return fw_ids[attr_name], False, custom_next
     if auto_custom:
         cid = custom_next
         return cid, True, custom_next + 1
@@ -154,7 +181,6 @@ def main():
     ap.add_argument('--cdroid-ids', default=None,
                     help='CDROID-private attr IDs (separate from SDK fw-ids so '
                          'SDK replacement does not lose them)')
-    ap.add_argument('--custom-ids', default=None)
     ap.add_argument('--name-map', default=None)
     ap.add_argument('--include', default=None,
                     help='comma list of OUTPUT styleable names to emit (default: all)')
@@ -184,12 +210,16 @@ def main():
                 continue
             ds_attrs[k] = v
 
-    # custom-ids: load existing + find next free id
-    custom_ids = load_id_map(args.custom_ids)
+    # widgetEx attr ids come from each component's res/values/public.xml (sibling of
+    # its attrs.xml — androidx per-component structure, the single source of truth for
+    # the stable 0x02 ids the runtime widgetex.apk carries).
+    custom_ids = {}
+    for attrs_path in [p.strip() for p in args.attrs.split(',') if p.strip()]:
+        custom_ids.update(load_public_xml_ids(os.path.join(os.path.dirname(attrs_path), 'public.xml')))
     custom_next = CUSTOM_ID_BASE
     if custom_ids:
         custom_next = max(custom_ids.values()) + 1
-    auto_custom = args.custom_ids is not None
+    auto_custom = bool(custom_ids)
     new_custom = {}  # name -> id, freshly assigned this run
 
     # Determine output styleables: map output-name -> attrs-xml declare-styleable name
@@ -281,15 +311,6 @@ def main():
     C.append('} // namespace cdroid')
     with open(args.out_cc, 'w') as f:
         f.write('\n'.join(C) + '\n')
-
-    # ---- persist custom ids cleanly (rewrite whole file: existing + new, id-sorted) ----
-    if args.custom_ids and custom_ids:
-        with open(args.custom_ids, 'w') as f:
-            f.write('# Custom (app/cdroid) attr name -> resource ID. Append-only stable.\n')
-            f.write('# Single source of truth; aapt2 public.xml will pin the same IDs.\n')
-            f.write('# Format: 0xID NAME\n\n')
-            for n in sorted(custom_ids, key=lambda k: custom_ids[k]):
-                f.write(f'0x{custom_ids[n]:08x} {n}\n')
 
     print(f"generated {args.out_h} + {args.out_cc}: {len(styleables)} styleables"
           + (f", {len(new_custom)} new custom ids" if new_custom else ""))
