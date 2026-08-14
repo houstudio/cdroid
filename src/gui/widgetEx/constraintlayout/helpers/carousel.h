@@ -59,7 +59,7 @@ class Carousel : public MotionHelper {
     Carousel(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
     explicit Carousel(int width, int height);
 
-    void setAdapter(Adapter* adapter) { mAdapter = adapter; }
+    void setAdapter(Adapter* adapter) { mAdapter = adapter; refresh(); }
     int  getCount();
     int  getCurrentIndex() const { return mIndex; }
     // Animate to `index`; `delay` is the per-step transition duration in ms.

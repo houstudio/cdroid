@@ -162,8 +162,7 @@ void Carousel::onTransitionCompleted(int currentId) {
     }
 }
 
-void Carousel::runUpdate() {
-    if (mAdapter == nullptr || mMotionLayout == nullptr) return;
+void Carousel::runUpdate() {    if (mAdapter == nullptr || mMotionLayout == nullptr) return;
     mMotionLayout->setProgress(0);
     updateItems();
     mAdapter->onNewItem(mIndex);
@@ -227,19 +226,13 @@ void Carousel::updateItems() {
     if (mBackwardTransition == -1 || mForwardTransition == -1) return;
     if (mInfiniteCarousel) return;
 
+    // AndroidX Carousel only calls enableTransition here — NOT setTransition.
+    // setTransition triggers a full captureAndBuild + setProgress(0) on every swipe,
+    // which is unnecessary (pickTransitionForDrag selects the right transition on touch
+    // based on drag direction + isEnabled) and caused subtle state issues.
     const int count = mAdapter->count();
-    if (mIndex == 0) {
-        enableTransition(mBackwardTransition, false);
-    } else {
-        enableTransition(mBackwardTransition, true);
-        mMotionLayout->setTransition(mBackwardTransition);
-    }
-    if (mIndex == count - 1) {
-        enableTransition(mForwardTransition, false);
-    } else {
-        enableTransition(mForwardTransition, true);
-        mMotionLayout->setTransition(mForwardTransition);
-    }
+    enableTransition(mBackwardTransition, mIndex > 0);
+    enableTransition(mForwardTransition, mIndex < count - 1);
 }
 
 bool Carousel::updateViewVisibility(View* view, int visibility) {
