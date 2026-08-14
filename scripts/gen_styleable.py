@@ -182,6 +182,10 @@ def main():
                     help='CDROID-private attr IDs (separate from SDK fw-ids so '
                          'SDK replacement does not lose them)')
     ap.add_argument('--name-map', default=None)
+    ap.add_argument('--auto-name', action='store_true',
+                    help='derive output names automatically: X_Layout -> XLayout '
+                         '(replaces the hand-maintained name-map file; entries from '
+                         '--name-map, when given, take precedence)')
     ap.add_argument('--include', default=None,
                     help='comma list of OUTPUT styleable names to emit (default: all)')
     ap.add_argument('--include-file', default=None,
@@ -210,6 +214,13 @@ def main():
                 continue
             ds_attrs[k] = v
 
+    # --auto-name: derive the rename rule instead of a hand-maintained file.
+    # Styleable names with underscores (X_Layout) become their underscore-free
+    # C++ form (XLayout); every other name is identity.
+    if args.auto_name:
+        for k in ds_attrs:
+            if '_' in k:
+                name_map.setdefault(k, k.replace('_', ''))
     # widgetEx attr ids come from each component's res/values/public.xml (sibling of
     # its attrs.xml — androidx per-component structure, the single source of truth for
     # the stable 0x02 ids the runtime widgetex.apk carries).

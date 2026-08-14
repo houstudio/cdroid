@@ -30,13 +30,12 @@ add_custom_command(
     COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/gen_styleable.py
             --attrs ${_WIDGETEX_ATTRS_CSV}
             --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
-            --name-map ${CMAKE_SOURCE_DIR}/scripts/widgetex_namemap.txt
+            --auto-name
             --out-h  ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.h
             --out-cc ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.cc
             --guard __WIDGETEX_STYLEABLE_H__ --header widgetex_styleable.h
     DEPENDS ${_WIDGETEX_ATTR_FILES} ${_WIDGETEX_PUBLIC_FILES}
             ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
-            ${CMAKE_SOURCE_DIR}/scripts/widgetex_namemap.txt
             ${CMAKE_SOURCE_DIR}/scripts/gen_styleable.py
     COMMENT "Generating widgetEx/widgetex_styleable.{h,cc}"
     VERBATIM
