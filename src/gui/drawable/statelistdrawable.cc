@@ -147,13 +147,28 @@ bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
     return selectDrawable(idx)||changed;
 }
 
-void StateListDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+// AOSP StateListDrawable.canApplyTheme/applyTheme.
+bool StateListDrawable::canApplyTheme(){
+    return (mStateListState && !mStateListState->mThemeAttrs.empty()) || Drawable::canApplyTheme();
+}
+
+void StateListDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    if (mStateListState && !mStateListState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mStateListState->mThemeAttrs, R::styleable::StateListDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        mStateListState->mThemeAttrs.clear();
+    }
+    onStateChange(getState());
+}
+
+void StateListDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     (void)r;
     Drawable::inflateWithAttributes(parser,atts);
     Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::StateListDrawable);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::StateListDrawable);
     if (ta) updateStateFromTypedArray(*ta);
-    inflateChildElements(r,parser,atts);
+    inflateChildElements(r,parser,atts, theme);
     onStateChange(getState());
 }
 
@@ -163,7 +178,7 @@ void StateListDrawable::updateStateFromTypedArray(const TypedArray& a) {
     // Account for any configuration changes.
     //state->mChangingConfigurations |= a.getChangingConfigurations();
     // Extract the theme attributes, if any.
-    //state->mThemeAttrs = a.extractThemeAttrs();
+    state->mThemeAttrs = a.extractThemeAttrs();
 
     state->mVariablePadding = a.getBoolean(R::styleable::StateListDrawable_variablePadding, state->mVariablePadding);
     state->mConstantSize = a.getBoolean(R::styleable::StateListDrawable_constantSize, state->mConstantSize);
@@ -173,7 +188,7 @@ void StateListDrawable::updateStateFromTypedArray(const TypedArray& a) {
     state->mAutoMirrored = a.getBoolean(R::styleable::StateListDrawable_autoMirrored, state->mAutoMirrored);
 }
 
-void StateListDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+void StateListDrawable::inflateChildElements(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
     while( ((type=parser.next())!=XmlPullParser::END_DOCUMENT)
@@ -183,14 +198,14 @@ void StateListDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,c
 
         std::vector<int>states;
         Context* ctx = atts.getContext();
-        auto ta = r.obtainStyledAttributes(&atts, R::styleable::StateListDrawableItem);
+        auto ta = obtainAttributes(r, theme, atts, R::styleable::StateListDrawableItem);
         Drawable*dr = ta ? ta->getDrawable(R::styleable::StateListDrawableItem_drawable) : nullptr;
         StateSet::parseState(states,atts);
         if(dr==nullptr){
             while((type=parser.next())==XmlPullParser::TEXT){}
             if(type!=XmlPullParser::START_TAG)
                 throw std::logic_error("<item> tag requires a 'drawable' attribute or child tag defining a drawable");
-            dr = Drawable::createFromXmlInner(r,parser,atts);
+            dr = Drawable::createFromXmlInner(r,parser,atts, theme);
         }
         mStateListState->addStateSet(states,dr);
     }

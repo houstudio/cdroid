@@ -80,8 +80,8 @@ void AdaptiveIconDrawable::addLayer(int index,ChildDrawable* layer) {
     mLayerState->invalidateCache();
 }
 
-void AdaptiveIconDrawable::inflate(Resources& r, XmlPullParser& parser,AttributeSet& attrs){
-    Drawable::inflate(r, parser, attrs);
+void AdaptiveIconDrawable::inflate(Resources& r, XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme){
+    Drawable::inflate(r, parser, attrs, theme);
 
     auto state = mLayerState;
     if (state == nullptr) {
@@ -100,7 +100,7 @@ void AdaptiveIconDrawable::inflate(Resources& r, XmlPullParser& parser,Attribute
         array[i]->setDensity(deviceDensity);
     }
 
-    inflateLayers(r,parser, attrs);
+    inflateLayers(r,parser,attrs,theme);
 }
 
 float AdaptiveIconDrawable::getExtraInsetFraction() {
@@ -270,7 +270,7 @@ int AdaptiveIconDrawable::getSourceDrawableResId() {
     return 0;//mLayerState == nullptr ? Resources.ID_NULL : mLayerState->mSourceDrawableId;
 }
 
-void AdaptiveIconDrawable::inflateLayers(Resources& r,XmlPullParser& parser,AttributeSet& attrs) {
+void AdaptiveIconDrawable::inflateLayers(Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme) {
     auto state = mLayerState;
 
     const int innerDepth = parser.getDepth() + 1;

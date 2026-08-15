@@ -211,14 +211,14 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     }
 }
 
-void AnimatedRotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::AnimatedRotateDrawable);
+void AnimatedRotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::AnimatedRotateDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     // frameDuration/framesCount lack a framework arsc id (CDROID-private): read via
     // the string bridge (text-XML works; binary returns the default — harmless).
     mState->mFramesCount = ta->getInt(R::styleable::AnimatedRotateDrawable_framesCount, mState->mFramesCount);
     mState->mFrameDuration = ta->getInt(R::styleable::AnimatedRotateDrawable_frameDuration, mState->mFrameDuration);
-    DrawableWrapper::inflate(r,parser,atts);
+    DrawableWrapper::inflate(r,parser,atts, nullptr);
     updateLocalState();
 }
 

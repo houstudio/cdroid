@@ -118,10 +118,27 @@ void ClipDrawable::draw(Canvas& canvas){
     }
 }
 
-void ClipDrawable::inflate(Resources& r, XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::ClipDrawable);
-    if (ta) updateStateFromTypedArray(*ta);
-    DrawableWrapper::inflate(r,parser,atts);
+void ClipDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::ClipDrawable);
+    if (ta) {
+        mState->mThemeAttrs = ta->extractThemeAttrs();
+        updateStateFromTypedArray(*ta);
+    }
+    DrawableWrapper::inflate(r,parser,atts, theme);
+}
+
+// AOSP ClipDrawable.canApplyTheme/applyTheme.
+bool ClipDrawable::canApplyTheme(){
+    return (mState && !mState->mThemeAttrs.empty()) || DrawableWrapper::canApplyTheme();
+}
+
+void ClipDrawable::applyTheme(const Resources::Theme& t){
+    DrawableWrapper::applyTheme(t);
+    if (mState && !mState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mState->mThemeAttrs, R::styleable::ClipDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        mState->mThemeAttrs.clear();
+    }
 }
 
 void ClipDrawable::updateStateFromTypedArray(const TypedArray& a){

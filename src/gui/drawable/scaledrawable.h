@@ -28,6 +28,8 @@ private:
     private:
         static constexpr float DO_NOT_SCALE = -1.f;
     public:
+        // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
+        std::vector<int> mThemeAttrs;
         float mScaleWidth;
         float mScaleHeight;
         int mGravity;
@@ -51,7 +53,9 @@ public:
     void draw(Canvas& canvas)override;
     int getOpacity()const override;
     int getGravity()const;
-    void inflate(Resources&,XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources&,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 
 }

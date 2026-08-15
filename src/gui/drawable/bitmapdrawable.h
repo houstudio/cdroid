@@ -112,7 +112,9 @@ public:
     void draw(Canvas&canvas)override;
     Insets getOpticalInsets()override;
     void getOutline(Outline&)override;
-    void inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 
 }

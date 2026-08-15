@@ -61,18 +61,19 @@ namespace R{
 
     namespace drawable{
         enum : int {
-            cts_level_list_correct = 0x7f060000,
-            cts_ripple_effect = 0x7f060001,
-            cts_ripple_radius = 0x7f060002,
-            cts_selector_correct = 0x7f060003,
-            cts_vector_icon = 0x7f060004,
-            cts_vector_size_1 = 0x7f060005,
-            cts_vector_size_2 = 0x7f060006,
-            gradientdrawable = 0x7f060007,
-            nine_patch_odd_insets = 0x7f060008,
-            ninepatch_0 = 0x7f060009,
-            ninepatch_1 = 0x7f06000a,
-            pass = 0x7f06000b,
+            cts_apply_theme_color = 0x7f060000,
+            cts_level_list_correct = 0x7f060001,
+            cts_ripple_effect = 0x7f060002,
+            cts_ripple_radius = 0x7f060003,
+            cts_selector_correct = 0x7f060004,
+            cts_vector_icon = 0x7f060005,
+            cts_vector_size_1 = 0x7f060006,
+            cts_vector_size_2 = 0x7f060007,
+            gradientdrawable = 0x7f060008,
+            nine_patch_odd_insets = 0x7f060009,
+            ninepatch_0 = 0x7f06000a,
+            ninepatch_1 = 0x7f06000b,
+            pass = 0x7f06000c,
         };
     }/*namespace drawable*/
 

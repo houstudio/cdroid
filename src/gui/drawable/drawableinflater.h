@@ -18,6 +18,7 @@
 #ifndef __DRAWABLE_INFLATER_H__
 #define __DRAWABLE_INFLATER_H__
 #include <core/context.h>
+#include <core/resources.h>   // Resources::Theme (themed inflation)
 namespace cdroid{
 class XmlPullParser;
 class DrawableInflater {
@@ -54,10 +55,22 @@ public:
     static Drawable* inflateFromXml(Resources& r,const std::string& name,XmlPullParser& parser,const AttributeSet& attrs);
 
     /**
+     * Version of {@link #inflateFromXml(String, XmlPullParser, AttributeSet)} that accepts
+     * a theme against which to inflate the drawable (AOSP @Nullable Theme).
+     */
+    static Drawable* inflateFromXml(Resources& r,const std::string& name,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme);
+
+    /**
      * Version of {@link #inflateFromXml(String, XmlPullParser, AttributeSet, Theme)} that accepts
      * an override density.
      */
     static Drawable* inflateFromXmlForDensity(Resources& r,const std::string& name,XmlPullParser& parser,const AttributeSet& attrs, int density);
+
+    /**
+     * Version of {@link #inflateFromXml(String, XmlPullParser, AttributeSet, Theme)} that accepts
+     * an override density.
+     */
+    static Drawable* inflateFromXmlForDensity(Resources& r,const std::string& name,XmlPullParser& parser,const AttributeSet& attrs, int density,const Resources::Theme* theme);
 };
 }/*endof namspace*/
 #endif/*__DRAWABLE_INFLATER_H__*/

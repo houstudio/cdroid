@@ -115,7 +115,7 @@ public:
     void registerAnimationCallback(const Animatable2::AnimationCallback& callback)override;
     bool unregisterAnimationCallback(const Animatable2::AnimationCallback& callback)override;
     void clearAnimationCallbacks();
-    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
 };
 
 }//end namespace

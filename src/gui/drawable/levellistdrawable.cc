@@ -108,8 +108,8 @@ void LevelListDrawable::addLevel(int low,int high,Drawable* drawable) {
         onLevelChange(getLevel());
     }
 }
-void LevelListDrawable::inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts){
-    DrawableContainer::inflate(r,parser,atts);
+void LevelListDrawable::inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts, const Resources::Theme* theme){
+    DrawableContainer::inflate(r,parser,atts, theme);
     inflateChildElements(r,parser,atts);
 }
 

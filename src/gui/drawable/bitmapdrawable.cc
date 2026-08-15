@@ -473,6 +473,8 @@ void BitmapDrawable::getOutline(Outline& outline) {
 void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a, int srcDensityOverride){
     auto& state = *mBitmapState;
     Resources& r = const_cast<Resources&>(a.getResources());
+    // AOSP: extract the theme attributes for later re-resolution (applyTheme).
+    state.mThemeAttrs = a.extractThemeAttrs();
 
     // AOSP: store density override + resolve target density from the display.
     state.mSrcDensityOverride = srcDensityOverride;
@@ -546,10 +548,25 @@ void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a, int srcDensi
     computeBitmapSize();
 }
 
-void BitmapDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(r,parser,atts);
+// AOSP BitmapDrawable.canApplyTheme/applyTheme: pending ?attr re-resolution.
+bool BitmapDrawable::canApplyTheme(){
+    return (mBitmapState && !mBitmapState->mThemeAttrs.empty()) || Drawable::canApplyTheme();
+}
+
+void BitmapDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    if (mBitmapState && !mBitmapState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mBitmapState->mThemeAttrs, R::styleable::BitmapDrawable);
+        if (a) updateStateFromTypedArray(*a, 0);
+        mBitmapState->mThemeAttrs.clear();
+    }
+    computeBitmapSize();
+}
+
+void BitmapDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    Drawable::inflate(r,parser,atts,theme);
     // AOSP: all attr reads + src loading happen inside updateStateFromTypedArray.
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::BitmapDrawable);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::BitmapDrawable);
     if (ta) updateStateFromTypedArray(*ta, 0);
 }
 

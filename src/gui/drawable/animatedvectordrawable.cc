@@ -200,7 +200,7 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
     return mAnimatedVectorState->mVectorDrawable->getOpticalInsets();
 }
 
-void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&attrs){
+void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&attrs, const Resources::Theme* theme){
     (void)r;
     auto state = mAnimatedVectorState;
     int eventType= parser.getEventType();//XmlPullParser::START_TAG;
@@ -214,7 +214,7 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
             const std::string tagName = parser.getName();
             if (tagName.compare(ANIMATED_VECTOR)==0) {
                 // AOSP obtains R.styleable.AnimatedVectorDrawable per <animated-vector>.
-                auto ta = r.obtainStyledAttributes(&attrs, R::styleable::AnimatedVectorDrawable);
+                auto ta = obtainAttributes(r, theme, attrs, R::styleable::AnimatedVectorDrawable);
                 Drawable* dr = ta->getDrawable(R::styleable::AnimatedVectorDrawable_drawable);
                 if (dr != nullptr) {
                     VectorDrawable* vectorDrawable = (VectorDrawable*) dr->mutate();
@@ -232,7 +232,7 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
                 }
             } else if (tagName.compare(TARGET)==0) {
                 // AOSP obtains R.styleable.AnimatedVectorDrawableTarget per <target>.
-                auto ta = r.obtainStyledAttributes(&attrs, R::styleable::AnimatedVectorDrawableTarget);
+                auto ta = obtainAttributes(r, theme, attrs, R::styleable::AnimatedVectorDrawableTarget);
                 const std::string target = ta->getString(R::styleable::AnimatedVectorDrawableTarget_name);
                 // animation is a @animator reference; TypedArray exposes no Animator
                 // getter, so resolve the reference to its resource name (the same form

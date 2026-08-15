@@ -126,16 +126,31 @@ void ScaleDrawable::draw(Canvas& canvas) {
 
 extern int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def);
 
-void ScaleDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::ScaleDrawable);
+// AOSP ScaleDrawable.canApplyTheme/applyTheme.
+bool ScaleDrawable::canApplyTheme(){
+    return (mState && !mState->mThemeAttrs.empty()) || DrawableWrapper::canApplyTheme();
+}
+
+void ScaleDrawable::applyTheme(const Resources::Theme& t){
+    DrawableWrapper::applyTheme(t);
+    if (mState && !mState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mState->mThemeAttrs, R::styleable::ScaleDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        mState->mThemeAttrs.clear();
+    }
+}
+
+void ScaleDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::ScaleDrawable);
     if (ta) {
+        mState->mThemeAttrs = ta->extractThemeAttrs();
         // AOSP a.getFraction(scaleWidth, ...) — base=100 preserves CDROID's
         // percent semantics (100% = 100.0, not AOSP's 1.0).
         mState->mScaleWidth = ta->getFraction(R::styleable::ScaleDrawable_scaleWidth, 100, 100, mState->mScaleWidth);
         mState->mScaleHeight = ta->getFraction(R::styleable::ScaleDrawable_scaleHeight, 100, 100, mState->mScaleHeight);
         updateStateFromTypedArray(*ta);
     }
-    DrawableWrapper::inflate(r,parser,atts);
+    DrawableWrapper::inflate(r,parser,atts, theme);
 }
 
 void ScaleDrawable::updateStateFromTypedArray(const TypedArray& a){

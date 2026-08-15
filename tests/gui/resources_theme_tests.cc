@@ -141,3 +141,26 @@ TEST_F(RESOURCES_THEME, getDrawable) {
 // CTS testRebase: deferred — locale/config switching (updateConfiguration)
 // is not wired in this harness; rebase's snapshot/restore behavior is covered
 // by ASSETS.theme_face (setTo → applyStyle(force) → rebase).
+
+// AOSP Drawable.applyTheme(): a drawable inflated WITHOUT a theme carries the
+// ?attr as a pending theme attr (mThemeAttrs); applyTheme() re-resolves it
+// through the given theme and refreshes the state.
+TEST_F(RESOURCES_THEME, applyThemeReResolvesPendingAttrs) {
+    Resources& res = App::getInstance().getResources();
+    // Unthemed load: pass a null Theme explicitly (no default-theme chain).
+    Drawable* dr = res.getDrawable(gui_test::R::drawable::cts_apply_theme_color,
+                                   (const Resources::Theme*)nullptr);
+    ASSERT_NE(dr, nullptr);
+    auto* cdr = dynamic_cast<ColorDrawable*>(dr);
+    ASSERT_NE(cdr, nullptr);
+    ASSERT_TRUE(cdr->canApplyTheme());
+
+    Resources::Theme themeA = res.newTheme();
+    themeA.applyStyle(gui_test::R::style::theme_face_probe, true);
+    cdr->applyTheme(themeA);
+    EXPECT_EQ(cdr->getColor(), (int)0xFF123456);
+
+    // AOSP applyTheme consumes the pending attrs: a second apply is a no-op.
+    EXPECT_FALSE(cdr->canApplyTheme());
+    delete cdr;
+}

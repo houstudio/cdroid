@@ -253,10 +253,10 @@ int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const 
 }
 
 
-void ShapeDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(r,parser,atts);
+void ShapeDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
+    Drawable::inflate(r,parser,atts, theme);
 
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::ShapeDrawable);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::ShapeDrawable);
     if (ta) updateStateFromTypedArray(*ta);
 
     int type;

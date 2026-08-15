@@ -110,7 +110,7 @@ public:
     bool isAutoMirrored() const override;
     long getNativeTree();
     void setAntiAlias(bool aa);
-    void inflate(Resources& r,XmlPullParser&,const AttributeSet&)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&,const Resources::Theme* theme)override;
 public:
     class VObject {
         friend VectorDrawableState;

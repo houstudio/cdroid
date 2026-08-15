@@ -1152,12 +1152,33 @@ void GradientDrawable::draw(Canvas&canvas) {
     canvas.restore();
 }
 
-void GradientDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(r, parser, atts);
+void GradientDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    Drawable::inflate(r, parser, atts, theme);
     mGradientState->setDensity(Drawable::resolveDensity( 0));
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::GradientDrawable);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawable);
     if (ta) updateStateFromTypedArray(*ta);
-    inflateChildElements(r,parser,atts);
+    inflateChildElements(r,parser,atts,theme);
+    updateLocalState();
+}
+
+// AOSP GradientDrawable.canApplyTheme: theme attrs pending re-resolution.
+bool GradientDrawable::canApplyTheme(){
+    return (mGradientState && !mGradientState->mThemeAttrs.empty()) || Drawable::canApplyTheme();
+}
+
+// AOSP GradientDrawable.applyTheme(Theme): re-resolve the recorded ?attr ids
+// through the new theme and refresh the state (AOSP also re-themes the tint /
+// solid / stroke / gradient ColorStateLists — CDROID CSLs resolve ?attr up
+// front at inflation, so only the top-level attrs are re-resolved here).
+void GradientDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    auto state = mGradientState;
+    if (!state) return;
+    if (!state->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(state->mThemeAttrs, R::styleable::GradientDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        state->mThemeAttrs.clear();
+    }
     updateLocalState();
 }
 
@@ -1167,7 +1188,7 @@ void GradientDrawable::updateStateFromTypedArray(const TypedArray& a) {
     // Account for any configuration changes.
     //state.mChangingConfigurations |= a.getChangingConfigurations();
     // Extract the theme attributes, if any.
-    //state.mThemeAttrs = a.extractThemeAttrs();
+    state->mThemeAttrs = a.extractThemeAttrs();
 
     // aapt2 pre-resolves the shape enum (rectangle/oval/line/ring).
     state->mShape = a.getInt(R::styleable::GradientDrawable_shape, state->mShape);
@@ -1206,7 +1227,7 @@ void GradientDrawable::updateStateFromTypedArray(const TypedArray& a) {
     state->mOpticalInsets = Insets::of(insetLeft, insetTop, insetRight, insetBottom);
 }
 
-void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
     Context* ctx = atts.getContext();
@@ -1219,27 +1240,27 @@ void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,co
 
         const std::string name = parser.getName();
         if (name.compare("size")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawableSize);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawableSize);
             if (ta) updateGradientDrawableSize(*ta);
         } else if (name.compare("gradient")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawableGradient);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawableGradient);
             if (ta) updateGradientDrawableGradient(*ta);
             // CDROID-private "pattern" attr (image pattern for gradient fill).
-            { auto ta2 = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawablePattern);
+            { auto ta2 = obtainAttributes(r, theme, atts, R::styleable::GradientDrawablePattern);
               auto pattern = ta2->getString(R::styleable::GradientDrawablePattern_pattern);
               if (!pattern.empty()) setImagePattern(atts.getContext(), pattern);
             }
         } else if (name.compare("solid")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawableSolid);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawableSolid);
             if (ta) updateGradientDrawableSolid(*ta);
         } else if (name.compare("stroke")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawableStroke);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawableStroke);
             if (ta) updateGradientDrawableStroke(*ta);
         } else if (name.compare("corners")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, R::styleable::DrawableCorners);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::DrawableCorners);
             if (ta) updateDrawableCorners(*ta);
         } else if (name.compare("padding")==0) {
-            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientDrawablePadding);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawablePadding);
             if (ta) updateGradientDrawablePadding(*ta);
         } else {
             LOGW("drawable", "Bad element %s under <shape>: ",name.c_str());

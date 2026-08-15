@@ -106,6 +106,9 @@ public:
     Movie*                  getMovie(int id) const;
 
     // --- AOSP Resources.obtainStyledAttributes(...) ---
+    // AOSP Resources.obtainAttributes(set, attrs): theme-less — only the
+    // attributes explicitly set in the XML (no style/theme resolution).
+    std::unique_ptr<TypedArray> obtainAttributes(const AttributeSet* set, const uint32_t* attrs) const;
     // AttributeSet is nullable (AOSP @Nullable).
     std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet* set,
         const uint32_t* attrs, int defStyleAttr = 0, int defStyleRes = 0) const;
@@ -148,6 +151,11 @@ public:
     // AOSP Resources.Theme face: applyStyle/setTo/resolveAttribute/obtainStyledAttributes.
     void applyStyle(int resId, bool force = false);
     void setTo(const Theme& other);
+    // AOSP Theme.resolveAttributes(@Nullable int[] themeAttrs, int[] attrs):
+    // re-resolve the ?attr ids recorded by TypedArray.extractThemeAttrs()
+    // through THIS theme — the applyTheme() re-resolution engine.
+    std::unique_ptr<TypedArray> resolveAttributes(const std::vector<int>& themeAttrs,
+                                                  const uint32_t* attrs) const;
     bool resolveAttribute(int resId, TypedValue* outValue, bool resolveRefs) const;
     std::unique_ptr<TypedArray> obtainStyledAttributes(const uint32_t* attrs) const;
     std::unique_ptr<TypedArray> obtainStyledAttributes(int resid, const uint32_t* attrs) const;
@@ -169,6 +177,7 @@ public:
 private:
     friend class Resources;       // newTheme() (owned engine)
     friend class Assets;          // Assets/App construct it from their engine
+    friend class ResourcesImpl;   // wraps a caller-passed engine (themed drawable loads)
     Theme(Resources& res, void* engine) : mRes(res), mEngine(engine) {}
     Resources& mRes;
     void*      mEngine;

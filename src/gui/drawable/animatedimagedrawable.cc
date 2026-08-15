@@ -453,8 +453,8 @@ void AnimatedImageDrawable::onBoundsChange(const Rect& bounds) {
     }*/
 }
 
-void AnimatedImageDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(r,parser,atts);
+void AnimatedImageDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
+    Drawable::inflate(r,parser,atts, theme);
     updateStateFromTypedArray(atts, mSrcDensityOverride);
 }
 

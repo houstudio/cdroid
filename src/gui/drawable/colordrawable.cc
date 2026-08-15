@@ -70,9 +70,28 @@ ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
 ColorDrawable::~ColorDrawable(){
 }
 
-void ColorDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::ColorDrawable);
-    if (ta) mColorState->mBaseColor = ta->getColor(R::styleable::ColorDrawable_color, mColorState->mBaseColor);
+void ColorDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::ColorDrawable);
+    if (ta) {
+        // AOSP: extract the theme attributes for later re-resolution (applyTheme).
+        mColorState->mThemeAttrs = ta->extractThemeAttrs();
+        mColorState->mBaseColor = ta->getColor(R::styleable::ColorDrawable_color, mColorState->mBaseColor);
+    }
+    mColorState->mUseColor = mColorState->mBaseColor;
+}
+
+// AOSP ColorDrawable.canApplyTheme/applyTheme.
+bool ColorDrawable::canApplyTheme(){
+    return (mColorState && !mColorState->mThemeAttrs.empty()) || Drawable::canApplyTheme();
+}
+
+void ColorDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    if (mColorState && !mColorState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mColorState->mThemeAttrs, R::styleable::ColorDrawable);
+        if (a) mColorState->mBaseColor = a->getColor(R::styleable::ColorDrawable_color, mColorState->mBaseColor);
+        mColorState->mThemeAttrs.clear();
+    }
     mColorState->mUseColor = mColorState->mBaseColor;
 }
 

@@ -32,6 +32,9 @@ private:
         void set(float);
     };
     class InsetState:public DrawableWrapper::DrawableWrapperState{
+    public:
+        // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
+        std::vector<int> mThemeAttrs;
     private:
         void applyDensityScaling(int sourceDensity, int targetDensity);
     public:
@@ -64,7 +67,9 @@ public:
     bool getPadding(Rect& padding)override;
     int getOpacity()const override;
     Insets getOpticalInsets()override;
-    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 
 }//namespace

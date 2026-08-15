@@ -306,7 +306,7 @@ VectorDrawable* VectorDrawable::create(Context*ctx, const std::string&rid) {
     return drawable;
 }
 
-void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
     (void)r; // Resources unused here; no super Drawable::inflate call in this body.
 
     if (mVectorState->mRootGroup != nullptr || mVectorState->mNativeTree != nullptr) {
@@ -842,7 +842,7 @@ long VectorDrawable::VGroup::getNativePtr() {
 
 void VectorDrawable::VGroup::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts) {
     // AOSP VGroup.inflate: obtainAttributes(R.styleable.VectorDrawableGroup).
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::VectorDrawable);
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::VectorDrawable);
     if (!ta) return;
     const TypedArray& a = *ta;
     const auto properties=mNativePtr->stagingProperties();
@@ -1099,7 +1099,7 @@ long VectorDrawable::VClipPath::getNativePtr() {
 
 
 void VectorDrawable::VClipPath::inflate(Resources&r,XmlPullParser&,const AttributeSet& attrs) {
-    auto ta = r.obtainStyledAttributes(attrs, R::styleable::VectorDrawableClipPath);
+    auto ta = r.obtainStyledAttributes(&attrs, R::styleable::VectorDrawableClipPath);
     if (ta) updateStateFromTypedArray(*ta);
 }
 
@@ -1267,7 +1267,7 @@ long VectorDrawable::VFullPath::getNativePtr() {
 }
 
 void VectorDrawable::VFullPath::inflate(Resources&r,XmlPullParser&parser,const AttributeSet& attrs) {
-    auto ta = r.obtainStyledAttributes(attrs, R::styleable::VectorDrawablePath);
+    auto ta = r.obtainStyledAttributes(&attrs, R::styleable::VectorDrawablePath);
     if (ta) updateStateFromTypedArray(*ta);
     inflateGradients(r,parser,attrs);
 }
@@ -1400,7 +1400,7 @@ void VectorDrawable::VFullPath::inflateGradients(Resources&r,XmlPullParser&parse
             float centerX,centerY,radius;
             // AOSP VGradient: GradientColor styleable (aapt2 pre-resolves the
             // type enum linear/radial/sweep to ints).
-            auto ta = r.obtainStyledAttributes(atts, R::styleable::GradientColor);
+            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientColor);
             gradientType = ta->getInt(R::styleable::GradientColor_type, 0);
             switch(gradientType){
             case 0:
@@ -1422,7 +1422,7 @@ void VectorDrawable::VFullPath::inflateGradients(Resources&r,XmlPullParser&parse
         }
         if(tagName.compare("item")==0){
             // AOSP VGradient: GradientColorItem styleable for color stops.
-            auto ta = r.obtainStyledAttributes(atts, R::styleable::GradientColorItem);
+            auto ta = r.obtainStyledAttributes(&atts, R::styleable::GradientColorItem);
             const float offset = ta->getFloat(R::styleable::GradientColorItem_offset,0.f);
             const uint32_t color = ta->getColor(R::styleable::GradientColorItem_color,0);
             Color c(color);

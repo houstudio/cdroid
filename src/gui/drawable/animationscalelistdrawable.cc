@@ -43,7 +43,7 @@ bool AnimationScaleListDrawable::onStateChange(const std::vector<int>& stateSet)
 }
 
 
-void AnimationScaleListDrawable::inflate(Resources& r, XmlPullParser& parser,const AttributeSet& attrs){
+void AnimationScaleListDrawable::inflate(Resources& r, XmlPullParser& parser,const AttributeSet& attrs, const Resources::Theme* theme){
     (void)r;
     //updateDensity();
     inflateChildElements(r,parser, attrs);

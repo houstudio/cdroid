@@ -328,6 +328,41 @@ bool TypedArray::peekValue(size_t idx, TypedValue* out) const {
     return get(idx, out);
 }
 
+// AOSP extractThemeAttrs(): scan for TYPE_ATTRIBUTE (?attr) entries and
+// return their attr ids (one slot per entry, 0 elsewhere) so a later Theme
+// pass can re-resolve them (Drawable.applyTheme). AOSP also nulls the scanned
+// entries so subsequent typed getters return defaults; CDROID resolves ?attr
+// lazily in getResolved/getters instead, so the entries stay live (see header).
+std::vector<int> TypedArray::extractThemeAttrs() const {
+    std::vector<int> noScrap;
+    return extractThemeAttrs(noScrap);
+}
+
+std::vector<int> TypedArray::extractThemeAttrs(std::vector<int>& scrap) const {
+    std::vector<int> attrs;
+    const size_t N = length();
+    for (size_t i = 0; i < N; i++) {
+        if (!mVals[i].set) continue;
+        const uint8_t type = mVals[i].value.dataType;
+        if (type != Res_value::TYPE_ATTRIBUTE && type != Res_value::TYPE_DYNAMIC_ATTRIBUTE)
+            continue;  // not an attribute, ignore
+        const int attr = (int)mVals[i].value.data;
+        if (attr == 0) continue;  // useless data, ignore
+        // Ensure we have a usable attribute array (AOSP reuses scrap when
+        // it matches length(), else allocates a fresh zeroed one).
+        if (attrs.empty()) {
+            if (scrap.size() == N) {
+                scrap.assign(N, 0);
+                attrs = std::move(scrap);
+            } else {
+                attrs.assign(N, 0);
+            }
+        }
+        attrs[i] = attr;
+    }
+    return attrs;
+}
+
 size_t TypedArray::getIndexCount() const {
     size_t n = 0;
     for (size_t i = 0; i < mCount; i++) if (mVals[i].set) n++;

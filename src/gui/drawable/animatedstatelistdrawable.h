@@ -67,7 +67,8 @@ public:
     void jumpToCurrentState()override;
     AnimatedStateListDrawable* mutate()override;
     void clearMutated()override;
-    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme)override;
+    void inflateChildElement(Resources& r,XmlPullParser&,const AttributeSet&,const Resources::Theme* theme);
 };
 
 class AnimatedStateListDrawable::AnimatedStateListState:public StateListState{

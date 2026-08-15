@@ -289,6 +289,26 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
     return obtainStyledAttributes(&set, attrs, defStyleAttr, defStyleRes);
 }
 
+// AOSP Resources.obtainAttributes(set, attrs): theme-less — only the
+// attributes explicitly set in the XML, no style/theme resolution
+// (AOSP ResourcesImpl.obtainStyledAttributes(set, attrs, theme=null)).
+std::unique_ptr<TypedArray> Resources::obtainAttributes(const AttributeSet* set, const uint32_t* attrs) const {
+    if (mCtx == nullptr || set == nullptr) return nullptr;
+    const ResTable& rt = getAssets()->getResources(false);
+    size_t count = 0; while (attrs[count]) ++count;   // sentinel-terminated
+    std::vector<StyledAttr> styled(count);
+    const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(set);
+    const ResXMLTree* xml = (parser && parser->isBinaryAXML())
+            ? static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree()) : nullptr;
+    if (xml) {
+        cdroid::obtainStyledAttributes(*xml, rt, /*theme*/nullptr, attrs, 0, 0, styled.data());
+    } else {
+        cdroid::obtainStyledAttributes(rt, /*theme*/nullptr, attrs, 0, 0, styled.data());
+    }
+    return std::make_unique<TypedArray>(rt, std::move(styled), xml,
+                                        getDisplayMetrics().density, this, /*theme*/nullptr);
+}
+
 std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const uint32_t* attrs) const {
     return obtainStyledAttributes(0, attrs);
 }
@@ -342,6 +362,30 @@ bool Resources::Theme::resolveAttribute(int resId, TypedValue* out, bool resolve
     out->type = v.dataType;
     out->data = v.data;
     return true;
+}
+
+// AOSP Theme.resolveAttributes(@Nullable int[] themeAttrs, int[] attrs):
+// re-resolve the ?attr ids recorded by TypedArray.extractThemeAttrs() through
+// this theme, shaped like the original styleable (slot i of themeAttrs pairs
+// with attrs[i]; 0 slots stay unset). The applyTheme() re-resolution engine.
+std::unique_ptr<TypedArray> Resources::Theme::resolveAttributes(
+        const std::vector<int>& themeAttrs, const uint32_t* attrs) const {
+    if (mEngine == nullptr) return nullptr;
+    const ResTable::Theme* engine = static_cast<const ResTable::Theme*>(mEngine);
+    const ResTable& rt = engine->getResTable();
+    size_t count = 0; while (attrs[count]) ++count;   // sentinel-terminated
+    if (themeAttrs.size() < count) count = themeAttrs.size();
+    std::vector<StyledAttr> styled(count);
+    for (size_t i = 0; i < count; i++) {
+        if (themeAttrs[i] == 0) continue;
+        Res_value rv;
+        if (engine->resolveAttribute((uint32_t)themeAttrs[i], &rv, true)) {
+            styled[i].value = rv;
+            styled[i].set = true;
+        }
+    }
+    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr,
+                                        mRes.getDisplayMetrics().density, &mRes, this);
 }
 
 AssetManager* Resources::Theme::getAssets() const {

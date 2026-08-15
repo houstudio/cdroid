@@ -95,6 +95,18 @@ public:
     // plumbing stays inside TypedArray, converted at the StyledAttr boundary.
     bool      peekValue(size_t idx, TypedValue* out) const;
     bool      getValue(size_t idx, TypedValue* out) const;
+    // AOSP extractThemeAttrs(): the ?attr (TYPE_ATTRIBUTE) ids this array
+    // carries, one slot per entry (0 where the entry is not a theme attr),
+    // kept by drawable constant states for Theme re-resolution (applyTheme).
+    // Empty vector when the array holds no theme attrs (AOSP returns null).
+    // Unlike AOSP the entries are NOT nulled afterwards: AOSP resolves ?attr
+    // once at obtain time and re-reads in applyTheme, while CDROID's getters
+    // resolve ?attr lazily through mTheme on every call, so clearing them
+    // here would drop values nothing re-reads.
+    std::vector<int> extractThemeAttrs() const;
+    // AOSP extractThemeAttrs(@Nullable int[] scrap): reuse the caller's array
+    // when it already matches length() (AOSP Arrays.fill(attrs, 0)).
+    std::vector<int> extractThemeAttrs(std::vector<int>& scrap) const;
     // High-level resource access — delegate to the owning Resources (AOSP
     // AOSP TypedArray.getResources(): the owning Resources (for openRawResource,
     // getValue, DisplayMetrics — everything updateStateFromTypedArray needs).

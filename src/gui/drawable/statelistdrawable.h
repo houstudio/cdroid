@@ -25,6 +25,8 @@ class StateListDrawable:public DrawableContainer{
 protected:
     class StateListState:public DrawableContainerState{
     public:
+        // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
+        std::vector<int> mThemeAttrs;
         std::vector<std::vector<int>>mStateSets;
         StateListState(const StateListState*orig,StateListDrawable*own);
         void mutate()override;
@@ -48,8 +50,10 @@ public:
     void addState(const std::vector<int>&stateSet,Drawable*drawable);
     bool isStateful()const override{return true;}
     bool hasFocusStateSpecified()const override;
-    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts)override;
-    void inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts);
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
+    void inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme);
     StateListDrawable*mutate()override;
     void clearMutated()override;
     int getStateCount()const;

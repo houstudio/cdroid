@@ -46,7 +46,7 @@ public:
     void addLevel(int low, int high, Drawable* drawable);
     LevelListDrawable* mutate()override;
     void clearMutated()override;
-    void inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme)override;
 };
 }/*endof namespace*/
 #endif

@@ -79,7 +79,7 @@ public:
     int getIntrinsicHeight()override;
     void getOutline(Outline& outline)override;
     Insets getOpticalInsets()override;
-    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&)override;
+    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&,const Resources::Theme* theme)override;
     void forceAnimationOnUI();
     bool canApplyTheme()override;
     bool isRunning();

@@ -65,6 +65,9 @@ private:
     class GradientState:public std::enable_shared_from_this<GradientState>,public ConstantState{
     public:
        int mChangingConfigurations;
+       // AOSP GradientState.mThemeAttrs: ?attr ids captured at inflate time
+       // (TypedArray.extractThemeAttrs), re-resolved by applyTheme().
+       std::vector<int> mThemeAttrs;
        int mShape;
        int mGradient;// = LINEAR_GRADIENT
        int mAngle;
@@ -154,7 +157,7 @@ private:
     void prepareStrokeProps(Canvas&canvas);
     void getPatternAlpha(int& strokeAlpha,int& fillApha);
     void updateStateFromTypedArray(const TypedArray& a);
-    void inflateChildElements(Resources& r,XmlPullParser&,const AttributeSet&);
+    void inflateChildElements(Resources& r,XmlPullParser&,const AttributeSet&,const Resources::Theme* theme);
     void updateGradientDrawableSize(const TypedArray& a);
     void updateGradientDrawableGradient(const TypedArray& a);
     void updateGradientDrawableSolid(const TypedArray& a);
@@ -231,9 +234,13 @@ public:
     std::shared_ptr<ConstantState>getConstantState()override;
     void getOutline(Outline&)override;
     GradientDrawable*mutate()override;
+    // AOSP canApplyTheme/applyTheme: re-resolve the recorded ?attr ids
+    // through a new theme and refresh the state.
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;
-    void inflate(Resources& r,XmlPullParser&,const AttributeSet&)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&,const Resources::Theme* theme)override;
 };
 
 }/*endof namespace*/

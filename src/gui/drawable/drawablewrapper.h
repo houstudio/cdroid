@@ -46,7 +46,7 @@ protected:
     std::shared_ptr<DrawableWrapperState>mState;
     void updateLocalState();
     void updateStateFromTypedArray(const TypedArray& a);
-    void inflateChildDrawable(XmlPullParser& parser,const AttributeSet& attrs);
+    void inflateChildDrawable(XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme);
 protected:
     virtual std::shared_ptr<DrawableWrapperState> mutateConstantState();
     DrawableWrapper(std::shared_ptr<DrawableWrapperState>state);
@@ -82,7 +82,9 @@ public:
     void setTintMode(int)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
-    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 
 }

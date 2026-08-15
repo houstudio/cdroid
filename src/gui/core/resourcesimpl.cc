@@ -439,8 +439,19 @@ cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/, 
                    type != XmlPullParser::END_DOCUMENT) {}
             if (type == XmlPullParser::START_TAG) {
                 const AttributeSet& attrs = parser;
-                d = DrawableInflater::inflateFromXml(mCtx->getResources(),
-                                                     parser.getName(), parser, attrs);
+                // AOSP loadDrawableForCookie inflates with a null theme and
+                // re-applies via applyTheme(); CDROID has no mThemeAttrs
+                // deferred machinery, so the theme goes straight into the
+                // inflation (the same route AOSP uses for ColorStateList).
+                if (themeEngine) {
+                    Resources::Theme themed(mCtx->getResources(),
+                                            const_cast<void*>(themeEngine));
+                    d = DrawableInflater::inflateFromXml(mCtx->getResources(),
+                                                         parser.getName(), parser, attrs, &themed);
+                } else {
+                    d = DrawableInflater::inflateFromXml(mCtx->getResources(),
+                                                         parser.getName(), parser, attrs);
+                }
             }
         } else {
             d = ImageDecoder::createAsDrawable(mCtx, id);

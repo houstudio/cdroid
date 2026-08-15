@@ -61,7 +61,7 @@ public:
     void setPivotYRelative(bool relative);
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas& canvas)override;
-    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
 };
 
 }

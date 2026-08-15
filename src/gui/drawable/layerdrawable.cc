@@ -1091,23 +1091,62 @@ void LayerDrawable::draw(Canvas&canvas){
     }
 }
 
-void LayerDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(r,parser,atts);
+// AOSP LayerDrawable.canApplyTheme/applyTheme: re-resolve the layer-level
+// and per-child recorded ?attr ids, forward to each child drawable.
+bool LayerDrawable::canApplyTheme(){
+    if (mLayerState && !mLayerState->mThemeAttrs.empty()) return true;
+    if (mLayerState) {
+        for (ChildDrawable* child : mLayerState->mChildren) {
+            if (child && !child->mThemeAttrs.empty()) return true;
+            if (child && child->mDrawable && child->mDrawable->canApplyTheme()) return true;
+        }
+    }
+    return Drawable::canApplyTheme();
+}
+
+void LayerDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    if (mLayerState) {
+        if (!mLayerState->mThemeAttrs.empty()) {
+            auto a = t.resolveAttributes(mLayerState->mThemeAttrs, R::styleable::LayerDrawable);
+            if (a) updateStateFromTypedArray(*a);
+            mLayerState->mThemeAttrs.clear();
+        }
+        for (ChildDrawable* child : mLayerState->mChildren) {
+            if (child == nullptr) continue;
+            if (!child->mThemeAttrs.empty()) {
+                auto a = t.resolveAttributes(child->mThemeAttrs, R::styleable::LayerDrawableItem);
+                if (a) updateLayerFromTypedArray(child, *a);
+                child->mThemeAttrs.clear();
+            }
+            if (child->mDrawable && child->mDrawable->canApplyTheme()) {
+                child->mDrawable->mutate();
+                child->mDrawable->applyTheme(t);
+                child->mDrawable->clearMutated();
+            }
+        }
+        ensurePadding();
+        refreshPadding();
+    }
+}
+
+void LayerDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    Drawable::inflate(r,parser,atts, theme);
     const int density = Drawable::resolveDensity( 0);
     mLayerState->setDensity(density);
 
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::LayerDrawable);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::LayerDrawable);
     if (ta) updateStateFromTypedArray(*ta);
 
     for (ChildDrawable*layer:mLayerState->mChildren) {
         layer->setDensity(density);
     }
-    inflateLayers(r,parser,atts);
+    inflateLayers(r,parser,atts, theme);
     ensurePadding();
     refreshPadding();
 }
 
-void LayerDrawable::inflateLayers(Resources& r,XmlPullParser& parser,const AttributeSet& atts){
+void LayerDrawable::inflateLayers(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     int type,depth,low = 0;
     const int innerDepth = parser.getDepth()+1;
     while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
@@ -1123,7 +1162,7 @@ void LayerDrawable::inflateLayers(Resources& r,XmlPullParser& parser,const Attri
         ChildDrawable*layer = new ChildDrawable(mLayerState->mDensity);
         // AOSP inflateLayers: obtainAttributes(R.styleable.LayerDrawableItem) per <item>.
         Context* ctx = atts.getContext();
-        auto ta = r.obtainStyledAttributes(&atts, R::styleable::LayerDrawableItem);
+        auto ta = obtainAttributes(r, theme, atts, R::styleable::LayerDrawableItem);
         if (ta) updateLayerFromTypedArray(layer, *ta);
 
         if (layer->mDrawable==nullptr) {
@@ -1134,7 +1173,7 @@ void LayerDrawable::inflateLayers(Resources& r,XmlPullParser& parser,const Attri
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            layer->mDrawable = Drawable::createFromXmlInner(r,parser,atts);
+            layer->mDrawable = Drawable::createFromXmlInner(r,parser,atts, theme);
             layer->mDrawable->setCallback(this);
         }
         addLayer(layer);
@@ -1147,7 +1186,7 @@ void LayerDrawable::updateStateFromTypedArray(const TypedArray& a) {
     // Account for any configuration changes.
     //state->mChangingConfigurations |= a.getChangingConfigurations();
     // Extract the theme attributes, if any.
-    //state->mThemeAttrs = a.extractThemeAttrs();
+    state->mThemeAttrs = a.extractThemeAttrs();
 
     state->mOpacityOverride = a.getInt(R::styleable::LayerDrawable_opacity, state->mOpacityOverride);
     state->mPaddingTop = a.getDimensionPixelOffset(R::styleable::LayerDrawable_paddingTop, state->mPaddingTop);
@@ -1165,7 +1204,7 @@ void LayerDrawable::updateLayerFromTypedArray(ChildDrawable*layer,const TypedArr
 
     // Account for any configuration changes.
     //state->mChildrenChangingConfigurations |= a.getChangingConfigurations();
-    //layer->mThemeAttrs = a.extractThemeAttrs();
+    layer->mThemeAttrs = a.extractThemeAttrs();
 
     layer->mInsetL = a.getDimensionPixelOffset(R::styleable::LayerDrawableItem_left, layer->mInsetL);
     layer->mInsetT = a.getDimensionPixelOffset(R::styleable::LayerDrawableItem_top, layer->mInsetT);

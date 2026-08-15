@@ -64,7 +64,8 @@ public:
     void nextFrame(bool unschedule);
     AnimationDrawable*mutate()override;
     void clearMutated()override;
-    void inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts)override;
+    void inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts,const Resources::Theme* theme)override;
+    void inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts,const Resources::Theme* theme);
 };
 
 }

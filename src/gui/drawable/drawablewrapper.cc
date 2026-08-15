@@ -277,8 +277,32 @@ void DrawableWrapper::draw(Canvas&canvas){
     }
 }
 
-void DrawableWrapper::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(r,parser,atts);
+// AOSP DrawableWrapper.canApplyTheme/applyTheme: re-resolve the recorded
+// ?attr ids and forward to the wrapped drawable.
+bool DrawableWrapper::canApplyTheme(){
+    Drawable* dr = getDrawable();
+    return (mState && !mState->mThemeAttrs.empty()) || (dr && dr->canApplyTheme())
+           || Drawable::canApplyTheme();
+}
+
+void DrawableWrapper::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    auto state = mState;
+    if (state && !state->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(state->mThemeAttrs, R::styleable::DrawableWrapper);
+        if (a) updateStateFromTypedArray(*a);
+        state->mThemeAttrs.clear();
+    }
+    Drawable* dr = getDrawable();
+    if (dr && dr->canApplyTheme()) {
+        dr->mutate();
+        dr->applyTheme(t);
+        dr->clearMutated();
+    }
+}
+
+void DrawableWrapper::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    Drawable::inflate(r,parser,atts, theme);
     auto state = mState;
     if (state == nullptr) {
         return;
@@ -291,9 +315,9 @@ void DrawableWrapper::inflate(Resources& r,XmlPullParser&parser,const AttributeS
     //state->mSrcDensityOverride = mSrcDensityOverride;
 
     // AOSP DrawableWrapper.inflate: obtainAttributes(R.styleable.DrawableWrapper).
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::DrawableWrapper);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::DrawableWrapper);
     if (ta) updateStateFromTypedArray(*ta);
-    inflateChildDrawable(parser, atts);
+    inflateChildDrawable(parser, atts, theme);
 }
 
 void DrawableWrapper::updateStateFromTypedArray(const TypedArray& a) {
@@ -306,13 +330,13 @@ void DrawableWrapper::updateStateFromTypedArray(const TypedArray& a) {
     //state.mChangingConfigurations |= a.getChangingConfigurations();
 
     // Extract the theme attributes, if any.
-    //state.mThemeAttrs = a.extractThemeAttrs();
+    state->mThemeAttrs = a.extractThemeAttrs();
     if (a.hasValue(R::styleable::DrawableWrapper_drawable)) {
         setDrawable(a.getDrawable(R::styleable::DrawableWrapper_drawable));
     }
 }
 
-void DrawableWrapper::inflateChildDrawable(XmlPullParser& parser,const AttributeSet& attrs){
+void DrawableWrapper::inflateChildDrawable(XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme){
     // Seek to the first child element.
     Drawable* dr = nullptr;
     int type;
@@ -320,7 +344,7 @@ void DrawableWrapper::inflateChildDrawable(XmlPullParser& parser,const Attribute
     while ((type = parser.next()) != XmlPullParser::END_DOCUMENT
             && (type != XmlPullParser::END_TAG || parser.getDepth() > outerDepth)) {
         if (type == XmlPullParser::START_TAG) {
-            dr = Drawable::createFromXmlInnerForDensity(attrs.getContext()->getResources(),parser,attrs,0/*mState->mSrcDensityOverride*/);
+            dr = Drawable::createFromXmlInnerForDensity(attrs.getContext()->getResources(),parser,attrs,0/*mState->mSrcDensityOverride*/,theme);
         }
     }
 

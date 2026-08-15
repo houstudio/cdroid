@@ -26,6 +26,8 @@ class NinePatchDrawable:public Drawable{
 private:
     class NinePatchState:public std::enable_shared_from_this<NinePatchState>,public ConstantState{
     public:
+        // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
+        std::vector<int> mThemeAttrs;
         float mBaseAlpha;//= 1.0f;
         bool mDither;//=DEFAULT_DITHER;
         bool mAutoMirrored;//= false;
@@ -83,7 +85,9 @@ public:
     bool hasFocusStateSpecified()const override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas&canvas)override;
-    void inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 }
 #endif

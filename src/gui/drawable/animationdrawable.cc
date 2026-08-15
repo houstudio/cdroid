@@ -160,13 +160,13 @@ void AnimationDrawable::clearMutated(){
     mMutated = false;
 }
 
-void AnimationDrawable::inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts){
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::AnimationDrawable);
+void AnimationDrawable::inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts, const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::AnimationDrawable);
     DrawableContainer::inflateWithAttributes(parser,atts);
     if (ta) updateStateFromTypedArray(*ta);
 
     //updateDensity();
-    inflateChildElements(r,parser,atts);
+    inflateChildElements(r,parser,atts,theme);
     setFrame(0,true,false);
 }
 
@@ -176,7 +176,7 @@ void AnimationDrawable::updateStateFromTypedArray(const TypedArray& a){
     state->mOneShot = a.getBoolean(R::styleable::AnimationDrawable_oneshot, state->mOneShot);
 }
 
-void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts){
+void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts,const Resources::Theme* theme){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
     while ((type=parser.next()) != XmlPullParser::END_DOCUMENT
@@ -190,7 +190,7 @@ void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
         }
         // AOSP obtains R.styleable.AnimationDrawableItem per <item>.
         Context* ctx = atts.getContext();
-        auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimationDrawableItem);
+        auto ta = obtainAttributes(r, theme, atts, R::styleable::AnimationDrawableItem);
         const int duration = ta ? ta->getInt(R::styleable::AnimationDrawableItem_duration, -1)
                                 : -1;
         if (duration < 0) {

@@ -89,13 +89,34 @@ void Drawable::clearMutated() {
 }
 
 void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    // AOSP Drawable.inflate(Resources r,...): r for resource resolution; CDROID resolves
-    // typed attrs via the AttributeSet's Context (Resources has no obtainStyledAttributes),
-    // so r is accepted for API parity and unused at this base layer.
-    (void)r;
-    Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::Drawable);
+    // AOSP: inflate(r, parser, attrs, null)
+    inflate(r, parser, atts, nullptr);
+}
+
+// AOSP Drawable.inflate(r, parser, attrs, @Nullable Theme): the default
+// resolves the base Drawable attrs only (AOSP 4-arg default body; no
+// re-dispatch).
+void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = theme ? obtainAttributes(r, theme, atts, R::styleable::Drawable)
+                    : r.obtainStyledAttributes(&atts, R::styleable::Drawable);
     mVisible = ta ? ta->getBoolean(R::styleable::Drawable_visible, mVisible) : mVisible;
+}
+
+// AOSP Drawable.applyTheme(@NonNull Theme): no-op here (the mThemeAttrs
+// deferred-resolution machinery is not ported; themed inflation happens up
+// front through the 4-arg inflate instead).
+void Drawable::applyTheme(const Resources::Theme& t){
+    (void)t;
+}
+
+// AOSP Drawable.obtainAttributes(res, @Nullable Theme, set, attrs).
+std::unique_ptr<TypedArray> Drawable::obtainAttributes(Resources& r,const Resources::Theme* theme,
+        const AttributeSet& set,const uint32_t* attrs){
+    if (theme) return theme->obtainStyledAttributes(&set, attrs);
+    // AOSP falls back to the theme-less Resources.obtainAttributes(set, attrs);
+    // CDROID keeps the default-theme styled resolution so unthemed loads
+    // behave exactly as before.
+    return r.obtainStyledAttributes(&set, attrs);
 }
 
 void Drawable::inflateWithAttributes(XmlPullParser&parser,const AttributeSet&atts){
@@ -106,8 +127,16 @@ Drawable* Drawable::createFromXmlInner(Resources& r,XmlPullParser&parser,const A
     return DrawableInflater::inflateFromXml(r,parser.getName(),parser,atts);
 }
 
+Drawable* Drawable::createFromXmlInner(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    return DrawableInflater::inflateFromXml(r,parser.getName(),parser,atts,theme);
+}
+
 Drawable* Drawable::createFromXmlInnerForDensity(Resources& r,XmlPullParser&parser,const AttributeSet&atts,int density){
     return DrawableInflater::inflateFromXmlForDensity(r,parser.getName(),parser,atts,density);
+}
+
+Drawable* Drawable::createFromXmlInnerForDensity(Resources& r,XmlPullParser&parser,const AttributeSet&atts,int density,const Resources::Theme* theme){
+    return DrawableInflater::inflateFromXmlForDensity(r,parser.getName(),parser,atts,density,theme);
 }
 
 /*int Drawable::getDimensionOrFraction(const std::string&value,int base,int def){

@@ -600,13 +600,13 @@ Rect RippleDrawable::getDirtyBounds() const{
     }
 }
 
-void RippleDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::RippleDrawable);
+void RippleDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::RippleDrawable);
 
     // Force padding default to STACK before inflating.
     setPaddingMode(PADDING_MODE_STACK);
 
-    LayerDrawable::inflate(r,parser,atts);
+    LayerDrawable::inflate(r,parser,atts, theme);
 
     if (ta) updateStateFromTypedArray(*ta);
 

@@ -281,10 +281,25 @@ void NinePatchDrawable::draw(Canvas&canvas){
     }
 }
 
-void NinePatchDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
-   Drawable::inflate(r,parser,atts);
+// AOSP NinePatchDrawable.canApplyTheme/applyTheme.
+bool NinePatchDrawable::canApplyTheme(){
+    return (mNinePatchState && !mNinePatchState->mThemeAttrs.empty()) || Drawable::canApplyTheme();
+}
+
+void NinePatchDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    if (mNinePatchState && !mNinePatchState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mNinePatchState->mThemeAttrs, R::styleable::NinePatchDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        mNinePatchState->mThemeAttrs.clear();
+    }
+    computeBitmapSize();
+}
+
+void NinePatchDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+   Drawable::inflate(r,parser,atts, theme);
    // AOSP: all attr reads + src loading happen inside updateStateFromTypedArray.
-   auto ta = r.obtainStyledAttributes(&atts, R::styleable::NinePatchDrawable);
+   auto ta = obtainAttributes(r, theme, atts, R::styleable::NinePatchDrawable);
    if (ta) updateStateFromTypedArray(*ta);
    computeBitmapSize();
 }
@@ -292,6 +307,8 @@ void NinePatchDrawable::inflate(Resources&r,XmlPullParser&parser,const Attribute
 void NinePatchDrawable::updateStateFromTypedArray(const TypedArray& a){
     auto state = mNinePatchState;
     Resources& r = const_cast<Resources&>(a.getResources());
+    // AOSP: extract the theme attributes for later re-resolution (applyTheme).
+    state->mThemeAttrs = a.extractThemeAttrs();
 
     state->mDither = a.getBoolean(R::styleable::NinePatchDrawable_dither, state->mDither);
 

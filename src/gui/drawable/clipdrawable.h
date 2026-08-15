@@ -29,6 +29,8 @@ public:
 private:
     class ClipState:public DrawableWrapperState{
     public:
+        // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
+        std::vector<int> mThemeAttrs;
         int mGravity;
         int mOrientation;
         ClipState();
@@ -48,7 +50,9 @@ public:
     int getGravity()const;
     int getOrientation()const;
     void draw(Canvas& canvas)override;
-    void inflate(Resources& r, XmlPullParser&,const AttributeSet&)override;
+    void inflate(Resources& r, XmlPullParser&,const AttributeSet&,const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 
 }

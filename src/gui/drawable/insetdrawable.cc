@@ -166,12 +166,29 @@ std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){
     return mState;
 }
 
-void InsetDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+void InsetDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     // Inset attribute may be overridden by more specific attributes.
-    auto ta = r.obtainStyledAttributes(atts, R::styleable::InsetDrawable);
-    if (ta) updateStateFromTypedArray(*ta);
-    DrawableWrapper::inflate(r,parser,atts);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::InsetDrawable);
+    if (ta) {
+        mState->mThemeAttrs = ta->extractThemeAttrs();
+        updateStateFromTypedArray(*ta);
+    }
+    DrawableWrapper::inflate(r,parser,atts, theme);
     verifyRequiredAttributes();
+}
+
+// AOSP InsetDrawable.canApplyTheme/applyTheme.
+bool InsetDrawable::canApplyTheme(){
+    return (mState && !mState->mThemeAttrs.empty()) || DrawableWrapper::canApplyTheme();
+}
+
+void InsetDrawable::applyTheme(const Resources::Theme& t){
+    DrawableWrapper::applyTheme(t);
+    if (mState && !mState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mState->mThemeAttrs, R::styleable::InsetDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        mState->mThemeAttrs.clear();
+    }
 }
 
 void InsetDrawable::verifyRequiredAttributes(){

@@ -196,15 +196,15 @@ void AnimatedStateListDrawable::setConstantState(std::shared_ptr<DrawableContain
     }
 }
 
-void AnimatedStateListDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+void AnimatedStateListDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
     (void)r;
     StateListDrawable::inflateWithAttributes(parser,atts);
 
     Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimatedStateListDrawable);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::AnimatedStateListDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     //updateDensity();
-    inflateChildElement(r,parser,atts);
+    inflateChildElement(r,parser,atts,theme);
     init();
 }
 
@@ -228,7 +228,7 @@ void AnimatedStateListDrawable::init(){
     onStateChange(getState());
 }
 
-void AnimatedStateListDrawable::inflateChildElement(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+void AnimatedStateListDrawable::inflateChildElement(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
     while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
