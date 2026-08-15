@@ -350,7 +350,11 @@ int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t he
         }
         img = XCreateImage(x11Display,x11Visual, imagedepth,ZPixmap,0,NULL,width,height,32,width*4);
     } else {
-        img = (XImage*)malloc(sizeof(XImage));
+        // Offscreen (no X connection): a bare XImage shell over a malloc'd
+        // buffer. calloc so f.destroy_image stays NULL — GFXDestroySurface
+        // recognizes that and frees directly instead of calling the X11
+        // destroy function pointer (which was never initialized here).
+        img = (XImage*)calloc(1, sizeof(XImage));
         img->width = width;
         img->height= height;
         img->bits_per_pixel = 32;
@@ -421,7 +425,17 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 }
 
 int32_t GFXDestroySurface(GFXHANDLE surface) {
-    XDestroyImage((XImage*)surface);
+    XImage* img = (XImage*)surface;
+    if (img == NULL) return 0;
+    if (img->f.destroy_image) {
+        // Created via XCreateImage: XDestroyImage frees data + the image.
+        XDestroyImage(img);
+    } else {
+        // Offscreen shell from GFXCreateSurface's no-display branch: the
+        // function pointers were never initialized, free directly.
+        if (img->data) free(img->data);
+        free(img);
+    }
     return 0;
 }
 
