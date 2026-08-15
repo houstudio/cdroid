@@ -45,6 +45,7 @@ struct StyledAttr;   // androidfw/resourcetypes.h — opaque pointer members
 class Resources;     // cdroid::Resources — the AOSP mResources holder (loadDrawable/...)
 class Drawable;
 class ColorStateList;
+class Typeface;
 
 class TypedArray {
 public:
@@ -57,7 +58,7 @@ public:
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
                const Resources* res = nullptr);
     ~TypedArray();
-    size_t size() const;
+    size_t length() const { return mCount; }   // AOSP TypedArray.length()
     bool hasValue(size_t idx) const;
     bool hasValueOrEmpty(size_t idx) const;
     // AOSP TypedArray pattern: iterate only over SET indices (not all COUNT).
@@ -78,6 +79,11 @@ public:
     uint32_t getResourceId(size_t idx, uint32_t def) const;
     std::string getString(size_t idx) const;
     std::string getText(size_t idx) const;     // alias of getString for now
+    // AOSP getNonResourceString: the string only when it does NOT come from a
+    // resource pool (for us: an AXML-inline string).
+    std::string getNonResourceString(size_t idx) const;
+    std::vector<std::string> getTextArray(size_t idx) const;
+    Typeface* getFont(size_t idx) const;
     int       getType(size_t idx) const;        // TypedValue.type, or -1
     // AOSP TypedArray.getValue(int, TypedValue) / peekValue(int): the typed
     // value as a TypedValue (the android.util container). The Res_value

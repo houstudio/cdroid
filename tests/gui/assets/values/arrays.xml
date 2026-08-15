@@ -6,4 +6,9 @@
         <item>beta</item>
         <item>gamma</item>
     </string-array>
+    <string-array name="difficulty">
+        <item>Easy</item>
+        <item>Medium</item>
+        <item>Hard</item>
+    </string-array>
 </resources>

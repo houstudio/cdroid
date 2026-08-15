@@ -133,6 +133,10 @@ class Resources::Theme {
 public:
     Resources& getResources() const { return mRes; }   // CDROID extension (AOSP has getAssets)
     AssetManager* getAssets() const;
+    // AOSP Resources.Theme.getDrawable/getColor(@Res int): resource loads
+    // resolved through this theme's Resources.
+    Drawable* getDrawable(int id) const;
+    int getColor(int id) const;
     // AOSP Resources.Theme face: applyStyle/setTo/resolveAttribute/obtainStyledAttributes.
     void applyStyle(int resId, bool force = false);
     void setTo(const Theme& other);

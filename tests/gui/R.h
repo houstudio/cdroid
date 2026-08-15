@@ -21,62 +21,103 @@ namespace R{
 
     namespace array{
         enum : int {
-            string_array_test = 0x7f030000,
+            difficulty = 0x7f030000,
+            string_array_test = 0x7f030001,
         };
     }/*namespace array*/
 
+    namespace attr{
+        enum : int {
+            testString = 0x7f040000,
+            type1 = 0x7f040001,
+            type10 = 0x7f040002,
+            type11 = 0x7f040003,
+            type12 = 0x7f040004,
+            type13 = 0x7f040005,
+            type14 = 0x7f040006,
+            type15 = 0x7f040007,
+            type16 = 0x7f040008,
+            type17 = 0x7f040009,
+            type18 = 0x7f04000a,
+            type2 = 0x7f04000b,
+            type3 = 0x7f04000c,
+            type4 = 0x7f04000d,
+            type5 = 0x7f04000e,
+            type6 = 0x7f04000f,
+            type7 = 0x7f040010,
+            type8 = 0x7f040011,
+            type9 = 0x7f040012,
+            typeEmpty = 0x7f040013,
+            typeUndefined = 0x7f040014,
+        };
+    }/*namespace attr*/
+
     namespace color{
         enum : int {
-            test_colors = 0x7f040000,
+            test_colors = 0x7f050000,
+            typedarray_green = 0x7f050001,
         };
     }/*namespace color*/
 
     namespace drawable{
         enum : int {
-            cts_level_list_correct = 0x7f050000,
-            cts_ripple_effect = 0x7f050001,
-            cts_ripple_radius = 0x7f050002,
-            cts_selector_correct = 0x7f050003,
-            cts_vector_icon = 0x7f050004,
-            cts_vector_size_1 = 0x7f050005,
-            cts_vector_size_2 = 0x7f050006,
-            gradientdrawable = 0x7f050007,
-            nine_patch_odd_insets = 0x7f050008,
-            ninepatch_0 = 0x7f050009,
-            ninepatch_1 = 0x7f05000a,
+            cts_level_list_correct = 0x7f060000,
+            cts_ripple_effect = 0x7f060001,
+            cts_ripple_radius = 0x7f060002,
+            cts_selector_correct = 0x7f060003,
+            cts_vector_icon = 0x7f060004,
+            cts_vector_size_1 = 0x7f060005,
+            cts_vector_size_2 = 0x7f060006,
+            gradientdrawable = 0x7f060007,
+            nine_patch_odd_insets = 0x7f060008,
+            ninepatch_0 = 0x7f060009,
+            ninepatch_1 = 0x7f06000a,
+            pass = 0x7f06000b,
         };
     }/*namespace drawable*/
 
     namespace id{
         enum : int {
-            args_test = 0x7f060000,
-            finish = 0x7f060001,
-            finish_self = 0x7f060002,
-            nav_args = 0x7f060003,
-            nav_host_test = 0x7f060004,
-            nav_root = 0x7f060005,
-            second = 0x7f060006,
-            second_fragment = 0x7f060007,
-            second_test = 0x7f060008,
-            self = 0x7f060009,
-            start_fragment = 0x7f06000a,
-            start_test = 0x7f06000b,
+            args_test = 0x7f070000,
+            finish = 0x7f070001,
+            finish_self = 0x7f070002,
+            nav_args = 0x7f070003,
+            nav_host_test = 0x7f070004,
+            nav_root = 0x7f070005,
+            second = 0x7f070006,
+            second_fragment = 0x7f070007,
+            second_test = 0x7f070008,
+            self = 0x7f070009,
+            start_fragment = 0x7f07000a,
+            start_test = 0x7f07000b,
         };
     }/*namespace id*/
 
     namespace navigation{
         enum : int {
-            nav_args_test = 0x7f070000,
-            nav_host_test = 0x7f070001,
-            nav_simple_test = 0x7f070002,
+            nav_args_test = 0x7f080000,
+            nav_host_test = 0x7f080001,
+            nav_simple_test = 0x7f080002,
         };
     }/*namespace navigation*/
 
     namespace style{
         enum : int {
-            theme_face_probe = 0x7f080000,
+            StyleA = 0x7f090000,
+            Theme_Empty = 0x7f090001,
+            Theme_InlineString = 0x7f090002,
+            Theme_OrientationDependent = 0x7f090003,
+            Whatever = 0x7f090004,
+            theme_face_probe = 0x7f090005,
         };
     }/*namespace style*/
+
+    namespace xml{
+        enum : int {
+            empty = 0x7f0a0000,
+            test_color = 0x7f0a0001,
+        };
+    }/*namespace xml*/
 
 };//endof namespace R
 

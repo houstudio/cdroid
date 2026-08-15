@@ -835,7 +835,9 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
                     || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
                 out[i].resourceId = v.data;
             }
-            ssize_t tblk = 0;
+            // getAttribute returns the owning header block; keep it so string
+            // values resolve from the right (multi-pak) pool.
+            ssize_t tblk = theme->getAttribute(a, &v);
             tblk = theme->resolveAttributeReference(&v, tblk);
             out[i].value = v; out[i].stringBlock = tblk; out[i].set = true; continue;
         }
@@ -890,7 +892,9 @@ void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
                     || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
                 out[i].resourceId = v.data;
             }
-            ssize_t tblk = 0;
+            // getAttribute returns the owning header block; keep it so string
+            // values resolve from the right (multi-pak) pool.
+            ssize_t tblk = theme->getAttribute(a, &v);
             tblk = theme->resolveAttributeReference(&v, tblk);
             out[i].value = v; out[i].stringBlock = tblk; out[i].set = true; continue;
         }

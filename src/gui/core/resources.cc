@@ -339,6 +339,14 @@ AssetManager* Resources::Theme::getAssets() const {
     return mRes.getAssets();
 }
 
+Drawable* Resources::Theme::getDrawable(int id) const {
+    return mRes.getDrawable(id);
+}
+
+int Resources::Theme::getColor(int id) const {
+    return mRes.getColor(id);
+}
+
 // AOSP Resources.Theme.obtainStyledAttributes(AttributeSet, int[],
 // defStyleAttr, defStyleRes) — same resolution ladder as Resources::
 // obtainStyledAttributes, but against THIS theme's engine (a Theme obtained

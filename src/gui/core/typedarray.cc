@@ -87,10 +87,9 @@ TypedArray::~TypedArray() {
     delete mOwned;
 }
 
-size_t TypedArray::size() const { return mCount; }
-
 bool TypedArray::hasValue(size_t idx) const {
-    return idx < mCount && mVals[idx].set;
+    // AOSP hasValue: entry present AND not TYPE_NULL (@empty reads false here).
+    return idx < mCount && mVals[idx].set && mVals[idx].value.dataType != Res_value::TYPE_NULL;
 }
 
 // --- Low-level typed getters (TypedValue decoders; AOSP getValueAt shape) ---
@@ -186,18 +185,18 @@ uint32_t TypedArray::getResourceId(size_t idx, uint32_t def) const {
 
 std::string TypedArray::getString(size_t idx) const {
     TypedValue v; if (!get(idx, &v) || v.type != TypedValue::TYPE_STRING) return "";
-    const ResStringPool* pool = nullptr;
-    if (mVals[idx].stringBlock == -2 && mXml) {
-        pool = &mXml->getStrings();  // element-sourced: AXML's own pool
-    } else if (mVals[idx].stringBlock >= 0 && mVals[idx].stringBlock < (ssize_t)0 /*placeholder*/) {
-        // style-sourced: owning arsc header pool (resolved via table on demand)
-        // (kept simple: fall back to table's first pool)
-        pool = &mTable.getStringPool();
-    } else {
-        pool = &mTable.getStringPool();
-    }
+    const char16_t* s = nullptr;
     size_t len = 0;
-    const char16_t* s = pool->stringAt(v.data, &len);
+    if (mVals[idx].stringBlock == -2 && mXml) {
+        // element-sourced: the AXML's own string pool
+        s = mXml->getStrings().stringAt(v.data, &len);
+    } else if (mVals[idx].stringBlock >= 0) {
+        // style/theme-sourced: the owning arsc header's pool (multi-pak table —
+        // the index is into THAT pool, not the first one).
+        s = mTable.stringAtBlock(mVals[idx].stringBlock, v.data, &len);
+    } else {
+        s = mTable.getStringPool().stringAt(v.data, &len);
+    }
     std::string out;
     for (size_t i = 0; s && i < len; i++) {
         uint32_t c = s[i];
@@ -216,11 +215,28 @@ int32_t TypedArray::getInteger(size_t idx, int32_t def) const {
 }
 
 bool TypedArray::hasValueOrEmpty(size_t idx) const {
-    if (!hasValue(idx)) return false;
-    TypedValue v;
-    get(idx, &v);
-    // @empty is represented as TYPE_REFERENCE with data == 0.
-    return !(v.type == TypedValue::TYPE_REFERENCE && v.data == 0);
+    // AOSP hasValueOrEmpty: hasValue, or a TYPE_NULL @empty (DATA_NULL_EMPTY).
+    if (idx >= mCount || !mVals[idx].set) return false;
+    const Res_value& v = mVals[idx].value;
+    return v.dataType != Res_value::TYPE_NULL || v.data == Res_value::DATA_NULL_EMPTY;
+}
+
+std::string TypedArray::getNonResourceString(size_t idx) const {
+    if (idx >= mCount || !mVals[idx].set) return "";
+    if (mVals[idx].stringBlock != -2 || mXml == nullptr) return "";
+    return getString(idx);
+}
+
+std::vector<std::string> TypedArray::getTextArray(size_t idx) const {
+    const uint32_t id = getResourceId(idx, 0);
+    if (id == 0 || !mResources) return {};
+    return mResources->getStringArray((int)id);
+}
+
+Typeface* TypedArray::getFont(size_t idx) const {
+    const uint32_t id = getResourceId(idx, 0);
+    if (id == 0 || !mResources) return nullptr;
+    return mResources->getFont((int)id);
 }
 
 float TypedArray::getFloat(size_t idx, float def) const {
@@ -271,8 +287,9 @@ std::string TypedArray::getText(size_t idx) const {
 }
 
 int TypedArray::getType(size_t idx) const {
-    TypedValue v;
-    return get(idx, &v) ? v.type : -1;
+    // AOSP getType: TYPE_NULL when the entry is unset.
+    if (idx >= mCount || !mVals[idx].set) return TypedValue::TYPE_NULL;
+    return mVals[idx].value.dataType;
 }
 
 // AOSP TypedArray.peekValue(int) / getValue(int, TypedValue): the typed value
