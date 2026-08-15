@@ -42,6 +42,11 @@ namespace internal { namespace R { namespace styleable {
     constexpr int ViewTag_id = 0;
     constexpr int ViewTag_value = 1;
 
+    // Include (2 attrs)
+    extern const uint32_t Include[];
+    constexpr int Include_id = 0;
+    constexpr int Include_visibility = 1;
+
     // AdapterViewAnimator (4 attrs)
     extern const uint32_t AdapterViewAnimator[];
     constexpr int AdapterViewAnimator_inAnimation = 0;

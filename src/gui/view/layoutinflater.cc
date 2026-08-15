@@ -434,9 +434,18 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // The <merge> tag doesn't support android:theme, so nothing special to do here.
             rInflate(childParser, parent, context, childAttrs, false);
         } else {
-            childAttrs.inherit(attrs);
             View* view = createViewFromTag(parent, childName,context, childAttrs, hasThemeOverride);
             ViewGroup* group = (ViewGroup*) parent;
+
+            // AOSP: read id/visibility off the <include /> tag itself and apply
+            // them to the included root AFTER inflation (setId/setVisibility).
+            // The old CDROID inherit() merge only reached the text-XML string
+            // map — invisible to the binary AXML typed path — so the include
+            // tag's android:id/visibility were silently dropped in binary mode.
+            auto ta = context->obtainStyledAttributes(attrs, R::styleable::Include);
+            const int id = ta ? ta->getResourceId(R::styleable::Include_id, View::NO_ID) : View::NO_ID;
+            const int visibility = ta ? ta->getInt(R::styleable::Include_visibility, -1) : -1;
+
             // We try to load the layout params set in the <include /> tag.
             // If the parent can't generate layout params (ex. missing width
             // or height for the framework ViewGroups, though this is not
@@ -445,11 +454,35 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // We catch this exception and set localParams accordingly: true
             // means we successfully loaded layout params from the <include>
             // tag, false means we need to rely on the included layout params.
-            ViewGroup::LayoutParams* params = group->generateLayoutParams(childAttrs);
+            ViewGroup::LayoutParams* params = nullptr;
+            try {
+                params = group->generateLayoutParams(attrs);
+            } catch (std::exception&) {
+                // Ignore, just fail over to child attrs.
+            }
+            if (params == nullptr) {
+                params = group->generateLayoutParams(childAttrs);
+            }
             view->setLayoutParams(params);
 
             // Inflate all children.
             rInflateChildren(childParser, view, childAttrs, true);
+
+            if (id != View::NO_ID) {
+                view->setId(id);
+            }
+
+            switch (visibility) {
+                case 0:
+                    view->setVisibility(View::VISIBLE);
+                    break;
+                case 1:
+                    view->setVisibility(View::INVISIBLE);
+                    break;
+                case 2:
+                    view->setVisibility(View::GONE);
+                    break;
+            }
             group->addView(view);
         }
     } else {

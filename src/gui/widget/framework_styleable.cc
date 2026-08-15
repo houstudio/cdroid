@@ -9,6 +9,7 @@ namespace internal { namespace R { namespace styleable {
         0x01011035, 0x01011036, 0x01011037, 0x01011038, 0x01011039, 0x0101103a, 0x0101103b,
         0x0101103c, 0x0101103d, 0x0101103e, 0x0101103f, 0x0101013f, 0x01010140, 0 };
     const uint32_t ViewTag[] = { 0x010100d0, 0x01010024, 0 };
+    const uint32_t Include[] = { 0x010100d0, 0x010100dc, 0 };
     const uint32_t AdapterViewAnimator[] = { 0x01010177, 0x01010178, 0x01010307, 0x010102d5, 0 };
     const uint32_t AdapterViewFlipper[] = { 0x01010179, 0x010102b5, 0 };
     const uint32_t AnalogClock[] = {

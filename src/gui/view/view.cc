@@ -7826,7 +7826,15 @@ bool View::hasParentWantsFocus()const{
 }
 
 bool View::isInLayout()const{
-    ViewGroup* viewRoot = getRootView();
+    // AOSP: ViewRootImpl viewRoot = getViewRootImpl() — null when the view is
+    // detached, so isInLayout() is false. CDROID's ViewRootImpl analog is the
+    // Window at the tree root (AttachInfo.mRootView; Window overrides
+    // isInLayout with mInLayout). The old getRootView() parent-walk fallback
+    // recursed forever on detached subtrees: their root is a plain ViewGroup,
+    // so viewRoot->isInLayout() dispatched back into View::isInLayout with
+    // viewRoot == getRootView() == itself.
+    ViewGroup* viewRoot = (mAttachInfo && mAttachInfo->mRootView)
+                          ? mAttachInfo->mRootView : nullptr;
     return (viewRoot && viewRoot->isInLayout());
 }
 
