@@ -546,12 +546,11 @@ class PakBuilder:
             # "attribute xxx not found") are visible.
             err = (e.stderr or b"").decode("utf-8", "replace").strip()
             out = (e.stdout or b"").decode("utf-8", "replace").strip()
-            sys.stderr.write("SDK res aapt2 failed (rc=%d):\n%s\n%s\nfalling back\n"
-                             % (e.returncode, err, out))
-            return {}
+            raise SystemExit("pakbuilder: SDK-res aapt2 failed (rc=%d) — refusing to "
+                             "fall back (a partial framework pak breaks the runtime "
+                             "attr tables).\n%s\n%s" % (e.returncode, err, out))
         except Exception as e:
-            sys.stderr.write("SDK res compile failed (%s); falling back\n" % e)
-            return {}
+            raise SystemExit("pakbuilder: SDK-res compile failed — no fallback. %s" % e)
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
@@ -751,14 +750,18 @@ class PakBuilder:
         except subprocess.CalledProcessError as e:
             # Surface aapt2's own stderr/stdout (attribute-not-found, etc.) so
             # the actual link/compile error is visible, not just "non-zero exit".
+            # NO text-XML fallback: a pak without an arsc resolves no ids at
+            # runtime (every inflate of a compiled layout dies far from the
+            # cause). Fail the build here instead — the resource error itself
+            # is the actionable message.
             err = (e.stderr or b"").decode("utf-8", "replace").strip()
             out = (e.stdout or b"").decode("utf-8", "replace").strip()
-            sys.stderr.write("aapt2 failed (rc=%d):\n%s\n%s\nfalling back to text XML\n"
+            raise SystemExit("pakbuilder: aapt2 failed (rc=%d) — refusing to emit a "
+                             "text-XML pak (no arsc => no ids at runtime).\n%s\n%s"
                              % (e.returncode, err, out))
-            return {}, None
         except Exception as e:
-            sys.stderr.write("aapt2 compile failed (%s); falling back to text XML\n" % e)
-            return {}, None
+            raise SystemExit("pakbuilder: aapt2 compile failed — refusing to emit a "
+                             "text-XML pak (no arsc => no ids at runtime). %s" % e)
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
