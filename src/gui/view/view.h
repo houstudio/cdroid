@@ -1253,7 +1253,7 @@ public:
     void setScrollY(int y);
     int getScrollX()const;
     int getScrollY()const;
-    static View*inflate(Context*,const std::string& resource, ViewGroup* root);
+    static View*inflate(Context*,int, ViewGroup* root);
     int getOverScrollMode()const;
     virtual void setOverScrollMode(int overScrollMode);
     int getVerticalFadingEdgeLength()const;

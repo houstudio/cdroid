@@ -74,12 +74,12 @@ private:
 protected:
     Context* mContext;
     int  mFieldId;
-    std::string mResource;
-    std::string mDropDownResource;
+    int mResource;
+    int mDropDownResource;
 private:
-     View* createViewFromResource(int position,View* convertView,ViewGroup* parent,const std::string& resource) {
+     View* createViewFromResource(int position,View* convertView,ViewGroup* parent,int resource) {
         View*view = convertView;
-        if((view==nullptr)&&!resource.empty()){
+        if((view==nullptr)&&(resource!=0)){
             view = LayoutInflater::from(mContext)->inflate(resource,nullptr, false);
             //If no custom field is assigned, assume the whole resource is a TextView
             //Otherwise, find the TextView field within the layout
@@ -93,13 +93,13 @@ public:
         mContext = nullptr;
         mFieldId = 0;
     }
-    ArrayAdapter(Context*context,const std::string&resource,int textViewResourceId/*,onSetTextListener setfun=nullptr*/){
+    ArrayAdapter(Context*context,int resource,int textViewResourceId/*,onSetTextListener setfun=nullptr*/){
         mContext = context;
         mResource= resource;
         mDropDownResource = resource;
         mFieldId = textViewResourceId;
     }
-    void setDropDownViewResource(const std::string&resource){
+    void setDropDownViewResource(int resource){
         mDropDownResource = resource;
     }
     void addAll(const std::vector<T>&items){

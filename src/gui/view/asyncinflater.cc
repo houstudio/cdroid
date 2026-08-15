@@ -34,7 +34,7 @@ AsyncLayoutInflater::~AsyncLayoutInflater(){
 }
 
 /*UiThread*/
-void AsyncLayoutInflater::inflate(const std::string&resid,ViewGroup* parent, const OnInflateFinishedListener& callback) {
+void AsyncLayoutInflater::inflate(int resid,ViewGroup* parent, const OnInflateFinishedListener& callback) {
     if (callback == nullptr) {
         throw std::invalid_argument("callback argument may not be null!");
     }
@@ -148,7 +148,7 @@ void AsyncLayoutInflater::InflateThread::releaseRequest(InflateRequest* obj) {
     obj->callback = nullptr;
     obj->inflater = nullptr;
     obj->parent = nullptr;
-    obj->resid.clear();
+    obj->resid= 0;
     obj->view = nullptr;
     mRequestPool.release(obj);
 }

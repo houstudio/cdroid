@@ -25,7 +25,7 @@
 namespace cdroid{
 class AsyncLayoutInflater {
 public:
-    using OnInflateFinishedListener = std::function<void(View*,const std::string&, ViewGroup*)>;
+    using OnInflateFinishedListener = std::function<void(View*,int resid, ViewGroup*)>;
 private:
     class InflateRequest;
     class BasicInflater;
@@ -39,14 +39,14 @@ public:
     AsyncLayoutInflater(Context* context);
     virtual ~AsyncLayoutInflater();
     /*UiThread*/
-    void inflate(const std::string&resid,ViewGroup* parent, const OnInflateFinishedListener& callback);
+    void inflate(int,ViewGroup* parent, const OnInflateFinishedListener& callback);
 };
 
 class AsyncLayoutInflater::InflateRequest {
 public:
     AsyncLayoutInflater* inflater;
     ViewGroup* parent;
-    std::string resid;
+    int resid;
     View* view;
     OnInflateFinishedListener callback;
 

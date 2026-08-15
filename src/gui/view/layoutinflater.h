@@ -79,7 +79,7 @@ public:
     void setFilter(const Filter& f);
 
     [[deprecated("This function is deprecated")]]
-    View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
+    //View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
     View* inflate(XmlPullParser& parser,ViewGroup* root);
 
     View* inflate(int resource, ViewGroup* root);
@@ -102,8 +102,8 @@ public:
       *         In cdroid ,we allways return  the root of the inflated XML file.
       */
     View* inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot);
-    View* inflate(const std::string&resource,ViewGroup* root);
-    View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot);
+    //View* inflate(const std::string&resource,ViewGroup* root);
+    //View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot);
 
     View* createView(const std::string& name, const std::string& prefix,AttributeSet& attrs);
     View* createView(Context* viewContext, const std::string& name, const std::string& prefix,AttributeSet& attrs);

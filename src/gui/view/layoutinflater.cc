@@ -154,12 +154,6 @@ void LayoutInflater::setFilter(const Filter& f){
     mFilter = f;
 }
 
-View* LayoutInflater::inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*){
-    auto strm = std::make_unique<std::istream>(stream.rdbuf());
-    XmlPullParser parser(mContext,std::move(strm));
-    return inflate(parser,root,attachToRoot);
-}
-
 void LayoutInflater::advanceToRootNode(XmlPullParser& parser){
     // Look for the root node.
     int type;
@@ -224,7 +218,7 @@ View* LayoutInflater::inflate(int resource, ViewGroup* root, bool attachToRoot){
     XmlPullParser parser(mContext, resource);
     return inflate(parser,root,attachToRoot);
 }
-
+#if 0
 View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root){
     return inflate(resource,root,root!=nullptr);
 }
@@ -233,7 +227,7 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool a
     XmlPullParser parser(mContext,resource);
     return inflate(parser,root,attachToRoot);
 }
-
+#endif
 View* LayoutInflater::createView(const std::string& name, const std::string& prefix,AttributeSet& attrs){
     return createView(mContext,name,prefix,attrs);
 }
