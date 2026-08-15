@@ -28,6 +28,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <sstream>
 #include <cstdlib>
 #include <cerrno>
 #include <utils/textutils.h>
@@ -90,7 +91,7 @@ bool Assets::arscThemeAttribute(uint32_t attrId, Res_value* out, ssize_t* outBlo
 // SDK/binary mode mTheme is empty (values only in resources.arsc), so fall back
 // to the arsc Theme. pkg is a hint (arscGetIdentifier also tries android/any).
 std::string Assets::themeString(const std::string& key, const std::string& pkg) const {
-    std::string v = mTheme.getString(key);
+    std::string v = mTheme.getAttributeValue(key);
     if (!v.empty() || !mArscTheme || !mResTable) return v;
     uint32_t attrId = arscGetIdentifier(key, "attr", pkg);
     Res_value tv;
@@ -275,7 +276,7 @@ Drawable* Assets::getDrawable(int id) {
     return mCdroidResources->getDrawable(id);   // delegates to the ID path (Assets retirement)
 }
 
-ColorStateList* Assets::getColorStateList(int id) {
+std::shared_ptr<ColorStateList> Assets::getColorStateList(int id) {
     ensureCdroidResources();
     if (mCdroidResources == nullptr) return nullptr;
     return mCdroidResources->getColorStateList(id);
@@ -396,7 +397,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
         // longer store them. Only styles and color-state-list selectors still
         // need text-XML parsing here.
         if(tag.compare("selector")==0){//for colorstatelist
-            std::string key = attrs.getString("name");
+            std::string key = attrs.getAttributeValue("name");
             depth = parser.getDepth()+1;
             std::string resUri = resid.substr(0,resid.find(".xml"));
             std::unordered_map<std::string,std::vector<AttributeSet>>::iterator it;
@@ -410,17 +411,17 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                     it->second.emplace_back(itemAtts);
             }
         }else if(tag.compare("style")==0){
-            const std::string styleName = package+":style/"+attrs.getString("name");
+            const std::string styleName = package+":style/"+attrs.getAttributeValue("name");
             auto its =mStyles.find(styleName);
             if(its==mStyles.end()){
-                const std::string styleParent = attrs.getString("parent");
+                const std::string styleParent = attrs.getAttributeValue("parent");
                 its =mStyles.insert(its,{styleName,AttributeSet(this,package)});
                 if(styleParent.size())its->second.add("parent",styleParent);
             }
             depth = parser.getDepth()+1;
             while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
                 if(type!=XmlPullParser::START_TAG)continue;
-                std::string key  = attrs.getString("name");
+                std::string key  = attrs.getAttributeValue("name");
                 std::string value= getTrimedValue(parser);
                 value = AttributeSet::normalize(package,value);
                 const size_t pos =key.find(':');
@@ -717,6 +718,23 @@ Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(const std::string&resname,i
     return nullptr;
 }
 
+// Int face: openRawResource resolves the id to the packed file (res/ strip
+// included) — the string face can't open "pkg:type/key" refs from a binary pak.
+Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(int id,int width,int height){
+    if (id <= 0) return nullptr;
+    ensureCdroidResources();
+    if (mCdroidResources == nullptr) return nullptr;
+    Asset* asset = mCdroidResources->openRawResource(id);
+    if (asset == nullptr) return nullptr;
+    const off64_t sz = asset->getLength();
+    if (sz <= 0) { delete asset; return nullptr; }
+    std::string buf((size_t)sz, '\0');
+    asset->read(&buf[0], (size_t)sz);
+    delete asset;
+    std::istringstream stm(buf);
+    return loadImage(stm, width, height);
+}
+
 #if 0  // retired: Assets::getId(const std::string&) — zero callers. Use R::id::* (int)
        // or Resources.getIdentifier(name,type,pkg). Kept for reference until AttributeSet
        // string-key retirement completes the last string-id path.
@@ -754,7 +772,7 @@ int Assets::getId(const std::string&resname)const {
 int Assets::getNextAutofillId(){
     return mNextAutofillViewId++;
 }
-
+#if 0
 const std::string Assets::getString(const std::string& resid,const std::string&lan) {
     // Theme-attribute reference "?type/key" → resolve through arsc Theme.
     if (!resid.empty() && resid[0] == '?') {
@@ -1077,7 +1095,6 @@ float Assets::getFloat(const std::string&refid,float def)const{
     }
     return def;
 }
-
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
@@ -1181,11 +1198,11 @@ cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullr
 }
 
 #pragma GCC pop_options
-
+#endif
 void Assets::clearStyles() {
     mStyles.clear();
 }
-
+#if 0
 std::string Assets::resolveAttrValue(const std::string&attrResId)const{
     std::string name = attrResId;
     AttributeSet atts;
@@ -1295,7 +1312,7 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
         atts = it->second;
     }
     atts.setContext(this,pkg);
-    std::string parent = atts.getString("parent");
+    std::string parent = atts.getAttributeValue("parent");
     if(parent.length()) {
         if(parent.find('/')==std::string::npos)
             parent = std::string("style/")+parent;
@@ -1306,7 +1323,7 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
     }
     return atts;
 }
-
+#endif
 // AOSP Context.obtainStyledAttributes(AttributeSet, int[], defStyleAttr,
 // defStyleRes) — delegates to Resources.obtainStyledAttributes (the AOSP
 // Resources surface; the resolver logic lives there now). AttributeSet is

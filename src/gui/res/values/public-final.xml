@@ -4030,6 +4030,45 @@
   <public type="attr" name="framesCount" id="0x01011016" />
   <public type="attr" name="internalLayout" id="0x01011017" />
   <public type="attr" name="selectedTextSize" id="0x01011018" />
+  <public type="attr" name="backgroundColor" id="0x01011019" />
+  <public type="attr" name="badgeRadius" id="0x0101101a" />
+  <public type="attr" name="badgeWithTextRadius" id="0x0101101b" />
+  <public type="attr" name="badgeWidth" id="0x0101101c" />
+  <public type="attr" name="badgeHeight" id="0x0101101d" />
+  <public type="attr" name="badgeWithTextWidth" id="0x0101101e" />
+  <public type="attr" name="badgeWithTextHeight" id="0x0101101f" />
+  <public type="attr" name="badgeTextAppearance" id="0x01011020" />
+  <public type="attr" name="badgeText" id="0x01011021" />
+  <public type="attr" name="badgeTextColor" id="0x01011022" />
+  <public type="attr" name="badgeGravity" id="0x01011023" />
+  <public type="attr" name="badgeFixedEdge" id="0x01011024" />
+  <public type="attr" name="offsetAlignmentMode" id="0x01011025" />
+  <public type="attr" name="badgeWidePadding" id="0x01011026" />
+  <public type="attr" name="badgeVerticalPadding" id="0x01011027" />
+  <public type="attr" name="horizontalOffset" id="0x01011028" />
+  <public type="attr" name="verticalOffset" id="0x01011029" />
+  <public type="attr" name="horizontalOffsetWithText" id="0x0101102a" />
+  <public type="attr" name="verticalOffsetWithText" id="0x0101102b" />
+  <public type="attr" name="largeFontVerticalOffsetAdjustment" id="0x0101102c" />
+  <public type="attr" name="maxCharacterCount" id="0x0101102d" />
+  <public type="attr" name="maxNumber" id="0x0101102e" />
+  <public type="attr" name="number" id="0x0101102f" />
+  <public type="attr" name="badgeShapeAppearance" id="0x01011030" />
+  <public type="attr" name="badgeShapeAppearanceOverlay" id="0x01011031" />
+  <public type="attr" name="badgeWithTextShapeAppearance" id="0x01011032" />
+  <public type="attr" name="badgeWithTextShapeAppearanceOverlay" id="0x01011033" />
+  <public type="attr" name="autoAdjustToWithinGrandparentBounds" id="0x01011034" />
+  <public type="attr" name="cardBackgroundColor" id="0x01011035" />
+  <public type="attr" name="cardCornerRadius" id="0x01011036" />
+  <public type="attr" name="cardElevation" id="0x01011037" />
+  <public type="attr" name="cardMaxElevation" id="0x01011038" />
+  <public type="attr" name="cardUseCompatPadding" id="0x01011039" />
+  <public type="attr" name="cardPreventCornerOverlap" id="0x0101103a" />
+  <public type="attr" name="contentPadding" id="0x0101103b" />
+  <public type="attr" name="contentPaddingLeft" id="0x0101103c" />
+  <public type="attr" name="contentPaddingTop" id="0x0101103d" />
+  <public type="attr" name="contentPaddingRight" id="0x0101103e" />
+  <public type="attr" name="contentPaddingBottom" id="0x0101103f" />
 
   <!-- id/numberpicker_input: app NumberPicker override layouts reference
        @android:id/numberpicker_input so the framework NumberPicker finds its

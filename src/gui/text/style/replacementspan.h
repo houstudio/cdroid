@@ -36,7 +36,7 @@ public:
 class ImageSpan:public DynamicDrawableSpan{
 protected:
     Context*mContext = nullptr;
-    std::string mContentUri;
+    int mContentUri=0;
 public:
     ImageSpan(Drawable* drawable) :DynamicDrawableSpan(ALIGN_BOTTOM) {
         mContext = nullptr;
@@ -45,10 +45,10 @@ public:
     ImageSpan(Drawable* drawable,int verticalAlignment):DynamicDrawableSpan(verticalAlignment){
         mDrawable = drawable;
     }
-    ImageSpan(Context* context, const std::string& resourceId);
-    ImageSpan(Context* context, const std::string&resourceId,int verticalAlignment);
+    ImageSpan(Context* context, int resourceId);
+    ImageSpan(Context* context, int resourceId,int verticalAlignment);
     Drawable* getDrawable()const override;
-    std::string getSource()const{
+    int getSource()const{
         return mContentUri;
     }
     // mContext/mDrawable are BORROWED (lifetime managed elsewhere; ImageSpan

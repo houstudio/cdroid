@@ -67,9 +67,9 @@ void Preferences::load(std::istream&istream){
         switch(type){
         case XmlPullParser::START_TAG:
             if(tagName.compare("item")==0){
-                key = attrs.getString("name");
+                key = attrs.getAttributeValue("name");
             }else if(tagName.compare("section")==0){
-                section = attrs.getString("name");
+                section = attrs.getAttributeValue("name");
             }
             break;
         case XmlPullParser::END_TAG:

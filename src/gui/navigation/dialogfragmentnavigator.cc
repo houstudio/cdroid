@@ -26,7 +26,7 @@ namespace cdroid{
 
 void DialogFragmentNavigator::Destination::onInflate(cdroid::Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
-    setClassName(attrs.getString("name"));
+    setClassName(attrs.getAttributeValue("name"));
     LOGV("DialogFragmentNavigator.Destination.onInflate route='%s' className='%s'",
          getRoute().c_str(), getClassName().c_str());
 }

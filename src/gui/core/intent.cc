@@ -2187,14 +2187,14 @@ void Intent::readFromParcel(Parcel& in) {
 Intent* Intent::parseIntent(XmlPullParser& parser,const AttributeSet& attrs){
     Intent* intent = new Intent();
 
-    intent->setAction(sa.getString("action"));
+    intent->setAction(sa.getAttributeValue("action"));
 
-    std::string data = sa.getString("data");
-    std::string mimeType = sa.getString("mimeType");
+    std::string data = sa.getAttributeValue("data");
+    std::string mimeType = sa.getAttributeValue("mimeType");
     intent.setDataAndType(data != null ? Uri.parse(data) : null, mimeType);
 
-    std::string packageName = sa.getString("targetPackage");
-    std::string className = sa.getString("targetClass");
+    std::string packageName = sa.getAttributeValue("targetPackage");
+    std::string className = sa.getAttributeValue("targetClass");
     if (packageName != null && className != nullptr) {
         intent.setComponent(new ComponentName(packageName, className));
     }

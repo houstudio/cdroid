@@ -977,8 +977,16 @@ static void extractMetaFromFace(FT_Face ftFace, std::string& family, int& weight
 
 int Typeface::loadFaceFromResource(cdroid::Context* context) {
     std::vector<std::string> fonts;
-    context->getArray("@fonts", fonts);
-    context->getArray("@font", fonts);
+    // The font lists are string-array resources ("fonts"/"font"); resolve them
+    // by identifier (the string-keyed Context::getArray is retired).
+    const std::string pkg = context->getPackageName();
+    for (const char* name : { "fonts", "font" }) {
+        const int id = context->getResources().getIdentifier(name, "array", pkg);
+        if (id != 0) {
+            const auto arr = context->getResources().getStringArray(id);
+            fonts.insert(fonts.end(), arr.begin(), arr.end());
+        }
+    }
     if (ftLibrary == nullptr) FT_Init_FreeType(&ftLibrary);
     // Small fonts (below the threshold) are read fully into an in-memory blob; large ones are
     // streamed to a tmp file and mmap'd (lazy paging, low RAM). Non-intrusive: only uses

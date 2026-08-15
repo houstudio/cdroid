@@ -93,7 +93,7 @@ NavDestination* NavInflater::inflate(XmlPullParser&parser,const AttributeSet& at
         } else if (name.compare("action")==0) {
             inflateAction(*dest, attrs);
         } else if ((name.compare("include")==0) && dynamic_cast<NavGraph*>(dest)) {
-            const int id = attrs.getResourceId("graph", 0);
+            const int id = attrs.getAttributeResourceValue(std::string(), "graph", 0);
             if (id != 0) ((NavGraph*) dest)->addDestination(inflate(id));
         } else if (dynamic_cast<NavGraph*>(dest)) {
             ((NavGraph*)dest)->addDestination(inflate(parser, attrs));
@@ -127,7 +127,7 @@ void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs
                 // the raw attribute value and resolves @-refs (via Context) + 0x + decimals, which
                 // is the closest CDROID analogue to androidx resolving @ refs in inflate (CDROID
                 // has no unified int-resId system, so @string resId is a known limitation).
-                case NavTypeKind::REFERENCE: builder.setDefaultValue(attrs.getInt("defaultValue", 0)); break;
+                case NavTypeKind::REFERENCE: builder.setDefaultValue(attrs.getAttributeIntValue(std::string(), "defaultValue", 0)); break;
                 default:                  builder.setDefaultValue(defValue); break;
             }
         }catch(...){
@@ -139,7 +139,7 @@ void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs
 
 void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attrs) {
     //TypedArray a = res.obtainAttributes(attrs, R.styleable.NavDeepLink);
-    std::string uri = attrs.getString("uri");//R.styleable.NavDeepLink_uri);
+    std::string uri = attrs.getAttributeValue("uri");//R.styleable.NavDeepLink_uri);
     if (uri.empty()){//
         throw std::runtime_error("Every <deepLink> must include an app:uri");
     }

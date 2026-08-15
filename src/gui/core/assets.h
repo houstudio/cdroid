@@ -114,30 +114,31 @@ public:
     const DisplayMetrics&getDisplayMetrics()const override;
     //int getId(const std::string&)const override; // retired: use R::id::* (int) or Resources.getIdentifier
     int getNextAutofillId()override;
-    const std::string getString(const std::string&id,const std::string&lan="")override;
+    //const std::string getString(const std::string&id,const std::string&lan="")override;
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&,int width,int height)override;
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height)override;
-    std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(int id,int width,int height)override;
+    //std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;
     std::unique_ptr<std::istream> getInputStream(const std::string&resname,std::string*outpkg=nullptr)override;
-    Drawable * getDrawable(const std::string&resid)override;
+    //Drawable * getDrawable(const std::string&resid)override;
     // AOSP ID-based overrides (cdroid::Context resource face).
     Resources&      getResources() override;
     AssetManager&   getAssets() override;
     Drawable*                getDrawable(int id) override;
-    ColorStateList*          getColorStateList(int id) override;
-    bool getBoolean(const std::string&resid)const override;
-    int getColor(const std::string&resid)override;
-    int getDimension(const std::string&resid)const override;
-    int getDimensionPixelSize(const std::string&key,int def=0)const override;
-    float getFloat(const std::string&resid,float def=0)const override;
-    size_t getArray(const std::string&resid,std::vector<int>&)override;
-    size_t getArray(const std::string&resid,std::vector<std::string>&)override;
-    RefPtr<ColorStateList> getColorStateList(const std::string&resid)override;
+    std::shared_ptr<ColorStateList> getColorStateList(int id) override;
+    //bool getBoolean(const std::string&resid)const override;
+    //int getColor(const std::string&resid)override;
+    //int getDimension(const std::string&resid)const override;
+    //int getDimensionPixelSize(const std::string&key,int def=0)const override;
+    //float getFloat(const std::string&resid,float def=0)const override;
+    //size_t getArray(const std::string&resid,std::vector<int>&)override;
+    //size_t getArray(const std::string&resid,std::vector<std::string>&)override;
+    //RefPtr<ColorStateList> getColorStateList(const std::string&resid)override;
     // Bring the ID-based obtainStyledAttributes(const uint32_t*) overloads from
     // Context into Assets scope; otherwise the string overload above hides them
     // (C++ name hiding).
     using Context::obtainStyledAttributes;
-    AttributeSet obtainStyledAttributes(const std::string&)override;
+    //AttributeSet obtainStyledAttributes(const std::string&)override;
     // Phase 2 TypedArray bridge: extract typed attr values from binary AXML.
     // AOSP Context.obtainStyledAttributes(AttributeSet, int[], defStyleAttr, defStyleRes).
     // `attrs` is nullable (AOSP new View(ctx, null, defStyleAttr)); `styleable` is a

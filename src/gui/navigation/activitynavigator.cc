@@ -152,16 +152,16 @@ int ActivityNavigator::Destination::hashCode() const {
 void ActivityNavigator::Destination::onInflate(Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
     // androidx R.styleable.ActivityNavigator: targetPackage / android:name / action / data / dataPattern.
-    setTargetPackage(parseApplicationId(context, attrs.getString("targetPackage")));
-    std::string className = attrs.getString("name");
+    setTargetPackage(parseApplicationId(context, attrs.getAttributeValue("targetPackage")));
+    std::string className = attrs.getAttributeValue("name");
     if(!className.empty()){
         if(className[0] == '.') className = context->getPackageName() + className;
         setComponentName(ComponentName(context->getPackageName(), className));
     }
-    setAction(attrs.getString("action"));
-    const std::string data = parseApplicationId(context, attrs.getString("data"));
+    setAction(attrs.getAttributeValue("action"));
+    const std::string data = parseApplicationId(context, attrs.getAttributeValue("data"));
     if(!data.empty()) setData(Uri::parse(data));
-    setDataPattern(parseApplicationId(context, attrs.getString("dataPattern")));
+    setDataPattern(parseApplicationId(context, attrs.getAttributeValue("dataPattern")));
 }
 
 }//namespace

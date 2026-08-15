@@ -71,6 +71,7 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,int 
         XmlPullParser parser(context, resid);
         const AttributeSet& attrs = parser;
         StateListAnimator* anim = createStateListAnimatorFromXml(context, parser, attrs);
+        LOGD("loadStateListAnimator(%d) parser=%d anim=%p", resid, (int)parser.getEventType(), anim);
         it = mStateAnimatorMap.insert({key, std::shared_ptr<StateListAnimator>(anim)}).first;
     }
     return new StateListAnimator(*it->second);
