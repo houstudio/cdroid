@@ -156,7 +156,6 @@ public:
     Drawable* getDrawable(int index)const;
     void setDrawable(int index, Drawable* drawable);
     bool getPadding(Rect& padding)override;
-    void setPadding(const AttributeSet&);
     void setPadding(int left, int top, int right, int bottom);
     void setPaddingRelative(int start,int top,int end,int bottom);
     int getLeftPadding()const;

@@ -95,18 +95,14 @@ void LayerDrawable::ChildDrawable::applyDensityScaling(int sourceDensity, int ta
 LayerDrawable::LayerState::LayerState(){
 #if 0
     if(attrs){
-        mPaddingTop  = attrs->getInt("paddingTop");
-        mPaddingLeft = attrs->getInt("paddingLeft");
-        mPaddingRight= attrs->getInt("paddingRight");
-        mPaddingBottom=attrs->getInt("paddingBottom");
-        mPaddingStart =attrs->getInt("paddingStart");
-        mPaddingEnd  = attrs->getInt("paddingEnd");
-        mPaddingMode = attrs->getInt("paddingMode",std::unordered_map<std::string,int>{
-	        {"nest",PADDING_MODE_NEST},
-	        {"inner",PADDING_MODE_INNER},
-	        {"stack",PADDING_MODE_STACK}
-        },PADDING_MODE_NEST);
-        mAutoMirrored= attrs->getBoolean("paddingMode");
+        mPaddingTop  = attrs->getAttributeIntValue(std::string(), "paddingTop", 0);
+        mPaddingLeft = attrs->getAttributeIntValue(std::string(), "paddingLeft", 0);
+        mPaddingRight= attrs->getAttributeIntValue(std::string(), "paddingRight", 0);
+        mPaddingBottom=attrs->getAttributeIntValue(std::string(), "paddingBottom", 0);
+        mPaddingStart =attrs->getAttributeIntValue(std::string(), "paddingStart", 0);
+        mPaddingEnd  = attrs->getAttributeIntValue(std::string(), "paddingEnd", 0);
+        mPaddingMode = attrs->getAttributeIntValue(std::string(), "paddingMode", PADDING_MODE_NEST);
+        mAutoMirrored= attrs->getAttributeBooleanValue(std::string(), "paddingMode", false);
     }else
 #endif
     mChangingConfigurations = 0;
@@ -607,19 +603,6 @@ bool LayerDrawable::getPadding(Rect& padding){
     if (paddingR >= 0) padding.width = paddingR;
     if (paddingB >= 0) padding.height = paddingB;
     return padding.left != 0 || padding.top != 0 || padding.width != 0 || padding.height != 0;
-}
-
-void LayerDrawable::setPadding(const AttributeSet&atts){
-    const int left = atts.getDimensionPixelOffset("paddingLeft",0);
-    const int top = atts.getDimensionPixelOffset("paddingTop",0);
-    const int right= atts.getDimensionPixelOffset("paddingRight",0);
-    const int bottom= atts.getDimensionPixelOffset("paddingBottom",0);
-    const int start= atts.getDimensionPixelOffset("paddingStart",INSET_UNDEFINED);
-    const int end  = atts.getDimensionPixelOffset("paddingEnd",INSET_UNDEFINED);
-    if((start==INSET_UNDEFINED)&&(end==INSET_UNDEFINED)) 
-        setPadding(left,top,right,bottom);
-    else
-        setPaddingRelative(start,top,end,bottom);
 }
 
 void LayerDrawable::setPadding(int left, int top, int right, int bottom){

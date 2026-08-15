@@ -203,7 +203,7 @@ public:
     int getLargeFontVerticalOffsetAdjustment() const;
     void setAdditionalVerticalOffset(int px);//
     int getAdditionalVerticalOffset() const;
-    void setTextAppearance(const std::string& id);
+    void setTextAppearance(int resId);
     void setBadgeWithTextShapeAppearance(const std::string& id);
     void setBadgeWithTextShapeAppearanceOverlay(const std::string& id);
     void setBadgeWithoutTextShapeAppearance(const std::string& id);

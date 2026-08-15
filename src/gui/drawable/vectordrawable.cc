@@ -1269,7 +1269,7 @@ long VectorDrawable::VFullPath::getNativePtr() {
 void VectorDrawable::VFullPath::inflate(Resources&r,XmlPullParser&parser,const AttributeSet& attrs) {
     auto ta = r.obtainStyledAttributes(attrs, R::styleable::VectorDrawablePath);
     if (ta) updateStateFromTypedArray(*ta);
-    inflateGradients(parser,attrs);
+    inflateGradients(r,parser,attrs);
 }
 
 void VectorDrawable::VFullPath::updateStateFromTypedArray(const TypedArray& a) {
@@ -1368,7 +1368,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const TypedArray& a) {
             strokeMiterLimit, strokeLineCap, strokeLineJoin, fillType);
 }
 
-void VectorDrawable::VFullPath::inflateGradients(XmlPullParser&parser,const AttributeSet&atts){
+void VectorDrawable::VFullPath::inflateGradients(Resources&r,XmlPullParser&parser,const AttributeSet&atts){
     int eventType,gradientType,strokeFill=-1;
     const int innerDepth = parser.getDepth();
     Cairo::RefPtr<Cairo::Gradient>gradient;
@@ -1384,33 +1384,47 @@ void VectorDrawable::VFullPath::inflateGradients(XmlPullParser&parser,const Attr
         if(tagName.compare("path")==0)break;
         if (eventType != XmlPullParser::START_TAG)continue;
         if(tagName.find("attr")!=std::string::npos){
-            const std::string name = atts.getString("name");
+            // CDROID extension: <attr name="fill|stroke"> selects the target.
+            std::string name;
+            const int attributeCount = (int)atts.getAttributeCount();
+            for (int i = 0; i < attributeCount; i++) {
+                if (atts.getAttributeNameResource(i) == R::attr::name) {
+                    name = atts.getAttributeValue(i);
+                    break;
+                }
+            }
             LOGV("tag=%s name=%s depth=%d/%d",tagName.c_str(),name.c_str(),innerDepth,parser.getDepth());
             strokeFill=(name.find("stroke")!=std::string::npos)?0:1;
         }
         if(tagName.compare("gradient")==0){
             float centerX,centerY,radius;
-            gradientType = atts.getInt("type",std::unordered_map<std::string,int>{
-                    {"linear",0},{"radial",1},{"sweep",2}},0);
+            // AOSP VGradient: GradientColor styleable (aapt2 pre-resolves the
+            // type enum linear/radial/sweep to ints).
+            auto ta = r.obtainStyledAttributes(atts, R::styleable::GradientColor);
+            gradientType = ta->getInt(R::styleable::GradientColor_type, 0);
             switch(gradientType){
             case 0:
                 gradient = Cairo::LinearGradient::create(
-                        atts.getFloat("startX",0), atts.getFloat("startY",0),
-                        atts.getFloat("endX",0) , atts.getFloat("endY",0));
+                        ta->getFloat(R::styleable::GradientColor_startX,0),
+                        ta->getFloat(R::styleable::GradientColor_startY,0),
+                        ta->getFloat(R::styleable::GradientColor_endX,0) ,
+                        ta->getFloat(R::styleable::GradientColor_endY,0));
                 break;
             case 1:
-                centerX= atts.getFloat("centerX",0);
-                centerY= atts.getFloat("centerY",0);
-                radius = atts.getFloat("gradientRadius",0);
+                centerX= ta->getFloat(R::styleable::GradientColor_centerX,0);
+                centerY= ta->getFloat(R::styleable::GradientColor_centerY,0);
+                radius = ta->getFloat(R::styleable::GradientColor_gradientRadius,0);
                 gradient=Cairo::RadialGradient::create(centerX,centerY,0,centerX,centerY,radius);
                 break;
             case 2:
-            default:LOGD("TODO: GradientType=%s",atts.getString("type").c_str());break;
+            default:LOGD("TODO: GradientType=%d",gradientType);break;
             }
         }
         if(tagName.compare("item")==0){
-            const float offset = atts.getFloat("offset",0.f);
-            const uint32_t color =atts.getColor("color",0);
+            // AOSP VGradient: GradientColorItem styleable for color stops.
+            auto ta = r.obtainStyledAttributes(atts, R::styleable::GradientColorItem);
+            const float offset = ta->getFloat(R::styleable::GradientColorItem_offset,0.f);
+            const uint32_t color = ta->getColor(R::styleable::GradientColorItem_color,0);
             Color c(color);
             LOGV("gradient %p %.2f colorstop=%x",gradient.get(),offset,color);
             gradient->add_color_stop_rgba(offset,c.red(),c.green(),c.blue(),c.alpha());

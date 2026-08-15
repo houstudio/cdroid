@@ -72,8 +72,8 @@ public:
     int getBadgeTextColor() const;
     void setBadgeTextColor(int badgeTextColor);
 
-    std::string getTextAppearanceResId() const;
-    void setTextAppearanceResId(const std::string& textAppearanceResId);
+    int getTextAppearanceResId() const;
+    void setTextAppearanceResId(int textAppearanceResId);
 
     std::string getBadgeShapeAppearanceResId()const;
     void setBadgeShapeAppearanceResId(const std::string& shapeAppearanceResId);
@@ -160,7 +160,7 @@ private:
     int backgroundColor;
     int badgeTextColor;
 
-    std::string badgeTextAppearanceResId;
+    int badgeTextAppearanceResId = 0;
     std::string badgeShapeAppearanceResId;
     std::string badgeShapeAppearanceOverlayResId;
     std::string badgeWithTextShapeAppearanceResId;

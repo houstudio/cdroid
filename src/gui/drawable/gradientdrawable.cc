@@ -1256,9 +1256,9 @@ void GradientDrawable::updateGradientDrawableSize(const TypedArray& a){
 // Faithful port of AOSP GradientDrawable.getFloatOrFraction: a fraction-typed
 // value resolves via getFraction, everything else via getFloat.
 static float getFloatOrFraction(const TypedArray& a, size_t idx, float defaultValue) {
-    Res_value tv;
+    TypedValue tv;
     if (!a.peekValue(idx, &tv)) return defaultValue;
-    if (tv.dataType == Res_value::TYPE_FRACTION)
+    if (tv.type == TypedValue::TYPE_FRACTION)
         return a.getFraction(idx, 1, 1, defaultValue);
     return a.getFloat(idx, defaultValue);
 }
@@ -1330,16 +1330,16 @@ void GradientDrawable::updateGradientDrawableGradient(const TypedArray& a){
     }
 
     // gradientRadius: dispatch on the raw typed value (AOSP peekValue pattern).
-    Res_value tv;
+    TypedValue tv;
     if (a.peekValue(R::styleable::GradientDrawableGradient_gradientRadius, &tv)) {
         float radius;
         int radiusType;
-        if (tv.dataType == Res_value::TYPE_FRACTION) {
+        if (tv.type == TypedValue::TYPE_FRACTION) {
             radius = a.getFraction(R::styleable::GradientDrawableGradient_gradientRadius, 1, 1, 1.0f);
-            const int unit = (tv.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
-            radiusType = (unit == Res_value::COMPLEX_UNIT_FRACTION_PARENT)
+            const int unit = (tv.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
+            radiusType = (unit == TypedValue::COMPLEX_UNIT_FRACTION_PARENT)
                          ? RADIUS_TYPE_FRACTION_PARENT : RADIUS_TYPE_FRACTION;
-        } else if (tv.dataType == Res_value::TYPE_DIMENSION) {
+        } else if (tv.type == TypedValue::TYPE_DIMENSION) {
             radius = a.getDimension(R::styleable::GradientDrawableGradient_gradientRadius, 0);
             radiusType = RADIUS_TYPE_PIXELS;
         } else {

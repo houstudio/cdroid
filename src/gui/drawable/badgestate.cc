@@ -18,7 +18,9 @@
 #include <porting/cdlog.h>
 #include <drawable/badgedrawable.h>
 #include <drawable/badgestate.h>
+#include <core/typedarray.h>
 #include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
 using namespace cdroid::internal;
@@ -29,40 +31,32 @@ BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std:
     }
     storedState->badgeResId = badgeResId;
 
-    //AttributeSet a = generateTypedArray(context, storedState->badgeResId, defStyleAttr, defStyleRes);
+    // AOSP BadgeState: generateTypedArray parses the badge XML (or picks up its
+    // style), then one obtainStyledAttributes over R.styleable.Badge.
+    const AttributeSet attrs = generateTypedArray(context, storedState->badgeResId, defStyleAttr, defStyleRes);
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::Badge);
 
-    int type;
-    XmlPullParser parser(context,badgeResId);
-    const AttributeSet& a = parser;
-    while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
-        //NOTHING
-    }
-    const std::string tag=parser.getName();
-    LOGD_IF(tag.compare("badge"),"invalid resource tag:%s[%s] ",tag.c_str(),badgeResId.c_str());
-
-    mBadgeRadius = a.getDimensionPixelSize("badgeRadius", (int)BadgeDrawable::BADGE_RADIUS_NOT_SPECIFIED);
+    mBadgeRadius = a->getDimension(R::styleable::Badge_badgeRadius, (float)BadgeDrawable::BADGE_RADIUS_NOT_SPECIFIED);
 
     mHorizontalInset = context->getDimensionPixelSize(R::dimen::mtrl_badge_horizontal_edge_offset);
 
     mHorizontalInsetWithText =context->getDimensionPixelSize(R::dimen::mtrl_badge_text_horizontal_edge_offset);
 
-    mBadgeWithTextRadius = a.getDimensionPixelSize("badgeWithTextRadius", (int)BadgeDrawable::BADGE_RADIUS_NOT_SPECIFIED);
-    mBadgeWidth = a.getDimension("badgeWidth", context->getDimension(R::dimen::m3_badge_size));
-    mBadgeWithTextWidth =a.getDimension("badgeWithTextWidth",
+    mBadgeWithTextRadius = a->getDimension(R::styleable::Badge_badgeWithTextRadius, (float)BadgeDrawable::BADGE_RADIUS_NOT_SPECIFIED);
+    mBadgeWidth = a->getDimension(R::styleable::Badge_badgeWidth, context->getDimension(R::dimen::m3_badge_size));
+    mBadgeWithTextWidth =a->getDimension(R::styleable::Badge_badgeWithTextWidth,
             context->getDimension(R::dimen::m3_badge_with_text_size));
-    mBadgeHeight = a.getDimension("badgeHeight", context->getDimension(R::dimen::m3_badge_size));
-    mBadgeWithTextHeight = a.getDimension("badgeWithTextHeight",
+    mBadgeHeight = a->getDimension(R::styleable::Badge_badgeHeight, context->getDimension(R::dimen::m3_badge_size));
+    mBadgeWithTextHeight = a->getDimension(R::styleable::Badge_badgeWithTextHeight,
             context->getDimension(R::dimen::m3_badge_with_text_size));
 
-    mOffsetAlignmentMode = a.getInt("offsetAlignmentMode",std::unordered_map<std::string,int>{
-            {"edge" ,(int)BadgeDrawable::OFFSET_ALIGNMENT_MODE_EDGE},
-            {"legacy",(int)BadgeDrawable::OFFSET_ALIGNMENT_MODE_LEGACY}
-            }, (int)BadgeDrawable::OFFSET_ALIGNMENT_MODE_LEGACY);
+    // aapt2 pre-resolves the offsetAlignmentMode/badgeFixedEdge enum names
+    // (edge/legacy, start/end) to their int values.
+    mOffsetAlignmentMode = a->getInt(R::styleable::Badge_offsetAlignmentMode,
+            (int)BadgeDrawable::OFFSET_ALIGNMENT_MODE_LEGACY);
 
-    mBadgeFixedEdge = a.getInt("badgeFixedEdge",std::unordered_map<std::string,int>{
-            {"start",(int)BadgeDrawable::BADGE_FIXED_EDGE_START},
-            {"end",(int)BadgeDrawable::BADGE_FIXED_EDGE_END}
-            }, (int)BadgeDrawable::BADGE_FIXED_EDGE_START);
+    mBadgeFixedEdge = a->getInt(R::styleable::Badge_badgeFixedEdge,
+            (int)BadgeDrawable::BADGE_FIXED_EDGE_START);
 
     currentState->alpha = storedState->alpha == State::NOT_SET ? 255 : storedState->alpha;
 
@@ -71,16 +65,16 @@ BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std:
     // numberless badge.
     if (storedState->number != State::NOT_SET) {
         currentState->number = storedState->number;
-    } else if (a.hasAttribute("number")) {
-        currentState->number = a.getInt("number", 0);
+    } else if (a->hasValue(R::styleable::Badge_number)) {
+        currentState->number = a->getInt(R::styleable::Badge_number, 0);
     } else {
         currentState->number = State::BADGE_NUMBER_NONE;
     }
 
     if (!storedState->text.empty()) {
         currentState->text = storedState->text;
-    } else if (a.hasAttribute("badgeText")) {
-        currentState->text = a.getString("badgeText");
+    } else if (a->hasValue(R::styleable::Badge_badgeText)) {
+        currentState->text = a->getString(R::styleable::Badge_badgeText);
     }
 #if 0
     currentState->contentDescriptionForText = storedState->contentDescriptionForText;
@@ -104,95 +98,101 @@ BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std:
 
     currentState->maxCharacterCount =
         storedState->maxCharacterCount == State::NOT_SET
-        ? a.getInt("maxCharacterCount", (int)BadgeDrawable::BADGE_CONTENT_NOT_TRUNCATED)
+        ? a->getInt(R::styleable::Badge_maxCharacterCount, (int)BadgeDrawable::BADGE_CONTENT_NOT_TRUNCATED)
         : storedState->maxCharacterCount;
 
     currentState->maxNumber =
         storedState->maxNumber == State::NOT_SET
-        ? a.getInt("maxNumber", (int)BadgeDrawable::BADGE_CONTENT_NOT_TRUNCATED)
+        ? a->getInt(R::styleable::Badge_maxNumber, (int)BadgeDrawable::BADGE_CONTENT_NOT_TRUNCATED)
         : storedState->maxNumber;
+
+    // Shape-appearance State fields stay string-keyed ("@style/Name") — the
+    // BadgeDrawable API consumes them by name; resolve the typed ref via
+    // getResourceName (AOSP keeps the raw resId, CDROID keeps the name).
+    auto styleRef = [&](int idx, const std::string& def)->std::string {
+        const int id = a->getResourceId(idx, 0);
+        return id ? context->getResourceName(id) : def;
+    };
 
     currentState->badgeShapeAppearanceResId =
         storedState->badgeShapeAppearanceResId.empty()
-        ? a.getString("badgeShapeAppearance", "@cdroid:style/ShapeAppearance_M3_Sys_Shape_Corner_Full")
+        ? styleRef(R::styleable::Badge_badgeShapeAppearance, "@cdroid:style/ShapeAppearance_M3_Sys_Shape_Corner_Full")
         : storedState->badgeShapeAppearanceResId;
 
     currentState->badgeShapeAppearanceOverlayResId =
         storedState->badgeShapeAppearanceOverlayResId.empty()
-        ? a.getString("badgeShapeAppearanceOverlay")
+        ? styleRef(R::styleable::Badge_badgeShapeAppearanceOverlay, "")
         : storedState->badgeShapeAppearanceOverlayResId;
 
     currentState->badgeWithTextShapeAppearanceResId =
         storedState->badgeWithTextShapeAppearanceResId.empty()
-        ? a.getString("badgeWithTextShapeAppearance", "@cdroid:style/ShapeAppearance_M3_Sys_Shape_Corner_Full")
+        ? styleRef(R::styleable::Badge_badgeWithTextShapeAppearance, "@cdroid:style/ShapeAppearance_M3_Sys_Shape_Corner_Full")
         : storedState->badgeWithTextShapeAppearanceResId;
 
     currentState->badgeWithTextShapeAppearanceOverlayResId =
         storedState->badgeWithTextShapeAppearanceOverlayResId.empty()
-        ? a.getString("badgeWithTextShapeAppearanceOverlay")
+        ? styleRef(R::styleable::Badge_badgeWithTextShapeAppearanceOverlay, "")
         : storedState->badgeWithTextShapeAppearanceOverlayResId;
 
-    currentState->backgroundColor = a.getColor("backgroundColor",storedState->backgroundColor);
+    currentState->backgroundColor = a->getColor(R::styleable::Badge_backgroundColor,storedState->backgroundColor);
         /*storedState->backgroundColor == null
         ? readColorFromAttributes(context, a, R.styleable.Badge_backgroundColor)
         : storedState->backgroundColor;*/
 
-    currentState->badgeTextAppearanceResId = a.getString("badgeTextAppearance",storedState->badgeTextAppearanceResId);
-        /*storedState->badgeTextAppearanceResId == null
-        ? a.getString("badgeTextAppearance","cdroid:style/TextAppearance.MaterialComponents.Badge")
-        : storedState->badgeTextAppearanceResId;*/
+    const int textAppearanceId = a->getResourceId(R::styleable::Badge_badgeTextAppearance, 0);
+    currentState->badgeTextAppearanceResId = storedState->badgeTextAppearanceResId != 0
+        ? storedState->badgeTextAppearanceResId
+        : textAppearanceId;
 
     // Only set the badge text color if this attribute has explicitly been set, otherwise use the
     // text color specified in the TextAppearance.
-    if (a.hasAttribute("badgeTextColor")) {
-        currentState->badgeTextColor = a.getColor("badgeTextColor");
-    } else if(!currentState->badgeTextAppearanceResId.empty()){
+    if (a->hasValue(R::styleable::Badge_badgeTextColor)) {
+        currentState->badgeTextColor = a->getColor(R::styleable::Badge_badgeTextColor, 0xFFFFFFFF);
+    } else if (textAppearanceId) {
         //TextAppearance textAppearance = new TextAppearance(context, currentState->badgeTextAppearanceResId);
         //currentState->badgeTextColor = textAppearance.getTextColor().getDefaultColor();
-        const AttributeSet attrText = context->obtainStyledAttributes(currentState->badgeTextAppearanceResId);
-        currentState->badgeTextColor= attrText.getColorStateList("textColor")->getDefaultColor();
+        auto taText = context->obtainStyledAttributes(textAppearanceId, R::styleable::TextAppearance);
+        auto csl = taText->getColorStateList(R::styleable::TextAppearance_textColor);
+        if (csl) currentState->badgeTextColor = csl->getDefaultColor();
     }else{
         currentState->badgeTextColor = storedState->badgeTextColor;
     }
 
+    // aapt2 pre-resolves badgeGravity enum names (TOP_END... gravity masks).
     currentState->badgeGravity = (storedState->badgeGravity == Gravity::NO_GRAVITY)
-        ? a.getInt("badgeGravity",std::unordered_map<std::string,int>{
-                {"TOP_END"     , (int)BadgeDrawable::TOP_END},
-                {"TOP_START"   , (int)BadgeDrawable::TOP_START},
-                {"BOTTOM_END"  , (int)BadgeDrawable::BOTTOM_END},
-                {"BOTTOM_START", (int)BadgeDrawable::BOTTOM_START}},BadgeDrawable::TOP_END)
+        ? a->getInt(R::styleable::Badge_badgeGravity, BadgeDrawable::TOP_END)
         : storedState->badgeGravity;
 
     currentState->badgeHorizontalPadding = (storedState->badgeHorizontalPadding == INT_MIN)
-        ? a.getDimensionPixelSize("badgeWidePadding",
+        ? a->getDimensionPixelSize(R::styleable::Badge_badgeWidePadding,
                 context->getDimensionPixelSize(R::dimen::mtrl_badge_long_text_horizontal_padding))
         : storedState->badgeHorizontalPadding;
     currentState->badgeVerticalPadding = (storedState->badgeVerticalPadding == INT_MIN)
-        ? a.getDimensionPixelSize("badgeVerticalPadding",
+        ? a->getDimensionPixelSize(R::styleable::Badge_badgeVerticalPadding,
                 context->getDimensionPixelSize(R::dimen::m3_badge_with_text_vertical_padding))
         : storedState->badgeVerticalPadding;
 
     currentState->horizontalOffsetWithoutText = (storedState->horizontalOffsetWithoutText == INT_MIN)
-        ? a.getDimensionPixelOffset("horizontalOffset", 0)
+        ? a->getDimensionPixelOffset(R::styleable::Badge_horizontalOffset, 0)
         : storedState->horizontalOffsetWithoutText;
 
     currentState->verticalOffsetWithoutText = (storedState->verticalOffsetWithoutText == INT_MIN)
-        ? a.getDimensionPixelOffset("verticalOffset", 0)
+        ? a->getDimensionPixelOffset(R::styleable::Badge_verticalOffset, 0)
         : storedState->verticalOffsetWithoutText;
 
     // Set the offsets when the badge has text. Default to using the badge "dot" offsets
     // (horizontalOffsetWithoutText and verticalOffsetWithoutText) if there is no offsets defined
     // for badges with text.
     currentState->horizontalOffsetWithText = (storedState->horizontalOffsetWithText == INT_MIN)
-        ? a.getDimensionPixelOffset("horizontalOffsetWithText", currentState->horizontalOffsetWithoutText)
+        ? a->getDimensionPixelOffset(R::styleable::Badge_horizontalOffsetWithText, currentState->horizontalOffsetWithoutText)
         : storedState->horizontalOffsetWithText;
 
     currentState->verticalOffsetWithText = (storedState->verticalOffsetWithText == INT_MIN)
-        ? a.getDimensionPixelOffset("verticalOffsetWithText", currentState->verticalOffsetWithoutText)
+        ? a->getDimensionPixelOffset(R::styleable::Badge_verticalOffsetWithText, currentState->verticalOffsetWithoutText)
         : storedState->verticalOffsetWithText;
 
     currentState->largeFontVerticalOffsetAdjustment = (storedState->largeFontVerticalOffsetAdjustment == INT_MIN)
-        ? a.getDimensionPixelOffset("largeFontVerticalOffsetAdjustment", 0)
+        ? a->getDimensionPixelOffset(R::styleable::Badge_largeFontVerticalOffsetAdjustment, 0)
         : storedState->largeFontVerticalOffsetAdjustment;
 
     currentState->additionalHorizontalOffset =
@@ -202,9 +202,9 @@ BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std:
         storedState->additionalVerticalOffset == INT_MIN ? 0 : storedState->additionalVerticalOffset;
 
     currentState->autoAdjustToWithinGrandparentBounds =
-        a.getBoolean("autoAdjustToWithinGrandparentBounds",storedState->autoAdjustToWithinGrandparentBounds);
+        a->getBoolean(R::styleable::Badge_autoAdjustToWithinGrandparentBounds,storedState->autoAdjustToWithinGrandparentBounds);
         /*storedState->autoAdjustToWithinGrandparentBounds == null
-        ? a.getBoolean("autoAdjustToWithinGrandparentBounds", false)
+        ? a.getAttributeBooleanValue(std::string(), "autoAdjustToWithinGrandparentBounds", false)
         : storedState->autoAdjustToWithinGrandparentBounds;*/
 
     /*if (storedState->numberLocale == null) {
@@ -336,11 +336,11 @@ void BadgeState::setBadgeTextColor(int badgeTextColor) {
     currentState->badgeTextColor = badgeTextColor;
 }
 
-std::string BadgeState::getTextAppearanceResId() const{
+int BadgeState::getTextAppearanceResId() const{
     return currentState->badgeTextAppearanceResId;
 }
 
-void BadgeState::setTextAppearanceResId(const std::string& textAppearanceResId) {
+void BadgeState::setTextAppearanceResId(int textAppearanceResId) {
     overridingState->badgeTextAppearanceResId = textAppearanceResId;
     currentState->badgeTextAppearanceResId = textAppearanceResId;
 }

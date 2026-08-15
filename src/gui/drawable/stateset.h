@@ -27,6 +27,9 @@ private:
     // AOSP View.java VIEW_STATE_* bits (for getDrawableState's bitmask → state-set).
     static std::vector<int>VIEW_STATE_IDS;
 public:
+    // AOSP StateSet.VIEW_STATE_* bits — exactly the base View set. checked/
+    // checkable/single/first/middle/last are appended by subclasses via
+    // View.mergeDrawableStates() with their own static state sets.
     enum{
         VIEW_STATE_WINDOW_FOCUSED =1<<0 ,
         VIEW_STATE_SELECTED       =1<<1 ,
@@ -34,16 +37,10 @@ public:
         VIEW_STATE_ENABLED        =1<<3 ,
         VIEW_STATE_PRESSED        =1<<4 ,
         VIEW_STATE_ACTIVATED      =1<<5 ,
-        VIEW_STATE_HOVERED        =1<<6 ,
-        VIEW_STATE_CHECKED        =1<<7 ,
-        VIEW_STATE_CHECKABLE      =1<<8 ,
-        VIEW_STATE_DRAG_CAN_ACCEPT=1<<9 ,
-        VIEW_STATE_DRAG_HOVERED   =1<<10,
-
-        VIEW_STATE_SINGLE         =1<<11,
-        VIEW_STATE_FIRST          =1<<12,
-        VIEW_STATE_MIDDLE         =1<<13,
-        VIEW_STATE_LAST           =1<<14
+        VIEW_STATE_ACCELERATED    =1<<6 ,
+        VIEW_STATE_HOVERED        =1<<7 ,
+        VIEW_STATE_DRAG_CAN_ACCEPT=1<<8 ,
+        VIEW_STATE_DRAG_HOVERED   =1<<9 ,
     };
     // AOSP-aligned: state values ARE the R.attr IDs (0x010100xx). StateListDrawable
     // items carry these IDs; stateSetMatches compares them by equality. CDROID-private

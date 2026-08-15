@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <gesture/gestureoverlayview.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
 DECLARE_WIDGET(GestureOverlayView)
 GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attrs):GestureOverlayView(context,&attrs,0){}
@@ -25,21 +27,22 @@ GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet* pAtt
     const AttributeSet& attrs = *pAttrs;
 
     init();
-    mGestureStrokeWidth = attrs.getFloat("gestureStrokeWidth", mGestureStrokeWidth);
+    // AOSP GestureOverlayView ctor: obtainStyledAttributes(attrs, R.styleable.GestureOverlayView).
+    auto ta = context->obtainStyledAttributes(attrs, cdroid::internal::R::styleable::GestureOverlayView, defStyleAttr);
+    mGestureStrokeWidth = ta->getFloat(cdroid::internal::R::styleable::GestureOverlayView_gestureStrokeWidth, mGestureStrokeWidth);
     mInvalidateExtraBorder = std::max(1, int(mGestureStrokeWidth - 1));
-    mCertainGestureColor = attrs.getColor("gestureColor",mCertainGestureColor);
-    mUncertainGestureColor = attrs.getColor("uncertainGestureColor",mUncertainGestureColor);
-    mFadeDuration = attrs.getInt("fadeDuration", (int) mFadeDuration);
-    mFadeOffset = attrs.getInt("fadeOffset", (int) mFadeOffset);
-    mGestureStrokeType = attrs.getInt("gestureStrokeType",std::unordered_map<std::string,int>{
-            {"single",(int)GESTURE_STROKE_TYPE_SINGLE},
-            {"multiple",(int)GESTURE_STROKE_TYPE_MULTIPLE}}, mGestureStrokeType);
-    mGestureStrokeLengthThreshold = attrs.getFloat("gestureStrokeLengthThreshold",  mGestureStrokeLengthThreshold);
-    mGestureStrokeAngleThreshold = attrs.getFloat("gestureStrokeAngleThreshold", mGestureStrokeAngleThreshold);
-    mGestureStrokeSquarenessTreshold = attrs.getFloat("gestureStrokeSquarenessThreshold", mGestureStrokeSquarenessTreshold);
-    mInterceptEvents = attrs.getBoolean("eventsInterceptionEnabled", mInterceptEvents);
-    mFadeEnabled = attrs.getBoolean("fadeEnabled", mFadeEnabled);
-    mOrientation = attrs.getInt("orientation", mOrientation);
+    mCertainGestureColor = ta->getColor(cdroid::internal::R::styleable::GestureOverlayView_gestureColor, mCertainGestureColor);
+    mUncertainGestureColor = ta->getColor(cdroid::internal::R::styleable::GestureOverlayView_uncertainGestureColor, mUncertainGestureColor);
+    mFadeDuration = ta->getInt(cdroid::internal::R::styleable::GestureOverlayView_fadeDuration, (int) mFadeDuration);
+    mFadeOffset = ta->getInt(cdroid::internal::R::styleable::GestureOverlayView_fadeOffset, (int) mFadeOffset);
+    // gestureStrokeType enum pre-resolves to int by aapt2.
+    mGestureStrokeType = ta->getInt(cdroid::internal::R::styleable::GestureOverlayView_gestureStrokeType, mGestureStrokeType);
+    mGestureStrokeLengthThreshold = ta->getFloat(cdroid::internal::R::styleable::GestureOverlayView_gestureStrokeLengthThreshold,  mGestureStrokeLengthThreshold);
+    mGestureStrokeAngleThreshold = ta->getFloat(cdroid::internal::R::styleable::GestureOverlayView_gestureStrokeAngleThreshold, mGestureStrokeAngleThreshold);
+    mGestureStrokeSquarenessTreshold = ta->getFloat(cdroid::internal::R::styleable::GestureOverlayView_gestureStrokeSquarenessThreshold, mGestureStrokeSquarenessTreshold);
+    mInterceptEvents = ta->getBoolean(cdroid::internal::R::styleable::GestureOverlayView_eventsInterceptionEnabled, mInterceptEvents);
+    mFadeEnabled = ta->getBoolean(cdroid::internal::R::styleable::GestureOverlayView_fadeEnabled, mFadeEnabled);
+    mOrientation = ta->getInt(cdroid::internal::R::styleable::GestureOverlayView_orientation, mOrientation);
 }
 
 void GestureOverlayView::init() {

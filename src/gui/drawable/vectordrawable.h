@@ -367,7 +367,7 @@ private:
 private:
     void updateStateFromTypedArray(const TypedArray& a);
     bool canComplexColorApplyTheme(const RefPtr<ComplexColor>& complexColor);
-    void inflateGradients(XmlPullParser&,const AttributeSet&atts);
+    void inflateGradients(Resources&r,XmlPullParser&,const AttributeSet&atts);
 public:
     VFullPath();
     VFullPath(const VFullPath* copy);

@@ -215,7 +215,7 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
             if (tagName.compare(ANIMATED_VECTOR)==0) {
                 // AOSP obtains R.styleable.AnimatedVectorDrawable per <animated-vector>.
                 auto ta = r.obtainStyledAttributes(&attrs, R::styleable::AnimatedVectorDrawable);
-                Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimatedVectorDrawable_drawable) : nullptr;
+                Drawable* dr = ta->getDrawable(R::styleable::AnimatedVectorDrawable_drawable);
                 if (dr != nullptr) {
                     VectorDrawable* vectorDrawable = (VectorDrawable*) dr->mutate();
                     vectorDrawable->setAllowCaching(false);
@@ -233,19 +233,17 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
             } else if (tagName.compare(TARGET)==0) {
                 // AOSP obtains R.styleable.AnimatedVectorDrawableTarget per <target>.
                 auto ta = r.obtainStyledAttributes(&attrs, R::styleable::AnimatedVectorDrawableTarget);
-                const std::string target = ta ? ta->getString(R::styleable::AnimatedVectorDrawableTarget_name) : attrs.getString("name");
+                const std::string target = ta->getString(R::styleable::AnimatedVectorDrawableTarget_name);
                 // animation is a @animator reference; TypedArray exposes no Animator
                 // getter, so resolve the reference to its resource name (the same form
                 // TypedArray.getDrawable and XmlPullParser consume) and hand it to
-                // AnimatorInflater. Fall back to the string bridge for text XML.
+                // AnimatorInflater.
                 std::string animResId;
-                Res_value v;
-                if (ta && ta->peekValue(R::styleable::AnimatedVectorDrawableTarget_animation, &v)) {
-                    animResId = (v.dataType == Res_value::TYPE_STRING)
+                TypedValue v;
+                if (ta->peekValue(R::styleable::AnimatedVectorDrawableTarget_animation, &v)) {
+                    animResId = (v.type == TypedValue::TYPE_STRING)
                               ? ta->getString(R::styleable::AnimatedVectorDrawableTarget_animation)
                               : ctx->getResourceName(v.data);
-                } else {
-                    animResId = attrs.getString("animation");
                 }
                 if (!animResId.empty()) {
                     if (true/*theme != nullptr*/) {

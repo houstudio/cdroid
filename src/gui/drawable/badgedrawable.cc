@@ -116,7 +116,10 @@ BadgeDrawable::BadgeDrawable(Context* context,const std::string&badgeResId,
     mState = new BadgeState(context,badgeResId,defStyleAttr,defStyleRes,savedState);
     //setBackgroundColor(mState->mBackgroundColor);
     //mTextPaint.setTextAlign(Paint::Align::CENTER);
-    setTextAppearance("@cdroid:style/TextAppearance.MaterialComponents.Badge");
+    // AOSP default: R.style.TextAppearance_MaterialComponents_Badge (not shipped
+    // in the CDROID framework res; resolve by name, 0 keeps the paint defaults).
+    setTextAppearance(context->getResources().getIdentifier(
+            "TextAppearance.MaterialComponents.Badge", "style", "cdroid"));
     restoreState();
 }
 
@@ -480,9 +483,11 @@ int BadgeDrawable::getAdditionalVerticalOffset() const{
     return mState->getAdditionalVerticalOffset();
 }
 
-void BadgeDrawable::setTextAppearance(const std::string& id) {
-    AttributeSet atts = mContext->obtainStyledAttributes(id);
-    auto ta = mContext->obtainStyledAttributes(atts, R::styleable::TextAppearance);
+void BadgeDrawable::setTextAppearance(int resId) {
+    // AOSP resolves the @StyleRes id directly (TextAppearance helper); no
+    // string→AttributeSet round-trip.
+    auto ta = mContext->obtainStyledAttributes(resId, R::styleable::TextAppearance);
+    if (!ta) return;
     const int textSize = ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 12);
     Typeface* tf = Typeface::create(ta->getString(R::styleable::TextAppearance_fontFamily), 0);
     mTextPaint.setTypeface(tf);
@@ -494,8 +499,7 @@ void BadgeDrawable::onBadgeTextAppearanceUpdated() {
     if (mContext == nullptr) {
         return;
     }
-    AttributeSet atts = mContext->obtainStyledAttributes(mState->getTextAppearanceResId());
-    auto ta = mContext->obtainStyledAttributes(atts, R::styleable::TextAppearance);
+    auto ta = mContext->obtainStyledAttributes(mState->getTextAppearanceResId(), R::styleable::TextAppearance);
     const int fontSize = ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, mTextPaint.getTextSize());
     mTextPaint.setTextSize(fontSize);
     /*TextAppearance textAppearance = new TextAppearance(context, state.getTextAppearanceResId());
