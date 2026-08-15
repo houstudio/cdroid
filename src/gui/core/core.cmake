@@ -4,6 +4,8 @@ SET(CORE_SOURCES
     core/attributeset.cc
     core/typedarray.cc      # TypedArray (cdroid-side typed attr view over a styleable set)
     core/typedvalue.cc      # TypedValue (AOSP android.util.TypedValue) + applyDimension
+    core/Locale.cc          # cdroid::Locale (java.util.Locale BCP-47 core)
+    core/LocaleList.cc      # cdroid::LocaleList (android.os.LocaleList)
     core/context.cc         # cdroid::Context AOSP ID-based resource getters (defaults)
     core/contextthemewrapper.cc # cdroid::ContextThemeWrapper: per-object theme overlay
     core/resourcesimpl.cc   # cdroid::ResourcesImpl: facade hiding androidfw (ResTable/AssetManager)

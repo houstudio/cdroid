@@ -83,21 +83,26 @@ ResourcesImpl::~ResourcesImpl() {
 
 // AOSP ResourcesImpl.updateConfigurationImpl → mAssets.setConfigurationInternal:
 // map the live Configuration onto the arsc ResTable_config so -night/-land/...
-// resource variants reselect. CDROID's locale is a BCP-47 tag string
-// ("zh-CN" / "xx-rYY"), packed via ResTable_config::packLanguage/packRegion.
+// resource variants reselect. The locale comes from the Configuration's
+// LocaleList primary (getLocales() reconciles the deprecated tag-string field);
+// language/region are packed the way AOSP's JNI bridge does (language 2-3
+// chars, region 2 chars/3 digits, script char[4] when the locale carries one).
 static ResTable_config toResTableConfig(const Configuration& c, const DisplayMetrics& m) {
     ResTable_config cfg = {};
     cfg.size = sizeof(ResTable_config);
     cfg.mcc = (uint16_t)c.mcc;
     cfg.mnc = (uint16_t)c.mnc;
-    if (!c.locale.empty()) {
-        const size_t dash = c.locale.find('-');
-        const std::string lang = c.locale.substr(0, 2);
-        std::string region = (dash != std::string::npos) ? c.locale.substr(dash + 1) : std::string();
-        if (region.size() > 2 && region[0] == 'r') region = region.substr(1);   // xx-rYY
-        if (region.size() >= 2) region = region.substr(region.size() - 2);
-        cfg.packLanguage(lang.c_str());
-        if (region.size() == 2) cfg.packRegion(region.c_str());
+    const Locale primary = c.getLocales().get(0);
+    if (!primary.getLanguage().empty()) {
+        cfg.packLanguage(primary.getLanguage().c_str());
+        if (primary.getCountry().size() == 2) {
+            cfg.packRegion(primary.getCountry().c_str());
+        }
+        const std::string script = primary.getScript();
+        if (!script.empty()) {
+            strncpy(cfg.localeScript, script.c_str(), sizeof(cfg.localeScript));
+            cfg.localeScriptWasComputed = false;
+        }
     }
     cfg.orientation = (uint8_t)c.orientation;
     cfg.touchscreen = (uint8_t)c.touchscreen;
@@ -480,7 +485,36 @@ void ResourcesImpl::updateConfiguration(const Configuration* config, const Displ
     if (metrics != nullptr) mMetrics = *metrics;
     const int changes = calcConfigChanges(config);
     if (config != nullptr) mConfiguration = *config;
-    if (changes == 0) return;
+
+    // AOSP updateConfigurationImpl: if even after the update there are no
+    // Locales set, grab the default locales. And when the locale list changed
+    // and has more than one entry, pick the best match among the locales the
+    // resources actually carry (getNonSystemLocales→getLocales upstream; the
+    // LocaleConfig/default-locale Flags path is not ported), reordering the
+    // configuration so the best locale becomes primary.
+    bool localesChanged = false;
+    LocaleList locales = mConfiguration.getLocales();
+    if (locales.isEmpty()) {
+        locales = LocaleList::getDefault();
+        mConfiguration.setLocales(locales);
+        localesChanged = true;
+    }
+    if ((changes & Configuration::CONFIG_LOCALE) != 0 && locales.size() > 1) {
+        std::vector<std::string> availableLocales;
+        // getResources() is const (AOSP facade); the table is a mutable cache.
+        const_cast<ResTable&>(mAssets->getResources(false)).getLocales(&availableLocales);
+        if (LocaleList::isPseudoLocalesOnly(&availableLocales)) {
+            availableLocales.clear();
+        }
+        if (!availableLocales.empty()) {
+            const Locale bestLocale = locales.getFirstMatchWithEnglishSupported(availableLocales);
+            if (!bestLocale.getLanguage().empty() && !(bestLocale == locales.get(0))) {
+                mConfiguration.setLocales(LocaleList(bestLocale, &locales));
+                localesChanged = true;
+            }
+        }
+    }
+    if (changes == 0 && !localesChanged) return;
 
     // AOSP: metrics follow densityDpi / fontScale.
     if (mConfiguration.densityDpi != Configuration::DENSITY_DPI_UNDEFINED) {

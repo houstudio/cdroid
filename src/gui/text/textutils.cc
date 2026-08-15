@@ -9,6 +9,7 @@
 #include <unicode/uchar.h>
 #include <porting/cdlog.h>
 #include <text/measuredparagraph.h>
+#include <view/gravity.h>  // LayoutDirection (getLayoutDirectionFromLocale result)
 namespace cdroid{
 
 const auto ObjectFilter =Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ParcelableSpan*>(span) != nullptr;});
@@ -1120,5 +1121,32 @@ bool TextUtils::isPunctuation(int codePoint) {
             || type == Character::INITIAL_QUOTE_PUNCTUATION
             || type == Character::OTHER_PUNCTUATION
             || type == Character::START_PUNCTUATION;
+}
+
+// Port of android.text.TextUtils.getLayoutDirectionFromLocale (android-36).
+// AOSP: ((locale != null && !locale.equals(Locale.ROOT)
+//                  && ULocale.forLocale(locale).isRightToLeft())
+//         || DisplayProperties.debug_force_rtl()) ? RTL : LTR.
+// ICU's isRightToLeft() consults the locale's (likely) script; translated here
+// as an RTL-script set plus a language fallback for script-less locales
+// (debug_force_rtl is a debug-property toggle CDROID does not have).
+int TextUtils::getLayoutDirectionFromLocale(const Locale& locale) {
+    if (!(locale == Locale::ROOT)) {
+        const std::string script = locale.getScript();
+        if (script == "Arab" || script == "Hebr" || script == "Thaa"
+                || script == "Aran" || script == "Samr" || script == "Mand"
+                || script == "Adlm") {
+            return LayoutDirection::RTL;
+        }
+        if (script.empty()) {
+            const std::string language = locale.getLanguage();
+            // Languages whose default script is RTL (ULocale likelihood data).
+            for (const char* rtl : {"ar", "dv", "fa", "he", "iw", "nqo",
+                                    "ps", "sd", "ug", "ur", "yi"}) {
+                if (language == rtl) return LayoutDirection::RTL;
+            }
+        }
+    }
+    return LayoutDirection::LTR;
 }
 }/*endof namespace*/

@@ -107,6 +107,10 @@ public:
                            const std::string& package) const;
     // Every distinct configuration present in the table (for introspection).
     void getConfigurations(std::vector<ResTable_config>* out) const;
+    // AOSP native ResTable::getLocales: every distinct locale in the table as
+    // BCP-47-ish "xx" / "xx-YY" tags (language lower-case, region upper-case),
+    // language-less entries skipped. Used by ResourcesImpl's locale negotiation.
+    void getLocales(std::vector<std::string>* out) const;
     // Names of all loaded packages.
     std::vector<std::string> listPackageNames() const;
 

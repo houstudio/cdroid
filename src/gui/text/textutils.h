@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <stdio.h>
+#include <core/Locale.h>
 #include <text/textpaint.h>
 #include <text/charsequence.h>
 #include <text/textdirectionheuristics.h>
@@ -109,6 +110,12 @@ public:
     static std::vector<std::string> split(const std::string& text, const std::string& delim);
     static std::vector<std::string> split(const std::string& text,int delim);
     static int getTrimmedLength(const CharSequence* s);
+
+    // Returns View.LAYOUT_DIRECTION_RTL when the locale is RTL, else
+    // LAYOUT_DIRECTION_LTR. The empty Locale (Locale.ROOT) is LTR.
+    // AOSP resolves via ICU ULocale.isRightToLeft(); CDROID translates that as
+    // an RTL-script set plus a language fallback for script-less locales.
+    static int getLayoutDirectionFromLocale(const Locale& locale);
     static bool equals(const CharSequence* a,const CharSequence* b);
 
     /**

@@ -4,6 +4,8 @@
 #include <vector>
 #include <core/parcel.h>
 #include <core/displaymetrics.h>
+#include <core/Locale.h>
+#include <core/LocaleList.h>
 namespace cdroid{
 class XmlPullParser;   // readXmlAttrs (declared, definition disabled below)
 /**
@@ -18,17 +20,14 @@ class XmlPullParser;   // readXmlAttrs (declared, definition disabled below)
  */
 class Configuration final{
 private:
-    /**
-     * Current user preference for the locale, corresponding to
-     * <a href="{@docRoot}guide/topics/resources/providing-resources.html#LocaleQualifier">locale</a>
-     * resource qualifier.
-     *
-     * @deprecated Do not set or read this directly. Use {@link #getLocales()} and
-     * {@link #setLocales(LocaleList)}. If only the primary locale is needed,
-     * <code>getLocales().get(0)</code> is now the preferred accessor.
-     */
-    //@Deprecated public Locale locale;
-    //LocaleList mLocaleList;
+    /** AOSP private LocaleList mLocaleList — the authoritative locale state.
+     *  Mutable so the const getLocales() can run the legacy-field fix-up
+     *  (fixUpLocaleList) exactly like every AOSP read path does. */
+    mutable LocaleList mLocaleList;
+
+    /** Brings mLocaleList in sync with the deprecated `locale` string in case
+     *  a user of the older API changed locale directly. */
+    void fixUpLocaleList() const;
 public:
 	//static Configuration EMPTY = new Configuration();
 
@@ -59,9 +58,10 @@ public:
      */
     static constexpr int MNC_ZERO = 0xffff;
 
-    /** AOSP: @Deprecated public Locale locale — CDROID keeps a BCP-47 tag
-     *  string ("zh-CN") until a java.util.Locale port lands; compared verbatim
-     *  in updateFrom()/diff(). Empty = undefined. */
+    /** AOSP: @Deprecated public Locale locale — kept as the primary locale's
+     *  BCP-47 tag string ("zh-CN"); synced by setLocales()/setLocale() and
+     *  reconciled into mLocaleList by fixUpLocaleList(). Empty = undefined
+     *  (Java null). getLocales().get(0) is the preferred accessor. */
     std::string locale;
 
     // ---- AOSP android.content.pm.ActivityInfo.CONFIG_* bit values ----------
@@ -683,9 +683,9 @@ public:
      * </pre>
      */
     /* This brings mLocaleList in sync with locale in case a user of the older API who doesn't know
-     * about setLocales() has changed locale directly. */
+     * about setLocales() has changed locale directly. (fixUpLocaleList is declared with the
+     * other locale members at the top of the class.) */
 private:
-    void fixUpLocaleList();
     Configuration(Parcel& source);
     static int getScreenLayoutNoDirection(int screenLayout);
 public:
@@ -837,7 +837,7 @@ public:
      *
      * @return The locale list.
      */
-    //LocaleList* getLocales();
+    LocaleList getLocales() const;
 
     /**
      * Set the locale list. This is the preferred way for setting up the locales (instead of using
@@ -848,9 +848,9 @@ public:
      * even if the locale is not supported by the resources (the resources may only support
      * another locale further down the list which has a different direction).
      *
-     * @param locales The locale list. If null, an empty LocaleList will be assigned.
+     * @param locales The locale list. An empty LocaleList clears the state.
      */
-    //void setLocales(LocaleList* locales);
+    void setLocales(const LocaleList& locales);
     /**
      * Set the locale list to a list of just one locale. This will also set the layout direction
      * according to the locale.
@@ -861,15 +861,22 @@ public:
      *
      * See also the note about layout direction in {@link #setLocales(LocaleList)}.
      *
-     * @param loc The locale. Can be null.
+     * @param loc The locale. The empty Locale clears the state.
      */
-    //void setLocale(Locale* loc);
+    void setLocale(const Locale& loc);
     /**
      * @hide
      *
      * Clears the locale without changing layout direction.
      */
     void clearLocales();
+
+    /**
+     * The BCP-47 resource-qualifier form of a locale list: "xx-rYY" entries,
+     * or "b+xx+Script+YY" when a script/long form is present (AOSP aapt
+     * qualifier syntax). @hide
+     */
+    static std::string localesToResourceQualifier(const LocaleList& locs);
 
     /**
      * Return the layout direction. Will be either {@link View#LAYOUT_DIRECTION_LTR} or
@@ -883,14 +890,14 @@ public:
     /**
      * Set the layout direction from a Locale.
      *
-     * @param loc The Locale. If null will set the layout direction to
-     * {@link View#LAYOUT_DIRECTION_LTR}. If not null will set it to the layout direction
+     * @param loc The Locale. If empty will set the layout direction to
+     * {@link View#LAYOUT_DIRECTION_LTR}. If not empty will set it to the layout direction
      * corresponding to the Locale.
      *
      * @see View#LAYOUT_DIRECTION_LTR
      * @see View#LAYOUT_DIRECTION_RTL
      */
-    //void setLayoutDirection(Locale loc);
+    void setLayoutDirection(const Locale& loc);
     /**
      * Return whether the screen has a round shape. Apps may choose to change styling based
      * on this property, such as the alignment or layout of text or informational icons.

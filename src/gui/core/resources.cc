@@ -4,7 +4,7 @@
 // from the many files that include resources.h via context.h.
 
 #include "resources.h"
-#include "context.h"
+#include <core/context.h>
 #include <core/app.h>                  // App::getInstance() (getSystem)
 #include <core/attributeset.h>
 #include <core/typedarray.h>
@@ -267,7 +267,8 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
          const uint32_t* attrs, int defStyleAttr, int defStyleRes) const {
     if (mCtx == nullptr) return nullptr;
     const ResTable& rt = getAssets()->getResources(false);
-    Resources::Theme _th = mCtx->getTheme(); ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
+    Resources::Theme _th = mCtx->getTheme();
+    ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
     size_t count = 0;
     while (attrs[count]) count++;
     std::vector<StyledAttr> styled(count);
@@ -306,7 +307,8 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
 std::unique_ptr<TypedArray> Resources::obtainAttributes(const AttributeSet* set, const uint32_t* attrs) const {
     if (mCtx == nullptr || set == nullptr) return nullptr;
     const ResTable& rt = getAssets()->getResources(false);
-    size_t count = 0; while (attrs[count]) ++count;   // sentinel-terminated
+    size_t count = 0;
+    while (attrs[count]) ++count;   // sentinel-terminated
     std::vector<StyledAttr> styled(count);
     const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(set);
     const ResXMLTree* xml = (parser && parser->isBinaryAXML())
@@ -327,7 +329,8 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const uint32_t* at
 std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(int resid, const uint32_t* attrs) const {
     if (mCtx == nullptr) return nullptr;
     const ResTable& rt = getAssets()->getResources(false);
-    Resources::Theme _th = mCtx->getTheme(); ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
+    Resources::Theme _th = mCtx->getTheme();
+    ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
     size_t count = 0;
     while (attrs[count]) count++;
     std::vector<StyledAttr> styled(count);

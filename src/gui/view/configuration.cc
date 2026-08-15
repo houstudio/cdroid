@@ -1,5 +1,6 @@
 #include <core/build.h>
 #include <utils/textutils.h>
+#include <text/textutils.h>
 #include <view/configuration.h>
 #include <view/view.h>
 namespace cdroid{
@@ -182,11 +183,21 @@ Configuration::Configuration(const Configuration& o) {
 
 /* This brings mLocaleList in sync with locale in case a user of the older API who doesn't know
  * about setLocales() has changed locale directly. */
-void Configuration::fixUpLocaleList() {
-	/*if ((locale == nullptr && !mLocaleList.isEmpty()) ||
-			(locale && !locale.equals(mLocaleList.get(0)))) {
-		mLocaleList = locale == nullptr ? LocaleList.getEmptyLocaleList() : new LocaleList(locale);
-	}*/
+void Configuration::fixUpLocaleList() const {
+	/* AOSP:
+	   if ((locale == null && !mLocaleList.isEmpty()) ||
+	           (locale != null && !locale.equals(mLocaleList.get(0)))) {
+	       mLocaleList = locale == null ? LocaleList.getEmptyLocaleList() : new LocaleList(locale);
+	   }
+	   The deprecated field is the primary locale's BCP-47 tag string; the list
+	   primary re-serializes through toLanguageTag() for the comparison. */
+	const std::string primary = mLocaleList.isEmpty() ? std::string()
+	                                                  : mLocaleList.get(0).toLanguageTag();
+	if ((locale.empty() && !mLocaleList.isEmpty())
+			|| (!locale.empty() && locale != primary)) {
+		mLocaleList = locale.empty() ? LocaleList::getEmptyLocaleList()
+		                             : LocaleList(std::vector<Locale>{Locale::forLanguageTag(locale)});
+	}
 }
 
 /**
@@ -200,7 +211,7 @@ void Configuration::setTo(const Configuration& o) {
 	mnc = o.mnc;
 	//locale = o.locale == null ? null : (Locale) o.locale.clone();
 	locale = o.locale;   // CDROID: BCP-47 tag string
-	//mLocaleList = o.mLocaleList;
+	mLocaleList = o.mLocaleList;
 	userSetLocale = o.userSetLocale;
 	touchscreen = o.touchscreen;
 	keyboard = o.keyboard;
@@ -241,13 +252,13 @@ std::string Configuration::toString()const {
 	} else {
 		sb<<"?mnc";
 	}
-	/*fixUpLocaleList();
+	fixUpLocaleList();
 	if (!mLocaleList.isEmpty()) {
 		sb<<" ";
-		sb<<mLocaleList;
+		sb<<mLocaleList.toString();
 	} else {
 		sb<<" ?localeList";
-	}*/
+	}
 	const int layoutDir = (screenLayout&SCREENLAYOUT_LAYOUTDIR_MASK);
 	switch (layoutDir) {
 		case SCREENLAYOUT_LAYOUTDIR_UNDEFINED: sb<<" ?layoutDir"; break;
@@ -477,7 +488,7 @@ std::string Configuration::uiModeToString(int uiMode) {
 void Configuration::setToDefaults() {
 	fontScale = 1;
 	mcc = mnc = 0;
-	//mLocaleList = LocaleList.getEmptyLocaleList();
+	mLocaleList = LocaleList::getEmptyLocaleList();
 	//locale = nullptr;
 	locale.clear();   // CDROID: BCP-47 tag string, empty = undefined
 	userSetLocale = false;
@@ -535,14 +546,22 @@ int Configuration::updateFrom(const Configuration& delta) {
 		changed |= CONFIG_MNC;
 		mnc = delta.mnc;
 	}
-	// AOSP compares the LocaleList / Locale objects here; CDROID's locale is a
-	// BCP-47 tag string, compared verbatim (a locale change conservatively also
-	// flags CONFIG_LAYOUT_DIRECTION — the RTL bit is not re-derived, there is no
-	// TextUtils.getLayoutDirectionFromLocale port).
-	if (!delta.locale.empty() && locale != delta.locale) {
+	// AOSP updateFrom(): compare/assign the LocaleList; a change of the primary
+	// locale also re-derives the layout-direction bits.
+	fixUpLocaleList();
+	delta.fixUpLocaleList();
+	if (!delta.mLocaleList.isEmpty() && !(mLocaleList == delta.mLocaleList)) {
 		changed |= CONFIG_LOCALE;
-		locale = delta.locale;
-		changed |= CONFIG_LAYOUT_DIRECTION;
+		mLocaleList = delta.mLocaleList;
+		// delta.locale can't be empty, since delta.mLocaleList is not empty.
+		if (delta.locale != locale) {
+			locale = delta.locale;
+			// If locale has changed, then layout direction is also changed ...
+			changed |= CONFIG_LAYOUT_DIRECTION;
+			// ... and we need to update the layout direction (represented by the first
+			// 2 most significant bits in screenLayout).
+			setLayoutDirection(Locale::forLanguageTag(locale));
+		}
 	}
 	const int deltaScreenLayoutDir = delta.screenLayout & SCREENLAYOUT_LAYOUTDIR_MASK;
 	if (deltaScreenLayoutDir != SCREENLAYOUT_LAYOUTDIR_UNDEFINED &&
@@ -752,10 +771,15 @@ int Configuration::diff(const Configuration& delta, bool compareUndefined, bool 
 	if ((compareUndefined || delta.mnc != 0) && mnc != delta.mnc) {
 		changed |= CONFIG_MNC;
 	}
-	// AOSP compares LocaleList objects; CDROID's locale is a BCP-47 tag string.
-	if ((compareUndefined || !delta.locale.empty()) && locale != delta.locale) {
+	// AOSP diff(): the LocaleList decides CONFIG_LOCALE; a primary-locale change
+	// also implies CONFIG_LAYOUT_DIRECTION (diff only flags, it never re-derives).
+	fixUpLocaleList();
+	delta.fixUpLocaleList();
+	if ((compareUndefined || !delta.mLocaleList.isEmpty()) && !(mLocaleList == delta.mLocaleList)) {
 		changed |= CONFIG_LOCALE;
-		changed |= CONFIG_LAYOUT_DIRECTION;
+		if (delta.locale != locale) {
+			changed |= CONFIG_LAYOUT_DIRECTION;
+		}
 	}
 	const int deltaScreenLayoutDir = delta.screenLayout & SCREENLAYOUT_LAYOUTDIR_MASK;
 	if ((compareUndefined || deltaScreenLayoutDir != SCREENLAYOUT_LAYOUTDIR_UNDEFINED)
@@ -1043,8 +1067,7 @@ int Configuration::compareTo(const Configuration& that) {
  *
  * @return The locale list.
  */
-#if 0
-LocaleList* Configuration::getLocales() {
+LocaleList Configuration::getLocales() const {
 	fixUpLocaleList();
 	return mLocaleList;
 }
@@ -1060,10 +1083,11 @@ LocaleList* Configuration::getLocales() {
  *
  * @param locales The locale list. If null, an empty LocaleList will be assigned.
  */
-void Configuration::setLocales(LocaleList* locales) {
-	mLocaleList = locales == nullptr ? LocaleList.getEmptyLocaleList() : locales;
-	locale = mLocaleList.get(0);
-	setLayoutDirection(locale);
+void Configuration::setLocales(const LocaleList& locales) {
+	mLocaleList = locales;
+	const Locale primary = mLocaleList.get(0);
+	locale = mLocaleList.isEmpty() ? std::string() : primary.toLanguageTag();
+	setLayoutDirection(primary);
 }
 
 /**
@@ -1078,18 +1102,61 @@ void Configuration::setLocales(LocaleList* locales) {
  *
  * @param loc The locale. Can be null.
  */
-void Configuration::setLocale(Locale* loc) {
-	setLocales(loc == nullptr ? LocaleList.getEmptyLocaleList() : new LocaleList(loc));
+void Configuration::setLocale(const Locale& loc) {
+	setLocales((loc == Locale::ROOT) ? LocaleList::getEmptyLocaleList()
+	                                 : LocaleList(std::vector<Locale>{loc}));
 }
-#endif
 /**
  * @hide
  *
  * Clears the locale without changing layout direction.
  */
 void Configuration::clearLocales() {
-	//mLocaleList = LocaleList.getEmptyLocaleList();
-	//locale = null;
+	mLocaleList = LocaleList::getEmptyLocaleList();
+	locale.clear();
+}
+
+std::string Configuration::localesToResourceQualifier(const LocaleList& locs) {
+	std::string sb;
+	for (int i = 0; i < locs.size(); i++) {
+		const Locale loc = locs.get(i);
+		const size_t l = loc.getLanguage().size();
+		if (l == 0) {
+			continue;
+		}
+		const size_t s = loc.getScript().size();
+		const size_t c = loc.getCountry().size();
+		const size_t v = loc.getVariant().size();
+		// We ignore locale extensions, since they are not supported by AAPT
+
+		if (!sb.empty()) {
+			sb += ",";
+		}
+		if (l == 2 && s == 0 && (c == 0 || c == 2) && v == 0) {
+			// Traditional locale format: xx or xx-rYY
+			sb += loc.getLanguage();
+			if (c == 2) {
+				sb += "-r";
+				sb += loc.getCountry();
+			}
+		} else {
+			sb += "b+";
+			sb += loc.getLanguage();
+			if (s != 0) {
+				sb += "+";
+				sb += loc.getScript();
+			}
+			if (c != 0) {
+				sb += "+";
+				sb += loc.getCountry();
+			}
+			if (v != 0) {
+				sb += "+";
+				sb += loc.getVariant();
+			}
+		}
+	}
+	return sb;
 }
 
 /**
@@ -1114,14 +1181,12 @@ int Configuration::getLayoutDirection() const{
  * @see View#LAYOUT_DIRECTION_LTR
  * @see View#LAYOUT_DIRECTION_RTL
  */
-#if 0
-void Configuration::setLayoutDirection(Locale loc) {
+void Configuration::setLayoutDirection(const Locale& loc) {
 	// There is a "1" difference between the configuration values for
 	// layout direction and View constants for layout direction, just add "1".
-	const int layoutDirection = 1 + TextUtils.getLayoutDirectionFromLocale(loc);
+	const int layoutDirection = 1 + TextUtils::getLayoutDirectionFromLocale(loc);
 	screenLayout = (screenLayout&~SCREENLAYOUT_LAYOUTDIR_MASK)|(layoutDirection << SCREENLAYOUT_LAYOUTDIR_SHIFT);
 }
-#endif
 
 int Configuration::getScreenLayoutNoDirection(int screenLayout){
 	return screenLayout&~SCREENLAYOUT_LAYOUTDIR_MASK;

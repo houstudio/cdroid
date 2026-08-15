@@ -508,6 +508,37 @@ void ResTable::getConfigurations(std::vector<ResTable_config>* out) const {
     }
 }
 
+void ResTable::getLocales(std::vector<std::string>* out) const {
+    // AOSP native ResTable::getLocales collects the distinct locales of every
+    // config in the table ("xx-YY", language lower-case / region upper-case);
+    // entries without a language are skipped (the default config matches any
+    // locale, so it carries no locale information).
+    if (!out) return;
+    out->clear();
+    std::vector<ResTable_config> configs;
+    getConfigurations(&configs);
+    for (const ResTable_config& c : configs) {
+        char lang[4] = {0};
+        const size_t langLen = c.unpackLanguage(lang);
+        char regionBuf[4] = {0};
+        const size_t regionLen = c.unpackRegion(regionBuf);
+        if (langLen == 0) continue;
+        std::string tag(lang, langLen);
+        for (auto& ch : tag) ch = (char)tolower((unsigned char)ch);
+        if (regionLen > 0) {
+            std::string r(regionBuf, regionLen);
+            for (auto& ch : r) ch = (char)toupper((unsigned char)ch);
+            tag += "-";
+            tag += r;
+        }
+        bool seen = false;
+        for (const std::string& e : *out) {
+            if (e == tag) { seen = true; break; }
+        }
+        if (!seen) out->push_back(tag);
+    }
+}
+
 std::vector<std::string> ResTable::listPackageNames() const {
     std::vector<std::string> names;
     for (const Package& pkg : mPackages) names.push_back(pkg.name);
