@@ -22,7 +22,7 @@
 #include <menu/listmenuitemview.h>
 namespace cdroid{
 
-MenuAdapter::MenuAdapter(MenuBuilder* menu, LayoutInflater* inflater, bool overflowOnly, const std::string& itemLayoutRes) {
+MenuAdapter::MenuAdapter(MenuBuilder* menu, LayoutInflater* inflater, bool overflowOnly, int itemLayoutRes) {
     mOverflowOnly = overflowOnly;
     mInflater = inflater;
     mAdapterMenu = menu;

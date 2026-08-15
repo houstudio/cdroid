@@ -244,19 +244,19 @@ void ListMenuItemView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
 void ListMenuItemView::insertIconView() {
     LayoutInflater* inflater = getInflater();
-    mIconView = (ImageView*) inflater->inflate("android:layout/list_menu_item_icon", this, false);
+    mIconView = (ImageView*) inflater->inflate(cdroid::internal::R::layout::list_menu_item_icon, this, false);
     addContentView(mIconView, 0);
 }
 
 void ListMenuItemView::insertRadioButton() {
     LayoutInflater* inflater = getInflater();
-    mRadioButton =(RadioButton*) inflater->inflate("android/layout/list_menu_item_radio", this, false);
+    mRadioButton =(RadioButton*) inflater->inflate(cdroid::internal::R::layout::list_menu_item_radio, this, false);
     addContentView(mRadioButton);
 }
 
 void ListMenuItemView::insertCheckBox() {
     LayoutInflater* inflater = getInflater();
-    mCheckBox =(CheckBox*) inflater->inflate("android:/layout/list_menu_item_checkbox", this, false);
+    mCheckBox =(CheckBox*) inflater->inflate(cdroid::internal::R::layout::list_menu_item_checkbox, this, false);
     addContentView(mCheckBox);
 }
 

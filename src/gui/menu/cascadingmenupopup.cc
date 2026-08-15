@@ -134,7 +134,7 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
 
     mSubMenuHoverHandler = new Handler();
 
-    mItemLayout = "cdroid:layout/cascading_menu_item_layout_material";//com.android.internal.R.layout.cascading_menu_item_layout_material;
+    mItemLayout = cdroid::internal::R::layout::cascading_menu_item_layout_material;
 }
 
 CascadingMenuPopup::~CascadingMenuPopup(){
@@ -350,7 +350,7 @@ void CascadingMenuPopup::showMenu(MenuBuilder* menu) {
     // If this is the root menu, show the title if requested.
     if ((parentInfo == nullptr) && mShowTitle && menu->getHeaderTitle().size()) {
         FrameLayout* titleItemView = (FrameLayout*) inflater->inflate(
-            "cdroid:layout/popup_menu_header_item_layout", listView, false);
+            cdroid::internal::R::layout::popup_menu_header_item_layout, listView, false);
         TextView* titleView = (TextView*) titleItemView->findViewById(R::id::title);
         titleItemView->setEnabled(false);
         titleView->setText(menu->getHeaderTitle());

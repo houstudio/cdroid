@@ -30,7 +30,7 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 ActionMenuPresenter::ActionMenuPresenter(Context* context)
-    :BaseMenuPresenter(context, "cdroid:layout/action_menu_layout","cdroid:layout/action_menu_item_layout"){
+    :BaseMenuPresenter(context, R::layout::action_menu_layout, R::layout::action_menu_item_layout){
     mMaxItemsSet = 0;
     mMinCellSize = 0;
     mOpenSubMenuId = 0;

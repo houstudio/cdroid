@@ -63,7 +63,7 @@ private:
     Callback mPresenterCallback;
     ViewTreeObserver* mTreeObserver=nullptr;
     PopupWindow::OnDismissListener mOnDismissListener;
-    std::string mItemLayout;
+    int mItemLayout = 0;
 
     /** Whether popup menus should disable exit animations when closing. */
     bool mShouldCloseImmediately;

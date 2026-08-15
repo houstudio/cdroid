@@ -18,6 +18,7 @@
 #include <menu/menubuilder.h>
 #include <menu/menudialoghelper.h>
 #include <menu/listmenupresenter.h>
+#include <widget/internal_R.h>
 namespace cdroid{
 
 MenuDialogHelper::MenuDialogHelper(MenuBuilder* menu) {
@@ -31,7 +32,7 @@ void MenuDialogHelper::show() {
     // Get the builder for the dialog
     AlertDialog::Builder* builder = new AlertDialog::Builder(menu->getContext());
 
-    mPresenter = new ListMenuPresenter(builder->getContext(),"android:layout/list_menu_item_layout");
+    mPresenter = new ListMenuPresenter(builder->getContext(),cdroid::internal::R::layout::list_menu_item_layout);
 
     MenuPresenter::Callback mpc;
     mpc.onCloseMenu=[this](MenuBuilder& menu, bool allMenusAreClosing){

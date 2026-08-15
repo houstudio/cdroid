@@ -19,7 +19,7 @@
 #include <menu/basemenupresenter.h>
 #include <menu/submenubuilder.h> // complete type for SubMenuBuilder* -> MenuBuilder& upcast
 namespace cdroid{ 
-BaseMenuPresenter::BaseMenuPresenter(Context* context,const std::string& menuLayoutRes,const std::string& itemLayoutRes){
+BaseMenuPresenter::BaseMenuPresenter(Context* context,int menuLayoutRes,int itemLayoutRes){
     mSystemContext = context;
     mMenu = nullptr;
     mMenuView = nullptr;

@@ -24,7 +24,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 //private static final int ITEM_LAYOUT = com.android.internal.R.layout.popup_menu_item_layout;
-static constexpr const char* ITEM_LAYOUT_MATERIAL ="cdroid:layout/popup_menu_item_layout_material";
+static constexpr int ITEM_LAYOUT_MATERIAL = cdroid::internal::R::layout::popup_menu_item_layout_material;
 
 void StandardMenuPopup::onGlobalLayout() {
     // Only move the popup if it's showing and non-modal. We don't want
@@ -144,7 +144,7 @@ bool StandardMenuPopup::tryShow() {
 
     if (mShowTitle && mMenu->getHeaderTitle().size()){// != null) {
         FrameLayout* titleItemView =(FrameLayout*) LayoutInflater::from(mContext)->inflate(
-                        "cdroid:layout/popup_menu_header_item_layout",listView, false);
+                        cdroid::internal::R::layout::popup_menu_header_item_layout,listView, false);
         TextView* titleView = (TextView*) titleItemView->findViewById(R::id::title);
         if (titleView != nullptr) {
             titleView->setText(mMenu->getHeaderTitle());

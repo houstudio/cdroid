@@ -16,10 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <menu/menubuilder.h>
+#include <widget/internal_R.h>
 #include <menu/iconmenuview.h>
 #include <menu/iconmenuitemview.h>
 #include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 using namespace cdroid::internal;
 
 DECLARE_WIDGET(IconMenuView)
@@ -161,7 +163,7 @@ IconMenuItemView* IconMenuView::createMoreItemView() {
     Context* context = getContext();
     LayoutInflater* inflater = LayoutInflater::from(context);
 
-    IconMenuItemView* itemView = (IconMenuItemView*) inflater->inflate("android:layout/icon_menu_item_layout", nullptr);
+    IconMenuItemView* itemView = (IconMenuItemView*) inflater->inflate(cdroid::internal::R::layout::icon_menu_item_layout, nullptr);
 
     itemView->initialize(""/*r.getText(com.android.internal.R.string.more_item_label)*/, mMoreIcon);
 
