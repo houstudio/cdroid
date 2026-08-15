@@ -84,26 +84,13 @@ public:
     // name straight from its ResXMLTree (no mAttrs bridge). Call sites pass a
     // std::string (not const char*) so the virtual dispatch is not bypassed.
     virtual const std::string getAttributeValue(const std::string&key)const;
-    //int getColor(const std::string&key,int def=0xFFFFFFFF)const;
-    //int getColorWithException(const std::string&key)const;
-    //int getGravity(const std::string&key,int defvalue=0)const;
-    //int getTintMode(const std::string&key,int def)const;
 
-    //int getDimension(const std::string&key,int def=0)const;
-    //int getDimensionPixelSize(const std::string&key,int def=0)const;
-    //int getDimensionPixelOffset(const std::string&key,int def=0)const;
-    //int getLayoutDimension(const std::string&key,int def)const;
-    //float getFraction(const std::string&key,int base,int pbase,float def=.0)const;
 
-    //RefPtr<ColorStateList>getColorStateList(const std::string&key)const;
-    //Drawable*getDrawable(const std::string&key)const;
-    //int getArray(const std::string&key,std::vector<std::string>&array)const;
-    //int getArray(const std::string&key,std::vector<int>&array)const;
 
     // --- AOSP android.util.AttributeSet interface (index/id-based) -------------
     // Ported verbatim from frameworks/base/core/java/android/util/AttributeSet.java.
-    // Coexists with the string-key getters above (CDROID additions); these are the
-    // index/namespace-based, typed, AOSP-faithful methods. Virtual so XmlPullParser
+    // These are the index/namespace-based, typed, AOSP-faithful methods (the old
+    // CDROID string-key getters are retired). Virtual so XmlPullParser
     // (binary AXML) overrides them via ResXMLTree; the base impl works off mAttrs.
     // String return values use std::string (empty == AOSP null).
     virtual std::string getAttributeNamespace(int index) const;          // default ""
