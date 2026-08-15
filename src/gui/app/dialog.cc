@@ -27,9 +27,9 @@ Dialog::Dialog(Context*context){
     mCancelable = true;
 }
 
-Dialog::Dialog(Context* context,const std::string&resId):Dialog(context){
+Dialog::Dialog(Context* context,int layoutResId):Dialog(context){
     mWindow = new Window(0,0,640,320);
-    LayoutInflater::from(mWindow->getContext())->inflate(resId,mWindow,true);
+    LayoutInflater::from(mWindow->getContext())->inflate(layoutResId,mWindow,true);
 }
 
 Dialog::~Dialog(){
@@ -171,8 +171,8 @@ View* Dialog::findViewById(int id){
     return mWindow->findViewById(id);
 }
 
-void Dialog::setContentView(const std::string&resid){
-    View*v=LayoutInflater::from(mWindow->getContext())->inflate(resid,nullptr,false);
+void Dialog::setContentView(int layoutResId){
+    View*v=LayoutInflater::from(mWindow->getContext())->inflate(layoutResId,nullptr,false);
     mWindow->addView(v);
 }
 

@@ -32,7 +32,7 @@ ProgressDialog::ProgressDialog(cdroid::Context*context):AlertDialog(context){
     mIndeterminateDrawable = nullptr;
 }
 
-ProgressDialog::ProgressDialog(cdroid::Context*context,const std::string& resid):AlertDialog(context,resid){
+ProgressDialog::ProgressDialog(cdroid::Context*context,int themeResId):AlertDialog(context,themeResId){
     mProgressStyle = STYLE_SPINNER;
     mIndeterminate = false;
     mProgress = nullptr;

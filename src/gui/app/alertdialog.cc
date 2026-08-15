@@ -16,18 +16,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <app/alertdialog.h>
+#include <widget/internal_R.h>
 namespace cdroid{
 
 AlertDialog::AlertDialog(Context*ctx):AlertDialog(ctx,false,nullptr){
 }
 
-AlertDialog::AlertDialog(Context*ctx,const std::string&resid):Dialog(ctx,resid){
+AlertDialog::AlertDialog(Context*ctx,int themeResId):Dialog(ctx,themeResId){
     mAlert = AlertController::create(getContext(), this, getWindow());
     P = nullptr;
 }
 
 AlertDialog::AlertDialog(Context*ctx,bool cancelable,DialogInterface::OnCancelListener listener)
-   :AlertDialog(ctx,"@cdroid:layout/alert_dialog"){
+   :AlertDialog(ctx, cdroid::internal::R::layout::alert_dialog){
     setCancelable(cancelable);
     setOnCancelListener(listener);
 }
@@ -274,9 +275,9 @@ AlertDialog::Builder& AlertDialog::Builder::setOnItemSelectedListener(AdapterVie
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setView(int layoutResId){
+AlertDialog::Builder& AlertDialog::Builder::setView(int themeResId){
     P->mView = nullptr;
-    P->mViewLayoutResId = layoutResId;
+    P->mViewLayoutResId = themeResId;
     P->mViewSpacingSpecified = false;
     return *this;
 }
@@ -294,7 +295,7 @@ AlertDialog::Builder& AlertDialog::Builder::setRecycleOnMeasureEnabled(bool enab
 }
 
 AlertDialog* AlertDialog::Builder::create(){
-    AlertDialog* dialog = new AlertDialog(P->mContext,"@cdroid:layout/alert_dialog");
+    AlertDialog* dialog = new AlertDialog(P->mContext, cdroid::internal::R::layout::alert_dialog);
     P->apply(dialog->mAlert);
     dialog->setCancelable(P->mCancelable);
     if (P->mCancelable) {

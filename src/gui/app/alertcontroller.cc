@@ -708,7 +708,7 @@ private:
     int mLayoutResource;
 public:
     AlertListAdapter(Context*ctx,int resource,int field)
-       :ArrayAdapter<std::string>::ArrayAdapter(ctx,std::string(),field),mParams(nullptr),LV(nullptr),mLayoutResource(resource){
+       :ArrayAdapter<std::string>::ArrayAdapter(ctx,0,field),mParams(nullptr),LV(nullptr),mLayoutResource(resource){
     }
     void setParams(AlertController::AlertParams*param,ListView*lv){
         mParams=param;

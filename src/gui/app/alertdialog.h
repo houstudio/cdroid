@@ -63,7 +63,7 @@ public:
         Builder& setSingleChoiceItems(const std::vector<std::string>&items, int checkedItem,OnClickListener listener);
         Builder& setSingleChoiceItems(ListAdapter* adapter, int checkedItem,OnClickListener listener);
         Builder& setOnItemSelectedListener(AdapterView::OnItemSelectedListener listener);
-        Builder& setView(int layoutResId);
+        Builder& setView(int themeResId);
         Builder& setView(View* view);
         Builder& setRecycleOnMeasureEnabled(bool enabled);
         AlertDialog* create();
@@ -76,7 +76,7 @@ protected:
     AlertController::AlertParams*P;
 protected:
     AlertDialog(Context*ctx);
-    AlertDialog(Context*ctx,const std::string&resid); 
+    AlertDialog(Context*ctx,int themeResId); 
     AlertDialog(Context*ctx,bool cancelable,OnCancelListener listener);
     ~AlertDialog()override;
     void onCreate()override;

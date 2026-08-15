@@ -41,7 +41,7 @@ protected:
     virtual ~Dialog();
 public:
     Dialog(Context*context);
-    Dialog(Context* context,const std::string&resId);
+    Dialog(Context* context,int layoutResId);
     Context*getContext()const;
     bool isShowing()const;
     void create();
@@ -52,7 +52,7 @@ public:
     Window*getWindow()const;
     View*getCurrentFocus(); 
     View*findViewById(int id);
-    void setContentView(const std::string&resid);
+    void setContentView(int layoutResId);
     void setContentView(View*view);
     void addContentView(View* view,ViewGroup::LayoutParams* params);
     void setTitle(const std::string&);
