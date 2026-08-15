@@ -157,10 +157,19 @@ struct Private{
                             const std::string attrName = u16toUtf8(an, anLen);
                             // style= is namespace-less by spec (read by name, not id).
                             if (attrName == "style") continue;
+                            // Best-effort source name: the resource-id ctor stores a
+                            // numeric id string; resolve it to pkg:type/name for the log.
+                            std::string src = resourceId;
+                            if (ctx != nullptr && !resourceId.empty()
+                                    && resourceId.find_first_not_of("0123456789") == std::string::npos) {
+                                std::string resName;
+                                if (ctx->getResources().getResourceName(
+                                        atoi(resourceId.c_str()), &resName)) src = resName;
+                            }
                             LOGD("binary AXML '%s' line %d: attribute '%s' on <%s> has no "
                                  "resource id (missing android:/app: prefix?) — id-based "
                                  "lookups will ignore it",
-                                 resourceId.c_str(), event->lineNumber,
+                                 src.c_str(), event->lineNumber,
                                  attrName.c_str(), event->name.c_str());
                         }
                     }
