@@ -36,12 +36,12 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
     # (cdNp chunk, borderless) + verbatim binaries. lxml+Pillow are hard deps;
     # pakbuilder.py fails loud if either is missing (no silent half-broken path).
     #
-    # When ENABLE_BINARY_XML is ON and CDROID_SDK_RES exists, pakbuilder gets
-    # 3 extra args (aapt2, android.jar, sdk_res) and produces a hybrid pak:
-    # binary AXML layouts (from SDK framework res) + text values/ + resources.arsc.
+    # Binary AXML is the only mode: pakbuilder gets the extra aapt2 args and
+    # produces binary AXML layouts + resources.arsc (no ENABLE_BINARY_XML gate
+    # anymore — the text-XML path is retired).
     set(extra_args "")
     set(_framework_apk "${CMAKE_BINARY_DIR}/framework.apk")
-    if(ENABLE_BINARY_XML AND EXISTS "${CDROID_SDK_RES}")
+    if(EXISTS "${CDROID_SDK_RES}")
         if("${project}" STREQUAL "cdroid")
             # Only cdroid.pak gets the full SDK framework res. The built framework.apk
             # is also persisted (--framework-apk-out) so app paks can -I CDROID's own
@@ -79,7 +79,7 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
         add_dependencies(${project}_assets widgetex_assets)
     endif()
     # App paks -I framework.apk, which the cdroid SDK pak produces — build it first.
-    if(ENABLE_BINARY_XML AND TARGET cdroid_assets AND NOT "${project}" STREQUAL "cdroid")
+    if(TARGET cdroid_assets AND NOT "${project}" STREQUAL "cdroid")
         add_dependencies(${project}_assets cdroid_assets)
     endif()
     install(FILES ${PakPath} DESTINATION data)

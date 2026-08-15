@@ -1,12 +1,11 @@
 // Binary AXML inflation test sample.
 // Loads a layout from the SDK framework pak (binary AXML) and displays it.
-// Build with ENABLE_BINARY_XML=ON so cdroid.pak contains binary AXML.
 //
-//   cmake -DENABLE_BINARY_XML=ON ...
 //   make axmltest
 //   ./outX64-Debug/axmltest
 #include <core/app.h>
 #include <widget/cdwindow.h>
+#include <widget/internal_R.h>
 #include <widget/textview.h>
 #include <widget/linearlayout.h>
 #include <view/layoutinflater.h>
@@ -16,9 +15,9 @@ int main(int argc, const char* argv[]) {
     App app(argc, argv);
     Window* w = new Window(0, 0, -1, -1);
 
-    // Inflate a framework layout (binary AXML in cdroid.pak when ENABLE_BINARY_XML).
+    // Inflate a framework layout (binary AXML in cdroid.pak).
     LayoutInflater* inflater = LayoutInflater::from(&app);
-    View* view = inflater->inflate("cdroid:layout/simple_list_item_1", nullptr);
+    View* view = inflater->inflate(cdroid::internal::R::layout::simple_list_item_1, nullptr);
     if (view) {
         LOGD("Binary AXML layout inflated OK");
         TextView* tv = dynamic_cast<TextView*>(view);

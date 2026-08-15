@@ -48,7 +48,6 @@ option(ENABLE_MENU "Enable MENU(Experience)" ON)
 option(ENABLE_WEARABLE_WIDGETS "Enable wearable Widgets(Experience)" OFF)
 option(ENABLE_KPLOT "Enable QT KPlot " ON)
 option(ENABLE_ACHART "Enable AChartEngine " ON)
-option(ENABLE_BINARY_XML "Use SDK framework resources + binary AXML in pak" ON)
 
 cmake_dependent_option(ENABLE_GIF "enable gif encode and decoder" ON "GIF_FOUND" OFF)
 cmake_dependent_option(ENABLE_JPEG "enable jpeg decoder" ON "JPEG_FOUND" OFF)
