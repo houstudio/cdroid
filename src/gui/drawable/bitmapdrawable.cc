@@ -20,7 +20,7 @@
 #include <image-decoders/imagedecoder.h>
 #include <core/typedarray.h>
 #include <core/context.h>
-#include <androidfw/typedvalue.h>
+#include <core/typedvalue.h>
 #include <core/asset.h>
 #include <utils/textutils.h>
 #include <widget/framework_styleable.h>

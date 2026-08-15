@@ -23,7 +23,7 @@
 //
 #include <core/typedarray.h>
 #include <androidfw/restable.h>        // ResTable (complete def for mTable use)
-#include <androidfw/typedvalue.h>      // TypedValue (getResolved reference resolution)
+#include <core/typedvalue.h>      // TypedValue (getResolved reference resolution)
 #include <core/resources.h>            // Resources (mResources: getDrawable/loadComplexColor/getString)
 #include <drawable/colordrawable.h>    // ColorDrawable
 #include <drawable/colorstatelist.h>   // ColorStateList
@@ -62,7 +62,15 @@ static int pathToResourceId(const cdroid::ResTable& table, const std::string& pa
 
 namespace cdroid {
 
-// --- Constructors (out-of-line so typedarray.h need not include restable.h) ---
+// androidfw glue: fill a TypedValue from a raw Res_value. AOSP does exactly
+// this fill in the JNI layer (android.util.TypedValue itself has no factory);
+// this is CDROID's single androidfw→core value seam.
+static void fillTypedValue(const Res_value& rv, TypedValue* out) {
+    out->type = rv.dataType;
+    out->data = rv.data;
+}
+
+// --- Constructors (out-of-line so typedarray.h needs no androidfw header) ---
 
 TypedArray::TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
                        const ResXMLTree* xmlSrc, float density, const Resources* res)
@@ -71,44 +79,69 @@ TypedArray::TypedArray(const ResTable& table, const StyledAttr* vals, size_t cou
 
 TypedArray::TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
                        const ResXMLTree* xmlSrc, float density, const Resources* res)
-    : mTable(table), mOwned(std::move(vals)),
-      mVals(mOwned.data()), mCount(mOwned.size()),
+    : mTable(table), mOwned(new std::vector<StyledAttr>(std::move(vals))),
+      mVals(mOwned->data()), mCount(mOwned->size()),
       mXml(xmlSrc), mDensity(density), mResources(res) {}
 
-// --- Low-level typed getters (Res_value decoders) ---
+TypedArray::~TypedArray() {
+    delete mOwned;
+}
 
-bool TypedArray::getResolved(size_t idx, Res_value* out) const {
-    Res_value v;
+size_t TypedArray::size() const { return mCount; }
+
+bool TypedArray::hasValue(size_t idx) const {
+    return idx < mCount && mVals[idx].set;
+}
+
+// --- Low-level typed getters (TypedValue decoders; AOSP getValueAt shape) ---
+
+bool TypedArray::get(size_t idx, TypedValue* out) const {
+    if (!hasValue(idx)) return false;
+    fillTypedValue(mVals[idx].value, out);
+    return true;
+}
+
+bool TypedArray::getValue(size_t idx, TypedValue* out) const {
+    return get(idx, out);
+}
+
+bool TypedArray::getResolved(size_t idx, TypedValue* out) const {
+    TypedValue v;
     if (!get(idx, &v)) return false;
-    if ((v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
-         v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE)
+    if ((v.type == TypedValue::TYPE_REFERENCE || v.type == TypedValue::TYPE_ATTRIBUTE ||
+         v.type == TypedValue::TYPE_DYNAMIC_REFERENCE || v.type == TypedValue::TYPE_DYNAMIC_ATTRIBUTE)
         && mResources) {
         TypedValue tv;
         if (!mResources->getValue((int)v.data, &tv, true)) return false;
-        v.dataType = tv.type;
-        v.data = tv.data;
+        tv.resourceId = v.data;   // keep the source id (AOSP column semantics)
+        v = tv;
     }
     *out = v;
     return true;
 }
 
 int32_t TypedArray::getInt(size_t idx, int32_t def) const {
-    Res_value v; if (!getResolved(idx, &v)) return def;
-    return (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX) ? (int32_t)v.data : def;
+    // AOSP getInt: FIRST_INT..LAST_INT (includes color ints) → raw data;
+    // TYPE_FLOAT coerces through the value's string form — numerically (int)f.
+    TypedValue v; if (!getResolved(idx, &v)) return def;
+    if (v.type >= TypedValue::TYPE_FIRST_INT && v.type <= TypedValue::TYPE_LAST_INT)
+        return (int32_t)v.data;
+    if (v.type == TypedValue::TYPE_FLOAT) return (int32_t)v.getFloat();
+    return def;
 }
 
 bool TypedArray::getBoolean(size_t idx, bool def) const {
-    Res_value v; if (!getResolved(idx, &v)) return def;
-    return v.dataType == Res_value::TYPE_INT_BOOLEAN ? (v.data != 0) : def;
+    TypedValue v; if (!getResolved(idx, &v)) return def;
+    return v.type == TypedValue::TYPE_INT_BOOLEAN ? (v.data != 0) : def;
 }
 
 uint32_t TypedArray::getColor(size_t idx, uint32_t def) const {
-    Res_value v; if (!get(idx, &v)) return def;
-    if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
+    TypedValue v; if (!get(idx, &v)) return def;
+    if (v.type >= TypedValue::TYPE_FIRST_COLOR_INT && v.type <= TypedValue::TYPE_LAST_COLOR_INT)
         return v.data;
     // Reference (@color/foo): resolve the referenced color resource.
-    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
-        v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+    if (v.type == TypedValue::TYPE_REFERENCE || v.type == TypedValue::TYPE_ATTRIBUTE ||
+        v.type == TypedValue::TYPE_DYNAMIC_REFERENCE || v.type == TypedValue::TYPE_DYNAMIC_ATTRIBUTE) {
         if (mResources) {
             int c = mResources->getColor((int)v.data);
             return c;   // getColor returns the packed ARGB color
@@ -117,7 +150,7 @@ uint32_t TypedArray::getColor(size_t idx, uint32_t def) const {
     }
     // Style-sourced color stored as the file path (TYPE_STRING): load the
     // ColorStateList and return its default color, matching AOSP getColor.
-    if (v.dataType == Res_value::TYPE_STRING) {
+    if (v.type == TypedValue::TYPE_STRING) {
         auto csl = getColorStateList(idx);
         if (csl) return csl->getDefaultColor();
         return def;
@@ -126,34 +159,33 @@ uint32_t TypedArray::getColor(size_t idx, uint32_t def) const {
 }
 
 float TypedArray::getDimension(size_t idx, float def) const {
-    Res_value v; if (!getResolved(idx, &v)) return def;
-    return v.dataType == Res_value::TYPE_DIMENSION ? complexToFloat(v.data) : def;
+    TypedValue v; if (!getResolved(idx, &v)) return def;
+    return v.type == TypedValue::TYPE_DIMENSION ? TypedValue::complexToFloat(v.data) : def;
 }
 
 int32_t TypedArray::getDimensionPixelSize(size_t idx, int32_t def) const {
-    Res_value v; if (!getResolved(idx, &v)) return def;
-    if (v.dataType != Res_value::TYPE_DIMENSION) return def;
-    float mag = complexToFloat(v.data);
-    int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
-    float px = (unit == Res_value::COMPLEX_UNIT_PX) ? mag : mag * mDensity;
+    TypedValue v; if (!getResolved(idx, &v)) return def;
+    if (v.type != TypedValue::TYPE_DIMENSION) return def;
+    float mag = TypedValue::complexToFloat(v.data);
+    int unit = (v.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
+    float px = (unit == TypedValue::COMPLEX_UNIT_PX) ? mag : mag * mDensity;
     return (int32_t)(px + 0.5f);
 }
 
 uint32_t TypedArray::getResourceId(size_t idx, uint32_t def) const {
-    // AOSP TypedArray.getResourceId: TYPE_NULL/TYPE_STRING → def; otherwise the
-    // STYLE_RESOURCE_ID column — the id the value came from, kept even after
-    // reference flattening (resolver records it in StyledAttr::resourceId).
-    // The ids are the aapt2/arsc space View::getId() uses now that idgen is
-    // retired (R.h is dumped from the arsc).
+    // AOSP TypedArray.getResourceId: any non-TYPE_NULL value with a non-zero
+    // STYLE_RESOURCE_ID column returns the column id — the id the value came
+    // from, kept even after reference flattening (e.g. a style item pointing
+    // at a file resource resolves to TYPE_STRING while the column keeps the
+    // @animator/... id). Resolver records it in StyledAttr::resourceId.
     if (!hasValue(idx)) return def;
-    const Res_value& v = mVals[idx].value;
-    if (v.dataType == Res_value::TYPE_NULL || v.dataType == Res_value::TYPE_STRING) return def;
+    if (mVals[idx].value.dataType == Res_value::TYPE_NULL) return def;
     if (mVals[idx].resourceId != 0) return mVals[idx].resourceId;
     return def;
 }
 
 std::string TypedArray::getString(size_t idx) const {
-    Res_value v; if (!get(idx, &v) || v.dataType != Res_value::TYPE_STRING) return "";
+    TypedValue v; if (!get(idx, &v) || v.type != TypedValue::TYPE_STRING) return "";
     const ResStringPool* pool = nullptr;
     if (mVals[idx].stringBlock == -2 && mXml) {
         pool = &mXml->getStrings();  // element-sourced: AXML's own pool
@@ -185,56 +217,53 @@ int32_t TypedArray::getInteger(size_t idx, int32_t def) const {
 
 bool TypedArray::hasValueOrEmpty(size_t idx) const {
     if (!hasValue(idx)) return false;
-    Res_value v = mVals[idx].value;
+    TypedValue v;
+    get(idx, &v);
     // @empty is represented as TYPE_REFERENCE with data == 0.
-    return !(v.dataType == Res_value::TYPE_REFERENCE && v.data == 0);
+    return !(v.type == TypedValue::TYPE_REFERENCE && v.data == 0);
 }
 
 float TypedArray::getFloat(size_t idx, float def) const {
-    Res_value v; if (!getResolved(idx, &v)) return def;
-    if (v.dataType == Res_value::TYPE_FLOAT) {
-        float f; memcpy(&f, &v.data, sizeof(f)); return f;
-    }
-    if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)
+    TypedValue v; if (!getResolved(idx, &v)) return def;
+    if (v.type == TypedValue::TYPE_FLOAT) return v.getFloat();
+    if (v.type == TypedValue::TYPE_INT_DEC || v.type == TypedValue::TYPE_INT_HEX)
         return (float)(int32_t)v.data;
-    if (v.dataType == Res_value::TYPE_DIMENSION)
-        return complexToFloat(v.data);
+    if (v.type == TypedValue::TYPE_DIMENSION)
+        return TypedValue::complexToFloat(v.data);
     return def;
 }
 
 int32_t TypedArray::getDimensionPixelOffset(size_t idx, int32_t def) const {
-    Res_value v; if (!getResolved(idx, &v)) return def;
-    if (v.dataType != Res_value::TYPE_DIMENSION) return def;
-    float mag = complexToFloat(v.data);
-    int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
-    float px = (unit == Res_value::COMPLEX_UNIT_PX) ? mag : mag * mDensity;
+    TypedValue v; if (!getResolved(idx, &v)) return def;
+    if (v.type != TypedValue::TYPE_DIMENSION) return def;
+    float mag = TypedValue::complexToFloat(v.data);
+    int unit = (v.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
+    float px = (unit == TypedValue::COMPLEX_UNIT_PX) ? mag : mag * mDensity;
     return (int32_t)px;  // truncate (offset), vs round (size)
 }
 
 int32_t TypedArray::getLayoutDimension(size_t idx, int32_t def) const {
-    Res_value v; if (!get(idx, &v)) return def;
+    TypedValue v; if (!get(idx, &v)) return def;
     // MATCH_PARENT(-1) / WRAP_CONTENT(-2) are passed through as-is.
-    if (v.dataType == Res_value::TYPE_INT_DEC &&
-        ((int32_t)v.data < 0)) return (int32_t)v.data;
+    if (v.type == TypedValue::TYPE_INT_DEC && ((int32_t)v.data < 0)) return (int32_t)v.data;
     return getDimensionPixelSize(idx, def);
 }
 
 float TypedArray::getFraction(size_t idx, int base, int pbase, float def) const {
-    Res_value v; if (!getResolved(idx, &v)) return def;
-    if (v.dataType != Res_value::TYPE_FRACTION) return def;
-    float f = complexToFloat(v.data);
-    int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
-    return (unit == Res_value::COMPLEX_UNIT_FRACTION_PARENT) ? f * pbase : f * base;
+    TypedValue v; if (!getResolved(idx, &v)) return def;
+    if (v.type != TypedValue::TYPE_FRACTION) return def;
+    float f = TypedValue::complexToFloat(v.data);
+    int unit = (v.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
+    return (unit == TypedValue::COMPLEX_UNIT_FRACTION_PARENT) ? f * pbase : f * base;
 }
 
 std::string TypedArray::getText(size_t idx) const {
-    Res_value v;
+    TypedValue v;
     if (!get(idx, &v)) return "";
     // AOSP TypedArray.getText resolves @string/foo references to their value
     // (TypedValue.coerceToString). getString only handles TYPE_STRING, so resolve
     // TYPE_REFERENCE / TYPE_DYNAMIC_REFERENCE through the owning Resources.
-    if (v.dataType == Res_value::TYPE_REFERENCE ||
-        v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE) {
+    if (v.type == TypedValue::TYPE_REFERENCE || v.type == TypedValue::TYPE_DYNAMIC_REFERENCE) {
         if (mResources) return mResources->getString((int)v.data);
         return "";
     }
@@ -242,17 +271,15 @@ std::string TypedArray::getText(size_t idx) const {
 }
 
 int TypedArray::getType(size_t idx) const {
-    if (!hasValue(idx)) return -1;
-    return mVals[idx].value.dataType;
+    TypedValue v;
+    return get(idx, &v) ? v.type : -1;
 }
 
-// AOSP TypedArray.peekValue(int): expose the typed value as a TypedValue
-// (android.util container); the raw Res_value stays an androidfw internal.
+// AOSP TypedArray.peekValue(int) / getValue(int, TypedValue): the typed value
+// as a TypedValue (android.util container); the raw Res_value stays an
+// androidfw internal, converted once at the StyledAttr boundary.
 bool TypedArray::peekValue(size_t idx, TypedValue* out) const {
-    Res_value v;
-    if (!get(idx, &v)) return false;
-    *out = TypedValue::from(v);
-    return true;
+    return get(idx, out);
 }
 
 size_t TypedArray::getIndexCount() const {
@@ -275,19 +302,19 @@ size_t TypedArray::getIndex(size_t n) const {
 
 Drawable* TypedArray::getDrawable(size_t idx) const {
     if (!mResources) return nullptr;
-    Res_value v;
+    TypedValue v;
     if (!get(idx, &v)) return nullptr;
     // Inline color → ColorDrawable directly (no resource id).
-    if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
+    if (v.type >= TypedValue::TYPE_FIRST_COLOR_INT && v.type <= TypedValue::TYPE_LAST_COLOR_INT)
         return new ColorDrawable(v.data);
     // Resolve the resource id, then load through the owning Resources (AOSP
     // TypedArray -> mResources.loadDrawable). References carry the id in v.data;
     // style-sourced file paths (TYPE_STRING) are reverse-resolved via the arsc.
     int id = 0;
-    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
-        v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+    if (v.type == TypedValue::TYPE_REFERENCE || v.type == TypedValue::TYPE_ATTRIBUTE ||
+        v.type == TypedValue::TYPE_DYNAMIC_REFERENCE || v.type == TypedValue::TYPE_DYNAMIC_ATTRIBUTE) {
         id = (int)v.data;
-    } else if (v.dataType == Res_value::TYPE_STRING) {
+    } else if (v.type == TypedValue::TYPE_STRING) {
         id = pathToResourceId(mTable, getString(idx));
     }
     if (id != 0) return mResources->getDrawable(id);
@@ -296,19 +323,19 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
 
 std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const {
     if (!mResources) return nullptr;
-    Res_value v;
+    TypedValue v;
     if (!get(idx, &v)) return nullptr;
     // Inline color → single-color ColorStateList (valueOf caches it).
-    if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
+    if (v.type >= TypedValue::TYPE_FIRST_COLOR_INT && v.type <= TypedValue::TYPE_LAST_COLOR_INT)
         return ColorStateList::valueOf(v.data);
     // Load through the owning Resources.loadComplexColor (AOSP TypedArray ->
     // mResources.loadComplexColor), preserving shared_ptr ownership so the cached
     // instance is shared with the loader cache.
     int id = 0;
-    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
-        v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+    if (v.type == TypedValue::TYPE_REFERENCE || v.type == TypedValue::TYPE_ATTRIBUTE ||
+        v.type == TypedValue::TYPE_DYNAMIC_REFERENCE || v.type == TypedValue::TYPE_DYNAMIC_ATTRIBUTE) {
         id = (int)v.data;
-    } else if (v.dataType == Res_value::TYPE_STRING) {
+    } else if (v.type == TypedValue::TYPE_STRING) {
         id = pathToResourceId(mTable, getString(idx));
     }
     if (id != 0)

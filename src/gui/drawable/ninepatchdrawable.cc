@@ -21,7 +21,7 @@
 #include <image-decoders/imagedecoder.h>
 #include <core/asset.h>
 #include <widget/framework_styleable.h>
-#include <androidfw/typedvalue.h>
+#include <core/typedvalue.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
 #include <fstream>

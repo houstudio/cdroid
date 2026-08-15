@@ -63,7 +63,11 @@ TEST_F(ANIMATORINFLATOR,statelistanimator_scale_runs){
     ASSERT_TRUE(set->isRunning()) << "animator set not running";
     // Durations come through the binary AXML typed values (500 for activated item).
     ASSERT_EQ(set->getTotalDuration(),(int64_t)500) << "duration not read from AXML";
+    // Value level: alpha must actually animate to valueTo=1.0 (the old
+    // string-probing getPVH lost every typed value and the set ran empty).
+    v->setAlpha(0.f);
     pumpFor(600);
+    ASSERT_NEAR(v->getAlpha(),1.f,0.01f) << "alpha did not animate to valueTo=1.0";
 
     v->setActivated(false); // back to base state -> 300ms animators
     running=v->getStateListAnimator()->getRunningAnimator();
@@ -73,6 +77,7 @@ TEST_F(ANIMATORINFLATOR,statelistanimator_scale_runs){
     ASSERT_EQ(set->getChildAnimations().size(),(size_t)4);
     ASSERT_EQ(set->getTotalDuration(),(int64_t)300);
     pumpFor(400);
+    ASSERT_NEAR(v->getAlpha(),0.7f,0.01f) << "alpha did not animate to valueTo=0.7";
     delete v; // deletes the SLA it owns
 }
 

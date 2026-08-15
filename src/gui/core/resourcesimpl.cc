@@ -17,7 +17,7 @@
 #include <androidfw/restable.h>       // ResTable, ResTable_config, Res_value, pakPathCandidates
 #include <core/assetmanager.h>        // AssetManager
 #include <core/asset.h>               // Asset
-#include <androidfw/typedvalue.h>     // TypedValue
+#include <core/typedvalue.h>     // TypedValue
 
 #include <drawable/drawable.h>        // Drawable::ConstantState
 #include <drawable/colordrawable.h>   // ColorDrawable (color-drawable path)

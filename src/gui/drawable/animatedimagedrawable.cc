@@ -19,7 +19,7 @@
 #include <drawable/animatedimagedrawable.h>
 #include <core/systemclock.h>
 #include <core/typedarray.h>
-#include <androidfw/typedvalue.h>
+#include <core/typedvalue.h>
 #include <utils/textutils.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdlog.h>

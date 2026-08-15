@@ -35,12 +35,13 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <androidfw/resourcetypes.h>  // Res_value, StyledAttr, ResXMLTree
-#include <androidfw/typedvalue.h>     // TypedValue (peekValue out-param)
+#include <core/typedvalue.h>     // TypedValue (peekValue/getValue out-param)
 
 namespace cdroid {
 
-class ResTable;      // defined in androidfw/restable.h (reference member only)
+class ResTable;      // androidfw/restable.h — opaque here (reference member only)
+class ResXMLTree;    // androidfw/resourcetypes.h — opaque pointer
+struct StyledAttr;   // androidfw/resourcetypes.h — opaque pointer members
 class Resources;     // cdroid::Resources — the AOSP mResources holder (loadDrawable/...)
 class Drawable;
 class ColorStateList;
@@ -55,8 +56,9 @@ public:
     TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
                const Resources* res = nullptr);
-    size_t size() const { return mCount; }
-    bool hasValue(size_t idx) const { return idx < mCount && mVals[idx].set; }
+    ~TypedArray();
+    size_t size() const;
+    bool hasValue(size_t idx) const;
     bool hasValueOrEmpty(size_t idx) const;
     // AOSP TypedArray pattern: iterate only over SET indices (not all COUNT).
     size_t getIndexCount() const;
@@ -76,10 +78,12 @@ public:
     uint32_t getResourceId(size_t idx, uint32_t def) const;
     std::string getString(size_t idx) const;
     std::string getText(size_t idx) const;     // alias of getString for now
-    int       getType(size_t idx) const;        // Res_value dataType, or -1
-    // AOSP TypedArray.peekValue(int): the typed value as a TypedValue (the
-    // android.util container). The Res_value plumbing stays inside TypedArray.
+    int       getType(size_t idx) const;        // TypedValue.type, or -1
+    // AOSP TypedArray.getValue(int, TypedValue) / peekValue(int): the typed
+    // value as a TypedValue (the android.util container). The Res_value
+    // plumbing stays inside TypedArray, converted at the StyledAttr boundary.
     bool      peekValue(size_t idx, TypedValue* out) const;
+    bool      getValue(size_t idx, TypedValue* out) const;
     // High-level resource access — delegate to the owning Resources (AOSP
     // AOSP TypedArray.getResources(): the owning Resources (for openRawResource,
     // getValue, DisplayMetrics — everything updateStateFromTypedArray needs).
@@ -92,17 +96,15 @@ public:
     Drawable* getDrawable(size_t idx) const;
     std::shared_ptr<ColorStateList> getColorStateList(size_t idx) const;
 private:
-    bool get(size_t idx, Res_value* v) const {
-        if (!hasValue(idx)) return false;
-        *v = mVals[idx].value;
-        return true;
-    }
+    // Internal access speaks TypedValue everywhere; Res_value (androidfw) is
+    // converted exactly once at the StyledAttr boundary (typedarray.cc glue).
+    bool get(size_t idx, TypedValue* out) const;
     // Resolve TYPE_REFERENCE/ATTRIBUTE/DYNAMIC_* to the referenced resource's
     // final value via the owning Resources (AOSP TypedArray resolves refs in
     // getValue). Non-reference values pass through unchanged.
-    bool getResolved(size_t idx, Res_value* out) const;
+    bool getResolved(size_t idx, TypedValue* out) const;
     const ResTable&         mTable;
-    std::vector<StyledAttr> mOwned;  // empty for non-owning mode
+    std::vector<StyledAttr>* mOwned = nullptr;  // heap (opaque in this header); null = non-owning
     const StyledAttr*       mVals;
     size_t                  mCount;
     const ResXMLTree*       mXml;

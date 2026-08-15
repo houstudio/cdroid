@@ -3,6 +3,7 @@ SET(CORE_SOURCES
     core/assets.cc
     core/attributeset.cc
     core/typedarray.cc      # TypedArray (cdroid-side typed attr view over a styleable set)
+    core/typedvalue.cc      # TypedValue (AOSP android.util.TypedValue) + applyDimension
     core/context.cc         # cdroid::Context AOSP ID-based resource getters (defaults)
     core/resourcesimpl.cc   # cdroid::ResourcesImpl: facade hiding androidfw (ResTable/AssetManager)
     core/resources.cc # cdroid::Resources: GUI factories over ResourcesImpl

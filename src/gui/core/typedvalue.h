@@ -8,7 +8,6 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <androidfw/resourcetypes.h>  // Res_value (TypedValue::from)
 #include <core/displaymetrics.h>   // DisplayMetrics (complexToDimension param)
 
 namespace cdroid {
@@ -33,6 +32,9 @@ public:
     static constexpr int TYPE_INT_COLOR_RGB4 = 0x1f;
     static constexpr int TYPE_LAST_COLOR_INT = 0x1f;
     static constexpr int TYPE_LAST_INT = 0x1f;
+    // Dynamic (runtime-chocolate-dipped) references — AOSP android.util.TypedValue.
+    static constexpr int TYPE_DYNAMIC_REFERENCE = 0x100;
+    static constexpr int TYPE_DYNAMIC_ATTRIBUTE = 0x101;
 
     static constexpr int COMPLEX_UNIT_SHIFT = 0;
     static constexpr int COMPLEX_UNIT_MASK = 0xf;
@@ -69,15 +71,9 @@ public:
     size_t stringLen = 0;
 
     int   getComplexUnit();
-    // Adopt the type/data payload of a raw Res_value (androidfw internal).
-    // AOSP ResXMLTree.getAttributeValue fills a TypedValue directly; CDROID's
-    // TypedArray hands out Res_value, so this is the seam.
-    static TypedValue from(const Res_value& v) {
-        TypedValue tv;
-        tv.type = v.dataType;
-        tv.data = v.data;
-        return tv;
-    }
+    // AOSP android.util.TypedValue has no factory from the native Res_value —
+    // the fill happens in the JNI glue, not in this class. The CDROID glue
+    // lives at the TypedArray StyledAttr boundary (typedarray.cc).
     static float complexToFloat(int complex);
     static float complexToFraction(int data, float base, float pbase);
     float getFraction(float base, float pbase);

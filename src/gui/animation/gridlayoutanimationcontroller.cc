@@ -21,7 +21,7 @@
 #include <animation/animationutils.h>
 #include <animation/gridlayoutanimationcontroller.h>
 #include <core/typedarray.h>
-#include <androidfw/typedvalue.h>   // TypedValue (Description::parseValue)
+#include <core/typedvalue.h>   // TypedValue (Description::parseValue)
 #include <widget/framework_styleable.h>
 
 namespace cdroid{

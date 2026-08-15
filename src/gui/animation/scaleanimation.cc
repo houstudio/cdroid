@@ -19,7 +19,7 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <core/typedarray.h>
-#include <androidfw/typedvalue.h>
+#include <core/typedvalue.h>
 #include <widget/framework_styleable.h>
 namespace cdroid{
 using namespace cdroid::internal;

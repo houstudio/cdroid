@@ -17,6 +17,8 @@
  *********************************************************************************/
 #include <assets.h>
 #include <core/typedarray.h>   // TypedArray (constructed in obtainStyledAttributes)
+#include <core/typedvalue.h>   // TypedValue (typed currency of this layer)
+#include <androidfw/restable.h> // ResTable engine + Res_value (boundary lookups)
 #include "androidfw/LocaleData.h"  // localeDataComputeScript (arsc locale config)
 #include "core/assetmanager.h"   // AssetManager
 #include "resources.h"         // cdroid::Resources
@@ -42,13 +44,26 @@
 using namespace Cairo;
 namespace cdroid {
 
-static std::string renderResValue(const Assets* a, const Res_value& v);  // fwd
+// androidfw glue (same seam as typedarray.cc): fill a TypedValue from the raw
+// Res_value handed out by ResTable lookups. AOSP does this fill in the native
+// layer; core code speaks TypedValue from here on.
+static TypedValue tvOf(const Res_value& rv) {
+    TypedValue tv; tv.type = rv.dataType; tv.data = rv.data; return tv;
+}
+// mArscTheme is stored opaque in the header (void*) to keep androidfw out of
+// assets.h; cast at the engine boundary.
+static ResTable::Theme* asTheme(void* t) { return (ResTable::Theme*)t; }
+
+static std::string renderResValue(const Assets* a, const TypedValue& v);  // fwd
 static std::string u16toUtf8(const char16_t* s, size_t len);  // fwd (def below)
 
 // Resolve a resource ID through the loaded arsc.
-bool Assets::arscResolveId(uint32_t resId, Res_value* out) const {
+bool Assets::arscResolveId(uint32_t resId, TypedValue* out) const {
     if (!mResTable || resId == 0 || resId == 0xFFFFFFFF) return false;
-    return mResTable->getResource(resId, out) >= 0;
+    Res_value rv;
+    if (mResTable->getResource(resId, &rv) < 0) return false;
+    *out = tvOf(rv);
+    return true;
 }
 
 // Get a string from the arsc string pool by resource ID.
@@ -74,15 +89,16 @@ std::string Assets::getResourceName(uint32_t resId) const {
 }
 
 // Resolve a theme-attribute reference (?attr/<id>) through the arsc Theme.
-bool Assets::arscThemeAttribute(uint32_t attrId, Res_value* out, ssize_t* outBlock) const {
+bool Assets::arscThemeAttribute(uint32_t attrId, TypedValue* out, ssize_t* outBlock) const {
     if (!mArscTheme || !out) return false;
-    Res_value v;
-    ssize_t blk = mArscTheme->getAttribute(attrId, &v);
+    ResTable::Theme* theme = (ResTable::Theme*)mArscTheme;
+    Res_value rv;
+    ssize_t blk = theme->getAttribute(attrId, &rv);
     if (blk < 0) return false;
     // Flatten ?attr / @ref chains to a concrete value.
-    blk = mArscTheme->resolveAttributeReference(&v, blk);
+    blk = theme->resolveAttributeReference(&rv, blk);
     if (blk < 0) return false;
-    *out = v;
+    *out = tvOf(rv);
     if (outBlock) *outBlock = blk;
     return true;
 }
@@ -94,14 +110,14 @@ std::string Assets::themeString(const std::string& key, const std::string& pkg) 
     std::string v = mTheme.getAttributeValue(key);
     if (!v.empty() || !mArscTheme || !mResTable) return v;
     uint32_t attrId = arscGetIdentifier(key, "attr", pkg);
-    Res_value tv;
+    TypedValue tv;
     ssize_t blk = -1;
     if (attrId && arscThemeAttribute(attrId, &tv, &blk) && tv.data != 0) {
         // aapt2 stores color/drawable theme values as the file path (TYPE_STRING),
         // not a reference id; resolve the string from the owning pool block so the
         // caller (e.g. getColorStateList) can re-resolve it. renderResValue returns
         // empty for TYPE_STRING, so handle it here.
-        if (tv.dataType == Res_value::TYPE_STRING && blk >= 0) {
+        if (tv.type == TypedValue::TYPE_STRING && blk >= 0) {
             size_t len = 0;
             const char16_t* s = mResTable->stringAtBlock(blk, tv.data, &len);
             if (s && len) return u16toUtf8(s, len);
@@ -121,14 +137,14 @@ std::string Assets::resolveThemeRef(const std::string& resid) const {
     std::string key  = (slash != std::string::npos) ? name.substr(slash + 1) : name;
     uint32_t attrId = arscGetIdentifier(key, type, pkg);
     if (!attrId) return resid;
-    Res_value v;
+    TypedValue v;
     if (!arscThemeAttribute(attrId, &v)) return resid;
     std::string rendered = renderResValue(this, v);
     return rendered.empty() ? resid : rendered;
 }
 
 // Try to resolve a "@0xPPtteeee" hex resource ID string through the arsc.
-bool Assets::arscResolveHexRef(const std::string& s, Res_value* out) const {
+bool Assets::arscResolveHexRef(const std::string& s, TypedValue* out) const {
     if (!mResTable || s.empty()) return false;
     // Accept "@0x...", "0x...", or a bare hex tail after the last '@'.
     size_t at = s.rfind('@');
@@ -138,7 +154,10 @@ bool Assets::arscResolveHexRef(const std::string& s, Res_value* out) const {
     errno = 0;
     unsigned long id = strtoul(hex.c_str() + 2, &end, 16);
     if (errno || end == hex.c_str() + 2 || id == 0 || id == 0xFFFFFFFF) return false;
-    return mResTable->getResource((uint32_t)id, out) >= 0;
+    Res_value rv;
+    if (mResTable->getResource((uint32_t)id, &rv) < 0) return false;
+    *out = tvOf(rv);
+    return true;
 }
 
 // arsc identifier lookup. aapt2 forces a dotted package name (e.g.
@@ -170,26 +189,26 @@ uint32_t Assets::arscGetIdentifier(const std::string& name, const std::string& t
 // Render a Res_value to the same string form renderTypedValue produces, so a
 // theme-resolved value can flow through the string-based getters. Only the
 // types a theme attribute realistically resolves to (color/int/dimension/ref).
-static std::string renderResValue(const Assets* a, const Res_value& v) {
+static std::string renderResValue(const Assets* a, const TypedValue& v) {
     char buf[32];
-    switch (v.dataType) {
-        case Res_value::TYPE_INT_COLOR_ARGB8:
-        case Res_value::TYPE_INT_COLOR_RGB8:
-        case Res_value::TYPE_INT_COLOR_ARGB4:
-        case Res_value::TYPE_INT_COLOR_RGB4:
+    switch (v.type) {
+        case TypedValue::TYPE_INT_COLOR_ARGB8:
+        case TypedValue::TYPE_INT_COLOR_RGB8:
+        case TypedValue::TYPE_INT_COLOR_ARGB4:
+        case TypedValue::TYPE_INT_COLOR_RGB4:
             snprintf(buf, sizeof(buf), "#%08x", v.data); return buf;
-        case Res_value::TYPE_INT_DEC:  snprintf(buf, sizeof(buf), "%d", (int)v.data); return buf;
-        case Res_value::TYPE_INT_HEX:  snprintf(buf, sizeof(buf), "0x%x", v.data); return buf;
-        case Res_value::TYPE_INT_BOOLEAN: return v.data ? "true" : "false";
-        case Res_value::TYPE_DIMENSION: {
+        case TypedValue::TYPE_INT_DEC:  snprintf(buf, sizeof(buf), "%d", (int)v.data); return buf;
+        case TypedValue::TYPE_INT_HEX:  snprintf(buf, sizeof(buf), "0x%x", v.data); return buf;
+        case TypedValue::TYPE_INT_BOOLEAN: return v.data ? "true" : "false";
+        case TypedValue::TYPE_DIMENSION: {
             float mag = complexToFloat(v.data);
-            int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
-            const char* u = unit == Res_value::COMPLEX_UNIT_SP ? "sp"
-                          : unit == Res_value::COMPLEX_UNIT_DIP ? "dp" : "px";
+            int unit = (v.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
+            const char* u = unit == TypedValue::COMPLEX_UNIT_SP ? "sp"
+                          : unit == TypedValue::COMPLEX_UNIT_DIP ? "dp" : "px";
             snprintf(buf, sizeof(buf), "%d%s", (int)mag, u); return buf;
         }
-        case Res_value::TYPE_REFERENCE:
-        case Res_value::TYPE_DYNAMIC_REFERENCE:
+        case TypedValue::TYPE_REFERENCE:
+        case TypedValue::TYPE_DYNAMIC_REFERENCE:
             return a->getResourceName(v.data);
         default: return std::string();
     }
@@ -222,7 +241,7 @@ Assets::Assets(const std::string&path):Assets() {
 Assets::~Assets() {
     delete mCdroidResources;   // holds mAssetManager as a borrowed pointer
     delete mAssetManager;
-    delete mArscTheme;
+    delete asTheme(mArscTheme);
     delete mResTable;
 
     for(auto it=mResources.begin(); it!=mResources.end(); it++) {
@@ -301,7 +320,7 @@ Resources::Theme Assets::getTheme() {
     if (!mArscTheme && mResTable) {
         mArscTheme = new ResTable::Theme(*mResTable);
     }
-    ResTable::Theme* engine = mArscTheme;
+    ResTable::Theme* engine = asTheme(mArscTheme);
     if (engine == nullptr) {
         static ResTable sEmptyTable;
         static ResTable::Theme sEmptyTheme(sEmptyTable);
@@ -325,7 +344,7 @@ void Assets::setTheme(const std::string&theme) {
     // (Re)build the arsc-backed Theme for ?attr resolution. The text mTheme
     // above stays for the existing string path; mArscTheme adds typed theme
     // lookups (?android:colorPrimary etc.) via ResTable::Theme.
-    delete mArscTheme;
+    delete asTheme(mArscTheme);
     mArscTheme = nullptr;
     if (mResTable) {
         std::string pkg, name = theme;
@@ -335,9 +354,9 @@ void Assets::setTheme(const std::string&theme) {
         uint32_t styleId = arscGetIdentifier(styleName, "style", pkg);
         if (styleId) {
             mArscTheme = new ResTable::Theme(*mResTable);
-            if (mArscTheme->applyStyle(styleId) != 0) {
+            if (asTheme(mArscTheme)->applyStyle(styleId) != 0) {
                 LOGW("arsc Theme applyStyle(%s) failed", theme.c_str());
-                delete mArscTheme;
+                delete asTheme(mArscTheme);
                 mArscTheme = nullptr;
             } else {
                 LOGD("arsc Theme built from %s (resId=0x%08x)", theme.c_str(), styleId);
@@ -350,13 +369,13 @@ void Assets::setTheme(int resid) {
     // ID-based theme apply (AOSP Context.setTheme(int @StyleRes)): rebuild the
     // arsc-backed theme directly from a style resource id, skipping the name
     // lookup the string overload performs.
-    delete mArscTheme;
+    delete asTheme(mArscTheme);
     mArscTheme = nullptr;
     if (mResTable && resid) {
         mArscTheme = new ResTable::Theme(*mResTable);
-        if (mArscTheme->applyStyle((uint32_t)resid) != 0) {
+        if (asTheme(mArscTheme)->applyStyle((uint32_t)resid) != 0) {
             LOGW("arsc Theme applyStyle(resId=0x%08x) failed", resid);
-            delete mArscTheme;
+            delete asTheme(mArscTheme);
             mArscTheme = nullptr;
         } else {
             LOGD("arsc Theme built from resId=0x%08x", resid);
@@ -509,32 +528,6 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         //setTheme("cdroid:style/Theme");
         setTheme("cdroid:style/Theme.Material");
     }
-#if 0
-    // pending.colors / pending.dimens resolved cross-references into the retired
-    // text caches (mColors/mDimensions); those caches are gone, so nothing feeds
-    // these queues now. Only pending.colorStateList still resolves (via the
-    // arsc-backed getColorStateList(name) → Resources::loadComplexColor(id)).
-    while (!pending.colorStateList.empty()) {
-        bool resolved = false;
-        for (auto it = pending.colorStateList.begin(); it != pending.colorStateList.end(); ) {
-            // Resolve each pending color-state-list by name through the apk
-            // id-path (Assets::getColorStateList(name) → Resources::loadComplexColor(id),
-            // cached). Forward references that can't resolve yet stay pending for
-            // the next pass.
-            if (getColorStateList(it->first)) {
-                it = pending.colorStateList.erase(it);
-                resolved = true;
-            } else {
-                LOGD("%s tobe done", it->first.c_str());
-                ++it;
-            }
-        }
-        if (!resolved) break;
-    }
-    for(auto c:pending.colorStateList){
-        LOGD("colorStateList %s unresolved", c.first.c_str());
-    }
-#endif
     LOGI("[%s] loaded %d files, %d styles, %d theme attrs, used %dms",
          package.c_str(), count, mStyles.size(), mTheme.getAttributeCount(),
          int(SystemClock::uptimeMillis()-sttm));
@@ -632,8 +625,10 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
         parseResource(effective, &rawName, &package);
         uint32_t id = arscGetIdentifier(rawName, "drawable", package);
         if(id != 0){
-            Res_value v;
-            if(mResTable->getResource(id, &v) >= 0 && v.dataType == Res_value::TYPE_STRING){
+            Res_value rv;
+            if(mResTable->getResource(id, &rv) >= 0){
+            TypedValue v = tvOf(rv);
+            if(v.type == TypedValue::TYPE_STRING){
                 size_t len = 0;
                 const char16_t* s = mResTable->getResourceString(id, &len);
                 if(s && len > 0){
@@ -646,6 +641,7 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
                         if(pak2) stream = pak2->getInputStream(resname);
                     }
                 }
+            }
             }
         }
     }
@@ -735,595 +731,13 @@ Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(int id,int width,int height
     return loadImage(stm, width, height);
 }
 
-#if 0  // retired: Assets::getId(const std::string&) — zero callers. Use R::id::* (int)
-       // or Resources.getIdentifier(name,type,pkg). Kept for reference until AttributeSet
-       // string-key retirement completes the last string-id path.
-int Assets::getId(const std::string&resname)const {
-    std::string resid,pkg;
-    std::string key = resname;
-    if(key.empty())return -1;
-    if(key.length()&&(key.find('/')==std::string::npos)) {
-        // Bare value (no '/'): a pure numeric id ("42") or a bare name ("cs_prev", "parent").
-        // strtol resolves numerics; a bare name is resolved as an id reference against the id table
-        // (Android Resources.getIdentifier(name,"id",pkg)). Falling back to strtol (==0) when the
-        // name is unregistered preserves the legacy "parent" -> PARENT_ID(0) convention — otherwise
-        // a bare name strtol()d to 0 and every MotionScene ConstraintSet id collided at 0.
-        char* endP = nullptr;
-        const long v = std::strtol(key.c_str(), &endP, 10);
-        if (*endP == '\0') return (int)v;            // whole string consumed → pure numeric
-        const int rid = getId("@id/" + key);         // bare name → id table via the prefixed path
-        return (rid != -1) ? rid : (int)v;           // unregistered → strtol fallback (parent -> 0)
-    }
-    auto pos = key.find('+');
-    if(pos != std::string::npos)
-        key.erase(pos,1);
-    parseResource(key,&resid,&pkg);
-
-    // arsc is the single id source for binary apps: R.h is dumped from the same
-    // arsc (aapt2_gen_rh), so the resolved id matches View::getId().
-    if (mResTable) {
-        uint32_t id = arscGetIdentifier(resid, "id", pkg);
-        if (id != 0) return (int)id;
-    }
-    return -1;
-}
-#endif
 
 int Assets::getNextAutofillId(){
     return mNextAutofillViewId++;
 }
-#if 0
-const std::string Assets::getString(const std::string& resid,const std::string&lan) {
-    // Theme-attribute reference "?type/key" → resolve through arsc Theme.
-    if (!resid.empty() && resid[0] == '?') {
-        std::string r = resolveThemeRef(resid);
-        if (r != resid) return getString(r, lan);
-    }
-    // Binary AXML hex reference "@0xPPtteeee" → resolve the resource ID to a
-    // string via arsc. (getResourceString takes a resId and does getResource
-    // internally; do NOT pass the resolved Res_value.data, which for strings is
-    // a string-pool index, not a resId.)
-    if (mResTable) {
-        size_t at = resid.rfind('@');
-        std::string hex = (at != std::string::npos) ? resid.substr(at + 1) : resid;
-        if (hex.compare(0, 2, "0x") == 0 || hex.compare(0, 2, "0X") == 0) {
-            char* end = nullptr;
-            unsigned long id = strtoul(hex.c_str() + 2, &end, 16);
-            if (end != hex.c_str() + 2 && id != 0 && id != 0xFFFFFFFF) {
-                size_t len = 0;
-                const char16_t* s = mResTable->getResourceString((uint32_t)id, &len);
-                if (s && len > 0) return u16toUtf8(s, len);
-            }
-        }
-    }
-    if((!lan.empty())&&(mLanguage!=lan)) {
-        applyLocale(lan);     // arsc locale (setParameters) — binary apps
-        loadStrings(lan);     // text fallback (no-op for apps with no text values)
-        mLanguage = lan;      // track current locale (was never assigned before)
-    }
-    std::string str = resid;
-    std::string pkg,name = resid;
-    parseResource(resid,&name,&pkg);
-    std::string rawName = name; // save before normalize for arsc lookup
-    name = AttributeSet::normalize(pkg,resid);
-    // arsc is the single string source for binary apps.
-    if (mResTable && mResTable->getError() == 0) {
-        uint32_t id = arscGetIdentifier(rawName, "string", pkg);
-        if (id != 0) {
-            size_t len = 0;
-            const char16_t* s = mResTable->getResourceString(id, &len);
-            if (s && len > 0) { str = u16toUtf8(s, len); }
-        }
-    }
-    TextUtils::replace(str,"\\n","\n");
-    return str;
-}
-
-size_t Assets::getArray(const std::string&resid,std::vector<int>&out) {
-    std::string pkg,name = resid;
-    std::string fullname = parseResource(resid,&name,&pkg);
-    // arsc-first: read integer-array bag from resources.arsc.
-    if (mResTable) {
-        uint32_t id = arscGetIdentifier(name, "array", pkg);
-        if (id != 0) {
-            size_t count = 0; ssize_t block = -1;
-            const ResTable_map* map = mResTable->getBag(id, &count, nullptr, &block);
-            if (map && count) {
-                for (size_t i = 0; i < count; i++) {
-                    const Res_value& v = map[i].value;
-                    if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)
-                        out.emplace_back((int)v.data);
-                }
-                return count;
-            }
-        }
-    }
-    return  0;
-}
-
-size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
-    std::string pkg,name = resid;
-    std::string fullname = parseResource(resid,&name,&pkg);
-    // arsc-first: read string-array bag from resources.arsc.
-    if (mResTable) {
-        uint32_t id = arscGetIdentifier(name, "array", pkg);
-        if (id != 0) {
-            size_t count = 0; ssize_t block = -1;
-            const ResTable_map* map = mResTable->getBag(id, &count, nullptr, &block);
-            if (map && count) {
-                for (size_t i = 0; i < count; i++) {
-                    const Res_value& v = map[i].value;
-                    if (v.dataType == Res_value::TYPE_STRING) {
-                        size_t len = 0;
-                        const char16_t* s = mResTable->stringAtBlock(block, v.data, &len);
-                        if (s && len) out.emplace_back(u16toUtf8(s, len));
-                    } else {
-                        out.emplace_back(renderResValue(this, v));
-                    }
-                }
-                return count;
-            }
-        }
-    }
-    ZIPArchive * pak = getResource(resid,&name,nullptr);
-    if(pak)pak->forEachEntry([&out,pkg](const std::string&res){
-        if(TextUtils::startWith(res,"font")){
-            std::string fullres = AttributeSet::normalize(pkg,res);
-            out.emplace_back(fullres);
-        }
-        return out.size();
-    });
-    return 0;
-}
-
-
-Drawable* Assets::getDrawable(const std::string&resid) {
-    // Theme-attribute reference "?type/key" → resolve through arsc Theme.
-    if (!resid.empty() && resid[0] == '?') {
-        std::string r = resolveThemeRef(resid);
-        if (r != resid) return getDrawable(r);
-    }
-    Drawable* d = nullptr;
-    // Binary AXML hex reference → resolve path via arsc.
-    {
-        Res_value rv;
-        if (arscResolveHexRef(resid, &rv) && rv.dataType == Res_value::TYPE_STRING) {
-            size_t len = 0;
-            const char16_t* s = mResTable->getResourceString(rv.data, &len);
-            if (s && len > 0) {
-                std::string path = u16toUtf8(s, len);
-                if (path.substr(0, 4) == "res/") path = path.substr(4);
-                return getDrawable(path);
-            }
-        }
-    }
-    std::string resname,package,ext,fullresid;
-    if(resid.empty()||(resid.compare("null")==0)) {
-        return nullptr;
-    }
-    fullresid = parseResource(resid,&resname,&package);
-    // arsc: if the resource resolves to a string (file path), use that path.
-    if (mResTable && resname.find("drawable/") != std::string::npos) {
-        std::string rawName;
-        parseResource(resid, &rawName, &package);
-        uint32_t id = arscGetIdentifier(rawName, "drawable", package);
-        if (id != 0) {
-            Res_value v;
-            if (mResTable->getResource(id, &v) >= 0 && v.dataType == Res_value::TYPE_STRING) {
-                size_t len = 0;
-                const char16_t* s = mResTable->getResourceString(id, &len);
-                if (s && len > 0) {
-                    std::string path = u16toUtf8(s, len);
-                    // arsc path ("res/drawable-hdpi-v4/x.png") -> real pak
-                    // entry name ("drawable-hdpi/x.png"): res/ strip + "-vN"
-                    // strip, shared with ResourcesImpl::openPakPath.
-                    std::string realName;
-                    ZIPArchive* pak = findPakForPath(package, path, &realName);
-                    if (pak && !realName.empty()) {
-                        resname = realName;
-                        fullresid = package.empty() ? realName : package + ":" + realName;
-                    }
-                }
-            }
-        }
-    }
-    ZIPArchive* pak = getResource(fullresid,&resname,nullptr);
-    {
-        auto it = mDrawables.find(fullresid);
-        if( it != mDrawables.end() ) {
-            if(it->second.expired()==false) {
-                auto cs=it->second.lock();
-                d= cs->newDrawable();
-                LOGV("%s:%p use_count=%d",fullresid.c_str(),d,it->second.use_count());
-                return d;
-            }
-            mDrawables.erase(it);
-        }
-    }
-    auto extpos = resname.rfind(".");
-    if(extpos!=std::string::npos)
-        ext = resname.substr(extpos+1);
-    //wrap png to drawable,make app develop simply
-    if((resname[0]=='#')||(resname[1]=='x')||(resname[1]=='X')){
-        LOGV("color %s",fullresid.c_str());
-        d = new ColorDrawable(Color::parseColor(resname));
-        mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
-        return d;
-    }
-    if(resname.find("color/")!=std::string::npos){
-        // Resolve a color/ resource as a drawable: a plain color-int becomes a
-        // ColorDrawable; a color-state-list (selector) becomes a StateListDrawable.
-        if (mResTable) {
-            std::string pkg2, rel2;
-            parseResource(fullresid, &rel2, &pkg2);
-            uint32_t id = arscGetIdentifier(rel2, "color", pkg2);
-            if (id != 0) {
-                Res_value v;
-                if (mResTable->getResource(id, &v) >= 0 &&
-                    v.dataType >= Res_value::TYPE_FIRST_COLOR_INT &&
-                    v.dataType <= Res_value::TYPE_LAST_COLOR_INT) {
-                    LOGV("%s use colors as drawable",fullresid.c_str());
-                    d = new ColorDrawable((uint32_t)v.data);
-                    mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
-                    return d;
-                }
-                auto csl = getColorStateList(fullresid);
-                if (csl) {
-                    LOGV("%s use colorstatelist as drawable",fullresid.c_str());
-                    d = new StateListDrawable(*csl);
-                    mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
-                    return d;
-                }
-            }
-        }
-    }
-
-    if(resname.find("attr/")!=std::string::npos) {//for reference resource
-        resname = themeString(resname.substr(5), package);
-        d = getDrawable(resname);
-    } else if(resname.find("color/")!=std::string::npos) {
-        const uint32_t cc = (uint32_t)getColor(fullresid);
-        return new ColorDrawable(cc);
-    } else if(ext.compare("xml")){
-        if(resname.find(":")==std::string::npos){
-            struct stat st;
-            if(stat(resname.c_str(),&st))
-                resname = package+":"+resname;
-        }
-        d = ImageDecoder::createAsDrawable(this,resname);
-    }
-    if( (d == nullptr) && (ext.compare("xml")==0) ) {
-        d = DrawableInflater::loadDrawable(this,fullresid);//fromStream(this,zs,resname,package);
-    }
-    if(d) {
-        mDrawables.insert({fullresid,std::weak_ptr<Drawable::ConstantState>(d->getConstantState())});
-    }
-    return d;
-}
-
-int Assets::getDimension(const std::string&refid)const{
-    if (!refid.empty() && refid[0] == '?') {
-        std::string r = resolveThemeRef(refid);
-        if (r != refid) return getDimension(r);
-    }
-    std::string pkg,name = refid;
-    parseResource(name,nullptr,&pkg);
-    // arsc is the single dimen source for binary apps (mDimensions text is fallback).
-    if (mResTable) {
-        std::string rawName;
-        parseResource(refid, &rawName, nullptr);
-        uint32_t id = arscGetIdentifier(rawName, "dimen", pkg);
-        if (id != 0) {
-            Res_value v;
-            if (mResTable->getResource(id, &v) >= 0) {
-                if (v.dataType == Res_value::TYPE_DIMENSION) {
-                    float mag = complexToFloat(v.data);
-                    int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
-                    const auto& dm = getDisplayMetrics();
-                    if (unit == Res_value::COMPLEX_UNIT_DIP) return (int)(dm.density * mag);
-                    if (unit == Res_value::COMPLEX_UNIT_SP)  return (int)(dm.scaledDensity * mag);
-                    return (int)mag;
-                }
-                if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)
-                    return (int)v.data;
-            }
-        }
-    }
-    // Resource-not-found is a normal runtime case here, not a fault:
-    // AttributeSet::getDimension() forwards any ':'-bearing attribute value
-    // (e.g. a "@android:color/..." reference) to this method, which only
-    // resolves the "dimen" type — so color/style references legitimately miss.
-    // The trimmed framework arsc also omits many private resources. AOSP's
-    // getDimension throws NotFoundException that the caller catches to use its
-    // default; we mirror that by silently returning 0. No log: this fires on
-    // every color/style value forwarded here, so logging is pure noise.
-    return 0;
-}
-
-int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
-    std::string pkg,name = refid;
-    parseResource(name,nullptr,&pkg);
-    // arsc is the single dimen source for binary apps.
-    if (mResTable) {
-        std::string rawName;
-        parseResource(refid, &rawName, nullptr);
-        uint32_t id = arscGetIdentifier(rawName, "dimen", pkg);
-        if (id != 0) {
-            Res_value v;
-            if (mResTable->getResource(id, &v) >= 0) {
-                if (v.dataType == Res_value::TYPE_DIMENSION) {
-                    float mag = complexToFloat(v.data);
-                    int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
-                    const auto& dm = getDisplayMetrics();
-                    if (unit == Res_value::COMPLEX_UNIT_DIP) return (int)(dm.density * mag + 0.5f);
-                    if (unit == Res_value::COMPLEX_UNIT_SP)  return (int)(dm.scaledDensity * mag + 0.5f);
-                    return (int)(mag + 0.5f);
-                }
-                if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)
-                    return (int)v.data;
-            }
-        }
-    }
-    return def;
-}
-
-bool Assets::getBoolean(const std::string&refid)const{
-    return getDimension(refid);
-}
-
-float Assets::getFloat(const std::string&refid,float def)const{
-    std::string pkg,name = refid;
-    parseResource(name,nullptr,&pkg);
-    // arsc is the single dimen/float source for binary apps.
-    if (mResTable) {
-        std::string rawName;
-        parseResource(refid, &rawName, nullptr);
-        uint32_t id = arscGetIdentifier(rawName, "dimen", pkg);
-        if (id != 0) {
-            Res_value v;
-            if (mResTable->getResource(id, &v) >= 0) {
-                if (v.dataType == Res_value::TYPE_FLOAT) {
-                    float f; memcpy(&f, &v.data, sizeof(f));
-                    return f;
-                }
-                if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)
-                    return (float)(int)v.data;
-                if (v.dataType == Res_value::TYPE_DIMENSION)
-                    return complexToFloat(v.data);
-            }
-        }
-    }
-    return def;
-}
-#pragma GCC push_options
-#pragma GCC optimize("O0")
-//codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
-int Assets::getColor(const std::string&refid) {
-    // Theme-attribute reference "?type/key" → resolve through arsc Theme.
-    if (!refid.empty() && refid[0] == '?') {
-        std::string r = resolveThemeRef(refid);
-        if (r != refid) return getColor(r);
-    }
-    // Binary AXML hex reference: "@0x01060373" → resolve via arsc.
-    {
-        Res_value rv;
-        if (arscResolveHexRef(refid, &rv) &&
-            rv.dataType >= Res_value::TYPE_FIRST_COLOR_INT &&
-            rv.dataType <= Res_value::TYPE_LAST_COLOR_INT)
-            return rv.data;
-    }
-    std::string pkg,relname,name = refid;
-    parseResource(name,&relname,&pkg);
-    // arsc is the single color source for binary apps.
-    if (mResTable) {
-        uint32_t id = arscGetIdentifier(relname, "color", pkg);
-        if (id != 0) {
-            Res_value v;
-            if (mResTable->getResource(id, &v) >= 0 &&
-                v.dataType >= Res_value::TYPE_FIRST_COLOR_INT &&
-                v.dataType <= Res_value::TYPE_LAST_COLOR_INT) {
-                return v.data;
-            }
-        }
-    }
-    if(relname.compare(0,4,"attr")==0){
-        relname=relname.substr(5);
-        name =  themeString(relname, pkg);
-        return getColor(name);
-    }else if(refid.find("?")!=std::string::npos){
-        std::string clrRef = name;
-        TextUtils::replace(clrRef,"attr","color");
-        name = name.substr(name.find_last_of(":?/")+1);
-        clrRef = themeString(name, pkg);
-        return getColor(clrRef);
-    }else if((refid[0]=='#')||refid.find(':')==std::string::npos) {
-        return Color::parseColor(refid);
-    } else if(refid.find("color/")==std::string::npos) { //refid is defined as an color reference
-        parseResource(refid,&name,nullptr);
-        name = themeString(name, pkg);
-        return getColor(name);
-    }
-    throw std::runtime_error("Resource not found:" + refid);
-}
-
-cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
-    std::string pkg,name = fullresid,relname;
-    parseResource(name,&relname,&pkg);
-    name = AttributeSet::normalize(pkg,name);
-    // Fallback: resolve from resources.arsc via ResTable.
-    if (mResTable) {
-        uint32_t id = arscGetIdentifier(relname, "color", pkg);
-        if (id != 0) {
-            Res_value v;
-            if (mResTable->getResource(id, &v) >= 0 &&
-                v.dataType >= Res_value::TYPE_FIRST_COLOR_INT &&
-                v.dataType <= Res_value::TYPE_LAST_COLOR_INT) {
-                auto cls = ColorStateList::valueOf(v.data);
-                return cls;
-            }
-        }
-    }
-    if( name.size()&&(fullresid.find("attr")==std::string::npos) ) {
-        const size_t slashpos = fullresid.find("/");
-        try{
-            cdroid::RefPtr<ColorStateList>cls;
-            if(fullresid.size()&&(fullresid[0]=='#')){
-                const int color = Color::parseColor(fullresid);
-                cls = ColorStateList::valueOf(color);
-            }else{
-                // Apk id-path (AOSP loadComplexColor): resolve the resource id and
-                // load through the cached Resources::loadComplexColor; fall back to
-                // parsing the XML by name for resources absent from the arsc.
-                Resources& r = getResources();
-                const uint32_t id = arscGetIdentifier(relname, "color", pkg);
-                if (id != 0) {
-                    cls = std::dynamic_pointer_cast<ColorStateList>(r.loadComplexColor((int)id));
-                }
-                if (!cls) {
-                    XmlPullParser parser(this, fullresid);
-                    cls = ColorStateList::createFromXml(r, parser);
-                }
-            }
-            return cls;
-        }catch(std::exception&e){
-        }
-    } else if(fullresid.find("attr")!=std::string::npos) {
-        const size_t slashpos = fullresid.find("/");
-        std::string name = fullresid.substr(slashpos+1);
-        name = themeString(name, pkg);
-        if(!name.empty())return getColorStateList(name);
-    }
-    LOGD_IF(!fullresid.empty(),"%s not found",fullresid.c_str());
-    return nullptr;
-}
-
-#pragma GCC pop_options
-#endif
 void Assets::clearStyles() {
     mStyles.clear();
 }
-#if 0
-std::string Assets::resolveAttrValue(const std::string&attrResId)const{
-    std::string name = attrResId;
-    AttributeSet atts;
-    size_t pos = name.find("attr/");
-    if(pos!=std::string::npos){
-        do {
-            std::string key;
-            if((pos=name.find('?'))!=std::string::npos)
-                name.erase(pos,1);
-            if((pos =name.find('/'))!=std::string::npos)
-                name=name.substr(pos+1);
-            key = name;
-            name= themeString(key, "");
-            atts.add(key,name);
-            if((pos=name.find('@'))!=std::string::npos)
-                name.erase(pos,1);
-            pos = name.find("attr");
-        }while(pos!=std::string::npos);
-        name = parseResource(name,nullptr,nullptr);
-    }
-    if((pos=name.find("@"))!=std::string::npos)
-        name.erase(pos,1);
-    return name;
-}
-
-AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
-    AttributeSet atts;
-    std::string pkg,name = resname;
-    // Package prefix of the reference (e.g. "android" in "android:attr/..."). In
-    // SDK/binary mode values live only in resources.arsc, so the text mTheme is
-    // empty and theme-attribute lookups must go through the arsc Theme below.
-    size_t colonAt = resname.find(':');
-    std::string resPkg = (colonAt != std::string::npos) ? resname.substr(0, colonAt) : "";
-    size_t pos = name.find("attr/");
-    if(pos!=std::string::npos){
-        do {
-            std::string key;
-            if((pos=name.find('?'))!=std::string::npos)
-                name.erase(pos,1);
-            if((pos =name.find('/'))!=std::string::npos)
-                name=name.substr(pos+1);
-            key = name;
-            name= themeString(key, resPkg);
-            atts.add(key,name);
-            // A theme attr that resolves to a style reference: capture the style
-            // resId directly (the themeString -> name -> arscGetIdentifier round-
-            // trip below can fail to recover it). Lets obtainStyledAttributes
-            // re-resolve the style through the arsc theme resolver.
-            if (mResTable) {
-                uint32_t attrId = arscGetIdentifier(key, "attr", resPkg);
-                Res_value tv;
-                if (attrId && arscThemeAttribute(attrId, &tv) &&
-                    (tv.dataType == Res_value::TYPE_REFERENCE ||
-                     tv.dataType == Res_value::TYPE_DYNAMIC_REFERENCE)) {
-                    atts.setStyleResourceId((int)tv.data);
-                }
-            }
-            if((pos=name.find('@'))!=std::string::npos)
-                name.erase(pos,1);
-            pos = name.find("attr");
-        }while(pos!=std::string::npos);
-    }else{
-        if((pos=name.find('?'))!=std::string::npos)
-            name.erase(pos,1);
-    }
-    name = parseResource(name,nullptr,&pkg);
-    // arsc-first: resolve the style from resources.arsc (binary apps). Falls back
-    // to the text mStyles table below when no arsc / style not found.
-    if (mResTable) {
-        uint32_t styleId = arscGetIdentifier(name, "style", pkg);
-        if (styleId != 0) {
-            size_t count = 0; ssize_t block = -1;
-            const ResTable_map* map = mResTable->getBag(styleId, &count, nullptr, &block);
-            if (map) {
-                for (size_t i = 0; i < count; i++) {
-                    std::string attrName;
-                    mResTable->getResourceName(map[i].name.ident, nullptr, nullptr, &attrName);
-                    if (attrName.empty() || attrName == "parent") continue;
-                    const Res_value& v = map[i].value;
-                    std::string valStr;
-                    if (v.dataType == Res_value::TYPE_STRING) {
-                        size_t len = 0;
-                        const char16_t* s = mResTable->stringAtBlock(block, v.data, &len);
-                        if (s && len) valStr = u16toUtf8(s, len);
-                    } else {
-                        valStr = renderResValue(this, v);
-                    }
-                    atts.add(attrName, valStr);
-                    atts.setAttributeResourceId(attrName, (int)map[i].name.ident);
-                }
-                atts.setStyleResourceId((int)styleId);   // mark as a resolved style
-                atts.setContext(this, pkg);
-                uint32_t parentId = mResTable->getBagParent(styleId);
-                if (parentId != 0) {
-                    std::string pp, pn;
-                    if (mResTable->getResourceName(parentId, &pp, nullptr, &pn) && !pn.empty()) {
-                        AttributeSet parentAtts = obtainStyledAttributes(pp + ":style/" + pn);
-                        atts.inherit(parentAtts);
-                    }
-                }
-                return atts;
-            }
-        }
-    }
-    auto it = mStyles.find(name);
-    if(it != mStyles.end()){
-        atts = it->second;
-    }
-    atts.setContext(this,pkg);
-    std::string parent = atts.getAttributeValue("parent");
-    if(parent.length()) {
-        if(parent.find('/')==std::string::npos)
-            parent = std::string("style/")+parent;
-        if(parent.find(':')==std::string::npos)
-            parent = pkg+":"+parent;
-        AttributeSet parentAtts = obtainStyledAttributes(parent);
-        atts.inherit(parentAtts);
-    }
-    return atts;
-}
-#endif
 // AOSP Context.obtainStyledAttributes(AttributeSet, int[], defStyleAttr,
 // defStyleRes) — delegates to Resources.obtainStyledAttributes (the AOSP
 // Resources surface; the resolver logic lives there now). AttributeSet is

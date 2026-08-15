@@ -509,7 +509,6 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr,int defStyleRe
             setNestedScrollingEnabled(a->getBoolean(attr, false));
             break;
         case R::styleable::View_stateListAnimator:
-            LOGD("View ctor stateListAnimator resid=%d", a->getResourceId(attr, 0));
             setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,
                     a->getResourceId(attr, 0)));
             break;

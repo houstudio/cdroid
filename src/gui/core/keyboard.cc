@@ -21,7 +21,7 @@
 #include <core/tokenizer.h>
 #include <core/xmlpullparser.h>
 #include <core/typedarray.h>
-#include <androidfw/typedvalue.h>
+#include <core/typedvalue.h>
 #include <widget/internal_R.h>
 #include <widget/framework_styleable.h>
 using namespace cdroid::internal;

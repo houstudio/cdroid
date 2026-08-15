@@ -95,7 +95,14 @@ static int lerp(int startValue, int endValue, float fraction) {
 
 AnimateValue& PropertyValuesHolder::evaluator(float fraction,AnimateValue&out, const AnimateValue& from, const AnimateValue& to){
 #if VARIANT_AS_ANIMATEDVAUE
-    switch(from.index()){
+    // Mixed int/float endpoints (property getter float vs XML int literal) lerp
+    // in float — numeric promotion instead of bad_variant_access.
+    const bool eitherFloat = (from.index() == 1) || (to.index() == 1);
+    if (eitherFloat) {
+        const float f = (from.index() == 0) ? (float)GET_VARIANT(from,int) : GET_VARIANT(from,float);
+        const float t = (to.index()   == 0) ? (float)GET_VARIANT(to,int)   : GET_VARIANT(to,float);
+        out = f * (1.f - fraction) + t * fraction;
+    } else switch(from.index()){
     case 0:
         out = (int)((1.f - fraction)*GET_VARIANT(from,int) +  fraction * GET_VARIANT(to,int));
         break;
@@ -250,7 +257,16 @@ void PropertyValuesHolder::getPropertyValues(PropertyValues& values){
 
 void PropertyValuesHolder::setAnimatedValue(void*target){
     if(mProperty!=nullptr){
-        mProperty->set(target,getAnimatedValue());
+        AnimateValue value = getAnimatedValue();
+        // Numeric coercion at the property seam: an XML int literal ("55") on a
+        // float-typed property (pivotY etc.; AOSP generics would throw) crosses
+        // over instead of raising bad_variant_access, and float→int likewise.
+        if (mProperty->getType() == Property::FLOAT_TYPE && value.index() == 0/*int*/) {
+            value = (float)GET_VARIANT(value,int);
+        } else if (mProperty->getType() == Property::INT_TYPE && value.index() == 1/*float*/) {
+            value = (int)GET_VARIANT(value,float);
+        }
+        mProperty->set(target,value);
     }else if(mSetter!=0){
         AnimateValue value = getAnimatedValue();
         mSetter(target,mPropertyName,value);

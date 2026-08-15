@@ -20,6 +20,10 @@
 #include <animation/objectanimator.h>
 #include <animation/statelistanimator.h>
 namespace cdroid{
+class TypedArray;
+class TypedValue;
+}
+namespace cdroid{
 class AnimatorInflater{
 private:
     static constexpr int VALUE_TYPE_FLOAT     = 0;
@@ -34,7 +38,10 @@ private:
     static Animator* createAnimatorFromXml(Context*ctx,XmlPullParser&parser,const AttributeSet& atts,
                          AnimatorSet*parent,int sequenceOrdering,float pixelSize);
     static StateListAnimator* createStateListAnimatorFromXml(Context*ctx,XmlPullParser&,const AttributeSet&);
-    static int inferValueTypeFromPropertyName(Context*ctx,const AttributeSet&atts, const std::string& propertyName);
+    // AOSP AnimatorInflater: infer the value type from valueFrom/valueTo's raw
+    // TypedValues (typed/binary face; the old propertyName map was a text-XML shim).
+    static int inferValueTypeFromValues(const TypedArray& a, int valueFromId, int valueToId);
+    static int inferValueTypeFromType(const TypedValue& tv);
     static PropertyValuesHolder* getPVH(Context*ctx,const AttributeSet&atts, int valueType,const std::string& propertyName);
     static void parseAnimatorFromTypeArray(Context*ctx,ValueAnimator* anim,const AttributeSet&atts, float pixelSize);
     static TypeEvaluator setupAnimatorForPath(Context*ctx,ValueAnimator* anim,const AttributeSet&arrayAnimator);

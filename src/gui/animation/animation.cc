@@ -19,7 +19,7 @@
 #include <animation/animationutils.h>
 #include <widget/framework_styleable.h>
 #include <core/typedarray.h>
-#include <androidfw/typedvalue.h>   // TypedValue (Description::parseValue)
+#include <core/typedvalue.h>   // TypedValue (Description::parseValue)
 #include <systemclock.h>
 #include <limits>
 #include <cdtypes.h>

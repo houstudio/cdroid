@@ -7,7 +7,7 @@
 #include <core/asset.h>
 #include <core/assetmanager.h>
 #include <androidfw/resourcetypes.h>  // Res_value
-#include <androidfw/typedvalue.h>     // TypedValue, applyDimension
+#include <core/typedvalue.h>     // TypedValue, applyDimension
 
 #include <memory>
 #include <string>

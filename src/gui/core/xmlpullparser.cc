@@ -15,7 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <androidfw/resourcetypes.h>   // Must be first: Res_value used by assets.h
+#include <androidfw/resourcetypes.h>   // Res_value/ResXMLTree (boundary lookups)
+#include <core/typedvalue.h>           // TypedValue (typed currency)
 #include <core/xmlpullparser.h>
 #include <porting/cdlog.h>
 #include <core/context.h>
@@ -32,14 +33,20 @@
 
 namespace cdroid{
 
+// androidfw glue (same seam as typedarray.cc/assets.cc): fill a TypedValue
+// from the raw Res_value the AXML tree hands out.
+static TypedValue tvOf(const Res_value& rv) {
+    TypedValue tv; tv.type = rv.dataType; tv.data = rv.data; return tv;
+}
+
 // Decode a TYPE_DIMENSION complex value to its float magnitude.
 static float axmlComplexToFloat(uint32_t data) {
-    const uint32_t radix = (data >> Res_value::COMPLEX_RADIX_SHIFT) & Res_value::COMPLEX_RADIX_MASK;
-    const uint32_t mantissa = (data >> Res_value::COMPLEX_MANTISSA_SHIFT) & Res_value::COMPLEX_MANTISSA_MASK;
+    const uint32_t radix = (data >> TypedValue::COMPLEX_RADIX_SHIFT) & TypedValue::COMPLEX_RADIX_MASK;
+    const uint32_t mantissa = (data >> TypedValue::COMPLEX_MANTISSA_SHIFT) & TypedValue::COMPLEX_MANTISSA_MASK;
     switch (radix) {
-        case Res_value::COMPLEX_RADIX_23p0: return (float)(int32_t)mantissa;
-        case Res_value::COMPLEX_RADIX_16p7: return mantissa * (1.0f / (1 << 7));
-        case Res_value::COMPLEX_RADIX_8p15: return mantissa * (1.0f / (1 << 15));
+        case TypedValue::COMPLEX_RADIX_23p0: return (float)(int32_t)mantissa;
+        case TypedValue::COMPLEX_RADIX_16p7: return mantissa * (1.0f / (1 << 7));
+        case TypedValue::COMPLEX_RADIX_8p15: return mantissa * (1.0f / (1 << 15));
         default: return mantissa * (1.0f / (1 << 23));
     }
 }
@@ -178,44 +185,44 @@ struct Private{
     // Render a typed Res_value to a string when no rawValue is available.
     // ctx: the Context (App/Assets) for resolving references through arsc.
     std::string renderTypedValue(size_t attrIdx, Context* ctx) const {
-        Res_value v;
-        if(axmlTree->getAttributeValue(attrIdx, &v) != sizeof(Res_value)) return "";
+        Res_value rv;
+        if(axmlTree->getAttributeValue(attrIdx, &rv) != sizeof(Res_value)) return "";
+        const TypedValue v = tvOf(rv);
         char buf[32];
-        switch(v.dataType){
-            case Res_value::TYPE_STRING:{
+        switch(v.type){
+            case TypedValue::TYPE_STRING:{
                 size_t len = 0;
                 const char16_t* s = axmlTree->getStrings().stringAt(v.data, &len);
                 return s ? u16toUtf8(s, len) : "";
             }
-            case Res_value::TYPE_INT_DEC:
+            case TypedValue::TYPE_INT_DEC:
                 snprintf(buf, sizeof(buf), "%d", (int)v.data);
                 return buf;
-            case Res_value::TYPE_INT_HEX:
+            case TypedValue::TYPE_INT_HEX:
                 snprintf(buf, sizeof(buf), "0x%x", v.data);
                 return buf;
-            case Res_value::TYPE_INT_BOOLEAN:
+            case TypedValue::TYPE_INT_BOOLEAN:
                 return v.data ? "true" : "false";
-            case Res_value::TYPE_INT_COLOR_ARGB8:
-            case Res_value::TYPE_INT_COLOR_RGB8:
-            case Res_value::TYPE_INT_COLOR_ARGB4:
-            case Res_value::TYPE_INT_COLOR_RGB4:
+            case TypedValue::TYPE_INT_COLOR_ARGB8:
+            case TypedValue::TYPE_INT_COLOR_RGB8:
+            case TypedValue::TYPE_INT_COLOR_ARGB4:
+            case TypedValue::TYPE_INT_COLOR_RGB4:
                 snprintf(buf, sizeof(buf), "#%08x", v.data);
                 return buf;
-            case Res_value::TYPE_DIMENSION:{
+            case TypedValue::TYPE_DIMENSION:{
                 float mag = axmlComplexToFloat(v.data);
-                int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
-                const char* u = unit == Res_value::COMPLEX_UNIT_SP ? "sp"
-                              : unit == Res_value::COMPLEX_UNIT_DIP ? "dp" : "px";
+                int unit = (v.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
+                const char* u = unit == TypedValue::COMPLEX_UNIT_SP ? "sp"
+                              : unit == TypedValue::COMPLEX_UNIT_DIP ? "dp" : "px";
                 snprintf(buf, sizeof(buf), "%d%s", (int)mag, u);
                 return buf;
             }
-            case Res_value::TYPE_FLOAT:{
-                float f; memcpy(&f, &v.data, sizeof(f));
-                snprintf(buf, sizeof(buf), "%f", f);
+            case TypedValue::TYPE_FLOAT:{
+                snprintf(buf, sizeof(buf), "%f", v.getFloat());
                 return buf;
             }
-            case Res_value::TYPE_REFERENCE:
-            case Res_value::TYPE_DYNAMIC_REFERENCE:
+            case TypedValue::TYPE_REFERENCE:
+            case TypedValue::TYPE_DYNAMIC_REFERENCE:
                 // Render as an "@type/key" reference string (e.g. "@drawable/bg",
                 // "@string/hello", "@android:color/holo_orange") — the same form
                 // text XML uses — so the consuming widget's resolver
@@ -230,8 +237,8 @@ struct Private{
                 }
                 snprintf(buf, sizeof(buf), "@0x%08x", v.data);
                 return buf;
-            case Res_value::TYPE_ATTRIBUTE:
-            case Res_value::TYPE_DYNAMIC_ATTRIBUTE:
+            case TypedValue::TYPE_ATTRIBUTE:
+            case TypedValue::TYPE_DYNAMIC_ATTRIBUTE:
                 // A theme-attribute reference "?type/key" (e.g. "?android:attr/
                 // colorPrimary"). Rendered with '?' so AttributeSet routes it to
                 // obtainStyledAttributes (theme lookup) instead of treating it as
@@ -239,29 +246,29 @@ struct Private{
                 if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
                     Assets* assets = dynamic_cast<Assets*>(ctx);
                     if(assets){
-                        Res_value tv;
+                        TypedValue tv;
                         if(assets->arscThemeAttribute(v.data, &tv)){
-                            switch(tv.dataType){
-                                case Res_value::TYPE_INT_COLOR_ARGB8:
-                                case Res_value::TYPE_INT_COLOR_RGB8:
-                                case Res_value::TYPE_INT_COLOR_ARGB4:
-                                case Res_value::TYPE_INT_COLOR_RGB4:
+                            switch(tv.type){
+                                case TypedValue::TYPE_INT_COLOR_ARGB8:
+                                case TypedValue::TYPE_INT_COLOR_RGB8:
+                                case TypedValue::TYPE_INT_COLOR_ARGB4:
+                                case TypedValue::TYPE_INT_COLOR_RGB4:
                                     snprintf(buf, sizeof(buf), "#%08x", tv.data); return buf;
-                                case Res_value::TYPE_INT_DEC:
+                                case TypedValue::TYPE_INT_DEC:
                                     snprintf(buf, sizeof(buf), "%d", (int)tv.data); return buf;
-                                case Res_value::TYPE_INT_HEX:
+                                case TypedValue::TYPE_INT_HEX:
                                     snprintf(buf, sizeof(buf), "0x%x", tv.data); return buf;
-                                case Res_value::TYPE_INT_BOOLEAN:
+                                case TypedValue::TYPE_INT_BOOLEAN:
                                     return tv.data ? "true" : "false";
-                                case Res_value::TYPE_DIMENSION:{
+                                case TypedValue::TYPE_DIMENSION:{
                                     float mag = axmlComplexToFloat(tv.data);
-                                    int unit = (tv.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
-                                    const char* u = unit == Res_value::COMPLEX_UNIT_SP ? "sp"
-                                                  : unit == Res_value::COMPLEX_UNIT_DIP ? "dp" : "px";
+                                    int unit = (tv.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
+                                    const char* u = unit == TypedValue::COMPLEX_UNIT_SP ? "sp"
+                                                  : unit == TypedValue::COMPLEX_UNIT_DIP ? "dp" : "px";
                                     snprintf(buf, sizeof(buf), "%d%s", (int)mag, u); return buf;
                                 }
-                                case Res_value::TYPE_REFERENCE:
-                                case Res_value::TYPE_DYNAMIC_REFERENCE:{
+                                case TypedValue::TYPE_REFERENCE:
+                                case TypedValue::TYPE_DYNAMIC_REFERENCE:{
                                     std::string ref = ctx->getResourceName(tv.data);
                                     if(!ref.empty()) return ref;
                                     break;
@@ -429,7 +436,7 @@ bool XmlPullParser::getAttributeBooleanValue(int index, bool defaultValue) const
     if (isBinaryAXML()) {
         Res_value v;
         if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
-            && v.dataType == Res_value::TYPE_INT_BOOLEAN) return v.data != 0;
+            && v.dataType == TypedValue::TYPE_INT_BOOLEAN) return v.data != 0;
         return defaultValue;
     }
     return AttributeSet::getAttributeBooleanValue(index, defaultValue);
@@ -439,8 +446,8 @@ int XmlPullParser::getAttributeResourceValue(int index, int defaultValue) const 
     if (isBinaryAXML()) {
         Res_value v;
         if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
-            && (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE
-                || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE)) return (int)v.data;
+            && (v.dataType == TypedValue::TYPE_REFERENCE || v.dataType == TypedValue::TYPE_ATTRIBUTE
+                || v.dataType == TypedValue::TYPE_DYNAMIC_REFERENCE)) return (int)v.data;
         return defaultValue;
     }
     return AttributeSet::getAttributeResourceValue(index, defaultValue);
@@ -450,7 +457,7 @@ int XmlPullParser::getAttributeIntValue(int index, int defaultValue) const {
     if (isBinaryAXML()) {
         Res_value v;
         if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
-            && (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)) return (int)v.data;
+            && (v.dataType == TypedValue::TYPE_INT_DEC || v.dataType == TypedValue::TYPE_INT_HEX)) return (int)v.data;
         return defaultValue;
     }
     return AttributeSet::getAttributeIntValue(index, defaultValue);
@@ -460,7 +467,7 @@ int XmlPullParser::getAttributeUnsignedIntValue(int index, int defaultValue) con
     if (isBinaryAXML()) {
         Res_value v;
         if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
-            && (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)) return (int)v.data;
+            && (v.dataType == TypedValue::TYPE_INT_DEC || v.dataType == TypedValue::TYPE_INT_HEX)) return (int)v.data;
         return defaultValue;
     }
     return AttributeSet::getAttributeUnsignedIntValue(index, defaultValue);
@@ -470,7 +477,7 @@ float XmlPullParser::getAttributeFloatValue(int index, float defaultValue) const
     if (isBinaryAXML()) {
         Res_value v;
         if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
-            && v.dataType == Res_value::TYPE_FLOAT) {
+            && v.dataType == TypedValue::TYPE_FLOAT) {
             float f; memcpy(&f, &v.data, sizeof(f)); return f;
         }
         return defaultValue;

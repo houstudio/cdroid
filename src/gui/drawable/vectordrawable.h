@@ -18,7 +18,7 @@
 #ifndef __CDROID_VECTOR_DRAWABLE_H__
 #define __CDROID_VECTOR_DRAWABLE_H__
 #include <unordered_map>
-#include <androidfw/typedvalue.h>
+#include <core/typedvalue.h>
 #include <drawable/drawable.h>
 #include <drawable/pathparser.h>
 #include <animation/property.h>
