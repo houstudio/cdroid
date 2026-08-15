@@ -80,13 +80,13 @@ private:
     Keyboard();/*no-XML base ctor, for createMiniKeyboard*/
     void computeNearestNeighbors();
     void skipToEndOfRow(XmlPullParser& parser);
-    void parseKeyboardAttributes(XmlPullParser& parser,const AttributeSet&atts);
+    void parseKeyboardAttributes(Context* context,XmlPullParser& parser,const AttributeSet&atts);
 protected:
     int  keyboardWidth;
     int  keyboardHeight;
     Key* getKeyByCode(int code);
-    Row* createRowFromXml(XmlPullParser& parser,const AttributeSet&atts);
-    Key* createKeyFromXml(Row*parent, int x, int y,XmlPullParser&,const AttributeSet&);
+    Row* createRowFromXml(Context*context,XmlPullParser& parser,const AttributeSet&atts);
+    Key* createKeyFromXml(Context*context,Row*parent, int x, int y,XmlPullParser&,const AttributeSet&);
     void loadKeyboard(Context*context, XmlPullParser& parser);
 public:
     Keyboard(Context* context,const std::string&resid,int w,int h,int modeId=0);
@@ -148,14 +148,14 @@ public:
     Drawable* icon;
     Drawable* iconPreview;
     std::string action;
-    std::string popupResId;
+    int popupResId = 0;   // AOSP: popupKeyboard layout resource (0 == none)
     /* Accent/alt characters offered on a long-press popup mini-keyboard
      * (AOSP android:popupCharacters), e.g. a key labeled 'a' may have
      * "àáâäãåæ". Empty for keys with no popup. Consumed by KeyboardView's
      * onLongPress to build the mini-keyboard. */
     std::string popupCharacters;
     Key(Row*parent=nullptr);
-    Key(Row*parent,int x,int y,XmlPullParser&,const AttributeSet&);
+    Key(Context*ctx,Row*parent,int x,int y,XmlPullParser&,const AttributeSet&);
     void onPressed();
     void onReleased(bool inside);
     int parseCSV(const std::string& value,std::vector<int>& codes);

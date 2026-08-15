@@ -22,6 +22,7 @@
 #include <animation/transformation.h>
 
 namespace cdroid{
+class TypedValue;
 class Animation{
 public:
     static constexpr int INFINITE=-1;
@@ -38,6 +39,17 @@ public:
         std::function<void(Animation&)>onAnimationStart;
         std::function<void(Animation&)>onAnimationEnd;
         std::function<void(Animation&)>onAnimationRepeat;
+    };
+    // AOSP: public static class Description (was protected in CDROID; non-Animation
+    // consumers like GridLayoutAnimationController parse float|fraction delays).
+    class Description{
+    public:
+        int type;
+        float value;
+        static Description parseValue(const std::string&);
+        // AOSP Animation.Description.parseValue(TypedValue, Context). Null value
+        // (attr absent) maps to AOSP's null TypedValue.
+        static Description parseValue(const TypedValue* value, Context* context);
     };
     friend class AnimationSet;
 private:
@@ -75,12 +87,6 @@ protected:
     AnimationListener mListener;
     Rect mPreviousRegion ;
     Rect mRegion;
-    class Description{
-    public:
-        int type;
-        float value;
-        static Description parseValue(const std::string&);
-    };
     Transformation mTransformation;
     Transformation mPreviousTransformation;
 protected:

@@ -174,24 +174,26 @@ PathInterpolator::PathInterpolator(float controlX1, float controlY1, float contr
 }
 
 PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
-    if(a.hasAttribute("pathData")){
-        std::string pathData = a.getString("pathData");
+    // AOSP PathInterpolator.parseInterpolatorFromTypeArray.
+    auto ta = ctx->obtainStyledAttributes(a, R::styleable::PathInterpolator);
+    if(ta->hasValue(R::styleable::PathInterpolator_pathData)){
+        std::string pathData = ta->getString(R::styleable::PathInterpolator_pathData);
         auto path = PathParser::createPathFromPathData(pathData);
         if (path == nullptr) {
             throw std::runtime_error("The path is null, which is created from " + pathData);
         }
         initPath(*path);
     }else{
-        if (!a.hasAttribute("controlX1")) {
+        if (!ta->hasValue(R::styleable::PathInterpolator_controlX1)) {
             throw "pathInterpolator requires the controlX1 attribute";
-        } else if (!a.hasAttribute("controlY1")) {
+        } else if (!ta->hasValue(R::styleable::PathInterpolator_controlY1)) {
             throw "pathInterpolator requires the controlY1 attribute";
         }
-        const float x1 = a.getFloat("controlX1", 0);
-        const float y1 = a.getFloat("controlY1", 0);
+        const float x1 = ta->getFloat(R::styleable::PathInterpolator_controlX1, 0);
+        const float y1 = ta->getFloat(R::styleable::PathInterpolator_controlY1, 0);
 
-        const bool hasX2 = a.hasAttribute("controlX2");
-        const bool hasY2 = a.hasAttribute("controlY2");
+        const bool hasX2 = ta->hasValue(R::styleable::PathInterpolator_controlX2);
+        const bool hasY2 = ta->hasValue(R::styleable::PathInterpolator_controlY2);
 
         if (hasX2 != hasY2) {
             throw "pathInterpolator requires both controlX2 and controlY2 for cubic Beziers.";
@@ -200,8 +202,8 @@ PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
         if (!hasX2) {
             initQuad(x1, y1);
         } else {
-            float x2 = a.getFloat("controlX2", 0);
-            float y2 = a.getFloat("controlY2", 0);
+            float x2 = ta->getFloat(R::styleable::PathInterpolator_controlX2, 0);
+            float y2 = ta->getFloat(R::styleable::PathInterpolator_controlY2, 0);
             initCubic(x1, y1, x2, y2);
         }
     }

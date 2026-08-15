@@ -137,9 +137,10 @@ void StateListAnimator::cancel() {
 }
 
 void StateListAnimator::jumpToCurrentState(){
+    // AOSP: only end() — mRunningAnimator is NOT cleared (getRunningAnimator
+    // keeps reporting the jumped-to-end animator until the next setState).
     if (mRunningAnimator != nullptr) {
         mRunningAnimator->end();
-        mRunningAnimator = nullptr;
     }
 }
 

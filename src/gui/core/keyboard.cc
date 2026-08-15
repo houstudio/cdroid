@@ -20,52 +20,75 @@
 #include <core/keyboard.h>
 #include <core/tokenizer.h>
 #include <core/xmlpullparser.h>
+#include <core/typedarray.h>
+#include <androidfw/typedvalue.h>
 #include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 using namespace cdroid::internal;
 #include <vector>
 #include <fstream>
 
 namespace cdroid{
 
-static std::unordered_map<std::string,int>edgeFlagKVS={
-   {"left"  ,(int)Keyboard::EDGE_LEFT},
-   {"right" ,(int)Keyboard::EDGE_RIGHT},
-   {"top"   ,(int)Keyboard::EDGE_TOP},
-   {"bottom",(int)Keyboard::EDGE_BOTTOM}
-};
-
-int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def){
-    const std::string value=attrs.getAttributeValue(key);
-    if(value.find("%")!=std::string::npos){
-        LOGV("%d %s[%.f]=%.2f",base,value.c_str(),std::stof(value),base*std::stof(value)/100);
-        return base*std::stof(value)/100;
-    }else if(value.find("px")!=std::string::npos){
-        return std::stoi(value);
+// AOSP Keyboard.getDimensionOrFraction: dimension → pixels, fraction → ×base.
+static int getDimensionOrFraction(const TypedArray& a,int idx,int base,int def){
+    TypedValue value;
+    if(!a.peekValue(idx,&value)) return def;
+    if(value.type==TypedValue::TYPE_DIMENSION){
+        return a.getDimensionPixelSize(idx,def);
+    }else if(value.type==TypedValue::TYPE_FRACTION){
+        // Round down to be close to the common behavior of layout dimensions
+        return (int)(value.getFraction(base,base)*base);
     }
     return def;
 }
 
-Keyboard::Key::Key(Row*parent,int x,int y,XmlPullParser&parser,const AttributeSet&attrs)
+Keyboard::Key::Key(Context*ctx,Row*parent,int x,int y,XmlPullParser&parser,const AttributeSet&attrs)
   :Keyboard::Key(parent){
     this->x = x;
     this->y = y;
     Keyboard::Row*row=(Keyboard::Row*)parent;
     Keyboard*keyboard = row->parent;
-    width = getDimensionOrFraction(attrs,"keyWidth" , keyboard->mDisplayWidth,  row->defaultWidth );
-    height= getDimensionOrFraction(attrs,"keyHeight", keyboard->mDisplayHeight, row->defaultHeight);
-    gap   = getDimensionOrFraction(attrs,"horizontalGap", keyboard->mDisplayWidth, row->defaultHorizontalGap);
-    edgeFlags =row->rowEdgeFlags | attrs.getInt("keyEdgeFlags",edgeFlagKVS,0);
+    auto a = ctx->obtainStyledAttributes(attrs, R::styleable::Keyboard);
+    width = getDimensionOrFraction(*a, R::styleable::Keyboard_keyWidth,
+            keyboard->mDisplayWidth, row->defaultWidth);
+    height= getDimensionOrFraction(*a, R::styleable::Keyboard_keyHeight,
+            keyboard->mDisplayHeight, row->defaultHeight);
+    gap   = getDimensionOrFraction(*a, R::styleable::Keyboard_horizontalGap,
+            keyboard->mDisplayWidth, row->defaultHorizontalGap);
+
+    auto ka = ctx->obtainStyledAttributes(attrs, R::styleable::Keyboard_Key);
     this->x += gap;
-    const std::string resicon=attrs.getString("keyIcon");
-    icon  = resicon.empty()?nullptr:attrs.getContext()->getDrawable(resicon);
-    label = attrs.getString("keyLabel");
-    text  = attrs.getString("keyOutputText");
-    popupCharacters = attrs.getString("popupCharacters");
-    popupResId      = attrs.getString("popupKeyboard");
-    parseCSV(attrs.getString("codes"),codes);
-    repeatable= attrs.getBoolean("isRepeatable",false);
-    sticky    = attrs.getBoolean("isSticky",false);
-    modifier  = attrs.getBoolean("isModifier",false);
+    // AOSP: codes is a single int (TYPE_INT_DEC/HEX) or a CSV string.
+    TypedValue codesValue;
+    if (ka->peekValue(R::styleable::Keyboard_Key_codes, &codesValue)) {
+        if (codesValue.type == TypedValue::TYPE_INT_DEC
+                || codesValue.type == TypedValue::TYPE_INT_HEX) {
+            codes.push_back(codesValue.data);
+        } else if (codesValue.type == TypedValue::TYPE_STRING) {
+            parseCSV(ka->getString(R::styleable::Keyboard_Key_codes), codes);
+        }
+    }
+
+    iconPreview = ka->getDrawable(R::styleable::Keyboard_Key_iconPreview);
+    if (iconPreview) {
+        iconPreview->setBounds(0,0,iconPreview->getIntrinsicWidth(),iconPreview->getIntrinsicHeight());
+    }
+    popupCharacters = ka->getString(R::styleable::Keyboard_Key_popupCharacters);
+    popupResId      = ka->getResourceId(R::styleable::Keyboard_Key_popupKeyboard, 0);
+    repeatable= ka->getBoolean(R::styleable::Keyboard_Key_isRepeatable,false);
+    sticky    = ka->getBoolean(R::styleable::Keyboard_Key_isSticky,false);
+    modifier  = ka->getBoolean(R::styleable::Keyboard_Key_isModifier,false);
+    // aapt2 compiles the keyEdgeFlags flags (left=1/right=2) to ints.
+    edgeFlags = ka->getInt(R::styleable::Keyboard_Key_keyEdgeFlags, 0);
+    edgeFlags |= row->rowEdgeFlags;
+
+    icon = ka->getDrawable(R::styleable::Keyboard_Key_keyIcon);
+    if (icon) {
+        icon->setBounds(0,0,icon->getIntrinsicWidth(),icon->getIntrinsicHeight());
+    }
+    label = ka->getString(R::styleable::Keyboard_Key_keyLabel);
+    text  = ka->getString(R::styleable::Keyboard_Key_keyOutputText);
     if(codes.size()==0&&label.empty()==false){
         std::wstring ws=TextUtils::utf8tounicode(label);
         codes.push_back(ws[0]);
@@ -175,12 +198,20 @@ std::vector<int>Keyboard::Key::getCurrentDrawableState()const{
 
 Keyboard::Row::Row(Context*ctx,Keyboard*p,XmlPullParser&parseer,const AttributeSet&attrs){
     parent =p;
-    defaultWidth = getDimensionOrFraction(attrs,"keyWidth",   parent->mDisplayWidth, parent->mDefaultWidth);
-    defaultHeight= getDimensionOrFraction(attrs,"keyHeight", parent->mDisplayHeight, parent->mDefaultHeight);
-    defaultHorizontalGap = getDimensionOrFraction(attrs,"horizontalGap", parent->mDisplayWidth, parent->mDefaultHorizontalGap);
-    verticalGap  = getDimensionOrFraction(attrs,"verticalGap", parent->mDisplayHeight, parent->mDefaultVerticalGap);
-    rowEdgeFlags = attrs.getInt("rowEdgeFlags",edgeFlagKVS,0);
-    mode = attrs.getInt("keyboardMode",0);
+    auto a = ctx->obtainStyledAttributes(attrs, R::styleable::Keyboard);
+    defaultWidth = getDimensionOrFraction(*a, R::styleable::Keyboard_keyWidth,
+            parent->mDisplayWidth, parent->mDefaultWidth);
+    defaultHeight= getDimensionOrFraction(*a, R::styleable::Keyboard_keyHeight,
+            parent->mDisplayHeight, parent->mDefaultHeight);
+    defaultHorizontalGap = getDimensionOrFraction(*a, R::styleable::Keyboard_horizontalGap,
+            parent->mDisplayWidth, parent->mDefaultHorizontalGap);
+    verticalGap  = getDimensionOrFraction(*a, R::styleable::Keyboard_verticalGap,
+            parent->mDisplayHeight, parent->mDefaultVerticalGap);
+
+    auto ra = ctx->obtainStyledAttributes(attrs, R::styleable::Keyboard_Row);
+    // aapt2 compiles the rowEdgeFlags flags (top=4/bottom=8) to ints.
+    rowEdgeFlags = ra->getInt(R::styleable::Keyboard_Row_rowEdgeFlags, 0);
+    mode = ra->getResourceId(R::styleable::Keyboard_Row_keyboardMode, 0);
 }
 
 /* AOSP-faithful Row(Keyboard) ctor: only records the parent. The mini-keyboard
@@ -474,12 +505,12 @@ std::vector<int> Keyboard::getNearestKeys(int x, int y){
     return std::vector<int>();
 }
 
-Keyboard::Row* Keyboard::createRowFromXml(XmlPullParser& parser,const AttributeSet&atts) {
-    return new Row(atts.getContext(),this, parser,atts);
+Keyboard::Row* Keyboard::createRowFromXml(Context*context,XmlPullParser& parser,const AttributeSet&atts) {
+    return new Row(context,this, parser,atts);
 }
 
-Keyboard::Key* Keyboard::createKeyFromXml(Row* parent, int x, int y,XmlPullParser& parser,const AttributeSet&atts) {
-    return new Key(parent, x, y, parser,atts);
+Keyboard::Key* Keyboard::createKeyFromXml(Context*context,Row* parent, int x, int y,XmlPullParser& parser,const AttributeSet&atts) {
+    return new Key(context, parent, x, y, parser,atts);
 }
 
 void Keyboard::loadKeyboard(Context*context, XmlPullParser& parser){
@@ -498,7 +529,7 @@ void Keyboard::loadKeyboard(Context*context, XmlPullParser& parser){
             if (tag.compare(TAG_ROW)==0) {
                 inRow = true;
                 x = 0;
-                currentRow = createRowFromXml(parser,attrs);
+                currentRow = createRowFromXml(context,parser,attrs);
                 rows.push_back(currentRow);
                 skipRow = currentRow->mode != 0 && currentRow->mode != mKeyboardMode;
                 if (skipRow) {
@@ -507,7 +538,7 @@ void Keyboard::loadKeyboard(Context*context, XmlPullParser& parser){
                 }
            } else if (tag.compare(TAG_KEY)==0) {
                 inKey = true;
-                key = createKeyFromXml(currentRow, x, y, parser,attrs);
+                key = createKeyFromXml(context,currentRow, x, y, parser,attrs);
                 mKeys.push_back(key);
                 if (key->codes[0] == KEYCODE_SHIFT) {
                     // Find available shift key slot and put this shift key in it
@@ -524,7 +555,7 @@ void Keyboard::loadKeyboard(Context*context, XmlPullParser& parser){
                 }
                 currentRow->mKeys.push_back(key);
             } else if (tag.compare(TAG_KEYBOARD)==0) {
-                parseKeyboardAttributes(parser,attrs);
+                parseKeyboardAttributes(context,parser,attrs);
             }
         } else if (eventType == XmlPullParser::END_TAG) {
             if (inKey) {
@@ -555,12 +586,13 @@ void Keyboard::skipToEndOfRow(XmlPullParser&parser){
     }
 }
 
-void Keyboard::parseKeyboardAttributes(XmlPullParser& parser,const AttributeSet&atts) {
+void Keyboard::parseKeyboardAttributes(Context*context, XmlPullParser& parser,const AttributeSet&atts) {
 
-    mDefaultWidth = getDimensionOrFraction(atts,"keyWidth", mDisplayWidth, mDisplayWidth / 10);
-    mDefaultHeight = getDimensionOrFraction(atts,"keyHeight", mDisplayHeight, 50);
-    mDefaultHorizontalGap = getDimensionOrFraction(atts,"horizontalGap", mDisplayWidth, 0);
-    mDefaultVerticalGap = getDimensionOrFraction(atts,"verticalGap", mDisplayHeight, 0);
+    auto a = context->obtainStyledAttributes(atts, R::styleable::Keyboard);
+    mDefaultWidth  = getDimensionOrFraction(*a, R::styleable::Keyboard_keyWidth,      mDisplayWidth,  mDisplayWidth / 10);
+    mDefaultHeight = getDimensionOrFraction(*a, R::styleable::Keyboard_keyHeight,     mDisplayHeight, 50);
+    mDefaultHorizontalGap = getDimensionOrFraction(*a, R::styleable::Keyboard_horizontalGap, mDisplayWidth, 0);
+    mDefaultVerticalGap   = getDimensionOrFraction(*a, R::styleable::Keyboard_verticalGap,   mDisplayHeight, 0);
     mProximityThreshold = (int) (mDefaultWidth * 0.6f);//SEARCH_DISTANCE);
     mProximityThreshold*= mProximityThreshold; // Square it for comparison
 }

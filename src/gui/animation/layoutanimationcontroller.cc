@@ -19,23 +19,30 @@
 #include <view/viewgroup.h>
 #include <animation/animationutils.h>
 #include <animation/layoutanimationcontroller.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <random>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 LayoutAnimationController::LayoutAnimationController(Context* context, const AttributeSet& attrs){
-    mDelay = attrs.getFloat("delay");
-    mOrder = attrs.getInt("animationOrder",std::unordered_map<std::string,int>{
-       {"normal" ,(int)ORDER_NORMAL},
-       {"reverse",(int)ORDER_REVERSE},
-       {"random" ,(int)ORDER_RANDOM}
-    },ORDER_NORMAL);
-    int resource = attrs.getResourceId("animation",0);
+    // AOSP LayoutAnimationController: LayoutAnimation styleable, in order
+    // animation → delay → animationOrder → interpolator.
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::LayoutAnimation);
+
     mAnimation    = nullptr;
     mInterpolator = nullptr;
     mMaxDelay  = LONG_MIN;
+
+    int resource = a->getResourceId(R::styleable::LayoutAnimation_animation, 0);
     if(resource) setAnimation(context,resource);
-    resource   = attrs.getResourceId("interpolator",0);
+
+    mDelay = a->getFloat(R::styleable::LayoutAnimation_delay, 0.5f/*DEFAULT_DELAY*/);
+    // aapt2 pre-resolves the animationOrder enum names (normal/reverse/random).
+    mOrder = a->getInt(R::styleable::LayoutAnimation_animationOrder, ORDER_NORMAL);
+
+    resource = a->getResourceId(R::styleable::LayoutAnimation_interpolator, 0);
     if(resource) setInterpolator(context,resource);
 }
 

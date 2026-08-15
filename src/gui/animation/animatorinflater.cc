@@ -143,8 +143,8 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
             anim = loadAnimator(context, attrs, nullptr, pixelSize);
         } else if (name.compare("set")==0) {
             anim = new AnimatorSet();
-            const int ordering = attrs.getInt("ordering",std::unordered_map<std::string,int>{
-                    {"together",(int)TOGETHER},{"sequentially",(int)SEQUENTIALLY}}, TOGETHER);
+            auto ta = context->obtainStyledAttributes(attrs, R::styleable::AnimatorSet);
+            const int ordering = ta->getInt(R::styleable::AnimatorSet_ordering, TOGETHER);
             createAnimatorFromXml(context, parser, attrs, (AnimatorSet*) anim, ordering,pixelSize);
         } else if (name.compare("propertyValuesHolder")==0) {
             std::vector<PropertyValuesHolder*>values = loadValues(context,parser,attrs);
@@ -184,10 +184,15 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
                 std::vector<int>states;
                 Animator* animator = nullptr;
                 StateSet::parseState(states,attrs);
-                std::string animId = attrs.getString("animator");
-                if(!animId.empty()){
-                    animator = loadAnimator(context, animId);
-                }else{
+                // AOSP: scan the item's attrs for android:animation (@animator/... ref)
+                const int attributeCount = (int)attrs.getAttributeCount();
+                for (int i = 0; i < attributeCount; i++) {
+                    if (attrs.getAttributeNameResource(i) == R::attr::animation) {
+                        animator = loadAnimator(context, attrs.getAttributeResourceValue(i, 0));
+                        break;
+                    }
+                }
+                if (animator == nullptr) {
                     animator = createAnimatorFromXml(context,parser,attrs, nullptr, 0,1.f);
                 }
 
@@ -502,8 +507,9 @@ void AnimatorInflater::parseAnimatorFromTypeArray(Context*ctx, ValueAnimator* an
 
 TypeEvaluator AnimatorInflater::setupAnimatorForPath(Context*ctx, ValueAnimator* anim,const AttributeSet&arrayAnimator){
     TypeEvaluator evaluator = nullptr;
-    const std::string fromString = arrayAnimator.getString("valueFrom");
-    const std::string toString = arrayAnimator.getString("valueTo");
+    auto ta = ctx->obtainStyledAttributes(arrayAnimator, R::styleable::Animator);
+    const std::string fromString = ta->getString(R::styleable::Animator_valueFrom);
+    const std::string toString   = ta->getString(R::styleable::Animator_valueTo);
 
     if (!fromString.empty()) {//pathDataFrom != null) {
         PathParser::PathData pathDataFrom (fromString);

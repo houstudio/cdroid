@@ -16,40 +16,53 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <animation/extendanimation.h>
+#include <core/typedarray.h>
+#include <androidfw/typedvalue.h>   // TypedValue (Description::parseValue)
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 ExtendAnimation::ExtendAnimation(Context* context,const AttributeSet& attrs)
     :Animation(context, attrs){
-    Description d = Description::parseValue(attrs.getString("fromExtendLeft"));
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::ExtendAnimation);
+
+    // AOSP: Description.parseValue(a.peekValue(idx), context) — null when absent.
+    TypedValue v;
+    auto parse = [&](int idx)->Description {
+        if (!a->peekValue(idx, &v)) return Description::parseValue(nullptr, context);
+        return Description::parseValue(&v, context);
+    };
+
+    Description d = parse(R::styleable::ExtendAnimation_fromExtendLeft);
     mFromLeftType = d.type;
     mFromLeftValue= d.value;
 
-    d = Description::parseValue(attrs.getString("fromExtendTop"));
+    d = parse(R::styleable::ExtendAnimation_fromExtendTop);
     mFromTopType = d.type;
     mFromTopValue= d.value;
 
-    d = Description::parseValue(attrs.getString("fromExtendRight"));
+    d = parse(R::styleable::ExtendAnimation_fromExtendRight);
     mFromRightType = d.type;
     mFromRightValue= d.value;
 
-    d = Description::parseValue(attrs.getString("fromExtendBottom"));
+    d = parse(R::styleable::ExtendAnimation_fromExtendBottom);
     mFromBottomType = d.type;
     mFromBottomValue= d.value;
 
-    d = Description::parseValue(attrs.getString("toExtendLeft"));
+    d = parse(R::styleable::ExtendAnimation_toExtendLeft);
     mToLeftType = d.type;
     mToLeftValue= d.value;
 
-    d = Description::parseValue(attrs.getString("toExtendTop"));
+    d = parse(R::styleable::ExtendAnimation_toExtendTop);
     mToTopType = d.type;
     mToTopValue= d.value;
 
-    d = Description::parseValue(attrs.getString("toExtendRight"));
+    d = parse(R::styleable::ExtendAnimation_toExtendRight);
     mToRightType = d.type;
     mToRightValue= d.value;
 
-    d = Description::parseValue(attrs.getString("toExtendBottom"));
+    d = parse(R::styleable::ExtendAnimation_toExtendBottom);
     mToBottomType = d.type;
     mToBottomValue= d.value;
 }

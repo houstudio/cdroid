@@ -19,6 +19,7 @@
 #include <animation/animationutils.h>
 #include <widget/framework_styleable.h>
 #include <core/typedarray.h>
+#include <androidfw/typedvalue.h>   // TypedValue (Description::parseValue)
 #include <systemclock.h>
 #include <limits>
 #include <cdtypes.h>
@@ -74,7 +75,7 @@ Animation::Animation(Context* context, const AttributeSet& attrs){
     setFillAfter  (a->getBoolean(R::styleable::Animation_fillAfter,mFillAfter));
     setRepeatCount(a->getInt(R::styleable::Animation_repeatCount,mRepeatCount));
     setRepeatMode (a->getInt(R::styleable::Animation_repeatMode,RESTART));
-    //setBackgroundColor(Color::parseColor(attrs.getString("background")));
+    //setBackgroundColor(Color::parseColor(attrs.getAttributeValue("background")));
     const int resid=a->getResourceId(R::styleable::Animation_interpolator,0);
     if(resid)setInterpolator(context,resid);else mInterpolator=nullptr;
 }
@@ -89,6 +90,36 @@ Animation::Description Animation::Description::parseValue(const std::string&v){
     else if(v.find("%")!=std::string::npos)d.type= RELATIVE_TO_SELF;
     else d.type = ABSOLUTE;
     d.value =  (d.type==ABSOLUTE)?ret:(ret/100.f);
+    return d;
+}
+
+Animation::Description Animation::Description::parseValue(const TypedValue* value, Context* context){
+    // AOSP Animation.Description.parseValue(TypedValue, Context), verbatim.
+    Description d;
+    if (value != nullptr) {
+        if (value->type == TypedValue::TYPE_FRACTION) {
+            d.type = (value->data & TypedValue::COMPLEX_UNIT_MASK) ==
+                    TypedValue::COMPLEX_UNIT_FRACTION_PARENT ?
+                            RELATIVE_TO_PARENT : RELATIVE_TO_SELF;
+            d.value = TypedValue::complexToFloat(value->data);
+            return d;
+        } else if (value->type == TypedValue::TYPE_FLOAT) {
+            d.type = ABSOLUTE;
+            d.value = value->getFloat();
+            return d;
+        } else if (value->type >= TypedValue::TYPE_FIRST_INT &&
+                value->type <= TypedValue::TYPE_LAST_INT) {
+            d.type = ABSOLUTE;
+            d.value = value->data;
+            return d;
+        } else if (value->type == TypedValue::TYPE_DIMENSION) {
+            d.type = ABSOLUTE;
+            d.value = value->complexToDimension(context->getDisplayMetrics());
+            return d;
+        }
+    }
+    d.type = ABSOLUTE;
+    d.value = 0.0f;
     return d;
 }
 
