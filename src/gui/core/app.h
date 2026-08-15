@@ -71,6 +71,13 @@ public:
      // Intent's ComponentName.className via ActivityFactory (REGISTER_ACTIVITY) and `new` the Window
      // (its ctor self-registers with WindowManager, so it shows), then stamp the Intent on it.
      void startActivity(const Intent& intent) override;
+    // AOSP ActivityThread.handleConfigurationChanged(Configuration): the system
+    // side of a configuration change — applies it to the resources (variant
+    // reselection + cache invalidation) and then, per activity, either
+    // dispatches onConfigurationChanged (when its configChanges covers every
+    // changed bit) or relaunches it (recreate). CDROID's "system" entry point:
+    // apps call this to switch uiMode (night), locale, density, ...
+    void handleConfigurationChanged(const Configuration& newConfig);
 };
 
 }/*end ofnamespace*/

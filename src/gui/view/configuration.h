@@ -5,6 +5,7 @@
 #include <core/parcel.h>
 #include <core/displaymetrics.h>
 namespace cdroid{
+class XmlPullParser;   // readXmlAttrs (declared, definition disabled below)
 /**
  * This class describes all device configuration information that can
  * impact the resources the application retrieves.  This includes both
@@ -57,6 +58,35 @@ public:
      * 0 cannot be used, since it is used to represent an undefined MNC.
      */
     static constexpr int MNC_ZERO = 0xffff;
+
+    /** AOSP: @Deprecated public Locale locale — CDROID keeps a BCP-47 tag
+     *  string ("zh-CN") until a java.util.Locale port lands; compared verbatim
+     *  in updateFrom()/diff(). Empty = undefined. */
+    std::string locale;
+
+    // ---- AOSP android.content.pm.ActivityInfo.CONFIG_* bit values ----------
+    // CDROID has no android.content.pm, so the bits live here (needNewResources
+    // and the configChange dispatch below use them). Values are AOSP's.
+    static constexpr int CONFIG_MCC                    = 0x0001;
+    static constexpr int CONFIG_MNC                    = 0x0002;
+    static constexpr int CONFIG_LOCALE                 = 0x0004;
+    static constexpr int CONFIG_TOUCHSCREEN            = 0x0008;
+    static constexpr int CONFIG_KEYBOARD               = 0x0010;
+    static constexpr int CONFIG_KEYBOARD_HIDDEN        = 0x0020;
+    static constexpr int CONFIG_NAVIGATION             = 0x0040;
+    static constexpr int CONFIG_ORIENTATION            = 0x0080;
+    static constexpr int CONFIG_SCREEN_LAYOUT          = 0x0100;
+    static constexpr int CONFIG_UI_MODE                = 0x0200;
+    static constexpr int CONFIG_SCREEN_SIZE            = 0x0400;
+    static constexpr int CONFIG_SMALLEST_SCREEN_SIZE   = 0x0800;
+    static constexpr int CONFIG_DENSITY                = 0x1000;
+    static constexpr int CONFIG_LAYOUT_DIRECTION       = 0x2000;
+    static constexpr int CONFIG_COLOR_MODE             = 0x4000;
+    static constexpr int CONFIG_GRAMMATICAL_GENDER     = 0x8000;
+    static constexpr int CONFIG_ASSETS_PATHS           = 0x80000000;
+    static constexpr int CONFIG_FONT_SCALE             = 0x40000000;
+    static constexpr int CONFIG_WINDOW_CONFIGURATION   = 0x20000000;
+    static constexpr int CONFIG_FONT_WEIGHT_ADJUSTMENT = 0x10000000;
 
     /**
      * Locale should persist on setting.  This is hidden because it is really
@@ -664,13 +694,13 @@ public:
     /**
      * Makes a deep copy suitable for modification.
      */
-    Configuration(Configuration& o);
+    Configuration(const Configuration& o);
     /**
      * Sets the fields in this object to those in the given Configuration.
      *
      * @param o The Configuration object used to set the values of this Configuration's fields.
      */
-    void setTo(Configuration& o);
+    void setTo(const Configuration& o);
     std::string toString()const;
 
     /**

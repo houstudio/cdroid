@@ -70,6 +70,9 @@ ResourcesImpl::ResourcesImpl(AssetManager* am, const ResTable_config* config,
     if (config != nullptr) *mConfig = *config;
     else memset(mConfig.get(), 0, sizeof(ResTable_config));
     if (metrics != nullptr) mMetrics = *metrics;  // else default density=1
+    // AOSP seeds the live configuration from the device defaults (density).
+    mConfiguration.setToDefaults();
+    if (metrics != nullptr) mConfiguration.densityDpi = mMetrics.densityDpi;
     mDrawableCache = std::make_unique<DrawableCache>();
     mColorStateListCache = std::make_unique<ColorStateListCache>();
 }
@@ -77,13 +80,77 @@ ResourcesImpl::ResourcesImpl(AssetManager* am, const ResTable_config* config,
 ResourcesImpl::~ResourcesImpl() {
 }
 
-const ResTable_config& ResourcesImpl::getConfiguration() const {
+
+// AOSP ResourcesImpl.updateConfigurationImpl → mAssets.setConfigurationInternal:
+// map the live Configuration onto the arsc ResTable_config so -night/-land/...
+// resource variants reselect. CDROID's locale is a BCP-47 tag string
+// ("zh-CN" / "xx-rYY"), packed via ResTable_config::packLanguage/packRegion.
+static ResTable_config toResTableConfig(const Configuration& c, const DisplayMetrics& m) {
+    ResTable_config cfg = {};
+    cfg.size = sizeof(ResTable_config);
+    cfg.mcc = (uint16_t)c.mcc;
+    cfg.mnc = (uint16_t)c.mnc;
+    if (!c.locale.empty()) {
+        const size_t dash = c.locale.find('-');
+        const std::string lang = c.locale.substr(0, 2);
+        std::string region = (dash != std::string::npos) ? c.locale.substr(dash + 1) : std::string();
+        if (region.size() > 2 && region[0] == 'r') region = region.substr(1);   // xx-rYY
+        if (region.size() >= 2) region = region.substr(region.size() - 2);
+        cfg.packLanguage(lang.c_str());
+        if (region.size() == 2) cfg.packRegion(region.c_str());
+    }
+    cfg.orientation = (uint8_t)c.orientation;
+    cfg.touchscreen = (uint8_t)c.touchscreen;
+    cfg.density = (uint16_t)((c.densityDpi != Configuration::DENSITY_DPI_UNDEFINED)
+                             ? c.densityDpi : m.densityDpi);
+    cfg.keyboard = (uint8_t)c.keyboard;
+    // keyboardHidden/navigationHidden share the inputFlags byte (AOSP native layout).
+    uint8_t inputFlags = 0;
+    switch (c.keyboardHidden) {
+        case Configuration::KEYBOARDHIDDEN_NO:  inputFlags |= ResTable_config::KEYSHIDDEN_NO;  break;
+        case Configuration::KEYBOARDHIDDEN_YES: inputFlags |= ResTable_config::KEYSHIDDEN_YES; break;
+        case Configuration::KEYBOARDHIDDEN_SOFT:inputFlags |= ResTable_config::KEYSHIDDEN_SOFT;break;
+    }
+    switch (c.navigationHidden) {
+        case Configuration::NAVIGATIONHIDDEN_NO:  inputFlags |= ResTable_config::NAVHIDDEN_NO;  break;
+        case Configuration::NAVIGATIONHIDDEN_YES: inputFlags |= ResTable_config::NAVHIDDEN_YES; break;
+    }
+    cfg.inputFlags = inputFlags;
+    cfg.navigation = (uint8_t)c.navigation;
+    const int w = (m.widthPixels >= m.heightPixels) ? m.widthPixels : m.heightPixels;
+    const int h = (m.widthPixels >= m.heightPixels) ? m.heightPixels : m.widthPixels;
+    cfg.screenWidth = (uint16_t)w;
+    cfg.screenHeight = (uint16_t)h;
+    cfg.screenLayout = (uint8_t)c.screenLayout;
+    cfg.uiMode = (uint8_t)c.uiMode;
+    cfg.smallestScreenWidthDp = (uint16_t)c.smallestScreenWidthDp;
+    cfg.screenWidthDp = (uint16_t)c.screenWidthDp;
+    cfg.screenHeightDp = (uint16_t)c.screenHeightDp;
+    return cfg;
+}
+
+const Configuration& ResourcesImpl::getConfiguration() const {
+    return mConfiguration;
+}
+
+const ResTable_config& ResourcesImpl::getResTableConfig() const {
     return *mConfig;
 }
 
 void ResourcesImpl::setConfiguration(const ResTable_config& config) {
     *mConfig = config;
 }
+
+// AOSP ResourcesImpl.calcConfigChanges(@Nullable Configuration): null → all
+// flags changed; otherwise the updateFrom() delta against the live config.
+int ResourcesImpl::calcConfigChanges(const Configuration* config) {
+    if (config == nullptr) return 0xFFFFFFFF;
+    // AOSP calculates on a scratch copy (mTmpConfig.setTo(config)) so the live
+    // configuration is not modified by the calculation.
+    Configuration tmp = mConfiguration;
+    return tmp.updateFrom(*config);
+}
+
 
 int ResourcesImpl::getIdentifier(const std::string& name,
         const std::string& type, const std::string& package) const {
@@ -378,6 +445,7 @@ static uint64_t themedCacheKey(int id, const void* themeEngine) {
 
 class ResourcesImpl::DrawableCache {
 public:
+    void clear() { mEntries.clear(); }   // AOSP onConfigurationChange drops entries
     std::shared_ptr<Drawable::ConstantState> get(uint64_t key) {
         auto it = mEntries.find(key);
         if (it == mEntries.end()) return nullptr;
@@ -393,6 +461,7 @@ private:
 
 class ResourcesImpl::ColorStateListCache {
 public:
+    void clear() { mEntries.clear(); }   // AOSP onConfigurationChange drops entries
     std::shared_ptr<ColorStateList> get(uint64_t key) const {
         auto it = mEntries.find(key);
         return it == mEntries.end() ? nullptr : it->second;
@@ -403,6 +472,36 @@ public:
 private:
     std::unordered_map<uint64_t, std::shared_ptr<ColorStateList>> mEntries;
 };
+
+// AOSP ResourcesImpl.updateConfiguration(config, metrics, compat): apply the
+// new configuration; the change bits drive resource-variant reselection
+// (arsc setParameters) and resource-cache invalidation.
+void ResourcesImpl::updateConfiguration(const Configuration* config, const DisplayMetrics* metrics) {
+    if (metrics != nullptr) mMetrics = *metrics;
+    const int changes = calcConfigChanges(config);
+    if (config != nullptr) mConfiguration = *config;
+    if (changes == 0) return;
+
+    // AOSP: metrics follow densityDpi / fontScale.
+    if (mConfiguration.densityDpi != Configuration::DENSITY_DPI_UNDEFINED) {
+        mMetrics.densityDpi = mConfiguration.densityDpi;
+        mMetrics.density = mConfiguration.densityDpi * (1.0f / DisplayMetrics::DENSITY_DEFAULT_SCALE);
+    }
+    mMetrics.scaledDensity = mMetrics.density *
+            (mConfiguration.fontScale != 0 ? mConfiguration.fontScale : 1.0f);
+
+    // AOSP mAssets.setConfigurationInternal(...): reselect resource variants.
+    ResTable_config cfg = toResTableConfig(mConfiguration, mMetrics);
+    // getResources() is const (AOSP facade); the underlying table is a mutable
+    // cache (AssetManager owns it via mutable members), so the cast is safe.
+    const_cast<ResTable&>(mAssets->getResources(false)).setParameters(&cfg);
+    *mConfig = cfg;
+
+    // AOSP: mDrawableCache/mColorDrawableCache/mComplexColorCache/...
+    // .onConfigurationChange(changes) — CDROID drops the cached entries.
+    if (mDrawableCache) mDrawableCache->clear();
+    if (mColorStateListCache) mColorStateListCache->clear();
+}
 
 // AOSP Resources.getDrawable(id) → getDrawableForDensity(id, 0).
 cdroid::Drawable* ResourcesImpl::getDrawable(int id, int density, const void* themeEngine) const {

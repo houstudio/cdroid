@@ -73,6 +73,14 @@ private:
     bool mPendingEnterAnim  = false; // run mEnterTransition after the first doTraversal (content drawn)
     bool mInTransition      = false; // close()/re-enter re-entrancy guard
     bool mDestroyed         = false; // set in ~Window so the animator end-callback skips finishClose
+    // True when the Context ctor auto-wrapped the caller's plain context in a
+    // ContextThemeWrapper (AOSP: an Activity IS a themed context); freed in ~Window.
+    bool mOwnsContext       = false;
+    // Activity name stamped by REGISTER_ACTIVITY's factory; empty for anonymous
+    // windows. Window::recreate() relaunches through the ActivityFactory by it.
+    std::string mActivityName;
+    // AOSP ActivityInfo.configChanges bits (android:configChanges).
+    int mConfigChanges = 0;
 private:
     void doLayout();
     // Schedule a traversal (layout + draw + flip + compose) via Choreographer CALLBACK_TRAVERSAL.
@@ -202,6 +210,33 @@ public:
     // by this Window and freed in ~Window(). Pass nullptr to clear.
     void setActionBar(Toolbar* toolbar);
     ActionBar* getActionBar();
+
+    // AOSP Activity.setTheme(@StyleRes int): ContextThemeWrapper.setTheme applies
+    // the style to the LIVE theme object, so views inflated afterwards — and lazy
+    // ?attr resolution — pick it up. Already-inflated views are NOT re-themed in
+    // place (AOSP behavior too); call recreate() to rebuild under the new theme.
+    void setTheme(int resid);
+    // AOSP Activity.recreate(): cause this Activity to be relaunched with a new
+    // instance (which inflates under the theme selected before recreation).
+    // CDROID: closes this window and instantiates a fresh one through the
+    // ActivityFactory (REGISTER_ACTIVITY name). Needs the name — only registered
+    // activities can relaunch themselves.
+    void recreate();
+    // Stamp used by REGISTER_ACTIVITY's factory so recreate() can relaunch by name.
+    void setActivityName(const std::string& name) { mActivityName = name; }
+
+    // AOSP ComponentCallbacks.onConfigurationChanged: override to receive
+    // configuration changes the activity declared it handles (setConfigChanges).
+    virtual void onConfigurationChanged(Configuration& newConfig);
+    // AOSP Activity.dispatchConfigurationChanged: delivered by the system
+    // (App::handleConfigurationChanged) — runs the callback and dispatches
+    // through the content view tree (AOSP ViewRootImpl does the tree walk).
+    void dispatchConfigurationChanged(Configuration& newConfig);
+    // AOSP ActivityInfo.configChanges (manifest android:configChanges): the
+    // CONFIG_* bits this activity handles itself — an activity keeps alive only
+    // when EVERY changed bit is declared; otherwise the system recreates it.
+    int  getConfigChanges() const { return mConfigChanges; }
+    void setConfigChanges(int configChanges) { mConfigChanges = configChanges; }
 
     // Options-menu dispatch chain. Override in subclasses to populate / handle items.
     virtual bool onCreateOptionsMenu(Menu& menu);

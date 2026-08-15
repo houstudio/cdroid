@@ -21,7 +21,8 @@
 #include <utility>
 #include <vector>
 
-#include <core/displaymetrics.h>      // cdroid::DisplayMetrics (value member mMetrics)
+#include <core/displaymetrics.h>
+#include <view/configuration.h>   // Configuration (live config face)      // cdroid::DisplayMetrics (value member mMetrics)
 
 // ResourcesImpl is the facade that HIDES the androidfw native readers (ResTable,
 // ResTable_config, AssetManager, Asset, TypedValue) — those headers live in the
@@ -60,8 +61,20 @@ public:
 
     // Theme lives at the Resources level now (Resources::Theme; cdroid::Resources
     // owns the engine view). ResourcesImpl exposes only config/metrics here.
-    const ResTable_config& getConfiguration() const;       // out-of-line (mConfig opaque)
+    // AOSP ResourcesImpl.getConfiguration(): the LIVE Configuration object
+    // (android.content.res.Configuration; updateFrom/calcConfigChanges operate
+    // on it).
+    const Configuration&   getConfiguration() const;
     const DisplayMetrics&  getDisplayMetrics() const { return mMetrics; }
+    // AOSP ResourcesImpl.calcConfigChanges(@Nullable Configuration): the change
+    // bits between the live configuration and `config` (null → all changed).
+    int  calcConfigChanges(const Configuration* config);
+    // AOSP ResourcesImpl.updateConfiguration(@Nullable Configuration, @Nullable
+    // DisplayMetrics): applies the new configuration — the change bits drive
+    // resource-variant reselection (arsc setParameters) and cache invalidation.
+    void updateConfiguration(const Configuration* config, const DisplayMetrics* metrics);
+    // Internal: raw arsc config seeding (device defaults at construction).
+    const ResTable_config& getResTableConfig() const;      // out-of-line (mConfig opaque)
     void setConfiguration(const ResTable_config& config);  // out-of-line
     void setDisplayMetrics(const DisplayMetrics& m) { mMetrics = m; }
 
@@ -143,6 +156,7 @@ private:
     bool   pathOf(int id, std::string* out) const;
 
     AssetManager*       mAssets;
+    Configuration       mConfiguration;   // AOSP mConfiguration (live config)
     std::unique_ptr<ResTable_config> mConfig;  // opaque (restable.h hidden in .cc)
     DisplayMetrics      mMetrics;
     Context*            mCtx = nullptr;   // inflation bridge (see setContext)

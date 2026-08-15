@@ -287,6 +287,31 @@ void App::exit(int code){
     }
 }
 
+// AOSP ActivityThread.handleConfigurationChanged(Configuration): update the
+// resources' live configuration (resource-variant reselection + cache
+// invalidation), then route each activity — every changed bit declared in the
+// activity's configChanges → dispatchConfigurationChanged; anything undeclared
+// → recreate (AOSP relaunchActivity semantics).
+void App::handleConfigurationChanged(const Configuration& newConfig){
+    Resources& res = getResources();
+    const int changes = res.calcConfigChanges(&newConfig);
+    res.updateConfiguration(&newConfig, nullptr);
+    if (changes == 0) return;
+
+    std::vector<Window*> windows;
+    WindowManager::getInstance().getWindows(windows);
+    for (Window* w : windows) {
+        if (w == nullptr) continue;
+        // AOSP performActivityConfigurationChanged: keep the activity alive only
+        // when every changed bit is declared in its configChanges.
+        if ((changes & ~w->getConfigChanges()) == 0) {
+            w->dispatchConfigurationChanged(const_cast<Configuration&>(res.getConfiguration()));
+        } else {
+            w->recreate();
+        }
+    }
+}
+
 void App::startActivity(const Intent& intent){
     // Resolve the Intent's ComponentName.className via ActivityFactory (REGISTER_ACTIVITY) and `new`
     // the Window (its ctor self-registers with WindowManager -> it appears on screen), then stamp the

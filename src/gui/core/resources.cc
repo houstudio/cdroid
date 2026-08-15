@@ -43,8 +43,19 @@ AssetManager* Resources::getAssets() const {
     return mImpl->getAssets();
 }
 
-const ResTable_config& Resources::getConfiguration() const {
+// AOSP Resources.getConfiguration(): the live Configuration.
+const Configuration& Resources::getConfiguration() const {
     return mImpl->getConfiguration();
+}
+
+// AOSP Resources.updateConfiguration(@Nullable Configuration, @Nullable DisplayMetrics).
+void Resources::updateConfiguration(const Configuration* config, const DisplayMetrics* metrics) {
+    mImpl->updateConfiguration(config, metrics);
+}
+
+// AOSP Resources.calcConfigChanges(@Nullable Configuration): the change bits.
+int Resources::calcConfigChanges(const Configuration* config) const {
+    return mImpl->calcConfigChanges(config);
 }
 
 const DisplayMetrics& Resources::getDisplayMetrics() const {

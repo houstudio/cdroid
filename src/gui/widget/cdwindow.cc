@@ -15,6 +15,9 @@
  */
 //#include <cdroid.h>
 #include <core/app.h>
+#include <core/contextthemewrapper.h>
+#include <core/intent.h>
+#include <core/componentname.h>
 #include <core/looper.h>
 #include <widget/cdwindow.h>
 #include <widget/toolbar.h>
@@ -75,9 +78,18 @@ Window::Window(int x,int y,int width,int height,int type)
 
 // AOSP PhoneWindow(context): same window, but the caller's (possibly themed —
 // ContextThemeWrapper) context drives inflation instead of the global App.
+// AOSP windows belong to an Activity, which IS a ContextThemeWrapper — CDROID
+// windows are the Activity, so a plain context is wrapped in an empty
+// ContextThemeWrapper overlay (inherits the app theme via lazy setTo(base)),
+// giving every window its own theme for Window::setTheme()/recreate().
 Window::Window(Context*ctx,int x,int y,int width,int height,int type)
   : Window(x,y,width,height,type){
-    mContext = ctx;
+    if (dynamic_cast<ContextThemeWrapper*>(ctx) == nullptr) {
+        mContext = new ContextThemeWrapper(ctx ? ctx : &App::getInstance(), 0);
+        mOwnsContext = true;
+    } else {
+        mContext = ctx;
+    }
 }
 
 void Window::initWindow(){
@@ -119,6 +131,7 @@ void Window::initWindow(){
 }
 
 Window::~Window(){
+    if (mOwnsContext) delete mContext;   // the auto-wrapped ContextThemeWrapper
     if (mActionMode != nullptr) {
         ActionMode* mode = mActionMode;
         mActionMode = nullptr;
@@ -146,6 +159,48 @@ Window::~Window(){
 // =====================================================================================
 //  ActionBar / Options menu
 // =====================================================================================
+// AOSP Activity.setTheme(resid): super (ContextThemeWrapper.setTheme) applies the
+// style to the live Theme + Window.setTheme stores it. CDROID's Activity IS the
+// Window and the themed-context overlay carries the theme: applyStyle lands
+// immediately, so subsequent inflation and lazy ?attr resolution see it.
+void Window::setTheme(int resid){
+    ContextThemeWrapper* themed = dynamic_cast<ContextThemeWrapper*>(mContext);
+    if (themed) themed->setTheme(resid);
+}
+
+// AOSP Activity.recreate(): the system relaunches the activity with a NEW
+// instance, which inflates under the theme selected before recreation
+// (already-inflated views are never re-themed in place — AOSP does the same).
+// CDROID: close this window and run the REGISTER_ACTIVITY factory again; the
+// new instance's constructor re-runs its content setup. The theme selection
+// itself is the app's contract across recreation (re-read it in the ctor from
+// wherever it persists, or set it app-wide before recreating) — exactly the
+// AOSP recreate + onCreate(re-read persisted choice) shape.
+// AOSP ComponentCallbacks.onConfigurationChanged: default is a no-op
+// (subclasses override).
+void Window::onConfigurationChanged(Configuration& newConfig){
+    (void)newConfig;
+}
+
+// AOSP Activity.dispatchConfigurationChanged → onConfigurationChanged; the
+// content tree walk mirrors AOSP ViewRootImpl.dispatchConfigurationChanged.
+void Window::dispatchConfigurationChanged(Configuration& newConfig){
+    onConfigurationChanged(newConfig);
+    FrameLayout::dispatchConfigurationChanged(newConfig);
+}
+
+void Window::recreate(){
+    if (mActivityName.empty()) {
+        LOGW("Window::recreate: no activity name (not REGISTER_ACTIVITY'd); cannot relaunch");
+        return;
+    }
+    const std::string name = mActivityName;
+    close();   // posts removeWindow + onDestroy + delete (async, transition-aware)
+    Intent intent("");
+    intent.setComponent(ComponentName("", name));
+    App::getInstance().startActivity(intent);
+}
+
 void Window::setActionBar(Toolbar* toolbar){
     delete mActionBar;
     // CDROID's Activity plays the AppCompatActivity role: adopting a Toolbar builds a

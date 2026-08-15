@@ -15,6 +15,7 @@
 #include <memory>
 #include <cstdint>
 #include <vector>
+#include <view/configuration.h>   // Configuration (getConfiguration face)
 
 namespace cdroid {
 
@@ -47,7 +48,12 @@ public:
 
     // --- forwarded to the aggregated ResourcesImpl (AOSP Resources delegates) ---
     AssetManager*       getAssets() const;
-    const ResTable_config& getConfiguration() const;
+    // AOSP Resources.getConfiguration(): the live Configuration.
+    const Configuration& getConfiguration() const;
+    // AOSP Resources.updateConfiguration(@Nullable Configuration, @Nullable DisplayMetrics).
+    void updateConfiguration(const Configuration* config, const DisplayMetrics* metrics);
+    // AOSP Resources.calcConfigChanges(@Nullable Configuration): the change bits.
+    int  calcConfigChanges(const Configuration* config) const;
     const DisplayMetrics&  getDisplayMetrics() const;
     void setConfiguration(const ResTable_config& config);
     void setDisplayMetrics(const DisplayMetrics& metrics);

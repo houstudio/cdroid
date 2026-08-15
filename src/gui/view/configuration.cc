@@ -176,7 +176,7 @@ Configuration::Configuration() {
 /**
  * Makes a deep copy suitable for modification.
  */
-Configuration::Configuration(Configuration& o) {
+Configuration::Configuration(const Configuration& o) {
 	setTo(o);
 }
 
@@ -194,12 +194,12 @@ void Configuration::fixUpLocaleList() {
  *
  * @param o The Configuration object used to set the values of this Configuration's fields.
  */
-void Configuration::setTo(Configuration& o) {
+void Configuration::setTo(const Configuration& o) {
 	fontScale = o.fontScale;
 	mcc = o.mcc;
 	mnc = o.mnc;
 	//locale = o.locale == null ? null : (Locale) o.locale.clone();
-	o.fixUpLocaleList();
+	locale = o.locale;   // CDROID: BCP-47 tag string
 	//mLocaleList = o.mLocaleList;
 	userSetLocale = o.userSetLocale;
 	touchscreen = o.touchscreen;
@@ -479,6 +479,7 @@ void Configuration::setToDefaults() {
 	mcc = mnc = 0;
 	//mLocaleList = LocaleList.getEmptyLocaleList();
 	//locale = nullptr;
+	locale.clear();   // CDROID: BCP-47 tag string, empty = undefined
 	userSetLocale = false;
 	touchscreen = TOUCHSCREEN_UNDEFINED;
 	keyboard = KEYBOARD_UNDEFINED;
@@ -522,105 +523,98 @@ void Configuration::makeDefault() {
  */
 int Configuration::updateFrom(const Configuration& delta) {
 	int changed = 0;
-#if 0
 	if (delta.fontScale > 0 && fontScale != delta.fontScale) {
-		changed |= ActivityInfo.CONFIG_FONT_SCALE;
+		changed |= CONFIG_FONT_SCALE;
 		fontScale = delta.fontScale;
 	}
 	if (delta.mcc != 0 && mcc != delta.mcc) {
-		changed |= ActivityInfo.CONFIG_MCC;
+		changed |= CONFIG_MCC;
 		mcc = delta.mcc;
 	}
 	if (delta.mnc != 0 && mnc != delta.mnc) {
-		changed |= ActivityInfo.CONFIG_MNC;
+		changed |= CONFIG_MNC;
 		mnc = delta.mnc;
 	}
-	//fixUpLocaleList();
-	//delta.fixUpLocaleList();
-	if (!delta.mLocaleList.isEmpty() && !mLocaleList.equals(delta.mLocaleList)) {
-		changed |= ActivityInfo.CONFIG_LOCALE;
-		mLocaleList = delta.mLocaleList;
-		// delta.locale can't be null, since delta.mLocaleList is not empty.
-		if (!delta.locale.equals(locale)) {
-			locale = (Locale) delta.locale.clone();
-			// If locale has changed, then layout direction is also changed ...
-			changed |= ActivityInfo.CONFIG_LAYOUT_DIRECTION;
-			// ... and we need to update the layout direction (represented by the first
-			// 2 most significant bits in screenLayout).
-			setLayoutDirection(locale);
-		}
+	// AOSP compares the LocaleList / Locale objects here; CDROID's locale is a
+	// BCP-47 tag string, compared verbatim (a locale change conservatively also
+	// flags CONFIG_LAYOUT_DIRECTION — the RTL bit is not re-derived, there is no
+	// TextUtils.getLayoutDirectionFromLocale port).
+	if (!delta.locale.empty() && locale != delta.locale) {
+		changed |= CONFIG_LOCALE;
+		locale = delta.locale;
+		changed |= CONFIG_LAYOUT_DIRECTION;
 	}
 	const int deltaScreenLayoutDir = delta.screenLayout & SCREENLAYOUT_LAYOUTDIR_MASK;
 	if (deltaScreenLayoutDir != SCREENLAYOUT_LAYOUTDIR_UNDEFINED &&
 			deltaScreenLayoutDir != (screenLayout & SCREENLAYOUT_LAYOUTDIR_MASK)) {
 		screenLayout = (screenLayout & ~SCREENLAYOUT_LAYOUTDIR_MASK) | deltaScreenLayoutDir;
-		changed |= ActivityInfo.CONFIG_LAYOUT_DIRECTION;
+		changed |= CONFIG_LAYOUT_DIRECTION;
 	}
-	if (delta.userSetLocale && (!userSetLocale || ((changed & ActivityInfo.CONFIG_LOCALE) != 0)))
+	if (delta.userSetLocale && (!userSetLocale || ((changed & CONFIG_LOCALE) != 0)))
 	{
-		changed |= ActivityInfo.CONFIG_LOCALE;
+		changed |= CONFIG_LOCALE;
 		userSetLocale = true;
 	}
 	if (delta.touchscreen != TOUCHSCREEN_UNDEFINED
 			&& touchscreen != delta.touchscreen) {
-		changed |= ActivityInfo.CONFIG_TOUCHSCREEN;
+		changed |= CONFIG_TOUCHSCREEN;
 		touchscreen = delta.touchscreen;
 	}
 	if (delta.keyboard != KEYBOARD_UNDEFINED
 			&& keyboard != delta.keyboard) {
-		changed |= ActivityInfo.CONFIG_KEYBOARD;
+		changed |= CONFIG_KEYBOARD;
 		keyboard = delta.keyboard;
 	}
 	if (delta.keyboardHidden != KEYBOARDHIDDEN_UNDEFINED
 			&& keyboardHidden != delta.keyboardHidden) {
-		changed |= ActivityInfo.CONFIG_KEYBOARD_HIDDEN;
+		changed |= CONFIG_KEYBOARD_HIDDEN;
 		keyboardHidden = delta.keyboardHidden;
 	}
 	if (delta.hardKeyboardHidden != HARDKEYBOARDHIDDEN_UNDEFINED
 			&& hardKeyboardHidden != delta.hardKeyboardHidden) {
-		changed |= ActivityInfo.CONFIG_KEYBOARD_HIDDEN;
+		changed |= CONFIG_KEYBOARD_HIDDEN;
 		hardKeyboardHidden = delta.hardKeyboardHidden;
 	}
 	if (delta.navigation != NAVIGATION_UNDEFINED
 			&& navigation != delta.navigation) {
-		changed |= ActivityInfo.CONFIG_NAVIGATION;
+		changed |= CONFIG_NAVIGATION;
 		navigation = delta.navigation;
 	}
 	if (delta.navigationHidden != NAVIGATIONHIDDEN_UNDEFINED
 			&& navigationHidden != delta.navigationHidden) {
-		changed |= ActivityInfo.CONFIG_KEYBOARD_HIDDEN;
+		changed |= CONFIG_KEYBOARD_HIDDEN;
 		navigationHidden = delta.navigationHidden;
 	}
 	if (delta.orientation != ORIENTATION_UNDEFINED
 			&& orientation != delta.orientation) {
-		changed |= ActivityInfo.CONFIG_ORIENTATION;
+		changed |= CONFIG_ORIENTATION;
 		orientation = delta.orientation;
 	}
 	if (((delta.screenLayout & SCREENLAYOUT_SIZE_MASK) != SCREENLAYOUT_SIZE_UNDEFINED)
 			&& (delta.screenLayout & SCREENLAYOUT_SIZE_MASK)
 			!= (screenLayout & SCREENLAYOUT_SIZE_MASK)) {
-		changed |= ActivityInfo.CONFIG_SCREEN_LAYOUT;
+		changed |= CONFIG_SCREEN_LAYOUT;
 		screenLayout = (screenLayout & ~SCREENLAYOUT_SIZE_MASK)
 				| (delta.screenLayout & SCREENLAYOUT_SIZE_MASK);
 	}
 	if (((delta.screenLayout & SCREENLAYOUT_LONG_MASK) != SCREENLAYOUT_LONG_UNDEFINED)
 			&& (delta.screenLayout & SCREENLAYOUT_LONG_MASK)
 			!= (screenLayout & SCREENLAYOUT_LONG_MASK)) {
-		changed |= ActivityInfo.CONFIG_SCREEN_LAYOUT;
+		changed |= CONFIG_SCREEN_LAYOUT;
 		screenLayout = (screenLayout & ~SCREENLAYOUT_LONG_MASK)
 				| (delta.screenLayout & SCREENLAYOUT_LONG_MASK);
 	}
 	if (((delta.screenLayout & SCREENLAYOUT_ROUND_MASK) != SCREENLAYOUT_ROUND_UNDEFINED)
 			&& (delta.screenLayout & SCREENLAYOUT_ROUND_MASK)
 			!= (screenLayout & SCREENLAYOUT_ROUND_MASK)) {
-		changed |= ActivityInfo.CONFIG_SCREEN_LAYOUT;
+		changed |= CONFIG_SCREEN_LAYOUT;
 		screenLayout = (screenLayout & ~SCREENLAYOUT_ROUND_MASK)
 				| (delta.screenLayout & SCREENLAYOUT_ROUND_MASK);
 	}
 	if ((delta.screenLayout & SCREENLAYOUT_COMPAT_NEEDED)
 			!= (screenLayout & SCREENLAYOUT_COMPAT_NEEDED)
 			&& delta.screenLayout != 0) {
-		changed |= ActivityInfo.CONFIG_SCREEN_LAYOUT;
+		changed |= CONFIG_SCREEN_LAYOUT;
 		screenLayout = (screenLayout & ~SCREENLAYOUT_COMPAT_NEEDED)
 			| (delta.screenLayout & SCREENLAYOUT_COMPAT_NEEDED);
 	}
@@ -629,7 +623,7 @@ int Configuration::updateFrom(const Configuration& delta) {
 				 COLOR_MODE_WIDE_COLOR_GAMUT_UNDEFINED)
 			&& (delta.colorMode & COLOR_MODE_WIDE_COLOR_GAMUT_MASK)
 			!= (colorMode & COLOR_MODE_WIDE_COLOR_GAMUT_MASK)) {
-		changed |= ActivityInfo.CONFIG_COLOR_MODE;
+		changed |= CONFIG_COLOR_MODE;
 		colorMode = (colorMode & ~COLOR_MODE_WIDE_COLOR_GAMUT_MASK)
 				| (delta.colorMode & COLOR_MODE_WIDE_COLOR_GAMUT_MASK);
 	}
@@ -637,14 +631,14 @@ int Configuration::updateFrom(const Configuration& delta) {
 	if (((delta.colorMode & COLOR_MODE_HDR_MASK) != COLOR_MODE_HDR_UNDEFINED)
 			&& (delta.colorMode & COLOR_MODE_HDR_MASK)
 			!= (colorMode & COLOR_MODE_HDR_MASK)) {
-		changed |= ActivityInfo.CONFIG_COLOR_MODE;
+		changed |= CONFIG_COLOR_MODE;
 		colorMode = (colorMode & ~COLOR_MODE_HDR_MASK)
 				| (delta.colorMode & COLOR_MODE_HDR_MASK);
 	}
 
 	if (delta.uiMode != (UI_MODE_TYPE_UNDEFINED|UI_MODE_NIGHT_UNDEFINED)
 			&& uiMode != delta.uiMode) {
-		changed |= ActivityInfo.CONFIG_UI_MODE;
+		changed |= CONFIG_UI_MODE;
 		if ((delta.uiMode&UI_MODE_TYPE_MASK) != UI_MODE_TYPE_UNDEFINED) {
 			uiMode = (uiMode&~UI_MODE_TYPE_MASK)
 					| (delta.uiMode&UI_MODE_TYPE_MASK);
@@ -656,22 +650,22 @@ int Configuration::updateFrom(const Configuration& delta) {
 	}
 	if (delta.screenWidthDp != SCREEN_WIDTH_DP_UNDEFINED
 			&& screenWidthDp != delta.screenWidthDp) {
-		changed |= ActivityInfo.CONFIG_SCREEN_SIZE;
+		changed |= CONFIG_SCREEN_SIZE;
 		screenWidthDp = delta.screenWidthDp;
 	}
 	if (delta.screenHeightDp != SCREEN_HEIGHT_DP_UNDEFINED
 			&& screenHeightDp != delta.screenHeightDp) {
-		changed |= ActivityInfo.CONFIG_SCREEN_SIZE;
+		changed |= CONFIG_SCREEN_SIZE;
 		screenHeightDp = delta.screenHeightDp;
 	}
 	if (delta.smallestScreenWidthDp != SMALLEST_SCREEN_WIDTH_DP_UNDEFINED
 			&& smallestScreenWidthDp != delta.smallestScreenWidthDp) {
-		changed |= ActivityInfo.CONFIG_SMALLEST_SCREEN_SIZE;
+		changed |= CONFIG_SMALLEST_SCREEN_SIZE;
 		smallestScreenWidthDp = delta.smallestScreenWidthDp;
 	}
 	if (delta.densityDpi != DENSITY_DPI_UNDEFINED &&
 			densityDpi != delta.densityDpi) {
-		changed |= ActivityInfo.CONFIG_DENSITY;
+		changed |= CONFIG_DENSITY;
 		densityDpi = delta.densityDpi;
 	}
 	if (delta.compatScreenWidthDp != SCREEN_WIDTH_DP_UNDEFINED) {
@@ -684,16 +678,14 @@ int Configuration::updateFrom(const Configuration& delta) {
 		compatSmallestScreenWidthDp = delta.compatSmallestScreenWidthDp;
 	}
 	if (delta.assetsSeq != ASSETS_SEQ_UNDEFINED && delta.assetsSeq != assetsSeq) {
-		changed |= ActivityInfo.CONFIG_ASSETS_PATHS;
+		changed |= CONFIG_ASSETS_PATHS;
 		assetsSeq = delta.assetsSeq;
 	}
 	if (delta.seq != 0) {
 		seq = delta.seq;
 	}
-	if (windowConfiguration.updateFrom(delta.windowConfiguration) != 0) {
-		changed |= ActivityInfo.CONFIG_WINDOW_CONFIGURATION;
-	}
-#endif
+	// AOSP: WindowConfiguration differences (CONFIG_WINDOW_CONFIGURATION) — no
+	// WindowConfiguration port; the branch is dropped until one lands.
 	return changed;
 }
 
@@ -704,29 +696,29 @@ int Configuration::updateFrom(const Configuration& delta) {
  * @return Returns a bit mask indicating which configuration
  * values has changed, containing any combination of
  * {@link android.content.pm.ActivityInfo#CONFIG_FONT_SCALE
- * PackageManager.ActivityInfo.CONFIG_FONT_SCALE},
+ * PackageManager.CONFIG_FONT_SCALE},
  * {@link android.content.pm.ActivityInfo#CONFIG_MCC
- * PackageManager.ActivityInfo.CONFIG_MCC},
+ * PackageManager.CONFIG_MCC},
  * {@link android.content.pm.ActivityInfo#CONFIG_MNC
- * PackageManager.ActivityInfo.CONFIG_MNC},
+ * PackageManager.CONFIG_MNC},
  * {@link android.content.pm.ActivityInfo#CONFIG_LOCALE
- * PackageManager.ActivityInfo.CONFIG_LOCALE},
+ * PackageManager.CONFIG_LOCALE},
  * {@link android.content.pm.ActivityInfo#CONFIG_TOUCHSCREEN
- * PackageManager.ActivityInfo.CONFIG_TOUCHSCREEN},
+ * PackageManager.CONFIG_TOUCHSCREEN},
  * {@link android.content.pm.ActivityInfo#CONFIG_KEYBOARD
- * PackageManager.ActivityInfo.CONFIG_KEYBOARD},
+ * PackageManager.CONFIG_KEYBOARD},
  * {@link android.content.pm.ActivityInfo#CONFIG_NAVIGATION
- * PackageManager.ActivityInfo.CONFIG_NAVIGATION},
+ * PackageManager.CONFIG_NAVIGATION},
  * {@link android.content.pm.ActivityInfo#CONFIG_ORIENTATION
- * PackageManager.ActivityInfo.CONFIG_ORIENTATION},
+ * PackageManager.CONFIG_ORIENTATION},
  * {@link android.content.pm.ActivityInfo#CONFIG_SCREEN_LAYOUT
- * PackageManager.ActivityInfo.CONFIG_SCREEN_LAYOUT}, or
+ * PackageManager.CONFIG_SCREEN_LAYOUT}, or
  * {@link android.content.pm.ActivityInfo#CONFIG_SCREEN_SIZE
- * PackageManager.ActivityInfo.CONFIG_SCREEN_SIZE}, or
+ * PackageManager.CONFIG_SCREEN_SIZE}, or
  * {@link android.content.pm.ActivityInfo#CONFIG_SMALLEST_SCREEN_SIZE
- * PackageManager.ActivityInfo.CONFIG_SMALLEST_SCREEN_SIZE}.
+ * PackageManager.CONFIG_SMALLEST_SCREEN_SIZE}.
  * {@link android.content.pm.ActivityInfo#CONFIG_LAYOUT_DIRECTION
- * PackageManager.ActivityInfo.CONFIG_LAYOUT_DIRECTION}.
+ * PackageManager.CONFIG_LAYOUT_DIRECTION}.
  */
 int Configuration::diff(const Configuration& delta)const {
 	return diff(delta, false /* compareUndefined */, false /* publicOnly */);
@@ -751,101 +743,95 @@ int Configuration::diffPublicOnly(const Configuration& delta)const {
  */
 int Configuration::diff(const Configuration& delta, bool compareUndefined, bool publicOnly)const {
 	int changed = 0;
-#if 0
 	if ((compareUndefined || delta.fontScale > 0) && fontScale != delta.fontScale) {
-		changed |= ActivityInfo.CONFIG_FONT_SCALE;
+		changed |= CONFIG_FONT_SCALE;
 	}
 	if ((compareUndefined || delta.mcc != 0) && mcc != delta.mcc) {
-		changed |= ActivityInfo.CONFIG_MCC;
+		changed |= CONFIG_MCC;
 	}
 	if ((compareUndefined || delta.mnc != 0) && mnc != delta.mnc) {
-		changed |= ActivityInfo.CONFIG_MNC;
+		changed |= CONFIG_MNC;
 	}
-	fixUpLocaleList();
-	delta.fixUpLocaleList();
-	if ((compareUndefined || !delta.mLocaleList.isEmpty())
-			&& !mLocaleList.equals(delta.mLocaleList)) {
-		changed |= ActivityInfo.CONFIG_LOCALE;
-		changed |= ActivityInfo.CONFIG_LAYOUT_DIRECTION;
+	// AOSP compares LocaleList objects; CDROID's locale is a BCP-47 tag string.
+	if ((compareUndefined || !delta.locale.empty()) && locale != delta.locale) {
+		changed |= CONFIG_LOCALE;
+		changed |= CONFIG_LAYOUT_DIRECTION;
 	}
 	const int deltaScreenLayoutDir = delta.screenLayout & SCREENLAYOUT_LAYOUTDIR_MASK;
 	if ((compareUndefined || deltaScreenLayoutDir != SCREENLAYOUT_LAYOUTDIR_UNDEFINED)
 			&& deltaScreenLayoutDir != (screenLayout & SCREENLAYOUT_LAYOUTDIR_MASK)) {
-		changed |= ActivityInfo.CONFIG_LAYOUT_DIRECTION;
+		changed |= CONFIG_LAYOUT_DIRECTION;
 	}
 	if ((compareUndefined || delta.touchscreen != TOUCHSCREEN_UNDEFINED)
 			&& touchscreen != delta.touchscreen) {
-		changed |= ActivityInfo.CONFIG_TOUCHSCREEN;
+		changed |= CONFIG_TOUCHSCREEN;
 	}
 	if ((compareUndefined || delta.keyboard != KEYBOARD_UNDEFINED)
 			&& keyboard != delta.keyboard) {
-		changed |= ActivityInfo.CONFIG_KEYBOARD;
+		changed |= CONFIG_KEYBOARD;
 	}
 	if ((compareUndefined || delta.keyboardHidden != KEYBOARDHIDDEN_UNDEFINED)
 			&& keyboardHidden != delta.keyboardHidden) {
-		changed |= ActivityInfo.CONFIG_KEYBOARD_HIDDEN;
+		changed |= CONFIG_KEYBOARD_HIDDEN;
 	}
 	if ((compareUndefined || delta.hardKeyboardHidden != HARDKEYBOARDHIDDEN_UNDEFINED)
 			&& hardKeyboardHidden != delta.hardKeyboardHidden) {
-		changed |= ActivityInfo.CONFIG_KEYBOARD_HIDDEN;
+		changed |= CONFIG_KEYBOARD_HIDDEN;
 	}
 	if ((compareUndefined || delta.navigation != NAVIGATION_UNDEFINED)
 			&& navigation != delta.navigation) {
-		changed |= ActivityInfo.CONFIG_NAVIGATION;
+		changed |= CONFIG_NAVIGATION;
 	}
 	if ((compareUndefined || delta.navigationHidden != NAVIGATIONHIDDEN_UNDEFINED)
 			&& navigationHidden != delta.navigationHidden) {
-		changed |= ActivityInfo.CONFIG_KEYBOARD_HIDDEN;
+		changed |= CONFIG_KEYBOARD_HIDDEN;
 	}
 	if ((compareUndefined || delta.orientation != ORIENTATION_UNDEFINED)
 			&& orientation != delta.orientation) {
-		changed |= ActivityInfo.CONFIG_ORIENTATION;
+		changed |= CONFIG_ORIENTATION;
 	}
 	if ((compareUndefined || getScreenLayoutNoDirection(delta.screenLayout) !=
 			(SCREENLAYOUT_SIZE_UNDEFINED | SCREENLAYOUT_LONG_UNDEFINED))
 			&& getScreenLayoutNoDirection(screenLayout) !=
 			getScreenLayoutNoDirection(delta.screenLayout)) {
-		changed |= ActivityInfo.CONFIG_SCREEN_LAYOUT;
+		changed |= CONFIG_SCREEN_LAYOUT;
 	}
 	if ((compareUndefined || (delta.colorMode & COLOR_MODE_HDR_MASK) != COLOR_MODE_HDR_UNDEFINED)
 			&& (colorMode & COLOR_MODE_HDR_MASK) !=	(delta.colorMode & COLOR_MODE_HDR_MASK)) {
-		changed |= ActivityInfo.CONFIG_COLOR_MODE;
+		changed |= CONFIG_COLOR_MODE;
 	}
 	if ((compareUndefined || (delta.colorMode & COLOR_MODE_WIDE_COLOR_GAMUT_MASK) !=
 		 COLOR_MODE_WIDE_COLOR_GAMUT_UNDEFINED)	&& (colorMode & COLOR_MODE_WIDE_COLOR_GAMUT_MASK) !=
 					(delta.colorMode & COLOR_MODE_WIDE_COLOR_GAMUT_MASK)) {
-		changed |= ActivityInfo.CONFIG_COLOR_MODE;
+		changed |= CONFIG_COLOR_MODE;
 	}
 	if ((compareUndefined || delta.uiMode != (UI_MODE_TYPE_UNDEFINED|UI_MODE_NIGHT_UNDEFINED))
 			&& uiMode != delta.uiMode) {
-		changed |= ActivityInfo.CONFIG_UI_MODE;
+		changed |= CONFIG_UI_MODE;
 	}
 	if ((compareUndefined || delta.screenWidthDp != SCREEN_WIDTH_DP_UNDEFINED)
 			&& screenWidthDp != delta.screenWidthDp) {
-		changed |= ActivityInfo.CONFIG_SCREEN_SIZE;
+		changed |= CONFIG_SCREEN_SIZE;
 	}
 	if ((compareUndefined || delta.screenHeightDp != SCREEN_HEIGHT_DP_UNDEFINED)
 			&& screenHeightDp != delta.screenHeightDp) {
-		changed |= ActivityInfo.CONFIG_SCREEN_SIZE;
+		changed |= CONFIG_SCREEN_SIZE;
 	}
 	if ((compareUndefined || delta.smallestScreenWidthDp != SMALLEST_SCREEN_WIDTH_DP_UNDEFINED)
 			&& smallestScreenWidthDp != delta.smallestScreenWidthDp) {
-		changed |= ActivityInfo.CONFIG_SMALLEST_SCREEN_SIZE;
+		changed |= CONFIG_SMALLEST_SCREEN_SIZE;
 	}
 	if ((compareUndefined || delta.densityDpi != DENSITY_DPI_UNDEFINED)
 			&& densityDpi != delta.densityDpi) {
-		changed |= ActivityInfo.CONFIG_DENSITY;
+		changed |= CONFIG_DENSITY;
 	}
 	if ((compareUndefined || delta.assetsSeq != ASSETS_SEQ_UNDEFINED)
 			&& assetsSeq != delta.assetsSeq) {
-		changed |= ActivityInfo.CONFIG_ASSETS_PATHS;
+		changed |= CONFIG_ASSETS_PATHS;
 	}
 
-	// WindowConfiguration differences aren't considered public...
-	if (!publicOnly && windowConfiguration.diff(delta.windowConfiguration, compareUndefined) != 0) {
-		changed |= ActivityInfo.CONFIG_WINDOW_CONFIGURATION;
-	}
-#endif
+	// AOSP: WindowConfiguration differences aren't considered public... no
+	// WindowConfiguration port; the branch is dropped until one lands.
 	return changed;
 }
 
@@ -1498,7 +1484,9 @@ std::string Configuration::resourceQualifierString(const Configuration& config,c
 	}
 
 	parts.push_back(std::string("v") + Build::VERSION::Release);//RESOURCES_SDK_INT);
-	return TextUtils::join("-", parts);
+	std::string out;
+	for (size_t i = 0; i < parts.size(); i++) { if (i) out += "-"; out += parts[i]; }
+	return out;
 }
 
 /**

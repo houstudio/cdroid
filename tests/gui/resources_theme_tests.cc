@@ -164,3 +164,24 @@ TEST_F(RESOURCES_THEME, applyThemeReResolvesPendingAttrs) {
     EXPECT_FALSE(cdr->canApplyTheme());
     delete cdr;
 }
+
+// AOSP configuration-change flow: calcConfigChanges reports the uiMode delta,
+// updateConfiguration applies it to the live Configuration and reseeds the
+// arsc parameters (resource-variant reselection). App::handleConfigurationChanged
+// (ActivityThread role) drives the per-activity dispatch/recreate on top.
+TEST_F(RESOURCES_THEME, configurationChangeFlow) {
+    Resources& res = App::getInstance().getResources();
+    Configuration c = res.getConfiguration();
+    c.uiMode = (c.uiMode & ~Configuration::UI_MODE_NIGHT_MASK) | Configuration::UI_MODE_NIGHT_YES;
+    EXPECT_NE(res.calcConfigChanges(&c) & Configuration::CONFIG_UI_MODE, 0);
+
+    res.updateConfiguration(&c, nullptr);
+    EXPECT_EQ(res.getConfiguration().uiMode & Configuration::UI_MODE_NIGHT_MASK,
+              (int)Configuration::UI_MODE_NIGHT_YES);
+    // No further change: the live config matches now.
+    EXPECT_EQ(res.calcConfigChanges(&c) & Configuration::CONFIG_UI_MODE, 0);
+
+    // Restore (unset night bit).
+    c.uiMode = (c.uiMode & ~Configuration::UI_MODE_NIGHT_MASK) | Configuration::UI_MODE_NIGHT_NO;
+    res.updateConfiguration(&c, nullptr);
+}
