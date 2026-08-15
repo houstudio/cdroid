@@ -38,23 +38,14 @@ QRCodeView::QRCodeView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):
     const AttributeSet& attrs = *pAttrs;
     initView();
 
-    mEccLevel = attrs.getInt("eccLevel",std::unordered_map<std::string,int>{
-            {"low",ECC_LOW},    /* 7%*/
-            {"medium",ECC_MEDIUM}, /*15%*/
-            {"quartor",ECC_QUARTOR},/*20%*/
-            {"high",ECC_HIGH}    /*30%*/
-    },mEccLevel);
+    mEccLevel = attrs.getAttributeIntValue(std::string(), "eccLevel", mEccLevel);
 
-    mEncodeMode = attrs.getInt("encodeMode",std::unordered_map<std::string,int>{
-            {"numberic",MODE_NUMERIC},
-            {"alphanumeric",MODE_ALPHANUMERIC},
-            {"utf8" , MODE_UTF8},
-            {"kanji", MODE_KANJI}
-    },mEncodeMode);
+    mEncodeMode = attrs.getAttributeIntValue(std::string(), "encodeMode", mEncodeMode);
 
-    mDotColor  = attrs.getColor("dotColor",mDotColor);
-    mBarBgColor= attrs.getColor("barBgColor", (~mDotColor)|0xFF000000);
-    mLogoDrawable = attrs.getDrawable("logo");
+    mDotColor  = attrs.getAttributeIntValue(std::string(), "dotColor", mDotColor);
+    //mBarBgColor= attrs.getColor("barBgColor", (~mDotColor)|0xFF000000);
+    mBarBgColor = (~mDotColor)|0xFF000000;  // barBgColor attr unregistered; keep the default
+    mLogoDrawable = nullptr;                 // logo attr unregistered
     encode();
 }
 
@@ -130,7 +121,7 @@ void QRCodeView::setText(const std::string&text){
     }
 }
 
-void QRCodeView::setLogoResource(const std::string&resid){
+void QRCodeView::setLogoResource(int resid){
     setLogo(mContext->getDrawable(resid));
 }
 

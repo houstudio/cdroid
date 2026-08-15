@@ -30,8 +30,8 @@ HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior(Context* context,
 HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :CoordinatorLayout::Behavior(context, pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
-    mEnterAnimDuration = attrs.getInt("enterAnimDuration",DEFAULT_ENTER_ANIMATION_DURATION_MS);
-    mExitAnimDuration = attrs.getInt("exitAnimDuration",DEFAULT_EXIT_ANIMATION_DURATION_MS);
+    mEnterAnimDuration = attrs.getAttributeIntValue(std::string(), "enterAnimDuration",DEFAULT_ENTER_ANIMATION_DURATION_MS);
+    mExitAnimDuration = attrs.getAttributeIntValue(std::string(), "exitAnimDuration",DEFAULT_EXIT_ANIMATION_DURATION_MS);
     mEnterAnimInterpolator = nullptr;
     mExitAnimInterpolator = nullptr;
     mDisableOnTouchExploration = true;

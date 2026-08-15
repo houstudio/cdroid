@@ -170,19 +170,19 @@ ConstraintSet::CustomAttribute ConstraintSet::parseCustomAttribute(const Attribu
     // @color/@string refs and handles numeric formats instead of parsing inline.
     if (!parser.getAttributeValue("customColorValue").empty()) {
         ca.type = CustomAttribute::COLOR;
-        ca.intValue = parser.getColor("customColorValue", 0);
+        ca.intValue = parser.getAttributeUnsignedIntValue("", "customColorValue", 0);
     } else if (!parser.getAttributeValue("customIntegerValue").empty()) {
         ca.type = CustomAttribute::INTEGER;
-        ca.intValue = parser.getInt("customIntegerValue", 0);
+        ca.intValue = parser.getAttributeIntValue(std::string(), "customIntegerValue", 0);
     } else if (!parser.getAttributeValue("customFloatValue").empty()) {
         ca.type = CustomAttribute::FLOAT;
-        ca.floatValue = parser.getFloat("customFloatValue", 0.f);
+        ca.floatValue = parser.getAttributeFloatValue(std::string(), "customFloatValue", 0.f);
     } else if (!parser.getAttributeValue("customStringValue").empty()) {
         ca.type = CustomAttribute::STRING;
-        ca.stringValue = parser.getString("customStringValue");
+        ca.stringValue = parser.getAttributeValue("customStringValue");
     } else if (!parser.getAttributeValue("customBooleanValue").empty()) {
         ca.type = CustomAttribute::BOOLEAN;
-        ca.boolValue = parser.getBoolean("customBooleanValue", false);
+        ca.boolValue = parser.getAttributeBooleanValue(std::string(), "customBooleanValue", false);
     }
     return ca;
 }
@@ -663,7 +663,7 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     // <Constraint> uses android:id; <ConstraintOverride> (ViewTransition delta) uses motionTarget.
     mViewId      = (int)ta->getResourceId(R::styleable::Constraint_id, mViewId);
     // motionTarget is a ConstraintOverride attr (not in the Constraint styleable) — attrs bridge only.
-    if (mViewId == View::NO_ID) mViewId = a.getResourceId("motionTarget", mViewId);
+    if (mViewId == View::NO_ID) mViewId = a.getAttributeResourceValue(std::string(), "motionTarget", mViewId);
     // Anchor targets are reference|enum with <enum name="parent" value="0"/>: "@id/x" is stored
     // as a reference (resource id), "parent" as an int enum (0). Match androidx — getResourceId
     // for @id/x, getInt fallback for the "parent" sentinel — else binary AXML leaves every

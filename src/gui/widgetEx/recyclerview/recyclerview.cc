@@ -62,27 +62,15 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
     setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
-    
-    //Create the layoutManager if specified.
-    AttributeSet attrs(getContext(),getContext()->getPackageName());
-    std::string layoutManagerName = attrs.getString("layoutManager","LinearLayoutManager");
-    const int descendantFocusability = attrs.getInt("descendantFocusability", -1);
-    if (descendantFocusability == -1) {
-        setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
-    }
-    mEnableFastScroller = attrs.getBoolean("fastScrollEnabled", false);
-    if (mEnableFastScroller) {
-        StateListDrawable* verticalThumbDrawable = (StateListDrawable*) attrs.getDrawable("fastScrollVerticalThumbDrawable");
-        Drawable* verticalTrackDrawable = attrs.getDrawable("fastScrollVerticalTrackDrawable");
-        StateListDrawable* horizontalThumbDrawable = (StateListDrawable*) attrs.getDrawable("fastScrollHorizontalThumbDrawable");
-        Drawable* horizontalTrackDrawable = attrs.getDrawable("fastScrollHorizontalTrackDrawable");
-        initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable,attrs);
-    }
-    createLayoutManager(getContext(), layoutManagerName, attrs);//, defStyle, defStyleRes);
-    setDescendantFocusability(descendantFocusability==-1?ViewGroup::FOCUS_AFTER_DESCENDANTS:ViewGroup::FOCUS_AFTER_DESCENDANTS);
+
+    // Programmatic construction (no XML attrs): the defaults the XML ctor's
+    // unset attrs resolve to — LinearLayoutManager, fast scroller off,
+    // FOCUS_AFTER_DESCENDANTS, nested scrolling on.
+    createLayoutManager(getContext(), "LinearLayoutManager", AttributeSet::empty());
+    setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
 
     // Re-set whether nested scrolling is enabled so that it is set on all API levels
-    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled", true));
+    setNestedScrollingEnabled(true);
     setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 
@@ -117,13 +105,13 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defSt
         Drawable* verticalTrackDrawable = ta->getDrawable(R::styleable::RecyclerView_fastScrollVerticalTrackDrawable);
         StateListDrawable* horizontalThumbDrawable = (StateListDrawable*) (ta->getDrawable(R::styleable::RecyclerView_fastScrollHorizontalThumbDrawable));
         Drawable* horizontalTrackDrawable = ta->getDrawable(R::styleable::RecyclerView_fastScrollHorizontalTrackDrawable);
-        initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable,attrs);
+        initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable);
     }
     createLayoutManager(context, layoutManagerName, attrs);//, defStyle, defStyleRes);
     setDescendantFocusability(descendantFocusability==-1?ViewGroup::FOCUS_AFTER_DESCENDANTS:ViewGroup::FOCUS_AFTER_DESCENDANTS);
 
     // nestedScrollingEnabled is a framework View attr (not in the RecyclerView styleable) — attrs bridge.
-    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled", true));
+    setNestedScrollingEnabled(attrs.getAttributeBooleanValue(std::string(), "nestedScrollingEnabled", true));
     setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 
@@ -6692,12 +6680,10 @@ bool RecyclerView::LayoutManager::performAccessibilityActionForItem(Recycler& re
 
 RecyclerView::LayoutManager::Properties RecyclerView::LayoutManager::getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes) {
     Properties properties;
-    properties.orientation = attrs.getInt("orientation",std::unordered_map<std::string,int>{
-            {"horizontal",LinearLayout::HORIZONTAL},
-            {"vertical",LinearLayout::VERTICAL}}, DEFAULT_ORIENTATION);//a.getInt(R.styleable.RecyclerView_android_orientation, DEFAULT_ORIENTATION);
-    properties.spanCount = attrs.getInt("spanCount",1);//a.getInt(R.styleable.RecyclerView_spanCount, 1);
-    properties.reverseLayout = attrs.getBoolean("reverseLayout",false);//a.getBoolean(R.styleable.RecyclerView_reverseLayout, false);
-    properties.stackFromEnd = attrs.getBoolean("stackFromEnd",false);//a.getBoolean(R.styleable.RecyclerView_stackFromEnd, false);
+    properties.orientation = attrs.getAttributeIntValue(std::string(), "orientation", DEFAULT_ORIENTATION);//a.getInt(R.styleable.RecyclerView_android_orientation, DEFAULT_ORIENTATION);
+    properties.spanCount = attrs.getAttributeIntValue(std::string(), "spanCount",1);//a.getInt(R.styleable.RecyclerView_spanCount, 1);
+    properties.reverseLayout = attrs.getAttributeBooleanValue(std::string(), "reverseLayout",false);//a.getBoolean(R.styleable.RecyclerView_reverseLayout, false);
+    properties.stackFromEnd = attrs.getAttributeBooleanValue(std::string(), "stackFromEnd",false);//a.getBoolean(R.styleable.RecyclerView_stackFromEnd, false);
     return properties;
 }
 
@@ -7097,16 +7083,16 @@ int RecyclerView::getAdapterPositionInRecyclerView(const ViewHolder* viewHolder)
 }
 
 void RecyclerView::initFastScroller(StateListDrawable* verticalThumb, Drawable* verticalTrack,
-   StateListDrawable* horizontalThumb,Drawable* horizontalTrack,const AttributeSet&atts) {
+   StateListDrawable* horizontalThumb,Drawable* horizontalTrack) {
     if (verticalThumb == nullptr || verticalTrack == nullptr
             || horizontalThumb == nullptr || horizontalTrack == nullptr) {
         throw std::runtime_error("Trying to set fast scroller without both required drawables.");
     }
-    //Resources resources = getContext().getResources();
+    // AOSP reads R.dimen.fastscroll_default_thickness / fastscroll_minimum_range /
+    // fastscroll_margin (not shipped in the CDROID framework res) — keep the CDROID
+    // values the old string reads fell through to.
     new FastScroller(this, verticalThumb, verticalTrack, horizontalThumb, horizontalTrack,
-            atts.getDimensionPixelSize("default_thickness",4),//R.dimen.fastscroll_default_thickness),
-            atts.getDimensionPixelSize("minimum_range",32),//R.dimen.fastscroll_minimum_range),
-            atts.getDimensionPixelOffset("margin"));//R.dimen.fastscroll_margin));
+            4, 32, 0);
 }
 
 //////////////////////////////RecyclerView::NestedScrollingChild//////////////////////////////////////

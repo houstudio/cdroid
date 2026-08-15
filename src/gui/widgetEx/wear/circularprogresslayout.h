@@ -33,7 +33,7 @@ private:
     int64_t mTotalTime;
 private:
     void initCircularProgressLayout();
-    std::vector<int> getColorListFromResources(const std::string& arrayResId);
+    std::vector<int> getColorListFromResources(int arrayResId);
 protected:
     void onLayout(bool changed, int left, int top, int width, int heigt) override;
     void onDetachedFromWindow() override;

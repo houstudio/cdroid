@@ -169,8 +169,8 @@ void CoordinatorLayout::setVisibility(int visibility) {
     }
 }
 
-void CoordinatorLayout::setStatusBarBackgroundResource(const std::string& resId) {
-    setStatusBarBackground(!resId.empty() ? mContext->getDrawable(resId) : nullptr);
+void CoordinatorLayout::setStatusBarBackgroundResource(int resId) {
+    setStatusBarBackground(resId ? mContext->getDrawable(resId) : nullptr);
 }
 
 void CoordinatorLayout::setStatusBarBackgroundColor(int color) {

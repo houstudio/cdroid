@@ -72,7 +72,7 @@ public:
     void setBarBgColor(int color);
     int getBarBgColor()const;
     void setLogo(Drawable*);
-    void setLogoResource(const std::string&);
+    void setLogoResource(int resid);
     Drawable* getLogo()const;
     void setZoom(float);
     float getZoom()const;

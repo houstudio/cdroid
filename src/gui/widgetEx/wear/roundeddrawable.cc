@@ -34,7 +34,7 @@ RoundedDrawable::~RoundedDrawable(){
 void RoundedDrawable::inflate(XmlPullParser& parser, const AttributeSet& attrs/*, Theme theme*/){
     Drawable::inflate(parser, attrs/*, theme*/);
     setRadius(attrs.getDimensionPixelSize("radius", 0));
-    setClipEnabled(attrs.getBoolean("clipEnabled", false));
+    setClipEnabled(attrs.getAttributeBooleanValue(std::string(), "clipEnabled", false));
     setBackgroundColor(attrs.getColor("backgroundColor", Color::TRANSPARENT));
 }
 

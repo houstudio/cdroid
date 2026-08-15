@@ -421,8 +421,8 @@ protected:
     bool setChildImportantForAccessibilityInternal(ViewHolder* viewHolder,int importantForAccessibility);
     void dispatchPendingImportantForAccessibilityChanges();
     int getAdapterPositionInRecyclerView(const ViewHolder* viewHolder)const;
-    void initFastScroller(StateListDrawable* verticalThumbDrawable, Drawable* verticalTrackDrawable, 
-             StateListDrawable* horizontalThumbDrawable, Drawable* horizontalTrackDrawable,const AttributeSet&);
+    void initFastScroller(StateListDrawable* verticalThumbDrawable, Drawable* verticalTrackDrawable,
+             StateListDrawable* horizontalThumbDrawable, Drawable* horizontalTrackDrawable);
     int getChildDrawingOrder(int childCount, int i)override;
 public:
     RecyclerView(int w,int h);

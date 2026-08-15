@@ -37,9 +37,9 @@ WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* 
     // allows the items to draw in that space.
     setClipToPadding(false);
 
-    setCircularScrollingGestureEnabled(attrs.getBoolean("circularScrollingGestureEnabled",mCircularScrollingEnabled));
-    setBezelFraction(attrs.getFloat("bezelWidth",mScrollManager->getBezelWidth()));
-    setScrollDegreesPerScreen(attrs.getFloat("scrollDegreesPerScreen",mScrollManager->getScrollDegreesPerScreen()));
+    setCircularScrollingGestureEnabled(attrs.getAttributeBooleanValue(std::string(), "circularScrollingGestureEnabled",mCircularScrollingEnabled));
+    setBezelFraction(attrs.getAttributeFloatValue(std::string(), "bezelWidth",mScrollManager->getBezelWidth()));
+    setScrollDegreesPerScreen(attrs.getAttributeFloatValue(std::string(), "scrollDegreesPerScreen",mScrollManager->getScrollDegreesPerScreen()));
 }
 
 WearableRecyclerView::~WearableRecyclerView(){

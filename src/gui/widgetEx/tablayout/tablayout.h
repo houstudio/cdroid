@@ -271,7 +271,7 @@ protected:
     float mTabTextSize;
     float mSelectedTabTextSize;
     float mTabTextMultiLineSize;
-    std::string mTabBackgroundResId;
+    int mTabBackgroundResId = 0;
     int mTabTextAppearance = 0;
     int mSelectedTabTextAppearance = 0;
     int mDefaultTabTextAppearance = 0;
@@ -347,7 +347,7 @@ public:
     int getTabIndicatorAnimationMode()const;
     Drawable* getTabSelectedIndicator()const;
     void setSelectedTabIndicator(Drawable*d);
-    void setSelectedTabIndicator(const std::string&res);
+    void setSelectedTabIndicator(int res);
     bool isTabIndicatorFullWidth()const;
     void setTabIndicatorFullWidth(bool tabIndicatorFullWidth);
     bool isInlineLabel()const;

@@ -113,7 +113,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
     mRequestedTabMinWidth = ta->getDimensionPixelSize(R::styleable::TabLayout_tabMinWidth, -1);
     mRequestedTabMaxWidth = ta->getDimensionPixelSize(R::styleable::TabLayout_tabMaxWidth, -1);
 
-    mTabBackgroundResId= ta->getString(R::styleable::TabLayout_tabBackground);
+    mTabBackgroundResId = ta->getResourceId(R::styleable::TabLayout_tabBackground, 0);
     mContentInsetStart  = ta->getDimensionPixelSize(R::styleable::TabLayout_tabContentStart, 0);
     mMode = ta->getInt(R::styleable::TabLayout_tabMode, mMode);
     mSmoothScroll = ta->getBoolean(R::styleable::TabLayout_smoothScroll,true);
@@ -407,7 +407,7 @@ void TabLayout::setSelectedTabIndicator(Drawable*tabSelectedIndicator){
     mSlidingTabIndicator->postInvalidateOnAnimation();
 }
 
-void TabLayout::setSelectedTabIndicator(const std::string&res){
+void TabLayout::setSelectedTabIndicator(int res){
     setSelectedTabIndicator(getContext()->getDrawable(res));
 }
 
@@ -1005,8 +1005,9 @@ TabLayout::TabItem::TabItem():View(0,0){
 }
 
 TabLayout::TabItem::TabItem(Context* context,const AttributeSet& attrs):View(context,attrs){
-    mText = attrs.getString("text");
-    mIcon = attrs.getDrawable("icon");
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::TabItem);
+    mText = ta->getText(R::styleable::TabItem_text);
+    mIcon = ta->getDrawable(R::styleable::TabItem_icon);
     LOGV("%s,%p",mText.c_str(),mIcon);
 }
 
@@ -1138,7 +1139,7 @@ TabLayout::TabView::TabView(Context* context,const AttributeSet&atts,TabLayout*p
     mCustomView = nullptr;
     mCustomTextView = nullptr;
     mCustomIconView = nullptr;
-    if(parent->mTabBackgroundResId.length())
+    if(parent->mTabBackgroundResId != 0)
         setBackgroundResource(parent->mTabBackgroundResId);
     setPaddingRelative(parent->mTabPaddingStart, parent->mTabPaddingTop, parent->mTabPaddingEnd, parent->mTabPaddingBottom);
     setGravity(Gravity::CENTER);
@@ -1152,7 +1153,7 @@ TabLayout::TabView::~TabView(){
 }
 
 void TabLayout::TabView::updateBackgroundDrawable(Context* context) {
-    if (mParent->mTabBackgroundResId.size()) {
+    if (mParent->mTabBackgroundResId != 0) {
         mBaseBackgroundDrawable = context->getDrawable(mParent->mTabBackgroundResId);
         if (mBaseBackgroundDrawable && mBaseBackgroundDrawable->isStateful()) {
           mBaseBackgroundDrawable->setState(getDrawableState());

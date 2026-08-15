@@ -128,10 +128,10 @@ void ConstraintLayoutStates::parse(Context* ctx, XmlPullParser& parser) {
                     Variant v;
                     v.mConstraintsAttr = parser.getAttributeValue("constraints");
                     v.mConstraintID = getId(v.mConstraintsAttr);
-                    v.mMinWidth  = parser.getFloat("region_widthMoreThan",  v.mMinWidth);
-                    v.mMaxWidth  = parser.getFloat("region_widthLessThan",  v.mMaxWidth);
-                    v.mMinHeight = parser.getFloat("region_heightMoreThan", v.mMinHeight);
-                    v.mMaxHeight = parser.getFloat("region_heightLessThan", v.mMaxHeight);
+                    v.mMinWidth  = parser.getAttributeFloatValue(std::string(), "region_widthMoreThan",  v.mMinWidth);
+                    v.mMaxWidth  = parser.getAttributeFloatValue(std::string(), "region_widthLessThan",  v.mMaxWidth);
+                    v.mMinHeight = parser.getAttributeFloatValue(std::string(), "region_heightMoreThan", v.mMinHeight);
+                    v.mMaxHeight = parser.getAttributeFloatValue(std::string(), "region_heightLessThan", v.mMaxHeight);
                     currentState->mVariants.push_back(v);
                 }
             } else if (tag == "ConstraintSet") {

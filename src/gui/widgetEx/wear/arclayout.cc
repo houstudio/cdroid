@@ -20,12 +20,9 @@ namespace cdroid{
 ArcLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet& attrs)
     :ViewGroup::MarginLayoutParams(context, attrs){
 
-    mRotated = attrs.getBoolean("layout_rotate", true);
-    mVerticalAlignment = attrs.getInt("layout_valign",std::unordered_map<std::string,int>{
-            {"outer" ,(int)VERTICAL_ALIGN_OUTER},
-            {"center",(int)VERTICAL_ALIGN_CENTER},
-            {"inner" ,(int)VERTICAL_ALIGN_INNER} }, VERTICAL_ALIGN_CENTER);
-    mWeight = attrs.getFloat("layout_weight", 0.f);
+    mRotated = attrs.getAttributeBooleanValue(std::string(), "layout_rotate", true);
+    mVerticalAlignment = attrs.getAttributeIntValue(std::string(), "layout_valign", VERTICAL_ALIGN_CENTER);
+    mWeight = attrs.getAttributeFloatValue(std::string(), "layout_weight", 0.f);
 }
 
 ArcLayout::LayoutParams::LayoutParams(int width, int height)
@@ -70,12 +67,9 @@ ArcLayout::ArcLayout(Context* context,const AttributeSet* pAttrs,int defStyleAtt
     :ViewGroup(context, pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
 
-    mAnchorType = attrs.getInt("anchorPosition",std::unordered_map<std::string,int>{
-            {"start",(int)ANCHOR_START},
-            {"center",(int)ANCHOR_CENTER},
-            {"end",(int)ANCHOR_END} }, DEFAULT_ANCHOR_TYPE);
-    mAnchorAngleDegrees = attrs.getFloat("anchorAngleDegrees", DEFAULT_START_ANGLE_DEGREES);
-    mClockwise = attrs.getBoolean("clockwise", DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE);
+    mAnchorType = attrs.getAttributeIntValue(std::string(), "anchorPosition", DEFAULT_ANCHOR_TYPE);
+    mAnchorAngleDegrees = attrs.getAttributeFloatValue(std::string(), "anchorAngleDegrees", DEFAULT_START_ANGLE_DEGREES);
+    mClockwise = attrs.getAttributeBooleanValue(std::string(), "clockwise", DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE);
 }
 
 void ArcLayout::requestLayout() {

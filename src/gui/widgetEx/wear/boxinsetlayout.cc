@@ -304,13 +304,7 @@ BoxInsetLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet&
     if (!a.hasValueOrEmpty(R.styleable.BoxInsetLayout_Layout_layout_boxedEdges)){
         boxedEdgesResourceKey = R.styleable.BoxInsetLayout_Layout_boxedEdges;
     }*/
-    boxedEdges = attrs.getInt("boxedEdges",std::unordered_map<std::string,int>{
-            {"none", (int)BOX_NONE},
-            {"left", (int)BOX_LEFT},
-            {"top" , (int)BOX_TOP},
-            {"right", (int)BOX_RIGHT},
-            {"bottom",(int)BOX_BOTTOM}
-            }, BOX_NONE);
+    boxedEdges = attrs.getAttributeIntValue(std::string(), "boxedEdges", BOX_NONE);
 }
 
 BoxInsetLayout::LayoutParams::LayoutParams(int width, int height)

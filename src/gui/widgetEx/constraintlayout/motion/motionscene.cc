@@ -265,7 +265,7 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();
             if (tag == "MotionScene") {
-                mDefaultDuration = parser.getInt("defaultDuration", mDefaultDuration);
+                mDefaultDuration = parser.getAttributeIntValue(std::string(), "defaultDuration", mDefaultDuration);
             } else if (tag == "Transition") {
                 auto t = std::make_unique<Transition>(*this, parser);
                 Transition* raw = t.get();
