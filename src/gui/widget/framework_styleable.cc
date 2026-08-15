@@ -5,6 +5,7 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t AbsListView[] = {
         0x010100fb, 0x010100fc, 0x010100fd, 0x010100fe, 0x010100ff, 0x01010100, 0x01010101,
         0x01010226, 0x010103f7, 0x01010231, 0x0101012b, 0x01010335, 0 };
+    const uint32_t ButtonBarLayout[] = { 0x010d0012, 0 };
     const uint32_t CardView[] = {
         0x01011035, 0x01011036, 0x01011037, 0x01011038, 0x01011039, 0x0101103a, 0x0101103b,
         0x0101103c, 0x0101103d, 0x0101103e, 0x0101103f, 0x0101013f, 0x01010140, 0 };
@@ -20,7 +21,6 @@ namespace internal { namespace R { namespace styleable {
         0x010100cd, 0x010100ce, 0x010100cf, 0x010100f2, 0x010d0022, 0x010d0085, 0x010d009c,
         0x010d00f8, 0x010d0084, 0x010d00d8, 0x010d0068, 0x010d00f6, 0x010d009e, 0x010d0035,
         0x010d00f2, 0 };
-    const uint32_t ButtonBarLayout[] = { 0x010d0012, 0 };
     const uint32_t CheckedTextView[] = { 0x01010106, 0x01010108, 0x010104a7, 0x010104a8, 0x010d0024, 0 };
     const uint32_t Chronometer[] = { 0x01010105, 0x0101051b, 0 };
     const uint32_t CompoundButton[] = { 0x01010106, 0x01010107, 0x0101046f, 0x01010470, 0 };

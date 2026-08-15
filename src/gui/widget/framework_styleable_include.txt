@@ -5,6 +5,7 @@
 
 # --- widgets (View/ViewGroup subclasses) ---
 AbsListView
+ButtonBarLayout
 CardView
 ViewTag
 Include

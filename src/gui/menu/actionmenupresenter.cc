@@ -333,6 +333,18 @@ void ActionMenuPresenter::setupItemAnimations() {
     /*((View*) mMenuView)*/mContainer->getViewTreeObserver()->addOnPreDrawListener(mItemAnimationPreDrawListener);
 }
 
+// AOSP ActionMenuPresenter.onConfigurationChanged: re-read the max action
+// button count (width-configuration dependent — CDROID derives it from the
+// display width like initForMenu does) and rebuild the items.
+void ActionMenuPresenter::onConfigurationChanged(Configuration& newConfig){
+    if (!mMaxItemsSet) {
+        mMaxItems = mContext->getDisplayMetrics().widthPixels / 120;   // abp.getMaxActionButtons()
+    }
+    if (mMenu != nullptr) {
+        mMenu->onItemsChanged(true);
+    }
+}
+
 void ActionMenuPresenter::updateMenuView(bool cleared) {
     ViewGroup* menuViewParent = mContainer->getParent();
     if ((menuViewParent != nullptr) && ACTIONBAR_ANIMATIONS_ENABLED) {

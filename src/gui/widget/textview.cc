@@ -742,6 +742,20 @@ void TextView::initView() {
     };
 }
 
+// AOSP TextView.onConfigurationChanged: refresh the text paint and rebuild
+// the layouts so locale-dependent metrics pick up the new configuration.
+// AOSP also re-applies fontWeightAdjustment and restarts the IME on
+// orientation changes — both out of CDROID scope (no fontWeightAdjustment
+// field; the in-process IMM has no InputConnection to restart).
+void TextView::onConfigurationChanged(Configuration& newConfig){
+    View::onConfigurationChanged(newConfig);
+    if (mLayout != nullptr) {
+        nullLayouts();
+        requestLayout();
+        invalidate();
+    }
+}
+
 TextView::~TextView() {
     // mHint is always a freshly-allocated stringOrSpannedString result (see
     // setHintInternal), so it never aliases mText/mCharWrapper — no alias-drop

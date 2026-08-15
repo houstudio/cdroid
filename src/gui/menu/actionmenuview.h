@@ -67,7 +67,7 @@ public:
     int getPopupTheme();
     void setPresenter(ActionMenuPresenter* presenter);
 
-    //void onConfigurationChanged(Configuration newConfig) override;
+    void onConfigurationChanged(Configuration& newConfig) override;
 
     void setOnMenuItemClickListener(const OnMenuItemClickListener& listener);
 

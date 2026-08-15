@@ -21,6 +21,10 @@ namespace internal { namespace R { namespace styleable {
     constexpr int AbsListView_choiceMode = 10;
     constexpr int AbsListView_fastScrollAlwaysVisible = 11;
 
+    // ButtonBarLayout (1 attrs)
+    extern const uint32_t ButtonBarLayout[];
+    constexpr int ButtonBarLayout_allowStacking = 0;
+
     // CardView (13 attrs)
     extern const uint32_t CardView[];
     constexpr int CardView_cardBackgroundColor = 0;
@@ -74,10 +78,6 @@ namespace internal { namespace R { namespace styleable {
     constexpr int AnalogClock_hand_minuteTintMode = 10;
     constexpr int AnalogClock_hand_secondTint = 11;
     constexpr int AnalogClock_hand_secondTintMode = 12;
-
-    // ButtonBarLayout (1 attr)
-    extern const uint32_t ButtonBarLayout[];
-    constexpr int ButtonBarLayout_allowStacking = 0;
 
     // AlertDialog (22 attrs)
     extern const uint32_t AlertDialog[];

@@ -485,7 +485,10 @@ void ResourcesImpl::updateConfiguration(const Configuration* config, const Displ
     // AOSP: metrics follow densityDpi / fontScale.
     if (mConfiguration.densityDpi != Configuration::DENSITY_DPI_UNDEFINED) {
         mMetrics.densityDpi = mConfiguration.densityDpi;
-        mMetrics.density = mConfiguration.densityDpi * (1.0f / DisplayMetrics::DENSITY_DEFAULT_SCALE);
+        // AOSP: mMetrics.density = densityDpi * DENSITY_DEFAULT_SCALE (the
+        // scale is dpi→density = 1/160; a stray reciprocal here made density
+        // 160*160=25600 and every sp dimen 25600x too large).
+        mMetrics.density = mConfiguration.densityDpi * DisplayMetrics::DENSITY_DEFAULT_SCALE;
     }
     mMetrics.scaledDensity = mMetrics.density *
             (mConfiguration.fontScale != 0 ? mConfiguration.fontScale : 1.0f);

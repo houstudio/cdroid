@@ -299,6 +299,7 @@ protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindowInternal()override;
     std::vector<int> onCreateDrawableState(int)override;
+    void onConfigurationChanged(Configuration& newConfig)override;
     bool onPreDraw();
     virtual void onDraw(Canvas& canvas) override;
     void stopTextActionMode();

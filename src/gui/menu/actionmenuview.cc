@@ -540,6 +540,23 @@ MenuBuilder* ActionMenuView::peekMenu() {
     return mMenu;
 }
 
+// AOSP ActionMenuView.onConfigurationChanged: rebuild the action items and
+// re-show the overflow menu if it was open (max action count is
+// width-configuration dependent).
+void ActionMenuView::onConfigurationChanged(Configuration& newConfig){
+    LinearLayout::onConfigurationChanged(newConfig);
+
+    if (mPresenter != nullptr) {
+        mPresenter->onConfigurationChanged(newConfig);
+        mPresenter->updateMenuView(false);
+
+        if (isOverflowMenuShowing()) {
+            mPresenter->hideOverflowMenu();
+            mPresenter->showOverflowMenu();
+        }
+    }
+}
+
 bool ActionMenuView::showOverflowMenu() {
     return (mPresenter != nullptr) && mPresenter->showOverflowMenu();
 }

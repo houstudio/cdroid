@@ -158,7 +158,9 @@ void WindowManager::removeWindow(Window*w){
             break;
         }
     }
-    mActiveWindow->invalidate();
+    // The removed window may have been the last one (single-window apps,
+    // Window::recreate before the replacement is added): no window to focus.
+    if(mActiveWindow) mActiveWindow->invalidate();
     GraphDevice::getInstance().flip();
     LOGI("w=%p windows.size=%d",w,mWindows.size());
 }

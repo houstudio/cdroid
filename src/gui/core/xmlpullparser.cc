@@ -141,6 +141,29 @@ struct Private{
                     auto event = acquire(XmlPullParser::START_TAG, u16toUtf8(n16, nl));
                     event->depth = depth++;
                     event->lineNumber = axmlTree->getLineNumber();
+                    // Dev aid: an attribute aapt2 could not resolve to a resource id
+                    // (typically a missing android:/app: prefix — unprefixed names get
+                    // no id baked into the binary AXML) is invisible to every id-based
+                    // lookup (obtainStyledAttributes / getAttributeNameResource) and is
+                    // silently dropped. Android behaves the same, but it breaks layouts
+                    // in confusing ways (e.g. an unprefixed layout_width in a MotionScene
+                    // <Constraint> collapses the view to 0dp), so flag it here.
+                    {
+                        const size_t ac = axmlTree->getAttributeCount();
+                        for (size_t i = 0; i < ac; i++) {
+                            if (axmlTree->getAttributeNameResID(i) != 0) continue;
+                            size_t anLen = 0;
+                            const char16_t* an = axmlTree->getAttributeName(i, &anLen);
+                            const std::string attrName = u16toUtf8(an, anLen);
+                            // style= is namespace-less by spec (read by name, not id).
+                            if (attrName == "style") continue;
+                            LOGD("binary AXML '%s' line %d: attribute '%s' on <%s> has no "
+                                 "resource id (missing android:/app: prefix?) — id-based "
+                                 "lookups will ignore it",
+                                 resourceId.c_str(), event->lineNumber,
+                                 attrName.c_str(), event->name.c_str());
+                        }
+                    }
                     // Attribute values are NO LONGER rendered into mAttrs (the
                     // string bridge is retired). Name-based lookups
                     // (getString/hasAttribute/getAttributeCount, the AOSP id-
