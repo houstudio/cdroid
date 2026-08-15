@@ -772,11 +772,16 @@ class PakBuilder:
                 for f in files:
                     m = os.path.getmtime(os.path.join(root, f))
                     if m > newest: newest = m
-            # SDK res dir: just check directory mtime (installed once, never
-            # changes; scanning 4869 files would be slow).
+            # SDK res dir: scan recursively — a directory-level mtime only
+            # changes on add/remove in the TOP dir, so in-place content updates
+            # (a refreshed slim-framework base on another machine) silently kept
+            # a STALE framework arsc and the attr-id tables drifted against it.
+            # ~5k stats is tens of milliseconds; correctness is worth it.
             if self.sdk_res and os.path.isdir(self.sdk_res):
-                sdk_mtime = os.path.getmtime(self.sdk_res)
-                if sdk_mtime > newest: newest = sdk_mtime
+                for root, dirs, files in os.walk(self.sdk_res):
+                    for f in files:
+                        m = os.path.getmtime(os.path.join(root, f))
+                        if m > newest: newest = m
             # Also require R.h present: it is produced during a real rebuild, so
             # a missing/stale R.h must not be skipped (else builds with no R.h).
             if pak_mtime > newest and os.path.exists(self.rh_path):
