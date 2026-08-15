@@ -19,6 +19,7 @@
 #define __LAYOUT_INFLATE_H__
 #include <core/attributeset.h>
 #include <core/context.h>
+#include <core/contextthemewrapper.h>
 #include <core/xmlpullparser.h>
 
 namespace cdroid{
@@ -47,6 +48,10 @@ private:
     Factory2 mPrivateFactory;
     Filter mFilter;
     std::unordered_map<std::string,bool>mFilterMap;
+    // ContextThemeWrappers created for android:theme tag overrides. AOSP relies
+    // on GC; CDROID views hold a raw Context*, so the inflater (cached per
+    // Context by from()) owns the wrappers for the process lifetime.
+    std::vector<std::unique_ptr<ContextThemeWrapper>> mThemeContexts;
     std::shared_ptr<FactoryMerger> mFactoryMerger;
     bool mFactorySet;
 private:

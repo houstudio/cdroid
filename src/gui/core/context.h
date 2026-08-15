@@ -87,8 +87,10 @@ public:
     // attrs is nullable (AOSP new View(ctx, null, defStyleAttr)); styleable is a
     // sentinel-terminated attr-id array (internal::R::styleable::X, the C++ analog of
     // AOSP's int[]). Default returns nullptr; Assets overrides with arsc resolution.
+    // AOSP Context.obtainStyledAttributes is FINAL and routes through
+    // getTheme() — subclasses that change the theme only override getTheme().
     virtual std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet* attrs,
-        const uint32_t* styleable, int32_t defStyleAttr=0, int32_t defStyleRes=0)=0;
+        const uint32_t* styleable, int32_t defStyleAttr=0, int32_t defStyleRes=0);
     // Resolve a resource id to its "@type/key" (or "@pkg:type/key") reference name —
     // the CDROID counterpart of AOSP Resources.getResourceName(resId). Default
     // empty; Assets overrides with arsc resolution.

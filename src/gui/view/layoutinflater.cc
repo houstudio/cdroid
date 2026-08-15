@@ -293,6 +293,15 @@ View* LayoutInflater::onCreateView(Context* viewContext, View* parent, const std
 }
 
 View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Context* context,AttributeSet& attrs,bool ignoreThemeAttr) {
+    if (!ignoreThemeAttr) {
+        // AOSP: apply a theme wrapper if the tag carries android:theme.
+        auto ta = context->obtainStyledAttributes(&attrs, ATTRS_THEME);
+        const int themeResId = ta ? ta->getResourceId(0, 0) : 0;
+        if (themeResId != 0) {
+            mThemeContexts.emplace_back(new ContextThemeWrapper(context, themeResId));
+            context = mThemeContexts.back().get();
+        }
+    }
     try{
         View* view = tryCreateView(parent, name, context, attrs);
 

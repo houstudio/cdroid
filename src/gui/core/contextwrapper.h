@@ -17,7 +17,7 @@ public:
     ~ContextWrapper() override = default;
 
     // AOSP attachBaseContext / getBaseContext.
-    void attachBaseContext(Context* base){ mBase = base; }
+    virtual void attachBaseContext(Context* base){ mBase = base; }
     Context* getBaseContext() const { return mBase; }
 
     // --- delegate ALL pure-virtual Context methods to mBase ---
@@ -31,13 +31,8 @@ public:
     //const std::string getString(const std::string& id, const std::string& lan="") override { return mBase->getString(id, lan); }
     std::unique_ptr<std::istream> getInputStream(const std::string& resname, std::string* outpkg=nullptr) override { return mBase->getInputStream(resname, outpkg); }
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string& resname, int w, int h) override { return mBase->loadImage(resname, w, h); }
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(int id, int w, int h) override { return mBase->loadImage(id, w, h); }
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream& stream, int w, int h) override { return mBase->loadImage(stream, w, h); }
-    Drawable* getDrawable(const std::string& resid) override { return mBase->getDrawable(resid); }
-    int getColor(const std::string& resid) override { return mBase->getColor(resid); }
-    std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet* attrs,
-        const uint32_t* styleable, int32_t defStyleAttr=0, int32_t defStyleRes=0) override {
-        return mBase->obtainStyledAttributes(attrs, styleable, defStyleAttr, defStyleRes);
-    }
     std::string getResourceName(uint32_t resId) const override { return mBase->getResourceName(resId); }
     Resources& getResources() override { return mBase->getResources(); }
     AssetManager& getAssets() override { return mBase->getAssets(); }
