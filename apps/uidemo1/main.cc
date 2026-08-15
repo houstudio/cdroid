@@ -12,7 +12,6 @@ int main(int argc,const char*argv[]){
     printf("\r\nasset[%x]=%p\r\n",uidemo1::R::layout::layout1,aset);
     CreateMultiMedia();
     app.setOpacity(app.getArgAsInt("alpha",255));
-    app.getString("Main Menu",app.getArg("language","eng"));
     return app.exec();
 }
 
