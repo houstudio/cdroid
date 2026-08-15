@@ -28,12 +28,19 @@ class AlertDialog :public Dialog{
 public:
     static constexpr int LAYOUT_HINT_NONE = 0;
     static constexpr int LAYOUT_HINT_SIDE = 1;
+    // @Deprecated AOSP special theme selectors for resolveDialogTheme().
+    static constexpr int THEME_TRADITIONAL          = 1;
+    static constexpr int THEME_HOLO_DARK            = 2;
+    static constexpr int THEME_HOLO_LIGHT           = 3;
+    static constexpr int THEME_DEVICE_DEFAULT_DARK  = 4;
+    static constexpr int THEME_DEVICE_DEFAULT_LIGHT = 5;
     class Builder{
     private:
         AlertController::AlertParams* P;
     public:
         Builder(Context* context);
-        ~Builder(); 
+        Builder(Context* context,int themeResId);
+        ~Builder();
         Context* getContext();
         Builder& setTitle(const std::string& title);
         Builder& setTitle(int titleId);
@@ -76,8 +83,12 @@ protected:
     AlertController::AlertParams*P;
 protected:
     AlertDialog(Context*ctx);
-    AlertDialog(Context*ctx,int themeResId); 
+    AlertDialog(Context*ctx,int themeResId,bool createContextThemeWrapper=true);
     AlertDialog(Context*ctx,bool cancelable,OnCancelListener listener);
+    // AOSP AlertDialog.resolveDialogTheme: THEME_* selectors map to the
+    // framework alert-dialog styles, real ids pass through, 0 resolves
+    // ?attr/alertDialogTheme from the context theme.
+    static int resolveDialogTheme(Context* context,int themeResId);
     ~AlertDialog()override;
     void onCreate()override;
 public:

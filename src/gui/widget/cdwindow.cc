@@ -73,6 +73,13 @@ Window::Window(int x,int y,int width,int height,int type)
     mAttachInfo->mPlaySoundEffect = std::bind(&Window::playSoundImpl,this,std::placeholders::_1);
 }
 
+// AOSP PhoneWindow(context): same window, but the caller's (possibly themed —
+// ContextThemeWrapper) context drives inflation instead of the global App.
+Window::Window(Context*ctx,int x,int y,int width,int height,int type)
+  : Window(x,y,width,height,type){
+    mContext = ctx;
+}
+
 void Window::initWindow(){
     mInLayout= false;
     mAccessibilityManager =&AccessibilityManager::getInstance(mContext);

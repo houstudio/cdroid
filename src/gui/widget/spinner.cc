@@ -19,6 +19,7 @@
 #include <widget/spinner.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
+#include <core/contextthemewrapper.h>
 #include <widget/listview.h>
 #include <widget/dropdownlistview.h>
 #include <widget/forwardinglistener.h>
@@ -70,8 +71,10 @@ Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
     mDropDownWidth =0;
     mDisableChildrenWhenDisabled = true;
     mTempAdapter= nullptr;
-    mPopup = new DropdownPopup(mContext,this,R::attr::spinnerStyle);
-    mForwardingListener = new SpinnerForwardingListener(this,(DropdownPopup*)mPopup); 
+    mPopupContext = mContext;
+    mOwnsPopupContext = false;
+    mPopup = new DropdownPopup(getPopupContext(),this,R::attr::spinnerStyle);
+    mForwardingListener = new SpinnerForwardingListener(this,(DropdownPopup*)mPopup);
 }
 
 Spinner::Spinner(Context*ctx,const AttributeSet& atts):Spinner(ctx,&atts,R::attr::spinnerStyle){}
@@ -83,11 +86,21 @@ Spinner::Spinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mForwardingListener = nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = ctx->obtainStyledAttributes(atts, R::styleable::Spinner, defStyleAttr);
-    
+
 
 mGravity = ta->getInt(R::styleable::Spinner_gravity,Gravity::CENTER);
 mDisableChildrenWhenDisabled = ta->getBoolean(R::styleable::Spinner_disableChildrenWhenDisabled, false);
 const int mode = ta->getInt(R::styleable::Spinner_spinnerMode,MODE_DIALOG);
+
+// AOSP Spinner: android:popupTheme wraps the popup context so the dropdown
+// inflates with a different theme. The wrapper is owned by this Spinner.
+const int popupThemeResId = ta->getResourceId(R::styleable::Spinner_popupTheme, 0);
+if (popupThemeResId != 0) {
+    mPopupContext = new ContextThemeWrapper(ctx, popupThemeResId);
+    mOwnsPopupContext = true;
+} else {
+    mPopupContext = ctx;
+}
 
 Drawable*dr;
 DropdownPopup* popup;
@@ -97,7 +110,7 @@ case MODE_DIALOG:
      mPopup->setPromptText(ta->getString(R::styleable::Spinner_prompt));
      break;
 case MODE_DROPDOWN:
-     popup = new DropdownPopup(ctx,this,defStyleAttr);
+     popup = new DropdownPopup(getPopupContext(),this,defStyleAttr);
      mDropDownWidth = ta->getLayoutDimension(R::styleable::Spinner_dropDownWidth,LayoutParams::WRAP_CONTENT);
      dr = ta->getDrawable(R::styleable::Spinner_dropDownSelector);
      if(dr)popup->setListSelector(dr);
@@ -120,10 +133,11 @@ if (mTempAdapter != nullptr) {
 Spinner::~Spinner(){
     delete mPopup;
     delete mForwardingListener;
+    if (mOwnsPopupContext) delete mPopupContext;
 }
 
 Context* Spinner::getPopupContext()const{
-    return mContext;
+    return mPopupContext;
 }
 
 void Spinner::setPopupBackgroundDrawable(Drawable* background){

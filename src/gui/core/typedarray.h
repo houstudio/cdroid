@@ -36,6 +36,7 @@
 #include <vector>
 #include <memory>
 #include <core/typedvalue.h>     // TypedValue (peekValue/getValue out-param)
+#include <core/resources.h>      // Resources::Theme (mTheme value semantics)
 
 namespace cdroid {
 
@@ -50,14 +51,17 @@ class Typeface;
 
 class TypedArray {
 public:
+    // theme: AOSP TypedArray(@Nullable Theme) — borrowed for the constructor
+    // only; the raw engine handle is copied out (the view itself is stack-side
+    // at every call site and must not outlive it).
     // Non-owning (StyledAttr* must outlive this TypedArray).
     TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
-               const Resources* res = nullptr, const void* theme = nullptr);
+               const Resources* res = nullptr, const Resources::Theme* theme = nullptr);
     // Owning (StyledAttr vector moved in; mVals points into mOwned).
     TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
-               const Resources* res = nullptr, const void* theme = nullptr);
+               const Resources* res = nullptr, const Resources::Theme* theme = nullptr);
     ~TypedArray();
     size_t length() const { return mCount; }   // AOSP TypedArray.length()
     bool hasValue(size_t idx) const;
@@ -117,7 +121,11 @@ private:
     const ResXMLTree*       mXml;
     float                   mDensity;
     Resources const*        mResources; // owning Resources (AOSP mResources); nullable
-    const void*             mTheme = nullptr;  // ResTable::Theme* (borrowed; ?attr resolution)
+    // AOSP TypedArray.mTheme (@Nullable): a shared COPY of the theme view —
+    // the view itself is stack-side at the construction sites, so a value
+    // snapshot is kept (cheap: engine pointer + Resources&). Null when the
+    // TypedArray was created without one (obtainTypedArray).
+    std::shared_ptr<const Resources::Theme> mTheme;
 };
 
 } // namespace cdroid

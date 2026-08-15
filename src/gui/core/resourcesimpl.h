@@ -108,11 +108,19 @@ public:
     // --- GUI-object factories. ResourcesImpl owns the AOSP mDrawableCache /
     // mComplexColorCache + loadDrawable/loadComplexColor (it lives in the cdroid
     // target, so cairo + the Context inflation bridge are available). getFont/
-    // getMovie stay stubbed (out of scope). ---
-    virtual Drawable*       getDrawable(int id, int density = 0) const;
-    virtual Drawable*       getDrawableForDensity(int id, int density) const;
-    virtual std::shared_ptr<ColorStateList> getColorStateList(int id) const;
-    virtual std::shared_ptr<ComplexColor> loadComplexColor(int id) const;
+    // getMovie stay stubbed (out of scope).
+    // themeEngine = AOSP Theme parameter (ResTable::Theme*, borrowed; getTheme()
+    // ._engineHandle()): themes the ComplexColor inflation (AOSP
+    // loadComplexColor passes it into createFromXml) and keys the caches, so
+    // entries loaded under one theme never leak into another (AOSP
+    // ThemedResourceCache semantics; nullptr = unthemed shared entries).
+    // Drawable XML inflation resolves ?attr through the owning Context's theme
+    // (AOSP inflates with null theme + applyTheme(); CDROID has no applyTheme
+    // pass yet — themed drawables come from ContextThemeWrapper contexts). ---
+    virtual Drawable*       getDrawable(int id, int density = 0, const void* themeEngine = nullptr) const;
+    virtual Drawable*       getDrawableForDensity(int id, int density, const void* themeEngine = nullptr) const;
+    virtual std::shared_ptr<ColorStateList> getColorStateList(int id, const void* themeEngine = nullptr) const;
+    virtual std::shared_ptr<ComplexColor> loadComplexColor(int id, const void* themeEngine = nullptr) const;
     virtual Typeface*       getFont(int id) const;
     virtual Movie*          getMovie(int id) const;
 

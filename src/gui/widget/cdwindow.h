@@ -139,6 +139,9 @@ public:
         TYPE_TOAST        = 2005,
     }WindowType;
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
+    // AOSP PhoneWindow(context): themed (ContextThemeWrapper) dialog contexts
+    // drive inflation through this overload instead of the global App.
+    Window(Context*ctx,int x,int y,int w,int h,int type=TYPE_APPLICATION);
     Window(Context*,const AttributeSet&);
     ~Window()override;
     void setRegion(const Cairo::RefPtr<Cairo::Region>&region);

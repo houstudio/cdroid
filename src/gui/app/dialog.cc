@@ -17,24 +17,43 @@
  *********************************************************************************/
 #include <app/dialog.h>
 #include <core/windowmanager.h>
+#include <core/contextthemewrapper.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-Dialog::Dialog(Context*context){
-    mContext = context;
-    mCreated = false;
-    mShowing = false;
-    mWindow  = nullptr;
-    mCancelable = true;
+Dialog::Dialog(Context*context):Dialog(context,0,true){
 }
 
-Dialog::Dialog(Context* context,int layoutResId):Dialog(context){
-    mWindow = new Window(0,0,640,320);
-    LayoutInflater::from(mWindow->getContext())->inflate(layoutResId,mWindow,true);
+// AOSP Dialog(Context, int themeResId, boolean createContextThemeWrapper):
+// themeResId == 0 resolves ?attr/dialogTheme from the caller's theme, then the
+// context is wrapped in a ContextThemeWrapper (owned by this Dialog). The
+// window inflates with the themed context (AOSP new PhoneWindow(mContext)).
+Dialog::Dialog(Context* context,int themeResId,bool createContextThemeWrapper){
+    if (createContextThemeWrapper) {
+        if (themeResId == 0) {
+            TypedValue outValue;
+            context->getTheme().resolveAttribute(R::attr::dialogTheme, &outValue, true);
+            themeResId = outValue.resourceId;
+        }
+        mContext = new ContextThemeWrapper(context, themeResId);
+        mOwnsContext = true;
+    } else {
+        mContext = context;
+        mOwnsContext = false;
+    }
+    mCreated = false;
+    mShowing = false;
+    mCancelable = true;
+    mWindow = new Window(mContext, 0, 0, 640, 320);
 }
 
 Dialog::~Dialog(){
     if(mWindow){
         WindowManager::getInstance().removeWindow(mWindow);
+    }
+    if(mOwnsContext){
+        delete mContext;
     }
 }
 
@@ -172,7 +191,7 @@ View* Dialog::findViewById(int id){
 }
 
 void Dialog::setContentView(int layoutResId){
-    View*v=LayoutInflater::from(mWindow->getContext())->inflate(layoutResId,nullptr,false);
+    View*v=LayoutInflater::from(mContext)->inflate(layoutResId,nullptr,false);
     mWindow->addView(v);
 }
 

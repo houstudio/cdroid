@@ -657,6 +657,10 @@ AlertController::AlertParams::AlertParams(Context*context){
     LOGD("%p",this);
 }
 
+AlertController::AlertParams::~AlertParams(){
+    if (mOwnsContext) delete mContext;
+}
+
 void AlertController::AlertParams::apply(AlertController* dialog){
     if (mCustomTitleView) {
         dialog->setCustomTitle(mCustomTitleView);

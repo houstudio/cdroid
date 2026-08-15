@@ -117,6 +117,9 @@ public:
 private:
     int  mGravity;
     Context*mPopupContext;
+    // true when mPopupContext is a ContextThemeWrapper we new'd (popupTheme);
+    // AOSP relies on GC, CDROID tracks the ownership explicitly.
+    bool mOwnsPopupContext = false;
     ForwardingListener* mForwardingListener;
     SpinnerAdapter* mTempAdapter;
     bool mDisableChildrenWhenDisabled;

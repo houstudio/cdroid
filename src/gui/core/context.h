@@ -53,11 +53,9 @@ public:
     // (e.g. on App) to actually launch. Kept as Context* so Navigator's mContext->startActivity compiles.
     virtual void startActivity(const Intent& /*intent*/) = 0;
     // AOSP-aligned Theme access. getTheme() returns the live Resources::Theme
-    // (engine = cdroid::ResTable::Theme); the legacy text-XML theme name is
-    // getThemeName(). setTheme(@StyleRes int) applies a style resource
-    // (AOSP Context.setTheme).
+    // (engine = cdroid::ResTable::Theme). setTheme(@StyleRes int) applies a
+    // style resource (AOSP Context.setTheme).
     virtual Resources::Theme getTheme() = 0;
-    virtual const std::string getThemeName() const = 0;
     virtual void setTheme(int resid) = 0;
     virtual const DisplayMetrics&getDisplayMetrics() const = 0;
     virtual int getNextAutofillId() = 0;
@@ -104,7 +102,8 @@ public:
     // Coexists with the string-based legacy methods above (overloads differ by
     // int vs std::string). Default implementations live in core/context.cc and
     // delegate to getResources(); pure-virtual ones (getResources/getAssets/
-    // getDrawable(int)/getColorStateList(int)) are implemented by Assets.
+    // getDrawable(int)/getColorStateList(int) default to the themed path above
+    // (AOSP final methods) — no subclass override needed.
     virtual Resources&      getResources() = 0;
     virtual AssetManager&   getAssets() = 0;
     virtual std::string    getString(int id);
@@ -116,8 +115,9 @@ public:
     virtual float          getDimension(int id);
     virtual int            getDimensionPixelSize(int id);
     virtual Asset* openRawResource(int id);
-    virtual Drawable*       getDrawable(int id) = 0;
-    virtual std::shared_ptr<ColorStateList> getColorStateList(int id) = 0;
+    // AOSP final: resource loads are themed through getTheme() (context.cc).
+    virtual Drawable*       getDrawable(int id);
+    virtual std::shared_ptr<ColorStateList> getColorStateList(int id);
     virtual Typeface*       getFont(int id);   // default nullptr (deferred)
 };
 

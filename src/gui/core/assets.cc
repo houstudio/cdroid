@@ -54,7 +54,6 @@ static TypedValue tvOf(const Res_value& rv) {
 // assets.h; cast at the engine boundary.
 static ResTable::Theme* asTheme(void* t) { return (ResTable::Theme*)t; }
 
-static std::string renderResValue(const Assets* a, const TypedValue& v);  // fwd
 static std::string u16toUtf8(const char16_t* s, size_t len);  // fwd (def below)
 
 // Resolve a resource ID through the loaded arsc.
@@ -103,22 +102,6 @@ bool Assets::arscThemeAttribute(uint32_t attrId, TypedValue* out, ssize_t* outBl
     return true;
 }
 
-// Resolve a "?type/key" theme-attribute reference to a concrete value string.
-std::string Assets::resolveThemeRef(const std::string& resid) const {
-    if (resid.empty() || resid[0] != '?' || !mArscTheme) return resid;
-    std::string pkg, name = resid.substr(1);  // strip '?'
-    parseResource(name, &name, &pkg);
-    size_t slash = name.find('/');
-    std::string type = (slash != std::string::npos) ? name.substr(0, slash) : "attr";
-    std::string key  = (slash != std::string::npos) ? name.substr(slash + 1) : name;
-    uint32_t attrId = arscGetIdentifier(key, type, pkg);
-    if (!attrId) return resid;
-    TypedValue v;
-    if (!arscThemeAttribute(attrId, &v)) return resid;
-    std::string rendered = renderResValue(this, v);
-    return rendered.empty() ? resid : rendered;
-}
-
 // Try to resolve a "@0xPPtteeee" hex resource ID string through the arsc.
 bool Assets::arscResolveHexRef(const std::string& s, TypedValue* out) const {
     if (!mResTable || s.empty()) return false;
@@ -162,34 +145,6 @@ uint32_t Assets::arscGetIdentifier(const std::string& name, const std::string& t
 
 // complexToFloat is provided inline by <androidfw/resourcetypes.h>.
 
-// Render a Res_value to the same string form renderTypedValue produces, so a
-// theme-resolved value can flow through the string-based getters. Only the
-// types a theme attribute realistically resolves to (color/int/dimension/ref).
-static std::string renderResValue(const Assets* a, const TypedValue& v) {
-    char buf[32];
-    switch (v.type) {
-        case TypedValue::TYPE_INT_COLOR_ARGB8:
-        case TypedValue::TYPE_INT_COLOR_RGB8:
-        case TypedValue::TYPE_INT_COLOR_ARGB4:
-        case TypedValue::TYPE_INT_COLOR_RGB4:
-            snprintf(buf, sizeof(buf), "#%08x", v.data); return buf;
-        case TypedValue::TYPE_INT_DEC:  snprintf(buf, sizeof(buf), "%d", (int)v.data); return buf;
-        case TypedValue::TYPE_INT_HEX:  snprintf(buf, sizeof(buf), "0x%x", v.data); return buf;
-        case TypedValue::TYPE_INT_BOOLEAN: return v.data ? "true" : "false";
-        case TypedValue::TYPE_DIMENSION: {
-            float mag = complexToFloat(v.data);
-            int unit = (v.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
-            const char* u = unit == TypedValue::COMPLEX_UNIT_SP ? "sp"
-                          : unit == TypedValue::COMPLEX_UNIT_DIP ? "dp" : "px";
-            snprintf(buf, sizeof(buf), "%d%s", (int)mag, u); return buf;
-        }
-        case TypedValue::TYPE_REFERENCE:
-        case TypedValue::TYPE_DYNAMIC_REFERENCE:
-            return a->getResourceName(v.data);
-        default: return std::string();
-    }
-}
-
 // char16_t -> UTF-8 (for ResTable string values).
 static std::string u16toUtf8(const char16_t* s, size_t len) {
     std::string out;
@@ -228,7 +183,6 @@ Assets::~Assets() {
     }
     mDrawables.clear();
     mResources.clear();
-    mStyles.clear();
     LOGD("~Assets %p!",this);
 }
 
@@ -265,17 +219,9 @@ AssetManager& Assets::getAssets() {
     return *mAssetManager;
 }
 
-Drawable* Assets::getDrawable(int id) {
-    ensureCdroidResources();
-    if (mCdroidResources == nullptr) return nullptr;
-    return mCdroidResources->getDrawable(id);   // delegates to the ID path (Assets retirement)
-}
-
-std::shared_ptr<ColorStateList> Assets::getColorStateList(int id) {
-    ensureCdroidResources();
-    if (mCdroidResources == nullptr) return nullptr;
-    return mCdroidResources->getColorStateList(id);
-}
+// getDrawable/getColorStateList: Context's themed defaults (context.cc) call
+// getResources()/getTheme(), both of which ensureCdroidResources() — no
+// override needed here anymore (AOSP-final semantics).
 
 const DisplayMetrics& Assets::getDisplayMetrics()const{
     return mDisplayMetrics;
@@ -283,10 +229,6 @@ const DisplayMetrics& Assets::getDisplayMetrics()const{
 
 const std::string Assets::getPackageName()const {
     return mName;
-}
-
-const std::string Assets::getThemeName() const {
-    return mThemeName;
 }
 
 Resources::Theme Assets::getTheme() {
@@ -317,8 +259,8 @@ void Assets::setTheme(int resid) {
             delete asTheme(mArscTheme);
             mArscTheme = nullptr;
         } else {
-            mThemeName = getResourceName((uint32_t)resid);
-            LOGD("arsc Theme built from %s (resId=0x%08x)", mThemeName.c_str(), resid);
+            LOGD("arsc Theme built from %s (resId=0x%08x)",
+                 getResourceName((uint32_t)resid).c_str(), resid);
         }
     }
 }
@@ -367,24 +309,6 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                     it = pending->colorStateList.insert({resUri,{itemAtts}}).first;
                 }else
                     it->second.emplace_back(itemAtts);
-            }
-        }else if(tag.compare("style")==0){
-            const std::string styleName = package+":style/"+attrs.getAttributeValue("name");
-            auto its =mStyles.find(styleName);
-            if(its==mStyles.end()){
-                const std::string styleParent = attrs.getAttributeValue("parent");
-                its =mStyles.insert(its,{styleName,AttributeSet(this,package)});
-                if(styleParent.size())its->second.add("parent",styleParent);
-            }
-            depth = parser.getDepth()+1;
-            while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
-                if(type!=XmlPullParser::START_TAG)continue;
-                std::string key  = attrs.getAttributeValue("name");
-                std::string value= getTrimedValue(parser);
-                value = AttributeSet::normalize(package,value);
-                const size_t pos =key.find(':');
-                if(pos!=std::string::npos)key=key.substr(pos+1);
-                its->second.add(key,value);
             }
         }
     }
@@ -465,8 +389,8 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     }
     // The default theme is applied by App's bootstrap (single AOSP-like point
     // after every pak is loaded), not here.
-    LOGI("[%s] loaded %d files, %d styles, %d theme attrs, used %dms",
-         package.c_str(), count, mStyles.size(), mArscTheme!=nullptr,
+    LOGI("[%s] loaded %d files, %d theme attrs, used %dms",
+         package.c_str(), count, mArscTheme!=nullptr,
          int(SystemClock::uptimeMillis()-sttm));
     return pak?0:-1;
 }
@@ -542,24 +466,17 @@ ZIPArchive* Assets::findPakForPath(const std::string&package,const std::string&a
 }
 
 std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid,std::string*outpkg) {
-    // A theme-attribute reference isn't a streamable resource — resolve it
-    // first. If it resolves to a color/literal (not a file), fall through to
-    // the not-found path rather than leaking "?..." to zip lookup.
-    std::string rid = (!fullresid.empty() && fullresid[0] == '?') ? resolveThemeRef(fullresid) : fullresid;
-    if (rid != fullresid && (rid.empty() || rid[0] == '#' || rid.compare(0,2,"0x")==0))
-        return nullptr;  // resolved to a non-stream value (color/int)
-    const std::string& effective = (rid != fullresid) ? rid : fullresid;
     std::string resname,package;
-    ZIPArchive*pak = getResource(effective,&resname,&package);
+    ZIPArchive*pak = getResource(fullresid,&resname,&package);
     if(outpkg)*outpkg = package;
     std::istream*stream = pak ? pak->getInputStream(resname) : nullptr;
     // Fallback: a "@drawable/..." reference names a resource, not a file —
     // resolve it through the arsc to the qualified PNG path (e.g.
     // drawable-hdpi-v4/foo.9.png), like getDrawable does. Needed for 9-patch
     // src and other image loads that go through getInputStream.
-    if(!stream && mResTable && effective.find("drawable/") != std::string::npos){
+    if(!stream && mResTable && fullresid.find("drawable/") != std::string::npos){
         std::string rawName;
-        parseResource(effective, &rawName, &package);
+        parseResource(fullresid, &rawName, &package);
         uint32_t id = arscGetIdentifier(rawName, "drawable", package);
         if(id != 0){
             Res_value rv;
@@ -671,9 +588,6 @@ Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(int id,int width,int height
 
 int Assets::getNextAutofillId(){
     return mNextAutofillViewId++;
-}
-void Assets::clearStyles() {
-    mStyles.clear();
 }
 // AOSP Context.obtainStyledAttributes(AttributeSet, int[], defStyleAttr,
 // defStyleRes) — delegates to Resources.obtainStyledAttributes (the AOSP

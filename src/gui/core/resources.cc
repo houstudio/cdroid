@@ -115,6 +115,13 @@ int Resources::getColor(int id) const {
     return mImpl->getColor(id);
 }
 
+// AOSP Resources.getColor(int id, @Nullable Theme theme) →
+// impl.loadComplexColor(id, theme).getDefaultColor().
+int Resources::getColor(int id, const Theme* theme) const {
+    auto cc = mImpl->loadComplexColor(id, theme ? theme->_engineHandle() : nullptr);
+    return cc ? cc->getDefaultColor() : mImpl->getColor(id);
+}
+
 float Resources::getDimension(int id) const {
     return mImpl->getDimension(id);
 }
@@ -173,8 +180,8 @@ Typeface* Resources::getFont(int id) const {
 
 // AOSP ResourcesImpl.loadComplexColor — owned by the aggregated ResourcesImpl
 // (cache + createFromXml). Resources just forwards.
-std::shared_ptr<ComplexColor> Resources::loadComplexColor(int id) const {
-    return mImpl->loadComplexColor(id);
+std::shared_ptr<ComplexColor> Resources::loadComplexColor(int id, const Theme* theme) const {
+    return mImpl->loadComplexColor(id, theme ? theme->_engineHandle() : nullptr);
 }
 
 Movie* Resources::getMovie(int id) const {
@@ -227,16 +234,18 @@ Asset* Resources::openRawResourceFd(int id) const {
 // use cairo + the Context inflation bridge now that it's in the cdroid target).
 // ===========================================================================
 
-cdroid::Drawable* Resources::getDrawable(int id) const {
-    return mImpl->getDrawable(id, 0);
+// AOSP Resources.getDrawable(int id, @Nullable Theme theme)
+//   → getDrawableForDensity(id, 0, theme).
+cdroid::Drawable* Resources::getDrawable(int id, const Theme* theme) const {
+    return mImpl->getDrawable(id, 0, theme ? theme->_engineHandle() : nullptr);
 }
 
-cdroid::Drawable* Resources::getDrawableForDensity(int id, int density) const {
-    return mImpl->getDrawableForDensity(id, density);
+cdroid::Drawable* Resources::getDrawableForDensity(int id, int density, const Theme* theme) const {
+    return mImpl->getDrawableForDensity(id, density, theme ? theme->_engineHandle() : nullptr);
 }
 
-std::shared_ptr<ColorStateList> Resources::getColorStateList(int id) const {
-    return mImpl->getColorStateList(id);
+std::shared_ptr<ColorStateList> Resources::getColorStateList(int id, const Theme* theme) const {
+    return mImpl->getColorStateList(id, theme ? theme->_engineHandle() : nullptr);
 }
 
 // ===========================================================================
@@ -259,19 +268,19 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
             if (xml) {
                 cdroid::obtainStyledAttributes(*xml, rt, theme, attrs,
                                                (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
-                return std::make_unique<TypedArray>(rt, std::move(styled), xml, getDisplayMetrics().density, this, theme);
+                return std::make_unique<TypedArray>(rt, std::move(styled), xml, getDisplayMetrics().density, this, &_th);
             }
         }
         const int styleResId = set->getStyleResourceId();
         if (styleResId != 0) {
             cdroid::obtainStyledAttributes(rt, theme, attrs,
                                            (uint32_t)defStyleAttr, (uint32_t)styleResId, styled.data());
-            return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, theme);
+            return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, &_th);
         }
     }
     cdroid::obtainStyledAttributes(rt, theme, attrs,
                                    (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
-    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, theme);
+    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, &_th);
 }
 
 // Convenience: AttributeSet& → AttributeSet* (for AOSP callers passing the reference).
@@ -292,7 +301,7 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(int resid, const u
     while (attrs[count]) count++;
     std::vector<StyledAttr> styled(count);
     cdroid::obtainStyledAttributes(rt, theme, attrs, 0, (uint32_t)resid, styled.data());
-    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, theme);
+    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, &_th);
 }
 
 // AOSP Resources.obtainTypedArray(@ArrayRes int id) — TypedArray view over a
@@ -339,12 +348,16 @@ AssetManager* Resources::Theme::getAssets() const {
     return mRes.getAssets();
 }
 
+// AOSP Resources.Theme.getDrawable(id) = Resources.getDrawable(id, this) —
+// the load is resolved through THIS theme (themed cache + CSL inflation).
+// AOSP Resources.Theme.getDrawable(id) = Resources.getDrawable(id, this).
 Drawable* Resources::Theme::getDrawable(int id) const {
-    return mRes.getDrawable(id);
+    return mRes.getDrawable(id, this);
 }
 
+// AOSP Resources.Theme.getColor(id) = Resources.getColor(id, this).
 int Resources::Theme::getColor(int id) const {
-    return mRes.getColor(id);
+    return mRes.getColor(id, this);
 }
 
 // AOSP Resources.Theme.obtainStyledAttributes(AttributeSet, int[],
@@ -368,7 +381,7 @@ std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(const Attri
                 cdroid::obtainStyledAttributes(*xml, rt, theme, attrs,
                                                (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
                 return std::make_unique<TypedArray>(rt, std::move(styled), xml,
-                        mRes.getDisplayMetrics().density, &mRes);
+                        mRes.getDisplayMetrics().density, &mRes, this);
             }
         }
         const int styleResId = set->getStyleResourceId();
@@ -376,13 +389,13 @@ std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(const Attri
             cdroid::obtainStyledAttributes(rt, theme, attrs,
                                            (uint32_t)defStyleAttr, (uint32_t)styleResId, styled.data());
             return std::make_unique<TypedArray>(rt, std::move(styled), nullptr,
-                    mRes.getDisplayMetrics().density, &mRes);
+                    mRes.getDisplayMetrics().density, &mRes, this);
         }
     }
     cdroid::obtainStyledAttributes(rt, theme, attrs,
                                    (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
     return std::make_unique<TypedArray>(rt, std::move(styled), nullptr,
-            mRes.getDisplayMetrics().density, &mRes);
+            mRes.getDisplayMetrics().density, &mRes, this);
 }
 
 std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(const AttributeSet* set,

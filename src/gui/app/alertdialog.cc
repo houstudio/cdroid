@@ -16,21 +16,49 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <app/alertdialog.h>
+#include <core/contextthemewrapper.h>
 #include <widget/internal_R.h>
 namespace cdroid{
 
-AlertDialog::AlertDialog(Context*ctx):AlertDialog(ctx,false,nullptr){
+AlertDialog::AlertDialog(Context*ctx):AlertDialog(ctx,0,true){
 }
 
-AlertDialog::AlertDialog(Context*ctx,int themeResId):Dialog(ctx,themeResId){
+// AOSP AlertDialog(Context, int themeResId, boolean createContextThemeWrapper).
+AlertDialog::AlertDialog(Context*ctx,int themeResId,bool createContextThemeWrapper)
+  : Dialog(ctx, createContextThemeWrapper ? resolveDialogTheme(ctx,themeResId) : 0,
+             createContextThemeWrapper){
     mAlert = AlertController::create(getContext(), this, getWindow());
     P = nullptr;
 }
 
 AlertDialog::AlertDialog(Context*ctx,bool cancelable,DialogInterface::OnCancelListener listener)
-   :AlertDialog(ctx, cdroid::internal::R::layout::alert_dialog){
+   :AlertDialog(ctx,0){
     setCancelable(cancelable);
     setOnCancelListener(listener);
+}
+
+// AOSP AlertDialog.resolveDialogTheme: THEME_* selectors map to the framework
+// alert-dialog styles, real resource ids pass through, 0 resolves
+// ?attr/alertDialogTheme from the context theme.
+int AlertDialog::resolveDialogTheme(Context* context,int themeResId){
+    using namespace cdroid::internal;
+    if (themeResId == THEME_TRADITIONAL) {
+        return R::style::Theme_Dialog_Alert;
+    } else if (themeResId == THEME_HOLO_DARK) {
+        return R::style::Theme_Holo_Dialog_Alert;
+    } else if (themeResId == THEME_HOLO_LIGHT) {
+        return R::style::Theme_Holo_Light_Dialog_Alert;
+    } else if (themeResId == THEME_DEVICE_DEFAULT_DARK) {
+        return R::style::Theme_DeviceDefault_Dialog_Alert;
+    } else if (themeResId == THEME_DEVICE_DEFAULT_LIGHT) {
+        return R::style::Theme_DeviceDefault_Light_Dialog_Alert;
+    } else if (themeResId >= 0x01000000) {
+        // start of real resource IDs.
+        return themeResId;
+    }
+    TypedValue outValue;
+    context->getTheme().resolveAttribute(R::attr::alertDialogTheme, &outValue, true);
+    return outValue.resourceId;
 }
 
 AlertDialog::~AlertDialog(){
@@ -101,8 +129,16 @@ bool AlertDialog::onKeyUp(int keyCode, KeyEvent& event){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-AlertDialog::Builder::Builder(Context* context){
+// AOSP Builder(Context) / Builder(Context, int themeResId): the params hold a
+// ContextThemeWrapper carrying the resolved alert-dialog theme (owned by the
+// AlertParams; the dialog created by create() borrows it as its base context).
+AlertDialog::Builder::Builder(Context* context):Builder(context, 0){
+}
+
+AlertDialog::Builder::Builder(Context* context,int themeResId){
     P = new  AlertController::AlertParams(context);
+    P->mContext = new ContextThemeWrapper(context, resolveDialogTheme(context, themeResId));
+    P->mOwnsContext = true;
 }
 
 AlertDialog::Builder::~Builder(){
@@ -295,7 +331,9 @@ AlertDialog::Builder& AlertDialog::Builder::setRecycleOnMeasureEnabled(bool enab
 }
 
 AlertDialog* AlertDialog::Builder::create(){
-    AlertDialog* dialog = new AlertDialog(P->mContext, cdroid::internal::R::layout::alert_dialog);
+    // AOSP: the params context is already theme-wrapped, so the dialog takes
+    // it as its base context without wrapping again.
+    AlertDialog* dialog = new AlertDialog(P->mContext, 0, false);
     P->apply(dialog->mAlert);
     dialog->setCancelable(P->mCancelable);
     if (P->mCancelable) {

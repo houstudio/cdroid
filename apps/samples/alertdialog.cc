@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <core/cxxopts.h>
 #include <app/alertdialog.h>
+#include <widget/internal_R.h>
 
 int main(int argc,const char*argv[]){
     setenv("LANG","zh.CN",1);
@@ -29,7 +30,7 @@ int main(int argc,const char*argv[]){
            .setPositiveButton("OK",f)
            .setNegativeButton("Cancel",f)
            .setTitle("This is Title...")
-           .setIcon("@cdroid:mipmap/ic_dialog_info")
+           .setIcon(cdroid::internal::R::drawable::ic_dialog_info)
            .setMessage("Hello world,\nthis is alert dialog test message\n"
                        "text line can be long enough.\nbecause it is placed in a scrollview.\n"
                        "for long text ,it can scroll...!!!")

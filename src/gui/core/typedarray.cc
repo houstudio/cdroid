@@ -71,17 +71,23 @@ static void fillTypedValue(const Res_value& rv, TypedValue* out) {
 }
 
 // --- Constructors (out-of-line so typedarray.h needs no androidfw header) ---
+// The Theme view is stack-side at every call site, so a shared value snapshot
+// is kept (AOSP TypedArray.mTheme — there GC keeps the theme alive).
 
 TypedArray::TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
-                       const ResXMLTree* xmlSrc, float density, const Resources* res, const void* theme)
+                       const ResXMLTree* xmlSrc, float density, const Resources* res,
+                       const Resources::Theme* theme)
     : mTable(table), mVals(vals), mCount(count), mXml(xmlSrc),
-      mDensity(density), mResources(res), mTheme(theme) {}
+      mDensity(density), mResources(res),
+      mTheme(theme ? std::make_shared<Resources::Theme>(*theme) : nullptr) {}
 
 TypedArray::TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
-                       const ResXMLTree* xmlSrc, float density, const Resources* res, const void* theme)
+                       const ResXMLTree* xmlSrc, float density, const Resources* res,
+                       const Resources::Theme* theme)
     : mTable(table), mOwned(new std::vector<StyledAttr>(std::move(vals))),
       mVals(mOwned->data()), mCount(mOwned->size()),
-      mXml(xmlSrc), mDensity(density), mResources(res), mTheme(theme) {}
+      mXml(xmlSrc), mDensity(density), mResources(res),
+      mTheme(theme ? std::make_shared<Resources::Theme>(*theme) : nullptr) {}
 
 TypedArray::~TypedArray() {
     delete mOwned;
@@ -111,9 +117,9 @@ bool TypedArray::getResolved(size_t idx, TypedValue* out) const {
     // answer already follows references (resolveRefs=true).
     if ((v.type == TypedValue::TYPE_ATTRIBUTE || v.type == TypedValue::TYPE_DYNAMIC_ATTRIBUTE)
         && mTheme) {
-        Res_value rv;
-        if (((const ResTable::Theme*)mTheme)->resolveAttribute(v.data, &rv, true)) {
-            v.type = rv.dataType; v.data = rv.data; v.resourceId = 0;
+        TypedValue tv;
+        if (mTheme->resolveAttribute((int)v.data, &tv, true)) {
+            v.type = tv.type; v.data = tv.data; v.resourceId = 0;
         } else {
             return false;
         }
@@ -153,9 +159,9 @@ uint32_t TypedArray::getColor(size_t idx, uint32_t def) const {
     if (v.type == TypedValue::TYPE_ATTRIBUTE || v.type == TypedValue::TYPE_DYNAMIC_ATTRIBUTE) {
         // AOSP: resolve ?attr through the theme first.
         if (mTheme) {
-            Res_value rv;
-            if (((const ResTable::Theme*)mTheme)->resolveAttribute(v.data, &rv, true)) {
-                v.type = rv.dataType; v.data = rv.data;
+            TypedValue tv;
+            if (mTheme->resolveAttribute((int)v.data, &tv, true)) {
+                v.type = tv.type; v.data = tv.data;
                 if (v.type >= TypedValue::TYPE_FIRST_COLOR_INT && v.type <= TypedValue::TYPE_LAST_COLOR_INT)
                     return v.data;
             } else {
@@ -352,9 +358,9 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
     // style-sourced file paths (TYPE_STRING) are reverse-resolved via the arsc.
     // AOSP: ?attr resolves through the theme first (may land on a color).
     if ((v.type == TypedValue::TYPE_ATTRIBUTE || v.type == TypedValue::TYPE_DYNAMIC_ATTRIBUTE) && mTheme) {
-        Res_value rv;
-        if (((const ResTable::Theme*)mTheme)->resolveAttribute(v.data, &rv, true)) {
-            v.type = rv.dataType; v.data = rv.data;
+        TypedValue tv;
+        if (mTheme->resolveAttribute((int)v.data, &tv, true)) {
+            v.type = tv.type; v.data = tv.data;
             if (v.type >= TypedValue::TYPE_FIRST_COLOR_INT && v.type <= TypedValue::TYPE_LAST_COLOR_INT)
                 return new ColorDrawable(v.data);
         }
@@ -365,7 +371,9 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
     } else if (v.type == TypedValue::TYPE_STRING) {
         id = pathToResourceId(mTable, getString(idx));
     }
-    if (id != 0) return mResources->getDrawable(id);
+    // AOSP TypedArray.getDrawable → mResources.getDrawable(id, mTheme): the
+    // nested load resolves ?attr in the drawable/CSL XML against THIS theme.
+    if (id != 0) return mResources->getDrawable(id, mTheme.get());
     return nullptr;
 }
 
@@ -381,9 +389,9 @@ std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const 
     // instance is shared with the loader cache.
     // AOSP: ?attr resolves through the theme first (may land on a color).
     if ((v.type == TypedValue::TYPE_ATTRIBUTE || v.type == TypedValue::TYPE_DYNAMIC_ATTRIBUTE) && mTheme) {
-        Res_value rv;
-        if (((const ResTable::Theme*)mTheme)->resolveAttribute(v.data, &rv, true)) {
-            v.type = rv.dataType; v.data = rv.data;
+        TypedValue tv;
+        if (mTheme->resolveAttribute((int)v.data, &tv, true)) {
+            v.type = tv.type; v.data = tv.data;
             if (v.type >= TypedValue::TYPE_FIRST_COLOR_INT && v.type <= TypedValue::TYPE_LAST_COLOR_INT)
                 return ColorStateList::valueOf(v.data);
         }
@@ -395,7 +403,7 @@ std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const 
         id = pathToResourceId(mTable, getString(idx));
     }
     if (id != 0)
-        return std::dynamic_pointer_cast<ColorStateList>(mResources->loadComplexColor(id));
+        return std::dynamic_pointer_cast<ColorStateList>(mResources->loadComplexColor(id, mTheme.get()));
     return nullptr;
 }
 

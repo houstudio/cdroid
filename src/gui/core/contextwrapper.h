@@ -24,7 +24,6 @@ public:
     const std::string getPackageName() const override { return mBase->getPackageName(); }
     void startActivity(const Intent& intent) override { mBase->startActivity(intent); }
     Resources::Theme getTheme() override { return mBase->getTheme(); }
-    const std::string getThemeName() const override { return mBase->getThemeName(); }
     void setTheme(int resid) override { mBase->setTheme(resid); }
     const DisplayMetrics& getDisplayMetrics() const override { return mBase->getDisplayMetrics(); }
     int getNextAutofillId() override { return mBase->getNextAutofillId(); }

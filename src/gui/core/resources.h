@@ -36,6 +36,7 @@ class TypedArray;
 
 class Resources {
 public:
+    class Theme;   // defined below (Resources::Theme over this impl)
     Resources(AssetManager* am, cdroid::Context* ctx);
     ~Resources();
 
@@ -69,6 +70,9 @@ public:
     bool  getBoolean(int id) const;
     float getFloat(int id) const;
     int   getColor(int id) const;
+    // AOSP Resources.getColor(int id, @Nullable Theme theme) — null theme =
+    // unthemed load (same as the plain overload).
+    int   getColor(int id, const Theme* theme) const;
     float getDimension(int id) const;
     int   getDimensionPixelOffset(int id) const;
     int   getDimensionPixelSize(int id) const;
@@ -90,11 +94,15 @@ public:
     Asset* getAnimation(int id) const;
 
     // --- GUI-object factories (Resources' own; bridge to string-based inflation) ---
-    cdroid::Drawable*       getDrawable(int id) const;
-    cdroid::Drawable*       getDrawableForDensity(int id, int density) const;
-    std::shared_ptr<ColorStateList> getColorStateList(int id) const;
+    // AOSP face: @Nullable Theme — null theme = unthemed load (shared cache
+    // entries). The theme reaches ResourcesImpl as the raw engine handle
+    // (getTheme()._engineHandle()) for ComplexColor inflation and themed cache
+    // isolation (AOSP ThemedResourceCache semantics).
+    cdroid::Drawable*       getDrawable(int id, const Theme* theme = nullptr) const;
+    cdroid::Drawable*       getDrawableForDensity(int id, int density, const Theme* theme = nullptr) const;
+    std::shared_ptr<ColorStateList> getColorStateList(int id, const Theme* theme = nullptr) const;
     Typeface*               getFont(int id) const;
-    std::shared_ptr<ComplexColor> loadComplexColor(int id) const;
+    std::shared_ptr<ComplexColor> loadComplexColor(int id, const Theme* theme = nullptr) const;
     Movie*                  getMovie(int id) const;
 
     // --- AOSP Resources.obtainStyledAttributes(...) ---

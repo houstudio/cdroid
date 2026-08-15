@@ -24,6 +24,7 @@ namespace cdroid{
 class Dialog:public DialogInterface,KeyEvent::Callback{
 private:
     Context*mContext;
+    bool mOwnsContext;   // true when mContext is a ContextThemeWrapper we new'd
     Window*mWindow;
     bool mCreated;
     bool mShowing;
@@ -40,8 +41,12 @@ protected:
     virtual void onStop();
     virtual ~Dialog();
 public:
+    // AOSP Dialog(Context) / Dialog(Context, int themeResId, boolean
+    // createContextThemeWrapper): when createContextThemeWrapper, themeResId 0
+    // resolves ?attr/dialogTheme from the caller's theme and the context is
+    // wrapped in a ContextThemeWrapper owned (and freed) by this Dialog.
     Dialog(Context*context);
-    Dialog(Context* context,int layoutResId);
+    Dialog(Context* context,int themeResId,bool createContextThemeWrapper=true);
     Context*getContext()const;
     bool isShowing()const;
     void create();

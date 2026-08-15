@@ -368,37 +368,45 @@ Asset* ResourcesImpl::getXml(int id) const {
 // (Drawable::ConstantState is nested; ColorStateList) the header can only
 // forward-declare. ----
 
+// AOSP ThemedResourceCache key: (resource id, theme). CDROID's engine is an
+// opaque ResTable::Theme* kept stable per applied theme (Assets::setTheme
+// rebuilds it), so the pointer identifies the theme — pairs of
+// (theme, id) never collide across themes.
+static uint64_t themedCacheKey(int id, const void* themeEngine) {
+    return ((uint64_t)(uintptr_t)themeEngine << 32) | (uint32_t)id;
+}
+
 class ResourcesImpl::DrawableCache {
 public:
-    std::shared_ptr<Drawable::ConstantState> get(int id) {
-        auto it = mEntries.find(id);
+    std::shared_ptr<Drawable::ConstantState> get(uint64_t key) {
+        auto it = mEntries.find(key);
         if (it == mEntries.end()) return nullptr;
         if (it->second.expired()) { mEntries.erase(it); return nullptr; }
         return it->second.lock();
     }
-    void put(int id, const std::shared_ptr<Drawable::ConstantState>& cs) {
-        if (cs) mEntries[id] = cs;
+    void put(uint64_t key, const std::shared_ptr<Drawable::ConstantState>& cs) {
+        if (cs) mEntries[key] = cs;
     }
 private:
-    std::unordered_map<int, std::weak_ptr<Drawable::ConstantState>> mEntries;
+    std::unordered_map<uint64_t, std::weak_ptr<Drawable::ConstantState>> mEntries;
 };
 
 class ResourcesImpl::ColorStateListCache {
 public:
-    std::shared_ptr<ColorStateList> get(int id) const {
-        auto it = mEntries.find(id);
+    std::shared_ptr<ColorStateList> get(uint64_t key) const {
+        auto it = mEntries.find(key);
         return it == mEntries.end() ? nullptr : it->second;
     }
-    void put(int id, const std::shared_ptr<ColorStateList>& csl) {
-        if (csl) mEntries[id] = csl;
+    void put(uint64_t key, const std::shared_ptr<ColorStateList>& csl) {
+        if (csl) mEntries[key] = csl;
     }
 private:
-    std::unordered_map<int, std::shared_ptr<ColorStateList>> mEntries;
+    std::unordered_map<uint64_t, std::shared_ptr<ColorStateList>> mEntries;
 };
 
 // AOSP Resources.getDrawable(id) → getDrawableForDensity(id, 0).
-cdroid::Drawable* ResourcesImpl::getDrawable(int id, int density) const {
-    return getDrawableForDensity(id, density);
+cdroid::Drawable* ResourcesImpl::getDrawable(int id, int density, const void* themeEngine) const {
+    return getDrawableForDensity(id, density, themeEngine);
 }
 
 // AOSP Resources.getDrawableForDensity(id, density) → ResourcesImpl.loadDrawable:
@@ -407,10 +415,10 @@ cdroid::Drawable* ResourcesImpl::getDrawable(int id, int density) const {
 //   3. TYPE_FIRST/LAST_COLOR_INT → ColorDrawable(data)  (AOSP isColorDrawable)
 //   4. TYPE_STRING (file/xml) → inflate via Context     (loadDrawableForCookie)
 //   5. cache the ConstantState, return the drawable
-cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/) const {
+cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/, const void* themeEngine) const {
     if (id == 0 || mCtx == nullptr) return nullptr;
     if (mDrawableCache) {
-        if (auto cs = mDrawableCache->get(id)) return cs->newDrawable();
+        if (auto cs = mDrawableCache->get(themedCacheKey(id, themeEngine))) return cs->newDrawable();
     }
     TypedValue value;
     if (!getValue(id, &value, true)) return nullptr;
@@ -438,14 +446,14 @@ cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/) 
             d = ImageDecoder::createAsDrawable(mCtx, id);
         }
     }
-    if (d && mDrawableCache) mDrawableCache->put(id, d->getConstantState());
+    if (d && mDrawableCache) mDrawableCache->put(themedCacheKey(id, themeEngine), d->getConstantState());
     return d;
 }
 
 // AOSP Resources.getColorStateList(id) → loadComplexColor (CSL branch). The
 // cached instance (shared_ptr) keeps the ColorStateList alive.
-std::shared_ptr<cdroid::ColorStateList> ResourcesImpl::getColorStateList(int id) const {
-    auto cc = loadComplexColor(id);
+std::shared_ptr<cdroid::ColorStateList> ResourcesImpl::getColorStateList(int id, const void* themeEngine) const {
+    auto cc = loadComplexColor(id, themeEngine);
     return cc ? std::dynamic_pointer_cast<ColorStateList>(cc) : nullptr;
 }
 
@@ -453,14 +461,15 @@ std::shared_ptr<cdroid::ColorStateList> ResourcesImpl::getColorStateList(int id)
 //   1. cache hit → return cached instance              (mColorStateListCache)
 //   2. getValue(id) → TypedValue
 //   3. TYPE_FIRST/LAST_COLOR_INT → valueOf(data)        (getColorStateListFromInt)
-//   4. TYPE_STRING (xml) → createFromXml inline          (loadComplexColorForCookie)
+//   4. TYPE_STRING (xml) → createFromXml(theme)          (loadComplexColorForCookie)
 //   5. cache the instance, return it
-std::shared_ptr<cdroid::ComplexColor> ResourcesImpl::loadComplexColor(int id) const {
+std::shared_ptr<cdroid::ComplexColor> ResourcesImpl::loadComplexColor(int id, const void* themeEngine) const {
     if (id == 0 || mCtx == nullptr) return nullptr;
     if (mColorStateListCache) {
-        if (auto csl = mColorStateListCache->get(id)) return csl;
+        if (auto csl = mColorStateListCache->get(themedCacheKey(id, themeEngine))) return csl;
     }
     TypedValue value;
+    if (!getValue(id, &value, true)) return nullptr;
     std::shared_ptr<ColorStateList> csl;
     if (value.type >= TypedValue::TYPE_FIRST_COLOR_INT &&
         value.type <= TypedValue::TYPE_LAST_COLOR_INT) {
@@ -468,16 +477,18 @@ std::shared_ptr<cdroid::ComplexColor> ResourcesImpl::loadComplexColor(int id) co
     } else {
         // Binary face: load by resource id (getXml → openByStringId strips the
         // arsc's "res/" prefix). The string ctor can't open "pkg:type/key" refs
-        // from a binary pak (no text path table).
+        // from a binary pak (no text path table). AOSP passes the theme into
+        // createFromXml so ?attr inside the selector resolves against it.
         try {
             XmlPullParser parser(mCtx, id);
-            csl = ColorStateList::createFromXml(mCtx->getResources(), parser);
+            csl = ColorStateList::createFromXml(mCtx->getResources(), parser,
+                                                (ResTable::Theme*)themeEngine);
         } catch (const std::exception&) {
             csl = nullptr;
         }
     }
     if (csl && mColorStateListCache) {
-        mColorStateListCache->put(id, csl);
+        mColorStateListCache->put(themedCacheKey(id, themeEngine), csl);
     }
     return csl;
 }

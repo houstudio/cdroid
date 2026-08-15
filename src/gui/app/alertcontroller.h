@@ -50,6 +50,10 @@ public:
     class AlertParams {
     public:
         Context* mContext;
+        // True when mContext is a ContextThemeWrapper owned by this AlertParams
+        // (Builder(Context, themeResId)); freed in ~AlertParams. AOSP relies on
+        // GC here, CDROID tracks the ownership explicitly.
+        bool mOwnsContext = false;
         LayoutInflater* mInflater;
 
         int mIconId = 0;
@@ -94,6 +98,7 @@ public:
         void createListView(AlertController* dialog);
     public:
         AlertParams(Context*);
+        ~AlertParams();
         void apply(AlertController* dialog);
     };
 private:

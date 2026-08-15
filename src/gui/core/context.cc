@@ -28,6 +28,21 @@ int Context::getColor(int id) {
     return getResources().getColor(id);
 }
 
+// AOSP Context.getDrawable(id) is final:
+//   getResources().getDrawable(id, getTheme()) — the resource load is themed
+// through the context's theme (ContextThemeWrapper overrides getTheme, so
+// wrapped contexts resolve ?attr inside drawable/CSL XML with their overlay).
+Drawable* Context::getDrawable(int id) {
+    Resources::Theme t = getTheme();
+    return getResources().getDrawable(id, &t);
+}
+
+// AOSP Context.getColorStateList(id) is final: loadColorStateList(id, getTheme()).
+std::shared_ptr<ColorStateList> Context::getColorStateList(int id) {
+    Resources::Theme t = getTheme();
+    return getResources().getColorStateList(id, &t);
+}
+
 bool Context::getBoolean(int id) {
     return getResources().getBoolean(id);
 }
@@ -64,7 +79,7 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const uint32_t* attr
     std::vector<StyledAttr> styled(n);
     cdroid::obtainStyledAttributes(table, theme, attrs, 0, 0, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
-                                        getResources().getDisplayMetrics().density, &getResources(), theme);
+                                        getResources().getDisplayMetrics().density, &getResources(), &_th);
 }
 
 // AOSP Theme.obtainStyledAttributes(resId, attrs): resolve against a style on
@@ -77,7 +92,7 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const uin
     std::vector<StyledAttr> styled(n);
     cdroid::obtainStyledAttributes(table, theme, attrs, 0, (uint32_t)resid, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
-                                        getResources().getDisplayMetrics().density, &getResources(), theme);
+                                        getResources().getDisplayMetrics().density, &getResources(), &_th);
 }
 
 // AOSP Context.obtainStyledAttributes(set, attrs, defStyleAttr, defStyleRes)
