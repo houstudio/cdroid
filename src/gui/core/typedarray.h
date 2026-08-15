@@ -36,6 +36,7 @@
 #include <vector>
 #include <memory>
 #include <androidfw/resourcetypes.h>  // Res_value, StyledAttr, ResXMLTree
+#include <androidfw/typedvalue.h>     // TypedValue (peekValue out-param)
 
 namespace cdroid {
 
@@ -76,7 +77,9 @@ public:
     std::string getString(size_t idx) const;
     std::string getText(size_t idx) const;     // alias of getString for now
     int       getType(size_t idx) const;        // Res_value dataType, or -1
-    bool      peekValue(size_t idx, Res_value* out) const;
+    // AOSP TypedArray.peekValue(int): the typed value as a TypedValue (the
+    // android.util container). The Res_value plumbing stays inside TypedArray.
+    bool      peekValue(size_t idx, TypedValue* out) const;
     // High-level resource access — delegate to the owning Resources (AOSP
     // AOSP TypedArray.getResources(): the owning Resources (for openRawResource,
     // getValue, DisplayMetrics — everything updateStateFromTypedArray needs).

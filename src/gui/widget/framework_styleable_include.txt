@@ -5,6 +5,8 @@
 
 # --- widgets (View/ViewGroup subclasses) ---
 AbsListView
+CardView
+ViewTag
 AdapterViewAnimator
 AdapterViewFlipper
 AnalogClock
@@ -118,6 +120,13 @@ AnimatorSet
 
 # --- interpolators (framework attrs.xml) ---
 Animation
+AnimationSet
+AlphaAnimation
+RotateAnimation
+ScaleAnimation
+TranslateAnimation
+ClipRectAnimation
+ExtendAnimation
 AccelerateInterpolator
 DecelerateInterpolator
 CycleInterpolator
@@ -127,3 +136,15 @@ AnticipateOvershootInterpolator
 PathInterpolator
 DrawableContainerState
 GradientDrawablePattern
+GradientColor
+GradientColorItem
+Badge
+ViewStub
+LayoutAnimation
+GridLayoutAnimation
+PointerIcon
+Keyboard
+Keyboard_Row
+Keyboard_Key
+MenuGroup
+GestureOverlayView

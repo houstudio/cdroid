@@ -444,9 +444,9 @@ cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/) 
 
 // AOSP Resources.getColorStateList(id) → loadComplexColor (CSL branch). The
 // cached instance (shared_ptr) keeps the ColorStateList alive.
-cdroid::ColorStateList* ResourcesImpl::getColorStateList(int id) const {
+std::shared_ptr<cdroid::ColorStateList> ResourcesImpl::getColorStateList(int id) const {
     auto cc = loadComplexColor(id);
-    return cc ? dynamic_cast<ColorStateList*>(cc.get()) : nullptr;
+    return cc ? std::dynamic_pointer_cast<ColorStateList>(cc) : nullptr;
 }
 
 // AOSP ResourcesImpl.loadComplexColor:
@@ -461,20 +461,20 @@ std::shared_ptr<cdroid::ComplexColor> ResourcesImpl::loadComplexColor(int id) co
         if (auto csl = mColorStateListCache->get(id)) return csl;
     }
     TypedValue value;
-    if (!getValue(id, &value, true)) return nullptr;
+    LOGD("loadComplexColor id=0x%x type=0x%x", id, value.type);
     std::shared_ptr<ColorStateList> csl;
     if (value.type >= TypedValue::TYPE_FIRST_COLOR_INT &&
         value.type <= TypedValue::TYPE_LAST_COLOR_INT) {
         csl = ColorStateList::valueOf(value.data);
     } else {
-        std::string ref;
-        if (getResourceName(id, &ref)) {
-            try {
-                XmlPullParser parser(mCtx, ref);
-                csl = ColorStateList::createFromXml(mCtx->getResources(), parser);
-            } catch (const std::exception&) {
-                csl = nullptr;
-            }
+        // Binary face: load by resource id (getXml → openByStringId strips the
+        // arsc's "res/" prefix). The string ctor can't open "pkg:type/key" refs
+        // from a binary pak (no text path table).
+        try {
+            XmlPullParser parser(mCtx, id);
+            csl = ColorStateList::createFromXml(mCtx->getResources(), parser);
+        } catch (const std::exception&) {
+            csl = nullptr;
         }
     }
     if (csl && mColorStateListCache) {

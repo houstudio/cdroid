@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <androidfw/resourcetypes.h>  // Res_value (TypedValue::from)
 #include <core/displaymetrics.h>   // DisplayMetrics (complexToDimension param)
 
 namespace cdroid {
@@ -68,6 +69,15 @@ public:
     size_t stringLen = 0;
 
     int   getComplexUnit();
+    // Adopt the type/data payload of a raw Res_value (androidfw internal).
+    // AOSP ResXMLTree.getAttributeValue fills a TypedValue directly; CDROID's
+    // TypedArray hands out Res_value, so this is the seam.
+    static TypedValue from(const Res_value& v) {
+        TypedValue tv;
+        tv.type = v.dataType;
+        tv.data = v.data;
+        return tv;
+    }
     static float complexToFloat(int complex);
     static float complexToFraction(int data, float base, float pbase);
     float getFraction(float base, float pbase);

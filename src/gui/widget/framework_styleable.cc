@@ -5,6 +5,10 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t AbsListView[] = {
         0x010100fb, 0x010100fc, 0x010100fd, 0x010100fe, 0x010100ff, 0x01010100, 0x01010101,
         0x01010226, 0x010103f7, 0x01010231, 0x0101012b, 0x01010335, 0 };
+    const uint32_t CardView[] = {
+        0x01011035, 0x01011036, 0x01011037, 0x01011038, 0x01011039, 0x0101103a, 0x0101103b,
+        0x0101103c, 0x0101103d, 0x0101103e, 0x0101103f, 0x0101013f, 0x01010140, 0 };
+    const uint32_t ViewTag[] = { 0x010100d0, 0x01010024, 0 };
     const uint32_t AdapterViewAnimator[] = { 0x01010177, 0x01010178, 0x01010307, 0x010102d5, 0 };
     const uint32_t AdapterViewFlipper[] = { 0x01010179, 0x010102b5, 0 };
     const uint32_t AnalogClock[] = {
@@ -220,6 +224,17 @@ namespace internal { namespace R { namespace styleable {
         0x01010141, 0x0101024f, 0x010101bc, 0x010101bd, 0x01010198, 0x010101be, 0x010101bf,
         0x010101c0, 0x010101c1, 0x010100d4, 0x010102a6, 0x010d00fa, 0x010d0065, 0x0101065c,
         0x01010672, 0 };
+    const uint32_t AnimationSet[] = { 0x010101bb, 0x010101bc, 0x010101bd, 0x01010198, 0x010101be, 0x010101c0, 0 };
+    const uint32_t AlphaAnimation[] = { 0x010101ca, 0x010101cb, 0 };
+    const uint32_t RotateAnimation[] = { 0x010101b3, 0x010101b4, 0x010101b5, 0x010101b6, 0 };
+    const uint32_t ScaleAnimation[] = { 0x010101c2, 0x010101c3, 0x010101c4, 0x010101c5, 0x010101b5, 0x010101b6, 0 };
+    const uint32_t TranslateAnimation[] = { 0x010101c6, 0x010101c7, 0x010101c8, 0x010101c9, 0 };
+    const uint32_t ClipRectAnimation[] = {
+        0x010d005e, 0x010d0060, 0x010d005f, 0x010d005d, 0x010d0113, 0x010d0115, 0x010d0114,
+        0x010d0112, 0 };
+    const uint32_t ExtendAnimation[] = {
+        0x0101065f, 0x01010660, 0x01010661, 0x01010662, 0x01010663, 0x01010664, 0x01010665,
+        0x01010666, 0 };
     const uint32_t AccelerateInterpolator[] = { 0x010101d3, 0 };
     const uint32_t DecelerateInterpolator[] = { 0x010101d3, 0 };
     const uint32_t CycleInterpolator[] = { 0x010101d4, 0 };
@@ -229,5 +244,27 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t PathInterpolator[] = { 0x010103fc, 0x010103fd, 0x010103fe, 0x010103ff, 0x01010405, 0 };
     const uint32_t DrawableContainerState[] = { 0x01010196, 0x01010195, 0 };
     const uint32_t GradientDrawablePattern[] = { 0x01011007, 0 };
+    const uint32_t GradientColor[] = {
+        0x0101019d, 0x0101020b, 0x0101019e, 0x010101a1, 0x010101a4, 0x010101a2, 0x010101a3,
+        0x01010510, 0x01010511, 0x01010512, 0x01010513, 0x01010201, 0 };
+    const uint32_t GradientColorItem[] = { 0x01010514, 0x010101a5, 0 };
+    const uint32_t Badge[] = {
+        0x01011019, 0x0101101a, 0x0101101b, 0x0101101c, 0x0101101d, 0x0101101e, 0x0101101f,
+        0x01011020, 0x01011021, 0x01011022, 0x01011023, 0x01011024, 0x01011025, 0x01011026,
+        0x01011027, 0x01011028, 0x01011029, 0x0101102a, 0x0101102b, 0x0101102c, 0x0101102d,
+        0x0101102e, 0x0101102f, 0x01011030, 0x01011031, 0x01011032, 0x01011033, 0x01011034, 0 };
+    const uint32_t ViewStub[] = { 0x010100d0, 0x010100f2, 0x010100f3, 0 };
+    const uint32_t LayoutAnimation[] = { 0x010101cc, 0x010101cd, 0x010101ce, 0x01010141, 0 };
+    const uint32_t GridLayoutAnimation[] = { 0x010101cf, 0x010101d0, 0x010101d1, 0x010101d2, 0 };
+    const uint32_t PointerIcon[] = { 0x01010516, 0x01010517, 0x01010518, 0 };
+    const uint32_t Keyboard[] = { 0x0101023d, 0x0101023e, 0x0101023f, 0x01010240, 0 };
+    const uint32_t Keyboard_Row[] = { 0x01010241, 0x0101024d, 0 };
+    const uint32_t Keyboard_Key[] = {
+        0x01010242, 0x01010243, 0x01010244, 0x01010245, 0x01010246, 0x01010247, 0x01010248,
+        0x01010249, 0x0101024a, 0x0101024b, 0x0101024c, 0x0101024d, 0 };
+    const uint32_t MenuGroup[] = { 0x010100d0, 0x010101de, 0x010101df, 0x010101e0, 0x01010194, 0x0101000e, 0 };
+    const uint32_t GestureOverlayView[] = {
+        0x01010274, 0x01010275, 0x01010276, 0x01010277, 0x01010278, 0x01010279, 0x0101027a,
+        0x0101027b, 0x0101027c, 0x0101027d, 0x0101027e, 0x010100c4, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

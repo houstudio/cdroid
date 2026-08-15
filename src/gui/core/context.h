@@ -63,10 +63,14 @@ public:
     virtual const DisplayMetrics&getDisplayMetrics() const = 0;
     //virtual int getId(const std::string&) const = 0; // retired: use R::id::* (int) or Resources.getIdentifier
     virtual int getNextAutofillId() = 0;
-    virtual const std::string getString(const std::string&id,const std::string&lan="") = 0;
+    //virtual const std::string getString(const std::string&id,const std::string&lan="") = 0;
     virtual std::unique_ptr<std::istream>getInputStream(const std::string&,std::string*outpkg=nullptr) = 0;
 
     virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height) = 0;
+    // Int face (binary paks): opens the resource by id via openRawResource —
+    // string "pkg:type/key" refs cannot be opened from a binary pak.
+    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(int id,int width,int height) = 0;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(int id) { return loadImage(id,-1,-1); }
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname) {
         return loadImage(resname,-1,-1);
     }
@@ -75,16 +79,16 @@ public:
         return loadImage(stream,-1,-1);
     }
 
-    virtual Drawable* getDrawable(const std::string&resid) = 0;
-    virtual int getColor(const std::string&resid) = 0;
-    virtual bool getBoolean(const std::string&resid) const = 0;
-    virtual int getDimension(const std::string&resid) const = 0;
-    virtual int getDimensionPixelSize(const std::string&key,int def=0) const = 0;
-    virtual float getFloat(const std::string&resid,float def=0) const = 0;
-    virtual size_t getArray(const std::string&resname,std::vector<std::string>&) = 0;
-    virtual size_t getArray(const std::string&resname,std::vector<int>&) = 0;
-    virtual RefPtr<ColorStateList> getColorStateList(const std::string&resid) = 0;
-    virtual AttributeSet obtainStyledAttributes(const std::string&resid) = 0;
+    //virtual Drawable* getDrawable(const std::string&resid) = 0;
+    //virtual int getColor(const std::string&resid) = 0;
+    //virtual bool getBoolean(const std::string&resid) const = 0;
+    //virtual int getDimension(const std::string&resid) const = 0;
+    //virtual int getDimensionPixelSize(const std::string&key,int def=0) const = 0;
+    //virtual float getFloat(const std::string&resid,float def=0) const = 0;
+    //virtual size_t getArray(const std::string&resname,std::vector<std::string>&) = 0;
+    //virtual size_t getArray(const std::string&resname,std::vector<int>&) = 0;
+    //virtual RefPtr<ColorStateList> getColorStateList(const std::string&resid) = 0;
+    //virtual AttributeSet obtainStyledAttributes(const std::string&resid) = 0;
     // AOSP Resources.Theme.obtainStyledAttributes with AttributeSet == null.
     // Default impls delegate to getTheme() (see context.cc); the 4-arg
     // AttributeSet form is obtainStyledAttributes on Assets (binary AXML).
@@ -124,7 +128,7 @@ public:
     virtual int            getDimensionPixelSize(int id);
     virtual Asset* openRawResource(int id);
     virtual Drawable*       getDrawable(int id) = 0;
-    virtual ColorStateList* getColorStateList(int id) = 0;
+    virtual std::shared_ptr<ColorStateList> getColorStateList(int id) = 0;
     virtual Typeface*       getFont(int id);   // default nullptr (deferred)
 };
 

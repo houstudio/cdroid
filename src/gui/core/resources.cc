@@ -235,7 +235,7 @@ cdroid::Drawable* Resources::getDrawableForDensity(int id, int density) const {
     return mImpl->getDrawableForDensity(id, density);
 }
 
-cdroid::ColorStateList* Resources::getColorStateList(int id) const {
+std::shared_ptr<ColorStateList> Resources::getColorStateList(int id) const {
     return mImpl->getColorStateList(id);
 }
 

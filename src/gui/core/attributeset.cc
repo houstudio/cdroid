@@ -211,282 +211,11 @@ void AttributeSet::setAttributeResourceId(const std::string& name, int resId) {
 size_t AttributeSet::getAttributeCount()const{
     return mAttrs->size();
 }
-
 const std::string AttributeSet::getAttributeValue(const std::string&key)const{
     auto it = mAttrs->find(key);
     if(it != mAttrs->end())
         return it->second;
     return std::string();
-}
-const std::string AttributeSet::getAttributeValue(const char*key)const{
-    return getAttributeValue(std::string(key));
-}
-
-bool AttributeSet::getBoolean(const std::string&key,bool def)const{
-    const std::string v = getAttributeValue(key);
-    if(v.find_first_of("@:/")!=std::string::npos){
-        try{
-            const int32_t iv = mContext->getDimension(v);
-            return bool(iv);
-        }catch(std::exception&e){
-            return def;
-        }
-    }
-    if(v.empty()) return def;
-	return v.compare("true") == 0;
-}
-
-int AttributeSet::getInt(const std::string&key,int def)const{
-    const std::string v = getAttributeValue(key);
-    if(v.find_first_of("@:/")!=std::string::npos){
-        try{
-            return mContext->getDimension(v);
-        }catch(std::exception&e){
-            return def;
-        }
-    }
-    if(v.empty()||((v[0]>='a')&&(v[0]<='z'))){
-        return def;
-    }
-    const int base =(((v.length()>2)&&(v[1]=='x'||v[1]=='X'))||(v[0]=='#'))?16:10;
-    return std::strtol(v.c_str(),nullptr,base);
-}
-
-int AttributeSet::getInt(const std::string&key,const std::unordered_map<std::string,int>&kvs,int def)const{
-    const std::string vstr = getAttributeValue(key);
-    if( vstr.size() && (vstr.find('|') != std::string::npos) ){
-        std::vector<std::string> gs = split(vstr);
-        int result= 0;
-        int count = 0;
-        for(const std::string& s:gs){
-            auto it = kvs.find(s);
-            if(it != kvs.end()){
-                result |= it->second;
-                count++;
-            }
-        }
-        return count ? result : def;
-    }else{
-        auto it = kvs.find(vstr);
-        return it == kvs.end() ? def : it->second;
-    }
-}
-
-int AttributeSet::getResourceId(const std::string&key,int def)const{
-    const std::string str = getString(key);
-    if(!str.empty()){
-        // "parent" is the ConstraintLayout/RelativeLayout anchor sentinel meaning
-        // the parent view (id 0) — NOT a named resource. Return 0 directly; routing
-        // it through a resolver wrongly hits an unrelated arsc entry named "parent"
-        // and breaks every parent-anchored constraint.
-        if (str == "parent") return 0;
-        // arsc-backed resolve (was mContext->getId strtol). Strip @id/@+id/@android:id
-        // (or any pkg:) prefix to the bare name, then Resources.getIdentifier.
-        std::string name = str;
-        const size_t slash = name.rfind('/');
-        if (slash != std::string::npos) name = name.substr(slash + 1);
-        size_t at = 0;
-        while (at < name.size() && (name[at]=='@'||name[at]=='+')) at++;
-        if (at > 0) name = name.substr(at);
-        const int value = mContext ? mContext->getResources().getIdentifier(name, "id", "") : 0;
-        return value == 0 ? def : value;
-    }
-    return def;
-}
-
-int AttributeSet::getArray(const std::string&key,std::vector<std::string>&array)const{
-    const std::string str = getString(key);
-    if(!str.empty()){
-        const int value = mContext->getArray(str,array);
-        return value;
-    }
-    return 0;
-}
-
-int AttributeSet::getArray(const std::string&key,std::vector<int>&array)const{
-    const std::string str = getString(key);
-    if(!str.empty()){
-        int value = mContext->getArray(str,array);
-        return value;
-    }
-    return 0;
-}
-
-int AttributeSet::getColorWithException(const std::string&key)const{
-    const std::string resid = getString(key);
-    if(resid.empty()){
-        throw std::invalid_argument("color cant be empty");
-    } else if((resid[0]=='#')||(resid.find(':')==std::string::npos)) {
-        return Color::parseColor(resid);
-    }
-    return mContext->getColor(resid);
-}
-
-int AttributeSet::getColor(const std::string&key,int def)const{
-    const std::string resid = getString(key);
-    try{
-        if(resid.empty()) return def;
-        else if((resid[0]=='#')||(resid.find(':')==std::string::npos)) {
-            return Color::parseColor(resid);
-        }
-        return mContext->getColor(resid);
-    }catch(std::exception&e){
-        return def;
-    }
-
-}
-
-float AttributeSet::getFloat(const std::string&key,float def)const{
-    const std::string v = getAttributeValue(key);
-    if(v.find_first_of("@:/")!=std::string::npos){
-        try{
-            const float fv = mContext->getFloat(v,def);
-            return fv;
-        }catch(std::exception&e){
-            return def;
-        }
-    }
-    if(v.empty())return def;
-    return std::strtof(v.c_str(),nullptr);
-}
-
-float AttributeSet::getFraction(const std::string&key,int base,int pbase,float def)const{
-    char*p;
-    const std::string v = getAttributeValue(key);
-    if(v.empty()) return def;
-    float ret = std::strtof(v.c_str(),&p);
-    if(*p=='%')ret /= 100.f;
-    //if( v.find('%') != std::string::npos )ret /= 100.f;
-    return ret;
-}
-
-const std::string AttributeSet::getString(const std::string&key,const std::string&def)const{
-    const std::string v = getAttributeValue(key);
-    if(v.empty())
-        return def;
-    if((mContext==nullptr)||(v.find('/')==std::string::npos))
-        return v;
-    return mContext->getString(v);
-}
-
-static std::unordered_map<std::string,int>gravitykvs={
-    {"none"  , Gravity::NO_GRAVITY},
-    {"top"   , Gravity::TOP}   ,
-    {"bottom", Gravity::BOTTOM},    
-    {"left"  , Gravity::LEFT}  ,   
-    {"right" , Gravity::RIGHT} ,
-    {"center_vertical"  , Gravity::CENTER_VERTICAL},
-    {"fill_vertical"    , Gravity::FILL_VERTICAL}  ,
-    {"center_horizontal", Gravity::CENTER_HORIZONTAL},
-    {"fill_horizontal"  , Gravity::FILL_HORIZONTAL}  ,
-    {"center", Gravity::CENTER},
-    {"fill"  , Gravity::FILL}  ,
-    {"clip_vertical"  , Gravity::CLIP_VERTICAL},
-    {"clip_horizontal", Gravity::CLIP_HORIZONTAL},
-    {"start",Gravity::START},
-    {"end",Gravity::END}
-};
-
-int AttributeSet::getGravity(const std::string&key,int defvalue)const{
-    int gravity = 0;
-    const std::string prop = getString(key);
-    std::vector<std::string>gs = split(prop);
-    for(auto& s:gs){
-        auto it = gravitykvs.find(s);
-        if(it!=gravitykvs.end()){
-            gravity|=it->second;
-        }else if(!s.empty() && (s[0]=='-' || (s[0]>='0' && s[0]<='9'))){
-            // Binary AXML: aapt2 already resolved flag values to an integer
-            // (e.g. "0x11" for center). OR the parsed value directly — bitwise
-            // OR of integers is always valid for flags.
-            int base = (s.size()>2 && (s[1]=='x'||s[1]=='X')) ? 16 : 10;
-            gravity |= (int)std::strtol(s.c_str(), nullptr, base);
-        }
-    }
-    return gs.size()?gravity:defvalue;
-}
-
-static std::unordered_map<std::string,int> tintModes={
-    {"src",PorterDuff::Mode::SRC},
-};
-
-int AttributeSet::getTintMode(const std::string&key,int def)const{
-    /* android:tintMode enum -> PorterDuff::Mode. multiply maps to MULTIPLY per
-     * Android b/73224934 (same as Drawable::parseTintMode). Matches the 6 enum
-     * values declared in attrs.xml (src_over/src_in/src_atop/multiply/screen/add).
-     * Delegates to getInt() so absent-value and flag-style ("a|b") handling stay
-     * consistent with every other enum attribute. */
-    static const std::unordered_map<std::string,int> kvs={
-        {"src_over",PorterDuff::Mode::SRC_OVER},
-        {"src_in",  PorterDuff::Mode::SRC_IN},
-        {"src_atop",PorterDuff::Mode::SRC_ATOP},
-        {"multiply",PorterDuff::Mode::MULTIPLY},
-        {"screen",  PorterDuff::Mode::SCREEN},
-        {"add",     PorterDuff::Mode::ADD},
-    };
-    return getInt(key,kvs,def);
-}
-
-int AttributeSet::getDimension(const std::string&key,int def)const{
-    const std::string v = getString(key);
-    if( v.empty() ) return def;
-    // Resource reference: "@dimen/foo" or already-resolved "pkg:dimen/foo" (getString resolves
-    // the '@' prefix to the package form). Resolve via the context; otherwise parse a literal.
-    if (v[0] == '@' || v.find(':') != std::string::npos) {
-        return mContext->getDimension(v);
-    }
-    char*p;
-    def = std::strtol(v.c_str(),&p,10);
-    //p   = strpbrk(v.c_str(),"sdp");
-    return def;
-}
-
-int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
-    const std::string v = getString(key);
-    if( v.empty() ) return def;
-    if (v[0] == '@' || v.find(':') != std::string::npos) {
-        return mContext->getDimensionPixelSize(v, def);
-    }
-    char *p;
-    def = std::strtol(v.c_str(),&p,10);
-    //p = strpbrk(v.c_str(),"sdp");
-    if(*p){
-        const DisplayMetrics& dm=mContext->getDisplayMetrics();
-        if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)
-            def = (dm.density * def /*+0.5f*/);
-        if(strncmp(p,"sp",2)==0)
-            def = int(dm.scaledDensity * def /*+0.5f*/);
-    }
-    return def;
-}
-
-int AttributeSet::getDimensionPixelOffset(const std::string&key,int def)const{
-    return getDimensionPixelSize(key,def);
-}
-
-int AttributeSet::getLayoutDimension(const std::string&key,int def)const{
-    const std::string v = getString(key);
-    if(v.empty())return def;
-    // Special layout keywords: take precedence over dimension parsing. Compared by full string
-    // (not first character) so that package-qualified references starting with f/m/w
-    // (e.g. "foo:dimen/bar") are not misread as match_parent.
-    if (v == "match_parent" || v == "fill_parent") return LayoutParams::MATCH_PARENT;
-    if (v == "wrap_content") return LayoutParams::WRAP_CONTENT;
-    // Everything else is a dimension: "48dp" literal, "@dimen/foo", or "pkg:dimen/foo" (resolved
-    // form). Resource references (contain ':') go through the context; literals through density-aware parsing.
-    return (v.find(':') != std::string::npos || v[0] == '@')
-            ? mContext->getDimensionPixelSize(v, def)
-            : getDimensionPixelSize(key, def);
-}
-
-RefPtr<ColorStateList>AttributeSet::getColorStateList(const std::string&key)const{
-    const std::string resid = getString(key);
-    return mContext->getColorStateList(resid);
-}
-
-Drawable* AttributeSet::getDrawable(const std::string&key)const{
-    const std::string resid = getString(key);
-    return mContext->getDrawable(resid);
 }
 
 // ----------------------------------------------------------------------------
@@ -556,17 +285,17 @@ int AttributeSet::getAttributeListValue(int index,
 
 bool AttributeSet::getAttributeBooleanValue(int index, bool defaultValue) const {
     std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? getBoolean(k, defaultValue) : defaultValue;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeBooleanValue(std::string(), k, defaultValue) : defaultValue;
 }
 
 int AttributeSet::getAttributeResourceValue(int index, int defaultValue) const {
     std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? getResourceId(k, defaultValue) : defaultValue;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeResourceValue(std::string(), k, defaultValue) : defaultValue;
 }
 
 int AttributeSet::getAttributeIntValue(int index, int defaultValue) const {
     std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? getInt(k, defaultValue) : defaultValue;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeIntValue(std::string(), k, defaultValue) : defaultValue;
 }
 
 int AttributeSet::getAttributeUnsignedIntValue(int index, int defaultValue) const {
@@ -578,12 +307,12 @@ int AttributeSet::getAttributeUnsignedIntValue(int index, int defaultValue) cons
         if (v.size() >= 2 && v[0] == '0' && (v[1] == 'x' || v[1] == 'X'))
             return (int)strtoul(v.c_str() + 2, nullptr, 16);
     }
-    return getInt(k, defaultValue);
+    return getAttributeIntValue(std::string(), k, defaultValue);
 }
 
 float AttributeSet::getAttributeFloatValue(int index, float defaultValue) const {
     std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? getFloat(k, defaultValue) : defaultValue;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeFloatValue(std::string(), k, defaultValue) : defaultValue;
 }
 
 int AttributeSet::getAttributeListValue(const std::string& /*namespace_*/,const std::string& attribute,
@@ -595,17 +324,38 @@ int AttributeSet::getAttributeListValue(const std::string& /*namespace_*/,const 
 
 bool AttributeSet::getAttributeBooleanValue(const std::string& /*namespace_*/,
             const std::string& attribute, bool defaultValue) const {
-    return getBoolean(attribute, defaultValue);
+    const std::string v = getAttributeValue(attribute);
+    if (v.empty()) return defaultValue;
+    return v.compare("true") == 0;
 }
 
 int AttributeSet::getAttributeResourceValue(const std::string& /*namespace_*/,
             const std::string& attribute,int defaultValue) const {
-    return getResourceId(attribute, defaultValue);
+    const std::string v = getAttributeValue(attribute);
+    if (v.empty()) return defaultValue;
+    // "parent" is the ConstraintLayout/RelativeLayout anchor sentinel meaning
+    // the parent view (id 0) — NOT a named resource; resolving it hits an
+    // unrelated arsc entry named "parent" and breaks parent anchors.
+    if (v == "parent") return 0;
+    if (v.find_first_of("@+/") != std::string::npos) {
+        std::string name = v;
+        const size_t slash = name.rfind('/');
+        if (slash != std::string::npos) name = name.substr(slash + 1);
+        size_t at = 0;
+        while (at < name.size() && (name[at]=='@'||name[at]=='+')) at++;
+        if (at > 0) name = name.substr(at);
+        const int value = mContext ? mContext->getResources().getIdentifier(name, "id", "") : 0;
+        return value ? value : defaultValue;
+    }
+    return (int)std::strtoul(v.c_str(), nullptr, 10);
 }
 
 int AttributeSet::getAttributeIntValue(const std::string& /*namespace_*/,
             const std::string& attribute, int defaultValue) const {
-    return getInt(attribute, defaultValue);
+    const std::string v = getAttributeValue(attribute);
+    if (v.empty() || ((v[0] >= 'a') && (v[0] <= 'z'))) return defaultValue;
+    const int base = (((v.length() > 2) && (v[1]=='x'||v[1]=='X')) || (v[0]=='#')) ? 16 : 10;
+    return (int)std::strtol(v.c_str(), nullptr, base);
 }
 
 int AttributeSet::getAttributeUnsignedIntValue(const std::string& /*namespace_*/,
@@ -617,12 +367,14 @@ int AttributeSet::getAttributeUnsignedIntValue(const std::string& /*namespace_*/
         if (v.size() >= 2 && v[0] == '0' && (v[1] == 'x' || v[1] == 'X'))
             return (int)strtoul(v.c_str() + 2, nullptr, 16);
     }
-    return getInt(attribute, defaultValue);
+    return getAttributeIntValue(std::string(), attribute, defaultValue);
 }
 
 float AttributeSet::getAttributeFloatValue(const std::string& /*namespace_*/,
             const std::string& attribute,float defaultValue) const {
-    return getFloat(attribute, defaultValue);
+    const std::string v = getAttributeValue(attribute);
+    if (v.empty()) return defaultValue;
+    return std::strtof(v.c_str(), nullptr);
 }
 
 std::string AttributeSet::getIdAttribute() const {
@@ -634,11 +386,11 @@ std::string AttributeSet::getClassAttribute() const {
 }
 
 int AttributeSet::getIdAttributeResourceValue(int defaultValue) const {
-    return getResourceId("id", defaultValue);
+    return getAttributeResourceValue(std::string(), "id", defaultValue);
 }
 
 int AttributeSet::getStyleAttribute() const {
-    return getResourceId("style", 0);
+    return getAttributeResourceValue(std::string(), "style", 0);
 }
 
 void AttributeSet::dump()const{

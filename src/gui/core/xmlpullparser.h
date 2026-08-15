@@ -79,6 +79,16 @@ public:
     int getAttributeIntValue(int index, int defaultValue) const override;
     int getAttributeUnsignedIntValue(int index, int defaultValue) const override;
     float getAttributeFloatValue(int index, float defaultValue) const override;
+    // Name-keyed typed lookups (AOSP AttributeSet.getAttributeXxxValue(ns, name, def)
+    // and the style= special): binary resolves the attr index by name, then reads
+    // the typed Res_value through the (int) overrides above.
+    int getStyleAttribute() const override;
+    bool getAttributeBooleanValue(const std::string& namespace_,
+                                  const std::string& attribute, bool defaultValue) const override;
+    int getAttributeResourceValue(const std::string& namespace_,
+                                  const std::string& attribute, int defaultValue) const override;
+    int getAttributeIntValue(const std::string& namespace_,
+                             const std::string& attribute, int defaultValue) const override;
     // String-key value / count / presence — resolve straight from ResXMLTree on
     // binary AXML (no mAttrs bridge). Lets the binary parser serve name-based
     // lookups (attrs.getString/hasAttribute/getAttributeCount) after the eager

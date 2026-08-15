@@ -92,7 +92,7 @@ public:
     // --- GUI-object factories (Resources' own; bridge to string-based inflation) ---
     cdroid::Drawable*       getDrawable(int id) const;
     cdroid::Drawable*       getDrawableForDensity(int id, int density) const;
-    cdroid::ColorStateList* getColorStateList(int id) const;
+    std::shared_ptr<ColorStateList> getColorStateList(int id) const;
     Typeface*               getFont(int id) const;
     std::shared_ptr<ComplexColor> loadComplexColor(int id) const;
     Movie*                  getMovie(int id) const;

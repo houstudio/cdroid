@@ -30,20 +30,20 @@ public:
     const DisplayMetrics& getDisplayMetrics() const override { return mBase->getDisplayMetrics(); }
     //int getId(const std::string& name) const override { return mBase->getId(name); } // retired: use R::id::* (int)
     int getNextAutofillId() override { return mBase->getNextAutofillId(); }
-    const std::string getString(const std::string& id, const std::string& lan="") override { return mBase->getString(id, lan); }
+    //const std::string getString(const std::string& id, const std::string& lan="") override { return mBase->getString(id, lan); }
     std::unique_ptr<std::istream> getInputStream(const std::string& resname, std::string* outpkg=nullptr) override { return mBase->getInputStream(resname, outpkg); }
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string& resname, int w, int h) override { return mBase->loadImage(resname, w, h); }
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream& stream, int w, int h) override { return mBase->loadImage(stream, w, h); }
     Drawable* getDrawable(const std::string& resid) override { return mBase->getDrawable(resid); }
     int getColor(const std::string& resid) override { return mBase->getColor(resid); }
-    bool getBoolean(const std::string& resid) const override { return mBase->getBoolean(resid); }
-    int getDimension(const std::string& resid) const override { return mBase->getDimension(resid); }
-    int getDimensionPixelSize(const std::string& key, int def=0) const override { return mBase->getDimensionPixelSize(key, def); }
-    float getFloat(const std::string& resid, float def=0) const override { return mBase->getFloat(resid, def); }
-    size_t getArray(const std::string& resname, std::vector<std::string>& array) override { return mBase->getArray(resname, array); }
-    size_t getArray(const std::string& resname, std::vector<int>& array) override { return mBase->getArray(resname, array); }
-    RefPtr<ColorStateList> getColorStateList(const std::string& resid) override { return mBase->getColorStateList(resid); }
-    AttributeSet obtainStyledAttributes(const std::string& resid) override { return mBase->obtainStyledAttributes(resid); }
+    //bool getBoolean(const std::string& resid) const override { return mBase->getBoolean(resid); }
+    //int getDimension(const std::string& resid) const override { return mBase->getDimension(resid); }
+    //int getDimensionPixelSize(const std::string& key, int def=0) const override { return mBase->getDimensionPixelSize(key, def); }
+    //float getFloat(const std::string& resid, float def=0) const override { return mBase->getFloat(resid, def); }
+    //size_t getArray(const std::string& resname, std::vector<std::string>& array) override { return mBase->getArray(resname, array); }
+    //size_t getArray(const std::string& resname, std::vector<int>& array) override { return mBase->getArray(resname, array); }
+    //RefPtr<ColorStateList> getColorStateList(const std::string& resid) override { return mBase->getColorStateList(resid); }
+    //AttributeSet obtainStyledAttributes(const std::string& resid) override { return mBase->obtainStyledAttributes(resid); }
     std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet* attrs,
         const uint32_t* styleable, int32_t defStyleAttr=0, int32_t defStyleRes=0) override {
         return mBase->obtainStyledAttributes(attrs, styleable, defStyleAttr, defStyleRes);
@@ -52,7 +52,7 @@ public:
     Resources& getResources() override { return mBase->getResources(); }
     AssetManager& getAssets() override { return mBase->getAssets(); }
     Drawable* getDrawable(int id) override { return mBase->getDrawable(id); }
-    ColorStateList* getColorStateList(int id) override { return mBase->getColorStateList(id); }
+    std::shared_ptr<ColorStateList> getColorStateList(int id) override { return mBase->getColorStateList(id); }
 };
 
 } // namespace cdroid

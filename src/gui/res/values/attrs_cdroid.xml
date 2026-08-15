@@ -66,4 +66,66 @@
     <declare-styleable name="GradientDrawablePattern">
         <attr name="pattern" format="reference|color" />
     </declare-styleable>
+
+    <!-- Material BadgeDrawable (com.google.android.material.badge styleable Badge).
+         badgeGravity enum values are Gravity masks (TOP|END etc.). -->
+    <declare-styleable name="Badge">
+        <attr name="backgroundColor" format="color" />
+        <attr name="badgeRadius" format="dimension" />
+        <attr name="badgeWithTextRadius" format="dimension" />
+        <attr name="badgeWidth" format="dimension" />
+        <attr name="badgeHeight" format="dimension" />
+        <attr name="badgeWithTextWidth" format="dimension" />
+        <attr name="badgeWithTextHeight" format="dimension" />
+        <attr name="badgeTextAppearance" format="reference" />
+        <attr name="badgeText" format="string" />
+        <attr name="badgeTextColor" format="color" />
+        <attr name="badgeGravity" format="enum">
+            <enum name="TOP_END" value="8388661" />
+            <enum name="TOP_START" value="8388659" />
+            <enum name="BOTTOM_END" value="8388693" />
+            <enum name="BOTTOM_START" value="8388691" />
+        </attr>
+        <attr name="badgeFixedEdge" format="enum">
+            <enum name="start" value="0" />
+            <enum name="end" value="1" />
+        </attr>
+        <attr name="offsetAlignmentMode" format="enum">
+            <enum name="edge" value="0" />
+            <enum name="legacy" value="1" />
+        </attr>
+        <attr name="badgeWidePadding" format="dimension" />
+        <attr name="badgeVerticalPadding" format="dimension" />
+        <attr name="horizontalOffset" format="dimension" />
+        <attr name="verticalOffset" format="dimension" />
+        <attr name="horizontalOffsetWithText" format="dimension" />
+        <attr name="verticalOffsetWithText" format="dimension" />
+        <attr name="largeFontVerticalOffsetAdjustment" format="dimension" />
+        <attr name="maxCharacterCount" format="integer" />
+        <attr name="maxNumber" format="integer" />
+        <attr name="number" format="integer" />
+        <attr name="badgeShapeAppearance" format="reference" />
+        <attr name="badgeShapeAppearanceOverlay" format="reference" />
+        <attr name="badgeWithTextShapeAppearance" format="reference" />
+        <attr name="badgeWithTextShapeAppearanceOverlay" format="reference" />
+        <attr name="autoAdjustToWithinGrandparentBounds" format="boolean" />
+    </declare-styleable>
+
+    <!-- androidx CardView (androidx.cardview.widget styleable CardView);
+         minWidth/minHeight reuse the framework attrs (android:minWidth). -->
+    <declare-styleable name="CardView">
+        <attr name="cardBackgroundColor" format="color|reference" />
+        <attr name="cardCornerRadius" format="dimension" />
+        <attr name="cardElevation" format="dimension" />
+        <attr name="cardMaxElevation" format="dimension" />
+        <attr name="cardUseCompatPadding" format="boolean" />
+        <attr name="cardPreventCornerOverlap" format="boolean" />
+        <attr name="contentPadding" format="dimension" />
+        <attr name="contentPaddingLeft" format="dimension" />
+        <attr name="contentPaddingTop" format="dimension" />
+        <attr name="contentPaddingRight" format="dimension" />
+        <attr name="contentPaddingBottom" format="dimension" />
+        <attr name="minWidth" />
+        <attr name="minHeight" />
+    </declare-styleable>
 </resources>

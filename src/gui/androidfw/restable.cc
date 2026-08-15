@@ -743,7 +743,9 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
                             const uint32_t* attrs,
                             uint32_t defStyleAttr, uint32_t defStyleRes,
                             StyledAttr* out) {
-    for (size_t i = 0; attrs[i] != 0; i++) { out[i].set = false; out[i].stringBlock = -1; }
+    for (size_t i = 0; attrs[i] != 0; i++) {
+        out[i].set = false; out[i].stringBlock = -1; out[i].resourceId = 0;
+    }
     if (xml.getEventType() != ResXMLParser::START_TAG) return;
 
     // The element's style= attribute (no namespace, name "style") -> style resId.
@@ -780,6 +782,13 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
                 Res_value v;
                 if (xml.getAttributeValue(j, &v) == sizeof(Res_value)) {
                     out[i].value = v; out[i].stringBlock = -2; out[i].set = true; found = true;
+                    // AOSP STYLE_RESOURCE_ID: keep the source reference id.
+                    if (v.dataType == Res_value::TYPE_REFERENCE
+                            || v.dataType == Res_value::TYPE_ATTRIBUTE
+                            || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE
+                            || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+                        out[i].resourceId = v.data;
+                    }
                 }
                 break;
             }
@@ -789,13 +798,26 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
         Res_value v;
         ssize_t blk = chain.getAttribute(a, &v);
         if (blk >= 0) {
-            // Flatten ?attr (TYPE_ATTRIBUTE) / @ref (TYPE_REFERENCE) chains to a
-            // concrete value before storing, so callers see the resolved value.
+            // AOSP STYLE_RESOURCE_ID: record the reference id before flattening
+            // ?attr (TYPE_ATTRIBUTE) / @ref (TYPE_REFERENCE) chains to a
+            // concrete value, so callers see both (getResourceId vs getString).
+            if (v.dataType == Res_value::TYPE_REFERENCE
+                    || v.dataType == Res_value::TYPE_ATTRIBUTE
+                    || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE
+                    || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+                out[i].resourceId = v.data;
+            }
             blk = chain.resolveAttributeReference(&v, blk);
             out[i].value = v; out[i].stringBlock = blk; out[i].set = true; continue;
         }
         // 3. Theme direct value.
         if (theme && theme->getAttribute(a, &v) >= 0) {
+            if (v.dataType == Res_value::TYPE_REFERENCE
+                    || v.dataType == Res_value::TYPE_ATTRIBUTE
+                    || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE
+                    || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+                out[i].resourceId = v.data;
+            }
             ssize_t tblk = 0;
             tblk = theme->resolveAttributeReference(&v, tblk);
             out[i].value = v; out[i].stringBlock = tblk; out[i].set = true; continue;
@@ -811,7 +833,9 @@ void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
                             const uint32_t* attrs,
                             uint32_t defStyleAttr, uint32_t defStyleRes,
                             StyledAttr* out) {
-    for (size_t i = 0; attrs[i] != 0; i++) { out[i].set = false; out[i].stringBlock = -1; }
+    for (size_t i = 0; attrs[i] != 0; i++) {
+        out[i].set = false; out[i].stringBlock = -1; out[i].resourceId = 0;
+    }
 
     // Style/theme fallback chain. Lowest priority is applied first so the
     // sticky "first-set wins" rule yields the right precedence.
@@ -831,11 +855,24 @@ void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
         Res_value v;
         ssize_t blk = chain.getAttribute(a, &v);
         if (blk >= 0) {
+            // AOSP STYLE_RESOURCE_ID: record the reference id before flattening.
+            if (v.dataType == Res_value::TYPE_REFERENCE
+                    || v.dataType == Res_value::TYPE_ATTRIBUTE
+                    || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE
+                    || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+                out[i].resourceId = v.data;
+            }
             blk = chain.resolveAttributeReference(&v, blk);
             out[i].value = v; out[i].stringBlock = blk; out[i].set = true; continue;
         }
         // 2. Theme direct value.
         if (theme && theme->getAttribute(a, &v) >= 0) {
+            if (v.dataType == Res_value::TYPE_REFERENCE
+                    || v.dataType == Res_value::TYPE_ATTRIBUTE
+                    || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE
+                    || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+                out[i].resourceId = v.data;
+            }
             ssize_t tblk = 0;
             tblk = theme->resolveAttributeReference(&v, tblk);
             out[i].value = v; out[i].stringBlock = tblk; out[i].set = true; continue;

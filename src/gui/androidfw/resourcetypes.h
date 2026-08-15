@@ -938,6 +938,9 @@ struct ResTable_map {
 struct StyledAttr {
     Res_value value;
     ssize_t   stringBlock;
+    // AOSP mData[index+STYLE_RESOURCE_ID]: the resource id the value came from
+    // (kept even after reference flattening; 0 == value is not from a resource).
+    uint32_t  resourceId = 0;
     bool      set;
 };
 } // namespace cdroid

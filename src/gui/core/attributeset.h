@@ -81,31 +81,24 @@ public:
     int inherit(const AttributeSet&other);
     int Override(const AttributeSet&other);
     // String-key value lookup. Virtual so a binary XmlPullParser can resolve by
-    // name straight from its ResXMLTree (no mAttrs bridge). The const char*
-    // overload below delegates here.
+    // name straight from its ResXMLTree (no mAttrs bridge). Call sites pass a
+    // std::string (not const char*) so the virtual dispatch is not bypassed.
     virtual const std::string getAttributeValue(const std::string&key)const;
-    const std::string getAttributeValue(const char*key)const;   // const char* overload (binds before the AOSP int-index overload)
-    bool getBoolean(const std::string&key,bool def=false)const;
-    int getInt(const std::string&key,int def=0)const;
-    int getInt(const std::string&key,const std::unordered_map<std::string,int>&keyvaluemaps,int def=0)const;
-    int getResourceId(const std::string&key,int def=0)const;
-    int getColor(const std::string&key,int def=0xFFFFFFFF)const;
-    int getColorWithException(const std::string&key)const;
-    float getFloat(const std::string&key,float def=.0)const;
-    const std::string getString(const std::string&key,const std::string&def=std::string())const;
-    int getGravity(const std::string&key,int defvalue=0)const;
-    int getTintMode(const std::string&key,int def)const;
+    //int getColor(const std::string&key,int def=0xFFFFFFFF)const;
+    //int getColorWithException(const std::string&key)const;
+    //int getGravity(const std::string&key,int defvalue=0)const;
+    //int getTintMode(const std::string&key,int def)const;
 
-    int getDimension(const std::string&key,int def=0)const;
-    int getDimensionPixelSize(const std::string&key,int def=0)const;
-    int getDimensionPixelOffset(const std::string&key,int def=0)const;
-    int getLayoutDimension(const std::string&key,int def)const;
-    float getFraction(const std::string&key,int base,int pbase,float def=.0)const;
+    //int getDimension(const std::string&key,int def=0)const;
+    //int getDimensionPixelSize(const std::string&key,int def=0)const;
+    //int getDimensionPixelOffset(const std::string&key,int def=0)const;
+    //int getLayoutDimension(const std::string&key,int def)const;
+    //float getFraction(const std::string&key,int base,int pbase,float def=.0)const;
 
-    RefPtr<ColorStateList>getColorStateList(const std::string&key)const;
-    Drawable*getDrawable(const std::string&key)const;
-    int getArray(const std::string&key,std::vector<std::string>&array)const;
-    int getArray(const std::string&key,std::vector<int>&array)const;
+    //RefPtr<ColorStateList>getColorStateList(const std::string&key)const;
+    //Drawable*getDrawable(const std::string&key)const;
+    //int getArray(const std::string&key,std::vector<std::string>&array)const;
+    //int getArray(const std::string&key,std::vector<int>&array)const;
 
     // --- AOSP android.util.AttributeSet interface (index/id-based) -------------
     // Ported verbatim from frameworks/base/core/java/android/util/AttributeSet.java.

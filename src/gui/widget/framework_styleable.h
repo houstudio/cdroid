@@ -21,6 +21,27 @@ namespace internal { namespace R { namespace styleable {
     constexpr int AbsListView_choiceMode = 10;
     constexpr int AbsListView_fastScrollAlwaysVisible = 11;
 
+    // CardView (13 attrs)
+    extern const uint32_t CardView[];
+    constexpr int CardView_cardBackgroundColor = 0;
+    constexpr int CardView_cardCornerRadius = 1;
+    constexpr int CardView_cardElevation = 2;
+    constexpr int CardView_cardMaxElevation = 3;
+    constexpr int CardView_cardUseCompatPadding = 4;
+    constexpr int CardView_cardPreventCornerOverlap = 5;
+    constexpr int CardView_contentPadding = 6;
+    constexpr int CardView_contentPaddingLeft = 7;
+    constexpr int CardView_contentPaddingTop = 8;
+    constexpr int CardView_contentPaddingRight = 9;
+    constexpr int CardView_contentPaddingBottom = 10;
+    constexpr int CardView_minWidth = 11;
+    constexpr int CardView_minHeight = 12;
+
+    // ViewTag (2 attrs)
+    extern const uint32_t ViewTag[];
+    constexpr int ViewTag_id = 0;
+    constexpr int ViewTag_value = 1;
+
     // AdapterViewAnimator (4 attrs)
     extern const uint32_t AdapterViewAnimator[];
     constexpr int AdapterViewAnimator_inAnimation = 0;
@@ -1249,6 +1270,65 @@ namespace internal { namespace R { namespace styleable {
     constexpr int Animation_showBackdrop = 13;
     constexpr int Animation_backdropColor = 14;
 
+    // AnimationSet (6 attrs)
+    extern const uint32_t AnimationSet[];
+    constexpr int AnimationSet_shareInterpolator = 0;
+    constexpr int AnimationSet_fillBefore = 1;
+    constexpr int AnimationSet_fillAfter = 2;
+    constexpr int AnimationSet_duration = 3;
+    constexpr int AnimationSet_startOffset = 4;
+    constexpr int AnimationSet_repeatMode = 5;
+
+    // AlphaAnimation (2 attrs)
+    extern const uint32_t AlphaAnimation[];
+    constexpr int AlphaAnimation_fromAlpha = 0;
+    constexpr int AlphaAnimation_toAlpha = 1;
+
+    // RotateAnimation (4 attrs)
+    extern const uint32_t RotateAnimation[];
+    constexpr int RotateAnimation_fromDegrees = 0;
+    constexpr int RotateAnimation_toDegrees = 1;
+    constexpr int RotateAnimation_pivotX = 2;
+    constexpr int RotateAnimation_pivotY = 3;
+
+    // ScaleAnimation (6 attrs)
+    extern const uint32_t ScaleAnimation[];
+    constexpr int ScaleAnimation_fromXScale = 0;
+    constexpr int ScaleAnimation_toXScale = 1;
+    constexpr int ScaleAnimation_fromYScale = 2;
+    constexpr int ScaleAnimation_toYScale = 3;
+    constexpr int ScaleAnimation_pivotX = 4;
+    constexpr int ScaleAnimation_pivotY = 5;
+
+    // TranslateAnimation (4 attrs)
+    extern const uint32_t TranslateAnimation[];
+    constexpr int TranslateAnimation_fromXDelta = 0;
+    constexpr int TranslateAnimation_toXDelta = 1;
+    constexpr int TranslateAnimation_fromYDelta = 2;
+    constexpr int TranslateAnimation_toYDelta = 3;
+
+    // ClipRectAnimation (8 attrs)
+    extern const uint32_t ClipRectAnimation[];
+    constexpr int ClipRectAnimation_fromLeft = 0;
+    constexpr int ClipRectAnimation_fromTop = 1;
+    constexpr int ClipRectAnimation_fromRight = 2;
+    constexpr int ClipRectAnimation_fromBottom = 3;
+    constexpr int ClipRectAnimation_toLeft = 4;
+    constexpr int ClipRectAnimation_toTop = 5;
+    constexpr int ClipRectAnimation_toRight = 6;
+    constexpr int ClipRectAnimation_toBottom = 7;
+
+    // ExtendAnimation (8 attrs)
+    extern const uint32_t ExtendAnimation[];
+    constexpr int ExtendAnimation_fromExtendLeft = 0;
+    constexpr int ExtendAnimation_fromExtendTop = 1;
+    constexpr int ExtendAnimation_fromExtendRight = 2;
+    constexpr int ExtendAnimation_fromExtendBottom = 3;
+    constexpr int ExtendAnimation_toExtendLeft = 4;
+    constexpr int ExtendAnimation_toExtendTop = 5;
+    constexpr int ExtendAnimation_toExtendRight = 6;
+    constexpr int ExtendAnimation_toExtendBottom = 7;
+
     // AccelerateInterpolator (1 attrs)
     extern const uint32_t AccelerateInterpolator[];
     constexpr int AccelerateInterpolator_factor = 0;
@@ -1290,6 +1370,134 @@ namespace internal { namespace R { namespace styleable {
     // GradientDrawablePattern (1 attrs)
     extern const uint32_t GradientDrawablePattern[];
     constexpr int GradientDrawablePattern_pattern = 0;
+
+    // GradientColor (12 attrs)
+    extern const uint32_t GradientColor[];
+    constexpr int GradientColor_startColor = 0;
+    constexpr int GradientColor_centerColor = 1;
+    constexpr int GradientColor_endColor = 2;
+    constexpr int GradientColor_type = 3;
+    constexpr int GradientColor_gradientRadius = 4;
+    constexpr int GradientColor_centerX = 5;
+    constexpr int GradientColor_centerY = 6;
+    constexpr int GradientColor_startX = 7;
+    constexpr int GradientColor_startY = 8;
+    constexpr int GradientColor_endX = 9;
+    constexpr int GradientColor_endY = 10;
+    constexpr int GradientColor_tileMode = 11;
+
+    // GradientColorItem (2 attrs)
+    extern const uint32_t GradientColorItem[];
+    constexpr int GradientColorItem_offset = 0;
+    constexpr int GradientColorItem_color = 1;
+
+    // Badge (28 attrs)
+    extern const uint32_t Badge[];
+    constexpr int Badge_backgroundColor = 0;
+    constexpr int Badge_badgeRadius = 1;
+    constexpr int Badge_badgeWithTextRadius = 2;
+    constexpr int Badge_badgeWidth = 3;
+    constexpr int Badge_badgeHeight = 4;
+    constexpr int Badge_badgeWithTextWidth = 5;
+    constexpr int Badge_badgeWithTextHeight = 6;
+    constexpr int Badge_badgeTextAppearance = 7;
+    constexpr int Badge_badgeText = 8;
+    constexpr int Badge_badgeTextColor = 9;
+    constexpr int Badge_badgeGravity = 10;
+    constexpr int Badge_badgeFixedEdge = 11;
+    constexpr int Badge_offsetAlignmentMode = 12;
+    constexpr int Badge_badgeWidePadding = 13;
+    constexpr int Badge_badgeVerticalPadding = 14;
+    constexpr int Badge_horizontalOffset = 15;
+    constexpr int Badge_verticalOffset = 16;
+    constexpr int Badge_horizontalOffsetWithText = 17;
+    constexpr int Badge_verticalOffsetWithText = 18;
+    constexpr int Badge_largeFontVerticalOffsetAdjustment = 19;
+    constexpr int Badge_maxCharacterCount = 20;
+    constexpr int Badge_maxNumber = 21;
+    constexpr int Badge_number = 22;
+    constexpr int Badge_badgeShapeAppearance = 23;
+    constexpr int Badge_badgeShapeAppearanceOverlay = 24;
+    constexpr int Badge_badgeWithTextShapeAppearance = 25;
+    constexpr int Badge_badgeWithTextShapeAppearanceOverlay = 26;
+    constexpr int Badge_autoAdjustToWithinGrandparentBounds = 27;
+
+    // ViewStub (3 attrs)
+    extern const uint32_t ViewStub[];
+    constexpr int ViewStub_id = 0;
+    constexpr int ViewStub_layout = 1;
+    constexpr int ViewStub_inflatedId = 2;
+
+    // LayoutAnimation (4 attrs)
+    extern const uint32_t LayoutAnimation[];
+    constexpr int LayoutAnimation_delay = 0;
+    constexpr int LayoutAnimation_animation = 1;
+    constexpr int LayoutAnimation_animationOrder = 2;
+    constexpr int LayoutAnimation_interpolator = 3;
+
+    // GridLayoutAnimation (4 attrs)
+    extern const uint32_t GridLayoutAnimation[];
+    constexpr int GridLayoutAnimation_columnDelay = 0;
+    constexpr int GridLayoutAnimation_rowDelay = 1;
+    constexpr int GridLayoutAnimation_direction = 2;
+    constexpr int GridLayoutAnimation_directionPriority = 3;
+
+    // PointerIcon (3 attrs)
+    extern const uint32_t PointerIcon[];
+    constexpr int PointerIcon_bitmap = 0;
+    constexpr int PointerIcon_hotSpotX = 1;
+    constexpr int PointerIcon_hotSpotY = 2;
+
+    // Keyboard (4 attrs)
+    extern const uint32_t Keyboard[];
+    constexpr int Keyboard_keyWidth = 0;
+    constexpr int Keyboard_keyHeight = 1;
+    constexpr int Keyboard_horizontalGap = 2;
+    constexpr int Keyboard_verticalGap = 3;
+
+    // Keyboard_Row (2 attrs)
+    extern const uint32_t Keyboard_Row[];
+    constexpr int Keyboard_Row_rowEdgeFlags = 0;
+    constexpr int Keyboard_Row_keyboardMode = 1;
+
+    // Keyboard_Key (12 attrs)
+    extern const uint32_t Keyboard_Key[];
+    constexpr int Keyboard_Key_codes = 0;
+    constexpr int Keyboard_Key_popupKeyboard = 1;
+    constexpr int Keyboard_Key_popupCharacters = 2;
+    constexpr int Keyboard_Key_keyEdgeFlags = 3;
+    constexpr int Keyboard_Key_isModifier = 4;
+    constexpr int Keyboard_Key_isSticky = 5;
+    constexpr int Keyboard_Key_isRepeatable = 6;
+    constexpr int Keyboard_Key_iconPreview = 7;
+    constexpr int Keyboard_Key_keyOutputText = 8;
+    constexpr int Keyboard_Key_keyLabel = 9;
+    constexpr int Keyboard_Key_keyIcon = 10;
+    constexpr int Keyboard_Key_keyboardMode = 11;
+
+    // MenuGroup (6 attrs)
+    extern const uint32_t MenuGroup[];
+    constexpr int MenuGroup_id = 0;
+    constexpr int MenuGroup_menuCategory = 1;
+    constexpr int MenuGroup_orderInCategory = 2;
+    constexpr int MenuGroup_checkableBehavior = 3;
+    constexpr int MenuGroup_visible = 4;
+    constexpr int MenuGroup_enabled = 5;
+
+    // GestureOverlayView (12 attrs)
+    extern const uint32_t GestureOverlayView[];
+    constexpr int GestureOverlayView_gestureStrokeWidth = 0;
+    constexpr int GestureOverlayView_gestureColor = 1;
+    constexpr int GestureOverlayView_uncertainGestureColor = 2;
+    constexpr int GestureOverlayView_fadeOffset = 3;
+    constexpr int GestureOverlayView_fadeDuration = 4;
+    constexpr int GestureOverlayView_gestureStrokeType = 5;
+    constexpr int GestureOverlayView_gestureStrokeLengthThreshold = 6;
+    constexpr int GestureOverlayView_gestureStrokeSquarenessThreshold = 7;
+    constexpr int GestureOverlayView_gestureStrokeAngleThreshold = 8;
+    constexpr int GestureOverlayView_eventsInterceptionEnabled = 9;
+    constexpr int GestureOverlayView_fadeEnabled = 10;
+    constexpr int GestureOverlayView_orientation = 11;
 
 } } } // namespace internal::R::styleable
 } // namespace cdroid

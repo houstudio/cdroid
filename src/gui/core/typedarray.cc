@@ -140,15 +140,15 @@ int32_t TypedArray::getDimensionPixelSize(size_t idx, int32_t def) const {
 }
 
 uint32_t TypedArray::getResourceId(size_t idx, uint32_t def) const {
-    Res_value v; if (!get(idx, &v)) return def;
-    if (v.dataType == Res_value::TYPE_REFERENCE || v.dataType == Res_value::TYPE_ATTRIBUTE ||
-        v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
-        // Binary-AXML references carry the aapt2/arsc resource id, which is the
-        // SAME id space View::getId() uses now that idgen is retired (R.h is
-        // dumped from the arsc). So the reference id resolves directly — no
-        // arsc↔idgen bridge needed.
-        return v.data;
-    }
+    // AOSP TypedArray.getResourceId: TYPE_NULL/TYPE_STRING → def; otherwise the
+    // STYLE_RESOURCE_ID column — the id the value came from, kept even after
+    // reference flattening (resolver records it in StyledAttr::resourceId).
+    // The ids are the aapt2/arsc space View::getId() uses now that idgen is
+    // retired (R.h is dumped from the arsc).
+    if (!hasValue(idx)) return def;
+    const Res_value& v = mVals[idx].value;
+    if (v.dataType == Res_value::TYPE_NULL || v.dataType == Res_value::TYPE_STRING) return def;
+    if (mVals[idx].resourceId != 0) return mVals[idx].resourceId;
     return def;
 }
 
@@ -246,8 +246,13 @@ int TypedArray::getType(size_t idx) const {
     return mVals[idx].value.dataType;
 }
 
-bool TypedArray::peekValue(size_t idx, Res_value* out) const {
-    return get(idx, out);
+// AOSP TypedArray.peekValue(int): expose the typed value as a TypedValue
+// (android.util container); the raw Res_value stays an androidfw internal.
+bool TypedArray::peekValue(size_t idx, TypedValue* out) const {
+    Res_value v;
+    if (!get(idx, &v)) return false;
+    *out = TypedValue::from(v);
+    return true;
 }
 
 size_t TypedArray::getIndexCount() const {
@@ -271,7 +276,7 @@ size_t TypedArray::getIndex(size_t n) const {
 Drawable* TypedArray::getDrawable(size_t idx) const {
     if (!mResources) return nullptr;
     Res_value v;
-    if (!peekValue(idx, &v)) return nullptr;
+    if (!get(idx, &v)) return nullptr;
     // Inline color → ColorDrawable directly (no resource id).
     if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
         return new ColorDrawable(v.data);
@@ -292,7 +297,7 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
 std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const {
     if (!mResources) return nullptr;
     Res_value v;
-    if (!peekValue(idx, &v)) return nullptr;
+    if (!get(idx, &v)) return nullptr;
     // Inline color → single-color ColorStateList (valueOf caches it).
     if (v.dataType >= Res_value::TYPE_FIRST_COLOR_INT && v.dataType <= Res_value::TYPE_LAST_COLOR_INT)
         return ColorStateList::valueOf(v.data);

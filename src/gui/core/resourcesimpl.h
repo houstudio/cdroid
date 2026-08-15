@@ -111,7 +111,7 @@ public:
     // getMovie stay stubbed (out of scope). ---
     virtual Drawable*       getDrawable(int id, int density = 0) const;
     virtual Drawable*       getDrawableForDensity(int id, int density) const;
-    virtual ColorStateList* getColorStateList(int id) const;
+    virtual std::shared_ptr<ColorStateList> getColorStateList(int id) const;
     virtual std::shared_ptr<ComplexColor> loadComplexColor(int id) const;
     virtual Typeface*       getFont(int id) const;
     virtual Movie*          getMovie(int id) const;

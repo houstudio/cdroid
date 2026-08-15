@@ -500,6 +500,43 @@ const std::string XmlPullParser::getAttributeValue(const std::string& key) const
     return AttributeSet::getAttributeValue(key);
 }
 
+// Name-keyed typed lookups: binary resolves the attr index by name, then reads
+// the typed Res_value through the (int) overrides above.
+int XmlPullParser::getStyleAttribute() const {
+    if (isBinaryAXML()) {
+        const int i = binaryAttrIndex("style");
+        return i >= 0 ? getAttributeResourceValue(i, 0) : 0;
+    }
+    return AttributeSet::getStyleAttribute();
+}
+
+bool XmlPullParser::getAttributeBooleanValue(const std::string& /*namespace_*/,
+        const std::string& attribute, bool defaultValue) const {
+    if (isBinaryAXML()) {
+        const int i = binaryAttrIndex(attribute);
+        return i >= 0 ? getAttributeBooleanValue(i, defaultValue) : defaultValue;
+    }
+    return AttributeSet::getAttributeBooleanValue(std::string(), attribute, defaultValue);
+}
+
+int XmlPullParser::getAttributeResourceValue(const std::string& /*namespace_*/,
+        const std::string& attribute, int defaultValue) const {
+    if (isBinaryAXML()) {
+        const int i = binaryAttrIndex(attribute);
+        return i >= 0 ? getAttributeResourceValue(i, defaultValue) : defaultValue;
+    }
+    return AttributeSet::getAttributeResourceValue(std::string(), attribute, defaultValue);
+}
+
+int XmlPullParser::getAttributeIntValue(const std::string& /*namespace_*/,
+        const std::string& attribute, int defaultValue) const {
+    if (isBinaryAXML()) {
+        const int i = binaryAttrIndex(attribute);
+        return i >= 0 ? getAttributeIntValue(i, defaultValue) : defaultValue;
+    }
+    return AttributeSet::getAttributeIntValue(std::string(), attribute, defaultValue);
+}
+
 bool XmlPullParser::hasAttribute(const std::string& key) const {
     if (isBinaryAXML()) return binaryAttrIndex(key) >= 0;
     return AttributeSet::hasAttribute(key);
