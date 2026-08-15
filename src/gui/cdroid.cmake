@@ -56,7 +56,10 @@ if(ENABLE_DIALOGS OR ENABLE_SPINNER)
     list(APPEND CDROID_SOURCES
         app/alertcontroller.cc
         app/alertdialog.cc
+        app/alertdialoglayout.cc   # com.android.internal.widget.AlertDialogLayout
+        app/buttonbarlayout.cc     # com.android.internal.widget.ButtonBarLayout
         app/dialog.cc
+        app/dialogtitle.cc         # com.android.internal.widget.DialogTitle
         app/progressdialog.cc
     )
 endif(ENABLE_DIALOGS)

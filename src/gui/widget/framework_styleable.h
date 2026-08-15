@@ -75,6 +75,10 @@ namespace internal { namespace R { namespace styleable {
     constexpr int AnalogClock_hand_secondTint = 11;
     constexpr int AnalogClock_hand_secondTintMode = 12;
 
+    // ButtonBarLayout (1 attr)
+    extern const uint32_t ButtonBarLayout[];
+    constexpr int ButtonBarLayout_allowStacking = 0;
+
     // AlertDialog (22 attrs)
     extern const uint32_t AlertDialog[];
     constexpr int AlertDialog_fullDark = 0;

@@ -20,6 +20,7 @@ namespace internal { namespace R { namespace styleable {
         0x010100cd, 0x010100ce, 0x010100cf, 0x010100f2, 0x010d0022, 0x010d0085, 0x010d009c,
         0x010d00f8, 0x010d0084, 0x010d00d8, 0x010d0068, 0x010d00f6, 0x010d009e, 0x010d0035,
         0x010d00f2, 0 };
+    const uint32_t ButtonBarLayout[] = { 0x010d0012, 0 };
     const uint32_t CheckedTextView[] = { 0x01010106, 0x01010108, 0x010104a7, 0x010104a8, 0x010d0024, 0 };
     const uint32_t Chronometer[] = { 0x01010105, 0x0101051b, 0 };
     const uint32_t CompoundButton[] = { 0x01010106, 0x01010107, 0x0101046f, 0x01010470, 0 };

@@ -9476,6 +9476,11 @@ void View::setMinimumWidth(int minWidth) {
     requestLayout();
 }
 
+// AOSP View.getResources(): the Resources of the attached context.
+Resources& View::getResources() {
+    return mContext->getResources();
+}
+
 void View::setSoundEffectsEnabled(bool soundEffectsEnabled) {
     setFlags(soundEffectsEnabled ? SOUND_EFFECTS_ENABLED: 0, SOUND_EFFECTS_ENABLED);
 }

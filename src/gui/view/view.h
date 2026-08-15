@@ -999,10 +999,12 @@ public:
     virtual bool resolveLayoutDirection();
     bool canResolveTextDirection()const;
     bool canResolveLayoutDirection()const;
-    int getMinimumHeight();
+    virtual int getMinimumHeight();
     virtual void setMinimumHeight(int minHeight);
-    int getMinimumWidth();
+    virtual int getMinimumWidth();
     virtual void setMinimumWidth(int minWidth);
+    // AOSP View.getResources() (final): the Resources of the attached context.
+    Resources& getResources();
 
     Animation* getAnimation()const;
     /*The View owns the animation it is currently running (one Animation per View:
