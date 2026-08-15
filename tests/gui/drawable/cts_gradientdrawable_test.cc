@@ -28,6 +28,7 @@
 #include <core/rect.h>
 #include <core/insets.h>
 #include <core/color.h>
+#include "R.h"
 #include <guienvironment.h>
 
 using namespace cdroid;
@@ -329,7 +330,7 @@ TEST_F(CtsGradientDrawableTest, testMutate) {
 // left=4 top=2 right=6 bottom=10 (png refs replaced by pure shape — same asset CtsDrawableTest
 // uses). getDrawable() returns a borrowed (cached) instance. CDROID Rect caveat as above.
 TEST_F(CtsGradientDrawableTest, testInflate) {
-    Drawable* d = App::getInstance().getDrawable("@drawable/gradientdrawable");
+    Drawable* d = App::getInstance().getDrawable(gui_test::R::drawable::gradientdrawable);
     ASSERT_NE(nullptr, d);
     auto* gd = dynamic_cast<GradientDrawable*>(d);
     ASSERT_NE(nullptr, gd);
@@ -344,7 +345,7 @@ TEST_F(CtsGradientDrawableTest, testInflate) {
 
 // CTS testOpticalInsets. Same shape asset: opticalInset{Left=1,Top=2,Right=3,Bottom=4}.
 TEST_F(CtsGradientDrawableTest, testOpticalInsets) {
-    Drawable* d = App::getInstance().getDrawable("@drawable/gradientdrawable");
+    Drawable* d = App::getInstance().getDrawable(gui_test::R::drawable::gradientdrawable);
     ASSERT_NE(nullptr, d);
     auto* gd = dynamic_cast<GradientDrawable*>(d);
     ASSERT_NE(nullptr, gd);

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
+#include "R.h"
 #include <algorithm>
 #include <vector>
 #include <list>
@@ -26,7 +27,9 @@ TEST_F(KEYNAV,btns){
    ViewGroup*w=GUIEnvironment::content();
    for(int i=0;i<8;i++){
        Button*btn=new Button("Button_"+std::to_string(i),200,50);
-       btn->setTextColor(app.getColorStateList("cdroid:color/textview.xml"));
+       auto csl = app.getColorStateList(gui_test::R::color::test_colors);
+       ASSERT_NE(csl, nullptr);
+       btn->setTextColor(csl);
        w->addView(btn);
        btn->setId(100+i);
        btn->layout(10,i*55,200,50);

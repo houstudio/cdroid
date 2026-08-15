@@ -11,6 +11,7 @@
 // Original: cts/tests/tests/graphics/src/android/graphics/drawable/cts/VectorDrawableTest.java (Apache 2.0)
 //           cts/tests/tests/graphics/src/android/graphics/drawable/cts/VectorDrawableSizeTest.java (Apache 2.0)
 #include <gtest/gtest.h>
+#include "R.h"
 #include <drawable/vectordrawable.h>
 #include <drawable/drawables.h>
 #include <drawable/colorfilters.h>
@@ -32,8 +33,8 @@ int hostDensityDpi() {
 
 // Casts the cached, resource-loaded drawable to a VectorDrawable. getDrawable() returns a
 // borrowed (cached) instance — do not delete.
-VectorDrawable* loadVectorDrawable(const std::string& ref) {
-    Drawable* d = App::getInstance().getDrawable(ref);
+VectorDrawable* loadVectorDrawable(int resId) {
+    Drawable* d = App::getInstance().getDrawable(resId);
     return dynamic_cast<VectorDrawable*>(d);
 }
 } // namespace
@@ -80,9 +81,9 @@ TEST_F(CtsVectorDrawableTest, testMutate) {
     // CTS loads vector_icon_create three times from the resource cache so d1/d2/d3 share
     // constant state, then mutates d1/d2 to verify the shared-state copy-on-write semantics.
     // CDROID's getDrawable() returns cached, shared-constant-state drawables the same way.
-    VectorDrawable* d1 = loadVectorDrawable("@drawable/cts_vector_icon");
-    VectorDrawable* d2 = loadVectorDrawable("@drawable/cts_vector_icon");
-    VectorDrawable* d3 = loadVectorDrawable("@drawable/cts_vector_icon");
+    VectorDrawable* d1 = loadVectorDrawable(gui_test::R::drawable::cts_vector_icon);
+    VectorDrawable* d2 = loadVectorDrawable(gui_test::R::drawable::cts_vector_icon);
+    VectorDrawable* d3 = loadVectorDrawable(gui_test::R::drawable::cts_vector_icon);
     ASSERT_NE(nullptr, d1);
     ASSERT_NE(nullptr, d2);
     ASSERT_NE(nullptr, d3);
@@ -105,7 +106,7 @@ TEST_F(CtsVectorDrawableTest, testMutatePreservesState) {
     // CTS asserts that alpha set BEFORE mutate() survives the mutate (state is copied, not
     // reset). The cached drawable's alpha is left untouched by the resource cache restoration
     // since cts_vector_icon has no explicit alpha.
-    VectorDrawable* d = loadVectorDrawable("@drawable/cts_vector_icon");
+    VectorDrawable* d = loadVectorDrawable(gui_test::R::drawable::cts_vector_icon);
     ASSERT_NE(nullptr, d);
     EXPECT_NE(0x00, d->getAlpha());
 
@@ -136,7 +137,7 @@ TEST_F(CtsVectorDrawableTest, testOpticalInsets) {
     // CTS loads vector_icon_create (whose XML declares opticalInset 1/2/3/4) and asserts
     // Insets.of(1,2,3,4) is read back. cts_vector_icon.xml carries the same four px insets;
     // at the test env's default density (source == target == 160) no scaling is applied.
-    VectorDrawable* d = loadVectorDrawable("@drawable/cts_vector_icon");
+    VectorDrawable* d = loadVectorDrawable(gui_test::R::drawable::cts_vector_icon);
     ASSERT_NE(nullptr, d);
     EXPECT_EQ(Insets::of(1, 2, 3, 4), d->getOpticalInsets());
 }
@@ -144,7 +145,7 @@ TEST_F(CtsVectorDrawableTest, testOpticalInsets) {
 TEST_F(CtsVectorDrawableTest, testIntrinsicSizeFromResource) {
     // cts_vector_icon declares width=24dp / height=24dp. At the host density the intrinsic
     // size is round(24 * densityDpi / 160) — verify both axes report that.
-    VectorDrawable* d = loadVectorDrawable("@drawable/cts_vector_icon");
+    VectorDrawable* d = loadVectorDrawable(gui_test::R::drawable::cts_vector_icon);
     ASSERT_NE(nullptr, d);
     const int expected = (int)std::lround(24.0f * hostDensityDpi() / 160.0f);
     EXPECT_EQ(expected, d->getIntrinsicWidth());
@@ -156,7 +157,7 @@ TEST_F(CtsVectorDrawableTest, testIntrinsicSizeFromResource) {
 // CTS vector_icon_size_1: width=7dp. Verifies VectorDrawable uses round(), not floor(), when
 // scaling dp to pixels at the host density.
 TEST_F(CtsVectorDrawableTest, testVectorDrawableSize_size_1) {
-    VectorDrawable* d = loadVectorDrawable("@drawable/cts_vector_size_1");
+    VectorDrawable* d = loadVectorDrawable(gui_test::R::drawable::cts_vector_size_1);
     ASSERT_NE(nullptr, d);
     const int expected = (int)std::lround(7 * hostDensityDpi() / 160.0f);
     EXPECT_EQ(expected, d->getIntrinsicWidth());
@@ -165,7 +166,7 @@ TEST_F(CtsVectorDrawableTest, testVectorDrawableSize_size_1) {
 
 // CTS vector_icon_size_2: width=9dp.
 TEST_F(CtsVectorDrawableTest, testVectorDrawableSize_size_2) {
-    VectorDrawable* d = loadVectorDrawable("@drawable/cts_vector_size_2");
+    VectorDrawable* d = loadVectorDrawable(gui_test::R::drawable::cts_vector_size_2);
     ASSERT_NE(nullptr, d);
     const int expected = (int)std::lround(9 * hostDensityDpi() / 160.0f);
     EXPECT_EQ(expected, d->getIntrinsicWidth());

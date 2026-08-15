@@ -34,9 +34,11 @@ TEST_F(ATTS,inherit1){
     };
     att1.set(kvs);
     att2.inherit(att1);
-    ASSERT_EQ(att2.getString("color1"),"cdroid:attr/textColor");
-    ASSERT_EQ(att2.getString("color2"),"cdroid:attr/textColor");
-    ASSERT_EQ(att2.getString("color3"),"?cdroid:attr/textColor");
+    // getString(name) retired with the string-key getters; getAttributeValue(name)
+    // is the surviving name-based lookup (virtual, binary parser overrides it).
+    ASSERT_EQ(att2.getAttributeValue("color1"),"cdroid:attr/textColor");
+    ASSERT_EQ(att2.getAttributeValue("color2"),"cdroid:attr/textColor");
+    ASSERT_EQ(att2.getAttributeValue("color3"),"?cdroid:attr/textColor");
 }
 TEST_F(ATTS,inherit2){
     AttributeSet att1(nullptr,"cdroid");
@@ -49,7 +51,7 @@ TEST_F(ATTS,inherit2){
     };
     att1.set(kvs);
     att2.inherit(att1);
-    ASSERT_EQ(att2.getString("color1"),"cdroid:attr/textColor");
-    ASSERT_EQ(att2.getString("color2"),"cdroid:attr/textColor");
-    ASSERT_EQ(att2.getString("color3"),"?cdroid:attr/textColor");
+    ASSERT_EQ(att2.getAttributeValue("color1"),"cdroid:attr/textColor");
+    ASSERT_EQ(att2.getAttributeValue("color2"),"cdroid:attr/textColor");
+    ASSERT_EQ(att2.getAttributeValue("color3"),"?cdroid:attr/textColor");
 }

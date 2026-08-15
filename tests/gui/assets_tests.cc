@@ -6,6 +6,7 @@
 #include <drawable/animatedvectordrawable.h>
 #include <drawable/statelistdrawable.h>
 #include <drawable/transitiondrawable.h>
+#include "R.h"
 #include <drawable/vectordrawable.h>
 #include <drawable/ninepatchdrawable.h>
 #include <drawable/bitmapdrawable.h>
@@ -33,23 +34,16 @@ TEST_F(ASSETS,string){
 }
 // getArray stays on the string face: it renders reference-typed elements
 // ("@color/...") as strings, which the arsc bridge handles; the id-face
-// Resources.getStringArray skips non-string entries.
+// Resources.getStringArray via the int face. The two old string-key forms
+// ("cdroid:array/..." / "@cdroid:array/...") were the only thing array2 tested
+// differently — both retired with the string-key getters, so the cases merged.
 TEST_F(ASSETS,array){
    App&app=App::getInstance();
-   std::vector<std::string>array;
-   app.getArray("cdroid:array/preloaded_color_state_lists",array);
+   std::vector<std::string>array = app.getResources().getStringArray(
+           gui_test::R::array::string_array_test);
    for(auto a:array)printf("%s\r\n",a.c_str());
    printf("size=%lu\r\n",array.size());
-   ASSERT_TRUE(array.size()>0);
-}
-
-TEST_F(ASSETS,array2){
-   App&app=App::getInstance();
-   std::vector<std::string>array;
-   app.getArray("@cdroid:array/preloaded_color_state_lists",array);
-   for(auto a:array)printf("%s\r\n",a.c_str());
-   printf("size=%lu\r\n",array.size());
-   ASSERT_TRUE(array.size()>0);
+   ASSERT_EQ(array.size(),(size_t)3);
 }
 TEST_F(ASSETS,color){
     App&app=App::getInstance();

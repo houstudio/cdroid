@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <core/systemclock.h>
+#include <widget/internal_R.h>
 using namespace Cairo;
 class MUTATE:public testing::Test{
 protected:
@@ -45,7 +46,7 @@ TEST_F(MUTATE,bitmap){
 }
 
 TEST_F(MUTATE,bitmap2){
-    cdroid::RefPtr<ImageSurface>img=mContext->loadImage("@cdroid:mipmap/seek_thumb_selected");
+    cdroid::RefPtr<ImageSurface>img=mContext->loadImage(cdroid::internal::R::drawable::seek_thumb_selected);
     BitmapDrawable*d1=new BitmapDrawable(img);
     BitmapDrawable*d2=(BitmapDrawable*)d1->getConstantState()->newDrawable();
     ASSERT_NE(dynamic_cast<BitmapDrawable*>(d2),(void*)nullptr);
@@ -58,7 +59,7 @@ TEST_F(MUTATE,bitmap2){
 }
 
 TEST_F(MUTATE,ninepatch){
-    cdroid::RefPtr<ImageSurface>img=mContext->loadImage("@cdroid:mipmap/btn_default_pressed");
+    cdroid::RefPtr<ImageSurface>img=mContext->loadImage(cdroid::internal::R::drawable::btn_default_pressed);
     NinePatchDrawable*d1=new NinePatchDrawable(img);
     NinePatchDrawable*d2=(NinePatchDrawable*)d1->getConstantState()->newDrawable();
     printf("intrinsicsize d1=%dx%d d2=%dx%d\r\n",d1->getIntrinsicWidth(),d1->getIntrinsicHeight(),
@@ -108,7 +109,7 @@ TEST_F(MUTATE,statelist){
 }
 
 TEST_F(MUTATE,statelist2){
-    StateListDrawable*d1=(StateListDrawable*)DrawableInflater::loadDrawable(mContext,"@cdroid:drawable/seek_thumb");
+    StateListDrawable*d1=(StateListDrawable*)mContext->getDrawable(cdroid::internal::R::drawable::seek_thumb);
     StateListDrawable*d2=dynamic_cast<StateListDrawable*>(d1->getConstantState()->newDrawable());
     ASSERT_TRUE(d2->getChildCount()>0);
 
@@ -134,7 +135,7 @@ TEST_F(MUTATE,statelist2){
 }
 
 TEST_F(MUTATE,layer){
-    LayerDrawable*d1=(LayerDrawable*)DrawableInflater::loadDrawable(mContext,"@cdroid:drawable/progress_horizontal");
+    LayerDrawable*d1=(LayerDrawable*)mContext->getDrawable(cdroid::internal::R::drawable::progress_horizontal);
     LayerDrawable*d2=dynamic_cast<LayerDrawable*>(d1->getConstantState()->newDrawable());
 
     ASSERT_GT(d2->getNumberOfLayers(),0);
@@ -168,7 +169,7 @@ TEST_F(MUTATE,layer){
 
 TEST_F(MUTATE,parsexml){
     Drawable*d1,*d2;
-    d1=DrawableInflater::loadDrawable(mContext,"@cdroid:drawable/progress_horizontal");
+    d1=mContext->getDrawable(cdroid::internal::R::drawable::progress_horizontal);
     ASSERT_EQ(d1->getConstantState().use_count(),1);
     d2=d1->getConstantState()->newDrawable();
     ASSERT_EQ(d1->getConstantState().use_count(),2);

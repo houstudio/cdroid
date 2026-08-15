@@ -107,11 +107,6 @@ public:
         XmlPullParser parser(rm,std::move(txtis));
         AttributeSet& attrs=parser;
         while((type=parser.next())!=XmlPullParser::START_TAG){}
-        printf("fromStream START_TAG=%s drawable=%s android:drawable=%s cdroid:drawable=%s\n",
-               parser.getName().c_str(),
-               attrs.getString("drawable").c_str(),
-               attrs.getString("android:drawable").c_str(),
-               attrs.getString("cdroid:drawable").c_str());
         parser.dump();
         return DrawableInflater::inflateFromXml(App::getInstance().getResources(),parser.getName(),parser,attrs);
     }
