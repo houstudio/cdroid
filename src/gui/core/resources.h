@@ -112,6 +112,12 @@ public:
 
     class Theme;   // AOSP Resources.Theme — defined below (view over ResTable::Theme)
 
+    // AOSP Resources.newTheme(): a NEW empty theme over this Resources' table
+    // (framework-internal consumers build their own theme without a Context).
+    // The returned Theme OWNS its engine; themes obtained via getTheme() borrow
+    // the Context's engine.
+    Theme newTheme();
+
 private:
     std::unique_ptr<ResourcesImpl> mImpl;   // aggregated (AOSP Resources -> ResourcesImpl); owns the drawable/ComplexColor caches
     cdroid::Context* mCtx;
@@ -125,15 +131,36 @@ private:
 // context.cc) — the only places that need the raw ResTable::Theme*.
 class Resources::Theme {
 public:
-    Resources& getResources() const { return mRes; }
+    Resources& getResources() const { return mRes; }   // CDROID extension (AOSP has getAssets)
+    AssetManager* getAssets() const;
+    // AOSP Resources.Theme face: applyStyle/setTo/resolveAttribute/obtainStyledAttributes.
     void applyStyle(int resId, bool force = false);
+    void setTo(const Theme& other);
     bool resolveAttribute(int resId, TypedValue* outValue, bool resolveRefs) const;
-    void* _engineHandle() const { return mEngine; }   // cdroid::ResTable::Theme* (borrowed)
+    std::unique_ptr<TypedArray> obtainStyledAttributes(const uint32_t* attrs) const;
+    std::unique_ptr<TypedArray> obtainStyledAttributes(int resid, const uint32_t* attrs) const;
+    std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet* set,
+            const uint32_t* attrs) const;
+    std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet* set,
+            const uint32_t* attrs, int defStyleAttr, int defStyleRes) const;
+    // --- AOSP @hide face (used by framework-internal theme consumers) ---------
+    // Attr resIDs this theme currently has values for.
+    std::vector<uint32_t> getAllAttributes() const;
+    // Bit mask of CONFIG_* changes that would impact this theme.
+    int getChangingConfigurations() const;
+    // Reset to the last setTo() state (or initial state), erasing applyStyle()
+    // changes made since.
+    void rebase();
+    // Log the theme's attribute values (AOSP dump(priority, tag, prefix)).
+    void dump(const char* tag, const char* prefix = "") const;
+    void* _engineHandle() const { return mEngine; }   // cdroid::ResTable::Theme* (borrowed or owned)
 private:
+    friend class Resources;       // newTheme() (owned engine)
     friend class Assets;          // Assets/App construct it from their engine
     Theme(Resources& res, void* engine) : mRes(res), mEngine(engine) {}
     Resources& mRes;
     void*      mEngine;
+    std::shared_ptr<void> mOwned;  // engine ownership when created by newTheme()
 };
 
 } // namespace cdroid

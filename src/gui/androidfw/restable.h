@@ -162,6 +162,15 @@ public:
         // be rebuilt when the configuration changes).
         uint32_t getChangingConfigurations() const;
 
+        // AOSP Resources.Theme.getAllAttributes() (@hide): the attr resIDs this
+        // theme currently has values for.
+        void getAllAttributes(std::vector<uint32_t>& out) const;
+
+        // AOSP Resources.Theme.rebase() (@hide): reset the contents to the state
+        // of the last setTo() (or the empty initial state if never setTo'd),
+        // erasing any applyStyle() changes made since.
+        status_t rebase();
+
     private:
         const ResTable& mTable;
         struct ThemedItem {
@@ -172,6 +181,9 @@ public:
         };
         std::map<uint32_t, ThemedItem> mEntries;  // attr resID -> item
         uint32_t mTypeSpecFlags = 0;
+        // Base snapshot for rebase(): taken at construction and after each setTo.
+        std::map<uint32_t, ThemedItem> mBaseEntries;
+        uint32_t mBaseTypeSpecFlags = 0;
         status_t applyStyleChain(uint32_t resID, bool force, int depth);
     };
 

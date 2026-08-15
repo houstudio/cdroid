@@ -72,6 +72,12 @@ namespace R{
         };
     }/*namespace navigation*/
 
+    namespace style{
+        enum : int {
+            theme_face_probe = 0x7f080000,
+        };
+    }/*namespace style*/
+
 };//endof namespace R
 
 }//endof namespace

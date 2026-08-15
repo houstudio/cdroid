@@ -625,6 +625,23 @@ status_t ResTable::Theme::setTo(const Theme& other) {
     if (this == &other) return NO_ERROR;
     mEntries = other.mEntries;
     mTypeSpecFlags = other.mTypeSpecFlags;
+    // AOSP rebase() semantics: the last setTo() state becomes the new base.
+    mBaseEntries = mEntries;
+    mBaseTypeSpecFlags = mTypeSpecFlags;
+    return NO_ERROR;
+}
+
+void ResTable::Theme::getAllAttributes(std::vector<uint32_t>& out) const {
+    out.clear();
+    out.reserve(mEntries.size());
+    for (const auto& kv : mEntries) {
+        if (kv.second.set) out.push_back(kv.first);
+    }
+}
+
+status_t ResTable::Theme::rebase() {
+    mEntries = mBaseEntries;
+    mTypeSpecFlags = mBaseTypeSpecFlags;
     return NO_ERROR;
 }
 

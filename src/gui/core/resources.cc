@@ -319,6 +319,12 @@ void Resources::Theme::applyStyle(int resId, bool force) {
     if (mEngine) static_cast<ResTable::Theme*>(mEngine)->applyStyle((uint32_t)resId, force);
 }
 
+void Resources::Theme::setTo(const Theme& other) {
+    if (mEngine == nullptr || other.mEngine == nullptr) return;
+    static_cast<ResTable::Theme*>(mEngine)->setTo(
+            *static_cast<const ResTable::Theme*>(other.mEngine));
+}
+
 bool Resources::Theme::resolveAttribute(int resId, TypedValue* out, bool resolveRefs) const {
     if (mEngine == nullptr || out == nullptr) return false;
     Res_value v;
@@ -327,6 +333,102 @@ bool Resources::Theme::resolveAttribute(int resId, TypedValue* out, bool resolve
     out->type = v.dataType;
     out->data = v.data;
     return true;
+}
+
+AssetManager* Resources::Theme::getAssets() const {
+    return mRes.getAssets();
+}
+
+// AOSP Resources.Theme.obtainStyledAttributes(AttributeSet, int[],
+// defStyleAttr, defStyleRes) — same resolution ladder as Resources::
+// obtainStyledAttributes, but against THIS theme's engine (a Theme obtained
+// from a different Context/Assets resolves independently).
+std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(const AttributeSet* set,
+        const uint32_t* attrs, int defStyleAttr, int defStyleRes) const {
+    if (mEngine == nullptr) return nullptr;
+    const ResTable::Theme* theme = static_cast<const ResTable::Theme*>(mEngine);
+    const ResTable& rt = theme->getResTable();
+    size_t count = 0;
+    while (attrs[count]) count++;
+    std::vector<StyledAttr> styled(count);
+
+    if (set != nullptr) {
+        const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(set);
+        if (parser && parser->isBinaryAXML()) {
+            const ResXMLTree* xml = static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree());
+            if (xml) {
+                cdroid::obtainStyledAttributes(*xml, rt, theme, attrs,
+                                               (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
+                return std::make_unique<TypedArray>(rt, std::move(styled), xml,
+                        mRes.getDisplayMetrics().density, &mRes);
+            }
+        }
+        const int styleResId = set->getStyleResourceId();
+        if (styleResId != 0) {
+            cdroid::obtainStyledAttributes(rt, theme, attrs,
+                                           (uint32_t)defStyleAttr, (uint32_t)styleResId, styled.data());
+            return std::make_unique<TypedArray>(rt, std::move(styled), nullptr,
+                    mRes.getDisplayMetrics().density, &mRes);
+        }
+    }
+    cdroid::obtainStyledAttributes(rt, theme, attrs,
+                                   (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
+    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr,
+            mRes.getDisplayMetrics().density, &mRes);
+}
+
+std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(const AttributeSet* set,
+        const uint32_t* attrs) const {
+    return obtainStyledAttributes(set, attrs, 0, 0);
+}
+
+std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(const uint32_t* attrs) const {
+    return obtainStyledAttributes(nullptr, attrs, 0, 0);
+}
+
+std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(int resid, const uint32_t* attrs) const {
+    return obtainStyledAttributes(nullptr, attrs, 0, resid);
+}
+
+// AOSP Resources.newTheme(): a fresh empty theme owning its own engine over
+// this Resources' table. getTheme()-style views borrow the Context's engine;
+// this one lives as long as the returned Theme (shared ownership on copy).
+Resources::Theme Resources::newTheme() {
+    const ResTable& rt = getAssets()->getResources(false);
+    std::shared_ptr<ResTable::Theme> engine = std::make_shared<ResTable::Theme>(rt);
+    Theme theme(*this, engine.get());
+    theme.mOwned = engine;
+    return theme;
+}
+
+// --- AOSP @hide face ---
+
+std::vector<uint32_t> Resources::Theme::getAllAttributes() const {
+    std::vector<uint32_t> out;
+    if (mEngine) static_cast<const ResTable::Theme*>(mEngine)->getAllAttributes(out);
+    return out;
+}
+
+int Resources::Theme::getChangingConfigurations() const {
+    return mEngine ? (int)static_cast<const ResTable::Theme*>(mEngine)->getChangingConfigurations() : 0;
+}
+
+void Resources::Theme::rebase() {
+    if (mEngine) static_cast<ResTable::Theme*>(mEngine)->rebase();
+}
+
+void Resources::Theme::dump(const char* tag, const char* prefix) const {
+    if (mEngine == nullptr) return;
+    const ResTable::Theme* theme = static_cast<const ResTable::Theme*>(mEngine);
+    std::vector<uint32_t> attrs;
+    theme->getAllAttributes(attrs);
+    LOGD("%s%sTheme %p: %zu attributes", prefix, tag, mEngine, attrs.size());
+    for (uint32_t attr : attrs) {
+        TypedValue v;
+        if (resolveAttribute((int)attr, &v, false)) {
+            LOGD("%s  attr 0x%08x: type=0x%x data=0x%x", prefix, attr, v.type, v.data);
+        }
+    }
 }
 
 } // namespace cdroid

@@ -147,3 +147,43 @@ TEST_F(ASSETS,animatedselector){
     pumpFor(100);
 }
 
+
+// AOSP Resources.Theme face for framework-internal consumers: the typed reads
+// (resolveAttribute / Theme.obtainStyledAttributes) plus the @hide
+// introspection (getAllAttributes/getChangingConfigurations/rebase), exercised
+// against the default Theme.Material — no Context/AttributeSet involved.
+TEST_F(ASSETS, theme_face){
+    App&app=App::getInstance();
+    Resources::Theme theme = app.getTheme();
+
+    // @hide getAllAttributes: the default theme carries real entries.
+    const auto attrs = theme.getAllAttributes();
+    ASSERT_GT(attrs.size(),(size_t)0) << "default Theme.Material resolved empty";
+
+    // resolveAttribute (AOSP resolveRefs form) on a themed attr.
+    TypedValue v;
+    ASSERT_TRUE(theme.resolveAttribute((int)attrs.front(),&v,true));
+
+    // Theme.obtainStyledAttributes(int[]) — the entry point internal
+    // facilities use (no AttributeSet, no Context).
+    const uint32_t set[] = {attrs.front(), attrs.back(), 0};
+    auto ta = theme.obtainStyledAttributes(set);
+    ASSERT_NE(ta,nullptr);
+    ASSERT_TRUE(ta->hasValue(0) || ta->hasValue(1));
+
+    // newTheme() + setTo() + applyStyle() + rebase() (@hide): an OWNED theme
+    // the internal facility can restyle without touching the app's theme.
+    const int colorPrimary = (int)cdroid::internal::R::attr::colorPrimary;
+    auto own = app.getResources().newTheme();
+    own.setTo(theme);   // this snapshot becomes the rebase base
+    TypedValue v2;
+    ASSERT_TRUE(own.resolveAttribute(colorPrimary,&v2,true));
+    own.applyStyle(gui_test::R::style::theme_face_probe, /*force=*/true); // non-force would keep Theme.Material's value
+    ASSERT_TRUE(own.resolveAttribute(colorPrimary,&v2,false));
+    ASSERT_EQ(v2.data,(uint32_t)0xFF123456) << "applyStyle did not overlay the probe";
+    own.rebase();      // erases the probe overlay, restores the setTo snapshot
+    ASSERT_TRUE(own.resolveAttribute(colorPrimary,&v2,true));
+    ASSERT_NE(v2.data,(uint32_t)0xFF123456) << "rebase did not restore the setTo state";
+
+    theme.dump("theme_face");
+}
