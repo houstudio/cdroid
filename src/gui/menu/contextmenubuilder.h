@@ -29,8 +29,7 @@ public:
     ContextMenuBuilder(Context* context);
 
     ContextMenu& setHeaderIcon(Drawable* icon);
-    ContextMenu& setHeaderIcon(const std::string& iconRes);
-    //ContextMenu& setHeaderIcon(int iconRes);
+    ContextMenu& setHeaderIcon(int iconRes);
 
     ContextMenu& setHeaderTitle(const std::string& title);
     //ContextMenu& setHeaderTitle(int titleRes);

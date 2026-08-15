@@ -71,7 +71,7 @@ ListView* AlertDialog::getListView() {
     return mAlert->getListView();
 }
 
-void AlertDialog::setIcon(const std::string&iconId){
+void AlertDialog::setIcon(int iconId){
     mAlert->setIcon(iconId);
 }
 
@@ -112,14 +112,14 @@ Context* AlertDialog::Builder::getContext(){
     return P->mContext;
 }
 
-const std::string AlertDialog::Builder::getString(const std::string&resid)const{
-    const std::string text = P->mContext->getString(resid);
-    if(text.size())return text;
-    return resid;
+AlertDialog::Builder& AlertDialog::Builder::setTitle(const std::string& title){
+    // AOSP CharSequence form — the literal text, no resource resolution.
+    P->mTitle = title;
+    return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setTitle(const std::string& title){
-    P->mTitle = getString(title);
+AlertDialog::Builder& AlertDialog::Builder::setTitle(int titleId){
+    P->mTitle = P->mContext->getString(titleId);
     return *this;
 }
 
@@ -128,12 +128,18 @@ AlertDialog::Builder& AlertDialog::Builder::setCustomTitle(View* customTitleView
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setMessage(const std::string&messageId){
-    P->mMessage = getString(messageId);
+AlertDialog::Builder& AlertDialog::Builder::setMessage(const std::string& message){
+    // AOSP CharSequence form.
+    P->mMessage = message;
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setIcon(const std::string&iconId){
+AlertDialog::Builder& AlertDialog::Builder::setMessage(int messageId){
+    P->mMessage = P->mContext->getString(messageId);
+    return *this;
+}
+
+AlertDialog::Builder& AlertDialog::Builder::setIcon(int iconId){
     P->mIconId = iconId;
     return *this;
 }
@@ -144,19 +150,40 @@ AlertDialog::Builder& AlertDialog::Builder::setIcon(Drawable*icon){
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setPositiveButton(const std::string& text, DialogInterface::OnClickListener listener){
-    P->mPositiveButtonText = getString(text);
+    // AOSP CharSequence form.
+    P->mPositiveButtonText = text;
+    P->mPositiveButtonListener = listener;
+    return *this;
+}
+
+AlertDialog::Builder& AlertDialog::Builder::setPositiveButton(int textId, DialogInterface::OnClickListener listener){
+    P->mPositiveButtonText = P->mContext->getString(textId);
     P->mPositiveButtonListener = listener;
     return *this;
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setNegativeButton(const std::string& text, DialogInterface::OnClickListener listener){
-    P->mNegativeButtonText = getString(text);
+    // AOSP CharSequence form.
+    P->mNegativeButtonText = text;
+    P->mNegativeButtonListener = listener;
+    return *this;
+}
+
+AlertDialog::Builder& AlertDialog::Builder::setNegativeButton(int textId, DialogInterface::OnClickListener listener){
+    P->mNegativeButtonText = P->mContext->getString(textId);
     P->mNegativeButtonListener = listener;
     return *this;
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setNeutralButton(const std::string& text, DialogInterface::OnClickListener listener){
-    P->mNeutralButtonText = getString(text);
+    // AOSP CharSequence form.
+    P->mNeutralButtonText = text;
+    P->mNeutralButtonListener = listener;
+    return *this;
+}
+
+AlertDialog::Builder& AlertDialog::Builder::setNeutralButton(int textId, DialogInterface::OnClickListener listener){
+    P->mNeutralButtonText = P->mContext->getString(textId);
     P->mNeutralButtonListener = listener;
     return *this;
 }
@@ -181,9 +208,8 @@ AlertDialog::Builder& AlertDialog::Builder::setOnKeyListener(DialogInterface::On
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setItems(const std::string& itemsId,OnClickListener listener){
-    P->mContext->getArray(itemsId,P->mItems);
-    P->mContext->getArray(itemsId,P->mItems);
+AlertDialog::Builder& AlertDialog::Builder::setItems(int itemsId,OnClickListener listener){
+    P->mItems = P->mContext->getResources().getStringArray(itemsId);
     P->mOnClickListener = listener;
     return *this;
 }
@@ -200,9 +226,9 @@ AlertDialog::Builder& AlertDialog::Builder::setAdapter(ListAdapter* adapter,Dial
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::string&itemsId,
+AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(int itemsId,
       const std::vector<bool>& checkedItems,DialogInterface::OnMultiChoiceClickListener listener){
-    P->mContext->getArray(itemsId,P->mItems);
+    P->mItems = P->mContext->getResources().getStringArray(itemsId);
     P->mOnCheckboxClickListener = listener;
     P->mCheckedItems = checkedItems;
     P->mIsMultiChoice = true;
@@ -218,9 +244,9 @@ AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::vecto
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setSingleChoiceItems(const std::string&itemsId, 
+AlertDialog::Builder& AlertDialog::Builder::setSingleChoiceItems(int itemsId,
       int checkedItem, DialogInterface::OnClickListener listener){
-    P->mContext->getArray(itemsId,P->mItems);
+    P->mItems = P->mContext->getResources().getStringArray(itemsId);
     P->mOnClickListener = listener;
     P->mCheckedItem = checkedItem;
     P->mIsSingleChoice = true;
@@ -248,7 +274,7 @@ AlertDialog::Builder& AlertDialog::Builder::setOnItemSelectedListener(AdapterVie
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setView(const std::string&layoutResId){
+AlertDialog::Builder& AlertDialog::Builder::setView(int layoutResId){
     P->mView = nullptr;
     P->mViewLayoutResId = layoutResId;
     P->mViewSpacingSpecified = false;
@@ -257,7 +283,7 @@ AlertDialog::Builder& AlertDialog::Builder::setView(const std::string&layoutResI
 
 AlertDialog::Builder& AlertDialog::Builder::setView(View* view){
     P->mView = view;
-    P->mViewLayoutResId ="";
+    P->mViewLayoutResId = 0;
     P->mViewSpacingSpecified = false;
     return *this;
 }

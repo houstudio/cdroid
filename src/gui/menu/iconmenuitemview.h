@@ -29,7 +29,7 @@ private:
     MenuItemImpl* mItemData;
 
     Drawable* mIcon;
-    std::string mTextAppearance;
+    int mTextAppearance = 0;
     Context* mTextAppearanceContext;
     float mDisabledAlpha;
 

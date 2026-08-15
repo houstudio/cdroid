@@ -757,7 +757,7 @@ public:
 };
 
 ActionMenuPresenter::OverflowMenuButton::OverflowMenuButton(ActionMenuPresenter*p,Context* context)
-    :ImageButton(context,context->obtainStyledAttributes("android:attr/actionOverflowButtonStyle")){
+    :ImageButton(context,nullptr,cdroid::internal::R::attr::actionOverflowButtonStyle){
 
     mPresenter = p;
     setClickable(true);

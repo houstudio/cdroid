@@ -32,9 +32,16 @@ ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* pAttrs,i
     :LinearLayout(context, pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
 
-    mBackground = attrs.getDrawable("itemBackground");
-    mTextAppearance = attrs.getString("itemTextAppearance");
-    mPreserveIconSpacing = attrs.getBoolean("preserveIconSpacing", false);
+    // AOSP: obtainStyledAttributes(attrs, R.styleable.ListMenuItemView, defStyleAttr).
+    // The item attrs carry no generated styleable; resolve them by attr id directly.
+    static const uint32_t LIST_MENU_ITEM_ATTRS[] = {
+        (uint32_t)R::attr::itemBackground, (uint32_t)R::attr::itemTextAppearance,
+        (uint32_t)R::attr::preserveIconSpacing, (uint32_t)R::attr::subMenuArrow, 0 };
+    auto ta = context->obtainStyledAttributes(attrs, LIST_MENU_ITEM_ATTRS, defStyleAttr);
+
+    mBackground = ta->getDrawable(0);
+    mTextAppearance = ta->getResourceId(1, 0);
+    mPreserveIconSpacing = ta->getBoolean(2, false);
     mTextAppearanceContext = context;
     mItemData = nullptr;
     mIconView = nullptr;
@@ -42,12 +49,13 @@ ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* pAttrs,i
     mRadioButton = nullptr;
     mInflater = nullptr;
     mForceShowIcon = false;
-    mSubMenuArrow = attrs.getDrawable("subMenuArrow");
+    mSubMenuArrow = ta->getDrawable(3);
 
-    /*final TypedArray b = context.getTheme()
-            .obtainStyledAttributes(null, new int[] { com.android.internal.R.attr.divider },
-                    com.android.internal.R.attr.dropDownListViewStyle, 0);*/
-    mHasListDivider = false;//b.hasValue(0);
+    // AOSP: theme.obtainStyledAttributes(null, {divider}, dropDownListViewStyle, 0).
+    static const uint32_t DIVIDER_ATTR[] = { (uint32_t)R::attr::divider, 0 };
+    auto b = context->obtainStyledAttributes(nullptr, DIVIDER_ATTR,
+            R::attr::dropDownListViewStyle, 0);
+    mHasListDivider = b ? b->hasValue(0) : false;
 }
 
 void ListMenuItemView::onFinishInflate() {
@@ -56,7 +64,7 @@ void ListMenuItemView::onFinishInflate() {
     setBackground(mBackground);
 
     mTitleView = (TextView*)findViewById(R::id::title);
-    if (!mTextAppearance.empty()) {
+    if (mTextAppearance != 0) {
         mTitleView->setTextAppearance(mTextAppearanceContext,mTextAppearance);
     }
 

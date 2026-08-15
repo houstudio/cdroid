@@ -325,9 +325,9 @@ Drawable* MenuItemImpl::getIcon() {
         return applyIconTintIfNecessary(mIconDrawable);
     }
 
-    if (!mIconResId.empty()) {
+    if (mIconResId != NO_ICON) {
         Drawable* icon =  mMenu->getContext()->getDrawable(mIconResId);
-        mIconResId.clear();
+        mIconResId = NO_ICON;
         mIconDrawable = icon;
         return applyIconTintIfNecessary(icon);
     }
@@ -342,7 +342,7 @@ MenuItem& MenuItemImpl::setIcon(Drawable* icon) {
     return *this;
 }
 
-MenuItem& MenuItemImpl::setIcon(const std::string& iconResId) {
+MenuItem& MenuItemImpl::setIcon(int iconResId) {
     mIconDrawable = nullptr;
     mIconResId = iconResId;
     mNeedToApplyIconTint = true;
@@ -544,10 +544,11 @@ MenuItem& MenuItemImpl::setActionView(View* view) {
     return *this;
 }
 
-MenuItem& MenuItemImpl::setActionView(const std::string& resId) {
+MenuItem& MenuItemImpl::setActionView(int resId) {
     Context* context = mMenu->getContext();
     LayoutInflater* inflater = LayoutInflater::from(context);
-    LinearLayout*ll = new LinearLayout(context,AttributeSet(context,"cdroid"));
+    // AOSP: new LinearLayout(context) — programmatic construction (null attrs).
+    LinearLayout*ll = new LinearLayout(context,nullptr,0);
     setActionView(inflater->inflate(resId, ll, false));
     return *this;
 }

@@ -120,7 +120,7 @@ private:
     static int getOrdering(int categoryOrder);
     void setShortcutsVisibleInner(bool shortcutsVisible);
     static int findInsertIndex(const std::vector<MenuItemImpl*>& items, int ordering);
-    void setHeaderInternal(const std::string& titleRes, const std::string& title,const std::string& iconRes, Drawable* icon,View* view);
+    void setHeaderInternal(int titleRes, const std::string& title, int iconRes, Drawable* icon,View* view);
 protected:
     /** Header title for menu types that have a header (context and submenus) */
     std::string mHeaderTitle;
@@ -134,7 +134,7 @@ protected:
     void setExclusiveItemChecked(MenuItem& item);
     MenuBuilder& setHeaderTitleInt(const std::string& title);
     MenuBuilder& setHeaderIconInt(Drawable* icon);
-    MenuBuilder& setHeaderIconInt(const std::string& iconRes);
+    MenuBuilder& setHeaderIconInt(int iconRes);
     virtual MenuBuilder& setHeaderViewInt(View* view);
 
     virtual bool isQwertyMode() const;

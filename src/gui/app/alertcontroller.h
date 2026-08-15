@@ -52,9 +52,9 @@ public:
         Context* mContext;
         LayoutInflater* mInflater;
 
-        std::string mIconId;
+        int mIconId = 0;
         Drawable* mIcon;
-        std::string mIconAttrId;
+        int mIconAttrId = 0;
         std::string mTitle;
         View* mCustomTitleView;
         std::string mMessage;
@@ -71,7 +71,7 @@ public:
         std::vector<std::string> mItems;
         ListAdapter* mAdapter;
         DialogInterface::OnClickListener mOnClickListener;
-        std::string mViewLayoutResId;
+        int mViewLayoutResId = 0;
         View* mView;
         int  mViewSpacingLeft;
         int  mViewSpacingTop;
@@ -104,7 +104,7 @@ private:
     std::string mTitle;
     View* mView;
 
-    std::string mViewLayoutResId;
+    int mViewLayoutResId = 0;
 
     int mViewSpacingLeft;
     int mViewSpacingTop;
@@ -124,7 +124,7 @@ private:
     std::string mButtonNeutralText;
     View::OnClickListener mButtonNeutralListener;
 
-    std::string mIconId ;
+    int mIconId = 0;
     Drawable* mIcon;
 
     ImageView* mIconView;
@@ -175,13 +175,13 @@ public:
     void setTitle(const std::string& title);
     void setCustomTitle(View* customTitleView);
     void setMessage(const std::string& message);
-    void setView(const std::string&layoutResId);
+    void setView(int layoutResId);
     void setView(View* view);
     void setView(View* view, int viewSpacingLeft, int viewSpacingTop, int viewSpacingRight,int viewSpacingBottom);
     void setButton(int whichButton,const std::string&text,DialogInterface::OnClickListener listener);
-    void setIcon(const std::string& resId);
+    void setIcon(int resId);
     void setIcon(Drawable* icon);
-    std::string getIconAttributeResId(const std::string&attrId);
+    int getIconAttributeResId(int attrId);
     void setInverseBackgroundForced(bool forceInverseBackground);
     ListView* getListView();
     Button*getButton(int whichButton);

@@ -17,7 +17,9 @@
  *********************************************************************************/
 #include <menu/iconmenuitemview.h>
 #include <menu/menuitemimpl.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(IconMenuItemView)
 std::string IconMenuItemView::sPrependShortcutLabel;
@@ -32,11 +34,16 @@ IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet* pAttrs,i
          * Views should only be constructed from the UI thread, so no
          * synchronization needed
          */
-        sPrependShortcutLabel = attrs.getString("android:string/prepend_shortcut_label");
+        // AOSP: getResources().getString(R.string.prepend_shortcut_label).
+        sPrependShortcutLabel = context->getString(R::string::prepend_shortcut_label);
     }
 
-    mDisabledAlpha = attrs.getFloat("itemIconDisabledAlpha", 0.8f);
-    mTextAppearance = attrs.getString("itemTextAppearance");
+    // AOSP: obtainStyledAttributes(attrs, R.styleable.IconMenuItemView, defStyleAttr).
+    static const uint32_t ICON_MENU_ITEM_ATTRS[] = {
+        (uint32_t)R::attr::itemIconDisabledAlpha, (uint32_t)R::attr::itemTextAppearance, 0 };
+    auto ta = context->obtainStyledAttributes(attrs, ICON_MENU_ITEM_ATTRS, defStyleAttr);
+    mDisabledAlpha = ta->getFloat(0, 0.8f);
+    mTextAppearance = ta->getResourceId(1, 0);
     mTextAppearanceContext = context;
 }
 
@@ -44,7 +51,7 @@ void IconMenuItemView::initialize(const std::string& title, Drawable* icon) {
     setClickable(true);
     setFocusable(true);
 
-    if (!mTextAppearance.empty()) {
+    if (mTextAppearance != 0) {
         setTextAppearance(mTextAppearanceContext, mTextAppearance);
     }
 

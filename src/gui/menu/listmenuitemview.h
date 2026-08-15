@@ -37,7 +37,7 @@ private:
     LinearLayout* mContent;
 
     Drawable* mBackground;
-    std::string mTextAppearance;
+    int mTextAppearance = 0;
     int mMenuType;
     Context* mTextAppearanceContext;
     Drawable* mSubMenuArrow;

@@ -31,35 +31,39 @@ public:
     class Builder{
     private:
         AlertController::AlertParams* P;
-        const std::string getString(const std::string&resid)const;
     public:
         Builder(Context* context);
         ~Builder(); 
         Context* getContext();
         Builder& setTitle(const std::string& title);
+        Builder& setTitle(int titleId);
         Builder& setCustomTitle(View* customTitleView);
-        Builder& setMessage(const std::string&messageId);
-        Builder& setIcon(const std::string&iconId);
+        Builder& setMessage(const std::string& message);
+        Builder& setMessage(int messageId);
+        Builder& setIcon(int iconId);
         Builder& setIcon(Drawable*icon);
-        Builder& setPositiveButton(const std::string& textId,OnClickListener listener);
-        Builder& setNegativeButton(const std::string& textId, OnClickListener listener);
-        Builder& setNeutralButton(const std::string& textId, OnClickListener listener);
+        Builder& setPositiveButton(const std::string& text,OnClickListener listener);
+        Builder& setPositiveButton(int textId,OnClickListener listener);
+        Builder& setNegativeButton(const std::string& text, OnClickListener listener);
+        Builder& setNegativeButton(int textId, OnClickListener listener);
+        Builder& setNeutralButton(const std::string& text, OnClickListener listener);
+        Builder& setNeutralButton(int textId, OnClickListener listener);
         Builder& setCancelable(bool cancelable);
         Builder& setOnCancelListener(OnCancelListener onCancelListener);
         Builder& setOnDismissListener(OnDismissListener onDismissListener);
         Builder& setOnKeyListener(OnKeyListener onKeyListener);
-        Builder& setItems(const std::string& itemsId,OnClickListener listener);
+        Builder& setItems(int itemsId,OnClickListener listener);
         Builder& setItems(const std::vector<std::string>&items, OnClickListener listener);
         Builder& setAdapter(ListAdapter* adapter,OnClickListener listener);
-        Builder& setMultiChoiceItems(const std::string&itemsId,const std::vector<bool>& checkedItems,
+        Builder& setMultiChoiceItems(int itemsId,const std::vector<bool>& checkedItems,
                 OnMultiChoiceClickListener listener);
         Builder& setMultiChoiceItems(const std::vector<std::string>&items, const std::vector<bool>& checkedItems,
                 OnMultiChoiceClickListener listener);
-        Builder& setSingleChoiceItems(const std::string&itemsId, int checkedItem, OnClickListener listener);
+        Builder& setSingleChoiceItems(int itemsId, int checkedItem, OnClickListener listener);
         Builder& setSingleChoiceItems(const std::vector<std::string>&items, int checkedItem,OnClickListener listener);
         Builder& setSingleChoiceItems(ListAdapter* adapter, int checkedItem,OnClickListener listener);
         Builder& setOnItemSelectedListener(AdapterView::OnItemSelectedListener listener);
-        Builder& setView(const std::string&layoutResId);
+        Builder& setView(int layoutResId);
         Builder& setView(View* view);
         Builder& setRecycleOnMeasureEnabled(bool enabled);
         AlertDialog* create();
@@ -86,7 +90,7 @@ public:
     void setView(View* view, int viewSpacingLeft, int viewSpacingTop, int viewSpacingRight,
             int viewSpacingBottom);
     void setButton(int whichButton,const std::string&text, OnClickListener listener);
-    void setIcon(const std::string&);
+    void setIcon(int iconId);
     void setIcon(Drawable*);
     void setInverseBackgroundForced(bool forceInverseBackground);
     bool onKeyDown(int keyCode, KeyEvent& event)override;

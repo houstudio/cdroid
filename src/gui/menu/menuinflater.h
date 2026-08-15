@@ -100,7 +100,7 @@ private:
     int itemCategoryOrder;
     std::string itemTitle;
     std::string itemTitleCondensed;
-    std::string itemIconResId;
+    int itemIconResId;
     RefPtr<ColorStateList> itemIconTintList;
     int mItemIconBlendMode;
     int itemAlphabeticModifiers;
@@ -109,7 +109,7 @@ private:
     int itemNumericModifiers;
     int itemCheckable;
     int itemShowAsAction;
-    std::string itemActionViewLayout;
+    int itemActionViewLayout;
     std::string itemActionViewClassName;
     std::string itemActionProviderClassName;
     std::string itemListenerMethodName;

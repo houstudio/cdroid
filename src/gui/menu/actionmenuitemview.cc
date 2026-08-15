@@ -18,6 +18,7 @@
 #include <utils/textutils.h>
 #include <menu/menuitemimpl.h>
 #include <menu/actionmenuitemview.h>
+#include <widget/internal_R.h>
 namespace cdroid{
 
 DECLARE_WIDGET(ActionMenuItemView)
@@ -31,7 +32,10 @@ ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet* pAtt
     mExpandedFormat = false;
     mForwardingListener = nullptr;
     mAllowTextWithIcon = shouldAllowTextWithIcon();
-    mMinWidth = attrs.getDimensionPixelSize("minWidth", 0);
+    // AOSP: obtainStyledAttributes(attrs, R.styleable.ActionMenuItemView).
+    static const uint32_t ACTION_MENU_ITEM_ATTRS[] = { (uint32_t)cdroid::internal::R::attr::minWidth, 0 };
+    auto a = context->obtainStyledAttributes(attrs, ACTION_MENU_ITEM_ATTRS, defStyleAttr);
+    mMinWidth = a->getDimensionPixelSize(0, 0);
 
     const float density = context->getDisplayMetrics().density;
     mMaxIconSize = (int) (MAX_ICON_SIZE * density + 0.5f);

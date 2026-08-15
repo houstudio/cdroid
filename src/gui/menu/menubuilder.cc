@@ -20,6 +20,7 @@
 #include <view/keyevent.h>
 #include <menu/menuitemimpl.h>
 #include <menu/menubuilder.h>
+#include <utils/textutils.h>
 #include <menu/submenubuilder.h>
 #include <menu/menupresenter.h>
 #include <view/actionprovider.h>
@@ -781,19 +782,19 @@ void MenuBuilder::clearHeader() {
     onItemsChanged(false);
 }
 
-void MenuBuilder::setHeaderInternal(const std::string& titleRes, const std::string& title, const std::string& iconRes,Drawable* icon, View* view) {
+void MenuBuilder::setHeaderInternal(int titleRes, const std::string& title, int iconRes,Drawable* icon, View* view) {
     if (view != nullptr) {
         mHeaderView = view;
         // If using a custom view, then the title and icon aren't used
         mHeaderTitle.clear();
         mHeaderIcon = nullptr;
     } else {
-        if (!titleRes.empty()) {
-            //mHeaderTitle = r.getText(titleRes);
+        if (titleRes != 0) {
+            mHeaderTitle = TextUtils::utf16_utf8(getContext()->getText(titleRes));
         } else if (!title.empty()) {
             mHeaderTitle = title;
         }
-        if (!iconRes.empty()) {
+        if (iconRes != 0) {
             mHeaderIcon = getContext()->getDrawable(iconRes);
         } else if (icon != nullptr) {
             mHeaderIcon = icon;
@@ -807,27 +808,22 @@ void MenuBuilder::setHeaderInternal(const std::string& titleRes, const std::stri
 }
 
 MenuBuilder& MenuBuilder::setHeaderTitleInt(const std::string& title) {
-    setHeaderInternal("", title, "", nullptr, nullptr);
+    setHeaderInternal(0, title, 0, nullptr, nullptr);
     return *this;
 }
-
-/*MenuBuilder& MenuBuilder::setHeaderTitleInt(const std::string& titleRes) {
-    setHeaderInternal(titleRes, nullptr, "", nullptr, nullptr);
-    return *this;
-}*/
 
 MenuBuilder& MenuBuilder::setHeaderIconInt(Drawable* icon) {
-    setHeaderInternal("", nullptr, "", icon, nullptr);
+    setHeaderInternal(0, std::string(), 0, icon, nullptr);
     return *this;
 }
 
-MenuBuilder& MenuBuilder::setHeaderIconInt(const std::string& iconRes) {
-    setHeaderInternal("", nullptr, iconRes, nullptr, nullptr);
+MenuBuilder& MenuBuilder::setHeaderIconInt(int iconRes) {
+    setHeaderInternal(0, std::string(), iconRes, nullptr, nullptr);
     return *this;
 }
 
 MenuBuilder& MenuBuilder::setHeaderViewInt(View* view) {
-    setHeaderInternal("", nullptr, "", nullptr, view);
+    setHeaderInternal(0, std::string(), 0, nullptr, view);
     return *this;
 }
 

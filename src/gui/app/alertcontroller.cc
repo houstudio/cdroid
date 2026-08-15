@@ -134,7 +134,7 @@ void AlertController::setMessage(const std::string& message) {
     }
 }
 
-void AlertController::setView(const std::string&layoutResId) {
+void AlertController::setView(int layoutResId) {
     mView = nullptr;
     mViewLayoutResId = layoutResId;
     mViewSpacingSpecified = false;
@@ -145,13 +145,13 @@ void AlertController::setView(const std::string&layoutResId) {
  */
 void AlertController::setView(View* view) {
     mView = view;
-    mViewLayoutResId.clear();
+    mViewLayoutResId = 0;
     mViewSpacingSpecified = false;
 }
 
 void AlertController::setView(View* view, int viewSpacingLeft, int viewSpacingTop, int viewSpacingRight,int viewSpacingBottom){
     mView = view;
-    mViewLayoutResId.clear();
+    mViewLayoutResId = 0;
     mViewSpacingSpecified = true;
     mViewSpacingLeft = viewSpacingLeft;
     mViewSpacingTop = viewSpacingTop;
@@ -181,12 +181,12 @@ void AlertController::setButton(int whichButton,const std::string&text,DialogInt
     }
 }
 
-void AlertController::setIcon(const std::string& resId){
+void AlertController::setIcon(int resId){
     mIcon = nullptr;
     mIconId = resId;
 
     if (mIconView != nullptr) {
-        if (resId.size()) {
+        if (resId) {
             mIconView->setVisibility(View::VISIBLE);
             mIconView->setImageResource(mIconId);
         } else {
@@ -197,7 +197,7 @@ void AlertController::setIcon(const std::string& resId){
 
 void AlertController::setIcon(Drawable* icon) {
     mIcon = icon;
-    mIconId.clear();
+    mIconId = 0;
 
     if (mIconView != nullptr) {
         if (icon != nullptr) {
@@ -209,8 +209,11 @@ void AlertController::setIcon(Drawable* icon) {
     }
 }
 
-std::string AlertController::getIconAttributeResId(const std::string&attrId){
-    return "";
+// AOSP: resolve the theme attribute (R.attr.dialogIcon etc.) to its icon res id.
+int AlertController::getIconAttributeResId(int attrId){
+    static const uint32_t kAttr[] = { (uint32_t)attrId, 0 };
+    auto ta = mContext->obtainStyledAttributes(kAttr);
+    return ta ? ta->getResourceId(0, 0) : 0;
 }
 
 void AlertController::setInverseBackgroundForced(bool forceInverseBackground){
@@ -343,7 +346,7 @@ void AlertController::setupCustomContent(ViewGroup* customPanel){
     View* customView=nullptr;
     if (mView != nullptr) {
         customView = mView;
-    } else if (mViewLayoutResId.size()) {
+    } else if (mViewLayoutResId != 0) {
         LayoutInflater* inflater = LayoutInflater::from(mContext);
         customView = inflater->inflate(mViewLayoutResId,customPanel,false);
     } 
@@ -390,7 +393,7 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
             // Do this last so that if the user has supplied any icons we
             // use them instead of the default ones. If the user has
             // specified 0 then make it disappear.
-            if (mIconId.length()) {
+            if (mIconId != 0) {
                  mIconView->setImageResource(mIconId);
             } else if (mIcon) {
                  mIconView->setImageDrawable(mIcon);
@@ -660,9 +663,9 @@ void AlertController::AlertParams::apply(AlertController* dialog){
     } else {
         if (mTitle.length())dialog->setTitle(mTitle);
         if (mIcon) dialog->setIcon(mIcon);
-        if (mIconId.length())dialog->setIcon(mIconId);
+        if (mIconId != 0)dialog->setIcon(mIconId);
         
-        if (mIconAttrId.length())
+        if (mIconAttrId != 0)
             dialog->setIcon(dialog->getIconAttributeResId(mIconAttrId));
         if (mMessage.length())dialog->setMessage(mMessage);
             
@@ -693,7 +696,7 @@ void AlertController::AlertParams::apply(AlertController* dialog){
             } else {
                 dialog->setView(mView);
             }
-        } else if (mViewLayoutResId.length()) {
+        } else if (mViewLayoutResId != 0) {
             dialog->setView(mViewLayoutResId);
         }
 }
@@ -816,8 +819,13 @@ bool AlertController::RecycleListView::recycleOnMeasure() {
 
 AlertController::RecycleListView::RecycleListView(Context* context,const AttributeSet& attrs)
     :ListView(context, attrs){
-    mPaddingBottomNoButtons = attrs.getDimensionPixelOffset("paddingBottomNoButtons", -1);
-    mPaddingTopNoTitle = attrs.getDimensionPixelOffset("paddingTopNoTitle", -1);
+    // AOSP: obtainStyledAttributes(attrs, R.styleable.RecycleListView) — the
+    // padding attrs carry no generated styleable; resolve them by attr id directly.
+    static const uint32_t RECYCLE_LIST_VIEW_ATTRS[] = {
+        (uint32_t)R::attr::paddingBottomNoButtons, (uint32_t)R::attr::paddingTopNoTitle, 0 };
+    auto ta = context->obtainStyledAttributes(attrs, RECYCLE_LIST_VIEW_ATTRS);
+    mPaddingBottomNoButtons = ta->getDimensionPixelOffset(0, -1);
+    mPaddingTopNoTitle = ta->getDimensionPixelOffset(1, -1);
 }
 
 void AlertController::RecycleListView::setHasDecor(bool hasTitle, bool hasButtons) {
