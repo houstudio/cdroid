@@ -960,7 +960,7 @@ void AbsListView::createTextFilter(bool animateEntrance) {
 EditText* AbsListView::getTextFilterInput() {
     if (mTextFilter == nullptr) {
         LayoutInflater* layoutInflater = LayoutInflater::from(getContext());
-        mTextFilter = (EditText*) layoutInflater->inflate("cdroid:layout/typing_filter", nullptr);
+        mTextFilter = (EditText*) layoutInflater->inflate(cdroid::internal::R::layout::typing_filter, nullptr);
         // For some reason setting this as the "real" input type changes
         // the text view in some way that it doesn't work, and I don't
         // want to figure out why this is.

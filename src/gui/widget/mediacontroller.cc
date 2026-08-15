@@ -110,7 +110,7 @@ void MediaController::setAnchorView(View* view) {
 
 View* MediaController::makeControllerView() {
     LayoutInflater* inflate = LayoutInflater::from(mContext);
-    mRoot = inflate->inflate("cdroid:layout/media_controller", nullptr);
+    mRoot = inflate->inflate(cdroid::internal::R::layout::media_controller, nullptr);
     initControllerView(mRoot);
     return mRoot;
 }

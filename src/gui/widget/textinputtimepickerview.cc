@@ -34,7 +34,7 @@ TextInputTimePickerView::TextInputTimePickerView(Context* context,const Attribut
     :RelativeLayout(context, pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
 
-    LayoutInflater::from(context)->inflate("cdroid:layout/time_picker_text_input_material", this);
+    LayoutInflater::from(context)->inflate(R::layout::time_picker_text_input_material, this);
 
     mHourEditText = (EditText*)findViewById(R::id::input_hour);
     mMinuteEditText = (EditText*)findViewById(R::id::input_minute);
@@ -63,7 +63,7 @@ TextInputTimePickerView::TextInputTimePickerView(Context* context,const Attribut
     mMinuteEditText->addTextChangedListener(minuteWatcher);
     mAmPmSpinner = (Spinner*)findViewById(R::id::am_pm_spinner);
     std::vector<std::string> amPmStrings = TimePicker::getAmPmStrings(context);
-    ArrayAdapter<std::string>* adapter = new ArrayAdapter<std::string>(context, "@cdroid:layout/simple_spinner_dropdown_item",0);
+    ArrayAdapter<std::string>* adapter = new ArrayAdapter<std::string>(context, R::layout::simple_spinner_dropdown_item,0);
     adapter->add(TimePickerClockDelegate::obtainVerbatim(amPmStrings[0]));
     adapter->add(TimePickerClockDelegate::obtainVerbatim(amPmStrings[1]));
     mAmPmSpinner->setAdapter(adapter);

@@ -85,7 +85,7 @@ public:
     View* getView(int position, View* convertView, ViewGroup* parent) {
         TextView* v;
         if (convertView==nullptr) {
-            v = (TextView*) mInflater->inflate("cdroid:layout/year_label_text_view.xml", parent, false);
+            v = (TextView*) mInflater->inflate(R::layout::year_label_text_view, parent, false);
         } else {
             v = (TextView*) convertView;
         }

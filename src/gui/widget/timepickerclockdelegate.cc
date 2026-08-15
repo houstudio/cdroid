@@ -82,10 +82,9 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     LayoutInflater* inflater = LayoutInflater::from(mContext);
 
     auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);
-    const std::string layoutResourceId = a ? a->getString(R::styleable::TimePicker_internalLayout)
-            : std::string("cdroid:layout/time_picker_material");
-    const std::string layoutRes = layoutResourceId.empty()
-            ? std::string("cdroid:layout/time_picker_material") : layoutResourceId;
+    const int layoutResourceId = a ? a->getResourceId(R::styleable::TimePicker_internalLayout, 0) : 0;
+    const int layoutRes = layoutResourceId ? layoutResourceId
+            : R::layout::time_picker_material;
     View* mainView = inflater->inflate(layoutRes, delegator);
     mainView->setSaveFromParentEnabled(false);
     mRadialTimePickerHeader = mainView->findViewById(R::id::time_header);

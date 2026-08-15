@@ -34,10 +34,9 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
     :AbstractTimePickerDelegate(delegator, context) {
 
     auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);
-    const std::string layoutResourceId = a ? a->getString(R::styleable::TimePicker_legacyLayout)
-            : std::string();
-    const std::string layoutRes = layoutResourceId.empty()
-            ? std::string("cdroid:layout/time_picker_legacy") : layoutResourceId;
+    const int layoutResourceId = a ? a->getResourceId(R::styleable::TimePicker_legacyLayout, 0) : 0;
+    const int layoutRes = layoutResourceId ? layoutResourceId
+            : R::layout::time_picker_legacy;
 
     LayoutInflater* inflater = LayoutInflater::from(mContext);
     View* view = inflater->inflate(layoutRes, mDelegator, true);

@@ -42,7 +42,7 @@ KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAt
     mKeyTextSize       = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyTextSize,20) : 20;
     mKeyTextColor      = ta ? ta->getColor(R::styleable::KeyboardView_keyTextColor,0xFF000000) : 0xFF000000;
     mLabelTextSize     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_labelTextSize,20) : 20;
-    mPopupLayout       = ta ? ta->getString(R::styleable::KeyboardView_popupLayout) : std::string();
+    mPopupLayout       = ta ? ta->getResourceId(R::styleable::KeyboardView_popupLayout, 0) : 0;
     mPaint.setTextSize(mLabelTextSize);
     mPaint.setTextAlign(Paint::Align::CENTER);
     resetMultiTap();
@@ -73,7 +73,7 @@ void KeyboardView::init(){
     mDistances.resize(MAX_NEARBY_KEYS);
     mKeyIndices.resize(MAX_NEARBY_KEYS);
     std::memset(&mKeyboardActionListener,0,sizeof(mKeyboardActionListener));
-    mPopupLayout.clear();
+    mPopupLayout = 0;
     /* AOSP schedules the long-press popup via a Handler; CDROID's Handler is
      * now usable, so wire it faithfully (replaces the early Runnable workaround
      * and the commented-out scheduling). */
@@ -174,9 +174,16 @@ void KeyboardView::setPopupOffset(int x, int y) {
 }
 
 void KeyboardView::setPopupLayout(const std::string& popupLayout) {
+    // Runtime product override (InputMethodManager passes a layout name);
+    // resolve it to an id — the inflater is id-keyed.
     if(popupLayout.empty()) return;
-    if(mPopupLayout != popupLayout){
-        mPopupLayout = popupLayout;
+    std::string name = popupLayout;
+    const size_t slash = name.rfind('/');
+    if (slash != std::string::npos) name = name.substr(slash + 1);
+    const int resId = getContext()->getResources().getIdentifier(name, "layout", "cdroid");
+    if(resId == 0) return;
+    if(mPopupLayout != resId){
+        mPopupLayout = resId;
         // Cached popups were inflated from the old layout; drop them so the next
         // long-press re-inflates with the new container.
         mMiniKeyboardCache.clear();
@@ -358,7 +365,7 @@ void KeyboardView::invalidateKey(int keyIndex) {
 }
 
 bool KeyboardView::openPopupIfRequired(){
-    if ((mPopupLayout.empty())||(mCurrentKey < 0) || (mCurrentKey >= mKeys.size())) {
+    if ((mPopupLayout == 0)||(mCurrentKey < 0) || (mCurrentKey >= mKeys.size())) {
         return false;
     }
     Keyboard::Key* popupKey = mKeys[mCurrentKey];

@@ -90,17 +90,21 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
         auto saTa = context->obtainStyledAttributes(mSelectedTabTextAppearance, R::styleable::TextAppearance);
         mSelectedTabTextSize = saTa ? saTa->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 0) : 0;
         auto selectedTabTextColor = saTa ? saTa->getColorStateList(R::styleable::TextAppearance_textColor) : nullptr;
-        if(selectedTabTextColor!=nullptr){
+        if(mTabTextColors && selectedTabTextColor!=nullptr){
             mTabTextColors = createColorStateList(mTabTextColors->getDefaultColor(),
                     selectedTabTextColor->getColorForState({StateSet::VIEW_STATE_SELECTED}, selectedTabTextColor->getDefaultColor()));
         }
     }
 
+    // AOSP TabLayout: tabTextColor when set; otherwise the default color-state
+    // list (theme textColorPrimary — white here). Unlike AOSP we ALSO fold the
+    // text-appearance color in above, so only fall back when nothing resolved.
     if(ta->hasValue(R::styleable::TabLayout_tabTextColor)) {
         auto csl = ta->getColorStateList(R::styleable::TabLayout_tabTextColor);
         if (csl) mTabTextColors = csl;
-    } else{
-        mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
+    }
+    if (!mTabTextColors) {
+        mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);   // createDefaultColorStateList()
     }
 
     if(ta->hasValue(R::styleable::TabLayout_tabSelectedTextColor)){
@@ -273,7 +277,7 @@ void TabLayout::addTabFromItemView(TabItem* item){
     if (item->mIcon) {
         tab->setIcon(item->mIcon);
     }
-    if (item->mCustomLayout.size()){
+    if (item->mCustomLayout != 0){
         tab->setCustomView(item->mCustomLayout);
     }
     tab->setContentDescription(item->getContentDescription());//getContentDescription inherited from View.
@@ -1045,7 +1049,7 @@ TabLayout::Tab& TabLayout::Tab::setCustomView(View*v){
     return *this;
 }
 
-TabLayout::Tab& TabLayout::Tab::setCustomView(const std::string&resid){
+TabLayout::Tab& TabLayout::Tab::setCustomView(int resid){
     View*v = LayoutInflater::from(mParent->getContext())->inflate(resid,nullptr,false);
     return setCustomView(v);
 }
@@ -1387,14 +1391,14 @@ void TabLayout::TabView::update() {
 void TabLayout::TabView::inflateAndAddDefaultIconView() {
     ViewGroup* iconViewParent = this;
 
-    mIconView = (ImageView*)LayoutInflater::from(getContext())->inflate("cdroid:layout/design_layout_tab_icon", iconViewParent, false);
+    mIconView = (ImageView*)LayoutInflater::from(getContext())->inflate(R::layout::design_layout_tab_icon, iconViewParent, false);
     iconViewParent->addView(this->mIconView, 0);
 }
 
 void TabLayout::TabView::inflateAndAddDefaultTextView() {
     ViewGroup* textViewParent = this;
 
-    this->mTextView = (TextView*)LayoutInflater::from(getContext())->inflate("cdroid:layout/design_layout_tab_text", textViewParent, false);
+    this->mTextView = (TextView*)LayoutInflater::from(getContext())->inflate(R::layout::design_layout_tab_text, textViewParent, false);
     textViewParent->addView(this->mTextView);
 }
 

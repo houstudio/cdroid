@@ -75,7 +75,7 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
     // (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, UNSCALED_WEEK_SEPARATOR_LINE_WIDTH, displayMetrics);
 
     LayoutInflater* layoutInflater = LayoutInflater::from(mContext);
-    View* content = layoutInflater->inflate("cdroid:layout/calendar_view", nullptr, false);
+    View* content = layoutInflater->inflate(R::layout::calendar_view, nullptr, false);
     mDelegator->addView(content);
 
     mListView = (ListView*)mDelegator->findViewById(R::id::list);

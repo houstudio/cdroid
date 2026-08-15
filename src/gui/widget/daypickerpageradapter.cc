@@ -24,7 +24,7 @@ DayPickerPagerAdapter::ViewHolder::ViewHolder(int position, View* container, Sim
     this->calendar = calendar;
 }
 
-DayPickerPagerAdapter::DayPickerPagerAdapter(Context* context,const std::string&layoutResId,int calendarViewId){
+DayPickerPagerAdapter::DayPickerPagerAdapter(Context* context,int layoutResId,int calendarViewId){
     mInflater = LayoutInflater::from(context);
     mLayoutResId = layoutResId;
     mCalendarViewId = calendarViewId;

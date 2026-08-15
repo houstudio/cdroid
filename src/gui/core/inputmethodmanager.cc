@@ -112,7 +112,9 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     // does not keep eating events.
     KeyboardView::OnKeyboardActionListener listener;
     InputMethodManager&imm = InputMethodManager::getInstance();
-    View*vg=LayoutInflater::from(mContext)->inflate("@cdroid:layout/ime_pinyin_keyboard",this,false);
+    // The pinyin IME layout ships in the IME module's pak — resolve by name.
+    const int imeLayout = mContext->getResources().getIdentifier("ime_pinyin_keyboard", "layout", "cdroid");
+    View*vg=LayoutInflater::from(mContext)->inflate(imeLayout,this,false);
     kbdView = (KeyboardView*)vg->findViewById(R::id::keyboardview);
     candidateView = (CandidateView*)vg->findViewById(R::id::predict2);
     // The controller owns the 1/2-level selection logic; the committer delivers

@@ -108,7 +108,7 @@ private:
     int  mMiniKeyboardOffsetY;
     /* The popup-keyboard container layout (AOSP android:popupKeyboard). Empty
      * => no long-press popup. Inflated by onLongPress to host the mini keyboard. */
-    std::string mPopupLayout;
+    int mPopupLayout = 0;
     /* Drives the delayed long-press (AOSP used a Handler; CDROID's Handler is
      * now usable, so we use it faithfully instead of the Runnable workaround). */
     Handler* mHandler = nullptr;

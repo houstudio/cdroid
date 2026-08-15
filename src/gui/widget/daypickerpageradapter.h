@@ -38,7 +38,7 @@ private:
     Calendar mMaxDate;
     SparseArray<ViewHolder*>mItems;
     LayoutInflater* mInflater;
-    std::string mLayoutResId;
+    int mLayoutResId = 0;
     int mCalendarViewId;
     
     // Stored by value: AOSP holds a reference, but the C++ click path passes a
@@ -65,7 +65,7 @@ private:
     int getYearForPosition(int position);
     int getPositionForDay(Calendar* day);
 public:
-    DayPickerPagerAdapter(Context* context,const std::string&layoutResId,int calendarViewId);
+    DayPickerPagerAdapter(Context* context,int layoutResId,int calendarViewId);
     ~DayPickerPagerAdapter();
     void setRange(Calendar& min,Calendar& max);
     void setFirstDayOfWeek(int weekStart);

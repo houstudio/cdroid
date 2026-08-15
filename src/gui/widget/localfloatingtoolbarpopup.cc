@@ -756,7 +756,7 @@ ViewGroup* LocalFloatingToolbarPopup::createMainPanel() {
 
 ViewGroup* LocalFloatingToolbarPopup::createContentContainer(Context* context) {
     ViewGroup* contentContainer = (ViewGroup*) LayoutInflater::from(context)
-            ->inflate("cdroid:layout/floating_popup_container", nullptr);
+            ->inflate(cdroid::internal::R::layout::floating_popup_container, nullptr);
     ViewGroup::LayoutParams* lp = new ViewGroup::LayoutParams(
             ViewGroup::LayoutParams::WRAP_CONTENT, ViewGroup::LayoutParams::WRAP_CONTENT);
     contentContainer->setLayoutParams(lp);
@@ -782,7 +782,7 @@ PopupWindow* LocalFloatingToolbarPopup::createPopupWindow(ViewGroup* content) {
 
 ImageButton* LocalFloatingToolbarPopup::createOverflowButton() {
     ImageButton* overflowButton = (ImageButton*) LayoutInflater::from(mContext)
-            ->inflate("cdroid:layout/floating_popup_overflow_button", nullptr);
+            ->inflate(cdroid::internal::R::layout::floating_popup_overflow_button, nullptr);
     // Closed-state icon (AOSP mOverflow == ft_avd_toarrow). Fresh: ImageView owns+deletes it.
     Drawable* overflowIcon = mContext->getDrawable(R::drawable::ft_avd_toarrow);
     if (overflowIcon) overflowIcon->setAutoMirrored(true);
@@ -843,7 +843,7 @@ void LocalFloatingToolbarPopup::setHeight(View* view, int height) {
 View* LocalFloatingToolbarPopup::createMenuItemButton(
         Context* context, MenuItem* menuItem, int iconTextSpacing, bool showIcon) {
     View* menuItemButton = LayoutInflater::from(context)
-            ->inflate("cdroid:layout/floating_popup_menu_button", nullptr);
+            ->inflate(cdroid::internal::R::layout::floating_popup_menu_button, nullptr);
     if (menuItem != nullptr) {
         updateMenuItemButton(menuItemButton, menuItem, iconTextSpacing, showIcon);
     }

@@ -159,7 +159,7 @@ int  Toast::getYOffset()const{
 Toast*Toast::makeText(Context*context,const std::string&text,int duration){
     Toast* result = new Toast(context);
     LayoutInflater*inflater=LayoutInflater::from(result->mContext);
-    View*v = inflater->inflate("cdroid:layout/transient_notification",nullptr);
+    View*v = inflater->inflate(cdroid::internal::R::layout::transient_notification,nullptr);
     TextView*tv = (TextView*)v->findViewById(R::id::message);
     tv->setText(text);
     result->mNextView = v;

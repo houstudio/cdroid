@@ -48,14 +48,14 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
     auto daySelectorColor = a ? a->getColorStateList(R::styleable::CalendarView_daySelectorColor) : nullptr;
 
     // Set up adapter.
-    mAdapter = new DayPickerPagerAdapter(context,"cdroid:layout/date_picker_month_item_material", R::id::month_view);
+    mAdapter = new DayPickerPagerAdapter(context, R::layout::date_picker_month_item_material, R::id::month_view);
     mAdapter->setMonthTextAppearance(monthTextAppearanceResId);
     mAdapter->setDayOfWeekTextAppearance(dayOfWeekTextAppearanceResId);
     mAdapter->setDayTextAppearance(dayTextAppearanceResId);
     mAdapter->setDaySelectorColor(daySelectorColor);
 
     LayoutInflater* inflater = LayoutInflater::from(context);
-    ViewGroup* content = (ViewGroup*) inflater->inflate("cdroid:layout/day_picker_content_material", this, false);
+    ViewGroup* content = (ViewGroup*) inflater->inflate(R::layout::day_picker_content_material, this, false);
 
     // Transfer all children from content to here.
     while (content->getChildCount() > 0) {

@@ -51,7 +51,7 @@ DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Cont
     const std::string maxDate = a ? a->getString(R::styleable::DatePicker_maxDate) : std::string();
 
     LayoutInflater* inflater = LayoutInflater::from(mContext);
-    View* content = inflater->inflate("cdroid:layout/date_picker_legacy", nullptr, false);
+    View* content = inflater->inflate(R::layout::date_picker_legacy, nullptr, false);
     mDelegator->addView(content);
 
     NumberPicker::OnValueChangeListener onChangeListener =

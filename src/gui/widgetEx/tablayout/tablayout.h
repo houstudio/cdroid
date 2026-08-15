@@ -83,7 +83,7 @@ public:
         void setTag(void*tag);
         View* getCustomView()const;
         Tab& setCustomView(View*);
-        Tab& setCustomView(const std::string&);
+        Tab& setCustomView(int resid);
         Drawable* getIcon()const;
         Tab& setIcon(Drawable* icon);
         int  getPosition()const;
@@ -148,7 +148,7 @@ public:
     public:
        std::string mText;
        Drawable* mIcon;
-       std::string mCustomLayout;
+       int mCustomLayout = 0;
        TabItem();
        TabItem(Context* context,const AttributeSet& attrs);
        virtual ~TabItem();

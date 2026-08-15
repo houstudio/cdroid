@@ -461,7 +461,6 @@ std::shared_ptr<cdroid::ComplexColor> ResourcesImpl::loadComplexColor(int id) co
         if (auto csl = mColorStateListCache->get(id)) return csl;
     }
     TypedValue value;
-    LOGD("loadComplexColor id=0x%x type=0x%x", id, value.type);
     std::shared_ptr<ColorStateList> csl;
     if (value.type >= TypedValue::TYPE_FIRST_COLOR_INT &&
         value.type <= TypedValue::TYPE_LAST_COLOR_INT) {

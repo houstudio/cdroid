@@ -96,8 +96,13 @@ void Scene::enter() {
         // empty out parent container before adding to it
         getSceneRoot()->removeAllViews();
         if (!mLayoutResource.empty()) {
-            // CDROID-idiomatic path: inflate by string resource ("cdroid:layout/..." / "@layout/...").
-            LayoutInflater::from(mContext)->inflate(mLayoutResource, mSceneRoot, true);
+            // CDROID-idiomatic path: the scene XML may carry "cdroid:layout/...";
+            // resolve it to an id (the inflater is id-keyed).
+            std::string name = mLayoutResource;
+            const size_t slash = name.rfind('/');
+            if (slash != std::string::npos) name = name.substr(slash + 1);
+            const int resId = mContext->getResources().getIdentifier(name, "layout", "cdroid");
+            if (resId) LayoutInflater::from(mContext)->inflate(resId, mSceneRoot, true);
         } else if (mLayoutId > 0) {
             // Android int layoutId: CDROID has no runtime int→resource table, so this cannot
             // resolve. Use the string-resource overload of getSceneForLayout instead.
