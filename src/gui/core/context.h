@@ -54,11 +54,10 @@ public:
     virtual void startActivity(const Intent& /*intent*/) = 0;
     // AOSP-aligned Theme access. getTheme() returns the live Resources::Theme
     // (engine = cdroid::ResTable::Theme); the legacy text-XML theme name is
-    // getThemeName(). setTheme(int) applies a style resource; setTheme(const
-    // std::string&) remains for text-XML compatibility.
+    // getThemeName(). setTheme(@StyleRes int) applies a style resource
+    // (AOSP Context.setTheme).
     virtual Resources::Theme getTheme() = 0;
     virtual const std::string getThemeName() const = 0;
-    virtual void setTheme(const std::string&theme) = 0;
     virtual void setTheme(int resid) = 0;
     virtual const DisplayMetrics&getDisplayMetrics() const = 0;
     virtual int getNextAutofillId() = 0;

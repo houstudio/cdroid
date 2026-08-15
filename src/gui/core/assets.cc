@@ -103,30 +103,6 @@ bool Assets::arscThemeAttribute(uint32_t attrId, TypedValue* out, ssize_t* outBl
     return true;
 }
 
-// Resolve a theme attribute NAME to its value string. Text mTheme first; in
-// SDK/binary mode mTheme is empty (values only in resources.arsc), so fall back
-// to the arsc Theme. pkg is a hint (arscGetIdentifier also tries android/any).
-std::string Assets::themeString(const std::string& key, const std::string& pkg) const {
-    std::string v = mTheme.getAttributeValue(key);
-    if (!v.empty() || !mArscTheme || !mResTable) return v;
-    uint32_t attrId = arscGetIdentifier(key, "attr", pkg);
-    TypedValue tv;
-    ssize_t blk = -1;
-    if (attrId && arscThemeAttribute(attrId, &tv, &blk) && tv.data != 0) {
-        // aapt2 stores color/drawable theme values as the file path (TYPE_STRING),
-        // not a reference id; resolve the string from the owning pool block so the
-        // caller (e.g. getColorStateList) can re-resolve it. renderResValue returns
-        // empty for TYPE_STRING, so handle it here.
-        if (tv.type == TypedValue::TYPE_STRING && blk >= 0) {
-            size_t len = 0;
-            const char16_t* s = mResTable->stringAtBlock(blk, tv.data, &len);
-            if (s && len) return u16toUtf8(s, len);
-        }
-        return renderResValue(this, tv);
-    }
-    return std::string();
-}
-
 // Resolve a "?type/key" theme-attribute reference to a concrete value string.
 std::string Assets::resolveThemeRef(const std::string& resid) const {
     if (resid.empty() || resid[0] != '?' || !mArscTheme) return resid;
@@ -329,46 +305,9 @@ Resources::Theme Assets::getTheme() {
     return Resources::Theme(getResources(), engine);
 }
 
-void Assets::setTheme(const std::string&theme) {
-    auto it = mStyles.find(theme);
-    if(it!=mStyles.end()) {
-        std::string pkg;
-        mThemeName= theme;
-        mTheme = it->second;
-        parseResource(theme,nullptr,&pkg);
-        LOGD("set Theme to %s",theme.c_str());
-    } else {
-        LOGE("Theme %s not found,[cdroid.pak %s] must be copied to your work directory!",theme.c_str(),
-             mName.empty()?"":(mName+".pak").c_str());
-    }
-    // (Re)build the arsc-backed Theme for ?attr resolution. The text mTheme
-    // above stays for the existing string path; mArscTheme adds typed theme
-    // lookups (?android:colorPrimary etc.) via ResTable::Theme.
-    delete asTheme(mArscTheme);
-    mArscTheme = nullptr;
-    if (mResTable) {
-        std::string pkg, name = theme;
-        parseResource(theme, &name, &pkg);
-        size_t slash = name.rfind('/');
-        std::string styleName = (slash != std::string::npos) ? name.substr(slash + 1) : name;
-        uint32_t styleId = arscGetIdentifier(styleName, "style", pkg);
-        if (styleId) {
-            mArscTheme = new ResTable::Theme(*mResTable);
-            if (asTheme(mArscTheme)->applyStyle(styleId) != 0) {
-                LOGW("arsc Theme applyStyle(%s) failed", theme.c_str());
-                delete asTheme(mArscTheme);
-                mArscTheme = nullptr;
-            } else {
-                LOGD("arsc Theme built from %s (resId=0x%08x)", theme.c_str(), styleId);
-            }
-        }
-    }
-}
-
 void Assets::setTheme(int resid) {
-    // ID-based theme apply (AOSP Context.setTheme(int @StyleRes)): rebuild the
-    // arsc-backed theme directly from a style resource id, skipping the name
-    // lookup the string overload performs.
+    // AOSP Context.setTheme(@StyleRes int): rebuild the arsc-backed theme from
+    // the style resource id (applyStyle follows the style's parent chain).
     delete asTheme(mArscTheme);
     mArscTheme = nullptr;
     if (mResTable && resid) {
@@ -378,11 +317,11 @@ void Assets::setTheme(int resid) {
             delete asTheme(mArscTheme);
             mArscTheme = nullptr;
         } else {
-            LOGD("arsc Theme built from resId=0x%08x", resid);
+            mThemeName = getResourceName((uint32_t)resid);
+            LOGD("arsc Theme built from %s (resId=0x%08x)", mThemeName.c_str(), resid);
         }
     }
 }
-
 
 typedef struct{
     std::unordered_map<std::string,const std::string>colors;
@@ -524,12 +463,10 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         LOGD("Loaded resources.arsc from %s (%zu bytes, error=%d)",
              path.c_str(), data.size(), mResTable->getError());
     }
-    if(name.compare("cdroid")==0){
-        //setTheme("cdroid:style/Theme");
-        setTheme("cdroid:style/Theme.Material");
-    }
+    // The default theme is applied by App's bootstrap (single AOSP-like point
+    // after every pak is loaded), not here.
     LOGI("[%s] loaded %d files, %d styles, %d theme attrs, used %dms",
-         package.c_str(), count, mStyles.size(), mTheme.getAttributeCount(),
+         package.c_str(), count, mStyles.size(), mArscTheme!=nullptr,
          int(SystemClock::uptimeMillis()-sttm));
     return pak?0:-1;
 }

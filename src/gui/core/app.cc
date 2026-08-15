@@ -35,6 +35,7 @@
 #include <core/inputeventsource.h>
 #include <core/windowmanager.h>
 #include <core/inputmethodmanager.h>
+#include <widget/internal_R.h>
 
 #if defined(__linux__)||defined(__unix__)
 #include <sys/auxv.h>
@@ -104,6 +105,11 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
             addResource(pakPath,getName());
         else addResource(name+".pak",getName());
     }
+    // AOSP: the application theme comes from the manifest (android:theme) and
+    // falls back to the platform default; applyStyle follows the style's parent
+    // chain. CDROID manifests don't carry a theme yet, so every pak must be
+    // loaded before applying the framework default (Theme.Material).
+    setTheme(cdroid::internal::R::style::Theme_Material);
     LOGI("\033[1;35m          ┏━┓┏┓╋╋╋┏┓┏┓");
     LOGI("\033[1;35m          ┃┏╋┛┣┳┳━╋╋┛┃");
     LOGI("\033[1;35m          ┃┗┫╋┃┏┫╋┃┃╋┃");

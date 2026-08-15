@@ -64,7 +64,7 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const uint32_t* attr
     std::vector<StyledAttr> styled(n);
     cdroid::obtainStyledAttributes(table, theme, attrs, 0, 0, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
-                                        getResources().getDisplayMetrics().density, &getResources());
+                                        getResources().getDisplayMetrics().density, &getResources(), theme);
 }
 
 // AOSP Theme.obtainStyledAttributes(resId, attrs): resolve against a style on
@@ -77,7 +77,7 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const uin
     std::vector<StyledAttr> styled(n);
     cdroid::obtainStyledAttributes(table, theme, attrs, 0, (uint32_t)resid, styled.data());
     return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
-                                        getResources().getDisplayMetrics().density, &getResources());
+                                        getResources().getDisplayMetrics().density, &getResources(), theme);
 }
 
 // Convenience overload: non-null AttributeSet& delegates to the pointer form.

@@ -259,19 +259,19 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
             if (xml) {
                 cdroid::obtainStyledAttributes(*xml, rt, theme, attrs,
                                                (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
-                return std::make_unique<TypedArray>(rt, std::move(styled), xml, getDisplayMetrics().density, this);
+                return std::make_unique<TypedArray>(rt, std::move(styled), xml, getDisplayMetrics().density, this, theme);
             }
         }
         const int styleResId = set->getStyleResourceId();
         if (styleResId != 0) {
             cdroid::obtainStyledAttributes(rt, theme, attrs,
                                            (uint32_t)defStyleAttr, (uint32_t)styleResId, styled.data());
-            return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this);
+            return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, theme);
         }
     }
     cdroid::obtainStyledAttributes(rt, theme, attrs,
                                    (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
-    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this);
+    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, theme);
 }
 
 // Convenience: AttributeSet& → AttributeSet* (for AOSP callers passing the reference).
@@ -292,7 +292,7 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(int resid, const u
     while (attrs[count]) count++;
     std::vector<StyledAttr> styled(count);
     cdroid::obtainStyledAttributes(rt, theme, attrs, 0, (uint32_t)resid, styled.data());
-    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this);
+    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, theme);
 }
 
 // AOSP Resources.obtainTypedArray(@ArrayRes int id) — TypedArray view over a

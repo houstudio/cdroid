@@ -25,7 +25,6 @@ public:
     void startActivity(const Intent& intent) override { mBase->startActivity(intent); }
     Resources::Theme getTheme() override { return mBase->getTheme(); }
     const std::string getThemeName() const override { return mBase->getThemeName(); }
-    void setTheme(const std::string& theme) override { mBase->setTheme(theme); }
     void setTheme(int resid) override { mBase->setTheme(resid); }
     const DisplayMetrics& getDisplayMetrics() const override { return mBase->getDisplayMetrics(); }
     int getNextAutofillId() override { return mBase->getNextAutofillId(); }

@@ -45,7 +45,6 @@ private:
     int mNextAutofillViewId;
     std::string mLanguage;
     std::string mThemeName;
-    AttributeSet mTheme;
     //std::unordered_map<std::string,std::string>mStrings; // retired: arsc getString(int)
     //std::unordered_map<std::string,int>mIDS; // retired: arsc ID path (Resources.getIdentifier)
     //std::unordered_map<std::string,std::vector<std::string>>mArraies; // retired: arsc getStringArray(int)
@@ -101,17 +100,11 @@ public:
     // When outBlock != null, *outBlock receives the owning string-pool block of
     // the resolved value (needed to resolve TYPE_STRING values via stringAtBlock).
     bool arscThemeAttribute(uint32_t attrId, TypedValue* out, ssize_t* outBlock = nullptr) const;
-    // Resolve a theme attribute NAME to its value string. Uses the text mTheme
-    // first; in SDK/binary mode mTheme is empty (values only in resources.arsc),
-    // so it falls back to the arsc Theme. pkg is a package hint (arscGetIdentifier
-    // also tries "android" and any package).
-    std::string themeString(const std::string& key, const std::string& pkg) const;
     int loadStyles(const std::string&resid);
     void clearStyles();
     const std::string getPackageName()const override;
     Resources::Theme getTheme() override;
     const std::string getThemeName() const override;
-    void setTheme(const std::string&theme)override;
     void setTheme(int resid) override;
     const DisplayMetrics&getDisplayMetrics()const override;
     //int getId(const std::string&)const override; // retired: use R::id::* (int) or Resources.getIdentifier

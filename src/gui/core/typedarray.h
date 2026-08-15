@@ -43,6 +43,7 @@ class ResTable;      // androidfw/restable.h — opaque here (reference member o
 class ResXMLTree;    // androidfw/resourcetypes.h — opaque pointer
 struct StyledAttr;   // androidfw/resourcetypes.h — opaque pointer members
 class Resources;     // cdroid::Resources — the AOSP mResources holder (loadDrawable/...)
+// cdroid::ResTable::Theme — opaque here (AOSP mTheme; ?attr resolution)
 class Drawable;
 class ColorStateList;
 class Typeface;
@@ -52,11 +53,11 @@ public:
     // Non-owning (StyledAttr* must outlive this TypedArray).
     TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
-               const Resources* res = nullptr);
+               const Resources* res = nullptr, const void* theme = nullptr);
     // Owning (StyledAttr vector moved in; mVals points into mOwned).
     TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
-               const Resources* res = nullptr);
+               const Resources* res = nullptr, const void* theme = nullptr);
     ~TypedArray();
     size_t length() const { return mCount; }   // AOSP TypedArray.length()
     bool hasValue(size_t idx) const;
@@ -116,6 +117,7 @@ private:
     const ResXMLTree*       mXml;
     float                   mDensity;
     Resources const*        mResources; // owning Resources (AOSP mResources); nullable
+    const void*             mTheme = nullptr;  // ResTable::Theme* (borrowed; ?attr resolution)
 };
 
 } // namespace cdroid
