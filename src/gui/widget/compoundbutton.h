@@ -48,7 +48,7 @@ public:
     CompoundButton(Context*ctx,const AttributeSet&attrs);
     CompoundButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
     ~CompoundButton()override;
-    void setButtonDrawable(const std::string&resid);
+    void setButtonDrawable(int resid);
     void setButtonDrawable(Drawable*d);
     bool performClick()override;
     Drawable* getButtonDrawable()const;

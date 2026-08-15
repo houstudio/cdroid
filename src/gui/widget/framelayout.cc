@@ -289,7 +289,7 @@ FrameLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     // layout_gravity is shared with LinearLayout's styleable (same framework attr).
     auto ta = c->obtainStyledAttributes(attrs, R::styleable::LinearLayoutLayout);
-    gravity = ta&&ta->hasValue(R::styleable::LinearLayoutLayout_layout_gravity) ? ta->getInt(R::styleable::LinearLayoutLayout_layout_gravity,UNSPECIFIED_GRAVITY) : attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
+    gravity = ta->getInt(R::styleable::LinearLayoutLayout_layout_gravity, UNSPECIFIED_GRAVITY);
 }
 
 FrameLayout::LayoutParams::LayoutParams(int width, int height)

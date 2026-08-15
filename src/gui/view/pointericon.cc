@@ -2,9 +2,12 @@
 #include <porting/cdlog.h>
 #include <drawable/animationdrawable.h>
 #include <core/xmlpullparser.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <stdexcept>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 PointerIcon* PointerIcon::gNullIcon = new PointerIcon(TYPE_NULL);
 SparseArray<PointerIcon*> PointerIcon::gSystemIcons;
@@ -43,9 +46,9 @@ PointerIcon* PointerIcon::getSystemIcon(Context* context, int type) {
 
     //const int defStyle = sUseLargeIcons ? com.android.internal.R.style.LargePointer : com.android.internal.R.style.Pointer;
     //TypedArray a = context.obtainStyledAttributes(nullptr, com.android.internal.R.styleable.Pointer,0, defStyle);
-    const std::string resourceId;// = a.getResourceId(typeIndex, -1);
+    const int resourceId = 0;// = a.getResourceId(typeIndex, -1);
 
-    if (resourceId.empty()) {
+    if (resourceId == 0) {
         LOGW("Missing theme resources for pointer icon type %d",type);
         return type == TYPE_DEFAULT ? gNullIcon : getSystemIcon(context, TYPE_DEFAULT);
     }
@@ -78,7 +81,7 @@ PointerIcon* PointerIcon::create(Bitmap bitmap, float hotSpotX, float hotSpotY) 
     return icon;
 }
 
-PointerIcon* PointerIcon::load(Context*ctx,const std::string& resourceId) {
+PointerIcon* PointerIcon::load(Context*ctx,int resourceId) {
     PointerIcon* icon = new PointerIcon(TYPE_CUSTOM);
     icon->loadResource(ctx, resourceId);
     return icon;
@@ -89,7 +92,7 @@ PointerIcon* PointerIcon::load(Context* context) {
         throw std::runtime_error("context must not be null");
     }
 
-    if (mSystemIconResourceId.empty() || (mBitmap != nullptr)) {
+    if (mSystemIconResourceId == 0 || (mBitmap != nullptr)) {
         return this;
     }
 
@@ -113,7 +116,7 @@ bool PointerIcon::equals(const PointerIcon* otherIcon) {
         return false;
     }
 
-    if (mSystemIconResourceId.empty() && (mBitmap != otherIcon->mBitmap
+    if (mSystemIconResourceId == 0 && (mBitmap != otherIcon->mBitmap
             || mHotSpotX != otherIcon->mHotSpotX
             || mHotSpotY != otherIcon->mHotSpotY)) {
         return false;
@@ -139,7 +142,7 @@ Bitmap PointerIcon::getBitmapFromDrawable(BitmapDrawable* bitmapDrawable) {
     return scaled;
 }
 
-void PointerIcon::loadResource(Context* context, const std::string& resourceId) {
+void PointerIcon::loadResource(Context* context, int resourceId) {
     int type;
     float hotSpotX,hotSpotY;
     XmlPullParser parser(context,resourceId);
@@ -152,11 +155,13 @@ void PointerIcon::loadResource(Context* context, const std::string& resourceId) 
     if (type != XmlPullParser::START_TAG){
        //XmlUtils.beginDocument(parser, "pointer-icon");
     }
-    const std::string bitmapRes = attrs.getString("bitmap");
-    hotSpotX = attrs.getDimension("hotSpotX", 0);
-    hotSpotY = attrs.getDimension("hotSpotY", 0);
+    // AOSP PointerIcon.loadResource: PointerIcon styleable (bitmap ref + hotspot dims).
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::PointerIcon);
+    const int bitmapRes = a->getResourceId(R::styleable::PointerIcon_bitmap, 0);
+    hotSpotX = a->getDimension(R::styleable::PointerIcon_hotSpotX, 0);
+    hotSpotY = a->getDimension(R::styleable::PointerIcon_hotSpotY, 0);
 
-    if (bitmapRes.empty()) {
+    if (bitmapRes == 0) {
         throw std::logic_error("<pointer-icon> is missing bitmap attribute.");
     }
 

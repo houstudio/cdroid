@@ -36,20 +36,33 @@ CalendarViewMaterialDelegate::CalendarViewMaterialDelegate(CalendarView* delegat
     delegator->addView(mDayPickerView);
 }
 
+// CalendarView's public header face is string-keyed ("@[pkg:]style/name");
+// DayPickerView takes ids — bridge here (parse + arsc getIdentifier).
+static int resolveStyleResId(Context* ctx, const std::string& ref) {
+    std::string s = (!ref.empty() && ref[0]=='@') ? ref.substr(1) : ref;
+    const size_t slash = s.rfind('/');
+    if (slash == std::string::npos) return 0;
+    const size_t colon = s.rfind(':');
+    const size_t typeStart = (colon==std::string::npos)?0:colon+1;
+    return ctx->getResources().getIdentifier(s.substr(slash+1),
+        s.substr(typeStart, slash-typeStart),
+        (colon==std::string::npos)?std::string():s.substr(0,colon));
+}
+
 void CalendarViewMaterialDelegate::setWeekDayTextAppearance(const std::string& resId){
-    mDayPickerView->setDayOfWeekTextAppearance(resId);
+    mDayPickerView->setDayOfWeekTextAppearance(resolveStyleResId(mDelegator->getContext(), resId));
 }
 
 std::string CalendarViewMaterialDelegate::getWeekDayTextAppearance() const{
-    return mDayPickerView->getDayOfWeekTextAppearance();
+    return mDelegator->getContext()->getResourceName((uint32_t)mDayPickerView->getDayOfWeekTextAppearance());
 }
 
 void CalendarViewMaterialDelegate::setDateTextAppearance(const std::string&resId){
-    mDayPickerView->setDayTextAppearance(resId);
+    mDayPickerView->setDayTextAppearance(resolveStyleResId(mDelegator->getContext(), resId));
 }
 
 std::string CalendarViewMaterialDelegate::getDateTextAppearance() const{
-    return mDayPickerView->getDayTextAppearance();
+    return mDelegator->getContext()->getResourceName((uint32_t)mDayPickerView->getDayTextAppearance());
 }
 
 void CalendarViewMaterialDelegate::setMinDate(int64_t minDate){

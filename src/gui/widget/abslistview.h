@@ -405,7 +405,7 @@ public:
     bool isDrawSelectorOnTop()const;
     Drawable*getSelector();
     void setSelector(Drawable*drawable);
-    void setSelector(const std::string&resid);
+    void setSelector(int resid);
     void getFocusedRect(Rect& r)override;
 
     void setScrollBarStyle(int style)override;

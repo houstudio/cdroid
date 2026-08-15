@@ -100,7 +100,7 @@ private:
     void initPaints();
     void updateMonthYearLabel();
     void updateDayOfWeekLabels();
-    const cdroid::RefPtr<ColorStateList> applyTextAppearance(Paint& p, const std::string& resId);
+    const cdroid::RefPtr<ColorStateList> applyTextAppearance(Paint& p, int resId);
     bool moveOneDay(bool positive);
     int findClosestRow(const Rect* previouslyFocusedRect);
     int findClosestColumn(const Rect*previouslyFocusedRect);
@@ -136,9 +136,9 @@ public:
     int getMonthHeight()const;
     int getCellWidth()const;
      
-    void setMonthTextAppearance(const std::string& resId);
-    void setDayOfWeekTextAppearance(const std::string& resId);
-    void setDayTextAppearance(const std::string& resId);
+    void setMonthTextAppearance(int resId);
+    void setDayOfWeekTextAppearance(int resId);
+    void setDayTextAppearance(int resId);
 
     void setMonthTextColor(const cdroid::RefPtr<ColorStateList>& monthTextColor);
     void setDayOfWeekTextColor(const cdroid::RefPtr<ColorStateList>& dayOfWeekTextColor);

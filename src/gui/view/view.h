@@ -1184,7 +1184,6 @@ public:
     Drawable*getBackground()const;
     virtual void setBackground(Drawable*background);
     virtual void setBackgroundColor(int color);
-    void setBackgroundResource(const std::string&resid);
     void setBackgroundResource(int resId);
     void setBackgroundTintList(const RefPtr<ColorStateList>& tint);
     void setBackgroundTintMode(int tintMode);

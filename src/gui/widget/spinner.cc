@@ -101,7 +101,7 @@ case MODE_DROPDOWN:
      mDropDownWidth = ta->getLayoutDimension(R::styleable::Spinner_dropDownWidth,LayoutParams::WRAP_CONTENT);
      dr = ta->getDrawable(R::styleable::Spinner_dropDownSelector);
      if(dr)popup->setListSelector(dr);
-     dr = mContext->getDrawable(ta->getString(R::styleable::Spinner_popupBackground));
+     dr = ta->getDrawable(R::styleable::Spinner_popupBackground);
      if(dr)popup->setBackgroundDrawable(dr);
      popup->setPromptText(ta->getString(R::styleable::Spinner_prompt));
      mPopup = popup;
@@ -130,7 +130,7 @@ void Spinner::setPopupBackgroundDrawable(Drawable* background){
     mPopup->setBackgroundDrawable(background);
 }
 
-void Spinner::setPopupBackgroundResource(const std::string& resId){
+void Spinner::setPopupBackgroundResource(int resId){
     setPopupBackgroundDrawable(getPopupContext()->getDrawable(resId));
 }
 

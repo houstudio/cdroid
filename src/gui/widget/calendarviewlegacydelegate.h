@@ -108,8 +108,8 @@ private:
     int mWeekSeparatorLineColor;
     int mWeekNumberColor;
 
-    std::string mWeekDayTextAppearanceResId;
-    std::string mDateTextAppearanceResId;
+    int mWeekDayTextAppearanceResId = 0;
+    int mDateTextAppearanceResId = 0;
 
     int mListScrollTopOffset = 2;
     int mWeekMinVisibleHeight = 12;
@@ -182,7 +182,7 @@ public:
 
     int getWeekSeparatorLineColor() const override;
 
-    void setSelectedDateVerticalBar(const std::string& resourceId) override;
+    void setSelectedDateVerticalBar(int resourceId) override;
 
     void setSelectedDateVerticalBar(Drawable* drawable) override;
 

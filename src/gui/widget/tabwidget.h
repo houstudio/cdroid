@@ -56,12 +56,12 @@ public:
     View*getChildTabViewAt(int index);
     int getTabCount()const;
     void setDividerDrawable(Drawable* drawable);
-    void setDividerDrawable(const std::string&);
+    void setDividerDrawable(int resId);
     void setLeftStripDrawable(Drawable* drawable);
-    void setLeftStripDrawable(const std::string&);
+    void setLeftStripDrawable(int resId);
     Drawable*getLeftStripDrawable();
     void setRightStripDrawable(Drawable* drawable);
-    void setRightStripDrawable(const std::string& resId);
+    void setRightStripDrawable(int resId);
     Drawable*getRightStripDrawable();
     void setStripEnabled(bool stripEnabled);
     bool isStripEnabled()const;

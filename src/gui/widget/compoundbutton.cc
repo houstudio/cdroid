@@ -118,7 +118,7 @@ void CompoundButton::setDefaultStateDescription() {
 std::vector<int>CompoundButton::onCreateDrawableState(int extraSpace){
     std::vector<int>drawableState = Button::onCreateDrawableState(extraSpace);
     if (isChecked()) {
-        mergeDrawableStates(drawableState,{cdroid::internal::R::attr::state_checked});//StateSet::get(StateSet::VIEW_STATE_CHECKED));
+        mergeDrawableStates(drawableState,{cdroid::internal::R::attr::state_checked});
     }
     return drawableState;
 }
@@ -147,7 +147,7 @@ bool CompoundButton::performClick(){
     return handled;
 }
 
-void CompoundButton::setButtonDrawable(const std::string&resid){
+void CompoundButton::setButtonDrawable(int resid){
     Drawable* d= getContext()->getDrawable(resid);
     setButtonDrawable(d);
 }
@@ -326,7 +326,10 @@ CheckBox::CheckBox(Context*ctx,const AttributeSet* attrs,int defStyleAttr)
 
 CheckBox::CheckBox(const std::string&txt,int w,int h)
     :CompoundButton(txt,w,h){
-    setButtonDrawable("cdroid:drawable/btn_check.xml");
+    // Resolve the default "cdroid:drawable/btn_check.xml" ref by identifier
+    // (getDrawable is id-keyed now; ".xml" is stripped like other type-less refs).
+    const int btnRes = getContext()->getResources().getIdentifier("btn_check", "drawable", "cdroid");
+    setButtonDrawable(btnRes);
 }
 
 std::string CheckBox::getAccessibilityClassName()const{

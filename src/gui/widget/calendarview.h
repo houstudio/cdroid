@@ -54,7 +54,7 @@ public:
     void setWeekSeparatorLineColor(int color);
     int  getWeekSeparatorLineColor()const;
 
-    void setSelectedDateVerticalBar(const std::string& resourceId);
+    void setSelectedDateVerticalBar(int resourceId);
     void setSelectedDateVerticalBar(Drawable* drawable);
     Drawable* getSelectedDateVerticalBar()const;
 
@@ -105,7 +105,7 @@ public:
     virtual void setWeekSeparatorLineColor(int color)=0;
     virtual int getWeekSeparatorLineColor()const=0;
 
-    virtual void setSelectedDateVerticalBar(const std::string& resourceId)=0;
+    virtual void setSelectedDateVerticalBar(int resourceId)=0;
     virtual void setSelectedDateVerticalBar(Drawable* drawable)=0;
     virtual Drawable* getSelectedDateVerticalBar()const=0;
 
@@ -216,7 +216,7 @@ public:
         return 0;
     }
 
-    void setSelectedDateVerticalBar(const std::string& resId) override{
+    void setSelectedDateVerticalBar(int resId) override{
         // Deprecated.
     }
 

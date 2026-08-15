@@ -133,26 +133,26 @@ void DayPickerPagerAdapter::setDaySelectorColor(const cdroid::RefPtr<ColorStateL
     }
 }
 
-void DayPickerPagerAdapter::setMonthTextAppearance(const std::string& resId) {
+void DayPickerPagerAdapter::setMonthTextAppearance(int resId) {
     mMonthTextAppearance = resId;
     notifyDataSetChanged();
 }
 
-void DayPickerPagerAdapter::setDayOfWeekTextAppearance(const std::string& resId) {
+void DayPickerPagerAdapter::setDayOfWeekTextAppearance(int resId) {
     mDayOfWeekTextAppearance = resId;
     notifyDataSetChanged();
 }
 
-std::string DayPickerPagerAdapter::getDayOfWeekTextAppearance() {
+int DayPickerPagerAdapter::getDayOfWeekTextAppearance() {
     return mDayOfWeekTextAppearance;
 }
 
-void DayPickerPagerAdapter::setDayTextAppearance(const std::string& resId) {
+void DayPickerPagerAdapter::setDayTextAppearance(int resId) {
     mDayTextAppearance = resId;
     notifyDataSetChanged();
 }
 
-std::string DayPickerPagerAdapter::getDayTextAppearance() {
+int DayPickerPagerAdapter::getDayTextAppearance() {
     return mDayTextAppearance;
 }
 

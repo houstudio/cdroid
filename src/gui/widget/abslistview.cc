@@ -1105,7 +1105,7 @@ void AbsListView::setSelector(Drawable*sel) {
     updateSelectorState();
 }
 
-void AbsListView::setSelector(const std::string&resid) {
+void AbsListView::setSelector(int resid) {
     setSelector(mContext->getDrawable(resid));
 }
 

@@ -69,9 +69,10 @@ Switch::Switch(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
         applyTrackTint();
     }
 
-    const std::string appearance = ta->getString(R::styleable::Switch_switchTextAppearance);
-    if (!appearance.empty()){
-        setSwitchTextAppearance(context, appearance);
+    // AOSP reads the @StyleRes id (TextView_appearance is a style reference).
+    const int textAppearance = ta->getResourceId(R::styleable::Switch_switchTextAppearance, 0);
+    if (textAppearance != 0){
+        setSwitchTextAppearance(context, textAppearance);
     }
     ViewConfiguration& config = ViewConfiguration::get(context);
     mTouchSlop = config.getScaledTouchSlop();
@@ -129,9 +130,9 @@ Switch::~Switch(){
     mVelocityTracker->recycle();
 }
 
-void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
-    AttributeSet atts = context->obtainStyledAttributes(resid);
-    auto ta = context->obtainStyledAttributes(atts, R::styleable::TextAppearance);
+void Switch::setSwitchTextAppearance(Context* context,int resid){
+    // AOSP: obtainStyledAttributes(resid, R.styleable.TextAppearance) directly.
+    auto ta = context->obtainStyledAttributes(resid, R::styleable::TextAppearance);
 
     auto colors = ta ? ta->getColorStateList(R::styleable::TextAppearance_textColor) : nullptr;
     if (colors) {
@@ -249,7 +250,7 @@ void Switch::setTrackDrawable(Drawable* track) {
     requestLayout();
 }
 
-void Switch::setTrackResource(const std::string& resId){
+void Switch::setTrackResource(int resId){
     setTrackDrawable(getContext()->getDrawable(resId));
 }
 
@@ -310,7 +311,7 @@ void Switch::setThumbDrawable(Drawable* thumb){
     requestLayout();   
 }
 
-void Switch::setThumbResource(const std::string& resId){
+void Switch::setThumbResource(int resId){
     setThumbDrawable(getContext()->getDrawable(resId));
 }
 
@@ -923,7 +924,7 @@ int Switch::getThumbScrollRange() {
 std::vector<int> Switch::onCreateDrawableState(int extraSpace){
     std::vector<int> drawableState = CompoundButton::onCreateDrawableState(extraSpace);
     if (isChecked()) {
-        mergeDrawableStates(drawableState,{cdroid::internal::R::attr::state_checked});//StateSet::get(StateSet::VIEW_STATE_CHECKED));
+        mergeDrawableStates(drawableState,{cdroid::internal::R::attr::state_checked});
     }
     return drawableState;
 }

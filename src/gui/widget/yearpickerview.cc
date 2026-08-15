@@ -17,16 +17,18 @@
  *********************************************************************************/
 #include <widget/yearpickerview.h>
 #include <widget/textview.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(YearPickerView)
 
 class YearAdapter:public ArrayAdapter<int> {
 private:
-    /*static int ITEM_LAYOUT = R.layout.year_label_text_view;
-    static int ITEM_TEXT_APPEARANCE = R.style.TextAppearance_Material_DatePicker_List_YearLabel;
-    static int ITEM_TEXT_ACTIVATED_APPEARANCE =  R.style.TextAppearance_Material_DatePicker_List_YearLabel_Activated;*/
+    /*static int ITEM_LAYOUT = R.layout.year_label_text_view;*/
+    static const int ITEM_TEXT_APPEARANCE = R::style::TextAppearance_Material_DatePicker_List_YearLabel;
+    static const int ITEM_TEXT_ACTIVATED_APPEARANCE = R::style::TextAppearance_Material_DatePicker_List_YearLabel_Activated;
     LayoutInflater* mInflater;
     int mActivatedYear;
     int mMinYear;
@@ -92,11 +94,9 @@ public:
         bool activated = mActivatedYear == year;
 
         if ((convertView == nullptr) || v->isActivated() != activated) {
-            std::string textAppearanceResId="YearLabel_Activated";
-            if (activated /*&& ITEM_TEXT_ACTIVATED_APPEARANCE != 0*/) {
-                //textAppearanceResId = ITEM_TEXT_ACTIVATED_APPEARANCE;
-            } else {
-                //textAppearanceResId = ITEM_TEXT_APPEARANCE;
+            int textAppearanceResId = ITEM_TEXT_APPEARANCE;
+            if (activated && ITEM_TEXT_ACTIVATED_APPEARANCE != 0) {
+                textAppearanceResId = ITEM_TEXT_ACTIVATED_APPEARANCE;
             }
             v->setTextAppearance(textAppearanceResId);
             v->setActivated(activated);
@@ -130,9 +130,10 @@ public:
 YearPickerView::YearPickerView(Context*ctx,const AttributeSet& attrs):YearPickerView(ctx,&attrs,0){}
 
 YearPickerView::YearPickerView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ListView(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
-    mViewSize = attrs.getDimensionPixelOffset("animator_height");
-    mChildSize= attrs.getDimensionPixelOffset("year_label_height");
+    (void)pAttrs;
+    // AOSP reads R.dimen.datepicker_view_animator_height / datepicker_year_label_height.
+    mViewSize = ctx->getResources().getDimensionPixelOffset(R::dimen::datepicker_view_animator_height);
+    mChildSize= ctx->getResources().getDimensionPixelOffset(R::dimen::datepicker_year_label_height);
     mAdapter = new YearAdapter(ctx);
     setAdapter(mAdapter);
     setOnItemClickListener([this](AdapterView& parent,View& view, int position, long id){

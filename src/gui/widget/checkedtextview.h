@@ -8,7 +8,7 @@ class CheckedTextView:public TextView,public Checkable{
 private:
     bool mChecked;
 
-    std::string mCheckMarkResource;
+    int mCheckMarkResource = 0;
     Drawable* mCheckMarkDrawable;
     cdroid::RefPtr<ColorStateList> mCheckMarkTintList;
     int mCheckMarkBlendMode = -1; /* null == -1; otherwise a BlendMode value */
@@ -21,7 +21,7 @@ private:
 
     bool mNeedRequestlayout;
 private:
-    void setCheckMarkDrawableInternal(Drawable* d,const std::string&resId);
+    void setCheckMarkDrawableInternal(Drawable* d,int resId);
     void applyCheckMarkTint();
     void updatePadding();
     void setBasePadding(bool checkmarkAtStart);
@@ -45,7 +45,7 @@ public:
     void setChecked(bool checked)override;
 
     Drawable* getCheckMarkDrawable()const;
-    void setCheckMarkDrawable(const std::string&resId);
+    void setCheckMarkDrawable(int resId);
     void setCheckMarkDrawable(Drawable* d);
     void setCheckMarkTintList(const cdroid::RefPtr<ColorStateList>&tint);
     const cdroid::RefPtr<ColorStateList> getCheckMarkTintList()const;

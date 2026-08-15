@@ -84,9 +84,9 @@ View::View(Context*ctx,const AttributeSet&attrs):View(ctx,&attrs,0){
 // by aapt2 ("true"/"false") so a plain getInt() would mis-read it; numeric/auto are
 // TYPE_INT_DEC. Mirrors frameworks/base View.java.
 int View::getFocusableAttribute(const TypedArray& a) {
-    Res_value val;
+    TypedValue val;
     if (a.peekValue(R::styleable::View_focusable, &val)) {
-        if (val.dataType == Res_value::TYPE_INT_BOOLEAN) {
+        if (val.type == TypedValue::TYPE_INT_BOOLEAN) {
             return (val.data == 0) ? NOT_FOCUSABLE : FOCUSABLE;
         } else {
             return val.data;
@@ -509,6 +509,7 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr,int defStyleRe
             setNestedScrollingEnabled(a->getBoolean(attr, false));
             break;
         case R::styleable::View_stateListAnimator:
+            LOGD("View ctor stateListAnimator resid=%d", a->getResourceId(attr, 0));
             setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,
                     a->getResourceId(attr, 0)));
             break;
@@ -5115,11 +5116,6 @@ int View::getSolidColor()const{
 
 Drawable*View::getBackground()const{
     return mBackground;
-}
-
-void View::setBackgroundResource(const std::string&resid){
-    Drawable*d=getContext()->getDrawable(resid);
-    return setBackground(d);
 }
 
 void View::setBackgroundResource(int resId){

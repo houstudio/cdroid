@@ -47,9 +47,9 @@ private:
     Calendar mSelectedDay;
     bool mSelectedDayValid = false;
 
-    std::string mMonthTextAppearance;
-    std::string mDayOfWeekTextAppearance;
-    std::string mDayTextAppearance;
+    int mMonthTextAppearance = 0;
+    int mDayOfWeekTextAppearance = 0;
+    int mDayTextAppearance = 0;
 
     cdroid::RefPtr<ColorStateList> mCalendarTextColor;
     cdroid::RefPtr<ColorStateList> mDaySelectorColor;
@@ -76,12 +76,12 @@ public:
     void setCalendarTextColor(const cdroid::RefPtr<ColorStateList>& calendarTextColor);
     void setDaySelectorColor(const cdroid::RefPtr<ColorStateList>& selectorColor);
 
-    void setMonthTextAppearance(const std::string& resId);
-    void setDayOfWeekTextAppearance(const std::string& resId);
-    std::string getDayOfWeekTextAppearance();
+    void setMonthTextAppearance(int resId);
+    void setDayOfWeekTextAppearance(int resId);
+    int getDayOfWeekTextAppearance();
 
-    void setDayTextAppearance(const std::string&resId);
-    std::string getDayTextAppearance();
+    void setDayTextAppearance(int resId);
+    int getDayTextAppearance();
 
     int getCount()override;
     bool isViewFromObject(View* view,void*object)override;

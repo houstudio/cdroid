@@ -892,7 +892,7 @@ RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& s
 }
 
 RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):MarginLayoutParams(ctx,atts){
-    alignWithParent = atts.getBoolean("alignWithParentIfMissing",false); // not in styleable; bridge handles both
+    alignWithParent = atts.getAttributeBooleanValue(std::string(), "alignWithParentIfMissing",false); // not in styleable; bridge handles both
     mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
     memset(mRules, 0, sizeof(mRules)); // absent rules stay 0 (binary switch only fires present attrs)
     // Phase 2: TypedArray switch-loop (22 rules = many attrs → loop, AOSP pattern).

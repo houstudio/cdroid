@@ -1,11 +1,14 @@
 #include <widget/actionbar.h>
+#include <widget/framework_styleable.h>
 #include <stdexcept>
 namespace cdroid{
 
 
 ActionBar::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     :ViewGroup::MarginLayoutParams(c, attrs){
-    gravity = attrs.getGravity("layout_gravity",Gravity::NO_GRAVITY);
+    // layout_gravity is shared with LinearLayout's styleable (same framework attr).
+    auto ta = c->obtainStyledAttributes(attrs, cdroid::internal::R::styleable::LinearLayoutLayout);
+    gravity = ta->getInt(cdroid::internal::R::styleable::LinearLayoutLayout_layout_gravity, Gravity::NO_GRAVITY);
 }
 
 ActionBar::LayoutParams::LayoutParams(int width, int height)

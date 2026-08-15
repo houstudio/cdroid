@@ -7,6 +7,9 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(CheckedTextView)
 
+// AOSP CheckedTextView.CHECKED_STATE_SET = { android.R.attr.state_checked }.
+static const std::vector<int> CHECKED_STATE_SET = { R::attr::state_checked };
+
 CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):CheckedTextView(context,&a,0){}
 
 CheckedTextView::CheckedTextView(Context* context,const AttributeSet* pAttrs,int defStyleAttr):TextView(context,pAttrs, defStyleAttr){
@@ -62,20 +65,20 @@ void CheckedTextView::doSetChecked(bool checked) {
     }
 }
 
-void CheckedTextView::setCheckMarkDrawable(const std::string&resId) {
-    if (resId.empty()==false && resId == mCheckMarkResource) {
+void CheckedTextView::setCheckMarkDrawable(int resId) {
+    if (resId != 0 && resId == mCheckMarkResource) {
         return;
     }
 
-    Drawable* d = resId.empty()==false ? getContext()->getDrawable(resId) : nullptr;
+    Drawable* d = resId != 0 ? getContext()->getDrawable(resId) : nullptr;
     setCheckMarkDrawableInternal(d, resId);
 }
 
 void CheckedTextView::setCheckMarkDrawable(Drawable* d) {
-    setCheckMarkDrawableInternal(d, "");
+    setCheckMarkDrawableInternal(d, 0);
 }
 
-void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,const std::string&resId){
+void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,int resId){
     if (mCheckMarkDrawable) {
         mCheckMarkDrawable->setCallback(nullptr);
         unscheduleDrawable(*mCheckMarkDrawable);
@@ -86,7 +89,7 @@ void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,const std::string
     if (d != nullptr) {
         d->setCallback(this);
         d->setVisible(getVisibility() == VISIBLE, false);
-        d->setState(StateSet::get(StateSet::VIEW_STATE_CHECKED));
+        d->setState(CHECKED_STATE_SET);
 
         // Record the intrinsic dimensions when in "checked" state.
         setMinHeight(d->getIntrinsicHeight());
@@ -251,7 +254,7 @@ void CheckedTextView::onDraw(Canvas& canvas) {
 std::vector<int> CheckedTextView::onCreateDrawableState(int extraSpace){
     std::vector<int> drawableState = TextView::onCreateDrawableState(extraSpace);
     if (isChecked()) {
-        mergeDrawableStates(drawableState, StateSet::get(StateSet::VIEW_STATE_CHECKED));
+        mergeDrawableStates(drawableState, CHECKED_STATE_SET);
     }
     return drawableState;
 }

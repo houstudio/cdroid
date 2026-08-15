@@ -221,7 +221,7 @@ public:
     float getDrawerElevation()const;
     void setChildInsets(const WindowInsets& insets, bool draw);
     void setDrawerShadow(Drawable* shadowDrawable,int gravity);
-    void setDrawerShadow(const std::string& resId,int gravity);
+    void setDrawerShadow(int resId,int gravity);
     void setScrimColor(int color);
     void addDrawerListener(const DrawerListener& listener);
     void removeDrawerListener(const DrawerListener& listener);
@@ -238,7 +238,7 @@ public:
     void computeScroll()override;
     void setStatusBarBackground(Drawable* bg);
     Drawable* getStatusBarBackgroundDrawable() ;
-    void setStatusBarBackground(const std::string& resId);
+    void setStatusBarBackground(int resId);
     void setStatusBarBackgroundColor(int color);
     void onRtlPropertiesChanged(int layoutDirection)override;
     void onDraw(Canvas& c)override;

@@ -17,7 +17,10 @@
  *********************************************************************************/
 #include <widget/cardview.h>
 #include <widget/cardviewimpl.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 class CardView::CardViewDelegateInternal:public CardViewDelegate{
 private:
     CardView*mCardView;
@@ -89,10 +92,11 @@ CardView::CardView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :FrameLayout(context, pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
     mCardViewDelegate = new CardViewDelegateInternal(this);
-    //TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CardView, defStyleAttr,R.style.CardView);
+    // AOSP androidx CardView: CardView styleable (defStyleRes R.style.CardView).
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::CardView, defStyleAttr);
     cdroid::RefPtr<ColorStateList> backgroundColor;
-    if (attrs.hasAttribute("cardBackgroundColor")) {
-        backgroundColor = attrs.getColorStateList("cardBackgroundColor");
+    if (a->hasValue(R::styleable::CardView_cardBackgroundColor)) {
+        backgroundColor = a->getColorStateList(R::styleable::CardView_cardBackgroundColor);
     } /*else {
         // There isn't one set, so we'll compute one based on the theme
         final TypedArray aa = getContext().obtainStyledAttributes(COLOR_BACKGROUND_ATTR);//R.attr.colorBackground
@@ -106,21 +110,21 @@ CardView::CardView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
                 ? getResources().getColor(R.color.cardview_light_background)
                 : getResources().getColor(R.color.cardview_dark_background));
     }*/
-    const float radius = attrs.getDimension("cardCornerRadius", 0);
-    const float elevation = attrs.getDimension("cardElevation", 0);
-    float maxElevation = attrs.getDimension("cardMaxElevation", 0);
-    mCompatPadding = attrs.getBoolean("cardUseCompatPadding", false);
-    mPreventCornerOverlap = attrs.getBoolean("cardPreventCornerOverlap", true);
-    const int defaultPadding = attrs.getDimensionPixelSize("contentPadding", 0);
-    mContentPadding.left = attrs.getDimensionPixelSize("contentPaddingLeft", defaultPadding);
-    mContentPadding.top = attrs.getDimensionPixelSize("contentPaddingTop", defaultPadding);
-    mContentPadding.width = attrs.getDimensionPixelSize("contentPaddingRight", defaultPadding);
-    mContentPadding.height = attrs.getDimensionPixelSize("contentPaddingBottom", defaultPadding);
+    const float radius = a->getDimension(R::styleable::CardView_cardCornerRadius, 0);
+    const float elevation = a->getDimension(R::styleable::CardView_cardElevation, 0);
+    float maxElevation = a->getDimension(R::styleable::CardView_cardMaxElevation, 0);
+    mCompatPadding = a->getBoolean(R::styleable::CardView_cardUseCompatPadding, false);
+    mPreventCornerOverlap = a->getBoolean(R::styleable::CardView_cardPreventCornerOverlap, true);
+    const int defaultPadding = a->getDimensionPixelSize(R::styleable::CardView_contentPadding, 0);
+    mContentPadding.left = a->getDimensionPixelSize(R::styleable::CardView_contentPaddingLeft, defaultPadding);
+    mContentPadding.top = a->getDimensionPixelSize(R::styleable::CardView_contentPaddingTop, defaultPadding);
+    mContentPadding.width = a->getDimensionPixelSize(R::styleable::CardView_contentPaddingRight, defaultPadding);
+    mContentPadding.height = a->getDimensionPixelSize(R::styleable::CardView_contentPaddingBottom, defaultPadding);
     if (elevation > maxElevation) {
         maxElevation = elevation;
     }
-    mUserSetMinWidth = attrs.getDimensionPixelSize("minWidth", 0);
-    mUserSetMinHeight = attrs.getDimensionPixelSize("minHeight", 0);
+    mUserSetMinWidth = a->getDimensionPixelSize(R::styleable::CardView_minWidth, 0);
+    mUserSetMinHeight = a->getDimensionPixelSize(R::styleable::CardView_minHeight, 0);
 
     IMPL->initialize(mCardViewDelegate, context, backgroundColor, radius, elevation, maxElevation);
 }

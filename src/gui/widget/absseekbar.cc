@@ -48,10 +48,10 @@ setTickMark(ta->getDrawable(R::styleable::SeekBar_tickMark));
 const int thumbOffset = ta->getDimensionPixelOffset(R::styleable::SeekBar_thumbOffset,getThumbOffset());
 setThumbOffset(thumbOffset);
 
-const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
+const bool useDisabledAlpha = attrs.getAttributeBooleanValue(std::string(), "useDisabledAlpha", true);
 // disabledAlpha is not in the SeekBar styleable (only ToggleButton's), so
 // read it via the AttributeSet bridge for both modes.
-mDisabledAlpha = useDisabledAlpha? attrs.getFloat("disabledAlpha", 0.5f) :1.f;
+mDisabledAlpha = useDisabledAlpha? attrs.getAttributeFloatValue(std::string(), "disabledAlpha", 0.5f) :1.f;
 mSplitTrack = ta->getBoolean(R::styleable::SeekBar_splitTrack,false);
 mThumbExclusionMaxSize = ctx->getDimension(R::dimen::seekbar_thumb_exclusion_max_size);
 

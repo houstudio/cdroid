@@ -138,7 +138,7 @@ public:
     Context* getPopupContext()const;
     int measureContentWidth(Adapter* adapter, Drawable* background);
     void setPopupBackgroundDrawable(Drawable* background);
-    void setPopupBackgroundResource(const std::string& resId);
+    void setPopupBackgroundResource(int resId);
     Drawable* getPopupBackground();
     void setDropDownVerticalOffset(int pixels);
     int getDropDownVerticalOffset();

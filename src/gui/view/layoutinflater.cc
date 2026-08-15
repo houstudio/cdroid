@@ -17,11 +17,14 @@
  *********************************************************************************/
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 #include <fstream>
 #include <iomanip>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 static constexpr const char* TAG_MERGE = "merge";
 static constexpr const char* TAG_INCLUDE = "include";
@@ -29,6 +32,9 @@ static constexpr const char* TAG_1995 = "blink";
 static constexpr const char* TAG_REQUEST_FOCUS = "requestFocus";
 static constexpr const char* TAG_TAG = "tag";
 static constexpr const char* ATTR_LAYOUT = "layout";
+// AOSP LayoutInflater.ATTRS_THEME = { android.R.attr.theme } — sentinel-terminated
+// attr-id array (trailing 0), the C++ analog of AOSP's int[].
+static const uint32_t ATTRS_THEME[] = { (uint32_t)cdroid::internal::R::attr::theme, 0 };
 
 static std::unordered_map<std::string,int> mDefaultStyle;
 static std::unordered_map<std::string,LayoutInflater::ViewInflater> mFlateMapper;
@@ -236,7 +242,8 @@ View* LayoutInflater::createView(Context* viewContext, const std::string& name, 
     LayoutInflater::ViewInflater inflater;
 
     if(name.compare("view")==0){
-        const std::string clsName =  attrs.getString("class");
+        // AOSP createViewFromTag: name = attrs.getAttributeValue(null, "class").
+        const std::string clsName =  attrs.getClassAttribute();
         inflater = LayoutInflater::getInflater(clsName);
     }else{
         inflater = LayoutInflater::getInflater(name);
@@ -265,19 +272,10 @@ View* LayoutInflater::createView(Context* viewContext, const std::string& name, 
             }
         }
     }
-    std::string styleName = attrs.getString("style");
-    if(!styleName.empty()) {
-        AttributeSet style = viewContext->obtainStyledAttributes(styleName);
-        attrs.inherit(style);
-    }
-    styleName = LayoutInflater::from(viewContext)->getDefaultStyle(name);
-    if(!styleName.empty()) {
-        // defStyleAttr is passed by the inflater factory (resolveDefStyleAttr);
-        // this inherit is a transitional style-merge kept until all widget bodies
-        // resolve purely via the ctor defStyleAttr / TypedArray path.
-        AttributeSet defstyle = viewContext->obtainStyledAttributes(styleName);
-        attrs.inherit(defstyle);
-    }
+    // AOSP createView applies no style here: the tag's style= attribute is
+    // resolved natively inside obtainStyledAttributes (binary AXML ResXMLTree
+    // path), and each widget's default style comes from the defStyleAttr its
+    // constructor resolves (registered via DECLARE_WIDGET2).
     View*view = inflater(viewContext,attrs);
     return view;
 }
@@ -301,7 +299,6 @@ View* LayoutInflater::onCreateView(Context* viewContext, View* parent, const std
 }
 
 View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Context* context,AttributeSet& attrs,bool ignoreThemeAttr) {
-#if 10
     try{
         View* view = tryCreateView(parent, name, context, attrs);
 
@@ -323,27 +320,6 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
         LOGE("%s:Error %s",name.c_str(),e.what());
         throw e;
     }
-#else
-    LayoutInflater::ViewInflater inflater;
-    if(name.compare("view")==0){
-        const std::string clsName =  attrs.getString("class");
-        inflater = LayoutInflater::getInflater(clsName);
-    }else{
-        inflater = LayoutInflater::getInflater(name);
-    }
-    std::string styleName = attrs.getString("style");
-    if(!styleName.empty()) {
-        AttributeSet style = context->obtainStyledAttributes(styleName);
-        attrs.inherit(style);
-    }
-    styleName = LayoutInflater::from(context)->getDefaultStyle(name);
-    if(!styleName.empty()) {
-        AttributeSet defstyle = context->obtainStyledAttributes(styleName);
-        attrs.inherit(defstyle);
-    }
-    View*view = inflater(context,attrs);
-    return view;
-#endif
 }
 
 View* LayoutInflater::tryCreateView(View* parent,const std::string& name, Context* context,AttributeSet& attrs) {
@@ -416,9 +392,15 @@ void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* cont
 }
 
 void LayoutInflater::parseViewTag(XmlPullParser& parser, View* view,const AttributeSet& attrs){
-    const int key = attrs.getResourceId("id", 0);
-    const std::string value = attrs.getString("value");
-    //view->setTag(key, value);
+    // AOSP View.parseViewTag: R.styleable.ViewTag (id ref + value string).
+    Context* context = view->getContext();
+    auto ta = context->obtainStyledAttributes(&attrs, R::styleable::ViewTag);
+    const int key = ta->getResourceId(R::styleable::ViewTag_id, 0);
+    const std::string value = ta->getString(R::styleable::ViewTag_value);
+    // CDROID setTag is (int, void*); AOSP stores a CharSequence value object.
+    if (key != 0 && !value.empty()) {
+        view->setTag(key, new std::string(value), [](void*p){ delete (std::string*)p; });
+    }
     consumeChildElements(parser);
 }
 
@@ -431,9 +413,11 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
 
         // If the layout is pointing to a theme attribute, we have to
         // massage the value to get a resource identifier out of it.
-        const bool hasThemeOverride = false;
-        const std::string layout = attrs.getString("layout");
-        if (layout.empty()) {
+        auto ta = context->obtainStyledAttributes(attrs, ATTRS_THEME);
+        int themeResId = ta->getResourceId(0, 0);
+        bool hasThemeOverride = themeResId != 0;
+        int layout = attrs.getAttributeResourceValue(std::string(), ATTR_LAYOUT, 0);
+        if (layout==0) {
             throw std::logic_error("You must specify a layout in the include tag: <include layout=\"@layout/layoutID\" />");
             // Attempt to resolve the "?attr/name" string to an attribute within the default (e.g. application) package.
             // layout = context.getResources().getIdentifier(value.substring(1), "attr", context.getPackageName());

@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/absolutelayout.h>
+#include <widget/internal_R.h>
 namespace cdroid{
 
 DECLARE_WIDGET(AbsoluteLayout)
@@ -28,8 +29,12 @@ AbsoluteLayout::LayoutParams::LayoutParams(int width, int height, int x, int y)
 
 AbsoluteLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     :ViewGroup::LayoutParams(c,attrs){
-    x=attrs.getDimensionPixelOffset("layout_x");
-    y=attrs.getDimensionPixelOffset("layout_y");
+    // AOSP: obtainStyledAttributes(attrs, R.styleable.AbsoluteLayout_Layout).
+    static const uint32_t ABS_LAYOUT_ATTRS[] = {
+        (uint32_t)cdroid::internal::R::attr::layout_x, (uint32_t)cdroid::internal::R::attr::layout_y, 0 };
+    auto ta = c->obtainStyledAttributes(attrs, ABS_LAYOUT_ATTRS);
+    x=ta->getDimensionPixelOffset(0, 0);
+    y=ta->getDimensionPixelOffset(1, 0);
 }
 
 AbsoluteLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)

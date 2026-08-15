@@ -247,7 +247,7 @@ public:
     int getPageMargin()const;
     void setPageMargin(int marginPixels);
     void setPageMarginDrawable(Drawable* d);
-    void setPageMarginDrawable(const std::string&resId);
+    void setPageMarginDrawable(int resId);
     void smoothScrollTo(int x, int y);
     void smoothScrollTo(int x, int y, int velocity);
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;

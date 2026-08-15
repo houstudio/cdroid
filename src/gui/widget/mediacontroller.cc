@@ -39,7 +39,7 @@ void MediaController::initFloatingWindow() {
     //mDecor.setOnTouchListener(mTouchListener);
     //mDecor.addOnAttachStateChangeListener(mAttachStateListener);
     //mWindow.setContentView(this);
-    mWindow->setBackgroundResource("@null");
+    mWindow->setBackgroundResource(0);
 
     // While the media controller is up, the volume control keys should
     // affect the media stream type

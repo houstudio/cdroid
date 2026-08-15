@@ -16,8 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/imageview.h>
+#include <widget/internal_R.h>
 #include <widget/stackview.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(StackView);
 
@@ -26,8 +28,13 @@ std::shared_ptr<StackView::HolographicHelper> StackView::sHolographicHelper;
 StackView::StackView(Context* context,const  AttributeSet& attrs)
     :AdapterViewAnimator(context, attrs){
 
-    mResOutColor = attrs.getColor("resOutColor", 0);
-    mClickColor = attrs.getColor("clickColor", 0);
+    // AOSP: obtainStyledAttributes(attrs, R.styleable.StackView) — resOutColor /
+    // clickColor carry no generated styleable; resolve them by attr id directly.
+    static const uint32_t STACK_VIEW_ATTRS[] = {
+        (uint32_t)R::attr::resOutColor, (uint32_t)R::attr::clickColor, 0 };
+    auto ta = context->obtainStyledAttributes(attrs, STACK_VIEW_ATTRS);
+    mResOutColor = ta->getColor(0, 0);
+    mClickColor  = ta->getColor(1, 0);
 
     initStackView();
 }

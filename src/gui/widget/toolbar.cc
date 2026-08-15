@@ -39,14 +39,12 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ViewGr
     // TypedArray; a==null (text XML / no arsc) leaves the toolbar at defaults.
     auto a = ctx->obtainStyledAttributes(atts, R::styleable::Toolbar, defStyleAttr);
     
-// AOSP reads these via getResourceId(@StyleRes int); CDROID holds style
-// strings, so bridge the id -> "@type/key" via getResourceName.
-auto styleName = [&](size_t idx)->std::string{
-    uint32_t rid = a->getResourceId(idx, 0);
-    return rid ? ctx->getResourceName(rid) : std::string();
-};
-mTitleTextAppearance = styleName(R::styleable::Toolbar_titleTextAppearance);
-mSubtitleTextAppearance = styleName(R::styleable::Toolbar_subtitleTextAppearance);
+// AOSP reads these via getResourceId(@StyleRes int).
+mTitleTextAppearance = a->getResourceId(R::styleable::Toolbar_titleTextAppearance, 0);
+mSubtitleTextAppearance = a->getResourceId(R::styleable::Toolbar_subtitleTextAppearance, 0);
+// AOSP ensureNavButtonView passes R.attr.toolbarNavigationButtonStyle as the
+// ImageButton defStyleAttr; CDROID's res registers it as navigationButtonStyle.
+mNavButtonStyle = R::attr::navigationButtonStyle;
 // navigationButtonStyle is a private framework attr with no resource id
 // (skipped by gen_styleable) — not readable through the TypedArray.
 mGravity = a->getInteger(R::styleable::Toolbar_gravity, mGravity);
@@ -347,7 +345,7 @@ bool Toolbar::isTitleTruncated()const{
     return false;
 }
 
-void Toolbar::setLogo(const std::string& resId){
+void Toolbar::setLogo(int resId){
     setLogo(getContext()->getDrawable(resId));
 }
 
@@ -419,7 +417,7 @@ void Toolbar::setTitle(const std::string&title){
             mTitleTextView = new TextView(context,AttributeSet(mContext,"cdroid"));
             mTitleTextView->setSingleLine(true);
             mTitleTextView->setEllipsize(TextUtils::TruncateAt::END);
-            if (!mTitleTextAppearance.empty()) {
+            if (mTitleTextAppearance != 0) {
                 mTitleTextView->setTextAppearance(mTitleTextAppearance);
             }
             if (mTitleTextColor != 0) {
@@ -452,7 +450,7 @@ void Toolbar::setSubtitle(const std::string&subtitle){
             mSubtitleTextView = new TextView(mContext,AttributeSet(mContext,"cdroid"));
             mSubtitleTextView->setSingleLine(true);
             mSubtitleTextView->setEllipsize(TextUtils::TruncateAt::END);
-            if (!mSubtitleTextAppearance.empty()) {
+            if (mSubtitleTextAppearance != 0) {
                 mSubtitleTextView->setTextAppearance(mSubtitleTextAppearance);
             }
             if (mSubtitleTextColor != 0) {
@@ -711,8 +709,8 @@ int Toolbar::getCurrentContentInsetRight()const{
 
 void Toolbar::ensureNavButtonView(){
     if (mNavButtonView == nullptr) {
-        AttributeSet attrs = mContext->obtainStyledAttributes(mNavButtonStyle);
-        mNavButtonView = new ImageButton(getContext(),attrs);
+        // AOSP: new ImageButton(context, null, R.attr.toolbarNavigationButtonStyle).
+        mNavButtonView = new ImageButton(getContext(),nullptr,mNavButtonStyle);
         LayoutParams* lp = (LayoutParams*)generateDefaultLayoutParams();
         lp->gravity = Gravity::START | (mButtonGravity & Gravity::VERTICAL_GRAVITY_MASK);
         mNavButtonView->setLayoutParams(lp);
@@ -721,8 +719,8 @@ void Toolbar::ensureNavButtonView(){
 
 void Toolbar::ensureCollapseButtonView(){
     if (mCollapseButtonView == nullptr) {
-        AttributeSet attrs = mContext->obtainStyledAttributes(mNavButtonStyle);
-        mCollapseButtonView = new ImageButton(getContext(),attrs);
+        // AOSP: new ImageButton(context, null, R.attr.toolbarNavigationButtonStyle).
+        mCollapseButtonView = new ImageButton(getContext(),nullptr,mNavButtonStyle);
         mCollapseButtonView->setImageDrawable(mCollapseIcon);
         mCollapseButtonView->setContentDescription(mCollapseDescription);
         LayoutParams* lp = (LayoutParams*)generateDefaultLayoutParams();

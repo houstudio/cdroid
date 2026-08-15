@@ -41,9 +41,9 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
     const std::string minDate = a ? a->getString(R::styleable::CalendarView_minDate) : std::string();
     const std::string maxDate = a ? a->getString(R::styleable::CalendarView_maxDate) : std::string();
 
-    std::string monthTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_monthTextAppearance) : std::string();
-    std::string dayOfWeekTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_weekDayTextAppearance) : std::string();
-    std::string dayTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_dateTextAppearance) : std::string();
+    const int monthTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_monthTextAppearance, 0) : 0;
+    const int dayOfWeekTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_weekDayTextAppearance, 0) : 0;
+    const int dayTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_dateTextAppearance, 0) : 0;
 
     auto daySelectorColor = a ? a->getColorStateList(R::styleable::CalendarView_daySelectorColor) : nullptr;
 
@@ -86,10 +86,16 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
     mViewPager->addOnPageChangeListener(pcl);
 
     // Proxy the month text color into the previous and next buttons.
-    if (!monthTextAppearanceResId.empty()) {
+    if (monthTextAppearanceResId != 0) {
+        // AOSP: mPrevNextButtonColor = textAppearance.getTextColor(); resolve the
+        // style's textColor through its own typed resolution.
         static const uint32_t kTextColor[] = { R::attr::textColor, 0 };
-        auto ta = mContext->obtainStyledAttributes(kTextColor);
-        auto monthColor = ta ? ta->getColorStateList(0) : nullptr;
+        auto taStyle = mContext->obtainStyledAttributes(monthTextAppearanceResId, R::styleable::TextAppearance);
+        auto monthColor = taStyle ? taStyle->getColorStateList(R::styleable::TextAppearance_textColor) : nullptr;
+        if (monthColor == nullptr) {
+            auto ta = mContext->obtainStyledAttributes(kTextColor);
+            monthColor = ta ? ta->getColorStateList(0) : nullptr;
+        }
         if (monthColor != nullptr) {
             mPrevButton->setImageTintList(monthColor);
             mNextButton->setImageTintList(monthColor);
@@ -200,19 +206,19 @@ void DayPickerView::onLayout(bool changed, int left, int top, int width, int hei
                 rightIconRight, rightIconTop + rightDH);
 }
 
-void DayPickerView::setDayOfWeekTextAppearance(const std::string& resId) {
+void DayPickerView::setDayOfWeekTextAppearance(int resId) {
     mAdapter->setDayOfWeekTextAppearance(resId);
 }
 
-const std::string DayPickerView::getDayOfWeekTextAppearance() {
+int DayPickerView::getDayOfWeekTextAppearance() {
     return mAdapter->getDayOfWeekTextAppearance();
 }
 
-void DayPickerView::setDayTextAppearance(const std::string& resId) {
+void DayPickerView::setDayTextAppearance(int resId) {
     mAdapter->setDayTextAppearance(resId);
 }
 
-const std::string DayPickerView::getDayTextAppearance() {
+int DayPickerView::getDayTextAppearance() {
     return mAdapter->getDayTextAppearance();
 }
 

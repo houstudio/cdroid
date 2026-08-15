@@ -1,7 +1,9 @@
 #include <view/viewstub.h>
 #include <view/viewgroup.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(ViewStub)
 
@@ -9,8 +11,10 @@ ViewStub::ViewStub(Context* context,const AttributeSet& attrs):ViewStub(context,
 
 ViewStub::ViewStub(Context* context,const AttributeSet* pAttrs,int defStyleAttr):View(context,pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
-    mInflatedId = attrs.getResourceId("inflatedId",View::NO_ID);
-    mLayoutResource  = attrs.getString("layout");
+    // AOSP ViewStub: ViewStub styleable (layout/inflatedId are references).
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::ViewStub, defStyleAttr);
+    mInflatedId = a->getResourceId(R::styleable::ViewStub_inflatedId, View::NO_ID);
+    mLayoutResource = a->getResourceId(R::styleable::ViewStub_layout, 0);
     mInflatedViewRef = nullptr;
     mInflateListener = nullptr;
     setVisibility(GONE);
@@ -21,8 +25,12 @@ int ViewStub::getInflatedId()const{
     return mInflatedId;
 }
 
-const std::string& ViewStub::getLayoutResource()const{
+int ViewStub::getLayoutResource()const{
     return mLayoutResource;
+}
+
+void ViewStub::setLayoutResource(int layoutResource){
+    mLayoutResource = layoutResource;
 }
 
 void ViewStub::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
@@ -81,7 +89,7 @@ void ViewStub::replaceSelfWithView(View* view, ViewGroup* parent) {
 View* ViewStub::inflate() {
     ViewGroup* parent = getParent();
     if (parent) {
-        if (!mLayoutResource.empty()) {
+        if (mLayoutResource != 0) {
             View* view = inflateViewNoAdd(parent);
             replaceSelfWithView(view, parent);
 

@@ -127,7 +127,7 @@ PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
     axis(TopAxis)->setTickLabelsShown(tickLabels&2);
     axis(RightAxis)->setTickLabelsShown(tickLabels&4);
     axis(BottomAxis)->setTickLabelsShown(tickLabels&8);
-    //d->tickMarkTextColor= atts.getInt("tickMarkColor",d->tickMarkTextColor);
+    //d->tickMarkTextColor= atts.getAttributeIntValue(std::string(), "tickMarkColor",d->tickMarkTextColor);
 }
 
 PlotView::~PlotView()

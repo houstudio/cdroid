@@ -480,7 +480,7 @@ void KeyboardView::showKey(int keyIndex){
  * popupResId template), host it in mPopupKeyboard (a PopupWindow) above the
  * key, and forward the mini-keyboard's key events to our own listener. */
 bool KeyboardView::onLongPress(Keyboard::Key* popupKey){
-    if(popupKey->popupResId.empty()) return false; // AOSP: popupResId != 0
+    if(popupKey->popupResId == 0) return false; // AOSP: popupResId != 0
 
     auto cached = mMiniKeyboardCache.find(popupKey);
     if(cached != mMiniKeyboardCache.end()){

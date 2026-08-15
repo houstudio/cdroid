@@ -56,11 +56,11 @@ ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     setMaxWidth (ta->getDimensionPixelSize(R::styleable::ImageView_maxWidth,INT_MAX));
     setMaxHeight(ta->getDimensionPixelSize(R::styleable::ImageView_maxHeight,INT_MAX));
     setImageAlpha(ta->getInt(R::styleable::View_alpha,255));
-    const int radii = attrs.getInt("radius",0);
-    mRadii[0] = attrs.getInt("topLeftRadius",radii);
-    mRadii[1] = attrs.getInt("topRightRadius",radii);
-    mRadii[2] = attrs.getInt("bottomRightRadius",radii);
-    mRadii[3] = attrs.getInt("bottomLeftRadius",radii);
+    //const int radii = attrs.getAttributeIntValue(std::string(), "radius",0);
+    mRadii[0] = 0;//attrs.getAttributeIntValue(std::string(), "topLeftRadius",radii);
+    mRadii[1] = 0;//attrs.getAttributeIntValue(std::string(), "topRightRadius",radii);
+    mRadii[2] = 0;//attrs.getAttributeIntValue(std::string(), "bottomRightRadius",radii);
+    mRadii[3] = 0;//attrs.getAttributeIntValue(std::string(), "bottomLeftRadius",radii);
     applyImageTint();
 }
 
@@ -138,7 +138,18 @@ void ImageView::resolveUri(){
             setImageBitmap(bitmap);
             return;
         }else if(mResource.compare("@null")){
-            d = getContext()->getDrawable(mResource);
+            // Resolve the "@[pkg:]type/name" reference through arsc — getDrawable
+            // is id-keyed (no string bridge).
+            std::string ref = (mResource[0]=='@') ? mResource.substr(1) : mResource;
+            const size_t slash = ref.rfind('/');
+            const size_t colon = ref.rfind(':');
+            const size_t typeStart = (colon==std::string::npos)?0:colon+1;
+            const std::string name = (slash==std::string::npos)?ref:ref.substr(slash+1);
+            const std::string type = (slash==std::string::npos)?std::string("drawable")
+                                     :ref.substr(typeStart, slash-typeStart);
+            const std::string pkg = (colon==std::string::npos)?std::string():ref.substr(0,colon);
+            const int resId = getContext()->getResources().getIdentifier(name, type, pkg);
+            d = resId ? getContext()->getDrawable(resId) : nullptr;
             LOGW_IF(d==nullptr,"Unable to find resource: %s",mResource.c_str());
         }else{
             updateDrawable(nullptr);
@@ -165,8 +176,10 @@ Drawable* ImageView::getDrawableFromUri(const Uri& uri){
         if(segs.size()>=2){
             const std::string& type = segs[segs.size()-2];
             const std::string& name = segs[segs.size()-1];
-            std::string ref = "@" + (authority.empty()?std::string():(authority+":")) + type + "/" + name;
-            Drawable* d = getContext()->getDrawable(ref);
+            // AOSP re-loads through the owning Resources — resolve the
+            // pkg/type/name path to an id, then getDrawable(int).
+            const int resId = getContext()->getResources().getIdentifier(name, type, authority);
+            Drawable* d = resId ? getContext()->getDrawable(resId) : nullptr;
             if(d) return d;
             LOGW("Unable to open content: %s",uri.toString().c_str());
         }

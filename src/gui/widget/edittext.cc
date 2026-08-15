@@ -39,15 +39,7 @@ EditText::EditText(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :TextView(ctx,pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
     initEditText();
-    setInputType(attrs.getInt("inputType",std::unordered_map<std::string,int>{
-		    {"none",  (int)InputType::TYPE_NULL},
-		    {"any",   (int)InputType::TYPE_CLASS_TEXT},
-		    {"text",  (int)InputType::TYPE_CLASS_TEXT},
-		    {"number",(int)InputType::TYPE_CLASS_NUMBER},
-		    {"textPassword",        InputType::TYPE_CLASS_TEXT | (int)InputType::TYPE_TEXT_VARIATION_PASSWORD},
-		    {"textVisiblePassword", InputType::TYPE_CLASS_TEXT | (int)InputType::TYPE_TEXT_VARIATION_PASSWORD},
-		    {"ip",   (int)InputType::TYPE_CLASS_TEXT}
-	  }, (int)InputType::TYPE_CLASS_TEXT));
+    setInputType(attrs.getAttributeIntValue(std::string(), "inputType", (int)InputType::TYPE_CLASS_TEXT));
     // Android-aligned: an EditText's buffer is Editable from construction via
     // setText(EDITABLE) — not a runtime setEditable() conversion. setText also
     // creates the Editor and syncs mTransformed, so the Layout draws the same

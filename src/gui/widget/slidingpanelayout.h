@@ -163,8 +163,8 @@ public:
     void setShadowDrawableLeft(Drawable* d);
     void setShadowDrawableRight(Drawable* d);
 
-    void setShadowResourceLeft(const std::string& resId);
-    void setShadowResourceRight(const std::string& resId);
+    void setShadowResourceLeft(int resId);
+    void setShadowResourceRight(int resId);
     void draw(Canvas& c)override;
 
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;

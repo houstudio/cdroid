@@ -103,7 +103,7 @@ int CalendarView::getWeekSeparatorLineColor() const{
     return mDelegate->getWeekSeparatorLineColor();
 }
 
-void CalendarView::setSelectedDateVerticalBar(const std::string& resourceId) {
+void CalendarView::setSelectedDateVerticalBar(int resourceId) {
     mDelegate->setSelectedDateVerticalBar(resourceId);
 }
 

@@ -1143,7 +1143,17 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
     mDisplayedDrawableSize = 0;
     int drsize=0;
     for(auto s:mDisplayedValues){
-        Drawable*dr = s.find("/")==std::string::npos?nullptr:mContext->getDrawable(s);
+        // Display values may carry drawable refs as "type/name" — resolve through
+        // arsc (getDrawable is id-keyed now).
+        Drawable*dr = nullptr;
+        const size_t slash = s.find('/');
+        if (slash != std::string::npos) {
+            std::string t = s.substr(0, slash), n = s.substr(slash + 1), pkg;
+            const size_t colon = t.rfind(':');
+            if (colon != std::string::npos) { pkg = t.substr(0, colon); t = t.substr(colon + 1); }
+            const int resId = mContext->getResources().getIdentifier(n, t, pkg);
+            if (resId) dr = mContext->getDrawable(resId);
+        }
         mDisplayedDrawables.push_back(dr);
         if(dr){
             drsize += (isHorizontalMode()?dr->getIntrinsicWidth():dr->getIntrinsicHeight());

@@ -430,7 +430,7 @@ void ViewPager::setPageMarginDrawable(Drawable* d){
     invalidate();    
 }
 
-void ViewPager::setPageMarginDrawable(const std::string&resId){
+void ViewPager::setPageMarginDrawable(int resId){
     setPageMarginDrawable(getContext()->getDrawable(resId));
 }
 

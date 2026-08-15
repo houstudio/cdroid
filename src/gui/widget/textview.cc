@@ -453,10 +453,12 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
 // readTextAppearance switch only iterates SET indices so unset element attrs
 // don't clobber values taken from the style.
     TextAppearanceAttributes attributes;
-    const std::string appearance = attrs.getString("textAppearance");
-    if(appearance.empty()==false) {
-        AttributeSet styleAttrs = ctx->obtainStyledAttributes(appearance);
-        auto taStyle = ctx->obtainStyledAttributes(styleAttrs, R::styleable::TextAppearance, defStyleAttr);
+    // AOSP: textAppearance = a.getResourceId(TextView_textAppearance, -1), then
+    // obtainStyledAttributes(textAppearance, R.styleable.TextAppearance) —
+    // the style's typed resolution, no string→AttributeSet round-trip.
+    const int textAppearance = ta->getResourceId(R::styleable::TextView_textAppearance, -1);
+    if(textAppearance != -1) {
+        auto taStyle = ctx->obtainStyledAttributes(textAppearance, R::styleable::TextAppearance);
         attributes.readTextAppearance(ctx, taStyle.get());
     }
     {
@@ -1578,21 +1580,6 @@ Drawable* TextView::getTextCursorDrawable()const {
         mCursorDrawable=new ColorDrawable(0xFFFF0000);
     }
     return mCursorDrawable;
-}
-void TextView::setTextAppearance(Context*context,const std::string&appearance) {
-    TextAppearanceAttributes attributes;
-    if(appearance.empty()==false) {
-        AttributeSet attrs = context->obtainStyledAttributes(appearance);
-        if(attrs.getAttributeCount()) {
-            auto ta = context->obtainStyledAttributes(attrs, R::styleable::TextAppearance);
-            attributes.readTextAppearance(mContext, ta.get());
-            applyTextAppearance(&attributes);
-        }
-    }
-}
-
-void TextView::setTextAppearance(const std::string&appearance) {
-    setTextAppearance(mContext,appearance);
 }
 
 void TextView::setTextAppearance(Context*context,int resId) {
@@ -3831,13 +3818,6 @@ void TextView::setCompoundDrawablesWithIntrinsicBounds(Drawable* left,Drawable* 
     if (top)  top->setBounds(0, 0, top->getIntrinsicWidth(), top->getIntrinsicHeight());
     if (bottom)bottom->setBounds(0, 0, bottom->getIntrinsicWidth(), bottom->getIntrinsicHeight());
     setCompoundDrawables(left, top, right, bottom);
-}
-
-void TextView::setCompoundDrawablesWithIntrinsicBounds(const std::string& left, const std::string& top,
-        const std::string& right,const std::string& bottom) {
-    Context* context = getContext();
-    setCompoundDrawablesWithIntrinsicBounds(context->getDrawable(left),context->getDrawable(top),
-                                            context->getDrawable(right),context->getDrawable(bottom));
 }
 
 std::vector<Drawable*> TextView::getCompoundDrawablesRelative() const {

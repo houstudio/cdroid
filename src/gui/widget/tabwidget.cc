@@ -156,7 +156,7 @@ void TabWidget::setDividerDrawable(Drawable* drawable) {
     LinearLayout::setDividerDrawable(drawable);
 }
 
-void TabWidget::setDividerDrawable(const std::string& resId) {
+void TabWidget::setDividerDrawable(int resId) {
     setDividerDrawable(mContext->getDrawable(resId));
 }
 void TabWidget::setLeftStripDrawable(Drawable* drawable) {
@@ -164,7 +164,7 @@ void TabWidget::setLeftStripDrawable(Drawable* drawable) {
     requestLayout();
     invalidate();
 }
-void TabWidget::setLeftStripDrawable(const std::string&resId) {
+void TabWidget::setLeftStripDrawable(int resId) {
     setLeftStripDrawable(mContext->getDrawable(resId));
 }
 
@@ -178,7 +178,7 @@ void TabWidget::setRightStripDrawable(Drawable* drawable) {
     invalidate();
 }
 
-void TabWidget::setRightStripDrawable(const std::string& resId) {
+void TabWidget::setRightStripDrawable(int resId) {
     setRightStripDrawable(mContext->getDrawable(resId));
 }
 

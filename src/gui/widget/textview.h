@@ -359,8 +359,6 @@ public:
     MovementMethod* getMovementMethod() const { return mMovement; }
     void setTextCursorDrawable(Drawable*);
     Drawable* getTextCursorDrawable()const;
-    void setTextAppearance(const std::string&);
-    void setTextAppearance(Context*,const std::string&);
     void setTextAppearance(int resId);
     void setTextAppearance(Context*,int resId);
     void setHint(int resid);
@@ -577,8 +575,6 @@ public:
     void setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
     void setCompoundDrawablesWithIntrinsicBounds(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
     void setCompoundDrawablesWithIntrinsicBounds(int left,int top,int right,int bottom);
-    void setCompoundDrawablesWithIntrinsicBounds(const std::string& left, const std::string& top,
-                const std::string& right,const std::string& bottom);
     int computeHorizontalScrollRange()override;
     int computeVerticalScrollRange()override;
 

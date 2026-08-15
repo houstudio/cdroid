@@ -108,7 +108,7 @@ private:
     static bool sUseLargeIcons;
 
     int mType;
-    std::string mSystemIconResourceId;
+    int mSystemIconResourceId = 0;   // AOSP: resource id of the system icon (0 == unset)
     Bitmap mBitmap;
     float mHotSpotX;
     float mHotSpotY;
@@ -195,7 +195,7 @@ public:
      * @throws Resources.NotFoundException if the resource was not found or the drawable
      * linked in the resource was not found.
      */
-    static PointerIcon* load(Context*ctx,const std::string& resourceId);
+    static PointerIcon* load(Context*ctx,int resourceId);
 
     /**
      * Loads the bitmap and hotspot information for a pointer icon, if it is not already loaded.
@@ -224,7 +224,7 @@ public:
 private:
     Bitmap getBitmapFromDrawable(BitmapDrawable* bitmapDrawable);
 
-    void loadResource(Context* context, const std::string& resourceId);
+    void loadResource(Context* context, int resourceId);
 
     static void validateHotSpot(Bitmap bitmap, float hotSpotX, float hotSpotY);
 

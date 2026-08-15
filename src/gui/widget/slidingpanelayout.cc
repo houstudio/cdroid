@@ -885,11 +885,11 @@ void SlidingPaneLayout::setShadowDrawableRight(Drawable* d) {
     mShadowDrawableRight = d;
 }
 
-void SlidingPaneLayout::setShadowResourceLeft(const std::string& resId) {
+void SlidingPaneLayout::setShadowResourceLeft(int resId) {
     setShadowDrawableLeft(getContext()->getDrawable(resId));
 }
 
-void SlidingPaneLayout::setShadowResourceRight(const std::string& resId) {
+void SlidingPaneLayout::setShadowResourceRight(int resId) {
     setShadowDrawableRight(getContext()->getDrawable(resId));
 }
 
@@ -1188,7 +1188,7 @@ SlidingPaneLayout::LayoutParams::LayoutParams(const LayoutParams& source)
 SlidingPaneLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& attrs)
     :ViewGroup::MarginLayoutParams(c, attrs){
 
-    this->weight = attrs.getFloat("weight", 0);
+    this->weight = attrs.getAttributeFloatValue(std::string(), "weight", 0);
 }
 
 #if 0

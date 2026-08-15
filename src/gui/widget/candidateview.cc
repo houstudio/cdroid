@@ -46,8 +46,10 @@ CandidateView::CandidateView(Context*ctx,const AttributeSet* pAttrs,int defStyle
      mColorNormal = ta->getColor(R::styleable::CandidateView_candidate_normal, 0);
      mColorRecommended = ta->getColor(R::styleable::CandidateView_candidate_recommand, 0);
      mColorOther = ta->getColor(R::styleable::CandidateView_candidate_other, 0);
-     mVerticalPadding = atts.getDimensionPixelSize("candidate_vertical_padding");
-     const int textSize = atts.getDimensionPixelSize("candidate_font_height",20);
+     // candidate_vertical_padding/candidate_font_height are not registered attr
+     // ids (the string reads always fell through) — keep the fallback values.
+     mVerticalPadding = 0;
+     const int textSize = 20;
      setHorizontalFadingEdgeEnabled(true);
      setWillNotDraw(false);
      setHorizontalScrollBarEnabled(false);

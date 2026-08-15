@@ -110,7 +110,7 @@ public:
     Switch(Context* context,const AttributeSet& attrs);
     Switch(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
     ~Switch()override;
-    void setSwitchTextAppearance(Context* context,const std::string&resid);
+    void setSwitchTextAppearance(Context* context,int resid);
     void setSwitchTypeface(Typeface* tf, int style);
     void setSwitchTypeface(Typeface* tf);
     void setSwitchPadding(int pixels);
@@ -120,14 +120,14 @@ public:
     void setThumbTextPadding(int pixels);
     int  getThumbTextPadding()const;
     void setTrackDrawable(Drawable* track);
-    void setTrackResource(const std::string& resId);
+    void setTrackResource(int resId);
     Drawable* getTrackDrawable();
     void setTrackTintList(const cdroid::RefPtr<ColorStateList>& tint);
     const cdroid::RefPtr<ColorStateList> getTrackTintList();
     void setTrackTintMode(PorterDuffMode tintMode);
     PorterDuffMode getTrackTintMode()const;
     void setThumbDrawable(Drawable* thumb);
-    void setThumbResource(const std::string& resId);
+    void setThumbResource(int resId);
     Drawable* getThumbDrawable();
     void setThumbTintList(const cdroid::RefPtr<ColorStateList> tint);
     const cdroid::RefPtr<ColorStateList> getThumbTintList()const;

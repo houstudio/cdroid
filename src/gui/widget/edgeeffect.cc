@@ -16,7 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/edgeeffect.h>
+#include <widget/internal_R.h>
 #include <core/systemclock.h>
+#include <core/typedarray.h>
 #include <utils/mathutils.h>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -51,9 +53,12 @@ EdgeEffect::EdgeEffect(Context* context,const AttributeSet* attrs){
     mDuration = PULL_DECAY_TIME;
     mDistance = 0;
     mVelocity = 0.f;
-    if(attrs != nullptr){
-        mColor = attrs->getColor("colorEdgeEffect", 0xff666666);
-    }
+    (void)attrs;
+    // AOSP: colorEdgeEffect is a theme attribute (R.attr.colorEdgeEffect), not a
+    // tag attribute — resolve it through the theme.
+    static const uint32_t EDGE_EFFECT_ATTRS[] = { (uint32_t)cdroid::internal::R::attr::colorEdgeEffect, 0 };
+    auto ta = context->obtainStyledAttributes(EDGE_EFFECT_ATTRS);
+    mColor = ta ? ta->getColor(0, 0xff666666) : 0xff666666;
 }
 
 EdgeEffect::~EdgeEffect(){

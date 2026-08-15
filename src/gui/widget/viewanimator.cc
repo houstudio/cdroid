@@ -44,7 +44,7 @@ ViewAnimator::~ViewAnimator(){
 void ViewAnimator::initViewAnimator(Context* context, const AttributeSet& attrs) {
     // For compatibility, default to measure children, but allow XML
     // attribute to override.
-    setMeasureAllChildren(attrs.getBoolean("measureAllChildren", true));
+    setMeasureAllChildren(attrs.getAttributeBooleanValue(std::string(), "measureAllChildren", true));
     mInAnimation  = nullptr;
     mOutAnimation = nullptr;
 }

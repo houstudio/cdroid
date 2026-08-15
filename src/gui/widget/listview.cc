@@ -60,12 +60,12 @@ void ListView::initListView(const AttributeSet&attrs,int defStyleAttr) {
     auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ListView, defStyleAttr, 0);
     if (ta) {
 
-    Drawable* d = ctx->getDrawable(ta->getString(R::styleable::ListView_divider));
-    Drawable* osHeader = ctx->getDrawable(ta->getString(R::styleable::ListView_overScrollHeader));
-    Drawable* osFooter = ctx->getDrawable(ta->getString(R::styleable::ListView_overScrollFooter));
+    Drawable* d = ta->getDrawable(R::styleable::ListView_divider);
+    Drawable* osHeader = ta->getDrawable(R::styleable::ListView_overScrollHeader);
+    Drawable* osFooter = ta->getDrawable(R::styleable::ListView_overScrollFooter);
 
     setOverscrollHeader(osHeader);
-    setOverscrollHeader(osFooter);
+    setOverscrollFooter(osFooter);
     setDivider(d);
     mHeaderDividersEnabled = ta->getBoolean(R::styleable::ListView_headerDividersEnabled,true);
     mFooterDividersEnabled = ta->getBoolean(R::styleable::ListView_footerDividersEnabled, true);

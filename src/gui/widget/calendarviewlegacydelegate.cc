@@ -57,11 +57,11 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
     mWeekNumberColor = a ? a->getColor(R::styleable::CalendarView_weekNumberColor, 0xFF9BA6B2) : 0xFF9BA6B2;
     mSelectedDateVerticalBar = a ? a->getDrawable(R::styleable::CalendarView_selectedDateVerticalBar) : nullptr;
 
-    const std::string dateTextAppearance = a ? a->getString(R::styleable::CalendarView_dateTextAppearance) : std::string();
-    mDateTextAppearanceResId = dateTextAppearance.empty() ? std::string("cdroid:style/TextAppearance_Small") : dateTextAppearance;
+    mDateTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_dateTextAppearance, R::style::TextAppearance_Small)
+                                 : R::style::TextAppearance_Small;
     updateDateTextSize();
 
-    mWeekDayTextAppearanceResId = a ? a->getString(R::styleable::CalendarView_weekDayTextAppearance) : std::string();
+    mWeekDayTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_weekDayTextAppearance, 0) : 0;
 
     DisplayMetrics displayMetrics = mDelegator->getContext()->getDisplayMetrics();
     mWeekMinVisibleHeight = UNSCALED_WEEK_MIN_VISIBLE_HEIGHT;
@@ -189,7 +189,7 @@ int CalendarViewLegacyDelegate::getWeekSeparatorLineColor() const{
     return mWeekSeparatorLineColor;
 }
 
-void CalendarViewLegacyDelegate::setSelectedDateVerticalBar(const std::string& resourceId) {
+void CalendarViewLegacyDelegate::setSelectedDateVerticalBar(int resourceId) {
     Drawable* drawable = mDelegator->getContext()->getDrawable(resourceId);
     setSelectedDateVerticalBar(drawable);
 }
@@ -211,27 +211,43 @@ Drawable* CalendarViewLegacyDelegate::getSelectedDateVerticalBar() const{
     return mSelectedDateVerticalBar;
 }
 
+// Bridge the legacy "@[package:]type/name" string face to an arsc resource id
+// (CalendarView's public setters stay string-keyed; the members hold ids).
+static int resolveTextAppearanceResId(Context* ctx, const std::string& ref) {
+    const std::string s = (!ref.empty() && ref[0] == '@') ? ref.substr(1) : ref;
+    const size_t slash = s.rfind('/');
+    if (slash == std::string::npos) return 0;
+    const size_t colon = s.rfind(':');
+    const size_t typeStart = (colon == std::string::npos) ? 0 : colon + 1;
+    const std::string name = s.substr(slash + 1);
+    const std::string type = s.substr(typeStart, slash - typeStart);
+    const std::string pkg = (colon == std::string::npos) ? std::string() : s.substr(0, colon);
+    return ctx->getResources().getIdentifier(name, type.empty() ? "style" : type, pkg);
+}
+
 void CalendarViewLegacyDelegate::setWeekDayTextAppearance(const std::string& resourceId) {
-    if (mWeekDayTextAppearanceResId != resourceId) {
-        mWeekDayTextAppearanceResId = resourceId;
+    const int resId = resolveTextAppearanceResId(mDelegator->getContext(), resourceId);
+    if (mWeekDayTextAppearanceResId != resId) {
+        mWeekDayTextAppearanceResId = resId;
         setUpHeader();
     }
 }
 
 std::string CalendarViewLegacyDelegate::getWeekDayTextAppearance() const{
-    return mWeekDayTextAppearanceResId;
+    return mDelegator->getContext()->getResourceName((uint32_t)mWeekDayTextAppearanceResId);
 }
 
 void CalendarViewLegacyDelegate::setDateTextAppearance(const std::string& resourceId) {
-    if (mDateTextAppearanceResId != resourceId) {
-        mDateTextAppearanceResId = resourceId;
+    const int resId = resolveTextAppearanceResId(mDelegator->getContext(), resourceId);
+    if (mDateTextAppearanceResId != resId) {
+        mDateTextAppearanceResId = resId;
         updateDateTextSize();
         invalidateAllWeekViews();
     }
 }
 
 std::string CalendarViewLegacyDelegate::getDateTextAppearance() const{
-    return mDateTextAppearanceResId;
+    return mDelegator->getContext()->getResourceName((uint32_t)mDateTextAppearanceResId);
 }
 
 void CalendarViewLegacyDelegate::setMinDate(int64_t minDate) {
@@ -374,11 +390,9 @@ void CalendarViewLegacyDelegate::onConfigurationChanged(int newConfig) {
 
 void CalendarViewLegacyDelegate::updateDateTextSize() {
     Context* ctx = mDelegator->getContext();
-    const AttributeSet attr = ctx->obtainStyledAttributes(mDateTextAppearanceResId);
-    // Resolve the TextAppearance style typed (framework textSize sub-attr), the
-    // same pattern as switch/simplemonthview/tablayout; keep the init default
-    // when the style is unset or unresolvable.
-    auto ta = ctx->obtainStyledAttributes(attr, R::styleable::TextAppearance);
+    // Resolve the TextAppearance style typed (framework textSize sub-attr); keep
+    // the init default when the style is unset or unresolvable.
+    auto ta = ctx->obtainStyledAttributes(mDateTextAppearanceResId, R::styleable::TextAppearance);
     mDateTextSize = ta ? ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, DEFAULT_DATE_TEXT_SIZE)
                        : DEFAULT_DATE_TEXT_SIZE;
 }
@@ -464,7 +478,7 @@ void CalendarViewLegacyDelegate::setUpHeader() {
     }
     for (int i = 1, count = mDayNamesHeader->getChildCount(); i < count; i++) {
         label = (TextView*) mDayNamesHeader->getChildAt(i);
-        if (mWeekDayTextAppearanceResId.size()) {
+        if (mWeekDayTextAppearanceResId != 0) {
             label->setTextAppearance(mWeekDayTextAppearanceResId);
         }
         if (i < mDaysPerWeek + 1) {

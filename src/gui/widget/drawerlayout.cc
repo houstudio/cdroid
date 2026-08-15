@@ -17,8 +17,10 @@
  *********************************************************************************/
 #include <core/build.h>
 #include <widget/drawerlayout.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(DrawerLayout)
 
@@ -155,7 +157,7 @@ void DrawerLayout::setDrawerShadow(Drawable* shadowDrawable,int gravity){
     invalidate();
 }
 
-void DrawerLayout::setDrawerShadow(const std::string&resId,int gravity) {
+void DrawerLayout::setDrawerShadow(int resId,int gravity) {
     setDrawerShadow(mContext->getDrawable(resId), gravity);
 }
 
@@ -916,7 +918,7 @@ Drawable* DrawerLayout::getStatusBarBackgroundDrawable() {
 }
 
 
-void DrawerLayout::setStatusBarBackground(const std::string& resId) {
+void DrawerLayout::setStatusBarBackground(int resId) {
     delete mStatusBarBackground;
     mStatusBarBackground = getContext()->getDrawable(resId);
     invalidate();
@@ -1792,7 +1794,9 @@ int DrawerLayout::ViewDragCallback::clampViewPositionVertical(View& child, int t
 
 DrawerLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
   :ViewGroup::MarginLayoutParams(c, attrs){
-    gravity = attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
+    // layout_gravity is shared with LinearLayout's styleable (same framework attr).
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::LinearLayoutLayout);
+    gravity = ta->getInt(R::styleable::LinearLayoutLayout_layout_gravity, Gravity::NO_GRAVITY);
     onScreen =0.0f;
 }
 

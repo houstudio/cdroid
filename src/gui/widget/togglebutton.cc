@@ -37,9 +37,9 @@ ToggleButton::ToggleButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAt
     auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ToggleButton, defStyleAttr);
     
 
-setTextOn(ctx->getString(ta->getString(R::styleable::ToggleButton_textOn)));
-setTextOff(ctx->getString(ta->getString(R::styleable::ToggleButton_textOff)));
-mDisabledAlpha= ta->getFloat(R::styleable::ToggleButton_disabledAlpha,0.5f);
+    setTextOn(ta->getString(R::styleable::ToggleButton_textOn));
+    setTextOff(ta->getString(R::styleable::ToggleButton_textOff));
+    mDisabledAlpha= ta->getFloat(R::styleable::ToggleButton_disabledAlpha,0.5f);
 
 }
 
