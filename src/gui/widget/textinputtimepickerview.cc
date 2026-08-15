@@ -90,9 +90,9 @@ void TextInputTimePickerView::setListener(const OnValueTypedListener& listener) 
 void TextInputTimePickerView::setHourFormat(int maxCharLength) {
     mHourEditText->setFilters({ new InputFilter::LengthFilter(maxCharLength)});
     mMinuteEditText->setFilters({ new InputFilter::LengthFilter(maxCharLength)});
-    /*final LocaleList locales = mContext.getResources().getConfiguration().getLocales();
+    const LocaleList locales = getContext()->getResources().getConfiguration().getLocales();
     mHourEditText->setImeHintLocales(locales);
-    mMinuteEditText->setImeHintLocales(locales);*/
+    mMinuteEditText->setImeHintLocales(locales);
 }
 
 bool TextInputTimePickerView::validateInput() {

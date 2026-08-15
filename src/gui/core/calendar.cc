@@ -150,6 +150,13 @@ std::unique_ptr<Calendar> Calendar::getInstance() {
     return cal;
 }
 
+std::unique_ptr<Calendar> Calendar::getInstance(const Locale& locale) {
+    // Single Gregorian implementation (see calendar.h) — the locale is only a
+    // selector upstream; nothing differs here.
+    (void)locale;
+    return getInstance();
+}
+
 std::unique_ptr<Calendar> Calendar::getInstance(int zoneOffsetSeconds) {
     auto cal = std::make_unique<GregorianCalendar>();
     cal->setTimeZone(zoneOffsetSeconds);

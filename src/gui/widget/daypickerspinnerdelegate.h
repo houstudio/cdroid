@@ -81,18 +81,20 @@ public:
     void setSpinnersShown(bool shown) override;
     bool getSpinnersShown() override;
 
-    //void onConfigurationChanged(Configuration newConfig)override;
+    void onConfigurationChanged(Configuration& newConfig)override;
 
     Parcelable* onSaveInstanceState(Parcelable& superState);
     void onRestoreInstanceState(Parcelable& state)override;
 
     bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event)override;
 protected:
-    //void setCurrentLocale(Locale& locale)override;
+    // Base's setCurrentLocale is protected non-virtual; this shadows it to
+    // refresh the spinner labels on locale change.
+    void setCurrentLocale(const Locale& locale);
 private:
     bool usingNumericMonths()const;
 
-    //Calendar getCalendarForLocale(Calendar& oldCalendar, Locale& locale);
+    Calendar getCalendarForLocale(Calendar& oldCalendar, const Locale& locale);
     void reorderSpinners();
     bool parseDate(const std::string& date, Calendar& outDate);
     bool isNewDate(int year, int month, int dayOfMonth);

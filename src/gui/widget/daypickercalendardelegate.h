@@ -51,7 +51,7 @@ private:
     static int getDaysInMonth(int month, int year);
     void tryVibrate();
 protected:
-    //void onLocaleChanged(Locale locale)override; // DEFERRED: Locale/DateFormat not ported.
+    void onLocaleChanged(const Locale& locale)override;
 public:
     DatePickerCalendarDelegate(DatePicker* delegator, Context* context,const AttributeSet& attrs);
 
@@ -78,7 +78,7 @@ public:
     void setSpinnersShown(bool shown) override;
     bool getSpinnersShown() override;
 
-    //void onConfigurationChanged(Configuration newConfig)override;
+    void onConfigurationChanged(Configuration& newConfig)override;
 
     Parcelable* onSaveInstanceState(Parcelable& superState)override;
     void onRestoreInstanceState(Parcelable& state)override;

@@ -32,6 +32,10 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
     mAdapter = nullptr;
     mPreviousScrollPosition =0;
     mScrollStateChangedRunnable = new ScrollStateRunnable(this);
+    // The Java base ctor's setCurrentLocale(Locale.getDefault()) dispatches
+    // virtually into our override; C++ base construction skips it, so re-run
+    // it here now that the calendar members are live.
+    setCurrentLocale(Locale::getDefault());
     auto a = context->obtainStyledAttributes(attrs, R::styleable::CalendarView, 0, 0);
     mShowWeekNumber = a ? a->getBoolean(R::styleable::CalendarView_showWeekNumber, DEFAULT_SHOW_WEEK_NUMBER) : DEFAULT_SHOW_WEEK_NUMBER;
     Calendar cal;
@@ -375,18 +379,18 @@ bool CalendarViewLegacyDelegate::getBoundsForDate(int64_t date, Rect& outBounds)
     return false;
 }
 
-void CalendarViewLegacyDelegate::onConfigurationChanged(int newConfig) {
-    //setCurrentLocale(newConfig.locale);
+void CalendarViewLegacyDelegate::onConfigurationChanged(Configuration& newConfig) {
+    setCurrentLocale(newConfig.getLocales().get(0));
 }
 
-/*void CalendarViewLegacyDelegate::setCurrentLocale(Locale locale) {
-    super.setCurrentLocale(locale);
+void CalendarViewLegacyDelegate::setCurrentLocale(const Locale& locale) {
+    AbstractCalendarViewDelegate::setCurrentLocale(locale);
 
     mTempDate = getCalendarForLocale(mTempDate, locale);
     mFirstDayOfMonth = getCalendarForLocale(mFirstDayOfMonth, locale);
     mMinDate = getCalendarForLocale(mMinDate, locale);
     mMaxDate = getCalendarForLocale(mMaxDate, locale);
-}*/
+}
 
 void CalendarViewLegacyDelegate::updateDateTextSize() {
     Context* ctx = mDelegator->getContext();
@@ -404,18 +408,14 @@ void CalendarViewLegacyDelegate::invalidateAllWeekViews() {
         view->invalidate();
     }
 }
-#if 0
-Calendar CalendarViewLegacyDelegate::getCalendarForLocale(Calendar& oldCalendar, Locale& locale) {
-    /*if (oldCalendar == null) {
-        return Calendar.getInstance(locale);
-    } else */{
-        const long currentTimeMillis = oldCalendar.getTimeInMillis();
-        Calendar newCalendar;// = Calendar.getInstance(locale);
-        newCalendar.setTimeInMillis(currentTimeMillis);
-        return newCalendar;
-    }
+Calendar CalendarViewLegacyDelegate::getCalendarForLocale(Calendar& oldCalendar, const Locale& locale) {
+    // AOSP's null-oldCalendar branch is unreachable (value member); a fresh
+    // locale calendar is what Calendar::getInstance(locale) yields anyway.
+    const int64_t currentTimeMillis = oldCalendar.getTimeInMillis();
+    Calendar newCalendar = *Calendar::getInstance(locale);
+    newCalendar.setTimeInMillis(currentTimeMillis);
+    return newCalendar;
 }
-#endif
 bool CalendarViewLegacyDelegate::isSameDate(Calendar& firstDate, Calendar& secondDate) {
     return (firstDate.get(Calendar::DAY_OF_YEAR) == secondDate.get(Calendar::DAY_OF_YEAR)
             && firstDate.get(Calendar::YEAR) == secondDate.get(Calendar::YEAR));

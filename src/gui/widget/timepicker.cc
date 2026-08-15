@@ -170,7 +170,7 @@ std::vector<std::string> TimePicker::getAmPmStrings(Context* context) {
 TimePicker::AbstractTimePickerDelegate::AbstractTimePickerDelegate(TimePicker* delegator, Context* context) {
     mDelegator = delegator;
     mContext = context;
-    //mLocale = context.getResources().getConfiguration().locale;
+    mLocale = context->getResources().getConfiguration().getLocales().get(0);
 }
 
 void TimePicker::AbstractTimePickerDelegate::setOnTimeChangedListener(const OnTimeChangedListener& callback) {

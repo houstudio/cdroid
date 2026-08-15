@@ -432,6 +432,10 @@ public:
     int getImeOptions()const;
     bool isInputMethodTarget()const;
     void setImeOptions(int imeOptions);
+    // Sets the languages the user is supposed to switch to (an empty list
+    // clears the hint — Java null maps to LocaleList::getEmptyLocaleList()).
+    void setImeHintLocales(const LocaleList& hintLocales);
+    LocaleList getImeHintLocales() const;
     bool isAnyPasswordInputType()const;   // Android TextView (TextView.java:7862)
     void setFilters(const std::vector<InputFilter*>& filters);
     std::vector<InputFilter*> getFilters();

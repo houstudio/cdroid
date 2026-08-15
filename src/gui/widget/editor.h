@@ -186,7 +186,7 @@ public:
     //Bundle extras;
     TextView::OnEditorActionListener onEditorActionListener;
     bool enterDown;
-    //LocaleList imeHintLocales;
+    LocaleList imeHintLocales;   // empty list = Java null (no hint)
 };
 class Editor::CursorController {
 public:

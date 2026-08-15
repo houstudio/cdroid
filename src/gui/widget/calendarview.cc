@@ -183,10 +183,10 @@ bool CalendarView::getBoundsForDate(int64_t date, Rect& outBounds) {
     return mDelegate->getBoundsForDate(date, outBounds);
 }
 
-/*void CalendarView::onConfigurationChanged(Configuration newConfig {
+void CalendarView::onConfigurationChanged(Configuration& newConfig) {
     FrameLayout::onConfigurationChanged(newConfig);
     mDelegate->onConfigurationChanged(newConfig);
-}*/
+}
 
 std::string CalendarView::getAccessibilityClassName() const{
     return "CalendarView";

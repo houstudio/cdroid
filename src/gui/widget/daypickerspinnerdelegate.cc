@@ -34,13 +34,10 @@ DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Cont
     mDelegator = delegator;
     mContext = context;
 
-    // DEFERRED: setCurrentLocale(Locale.getDefault()) -- CDROID has no Locale.
-    // Bootstrap the locale-dependent fields directly with numeric months.
-    mNumberOfMonths = 12; // mTempDate.getActualMaximum(Calendar.MONTH) + 1
-    mShortMonths.clear();
-    for (int i = 0; i < mNumberOfMonths; ++i) {
-        mShortMonths.push_back(std::to_string(i + 1)); // TODO: DateFormatSymbols.getShortMonths()
-    }
+    // The Java base ctor's setCurrentLocale(Locale.getDefault()) dispatches
+    // virtually into our override; C++ base construction skips it, so re-run
+    // it here now that our members are live.
+    setCurrentLocale(Locale::getDefault());
 
     auto a = context->obtainStyledAttributes(attrs, R::styleable::DatePicker, 0, 0);
     const bool spinnersShown = a ? a->getBoolean(R::styleable::DatePicker_spinnersShown, DEFAULT_SPINNERS_SHOWN) : DEFAULT_SPINNERS_SHOWN;
@@ -396,6 +393,34 @@ void DatePickerSpinnerDelegate::trySetContentDescription(View*, int, int) {
 
 void DatePickerSpinnerDelegate::updateInputState() {
     // DEFERRED: hide the IME when the user changes a value via the spinners.
+}
+
+void DatePickerSpinnerDelegate::onConfigurationChanged(Configuration& newConfig) {
+    setCurrentLocale(newConfig.getLocales().get(0));
+}
+
+void DatePickerSpinnerDelegate::setCurrentLocale(const Locale& locale) {
+    AbstractDatePickerDelegate::setCurrentLocale(locale);
+
+    mTempDate = getCalendarForLocale(mTempDate, locale);
+    mMinDate = getCalendarForLocale(mMinDate, locale);
+    mMaxDate = getCalendarForLocale(mMaxDate, locale);
+    mNumberOfMonths = mTempDate.getActualMaximum(Calendar::MONTH) + 1;
+    mShortMonths.clear();
+    for (int i = 0; i < mNumberOfMonths; i++) {
+        // TODO: DateUtils.getMonthString(JANUARY + i, LENGTH_MEDIUM) for the
+        // locale's month names (needs the per-locale symbols tables).
+        mShortMonths.push_back(std::to_string(i + 1));
+    }
+}
+
+Calendar DatePickerSpinnerDelegate::getCalendarForLocale(Calendar& oldCalendar, const Locale& locale) {
+    // AOSP's null-oldCalendar branch is unreachable here (value member; a
+    // fresh Calendar is what Calendar::getInstance(locale) yields anyway).
+    const int64_t currentTimeMillis = oldCalendar.getTimeInMillis();
+    Calendar newCalendar = *Calendar::getInstance(locale);
+    newCalendar.setTimeInMillis(currentTimeMillis);
+    return newCalendar;
 }
 
 } // namespace cdroid

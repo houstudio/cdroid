@@ -378,4 +378,19 @@ void DatePickerCalendarDelegate::tryVibrate() {
     mDelegator->performHapticFeedback(HapticFeedbackConstants::CALENDAR_DATE);
 }
 
+void DatePickerCalendarDelegate::onConfigurationChanged(Configuration& newConfig) {
+    setCurrentLocale(newConfig.getLocales().get(0));
+}
+
+void DatePickerCalendarDelegate::onLocaleChanged(const Locale& locale) {
+    (void)locale; // per-locale DateFormat skeletons ("EMMMd"/"y") not ported
+    if (mHeaderYear == nullptr) {
+        // Abort, we haven't initialized yet. This method will get called
+        // again later after everything has been set up.
+        return;
+    }
+    // Update the header text (AOSP onCurrentDateChanged).
+    updateHeader(mHeaderYear, mHeaderMonthDay, mCurrentDate);
+}
+
 } // namespace cdroid

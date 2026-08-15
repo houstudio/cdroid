@@ -222,13 +222,15 @@ public:
 
     bool getBoundsForDate(int64_t date, Rect& outBounds)override;
 
-    void onConfigurationChanged(int newConfig) override;
+    void onConfigurationChanged(Configuration& newConfig) override;
+protected:
+    void setCurrentLocale(const Locale& locale) override;
 private:
     void updateDateTextSize();
 
     void invalidateAllWeekViews();
 
-    //static Calendar getCalendarForLocale(Calendar& oldCalendar, Locale locale);
+    Calendar getCalendarForLocale(Calendar& oldCalendar, const Locale& locale);
 
     static bool isSameDate(Calendar& firstDate, Calendar& secondDate);
 

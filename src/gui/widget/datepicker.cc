@@ -156,10 +156,10 @@ std::string DatePicker::getAccessibilityClassName() const{
     return "DatePicker";
 }
 
-/*void DatePicker::onConfigurationChanged(Configuration newConfig) {
+void DatePicker::onConfigurationChanged(Configuration& newConfig) {
     FrameLayout::onConfigurationChanged(newConfig);
     mDelegate->onConfigurationChanged(newConfig);
-}*/
+}
 
 void DatePicker::setFirstDayOfWeek(int firstDayOfWeek) {
     if (firstDayOfWeek < Calendar::SUNDAY || firstDayOfWeek > Calendar::SATURDAY) {
@@ -212,15 +212,15 @@ void DatePicker::onRestoreInstanceState(Parcelable& state) {
 DatePicker::AbstractDatePickerDelegate::AbstractDatePickerDelegate(DatePicker* delegator, Context* context) {
     mDelegator = delegator;
     mContext = context;
-    //setCurrentLocale(Locale.getDefault());
+    setCurrentLocale(Locale::getDefault());
 }
 
-/*void DatePicker::AbstractDatePickerDelegate::setCurrentLocale(Locale& locale) {
-    if (!locale.equals(mCurrentLocale)) {
+void DatePicker::AbstractDatePickerDelegate::setCurrentLocale(const Locale& locale) {
+    if (!(locale == mCurrentLocale)) {
         mCurrentLocale = locale;
         onLocaleChanged(locale);
     }
-}*/
+}
 
 void DatePicker::AbstractDatePickerDelegate::setOnDateChangedListener(const OnDateChangedListener& callback) {
     mOnDateChangedListener = callback;
@@ -264,9 +264,10 @@ void DatePicker::AbstractDatePickerDelegate::onValidationChanged(bool valid) {
     }
 }
 
-/*void DatePicker::AbstractDatePickerDelegate::onLocaleChanged(Locale& locale) {
+void DatePicker::AbstractDatePickerDelegate::onLocaleChanged(const Locale& locale) {
     // Stub.
-}*/
+    (void)locale;
+}
 
 void DatePicker::AbstractDatePickerDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& event) {
     //event.getText().add(getFormattedCurrentDate());

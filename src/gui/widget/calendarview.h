@@ -80,6 +80,10 @@ public:
     void setDate(int64_t date, bool animate, bool center);
     bool getBoundsForDate(int64_t date,Rect& outBounds);
 
+protected:
+    void onConfigurationChanged(Configuration& newConfig) override;
+
+public:
     std::string getAccessibilityClassName() const override;
     static bool parseDate(const std::string& date, Calendar& outDate);
 };
@@ -135,7 +139,7 @@ public:
 
     virtual void setOnDateChangeListener(const OnDateChangeListener& listener)=0;
 
-    virtual void onConfigurationChanged(int newConfig)=0;
+    virtual void onConfigurationChanged(Configuration& newConfig)=0;
 };
 
 class CalendarView::AbstractCalendarViewDelegate:public CalendarViewDelegate {
@@ -148,22 +152,27 @@ protected:
 
     CalendarView* mDelegator;
     Context* mContext;
-    //Locale mCurrentLocale;
+    Locale mCurrentLocale;
+
+    /**
+     * Sets the current locale.
+     *
+     * @param locale The current locale.
+     */
+    virtual void setCurrentLocale(const Locale& locale) {
+        if (locale == mCurrentLocale) {
+            return;
+        }
+        mCurrentLocale = locale;
+    }
 public:
     AbstractCalendarViewDelegate(CalendarView* delegator, Context* context) {
         mDelegator = delegator;
         mContext = context;
 
         // Initialization based on locale
-        //setCurrentLocale(Locale.getDefault());
+        setCurrentLocale(Locale::getDefault());
     }
-
-    /*void setCurrentLocale(Locale locale) {
-        if (locale.equals(mCurrentLocale)) {
-            return;
-        }
-        mCurrentLocale = locale;
-    }*/
 
     void setShownWeekCount(int count) override{
         // Deprecated.
@@ -238,9 +247,10 @@ public:
         return false;
     }
 
-    void onConfigurationChanged(int newConfig) override{
+    void onConfigurationChanged(Configuration& newConfig) override{
         // Nothing to do here, configuration changes are already propagated
         // by ViewGroup.
+        (void)newConfig;
     }
 };
 

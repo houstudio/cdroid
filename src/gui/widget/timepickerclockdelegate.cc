@@ -2,6 +2,7 @@
 #include <climits>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
+#include <text/textutils.h>   // getLayoutDirectionFromLocale (setAmPmStart)
 #include <widget/framework_styleable.h>
 #include <core/typedarray.h>
 #include <widget/radialtimepickerview.h>
@@ -235,9 +236,9 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     updateHourFormat();
 
     // Initialize with current time (mTempCalendar defaults to now).
-    // AOSP uses Calendar.getInstance(locale) (local TZ); mirror the local-TZ
-    // part here since the default ctor leaves zone=0/UTC.
-    mTempCalendar.setTimeZone(Calendar::getInstance()->getTimeZone());
+    // Calendar.getInstance(mLocale) carries the local time zone (the locale is
+    // a no-op selector for CDROID's single-Gregorian calendar libc).
+    mTempCalendar = *Calendar::getInstance(mLocale);
     const int currentHour = mTempCalendar.get(Calendar::HOUR_OF_DAY);
     const int currentMinute = mTempCalendar.get(Calendar::MINUTE);
     initialize(currentHour, currentMinute, mIs24Hour, HOUR_INDEX);
@@ -380,8 +381,7 @@ void TimePickerClockDelegate::setAmPmStart(bool isAmPmAtStart) {
         const int margin = (int) (mContext->getDisplayMetrics().density * 8);
         // Horizontal mode, with AM/PM appearing to left/right of hours and minutes.
         bool isAmPmAtLeft;
-        // DEFERRED: TextUtils.getLayoutDirectionFromLocale(mLocale); assume LTR.
-        const int layoutDirection = View::LAYOUT_DIRECTION_LTR;
+        const int layoutDirection = TextUtils::getLayoutDirectionFromLocale(mLocale);
         if (layoutDirection == View::LAYOUT_DIRECTION_LTR) {
             isAmPmAtLeft = isAmPmAtStart;
         } else {

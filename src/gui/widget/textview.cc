@@ -5372,6 +5372,21 @@ void TextView::setImeOptions(int imeOptions) {
     mEditor->mInputContentType->imeOptions = imeOptions;
 }
 
+// Android TextView.setImeHintLocales / getImeHintLocales (TextView.java:8460/8477).
+// AOSP additionally swaps the KeyListener's locale when mUseInternationalizedInput
+// (changeListenerLocaleTo) — the KeyListener locale machinery is not ported.
+void TextView::setImeHintLocales(const LocaleList& hintLocales) {
+    createEditorIfNeeded();
+    mEditor->createInputContentTypeIfNeeded();
+    mEditor->mInputContentType->imeHintLocales = hintLocales;
+}
+
+LocaleList TextView::getImeHintLocales() const {
+    if (mEditor == nullptr) return LocaleList::getEmptyLocaleList();
+    if (mEditor->mInputContentType == nullptr) return LocaleList::getEmptyLocaleList();
+    return mEditor->mInputContentType->imeHintLocales;
+}
+
 // Android TextView.isAnyPasswordInputType (TextView.java:7862).
 bool TextView::isAnyPasswordInputType() const {
     const int t = getInputType();

@@ -249,9 +249,10 @@ void TextClock::chooseFormat() {
 }
 
 const std::string TextClock::getBestDateTimePattern(const std::string& skeleton) {
-    /*DateTimePatternGenerator dtpg = DateTimePatternGenerator.getInstance(
-            getContext().getResources().getConfiguration().locale);
-    return dtpg.getBestPattern(skeleton);*/
+    /* AOSP: DateTimePatternGenerator.getInstance(
+     *       getContext().getResources().getConfiguration().getLocales().get(0))
+     *       .getBestPattern(skeleton) — ICU, not ported (no DTPG in i18n). */
+    (void)skeleton;
     return DEFAULT_FORMAT_24_HOUR;
 }
 
