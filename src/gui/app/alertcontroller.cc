@@ -56,14 +56,14 @@ AlertController::AlertController(Context* context, Dialog* di, Window* window){
     // AOSP: obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0).
     auto atts = context->obtainStyledAttributes(nullptr, R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
 
-    mAlertDialogLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_layout, R::layout::alert_dialog) : R::layout::alert_dialog;
-    mButtonPanelSideLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_buttonPanelSideLayout, 0) : 0;
-    mListLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_listLayout, R::layout::select_dialog) : R::layout::select_dialog;
+    mAlertDialogLayout = atts->getResourceId(R::styleable::AlertDialog_layout, R::layout::alert_dialog);
+    mButtonPanelSideLayout = atts->getResourceId(R::styleable::AlertDialog_buttonPanelSideLayout, 0);
+    mListLayout = atts->getResourceId(R::styleable::AlertDialog_listLayout, R::layout::select_dialog);
 
-    mMultiChoiceItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_multiChoiceItemLayout, R::layout::select_dialog_multichoice) : R::layout::select_dialog_multichoice;
-    mSingleChoiceItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_singleChoiceItemLayout, R::layout::select_dialog_singlechoice) : R::layout::select_dialog_singlechoice;
-    mListItemLayout = atts ? atts->getResourceId(R::styleable::AlertDialog_listItemLayout, R::layout::select_dialog_item) : R::layout::select_dialog_item;
-    mShowTitle = atts ? atts->getBoolean(R::styleable::AlertDialog_showTitle, true) : true;
+    mMultiChoiceItemLayout = atts->getResourceId(R::styleable::AlertDialog_multiChoiceItemLayout, R::layout::select_dialog_multichoice);
+    mSingleChoiceItemLayout = atts->getResourceId(R::styleable::AlertDialog_singleChoiceItemLayout, R::layout::select_dialog_singlechoice);
+    mListItemLayout = atts->getResourceId(R::styleable::AlertDialog_listItemLayout, R::layout::select_dialog_item);
+    mShowTitle = atts->getBoolean(R::styleable::AlertDialog_showTitle, true);
 
     //mDialogInterface.OnCancelListener=nullptr;
     /* We use a custom title so never request a window title */

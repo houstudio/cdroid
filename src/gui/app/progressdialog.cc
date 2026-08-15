@@ -97,14 +97,14 @@ void ProgressDialog::onCreate() {
                 }
             }
         };*/
-        int hLayout = a ? a->getResourceId(R::styleable::AlertDialog_horizontalProgressLayout, R::layout::alert_dialog_progress) : R::layout::alert_dialog_progress;
+        int hLayout = a->getResourceId(R::styleable::AlertDialog_horizontalProgressLayout, R::layout::alert_dialog_progress);
         View* view = inflater->inflate(hLayout,nullptr,false);
         mProgress = (ProgressBar*) view->findViewById(R::id::progress);
         mProgressNumber = (TextView*) view->findViewById(R::id::progress_number);
         mProgressPercent = (TextView*) view->findViewById(R::id::progress_percent);
         setView(view);
     } else {
-        int pLayout = a ? a->getResourceId(R::styleable::AlertDialog_progressLayout, R::layout::progress_dialog) : R::layout::progress_dialog;
+        int pLayout = a->getResourceId(R::styleable::AlertDialog_progressLayout, R::layout::progress_dialog);
         View* view = inflater->inflate(pLayout,nullptr,false);
         mProgress = (ProgressBar*) view->findViewById(R::id::progress);
         mMessageView = (TextView*) view->findViewById(R::id::message);
