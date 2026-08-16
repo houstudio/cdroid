@@ -38,10 +38,6 @@ protected:
 public:
     AttributeSet();
     AttributeSet(const AttributeSet&);
-    // Shared empty AttributeSet — non-null stand-in for a widget ctor's null
-    // AttributeSet* (programmatic styled construction), so attribute reads return
-    // defaults instead of dereferencing null.
-    static const AttributeSet& empty();
     AttributeSet(Context*ctx,const std::string&package);
     virtual ~AttributeSet()=default;
     Context*getContext()const;

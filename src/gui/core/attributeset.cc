@@ -55,13 +55,6 @@ Context*AttributeSet::getContext()const{
     return mContext;
 }
 
-const AttributeSet& AttributeSet::empty() {
-    // Meyer's singleton — a default-constructed (no Context, no attrs) AttributeSet
-    // used as a non-null stand-in for a null AttributeSet* in widget ctors.
-    static const AttributeSet inst;
-    return inst;
-}
-
 void AttributeSet::setContext(Context*ctx,const std::string&package){
     mContext = ctx;
     mPackage = package;
