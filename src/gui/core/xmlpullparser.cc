@@ -529,14 +529,15 @@ int XmlPullParser::binaryAttrIndex(const std::string& name) const {
     return -1;
 }
 
-// String-key value lookup: binary resolves by name from ResXMLTree (rendered),
-// so name-based reads (attrs.getString/getInt/getColor/...) work without mAttrs.
-const std::string XmlPullParser::getAttributeValue(const std::string& key) const {
+// AOSP getAttributeValue(ns, name): binary resolves by name from ResXMLTree
+// (rendered), so name-based reads work without the mAttrs string bridge.
+std::string XmlPullParser::getAttributeValue(const std::string& /*namespace_*/,
+                                             const std::string& name) const {
     if (isBinaryAXML()) {
-        const int i = binaryAttrIndex(key);
+        const int i = binaryAttrIndex(name);
         return i >= 0 ? getAttributeValue(i) : std::string();
     }
-    return AttributeSet::getAttributeValue(key);
+    return AttributeSet::getAttributeValue(std::string(), name);
 }
 
 // Debug dump — binary AXML prints the raw typed data (attr resId + Res_value

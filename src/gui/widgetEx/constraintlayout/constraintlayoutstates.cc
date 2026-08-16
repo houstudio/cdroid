@@ -98,7 +98,7 @@ ConstraintLayoutStates::ConstraintLayoutStates(Context* ctx, ConstraintLayout* l
 
 int ConstraintLayoutStates::parseConstraintSet(Context* ctx, XmlPullParser& parser) {
     // <ConstraintSet android:id="@+id/cs1"> ...children... </ConstraintSet>
-    const std::string idStr = parser.getAttributeValue("id");
+    const std::string idStr = parser.getAttributeValue(std::string(), "id");
     const int id = getId(idStr);
     if (id == -1) return -1;
     auto set = std::make_unique<ConstraintSet>();
@@ -115,18 +115,18 @@ void ConstraintLayoutStates::parse(Context* ctx, XmlPullParser& parser) {
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();
             if (tag == "StateSet" || tag == "layoutDescription" || tag == "ConstraintLayoutStates") {
-                mDefaultState = getId(parser.getAttributeValue("defaultState"));
+                mDefaultState = getId(parser.getAttributeValue(std::string(), "defaultState"));
             } else if (tag == "State") {
                 State s;
-                s.mId = getId(parser.getAttributeValue("id"));
-                s.mConstraintsAttr = parser.getAttributeValue("constraints");
+                s.mId = getId(parser.getAttributeValue(std::string(), "id"));
+                s.mConstraintsAttr = parser.getAttributeValue(std::string(), "constraints");
                 s.mConstraintID = getId(s.mConstraintsAttr);
                 mStates.push_back(s);
                 currentState = &mStates.back();
             } else if (tag == "Variant") {
                 if (currentState != nullptr) {
                     Variant v;
-                    v.mConstraintsAttr = parser.getAttributeValue("constraints");
+                    v.mConstraintsAttr = parser.getAttributeValue(std::string(), "constraints");
                     v.mConstraintID = getId(v.mConstraintsAttr);
                     v.mMinWidth  = parser.getAttributeFloatValue(std::string(), "region_widthMoreThan",  v.mMinWidth);
                     v.mMaxWidth  = parser.getAttributeFloatValue(std::string(), "region_widthLessThan",  v.mMaxWidth);

@@ -27,6 +27,8 @@
 #include <porting/cdlog.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 
 #include <transition/transitionlisteneradapter.h>
 
@@ -45,18 +47,8 @@ constexpr bool DBG = false;
 
 Fade::Fade(Context* context, AttributeSet* attrs)
     : Visibility(context, attrs) {
-    // android: obtainStyledAttributes(attrs, R.styleable.Fade) → fadingMode (default getMode()).
-    // CDROID reads the attribute directly (TypedArray is rarely used).
-    int fadingMode = getMode();
-    if (attrs != nullptr) {
-        std::string fm = attrs->getAttributeValue("fadingMode");
-        if (!fm.empty()) {
-            int parsed = atoi(fm.c_str());
-            if (parsed == IN || parsed == OUT || parsed == (IN | OUT)) {
-                fadingMode = parsed;
-            }
-        }
-    }
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::Fade);
+    const int fadingMode = a->getInt(internal::R::styleable::Fade_fadingMode, getMode());
     setMode(fadingMode);
 }
 

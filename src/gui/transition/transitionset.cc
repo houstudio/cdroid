@@ -24,6 +24,8 @@
 #include <core/context.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 
 namespace cdroid {
 
@@ -35,14 +37,9 @@ TransitionSet::TransitionSet() = default;
 
 TransitionSet::TransitionSet(Context* context, AttributeSet* attrs)
     : Transition(context, attrs) {
-    // android: obtainStyledAttributes(attrs, R.styleable.TransitionSet) → transitionOrdering.
-    // CDROID reads the attribute directly.
-    int ordering = ORDERING_TOGETHER;
-    if (attrs != nullptr) {
-        std::string ord = attrs->getAttributeValue("transitionOrdering");
-        if (ord == "sequential") ordering = ORDERING_SEQUENTIAL;
-        else if (ord == "together") ordering = ORDERING_TOGETHER;
-    }
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::TransitionSet);
+    const int ordering = a->getInt(internal::R::styleable::TransitionSet_transitionOrdering,
+            TransitionSet::ORDERING_TOGETHER);
     setOrdering(ordering);
 }
 

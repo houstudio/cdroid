@@ -11,6 +11,8 @@
 #include <core/attributeset.h>
 #include <core/context.h>
 #include <core/path.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 
 namespace cdroid {
 
@@ -20,16 +22,16 @@ ArcMotion::ArcMotion() {
 
 ArcMotion::ArcMotion(Context* context, AttributeSet* attrs)
     : PathMotion(context, attrs) {
-    // android reads ArcMotion_minimumVerticalAngle/minimumHorizontalAngle/maximumAngle.
-    if (attrs != nullptr) {
-        std::string v;
-        v = attrs->getAttributeValue("minimumVerticalAngle");
-        if (!v.empty()) setMinimumVerticalAngle((float)atof(v.c_str()));
-        v = attrs->getAttributeValue("minimumHorizontalAngle");
-        if (!v.empty()) setMinimumHorizontalAngle((float)atof(v.c_str()));
-        v = attrs->getAttributeValue("maximumAngle");
-        if (!v.empty()) setMaximumAngle((float)atof(v.c_str()));
-    }
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::ArcMotion);
+    const float minimumVerticalAngle = a->getFloat(
+            internal::R::styleable::ArcMotion_minimumVerticalAngle, DEFAULT_MIN_ANGLE_DEGREES);
+    setMinimumVerticalAngle(minimumVerticalAngle);
+    const float minimumHorizontalAngle = a->getFloat(
+            internal::R::styleable::ArcMotion_minimumHorizontalAngle, DEFAULT_MIN_ANGLE_DEGREES);
+    setMinimumHorizontalAngle(minimumHorizontalAngle);
+    const float maximumAngle = a->getFloat(
+            internal::R::styleable::ArcMotion_maximumAngle, DEFAULT_MAX_ANGLE_DEGREES);
+    setMaximumAngle(maximumAngle);
 }
 
 void ArcMotion::setMinimumHorizontalAngle(float angleInDegrees) {

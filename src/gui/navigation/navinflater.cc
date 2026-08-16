@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/framework_styleable.h>
 #include <core/typedarray.h>
 #include <core/xmlpullparser.h>
 #include <navigation/navaction.h>
@@ -139,7 +140,7 @@ void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs
 
 void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attrs) {
     //TypedArray a = res.obtainAttributes(attrs, R.styleable.NavDeepLink);
-    std::string uri = attrs.getAttributeValue("uri");//R.styleable.NavDeepLink_uri);
+    std::string uri = attrs.getAttributeValue(std::string(), "uri");//R.styleable.NavDeepLink_uri);
     if (uri.empty()){//
         throw std::runtime_error("Every <deepLink> must include an app:uri");
     }

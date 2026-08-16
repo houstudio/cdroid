@@ -89,11 +89,11 @@ public:
                                   const std::string& attribute, int defaultValue) const override;
     int getAttributeIntValue(const std::string& namespace_,
                              const std::string& attribute, int defaultValue) const override;
-    // String-key value / count / presence — resolve straight from ResXMLTree on
-    // binary AXML (no mAttrs bridge). Lets the binary parser serve name-based
-    // lookups (attrs.getString/hasAttribute/getAttributeCount) after the eager
-    // mAttrs populate is retired.
-    const std::string getAttributeValue(const std::string& key) const override;
+    // Name-based value / count / presence — resolve straight from ResXMLTree on
+    // binary AXML (no mAttrs bridge). Lets the binary parser serve the AOSP
+    // (namespace, name) lookups after the eager mAttrs populate is retired.
+    std::string getAttributeValue(const std::string& namespace_,
+                                  const std::string& name) const override;
     bool hasAttribute(const std::string& key) const override;
     size_t getAttributeCount() const override;
     // Debug dump: binary prints each attribute's raw typed Res_value (attr

@@ -147,13 +147,13 @@ int MotionScene::parseConstraintSet(Context* ctx, XmlPullParser& parser) {
         if      (nm == "id")                     id       = parser.getAttributeResourceValue(i, UNSET);
         else if (nm == "deriveConstraintsFrom")  deriveId = parser.getAttributeResourceValue(i, UNSET);
     }
-    if (id == UNSET) id = getId(parser.getAttributeValue("id"));          // text-XML fallback
+    if (id == UNSET) id = getId(parser.getAttributeValue(std::string(), "id"));          // text-XML fallback
     if (id == UNSET) return UNSET;
     auto set = std::make_unique<ConstraintSet>();
     set->load(ctx, parser); // consumes through </ConstraintSet>
     mConstraintSetMap[id] = std::move(set);
     if (deriveId == UNSET) {
-        const std::string deriveStr = parser.getAttributeValue("deriveConstraintsFrom");
+        const std::string deriveStr = parser.getAttributeValue(std::string(), "deriveConstraintsFrom");
         if (!deriveStr.empty()) deriveId = getId(deriveStr);
     }
     if (deriveId != UNSET) mDeriveFrom[id] = deriveId; // base merged lazily in getConstraintSet

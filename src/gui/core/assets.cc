@@ -297,7 +297,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
         // longer store them. Only styles and color-state-list selectors still
         // need text-XML parsing here.
         if(tag.compare("selector")==0){//for colorstatelist
-            std::string key = attrs.getAttributeValue("name");
+            std::string key = attrs.getAttributeValue(std::string(), "name");
             depth = parser.getDepth()+1;
             std::string resUri = resid.substr(0,resid.find(".xml"));
             std::unordered_map<std::string,std::vector<AttributeSet>>::iterator it;

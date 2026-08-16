@@ -1670,6 +1670,54 @@ namespace internal { namespace R { namespace styleable {
     constexpr int GestureOverlayView_fadeEnabled = 10;
     constexpr int GestureOverlayView_orientation = 11;
 
+    // AndroidTransition (4 attrs)
+    extern const uint32_t AndroidTransition[];
+    constexpr int AndroidTransition_duration = 0;
+    constexpr int AndroidTransition_startDelay = 1;
+    constexpr int AndroidTransition_interpolator = 2;
+    constexpr int AndroidTransition_matchOrder = 3;
+
+    // TransitionTarget (6 attrs)
+    extern const uint32_t TransitionTarget[];
+    constexpr int TransitionTarget_targetId = 0;
+    constexpr int TransitionTarget_excludeId = 1;
+    constexpr int TransitionTarget_targetClass = 2;
+    constexpr int TransitionTarget_excludeClass = 3;
+    constexpr int TransitionTarget_targetName = 4;
+    constexpr int TransitionTarget_excludeName = 5;
+
+    // TransitionSet (1 attrs)
+    extern const uint32_t TransitionSet[];
+    constexpr int TransitionSet_transitionOrdering = 0;
+
+    // ArcMotion (3 attrs)
+    extern const uint32_t ArcMotion[];
+    constexpr int ArcMotion_minimumHorizontalAngle = 0;
+    constexpr int ArcMotion_minimumVerticalAngle = 1;
+    constexpr int ArcMotion_maximumAngle = 2;
+
+    // Slide (1 attrs)
+    extern const uint32_t Slide[];
+    constexpr int Slide_slideEdge = 0;
+
+    // Fade (1 attrs)
+    extern const uint32_t Fade[];
+    constexpr int Fade_fadingMode = 0;
+
+    // PatternPathMotion (1 attrs)
+    extern const uint32_t PatternPathMotion[];
+    constexpr int PatternPathMotion_patternPathData = 0;
+
+    // ChangeBounds (1 attrs)
+    extern const uint32_t ChangeBounds[];
+    constexpr int ChangeBounds_resizeClip = 0;
+
+    // TransitionManager (3 attrs)
+    extern const uint32_t TransitionManager[];
+    constexpr int TransitionManager_transition = 0;
+    constexpr int TransitionManager_fromScene = 1;
+    constexpr int TransitionManager_toScene = 2;
+
 } } } // namespace internal::R::styleable
 } // namespace cdroid
 #endif // __FRAMEWORK_STYLEABLE_H__

@@ -27,6 +27,8 @@
 #include <transition/slide.h>
 #include <transition/transitionmanager.h>
 #include <transition/transitionset.h>
+#include <core/typedarray.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid {
 
@@ -34,9 +36,19 @@ TransitionInflater* TransitionInflater::from(Context* context) {
     return new TransitionInflater(context);
 }
 
+Transition* TransitionInflater::inflateTransition(int resourceId) {
+    XmlPullParser parser(mContext, resourceId);
+    return createTransitionFromXml(parser, nullptr);
+}
+
 Transition* TransitionInflater::inflateTransition(const std::string& resource) {
     XmlPullParser parser(mContext, resource);
     return createTransitionFromXml(parser, nullptr);
+}
+
+TransitionManager* TransitionInflater::inflateTransitionManager(int resourceId, ViewGroup* sceneRoot) {
+    XmlPullParser parser(mContext, resourceId);
+    return createTransitionManagerFromXml(parser, sceneRoot);
 }
 
 TransitionManager* TransitionInflater::inflateTransitionManager(const std::string& resource, ViewGroup* sceneRoot) {
@@ -122,31 +134,33 @@ void TransitionInflater::getTargetIds(XmlPullParser& parser, Transition* transit
         }
         std::string name = parser.getName();
         if (name == "target") {
-            std::string v;
-            v = parser.getAttributeValue("targetId");
-            if (!v.empty()) {
-                transition->addTarget(atoi(v.c_str()));
-                continue;
-            }
-            v = parser.getAttributeValue("excludeId");
-            if (!v.empty()) {
-                transition->excludeTarget(atoi(v.c_str()), true);
-                continue;
-            }
-            v = parser.getAttributeValue("targetName");
-            if (!v.empty()) {
-                transition->addTarget(v);
-                continue;
-            }
-            v = parser.getAttributeValue("excludeName");
-            if (!v.empty()) {
-                transition->excludeTarget(v, true);
-                continue;
-            }
-            // targetClass/excludeClass need Class/reflection — skipped (CDROID has no reflection).
-            v = parser.getAttributeValue("targetClass");
-            if (!v.empty()) {
-                LOGW("TransitionInflater: targetClass '%s' not supported (no reflection)", v.c_str());
+            auto a = mContext->obtainStyledAttributes(&parser,
+                    internal::R::styleable::TransitionTarget);
+            int id = a->getResourceId(internal::R::styleable::TransitionTarget_targetId, 0);
+            std::string transitionName;
+            if (id != 0) {
+                transition->addTarget(id);
+            } else if ((id = a->getResourceId(
+                    internal::R::styleable::TransitionTarget_excludeId, 0)) != 0) {
+                transition->excludeTarget(id, true);
+            } else if (!(transitionName = a->getString(
+                    internal::R::styleable::TransitionTarget_targetName)).empty()) {
+                transition->addTarget(transitionName);
+            } else if (!(transitionName = a->getString(
+                    internal::R::styleable::TransitionTarget_excludeName)).empty()) {
+                transition->excludeTarget(transitionName, true);
+            } else {
+                // excludeClass/targetClass need Class/reflection — CDROID has no reflection.
+                std::string className = a->getString(
+                        internal::R::styleable::TransitionTarget_excludeClass);
+                if (!className.empty()) {
+                    LOGW("TransitionInflater: excludeClass '%s' not supported (no reflection)",
+                         className.c_str());
+                } else if (!(className = a->getString(
+                        internal::R::styleable::TransitionTarget_targetClass)).empty()) {
+                    LOGW("TransitionInflater: targetClass '%s' not supported (no reflection)",
+                         className.c_str());
+                }
             }
         } else {
             throw std::runtime_error("Unknown scene name: " + name);
@@ -176,16 +190,16 @@ TransitionManager* TransitionInflater::createTransitionManagerFromXml(XmlPullPar
 }
 
 void TransitionInflater::loadTransition(const AttributeSet& attrs, ViewGroup* sceneRoot, TransitionManager* tm) {
-    // android resolves transition/fromScene/toScene by int resource id. CDROID is string-based;
-    // Scene.getSceneForLayout takes an int layoutId (the layoutId inflation path is itself
-    // stubbed — see Scene). Resolve what we can; scene-based TransitionManager XML is limited.
-    std::string transitionRef = attrs.getAttributeValue("transition");
-    std::string toSceneRef = attrs.getAttributeValue("toScene");
-    if (!transitionRef.empty() && !toSceneRef.empty()) {
-        Transition* transition = inflateTransition(transitionRef);
+    auto a = mContext->obtainStyledAttributes(&attrs, internal::R::styleable::TransitionManager);
+    const int transitionId = a->getResourceId(internal::R::styleable::TransitionManager_transition, -1);
+    const int fromId = a->getResourceId(internal::R::styleable::TransitionManager_fromScene, -1);
+    const int toId = a->getResourceId(internal::R::styleable::TransitionManager_toScene, -1);
+    (void)fromId;
+    if (transitionId >= 0 && toId >= 0) {
+        Transition* transition = inflateTransition(transitionId);
         if (transition != nullptr) {
-            // toScene/fromScene are layout resources; Scene layoutId path is stubbed, so use a
-            // plain Scene(sceneRoot) and setTransition(toScene). Best-effort.
+            // toScene/fromScene are layout resources; the Scene layoutId path is stubbed, so a
+            // plain Scene(sceneRoot) stands in for toScene. Best-effort.
             Scene* toScene = new Scene(sceneRoot);
             tm->setTransition(toScene, transition);
         }

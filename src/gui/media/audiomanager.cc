@@ -49,8 +49,8 @@ void AudioManager::loadSoundEffects(){
         if(type!=XmlPullParser::START_TAG)continue;
         std::string tagName = parser->getName();
         if(tagName.compare("asset")==0){
-            const std::string id = attrs.getAttributeValue("id");
-            const std::string file = attrs.getAttributeValue("file");
+            const std::string id = attrs.getAttributeValue(std::string(), "id");
+            const std::string file = attrs.getAttributeValue(std::string(), "file");
             sounds.emplace(id,file);
             LOGD("%s:%s",id.c_str(),file.c_str());;
         }

@@ -6,3 +6,6 @@ LinearLayout_Layout LinearLayoutLayout
 GridLayout_Layout GridLayoutLayout
 TableRow_Cell TableRowLayout
 RelativeLayout_Layout RelativeLayoutLayout
+# android.transition.Transition collides with the MotionLayout Transition styleable
+# (widgetEx); the framework one is emitted under its android name.
+Transition AndroidTransition

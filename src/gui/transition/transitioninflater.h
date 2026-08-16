@@ -33,6 +33,9 @@ class TransitionInflater {
   public:
     static TransitionInflater* from(Context* context);
 
+    Transition* inflateTransition(int resourceId);
+    TransitionManager* inflateTransitionManager(int resourceId, ViewGroup* sceneRoot);
+    // CDROID string-resource overloads (apps pass "@transition/name" strings).
     Transition* inflateTransition(const std::string& resource);
     TransitionManager* inflateTransitionManager(const std::string& resource, ViewGroup* sceneRoot);
 

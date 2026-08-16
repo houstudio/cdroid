@@ -24,6 +24,7 @@
 #include <stdexcept>
 
 #include <animation/animator.h>
+#include <animation/animationutils.h>
 #include <animation/interpolators.h>
 #include <core/attributeset.h>
 #include <core/context.h>
@@ -33,6 +34,8 @@
 #include <view/viewgroup.h>
 #include <widget/abslistview.h>
 #include <widget/adapter.h>
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 #include <widget/listview.h>
 
 namespace cdroid {
@@ -80,30 +83,22 @@ Transition::Transition() {
     mPathMotion = straightPathMotion();
 }
 
-Transition::Transition(Context* /*context*/, AttributeSet* attrs) {
+Transition::Transition(Context* context, AttributeSet* attrs) {
     mPathMotion = straightPathMotion();
-    // android uses context.obtainStyledAttributes(attrs, R.styleable.Transition).
-    // CDROID reads attributes directly from AttributeSet (TypedArray is rarely used).
-    if (attrs == nullptr) {
-        return;
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::AndroidTransition);
+    const int64_t duration = a->getInt(internal::R::styleable::AndroidTransition_duration, -1);
+    if (duration >= 0) {
+        setDuration(duration);
     }
-    std::string d = attrs->getAttributeValue("duration");
-    if (!d.empty()) {
-        long long duration = atoll(d.c_str());
-        if (duration >= 0) {
-            setDuration(duration);
-        }
+    const int64_t startDelay = a->getInt(internal::R::styleable::AndroidTransition_startDelay, -1);
+    if (startDelay > 0) {
+        setStartDelay(startDelay);
     }
-    std::string sd = attrs->getAttributeValue("startDelay");
-    if (!sd.empty()) {
-        long long startDelay = atoll(sd.c_str());
-        if (startDelay > 0) {
-            setStartDelay(startDelay);
-        }
+    const int resID = a->getResourceId(internal::R::styleable::AndroidTransition_interpolator, 0);
+    if (resID > 0) {
+        setInterpolator(AnimationUtils::loadInterpolator(context, resID));
     }
-    // interpolator: android loads via AnimationUtils.loadInterpolator(context, resID).
-    // CDROID resource->interpolator wiring is deferred (TODO: wire when needed).
-    std::string matchOrder = attrs->getAttributeValue("matchOrder");
+    const std::string matchOrder = a->getString(internal::R::styleable::AndroidTransition_matchOrder);
     if (!matchOrder.empty()) {
         setMatchOrder(parseMatchOrder(matchOrder));
     }

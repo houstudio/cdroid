@@ -121,6 +121,23 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     if (!appPakPath.empty()) parsePackageManifest(appPakPath);
     setTheme(mApplicationTheme ? mApplicationTheme
                                : (int)cdroid::internal::R::style::Theme_Material);
+    // AOSP: the system starts the manifest's launcher activity — app main()
+    // never does. CDROID's App plays that side on the message queue (like
+    // ActivityThread: bindApplication/launchActivity are messages): a posted
+    // runnable fires once exec()'s loop is turning, after anything main() set
+    // up synchronously. Skipped when a window is already up or the manifest
+    // declares no activity (app-driven windows keep working as before).
+    static Handler sLaunchHandler(Looper::getMainLooper());
+    sLaunchHandler.post([this](){
+        std::vector<Window*> windows;
+        WindowManager::getInstance().getWindows(windows);
+        if (!windows.empty()) return;
+        const std::string launcher = getLauncherActivity();
+        if (launcher.empty()) return;
+        Intent intent("");
+        intent.setComponent(ComponentName("", launcher));
+        startActivity(intent);
+    });
     LOGI("\033[1;35m          ┏━┓┏┓╋╋╋┏┓┏┓");
     LOGI("\033[1;35m          ┃┏╋┛┣┳┳━╋╋┛┃");
     LOGI("\033[1;35m          ┃┗┫╋┃┏┫╋┃┃╋┃");
@@ -344,7 +361,7 @@ void App::parsePackageManifest(const std::string& pakPath) {
                 return atts.getAttributeValue(i);
             }
         }
-        return bareName ? atts.getAttributeValue(bareName) : std::string();
+        return bareName ? atts.getAttributeValue(std::string(), bareName) : std::string();
     };
 
     // configChanges flag names -> Configuration::CONFIG_* bits.

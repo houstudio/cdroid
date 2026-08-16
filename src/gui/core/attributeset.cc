@@ -117,12 +117,6 @@ bool AttributeSet::hasAttribute(const std::string&key)const{
 size_t AttributeSet::getAttributeCount()const{
     return mAttrs->size();
 }
-const std::string AttributeSet::getAttributeValue(const std::string&key)const{
-    auto it = mAttrs->find(key);
-    if(it != mAttrs->end())
-        return it->second;
-    return std::string();
-}
 
 // ----------------------------------------------------------------------------
 // AOSP android.util.AttributeSet — index/id-based methods (base / text impl).
@@ -159,12 +153,13 @@ std::string AttributeSet::getAttributeName(int index) const {
 
 std::string AttributeSet::getAttributeValue(int index) const {
     std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeValue(k) : std::string();
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeValue(std::string(), k) : std::string();
 }
 
 std::string AttributeSet::getAttributeValue(const std::string& /*namespace_*/,
                         const std::string& name) const {
-    return getAttributeValue(name);// namespace-agnostic for text (bare localname)
+    auto it = mAttrs->find(name);   // namespace-agnostic for text (bare localname keys)
+    return it != mAttrs->end() ? it->second : std::string();
 }
 
 std::string AttributeSet::getPositionDescription() const {
@@ -205,7 +200,7 @@ int AttributeSet::getAttributeIntValue(int index, int defaultValue) const {
 int AttributeSet::getAttributeUnsignedIntValue(int index, int defaultValue) const {
     std::string k;
     if (!keyAt(*mAttrs, (size_t)index, &k)) return defaultValue;
-    const std::string v = getAttributeValue(k);
+    const std::string v = getAttributeValue(std::string(), k);
     if (!v.empty()) {
         if (v[0] == '#') return (int)Color::parseColor(v);
         if (v.size() >= 2 && v[0] == '0' && (v[1] == 'x' || v[1] == 'X'))
@@ -221,21 +216,21 @@ float AttributeSet::getAttributeFloatValue(int index, float defaultValue) const 
 
 int AttributeSet::getAttributeListValue(const std::string& /*namespace_*/,const std::string& attribute,
             const std::vector<std::string>& options, int defaultValue) const {
-    const std::string v = getAttributeValue(attribute);
+    const std::string v = getAttributeValue(std::string(), attribute);
     for (size_t i = 0; i < options.size(); i++) if (options[i] == v) return (int)i;
     return defaultValue;
 }
 
 bool AttributeSet::getAttributeBooleanValue(const std::string& /*namespace_*/,
             const std::string& attribute, bool defaultValue) const {
-    const std::string v = getAttributeValue(attribute);
+    const std::string v = getAttributeValue(std::string(), attribute);
     if (v.empty()) return defaultValue;
     return v.compare("true") == 0;
 }
 
 int AttributeSet::getAttributeResourceValue(const std::string& /*namespace_*/,
             const std::string& attribute,int defaultValue) const {
-    const std::string v = getAttributeValue(attribute);
+    const std::string v = getAttributeValue(std::string(), attribute);
     if (v.empty()) return defaultValue;
     // "parent" is the ConstraintLayout/RelativeLayout anchor sentinel meaning
     // the parent view (id 0) — NOT a named resource; resolving it hits an
@@ -256,7 +251,7 @@ int AttributeSet::getAttributeResourceValue(const std::string& /*namespace_*/,
 
 int AttributeSet::getAttributeIntValue(const std::string& /*namespace_*/,
             const std::string& attribute, int defaultValue) const {
-    const std::string v = getAttributeValue(attribute);
+    const std::string v = getAttributeValue(std::string(), attribute);
     if (v.empty() || ((v[0] >= 'a') && (v[0] <= 'z'))) return defaultValue;
     const int base = (((v.length() > 2) && (v[1]=='x'||v[1]=='X')) || (v[0]=='#')) ? 16 : 10;
     return (int)std::strtol(v.c_str(), nullptr, base);
@@ -264,7 +259,7 @@ int AttributeSet::getAttributeIntValue(const std::string& /*namespace_*/,
 
 int AttributeSet::getAttributeUnsignedIntValue(const std::string& /*namespace_*/,
             const std::string& attribute, int defaultValue) const {
-    const std::string v = getAttributeValue(attribute);
+    const std::string v = getAttributeValue(std::string(), attribute);
     if (!v.empty()) {
         if (v[0] == '#')
             return (int)Color::parseColor(v);
@@ -276,17 +271,17 @@ int AttributeSet::getAttributeUnsignedIntValue(const std::string& /*namespace_*/
 
 float AttributeSet::getAttributeFloatValue(const std::string& /*namespace_*/,
             const std::string& attribute,float defaultValue) const {
-    const std::string v = getAttributeValue(attribute);
+    const std::string v = getAttributeValue(std::string(), attribute);
     if (v.empty()) return defaultValue;
     return std::strtof(v.c_str(), nullptr);
 }
 
 std::string AttributeSet::getIdAttribute() const {
-    return getAttributeValue("id");
+    return getAttributeValue(std::string(), "id");
 }
 
 std::string AttributeSet::getClassAttribute() const {
-    return getAttributeValue("class");
+    return getAttributeValue(std::string(), "class");
 }
 
 int AttributeSet::getIdAttributeResourceValue(int defaultValue) const {

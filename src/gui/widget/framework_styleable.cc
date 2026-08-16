@@ -294,5 +294,14 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t GestureOverlayView[] = {
         0x01010274, 0x01010275, 0x01010276, 0x01010277, 0x01010278, 0x01010279, 0x0101027a,
         0x0101027b, 0x0101027c, 0x0101027d, 0x0101027e, 0x010100c4, 0 };
+    const uint32_t AndroidTransition[] = { 0x01010198, 0x010103e2, 0x01010141, 0x0101044f, 0 };
+    const uint32_t TransitionTarget[] = { 0x010103dc, 0x01010441, 0x0101002f, 0x01010442, 0x0101044d, 0x0101044e, 0 };
+    const uint32_t TransitionSet[] = { 0x010103e0, 0 };
+    const uint32_t ArcMotion[] = { 0x0101047d, 0x0101047e, 0x0101047f, 0 };
+    const uint32_t Slide[] = { 0x01010430, 0 };
+    const uint32_t Fade[] = { 0x010103e1, 0 };
+    const uint32_t PatternPathMotion[] = { 0x010104ca, 0 };
+    const uint32_t ChangeBounds[] = { 0x010104cf, 0 };
+    const uint32_t TransitionManager[] = { 0x010103df, 0x010103dd, 0x010103de, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

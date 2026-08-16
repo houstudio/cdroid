@@ -11,7 +11,9 @@
 #include <core/attributeset.h>
 #include <core/context.h>
 #include <core/pathmeasure.h>
+#include <core/typedarray.h>
 #include <drawable/pathparser.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid {
 
@@ -22,15 +24,15 @@ PatternPathMotion::PatternPathMotion() {
 
 PatternPathMotion::PatternPathMotion(Context* context, AttributeSet* attrs)
     : PathMotion(context, attrs) {
-    if (attrs != nullptr) {
-        std::string pathData = attrs->getAttributeValue("patternPathData");
-        if (pathData.empty()) {
-            throw std::runtime_error("pathData must be supplied for patternPathMotion");
-        }
-        auto parsed = PathParser::createPathFromPathData(pathData); // shared_ptr<Path>
-        if (parsed) {
-            setPatternPath(*parsed);
-        }
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::PatternPathMotion);
+    const std::string pathData = a->getString(
+            internal::R::styleable::PatternPathMotion_patternPathData);
+    if (pathData.empty()) {
+        throw std::runtime_error("pathData must be supplied for patternPathMotion");
+    }
+    auto parsed = PathParser::createPathFromPathData(pathData); // shared_ptr<Path>
+    if (parsed) {
+        setPatternPath(*parsed);
     }
 }
 

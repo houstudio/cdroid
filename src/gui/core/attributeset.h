@@ -52,10 +52,9 @@ public:
     // Qualify a bare XML value ("@mipmap/x", "?attr/x") into "pkg:type/name"
     // form. Used by the text-XML paths building string attribute sets.
     static std::string normalize(const std::string&pkg,const std::string&property);
-    // String-key value lookup. Virtual so a binary XmlPullParser can resolve by
-    // name straight from its ResXMLTree (no mAttrs bridge). Call sites pass a
-    // std::string (not const char*) so the virtual dispatch is not bypassed.
-    virtual const std::string getAttributeValue(const std::string&key)const;
+    // AOSP android.util.AttributeSet interface continues below (index/id-based);
+    // the old CDROID single-string getAttributeValue(key) lookup is retired —
+    // name-based reads go through the AOSP (namespace, name) overloads.
 
 
 

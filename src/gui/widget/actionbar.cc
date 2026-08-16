@@ -1,5 +1,6 @@
 #include <widget/actionbar.h>
 #include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 #include <stdexcept>
 namespace cdroid{
 

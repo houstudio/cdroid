@@ -29,8 +29,10 @@
 #include <core/context.h>
 #include <core/path.h>
 #include <core/rect.h>
+#include <core/typedarray.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <widget/framework_styleable.h>
 
 #include <transition/transitionlisteneradapter.h>
 #include <transition/transitionutils.h>
@@ -162,11 +164,9 @@ ChangeBounds::ChangeBounds() = default;
 
 ChangeBounds::ChangeBounds(Context* context, AttributeSet* attrs)
     : Transition(context, attrs) {
-    // android: obtainStyledAttributes(attrs, R.styleable.ChangeBounds) → resizeClip.
-    if (attrs != nullptr) {
-        std::string v = attrs->getAttributeValue("resizeClip");
-        setResizeClip(v == "true" || v == "1");
-    }
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::ChangeBounds);
+    const bool resizeClip = a->getBoolean(internal::R::styleable::ChangeBounds_resizeClip, false);
+    setResizeClip(resizeClip);
 }
 
 std::vector<std::string> ChangeBounds::getTransitionProperties() {

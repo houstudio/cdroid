@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/framework_styleable.h>
 #include <navigation/navgraph.h>
 #include <core/typedarray.h>
 #include <widgetEx/widgetex_styleable.h>

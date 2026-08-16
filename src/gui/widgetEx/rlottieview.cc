@@ -10,7 +10,7 @@ RLottieView::RLottieView(Context *ctx, const AttributeSet &attrs) : View(ctx, at
     initViewData();
     mAutoStart = attrs.getAttributeBooleanValue(std::string(), "autoStart", mAutoStart);
     mOneShot   = attrs.getAttributeBooleanValue(std::string(), "oneShot", mOneShot);
-    loadFromFile(attrs.getAttributeValue("src"));
+    loadFromFile(attrs.getAttributeValue(std::string(), "src"));
 }
 
 RLottieView::RLottieView(int width, int height) : View(width, height) {

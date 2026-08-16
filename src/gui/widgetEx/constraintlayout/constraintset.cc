@@ -19,6 +19,8 @@
 /*
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.ConstraintSet.
  */
+#include <widget/framework_styleable.h>
+#include <core/typedarray.h>
 #include <widget/internal_R.h>
 #include <climits>
 #include <cctype>
@@ -164,23 +166,23 @@ ConstraintSet::Constraint& ConstraintSet::get(int id) {
 ConstraintSet::CustomAttribute ConstraintSet::parseCustomAttribute(const AttributeSet& parser) {
     using CustomAttribute = ConstraintSet::CustomAttribute;
     CustomAttribute ca;
-    ca.name = parser.getAttributeValue("attributeName");
+    ca.name = parser.getAttributeValue(std::string(), "attributeName");
     // Presence is detected via getAttributeValue (the hasValue equivalent); the
     // value is then read with the matching typed getter, which resolves @dimen/
     // @color/@string refs and handles numeric formats instead of parsing inline.
-    if (!parser.getAttributeValue("customColorValue").empty()) {
+    if (!parser.getAttributeValue(std::string(), "customColorValue").empty()) {
         ca.type = CustomAttribute::COLOR;
         ca.intValue = parser.getAttributeUnsignedIntValue("", "customColorValue", 0);
-    } else if (!parser.getAttributeValue("customIntegerValue").empty()) {
+    } else if (!parser.getAttributeValue(std::string(), "customIntegerValue").empty()) {
         ca.type = CustomAttribute::INTEGER;
         ca.intValue = parser.getAttributeIntValue(std::string(), "customIntegerValue", 0);
-    } else if (!parser.getAttributeValue("customFloatValue").empty()) {
+    } else if (!parser.getAttributeValue(std::string(), "customFloatValue").empty()) {
         ca.type = CustomAttribute::FLOAT;
         ca.floatValue = parser.getAttributeFloatValue(std::string(), "customFloatValue", 0.f);
-    } else if (!parser.getAttributeValue("customStringValue").empty()) {
+    } else if (!parser.getAttributeValue(std::string(), "customStringValue").empty()) {
         ca.type = CustomAttribute::STRING;
-        ca.stringValue = parser.getAttributeValue("customStringValue");
-    } else if (!parser.getAttributeValue("customBooleanValue").empty()) {
+        ca.stringValue = parser.getAttributeValue(std::string(), "customStringValue");
+    } else if (!parser.getAttributeValue(std::string(), "customBooleanValue").empty()) {
         ca.type = CustomAttribute::BOOLEAN;
         ca.boolValue = parser.getAttributeBooleanValue(std::string(), "customBooleanValue", false);
     }

@@ -154,3 +154,12 @@ Keyboard_Row
 Keyboard_Key
 MenuGroup
 GestureOverlayView
+AndroidTransition
+TransitionTarget
+TransitionSet
+ArcMotion
+Slide
+Fade
+PatternPathMotion
+ChangeBounds
+TransitionManager
