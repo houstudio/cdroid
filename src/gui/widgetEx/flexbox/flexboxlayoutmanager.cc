@@ -41,12 +41,9 @@ FlexboxLayoutManager::FlexboxLayoutManager(Context* context, int flexDirection, 
     init();
 }
 
-FlexboxLayoutManager::FlexboxLayoutManager(Context* context,const AttributeSet& attrs):FlexboxLayoutManager(context,&attrs,0){}
-
-FlexboxLayoutManager::FlexboxLayoutManager(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+FlexboxLayoutManager::FlexboxLayoutManager(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
     : mContext(context) {
-    const AttributeSet& attrs = *pAttrs;
-    auto properties = getProperties(context, attrs, 0, 0);
+    auto properties = getProperties(context, pAttrs, defStyleAttr, defStyleRes);
     switch (properties.orientation) {
         case LinearLayoutManager::HORIZONTAL:
             mFlexDirection = properties.reverseLayout

@@ -66,7 +66,7 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
     // Programmatic construction (no XML attrs): the defaults the XML ctor's
     // unset attrs resolve to — LinearLayoutManager, fast scroller off,
     // FOCUS_AFTER_DESCENDANTS, nested scrolling on.
-    createLayoutManager(getContext(), "LinearLayoutManager", AttributeSet::empty());
+    createLayoutManager(getContext(), "LinearLayoutManager", nullptr, 0, 0);
     setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
 
     // Re-set whether nested scrolling is enabled so that it is set on all API levels
@@ -92,7 +92,6 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defSt
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
     setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
-    // Create the layoutManager if specified.
 
     std::string layoutManagerName = ta->getString(R::styleable::RecyclerView_layoutManager);
     const int descendantFocusability = ta->getInt(R::styleable::RecyclerView_descendantFocusability, -1);
@@ -107,8 +106,8 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defSt
         Drawable* horizontalTrackDrawable = ta->getDrawable(R::styleable::RecyclerView_fastScrollHorizontalTrackDrawable);
         initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable);
     }
-    createLayoutManager(context, layoutManagerName, attrs);//, defStyle, defStyleRes);
-    setDescendantFocusability(descendantFocusability==-1?ViewGroup::FOCUS_AFTER_DESCENDANTS:ViewGroup::FOCUS_AFTER_DESCENDANTS);
+    // Create the layoutManager if specified.
+    createLayoutManager(context, layoutManagerName, pAttrs, defStyleAttr, 0);
 
     // nestedScrollingEnabled is a framework View attr (not in the RecyclerView styleable) — attrs bridge.
     setNestedScrollingEnabled(attrs.getAttributeBooleanValue(std::string(), "nestedScrollingEnabled", true));
@@ -293,14 +292,43 @@ void RecyclerView::setAccessibilityDelegate(RecyclerViewAccessibilityDelegate* a
     mAccessibilityDelegate = accessibilityDelegate;
 }
 
+// java createLayoutManager resolves the class by reflection — the 4-arg ctor
+// (Context, AttributeSet, defStyleAttr, defStyleRes) first, then the no-arg
+// ctor. CDROID has no reflection; the built-in managers register their 4-arg
+// ctor by the androidx full name that getFullClassName() builds.
+static const std::unordered_map<std::string,
+        std::function<RecyclerView::LayoutManager*(Context*,const AttributeSet*,int,int)>>
+        layoutManagerParsers = {
+    {"androidx.recyclerview.widget.LinearLayoutManager",
+        [](Context* c,const AttributeSet* a,int da,int dr){ return new LinearLayoutManager(c,a,da,dr); }},
+    {"androidx.recyclerview.widget.GridLayoutManager",
+        [](Context* c,const AttributeSet* a,int da,int dr){ return new GridLayoutManager(c,a,da,dr); }},
+    {"androidx.recyclerview.widget.StaggeredGridLayoutManager",
+        [](Context* c,const AttributeSet* a,int da,int dr){ return new StaggeredGridLayoutManager(c,a,da,dr); }},
+};
+
+/**
+ * Instantiate and set a LayoutManager, if specified in the attributes.
+ */
 void RecyclerView::createLayoutManager(Context* context,const std::string& className,
-	const AttributeSet& attrs/*,int defStyleAttr, int defStyleRes*/) {
-    if(!className.compare("LinearLayoutManager")){
-        setLayoutManager(std::make_unique<LinearLayoutManager>(context,attrs));
-    }else if(!className.compare("GridLayoutManager")){
-        setLayoutManager(std::make_unique<GridLayoutManager>(context,attrs));
-    }else if(!className.compare("StaggeredGridLayoutManager")){
-        setLayoutManager(std::make_unique<StaggeredGridLayoutManager>(context,attrs));
+        const AttributeSet* attrs,int defStyleAttr,int defStyleRes) {
+    if (!className.empty()) {
+        std::string name = className;
+        const size_t b = name.find_first_not_of(" \t\n\r\f");  // java String.trim()
+        const size_t e = name.find_last_not_of(" \t\n\r\f");
+        name = (b == std::string::npos) ? std::string() : name.substr(b, e - b + 1);
+        if (!name.empty()) {
+            name = getFullClassName(context, name);
+            auto it = layoutManagerParsers.find(name);
+            if (it != layoutManagerParsers.end()) {
+                setLayoutManager(std::unique_ptr<LayoutManager>(
+                        it->second(context, attrs, defStyleAttr, defStyleRes)));
+            } else {
+                // java: IllegalStateException "Unable to find LayoutManager".
+                const std::string pos = attrs ? attrs->getPositionDescription() : std::string();
+                throw std::runtime_error(pos + ": Unable to find LayoutManager " + name);
+            }
+        }
     }
 }
 
@@ -308,10 +336,10 @@ std::string RecyclerView::getFullClassName(Context* context, const std::string& 
     if (className[0] == '.') {
         return context->getPackageName() + className;
     }
-    if (className.find(".")!=std::string::npos){//contains(".")) {
+    if (className.find(".") != std::string::npos) {
         return className;
     }
-    return className;//RecyclerView.class.getPackage().getName() + '.' + className;
+    return std::string("androidx.recyclerview.widget.") + className;
 }
 
 void RecyclerView::initChildrenHelper() {
@@ -6678,12 +6706,14 @@ bool RecyclerView::LayoutManager::performAccessibilityActionForItem(Recycler& re
 }
 
 
-RecyclerView::LayoutManager::Properties RecyclerView::LayoutManager::getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes) {
+RecyclerView::LayoutManager::Properties RecyclerView::LayoutManager::getProperties(Context* context,
+        const AttributeSet* attrs,int defStyleAttr, int defStyleRes) {
     Properties properties;
-    properties.orientation = attrs.getAttributeIntValue(std::string(), "orientation", DEFAULT_ORIENTATION);//a.getInt(R.styleable.RecyclerView_android_orientation, DEFAULT_ORIENTATION);
-    properties.spanCount = attrs.getAttributeIntValue(std::string(), "spanCount",1);//a.getInt(R.styleable.RecyclerView_spanCount, 1);
-    properties.reverseLayout = attrs.getAttributeBooleanValue(std::string(), "reverseLayout",false);//a.getBoolean(R.styleable.RecyclerView_reverseLayout, false);
-    properties.stackFromEnd = attrs.getAttributeBooleanValue(std::string(), "stackFromEnd",false);//a.getBoolean(R.styleable.RecyclerView_stackFromEnd, false);
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::RecyclerView, defStyleAttr, defStyleRes);
+    properties.orientation = a->getInt(R::styleable::RecyclerView_orientation, DEFAULT_ORIENTATION);
+    properties.spanCount = a->getInt(R::styleable::RecyclerView_spanCount, 1);
+    properties.reverseLayout = a->getBoolean(R::styleable::RecyclerView_reverseLayout, false);
+    properties.stackFromEnd = a->getBoolean(R::styleable::RecyclerView_stackFromEnd, false);
     return properties;
 }
 

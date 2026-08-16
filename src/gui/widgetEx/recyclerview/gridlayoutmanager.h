@@ -104,8 +104,7 @@ protected:
     void layoutChunk(RecyclerView::Recycler& recycler, RecyclerView::State& state,
             LayoutState& layoutState, LayoutChunkResult& result)override;
 public:
-    GridLayoutManager(Context* context, const AttributeSet& attrs);
-    GridLayoutManager(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    GridLayoutManager(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     GridLayoutManager(Context* context, int spanCount);
     GridLayoutManager(Context* context, int spanCount,int orientation, bool reverseLayout);
     ~GridLayoutManager()override;

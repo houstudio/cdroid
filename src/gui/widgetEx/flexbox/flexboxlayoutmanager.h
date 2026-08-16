@@ -127,8 +127,7 @@ public:
     FlexboxLayoutManager(Context* context);
     FlexboxLayoutManager(Context* context, int flexDirection);
     FlexboxLayoutManager(Context* context, int flexDirection, int flexWrap);
-    FlexboxLayoutManager(Context* context, const AttributeSet& attrs);
-    FlexboxLayoutManager(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    FlexboxLayoutManager(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~FlexboxLayoutManager() override;
 
     bool isAutoMeasureEnabled() const override;

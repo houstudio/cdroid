@@ -32,7 +32,7 @@ DECLARE_WIDGET2(ListView,R::attr::listViewStyle)
 ListView::ListView(int w,int h):AbsListView(w,h) {
     // Programmatic construction: no XML element, but still resolve the default
     // style (listViewStyle) from the theme, same as the inflate path.
-    initListView(AttributeSet::empty(), R::attr::listViewStyle);
+    initListView(nullptr, R::attr::listViewStyle);
 }
 
 ListView::ListView(Context* context,const AttributeSet& attrs)
@@ -41,10 +41,10 @@ ListView::ListView(Context* context,const AttributeSet& attrs)
 
 ListView::ListView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :AbsListView(context,pAttrs, defStyleAttr) {
-    initListView(*pAttrs, defStyleAttr);
+    initListView(pAttrs, defStyleAttr);
 }
 
-void ListView::initListView(const AttributeSet&attrs,int defStyleAttr) {
+void ListView::initListView(const AttributeSet*attrs,int defStyleAttr) {
     mDividerHeight=0;
     mItemsCanFocus=false;
     mDivider=nullptr;

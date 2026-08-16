@@ -140,8 +140,7 @@ protected:
     int getFirstChildPosition();
 
 public:
-    StaggeredGridLayoutManager(Context* context,const AttributeSet& attrs);
-    StaggeredGridLayoutManager(Context* context,const AttributeSet* attrs,int defStyleAttr=0);//, int defStyleAttr,int defStyleRes);
+    StaggeredGridLayoutManager(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     StaggeredGridLayoutManager(int spanCount, int orientation);
 	~StaggeredGridLayoutManager()override;
     bool isAutoMeasureEnabled()const override;

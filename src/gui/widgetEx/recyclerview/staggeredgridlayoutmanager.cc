@@ -28,12 +28,9 @@
 
 namespace cdroid{
 
-StaggeredGridLayoutManager::StaggeredGridLayoutManager(Context* context,const AttributeSet& attrs):StaggeredGridLayoutManager(context,&attrs,0){}
-
-StaggeredGridLayoutManager::StaggeredGridLayoutManager(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+StaggeredGridLayoutManager::StaggeredGridLayoutManager(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
 	:LayoutManager(){
-    const AttributeSet& attrs = *pAttrs;//, int defStyleAttr,int defStyleRes) {
-    Properties properties = getProperties(context, attrs,0,0);//, defStyleAttr, defStyleRes);
+    Properties properties = getProperties(context, pAttrs, defStyleAttr, defStyleRes);
     initLayoutManager();
     setOrientation(properties.orientation);
 

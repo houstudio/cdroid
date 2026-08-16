@@ -259,7 +259,7 @@ private:
     void dispatchUpdate(void* /*AdapterHelper::UpdateOp*/ op);
     void initAutofill();
     void createLayoutManager(Context* context,const std::string& className,
-            const AttributeSet& attrs/*,int defStyleAttr, int defStyleRes*/);
+            const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     std::string getFullClassName(Context* context,const std::string& className);
     void initChildrenHelper();
     void setAdapterInternal(Adapter* adapter, bool compatibleWithPrevious,bool removeAndRecycleViews);
@@ -886,7 +886,7 @@ public:
     bool isLayoutHierarchical(Recycler& recycler,State& state);
     virtual bool performAccessibilityAction(Recycler& recycler, State& state,int action, Bundle* args);
     virtual bool performAccessibilityActionForItem(Recycler& recycler,State& state, View& view, int action, Bundle* args);
-    static Properties getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes);
+    static Properties getProperties(Context* context,const AttributeSet* attrs,int defStyleAttr, int defStyleRes);
 };
 
 class RecyclerView::EdgeEffectFactory {
