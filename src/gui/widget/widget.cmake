@@ -25,7 +25,7 @@ add_custom_command(
             --table ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
             --table ${CMAKE_SOURCE_DIR}/scripts/cdroid_attrids.txt
     COMMAND ${Python_EXECUTABLE} ${_FW_STYLEABLE_GEN}
-            --attrs ${PROJECT_SOURCE_DIR}/res/values/attrs.xml,${PROJECT_SOURCE_DIR}/res/values/attrs_cdroid.xml
+            --attrs ${PROJECT_SOURCE_DIR}/res/values/attrs.xml,${PROJECT_SOURCE_DIR}/res/values/attrs_manifest.xml,${PROJECT_SOURCE_DIR}/res/values/attrs_cdroid.xml
             --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
             --cdroid-ids ${CMAKE_SOURCE_DIR}/scripts/cdroid_attrids.txt
             --name-map ${CMAKE_SOURCE_DIR}/scripts/framework_namemap.txt
@@ -34,6 +34,7 @@ add_custom_command(
             --out-cc ${PROJECT_SOURCE_DIR}/widget/framework_styleable.cc
             --guard __FRAMEWORK_STYLEABLE_H__ --header framework_styleable.h
     DEPENDS ${PROJECT_SOURCE_DIR}/res/values/attrs.xml
+            ${PROJECT_SOURCE_DIR}/res/values/attrs_manifest.xml
             ${PROJECT_SOURCE_DIR}/res/values/attrs_cdroid.xml
             ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
             ${CMAKE_SOURCE_DIR}/scripts/cdroid_attrids.txt

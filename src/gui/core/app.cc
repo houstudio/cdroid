@@ -26,6 +26,7 @@
 #include <porting/cdgraph.h>
 #include <core/app.h>
 #include <private/ziparchive.h>
+#include <widget/framework_styleable.h>
 #include <core/xmlpullparser.h>
 #include <core/build.h>
 #include <core/messagequeue.h>
@@ -322,15 +323,18 @@ std::string App::getLauncherActivity() const {
 }
 
 void App::parsePackageManifest(const std::string& pakPath) {
+    using namespace cdroid::internal;
     ZIPArchive pak(pakPath);
     std::istream* stm = pak.getInputStream("AndroidManifest.xml");
     if (stm == nullptr) return;   // no manifest (synthesized paks carry none)
     auto stream = std::unique_ptr<std::istream>(stm);
     XmlPullParser parser(this, std::move(stream));
 
-    // Binary AXML attribute names are resource ids; the manifest ones:
-    //   theme=0x01010000 label=0x01010001 name=0x01010003
-    //   configChanges=0x0101001f (values below resolved by resource name)
+    // Manifest attribute ids come from the AOSP attrs_manifest.xml
+    // declare-styleables (generated framework_styleable.h).
+    auto attrId = [](const uint32_t* styleable, int index) -> uint32_t {
+        return styleable[index];
+    };
     auto attrValueByName = [&](const AttributeSet& atts, uint32_t attrId,
                                const char* bareName) -> std::string {
         for (int i = 0; i < atts.getAttributeCount(); i++) {
@@ -396,22 +400,31 @@ void App::parsePackageManifest(const std::string& pakPath) {
         if (type == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();
             if (tag == "application") {
-                mApplicationLabel = attrValueByName(parser, 0x01010001, "label");
-                mApplicationTheme = resIdFromRef(attrValueByName(parser, 0x01010000, "theme"), "style");
+                mApplicationLabel = attrValueByName(parser,
+                        attrId(R::styleable::AndroidManifestApplication, R::styleable::AndroidManifestApplication_label), "label");
+                mApplicationTheme = resIdFromRef(attrValueByName(parser,
+                        attrId(R::styleable::AndroidManifestApplication, R::styleable::AndroidManifestApplication_theme), "theme"), "style");
             } else if (tag == "activity") {
                 inActivity = true;
                 current = ActivityInfo();
-                current.name = attrValueByName(parser, 0x01010003, "name");
-                current.theme = resIdFromRef(attrValueByName(parser, 0x01010000, "theme"), "style");
-                current.label = attrValueByName(parser, 0x01010001, "label");
-                current.configChanges = parseConfigChanges(
-                        attrValueByName(parser, 0x0101001f, "configChanges"));
+                current.name = attrValueByName(parser,
+                        attrId(R::styleable::AndroidManifestActivity, R::styleable::AndroidManifestActivity_name), "name");
+                current.theme = resIdFromRef(attrValueByName(parser,
+                        attrId(R::styleable::AndroidManifestActivity, R::styleable::AndroidManifestActivity_theme), "theme"), "style");
+                current.label = attrValueByName(parser,
+                        attrId(R::styleable::AndroidManifestActivity, R::styleable::AndroidManifestActivity_label), "label");
+                current.configChanges = parseConfigChanges(attrValueByName(parser,
+                        attrId(R::styleable::AndroidManifestActivity, R::styleable::AndroidManifestActivity_configChanges), "configChanges"));
                 sawMainAction = sawLauncherCategory = false;
             } else if (inActivity && tag == "action") {
-                if (attrValueByName(parser, 0x01010003, "name") == "android.intent.action.MAIN")
+                if (attrValueByName(parser,
+                        attrId(R::styleable::AndroidManifestAction, R::styleable::AndroidManifestAction_name), "name")
+                        == "android.intent.action.MAIN")
                     sawMainAction = true;
             } else if (inActivity && tag == "category") {
-                if (attrValueByName(parser, 0x01010003, "name") == "android.intent.category.LAUNCHER")
+                if (attrValueByName(parser,
+                        attrId(R::styleable::AndroidManifestCategory, R::styleable::AndroidManifestCategory_name), "name")
+                        == "android.intent.category.LAUNCHER")
                     sawLauncherCategory = true;
             }
         } else if (type == XmlPullParser::END_TAG) {

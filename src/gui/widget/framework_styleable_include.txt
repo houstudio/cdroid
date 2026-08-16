@@ -5,6 +5,10 @@
 
 # --- widgets (View/ViewGroup subclasses) ---
 AbsListView
+AndroidManifestAction
+AndroidManifestActivity
+AndroidManifestApplication
+AndroidManifestCategory
 ButtonBarLayout
 CardView
 ViewTag
