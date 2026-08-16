@@ -218,16 +218,7 @@ View* LayoutInflater::inflate(int resource, ViewGroup* root, bool attachToRoot){
     XmlPullParser parser(mContext, resource);
     return inflate(parser,root,attachToRoot);
 }
-#if 0
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root){
-    return inflate(resource,root,root!=nullptr);
-}
 
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool attachToRoot){
-    XmlPullParser parser(mContext,resource);
-    return inflate(parser,root,attachToRoot);
-}
-#endif
 View* LayoutInflater::createView(const std::string& name, const std::string& prefix,AttributeSet& attrs){
     return createView(mContext,name,prefix,attrs);
 }
