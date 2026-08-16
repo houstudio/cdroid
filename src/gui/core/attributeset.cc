@@ -159,11 +159,23 @@ std::string AttributeSet::getPositionDescription() const {
     return std::string();
 }
 
-int AttributeSet::getAttributeNameResource(int /*index*/) const {
-    // Text-built sets carry no attr resource ids (AOSP: 0 when the name has no
-    // associated resource). The binary XmlPullParser override resolves real ids
-    // straight from its ResXMLTree.
-    return 0;
+int AttributeSet::getAttributeNameResource(int index) const {
+    // Text-built sets carry no attr resource ids natively (binary AXML does).
+    // Resolve the attribute NAME through the arsc attr table instead —
+    // obtainStyledAttributes matches element attributes BY RESOURCE ID, so a
+    // text XML (e.g. res/color/ selectors packed as text) otherwise never
+    // matches and its items fall to defaults (the MAGENTA ColorStateList bug).
+    // Name form: "prefix:name" (prefix is a package) or bare "name".
+    std::string key;
+    if (!keyAt(*mAttrs, (size_t)index, &key)) return 0;
+    std::string pkg, name = key;
+    const size_t colon = key.rfind(':');
+    if (colon != std::string::npos) {
+        pkg = key.substr(0, colon);
+        name = key.substr(colon + 1);
+    }
+    if (name.empty() || mContext == nullptr) return 0;
+    return mContext->getResources().getIdentifier(name, "attr", pkg);
 }
 
 int AttributeSet::getAttributeListValue(int index,

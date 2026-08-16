@@ -430,7 +430,9 @@ const ResTable_map* ResTable::getBag(uint32_t resId, size_t* outCount,
     const Package* pkg = packageForId(pkgId);
     if (!pkg) return nullptr;
     const ResTable_entry* entry = getBestEntry(*pkg, typeId, entryId, mParams, outConfig, outSpecFlags);
-    if (!entry || !(entry->flags & ResTable_entry::FLAG_COMPLEX)) return nullptr;
+    if (!entry || !(entry->flags & ResTable_entry::FLAG_COMPLEX)) {
+        return nullptr;
+    }
     const ResTable_map_entry* me = (const ResTable_map_entry*)entry;
     if (outCount) *outCount = dtohl(me->count);
     if (outBlock) *outBlock = (ssize_t)pkg->headerIndex;  // owning header (string pool)
@@ -689,7 +691,6 @@ status_t ResTable::Theme::applyStyle(uint32_t resID, bool force) {
 // below, a child's already-set value is sticky and the parent only fills gaps.
 status_t ResTable::Theme::applyStyleChain(uint32_t resID, bool force, int depth) {
     if (depth > 16) return BAD_VALUE;
-
     size_t count = 0;
     ResTable_config cfg;
     ssize_t block = -1;
@@ -905,11 +906,18 @@ void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
         Res_value v;
         ssize_t blk = chain.getAttribute(a, &v);
         if (blk >= 0) {
+            // AOSP records style-bag theme attrs (mThemeAttrs) and resolves them
+            // at read time — do NOT flatten ?attr here: resolving through the
+            // chain's theme yields the final file path and the referenced @color
+            // id is lost (the column ends up holding the ATTR id, which
+            // TypedArray's string branch then loads as a resource → null).
+            if (v.dataType == Res_value::TYPE_ATTRIBUTE
+                    || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+                out[i].value = v; out[i].stringBlock = blk; out[i].set = true; continue;
+            }
             // AOSP STYLE_RESOURCE_ID: record the reference id before flattening.
             if (v.dataType == Res_value::TYPE_REFERENCE
-                    || v.dataType == Res_value::TYPE_ATTRIBUTE
-                    || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE
-                    || v.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+                    || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE) {
                 out[i].resourceId = v.data;
             }
             blk = chain.resolveAttributeReference(&v, blk);

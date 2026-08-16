@@ -201,13 +201,31 @@ int32_t TypedArray::getDimensionPixelSize(size_t idx, int32_t def) const {
 }
 
 uint32_t TypedArray::getResourceId(size_t idx, uint32_t def) const {
-    // AOSP TypedArray.getResourceId: any non-TYPE_NULL value with a non-zero
-    // STYLE_RESOURCE_ID column returns the column id — the id the value came
-    // from, kept even after reference flattening (e.g. a style item pointing
-    // at a file resource resolves to TYPE_STRING while the column keeps the
-    // @animator/... id). Resolver records it in StyledAttr::resourceId.
+    // AOSP TypedArray.getResourceId: the id the value came from. AOSP resolves
+    // theme attributes lazily (mThemeAttrs + Theme.resolveAttributeReference),
+    // so a ?attr value yields the id of the resource it RESOLVES TO — e.g.
+    // android:textAppearance="?attr/textAppearanceLargePopupMenu" must return
+    // the @style id, not the attr's own id (the raw StyledAttr column holds
+    // the attr id for element-set ?attrs; TextView read it as a style id and
+    // the whole appearance chain died → menu text fell back to hard white).
     if (!hasValue(idx)) return def;
-    if (mVals[idx].value.dataType == Res_value::TYPE_NULL) return def;
+    TypedValue v;
+    if (!get(idx, &v)) return def;
+    if (v.type == Res_value::TYPE_ATTRIBUTE || v.type == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+        if (mTheme) {
+            TypedValue tv;
+            if (mTheme->resolveAttribute((int)v.data, &tv, /*resolveRefs*/false)
+                    && tv.resourceId != 0)
+                return tv.resourceId;
+        }
+        return def;
+    }
+    if (v.type == Res_value::TYPE_NULL) return def;
+    if (v.type == Res_value::TYPE_REFERENCE || v.type == Res_value::TYPE_DYNAMIC_REFERENCE)
+        return v.data;   // resolved final reference
+    // Non-reference value that CAME from a reference (e.g. a style item
+    // pointing at a file resource flattens to TYPE_STRING while the column
+    // keeps the @animator/... id) — the StyledAttr column is exactly that.
     if (mVals[idx].resourceId != 0) return mVals[idx].resourceId;
     return def;
 }
@@ -393,7 +411,20 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
     // style-sourced file paths (TYPE_STRING) are reverse-resolved via the arsc.
     // AOSP: ?attr resolves through the theme first (may land on a color).
     if ((v.type == TypedValue::TYPE_ATTRIBUTE || v.type == TypedValue::TYPE_DYNAMIC_ATTRIBUTE) && mTheme) {
+        // AOSP loadDrawable(themeAttr): resolveRefs=false first — a theme
+        // drawable lands on a RESOURCE whose id must reach getDrawable (with
+        // the theme for nested ?attr); resolveRefs=true flattens to the
+        // file-path string whose data is a pool index, not an id (the black
+        // popup: background attr resolved to nothing → null → black).
         TypedValue tv;
+        if (mTheme->resolveAttribute((int)v.data, &tv, /*resolveRefs*/false)) {
+            if (tv.type >= TypedValue::TYPE_FIRST_COLOR_INT && tv.type <= TypedValue::TYPE_LAST_COLOR_INT)
+                return new ColorDrawable(tv.data);
+            if (tv.type == TypedValue::TYPE_REFERENCE || tv.type == TypedValue::TYPE_DYNAMIC_REFERENCE)
+                return mResources->getDrawable((int)tv.data, mTheme.get());
+        }
+        if (mVals[idx].resourceId != 0)
+            return mResources->getDrawable((int)mVals[idx].resourceId, mTheme.get());
         if (mTheme->resolveAttribute((int)v.data, &tv, true)) {
             v.type = tv.type; v.data = tv.data;
             if (v.type >= TypedValue::TYPE_FIRST_COLOR_INT && v.type <= TypedValue::TYPE_LAST_COLOR_INT)
@@ -404,7 +435,8 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
     if (v.type == TypedValue::TYPE_REFERENCE || v.type == TypedValue::TYPE_DYNAMIC_REFERENCE) {
         id = (int)v.data;
     } else if (v.type == TypedValue::TYPE_STRING) {
-        id = pathToResourceId(mTable, getString(idx));
+        id = (int)mVals[idx].resourceId;   // column keeps the source ref id
+        if (id == 0) id = pathToResourceId(mTable, getString(idx));
     }
     // AOSP TypedArray.getDrawable → mResources.getDrawable(id, mTheme): the
     // nested load resolves ?attr in the drawable/CSL XML against THIS theme.
@@ -424,7 +456,31 @@ std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const 
     // instance is shared with the loader cache.
     // AOSP: ?attr resolves through the theme first (may land on a color).
     if ((v.type == TypedValue::TYPE_ATTRIBUTE || v.type == TypedValue::TYPE_DYNAMIC_ATTRIBUTE) && mTheme) {
+        // AOSP loadColorStateList(themeAttr): resolve WITHOUT following the
+        // reference chain — a theme color usually lands on a CSL resource whose
+        // id must reach loadComplexColor (themed); only an inline color
+        // short-circuits. resolveRefs=true flattens to the file-path string
+        // and the id is lost (→ null → callers fall to hard colors).
         TypedValue tv;
+        if (mTheme->resolveAttribute((int)v.data, &tv, /*resolveRefs*/false)) {
+            if (tv.type >= TypedValue::TYPE_FIRST_COLOR_INT && tv.type <= TypedValue::TYPE_LAST_COLOR_INT)
+                return ColorStateList::valueOf(tv.data);
+            if (tv.resourceId != 0)
+                return std::dynamic_pointer_cast<ColorStateList>(
+                        mResources->loadComplexColor((int)tv.resourceId, mTheme.get()));
+        }
+        if (mVals[idx].resourceId != 0) {
+            // Column reference id — only valid when it names a COLOR resource;
+            // for element-set ?attr it holds the ATTR id (not a resource), and
+            // for a two-hop theme attr (?attr -> ?attr) resolve(false) yields
+            // no id at all. Try it, but fall through instead of returning null
+            // — the flattened resolve(true) below still carries the color.
+            if ((mVals[idx].resourceId & 0xff0000u) != 0x010000u ||
+                mResources->getValue((int)mVals[idx].resourceId, &tv, true)) {
+                auto cc = mResources->loadComplexColor((int)mVals[idx].resourceId, mTheme.get());
+                if (cc) return std::dynamic_pointer_cast<ColorStateList>(cc);
+            }
+        }
         if (mTheme->resolveAttribute((int)v.data, &tv, true)) {
             v.type = tv.type; v.data = tv.data;
             if (v.type >= TypedValue::TYPE_FIRST_COLOR_INT && v.type <= TypedValue::TYPE_LAST_COLOR_INT)
@@ -435,7 +491,12 @@ std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const 
     if (v.type == TypedValue::TYPE_REFERENCE || v.type == TypedValue::TYPE_DYNAMIC_REFERENCE) {
         id = (int)v.data;
     } else if (v.type == TypedValue::TYPE_STRING) {
-        id = pathToResourceId(mTable, getString(idx));
+        // A bag value flattened from a reference (style items and ?attr
+        // resolutions land here as the file path): the resolver kept the
+        // source reference id in the column — prefer it over re-parsing the
+        // path (the string needs the owning pool block to fetch at all).
+        id = (int)mVals[idx].resourceId;
+        if (id == 0) id = pathToResourceId(mTable, getString(idx));
     }
     if (id != 0)
         return std::dynamic_pointer_cast<ColorStateList>(mResources->loadComplexColor(id, mTheme.get()));

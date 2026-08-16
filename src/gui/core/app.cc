@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <limits.h>
 #include <thread>
 #include <mutex>
 #include <porting/cdlog.h>
@@ -194,18 +195,38 @@ void App::onInit(){
     LOGD("onInit");
     GFXInit();
     mDisplayMetrics.setToDefaults();
-    std::string pak=getDataPath()+std::string("cdroid.pak");
-    if(0==access(pak.c_str(),F_OK))
-        addResource(pak,"cdroid");
-    else
-        addResource("cdroid.pak","cdroid");
+    // Locate a shared pak (cdroid.pak / widgetex.pak): data path first, then
+    // the executable's directory (build-tree layout puts the app binary in
+    // apps/<name>/ with cdroid.pak at the binary-root, so walk up a couple of
+    // levels), then the cwd. Without the framework pak every framework style
+    // resolves empty — a themed app silently loses its parent chain and the
+    // overflow menu renders with no background style at all.
+    auto findSharedPak = [this](const std::string& name) -> std::string {
+        std::vector<std::string> cands;
+        cands.push_back(getDataPath() + name);
+        // Resolve the executable to an absolute path first — argv[0] may be
+        // relative ("./printerdemo") and a naive dirname walk would stall on ".".
+        char rp[PATH_MAX] = {0};
+        std::string dir = realpath(mName.c_str(), rp) ? std::string(rp) : mName;
+        for (int up = 0; up < 3 && !dir.empty(); up++) {
+            const size_t pos = dir.rfind(PATH_SEP);
+            if (pos == std::string::npos) break;
+            dir = dir.substr(0, pos);
+            if (dir.empty()) dir = "/";
+            cands.push_back(dir + PATH_SEP + name);
+        }
+        cands.push_back(name);   // cwd
+        for (const auto& c : cands)
+            if (0 == access(c.c_str(), F_OK)) return c;
+        return std::string();
+    };
+    const std::string pak = findSharedPak("cdroid.pak");
+    if (!pak.empty()) addResource(pak, "cdroid");
+    else addResource("cdroid.pak", "cdroid");   // keep the old failure log
     // widgetEx shared resource pak (package-id 0x02 — ConstraintLayout/TabLayout/
     // RecyclerView/etc. custom attrs). Built once, shared by all apps.
-    std::string wpak=getDataPath()+std::string("widgetex.pak");
-    if(0==access(wpak.c_str(),F_OK))
-        addResource(wpak,"widgetex");
-    else if(0==access("widgetex.pak",F_OK))
-        addResource("widgetex.pak","widgetex");
+    const std::string wpak = findSharedPak("widgetex.pak");
+    if (!wpak.empty()) addResource(wpak, "widgetex");
 }
 
 const std::string App::getDataPath()const{
