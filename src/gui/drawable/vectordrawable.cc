@@ -353,7 +353,7 @@ void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
 
     const int tintMode = a.getInt(R::styleable::VectorDrawable_tintMode, PorterDuff::NOOP);
     if (tintMode != PorterDuff::NOOP) {
-        state->mTintMode = tintMode;
+        state->mTintMode = (int)parseTintMode(tintMode, (PorterDuff::Mode)state->mTintMode);
     }
 
     auto tint = a.getColorStateList(R::styleable::VectorDrawable_tint);

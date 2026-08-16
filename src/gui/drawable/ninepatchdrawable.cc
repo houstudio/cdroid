@@ -356,9 +356,12 @@ void NinePatchDrawable::updateStateFromTypedArray(const TypedArray& a){
     state->mAutoMirrored = a.getBoolean(R::styleable::NinePatchDrawable_autoMirrored, state->mAutoMirrored);
     state->mBaseAlpha = a.getFloat(R::styleable::NinePatchDrawable_alpha, state->mBaseAlpha);
 
+    /* AOSP: Drawable.parseTintMode maps the XML enum (src_over=3 ... multiply=14)
+     * onto PorterDuff.Mode values. Storing the raw int left "multiply" (14) as an
+     * unrelated operator and the tint painted the whole group rect. */
     const int tintMode = a.getInt(R::styleable::NinePatchDrawable_tintMode, PorterDuff::NOOP);
     if (tintMode != PorterDuff::NOOP) {
-        state->mTintMode = tintMode;
+        state->mTintMode = (int)parseTintMode(tintMode, (PorterDuff::Mode)state->mTintMode);
     }
 
     auto tint = a.getColorStateList(R::styleable::NinePatchDrawable_tint);

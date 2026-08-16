@@ -92,6 +92,37 @@ void PorterDuffColorFilter::apply(Canvas&canvas,const Rect&rect){
      * PorterDuff/blend operator. Option A: cairo's native operator — exact for the 12
      * classic Porter-Duff modes + ADD; W3C-semantic (close, not bit-exact vs Skia) for
      * MULTIPLY/SCREEN/OVERLAY/DARKEN/LIGHTEN (alpha-handling differs; see memory note). */
+    if (mMode == PorterDuff::Mode::MULTIPLY) {
+        /* Skia's MULTIPLY (a.k.a. MODULATE) is element-wise s*d on the
+         * PREMULTIPLIED channels including alpha: transparent dst stays
+         * transparent. Cairo's CAIRO_OPERATOR_MULTIPLY uses the W3C blend
+         * spec, where a transparent backdrop shows the source color — a
+         * multiply tint over a nine-patch group painted the whole group rect
+         * (the "thumb circle wrapped in a translucent square"). Do it
+         * per-pixel instead. */
+        const int sa = (mColor>>24)&0xFF, sr = ((mColor>>16)&0xFF)*sa/255,
+                  sg = ((mColor>>8)&0xFF)*sa/255, sb = (mColor&0xFF)*sa/255;
+        withGroupPixels(canvas, "PorterDuff MULTIPLY",
+            [&](unsigned char* data, int stride, int w, int h){
+                for(int y=0;y<h;y++){
+                    uint32_t* row = reinterpret_cast<uint32_t*>(data + y*stride);
+                    /* fully-transparent rows (most of a nine-patch group) skip
+                       the per-pixel math entirely */
+                    bool any=false;
+                    for(int x=0;x<w;x++) if(row[x]){ any=true; break; }
+                    if(!any) continue;
+                    for(int x=0;x<w;x++){
+                        const uint32_t p = row[x];
+                        const uint32_t a = (p>>24)&0xFF;
+                        if (a == 0) { row[x] = 0; continue; }   // d=0 -> out=0
+                        const uint32_t r = (p>>16)&0xFF, g = (p>>8)&0xFF, b = p&0xFF;
+                        row[x] = ((a*sa/255)<<24) | ((r*sr/255)<<16)
+                               | ((g*sg/255)<<8) | (b*sb/255);
+                    }
+                }
+            });
+        return;
+    }
     canvas.set_operator((Cairo::Context::Operator)PorterDuff::toOperator(mMode));
     canvas.set_color(mColor);
     canvas.paint();

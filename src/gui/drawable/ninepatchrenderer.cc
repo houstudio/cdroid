@@ -712,7 +712,7 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
 		imgPainter->restore();
         ppainter=imgPainter.get();
     }
-    Cairo::Context&painter=*imgPainter.get();
+    Cairo::Context&painter=*ppainter;
     // Deficit case: destination smaller than the sum of the fixed (non-stretch) patches
     // on either axis. The factor-based loop below only scales the stretch patches, so its
     // factor goes NEGATIVE here and the const patches overlap/garble (the old

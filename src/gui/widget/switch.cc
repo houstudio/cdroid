@@ -784,7 +784,10 @@ void Switch::draw(Canvas& c) {
                 trackBottom -= thumbInsets.bottom - padding.height;
             }
         }
-        mTrackDrawable->setBounds(trackLeft, trackTop, trackRight, trackBottom);
+        /* CDROID setBounds is (x, y, w, h) — the old AOSP (l, t, r, b) form
+           passed right/bottom as the size and the capsule's right end was
+           clipped into a square corner. */
+        mTrackDrawable->setBounds(trackLeft, trackTop, trackRight - trackLeft, trackBottom - trackTop);
     }
 
     // Layout the thumb.
