@@ -454,11 +454,28 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // We catch this exception and set localParams accordingly: true
             // means we successfully loaded layout params from the <include>
             // tag, false means we need to rely on the included layout params.
+            // AOSP: generateLayoutParams(include-attrs) THROWS when the
+            // <include> tag lacks layout_width/height (TypedArray
+            // .getLayoutDimension throws on a missing dimension) and the
+            // catch falls back to the included root's LayoutParams — that's
+            // how an attribute-less <include> keeps the root's 110dp/
+            // match_parent. CDROID's getLayoutDimension returns a default
+            // instead of throwing, so the fallback never fired and the
+            // include inherited junk dimensions (the status bar stretched
+            // over the whole page and its centered content drifted to the
+            // middle). Detect the missing pair explicitly instead.
             ViewGroup::LayoutParams* params = nullptr;
-            try {
-                params = group->generateLayoutParams(attrs);
-            } catch (std::exception&) {
-                // Ignore, just fail over to child attrs.
+            {
+                auto lta = context->obtainStyledAttributes(attrs, R::styleable::Layout);
+                const bool hasSize = lta && lta->hasValue(R::styleable::Layout_layout_width)
+                        && lta->hasValue(R::styleable::Layout_layout_height);
+                if (hasSize) {
+                    try {
+                        params = group->generateLayoutParams(attrs);
+                    } catch (std::exception&) {
+                        // Ignore, just fail over to child attrs.
+                    }
+                }
             }
             if (params == nullptr) {
                 params = group->generateLayoutParams(childAttrs);
