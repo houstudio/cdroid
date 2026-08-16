@@ -682,7 +682,6 @@ void AnimatedVectorDrawable::clearAnimationCallbacks() {
 AnimatedVectorDrawable::VectorDrawableAnimatorUI::VectorDrawableAnimatorUI(AnimatedVectorDrawable* drawable) {
     mDrawable = drawable;
     mSet = nullptr;
-    LOGD("VectorDrawableAnimatorUI %p on vector %p",this,mDrawable);
 }
 
 AnimatedVectorDrawable::VectorDrawableAnimatorUI::~VectorDrawableAnimatorUI(){

@@ -395,7 +395,6 @@ void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
     if (!name.empty()) {
         state->mRootName = name;
         state->mRootGroup->mGroupName = name;
-        LOGD("%p rootName=%s",state->mRootGroup,name.c_str());
         state->mVGTargetsMap.emplace(name, state.get());
     }
 
