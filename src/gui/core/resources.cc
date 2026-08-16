@@ -283,12 +283,6 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
                 return std::make_unique<TypedArray>(rt, std::move(styled), xml, getDisplayMetrics().density, this, &_th);
             }
         }
-        const int styleResId = set->getStyleResourceId();
-        if (styleResId != 0) {
-            cdroid::obtainStyledAttributes(rt, theme, attrs,
-                                           (uint32_t)defStyleAttr, (uint32_t)styleResId, styled.data());
-            return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, &_th);
-        }
     }
     cdroid::obtainStyledAttributes(rt, theme, attrs,
                                    (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
@@ -441,13 +435,6 @@ std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(const Attri
                 return std::make_unique<TypedArray>(rt, std::move(styled), xml,
                         mRes.getDisplayMetrics().density, &mRes, this);
             }
-        }
-        const int styleResId = set->getStyleResourceId();
-        if (styleResId != 0) {
-            cdroid::obtainStyledAttributes(rt, theme, attrs,
-                                           (uint32_t)defStyleAttr, (uint32_t)styleResId, styled.data());
-            return std::make_unique<TypedArray>(rt, std::move(styled), nullptr,
-                    mRes.getDisplayMetrics().density, &mRes, this);
         }
     }
     cdroid::obtainStyledAttributes(rt, theme, attrs,

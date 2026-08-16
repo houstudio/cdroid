@@ -539,6 +539,25 @@ const std::string XmlPullParser::getAttributeValue(const std::string& key) const
     return AttributeSet::getAttributeValue(key);
 }
 
+// Debug dump — binary AXML prints the raw typed data (attr resId + Res_value
+// type/data, same shape as the resources dump) plus the rendered text value.
+void XmlPullParser::dump() const {
+    if (isBinaryAXML()) {
+        const size_t ac = mData->axmlTree->getAttributeCount();
+        for (size_t i = 0; i < ac; i++) {
+            Res_value v;
+            const bool have = mData->axmlTree->getAttributeValue(i, &v) == sizeof(Res_value);
+            LOGD("[%zu] %s (attr 0x%08x): type=0x%x data=0x%x  \"%s\"", i,
+                 getAttributeName((int)i).c_str(),
+                 mData->axmlTree->getAttributeNameResID(i),
+                 have ? v.dataType : 0, have ? v.data : 0u,
+                 getAttributeValue((int)i).c_str());
+        }
+        return;
+    }
+    AttributeSet::dump();
+}
+
 // Name-keyed typed lookups: binary resolves the attr index by name, then reads
 // the typed Res_value through the (int) overrides above.
 int XmlPullParser::getStyleAttribute() const {

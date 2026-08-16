@@ -28,17 +28,6 @@
 
 namespace cdroid{
 
-static std::vector<std::string> split(const std::string & path) {
-    std::vector<std::string> vec;
-    size_t begin = path.find_first_not_of("|");
-    while (begin != std::string::npos) {
-        size_t end = path.find_first_of("|", begin);
-        vec.push_back(path.substr(begin, end-begin));
-        begin = path.find_first_not_of("|", end);
-    }
-    return vec;
-}
-
 AttributeSet::AttributeSet():AttributeSet(nullptr,""){
 }
 
@@ -51,8 +40,6 @@ AttributeSet::AttributeSet(const AttributeSet&other):AttributeSet(other.mContext
     for(auto& a:*other.mAttrs){
         mAttrs->insert({a.first,a.second});
     }
-    mAttrResIds = other.mAttrResIds;   // share the name->resId map (if any)
-    mStyleResId = other.mStyleResId;
 }
 
 AttributeSet& AttributeSet::operator =(const AttributeSet&other){
@@ -61,8 +48,6 @@ AttributeSet& AttributeSet::operator =(const AttributeSet&other){
     for(auto& a:*other.mAttrs){
         mAttrs->insert({a.first,a.second});
     }
-    mAttrResIds = other.mAttrResIds;
-    mStyleResId = other.mStyleResId;
     return *this;
 }
 
@@ -112,75 +97,6 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
     }
 }
 
-int AttributeSet::set(const char*atts[],int size){
-    int rc = 0;
-    for(int i = 0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
-        const char* key = strrchr(atts[i],' ');
-        if(key) key++;
-        else key = atts[i];
-        const std::string k(key);
-        mAttrs->insert({k,normalize(mPackage,std::string(atts[i+1]))});
-        // Record the attribute's own resource id (for getAttributeNameResource)
-        // via the Android-aligned Resources.getIdentifier. No-op without a Context
-        // or when already known; absent/unknown attrs stay at 0 (id interface returns 0).
-        if (mContext && !(mAttrResIds && mAttrResIds->count(k))) {
-            const int rid = mContext->getResources().getIdentifier(k, "attr", mPackage);
-            if (rid) setAttributeResourceId(k, rid);
-        }
-    }
-    return (int)mAttrs->size();
-}
-
-int AttributeSet::inherit(const AttributeSet&other){
-    int inheritedCount = 0;
-    const bool isSamePackage = (mPackage.compare(other.mPackage)==0);
-    for(auto it = other.mAttrs->begin(); it != other.mAttrs->end() ; it++){
-        if(mAttrs->find(it->first)==mAttrs->end()){
-            if(isSamePackage){
-                mAttrs->insert({it->first.c_str(),it->second});
-            }else{
-                mAttrs->insert({it->first,normalize(other.mPackage,it->second)});
-            }
-            inheritedCount++;
-            // carry the attribute's resource id (so inherited style attrs keep
-            // their resId for getAttributeNameResource).
-            if (other.mAttrResIds) {
-                auto ri = other.mAttrResIds->find(it->first);
-                if (ri != other.mAttrResIds->end()) setAttributeResourceId(it->first, ri->second);
-            }
-        }
-    }
-    // Carry the source style resId: when a base AttributeSet inherits a resolved
-    // style (e.g. TextView merges its textAppearance style into the element set),
-    // the merged set must keep the style's resId so obtainStyledAttributes
-    // routes it through the arsc theme resolver (non-binary styleResId branch).
-    if (mStyleResId == 0) mStyleResId = other.mStyleResId;
-    return inheritedCount;
-}
-
-int AttributeSet::Override(const AttributeSet&other){
-    int overrideCount = 0;
-    const bool isSamePackage = (mPackage.compare(other.mPackage)==0);
-    for(auto it = other.mAttrs->begin(); it != other.mAttrs->end() ; it++){
-        auto thisIter = mAttrs->find(it->first);
-        if(thisIter==mAttrs->end()){
-            if(isSamePackage){
-                mAttrs->insert({it->first.c_str(),it->second});
-            }else{
-                mAttrs->insert({it->first,normalize(other.mPackage,it->second)});
-            }
-            overrideCount++;
-        }else{
-            if(isSamePackage){
-                thisIter->second=it->second;
-            }else{
-                thisIter->second=normalize(other.mPackage,it->second);
-            }
-        }
-    }
-    return overrideCount;
-}
-
 bool AttributeSet::add(const std::string&key,const std::string&value){
     auto itr = mAttrs->find(key);
     std::string ks = key;
@@ -188,11 +104,6 @@ bool AttributeSet::add(const std::string&key,const std::string&value){
     if( pos != std::string::npos )ks = ks.substr(pos+1);
     if(itr == mAttrs->end()) {
         mAttrs->insert({(std::string)ks,normalize(mPackage,value)});
-        // Record the attribute's own resource id (see set()).
-        if (mContext && !(mAttrResIds && mAttrResIds->count(ks))) {
-            const int rid = mContext->getResources().getIdentifier(ks, "attr", mPackage);
-            if (rid) setAttributeResourceId(ks, rid);
-        }
     } else {
         itr->second = value;
     }
@@ -201,11 +112,6 @@ bool AttributeSet::add(const std::string&key,const std::string&value){
 
 bool AttributeSet::hasAttribute(const std::string&key)const{
     return mAttrs->find(key)!=mAttrs->end();
-}
-
-void AttributeSet::setAttributeResourceId(const std::string& name, int resId) {
-    if (!mAttrResIds) mAttrResIds = std::make_shared<std::unordered_map<std::string,int>>();
-    (*mAttrResIds)[name] = resId;
 }
 
 size_t AttributeSet::getAttributeCount()const{
@@ -265,13 +171,11 @@ std::string AttributeSet::getPositionDescription() const {
     return std::string();
 }
 
-int AttributeSet::getAttributeNameResource(int index) const {
-    std::string k;
-    if (!keyAt(*mAttrs, (size_t)index, &k) || !mAttrResIds){
-        return 0;
-    }
-    auto it = mAttrResIds->find(k);
-    return it != mAttrResIds->end() ? it->second : 0;
+int AttributeSet::getAttributeNameResource(int /*index*/) const {
+    // Text-built sets carry no attr resource ids (AOSP: 0 when the name has no
+    // associated resource). The binary XmlPullParser override resolves real ids
+    // straight from its ResXMLTree.
+    return 0;
 }
 
 int AttributeSet::getAttributeListValue(int index,
@@ -394,8 +298,11 @@ int AttributeSet::getStyleAttribute() const {
 }
 
 void AttributeSet::dump()const{
-    for(auto it = mAttrs->begin();it != mAttrs->end();it++){
-        LOGD("%s = %s",it->first.c_str(),it->second.c_str());
+    // Virtual index API: on a binary XmlPullParser this prints the parser's
+    // ResXMLTree attributes (typed values rendered as text); on a plain
+    // string-built set it prints mAttrs.
+    for (size_t i = 0; i < getAttributeCount(); i++) {
+        LOGD("[%zu] %s = %s", i, getAttributeName((int)i).c_str(), getAttributeValue((int)i).c_str());
     }
 }
 

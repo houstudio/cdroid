@@ -107,7 +107,6 @@ public:
         XmlPullParser parser(rm,std::move(txtis));
         AttributeSet& attrs=parser;
         while((type=parser.next())!=XmlPullParser::START_TAG){}
-        parser.dump();
         return DrawableInflater::inflateFromXml(App::getInstance().getResources(),parser.getName(),parser,attrs);
     }
 };

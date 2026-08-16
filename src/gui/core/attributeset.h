@@ -35,17 +35,6 @@ protected:
     std::string mPackage;
     Context*mContext;
     std::shared_ptr<std::unordered_map<std::string,std::string>>mAttrs;
-    // Optional attribute-NAME -> resource-id map (each attr's OWN id, for the
-    // AOSP getAttributeNameResource). Populated when this AttributeSet is built
-    // from a typed source (e.g. an arsc style bag); empty for plain string-built
-    // sets (getAttributeNameResource then returns 0). Index methods iterate mAttrs
-    // (small N; resolution matches by id/name, not position).
-    std::shared_ptr<std::unordered_map<std::string,int>>mAttrResIds;
-    // When this AttributeSet is a *style* resolved from the arsc (built by
-    // obtainStyledAttributes(styleName)), the source style's resource id — so
-    // obtainStyledAttributes can re-resolve it through the arsc theme
-    // resolver (raw Res_values) instead of string-parsing. 0 = not a style set.
-    int mStyleResId = 0;
 public:
     AttributeSet();
     AttributeSet(const AttributeSet&);
@@ -58,28 +47,11 @@ public:
     Context*getContext()const;
     void setContext(Context*,const std::string&package);
     bool add(const std::string&,const std::string&value);
-    // CDROID bridge: record an attribute's resource id (its OWN id, for the AOSP
-    // getAttributeNameResource). Used when this AttributeSet is built from a typed
-    // source (arsc style bag) so the id-interface works for style-derived sets.
-    void setAttributeResourceId(const std::string& name, int resId);
-    // The source style resId if this AttributeSet is a resolved style (else 0).
-    int getStyleResourceId() const { return mStyleResId; }
-    void setStyleResourceId(int resId) { mStyleResId = resId; }
     virtual bool hasAttribute(const std::string&key)const;
     virtual size_t getAttributeCount()const;
-    // Single-pass KV iteration over the present attributes (map order). Templated and header-only so
-    // the callback inlines — O(n) with no std::function overhead (index-probing an unordered_map
-    // would be O(n) per call → O(n²) for a full sweep).
-    template<typename F>
-    void forEachAttribute(F&& fn) const {
-        for (const auto& kv : *mAttrs) {
-            fn(kv.first, kv.second);
-        }
-    }
-    int set(const char*atts[],int size=0);
+    // Qualify a bare XML value ("@mipmap/x", "?attr/x") into "pkg:type/name"
+    // form. Used by the text-XML paths building string attribute sets.
     static std::string normalize(const std::string&pkg,const std::string&property);
-    int inherit(const AttributeSet&other);
-    int Override(const AttributeSet&other);
     // String-key value lookup. Virtual so a binary XmlPullParser can resolve by
     // name straight from its ResXMLTree (no mAttrs bridge). Call sites pass a
     // std::string (not const char*) so the virtual dispatch is not bypassed.
@@ -133,7 +105,10 @@ public:
     virtual int getIdAttributeResourceValue(int defaultValue) const;
     virtual int getStyleAttribute() const;                  // getAttributeResourceValue("style")
     AttributeSet& operator =(const AttributeSet&other);
-    void dump()const;
+    // Debug print of the present attributes as text (text sets: name = value;
+    // a binary XmlPullParser overrides this to print each attribute's raw
+    // typed Res_value — attr resId + type + data — alongside the rendered text).
+    virtual void dump()const;
 };
 }
 #endif

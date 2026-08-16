@@ -96,6 +96,10 @@ public:
     const std::string getAttributeValue(const std::string& key) const override;
     bool hasAttribute(const std::string& key) const override;
     size_t getAttributeCount() const override;
+    // Debug dump: binary prints each attribute's raw typed Res_value (attr
+    // resId + type + data, like the resources dump) plus the rendered text;
+    // text XML falls through to AttributeSet::dump().
+    void dump() const override;
 private:
     // Find a binary-AXML attribute by bare localname; returns its index or -1.
     int binaryAttrIndex(const std::string& name) const;
