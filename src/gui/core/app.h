@@ -78,6 +78,10 @@ public:
     // changed bit) or relaunches it (recreate). CDROID's "system" entry point:
     // apps call this to switch uiMode (night), locale, density, ...
     void handleConfigurationChanged(const Configuration& newConfig);
+    // AOSP Application.onConfigurationChanged (ComponentCallbacks2): the app-
+    // level callback, invoked by the "system" side (ActivityThread role) before
+    // the per-activity dispatch/recreate. Override to react app-wide.
+    virtual void onConfigurationChanged(const Configuration& newConfig){(void)newConfig;}
 };
 
 }/*end ofnamespace*/

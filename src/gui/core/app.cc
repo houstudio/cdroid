@@ -294,6 +294,9 @@ void App::exit(int code){
 // → recreate (AOSP relaunchActivity semantics).
 void App::handleConfigurationChanged(const Configuration& newConfig){
     Resources& res = getResources();
+    // AOSP ActivityThread first notifies the Application itself
+    // (ComponentCallbacks), then routes each activity.
+    onConfigurationChanged(newConfig);
     const int changes = res.calcConfigChanges(&newConfig);
     res.updateConfiguration(&newConfig, nullptr);
     if (changes == 0) return;
