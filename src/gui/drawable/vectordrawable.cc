@@ -842,7 +842,11 @@ long VectorDrawable::VGroup::getNativePtr() {
 
 void VectorDrawable::VGroup::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts) {
     // AOSP VGroup.inflate: obtainAttributes(R.styleable.VectorDrawableGroup).
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::VectorDrawable);
+    // This used VectorDrawable's attr array while reading VectorDrawableGroup_*
+    // indices — every group transform read the wrong column (or fell back to
+    // the default), so nested group scale/translate was silently dropped and
+    // Material checkbox/radio art rendered at raw path size.
+    auto ta = r.obtainStyledAttributes(&atts, R::styleable::VectorDrawableGroup);
     if (!ta) return;
     const TypedArray& a = *ta;
     const auto properties=mNativePtr->stagingProperties();
@@ -853,7 +857,11 @@ void VectorDrawable::VGroup::inflate(Resources&r,XmlPullParser&parser,const Attr
     float scaleY = a.getFloat(R::styleable::VectorDrawableGroup_scaleY,properties->getScaleY());
     float translateX = a.getFloat(R::styleable::VectorDrawableGroup_translateX,properties->getTranslateX());
     float translateY = a.getFloat(R::styleable::VectorDrawableGroup_translateY,properties->getTranslateY());
-    mGroupName = a.getString(R::styleable::VectorDrawable_name);
+    // AOSP reads VectorDrawableGroup_name; using VectorDrawable_name's index
+    // against the group array read the scaleY column, so every group name came
+    // back empty and animation targets like "icon_null" vanished from the
+    // target map (prepareLocalAnimator then setTarget(nullptr)).
+    mGroupName = a.getString(R::styleable::VectorDrawableGroup_name);
     if (!mGroupName.empty()) {
         //nSetName(mNativePtr, mGroupName);
         mNativePtr->setName(mGroupName.c_str());

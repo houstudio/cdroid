@@ -280,12 +280,16 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
             const std::string propertyName = pvh->getPropertyName();
             void* targetNameObj = vectorDrawable->getTargetByName(targetName);
             const Property* property = nullptr;
-            /*if (dynamic_cast<VectorDrawable::VObject*>(targetNameObj)) {
-                property = ((VectorDrawable::VObject*) targetNameObj)->getProperty(propertyName);
-            }*/if (targetNameObj==vectorDrawable->getConstantState().get()){
-                //dynamic_cast<VectorDrawable::VectorDrawableState*>(targetNameObj)) {
+            /* AOSP: the two instanceof branches both fail for a null target —
+               property stays null and the holder is skipped. The pointer
+               comparisons here let null fall into the VObject branch and
+               crashed on nullptr->getProperty(). */
+            if (targetNameObj == nullptr) {
+                continue;
+            }
+            if (targetNameObj==vectorDrawable->getConstantState().get()){
                 property = ((VectorDrawable::VectorDrawableState*) targetNameObj)->getProperty(propertyName);
-            }else {//if (dynamic_cast<VectorDrawable::VObject*>(targetNameObj)){
+            }else {
                 property = ((VectorDrawable::VObject*) targetNameObj)->getProperty(propertyName);
             }
             if (property != nullptr) {
