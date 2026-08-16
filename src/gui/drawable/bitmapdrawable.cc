@@ -107,6 +107,10 @@ BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
     mBitmapState = state;
     mDstRectAndInsetsDirty = true;
     mMutated = false;
+    // AOSP: the One True Constructor ends in updateLocalState() — rebuild the
+    // tint filter from the shared state, otherwise every newDrawable()/clone
+    // (e.g. ProgressBar.tileify) loses the tint parsed at inflate time.
+    mTintFilter = updateTintFilter(mTintFilter, mBitmapState->mTint, mBitmapState->mTintMode);
     computeBitmapSize();
 }
 
@@ -560,6 +564,9 @@ void BitmapDrawable::applyTheme(const Resources::Theme& t){
         if (a) updateStateFromTypedArray(*a, 0);
         mBitmapState->mThemeAttrs.clear();
     }
+    // AOSP applyTheme also ends in updateLocalState(): refresh the tint
+    // filter and size from the re-resolved state.
+    mTintFilter = updateTintFilter(mTintFilter, mBitmapState->mTint, mBitmapState->mTintMode);
     computeBitmapSize();
 }
 
@@ -568,6 +575,11 @@ void BitmapDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet
     // AOSP: all attr reads + src loading happen inside updateStateFromTypedArray.
     auto ta = obtainAttributes(r, theme, atts, R::styleable::BitmapDrawable);
     if (ta) updateStateFromTypedArray(*ta, 0);
+    // AOSP ends inflate with updateLocalState(), which rebuilds the tint
+    // filter from the freshly parsed state — without it a statically tinted
+    // bitmap (e.g. ratingbar_material's ?attr/colorControlActivated stars)
+    // draws untinted (black) because mTintFilter stays null.
+    mTintFilter = updateTintFilter(mTintFilter, mBitmapState->mTint, mBitmapState->mTintMode);
 }
 
 }
