@@ -84,8 +84,13 @@ Window::Window(int x,int y,int width,int height,int type)
 // giving every window its own theme for Window::setTheme()/recreate().
 Window::Window(Context*ctx,int x,int y,int width,int height,int type)
   : Window(x,y,width,height,type){
+    // AOSP performLaunchActivity applies the manifest theme (activity's, else
+    // the application's) before the activity class instantiates; App routes it
+    // through a pending slot so the themed overlay exists before the subclass
+    // ctor inflates content.
+    const int themeResId = App::getInstance().mPendingActivityTheme;
     if (dynamic_cast<ContextThemeWrapper*>(ctx) == nullptr) {
-        mContext = new ContextThemeWrapper(ctx ? ctx : &App::getInstance(), 0);
+        mContext = new ContextThemeWrapper(ctx ? ctx : &App::getInstance(), themeResId);
         mOwnsContext = true;
     } else {
         mContext = ctx;

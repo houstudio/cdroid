@@ -691,17 +691,24 @@ class PakBuilder:
             # back to merging when the shared lib isn't available.
             if not self.use_sdk and not (self.widgetex_apk and os.path.exists(self.widgetex_apk)):
                 self._merge_widgetex_attrs(tmpres)
-            # Synthesize a minimal manifest. aapt2 rejects a non-dotted package
-            # name, so qualify the namespace (e.g. "axmlapp" -> "cdroid.axmlapp").
+            # Manifest: use the app's own assets/AndroidManifest.xml when present
+            # (the runtime parses it for the application theme/label, per-activity
+            # theme + configChanges, and the MAIN/LAUNCHER window); otherwise
+            # synthesize a minimal one. aapt2 rejects a non-dotted package name,
+            # so qualify the namespace (e.g. "axmlapp" -> "cdroid.axmlapp").
             pkg = self.namespace if "." in self.namespace else "cdroid." + self.namespace
-            manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
-                        '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
-                        ' package="%s">'
-                        '<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>'
-                        '</manifest>' % pkg)
+            app_manifest = os.path.join(self.res_dir, "AndroidManifest.xml")
             mpath = os.path.join(tmpdir, "AndroidManifest.xml")
-            with open(mpath, "w") as fh:
-                fh.write(manifest)
+            if os.path.exists(app_manifest):
+                shutil.copyfile(app_manifest, mpath)
+            else:
+                manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
+                            '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
+                            ' package="%s">'
+                            '<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>'
+                            '</manifest>' % pkg)
+                with open(mpath, "w") as fh:
+                    fh.write(manifest)
             compiled = os.path.join(tmpdir, "compiled.zip")
             out_apk = os.path.join(tmpdir, "out.apk")
             subprocess.run([self.aapt2_path, "compile", "--dir", tmpres, "-o", compiled],
@@ -718,10 +725,16 @@ class PakBuilder:
             # Extract binary XML (res/layout/*.xml) + the app's resources.arsc.
             result = {}
             arsc = None
+            manifest_bin = None
             with zipfile.ZipFile(out_apk) as zf:
                 for name in zf.namelist():
                     if name == "resources.arsc":
                         arsc = zf.read(name)
+                    elif name == "AndroidManifest.xml":
+                        # Compiled binary manifest — stored in the pak next to the
+                        # arsc; the runtime parses it at boot (the PackageManager
+                        # role: application/activity theme, configChanges, MAIN).
+                        manifest_bin = zf.read(name)
                     elif name.startswith("res/") and name.endswith(".xml"):
                         rel = name[4:]  # strip "res/" prefix -> layout/main.xml
                         result[rel] = zf.read(name)
@@ -746,6 +759,7 @@ class PakBuilder:
                 _r = subprocess.run(_cmd, capture_output=True, text=True)
                 sys.stderr.write("aapt2_gen_rh (app): rc=%d %s\n"
                                  % (_r.returncode, (_r.stderr or _r.stdout)[:200]))
+            self._app_manifest_bin = manifest_bin
             return result, arsc
         except subprocess.CalledProcessError as e:
             # Surface aapt2's own stderr/stdout (attribute-not-found, etc.) so
@@ -822,6 +836,9 @@ class PakBuilder:
             # alongside the framework arsc; lets app @string/@color refs work).
             if app_arsc:
                 zf.writestr("resources.arsc", app_arsc, zipfile.ZIP_DEFLATED)
+            _manifest_bin = getattr(self, '_app_manifest_bin', None)
+            if _manifest_bin:
+                zf.writestr("AndroidManifest.xml", _manifest_bin, zipfile.ZIP_DEFLATED)
             # Walk cdroid's res/ for files NOT already provided by SDK.
             for root, dirs, files in os.walk(self.res_dir):
                 dirs.sort(); files.sort()
@@ -833,6 +850,10 @@ class PakBuilder:
                     # locale setParameters). Skip the text copies — also avoids text
                     # parse bugs (e.g. values-ko XmlPullParser multi-byte error).
                     # color/ ColorStateLists stay text (parsed by loadKeyValues).
+                    if rel == "AndroidManifest.xml":
+                        # The compiled binary manifest is written separately
+                        # (from the aapt2 link output); skip the text source.
+                        continue
                     if binary_ok and (rel.startswith("values/") or rel.startswith("values-")):
                         continue
                     if self.use_sdk and rel in sdk_data:

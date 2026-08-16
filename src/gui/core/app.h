@@ -34,11 +34,32 @@ namespace cdroid{
 class Window;
 struct ActivityPendingResult { Window* caller; int requestCode; Window* target; };
 
+// AOSP android.content.pm.ActivityInfo (micro): the fields CDROID consumes
+// from the compiled AndroidManifest.xml in the app pak — the PackageManager
+// role. Populated by App::parsePackageManifest (PackageParser micro-port).
+struct ActivityInfo {
+    std::string name;            // android:name (the REGISTER_ACTIVITY key)
+    int theme = 0;               // android:theme (0 = inherit the application theme)
+    int configChanges = 0;       // android:configChanges bits (Configuration::CONFIG_*)
+    std::string label;           // android:label
+    bool launchable = false;     // MAIN/LAUNCHER intent-filter present
+};
+
 class App:public Assets{
 private:
     bool mQuitFlag;
     int mExitCode;
     std::vector<ActivityPendingResult> mPendingResults;
+    // Manifest-derived app metadata (PackageManager role).
+    int mApplicationTheme = 0;                 // <application android:theme>
+    std::string mApplicationLabel;             // <application android:label>
+    std::map<std::string, ActivityInfo> mActivityInfos;
+    // Theme to apply to the NEXT instantiated activity window (set by
+    // startActivity from the manifest, consumed by Window's Context ctor —
+    // the theme must land on the themed context before the subclass ctor
+    // inflates content; AOSP performs this in performLaunchActivity).
+    int mPendingActivityTheme = 0;
+    void parsePackageManifest(const std::string& pakPath);
     Window* mLastStartedWindow = nullptr;
 protected:
     std::unique_ptr<cxxopts::ParseResult> mArgsResult;
@@ -82,6 +103,15 @@ public:
     // level callback, invoked by the "system" side (ActivityThread role) before
     // the per-activity dispatch/recreate. Override to react app-wide.
     virtual void onConfigurationChanged(const Configuration& newConfig){(void)newConfig;}
+
+    // --- PackageManager face (from the app pak's compiled manifest) ---
+    // AOSP ApplicationInfo.theme / ActivityInfo lookups.
+    int getApplicationTheme() const { return mApplicationTheme; }
+    const std::string& getApplicationLabel() const { return mApplicationLabel; }
+    const ActivityInfo* getActivityInfo(const std::string& name) const;
+    // The MAIN/LAUNCHER activity (empty when the manifest has none).
+    std::string getLauncherActivity() const;
+    friend class Window;   // consumes mPendingActivityTheme in its Context ctor
 };
 
 }/*end ofnamespace*/

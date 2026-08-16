@@ -25,6 +25,8 @@
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
 #include <core/app.h>
+#include <private/ziparchive.h>
+#include <core/xmlpullparser.h>
 #include <core/build.h>
 #include <core/messagequeue.h>
 #include <core/intent.h>
@@ -97,19 +99,27 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     }
     Typeface::setContext(this);
     onInit();
+    std::string appPakPath;
     const size_t pos = mName.rfind(PATH_SEP);
     if(pos!=std::string::npos){
         const std::string name = mName.substr(pos+1);
         std::string pakPath =getDataPath()+name+std::string(".pak");
-        if(0==access(pakPath.c_str(),F_OK))
+        if(0==access(pakPath.c_str(),F_OK)) {
             addResource(pakPath,getName());
-        else addResource(name+".pak",getName());
+            appPakPath = pakPath;
+        }
+        else {
+            addResource(name+".pak",getName());
+            appPakPath = name+".pak";
+        }
     }
     // AOSP: the application theme comes from the manifest (android:theme) and
     // falls back to the platform default; applyStyle follows the style's parent
-    // chain. CDROID manifests don't carry a theme yet, so every pak must be
-    // loaded before applying the framework default (Theme.Material).
-    setTheme(cdroid::internal::R::style::Theme_Material);
+    // chain. Every pak is loaded before the theme so the manifest parse and the
+    // theme's resource references both resolve.
+    if (!appPakPath.empty()) parsePackageManifest(appPakPath);
+    setTheme(mApplicationTheme ? mApplicationTheme
+                               : (int)cdroid::internal::R::style::Theme_Material);
     LOGI("\033[1;35m          ┏━┓┏┓╋╋╋┏┓┏┓");
     LOGI("\033[1;35m          ┃┏╋┛┣┳┳━╋╋┛┃");
     LOGI("\033[1;35m          ┃┗┫╋┃┏┫╋┃┃╋┃");
@@ -292,6 +302,133 @@ void App::exit(int code){
 // invalidation), then route each activity — every changed bit declared in the
 // activity's configChanges → dispatchConfigurationChanged; anything undeclared
 // → recreate (AOSP relaunchActivity semantics).
+
+// ============================================================================
+// PackageManager role: parse the compiled AndroidManifest.xml carried by the
+// app pak (aapt2 compiles the manifest into binary AXML; a PackageParser
+// micro-port — AOSP parses this in system_server and ships ActivityInfo over
+// Binder, CDROID has no system side so the App fills in).
+// ============================================================================
+const ActivityInfo* App::getActivityInfo(const std::string& name) const {
+    auto it = mActivityInfos.find(name);
+    return it == mActivityInfos.end() ? nullptr : &it->second;
+}
+
+std::string App::getLauncherActivity() const {
+    for (const auto& kv : mActivityInfos) {
+        if (kv.second.launchable) return kv.first;
+    }
+    return std::string();
+}
+
+void App::parsePackageManifest(const std::string& pakPath) {
+    ZIPArchive pak(pakPath);
+    std::istream* stm = pak.getInputStream("AndroidManifest.xml");
+    if (stm == nullptr) return;   // no manifest (synthesized paks carry none)
+    auto stream = std::unique_ptr<std::istream>(stm);
+    XmlPullParser parser(this, std::move(stream));
+
+    // Binary AXML attribute names are resource ids; the manifest ones:
+    //   theme=0x01010000 label=0x01010001 name=0x01010003
+    //   configChanges=0x0101001f (values below resolved by resource name)
+    auto attrValueByName = [&](const AttributeSet& atts, uint32_t attrId,
+                               const char* bareName) -> std::string {
+        for (int i = 0; i < atts.getAttributeCount(); i++) {
+            if ((uint32_t)atts.getAttributeNameResource(i) == attrId) {
+                // aapt2 compiles references to typed values; the binary bridge
+                // renders them back to "@type/name" strings.
+                return atts.getAttributeValue(i);
+            }
+        }
+        return bareName ? atts.getAttributeValue(bareName) : std::string();
+    };
+
+    // configChanges flag names -> Configuration::CONFIG_* bits.
+    auto parseConfigChanges = [](const std::string& value) -> int {
+        static const std::pair<const char*, int> flags[] = {
+            {"mcc", Configuration::CONFIG_MCC}, {"mnc", Configuration::CONFIG_MNC},
+            {"locale", Configuration::CONFIG_LOCALE},
+            {"touchscreen", Configuration::CONFIG_TOUCHSCREEN},
+            {"keyboard", Configuration::CONFIG_KEYBOARD},
+            {"keyboardHidden", Configuration::CONFIG_KEYBOARD_HIDDEN},
+            {"navigation", Configuration::CONFIG_NAVIGATION},
+            {"orientation", Configuration::CONFIG_ORIENTATION},
+            {"screenLayout", Configuration::CONFIG_SCREEN_LAYOUT},
+            {"uiMode", Configuration::CONFIG_UI_MODE},
+            {"screenSize", Configuration::CONFIG_SCREEN_SIZE},
+            {"smallestScreenSize", Configuration::CONFIG_SMALLEST_SCREEN_SIZE},
+            {"density", Configuration::CONFIG_DENSITY},
+            {"layoutDirection", Configuration::CONFIG_LAYOUT_DIRECTION},
+            {"colorMode", Configuration::CONFIG_COLOR_MODE},
+            {"fontScale", Configuration::CONFIG_FONT_SCALE},
+        };
+        int bits = 0;
+        size_t pos = 0;
+        while (pos < value.size()) {
+            const size_t bar = value.find('|', pos);
+            const std::string tok = value.substr(pos,
+                    bar == std::string::npos ? std::string::npos : bar - pos);
+            for (const auto& f : flags) {
+                if (tok == f.first) { bits |= f.second; break; }
+            }
+            if (bar == std::string::npos) break;
+            pos = bar + 1;
+        }
+        return bits;
+    };
+
+    // Resolve a compiled "@style/X" reference value to a resource id.
+    auto resIdFromRef = [&](const std::string& value, const char* type) -> int {
+        if (value.empty() || value[0] != '@') return 0;
+        std::string entry = value.substr(1);
+        const size_t slash = entry.rfind('/');
+        if (slash == std::string::npos) return 0;
+        const std::string name = entry.substr(slash + 1);
+        return getResources().getIdentifier(name, type, "");
+    };
+
+    std::vector<ActivityInfo> stack;   // open <activity> elements
+    ActivityInfo current;
+    bool inActivity = false;
+    bool sawMainAction = false, sawLauncherCategory = false;
+    int type;
+    while ((type = parser.next()) != XmlPullParser::END_DOCUMENT) {
+        if (type == XmlPullParser::START_TAG) {
+            const std::string tag = parser.getName();
+            if (tag == "application") {
+                mApplicationLabel = attrValueByName(parser, 0x01010001, "label");
+                mApplicationTheme = resIdFromRef(attrValueByName(parser, 0x01010000, "theme"), "style");
+            } else if (tag == "activity") {
+                inActivity = true;
+                current = ActivityInfo();
+                current.name = attrValueByName(parser, 0x01010003, "name");
+                current.theme = resIdFromRef(attrValueByName(parser, 0x01010000, "theme"), "style");
+                current.label = attrValueByName(parser, 0x01010001, "label");
+                current.configChanges = parseConfigChanges(
+                        attrValueByName(parser, 0x0101001f, "configChanges"));
+                sawMainAction = sawLauncherCategory = false;
+            } else if (inActivity && tag == "action") {
+                if (attrValueByName(parser, 0x01010003, "name") == "android.intent.action.MAIN")
+                    sawMainAction = true;
+            } else if (inActivity && tag == "category") {
+                if (attrValueByName(parser, 0x01010003, "name") == "android.intent.category.LAUNCHER")
+                    sawLauncherCategory = true;
+            }
+        } else if (type == XmlPullParser::END_TAG) {
+            const std::string tag = parser.getName();
+            if (tag == "activity" && inActivity) {
+                current.launchable = sawMainAction && sawLauncherCategory;
+                if (!current.name.empty())
+                    mActivityInfos[current.name] = current;
+                inActivity = false;
+            }
+        }
+    }
+    LOGI("manifest: appTheme=0x%x label='%s' activities=%zu launcher='%s'",
+         mApplicationTheme, mApplicationLabel.c_str(), mActivityInfos.size(),
+         getLauncherActivity().c_str());
+}
+
 void App::handleConfigurationChanged(const Configuration& newConfig){
     Resources& res = getResources();
     // AOSP ActivityThread first notifies the Application itself
@@ -376,9 +513,18 @@ void App::startActivity(const Intent& intent){
             }
         }
     }
+    // AOSP performLaunchActivity: the activity's theme (from the manifest's
+    // ActivityInfo, else the application theme) is applied before the class
+    // instantiates — CDROID routes it through a pending slot the Window's
+    // Context ctor consumes while building its ContextThemeWrapper overlay.
+    const ActivityInfo* info = getActivityInfo(className);
+    mPendingActivityTheme = info && info->theme ? info->theme : mApplicationTheme;
     ActivityFactory factory;
     Window* window = factory.instantiate(className);
+    mPendingActivityTheme = 0;
     if(window != nullptr){
+        // AOSP ActivityInfo.configChanges drives dispatch vs recreate.
+        if (info && info->configChanges) window->setConfigChanges(info->configChanges);
         window->setIntent(intent);
         if((intent.getFlags() & Intent::FLAG_ACTIVITY_NO_HISTORY) != 0) window->setNoHistory(true);
         mLastStartedWindow = window;
