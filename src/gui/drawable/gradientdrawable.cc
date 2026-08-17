@@ -1415,9 +1415,12 @@ void GradientDrawable::updateDrawableCorners(const TypedArray& a){
 
     if ( (topLeftRadius != radius) || (topRightRadius != radius) ||
             (bottomLeftRadius != radius) || (bottomRightRadius != radius)) {
-        // The corner radii are specified in clockwise order (see Path.addRoundRect())
+        // The corner radii are specified in clockwise order (see Path.addRoundRect()):
+        // tl,tl, tr,tr, br,br, bl,bl — the bottom pair was previously flipped,
+        // swapping the bottom-left/bottom-right corners of every shape that
+        // declares per-corner radii.
         setCornerRadii(std::vector<float>{ topLeftRadius, topLeftRadius, topRightRadius, topRightRadius,
-                bottomLeftRadius, bottomLeftRadius, bottomRightRadius, bottomRightRadius });
+                bottomRightRadius, bottomRightRadius, bottomLeftRadius, bottomLeftRadius });
     }
 }
 
