@@ -190,6 +190,7 @@ void CandidateView::onDrawInternal(Canvas* canvas) {
 }
 
 void CandidateView::onDraw(Canvas&canvas){
+    View::onDraw(canvas);
     onDrawInternal(&canvas);
 }
 
