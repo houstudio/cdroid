@@ -103,8 +103,14 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     mHasTintMode = orig.mHasTintMode;*/
 
     if (orig->mDensity == mDensity) {
-        mConstantPadding = orig->mConstantPadding;
-        mCheckedPadding = true;
+        // AOSP: mCheckedPadding = orig.mCheckedPadding (inherit the COMPUTED
+        // flag, not unconditionally true — a copy of a never-computed state
+        // must stay unchecked, else it reports an empty constant padding
+        // forever; seen as the 2nd Switch thumb losing its 9-patch padding).
+        if (orig->mCheckedPadding) {
+            mConstantPadding = orig->mConstantPadding;
+            mCheckedPadding = true;
+        }
 
         if (orig->mCheckedConstantSize) {
             mConstantWidth = orig->mConstantWidth;
@@ -286,10 +292,21 @@ bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
 
     createAllFutures();
 
+    // No REALIZED children yet (empty, or all-null pending futures): there is
+    // no constant padding to report. Caching an empty result here poisons every
+    // future copy of this state (the copy inherits mCheckedPadding) — seen as a
+    // Switch thumb losing its 9-patch padding on the second instance loaded
+    // from the same resource.
+    bool anyChild = false;
+    for (auto dr:mDrawables) { if (dr != nullptr) { anyChild = true; break; } }
+    if (!anyChild) return false;
+
     Rect r ={0,0,0,0};
     Rect t ={0,0,0,0};
     for (auto dr:mDrawables) {
-        if (dr->getPadding(t)) {
+        if (dr == nullptr) continue;
+        const bool has = dr->getPadding(t);
+        if (has) {
             if (t.left > r.left) r.left = t.left;
             if (t.top > r.top) r.top = t.top;
             if(t.width > r.width ) r.width = t.width;
