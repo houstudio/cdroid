@@ -8900,7 +8900,10 @@
              possible states: normal, pressed, checkable, checkable+pressed, checkable+checked,
              checkable+checked+pressed.
              {@deprecated Copy this definition into your own application project.} -->
-        <attr name="keyBackground" format="reference" />
+        <!-- CDROID: reference|color (AOSP declares reference-only; the legacy
+             text-mode layouts set bare color literals here, and TypedArray
+             turns an inline color into a ColorDrawable either way). -->
+        <attr name="keyBackground" format="reference|color" />
 
         <!-- Size of the text for character keys.
              {@deprecated Copy this definition into your own application project.} -->
