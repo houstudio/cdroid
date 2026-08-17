@@ -148,15 +148,22 @@ struct Private{
                     // silently dropped. Android behaves the same, but it breaks layouts
                     // in confusing ways (e.g. an unprefixed layout_width in a MotionScene
                     // <Constraint> collapses the view to 0dp), so flag it here.
-                    {
+                    // Directive tags (<merge>/<requestFocus>/<tag>) carry no
+                    // view attributes at all — nothing to warn about there.
+                    if (event->name != "merge" && event->name != "requestFocus"
+                            && event->name != "tag") {
                         const size_t ac = axmlTree->getAttributeCount();
                         for (size_t i = 0; i < ac; i++) {
                             if (axmlTree->getAttributeNameResID(i) != 0) continue;
                             size_t anLen = 0;
                             const char16_t* an = axmlTree->getAttributeName(i, &anLen);
                             const std::string attrName = u16toUtf8(an, anLen);
-                            // style= is namespace-less by spec (read by name, not id).
-                            if (attrName == "style") continue;
+                            // Namespace-less system attributes are read BY NAME
+                            // in AOSP (getAttributeValue(null, ...)) and
+                            // legitimately carry no resource id: style,
+                            // <view>/<fragment> class, <include> layout.
+                            if (attrName == "style" || attrName == "class"
+                                    || attrName == "layout") continue;
                             // Best-effort source name: the resource-id ctor stores a
                             // numeric id string; resolve it to pkg:type/name for the log.
                             std::string src = resourceId;
