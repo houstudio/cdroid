@@ -15,6 +15,7 @@ set(_WIDGETEX_ATTR_FILES
     ${PROJECT_SOURCE_DIR}/widgetEx/constraintlayout/res/values/attrs.xml
     ${PROJECT_SOURCE_DIR}/widgetEx/recyclerview/res/values/attrs.xml
     ${PROJECT_SOURCE_DIR}/widgetEx/tablayout/res/values/attrs.xml
+    ${PROJECT_SOURCE_DIR}/widgetEx/res/values/attrs.xml
     ${PROJECT_SOURCE_DIR}/navigation/res/values/attrs.xml)
 string(REPLACE ";" "," _WIDGETEX_ATTRS_CSV "${_WIDGETEX_ATTR_FILES}")
 # Per-component public.xml (sibling of each attrs.xml) — gen_styleable reads the
@@ -25,6 +26,7 @@ set(_WIDGETEX_PUBLIC_FILES
     ${PROJECT_SOURCE_DIR}/widgetEx/constraintlayout/res/values/public.xml
     ${PROJECT_SOURCE_DIR}/widgetEx/recyclerview/res/values/public.xml
     ${PROJECT_SOURCE_DIR}/widgetEx/tablayout/res/values/public.xml
+    ${PROJECT_SOURCE_DIR}/widgetEx/res/values/public.xml
     ${PROJECT_SOURCE_DIR}/navigation/res/values/public.xml)
 add_custom_command(
     OUTPUT  ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.h

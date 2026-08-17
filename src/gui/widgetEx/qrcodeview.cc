@@ -18,6 +18,8 @@
 #include <widgetEx/qrcodeview.h>
 #if ENABLE(QRCODE)
 #include <widgetEx/qrcodegen.h>
+#include <widgetEx/widgetex_styleable.h>
+#include <core/typedarray.h>
 #include <float.h>
 #include <cdlog.h>
 
@@ -35,17 +37,16 @@ QRCodeView::QRCodeView(int w,int h):View(w,h){
 QRCodeView::QRCodeView(Context*ctx,const AttributeSet& attrs):QRCodeView(ctx,&attrs,0){}
 
 QRCodeView::QRCodeView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initView();
 
-    mEccLevel = attrs.getAttributeIntValue(std::string(), "eccLevel", mEccLevel);
-
-    mEncodeMode = attrs.getAttributeIntValue(std::string(), "encodeMode", mEncodeMode);
-
-    mDotColor  = attrs.getAttributeIntValue(std::string(), "dotColor", mDotColor);
-    //mBarBgColor= attrs.getColor("barBgColor", (~mDotColor)|0xFF000000);
-    mBarBgColor = (~mDotColor)|0xFF000000;  // barBgColor attr unregistered; keep the default
-    mLogoDrawable = nullptr;                 // logo attr unregistered
+    // declare-styleable reads (widgetEx 0x02 attr ids); the eccLevel/encodeMode
+    // enum names pre-resolve to ints by aapt2.
+    auto ta = ctx->obtainStyledAttributes(pAttrs, cdroid::internal::R::styleable::QRCodeView, defStyleAttr);
+    mEccLevel   = ta->getInt(cdroid::internal::R::styleable::QRCodeView_eccLevel, mEccLevel);
+    mEncodeMode = ta->getInt(cdroid::internal::R::styleable::QRCodeView_encodeMode, mEncodeMode);
+    mDotColor   = ta->getColor(cdroid::internal::R::styleable::QRCodeView_dotColor, mDotColor);
+    mBarBgColor = ta->getColor(cdroid::internal::R::styleable::QRCodeView_barBgColor, (~mDotColor)|0xFF000000);
+    mLogoDrawable = ta->getDrawable(cdroid::internal::R::styleable::QRCodeView_logo);
     encode();
 }
 

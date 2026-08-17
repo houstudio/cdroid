@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared attrs for the simple (non-component) widgetEx views: qrcodeview,
+     barcodeview, plotview, rlottieview. Attr ids are pinned in public.xml at
+     stable 0x02 ids (one pool, watermark-allocated). -->
+<!-- QRCodeView attributes. -->
+<resources>
+    <declare-styleable name="QRCodeView">
+        <attr name="eccLevel">
+            <!-- QRCodeView::ECC_* -->
+            <enum name="low" value="0"/>
+            <enum name="medium" value="1"/>
+            <enum name="quartor" value="2"/>
+            <enum name="high" value="3"/>
+        </attr>
+        <attr name="encodeMode">
+            <!-- QRCodeView::MODE_* -->
+            <enum name="numberic" value="0"/>
+            <enum name="alphanumeric" value="1"/>
+            <enum name="utf8" value="2"/>
+            <enum name="kanji" value="3"/>
+            <enum name="eci" value="4"/>
+        </attr>
+        <attr name="dotColor" format="color"/>
+        <attr name="barBgColor" format="color"/>
+        <attr name="logo" format="reference"/>
+    </declare-styleable>
+</resources>
