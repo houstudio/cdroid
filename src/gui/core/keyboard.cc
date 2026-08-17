@@ -37,8 +37,10 @@ static int getDimensionOrFraction(const TypedArray& a,int idx,int base,int def){
     if(value.type==TypedValue::TYPE_DIMENSION){
         return a.getDimensionPixelSize(idx,def);
     }else if(value.type==TypedValue::TYPE_FRACTION){
-        // Round down to be close to the common behavior of layout dimensions
-        return (int)(value.getFraction(base,base)*base);
+        // AOSP: Math.round(a.getFraction(index, base, base, defValue)) —
+        // getFraction already applies the base (%p → mantissa × pbase); the
+        // extra ×base here multiplied every keyboard dimension by itself.
+        return (int)(value.getFraction(base,base) + 0.5f);
     }
     return def;
 }

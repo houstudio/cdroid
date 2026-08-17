@@ -656,6 +656,13 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
         mDownTime = me.getEventTime();
         mLastMoveTime = mDownTime;
         checkMultiTap(eventTime, keyIndex);
+        // Old AOSP behavior (dropped by the android-36 deprecated stub): press
+        // the key so getCurrentDrawableState() reports state_pressed and the
+        // key background shows its pressed state.
+        if (keyIndex != NOT_A_KEY) {
+            mKeys[keyIndex]->pressed = true;
+            invalidateKey(keyIndex);
+        }
         if(mKeyboardActionListener.onPress)
             mKeyboardActionListener.onPress(keyIndex != NOT_A_KEY ?  mKeys[keyIndex]->codes[0] : 0);
         if (mCurrentKey >= 0 && mKeys[mCurrentKey]->repeatable) {
@@ -682,12 +689,19 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
             if (mCurrentKey == NOT_A_KEY) {
                 mCurrentKey = keyIndex;
                 mCurrentKeyTime = eventTime - mDownTime;
+                mKeys[keyIndex]->pressed = true;
+                invalidateKey(keyIndex);
             } else {
                 if (keyIndex == mCurrentKey) {
                     mCurrentKeyTime += eventTime - mLastMoveTime;
                     continueLongPress = true;
                 } else if (mRepeatKeyIndex == NOT_A_KEY) {
                     resetMultiTap();
+                    // Slide onto a different key: swap the pressed state.
+                    mKeys[mCurrentKey]->pressed = false;
+                    invalidateKey(mCurrentKey);
+                    mKeys[keyIndex]->pressed = true;
+                    invalidateKey(keyIndex);
                     mLastKey = mCurrentKey;
                     mLastCodeX = mLastX;
                     mLastCodeY = mLastY;
@@ -731,6 +745,10 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
             touchY = mLastCodeY;
         }
         showPreview(NOT_A_KEY);
+        if (keyIndex != NOT_A_KEY) {
+            mKeys[keyIndex]->pressed = false;
+            invalidateKey(keyIndex);
+        }
         for(int i=0;i<mKeyIndices.size();i++)
             mKeyIndices[i]=NOT_A_KEY;//Arrays.fill(mKeyIndices, NOT_A_KEY);
         // If we're not on a repeating key (which sends on a DOWN event)
@@ -745,6 +763,9 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
         dismissPopupKeyboard();
         mAbortKey = true;
         showPreview(NOT_A_KEY);
+        if (mCurrentKey != NOT_A_KEY) {
+            mKeys[mCurrentKey]->pressed = false;
+        }
         invalidateKey(mCurrentKey);
         break;
     }

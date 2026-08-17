@@ -113,8 +113,17 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     KeyboardView::OnKeyboardActionListener listener;
     InputMethodManager&imm = InputMethodManager::getInstance();
     // The pinyin IME layout ships in the IME module's pak — resolve by name.
-    const int imeLayout = mContext->getResources().getIdentifier("ime_pinyin_keyboard", "layout", "cdroid");
-    View*vg=LayoutInflater::from(mContext)->inflate(imeLayout,this,false);
+    // A broken IME layout must not abort the whole process (inflate throws);
+    // degrade to a text-less window instead.
+    kbdView = nullptr;
+    candidateView = nullptr;
+    View*vg = nullptr;
+    try {
+        vg = LayoutInflater::from(mContext)->inflate(cdroid::R::layout::ime_pinyin_keyboard,this,false);
+    } catch (std::exception&e) {
+        LOGE("IME layout inflate failed: %s", e.what());
+        return;
+    }
     kbdView = (KeyboardView*)vg->findViewById(R::id::keyboardview);
     candidateView = (CandidateView*)vg->findViewById(R::id::predict2);
     // The controller owns the 1/2-level selection logic; the committer delivers
