@@ -2400,8 +2400,10 @@
         this attribution
         -->
         <attr name="tag" format="string" />
-        <!-- Required user visible label for a attribution. -->
-        <attr name="label" format="string" />
+        <!-- Required user visible label for a attribution. Reuses the global
+             label attr (aapt2 rejects a redeclaration with a different format
+             than "reference|string"). -->
+        <attr name="label" />
     </declare-styleable>
 
     <!-- Declares previously declared attributions this attribution inherits from. -->
