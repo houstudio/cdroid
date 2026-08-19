@@ -162,11 +162,11 @@ void NavigationView::removeHeaderView(View* view) {
     if (mHeaderView) mHeaderView->removeView(view);
 }
 
-int NavigationView::getHeaderCount() {
+int NavigationView::getHeaderCount() const{
     return mHeaderView ? mHeaderView->getChildCount() : 0;
 }
 
-View* NavigationView::getHeaderView(int index) {
+View* NavigationView::getHeaderView(int index) const{
     return mHeaderView ? mHeaderView->getChildAt(index) : nullptr;
 }
 

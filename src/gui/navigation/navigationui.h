@@ -75,12 +75,15 @@ protected:
     void setNavigationIcon(Drawable* icon) override;
 };
 
+class NavigationView;
+
 class NavigationUI{
 public:
     static void setupActionBarWithNavController(ActionBar* actionBar, NavController* navController,
                                                 AppBarConfiguration* configuration = nullptr);
     static void setupWithNavController(Toolbar* toolbar, NavController* navController,
                                        AppBarConfiguration* configuration = nullptr);
+    static void setupWithNavController(NavigationView* navigationView, NavController* navController);
     // androidx navigateUp(NavController, Openable): opens the Openable on a
     // top-level destination instead of popping.
     static bool navigateUp(NavController* navController, Openable* openableLayout);

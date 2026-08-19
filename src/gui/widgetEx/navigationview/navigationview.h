@@ -75,8 +75,8 @@ public:
     View* inflateHeaderView(int res);
     void addHeaderView(View* view);
     void removeHeaderView(View* view);
-    int getHeaderCount();
-    View* getHeaderView(int index);
+    int getHeaderCount()const;
+    View* getHeaderView(int index)const;
 
     const RefPtr<ColorStateList> getItemIconTintList() const;
     void setItemIconTintList(const RefPtr<ColorStateList>& tint);

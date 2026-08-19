@@ -24,6 +24,8 @@
 #include <menu/menu.h>
 #include <menu/menuitem.h>
 #include <widget/openable.h>
+#include <widgetEx/navigationview/navigationview.h>
+#include <menu/menuitem.h>
 #include <widget/actionbar.h>
 #include <widget/toolbar.h>
 #include <view/view.h>
@@ -215,6 +217,50 @@ bool NavigationUI::onNavDestinationSelected(MenuItem* item, NavController* navCo
              "as it cannot be found from the current destination", item->getItemId());
     }
     return matched;
+}
+
+
+// androidx NavigationUI.setupWithNavController(NavigationView, NavController):
+// item clicks navigate (and close the Openable parent — a drawer), destination
+// changes check the matching menu items (matchDestination over the hierarchy).
+void NavigationUI::setupWithNavController(NavigationView* navigationView, NavController* navController){
+    if (navigationView == nullptr || navController == nullptr) return;
+
+    class ItemListener : public NavigationView::OnNavigationItemSelectedListener {
+    public:
+        NavController* mController;
+        NavigationView* mView;
+        explicit ItemListener(NavController* c, NavigationView* v)
+            : mController(c), mView(v) {}
+        bool onNavigationItemSelected(MenuItem* item) override {
+            const bool handled = NavigationUI::onNavDestinationSelected(item, mController);
+            if (handled) {
+                // androidx: close the Openable parent (a DrawerLayout); the
+                // bottom-sheet branch is not ported.
+                Openable* openable = dynamic_cast<Openable*>(mView->getParent());
+                if (openable != nullptr) {
+                    openable->close();
+                }
+            }
+            return handled;
+        }
+    };
+    // The listener must outlive the view's clicks; app-lifetime arena like the
+    // app-bar listeners above.
+    static std::vector<std::unique_ptr<ItemListener>> sItemListeners;
+    sItemListeners.push_back(std::make_unique<ItemListener>(navController, navigationView));
+    navigationView->setNavigationItemSelectedListener(sItemListeners.back().get());
+
+    navController->addOnDestinationChangedListener(
+        [navigationView](NavController*, NavDestination* destination, Bundle*){
+            if (destination == nullptr) return;
+            // androidx skips FloatingWindow destinations (not ported).
+            Menu* menu = navigationView->getMenu();
+            for (int i = 0; i < menu->size(); i++) {
+                MenuItem* item = menu->getItem(i);
+                item->setChecked(matchDestination(destination, item->getItemId()));
+            }
+        });
 }
 
 }//namespace cdroid
