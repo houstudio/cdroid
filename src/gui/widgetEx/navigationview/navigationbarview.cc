@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/navigationview/navigationbarview.h>
+#include <widget/internal_R.h>
 #include <widgetEx/navigationview/bottomnavigationview.h>
 #include <widgetEx/widgetex_styleable.h>
 #include <menu/menubuilder.h>
@@ -24,7 +25,6 @@
 #include <menu/menuitemimpl.h>
 #include <widget/imageview.h>
 #include <widget/textview.h>
-#include <drawable/gradientdrawable.h>
 #include <drawable/colorstatelist.h>
 #include <core/typedarray.h>
 
@@ -153,13 +153,12 @@ View* NavigationBarView::createItemView(MenuItem* item) {
     column->setOrientation(LinearLayout::VERTICAL);
     column->setGravity(Gravity::CENTER_HORIZONTAL);
     column->setPadding(8, 6, 8, 6);
-    if (item->isChecked()) {
-        GradientDrawable* selectedBackground = new GradientDrawable();
-        selectedBackground->setColor(0x22009688);
-        selectedBackground->setCornerRadius(18.0f);
-        column->setBackground(selectedBackground);
-    } else if (mItemBackground) {
-        column->setBackground(mItemBackground->mutate());
+    if (mItemBackground) {
+        Drawable* background = mItemBackground->mutate();
+        const std::vector<int> state = item->isChecked()
+            ? std::vector<int>{R::attr::state_checked} : std::vector<int>{};
+        background->setState(state);
+        column->setBackground(background);
     }
     column->setLayoutParams(new LinearLayout::LayoutParams(
             0, 56, 1.f));
@@ -171,17 +170,24 @@ View* NavigationBarView::createItemView(MenuItem* item) {
         if (mItemIconSize > 0) {
             iconView->setLayoutParams(new LinearLayout::LayoutParams(mItemIconSize, mItemIconSize));
         }
-        if (mItemIconTint) iconView->setImageTintList(mItemIconTint);
+        if (mItemIconTint) {
+            const std::vector<int> state = item->isChecked()
+                ? std::vector<int>{R::attr::state_checked} : std::vector<int>{};
+            iconView->setImageTintList(ColorStateList::valueOf(
+                mItemIconTint->getColorForState(state, mItemIconTint->getDefaultColor())));
+        }
         column->addView(iconView);
     }
     // LABEL_VISIBILITY_UNLABELED(2) hides the label; AUTO/SELECTED/LABELED show it.
     if (mLabelVisibilityMode != 2) {
         TextView* label = new TextView(context, nullptr, 0);
         label->setText(item->getTitle());
-        if (item->isChecked()) {
-            label->setTextColor(0xFF00796B);
-        } else if (mItemTextColor) {
-            label->setTextColor(mItemTextColor);
+        if (mItemTextColor) {
+            const std::vector<int> state = item->isChecked()
+                ? std::vector<int>{R::attr::state_checked} : std::vector<int>{};
+            label->setTextColor(mItemTextColor->getColorForState(
+                state,
+                    mItemTextColor->getDefaultColor()));
         }
         label->setGravity(Gravity::CENTER_HORIZONTAL);
         column->addView(label);

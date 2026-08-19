@@ -299,9 +299,7 @@ void NavigationUI::setupWithNavController(NavigationBarView* navigationBarView, 
             Menu* menu = navigationBarView->getMenu();
             for (int i = 0; i < menu->size(); i++) {
                 MenuItem* item = menu->getItem(i);
-                if (matchDestination(&destination, item->getItemId())) {
-                    item->setChecked(true);
-                }
+                item->setChecked(matchDestination(&destination, item->getItemId()));
             }
             navigationBarView->refreshMenuView();
         });
