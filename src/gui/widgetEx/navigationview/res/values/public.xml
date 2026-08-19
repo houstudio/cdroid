@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widgetEx navigationview attr id pinning (0x02 shared-lib). Source of truth;
+     consumed by _compile_shared_lib (aapt2 <public id=>) and gen_styleable.
+     Watermark-allocated: next free 0x02010138. -->
+<resources>
+    <public type="attr" name="menu" id="0x02010138"/>
+    <public type="attr" name="headerLayout" id="0x02010139"/>
+    <public type="attr" name="itemIconSize" id="0x0201013a"/>
+    <public type="attr" name="itemIconTint" id="0x0201013b"/>
+    <public type="attr" name="itemTextAppearance" id="0x0201013c"/>
+    <public type="attr" name="itemTextColor" id="0x0201013d"/>
+    <public type="attr" name="itemBackground" id="0x0201013e"/>
+    <public type="attr" name="itemHorizontalPadding" id="0x0201013f"/>
+    <public type="attr" name="itemVerticalPadding" id="0x02010140"/>
+    <public type="attr" name="itemIconPadding" id="0x02010141"/>
+    <public type="attr" name="itemMaxLines" id="0x02010142"/>
+</resources>

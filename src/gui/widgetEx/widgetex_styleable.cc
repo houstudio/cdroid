@@ -2,14 +2,12 @@
 #include "widgetex_styleable.h"
 namespace cdroid {
 namespace internal { namespace R { namespace styleable {
-    const uint32_t CoordinatorLayout[] = { 0x02010000, 0x02010001, 0 };
-    const uint32_t CoordinatorLayoutLayout[] = { 0x010100b3, 0x02010002, 0x02010003, 0x02010004, 0x02010005, 0x02010006, 0x02010007, 0 };
-    const uint32_t FlexboxLayout[] = {
-        0x02010008, 0x02010009, 0x0201000a, 0x0201000b, 0x0201000c, 0x020100cd, 0x020100ce,
-        0x020100cf, 0x020100d0, 0x020100d1, 0x020100d2, 0x020100d3, 0 };
-    const uint32_t FlexboxLayoutLayout[] = {
-        0x0201000d, 0x0201000f, 0x02010010, 0x0201000e, 0x02010011, 0x020100d4, 0x020100d5,
-        0x020100d6, 0x020100d7, 0x02010012, 0 };
+    const uint32_t NavGraph[] = { 0x02010120, 0x02010121, 0 };
+    const uint32_t NavDestination[] = { 0x010100d0, 0x01010001, 0x02010121, 0 };
+    const uint32_t NavAction[] = {
+        0x010100d0, 0x02010122, 0x02010127, 0x02010123, 0x02010124, 0x02010125, 0x02010126,
+        0x02010128, 0x02010129, 0x0201012a, 0x0201012b, 0 };
+    const uint32_t NavArgument[] = { 0x01010003, 0x010101ed, 0x0201012e, 0x0201012f, 0 };
     const uint32_t ConstraintLayoutLayout[] = {
         0x010100c4, 0x0101013f, 0x01010140, 0x0101011f, 0x01010120, 0x010100dc, 0x01010440,
         0x02010013, 0x02010014, 0x02010015, 0x02010016, 0x02010017, 0x02010018, 0x02010019,
@@ -91,21 +89,26 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t Carousel[] = {
         0x020100fc, 0x020100fa, 0x020100fd, 0x02010100, 0x020100ff, 0x020100fb, 0x02010101,
         0x02010103, 0x02010102, 0x020100fe, 0 };
+    const uint32_t CoordinatorLayout[] = { 0x02010000, 0x02010001, 0 };
+    const uint32_t CoordinatorLayoutLayout[] = { 0x010100b3, 0x02010002, 0x02010003, 0x02010004, 0x02010005, 0x02010006, 0x02010007, 0 };
+    const uint32_t FlexboxLayout[] = {
+        0x02010008, 0x02010009, 0x0201000a, 0x0201000b, 0x0201000c, 0x020100cd, 0x020100ce,
+        0x020100cf, 0x020100d0, 0x020100d1, 0x020100d2, 0x020100d3, 0 };
+    const uint32_t FlexboxLayoutLayout[] = {
+        0x0201000d, 0x0201000f, 0x02010010, 0x0201000e, 0x02010011, 0x020100d4, 0x020100d5,
+        0x020100d6, 0x020100d7, 0x02010012, 0 };
+    const uint32_t NavigationView[] = {
+        0x02010138, 0x02010139, 0x0201013a, 0x0201013b, 0x0201013c, 0x0201013d, 0x0201013e,
+        0x0201013f, 0x02010140, 0x02010141, 0x02010142, 0 };
     const uint32_t RecyclerView[] = {
         0x020100c4, 0x010100c4, 0x010100f1, 0x010100eb, 0x020100c5, 0x020100c6, 0x020100c7,
         0x020100f5, 0x020100c8, 0x020100c9, 0x020100ca, 0x020100cb, 0x020100cc, 0 };
+    const uint32_t QRCodeView[] = { 0x02010133, 0x02010134, 0x02010135, 0x02010136, 0x02010137, 0 };
     const uint32_t TabLayout[] = {
         0x020100d8, 0x020100d9, 0x020100da, 0x020100db, 0x020100dc, 0x020100dd, 0x020100de,
         0x020100df, 0x020100e0, 0x020100e1, 0x020100e2, 0x020100e3, 0x020100e4, 0x020100e5,
         0x020100e6, 0x020100e7, 0x020100e8, 0x020100f3, 0x020100e9, 0x020100ea, 0x020100eb,
         0x020100ec, 0x020100ed, 0x020100ee, 0x020100ef, 0x020100f0, 0x020100f1, 0x020100f2, 0 };
     const uint32_t TabItem[] = { 0x0101014f, 0x01010002, 0x010100f2, 0 };
-    const uint32_t QRCodeView[] = { 0x02010133, 0x02010134, 0x02010135, 0x02010136, 0x02010137, 0 };
-    const uint32_t NavGraph[] = { 0x02010120, 0x02010121, 0 };
-    const uint32_t NavDestination[] = { 0x010100d0, 0x01010001, 0x02010121, 0 };
-    const uint32_t NavAction[] = {
-        0x010100d0, 0x02010122, 0x02010127, 0x02010123, 0x02010124, 0x02010125, 0x02010126,
-        0x02010128, 0x02010129, 0x0201012a, 0x0201012b, 0 };
-    const uint32_t NavArgument[] = { 0x01010003, 0x010101ed, 0x0201012e, 0x0201012f, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

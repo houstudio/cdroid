@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NavigationView attributes (material NavigationView, widgetEx 0x02 shared-lib
+     ids pinned in public.xml). Android:-namespaced attrs (maxWidth, background)
+     resolve from the framework package and are read by their fw ids. -->
+<resources>
+    <declare-styleable name="NavigationView">
+        <attr name="menu" format="reference" />
+        <attr name="headerLayout" format="reference" />
+        <attr name="itemIconSize" format="dimension" />
+        <attr name="itemIconTint" format="color" />
+        <attr name="itemTextAppearance" format="reference" />
+        <attr name="itemTextColor" format="color" />
+        <attr name="itemBackground" format="reference|color" />
+        <attr name="itemHorizontalPadding" format="dimension" />
+        <attr name="itemVerticalPadding" format="dimension" />
+        <attr name="itemIconPadding" format="dimension" />
+        <attr name="itemMaxLines" format="integer" />
+    </declare-styleable>
+</resources>

@@ -101,6 +101,7 @@ list(APPEND WIDGETEX_SOURCES
     widgetEx/scrolleventadapter.cc
     widgetEx/plotview.cc
     widgetEx/fakedrag.cc
+    widgetEx/navigationview/navigationview.cc
     #widgetEx/mathglview.cc
 )
 
