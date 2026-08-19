@@ -14,4 +14,7 @@
     <public type="attr" name="itemVerticalPadding" id="0x02010140"/>
     <public type="attr" name="itemIconPadding" id="0x02010141"/>
     <public type="attr" name="itemMaxLines" id="0x02010142"/>
+    <!-- NavigationBarView reuses NavigationView's pinned attrs; only the
+         BottomNavigationView-specific one needs an id. -->
+    <public type="attr" name="itemHorizontalTranslationEnabled" id="0x02010143"/>
 </resources>

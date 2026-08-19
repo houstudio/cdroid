@@ -16,4 +16,17 @@
         <attr name="itemIconPadding" format="dimension" />
         <attr name="itemMaxLines" format="integer" />
     </declare-styleable>
+
+    <!-- NavigationBarView (shared by BottomNavigationView); attrs reuse the
+         NavigationView declarations above. -->
+    <declare-styleable name="NavigationBarView">
+        <attr name="itemIconTint" />
+        <attr name="itemIconSize" />
+        <attr name="itemTextColor" />
+        <attr name="itemBackground" />
+        <attr name="menu" />
+    </declare-styleable>
+    <declare-styleable name="BottomNavigationView">
+        <attr name="itemHorizontalTranslationEnabled" format="boolean" />
+    </declare-styleable>
 </resources>

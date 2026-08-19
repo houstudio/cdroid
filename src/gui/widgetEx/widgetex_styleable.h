@@ -561,6 +561,18 @@ namespace internal { namespace R { namespace styleable {
     constexpr int NavigationView_itemIconPadding = 9;
     constexpr int NavigationView_itemMaxLines = 10;
 
+    // NavigationBarView (5 attrs)
+    extern const uint32_t NavigationBarView[];
+    constexpr int NavigationBarView_itemIconTint = 0;
+    constexpr int NavigationBarView_itemIconSize = 1;
+    constexpr int NavigationBarView_itemTextColor = 2;
+    constexpr int NavigationBarView_itemBackground = 3;
+    constexpr int NavigationBarView_menu = 4;
+
+    // BottomNavigationView (1 attrs)
+    extern const uint32_t BottomNavigationView[];
+    constexpr int BottomNavigationView_itemHorizontalTranslationEnabled = 0;
+
     // RecyclerView (13 attrs)
     extern const uint32_t RecyclerView[];
     constexpr int RecyclerView_layoutManager = 0;

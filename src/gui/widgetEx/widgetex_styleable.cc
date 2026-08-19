@@ -100,6 +100,8 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t NavigationView[] = {
         0x02010138, 0x02010139, 0x0201013a, 0x0201013b, 0x0201013c, 0x0201013d, 0x0201013e,
         0x0201013f, 0x02010140, 0x02010141, 0x02010142, 0 };
+    const uint32_t NavigationBarView[] = { 0x0201013b, 0x0201013a, 0x0201013d, 0x0201013e, 0x02010138, 0 };
+    const uint32_t BottomNavigationView[] = { 0x02010143, 0 };
     const uint32_t RecyclerView[] = {
         0x020100c4, 0x010100c4, 0x010100f1, 0x010100eb, 0x020100c5, 0x020100c6, 0x020100c7,
         0x020100f5, 0x020100c8, 0x020100c9, 0x020100ca, 0x020100cb, 0x020100cc, 0 };
