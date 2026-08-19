@@ -82,8 +82,6 @@ int main(int argc,const char*argv[]){
     }
 
     auto tv=new EditText("textview with leftdrawable",0,0);
-    tv->setBackgroundResource("cdroid:drawable/progress_horizontal.xml");
-    tv->setCompoundDrawablesWithIntrinsicBounds("cdroid:drawable/progress_large.xml","","cdroid:drawable/progress_small.xml","");
     layout->addView(tv);
     tv->setFocusable(true);
 

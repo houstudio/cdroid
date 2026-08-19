@@ -222,12 +222,12 @@ int main(int argc,const char*argv[]){
     layout->addView(spanTv,new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
 
     TextView*tv=new TextView("textview with background drawable",0,0);
-    tv->setBackgroundResource("cdroid:drawable/btn_default.xml");
+    //tv->setBackgroundResource(cdroid::R::drawable::btn_default);
     layout->addView(tv);
 
     tv=new TextView("textview with leftdrawable",0,0);
-    tv->setBackgroundResource("cdroid:drawable/progress_horizontal.xml");
-    tv->setCompoundDrawablesWithIntrinsicBounds("cdroid:drawable/progress_large.xml","","cdroid:drawable/progress_small.xml","");
+    //tv->setBackgroundResource(cdroid::R::drawable::progress_horizontal);
+    //tv->setCompoundDrawablesWithIntrinsicBounds(cdroid::R::drawable::progress_large,0,cdroid::R::drawable::progress_small,0);
     layout->addView(tv);
     int level=0;
     Runnable run;
