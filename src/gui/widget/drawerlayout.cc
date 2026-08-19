@@ -1824,4 +1824,5 @@ DrawerLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams& so
   :ViewGroup::MarginLayoutParams(source){
     gravity = Gravity::NO_GRAVITY;
 }
+
 }

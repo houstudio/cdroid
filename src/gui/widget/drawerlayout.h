@@ -19,9 +19,10 @@
 #define __DRAWER_LAYOUT_H__
 #include <view/viewgroup.h>
 #include <widget/viewdraghelper.h>
+#include <widget/openable.h>
 namespace cdroid{
 
-class DrawerLayout:public ViewGroup{
+class DrawerLayout:public ViewGroup, public Openable{
 public:
     static constexpr int STATE_IDLE = ViewDragHelper::STATE_IDLE;
     static constexpr int STATE_DRAGGING = ViewDragHelper::STATE_DRAGGING;
@@ -260,10 +261,11 @@ public:
     bool isDrawerOpen(int drawerGravity)const;
     bool isDrawerVisible(View* drawer)const;
     bool isDrawerVisible(int drawerGravity)const;
-    // Openable contract: open()/close() act on the start drawer; isOpen() queries it.
-    void open();
-    void close();
-    bool isOpen();
+    // androidx.customview.widget.Openable: open()/close() act on the drawer
+    // matching the default (start) gravity.
+    void open() override;
+    void close() override;
+    bool isOpen() override;
     void addFocusables(std::vector<View*>&views, int direction, int focusableMode)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;
