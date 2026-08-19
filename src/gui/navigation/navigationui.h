@@ -76,6 +76,7 @@ protected:
 };
 
 class NavigationView;
+class NavigationBarView;
 
 class NavigationUI{
 public:
@@ -84,6 +85,7 @@ public:
     static void setupWithNavController(Toolbar* toolbar, NavController* navController,
                                        AppBarConfiguration* configuration = nullptr);
     static void setupWithNavController(NavigationView* navigationView, NavController* navController);
+    static void setupWithNavController(NavigationBarView* navigationBarView, NavController* navController);
     // androidx navigateUp(NavController, Openable): opens the Openable on a
     // top-level destination instead of popping.
     static bool navigateUp(NavController* navController, Openable* openableLayout);

@@ -25,6 +25,7 @@
 #include <menu/menuitem.h>
 #include <widget/openable.h>
 #include <widgetEx/navigationview/navigationview.h>
+#include <widgetEx/navigationview/navigationbarview.h>
 #include <menu/menuitem.h>
 #include <widget/actionbar.h>
 #include <widget/toolbar.h>
@@ -259,6 +260,39 @@ void NavigationUI::setupWithNavController(NavigationView* navigationView, NavCon
             for (int i = 0; i < menu->size(); i++) {
                 MenuItem* item = menu->getItem(i);
                 item->setChecked(matchDestination(destination, item->getItemId()));
+            }
+        });
+}
+
+
+// androidx NavigationUI.setupWithNavController(NavigationBarView, NavController)
+// — the BottomNavigationView family: item clicks navigate, destination changes
+// CHECK matching items (no uncheck pass, unlike the NavigationView variant).
+void NavigationUI::setupWithNavController(NavigationBarView* navigationBarView, NavController* navController){
+    if (navigationBarView == nullptr || navController == nullptr) return;
+
+    class BarItemSelectedListener : public NavigationBarView::OnItemSelectedListener {
+    public:
+        NavController* mController;
+        explicit BarItemSelectedListener(NavController* c) : mController(c) {}
+        bool onNavigationItemSelected(MenuItem* item) override {
+            return NavigationUI::onNavDestinationSelected(item, mController);
+        }
+    };
+    static std::vector<std::unique_ptr<BarItemSelectedListener>> sBarListeners;
+    sBarListeners.push_back(std::make_unique<BarItemSelectedListener>(navController));
+    navigationBarView->setOnItemSelectedListener(sBarListeners.back().get());
+
+    navController->addOnDestinationChangedListener(
+        [navigationBarView](NavController*, NavDestination* destination, Bundle*){
+            if (destination == nullptr) return;
+            // androidx skips FloatingWindow destinations (not ported).
+            Menu* menu = navigationBarView->getMenu();
+            for (int i = 0; i < menu->size(); i++) {
+                MenuItem* item = menu->getItem(i);
+                if (matchDestination(destination, item->getItemId())) {
+                    item->setChecked(true);
+                }
             }
         });
 }
