@@ -69,21 +69,28 @@ Bundle* NavDeepLink::getMatchingArguments(const std::string& deepLink,
     std::smatch sm;
     if(!std::regex_match(deepLink, sm, mRegex)) return nullptr;
     Bundle* result = new Bundle();
-    for(size_t i = 0; i < mArgNames.size() && (i + 1) < sm.size(); i++){
-        const std::string& name = mArgNames[i];
-        const std::string value = sm[i + 1].str();
-        auto it = arguments.find(name);
-        if(it != arguments.end() && it->second){
-            switch(it->second->getType()){
-                case NavTypeKind::INT:    result->putInt(name,    IntType().parseValue(value)); break;
-                case NavTypeKind::LONG:   result->putLong(name,   LongType().parseValue(value)); break;
-                case NavTypeKind::FLOAT:  result->putFloat(name,  FloatType().parseValue(value)); break;
-                case NavTypeKind::BOOL:   result->putBoolean(name, BoolType().parseValue(value)); break;
-                default:                  result->putString(name, value); break;
+    // androidx wraps the typed parse in try/catch(IllegalArgumentException) and
+    // returns null args when a value fails to parse for its declared type.
+    try{
+        for(size_t i = 0; i < mArgNames.size() && (i + 1) < sm.size(); i++){
+            const std::string& name = mArgNames[i];
+            const std::string value = sm[i + 1].str();
+            auto it = arguments.find(name);
+            if(it != arguments.end() && it->second){
+                switch(it->second->getType()){
+                    case NavTypeKind::INT:    result->putInt(name,    IntType().parseValue(value)); break;
+                    case NavTypeKind::LONG:   result->putLong(name,   LongType().parseValue(value)); break;
+                    case NavTypeKind::FLOAT:  result->putFloat(name,  FloatType().parseValue(value)); break;
+                    case NavTypeKind::BOOL:   result->putBoolean(name, BoolType().parseValue(value)); break;
+                    default:                  result->putString(name, value); break;
+                }
+            }else{
+                result->putString(name, value);
             }
-        }else{
-            result->putString(name, value);
         }
+    }catch(const std::exception&){
+        delete result;
+        return nullptr;
     }
     return result;
 }

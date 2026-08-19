@@ -91,6 +91,13 @@ void NavGraph::addDestination(/*@NonNull*/ NavDestination* node) {
         throw std::runtime_error("Destinations must have an id or a route."
                 " Call setId()/setRoute() or include android:id/app:route in your navigation XML.");
     }
+    // androidx: a destination cannot have the same id as the graph itself.
+    if (node->getId() != 0 && node->getId() == getId()) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "Destination %d cannot have the same id as graph %d",
+                 node->getId(), getId());
+        throw std::runtime_error(buf);
+    }
     NavDestination* existingDestination = mNodes.get(node->getId());
     if (existingDestination == node) {
         return;
@@ -221,6 +228,13 @@ int NavGraph::getStartDestination() const{
  * @param startDestId The id of the destination to be shown when navigating to this NavGraph.
  */
 void NavGraph::setStartDestination(int startDestId) {
+    // androidx: the start destination cannot use the same id as the graph itself.
+    if (startDestId != 0 && startDestId == getId()) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "Start destination %d cannot use the same id as the graph %d",
+                 startDestId, getId());
+        throw std::runtime_error(buf);
+    }
     mStartDestId = startDestId;
 }
 
