@@ -76,11 +76,11 @@ void FragmentNavigator::navigate(NavBackStackEntry* entry, NavOptions* navOption
     fragment::FragmentTransaction* t = mFragmentManager->beginTransaction();
     // Apply custom animations from NavOptions (androidx createFragmentTransaction :530-539).
     if(navOptions){
-        std::string enter = navOptions->getEnterAnim();
-        std::string exit = navOptions->getExitAnim();
-        std::string popEnter = navOptions->getPopEnterAnim();
-        std::string popExit = navOptions->getPopExitAnim();
-        if(!enter.empty() || !exit.empty() || !popEnter.empty() || !popExit.empty()){
+        const int enter = navOptions->getEnterAnim();
+        const int exit = navOptions->getExitAnim();
+        const int popEnter = navOptions->getPopEnterAnim();
+        const int popExit = navOptions->getPopExitAnim();
+        if(enter != 0 || exit != 0 || popEnter != 0 || popExit != 0){
             t->setCustomAnimations(enter, exit, popEnter, popExit);
         }
     }

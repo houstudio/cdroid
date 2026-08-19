@@ -38,7 +38,7 @@ public:
     static Animation* loadAnimation(Context* context, Fragment* fragment, bool enter, bool isPop);
 private:
     // 4-anim matrix: forward enter/exit, pop popEnter/popExit (androidx FragmentAnim.getNextAnim).
-    static std::string getNextAnim(Fragment* fragment, bool enter, bool isPop);
+    static int getNextAnim(Fragment* fragment, bool enter, bool isPop);
 };
 }//namespace fragment
 }//namespace cdroid

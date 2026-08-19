@@ -165,10 +165,10 @@ void NavInflater::inflateAction(NavDestination& dest,const AttributeSet& attrs) 
     builder.setPopUpTo(ta ? ta->getResourceId(ns::NavAction_popUpTo, -1) : -1,
             ta ? ta->getBoolean(ns::NavAction_popUpToInclusive, false) : false,
             ta ? ta->getBoolean(ns::NavAction_popUpToSaveState, false) : false);
-    builder.setEnterAnim(ta ? ta->getString(ns::NavAction_enterAnim) : "");
-    builder.setExitAnim(ta ? ta->getString(ns::NavAction_exitAnim) : "");
-    builder.setPopEnterAnim(ta ? ta->getString(ns::NavAction_popEnterAnim) : "");
-    builder.setPopExitAnim(ta ? ta->getString(ns::NavAction_popExitAnim) : "");
+    builder.setEnterAnim(ta ? ta->getResourceId(ns::NavAction_enterAnim, 0) : 0);
+    builder.setExitAnim(ta ? ta->getResourceId(ns::NavAction_exitAnim, 0) : 0);
+    builder.setPopEnterAnim(ta ? ta->getResourceId(ns::NavAction_popEnterAnim, 0) : 0);
+    builder.setPopExitAnim(ta ? ta->getResourceId(ns::NavAction_popExitAnim, 0) : 0);
     action->setNavOptions(builder.build());
     // TODO: nested <argument> children should populate action defaultArguments (needs SavedState
     // merge); not required for popUpTo/singleTop, deferred.

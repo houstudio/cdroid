@@ -55,7 +55,7 @@ public:
     // the NavController owns its listeners (stored by value in mOnDestinationChangedListeners), so no
     // caller new/delete. Identity for removeOnDestinationChangedListener is the CallbackBase shared-
     // functor pointer — a copy compares equal to its original.
-    using OnDestinationChangedListener = CallbackBase<void, NavController*, NavDestination*, Bundle*>;
+    using OnDestinationChangedListener = CallbackBase<void, NavController&, NavDestination&, Bundle*>;
 
     NavController(Context* context);
     ~NavController();

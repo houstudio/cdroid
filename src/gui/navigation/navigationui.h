@@ -25,12 +25,12 @@
  * drives an ActionBar's title + DISPLAY_HOME_AS_UP the same way. navigateUp works fully.
  *********************************************************************************/
 #include <navigation/navcontroller.h>
+#include <navigation/appbarconfiguration.h>
 namespace cdroid{
 class Context;
 class Drawable;
 class ActionBar;
 class Toolbar;
-class AppBarConfiguration;
 class MenuItem;
 class Openable;
 
@@ -41,13 +41,15 @@ class Openable;
 class AbstractAppBarOnDestinationChangedListener{
 protected:
     Context* mContext;
-    AppBarConfiguration* mConfiguration;
+    AppBarConfiguration mConfiguration;
+    NavController::OnDestinationChangedListener mDestinationChangedListener;
 public:
     AbstractAppBarOnDestinationChangedListener(Context* context, AppBarConfiguration* configuration);
     virtual ~AbstractAppBarOnDestinationChangedListener() = default;
     void attach(NavController* controller);
     void detach(NavController* controller);
-    virtual void onDestinationChanged(NavController* controller, NavDestination* destination, Bundle* arguments);
+    AppBarConfiguration* getConfiguration() { return &mConfiguration; }
+    virtual void onDestinationChanged(NavController& controller, NavDestination& destination, Bundle* arguments);
 protected:
     virtual void setTitle(const std::string& title) = 0;
     virtual void setNavigationIcon(Drawable* icon) = 0;
@@ -58,7 +60,7 @@ class ToolbarOnDestinationChangedListener : public AbstractAppBarOnDestinationCh
     Toolbar* mToolbar;
 public:
     ToolbarOnDestinationChangedListener(Toolbar* toolbar, AppBarConfiguration* configuration);
-    void onDestinationChanged(NavController* controller, NavDestination* destination, Bundle* arguments) override;
+    void onDestinationChanged(NavController& controller, NavDestination& destination, Bundle* arguments) override;
 protected:
     void setTitle(const std::string& title) override;
     void setNavigationIcon(Drawable* icon) override;
@@ -69,7 +71,7 @@ class ActionBarOnDestinationChangedListener : public AbstractAppBarOnDestination
     ActionBar* mActionBar;
 public:
     ActionBarOnDestinationChangedListener(Context* context, ActionBar* actionBar, AppBarConfiguration* configuration);
-    void onDestinationChanged(NavController* controller, NavDestination* destination, Bundle* arguments) override;
+    void onDestinationChanged(NavController& controller, NavDestination& destination, Bundle* arguments) override;
 protected:
     void setTitle(const std::string& title) override;
     void setNavigationIcon(Drawable* icon) override;

@@ -121,9 +121,8 @@ public:
     bool mBeingSaved = false;
     // Custom transition animations pushed by FragmentTransaction.executeOps (androidx
     // Fragment.setAnimations -> AnimationInfo). Empty = use the default Fade transition.
-    std::string mEnterAnim, mExitAnim, mPopEnterAnim, mPopExitAnim;
-    void setAnimations(const std::string& enter, const std::string& exit,
-                       const std::string& popEnter, const std::string& popExit){
+    int mEnterAnim = 0, mExitAnim = 0, mPopEnterAnim = 0, mPopExitAnim = 0;
+    void setAnimations(int enter, int exit, int popEnter, int popExit){
         mEnterAnim = enter; mExitAnim = exit; mPopEnterAnim = popEnter; mPopExitAnim = popExit;
     }
     // Fragment Transition API (androidx Fragment.enterTransition etc.). nullptr = not set.

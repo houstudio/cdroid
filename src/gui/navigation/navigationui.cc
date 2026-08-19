@@ -66,29 +66,38 @@ bool NavigationUI::navigateUp(NavController* navController, AppBarConfiguration*
 // (the drawer toggle is the app chrome's job) — same net behavior as before.
 AbstractAppBarOnDestinationChangedListener::AbstractAppBarOnDestinationChangedListener(
         Context* context, AppBarConfiguration* configuration)
-    : mContext(context), mConfiguration(configuration){}
+    : mContext(context), mConfiguration(configuration ? *configuration : AppBarConfiguration()),
+          mDestinationChangedListener([this](NavController& controller,
+              NavDestination& destination, Bundle* arguments) {
+          onDestinationChanged(controller, destination, arguments);
+      }){}
 
 void AbstractAppBarOnDestinationChangedListener::attach(NavController* controller){
-    controller->addOnDestinationChangedListener(
-        [this](NavController* c, NavDestination* d, Bundle* b){ onDestinationChanged(c, d, b); });
+    if (controller != nullptr) {
+        controller->addOnDestinationChangedListener(mDestinationChangedListener);
+    }
 }
 
 void AbstractAppBarOnDestinationChangedListener::onDestinationChanged(
-        NavController* /*controller*/, NavDestination* destination, Bundle* /*arguments*/){
-    if (destination == nullptr) return;
+    NavController& /*controller*/, NavDestination& destination, Bundle* /*arguments*/){
     // androidx skips FloatingWindow destinations (dialogs); CDROID has no
     // FloatingWindow marker yet.
-    const std::string& label = destination->getLabel();
+    const std::string& label = destination.getLabel();
     if (!label.empty()) {
         setTitle(label);
     }
-    const bool isTopLevel = mConfiguration
-        && mConfiguration->isTopLevelDestination(destination->getRoute());
+    const bool isTopLevel = mConfiguration.isTopLevelDestination(destination.getRoute());
     if (isTopLevel) {
         // top-level: no Up icon (with an openable, the drawer toggle owns it)
         setNavigationIcon(nullptr);
     } else {
         setNavigationIcon(mContext->getDrawable(cdroid::internal::R::drawable::ic_ab_back_holo_dark));
+    }
+}
+
+void AbstractAppBarOnDestinationChangedListener::detach(NavController* controller){
+    if (controller != nullptr) {
+        controller->removeOnDestinationChangedListener(mDestinationChangedListener);
     }
 }
 
@@ -98,7 +107,7 @@ ToolbarOnDestinationChangedListener::ToolbarOnDestinationChangedListener(
       mToolbar(toolbar){}
 
 void ToolbarOnDestinationChangedListener::onDestinationChanged(
-        NavController* controller, NavDestination* destination, Bundle* arguments){
+    NavController& controller, NavDestination& destination, Bundle* arguments){
     if (mToolbar == nullptr) {  // androidx: WeakReference gone -> stop
         return;
     }
@@ -118,7 +127,7 @@ ActionBarOnDestinationChangedListener::ActionBarOnDestinationChangedListener(
     : AbstractAppBarOnDestinationChangedListener(context, configuration), mActionBar(actionBar){}
 
 void ActionBarOnDestinationChangedListener::onDestinationChanged(
-        NavController* controller, NavDestination* destination, Bundle* arguments){
+    NavController& controller, NavDestination& destination, Bundle* arguments){
     if (mActionBar == nullptr) return;
     AbstractAppBarOnDestinationChangedListener::onDestinationChanged(controller, destination, arguments);
 }
@@ -171,11 +180,13 @@ void NavigationUI::setupWithNavController(Toolbar* toolbar, NavController* navCo
         }
     }
     static std::vector<std::unique_ptr<ToolbarOnDestinationChangedListener>> sListeners;
-    sListeners.push_back(std::make_unique<ToolbarOnDestinationChangedListener>(toolbar, configuration));
-    sListeners.back()->attach(navController);
+    auto listener = std::make_unique<ToolbarOnDestinationChangedListener>(toolbar, configuration);
+    ToolbarOnDestinationChangedListener* listenerPtr = listener.get();
+    listener->attach(navController);
+    sListeners.push_back(std::move(listener));
     // Wired once, unconditionally — navigateUp itself decides drawer-vs-pop from the configuration.
-    toolbar->setNavigationOnClickListener([navController, configuration](View&){
-        navigateUp(navController, configuration);
+    toolbar->setNavigationOnClickListener([navController, listenerPtr](View&){
+        navigateUp(navController, listenerPtr->getConfiguration());
     });
 }
 
@@ -253,13 +264,12 @@ void NavigationUI::setupWithNavController(NavigationView* navigationView, NavCon
     navigationView->setNavigationItemSelectedListener(sItemListeners.back().get());
 
     navController->addOnDestinationChangedListener(
-        [navigationView](NavController*, NavDestination* destination, Bundle*){
-            if (destination == nullptr) return;
+        [navigationView](NavController&, NavDestination& destination, Bundle*){
             // androidx skips FloatingWindow destinations (not ported).
             Menu* menu = navigationView->getMenu();
             for (int i = 0; i < menu->size(); i++) {
                 MenuItem* item = menu->getItem(i);
-                item->setChecked(matchDestination(destination, item->getItemId()));
+                item->setChecked(matchDestination(&destination, item->getItemId()));
             }
         });
 }
@@ -284,16 +294,16 @@ void NavigationUI::setupWithNavController(NavigationBarView* navigationBarView, 
     navigationBarView->setOnItemSelectedListener(sBarListeners.back().get());
 
     navController->addOnDestinationChangedListener(
-        [navigationBarView](NavController*, NavDestination* destination, Bundle*){
-            if (destination == nullptr) return;
+        [navigationBarView](NavController&, NavDestination& destination, Bundle*){
             // androidx skips FloatingWindow destinations (not ported).
             Menu* menu = navigationBarView->getMenu();
             for (int i = 0; i < menu->size(); i++) {
                 MenuItem* item = menu->getItem(i);
-                if (matchDestination(destination, item->getItemId())) {
+                if (matchDestination(&destination, item->getItemId())) {
                     item->setChecked(true);
                 }
             }
+            navigationBarView->refreshMenuView();
         });
 }
 

@@ -30,14 +30,12 @@ void NavOptions::applyPopAnimationsToPendingTransition(Activity& activity) {
 }
 
 NavOptions::NavOptions(int launchMode, const std::string& popUpTo, bool popUpToInclusive,
-        const std::string& enterAnim, const std::string& exitAnim,
-        const std::string& popEnterAnim, const std::string& popExitAnim, int popUpToId)
+        int enterAnim, int exitAnim, int popEnterAnim, int popExitAnim, int popUpToId)
     : NavOptions(launchMode, popUpTo, popUpToInclusive, enterAnim, exitAnim,
                  popEnterAnim, popExitAnim, false, false, popUpToId){}
 
 NavOptions::NavOptions(int launchMode, const std::string& popUpTo, bool popUpToInclusive,
-        const std::string& enterAnim, const std::string& exitAnim,
-        const std::string& popEnterAnim, const std::string& popExitAnim,
+        int enterAnim, int exitAnim, int popEnterAnim, int popExitAnim,
         bool shouldRestoreState, bool shouldPopUpToSaveState, int popUpToId) {
     mLaunchMode = launchMode;
     mPopUpTo = popUpTo;
@@ -56,20 +54,20 @@ bool NavOptions::shouldLaunchDocument() const{ return (mLaunchMode & LAUNCH_DOCU
 bool NavOptions::shouldClearTask() const{ return (mLaunchMode & LAUNCH_CLEAR_TASK) != 0; }
 const std::string NavOptions::getPopUpTo() const{ return mPopUpTo; }
 bool NavOptions::isPopUpToInclusive() const{ return mPopUpToInclusive; }
-const std::string NavOptions::getEnterAnim() const{ return mEnterAnim; }
-const std::string NavOptions::getExitAnim() const{ return mExitAnim; }
-const std::string NavOptions::getPopEnterAnim() const{ return mPopEnterAnim; }
-const std::string NavOptions::getPopExitAnim() const{ return mPopExitAnim; }
+int NavOptions::getEnterAnim() const{ return mEnterAnim; }
+int NavOptions::getExitAnim() const{ return mExitAnim; }
+int NavOptions::getPopEnterAnim() const{ return mPopEnterAnim; }
+int NavOptions::getPopExitAnim() const{ return mPopExitAnim; }
 
 Bundle* NavOptions::toBundle() {
     Bundle* b = new Bundle();
     b->putInt(KEY_LAUNCH_MODE, mLaunchMode);
     b->putString(KEY_POP_UP_TO, mPopUpTo);
     b->putBoolean(KEY_POP_UP_TO_INCLUSIVE, mPopUpToInclusive);
-    b->putString(KEY_ENTER_ANIM, mEnterAnim);
-    b->putString(KEY_EXIT_ANIM, mExitAnim);
-    b->putString(KEY_POP_ENTER_ANIM, mPopEnterAnim);
-    b->putString(KEY_POP_EXIT_ANIM, mPopExitAnim);
+    b->putInt(KEY_ENTER_ANIM, mEnterAnim);
+    b->putInt(KEY_EXIT_ANIM, mExitAnim);
+    b->putInt(KEY_POP_ENTER_ANIM, mPopEnterAnim);
+    b->putInt(KEY_POP_EXIT_ANIM, mPopExitAnim);
     return b;
 }
 
@@ -121,10 +119,10 @@ NavOptions::Builder& NavOptions::Builder::setRestoreState(bool restoreState) {
     mShouldRestoreState = restoreState;
     return *this;
 }
-NavOptions::Builder& NavOptions::Builder::setEnterAnim(const std::string& enterAnim) { mEnterAnim = enterAnim; return *this; }
-NavOptions::Builder& NavOptions::Builder::setExitAnim(const std::string& exitAnim) { mExitAnim = exitAnim; return *this; }
-NavOptions::Builder& NavOptions::Builder::setPopEnterAnim(const std::string& popEnterAnim) { mPopEnterAnim = popEnterAnim; return *this; }
-NavOptions::Builder& NavOptions::Builder::setPopExitAnim(const std::string& popExitAnim) { mPopExitAnim = popExitAnim; return *this; }
+NavOptions::Builder& NavOptions::Builder::setEnterAnim(int enterAnim) { mEnterAnim = enterAnim; return *this; }
+NavOptions::Builder& NavOptions::Builder::setExitAnim(int exitAnim) { mExitAnim = exitAnim; return *this; }
+NavOptions::Builder& NavOptions::Builder::setPopEnterAnim(int popEnterAnim) { mPopEnterAnim = popEnterAnim; return *this; }
+NavOptions::Builder& NavOptions::Builder::setPopExitAnim(int popExitAnim) { mPopExitAnim = popExitAnim; return *this; }
 
 NavOptions* NavOptions::Builder::build() {
     return new NavOptions(mLaunchMode, mPopUpTo, mPopUpToInclusive,
