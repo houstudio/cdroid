@@ -173,7 +173,7 @@ public:
     void setStatusBarBackground(Drawable* bg);
     Drawable* getStatusBarBackground()const;
     void setVisibility(int visibility) override;
-    void setStatusBarBackgroundResource(const std::string& resId);
+    void setStatusBarBackgroundResource(int resId);
     void setStatusBarBackgroundColor(int color);
     WindowInsets getLastWindowInsets();
     bool onInterceptTouchEvent(MotionEvent& ev) override;

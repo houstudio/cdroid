@@ -39,16 +39,16 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* pAttrs
     initView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::CoordinatorLayout, defStyleAttr);
-    std::string keylineArrayRes = ta&&ta->hasValue(R::styleable::CoordinatorLayout_keylines) ? ta->getString(R::styleable::CoordinatorLayout_keylines) : "";
-    if (!keylineArrayRes.empty()) {
-        context->getArray(keylineArrayRes,mKeylines);
+    const int keylineArrayRes = ta->getResourceId(R::styleable::CoordinatorLayout_keylines, 0);
+    if (keylineArrayRes != 0) {
+        mKeylines = context->getResources().getIntArray(keylineArrayRes);
         const float density = context->getDisplayMetrics().density;
         const size_t count = mKeylines.size();
         for (size_t i = 0; i < count; i++) {
             mKeylines[i] = (int) (mKeylines[i] * density);
         }
     }
-    mStatusBarBackground = ta&&ta->hasValue(R::styleable::CoordinatorLayout_statusBarBackground) ? ta->getDrawable(R::styleable::CoordinatorLayout_statusBarBackground) : nullptr;
+    mStatusBarBackground = ta->getDrawable(R::styleable::CoordinatorLayout_statusBarBackground);
 }
 
 void CoordinatorLayout::initView() {
@@ -1691,17 +1691,19 @@ CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeS
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::CoordinatorLayoutLayout);
 
-    this->gravity = ta&&ta->hasValue(R::styleable::CoordinatorLayout_layout_gravity) ? ta->getInt(R::styleable::CoordinatorLayout_layout_gravity,Gravity::NO_GRAVITY) : Gravity::NO_GRAVITY;
-    mAnchorId = ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_anchor) ? (int)ta->getResourceId(R::styleable::CoordinatorLayoutLayout_layout_anchor,(uint32_t)View::NO_ID) : View::NO_ID;
-    anchorGravity = ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_anchorGravity) ? ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_anchorGravity,Gravity::NO_GRAVITY) : Gravity::NO_GRAVITY;
+    this->gravity = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_gravity, Gravity::NO_GRAVITY);
+    mAnchorId = (int)ta->getResourceId(R::styleable::CoordinatorLayoutLayout_layout_anchor, (uint32_t)View::NO_ID);
+    anchorGravity = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_anchorGravity, Gravity::NO_GRAVITY);
 
-    this->keyline = ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_keyline) ? ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_keyline, -1) : -1;
+    this->keyline = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_keyline, -1);
 
-    insetEdge = ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_insetEdge) ? ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_insetEdge, Gravity::NO_GRAVITY) : Gravity::NO_GRAVITY;
-    dodgeInsetEdges = ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_dodgeInsetEdges) ? ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_dodgeInsetEdges, Gravity::NO_GRAVITY) : Gravity::NO_GRAVITY;
-    mBehaviorResolved = (ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_behavior)) || attrs.hasAttribute("layout_behavior");
+    insetEdge = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_insetEdge, Gravity::NO_GRAVITY);
+    dodgeInsetEdges = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_dodgeInsetEdges, Gravity::NO_GRAVITY);
+    mBehaviorResolved = ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_behavior)
+            || attrs.hasAttribute("layout_behavior");
     if (mBehaviorResolved) {
-        mBehavior = parseBehavior(context, attrs, ta&&ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_behavior) ? ta->getString(R::styleable::CoordinatorLayoutLayout_layout_behavior) : "");
+        mBehavior = parseBehavior(context, attrs,
+                ta->getString(R::styleable::CoordinatorLayoutLayout_layout_behavior));
     }
 
     if (mBehavior != nullptr) {

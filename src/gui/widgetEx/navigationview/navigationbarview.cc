@@ -24,6 +24,7 @@
 #include <menu/menuitemimpl.h>
 #include <widget/imageview.h>
 #include <widget/textview.h>
+#include <drawable/gradientdrawable.h>
 #include <drawable/colorstatelist.h>
 #include <core/typedarray.h>
 
@@ -48,6 +49,7 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
 
     mMenuView = new LinearLayout(context, nullptr, 0);
     mMenuView->setOrientation(LinearLayout::HORIZONTAL);
+    mMenuView->setPadding(12, 8, 12, 8);
     addView(mMenuView, new ViewGroup::LayoutParams(
             ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
 
@@ -64,7 +66,6 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
         MenuInflater inflater(context);
         inflater.inflate(ta->getResourceId(cdroid::internal::R::styleable::NavigationBarView_menu, 0), mMenu);
     }
-    updateMenuView();
 }
 
 NavigationBarView::~NavigationBarView() {
@@ -85,6 +86,10 @@ Menu* NavigationBarView::getMenu() {
 
 ViewGroup* NavigationBarView::getMenuViewGroup() {
     return mMenuView;
+}
+
+void NavigationBarView::refreshMenuView() {
+    updateMenuView();
 }
 
 const RefPtr<ColorStateList> NavigationBarView::getItemIconTintList() const {
@@ -147,9 +152,17 @@ View* NavigationBarView::createItemView(MenuItem* item) {
     LinearLayout* column = new LinearLayout(context, nullptr, 0);
     column->setOrientation(LinearLayout::VERTICAL);
     column->setGravity(Gravity::CENTER_HORIZONTAL);
-    if (mItemBackground) column->setBackground(mItemBackground->mutate());
+    column->setPadding(8, 6, 8, 6);
+    if (item->isChecked()) {
+        GradientDrawable* selectedBackground = new GradientDrawable();
+        selectedBackground->setColor(0x22009688);
+        selectedBackground->setCornerRadius(18.0f);
+        column->setBackground(selectedBackground);
+    } else if (mItemBackground) {
+        column->setBackground(mItemBackground->mutate());
+    }
     column->setLayoutParams(new LinearLayout::LayoutParams(
-            0, ViewGroup::LayoutParams::WRAP_CONTENT, 1.f));
+            0, 56, 1.f));
 
     Drawable* icon = item->getIcon();
     if (icon) {
@@ -165,7 +178,11 @@ View* NavigationBarView::createItemView(MenuItem* item) {
     if (mLabelVisibilityMode != 2) {
         TextView* label = new TextView(context, nullptr, 0);
         label->setText(item->getTitle());
-        if (mItemTextColor) label->setTextColor(mItemTextColor);
+        if (item->isChecked()) {
+            label->setTextColor(0xFF00796B);
+        } else if (mItemTextColor) {
+            label->setTextColor(mItemTextColor);
+        }
         label->setGravity(Gravity::CENTER_HORIZONTAL);
         column->addView(label);
     }
@@ -177,9 +194,6 @@ View* NavigationBarView::createItemView(MenuItem* item) {
 }
 
 bool NavigationBarView::onMenuItemClick(MenuItem* item) {
-    if (dynamic_cast<MenuItemImpl*>(item)) {
-        ((MenuItemImpl*)item)->invoke();
-    }
     if (mItemSelectedListener) {
         return mItemSelectedListener->onNavigationItemSelected(item);
     }

@@ -70,6 +70,7 @@ public:
     void setOnItemReselectedListener(OnItemReselectedListener* listener);
     Menu* getMenu();
     ViewGroup* getMenuViewGroup();
+    void refreshMenuView();
 
     const RefPtr<ColorStateList> getItemIconTintList() const;
     void setItemIconTintList(const RefPtr<ColorStateList>& tint);

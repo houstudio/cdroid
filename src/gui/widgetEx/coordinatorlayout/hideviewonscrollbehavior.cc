@@ -31,7 +31,7 @@ HideViewOnScrollBehavior::HideViewOnScrollBehavior(int viewEdge):HideViewOnScrol
 HideViewOnScrollBehavior::HideViewOnScrollBehavior(Context* context,const AttributeSet& attrs):HideViewOnScrollBehavior(context,&attrs,0){}
 
 HideViewOnScrollBehavior::HideViewOnScrollBehavior(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
-    :CoordinatorLayout::Behavior(context, pAttrs, defStyleAttr){
+    :CoordinatorLayout::Behavior(context, *pAttrs){
     const AttributeSet& attrs = *pAttrs;
 }
 
