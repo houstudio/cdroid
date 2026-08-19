@@ -282,5 +282,16 @@ bool NavGraph::Iterator::operator!=(const Iterator& other) const {
     return mIter != other.mIter;
 }
 
-}/*endof namesapce*/
 
+// androidx NavGraph.findStartDestination(): walk nested graphs until the
+// start destination is a plain destination.
+NavDestination* NavGraph::findStartDestination(NavGraph* graph) {
+    NavDestination* startDestination = graph;
+    while (auto* g = dynamic_cast<NavGraph*>(startDestination)) {
+        startDestination = g->findNode(g->getStartDestination());
+        if (startDestination == nullptr) break;  // malformed graph; stop at the graph node
+    }
+    return startDestination;
+}
+
+}/*endof namesapce*/

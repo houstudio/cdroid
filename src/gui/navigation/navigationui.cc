@@ -20,6 +20,9 @@
 #include <navigation/appbarconfiguration.h>
 #include <navigation/navdestination.h>
 #include <navigation/navgraph.h>
+#include <navigation/navoptions.h>
+#include <menu/menu.h>
+#include <menu/menuitem.h>
 #include <widget/actionbar.h>
 #include <widget/toolbar.h>
 #include <view/view.h>
@@ -95,9 +98,45 @@ void NavigationUI::setupWithNavController(Toolbar* toolbar, NavController* navCo
     });
 }
 
-bool NavigationUI::onNavDestinationSelected(MenuItem* /*item*/, NavController* /*navController*/){
-    // TODO: resolve the menu item's itemId to a destination and navigate.
+// androidx NavigationUI.matchDestination (internal): the destination's id or
+// any ANCESTOR graph's id matches (hierarchy = self -> root).
+static bool matchDestination(NavDestination* destination, int destId) {
+    for (NavDestination* node : destination->hierarchy()) {
+        if (node->getId() == destId) return true;
+    }
     return false;
+}
+
+bool NavigationUI::onNavDestinationSelected(MenuItem* item, NavController* navController){
+    if (item == nullptr || navController == nullptr) return false;
+
+    NavOptions::Builder builder;
+    builder.setLaunchSingleTop(true).setRestoreState(true);
+    // androidx picks view animations for ActivityNavigator destinations and
+    // animator resources otherwise; CDROID ships neither nav_default_* set, so
+    // no explicit animations are set here (the nav transition keeps defaults).
+    if ((item->getOrder() & Menu::CATEGORY_SECONDARY) == 0) {
+        // Primary menu items pop back to the start destination, saving its state.
+        NavDestination* start = navController->getGraph()
+                ? NavGraph::findStartDestination(navController->getGraph()) : nullptr;
+        if (start) {
+            builder.setPopUpTo(start->getId(), /*inclusive*/ false, /*saveState*/ true);
+        }
+    }
+    NavOptions* options = builder.build();
+
+    // androidx throws/catches IllegalArgumentException when the id cannot be
+    // resolved from the current destination; CDROID's navigate(int) returns
+    // silently, and matchDestination decides success below.
+    navController->navigate(item->getItemId(), nullptr, options);
+    // Return true only if the destination we've navigated to matches the MenuItem.
+    NavDestination* current = navController->getCurrentDestination();
+    const bool matched = current != nullptr && matchDestination(current, item->getItemId());
+    if (!matched) {
+        LOGD("NavigationUI: ignoring onNavDestinationSelected for MenuItem 0x%x "
+             "as it cannot be found from the current destination", item->getItemId());
+    }
+    return matched;
 }
 
 }//namespace cdroid
