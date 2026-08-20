@@ -118,6 +118,8 @@ void Switch::init(){
     mOffLayout = nullptr;
     mOnText    = nullptr;
     mOffText   = nullptr;
+    mOnTransformed  = nullptr;
+    mOffTransformed = nullptr;
     mSwitchLeft= mSwitchRight  =0;
     mSwitchTop = mSwitchBottom =0;
     mSwitchTransformationMethod = nullptr;
@@ -131,8 +133,14 @@ Switch::~Switch(){
     // Delete the layouts before their text: a Layout dtor may deref its text.
     delete mOnLayout;
     delete mOffLayout;
+    // getTransformation may hand back the source itself instead of a new
+    // object; same pointer-compare trick as TextView's mText/mTransformed.
+    if (mOnTransformed == mOnText)   mOnTransformed  = nullptr;
+    if (mOffTransformed == mOffText) mOffTransformed = nullptr;
     delete mOnText;
     delete mOffText;
+    delete mOnTransformed;
+    delete mOffTransformed;
     delete mSwitchTransformationMethod;
     mVelocityTracker->recycle();
 }
@@ -141,7 +149,7 @@ void Switch::setSwitchTextAppearance(Context* context,int resid){
     // AOSP: obtainStyledAttributes(resid, R.styleable.TextAppearance) directly.
     auto ta = context->obtainStyledAttributes(resid, R::styleable::TextAppearance);
 
-    auto colors = ta ? ta->getColorStateList(R::styleable::TextAppearance_textColor) : nullptr;
+    auto colors = ta->getColorStateList(R::styleable::TextAppearance_textColor);
     if (colors) {
         mTextColors = colors;
     } else {
@@ -149,7 +157,7 @@ void Switch::setSwitchTextAppearance(Context* context,int resid){
         mTextColors = getTextColors();
     }
 
-    int ts = ta ? ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 0) : 0;
+    int ts = ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 0);
     if (ts != 0) {
         if (ts != mTextPaint.getTextSize()) {
             mTextPaint.setTextSize(ts);
@@ -157,12 +165,15 @@ void Switch::setSwitchTextAppearance(Context* context,int resid){
         }
     }
 
-    int typefaceIndex = ta ? ta->getInt(R::styleable::TextAppearance_typeface, -1) : -1;
-    int styleIndex    = ta ? ta->getInt(R::styleable::TextAppearance_textStyle, -1) : -1;
+    int typefaceIndex = ta->getInt(R::styleable::TextAppearance_typeface, -1);
+    int styleIndex    = ta->getInt(R::styleable::TextAppearance_textStyle, -1);
 
     setSwitchTypefaceByIndex(typefaceIndex, styleIndex);
 
-    const bool allCaps = ta && ta->getBoolean(R::styleable::TextAppearance_textAllCaps, false);
+    const bool allCaps = ta->getBoolean(R::styleable::TextAppearance_textAllCaps, false);
+    // AOSP nulls the method out when allCaps is off; delete the old one so a
+    // second call with allCaps on does not leak the previous method either.
+    delete mSwitchTransformationMethod;
     if (allCaps) {
         mSwitchTransformationMethod = new AllCapsTransformationMethod(getContext());
         mSwitchTransformationMethod->setLengthChangesAllowed(true);
@@ -434,11 +445,17 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (mShowText) {
         if (mOnLayout == nullptr) {
             mOnText = new SpannedString(TextUtils::utf8_utf16(mTextOn));
-            mOnLayout = makeLayout(mOnText);
+            mOnTransformed = (mSwitchTransformationMethod != nullptr)
+                    ? mSwitchTransformationMethod->getTransformation(*mOnText, *this)
+                    : mOnText;
+            mOnLayout = makeLayout(mOnTransformed);
         }
         if (mOffLayout == nullptr) {
             mOffText = new SpannedString(TextUtils::utf8_utf16(mTextOff));
-            mOffLayout = makeLayout(mOffText);
+            mOffTransformed = (mSwitchTransformationMethod != nullptr)
+                    ? mSwitchTransformationMethod->getTransformation(*mOffText, *this)
+                    : mOffText;
+            mOffLayout = makeLayout(mOffTransformed);
         }
     }
 
@@ -497,13 +514,9 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 Layout* Switch::makeLayout(CharSequence* text){
-    // TODO: apply mSwitchTransformationMethod (allCaps) once TransformationMethod
-    // ownership is wired; kept as a pass-through like other stubbed paths.
-    CharSequence* transformed = text;
-
-    const int width = (int) std::ceil(Layout::getDesiredWidth(transformed, 0,
-                transformed->length(), mTextPaint, getTextDirectionHeuristic()));
-    auto builder= StaticLayout::Builder::obtain(transformed, 0, transformed->length(), &mTextPaint, width);
+    const int width = (int) std::ceil(Layout::getDesiredWidth(text, 0,
+                text->length(), mTextPaint, getTextDirectionHeuristic()));
+    auto builder= StaticLayout::Builder::obtain(text, 0, text->length(), &mTextPaint, width);
     return builder->setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing).build();
 }
 

@@ -85,6 +85,12 @@ private:
     // (a Layout dtor may still dereference its text).
     CharSequence* mOnText;
     CharSequence* mOffText;
+    // getTransformation returns an owned CharSequence* — or the source itself
+    // when the method does not transform (AllCaps returns &source until
+    // setLengthChangesAllowed). Compare pointers before deleting, same trick
+    // as TextView's mText/mTransformed.
+    CharSequence* mOnTransformed;
+    CharSequence* mOffTransformed;
     //TransformationMethod2 mSwitchTransformationMethod;
     ObjectAnimator* mPositionAnimator;
     friend class THUMB_POS;
