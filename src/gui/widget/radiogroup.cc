@@ -116,8 +116,15 @@ std::string RadioGroup::getAccessibilityClassName()const{
 
 void RadioGroup::setCheckedId(int id){
     mCheckedId = id;
-    if (mOnCheckedChangeListener != nullptr) {
-        mOnCheckedChangeListener((CompoundButton&)*this, mCheckedId);
+    if (mOnCheckedChangeListener != nullptr && id != View::NO_ID) {
+        // Report the newly checked RadioButton (a CompoundButton), NOT *this:
+        // RadioGroup is a LinearLayout, not a CompoundButton, so the old
+        // (CompoundButton&)*this cast was invalid and crashed listeners that
+        // dereferenced the button (e.g. ->getText()).
+        CompoundButton* cb = dynamic_cast<CompoundButton*>(findViewById(id));
+        if (cb != nullptr) {
+            mOnCheckedChangeListener(*cb, true);
+        }
     }
 }
 
