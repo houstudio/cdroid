@@ -28,7 +28,7 @@ public:
 private:
     int mCheckedId;
     bool mInitialCheckedId;
-    bool mProtectFromCheckedChange;
+    bool mProtectFromCheckedChange = false;
     CompoundButton::OnCheckedChangeListener mChildOnCheckedChangeListener;
     CompoundButton::OnCheckedChangeListener mOnCheckedChangeListener;
     ViewGroup::OnHierarchyChangeListener mOnHierarchyChangeListener;

@@ -84,6 +84,7 @@ void RadioGroup::init(){
     ViewGroup::OnHierarchyChangeListener lhs;
     mCheckedId = View::NO_ID;
     mInitialCheckedId = false;
+    mProtectFromCheckedChange = false;
     mChildOnCheckedChangeListener=[this](CompoundButton&view,bool checked){
         onRadioChecked(view,checked);
     };
