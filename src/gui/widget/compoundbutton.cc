@@ -344,7 +344,7 @@ RadioButton::RadioButton(const std::string&txt,int w,int h)
 }
 
 RadioButton::RadioButton(Context*ctx,const AttributeSet& attrs)
-   :RadioButton(ctx,&attrs,0){
+   :RadioButton(ctx,&attrs, R::attr::radioButtonStyle){
 }
 
 RadioButton::RadioButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr)
