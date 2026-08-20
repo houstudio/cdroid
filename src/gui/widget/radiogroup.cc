@@ -16,7 +16,9 @@ RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
     setOrientation(VERTICAL);
 }
 
-RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs):RadioGroup(context,&attrs,0){}
+RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
+    :RadioGroup(context,&attrs,R::attr::radioButtonStyle){
+}
 
 RadioGroup::RadioGroup(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :LinearLayout(context,pAttrs, defStyleAttr){
@@ -25,15 +27,13 @@ RadioGroup::RadioGroup(Context* context,const AttributeSet* pAttrs,int defStyleA
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::RadioGroup, defStyleAttr);
     
-
-const int value = (int)ta->getResourceId(R::styleable::RadioGroup_checkedButton,(uint32_t)View::NO_ID);
-if(value!=View::NO_ID){
-    mCheckedId = value;
-    mInitialCheckedId = value;
-}
-const int index = ta->getInt(R::styleable::RadioGroup_orientation,VERTICAL);
-setOrientation(index);
-
+    const int value = (int)ta->getResourceId(R::styleable::RadioGroup_checkedButton,(uint32_t)View::NO_ID);
+    if(value!=View::NO_ID){
+        mCheckedId = value;
+        mInitialCheckedId = value;
+    }
+    const int index = ta->getInt(R::styleable::RadioGroup_orientation,VERTICAL);
+    setOrientation(index);
 }
 
 LinearLayout::LayoutParams* RadioGroup::generateLayoutParams(const AttributeSet& attrs)const {
@@ -54,7 +54,7 @@ void RadioGroup::onRadioChecked(CompoundButton&c,bool checked){
     if (mCheckedId != -1) {
         setCheckedStateForView(mCheckedId, false);
     }
-    LOGD("onRadioChecked %d",c.getId());
+    LOGD("onRadioChecked %x checkedid=%x",c.getId(),mCheckedId);
     mProtectFromCheckedChange = false;
     setCheckedId(c.getId());
 }

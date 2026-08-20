@@ -112,8 +112,12 @@ void Switch::init(){
     mSwitchHeight= 0;
     mThumbWidth = 0;
     mPositionAnimator = nullptr;
-    mOnLayout  = makeLayout("");
-    mOffLayout = makeLayout("");
+    // AOSP leaves mOnLayout/mOffLayout null until the first onMeasure;
+    // pre-creating empty layouts here would defeat that caching.
+    mOnLayout  = nullptr;
+    mOffLayout = nullptr;
+    mOnText    = nullptr;
+    mOffText   = nullptr;
     mSwitchLeft= mSwitchRight  =0;
     mSwitchTop = mSwitchBottom =0;
     mSwitchTransformationMethod = nullptr;
@@ -124,8 +128,11 @@ Switch::~Switch(){
     delete mThumbDrawable;
     delete mTrackDrawable;
     delete mPositionAnimator;
+    // Delete the layouts before their text: a Layout dtor may deref its text.
     delete mOnLayout;
     delete mOffLayout;
+    delete mOnText;
+    delete mOffText;
     delete mSwitchTransformationMethod;
     mVelocityTracker->recycle();
 }
@@ -374,7 +381,7 @@ std::string Switch::getTextOn()const{
 
 void Switch::setTextOn(const std::string&text){
     mTextOn = text;
-    invalidate();
+    requestLayout();
 }
 
 std::string Switch::getTextOff()const{
@@ -383,7 +390,7 @@ std::string Switch::getTextOff()const{
 
 void Switch::setTextOff(const std::string&text){
     mTextOff = text;
-    invalidate();
+    requestLayout();
 }
 
 bool Switch::getShowText()const{
@@ -426,10 +433,12 @@ void Switch::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& in
 void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (mShowText) {
         if (mOnLayout == nullptr) {
-            mOnLayout = makeLayout(mTextOn);
+            mOnText = new SpannedString(TextUtils::utf8_utf16(mTextOn));
+            mOnLayout = makeLayout(mOnText);
         }
         if (mOffLayout == nullptr) {
-            mOffLayout = makeLayout(mTextOff);
+            mOffText = new SpannedString(TextUtils::utf8_utf16(mTextOff));
+            mOffLayout = makeLayout(mOffText);
         }
     }
 
@@ -487,12 +496,10 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     }
 }
 
-Layout* Switch::makeLayout(const std::string& text){
-    //Layout*layout = new Layout(getTextSize(),getWidth());
-    //layout->setText(text);
-    mText = new SpannedString(TextUtils::utf8_utf16(text));
-    CharSequence* transformed = mText;
-        //(mSwitchTransformationMethod != nullptr)? mSwitchTransformationMethod.getTransformation(text, this):text;
+Layout* Switch::makeLayout(CharSequence* text){
+    // TODO: apply mSwitchTransformationMethod (allCaps) once TransformationMethod
+    // ownership is wired; kept as a pass-through like other stubbed paths.
+    CharSequence* transformed = text;
 
     const int width = (int) std::ceil(Layout::getDesiredWidth(transformed, 0,
                 transformed->length(), mTextPaint, getTextDirectionHeuristic()));
@@ -641,8 +648,8 @@ void Switch::animateThumbToCheckedState(bool newCheckedState){
         mPositionAnimator = nullptr;
     };
     animator->addListener(animtorListener);
-    animator->start();
     mPositionAnimator = animator;
+    animator->start();
 }
 
 void Switch::cancelPositionAnimator(){
@@ -826,11 +833,17 @@ void Switch::onDraw(Canvas& canvas) {
         if (mSplitTrack && mThumbDrawable) {
             Insets insets = mThumbDrawable->getOpticalInsets();
             padding = mThumbDrawable->getBounds();
+            // AOSP: padding.left += insets.left; padding.right -= insets.right
+            // → x += il and width shrinks by il + ir to keep both edges moving in.
             padding.left += insets.left;
-            padding.width -= insets.right;
+            padding.width -= insets.left + insets.right;
             canvas.save();
-            canvas.rectangle(padding.left,padding.top,padding.width,padding.height);
-            canvas.clip();//clipRect(padding, Op.DIFFERENCE);
+            /* AOSP: clipRect(padding, Op.DIFFERENCE) — draw the track everywhere
+               except the thumb's optical bounds. cairo clips by intersection only,
+               so clip to the union of the two side strips instead. */
+            canvas.rectangle(0, 0, padding.left, getHeight());
+            canvas.rectangle(padding.right(), 0, getWidth() - padding.right(), getHeight());
+            canvas.clip();
             mTrackDrawable->draw(canvas);
             canvas.restore();
         } else {
@@ -849,19 +862,22 @@ void Switch::onDraw(Canvas& canvas) {
         if (mTextColors) {
             const int stateColor = mTextColors->getColorForState(drawableState, 0);
             mTextPaint.setColor(stateColor);
-            canvas.set_color(stateColor);
         }
         //mTextPaint.drawableState = drawableState;
         int cX;
         if (mThumbDrawable) {
             Rect bounds = mThumbDrawable->getBounds();
-            cX = bounds.left + bounds.width;
+            /* AOSP: cX = bounds.left + bounds.right (both coordinates, twice the
+               thumb center). CDROID Rect stores width, so right() restores the
+               AOSP coordinate — reading bounds.width here would left-shift the
+               text center by half the thumb position. */
+            cX = bounds.left + bounds.right();
         } else {
             cX = getWidth();
         }
         const int left = cX / 2 - switchText->getWidth() / 2;
         const int top = (switchInnerTop + switchInnerBottom) / 2 - switchText->getHeight() / 2;
-        canvas.translate(left, 0);//top);
+        canvas.translate(left, top);
         switchText->draw(canvas);
     }
     canvas.restore();
@@ -925,7 +941,7 @@ int Switch::getThumbScrollRange() {
 }
 
 std::vector<int> Switch::onCreateDrawableState(int extraSpace){
-    std::vector<int> drawableState = CompoundButton::onCreateDrawableState(extraSpace);
+    std::vector<int> drawableState = CompoundButton::onCreateDrawableState(extraSpace + 1);
     if (isChecked()) {
         mergeDrawableStates(drawableState,{cdroid::internal::R::attr::state_checked});
     }

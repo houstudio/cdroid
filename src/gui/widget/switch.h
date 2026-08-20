@@ -80,6 +80,11 @@ private:
     cdroid::RefPtr<ColorStateList> mTextColors;
     Layout* mOnLayout;
     Layout* mOffLayout;
+    // C++ ownership: AOSP relies on GC for the CharSequence backing each
+    // Layout; these own the text so it outlives mOnLayout/mOffLayout
+    // (a Layout dtor may still dereference its text).
+    CharSequence* mOnText;
+    CharSequence* mOffText;
     //TransformationMethod2 mSwitchTransformationMethod;
     ObjectAnimator* mPositionAnimator;
     friend class THUMB_POS;
@@ -88,7 +93,7 @@ private:
     void setSwitchTypefaceByIndex(int typefaceIndex, int styleIndex);
     void applyTrackTint();
     void applyThumbTint();
-    Layout* makeLayout(const std::string& text);
+    Layout* makeLayout(CharSequence* text);
     bool hitThumb(float x, float y);
     void cancelSuperTouch(MotionEvent& ev);
     void stopDrag(MotionEvent& ev);
