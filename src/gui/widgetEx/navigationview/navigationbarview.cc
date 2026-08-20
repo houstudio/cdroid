@@ -154,7 +154,10 @@ View* NavigationBarView::createItemView(MenuItem* item) {
     column->setGravity(Gravity::CENTER_HORIZONTAL);
     column->setPadding(8, 6, 8, 6);
     if (mItemBackground) {
-        Drawable* background = mItemBackground->mutate();
+        // Each item owns its background through View::mBackground. Never share the
+        // template drawable between items: View destruction deletes its background.
+        std::shared_ptr<Drawable::ConstantState> constantState = mItemBackground->getConstantState();
+        Drawable* background = constantState ? constantState->newDrawable() : mItemBackground->mutate();
         const std::vector<int> state = item->isChecked()
             ? std::vector<int>{R::attr::state_checked} : std::vector<int>{};
         background->setState(state);

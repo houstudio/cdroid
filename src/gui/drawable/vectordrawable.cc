@@ -529,6 +529,7 @@ VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableSta
     mCacheDirty = false;
     mRootGroup = nullptr;
     mAutoMirrored = false;
+    mTintMode=0;
     mCachedAutoMirrored = false;
     memset(mThemeAttrs,0,sizeof(mThemeAttrs));
     memset(mCachedThemeAttrs,0,sizeof(mCachedThemeAttrs));

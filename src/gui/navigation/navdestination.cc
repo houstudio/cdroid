@@ -61,7 +61,7 @@ void NavDestination::onInflate(Context* context, const AttributeSet& attrs) {
     namespace ns = internal::R::styleable;
     auto ta = context->obtainStyledAttributes(attrs, ns::NavDestination);
     setId(ta ? ta->getResourceId(ns::NavDestination_id, 0) : 0);
-    setLabel(ta ? ta->getString(ns::NavDestination_label) : "");
+    setLabel(ta->getText(ns::NavDestination_label));
     const std::string route = ta ? ta->getString(ns::NavDestination_route) : "";
     if(!route.empty()) setRoute(route);
 }
