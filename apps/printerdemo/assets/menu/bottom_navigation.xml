@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex">
+    <item android:id="@id/home" android:title="@string/home_label" android:icon="@drawable/ic_nav_home" />
+    <item android:id="@id/copy" android:title="@string/copy_label" android:icon="@drawable/ic_nav_copy" />
+    <item android:id="@id/scan" android:title="@string/action_scan" android:icon="@drawable/ic_nav_scan" />
+    <item android:id="@id/maintain" android:title="@string/maintain_label" android:icon="@drawable/ic_nav_build" />
+    <item android:id="@id/settings" android:title="@string/settings_label" android:icon="@drawable/ic_nav_settings" />
+</menu>

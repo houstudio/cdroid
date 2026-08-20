@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default locale (development language base); values-zh-rCN carries the
+         Chinese variants. Locale switching goes through the Configuration
+         chain: App::handleConfigurationChanged(CONFIG_LOCALE) -> arsc
+         language/region repack -> recreate. -->
+    <string name="app_name">CDROID MFP</string>
+    <string name="home_label">Control Panel</string>
+    <string name="copy_label">Copy</string>
+    <string name="maintain_label">Maintenance</string>
+    <string name="settings_label">Settings</string>
+    <string name="menu_toggle_theme">Toggle theme</string>
+    <string name="menu_toggle_language">切换中文 / Switch to Chinese</string>
+    <string name="menu_about">About CDroid</string>
+    <string name="stat_total_pages">12,480 pages</string>
+    <string name="scan_last_mode">300 DPI · Color</string>
+    <string name="network_good">CDROID-Net · Good signal</string>
+    <string name="label_ip">IP address</string>
+    <string name="about_subtitle">v1.0 · Line-by-line C++ port · Android UI</string>
+    <string name="maintain_last">Last maintenance</string>
+    <string name="copy_copies">Copies</string>
+    <string name="settings_pref">Preferences</string>
+    <string name="about_device">About this device</string>
+    <string name="label_resolution">Resolution</string>
+    <string name="paper_remaining">About 200 sheets left</string>
+    <string name="home_functions">Functions</string>
+    <string name="maintain_nozzle_check">Nozzle check</string>
+    <string name="maintain_head">Print head maintenance</string>
+    <string name="label_ink">Ink</string>
+    <string name="action_copy">Copy</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_ready_full">Ready</string>
+    <string name="settings_brightness">Screen brightness</string>
+    <string name="about_features">Ported features</string>
+    <string name="copy_start">Start Copy</string>
+    <string name="scan_start">Start Scan</string>
+    <string name="mode_color">Color</string>
+    <string name="ink_color_cmy">Color cartridges C / M / Y</string>
+    <string name="stat_total_print">Total printed</string>
+    <string name="stat_total_scan">Total scanned</string>
+    <string name="maintain_align">Print head alignment</string>
+    <string name="maintain_test_desc">Print a test page to find clogged nozzles</string>
+    <string name="action_scan">Scan</string>
+    <string name="settings_sound">Key press sound</string>
+    <string name="settings_datetime">Date &amp; time</string>
+    <string name="action_maintain">Maintenance</string>
+    <string name="home_health">Device health</string>
+    <string name="home_overview">Device overview</string>
+    <string name="maintain_selftest">Device self test</string>
+    <string name="action_settings">Settings</string>
+    <string name="maintain_diagnose">Diagnostics</string>
+    <string name="more_detail">Details ›</string>
+    <string name="settings_language">Language</string>
+    <string name="loading">Please wait…</string>
+    <string name="label_quality">Quality</string>
+    <string name="about_use_cases">Use cases</string>
+    <string name="label_color">Color</string>
+    <string name="mode_mono">Black &amp; white</string>
+    <string name="ink_black">Black cartridge K</string>
+    <string name="settings_display">Display</string>
+    <string name="home_tagline">Smart MFP</string>
+    <string name="about_highlights">Architecture highlights</string>
+    <string name="quality_standard">Standard</string>
+    <string name="maintain_align_desc">Align the print head to remove banding</string>
+    <string name="copy_busy">Copying…</string>
+    <string name="maintain_deep_desc">Deep ink-path cleaning — weekly recommended</string>
+    <string name="maintain_clean">Clean print head</string>
+    <string name="about_intro">Introduction</string>
+    <string name="lang_zh">Simplified Chinese ›</string>
+    <string name="settings_system">System</string>
+    <string name="stat_lifetime">Lifetime prints</string>
+    <string name="label_paper">Paper</string>
+    <string name="paper_tray">Tray 1 · A4</string>
+    <string name="maintain_busy">Maintaining…</string>
+    <string name="label_scale">Scale</string>
+    <string name="settings_network">Network</string>
+    <string name="home_supplies">Supplies</string>
+    <string name="settings_sleep">Energy saver</string>
+    <string name="quality_draft">Draft</string>
+</resources>

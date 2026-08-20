@@ -1,0 +1,39 @@
+<resources>
+    <!-- App styles derived from the system theme: the framework parent chain
+         (Theme.Material.Light / TextAppearance.Material.Title) is applied by
+         ResTable::Theme::applyStyle, the app only overrides what it cares
+         about. Framework attrs carry the android: namespace (aapt2 resolves
+         them against the linked framework package, not the app's own).
+         colorPrimary drives colorEdgeEffect (?attr) so the edge glow is the
+         visible probe. -->
+    <style name="AppTheme" parent="@android:style/Theme.Material.Light">
+        <item name="android:colorPrimary">#ff009688</item>
+        <item name="android:colorBackground">#fffafafa</item>
+        <!-- Text state colors go through ColorStateList selectors
+             (res/color/app_text_*.xml), like AOSP's primary_text_material_*. -->
+        <item name="android:textColorPrimary">@color/app_text_primary</item>
+        <item name="android:textColorSecondary">@color/app_text_secondary</item>
+        <item name="cardBackground">@drawable/card_bg</item>
+        <item name="progressTrack">@drawable/progress_track_bg</item>
+        <item name="colorSurfaceVariant">#FFECEFF1</item>
+    </style>
+
+    <!-- Dark variant: same attr set, Material (dark) parent. The layout's
+         backgrounds are ?attr-driven (colorBackground / colorPrimary), so
+         toggling the theme + recreate() re-colors the whole UI (AOSP parity:
+         the persisted choice is re-read by every new activity). -->
+    <style name="AppTheme.Dark" parent="@android:style/Theme.Material">
+        <item name="android:colorPrimary">#ff5e35b1</item>
+        <item name="android:colorBackground">#ff303030</item>
+        <item name="android:textColorPrimary">@color/app_text_primary_dark</item>
+        <item name="android:textColorSecondary">@color/app_text_secondary_dark</item>
+        <item name="cardBackground">@drawable/card_bg_dark</item>
+        <item name="progressTrack">@drawable/progress_track_bg_dark</item>
+        <item name="colorSurfaceVariant">#FF3A3F44</item>
+    </style>
+
+    <!-- Referenced by layout/main.xml (android:titleTextAppearance). -->
+    <style name="ToolbarTitle" parent="@android:style/TextAppearance.Material.Title">
+        <item name="android:textSize">22sp</item>
+    </style>
+</resources>

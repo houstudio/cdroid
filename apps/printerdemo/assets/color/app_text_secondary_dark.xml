@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Secondary text state colors for the dark theme: disabled 30% white,
+     default 70% white. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="#4dffffff"/>
+    <item android:color="#b3ffffff"/>
+</selector>

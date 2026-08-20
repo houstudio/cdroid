@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?android:attr/colorBackground"
+        android:fillViewport="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp" android:text="@string/maintain_head" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="4dp">
+                <LinearLayout android:id="@+id/m_clean"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:background="#00000000" android:padding="12dp" android:clickable="true">
+                    <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_accent">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="洗" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    </FrameLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_clean" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="@string/maintain_deep_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textSize="20sp" android:textColor="?android:attr/textColorSecondary"/>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="12dp" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:id="@+id/m_nozzle"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:padding="12dp" android:clickable="true">
+                    <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_green">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="检" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    </FrameLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_nozzle_check" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="@string/maintain_test_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textSize="20sp" android:textColor="?android:attr/textColorSecondary"/>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="12dp" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:id="@+id/m_align"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:padding="12dp" android:clickable="true">
+                    <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_amber">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="准" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    </FrameLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_align" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="@string/maintain_align_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textSize="20sp" android:textColor="?android:attr/textColorSecondary"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" android:layout_marginBottom="8dp" android:text="@string/home_supplies" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="16dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <FrameLayout android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/btn_card_accent">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="黑" android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="@string/ink_black" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="85%" android:textSize="14sp" android:textColor="#FF2E7D32"/>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="12dp" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <FrameLayout android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/btn_card_purple">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="彩" android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="@string/ink_color_cmy" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="60 / 40 / 72 %" android:textSize="14sp" android:textColor="#FFEF6C00"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" android:layout_marginBottom="8dp" android:text="@string/maintain_diagnose" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="4dp">
+                <LinearLayout android:id="@+id/m_selftest"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:padding="12dp" android:clickable="true">
+                    <FrameLayout android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/btn_card_green">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="测" android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="@string/maintain_selftest" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textSize="20sp" android:textColor="?android:attr/textColorSecondary"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" android:layout_marginBottom="8dp"
+                android:text="@string/home_overview" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="16dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="@string/stat_lifetime" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp" android:text="@string/stat_total_pages" android:textSize="18sp"
+                            android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="right">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="@string/maintain_last" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp" android:text="2026-07-20" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                    </LinearLayout>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginTop="14dp" android:layout_marginBottom="12dp" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="@string/home_health" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="92%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF2E7D32"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="8dp"
+                    android:layout_marginTop="8dp" android:weightSum="100" android:orientation="horizontal">
+                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="92" android:background="#FF2E7D32"/>
+                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="8" android:background="?attr/colorSurfaceVariant"/>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Maintenance progress overlay -->
+    <FrameLayout android:id="@+id/maint_overlay"
+        android:layout_width="match_parent" android:layout_height="match_parent"
+        android:background="#B3000000" android:clickable="true" android:visibility="gone">
+        <LinearLayout
+            android:layout_width="260dp" android:layout_height="wrap_content"
+            android:layout_gravity="center" android:orientation="vertical" android:gravity="center_horizontal"
+            android:background="?attr/cardBackground" android:padding="28dp">
+            <LinearLayout android:id="@+id/maint_track"
+                android:layout_width="200dp" android:layout_height="8dp"
+                android:orientation="horizontal" android:weightSum="100"
+                android:background="?attr/progressTrack">
+                <View android:id="@+id/maint_fill"
+                    android:layout_width="0dp" android:layout_height="match_parent"
+                    android:layout_weight="0" android:background="@drawable/btn_primary"/>
+            </LinearLayout>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" android:text="@string/maintain_busy" android:textSize="16sp"
+                android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+            <TextView android:id="@+id/maint_status"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="6dp" android:text="@string/loading" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

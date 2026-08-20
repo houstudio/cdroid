@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- HERO: gradient banner with decorative circle + status pill -->
+        <FrameLayout
+            android:id="@+id/hero"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:background="@drawable/hero_bg">
+            <View
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="-70dp"
+                android:background="@drawable/circle_deco"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center_vertical"
+                android:padding="22dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="CDROID MFP" android:textSize="28sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp" android:text="@string/home_tagline"
+                            android:textSize="12sp" android:textColor="#B3FFFFFF"/>
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical"
+                        android:background="@drawable/pill_bg" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="5dp" android:paddingBottom="5dp">
+                        <View android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/status_dot"/>
+                        <TextView android:id="@+id/status_text" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp" android:text="@string/status_ready" android:textSize="12sp"
+                            android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    </LinearLayout>
+                </LinearLayout>
+                <TextView android:id="@+id/network_text" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp" android:text="Wi-Fi · CDROID-Net    192.168.1.50"
+                    android:textSize="12sp" android:textColor="#E6FFFFFF"/>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- INK: vertical bars -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:background="?attr/cardBackground"
+            android:padding="16dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="@string/label_ink" android:textSize="14sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/more_detail" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="14dp" android:orientation="horizontal" android:gravity="center">
+                <!-- K 85% -->
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                    <LinearLayout android:layout_width="28dp" android:layout_height="110dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack">
+                        <View android:id="@+id/ink_k_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="15"/>
+                        <View android:id="@+id/ink_k_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="85" android:background="#FF212121"/>
+                    </LinearLayout>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="K" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:id="@+id/ink_k_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="85%" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+                </LinearLayout>
+                <!-- C 60% -->
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                    <LinearLayout android:layout_width="28dp" android:layout_height="110dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack">
+                        <View android:id="@+id/ink_c_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="40"/>
+                        <View android:id="@+id/ink_c_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="60" android:background="#FF1976D2"/>
+                    </LinearLayout>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="C" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:id="@+id/ink_c_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="60%" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+                </LinearLayout>
+                <!-- M 40% (low) -->
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                    <LinearLayout android:layout_width="28dp" android:layout_height="110dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack">
+                        <View android:id="@+id/ink_m_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="60"/>
+                        <View android:id="@+id/ink_m_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="40" android:background="#FFE91E63"/>
+                    </LinearLayout>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="M" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:id="@+id/ink_m_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="40%" android:textSize="11sp" android:textColor="#FFEF6C00"/>
+                </LinearLayout>
+                <!-- Y 72% -->
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                    <LinearLayout android:layout_width="28dp" android:layout_height="110dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack">
+                        <View android:id="@+id/ink_y_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="28"/>
+                        <View android:id="@+id/ink_y_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="72" android:background="#FFFBC02D"/>
+                    </LinearLayout>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Y" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:id="@+id/ink_y_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="72%" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- PAPER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/cardBackground"
+            android:padding="16dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:id="@+id/paper_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/paper_tray" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                <TextView android:id="@+id/paper_sheets" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/paper_remaining" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="120dp" android:layout_height="8dp" android:layout_marginStart="12dp" android:weightSum="100" android:orientation="horizontal">
+                <View android:id="@+id/paper_fill" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="80" android:background="#FF1565C0"/>
+                <View android:id="@+id/paper_space" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="20" android:background="?attr/colorSurfaceVariant"/>
+            </LinearLayout>
+            <TextView android:id="@+id/paper_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="80%" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+        </LinearLayout>
+
+        <!-- STATISTICS: live job counters driven by PrinterViewModel (no hardcoded values). -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:background="?attr/cardBackground"
+            android:paddingTop="14dp" android:paddingBottom="14dp" android:paddingLeft="8dp" android:paddingRight="8dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                <TextView android:id="@+id/stat_prints" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF1565C0"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/stat_total_print" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                <TextView android:id="@+id/stat_scans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF2E7D32"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/stat_total_scan" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                <TextView android:id="@+id/stat_copies" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF6A1B9A"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/action_copy" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
+                <TextView android:id="@+id/stat_maint" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FFEF6C00"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/action_maintain" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- FUNCTION grid: full-gradient cards -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="20dp" android:layout_marginBottom="10dp"
+            android:text="@string/home_functions" android:textSize="16sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+            <LinearLayout android:id="@+id/card_copy"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:minHeight="128dp" android:orientation="vertical" android:gravity="center" android:clickable="true"
+                android:background="@drawable/btn_card_accent" android:padding="18dp" android:visibility="invisible">
+                <FrameLayout android:layout_width="56dp" android:layout_height="56dp" android:background="@drawable/icon_chip_bg">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="复" android:textSize="24sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                </FrameLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/action_copy" android:textSize="15sp" android:textColor="#FFFFFFFF"/>
+            </LinearLayout>
+            <View android:layout_width="12dp" android:layout_height="0dp"/>
+            <LinearLayout android:id="@+id/card_scan"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:minHeight="128dp" android:orientation="vertical" android:gravity="center" android:clickable="true"
+                android:background="@drawable/btn_card_green" android:padding="18dp" android:visibility="invisible">
+                <FrameLayout android:layout_width="56dp" android:layout_height="56dp" android:background="@drawable/icon_chip_bg">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="扫" android:textSize="24sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                </FrameLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/action_scan" android:textSize="15sp" android:textColor="#FFFFFFFF"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="horizontal">
+            <LinearLayout android:id="@+id/card_maintain"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:minHeight="128dp" android:orientation="vertical" android:gravity="center" android:clickable="true"
+                android:background="@drawable/btn_card_amber" android:padding="18dp" android:visibility="invisible">
+                <FrameLayout android:layout_width="56dp" android:layout_height="56dp" android:background="@drawable/icon_chip_bg">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="护" android:textSize="24sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                </FrameLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/action_maintain" android:textSize="15sp" android:textColor="#FFFFFFFF"/>
+            </LinearLayout>
+            <View android:layout_width="12dp" android:layout_height="0dp"/>
+            <LinearLayout android:id="@+id/card_settings"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:minHeight="128dp" android:orientation="vertical" android:gravity="center" android:clickable="true"
+                android:background="@drawable/btn_card_purple" android:padding="18dp" android:visibility="invisible">
+                <FrameLayout android:layout_width="56dp" android:layout_height="56dp" android:background="@drawable/icon_chip_bg">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="设" android:textSize="24sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                </FrameLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/action_settings" android:textSize="15sp" android:textColor="#FFFFFFFF"/>
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MotionScene for the scan beam: the beam sweeps top -> bottom (scan_start -> scan_end).
+  The motion (path/easing/duration) is fully declarative here; ScanFragment only triggers
+  transitionToEnd()/transitionToStart() and bounces on onTransitionCompleted for the loop.
+-->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex" xmlns:android="http://schemas.android.com/apk/res/android"
+    app:defaultDuration="850">
+
+    <Transition
+        app:constraintSetStart="@+id/scan_start"
+        app:constraintSetEnd="@+id/scan_end"
+        app:duration="3000"
+        app:motionInterpolator="linear">
+        <KeyFrameSet>
+            <!-- beam glows a touch brighter at the midpoint of each sweep -->
+            <KeyAttribute app:motionTarget="@id/scan_beam" app:framePosition="50" android:alpha="0.55"/>
+        </KeyFrameSet>
+    </Transition>
+
+    <!-- NB: framework attrs (layout_width/height, alpha) MUST carry the android: prefix —
+         unprefixed names get no resource id baked into the binary AXML, so the id-based
+         TypedArray reads in ConstraintSet/KeyAttribute silently drop them. -->
+    <ConstraintSet android:id="@+id/scan_start">
+        <Constraint android:id="@id/scan_beam"
+                    android:layout_width="match_parent" android:layout_height="28dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintLeft_toLeftOf="parent"/>
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/scan_end">
+        <Constraint android:id="@id/scan_beam"
+                    android:layout_width="match_parent" android:layout_height="28dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintLeft_toLeftOf="parent"/>
+    </ConstraintSet>
+</MotionScene>

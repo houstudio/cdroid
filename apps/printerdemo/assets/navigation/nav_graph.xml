@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fragment enter/exit use android.transition (Slide), set per-Fragment in onCreate.
+     No legacy enterAnim/exitAnim here (those flicker in CDROID; transition clone is clean). -->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+    android:id="@+id/nav_graph"
+    app:startDestination="home">
+
+    <fragment android:id="@+id/home" android:name="HomeFragment"
+        android:label="@string/home_label" app:route="home">
+        <action android:id="@+id/action_home_to_copy"     app:destination="@id/copy"/>
+        <action android:id="@+id/action_home_to_scan"     app:destination="@id/scan"/>
+        <action android:id="@+id/action_home_to_maintain" app:destination="@id/maintain"/>
+        <action android:id="@+id/action_home_to_settings" app:destination="@id/settings"/>
+    </fragment>
+
+    <fragment android:id="@+id/copy"     android:name="CopyFragment"     android:label="@string/copy_label"     app:route="copy"/>
+    <fragment android:id="@+id/scan"     android:name="ScanFragment"     android:label="扫描"                    app:route="scan"/>
+    <fragment android:id="@+id/maintain" android:name="MaintainFragment" android:label="@string/maintain_label" app:route="maintain"/>
+    <fragment android:id="@+id/settings" android:name="SettingsFragment" android:label="@string/settings_label" app:route="settings"/>
+    <fragment android:id="@+id/about"    android:name="AboutFragment"    android:label="关于 CDroid"             app:route="about"/>
+</navigation>

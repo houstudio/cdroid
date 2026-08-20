@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Themable surface colors: the light/dark themes point them at their
+         own drawables/colors, layouts reference ?attr/... so a theme switch
+         + recreate re-skins every page. -->
+    <attr name="cardBackground" format="reference" />
+    <attr name="progressTrack" format="reference" />
+    <attr name="colorSurfaceVariant" format="color|reference" />
+
+    <attr name="showAsAction" format="enum">
+        <enum name="always" value="2" />
+        <enum name="never" value="0" />
+        <enum name="ifRoom" value="1" />
+        <enum name="withText" value="4" />
+        <enum name="collapseActionView" value="8" />
+    </attr>
+    <attr name="destination" format="reference" />
+    <attr name="route" format="string" />
+    <attr name="startDestination" format="string" />
+    <attr name="buttonGravity" format="enum">
+        <enum name="top" value="48" />
+        <enum name="bottom" value="80" />
+        <enum name="center_vertical" value="16" />
+    </attr>
+</resources>
