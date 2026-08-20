@@ -142,18 +142,22 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     Cairo::RefPtr<cdroid::Path> tempStagingPath = std::make_shared<cdroid::Path>();
     const FullPathProperties& properties = useStagingData ? mStagingProperties : mProperties;
     const Cairo::RefPtr<cdroid::Path> renderPath = getUpdatedPath(useStagingData, tempStagingPath);
-    // Draw path's fill, if fill color or gradient is valid
-    const uint32_t fillAlpha  = uint32_t(properties.getFillAlpha()*255.f)<<24;
-    const uint32_t strokeAlpha= uint32_t(properties.getStrokeAlpha()*255.f)<<24;
-    const bool needsFill  = (properties.getFillGradient() != nullptr) || fillAlpha;
-    const bool needsStroke= (properties.getStrokeGradient()!=nullptr) || strokeAlpha;
+    // AOSP gates fill/stroke on color != TRANSPARENT and applies alpha via
+    // applyAlpha() (multiplies the alpha channel), not by OR-ing a pre-shifted
+    // alpha byte. The old alpha-truthiness gate + `color | alphaByte` filled
+    // stroke-only paths (btn_radio ring) as solid discs AND made fillAlpha=0
+    // paths (checkbox box_inner/box_outer) opaque instead of transparent.
+    const bool needsFill  = (properties.getFillGradient() != nullptr)
+            || (properties.getFillColor() != (uint32_t)Color::TRANSPARENT);
+    const bool needsStroke= (properties.getStrokeGradient()!= nullptr)
+            || (properties.getStrokeColor() != (uint32_t)Color::TRANSPARENT);
 
     outCanvas.set_antialias(mAntiAlias?Cairo::ANTIALIAS_GRAY:Cairo::ANTIALIAS_NONE);
     renderPath->append_to_context(&outCanvas);
     if (needsFill) {
         if(properties.getFillGradient())
             outCanvas.set_source(properties.getFillGradient());
-        else outCanvas.set_color(properties.getFillColor()|fillAlpha);
+        else outCanvas.set_color(applyAlpha(properties.getFillColor(), properties.getFillAlpha()));
         outCanvas.set_fill_rule((Cairo::Context::FillRule)properties.getFillType());// EVEN_ODD WINDING
         if(needsStroke)
             outCanvas.fill_preserve();
@@ -163,7 +167,7 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     if (needsStroke) {
         if(properties.getStrokeGradient())
             outCanvas.set_source(properties.getStrokeGradient());
-        else outCanvas.set_color(properties.getStrokeColor()|strokeAlpha);
+        else outCanvas.set_color(applyAlpha(properties.getStrokeColor(), properties.getStrokeAlpha()));
         outCanvas.set_line_join((Cairo::Context::LineJoin)properties.getStrokeLineJoin());
         //paint.setStrokeJoin(SkPaint::Join(properties.getStrokeLineJoin()));
         outCanvas.set_line_cap((Cairo::Context::LineCap)properties.getStrokeLineCap());

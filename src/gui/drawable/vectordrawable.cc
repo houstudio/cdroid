@@ -529,7 +529,12 @@ VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableSta
     mCacheDirty = false;
     mRootGroup = nullptr;
     mAutoMirrored = false;
-    mTintMode = PorterDuff::Mode::NOOP;
+    // AOSP VectorDrawableState defaults mBlendMode = DEFAULT_BLEND_MODE (SRC_IN);
+    // BitmapDrawable/GradientDrawable/NinePatchDrawable all use DEFAULT_TINT_MODE
+    // here. NOOP makes Drawable::updateTintFilter bail (returns null), so a vector
+    // with android:tint but no android:tintMode (e.g. btn_radio_*_mtrl) got no tint
+    // and onStateChange skipped re-resolution -> no color transition on check.
+    mTintMode = DEFAULT_TINT_MODE;
     mCachedAutoMirrored = false;
     memset(mThemeAttrs,0,sizeof(mThemeAttrs));
     memset(mCachedThemeAttrs,0,sizeof(mCachedThemeAttrs));
