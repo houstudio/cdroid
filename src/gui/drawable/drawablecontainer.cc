@@ -73,8 +73,10 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     mAutoMirrored = false;
     mMutated = false;
     mDither  = false;
+    mCheckedPadding = false;
     mCheckedStateful  = false;
     mCheckedOpacity   = false;
+    mConstantPadding.setEmpty();
     mLayoutDirection  = LayoutDirection::LTR;
     mEnterFadeDuration= 0;
     mExitFadeDuration = 0;

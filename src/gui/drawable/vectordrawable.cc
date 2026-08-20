@@ -172,7 +172,7 @@ bool VectorDrawable::onStateChange(const std::vector<int>&stateSet) {
         changed = true;
         state->mCacheDirty = true;
     }
-    if (state->mTint && state->mTintMode) {
+    if (state->mTint && (state->mTintMode!=PorterDuff::Mode::NOOP)) {
         mTintFilter = updateTintFilter(mTintFilter, state->mTint, state->mTintMode);
         changed = true;
     }
@@ -529,7 +529,7 @@ VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableSta
     mCacheDirty = false;
     mRootGroup = nullptr;
     mAutoMirrored = false;
-    mTintMode=0;
+    mTintMode = PorterDuff::Mode::NOOP;
     mCachedAutoMirrored = false;
     memset(mThemeAttrs,0,sizeof(mThemeAttrs));
     memset(mCachedThemeAttrs,0,sizeof(mCachedThemeAttrs));

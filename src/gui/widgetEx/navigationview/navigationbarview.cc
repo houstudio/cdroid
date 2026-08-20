@@ -37,7 +37,7 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
     mItemReselectedListener = nullptr;
     mItemBackground = nullptr;
     mItemIconSize = 0;
-    mLabelVisibilityMode = -1;  // LABEL_VISIBILITY_AUTO
+    mLabelVisibilityMode = LABEL_VISIBILITY_AUTO;
 
     // AOSP NavigationBarView ctor: menu, menu view, presenter, then attrs.
     mMenu = new MenuBuilder(context);
@@ -182,7 +182,7 @@ View* NavigationBarView::createItemView(MenuItem* item) {
         column->addView(iconView);
     }
     // LABEL_VISIBILITY_UNLABELED(2) hides the label; AUTO/SELECTED/LABELED show it.
-    if (mLabelVisibilityMode != 2) {
+    if (mLabelVisibilityMode != LABEL_VISIBILITY_UNLABELED) {
         TextView* label = new TextView(context, nullptr, 0);
         label->setText(item->getTitle());
         if (mItemTextColor) {

@@ -214,6 +214,7 @@ MenuInflater::MenuState::~MenuState(){
 
 void MenuInflater::MenuState::resetGroup() {
     groupId = defaultGroupId;
+    mItemIconBlendMode = PorterDuff::Mode::NOOP;
     groupCategory = defaultItemCategory;
     groupOrder = defaultItemOrder;
     groupCheckable = defaultItemCheckable;
