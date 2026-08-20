@@ -25,10 +25,10 @@
 // data flow and public API stay 1:1).
 #include <widget/framelayout.h>
 #include <widget/linearlayout.h>
-#include <cdroid.h>
 
 namespace cdroid{
 class Menu;
+class MenuView;
 class MenuBuilder;
 class MenuInflater;
 class MenuItem;
@@ -36,6 +36,21 @@ class ColorStateList;
 
 class NavigationView : public FrameLayout {
 public:
+    enum LabelVisibility{
+         LABEL_VISIBILITY_AUTO = -1,
+         LABEL_VISIBILITY_SELECTED = 0,
+         LABEL_VISIBILITY_LABELED = 1,
+         LABEL_VISIBILITY_UNLABELED = 2
+    };
+    enum ItemGravity{
+        ITEM_GRAVITY_TOP_CENTER = Gravity::TOP | Gravity::CENTER_HORIZONTAL,
+        ITEM_GRAVITY_CENTER = Gravity::CENTER,
+        ITEM_GRAVITY_START_CENTER = Gravity::START | Gravity::CENTER_VERTICAL
+    };
+    enum ItemIconGravity{
+        ITEM_ICON_GRAVITY_TOP = 0,
+        ITEM_ICON_GRAVITY_START = 1
+    };
     /** Called when an item in the navigation menu is selected. */
     class OnNavigationItemSelectedListener {
     public:
@@ -71,6 +86,8 @@ public:
 
     void inflateMenu(int resId);
     Menu* getMenu();
+    //MenuView*getMenuView();
+    ViewGroup*getMenuViewGroup();
 
     View* inflateHeaderView(int res);
     void addHeaderView(View* view);

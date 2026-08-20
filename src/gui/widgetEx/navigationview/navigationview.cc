@@ -144,8 +144,16 @@ void NavigationView::inflateMenu(int resId) {
     updateMenuView();
 }
 
-Menu* NavigationView::getMenu() {
+Menu* NavigationView::getMenu(){
     return mMenu;
+}
+
+/*MenuView*NavigationView::getMenuView(){
+    return mMenuView;
+}*/
+
+ViewGroup* NavigationView::getMenuViewGroup(){
+    return mMenuView;
 }
 
 View* NavigationView::inflateHeaderView(int res) {
