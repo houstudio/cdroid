@@ -1482,7 +1482,7 @@ bool FlexboxLayoutManager::computeScrollVectorForPosition(int targetPosition, Po
     return true;
 }
 
-RecyclerView::LayoutParams* FlexboxLayoutManager::generateLayoutParams(Context* c, const AttributeSet& attrs) const {
+RecyclerView::LayoutParams* FlexboxLayoutManager::generateLayoutParams(Context* c, const AttributeSet* attrs) const {
     return new FlexboxLayoutManager::LayoutParams(c, attrs);
 }
 

@@ -140,7 +140,9 @@ void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs
 
 void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attrs) {
     //TypedArray a = res.obtainAttributes(attrs, R.styleable.NavDeepLink);
-    std::string uri = attrs.getAttributeValue(std::string(), "uri");//R.styleable.NavDeepLink_uri);
+    namespace nsd = internal::R::styleable;
+    auto ta = mContext->obtainStyledAttributes(&attrs, nsd::NavDeepLinkDeclare);
+    std::string uri = ta ? ta->getString(nsd::NavDeepLinkDeclare_uri) : "";
     if (uri.empty()){//
         throw std::runtime_error("Every <deepLink> must include an app:uri");
     }

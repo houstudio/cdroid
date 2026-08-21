@@ -41,9 +41,9 @@ private:
     void setChildFrame(View* child,int left,int top,int width,int height);
 public:
     AlertDialogLayout(Context* context);
-    AlertDialogLayout(Context* context,const AttributeSet& attrs);
+    AlertDialogLayout(Context* context,const AttributeSet* attrs);
     // AOSP 4-arg form; LinearLayout has no defStyleRes ctor yet, defStyleAttr only.
-    AlertDialogLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0,int defStyleRes=0);
+    AlertDialogLayout(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes=0);
 protected:
     void onMeasure(int widthMeasureSpec,int heightMeasureSpec)override;
     void onLayout(bool changed,int left,int top,int right,int bottom)override;

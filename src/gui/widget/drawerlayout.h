@@ -214,9 +214,9 @@ protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 public:
-    DrawerLayout(int w,int h);
-    DrawerLayout(Context*ctx,const AttributeSet&atts);
-    DrawerLayout(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0); 
+    DrawerLayout(Context*ctx);   // AOSP DrawerLayout(Context)
+    DrawerLayout(Context*ctx,const AttributeSet*atts);
+    DrawerLayout(Context*ctx,const AttributeSet* attrs,int defStyleAttr); 
     ~DrawerLayout()override;
     void setDrawerElevation(float elevation);
     float getDrawerElevation()const;

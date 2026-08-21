@@ -26,8 +26,8 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(ButtonBarLayout);
 
-ButtonBarLayout::ButtonBarLayout(Context* context,const AttributeSet& attrs)
-  :ButtonBarLayout(context,&attrs,0){
+ButtonBarLayout::ButtonBarLayout(Context* context,const AttributeSet* attrs)
+  :ButtonBarLayout(context, attrs,0){
 }
 
 ButtonBarLayout::ButtonBarLayout(Context* context,const AttributeSet* attrs,int defStyleAttr)

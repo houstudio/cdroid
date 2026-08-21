@@ -142,11 +142,13 @@ int RadialTimePickerView::snapOnly30s(int degrees, int forceHigherOrLower) {
 
 DECLARE_WIDGET(RadialTimePickerView);
 
-RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet& attrs):RadialTimePickerView(context,&attrs,0){}
+RadialTimePickerView::RadialTimePickerView(Context*ctx)
+    :RadialTimePickerView(ctx,nullptr){}
+
+RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* attrs):RadialTimePickerView(context,attrs,0){}
 
 RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     : View(context, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
     staticInit();
 
     mHours12Texts.resize(12);
@@ -154,7 +156,7 @@ RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* 
     mInnerHours24Texts.resize(12);
     mMinutesTexts.resize(12);
 
-    applyAttributes(attrs);
+    applyAttributes(pAttrs);
 
     // TODO: theme.resolveAttribute(android.R.attr.disabledAlpha) is not wired in
     // cdroid; use the platform default disabled alpha until it is.
@@ -216,7 +218,7 @@ RadialTimePickerView::~RadialTimePickerView() {
     delete mSelectorPath;
 }
 
-void RadialTimePickerView::applyAttributes(const AttributeSet& attrs) {
+void RadialTimePickerView::applyAttributes(const AttributeSet* attrs) {
     auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);
     RefPtr<ColorStateList> numbersTextColor = a ? a->getColorStateList(R::styleable::TimePicker_numbersTextColor) : nullptr;
     RefPtr<ColorStateList> numbersInnerTextColor = a ? a->getColorStateList(R::styleable::TimePicker_numbersInnerTextColor) : nullptr;

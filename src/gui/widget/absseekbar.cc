@@ -30,13 +30,15 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(AbsSeekBar)
 
-AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet& attrs):AbsSeekBar(ctx,&attrs,0){}
+AbsSeekBar::AbsSeekBar(Context*ctx)
+    :AbsSeekBar(ctx,nullptr){}
+
+AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet* attrs):AbsSeekBar(ctx,attrs,0){}
 
 AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ProgressBar(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initSeekBar();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::SeekBar, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::SeekBar, defStyleAttr);
     
 
 setThumb(ta->getDrawable(R::styleable::SeekBar_thumb));
@@ -48,22 +50,16 @@ setTickMark(ta->getDrawable(R::styleable::SeekBar_tickMark));
 const int thumbOffset = ta->getDimensionPixelOffset(R::styleable::SeekBar_thumbOffset,getThumbOffset());
 setThumbOffset(thumbOffset);
 
-const bool useDisabledAlpha = attrs.getAttributeBooleanValue(std::string(), "useDisabledAlpha", true);
+const bool useDisabledAlpha = pAttrs ? pAttrs->getAttributeBooleanValue(std::string(), "useDisabledAlpha", true) : false;
 // disabledAlpha is not in the SeekBar styleable (only ToggleButton's), so
 // read it via the AttributeSet bridge for both modes.
-mDisabledAlpha = useDisabledAlpha? attrs.getAttributeFloatValue(std::string(), "disabledAlpha", 0.5f) :1.f;
+mDisabledAlpha = useDisabledAlpha && pAttrs ? pAttrs->getAttributeFloatValue(std::string(), "disabledAlpha", 0.5f) : 1.f;
 mSplitTrack = ta->getBoolean(R::styleable::SeekBar_splitTrack,false);
 mThumbExclusionMaxSize = ctx->getDimension(R::dimen::seekbar_thumb_exclusion_max_size);
 
 applyThumbTint();
 applyTickMarkTint();
 
-}
-
-AbsSeekBar::AbsSeekBar(int w,int h):ProgressBar(w,h){
-    initSeekBar();
-    applyThumbTint();
-    applyTickMarkTint();
 }
 
 void AbsSeekBar::initSeekBar(){

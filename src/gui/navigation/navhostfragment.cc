@@ -72,12 +72,13 @@ NavController* NavHostFragment::onCreateNavController(){
     return new NavController(getContext());
 }
 
-cdroid::View* NavHostFragment::onCreateView(cdroid::LayoutInflater* /*inflater*/,
+cdroid::View* NavHostFragment::onCreateView(cdroid::LayoutInflater* inflater,
                                             cdroid::ViewGroup* /*container*/,
                                             cdroid::Bundle* /*savedInstanceState*/){
     // The NavHost's own view is a FrameLayout that serves as the container for the
     // child Fragments FragmentNavigator swaps in (identified by this Fragment's id).
-    cdroid::FrameLayout* view = new cdroid::FrameLayout(-1, -1);
+    // androidx: FrameLayout(inflater.context)
+    cdroid::FrameLayout* view = new cdroid::FrameLayout(inflater->getContext());
     view->setId(getId());
     return view;
 }

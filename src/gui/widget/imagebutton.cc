@@ -24,14 +24,13 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(ImageButton,R::attr::imageButtonStyle)
 
-ImageButton::ImageButton(Context*ctx,const AttributeSet& attrs):ImageButton(ctx,&attrs,0){}
+ImageButton::ImageButton(Context*ctx)
+    :ImageButton(ctx,nullptr){}
+
+ImageButton::ImageButton(Context*ctx,const AttributeSet* attrs):ImageButton(ctx,attrs,0){}
 
 ImageButton::ImageButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :ImageView(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
-}
-
-ImageButton::ImageButton(int w,int h):ImageView(w,h){
 }
 
 PointerIcon* ImageButton::onResolvePointerIcon(MotionEvent& event, int pointerIndex){

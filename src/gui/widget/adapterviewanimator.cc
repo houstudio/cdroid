@@ -25,14 +25,16 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(AdapterViewAnimator)
 
-AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet& attrs):AdapterViewAnimator(context,&attrs,0){}
+AdapterViewAnimator::AdapterViewAnimator(Context*ctx)
+    :AdapterViewAnimator(ctx,nullptr){}
+
+AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet* attrs):AdapterViewAnimator(context,attrs,0){}
 
 AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :AdapterView(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initViewAnimator();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::AdapterViewAnimator, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::AdapterViewAnimator, defStyleAttr);
     
 
 int res = ta->getResourceId(R::styleable::AdapterViewAnimator_inAnimation, 0);
@@ -246,7 +248,7 @@ void AdapterViewAnimator::refreshChildren() {
 }
 
 FrameLayout* AdapterViewAnimator::getFrameForChild() {
-    return new FrameLayout(mContext,AttributeSet(mContext,mContext->getPackageName()));
+    return new FrameLayout(mContext);   // AOSP code construction
 }
 
 void AdapterViewAnimator::showOnly(int childIndex, bool animate) {

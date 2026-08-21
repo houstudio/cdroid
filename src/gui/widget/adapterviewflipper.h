@@ -36,8 +36,9 @@ protected:
     void onDetachedFromWindow() override;
     void onWindowVisibilityChanged(int visibility) override;
 public:
-    AdapterViewFlipper(Context* context,const AttributeSet& attrs);
-    AdapterViewFlipper(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    AdapterViewFlipper(Context*ctx);   // AOSP AdapterViewFlipper(Context)
+    AdapterViewFlipper(Context* context,const AttributeSet* attrs);
+    AdapterViewFlipper(Context* context,const AttributeSet* attrs,int defStyleAttr);
     
     void setAdapter(Adapter* adapter) override;
 

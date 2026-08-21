@@ -35,8 +35,8 @@ private:
     void setStacked(bool stacked);
     bool isStacked()const;
 public:
-    ButtonBarLayout(Context* context,const AttributeSet& attrs);
-    ButtonBarLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    ButtonBarLayout(Context* context,const AttributeSet* attrs);
+    ButtonBarLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     void setAllowStacking(bool allowStacking);
 protected:
     void onMeasure(int widthMeasureSpec,int heightMeasureSpec)override;

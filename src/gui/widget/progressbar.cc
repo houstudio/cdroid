@@ -72,14 +72,16 @@ class RefreshData {
 
 DECLARE_WIDGET(ProgressBar)
 
-ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs):ProgressBar(ctx,&attrs,0) {}
+ProgressBar::ProgressBar(Context*ctx)
+    :ProgressBar(ctx,nullptr){}
+
+ProgressBar::ProgressBar(Context*ctx,const AttributeSet* attrs):ProgressBar(ctx,attrs,0) {}
 
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :View(ctx,pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
     initProgressBar();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ProgressBar, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::ProgressBar, defStyleAttr);
 
 
     Drawable* progressDrawable = ta->getDrawable(R::styleable::ProgressBar_progressDrawable);
@@ -172,16 +174,6 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
 
-}
-
-ProgressBar::ProgressBar(int width, int height):View(width,height) {
-    initProgressBar();
-    mMirrorForRtl = false;
-    mHasAnimation = false;
-    indeterminatePos = 0;
-    mAttached = false;
-    mShouldStartAnimationDrawable = false;
-    setProgressDrawable(mContext->getDrawable(R::drawable::progress_horizontal));
 }
 
 ProgressBar::~ProgressBar() {

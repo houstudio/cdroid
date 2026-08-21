@@ -31,10 +31,9 @@ protected:
     bool getDefaultEditable()const override;
     int commitText(const std::wstring&ws)override;
 public:
-    EditText(int w,int h);
-    EditText(const std::string&txt,int w,int h);
-    EditText(Context*ctx,const AttributeSet&attrs);
-    EditText(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    EditText(Context*ctx);
+    EditText(Context*ctx,const AttributeSet*attrs);
+    EditText(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     void setText(const std::string&txt)override;
     void setPattern(const std::string&pattern);
     void setSelection(int start, int stop);

@@ -19,7 +19,7 @@ public:
         static constexpr int COLLAPSE_MODE_PARALLAX = 2;
         int collapseMode = COLLAPSE_MODE_OFF;
         float parallaxMultiplier = 0.5f;
-        LayoutParams(Context* context, const AttributeSet* attrs);
+        LayoutParams(Context* context, const AttributeSet& attrs);
         LayoutParams(int width, int height);
         LayoutParams(const ViewGroup::LayoutParams& source);
     };
@@ -52,8 +52,8 @@ protected:
     LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* params) const override;
     LayoutParams* generateLayoutParams(const AttributeSet& attrs) const override;
 public:
-    CollapsingToolbarLayout(Context* context, const AttributeSet& attrs);
-    CollapsingToolbarLayout(Context* context, const AttributeSet* attrs, int defStyleAttr = 0);
+    CollapsingToolbarLayout(Context* context, const AttributeSet* attrs);
+    CollapsingToolbarLayout(Context* context, const AttributeSet* attrs, int defStyleAttr);
     ~CollapsingToolbarLayout() override;
 
     void setTitle(const std::u16string& title);

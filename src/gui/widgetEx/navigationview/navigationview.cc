@@ -28,8 +28,8 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(NavigationView)
 
-NavigationView::NavigationView(Context* context, const AttributeSet& attrs)
-    : NavigationView(context, &attrs, 0) {}
+NavigationView::NavigationView(Context* context, const AttributeSet* attrs)
+    : NavigationView(context, attrs, 0) {}
 
 NavigationView::NavigationView(Context* context, const AttributeSet* attrs, int defStyleAttr)
     : FrameLayout(context, attrs, defStyleAttr) {

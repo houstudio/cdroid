@@ -821,7 +821,7 @@ bool AlertController::RecycleListView::recycleOnMeasure() {
     return mRecycleOnMeasure;
 }
 
-AlertController::RecycleListView::RecycleListView(Context* context,const AttributeSet& attrs)
+AlertController::RecycleListView::RecycleListView(Context* context,const AttributeSet* attrs)
     :ListView(context, attrs){
     // AOSP: obtainStyledAttributes(attrs, R.styleable.RecycleListView) — the
     // padding attrs carry no generated styleable; resolve them by attr id directly.

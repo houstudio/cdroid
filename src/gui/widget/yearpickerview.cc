@@ -127,7 +127,10 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-YearPickerView::YearPickerView(Context*ctx,const AttributeSet& attrs):YearPickerView(ctx,&attrs,0){}
+YearPickerView::YearPickerView(Context*ctx)
+    :YearPickerView(ctx,nullptr){}
+
+YearPickerView::YearPickerView(Context*ctx,const AttributeSet* attrs):YearPickerView(ctx,attrs,0){}
 
 YearPickerView::YearPickerView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ListView(ctx,pAttrs, defStyleAttr){
     (void)pAttrs;

@@ -49,8 +49,8 @@ protected:
     void onLayout(bool changed, int left, int top, int right, int bottom)override;
     void onTextChanged(CharSequence& text, int start, int before, int after)override;
 public:
-    IconMenuItemView(Context* context,const AttributeSet& attrs);
-    IconMenuItemView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    IconMenuItemView(Context* context,const AttributeSet* attrs);
+    IconMenuItemView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     void initialize(const std::string& title, Drawable* icon);
     void initialize(MenuItemImpl* itemData, int menuType)override;
     void setItemData(MenuItemImpl* data);

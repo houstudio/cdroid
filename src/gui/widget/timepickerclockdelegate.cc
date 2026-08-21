@@ -72,7 +72,7 @@ public:
 };
 } // namespace
 
-TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs)
+TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet* attrs)
     :AbstractTimePickerDelegate(delegator, context){
 
     // Accessibility contentDescription strings are not wired (deferred); the values are only

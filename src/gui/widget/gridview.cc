@@ -11,18 +11,16 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(GridView,R::attr::gridViewStyle)
 
-GridView::GridView(int w,int h):AbsListView(w,h) {
-    initGridView();
-}
+GridView::GridView(Context*ctx)
+    :GridView(ctx,nullptr){}
 
-GridView::GridView(Context*ctx,const AttributeSet& atts):GridView(ctx,&atts,0){}
+GridView::GridView(Context*ctx,const AttributeSet* atts):GridView(ctx,atts,0){}
 
 GridView::GridView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :AbsListView(ctx,pAttrs, defStyleAttr) {
-    const AttributeSet& atts = *pAttrs;
     initGridView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::GridView, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::GridView, defStyleAttr);
     
 
 

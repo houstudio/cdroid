@@ -66,26 +66,17 @@ bool Spinner::SpinnerForwardingListener::onForwardingStarted(){
     return true;
 }
 
-Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
-    mGravity = Gravity::CENTER;
-    mDropDownWidth =0;
-    mDisableChildrenWhenDisabled = true;
-    mTempAdapter= nullptr;
-    mPopupContext = mContext;
-    mOwnsPopupContext = false;
-    mPopup = new DropdownPopup(getPopupContext(),this,R::attr::spinnerStyle);
-    mForwardingListener = new SpinnerForwardingListener(this,(DropdownPopup*)mPopup);
-}
+Spinner::Spinner(Context*ctx)
+    :Spinner(ctx,nullptr){}
 
-Spinner::Spinner(Context*ctx,const AttributeSet& atts):Spinner(ctx,&atts,R::attr::spinnerStyle){}
+Spinner::Spinner(Context*ctx,const AttributeSet* atts):Spinner(ctx,atts,R::attr::spinnerStyle){}
 
 Spinner::Spinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :AbsSpinner(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     mTempAdapter = nullptr;
     mForwardingListener = nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::Spinner, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::Spinner, defStyleAttr);
 
 
 mGravity = ta->getInt(R::styleable::Spinner_gravity,Gravity::CENTER);
@@ -508,7 +499,7 @@ PointerIcon* Spinner::onResolvePointerIcon(MotionEvent& event, int pointerIndex)
 
 /////////////////////////////////SpinnerPopup//////////////////////////////////////////
 Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp,int defStyleAttr)
-  :ListPopupWindow(context,AttributeSet(context,""),defStyleAttr){
+  :ListPopupWindow(context,nullptr,defStyleAttr){
     mSpinner = sp;
     mAdapter = nullptr;
     setAnchorView(mSpinner);

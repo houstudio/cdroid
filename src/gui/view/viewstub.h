@@ -16,8 +16,9 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void dispatchDraw(Canvas& canvas)override;
 public:
-    ViewStub(Context* context,const AttributeSet& attrs);
-    ViewStub(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    ViewStub(Context*ctx);   // AOSP ViewStub(Context)
+    ViewStub(Context* context,const AttributeSet* attrs);
+    ViewStub(Context* context,const AttributeSet* attrs,int defStyleAttr);
     int getInflatedId()const;
     int getLayoutResource()const;
     void setLayoutResource(int layoutResource);

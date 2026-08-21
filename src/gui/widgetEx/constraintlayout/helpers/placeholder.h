@@ -35,9 +35,8 @@ class ConstraintLayout;
 
 class Placeholder : public View {
   public:
-    Placeholder(Context* ctx, const AttributeSet& attrs);
-    Placeholder(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
-    explicit Placeholder(int width, int height);
+    Placeholder(Context* ctx, const AttributeSet* attrs);
+    Placeholder(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
     int  getEmptyVisibility() const;
     void setEmptyVisibility(int visibility);

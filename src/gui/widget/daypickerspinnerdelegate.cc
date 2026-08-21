@@ -29,7 +29,7 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Context* context,
-        const AttributeSet& attrs)
+        const AttributeSet* attrs)
     : AbstractDatePickerDelegate(delegator, context) {
     mDelegator = delegator;
     mContext = context;

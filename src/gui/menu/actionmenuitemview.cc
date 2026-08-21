@@ -22,11 +22,10 @@
 namespace cdroid{
 
 DECLARE_WIDGET(ActionMenuItemView)
-ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet& attrs):ActionMenuItemView(context,&attrs,0){}
+ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet* attrs):ActionMenuItemView(context,attrs,0){}
 
 ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :TextView(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;//, defStyleAttr, defStyleRes){
     mIcon = nullptr;
     mItemData = nullptr;
     mExpandedFormat = false;
@@ -34,7 +33,7 @@ ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet* pAtt
     mAllowTextWithIcon = shouldAllowTextWithIcon();
     // AOSP: obtainStyledAttributes(attrs, R.styleable.ActionMenuItemView).
     static const uint32_t ACTION_MENU_ITEM_ATTRS[] = { (uint32_t)cdroid::internal::R::attr::minWidth, 0 };
-    auto a = context->obtainStyledAttributes(attrs, ACTION_MENU_ITEM_ATTRS, defStyleAttr);
+    auto a = context->obtainStyledAttributes(pAttrs, ACTION_MENU_ITEM_ATTRS, defStyleAttr);
     mMinWidth = a->getDimensionPixelSize(0, 0);
 
     const float density = context->getDisplayMetrics().density;

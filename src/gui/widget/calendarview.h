@@ -32,9 +32,9 @@ public:
 private:
     CalendarViewDelegate* mDelegate = nullptr;
 public:
-    CalendarView(int w,int h);
-    CalendarView(Context*,const AttributeSet&atts);
-    CalendarView(Context*,const AttributeSet* attrs,int defStyleAttr=0);
+    CalendarView(Context*ctx);   // AOSP CalendarView(Context)
+    CalendarView(Context*,const AttributeSet*atts);
+    CalendarView(Context*,const AttributeSet* attrs,int defStyleAttr);
     ~CalendarView()override;
 
     void setShownWeekCount(int count);

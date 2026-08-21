@@ -39,9 +39,9 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int l, int t,int w, int h)override;
 public:
-    AbsoluteLayout(int w,int h);
-    AbsoluteLayout(Context* context,const AttributeSet& attrs);
-    AbsoluteLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    AbsoluteLayout(Context*ctx);   // AOSP AbsoluteLayout(Context)
+    AbsoluteLayout(Context* context,const AttributeSet* attrs);
+    AbsoluteLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     std::string getAccessibilityClassName()const override;
 };

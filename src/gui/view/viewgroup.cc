@@ -130,23 +130,15 @@ HoverTarget*HoverTarget::sRecycleBin = nullptr;
 int TouchTarget::sRecycledCount = 0;
 int HoverTarget::sRecycledCount = 0;
 
-ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):ViewGroup(ctx,&attrs,0){
+ViewGroup::ViewGroup(Context*ctx)
+    :ViewGroup(ctx,nullptr){}
+
+ViewGroup::ViewGroup(Context*ctx,const AttributeSet* attrs):ViewGroup(ctx,attrs,0){
 }
 
 ViewGroup::ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr):View(ctx,attrs,defStyleAttr){
     initGroup();
-    initFromAttributes(ctx,*attrs);
-}
-
-ViewGroup::ViewGroup(int w,int h)
-  : ViewGroup(0,0,w,h) {
-}
-
-ViewGroup::ViewGroup(int x,int y,int w,int h)
-:View(w,h){
-    mLeft = x;
-    mTop  = y;
-    initGroup();
+    initFromAttributes(ctx,attrs);
 }
 
 void ViewGroup::initGroup(){
@@ -206,7 +198,7 @@ void ViewGroup::initGroup(){
     };
 }
 
-void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
+void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet*atts){
     auto ta = ctx->obtainStyledAttributes(atts, R::styleable::ViewGroup);
 
     setClipChildren(true);

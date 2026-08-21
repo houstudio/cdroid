@@ -184,9 +184,9 @@ protected:
     void onDraw(Canvas& canvas)override;
     void onSizeChanged(int width, int height, int oldWidth, int oldHeight)override; 
 public:
-    PatternLockView(int,int);
-    PatternLockView(Context* context,const AttributeSet& attrs);
-    PatternLockView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    PatternLockView(Context*ctx);   // AOSP PatternLockView(Context)
+    PatternLockView(Context* context,const AttributeSet* attrs);
+    PatternLockView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~PatternLockView()override;
     bool onHoverEvent(MotionEvent& event)override;
     bool onTouchEvent(MotionEvent& event)override;

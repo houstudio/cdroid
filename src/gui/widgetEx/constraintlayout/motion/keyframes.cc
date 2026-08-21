@@ -40,7 +40,7 @@ namespace {
 // motionTarget (view id) + framePosition are common to every keyframe but sit at
 // different indices per styleable, so each make* reads them from its own TypedArray.
 
-std::unique_ptr<MotionKey> makeKeyAttribute(Context* ctx, const AttributeSet& a) {
+std::unique_ptr<MotionKey> makeKeyAttribute(Context* ctx, const AttributeSet* a) {
     auto k = std::make_unique<MotionKeyAttributes>();
     auto ta = ctx->obtainStyledAttributes(a, R::styleable::KeyAttribute);
     if (ta) {
@@ -66,7 +66,7 @@ std::unique_ptr<MotionKey> makeKeyAttribute(Context* ctx, const AttributeSet& a)
     return k;
 }
 
-std::unique_ptr<MotionKey> makeKeyPosition(Context* ctx, const AttributeSet& a) {
+std::unique_ptr<MotionKey> makeKeyPosition(Context* ctx, const AttributeSet* a) {
     auto k = std::make_unique<MotionKeyPosition>();
     auto ta = ctx->obtainStyledAttributes(a, R::styleable::KeyPosition);
     if (ta) {
@@ -88,7 +88,7 @@ std::unique_ptr<MotionKey> makeKeyPosition(Context* ctx, const AttributeSet& a) 
 
 // KeyCycle and KeyTimeCycle share the same attribute set (wave params + transform values).
 template <typename KeyT>
-std::unique_ptr<MotionKey> makeKeyCycle(Context* ctx, const AttributeSet& a) {
+std::unique_ptr<MotionKey> makeKeyCycle(Context* ctx, const AttributeSet* a) {
     auto k = std::make_unique<KeyT>();
     auto ta = ctx->obtainStyledAttributes(a, R::styleable::KeyCycle);
     if (ta) {
@@ -114,7 +114,7 @@ std::unique_ptr<MotionKey> makeKeyCycle(Context* ctx, const AttributeSet& a) {
     return k;
 }
 
-std::unique_ptr<MotionKey> makeKeyTrigger(Context* ctx,const AttributeSet& a) {
+std::unique_ptr<MotionKey> makeKeyTrigger(Context* ctx,const AttributeSet* a) {
     auto k = std::make_unique<MotionKeyTrigger>();
     auto ta = ctx->obtainStyledAttributes(a, R::styleable::KeyTrigger);
     if (ta) {
@@ -140,11 +140,11 @@ KeyFrames::KeyFrames(Context* ctx, XmlPullParser& parser) {
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();
             std::unique_ptr<MotionKey> key;
-            if (tag == "KeyAttribute")      key = makeKeyAttribute(ctx, parser);
-            else if (tag == "KeyPosition")  key = makeKeyPosition(ctx, parser);
-            else if (tag == "KeyCycle")     key = makeKeyCycle<MotionKeyCycle>(ctx, parser);
-            else if (tag == "KeyTimeCycle") key = makeKeyCycle<MotionKeyTimeCycle>(ctx, parser);
-            else if (tag == "KeyTrigger")   key = makeKeyTrigger(ctx, parser);
+            if (tag == "KeyAttribute")      key = makeKeyAttribute(ctx, &parser);
+            else if (tag == "KeyPosition")  key = makeKeyPosition(ctx, &parser);
+            else if (tag == "KeyCycle")     key = makeKeyCycle<MotionKeyCycle>(ctx, &parser);
+            else if (tag == "KeyTimeCycle") key = makeKeyCycle<MotionKeyTimeCycle>(ctx, &parser);
+            else if (tag == "KeyTrigger")   key = makeKeyTrigger(ctx, &parser);
             if (key) addKey(std::move(key));
         } else if (eventType == XmlPullParser::END_TAG) {
             if (parser.getName() == "KeyFrameSet") return; // consumed the set

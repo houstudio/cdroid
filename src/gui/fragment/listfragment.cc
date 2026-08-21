@@ -22,10 +22,10 @@ namespace fragment{
 
 ListFragment::ListFragment(){}
 
-cdroid::View* ListFragment::onCreateView(cdroid::LayoutInflater* /*inflater*/,
+cdroid::View* ListFragment::onCreateView(cdroid::LayoutInflater* inflater,
                                          cdroid::ViewGroup* /*container*/,
                                          cdroid::Bundle* /*savedInstanceState*/){
-    mList = new cdroid::ListView(0, 0);
+    mList = new cdroid::ListView(inflater->getContext());
     return mList;
 }
 

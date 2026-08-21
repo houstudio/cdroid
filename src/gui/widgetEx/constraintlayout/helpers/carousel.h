@@ -55,9 +55,8 @@ class Carousel : public MotionHelper {
         virtual void onNewItem(int /*index*/) {}               // settled on a new index
     };
 
-    Carousel(Context* ctx, const AttributeSet& attrs);
-    Carousel(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
-    explicit Carousel(int width, int height);
+    Carousel(Context* ctx, const AttributeSet* attrs);
+    Carousel(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
     void setAdapter(Adapter* adapter) { mAdapter = adapter; refresh(); }
     int  getCount();

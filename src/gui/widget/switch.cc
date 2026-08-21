@@ -13,18 +13,16 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(Switch,R::attr::switchStyle)
 
-Switch::Switch(int w,int h):CompoundButton(std::string(),w,h){
-    init();
-}
+Switch::Switch(Context*ctx)
+    :Switch(ctx,nullptr){}
 
-Switch::Switch(Context* context,const AttributeSet& a):Switch(context,&a,0){}
+Switch::Switch(Context* context,const AttributeSet* a):Switch(context,a,0){}
 
 Switch::Switch(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :CompoundButton(context,pAttrs, defStyleAttr){
-    const AttributeSet& a = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(a, R::styleable::Switch, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::Switch, defStyleAttr);
     
 
     mThumbDrawable = ta->getDrawable(R::styleable::Switch_thumb);

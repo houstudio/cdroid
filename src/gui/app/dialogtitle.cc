@@ -28,8 +28,8 @@ DECLARE_WIDGET(DialogTitle);
 DialogTitle::DialogTitle(Context* context):TextView(context,nullptr,0){
 }
 
-DialogTitle::DialogTitle(Context* context,const AttributeSet& attrs)
-  :DialogTitle(context,&attrs,0,0){
+DialogTitle::DialogTitle(Context* context,const AttributeSet* attrs)
+  :DialogTitle(context,attrs,0,0){
 }
 
 DialogTitle::DialogTitle(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes)

@@ -37,9 +37,8 @@ namespace cdroid {
 
 class CircularFlow : public ConstraintHelper {
   public:
-    CircularFlow(Context* ctx, const AttributeSet& attrs);
-    CircularFlow(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
-    explicit CircularFlow(int width, int height);
+    CircularFlow(Context* ctx, const AttributeSet* attrs);
+    CircularFlow(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
     std::vector<float> getAngles() const;
     std::vector<int>   getRadius() const;

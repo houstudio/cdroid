@@ -44,7 +44,7 @@ public:
     protected:
         bool recycleOnMeasure();
     public:
-        RecycleListView(Context* context,const AttributeSet& attrs);
+        RecycleListView(Context* context,const AttributeSet* attrs);
         void setHasDecor(bool hasTitle, bool hasButtons);
     };
     class AlertParams {

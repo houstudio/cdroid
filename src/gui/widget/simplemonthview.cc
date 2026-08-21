@@ -32,36 +32,13 @@
 namespace cdroid{
 using namespace cdroid::internal;
 DECLARE_WIDGET(SimpleMonthView);
-SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
-    setFocusable(true);
-    initMonthView();
-    mPaddedWidth = w;
-    mPaddedHeight = h;
+SimpleMonthView::SimpleMonthView(Context*ctx)
+    :SimpleMonthView(ctx,nullptr){}
 
-    // We may have been laid out smaller than our preferred size. If so,
-    // scale all dimensions to fit.
-    //const int measuredPaddedHeight = h;// - paddingTop - paddingBottom;
-    const float scaleH = 1.0f;//paddedHeight / (float) measuredPaddedHeight;
-    int monthHeight = (int) (mDesiredMonthHeight * scaleH);
-    int cellWidth = mPaddedWidth / DAYS_IN_WEEK;
-    mMonthHeight = monthHeight;
-    mMonth=0;
-    mDayOfWeekHeight = (int) (mDesiredDayOfWeekHeight * scaleH);
-    mDayHeight = (int) (mDesiredDayHeight * scaleH);
-    mCellWidth = cellWidth;
-    mWeekStart = Calendar::SUNDAY;
-    // Compute the largest day selector radius that's still within the clip
-    // bounds and desired selector radius.
-    const int maxSelectorWidth = cellWidth / 2 + 0;//std::min(paddingLeft, paddingRight);
-    const int maxSelectorHeight = mDayHeight / 2 + 0;//paddingBottom;
-    mDaySelectorRadius = std::min(mDesiredDaySelectorRadius,std::min(maxSelectorWidth, maxSelectorHeight));
-}
-
-SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet& atts):SimpleMonthView(ctx,&atts,0){}
+SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* atts):SimpleMonthView(ctx,atts,0){}
 
 SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
    :View(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     initMonthView();
     // Faithful to AOSP SimpleMonthView: the desired dimensions come from
     // R.dimen.date_picker_* resources, NOT from XML attributes (the month-item
@@ -77,11 +54,11 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* pAttrs,int defS
     setAccessibilityDelegate(mTouchHelper);
     setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
 
-    int res = atts.getAttributeResourceValue(std::string(), "monthTextAppearance", 0);
+    int res = pAttrs ? pAttrs->getAttributeResourceValue(std::string(), "monthTextAppearance", 0) : 0;
     if(res) setMonthTextAppearance(res);
-    res = atts.getAttributeResourceValue(std::string(), "dayOfWeekTextAppearance", 0);
+    res = pAttrs ? pAttrs->getAttributeResourceValue(std::string(), "dayOfWeekTextAppearance", 0) : 0;
     if(res) setDayOfWeekTextAppearance(res);
-    { auto ta2 = mContext->obtainStyledAttributes(atts, R::styleable::SimpleMonthViewCdroid);
+    { auto ta2 = mContext->obtainStyledAttributes(pAttrs, R::styleable::SimpleMonthViewCdroid);
       const int dayTA = ta2->getResourceId(R::styleable::SimpleMonthViewCdroid_dayTextAppearance, 0);
       if(dayTA) setDayTextAppearance(dayTA);
     }

@@ -36,8 +36,9 @@ protected:
     void drawableStateChanged()override;
     void drawableHotspotChanged(float x, float y)override;
 public:
-    CheckedTextView(Context* context,const AttributeSet& attrs);
-    CheckedTextView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    CheckedTextView(Context*ctx);   // AOSP CheckedTextView(Context)
+    CheckedTextView(Context* context,const AttributeSet* attrs);
+    CheckedTextView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~CheckedTextView()override;
 
     void toggle()override;

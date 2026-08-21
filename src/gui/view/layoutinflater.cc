@@ -174,7 +174,7 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root){
 View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot){
     int type;
     View*result = root;
-    AttributeSet& attrs = parser;
+    const AttributeSet& attrs = parser;
     if(!parser){
         return nullptr;
     }
@@ -219,11 +219,11 @@ View* LayoutInflater::inflate(int resource, ViewGroup* root, bool attachToRoot){
     return inflate(parser,root,attachToRoot);
 }
 
-View* LayoutInflater::createView(const std::string& name, const std::string& prefix,AttributeSet& attrs){
+View* LayoutInflater::createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs){
     return createView(mContext,name,prefix,attrs);
 }
 
-View* LayoutInflater::createView(Context* viewContext, const std::string& name, const std::string& prefix,AttributeSet& attrs){
+View* LayoutInflater::createView(Context* viewContext, const std::string& name, const std::string& prefix,const AttributeSet& attrs){
     LayoutInflater::ViewInflater inflater;
 
     if(name.compare("view")==0){
@@ -271,19 +271,19 @@ void LayoutInflater::failNotAllowed(const std::string& name, const std::string& 
             ": Class not allowed to be inflated "+ (!prefix.empty() ? (prefix + name) : name));
 }
 
-View* LayoutInflater::onCreateView(const std::string& name,AttributeSet& attrs){
+View* LayoutInflater::onCreateView(const std::string& name,const AttributeSet& attrs){
     return createView(name, "android.view.", attrs);
 }
 
-View* LayoutInflater::onCreateView(View* parent, const std::string& name,AttributeSet& attrs){
+View* LayoutInflater::onCreateView(View* parent, const std::string& name,const AttributeSet& attrs){
     return onCreateView(name,attrs);
 }
 
-View* LayoutInflater::onCreateView(Context* viewContext, View* parent, const std::string& name,AttributeSet& attrs){
+View* LayoutInflater::onCreateView(Context* viewContext, View* parent, const std::string& name,const AttributeSet& attrs){
     return onCreateView(parent,name,attrs);
 }
 
-View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Context* context,AttributeSet& attrs,bool ignoreThemeAttr) {
+View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Context* context,const AttributeSet& attrs,bool ignoreThemeAttr) {
     if (!ignoreThemeAttr) {
         // AOSP: apply a theme wrapper if the tag carries android:theme.
         auto ta = context->obtainStyledAttributes(&attrs, ATTRS_THEME);
@@ -316,7 +316,7 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
     }
 }
 
-View* LayoutInflater::tryCreateView(View* parent,const std::string& name, Context* context,AttributeSet& attrs) {
+View* LayoutInflater::tryCreateView(View* parent,const std::string& name, Context* context,const AttributeSet& attrs) {
     if (name.compare(TAG_1995)==0) {
         // Let's party like it's 1995!
         return nullptr;//new BlinkLayout(context, attrs);
@@ -338,11 +338,11 @@ View* LayoutInflater::tryCreateView(View* parent,const std::string& name, Contex
     return view;
 }
 
-void LayoutInflater::rInflateChildren(XmlPullParser& parser, View* parent,AttributeSet& attrs,bool finishInflate){
+void LayoutInflater::rInflateChildren(XmlPullParser& parser, View* parent,const AttributeSet& attrs,bool finishInflate){
     rInflate(parser, parent, parent->getContext(), attrs, finishInflate);
 }
 
-void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* context,AttributeSet& attrs, bool finishInflate){
+void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate){
     int type;
     const int depth = parser.getDepth();
     bool pendingRequestFocus = false;
@@ -407,7 +407,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
 
         // If the layout is pointing to a theme attribute, we have to
         // massage the value to get a resource identifier out of it.
-        auto ta = context->obtainStyledAttributes(attrs, ATTRS_THEME);
+        auto ta = context->obtainStyledAttributes(&attrs, ATTRS_THEME);
         int themeResId = ta->getResourceId(0, 0);
         bool hasThemeOverride = themeResId != 0;
         int layout = attrs.getAttributeResourceValue(std::string(), ATTR_LAYOUT, 0);
@@ -428,7 +428,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         }
 
         const std::string childName = childParser.getName();
-        AttributeSet& childAttrs = childParser;
+        const AttributeSet& childAttrs = childParser;
 
         if (childName.compare(TAG_MERGE)==0){
             // The <merge> tag doesn't support android:theme, so nothing special to do here.
@@ -442,7 +442,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // The old CDROID inherit() merge only reached the text-XML string
             // map — invisible to the binary AXML typed path — so the include
             // tag's android:id/visibility were silently dropped in binary mode.
-            auto ta = context->obtainStyledAttributes(attrs, R::styleable::Include);
+            auto ta = context->obtainStyledAttributes(&attrs, R::styleable::Include);
             const int id = ta ? ta->getResourceId(R::styleable::Include_id, View::NO_ID) : View::NO_ID;
             const int visibility = ta ? ta->getInt(R::styleable::Include_visibility, -1) : -1;
 
@@ -466,7 +466,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // middle). Detect the missing pair explicitly instead.
             ViewGroup::LayoutParams* params = nullptr;
             {
-                auto lta = context->obtainStyledAttributes(attrs, R::styleable::Layout);
+                auto lta = context->obtainStyledAttributes(&attrs, R::styleable::Layout);
                 const bool hasSize = lta && lta->hasValue(R::styleable::Layout_layout_width)
                         && lta->hasValue(R::styleable::Layout_layout_height);
                 if (hasSize) {

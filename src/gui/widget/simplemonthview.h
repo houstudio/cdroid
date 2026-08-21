@@ -129,9 +129,9 @@ protected:
     void onLayout(bool changed, int left, int top, int width, int height)override;
     void onDraw(Canvas& canvas)override;
 public:
-    SimpleMonthView(int,int);
-    SimpleMonthView(Context*,const AttributeSet&atts);
-    SimpleMonthView(Context*,const AttributeSet* attrs,int defStyleAttr=0);
+    SimpleMonthView(Context*ctx);   // AOSP SimpleMonthView(Context)
+    SimpleMonthView(Context*,const AttributeSet*atts);
+    SimpleMonthView(Context*,const AttributeSet* attrs,int defStyleAttr);
     ~SimpleMonthView()override;
     int getMonthHeight()const;
     int getCellWidth()const;

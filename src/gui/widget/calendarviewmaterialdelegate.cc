@@ -19,7 +19,7 @@
 #include <widget/calendarviewmaterialdelegate.h>
 namespace cdroid{
 
-CalendarViewMaterialDelegate::CalendarViewMaterialDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs)
+CalendarViewMaterialDelegate::CalendarViewMaterialDelegate(CalendarView* delegator, Context* context,const AttributeSet* attrs)
     :CalendarView::AbstractCalendarViewDelegate(delegator,context){
     mDayPickerView = new DayPickerView(context, attrs);
     mDayPickerView->setId(View::NO_ID); 

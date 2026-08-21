@@ -26,17 +26,15 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(TabWidget,R::attr::tabWidgetStyle)
 
-TabWidget::TabWidget(int w,int h):LinearLayout(w,h){
-    initTab();
-}
+TabWidget::TabWidget(Context*ctx)
+    :TabWidget(ctx,nullptr){}
 
-TabWidget::TabWidget(Context*ctx,const AttributeSet& atts):TabWidget(ctx,&atts,0){}
+TabWidget::TabWidget(Context*ctx,const AttributeSet* atts):TabWidget(ctx,atts,0){}
 
 TabWidget::TabWidget(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :LinearLayout(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     initTab();
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::TabWidget, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::TabWidget, defStyleAttr);
     const bool hasExplicitLeft = ta && ta->hasValue(R::styleable::TabWidget_tabStripLeft);
     if(hasExplicitLeft)
         mLeftStrip = ta->getDrawable(R::styleable::TabWidget_tabStripLeft);

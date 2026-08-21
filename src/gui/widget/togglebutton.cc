@@ -27,25 +27,22 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(ToggleButton,R::attr::buttonStyleToggle)
 
-ToggleButton::ToggleButton(Context*ctx,const AttributeSet& attrs):ToggleButton(ctx,&attrs,0){}
+ToggleButton::ToggleButton(Context*ctx)
+    :ToggleButton(ctx,nullptr){}
+
+ToggleButton::ToggleButton(Context*ctx,const AttributeSet* attrs):ToggleButton(ctx,attrs,0){}
 
 ToggleButton::ToggleButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :CompoundButton(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     mIndicatorDrawable=nullptr;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ToggleButton, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::ToggleButton, defStyleAttr);
     
 
     setTextOn(ta->getString(R::styleable::ToggleButton_textOn));
     setTextOff(ta->getString(R::styleable::ToggleButton_textOff));
     mDisabledAlpha= ta->getFloat(R::styleable::ToggleButton_disabledAlpha,0.5f);
 
-}
-
-ToggleButton::ToggleButton(int w,int h):CompoundButton(std::string(),w,h){
-    mIndicatorDrawable=nullptr;
-    mDisabledAlpha=0.5f;
 }
 
 void ToggleButton::setChecked(bool checked){

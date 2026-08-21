@@ -58,9 +58,9 @@ protected:
     void layoutChildren(int left, int top, int width, int height, bool forceLeftGravity);
 
 public:
-    FrameLayout(int w,int h);
-    FrameLayout(Context* context,const AttributeSet& attrs);
-    FrameLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    FrameLayout(Context*ctx);   // AOSP FrameLayout(Context)
+    FrameLayout(Context* context,const AttributeSet* attrs);
+    FrameLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     void setForegroundGravity(int foregroundGravity);
     void setMeasureAllChildren(bool measureAll);
     bool getMeasureAllChildren()const;

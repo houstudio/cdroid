@@ -60,8 +60,9 @@ protected:
     void onLayout(bool changed, int left, int top, int width, int height)override;
 
 public:
-    DayPickerView(Context* context,const AttributeSet&atts);
-    DayPickerView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    DayPickerView(Context*ctx);   // AOSP DayPickerView(Context)
+    DayPickerView(Context* context,const AttributeSet*atts);
+    DayPickerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~DayPickerView()override;
     void setDayOfWeekTextAppearance(int resId);
     int getDayOfWeekTextAppearance();

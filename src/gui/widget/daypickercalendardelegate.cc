@@ -53,7 +53,7 @@ void updateHeader(TextView* yearTv, TextView* monthDayTv, Calendar& date) {
 } // namespace
 
 DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Context* context,
-        const AttributeSet& attrs)
+        const AttributeSet* attrs)
     : AbstractDatePickerDelegate(delegator, context) {
     (void) attrs; // DEFERRED: styling attrs (headerBackground, textAppearance) not wired.
     mDelegator = delegator;

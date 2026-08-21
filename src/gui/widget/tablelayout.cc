@@ -52,15 +52,13 @@ TableLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams& sou
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TableLayout::TableLayout(int w,int h):LinearLayout(w,h){
-    initTableLayout();
-}
+TableLayout::TableLayout(Context*ctx)
+    :TableLayout(ctx,nullptr){}
 
-TableLayout::TableLayout(Context*ctx,const AttributeSet& atts):TableLayout(ctx,&atts,0){}
+TableLayout::TableLayout(Context*ctx,const AttributeSet* atts):TableLayout(ctx,atts,0){}
 
 TableLayout::TableLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :LinearLayout(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     initTableLayout();
 }
 

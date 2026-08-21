@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <navigation/fragmentnavigator.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <navigation/navigatorstate.h>
 #include <fragment/fragment.h>
 #include <fragment/fragmentfactory.h>
@@ -35,7 +36,9 @@ NavDestination* FragmentNavigator::createDestination(){
 
 void FragmentNavigator::Destination::onInflate(cdroid::Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
-    setClassName(attrs.getAttributeValue(std::string(), "name"));
+    namespace ns = internal::R::styleable;
+    auto ta = context->obtainStyledAttributes(attrs, ns::FragmentNavigator);
+    setClassName(ta ? ta->getString(ns::FragmentNavigator_name) : "");
     LOGV("FragmentNavigator.Destination.onInflate route='%s' className='%s'",
          getRoute().c_str(), getClassName().c_str());
 }

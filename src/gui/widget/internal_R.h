@@ -9681,6 +9681,12 @@ namespace R{
         };
     }/*namespace plurals*/
 
+    namespace raw{
+        enum : int {
+            i18n = 0x01140000,
+        };
+    }/*namespace raw*/
+
     namespace string{
         enum : int {
             BaMmi = 0x0104004c,
@@ -13787,37 +13793,37 @@ namespace R{
 
     namespace xml{
         enum : int {
-            apns = 0x01150000,
-            audio_assets = 0x01150001,
-            autofill_compat_accessibility_service = 0x01150002,
-            autotext = 0x01150003,
-            bookmarks = 0x01150004,
-            color_extraction = 0x01150005,
-            config_user_types = 0x01150006,
-            config_webview_packages = 0x01150007,
-            default_zen_mode_config = 0x01150008,
-            global_keys = 0x01150009,
-            haptic_feedback_customization = 0x0115000a,
-            haptic_feedback_customization_source_rotary_encoder = 0x0115000b,
-            haptic_feedback_customization_source_touchscreen = 0x0115000c,
-            irq_device_map = 0x0115000d,
-            keyboard_popup_template = 0x0115000e,
-            kg_password_kbd_numeric = 0x0115000f,
-            password_kbd_extension = 0x01150010,
-            password_kbd_numeric = 0x01150011,
-            password_kbd_popup_template = 0x01150012,
-            password_kbd_qwerty = 0x01150013,
-            password_kbd_qwerty_shifted = 0x01150014,
-            password_kbd_symbols = 0x01150015,
-            password_kbd_symbols_shift = 0x01150016,
-            power_profile = 0x01150017,
-            power_profile_test = 0x01150018,
-            qwerty = 0x01150019,
-            sms_7bit_translation_table = 0x0115001a,
-            sms_short_codes = 0x0115001b,
-            storage_list = 0x0115001c,
-            symbols = 0x0115001d,
-            symbols_shift = 0x0115001e,
+            apns = 0x01160000,
+            audio_assets = 0x01160001,
+            autofill_compat_accessibility_service = 0x01160002,
+            autotext = 0x01160003,
+            bookmarks = 0x01160004,
+            color_extraction = 0x01160005,
+            config_user_types = 0x01160006,
+            config_webview_packages = 0x01160007,
+            default_zen_mode_config = 0x01160008,
+            global_keys = 0x01160009,
+            haptic_feedback_customization = 0x0116000a,
+            haptic_feedback_customization_source_rotary_encoder = 0x0116000b,
+            haptic_feedback_customization_source_touchscreen = 0x0116000c,
+            irq_device_map = 0x0116000d,
+            keyboard_popup_template = 0x0116000e,
+            kg_password_kbd_numeric = 0x0116000f,
+            password_kbd_extension = 0x01160010,
+            password_kbd_numeric = 0x01160011,
+            password_kbd_popup_template = 0x01160012,
+            password_kbd_qwerty = 0x01160013,
+            password_kbd_qwerty_shifted = 0x01160014,
+            password_kbd_symbols = 0x01160015,
+            password_kbd_symbols_shift = 0x01160016,
+            power_profile = 0x01160017,
+            power_profile_test = 0x01160018,
+            qwerty = 0x01160019,
+            sms_7bit_translation_table = 0x0116001a,
+            sms_short_codes = 0x0116001b,
+            storage_list = 0x0116001c,
+            symbols = 0x0116001d,
+            symbols_shift = 0x0116001e,
         };
     }/*namespace xml*/
 

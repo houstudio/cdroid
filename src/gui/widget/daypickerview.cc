@@ -28,14 +28,16 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(DayPickerView);
 
-DayPickerView::DayPickerView(Context* context,const AttributeSet& attrs):DayPickerView(context,&attrs,0){}
+DayPickerView::DayPickerView(Context*ctx)
+    :DayPickerView(ctx,nullptr){}
+
+DayPickerView::DayPickerView(Context* context,const AttributeSet* attrs):DayPickerView(context,attrs,0){}
 
 DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 
     Calendar tempDate;
-    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::CalendarView, defStyleAttr);
+    auto a = mContext->obtainStyledAttributes(pAttrs, R::styleable::CalendarView, defStyleAttr);
     const int firstDayOfWeek = a ? a->getInt(R::styleable::CalendarView_firstDayOfWeek, tempDate.getFirstDayOfWeek()) : tempDate.getFirstDayOfWeek();
 
     const std::string minDate = a ? a->getString(R::styleable::CalendarView_minDate) : std::string();

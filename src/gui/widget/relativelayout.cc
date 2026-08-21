@@ -45,20 +45,16 @@ static constexpr int RULES_HORIZONTAL[] = {
 
 DECLARE_WIDGET(RelativeLayout)
 
-RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
-    mIgnoreGravity  = NO_ID;
-    mDirtyHierarchy = true;
-    mGraph = new DependencyGraph();
-}
+RelativeLayout::RelativeLayout(Context*ctx)
+    :RelativeLayout(ctx,nullptr){}
 
-RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs):RelativeLayout(context,&attrs,0){}
+RelativeLayout::RelativeLayout(Context* context,const AttributeSet* attrs):RelativeLayout(context,attrs,0){}
 
 RelativeLayout::RelativeLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
  :ViewGroup(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     mDirtyHierarchy = true;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::RelativeLayout, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::RelativeLayout, defStyleAttr);
     
 mIgnoreGravity = (int)ta->getResourceId(R::styleable::RelativeLayout_ignoreGravity,(uint32_t)View::NO_ID);
 mGravity = ta->getInt(R::styleable::RelativeLayout_gravity,mGravity);

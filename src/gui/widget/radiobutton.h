@@ -21,9 +21,9 @@
 namespace cdroid{
 class RadioButton:public CompoundButton{
 public:
-    RadioButton(const std::string&,int w,int h);
-    RadioButton(Context*ctx,const AttributeSet& attrs);
-    RadioButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    RadioButton(Context*ctx);
+    RadioButton(Context*ctx,const AttributeSet* attrs);
+    RadioButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     void toggle()override;
     std::string getAccessibilityClassName()const override;
 };

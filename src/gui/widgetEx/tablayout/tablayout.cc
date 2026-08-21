@@ -34,18 +34,10 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(TabLayout)
 
-TabLayout::TabLayout(int w,int h):HorizontalScrollView(w,h){
-    initTabLayout();
-    setSelectedTabIndicator(nullptr);
-    setTabIndicatorAnimationMode(INDICATOR_ANIMATION_MODE_LINEAR);
-    applyModeAndGravity();
-}
-
-TabLayout::TabLayout(Context*context,const AttributeSet& atts):TabLayout(context,&atts,0){}
+TabLayout::TabLayout(Context*context,const AttributeSet* atts):TabLayout(context,atts,0){}
 
 TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
   :HorizontalScrollView(context,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     initTabLayout();
 
     // Phase 2: pure TypedArray (binary AXML typed resolution). ta=null → text XML
@@ -53,7 +45,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
     // aapt2 has already resolved the enum attrs (tabIndicatorAnimationMode /
     // tabIndicatorGravity / tabMode / tabGravity) at compile time, so getInt reads
     // them directly — no runtime enum map needed.
-    auto ta = context->obtainStyledAttributes(atts, R::styleable::TabLayout, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::TabLayout, defStyleAttr);
     
 
     setTabIndicatorAnimationMode(ta->getInt(R::styleable::TabLayout_tabIndicatorAnimationMode, INDICATOR_ANIMATION_MODE_LINEAR));
@@ -175,7 +167,7 @@ void TabLayout::initTabLayout(){
     mDefaultTabTextAppearance = R::style::TextAppearance_Material_Button;
     mViewPagerScrollState = ViewPager::SCROLL_STATE_IDLE;
     mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
-    mSlidingTabIndicator = new SlidingTabIndicator(getContext(),atts,this);
+    mSlidingTabIndicator = new SlidingTabIndicator(getContext(),nullptr,this);
     HorizontalScrollView::addView(mSlidingTabIndicator, 0, new HorizontalScrollView::LayoutParams(
           LayoutParams::WRAP_CONTENT, LayoutParams::MATCH_PARENT));
 }
@@ -641,7 +633,7 @@ void TabLayout::updateAllTabs(){
 TabLayout::TabView*TabLayout::createTabView(TabLayout::Tab* tab){
     TabView* tabView =nullptr;// mTabViewPool != null ? mTabViewPool.acquire() : null;
     if (tabView == nullptr) {
-        tabView = new TabView(getContext(),AttributeSet(getContext(),"cdroid"),this);
+        tabView = new TabView(getContext(),nullptr,this);
     }
     tabView->setTab(tab);
     tabView->setFocusable(true);
@@ -1004,11 +996,7 @@ int TabLayout::getTabMaxWidth() const{
 ///////////////////////////////////////////////////////////////////////////////////////////
 DECLARE_WIDGET3(TabLayout::TabItem,TabItem,0)
 
-TabLayout::TabItem::TabItem():View(0,0){
-    mIcon = nullptr;
-}
-
-TabLayout::TabItem::TabItem(Context* context,const AttributeSet& attrs):View(context,attrs){
+TabLayout::TabItem::TabItem(Context* context,const AttributeSet* attrs):View(context,attrs){
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::TabItem);
     mText = ta->getText(R::styleable::TabItem_text);
     mIcon = ta->getDrawable(R::styleable::TabItem_icon);
@@ -1134,7 +1122,7 @@ void TabLayout::Tab::reset() {
 }
 
 /*----------------------------------------------------------------------------------*/
-TabLayout::TabView::TabView(Context* context,const AttributeSet&atts,TabLayout*parent)
+TabLayout::TabView::TabView(Context* context,const AttributeSet*atts,TabLayout*parent)
   :LinearLayout(context,atts){
     mParent = parent;
     mTab    = nullptr;
@@ -1523,7 +1511,7 @@ float TabLayout::TabView::approximateLineWidth(Layout* layout, int line, float t
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-TabLayout::SlidingTabIndicator::SlidingTabIndicator(Context* context,const AttributeSet&atts,TabLayout*parent)
+TabLayout::SlidingTabIndicator::SlidingTabIndicator(Context* context,const AttributeSet*atts,TabLayout*parent)
  :LinearLayout(context,atts){
     mParent = parent;
     mIndicatorLeft  = -1;

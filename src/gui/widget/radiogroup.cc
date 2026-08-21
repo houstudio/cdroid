@@ -11,21 +11,18 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(RadioGroup)
 
-RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
-    init();
-    setOrientation(VERTICAL);
-}
+RadioGroup::RadioGroup(Context*ctx)
+    :RadioGroup(ctx,nullptr){}
 
-RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
-    :RadioGroup(context,&attrs,R::attr::radioButtonStyle){
+RadioGroup::RadioGroup(Context* context,const AttributeSet* attrs)
+    :RadioGroup(context,attrs,R::attr::radioButtonStyle){
 }
 
 RadioGroup::RadioGroup(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :LinearLayout(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::RadioGroup, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::RadioGroup, defStyleAttr);
     
     const int value = (int)ta->getResourceId(R::styleable::RadioGroup_checkedButton,(uint32_t)View::NO_ID);
     if(value!=View::NO_ID){

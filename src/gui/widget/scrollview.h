@@ -105,9 +105,9 @@ protected:
     void onRestoreInstanceState(Parcelable& state)override;
     Parcelable*onSaveInstanceState()override;
 public:
-    ScrollView(int w,int h);
-    ScrollView(Context*ctx,const AttributeSet&atts);
-    ScrollView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    ScrollView(Context*ctx);   // AOSP ScrollView(Context)
+    ScrollView(Context*ctx,const AttributeSet*atts);
+    ScrollView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~ScrollView()override;
     int getMaxScrollAmount();
     std::string getAccessibilityClassName() const override;

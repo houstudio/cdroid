@@ -59,9 +59,9 @@ protected:
     void onDrawInternal(Canvas* canvas);
     void onDraw(Canvas& canvas)override;
 public:
-    CandidateView(int,int);
-    CandidateView(Context*ctx,const AttributeSet&atts);
-    CandidateView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    CandidateView(Context*ctx);   // AOSP CandidateView(Context)
+    CandidateView(Context*ctx,const AttributeSet*atts);
+    CandidateView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~CandidateView()override;
     int computeHorizontalScrollRange()override;
     void setMaxSuggestion(int max);

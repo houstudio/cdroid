@@ -39,19 +39,18 @@ constexpr int Barrier::BOTTOM;
 constexpr int Barrier::START;
 constexpr int Barrier::END;
 
-Barrier::Barrier(Context* ctx,const AttributeSet& attrs):Barrier(ctx,&attrs,0){
+Barrier::Barrier(Context* ctx,const AttributeSet* attrs):Barrier(ctx,attrs,0){
 }
 
 Barrier::Barrier(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
     setVisibility(View::GONE);
     mHelperWidget = std::make_unique<clcore::Barrier>();
 
     // TypedArray reads typed binary AXML values directly (AOSP pattern). barrierDirection is an
     // enum compiled by aapt2 to its int (left/right/top/bottom/start/end == the Barrier::* enum),
     // so no name-based string→int map is needed.
-    auto ta = ctx ? ctx->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout) : nullptr;
+    auto ta = ctx ? ctx->obtainStyledAttributes(pAttrs, R::styleable::ConstraintLayoutLayout) : nullptr;
     int dir = LEFT;
     bool allowsGone = true;
     int margin = 0;
@@ -66,15 +65,6 @@ Barrier::Barrier(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
 
     // Default to LTR here (START->LEFT, END->RIGHT); the bridge re-resolves via resolveRtl() with
     // the container's real direction at measure time (START->RIGHT/END->LEFT under RTL).
-    updateType(mHelperWidget.get(), mIndicatedType, /*isRtl=*/false);
-    validateParams();
-}
-
-Barrier::Barrier(int width, int height)
-    : ConstraintHelper(width, height) {
-    setVisibility(View::GONE);
-    mHelperWidget = std::make_unique<clcore::Barrier>();
-    setType(LEFT);
     updateType(mHelperWidget.get(), mIndicatedType, /*isRtl=*/false);
     validateParams();
 }

@@ -6,9 +6,9 @@ namespace cdroid{
 
 class CheckBox:public CompoundButton{
 public:
-    CheckBox(Context*ctx,const AttributeSet& attrs);
-    CheckBox(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
-    CheckBox(const std::string&txt,int w,int h);
+    CheckBox(Context*ctx);
+    CheckBox(Context*ctx,const AttributeSet* attrs);
+    CheckBox(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     std::string getAccessibilityClassName()const override;
 };
 

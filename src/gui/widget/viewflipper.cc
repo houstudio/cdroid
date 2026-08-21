@@ -22,16 +22,13 @@ namespace cdroid{
 
 DECLARE_WIDGET(ViewFlipper)
 
-ViewFlipper::ViewFlipper(int w,int h):ViewAnimator(w,h){
-    mFlipRunnable = [this](){doFlip();};
-    mVisible =true;
-}
+ViewFlipper::ViewFlipper(Context*ctx)
+    :ViewFlipper(ctx,nullptr){}
 
-ViewFlipper::ViewFlipper(Context* context,const AttributeSet& attrs):ViewFlipper(context,&attrs,0){}
+ViewFlipper::ViewFlipper(Context* context,const AttributeSet* attrs):ViewFlipper(context,attrs,0){}
 
 ViewFlipper::ViewFlipper(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :ViewAnimator(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     mFlipRunnable = [this](){doFlip();};
 }
 

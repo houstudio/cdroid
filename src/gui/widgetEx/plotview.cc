@@ -5,14 +5,9 @@ namespace cdroid{
 
 DECLARE_WIDGET(PLPlotView)
 
-PLPlotView::PLPlotView(int w,int h):View(w,h){
-    initView();
-}
-
-PLPlotView::PLPlotView(Context*ctx,const AttributeSet& attrs):PLPlotView(ctx,&attrs,0){}
+PLPlotView::PLPlotView(Context*ctx,const AttributeSet* attrs):PLPlotView(ctx,attrs,0){}
 
 PLPlotView::PLPlotView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initView();
 }
 

@@ -24,8 +24,8 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(BottomNavigationView)
 
-BottomNavigationView::BottomNavigationView(Context* context, const AttributeSet& attrs)
-    : BottomNavigationView(context, &attrs, 0) {}
+BottomNavigationView::BottomNavigationView(Context* context, const AttributeSet* attrs)
+    : BottomNavigationView(context, attrs, 0) {}
 
 BottomNavigationView::BottomNavigationView(Context* context, const AttributeSet* attrs, int defStyleAttr)
     : NavigationBarView(context, attrs, defStyleAttr) {

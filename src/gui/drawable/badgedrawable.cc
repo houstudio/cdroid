@@ -151,7 +151,7 @@ void BadgeDrawable::tryWrapAnchorInCompatParent(View* anchorView) {
     updateAnchorParentToNotClip(anchorView);
   
     // Create FrameLayout and configure it to wrap the anchor.
-    FrameLayout* frameLayout = new FrameLayout(-1,-1);//anchorView->getContext());
+    FrameLayout* frameLayout = new FrameLayout(anchorView->getContext());
     frameLayout->setId(R::id::mtrl_anchor_parent);
     frameLayout->setClipChildren(false);
     frameLayout->setClipToPadding(false);

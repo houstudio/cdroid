@@ -220,9 +220,9 @@ protected:
     LayoutParams* generateLayoutParams(ViewGroup::LayoutParams* p);
     bool checkLayoutParams(ViewGroup::LayoutParams* p);
 public:
-    ViewPager(int w,int h);
-    ViewPager(Context* context,const AttributeSet& attrs);
-    ViewPager(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    ViewPager(Context*ctx);   // AOSP ViewPager(Context)
+    ViewPager(Context* context,const AttributeSet* attrs);
+    ViewPager(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~ViewPager()override;
     void setAdapter(PagerAdapter* adapter);
     PagerAdapter* getAdapter();

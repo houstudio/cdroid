@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- widgetEx navigationview attr id pinning (0x02 shared-lib). Source of truth;
      consumed by _compile_shared_lib (aapt2 <public id=>) and gen_styleable.
-     Watermark-allocated: next free 0x02010169 (0x0201014d = recyclerViewStyle;
+     Watermark-allocated: next free 0x0201016c (0x0201014d = recyclerViewStyle;
      0x02010150-58 = appbar block; width/height/marginX/color are generic
      shared names pinned here for the ActiveIndicator styleable). -->
 <resources>
@@ -29,8 +29,8 @@
          BottomNavigationView-specific one needs an id. -->
     <public type="attr" name="itemHorizontalTranslationEnabled" id="0x02010143"/>
     <!-- NavigationBarView additions -->
-    <public type="attr" name="itemGravity" id="0x0201014e"/>
-    <public type="attr" name="itemIconGravity" id="0x0201014f"/>
+    <public type="attr" name="itemGravity" id="0x0201016a"/>
+    <public type="attr" name="itemIconGravity" id="0x0201016b"/>
     <!-- 0x02010150-0x02010158 are the appbar block -->
     <public type="attr" name="labelVisibilityMode" id="0x02010159"/>
     <public type="attr" name="itemTextAppearanceInactive" id="0x0201015a"/>

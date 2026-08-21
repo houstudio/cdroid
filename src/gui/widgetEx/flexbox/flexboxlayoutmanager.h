@@ -208,7 +208,7 @@ public:
     void updateViewCache(int position, View* view) override;
 
     bool computeScrollVectorForPosition(int targetPosition, PointF& scrollVector) override;
-    RecyclerView::LayoutParams* generateLayoutParams(Context* c, const AttributeSet& attrs) const override;
+    RecyclerView::LayoutParams* generateLayoutParams(Context* c, const AttributeSet* attrs) const override;
     bool checkLayoutParams(const RecyclerView::LayoutParams* lp) const override;
     void onAdapterChanged(RecyclerView::Adapter* oldAdapter, RecyclerView::Adapter* newAdapter) override;
     void onItemsAdded(RecyclerView& recyclerView, int positionStart, int itemCount) override;

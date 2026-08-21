@@ -70,7 +70,7 @@ AsyncLayoutInflater::BasicInflater::BasicInflater(Context* context):LayoutInflat
     return new BasicInflater(newContext);
 }*/
 
-View* AsyncLayoutInflater::BasicInflater::onCreateView(const std::string& name,AttributeSet& attrs){
+View* AsyncLayoutInflater::BasicInflater::onCreateView(const std::string& name,const AttributeSet& attrs){
     /*for (std::string prefix : sClassPrefixList) {
         try {
             View* view = createView(name, prefix, attrs);

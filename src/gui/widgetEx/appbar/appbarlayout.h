@@ -42,7 +42,7 @@ public:
         static constexpr int SCROLL_FLAG_SNAP = 0x10;
 
         int scrollFlags = 0;
-        LayoutParams(Context* c, const AttributeSet* attrs);
+        LayoutParams(Context* c, const AttributeSet& attrs);
         LayoutParams(int width, int height);
         LayoutParams(const ViewGroup::LayoutParams& source);
     };
@@ -87,7 +87,7 @@ private:
 protected:
     LinearLayout::LayoutParams* generateDefaultLayoutParams() const override;
 public:
-    AppBarLayout(Context* context, const AttributeSet& attrs);
+    AppBarLayout(Context* context, const AttributeSet* attrs);
     AppBarLayout(Context* context, const AttributeSet* attrs, int defStyleAttr);
     ~AppBarLayout() override;
 

@@ -180,7 +180,7 @@ private:
     // extracted here so both ctors (XML element attrs + the programmatic style-
     // ref path) share one AOSP-aligned read sequence (binary TypedArray with a
     // text-XML AttributeSet fallback).
-    void readAbsListViewAttrs(const AttributeSet& atts);
+    void readAbsListViewAttrs(const AttributeSet* atts);
     void useDefaultSelector();
     std::vector<int>getDrawableStateForSelector();
     void setItemViewLayoutParams(View* child, int position);
@@ -367,9 +367,9 @@ protected:
     void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY)override;
     void draw(Canvas&canvas)override;
 public:
-    AbsListView(int w,int h);
-    AbsListView(Context*,const AttributeSet&atts);
-    AbsListView(Context*,const AttributeSet* attrs,int defStyleAttr=0);
+    AbsListView(Context*ctx);   // AOSP AbsListView(Context)
+    AbsListView(Context*,const AttributeSet*atts);
+    AbsListView(Context*,const AttributeSet* attrs,int defStyleAttr);
     ~AbsListView()override;
     void setAdapter(Adapter*adapter)override;
     int getCheckedItemCount()const;

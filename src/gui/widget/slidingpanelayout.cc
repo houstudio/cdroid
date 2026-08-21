@@ -21,15 +21,13 @@ namespace cdroid{
 
 DECLARE_WIDGET(SlidingPaneLayout)
 
-SlidingPaneLayout::SlidingPaneLayout(int w,int h):ViewGroup(w,h){
-    initView();
-}
+SlidingPaneLayout::SlidingPaneLayout(Context*ctx)
+    :SlidingPaneLayout(ctx,nullptr){}
 
-SlidingPaneLayout::SlidingPaneLayout(Context* context,const AttributeSet& attrs):SlidingPaneLayout(context,&attrs,0){}
+SlidingPaneLayout::SlidingPaneLayout(Context* context,const AttributeSet* attrs):SlidingPaneLayout(context,attrs,0){}
 
 SlidingPaneLayout::SlidingPaneLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initView();
 }
 

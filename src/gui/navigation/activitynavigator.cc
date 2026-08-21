@@ -1,4 +1,5 @@
 #include <navigation/activitynavigator.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <navigation/navoptions.h>
 #include <navigation/navbackstackentry.h>
 #include <navigation/navtype.h>
@@ -151,17 +152,21 @@ int ActivityNavigator::Destination::hashCode() const {
 
 void ActivityNavigator::Destination::onInflate(Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
-    // androidx R.styleable.ActivityNavigator: targetPackage / android:name / action / data / dataPattern.
-    setTargetPackage(parseApplicationId(context, attrs.getAttributeValue(std::string(), "targetPackage")));
-    std::string className = attrs.getAttributeValue(std::string(), "name");
+    // androidx R.styleable.ActivityNavigator (binary-AXML typed reads; the old
+    // string-keyed getAttributeValue calls returned empty under arsc).
+    namespace ns = internal::R::styleable;
+    auto ta = context->obtainStyledAttributes(attrs, ns::ActivityNavigator);
+    setTargetPackage(parseApplicationId(context, ta ? ta->getString(ns::ActivityNavigator_targetPackage) : ""));
+    const std::string className = ta ? ta->getString(ns::ActivityNavigator_name) : "";
     if(!className.empty()){
-        if(className[0] == '.') className = context->getPackageName() + className;
-        setComponentName(ComponentName(context->getPackageName(), className));
+        std::string cn = className;
+        if(cn[0] == '.') cn = context->getPackageName() + cn;
+        setComponentName(ComponentName(context->getPackageName(), cn));
     }
-    setAction(attrs.getAttributeValue(std::string(), "action"));
-    const std::string data = parseApplicationId(context, attrs.getAttributeValue(std::string(), "data"));
+    setAction(ta ? ta->getString(ns::ActivityNavigator_action) : "");
+    const std::string data = parseApplicationId(context, ta ? ta->getString(ns::ActivityNavigator_data) : "");
     if(!data.empty()) setData(Uri::parse(data));
-    setDataPattern(parseApplicationId(context, attrs.getAttributeValue(std::string(), "dataPattern")));
+    setDataPattern(parseApplicationId(context, ta ? ta->getString(ns::ActivityNavigator_dataPattern) : ""));
 }
 
 }//namespace

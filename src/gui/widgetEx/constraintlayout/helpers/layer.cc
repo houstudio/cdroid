@@ -34,7 +34,7 @@ DECLARE_WIDGET(Layer)
 namespace cdroid {
 using namespace cdroid::internal;
 
-Layer::Layer(Context* ctx,const AttributeSet& attrs):Layer(ctx,&attrs,0){}
+Layer::Layer(Context* ctx,const AttributeSet* attrs):Layer(ctx,attrs,0){}
 
 Layer::Layer(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
@@ -44,10 +44,6 @@ Layer::Layer(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     // is fully constructed so it dispatches to Layer::init — same pattern as
     // Carousel/MotionEffect/Placeholder/CircularFlow/Grid. ConstraintHelper::init is idempotent.
     init(pAttrs);
-}
-
-Layer::Layer(int width, int height)
-    : ConstraintHelper(width, height) {
 }
 
 void Layer::init(const AttributeSet* attrs) {

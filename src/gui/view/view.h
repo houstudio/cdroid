@@ -920,13 +920,13 @@ protected:
     bool traverseAtGranularity(int granularity, bool forward,  bool extendSelection);
     void ensureTransformationInfo();
 public:
-    View(Context*ctx,const AttributeSet&attrs);
+    View(Context*ctx);   // AOSP View(Context)
+    View(Context*ctx,const AttributeSet*attrs);
     // AOSP ctor: defStyleAttr flows in as a parameter (cdroid:attr/<widget>Style
     // resolved by the inflater factory). attrs is a nullable pointer (AOSP allows
     // constructing a styled view without XML attrs). The AttributeSet& ctor above
     // delegates here.
-    View(Context*ctx,const AttributeSet*attrs,int defStyleAttr=0,int defStyleRes=0);
-    View(int w,int h);
+    View(Context*ctx,const AttributeSet*attrs,int defStyleAttr,int defStyleRes=0);
     virtual ~View();
     bool isShowingLayoutBounds()const;
     void setShowingLayoutBounds(bool debugLayout);

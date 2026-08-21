@@ -30,30 +30,20 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(EditText,R::attr::editTextStyle)
 
-EditText::EditText(int w,int h):EditText(std::string(),w,h){
-}
+EditText::EditText(Context*ctx)
+    :EditText(ctx,nullptr){}
 
-EditText::EditText(Context*ctx,const AttributeSet& attrs):EditText(ctx,&attrs,0){}
+EditText::EditText(Context*ctx,const AttributeSet* attrs):EditText(ctx,attrs,0){}
 
 EditText::EditText(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :TextView(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initEditText();
-    setInputType(attrs.getAttributeIntValue(std::string(), "inputType", (int)InputType::TYPE_CLASS_TEXT));
+    // (the old string-keyed inputType read was redundant — TextView's
+    // TypedArray already reads TextView_inputType — and blocked null attrs)
     // Android-aligned: an EditText's buffer is Editable from construction via
     // setText(EDITABLE) — not a runtime setEditable() conversion. setText also
     // creates the Editor and syncs mTransformed, so the Layout draws the same
     // buffer Editor edits.
-    setText(mText, BufferType::EDITABLE);
-}
-
-EditText::EditText(const std::string&txt,int w,int h):TextView(txt,w,h){
-    initEditText();
-    setFocusable(true);
-    setFocusableInTouchMode(true);
-    // Android-aligned: build the Editable buffer via setText(EDITABLE) instead of
-    // a setEditable() conversion (not an Android API). setText creates the Editor
-    // and keeps mText/mTransformed/Layout on the same live SpannableStringBuilder.
     setText(mText, BufferType::EDITABLE);
 }
 

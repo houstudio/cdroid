@@ -352,7 +352,9 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
 
     bool actionViewSpecified = false;
     if (!itemActionViewClassName.empty()) {
-        AttributeSet atts(mContext,"cdroid");
+        // AOSP constructs the action view with the (Context) ctor signature —
+        // no XML attributes. Feed the typed path an empty AttributeSet.
+        AttributeSet atts(mContext, std::string());
         View* actionView = LayoutInflater::from(mContext)->createViewFromTag(nullptr,itemActionViewClassName,mContext,atts,true);
             //(View*) newInstance(itemActionViewClassName,ACTION_VIEW_CONSTRUCTOR_SIGNATURE, mActionViewConstructorArguments);
         item->setActionView(actionView);

@@ -63,16 +63,11 @@ public:
     }
 };
 
-ViewPager2::ViewPager2(int w,int h):ViewGroup(w,h){
-    initialize(mContext, AttributeSet(mContext,""));
-}
-
-ViewPager2::ViewPager2(Context* context,const AttributeSet& attrs):ViewPager2(context,&attrs,0){}
+ViewPager2::ViewPager2(Context* context,const AttributeSet* attrs):ViewPager2(context,attrs,0){}
 
 ViewPager2::ViewPager2(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
-    initialize(context, attrs);
+    initialize(context, pAttrs);
 }
 
 ViewPager2::~ViewPager2(){
@@ -85,7 +80,7 @@ ViewPager2::~ViewPager2(){
     delete mPageTransformerAdapter;
 }
 
-void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
+void ViewPager2::initialize(Context* context,const AttributeSet* attrs) {
     if(sFeatureEnhancedA11yEnabled)
         mAccessibilityProvider = new PageAwareAccessibilityProvider(this);
     else 
@@ -224,7 +219,7 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     mPageChangeCallbacks.push_back(*mPageTransformerAdapter);//mPageChangeEventDispatcher->addOnPageChangeCallback(*mPageTransformerAdapter);
 }
 
-void ViewPager2::setOrientation(Context* context,const AttributeSet& attrs) {
+void ViewPager2::setOrientation(Context* context,const AttributeSet* attrs) {
     setOrientation(ORIENTATION_HORIZONTAL);
     //a.getInt(R.styleable.ViewPager2_android_orientation, ORIENTATION_HORIZONTAL));
 }
@@ -615,7 +610,7 @@ bool ViewPager2::performAccessibilityAction(int action, Bundle* arguments) {
     return ViewGroup::performAccessibilityAction(action, arguments);
 }
 
-ViewPager2::RecyclerViewImpl::RecyclerViewImpl(Context* context,const AttributeSet&attr,ViewPager2*vp)
+ViewPager2::RecyclerViewImpl::RecyclerViewImpl(Context* context,const AttributeSet*attr,ViewPager2*vp)
     :RecyclerView(context,attr),mVP(vp){
 }
 

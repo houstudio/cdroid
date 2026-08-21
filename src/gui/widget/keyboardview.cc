@@ -21,19 +21,15 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(KeyboardView)
 
-KeyboardView::KeyboardView(int w,int h):View(w,h){
-    init();
-    mKeyBackground = new ColorDrawable(0xFF112211);
-    resetMultiTap();
-}
+KeyboardView::KeyboardView(Context*ctx)
+    :KeyboardView(ctx,nullptr){}
 
-KeyboardView::KeyboardView(Context*ctx,const AttributeSet& atts):KeyboardView(ctx,&atts,0){}
+KeyboardView::KeyboardView(Context*ctx,const AttributeSet* atts):KeyboardView(ctx,atts,0){}
 
 KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :View(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     init();
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::KeyboardView, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::KeyboardView, defStyleAttr);
     Drawable *dr = ta ? ta->getDrawable(R::styleable::KeyboardView_keyBackground) : nullptr;
     mKeyBackground = dr ? dr:new ColorDrawable(0xFF889988);
     mVerticalCorrection= ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_verticalCorrection,0) : 0;

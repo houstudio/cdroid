@@ -92,7 +92,7 @@ void ViewGroupOverlay::remove(View*view){
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-ViewOverlay::OverlayViewGroup::OverlayViewGroup(Context*context,View* hostView):ViewGroup(0,0){
+ViewOverlay::OverlayViewGroup::OverlayViewGroup(Context*context,View* hostView):ViewGroup(context){
     mHostView = hostView;
 }
 

@@ -110,9 +110,9 @@ protected:
     void rememberSyncState();
     int  findSyncPosition();
 public:
-    AdapterView(int w,int h);
-    AdapterView(Context*ctx,const AttributeSet&atts);
-    AdapterView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    AdapterView(Context*ctx);   // AOSP AdapterView(Context)
+    AdapterView(Context*ctx,const AttributeSet*atts);
+    AdapterView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~AdapterView()override;
     virtual Adapter*getAdapter();
     virtual void setAdapter(Adapter*)=0;

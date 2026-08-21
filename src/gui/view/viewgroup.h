@@ -123,7 +123,7 @@ private:
     View* mTooltipHoverTarget;
     Transformation* mChildTransformation;
     void initGroup();
-    void initFromAttributes(Context*,const AttributeSet&);
+    void initFromAttributes(Context*,const AttributeSet*);
     void setBooleanFlag(int flag, bool value);
     bool hasBooleanFlag(int flag)const;
     bool hasChildWithZ()const;
@@ -302,10 +302,9 @@ protected:
 
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
 public:
-    ViewGroup(int w,int h);
-    ViewGroup(int x,int y,int w,int h);
-    ViewGroup(Context*ctx,const AttributeSet& attrs);
-    ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    ViewGroup(Context*ctx);   // AOSP ViewGroup(Context)
+    ViewGroup(Context*ctx,const AttributeSet* attrs);
+    ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     virtual ~ViewGroup();
     virtual bool ensureTouchMode(bool);
     bool getTouchscreenBlocksFocus()const;

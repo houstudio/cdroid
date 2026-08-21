@@ -90,9 +90,9 @@ protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
 public:
-    explicit ImageView(int w, int h);
-    ImageView(Context*ctx,const AttributeSet&attrs);
-    ImageView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    ImageView(Context*ctx);   // AOSP ImageView(Context)
+    ImageView(Context*ctx,const AttributeSet*attrs);
+    ImageView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~ImageView()override;
     bool verifyDrawable(Drawable* dr)const override;
     void jumpDrawablesToCurrentState()override;

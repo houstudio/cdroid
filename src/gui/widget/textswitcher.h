@@ -23,9 +23,9 @@ namespace cdroid{
 
 class TextSwitcher:public ViewSwitcher{
 public:
-    TextSwitcher(int w,int h);
-    TextSwitcher(Context*ctx,const AttributeSet&atts);
-    TextSwitcher(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    TextSwitcher(Context*ctx);   // AOSP TextSwitcher(Context)
+    TextSwitcher(Context*ctx,const AttributeSet*atts);
+    TextSwitcher(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
     void setText(const std::string&);
     void setCurrentText(const std::string& text);

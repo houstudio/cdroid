@@ -33,7 +33,7 @@ DECLARE_WIDGET(Carousel)
 namespace cdroid {
 using namespace cdroid::internal;
 
-Carousel::Carousel(Context* ctx,const AttributeSet& attrs):Carousel(ctx,&attrs,0){}
+Carousel::Carousel(Context* ctx,const AttributeSet* attrs):Carousel(ctx,attrs,0){}
 
 Carousel::Carousel(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : MotionHelper(ctx, pAttrs, defStyleAttr) {
@@ -43,10 +43,6 @@ Carousel::Carousel(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     // fully constructed so it dispatches to Carousel::init — same pattern as MotionEffect/Placeholder.
     // ConstraintHelper::init is idempotent on re-run (mIds cleared then refilled).
     init(pAttrs);
-}
-
-Carousel::Carousel(int width, int height)
-    : MotionHelper(width, height) {
 }
 
 void Carousel::init(const AttributeSet* attrs) {

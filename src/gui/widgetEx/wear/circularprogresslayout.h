@@ -39,9 +39,8 @@ protected:
     void onDetachedFromWindow() override;
 public:
     DECLARE_UIEVENT(void,OnTimerFinishedListener,CircularProgressLayout&);
-    CircularProgressLayout(int w,int h);
-    CircularProgressLayout(Context* context,const AttributeSet& attrs);
-    CircularProgressLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    CircularProgressLayout(Context* context,const AttributeSet* attrs);
+    CircularProgressLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~CircularProgressLayout()override;
 
     void setBackgroundColor(int color) override;

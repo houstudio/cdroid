@@ -31,14 +31,16 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(AnalogClock)
 
-AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs):AnalogClock(ctx,&attrs,0){}
+AnalogClock::AnalogClock(Context*ctx)
+    :AnalogClock(ctx,nullptr){}
+
+AnalogClock::AnalogClock(Context*ctx,const AttributeSet* attrs):AnalogClock(ctx,attrs,0){}
 
 AnalogClock::AnalogClock(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :View(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initAnalog();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::AnalogClock, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::AnalogClock, defStyleAttr);
     
 
 setDial (ta->getDrawable(R::styleable::AnalogClock_dial));
@@ -46,10 +48,6 @@ setHourHand( ta->getDrawable(R::styleable::AnalogClock_hand_hour));
 setMinuteHand( ta->getDrawable(R::styleable::AnalogClock_hand_minute));
 setSecondHand( ta->getDrawable(R::styleable::AnalogClock_hand_second));
 
-}
-
-AnalogClock::AnalogClock(int w,int h):View(w,h){
-    initAnalog();
 }
 
 AnalogClock::~AnalogClock(){

@@ -110,7 +110,7 @@ namespace internal { namespace R { namespace styleable {
         0x0201013f, 0x02010140, 0x02010141, 0x02010142, 0x02010144, 0x02010145, 0x02010146,
         0x02010147, 0x02010148, 0x02010149, 0x0201014a, 0x0201014b, 0x0201014c, 0 };
     const uint32_t NavigationBarView[] = {
-        0x0201013b, 0x0201013a, 0x0201013d, 0x0201013e, 0x02010138, 0x0201014e, 0x0201014f,
+        0x0201013b, 0x0201013a, 0x0201013d, 0x0201013e, 0x02010138, 0x0201016a, 0x0201016b,
         0x02010159, 0x0201015a, 0x0201015b, 0x0201015c, 0x0201015d, 0x0201014a, 0x0201015f,
         0x02010160, 0x02010161, 0x02010162, 0x02010163, 0x02010164, 0 };
     const uint32_t BottomNavigationActiveIndicator[] = { 0x02010165, 0x02010166, 0x02010167, 0x02010168, 0 };
@@ -120,6 +120,9 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t NavAction[] = {
         0x010100d0, 0x02010122, 0x02010127, 0x02010123, 0x02010124, 0x02010125, 0x02010126,
         0x02010128, 0x02010129, 0x0201012a, 0x0201012b, 0 };
+    const uint32_t NavDeepLinkDeclare[] = { 0x010104ee, 0x0201014f, 0 };
+    const uint32_t ActivityNavigator[] = { 0x0201014e, 0x01010003, 0x02010130, 0x02010131, 0x02010132, 0 };
+    const uint32_t FragmentNavigator[] = { 0x01010003, 0 };
     const uint32_t NavArgument[] = { 0x01010003, 0x010101ed, 0x0201012e, 0x0201012f, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

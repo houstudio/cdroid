@@ -62,22 +62,11 @@ bool View::sPreserveMarginParamsInLayoutParamConversion = true;
 
 bool View::VIEW_DEBUG = false;
 int View::mViewCount = 0;
-View::View(int w,int h){
-    initView();
-    mContext=&App::getInstance();
-    mRight  = w;
-    mBottom = h;
-    mLeft = mTop =0;
-    if((w > 0) && (h>0) ){
-        mPrivateFlags |= PFLAG_HAS_BOUNDS;
-    }
-    setBackgroundColor(0xFF000000);
-    if(ViewConfiguration::isScreenRound())
-        mRoundScrollbarRenderer = new RoundScrollbarRenderer(this);
-    mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
-}
 
-View::View(Context*ctx,const AttributeSet&attrs):View(ctx,&attrs,0){
+View::View(Context*ctx)
+    :View(ctx,nullptr){}
+
+View::View(Context*ctx,const AttributeSet*attrs):View(ctx,attrs,0){
 }
 
 // AOSP View.getFocusableAttribute: android:focusable is stored as TYPE_INT_BOOLEAN
@@ -103,12 +92,13 @@ int View::getFocusableAttribute(const TypedArray& a) {
 // fallback has been retired (apps are migrated to binary AXML).
 View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr,int defStyleRes){
     initView();                       // == this(context)
-    const AttributeSet& attrs = *pAttrs;  // raw attrs; TypedArray `a` is used below
 
     mContext = ctx;
     mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
 
-    auto a = ctx->obtainStyledAttributes(attrs, R::styleable::View, defStyleAttr, defStyleRes);
+    // AOSP @Nullable AttributeSet: a null set (code construction) resolves through
+    // the defStyleAttr/defStyleRes/theme chain only.
+    auto a = ctx->obtainStyledAttributes(pAttrs, R::styleable::View, defStyleAttr, defStyleRes);
 
     Drawable* background = nullptr;
 

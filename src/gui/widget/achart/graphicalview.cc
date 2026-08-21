@@ -3,14 +3,13 @@
 #include <widget/achart/chart/dragcontrolchart.h>
 namespace cdroid {
 DECLARE_WIDGET(GraphicalView)
-GraphicalView::GraphicalView(Context*ctx,const AttributeSet& attr):GraphicalView(ctx,&attr,0){}
+GraphicalView::GraphicalView(Context*ctx,const AttributeSet* attr):GraphicalView(ctx,attr,0){}
 
 GraphicalView::GraphicalView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr) {
-    const AttributeSet& attr = *pAttrs;
 }
 
 GraphicalView::GraphicalView(Context* context, AbstractChart* chart)
-    :View(-1,-1) {
+    :View(context) {
     mChart = chart;
     mZoomRate = 1.25f;
     setClickable(true);

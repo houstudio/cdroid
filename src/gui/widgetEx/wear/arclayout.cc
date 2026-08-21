@@ -61,15 +61,14 @@ void ArcLayout::LayoutParams::setWeight(float weight) {
 
 DECLARE_WIDGET(ArcLayout)
 
-ArcLayout::ArcLayout(Context* context,const AttributeSet& attrs):ArcLayout(context,&attrs,0){}
+ArcLayout::ArcLayout(Context* context,const AttributeSet* attrs):ArcLayout(context,attrs,0){}
 
 ArcLayout::ArcLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 
-    mAnchorType = attrs.getAttributeIntValue(std::string(), "anchorPosition", DEFAULT_ANCHOR_TYPE);
-    mAnchorAngleDegrees = attrs.getAttributeFloatValue(std::string(), "anchorAngleDegrees", DEFAULT_START_ANGLE_DEGREES);
-    mClockwise = attrs.getAttributeBooleanValue(std::string(), "clockwise", DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE);
+    mAnchorType = pAttrs ? pAttrs->getAttributeIntValue(std::string(), "anchorPosition", DEFAULT_ANCHOR_TYPE) : DEFAULT_ANCHOR_TYPE;
+    mAnchorAngleDegrees = pAttrs ? pAttrs->getAttributeFloatValue(std::string(), "anchorAngleDegrees", DEFAULT_START_ANGLE_DEGREES) : DEFAULT_START_ANGLE_DEGREES;
+    mClockwise = pAttrs ? pAttrs->getAttributeBooleanValue(std::string(), "clockwise", DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE) : DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE;
 }
 
 void ArcLayout::requestLayout() {

@@ -22,10 +22,6 @@
 #include <systemclock.h>
 
 namespace cdroid{
-AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
-    initAdapterView();
-}
-
 void AdapterView::initAdapterView(){
     mFirstPosition=0;
     mIsVertical = true;
@@ -63,11 +59,13 @@ void AdapterView::initAdapterView(){
     }
 }
 
-AdapterView::AdapterView(Context*ctx,const AttributeSet& atts):AdapterView(ctx,&atts,0){}
+AdapterView::AdapterView(Context*ctx)
+    :AdapterView(ctx,nullptr){}
+
+AdapterView::AdapterView(Context*ctx,const AttributeSet* atts):AdapterView(ctx,atts,0){}
 
 AdapterView::AdapterView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :ViewGroup(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     initAdapterView();
 }
 

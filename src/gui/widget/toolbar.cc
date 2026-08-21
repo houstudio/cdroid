@@ -28,16 +28,18 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(Toolbar)
 
-Toolbar::Toolbar(Context*ctx,const AttributeSet& atts):Toolbar(ctx,&atts,0){}
+Toolbar::Toolbar(Context*ctx)
+    :Toolbar(ctx,nullptr){}
+
+Toolbar::Toolbar(Context*ctx,const AttributeSet* atts):Toolbar(ctx,atts,0){}
 
 Toolbar::Toolbar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ViewGroup(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     initToolbar();
 
     // Styled-attribute reads (AOSP Toolbar ctor body, verbatim order/methods).
     // Text-XML ctor path dropped: resolves only through the binary-AXML
     // TypedArray; a==null (text XML / no arsc) leaves the toolbar at defaults.
-    auto a = ctx->obtainStyledAttributes(atts, R::styleable::Toolbar, defStyleAttr);
+    auto a = ctx->obtainStyledAttributes(pAttrs, R::styleable::Toolbar, defStyleAttr);
     
 // AOSP reads these via getResourceId(@StyleRes int).
 mTitleTextAppearance = a->getResourceId(R::styleable::Toolbar_titleTextAppearance, 0);
@@ -384,7 +386,7 @@ std::string Toolbar::getLogoDescription()const{
 
 void Toolbar::ensureLogoView() {
     if (mLogoView == nullptr) {
-        mLogoView = new ImageView(getContext(),AttributeSet(mContext,"cdroid"));
+        mLogoView = new ImageView(getContext(),nullptr);
     }
 }
 
@@ -414,7 +416,7 @@ void Toolbar::setTitle(const std::string&title){
     if (!title.empty()) {
         if (mTitleTextView == nullptr) {
             Context* context = getContext();
-            mTitleTextView = new TextView(context,AttributeSet(mContext,"cdroid"));
+            mTitleTextView = new TextView(context,nullptr);
             mTitleTextView->setSingleLine(true);
             mTitleTextView->setEllipsize(TextUtils::TruncateAt::END);
             if (mTitleTextAppearance != 0) {
@@ -447,7 +449,7 @@ std::string Toolbar::getSubtitle()const{
 void Toolbar::setSubtitle(const std::string&subtitle){
     if (!subtitle.empty()) {
         if (mSubtitleTextView == nullptr) {
-            mSubtitleTextView = new TextView(mContext,AttributeSet(mContext,"cdroid"));
+            mSubtitleTextView = new TextView(mContext,nullptr);
             mSubtitleTextView->setSingleLine(true);
             mSubtitleTextView->setEllipsize(TextUtils::TruncateAt::END);
             if (mSubtitleTextAppearance != 0) {
@@ -564,7 +566,7 @@ void Toolbar::ensureMenu(){
 void Toolbar::ensureMenuView(){
     if (mMenuView == nullptr) {
 #if ENABLE(MENU)
-        mMenuView = new ActionMenuView(getContext(),AttributeSet(getContext(),"cdroid"));
+        mMenuView = new ActionMenuView(getContext(),nullptr);
         mMenuView->setPopupTheme(mPopupTheme);
         mMenuView->setOnMenuItemClickListener([this](MenuItem&item){
             return (mOnMenuItemClickListener!=nullptr)&&mOnMenuItemClickListener(item);

@@ -38,9 +38,9 @@ protected:
     void dispatchRatingChange(bool fromUser);
     bool canUserSetProgress()const override;
 public:
-    RatingBar(int w,int h);
-    RatingBar(Context*ctx,const AttributeSet&atts);
-    RatingBar(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    RatingBar(Context*ctx);   // AOSP RatingBar(Context)
+    RatingBar(Context*ctx,const AttributeSet*atts);
+    RatingBar(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     void setOnRatingBarChangeListener(const OnRatingBarChangeListener& listener);
     OnRatingBarChangeListener getOnRatingBarChangeListener();
     void setIsIndicator(bool isIndicator);

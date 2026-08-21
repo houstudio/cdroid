@@ -21,15 +21,13 @@ namespace cdroid{
 
 DECLARE_WIDGET(ViewSwitcher)
 
-ViewSwitcher::ViewSwitcher(int w,int h)
-   :ViewAnimator(w,h){
-}
+ViewSwitcher::ViewSwitcher(Context*ctx)
+    :ViewSwitcher(ctx,nullptr){}
 
-ViewSwitcher::ViewSwitcher(Context*ctx,const AttributeSet& atts):ViewSwitcher(ctx,&atts,0){}
+ViewSwitcher::ViewSwitcher(Context*ctx,const AttributeSet* atts):ViewSwitcher(ctx,atts,0){}
 
 ViewSwitcher::ViewSwitcher(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :ViewAnimator(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
 }
 
 void ViewSwitcher::addView(View* child, int index, ViewGroup::LayoutParams* params){

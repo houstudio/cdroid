@@ -24,10 +24,6 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(DrawerLayout)
 
-DrawerLayout::DrawerLayout(int w,int h):ViewGroup(w,h){
-    initView();
-}
-
 void DrawerLayout::initView(){
     mInLayout = false;
     mStatusBarBackground = nullptr;
@@ -77,11 +73,13 @@ void DrawerLayout::initView(){
     mDrawerElevation = DRAWER_ELEVATION * density;
 }
 
-DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet& atts):DrawerLayout(ctx,&atts,0){}
+DrawerLayout::DrawerLayout(Context*ctx)
+    :DrawerLayout(ctx,nullptr){}
+
+DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet* atts):DrawerLayout(ctx,atts,0){}
 
 DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :ViewGroup(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     initView();
 }
 

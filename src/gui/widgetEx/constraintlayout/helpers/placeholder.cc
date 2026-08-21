@@ -32,17 +32,11 @@ DECLARE_WIDGET(Placeholder)
 namespace cdroid {
 using namespace cdroid::internal;
 
-Placeholder::Placeholder(Context* ctx,const AttributeSet& attrs):Placeholder(ctx,&attrs,0){}
+Placeholder::Placeholder(Context* ctx,const AttributeSet* attrs):Placeholder(ctx,attrs,0){}
 
 Placeholder::Placeholder(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : View(ctx, pAttrs, defStyleAttr) {
     init(pAttrs);
-}
-
-Placeholder::Placeholder(int width, int height)
-    : View(width, height) {
-    setVisibility(mEmptyVisibility);
-    mContentId = -1;
 }
 
 void Placeholder::init(const AttributeSet* attrs) {

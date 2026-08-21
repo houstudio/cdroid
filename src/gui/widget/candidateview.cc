@@ -24,23 +24,13 @@ namespace cdroid{
 
 DECLARE_WIDGET(CandidateView)
 
-CandidateView::CandidateView(int w,int h):View(w,h){
-    mSelectionHighlight = nullptr;
-    mColorNormal= 0xFFFFFFFF;
-    mColorRecommended =0xFFFF0000;
-    mColorOther =0xFF00FF00;
-    mVerticalPadding=0;
-    mBgPadding.set(5,5,5,5);
-    setMinimumHeight(28);
-    mPaint.setTextSize(20);
-    initView();
-}
+CandidateView::CandidateView(Context*ctx)
+    :CandidateView(ctx,nullptr){}
 
-CandidateView::CandidateView(Context*ctx,const AttributeSet& atts):CandidateView(ctx,&atts,0){}
+CandidateView::CandidateView(Context*ctx,const AttributeSet* atts):CandidateView(ctx,atts,0){}
 
 CandidateView::CandidateView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::CandidateView);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::CandidateView);
      mSelectionHighlight = mContext->getDrawable(R::drawable::list_selector_background);
      setBackgroundColor(ta->getColor(R::styleable::CandidateView_candidate_background, 0));
      mColorNormal = ta->getColor(R::styleable::CandidateView_candidate_normal, 0);

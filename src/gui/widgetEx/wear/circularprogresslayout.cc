@@ -24,16 +24,10 @@ namespace cdroid{
 
 DECLARE_WIDGET(CircularProgressLayout)
 
-CircularProgressLayout::CircularProgressLayout(int w,int h)
-    :FrameLayout(w,h){
-    initCircularProgressLayout();
-}
-
-CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet& attrs):CircularProgressLayout(context,&attrs,0){}
+CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet* attrs):CircularProgressLayout(context,attrs,0){}
 
 CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :FrameLayout(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 
     initCircularProgressLayout();
     //Resources r = context.getResources();
@@ -56,10 +50,11 @@ CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeS
     setStrokeWidth(a.getDimensionPixelSize("strokeWidth",r.getDimensionPixelSize("cdroid:dimen/circular_progress_layout_stroke_width")));
     */
 
-    setBackgroundColor(attrs.getColor("backgroundColor",
-            context->getColor("cdroid:color/circular_progress_layout_background_color")));
-
-    setIndeterminate(attrs.getAttributeBooleanValue(std::string(), "indeterminate", false));
+    if (pAttrs) {
+        setBackgroundColor(pAttrs->getColor("backgroundColor",
+                context->getColor("cdroid:color/circular_progress_layout_background_color")));
+        setIndeterminate(pAttrs->getAttributeBooleanValue(std::string(), "indeterminate", false));
+    }
 }
 
 void CircularProgressLayout::initCircularProgressLayout(){

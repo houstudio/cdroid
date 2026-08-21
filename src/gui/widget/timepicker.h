@@ -37,8 +37,9 @@ protected:
     Parcelable* onSaveInstanceState() override;
     void onRestoreInstanceState(Parcelable& state) override;
 public:
-    TimePicker(Context* context,const AttributeSet& attrs);
-    TimePicker(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    TimePicker(Context*ctx);   // AOSP TimePicker(Context)
+    TimePicker(Context* context,const AttributeSet* attrs);
+    TimePicker(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~TimePicker()override;
     int getMode() const;
 

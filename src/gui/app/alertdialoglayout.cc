@@ -26,11 +26,11 @@ using namespace cdroid::internal;
 DECLARE_WIDGET(AlertDialogLayout);
 
 AlertDialogLayout::AlertDialogLayout(Context* context)
-  :LinearLayout(context,AttributeSet(context,"cdroid")){
+  :LinearLayout(context){
 }
 
-AlertDialogLayout::AlertDialogLayout(Context* context,const AttributeSet& attrs)
-  :AlertDialogLayout(context,&attrs,0,0){
+AlertDialogLayout::AlertDialogLayout(Context* context,const AttributeSet* attrs)
+  :AlertDialogLayout(context,attrs,0,0){
 }
 
 AlertDialogLayout::AlertDialogLayout(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes)

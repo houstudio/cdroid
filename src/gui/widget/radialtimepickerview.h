@@ -140,10 +140,11 @@ protected:
     void onLayout(bool changed, int left, int top, int right, int bottom)override;
     void onDraw(Canvas& canvas)override;
 public:
-    RadialTimePickerView(Context* context,const AttributeSet& attrs);
-    RadialTimePickerView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    RadialTimePickerView(Context*ctx);   // AOSP RadialTimePickerView(Context)
+    RadialTimePickerView(Context* context,const AttributeSet* attrs);
+    RadialTimePickerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~RadialTimePickerView()override;
-    void applyAttributes(const AttributeSet& attrs);
+    void applyAttributes(const AttributeSet* attrs);
     void initialize(int hour, int minute, bool is24HourMode);
 
     void setCurrentItemShowing(int item, bool animate);

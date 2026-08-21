@@ -62,7 +62,7 @@ public:
         return new BasicInflater(newContext);
     }*/
 protected:
-    View* onCreateView(const std::string& name, AttributeSet& attrs)override;
+    View* onCreateView(const std::string& name, const AttributeSet& attrs)override;
 };
 
 class AsyncLayoutInflater::InflateThread{

@@ -24,8 +24,11 @@ namespace cdroid{
 
 DECLARE_WIDGET(DialogViewAnimator)
 
-DialogViewAnimator::DialogViewAnimator(Context* context,const AttributeSet& attrs)
-  :DialogViewAnimator(context,&attrs,0){
+DialogViewAnimator::DialogViewAnimator(Context*ctx)
+    :DialogViewAnimator(ctx,nullptr){}
+
+DialogViewAnimator::DialogViewAnimator(Context* context,const AttributeSet* attrs)
+  :DialogViewAnimator(context,attrs,0){
 }
 
 DialogViewAnimator::DialogViewAnimator(Context* context,const AttributeSet* attrs,int defStyleAttr)

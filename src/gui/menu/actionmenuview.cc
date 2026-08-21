@@ -5,11 +5,10 @@
 namespace cdroid{
 
 DECLARE_WIDGET(ActionMenuView)
-ActionMenuView::ActionMenuView(Context* context,const AttributeSet& attrs):ActionMenuView(context,&attrs,0){}
+ActionMenuView::ActionMenuView(Context* context,const AttributeSet* attrs):ActionMenuView(context,attrs,0){}
 
 ActionMenuView::ActionMenuView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :LinearLayout(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     setBaselineAligned(false);
     const float density = context->getDisplayMetrics().density;
     mMinCellSize = int(MIN_CELL_SIZE * density);

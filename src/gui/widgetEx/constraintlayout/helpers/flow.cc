@@ -35,11 +35,10 @@ static clcore::Flow* asFlow(HelperWidget* hw) {
     return static_cast<clcore::Flow*>(hw);
 }
 
-Flow::Flow(Context* ctx,const AttributeSet& attrs):Flow(ctx,&attrs,0){}
+Flow::Flow(Context* ctx,const AttributeSet* attrs):Flow(ctx,attrs,0){}
 
 Flow::Flow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
     mHelperWidget = std::make_unique<clcore::Flow>();
     auto* f = asFlow(mHelperWidget.get());
     // TypedArray reads typed binary AXML values directly (AOSP pattern). AndroidX Flow reuses the
@@ -47,7 +46,7 @@ Flow::Flow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     // flow_* attrs; all live in the ConstraintLayout_Layout styleable. flow_wrapMode/align/style
     // and orientation are enums compiled by aapt2 to their int, so the string→int maps are gone.
     namespace F = R::styleable;
-    auto ta = ctx ? ctx->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout) : nullptr;
+    auto ta = ctx ? ctx->obtainStyledAttributes(pAttrs, R::styleable::ConstraintLayoutLayout) : nullptr;
     if (ta) {
         f->setWrapMode           (ta->getInt(F::ConstraintLayoutLayout_flow_wrapMode, clcore::Flow::WRAP_NONE));
         int orient = ta->getInt(F::ConstraintLayoutLayout_orientation, ConstraintWidget::HORIZONTAL);
@@ -72,12 +71,6 @@ Flow::Flow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
         f->setPadding            (ta->getDimensionPixelSize(F::ConstraintLayoutLayout_padding, 0));
         f->setMaxElementsWrap    (ta->getInt(F::ConstraintLayoutLayout_flow_maxElementsWrap, ConstraintWidget::UNKNOWN));
     }
-    validateParams();
-}
-
-Flow::Flow(int width, int height)
-    : ConstraintHelper(width, height) {
-    mHelperWidget = std::make_unique<clcore::Flow>();
     validateParams();
 }
 

@@ -41,20 +41,23 @@ public:
     }
 };
 
-ListPopupWindow::ListPopupWindow(Context*context,const AttributeSet&atts)
+ListPopupWindow::ListPopupWindow(Context*ctx)
+    :ListPopupWindow(ctx,nullptr){}
+
+ListPopupWindow::ListPopupWindow(Context*context,const AttributeSet*atts)
     :ListPopupWindow(context,atts,R::attr::listPopupWindowStyle,0){
 }
 
-ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, int defStyleAttr)
+ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet* atts, int defStyleAttr)
     :ListPopupWindow(context,atts,defStyleAttr,0){
 }
 
-ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, int defStyleAttr, int defStyleRes){
+ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet* atts, int defStyleAttr, int defStyleRes){
     mContext = context;
     initPopupWindow();
     // AOSP: resolve dropDownHorizontalOffset/VerticalOffset through the defStyle
     // chain via R.styleable.ListPopupWindow (no more hand-cobbled attr-id array).
-    auto ta = context->obtainStyledAttributes(&atts, R::styleable::ListPopupWindow, defStyleAttr, defStyleRes);
+    auto ta = context->obtainStyledAttributes(atts, R::styleable::ListPopupWindow, defStyleAttr, defStyleRes);
     if (ta) {
         mDropDownHorizontalOffset = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownHorizontalOffset, 0);
         mDropDownVerticalOffset   = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownVerticalOffset, 0);
@@ -648,7 +651,7 @@ int ListPopupWindow::buildDropDown() {
         if (hintView != nullptr) {
             // if a hint has been specified, we accommodate more space for it and
             // add a text view in the drop down menu, at the bottom of the list
-            LinearLayout* hintContainer = new LinearLayout(context,AttributeSet());
+            LinearLayout* hintContainer = new LinearLayout(context);   // AOSP code construction
             hintContainer->setOrientation(LinearLayout::VERTICAL);
 
             LinearLayout::LayoutParams* hintParams = new LinearLayout::LayoutParams(

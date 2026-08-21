@@ -70,7 +70,7 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
     };
     mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,context->getDimensionPixelSize(R::dimen::config_prefDialogWidth));
     mAnchorView = anchorView;
-    mPopup = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"), mPopupStyleAttr, mPopupStyleRes);
+    mPopup = new MenuPopupWindow(mContext,nullptr, mPopupStyleAttr, mPopupStyleRes);
 
     // Present the menu using our context, not the menu builder's context.
     menu->addMenuPresenter(this, context);

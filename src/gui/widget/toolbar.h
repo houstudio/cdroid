@@ -145,8 +145,9 @@ protected:
     ActionMenuPresenter* getOuterActionMenuPresenter()const;
     Context*getPopupContext();
 public:
-    Toolbar(Context*,const AttributeSet&);
-    Toolbar(Context*,const AttributeSet* attrs,int defStyleAttr=0);
+    Toolbar(Context*ctx);   // AOSP Toolbar(Context)
+    Toolbar(Context*,const AttributeSet*);
+    Toolbar(Context*,const AttributeSet* attrs,int defStyleAttr);
     ~Toolbar()override;
     void setTitleMargin(int start, int top, int end, int bottom);
     int getTitleMarginStart()const;

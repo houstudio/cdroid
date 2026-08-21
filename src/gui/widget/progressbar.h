@@ -109,9 +109,9 @@ protected:
     virtual void onVisualProgressChanged(int id, float progress);
     virtual void onDraw(Canvas&canvas)override;
 public:
-    ProgressBar(int width, int height);
-    ProgressBar(Context*ctx,const AttributeSet&attrs);
-    ProgressBar(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    ProgressBar(Context*ctx);
+    ProgressBar(Context*ctx,const AttributeSet*attrs);
+    ProgressBar(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~ProgressBar()override;
     void setMin(int value);
     void setMax(int value);

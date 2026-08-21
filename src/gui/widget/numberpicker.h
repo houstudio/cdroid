@@ -190,9 +190,9 @@ protected:
     void drawableStateChanged()override;
     void onDraw(Canvas&canvas)override;
 public:
-    NumberPicker(int w,int h);
-    NumberPicker(Context* context,const AttributeSet& attrs);
-    NumberPicker(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    NumberPicker(Context*ctx);   // AOSP NumberPicker(Context)
+    NumberPicker(Context* context,const AttributeSet* attrs);
+    NumberPicker(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~NumberPicker()override;
     void setOrientation(int orientation)override;
     void setWheelItemCount(int count);

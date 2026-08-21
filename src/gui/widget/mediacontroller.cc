@@ -7,18 +7,20 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(MediaController)
 
-MediaController::MediaController(Context* context,const AttributeSet& attrs):MediaController(context,&attrs,0){}
+MediaController::MediaController(Context*ctx)
+    :MediaController(ctx,nullptr){}
+
+MediaController::MediaController(Context* context,const AttributeSet* attrs):MediaController(context,attrs,0){}
 
 MediaController::MediaController(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
  :FrameLayout(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     mRoot = this;
     mUseFastForward = true;
     mFromXml = true;
 }
 
 MediaController::MediaController(Context* context, bool useFastForward)
-  :FrameLayout(context,AttributeSet()){
+  :FrameLayout(context){
     mContext = context;
     mUseFastForward = useFastForward;
     initFloatingWindowLayout();

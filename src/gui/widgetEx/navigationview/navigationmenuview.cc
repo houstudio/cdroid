@@ -22,8 +22,8 @@ namespace cdroid{
 NavigationMenuView::NavigationMenuView(Context* context)
     : RecyclerView(context, nullptr, 0){}
 
-NavigationMenuView::NavigationMenuView(Context* context,const AttributeSet& attrs)
-    : RecyclerView(context, &attrs, 0){}
+NavigationMenuView::NavigationMenuView(Context* context,const AttributeSet* attrs)
+    : RecyclerView(context, attrs, 0){}
 
 void NavigationMenuView::initialize(MenuBuilder* menu){
     (void)menu;

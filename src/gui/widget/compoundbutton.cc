@@ -27,15 +27,17 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(CompoundButton)
 
-CompoundButton::CompoundButton(Context*ctx,const AttributeSet& attrs):CompoundButton(ctx,&attrs,0){}
+CompoundButton::CompoundButton(Context*ctx)
+    :CompoundButton(ctx,nullptr){}
+
+CompoundButton::CompoundButton(Context*ctx,const AttributeSet* attrs):CompoundButton(ctx,attrs,0){}
 
 CompoundButton::CompoundButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :Button(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initCompoundButton();
-    // AOSP CompoundButton ctor: obtainStyledAttributes(attrs, styleable, defStyleAttr, 0);
+    // AOSP CompoundButton ctor: obtainStyledAttributes(pAttrs, styleable, defStyleAttr, 0);
     // reads button, buttonTintMode, buttonTint, checked in that order, then applyButtonTint().
-    auto ta = ctx->obtainStyledAttributes(&attrs, R::styleable::CompoundButton, defStyleAttr, 0);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::CompoundButton, defStyleAttr, 0);
     Drawable* d = ta->getDrawable(R::styleable::CompoundButton_button);
     if (d) setButtonDrawable(d);
 
@@ -54,11 +56,6 @@ CompoundButton::CompoundButton(Context*ctx,const AttributeSet* pAttrs,int defSty
     mCheckedFromResource = true;
 
     applyButtonTint();
-}
-
-CompoundButton::CompoundButton(const std::string&txt,int width,int height)
-    :Button(txt,width,height){
-    initCompoundButton();
 }
 
 void CompoundButton::initCompoundButton(){
@@ -342,20 +339,12 @@ void CompoundButton::onDraw(Canvas&canvas){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 DECLARE_WIDGET2(CheckBox,R::attr::checkboxStyle)
-CheckBox::CheckBox(Context*ctx,const AttributeSet& attrs)
-    :CheckBox(ctx,&attrs,0){
+CheckBox::CheckBox(Context*ctx,const AttributeSet* attrs)
+    :CheckBox(ctx,attrs,0){
 }
 
 CheckBox::CheckBox(Context*ctx,const AttributeSet* attrs,int defStyleAttr)
     :CompoundButton(ctx,attrs,defStyleAttr){
-}
-
-CheckBox::CheckBox(const std::string&txt,int w,int h)
-    :CompoundButton(txt,w,h){
-    // Resolve the default "cdroid:drawable/btn_check.xml" ref by identifier
-    // (getDrawable is id-keyed now; ".xml" is stripped like other type-less refs).
-    const int btnRes = getContext()->getResources().getIdentifier("btn_check", "drawable", "cdroid");
-    setButtonDrawable(btnRes);
 }
 
 std::string CheckBox::getAccessibilityClassName()const{
@@ -365,12 +354,8 @@ std::string CheckBox::getAccessibilityClassName()const{
 //class RadioButton:public CompoundButton
 
 DECLARE_WIDGET2(RadioButton,R::attr::radioButtonStyle)
-RadioButton::RadioButton(const std::string&txt,int w,int h)
-  :CompoundButton(txt,w,h){
-}
-
-RadioButton::RadioButton(Context*ctx,const AttributeSet& attrs)
-   :RadioButton(ctx,&attrs, R::attr::radioButtonStyle){
+RadioButton::RadioButton(Context*ctx,const AttributeSet* attrs)
+   :RadioButton(ctx,attrs, R::attr::radioButtonStyle){
 }
 
 RadioButton::RadioButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr)

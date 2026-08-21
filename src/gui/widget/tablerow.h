@@ -52,9 +52,9 @@ protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
 public:
-    TableRow(int w,int h);
-    TableRow(Context* context,const AttributeSet&attrs);
-    TableRow(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    TableRow(Context*ctx);   // AOSP TableRow(Context)
+    TableRow(Context* context,const AttributeSet*attrs);
+    TableRow(Context* context,const AttributeSet* attrs,int defStyleAttr);
     void setOnHierarchyChangeListener(const OnHierarchyChangeListener& listener)override;
     void setColumnCollapsed(int columnIndex, bool collapsed);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;

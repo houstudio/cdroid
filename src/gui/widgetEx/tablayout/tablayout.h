@@ -125,7 +125,7 @@ public:
         void inflateAndAddDefaultTextView();
         void addOnLayoutChangeListener(View* view);
     public:
-        TabView(Context* context,const AttributeSet&atts,TabLayout*parent);
+        TabView(Context* context,const AttributeSet*atts,TabLayout*parent);
         ~TabView()override;
         bool performClick()override;
         void setSelected(bool selected)override;
@@ -149,8 +149,7 @@ public:
        std::string mText;
        Drawable* mIcon;
        int mCustomLayout = 0;
-       TabItem();
-       TabItem(Context* context,const AttributeSet& attrs);
+       TabItem(Context* context,const AttributeSet* attrs);
        virtual ~TabItem();
     };
 
@@ -207,7 +206,7 @@ private:
         void onMeasure(int widthMeasureSpec,int heightMeasureSpec)override;
         void onLayout(bool changed, int l, int t, int w, int h)override;
     public:
-        SlidingTabIndicator(Context* context,const AttributeSet&atts,TabLayout*parent);
+        SlidingTabIndicator(Context* context,const AttributeSet*atts,TabLayout*parent);
         ~SlidingTabIndicator()override;
         void setSelectedIndicatorColor(int color);
         void setSelectedIndicatorHeight(int height);
@@ -311,9 +310,8 @@ protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
 public:
-    TabLayout(int w,int h);
-    TabLayout(Context*context,const AttributeSet&atts);
-    TabLayout(Context*context,const AttributeSet* attrs,int defStyleAttr=0);
+    TabLayout(Context*context,const AttributeSet*atts);
+    TabLayout(Context*context,const AttributeSet* attrs,int defStyleAttr);
     ~TabLayout()override;
     void setSelectedTabIndicatorColor( int color);
     void setSelectedTabIndicatorHeight(int height);

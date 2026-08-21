@@ -30,7 +30,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs)
+TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,const AttributeSet* attrs)
     :AbstractTimePickerDelegate(delegator, context) {
 
     auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);

@@ -31,6 +31,20 @@
     <attr name="popEnterAnim" />
     <attr name="popExitAnim" />
 </declare-styleable>
+<declare-styleable name="NavDeepLinkDeclare">
+    <attr name="android:autoVerify" />
+    <attr name="uri" format="string" />
+</declare-styleable>
+<declare-styleable name="ActivityNavigator">
+    <attr name="targetPackage" format="string" />
+    <attr name="android:name" />
+    <attr name="action" />
+    <attr name="data" />
+    <attr name="dataPattern" />
+</declare-styleable>
+<declare-styleable name="FragmentNavigator">
+    <attr name="android:name" />
+</declare-styleable>
 <declare-styleable name="NavArgument">
     <attr name="android:name" />
     <attr name="android:defaultValue" />

@@ -20,12 +20,10 @@
 namespace cdroid{
 static constexpr float FLOAT_MIN = FLT_MIN;//std::numeric_limits<float>::min();
 
-PatternLockView::PatternLockView(int w,int h):View(w,h){
-    initView();
-    setDotCount(DEFAULT_PATTERN_DOT_COUNT);
-}
+PatternLockView::PatternLockView(Context*ctx)
+    :PatternLockView(ctx,nullptr){}
 
-PatternLockView::PatternLockView(Context* context,const AttributeSet& attrs):PatternLockView(context,&attrs,0){}
+PatternLockView::PatternLockView(Context* context,const AttributeSet* attrs):PatternLockView(context,attrs,0){}
 
 PatternLockView::PatternLockView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
    :View::View(context,pAttrs, defStyleAttr){

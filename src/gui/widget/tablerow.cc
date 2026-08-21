@@ -55,15 +55,13 @@ TableRow::LayoutParams::LayoutParams(const MarginLayoutParams& source)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TableRow::TableRow(int w,int h):LinearLayout(w,h){
-    initTableRow();
-}
+TableRow::TableRow(Context*ctx)
+    :TableRow(ctx,nullptr){}
 
-TableRow::TableRow(Context* context,const AttributeSet& attrs):TableRow(context,&attrs,0){}
+TableRow::TableRow(Context* context,const AttributeSet* attrs):TableRow(context,attrs,0){}
 
 TableRow::TableRow(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :LinearLayout(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initTableRow();
 }
 

@@ -25,22 +25,20 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(Chronometer)
 
-Chronometer::Chronometer(int w,int h):TextView(std::string(),w,h){
-    init();
-}
+Chronometer::Chronometer(Context*ctx)
+    :Chronometer(ctx,nullptr){}
 
-Chronometer::Chronometer(Context*ctx,const AttributeSet& atts):Chronometer(ctx,&atts,0){}
+Chronometer::Chronometer(Context*ctx,const AttributeSet* atts):Chronometer(ctx,atts,0){}
 
 Chronometer::Chronometer(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :TextView(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::Chronometer, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::Chronometer, defStyleAttr);
     
 setFormat(ta->getString(R::styleable::Chronometer_format));
 setCountDown(ta->getBoolean(R::styleable::Chronometer_countDown,false));
-{ auto ta2 = ctx->obtainStyledAttributes(atts, R::styleable::ChronometerCdroid);
+{ auto ta2 = ctx->obtainStyledAttributes(pAttrs, R::styleable::ChronometerCdroid);
   mColonBlinking = ta2->getBoolean(R::styleable::ChronometerCdroid_colonBlinking, mColonBlinking); }
 
 }

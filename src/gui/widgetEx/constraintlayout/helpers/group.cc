@@ -29,16 +29,10 @@ DECLARE_WIDGET(Group)
 
 namespace cdroid {
 
-Group::Group(Context* ctx,const AttributeSet& attrs):Group(ctx,&attrs,0){}
+Group::Group(Context* ctx,const AttributeSet* attrs):Group(ctx,attrs,0){}
 
 Group::Group(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
-    mUseViewMeasure = false;
-}
-
-Group::Group(int width, int height)
-    : ConstraintHelper(width, height) {
     mUseViewMeasure = false;
 }
 

@@ -22,17 +22,12 @@ namespace cdroid{
 
 DECLARE_WIDGET(ViewAnimator)
 
-ViewAnimator::ViewAnimator(int w,int h):FrameLayout(w,h){
-    mInAnimation = nullptr;
-    mOutAnimation= nullptr;
-    setMeasureAllChildren(true);
-}
+ViewAnimator::ViewAnimator(Context*ctx):ViewAnimator(ctx,nullptr){}
 
-ViewAnimator::ViewAnimator(Context* context,const AttributeSet& attrs):ViewAnimator(context,&attrs,0){}
+ViewAnimator::ViewAnimator(Context* context,const AttributeSet* attrs):ViewAnimator(context,attrs,0){}
 
 ViewAnimator::ViewAnimator(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :FrameLayout(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     mInAnimation = nullptr;
     mOutAnimation= nullptr;
 }
@@ -41,10 +36,10 @@ ViewAnimator::~ViewAnimator(){
     delete mOutAnimation;
 }
 
-void ViewAnimator::initViewAnimator(Context* context, const AttributeSet& attrs) {
+void ViewAnimator::initViewAnimator(Context* context, const AttributeSet* attrs) {
     // For compatibility, default to measure children, but allow XML
     // attribute to override.
-    setMeasureAllChildren(attrs.getAttributeBooleanValue(std::string(), "measureAllChildren", true));
+    setMeasureAllChildren(attrs->getAttributeBooleanValue(std::string(), "measureAllChildren", true));
     mInAnimation  = nullptr;
     mOutAnimation = nullptr;
 }

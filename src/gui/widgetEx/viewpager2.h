@@ -85,8 +85,8 @@ protected:
     ScrollEventAdapter* mScrollEventAdapter;
     AccessibilityProvider* mAccessibilityProvider; //to avoid creation of a synthetic accessor
 private:
-    void initialize(Context* context, const AttributeSet& attrs);
-    void setOrientation(Context* context,const AttributeSet& attrs);
+    void initialize(Context* context, const AttributeSet* attrs);
+    void setOrientation(Context* context,const AttributeSet* attrs);
     void restorePendingState();
     void unregisterCurrentItemDataSetTracker(RecyclerView::Adapter*adapter);
 protected:
@@ -104,9 +104,8 @@ protected:
     void setCurrentItemInternal(int item, bool smoothScroll);
     void snapToPage();
 public:
-    ViewPager2(int w,int h);
-    ViewPager2(Context* context, const AttributeSet& attrs);
-    ViewPager2(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    ViewPager2(Context* context, const AttributeSet* attrs);
+    ViewPager2(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~ViewPager2()override;
     void setAdapter(RecyclerView::Adapter* adapter);
     void registerCurrentItemDataSetTracker(RecyclerView::Adapter* adapter);
@@ -231,7 +230,7 @@ private:
     friend ViewPager2;
     ViewPager2*mVP;
 public:
-    RecyclerViewImpl(Context* context,const AttributeSet&,ViewPager2*);
+    RecyclerViewImpl(Context* context,const AttributeSet*,ViewPager2*);
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
     bool onTouchEvent(MotionEvent& event)override;

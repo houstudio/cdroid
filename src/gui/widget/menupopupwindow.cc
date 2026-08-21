@@ -5,7 +5,10 @@
 #include <menu/listmenupresenter.h>
 namespace cdroid{
 
-MenuPopupWindow::MenuPopupWindow(Context* context,const AttributeSet& attrs,
+MenuPopupWindow::MenuPopupWindow(Context*ctx)
+    :MenuPopupWindow(ctx,nullptr,0,0){}
+
+MenuPopupWindow::MenuPopupWindow(Context* context,const AttributeSet* attrs,
         int defStyleAttr,int defStyleRes)
     :ListPopupWindow(context, attrs,defStyleAttr,defStyleRes){
 }

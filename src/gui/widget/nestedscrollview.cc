@@ -51,17 +51,15 @@ private:
 
 DECLARE_WIDGET2(NestedScrollView,R::attr::scrollViewStyle)
 
-NestedScrollView::NestedScrollView(int w,int h):FrameLayout(w,h){
-    initScrollView(nullptr);
-}
+NestedScrollView::NestedScrollView(Context*ctx)
+    :NestedScrollView(ctx,nullptr){}
 
-NestedScrollView::NestedScrollView(Context* context,const AttributeSet& attrs):NestedScrollView(context,&attrs,0){}
+NestedScrollView::NestedScrollView(Context* context,const AttributeSet* attrs):NestedScrollView(context,attrs,0){}
 
 NestedScrollView::NestedScrollView(Context* context,const AttributeSet* pAttrs,int defStyleAttr):FrameLayout(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
-    initScrollView(&attrs);
+    initScrollView(pAttrs);
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::ScrollView, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::ScrollView, defStyleAttr);
     
 setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport,false));
 

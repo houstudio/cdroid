@@ -34,7 +34,7 @@ DECLARE_WIDGET(Grid)
 namespace cdroid {
 using namespace cdroid::internal;
 
-Grid::Grid(Context* ctx,const AttributeSet& attrs):Grid(ctx,&attrs,0){}
+Grid::Grid(Context* ctx,const AttributeSet* attrs):Grid(ctx,attrs,0){}
 
 Grid::Grid(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
@@ -44,10 +44,6 @@ Grid::Grid(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     // constructed so it dispatches to Grid::init — same pattern as Carousel/MotionEffect/
     // Placeholder/CircularFlow. ConstraintHelper::init is idempotent on re-run.
     init(pAttrs);
-}
-
-Grid::Grid(int width, int height)
-    : ConstraintHelper(width, height) {
 }
 
 using LP = ConstraintLayout::LayoutParams;
@@ -166,7 +162,7 @@ void Grid::buildBoxes() {
 }
 
 View* Grid::makeNewView() {
-    View* v = new View(0, 0);
+    View* v = new View(getContext());
     v->setId(View::generateViewId());
     v->setVisibility(View::INVISIBLE);
     auto* p = new ConstraintLayout::LayoutParams(0, 0);

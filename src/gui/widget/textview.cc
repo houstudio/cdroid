@@ -190,13 +190,15 @@ static constexpr int ELLIPSIZE_MARQUEE = 4;
 // AOSP TextView(Context, AttributeSet) → this(context, attrs, textViewStyle):
 // code-built TextViews (hand-made AttributeSet) ride the same default-style
 // chain as inflated ones, so the theme's textAppearance reaches them too.
-TextView::TextView(Context*ctx,const AttributeSet& attrs)
-    :TextView(ctx,&attrs,R::attr::textViewStyle) {
+TextView::TextView(Context*ctx)
+    :TextView(ctx,nullptr){}
+
+TextView::TextView(Context*ctx,const AttributeSet* attrs)
+    :TextView(ctx,attrs,R::attr::textViewStyle) {
 }
 
 TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :View(ctx,pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
     initView();
 
     // Phase 2: TypedArray switch-loop (AOSP TextView ctor pattern). Binary AXML
@@ -205,7 +207,7 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     // sequence below preserves the original order so behaviour is unchanged.
     // aapt2 pre-resolves enums/flags at compile time → binary getInt returns the
     // int directly (no string→enum map on that path); text XML still needs maps.
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::TextView, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::TextView, defStyleAttr);
 
 
 // --- gather phase: locals filled by the switch (binary) or attrs (text) ---
@@ -477,7 +479,7 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
         attributes.mFontFamilyExplicit = false;
     }
     {
-        auto taElem = ctx->obtainStyledAttributes(attrs, R::styleable::TextAppearance, defStyleAttr);
+        auto taElem = ctx->obtainStyledAttributes(pAttrs, R::styleable::TextAppearance, defStyleAttr);
         attributes.readTextAppearance(ctx, taElem.get());
     }
     applyTextAppearance(&attributes);
@@ -665,16 +667,6 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
         setLineHeight(lineHeight);
     }
 
-}
-
-TextView::TextView(int width, int height):TextView(std::string(),width,height) {
-}
-
-TextView::TextView(const std::string& text, int width, int height)
-    : View( width, height) {
-    initView();
-    mText = new SpannedString(TextUtils::utf8_utf16(text));
-    mTransformed = mText;
 }
 
 void TextView::initView() {

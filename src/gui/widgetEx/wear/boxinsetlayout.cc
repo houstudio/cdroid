@@ -20,11 +20,10 @@ namespace cdroid{
 
 DECLARE_WIDGET(BoxInsetLayout);
 
-BoxInsetLayout::BoxInsetLayout(Context* context,const AttributeSet& attrs):BoxInsetLayout(context,&attrs,0){}
+BoxInsetLayout::BoxInsetLayout(Context* context,const AttributeSet* attrs):BoxInsetLayout(context,attrs,0){}
 
 BoxInsetLayout::BoxInsetLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     // make sure we have a foreground padding object
     /*if (mForegroundPadding == nullptr) {
         mForegroundPadding = new Rect();

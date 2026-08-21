@@ -134,9 +134,9 @@ protected:
     void layout(int delta, bool animate)override;
     void computeContentWidth();
 public:
-    Spinner(int w,int h,int mode=0);
-    Spinner(Context*ctx,const AttributeSet&atts);
-    Spinner(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    Spinner(Context*ctx);   // AOSP Spinner(Context)
+    Spinner(Context*ctx,const AttributeSet*atts);
+    Spinner(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~Spinner()override;
     Context* getPopupContext()const;
     int measureContentWidth(Adapter* adapter, Drawable* background);

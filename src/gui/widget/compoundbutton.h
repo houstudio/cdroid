@@ -51,9 +51,9 @@ protected:
     void onDraw(Canvas&canvas)override;
     void setDefaultStateDescription();
 public:
-    CompoundButton(const std::string&txt,int width,int height);
-    CompoundButton(Context*ctx,const AttributeSet&attrs);
-    CompoundButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    CompoundButton(Context*ctx);   // AOSP CompoundButton(Context)
+    CompoundButton(Context*ctx,const AttributeSet*attrs);
+    CompoundButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~CompoundButton()override;
     void setButtonDrawable(int resid);
     void setButtonDrawable(Drawable*d);

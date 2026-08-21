@@ -27,17 +27,6 @@ namespace cdroid {
 
 DECLARE_WIDGET(BarcodeView)
 
-BarcodeView::BarcodeView(int w,int h):View(w,h) {
-    initView();
-};
-
-BarcodeView::BarcodeView(Context*ctx,const AttributeSet& attrs):BarcodeView(ctx,&attrs,0){}
-
-BarcodeView::BarcodeView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
-    initView();
-}
-
 BarcodeView::~BarcodeView() {
     ZBarcode_Clear(mSymbol);
     ZBarcode_Delete(mSymbol);

@@ -30,10 +30,11 @@ public:
     DECLARE_UIEVENT(void,OnDismissListener);
 private:
     class PopupDecorView:public Window{
+    public:
+        PopupDecorView(Context*ctx,int w,int h,int type);
     private:
         PopupWindow*mPop;
     public:
-        PopupDecorView(int w,int h,int type);
         bool dispatchKeyEvent(KeyEvent& event)override;
         bool dispatchTouchEvent(MotionEvent& ev)override;
         bool onTouchEvent(MotionEvent& event)override;
@@ -159,9 +160,10 @@ protected:
             int xOffset, int yOffset, int width, int height, int gravity, bool allowScroll);
      Rect getTransitionEpicenter();
 public:
-    PopupWindow(Context* context,const AttributeSet& attrs);
-    PopupWindow(Context* context,const AttributeSet& attrs, int defStyleAttr);
-    PopupWindow(Context* context,const AttributeSet& attrs, int defStyleAttr, int defStyleRes);
+    PopupWindow(Context* context);   // AOSP PopupWindow(Context)
+    PopupWindow(Context* context,const AttributeSet* attrs);
+    PopupWindow(Context* context,const AttributeSet* attrs, int defStyleAttr);
+    PopupWindow(Context* context,const AttributeSet* attrs, int defStyleAttr, int defStyleRes);
     PopupWindow(View* contentView, int width, int height,bool focusable=false);
     PopupWindow(int width, int height);
     virtual ~PopupWindow();

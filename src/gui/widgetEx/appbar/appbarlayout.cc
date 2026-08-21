@@ -25,8 +25,8 @@ using namespace cdroid::internal;
 
 // --- LayoutParams: app:layout_scrollFlags ------------------------------------
 
-AppBarLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet* attrs)
-    : LinearLayout::LayoutParams(c, *attrs) {
+AppBarLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& attrs)
+    : LinearLayout::LayoutParams(c, attrs) {
     // AOSP reads scrollViewFlags from AppBarLayout_Layout.
     auto ta = c->obtainStyledAttributes(attrs,
             cdroid::internal::R::styleable::AppBarLayoutLayout, 0, 0);
@@ -145,8 +145,8 @@ bool AppBarLayout::ScrollingViewBehavior::onMeasureChild(
 
 // --- AppBarLayout --------------------------------------------------------------
 
-AppBarLayout::AppBarLayout(Context* context, const AttributeSet& attrs)
-    : AppBarLayout(context, &attrs, 0) {}
+AppBarLayout::AppBarLayout(Context* context, const AttributeSet* attrs)
+    : AppBarLayout(context, attrs, 0) {}
 
 AppBarLayout::AppBarLayout(Context* context, const AttributeSet* attrs, int defStyleAttr)
     : LinearLayout(context, attrs, defStyleAttr) {

@@ -11,13 +11,6 @@ static const char* master_css =
 #include "master.css.inc"
 ;
 
-HtmlView::HtmlView(int w,int h)
-  :cdroid::View(w,h) {
-    m_hash_valid  = false;
-    m_html = nullptr;
-    mHtmlContext.load_master_stylesheet(master_css);
-}
-
 HtmlView::~HtmlView() {
 
 }

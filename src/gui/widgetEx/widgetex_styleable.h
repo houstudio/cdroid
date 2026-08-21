@@ -844,6 +844,23 @@ namespace internal { namespace R { namespace styleable {
     constexpr int NavAction_popEnterAnim = 9;
     constexpr int NavAction_popExitAnim = 10;
 
+    // NavDeepLinkDeclare (2 attrs)
+    extern const uint32_t NavDeepLinkDeclare[];
+    constexpr int NavDeepLinkDeclare_autoVerify = 0;
+    constexpr int NavDeepLinkDeclare_uri = 1;
+
+    // ActivityNavigator (5 attrs)
+    extern const uint32_t ActivityNavigator[];
+    constexpr int ActivityNavigator_targetPackage = 0;
+    constexpr int ActivityNavigator_name = 1;
+    constexpr int ActivityNavigator_action = 2;
+    constexpr int ActivityNavigator_data = 3;
+    constexpr int ActivityNavigator_dataPattern = 4;
+
+    // FragmentNavigator (1 attrs)
+    extern const uint32_t FragmentNavigator[];
+    constexpr int FragmentNavigator_name = 0;
+
     // NavArgument (4 attrs)
     extern const uint32_t NavArgument[];
     constexpr int NavArgument_name = 0;

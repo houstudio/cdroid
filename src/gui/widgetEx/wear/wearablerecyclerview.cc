@@ -21,25 +21,21 @@ namespace cdroid{
 
 DECLARE_WIDGET(WearableRecyclerView);
 
-WearableRecyclerView::WearableRecyclerView(int w,int h)
-    :RecyclerView(w,h){
-    mScrollManager = new ScrollManager();
-}
-
-WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet& attrs):WearableRecyclerView(context,&attrs,0){}
+WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* attrs):WearableRecyclerView(context,attrs,0){}
 
 WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :RecyclerView(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     mScrollManager = new ScrollManager();
     setHasFixedSize(true);
     // Padding is used to center the top and bottom items in the list, don't clip to padding to
     // allows the items to draw in that space.
     setClipToPadding(false);
 
-    setCircularScrollingGestureEnabled(attrs.getAttributeBooleanValue(std::string(), "circularScrollingGestureEnabled",mCircularScrollingEnabled));
-    setBezelFraction(attrs.getAttributeFloatValue(std::string(), "bezelWidth",mScrollManager->getBezelWidth()));
-    setScrollDegreesPerScreen(attrs.getAttributeFloatValue(std::string(), "scrollDegreesPerScreen",mScrollManager->getScrollDegreesPerScreen()));
+    if (pAttrs) {
+        setCircularScrollingGestureEnabled(pAttrs->getAttributeBooleanValue(std::string(), "circularScrollingGestureEnabled",mCircularScrollingEnabled));
+        setBezelFraction(pAttrs->getAttributeFloatValue(std::string(), "bezelWidth",mScrollManager->getBezelWidth()));
+        setScrollDegreesPerScreen(pAttrs->getAttributeFloatValue(std::string(), "scrollDegreesPerScreen",mScrollManager->getScrollDegreesPerScreen()));
+    }
 }
 
 WearableRecyclerView::~WearableRecyclerView(){

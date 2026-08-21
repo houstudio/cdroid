@@ -10,9 +10,9 @@
 namespace cdroid {
 using namespace cdroid::internal;
 
-CollapsingToolbarLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet* attrs)
-    : FrameLayout::LayoutParams(context, *attrs) {
-    auto ta = context->obtainStyledAttributes(*attrs,
+CollapsingToolbarLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet& attrs)
+    : FrameLayout::LayoutParams(context, attrs) {
+    auto ta = context->obtainStyledAttributes(attrs,
                 R::styleable::CollapsingToolbarLayoutLayout, 0, 0);
             collapseMode = ta->getInt(R::styleable::CollapsingToolbarLayoutLayout_layout_collapseMode,
             COLLAPSE_MODE_OFF);
@@ -26,8 +26,8 @@ CollapsingToolbarLayout::LayoutParams::LayoutParams(int width, int height)
 CollapsingToolbarLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
     : FrameLayout::LayoutParams(source) {}
 
-CollapsingToolbarLayout::CollapsingToolbarLayout(Context* context, const AttributeSet& attrs)
-    : CollapsingToolbarLayout(context, &attrs, 0) {}
+CollapsingToolbarLayout::CollapsingToolbarLayout(Context* context, const AttributeSet* attrs)
+    : CollapsingToolbarLayout(context, attrs, 0) {}
 
 CollapsingToolbarLayout::CollapsingToolbarLayout(Context* context,
         const AttributeSet* attrs, int defStyleAttr)
@@ -213,7 +213,7 @@ CollapsingToolbarLayout::LayoutParams* CollapsingToolbarLayout::generateLayoutPa
 
 CollapsingToolbarLayout::LayoutParams* CollapsingToolbarLayout::generateLayoutParams(
         const AttributeSet& attrs) const {
-    return new LayoutParams(mContext, &attrs);
+    return new LayoutParams(mContext, attrs);
 }
 
 DECLARE_WIDGET(CollapsingToolbarLayout)

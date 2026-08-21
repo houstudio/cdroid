@@ -26,20 +26,16 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(FrameLayout)
 
-FrameLayout::FrameLayout(int w,int h):ViewGroup(w,h){
-    mMeasureAllChildren = false;
-    mForegroundPaddingLeft= mForegroundPaddingRight = 0;
-    mForegroundPaddingTop = mForegroundPaddingBottom= 0;
-}
+FrameLayout::FrameLayout(Context*ctx)
+    :FrameLayout(ctx,nullptr){}
 
-FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs):FrameLayout(context,&attrs,0){}
+FrameLayout::FrameLayout(Context* context,const AttributeSet* attrs):FrameLayout(context,attrs,0){}
 
 FrameLayout::FrameLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     mMeasureAllChildren = false;
     {
-        auto ta = context->obtainStyledAttributes(attrs, R::styleable::FrameLayout, defStyleAttr);
+        auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::FrameLayout, defStyleAttr);
     
     
     for (size_t n = ta->getIndexCount(); n > 0; ) {

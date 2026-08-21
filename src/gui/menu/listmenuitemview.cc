@@ -26,18 +26,17 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 DECLARE_WIDGET2(ListMenuItemView,R::attr::listMenuViewStyle)
-ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs):ListMenuItemView(context,&attrs,0){}
+ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* attrs):ListMenuItemView(context,attrs,0){}
 
 ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :LinearLayout(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 
     // AOSP: obtainStyledAttributes(attrs, R.styleable.ListMenuItemView, defStyleAttr).
     // The item attrs carry no generated styleable; resolve them by attr id directly.
     static const uint32_t LIST_MENU_ITEM_ATTRS[] = {
         (uint32_t)R::attr::itemBackground, (uint32_t)R::attr::itemTextAppearance,
         (uint32_t)R::attr::preserveIconSpacing, (uint32_t)R::attr::subMenuArrow, 0 };
-    auto ta = context->obtainStyledAttributes(attrs, LIST_MENU_ITEM_ATTRS, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, LIST_MENU_ITEM_ATTRS, defStyleAttr);
 
     mBackground = ta->getDrawable(0);
     mTextAppearance = ta->getResourceId(1, 0);

@@ -80,8 +80,8 @@ protected:
     Parcelable* onSaveInstanceState()override;
     void onRestoreInstanceState(Parcelable& state)override;
 public:
-    IconMenuView(Context* context, const AttributeSet& attrs);
-    IconMenuView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    IconMenuView(Context* context, const AttributeSet* attrs);
+    IconMenuView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     int getMaxItems()const;
 
     Drawable* getItemBackgroundDrawable();

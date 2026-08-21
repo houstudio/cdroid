@@ -48,7 +48,7 @@ private:
     void setContentDescriptions();
     void trySetContentDescription(View* root, int viewId, int contDescResId);
 public:
-    TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs);
+    TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,const AttributeSet* attrs);
     bool validateInput() override;
 
     void setDate(int hour, int minute) override;

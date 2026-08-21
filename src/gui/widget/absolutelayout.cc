@@ -50,14 +50,13 @@ AbsoluteLayout::LayoutParams::LayoutParams(const LayoutParams& source)
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-AbsoluteLayout::AbsoluteLayout(int w,int h):ViewGroup(w,h){
-}
+AbsoluteLayout::AbsoluteLayout(Context*ctx)
+    :AbsoluteLayout(ctx,nullptr){}
 
-AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet& attrs):AbsoluteLayout(context,&attrs,0){}
+AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet* attrs):AbsoluteLayout(context,attrs,0){}
 
 AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 }
 
 void AbsoluteLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){

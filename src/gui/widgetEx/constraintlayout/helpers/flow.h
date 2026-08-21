@@ -48,9 +48,8 @@ class Flow : public ConstraintHelper {
     static constexpr int VERTICAL_ALIGN_CENTER   = clcore::Flow::VERTICAL_ALIGN_CENTER;
     static constexpr int VERTICAL_ALIGN_BASELINE = clcore::Flow::VERTICAL_ALIGN_BASELINE;
 
-    Flow(Context* ctx, const AttributeSet& attrs);
-    Flow(Context* ctx,const AttributeSet* attrs,int defStyleAttr=0);
-    explicit Flow(int width, int height);
+    Flow(Context* ctx, const AttributeSet* attrs);
+    Flow(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
     // configuration (delegate to the core Flow)
     void setWrapMode(int wrapMode);

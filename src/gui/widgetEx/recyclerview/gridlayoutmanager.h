@@ -126,7 +126,7 @@ public:
     void onItemsUpdated(RecyclerView& recyclerView, int positionStart, int itemCount,Object* payload)override;
     void onItemsMoved(RecyclerView& recyclerView, int from, int to, int itemCount)override;
     LayoutParams* generateDefaultLayoutParams()const override;
-    LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(Context* c,const AttributeSet* attrs)const override;
     LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const override;
 
     bool checkLayoutParams(const RecyclerView::LayoutParams* lp)const override;

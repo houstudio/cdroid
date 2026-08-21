@@ -15,20 +15,16 @@
 namespace cdroid {
 using namespace cdroid::internal;
 
-AbsListView::AbsListView(int w,int h):AdapterView(w,h) {
-    mEdgeGlowBottom = new EdgeEffect(mContext);
-    mEdgeGlowTop = new EdgeEffect(mContext);
-    initAbsListView();
-}
+AbsListView::AbsListView(Context*ctx)
+    :AbsListView(ctx,nullptr){}
 
-AbsListView::AbsListView(Context*ctx,const AttributeSet& atts):AbsListView(ctx,&atts,0){}
+AbsListView::AbsListView(Context*ctx,const AttributeSet* atts):AbsListView(ctx,atts,0){}
 
 AbsListView::AbsListView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):AdapterView(ctx,pAttrs, defStyleAttr) {
-    const AttributeSet& atts = *pAttrs;
-    mEdgeGlowBottom = new EdgeEffect(mContext,&atts);
-    mEdgeGlowTop = new EdgeEffect(mContext,&atts);
+    mEdgeGlowBottom = new EdgeEffect(mContext,pAttrs);
+    mEdgeGlowTop = new EdgeEffect(mContext,pAttrs);
     initAbsListView();
-    readAbsListViewAttrs(atts);
+    readAbsListViewAttrs(pAttrs);
 }
 
 void AbsListView::initAbsListView() {
@@ -117,7 +113,7 @@ void AbsListView::initAbsListView() {
 // Styled-attribute reads (AOSP AbsListView ctor body, verbatim order/methods).
 // Text-XML ctor path is dropped: this resolves only through the binary-AXML
 // TypedArray; a==null (text XML / no arsc) leaves the widget at its defaults.
-void AbsListView::readAbsListViewAttrs(const AttributeSet& atts) {
+void AbsListView::readAbsListViewAttrs(const AttributeSet* atts) {
     auto a = mContext->obtainStyledAttributes(atts, R::styleable::AbsListView);
     if (!a) return;
 
@@ -938,7 +934,7 @@ bool AbsListView::acceptFilter() const {
 
 void AbsListView::createTextFilter(bool animateEntrance) {
     if (mPopup == nullptr) {
-        PopupWindow* p = new PopupWindow(getContext(),AttributeSet(getContext(),"cdroid"));
+        PopupWindow* p = new PopupWindow(getContext(),nullptr);
         p->setFocusable(false);
         p->setTouchable(false);
         p->setInputMethodMode(PopupWindow::INPUT_METHOD_NOT_NEEDED);

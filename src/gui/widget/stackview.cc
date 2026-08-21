@@ -25,7 +25,10 @@ DECLARE_WIDGET(StackView);
 
 std::shared_ptr<StackView::HolographicHelper> StackView::sHolographicHelper;
 
-StackView::StackView(Context* context,const  AttributeSet& attrs)
+StackView::StackView(Context*ctx)
+    :StackView(ctx,nullptr){}
+
+StackView::StackView(Context* context,const  AttributeSet* attrs)
     :AdapterViewAnimator(context, attrs){
 
     // AOSP: obtainStyledAttributes(attrs, R.styleable.StackView) — resOutColor /
@@ -48,11 +51,11 @@ void StackView::initStackView() {
     mActivePointerId = INVALID_POINTER;
 
     mVelocityTracker = nullptr;
-    mHighlight = new ImageView(1,1);
+    mHighlight = new ImageView(getContext());
     mHighlight->setLayoutParams(new LayoutParams(mHighlight));
     addViewInLayout(mHighlight, -1, new LayoutParams(mHighlight));
 
-    mClickFeedback = new ImageView(1,1);
+    mClickFeedback = new ImageView(getContext());
     mClickFeedback->setLayoutParams(new LayoutParams(mClickFeedback));
     addViewInLayout(mClickFeedback, -1, new LayoutParams(mClickFeedback));
     mClickFeedback->setVisibility(INVISIBLE);
@@ -313,7 +316,7 @@ void StackView::updateChildTransforms() {
 /////////////////////////////////////////////////////////////////////////////////////////
 //private static class StackFrame:public FrameLayout {
 
-StackView::StackFrame::StackFrame(Context* context):FrameLayout(context,AttributeSet(context,"")){
+StackView::StackFrame::StackFrame(Context* context):FrameLayout(context){
 }
 
 void StackView::StackFrame::setTransformAnimator(ObjectAnimator* oa) {

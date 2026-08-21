@@ -23,18 +23,12 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(Button,R::attr::buttonStyle)
 
-Button::Button(Context*ctx,const AttributeSet& attrs):Button(ctx,&attrs,0){}
+Button::Button(Context*ctx)
+    :Button(ctx,nullptr){}
+
+Button::Button(Context*ctx,const AttributeSet* attrs):Button(ctx,attrs,0){}
 
 Button::Button(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):TextView(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
-}
-
-Button::Button(int32_t w, int32_t h):Button(std::string(),w,h){
-}
-
-Button::Button(const std::string& text, int32_t w, int32_t h)
-  :TextView(text, w, h){
-    setGravity(Gravity::CENTER);
 }
 
 Button::~Button() {

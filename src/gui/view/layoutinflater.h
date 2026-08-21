@@ -28,6 +28,9 @@ class ViewGroup;
 class MenuInflater;
 class LayoutInflater{
 public:
+    // AOSP Factory/Factory2.onCreateView declare AttributeSet @NonNull — the
+    // inflater chain keeps references; only the widget ctor boundary (nullable
+    // AttributeSet*) takes a pointer.
     typedef std::function<View*(Context*ctx, const AttributeSet&attrs)>ViewInflater;
     typedef std::function<bool(const std::string&)>Filter;
     typedef std::function<View*(const std::string&,Context*,const AttributeSet&)>Factory;
@@ -63,9 +66,9 @@ private:
 protected:
     friend MenuInflater;
     LayoutInflater(Context*ctx);
-    View* createViewFromTag(View* parent,const std::string& name, Context* context,AttributeSet& attrs,bool ignoreThemeAttr);
-    void rInflateChildren(XmlPullParser& parser, View* parent,AttributeSet& attrs,bool finishInflate);
-    void rInflate(XmlPullParser& parser, View* parent, Context* context,AttributeSet& attrs, bool finishInflate);
+    View* createViewFromTag(View* parent,const std::string& name, Context* context,const AttributeSet& attrs,bool ignoreThemeAttr);
+    void rInflateChildren(XmlPullParser& parser, View* parent,const AttributeSet& attrs,bool finishInflate);
+    void rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate);
 public:
     static LayoutInflater*from(Context*context);
     static ViewInflater getInflater(const std::string&);
@@ -108,12 +111,12 @@ public:
       */
     View* inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot);
 
-    View* createView(const std::string& name, const std::string& prefix,AttributeSet& attrs);
-    View* createView(Context* viewContext, const std::string& name, const std::string& prefix,AttributeSet& attrs);
-    View* tryCreateView(View* parent,const std::string& name, Context* context,AttributeSet& attr);
-    virtual View* onCreateView(const std::string& name,AttributeSet& attrs);
-    virtual View* onCreateView(View* parent, const std::string& name,AttributeSet& attrs);
-    virtual View* onCreateView(Context* viewContext, View* parent, const std::string& name,AttributeSet& attrs);
+    View* createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs);
+    View* createView(Context* viewContext, const std::string& name, const std::string& prefix,const AttributeSet& attrs);
+    View* tryCreateView(View* parent,const std::string& name, Context* context,const AttributeSet& attrs);
+    virtual View* onCreateView(const std::string& name,const AttributeSet& attrs);
+    virtual View* onCreateView(View* parent, const std::string& name,const AttributeSet& attrs);
+    virtual View* onCreateView(Context* viewContext, View* parent, const std::string& name,const AttributeSet& attrs);
 };
 
 // SFINAE factory: prefer the AOSP pointer ctor when T has one; otherwise fall
@@ -121,12 +124,12 @@ public:
 // converted; they need the arsc layer fully ready first).
 namespace detail {
 template<typename T>
-inline View* makeView(Context*ctx,const AttributeSet&attr,int da,std::true_type){
-    return new T(ctx,&attr,da);
+inline View* makeView(Context*ctx,const AttributeSet*attr,int da,std::true_type){
+    return new T(ctx,attr,da);
 }
 template<typename T>
-inline View* makeView(Context*ctx,const AttributeSet&attr,int,std::false_type){
-    return new T(ctx,attr);
+inline View* makeView(Context*ctx,const AttributeSet*attr,int,std::false_type){
+    return new T(ctx,attr);   // widget family without the 3-arg ctor
 }
 }
 
@@ -135,7 +138,7 @@ class InflaterRegister{
 public:
     InflaterRegister(const std::string&name,int defStyleAttr){
         LayoutInflater::registerInflater(name,defStyleAttr,[defStyleAttr](Context*ctx,const AttributeSet&attr)->View*{
-            return detail::makeView<T>(ctx,attr,defStyleAttr,
+            return detail::makeView<T>(ctx,&attr,defStyleAttr,
                 std::is_constructible<T,Context*,const AttributeSet*,int>{});
         });
     }

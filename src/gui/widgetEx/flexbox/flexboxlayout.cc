@@ -25,16 +25,11 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(FlexboxLayout)
 
-FlexboxLayout::FlexboxLayout(int w,int h):ViewGroup(w,h){
-    init();
-}
-
-FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):FlexboxLayout(context,&attrs,0){}
+FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet* attrs):FlexboxLayout(context,attrs,0){}
 
 FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr):ViewGroup(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     init();
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::FlexboxLayout, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::FlexboxLayout, defStyleAttr);
     mFlexDirection = ta->getInt(R::styleable::FlexboxLayout_flexDirection, (int)FlexDirection::ROW);
     mFlexWrap = ta->getInt(R::styleable::FlexboxLayout_flexWrap, (int)FlexWrap::NOWRAP);
     mJustifyContent = ta->getInt(R::styleable::FlexboxLayout_justifyContent, (int)JustifyContent::FLEX_START);

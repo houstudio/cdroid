@@ -127,9 +127,9 @@ protected:
     Parcelable* onSaveInstanceState() override;
     void onRestoreInstanceState(Parcelable& state)override;
 public:
-    SlidingPaneLayout(int w,int h);
-    SlidingPaneLayout(Context* context, const AttributeSet& attrs);
-    SlidingPaneLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    SlidingPaneLayout(Context*ctx);   // AOSP SlidingPaneLayout(Context)
+    SlidingPaneLayout(Context* context, const AttributeSet* attrs);
+    SlidingPaneLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~SlidingPaneLayout()override;
 
     void setLockMode(int);
@@ -215,7 +215,7 @@ public:
 
 class SlidingPaneLayout::TouchBlocker:public FrameLayout {
 public:
-    TouchBlocker(View* view):FrameLayout(1,1){
+    TouchBlocker(View* view):FrameLayout(view->getContext()){
         addView(view);
     }
     bool onTouchEvent(MotionEvent& event) override{

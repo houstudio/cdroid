@@ -27,9 +27,9 @@ private:
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
-    Space(int w,int h);
-    Space(Context*context,const AttributeSet& attrs);
-    Space(Context*context,const AttributeSet* attrs,int defStyleAttr=0);
+    Space(Context*ctx);   // AOSP Space(Context)
+    Space(Context*context,const AttributeSet* attrs);
+    Space(Context*context,const AttributeSet* attrs,int defStyleAttr);
     void draw(Canvas&)override;
 };
 

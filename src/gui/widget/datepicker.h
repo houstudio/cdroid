@@ -33,16 +33,17 @@ private:
     DatePickerDelegate* mDelegate;
     int mMode;
 private:
-    DatePickerDelegate* createSpinnerUIDelegate(Context*,const AttributeSet& attrs);
-    DatePickerDelegate* createCalendarUIDelegate(Context*,const AttributeSet& attrs);
+    DatePickerDelegate* createSpinnerUIDelegate(Context*,const AttributeSet* attrs);
+    DatePickerDelegate* createCalendarUIDelegate(Context*,const AttributeSet* attrs);
 protected:
     void onConfigurationChanged(Configuration& newConfig)override;
     void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container)override;
     Parcelable* onSaveInstanceState()override;
     void onRestoreInstanceState(Parcelable&state)override;
 public:
-    DatePicker(Context* context,const AttributeSet& attrs);
-    DatePicker(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    DatePicker(Context*ctx);   // AOSP DatePicker(Context)
+    DatePicker(Context* context,const AttributeSet* attrs);
+    DatePicker(Context* context,const AttributeSet* attrs,int defStyleAttr);
     int getMode();
 
     void init(int year, int monthOfYear, int dayOfMonth,const OnDateChangedListener& onDateChangedListener);

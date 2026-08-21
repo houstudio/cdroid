@@ -50,9 +50,9 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual void layout(int delta, bool animate)=0;
 public:
-    AbsSpinner(int w,int h);
-    AbsSpinner(Context*,const AttributeSet&atts);
-    AbsSpinner(Context*,const AttributeSet* attrs,int defStyleAttr=0);
+    AbsSpinner(Context*ctx);   // AOSP AbsSpinner(Context)
+    AbsSpinner(Context*,const AttributeSet*atts);
+    AbsSpinner(Context*,const AttributeSet* attrs,int defStyleAttr);
     virtual ~AbsSpinner();
     int getCount()override;
     View* getSelectedView()override;

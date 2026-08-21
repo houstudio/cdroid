@@ -77,23 +77,16 @@ CardViewImpl* CardView::IMPL = &mCardViewBaseImpl;//&mCardViewApi21Impl;
 
 DECLARE_WIDGET(CardView);
 
-CardView::CardView(int w,int h):FrameLayout(w,h){
-    mCardViewDelegate = new CardViewDelegateInternal(this);
-    mCompatPadding = false;
-    mPreventCornerOverlap =true;
-    mUserSetMinWidth =0;
-    mUserSetMinHeight=0;
-    IMPL->initialize(mCardViewDelegate, mContext, 0, 0, 0, 0);
-}
+CardView::CardView(Context*ctx)
+    :CardView(ctx,nullptr){}
 
-CardView::CardView(Context* context,const AttributeSet& attrs):CardView(context,&attrs,0){}
+CardView::CardView(Context* context,const AttributeSet* attrs):CardView(context,attrs,0){}
 
 CardView::CardView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :FrameLayout(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     mCardViewDelegate = new CardViewDelegateInternal(this);
     // AOSP androidx CardView: CardView styleable (defStyleRes R.style.CardView).
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::CardView, defStyleAttr);
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::CardView, defStyleAttr);
     cdroid::RefPtr<ColorStateList> backgroundColor;
     if (a->hasValue(R::styleable::CardView_cardBackgroundColor)) {
         backgroundColor = a->getColorStateList(R::styleable::CardView_cardBackgroundColor);

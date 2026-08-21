@@ -22,4 +22,8 @@
     <public type="attr" name="action"           id="0x02010130"/>
     <public type="attr" name="data"             id="0x02010131"/>
     <public type="attr" name="dataPattern"      id="0x02010132"/>
+    <!-- uri/targetPackage defined with format in attrs.xml (a format-less
+         styleable reference alone is not a symbol definition for <public>). -->
+    <public type="attr" name="targetPackage"  id="0x0201014e"/>
+    <public type="attr" name="uri"            id="0x0201014f"/>
 </resources>

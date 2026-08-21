@@ -33,9 +33,9 @@ protected:
     void onStartTrackingTouch()override;
     void onStopTrackingTouch()override;
 public:
-    SeekBar(int w,int h);
-    SeekBar(Context*ctx,const AttributeSet& attrs);
-    SeekBar(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    SeekBar(Context*ctx);
+    SeekBar(Context*ctx,const AttributeSet* attrs);
+    SeekBar(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     void setOnSeekBarChangeListener(const OnSeekBarChangeListener& l);
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;

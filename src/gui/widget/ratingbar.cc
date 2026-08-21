@@ -25,24 +25,18 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(RatingBar,R::attr::ratingBarStyle)
 
-RatingBar::RatingBar(int w,int h):AbsSeekBar(w,h){
-    mNumStars = 5;
-    mIsUserSeekable = true;
-    mProgressOnStartTracking=0;
-    mTouchProgressOffset = 0.6f;
-    setStepSize(0.5f);
-}
+RatingBar::RatingBar(Context*ctx)
+    :RatingBar(ctx,nullptr){}
 
-RatingBar::RatingBar(Context*ctx,const AttributeSet& atts):RatingBar(ctx,&atts,0){}
+RatingBar::RatingBar(Context*ctx,const AttributeSet* atts):RatingBar(ctx,atts,0){}
 
 RatingBar::RatingBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :AbsSeekBar(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     mNumStars = 5;
     mIsUserSeekable = true;
     mProgressOnStartTracking =0;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::RatingBar, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::RatingBar, defStyleAttr);
     
 
 setIsIndicator(ta->getBoolean(R::styleable::RatingBar_isIndicator,!mIsUserSeekable));

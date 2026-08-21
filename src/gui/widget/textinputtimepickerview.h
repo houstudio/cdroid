@@ -57,8 +57,9 @@ private:
     bool isValidLocalizedHour(int localizedHour)const;
     int getHourOfDayFromLocalizedHour(int localizedHour);
 public:
-    TextInputTimePickerView(Context* context,const AttributeSet& attrs);
-    TextInputTimePickerView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    TextInputTimePickerView(Context*ctx);   // AOSP TextInputTimePickerView(Context)
+    TextInputTimePickerView(Context* context,const AttributeSet* attrs);
+    TextInputTimePickerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~TextInputTimePickerView()override;
     void setListener(const OnValueTypedListener& listener);
 

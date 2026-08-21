@@ -199,9 +199,9 @@ private:
 protected:
     bool onLongPress(Keyboard::Key* popupKey);
 public:
-    KeyboardView(int w,int h);
-    KeyboardView(Context*context,const AttributeSet&atts);
-    KeyboardView(Context*context,const AttributeSet* attrs,int defStyleAttr=0);
+    KeyboardView(Context*ctx);   // AOSP KeyboardView(Context)
+    KeyboardView(Context*context,const AttributeSet*atts);
+    KeyboardView(Context*context,const AttributeSet* attrs,int defStyleAttr);
     ~KeyboardView()override;
     void setOnKeyboardActionListener(const OnKeyboardActionListener& listener);
     Keyboard*getKeyboard();

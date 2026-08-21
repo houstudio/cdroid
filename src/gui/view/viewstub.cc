@@ -7,12 +7,14 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(ViewStub)
 
-ViewStub::ViewStub(Context* context,const AttributeSet& attrs):ViewStub(context,&attrs,0){}
+ViewStub::ViewStub(Context*ctx)
+    :ViewStub(ctx,nullptr){}
+
+ViewStub::ViewStub(Context* context,const AttributeSet* attrs):ViewStub(context,attrs,0){}
 
 ViewStub::ViewStub(Context* context,const AttributeSet* pAttrs,int defStyleAttr):View(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     // AOSP ViewStub: ViewStub styleable (layout/inflatedId are references).
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::ViewStub, defStyleAttr);
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::ViewStub, defStyleAttr);
     mInflatedId = a->getResourceId(R::styleable::ViewStub_inflatedId, View::NO_ID);
     mLayoutResource = a->getResourceId(R::styleable::ViewStub_layout, 0);
     mInflatedViewRef = nullptr;

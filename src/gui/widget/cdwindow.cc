@@ -49,7 +49,7 @@ constexpr int FORWARD = 0;
 constexpr int FINISH_HANDLED = 1;
 constexpr int FINISH_NOT_HANDLED = 2;
 
-Window::Window(Context*ctx,const AttributeSet&atts)
+Window::Window(Context*ctx,const AttributeSet*atts)
   :FrameLayout(ctx,atts){
     initWindow();
     Point pt;
@@ -60,7 +60,7 @@ Window::Window(Context*ctx,const AttributeSet&atts)
 }
 
 Window::Window(int x,int y,int width,int height,int type)
-  : FrameLayout(width,height),window_type(type){
+  : FrameLayout(&App::getInstance()),window_type(type){
     initWindow();
     LOGD("Window::Window(%p)",this);
     // Set the boundary

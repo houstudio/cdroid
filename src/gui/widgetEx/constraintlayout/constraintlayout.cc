@@ -204,7 +204,7 @@ void ConstraintLayout::LayoutParams::validate() {
 // ===========================================================================
 // ConstraintLayout
 // ===========================================================================
-ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet& attrs):ConstraintLayout(ctx,&attrs,0){}
+ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* attrs):ConstraintLayout(ctx,attrs,0){}
 
 ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ViewGroup(ctx, pAttrs, defStyleAttr) {
@@ -243,12 +243,6 @@ ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int d
             mConstraintLayoutStates = std::make_unique<ConstraintLayoutStates>(ctx, this, parser);
         }
     }
-}
-
-ConstraintLayout::ConstraintLayout(int width, int height)
-    : ViewGroup(width, height) {
-    mLayoutWidget.setMeasurer(asMeasurer());
-    mLayoutWidget.setCompanionWidget(this);
 }
 
 // Defined here (not defaulted in the header) so the unique_ptr<ConstraintLayoutStates> member

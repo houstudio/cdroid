@@ -25,17 +25,19 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 DECLARE_WIDGET2(DatePicker, R::attr::datePickerStyle);
-DatePicker::DatePicker(Context* context,const AttributeSet& attrs):DatePicker(context,&attrs,0){}
+DatePicker::DatePicker(Context*ctx)
+    :DatePicker(ctx,nullptr){}
+
+DatePicker::DatePicker(Context* context,const AttributeSet* attrs):DatePicker(context,attrs,0){}
 
 DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :FrameLayout(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 
     if (getImportantForAutofill() == IMPORTANT_FOR_AUTOFILL_AUTO) {
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);
     }
 
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::DatePicker, defStyleAttr);
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::DatePicker, defStyleAttr);
     const bool isDialogMode = a ? a->getBoolean(R::styleable::DatePicker_dialogMode, false) : false;
     const int requestedMode = a ? a->getInt(R::styleable::DatePicker_datePickerMode, MODE_SPINNER) : MODE_SPINNER;
     const int firstDayOfWeek = a ? a->getInt(R::styleable::DatePicker_firstDayOfWeek, 0) : 0;
@@ -50,16 +52,16 @@ DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleA
 
     switch (mMode) {
     case MODE_CALENDAR:
-        mDelegate = createCalendarUIDelegate(context, attrs);
+        mDelegate = createCalendarUIDelegate(context, pAttrs);
         if (mDelegate == nullptr) {
             // DEFERRED: calendar delegate not ported yet; fall back to spinner.
             mMode = MODE_SPINNER;
-            mDelegate = createSpinnerUIDelegate(context, attrs);
+            mDelegate = createSpinnerUIDelegate(context, pAttrs);
         }
         break;
     case MODE_SPINNER:
     default:
-        mDelegate = createSpinnerUIDelegate(context, attrs);
+        mDelegate = createSpinnerUIDelegate(context, pAttrs);
         break;
     }
 
@@ -75,11 +77,11 @@ DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleA
     });*/
 }
 
-DatePicker::DatePickerDelegate* DatePicker::createSpinnerUIDelegate(Context* context,const AttributeSet& attrs) {
+DatePicker::DatePickerDelegate* DatePicker::createSpinnerUIDelegate(Context* context,const AttributeSet* attrs) {
     return new DatePickerSpinnerDelegate(this, context, attrs);
 }
 
-DatePicker::DatePickerDelegate* DatePicker::createCalendarUIDelegate(Context* context,const AttributeSet& attrs) {
+DatePicker::DatePickerDelegate* DatePicker::createCalendarUIDelegate(Context* context,const AttributeSet* attrs) {
     return new DatePickerCalendarDelegate(this, context, attrs);
 }
 

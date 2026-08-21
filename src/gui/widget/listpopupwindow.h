@@ -62,9 +62,10 @@ private:
     void removePromptView();
     int  buildDropDown();
 public:
-    ListPopupWindow(Context*context,const AttributeSet&atts);
-    ListPopupWindow(Context* context,const AttributeSet& attrs, int defStyleAttr);
-    ListPopupWindow(Context* context,const AttributeSet& attrs, int defStyleAttr, int defStyleRes);
+    ListPopupWindow(Context*ctx);   // AOSP ListPopupWindow(Context)
+    ListPopupWindow(Context*context,const AttributeSet*atts);
+    ListPopupWindow(Context* context,const AttributeSet* attrs, int defStyleAttr);
+    ListPopupWindow(Context* context,const AttributeSet* attrs, int defStyleAttr, int defStyleRes);
     virtual ~ListPopupWindow();
     void setAdapter(Adapter*adapter);
     void setPromptPosition(int position);

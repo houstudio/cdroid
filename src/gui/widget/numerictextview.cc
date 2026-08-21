@@ -3,11 +3,13 @@
 namespace cdroid{
 
 DECLARE_WIDGET(NumericTextView);
-NumericTextView::NumericTextView(Context* context,const AttributeSet& attrs):NumericTextView(context,&attrs,0){}
+NumericTextView::NumericTextView(Context*ctx)
+    :NumericTextView(ctx,nullptr){}
+
+NumericTextView::NumericTextView(Context* context,const AttributeSet* attrs):NumericTextView(context,attrs,0){}
 
 NumericTextView::NumericTextView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :TextView(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     // Generate the hint text color based on disabled state.
     const int textColorDisabled = getTextColors()->getColorForState(StateSet::get(0), 0);
     setHintTextColor(textColorDisabled);

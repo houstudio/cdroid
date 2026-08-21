@@ -592,8 +592,8 @@ GridLayoutManager::LayoutParams* GridLayoutManager::generateDefaultLayoutParams(
     }
 }
 
-GridLayoutManager::LayoutParams* GridLayoutManager::generateLayoutParams(Context* c,const AttributeSet& attrs)const{
-    return new LayoutParams(c, attrs);
+GridLayoutManager::LayoutParams* GridLayoutManager::generateLayoutParams(Context* c,const AttributeSet* attrs)const{
+    return new LayoutParams(c, *attrs);
 }
 
 GridLayoutManager::LayoutParams* GridLayoutManager::generateLayoutParams(const ViewGroup::LayoutParams& lp)const{

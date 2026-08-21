@@ -24,18 +24,20 @@
 #include <core/typedarray.h>
 namespace cdroid{
 using namespace cdroid::internal;
-TimePicker::TimePicker(Context* context,const AttributeSet& attrs):TimePicker(context,&attrs,0){}
+TimePicker::TimePicker(Context*ctx)
+    :TimePicker(ctx,nullptr){}
+
+TimePicker::TimePicker(Context* context,const AttributeSet* attrs):TimePicker(context,attrs,0){}
 
 TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :FrameLayout(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 
     // DatePicker is important by default, unless app developer overrode attribute.
     if (getImportantForAutofill() == IMPORTANT_FOR_AUTOFILL_AUTO) {
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);
     }
 
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::TimePicker, defStyleAttr);
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::TimePicker, defStyleAttr);
     const bool isDialogMode = a ? a->getBoolean(R::styleable::TimePicker_dialogMode, false) : false;
     const int requestedMode = a ? a->getInt(R::styleable::TimePicker_timePickerMode, MODE_SPINNER) : MODE_SPINNER;
 
@@ -49,11 +51,11 @@ TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleA
 
     switch (mMode) {
     case MODE_CLOCK:
-        mDelegate = new TimePickerClockDelegate(this, context, attrs);
+        mDelegate = new TimePickerClockDelegate(this, context, pAttrs);
         break;
     case MODE_SPINNER:
     default:
-        mDelegate = new TimePickerSpinnerDelegate(this, context, attrs);
+        mDelegate = new TimePickerSpinnerDelegate(this, context, pAttrs);
         break;
     }
     /*mDelegate->setAutoFillChangeListener((v, h, m) -> {

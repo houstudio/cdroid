@@ -46,14 +46,13 @@ DECLARE_WIDGET(MotionLayout)
 namespace cdroid {
 using namespace cdroid::internal;
 
-MotionLayout::MotionLayout(Context* ctx,const AttributeSet& attrs):MotionLayout(ctx,&attrs,0){}
+MotionLayout::MotionLayout(Context* ctx,const AttributeSet* attrs):MotionLayout(ctx,attrs,0){}
 
 MotionLayout::MotionLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ConstraintLayout(ctx, pAttrs, defStyleAttr) {
-    const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     // layoutDescription is declared in the ConstraintLayout_Layout styleable.
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::ConstraintLayoutLayout, defStyleAttr);
     // app:layoutDescription="@xml/..." is a reference to the <MotionScene> xml
     // resource. Read it as a resource id (AOSP MotionLayout keeps the scene as an
     // int R.xml.*); binary AXML stores @xml/... as TYPE_REFERENCE, which getString
@@ -62,9 +61,6 @@ MotionLayout::MotionLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleA
         mSceneResource = (int)ta->getResourceId(R::styleable::ConstraintLayoutLayout_layoutDescription, 0);
     }
 }
-
-MotionLayout::MotionLayout(int width, int height)
-    : ConstraintLayout(width, height) {}
 
 MotionLayout::~MotionLayout() {
     // Owns the per-child Motion controllers and the transition animator (buildMotions/animator reuse

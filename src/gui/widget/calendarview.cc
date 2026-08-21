@@ -26,23 +26,21 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 DECLARE_WIDGET2(CalendarView, R::attr::calendarViewStyle);
-CalendarView::CalendarView(int w,int h):FrameLayout(w,h){
-    LOGD("%p",this);
-}
+CalendarView::CalendarView(Context*ctx)
+    :CalendarView(ctx,nullptr){}
 
-CalendarView::CalendarView(Context*context,const AttributeSet& attrs):CalendarView(context,&attrs,0){}
+CalendarView::CalendarView(Context*context,const AttributeSet* attrs):CalendarView(context,attrs,0){}
 
 CalendarView::CalendarView(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
   :FrameLayout(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::CalendarView, defStyleAttr);
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::CalendarView, defStyleAttr);
     const int mode = a ? a->getInt(R::styleable::CalendarView_calendarViewMode, (int)MODE_HOLO) : (int)MODE_HOLO;
     switch (mode) {
     case MODE_HOLO:
-        mDelegate = new CalendarViewLegacyDelegate(this, context, attrs);
+        mDelegate = new CalendarViewLegacyDelegate(this, context, pAttrs);
         break;
     case MODE_MATERIAL:
-        mDelegate = new CalendarViewMaterialDelegate(this, context, attrs);
+        mDelegate = new CalendarViewMaterialDelegate(this, context, pAttrs);
         break;
     default:
         mDelegate = nullptr;

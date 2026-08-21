@@ -49,9 +49,9 @@ protected:
           int heightMeasureSpec, int totalHeight)override;
     void measureHorizontal(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
-    TabWidget(int w,int h);
-    TabWidget(Context*ctx,const AttributeSet&atts);
-    TabWidget(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    TabWidget(Context*ctx);   // AOSP TabWidget(Context)
+    TabWidget(Context*ctx,const AttributeSet*atts);
+    TabWidget(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~TabWidget()override;
     View*getChildTabViewAt(int index);
     int getTabCount()const;

@@ -425,9 +425,8 @@ protected:
              StateListDrawable* horizontalThumbDrawable, Drawable* horizontalTrackDrawable);
     int getChildDrawingOrder(int childCount, int i)override;
 public:
-    RecyclerView(int w,int h);
-    RecyclerView(Context* context,const AttributeSet& attrs);
-    RecyclerView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    RecyclerView(Context* context,const AttributeSet* attrs);
+    RecyclerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~RecyclerView()override;
     RecyclerViewAccessibilityDelegate* getCompatAccessibilityDelegate();
     void setAccessibilityDelegate(RecyclerViewAccessibilityDelegate* accessibilityDelegate);
@@ -767,7 +766,7 @@ public:
     virtual LayoutParams* generateDefaultLayoutParams()const=0;
     virtual bool checkLayoutParams(const LayoutParams* lp)const;
     virtual LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const;
-    virtual LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const;
+    virtual LayoutParams* generateLayoutParams(Context* c,const AttributeSet* attrs)const;
     virtual int scrollHorizontallyBy(int dx, Recycler& recycler, State& state);
     virtual int scrollVerticallyBy(int dy, Recycler& recycler, State& state);
     virtual bool canScrollHorizontally()const;

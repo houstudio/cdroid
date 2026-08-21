@@ -30,14 +30,16 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(ImageView)
 
-ImageView::ImageView(Context*ctx,const AttributeSet& attrs):ImageView(ctx,&attrs,0){}
+ImageView::ImageView(Context*ctx)
+    :ImageView(ctx,nullptr){}
+
+ImageView::ImageView(Context*ctx,const AttributeSet* attrs):ImageView(ctx,attrs,0){}
 
 ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :View(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initImageView();
     auto ta = getContext()->obtainStyledAttributes(
-        attrs, R::styleable::ImageView, defStyleAttr);
+        pAttrs, R::styleable::ImageView, defStyleAttr);
     mBaselineAlignBottom = ta->getBoolean(R::styleable::ImageView_baselineAlignBottom,false);
     mBaseline = ta->getDimensionPixelSize(R::styleable::ImageView_baseline,-1);
     setAdjustViewBounds(ta->getBoolean(R::styleable::ImageView_adjustViewBounds,false));
@@ -62,11 +64,6 @@ ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mRadii[2] = 0;//attrs.getAttributeIntValue(std::string(), "bottomRightRadius",radii);
     mRadii[3] = 0;//attrs.getAttributeIntValue(std::string(), "bottomLeftRadius",radii);
     applyImageTint();
-}
-
-ImageView::ImageView(int w, int h)
-  : View(w,h){
-    initImageView();
 }
 
 void ImageView::initImageView(){

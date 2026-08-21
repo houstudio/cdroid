@@ -22,15 +22,13 @@ namespace cdroid{
 
 DECLARE_WIDGET(TextSwitcher)
 
-TextSwitcher::TextSwitcher(int w,int h)
-    :ViewSwitcher(w,h){
-}
+TextSwitcher::TextSwitcher(Context*ctx)
+    :TextSwitcher(ctx,nullptr){}
 
-TextSwitcher::TextSwitcher(Context*ctx,const AttributeSet& atts):TextSwitcher(ctx,&atts,0){}
+TextSwitcher::TextSwitcher(Context*ctx,const AttributeSet* atts):TextSwitcher(ctx,atts,0){}
 
 TextSwitcher::TextSwitcher(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewSwitcher(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
 }
 
 void TextSwitcher::addView(View* child, int index, ViewGroup::LayoutParams* params){

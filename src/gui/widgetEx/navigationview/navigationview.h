@@ -64,7 +64,7 @@ public:
         SavedState(Parcelable* superState);
     };
 
-    NavigationView(Context* context, const AttributeSet& attrs);
+    NavigationView(Context* context, const AttributeSet* attrs);
     NavigationView(Context* context, const AttributeSet* attrs, int defStyleAttr);
     ~NavigationView() override;
 

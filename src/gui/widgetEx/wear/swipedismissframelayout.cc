@@ -20,11 +20,10 @@ namespace cdroid{
 
 DECLARE_WIDGET(SwipeDismissFrameLayout);
 
-SwipeDismissFrameLayout::SwipeDismissFrameLayout(Context* context,const AttributeSet& attrs):SwipeDismissFrameLayout(context,&attrs,0){}
+SwipeDismissFrameLayout::SwipeDismissFrameLayout(Context* context,const AttributeSet* attrs):SwipeDismissFrameLayout(context,attrs,0){}
 
 SwipeDismissFrameLayout::SwipeDismissFrameLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :DismissibleFrameLayout(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 }
 
 void SwipeDismissFrameLayout::addCallback(const SwipeDismissFrameLayout::Callback& callback) {

@@ -52,13 +52,12 @@ FastScroller::FastScroller(AbsListView* listView, int styleResId){
     mCurrentSection =-1;
     mScrollbarPosition=-1;
 
-    AttributeSet atts;
-    atts.setContext(listView->getContext(),"");
-    mTrackImage = new ImageView(context,atts);
+    // code construction: no AttributeSet (the old empty string-keyed set is gone)
+    mTrackImage = new ImageView(context,nullptr);
     mTrackImage->setScaleType(ScaleType::FIT_XY);
-    mThumbImage = new ImageView(context,atts);
+    mThumbImage = new ImageView(context,nullptr);
     mThumbImage->setScaleType(ScaleType::FIT_XY);
-    mPreviewImage = new View(context,atts);
+    mPreviewImage = new View(context,nullptr);
     mPreviewImage->setAlpha(.0f);
 
     mPrimaryText = createPreviewTextView(context);
@@ -283,8 +282,7 @@ void FastScroller::updateLongList(int childCount, int itemCount) {
 
 TextView* FastScroller::createPreviewTextView(Context* context) {
     LayoutParams* params = new LayoutParams( LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
-    AttributeSet atts(context,"");
-    TextView* textView = new TextView(context,atts);
+    TextView* textView = new TextView(context,nullptr);
     textView->setLayoutParams(params);
     textView->setSingleLine(true);
     textView->setEllipsize(TextUtils::TruncateAt::MIDDLE);

@@ -46,9 +46,9 @@ protected:
     LinearLayout::LayoutParams* generateDefaultLayoutParams()const override;
     void onFinishInflate()override;
 public:
-    RadioGroup(int w,int h);
-    RadioGroup(Context* context,const AttributeSet& attrs);
-    RadioGroup(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    RadioGroup(Context*ctx);   // AOSP RadioGroup(Context)
+    RadioGroup(Context* context,const AttributeSet* attrs);
+    RadioGroup(Context* context,const AttributeSet* attrs,int defStyleAttr);
     LinearLayout::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     void addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     int getCheckedRadioButtonId()const;

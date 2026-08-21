@@ -34,7 +34,7 @@ DECLARE_WIDGET(CircularFlow)
 namespace cdroid {
 using namespace cdroid::internal;
 
-CircularFlow::CircularFlow(Context* ctx,const AttributeSet& attrs):CircularFlow(ctx,&attrs,0){}
+CircularFlow::CircularFlow(Context* ctx,const AttributeSet* attrs):CircularFlow(ctx,attrs,0){}
 
 CircularFlow::CircularFlow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
@@ -44,10 +44,6 @@ CircularFlow::CircularFlow(Context* ctx,const AttributeSet* pAttrs,int defStyleA
     // constructed so it dispatches to CircularFlow::init — same pattern as Carousel/MotionEffect/
     // Placeholder. ConstraintHelper::init is idempotent on re-run (mIds cleared then refilled).
     init(pAttrs);
-}
-
-CircularFlow::CircularFlow(int width, int height)
-    : ConstraintHelper(width, height) {
 }
 
 void CircularFlow::init(const AttributeSet* attrs) {

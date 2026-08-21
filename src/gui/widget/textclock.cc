@@ -57,14 +57,16 @@ private final BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
 
 DECLARE_WIDGET(TextClock)
 
-TextClock::TextClock(Context* context,const AttributeSet& attrs):TextClock(context,&attrs,0){}
+TextClock::TextClock(Context*ctx)
+    :TextClock(ctx,nullptr){}
+
+TextClock::TextClock(Context* context,const AttributeSet* attrs):TextClock(context,attrs,0){}
 
 TextClock::TextClock(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :TextView(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     init();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::TextClock, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::TextClock, defStyleAttr);
     
 mFormat12 = ta->getString(R::styleable::TextClock_format12Hour);
 mFormat24 = ta->getString(R::styleable::TextClock_format24Hour);

@@ -749,7 +749,7 @@ ViewGroup* LocalFloatingToolbarPopup::createMainPanel() {
     // TODO(3b-anim): anonymous LinearLayout subclass overriding onMeasure (clamp to
     //                mMainPanelSize during overflow animation) + onInterceptTouchEvent.
     // 3b: plain horizontal LinearLayout (instant open/close => isOverflowAnimating()==false).
-    LinearLayout* panel = new LinearLayout(mContext, AttributeSet(mContext, "cdroid"));
+    LinearLayout* panel = new LinearLayout(mContext,nullptr);
     panel->setOrientation(LinearLayout::HORIZONTAL);
     return panel;
 }
@@ -766,7 +766,7 @@ ViewGroup* LocalFloatingToolbarPopup::createContentContainer(Context* context) {
 }
 
 PopupWindow* LocalFloatingToolbarPopup::createPopupWindow(ViewGroup* content) {
-    LinearLayout* popupContentHolder = new LinearLayout(content->getContext(), AttributeSet(content->getContext(), "cdroid"));
+    LinearLayout* popupContentHolder = new LinearLayout(content->getContext(),nullptr);
     PopupWindow* popupWindow = new PopupWindow(popupContentHolder,
             ViewGroup::LayoutParams::WRAP_CONTENT, ViewGroup::LayoutParams::WRAP_CONTENT);
     popupWindow->setClippingEnabled(false);
@@ -928,7 +928,7 @@ void LocalFloatingToolbarPopup::cancelOverflowAnimations() {
 //  OverflowPanel  (AOSP private static final class OverflowPanel extends ListView)
 // =====================================================================================
 LocalFloatingToolbarPopup::OverflowPanel::OverflowPanel(LocalFloatingToolbarPopup* popup)
-    : ListView(popup->mContext, AttributeSet(popup->mContext, "cdroid"))
+    : ListView(popup->mContext,nullptr)
     , mPopup(popup) {
     // AOSP: setScrollBarDefaultDelayBeforeFade(ViewConfiguration.getScrollDefaultDelay() * 3);
     //       setScrollIndicators(SCROLL_INDICATOR_TOP | SCROLL_INDICATOR_BOTTOM).

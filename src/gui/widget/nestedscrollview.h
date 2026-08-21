@@ -136,9 +136,9 @@ protected:
     Parcelable* onSaveInstanceState()override;
     void onRestoreInstanceState(Parcelable& state)override;
 public:
-    NestedScrollView(int w,int h);
-    NestedScrollView(Context* context,const AttributeSet&attrs);
-    NestedScrollView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    NestedScrollView(Context*ctx);   // AOSP NestedScrollView(Context)
+    NestedScrollView(Context* context,const AttributeSet*attrs);
+    NestedScrollView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~NestedScrollView()override;
     bool startNestedScroll(int axes, int type);
     void stopNestedScroll(int type);

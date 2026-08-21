@@ -84,8 +84,8 @@ public:
      *                 resource that supplies default values for the view. Can be 0 to not look for
      *                 defaults.
      */
-    BoxInsetLayout(Context* context,const AttributeSet& attrs);
-    BoxInsetLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    BoxInsetLayout(Context* context,const AttributeSet* attrs);
+    BoxInsetLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
 
     void setForeground(Drawable* drawable) override;
 

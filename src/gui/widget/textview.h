@@ -322,10 +322,9 @@ protected:
     Layout* makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring, int ellipsisWidth,
         Layout::Alignment alignment, bool shouldEllipsize, TextUtils::TruncateAt effectiveEllipsize, bool useSaved);
 public:
-    TextView(Context*ctx,const AttributeSet&attrs);
-    TextView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
-    TextView(int width, int height);
-    TextView(const std::string& text, int width, int height);
+    TextView(Context*ctx);   // AOSP TextView(Context)
+    TextView(Context*ctx,const AttributeSet*attrs);
+    TextView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~TextView()override;
     void setAutoSizeTextTypeWithDefaults(int autoSizeTextType);
     void setAutoSizeTextTypeUniformWithConfiguration(int autoSizeMinTextSize,

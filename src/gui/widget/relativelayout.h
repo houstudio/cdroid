@@ -150,9 +150,9 @@ protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 public:
-    RelativeLayout(int w,int h);
-    RelativeLayout(Context* context,const AttributeSet& attrs);
-    RelativeLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    RelativeLayout(Context*ctx);   // AOSP RelativeLayout(Context)
+    RelativeLayout(Context* context,const AttributeSet* attrs);
+    RelativeLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~RelativeLayout()override;
     bool shouldDelayChildPressedState()override;
     void setIgnoreGravity(int viewId);

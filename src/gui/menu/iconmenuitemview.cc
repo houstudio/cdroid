@@ -23,11 +23,10 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(IconMenuItemView)
 std::string IconMenuItemView::sPrependShortcutLabel;
-IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet& attrs):IconMenuItemView(context,&attrs,0){}
+IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet* attrs):IconMenuItemView(context,attrs,0){}
 
 IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :TextView(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 
     if (sPrependShortcutLabel.empty()) {
         /*
@@ -38,10 +37,10 @@ IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet* pAttrs,i
         sPrependShortcutLabel = context->getString(R::string::prepend_shortcut_label);
     }
 
-    // AOSP: obtainStyledAttributes(attrs, R.styleable.IconMenuItemView, defStyleAttr).
+    // AOSP: obtainStyledAttributes(pAttrs, R.styleable.IconMenuItemView, defStyleAttr).
     static const uint32_t ICON_MENU_ITEM_ATTRS[] = {
         (uint32_t)R::attr::itemIconDisabledAlpha, (uint32_t)R::attr::itemTextAppearance, 0 };
-    auto ta = context->obtainStyledAttributes(attrs, ICON_MENU_ITEM_ATTRS, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, ICON_MENU_ITEM_ATTRS, defStyleAttr);
     mDisabledAlpha = ta->getFloat(0, 0.8f);
     mTextAppearance = ta->getResourceId(1, 0);
     mTextAppearanceContext = context;

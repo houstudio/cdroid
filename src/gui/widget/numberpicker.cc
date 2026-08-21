@@ -45,8 +45,8 @@ const int DEFAULT_LAYOUT_HORZ = R::layout::number_picker; // no horizontal layou
 namespace {
 class NumberPickerCustomEditText : public EditText {
 public:
-    NumberPickerCustomEditText(Context* context, const AttributeSet& attrs)
-        : NumberPickerCustomEditText(context, &attrs, 0) {}
+    NumberPickerCustomEditText(Context* context, const AttributeSet* attrs)
+        : NumberPickerCustomEditText(context, attrs, 0) {}
     NumberPickerCustomEditText(Context* context, const AttributeSet* pAttrs, int defStyleAttr)
         : EditText(context, pAttrs, defStyleAttr) {}
 };
@@ -59,74 +59,20 @@ namespace {
         return TextUtils::stringPrintf("%02d",value);
     };
 }
-NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
-    initView();
-    setOrientation(h>w?VERTICAL:HORIZONTAL);
+NumberPicker::NumberPicker(Context*ctx)
+    :NumberPicker(ctx,nullptr){}
 
-    const int layoutres = (getOrientation()==VERTICAL)?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ;
-    LayoutInflater::from(mContext)->inflate(layoutres,this,true);
- 
-    mInputText =(EditText*)findViewById(R::id::numberpicker_input);
-    if(mInputText){
-        mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
-        mTextSize2 = mInputText->getTextSize();
-        mTextSize  = mTextSize2;
-        mSelectorElementSize = mTextSize2;
-    }
-    mIncrementButton =(ImageButton*)findViewById(R::id::increment);
-    mDecrementButton =(ImageButton*)findViewById(R::id::decrement);
-    const View::OnClickListener onClick= [this](View& v) {
-        hideSoftInput();
-        mInputText->clearFocus();
-        if (v.getId() == R::id::increment) {
-            changeValueByOne(true);
-        } else {
-            changeValueByOne(false);
-        }
-    };
-    const View::OnLongClickListener onLongClick=[this](View& v) {
-        hideSoftInput();
-        mInputText->clearFocus();
-        if (v.getId() == R::id::increment) {
-            postChangeCurrentByOneFromLongPress(true, 0);
-        } else {
-            postChangeCurrentByOneFromLongPress(false, 0);
-        }
-        return true;
-    };
-
-    if(mIncrementButton){
-        mIncrementButton->setOnClickListener(onClick);
-        mIncrementButton->setOnLongClickListener(onLongClick);
-    }
-    if(mDecrementButton){
-        mDecrementButton->setOnClickListener(onClick);
-        mDecrementButton->setOnLongClickListener(onLongClick);
-    }
-
-    setWidthAndHeight();
-    mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
-    measure(MeasureSpec::makeMeasureSpec(w,MeasureSpec::EXACTLY),MeasureSpec::makeMeasureSpec(h,MeasureSpec::EXACTLY));
-    layout(0,0,getMeasuredWidth(),getMeasuredHeight());
-    mSelectorWheelPaint.setTypeface(mInputText->getTypeface());
-    mSelectorWheelPaint.setTextSize(mTextSize);
-    updateInputTextView();
-    setFocusable(int(View::FOCUSABLE));
-    setFocusableInTouchMode(true);
-}
-
-NumberPicker::NumberPicker(Context* context,const AttributeSet& atts):NumberPicker(context,&atts,0){}
+NumberPicker::NumberPicker(Context* context,const AttributeSet* atts):NumberPicker(context,atts,0){}
 
 NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :LinearLayout(context,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     initView();
     // Framework attrs resolve typed via the NumberPicker styleable; CDROID-specific
     // attrs (textColor2/selectedTextSize/wheelItemCount/...) via NumberPickerCdroid —
     // both public in the framework arsc (0x01011000+ block), so binary AXML works.
-    auto ta = context->obtainStyledAttributes(atts, R::styleable::NumberPicker, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::NumberPicker, defStyleAttr);
     mHideWheelUntilFocused = ta->getBoolean(R::styleable::NumberPicker_hideWheelUntilFocused, false);
-    { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); mWrapSelectorWheelPreferred = ta2->getBoolean(R::styleable::NumberPickerCdroid_wrapSelectorWheel, mWrapSelectorWheelPreferred); }
+    { auto ta2 = context->obtainStyledAttributes(pAttrs, R::styleable::NumberPickerCdroid); mWrapSelectorWheelPreferred = ta2->getBoolean(R::styleable::NumberPickerCdroid_wrapSelectorWheel, mWrapSelectorWheelPreferred); }
     mDividerDrawable = ta->getDrawable(R::styleable::NumberPicker_selectionDivider);
     if (mDividerDrawable) {
         mDividerDrawable->setCallback(this);
@@ -164,7 +110,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     const int defaultLayoutRes = (getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ);
     int layoutRes = (int)ta->getResourceId(R::styleable::NumberPicker_internalLayout, 0);
     if (layoutRes == 0) layoutRes = defaultLayoutRes;
-    { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); setWheelItemCount(ta2->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount)); }
+    { auto ta2 = context->obtainStyledAttributes(pAttrs, R::styleable::NumberPickerCdroid); setWheelItemCount(ta2->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount)); }
     mHasSelectorWheel = (defaultLayoutRes!=layoutRes)||(mWheelItemCount!=DEFAULT_WHEEL_ITEM_COUNT);
     LayoutInflater::from(mContext)->inflate(layoutRes,this);
     setWidthAndHeight();
@@ -211,11 +157,11 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
 
     mInputText->setEnabled(false);
     mInputText->setFocusable(false);
-    { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); mUpdateInputTextInFling = ta2->getBoolean(R::styleable::NumberPickerCdroid_updateInputTextInFling, mUpdateInputTextInFling); }
+    { auto ta2 = context->obtainStyledAttributes(pAttrs, R::styleable::NumberPickerCdroid); mUpdateInputTextInFling = ta2->getBoolean(R::styleable::NumberPickerCdroid_updateInputTextInFling, mUpdateInputTextInFling); }
     mTextAlign = mInputText->getGravity();
     mTextSize2 = mInputText->getTextSize();
     mTypeface = Typeface::create(ta ? ta->getString(R::styleable::NumberPicker_fontFamily) : std::string(),Typeface::NORMAL);
-    { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid);
+    { auto ta2 = context->obtainStyledAttributes(pAttrs, R::styleable::NumberPickerCdroid);
       auto selectedTypeface = Typeface::create(ta2->getString(R::styleable::NumberPickerCdroid_selectedfontFamily),Typeface::NORMAL);
       if(selectedTypeface!=nullptr){
           setSelectedTypeface(selectedTypeface);
@@ -225,12 +171,12 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     setTextSize(ta ? ta->getDimensionPixelSize(R::styleable::NumberPicker_textSize,mTextSize) : mTextSize);
     // selectedTextSize (NumberPickerCdroid): explicit value wins, else default to textSize
     // (the old "textSize2" name read was dead — that attr was never declared anywhere).
-    { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid);
+    { auto ta2 = context->obtainStyledAttributes(pAttrs, R::styleable::NumberPickerCdroid);
       mTextSize2 = ta2->getDimensionPixelSize(R::styleable::NumberPickerCdroid_selectedTextSize, mTextSize); }
     setSelectedTextSize(mTextSize2);
     setTextColor(ta ? ta->getColor(R::styleable::NumberPicker_textColor, 0xFFFFFFFF) : 0xFFFFFFFF);
-    { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); setTextColor(mTextColor, ta2->getColor(R::styleable::NumberPickerCdroid_textColor2, mTextColor)); }
-    { auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); setSelectedTextColor(ta2->getColor(R::styleable::NumberPickerCdroid_selectedTextColor, 0)); }
+    { auto ta2 = context->obtainStyledAttributes(pAttrs, R::styleable::NumberPickerCdroid); setTextColor(mTextColor, ta2->getColor(R::styleable::NumberPickerCdroid_textColor2, mTextColor)); }
+    { auto ta2 = context->obtainStyledAttributes(pAttrs, R::styleable::NumberPickerCdroid); setSelectedTextColor(ta2->getColor(R::styleable::NumberPickerCdroid_selectedTextColor, 0)); }
     auto colors = mInputText->getTextColors();
     if(colors&&colors->isStateful())
         setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),mInputTextColor));
@@ -242,7 +188,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defSt
     
     updateInputTextView();
 
-    //{ auto ta2 = context->obtainStyledAttributes(atts, R::styleable::NumberPickerCdroid); setWheelItemCount(ta2->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount)); }
+    //{ auto ta2 = context->obtainStyledAttributes(pAttrs, R::styleable::NumberPickerCdroid); setWheelItemCount(ta2->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount)); }
     setValue(ta ? ta->getInt(R::styleable::NumberPicker_value, 0) : 0);
     setMinValue(ta ? ta->getInt(R::styleable::NumberPicker_min, 0) : 0);
     setMaxValue(ta ? ta->getInt(R::styleable::NumberPicker_max, 0) : 0);

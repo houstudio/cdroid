@@ -53,7 +53,7 @@ private:
 protected:
     void onLocaleChanged(const Locale& locale)override;
 public:
-    DatePickerCalendarDelegate(DatePicker* delegator, Context* context,const AttributeSet& attrs);
+    DatePickerCalendarDelegate(DatePicker* delegator, Context* context,const AttributeSet* attrs);
 
     void init(int year, int month, int dayOfMonth,const DatePicker::OnDateChangedListener& callBack) override;
     void updateDate(int year, int month, int dayOfMonth) override;

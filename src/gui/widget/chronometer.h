@@ -46,9 +46,9 @@ private:
 protected:
     void dispatchChronometerTick();
 public:
-    Chronometer(int w,int h);
-    Chronometer(Context*ctx,const AttributeSet&);
-    Chronometer(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    Chronometer(Context*ctx);   // AOSP Chronometer(Context)
+    Chronometer(Context*ctx,const AttributeSet*);
+    Chronometer(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     void setCountDown(bool countDown);
     bool isCountDown()const;
     bool isTheFinalCountDown()const;

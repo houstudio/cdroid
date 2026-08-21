@@ -28,24 +28,19 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(ScrollView,R::attr::scrollViewStyle)
 
-ScrollView::ScrollView(int w,int h):FrameLayout(w,h){
-    initScrollView();
-    AttributeSet attrs;
-    mIsBeingDragged=false;
-    mActivePointerId=INVALID_POINTER;
-}
+ScrollView::ScrollView(Context*ctx)
+    :ScrollView(ctx,nullptr){}
 
-ScrollView::ScrollView(Context*context,const AttributeSet& atts):ScrollView(context,&atts,0){}
+ScrollView::ScrollView(Context*context,const AttributeSet* atts):ScrollView(context,atts,0){}
 
 ScrollView::ScrollView(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
   :FrameLayout(context,pAttrs, defStyleAttr){
-    const AttributeSet& atts = *pAttrs;
     initScrollView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(atts, R::styleable::ScrollView, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::ScrollView, defStyleAttr);
     
 setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport, false));
-{ auto ta2 = context->obtainStyledAttributes(atts, R::styleable::ScrollViewCdroid);
+{ auto ta2 = context->obtainStyledAttributes(pAttrs, R::styleable::ScrollViewCdroid);
   mScrollDuration = ta2->getInt(R::styleable::ScrollViewCdroid_scrollDuration, 400); }
 
 }

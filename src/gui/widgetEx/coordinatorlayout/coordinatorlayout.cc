@@ -27,18 +27,13 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(CoordinatorLayout)
 
-CoordinatorLayout::CoordinatorLayout(int w, int h) :ViewGroup(w, h) {
-    initView();
-}
-
-CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs):CoordinatorLayout(context,&attrs,0){}
+CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* attrs):CoordinatorLayout(context,attrs,0){}
 
 CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::CoordinatorLayout, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::CoordinatorLayout, defStyleAttr);
     const int keylineArrayRes = ta->getResourceId(R::styleable::CoordinatorLayout_keylines, 0);
     if (keylineArrayRes != 0) {
         mKeylines = context->getResources().getIntArray(keylineArrayRes);
@@ -420,7 +415,7 @@ int CoordinatorLayout::getKeyline(int index) const{
     return mKeylines[index];
 }
 
-CoordinatorLayout::Behavior* CoordinatorLayout::parseBehavior(Context* context,const AttributeSet& attrs,const std::string& name) {
+CoordinatorLayout::Behavior* CoordinatorLayout::parseBehavior(Context* context,const AttributeSet* attrs,const std::string& name) {
     if (name.empty()){//TextUtils.isEmpty(name)) {
         return nullptr;
     }
@@ -1702,7 +1697,7 @@ CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeS
     mBehaviorResolved = ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_behavior)
             || attrs.hasAttribute("layout_behavior");
     if (mBehaviorResolved) {
-        mBehavior = parseBehavior(context, attrs,
+        mBehavior = parseBehavior(context, &attrs,
                 ta->getString(R::styleable::CoordinatorLayoutLayout_layout_behavior));
     }
 

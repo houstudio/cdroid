@@ -28,7 +28,7 @@ private:
 protected:
     int getMaxItemCount() const override { return MAX_ITEM_COUNT; }
 public:
-    BottomNavigationView(Context* context, const AttributeSet& attrs);
+    BottomNavigationView(Context* context, const AttributeSet* attrs);
     BottomNavigationView(Context* context, const AttributeSet* attrs, int defStyleAttr);
     bool onTouchEvent(MotionEvent& event) override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;

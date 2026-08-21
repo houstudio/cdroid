@@ -28,9 +28,9 @@ private:
     ViewFactory mFactory;
     View*obtainView();
 public:
-    ViewSwitcher(int w,int h);
-    ViewSwitcher(Context*ctx,const AttributeSet&atts);
-    ViewSwitcher(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    ViewSwitcher(Context*ctx);   // AOSP ViewSwitcher(Context)
+    ViewSwitcher(Context*ctx,const AttributeSet*atts);
+    ViewSwitcher(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
     View* getNextView();
     void setFactory(ViewFactory factory);

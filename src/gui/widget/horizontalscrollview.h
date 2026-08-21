@@ -91,9 +91,9 @@ protected:
     void onRestoreInstanceState(Parcelable& state)override;
     Parcelable*onSaveInstanceState()override;
 public:
-    HorizontalScrollView(int w,int h);
-    HorizontalScrollView(Context*ctx,const AttributeSet&atts);
-    HorizontalScrollView(Context*ctx,const AttributeSet* attrs,int defStyleAttr=0);
+    HorizontalScrollView(Context*ctx);   // AOSP HorizontalScrollView(Context)
+    HorizontalScrollView(Context*ctx,const AttributeSet*atts);
+    HorizontalScrollView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~HorizontalScrollView()override;
     void setEdgeEffectColor(int color);
     void setLeftEdgeEffectColor(int color);

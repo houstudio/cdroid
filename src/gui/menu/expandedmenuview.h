@@ -27,8 +27,8 @@ private:
 protected:
     void onDetachedFromWindow() override;
 public:
-    ExpandedMenuView(Context* context,const AttributeSet& attrs);
-    ExpandedMenuView(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    ExpandedMenuView(Context* context,const AttributeSet* attrs);
+    ExpandedMenuView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     void initialize(MenuBuilder* menu)override;
     bool invokeItem(MenuItemImpl* item);
 

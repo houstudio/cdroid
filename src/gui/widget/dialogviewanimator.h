@@ -32,8 +32,9 @@ private:
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
-    DialogViewAnimator(Context* context,const AttributeSet& attrs);
-    DialogViewAnimator(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    DialogViewAnimator(Context*ctx);   // AOSP DialogViewAnimator(Context)
+    DialogViewAnimator(Context* context,const AttributeSet* attrs);
+    DialogViewAnimator(Context* context,const AttributeSet* attrs,int defStyleAttr);
 };
 
 }//namespace

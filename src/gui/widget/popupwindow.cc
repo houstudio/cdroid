@@ -22,21 +22,24 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs)
+PopupWindow::PopupWindow(Context*ctx)
+    :PopupWindow(ctx,nullptr){}
+
+PopupWindow::PopupWindow(Context* context,const AttributeSet* attrs)
     :PopupWindow(context,attrs,R::attr::popupWindowStyle){
 }
 
-PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, int defStyleAttr)
+PopupWindow::PopupWindow(Context* context,const AttributeSet* attrs, int defStyleAttr)
     :PopupWindow(context,attrs,defStyleAttr,0){
 }
 
-PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, int defStyleAttr, int defStyleRes){
+PopupWindow::PopupWindow(Context* context,const AttributeSet* attrs, int defStyleAttr, int defStyleRes){
     init();
     mContext = context;
     // AOSP: context.obtainStyledAttributes(attrs, R.styleable.PopupWindow, defStyleAttr,
     // defStyleRes). Read the consumed attrs (popupBackground/popupElevation/overlapAnchor)
     // via R.styleable.PopupWindow named indices (no more hand-cobbled attr-id array).
-    auto ta = context->obtainStyledAttributes(&attrs, R::styleable::PopupWindow, defStyleAttr, defStyleRes);
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::PopupWindow, defStyleAttr, defStyleRes);
     if (ta) {
         Drawable* bg = ta->getDrawable(R::styleable::PopupWindow_popupBackground);
         mElevation = ta->getFloat(R::styleable::PopupWindow_popupElevation, 0);
@@ -460,6 +463,11 @@ PopupWindow::PopupBackgroundView* PopupWindow::createBackgroundView(View* conten
     return backgroundView;
 }
 
+PopupWindow::PopupDecorView::PopupDecorView(Context*ctx,int w,int h,int type)
+   :Window(ctx,0,0,w,h,type){
+    mPop = nullptr;
+}
+
 PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){
     ViewGroup::LayoutParams* layoutParams = mContentView->getLayoutParams();
     int height;
@@ -475,7 +483,7 @@ PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){
      * hiding the popup behind the keyboard. Pass mWindowLayoutType so callers
      * can raise the popup (e.g. KeyboardView sets TYPE_SYSTEM_ALERT). */
     const int wtype = mWindowLayoutType ? mWindowLayoutType : Window::TYPE_APPLICATION;
-    PopupDecorView* decorView = new PopupDecorView(mWidth,mHeight,wtype);
+    PopupDecorView* decorView = new PopupDecorView(mContext,mWidth,mHeight,wtype);
     decorView->addView(contentView, LayoutParams::MATCH_PARENT, height);
     //decorView->setClipChildren(false);
     //decorView->setClipToPadding(false);
@@ -1177,11 +1185,6 @@ void PopupWindow::alignToAnchor() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-PopupWindow::PopupDecorView::PopupDecorView(int w,int h,int type)
-   :Window(0,0,w,h,type){
-    mPop = nullptr;
-}
-
 bool PopupWindow::PopupDecorView::dispatchKeyEvent(KeyEvent& event){
      if (event.getKeyCode() == KeyEvent::KEYCODE_BACK) {
         if (getKeyDispatcherState() == nullptr) {
@@ -1231,6 +1234,6 @@ bool PopupWindow::PopupDecorView::onTouchEvent(MotionEvent& event){
 }
 
 PopupWindow::PopupBackgroundView::PopupBackgroundView(Context* context)
-:FrameLayout(context,AttributeSet(context,"")){
+:FrameLayout(context){
 }
 }

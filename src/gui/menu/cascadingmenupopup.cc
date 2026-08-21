@@ -157,7 +157,7 @@ void CascadingMenuPopup::setForceShowIcon(bool forceShow) {
 }
 
 MenuPopupWindow* CascadingMenuPopup::createPopupWindow() {
-    MenuPopupWindow* popupWindow = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"), mPopupStyleAttr, mPopupStyleRes);
+    MenuPopupWindow* popupWindow = new MenuPopupWindow(mContext,nullptr, mPopupStyleAttr, mPopupStyleRes);
     popupWindow->setHoverListener(mMenuItemHoverListener);
     popupWindow->setOnItemClickListener([this](AdapterView&parent, View& view, int position, long id){
         onItemClick(parent,view,position,id);

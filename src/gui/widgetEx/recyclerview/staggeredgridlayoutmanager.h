@@ -199,7 +199,7 @@ public:
     void collectAdjacentPrefetchPositions(int dx, int dy, RecyclerView::State& state,
           LayoutPrefetchRegistry& layoutPrefetchRegistry)override;
     LayoutParams* generateDefaultLayoutParams()const override;
-    LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(Context* c,const AttributeSet* attrs)const override;
     LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const override;
     bool checkLayoutParams(const RecyclerView::LayoutParams* lp)const override;
     int getOrientation()const;

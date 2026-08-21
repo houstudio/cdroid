@@ -157,7 +157,7 @@ private:
 
     Calendar mMaxDate;
 public:
-    CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs);
+    CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet* attrs);
     ~CalendarViewLegacyDelegate()override;
     void setShownWeekCount(int count) override;
     int getShownWeekCount() const override;
@@ -319,7 +319,7 @@ protected:
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
-    WeekView(CalendarViewLegacyDelegate*,Context* context,const AttributeSet&);
+    WeekView(CalendarViewLegacyDelegate*,Context* context,const AttributeSet*);
 
     void init(int weekNumber, int selectedWeekDay, int focusedMonth);
 

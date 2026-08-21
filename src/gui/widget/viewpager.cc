@@ -37,10 +37,6 @@ static VPInterpolator sVPInterpolator;
 
 DECLARE_WIDGET(ViewPager);
 
-ViewPager::ViewPager(int w,int h):ViewGroup(w,h){
-    initViewPager(nullptr); 
-}
-
 ViewPager::~ViewPager(){
     delete mObserver;
     delete mLeftEdge;
@@ -56,12 +52,14 @@ ViewPager::~ViewPager(){
     }
 }
 
-ViewPager::ViewPager(Context* context,const AttributeSet& attrs):ViewPager(context,&attrs,0){}
+ViewPager::ViewPager(Context*ctx)
+    :ViewPager(ctx,nullptr){}
+
+ViewPager::ViewPager(Context* context,const AttributeSet* attrs):ViewPager(context,attrs,0){}
 
 ViewPager::ViewPager(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :ViewGroup(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
-    initViewPager(&attrs);
+    initViewPager(pAttrs);
 }
 
 void ViewPager::initViewPager(const AttributeSet*atts){

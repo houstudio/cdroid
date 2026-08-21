@@ -70,7 +70,7 @@ GridLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& params)
 // defaults to those between peers.
 
 // This method could be parametrized and moved into MarginLayout.
-void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet& attrs){
+void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet* attrs){
     // AOSP reInitSuper reads ViewGroup_MarginLayout (MarginLayout styleable).
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::MarginLayout);
     const int margin = ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_margin, DEFAULT_MARGIN);
@@ -79,7 +79,7 @@ void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet&
     rightMargin = ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginRight, margin);
     bottomMargin = ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginBottom, margin);
 }
-void GridLayout::LayoutParams::init(Context* context,const AttributeSet& attrs){
+void GridLayout::LayoutParams::init(Context* context,const AttributeSet* attrs){
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::GridLayoutLayout);
 
     const int gravity = ta->getInt(R::styleable::GridLayoutLayout_layout_gravity, Gravity::NO_GRAVITY);
@@ -103,8 +103,8 @@ GridLayout::LayoutParams::LayoutParams(const MarginLayoutParams& params)
 
 GridLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
     :MarginLayoutParams(context,attrs){
-    reInitSuper(context,attrs);
-    init(context,attrs);
+    reInitSuper(context,&attrs);
+    init(context,&attrs);
 }
 
 void GridLayout::LayoutParams::setGravity(int gravity){
@@ -128,18 +128,15 @@ int GridLayout::LayoutParams::hashCode()const{
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-GridLayout::GridLayout(int w,int h)
-    :ViewGroup(w,h){
-    initGridLayout();
-}
+GridLayout::GridLayout(Context*ctx)
+    :GridLayout(ctx,nullptr){}
 
-GridLayout::GridLayout(Context*ctx,const AttributeSet& attrs):GridLayout(ctx,&attrs,0){}
+GridLayout::GridLayout(Context*ctx,const AttributeSet* attrs):GridLayout(ctx,attrs,0){}
 
 GridLayout::GridLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initGridLayout();
-    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::GridLayout, defStyleAttr);
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::GridLayout, defStyleAttr);
 
     // Enum attrs (orientation/alignmentMode) arrive pre-resolved to ints by aapt2.
     setOrientation(ta->getInt(R::styleable::GridLayout_orientation, DEFAULT_ORIENTATION));

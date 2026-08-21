@@ -36,15 +36,11 @@ DECLARE_WIDGET(MotionEffect)
 namespace cdroid {
 using namespace cdroid::internal;
 
-MotionEffect::MotionEffect(Context* ctx,const AttributeSet& attrs):MotionEffect(ctx,&attrs,0){}
+MotionEffect::MotionEffect(Context* ctx,const AttributeSet* attrs):MotionEffect(ctx,attrs,0){}
 
 MotionEffect::MotionEffect(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     : MotionHelper(ctx, pAttrs, defStyleAttr) {
     init(pAttrs);
-}
-
-MotionEffect::MotionEffect(int width, int height)
-    : MotionHelper(width, height) {
 }
 
 void MotionEffect::init(const AttributeSet* attrs) {

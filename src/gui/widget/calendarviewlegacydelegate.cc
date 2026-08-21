@@ -26,7 +26,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs)
+CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet* attrs)
     :CalendarView::AbstractCalendarViewDelegate(delegator,context){
     mDelegator = delegator;
     mAdapter = nullptr;
@@ -750,7 +750,7 @@ View* CalendarViewLegacyDelegate::WeeksAdapter::getView(int position, View* conv
     if (convertView != nullptr) {
         weekView = (WeekView*) convertView;
     } else {
-        weekView = new WeekView(mCV,mCV->mContext,AttributeSet(mCV->mContext,"android"));
+        weekView = new WeekView(mCV,mCV->mContext,nullptr);
         AbsListView::LayoutParams* params =
                 new AbsListView::LayoutParams(FrameLayout::LayoutParams::WRAP_CONTENT,
                         FrameLayout::LayoutParams::WRAP_CONTENT);
@@ -802,7 +802,7 @@ void CalendarViewLegacyDelegate::WeeksAdapter::onDateTapped(Calendar& day) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //DECLARE_WIDGET3(CalendarViewLegacyDelegate::WeekView,WeekView,"");
-CalendarViewLegacyDelegate::WeekView::WeekView(CalendarViewLegacyDelegate*cv,Context* context,const AttributeSet&attrs)
+CalendarViewLegacyDelegate::WeekView::WeekView(CalendarViewLegacyDelegate*cv,Context* context,const AttributeSet*attrs)
     :View(context,attrs),mCV(cv){
     // Sets up any standard paints that will be used
     initializePaints();

@@ -25,9 +25,9 @@ namespace cdroid{
 class DialogTitle:public TextView{
 public:
     DialogTitle(Context* context);
-    DialogTitle(Context* context,const AttributeSet& attrs);
+    DialogTitle(Context* context,const AttributeSet* attrs);
     // AOSP 4-arg form; TextView has no defStyleRes ctor yet, defStyleAttr only.
-    DialogTitle(Context* context,const AttributeSet* attrs,int defStyleAttr=0,int defStyleRes=0);
+    DialogTitle(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes=0);
 protected:
     void onMeasure(int widthMeasureSpec,int heightMeasureSpec)override;
 };

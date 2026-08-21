@@ -54,33 +54,11 @@ static QuinticInterpolator sQuinticInterpolator;
 // defStyleAttr = R.attr.recyclerViewStyle (library attr, 0x02 shared-lib).
 DECLARE_WIDGET2(RecyclerView, (int)R::attr::recyclerViewStyle)
 
-RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
-    initRecyclerView();
-    initAdapterManager();
-    initChildrenHelper();
-    initAutofill();
-    // If not explicitly specified this view is important for accessibility.
-    if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
-        setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
-    }
-    setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
-
-    // Programmatic construction (no XML attrs): the defaults the XML ctor's
-    // unset attrs resolve to — LinearLayoutManager, fast scroller off,
-    // FOCUS_AFTER_DESCENDANTS, nested scrolling on.
-    createLayoutManager(getContext(), "LinearLayoutManager", nullptr, 0, 0);
-    setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
-
-    // Re-set whether nested scrolling is enabled so that it is set on all API levels
-    setNestedScrollingEnabled(true);
-    setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
-}
-
-RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
+RecyclerView::RecyclerView(Context* context,const AttributeSet* attrs)
     // androidx: this(context, attrs, R.attr.recyclerViewStyle). The attr id is
     // pinned in widgetEx/recyclerview public.xml and surfaced by gen_styleable
     // as a standalone R::attr constant (single source).
-    :RecyclerView(context,&attrs,(int)R::attr::recyclerViewStyle){
+    :RecyclerView(context,attrs,(int)R::attr::recyclerViewStyle){
 }
 
 RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
@@ -3312,7 +3290,7 @@ RecyclerView::LayoutParams* RecyclerView::generateDefaultLayoutParams()const {
 
 RecyclerView::LayoutParams* RecyclerView::generateLayoutParams(const AttributeSet& attrs)const {
     LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager");
-    return mLayout->generateLayoutParams(getContext(), attrs);
+    return mLayout->generateLayoutParams(getContext(), &attrs);
 }
 
 RecyclerView::LayoutParams* RecyclerView::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
@@ -5627,8 +5605,8 @@ RecyclerView::LayoutParams* RecyclerView::LayoutManager::generateLayoutParams(co
     return new LayoutParams(lp);
 }
 
-RecyclerView::LayoutParams* RecyclerView::LayoutManager::generateLayoutParams(Context *c, const AttributeSet& attrs)const {
-    return new LayoutParams(c, attrs);
+RecyclerView::LayoutParams* RecyclerView::LayoutManager::generateLayoutParams(Context *c, const AttributeSet* attrs)const {
+    return new LayoutParams(c, *attrs);
 }
 
 int RecyclerView::LayoutManager::scrollHorizontallyBy(int dx, Recycler& recycler, State& state) {

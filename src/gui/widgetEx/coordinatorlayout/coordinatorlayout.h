@@ -163,9 +163,8 @@ protected:
     void onRestoreInstanceState(Parcelable& state)override;
     Parcelable* onSaveInstanceState() override;
 public:
-    CoordinatorLayout(int w, int h);
-    CoordinatorLayout(Context* context,const AttributeSet& attrs);
-    CoordinatorLayout(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    CoordinatorLayout(Context* context,const AttributeSet* attrs);
+    CoordinatorLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~CoordinatorLayout()override;
     void setOnHierarchyChangeListener(const OnHierarchyChangeListener& onHierarchyChangeListener)override;
     void onAttachedToWindow()override;
@@ -180,7 +179,7 @@ public:
     bool onTouchEvent(MotionEvent& ev)override;
     void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
 
-    static Behavior* parseBehavior(Context* context,const AttributeSet& attrs,const std::string& name);
+    static Behavior* parseBehavior(Context* context,const AttributeSet* attrs,const std::string& name);
     LayoutParams* getResolvedLayoutParams(View* child);
 
     void getDescendantRect(View* descendant, Rect& out);
@@ -236,7 +235,7 @@ class CoordinatorLayout::Behavior{//; :public View {//<V extends View> {
     //static_assert(std::is_base_of<View, V>::value, "V must be a subclass of View");
 public:
     Behavior() {}
-    Behavior(Context* context, const AttributeSet& attrs) {}
+    Behavior(Context* context, const AttributeSet* attrs) {}
     virtual ~Behavior()=default;
     virtual void onAttachedToLayoutParams(CoordinatorLayout::LayoutParams& params) {}
     virtual void onDetachedFromLayoutParams() {}

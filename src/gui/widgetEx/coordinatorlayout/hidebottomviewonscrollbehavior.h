@@ -43,8 +43,8 @@ private:
     void animateChildTo(View* child, int targetY, long duration, TimeInterpolator* interpolator);
 public:
     HideBottomViewOnScrollBehavior();
-    HideBottomViewOnScrollBehavior(Context* context,const AttributeSet& attrs);
-    HideBottomViewOnScrollBehavior(Context* context,const AttributeSet* attrs,int defStyleAttr=0);
+    HideBottomViewOnScrollBehavior(Context* context,const AttributeSet* attrs);
+    HideBottomViewOnScrollBehavior(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~HideBottomViewOnScrollBehavior()override;
     bool onLayoutChild(CoordinatorLayout& parent, View& child, int layoutDirection)override;
 

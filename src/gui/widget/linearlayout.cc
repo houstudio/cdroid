@@ -70,15 +70,6 @@ LinearLayout::LayoutParams::LayoutParams(const LayoutParams&source)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-LinearLayout::LinearLayout(int w,int h):LinearLayout(0,0,w,h){
-    initView();
-}
-
-LinearLayout::LinearLayout(int x,int y,int w,int h)
-  :ViewGroup(x,y,w,h){
-    initView();
-}
-
 void LinearLayout::initView(){
     mWeightSum   = -1.0;
     mOrientation = HORIZONTAL;
@@ -96,14 +87,18 @@ void LinearLayout::initView(){
     mAllowInconsistentMeasurement= false;//version <= Build::VERSION_CODES::M;
 }
 
-LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs):LinearLayout(context,&attrs,0){}
+LinearLayout::LinearLayout(Context*ctx)
+    :LinearLayout(ctx,nullptr){}
+
+LinearLayout::LinearLayout(Context* context,const AttributeSet* attrs)
+    :LinearLayout(context,attrs,0){
+}
 
 LinearLayout::LinearLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :ViewGroup(context,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     initView();
 
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::LinearLayout, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::LinearLayout, defStyleAttr);
 
     // Defaults
     setBaselineAligned(true);

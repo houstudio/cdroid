@@ -103,7 +103,7 @@ private:
     void onViewClick(View& v);
     void onViewFocusChange(View& v, bool focused);
 public:
-    TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs);
+    TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet* attrs);
 
 
     bool validateInput() override;

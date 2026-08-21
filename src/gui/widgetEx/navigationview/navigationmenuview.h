@@ -28,7 +28,7 @@ namespace cdroid{
 class NavigationMenuView:public RecyclerView,public MenuView{
 public:
     NavigationMenuView(Context* context);
-    NavigationMenuView(Context* context,const AttributeSet& attrs);
+    NavigationMenuView(Context* context,const AttributeSet* attrs);
     void initialize(MenuBuilder* menu)override;
     int getWindowAnimations()override;
 };

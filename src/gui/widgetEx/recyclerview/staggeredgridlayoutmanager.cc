@@ -1750,8 +1750,8 @@ StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateDe
     }
 }
 
-StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateLayoutParams(Context* c,const AttributeSet& attrs)const{
-    return new LayoutParams(c, attrs);
+StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateLayoutParams(Context* c,const AttributeSet* attrs)const{
+    return new LayoutParams(c, *attrs);
 }
 
 StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateLayoutParams(const ViewGroup::LayoutParams& lp)const{

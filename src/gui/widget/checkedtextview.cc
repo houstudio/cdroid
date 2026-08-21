@@ -10,11 +10,13 @@ DECLARE_WIDGET(CheckedTextView)
 // AOSP CheckedTextView.CHECKED_STATE_SET = { android.R.attr.state_checked }.
 static const std::vector<int> CHECKED_STATE_SET = { R::attr::state_checked };
 
-CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):CheckedTextView(context,&a,0){}
+CheckedTextView::CheckedTextView(Context*ctx)
+    :CheckedTextView(ctx,nullptr){}
+
+CheckedTextView::CheckedTextView(Context* context,const AttributeSet* a):CheckedTextView(context,a,0){}
 
 CheckedTextView::CheckedTextView(Context* context,const AttributeSet* pAttrs,int defStyleAttr):TextView(context,pAttrs, defStyleAttr){
-    const AttributeSet& a = *pAttrs;
-    auto ta = context->obtainStyledAttributes(a, R::styleable::CheckedTextView, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::CheckedTextView, defStyleAttr);
 
     mCheckMarkDrawable = nullptr;
     mCheckMarkTintList = nullptr;

@@ -22,14 +22,13 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(SeekBar,R::attr::seekBarStyle)
 
-SeekBar::SeekBar(Context*ctx,const AttributeSet& attrs):SeekBar(ctx,&attrs,0){}
+SeekBar::SeekBar(Context*ctx)
+    :SeekBar(ctx,nullptr){}
+
+SeekBar::SeekBar(Context*ctx,const AttributeSet* attrs):SeekBar(ctx,attrs,0){}
 
 SeekBar::SeekBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :AbsSeekBar(ctx,pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
-}
-
-SeekBar::SeekBar(int w,int h):AbsSeekBar(w,h){
 }
 
 void SeekBar::onProgressRefresh(float scale, bool fromUser, int progress){

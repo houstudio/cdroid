@@ -29,14 +29,11 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET2(ListView,R::attr::listViewStyle)
 
-ListView::ListView(int w,int h):AbsListView(w,h) {
-    // Programmatic construction: no XML element, but still resolve the default
-    // style (listViewStyle) from the theme, same as the inflate path.
-    initListView(nullptr, R::attr::listViewStyle);
-}
+ListView::ListView(Context*ctx)
+    :ListView(ctx,nullptr){}
 
-ListView::ListView(Context* context,const AttributeSet& attrs)
-    :ListView(context,&attrs,R::attr::listViewStyle){
+ListView::ListView(Context* context,const AttributeSet* attrs)
+    :ListView(context,attrs,R::attr::listViewStyle){
 }
 
 ListView::ListView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)

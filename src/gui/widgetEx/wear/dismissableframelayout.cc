@@ -21,11 +21,10 @@ namespace cdroid{
 
 DECLARE_WIDGET(DismissibleFrameLayout);
 
-DismissibleFrameLayout::DismissibleFrameLayout(Context* context,const AttributeSet& attrs):DismissibleFrameLayout(context,&attrs,0){}
+DismissibleFrameLayout::DismissibleFrameLayout(Context* context,const AttributeSet* attrs):DismissibleFrameLayout(context,attrs,0){}
 
 DismissibleFrameLayout::DismissibleFrameLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :FrameLayout(context, pAttrs/*, defStyle, defStyleRes*/){
-    const AttributeSet& attrs = *pAttrs;
 
     mContext = context;
     setSwipeDismissible(true);//WearableNavigationHelper::isSwipeToDismissEnabled(context));

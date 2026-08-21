@@ -25,22 +25,21 @@ using namespace cdroid::internal;
 using namespace cdroid::internal;
 
 DECLARE_WIDGET(IconMenuView)
-IconMenuView::IconMenuView(Context* context,const AttributeSet& attrs):IconMenuView(context,&attrs,0){}
+IconMenuView::IconMenuView(Context* context,const AttributeSet* attrs):IconMenuView(context,attrs,0){}
 
 IconMenuView::IconMenuView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :ViewGroup(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 
     // AOSP IconMenuView: two obtainStyledAttributes (IconMenuView + MenuView),
     // defStyleAttr=0 (element attrs only, matching the prior raw attrs reads).
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::IconMenuView, 0);
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::IconMenuView, 0);
     mRowHeight = a->getDimensionPixelSize(R::styleable::IconMenuView_rowHeight, 64);
     mMaxRows   = a->getInt(R::styleable::IconMenuView_maxRows, 2);
     mMaxItems  = a->getInt(R::styleable::IconMenuView_maxItems, 6);
     mMaxItemsPerRow = a->getInt(R::styleable::IconMenuView_maxItemsPerRow, 3);
     mMoreIcon  = a->getDrawable(R::styleable::IconMenuView_moreIcon);
 
-    auto b = context->obtainStyledAttributes(attrs, R::styleable::MenuView, 0);
+    auto b = context->obtainStyledAttributes(pAttrs, R::styleable::MenuView, 0);
     mItemBackground = b->getDrawable(R::styleable::MenuView_itemBackground);
     mHorizontalDivider = b->getDrawable(R::styleable::MenuView_horizontalDivider);
     //mHorizontalDividerRects = new ArrayList<Rect>();
