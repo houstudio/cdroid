@@ -32,11 +32,13 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(TabLayout)
+DECLARE_WIDGET2(TabLayout,R::attr::tabStyle)
 
 TabLayout::TabLayout(Context*ctx):TabLayout(ctx,nullptr){}
 
-TabLayout::TabLayout(Context*context,const AttributeSet* atts):TabLayout(context,atts,0){}
+TabLayout::TabLayout(Context*context,const AttributeSet* atts)
+    :TabLayout(context,atts, R::attr::tabStyle){
+}
 
 TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
   :HorizontalScrollView(context,pAttrs, defStyleAttr){
