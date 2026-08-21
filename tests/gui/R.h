@@ -54,8 +54,10 @@ namespace R{
 
     namespace color{
         enum : int {
-            test_colors = 0x7f050000,
-            typedarray_green = 0x7f050001,
+            ctd_text_primary = 0x7f050000,
+            ctd_text_primary_dark = 0x7f050001,
+            test_colors = 0x7f050002,
+            typedarray_green = 0x7f050003,
         };
     }/*namespace color*/
 
@@ -80,43 +82,53 @@ namespace R{
     namespace id{
         enum : int {
             args_test = 0x7f070000,
-            finish = 0x7f070001,
-            finish_self = 0x7f070002,
-            nav_args = 0x7f070003,
-            nav_host_test = 0x7f070004,
-            nav_root = 0x7f070005,
-            second = 0x7f070006,
-            second_fragment = 0x7f070007,
-            second_test = 0x7f070008,
-            self = 0x7f070009,
-            start_fragment = 0x7f07000a,
-            start_test = 0x7f07000b,
+            ctd_themed_attr = 0x7f070001,
+            ctd_themed_default = 0x7f070002,
+            finish = 0x7f070003,
+            finish_self = 0x7f070004,
+            nav_args = 0x7f070005,
+            nav_host_test = 0x7f070006,
+            nav_root = 0x7f070007,
+            second = 0x7f070008,
+            second_fragment = 0x7f070009,
+            second_test = 0x7f07000a,
+            self = 0x7f07000b,
+            start_fragment = 0x7f07000c,
+            start_test = 0x7f07000d,
         };
     }/*namespace id*/
 
+    namespace layout{
+        enum : int {
+            ctd_themed_text = 0x7f080000,
+        };
+    }/*namespace layout*/
+
     namespace navigation{
         enum : int {
-            nav_args_test = 0x7f080000,
-            nav_host_test = 0x7f080001,
-            nav_simple_test = 0x7f080002,
+            nav_args_test = 0x7f090000,
+            nav_host_test = 0x7f090001,
+            nav_simple_test = 0x7f090002,
         };
     }/*namespace navigation*/
 
     namespace style{
         enum : int {
-            StyleA = 0x7f090000,
-            Theme_Empty = 0x7f090001,
-            Theme_InlineString = 0x7f090002,
-            Theme_OrientationDependent = 0x7f090003,
-            Whatever = 0x7f090004,
-            theme_face_probe = 0x7f090005,
+            StyleA = 0x7f0a0000,
+            Theme_Empty = 0x7f0a0001,
+            Theme_InlineString = 0x7f0a0002,
+            Theme_OrientationDependent = 0x7f0a0003,
+            Whatever = 0x7f0a0004,
+            ctdThemeDark = 0x7f0a0005,
+            ctdThemeLight = 0x7f0a0006,
+            theme_face_probe = 0x7f0a0007,
         };
     }/*namespace style*/
 
     namespace xml{
         enum : int {
-            empty = 0x7f0a0000,
-            test_color = 0x7f0a0001,
+            empty = 0x7f0b0000,
+            test_color = 0x7f0b0001,
         };
     }/*namespace xml*/
 

@@ -107,6 +107,14 @@ public:
     // --- PackageManager face (from the app pak's compiled manifest) ---
     // AOSP ApplicationInfo.theme / ActivityInfo lookups.
     int getApplicationTheme() const { return mApplicationTheme; }
+    // App-wide setTheme (the "apply it app-wide" lever): besides rebuilding the
+    // live theme (Assets::setTheme), the runtime choice becomes the
+    // manifest-equivalent default so windows launched afterwards — including
+    // Window::recreate() relaunches — build their ContextThemeWrapper under it
+    // (startActivity reads mApplicationTheme when the activity has no
+    // android:theme of its own). Without this, recreate() keeps inflating
+    // under the boot theme and themed views never re-color.
+    void setTheme(int resid) override;
     const std::string& getApplicationLabel() const { return mApplicationLabel; }
     const ActivityInfo* getActivityInfo(const std::string& name) const;
     // The MAIN/LAUNCHER activity (empty when the manifest has none).

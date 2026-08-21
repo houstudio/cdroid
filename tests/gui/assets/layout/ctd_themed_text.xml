@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Theme-follow probes: ctd_themed_default is a bare TextView (colors through
+     the textViewStyle default-style textAppearance chain); ctd_themed_attr
+     carries an element-level ?android:attr/textColorPrimary (the printerdemo
+     pattern). Both must re-color when the theme changes. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView android:id="@+id/ctd_themed_default"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="default" />
+
+    <TextView android:id="@+id/ctd_themed_attr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="attr"
+        android:textColor="?android:attr/textColorPrimary" />
+</LinearLayout>

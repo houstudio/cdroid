@@ -582,6 +582,16 @@ void App::startActivity(const Intent& intent){
     } // else: ActivityFactory::instantiate already logged "no Window registered".
 }
 
+// App-wide setTheme: Assets::setTheme rebuilds the live theme; the override
+// also records the choice as the manifest-equivalent default so windows
+// launched afterwards (startActivity / Window::recreate) build their themed
+// context under it — the app-wide dynamic-theming contract (toggle the theme,
+// recreate(), the new activity inflates re-colored).
+void App::setTheme(int resid) {
+    mApplicationTheme = resid;
+    Assets::setTheme(resid);
+}
+
 void App::startActivityForResultInternal(Window* caller, const Intent& intent, int requestCode){
     mLastStartedWindow = nullptr;
     startActivity(intent); // creates target + sets mLastStartedWindow

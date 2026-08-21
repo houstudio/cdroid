@@ -219,6 +219,113 @@ TEST_F(RESOURCES_THEME, menuItemTextAppearanceChain) {
     EXPECT_LT(c, 0x80000000u);   // alpha < 0x80 fails only for white/bright
 }
 
+// The plain-TextView case: a bare <TextView/> (activity_list_item's text1, no
+// textAppearance attr) must color through the DEFAULT STYLE chain —
+// textViewStyle(defStyleAttr) -> Widget.Material.TextView -> Widget.TextView's
+// textAppearance=?attr/textAppearanceSmall -> TextAppearance.Material.Small ->
+// textColor=?attr/textColorPrimary -> theme color. The element-?attr variant is
+// covered by menuItemTextAppearanceChain above; this one exercises the
+// defStyleAttr path the TextView ctor actually relies on.
+TEST_F(RESOURCES_THEME, textViewDefaultStyleTextAppearanceChain) {
+    App& app = App::getInstance();
+
+    // Step-by-step replica of the TextView ctor chain (no element attrs).
+    app.setTheme((int)cdroid::internal::R::style::Theme_Material_Light);
+    auto ta = app.obtainStyledAttributes((const AttributeSet*)nullptr,
+            cdroid::internal::R::styleable::TextView,
+            (int)cdroid::internal::R::attr::textViewStyle);
+    ASSERT_NE(ta, nullptr);
+    const int textAppearance = (int)ta->getResourceId(
+            cdroid::internal::R::styleable::TextView_textAppearance, (uint32_t)-1);
+    LOGI("default-style textAppearance id=0x%x", textAppearance);
+    ASSERT_NE(textAppearance, -1);
+    auto taStyle = app.obtainStyledAttributes(
+            textAppearance, cdroid::internal::R::styleable::TextAppearance);
+    ASSERT_NE(taStyle, nullptr);
+    auto csl = taStyle->getColorStateList(
+            cdroid::internal::R::styleable::TextAppearance_textColor);
+    LOGI("appearance textColor csl=%p default=0x%08x", (void*)csl.get(),
+         csl ? csl->getDefaultColor() : 0);
+    ASSERT_NE(csl, nullptr);
+    std::vector<int> st;
+    LOGI("appearance textColor enabled=0x%08x",
+         csl->getColorForState(st, csl->getDefaultColor()));
+
+    // End-to-end: inflate the bare TextView under Light and Dark themes.
+    uint32_t defaults[2] = {0, 0};
+    for (int pass = 0; pass < 2; pass++) {
+        app.setTheme((int)(pass == 0 ? cdroid::internal::R::style::Theme_Material_Light
+                                     : cdroid::internal::R::style::Theme_Material));
+        View* item = LayoutInflater::from(&app)->inflate(
+                cdroid::internal::R::layout::activity_list_item, nullptr, false);
+        ASSERT_NE(item, nullptr);
+        TextView* text1 = dynamic_cast<TextView*>(
+                item->findViewById(cdroid::internal::R::id::text1));
+        ASSERT_NE(text1, nullptr);
+        const auto tc = text1->getTextColors();
+        LOGI("pass%d bare TextView colors=%p default=0x%08x", pass, (void*)tc.get(),
+             tc ? tc->getDefaultColor() : 0);
+        if (tc) defaults[pass] = tc->getDefaultColor();
+        delete item;
+    }
+    // Text color must follow the theme: framework Material light secondary is
+    // #8a000000 (dark ink), dark is #b3ffffff (light ink) — compare the RGB,
+    // the alphas straddle 0x80.
+    EXPECT_NE(defaults[0], defaults[1]);
+    EXPECT_EQ(0x000000u, defaults[0] & 0xffffffu);   // light theme text is dark
+    EXPECT_EQ(0xffffffu, defaults[1] & 0xffffffu);   // dark theme text is light
+}
+
+// The printerdemo scenario: an APP theme overriding android:textColorPrimary
+// (pointing at app color selectors), and TextViews that either rely on the
+// default style (bare) or carry an element-level
+// android:textColor="?android:attr/textColorPrimary". Toggling the theme and
+// re-inflating must re-color BOTH probes (AOSP recreate parity).
+TEST_F(RESOURCES_THEME, textViewAppThemeTextColors) {
+    App& app = App::getInstance();
+    uint32_t def[2] = {0, 0}, attr[2] = {0, 0};
+    for (int pass = 0; pass < 2; pass++) {
+        app.setTheme((int)(pass == 0 ? gui_test::R::style::ctdThemeLight
+                                     : gui_test::R::style::ctdThemeDark));
+        View* root = LayoutInflater::from(&app)->inflate(
+                gui_test::R::layout::ctd_themed_text, nullptr, false);
+        ASSERT_NE(root, nullptr);
+        TextView* defTv = dynamic_cast<TextView*>(
+                root->findViewById(gui_test::R::id::ctd_themed_default));
+        TextView* attrTv = dynamic_cast<TextView*>(
+                root->findViewById(gui_test::R::id::ctd_themed_attr));
+        ASSERT_NE(defTv, nullptr);
+        ASSERT_NE(attrTv, nullptr);
+        const auto dc = defTv->getTextColors();
+        const auto ac = attrTv->getTextColors();
+        if (dc) def[pass] = dc->getDefaultColor();
+        if (ac) attr[pass] = ac->getDefaultColor();
+        LOGI("pass%d app-theme default-style=0x%08x element-?attr=0x%08x",
+             pass, def[pass], attr[pass]);
+        delete root;
+    }
+    // ctdThemeLight: textColorPrimary = #de000000; ctdThemeDark = #deffffff.
+    EXPECT_EQ(0xde000000u, attr[0]);
+    EXPECT_EQ(0xdeffffffu, attr[1]);
+    // The bare TextView rides the default-style textAppearance chain, which
+    // lands on the same theme attribute in these themes.
+    EXPECT_EQ(0xde000000u, def[0]);
+    EXPECT_EQ(0xdeffffffu, def[1]);
+}
+
+// App-wide setTheme must become the manifest-equivalent default so windows
+// launched afterwards (Window::recreate → startActivity) build their themed
+// context under the runtime choice — without it, recreate keeps inflating
+// under the boot theme and themed views never re-color.
+TEST_F(RESOURCES_THEME, appSetThemeUpdatesApplicationTheme) {
+    App& app = App::getInstance();
+    const int saved = app.getApplicationTheme();
+    app.setTheme((int)gui_test::R::style::ctdThemeDark);
+    EXPECT_EQ((int)gui_test::R::style::ctdThemeDark, app.getApplicationTheme());
+    app.setTheme(saved);
+    EXPECT_EQ(saved, app.getApplicationTheme());
+}
+
 // Narrow the menu chain: load the theme's textColorPrimary resource directly.
 TEST_F(RESOURCES_THEME, textColorPrimaryResource) {
     App& app = App::getInstance();

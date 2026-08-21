@@ -73,7 +73,7 @@ class TextAppearanceAttributes {
     cdroid::RefPtr<ColorStateList> mTextColor;
     cdroid::RefPtr<ColorStateList> mTextColorHint;
     cdroid::RefPtr<ColorStateList> mTextColorLink;
-    int mTextSize = 0;
+    int mTextSize = -1;   // AOSP 4195: -1 = unset (ctor seeds 15)
     std::string mFontFamily;
     Typeface* mFontTypeface;
     int mTypefaceIndex = -1;
@@ -187,7 +187,12 @@ static constexpr int ELLIPSIZE_START = 1;
 static constexpr int ELLIPSIZE_MIDDLE = 2;
 static constexpr int ELLIPSIZE_END = 3;
 static constexpr int ELLIPSIZE_MARQUEE = 4;
-TextView::TextView(Context*ctx,const AttributeSet& attrs):TextView(ctx,&attrs,0) {}
+// AOSP TextView(Context, AttributeSet) → this(context, attrs, textViewStyle):
+// code-built TextViews (hand-made AttributeSet) ride the same default-style
+// chain as inflated ones, so the theme's textAppearance reaches them too.
+TextView::TextView(Context*ctx,const AttributeSet& attrs)
+    :TextView(ctx,&attrs,R::attr::textViewStyle) {
+}
 
 TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :View(ctx,pAttrs, defStyleAttr) {
@@ -445,21 +450,31 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     setLineSpacing(lineSpacingExtra, lineSpacingMultiplier);
     setBreakStrategy(breakStrategy);
 
-// AOSP TextView ctor (TextView.java:1237-1287): resolve textAppearance as a
-// TextAppearance style TypedArray FIRST, then read the element's own text
-// appearance attrs to OVERRIDE (readTextAppearance(a, attributes, true)). No
-// element/style AttributeSet merge (the old tmp.inherit(attrs2) is gone) — each
-// source is resolved independently through obtainStyledAttributes, and the
-// readTextAppearance switch only iterates SET indices so unset element attrs
-// don't clobber values taken from the style.
+// AOSP TextView ctor (TextView.java:1217-1251 + 1287): seed the appearance
+// defaults, resolve textAppearance as a TextAppearance style TypedArray FIRST
+// (through the theme — the style's ?attr items resolve against it at read
+// time), then read the element's own text appearance attrs to OVERRIDE
+// (readTextAppearance(a, attributes, true)). No element/style AttributeSet
+// merge (the old tmp.inherit(attrs2) is gone) — each source is resolved
+// independently through obtainStyledAttributes, and the readTextAppearance
+// switch only iterates SET indices so unset element attrs don't clobber
+// values taken from the style.
     TextAppearanceAttributes attributes;
-    // AOSP: textAppearance = a.getResourceId(TextView_textAppearance, -1), then
-    // obtainStyledAttributes(textAppearance, R.styleable.TextAppearance) —
-    // the style's typed resolution, no string→AttributeSet round-trip.
+    attributes.mTextColor = ColorStateList::valueOf(0xFF000000);   // AOSP 1218
+    attributes.mTextSize = 15;                                     // AOSP 1219
+    // AOSP 1237-1239: textAppearance = a.getResourceId(
+    // TextViewAppearance_textAppearance, -1) — read here from the main TextView
+    // array (same resolution params), then obtainStyledAttributes(textAppearance,
+    // R.styleable.TextAppearance): the style's typed resolution, no
+    // string→AttributeSet round-trip.
     const int textAppearance = ta->getResourceId(R::styleable::TextView_textAppearance, -1);
     if(textAppearance != -1) {
         auto taStyle = ctx->obtainStyledAttributes(textAppearance, R::styleable::TextAppearance);
         attributes.readTextAppearance(ctx, taStyle.get());
+        // AOSP 1249: after the style read, fontFamily stops counting as
+        // explicit so a later typeface attr can clear it (applyTextAppearance's
+        // mTypefaceIndex check).
+        attributes.mFontFamilyExplicit = false;
     }
     {
         auto taElem = ctx->obtainStyledAttributes(attrs, R::styleable::TextAppearance, defStyleAttr);
@@ -1325,7 +1340,7 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr) {
 
     if (attr->mTextColorHighlight) setHighlightColor(attr->mTextColorHighlight);
 
-    if (attr->mTextSize != 0) setRawTextSize(attr->mTextSize, true /* shouldRequestLayout */);
+    if (attr->mTextSize != -1) setRawTextSize(attr->mTextSize, true /* shouldRequestLayout */);
 
     if ((attr->mTypefaceIndex != -1) && !attr->mFontFamilyExplicit) {
         attr->mFontFamily.clear();
