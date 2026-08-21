@@ -104,13 +104,9 @@ void ColorStateList::inflate(const Resources&r,XmlPullParser& parser,const Attri
 
         // AOSP: Resources.obtainAttributes(r, theme, attrs, R.styleable.ColorStateListItem).
         auto a = r.obtainStyledAttributes(attrs, R::styleable::ColorStateListItem);
-        const int baseColor = a ? (int)a->getColor(R::styleable::ColorStateListItem_color,
-                                                    Color::MAGENTA)
-                                : (int)Color::MAGENTA;
-        const float alphaMod = a ? a->getFloat(R::styleable::ColorStateListItem_alpha, 1.0f)
-                                 : 1.0f;
-        const float lStar = a ? a->getFloat(R::styleable::ColorStateListItem_lStar, -1.0f)
-                              : -1.0f;
+        const int baseColor = (int)a->getColor(R::styleable::ColorStateListItem_color, Color::MAGENTA);
+        const float alphaMod = a->getFloat(R::styleable::ColorStateListItem_alpha, 1.0f);
+        const float lStar = a->getFloat(R::styleable::ColorStateListItem_lStar, -1.0f);
 
         // Parse all unrecognized attributes as state specifiers (AOSP inflate).
         const int numAttrs = (int)attrs.getAttributeCount();
