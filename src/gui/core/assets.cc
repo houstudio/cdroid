@@ -259,8 +259,9 @@ void Assets::setTheme(int resid) {
             delete asTheme(mArscTheme);
             mArscTheme = nullptr;
         } else {
-            LOGD("arsc Theme built from %s (resId=0x%08x)",
-                 getResourceName((uint32_t)resid).c_str(), resid);
+            LOGD("arsc Theme built from %s (resId=0x%08x, gen=%u)",
+                 getResourceName((uint32_t)resid).c_str(), resid,
+                 asTheme(mArscTheme)->cacheGeneration());
         }
     }
 }

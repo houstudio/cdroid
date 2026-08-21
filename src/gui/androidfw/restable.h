@@ -153,7 +153,12 @@ public:
         // AOSP Resources.Theme.resolveAttribute(resid, outValue, resolveRefs):
         // resolve a single attribute against this theme. Returns false if unset;
         // when resolveRefs is true, REFERENCE/ATTRIBUTE chains are followed.
-        bool resolveAttribute(uint32_t resID, Res_value* outValue, bool resolveRefs) const;
+        // outLastRef (optional): the LAST reference traversed by the chain —
+        // AOSP TypedValue.resourceId; the final value may be fully flattened
+        // (e.g. a color-selector's file-path string) while callers still need
+        // the resource id to load it.
+        bool resolveAttribute(uint32_t resID, Res_value* outValue, bool resolveRefs,
+                              uint32_t* outLastRef = nullptr) const;
 
         // Like ResTable::resolveReference, but TYPE_ATTRIBUTE is resolved via
         // this theme (getAttribute) rather than the table.
@@ -175,8 +180,17 @@ public:
         // erasing any applyStyle() changes made since.
         status_t rebase();
 
+        // Monotonic identity for themed resource caches. The engine ADDRESS is
+        // not unique across Assets::setTheme()'s delete+new rebuilds (the
+        // allocator hands the same block back), so caches must key on this
+        // generation instead of the pointer.
+        uint32_t cacheGeneration() const { return mCacheGeneration; }
+
     private:
+        static uint32_t nextGeneration();
+
         const ResTable& mTable;
+        const uint32_t mCacheGeneration;
         struct ThemedItem {
             Res_value value;
             ssize_t   stringBlock;   // owning header index (for string values)

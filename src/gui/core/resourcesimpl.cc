@@ -440,12 +440,16 @@ Asset* ResourcesImpl::getXml(int id) const {
 // (Drawable::ConstantState is nested; ColorStateList) the header can only
 // forward-declare. ----
 
-// AOSP ThemedResourceCache key: (resource id, theme). CDROID's engine is an
-// opaque ResTable::Theme* kept stable per applied theme (Assets::setTheme
-// rebuilds it), so the pointer identifies the theme — pairs of
-// (theme, id) never collide across themes.
+// AOSP ThemedResourceCache key: (resource id, theme). The engine ADDRESS is
+// not a safe theme identity — Assets::setTheme() rebuilds the engine with
+// delete+new and the allocator typically hands the same block back, so a
+// toggled theme would collide with (and be served) the previous theme's
+// cached drawables/CSLs. Key on the theme's monotonic generation instead.
 static uint64_t themedCacheKey(int id, const void* themeEngine) {
-    return ((uint64_t)(uintptr_t)themeEngine << 32) | (uint32_t)id;
+    const uint64_t theme = themeEngine
+            ? static_cast<const ResTable::Theme*>(themeEngine)->cacheGeneration()
+            : 0;
+    return (theme << 32) | (uint32_t)id;
 }
 
 class ResourcesImpl::DrawableCache {

@@ -452,14 +452,19 @@ void Resources::Theme::setTo(const Theme& other) {
 bool Resources::Theme::resolveAttribute(int resId, TypedValue* out, bool resolveRefs) const {
     if (mEngine == nullptr || out == nullptr) return false;
     Res_value v;
+    uint32_t lastRef = 0;
     if (!static_cast<const ResTable::Theme*>(mEngine)->resolveAttribute(
-            (uint32_t)resId, &v, resolveRefs)) return false;
+            (uint32_t)resId, &v, resolveRefs, &lastRef)) return false;
     out->type = v.dataType;
     out->data = v.data;
-    // AOSP TypedValue.resourceId: a non-resolved reference's data IS the
-    // referenced resource id — TypedArray's ?attr branches depend on it.
-    out->resourceId = (v.dataType == Res_value::TYPE_REFERENCE
-                       || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE) ? v.data : 0;
+    // AOSP TypedValue.resourceId: the reference this value came from. With
+    // resolveRefs the chain flattens (a color-selector reference becomes its
+    // file-path string) and callers like TypedArray still need the id to load
+    // it — keep the LAST traversed reference, falling back to a plain
+    // reference's data.
+    out->resourceId = lastRef != 0 ? lastRef
+            : ((v.dataType == Res_value::TYPE_REFERENCE
+                || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE) ? v.data : 0);
     return true;
 }
 

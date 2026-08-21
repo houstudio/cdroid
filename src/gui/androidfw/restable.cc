@@ -23,6 +23,7 @@
 #include "restable.h"
 #include <porting/cdlog.h>
 #include <cstring>      // memset/memcpy/memcmp
+#include <atomic>       // Theme::nextGeneration counter
 #include <algorithm>    // std::lower_bound (sparse type entries)
 
 namespace cdroid {
@@ -645,7 +646,13 @@ uint32_t ResTable::getBagParent(uint32_t resId, ResTable_config* outConfig) cons
 // locking cache; a plain map is semantically equivalent).
 // ===========================================================================
 
-ResTable::Theme::Theme(const ResTable& table) : mTable(table) {}
+uint32_t ResTable::Theme::nextGeneration() {
+    static std::atomic<uint32_t> sNext{1};
+    return sNext.fetch_add(1, std::memory_order_relaxed);
+}
+
+ResTable::Theme::Theme(const ResTable& table)
+    : mTable(table), mCacheGeneration(nextGeneration()) {}
 ResTable::Theme::~Theme() {}
 
 status_t ResTable::Theme::clear() {
@@ -737,12 +744,13 @@ ssize_t ResTable::Theme::getAttribute(uint32_t resID, Res_value* outValue,
 
 // AOSP Resources.Theme.resolveAttribute: getAttribute + (optional) reference
 // flattening, as a single boolean-returning call.
-bool ResTable::Theme::resolveAttribute(uint32_t resID, Res_value* outValue, bool resolveRefs) const {
+bool ResTable::Theme::resolveAttribute(uint32_t resID, Res_value* outValue, bool resolveRefs,
+                                        uint32_t* outLastRef) const {
     Res_value v;
     ssize_t blk = getAttribute(resID, &v);
     if (blk < 0) return false;
     if (resolveRefs) {
-        blk = resolveAttributeReference(&v, blk);
+        blk = resolveAttributeReference(&v, blk, outLastRef);
         if (blk < 0) return false;
     }
     if (outValue) *outValue = v;

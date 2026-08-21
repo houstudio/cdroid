@@ -161,9 +161,16 @@ uint32_t TypedArray::getColor(size_t idx, uint32_t def) const {
         if (mTheme) {
             TypedValue tv;
             if (mTheme->resolveAttribute((int)v.data, &tv, true)) {
+                if (tv.type >= TypedValue::TYPE_FIRST_COLOR_INT && tv.type <= TypedValue::TYPE_LAST_COLOR_INT)
+                    return tv.data;
+                if (tv.resourceId != 0 && mResources) {
+                    // The chain landed on a COLOR resource — often a
+                    // color-selector file flattened to its file path. The
+                    // resolver kept the last reference id (AOSP TypedValue.
+                    // resourceId); load it themed (a CSL yields its default).
+                    return mResources->getColor((int)tv.resourceId, mTheme.get());
+                }
                 v.type = tv.type; v.data = tv.data;
-                if (v.type >= TypedValue::TYPE_FIRST_COLOR_INT && v.type <= TypedValue::TYPE_LAST_COLOR_INT)
-                    return v.data;
             } else {
                 return def;
             }
@@ -463,6 +470,17 @@ std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const 
         // and the id is lost (→ null → callers fall to hard colors).
         TypedValue tv;
         if (mTheme->resolveAttribute((int)v.data, &tv, /*resolveRefs*/false)) {
+            if (tv.type >= TypedValue::TYPE_FIRST_COLOR_INT && tv.type <= TypedValue::TYPE_LAST_COLOR_INT)
+                return ColorStateList::valueOf(tv.data);
+            if (tv.resourceId != 0)
+                return std::dynamic_pointer_cast<ColorStateList>(
+                        mResources->loadComplexColor((int)tv.resourceId, mTheme.get()));
+        }
+        // Full-resolution chase: ?attr -> ?attr -> @color/x (possibly a
+        // color-selector file). resolveRefs=true flattens the value to the
+        // file path, but TypedValue.resourceId keeps the LAST reference id —
+        // the themed loader still has something to load.
+        if (mTheme->resolveAttribute((int)v.data, &tv, true)) {
             if (tv.type >= TypedValue::TYPE_FIRST_COLOR_INT && tv.type <= TypedValue::TYPE_LAST_COLOR_INT)
                 return ColorStateList::valueOf(tv.data);
             if (tv.resourceId != 0)
