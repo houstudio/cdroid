@@ -66,6 +66,14 @@ void RadioGroup::onChildViewAdded(View& parent, View* child){
 	        id = child->generateViewId();
 	        child->setId(id);
 	    }
+	    // Hardening beyond AOSP: addView() records mCheckedId = button.getId()
+	    // BEFORE this listener generates a missing id, so a RadioButton that is
+	    // checked in XML without an android:id recorded NO_ID and could then
+	    // never be unchecked by the group (two checked at once). Backfill the
+	    // record now that the id exists.
+	    if (((RadioButton*)child)->isChecked() && mCheckedId == View::NO_ID) {
+	        setCheckedId(id);
+	    }
 	    ((RadioButton*)child)->setOnCheckedChangeWidgetListener(mChildOnCheckedChangeListener);
         if(mOnHierarchyChangeListener.onChildViewAdded)
             mOnHierarchyChangeListener.onChildViewAdded(parent, child);
