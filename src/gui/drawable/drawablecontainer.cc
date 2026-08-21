@@ -445,12 +445,6 @@ DrawableContainer::DrawableContainer(){
     mEnterAnimationEnd= 0;
 }
 
-DrawableContainer::DrawableContainer(Context*ctx,const AttributeSet&atts):DrawableContainer(){
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::DrawableContainerState);
-    mDrawableContainerState->setConstantSize(ta->getBoolean(R::styleable::DrawableContainerState_constantSize, false));
-    mDrawableContainerState->setVariablePadding(ta->getBoolean(R::styleable::DrawableContainerState_variablePadding, false));
-}
-
 DrawableContainer::~DrawableContainer(){
     std::vector<Drawable*>&ds=mDrawableContainerState->mDrawables;
     for_each(ds.begin(),ds.end(),[](Drawable*d){delete d;});

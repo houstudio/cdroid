@@ -103,7 +103,6 @@ protected:
 
     Drawable* mCurrDrawable;
     Drawable* mLastDrawable;
-    DrawableContainer(Context*ctx,const AttributeSet&atts);
     bool needsMirroring();
     void animate(bool schedule);
     virtual std::shared_ptr<DrawableContainerState> cloneConstantState();
