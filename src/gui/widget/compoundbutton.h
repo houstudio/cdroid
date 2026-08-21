@@ -24,13 +24,13 @@ class CompoundButton:public Button,public Checkable{
 public:
     DECLARE_UIEVENT(void,OnCheckedChangeListener,CompoundButton&view,bool);
 private:
-    bool mChecked;
-    bool mBroadcasting;
     Drawable* mButtonDrawable;
     cdroid::RefPtr<ColorStateList>mButtonTintList;
     /* AOSP: BlendMode mButtonBlendMode. CDROID has no BlendMode class; the
        PorterDuff::Mode union covers the legacy modes and NOOP stands in for null. */
     PorterDuffMode mButtonBlendMode;
+    bool mChecked;
+    bool mBroadcasting;
     bool mHasButtonTint;
     bool mHasButtonBlendMode;
     // Indicates whether the toggle state was set from resources or dynamically, so it can be used
