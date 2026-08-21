@@ -111,7 +111,9 @@ namespace internal { namespace R { namespace styleable {
         0x02010147, 0x02010148, 0x02010149, 0x0201014a, 0x0201014b, 0x0201014c, 0 };
     const uint32_t NavigationBarView[] = {
         0x0201013b, 0x0201013a, 0x0201013d, 0x0201013e, 0x02010138, 0x0201014e, 0x0201014f,
-        0x02010159, 0 };
+        0x02010159, 0x0201015a, 0x0201015b, 0x0201015c, 0x0201015d, 0x0201014a, 0x0201015f,
+        0x02010160, 0x02010161, 0x02010162, 0x02010163, 0x02010164, 0 };
+    const uint32_t BottomNavigationActiveIndicator[] = { 0x02010165, 0x02010166, 0x02010167, 0x02010168, 0 };
     const uint32_t BottomNavigationView[] = { 0x02010143, 0 };
     const uint32_t NavGraph[] = { 0x02010120, 0x02010121, 0 };
     const uint32_t NavDestination[] = { 0x010100d0, 0x01010001, 0x02010121, 0 };

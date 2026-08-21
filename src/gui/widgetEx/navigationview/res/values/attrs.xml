@@ -59,6 +59,27 @@
             <!-- Label is not shown on any navigation items. -->
             <enum name="unlabeled" value="2"/>
         </attr>
+        <attr name="itemTextAppearanceInactive" format="reference" />
+        <attr name="itemTextAppearanceActive" format="reference" />
+        <attr name="horizontalItemTextAppearanceInactive" format="reference" />
+        <attr name="horizontalItemTextAppearanceActive" format="reference" />
+        <attr name="itemTextAppearanceActiveBoldEnabled" />
+        <attr name="itemRippleColor" format="color" />
+        <attr name="itemPaddingTop" format="dimension" />
+        <attr name="itemPaddingBottom" format="dimension" />
+        <attr name="activeIndicatorLabelPadding" format="dimension" />
+        <attr name="iconLabelHorizontalSpacing" format="dimension" />
+        <attr name="itemActiveIndicatorStyle" format="reference" />
+    </declare-styleable>
+
+    <!-- The active indicator's pill (simplified from material's shape-based
+         BottomNavigationActiveIndicator: shapeAppearance machinery is not
+         ported, the pill is a rounded rectangle). -->
+    <declare-styleable name="BottomNavigationActiveIndicator">
+        <attr name="width" format="dimension" />
+        <attr name="height" format="dimension" />
+        <attr name="marginX" format="dimension" />
+        <attr name="color" format="color" />
     </declare-styleable>
     <declare-styleable name="BottomNavigationView">
         <attr name="itemHorizontalTranslationEnabled" format="boolean" />

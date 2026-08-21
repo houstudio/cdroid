@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- widgetEx navigationview attr id pinning (0x02 shared-lib). Source of truth;
      consumed by _compile_shared_lib (aapt2 <public id=>) and gen_styleable.
-     Watermark-allocated: next free 0x0201015a (0x0201014d = recyclerViewStyle,
-     pinned in recyclerview/res/values/public.xml; 0x02010150-58 = appbar block). -->
+     Watermark-allocated: next free 0x02010169 (0x0201014d = recyclerViewStyle;
+     0x02010150-58 = appbar block; width/height/marginX/color are generic
+     shared names pinned here for the ActiveIndicator styleable). -->
 <resources>
     <public type="attr" name="menu" id="0x02010138"/>
     <public type="attr" name="headerLayout" id="0x02010139"/>
@@ -32,4 +33,20 @@
     <public type="attr" name="itemIconGravity" id="0x0201014f"/>
     <!-- 0x02010150-0x02010158 are the appbar block -->
     <public type="attr" name="labelVisibilityMode" id="0x02010159"/>
+    <public type="attr" name="itemTextAppearanceInactive" id="0x0201015a"/>
+    <public type="attr" name="itemTextAppearanceActive" id="0x0201015b"/>
+    <public type="attr" name="horizontalItemTextAppearanceInactive" id="0x0201015c"/>
+    <public type="attr" name="horizontalItemTextAppearanceActive" id="0x0201015d"/>
+    <!-- itemTextAppearanceActiveBoldEnabled reuses the NavigationView attr (0x0201014a) -->
+    <public type="attr" name="itemRippleColor" id="0x0201015f"/>
+    <public type="attr" name="itemPaddingTop" id="0x02010160"/>
+    <public type="attr" name="itemPaddingBottom" id="0x02010161"/>
+    <public type="attr" name="activeIndicatorLabelPadding" id="0x02010162"/>
+    <public type="attr" name="iconLabelHorizontalSpacing" id="0x02010163"/>
+    <public type="attr" name="itemActiveIndicatorStyle" id="0x02010164"/>
+    <!-- BottomNavigationActiveIndicator (generic names, shared 0x02 space) -->
+    <public type="attr" name="width" id="0x02010165"/>
+    <public type="attr" name="height" id="0x02010166"/>
+    <public type="attr" name="marginX" id="0x02010167"/>
+    <public type="attr" name="color" id="0x02010168"/>
 </resources>

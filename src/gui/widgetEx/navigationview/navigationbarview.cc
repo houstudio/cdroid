@@ -26,7 +26,11 @@
 #include <widget/imageview.h>
 #include <widget/textview.h>
 #include <drawable/colorstatelist.h>
+#include <drawable/gradientdrawable.h>
+#include <drawable/rippledrawable.h>
+#include <drawable/colordrawable.h>
 #include <core/typedarray.h>
+#include <core/typeface.h>
 
 namespace cdroid{
 using namespace cdroid::internal;
@@ -40,6 +44,20 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
     mLabelVisibilityMode = LABEL_VISIBILITY_AUTO;
     mItemGravity = ITEM_GRAVITY_TOP_CENTER;
     mItemIconGravity = ITEM_ICON_GRAVITY_TOP;
+    mItemTextAppearanceInactive = 0;
+    mItemTextAppearanceActive = 0;
+    mHorizontalItemTextAppearanceInactive = 0;
+    mHorizontalItemTextAppearanceActive = 0;
+    mItemTextAppearanceActiveBoldEnabled = true;
+    mItemRippleColor = nullptr;
+    mItemPaddingTop = -1;
+    mItemPaddingBottom = -1;
+    mActiveIndicatorLabelPadding = -1;
+    mIconLabelHorizontalSpacing = -1;
+    mActiveIndicatorWidth = 0;
+    mActiveIndicatorHeight = 0;
+    mActiveIndicatorMarginX = 0;
+    mActiveIndicatorColor = 0;
 
     // AOSP NavigationBarView ctor: menu, menu view, presenter, then attrs.
     mMenu = new MenuBuilder(context);
@@ -77,6 +95,48 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
     mItemGravity = ta->getInt(
             cdroid::internal::R::styleable::NavigationBarView_itemGravity,
             ITEM_GRAVITY_TOP_CENTER);
+
+    // Text appearances (0 = none). The horizontal variants only apply to the
+    // icon-start layout and fall back to the vertical ones.
+    mItemTextAppearanceInactive = ta->getResourceId(
+            cdroid::internal::R::styleable::NavigationBarView_itemTextAppearanceInactive, 0);
+    mItemTextAppearanceActive = ta->getResourceId(
+            cdroid::internal::R::styleable::NavigationBarView_itemTextAppearanceActive, 0);
+    mHorizontalItemTextAppearanceInactive = ta->getResourceId(
+            cdroid::internal::R::styleable::NavigationBarView_horizontalItemTextAppearanceInactive,
+            mItemTextAppearanceInactive);
+    mHorizontalItemTextAppearanceActive = ta->getResourceId(
+            cdroid::internal::R::styleable::NavigationBarView_horizontalItemTextAppearanceActive,
+            mItemTextAppearanceActive);
+    mItemTextAppearanceActiveBoldEnabled = ta->getBoolean(
+            cdroid::internal::R::styleable::NavigationBarView_itemTextAppearanceActiveBoldEnabled, true);
+    mItemRippleColor = ta->getColorStateList(
+            cdroid::internal::R::styleable::NavigationBarView_itemRippleColor);
+    mItemPaddingTop = ta->getDimensionPixelSize(
+            cdroid::internal::R::styleable::NavigationBarView_itemPaddingTop, -1);
+    mItemPaddingBottom = ta->getDimensionPixelSize(
+            cdroid::internal::R::styleable::NavigationBarView_itemPaddingBottom, -1);
+    mActiveIndicatorLabelPadding = ta->getDimensionPixelSize(
+            cdroid::internal::R::styleable::NavigationBarView_activeIndicatorLabelPadding, -1);
+    mIconLabelHorizontalSpacing = ta->getDimensionPixelSize(
+            cdroid::internal::R::styleable::NavigationBarView_iconLabelHorizontalSpacing, -1);
+
+    // itemActiveIndicatorStyle: a style holding the pill geometry (simplified
+    // from material's shape-based BottomNavigationActiveIndicator).
+    const int activeIndicatorStyle = ta->getResourceId(
+            cdroid::internal::R::styleable::NavigationBarView_itemActiveIndicatorStyle, 0);
+    if (activeIndicatorStyle != 0) {
+        auto ai = context->obtainStyledAttributes(activeIndicatorStyle,
+                cdroid::internal::R::styleable::BottomNavigationActiveIndicator);
+        mActiveIndicatorWidth = ai->getDimensionPixelSize(
+                cdroid::internal::R::styleable::BottomNavigationActiveIndicator_width, 0);
+        mActiveIndicatorHeight = ai->getDimensionPixelSize(
+                cdroid::internal::R::styleable::BottomNavigationActiveIndicator_height, 0);
+        mActiveIndicatorMarginX = ai->getDimensionPixelSize(
+                cdroid::internal::R::styleable::BottomNavigationActiveIndicator_marginX, 0);
+        mActiveIndicatorColor = ai->getColor(
+                cdroid::internal::R::styleable::BottomNavigationActiveIndicator_color, 0);
+    }
 
     if (ta->hasValue(cdroid::internal::R::styleable::NavigationBarView_menu)) {
         MenuInflater inflater(context);
@@ -183,6 +243,79 @@ void NavigationBarView::setItemIconGravity(int itemIconGravity) {
     }
 }
 
+int NavigationBarView::getItemTextAppearanceInactive() const {
+    return mItemTextAppearanceInactive;
+}
+
+void NavigationBarView::setItemTextAppearanceInactive(int textAppearanceRes) {
+    if (mItemTextAppearanceInactive != textAppearanceRes) {
+        mItemTextAppearanceInactive = textAppearanceRes;
+        updateMenuView();
+    }
+}
+
+int NavigationBarView::getItemTextAppearanceActive() const {
+    return mItemTextAppearanceActive;
+}
+
+void NavigationBarView::setItemTextAppearanceActive(int textAppearanceRes) {
+    if (mItemTextAppearanceActive != textAppearanceRes) {
+        mItemTextAppearanceActive = textAppearanceRes;
+        updateMenuView();
+    }
+}
+
+void NavigationBarView::setItemTextAppearanceActiveBoldEnabled(bool isBold) {
+    if (mItemTextAppearanceActiveBoldEnabled != isBold) {
+        mItemTextAppearanceActiveBoldEnabled = isBold;
+        updateMenuView();
+    }
+}
+
+const RefPtr<ColorStateList> NavigationBarView::getItemRippleColor() const {
+    return mItemRippleColor;
+}
+
+void NavigationBarView::setItemRippleColor(const RefPtr<ColorStateList>& itemRippleColor) {
+    if (mItemRippleColor != itemRippleColor) {
+        mItemRippleColor = itemRippleColor;
+        updateMenuView();
+    }
+}
+
+int NavigationBarView::getItemPaddingTop() const {
+    return mItemPaddingTop;
+}
+
+void NavigationBarView::setItemPaddingTop(int paddingTop) {
+    if (mItemPaddingTop != paddingTop) {
+        mItemPaddingTop = paddingTop;
+        updateMenuView();
+    }
+}
+
+int NavigationBarView::getItemPaddingBottom() const {
+    return mItemPaddingBottom;
+}
+
+void NavigationBarView::setItemPaddingBottom(int paddingBottom) {
+    if (mItemPaddingBottom != paddingBottom) {
+        mItemPaddingBottom = paddingBottom;
+        updateMenuView();
+    }
+}
+
+int NavigationBarView::getActiveIndicatorLabelPadding() const {
+    return mActiveIndicatorLabelPadding;
+}
+
+void NavigationBarView::setActiveIndicatorLabelPadding(int activeIndicatorLabelPadding) {
+    if (mActiveIndicatorLabelPadding != activeIndicatorLabelPadding) {
+        mActiveIndicatorLabelPadding = activeIndicatorLabelPadding;
+        updateMenuView();
+    }
+}
+
 // Icon-over-label button (material NavigationBarItemView simplified: no
 // active indicator, no badge, no item animation).
 View* NavigationBarView::createItemView(MenuItem* item) {
@@ -195,8 +328,17 @@ View* NavigationBarView::createItemView(MenuItem* item) {
     column->setOrientation(iconAtStart ? LinearLayout::HORIZONTAL : LinearLayout::VERTICAL);
     // itemGravity positions the item content inside the item bounds.
     column->setGravity(mItemGravity);
-    column->setPadding(8, 6, 8, 6);
-    if (mItemBackground) {
+    column->setPadding(8, mItemPaddingTop >= 0 ? mItemPaddingTop : 6,
+                       8, mItemPaddingBottom >= 0 ? mItemPaddingBottom : 6);
+    if (item->isChecked() && mActiveIndicatorWidth > 0 && mActiveIndicatorHeight > 0) {
+        // Active indicator pill behind the checked item (a rounded rectangle;
+        // material's shape machinery is not ported).
+        GradientDrawable* pill = new GradientDrawable();
+        pill->setShape(GradientDrawable::RECTANGLE);
+        pill->setColor(mActiveIndicatorColor);
+        pill->setCornerRadius(mActiveIndicatorHeight / 2.f);
+        column->setBackground(pill);
+    } else if (mItemBackground) {
         // Each item owns its background through View::mBackground. Never share the
         // template drawable between items: View destruction deletes its background.
         std::shared_ptr<Drawable::ConstantState> constantState = mItemBackground->getConstantState();
@@ -205,6 +347,11 @@ View* NavigationBarView::createItemView(MenuItem* item) {
             ? std::vector<int>{R::attr::state_checked} : std::vector<int>{};
         background->setState(state);
         column->setBackground(background);
+    } else if (mItemRippleColor != nullptr) {
+        // No item background: the ripple alone (material resolves the same
+        // either/or in its ctor).
+        column->setBackground(new RippleDrawable(mItemRippleColor, nullptr,
+                new ColorDrawable(0xFFFFFFFF)));
     }
     column->setLayoutParams(new LinearLayout::LayoutParams(
             0, 56, 1.f));
@@ -228,6 +375,17 @@ View* NavigationBarView::createItemView(MenuItem* item) {
     if (mLabelVisibilityMode != LABEL_VISIBILITY_UNLABELED) {
         TextView* label = new TextView(context, nullptr, 0);
         label->setText(item->getTitle());
+        const int textAppearance = iconAtStart
+                ? (item->isChecked() ? mHorizontalItemTextAppearanceActive
+                                     : mHorizontalItemTextAppearanceInactive)
+                : (item->isChecked() ? mItemTextAppearanceActive
+                                     : mItemTextAppearanceInactive);
+        if (textAppearance != 0) {
+            label->setTextAppearance(textAppearance);
+            if (item->isChecked() && mItemTextAppearanceActiveBoldEnabled) {
+                label->setTypeface(label->getTypeface(), Typeface::BOLD);
+            }
+        }
         if (mItemTextColor) {
             const std::vector<int> state = item->isChecked()
                 ? std::vector<int>{R::attr::state_checked} : std::vector<int>{};

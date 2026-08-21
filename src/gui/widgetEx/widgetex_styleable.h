@@ -786,7 +786,7 @@ namespace internal { namespace R { namespace styleable {
     constexpr int NavigationView_topInsetScrimEnabled = 18;
     constexpr int NavigationView_bottomInsetScrimEnabled = 19;
 
-    // NavigationBarView (8 attrs)
+    // NavigationBarView (19 attrs)
     extern const uint32_t NavigationBarView[];
     constexpr int NavigationBarView_itemIconTint = 0;
     constexpr int NavigationBarView_itemIconSize = 1;
@@ -796,6 +796,24 @@ namespace internal { namespace R { namespace styleable {
     constexpr int NavigationBarView_itemGravity = 5;
     constexpr int NavigationBarView_itemIconGravity = 6;
     constexpr int NavigationBarView_labelVisibilityMode = 7;
+    constexpr int NavigationBarView_itemTextAppearanceInactive = 8;
+    constexpr int NavigationBarView_itemTextAppearanceActive = 9;
+    constexpr int NavigationBarView_horizontalItemTextAppearanceInactive = 10;
+    constexpr int NavigationBarView_horizontalItemTextAppearanceActive = 11;
+    constexpr int NavigationBarView_itemTextAppearanceActiveBoldEnabled = 12;
+    constexpr int NavigationBarView_itemRippleColor = 13;
+    constexpr int NavigationBarView_itemPaddingTop = 14;
+    constexpr int NavigationBarView_itemPaddingBottom = 15;
+    constexpr int NavigationBarView_activeIndicatorLabelPadding = 16;
+    constexpr int NavigationBarView_iconLabelHorizontalSpacing = 17;
+    constexpr int NavigationBarView_itemActiveIndicatorStyle = 18;
+
+    // BottomNavigationActiveIndicator (4 attrs)
+    extern const uint32_t BottomNavigationActiveIndicator[];
+    constexpr int BottomNavigationActiveIndicator_width = 0;
+    constexpr int BottomNavigationActiveIndicator_height = 1;
+    constexpr int BottomNavigationActiveIndicator_marginX = 2;
+    constexpr int BottomNavigationActiveIndicator_color = 3;
 
     // BottomNavigationView (1 attrs)
     extern const uint32_t BottomNavigationView[];

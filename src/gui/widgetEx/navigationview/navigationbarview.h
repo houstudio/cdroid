@@ -74,6 +74,22 @@ private:
     int mLabelVisibilityMode;  // LABEL_VISIBILITY_*
     int mItemGravity;          // ITEM_GRAVITY_*
     int mItemIconGravity;      // ITEM_ICON_GRAVITY_*
+    // material NavigationBarMenuView presentation fields (merged into this
+    // substrate class; style res ids, 0 = none).
+    int mItemTextAppearanceInactive;
+    int mItemTextAppearanceActive;
+    int mHorizontalItemTextAppearanceInactive;
+    int mHorizontalItemTextAppearanceActive;
+    bool mItemTextAppearanceActiveBoldEnabled;
+    RefPtr<ColorStateList> mItemRippleColor;
+    int mItemPaddingTop;            // -1 = substrate default
+    int mItemPaddingBottom;         // -1 = substrate default
+    int mActiveIndicatorLabelPadding;
+    int mIconLabelHorizontalSpacing;
+    int mActiveIndicatorWidth;      // 0 = no active indicator
+    int mActiveIndicatorHeight;
+    int mActiveIndicatorMarginX;
+    int mActiveIndicatorColor;
 protected:
     NavigationBarView(Context* context, const AttributeSet* attrs, int defStyleAttr);
     virtual int getMaxItemCount() const = 0;
@@ -107,6 +123,20 @@ public:
     /** Returns the icon gravity which determines the item layout configuration (ITEM_ICON_GRAVITY_*). */
     int getItemIconGravity() const;
     void setItemIconGravity(int itemIconGravity);
+
+    int getItemTextAppearanceInactive() const;
+    void setItemTextAppearanceInactive(int textAppearanceRes);
+    int getItemTextAppearanceActive() const;
+    void setItemTextAppearanceActive(int textAppearanceRes);
+    void setItemTextAppearanceActiveBoldEnabled(bool isBold);
+    const RefPtr<ColorStateList> getItemRippleColor() const;
+    void setItemRippleColor(const RefPtr<ColorStateList>& itemRippleColor);
+    int getItemPaddingTop() const;
+    void setItemPaddingTop(int paddingTop);
+    int getItemPaddingBottom() const;
+    void setItemPaddingBottom(int paddingBottom);
+    int getActiveIndicatorLabelPadding() const;
+    void setActiveIndicatorLabelPadding(int activeIndicatorLabelPadding);
 };
 
 }//namespace cdroid
