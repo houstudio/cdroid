@@ -6,7 +6,7 @@
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
-    TextView*tv=new TextView("AnimatedVectorDrawable",0,0);
+    TextView*tv=new TextView(&app); tv->setText("AnimatedVectorDrawable" );
     w->setBackgroundColor(0xFF112233);
     w->addView(tv);
     Drawable *d = nullptr;

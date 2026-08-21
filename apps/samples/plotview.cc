@@ -7,7 +7,7 @@ void slotSelectPlot(PlotView*plot,int n);
 int main(int argc,char*srgv[]){
    App app;
    Window*w=new Window(0,0,-1,-1);
-   PlotView*plot=new PlotView(400,400);
+   PlotView*plot=new PlotView(&app);
    w->addView(plot);
    plot->setPadding(20,20,20,20);
    plot->setShowGrid(true);

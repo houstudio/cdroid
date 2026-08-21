@@ -5,6 +5,13 @@
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
+
+    // Framework resource by name at runtime (AOSP Resources.getIdentifier) —
+    // public and internal names alike, no R header needed. Images live in the
+    // drawable namespaces now (the pre-arsc mipmap/ directory convention is gone).
+    auto fwid = [&app](const char* name) {
+        return app.getResources().getIdentifier(name, "drawable", "android");
+    };
     cxxopts::Options options("main","application");
     options.add_options()("u,url","image url",cxxopts::value<std::string>());
     options.allow_unrecognised_options();
@@ -15,7 +22,7 @@ int main(int argc,const char*argv[]){
 
     // Window::doLayout now always lays out direct children, so absolute layout() on
     // multiple direct children piles them up at (0,0). Stack them in a LinearLayout.
-    LinearLayout*content=new LinearLayout(-1,-1);
+    LinearLayout*content=new LinearLayout(&app);
     content->setOrientation(LinearLayout::VERTICAL);
     w->addView(content);
     auto add=[&](View*v,int ww,int hh){
@@ -24,15 +31,15 @@ int main(int argc,const char*argv[]){
         content->addView(v,lp);
     };
 
-    ImageView *btn=new ImageView(200,200);
+    ImageView *btn=new ImageView(&app);
     if(result.count("url")){
         std::string url = result["url"].as<std::string>();
         btn->setImageResource(url);
     }
     add(btn,200,200);
 
-    ImageView*img=new ImageView(200,200);
-    Drawable*dr=app.getDrawable("cdroid:mipmap/bottom_bar");//drawable/btn_radio.xml");
+    ImageView*img=new ImageView(&app);
+    Drawable*dr=app.getDrawable(fwid("bottom_bar"));
     img->setImageDrawable(dr);
     img->setCornerRadii(20);
     img->setScaleType(ScaleType::FIT_XY);

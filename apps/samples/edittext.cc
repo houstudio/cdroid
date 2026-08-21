@@ -57,7 +57,7 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
 
-    LinearLayout*layout=new LinearLayout(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
+    LinearLayout*layout=new LinearLayout(&App::getInstance());
     layout->setOrientation(LinearLayout::VERTICAL);
     layout->setBackgroundColor(0xFF334455);
     w->addView(layout);
@@ -66,7 +66,7 @@ int main(int argc,const char*argv[]){
         TestString*ts=testStrings+i;
         LinearLayout::LayoutParams*layoutParams=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
         layoutParams->setMargins(0,8,0,8);
-        EditText*edt=new EditText(ts->text,0,0);
+        EditText*edt=new EditText(&App::getInstance()); edt->setText(ts->text);
         edt->setTextColor(i?0xffff0000:0xFF44FFaa);
         edt->setFocusable(true);
         edt->setClickable(true);
@@ -81,7 +81,7 @@ int main(int argc,const char*argv[]){
         layout->addView(edt,layoutParams);
     }
 
-    auto tv=new EditText("textview with leftdrawable",0,0);
+    auto tv=new EditText(&app); tv->setText("textview with leftdrawable" );
     layout->addView(tv);
     tv->setFocusable(true);
 
@@ -99,12 +99,12 @@ int main(int argc,const char*argv[]){
         { "Hebrew RTL",              "שלום עולם" },
     };
     for (int i = 0; i < (int)(sizeof(bidiCases) / sizeof(bidiCases[0])); i++) {
-        auto* lbl = new TextView(bidiCases[i].label, 0, 0);
+        auto* lbl = new TextView(&App::getInstance()); lbl->setText(bidiCases[i].label);
         lbl->setTextSize(14);
         lbl->setTextColor(0xFFAABBCC);
         layout->addView(lbl, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
 
-        EditText* edt = new EditText(bidiCases[i].text, 0, 0);
+        EditText* edt = new EditText(&App::getInstance()); edt->setText(bidiCases[i].text);
         edt->setTextSize(24);
         edt->setFocusable(true);
         edt->setClickable(true);
@@ -124,13 +124,13 @@ int main(int argc,const char*argv[]){
         { "RTL layout: pure RTL (Arabic)", "مرحبا بالعالم" },
     };
     for (int i = 0; i < (int)(sizeof(bidiRtlCases) / sizeof(bidiRtlCases[0])); i++) {
-        auto* lbl = new TextView(bidiRtlCases[i].label, 0, 0);
+        auto* lbl = new TextView(&App::getInstance()); lbl->setText(bidiRtlCases[i].label);
         lbl->setTextSize(14);
         lbl->setTextColor(0xFFCCBBAA);
         lbl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
         layout->addView(lbl, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
 
-        EditText* edt = new EditText(bidiRtlCases[i].text, 0, 0);
+        EditText* edt = new EditText(&App::getInstance()); edt->setText(bidiRtlCases[i].text);
         edt->setTextSize(24);
         edt->setFocusable(true);
         edt->setClickable(true);

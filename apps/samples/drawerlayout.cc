@@ -10,7 +10,7 @@ public:
     View*getView(int position, View* convertView, ViewGroup* parent)override{
         TextView*tv=(TextView*)convertView;
         if(convertView==nullptr){
-            tv=new TextView("",600,20);
+            tv=new TextView(&App::getInstance());
             tv->setPadding(20,0,0,0);
             tv->setFocusable(false);
         }
@@ -27,12 +27,12 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w = new Window(0,0,-1,-1);
 
-    DrawerLayout*dl = new DrawerLayout(100,100);
+    DrawerLayout*dl = new DrawerLayout(&app);
 
     /*CONTENT main area*/
-    LinearLayout*content = new LinearLayout(100,100);
+    LinearLayout*content = new LinearLayout(&app);
     content->setOrientation(LinearLayout::VERTICAL);
-    TextView*tv = new TextView("TextView",40,40);
+    TextView*tv =new TextView(&app); tv->setText("TextView" );
     content->setBackgroundColor(0xFFFF0000);
     tv->setTextSize(60);
     content->setId(0);
@@ -42,7 +42,7 @@ int main(int argc,const char*argv[]){
     sd->setShape(new ArcShape(0,360));
     sd->getShape()->setGradientColors({0x20FFFFFF,0xFFFFFFFF,0x00FFFFFF});//setSolidColor(0x800000FF);
     RippleDrawable*rp = new RippleDrawable(ColorStateList::valueOf(0x80222222),new ColorDrawable(0x8000FF00),sd);
-    Button*btn = new Button("Open",100,64);
+    Button*btn =new Button(&app); btn->setText("Open" );
     btn->setMinimumHeight(64);
     btn->setBackground(rp);
     content->addView(btn);
@@ -51,13 +51,13 @@ int main(int argc,const char*argv[]){
         dl->openDrawer(Gravity::START);
     });
 
-    btn=new Button("Close",100,64);
+    btn=new Button(&app); btn->setText("Close" );
     content->addView(btn);
     btn->setOnClickListener([dl](View&){
         LOGD("closeDrawer");
         dl->closeDrawer(Gravity::START);
     });
-    SeekBar*pb=new SeekBar(-1,32);
+    SeekBar*pb=new SeekBar(&app);
     content->addView(pb);
    
     dl->setBackgroundColor(0xFF778899);
@@ -69,14 +69,14 @@ int main(int argc,const char*argv[]){
     /**create LEFT slider*/
     lp = new DrawerLayout::LayoutParams(240,LayoutParams::MATCH_PARENT);
     lp->gravity = Gravity::START;
-    LinearLayout*left=new LinearLayout(0,0);
+    LinearLayout*left=new LinearLayout(&app);
     left->setOrientation(LinearLayout::VERTICAL);
     left->setBackgroundColor(0xFF00FF00);
     left->setZ(100);
     left->setId(1);
 
     MyAdapter*adapter = new MyAdapter();
-    ListView*lv = new ListView(460,500);
+    ListView*lv = new ListView(&app);
     left->addView(lv,new LinearLayout::LayoutParams(-1,-1));
     lv->setId(1000);
     for(int i=0;i<56;i++){
@@ -94,9 +94,9 @@ int main(int argc,const char*argv[]){
     dl->addView(left,1,lp);
 
     /*RIGHT slider*/
-    LinearLayout*right = new LinearLayout(300,720);
+    LinearLayout*right = new LinearLayout(&app);
     right->setOrientation(LinearLayout::VERTICAL);
-    tv = new TextView("Right Panel",40,40);
+    tv =new TextView(&app); tv->setText("Right Panel" );
     tv->setTextSize(40);
     right->addView(tv);
     right->setId(3);
@@ -107,9 +107,9 @@ int main(int argc,const char*argv[]){
 
 
     /*TOP slider*/
-    LinearLayout*top =new LinearLayout(1280,128);
+    LinearLayout*top =new LinearLayout(&app);
     top->setOrientation(LinearLayout::VERTICAL);
-    tv = new TextView("Top Panel",40,128);
+    tv =new TextView(&app); tv->setText("Top Panel" );
     tv->setTextSize(40);
     top->addView(tv);
     top->setId(2);
@@ -119,9 +119,9 @@ int main(int argc,const char*argv[]){
     dl->addView(top,3,lp);
 
     /*BOTTOM slider*/
-    LinearLayout*bottom =new LinearLayout(1280,128);
+    LinearLayout*bottom =new LinearLayout(&app);
     bottom->setOrientation(LinearLayout::VERTICAL);
-    tv = new TextView("Bottom Panel",40,128);
+    tv =new TextView(&app); tv->setText("Bottom Panel" );
     tv->setTextSize(40);
     bottom->addView(tv);
     bottom->setId(4);

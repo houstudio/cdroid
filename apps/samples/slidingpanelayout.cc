@@ -7,11 +7,11 @@
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
-    SlidingPaneLayout*spl = new SlidingPaneLayout(-1,-1);
+    SlidingPaneLayout*spl = new SlidingPaneLayout(&App::getInstance());
     //spl->setPanelSlideGravity(Gravity::LEFT);
     w->addView(spl);
-    LinearLayout*ll=new LinearLayout(-1,-1);
-    LinearLayout*lr=new LinearLayout(-1,-1);
+    LinearLayout*ll=new LinearLayout(&app);
+    LinearLayout*lr=new LinearLayout(&app);
     ll->setId(100);
     lr->setId(200);
     ll->setOrientation(LinearLayout::VERTICAL);
@@ -19,8 +19,8 @@ int main(int argc,const char*argv[]){
     //spl->setParallaxDistance(120);
 
     SlidingPaneLayout::LayoutParams*lp =new SlidingPaneLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::MATCH_PARENT);
-    TextView*tv=new TextView(" Left Panel ",200,-1);
-    Button*btn=new Button("Open/Close",200,-1);
+    TextView*tv=new TextView(&app); tv->setText(" Left Panel " );
+    Button*btn=new Button(&app); btn->setText("Open/Close" );
     ll->addView(tv,new LinearLayout::LayoutParams(200/*LayoutParams::MATCH_PARENT*/,LayoutParams::WRAP_CONTENT));
     ll->addView(btn,new LinearLayout::LayoutParams(200/*LayoutParams::MATCH_PARENT*/,LayoutParams::WRAP_CONTENT));
     spl->addView(ll,-1,lp);

@@ -171,8 +171,8 @@ TestString testStrings[]={
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
-    ScrollView*sv=new ScrollView(0,0);
-    LinearLayout*layout=new LinearLayout(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
+    ScrollView*sv=new ScrollView(&app);
+    LinearLayout*layout=new LinearLayout(&App::getInstance());
     sv->addView(layout);
     layout->setOrientation(LinearLayout::VERTICAL);
     layout->setBackgroundColor(0xFF111111);
@@ -181,7 +181,7 @@ int main(int argc,const char*argv[]){
         TestString*ts=testStrings+i;
         LinearLayout::LayoutParams*layoutParams=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,ts->height);
         layoutParams->setMargins(0,1,0,1); 
-        TextView*tv=new TextView(ts->text,0,0);
+        TextView*tv=new TextView(&App::getInstance()); tv->setText(ts->text);
         tv->setId(i);
         tv->setTextColor(0xFFFFFFFF);
         tv->setSingleLine(ts->singleline);
@@ -212,7 +212,7 @@ int main(int argc,const char*argv[]){
     }, 0);
     spanText->append(u"2",new SuperscriptSpan(),0);
     spanText->append(u"Hello,你好",new ForegroundColorSpan(0xFF66FF66),0);
-    TextView* spanTv = new TextView("", 0, 0);
+    TextView* spanTv =new TextView(&app); spanTv->setText("" );
     spanTv->setSingleLine(false);
     spanTv->setText(spanText);
     spanTv->setTextSize(24);
@@ -221,11 +221,11 @@ int main(int argc,const char*argv[]){
     spanTv->setBackgroundColor(0xFF333333);
     layout->addView(spanTv,new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
 
-    TextView*tv=new TextView("textview with background drawable",0,0);
+    TextView*tv=new TextView(&app); tv->setText("textview with background drawable" );
     //tv->setBackgroundResource(cdroid::R::drawable::btn_default);
     layout->addView(tv);
 
-    tv=new TextView("textview with leftdrawable",0,0);
+    tv=new TextView(&app); tv->setText("textview with leftdrawable" );
     //tv->setBackgroundResource(cdroid::R::drawable::progress_horizontal);
     //tv->setCompoundDrawablesWithIntrinsicBounds(cdroid::R::drawable::progress_large,0,cdroid::R::drawable::progress_small,0);
     layout->addView(tv);

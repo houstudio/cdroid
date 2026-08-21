@@ -14,12 +14,12 @@ int main(int argc, const char* argv[]) {
     App app(argc, argv);
     Window* win = new Window(0, 0, -1, -1);
 
-    ConstraintLayout* cl = new ConstraintLayout(-1, -1);
+    ConstraintLayout* cl = new ConstraintLayout(&app);
     cl->setBackgroundColor(0xFF1B1B2F);
     win->addView(cl);
 
     // Box A (always 120 wide)
-    TextView* a = new TextView("A", 120, 80);
+    TextView* a =new TextView(&app); a->setText("A" );
     a->setId(1); a->setBackgroundColor(0xFFEF5350);
     a->setGravity(Gravity::CENTER); a->setTextColor(0xFFFFFFFF); a->setTextSize(18);
     auto* lpa = new ConstraintLayout::LayoutParams(120, 80);
@@ -29,7 +29,7 @@ int main(int argc, const char* argv[]) {
     cl->addView(a, lpa);
 
     // Box B (starts wide, tap toggles width)
-    TextView* b = new TextView("B (tap)", 300, 80);
+    TextView* b =new TextView(&app); b->setText("B (tap)" );
     b->setId(2); b->setBackgroundColor(0xFF66BB6A);
     b->setGravity(Gravity::CENTER); b->setTextColor(0xFFFFFFFF); b->setTextSize(18);
     auto* lpb = new ConstraintLayout::LayoutParams(300, 80);
@@ -39,8 +39,7 @@ int main(int argc, const char* argv[]) {
     cl->addView(b, lpb);
 
     // Right Barrier referencing A + B
-    Barrier* barrier = new Barrier(ConstraintLayout::LayoutParams::WRAP_CONTENT,
-                                   ConstraintLayout::LayoutParams::WRAP_CONTENT);
+    Barrier* barrier = new Barrier(&App::getInstance());
     barrier->setId(10);
     barrier->setType(Barrier::RIGHT);
     barrier->setReferencedIds({1, 2});
@@ -49,7 +48,7 @@ int main(int argc, const char* argv[]) {
             ConstraintLayout::LayoutParams::WRAP_CONTENT));
 
     // Box C pinned to the Barrier's left → sits right after the widest of A/B.
-    TextView* c = new TextView("C", 100, 80);
+    TextView* c =new TextView(&app); c->setText("C" );
     c->setId(3); c->setBackgroundColor(0xFF42A5F5);
     c->setGravity(Gravity::CENTER); c->setTextColor(0xFFFFFFFF); c->setTextSize(18);
     auto* lpc = new ConstraintLayout::LayoutParams(100, 80);

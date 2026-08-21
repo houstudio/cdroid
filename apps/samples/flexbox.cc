@@ -75,7 +75,7 @@ public:
 };
 
 static LinearLayout* titledColumn(const std::string& title, int titleBg) {
-    LinearLayout* col = new LinearLayout(-1, -1);
+    LinearLayout* col = new LinearLayout(&app);
     col->setOrientation(LinearLayout::VERTICAL);
     TextView* t = new TextView(title, -1, 40);
     t->setGravity(Gravity::CENTER);
@@ -104,12 +104,12 @@ int main(int argc, const char* argv[]) {
     }
 
     /* ---- root: two equal columns ---- */
-    LinearLayout* root = new LinearLayout(-1, -1);
+    LinearLayout* root = new LinearLayout(&app);
     root->setOrientation(LinearLayout::HORIZONTAL);
     /* ===== left: FlexboxLayout ===== */
     LinearLayout* left = titledColumn("FlexboxLayout", 0xFF3949AB);
     left->setBackgroundColor(0xFF181820);
-    FlexboxLayout* fb = new FlexboxLayout(-1, -1);
+    FlexboxLayout* fb = new FlexboxLayout(&app);
     fb->setFlexDirection((int) FlexDirection::ROW);
     fb->setFlexWrap((int) FlexWrap::WRAP);
     fb->setAlignItems((int) AlignItems::FLEX_START);
@@ -126,7 +126,7 @@ int main(int argc, const char* argv[]) {
     /* ===== right: RecyclerView + FlexboxLayoutManager ===== */
     LinearLayout* right = titledColumn("RecyclerView + FlexboxLayoutManager", 0xFF00897B);
     right->setBackgroundColor(0xFF202028);
-    RecyclerView* rv = new RecyclerView(-1, -1);
+    RecyclerView* rv = new RecyclerView(&app);
     FlexboxLayoutManager* lm = new FlexboxLayoutManager(&app,
             (int) FlexDirection::ROW, (int) FlexWrap::WRAP);
     lm->setAlignItems((int) AlignItems::FLEX_START);

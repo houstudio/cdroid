@@ -24,11 +24,11 @@ int main(int argc, const char* argv[]) {
     App app(argc, argv);
     Window* win = new Window(0, 0, -1, -1);
 
-    ConstraintLayout* cl = new ConstraintLayout(-1, -1);
+    ConstraintLayout* cl = new ConstraintLayout(&app);
     cl->setBackgroundColor(0xFF1B1B2F);
     win->addView(cl);
 
-    TextView* box = new TextView("Tap", 100, 100);
+    TextView* box =new TextView(&app); box->setText("Tap" );
     box->setId(42);
     box->setBackgroundColor(0xFF42A5F5);
     box->setGravity(Gravity::CENTER);

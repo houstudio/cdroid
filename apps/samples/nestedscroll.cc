@@ -1,4 +1,5 @@
 #include <cdroid.h>
+#include <widget/internal_R.h>
 #include <porting/cdlog.h>
 #include <gui/text/inputtype.h>
 #include <widget/nestedscrollview.h>
@@ -14,8 +15,8 @@ class MyAdapter:public ArrayAdapter<std::string>{
  
           TextView*tv=(TextView*)convertView;
           if(convertView==nullptr){
-              if(itemType==0) tv=new TextView("",600,20);
-              else tv=new CheckBox("",600,20);
+              if(itemType==0) tv=new TextView(&App::getInstance());
+              else tv=new CheckBox(&App::getInstance());
               tv->setPadding(20,0,0,0);
               tv->setFocusable(false);
           }
@@ -32,23 +33,23 @@ class MyAdapter:public ArrayAdapter<std::string>{
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
-    //ScrollView*scroller=new ScrollView(0,0);
-    NestedScrollView*scroller=new NestedScrollView(0,0);
+    //ScrollView*scroller=new ScrollView(&App::getInstance());
+    NestedScrollView*scroller=new NestedScrollView(&App::getInstance());
     scroller->setSmoothScrollingEnabled(true);
     scroller->setVerticalScrollBarEnabled(true);
     scroller->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     w->addView(scroller);
 
-    LinearLayout*layout=new LinearLayout(0,0);
+    LinearLayout*layout=new LinearLayout(&App::getInstance());
     layout->setOrientation(LinearLayout::VERTICAL);
     layout->setId(200);
 
     for(int i=0;i<50;i++){
         LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,100);//(LayoutParams::WRAP_CONTENT));
         lp->setMargins(5,2,5,2);
-        EditText*edit=new EditText("Hello world!"/*" This value is positive for typical fonts that include"*/,680,200);
-        edit->setTextColor(0xFFFFFFFF);//app.getColorStateList("cdroid:color/textview.xml"));
-        //edit->setTextColor(app.getColorStateList("cdroid:color/textview.xml"));
+        EditText*edit=new EditText(&App::getInstance());   // editTextStyle default style
+        edit->setText("Hello world!");
+        edit->setTextColor(0xFFFFFFFF);
         edit->setSingleLine(true);
         edit->setInputType(InputType::TYPE_CLASS_TEXT);
         edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
@@ -59,7 +60,7 @@ int main(int argc,const char*argv[]){
     }
     scroller->addView(layout,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::WRAP_CONTENT)));
     
-    /*ListView*lv=new ListView(0,300);
+    /*ListView*lv=new ListView(&App::getInstance());
     MyAdapter*adapter=new MyAdapter();
     lv->setAdapter(adapter);
     lv->setSelector(new ColorDrawable(0x8000FF00));

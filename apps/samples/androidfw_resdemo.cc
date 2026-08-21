@@ -34,13 +34,12 @@ int main(int argc, const char* argv[]) {
     }
 
     Window* w = new Window(0, 0, 720, 480);
-    LinearLayout* root = new LinearLayout(720, 480);
+    LinearLayout* root = new LinearLayout(&App::getInstance());
     root->setOrientation(LinearLayout::VERTICAL);
     w->addView(root);
 
     auto addLine = [&](const std::string& s) {
-        TextView* tv = new TextView(720, 40);
-        tv->setText(s);
+        TextView* tv = new TextView(&App::getInstance()); tv->setText(s);
         root->addView(tv);
     };
     char buf[256];

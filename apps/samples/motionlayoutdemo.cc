@@ -19,12 +19,12 @@ int main(int argc, const char* argv[]) {
     App app(argc, argv);
     Window* win = new Window(0, 0, -1, -1);
 
-    MotionLayout* ml = new MotionLayout(-1, -1); // fills the window
+    MotionLayout* ml = new MotionLayout(&app); // fills the window
     ml->setBackgroundColor(0xFF1B1B2F);
     win->addView(ml);
 
     // The animated box.
-    TextView* box = new TextView("Tap me", 200, 120);
+    TextView* box =new TextView(&app); box->setText("Tap me" );
     box->setId(1);
     box->setBackgroundColor(0xFFEF5350);
     box->setGravity(Gravity::CENTER);

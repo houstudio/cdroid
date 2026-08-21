@@ -32,10 +32,10 @@ public:
         setTheme(sThemeResId);
 
         AttributeSet atts(getContext(), "cdroid");
-        LinearLayout* root = new LinearLayout(getContext(), atts);
+        LinearLayout* root = new LinearLayout(getContext(), &atts);
         root->setOrientation(LinearLayout::VERTICAL);
 
-        TextView* title = new TextView(getContext(), atts);
+        TextView* title = new TextView(getContext(), &atts);
         title->setText("Dynamic theme switching");
         title->setTextSize(24);
         // ?attr resolution goes through THIS window's theme overlay.
@@ -45,7 +45,7 @@ public:
             title->setBackgroundColor(tv.data);
         }
 
-        Button* btn = new Button(getContext(), atts);
+        Button* btn = new Button(getContext(), &atts);
         btn->setText("Toggle theme + recreate");
         btn->setOnClickListener([this](View&){
             sThemeResId = (sThemeResId == (int)cdroid::internal::R::style::Theme_Material_Light)
@@ -57,7 +57,7 @@ public:
         // AOSP night mode: a uiMode configuration change routed through the
         // "system" (App::handleConfigurationChanged = ActivityThread) — every
         // activity is either dispatched (configChanges) or recreated.
-        Button* night = new Button(getContext(), atts);
+        Button* night = new Button(getContext(), &atts);
         night->setText("Toggle night mode (uiMode config change)");
         static bool sNight = false;
         night->setOnClickListener([](View&){

@@ -26,12 +26,12 @@ public:
     ActionBarActivity(int x,int y,int w,int h):Window(x,y,w,h){
         setText("ActionBar Demo"); // Window title; seeds the action bar title
 
-        LinearLayout* root = new LinearLayout(0,0);
+        LinearLayout* root = new LinearLayout(&App::getInstance());
         root->setOrientation(LinearLayout::VERTICAL);
         addView(root);
 
         // Toolbar declared in the content layout, then adopted as the ActionBar.
-        Toolbar* tb = new Toolbar(getContext(), AttributeSet(getContext(),"cdroid"));
+        Toolbar* tb = new Toolbar(getContext());
         tb->setLayoutParams(new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
         root->addView(tb);
@@ -40,7 +40,7 @@ public:
         getActionBar()->setDisplayHomeAsUpEnabled(true);
         getActionBar()->setTitle("Hello ActionBar");
 
-        mBody = new TextView("press a menu item (or Up)", 800, 240);
+        mBody =new TextView(&App::getInstance()); mBody->setText("press a menu item (or Up)" );
         mBody->setTextSize(28);
         mBody->setBackgroundColor(0xFF223344);
         mBody->setTextColor(0xFFFFFFFF);

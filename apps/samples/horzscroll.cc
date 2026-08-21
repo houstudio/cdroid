@@ -5,9 +5,9 @@ using namespace Cairo;
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
-    HorizontalScrollView* hs=new HorizontalScrollView(1280,400);
+    HorizontalScrollView* hs=new HorizontalScrollView(&app);
 
-    LinearLayout*layout=new LinearLayout(1280,100);
+    LinearLayout*layout=new LinearLayout(&app);
     layout->setOrientation(LinearLayout::HORIZONTAL);
 
     std::string path="/home/houzh/images";
@@ -27,7 +27,7 @@ int main(int argc,const char*argv[]){
         cdroid::RefPtr<Cairo::ImageSurface>img=app.loadImage(fullpath,-1,-1);
         LOGI("img:%s =%p",fullpath.c_str(),img.get());
         if(img==nullptr)continue;
-        ImageView*iv=new ImageView(150,30);
+        ImageView*iv=new ImageView(&app);
         iv->setImageBitmap(img);
         iv->setId(++count);
         layout->addView(iv,new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::MATCH_PARENT));

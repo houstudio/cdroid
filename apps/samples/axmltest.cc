@@ -25,7 +25,7 @@ int main(int argc, const char* argv[]) {
         w->addView(view);
     } else {
         LOGE("Layout inflation FAILED — text fallback");
-        TextView* tv = new TextView("Inflation failed (text fallback)", 0, 0);
+        TextView* tv =new TextView(&app); tv->setText("Inflation failed (text fallback)" );
         w->addView(tv);
     }
 
