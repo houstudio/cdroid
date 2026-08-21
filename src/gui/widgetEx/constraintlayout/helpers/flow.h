@@ -48,6 +48,7 @@ class Flow : public ConstraintHelper {
     static constexpr int VERTICAL_ALIGN_CENTER   = clcore::Flow::VERTICAL_ALIGN_CENTER;
     static constexpr int VERTICAL_ALIGN_BASELINE = clcore::Flow::VERTICAL_ALIGN_BASELINE;
 
+    Flow(Context* ctx);   // AOSP Flow(Context)
     Flow(Context* ctx, const AttributeSet* attrs);
     Flow(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 

@@ -39,6 +39,8 @@ constexpr int Barrier::BOTTOM;
 constexpr int Barrier::START;
 constexpr int Barrier::END;
 
+Barrier::Barrier(Context* ctx):Barrier(ctx,nullptr){}
+
 Barrier::Barrier(Context* ctx,const AttributeSet* attrs):Barrier(ctx,attrs,0){
 }
 

@@ -39,6 +39,7 @@ protected:
     void onAttachedToWindow() override;
     void onDetachedFromWindow() override;
 public:
+    WearableRecyclerView(Context*ctx);   // AOSP WearableRecyclerView(Context)
     WearableRecyclerView(Context* context, const AttributeSet* attrs);
     WearableRecyclerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~WearableRecyclerView()override;

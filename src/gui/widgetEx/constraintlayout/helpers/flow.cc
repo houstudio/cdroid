@@ -35,6 +35,8 @@ static clcore::Flow* asFlow(HelperWidget* hw) {
     return static_cast<clcore::Flow*>(hw);
 }
 
+Flow::Flow(Context* ctx):Flow(ctx,nullptr){}
+
 Flow::Flow(Context* ctx,const AttributeSet* attrs):Flow(ctx,attrs,0){}
 
 Flow::Flow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)

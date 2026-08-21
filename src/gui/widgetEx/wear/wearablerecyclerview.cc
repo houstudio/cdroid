@@ -21,6 +21,8 @@ namespace cdroid{
 
 DECLARE_WIDGET(WearableRecyclerView);
 
+WearableRecyclerView::WearableRecyclerView(Context*ctx):WearableRecyclerView(ctx,nullptr){}
+
 WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* attrs):WearableRecyclerView(context,attrs,0){}
 
 WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
