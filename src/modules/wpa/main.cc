@@ -7,7 +7,8 @@ int main(int argc,const char*argv[]){
    App app(argc,argv);
    Window*w=new Window(0,0,-1,-1);
    w->setBackgroundColor(0xFFFF0000);
-   Button*btn=new Button("scan",200,200);
+   Button*btn=new Button(&app);
+   btn->setText("scan");
    w->addView(btn);
    btn->setBackgroundColor(0xFF223344);
    cdroid::WpaClientSocket wpa;
