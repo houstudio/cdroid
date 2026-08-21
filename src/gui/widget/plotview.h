@@ -72,6 +72,7 @@ public:
      *@short Constructor.
      *@param parent the parent widget
      */
+    explicit PlotView(cdroid::Context*ctx);
     explicit PlotView(cdroid::Context*,const cdroid::AttributeSet*atts);
 
     /**

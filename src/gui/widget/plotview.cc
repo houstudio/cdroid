@@ -96,6 +96,8 @@ public:
     Cairo::RefPtr<Cairo::ImageSurface> plotMask;
 };
 
+PlotView::PlotView(cdroid::Context*ctx):PlotView(ctx,nullptr){}
+
 PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet*atts)
     : View(ctx,atts) , d(new Private(this))
 {
