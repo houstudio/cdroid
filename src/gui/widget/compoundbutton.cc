@@ -33,14 +33,26 @@ CompoundButton::CompoundButton(Context*ctx,const AttributeSet* pAttrs,int defSty
   :Button(ctx,pAttrs, defStyleAttr){
     const AttributeSet& attrs = *pAttrs;
     initCompoundButton();
-    // AOSP CompoundButton ctor: obtainStyledAttributes(attrs, styleable, defStyleAttr, 0),
-    // then a.getDrawable(button) / getBoolean(checked) / getColorStateList(buttonTint).
+    // AOSP CompoundButton ctor: obtainStyledAttributes(attrs, styleable, defStyleAttr, 0);
+    // reads button, buttonTintMode, buttonTint, checked in that order, then applyButtonTint().
     auto ta = ctx->obtainStyledAttributes(&attrs, R::styleable::CompoundButton, defStyleAttr, 0);
     Drawable* d = ta->getDrawable(R::styleable::CompoundButton_button);
     if (d) setButtonDrawable(d);
-    setChecked(ta->getBoolean(R::styleable::CompoundButton_checked, false));
-    if (ta->hasValue(R::styleable::CompoundButton_buttonTint))
+
+    if (ta->hasValue(R::styleable::CompoundButton_buttonTintMode)) {
+        mButtonBlendMode = Drawable::parseTintMode(ta->getInt(
+                R::styleable::CompoundButton_buttonTintMode, -1), mButtonBlendMode);
+        mHasButtonBlendMode = true;
+    }
+
+    if (ta->hasValue(R::styleable::CompoundButton_buttonTint)) {
         mButtonTintList = ta->getColorStateList(R::styleable::CompoundButton_buttonTint);
+        mHasButtonTint = true;
+    }
+
+    setChecked(ta->getBoolean(R::styleable::CompoundButton_checked, false));
+    mCheckedFromResource = true;
+
     applyButtonTint();
 }
 
@@ -52,12 +64,14 @@ CompoundButton::CompoundButton(const std::string&txt,int width,int height)
 void CompoundButton::initCompoundButton(){
     mChecked = false;
     mBroadcasting = false;
-    mCheckedFromResource = false;
     mButtonDrawable = nullptr;
+    mButtonTintList = nullptr;
+    mButtonBlendMode = PorterDuff::Mode::NOOP;
+    mHasButtonTint = false;
+    mHasButtonBlendMode = false;
     mOnCheckedChangeListener = nullptr;
     mOnCheckedChangeWidgetListener = nullptr;
-    mButtonTintMode = PorterDuff::Mode::NOOP;
-    mButtonTintList = nullptr;
+    mCheckedFromResource = false;
 }
 
 void CompoundButton::setChecked(bool checked){
@@ -194,10 +208,10 @@ void CompoundButton::jumpDrawablesToCurrentState(){
 }
 
 void CompoundButton::setButtonTintList(const cdroid::RefPtr<ColorStateList>& tint) {
-    if(mButtonTintList!=tint){
-        mButtonTintList = tint;
-        applyButtonTint();
-    }
+    mButtonTintList = tint;
+    mHasButtonTint = true;
+
+    applyButtonTint();
 }
 
 /**
@@ -210,24 +224,36 @@ const cdroid::RefPtr<ColorStateList> CompoundButton::getButtonTintList() const{
 }
 
 void CompoundButton::setButtonTintMode(PorterDuffMode tintMode){
-    mButtonTintMode = tintMode;
-    applyButtonTint();
+    // AOSP: setButtonTintBlendMode(tintMode != null ? BlendMode.fromValue(tintMode.nativeInt) : null);
+    setButtonTintBlendMode(tintMode);
 }
 
 PorterDuffMode CompoundButton::getButtonTintMode() const {
-    return (PorterDuffMode)mButtonTintMode;
+    // AOSP: mButtonBlendMode != null ? BlendMode.blendModeToPorterDuffMode(mButtonBlendMode) : null;
+    return getButtonTintBlendMode();
+}
+
+void CompoundButton::setButtonTintBlendMode(PorterDuffMode tintMode){
+    mButtonBlendMode = tintMode;
+    mHasButtonBlendMode = true;
+
+    applyButtonTint();
+}
+
+PorterDuffMode CompoundButton::getButtonTintBlendMode() const{
+    return mButtonBlendMode;
 }
 
 void CompoundButton::applyButtonTint() {
-    if (mButtonDrawable  && (mButtonTintList || mButtonTintMode!=PorterDuff::Mode::NOOP)) {
+    if (mButtonDrawable != nullptr && (mHasButtonTint || mHasButtonBlendMode)) {
         mButtonDrawable = mButtonDrawable->mutate();
 
-        if (mButtonTintList) {
+        if (mHasButtonTint) {
             mButtonDrawable->setTintList(mButtonTintList);
         }
 
-        if (mButtonTintMode!=PorterDuff::Mode::NOOP) {
-            mButtonDrawable->setTintMode(mButtonTintMode);
+        if (mHasButtonBlendMode) {
+            mButtonDrawable->setTintMode(mButtonBlendMode);
         }
 
         // The drawable (or one of its children) may not have been

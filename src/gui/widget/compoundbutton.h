@@ -23,16 +23,23 @@ namespace cdroid{
 class CompoundButton:public Button,public Checkable{
 public:
     DECLARE_UIEVENT(void,OnCheckedChangeListener,CompoundButton&view,bool);
-private: 
+private:
     bool mChecked;
     bool mBroadcasting;
-    bool mCheckedFromResource;
-    int  mButtonTintMode;
     Drawable* mButtonDrawable;
     cdroid::RefPtr<ColorStateList>mButtonTintList;
-    std::string mCustomStateDescription;
+    /* AOSP: BlendMode mButtonBlendMode. CDROID has no BlendMode class; the
+       PorterDuff::Mode union covers the legacy modes and NOOP stands in for null. */
+    PorterDuffMode mButtonBlendMode;
+    bool mHasButtonTint;
+    bool mHasButtonBlendMode;
+    // Indicates whether the toggle state was set from resources or dynamically, so it can be used
+    // to sanitize autofill requests.
+    bool mCheckedFromResource;
     OnCheckedChangeListener mOnCheckedChangeListener;
     OnCheckedChangeListener mOnCheckedChangeWidgetListener;
+
+    std::string mCustomStateDescription;
     void initCompoundButton();
     void applyButtonTint();
 protected:
@@ -57,6 +64,8 @@ public:
     const cdroid::RefPtr<ColorStateList> getButtonTintList()const;
     void setButtonTintMode(PorterDuffMode tintMode);
     PorterDuffMode getButtonTintMode()const;
+    void setButtonTintBlendMode(PorterDuffMode tintMode);
+    PorterDuffMode getButtonTintBlendMode()const;
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
