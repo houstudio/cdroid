@@ -18,40 +18,13 @@
 #include <widgetEx/navigationview/navigationview.h>
 #include <widgetEx/widgetex_styleable.h>
 #include <widget/internal_R.h>
-#include <menu/menubuilder.h>
 #include <menu/menuinflater.h>
-#include <menu/menuitem.h>
 #include <menu/menuitemimpl.h>
-#include <widget/linearlayout.h>
-#include <widget/imageview.h>
-#include <widget/textview.h>
-#include <drawable/colorstatelist.h>
-#include <drawable/drawable.h>
 #include <core/typedarray.h>
+#include <stdexcept>
 
 namespace cdroid{
 using namespace cdroid::internal;
-
-// Presenter-style menu view: a vertical LinearLayout of item rows, rebuilt on
-// menu change (the androidx NavigationMenuPresenter's RecyclerView adapter
-// simplified to CDROID's LinearLayout substrate; the MenuBuilder data flow and
-// item visuals follow material's NavigationMenuItemView).
-class NavigationView::NavigationMenuPresenter {
-public:
-    NavigationView* mOwner;
-    LinearLayout* mMenuView = nullptr;
-    void initForMenu(Context* context, MenuBuilder* menu) {
-        (void)menu;
-        if (mMenuView == nullptr) {
-            mMenuView = new LinearLayout(context, nullptr, 0);
-            mMenuView->setOrientation(LinearLayout::VERTICAL);
-        }
-    }
-    void updateMenuView(bool cleared) {
-        (void)cleared;
-        mOwner->updateMenuView();
-    }
-};
 
 DECLARE_WIDGET(NavigationView)
 
@@ -70,66 +43,145 @@ NavigationView::~NavigationView() {
 
 void NavigationView::init(Context* context, const AttributeSet* attrs, int defStyleAttr) {
     (void)defStyleAttr;
-    mListener = nullptr;
-    mItemBackground = nullptr;
-    mItemIconSize = 0;
-    mItemHorizontalPadding = 0;
-    mItemVerticalPadding = 0;
-    mItemIconPadding = 0;
-    mItemTextAppearance = 0;
-    mItemMaxLines = 1;
-    mHeaderView = nullptr;
-    mMaxWidth = 0;
+    // android:maxWidth is a framework attr; read it by its fw id through the
+    // tag AttributeSet (AOSP reads it via the same styleable).
+    mMaxWidth = attrs ? attrs->getAttributeIntValue(std::string(), "maxWidth", 0) : 0;
+
+    // Create the menu
+    this->mMenu = new NavigationMenu(context);
 
     mPresenter = new NavigationMenuPresenter();
-    mPresenter->mOwner = this;
 
-    // AOSP NavigationView ctor: create the menu, wire the callback, init the
-    // presenter, then read the styleable.
-    mMenu = new MenuBuilder(context);
-    MenuBuilder::Callback cb;
-    cb.onMenuItemSelected = [this](MenuBuilder&, MenuItem& item)->bool{
-        return onMenuItemClick(&item);
-    };
-    mMenu->setCallback(cb);
-
-    // The generated styleable (widgetEx/res attrs -> widgetex_styleable.h) drives
-    // every read: attribute ids and indexes come from the same single source the
-    // aapt2 build pins, so no attr table lives in program code.
+    // Custom attributes
     auto ta = context->obtainStyledAttributes(attrs,
             cdroid::internal::R::styleable::NavigationView, defStyleAttr);
-    // android:maxWidth is a framework attr; read it by its fw id through the
-    // tag AttributeSet (AOSP reads it via the same styleable index).
-    mMaxWidth = attrs ? attrs->getAttributeIntValue(std::string(), "maxWidth", 0) : 0;
-    mItemIconSize = ta->getDimensionPixelSize(cdroid::internal::R::styleable::NavigationView_itemIconSize, 0);
-    mItemIconTint = ta->getColorStateList(cdroid::internal::R::styleable::NavigationView_itemIconTint);
-    mItemTextAppearance = ta->getResourceId(cdroid::internal::R::styleable::NavigationView_itemTextAppearance, 0);
-    mItemTextColor = ta->getColorStateList(cdroid::internal::R::styleable::NavigationView_itemTextColor);
-    const int itemBackgroundRes = ta->getResourceId(cdroid::internal::R::styleable::NavigationView_itemBackground, 0);
-    if (itemBackgroundRes) mItemBackground = context->getDrawable(itemBackgroundRes);
-    mItemHorizontalPadding = ta->getDimensionPixelSize(cdroid::internal::R::styleable::NavigationView_itemHorizontalPadding, 0);
-    mItemVerticalPadding = ta->getDimensionPixelSize(cdroid::internal::R::styleable::NavigationView_itemVerticalPadding, 0);
-    mItemIconPadding = ta->getDimensionPixelSize(cdroid::internal::R::styleable::NavigationView_itemIconPadding, 0);
-    mItemMaxLines = ta->getInt(cdroid::internal::R::styleable::NavigationView_itemMaxLines, 1);
 
+    RefPtr<ColorStateList> subheaderColor;
+    if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_subheaderColor)) {
+        subheaderColor = ta->getColorStateList(
+                cdroid::internal::R::styleable::NavigationView_subheaderColor);
+    }
+
+    int subheaderTextAppearance = NavigationMenuPresenter::NO_TEXT_APPEARANCE_SET;
+    if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_subheaderTextAppearance)) {
+        subheaderTextAppearance = ta->getResourceId(
+                cdroid::internal::R::styleable::NavigationView_subheaderTextAppearance, 0);
+    }
+
+    if (subheaderTextAppearance == NavigationMenuPresenter::NO_TEXT_APPEARANCE_SET
+            && subheaderColor == nullptr) {
+        // If there isn't a text appearance set, we'll use a default text color
+        subheaderColor = createDefaultColorStateList(R::attr::textColorSecondary);
+    }
+
+    RefPtr<ColorStateList> itemIconTint;
+    if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_itemIconTint)) {
+        itemIconTint = ta->getColorStateList(
+                cdroid::internal::R::styleable::NavigationView_itemIconTint);
+    } else {
+        itemIconTint = createDefaultColorStateList(R::attr::textColorSecondary);
+    }
+
+    int textAppearance = NavigationMenuPresenter::NO_TEXT_APPEARANCE_SET;
+    if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_itemTextAppearance)) {
+        textAppearance = ta->getResourceId(
+                cdroid::internal::R::styleable::NavigationView_itemTextAppearance, 0);
+    }
+
+    const bool textAppearanceActiveBoldEnabled = ta->getBoolean(
+            cdroid::internal::R::styleable::NavigationView_itemTextAppearanceActiveBoldEnabled, true);
+
+    if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_itemIconSize)) {
+        setItemIconSize(ta->getDimensionPixelSize(
+                cdroid::internal::R::styleable::NavigationView_itemIconSize, 0));
+    }
+
+    RefPtr<ColorStateList> itemTextColor;
+    if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_itemTextColor)) {
+        itemTextColor = ta->getColorStateList(
+                cdroid::internal::R::styleable::NavigationView_itemTextColor);
+    }
+
+    if (textAppearance == NavigationMenuPresenter::NO_TEXT_APPEARANCE_SET && itemTextColor == nullptr) {
+        // If there isn't a text appearance set, we'll use a default text color
+        itemTextColor = createDefaultColorStateList(R::attr::textColorPrimary);
+    }
+
+    Drawable* itemBackground = ta->getDrawable(
+            cdroid::internal::R::styleable::NavigationView_itemBackground);
+
+    if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_itemHorizontalPadding)) {
+        setItemHorizontalPadding(ta->getDimensionPixelSize(
+                cdroid::internal::R::styleable::NavigationView_itemHorizontalPadding, 0));
+    }
+
+    if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_itemVerticalPadding)) {
+        setItemVerticalPadding(ta->getDimensionPixelSize(
+                cdroid::internal::R::styleable::NavigationView_itemVerticalPadding, 0));
+    }
+
+    setDividerInsetStart(ta->getDimensionPixelSize(
+            cdroid::internal::R::styleable::NavigationView_dividerInsetStart, 0));
+
+    setDividerInsetEnd(ta->getDimensionPixelSize(
+            cdroid::internal::R::styleable::NavigationView_dividerInsetEnd, 0));
+
+    setSubheaderInsetStart(ta->getDimensionPixelSize(
+            cdroid::internal::R::styleable::NavigationView_subheaderInsetStart, 0));
+
+    setSubheaderInsetEnd(ta->getDimensionPixelSize(
+            cdroid::internal::R::styleable::NavigationView_subheaderInsetEnd, 0));
+
+    setTopInsetScrimEnabled(ta->getBoolean(
+            cdroid::internal::R::styleable::NavigationView_topInsetScrimEnabled, mTopInsetScrimEnabled));
+
+    setBottomInsetScrimEnabled(ta->getBoolean(
+            cdroid::internal::R::styleable::NavigationView_bottomInsetScrimEnabled, mBottomInsetScrimEnabled));
+
+    const int itemIconPadding = ta->getDimensionPixelSize(
+            cdroid::internal::R::styleable::NavigationView_itemIconPadding, 0);
+
+    setItemMaxLines(ta->getInt(cdroid::internal::R::styleable::NavigationView_itemMaxLines, 1));
+
+    MenuBuilder::Callback cb;
+    cb.onMenuItemSelected = [this](MenuBuilder&, MenuItem& item)->bool{
+        return onMenuItemSelected(item);
+    };
+    cb.onMenuModeChange = [](MenuBuilder&){};
+    mMenu->setCallback(cb);
+    mPresenter->setId(PRESENTER_NAVIGATION_VIEW_ID);
     mPresenter->initForMenu(context, mMenu);
-
-    // Layout: headers stacked above the menu list (material wraps both in a
-    // custom scrim frame; CDROID's FrameLayout children stack vertically here).
-    LinearLayout* content = new LinearLayout(context, nullptr, 0);
-    content->setOrientation(LinearLayout::VERTICAL);
-    mHeaderView = new LinearLayout(context, nullptr, 0);
-    mHeaderView->setOrientation(LinearLayout::VERTICAL);
-    content->addView(mHeaderView);
-    content->addView(mPresenter->mMenuView);
-    addView(content, new ViewGroup::LayoutParams(
+    if (subheaderTextAppearance != NavigationMenuPresenter::NO_TEXT_APPEARANCE_SET) {
+        mPresenter->setSubheaderTextAppearance(subheaderTextAppearance);
+    }
+    mPresenter->setSubheaderColor(subheaderColor);
+    mPresenter->setItemIconTintList(itemIconTint);
+    mPresenter->setOverScrollMode(getOverScrollMode());
+    if (textAppearance != NavigationMenuPresenter::NO_TEXT_APPEARANCE_SET) {
+        mPresenter->setItemTextAppearance(textAppearance);
+    }
+    mPresenter->setItemTextAppearanceActiveBoldEnabled(textAppearanceActiveBoldEnabled);
+    mPresenter->setItemTextColor(itemTextColor);
+    mPresenter->setItemBackground(itemBackground);
+    mPresenter->setItemIconPadding(itemIconPadding);
+    mMenu->addMenuPresenter(mPresenter);
+    addView(mPresenter->getMenuView(this), new ViewGroup::LayoutParams(
             ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
 
     if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_menu)) {
         inflateMenu(ta->getResourceId(cdroid::internal::R::styleable::NavigationView_menu, 0));
     }
+
     if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_headerLayout)) {
-        inflateHeaderView(ta->getResourceId(cdroid::internal::R::styleable::NavigationView_headerLayout, 0));
+        inflateHeaderView(ta->getResourceId(
+                cdroid::internal::R::styleable::NavigationView_headerLayout, 0));
+    }
+}
+
+void NavigationView::setOverScrollMode(int overScrollMode) {
+    FrameLayout::setOverScrollMode(overScrollMode);
+    if (mPresenter != nullptr) {
+        mPresenter->setOverScrollMode(overScrollMode);
     }
 }
 
@@ -138,66 +190,55 @@ void NavigationView::setNavigationItemSelectedListener(OnNavigationItemSelectedL
 }
 
 void NavigationView::inflateMenu(int resId) {
-    mPresenter->updateMenuView(true);
+    mPresenter->setUpdateSuspended(true);
     MenuInflater inflater(getContext());
     inflater.inflate(resId, mMenu);
-    updateMenuView();
+    mPresenter->setUpdateSuspended(false);
+    mPresenter->updateMenuView(false);
 }
 
-Menu* NavigationView::getMenu(){
+Menu* NavigationView::getMenu() {
     return mMenu;
 }
 
-/*MenuView*NavigationView::getMenuView(){
-    return mMenuView;
-}*/
-
-ViewGroup* NavigationView::getMenuViewGroup(){
-    return mMenuView;
-}
-
 View* NavigationView::inflateHeaderView(int res) {
-    View* view = LayoutInflater::from(getContext())->inflate(res, mHeaderView, false);
-    addHeaderView(view);
-    return view;
+    return mPresenter->inflateHeaderView(res);
 }
 
 void NavigationView::addHeaderView(View* view) {
-    if (mHeaderView) mHeaderView->addView(view);
+    mPresenter->addHeaderView(view);
 }
 
 void NavigationView::removeHeaderView(View* view) {
-    if (mHeaderView) mHeaderView->removeView(view);
+    mPresenter->removeHeaderView(view);
 }
 
-int NavigationView::getHeaderCount() const{
-    return mHeaderView ? mHeaderView->getChildCount() : 0;
+int NavigationView::getHeaderCount() const {
+    return mPresenter->getHeaderCount();
 }
 
-View* NavigationView::getHeaderView(int index) const{
-    return mHeaderView ? mHeaderView->getChildAt(index) : nullptr;
+View* NavigationView::getHeaderView(int index) const {
+    return mPresenter->getHeaderView(index);
 }
 
 const RefPtr<ColorStateList> NavigationView::getItemIconTintList() const {
-    return mItemIconTint;
+    return mPresenter->getItemTintList();
 }
 
 void NavigationView::setItemIconTintList(const RefPtr<ColorStateList>& tint) {
-    mItemIconTint = tint;
-    updateMenuView();
+    mPresenter->setItemIconTintList(tint);
 }
 
 const RefPtr<ColorStateList> NavigationView::getItemTextColor() const {
-    return mItemTextColor;
+    return mPresenter->getItemTextColor();
 }
 
 void NavigationView::setItemTextColor(const RefPtr<ColorStateList>& textColor) {
-    mItemTextColor = textColor;
-    updateMenuView();
+    mPresenter->setItemTextColor(textColor);
 }
 
 Drawable* NavigationView::getItemBackground() const {
-    return mItemBackground;
+    return mPresenter->getItemBackground();
 }
 
 void NavigationView::setItemBackgroundResource(int resId) {
@@ -205,60 +246,138 @@ void NavigationView::setItemBackgroundResource(int resId) {
 }
 
 void NavigationView::setItemBackground(Drawable* itemBackground) {
-    mItemBackground = itemBackground;
-    updateMenuView();
+    mPresenter->setItemBackground(itemBackground);
 }
 
 int NavigationView::getItemHorizontalPadding() const {
-    return mItemHorizontalPadding;
+    return mPresenter->getItemHorizontalPadding();
 }
 
 void NavigationView::setItemHorizontalPadding(int padding) {
-    mItemHorizontalPadding = padding;
-    updateMenuView();
+    mPresenter->setItemHorizontalPadding(padding);
+}
+
+void NavigationView::setItemHorizontalPaddingResource(int paddingResource) {
+    setItemHorizontalPadding(getContext()->getDimensionPixelSize(paddingResource));
 }
 
 int NavigationView::getItemVerticalPadding() const {
-    return mItemVerticalPadding;
+    return mPresenter->getItemVerticalPadding();
 }
 
 void NavigationView::setItemVerticalPadding(int padding) {
-    mItemVerticalPadding = padding;
-    updateMenuView();
+    mPresenter->setItemVerticalPadding(padding);
+}
+
+void NavigationView::setItemVerticalPaddingResource(int paddingResource) {
+    setItemVerticalPadding(getContext()->getDimensionPixelSize(paddingResource));
 }
 
 int NavigationView::getItemIconPadding() const {
-    return mItemIconPadding;
+    return mPresenter->getItemIconPadding();
 }
 
 void NavigationView::setItemIconPadding(int padding) {
-    mItemIconPadding = padding;
-    updateMenuView();
+    mPresenter->setItemIconPadding(padding);
 }
 
-void NavigationView::setItemIconSize(int iconSize) {
-    mItemIconSize = iconSize;
-    updateMenuView();
+void NavigationView::setItemIconPaddingResource(int paddingResource) {
+    setItemIconPadding(getContext()->getDimensionPixelSize(paddingResource));
 }
 
-void NavigationView::setItemIconSizeResource(int resId) {
-    setItemIconSize(getContext()->getDimensionPixelSize(resId));
+void NavigationView::setCheckedItem(int id) {
+    MenuItem* item = mMenu->findItem(id);
+    if (item != nullptr) {
+        mPresenter->setCheckedItem((MenuItemImpl*)item);
+    }
+}
+
+void NavigationView::setCheckedItem(MenuItem* checkedItem) {
+    MenuItem* item = mMenu->findItem(checkedItem->getItemId());
+    if (item != nullptr) {
+        mPresenter->setCheckedItem((MenuItemImpl*)item);
+    } else {
+        throw std::invalid_argument(
+                "Called setCheckedItem(MenuItem) with an item that is not in the current menu.");
+    }
+}
+
+MenuItem* NavigationView::getCheckedItem() {
+    return mPresenter->getCheckedItem();
 }
 
 void NavigationView::setItemTextAppearance(int resId) {
-    mItemTextAppearance = resId;
-    updateMenuView();
+    mPresenter->setItemTextAppearance(resId);
 }
 
-void NavigationView::setItemMaxLines(int maxLines) {
-    mItemMaxLines = maxLines;
-    updateMenuView();
+void NavigationView::setItemTextAppearanceActiveBoldEnabled(bool isBold) {
+    mPresenter->setItemTextAppearanceActiveBoldEnabled(isBold);
+}
+
+void NavigationView::setItemIconSize(int iconSize) {
+    mPresenter->setItemIconSize(iconSize);
+}
+
+void NavigationView::setItemMaxLines(int itemMaxLines) {
+    mPresenter->setItemMaxLines(itemMaxLines);
+}
+
+int NavigationView::getItemMaxLines() {
+    return mPresenter->getItemMaxLines();
+}
+
+bool NavigationView::isTopInsetScrimEnabled() const {
+    return mTopInsetScrimEnabled;
+}
+
+void NavigationView::setTopInsetScrimEnabled(bool enabled) {
+    mTopInsetScrimEnabled = enabled;
+}
+
+bool NavigationView::isBottomInsetScrimEnabled() const {
+    return mBottomInsetScrimEnabled;
+}
+
+void NavigationView::setBottomInsetScrimEnabled(bool enabled) {
+    mBottomInsetScrimEnabled = enabled;
+}
+
+int NavigationView::getDividerInsetStart() const {
+    return mPresenter->getDividerInsetStart();
+}
+
+void NavigationView::setDividerInsetStart(int dividerInsetStart) {
+    mPresenter->setDividerInsetStart(dividerInsetStart);
+}
+
+int NavigationView::getDividerInsetEnd() const {
+    return mPresenter->getDividerInsetEnd();
+}
+
+void NavigationView::setDividerInsetEnd(int dividerInsetEnd) {
+    mPresenter->setDividerInsetEnd(dividerInsetEnd);
+}
+
+int NavigationView::getSubheaderInsetStart() const {
+    return mPresenter->getSubheaderInsetStart();
+}
+
+void NavigationView::setSubheaderInsetStart(int subheaderInsetStart) {
+    mPresenter->setSubheaderInsetStart(subheaderInsetStart);
+}
+
+int NavigationView::getSubheaderInsetEnd() const {
+    return mPresenter->getSubheaderInsetEnd();
+}
+
+void NavigationView::setSubheaderInsetEnd(int subheaderInsetEnd) {
+    mPresenter->setSubheaderInsetEnd(subheaderInsetEnd);
 }
 
 void NavigationView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    // AOSP NavigationView.onMeasure: cap the width at maxWidth when not EXACT.
     switch (MeasureSpec::getMode(widthMeasureSpec)) {
         case MeasureSpec::EXACTLY:
+            // Nothing to do
             break;
         case MeasureSpec::AT_MOST:
             widthMeasureSpec = MeasureSpec::makeMeasureSpec(
@@ -268,80 +387,31 @@ void NavigationView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             widthMeasureSpec = MeasureSpec::makeMeasureSpec(mMaxWidth, MeasureSpec::EXACTLY);
             break;
     }
+    // Let super sort out the height
     FrameLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
 }
 
-// --- item view factory (material NavigationMenuItemView simplified) ----------
-
-View* NavigationView::createItemView(MenuItem* item) {
-    Context* context = getContext();
-    LinearLayout* row = new LinearLayout(context, nullptr, 0);
-    row->setOrientation(LinearLayout::HORIZONTAL);
-    row->setGravity(Gravity::CENTER_VERTICAL);
-    if (mItemHorizontalPadding || mItemVerticalPadding) {
-        row->setPadding(mItemHorizontalPadding, mItemVerticalPadding,
-                        mItemHorizontalPadding, mItemVerticalPadding);
+RefPtr<ColorStateList> NavigationView::createDefaultColorStateList(int baseColorThemeAttr) {
+    TypedValue value;
+    if (!getContext()->getTheme().resolveAttribute(baseColorThemeAttr, &value, true)) {
+        return nullptr;
     }
-    if (mItemBackground) {
-        row->setBackground(mItemBackground->mutate());
+    RefPtr<ColorStateList> baseColor = getContext()->getColorStateList(value.resourceId);
+    if (!getContext()->getTheme().resolveAttribute(R::attr::colorPrimary, &value, true)) {
+        return nullptr;
     }
-
-    Drawable* icon = item->getIcon();
-    if (icon) {
-        ImageView* iconView = new ImageView(context, nullptr, 0);
-        iconView->setImageDrawable(icon);
-        if (mItemIconSize > 0) {
-            iconView->setLayoutParams(new LinearLayout::LayoutParams(mItemIconSize, mItemIconSize));
-        }
-        if (mItemIconTint) {
-            iconView->setImageTintList(mItemIconTint);
-        }
-        row->addView(iconView);
-    }
-
-    TextView* textView = new TextView(context, nullptr, 0);
-    textView->setText(item->getTitle());
-    if (mItemTextAppearance) {
-        textView->setTextAppearance(mItemTextAppearance);
-    } else if (mItemTextColor) {
-        textView->setTextColor(mItemTextColor);
-    }
-    textView->setMaxLines(mItemMaxLines);
-    LinearLayout::LayoutParams* lp = new LinearLayout::LayoutParams(
-            0, ViewGroup::LayoutParams::WRAP_CONTENT);
-    lp->weight = 1;
-    if (mItemIconPadding) lp->leftMargin = mItemIconPadding;
-    row->addView(textView, lp);
-
-    row->setOnClickListener([this, item](View&) {
-        onMenuItemClick(item);
-    });
-    return row;
+    const int colorPrimary = value.data;
+    const int defaultColor = baseColor->getDefaultColor();
+    const std::vector<int> disabled{-R::attr::state_enabled};
+    const std::vector<int> checked{R::attr::state_checked};
+    const std::vector<int> empty;
+    return RefPtr<ColorStateList>(new ColorStateList(
+            {disabled, checked, empty},
+            {baseColor->getColorForState(disabled, defaultColor), colorPrimary, defaultColor}));
 }
 
-bool NavigationView::onMenuItemClick(MenuItem* item) {
-    if (dynamic_cast<MenuItemImpl*>(item)) {
-        ((MenuItemImpl*)item)->invoke();
-    }
-    return mListener && mListener->onNavigationItemSelected(item);
-}
-
-void NavigationView::updateMenuView() {
-    if (mPresenter->mMenuView == nullptr) return;
-    mPresenter->mMenuView->removeAllViews();
-    const std::vector<MenuItemImpl*>& items = mMenu->getVisibleItems();
-    for (MenuItemImpl* item : items) {
-        if (item->hasSubMenu()) {
-            // material renders submenus as indented children on click; CDROID
-            // expands one level inline (simplified sub-menu presentation).
-            TextView* subHeader = new TextView(getContext(), nullptr, 0);
-            subHeader->setText(item->getTitle());
-            if (mItemTextColor) subHeader->setTextColor(mItemTextColor);
-            mPresenter->mMenuView->addView(subHeader);
-            continue;
-        }
-        mPresenter->mMenuView->addView(createItemView(item));
-    }
+bool NavigationView::onMenuItemSelected(MenuItem& item) {
+    return mListener && mListener->onNavigationItemSelected(&item);
 }
 
 }//namespace cdroid

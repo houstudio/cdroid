@@ -107,7 +107,8 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t QRCodeView[] = { 0x02010133, 0x02010134, 0x02010135, 0x02010136, 0x02010137, 0 };
     const uint32_t NavigationView[] = {
         0x02010138, 0x02010139, 0x0201013a, 0x0201013b, 0x0201013c, 0x0201013d, 0x0201013e,
-        0x0201013f, 0x02010140, 0x02010141, 0x02010142, 0 };
+        0x0201013f, 0x02010140, 0x02010141, 0x02010142, 0x02010144, 0x02010145, 0x02010146,
+        0x02010147, 0x02010148, 0x02010149, 0x0201014a, 0x0201014b, 0x0201014c, 0 };
     const uint32_t NavigationBarView[] = { 0x0201013b, 0x0201013a, 0x0201013d, 0x0201013e, 0x02010138, 0 };
     const uint32_t BottomNavigationView[] = { 0x02010143, 0 };
     const uint32_t NavGraph[] = { 0x02010120, 0x02010121, 0 };

@@ -109,6 +109,9 @@ list(APPEND WIDGETEX_SOURCES
     widgetEx/plotview.cc
     widgetEx/fakedrag.cc
     widgetEx/navigationview/navigationview.cc
+    widgetEx/navigationview/navigationmenuview.cc
+    widgetEx/navigationview/navigationmenuitemview.cc
+    widgetEx/navigationview/navigationmenupresenter.cc
     widgetEx/navigationview/navigationbarview.cc
     widgetEx/navigationview/bottomnavigationview.cc
     #widgetEx/mathglview.cc

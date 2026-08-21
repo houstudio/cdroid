@@ -74,13 +74,13 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
     setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 
-RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs):RecyclerView(context,&attrs,0){}
+RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs):RecyclerView(context,&attrs,0){
+}
 
 RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
    :ViewGroup(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
-    auto ta = context->obtainStyledAttributes(attrs, R::styleable::RecyclerView, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::RecyclerView, defStyleAttr);
 
     initRecyclerView();
     initAdapterManager();
@@ -110,7 +110,9 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defSt
     createLayoutManager(context, layoutManagerName, pAttrs, defStyleAttr, 0);
 
     // nestedScrollingEnabled is a framework View attr (not in the RecyclerView styleable) — attrs bridge.
-    setNestedScrollingEnabled(attrs.getAttributeBooleanValue(std::string(), "nestedScrollingEnabled", true));
+    setNestedScrollingEnabled(pAttrs
+            ? pAttrs->getAttributeBooleanValue(std::string(), "nestedScrollingEnabled", true)
+            : true);
     setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 

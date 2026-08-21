@@ -597,7 +597,7 @@ namespace internal { namespace R { namespace styleable {
     constexpr int QRCodeView_barBgColor = 3;
     constexpr int QRCodeView_logo = 4;
 
-    // NavigationView (11 attrs)
+    // NavigationView (20 attrs)
     extern const uint32_t NavigationView[];
     constexpr int NavigationView_menu = 0;
     constexpr int NavigationView_headerLayout = 1;
@@ -610,6 +610,15 @@ namespace internal { namespace R { namespace styleable {
     constexpr int NavigationView_itemVerticalPadding = 8;
     constexpr int NavigationView_itemIconPadding = 9;
     constexpr int NavigationView_itemMaxLines = 10;
+    constexpr int NavigationView_subheaderColor = 11;
+    constexpr int NavigationView_subheaderTextAppearance = 12;
+    constexpr int NavigationView_subheaderInsetStart = 13;
+    constexpr int NavigationView_subheaderInsetEnd = 14;
+    constexpr int NavigationView_dividerInsetStart = 15;
+    constexpr int NavigationView_dividerInsetEnd = 16;
+    constexpr int NavigationView_itemTextAppearanceActiveBoldEnabled = 17;
+    constexpr int NavigationView_topInsetScrimEnabled = 18;
+    constexpr int NavigationView_bottomInsetScrimEnabled = 19;
 
     // NavigationBarView (5 attrs)
     extern const uint32_t NavigationBarView[];

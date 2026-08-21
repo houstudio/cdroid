@@ -108,11 +108,13 @@ private:
     bool dispatchSubMenuSelected(SubMenuBuilder* subMenu,MenuPresenter* preferredPresenter);
     void dispatchSaveInstanceState(Bundle& outState);
     void dispatchRestoreInstanceState(Bundle& state);
+
+public:
     /**
      * Adds an item to the menu.  The other add methods funnel to this.
      */
     MenuItem* addInternal(int group, int id, int categoryOrder, const std::string& title);
-
+private:
     // Layoutlib overrides this method to return its custom implementation of MenuItemImpl
     MenuItemImpl* createNewMenuItem(int group, int id, int categoryOrder, int ordering,
             const std::string&title, int defaultShowAsAction);

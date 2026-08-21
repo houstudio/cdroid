@@ -15,6 +15,15 @@
         <attr name="itemVerticalPadding" format="dimension" />
         <attr name="itemIconPadding" format="dimension" />
         <attr name="itemMaxLines" format="integer" />
+        <attr name="subheaderColor" format="color" />
+        <attr name="subheaderTextAppearance" format="reference" />
+        <attr name="subheaderInsetStart" format="dimension" />
+        <attr name="subheaderInsetEnd" format="dimension" />
+        <attr name="dividerInsetStart" format="dimension" />
+        <attr name="dividerInsetEnd" format="dimension" />
+        <attr name="itemTextAppearanceActiveBoldEnabled" format="boolean" />
+        <attr name="topInsetScrimEnabled" format="boolean" />
+        <attr name="bottomInsetScrimEnabled" format="boolean" />
     </declare-styleable>
 
     <!-- NavigationBarView (shared by BottomNavigationView); attrs reuse the
