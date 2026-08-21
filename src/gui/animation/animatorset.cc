@@ -92,8 +92,14 @@ AnimatorSet::AnimatorSet(const AnimatorSet&other){
         Node* node = other.mNodes.at(i);
         // Update dependencies for node's clone
         Node* nodeClone = clonesMap.find(node)->second;
-        nodeClone->mLatestParent = node->mLatestParent == nullptr
-                ? nullptr : clonesMap.find(node->mLatestParent)->second;
+        // AOSP uses Map#get() here, which tolerates a stale mLatestParent
+        // (missing key -> null). find()->second dereferenced end() and crashed
+        // when cloning a set whose nodes were mutated by a previous run.
+        nodeClone->mLatestParent = nullptr;
+        if (node->mLatestParent != nullptr) {
+            auto parentIt = clonesMap.find(node->mLatestParent);
+            if (parentIt != clonesMap.end()) nodeClone->mLatestParent = parentIt->second;
+        }
         int size = node->mChildNodes.size();
         bool found=false;
         for (int j = 0; j < size; j++) {
