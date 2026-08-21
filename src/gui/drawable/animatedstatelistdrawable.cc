@@ -299,6 +299,14 @@ int AnimatedStateListDrawable::parseTransition(Resources& r,XmlPullParser&parser
 //////////////////////////////////////////////////////////////////////////////////////////////////
 AnimatedStateListDrawable::AnimatedStateListState::AnimatedStateListState(const AnimatedStateListDrawable::AnimatedStateListState* orig,AnimatedStateListDrawable* owner)
   :StateListState(orig,owner){
+    if (orig != nullptr) {
+        // AOSP clones both arrays (shallow copy). Without this, cloneConstantState()
+        // copies lost every keyframe id and transition, so selectTransition() bailed
+        // at "Missing a keyframe ID" and such copies never animated (e.g. every
+        // RadioButton after the first one sharing a drawable resource).
+        mTransitions = orig->mTransitions;
+        mStateIds = orig->mStateIds;
+    }
 }
 
 void AnimatedStateListDrawable::AnimatedStateListState::mutate() {
