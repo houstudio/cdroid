@@ -237,29 +237,22 @@ bool VectorDrawable::canApplyTheme() {
     return (mVectorState != nullptr && mVectorState->canApplyTheme()) || Drawable::canApplyTheme();
 }
 
-#if 0
-void VectorDrawable::applyTheme(Theme t) {
-    super.applyTheme(t);
+void VectorDrawable::applyTheme(const Resources::Theme& t) {
+    Drawable::applyTheme(t);
 
-    final VectorDrawableState state = mVectorState;
-    if (state == null) {
+    const auto state = mVectorState;
+    if (state == nullptr) {
         return;
     }
 
-    final bool changedDensity = mVectorState.setDensity(
-            Drawable::resolveDensity(t.getResources(), 0));
+    const bool changedDensity = mVectorState->setDensity(Drawable::resolveDensity(0));
     mDpiScaledDirty |= changedDensity;
 
-    if (state.mThemeAttrs != null) {
-        final TypedArray a = t.resolveAttributes(
-                state.mThemeAttrs, R.styleable.VectorDrawable);
-        try {
-            state.mCacheDirty = true;
-            updateStateFromTypedArray(a);
-        } catch (XmlPullParserException e) {
-            throw new RuntimeException(e);
-        } finally {
-            a.recycle();
+    if (!state->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(state->mThemeAttrs, R::styleable::VectorDrawable);
+        if (a) {
+            state->mCacheDirty = true;
+            updateStateFromTypedArray(*a);
         }
 
         // May have changed size.
@@ -267,18 +260,18 @@ void VectorDrawable::applyTheme(Theme t) {
     }
 
     // Apply theme to contained color state list.
-    if (state.mTint != null && state.mTint.canApplyTheme()) {
-        state.mTint = state.mTint.obtainForTheme(t);
-    }
+    // AOSP: if (state.mTint != null && state.mTint.canApplyTheme()) {
+    //           state.mTint = state.mTint.obtainForTheme(t); }
+    // Theme-preloaded ColorStateLists are not ported (canApplyTheme() is
+    // always false), so obtainForTheme has nothing to resolve here.
 
-    if (mVectorState != null && mVectorState.canApplyTheme()) {
-        mVectorState.applyTheme(t);
+    if (mVectorState != nullptr && mVectorState->canApplyTheme()) {
+        mVectorState->applyTheme(t);
     }
 
     // Update local properties.
-    updateLocalState(t.getResources());
+    updateLocalState();
 }
-#endif
 
 /**
  * The size of a pixel when scaled from the intrinsic dimension to the viewport dimension.
@@ -307,8 +300,6 @@ VectorDrawable* VectorDrawable::create(Context*ctx, const std::string&rid) {
 }
 
 void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
-    (void)r; // Resources unused here; no super Drawable::inflate call in this body.
-
     if (mVectorState->mRootGroup != nullptr || mVectorState->mNativeTree != nullptr) {
         // This VD has been used to display other VD resource content, clean up.
         if (mVectorState->mRootGroup != nullptr) {
@@ -330,13 +321,16 @@ void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSe
     auto state = mVectorState;
     mVectorState->setDensity(Drawable::resolveDensity(0));
 
-    // AOSP VectorDrawable.inflate: obtainAttributes(R.styleable.VectorDrawable).
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::VectorDrawable);
+    // AOSP VectorDrawable.inflate: obtainAttributes(res, theme, attrs,
+    // R.styleable.VectorDrawable) resolves ?attr values up front when a theme
+    // is available; without one they stay as TYPE_ATTRIBUTE and are captured
+    // by extractThemeAttrs() for a later applyTheme().
+    auto ta = Drawable::obtainAttributes(r, theme, atts, R::styleable::VectorDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     mDpiScaledDirty = true;
     mVectorState->mCacheDirty = true;
 
-    inflateChildElements(r,parser,atts);
+    inflateChildElements(r,parser,atts,theme);
     mVectorState->onTreeConstructionFinished();
     // Update local properties.
     updateLocalState();
@@ -349,7 +343,7 @@ void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
     state->mChangingConfigurations = 0;//|= a.getChangingConfigurations();
 
     // Extract the theme attributes, if any.
-    //state->mThemeAttrs = a.extractThemeAttrs();
+    state->mThemeAttrs = a.extractThemeAttrs();
 
     const int tintMode = a.getInt(R::styleable::VectorDrawable_tintMode, PorterDuff::NOOP);
     if (tintMode != PorterDuff::NOOP) {
@@ -400,7 +394,7 @@ void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
 
 }
 
-void VectorDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+void VectorDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     auto state = mVectorState;
     bool noPathTag = true;
 
@@ -420,7 +414,7 @@ void VectorDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,cons
 
             if (tagName.compare(SHAPE_PATH)==0) {
                 VFullPath* path = new VFullPath();
-                path->inflate(r,parser,atts);
+                path->inflate(r,parser,atts,theme);
                 currentGroup->addChild(path);
                 if (!path->getPathName().empty()) {
                     state->mVGTargetsMap.emplace(path->getPathName(), path);
@@ -429,7 +423,7 @@ void VectorDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,cons
                 state->mChangingConfigurations |= path->mChangingConfigurations;
             } else if (tagName.compare(SHAPE_CLIP_PATH)==0) {
                 VClipPath* path = new VClipPath();
-                path->inflate(r,parser,atts);
+                path->inflate(r,parser,atts,theme);
                 currentGroup->addChild(path);
                 if (!path->getPathName().empty()) {
                     state->mVGTargetsMap.emplace(path->getPathName(), path);
@@ -437,7 +431,7 @@ void VectorDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,cons
                 state->mChangingConfigurations |= path->mChangingConfigurations;
             } else if (tagName.compare(SHAPE_GROUP)==0) {
                 VGroup* newChildGroup = new VGroup();
-                newChildGroup->inflate(r,parser,atts);
+                newChildGroup->inflate(r,parser,atts,theme);
                 currentGroup->addChild(newChildGroup);
                 groupStack.push(newChildGroup);
                 if (!newChildGroup->getGroupName().empty()) {
@@ -536,10 +530,8 @@ VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableSta
     // and onStateChange skipped re-resolution -> no color transition on check.
     mTintMode = DEFAULT_TINT_MODE;
     mCachedAutoMirrored = false;
-    memset(mThemeAttrs,0,sizeof(mThemeAttrs));
-    memset(mCachedThemeAttrs,0,sizeof(mCachedThemeAttrs));
     if (copy != nullptr) {
-        //mThemeAttrs = copy->mThemeAttrs;
+        mThemeAttrs = copy->mThemeAttrs;
         mChangingConfigurations = copy->mChangingConfigurations;
         mTint = copy->mTint;
         mTintMode = copy->mTintMode;
@@ -590,7 +582,7 @@ long VectorDrawable::VectorDrawableState::getNativeRenderer() {
 }
 
 bool VectorDrawable::VectorDrawableState::canReuseCache() {
-    if (!mCacheDirty && (memcmp(mCachedThemeAttrs,mThemeAttrs,sizeof(int)*2)==0)
+    if (!mCacheDirty && mCachedThemeAttrs == mThemeAttrs
             && (mCachedTint == mTint) && (mCachedTintMode == mTintMode)
             && (mCachedAutoMirrored == mAutoMirrored) ) {
         return true;
@@ -602,22 +594,22 @@ bool VectorDrawable::VectorDrawableState::canReuseCache() {
 void VectorDrawable::VectorDrawableState::updateCacheStates() {
     // Use shallow copy here and shallow comparison in canReuseCache(),
     // likely hit cache miss more, but practically not much difference.
-    //mCachedThemeAttrs = mThemeAttrs;
+    mCachedThemeAttrs = mThemeAttrs;
     mCachedTint = mTint;
     mCachedTintMode = mTintMode;
     mCachedAutoMirrored = mAutoMirrored;
     mCacheDirty = false;
 }
 
-void VectorDrawable::VectorDrawableState::applyTheme(Theme t) {
+void VectorDrawable::VectorDrawableState::applyTheme(const Resources::Theme& t) {
     mRootGroup->applyTheme(t);
 }
 
 bool VectorDrawable::VectorDrawableState::canApplyTheme() {
-    return /*mThemeAttrs != nullptr
+    return !mThemeAttrs.empty()
             || (mRootGroup != nullptr && mRootGroup->canApplyTheme())
             || (mTint != nullptr && mTint->canApplyTheme())
-            || super.canApplyTheme();*/false;
+            || ConstantState::canApplyTheme();
 }
 
 Drawable* VectorDrawable::VectorDrawableState::newDrawable() {
@@ -777,7 +769,7 @@ VectorDrawable::VGroup::~VGroup(){
 VectorDrawable::VGroup::VGroup(const VGroup* copy,std::unordered_map<std::string, void*>& targetsMap) {
 
     mIsStateful = copy->mIsStateful;
-    //mThemeAttrs = copy->mThemeAttrs;
+    mThemeAttrs = copy->mThemeAttrs;
     mGroupName = copy->mGroupName;
     mChangingConfigurations = copy->mChangingConfigurations;
     if (!mGroupName.empty()) {
@@ -845,16 +837,26 @@ long VectorDrawable::VGroup::getNativePtr() {
 }
 
 
-void VectorDrawable::VGroup::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts) {
+void VectorDrawable::VGroup::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme) {
+    (void)parser;
     // AOSP VGroup.inflate: obtainAttributes(R.styleable.VectorDrawableGroup).
+    auto ta = Drawable::obtainAttributes(r, theme, atts, R::styleable::VectorDrawableGroup);
+    if (!ta) return;
+    updateStateFromTypedArray(*ta);
+}
+
+void VectorDrawable::VGroup::updateStateFromTypedArray(const TypedArray& a) {
+    // Account for any configuration changes.
+    mChangingConfigurations = 0;//|= a.getChangingConfigurations();
+
+    // Extract the theme attributes, if any.
+    mThemeAttrs = a.extractThemeAttrs();
+
+    const auto properties=mNativePtr->stagingProperties();
     // This used VectorDrawable's attr array while reading VectorDrawableGroup_*
     // indices — every group transform read the wrong column (or fell back to
     // the default), so nested group scale/translate was silently dropped and
     // Material checkbox/radio art rendered at raw path size.
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::VectorDrawableGroup);
-    if (!ta) return;
-    const TypedArray& a = *ta;
-    const auto properties=mNativePtr->stagingProperties();
     float rotate = a.getFloat(R::styleable::VectorDrawableGroup_rotation,properties->getRotation());
     float pivotX = a.getFloat(R::styleable::VectorDrawableGroup_pivotX,properties->getPivotX());
     float pivotY = a.getFloat(R::styleable::VectorDrawableGroup_pivotY,properties->getPivotY());
@@ -908,14 +910,11 @@ bool VectorDrawable::VGroup::hasFocusStateSpecified() const{
 }
 
 bool VectorDrawable::VGroup::canApplyTheme() {
-#ifndef __clang__
-    if (mThemeAttrs != nullptr)
-#endif
-    {
+    if (!mThemeAttrs.empty()) {
         return true;
     }
 
-    std::vector<VObject*> children = mChildren;
+    const std::vector<VObject*> children = mChildren;
     for (int i = 0, count = children.size(); i < count; i++) {
         VObject* child = children.at(i);
         if (child->canApplyTheme()) {
@@ -926,14 +925,13 @@ bool VectorDrawable::VGroup::canApplyTheme() {
     return false;
 }
 
-void VectorDrawable::VGroup::applyTheme(Theme t) {
-    /*if (mThemeAttrs != null) {
-        final TypedArray a = t.resolveAttributes(mThemeAttrs,R.styleable.VectorDrawableGroup);
-        updateStateFromTypedArray(a);
-        a.recycle();
-    }*/
+void VectorDrawable::VGroup::applyTheme(const Resources::Theme& t) {
+    if (!mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mThemeAttrs, R::styleable::VectorDrawableGroup);
+        if (a) updateStateFromTypedArray(*a);
+    }
 
-    std::vector<VObject*>& children = mChildren;
+    const std::vector<VObject*>& children = mChildren;
     for (int i = 0, count = children.size(); i < count; i++) {
         VObject* child = children.at(i);
         if (child->canApplyTheme()) {
@@ -1111,8 +1109,8 @@ long VectorDrawable::VClipPath::getNativePtr() {
 }
 
 
-void VectorDrawable::VClipPath::inflate(Resources&r,XmlPullParser&,const AttributeSet& attrs) {
-    auto ta = r.obtainStyledAttributes(&attrs, R::styleable::VectorDrawableClipPath);
+void VectorDrawable::VClipPath::inflate(Resources&r,XmlPullParser&,const AttributeSet& attrs,const Resources::Theme* theme) {
+    auto ta = Drawable::obtainAttributes(r, theme, attrs, R::styleable::VectorDrawableClipPath);
     if (ta) updateStateFromTypedArray(*ta);
 }
 
@@ -1120,8 +1118,9 @@ bool VectorDrawable::VClipPath::canApplyTheme() {
     return false;
 }
 
-void VectorDrawable::VClipPath::applyTheme(Theme theme) {
+void VectorDrawable::VClipPath::applyTheme(const Resources::Theme& theme) {
     // No-op.
+    (void)theme;
 }
 
 bool VectorDrawable::VClipPath::onStateChange(const std::vector<int>& stateSet) {
@@ -1206,7 +1205,7 @@ VectorDrawable::VFullPath::VFullPath() {
 
 VectorDrawable::VFullPath::VFullPath(const VFullPath* copy):VPath(copy){
     mNativePtr = new hwui::FullPath(*copy->mNativePtr);//nCreateFullPath(copy->mNativePtr);
-    //mThemeAttrs = copy->mThemeAttrs;
+    mThemeAttrs = copy->mThemeAttrs;
     mStrokeColors = copy->mStrokeColors;
     mFillColors = copy->mFillColors;
 }
@@ -1279,8 +1278,8 @@ long VectorDrawable::VFullPath::getNativePtr() {
     return (long)mNativePtr;
 }
 
-void VectorDrawable::VFullPath::inflate(Resources&r,XmlPullParser&parser,const AttributeSet& attrs) {
-    auto ta = r.obtainStyledAttributes(&attrs, R::styleable::VectorDrawablePath);
+void VectorDrawable::VFullPath::inflate(Resources&r,XmlPullParser&parser,const AttributeSet& attrs,const Resources::Theme* theme) {
+    auto ta = Drawable::obtainAttributes(r, theme, attrs, R::styleable::VectorDrawablePath);
     if (ta) updateStateFromTypedArray(*ta);
     inflateGradients(r,parser,attrs);
 }
@@ -1305,7 +1304,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const TypedArray& a) {
     mChangingConfigurations = 0;//!=a.getChangingConfigurations();
 
     // Extract the theme attributes, if any.
-    //mThemeAttrs = a.extractThemeAttrs();
+    mThemeAttrs = a.extractThemeAttrs();
 
     const std::string pathName = a.getString(R::styleable::VectorDrawablePath_name);
     if (!pathName.empty()) {
@@ -1446,10 +1445,7 @@ void VectorDrawable::VFullPath::inflateGradients(Resources&r,XmlPullParser&parse
 }
 
 bool VectorDrawable::VFullPath::canApplyTheme() {
-#ifndef __clang__
-    if (mThemeAttrs != nullptr)
-#endif
-    {
+    if (!mThemeAttrs.empty()) {
         return true;
     }
 
@@ -1462,45 +1458,41 @@ bool VectorDrawable::VFullPath::canApplyTheme() {
 
 }
 
-void VectorDrawable::VFullPath::applyTheme(Theme t) {
+void VectorDrawable::VFullPath::applyTheme(const Resources::Theme& t) {
     // Resolve the theme attributes directly referred by the VectorDrawable.
-#if 0
-    if (mThemeAttrs != null) {
-        final TypedArray a = t.resolveAttributes(mThemeAttrs, R.styleable.VectorDrawablePath);
-        updateStateFromTypedArray(a);
-        a.recycle();
+    if (!mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mThemeAttrs, R::styleable::VectorDrawablePath);
+        if (a) updateStateFromTypedArray(*a);
     }
 
     // Resolve the theme attributes in-directly referred by the VectorDrawable, for example,
     // fillColor can refer to a color state list which itself needs to apply theme.
     // And this is the reason we still want to keep partial update for the path's properties.
-    bool fillCanApplyTheme = canComplexColorApplyTheme(mFillColors);
-    bool strokeCanApplyTheme = canComplexColorApplyTheme(mStrokeColors);
+    const bool fillCanApplyTheme = canComplexColorApplyTheme(mFillColors);
+    const bool strokeCanApplyTheme = canComplexColorApplyTheme(mStrokeColors);
 
+    // AOSP: mFillColors = mFillColors.obtainForTheme(t) (and likewise for
+    // stroke), pushing GradientColor shaders or the ColorStateList default
+    // color to native. Theme-preloaded ComplexColors are not ported
+    // (canApplyTheme() is always false), so only the default-color push
+    // below would ever remain.
     if (fillCanApplyTheme) {
-        mFillColors = mFillColors.obtainForTheme(t);
-        if (mFillColors instanceof GradientColor) {
-            nUpdateFullPathFillGradient(mNativePtr,
-                    ((GradientColor) mFillColors).getShader().getNativeInstance());
-        } else if (mFillColors instanceof ColorStateList) {
-            nSetFillColor(mNativePtr, mFillColors.getDefaultColor());
+        if (auto fillColors = std::dynamic_pointer_cast<ColorStateList>(mFillColors)) {
+            //nSetFillColor(mNativePtr, mFillColors.getDefaultColor());
+            mNativePtr->mutateStagingProperties()->setFillColor(fillColors->getDefaultColor());
         }
     }
 
     if (strokeCanApplyTheme) {
-        mStrokeColors = mStrokeColors.obtainForTheme(t);
-        if (mStrokeColors instanceof GradientColor) {
-            nUpdateFullPathStrokeGradient(mNativePtr,
-                    ((GradientColor) mStrokeColors).getShader().getNativeInstance());
-        } else if (mStrokeColors instanceof ColorStateList) {
-            nSetStrokeColor(mNativePtr, mStrokeColors.getDefaultColor());
+        if (auto strokeColors = std::dynamic_pointer_cast<ColorStateList>(mStrokeColors)) {
+            //nSetStrokeColor(mNativePtr, mStrokeColors.getDefaultColor());
+            mNativePtr->mutateStagingProperties()->setStrokeColor(strokeColors->getDefaultColor());
         }
     }
-#endif
 }
 
 bool VectorDrawable::VFullPath::canComplexColorApplyTheme(const RefPtr<ComplexColor>& complexColor) {
-    return complexColor != nullptr ;//&& complexColor->canApplyTheme();
+    return complexColor != nullptr && complexColor->canApplyTheme();
 }
 
 /* Setters and Getters, used by animator from AnimatedVectorDrawable. */

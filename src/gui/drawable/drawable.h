@@ -79,6 +79,9 @@ public:
     public:
         virtual Drawable* newDrawable()=0;
         virtual int getChangingConfigurations()const=0;
+        // AOSP ConstantState.canApplyTheme(): false unless a subclass holds
+        // unresolved theme attrs.
+        virtual bool canApplyTheme(){return false;}
         virtual ~ConstantState();
     };
     enum{

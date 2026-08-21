@@ -238,16 +238,15 @@ void AnimatedStateListDrawable::inflateChildElement(Resources& r,XmlPullParser&p
         }
         const std::string tagName = parser.getName();
         if (tagName.compare(ELEMENT_ITEM)==0) {
-            parseItem(r,parser, atts);
+            parseItem(r,parser, atts, theme);
         } else if (tagName.compare(ELEMENT_TRANSITION)==0) {
-            parseTransition(r,parser, atts);
+            parseTransition(r,parser, atts, theme);
         }
     }
 }
 
-int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimatedStateListDrawableItem);
+int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = Drawable::obtainAttributes(r, theme, atts, R::styleable::AnimatedStateListDrawableItem);
     const int keyframeId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableItem_id, 0) : 0;
     Drawable* dr = ta ? ta->getDrawable(R::styleable::AnimatedStateListDrawableItem_drawable) : nullptr;
 
@@ -265,15 +264,14 @@ int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const
             throw std::logic_error(parser.getPositionDescription()+
                     ": <item> tag requires a 'drawable' attribute or child tag defining a drawable");
         }
-        dr = Drawable::createFromXmlInner(r,parser,atts);
+        dr = Drawable::createFromXmlInner(r,parser,atts,theme);
     }
 
     return mState->addStateSet(states, dr, keyframeId);
 }
 
-int AnimatedStateListDrawable::parseTransition(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
-    Context* ctx = atts.getContext();
-    auto ta = r.obtainStyledAttributes(&atts, R::styleable::AnimatedStateListDrawableTransition);
+int AnimatedStateListDrawable::parseTransition(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = Drawable::obtainAttributes(r, theme, atts, R::styleable::AnimatedStateListDrawableTransition);
     const int fromId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableTransition_fromId, 0) : 0;
     const int toId = ta ? ta->getResourceId(R::styleable::AnimatedStateListDrawableTransition_toId, 0) : 0;
     const bool reversible = ta ? ta->getBoolean(R::styleable::AnimatedStateListDrawableTransition_reversible, false) : false;
@@ -290,7 +288,7 @@ int AnimatedStateListDrawable::parseTransition(Resources& r,XmlPullParser&parser
             throw std::logic_error(parser.getPositionDescription()+
                             ": <transition> tag requires a 'drawable' attribute or child tag defining a drawable");
         }
-        dr = Drawable::createFromXmlInner(r,parser, atts);
+        dr = Drawable::createFromXmlInner(r,parser, atts, theme);
     }
 
     return mState->addTransition(fromId, toId, dr, reversible);
