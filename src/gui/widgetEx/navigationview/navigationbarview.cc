@@ -38,6 +38,8 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
     mItemBackground = nullptr;
     mItemIconSize = 0;
     mLabelVisibilityMode = LABEL_VISIBILITY_AUTO;
+    mItemGravity = ITEM_GRAVITY_TOP_CENTER;
+    mItemIconGravity = ITEM_ICON_GRAVITY_TOP;
 
     // AOSP NavigationBarView ctor: menu, menu view, presenter, then attrs.
     mMenu = new MenuBuilder(context);
@@ -61,6 +63,20 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
     mItemTextColor = ta->getColorStateList(cdroid::internal::R::styleable::NavigationBarView_itemTextColor);
     const int bgRes = ta->getResourceId(cdroid::internal::R::styleable::NavigationBarView_itemBackground, 0);
     if (bgRes) mItemBackground = context->getDrawable(bgRes);
+
+    // AOSP calls the setters here, but they trigger updateMenuView → the
+    // pure-virtual getMaxItemCount() while this base ctor still runs (Java's
+    // ctor virtual dispatch has no C++ counterpart) — assign the fields
+    // directly instead; the first menu inflation rebuilds the items anyway.
+    mLabelVisibilityMode = ta->getInt(
+            cdroid::internal::R::styleable::NavigationBarView_labelVisibilityMode,
+            LABEL_VISIBILITY_AUTO);
+    mItemIconGravity = ta->getInt(
+            cdroid::internal::R::styleable::NavigationBarView_itemIconGravity,
+            ITEM_ICON_GRAVITY_TOP);
+    mItemGravity = ta->getInt(
+            cdroid::internal::R::styleable::NavigationBarView_itemGravity,
+            ITEM_GRAVITY_TOP_CENTER);
 
     if (ta->hasValue(cdroid::internal::R::styleable::NavigationBarView_menu)) {
         MenuInflater inflater(context);
@@ -145,13 +161,40 @@ void NavigationBarView::setLabelVisibilityMode(int labelVisibilityMode) {
     updateMenuView();
 }
 
+int NavigationBarView::getItemGravity() const {
+    return mItemGravity;
+}
+
+void NavigationBarView::setItemGravity(int itemGravity) {
+    if (mItemGravity != itemGravity) {
+        mItemGravity = itemGravity;
+        updateMenuView();
+    }
+}
+
+int NavigationBarView::getItemIconGravity() const {
+    return mItemIconGravity;
+}
+
+void NavigationBarView::setItemIconGravity(int itemIconGravity) {
+    if (mItemIconGravity != itemIconGravity) {
+        mItemIconGravity = itemIconGravity;
+        updateMenuView();
+    }
+}
+
 // Icon-over-label button (material NavigationBarItemView simplified: no
 // active indicator, no badge, no item animation).
 View* NavigationBarView::createItemView(MenuItem* item) {
     Context* context = getContext();
     LinearLayout* column = new LinearLayout(context, nullptr, 0);
-    column->setOrientation(LinearLayout::VERTICAL);
-    column->setGravity(Gravity::CENTER_HORIZONTAL);
+    // itemIconGravity selects the item layout configuration: TOP stacks the
+    // icon over the label, START lays them out side by side (material's
+    // horizontal item).
+    const bool iconAtStart = (mItemIconGravity == ITEM_ICON_GRAVITY_START);
+    column->setOrientation(iconAtStart ? LinearLayout::HORIZONTAL : LinearLayout::VERTICAL);
+    // itemGravity positions the item content inside the item bounds.
+    column->setGravity(mItemGravity);
     column->setPadding(8, 6, 8, 6);
     if (mItemBackground) {
         // Each item owns its background through View::mBackground. Never share the
@@ -192,7 +235,8 @@ View* NavigationBarView::createItemView(MenuItem* item) {
                 state,
                     mItemTextColor->getDefaultColor()));
         }
-        label->setGravity(Gravity::CENTER_HORIZONTAL);
+        label->setGravity(iconAtStart ? (Gravity::START | Gravity::CENTER_VERTICAL)
+                                      : Gravity::CENTER_HORIZONTAL);
         column->addView(label);
     }
 

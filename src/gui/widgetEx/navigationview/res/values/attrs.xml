@@ -34,6 +34,31 @@
         <attr name="itemTextColor" />
         <attr name="itemBackground" />
         <attr name="menu" />
+        <attr name="itemGravity">
+            <!-- Gravity.TOP | Gravity.CENTER_HORIZONTAL -->
+            <enum name="top_center" value="49"/>
+            <!-- Gravity.CENTER -->
+            <enum name="center" value="17"/>
+            <!-- Gravity.START | Gravity.CENTER_VERTICAL -->
+            <enum name="start_center" value="8388627"/>
+        </attr>
+        <!-- The item's icon gravity which determines the layout configuration
+             of the navigation item. -->
+        <attr name="itemIconGravity">
+            <enum name="top" value="0"/>
+            <enum name="start" value="1"/>
+        </attr>
+        <attr name="labelVisibilityMode">
+            <!-- Label behaves as "labeled" when there are 3 items or less, or
+                 "selected" when there are 4 items or more. -->
+            <enum name="auto" value="-1"/>
+            <!-- Label is shown on the selected navigation item. -->
+            <enum name="selected" value="0"/>
+            <!-- Label is shown on all navigation items. -->
+            <enum name="labeled" value="1"/>
+            <!-- Label is not shown on any navigation items. -->
+            <enum name="unlabeled" value="2"/>
+        </attr>
     </declare-styleable>
     <declare-styleable name="BottomNavigationView">
         <attr name="itemHorizontalTranslationEnabled" format="boolean" />

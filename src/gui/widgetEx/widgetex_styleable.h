@@ -786,13 +786,16 @@ namespace internal { namespace R { namespace styleable {
     constexpr int NavigationView_topInsetScrimEnabled = 18;
     constexpr int NavigationView_bottomInsetScrimEnabled = 19;
 
-    // NavigationBarView (5 attrs)
+    // NavigationBarView (8 attrs)
     extern const uint32_t NavigationBarView[];
     constexpr int NavigationBarView_itemIconTint = 0;
     constexpr int NavigationBarView_itemIconSize = 1;
     constexpr int NavigationBarView_itemTextColor = 2;
     constexpr int NavigationBarView_itemBackground = 3;
     constexpr int NavigationBarView_menu = 4;
+    constexpr int NavigationBarView_itemGravity = 5;
+    constexpr int NavigationBarView_itemIconGravity = 6;
+    constexpr int NavigationBarView_labelVisibilityMode = 7;
 
     // BottomNavigationView (1 attrs)
     extern const uint32_t BottomNavigationView[];

@@ -185,6 +185,28 @@ void NavigationView::setOverScrollMode(int overScrollMode) {
     }
 }
 
+NavigationView::SavedState::SavedState(Parcelable* superState)
+    : AbsSavedState(superState){}
+
+Parcelable* NavigationView::onSaveInstanceState() {
+    Parcelable* superState = FrameLayout::onSaveInstanceState();
+    SavedState* state = new SavedState(superState);
+    mMenu->savePresenterStates(state->menuState);
+    return state;
+}
+
+void NavigationView::onRestoreInstanceState(Parcelable& savedState) {
+    SavedState* state = dynamic_cast<SavedState*>(&savedState);
+    if (state == nullptr) {
+        FrameLayout::onRestoreInstanceState(savedState);
+        return;
+    }
+    if (state->getSuperState() != nullptr) {
+        FrameLayout::onRestoreInstanceState(*state->getSuperState());
+    }
+    mMenu->restorePresenterStates(state->menuState);
+}
+
 void NavigationView::setNavigationItemSelectedListener(OnNavigationItemSelectedListener* listener) {
     mListener = listener;
 }

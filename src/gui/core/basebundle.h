@@ -7,9 +7,11 @@
 #include <vector>
 #include <unordered_map>
 #include <core/any.h>
+#include <core/sparsearray.h>
 
 namespace cdroid {
 using namespace nonstd;
+class Parcelable;
 class BaseBundle {
 protected:
     std::unordered_map<std::string, any> data_; // protected: mirrors Android's package-private (Bundle subclass needs direct access for putBundle/getBundle)
@@ -79,6 +81,17 @@ public:
 
     void putBooleanArray(const std::string& key, const std::vector<bool>& value) {
         data_[key] = value;
+    }
+
+    // AOSP Bundle.putSparseParcelableArray — keyed presenter/view state. The
+    // stored pointers are borrowed (the producer keeps them alive), matching
+    // the existing pointer-semantic getters.
+    void putSparseParcelableArray(const std::string& key, const SparseArray<Parcelable*>& value) {
+        data_[key] = value;
+    }
+    SparseArray<Parcelable*> getSparseParcelableArray(const std::string& key) const{
+        return containsKey(key) ? getValue<SparseArray<Parcelable*>>(key)
+                                : SparseArray<Parcelable*>();
     }
 
     // Get methods for single values

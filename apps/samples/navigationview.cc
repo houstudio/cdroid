@@ -31,6 +31,7 @@ int main(int argc, const char* argv[]){
     w->setBackgroundColor(0xFF202020);
 
     NavigationView* nv = new NavigationView(&app, nullptr, 0);
+    nv->setId(0x1000);   // needed: saveHierarchyState only stores views with an id
     nv->setLayoutParams(new ViewGroup::LayoutParams(
             ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
     w->addView(nv);
@@ -54,10 +55,18 @@ int main(int argc, const char* argv[]){
 
     // Self-test: move the checked item after a delay — drives the menu
     // update path (prepareMenuItems + full rebind through the presenter),
-    // the same flow a tap on an item takes.
+    // the same flow a tap on an item takes — then exercises the saved-state
+    // round trip (recreate-style) through the public hierarchy APIs.
     static cdroid::Handler sRebindDriver(cdroid::Looper::getMainLooper());
     sRebindDriver.postDelayed([nv](){
         nv->setCheckedItem(1002);
+
+        cdroid::SparseArray<cdroid::Parcelable*> saved;
+        nv->saveHierarchyState(saved);
+        nv->setCheckedItem(1001);
+        nv->restoreHierarchyState(saved);
+        const int restored = nv->getCheckedItem() ? nv->getCheckedItem()->getItemId() : -1;
+        LOGD("saved-state round trip: checked=%d (expect 1002)", restored);
     }, 1200);
 
     w->requestLayout();

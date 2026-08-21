@@ -72,6 +72,8 @@ private:
     Drawable* mItemBackground;
     int mItemIconSize;
     int mLabelVisibilityMode;  // LABEL_VISIBILITY_*
+    int mItemGravity;          // ITEM_GRAVITY_*
+    int mItemIconGravity;      // ITEM_ICON_GRAVITY_*
 protected:
     NavigationBarView(Context* context, const AttributeSet* attrs, int defStyleAttr);
     virtual int getMaxItemCount() const = 0;
@@ -99,6 +101,12 @@ public:
     void setItemBackground(Drawable* background);
     int getLabelVisibilityMode() const;
     void setLabelVisibilityMode(int labelVisibilityMode);
+    /** Returns the gravity of the items within the navigation bar (ITEM_GRAVITY_*). */
+    int getItemGravity() const;
+    void setItemGravity(int itemGravity);
+    /** Returns the icon gravity which determines the item layout configuration (ITEM_ICON_GRAVITY_*). */
+    int getItemIconGravity() const;
+    void setItemIconGravity(int itemIconGravity);
 };
 
 }//namespace cdroid

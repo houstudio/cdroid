@@ -23,6 +23,8 @@
 // state); everything else — the NavigationMenu menu, the presenter/adapter
 // data flow and the public API — follows material 1:1.
 #include <widget/framelayout.h>
+#include <view/abssavedstate.h>
+#include <core/bundle.h>
 #include <widgetEx/navigationview/navigationmenupresenter.h>
 #include <widgetEx/navigationview/navigationmenu.h>
 
@@ -42,12 +44,24 @@ private:
     bool mBottomInsetScrimEnabled = true;
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
+    Parcelable* onSaveInstanceState() override;
+    void onRestoreInstanceState(Parcelable& state) override;
 public:
     /** Called when an item in the navigation menu is selected. */
     class OnNavigationItemSelectedListener {
     public:
         virtual ~OnNavigationItemSelectedListener() = default;
         virtual bool onNavigationItemSelected(MenuItem* item) = 0;
+    };
+
+    /**
+     * User interface state that is stored by NavigationView for implementing
+     * onSaveInstanceState().
+     */
+    class SavedState : public AbsSavedState {
+    public:
+        Bundle menuState;
+        SavedState(Parcelable* superState);
     };
 
     NavigationView(Context* context, const AttributeSet& attrs);
