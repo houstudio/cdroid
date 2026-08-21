@@ -14,6 +14,7 @@
 #include <widget/framework_styleable.h>
 #include <view/layoutinflater.h>
 #include <drawable/colorstatelist.h>
+#include <drawable/gradientdrawable.h>
 #include "R.h"
 #include <guienvironment.h>
 using namespace cdroid;
@@ -352,6 +353,36 @@ TEST_F(RESOURCES_THEME, viewScrollbarThumbFollowsTheme) {
         if (pass == 1) EXPECT_EQ(4, thumb->getIntrinsicWidth());
         delete root;
     }
+
+    // The Material thumb's theme reactivity is android:tint=?attr/
+    // colorControlNormal (-> ?attr/textColorSecondary -> @color/
+    // text_color_secondary, ONE selector shared by both Material themes whose
+    // items are ?attr-parametrized). The attr resolves to the same selector
+    // id under Light and Dark by design; the theme difference materializes
+    // when the selector is LOADED through each theme. The tint itself sits in
+    // GradientDrawable's private state, so probe the loaded CSL + the shape.
+    uint32_t defaults[2] = {0, 0};
+    for (int pass = 0; pass < 2; pass++) {
+        app.setTheme((int)(pass == 0 ? cdroid::internal::R::style::Theme_Material_Light
+                                     : cdroid::internal::R::style::Theme_Material));
+        TypedValue cv;
+        // resolveRefs=true follows ?attr -> ?attr -> @color/selector; the final
+        // TypedValue keeps the selector's resource id (TYPE_STRING + resid).
+        ASSERT_TRUE(app.getTheme().resolveAttribute(
+                (int)cdroid::internal::R::attr::colorControlNormal, &cv, true));
+        ASSERT_NE(cv.resourceId, 0u);
+        Resources::Theme th = app.getTheme();
+        auto csl = app.getResources().loadComplexColor((int)cv.resourceId, &th);
+        auto cc = std::dynamic_pointer_cast<ColorStateList>(csl);
+        ASSERT_NE(cc, nullptr);
+        defaults[pass] = cc->getDefaultColor();
+        Drawable* d = app.getDrawable((int)cdroid::internal::R::drawable::scrollbar_handle_material);
+        ASSERT_NE(d, nullptr);
+        ASSERT_NE(dynamic_cast<GradientDrawable*>(d), nullptr);
+        LOGI("material thumb pass%d tint CSL default=0x%08x", pass, defaults[pass]);
+        delete d;
+    }
+    EXPECT_NE(defaults[0], defaults[1]);
 }
 
 // Narrow the menu chain: load the theme's textColorPrimary resource directly.
