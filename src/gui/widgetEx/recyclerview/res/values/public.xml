@@ -12,4 +12,5 @@
     <public type="attr" name="reverseLayout" id="0x020100c6"/>
     <public type="attr" name="spanCount" id="0x020100c5"/>
     <public type="attr" name="stackFromEnd" id="0x020100c7"/>
+    <public type="attr" name="recyclerViewStyle" id="0x0201014d"/>
 </resources>

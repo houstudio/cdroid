@@ -50,7 +50,9 @@ bool RecyclerView::sDebugAssertionsEnabled= false;
 bool RecyclerView::sVerboseLoggingEnabled = false;
 static QuinticInterpolator sQuinticInterpolator;
 
-DECLARE_WIDGET(RecyclerView)
+// androidx inflation path: RecyclerView(context, attrs) ->
+// defStyleAttr = R.attr.recyclerViewStyle (library attr, 0x02 shared-lib).
+DECLARE_WIDGET2(RecyclerView, (int)R::attr::recyclerViewStyle)
 
 RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
     initRecyclerView();
@@ -74,7 +76,11 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
     setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 
-RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs):RecyclerView(context,&attrs,0){
+RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
+    // androidx: this(context, attrs, R.attr.recyclerViewStyle). The attr id is
+    // pinned in widgetEx/recyclerview public.xml and surfaced by gen_styleable
+    // as a standalone R::attr constant (single source).
+    :RecyclerView(context,&attrs,(int)R::attr::recyclerViewStyle){
 }
 
 RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)

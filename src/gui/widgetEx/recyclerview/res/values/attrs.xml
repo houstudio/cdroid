@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- RecyclerView custom attrs (verbatim from androidx recyclerview). Source for gen_styleable.py. -->
 <resources>
+    <!-- Standalone style attr (verbatim from androidx recyclerview attrs.xml):
+         the library's default style for RecyclerView, resolved as defStyleAttr
+         from the theme. -->
+    <attr name="recyclerViewStyle" format="reference"/>
+
     <!-- RecyclerView (verbatim from androidx recyclerview attrs.xml) -->
     <declare-styleable name="RecyclerView">
         <attr name="layoutManager" format="string"/>
