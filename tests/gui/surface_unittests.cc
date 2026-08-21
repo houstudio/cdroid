@@ -20,7 +20,7 @@ using namespace cdroid;
 class DrawView:public View{
 public:
     std::function<void(Canvas&)> draw;
-    DrawView(int w,int h,std::function<void(Canvas&)>d):View(w,h),draw(std::move(d)){}
+    DrawView(int w,int h,std::function<void(Canvas&)>d):View(&App::getInstance()),draw(std::move(d)){}
     void onDraw(Canvas&c){
         View::onDraw(c);
         if(draw) draw(c);

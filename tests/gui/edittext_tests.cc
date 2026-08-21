@@ -21,7 +21,7 @@ TEST_F(EDITTEXT,edit){
     int format[]={Gravity::LEFT,Gravity::CENTER_HORIZONTAL,Gravity::RIGHT};
     ViewGroup*w=GUIEnvironment::content();
     for(int i=0;i<sizeof(format)/sizeof(format[0]);i++){
-        EditText*g=new EditText("Hello world!",600,32);
+        EditText*g=new EditText(&app); g->setText("Hello world!");
         g->setGravity(format[i]|Gravity::CENTER_VERTICAL);
         w->addView(g);
         g->layout(10,35*i+10,600,32);
@@ -32,7 +32,7 @@ TEST_F(EDITTEXT,edit){
 TEST_F(EDITTEXT,multiline){
     App&app=App::getInstance();
     ViewGroup*w=GUIEnvironment::content();
-    EditText*edt=new EditText("Hello world!\nThis is the second line\n The last line",400,200);
+    EditText*edt=new EditText(&app); edt->setText("Hello world!\nThis is the second line\n The last line");
     edt->setSingleLine(false);
     edt->setTextColor(0xFFFFFFFF);
     edt->setBackground(new ColorDrawable(0xFF111111));
@@ -48,7 +48,7 @@ TEST_F(EDITTEXT,hebrew){
              0x0020,0xfb3c,0x0020,0x05dc,0x0592,0x00};
     std::string u8text=TextUtils::unicode2utf8(text);
     ViewGroup*w=GUIEnvironment::content();
-    EditText*edt=new EditText(u8text,400,200);
+    EditText*edt=new EditText(&app); edt->setText(u8text);
     edt->setTextSize(40);
     edt->setSingleLine(false);
     edt->setTextColor(0xFFFFFFFF);
@@ -61,7 +61,7 @@ TEST_F(EDITTEXT,hindi){//印地语
     const char*text="आज सुबह एक ट्रैफिक जैम था";
     App&app=App::getInstance();
     ViewGroup*w=GUIEnvironment::content();
-    EditText*edt=new EditText(text,400,200);
+    EditText*edt=new EditText(&app); edt->setText(text);
     edt->setTextSize(40);
     edt->setSingleLine(false);
     edt->setTextColor(0xFFFFFFFF);

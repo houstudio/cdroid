@@ -124,5 +124,9 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t ActivityNavigator[] = { 0x0201014e, 0x01010003, 0x02010130, 0x02010131, 0x02010132, 0 };
     const uint32_t FragmentNavigator[] = { 0x01010003, 0 };
     const uint32_t NavArgument[] = { 0x01010003, 0x010101ed, 0x0201012e, 0x0201012f, 0 };
+    const uint32_t WearableRecyclerView[] = { 0x0201016c, 0x0201016d, 0x0201016e, 0 };
+    const uint32_t CircularProgressLayout[] = { 0x0201016f, 0x02010170, 0x02010171, 0x02010172, 0 };
+    const uint32_t RoundedDrawable[] = { 0x01010119, 0x02010173, 0x0201016f, 0x02010174, 0 };
+    const uint32_t BoxInsetLayoutLayout[] = { 0x02010175, 0x02010176, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

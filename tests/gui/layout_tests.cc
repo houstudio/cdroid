@@ -36,7 +36,7 @@ public:
 TEST_F(LAYOUT,linear){
     App&app=App::getInstance();
     ViewGroup*w=GUIEnvironment::content();
-    LinearLayout*ll=new LinearLayout(800,80);
+    LinearLayout*ll=new LinearLayout(&app);
     ShapeDrawable*sd=new ShapeDrawable();
     Shape*shape=new RectShape();
     shape->setSolidColor(0xFFFF0000);
@@ -48,7 +48,7 @@ TEST_F(LAYOUT,linear){
     ll->setDividerDrawable(sd);
 #if 1
     LinearLayout::LayoutParams*lp =new LinearLayout::LayoutParams(0,LayoutParams::WRAP_CONTENT,1.0f);
-    Button*btn=new Button("OK",0,0);
+    Button*btn=new Button(&app); btn->setText("OK");
     //lp->setMarginsRelative(10,0,10,0);
     lp->gravity=Gravity::TOP;
     ll->setBackground(new ColorDrawable(0xFFFFFFFF));
@@ -59,14 +59,14 @@ TEST_F(LAYOUT,linear){
 
     lp =new LinearLayout::LayoutParams(0,LayoutParams::WRAP_CONTENT,4.0f);
     lp->gravity=(Gravity::CENTER_VERTICAL);
-    btn=new Button("Cancel",0,0);
+    btn=new Button(&app); btn->setText("Cancel");
     btn->setTextColor(0xFF0088FF);
     btn->setTextSize(30);
     ll->addView(btn,lp);
     btn->setBackgroundColor(0xFF00FF00);
 #endif
 #if 10
-    ProgressBar*pb2=new ProgressBar(72,72);
+    ProgressBar*pb2=new ProgressBar(&app);
     Drawable*d=DrawableInflater::loadDrawable(&app,"@cdroid:drawable/progress_large");
     lp =new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);//,1.0f);
     lp->gravity=Gravity::BOTTOM;//CENTER_VERTICAL);
@@ -88,9 +88,9 @@ TEST_F(LAYOUT,radiogroup){
     const char*captions[]={"News","Sport","Reading","Walking","I saw A brown fox jump over a lazy dog!"};
     ViewGroup*w=GUIEnvironment::content();
     AttributeSet attrs;
-    RadioGroup *rg=new RadioGroup(500,300);//&app,attrs);
+    RadioGroup *rg=new RadioGroup(&app);
     for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
-        RadioButton*rb=new RadioButton(captions[i],200,60);
+        RadioButton*rb=new RadioButton(&app); rb->setText(captions[i]);
         rb->setId(100+i);
         rb->setPadding(0,8,0,8);
         Drawable*d=DrawableInflater::loadDrawable(&app,"@cdroid:drawable/btn_radio");
@@ -108,17 +108,17 @@ TEST_F(LAYOUT,radiogroup){
 TEST_F(LAYOUT,frame){
     App&app=App::getInstance();
     ViewGroup*w=GUIEnvironment::content();
-    FrameLayout*frame=new FrameLayout(800,600);
+    FrameLayout*frame=new FrameLayout(&app);
     FrameLayout::LayoutParams*lp=new FrameLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT,Gravity::CENTER);
 
-    TextView*tv=new TextView("Hello world!",0,0);
+    TextView*tv=new TextView(&app); tv->setText("Hello world!");
     tv->setBackground(new ColorDrawable(0xFF884444));
     tv->setTextColor(0xFF00FF88);
     tv->setTextSize(100);
     frame->addView(tv,lp);
 
     lp=new FrameLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT,Gravity::CENTER);
-    Button*btn=new Button("OK",0,0);
+    Button*btn=new Button(&app); btn->setText("OK");
     btn->setBackground(new ColorDrawable(0xFF4444ff));
     btn->setTextColor(0xFF00FF00);
     frame->addView(btn,lp);
@@ -133,15 +133,15 @@ TEST_F(LAYOUT,frame){
 TEST_F(LAYOUT,absolute){
     App&app=App::getInstance();
     ViewGroup*w=GUIEnvironment::content();
-    AbsoluteLayout*ll=new AbsoluteLayout(800,600);
+    AbsoluteLayout*ll=new AbsoluteLayout(&app);
     AbsoluteLayout::LayoutParams*lp=new AbsoluteLayout::LayoutParams(300,50,100,100);
-    TextView*tv=new TextView("A crown fox jump over the lazy dog!",0,0);
+    TextView*tv=new TextView(&app); tv->setText("A crown fox jump over the lazy dog!");
     tv->setBackground(new ColorDrawable(0xFF4444ff));
     tv->setTextColor(0xFF00FF00);
     ll->addView(tv,lp);
 
     lp=new AbsoluteLayout::LayoutParams(150,60,200,200);
-    Button *btn=new Button("Browser",0,0);
+    Button *btn=new Button(&app); btn->setText("Browser");
     btn->setBackground(new ColorDrawable(0xFF4444ff));
     btn->setTextColor(0xFF00FF00);
     ll->addView(btn,lp);
@@ -155,12 +155,12 @@ TEST_F(LAYOUT,tablerow){
     App&app=App::getInstance();
     const char*captions[]={"OK","Cancel","Ignore"};
     ViewGroup*w=GUIEnvironment::content();
-    TableRow*row=new TableRow(800,80);
+    TableRow*row=new TableRow(&app);
     row->setBackground(new ColorDrawable(0xFF444444));
     for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
         TableRow::LayoutParams*rp=new TableRow::LayoutParams(200+i*20,80);
         rp->setMarginsRelative(10,5,10,5);
-        Button*btn=new Button(captions[i],0,0);
+        Button*btn=new Button(&app); btn->setText(captions[i]);
         btn->setBackground(new ColorDrawable(0xFFFF0000));
         btn->setTextColor(0xFF00FF88);
         row->addView(btn,rp);
@@ -175,14 +175,14 @@ TEST_F(LAYOUT,table){
     App&app=App::getInstance();
     const char*captions[]={"OK","Cancel","Ignore"};
     ViewGroup*w=GUIEnvironment::content();
-    TableLayout*tbl=new TableLayout(800,320);
+    TableLayout*tbl=new TableLayout(&app);
     TableRow* row[4];
     for(int j=0;j<4;j++){
-        row[j]=new TableRow(800,80);
+        row[j]=new TableRow(&app);
         for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
             TableRow::LayoutParams*rp=new TableRow::LayoutParams(200+i*40,80);
             rp->setMarginsRelative(10,0,10,0);
-            Button*btn=new Button(captions[i],0,0);
+            Button*btn=new Button(&app); btn->setText(captions[i]);
             btn->setBackground(new ColorDrawable(0xFFFF0000+i*20));
             btn->setTextColor(0xFF00FF00+i*20);
             row[j]->addView(btn,rp);
@@ -203,12 +203,12 @@ TEST_F(LAYOUT,grid){
     App&app=App::getInstance();
     const char*captions[]={"OK","Cancel","Ignore","Hello world!","Sina News"};
     ViewGroup*w=GUIEnvironment::content();
-    GridLayout*grd=new GridLayout(800,400);
+    GridLayout*grd=new GridLayout(&app);
     const int N=sizeof(captions)/sizeof(captions[0]);
     for(int i=0;i<9;i++){
         GridLayout::LayoutParams*gp=new GridLayout::LayoutParams();
         gp->setMarginsRelative(5,5,5,5);
-        Button*btn=new Button(captions[i%N],0,0);
+        Button*btn=new Button(&app); btn->setText(captions[i%N]);
         btn->setBackground(new ColorDrawable(0xFFFF0000+i*20));
         btn->setTextColor(0xFF00FF00+i*20);
         grd->addView(btn,gp);

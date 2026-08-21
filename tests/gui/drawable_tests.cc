@@ -27,7 +27,7 @@ using namespace cdroid;
 class SurfaceBlitView:public View{
 public:
     cdroid::RefPtr<ImageSurface>mSrc;
-    SurfaceBlitView(int w,int h):View(w,h){}
+    SurfaceBlitView(int w,int h):View(&App::getInstance()){}
     void onDraw(Canvas&c){
         View::onDraw(c);
         if(mSrc){ c.set_source(mSrc,0,0); c.paint(); }

@@ -64,14 +64,14 @@ public:
            drawer is opened to read results and closed for a full-screen test.
            The drawer interior (header + suite list + detail) is built lazily by
            GuiTestListener in testmain.cc. */
-        mDrawerLayout = new cdroid::DrawerLayout(1, 1);
+        mDrawerLayout = new cdroid::DrawerLayout(&cdroid::App::getInstance());
 
-        mContent = new cdroid::FrameLayout(1, 1);
+        mContent = new cdroid::FrameLayout(&cdroid::App::getInstance());
         mContent->setBackgroundColor(0xFF23282E); // the "canvas": distinct from the dark drawer
         mDrawerLayout->addView(mContent, 0,
             new cdroid::DrawerLayout::LayoutParams(-1, -1, cdroid::Gravity::NO_GRAVITY));
 
-        mDrawerPanel = new cdroid::LinearLayout(1, 1);
+        mDrawerPanel = new cdroid::LinearLayout(&cdroid::App::getInstance());
         mDrawerPanel->setOrientation(cdroid::LinearLayout::VERTICAL);
         const int drawerWidth = 320; // tweakable
         mDrawerLayout->addView(mDrawerPanel, 1,

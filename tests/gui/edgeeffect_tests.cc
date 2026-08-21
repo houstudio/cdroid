@@ -23,7 +23,7 @@ class EdgeView:public View{
 public:
    EdgeEffect *mEF;
 public:
-   EdgeView(int w,int h):View(w,h){
+   EdgeView(int w,int h):View(&App::getInstance()){
        mEF=new EdgeEffect(&App::getInstance());
        mEF->setSize(w,100);
    }

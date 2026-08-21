@@ -40,7 +40,7 @@ TEST_F(ANIMATORINFLATOR,statelistanimator_scale_runs){
             gui_test::R::animator::statelist_scale);
     ASSERT_NE(sl,(void*)nullptr);
 
-    View*v=new View(100,100);
+    View*v=new View(&app);
     v->setStateListAnimator(sl); // takes ownership, sets target
     ASSERT_EQ(v->getStateListAnimator(),(StateListAnimator*)sl);
     // AOSP drawableStateChanged: !isAggregatedVisible() jumpDrawablesToCurrent-

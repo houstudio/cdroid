@@ -26,7 +26,7 @@ TEST_F(KEYNAV,btns){
    App&app=App::getInstance();
    ViewGroup*w=GUIEnvironment::content();
    for(int i=0;i<8;i++){
-       Button*btn=new Button("Button_"+std::to_string(i),200,50);
+       Button*btn=new Button(&app); btn->setText("Button_"+std::to_string(i));
        auto csl = app.getColorStateList(gui_test::R::color::test_colors);
        ASSERT_NE(csl, nullptr);
        btn->setTextColor(csl);
@@ -45,7 +45,7 @@ TEST_F(KEYNAV,edts){
    App&app=App::getInstance();
    ViewGroup*w=GUIEnvironment::content();
    for(int i=0;i<6;i++){
-       EditText*tv=new EditText("EditText_"+std::to_string(i),200,50);
+       EditText*tv=new EditText(&app); tv->setText("EditText_"+std::to_string(i));
        w->addView(tv);
        tv->layout(10,i*55,200,50);
    }
@@ -54,14 +54,14 @@ TEST_F(KEYNAV,edts){
 TEST_F(KEYNAV,edts1){
    App&app=App::getInstance();
    ViewGroup*w=GUIEnvironment::content();
-   LinearLayout*ll1=new LinearLayout(800,200);
-   LinearLayout*ll2=new LinearLayout(800,200);
-   w->addView(ll1);
+   LinearLayout*ll1=new LinearLayout(&app);
+   LinearLayout*ll2=new LinearLayout(&app);
+   w->addView(ll1); ll1->layout(0,0,800,200);
    w->addView(ll2);
    ll2->layout(0,210,800,200);
    ll2->setBackgroundColor(0xFF111111);
    for(int i=0;i<6;i++){
-       EditText*tv=new EditText("EditText_"+std::to_string(i)+":"+std::to_string((i+1)%6)+std::to_string((i-1+6)%6),600,50);
+       EditText*tv=new EditText(&app); tv->setText("EditText_"+std::to_string(i)+":"+std::to_string((i+1)%6)+std::to_string((i-1+6)%6));
        tv->setNextFocusDownId((i+1)%6);
        tv->setNextFocusUpId((i+5)%6);
        tv->setId(i);

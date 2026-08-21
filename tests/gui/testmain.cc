@@ -104,7 +104,8 @@ public:
     View*getView(int position,View*convertView,ViewGroup*/*parent*/)override{
         TextView*tv=dynamic_cast<TextView*>(convertView);
         if(!tv){
-            tv=new TextView("",-1,52);
+            tv=new TextView(&App::getInstance());
+            tv->setLayoutParams(new AbsListView::LayoutParams(-1,52));
             tv->setTextSize(15);
             tv->setPadding(28,10,16,10);
             tv->setFocusable(false);
@@ -156,34 +157,34 @@ void buildDrawer(){
     panel->setBackgroundColor(0xEE0E1419);
 
     // header bar: title + global totals + close button
-    LinearLayout*head=new LinearLayout(-1,56);
+    LinearLayout*head=new LinearLayout(&App::getInstance());
     head->setOrientation(LinearLayout::HORIZONTAL);
     head->setBackgroundColor(0xFF1B262C);
-    TextView*title=new TextView("Test Results",-2,56);
+    TextView*title=new TextView(&App::getInstance()); title->setText("Test Results");
     title->setTextSize(18);
     title->setTextColor(0xFFECEFF1);
     title->setPadding(24,0,0,0);
     title->setGravity(Gravity::START|Gravity::CENTER_VERTICAL);
-    head->addView(title);
-    gHeaderSum=new TextView("",-2,56);
+    head->addView(title,new LinearLayout::LayoutParams(-2,56));
+    gHeaderSum=new TextView(&App::getInstance());
     gHeaderSum->setTextSize(15);
     gHeaderSum->setTextColor(0xFFB0BEC5);
     gHeaderSum->setPadding(12,0,0,0);
     gHeaderSum->setGravity(Gravity::START|Gravity::CENTER_VERTICAL);
-    head->addView(gHeaderSum);
-    View*spacer=new View(0,0);
+    head->addView(gHeaderSum,new LinearLayout::LayoutParams(-2,56));
+    View*spacer=new View(&App::getInstance());
     head->addView(spacer,new LinearLayout::LayoutParams(0,0,1.0f));
-    Button*close=new Button("X",72,56);
+    Button*close=new Button(&App::getInstance()); close->setText("X");
     close->setTextSize(16);
     close->setOnClickListener([](View&){
         DrawerLayout*dl=GUIEnvironment::drawerLayout();
         if(dl) dl->closeDrawer(Gravity::START);
     });
-    head->addView(close);
+    head->addView(close,new LinearLayout::LayoutParams(72,56));
     panel->addView(head,new LinearLayout::LayoutParams(-1,56));
 
     // upper: suite list (selectable) — auto-follows the running case
-    gSuiteList=new ListView(-1,-1);
+    gSuiteList=new ListView(&App::getInstance());
     gSuiteList->setBackgroundColor(0xFF141B22);
     gAdapter=new SuiteAdapter();
     gSuiteList->setAdapter(gAdapter);
@@ -194,9 +195,9 @@ void buildDrawer(){
     panel->addView(gSuiteList,new LinearLayout::LayoutParams(-1,0,1.0f));
 
     // lower: per-case detail for the current suite (scrollable, span-colored)
-    gScroller=new ScrollView(-1,-1);
+    gScroller=new ScrollView(&App::getInstance());
     gScroller->setBackgroundColor(0xFF0C1116);
-    gDetail=new TextView("",-1,-2);
+    gDetail=new TextView(&App::getInstance());
     gDetail->setTextSize(13);
     gDetail->setTextColor(0xFFECEFF1);
     gDetail->setPadding(24,14,16,14);

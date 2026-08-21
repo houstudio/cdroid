@@ -136,7 +136,7 @@ TEST_F(ANIMATOR,loopdrivered){
 TEST_F(ANIMATOR,translate){
     App&app=App::getInstance();
     ViewGroup*w=GUIEnvironment::content();
-    TextView*tv=new TextView("Hello World!",120,30);
+    TextView*tv=new TextView(&app); tv->setText("Hello World!");
     tv->setBackgroundColor(0xFF111111);
     w->addView(tv);
 
@@ -168,7 +168,7 @@ TEST_F(ANIMATOR,translate){
 TEST_F(ANIMATOR,scale){
     App&app=App::getInstance();
     ViewGroup*w=GUIEnvironment::content();
-    TextView*tv=new TextView("Hello World!",120,30);
+    TextView*tv=new TextView(&app); tv->setText("Hello World!");
     tv->setBackgroundColor(0xFF111111);
     w->addView(tv);
 

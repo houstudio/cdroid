@@ -35,7 +35,7 @@ public:
     void onCreate(Bundle*) override { calls.push_back("onCreate"); }
     View* onCreateView(LayoutInflater*, ViewGroup*, Bundle*) override {
         calls.push_back("onCreateView");
-        return new View(10, 10);
+        return new View(&App::getInstance());
     }
     void onViewCreated(View*, Bundle*) override { calls.push_back("onViewCreated"); }
     void onResume() override { calls.push_back("onResume"); }

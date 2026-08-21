@@ -25,7 +25,7 @@ using namespace cdroid;
 class NavTestFragment : public fragment::Fragment {
 public:
     View* onCreateView(LayoutInflater*, ViewGroup*, Bundle*) override {
-        return new View(10, 10);
+        return new View(&App::getInstance());
     }
 };
 REGISTER_FRAGMENT(NavTestFragment);
