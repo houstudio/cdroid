@@ -16,8 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <widgetEx/wear/roundeddrawable.h>
+#include <widgetEx/widgetex_styleable.h>
+
 #include <drawable/gradientdrawable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 RoundedDrawable::RoundedDrawable() {
     mTmpBounds.setEmpty();
@@ -31,11 +34,15 @@ RoundedDrawable::~RoundedDrawable(){
     delete mDrawable;
 }
 
-void RoundedDrawable::inflate(XmlPullParser& parser, const AttributeSet& attrs/*, Theme theme*/){
-    Drawable::inflate(parser, attrs/*, theme*/);
-    setRadius(attrs.getDimensionPixelSize("radius", 0));
-    setClipEnabled(attrs.getAttributeBooleanValue(std::string(), "clipEnabled", false));
-    setBackgroundColor(attrs.getColor("backgroundColor", Color::TRANSPARENT));
+void RoundedDrawable::inflate(Resources& r, XmlPullParser& parser, const AttributeSet& attrs,const Resources::Theme* theme){
+    Drawable::inflate(r, parser, attrs, theme);
+    // androidx R.styleable.RoundedDrawable (TypedArray; binary AXML ids)
+    auto ta = obtainAttributes(r, theme, attrs, internal::R::styleable::RoundedDrawable);
+    if (ta) {
+        setRadius(ta->getDimensionPixelSize(internal::R::styleable::RoundedDrawable_radius, 0));
+        setClipEnabled(ta->getBoolean(internal::R::styleable::RoundedDrawable_clipEnabled, false));
+        setBackgroundColor(ta->getColor(internal::R::styleable::RoundedDrawable_backgroundColor, Color::TRANSPARENT));
+    }
 }
 
 void RoundedDrawable::setDrawable(Drawable* drawable) {

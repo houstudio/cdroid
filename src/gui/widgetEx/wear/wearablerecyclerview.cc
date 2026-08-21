@@ -16,8 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <widgetEx/wear/wearablerecyclerview.h>
+#include <widgetEx/widgetex_styleable.h>
+
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(WearableRecyclerView);
 
@@ -33,10 +36,14 @@ WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* 
     // allows the items to draw in that space.
     setClipToPadding(false);
 
+    // androidx R.styleable.WearableRecyclerView (TypedArray; binary AXML ids)
     if (pAttrs) {
-        setCircularScrollingGestureEnabled(pAttrs->getAttributeBooleanValue(std::string(), "circularScrollingGestureEnabled",mCircularScrollingEnabled));
-        setBezelFraction(pAttrs->getAttributeFloatValue(std::string(), "bezelWidth",mScrollManager->getBezelWidth()));
-        setScrollDegreesPerScreen(pAttrs->getAttributeFloatValue(std::string(), "scrollDegreesPerScreen",mScrollManager->getScrollDegreesPerScreen()));
+        auto ta = context->obtainStyledAttributes(pAttrs, internal::R::styleable::WearableRecyclerView);
+        if (ta) {
+            setCircularScrollingGestureEnabled(ta->getBoolean(internal::R::styleable::WearableRecyclerView_circularScrollingGestureEnabled, mCircularScrollingEnabled));
+            setBezelFraction(ta->getFraction(internal::R::styleable::WearableRecyclerView_bezelWidth, 1, 1, mScrollManager->getBezelWidth()));
+            setScrollDegreesPerScreen(ta->getFloat(internal::R::styleable::WearableRecyclerView_scrollDegreesPerScreen, mScrollManager->getScrollDegreesPerScreen()));
+        }
     }
 }
 

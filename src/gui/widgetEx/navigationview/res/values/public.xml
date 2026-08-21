@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- widgetEx navigationview attr id pinning (0x02 shared-lib). Source of truth;
      consumed by _compile_shared_lib (aapt2 <public id=>) and gen_styleable.
-     Watermark-allocated: next free 0x0201016c (0x0201014d = recyclerViewStyle;
+     Watermark-allocated: next free 0x02010177 (wear block 0x0201016c-76) (0x0201014d = recyclerViewStyle;
      0x02010150-58 = appbar block; width/height/marginX/color are generic
      shared names pinned here for the ActiveIndicator styleable). -->
 <resources>

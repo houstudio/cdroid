@@ -18,7 +18,8 @@ set(_WIDGETEX_ATTR_FILES
     ${PROJECT_SOURCE_DIR}/widgetEx/appbar/res/values/attrs.xml
     ${PROJECT_SOURCE_DIR}/widgetEx/res/values/attrs.xml
     ${PROJECT_SOURCE_DIR}/widgetEx/navigationview/res/values/attrs.xml
-    ${PROJECT_SOURCE_DIR}/navigation/res/values/attrs.xml)
+    ${PROJECT_SOURCE_DIR}/navigation/res/values/attrs.xml
+    ${PROJECT_SOURCE_DIR}/widgetEx/wear/res/values/attrs.xml)
 string(REPLACE ";" "," _WIDGETEX_ATTRS_CSV "${_WIDGETEX_ATTR_FILES}")
 # Per-component public.xml (sibling of each attrs.xml) — gen_styleable reads the
 # stable 0x02 attr ids from these (androidx per-component source of truth).
@@ -31,7 +32,8 @@ set(_WIDGETEX_PUBLIC_FILES
     ${PROJECT_SOURCE_DIR}/widgetEx/appbar/res/values/public.xml
     ${PROJECT_SOURCE_DIR}/widgetEx/res/values/public.xml
     ${PROJECT_SOURCE_DIR}/widgetEx/navigationview/res/values/public.xml
-    ${PROJECT_SOURCE_DIR}/navigation/res/values/public.xml)
+    ${PROJECT_SOURCE_DIR}/navigation/res/values/public.xml
+    ${PROJECT_SOURCE_DIR}/widgetEx/wear/res/values/public.xml)
 add_custom_command(
     OUTPUT  ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.h
             ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.cc

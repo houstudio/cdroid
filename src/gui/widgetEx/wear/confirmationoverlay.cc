@@ -103,7 +103,13 @@ void ConfirmationOverlay::hide() {
 void ConfirmationOverlay::updateOverlayView(Context* context) {
     if (mOverlayView == nullptr) {
         //noinspection InflateParams
-        mOverlayView = LayoutInflater::from(context)->inflate("cdroid:layout/ws_overlay_confirmation", nullptr);
+        {
+            // Shared-lib (cdroid.widgetex) resource by name at runtime — ids are
+            // auto-assigned by aapt2 in the 0x02 lib, no pinned R constant.
+            const int layoutId = context->getResources().getIdentifier(
+                    "ws_overlay_confirmation", "layout", "cdroid.widgetex");
+            mOverlayView = LayoutInflater::from(context)->inflate(layoutId, nullptr);
+        }
     }
     mOverlayView->setOnTouchListener([](View& v, MotionEvent& event) {
         return true;
@@ -115,7 +121,7 @@ void ConfirmationOverlay::updateOverlayView(Context* context) {
 }
 
 void ConfirmationOverlay::updateMessageView(Context* context, View* overlayView) {
-    TextView* messageView =  (TextView*)overlayView->findViewById(R::id::wearable_support_confirmation_overlay_message);
+    TextView* messageView =  (TextView*)overlayView->findViewById(context->getResources().getIdentifier("wearable_support_confirmation_overlay_message","id","cdroid.widgetex"));
 
     if (!mMessage.empty()) {
         const int screenWidthPx = context->getDisplayMetrics().widthPixels;// ResourcesUtil.getScreenWidthPx(context);
@@ -139,20 +145,20 @@ void ConfirmationOverlay::updateMessageView(Context* context, View* overlayView)
 void ConfirmationOverlay::updateImageView(Context* context, View* overlayView) {
     switch (mType) {
     case SUCCESS_ANIMATION:
-        mOverlayDrawable = context->getDrawable("@cdroid:drawable/generic_confirmation_animation");
+        mOverlayDrawable = context->getDrawable(context->getResources().getIdentifier("confirmation_animation","drawable","cdroid.widgetex"));
         break;
     case FAILURE_ANIMATION:
-        mOverlayDrawable = context->getDrawable("@cdroid:drawable/ws_full_sad");
+        mOverlayDrawable = context->getDrawable(context->getResources().getIdentifier("failure_animation","drawable","cdroid.widgetex"));
         break;
     case OPEN_ON_PHONE_ANIMATION:
-        mOverlayDrawable = context->getDrawable("@cdroid:drawable/ws_open_on_phone_animation");
+        mOverlayDrawable = context->getDrawable(context->getResources().getIdentifier("open_on_phone_animation","drawable","cdroid.widgetex"));
         break;
     default:
         LOGE("Invalid ConfirmationOverlay type [%d]", mType);
         break;
     }
 
-    ImageView* imageView = (ImageView*)overlayView->findViewById(R::id::wearable_support_confirmation_overlay_image);
+    ImageView* imageView = (ImageView*)overlayView->findViewById(context->getResources().getIdentifier("wearable_support_confirmation_overlay_image","id","cdroid.widgetex"));
     imageView->setImageDrawable(mOverlayDrawable);
 }
 }/*endof namespace*/

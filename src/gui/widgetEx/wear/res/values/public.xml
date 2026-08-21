@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widgetEx wear attr id pinning (0x02 shared-lib). Watermark-allocated from
+     0x0201016c (navigationview ends at 0x0201016b). -->
+<resources>
+    <public type="attr" name="bezelWidth" id="0x0201016c"/>
+    <public type="attr" name="circularScrollingGestureEnabled" id="0x0201016d"/>
+    <public type="attr" name="scrollDegreesPerScreen" id="0x0201016e"/>
+    <public type="attr" name="backgroundColor" id="0x0201016f"/>
+    <public type="attr" name="strokeWidth" id="0x02010170"/>
+    <public type="attr" name="colorSchemeColors" id="0x02010171"/>
+    <public type="attr" name="indeterminate" id="0x02010172"/>
+    <public type="attr" name="radius" id="0x02010173"/>
+    <public type="attr" name="clipEnabled" id="0x02010174"/>
+    <public type="attr" name="boxedEdges" id="0x02010175"/>
+    <public type="attr" name="layout_boxedEdges" id="0x02010176"/>
+</resources>

@@ -17,10 +17,13 @@
 */
 
 #include <widgetEx/wear/circularprogresslayout.h>
+#include <widgetEx/widgetex_styleable.h>
+
 #include <widgetEx/wear/circularprogressdrawable.h>
 #include <widgetEx/wear/circularprogresslayoutcontroller.h>
 #include <cairomm/context.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(CircularProgressLayout)
 
@@ -50,10 +53,13 @@ CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeS
     setStrokeWidth(a.getDimensionPixelSize("strokeWidth",r.getDimensionPixelSize("cdroid:dimen/circular_progress_layout_stroke_width")));
     */
 
-    if (pAttrs) {
-        setBackgroundColor(pAttrs->getColor("backgroundColor",
-                context->getColor("cdroid:color/circular_progress_layout_background_color")));
-        setIndeterminate(pAttrs->getAttributeBooleanValue(std::string(), "indeterminate", false));
+    // androidx R.styleable.CircularProgressLayout (TypedArray; binary AXML ids)
+    auto ta = context->obtainStyledAttributes(pAttrs, internal::R::styleable::CircularProgressLayout, defStyleAttr);
+    if (ta) {
+        const int defBg = context->getColor(context->getResources().getIdentifier(
+                "circular_progress_layout_background_color", "color", "cdroid.widgetex"));
+        setBackgroundColor(ta->getColor(internal::R::styleable::CircularProgressLayout_backgroundColor, defBg));
+        setIndeterminate(ta->getBoolean(internal::R::styleable::CircularProgressLayout_indeterminate, false));
     }
 }
 
