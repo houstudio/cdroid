@@ -234,7 +234,8 @@ Cairo::RefPtr<Cairo::Region> AdaptiveIconDrawable::getTransparentRegion() {
     return mTransparentRegion;
 }
 
-/*void AdaptiveIconDrawable::applyTheme() {
+// AOSP AdaptiveIconDrawable.applyTheme(Theme).
+void AdaptiveIconDrawable::applyTheme(const Resources::Theme& t) {
     Drawable::applyTheme(t);
 
     auto state = mLayerState;
@@ -242,18 +243,18 @@ Cairo::RefPtr<Cairo::Region> AdaptiveIconDrawable::getTransparentRegion() {
         return;
     }
 
-    const int density = Drawable::resolveDensity(t.getResources(), 0);
+    const int density = Drawable::resolveDensity(0);
     state->setDensity(density);
 
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
         ChildDrawable* layer = state->mChildren[i];
         layer->setDensity(density);
 
-        if (layer->mThemeAttrs != nullptr) {
-            TypedArray a = t.resolveAttributes(
-                layer.mThemeAttrs, R.styleable.AdaptiveIconDrawableLayer);
-            updateLayerFromTypedArray(layer, a);
-            a.recycle();
+        if (!layer->mThemeAttrs.empty()) {
+            auto a = t.resolveAttributes(layer->mThemeAttrs,
+                                         R::styleable::AdaptiveIconDrawableLayer);
+            if (a) updateLayerFromTypedArray(layer, *a);
+            layer->mThemeAttrs.clear();
         }
 
         Drawable* d = layer->mDrawable;
@@ -264,7 +265,7 @@ Cairo::RefPtr<Cairo::Region> AdaptiveIconDrawable::getTransparentRegion() {
             state->mChildrenChangingConfigurations |= d->getChangingConfigurations();
         }
     }
-}*/
+}
 
 int AdaptiveIconDrawable::getSourceDrawableResId() {
     return 0;//mLayerState == nullptr ? Resources.ID_NULL : mLayerState->mSourceDrawableId;
@@ -314,7 +315,7 @@ void AdaptiveIconDrawable::inflateLayers(Resources& r,XmlPullParser& parser,cons
         // attribute for a drawable, attempt to parse one from the child
         // element. If multiple child elements exist, we'll only use the
         // first one.
-        if (layer->mDrawable == nullptr && (layer->mThemeAttrs == nullptr)) {
+        if (layer->mDrawable == nullptr && layer->mThemeAttrs.empty()) {
             while ((type = parser.next()) == XmlPullParser::TEXT) {
             }
             if (type != XmlPullParser::START_TAG) {
@@ -339,7 +340,7 @@ void AdaptiveIconDrawable::updateLayerFromTypedArray(ChildDrawable* layer,const 
     //state->mChildrenChangingConfigurations |= a.getChangingConfigurations();
 
     // Extract the theme attributes, if any.
-    //layer->mThemeAttrs = a.extractThemeAttrs();
+    layer->mThemeAttrs = a.extractThemeAttrs();
 
     Drawable* dr = a.getDrawable(R::styleable::AdaptiveIconDrawableLayer_drawable);//a.getDrawableForDensity(R::styleable::AdaptiveIconDrawableLayer_drawable, state->mSrcDensityOverride);
     if (dr != nullptr) {
@@ -646,7 +647,6 @@ void AdaptiveIconDrawable::clearMutated() {
 
 AdaptiveIconDrawable::ChildDrawable::ChildDrawable(int density) {
     mDensity = density;
-    mThemeAttrs = nullptr;
 }
 
 AdaptiveIconDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig, AdaptiveIconDrawable* owner) {
@@ -676,7 +676,8 @@ AdaptiveIconDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig, Adaptive
 }
 
 bool AdaptiveIconDrawable::ChildDrawable::canApplyTheme() const{
-    return false;//(mThemeAttrs != nullptr)|| (mDrawable != nullptr && mDrawable->canApplyTheme());
+    return !mThemeAttrs.empty()
+            || (mDrawable != nullptr && mDrawable->canApplyTheme());
 }
 
 void AdaptiveIconDrawable::ChildDrawable::setDensity(int targetDensity) {
@@ -708,7 +709,7 @@ AdaptiveIconDrawable::LayerState::LayerState(LayerState* orig, AdaptiveIconDrawa
         mCheckedStateful = orig->mCheckedStateful;
         mIsStateful = orig->mIsStateful;
         mAutoMirrored = orig->mAutoMirrored;
-        //mThemeAttrs = orig->mThemeAttrs;
+        mThemeAttrs = orig->mThemeAttrs;
         mOpacityOverride = orig->mOpacityOverride;
         mSrcDensityOverride = orig->mSrcDensityOverride;
     } else {
@@ -724,17 +725,17 @@ void AdaptiveIconDrawable::LayerState::setDensity(int targetDensity) {
     }
 }
 
-bool AdaptiveIconDrawable::LayerState::canApplyTheme() const{
-    /*if (mThemeAttrs != nullptr || Drawable::ConstantState::canApplyTheme()) {
+bool AdaptiveIconDrawable::LayerState::canApplyTheme(){
+    if (!mThemeAttrs.empty() || Drawable::ConstantState::canApplyTheme()) {
         return true;
     }
 
     for (int i = 0; i < N_CHILDREN; i++) {
         ChildDrawable* layer = mChildren[i];
-        if (layer->canApplyTheme()) {
+        if (layer != nullptr && layer->canApplyTheme()) {
             return true;
         }
-    }*/
+    }
     return false;
 }
 

@@ -172,11 +172,27 @@ void RotateDrawable::draw(Canvas& canvas) {
 
 void RotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
     auto ta = obtainAttributes(r, theme, atts, R::styleable::RotateDrawable);
-    DrawableWrapper::inflate(r,parser,atts, nullptr);
+    DrawableWrapper::inflate(r,parser,atts, theme);
     if (ta) updateStateFromTypedArray(*ta);
 }
 
+void RotateDrawable::applyTheme(const Resources::Theme& t){
+    DrawableWrapper::applyTheme(t);
+    auto state = mState;
+    if (state == nullptr) {
+        return;
+    }
+    if (!state->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(state->mThemeAttrs, R::styleable::RotateDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        state->mThemeAttrs.clear();
+    }
+}
+
 void RotateDrawable::updateStateFromTypedArray(const TypedArray& a){
+    // Extract the theme attributes, if any.
+    mState->mThemeAttrs = a.extractThemeAttrs();
+
     // AOSP fidelity: pivotX/pivotY are relative fractions when the raw value
     // is TYPE_FRACTION, absolute pixels when TYPE_FLOAT. Avoids the prior
     // "<=1.f" heuristic that misclassified small absolute pivots.

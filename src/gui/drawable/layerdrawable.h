@@ -29,6 +29,8 @@ public:
 protected:
     class ChildDrawable{
     public:
+        bool canApplyTheme()const;
+    public:
         Drawable*mDrawable;
         int mInsetL, mInsetT, mInsetR, mInsetB,mInsetE,mInsetS;
         int mWidth,mHeight;
@@ -64,6 +66,7 @@ protected:
         ~LayerState()override;
         LayerDrawable*newDrawable()override;
         int getChangingConfigurations()const override;
+        bool canApplyTheme();
         int getOpacity()const;
         bool isStateful()const;
         bool hasFocusStateSpecified()const;

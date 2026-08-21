@@ -62,6 +62,7 @@ public:
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas& canvas)override;
     void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 
 }

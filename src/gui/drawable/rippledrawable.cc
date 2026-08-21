@@ -31,6 +31,7 @@ RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner
     mMaxRadius = RADIUS_AUTO;
     if(dynamic_cast<RippleState*>(orig)){
         RippleState* origs = (RippleState*) orig;
+        mTouchThemeAttrs = origs->mTouchThemeAttrs;
         mColor = origs->mColor;
         mEffectColor = origs->mEffectColor;
         mMaxRadius = origs->mMaxRadius;
@@ -323,8 +324,35 @@ void RippleDrawable::setPaddingMode(int mode) {
     LayerDrawable::setPaddingMode(mode);
 }
 
+bool RippleDrawable::RippleState::canApplyTheme(){
+    return !mTouchThemeAttrs.empty()
+            || (mColor != nullptr && mColor->canApplyTheme())
+            || LayerDrawable::LayerState::canApplyTheme();
+}
+
 bool RippleDrawable::canApplyTheme() {
-    return false;//(mState && mState->canApplyTheme()) || LayerDrawable::canApplyTheme();
+    return (mState != nullptr && mState->canApplyTheme()) || LayerDrawable::canApplyTheme();
+}
+
+// AOSP RippleDrawable.applyTheme(Theme): super (layers + own attrs) first,
+// then re-resolve the ripple's recorded ?attr ids and refresh the local
+// state. The color-list obtainForTheme hop is not ported (theme-preloaded
+// ColorStateLists do not exist, canApplyTheme() is always false).
+void RippleDrawable::applyTheme(const Resources::Theme& t) {
+    LayerDrawable::applyTheme(t);
+
+    auto state = mState;
+    if (state == nullptr) {
+        return;
+    }
+
+    if (!state->mTouchThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(state->mTouchThemeAttrs, R::styleable::RippleDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        state->mTouchThemeAttrs.clear();
+    }
+
+    updateLocalState();
 }
 
 void RippleDrawable::tryRippleEnter(){
@@ -614,10 +642,8 @@ void RippleDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet
 }
 
 void RippleDrawable::updateStateFromTypedArray(const TypedArray& a) {
-
-    // AOSP RippleDrawable.updateStateFromTypedArray: the mChangingConfigurations |=
-    // getChangingConfigurations() and extractThemeAttrs() lines are omitted — CDROID's TypedArray
-    // port has no theme-attr bookkeeping (no getChangingConfigurations / extractThemeAttrs).
+    // Extract the theme attributes, if any.
+    mState->mTouchThemeAttrs = a.extractThemeAttrs();
 
     const RefPtr<ColorStateList> color = a.getColorStateList(R::styleable::RippleDrawable_color);
     if (color) mState->mColor = color;

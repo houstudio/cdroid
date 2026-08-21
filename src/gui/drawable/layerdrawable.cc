@@ -1091,17 +1091,29 @@ void LayerDrawable::draw(Canvas&canvas){
     }
 }
 
+// AOSP LayerDrawable.ChildDrawable.canApplyTheme (1896-1899).
+bool LayerDrawable::ChildDrawable::canApplyTheme() const {
+    return !mThemeAttrs.empty()
+            || (mDrawable != nullptr && mDrawable->canApplyTheme());
+}
+
+// AOSP LayerDrawable.LayerState.canApplyTheme (2045-2052).
+bool LayerDrawable::LayerState::canApplyTheme() {
+    if (!mThemeAttrs.empty() || ConstantState::canApplyTheme()) {
+        return true;
+    }
+    for (ChildDrawable* child : mChildren) {
+        if (child != nullptr && child->canApplyTheme()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // AOSP LayerDrawable.canApplyTheme/applyTheme: re-resolve the layer-level
 // and per-child recorded ?attr ids, forward to each child drawable.
 bool LayerDrawable::canApplyTheme(){
-    if (mLayerState && !mLayerState->mThemeAttrs.empty()) return true;
-    if (mLayerState) {
-        for (ChildDrawable* child : mLayerState->mChildren) {
-            if (child && !child->mThemeAttrs.empty()) return true;
-            if (child && child->mDrawable && child->mDrawable->canApplyTheme()) return true;
-        }
-    }
-    return Drawable::canApplyTheme();
+    return (mLayerState != nullptr && mLayerState->canApplyTheme()) || Drawable::canApplyTheme();
 }
 
 void LayerDrawable::applyTheme(const Resources::Theme& t){

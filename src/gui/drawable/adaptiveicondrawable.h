@@ -91,7 +91,7 @@ public:
 
     Cairo::RefPtr<Cairo::Region> getSafeZone();
     Cairo::RefPtr<Cairo::Region> getTransparentRegion() override;
-    //void applyTheme() override;
+    void applyTheme(const Resources::Theme& t) override;
     int getSourceDrawableResId();
 
     bool canApplyTheme() override;
@@ -146,7 +146,7 @@ public:
 
 class AdaptiveIconDrawable::ChildDrawable {
 public:
-    int* mThemeAttrs;
+    std::vector<int> mThemeAttrs;   // AOSP int[] mThemeAttrs; empty == null
     int mDensity = DisplayMetrics::DENSITY_DEFAULT;
     Drawable* mDrawable;
 
@@ -170,7 +170,7 @@ class AdaptiveIconDrawable::LayerState:public Drawable::ConstantState {
     int mChildrenChangingConfigurations = 0;
     int mSourceDrawableId = 0;//Resources.ID_NULL;
 private:
-    int* mThemeAttrs;
+    std::vector<int> mThemeAttrs;   // AOSP int[] mThemeAttrs; empty == null
     int mOpacity = PixelFormat::UNKNOWN;
     bool mCheckedOpacity = false;
     bool mCheckedStateful = false;
@@ -182,7 +182,7 @@ public:
 
     void setDensity(int targetDensity);
 
-    bool canApplyTheme() const;
+    bool canApplyTheme();
     Drawable* newDrawable()override;
 
     int getChangingConfigurations() const override;

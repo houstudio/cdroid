@@ -45,11 +45,12 @@ private:
         RefPtr<ColorStateList>mColor;
         RefPtr<ColorStateList>mEffectColor;
         RippleState(LayerState* orig, RippleDrawable* owner);
-        ~RippleState();
+        ~RippleState()override;
         void onDensityChanged(int sourceDensity, int targetDensity)override;
         void applyDensityScaling(int sourceDensity, int targetDensity);
         RippleDrawable*newDrawable()override;
         int getChangingConfigurations()const override;
+        bool canApplyTheme()override;
     };
 
     Rect mHotspotBounds;
@@ -63,16 +64,16 @@ private:
     bool mRippleActive;
     bool mHasPending;
     bool mOverrideBounds;
+    bool mForceSoftware;
+    bool mAddRipple;
+    bool mRunBackgroundAnimation;
+    bool mExitingAnimation;
     float mPendingX;
     float mPendingY;
     std::vector<RippleForeground*>mExitingRipples;
     int  mDensity;
     float mBackgroundOpacity;
     float mTargetBackgroundOpacity;
-    bool mForceSoftware;
-    bool mAddRipple;
-    bool mRunBackgroundAnimation;
-    bool mExitingAnimation;
     RippleForeground* mRipple;
     ValueAnimator*mBackgroundAnimation;
 private:
@@ -127,6 +128,7 @@ public:
     bool setDrawableByLayerId(int id, Drawable* drawable)override;
     void setPaddingMode(int mode)override;
     bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
     void getHotspotBounds(Rect&out)const override;
     void setHotspot(float x,float y)override;
     void setHotspotBounds(int left,int top,int w,int h)override;

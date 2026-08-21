@@ -80,7 +80,7 @@ public:
     void getOutline(Outline& outline)override;
     Insets getOpticalInsets()override;
     void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&,const Resources::Theme* theme)override;
-    void forceAnimationOnUI();
+    void applyTheme(const Resources::Theme& t)override;    void forceAnimationOnUI();
     bool canApplyTheme()override;
     bool isRunning();
     void reset();
@@ -127,7 +127,7 @@ public:
     void addTargetAnimator(const std::string& targetName, Animator* animator);
     void prepareLocalAnimators(AnimatorSet* animatorSet);
     Animator*prepareLocalAnimator(int index);
-    void inflatePendingAnimators(/*Resources res,Theme t*/);
+    void inflatePendingAnimators(Resources* res,const Resources::Theme* t);
 };
 
 class AnimatedVectorDrawable::VectorDrawableAnimator {

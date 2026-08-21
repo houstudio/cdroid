@@ -356,8 +356,10 @@ bool AnimatedVectorDrawable::canApplyTheme() {
             || Drawable::canApplyTheme();
 }
 
-#if 0
-void AnimatedVectorDrawable::applyTheme(Theme t) {
+// AOSP AnimatedVectorDrawable.applyTheme(Theme): forward to the inner
+// VectorDrawable, then inflate any pending animators that were deferred
+// until a theme exists.
+void AnimatedVectorDrawable::applyTheme(const Resources::Theme& t) {
     Drawable::applyTheme(t);
 
     VectorDrawable* vectorDrawable = mAnimatedVectorState->mVectorDrawable;
@@ -365,17 +367,8 @@ void AnimatedVectorDrawable::applyTheme(Theme t) {
         vectorDrawable->applyTheme(t);
     }
 
-    if (t != null) {
-        mAnimatedVectorState->inflatePendingAnimators(t.getResources(), t);
-    }
-
-    // If we don't have any pending animations, we don't need to hold a
-    // reference to the resources.
-    if (mAnimatedVectorState->mPendingAnims.empty()) {
-        //mRes = null;
-    }
+    mAnimatedVectorState->inflatePendingAnimators(&t.getResources(), &t);
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////////
 //static class AnimatedVectorDrawableState:public Drawable::ConstantState
@@ -470,7 +463,7 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnimators(
     if (!mPendingAnims.empty()){// != nullptr) {
         // Attempt to load animators without applying a theme.
         if (true/*res != null*/) {
-            inflatePendingAnimators(/*res, null*/);
+            inflatePendingAnimators(nullptr, nullptr);
         } else {
             LOGE("Failed to load animators. Either the AnimatedVectorDrawable must be created using "
                 "a Resources object or applyTheme() must be called with a non-null Theme object.");
@@ -522,7 +515,12 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
  *
  * @param t the theme against which to inflate the animators
  */
-void AnimatedVectorDrawable::AnimatedVectorDrawableState::inflatePendingAnimators(/*Resources res,Theme t*/) {
+// AOSP inflatePendingAnimators(Resources res, Theme t): the animators load
+// through CDROID's PendingAnimator::newInstance(Context) — the res/theme
+// parameters are kept for the AOSP call shape (nullable, like the
+// "without applying a theme" call in prepareLocalAnimators).
+void AnimatedVectorDrawable::AnimatedVectorDrawableState::inflatePendingAnimators(Resources* res,const Resources::Theme* t) {
+    (void)res; (void)t;
     std::vector<PendingAnimator*> pendingAnims = mPendingAnims;
     if (!pendingAnims.empty()){// != null) {
         mPendingAnims.clear();
