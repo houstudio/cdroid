@@ -73,11 +73,6 @@ NavigationMenuItemView::NavigationMenuItemView(Context* context)
     setIconSize(dp(context, DEFAULT_ICON_SIZE_DP));
 }
 
-NavigationMenuItemView::~NavigationMenuItemView(){
-    delete mOwnedIcon;
-    delete mEmptyDrawable;
-}
-
 void NavigationMenuItemView::initialize(MenuItemImpl* itemData,int menuType){
     (void)menuType;
     mItemData = itemData;
@@ -137,11 +132,9 @@ void NavigationMenuItemView::recycle(){
     if (mActionArea != nullptr) {
         mActionArea->removeAllViews();
     }
+    // CDROID's TextView owns the compound drawables it holds and frees them
+    // when they are replaced/cleared, so nothing is deleted here.
     mTextView->setCompoundDrawables(nullptr, nullptr, nullptr, nullptr);
-    // The compound drawables were cleared above, the owned tinted icon (if
-    // any) can be freed now (AOSP leaves this to the GC).
-    delete mOwnedIcon;
-    mOwnedIcon = nullptr;
 }
 
 void NavigationMenuItemView::setActionView(View* actionView){
@@ -204,30 +197,26 @@ void NavigationMenuItemView::setShortcut(bool showShortcut,int shortcutKey){
 }
 
 void NavigationMenuItemView::setIcon(Drawable* icon){
+    Drawable* drawable = nullptr;
     if (icon != nullptr) {
+        // CDROID's TextView owns (and deletes) the compound drawables it is
+        // given, so always hand it a private copy — never the item's own icon
+        // (AOSP passes the original/mutated wrap and relies on the GC).
+        std::shared_ptr<Drawable::ConstantState> state = icon->getConstantState();
+        drawable = (state != nullptr) ? state->newDrawable() : icon->mutate();
+        drawable = drawable->mutate();
         if (mHasIconTintList) {
-            std::shared_ptr<Drawable::ConstantState> state = icon->getConstantState();
-            delete mOwnedIcon;
-            mOwnedIcon = nullptr;
-            if (state != nullptr) {
-                // Own the mutated copy (AOSP: wrap(newDrawable).mutate(), GC-owned).
-                icon = state->newDrawable()->mutate();
-                mOwnedIcon = icon;
-            } else {
-                icon = icon->mutate();
-            }
-            icon->setTintList(mIconTintList);
+            drawable->setTintList(mIconTintList);
         }
-        icon->setBounds(0, 0, mIconSize, mIconSize);
+        drawable->setBounds(0, 0, mIconSize, mIconSize);
     } else if (mNeedsEmptyIcon) {
-        if (mEmptyDrawable == nullptr) {
-            // navigation_empty_icon: a transparent icon-size rectangle.
-            mEmptyDrawable = new ColorDrawable(0);
-            mEmptyDrawable->setBounds(0, 0, mIconSize, mIconSize);
-        }
-        icon = mEmptyDrawable;
+        // navigation_empty_icon: a transparent icon-size rectangle. A fresh
+        // instance every time — TextView deletes it when it is replaced, so
+        // it cannot be cached the way material caches it.
+        drawable = new ColorDrawable(0);
+        drawable->setBounds(0, 0, mIconSize, mIconSize);
     }
-    mTextView->setCompoundDrawables(icon, nullptr, nullptr, nullptr);
+    mTextView->setCompoundDrawables(drawable, nullptr, nullptr, nullptr);
 }
 
 bool NavigationMenuItemView::prefersCondensedTitle()const{

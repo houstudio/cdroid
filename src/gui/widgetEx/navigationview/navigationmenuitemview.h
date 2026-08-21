@@ -44,10 +44,6 @@ private:
     MenuItemImpl* mItemData = nullptr;
     RefPtr<ColorStateList> mIconTintList;
     bool mHasIconTintList = false;
-    Drawable* mEmptyDrawable = nullptr;
-    // The tinted copy of the item icon this view owns (AOSP relies on GC for
-    // DrawableCompat.wrap(...).mutate(); CDROID frees it explicitly).
-    Drawable* mOwnedIcon = nullptr;
 private:
     bool shouldExpandActionArea();
     void adjustAppearance();
@@ -79,7 +75,6 @@ public:
     void setIconPadding(int padding);
     void setMaxLines(int maxLines);
     void setIconSize(int iconSize);
-    ~NavigationMenuItemView()override;
 };
 
 }//namespace cdroid

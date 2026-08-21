@@ -7,6 +7,8 @@
 #include <menu/menubuilder.h>
 #include <menu/menuitem.h>
 #include <drawable/gradientdrawable.h>
+#include <core/handler.h>
+#include <core/looper.h>
 
 static Drawable* colorIcon(Context* ctx, int color){
     GradientDrawable* d = new GradientDrawable();
@@ -49,6 +51,14 @@ int main(int argc, const char* argv[]){
 
     nv->setNavigationItemSelectedListener(new SelectionLogger());
     nv->setCheckedItem(1001);
+
+    // Self-test: move the checked item after a delay — drives the menu
+    // update path (prepareMenuItems + full rebind through the presenter),
+    // the same flow a tap on an item takes.
+    static cdroid::Handler sRebindDriver(cdroid::Looper::getMainLooper());
+    sRebindDriver.postDelayed([nv](){
+        nv->setCheckedItem(1002);
+    }, 1200);
 
     w->requestLayout();
     return app.exec();

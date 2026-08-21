@@ -136,13 +136,21 @@ private:
         View* divider = new View(context, nullptr, 0);
         divider->setLayoutParams(new ViewGroup::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, dp(context, 1)));
+        // View::setBackground owns (and deletes) the drawable it is given, so
+        // hand it a private copy — never the shared cached instance that
+        // Resources::getDrawable hands out.
+        Drawable* dividerDrawable = nullptr;
         TypedValue value;
         if (context->getTheme().resolveAttribute(R::attr::listDivider, &value, true)
                 && value.resourceId != 0) {
-            divider->setBackground(context->getDrawable(value.resourceId));
-        } else {
-            divider->setBackground(new ColorDrawable(0));
+            Drawable* cached = context->getDrawable(value.resourceId);
+            if (cached != nullptr) {
+                std::shared_ptr<Drawable::ConstantState> state = cached->getConstantState();
+                dividerDrawable = state != nullptr ? state->newDrawable() : cached;
+            }
         }
+        divider->setBackground(dividerDrawable != nullptr ? dividerDrawable
+                                                          : new ColorDrawable(0));
         frame->addView(divider);
         return frame;
     }
