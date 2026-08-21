@@ -21,15 +21,16 @@
 #include <core/typedarray.h>
 namespace cdroid{
 DECLARE_WIDGET(GestureOverlayView)
-GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attrs):GestureOverlayView(context,&attrs,0){}
+GestureOverlayView::GestureOverlayView(Context* context):GestureOverlayView(context,nullptr){}
+
+GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet* attrs):GestureOverlayView(context,attrs,0){}
 
 GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :FrameLayout(context, pAttrs, defStyleAttr){
-    const AttributeSet& attrs = *pAttrs;
 
     init();
-    // AOSP GestureOverlayView ctor: obtainStyledAttributes(attrs, R.styleable.GestureOverlayView).
-    auto ta = context->obtainStyledAttributes(attrs, cdroid::internal::R::styleable::GestureOverlayView, defStyleAttr);
+    // AOSP GestureOverlayView ctor: obtainStyledAttributes(pAttrs, R.styleable.GestureOverlayView).
+    auto ta = context->obtainStyledAttributes(pAttrs, cdroid::internal::R::styleable::GestureOverlayView, defStyleAttr);
     mGestureStrokeWidth = ta->getFloat(cdroid::internal::R::styleable::GestureOverlayView_gestureStrokeWidth, mGestureStrokeWidth);
     mInvalidateExtraBorder = std::max(1, int(mGestureStrokeWidth - 1));
     mCertainGestureColor = ta->getColor(cdroid::internal::R::styleable::GestureOverlayView_gestureColor, mCertainGestureColor);
