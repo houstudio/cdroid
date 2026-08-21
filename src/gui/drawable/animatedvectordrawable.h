@@ -105,7 +105,10 @@ private:
         float pathErrorScale;
         std::string target;
         PendingAnimator(const std::string& animResId, float pathErrorScale, const std::string& target);
-        Animator* newInstance(Context*);
+        // AOSP PendingAnimator.newInstance(Resources res, Theme theme): the
+        // caller's theme drives the animator's attribute reads (CDROID opens
+        // the XML through the Context, so the Resources argument is dropped).
+        Animator* newInstance(Context*, const Resources::Theme* theme);
     };
     int mChangingConfigurations;
     bool mShouldIgnoreInvalidAnim;

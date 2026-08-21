@@ -29,14 +29,27 @@ using namespace cdroid::internal;
 
 namespace cdroid{
 
+// AOSP AnimatorInflater private obtainAttributes(res, theme, set, attrs).
+std::unique_ptr<TypedArray> AnimatorInflater::obtainAttributes(Context*ctx,const Resources::Theme* theme,
+        const AttributeSet& set,const uint32_t* attrs){
+    if (theme) return theme->obtainStyledAttributes(&set, attrs);
+    return ctx->obtainStyledAttributes(set, attrs);
+}
+
 Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid){
     return loadAnimator(context,resid,1.f);
 }
 #if 1
-Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid,float){
+Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid,float pathErrorScale){
+    // AOSP loadAnimator(Context, id) → loadAnimator(res, context.getTheme(), id).
+    Resources::Theme theme = context->getTheme();
+    return loadAnimator(context, &theme, resid, pathErrorScale);
+}
+
+Animator* AnimatorInflater::loadAnimator(Context* context,const Resources::Theme* theme,
+        const std::string&resid,float pathErrorScale){
     XmlPullParser parser(context,resid);
-    Animator* animator = createAnimatorFromXml(context, parser, 1.f/*pathErrorScale*/);
-    return animator;
+    return createAnimatorFromXml(context, theme, parser, pathErrorScale);
 }
 
 Animator* AnimatorInflater::loadAnimator(Context* context,int resid){
@@ -45,17 +58,25 @@ Animator* AnimatorInflater::loadAnimator(Context* context,int resid){
 
 Animator* AnimatorInflater::loadAnimator(Context* context,int resid,float){
     if (resid == 0) return nullptr;  // AOSP: 0 → null
+    Resources::Theme theme = context->getTheme();
+    return loadAnimator(context, &theme, resid, 1.f);
+}
+
+Animator* AnimatorInflater::loadAnimator(Context* context,const Resources::Theme* theme,int resid,float pathErrorScale){
+    if (resid == 0) return nullptr;  // AOSP: 0 → null
     XmlPullParser parser(context,resid);
-    return createAnimatorFromXml(context, parser, 1.f/*pathErrorScale*/);
+    return createAnimatorFromXml(context, theme, parser, pathErrorScale);
 }
 
 static std::unordered_map<std::string,std::shared_ptr<StateListAnimator>>mStateAnimatorMap;
 StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,const std::string&resid){
     auto it = mStateAnimatorMap.find(resid);
     if(it==mStateAnimatorMap.end()){
+        // AOSP threads context.getTheme() through the parse.
         XmlPullParser parser(context,resid);
         const AttributeSet& attrs = parser;
-        StateListAnimator*anim =createStateListAnimatorFromXml(context,parser,attrs);
+        Resources::Theme theme = context->getTheme();
+        StateListAnimator*anim =createStateListAnimatorFromXml(context,&theme,parser,attrs);
         it = mStateAnimatorMap.insert({resid,std::shared_ptr<StateListAnimator>(anim)}).first;
     }
     return new StateListAnimator(*it->second);
@@ -70,7 +91,8 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,int 
     if (it == mStateAnimatorMap.end()) {
         XmlPullParser parser(context, resid);
         const AttributeSet& attrs = parser;
-        StateListAnimator* anim = createStateListAnimatorFromXml(context, parser, attrs);
+        Resources::Theme theme = context->getTheme();
+        StateListAnimator* anim = createStateListAnimatorFromXml(context, &theme, parser, attrs);
         it = mStateAnimatorMap.insert({key, std::shared_ptr<StateListAnimator>(anim)}).first;
     }
     return new StateListAnimator(*it->second);
@@ -115,12 +137,12 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,cons
     return animator;//new StateListAnimator(*it->second);
 }
 #endif
-Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser& parser,float pixelSize){
+Animator* AnimatorInflater::createAnimatorFromXml(Context*context,const Resources::Theme* theme,XmlPullParser& parser,float pixelSize){
     const AttributeSet& attrs = parser;
-    return createAnimatorFromXml(context,parser, attrs, nullptr, 0,pixelSize);
+    return createAnimatorFromXml(context,theme,parser, attrs, nullptr, 0,pixelSize);
 }
 
-Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&parser,const AttributeSet& attrs,
+Animator* AnimatorInflater::createAnimatorFromXml(Context*context,const Resources::Theme* theme,XmlPullParser&parser,const AttributeSet& attrs,
         AnimatorSet*parent,int sequenceOrdering,float pixelSize){
      Animator* anim = nullptr;
      std::vector<Animator*> childAnims;
@@ -138,16 +160,16 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
         std::string name = parser.getName();
         bool gotValues = false;
         if (name.compare("objectAnimator")==0) {
-            anim = loadObjectAnimator(context,attrs, pixelSize);
+            anim = loadObjectAnimator(context,theme,attrs, pixelSize);
         } else if (name.compare("animator")==0) {
-            anim = loadAnimator(context, attrs, nullptr, pixelSize);
+            anim = loadAnimator(context, theme, attrs, nullptr, pixelSize);
         } else if (name.compare("set")==0) {
             anim = new AnimatorSet();
-            auto ta = context->obtainStyledAttributes(attrs, R::styleable::AnimatorSet);
+            auto ta = obtainAttributes(context, theme, attrs, R::styleable::AnimatorSet);
             const int ordering = ta->getInt(R::styleable::AnimatorSet_ordering, TOGETHER);
-            createAnimatorFromXml(context, parser, attrs, (AnimatorSet*) anim, ordering,pixelSize);
+            createAnimatorFromXml(context, theme, parser, attrs, (AnimatorSet*) anim, ordering,pixelSize);
         } else if (name.compare("propertyValuesHolder")==0) {
-            std::vector<PropertyValuesHolder*>values = loadValues(context,parser,attrs);
+            std::vector<PropertyValuesHolder*>values = loadValues(context,theme,parser,attrs);
             if (values.size() && (dynamic_cast<ValueAnimator*>(anim))) {
                 ((ValueAnimator*) anim)->setValues(values);
             }
@@ -171,7 +193,7 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
     return anim;
 }
 
-StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*context,XmlPullParser&parser,const AttributeSet&attrs){
+StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*context,const Resources::Theme* theme,XmlPullParser&parser,const AttributeSet&attrs){
     StateListAnimator* stateListAnimator = new StateListAnimator();
     while (true) {
         const int type = parser.next();
@@ -188,12 +210,12 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
                 const int attributeCount = (int)attrs.getAttributeCount();
                 for (int i = 0; i < attributeCount; i++) {
                     if (attrs.getAttributeNameResource(i) == R::attr::animation) {
-                        animator = loadAnimator(context, attrs.getAttributeResourceValue(i, 0));
+                        animator = loadAnimator(context, theme, attrs.getAttributeResourceValue(i, 0), 1.f);
                         break;
                     }
                 }
                 if (animator == nullptr) {
-                    animator = createAnimatorFromXml(context,parser,attrs, nullptr, 0,1.f);
+                    animator = createAnimatorFromXml(context,theme,parser,attrs, nullptr, 0,1.f);
                 }
 
                 if (animator == nullptr) {
@@ -206,7 +228,7 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
     }
 }
  
-std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(Context*ctx,XmlPullParser& parser,const AttributeSet& attrs){
+std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(Context*ctx,const Resources::Theme* theme,XmlPullParser& parser,const AttributeSet& attrs){
     std::vector<PropertyValuesHolder*> values;
     int type = XmlPullParser::START_TAG;
     while ((type != XmlPullParser::END_TAG) && (type != XmlPullParser::END_DOCUMENT)) {
@@ -216,13 +238,13 @@ std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(Context*ctx,XmlP
         }
         std::string name = parser.getName();
         if (name.compare("propertyValuesHolder")==0) {
-            auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::PropertyValuesHolder);
+            auto ta = obtainAttributes(ctx, theme, attrs, R::styleable::PropertyValuesHolder);
             const std::string propertyName = ta->getString(R::styleable::PropertyValuesHolder_propertyName);
             const int valueType = ta->getInt(R::styleable::PropertyValuesHolder_valueType, VALUE_TYPE_UNDEFINED);
             LOGD("propertyValuesHolder.%s type=%d",propertyName.c_str(),valueType);
             PropertyValuesHolder* pvh = loadPvh(parser, propertyName, valueType);
             if (pvh == nullptr) {
-                pvh = getPVH(ctx, attrs, valueType, propertyName);
+                pvh = getPVH(ctx, theme, attrs, valueType, propertyName);
             }
             if (pvh != nullptr) {
                 values.push_back(pvh);
@@ -348,11 +370,11 @@ int AnimatorInflater::inferValueTypeFromValues(const TypedArray& a, int valueFro
     return VALUE_TYPE_UNDEFINED;
 }
 
-PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const AttributeSet&atts, int valueType,const std::string& propertyName){
+PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const Resources::Theme* theme,const AttributeSet&atts, int valueType,const std::string& propertyName){
     // AOSP AnimatorInflater.getPVH: typed face — hasValue presence, getFloat/
     // getInt reads (both coerce across int/float), VALUE_TYPE_* space. The old
     // string probing (sFrom/sTo via getString) lost every typed value.
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::PropertyValuesHolder);
+    auto ta = obtainAttributes(ctx, theme, atts, R::styleable::PropertyValuesHolder);
     PropertyValuesHolder* returnValue = nullptr;
     const bool hasFrom = ta->hasValue(R::styleable::PropertyValuesHolder_valueFrom);
     const bool hasTo   = ta->hasValue(R::styleable::PropertyValuesHolder_valueTo);
@@ -438,13 +460,13 @@ PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const AttributeSet&at
     return returnValue;
 }
 
-void AnimatorInflater::parseAnimatorFromTypeArray(Context*ctx, ValueAnimator* anim,const AttributeSet&atts, float pixelSize) {
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::Animator);
+void AnimatorInflater::parseAnimatorFromTypeArray(Context*ctx, const Resources::Theme* theme, ValueAnimator* anim,const AttributeSet&atts, float pixelSize) {
+    auto ta = obtainAttributes(ctx, theme, atts, R::styleable::Animator);
     const long duration = ta->getInt(R::styleable::Animator_duration, 300);
     const long startDelay = ta->getInt(R::styleable::Animator_startOffset, 0);
     // propertyName is in PropertyAnimator styleable, not Animator; read via PVH styleable.
     std::string propertyName;
-    { auto ta2 = ctx->obtainStyledAttributes(atts, R::styleable::PropertyValuesHolder);
+    { auto ta2 = obtainAttributes(ctx, theme, atts, R::styleable::PropertyValuesHolder);
       propertyName = ta2->getString(R::styleable::PropertyValuesHolder_propertyName);
     }
 
@@ -455,7 +477,7 @@ void AnimatorInflater::parseAnimatorFromTypeArray(Context*ctx, ValueAnimator* an
                 R::styleable::Animator_valueTo);
     }
 
-    PropertyValuesHolder* pvh = getPVH(ctx,atts, valueType,propertyName);
+    PropertyValuesHolder* pvh = getPVH(ctx,theme,atts, valueType,propertyName);
     if (pvh != nullptr) {
         anim->setValues({pvh});
     }
@@ -471,9 +493,9 @@ void AnimatorInflater::parseAnimatorFromTypeArray(Context*ctx, ValueAnimator* an
     }
 }
 
-TypeEvaluator AnimatorInflater::setupAnimatorForPath(Context*ctx, ValueAnimator* anim,const AttributeSet&arrayAnimator){
+TypeEvaluator AnimatorInflater::setupAnimatorForPath(Context*ctx, const Resources::Theme* theme, ValueAnimator* anim,const AttributeSet&arrayAnimator){
     TypeEvaluator evaluator = nullptr;
-    auto ta = ctx->obtainStyledAttributes(arrayAnimator, R::styleable::Animator);
+    auto ta = obtainAttributes(ctx, theme, arrayAnimator, R::styleable::Animator);
     const std::string fromString = ta->getString(R::styleable::Animator_valueFrom);
     const std::string toString   = ta->getString(R::styleable::Animator_valueTo);
 
@@ -501,8 +523,8 @@ TypeEvaluator AnimatorInflater::setupAnimatorForPath(Context*ctx, ValueAnimator*
     return evaluator;
 }
 
-void AnimatorInflater::setupObjectAnimator(Context*ctx, ValueAnimator* anim, const AttributeSet&arrayObjectAnimator,int valueType, float pixelSize){
-    auto ta = ctx->obtainStyledAttributes(arrayObjectAnimator, R::styleable::PropertyAnimator);
+void AnimatorInflater::setupObjectAnimator(Context*ctx, const Resources::Theme* theme, ValueAnimator* anim, const AttributeSet&arrayObjectAnimator,int valueType, float pixelSize){
+    auto ta = obtainAttributes(ctx, theme, arrayObjectAnimator, R::styleable::PropertyAnimator);
     ObjectAnimator* oa = (ObjectAnimator*) anim;
     std::string pathData = ta->getString(R::styleable::PropertyAnimator_pathData);
     // Path can be involved in an ObjectAnimator in the following 3 ways:
@@ -562,13 +584,13 @@ void AnimatorInflater::setupObjectAnimator(Context*ctx, ValueAnimator* anim, con
     }
 }
 
-ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const AttributeSet& atts,float){
+ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const Resources::Theme* theme,const AttributeSet& atts,float){
     ObjectAnimator*anim = new ObjectAnimator();
-    loadAnimator(ctx,atts,anim,1.f);
+    loadAnimator(ctx,theme,atts,anim,1.f);
     return anim;
 }
 
-ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale){
+ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const Resources::Theme* theme,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale){
     // If anim is not null, then it is an object animator.
     /*if (anim != nullptr) {
         if (theme != null) {
@@ -584,9 +606,9 @@ ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const AttributeSet
     }
     //anim->appendChangingConfigurations(arrayAnimator.getChangingConfigurations());
 
-    parseAnimatorFromTypeArray(context,anim,attrs, pathErrorScale);
+    parseAnimatorFromTypeArray(context,theme,anim,attrs, pathErrorScale);
 
-    auto taInt = context->obtainStyledAttributes(attrs, R::styleable::Animator);
+    auto taInt = obtainAttributes(context, theme, attrs, R::styleable::Animator);
     const int resID = taInt->getResourceId(R::styleable::Animator_interpolator, 0);
     if (resID != 0) {
         Interpolator* interpolator = AnimationUtils::loadInterpolator(context, resID);
@@ -595,9 +617,9 @@ ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const AttributeSet
     return anim;
 }
 
-ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const AttributeSet& atts, ValueAnimator*anim,float){
-    auto ta = context->obtainStyledAttributes(atts, R::styleable::Animator);
-    auto taPvh = context->obtainStyledAttributes(atts, R::styleable::PropertyValuesHolder);
+ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const Resources::Theme* theme,const AttributeSet& atts, ValueAnimator*anim,float){
+    auto ta = obtainAttributes(context, theme, atts, R::styleable::Animator);
+    auto taPvh = obtainAttributes(context, theme, atts, R::styleable::PropertyValuesHolder);
     // AOSP: valueType from the attr; if unspecified, infer from valueFrom/valueTo.
     int valueType = ta->getInt(R::styleable::Animator_valueType, VALUE_TYPE_UNDEFINED);
     if (valueType == VALUE_TYPE_UNDEFINED) {
@@ -622,7 +644,7 @@ ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const Attrib
     anim->setRepeatCount(ta->getInt(R::styleable::Animator_repeatCount, 0));
     anim->setRepeatMode(ta->getInt(R::styleable::Animator_repeatMode, ValueAnimator::RESTART));
 
-    PropertyValuesHolder* pvh = getPVH(context,atts,valueType,propertyName);
+    PropertyValuesHolder* pvh = getPVH(context,theme,atts,valueType,propertyName);
     if(pvh)
         anim->setValues({pvh});
     return anim;

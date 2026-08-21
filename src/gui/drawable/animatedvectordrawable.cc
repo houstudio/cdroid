@@ -248,7 +248,8 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
                 if (!animResId.empty()) {
                     if (true/*theme != nullptr*/) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
-                        Animator* animator = AnimatorInflater::loadAnimator(ctx, animResId, pathErrorScale);
+                        // AOSP: AnimatorInflater.loadAnimator(res, theme, animResId, pathErrorScale).
+                        Animator* animator = AnimatorInflater::loadAnimator(ctx, theme, animResId, pathErrorScale);
                         updateAnimatorProperty(animator, target, state->mVectorDrawable,state->mShouldIgnoreInvalidAnim);
                         state->addTargetAnimator(target, animator);
                         LOGV("%s -> %s %p",target.c_str(),animResId.c_str(),animator);
@@ -520,14 +521,14 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
 // parameters are kept for the AOSP call shape (nullable, like the
 // "without applying a theme" call in prepareLocalAnimators).
 void AnimatedVectorDrawable::AnimatedVectorDrawableState::inflatePendingAnimators(Resources* res,const Resources::Theme* t) {
-    (void)res; (void)t;
+    (void)res;   // animators load through the Context; only the theme is used
     std::vector<PendingAnimator*> pendingAnims = mPendingAnims;
     if (!pendingAnims.empty()){// != null) {
         mPendingAnims.clear();
 
         for (int i = 0, count = pendingAnims.size(); i < count; i++) {
             PendingAnimator* pendingAnimator = pendingAnims.at(i);
-            Animator* animator = pendingAnimator->newInstance(mContext);
+            Animator* animator = pendingAnimator->newInstance(mContext, t);
             updateAnimatorProperty(animator, pendingAnimator->target, mVectorDrawable,mShouldIgnoreInvalidAnim);
             addTargetAnimator(pendingAnimator->target, animator);
         }
@@ -545,8 +546,8 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator::PendingAni
     this->target = target;
 }
 
-Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator::newInstance(Context*ctx) {
-    return AnimatorInflater::loadAnimator(ctx,animResId, pathErrorScale);
+Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator::newInstance(Context*ctx,const Resources::Theme* theme) {
+    return AnimatorInflater::loadAnimator(ctx,theme,animResId, pathErrorScale);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
