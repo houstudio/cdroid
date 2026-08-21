@@ -46,6 +46,8 @@ DECLARE_WIDGET(MotionLayout)
 namespace cdroid {
 using namespace cdroid::internal;
 
+MotionLayout::MotionLayout(Context*ctx):MotionLayout(ctx,nullptr){}
+
 MotionLayout::MotionLayout(Context* ctx,const AttributeSet* attrs):MotionLayout(ctx,attrs,0){}
 
 MotionLayout::MotionLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)

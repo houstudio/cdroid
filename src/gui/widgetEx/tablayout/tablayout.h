@@ -310,6 +310,7 @@ protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
 public:
+    TabLayout(Context*ctx);   // AOSP TabLayout(Context)
     TabLayout(Context*context,const AttributeSet*atts);
     TabLayout(Context*context,const AttributeSet* attrs,int defStyleAttr);
     ~TabLayout()override;

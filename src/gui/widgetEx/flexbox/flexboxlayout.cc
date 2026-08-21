@@ -25,6 +25,8 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(FlexboxLayout)
 
+FlexboxLayout::FlexboxLayout(Context*ctx):FlexboxLayout(ctx,nullptr){}
+
 FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet* attrs):FlexboxLayout(context,attrs,0){}
 
 FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr):ViewGroup(context,pAttrs, defStyleAttr){

@@ -58,6 +58,7 @@ protected:
     void onResolveDrawables(int layoutDirection)override;
     bool onTouchEvent(MotionEvent&)override;
 public:
+    QRCodeView(Context*ctx);   // AOSP QRCodeView(Context)
     QRCodeView(Context*ctx,const AttributeSet*attrs);
     QRCodeView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~QRCodeView()override;

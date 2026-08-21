@@ -104,6 +104,7 @@ protected:
     void setCurrentItemInternal(int item, bool smoothScroll);
     void snapToPage();
 public:
+    ViewPager2(Context*ctx);   // AOSP ViewPager2(Context)
     ViewPager2(Context* context, const AttributeSet* attrs);
     ViewPager2(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~ViewPager2()override;

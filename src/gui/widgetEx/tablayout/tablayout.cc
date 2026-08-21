@@ -34,6 +34,8 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(TabLayout)
 
+TabLayout::TabLayout(Context*ctx):TabLayout(ctx,nullptr){}
+
 TabLayout::TabLayout(Context*context,const AttributeSet* atts):TabLayout(context,atts,0){}
 
 TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr)

@@ -29,6 +29,8 @@ namespace cdroid{
 
 DECLARE_WIDGET(QRCodeView)
 
+QRCodeView::QRCodeView(Context*ctx):QRCodeView(ctx,nullptr){}
+
 QRCodeView::QRCodeView(Context*ctx,const AttributeSet*attrs):QRCodeView(ctx,attrs,0){}
 
 QRCodeView::QRCodeView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr){

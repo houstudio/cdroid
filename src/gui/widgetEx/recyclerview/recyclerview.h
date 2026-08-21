@@ -425,6 +425,7 @@ protected:
              StateListDrawable* horizontalThumbDrawable, Drawable* horizontalTrackDrawable);
     int getChildDrawingOrder(int childCount, int i)override;
 public:
+    RecyclerView(Context*ctx);   // AOSP RecyclerView(Context)
     RecyclerView(Context* context,const AttributeSet* attrs);
     RecyclerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~RecyclerView()override;

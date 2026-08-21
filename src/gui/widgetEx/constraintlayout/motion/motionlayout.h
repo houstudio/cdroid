@@ -60,6 +60,7 @@ class KeyFrames;
 
 class MotionLayout : public ConstraintLayout {
   public:
+    MotionLayout(Context*ctx);   // AOSP MotionLayout(Context)
     MotionLayout(Context* ctx, const AttributeSet* attrs);
     MotionLayout(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
     ~MotionLayout() override;

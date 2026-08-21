@@ -27,6 +27,8 @@ using namespace cdroid::internal;
 
 DECLARE_WIDGET(CoordinatorLayout)
 
+CoordinatorLayout::CoordinatorLayout(Context*ctx):CoordinatorLayout(ctx,nullptr){}
+
 CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* attrs):CoordinatorLayout(context,attrs,0){}
 
 CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)

@@ -163,6 +163,7 @@ protected:
     void onRestoreInstanceState(Parcelable& state)override;
     Parcelable* onSaveInstanceState() override;
 public:
+    CoordinatorLayout(Context*ctx);   // AOSP CoordinatorLayout(Context)
     CoordinatorLayout(Context* context,const AttributeSet* attrs);
     CoordinatorLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~CoordinatorLayout()override;

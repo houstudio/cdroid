@@ -54,6 +54,8 @@ static QuinticInterpolator sQuinticInterpolator;
 // defStyleAttr = R.attr.recyclerViewStyle (library attr, 0x02 shared-lib).
 DECLARE_WIDGET2(RecyclerView, (int)R::attr::recyclerViewStyle)
 
+RecyclerView::RecyclerView(Context*ctx):RecyclerView(ctx,nullptr){}
+
 RecyclerView::RecyclerView(Context* context,const AttributeSet* attrs)
     // androidx: this(context, attrs, R.attr.recyclerViewStyle). The attr id is
     // pinned in widgetEx/recyclerview public.xml and surfaced by gen_styleable

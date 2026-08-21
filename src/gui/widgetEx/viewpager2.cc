@@ -63,6 +63,8 @@ public:
     }
 };
 
+ViewPager2::ViewPager2(Context*ctx):ViewPager2(ctx,nullptr){}
+
 ViewPager2::ViewPager2(Context* context,const AttributeSet* attrs):ViewPager2(context,attrs,0){}
 
 ViewPager2::ViewPager2(Context* context,const AttributeSet* pAttrs,int defStyleAttr)

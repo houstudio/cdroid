@@ -204,6 +204,8 @@ void ConstraintLayout::LayoutParams::validate() {
 // ===========================================================================
 // ConstraintLayout
 // ===========================================================================
+ConstraintLayout::ConstraintLayout(Context*ctx):ConstraintLayout(ctx,nullptr){}
+
 ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* attrs):ConstraintLayout(ctx,attrs,0){}
 
 ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)

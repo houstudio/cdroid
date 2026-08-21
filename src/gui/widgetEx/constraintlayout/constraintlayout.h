@@ -128,6 +128,7 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
         static constexpr float UNSET_FLOAT = -1.0f;
     };
 
+    ConstraintLayout(Context*ctx);   // AOSP ConstraintLayout(Context)
     ConstraintLayout(Context* ctx, const AttributeSet* attrs);
     ConstraintLayout(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
     ~ConstraintLayout() override;

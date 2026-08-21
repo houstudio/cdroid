@@ -89,6 +89,7 @@ protected:
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 public:
     class LayoutParams;
+    FlexboxLayout(Context*ctx);   // AOSP FlexboxLayout(Context)
     FlexboxLayout(Context* context,const AttributeSet* attrs);
     FlexboxLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~FlexboxLayout()override;
