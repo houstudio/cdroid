@@ -27,7 +27,7 @@ using namespace cdroid::internal;
 TimePicker::TimePicker(Context*ctx)
     :TimePicker(ctx,nullptr){}
 
-TimePicker::TimePicker(Context* context,const AttributeSet* attrs):TimePicker(context,attrs,0){}
+TimePicker::TimePicker(Context* context,const AttributeSet* attrs):TimePicker(context,attrs,cdroid::internal::R::attr::timePickerStyle){}
 
 TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :FrameLayout(context, pAttrs, defStyleAttr){

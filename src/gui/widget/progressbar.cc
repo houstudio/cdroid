@@ -75,7 +75,7 @@ DECLARE_WIDGET(ProgressBar)
 ProgressBar::ProgressBar(Context*ctx)
     :ProgressBar(ctx,nullptr){}
 
-ProgressBar::ProgressBar(Context*ctx,const AttributeSet* attrs):ProgressBar(ctx,attrs,0) {}
+ProgressBar::ProgressBar(Context*ctx,const AttributeSet* attrs):ProgressBar(ctx,attrs,cdroid::internal::R::attr::progressBarStyle) {}
 
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :View(ctx,pAttrs, defStyleAttr) {

@@ -62,7 +62,7 @@ namespace {
 NumberPicker::NumberPicker(Context*ctx)
     :NumberPicker(ctx,nullptr){}
 
-NumberPicker::NumberPicker(Context* context,const AttributeSet* atts):NumberPicker(context,atts,0){}
+NumberPicker::NumberPicker(Context* context,const AttributeSet* atts):NumberPicker(context,atts,cdroid::internal::R::attr::numberPickerStyle){}
 
 NumberPicker::NumberPicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :LinearLayout(context,pAttrs, defStyleAttr){

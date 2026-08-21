@@ -33,7 +33,7 @@ DECLARE_WIDGET2(EditText,R::attr::editTextStyle)
 EditText::EditText(Context*ctx)
     :EditText(ctx,nullptr){}
 
-EditText::EditText(Context*ctx,const AttributeSet* attrs):EditText(ctx,attrs,0){}
+EditText::EditText(Context*ctx,const AttributeSet* attrs):EditText(ctx,attrs,cdroid::internal::R::attr::editTextStyle){}
 
 EditText::EditText(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :TextView(ctx,pAttrs, defStyleAttr){

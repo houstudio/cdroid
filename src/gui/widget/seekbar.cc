@@ -25,7 +25,7 @@ DECLARE_WIDGET2(SeekBar,R::attr::seekBarStyle)
 SeekBar::SeekBar(Context*ctx)
     :SeekBar(ctx,nullptr){}
 
-SeekBar::SeekBar(Context*ctx,const AttributeSet* attrs):SeekBar(ctx,attrs,0){}
+SeekBar::SeekBar(Context*ctx,const AttributeSet* attrs):SeekBar(ctx,attrs,cdroid::internal::R::attr::seekBarStyle){}
 
 SeekBar::SeekBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :AbsSeekBar(ctx,pAttrs, defStyleAttr){

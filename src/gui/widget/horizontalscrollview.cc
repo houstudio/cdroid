@@ -31,7 +31,7 @@ DECLARE_WIDGET2(HorizontalScrollView,R::attr::horizontalScrollViewStyle)
 HorizontalScrollView::HorizontalScrollView(Context*ctx)
     :HorizontalScrollView(ctx,nullptr){}
 
-HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet* atts):HorizontalScrollView(ctx,atts,0){}
+HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet* atts):HorizontalScrollView(ctx,atts,cdroid::internal::R::attr::horizontalScrollViewStyle){}
 
 HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :FrameLayout(ctx,pAttrs, defStyleAttr){

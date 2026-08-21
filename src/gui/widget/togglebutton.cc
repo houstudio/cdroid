@@ -30,7 +30,7 @@ DECLARE_WIDGET2(ToggleButton,R::attr::buttonStyleToggle)
 ToggleButton::ToggleButton(Context*ctx)
     :ToggleButton(ctx,nullptr){}
 
-ToggleButton::ToggleButton(Context*ctx,const AttributeSet* attrs):ToggleButton(ctx,attrs,0){}
+ToggleButton::ToggleButton(Context*ctx,const AttributeSet* attrs):ToggleButton(ctx,attrs,cdroid::internal::R::attr::buttonStyleToggle){}
 
 ToggleButton::ToggleButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :CompoundButton(ctx,pAttrs, defStyleAttr){

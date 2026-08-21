@@ -28,7 +28,7 @@ DECLARE_WIDGET2(RatingBar,R::attr::ratingBarStyle)
 RatingBar::RatingBar(Context*ctx)
     :RatingBar(ctx,nullptr){}
 
-RatingBar::RatingBar(Context*ctx,const AttributeSet* atts):RatingBar(ctx,atts,0){}
+RatingBar::RatingBar(Context*ctx,const AttributeSet* atts):RatingBar(ctx,atts,cdroid::internal::R::attr::ratingBarStyle){}
 
 RatingBar::RatingBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :AbsSeekBar(ctx,pAttrs, defStyleAttr){

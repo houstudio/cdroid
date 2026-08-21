@@ -16,9 +16,12 @@ namespace cdroid {
 using namespace cdroid::internal;
 
 AbsListView::AbsListView(Context*ctx)
-    :AbsListView(ctx,nullptr){}
+    :AbsListView(ctx,nullptr){
+}
 
-AbsListView::AbsListView(Context*ctx,const AttributeSet* atts):AbsListView(ctx,atts,0){}
+AbsListView::AbsListView(Context*ctx,const AttributeSet* atts)
+    :AbsListView(ctx,atts,cdroid::internal::R::attr::absListViewStyle){
+}
 
 AbsListView::AbsListView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):AdapterView(ctx,pAttrs, defStyleAttr) {
     mEdgeGlowBottom = new EdgeEffect(mContext,pAttrs);

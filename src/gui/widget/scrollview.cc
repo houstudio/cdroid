@@ -31,7 +31,7 @@ DECLARE_WIDGET2(ScrollView,R::attr::scrollViewStyle)
 ScrollView::ScrollView(Context*ctx)
     :ScrollView(ctx,nullptr){}
 
-ScrollView::ScrollView(Context*context,const AttributeSet* atts):ScrollView(context,atts,0){}
+ScrollView::ScrollView(Context*context,const AttributeSet* atts):ScrollView(context,atts,cdroid::internal::R::attr::scrollViewStyle){}
 
 ScrollView::ScrollView(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
   :FrameLayout(context,pAttrs, defStyleAttr){

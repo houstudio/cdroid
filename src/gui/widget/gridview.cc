@@ -14,7 +14,7 @@ DECLARE_WIDGET2(GridView,R::attr::gridViewStyle)
 GridView::GridView(Context*ctx)
     :GridView(ctx,nullptr){}
 
-GridView::GridView(Context*ctx,const AttributeSet* atts):GridView(ctx,atts,0){}
+GridView::GridView(Context*ctx,const AttributeSet* atts):GridView(ctx,atts,cdroid::internal::R::attr::gridViewStyle){}
 
 GridView::GridView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :AbsListView(ctx,pAttrs, defStyleAttr) {

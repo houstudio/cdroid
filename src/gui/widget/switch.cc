@@ -16,7 +16,7 @@ DECLARE_WIDGET2(Switch,R::attr::switchStyle)
 Switch::Switch(Context*ctx)
     :Switch(ctx,nullptr){}
 
-Switch::Switch(Context* context,const AttributeSet* a):Switch(context,a,0){}
+Switch::Switch(Context* context,const AttributeSet* a):Switch(context,a,cdroid::internal::R::attr::switchStyle){}
 
 Switch::Switch(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :CompoundButton(context,pAttrs, defStyleAttr){

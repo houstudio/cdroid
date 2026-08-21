@@ -29,7 +29,7 @@ DECLARE_WIDGET2(CalendarView, R::attr::calendarViewStyle);
 CalendarView::CalendarView(Context*ctx)
     :CalendarView(ctx,nullptr){}
 
-CalendarView::CalendarView(Context*context,const AttributeSet* attrs):CalendarView(context,attrs,0){}
+CalendarView::CalendarView(Context*context,const AttributeSet* attrs):CalendarView(context,attrs,cdroid::internal::R::attr::calendarViewStyle){}
 
 CalendarView::CalendarView(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
   :FrameLayout(context,pAttrs, defStyleAttr){

@@ -339,8 +339,10 @@ void CompoundButton::onDraw(Canvas&canvas){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 DECLARE_WIDGET2(CheckBox,R::attr::checkboxStyle)
+CheckBox::CheckBox(Context*ctx):CheckBox(ctx,nullptr){}
+
 CheckBox::CheckBox(Context*ctx,const AttributeSet* attrs)
-    :CheckBox(ctx,attrs,0){
+    :CheckBox(ctx,attrs,cdroid::internal::R::attr::checkboxStyle){
 }
 
 CheckBox::CheckBox(Context*ctx,const AttributeSet* attrs,int defStyleAttr)
@@ -354,6 +356,8 @@ std::string CheckBox::getAccessibilityClassName()const{
 //class RadioButton:public CompoundButton
 
 DECLARE_WIDGET2(RadioButton,R::attr::radioButtonStyle)
+RadioButton::RadioButton(Context*ctx):RadioButton(ctx,nullptr){}
+
 RadioButton::RadioButton(Context*ctx,const AttributeSet* attrs)
    :RadioButton(ctx,attrs, R::attr::radioButtonStyle){
 }

@@ -28,7 +28,7 @@ DECLARE_WIDGET2(DatePicker, R::attr::datePickerStyle);
 DatePicker::DatePicker(Context*ctx)
     :DatePicker(ctx,nullptr){}
 
-DatePicker::DatePicker(Context* context,const AttributeSet* attrs):DatePicker(context,attrs,0){}
+DatePicker::DatePicker(Context* context,const AttributeSet* attrs):DatePicker(context,attrs,cdroid::internal::R::attr::datePickerStyle){}
 
 DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :FrameLayout(context, pAttrs, defStyleAttr){

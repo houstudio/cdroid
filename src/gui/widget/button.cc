@@ -26,7 +26,7 @@ DECLARE_WIDGET2(Button,R::attr::buttonStyle)
 Button::Button(Context*ctx)
     :Button(ctx,nullptr){}
 
-Button::Button(Context*ctx,const AttributeSet* attrs):Button(ctx,attrs,0){}
+Button::Button(Context*ctx,const AttributeSet* attrs):Button(ctx,attrs,cdroid::internal::R::attr::buttonStyle){}
 
 Button::Button(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):TextView(ctx,pAttrs, defStyleAttr){
 }

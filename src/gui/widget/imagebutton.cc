@@ -27,7 +27,7 @@ DECLARE_WIDGET2(ImageButton,R::attr::imageButtonStyle)
 ImageButton::ImageButton(Context*ctx)
     :ImageButton(ctx,nullptr){}
 
-ImageButton::ImageButton(Context*ctx,const AttributeSet* attrs):ImageButton(ctx,attrs,0){}
+ImageButton::ImageButton(Context*ctx,const AttributeSet* attrs):ImageButton(ctx,attrs,cdroid::internal::R::attr::imageButtonStyle){}
 
 ImageButton::ImageButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :ImageView(ctx,pAttrs, defStyleAttr){
