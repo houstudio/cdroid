@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Legacy Theme scrollbarThumbVertical (AOSP scrollbar_handle_vertical):
+     a light rounded pill over the dark legacy background. The slim framework
+     res set carries it as a shape equivalent of AOSP's 9-patch PNG. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+       android:shape="rectangle">
+    <solid android:color="#7f9e9e9e" />
+    <corners android:radius="6dip" />
+</shape>

@@ -17,4 +17,12 @@
         android:layout_height="wrap_content"
         android:text="attr"
         android:textColor="?android:attr/textColorPrimary" />
+
+    <!-- android:scrollbars triggers initializeScrollbarsInternal; the thumb
+         comes from the theme's scrollbarThumbVertical (framework default via
+         the config_ alias, or the app override). -->
+    <View android:id="@+id/ctd_scrollbars"
+        android:layout_width="40px"
+        android:layout_height="40px"
+        android:scrollbars="vertical" />
 </LinearLayout>

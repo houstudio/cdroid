@@ -326,6 +326,34 @@ TEST_F(RESOURCES_THEME, appSetThemeUpdatesApplicationTheme) {
     EXPECT_EQ(saved, app.getApplicationTheme());
 }
 
+// Scrollbars ARE theme-driven (android-36 View.initializeScrollbarsInternal):
+// scrollbarThumb/TrackVertical etc. come from the theme fallback of the ctor's
+// View TypedArray (Theme.Material: config_ alias -> scrollbar_handle_material;
+// TrackVertical is @null). A theme overriding scrollbarThumbVertical must swap
+// the thumb; the framework default must load when nothing overrides.
+TEST_F(RESOURCES_THEME, viewScrollbarThumbFollowsTheme) {
+    App& app = App::getInstance();
+    for (int pass = 0; pass < 3; pass++) {
+        app.setTheme((int)(pass == 0 ? gui_test::R::style::ctdThemeLight
+                          : pass == 1 ? gui_test::R::style::ctdThemeDark
+                                      : cdroid::internal::R::style::Theme));
+        View* root = LayoutInflater::from(&app)->inflate(
+                gui_test::R::layout::ctd_themed_text, nullptr, false);
+        ASSERT_NE(root, nullptr);
+        View* sv = root->findViewById(gui_test::R::id::ctd_scrollbars);
+        ASSERT_NE(sv, nullptr);
+        Drawable* thumb = sv->getVerticalScrollbarThumbDrawable();
+        LOGI("pass%d scrollbar thumb=%p intrinsicW=%d", pass, (void*)thumb,
+             thumb ? thumb->getIntrinsicWidth() : -1);
+        // Every theme must provide a thumb: framework Material default via the
+        // config_ alias (0), the app override (1, 4px), legacy Theme's
+        // scrollbar_handle_vertical (2).
+        ASSERT_NE(thumb, nullptr);
+        if (pass == 1) EXPECT_EQ(4, thumb->getIntrinsicWidth());
+        delete root;
+    }
+}
+
 // Narrow the menu chain: load the theme's textColorPrimary resource directly.
 TEST_F(RESOURCES_THEME, textColorPrimaryResource) {
     App& app = App::getInstance();

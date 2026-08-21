@@ -15,5 +15,8 @@
         <item name="android:textColorPrimary">@color/ctd_text_primary_dark</item>
         <item name="android:textColorSecondary">@color/ctd_text_primary_dark</item>
         <item name="android:textColorTertiary">@color/ctd_text_primary_dark</item>
+        <!-- Scrollbar theme probe: overriding the framework attr must swap the
+             vertical scrollbar thumb. -->
+        <item name="android:scrollbarThumbVertical">@drawable/ctd_scrollbar_thumb</item>
     </style>
 </resources>
