@@ -16,6 +16,12 @@ set(CDROID_AAPT2 "${CDROID_AAPT2_CMD}" CACHE PATH "aapt2 binary")
 set(CDROID_ANDROID_JAR "${CMAKE_SOURCE_DIR}/src/gui/res/android.jar" CACHE PATH "android.jar")
 set(CDROID_SDK_RES "${CMAKE_SOURCE_DIR}/src/gui/res" CACHE PATH "framework res dir (slim base, ex-gui/assets)")
 set(CDROID_SDK_RES_FILTER "${CMAKE_SOURCE_DIR}/scripts/sdk_res_filter.json" CACHE FILEPATH "JSON filter for SDK res densities/locales")
+# Global build-time res overlay (AOSP static device-overlay semantics) applied
+# to the shared cdroid.pak: values* files merge per (type,name) entry, other
+# files shadow whole-file by relative path. Per-app overlays live in
+# apps/<name>/overlay/ and build a dedicated cdroid.pak beside that app's
+# binary instead. ID-defining entries (attr/public/symbols) are rejected.
+set(CDROID_OVERLAY "" CACHE PATH "optional global res overlay dir applied to the shared cdroid.pak")
 
 # Enable ctest at the top level so registered tests (e.g. the standalone androidfw
 # sub-library unit tests) are discoverable via `ctest` from the build root.

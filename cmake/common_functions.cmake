@@ -53,6 +53,13 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
             if(CDROID_SDK_RES_FILTER AND EXISTS "${CDROID_SDK_RES_FILTER}")
                 list(APPEND extra_args "${CDROID_SDK_RES_FILTER}")
             endif()
+            # Global overlay (all apps of this build): shadow the shared cdroid.pak
+            # values, e.g. per-chipset touch/fling tuning via the <product>.txt
+            # options file.
+            if(CDROID_OVERLAY AND EXISTS "${CDROID_OVERLAY}")
+                list(APPEND extra_args "--overlay" "${CDROID_OVERLAY}")
+                message(STATUS "CreatePAK(${project}): global overlay ${CDROID_OVERLAY}")
+            endif()
             message(STATUS "CreatePAK(${project}): SDK framework res mode")
         else()
             # App paks: compile their own XML via aapt2 (binary AXML), no SDK res.
@@ -81,6 +88,48 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
     # App paks -I framework.apk, which the cdroid SDK pak produces — build it first.
     if(TARGET cdroid_assets AND NOT "${project}" STREQUAL "cdroid")
         add_dependencies(${project}_assets cdroid_assets)
+    endif()
+    # Per-app framework overlay: apps/<name>/overlay/ shadows the framework res
+    # with the same --overlay semantics (values* entries merge by (type,name),
+    # everything else whole-file). Builds a dedicated cdroid.pak into the app's
+    # binary dir — App::findSharedPak probes the binary's own directory first,
+    # so the overlaid pak applies to THIS app only; other apps/samples keep the
+    # shared out-dir-root cdroid.pak. Details worth keeping straight:
+    #  - namespace "cdroid" reuses the SDK -x pipeline (scrubs + pinned ids);
+    #    its work dir <app>/cdroid_pakbuild cannot collide with the shared build.
+    #  - rh_path points into that work dir: R.h/internal_R.h regenerate there and
+    #    never race the shared build's source-tree headers (ids are identical —
+    #    overlay only changes values of pinned names).
+    #  - NO --framework-apk-out: the shared framework.apk that app paks -I stays
+    #    the base one; ids match, only default values differ.
+    #  - No cp to the binary root and no install: must not shadow the shared pak.
+    #  - If a global CDROID_OVERLAY is set it applies first, the app overlay wins.
+    if(NOT "${project}" STREQUAL "cdroid" AND NOT "${project}" STREQUAL "widgetex"
+       AND EXISTS "${CDROID_SDK_RES}" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/overlay")
+        set(_ov_extra "")
+        if(CDROID_SDK_RES_FILTER AND EXISTS "${CDROID_SDK_RES_FILTER}")
+            set(_ov_extra "${CDROID_SDK_RES_FILTER}")
+        endif()
+        set(_ov_flags "")
+        if(CDROID_OVERLAY AND EXISTS "${CDROID_OVERLAY}")
+            list(APPEND _ov_flags "--overlay" "${CDROID_OVERLAY}")
+        endif()
+        list(APPEND _ov_flags "--overlay" "${CMAKE_CURRENT_SOURCE_DIR}/overlay")
+        add_custom_target(${project}_framework_assets
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py cdroid
+                    ${CDROID_SDK_RES} ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pak
+                    ${CMAKE_CURRENT_BINARY_DIR}/cdroid_pakbuild/R.h
+                    ${CDROID_AAPT2} ${CDROID_ANDROID_JAR} ${CDROID_SDK_RES} ${_ov_extra}
+                    ${_ov_flags}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Framework overlay pak for ${project} (${CMAKE_CURRENT_SOURCE_DIR}/overlay)")
+        add_custom_command(TARGET ${project} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pak
+                    $<TARGET_FILE_DIR:${project}>/cdroid.pak
+            COMMENT "Deploy overlaid cdroid.pak beside ${project} binary")
+        add_dependencies(${project} ${project}_framework_assets)
+        message(STATUS "CreatePAK(${project}): framework overlay from ${CMAKE_CURRENT_SOURCE_DIR}/overlay")
     endif()
     install(FILES ${PakPath} DESTINATION data)
 endfunction()

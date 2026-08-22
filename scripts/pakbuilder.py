@@ -19,6 +19,13 @@
 # the out tree (e.g. outXXX/apps/aaa/aaa_pakbuild/) — wiped at each real
 # rebuild and KEPT afterwards, so intermediates are attributable to the
 # subproject and inspectable (no random /tmp mkdtemp names).
+#
+# --overlay <dir> (repeatable, later wins): AOSP static device-overlay
+# semantics applied to the STAGED res copy — values*/ merge per (type,name)
+# entry, everything else whole-file by relative path. App-level framework
+# overlays build a per-app cdroid.pak next to the app binary (App::findSharedPak
+# picks it up before the shared one); CDROID_OVERLAY does the same for the
+# shared cdroid.pak. See _apply_overlays.
 # ----------------------------------------------------------------------------
 import os
 import sys
@@ -282,7 +289,7 @@ class PakBuilder:
 
     def __init__(self, namespace, res_dir, pak_path, rh_path,
                  aapt2_path=None, android_jar=None, sdk_res=None, sdk_filter=None,
-                 widgetex_apk=None, framework_apk_out=None):
+                 widgetex_apk=None, framework_apk_out=None, overlay_dirs=None):
         self.namespace = namespace
         self.res_dir = res_dir
         self.pak_path = pak_path
@@ -302,6 +309,10 @@ class PakBuilder:
         # attr table incl. the 0x010d CDROID extensions (pattern/frameDuration/
         # wheelItemCount/...) that a stock android.jar doesn't expose.
         self.framework_apk_out = framework_apk_out
+        # Build-time res overlay dirs (AOSP static device-overlay semantics),
+        # applied in order onto the staged res copy — a later dir wins. See
+        # _apply_overlays for the merge rules.
+        self.overlay_dirs = list(overlay_dirs) if overlay_dirs else []
 
     def _workdir(self):
         """Deterministic aapt2 work dir next to the pak (in the out tree):
@@ -324,6 +335,144 @@ class PakBuilder:
         s = etree.tostring(tree, encoding="UTF-8", xml_declaration=True, pretty_print=False)
         non_blank = [ln for ln in s.decode("utf-8").splitlines() if ln.strip()]
         return "\n".join(non_blank).encode("utf-8")
+
+    # ----- Build-time res overlay (AOSP static device-overlay semantics) -----
+    #
+    # An overlay dir shadows the STAGED res tree by relative path:
+    #   values*/  -> ENTRY-level merge: an overlay entry replaces the base entry
+    #                with the same (type, name) anywhere in the SAME qualifier
+    #                dir (values/ and values-zh/ never mix); new entries add
+    #                resources. Product overlays stay tiny (override one dimen
+    #                = a 3-line file) instead of forking whole values files.
+    #   anything else (drawable/layout/color/anim/raw/...) -> whole-file
+    #                replacement; one file IS one resource there.
+    # ID red line: tags that define the ID space are rejected with a warning —
+    # overlay may only change values or add non-ID resources, so pinned
+    # framework ids never move and app paks keep -I-linking the base
+    # framework.apk (identical ids, only default values differ).
+    _OVERLAY_FORBIDDEN_TAGS = frozenset((
+        "attr", "declare-styleable", "public", "public-final",
+        "public-staging", "symbols", "overlayable", "eat-comment"))
+
+    @staticmethod
+    def _value_entry_key(el):
+        """(type, name) key for a values entry. Type comes from the tag, or
+        from the type= attribute for <item> (e.g. <item type="dimen"
+        format="float">). None for entries without a name (malformed)."""
+        name = el.get("name")
+        rtype = el.get("type") if el.tag == "item" else el.tag
+        if name is None or rtype is None:
+            return None
+        return (rtype, name)
+
+    def _apply_overlays(self, staged_res):
+        """Apply self.overlay_dirs onto the staged res copy, in order (a later
+        dir wins). Runs after the base scrubs, before aapt2 compile. aapt2
+        rejects duplicate type+name within one compile unit, so a shadowed base
+        entry is REMOVED, not coexisted."""
+        if not self.overlay_dirs:
+            return
+        for odir in self.overlay_dirs:
+            if not os.path.isdir(odir):
+                raise SystemExit("pakbuilder: overlay dir not found: %s" % odir)
+            plain_files, value_files = [], []
+            for root, _dirs, files in os.walk(odir):
+                for f in files:
+                    p = os.path.join(root, f)
+                    rel = os.path.relpath(p, odir).replace(os.sep, "/")
+                    top = rel.split("/", 1)[0]
+                    if top == "values" or top.startswith("values-"):
+                        value_files.append((rel, p))
+                    else:
+                        plain_files.append((rel, p))
+            # 1) whole-file shadow outside values dirs
+            for rel, p in plain_files:
+                dst = os.path.join(staged_res, rel)
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                shutil.copyfile(p, dst)
+            # 2) entry-level values merge, one qualifier dir at a time
+            parser = etree.XMLParser(remove_comments=True)
+            by_qual = {}
+            for rel, p in value_files:
+                by_qual.setdefault(rel.split("/", 1)[0], []).append((rel, p))
+            overridden = added = 0
+            for qual, ofiles in sorted(by_qual.items()):
+                # Parse overlay files; validate entries; reject intra-dir dups.
+                ofile_entries = {}  # file rel -> [kept elements]
+                okeys = {}          # (type, name) -> file rel (for error text)
+                for rel, p in ofiles:
+                    root = etree.parse(p, parser).getroot()
+                    if root.tag != "resources":
+                        raise SystemExit("pakbuilder: overlay %s: root is <%s>, expected <resources>"
+                                         % (p, root.tag))
+                    kept = []
+                    for el in root:
+                        if not isinstance(el.tag, str):
+                            continue  # comment / processing instruction
+                        if el.tag in self._OVERLAY_FORBIDDEN_TAGS:
+                            sys.stderr.write("overlay: ignoring forbidden entry <%s name=%r> in %s "
+                                             "(ID space is pinned; overlay may only change values)\n"
+                                             % (el.tag, el.get("name"), rel))
+                            continue
+                        key = self._value_entry_key(el)
+                        if key is None:
+                            raise SystemExit("pakbuilder: overlay entry without name/type in %s: <%s>"
+                                             % (rel, el.tag))
+                        if key in okeys:
+                            raise SystemExit("pakbuilder: overlay defines %s/%s twice (%s and %s)"
+                                             % (key[0], key[1], okeys[key], rel))
+                        okeys[key] = rel
+                        kept.append(el)
+                    ofile_entries[rel] = kept
+                # Remove shadowed base entries from the staged qualifier dir.
+                # Only files we actually touch are rewritten; a file left with
+                # no resource children is deleted.
+                staged_qual = os.path.join(staged_res, qual)
+                hit = set()
+                if os.path.isdir(staged_qual):
+                    for vf in sorted(os.listdir(staged_qual)):
+                        if not vf.endswith(".xml"):
+                            continue
+                        vpath = os.path.join(staged_qual, vf)
+                        try:
+                            vtree = etree.parse(vpath)
+                        except etree.XMLSyntaxError as e:
+                            raise SystemExit("pakbuilder: cannot parse %s: %s" % (vpath, e))
+                        vroot = vtree.getroot()
+                        changed = False
+                        for el in list(vroot):
+                            if not isinstance(el.tag, str):
+                                continue
+                            key = self._value_entry_key(el)
+                            if key in okeys:
+                                vroot.remove(el)
+                                hit.add(key)
+                                changed = True
+                        if changed:
+                            if not [e for e in vroot if isinstance(e.tag, str)]:
+                                os.remove(vpath)
+                            else:
+                                vtree.write(vpath, encoding="UTF-8", xml_declaration=True)
+                overridden += len(hit)
+                added += len(okeys) - len(hit)
+                # Land the overlay entries: append into the staged file of the
+                # same rel (base duplicates already removed above), or write a
+                # fresh file with only the kept entries.
+                for rel, kept in ofile_entries.items():
+                    dst = os.path.join(staged_res, rel)
+                    if os.path.exists(dst):
+                        dtree = etree.parse(dst)
+                        for el in kept:
+                            dtree.getroot().append(el)
+                        dtree.write(dst, encoding="UTF-8", xml_declaration=True)
+                    elif kept:
+                        nroot = etree.Element("resources")
+                        for el in kept:
+                            nroot.append(el)
+                        etree.ElementTree(nroot).write(dst, encoding="UTF-8",
+                                                        xml_declaration=True)
+            sys.stderr.write("overlay %s: %d file(s) shadowed, %d values overridden, %d added\n"
+                             % (odir, len(plain_files), overridden, added))
 
     # ----- 9-patch aapt compile: returns borderless+cdNp bytes, or None to store as-is -----
     def _compile_9patch(self, path):
@@ -427,6 +576,9 @@ class PakBuilder:
         try:
             tmpres = os.path.join(tmpdir, "res")
             shutil.copytree(self.sdk_res, tmpres)
+            # build()'s final zip walk reads the staged copy (not the source
+            # sdk_res) so overlay changes to text entries (color/*.xml) ship.
+            self._sdk_staged_res = tmpres
             # remove symbols.xml / public-staging.xml: these are full-framework symbol
             # tables declaring ids that the slim res subset doesn't define → dangling
             # symbol link errors. framework -x locks IDs via public.xml, not symbols.
@@ -484,6 +636,10 @@ class PakBuilder:
                         f.writelines(l for l in lines
                                      if "system_app_widget_background_radius" not in l
                                      and "system_app_widget_inner_radius" not in l)
+            # Overlays land AFTER the scrubs/fixes above: what they change is
+            # what aapt2 sees, and they can never reintroduce a scrubbed file
+            # (symbols.xml entries are forbidden tags in overlays anyway).
+            self._apply_overlays(tmpres)
             # Synthesize manifest (framework: package=android).
             manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
                         '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
@@ -703,6 +859,9 @@ class PakBuilder:
             _idxml = os.path.join(tmpres, "values", "ID.xml")
             if os.path.exists(_idxml):
                 os.remove(_idxml)
+            # Same overlay semantics as the framework build, applied to the
+            # app's own staged res (rarely used; kept uniform).
+            self._apply_overlays(tmpres)
             # widgetEx attrs: when widgetex.apk (the 0x02 shared lib) is linked via
             # -I below, aapt2 resolves them to the stable 0x02 ids directly — so we
             # must NOT also merge the attr declarations into the app res (that would
@@ -817,6 +976,14 @@ class PakBuilder:
                     for f in files:
                         m = os.path.getmtime(os.path.join(root, f))
                         if m > newest: newest = m
+            # Overlay dirs are build inputs too — without this an edited overlay
+            # would keep producing a stale pak (same class of bug as above).
+            for odir in (self.overlay_dirs or []):
+                if os.path.isdir(odir):
+                    for root, dirs, files in os.walk(odir):
+                        for f in files:
+                            m = os.path.getmtime(os.path.join(root, f))
+                            if m > newest: newest = m
             # Also require R.h present: it is produced during a real rebuild, so
             # a missing/stale R.h must not be skipped (else builds with no R.h).
             if pak_mtime > newest and os.path.exists(self.rh_path):
@@ -826,6 +993,8 @@ class PakBuilder:
         if self.namespace == "widgetex":
             if not self.use_aapt2:
                 sys.exit("widgetex.pak requires aapt2 + android.jar")
+            if self.overlay_dirs:
+                sys.exit("widgetex.pak (attrs-only shared lib) does not support --overlay")
             self._compile_shared_lib()
             return
         # SDK mode: build complete framework from SDK data/res/ via aapt2 -x.
@@ -857,12 +1026,19 @@ class PakBuilder:
             _manifest_bin = getattr(self, '_app_manifest_bin', None)
             if _manifest_bin:
                 zf.writestr("AndroidManifest.xml", _manifest_bin, zipfile.ZIP_DEFLATED)
-            # Walk cdroid's res/ for files NOT already provided by SDK.
-            for root, dirs, files in os.walk(self.res_dir):
+            # Walk the res tree for files NOT already provided by SDK. In SDK
+            # mode walk the STAGED copy (= sdk_res + scrubs + overlay) so text
+            # entries (color/*.xml) reflect the overlay; without one the output
+            # is identical (staging is a copytree of the same tree, and the
+            # scrubs only touch values/, which is skipped below).
+            walk_dir = self.res_dir
+            if self.use_sdk and getattr(self, "_sdk_staged_res", None):
+                walk_dir = self._sdk_staged_res
+            for root, dirs, files in os.walk(walk_dir):
                 dirs.sort(); files.sort()
                 for f in files:
                     p = os.path.join(root, f)
-                    rel = os.path.relpath(p, self.res_dir).replace(os.sep, "/")
+                    rel = os.path.relpath(p, walk_dir).replace(os.sep, "/")
                     # binary apps/framework: values/ (dimen/string/style/attrs/...)
                     # resolve from arsc (string/color/dimen getters + style bag +
                     # locale setParameters). Skip the text copies — also avoids text
@@ -903,7 +1079,7 @@ class PakBuilder:
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar] [sdk_res] [filter.json] [--widgetex-apk <apk>] [--framework-apk-out <apk>]")
+        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar] [sdk_res] [filter.json] [--widgetex-apk <apk>] [--framework-apk-out <apk>] [--overlay <dir>]...")
     # Pull --widgetex-apk / --framework-apk-out <path> out of argv first: they are
     # flags so they never collide with the positional sdk_res/filter slots.
     args = sys.argv[1:]
@@ -917,10 +1093,19 @@ if __name__ == "__main__":
         i = args.index("--framework-apk-out")
         fwout = args[i + 1] if i + 1 < len(args) else None
         args = args[:i] + args[i + 2:]
+    # --overlay <dir> may repeat; applied in order, later dirs win.
+    overlays = []
+    while "--overlay" in args:
+        i = args.index("--overlay")
+        if i + 1 >= len(args):
+            sys.exit("--overlay requires a directory argument")
+        overlays.append(args[i + 1])
+        args = args[:i] + args[i + 2:]
     aapt2 = args[4] if len(args) > 4 else None
     ajar  = args[5] if len(args) > 5 else None
     sres  = args[6] if len(args) > 6 else None
     sflt  = args[7] if len(args) > 7 else None
     pb = PakBuilder(*args[0:4], aapt2_path=aapt2, android_jar=ajar, sdk_res=sres,
-                    sdk_filter=sflt, widgetex_apk=wxapk, framework_apk_out=fwout)
+                    sdk_filter=sflt, widgetex_apk=wxapk, framework_apk_out=fwout,
+                    overlay_dirs=overlays)
     pb.build()
