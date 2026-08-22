@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/viewpager.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 #include <focusfinder.h>
 #include <porting/cdtypes.h>
 #include <utils/mathutils.h>
@@ -25,6 +27,8 @@
 
 //https://www.androidos.net.cn/android/9.0.0_r8/xref/frameworks/support/viewpager/src/main/java/androidx/viewpager/widget/ViewPager.java
 namespace cdroid{
+using namespace cdroid::internal;
+
 class VPInterpolator:public Interpolator{
 public:
     float getInterpolation(float t)const override{
@@ -115,6 +119,35 @@ void ViewPager::initViewPager(const AttributeSet*atts){
     };
 }
 
+ViewPager::SavedState::SavedState(Parcelable* superState)
+  :AbsSavedState(superState){
+    position = -1;
+    adapterState = nullptr;
+}
+
+Parcelable* ViewPager::onSaveInstanceState() {
+    Parcelable* superState = ViewGroup::onSaveInstanceState();
+    SavedState* ss = new SavedState(superState);
+    ss->position = mCurItem;
+    if (mAdapter != nullptr) {
+        ss->adapterState = mAdapter->saveState();
+    }
+    return ss;
+}
+
+void ViewPager::onRestoreInstanceState(Parcelable& state) {
+    SavedState* ss = dynamic_cast<SavedState*>(&state);
+    if (ss == nullptr) {
+        ViewGroup::onRestoreInstanceState(state);
+        return;
+    }
+    ViewGroup::onRestoreInstanceState(*ss->getSuperState());
+    if (ss->adapterState != nullptr) {
+        mRestoredAdapterState = ss->adapterState;
+        mRestoredCurItem = ss->position;
+    }
+}
+
 ViewPager::ItemInfo::ItemInfo(){
     object=nullptr;
     position=0;
@@ -173,11 +206,10 @@ void ViewPager::setAdapter(PagerAdapter* adapter){
         mFirstLayout = true;
         mExpectedAdapterCount = mAdapter->getCount();
         if (mRestoredCurItem >= 0) {
-            //mAdapter->restoreState(mRestoredAdapterState, mRestoredClassLoader);
+            mAdapter->restoreState(mRestoredAdapterState);
             setCurrentItemInternal(mRestoredCurItem, false, true);
             mRestoredCurItem = -1;
-            //mRestoredAdapterState = nullptr;
-            //mRestoredClassLoader = nullptr;
+            mRestoredAdapterState = nullptr;
         } else if (!wasFirstLayout) {
             populate();
         } else {
@@ -185,7 +217,7 @@ void ViewPager::setAdapter(PagerAdapter* adapter){
         }
     }
     for(auto listener:mAdapterChangeListeners)
-        if(listener&&oldAdapter != adapter)
+        if(listener)
            listener(*this, oldAdapter, adapter);
 }
 
@@ -422,6 +454,9 @@ void ViewPager::setPageMargin(int marginPixels){
 }
 
 void ViewPager::setPageMarginDrawable(Drawable* d){
+    if (mMarginDrawable != d) {
+        delete mMarginDrawable;
+    }
     mMarginDrawable = d;
     if (d != nullptr) refreshDrawableState();
     setWillNotDraw(d == nullptr);
@@ -439,8 +474,8 @@ bool ViewPager::verifyDrawable(Drawable* who)const{
 void ViewPager::drawableStateChanged(){
     ViewGroup::drawableStateChanged();
     Drawable* d = mMarginDrawable;
-    if (d  && d->isStateful() && d->setState(getDrawableState())){
-        invalidateDrawable(*d);
+    if (d != nullptr && d->isStateful()) {
+        d->setState(getDrawableState());
     }
 }
 
@@ -522,6 +557,11 @@ ViewPager::ItemInfo* ViewPager::addNewItem(int position, int index){
     // for which isViewFromObject() is true. Casting ii->object straight to View*
     // only works for adapters that return the view itself and crashes adapters
     // that return a key (e.g. DayPickerPagerAdapter -> ViewHolder).
+    // This also flips isDecor=false for the page; LayoutParams default it to
+    // true (CDROID's stand-in for the missing @DecorView annotation). NOTE: it
+    // relies on the adapter having added the view during instantiateItem() —
+    // an adapter that defers addView to finishUpdate() (FragmentPagerAdapter
+    // style) would leave the page flagged as decor.
     View* view = findViewFromObject(ii->object);
     if (view != nullptr) {
         LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
@@ -1188,7 +1228,9 @@ bool ViewPager::pageScrolled(int scrollX){
 
     mCalledSuper = false;
     onPageScrolled(currentPage, pageOffset, offsetPixels);
-    LOGE_IF(!mCalledSuper,"onPageScrolled did not call superclass implementation");
+    if (!mCalledSuper) {
+        throw std::runtime_error("onPageScrolled did not call superclass implementation");
+    }
     return true;
 }
 
@@ -1990,8 +2032,8 @@ bool ViewPager::arrowScroll(int direction){
             for (ViewGroup* parent = currentFocused->getParent(); parent;parent = parent->getParent()) {
                 sb<<" => "<<typeid(parent).name();
             }
-            LOGD("arrowScroll tried to find focus based on non-child "
-                  "current focused view ",sb.str().c_str());
+            LOGE("arrowScroll tried to find focus based on non-child "
+                  "current focused view %s",sb.str().c_str());
             currentFocused = nullptr;
         }
     }
@@ -2170,7 +2212,10 @@ bool ViewPager::canScroll() {
 
 ViewPager::LayoutParams::LayoutParams()
   :ViewGroup::LayoutParams(MATCH_PARENT, MATCH_PARENT){
-    isDecor = true;
+    // AOSP default: false. Decor views are the ones carrying @ViewPager.DecorView;
+    // CDROID has no runtime annotations, so the XML (attrs) constructor below is the
+    // stand-in: children inflated inside a <ViewPager> element default to decor.
+    isDecor = false;
     gravity = Gravity::NO_GRAVITY;
     widthFactor = .0f;//.0f wil ask adapter for this value
     needsMeasure= true;
@@ -2181,7 +2226,9 @@ ViewPager::LayoutParams::LayoutParams()
 ViewPager::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts)
   :ViewGroup::LayoutParams(ctx,atts){
     isDecor = true;
-    gravity = Gravity::TOP;
+    // layout_gravity is shared with LinearLayout's styleable (same framework attr).
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::LinearLayoutLayout);
+    gravity = ta->getInt(R::styleable::LinearLayoutLayout_layout_gravity, Gravity::TOP);
     widthFactor = .0f;
     needsMeasure= true;
     position  = -1;

@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <fragment/fragment.h>
 #include <fragment/fragmentmanager.h>
+#include <fragment/fragmentstate.h>
 #include <fragment/fragmenthostcallback.h>
 #include <fragment/fragmentviewlifecycleowner.h>
 #include <view/view.h>
@@ -279,6 +280,26 @@ void Fragment::setHasOptionsMenu(bool hasMenu){
         // androidx: if(isAdded() && !isHidden()) mHost.onSupportInvalidateOptionsMenu();
         if(mHost && !mHidden) mHost->onSupportInvalidateOptionsMenu();
     }
+}
+
+void Fragment::setUserVisibleHint(bool isVisibleToUser){
+    mUserVisibleHint = isVisibleToUser;
+}
+
+Fragment::SavedState::SavedState(FragmentState* state){
+    mState = state;
+}
+
+Fragment::SavedState::~SavedState(){
+    delete mState;
+}
+
+void Fragment::setInitialSavedState(SavedState* state){
+    if (mState > INITIALIZING) {
+        throw std::runtime_error("Fragment already active");
+    }
+    mSavedFragmentState = state != nullptr ? state->mState : nullptr;
+    if (state != nullptr) state->mState = nullptr;
 }
 
 void Fragment::setMenuVisibility(bool menuVisible){

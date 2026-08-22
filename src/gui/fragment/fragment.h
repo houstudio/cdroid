@@ -205,6 +205,26 @@ public:
     bool isMenuVisible() const;
     void setHasOptionsMenu(bool hasMenu);
     void setMenuVisibility(bool menuVisible);
+    /* @deprecated androidx Fragment.setUserVisibleHint: flag-only port — the hint-driven
+     * menu/loader machinery is superseded by FragmentTransaction.setMaxLifecycle. */
+    void setUserVisibleHint(bool isVisibleToUser);
+    bool getUserVisibleHint() const { return mUserVisibleHint; }
+
+    /* androidx Fragment.SavedState: state captured by FragmentManager.saveFragmentInstanceState,
+     * re-applied with setInitialSavedState before the fragment is (re)added. CDROID backs it
+     * with the FragmentState DTO (the port's round-trip unit) instead of a Bundle. */
+    class SavedState{
+    public:
+        explicit SavedState(FragmentState* state);
+        ~SavedState();
+    private:
+        friend class Fragment;
+        friend class FragmentManager;
+        FragmentState* mState;
+    };
+    /*androidx: set the initial saved state before the fragment is added (mState must be
+     * INITIALIZING). Takes ownership of the wrapped state (androidx shares the Bundle).*/
+    void setInitialSavedState(SavedState* state);
     bool isDetached() const { return mDetached; }
     bool isRemoving() const { return mRemoving; }
     bool isResumed() const { return mState == RESUMED; }

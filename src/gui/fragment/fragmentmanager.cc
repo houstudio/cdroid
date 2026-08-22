@@ -84,6 +84,17 @@ void FragmentManager::attachController(FragmentHostCallback* host, FragmentConta
     // corresponding host interfaces are wired on FragmentActivity (stage 2b-5).
 }
 
+// androidx FragmentManager.saveFragmentInstanceState: capture a live fragment's state
+// as Fragment.SavedState for later re-application (FragmentStatePagerAdapter et al).
+Fragment::SavedState* FragmentManager::saveFragmentInstanceState(Fragment* fragment){
+    if (fragment->mState > Fragment::INITIALIZING) {
+        if (FragmentStateManager* fsm = getOrCreateStateManager(fragment)) {
+            return new Fragment::SavedState(fsm->saveState());
+        }
+    }
+    return nullptr;
+}
+
 FragmentStateManager* FragmentManager::getOrCreateStateManager(Fragment* f){
     auto it = mStateManagers.find(f);
     if(it != mStateManagers.end()) return it->second;

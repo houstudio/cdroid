@@ -30,6 +30,7 @@
 #include <memory>
 #include <lifecycle/lifecycle.h>
 #include <core/handler.h>
+#include <fragment/fragment.h>
 #include <core/callbackbase.h>
 #include <fragment/fragmentstate.h>
 namespace cdroid{
@@ -148,6 +149,10 @@ public:
     // Shared-element transition: the active BackStackRecord declares shared element names;
     // FragmentManager resolves them to target views (by transitionName) in the entering fragment.
     void setPendingSharedElementNames(const std::vector<std::string>& names){ mPendingSharedNames = names; }
+
+    // androidx FragmentManager.saveFragmentInstanceState(Fragment): capture a live fragment's
+    // state as Fragment::SavedState; null if the fragment is not yet added.
+    Fragment::SavedState* saveFragmentInstanceState(Fragment* fragment);
 
 private:
     friend class FragmentStateManager; // FSM drives the per-fragment state machine

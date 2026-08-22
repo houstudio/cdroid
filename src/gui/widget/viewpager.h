@@ -99,6 +99,7 @@ private:
     Drawable* mMarginDrawable;
     int mExpectedAdapterCount;
     int mRestoredCurItem = -1;
+    Parcelable* mRestoredAdapterState = nullptr; /* master also has mRestoredClassLoader */
     int mPageMargin;
     int mScrollState;
     int mTopPageBounds;
@@ -224,6 +225,14 @@ public:
     ViewPager(Context* context,const AttributeSet* attrs);
     ViewPager(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~ViewPager()override;
+    class SavedState:public AbsSavedState{
+    public:
+        int position;
+        Parcelable* adapterState;
+        SavedState(Parcelable* superState);
+    };
+    Parcelable* onSaveInstanceState()override;
+    void onRestoreInstanceState(Parcelable& state)override;
     void setAdapter(PagerAdapter* adapter);
     PagerAdapter* getAdapter();
     void addOnAdapterChangeListener(const OnAdapterChangeListener& listener);

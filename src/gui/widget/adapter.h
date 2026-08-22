@@ -166,6 +166,8 @@ public:
     virtual bool isViewFromObject(View* view, void* object);
     virtual int getItemPosition(void* object);
     virtual void notifyDataSetChanged();
+    virtual Parcelable* saveState();
+    virtual void restoreState(Parcelable* state);
     void registerDataSetObserver(DataSetObserver* observer);
     void unregisterDataSetObserver(DataSetObserver* observer);
     void setViewPagerObserver(DataSetObserver* observer);
