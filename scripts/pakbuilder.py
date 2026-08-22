@@ -13,6 +13,12 @@
 # CLI mirrors CreatePAK's 4 args:
 #   pakbuilder.py <namespace> <resdir> <pakpath> <rhpath>
 # Extra cmake args (e.g. kaidu_ms7's PIXMAN_INCLUDE_DIRS) are ignored.
+#
+# aapt2 intermediates (res copy, compiled.zip, out.apk/framework.apk) go to a
+# deterministic work dir next to the pak — <pak_dir>/<namespace>_pakbuild/ in
+# the out tree (e.g. outXXX/apps/aaa/aaa_pakbuild/) — wiped at each real
+# rebuild and KEPT afterwards, so intermediates are attributable to the
+# subproject and inspectable (no random /tmp mkdtemp names).
 # ----------------------------------------------------------------------------
 import os
 import sys
@@ -20,7 +26,6 @@ import io
 import shutil
 import struct
 import zlib
-import tempfile
 import zipfile
 
 try:
@@ -266,7 +271,7 @@ def _serialize_cdNp(nptc, nplb, npol):
 
 
 # Binary asset extensions stored verbatim (PNGs are already compressed -> ZIP_STORED).
-BIN_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".apng", ".webp", ".ttf", ".otf", ".ttc")
+BIN_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".apng", ".webp", ".ttf", ".otf", ".ttc", ".dat")
 
 
 class PakBuilder:
@@ -297,6 +302,20 @@ class PakBuilder:
         # attr table incl. the 0x010d CDROID extensions (pattern/frameDuration/
         # wheelItemCount/...) that a stock android.jar doesn't expose.
         self.framework_apk_out = framework_apk_out
+
+    def _workdir(self):
+        """Deterministic aapt2 work dir next to the pak (in the out tree):
+        <pak_dir>/<namespace>_pakbuild/ — e.g. outXXX/apps/aaa/aaa_pakbuild/.
+        Replaces tempfile.mkdtemp in /tmp: random names there are unattributable
+        to a subproject and the dirs are deleted even on failure, so nothing is
+        left to inspect. Wiped fresh at each real rebuild (the up-to-date skip
+        happens before this), kept after the build for inspection (res copy,
+        compiled.zip, out.apk/framework.apk, synthesized manifest)."""
+        d = os.path.join(os.path.dirname(os.path.abspath(self.pak_path)),
+                         "%s_pakbuild" % self.namespace)
+        shutil.rmtree(d, ignore_errors=True)
+        os.makedirs(d, exist_ok=True)
+        return d
 
     # ----- XML processing (in-memory strip; no temp dir) -----
     def _strip_xml(self, src):
@@ -404,7 +423,7 @@ class PakBuilder:
         with binary AXML layouts + resources.arsc + drawables (all with 'res/' prefix
         stripped to match pak naming convention)."""
         import subprocess, shutil, json
-        tmpdir = tempfile.mkdtemp(prefix="sdk_aapt2_")
+        tmpdir = self._workdir()   # out tree; kept after the build (inspectable)
         try:
             tmpres = os.path.join(tmpdir, "res")
             shutil.copytree(self.sdk_res, tmpres)
@@ -551,8 +570,7 @@ class PakBuilder:
                              "attr tables).\n%s\n%s" % (e.returncode, err, out))
         except Exception as e:
             raise SystemExit("pakbuilder: SDK-res compile failed — no fallback. %s" % e)
-        finally:
-            shutil.rmtree(tmpdir, ignore_errors=True)
+        # No cleanup: the work dir stays in the out tree for inspection.
 
     # ----- aapt2 compile: compile res/ to binary AXML, return {rel_path: bytes} -----
     def _merge_widgetex_attrs(self, tmpres):
@@ -620,7 +638,7 @@ class PakBuilder:
         at 0x0201xxxx, then aapt2 link --package-id 0x02 --allow-reserved-package-id.
         Output: widgetex.pak (arsc only) + widgetex.apk (kept for app -I linking)."""
         import subprocess, shutil
-        tmpdir = tempfile.mkdtemp(prefix="widgetex_")
+        tmpdir = self._workdir()   # out tree; kept after the build (inspectable)
         try:
             tmpres = os.path.join(tmpdir, "res")
             os.makedirs(tmpres, exist_ok=True)
@@ -665,7 +683,8 @@ class PakBuilder:
             sys.stderr.write("widgetex.pak: built (%d bytes arsc)\n" % (len(arsc) if arsc else 0))
             return arsc is not None
         finally:
-            shutil.rmtree(tmpdir, ignore_errors=True)
+            pass  # no cleanup: the work dir stays in the out tree for inspection
+
 
     def _compile_aapt2(self):
         """Run aapt2 compile+link on res/, return (binary_xmls, arsc) where
@@ -674,7 +693,7 @@ class PakBuilder:
         if aapt2 did not produce one). The arsc lets app @string/@color refs
         resolve alongside the framework arsc (multi-package ResTable)."""
         import subprocess, shutil
-        tmpdir = tempfile.mkdtemp(prefix="aapt2_")
+        tmpdir = self._workdir()   # out tree; kept after the build (inspectable)
         try:
             # Copy res/ to temp.
             tmpres = os.path.join(tmpdir, "res")
@@ -776,8 +795,7 @@ class PakBuilder:
         except Exception as e:
             raise SystemExit("pakbuilder: aapt2 compile failed — refusing to emit a "
                              "text-XML pak (no arsc => no ids at runtime). %s" % e)
-        finally:
-            shutil.rmtree(tmpdir, ignore_errors=True)
+        # No cleanup: the work dir stays in the out tree for inspection.
 
     # ----- packaging: one walk, XML deflated / binaries stored -----
     def build(self):
