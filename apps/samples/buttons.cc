@@ -114,7 +114,7 @@ int main(int argc,const char*argv[]){
     SeekBar*sb=new SeekBar(&app);   // seekBarStyle supplies progress/thumb/tick
     SeekBar*sb2=new SeekBar(&app);
     row(sb,800,30);
-    row(sb2,800,60);
+    row(sb2,800,30);
 #endif
     content->requestLayout();
     return app.exec();

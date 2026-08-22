@@ -12,7 +12,7 @@ public:
     View*getView(int position, View* convertView, ViewGroup* parent)override{
         TextView*tv=(TextView*)convertView;
         if(convertView==nullptr){
-            tv = new TextView("",600,20);
+            tv = new TextView(parent->getContext());
             tv->setPadding(20,0,0,0);
         }
         tv->setId(position);
@@ -40,8 +40,9 @@ int main(int argc,const char*argv[]){
     auto result = options.parse(argc,argv);
     Window*w = new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter();
-    ListView*lv = new ListView(460,500);
+    ListView*lv = new ListView(&App::getInstance());
     w->addView(lv);
+    lv->layout(0,0,460,500);
     lv->setId(100);
     adapter->setNotifyOnChange(true);
     lv->setAdapter(adapter);

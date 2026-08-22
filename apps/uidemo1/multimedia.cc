@@ -55,7 +55,7 @@ public:
             }break;
         case 0:
             {
-            ListView*lv=new ListView(800,480);
+            ListView*lv=new ListView(container->getContext());
             lv->setDivider(new ColorDrawable(0x80224422));
             lv->setDividerHeight(1);
             //lv->setFastScrollEnabled(true);
@@ -85,7 +85,7 @@ public:
             return lv;
             }   
         case 1:{//LOGD("===========1111");
-            GridView*gv=new GridView(800,480);
+            GridView*gv=new GridView(container->getContext());
             if(adapter2==nullptr)
                 adapter2=new FileAdapter(uidemo1::R::layout::fileitem2);
             gv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
