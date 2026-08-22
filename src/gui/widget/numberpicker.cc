@@ -20,6 +20,7 @@
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <text/inputtype.h>
+#include <widget/editorinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <core/color.h>
 #include <utils/textutils.h>
@@ -73,11 +74,12 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* attrs,int defSty
     // attrs (textColor2/selectedTextSize/wheelItemCount/...) via NumberPickerCdroid —
     // both public in the framework arsc (0x01011000+ block), so binary AXML works.
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::NumberPicker, defStyleAttr);
+    // One NumberPickerCdroid TypedArray for the whole ctor (values are resolved
+    // at obtain time; the getters below just pick them out, so a single array
+    // replaces the seven per-attr obtainStyledAttributes calls).
+    auto taCd = context->obtainStyledAttributes(attrs, R::styleable::NumberPickerCdroid);
     mHideWheelUntilFocused = ta->getBoolean(R::styleable::NumberPicker_hideWheelUntilFocused, false);
-    {
-        auto ta2 = context->obtainStyledAttributes(attrs, R::styleable::NumberPickerCdroid);
-        mWrapSelectorWheelPreferred = ta2->getBoolean(R::styleable::NumberPickerCdroid_wrapSelectorWheel, mWrapSelectorWheelPreferred); 
-    }
+    mWrapSelectorWheelPreferred = taCd->getBoolean(R::styleable::NumberPickerCdroid_wrapSelectorWheel, mWrapSelectorWheelPreferred);
     mDividerDrawable = ta->getDrawable(R::styleable::NumberPicker_selectionDivider);
     if (mDividerDrawable) {
         mDividerDrawable->setCallback(this);
@@ -115,10 +117,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* attrs,int defSty
     const int defaultLayoutRes = (getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ);
     int layoutRes = (int)ta->getResourceId(R::styleable::NumberPicker_internalLayout, 0);
     if (layoutRes == 0) layoutRes = defaultLayoutRes;
-    {
-        auto ta2 = context->obtainStyledAttributes(attrs, R::styleable::NumberPickerCdroid);
-        setWheelItemCount(ta2->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount));
-    }
+    setWheelItemCount(taCd->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount));
     mHasSelectorWheel = (defaultLayoutRes!=layoutRes)||(mWheelItemCount!=DEFAULT_WHEEL_ITEM_COUNT);
     LayoutInflater::from(mContext)->inflate(layoutRes,this);
     setWidthAndHeight();
@@ -163,18 +162,22 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* attrs,int defSty
         mDecrementButton = nullptr;
     }
 
+    // AOSP ctor (NumberPicker.java:777-778): the input accepts digits only and
+    // the IME shows the number panel with a DONE action. Without this the input
+    // keeps the EditText default (TEXT class + TextKeyListener): an ENTER from
+    // the soft keyboard walks the text path and inserts '\n' — the single-line
+    // edit box turns multi-line (Android never shows this because the number
+    // pad + IME_ACTION_DONE produce no newline).
+    mInputText->setInputType(EditorInfo::TYPE_CLASS_NUMBER);
+    mInputText->setImeOptions(EditorInfo::IME_ACTION_DONE);
     mInputText->setEnabled(false);
     mInputText->setFocusable(false);
-    {
-        auto ta2 = context->obtainStyledAttributes(attrs, R::styleable::NumberPickerCdroid);
-        mUpdateInputTextInFling = ta2->getBoolean(R::styleable::NumberPickerCdroid_updateInputTextInFling, mUpdateInputTextInFling);
-    }
+    mUpdateInputTextInFling = taCd->getBoolean(R::styleable::NumberPickerCdroid_updateInputTextInFling, mUpdateInputTextInFling);
     mTextAlign = mInputText->getGravity();
     mTextSize2 = mInputText->getTextSize();
     mTypeface = Typeface::create(ta->getString(R::styleable::NumberPicker_fontFamily),Typeface::NORMAL);
     {
-        auto ta2 = context->obtainStyledAttributes(attrs, R::styleable::NumberPickerCdroid);
-        auto selectedTypeface = Typeface::create(ta2->getString(R::styleable::NumberPickerCdroid_selectedfontFamily),Typeface::NORMAL);
+        auto selectedTypeface = Typeface::create(taCd->getString(R::styleable::NumberPickerCdroid_selectedfontFamily),Typeface::NORMAL);
         if(selectedTypeface!=nullptr){
             setSelectedTypeface(selectedTypeface);
         }
@@ -183,16 +186,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* attrs,int defSty
     setTextSize(ta ? ta->getDimensionPixelSize(R::styleable::NumberPicker_textSize,mTextSize) : mTextSize);
     // selectedTextSize (NumberPickerCdroid): explicit value wins, else default to textSize
     // (the old "textSize2" name read was dead — that attr was never declared anywhere).
-    {
-        auto ta2 = context->obtainStyledAttributes(attrs, R::styleable::NumberPickerCdroid);
-        mTextSize2 = ta2->getDimensionPixelSize(R::styleable::NumberPickerCdroid_selectedTextSize, mTextSize);
-    }
+    mTextSize2 = taCd->getDimensionPixelSize(R::styleable::NumberPickerCdroid_selectedTextSize, mTextSize);
     setSelectedTextSize(mTextSize2);
     setTextColor(ta->getColor(R::styleable::NumberPicker_textColor, 0xFFFFFFFF));
-    {
-        auto ta2 = context->obtainStyledAttributes(attrs, R::styleable::NumberPickerCdroid);
-        setTextColor(mTextColor, ta2->getColor(R::styleable::NumberPickerCdroid_textColor2, mTextColor));
-    }
+    setTextColor(mTextColor, taCd->getColor(R::styleable::NumberPickerCdroid_textColor2, mTextColor));
     // selectedTextColor: an explicit XML attr wins. Otherwise derive it from the
     // input text's THEMED colors — and read them BEFORE any setSelectedTextColor
     // call, because setSelectedTextColor() also does mInputText->setTextColor(),
@@ -200,17 +197,14 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* attrs,int defSty
     // (set from attr with default 0 first, then re-read from mInputText) made
     // the absent-attr case fall back to that transparent 0 — the static center
     // value turned invisible.
-    {
-        auto ta2 = context->obtainStyledAttributes(attrs, R::styleable::NumberPickerCdroid);
-        if (ta2 && ta2->hasValue(R::styleable::NumberPickerCdroid_selectedTextColor)) {
-            setSelectedTextColor(ta2->getColor(R::styleable::NumberPickerCdroid_selectedTextColor, 0));
-        } else {
-            auto colors = mInputText->getTextColors();
-            if (colors && colors->isStateful())
-                setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), mInputTextColor));
-            else
-                setSelectedTextColor(mInputText->getCurrentTextColor());
-        }
+    if (taCd && taCd->hasValue(R::styleable::NumberPickerCdroid_selectedTextColor)) {
+        setSelectedTextColor(taCd->getColor(R::styleable::NumberPickerCdroid_selectedTextColor, 0));
+    } else {
+        auto colors = mInputText->getTextColors();
+        if (colors && colors->isStateful())
+            setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), mInputTextColor));
+        else
+            setSelectedTextColor(mInputText->getCurrentTextColor());
     }
     
     mSelectorWheelPaint.setTypeface(mInputText->getTypeface());
@@ -218,10 +212,12 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* attrs,int defSty
     
     updateInputTextView();
 
-    //{ auto ta2 = context->obtainStyledAttributes(attrs, R::styleable::NumberPickerCdroid); setWheelItemCount(ta2->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount)); }
-    setValue(ta ? ta->getInt(R::styleable::NumberPicker_value, 0) : 0);
-    setMinValue(ta ? ta->getInt(R::styleable::NumberPicker_min, 0) : 0);
-    setMaxValue(ta ? ta->getInt(R::styleable::NumberPicker_max, 0) : 0);
+    // min → max → value: setValueInternal clamps to [min,max], so setting the
+    // value first would clamp it to the initial [0,0] range and the XML
+    // android:value would be lost (value=7, min=1, max=12 ended up as 1).
+    setMinValue(ta->getInt(R::styleable::NumberPicker_min, 0));
+    setMaxValue(ta->getInt(R::styleable::NumberPicker_max, 0));
+    setValue(ta->getInt(R::styleable::NumberPicker_value, 0));
 
     // displayedValues has no XML attr (not in AOSP, declared nowhere, no layout uses
     // it) — set programmatically via setDisplayedValues() only. The old name-based
@@ -594,6 +590,9 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
         removeBeginSoftInputCommand();
         removeChangeCurrentByOneFromLongPress();
         mPressedStateHelper->cancel();
+        // AOSP leaks this and leans on GC; CDROID has none — return the tracker.
+        mVelocityTracker->recycle();
+        mVelocityTracker = nullptr;
         break;
     case MotionEvent::ACTION_UP:
         removeBeginSoftInputCommand();
@@ -1136,8 +1135,11 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
             mDisplayedDrawableCount++;
         }
     }
-    if(mDisplayedDrawableCount==mDisplayedValues.size())
-        mInputText->setVisibility(View::INVISIBLE); 
+    // All-drawable values hide the input text (nothing textual to show) — but
+    // a later setDisplayedValues with text values must restore it, or the
+    // selected center value stays invisible forever.
+    mInputText->setVisibility(mDisplayedDrawableCount == (int)mDisplayedValues.size()
+                              ? View::INVISIBLE : View::VISIBLE);
     if(mDisplayedDrawableCount)
         mDisplayedDrawableSize = drsize/mDisplayedDrawableCount;
 }
@@ -1202,9 +1204,7 @@ void NumberPicker::onResolveDrawables(int layoutDirection){
 }
 
 void NumberPicker::setTextColor(int color){
-    mTextColor = color;
-    mTextColor2= color;
-    invalidate();
+    setTextColor(color, color);
 }
 
 void NumberPicker::setTextColor(int color,int color2){
@@ -1221,9 +1221,7 @@ int  NumberPicker::getTextColor()const{
 }
 
 void NumberPicker::setTextSize(int size){
-    mTextSize  = size;
-    mTextSize2 = size;
-    invalidate();
+    setTextSize(size, size);
 }
 void NumberPicker::setTextSize(int size,int size2){
     mTextSize  = size;
@@ -1480,7 +1478,7 @@ void NumberPicker::drawVerticalDividers(Canvas& canvas) {
     switch (mDividerType) {
     case SIDE_LINES:
         // draw the top divider
-        mDividerDrawable->setBounds(0, mStartDividerStart, right-left, mDividerThickness);
+        mDividerDrawable->setBounds(left, mStartDividerStart, right-left, mDividerThickness);
         mDividerDrawable->draw(canvas);
         // draw the bottom divider
         mDividerDrawable->setBounds(left,mEndDividerEnd - mDividerThickness,right - left, mDividerThickness);
@@ -1507,6 +1505,7 @@ void NumberPicker::drawText(const std::string& text,const Rect&r,int gravity,Can
     case Gravity::RIGHT:
         x = r.left + r.width-textWidth;
         break;
+    default: x = r.left + (r.width - textWidth)/2; break; // FILL et al → center
     }
     switch(gravity&Gravity::VERTICAL_GRAVITY_MASK){
     case Gravity::TOP: y = r.top; break;
@@ -1516,6 +1515,7 @@ void NumberPicker::drawText(const std::string& text,const Rect&r,int gravity,Can
     case Gravity::BOTTOM:
         y = r.top + r.height - textHeight;
         break;
+    default: y = r.top + (r.height - textHeight)/2; break; // FILL et al → center
     }
     y-=fm.ascent;
     //mSelectorWheelPaint.setTextAlign(Paint::Align::LEFT);
@@ -1761,7 +1761,14 @@ void NumberPicker::validateInputTextView(View* v){
 }
 
 bool NumberPicker::updateInputTextView(){
-    std::string text = mDisplayedValues.empty() ? formatNumber(mValue) : mDisplayedValues[mValue - mMinValue];
+    // Bounds guard: setDisplayedValues() can be called before setMin/MaxValue()
+    // narrows the range (order-sensitive API contract in AOSP too, but AOSP
+    // throws IndexOutOfBounds under GC land — here it would be UB). Fall back
+    // to the formatted number until the range matches the displayed array.
+    const int displayedIndex = mValue - mMinValue;
+    const bool inRange = !mDisplayedValues.empty()
+            && displayedIndex >= 0 && displayedIndex < (int)mDisplayedValues.size();
+    std::string text = inRange ? mDisplayedValues[displayedIndex] : formatNumber(mValue);
     if (!text.empty() ){
         std::string beforeText = mInputText->getText();
         if (text != beforeText){//!text.equals(beforeText.toString())) {
