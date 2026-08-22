@@ -18,8 +18,9 @@
 #include <widget/edittext.h>
 #include <widget/internal_R.h>
 #include <widget/editor.h>
+#include <widget/editorinfo.h>
 #include <text/selection.h>
-#include <text/inputtype.h>
+#include <text/method/textkeylistener.h>
 #include <text/method/arrowkeymovementmethod.h>
 #include <core/inputmethodmanager.h>
 #include <utils/textutils.h>
@@ -31,15 +32,28 @@ using namespace cdroid::internal;
 DECLARE_WIDGET2(EditText,R::attr::editTextStyle)
 
 EditText::EditText(Context*ctx)
-    :EditText(ctx,nullptr){}
+    :EditText(ctx,nullptr){
+}
 
-EditText::EditText(Context*ctx,const AttributeSet* attrs):EditText(ctx,attrs,cdroid::internal::R::attr::editTextStyle){}
+EditText::EditText(Context*ctx,const AttributeSet* attrs):EditText(ctx,attrs,cdroid::internal::R::attr::editTextStyle){
+}
 
 EditText::EditText(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :TextView(ctx,pAttrs, defStyleAttr){
+    // TextView's ctor evaluates virtual getDefaultEditable() while only the
+    // base subobject exists, so C++ dispatches statically to TextView's
+    // (false) where Java's super() would reach this override (true). Re-apply
+    // AOSP TextView's editable branch (TextView.java "else if (editable)":
+    // TextKeyListener + TYPE_CLASS_TEXT) here: setKeyListener installs the
+    // listener and derives mInputType from it (= TYPE_CLASS_TEXT). The guard
+    // keeps the ctor's branch priority — attrs that already configured the
+    // editor (inputType/digits/numeric/phone/autotext) are left untouched.
+    // Without this mEditor->mInputType stays TYPE_NULL, onCheckIsTextEditor()
+    // is false and the soft keyboard never shows on focus.
+    if (getInputType() == EditorInfo::TYPE_NULL) {
+        setKeyListener(TextKeyListener::getInstance());
+    }
     initEditText();
-    // (the old string-keyed inputType read was redundant — TextView's
-    // TypedArray already reads TextView_inputType — and blocked null attrs)
     // Android-aligned: an EditText's buffer is Editable from construction via
     // setText(EDITABLE) — not a runtime setEditable() conversion. setText also
     // creates the Editor and syncs mTransformed, so the Layout draws the same
