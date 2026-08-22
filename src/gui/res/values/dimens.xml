@@ -926,6 +926,10 @@
     <dimen name="item_touch_helper_swipe_escape_velocity">120dp</dimen>
     <dimen name="item_touch_helper_swipe_escape_max_velocity">800dp</dimen>
 
+    <!-- Material Design TabLayout defaults (com.google.android.material.tabs). -->
+    <dimen name="design_tab_scrollable_min_width">72dp</dimen>
+    <dimen name="design_tab_text_size_2line">12sp</dimen>
+
     <!-- The maximum size of the small notification icon. -->
     <dimen name="notification_small_icon_size">48dp</dimen>
     <!-- The maximum height of any image in a remote view. This is applied to all images in custom remoteviews. This value is determined by the maximum notification height -->

@@ -65,10 +65,12 @@ public:
     class Tab{
     private:
         friend class TabView;
+        friend class TabLayout;
         void* mTag;
         Drawable* mIcon;
         std::string mText;
         std::string mContentDesc;
+        int  mId = View::NO_ID;
         int  mPosition = INVALID_POSITION;
         int mLabelVisibilityMode =1;
         View* mCustomView;
@@ -78,7 +80,7 @@ public:
         TabView* mView;
 
         Tab();
-        ~Tab(); 
+        ~Tab();
         void*getTag()const;
         void setTag(void*tag);
         View* getCustomView()const;
@@ -86,16 +88,21 @@ public:
         Tab& setCustomView(int resid);
         Drawable* getIcon()const;
         Tab& setIcon(Drawable* icon);
+        Tab& setIcon(int resId);
+        int  getId()const;
+        Tab& setId(int id);
         int  getPosition()const;
         void setPosition(int position);
         std::string getText()const;
         Tab& setText(const std::string&text);
+        Tab& setText(int resId);
         void select();
         Tab& setTabLabelVisibility(int mode);
         int getTabLabelVisibility()const;
         bool isSelected()const;
         std::string getContentDescription()const;
         Tab& setContentDescription(const std::string&contentDesc);
+        Tab& setContentDescription(int resId);
         void updateView();
         void reset();
     };
@@ -121,6 +128,7 @@ public:
         void updateTextAndIcon(TextView* textView,ImageView* iconView,bool);
         float approximateLineWidth(Layout* layout, int line, float textSize);
         void updateBackgroundDrawable(Context* context);
+        void drawBackground(Canvas& canvas);
         void inflateAndAddDefaultIconView();
         void inflateAndAddDefaultTextView();
         void addOnLayoutChangeListener(View* view);
@@ -130,6 +138,7 @@ public:
         bool performClick()override;
         void setSelected(bool selected)override;
         void onMeasure(int origWidthMeasureSpec,int origHeightMeasureSpec)override;
+        void drawableStateChanged()override;
         void setTab(Tab* tab);
         void reset();
         void updateTab();
@@ -172,7 +181,12 @@ private:
     class FadeTabIndicatorInterpolator;
     class ElasticTabIndicatorInterpolator;
     class AdapterChangeListener:public ViewPager::OnAdapterChangeListener{
-
+    private:
+        TabLayout* mTabLayout;
+        bool mAutoRefresh;
+    public:
+        AdapterChangeListener(TabLayout* tabLayout);
+        void setAutoRefresh(bool autoRefresh);
     };
     class PagerAdapterObserver:public DataSetObserver{
     protected:
@@ -228,7 +242,7 @@ private:
     Tab* mSelectedTab;
     SlidingTabIndicator* mSlidingTabIndicator;
     TabIndicatorInterpolator* mTabIndicatorInterpolator;
-    TimeInterpolator* mTabIndicatorTimeInterpolator;
+    const TimeInterpolator* mTabIndicatorTimeInterpolator;
     bool mSetupViewPagerImplicitly;
     int mViewPagerScrollState;
 
@@ -253,6 +267,7 @@ private:
     void applyModeAndGravity();
     void applyGravityForModeScrollable(int tabGravity);
     static cdroid::RefPtr<ColorStateList> createColorStateList(int defaultColor, int selectedColor);
+    cdroid::RefPtr<ColorStateList> createDefaultColorStateList(int baseColorThemeAttr);
     int getDefaultHeight()const;
     int getTabMinWidth()const;
 protected:
@@ -265,6 +280,7 @@ protected:
     int mTabSelectedIndicatorColor;
     cdroid::RefPtr<ColorStateList> mTabTextColors;
     cdroid::RefPtr<ColorStateList> mTabIconTint;
+    int mTabIconTintMode; /* PorterDuff::Mode; NOOP = unset (Java null) */
     cdroid::RefPtr<ColorStateList> mTabRippleColorStateList;
     Drawable* mTabSelectedIndicator;
     float mTabTextSize;
@@ -272,7 +288,7 @@ protected:
     float mTabTextMultiLineSize;
     int mTabBackgroundResId = 0;
     int mTabTextAppearance = 0;
-    int mSelectedTabTextAppearance = 0;
+    int mSelectedTabTextAppearance = -1;
     int mDefaultTabTextAppearance = 0;
     int  mTabMaxWidth;
 
@@ -284,7 +300,6 @@ protected:
     int  mTabIndicatorHeight;
     bool mSmoothScroll;/*used for viewpage item switch*/
     bool mInlineLabel;
-    bool inlineLabel;
     bool unboundedRipple;
     bool mTabIndicatorFullWidth;
     std::vector<OnTabSelectedListener> mSelectedListeners;
@@ -304,6 +319,7 @@ protected:
     LinearLayout::LayoutParams* createLayoutParamsForTabs();
     void updateTabViewLayoutParams(LinearLayout::LayoutParams* lp);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    void onDraw(Canvas& canvas)override;
     void updateTabViews(bool requestLayout);
     int  getTabMaxWidth()const;
     void updateViewPagerScrollState(int scrollState);
@@ -351,6 +367,16 @@ public:
     void setTabIndicatorFullWidth(bool tabIndicatorFullWidth);
     bool isInlineLabel()const;
     void setInlineLabel(bool);
+    void setInlineLabelResource(int inlineResourceId);
+    bool hasUnboundedRipple()const;
+    void setUnboundedRipple(bool unboundedRipple);
+    void setUnboundedRippleResource(int unboundedRippleResourceId);
+    void setTabIconTint(const cdroid::RefPtr<ColorStateList>& iconTint);
+    void setTabIconTintResource(int iconTintResourceId);
+    cdroid::RefPtr<ColorStateList> getTabIconTint()const;
+    cdroid::RefPtr<ColorStateList> getTabRippleColor()const;
+    void setTabRippleColor(const cdroid::RefPtr<ColorStateList>& color);
+    void setTabRippleColorResource(int tabRippleColorResourceId);
     void setTabTextColors(const cdroid::RefPtr<ColorStateList>& textColor);
     const cdroid::RefPtr<ColorStateList> getTabTextColors()const;
     void setTabTextColors(int normalColor, int selectedColor);

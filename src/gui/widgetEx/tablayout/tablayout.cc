@@ -55,7 +55,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
     setTabIndicatorAnimationMode(ta->getInt(R::styleable::TabLayout_tabIndicatorAnimationMode, INDICATOR_ANIMATION_MODE_LINEAR));
     setSelectedTabIndicator(ta->getDrawable(R::styleable::TabLayout_tabIndicator));
     setSelectedTabIndicatorColor(ta->getColor(R::styleable::TabLayout_tabIndicatorColor, 0));
-    mSlidingTabIndicator->setSelectedIndicatorHeight(ta->getDimensionPixelSize(R::styleable::TabLayout_tabIndicatorHeight, 2));
+    mSlidingTabIndicator->setSelectedIndicatorHeight(ta->getDimensionPixelSize(R::styleable::TabLayout_tabIndicatorHeight, -1));
     setSelectedTabIndicatorGravity(ta->getInt(R::styleable::TabLayout_tabIndicatorGravity, INDICATOR_GRAVITY_BOTTOM));
     setTabIndicatorFullWidth(ta->getBoolean(R::styleable::TabLayout_tabIndicatorFullWidth, true));
 
@@ -80,17 +80,25 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
     mTabTextColors= taaTa ? taaTa->getColorStateList(R::styleable::TextAppearance_textColor) : mTabTextColors;
 
     if(ta->hasValue(R::styleable::TabLayout_tabSelectedTextAppearance)){
-        mSelectedTabTextAppearance = ta->getResourceId(R::styleable::TabLayout_tabSelectedTextAppearance, 0);
+        mSelectedTabTextAppearance = ta->getResourceId(R::styleable::TabLayout_tabSelectedTextAppearance, mTabTextAppearance);
     }
-    if(mSelectedTabTextAppearance != 0){
+    if(mSelectedTabTextAppearance != -1){
         auto saTa = context->obtainStyledAttributes(mSelectedTabTextAppearance, R::styleable::TextAppearance);
-        mSelectedTabTextSize = saTa ? saTa->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 0) : 0;
-        auto selectedTabTextColor = saTa ? saTa->getColorStateList(R::styleable::TextAppearance_textColor) : nullptr;
+        mSelectedTabTextSize = saTa->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 0);
+        auto selectedTabTextColor = saTa->getColorStateList(R::styleable::TextAppearance_textColor);
         if(mTabTextColors && selectedTabTextColor!=nullptr){
             mTabTextColors = createColorStateList(mTabTextColors->getDefaultColor(),
                     selectedTabTextColor->getColorForState({StateSet::VIEW_STATE_SELECTED}, selectedTabTextColor->getDefaultColor()));
         }
     }
+
+    if (ta->hasValue(R::styleable::TabLayout_tabIconTint)) {
+        mTabIconTint = ta->getColorStateList(R::styleable::TabLayout_tabIconTint);
+    }
+    if (ta->hasValue(R::styleable::TabLayout_tabIconTintMode)) {
+        mTabIconTintMode = Drawable::parseTintMode(ta->getInt(R::styleable::TabLayout_tabIconTintMode, -1), PorterDuff::NOOP);
+    }
+    mTabRippleColorStateList = ta->getColorStateList(R::styleable::TabLayout_tabRippleColor);
 
     // AOSP TabLayout: tabTextColor when set; otherwise the default color-state
     // list (theme textColorPrimary — white here). Unlike AOSP we ALSO fold the
@@ -100,7 +108,12 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
         if (csl) mTabTextColors = csl;
     }
     if (!mTabTextColors) {
-        mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);   // createDefaultColorStateList()
+        // createDefaultColorStateList(textColorPrimary): theme-driven default (dark text
+        // on light themes) instead of a hardcoded white.
+        mTabTextColors = createDefaultColorStateList(R::attr::textColorPrimary);
+    }
+    if (!mTabTextColors) {
+        mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
     }
 
     if(ta->hasValue(R::styleable::TabLayout_tabSelectedTextColor)){
@@ -115,10 +128,15 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
 
     mTabBackgroundResId = ta->getResourceId(R::styleable::TabLayout_tabBackground, 0);
     mContentInsetStart  = ta->getDimensionPixelSize(R::styleable::TabLayout_tabContentStart, 0);
-    mMode = ta->getInt(R::styleable::TabLayout_tabMode, mMode);
+    mMode = ta->getInt(R::styleable::TabLayout_tabMode, MODE_FIXED);
     mSmoothScroll = ta->getBoolean(R::styleable::TabLayout_smoothScroll,true);
     mTabGravity = ta->getInt(R::styleable::TabLayout_tabGravity,GRAVITY_FILL);
     mInlineLabel= ta->getBoolean(R::styleable::TabLayout_tabInlineLabel,false);
+    unboundedRipple = ta->getBoolean(R::styleable::TabLayout_tabUnboundedRipple, false);
+
+    // TODO add attr for these
+    mTabTextMultiLineSize  = context->getDimensionPixelSize(R::dimen::design_tab_text_size_2line);
+    mScrollableTabMinWidth = context->getDimensionPixelSize(R::dimen::design_tab_scrollable_min_width);
 
     applyModeAndGravity();
 }
@@ -136,7 +154,7 @@ TabLayout::~TabLayout(){
 
 void TabLayout::initTabLayout(){
     AttributeSet atts(getContext(),"cdroid");
-    mMode = MODE_SCROLLABLE;
+    mMode = MODE_FIXED;
     mInlineLabel =false;
     mTabPaddingStart= mTabPaddingTop   = 0;
     mTabPaddingEnd  = mTabPaddingBottom= 0;
@@ -150,7 +168,9 @@ void TabLayout::initTabLayout(){
     mViewPager    = nullptr;
     mPagerAdapter = nullptr;
     mTabSelectedIndicatorColor =0;
-    mTabIndicatorTimeInterpolator = nullptr;
+    // MotionUtils.resolveThemeInterpolator(motionEasingEmphasizedInterpolator,
+    // FAST_OUT_SLOW_IN) — theme interpolator not ported, use the default.
+    mTabIndicatorTimeInterpolator = FastOutSlowInInterpolator::Instance;
     mTabIndicatorInterpolator = nullptr;
     mTabIndicatorGravity  = INDICATOR_GRAVITY_BOTTOM;
     mPagerAdapterObserver = nullptr;
@@ -158,8 +178,8 @@ void TabLayout::initTabLayout(){
     mTabSelectedIndicator = nullptr;
     mRequestedTabMinWidth = INVALID_WIDTH;
     mRequestedTabMaxWidth = INVALID_WIDTH;
-    mTabTextMultiLineSize = 2;
-    mScrollableTabMinWidth= 100;
+    mTabTextMultiLineSize = 0;
+    mScrollableTabMinWidth= 0;
     mTabIndicatorFullWidth = true;
     mSetupViewPagerImplicitly = false;
     mTabIndicatorAnimationDuration = ANIMATION_DURATION;
@@ -171,6 +191,8 @@ void TabLayout::initTabLayout(){
     mDefaultTabTextAppearance = R::style::TextAppearance_Material_Button;
     mViewPagerScrollState = ViewPager::SCROLL_STATE_IDLE;
     mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
+    mTabMaxWidth  = INT_MAX;//Integer.MAX_VALUE
+    mTabIconTintMode = PorterDuff::NOOP;
     mSlidingTabIndicator = new SlidingTabIndicator(getContext(),nullptr,this);
     HorizontalScrollView::addView(mSlidingTabIndicator, 0, new HorizontalScrollView::LayoutParams(
           LayoutParams::WRAP_CONTENT, LayoutParams::MATCH_PARENT));
@@ -312,7 +334,10 @@ TabLayout::Tab* TabLayout::newTab(){
     Tab* tab =new Tab();
     tab->mParent = this;
     tab->mView = createTabView(tab);
-    return tab;    
+    if (tab->mId != View::NO_ID) {
+        tab->mView->setId(tab->mId);
+    }
+    return tab;
 }
 
 int TabLayout::getTabCount()const{
@@ -344,9 +369,17 @@ void TabLayout::removeTabAt(int position){
     }
 
     const int newTabCount = mTabs.size();
+    int newIndicatorPosition = -1;
     for (int i = position; i < newTabCount; i++) {
+        // If the current tab position is the indicator position, mark its new position as the new
+        // indicator position.
+        if (mTabs.at(i)->getPosition() == mIndicatorPosition) {
+            newIndicatorPosition = i;
+        }
         mTabs.at(i)->setPosition(i);
     }
+    // Update the indicator position to the correct selected tab after refreshing tab positions.
+    mIndicatorPosition = newIndicatorPosition;
 
     if (selectedTabPosition == position) {
         selectTab(mTabs.empty() ? nullptr : mTabs.at(std::max(0, position - 1)),true);
@@ -472,6 +505,65 @@ void TabLayout::setInlineLabel(bool v){
     applyModeAndGravity();
 }
 
+void TabLayout::setInlineLabelResource(int inlineResourceId){
+    setInlineLabel(getContext()->getResources().getBoolean(inlineResourceId));
+}
+
+bool TabLayout::hasUnboundedRipple()const{
+    return unboundedRipple;
+}
+
+void TabLayout::setUnboundedRipple(bool v){
+    if(unboundedRipple!=v){
+        unboundedRipple=v;
+        for (int i = 0; i < mSlidingTabIndicator->getChildCount(); i++) {
+            View* child = mSlidingTabIndicator->getChildAt(i);
+            if (dynamic_cast<TabView*>(child)) {
+                ((TabView*) child)->updateBackgroundDrawable(getContext());
+            }
+        }
+    }
+}
+
+void TabLayout::setUnboundedRippleResource(int unboundedRippleResourceId){
+    setUnboundedRipple(getContext()->getResources().getBoolean(unboundedRippleResourceId));
+}
+
+void TabLayout::setTabIconTint(const cdroid::RefPtr<ColorStateList>& iconTint){
+    if (mTabIconTint != iconTint) {
+        mTabIconTint = iconTint;
+        updateAllTabs();
+    }
+}
+
+void TabLayout::setTabIconTintResource(int iconTintResourceId){
+    setTabIconTint(getContext()->getColorStateList(iconTintResourceId));
+}
+
+cdroid::RefPtr<ColorStateList> TabLayout::getTabIconTint()const{
+    return mTabIconTint;
+}
+
+cdroid::RefPtr<ColorStateList> TabLayout::getTabRippleColor()const{
+    return mTabRippleColorStateList;
+}
+
+void TabLayout::setTabRippleColor(const cdroid::RefPtr<ColorStateList>& color){
+    if (mTabRippleColorStateList != color) {
+        mTabRippleColorStateList = color;
+        for (int i = 0; i < mSlidingTabIndicator->getChildCount(); i++) {
+            View* child = mSlidingTabIndicator->getChildAt(i);
+            if (dynamic_cast<TabView*>(child)) {
+                ((TabView*) child)->updateBackgroundDrawable(getContext());
+            }
+        }
+    }
+}
+
+void TabLayout::setTabRippleColorResource(int tabRippleColorResourceId){
+    setTabRippleColor(getContext()->getColorStateList(tabRippleColorResourceId));
+}
+
 void TabLayout::setTabTextColors(const cdroid::RefPtr<ColorStateList>& textColor) {
     if (mTabTextColors!=textColor){
         mTabTextColors = textColor;
@@ -515,7 +607,6 @@ void TabLayout::setupWithViewPager(ViewPager* viewPager, bool autoRefresh, bool 
 
         // Now we'll add a tab selected listener to set ViewPager's current item
         mCurrentVpSelectedListener.onTabSelected=[this](Tab&tab){
-            LOGD("selectTab %d/%d",tab.getPosition(),getTabCount());
             mViewPager->setCurrentItem(tab.getPosition(),mSmoothScroll);
         };
         addOnTabSelectedListener(mCurrentVpSelectedListener);
@@ -530,9 +621,9 @@ void TabLayout::setupWithViewPager(ViewPager* viewPager, bool autoRefresh, bool 
 
         // Add a listener so that we're notified of any adapter changes
         if (mAdapterChangeListener == nullptr) {
-            mAdapterChangeListener = new AdapterChangeListener();
+            mAdapterChangeListener = new AdapterChangeListener(this);
         }
-        //mAdapterChangeListener.setAutoRefresh(autoRefresh);
+        mAdapterChangeListener->setAutoRefresh(autoRefresh);
         viewPager->addOnAdapterChangeListener(*mAdapterChangeListener);
 
         // Now update the scroll position to match the ViewPager's current item
@@ -648,10 +739,18 @@ TabLayout::TabView*TabLayout::createTabView(TabLayout::Tab* tab){
 void TabLayout::configureTab(TabLayout::Tab* tab, int position){
     tab->setPosition(position);
     mTabs.insert(mTabs.begin()+position, tab);
+
     const int count = mTabs.size();
+    int newIndicatorPosition = -1;
     for (int i = position + 1; i < count; i++) {
+        // If the current tab position is the indicator position, mark its new position as the new
+        // indicator position.
+        if (mTabs[i]->getPosition() == mIndicatorPosition) {
+            newIndicatorPosition = i;
+        }
         mTabs[i]->setPosition(i);
     }
+    mIndicatorPosition = newIndicatorPosition;
 }
 
 void TabLayout::addTabView(TabLayout::Tab* tab){
@@ -705,15 +804,20 @@ static int dpToPx(int dps) {
 }
 
 void TabLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
-    const int idealHeight = dpToPx(getDefaultHeight()) + getPaddingTop() + getPaddingBottom();
+    // If we have a MeasureSpec which allows us to decide our height, try and use the default
+    // height
+    const int idealHeight = dpToPx(getDefaultHeight());
     switch (MeasureSpec::getMode(heightMeasureSpec)) {
     case MeasureSpec::AT_MOST:
-        heightMeasureSpec = MeasureSpec::makeMeasureSpec(
-                std::min(idealHeight, MeasureSpec::getSize(heightMeasureSpec)),
-                MeasureSpec::EXACTLY);
+        if (getChildCount() == 1 && MeasureSpec::getSize(heightMeasureSpec) >= idealHeight) {
+            getChildAt(0)->setMinimumHeight(idealHeight);
+        }
         break;
     case MeasureSpec::UNSPECIFIED:
-        heightMeasureSpec = MeasureSpec::makeMeasureSpec(idealHeight, MeasureSpec::EXACTLY);
+        heightMeasureSpec = MeasureSpec::makeMeasureSpec(
+                idealHeight + getPaddingTop() + getPaddingBottom(), MeasureSpec::EXACTLY);
+        break;
+    default:
         break;
     }
 
@@ -735,6 +839,7 @@ void TabLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         bool remeasure = false;
 
         switch (mMode) {
+        case MODE_AUTO:
         case MODE_SCROLLABLE:
             // We only need to resize the child if it's smaller than us. This is similar
             // to fillViewport
@@ -753,6 +858,16 @@ void TabLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             const int childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(
                     getMeasuredWidth(), MeasureSpec::EXACTLY);
             child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
+        }
+    }
+}
+
+void TabLayout::onDraw(Canvas& canvas){
+    // Draw tab background layer for each tab item
+    for (int i = 0; i < mSlidingTabIndicator->getChildCount(); i++) {
+        View* tabView = mSlidingTabIndicator->getChildAt(i);
+        if (dynamic_cast<TabView*>(tabView)) {
+            ((TabView*) tabView)->drawBackground(canvas);
         }
     }
 }
@@ -796,7 +911,7 @@ void TabLayout::animateToTab(int newPosition){
 void TabLayout::ensureScrollAnimator(){
      if (mScrollAnimator == nullptr) {
         mScrollAnimator = new ValueAnimator();
-        mScrollAnimator->setInterpolator(FastOutSlowInInterpolator::Instance);
+        mScrollAnimator->setInterpolator(mTabIndicatorTimeInterpolator);
         mScrollAnimator->setDuration(mTabIndicatorAnimationDuration);//ANIMATION_DURATION);
         mScrollAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim) {
            PropertyValuesHolder*ip=anim.getValues()[0]; 
@@ -815,10 +930,15 @@ void TabLayout::setSelectedTabView(int position){
     if (position < tabCount) {
         for (int i = 0; i < tabCount; i++) {
             View* child = mSlidingTabIndicator->getChildAt(i);
-            child->setSelected(i == position);
-            child->setActivated(i == position);
-            if(dynamic_cast<TabView*>(child)){
-                ((TabView*)child)->updateTab();
+            // Update the tab view if it needs to be updated (eg. it's newly selected and it is not
+            // yet selected, or it is selected and something else was selected).
+            if ((i == position && !child->isSelected()) || (i != position && child->isSelected())) {
+                child->setSelected(i == position);
+                child->setActivated(i == position);
+                if (dynamic_cast<TabView*>(child)) {
+                    ((TabView*)child)->updateTab();
+                }
+                continue;
             }
         }
     }
@@ -885,7 +1005,7 @@ void TabLayout::dispatchTabReselected(Tab* tab) {
 }
 
 int TabLayout::calculateScrollXForTab(int position, float positionOffset){
-    if (mMode == MODE_SCROLLABLE) {
+    if (mMode == MODE_SCROLLABLE || mMode == MODE_AUTO) {
         View* selectedChild = mSlidingTabIndicator->getChildAt(position);
         if(selectedChild==nullptr){
             return 0;
@@ -909,7 +1029,7 @@ int TabLayout::calculateScrollXForTab(int position, float positionOffset){
 
 void TabLayout::applyModeAndGravity(){
     int paddingStart = 0;
-    if (mMode == MODE_SCROLLABLE) {
+    if (mMode == MODE_SCROLLABLE || mMode == MODE_AUTO) {
         // If we're scrollable, or fixed at start, inset using padding
         paddingStart = std::max(0, mContentInsetStart - mTabPaddingStart);
     }
@@ -943,7 +1063,6 @@ void TabLayout::applyGravityForModeScrollable(int tabGravity) {
 }
 
 void TabLayout::updateTabViews(bool requestLayout){
-    LOGD("requestLayout=%d mintabwidth=%d %d children",requestLayout,getTabMinWidth(),mSlidingTabIndicator->getChildCount());
     for (int i = 0; i < mSlidingTabIndicator->getChildCount(); i++) {
         View* child = mSlidingTabIndicator->getChildAt(i);
         child->setMinimumWidth(getTabMinWidth());
@@ -952,6 +1071,25 @@ void TabLayout::updateTabViews(bool requestLayout){
             child->requestLayout();
         }
     }
+}
+
+RefPtr<ColorStateList> TabLayout::createDefaultColorStateList(int baseColorThemeAttr) {
+    TypedValue value;
+    if (!getContext()->getTheme().resolveAttribute(baseColorThemeAttr, &value, true)) {
+        return nullptr;
+    }
+    RefPtr<ColorStateList> baseColor = getContext()->getColorStateList(value.resourceId);
+    if (!getContext()->getTheme().resolveAttribute(R::attr::colorPrimary, &value, true)) {
+        return nullptr;
+    }
+    const int colorPrimary = value.data;
+    const int defaultColor = baseColor->getDefaultColor();
+    const std::vector<int> disabled{-R::attr::state_enabled};
+    const std::vector<int> selected{R::attr::state_selected};
+    const std::vector<int> empty;
+    return RefPtr<ColorStateList>(new ColorStateList(
+            {disabled, selected, empty},
+            {baseColor->getColorForState(disabled, defaultColor), colorPrimary, defaultColor}));
 }
 
 RefPtr<ColorStateList> TabLayout::createColorStateList(int defaultColor, int selectedColor){
@@ -964,7 +1102,6 @@ RefPtr<ColorStateList> TabLayout::createColorStateList(int defaultColor, int sel
     // Default enabled state
     states.push_back(StateSet::NOTHING);
     colors.push_back(defaultColor);
-    LOGD("createColorStateList %x,%x",defaultColor,selectedColor);
     return std::make_shared<ColorStateList>(states, colors);
 }
 
@@ -986,7 +1123,7 @@ int TabLayout::getTabMinWidth() const{
         return mRequestedTabMinWidth;
     }
     // Else, we'll use the default value
-    return mMode == MODE_SCROLLABLE ? mScrollableTabMinWidth : 0;
+    return (mMode == MODE_SCROLLABLE || mMode == MODE_AUTO) ? mScrollableTabMinWidth : 0;
 }
 
 FrameLayout::LayoutParams* TabLayout::generateLayoutParams(const AttributeSet& attrs)const{
@@ -1004,6 +1141,7 @@ TabLayout::TabItem::TabItem(Context* context,const AttributeSet* attrs):View(con
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::TabItem);
     mText = ta->getText(R::styleable::TabItem_text);
     mIcon = ta->getDrawable(R::styleable::TabItem_icon);
+    mCustomLayout = ta->getResourceId(R::styleable::TabItem_layout, 0);
     LOGV("%s,%p",mText.c_str(),mIcon);
 }
 
@@ -1059,6 +1197,23 @@ TabLayout::Tab& TabLayout::Tab::setIcon(Drawable* icon){
     return *this;
 }
 
+TabLayout::Tab& TabLayout::Tab::setIcon(int resId){
+    LOGE_IF(mParent==nullptr,"Tab not attached to a TabLayout");
+    return setIcon(mParent->getContext()->getDrawable(resId));
+}
+
+int TabLayout::Tab::getId()const{
+    return mId;
+}
+
+TabLayout::Tab& TabLayout::Tab::setId(int id){
+    mId = id;
+    if (mView) {
+        mView->setId(id);
+    }
+    return *this;
+}
+
 int TabLayout::Tab::getPosition()const{
     return mPosition;
 }
@@ -1075,6 +1230,11 @@ TabLayout::Tab& TabLayout::Tab::setText(const std::string&text){
     mText = text;
     updateView();
     return *this;
+}
+
+TabLayout::Tab& TabLayout::Tab::setText(int resId){
+    LOGE_IF(mParent==nullptr,"Tab not attached to a TabLayout");
+    return setText(mParent->getContext()->getString(resId));
 }
 
 void TabLayout::Tab::select() {
@@ -1097,7 +1257,8 @@ int TabLayout::Tab::getTabLabelVisibility()const{
 
 bool TabLayout::Tab::isSelected()const{
     LOGE_IF(mParent==nullptr,"Tab not attached to a TabLayout");
-    return mParent->getSelectedTabPosition() == mPosition;
+    const int selectedPosition = mParent->getSelectedTabPosition();
+    return selectedPosition != INVALID_POSITION && selectedPosition == mPosition;
 }
 
 TabLayout::Tab& TabLayout::Tab::setContentDescription(const std::string&contentDesc) {
@@ -1106,8 +1267,13 @@ TabLayout::Tab& TabLayout::Tab::setContentDescription(const std::string&contentD
     return *this;
 }
 
+TabLayout::Tab& TabLayout::Tab::setContentDescription(int resId){
+    LOGE_IF(mParent==nullptr,"Tab not attached to a TabLayout");
+    return setContentDescription(mParent->getContext()->getString(resId));
+}
+
 std::string TabLayout::Tab::getContentDescription()const{
-    return mContentDesc;
+    return (mView == nullptr) ? mContentDesc : mView->getContentDescription();
 }
 
 void TabLayout::Tab::updateView() {
@@ -1135,8 +1301,7 @@ TabLayout::TabView::TabView(Context* context,const AttributeSet*atts,TabLayout*p
     mCustomView = nullptr;
     mCustomTextView = nullptr;
     mCustomIconView = nullptr;
-    if(parent->mTabBackgroundResId != 0)
-        setBackgroundResource(parent->mTabBackgroundResId);
+    updateBackgroundDrawable(context);
     setPaddingRelative(parent->mTabPaddingStart, parent->mTabPaddingTop, parent->mTabPaddingEnd, parent->mTabPaddingBottom);
     setGravity(Gravity::CENTER);
     setOrientation(parent->mInlineLabel?HORIZONTAL:VERTICAL);
@@ -1162,33 +1327,51 @@ void TabLayout::TabView::updateBackgroundDrawable(Context* context) {
     Drawable* contentDrawable = new GradientDrawable();
     ((GradientDrawable*) contentDrawable)->setColor(Color::TRANSPARENT);
 
-    if (0/*tabRippleColorStateList*/) {
-        GradientDrawable* maskDrawable = new GradientDrawable();
-        // TODO: Find a workaround for this. Currently on certain devices/versions,
-        // LayerDrawable will draw a black background underneath any layer with a non-opaque color,
-        // (e.g. ripple) unless we set the shape to be something that's not a perfect rectangle.
-        maskDrawable->setCornerRadius(0.00001F);
-        maskDrawable->setColor(Color::WHITE);
-
-        //ColorStateList* rippleColor =  RippleUtils.convertToRippleDrawableColor(tabRippleColorStateList);
+    if (mParent->mTabRippleColorStateList) {
+        // TODO: RippleUtils.convertToRippleDrawableColor is not ported; use the
+        // ripple color state list as-is.
+        RefPtr<ColorStateList> rippleColor = mParent->mTabRippleColorStateList;
 
         // TODO: Add support to RippleUtils.compositeRippleColorStateList for different ripple color
         // for selected items vs non-selected items
-        /*if (Build::VERSION::SDK_INT >= Build::VERSION_CODES::LOLLIPOP) {
-            background =new RippleDrawable(
-                  rippleColor,
-                  unboundedRipple ? null : contentDrawable,
-                  unboundedRipple ? null : maskDrawable);
+        if (mParent->unboundedRipple) {
+            background = new RippleDrawable(rippleColor, nullptr, nullptr);
         } else {
-           Drawable* rippleDrawable = DrawableCompat.wrap(maskDrawable);
-           rippleDrawable->setTintList(rippleColor);
-           background = new LayerDrawable(new Drawable[] {contentDrawable, rippleDrawable});
-        }*/
+            GradientDrawable* maskDrawable = new GradientDrawable();
+            // TODO: Find a workaround for this. Currently on certain devices/versions,
+            // LayerDrawable will draw a black background underneath any layer with a non-opaque color,
+            // (e.g. ripple) unless we set the shape to be something that's not a perfect rectangle.
+            maskDrawable->setCornerRadius(0.00001F);
+            maskDrawable->setColor(Color::WHITE);
+            background = new RippleDrawable(rippleColor, contentDrawable, maskDrawable);
+        }
     } else {
         background = contentDrawable;
     }
     setBackground(background);
     mParent->invalidate();
+}
+
+void TabLayout::TabView::drawBackground(Canvas& canvas) {
+    if (mBaseBackgroundDrawable) {
+        mBaseBackgroundDrawable->setBounds(getLeft(), getTop(),
+                getRight() - getLeft(), getBottom() - getTop());
+        mBaseBackgroundDrawable->draw(canvas);
+    }
+}
+
+void TabLayout::TabView::drawableStateChanged() {
+    LinearLayout::drawableStateChanged();
+    bool changed = false;
+    std::vector<int> state = getDrawableState();
+    if (mBaseBackgroundDrawable && mBaseBackgroundDrawable->isStateful()) {
+        changed |= mBaseBackgroundDrawable->setState(state);
+    }
+
+    if (changed) {
+        invalidate();
+        mParent->invalidate(); // Invalidate TabLayout, which draws mBaseBackgroundDrawable
+    }
 }
 
 bool TabLayout::TabView::performClick(){
@@ -1247,6 +1430,9 @@ void TabLayout::TabView::onMeasure(int origWidthMeasureSpec,int origHeightMeasur
     if (mTextView != nullptr) {
         //Resources res = getResources();
         float textSize = mParent->mTabTextSize;
+        if (isSelected() && mParent->mSelectedTabTextAppearance != -1) {
+            textSize = mParent->mSelectedTabTextSize;
+        }
         int maxLines = mDefaultMaxLines;
 
         if (mIconView && mIconView->getVisibility() == VISIBLE) {
@@ -1353,7 +1539,7 @@ void TabLayout::TabView::updateTab() {
         }
 
         mTextView->setTextAppearance(mParent->mDefaultTabTextAppearance);
-        if (isSelected() && mParent->mSelectedTabTextAppearance != 0) {
+        if (isSelected() && mParent->mSelectedTabTextAppearance != -1) {
             mTextView->setTextAppearance(mParent->mSelectedTabTextAppearance);
         } else {
             mTextView->setTextAppearance(mParent->mTabTextAppearance);
@@ -1439,7 +1625,7 @@ int TabLayout::TabView::getContentHeight() const{
 }
 
 void TabLayout::TabView::updateOrientation() {
-    this->setOrientation(mParent->inlineLabel ? 0 : 1);
+    setOrientation(mParent->mInlineLabel ? HORIZONTAL : VERTICAL);
     if (mCustomTextView == nullptr && mCustomIconView == nullptr) {
         updateTextAndIcon(mTextView, mIconView, true);
     } else {
@@ -1450,6 +1636,12 @@ void TabLayout::TabView::updateOrientation() {
 
 void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconView,bool addDefaultMargins) {
     Drawable* icon = mTab ? mTab->getIcon() : nullptr;
+    if (icon) {
+        icon->setTintList(mParent->mTabIconTint);
+        if (mParent->mTabIconTintMode != PorterDuff::NOOP) {
+            icon->setTintMode(mParent->mTabIconTintMode);
+        }
+    }
     std::string text = mTab ? mTab->getText() : "";
     std::string contentDesc = mTab ? mTab->getContentDescription() : "";
 
@@ -1469,13 +1661,10 @@ void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconVie
     bool showingText =false;
     if (textView != nullptr) {
         showingText = hasText && (mTab->mLabelVisibilityMode==TAB_LABEL_VISIBILITY_LABELED);
+        textView->setText(hasText ? text : "");
+        textView->setVisibility(showingText ? VISIBLE : GONE);
         if (hasText) {
-            textView->setText(text);
-            textView->setVisibility(VISIBLE);
             setVisibility(VISIBLE);
-        } else {
-            textView->setVisibility(GONE);
-            textView->setText("");
         }
         textView->setContentDescription(contentDesc);
     }
@@ -1483,7 +1672,7 @@ void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconVie
     if (addDefaultMargins && iconView != nullptr) {
         MarginLayoutParams* lp = ((MarginLayoutParams*) iconView->getLayoutParams());
         int iconMargin = 0;
-        if(showingText && mIconView->getVisibility()==VISIBLE){
+        if(showingText && iconView->getVisibility()==VISIBLE){
             iconMargin = dpToPx(DEFAULT_GAP_TEXT_ICON);
         }
         if(mParent->mInlineLabel){
@@ -1511,7 +1700,7 @@ TabLayout::Tab* TabLayout::TabView::getTab() {
  * Approximates a given lines width with the new provided text size.
  */
 float TabLayout::TabView::approximateLineWidth(Layout* layout, int line, float textSize) {
-    return layout->getLineWidth(line) ;//* (textSize / layout.getPaint().getTextSize());
+    return layout->getLineWidth(line) * (textSize / layout->getPaint()->getTextSize());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1555,6 +1744,9 @@ bool TabLayout::SlidingTabIndicator::childrenNeedLayout() const{
 }
 
 void TabLayout::SlidingTabIndicator::setIndicatorPositionFromTabPosition(int position, float positionOffset) {
+    // Since we are tweening the indicator in between the position and position+positionOffset,
+    // we set the indicator position to whichever is closer.
+    mParent->mIndicatorPosition = std::round(position + positionOffset);
     if (mIndicatorAnimator && mIndicatorAnimator->isRunning()) {
         mIndicatorAnimator->cancel();
     }
@@ -1593,7 +1785,7 @@ void TabLayout::SlidingTabIndicator::onMeasure(int widthMeasureSpec, int heightM
         return;
     }
 
-    if (mParent->mMode == MODE_FIXED && mParent->mTabGravity == GRAVITY_CENTER) {
+    if ((mParent->mTabGravity == GRAVITY_CENTER) || mParent->mMode == MODE_AUTO) {
         const int count = getChildCount();
 
         // First we'll find the widest tab
@@ -1692,7 +1884,8 @@ void TabLayout::SlidingTabIndicator::setIndicatorPosition(int left, int right) {
 }
 
 void TabLayout::SlidingTabIndicator::animateIndicatorToPosition(int position, int duration) {
-    if (mIndicatorAnimator && mIndicatorAnimator->isRunning()) {
+    if (mIndicatorAnimator && mIndicatorAnimator->isRunning()
+            && mParent->mIndicatorPosition != position) {
         mIndicatorAnimator->cancel();
     }
 
@@ -1756,18 +1949,13 @@ void TabLayout::SlidingTabIndicator::draw(Canvas& canvas) {
         indicatorTop    = (getHeight()-indicatorHeight)/2;
         indicatorBottom = (getHeight()+indicatorHeight)/2; 
         break;
-    case Gravity::TOP:
+    case INDICATOR_GRAVITY_TOP:
         indicatorTop = 0;
         indicatorBottom = indicatorHeight;
         break;
-    case Gravity::FILL_VERTICAL:
+    case INDICATOR_GRAVITY_STRETCH:
         indicatorTop = 0;
         indicatorBottom = getHeight();
-        break;
-    case INDICATOR_GRAVITY_STRETCH:
-        // Default to BOTTOM if gravity doesn't match any known value
-        indicatorTop   = getHeight()-indicatorHeight;
-        indicatorBottom= getHeight();
         break;
     }
 
@@ -1819,7 +2007,7 @@ void TabLayout::TabLayoutOnPageChangeListener::doPageScrolled(int position,float
         // onPageSelected() instead.
         const bool updateIndicator = !(mScrollState == ViewPager::SCROLL_STATE_SETTLING
                 && mPreviousScrollState == ViewPager::SCROLL_STATE_IDLE);
-        mTabLayout->setScrollPosition(position, positionOffset, updateText, updateIndicator);
+        mTabLayout->setScrollPosition(position, positionOffset, updateText, updateIndicator, false);
     }
 }
 
@@ -1849,6 +2037,22 @@ void TabLayout::PagerAdapterObserver::onInvalidated(){
 
 void TabLayout::PagerAdapterObserver::clearSavedState(){
     mTabLayout->populateFromPagerAdapter();
+}
+
+TabLayout::AdapterChangeListener::AdapterChangeListener(TabLayout* tabLayout){
+    mTabLayout  = tabLayout;
+    mAutoRefresh = false;
+    // onAdapterChanged (TabLayout.java AdapterChangeListener)
+    *(ViewPager::OnAdapterChangeListener*)this =
+        [this](ViewPager& viewPager, PagerAdapter* /*oldAdapter*/, PagerAdapter* newAdapter) {
+            if (mTabLayout->mViewPager == &viewPager) {
+                mTabLayout->setPagerAdapter(newAdapter, mAutoRefresh);
+            }
+        };
+}
+
+void TabLayout::AdapterChangeListener::setAutoRefresh(bool autoRefresh){
+    mAutoRefresh = autoRefresh;
 }
 
 /*------------------------------------------------------------------------------*/

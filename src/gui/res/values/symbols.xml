@@ -3867,6 +3867,10 @@
   <java-symbol type="dimen" name="item_touch_helper_swipe_escape_velocity"/>
   <java-symbol type="dimen" name="item_touch_helper_swipe_escape_max_velocity"/>
 
+  <!-- com.google.android.material.tabs.TabLayout -->
+  <java-symbol type="dimen" name="design_tab_scrollable_min_width"/>
+  <java-symbol type="dimen" name="design_tab_text_size_2line"/>
+
   <!-- com.android.server.autofill -->
   <java-symbol type="layout" name="autofill_save"/>
   <java-symbol type="layout" name="autofill_dataset_picker"/>
