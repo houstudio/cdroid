@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionParse: a single <ViewTransition> with the attribute set under test
+     (onStateTransition / duration / viewTransitionMode / motionInterpolator) plus a
+     nested KeyFrameSet. -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <ViewTransition android:id="@+id/vt1" app:motionTarget="@+id/vtp_target"
+                    app:onStateTransition="actionDown" app:duration="300"
+                    app:viewTransitionMode="noState" app:motionInterpolator="standard">
+        <KeyFrameSet>
+            <KeyAttribute app:motionTarget="@+id/vtp_target" app:framePosition="50"
+                          android:alpha="0" />
+        </KeyFrameSet>
+    </ViewTransition>
+</MotionScene>

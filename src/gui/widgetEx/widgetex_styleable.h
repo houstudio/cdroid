@@ -129,6 +129,20 @@ namespace internal { namespace R { namespace attr {
     constexpr uint32_t wavePhase = 0x020100a1;
     constexpr uint32_t waveShape = 0x020100a0;
     constexpr uint32_t waveVariesBy = 0x020100a4;
+    constexpr uint32_t defaultState = 0x0201017f;
+    constexpr uint32_t constraints = 0x02010178;
+    constexpr uint32_t region_widthMoreThan = 0x02010183;
+    constexpr uint32_t region_widthLessThan = 0x02010182;
+    constexpr uint32_t region_heightMoreThan = 0x02010181;
+    constexpr uint32_t region_heightLessThan = 0x02010180;
+    constexpr uint32_t deriveConstraintsFrom = 0x02010184;
+    constexpr uint32_t attributeName = 0x02010177;
+    constexpr uint32_t customColorValue = 0x0201017a;
+    constexpr uint32_t customIntegerValue = 0x0201017d;
+    constexpr uint32_t customFloatValue = 0x0201017c;
+    constexpr uint32_t customDimension = 0x0201017b;
+    constexpr uint32_t customStringValue = 0x0201017e;
+    constexpr uint32_t customBoolean = 0x02010179;
     constexpr uint32_t placeholder_emptyVisibility = 0x02010110;
     constexpr uint32_t grid_rows = 0x0201010a;
     constexpr uint32_t grid_columns = 0x02010106;
@@ -648,6 +662,37 @@ namespace internal { namespace R { namespace styleable {
     constexpr int MotionEffect_motionEffect_viewTransition = 5;
     constexpr int MotionEffect_motionEffect_move = 6;
     constexpr int MotionEffect_motionEffect_strict = 7;
+
+    // StateSet (1 attrs)
+    extern const uint32_t StateSet[];
+    constexpr int StateSet_defaultState = 0;
+
+    // ConstraintSet (1 attrs)
+    extern const uint32_t ConstraintSet[];
+    constexpr int ConstraintSet_deriveConstraintsFrom = 0;
+
+    // State (2 attrs)
+    extern const uint32_t State[];
+    constexpr int State_id = 0;
+    constexpr int State_constraints = 1;
+
+    // Variant (5 attrs)
+    extern const uint32_t Variant[];
+    constexpr int Variant_constraints = 0;
+    constexpr int Variant_region_widthMoreThan = 1;
+    constexpr int Variant_region_widthLessThan = 2;
+    constexpr int Variant_region_heightMoreThan = 3;
+    constexpr int Variant_region_heightLessThan = 4;
+
+    // CustomAttribute (7 attrs)
+    extern const uint32_t CustomAttribute[];
+    constexpr int CustomAttribute_attributeName = 0;
+    constexpr int CustomAttribute_customColorValue = 1;
+    constexpr int CustomAttribute_customIntegerValue = 2;
+    constexpr int CustomAttribute_customFloatValue = 3;
+    constexpr int CustomAttribute_customDimension = 4;
+    constexpr int CustomAttribute_customStringValue = 5;
+    constexpr int CustomAttribute_customBoolean = 6;
 
     // Placeholder (2 attrs)
     extern const uint32_t Placeholder[];

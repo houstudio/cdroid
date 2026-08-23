@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KeyFramesXmlParse: a KeyAttribute + a KeyPosition for the same target. alpha/rotation
+     are framework attrs (android:), the motion attrs live in the widgetex namespace. -->
+<KeyFrameSet xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <KeyAttribute app:motionTarget="@+id/kf_target" app:framePosition="50"
+                  android:alpha="0" android:rotation="90" />
+    <KeyPosition app:motionTarget="@+id/kf_target" app:framePosition="50"
+                 app:percentX="0.5" app:percentY="0.5" app:keyPositionType="pathRelative" />
+</KeyFrameSet>

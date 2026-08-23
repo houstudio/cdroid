@@ -166,25 +166,34 @@ ConstraintSet::Constraint& ConstraintSet::get(int id) {
 ConstraintSet::CustomAttribute ConstraintSet::parseCustomAttribute(const AttributeSet& parser) {
     using CustomAttribute = ConstraintSet::CustomAttribute;
     CustomAttribute ca;
-    ca.name = parser.getAttributeValue(std::string(), "attributeName");
-    // Presence is detected via getAttributeValue (the hasValue equivalent); the
-    // value is then read with the matching typed getter, which resolves @dimen/
-    // @color/@string refs and handles numeric formats instead of parsing inline.
-    if (!parser.getAttributeValue(std::string(), "customColorValue").empty()) {
-        ca.type = CustomAttribute::COLOR;
-        ca.intValue = parser.getAttributeUnsignedIntValue("", "customColorValue", 0);
-    } else if (!parser.getAttributeValue(std::string(), "customIntegerValue").empty()) {
-        ca.type = CustomAttribute::INTEGER;
-        ca.intValue = parser.getAttributeIntValue(std::string(), "customIntegerValue", 0);
-    } else if (!parser.getAttributeValue(std::string(), "customFloatValue").empty()) {
-        ca.type = CustomAttribute::FLOAT;
-        ca.floatValue = parser.getAttributeFloatValue(std::string(), "customFloatValue", 0.f);
-    } else if (!parser.getAttributeValue(std::string(), "customStringValue").empty()) {
-        ca.type = CustomAttribute::STRING;
-        ca.stringValue = parser.getAttributeValue(std::string(), "customStringValue");
-    } else if (!parser.getAttributeValue(std::string(), "customBooleanValue").empty()) {
-        ca.type = CustomAttribute::BOOLEAN;
-        ca.boolValue = parser.getAttributeBooleanValue(std::string(), "customBooleanValue", false);
+    // androidx ConstraintAttribute.extractAttributes: TypedArray index-count loop; presence is
+    // "the authored index appears", each value read with the type-matching getter (aapt2 has
+    // already resolved @color/@string refs and numeric formats into typed values).
+    Context* ctx = parser.getContext();
+    if (ctx == nullptr) return ca;
+    auto ta = ctx->obtainStyledAttributes(parser, R::styleable::CustomAttribute);
+    if (!ta) return ca;
+    namespace CU = R::styleable;
+    ca.name = ta->getString(CU::CustomAttribute_attributeName);
+    const size_t n = ta->getIndexCount();
+    for (size_t i = 0; i < n; i++) {
+        const size_t attr = ta->getIndex(i);
+        if (attr == (size_t)CU::CustomAttribute_customColorValue) {
+            ca.type = CustomAttribute::COLOR;
+            ca.intValue = (int)ta->getColor(attr, 0);
+        } else if (attr == (size_t)CU::CustomAttribute_customIntegerValue) {
+            ca.type = CustomAttribute::INTEGER;
+            ca.intValue = ta->getInteger(attr, -1);
+        } else if (attr == (size_t)CU::CustomAttribute_customFloatValue) {
+            ca.type = CustomAttribute::FLOAT;
+            ca.floatValue = ta->getFloat(attr, 0.f);
+        } else if (attr == (size_t)CU::CustomAttribute_customStringValue) {
+            ca.type = CustomAttribute::STRING;
+            ca.stringValue = ta->getString(attr);
+        } else if (attr == (size_t)CU::CustomAttribute_customBoolean) {
+            ca.type = CustomAttribute::BOOLEAN;
+            ca.boolValue = ta->getBoolean(attr, false);
+        }
     }
     return ca;
 }
@@ -752,7 +761,12 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     l.constraintTag        = ta->hasValue(R::styleable::Constraint_layout_constraintTag) ? ta->getString(R::styleable::Constraint_layout_constraintTag) : l.constraintTag;
 
     // --- property set (visibility / alpha / progress) ---
-    p.visibility = ta->getInt(R::styleable::Constraint_visibility, p.visibility);
+    // android:visibility's attr enum is 0/1/2 (framework res); translate through the
+    // flags table right after the read, exactly like androidx populateConstraint
+    // (VISIBILITY_FLAGS[a.getInt(...)]) — consumers compare View::INVISIBLE/GONE (0/4/8).
+    static constexpr int VISIBILITY_FLAGS[] = {View::VISIBLE, View::INVISIBLE, View::GONE};
+    const int visibility = ta->getInt(R::styleable::Constraint_visibility, -1);
+    if (visibility >= 0) p.visibility = VISIBILITY_FLAGS[visibility];
     p.alpha      = ta->getFloat(R::styleable::Constraint_alpha, p.alpha);
     p.mProgress  = ta->getFloat(R::styleable::Constraint_motionProgress, p.mProgress);
     p.mVisibilityMode = ta->getInt(R::styleable::Constraint_visibilityMode, p.mVisibilityMode);

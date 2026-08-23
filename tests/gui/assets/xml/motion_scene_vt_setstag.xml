@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionSetsTagOnCompletion: a noState ViewTransition that sets a keyed tag on
+     completion (setsTag is a reference — the tag key is the resource id). -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <ViewTransition android:id="@+id/vt_tag" app:motionTarget="@+id/stg_target"
+                    app:onStateTransition="actionDown" app:duration="400"
+                    app:viewTransitionMode="noState" app:setsTag="@+id/stg_tag_key">
+        <KeyFrameSet>
+            <KeyAttribute app:motionTarget="@+id/stg_target" app:framePosition="50"
+                          android:alpha="0" />
+        </KeyFrameSet>
+    </ViewTransition>
+</MotionScene>

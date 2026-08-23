@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionSharedValueSetFires: sharedValueSet trigger — the controller listens on the
+     SharedValues registry for SharedValueId and fires when the value is reached. -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <Transition app:constraintSetStart="@+id/sv_start" app:constraintSetEnd="@+id/sv_end" />
+    <ConstraintSet android:id="@+id/sv_start">
+        <Constraint android:id="@+id/sv_target" android:layout_width="100px" android:layout_height="50px"
+                    app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    </ConstraintSet>
+    <ConstraintSet android:id="@+id/sv_end">
+        <Constraint android:id="@+id/sv_target" android:layout_width="100px" android:layout_height="50px"
+                    app:layout_constraintRight_toRightOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+    </ConstraintSet>
+    <ViewTransition android:id="@+id/vt_shared" app:motionTarget="@+id/sv_target"
+                    app:onStateTransition="sharedValueSet" app:SharedValueId="@+id/sv_key"
+                    app:SharedValue="42" app:duration="400"
+                    app:viewTransitionMode="noState">
+        <KeyFrameSet>
+            <KeyAttribute app:motionTarget="@+id/sv_target" app:framePosition="50"
+                          android:alpha="0" />
+        </KeyFrameSet>
+    </ViewTransition>
+</MotionScene>

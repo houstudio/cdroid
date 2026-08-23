@@ -824,6 +824,58 @@
         <attr name="motionEffect_strict" format="boolean"/>
     </declare-styleable>
 
+    <!-- ===== ConstraintLayoutStates (StateSet) standalone attrs. androidx keeps these as
+         declare-styleable-only attrs; they are declared standalone here so both the State
+         and Variant styleables can share `constraints` (same single attr). -->
+    <attr name="defaultState" format="reference" />
+    <attr name="constraints" format="reference" />
+    <attr name="region_widthMoreThan" format="dimension" />
+    <attr name="region_widthLessThan" format="dimension" />
+    <attr name="region_heightMoreThan" format="dimension" />
+    <attr name="region_heightLessThan" format="dimension" />
+    <!-- ConstraintSet (deriveConstraintsFrom; androidx's styleable also carries
+         stateLabels/constraintRotate, which CDROID does not parse). -->
+    <attr name="deriveConstraintsFrom" format="reference" />
+
+    <!-- CustomAttribute (ConstraintSet <CustomAttribute> / ViewTransition <CustomAttribute>);
+         names follow androidx attrs.xml (customDimension/customBoolean, no ...Value suffix). -->
+    <attr name="attributeName" format="string" />
+    <attr name="customColorValue" format="color" />
+    <attr name="customIntegerValue" format="integer" />
+    <attr name="customFloatValue" format="float" />
+    <attr name="customDimension" format="dimension" />
+    <attr name="customStringValue" format="string" />
+    <attr name="customBoolean" format="boolean" />
+
+    <!-- ConstraintLayoutStates parse (androidx ConstraintLayoutStates.java: StateSet/
+         State/Variant read via TypedArray; State's id is the framework android:id). -->
+    <declare-styleable name="StateSet">
+        <attr name="defaultState"/>
+    </declare-styleable>
+    <declare-styleable name="ConstraintSet">
+        <attr name="deriveConstraintsFrom"/>
+    </declare-styleable>
+    <declare-styleable name="State">
+        <attr name="android:id"/>
+        <attr name="constraints"/>
+    </declare-styleable>
+    <declare-styleable name="Variant">
+        <attr name="constraints"/>
+        <attr name="region_widthMoreThan"/>
+        <attr name="region_widthLessThan"/>
+        <attr name="region_heightMoreThan"/>
+        <attr name="region_heightLessThan"/>
+    </declare-styleable>
+    <declare-styleable name="CustomAttribute">
+        <attr name="attributeName"/>
+        <attr name="customColorValue"/>
+        <attr name="customIntegerValue"/>
+        <attr name="customFloatValue"/>
+        <attr name="customDimension"/>
+        <attr name="customStringValue"/>
+        <attr name="customBoolean"/>
+    </declare-styleable>
+
     <!-- ===== Standalone helper attrs (Placeholder / Grid / Carousel).
          These were previously undeclared, so under binary AXML they could not resolve
          (aapt2 has no resource id for them). Declaring them + pinning ids in public.xml

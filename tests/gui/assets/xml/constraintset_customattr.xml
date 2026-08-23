@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ConstraintSetCustomAttribute: a <CustomAttribute> with a color value, parsed into
+     the Constraint model and dispatched at applyTo() to a registered handler. -->
+<ConstraintSet xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+               xmlns:android="http://schemas.android.com/apk/res/android">
+    <Constraint android:id="@+id/ca_target" android:layout_width="100px" android:layout_height="50px">
+        <CustomAttribute app:attributeName="textColor" app:customColorValue="#FFFF0000" />
+    </Constraint>
+</ConstraintSet>

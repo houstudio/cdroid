@@ -50,7 +50,6 @@ class ConstraintLayoutStates {
         float mMaxWidth  = NAN;
         float mMaxHeight = NAN;
         int mConstraintID = -1;
-        std::string mConstraintsAttr;            // raw `constraints` attr (for @layout/ detection)
         ConstraintSet* mConstraintSet = nullptr; // borrowed (owned by mConstraintSetMap/mClonedSets)
         bool match(float widthDp, float heightDp) const;
     };
@@ -60,7 +59,6 @@ class ConstraintLayoutStates {
         int mId = -1;
         std::vector<Variant> mVariants;
         int mConstraintID = -1;
-        std::string mConstraintsAttr;            // raw `constraints` attr (for @layout/ detection)
         ConstraintSet* mConstraintSet = nullptr; // default (borrowed)
         // Index of the first matching Variant, or -1 if none.
         int findMatch(float widthDp, float heightDp) const;
@@ -91,16 +89,14 @@ class ConstraintLayoutStates {
     // current state/constraint so a no-op (same state, dimensions still matching) skips applyTo.
     void updateConstraints(int id, float width, float height);
 
-    // Stable scene-local id for a name (e.g. "@+id/s1" / "s1" -> int). Mirrors MotionScene.
-    int getId(const std::string& idString) const;
-    static std::string stripId(const std::string& idString);
-
   private:
     void parse(Context* ctx, XmlPullParser& parser);
     int parseConstraintSet(Context* ctx, XmlPullParser& parser); // inline <ConstraintSet> -> map
-    // Resolve a `constraints` attr value to a ConstraintSet: an inline <ConstraintSet> ref
-    // ("@+id/x") looks up mConstraintSetMap; a layout resource ("@layout/x") clones it. Nullptr if none.
-    ConstraintSet* resolveConstraintRef(const std::string& attr);
+    // Resolve a `constraints` resource id to a ConstraintSet: an inline <ConstraintSet> ref
+    // looks up mConstraintSetMap; a layout resource is cloned (androidx State/Variant ctors
+    // check getResourceTypeName == "layout" and clone there; CDROID resolves lazily after the
+    // full parse so inline sets defined later in the file resolve too). Nullptr if unknown.
+    ConstraintSet* resolveConstraintRef(int constraintId);
     // After all elements are parsed, wire each State/Variant `constraints` ref to its ConstraintSet.
     void resolveConstraintRefs();
 
@@ -115,8 +111,6 @@ class ConstraintLayoutStates {
     std::vector<State> mStates;
     std::unordered_map<int, std::shared_ptr<ConstraintSet>> mConstraintSetMap; // inline sets (owned)
     std::vector<std::shared_ptr<ConstraintSet>> mClonedSets; // layout-resource clones (owned)
-    mutable std::unordered_map<std::string, int> mIdMap;
-    mutable int mNextLocalId = 0x10000; // base for scene-local ids (avoids R.id collision)
 };
 
 } // namespace cdroid

@@ -84,6 +84,11 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t MotionEffect[] = {
         0x020100bc, 0x020100bd, 0x020100be, 0x020100bf, 0x020100c0, 0x020100c1, 0x020100c2,
         0x020100c3, 0 };
+    const uint32_t StateSet[] = { 0x0201017f, 0 };
+    const uint32_t ConstraintSet[] = { 0x02010184, 0 };
+    const uint32_t State[] = { 0x010100d0, 0x02010178, 0 };
+    const uint32_t Variant[] = { 0x02010178, 0x02010183, 0x02010182, 0x02010181, 0x02010180, 0 };
+    const uint32_t CustomAttribute[] = { 0x02010177, 0x0201017a, 0x0201017d, 0x0201017c, 0x0201017b, 0x0201017e, 0x02010179, 0 };
     const uint32_t Placeholder[] = { 0x02010104, 0x02010110, 0 };
     const uint32_t Grid[] = {
         0x0201010a, 0x02010106, 0x0201010c, 0x0201010b, 0x02010109, 0x02010105, 0x02010108,

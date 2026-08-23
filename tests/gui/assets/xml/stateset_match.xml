@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ConstraintLayoutStatesMatch: state "base" with a default set plus a Variant for
+     width>600. Inline <ConstraintSet> refs resolve by resource id. -->
+<StateSet xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+          xmlns:android="http://schemas.android.com/apk/res/android"
+          app:defaultState="@+id/st_base">
+    <State android:id="@+id/st_base" app:constraints="@+id/st_default">
+        <Variant app:region_widthMoreThan="600px" app:constraints="@+id/st_wide" />
+    </State>
+    <ConstraintSet android:id="@+id/st_default">
+        <Constraint android:id="@+id/st_target" android:layout_width="100px" android:layout_height="50px" />
+    </ConstraintSet>
+    <ConstraintSet android:id="@+id/st_wide">
+        <Constraint android:id="@+id/st_target" android:layout_width="200px" android:layout_height="50px" />
+    </ConstraintSet>
+</StateSet>

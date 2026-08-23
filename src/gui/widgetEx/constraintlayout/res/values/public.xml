@@ -6,6 +6,7 @@
     <public type="attr" name="SharedValueId" id="0x020100b4"/>
     <public type="attr" name="animateCircleAngleTo" id="0x02010071"/>
     <public type="attr" name="animateRelativeTo" id="0x02010070"/>
+    <public type="attr" name="attributeName" id="0x02010177"/>
     <public type="attr" name="autoCompleteMode" id="0x02010086"/>
     <public type="attr" name="autoTransition" id="0x02010080"/>
     <public type="attr" name="barrierAllowsGoneWidgets" id="0x02010017"/>
@@ -34,9 +35,18 @@
     <public type="attr" name="constraintSetStart" id="0x0201007c"/>
     <public type="attr" name="constraint_referenced_ids" id="0x02010019"/>
     <public type="attr" name="constraint_referenced_tags" id="0x0201001a"/>
+    <public type="attr" name="constraints" id="0x02010178"/>
     <public type="attr" name="content" id="0x02010104"/>
     <public type="attr" name="curveFit" id="0x02010099"/>
+    <public type="attr" name="deriveConstraintsFrom" id="0x02010184"/>
+    <public type="attr" name="customBoolean" id="0x02010179"/>
+    <public type="attr" name="customColorValue" id="0x0201017a"/>
+    <public type="attr" name="customDimension" id="0x0201017b"/>
+    <public type="attr" name="customFloatValue" id="0x0201017c"/>
+    <public type="attr" name="customIntegerValue" id="0x0201017d"/>
+    <public type="attr" name="customStringValue" id="0x0201017e"/>
     <public type="attr" name="defaultDuration" id="0x020100bb"/>
+    <public type="attr" name="defaultState" id="0x0201017f"/>
     <public type="attr" name="dragDirection" id="0x0201008e"/>
     <public type="attr" name="dragScale" id="0x02010084"/>
     <public type="attr" name="dragThreshold" id="0x02010085"/>
@@ -172,6 +182,10 @@
     <public type="attr" name="quantizeMotionInterpolator" id="0x0201007b"/>
     <public type="attr" name="quantizeMotionPhase" id="0x0201007a"/>
     <public type="attr" name="quantizeMotionSteps" id="0x02010079"/>
+    <public type="attr" name="region_heightLessThan" id="0x02010180"/>
+    <public type="attr" name="region_heightMoreThan" id="0x02010181"/>
+    <public type="attr" name="region_widthLessThan" id="0x02010182"/>
+    <public type="attr" name="region_widthMoreThan" id="0x02010183"/>
     <public type="attr" name="rotationCenterId" id="0x02010091"/>
     <public type="attr" name="setsTag" id="0x020100b6"/>
     <public type="attr" name="sizePercent" id="0x0201009f"/>

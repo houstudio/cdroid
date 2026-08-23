@@ -10,7 +10,7 @@
 
 #include <gtest/gtest.h>
 
-#include <sstream>
+#include "R.h"
 
 #include <core/app.h>
 #include <core/attributeset.h>
@@ -1189,29 +1189,13 @@ TEST(CLConstraintLayout, ConstraintSetCloneAndModify) {
 }
 
 // ConstraintSet.load(Context, XmlPullParser) parses a <ConstraintSet> XML resource into the
-// Constraint model. "parent"/literal ids resolve via Context::getId (strtol fallback). Verifies the
-// name-keyed attribute dispatch (populateConstraint) for dimensions, anchors, bias, margins,
-// visibility/alpha (PropertySet), transforms, chain style, and ratio.
+// Constraint model. The scene loads from the gui_test pak (binary AXML + arsc ids — aapt2 has
+// resolved enums/"parent"/@id refs before the parser sees them). Verifies the attribute dispatch
+// (populateConstraint) for dimensions, anchors, bias, margins, visibility/alpha (PropertySet),
+// transforms, chain style, and ratio.
 TEST(CLConstraintLayout, ConstraintSetXmlLoad) {
     App& app = App::getInstance();
-    const std::string xml =
-        "<ConstraintSet xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <Constraint android:id=\"42\""
-        "              android:layout_width=\"100dp\""
-        "              android:layout_height=\"60dp\""
-        "              layout_constraintLeft_toLeftOf=\"parent\""
-        "              layout_constraintRight_toRightOf=\"parent\""
-        "              layout_constraintHorizontal_bias=\"0.25\""
-        "              android:layout_marginLeft=\"8dp\""
-        "              layout_constraintHorizontal_chainStyle=\"packed\""
-        "              layout_constraintDimensionRatio=\"2:1\""
-        "              android:visibility=\"invisible\""
-        "              android:alpha=\"0.5\""
-        "              android:rotation=\"45\""
-        "              android:scaleX=\"2\" />"
-        "</ConstraintSet>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    XmlPullParser parser(&app, gui_test::R::xml::constraintset_parse);
     // Advance to the <ConstraintSet> START_TAG, then let load() consume through its END_TAG.
     while (parser.getEventType() != XmlPullParser::START_TAG &&
            parser.getEventType() != XmlPullParser::END_DOCUMENT) {
@@ -1221,8 +1205,8 @@ TEST(CLConstraintLayout, ConstraintSetXmlLoad) {
     ConstraintSet cs;
     cs.load(&app, parser);
 
-    ASSERT_TRUE(cs.contains(42));
-    const auto& c = cs.get(42);
+    ASSERT_TRUE(cs.contains(gui_test::R::id::cs_target));
+    const auto& c = cs.get(gui_test::R::id::cs_target);
     EXPECT_EQ(c.layout.mWidth, 100);
     EXPECT_EQ(c.layout.mHeight, 60);
     EXPECT_EQ(c.layout.leftToLeft, 0);     // "parent" -> PARENT_ID=0
@@ -1238,25 +1222,18 @@ TEST(CLConstraintLayout, ConstraintSetXmlLoad) {
 }
 
 // KeyFrames parses a <KeyFrameSet> into core MotionKey subclasses (KeyAttribute + KeyPosition),
-// filed under the target view id. Attribute names are bare localnames (XmlPullParser strips the
-// namespace); motionTarget resolves to a view id via Context::getId (strtol fallback: "42" -> 42).
+// filed under the target view id (a resource id from the pak arsc). alpha/rotation are framework
+// attrs (android:), the motion attrs live in the widgetex namespace (app:).
 TEST(CLConstraintLayout, KeyFramesXmlParse) {
     App& app = App::getInstance();
-    const std::string xml =
-        "<KeyFrameSet xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <KeyAttribute motionTarget=\"42\" framePosition=\"50\" alpha=\"0\" rotation=\"90\" />"
-        "  <KeyPosition motionTarget=\"42\" framePosition=\"50\" percentX=\"0.5\" percentY=\"0.5\""
-        "              keyPositionType=\"pathRelative\" />"
-        "</KeyFrameSet>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    XmlPullParser parser(&app, gui_test::R::xml::keyframes_parse);
     while (parser.getEventType() != XmlPullParser::START_TAG &&
            parser.getEventType() != XmlPullParser::END_DOCUMENT) {
         parser.next();
     }
 
     KeyFrames kf(&app, parser);
-    auto keys = kf.getKeysForView(42);
+    auto keys = kf.getKeysForView(gui_test::R::id::kf_target);
     ASSERT_EQ(keys.size(), 2u);
 
     MotionKeyAttributes* attr = nullptr;
@@ -1277,33 +1254,12 @@ TEST(CLConstraintLayout, KeyFramesXmlParse) {
 }
 
 // MotionScene parses a full scene: <Transition> referencing two inline <ConstraintSet>s, with a
-// <KeyFrameSet> and an <OnClick> child. The ConstraintSet ids ("@+id/start") resolve scene-locally
-// by name, so the Transition's start/end refs agree with the parsed sets.
+// <KeyFrameSet> and an <OnClick> child. Loaded from the pak (binary AXML): the @+id refs resolve
+// to arsc resource ids, so the Transition's start/end refs agree with the parsed sets.
 TEST(CLConstraintLayout, MotionSceneXmlParse) {
     App& app = App::getInstance();
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\" defaultDuration=\"300\">"
-        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" duration=\"500\">"
-        "    <OnClick targetId=\"1\" clickAction=\"toggle\" />"
-        "    <OnSwipe dragDirection=\"dragRight\" dragScale=\"2.0\" onTouchUp=\"autoCompleteToStart\" />"
-        "    <KeyFrameSet>"
-        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" />"
-        "    </KeyFrameSet>"
-        "  </Transition>"
-        "  <ConstraintSet android:id=\"@+id/start\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/end\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
-
     MotionScene scene(nullptr);
-    scene.load(&app, parser);
+    scene.load(&app, gui_test::R::xml::motion_scene_parse);
 
     auto* t = scene.getCurrentTransition();
     ASSERT_NE(t, nullptr);
@@ -1314,13 +1270,13 @@ TEST(CLConstraintLayout, MotionSceneXmlParse) {
     auto* endSet = scene.getConstraintSet(t->getEndId());
     ASSERT_NE(startSet, nullptr);
     ASSERT_NE(endSet, nullptr);
-    EXPECT_EQ(startSet->get(1).layout.leftToLeft, 0);  // parent
-    EXPECT_EQ(endSet->get(1).layout.rightToRight, 0);  // parent
+    EXPECT_EQ(startSet->get(gui_test::R::id::ms_target).layout.leftToLeft, 0);  // parent
+    EXPECT_EQ(endSet->get(gui_test::R::id::ms_target).layout.rightToRight, 0);  // parent
 
     ASSERT_NE(t->getKeyFrames(), nullptr);
-    EXPECT_EQ(t->getKeyFrames()->getKeysForView(1).size(), 1u);
+    EXPECT_EQ(t->getKeyFrames()->getKeysForView(gui_test::R::id::ms_target).size(), 1u);
     ASSERT_EQ(t->getOnClicks().size(), 1u);
-    EXPECT_EQ(t->getOnClicks()[0].targetId, 1);
+    EXPECT_EQ(t->getOnClicks()[0].targetId, (int)gui_test::R::id::ms_target);
     EXPECT_EQ(t->getOnClicks()[0].clickAction, MotionScene::Transition::FLAG_TOGGLE);
 
     ASSERT_NE(t->getOnSwipe(), nullptr);
@@ -1334,22 +1290,8 @@ TEST(CLConstraintLayout, MotionSceneXmlParse) {
 // derived set in the XML — the merge is lazy on the first getConstraintSet() call.
 TEST(CLConstraintLayout, MotionSceneDeriveConstraints) {
     App& app = App::getInstance();
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <Transition constraintSetStart=\"@+id/derived\" constraintSetEnd=\"@+id/base\" />"
-        "  <ConstraintSet android:id=\"@+id/derived\" deriveConstraintsFrom=\"@+id/base\">"
-        "    <Constraint android:id=\"1\" layout_width=\"200\" layout_height=\"50\" />"
-        "    <Constraint android:id=\"2\" layout_width=\"80\"  layout_height=\"40\" />"
-        "  </ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/base\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\" />"
-        "    <Constraint android:id=\"3\" layout_width=\"60\"  layout_height=\"30\" />"
-        "  </ConstraintSet>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
     MotionScene scene(nullptr);
-    scene.load(&app, parser);
+    scene.load(&app, gui_test::R::xml::motion_scene_derive);
 
     auto* t = scene.getCurrentTransition();
     ASSERT_NE(t, nullptr);
@@ -1358,18 +1300,18 @@ TEST(CLConstraintLayout, MotionSceneDeriveConstraints) {
     ASSERT_NE(derived, nullptr);
     ASSERT_NE(base, nullptr);
 
-    EXPECT_TRUE(base->contains(1));
-    EXPECT_TRUE(base->contains(3));
-    EXPECT_FALSE(base->contains(2));
-    EXPECT_EQ(base->get(1).layout.mWidth, 100);
+    EXPECT_TRUE(base->contains(gui_test::R::id::dc_one));
+    EXPECT_TRUE(base->contains(gui_test::R::id::dc_three));
+    EXPECT_FALSE(base->contains(gui_test::R::id::dc_two));
+    EXPECT_EQ(base->get(gui_test::R::id::dc_one).layout.mWidth, 100);
 
-    // derived inherits base's id=3, keeps its own id=2, and its id=1 overrides base's (200 vs 100).
-    EXPECT_TRUE(derived->contains(1));
-    EXPECT_TRUE(derived->contains(2));
-    EXPECT_TRUE(derived->contains(3));            // inherited from base
-    EXPECT_EQ(derived->get(1).layout.mWidth, 200); // derived wins over base
-    EXPECT_EQ(derived->get(2).layout.mWidth, 80);  // own
-    EXPECT_EQ(derived->get(3).layout.mWidth, 60);  // inherited
+    // derived inherits base's dc_three, keeps its own dc_two, and its dc_one overrides base's.
+    EXPECT_TRUE(derived->contains(gui_test::R::id::dc_one));
+    EXPECT_TRUE(derived->contains(gui_test::R::id::dc_two));
+    EXPECT_TRUE(derived->contains(gui_test::R::id::dc_three));            // inherited from base
+    EXPECT_EQ(derived->get(gui_test::R::id::dc_one).layout.mWidth, 200);  // derived wins over base
+    EXPECT_EQ(derived->get(gui_test::R::id::dc_two).layout.mWidth, 80);   // own
+    EXPECT_EQ(derived->get(gui_test::R::id::dc_three).layout.mWidth, 60); // inherited
 }
 
 // Multi-transition state machine: <Transition android:id> is parsed, and MotionScene can look up a
@@ -1377,24 +1319,17 @@ TEST(CLConstraintLayout, MotionSceneDeriveConstraints) {
 // (id) / transitionToState). The first non-abstract transition remains the current one.
 TEST(CLConstraintLayout, MotionSceneTransitionLookup) {
     App& app = App::getInstance();
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <Transition android:id=\"@+id/t1\" constraintSetStart=\"@+id/A\" constraintSetEnd=\"@+id/B\" />"
-        "  <Transition android:id=\"@+id/t2\" constraintSetStart=\"@+id/B\" constraintSetEnd=\"@+id/C\" />"
-        "  <ConstraintSet android:id=\"@+id/A\"><Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\" layout_constraintLeft_toLeftOf=\"parent\"/></ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/B\"><Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\" layout_constraintRight_toRightOf=\"parent\"/></ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/C\"><Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\" layout_constraintTop_toTopOf=\"parent\"/></ConstraintSet>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
     MotionScene scene(nullptr);
-    scene.load(&app, parser);
+    scene.load(&app, gui_test::R::xml::motion_scene_lookup);
 
     auto* t1 = scene.getCurrentTransition(); // first non-abstract
     ASSERT_NE(t1, nullptr);
     ASSERT_NE(t1->getId(), MotionScene::UNSET); // <Transition android:id> parsed
+    EXPECT_EQ(t1->getId(), (int)gui_test::R::id::t1);
     const int t1Id = t1->getId();
     const int A = t1->getStartId(), B = t1->getEndId();
+    EXPECT_EQ(A, (int)gui_test::R::id::trA);
+    EXPECT_EQ(B, (int)gui_test::R::id::trB);
 
     EXPECT_EQ(scene.getTransitionById(t1Id), t1);   // lookup by id
     EXPECT_EQ(scene.findTransition(A, B), t1);      // lookup by endpoints
@@ -1407,16 +1342,8 @@ TEST(CLConstraintLayout, MotionSceneTransitionLookup) {
 // matching endpoint MotionScene::autoTransition fires it (animate/jump to the other end).
 TEST(CLConstraintLayout, MotionSceneAutoTransitionParse) {
     App& app = App::getInstance();
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <Transition constraintSetStart=\"@+id/A\" constraintSetEnd=\"@+id/B\" autoTransition=\"animateToEnd\" />"
-        "  <ConstraintSet android:id=\"@+id/A\"><Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\"/></ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/B\"><Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\"/></ConstraintSet>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
     MotionScene scene(nullptr);
-    scene.load(&app, parser);
+    scene.load(&app, gui_test::R::xml::motion_scene_autotransition);
 
     auto* t = scene.getCurrentTransition();
     ASSERT_NE(t, nullptr);
@@ -1433,25 +1360,23 @@ TEST(CLConstraintLayout, ConstraintSetCustomAttribute) {
         });
 
     App& app = App::getInstance();
-    const std::string xml =
-        "<ConstraintSet xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\">"
-        "    <CustomAttribute attributeName=\"textColor\" customColorValue=\"#FFFF0000\" />"
-        "  </Constraint>"
-        "</ConstraintSet>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    XmlPullParser parser(&app, gui_test::R::xml::constraintset_customattr);
+    while (parser.getEventType() != XmlPullParser::START_TAG &&
+           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser.next();
+    }
     ConstraintSet set;
     set.load(&app, parser);
 
-    ASSERT_EQ(set.get(1).mCustomAttributes.size(), 1u);
-    const auto& ca = set.get(1).mCustomAttributes[0];
+    ASSERT_EQ(set.get(gui_test::R::id::ca_target).mCustomAttributes.size(), 1u);
+    const auto& ca = set.get(gui_test::R::id::ca_target).mCustomAttributes[0];
     EXPECT_EQ(ca.name, "textColor");
     EXPECT_EQ(ca.type, ConstraintSet::CustomAttribute::COLOR);
     ASSERT_NE(ca.intValue, 0); // a real color was parsed
 
     ConstraintLayout* cl = new ConstraintLayout(&App::getInstance());
-    TextView* tv = new TextView(&App::getInstance()); tv->setText("T"); tv->setId(1);
+    TextView* tv = new TextView(&App::getInstance()); tv->setText("T");
+    tv->setId(gui_test::R::id::ca_target);
     cl->addView(tv);
     set.applyTo(cl);
     EXPECT_EQ(tv->getCurrentTextColor(), ca.intValue); // handler dispatched the parsed color
@@ -1547,25 +1472,11 @@ TEST(CLConstraintLayout, MotionLayoutKeyPositionArc) {
 // ConstraintLayoutStates parses a <StateSet> into State/Variants and selects a ConstraintSet by
 // the layout's dimensions. State "base" has a default set (100x50) plus a Variant for width>600
 // (200x50). At width 400 the default wins; at width 800 the Variant wins. Inline <ConstraintSet>
-// refs resolve by name (the `constraints` attr). Anti-flap: passing the current set's id with
-// matching dims returns the same set.
+// refs resolve by resource id (the `constraints` attr). Anti-flap: passing the current set's id
+// with matching dims returns the same set.
 TEST(CLConstraintLayout, ConstraintLayoutStatesMatch) {
     App& app = App::getInstance();
-    const std::string xml =
-        "<StateSet xmlns:android=\"http://schemas.android.com/apk/res/android\""
-        "          defaultState=\"@+id/base\">"
-        "  <State android:id=\"@+id/base\" constraints=\"@+id/default\">"
-        "    <Variant region_widthMoreThan=\"600\" constraints=\"@+id/wide\"/>"
-        "  </State>"
-        "  <ConstraintSet android:id=\"@+id/default\">"
-        "    <Constraint android:id=\"42\" android:layout_width=\"100dp\" android:layout_height=\"50dp\"/>"
-        "  </ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/wide\">"
-        "    <Constraint android:id=\"42\" android:layout_width=\"200dp\" android:layout_height=\"50dp\"/>"
-        "  </ConstraintSet>"
-        "</StateSet>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    XmlPullParser parser(&app, gui_test::R::xml::stateset_match);
     while (parser.getEventType() != XmlPullParser::START_TAG &&
            parser.getEventType() != XmlPullParser::END_DOCUMENT) {
         parser.next();
@@ -1573,11 +1484,9 @@ TEST(CLConstraintLayout, ConstraintLayoutStatesMatch) {
 
     ConstraintLayoutStates states(&app, nullptr, parser);
 
-    const int baseId = states.getId("@+id/base");
-    const int defaultId = states.getId("@+id/default");
-    const int wideId   = states.getId("@+id/wide");
-    EXPECT_NE(baseId, -1);
-    EXPECT_EQ(states.getId("base"), baseId);      // stable across calls
+    const int baseId    = gui_test::R::id::st_base;
+    const int defaultId = gui_test::R::id::st_default;
+    const int wideId    = gui_test::R::id::st_wide;
     EXPECT_EQ(states.getDefaultState(), baseId);  // defaultState attr resolved
 
     // Narrow width -> default set (width 100); wide width -> Variant set (width 200).
@@ -1586,8 +1495,8 @@ TEST(CLConstraintLayout, ConstraintLayoutStatesMatch) {
     ASSERT_NE(narrow, nullptr);
     ASSERT_NE(wide, nullptr);
     EXPECT_NE(narrow, wide);                       // different sets selected by dimension
-    EXPECT_EQ(narrow->get(42).layout.mWidth, 100);
-    EXPECT_EQ(wide->get(42).layout.mWidth, 200);
+    EXPECT_EQ(narrow->get(gui_test::R::id::st_target).layout.mWidth, 100);
+    EXPECT_EQ(wide->get(gui_test::R::id::st_target).layout.mWidth, 200);
 
     // Anti-flap: with the wide set currently applied and wide dims, it is kept (returns the same set).
     EXPECT_EQ(states.convertToConstraintSet(wideId, baseId, 800.0f, 300.0f), wide);
@@ -1595,37 +1504,24 @@ TEST(CLConstraintLayout, ConstraintLayoutStatesMatch) {
 }
 
 // ConstraintLayoutStates.updateConstraints applies the dimension-selected ConstraintSet to the
-// bound layout. State "base": default set sizes id=42 to 100px, a Variant for width>600 sizes it to
-// 200px. At width 400 the child measures 100; at width 900 it measures 200 (re-applied + re-measured).
+// bound layout. State "base": default set sizes the target to 100px, a Variant for width>600 sizes
+// it to 200px. At width 400 the child measures 100; at width 900 it measures 200 (re-applied +
+// re-measured).
 TEST(CLConstraintLayout, ConstraintLayoutStatesSwitchesOnResize) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(&App::getInstance());
     TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
-    tv->setId(42);
+    tv->setId(gui_test::R::id::sw_target);
     cl->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
 
-    const std::string xml =
-        "<StateSet xmlns:android=\"http://schemas.android.com/apk/res/android\""
-        "          defaultState=\"@+id/base\">"
-        "  <State android:id=\"@+id/base\" constraints=\"@+id/small\">"
-        "    <Variant region_widthMoreThan=\"600\" constraints=\"@+id/large\"/>"
-        "  </State>"
-        "  <ConstraintSet android:id=\"@+id/small\">"
-        "    <Constraint android:id=\"42\" android:layout_width=\"100dp\" android:layout_height=\"50dp\"/>"
-        "  </ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/large\">"
-        "    <Constraint android:id=\"42\" android:layout_width=\"200dp\" android:layout_height=\"50dp\"/>"
-        "  </ConstraintSet>"
-        "</StateSet>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    XmlPullParser parser(&app, gui_test::R::xml::stateset_switch);
     while (parser.getEventType() != XmlPullParser::START_TAG &&
            parser.getEventType() != XmlPullParser::END_DOCUMENT) {
         parser.next();
     }
 
     ConstraintLayoutStates states(&app, cl, parser);
-    const int baseId = states.getId("@+id/base");
+    const int baseId = gui_test::R::id::sw_base;
 
     // Narrow (400 wide) -> default "small" set -> child width 100.
     states.updateConstraints(baseId, 400.0f, 400.0f);
@@ -1645,21 +1541,8 @@ TEST(CLConstraintLayout, ConstraintLayoutStatesSwitchesOnResize) {
 // nested <KeyFrameSet>, and the getViewTransitionById lookup.
 TEST(CLConstraintLayout, ViewTransitionParse) {
     App& app = App::getInstance();
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <ViewTransition android:id=\"@+id/vt1\" motionTarget=\"1\""
-        "                  onStateTransition=\"actionDown\" duration=\"300\""
-        "                  viewTransitionMode=\"noState\" motionInterpolator=\"standard\" >"
-        "    <KeyFrameSet>"
-        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" />"
-        "    </KeyFrameSet>"
-        "  </ViewTransition>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
-
     MotionScene scene(nullptr);
-    scene.load(&app, parser);
+    scene.load(&app, gui_test::R::xml::motion_scene_vt_parse);
 
     EXPECT_EQ(scene.getViewTransitionCount(), 1u);
     auto* vt = scene.getViewTransitionAt(0);
@@ -1681,25 +1564,14 @@ TEST(CLConstraintLayout, ViewTransitionParse) {
 TEST(CLConstraintLayout, ViewTransitionNoStateAnimates) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(&App::getInstance());
-    TextView* tv = new TextView(&App::getInstance()); tv->setText("X"); tv->setId(1);
+    TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
+    tv->setId(gui_test::R::id::vtn_target);
     ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
     ml->measure(exactly(600), exactly(400));
     ml->layout(0, 0, 600, 400);
 
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\""
-        "                  onStateTransition=\"actionDown\" duration=\"400\""
-        "                  viewTransitionMode=\"noState\">"
-        "    <KeyFrameSet>"
-        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" />"
-        "    </KeyFrameSet>"
-        "  </ViewTransition>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
     auto scene = std::make_unique<MotionScene>(ml);
-    scene->load(&app, parser);
+    scene->load(&app, gui_test::R::xml::motion_scene_vt_nostate);
     const int vtId = scene->getViewTransitionAt(0)->getId(); // capture before moving the scene
     ml->setScene(std::move(scene));
 
@@ -1723,25 +1595,14 @@ TEST(CLConstraintLayout, ViewTransitionNoStateAnimates) {
 TEST(CLConstraintLayout, ViewTransitionNoStateDownUpHolds) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(&App::getInstance());
-    TextView* tv = new TextView(&App::getInstance()); tv->setText("X"); tv->setId(1);
+    TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
+    tv->setId(gui_test::R::id::vtd_target);
     ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
     ml->measure(exactly(600), exactly(400));
     ml->layout(0, 0, 600, 400);
 
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\""
-        "                  onStateTransition=\"actionDownUp\" duration=\"400\" upDuration=\"200\""
-        "                  viewTransitionMode=\"noState\">"
-        "    <KeyFrameSet>"
-        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" scaleX=\"1.5\" scaleY=\"1.5\" />"
-        "    </KeyFrameSet>"
-        "  </ViewTransition>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
     auto scene = std::make_unique<MotionScene>(ml);
-    scene->load(&app, parser);
+    scene->load(&app, gui_test::R::xml::motion_scene_vt_downup);
     const int vtId = scene->getViewTransitionAt(0)->getId();
     ml->setScene(std::move(scene));
 
@@ -1762,36 +1623,17 @@ TEST(CLConstraintLayout, ViewTransitionNoStateDownUpHolds) {
 TEST(CLConstraintLayout, ViewTransitionNoStateDownUpReverses) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(&App::getInstance());
-    TextView* tv = new TextView(&App::getInstance()); tv->setText("X"); tv->setId(1);
+    TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
+    tv->setId(gui_test::R::id::rv_target);
     ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
     ml->measure(exactly(600), exactly(400));
     ml->layout(0, 0, 600, 400);
 
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" />"
-        "  <ConstraintSet android:id=\"@+id/start\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/end\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\""
-        "                  onStateTransition=\"actionDownUp\" duration=\"400\" upDuration=\"200\""
-        "                  viewTransitionMode=\"noState\">"
-        "    <KeyFrameSet>"
-        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" scaleX=\"1.5\" scaleY=\"1.5\" />"
-        "    </KeyFrameSet>"
-        "  </ViewTransition>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
     auto scene = std::make_unique<MotionScene>(ml);
-    scene->load(&app, parser);
+    scene->load(&app, gui_test::R::xml::motion_scene_vt_reverse);
     const int vtId = scene->getViewTransitionAt(0)->getId();
     auto* t = scene->getCurrentTransition();
+    ASSERT_NE(t, nullptr);
     const int startId = t->getStartId();
     const int endId = t->getEndId();
     ml->setScene(std::move(scene));
@@ -1822,17 +1664,14 @@ TEST(CLConstraintLayout, ViewTransitionNoStateDownUpReverses) {
 // touched. (Android's sparse Delta does this precisely; CDROID approximates via default-difference.)
 TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysWithoutClobbering) {
     App& app = App::getInstance();
-    // The "current state" constraint for view 1 already has rotation=30 (e.g. a rotated button).
+    const int id = gui_test::R::id::vds_target;
+    // The "current state" constraint for the target already has rotation=30 (a rotated button).
     ConstraintSet target;
-    target.get(1).transform.rotation = 30.0f;
-    EXPECT_EQ(target.get(1).transform.scaleX, 1.0f); // scale untouched so far
+    target.get(id).transform.rotation = 30.0f;
+    EXPECT_EQ(target.get(id).transform.scaleX, 1.0f); // scale untouched so far
 
-    // Parse the delta: <ConstraintOverride motionTarget="1" scaleX="1.5"/>.
-    const std::string xml =
-        "<ConstraintOverride xmlns:android=\"http://schemas.android.com/apk/res/android\""
-        " motionTarget=\"1\" scaleX=\"1.5\" />";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    // Parse the delta: <ConstraintOverride motionTarget scaleX="1.5"/>.
+    XmlPullParser parser(&app, gui_test::R::xml::vt_delta_scale);
     while (parser.getEventType() != XmlPullParser::START_TAG &&
            parser.getEventType() != XmlPullParser::END_DOCUMENT) {
         parser.next();
@@ -1840,26 +1679,22 @@ TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysWithoutClobbering) {
     ConstraintSet delta;
     delta.loadConstraint(parser);
 
-    ASSERT_TRUE(delta.contains(1));           // motionTarget resolved to view id 1
-    delta.applyDelta(target.get(1));
-    EXPECT_FLOAT_EQ(target.get(1).transform.scaleX, 1.5f); // delta applied
-    EXPECT_FLOAT_EQ(target.get(1).transform.rotation, 30.0f); // preserved — not clobbered to 0
+    ASSERT_TRUE(delta.contains(id));           // motionTarget resolved to the target id
+    delta.applyDelta(target.get(id));
+    EXPECT_FLOAT_EQ(target.get(id).transform.scaleX, 1.5f); // delta applied
+    EXPECT_FLOAT_EQ(target.get(id).transform.rotation, 30.0f); // preserved — not clobbered to 0
 }
 
 // A Layout-field delta (anchor + margin) overlays the same way as Transform: setting leftToLeft +
 // leftMargin takes effect WITHOUT clobbering an unrelated anchor (topToTop) the delta never touched.
 TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysLayoutFields) {
     App& app = App::getInstance();
+    const int id = gui_test::R::id::vdl_target;
     ConstraintSet target;
-    target.get(1).layout.topToTop = 0;    // already anchored top->parent
-    target.get(1).layout.leftToLeft = -1; // not yet anchored horizontally
+    target.get(id).layout.topToTop = 0;    // already anchored top->parent
+    target.get(id).layout.leftToLeft = -1; // not yet anchored horizontally
 
-    const std::string xml =
-        "<ConstraintOverride xmlns:android=\"http://schemas.android.com/apk/res/android\""
-        " motionTarget=\"1\" layout_constraintLeft_toLeftOf=\"parent\""
-        " layout_marginLeft=\"20\" />";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    XmlPullParser parser(&app, gui_test::R::xml::vt_delta_layout);
     while (parser.getEventType() != XmlPullParser::START_TAG &&
            parser.getEventType() != XmlPullParser::END_DOCUMENT) {
         parser.next();
@@ -1867,11 +1702,11 @@ TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysLayoutFields) {
     ConstraintSet delta;
     delta.loadConstraint(parser);
 
-    ASSERT_TRUE(delta.contains(1));
-    delta.applyDelta(target.get(1));
-    EXPECT_EQ(target.get(1).layout.leftToLeft, 0);  // parent — delta applied
-    EXPECT_EQ(target.get(1).layout.leftMargin, 20); // delta applied
-    EXPECT_EQ(target.get(1).layout.topToTop, 0);    // preserved — not clobbered
+    ASSERT_TRUE(delta.contains(id));
+    delta.applyDelta(target.get(id));
+    EXPECT_EQ(target.get(id).layout.leftToLeft, 0);  // parent — delta applied
+    EXPECT_EQ(target.get(id).layout.leftMargin, 20); // delta applied
+    EXPECT_EQ(target.get(id).layout.topToTop, 0);    // preserved — not clobbered
 }
 
 // Precise delta: a delta that sets a field to its DEFAULT value (rotation="0") RESETS the target's
@@ -1879,16 +1714,13 @@ TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysLayoutFields) {
 // target's rotation=30 untouched. Authored-field overlay applies it.
 TEST(CLConstraintLayout, ViewTransitionDeltaAppliesDefaultValuedField) {
     App& app = App::getInstance();
+    const int id = gui_test::R::id::vdd_target;
     ConstraintSet target;
-    target.get(1).transform.rotation = 30.0f;   // target currently rotated
-    target.get(1).transform.scaleX = 2.0f;       // and scaled
+    target.get(id).transform.rotation = 30.0f;   // target currently rotated
+    target.get(id).transform.scaleX = 2.0f;       // and scaled
 
     // delta explicitly sets rotation="0" (its default) — should reset rotation, leave scaleX.
-    const std::string xml =
-        "<ConstraintOverride xmlns:android=\"http://schemas.android.com/apk/res/android\""
-        " motionTarget=\"1\" rotation=\"0\" />";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    XmlPullParser parser(&app, gui_test::R::xml::vt_delta_default);
     while (parser.getEventType() != XmlPullParser::START_TAG &&
            parser.getEventType() != XmlPullParser::END_DOCUMENT) {
         parser.next();
@@ -1896,9 +1728,9 @@ TEST(CLConstraintLayout, ViewTransitionDeltaAppliesDefaultValuedField) {
     ConstraintSet delta;
     delta.loadConstraint(parser);
 
-    delta.applyDelta(target.get(1));
-    EXPECT_FLOAT_EQ(target.get(1).transform.rotation, 0.0f); // RESET to 0 (precise)
-    EXPECT_FLOAT_EQ(target.get(1).transform.scaleX, 2.0f);    // untouched (not authored by delta)
+    delta.applyDelta(target.get(id));
+    EXPECT_FLOAT_EQ(target.get(id).transform.rotation, 0.0f); // RESET to 0 (precise)
+    EXPECT_FLOAT_EQ(target.get(id).transform.scaleX, 2.0f);    // untouched (not authored by delta)
 }
 
 // viewTransitionMode=allStates persists the delta into every ConstraintSet except the current state,
@@ -1907,30 +1739,14 @@ TEST(CLConstraintLayout, ViewTransitionDeltaAppliesDefaultValuedField) {
 TEST(CLConstraintLayout, ViewTransitionAllStatesPersistsDelta) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(&App::getInstance());
-    TextView* tv = new TextView(&App::getInstance()); tv->setText("X"); tv->setId(1);
+    TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
+    tv->setId(gui_test::R::id::as_target);
     ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
     ml->measure(exactly(600), exactly(400));
     ml->layout(0, 0, 600, 400);
 
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" />"
-        "  <ConstraintSet android:id=\"@+id/start\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/end\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\" viewTransitionMode=\"allStates\">"
-        "    <ConstraintOverride motionTarget=\"1\" scaleX=\"1.5\" />"
-        "  </ViewTransition>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
     auto scene = std::make_unique<MotionScene>(ml);
-    scene->load(&app, parser);
+    scene->load(&app, gui_test::R::xml::motion_scene_vt_allstates);
     const int vtId = scene->getViewTransitionAt(0)->getId();
     const int endId = scene->getCurrentTransition()->getEndId();
     const int startId = scene->getCurrentTransition()->getStartId();
@@ -1938,43 +1754,28 @@ TEST(CLConstraintLayout, ViewTransitionAllStatesPersistsDelta) {
     ml->setTransition(startId, endId);
 
     ASSERT_NE(ml->getConstraintSet(endId), nullptr);
-    EXPECT_FLOAT_EQ(ml->getConstraintSet(endId)->get(1).transform.scaleX, 1.0f); // before
+    EXPECT_FLOAT_EQ(ml->getConstraintSet(endId)->get(gui_test::R::id::as_target).transform.scaleX, 1.0f); // before
     std::vector<View*> views = { tv };
     ml->viewTransition(vtId, views); // allStates persists the delta into every set != current
-    EXPECT_FLOAT_EQ(ml->getConstraintSet(endId)->get(1).transform.scaleX, 1.5f); // persisted
+    EXPECT_FLOAT_EQ(ml->getConstraintSet(endId)->get(gui_test::R::id::as_target).transform.scaleX, 1.5f); // persisted
 }
 
-// currentState delta integration: firing the VT sets up a transition (current -> current+delta) and
-// animates the target. Jumping to progress 1.0 lands the view at the delta'd state. Uses a WIDTH
-// delta (a Layout field applied via layout(), not a transform setter) so an unattached test view
-// reliably reflects it (transform setters are gated on attach).
-TEST(CLConstraintLayout, ViewTransitionCurrentStateAnimatesDelta) {
+// currentState mode under the independent-animation design (f6b5548e4): firing the VT registers a
+// per-view Animate WITHOUT replacing the main transition — main progress keeps driving the original
+// start↔end states and is not corrupted. (androidx instead animates current -> current+delta via a
+// temporary main transition; CDROID deliberately dropped that for OnClick toggle interference — the
+// delta's endpoint effect is a known TODO on top of the independent path.)
+TEST(CLConstraintLayout, ViewTransitionCurrentStateRunsIndependentAnimation) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(&App::getInstance());
-    TextView* tv = new TextView(&App::getInstance()); tv->setText("X"); tv->setId(1);
+    TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
+    tv->setId(gui_test::R::id::csa_target);
     ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
     ml->measure(exactly(600), exactly(400));
     ml->layout(0, 0, 600, 400);
 
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" />"
-        "  <ConstraintSet android:id=\"@+id/start\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/end\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\" viewTransitionMode=\"currentState\">"
-        "    <ConstraintOverride motionTarget=\"1\" layout_width=\"200\" />"
-        "  </ViewTransition>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
     auto scene = std::make_unique<MotionScene>(ml);
-    scene->load(&app, parser);
+    scene->load(&app, gui_test::R::xml::motion_scene_vt_currentstate);
     const int vtId = scene->getViewTransitionAt(0)->getId();
     const int startId = scene->getCurrentTransition()->getStartId();
     const int endId = scene->getCurrentTransition()->getEndId();
@@ -1982,35 +1783,35 @@ TEST(CLConstraintLayout, ViewTransitionCurrentStateAnimatesDelta) {
     ml->setTransition(startId, endId);
     ml->setProgress(0.0f);
     EXPECT_EQ(tv->getWidth(), 100); // at the start state
+    EXPECT_EQ(tv->getLeft(), 0);
 
     std::vector<View*> views = { tv };
-    ml->viewTransition(vtId, views);    // currentState: transition = start -> (start + width=200 delta)
-    ml->setProgress(1.0f);              // jump to the delta'd end state
-    EXPECT_EQ(tv->getWidth(), 200);     // the delta drove the view via the main transition
+    ml->viewTransition(vtId, views); // currentState: per-view Animate, main transition untouched
+    auto* controller = ml->getViewTransitionController();
+    ASSERT_NE(controller, nullptr);
+    EXPECT_EQ(controller->animationCount(), 1u); // the independent Animate registered
+
+    // The main transition still drives start↔end: progress 1.0 lands at the END set (right-pinned),
+    // not at any delta'd state — the delta did not hijack the transition.
+    ml->setProgress(1.0f);
+    EXPECT_EQ(tv->getLeft(), 500); // 600 - 100: end set, right-pinned
+    EXPECT_EQ(tv->getWidth(), 100);
 }
 
-// setsTag: a noState ViewTransition that completes sets a keyed tag on its target (numeric setsTag
-// resolves via getResourceId to that int key). After firing + stepping to completion the tag is set.
+// setsTag: a noState ViewTransition that completes sets a keyed tag on its target (setsTag is a
+// reference; the tag key is the resource id). After firing + stepping to completion the tag is set.
 TEST(CLConstraintLayout, ViewTransitionSetsTagOnCompletion) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(&App::getInstance());
-    TextView* tv = new TextView(&App::getInstance()); tv->setText("X"); tv->setId(1);
+    TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
+    tv->setId(gui_test::R::id::stg_target);
     ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
     ml->measure(exactly(600), exactly(400));
     ml->layout(0, 0, 600, 400);
 
-    const int tagKey = 4242;
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\" onStateTransition=\"actionDown\""
-        "                  duration=\"400\" viewTransitionMode=\"noState\" setsTag=\"4242\">"
-        "    <KeyFrameSet><KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" /></KeyFrameSet>"
-        "  </ViewTransition>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    const int tagKey = gui_test::R::id::stg_tag_key;
     auto scene = std::make_unique<MotionScene>(ml);
-    scene->load(&app, parser);
+    scene->load(&app, gui_test::R::xml::motion_scene_vt_setstag);
     const int vtId = scene->getViewTransitionAt(0)->getId();
     ml->setScene(std::move(scene));
     auto* controller = ml->getViewTransitionController();
@@ -2030,31 +1831,15 @@ TEST(CLConstraintLayout, ViewTransitionSetsTagOnCompletion) {
 TEST(CLConstraintLayout, ViewTransitionIfTagSetGates) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(&App::getInstance());
-    TextView* tv = new TextView(&App::getInstance()); tv->setText("X"); tv->setId(1);
+    TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
+    tv->setId(gui_test::R::id::ift_target);
     ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
     ml->measure(exactly(600), exactly(400));
     ml->layout(0, 0, 600, 400);
 
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" />"
-        "  <ConstraintSet android:id=\"@+id/start\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/end\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\" onStateTransition=\"actionDown\""
-        "                  duration=\"400\" viewTransitionMode=\"noState\" ifTagSet=\"4242\">"
-        "    <KeyFrameSet><KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" /></KeyFrameSet>"
-        "  </ViewTransition>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    const int tagKey = gui_test::R::id::ift_tag_key;
     auto scene = std::make_unique<MotionScene>(ml);
-    scene->load(&app, parser);
+    scene->load(&app, gui_test::R::xml::motion_scene_vt_iftag);
     const int startId = scene->getCurrentTransition()->getStartId();
     const int endId = scene->getCurrentTransition()->getEndId();
     ml->setScene(std::move(scene));
@@ -2066,13 +1851,13 @@ TEST(CLConstraintLayout, ViewTransitionIfTagSetGates) {
     down.setAction(MotionEvent::ACTION_DOWN);
     down.setLocation(0, 0); // over the top-left target
 
-    tv->setTag(4242, (void*) tv);              // tag present -> view enters the targeted set + fires
+    tv->setTag(tagKey, (void*) tv);           // tag present -> view enters the targeted set + fires
     controller->touchEvent(down);
     EXPECT_EQ(controller->animationCount(), 1u);
     controller->stepAnimations(400);           // let it finish so the count resets
     ASSERT_EQ(controller->animationCount(), 0u);
 
-    tv->setTag(4242, nullptr);                 // remove the tag -> checkTags now gates the fire
+    tv->setTag(tagKey, nullptr);               // remove the tag -> checkTags now gates the fire
     controller->touchEvent(down);
     EXPECT_EQ(controller->animationCount(), 0u); // did NOT fire (ifTagSet no longer satisfied)
 }
@@ -2083,33 +1868,15 @@ TEST(CLConstraintLayout, ViewTransitionIfTagSetGates) {
 TEST(CLConstraintLayout, ViewTransitionSharedValueSetFires) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(&App::getInstance());
-    TextView* tv = new TextView(&App::getInstance()); tv->setText("X"); tv->setId(1);
+    TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
+    tv->setId(gui_test::R::id::sv_target);
     ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
     ml->measure(exactly(600), exactly(400));
     ml->layout(0, 0, 600, 400);
 
-    const int key = 778899;
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" />"
-        "  <ConstraintSet android:id=\"@+id/start\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ConstraintSet android:id=\"@+id/end\">"
-        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
-        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
-        "  </ConstraintSet>"
-        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\""
-        "                  onStateTransition=\"sharedValueSet\" SharedValueId=\"778899\" SharedValue=\"42\""
-        "                  duration=\"400\" viewTransitionMode=\"noState\">"
-        "    <KeyFrameSet><KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" /></KeyFrameSet>"
-        "  </ViewTransition>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    const int key = gui_test::R::id::sv_key;
     auto scene = std::make_unique<MotionScene>(ml);
-    scene->load(&app, parser);
+    scene->load(&app, gui_test::R::xml::motion_scene_vt_shared);
     const int startId = scene->getCurrentTransition()->getStartId();
     const int endId = scene->getCurrentTransition()->getEndId();
     ml->setScene(std::move(scene));
@@ -2133,15 +1900,8 @@ TEST(CLConstraintLayout, ViewTransitionMatchesConstraintTag) {
     auto* lpb = new ConstraintLayout::LayoutParams(100, 50); lpb->constraintTag = "label";
     ml->addView(b, lpb);
 
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"btn_.*\" onStateTransition=\"actionDown\""
-        "                  duration=\"400\" viewTransitionMode=\"noState\" />"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
     auto scene = std::make_unique<MotionScene>(ml);
-    scene->load(&app, parser);
+    scene->load(&app, gui_test::R::xml::motion_scene_vt_tagregex);
     auto* vt = scene->getViewTransitionAt(0);
     ASSERT_NE(vt, nullptr);
     ml->setScene(std::move(scene));
@@ -2155,11 +1915,7 @@ TEST(CLConstraintLayout, ViewTransitionMatchesConstraintTag) {
 // <CustomAttribute> children to loadCustomAttribute.)
 TEST(CLConstraintLayout, ViewTransitionSetLevelCustomAttribute) {
     App& app = App::getInstance();
-    const std::string xml =
-        "<CustomAttribute xmlns:android=\"http://schemas.android.com/apk/res/android\""
-        " attributeName=\"textColor\" customColorValue=\"#FFFF0000\" />";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
+    XmlPullParser parser(&app, gui_test::R::xml::vt_customattr_setlevel);
     while (parser.getEventType() != XmlPullParser::START_TAG &&
            parser.getEventType() != XmlPullParser::END_DOCUMENT) {
         parser.next();
@@ -2183,24 +1939,14 @@ TEST(CLConstraintLayout, ViewTransitionSetLevelCustomAttribute) {
 TEST(CLConstraintLayout, ViewTransitionApplyViewTransitionMergesKeyframes) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(&App::getInstance());
-    TextView* tv = new TextView(&App::getInstance()); tv->setText("X"); tv->setId(1);
+    TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
+    tv->setId(gui_test::R::id::mk_target);
     ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
     ml->measure(exactly(600), exactly(400));
     ml->layout(0, 0, 600, 400);
 
-    const std::string xml =
-        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
-        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\""
-        "                  viewTransitionMode=\"noState\">"
-        "    <KeyFrameSet>"
-        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" />"
-        "    </KeyFrameSet>"
-        "  </ViewTransition>"
-        "</MotionScene>";
-    auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
     auto scene = std::make_unique<MotionScene>(ml);
-    scene->load(&app, parser);
+    scene->load(&app, gui_test::R::xml::motion_scene_vt_merge);
     const int vtId = scene->getViewTransitionAt(0)->getId();
     ml->setScene(std::move(scene));
 

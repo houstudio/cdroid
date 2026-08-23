@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionApplyViewTransitionMergesKeyframes: the VT KeyFrameSet merges into a
+     standalone Motion (start == end == current frame). -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <ViewTransition android:id="@+id/vt_merge" app:motionTarget="@+id/mk_target"
+                    app:viewTransitionMode="noState">
+        <KeyFrameSet>
+            <KeyAttribute app:motionTarget="@+id/mk_target" app:framePosition="50"
+                          android:alpha="0" />
+        </KeyFrameSet>
+    </ViewTransition>
+</MotionScene>
