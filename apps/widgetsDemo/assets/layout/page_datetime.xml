@@ -12,7 +12,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Date &amp; Time"
+            android:text="@string/ph_schedule_t"
             android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -20,12 +20,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/card_gap"
-            android:text="TextClock, TimePicker (clock &amp; spinner), DatePicker (spinner)"
+            android:text="@string/ph_schedule_d"
             android:textColor="@color/text_secondary"
             android:textSize="@dimen/body_size" />
 
         <!-- Live clock -->
         <LinearLayout
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -52,6 +53,7 @@
 
         <!-- TimePicker: clock mode. Picker on the left, live time on the right, same row. -->
         <LinearLayout
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -89,6 +91,7 @@
 
         <!-- TimePicker: spinner mode -->
         <LinearLayout
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -126,6 +129,7 @@
 
         <!-- DatePicker: spinner mode -->
         <LinearLayout
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -183,9 +187,8 @@
                 android:gravity="center_vertical">
                 <DatePicker
                     android:id="@+id/dt_dp_cal"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
+                    android:layout_height="420dp"
+                    android:layout_width="560dp"
                     android:datePickerMode="calendar" />
                 <TextView
                     android:id="@+id/dt_dp_cal_val"

@@ -14,7 +14,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Buttons &amp; Toggles"
+            android:text="@string/ph_lights_t"
             android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/card_gap"
-            android:text="Button, ripple, switch, checkbox, radio and rating widgets"
+            android:text="@string/ph_lights_d"
             android:textColor="@color/text_secondary"
             android:textSize="@dimen/body_size" />
 
@@ -55,7 +55,7 @@
                     android:background="@drawable/btn_primary"
                     android:stateListAnimator="@animator/press_scale"
                     android:textColor="#FFFFFFFF"
-                    android:text="Primary" />
+                    android:text="主按钮" />
                 <Button
                     android:id="@+id/btn_outline"
                     android:layout_width="0dp"
@@ -65,7 +65,7 @@
                     android:background="@drawable/btn_outline"
                     android:stateListAnimator="@animator/press_scale"
                     android:textColor="@color/accent"
-                    android:text="Outline" />
+                    android:text="描边按钮" />
                 <Button
                     android:id="@+id/btn_ripple"
                     android:layout_width="0dp"
@@ -74,7 +74,7 @@
                     android:layout_marginStart="@dimen/row_gap"
                     android:background="@drawable/ripple_demo"
                     android:textColor="#FFFFFFFF"
-                    android:text="Ripple" />
+                    android:text="涟漪" />
             </LinearLayout>
 
             <TextView
@@ -101,21 +101,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_primary"
-                android:text="Switch" />
+                android:text="Switch 开关" />
             <ToggleButton
                 android:id="@+id/toggle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/row_gap"
-                android:textOn="Toggle ON"
-                android:textOff="Toggle OFF" />
+                android:textOn="Toggle: 开"
+                android:textOff="Toggle: 关" />
             <CheckBox
                 android:id="@+id/checkbox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/row_gap"
                 android:textColor="@color/text_primary"
-                android:text="CheckBox" />
+                android:text="CheckBox 复选" />
         </LinearLayout>
 
         <!-- Choice & Rating -->
@@ -145,13 +145,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/text_primary"
-                    android:text="Option A" />
+                    android:text="选项 A" />
                 <RadioButton
                     android:id="@+id/radio_b"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/text_primary"
-                    android:text="Option B" />
+                    android:text="选项 B" />
             </RadioGroup>
 
             <RatingBar

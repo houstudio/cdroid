@@ -13,7 +13,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Carousel"
+            android:text="@string/ph_curtain_t"
             android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -21,7 +21,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Drag the row — Carousel recycles 3 views across 10 items"
+            android:text="@string/ph_curtain_d"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:layout_marginBottom="12dp" />

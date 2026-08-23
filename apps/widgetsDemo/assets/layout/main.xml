@@ -16,12 +16,17 @@
         app:tabIndicatorHeight="3dp"
         app:tabIndicatorFullWidth="true"
         app:tabMode="scrollable"
+        app:tabRippleColor="@null"
+        app:tabPaddingStart="16dp"
+        app:tabPaddingEnd="16dp"
         app:tabSelectedTextColor="@color/text_primary"
         app:tabTextColor="@color/text_secondary" />
 
-    <ViewPager2
-        android:id="@+id/pager"
+    <!-- The ViewPager is attached here in code (the legacy androidx ViewPager
+         is not registered for XML inflation; see WidgetsDemoActivity). -->
+    <FrameLayout
+        android:id="@+id/pager_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"/>
 </LinearLayout>

@@ -1,9 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_title">CDROID Widgets Demo</string>
-    <string name="sec_buttons">Buttons &amp; Toggles</string>
-    <string name="sec_choice">Choice &amp; Rating</string>
-    <string name="sec_progress">Progress &amp; Seek</string>
-    <string name="sec_chrono">Chronometer</string>
-    <string name="tap_hint">Tap a control to see it react…</string>
+    
+    <!-- Tab titles: one widget-category page each -->
+    <string name="tab_lights">按钮</string>
+    <string name="tab_energy">进度</string>
+    <string name="tab_messages">文本</string>
+    <string name="tab_gallery">图像</string>
+    <string name="tab_motion_fx">动画</string>
+    <string name="tab_devices">列表</string>
+    <string name="tab_dashboard">杂项</string>
+    <string name="tab_schedule">日期</string>
+    <string name="tab_climate">约束</string>
+    <string name="tab_curtain">动效</string>
+
+    <!-- Page headers -->
+    <string name="ph_lights_t">按钮与开关</string>
+    <string name="ph_lights_d">Button · Switch · CheckBox · RadioButton · RatingBar</string>
+    <string name="ph_energy_t">进度与计时</string>
+    <string name="ph_energy_d">ProgressBar · SeekBar · Chronometer · RatingBar</string>
+    <string name="ph_messages_t">文本与输入</string>
+    <string name="ph_messages_d">SpannableString 富文本 · 跑马灯 · Spinner</string>
+    <string name="ph_gallery_t">图像与图形</string>
+    <string name="ph_gallery_d">ImageView 缩放 · 渐变 · AnimatedVectorDrawable</string>
+    <string name="ph_fx_t">属性动画</string>
+    <string name="ph_fx_d">ViewPropertyAnimator 属性动画一键演示</string>
+    <string name="ph_devices_t">列表与拖拽</string>
+    <string name="ph_devices_d">RecyclerView · ItemTouchHelper 拖拽与滑动</string>
+    <string name="ph_dashboard_t">杂项与图表</string>
+    <string name="ph_dashboard_d">NumberPicker · AChart 图表 · QRCode · Toast/Dialog</string>
+    <string name="ph_schedule_t">日期与时间</string>
+    <string name="ph_schedule_d">TimePicker · DatePicker · CalendarView</string>
+    <string name="ph_climate_t">约束布局</string>
+    <string name="ph_climate_d">ConstraintLayout · Flow · Barrier · 约束动画</string>
+    <string name="ph_curtain_t">运动布局</string>
+    <string name="ph_curtain_d">MotionLayout · MotionScene · Carousel 轮播</string>
+
+    <!-- Section captions -->
+    <string name="sec_buttons">按钮 Buttons</string>
+    <string name="sec_choice">单选与评分</string>
+    <string name="sec_progress">进度与调节</string>
+    <string name="sec_chrono">计时器</string>
+    <string name="tap_hint">点击任意控件，反馈会显示在这里…</string>
 </resources>

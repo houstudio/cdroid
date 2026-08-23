@@ -14,7 +14,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Progress"
+            android:text="@string/ph_energy_t"
             android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/card_gap"
-            android:text="ProgressBar, SeekBar, Chronometer and RatingBar"
+            android:text="@string/ph_energy_d"
             android:textColor="@color/text_secondary"
             android:textSize="@dimen/body_size" />
 

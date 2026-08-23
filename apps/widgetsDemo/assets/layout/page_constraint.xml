@@ -11,7 +11,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ConstraintLayout"
+            android:text="@string/ph_climate_t"
             android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -19,7 +19,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bias · Guideline · Chain · Ratio · Barrier"
+            android:text="@string/ph_climate_d"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:layout_marginBottom="12dp" />

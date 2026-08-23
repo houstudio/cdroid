@@ -159,7 +159,7 @@ namespace R{
             np_speed = 0x7f050054,
             np_temp = 0x7f050055,
             np_value_tv = 0x7f050056,
-            pager = 0x7f050057,
+            pager_container = 0x7f050057,
             progress_h = 0x7f050058,
             qr = 0x7f050059,
             radio_a = 0x7f05005a,
@@ -209,18 +209,54 @@ namespace R{
     namespace string{
         enum : int {
             app_title = 0x7f080000,
-            sec_buttons = 0x7f080001,
-            sec_choice = 0x7f080002,
-            sec_chrono = 0x7f080003,
-            sec_progress = 0x7f080004,
-            tap_hint = 0x7f080005,
+            ph_climate_d = 0x7f080001,
+            ph_climate_t = 0x7f080002,
+            ph_curtain_d = 0x7f080003,
+            ph_curtain_t = 0x7f080004,
+            ph_dashboard_d = 0x7f080005,
+            ph_dashboard_t = 0x7f080006,
+            ph_devices_d = 0x7f080007,
+            ph_devices_t = 0x7f080008,
+            ph_energy_d = 0x7f080009,
+            ph_energy_t = 0x7f08000a,
+            ph_fx_d = 0x7f08000b,
+            ph_fx_t = 0x7f08000c,
+            ph_gallery_d = 0x7f08000d,
+            ph_gallery_t = 0x7f08000e,
+            ph_lights_d = 0x7f08000f,
+            ph_lights_t = 0x7f080010,
+            ph_messages_d = 0x7f080011,
+            ph_messages_t = 0x7f080012,
+            ph_schedule_d = 0x7f080013,
+            ph_schedule_t = 0x7f080014,
+            sec_buttons = 0x7f080015,
+            sec_choice = 0x7f080016,
+            sec_chrono = 0x7f080017,
+            sec_progress = 0x7f080018,
+            tab_climate = 0x7f080019,
+            tab_curtain = 0x7f08001a,
+            tab_dashboard = 0x7f08001b,
+            tab_devices = 0x7f08001c,
+            tab_energy = 0x7f08001d,
+            tab_gallery = 0x7f08001e,
+            tab_lights = 0x7f08001f,
+            tab_messages = 0x7f080020,
+            tab_motion_fx = 0x7f080021,
+            tab_schedule = 0x7f080022,
+            tap_hint = 0x7f080023,
         };
     }/*namespace string*/
 
+    namespace style{
+        enum : int {
+            AppTheme = 0x7f090000,
+        };
+    }/*namespace style*/
+
     namespace xml{
         enum : int {
-            scene_carousel = 0x7f090000,
-            scene_constraint = 0x7f090001,
+            scene_carousel = 0x7f0a0000,
+            scene_constraint = 0x7f0a0001,
         };
     }/*namespace xml*/
 
