@@ -39,7 +39,6 @@ std::unique_ptr<TypedArray> AnimatorInflater::obtainAttributes(Context*ctx,const
 Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid){
     return loadAnimator(context,resid,1.f);
 }
-#if 1
 Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid,float pathErrorScale){
     // AOSP loadAnimator(Context, id) → loadAnimator(res, context.getTheme(), id).
     Resources::Theme theme = context->getTheme();
@@ -58,8 +57,29 @@ Animator* AnimatorInflater::loadAnimator(Context* context,int resid){
 
 Animator* AnimatorInflater::loadAnimator(Context* context,int resid,float){
     if (resid == 0) return nullptr;  // AOSP: 0 → null
+    // AOSP loadAnimator(Resources, Theme, id, pathErrorScale): the
+    // ConfigurationBoundResourceCache on ResourcesImpl serves hits as
+    // newInstance() — the cached source animator is never handed out.
+    Resources& res = context->getResources();
     Resources::Theme theme = context->getTheme();
-    return loadAnimator(context, &theme, resid, 1.f);
+    Animator* animator = res.obtainCachedAnimator(resid, theme._engineHandle());
+    if (animator != nullptr) return animator;
+    XmlPullParser parser(context,resid);
+    animator = createAnimatorFromXml(context, &theme, parser, 1.f);
+    if (animator != nullptr) {
+        // AOSP appends getChangingConfigs(resources, id) so entries self-invalidate
+        // via needNewResources; CDROID clears the whole cache on configuration
+        // change (ResourcesImpl::updateConfiguration), making per-entry configs
+        // unnecessary. createConstantState() transfers ownership of the parsed
+        // animator to the constant state (AOSP relies on GC).
+        const auto constantState = animator->createConstantState();
+        if (constantState != nullptr) {
+            res.cacheAnimator(resid, theme._engineHandle(), constantState);
+            // create a new animator so that cached version is never used by the user
+            animator = constantState->newInstance();
+        }
+    }
+    return animator;
 }
 
 Animator* AnimatorInflater::loadAnimator(Context* context,const Resources::Theme* theme,int resid,float pathErrorScale){
@@ -68,75 +88,37 @@ Animator* AnimatorInflater::loadAnimator(Context* context,const Resources::Theme
     return createAnimatorFromXml(context, theme, parser, pathErrorScale);
 }
 
-static std::unordered_map<std::string,std::shared_ptr<StateListAnimator>>mStateAnimatorMap;
 StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,const std::string&resid){
-    auto it = mStateAnimatorMap.find(resid);
-    if(it==mStateAnimatorMap.end()){
-        // AOSP threads context.getTheme() through the parse.
-        XmlPullParser parser(context,resid);
-        const AttributeSet& attrs = parser;
-        Resources::Theme theme = context->getTheme();
-        StateListAnimator*anim =createStateListAnimatorFromXml(context,&theme,parser,attrs);
-        it = mStateAnimatorMap.insert({resid,std::shared_ptr<StateListAnimator>(anim)}).first;
-    }
-    return new StateListAnimator(*it->second);
+    // String-resid entry (CDROID extension; AOSP loads by @AnimatorRes int id):
+    // no caching — the themed animator cache is keyed by int resource id.
+    XmlPullParser parser(context,resid);
+    const AttributeSet& attrs = parser;
+    Resources::Theme theme = context->getTheme();
+    return createStateListAnimatorFromXml(context,&theme,parser,attrs);
 }
 
 StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,int resid){
     if (resid == 0) return nullptr;  // AOSP: 0 → null
-    // Cache by the int id (string key) and open the resource directly by id via
-    // XmlPullParser(Context, int) (binary AXML through Resources.getXml).
-    const std::string key = std::to_string(resid);
-    auto it = mStateAnimatorMap.find(key);
-    if (it == mStateAnimatorMap.end()) {
-        XmlPullParser parser(context, resid);
-        const AttributeSet& attrs = parser;
-        Resources::Theme theme = context->getTheme();
-        StateListAnimator* anim = createStateListAnimatorFromXml(context, &theme, parser, attrs);
-        it = mStateAnimatorMap.insert({key, std::shared_ptr<StateListAnimator>(anim)}).first;
-    }
-    return new StateListAnimator(*it->second);
-}
-#else
-static std::unordered_map<std::string,std::shared_ptr<ConstantState<Animator*>>>mAnimatorCache;
-Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid,float){
-    XmlPullParser parser(context,resid);
-    Animator* animator = nullptr;
-    auto itc = mAnimatorCache.find(resid);
-    if(itc!= mAnimatorCache.end()){
-        animator=itc->second->newInstance();
-    } else{
-        animator = createAnimatorFromXml(context, parser, 1.f/*pathErrorScale*/);
-        if (animator != nullptr) {
-            auto  constantState = animator->createConstantState();
-            if (constantState != nullptr) {
-                LOGD("caching animator for res %s",resid.c_str());
-                mAnimatorCache.insert({resid, constantState});
-                // create a new animator so that cached version is never used by the user
-                animator = constantState->newInstance();//resources, theme);
-            }
+    // AOSP loadStateListAnimator(Context, id): ConfigurationBoundResourceCache
+    // on ResourcesImpl; hits come back as newInstance() (a clone).
+    Resources& res = context->getResources();
+    Resources::Theme theme = context->getTheme();
+    StateListAnimator* animator = res.obtainCachedStateListAnimator(resid, theme._engineHandle());
+    if (animator != nullptr) return animator;
+    XmlPullParser parser(context, resid);
+    const AttributeSet& attrs = parser;
+    animator = createStateListAnimatorFromXml(context, &theme, parser, attrs);
+    if (animator != nullptr) {
+        // changing-configs per entry unnecessary — see loadAnimator(Context, int).
+        const auto constantState = animator->createConstantState();
+        if (constantState != nullptr) {
+            res.cacheStateListAnimator(resid, theme._engineHandle(), constantState);
+            // return a clone so that the animator in constant state is never used.
+            animator = constantState->newInstance();
         }
     }
     return animator;
 }
-
-static std::unordered_map<std::string,std::shared_ptr<ConstantState<StateListAnimator*>>>mStateAnimatorMap;
-StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,const std::string&resid){
-    auto itc = mStateAnimatorMap.find(resid);
-    StateListAnimator* animator =nullptr;
-    if(itc!=mStateAnimatorMap.end()){
-        animator = itc->second->newInstance();
-        LOGD("load %s from StateAnimatorCache",resid.c_str());
-    }else{
-        XmlPullParser parser(context,resid);
-        const AttributeSet attrs(&parser);
-        animator =createStateListAnimatorFromXml(context,parser,attrs);
-        auto constantState = animator->createConstantState();
-        mStateAnimatorMap.insert({resid,constantState});
-    }
-    return animator;//new StateListAnimator(*it->second);
-}
-#endif
 Animator* AnimatorInflater::createAnimatorFromXml(Context*context,const Resources::Theme* theme,XmlPullParser& parser,float pixelSize){
     const AttributeSet& attrs = parser;
     return createAnimatorFromXml(context,theme,parser, attrs, nullptr, 0,pixelSize);

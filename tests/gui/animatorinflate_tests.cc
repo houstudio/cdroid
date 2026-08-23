@@ -88,6 +88,92 @@ TEST_F(ANIMATORINFLATOR,fade_in){
     pumpFor(300);
 }
 
+// AOSP AnimatorInflater.loadAnimator(Resources, Theme, id): the
+// ConfigurationBoundResourceCache stores ConstantStates and every load returns
+// newInstance() — two loads of the same id are DISTINCT pristine animators
+// (never the cached source), and mutating one must not leak into the other.
+TEST_F(ANIMATORINFLATOR,animator_cache_double_load){
+    App&app=App::getInstance();
+    Animator*a=AnimatorInflater::loadAnimator(&app,gui_test::R::animator::fade_in);
+    Animator*b=AnimatorInflater::loadAnimator(&app,gui_test::R::animator::fade_in);
+    ASSERT_NE(a,(void*)nullptr);
+    ASSERT_NE(b,(void*)nullptr);
+    EXPECT_NE(a,b) << "loads must be distinct instances (newInstance, not the cached source)";
+    EXPECT_EQ(a->getDuration(),b->getDuration());
+    EXPECT_FALSE(a->isStarted());
+    EXPECT_FALSE(b->isStarted());
+    const int64_t xmlDuration=a->getDuration();
+    a->setDuration(12345);
+    EXPECT_EQ(b->getDuration(),xmlDuration) << "mutating one clone must not affect the other";
+    ObjectAnimator*oa=dynamic_cast<ObjectAnimator*>(a);
+    ObjectAnimator*ob=dynamic_cast<ObjectAnimator*>(b);
+    ASSERT_NE(oa,(ObjectAnimator*)nullptr);
+    ASSERT_NE(ob,(ObjectAnimator*)nullptr);
+    EXPECT_EQ(oa->getPropertyName(),ob->getPropertyName());
+    delete a;
+    delete b;
+}
+
+// Same for StateListAnimator: cached by int id, every load a deep clone — the
+// clone's tuple animators are freshly cloned (no stale listeners bound to the
+// cached source), and destroying one clone leaves the others usable.
+TEST_F(ANIMATORINFLATOR,sla_cache_double_load){
+    App&app=App::getInstance();
+    StateListAnimator*a=AnimatorInflater::loadStateListAnimator(&app,
+            gui_test::R::animator::statelist_test);
+    StateListAnimator*b=AnimatorInflater::loadStateListAnimator(&app,
+            gui_test::R::animator::statelist_test);
+    ASSERT_NE(a,(void*)nullptr);
+    ASSERT_NE(b,(void*)nullptr);
+    EXPECT_NE(a,b);
+    delete a;  // the cache's own source animator must survive this
+    // A third load goes through the cache HIT path (put by the first load).
+    StateListAnimator*c=AnimatorInflater::loadStateListAnimator(&app,
+            gui_test::R::animator::statelist_test);
+    ASSERT_NE(c,(void*)nullptr);
+    EXPECT_NE(c,b);
+    // Attach to a real view (setState on a targetless SLA would deref a null
+    // target inside the tuple animator — same as AOSP's NPE) and drive it.
+    // setActivated, not setPressed: the pressed dispatch is gated on
+    // mAttachInfo (detached test view) while activated is not. A detached view
+    // is not "aggregated visible", so drawableStateChanged JUMPS the just-
+    // started animator to its end value (AOSP "skip any animated changes") —
+    // which exercises the clone's full PHV pipeline: alpha must land on the
+    // default item's valueTo (0.5).
+    View*v=new View(&app);
+    v->setStateListAnimator(b);  // takes ownership, sets target
+    v->setActivated(true);
+    EXPECT_NEAR(v->getAlpha(),0.5f,0.01f) << "clone must apply the tuple animator's end value";
+    pumpFor(50);
+    delete c;
+    delete v;  // deletes b (its SLA)
+}
+
+// ConstantState contract: createConstantState() must not throw (it used to
+// call shared_from_this() inside the constructor -> bad_weak_ptr), adopts the
+// source animator, and newInstance() yields independent clones. The source is
+// owned by the constant state — do NOT delete it here.
+TEST_F(ANIMATORINFLATOR,constantstate_newinstance_independent){
+    ValueAnimator*va=ValueAnimator::ofFloat({0.f,1.f});
+    va->setDuration(777);
+    // auto: the nested constant-state type is private to Animator.
+    const auto cs=va->createConstantState();
+    ASSERT_NE(cs,nullptr);
+    Animator*c1=cs->newInstance();
+    Animator*c2=cs->newInstance();
+    ASSERT_NE(c1,(void*)nullptr);
+    ASSERT_NE(c2,(void*)nullptr);
+    EXPECT_NE(c1,c2);
+    EXPECT_NE(c1,va);
+    EXPECT_EQ(c1->getDuration(),(int64_t)777);
+    EXPECT_EQ(c2->getDuration(),(int64_t)777);
+    c1->setDuration(999);
+    EXPECT_EQ(c2->getDuration(),(int64_t)777) << "clones must not share state";
+    EXPECT_FALSE(c1->isStarted());
+    delete c1;
+    delete c2;
+}
+
 // Legacy tween <translate> animations live in anim/ and load through
 // AnimationUtils (Animation), not AnimatorInflater — on Android the latter
 // throws "Unknown animator name: translate" for this resource.

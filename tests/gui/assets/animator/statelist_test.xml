@@ -14,6 +14,6 @@
         <objectAnimator
             android:propertyName="alpha"
             android:duration="300"
-            android:valueTo="1.0"/>
+            android:valueTo="0.5"/>
     </item>
 </selector>

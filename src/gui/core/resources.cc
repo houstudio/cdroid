@@ -382,6 +382,22 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
     return obtainStyledAttributes(&set, attrs, defStyleAttr, defStyleRes);
 }
 
+// --- Animator caches (forwarding to ResourcesImpl; see resourcesimpl.cc) ---
+Animator* Resources::obtainCachedAnimator(int id, const void* themeEngine) const {
+    return mImpl->obtainCachedAnimator(id, themeEngine);
+}
+void Resources::cacheAnimator(int id, const void* themeEngine,
+        const std::shared_ptr<ConstantState<Animator*>>& cs) const {
+    mImpl->cacheAnimator(id, themeEngine, cs);
+}
+StateListAnimator* Resources::obtainCachedStateListAnimator(int id, const void* themeEngine) const {
+    return mImpl->obtainCachedStateListAnimator(id, themeEngine);
+}
+void Resources::cacheStateListAnimator(int id, const void* themeEngine,
+        const std::shared_ptr<ConstantState<StateListAnimator*>>& cs) const {
+    mImpl->cacheStateListAnimator(id, themeEngine, cs);
+}
+
 // AOSP Resources.obtainAttributes(set, attrs): theme-less — only the
 // attributes explicitly set in the XML, no style/theme resolution
 // (AOSP ResourcesImpl.obtainStyledAttributes(set, attrs, theme=null)).

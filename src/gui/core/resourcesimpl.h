@@ -39,6 +39,9 @@ class Typeface;
 class ComplexColor;
 class Movie;
 class Context;
+template <class T> class ConstantState;   // animation/animator.h — opaque here
+class Animator;            // animation — opaque (pointer return)
+class StateListAnimator;   // animation — opaque (pointer return)
 }  // namespace cdroid
 
 namespace cdroid {
@@ -145,9 +148,23 @@ public:
     // return nullptr.
     void setContext(Context* ctx) { mCtx = ctx; }
 
+    // AOSP ResourcesImpl.getAnimatorCache()/getStateListAnimatorCache()
+    // (ConfigurationBoundResourceCache) — used by AnimatorInflater's int-id
+    // loadAnimator/loadStateListAnimator. obtain* applies newInstance() on a
+    // hit (callers never receive the cached source animator); themeEngine is
+    // the opaque ResTable::Theme* from Resources::Theme::_engineHandle().
+    Animator* obtainCachedAnimator(int id, const void* themeEngine) const;
+    void cacheAnimator(int id, const void* themeEngine,
+                       const std::shared_ptr<ConstantState<Animator*>>& cs) const;
+    StateListAnimator* obtainCachedStateListAnimator(int id, const void* themeEngine) const;
+    void cacheStateListAnimator(int id, const void* themeEngine,
+                                const std::shared_ptr<ConstantState<StateListAnimator*>>& cs) const;
+
 private:
     class DrawableCache;        // id → Drawable::ConstantState (defined in .cc)
     class ColorStateListCache;  // id → ColorStateList          (defined in .cc)
+    class AnimatorCache;        // id → ConstantState<Animator*>  (AOSP mAnimatorCache)
+    class StateListAnimatorCache;  // id → ConstantState<StateListAnimator*>
 
     Asset* openByStringId(int id) const;
     // Open an arsc-recorded path against the pak layout (res/ prefix strip +
@@ -165,6 +182,12 @@ private:
     // .cc): they own GUI types (Drawable::ConstantState / ColorStateList).
     mutable std::unique_ptr<DrawableCache>       mDrawableCache;
     mutable std::unique_ptr<ColorStateListCache> mColorStateListCache;
+    // AOSP ResourcesImpl.mAnimatorCache / mStateListAnimatorCache feeding
+    // AnimatorInflater.loadAnimator/loadStateListAnimator (ConfigurationBound-
+    // ResourceCache semantics). Shared (not weak like DrawableCache): the
+    // animator ConstantState is the sole owner of the cached source animator.
+    mutable std::unique_ptr<AnimatorCache>           mAnimatorCache;
+    mutable std::unique_ptr<StateListAnimatorCache>  mStateListAnimatorCache;
 };
 
 } // namespace cdroid

@@ -34,6 +34,9 @@ class ComplexColor;
 class Movie;
 class AttributeSet;
 class TypedArray;
+template <class T> class ConstantState;   // animation/animator.h — opaque here
+class Animator;            // animation — opaque (pointer return)
+class StateListAnimator;   // animation — opaque (pointer return)
 
 class Resources {
 public:
@@ -126,6 +129,17 @@ public:
 
     // AOSP Resources.obtainTypedArray(@ArrayRes int id).
     std::unique_ptr<TypedArray> obtainTypedArray(int id) const;
+
+    // --- Animator caches (AOSP ResourcesImpl.getAnimatorCache() /
+    // getStateListAnimatorCache(), ConfigurationBoundResourceCache) ---
+    // Used by AnimatorInflater.loadAnimator/loadStateListAnimator(int).
+    // obtain* returns newInstance() on a hit — never the cached source.
+    Animator* obtainCachedAnimator(int id, const void* themeEngine) const;
+    void cacheAnimator(int id, const void* themeEngine,
+                       const std::shared_ptr<ConstantState<Animator*>>& cs) const;
+    StateListAnimator* obtainCachedStateListAnimator(int id, const void* themeEngine) const;
+    void cacheStateListAnimator(int id, const void* themeEngine,
+                                const std::shared_ptr<ConstantState<StateListAnimator*>>& cs) const;
 
     class Theme;   // AOSP Resources.Theme — defined below (view over ResTable::Theme)
 

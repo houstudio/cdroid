@@ -26,6 +26,8 @@
 #include <image-decoders/imagedecoder.h>  // ImageDecoder::createAsDrawable(id) (image self-load)
 #include <core/context.h>             // inflation bridge (mCtx)
 #include <core/xmlpullparser.h>       // ColorStateList::createFromXml inline inflate
+#include <animation/animator.h>             // AnimatorCache: ConstantState<Animator*>
+#include <animation/statelistanimator.h>    // StateListAnimatorCache
 
 using namespace cdroid;
 using cdroid::ResTable;
@@ -75,6 +77,8 @@ ResourcesImpl::ResourcesImpl(AssetManager* am, const ResTable_config* config,
     if (metrics != nullptr) mConfiguration.densityDpi = mMetrics.densityDpi;
     mDrawableCache = std::make_unique<DrawableCache>();
     mColorStateListCache = std::make_unique<ColorStateListCache>();
+    mAnimatorCache = std::make_unique<AnimatorCache>();
+    mStateListAnimatorCache = std::make_unique<StateListAnimatorCache>();
 }
 
 ResourcesImpl::~ResourcesImpl() {
@@ -482,6 +486,40 @@ private:
     std::unordered_map<uint64_t, std::shared_ptr<ColorStateList>> mEntries;
 };
 
+// AOSP ConfigurationBoundResourceCache<Animator> / <StateListAnimator> on
+// ResourcesImpl. Entries are ConstantStates; getInstance == get + newInstance,
+// so callers NEVER receive the cached source animator (AOSP: "create a new
+// animator so that cached version is never used by the user"). Shared (not
+// weak) storage: the ConstantState is the sole owner of the source animator —
+// a weak entry would expire the moment the put() call returns.
+class ResourcesImpl::AnimatorCache {
+public:
+    void clear() { mEntries.clear(); }   // AOSP onConfigurationChange drops entries
+    std::shared_ptr<ConstantState<Animator*>> get(uint64_t key) const {
+        auto it = mEntries.find(key);
+        return it == mEntries.end() ? nullptr : it->second;
+    }
+    void put(uint64_t key, const std::shared_ptr<ConstantState<Animator*>>& cs) {
+        if (cs) mEntries[key] = cs;
+    }
+private:
+    std::unordered_map<uint64_t, std::shared_ptr<ConstantState<Animator*>>> mEntries;
+};
+
+class ResourcesImpl::StateListAnimatorCache {
+public:
+    void clear() { mEntries.clear(); }   // AOSP onConfigurationChange drops entries
+    std::shared_ptr<ConstantState<StateListAnimator*>> get(uint64_t key) const {
+        auto it = mEntries.find(key);
+        return it == mEntries.end() ? nullptr : it->second;
+    }
+    void put(uint64_t key, const std::shared_ptr<ConstantState<StateListAnimator*>>& cs) {
+        if (cs) mEntries[key] = cs;
+    }
+private:
+    std::unordered_map<uint64_t, std::shared_ptr<ConstantState<StateListAnimator*>>> mEntries;
+};
+
 // AOSP ResourcesImpl.updateConfiguration(config, metrics, compat): apply the
 // new configuration; the change bits drive resource-variant reselection
 // (arsc setParameters) and resource-cache invalidation.
@@ -542,6 +580,39 @@ void ResourcesImpl::updateConfiguration(const Configuration* config, const Displ
     // .onConfigurationChange(changes) — CDROID drops the cached entries.
     if (mDrawableCache) mDrawableCache->clear();
     if (mColorStateListCache) mColorStateListCache->clear();
+    // AOSP mAnimatorCache/mStateListAnimatorCache.onConfigurationChange(changes)
+    // — ConfigurationBoundResourceCache prunes by changingConfigs and bumps its
+    // generation; CDROID drops the entries wholesale (same policy as above).
+    if (mAnimatorCache) mAnimatorCache->clear();
+    if (mStateListAnimatorCache) mStateListAnimatorCache->clear();
+}
+
+// AOSP ResourcesImpl.getAnimatorCache().getInstance(id, resources, theme): a
+// hit already applies newInstance(), so callers never receive the cached
+// source animator ("create a new animator so that cached version is never
+// used by the user").
+Animator* ResourcesImpl::obtainCachedAnimator(int id, const void* themeEngine) const {
+    if (!mAnimatorCache) return nullptr;
+    const std::shared_ptr<ConstantState<Animator*>> cs =
+            mAnimatorCache->get(themedCacheKey(id, themeEngine));
+    return cs ? cs->newInstance() : nullptr;
+}
+
+void ResourcesImpl::cacheAnimator(int id, const void* themeEngine,
+        const std::shared_ptr<ConstantState<Animator*>>& cs) const {
+    if (mAnimatorCache) mAnimatorCache->put(themedCacheKey(id, themeEngine), cs);
+}
+
+StateListAnimator* ResourcesImpl::obtainCachedStateListAnimator(int id, const void* themeEngine) const {
+    if (!mStateListAnimatorCache) return nullptr;
+    const std::shared_ptr<ConstantState<StateListAnimator*>> cs =
+            mStateListAnimatorCache->get(themedCacheKey(id, themeEngine));
+    return cs ? cs->newInstance() : nullptr;
+}
+
+void ResourcesImpl::cacheStateListAnimator(int id, const void* themeEngine,
+        const std::shared_ptr<ConstantState<StateListAnimator*>>& cs) const {
+    if (mStateListAnimatorCache) mStateListAnimatorCache->put(themedCacheKey(id, themeEngine), cs);
 }
 
 // AOSP Resources.getDrawable(id) → getDrawableForDensity(id, 0).
