@@ -44,6 +44,8 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet* attrs, int defStyl
         Drawable* bg = ta->getDrawable(R::styleable::PopupWindow_popupBackground);
         mElevation = ta->getFloat(R::styleable::PopupWindow_popupElevation, 0);
         mOverlapAnchor = ta->getBoolean(R::styleable::PopupWindow_overlapAnchor, false);
+        mAnimationStyle = ta->getResourceId(R::styleable::PopupWindow_popupAnimationStyle,
+                                            ANIMATION_STYLE_DEFAULT);
         setBackgroundDrawable(bg);
     }
     LOGD("create PopupWindow %p background=%p",this,mBackground);
@@ -130,6 +132,14 @@ void PopupWindow::setExitTransition(Transition* exitTransition) {
 
 Transition* PopupWindow::getExitTransition()const{
     return mExitTransition;
+}
+
+void PopupWindow::setAnimationStyle(int animationStyle) {
+    mAnimationStyle = animationStyle;
+}
+
+int PopupWindow::getAnimationStyle() const {
+    return mAnimationStyle;
 }
 
 void PopupWindow::setEpicenterBounds(const Rect& bounds) {
@@ -521,6 +531,19 @@ void PopupWindow::invokePopup(WindowManager::LayoutParams* p){
     WindowManager::getInstance().moveWindow(mDecorView,p->x,p->y);
     LOGD("invokePopup(%d,%d,%d,%d)",p->x,p->y,mDecorView->getWidth(),mDecorView->getHeight());
     mDecorView->setLayoutParams(p);
+    // AOSP carries the animation style on params.windowAnimations and the WindowManager
+    // starts the popup's enter/exit from it. CDROID resolves it onto the decor Window
+    // HERE — after the anchor alignment above — so an enter snap captures the final
+    // resting position (the theme windowAnimationStyle path cannot be used from the
+    // ctor for exactly that reason; see PopupDecorView's note).
+    // ENTER ONLY: an exit animation would defer the decor's detach to the animation end,
+    // past the moment owners free borrowed content at dismiss (a ListView's adapter
+    // deleted right after PopupWindow::dismiss crashed exactly so). AOSP pays the same
+    // deferred detach, surviving only because GC keeps the freed memory alive.
+    p->windowAnimations = computeAnimationResource();
+    if (p->windowAnimations != 0) {
+        ((Window*)mDecorView)->setWindowAnimations(p->windowAnimations, /*enableExit=*/false);
+    }
     //mWindowManager->addView(mDecorView, p);
     /*if (mEnterTransition != nullptr) {
         mDecorView->requestEnterTransition(mEnterTransition);
@@ -705,16 +728,22 @@ bool PopupWindow::positionInDisplayHorizontal(WindowManager::LayoutParams* outPa
     return fitsInDisplay;
 }
 
-const std::string PopupWindow::computeAnimationResource() {
-    /*if (mAnimationStyle == ANIMATION_STYLE_DEFAULT) {
+const int PopupWindow::computeAnimationResource() {
+    // AOSP PopupWindow.computeAnimationResource: an explicitly set style wins; dropdowns get
+    // the framework default grow/shrink-fade pair, above vs below the anchor. CDROID treats
+    // 0 (@empty — Material's popupMenuStyle chain) like ANIMATION_STYLE_DEFAULT: on AOSP the
+    // empty handoff pairs with popupEnter/ExitTransition (L popup transitions), which CDROID
+    // popups do not run, so falling back to the classic dropdown animation keeps menus
+    // animating. An explicit NON-zero style (even an empty one like Animation.PopupWindow)
+    // still wins verbatim.
+    if (mAnimationStyle == ANIMATION_STYLE_DEFAULT || mAnimationStyle == 0) {
         if (mIsDropdown) {
-            return mAboveAnchor
-                    ? com.android.internal.R.style.Animation_DropDownUp
-                    : com.android.internal.R.style.Animation_DropDownDown;
+            return mAboveAnchor ? (int)R::style::Animation_DropDownUp
+                                : (int)R::style::Animation_DropDownDown;
         }
         return 0;
-    }*/
-    return "";//mAnimationStyle;
+    }
+    return mAnimationStyle;
 }
 
 bool PopupWindow::findDropDownPosition(View* anchor,WindowManager::LayoutParams* outParams,

@@ -618,12 +618,17 @@ CascadingMenuPopup::CascadingMenuInfo::~CascadingMenuInfo(){
     // already returned; just delete the objects. Do NOT dismiss() here: this
     // dtor also runs from ~CascadingMenuPopup, and dismissing would re-enter
     // onCloseMenu and mutate the vectors being iterated.
-    // Order matters: delete the window first -- its ListView borrows (but does
-    // not own) the adapter and unregisters its observer in its own destructor;
-    // freeing the adapter before the window would leave the ListView touching
-    // freed memory.
-    delete window;
-    window = nullptr;
+    // With popup window animations the decor Window outlives this info (its
+    // close() animation finishes asynchronously), so the ListView must drop its
+    // BORROWED adapter reference before the adapter is freed — its later detach
+    // (onDetachedFromWindow) would otherwise unregister an observer on freed
+    // memory. setAdapter(nullptr) unregisters the observer and clears mAdapter.
+    if (window != nullptr) {
+        ListView* listView = window->getListView();
+        if (listView != nullptr) listView->setAdapter(nullptr);
+        delete window;
+        window = nullptr;
+    }
     delete adapter;
     adapter = nullptr;
 }

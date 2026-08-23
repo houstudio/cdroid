@@ -48,6 +48,7 @@ public:
         int gravity;
         int flags;
         int privateFlags;
+        int windowAnimations = 0; // AOSP LayoutParams.windowAnimations (animation STYLE res id)
     };
 public:
     virtual ~WindowManager();

@@ -128,7 +128,12 @@ private:
     PopupDecorView* createDecorView(View* contentView);
     void invokePopup(WindowManager::LayoutParams* p);
     void setLayoutDirectionFromAnchor();
-    const std::string computeAnimationResource();
+    // AOSP setAnimationStyle/getAnimationStyle: an explicit animation STYLE res id
+    // (0 = explicitly none) overriding the dropdown default; resolved onto the decor
+    // window at invokePopup time (computeAnimationResource).
+    void setAnimationStyle(int animationStyle);
+    int getAnimationStyle() const;
+    const int computeAnimationResource();
     void update(View* anchor, bool updateLocation, int xoff, int yoff, int width, int height);
     bool tryFitVertical(WindowManager::LayoutParams* outParams, int yOffset, int height, int anchorHeight,
            int drawingLocationY, int screenLocationY, int displayFrameTop,int displayFrameBottom, bool allowResize);

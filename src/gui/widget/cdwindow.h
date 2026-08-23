@@ -76,6 +76,7 @@ private:
     // AOSP LayoutParams.windowAnimations source: an explicit animation STYLE overriding the
     // theme's windowAnimationStyle (setWindowAnimations). 0 -> resolve from the theme.
     int mWindowAnimationStyle = 0;
+    bool mWindowExitAnimationsEnabled = true; // setWindowAnimations(enableExit=false) skips the exit pair
     // True when the Context ctor auto-wrapped the caller's plain context in a
     // ContextThemeWrapper (AOSP: an Activity IS a themed context); freed in ~Window.
     bool mOwnsContext       = false;
@@ -311,7 +312,12 @@ public:
     void requestTransitionStart(LayoutTransition* transition)override;
     // AOSP Window.setWindowAnimations: an explicit animation STYLE res id overriding the theme's
     // windowAnimationStyle for this window's enter/exit (0 restores the theme resolution).
-    void setWindowAnimations(int resId);
+    // enableExit=false installs the ENTER animation only: an exit animation defers the view
+    // tree's detach to the animation end, which breaks owners that free borrowed content at
+    // dismiss (e.g. a ListView's adapter deleted right after PopupWindow::dismiss — AOSP only
+    // gets away with animated popup exits because GC keeps that memory alive). Popups pass
+    // false; app windows keep the full pair.
+    void setWindowAnimations(int resId, bool enableExit = true);
     // Window-level Activity transitions (android.app.Activity transition API names). Each setter
     // takes ownership of the passed ActivityTransition* (replacing/deleting any previous one).
     void setEnterTransition(ActivityTransition* t);

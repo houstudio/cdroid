@@ -1142,8 +1142,9 @@ static ActivityTransition* transitionFromAnimation(Animation* anim, bool enter) 
     return nullptr;
 }
 
-void Window::setWindowAnimations(int resId) {
+void Window::setWindowAnimations(int resId, bool enableExit) {
     mWindowAnimationStyle = resId;
+    mWindowExitAnimationsEnabled = enableExit;
     if (resId != 0) applyWindowAnimationStyle(resId); // resolve now (AOSP: params.windowAnimations)
 }
 
@@ -1178,7 +1179,7 @@ void Window::applyWindowAnimationStyle(int styleRes) {
         mPendingEnterAnim = true;
         snapEnterStart(enterT);
     }
-    auto exitT = exitRes != 0
+    auto exitT = (exitRes != 0 && mWindowExitAnimationsEnabled)
         ? transitionFromAnimation(AnimationUtils::loadAnimation(mContext, exitRes), false) : nullptr;
     if (exitT != nullptr) {
         delete mExitTransition;
