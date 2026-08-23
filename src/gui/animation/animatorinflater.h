@@ -23,6 +23,7 @@
 namespace cdroid{
 class TypedArray;
 class TypedValue;
+class Keyframe;
 }
 namespace cdroid{
 class AnimatorInflater{
@@ -56,7 +57,14 @@ private:
     static ValueAnimator* loadValueAnimator(Context*context,const Resources::Theme* theme,const AttributeSet& attrs, ValueAnimator*anim,float);
     static ValueAnimator* loadAnimator(Context*ctx,const Resources::Theme* theme,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale);
     static std::vector<PropertyValuesHolder*> loadValues(Context*ctx,const Resources::Theme* theme,XmlPullParser& parser,const  AttributeSet& attrs);
-    static PropertyValuesHolder* loadPvh(XmlPullParser& parser,const std::string& propertyName, int valueType);
+    // AOSP loadPvh(res, theme, parser, propertyName, valueType): parses nested
+    // <keyframe> elements into a ofKeyframes() holder (no <keyframe> → null,
+    // caller falls back to getPVH's valueFrom/valueTo form).
+    static PropertyValuesHolder* loadPvh(Context*ctx,const Resources::Theme* theme,XmlPullParser& parser,const std::string& propertyName, int valueType);
+    static int inferValueTypeOfKeyframe(Context*ctx,const Resources::Theme* theme,const AttributeSet& attrs);
+    static Keyframe* loadKeyframe(Context*ctx,const Resources::Theme* theme,const AttributeSet& attrs,int valueType);
+    static Keyframe* createNewKeyframe(Keyframe* sampleKeyframe, float fraction);
+    static void distributeKeyframes(std::vector<Keyframe*>& keyframes, float gap,int startIndex, int endIndex);
 public:
     static Animator* loadAnimator(Context* context,const std::string&resid);
     static Animator* loadAnimator(Context* context,const std::string&resid,float pathErrorScale);

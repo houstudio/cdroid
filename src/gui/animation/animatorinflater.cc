@@ -224,7 +224,7 @@ std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(Context*ctx,cons
             const std::string propertyName = ta->getString(R::styleable::PropertyValuesHolder_propertyName);
             const int valueType = ta->getInt(R::styleable::PropertyValuesHolder_valueType, VALUE_TYPE_UNDEFINED);
             LOGD("propertyValuesHolder.%s type=%d",propertyName.c_str(),valueType);
-            PropertyValuesHolder* pvh = loadPvh(parser, propertyName, valueType);
+            PropertyValuesHolder* pvh = loadPvh(ctx, theme, parser, propertyName, valueType);
             if (pvh == nullptr) {
                 pvh = getPVH(ctx, theme, attrs, valueType, propertyName);
             }
@@ -238,90 +238,163 @@ std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(Context*ctx,cons
     return values;
 }
 
-PropertyValuesHolder* AnimatorInflater::loadPvh(XmlPullParser& parser,const std::string& propertyName, int valueType){
+PropertyValuesHolder* AnimatorInflater::loadPvh(Context*ctx,const Resources::Theme* theme,
+        XmlPullParser& parser,const std::string& propertyName, int valueType){
+    // AOSP AnimatorInflater.loadPvh, ported: nested <keyframe> elements become
+    // an ofKeyframes() holder; fraction gaps are filled/distributed per AOSP.
     int type;
     PropertyValuesHolder* value = nullptr;
-#if 0
-    ArrayList<Keyframe> keyframes = null;
+    std::vector<Keyframe*> keyframes;
 
     while ((type = parser.next()) != XmlPullParser::END_TAG &&
             type != XmlPullParser::END_DOCUMENT) {
+        if (type != XmlPullParser::START_TAG)continue;
         const std::string name = parser.getName();
         if (name.compare("keyframe")==0) {
             if (valueType == VALUE_TYPE_UNDEFINED) {
-                valueType = inferValueTypeOfKeyframe(res, theme, Xml.asAttributeSet(parser));
+                valueType = inferValueTypeOfKeyframe(ctx, theme, parser);
             }
-            Keyframe keyframe = loadKeyframe(res, theme, Xml.asAttributeSet(parser), valueType);
-            if (keyframe != null) {
-                if (keyframes == null) {
-                    keyframes = new ArrayList<Keyframe>();
-                }
-                keyframes.add(keyframe);
+            Keyframe* keyframe = loadKeyframe(ctx, theme, parser, valueType);
+            if (keyframe != nullptr) {
+                keyframes.push_back(keyframe);
             }
             parser.next();
         }
     }
 
     int count;
-    if (keyframes != null && (count = keyframes.size()) > 0) {
+    if ((count = (int)keyframes.size()) > 0) {
         // make sure we have keyframes at 0 and 1
         // If we have keyframes with set fractions, add keyframes at start/end
         // appropriately. If start/end have no set fractions:
         // if there's only one keyframe, set its fraction to 1 and add one at 0
         // if >1 keyframe, set the last fraction to 1, the first fraction to 0
-        Keyframe firstKeyframe = keyframes.get(0);
-        Keyframe lastKeyframe = keyframes.get(count - 1);
-        float endFraction = lastKeyframe.getFraction();
+        Keyframe* firstKeyframe = keyframes[0];
+        Keyframe* lastKeyframe = keyframes[count - 1];
+        float endFraction = lastKeyframe->getFraction();
         if (endFraction < 1) {
             if (endFraction < 0) {
-                lastKeyframe.setFraction(1);
+                lastKeyframe->setFraction(1);
             } else {
-                keyframes.add(keyframes.size(), createNewKeyframe(lastKeyframe, 1));
+                keyframes.push_back(createNewKeyframe(lastKeyframe, 1));
                 ++count;
             }
         }
-        float startFraction = firstKeyframe.getFraction();
+        float startFraction = firstKeyframe->getFraction();
         if (startFraction != 0) {
             if (startFraction < 0) {
-                firstKeyframe.setFraction(0);
+                firstKeyframe->setFraction(0);
             } else {
-                keyframes.add(0, createNewKeyframe(firstKeyframe, 0));
+                keyframes.insert(keyframes.begin(), createNewKeyframe(firstKeyframe, 0));
                 ++count;
             }
         }
-        Keyframe[] keyframeArray = new Keyframe[count];
-        keyframes.toArray(keyframeArray);
         for (int i = 0; i < count; ++i) {
-            Keyframe keyframe = keyframeArray[i];
-            if (keyframe.getFraction() < 0) {
+            Keyframe* keyframe = keyframes[i];
+            if (keyframe->getFraction() < 0) {
                 if (i == 0) {
-                    keyframe.setFraction(0);
+                    keyframe->setFraction(0);
                 } else if (i == count - 1) {
-                    keyframe.setFraction(1);
+                    keyframe->setFraction(1);
                 } else {
                     // figure out the start/end parameters of the current gap
                     // in fractions and distribute the gap among those keyframes
                     int startIndex = i;
                     int endIndex = i;
                     for (int j = startIndex + 1; j < count - 1; ++j) {
-                        if (keyframeArray[j].getFraction() >= 0) {
+                        if (keyframes[j]->getFraction() >= 0) {
                             break;
                         }
                         endIndex = j;
                     }
-                    float gap = keyframeArray[endIndex + 1].getFraction() -
-                            keyframeArray[startIndex - 1].getFraction();
-                    distributeKeyframes(keyframeArray, gap, startIndex, endIndex);
+                    float gap = keyframes[endIndex + 1]->getFraction() -
+                            keyframes[startIndex - 1]->getFraction();
+                    distributeKeyframes(keyframes, gap, startIndex, endIndex);
                 }
             }
         }
-        value = PropertyValuesHolder.ofKeyframe(propertyName, keyframeArray);
+        value = PropertyValuesHolder::ofKeyframes(propertyName, keyframes);
         if (valueType == VALUE_TYPE_COLOR) {
-            value.setEvaluator(ArgbEvaluator.getInstance());
+            value->setEvaluator(PropertyValuesHolder::ArgbEvaluator);
         }
     }
-#endif
     return value;
+}
+
+// AOSP AnimatorInflater.isColorType.
+static bool isColorType(int type) {
+    return type >= TypedValue::TYPE_FIRST_COLOR_INT && type <= TypedValue::TYPE_LAST_COLOR_INT;
+}
+
+int AnimatorInflater::inferValueTypeOfKeyframe(Context*ctx,const Resources::Theme* theme,const AttributeSet& attrs){
+    auto a = obtainAttributes(ctx, theme, attrs, R::styleable::Keyframe);
+    TypedValue tv;
+    const bool hasValue = a->peekValue(R::styleable::Keyframe_value, &tv);
+    // When no value type is provided, check whether it's a color type first.
+    // If not, fall back to default value type (i.e. float type).
+    const int valueType = (hasValue && isColorType(tv.type)) ? VALUE_TYPE_COLOR : VALUE_TYPE_FLOAT;
+    return valueType;
+}
+
+Keyframe* AnimatorInflater::loadKeyframe(Context*ctx,const Resources::Theme* theme,
+        const AttributeSet& attrs,int valueType){
+    auto a = obtainAttributes(ctx, theme, attrs, R::styleable::Keyframe);
+
+    Keyframe* keyframe = nullptr;
+
+    float fraction = a->getFloat(R::styleable::Keyframe_fraction, -1.f);
+
+    TypedValue tv;
+    const bool hasValue = a->peekValue(R::styleable::Keyframe_value, &tv);
+    if (valueType == VALUE_TYPE_UNDEFINED) {
+        // When no value type is provided, check whether it's a color type first.
+        // If not, fall back to default value type (i.e. float type).
+        valueType = (hasValue && isColorType(tv.type)) ? VALUE_TYPE_COLOR : VALUE_TYPE_FLOAT;
+    }
+
+    if (hasValue) {
+        switch (valueType) {
+            case VALUE_TYPE_FLOAT:
+                keyframe = Keyframe::ofFloat(fraction, a->getFloat(R::styleable::Keyframe_value, 0.f));
+                break;
+            case VALUE_TYPE_COLOR:
+            case VALUE_TYPE_INT:
+                keyframe = Keyframe::ofInt(fraction, a->getInt(R::styleable::Keyframe_value, 0));
+                break;
+        }
+    } else {
+        keyframe = (valueType == VALUE_TYPE_FLOAT) ? Keyframe::ofFloat(fraction) :
+                Keyframe::ofInt(fraction);
+    }
+
+    const int resID = a->getResourceId(R::styleable::Keyframe_interpolator, 0);
+    if (resID > 0) {
+        Interpolator* interpolator = AnimationUtils::loadInterpolator(ctx, resID);
+        keyframe->setInterpolator(interpolator);
+    }
+    return keyframe;
+}
+
+Keyframe* AnimatorInflater::createNewKeyframe(Keyframe* sampleKeyframe, float fraction){
+    // AOSP branches on getType() == float.class / int.class; the port matches
+    // the concrete keyframe classes (same information, RTTI instead of Class).
+    return dynamic_cast<FloatKeyframe*>(sampleKeyframe) ?
+                        Keyframe::ofFloat(fraction) :
+                        (dynamic_cast<IntKeyframe*>(sampleKeyframe)) ?
+                                Keyframe::ofInt(fraction) :
+                                Keyframe::ofObject(fraction);
+}
+
+void AnimatorInflater::distributeKeyframes(std::vector<Keyframe*>& keyframes, float gap,
+        int startIndex, int endIndex){
+    // Utility function to set fractions on keyframes to cover a gap in which the
+    // fractions are not currently set. Keyframe fractions will be distributed evenly
+    // in this gap.
+    const int count = endIndex - startIndex + 2;
+    const float increment = gap / count;
+    for (int i = startIndex; i <= endIndex; ++i) {
+        keyframes[i]->setFraction(keyframes[i-1]->getFraction() + increment);
+    }
 }
 
 // (The old propertyName→valueType map was a text-XML shim — binary values

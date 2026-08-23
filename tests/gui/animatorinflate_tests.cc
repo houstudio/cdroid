@@ -6,6 +6,7 @@
 #include <animation/animationutils.h>
 #include <animation/animatorset.h>
 #include <animation/statelistanimator.h>
+#include <animation/keyframeset.h>
 #include <view/view.h>
 #include <guienvironment.h>
 #include "R.h"
@@ -185,3 +186,89 @@ TEST_F(ANIMATORINFLATOR,slide_in_left){
 }
 
 
+
+// --- Keyframes (android.animation.Keyframe/KeyframeSet port) ---------------
+
+// Uniform fractions: ofFloat({0,100}) interpolates linearly across the range.
+TEST_F(ANIMATORINFLATOR,keyframes_uniform_interpolation){
+    KeyframeSet*ks = KeyframeSet::ofFloat({0.f,100.f});
+    ASSERT_NE(ks,(void*)nullptr);
+    FloatKeyframeSet*fks = dynamic_cast<FloatKeyframeSet*>(ks);
+    ASSERT_NE(fks,(FloatKeyframeSet*)nullptr);
+    EXPECT_NEAR(fks->getFloatValue(0.f),0.f,0.001f);
+    EXPECT_NEAR(fks->getFloatValue(0.25f),25.f,0.001f);
+    EXPECT_NEAR(fks->getFloatValue(0.5f),50.f,0.001f);
+    EXPECT_NEAR(fks->getFloatValue(1.f),100.f,0.001f);
+    // >2 values walk the right segment: {0,100,200} at 0.75 → 150.
+    KeyframeSet*ks3 = KeyframeSet::ofFloat({0.f,100.f,200.f});
+    FloatKeyframeSet*fks3 = dynamic_cast<FloatKeyframeSet*>(ks3);
+    ASSERT_NE(fks3,(FloatKeyframeSet*)nullptr);
+    EXPECT_NEAR(fks3->getFloatValue(0.75f),150.f,0.001f);
+    delete ks; delete ks3;
+}
+
+// Non-uniform fractions via ofKeyframe(): segment lookup must use the
+// keyframes' own fractions, not uniform spacing. Keyframes at 0/0.25/1:
+// fraction 0.5 sits 1/3 into the second segment → 50 + (200-50)/3 = 100.
+TEST_F(ANIMATORINFLATOR,keyframes_nonuniform_fractions){
+    std::vector<Keyframe*> kfs = {
+        Keyframe::ofFloat(0.f, 0.f),
+        Keyframe::ofFloat(0.25f, 50.f),
+        Keyframe::ofFloat(1.f, 200.f),
+    };
+    KeyframeSet*ks = KeyframeSet::ofKeyframe(kfs);
+    FloatKeyframeSet*fks = dynamic_cast<FloatKeyframeSet*>(ks);
+    ASSERT_NE(fks,(FloatKeyframeSet*)nullptr);
+    EXPECT_NEAR(fks->getFloatValue(0.125f),25.f,0.001f);   // mid of first segment
+    EXPECT_NEAR(fks->getFloatValue(0.5f),100.f,0.001f);    // 1/3 into second
+    EXPECT_NEAR(fks->getFloatValue(1.f),200.f,0.001f);
+    delete ks;
+}
+
+// Single value → [no-value@0, value@1]; the empty start keyframe reports
+// hasValue()==false until filled (AOSP setupValue semantics).
+TEST_F(ANIMATORINFLATOR,keyframes_single_value_hasvalue){
+    KeyframeSet*ks = KeyframeSet::ofFloat({100.f});
+    ASSERT_EQ(ks->getKeyframes().size(),(size_t)2);
+    EXPECT_FALSE(ks->getKeyframes()[0]->hasValue());
+    EXPECT_TRUE (ks->getKeyframes()[1]->hasValue());
+    ks->getKeyframes()[0]->setValue(25.f);
+    EXPECT_TRUE(ks->getKeyframes()[0]->hasValue());
+    FloatKeyframeSet*fks = dynamic_cast<FloatKeyframeSet*>(ks);
+    ASSERT_NE(fks,(FloatKeyframeSet*)nullptr);
+    EXPECT_NEAR(fks->getFloatValue(0.5f),62.5f,0.001f);   // 25→100 midpoint
+    delete ks;
+}
+
+// KeyframeSet::clone() deep-copies the keyframes.
+TEST_F(ANIMATORINFLATOR,keyframes_clone_independent){
+    std::vector<Keyframe*> kfs = {
+        Keyframe::ofFloat(0.f, 0.f),
+        Keyframe::ofFloat(1.f, 100.f),
+    };
+    KeyframeSet*orig = KeyframeSet::ofKeyframe(kfs);
+    KeyframeSet*copy = orig->clone();
+    ASSERT_NE(copy,(KeyframeSet*)nullptr);
+    ASSERT_NE(copy,orig);
+    ASSERT_EQ(copy->getKeyframes().size(),orig->getKeyframes().size());
+    ASSERT_NE(copy->getKeyframes()[1],orig->getKeyframes()[1]);
+    orig->getKeyframes()[1]->setValue(999.f);
+    FloatKeyframeSet*fcopy = dynamic_cast<FloatKeyframeSet*>(copy);
+    ASSERT_NE(fcopy,(FloatKeyframeSet*)nullptr);
+    EXPECT_NEAR(fcopy->getFloatValue(1.f),100.f,0.001f);  // clone unaffected
+    delete orig; delete copy;
+}
+
+// PHV over keyframes: load keyframes_test.xml (propertyValuesHolder with three
+// <keyframe> elements at 0/0.5/1) through the string-resid entry.
+TEST_F(ANIMATORINFLATOR,keyframes_xml){
+    App&app=App::getInstance();
+    Animator*anim=AnimatorInflater::loadAnimator(&app,"gui_test:animator/keyframes_test");
+    ASSERT_NE(anim,(void*)nullptr);
+    ObjectAnimator*oa=dynamic_cast<ObjectAnimator*>(anim);
+    ASSERT_NE(oa,(ObjectAnimator*)nullptr);
+    ASSERT_EQ(oa->getValues().size(),(size_t)1);
+    EXPECT_EQ(oa->getPropertyName(),"translationX");
+    EXPECT_EQ(oa->getValues(0)->getValueType(),Property::FLOAT_TYPE);
+    delete anim;
+}

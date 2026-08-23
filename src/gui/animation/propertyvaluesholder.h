@@ -26,13 +26,16 @@
 #include <core/color.h>
 #include <unordered_map>
 #include <animation/property.h>
+#include <animation/keyframeset.h>   // Keyframes storage (AOSP mKeyframes)
 #include <core/path.h>
 #include <drawable/pathparser.h>
 //reference:
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
 namespace cdroid{
 
-using TypeEvaluator = AnimateValue&(*)(float fraction,AnimateValue&out,const AnimateValue&startValue,const AnimateValue&endValue);
+// AOSP TypeEvaluator — canonical definition lives in keyframes.h (TypeEvaluatorFn).
+using TypeEvaluator = TypeEvaluatorFn;
+
 class PropertyValuesHolder{
 public:
     friend class ValueAnimator;
@@ -48,8 +51,8 @@ public:
         using DataSource = std::function<AnimateValue(float fraction)>;
         DataSource dataSource;
     };
-    static AnimateValue& ArgbEvaluator(float fraction,AnimateValue& out,const AnimateValue& from, const AnimateValue& to);
-    static AnimateValue& PathDataEvaluator(float fraction,AnimateValue& out,const AnimateValue& from, const AnimateValue& to);
+    static AnimateValue& ArgbEvaluator(float fraction,AnimateValue& out,const AnimateValue&from,const AnimateValue&to);
+    static AnimateValue& PathDataEvaluator(float fraction,AnimateValue& out,const AnimateValue&from,const AnimateValue&to);
 protected:
     int mValueType;
     std::string mPropertyName;
@@ -58,17 +61,12 @@ protected:
     PropertyGetter mGetter;
     PropertySetter mSetter;
     TypeEvaluator mEvaluator;
-    std::vector<AnimateValue>mDataSource;
+    // AOSP mKeyframes: the value storage. Owns the set; cloned on copy.
+    Keyframes*mKeyframes;
     AnimateValue mAnimateValue;
-    // True when the values come from a Path (ofPointF / ofFloat along a Path). Such holders
-    // already define every keyframe; setupStartValue/setupEndValue must NOT overwrite them with
-    // property.get() (which for pseudo-targets like ChangeBounds.ViewBounds returns a default
-    // PointF{0,0} and corrupts the Path-sampled start point). Matches AOSP, whose setupValue
-    // only fills keyframes that have no value.
-    bool mPathBased = false;
     void setupValue(void*target,int);
     void init();
-    static AnimateValue& evaluator(float fraction,AnimateValue&out,const AnimateValue& from, const AnimateValue& to);
+    static AnimateValue& evaluator(float fraction,AnimateValue&out,const AnimateValue& from,const AnimateValue& to);
     void calculateValue(float fraction);
 public:
     PropertyValuesHolder();
@@ -82,7 +80,7 @@ public:
     const Property*getProperty()const;
     int getValueType()const;
     void setPropertyChangedListener(const OnPropertyChangedListener&);
-    
+
     void setValues(const std::vector<int>&values);
     void setValues(const std::vector<float>&values);
     void setValues(const std::vector<PathParser::PathData>&values);
@@ -99,6 +97,9 @@ public:
     static PropertyValuesHolder*ofInt(const Property*,const std::vector<int>&);
     static PropertyValuesHolder*ofFloat(const std::string&name,const std::vector<float>&);
     static PropertyValuesHolder*ofFloat(const Property*prop,const std::vector<float>&);
+    // AOSP ofKeyframes: build straight from parsed Keyframes (XML <keyframe>).
+    static PropertyValuesHolder*ofKeyframes(const std::string&name,const std::vector<Keyframe*>&);
+    static PropertyValuesHolder*ofKeyframes(const Property*prop,const std::vector<Keyframe*>&);
     static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<void*>&);
     static PropertyValuesHolder*ofObject(const Property*prop,const std::vector<PathParser::PathData>&);
     static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<PathParser::PathData>&);
