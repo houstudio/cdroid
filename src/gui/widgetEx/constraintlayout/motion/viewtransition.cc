@@ -47,6 +47,7 @@
 #include <view/view.h>
 
 #include <limits>
+#include <unordered_map>
 
 namespace cdroid {
 using namespace cdroid::internal;
@@ -168,9 +169,38 @@ void ViewTransition::applyTransition(ViewTransitionController* controller, Motio
         }
     }
 
+    // androidx animates current -> current+delta by cloning the current set, applying the delta
+    // per target, and transitioning to it. CDROID keeps the independent per-view Animate
+    // (f6b5548e4 — never replaces the main transition), but the Animate still gets the delta'd
+    // endpoint: solve current+delta once via captureState and use the resulting frames as each
+    // Motion's end. Capture the start frames BEFORE the solve (it re-layouts the children), and
+    // restore the live layout to the current state afterwards so nothing visible moves.
+    std::unordered_map<int, MotionWidget> startFrames, endFrames;
+    for (View* v : views) {
+        if (v == nullptr || v->getId() == View::NO_ID) continue;
+        MotionLayout::captureWidgetFrame(startFrames[v->getId()], v);
+    }
+    if (!mConstraintDelta.empty()) {
+        ConstraintSet deltaSet(*current); // deep copy — every member is a value type
+        for (View* v : views) {
+            if (v == nullptr || v->getId() == View::NO_ID) continue;
+            mConstraintDelta.applyDelta(deltaSet.get(v->getId()));
+        }
+        layout->captureState(&deltaSet, endFrames);
+    }
     for (View* v : views) {
         if (v == nullptr) continue;
-        applyIndependentTransition(controller, layout, v);
+        const auto s = startFrames.find(v->getId());
+        const auto e = endFrames.find(v->getId());
+        if (s != startFrames.end() && e != endFrames.end()) {
+            applyIndependentTransition(controller, layout, v, s->second, e->second);
+        } else {
+            applyIndependentTransition(controller, layout, v); // no delta: keyframes only
+        }
+    }
+    if (!endFrames.empty()) { // captureState left the layout at the delta'd set — put it back
+        std::unordered_map<int, MotionWidget> restore;
+        layout->captureState(current, restore);
     }
 }
 
@@ -205,9 +235,19 @@ void ViewTransition::applyIndependentTransition(ViewTransitionController* contro
     // 1 leave the view untouched; the KeyFrameSet defines the deviation in between.
     MotionWidget mw;
     MotionLayout::captureWidgetFrame(mw, view);
+    applyIndependentTransition(controller, layout, view, mw, mw);
+}
+
+void ViewTransition::applyIndependentTransition(ViewTransitionController* controller,
+                                                MotionLayout* layout, View* view,
+                                                MotionWidget& start, MotionWidget& end) {
+    if (view == nullptr || layout == nullptr) return;
+    // Motion::setStart/setEnd read the widget state into their path points synchronously
+    // (nothing is retained), so the caller-owned frames are borrowed directly — MotionWidget's
+    // copy is shallow (it owns its WidgetFrame), no by-value copies here.
     Motion* m = new Motion();
-    m->setStart(&mw);
-    m->setEnd(&mw);
+    m->setStart(&start);
+    m->setEnd(&end);
     if (mKeyFrames) {
         for (MotionKey* key : mKeyFrames->getKeysForView(view->getId())) {
             switch (key->mType) {

@@ -13,7 +13,7 @@
                     app:layout_constraintRight_toRightOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
     </ConstraintSet>
     <ViewTransition android:id="@+id/vt_cur" app:motionTarget="@+id/csa_target"
-                    app:viewTransitionMode="currentState">
+                    app:duration="400" app:viewTransitionMode="currentState">
         <ConstraintOverride app:motionTarget="@+id/csa_target" android:layout_width="200px" />
     </ViewTransition>
 </MotionScene>

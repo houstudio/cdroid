@@ -47,6 +47,7 @@ class Context;
 class XmlPullParser;
 class View;
 class ViewTransitionController;
+class MotionWidget;
 class MotionLayout;
 class Motion;
 class Easing;
@@ -194,6 +195,13 @@ class ViewTransition {
     // and start an Animate on the controller.
     void applyIndependentTransition(ViewTransitionController* controller, MotionLayout* layout,
                                     View* view);
+    // currentState/allStates variant with explicit endpoint frames: the Motion runs start -> end
+    // (the delta'd frame), so the Animate animates current -> current+delta like androidx's
+    // temporary current->delta'd transition, without touching the main transition. The frames are
+    // borrowed only for the Motion setup — setStart/setEnd read them synchronously (MotionWidget's
+    // copy is shallow: it owns its WidgetFrame, so no by-value copies here).
+    void applyIndependentTransition(ViewTransitionController* controller, MotionLayout* layout,
+                                    View* view, MotionWidget& start, MotionWidget& end);
     // ifTagSet/ifTagNotSet gating: true unless a required tag is missing / a forbidden tag is present.
     bool checkTags(View* view) const;
     // Set/clear the setsTag/clearsTag keyed tags on each view (delta-mode completion callback).

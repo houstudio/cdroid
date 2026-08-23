@@ -190,6 +190,11 @@ class MotionLayout : public ConstraintLayout {
     static void captureWidgetFrame(MotionWidget& out, View* v);
     static void applyWidgetFrame(View* v, MotionWidget& mw);
 
+    // Apply `cs`, force a measure+layout pass, then read each child's frame into `out`. The
+    // layout is left at `cs`'s solved state — callers capturing for inspection must restore.
+    // Also used by ViewTransition to solve a delta'd set offscreen for per-view end frames.
+    void captureState(ConstraintSet* cs, std::unordered_map<int, MotionWidget>& out);
+
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
     void onLayout(bool changed, int l, int t, int w, int h) override;
@@ -208,8 +213,6 @@ class MotionLayout : public ConstraintLayout {
     // Actually run the start/end capture + build motions (called once we have a real size).
     void captureAndBuild();
 
-    // Apply `cs`, force a measure+layout pass, then read each child's frame into `out`.
-    void captureState(ConstraintSet* cs, std::unordered_map<int, MotionWidget>& out);
     // Build (or rebuild) the per-child Motion controllers from the captured start/end widgets.
     void buildMotions();
     // Apply the interpolated state at mProgress to every child view.

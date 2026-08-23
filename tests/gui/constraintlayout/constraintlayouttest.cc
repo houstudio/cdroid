@@ -1760,12 +1760,13 @@ TEST(CLConstraintLayout, ViewTransitionAllStatesPersistsDelta) {
     EXPECT_FLOAT_EQ(ml->getConstraintSet(endId)->get(gui_test::R::id::as_target).transform.scaleX, 1.5f); // persisted
 }
 
-// currentState mode under the independent-animation design (f6b5548e4): firing the VT registers a
-// per-view Animate WITHOUT replacing the main transition — main progress keeps driving the original
-// start↔end states and is not corrupted. (androidx instead animates current -> current+delta via a
-// temporary main transition; CDROID deliberately dropped that for OnClick toggle interference — the
-// delta's endpoint effect is a known TODO on top of the independent path.)
-TEST(CLConstraintLayout, ViewTransitionCurrentStateRunsIndependentAnimation) {
+// currentState delta integration: firing the VT solves current+delta offscreen (captureState) and
+// runs the per-view Animate from the current frame to the delta'd END frame — the androidx
+// current->current+delta semantics under CDROID's independent-animation design (f6b5548e4): the
+// main transition is never replaced. Uses a WIDTH delta (applied via layout(), not a transform
+// setter) so an unattached test view reliably reflects it. Afterwards the main transition still
+// drives start↔end untouched.
+TEST(CLConstraintLayout, ViewTransitionCurrentStateAnimatesDelta) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(&App::getInstance());
     TextView* tv = new TextView(&App::getInstance()); tv->setText("X");
@@ -1786,13 +1787,17 @@ TEST(CLConstraintLayout, ViewTransitionCurrentStateRunsIndependentAnimation) {
     EXPECT_EQ(tv->getLeft(), 0);
 
     std::vector<View*> views = { tv };
-    ml->viewTransition(vtId, views); // currentState: per-view Animate, main transition untouched
+    ml->viewTransition(vtId, views); // currentState: Animate current -> (current + width=200 delta)
     auto* controller = ml->getViewTransitionController();
     ASSERT_NE(controller, nullptr);
-    EXPECT_EQ(controller->animationCount(), 1u); // the independent Animate registered
+    EXPECT_EQ(controller->animationCount(), 1u);
+    EXPECT_EQ(tv->getWidth(), 100); // first frame ran; still at the current state
 
-    // The main transition still drives start↔end: progress 1.0 lands at the END set (right-pinned),
-    // not at any delta'd state — the delta did not hijack the transition.
+    controller->stepAnimations(400); // full duration -> progress 1.0 -> the delta'd end frame
+    EXPECT_EQ(tv->getWidth(), 200);  // width delta applied via the independent Animate
+    EXPECT_EQ(tv->getLeft(), 0);     // position untouched (width-only delta, left-anchored)
+
+    // The main transition was never replaced: progress still drives start↔end.
     ml->setProgress(1.0f);
     EXPECT_EQ(tv->getLeft(), 500); // 600 - 100: end set, right-pinned
     EXPECT_EQ(tv->getWidth(), 100);
