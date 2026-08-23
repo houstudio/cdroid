@@ -135,6 +135,10 @@ public:
     void setItemPaddingTop(int paddingTop);
     int getItemPaddingBottom() const;
     void setItemPaddingBottom(int paddingBottom);
+    /** Horizontal gap between the icon and the label in icon-start items
+        (app:iconLabelHorizontalSpacing); ignored in the icon-top layout. */
+    int getIconLabelHorizontalSpacing() const;
+    void setIconLabelHorizontalSpacing(int spacing);
     int getActiveIndicatorLabelPadding() const;
     void setActiveIndicatorLabelPadding(int activeIndicatorLabelPadding);
 };

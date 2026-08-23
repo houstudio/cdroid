@@ -33,6 +33,12 @@
 #include <core/typeface.h>
 
 namespace cdroid{
+
+namespace {
+inline int dp(Context* context, int dps) {
+    return (int) (dps * context->getResources().getDisplayMetrics().density + 0.5f);
+}
+} // namespace
 using namespace cdroid::internal;
 
 NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs, int defStyleAttr)
@@ -305,6 +311,17 @@ void NavigationBarView::setItemPaddingBottom(int paddingBottom) {
     }
 }
 
+int NavigationBarView::getIconLabelHorizontalSpacing() const {
+    return mIconLabelHorizontalSpacing;
+}
+
+void NavigationBarView::setIconLabelHorizontalSpacing(int spacing) {
+    if (mIconLabelHorizontalSpacing != spacing) {
+        mIconLabelHorizontalSpacing = spacing;
+        updateMenuView();
+    }
+}
+
 int NavigationBarView::getActiveIndicatorLabelPadding() const {
     return mActiveIndicatorLabelPadding;
 }
@@ -360,9 +377,15 @@ View* NavigationBarView::createItemView(MenuItem* item) {
     if (icon) {
         ImageView* iconView = new ImageView(context, nullptr, 0);
         iconView->setImageDrawable(icon);
-        if (mItemIconSize > 0) {
-            iconView->setLayoutParams(new LinearLayout::LayoutParams(mItemIconSize, mItemIconSize));
-        }
+        // Material's NavigationBarItemView measures the icon into a fixed
+        // iconSize x iconSize frame and centers that frame in the item; a
+        // default MATCH_PARENT-width ImageView relies on the scale-type
+        // transform to center the glyph, which draws off-axis here. Give the
+        // view the material frame so the container gravity centers it.
+        const int iconSize = mItemIconSize > 0 ? mItemIconSize : dp(context, 24);
+        LinearLayout::LayoutParams* iconLp = new LinearLayout::LayoutParams(iconSize, iconSize);
+        iconLp->gravity = iconAtStart ? Gravity::CENTER_VERTICAL : Gravity::CENTER_HORIZONTAL;
+        iconView->setLayoutParams(iconLp);
         if (mItemIconTint) {
             const std::vector<int> state = item->isChecked()
                 ? std::vector<int>{R::attr::state_checked} : std::vector<int>{};
@@ -395,7 +418,17 @@ View* NavigationBarView::createItemView(MenuItem* item) {
         }
         label->setGravity(iconAtStart ? (Gravity::START | Gravity::CENTER_VERTICAL)
                                       : Gravity::CENTER_HORIZONTAL);
-        column->addView(label);
+        // Wrap-content box centered by the column (same container-gravity path
+        // as the icon frame above) instead of relying on full-width text
+        // gravity, so icon and label share one axis.
+        LinearLayout::LayoutParams* labelLp = new LinearLayout::LayoutParams(
+                ViewGroup::LayoutParams::WRAP_CONTENT, ViewGroup::LayoutParams::WRAP_CONTENT);
+        labelLp->gravity = iconAtStart ? (Gravity::START | Gravity::CENTER_VERTICAL)
+                                       : Gravity::CENTER_HORIZONTAL;
+        if (iconAtStart && mIconLabelHorizontalSpacing >= 0) {
+            labelLp->leftMargin = mIconLabelHorizontalSpacing;
+        }
+        column->addView(label, labelLp);
     }
 
     column->setOnClickListener([this, item](View&) {
