@@ -100,6 +100,11 @@ public:
     // AOSP ofKeyframes: build straight from parsed Keyframes (XML <keyframe>).
     static PropertyValuesHolder*ofKeyframes(const std::string&name,const std::vector<Keyframe*>&);
     static PropertyValuesHolder*ofKeyframes(const Property*prop,const std::vector<Keyframe*>&);
+    // AOSP ofKeyframes(propertyName/property, Keyframes): adopts a ready-made
+    // Keyframes object (e.g. a PathKeyframes coordinate projection) as the
+    // storage — the caller must not delete it afterwards.
+    static PropertyValuesHolder*ofKeyframes(const std::string&name,Keyframes*keyframes);
+    static PropertyValuesHolder*ofKeyframes(const Property*prop,Keyframes*keyframes);
     static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<void*>&);
     static PropertyValuesHolder*ofObject(const Property*prop,const std::vector<PathParser::PathData>&);
     static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<PathParser::PathData>&);

@@ -258,12 +258,20 @@ void PropertyValuesHolder::setupValue(void*target,int position){
     }
 }
 
+// AOSP: an empty keyframe list (PathKeyframes projections) means the values
+// are fully defined by the path — start/end setup is skipped entirely.
 void PropertyValuesHolder::setupStartValue(void*target){
-    setupValue(target,0);
+    std::vector<Keyframe*>& keyframes = mKeyframes->getKeyframes();
+    if (!keyframes.empty()) {
+        setupValue(target,0);
+    }
 }
 
 void PropertyValuesHolder::setupEndValue(void*target){
-    setupValue(target,mKeyframes->getKeyframes().size()-1);
+    std::vector<Keyframe*>& keyframes = mKeyframes->getKeyframes();
+    if (!keyframes.empty()) {
+        setupValue(target,keyframes.size()-1);
+    }
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofInt(const std::string&name,const std::vector<int>&values){
@@ -303,6 +311,23 @@ PropertyValuesHolder* PropertyValuesHolder::ofKeyframes(const Property*prop,cons
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
     delete pvh->mKeyframes;
     pvh->mKeyframes = KeyframeSet::ofKeyframe(keyframes);
+    pvh->init();
+    return pvh;
+}
+
+PropertyValuesHolder*PropertyValuesHolder::ofKeyframes(const std::string&name,Keyframes*keyframes){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
+    delete pvh->mKeyframes;
+    pvh->mKeyframes = keyframes;
+    pvh->mValueType = keyframes->getType();
+    pvh->init();
+    return pvh;
+}
+
+PropertyValuesHolder*PropertyValuesHolder::ofKeyframes(const Property*prop,Keyframes*keyframes){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
+    delete pvh->mKeyframes;
+    pvh->mKeyframes = keyframes;
     pvh->init();
     return pvh;
 }

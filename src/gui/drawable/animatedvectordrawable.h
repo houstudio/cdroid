@@ -101,10 +101,10 @@ private:
     friend AnimatedVectorDrawable;
     class PendingAnimator {
     public:
-        std::string animResId;
+        int animResId;
         float pathErrorScale;
         std::string target;
-        PendingAnimator(const std::string& animResId, float pathErrorScale, const std::string& target);
+        PendingAnimator(int animResId, float pathErrorScale, const std::string& target);
         // AOSP PendingAnimator.newInstance(Resources res, Theme theme): the
         // caller's theme drives the animator's attribute reads (CDROID opens
         // the XML through the Context, so the Resources argument is dropped).
@@ -126,7 +126,7 @@ public:
     bool canApplyTheme();
     Drawable*newDrawable()override;
     int getChangingConfigurations() const override;
-    void addPendingAnimator(const std::string& resId, float pathErrorScale, const std::string& target);
+    void addPendingAnimator(int resId, float pathErrorScale, const std::string& target);
     void addTargetAnimator(const std::string& targetName, Animator* animator);
     void prepareLocalAnimators(AnimatorSet* animatorSet);
     Animator*prepareLocalAnimator(int index);

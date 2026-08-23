@@ -66,20 +66,15 @@ private:
     static Keyframe* createNewKeyframe(Keyframe* sampleKeyframe, float fraction);
     static void distributeKeyframes(std::vector<Keyframe*>& keyframes, float gap,int startIndex, int endIndex);
 public:
-    static Animator* loadAnimator(Context* context,const std::string&resid);
-    static Animator* loadAnimator(Context* context,const std::string&resid,float pathErrorScale);
     // AOSP AnimatorInflater.loadAnimator(Resources, Theme, @AnimatorRes int[, float])
     // (@hide): the caller's theme — not the Context's current one — drives every
     // attribute read (themed drawable/AVD loads). CDROID opens the XML through
     // the Context (XmlPullParser ctor), so the Resources argument is dropped;
-    // resid 0 → null.
-    static Animator* loadAnimator(Context* context,const Resources::Theme* theme,const std::string&resid,float pathErrorScale);
-    // AOSP AnimatorInflater.loadAnimator(Context, @AnimatorRes int): opened by id
-    // (binary AXML via Resources.getXml); resid 0 → null.
+    // resid 0 → null. String-resid overloads are retired — AOSP has no
+    // non-int animator entry.
     static Animator* loadAnimator(Context* context,int resid);
     static Animator* loadAnimator(Context* context,int resid,float pathErrorScale);
     static Animator* loadAnimator(Context* context,const Resources::Theme* theme,int resid,float pathErrorScale);
-    static StateListAnimator* loadStateListAnimator(Context*context,const std::string&resid);
     // AOSP AnimatorInflater.loadStateListAnimator(Context, @AnimatorRes int): the
     // resource is opened directly by id (binary AXML via Resources.getXml); resid 0 → null.
     static StateListAnimator* loadStateListAnimator(Context*context,int resid);

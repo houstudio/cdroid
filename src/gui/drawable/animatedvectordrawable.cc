@@ -234,25 +234,17 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
                 // AOSP obtains R.styleable.AnimatedVectorDrawableTarget per <target>.
                 auto ta = obtainAttributes(r, theme, attrs, R::styleable::AnimatedVectorDrawableTarget);
                 const std::string target = ta->getString(R::styleable::AnimatedVectorDrawableTarget_name);
-                // animation is a @animator reference; TypedArray exposes no Animator
-                // getter, so resolve the reference to its resource name (the same form
-                // TypedArray.getDrawable and XmlPullParser consume) and hand it to
-                // AnimatorInflater.
-                std::string animResId;
-                TypedValue v;
-                if (ta->peekValue(R::styleable::AnimatedVectorDrawableTarget_animation, &v)) {
-                    animResId = (v.type == TypedValue::TYPE_STRING)
-                              ? ta->getString(R::styleable::AnimatedVectorDrawableTarget_animation)
-                              : ctx->getResourceName(v.data);
-                }
-                if (!animResId.empty()) {
-                    if (true/*theme != nullptr*/) {
+                // AOSP: a.getResourceId(...Target_animation, 0) — the @animator
+                // reference's int id feeds AnimatorInflater.loadAnimator(res,
+                // theme, animResId, pathErrorScale) directly.
+                const int animResId = ta->getResourceId(R::styleable::AnimatedVectorDrawableTarget_animation, 0);
+                if (animResId != 0) {
+                    if (theme != nullptr) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
-                        // AOSP: AnimatorInflater.loadAnimator(res, theme, animResId, pathErrorScale).
                         Animator* animator = AnimatorInflater::loadAnimator(ctx, theme, animResId, pathErrorScale);
                         updateAnimatorProperty(animator, target, state->mVectorDrawable,state->mShouldIgnoreInvalidAnim);
                         state->addTargetAnimator(target, animator);
-                        LOGV("%s -> %s %p",target.c_str(),animResId.c_str(),animator);
+                        LOGV("%s -> %s %p",target.c_str(),ctx->getResourceName(animResId).c_str(),animator);
                     } else {
                         // The animation may be theme-dependent. As a
                         // workaround until Animator has full support for
@@ -428,7 +420,7 @@ int AnimatedVectorDrawable::AnimatedVectorDrawableState::getChangingConfiguratio
     return mChangingConfigurations;
 }
 
-void AnimatedVectorDrawable::AnimatedVectorDrawableState::addPendingAnimator(const std::string& resId, float pathErrorScale, const std::string& target) {
+void AnimatedVectorDrawable::AnimatedVectorDrawableState::addPendingAnimator(int resId, float pathErrorScale, const std::string& target) {
     /*if (mPendingAnims == null) {
         mPendingAnims = new ArrayList<>(1);
     }*/
@@ -540,7 +532,7 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::inflatePendingAnimator
  * constant states for Animators.
  */
 //static class AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator;
-AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator::PendingAnimator(const std::string& animResId, float pathErrorScale, const std::string& target) {
+AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator::PendingAnimator(int animResId, float pathErrorScale, const std::string& target) {
     this->animResId = animResId;
     this->pathErrorScale = pathErrorScale;
     this->target = target;

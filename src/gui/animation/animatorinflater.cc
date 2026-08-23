@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <animation/animatorset.h>
+#include <animation/pathkeyframes.h>
 #include <animation/animatorinflater.h>
 #include <animation/animationutils.h>
 #include <core/typedvalue.h>
@@ -34,21 +35,6 @@ std::unique_ptr<TypedArray> AnimatorInflater::obtainAttributes(Context*ctx,const
         const AttributeSet& set,const uint32_t* attrs){
     if (theme) return theme->obtainStyledAttributes(&set, attrs);
     return ctx->obtainStyledAttributes(set, attrs);
-}
-
-Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid){
-    return loadAnimator(context,resid,1.f);
-}
-Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid,float pathErrorScale){
-    // AOSP loadAnimator(Context, id) → loadAnimator(res, context.getTheme(), id).
-    Resources::Theme theme = context->getTheme();
-    return loadAnimator(context, &theme, resid, pathErrorScale);
-}
-
-Animator* AnimatorInflater::loadAnimator(Context* context,const Resources::Theme* theme,
-        const std::string&resid,float pathErrorScale){
-    XmlPullParser parser(context,resid);
-    return createAnimatorFromXml(context, theme, parser, pathErrorScale);
 }
 
 Animator* AnimatorInflater::loadAnimator(Context* context,int resid){
@@ -88,14 +74,6 @@ Animator* AnimatorInflater::loadAnimator(Context* context,const Resources::Theme
     return createAnimatorFromXml(context, theme, parser, pathErrorScale);
 }
 
-StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,const std::string&resid){
-    // String-resid entry (CDROID extension; AOSP loads by @AnimatorRes int id):
-    // no caching — the themed animator cache is keyed by int resource id.
-    XmlPullParser parser(context,resid);
-    const AttributeSet& attrs = parser;
-    Resources::Theme theme = context->getTheme();
-    return createStateListAnimatorFromXml(context,&theme,parser,attrs);
-}
 
 StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,int resid){
     if (resid == 0) return nullptr;  // AOSP: 0 → null
@@ -540,11 +518,21 @@ void AnimatorInflater::parseAnimatorFromTypeArray(Context*ctx, const Resources::
     anim->setDuration(duration);
     anim->setStartDelay(startDelay);
 
-    anim->setRepeatCount(ta->getInt(R::styleable::Animator_repeatCount, 0));
-    anim->setRepeatMode(ta->getInt(R::styleable::Animator_repeatMode, ValueAnimator::RESTART));
+    // AOSP gates both on hasValue: an absent repeatCount/repeatMode keeps the
+    // animator's current setting instead of resetting it to the default.
+    if (ta->hasValue(R::styleable::Animator_repeatCount)) {
+        anim->setRepeatCount(ta->getInt(R::styleable::Animator_repeatCount, 0));
+    }
+    if (ta->hasValue(R::styleable::Animator_repeatMode)) {
+        anim->setRepeatMode(ta->getInt(R::styleable::Animator_repeatMode,
+                ValueAnimator::RESTART));
+    }
 
-    if((propertyName.empty()==false)&&dynamic_cast<ObjectAnimator*>(anim)){
-       ((ObjectAnimator*)anim)->setPropertyName(propertyName);
+    // AOSP: arrayObjectAnimator != null -> setupObjectAnimator(...) — the
+    // path (propertyXName/propertyYName) object-animator setup lives there,
+    // not in an inline setPropertyName.
+    if (dynamic_cast<ObjectAnimator*>(anim)) {
+        setupObjectAnimator(ctx, theme, anim, atts, valueType, pixelSize);
     }
 }
 
@@ -554,27 +542,28 @@ TypeEvaluator AnimatorInflater::setupAnimatorForPath(Context*ctx, const Resource
     const std::string fromString = ta->getString(R::styleable::Animator_valueFrom);
     const std::string toString   = ta->getString(R::styleable::Animator_valueTo);
 
-    if (!fromString.empty()) {//pathDataFrom != null) {
-        PathParser::PathData pathDataFrom (fromString);
-        if (!toString.empty()) {//pathDataTo != null) {
+    // AOSP setObjectValues(...) + new PathDataEvaluator(): CDROID's Object
+    // values are AnimateValues, so the values go in through a PathData PHV.
+    // (Dead upstream too — the valueFrom/valueTo path-morphing inflow goes
+    // through getPVH's VALUE_TYPE_PATH branch; kept implemented for parity.)
+    if (!fromString.empty()) {
+        PathParser::PathData pathDataFrom(fromString);
+        if (!toString.empty()) {
             PathParser::PathData pathDataTo(toString);
-            //anim->setObjectValues(pathDataFrom, pathDataTo);
             if (!PathParser::canMorph(pathDataFrom, pathDataTo)) {
                 throw std::runtime_error(//arrayAnimator.getPositionDescription()
                         " Can't morph from " + fromString + " to " + toString);
             }
+            anim->setValues({PropertyValuesHolder::ofObject("", {pathDataFrom, pathDataTo})});
         } else {
-            //anim->setObjectValues((Object)pathDataFrom);
+            anim->setValues({PropertyValuesHolder::ofObject("", {pathDataFrom})});
         }
-        //evaluator = new PathDataEvaluator();
-    } else if (!toString.empty()){//pathDataTo != null) {
+        evaluator = PropertyValuesHolder::PathDataEvaluator;
+    } else if (!toString.empty()) {
         PathParser::PathData pathDataTo(toString);
-        //anim->setObjectValues((Object)pathDataTo);
-        //evaluator = new PathDataEvaluator();
+        anim->setValues({PropertyValuesHolder::ofObject("", {pathDataTo})});
+        evaluator = PropertyValuesHolder::PathDataEvaluator;
     }
-
-    LOGV_IF(evaluator!=nullptr,"create a new PathDataEvaluator here");
-
     return evaluator;
 }
 
@@ -599,22 +588,23 @@ void AnimatorInflater::setupObjectAnimator(Context*ctx, const Resources::Theme* 
             // be float type, or int type. Otherwise we fallback to default type.
             valueType = VALUE_TYPE_FLOAT;
         }
-#if 0
         if (propertyXName.empty() && propertyYName.empty()) {
             throw std::runtime_error(//arrayObjectAnimator.getPositionDescription()
                     " propertyXName or propertyYName is needed for PathData");
         } else {
             auto path = PathParser::createPathFromPathData(pathData);
-            float error = 0.5f * pixelSize; // max half a pixel error
-            PathKeyframes keyframeSet = KeyframeSet.ofPath(path, error);
-            Keyframes xKeyframes;
-            Keyframes yKeyframes;
+            const float error = 0.5f * pixelSize; // max half a pixel error
+            // AOSP KeyframeSet.ofPath(path, error): the X/Y holders share the
+            // sampled PathKeyframes (shared_ptr keeps the parent alive).
+            auto keyframeSet = std::make_shared<PathKeyframes>(path, error);
+            Keyframes* xKeyframes = nullptr;
+            Keyframes* yKeyframes = nullptr;
             if (valueType == VALUE_TYPE_FLOAT) {
-                xKeyframes = keyframeSet.createXFloatKeyframes();
-                yKeyframes = keyframeSet.createYFloatKeyframes();
+                xKeyframes = keyframeSet->createXFloatKeyframes();
+                yKeyframes = keyframeSet->createYFloatKeyframes();
             } else {
-                xKeyframes = keyframeSet.createXIntKeyframes();
-                yKeyframes = keyframeSet.createYIntKeyframes();
+                xKeyframes = keyframeSet->createXIntKeyframes();
+                yKeyframes = keyframeSet->createYIntKeyframes();
             }
             PropertyValuesHolder* x = nullptr;
             PropertyValuesHolder* y = nullptr;
@@ -632,7 +622,6 @@ void AnimatorInflater::setupObjectAnimator(Context*ctx, const Resources::Theme* 
                 oa->setValues({x, y});
             }
         }
-#endif
     } else {
         std::string propertyName = ta->getString(R::styleable::PropertyAnimator_propertyName);
         oa->setPropertyName(propertyName);

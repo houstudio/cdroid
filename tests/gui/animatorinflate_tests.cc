@@ -7,6 +7,7 @@
 #include <animation/animatorset.h>
 #include <animation/statelistanimator.h>
 #include <animation/keyframeset.h>
+#include <animation/pathkeyframes.h>
 #include <view/view.h>
 #include <guienvironment.h>
 #include "R.h"
@@ -260,10 +261,10 @@ TEST_F(ANIMATORINFLATOR,keyframes_clone_independent){
 }
 
 // PHV over keyframes: load keyframes_test.xml (propertyValuesHolder with three
-// <keyframe> elements at 0/0.5/1) through the string-resid entry.
+// <keyframe> elements at 0/0.5/1) through the int-resid entry.
 TEST_F(ANIMATORINFLATOR,keyframes_xml){
     App&app=App::getInstance();
-    Animator*anim=AnimatorInflater::loadAnimator(&app,"gui_test:animator/keyframes_test");
+    Animator*anim=AnimatorInflater::loadAnimator(&app,gui_test::R::animator::keyframes_test);
     ASSERT_NE(anim,(void*)nullptr);
     ObjectAnimator*oa=dynamic_cast<ObjectAnimator*>(anim);
     ASSERT_NE(oa,(ObjectAnimator*)nullptr);
@@ -271,4 +272,43 @@ TEST_F(ANIMATORINFLATOR,keyframes_xml){
     EXPECT_EQ(oa->getPropertyName(),"translationX");
     EXPECT_EQ(oa->getValues(0)->getValueType(),Property::FLOAT_TYPE);
     delete anim;
+}
+
+// PathKeyframes sampling: M0,0 L100,100 — arc-length fractions land on the
+// diagonal, X/Y projections read the coordinates.
+TEST_F(ANIMATORINFLATOR,pathkeyframes_sampling){
+    auto path = PathParser::createPathFromPathData("M 0,0 L 100,100");
+    auto pk = std::make_shared<PathKeyframes>(path, 0.5f);
+    const PointF& mid = pk->pointForFraction(0.5f);
+    EXPECT_NEAR(mid.x,50.f,0.6f);
+    EXPECT_NEAR(mid.y,50.f,0.6f);
+    FloatKeyframes* xf = pk->createXFloatKeyframes();
+    FloatKeyframes* yf = pk->createYFloatKeyframes();
+    EXPECT_NEAR(xf->getFloatValue(0.25f),25.f,0.6f);
+    EXPECT_NEAR(yf->getFloatValue(0.75f),75.f,0.6f);
+    IntKeyframes* xi = pk->createXIntKeyframes();
+    EXPECT_EQ(xi->getIntValue(1.f),100);
+    delete xf; delete yf; delete xi;
+}
+
+// setupObjectAnimator's path case (was #if 0): propertyXName/propertyYName +
+// pathData must build two PHVs and actually animate a view along the path.
+TEST_F(ANIMATORINFLATOR,pathxy_xml){
+    App&app=App::getInstance();
+    Animator*anim=AnimatorInflater::loadAnimator(&app,gui_test::R::animator::pathxy_test);
+    ASSERT_NE(anim,(void*)nullptr);
+    ObjectAnimator*oa=dynamic_cast<ObjectAnimator*>(anim);
+    ASSERT_NE(oa,(ObjectAnimator*)nullptr);
+    ASSERT_EQ(oa->getValues().size(),(size_t)2) << "expected X and Y holders";
+    EXPECT_EQ(oa->getValues(0)->getPropertyName(),"translationX");
+    EXPECT_EQ(oa->getValues(1)->getPropertyName(),"translationY");
+    View*v=new View(&app);
+    GUIEnvironment::content()->addView(v);
+    oa->setTarget(v);
+    oa->start();
+    pumpFor(500);
+    EXPECT_NEAR(v->getTranslationX(),100.f,1.f) << "X did not animate along the path";
+    EXPECT_NEAR(v->getTranslationY(),100.f,1.f) << "Y did not animate along the path";
+    delete oa;
+    delete v;
 }

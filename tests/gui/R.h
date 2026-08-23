@@ -15,8 +15,9 @@ namespace R{
         enum : int {
             fade_in = 0x7f020000,
             keyframes_test = 0x7f020001,
-            statelist_scale = 0x7f020002,
-            statelist_test = 0x7f020003,
+            pathxy_test = 0x7f020002,
+            statelist_scale = 0x7f020003,
+            statelist_test = 0x7f020004,
         };
     }/*namespace animator*/
 

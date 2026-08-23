@@ -18,6 +18,7 @@ SET(ANIMATION_SOURCES
     animation/layoutanimationcontroller.cc
     animation/layouttransition.cc
     animation/objectanimator.cc
+    animation/pathkeyframes.cc
     animation/properties.cc
     animation/propertyvaluesholder.cc
     animation/rotateanimation.cc
