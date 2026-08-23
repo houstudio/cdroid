@@ -164,8 +164,12 @@ void FrameLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     setMeasuredDimension(resolveSizeAndState(maxWidth, widthMeasureSpec, childState),
                 resolveSizeAndState(maxHeight, heightMeasureSpec,childState << MEASURED_HEIGHT_STATE_SHIFT));
 
+    // AOSP guards this re-measure pass with count > 1: with a single
+    // match-parent child the first pass already measured it against this
+    // container, and re-measuring can shrink it (e.g. a ScrollView child with
+    // height=0dp+weight gets re-measured EXACTLY 0, collapsing the subtree).
     count = mMatchParentChildren.size();
-    for (int i = 0; i < count; i++) {
+    if (count > 1) for (int i = 0; i < count; i++) {
         View* child = mMatchParentChildren.at(i);
         MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
 

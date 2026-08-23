@@ -44,11 +44,20 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* pAttrs,int defS
     // R.dimen.date_picker_* resources, NOT from XML attributes (the month-item
     // layout declares none). Reading the missing attrs returned 0, leaving
     // mDayHeight==0 and dividing by zero in getDayAtLocation.
-    mDesiredMonthHeight = mContext->getDimensionPixelSize(R::dimen::date_picker_month_height);
-    mDesiredDayOfWeekHeight = mContext->getDimensionPixelSize(R::dimen::date_picker_day_of_week_height);
-    mDesiredDayHeight = mContext->getDimensionPixelSize(R::dimen::date_picker_day_height);
-    mDesiredCellWidth  = mContext->getDimensionPixelSize(R::dimen::date_picker_day_width);
-    mDesiredDaySelectorRadius = mContext->getDimensionPixelSize(R::dimen::date_picker_day_selector_radius);
+    // AOSP reads R.dimen.date_picker_* and the values always resolve. CDROID's
+    // runtime table may not carry these framework dimens yet (getDimensionPixelSize
+    // returns 0), which collapsed the whole month grid to zero height — keep the
+    // material defaults from dimens_material.xml when resolution fails.
+    auto dimenOr = [this](int resId, int fallbackPx) {
+        const int v = mContext->getDimensionPixelSize(resId);
+        return v > 0 ? v : fallbackPx;
+    };
+    const float density = mContext->getResources().getDisplayMetrics().density;
+    mDesiredMonthHeight = dimenOr(R::dimen::date_picker_month_height, (int)(56 * density));
+    mDesiredDayOfWeekHeight = dimenOr(R::dimen::date_picker_day_of_week_height, (int)(36 * density));
+    mDesiredDayHeight = dimenOr(R::dimen::date_picker_day_height, (int)(40 * density));
+    mDesiredCellWidth  = dimenOr(R::dimen::date_picker_day_width, (int)(44 * density));
+    mDesiredDaySelectorRadius = dimenOr(R::dimen::date_picker_day_selector_radius, (int)(20 * density));
 
     // Set up accessibility components.
     setAccessibilityDelegate(mTouchHelper);

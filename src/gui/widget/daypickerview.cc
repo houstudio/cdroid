@@ -31,7 +31,11 @@ DECLARE_WIDGET(DayPickerView);
 DayPickerView::DayPickerView(Context*ctx)
     :DayPickerView(ctx,nullptr){}
 
-DayPickerView::DayPickerView(Context* context,const AttributeSet* attrs):DayPickerView(context,attrs,0){}
+// AOSP DayPickerView(Context, AttributeSet) chains to defStyleAttr
+// R.attr.calendarViewStyle, so Widget.Material.CalendarView's text appearances
+// and day selector color apply from the theme.
+DayPickerView::DayPickerView(Context* context,const AttributeSet* attrs)
+    :DayPickerView(context, attrs, cdroid::internal::R::attr::calendarViewStyle){}
 
 DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context, pAttrs, defStyleAttr){
@@ -43,9 +47,18 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
     const std::string minDate = a ? a->getString(R::styleable::CalendarView_minDate) : std::string();
     const std::string maxDate = a ? a->getString(R::styleable::CalendarView_maxDate) : std::string();
 
-    const int monthTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_monthTextAppearance, 0) : 0;
-    const int dayOfWeekTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_weekDayTextAppearance, 0) : 0;
-    const int dayTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_dateTextAppearance, 0) : 0;
+    // AOSP DayPickerView defaults these to the material calendar text
+    // appearances when the styleable doesn't carry them; without the defaults
+    // every text falls back to Paint's plain black (invisible on dark themes).
+    const int monthTextAppearanceResId = a ? a->getResourceId(
+            R::styleable::CalendarView_monthTextAppearance,
+            R::style::TextAppearance_Material_Widget_Calendar_Month) : 0;
+    const int dayOfWeekTextAppearanceResId = a ? a->getResourceId(
+            R::styleable::CalendarView_weekDayTextAppearance,
+            R::style::TextAppearance_Material_Widget_Calendar_DayOfWeek) : 0;
+    const int dayTextAppearanceResId = a ? a->getResourceId(
+            R::styleable::CalendarView_dateTextAppearance,
+            R::style::TextAppearance_Material_Widget_Calendar_Day) : 0;
 
     auto daySelectorColor = a ? a->getColorStateList(R::styleable::CalendarView_daySelectorColor) : nullptr;
 

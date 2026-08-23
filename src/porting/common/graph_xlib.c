@@ -497,6 +497,9 @@ static void* X11EventProc(void*p) {
         case ButtonRelease:
             if(1==event.xbutton.button) {
                 InjectABS(event.xbutton.time,EV_KEY,BTN_TOUCH,(event.type==ButtonPress)?1:0);
+                // Window-local coords ARE the virtual-screen coords here: CDROID models
+                // its single top-level window as the full (SCREEN_SIZE) display, whatever
+                // position the WM gives the X window on the host screen.
                 SENDMOUSE(event.xbutton.time,event.xbutton.x - screenMargin.x, event.xbutton.y - screenMargin.y);
             }
             break;
