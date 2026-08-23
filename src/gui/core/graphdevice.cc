@@ -344,6 +344,28 @@ void GraphDevice::composeSurfaces(){
         if(rgn->empty())continue; 
         rgn->intersect(wins[i]->mVisibleRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
+        if (!rgn->empty() && wins[i]->getAlpha() < 1.0f) {
+            // Whole-surface fade (window ActivityTransition FADE): the X11-style backends
+            // have no per-surface opacity, and the blit path bypasses View-level alpha —
+            // apply it HERE, compositing through cairo with paint_with_alpha (OVER, so the
+            // windows below show through). NB: ignores display rotation (fades on rotated
+            // displays fall back to this un-rotated blit).
+            const float walpha = wins[i]->getAlpha();
+            mPrimaryContext->save();
+            mPrimaryContext->reset_clip();
+            for(int j = 0; j < rgn->get_num_rectangles(); j++){
+                const RectangleInt rc = rgn->get_rectangle(j);
+                mPrimaryContext->rectangle(rcw.left + rc.x, rcw.top + rc.y, rc.width, rc.height);
+            }
+            mPrimaryContext->clip();
+            mPrimaryContext->set_operator(Cairo::Context::Operator::OVER);
+            mPrimaryContext->set_source(wSurfaces[i]->get_target(), rcw.left, rcw.top);
+            mPrimaryContext->paint_with_alpha(walpha);
+            mPrimaryContext->restore();
+            commitedRects += rgn->get_num_rectangles();
+            rgn->subtract(rgn);
+            continue;
+        }
 #if defined(__x86_64__) ||defined(__x86_64) ||defined(__amd64__)||defined(__amd64)
         for(int j = 0; j < rgn->get_num_rectangles(); j++){
             const RectangleInt rc = rgn->get_rectangle(j);

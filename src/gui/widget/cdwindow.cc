@@ -696,6 +696,11 @@ void Window::setPos(int x,int y){
 }
 
 View& Window::setAlpha(float alpha){
+    // Set the VIEW alpha too: the whole-surface fade is applied at composition
+    // (GraphDevice::composeSurfaces reads getAlpha() and paints with it — the X11-style
+    // backends have no per-surface opacity, GFXSurfaceSetOpacity is a stub there).
+    // View::setAlpha also invalidates, which re-queues the window for composition.
+    View::setAlpha(alpha);
     if(isAttachedToWindow()){
         RefPtr<Canvas> canvas = getCanvas();
         LOGV("setAlpha(%p,%d)",this,(int)(alpha*255));
@@ -1138,7 +1143,14 @@ static ActivityTransition* transitionFromAnimation(Animation* anim, bool enter) 
         else if (dx == 0 && dy > 0) edge = Gravity::BOTTOM;
         return ActivityTransition::slide(edge, duration > 0 ? duration : 300);
     }
-    if (fades) return ActivityTransition::fade(duration > 0 ? duration : 300);
+    if (fades) {
+        // A bare whole-surface fade is nearly imperceptible at the resource's own
+        // 150-220ms — the scale component it normally pairs with (the visible part of
+        // grow_fade_in) is not expressible window-level, so hold the fade long enough
+        // to read (window scaling is unsupported).
+        constexpr int64_t MIN_FADE_DURATION_MS = 350;
+        return ActivityTransition::fade(std::max<int64_t>(duration, MIN_FADE_DURATION_MS));
+    }
     return nullptr;
 }
 
