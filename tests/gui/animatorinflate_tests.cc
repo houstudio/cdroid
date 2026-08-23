@@ -312,3 +312,18 @@ TEST_F(ANIMATORINFLATOR,pathxy_xml){
     delete oa;
     delete v;
 }
+
+// PathData animators (AVD path morphing): the keyframes' scratch value must
+// be seeded with the PathData alternative before the first evaluate — the
+// evaluator writes in place via GET_VARIANT(out, PathData), and an unseeded
+// variant aborted widgetsDemo with bad_variant_access at start().
+TEST_F(ANIMATORINFLATOR,pathdata_animator_start){
+    PropertyValuesHolder*pvh = PropertyValuesHolder::ofObject("pathData",
+            {PathParser::PathData("M 0,0 L 10,10"), PathParser::PathData("M 0,0 L 20,20")});
+    ValueAnimator*va = ValueAnimator::ofPropertyValuesHolder({pvh});
+    va->setDuration(100);
+    va->start();            // start() -> setCurrentPlayTime(0) -> PathDataEvaluator
+    pumpFor(60);
+    va->end();
+    delete va;
+}

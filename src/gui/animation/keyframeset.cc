@@ -48,6 +48,14 @@ KeyframeSet::KeyframeSet(const std::vector<Keyframe*>& keyframes){
     mLastKeyframe = keyframes[mNumKeyframes - 1];
     mInterpolator = mLastKeyframe->getInterpolator();
     mEvaluator = nullptr;
+    // Seed the scratch value's alternative from the first keyframe (the old
+    // setValues() seeded PHV::mAnimateValue with values[0]). CDROID's
+    // evaluators write INTO `out` via GET_VARIANT(out, T) — e.g.
+    // PathDataEvaluator — so the variant must already hold the right type
+    // before the first evaluate, or bad_variant_access aborts the process.
+    if (mFirstKeyframe->hasValue()) {
+        mAnimatedValue = mFirstKeyframe->getValue();
+    }
 }
 
 KeyframeSet::~KeyframeSet(){
