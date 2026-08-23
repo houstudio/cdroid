@@ -161,7 +161,13 @@ public:
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
     // AOSP PhoneWindow(context): themed (ContextThemeWrapper) dialog contexts
     // drive inflation through this overload instead of the global App.
-    Window(Context*ctx,int x,int y,int w,int h,int type=TYPE_APPLICATION);
+    // themeWindowAnimations=false opts out of the theme windowAnimationStyle load —
+    // AOSP's windowAnimationStyle belongs to app/activity windows only; popup decor
+    // windows (PopupDecorView) animate via their own popup window animation style,
+    // never the theme (and CDROID popups align to their anchor after creation, so a
+    // ctor-time snap would use a stale resting position — see loadThemeWindowAnimations).
+    Window(Context*ctx,int x,int y,int w,int h,int type=TYPE_APPLICATION,
+           bool themeWindowAnimations = true);
     Window(Context*,const AttributeSet*);
     ~Window()override;
     void setRegion(const Cairo::RefPtr<Cairo::Region>&region);

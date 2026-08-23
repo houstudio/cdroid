@@ -6,6 +6,8 @@
 #include <app/alertdialog.h>
 #include <widget/activitytransition.h>
 #include <widget/cdwindow.h>
+#include <widget/popupwindow.h>
+#include <widget/textview.h>
 #include <guienvironment.h>
 
 using namespace cdroid;
@@ -84,6 +86,40 @@ TEST_F(DIALOG,ThemeWindowAnimations){
    EXPECT_EQ(exit->getType(),ActivityTransition::Type::SLIDE);
    pumpFor(300);
    dlg->dismiss();
+}
+
+/* Popups opt out of theme window animations: AOSP windowAnimationStyle is the app/activity
+   window mechanism (popups carry their own animation style), and CDROID popups align to
+   their anchor AFTER creation, so a ctor-time enter snap would use a stale resting position
+   and drag the popup to it. The popup decor IS a Window subclass, so this guards against
+   the theme load creeping back in — it crashed menu teardown (the deferred exit-animation
+   detach ran after ~CascadingMenuInfo had deleted the list adapter). */
+TEST_F(DIALOG,PopupWindowSkipsThemeTransitions){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("anchor");
+   GUIEnvironment::content()->addView(anchor, new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   PopupWindow*popup=new PopupWindow(&app);
+   TextView*content=new TextView(&app); content->setText("popup");
+   popup->setContentView(content);
+   popup->setWidth(200);
+   popup->setHeight(300);
+   popup->showAsDropDown(anchor,0,0);
+   pumpFor(100);
+
+   /* The decor is the popup's Window subclass; with the theme load it would have both a
+      SLIDE enter and exit transition (app theme -> Animation.Activity). */
+   Window*decor=(Window*)popup->getContentView()->getRootView();
+   ASSERT_NE(decor,nullptr);
+   EXPECT_EQ(decor->getEnterTransition(),nullptr);
+   EXPECT_EQ(decor->getExitTransition(),nullptr);
+
+   popup->dismiss();  // exercises the dismiss path (sync, no animation)
+   pumpFor(100);
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
+   delete popup;
 }
 
 TEST_F(DIALOG,Choices){

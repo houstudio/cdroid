@@ -464,8 +464,12 @@ PopupWindow::PopupBackgroundView* PopupWindow::createBackgroundView(View* conten
 }
 
 PopupWindow::PopupDecorView::PopupDecorView(Context*ctx,int w,int h,int type)
-   :Window(ctx,0,0,w,h,type){
+   :Window(ctx,0,0,w,h,type, /*themeWindowAnimations=*/false){
     mPop = nullptr;
+    // No theme windowAnimationStyle here (AOSP: that mechanism belongs to app/activity
+    // windows; popup windows carry their own animation style on LayoutParams). Also,
+    // popups are aligned to their anchor AFTER construction — a ctor-time enter snap
+    // would capture a stale resting position and drag the popup to it.
 }
 
 PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){

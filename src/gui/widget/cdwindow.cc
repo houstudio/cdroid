@@ -88,7 +88,7 @@ Window::Window(int x,int y,int width,int height,int type)
 // windows are the Activity, so a plain context is wrapped in an empty
 // ContextThemeWrapper overlay (inherits the app theme via lazy setTo(base)),
 // giving every window its own theme for Window::setTheme()/recreate().
-Window::Window(Context*ctx,int x,int y,int width,int height,int type)
+Window::Window(Context*ctx,int x,int y,int width,int height,int type, bool themeWindowAnimations)
   : Window(x,y,width,height,type){
     // AOSP performLaunchActivity applies the manifest theme (activity's, else
     // the application's) before the activity class instantiates; App routes it
@@ -103,7 +103,8 @@ Window::Window(Context*ctx,int x,int y,int width,int height,int type)
     }
     // Theme-driven window animations resolve against the FINAL context (the themed overlay
     // above), which did not exist when the delegated geometric ctor ran — load them here.
-    loadThemeWindowAnimations();
+    // PopupDecorView opts out (see the ctor declaration note).
+    if (themeWindowAnimations) loadThemeWindowAnimations();
 }
 
 void Window::initWindow(){
