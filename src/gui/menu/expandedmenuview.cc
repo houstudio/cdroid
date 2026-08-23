@@ -17,16 +17,24 @@
  *********************************************************************************/
 #include <menu/expandedmenuview.h>
 #include <menu/menubuilder.h>
+#include <widget/internal_R.h>
+using namespace cdroid::internal;
+
 namespace cdroid{
 
 DECLARE_WIDGET(ExpandedMenuView)
-ExpandedMenuView::ExpandedMenuView(Context* context,const AttributeSet* attrs):ExpandedMenuView(context,attrs,0){}
+ExpandedMenuView::ExpandedMenuView(Context* context,const AttributeSet* attrs)
+    :ExpandedMenuView(context,attrs,(int)R::attr::listViewStyle){}
 
 ExpandedMenuView::ExpandedMenuView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ListView(context, pAttrs, defStyleAttr){
 
-    //TypedArray a = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.MenuView, 0, 0);
-    //mAnimations = attrs.getResourceId(com.android.internal.R.styleable.MenuView_windowAnimationStyle, 0);
+    // androidx re-reads { background, divider } via TintTypedArray only as a tint shim; the
+    // base ctors already resolve both through the defStyleAttr chain (ListView reads its
+    // divider with defStyleAttr, View the background), so no extra read is needed here.
+    // windowAnimationStyle is not read either — androidx leaves mAnimations at 0
+    // (getWindowAnimations() is vestigial); the hosting dialog's own theme carries its window
+    // animations (theme windowAnimationStyle -> Window enter/exit).
     setOnItemClickListener([this](AdapterView& parent, View& v, int position, long id){
         onItemClick(parent,v,position,id);
     });

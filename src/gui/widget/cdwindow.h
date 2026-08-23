@@ -73,6 +73,9 @@ private:
     bool mPendingEnterAnim  = false; // run mEnterTransition after the first doTraversal (content drawn)
     bool mInTransition      = false; // close()/re-enter re-entrancy guard
     bool mDestroyed         = false; // set in ~Window so the animator end-callback skips finishClose
+    // AOSP LayoutParams.windowAnimations source: an explicit animation STYLE overriding the
+    // theme's windowAnimationStyle (setWindowAnimations). 0 -> resolve from the theme.
+    int mWindowAnimationStyle = 0;
     // True when the Context ctor auto-wrapped the caller's plain context in a
     // ContextThemeWrapper (AOSP: an Activity IS a themed context); freed in ~Window.
     bool mOwnsContext       = false;
@@ -114,6 +117,15 @@ private:
     void snapEnterStart(ActivityTransition* t); // pre-snap to the start state so the first frame isn't a fully-shown flash
     static void computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y);
     void finishClose(); // close()'s tail: post (onDestroy + delete) + removeWindow
+    // Build the default enter/exit ActivityTransitions from mWindowAnimationStyle or (when 0)
+    // the theme's windowAnimationStyle (AOSP PhoneWindow.generateLayout records the style;
+    // AppTransition resolves the actual animations from it — simplified to an enter/exit pair).
+    // Called from the Context-taking ctors, so a later programmatic setEnter/ExitTransition
+    // simply replaces these, like AOSP's overridePendingTransition over the theme.
+    void loadThemeWindowAnimations();
+    // Shared body of loadThemeWindowAnimations/setWindowAnimations: resolve enter/exit anims
+    // out of `styleRes` and install them (capturing the resting pos / snapping pre-first-frame).
+    void applyWindowAnimationStyle(int styleRes);
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
@@ -291,6 +303,9 @@ public:
     ActionMode* startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type)override;
     void cancelInvalidate(View* view)override;
     void requestTransitionStart(LayoutTransition* transition)override;
+    // AOSP Window.setWindowAnimations: an explicit animation STYLE res id overriding the theme's
+    // windowAnimationStyle for this window's enter/exit (0 restores the theme resolution).
+    void setWindowAnimations(int resId);
     // Window-level Activity transitions (android.app.Activity transition API names). Each setter
     // takes ownership of the passed ActivityTransition* (replacing/deleting any previous one).
     void setEnterTransition(ActivityTransition* t);

@@ -33,10 +33,15 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/floatingactionmode.h>
 #include <core/systemclock.h>
+#include <core/typedvalue.h>
 #include <core/windowmanager.h>
 #include <animation/animator.h>
 #include <animation/objectanimator.h>
 #include <animation/valueanimator.h>
+#include <animation/animationutils.h>
+#include <animation/animationset.h>
+#include <animation/alphaanimation.h>
+#include <animation/translateanimation.h>
 #include <view/gravity.h>
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
@@ -57,6 +62,7 @@ Window::Window(Context*ctx,const AttributeSet*atts)
     setFrame(0,0,pt.x,pt.y);
     WindowManager::getInstance().addWindow(this);
     mAttachInfo->mPlaySoundEffect = std::bind(&Window::playSoundImpl,this,std::placeholders::_1);
+    loadThemeWindowAnimations();
 }
 
 Window::Window(int x,int y,int width,int height,int type)
@@ -95,6 +101,9 @@ Window::Window(Context*ctx,int x,int y,int width,int height,int type)
     } else {
         mContext = ctx;
     }
+    // Theme-driven window animations resolve against the FINAL context (the themed overlay
+    // above), which did not exist when the delegated geometric ctor ran — load them here.
+    loadThemeWindowAnimations();
 }
 
 void Window::initWindow(){
@@ -1083,6 +1092,113 @@ void Window::setEnterTransition(ActivityTransition* t) {
 void Window::setExitTransition(ActivityTransition* t)    { delete mExitTransition;    mExitTransition = t; }
 void Window::setReturnTransition(ActivityTransition* t)  { delete mReturnTransition;  mReturnTransition = t; }
 void Window::setReenterTransition(ActivityTransition* t) { delete mReenterTransition; mReenterTransition = t; }
+
+// Delta reader for the slide mapping: TranslateAnimation's deltas are protected and carry no
+// getters, so a derived shim exposes them (the standard protected-member access idiom).
+namespace {
+struct TranslateDeltaReader : TranslateAnimation {
+    static float fromX(const TranslateAnimation* a) { return ((TranslateDeltaReader*)a)->mFromXDelta; }
+    static float toX(const TranslateAnimation* a)   { return ((TranslateDeltaReader*)a)->mToXDelta; }
+    static float fromY(const TranslateAnimation* a) { return ((TranslateDeltaReader*)a)->mFromYDelta; }
+    static float toY(const TranslateAnimation* a)   { return ((TranslateDeltaReader*)a)->mToYDelta; }
+};
+} // namespace
+
+// Map an AOSP window-animation resource onto the whole-Window ActivityTransition model.
+// AOSP window animations are usually <set>s of alpha/translate/extend children; the
+// whole-surface model can express one effect, so a translate child (the dominant motion)
+// drives a SLIDE — edge from the offset delta's axis/sign — and an alpha-only set drives
+// a FADE. Returns nullptr when the animation expresses nothing mappable.
+static ActivityTransition* transitionFromAnimation(Animation* anim, bool enter) {
+    if (anim == nullptr) return nullptr;
+    std::vector<Animation*> parts;
+    if (auto* set = dynamic_cast<AnimationSet*>(anim)) {
+        parts = set->getAnimations();
+    } else {
+        parts.push_back(anim);
+    }
+    int64_t duration = 0;
+    const TranslateAnimation* slide = nullptr;
+    bool fades = false;
+    for (Animation* a : parts) {
+        if (a == nullptr) continue;
+        duration = std::max<int64_t>(duration, a->getDuration());
+        if (slide == nullptr) slide = dynamic_cast<TranslateAnimation*>(a);
+        if (dynamic_cast<AlphaAnimation*>(a) != nullptr) fades = true;
+    }
+    if (slide != nullptr) {
+        // The nonzero delta gives the motion axis+direction: an enter animation's from-delta is
+        // the side the window comes FROM; an exit animation's to-delta is the side it leaves TO.
+        const float dx = enter ? TranslateDeltaReader::fromX(slide) : TranslateDeltaReader::toX(slide);
+        const float dy = enter ? TranslateDeltaReader::fromY(slide) : TranslateDeltaReader::toY(slide);
+        int edge = Gravity::RIGHT; // computeSlidePos's default for a degenerate zero delta
+        if      (dx < 0) edge = Gravity::LEFT;
+        else if (dx == 0 && dy < 0) edge = Gravity::TOP;
+        else if (dx == 0 && dy > 0) edge = Gravity::BOTTOM;
+        return ActivityTransition::slide(edge, duration > 0 ? duration : 300);
+    }
+    if (fades) return ActivityTransition::fade(duration > 0 ? duration : 300);
+    return nullptr;
+}
+
+void Window::setWindowAnimations(int resId) {
+    mWindowAnimationStyle = resId;
+    if (resId != 0) applyWindowAnimationStyle(resId); // resolve now (AOSP: params.windowAnimations)
+}
+
+void Window::applyWindowAnimationStyle(int styleRes) {
+    if (styleRes == 0 || mContext == nullptr) return;
+    // AOSP R.styleable.WindowAnimation subset: the plain window names, falling back to the
+    // Activity open/close names Animation.Activity carries (the windowAnimationStyle target).
+    constexpr uint32_t WINDOW_ANIM_ATTRS[] = {
+        (uint32_t)R::attr::windowEnterAnimation,       // 0
+        (uint32_t)R::attr::windowExitAnimation,        // 1
+        (uint32_t)R::attr::activityOpenEnterAnimation, // 2
+        (uint32_t)R::attr::activityCloseExitAnimation, // 3
+    };
+    auto ta = mContext->getTheme().obtainStyledAttributes(styleRes, WINDOW_ANIM_ATTRS);
+    if (!ta) return;
+    const int enterRes = ta->getResourceId(0, ta->getResourceId(2, 0));
+    const int exitRes  = ta->getResourceId(1, ta->getResourceId(3, 0));
+
+    // Install like setEnterTransition would, but reuse the resting position captured by an
+    // earlier install — after the first snap getLeft()/getTop() are the OFFSCREEN start, and
+    // re-capturing them would corrupt the resting point (the exact bug its comment describes).
+    auto enterT = enterRes != 0
+        ? transitionFromAnimation(AnimationUtils::loadAnimation(mContext, enterRes), true) : nullptr;
+    if (enterT != nullptr) {
+        delete mEnterTransition;
+        mEnterTransition = enterT;
+        if (!mEnterRestValid) {
+            mEnterRestX = getLeft();
+            mEnterRestY = getTop();
+            mEnterRestValid = true;
+        }
+        mPendingEnterAnim = true;
+        snapEnterStart(enterT);
+    }
+    auto exitT = exitRes != 0
+        ? transitionFromAnimation(AnimationUtils::loadAnimation(mContext, exitRes), false) : nullptr;
+    if (exitT != nullptr) {
+        delete mExitTransition;
+        mExitTransition = exitT;
+    }
+}
+
+void Window::loadThemeWindowAnimations() {
+    if (mContext == nullptr) return;
+    if (mWindowAnimationStyle != 0) { // explicit override (AOSP LayoutParams.windowAnimations)
+        applyWindowAnimationStyle(mWindowAnimationStyle);
+        return;
+    }
+    // AOSP PhoneWindow.generateLayout: the theme's windowAnimationStyle carries the window
+    // animation style; a compiled @style item resolves as a reference whose data is the style id.
+    TypedValue styleValue;
+    if (!mContext->getTheme().resolveAttribute(R::attr::windowAnimationStyle, &styleValue, true)) return;
+    const int styleRes = (styleValue.type == TypedValue::TYPE_REFERENCE)
+            ? (int)styleValue.data : (int)styleValue.resourceId;
+    if (styleRes != 0) applyWindowAnimationStyle(styleRes);
+}
 
 void Window::startEnterAnimation() {
     runActivityTransition(mEnterTransition, true, std::function<void()>());
