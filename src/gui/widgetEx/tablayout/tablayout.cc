@@ -153,7 +153,6 @@ TabLayout::~TabLayout(){
 }
 
 void TabLayout::initTabLayout(){
-    AttributeSet atts(getContext(),"cdroid");
     mMode = MODE_FIXED;
     mInlineLabel =false;
     mTabPaddingStart= mTabPaddingTop   = 0;

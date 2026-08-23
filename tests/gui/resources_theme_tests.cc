@@ -424,8 +424,9 @@ TEST_F(RESOURCES_THEME, popupBackgroundChain) {
     // the widget style chain and must produce a drawable (black popup = null).
     App& app = App::getInstance();
     app.setTheme((int)cdroid::internal::R::style::Theme_Material_Light);
-    AttributeSet atts(&app, "cdroid");
-    auto ta = (&app)->obtainStyledAttributes(&atts, cdroid::internal::R::styleable::PopupWindow,
+    // AOSP allows a null set (pure theme/defStyle resolution); the empty
+    // text AttributeSet contributed nothing (applyTextElementAttrs n<=0).
+    auto ta = (&app)->obtainStyledAttributes(nullptr, cdroid::internal::R::styleable::PopupWindow,
             (int)cdroid::internal::R::attr::actionOverflowMenuStyle);
     ASSERT_NE(ta, nullptr);
     const int bgIdx = cdroid::internal::R::styleable::PopupWindow_popupBackground;
