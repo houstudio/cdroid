@@ -77,12 +77,10 @@ Animator* Fade::createAnimation(View* view, float startAlpha, float endAlpha) {
         delete listenerState;
     };
     anim->addListener(listener);
-
-    Transition::TransitionListener endListener;
-    endListener.onTransitionEnd = [view](Transition&) {
-        view->setTransitionAlpha(1);
-    };
-    addListener(endListener);
+    // No transition-level onTransitionEnd here (AOSP Fade has none): the
+    // per-animator FadeAnimatorListener already resets transitionAlpha. A
+    // transition-level listener captures the raw view and fires when the
+    // whole transition ends — which can outlive deferred-freed sibling views.
     return anim;
 }
 

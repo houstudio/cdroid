@@ -314,8 +314,12 @@ class Transition {
     static bool isValueChanged(const TransitionValues& oldValues,
                                const TransitionValues& newValues, const std::string& key);
 
-    // Returns the per-process map of currently running animators (ThreadLocal in android).
+    // Returns the per-process map of currently running animators (ThreadLocal in
+    // android). Framework-internal: SpecialEffectsController ends animators over a
+    // view subtree before freeing deferred exit views.
+public:
     static ArrayMap<Animator*, AnimationInfo>& getRunningAnimators();
+private:
 
     /**
      * Utility class for managing ArrayLists efficiently (android.transition.Transition

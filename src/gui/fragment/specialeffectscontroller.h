@@ -34,6 +34,11 @@ namespace fragment{
 class Fragment;
 class FragmentStateManager;
 
+// Ends every running transition animator targeting `doomed`'s subtree at its
+// final state (listeners fire while the views are alive). Called by both
+// deferred exit-view deleters before freeing the view tree.
+void endAnimatorsOver(View* doomed);
+
 class SpecialEffectsController{
 public:
     class Effect; // forward (defined below Operation)

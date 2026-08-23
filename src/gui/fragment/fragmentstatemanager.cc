@@ -166,6 +166,10 @@ int FragmentStateManager::computeExpectedState(){
     maxState = std::min(maxState, maxStateToInt(mFragment->mMaxState));
     // Fragments not currently added sit at no higher than CREATED.
     if(!mFragment->mAdded) maxState = std::min(maxState, (int)Fragment::CREATED);
+    // Detached fragments keep their instance + FM registration but lose the
+    // view (androidx FragmentTransaction.detach: view destroyed, instance
+    // retained; attach() re-creates the view by lifting this cap).
+    if(mFragment->mDetached) maxState = std::min(maxState, (int)Fragment::CREATED);
     // SpecialEffectsController awaiting-effect clamp (androidx :220-240):
     // A fragment mid-add-effect can't pass AWAITING_ENTER_EFFECTS; mid-remove can't drop below
     // AWAITING_EXIT_EFFECTS. This is what freezes the fragment while its Animation/Transition runs.

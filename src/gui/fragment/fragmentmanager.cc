@@ -356,12 +356,19 @@ void FragmentManager::hideFragment(Fragment* f){
 void FragmentManager::attachFragment(Fragment* f){
     if(!f) return;
     f->mDetached = false;
+    // The detach cap in FragmentStateManager::computeExpectedState froze this
+    // fragment at CREATED (view destroyed). Lifting it must re-drive the FSM so
+    // the view is re-created (androidx: attach() re-adds and re-creates views).
+    getOrCreateStateManager(f)->moveToExpectedState();
 }
 
 void FragmentManager::detachFragment(Fragment* f){
     if(!f) return;
     f->mDetached = true;
-    if(f->mView && f->mContainer) f->mContainer->removeView(f->mView);
+    // No manual view removal here: the DETACHED cap in computeExpectedState
+    // steps the fragment down through the normal path, whose DESTROY_VIEW step
+    // removes the view from the container (SpecialEffects included).
+    getOrCreateStateManager(f)->moveToExpectedState();
 }
 
 // Drive a fragment to newState. Delegates to its FragmentStateManager (explicit target,

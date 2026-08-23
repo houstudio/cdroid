@@ -195,7 +195,14 @@ void TransitionEffect::onCommit(ViewGroup* container){
                     // listed in mDisappearingChildren — so ~View wouldn't pull it out, leaving the
                     // parent drawing a freed view. Remove explicitly so neither list retains it.
                     if(fragAlive.lock()){
-                        if(fragment){ fragment->performDestroyView(); fragment->mView = nullptr; }
+                        endAnimatorsOver(view);
+                        if(fragment && fragment->mView == view){
+                            fragment->performDestroyView();
+                            fragment->mView = nullptr;
+                        }
+                        // Re-attached meanwhile with a NEW view: leave the fragment
+                        // alone (performDestroyView would kill the live view) — only
+                        // free the stale captured one.
                         if(view->getParent()) view->getParent()->removeView(view);
                         delete view;
                     }

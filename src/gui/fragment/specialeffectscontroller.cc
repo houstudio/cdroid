@@ -21,6 +21,7 @@
 #include <fragment/fragmentstatemanager.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <transition/transition.h>
 #include <algorithm>
 #include <memory>
 #include <porting/cdlog.h>
@@ -112,11 +113,29 @@ void SpecialEffectsController::deferExitViewDelete(View* v){
     if(v) mLingeryExitViews.push_back(v);
 }
 
+// Rapidly switching fragment pages can reach the deferred exit-view delete
+// while a clone's ObjectAnimator (per-view Fade transitionAlpha) is still
+// ticking — the "the animator is done by then" assumption breaks when a newer
+// transition took over the timeline. End (synchronously, at final state) every
+// running transition animator whose target lies in `doomed`'s subtree, so
+// their end listeners run while the views are still alive.
+void endAnimatorsOver(View* doomed) {
+    auto& running = Transition::getRunningAnimators();
+    std::vector<Animator*> toEnd;
+    for (size_t i = 0; i < running.size(); i++) {
+        for (View* p = running.valueAt(i).view; p; p = p->getParent()) {
+            if (p == doomed) { toEnd.push_back(running.keyAt(i)); break; }
+        }
+    }
+    for (Animator* a : toEnd) a->end();
+}
+
 void SpecialEffectsController::reclaimDeferredExitViews(){
     // Detach + free every parked exit view. Called from a Transition clone's true end (addListener
     // in TransitionEffect::onCommit, guarded by the controller's alive-handle) — by then no clone
     // ObjectAnimator derefs these views anymore, so freeing is safe.
     for(View* v : mLingeryExitViews){
+        endAnimatorsOver(v);
         if(v->getParent()) v->getParent()->removeView(v);
         delete v;
     }
