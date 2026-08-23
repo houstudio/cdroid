@@ -164,40 +164,38 @@ void FrameLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     setMeasuredDimension(resolveSizeAndState(maxWidth, widthMeasureSpec, childState),
                 resolveSizeAndState(maxHeight, heightMeasureSpec,childState << MEASURED_HEIGHT_STATE_SHIFT));
 
-    // AOSP guards this re-measure pass with count > 1: with a single
-    // match-parent child the first pass already measured it against this
-    // container, and re-measuring can shrink it (e.g. a ScrollView child with
-    // height=0dp+weight gets re-measured EXACTLY 0, collapsing the subtree).
     count = mMatchParentChildren.size();
-    if (count > 1) for (int i = 0; i < count; i++) {
-        View* child = mMatchParentChildren.at(i);
-        MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
+    if (count > 1) {
+        for (int i = 0; i < count; i++) {
+            View* child = mMatchParentChildren.at(i);
+            MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
 
-        int childWidthMeasureSpec;
-        if (lp->width == LayoutParams::MATCH_PARENT) {
-            const int width = std::max(0, getMeasuredWidth()
-                        - getPaddingLeftWithForeground() - getPaddingRightWithForeground()
-                        - lp->leftMargin - lp->rightMargin);
-            childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY);
-        } else {
-            childWidthMeasureSpec = getChildMeasureSpec(widthMeasureSpec,
-                        getPaddingLeftWithForeground() + getPaddingRightWithForeground() +
-                        lp->leftMargin + lp->rightMargin,lp->width);
+            int childWidthMeasureSpec;
+            if (lp->width == LayoutParams::MATCH_PARENT) {
+                const int width = std::max(0, getMeasuredWidth()
+                            - getPaddingLeftWithForeground() - getPaddingRightWithForeground()
+                            - lp->leftMargin - lp->rightMargin);
+                childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY);
+            } else {
+                childWidthMeasureSpec = getChildMeasureSpec(widthMeasureSpec,
+                            getPaddingLeftWithForeground() + getPaddingRightWithForeground() +
+                            lp->leftMargin + lp->rightMargin,lp->width);
+            }
+
+            int childHeightMeasureSpec;
+            if (lp->height == LayoutParams::MATCH_PARENT) {
+                const int height = std::max(0, getMeasuredHeight()
+                            - getPaddingTopWithForeground() - getPaddingBottomWithForeground()
+                            - lp->topMargin - lp->bottomMargin);
+                childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(height, MeasureSpec::EXACTLY);
+            } else {
+                childHeightMeasureSpec = getChildMeasureSpec(heightMeasureSpec,
+                            getPaddingTopWithForeground() + getPaddingBottomWithForeground() +
+                            lp->topMargin + lp->bottomMargin,lp->height);
+            }
+
+            child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
         }
-
-        int childHeightMeasureSpec;
-        if (lp->height == LayoutParams::MATCH_PARENT) {
-            const int height = std::max(0, getMeasuredHeight()
-                        - getPaddingTopWithForeground() - getPaddingBottomWithForeground()
-                        - lp->topMargin - lp->bottomMargin);
-            childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(height, MeasureSpec::EXACTLY);
-        } else {
-            childHeightMeasureSpec = getChildMeasureSpec(heightMeasureSpec,
-                        getPaddingTopWithForeground() + getPaddingBottomWithForeground() +
-                        lp->topMargin + lp->bottomMargin,lp->height);
-        }
-
-        child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
 }
 
