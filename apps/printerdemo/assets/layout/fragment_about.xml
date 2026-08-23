@@ -26,7 +26,7 @@
                 android:layout_marginTop="14dp" android:text="CDroid" android:textSize="30sp"
                 android:textStyle="bold" android:textColor="#FFFFFFFF"/>
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_marginTop="4dp" android:text="@string/about_subtitle"
+                android:id="@+id/about_subtitle" android:layout_marginTop="4dp" android:text="@string/about_subtitle"
                 android:textSize="13sp" android:textColor="#E6FFFFFF"/>
         </LinearLayout>
 

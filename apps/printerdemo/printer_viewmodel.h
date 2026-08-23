@@ -37,13 +37,13 @@ struct PaperTray {
 class PrinterViewModel : public cdroid::lifecycle::ViewModel {
 public:
     PrinterViewModel()
-        : mInks({ {"K", 850, (int)0xFF212121, 20},
-                  {"C", 600, (int)0xFF1976D2, 20},
-                  {"M", 400, (int)0xFFE91E63, 25},
-                  {"Y", 720, (int)0xFFFBC02D, 20} })
+        : mInks({ {"K", 850, (int)0xFF2E3440, 20},
+                  {"C", 600, (int)0xFF0288D1, 20},
+                  {"M", 400, (int)0xFFD81B60, 25},
+                  {"Y", 720, (int)0xFFF9A825, 20} })
         , mPaper({"纸盒 1 · A4", 250, 200})
         , mStatus("就绪")
-        , mNetwork("Wi-Fi · CDROID-Net    192.168.1.50") {}
+        , mNetwork("Wi-Fi · CDROID-Net · 192.168.1.50") {}
 
     const std::vector<InkCartridge>& getInks() const { return mInks; }
     const PaperTray& getPaper() const { return mPaper; }
@@ -81,10 +81,11 @@ private:
 
     std::vector<InkCartridge> mInks;
     PaperTray mPaper;
-    int mTotalPrints = 0;
-    int mTotalScans = 0;
-    int mTotalCopies = 0;
-    int mTotalMaintenance = 0;
+    // Lifetime page/event counters as read off a working machine's service menu.
+    int mTotalPrints = 12480;
+    int mTotalScans = 3206;
+    int mTotalCopies = 5012;
+    int mTotalMaintenance = 36;
     std::string mStatus;
     std::string mNetwork;
 };

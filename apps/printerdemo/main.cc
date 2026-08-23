@@ -11,6 +11,7 @@
  * enterAnim/exitAnim — see navdemo_transition. IDs (R.h / ID.xml) are auto-generated.
  *********************************************************************************/
 #include <cdroid.h>
+#include <core/build.h>
 #include <core/activityfactory.h>
 #include <cdlog.h>
 #include <widget/toolbar.h>
@@ -92,15 +93,14 @@ static void bindPrinter(cdroid::View* root, printerdemo::PrinterViewModel& vm){
         float p = ink.level / 10.0f;             // 0.1-resolution percent: 0.5% steps are visible in the bar
         setWeight(root->findViewById(inkSlots[i].space), 100.0f - p);
         cdroid::View* fill = root->findViewById(inkSlots[i].fill);
-        setWeight(fill, p);
-        if(fill) fill->setBackgroundColor(ink.color);
+        setWeight(fill, p);                      // fill color comes from the ink_fill_* pill drawable
         if(cdroid::TextView* pct = (cdroid::TextView*)root->findViewById(inkSlots[i].pct)){
             // Show one decimal only when nonzero, so 850 -> "85%", 845 -> "84.5%".
             int whole = ink.level / 10, tenths = ink.level % 10;
             std::string s = std::to_string(whole);
             if(tenths) s += "." + std::to_string(tenths);
             pct->setText(s + "%");
-            pct->setTextColor(ink.percent() < ink.lowThreshold ? (int)0xFFEF6C00 : (int)0xFF5F6368);
+            pct->setTextColor(ink.percent() < ink.lowThreshold ? (int)0xFFEF6C00 : (int)0xFF8A929C);
         }
     }
 
@@ -110,7 +110,7 @@ static void bindPrinter(cdroid::View* root, printerdemo::PrinterViewModel& vm){
     setWeight(root->findViewById(R::id::paper_fill), (float)ppct);
     setWeight(root->findViewById(R::id::paper_space), (float)(100 - ppct));
     if(cdroid::TextView* t = (cdroid::TextView*)root->findViewById(R::id::paper_pct)) t->setText(std::to_string(ppct) + "%");
-    if(cdroid::TextView* t = (cdroid::TextView*)root->findViewById(R::id::paper_sheets)) t->setText("剩余约 " + std::to_string(paper.remaining) + " 张");
+    if(cdroid::TextView* t = (cdroid::TextView*)root->findViewById(R::id::paper_sheets)) t->setText("约剩 " + std::to_string(paper.remaining) + " 张 · 250 张纸盒");
     if(cdroid::TextView* t = (cdroid::TextView*)root->findViewById(R::id::paper_name)) t->setText(paper.name);
 
     // Status + network.
@@ -126,6 +126,12 @@ static void bindPrinter(cdroid::View* root, printerdemo::PrinterViewModel& vm){
     setNum(R::id::stat_copies, vm.getTotalCopies());
     setNum(R::id::stat_maint,  vm.getTotalMaintenance());
 }
+
+// Persisted theme choice — re-read by every new window (AOSP recreate +
+// onCreate re-reads the persisted selection).
+static bool sDarkTheme = false;
+// Persisted locale choice (zh-CN default, matching the pre-locale-switch UI).
+static bool sChineseLocale = true;
 
 // ---------------------------------------------------------------------------
 class HomeFragment : public cdroid::fragment::Fragment{
@@ -254,17 +260,18 @@ public:
                     }
                 };
                 overlay->setVisibility(cdroid::View::VISIBLE);
-                setPct(15);
-                status->setText("正在复印 1 / " + std::to_string(N));
-                overlay->postDelayed([status, N, setPct](){ setPct(60); status->setText("正在复印 " + std::to_string(N) + " / " + std::to_string(N)); }, 700);
-                overlay->postDelayed([status, setPct](){ setPct(100); status->setText("正在收尾…"); }, 1300);
+                setPct(10);
+                status->setText("正在预热…");
+                overlay->postDelayed([status, N, setPct](){ setPct(35); status->setText("正在复印 1 / " + std::to_string(N)); }, 600);
+                overlay->postDelayed([status, N, setPct](){ setPct(70); status->setText("正在复印 " + std::to_string(N) + " / " + std::to_string(N)); }, 1600);
+                overlay->postDelayed([status, setPct](){ setPct(100); status->setText("正在收尾…"); }, 2600);
                 overlay->postDelayed([this, overlay, N, setPct, color](){
                     setPct(0);
                     overlay->setVisibility(cdroid::View::GONE);
                     cdroid::Toast::makeText(getContext(), "复印完成 · " + std::to_string(N) + " 张")->show();
                     // Commit the job to the shared device model: bump counters, feed paper, drain ink.
                     if(auto* vm = sharedPrinterVM(this)) vm->recordCopy(N, color);
-                }, 8000);
+                }, 4000);
             });
         }
     }
@@ -308,16 +315,16 @@ public:
             btn->setOnClickListener([this, ml, btn, status, sweep](cdroid::View&){
                 if(!mScanning){
                     mScanning = true;
-                    btn->setText("停 止 扫 描");
+                    btn->setText("停止扫描");
                     status->setText("扫描中…");
-                    status->setTextColor(0xFF1565C0);
+                    status->setTextColor(0xFF188038);
                     (*sweep)();
                 } else {
                     mScanning = false;
                     ml->setProgressInstant(0.f);
-                    btn->setText("开 始 扫 描");
+                    btn->setText("开始扫描");
                     status->setText("就绪 · Ready");
-                    status->setTextColor(0xFF5F6368);
+                    status->setTextColor(0xFF8A929C);
                     cdroid::Toast::makeText(getContext(), "扫描完成 · 已保存为 PDF")->show();
                     if(auto* vm = sharedPrinterVM(this)) vm->recordScan(); // bump scan counter
                 }
@@ -428,19 +435,25 @@ public:
             cdroid::TextView* tv = (cdroid::TextView*)view->findViewById(id);
             if(tv) tv->setText(cdroid::Html::fromHtml(html));
         };
+        // Subtitle carries the real framework version (core/build.h), not a
+        // hardcoded app version — the demo ships against whatever CDROID builds.
+        if(cdroid::TextView* sub = (cdroid::TextView*)view->findViewById(printerdemo::R::id::about_subtitle))
+            sub->setText(std::string("CDroid ") + cdroid::Build::VERSION::RELEASE
+                         + " · " + (sChineseLocale ? "逐行 C++ 移植 · Android UI"
+                                                    : "Line-by-line C++ port · Android UI"));
         set(printerdemo::R::id::about_intro,
-            "<big><b><font color='#FF1565C0'>CDroid<sup>™</sup></font></b></big> 是 <b>Android UI 框架</b>"
+            "<big><b><font color='#FF4A90E2'>CDroid<sup>™</sup></font></b></big> 是 <b>Android UI 框架</b>"
             "（android.widget / view / text / drawable / animation）的<b>逐行 C++ 移植</b>，"
             "构建于 <i><b>Cairo</b></i> 矢量图形之上，面向<b>嵌入式设备</b>（最低 <tt>32M</tt> 内存即可运行）。"
             "<br/><br/><blockquote><i>「别再 <s>重造 UI 轮子</s>——把 Android 的真东西移植过来。」</i></blockquote>"
             "<br/><br/>类名、方法签名与控制流<b>紧跟 AOSP</b>——可把 Android 参考源码与 C++ 实现并排逐行对照。"
             "在 Android Studio 设计 XML 布局，<u>直接由 Cairo 渲染</u>，<b>全程无需 JVM</b>。");
         set(printerdemo::R::id::about_arch,
-            "<b><font color='#FF1565C0'>Canvas 即 cairo_t</font></b> —— <small>无独立渲染抽象，也无 Bitmap 类（由 ImageSurface 承担）</small>，<tt>onDraw</tt> 直接编程 cairo。"
-            "<br/><b><font color='#FF1565C0'>App = Context/Assets</font></b> —— <small>一套对象回答 <tt>getString</tt> / <tt>getDrawable</tt> / <tt>loadImage</tt>。</small>"
-            "<br/><b><font color='#FF1565C0'>Looper / Choreographer 原样移植</font></b> —— <small>epoll + eventFd 驱动主线程；无硬件 VSYNC 时自节拍。</small>"
-            "<br/><b><font color='#FF1565C0'>脏区 + blit 合成器</font></b> —— <small>按需重绘，非全屏刷新；像素格式 <tt>ARGB<sub>32</sub></tt>。</small>"
-            "<br/><b><font color='#FF1565C0'>多后端</font></b> —— <small>DRM / fb / SDL / XCB / VNC，一套 GUI 跨平台。</small>");
+            "<b><font color='#FF4A90E2'>Canvas 即 cairo_t</font></b> —— <small>无独立渲染抽象，也无 Bitmap 类（由 ImageSurface 承担）</small>，<tt>onDraw</tt> 直接编程 cairo。"
+            "<br/><b><font color='#FF4A90E2'>App = Context/Assets</font></b> —— <small>一套对象回答 <tt>getString</tt> / <tt>getDrawable</tt> / <tt>loadImage</tt>。</small>"
+            "<br/><b><font color='#FF4A90E2'>Looper / Choreographer 原样移植</font></b> —— <small>epoll + eventFd 驱动主线程；无硬件 VSYNC 时自节拍。</small>"
+            "<br/><b><font color='#FF4A90E2'>脏区 + blit 合成器</font></b> —— <small>按需重绘，非全屏刷新；像素格式 <tt>ARGB<sub>32</sub></tt>。</small>"
+            "<br/><b><font color='#FF4A90E2'>多后端</font></b> —— <small>DRM / fb / SDL / XCB / VNC，一套 GUI 跨平台。</small>");
         set(printerdemo::R::id::about_features,
             "<b>• 50+ 控件 · 20+ Drawable</b> <small>API 兼容 Android</small><br/>"
             "<b>• Fragment + Navigation</b> <small>含 saveState / restoreState</small><br/>"
@@ -459,12 +472,6 @@ public:
 REGISTER_FRAGMENT(AboutFragment);
 
 // ---------------------------------------------------------------------------
-// Persisted theme choice — re-read by every new window (AOSP recreate +
-// onCreate re-reads the persisted selection).
-static bool sDarkTheme = false;
-// Persisted locale choice (zh-CN default, matching the pre-locale-switch UI).
-static bool sChineseLocale = true;
-
 class PrinterDemoWindow : public cdroid::fragment::FragmentActivity{
     cdroid::NavHostFragment* mNavHost = nullptr;
     cdroid::Toolbar* mToolbar = nullptr;
@@ -507,6 +514,7 @@ public:
                 mBottomNavigation->refreshMenuView();
             cdroid::NavigationUI::setupWithNavController(mBottomNavigation, nc);
         }
+
         nc->addOnDestinationChangedListener([this](cdroid::NavController&,
                                                     cdroid::NavDestination& d, cdroid::Bundle*){
             if(!mToolbar) return;
@@ -565,9 +573,11 @@ int main(int argc, const char* argv[]){
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
     cdroid::App app(argc, argv);
-    // The application theme now comes from AndroidManifest.xml
-    // (application android:theme="@style/AppTheme"), parsed by App at boot —
-    // app.setTheme() here would only duplicate it.
+    // The application theme comes from AndroidManifest.xml (application
+    // android:theme="@style/AppTheme"). A persisted dark choice overrides it
+    // app-wide before any window is created (AOSP: the stored
+    // android:isUiEnabled/night mode is applied at process start).
+    if(sDarkTheme) app.setTheme(printerdemo::R::style::AppTheme_Dark);
     // Seed the live Configuration with the startup locale (zh-CN) so the
     // resource layer selects the Chinese variants from the start; a language
     // switch later flips this via handleConfigurationChanged (recreate).

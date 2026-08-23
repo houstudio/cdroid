@@ -4,6 +4,9 @@
          own drawables/colors, layouts reference ?attr/... so a theme switch
          + recreate re-skins every page. -->
     <attr name="cardBackground" format="reference" />
+    <attr name="cardRipple" format="reference" />
+    <attr name="inkBlackFill" format="reference" />
+    <attr name="navBackground" format="reference" />
     <attr name="progressTrack" format="reference" />
     <attr name="colorSurfaceVariant" format="color|reference" />
 

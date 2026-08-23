@@ -4,18 +4,27 @@
          ResTable::Theme::applyStyle, the app only overrides what it cares
          about. Framework attrs carry the android: namespace (aapt2 resolves
          them against the linked framework package, not the app's own).
-         colorPrimary drives colorEdgeEffect (?attr) so the edge glow is the
-         visible probe. -->
+
+         Brand system: one primary blue (#1A73E8) drives toolbar, hero
+         gradient start, colorAccent (Theme.Material aliases
+         colorControlActivated to ?attr/colorAccent, so radios / switches /
+         seekbars pick it up automatically). Per-function accents:
+         copy=blue, scan=green(#188038), maintain=amber(#E8710A),
+         settings=purple(#8430CE) — used by the tonal chips + icons. -->
     <style name="AppTheme" parent="@android:style/Theme.Material.Light">
-        <item name="android:colorPrimary">#ff009688</item>
-        <item name="android:colorBackground">#fffafafa</item>
+        <item name="android:colorPrimary">#ff1a73e8</item>
+        <item name="android:colorAccent">#ff1a73e8</item>
+        <item name="android:colorBackground">#fff5f7fa</item>
         <!-- Text state colors go through ColorStateList selectors
              (res/color/app_text_*.xml), like AOSP's primary_text_material_*. -->
         <item name="android:textColorPrimary">@color/app_text_primary</item>
         <item name="android:textColorSecondary">@color/app_text_secondary</item>
         <item name="cardBackground">@drawable/card_bg</item>
+        <item name="cardRipple">@drawable/ripple_card</item>
+        <item name="inkBlackFill">@drawable/ink_fill_k</item>
+        <item name="navBackground">@drawable/bg_nav</item>
         <item name="progressTrack">@drawable/progress_track_bg</item>
-        <item name="colorSurfaceVariant">#FFECEFF1</item>
+        <item name="colorSurfaceVariant">#FFE7EAF0</item>
     </style>
 
     <!-- Dark variant: same attr set, Material (dark) parent. The layout's
@@ -23,17 +32,21 @@
          toggling the theme + recreate() re-colors the whole UI (AOSP parity:
          the persisted choice is re-read by every new activity). -->
     <style name="AppTheme.Dark" parent="@android:style/Theme.Material">
-        <item name="android:colorPrimary">#ff5e35b1</item>
-        <item name="android:colorBackground">#ff303030</item>
+        <item name="android:colorPrimary">#ff173b66</item>
+        <item name="android:colorAccent">#ff5b9bff</item>
+        <item name="android:colorBackground">#ff15171b</item>
         <item name="android:textColorPrimary">@color/app_text_primary_dark</item>
         <item name="android:textColorSecondary">@color/app_text_secondary_dark</item>
         <item name="cardBackground">@drawable/card_bg_dark</item>
+        <item name="cardRipple">@drawable/ripple_card_dark</item>
+        <item name="inkBlackFill">@drawable/ink_fill_k_dark</item>
+        <item name="navBackground">@drawable/bg_nav_dark</item>
         <item name="progressTrack">@drawable/progress_track_bg_dark</item>
-        <item name="colorSurfaceVariant">#FF3A3F44</item>
+        <item name="colorSurfaceVariant">#FF3A3E45</item>
     </style>
 
     <!-- Referenced by layout/main.xml (android:titleTextAppearance). -->
     <style name="ToolbarTitle" parent="@android:style/TextAppearance.Material.Title">
-        <item name="android:textSize">22sp</item>
+        <item name="android:textSize">20sp</item>
     </style>
 </resources>

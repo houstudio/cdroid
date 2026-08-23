@@ -13,58 +13,68 @@
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_marginBottom="8dp" android:text="@string/settings_network" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="vertical" android:background="?attr/cardBackground" android:padding="4dp">
+            android:orientation="vertical" android:background="?attr/cardBackground" android:padding="6dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp">
-                <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_accent">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="Wi" android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_blue">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                        android:src="@drawable/ic_wifi_white" android:tint="#FF1A73E8"/>
                 </FrameLayout>
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wi-Fi" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="@string/network_good" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/network_good" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
                 </LinearLayout>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textSize="20sp" android:textColor="?android:attr/textColorSecondary"/>
+                <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron"/>
             </LinearLayout>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="12dp" android:background="?attr/colorSurfaceVariant"/>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="14dp" android:background="?attr/colorSurfaceVariant"/>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp">
-                <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_accent">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="IP" android:textSize="15sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                android:orientation="horizontal" android:gravity="center_vertical" android:padding="14dp">
+                <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_blue">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                        android:src="@drawable/ic_globe_blue"/>
                 </FrameLayout>
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/label_ip" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="192.168.1.50" android:textSize="14sp" android:textColor="?android:attr/textColorSecondary"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ip_value" android:textSize="14sp" android:textColor="?android:attr/textColorSecondary"/>
             </LinearLayout>
         </LinearLayout>
 
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_marginTop="18dp" android:layout_marginBottom="8dp" android:text="@string/settings_pref" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="vertical" android:background="?attr/cardBackground" android:padding="4dp">
+            android:orientation="vertical" android:background="?attr/cardBackground" android:padding="6dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp">
-                <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_green">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="省" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                android:orientation="horizontal" android:gravity="center_vertical" android:padding="14dp">
+                <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_green">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                        android:src="@drawable/ic_moon_green"/>
                 </FrameLayout>
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/settings_sleep" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/settings_sleep" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/sleep_value" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                </LinearLayout>
                 <Switch android:id="@+id/sw_sleep" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
             </LinearLayout>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="12dp" android:background="?attr/colorSurfaceVariant"/>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="14dp" android:background="?attr/colorSurfaceVariant"/>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp">
-                <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_purple">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="音" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                android:orientation="horizontal" android:gravity="center_vertical" android:padding="14dp">
+                <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_purple">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                        android:src="@drawable/ic_volume_purple"/>
                 </FrameLayout>
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/settings_sound" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
                 <Switch android:id="@+id/sw_sound" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
             </LinearLayout>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="12dp" android:background="?attr/colorSurfaceVariant"/>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="14dp" android:background="?attr/colorSurfaceVariant"/>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp">
-                <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_amber">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="语" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_amber">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                        android:src="@drawable/ic_translate_amber"/>
                 </FrameLayout>
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/settings_language" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/lang_zh" android:textSize="14sp" android:textColor="?android:attr/textColorSecondary"/>
+                <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -74,13 +84,14 @@
             android:orientation="vertical" android:background="?attr/cardBackground" android:padding="16dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:orientation="horizontal" android:gravity="center_vertical">
-                <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_amber">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="亮" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_amber">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                        android:src="@drawable/ic_brightness_amber"/>
                 </FrameLayout>
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/settings_brightness" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
                 <TextView android:id="@+id/tv_brightness"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="50%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF1565C0"/>
+                    android:text="50%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF1A73E8"/>
             </LinearLayout>
             <SeekBar android:id="@+id/seek_brightness"
                 android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -90,23 +101,27 @@
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_marginTop="18dp" android:layout_marginBottom="8dp" android:text="@string/settings_system" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="vertical" android:background="?attr/cardBackground" android:padding="4dp">
+            android:orientation="vertical" android:background="?attr/cardBackground" android:padding="6dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp">
-                <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_accent">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="时" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_blue">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                        android:src="@drawable/ic_clock_blue"/>
                 </FrameLayout>
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/settings_datetime" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2026-08-05 09:12" android:textSize="14sp" android:textColor="?android:attr/textColorSecondary"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2026-08-23 09:12" android:textSize="14sp" android:textColor="?android:attr/textColorSecondary"/>
             </LinearLayout>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="12dp" android:background="?attr/colorSurfaceVariant"/>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="14dp" android:background="?attr/colorSurfaceVariant"/>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp">
-                <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_green">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="于" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_green">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                        android:src="@drawable/ic_info_green"/>
                 </FrameLayout>
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/about_device" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="v1.0" android:textSize="14sp" android:textColor="?android:attr/textColorSecondary"/>
+                <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

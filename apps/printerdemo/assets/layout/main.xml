@@ -22,12 +22,20 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="?android:attr/colorBackground" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorSurfaceVariant" />
     <BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/colorBackground"
+        android:background="?attr/navBackground"
         app:itemBackground="@drawable/nav_item_background"
         app:itemTextColor="@color/nav_item_text"
-        app:itemIconTint="@color/nav_item_icon" />
+        app:itemIconTint="@color/nav_item_icon"
+        app:itemIconGravity="start"
+        app:itemGravity="center"
+        app:iconLabelHorizontalSpacing="5dp"
+        app:labelVisibilityMode="labeled" />
 </LinearLayout>

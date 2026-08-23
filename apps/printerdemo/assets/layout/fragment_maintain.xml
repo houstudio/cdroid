@@ -16,47 +16,50 @@
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp" android:text="@string/maintain_head" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="4dp">
+                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="6dp">
                 <LinearLayout android:id="@+id/m_clean"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="horizontal" android:gravity="center_vertical"
-                    android:background="#00000000" android:padding="12dp" android:clickable="true">
-                    <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_accent">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="洗" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                    <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_blue">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                            android:src="@drawable/ic_refresh_blue"/>
                     </FrameLayout>
                     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_clean" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="@string/maintain_deep_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/maintain_deep_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
                     </LinearLayout>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textSize="20sp" android:textColor="?android:attr/textColorSecondary"/>
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron"/>
                 </LinearLayout>
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="12dp" android:background="?attr/colorSurfaceVariant"/>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="14dp" android:background="?attr/colorSurfaceVariant"/>
                 <LinearLayout android:id="@+id/m_nozzle"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="horizontal" android:gravity="center_vertical"
-                    android:padding="12dp" android:clickable="true">
-                    <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_green">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="检" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                    <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_green">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                            android:src="@drawable/ic_checkcircle_green"/>
                     </FrameLayout>
                     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_nozzle_check" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="@string/maintain_test_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/maintain_test_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
                     </LinearLayout>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textSize="20sp" android:textColor="?android:attr/textColorSecondary"/>
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron"/>
                 </LinearLayout>
-                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="12dp" android:background="?attr/colorSurfaceVariant"/>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="14dp" android:background="?attr/colorSurfaceVariant"/>
                 <LinearLayout android:id="@+id/m_align"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="horizontal" android:gravity="center_vertical"
-                    android:padding="12dp" android:clickable="true">
-                    <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/btn_card_amber">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="准" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                    <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_amber">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                            android:src="@drawable/ic_tune_amber"/>
                     </FrameLayout>
                     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_align" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="@string/maintain_align_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/maintain_align_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
                     </LinearLayout>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textSize="20sp" android:textColor="?android:attr/textColorSecondary"/>
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron"/>
                 </LinearLayout>
             </LinearLayout>
 
@@ -66,36 +69,50 @@
                 android:orientation="vertical" android:background="?attr/cardBackground" android:padding="16dp">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="horizontal" android:gravity="center_vertical">
-                    <FrameLayout android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/btn_card_accent">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="黑" android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
-                    </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="@string/ink_black" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="85%" android:textSize="14sp" android:textColor="#FF2E7D32"/>
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/dot_k"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:text="@string/ink_black" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="85%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF188038"/>
                 </LinearLayout>
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="12dp" android:background="?attr/colorSurfaceVariant"/>
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="horizontal" android:gravity="center_vertical">
-                    <FrameLayout android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/btn_card_purple">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="彩" android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
-                    </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="@string/ink_color_cmy" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="60 / 40 / 72 %" android:textSize="14sp" android:textColor="#FFEF6C00"/>
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/dot_c"/>
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:layout_marginStart="2dp" android:background="@drawable/dot_m"/>
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:layout_marginStart="2dp" android:background="@drawable/dot_y"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:text="@string/ink_color_cmy" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="60 / 40 / 72%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FFEF6C00"/>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="12dp" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp" android:orientation="horizontal" android:gravity="center_vertical">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/drum_life" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="78%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF188038"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="10dp"
+                    android:layout_marginTop="8dp" android:weightSum="100" android:orientation="horizontal"
+                    android:background="?attr/progressTrack" android:padding="2dp">
+                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="78" android:background="@drawable/bar_fill_green"/>
+                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="22"/>
                 </LinearLayout>
             </LinearLayout>
 
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:layout_marginTop="18dp" android:layout_marginBottom="8dp" android:text="@string/maintain_diagnose" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="4dp">
+                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="6dp">
                 <LinearLayout android:id="@+id/m_selftest"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="horizontal" android:gravity="center_vertical"
-                    android:padding="12dp" android:clickable="true">
-                    <FrameLayout android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/btn_card_green">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="测" android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                    android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                    <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_green">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                            android:src="@drawable/ic_shield_green"/>
                     </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="@string/maintain_selftest" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" android:textSize="20sp" android:textColor="?android:attr/textColorSecondary"/>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_selftest" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/maintain_selftest_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron"/>
                 </LinearLayout>
             </LinearLayout>
 
@@ -119,7 +136,7 @@
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                             android:text="@string/maintain_last" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp" android:text="2026-07-20" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                            android:layout_marginTop="2dp" android:text="2026-08-18" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
                     </LinearLayout>
                 </LinearLayout>
                 <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -129,12 +146,13 @@
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:text="@string/home_health" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="92%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF2E7D32"/>
+                        android:text="92%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF188038"/>
                 </LinearLayout>
-                <LinearLayout android:layout_width="match_parent" android:layout_height="8dp"
-                    android:layout_marginTop="8dp" android:weightSum="100" android:orientation="horizontal">
-                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="92" android:background="#FF2E7D32"/>
-                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="8" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="10dp"
+                    android:layout_marginTop="8dp" android:weightSum="100" android:orientation="horizontal"
+                    android:background="?attr/progressTrack" android:padding="2dp">
+                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="92" android:background="@drawable/bar_fill_green"/>
+                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="8"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -145,19 +163,22 @@
         android:layout_width="match_parent" android:layout_height="match_parent"
         android:background="#B3000000" android:clickable="true" android:visibility="gone">
         <LinearLayout
-            android:layout_width="260dp" android:layout_height="wrap_content"
+            android:layout_width="280dp" android:layout_height="wrap_content"
             android:layout_gravity="center" android:orientation="vertical" android:gravity="center_horizontal"
-            android:background="?attr/cardBackground" android:padding="28dp">
+            android:background="?attr/cardBackground" android:padding="30dp">
+            <ImageView android:layout_width="40dp" android:layout_height="40dp"
+                android:src="@drawable/ic_wrench_amber" android:background="@drawable/chip_amber" android:padding="8dp"/>
             <LinearLayout android:id="@+id/maint_track"
-                android:layout_width="200dp" android:layout_height="8dp"
+                android:layout_width="210dp" android:layout_height="10dp"
+                android:layout_marginTop="18dp"
                 android:orientation="horizontal" android:weightSum="100"
-                android:background="?attr/progressTrack">
+                android:background="?attr/progressTrack" android:padding="2dp">
                 <View android:id="@+id/maint_fill"
                     android:layout_width="0dp" android:layout_height="match_parent"
-                    android:layout_weight="0" android:background="@drawable/btn_primary"/>
+                    android:layout_weight="0" android:background="@drawable/bar_fill_green"/>
             </LinearLayout>
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_marginTop="16dp" android:text="@string/maintain_busy" android:textSize="16sp"
+                android:layout_marginTop="18dp" android:text="@string/maintain_busy" android:textSize="16sp"
                 android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
             <TextView android:id="@+id/maint_status"
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
