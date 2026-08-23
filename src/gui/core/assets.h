@@ -72,10 +72,8 @@ private:
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
-    void loadStrings(const std::string&lan);
     void applyLocale(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
-    int loadKeyValues(const std::string&package,const std::string&resid,void*p);
 public:
     Assets();
     Assets(const std::string&path);

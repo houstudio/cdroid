@@ -266,56 +266,6 @@ void Assets::setTheme(int resid) {
     }
 }
 
-typedef struct{
-    std::unordered_map<std::string,const std::string>colors;
-    std::unordered_map<std::string,const std::string>dimens;
-    std::unordered_map<std::string,std::vector<AttributeSet>>colorStateList;
-}PENDINGRESOURCE;
-
-static std::string getTrimedValue(XmlPullParser&parser){
-    int type;
-    std::string value;
-    while((type=parser.next())!=XmlPullParser::END_TAG){
-        if(type==XmlPullParser::TEXT){
-            value.append(parser.getText());
-        }
-    }
-    TextUtils::trim(value);
-    return value;
-}
-
-int Assets::loadKeyValues(const std::string&package,const std::string&resid,void*params){
-    int type,depth;
-    XmlPullParser parser(this,resid);
-    const AttributeSet& attrs=(AttributeSet&)parser;
-    PENDINGRESOURCE*pending=(PENDINGRESOURCE*)params;
-    while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
-        const std::string tag = parser.getName();
-        if(type!=XmlPullParser::START_TAG)continue;
-        // id/dimen/integer/bool/color/string/item/array values now live in the
-        // resources.arsc (binary) or are resolved lazily via the id-path; the
-        // retired text caches (mIDS/mColors/mDimensions/mStrings/mArraies) no
-        // longer store them. Only styles and color-state-list selectors still
-        // need text-XML parsing here.
-        if(tag.compare("selector")==0){//for colorstatelist
-            std::string key = attrs.getAttributeValue(std::string(), "name");
-            depth = parser.getDepth()+1;
-            std::string resUri = resid.substr(0,resid.find(".xml"));
-            std::unordered_map<std::string,std::vector<AttributeSet>>::iterator it;
-            it = pending->colorStateList.end();
-            while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
-                if(type!=XmlPullParser::START_TAG)continue;
-                AttributeSet itemAtts(attrs);
-                if(it==pending->colorStateList.end()){
-                    it = pending->colorStateList.insert({resUri,{itemAtts}}).first;
-                }else
-                    it->second.emplace_back(itemAtts);
-            }
-        }
-    }
-    return 0;
-}
-
 int Assets::addResource(const std::string&path,const std::string&name) {
     mPakPaths.push_back(path);   // recorded for the lazy ID-based AssetManager
     // If the lazy AssetManager was already built — which happens when an earlier
@@ -339,26 +289,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     mResources.insert({package,pak});
 
     int count=0;
-    PENDINGRESOURCE pending;
     auto sttm = SystemClock::uptimeMillis();
-    /*pak->forEachEntry([this,package,pak,&count,&pending](const std::string&res) {
-        count++;
-        if((res.size()>6)&&(TextUtils::startWith(res,"values")||TextUtils::startWith(res,"color"))) {
-            // Skip binary AXML entries (SDK framework res — already in arsc).
-            // Binary color/selector files have <selector> root, not <resources>;
-            // parsing them as text corrupts mColors/mStateColors.
-            std::istream* s = pak->getInputStream(res);
-            if (s) {
-                char magic[2] = {0};
-                s->read(magic, 2);
-                delete s;
-                if ((uint8_t)magic[0] == 0x03) return 0; // binary AXML — skip
-            }
-            LOGV("LoadKeyValues from:%s",res.c_str());
-            loadKeyValues(package,package+":"+res,&pending);
-        }
-        return 0;
-    });*/
     // Load resources.arsc if present. Try getInputStream directly rather than
     // hasEntry: cdroid.pak carries duplicate color/ entries (SDK + own), and
     // libzip's zip_name_locate (used by hasEntry) fails to resolve some names
@@ -523,8 +454,8 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
 
 // Set the arsc request locale so getResource/getResourceString pick the matching
 // locale variant (mirrors the test config construction: packLanguage/Region +
-// localeDataComputeScript). Binary apps read localized strings from arsc; text
-// apps still use loadStrings for their app-local values.
+// localeDataComputeScript). Localized strings come from the arsc (the retired
+// text-XML loadStrings parsed them into write-only caches).
 void Assets::applyLocale(const std::string& lan) {
     if (!mResTable || lan.empty()) return;
     std::string lang = lan, region;
@@ -542,19 +473,6 @@ void Assets::applyLocale(const std::string& lan) {
     memcpy(cfg.localeScript, script, 4);
     cfg.localeScriptWasComputed = true;
     mResTable->setParameters(&cfg);
-}
-
-void Assets::loadStrings(const std::string&lan) {
-    const std::string suffix = "/strings-"+lan+".xml";
-    for(auto& a:mResources) {
-        std::vector<std::string>files;
-        a.second->getEntries(files);
-        for(auto& fileName:files){
-            if( (TextUtils::endWith(fileName,".xml") && TextUtils::endWith(fileName,suffix) )==false)continue;
-            loadKeyValues(a.first,fileName,nullptr);
-            LOGD("load %s for '%s'",fileName.c_str(),lan.c_str());
-        }
-    }
 }
 
 Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(std::istream&stream,int width,int height){
