@@ -118,6 +118,176 @@
                 android:text="CheckBox 复选" />
         </LinearLayout>
 
+        <!-- Switch style variants -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_switch_styles"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/title_size" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <Switch
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="蓝色 · 选中"
+                    android:textColor="@color/text_primary"
+                    android:track="@drawable/switch_track_blue"
+                    android:thumb="@drawable/switch_thumb_white"
+                    android:checked="true" />
+                <Switch
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:text="绿色轨道"
+                    android:textColor="@color/text_primary"
+                    android:track="@drawable/switch_track_green"
+                    android:thumb="@drawable/switch_thumb_white"
+                    android:checked="true" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <Switch
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="紫色轨道"
+                    android:textColor="@color/text_primary"
+                    android:track="@drawable/switch_track_purple"
+                    android:thumb="@drawable/switch_thumb_white" />
+                <Switch
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:text="轨道文字"
+                    android:textColor="@color/text_primary"
+                    android:showText="true"
+                    android:textOn="ON"
+                    android:textOff="OFF"
+                    android:switchMinWidth="120dp"
+                    android:track="@drawable/switch_track_grey"
+                    android:thumb="@drawable/switch_thumb_pill_blue"
+                    android:thumbTextPadding="12dp"
+                    android:checked="true" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <Switch
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:text="禁用 · 开"
+                    android:textColor="@color/text_disabled"
+                    android:track="@drawable/switch_track_grey"
+                    android:thumb="@drawable/switch_thumb_white"
+                    android:checked="true" />
+                <Switch
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:enabled="false"
+                    android:text="禁用 · 关"
+                    android:textColor="@color/text_disabled"
+                    android:track="@drawable/switch_track_grey"
+                    android:thumb="@drawable/switch_thumb_white" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Button size/shape variants -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_button_styles"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/title_size" />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="@dimen/row_gap"
+                android:background="@drawable/btn_primary"
+                android:stateListAnimator="@animator/press_scale"
+                android:textColor="#FFFFFFFF"
+                android:text="全宽主按钮 Full-width" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="@color/accent"
+                    android:textSize="12sp"
+                    android:text="小号" />
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="@color/good"
+                    android:textSize="12sp"
+                    android:text="成功色" />
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="@color/danger"
+                    android:textSize="12sp"
+                    android:text="危险色" />
+            </LinearLayout>
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/btn_demo"
+                android:textColor="@color/text_disabled"
+                android:enabled="false"
+                android:text="禁用按钮 Disabled" />
+        </LinearLayout>
+
         <!-- Choice & Rating -->
         <LinearLayout
             android:layout_width="match_parent"

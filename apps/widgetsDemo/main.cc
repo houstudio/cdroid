@@ -38,8 +38,6 @@ public:
             // FragmentPagerAdapter) instead of tearing down/rebuilding views through
             // the SpecialEffects exit pipeline on every tab hop.
             pager->setOffscreenPageLimit(9);
-            // Open on the date page (picker-heavy; also avoids first-frame tab timing).
-            pager->setCurrentItem(7, false);
             host->addView(pager, new ViewGroup::LayoutParams(
                     ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
             if (mTabs) mTabs->setupWithViewPager(pager);

@@ -42,4 +42,21 @@
     <string name="sec_progress">进度与调节</string>
     <string name="sec_chrono">计时器</string>
     <string name="tap_hint">点击任意控件，反馈会显示在这里…</string>
+    <string name="sec_prog_styles">进度条样式 Variants</string>
+    <string name="sec_seek_styles">SeekBar 样式</string>
+    <string name="prog_thin_hint">细线样式 · secondaryProgress 缓冲区间</string>
+    <string name="seek_disabled_hint">禁用态 · 渐变轨道 · 胶囊轨道</string>
+    <string name="sec_switch_styles">Switch 样式 Variants</string>
+    <string name="sec_button_styles">按钮尺寸与状态</string>
+    <string name="sec_ellipsize">Ellipsize 与行数行为</string>
+    <string name="ellip_demo_text">CDROID 逐行移植了 Android 的文本栈：StaticLayout 断行、minikin 度量、Bidi 算法与 Spannable 富文本，长文本在单行容器中的截断行为与 Android 完全一致——省略号的位置、跑马灯的循环、多行折叠的行数，都遵循同一套 TextView 布局与绘制规则，这也是本页所有示例所验证的内容，足够长的文本才能触发这些截断行为。</string>
+    <string name="ellip_none_hint">ellipsize=none · 不截断，允许溢出</string>
+    <string name="ellip_end_hint">ellipsize=end · 末尾省略号</string>
+    <string name="ellip_middle_hint">ellipsize=middle · 中间省略号</string>
+    <string name="ellip_start_hint">ellipsize=start · 开头省略号</string>
+    <string name="ellip_maxlines_hint">maxLines=2 + ellipsize=end · 两行截断</string>
+    <string name="marquee2_text">▶ 走马灯 marquee_forever —— 这条文本会一直向左滚动，就像状态栏通知或音乐播放器里那样永不停歇 · StaticLayout 断行 · minikin 度量 · BiDi 算法 · Spannable 富文本 · 逐行移植的 Android 文本栈，让超长文本在单行容器中以跑马灯的方式完整呈现 · CDROID TextView · CDROID TextView · </string>
+    <string name="ellip_marquee_hint">ellipsize=marquee · marqueeRepeatLimit=forever</string>
+    <string name="ellip_caps_text">textAllCaps + lineSpacingExtra: automatic capitalization with relaxed line spacing.</string>
+    <string name="ellip_caps_hint">textAllCaps=true · lineSpacingExtra=4dp</string>
 </resources>

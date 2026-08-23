@@ -257,6 +257,8 @@ void setupText(View* page) {
     // Marquee only animates on a selected/focused view.
     TextView* marquee = (TextView*)page->findViewById(widgetsDemo::R::id::marquee_tv);
     if (marquee) marquee->setSelected(true);
+    if (TextView* marquee2 = (TextView*)page->findViewById(widgetsDemo::R::id::marquee2_tv))
+        marquee2->setSelected(true);
 
     Spinner* spinner = (Spinner*)page->findViewById(widgetsDemo::R::id::spinner1);
     if (spinner && spinner->getAdapter() == nullptr) {

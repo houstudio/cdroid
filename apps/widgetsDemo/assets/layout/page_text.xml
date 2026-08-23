@@ -70,7 +70,137 @@
                 android:ellipsize="marquee"
                 android:textColor="@color/accent"
                 android:textSize="16sp"
-                android:text="CDROID ports Android's TextView layout engine line-by-line — BiDi, spans, ellipsize and marquee all included." />
+                android:text="CDROID ports Android's TextView layout engine line-by-line — BiDi, spans, ellipsize and marquee all included — StaticLayout line breaking, minikin measurement, spannable rich text, and a faithful marquee that keeps scrolling forever like a status-bar notification on a real device." />
+        </LinearLayout>
+
+        <!-- Ellipsize & line behavior variants -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_ellipsize"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:singleLine="true"
+                android:ellipsize="none"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/ellip_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_none_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/ellip_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_end_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:singleLine="true"
+                android:ellipsize="middle"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/ellip_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_middle_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:singleLine="true"
+                android:ellipsize="start"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/ellip_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_start_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/ellip_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_maxlines_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/marquee2_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:textColor="@color/good"
+                android:textSize="15sp"
+                android:text="@string/marquee2_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_marquee_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textAllCaps="true"
+                android:lineSpacingExtra="4dp"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:text="@string/ellip_caps_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_caps_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
         </LinearLayout>
 
         <!-- EditText input types -->
