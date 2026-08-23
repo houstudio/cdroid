@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_title">CDROID Widgets Demo</string>
+    <string name="sec_buttons">Buttons &amp; Toggles</string>
+    <string name="sec_choice">Choice &amp; Rating</string>
+    <string name="sec_progress">Progress &amp; Seek</string>
+    <string name="sec_chrono">Chronometer</string>
+    <string name="tap_hint">Tap a control to see it react…</string>
+</resources>

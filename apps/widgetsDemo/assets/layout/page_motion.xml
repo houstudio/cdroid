@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex" xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- ====== Carousel Showcase ====== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Carousel"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Drag the row — Carousel recycles 3 views across 10 items"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp" />
+
+        <MotionLayout
+            android:id="@+id/ml_carousel"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:background="#1B1B2F"
+            app:layoutDescription="@xml/scene_carousel">
+
+            <Carousel
+                android:id="@+id/carousel"
+                app:carousel_firstView="@id/car_center"
+                app:carousel_forwardTransition="@id/tr_forward"
+                app:carousel_backwardTransition="@id/tr_backward"
+                app:carousel_previousState="@id/cs_prev"
+                app:carousel_nextState="@id/cs_next"
+                app:constraint_referenced_ids="car_left,car_center,car_right" />
+
+            <TextView
+                android:id="@+id/car_left"
+                android:layout_width="80dp"
+                android:layout_height="120dp"
+                android:background="#EF5350"
+                android:gravity="center"
+                android:text="L"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/car_center"
+                android:layout_width="120dp"
+                android:layout_height="180dp"
+                android:background="#66BB6A"
+                android:gravity="center"
+                android:text="C"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/car_right"
+                android:layout_width="80dp"
+                android:layout_height="120dp"
+                android:background="#42A5F5"
+                android:gravity="center"
+                android:text="R"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp" />
+        </MotionLayout>
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/page_padding">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Date &amp; Time"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/card_gap"
+            android:text="TextClock, TimePicker (clock &amp; spinner), DatePicker (spinner)"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/body_size" />
+
+        <!-- Live clock -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextClock — live"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <TextClock
+                android:id="@+id/dt_clock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:format12Hour="EEE, MMM d · hh:mm:ss a"
+                android:format24Hour="EEE, MMM d · HH:mm:ss"
+                android:textColor="@color/accent"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- TimePicker: clock mode. Picker on the left, live time on the right, same row. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TimePicker — clock mode"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/row_gap"
+                android:gravity="center_vertical">
+                <TimePicker
+                    android:id="@+id/dt_tp_clock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:timePickerMode="clock" />
+                <TextView
+                    android:id="@+id/dt_tp_clock_val"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="@color/accent"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- TimePicker: spinner mode -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TimePicker — spinner mode"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/row_gap"
+                android:gravity="center_vertical">
+                <TimePicker
+                    android:id="@+id/dt_tp_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:timePickerMode="spinner" />
+                <TextView
+                    android:id="@+id/dt_tp_spinner_val"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="@color/accent"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- DatePicker: spinner mode -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DatePicker — spinner mode"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/row_gap"
+                android:gravity="center_vertical">
+                <DatePicker
+                    android:id="@+id/dt_dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:datePickerMode="spinner" />
+                <TextView
+                    android:id="@+id/dt_dp_val"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="@color/accent"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- DatePicker: calendar mode (DatePickerCalendarDelegate path) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DatePicker — calendar mode"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/row_gap"
+                android:gravity="center_vertical">
+                <DatePicker
+                    android:id="@+id/dt_dp_cal"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:datePickerMode="calendar" />
+                <TextView
+                    android:id="@+id/dt_dp_cal_val"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="@color/accent"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- CalendarView (standalone) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CalendarView — holo mode (default)"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/row_gap"
+                android:gravity="center_vertical">
+                <CalendarView
+                    android:id="@+id/dt_calview"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="300dp" />
+                <TextView
+                    android:id="@+id/dt_calview_val"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="@color/accent"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- CalendarView: MODE_MATERIAL (DayPickerView-based). Put here to test
+             whether the HOLO "tap a date -> jumps to 1900" bug also affects
+             material mode — material uses a different code path (DayPickerView),
+             so it should report the actually-tapped date. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CalendarView — material mode"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/row_gap"
+                android:gravity="center_vertical">
+                <CalendarView
+                    android:id="@+id/dt_calview_mat"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="300dp" />
+                <TextView
+                    android:id="@+id/dt_calview_mat_val"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="@color/accent"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

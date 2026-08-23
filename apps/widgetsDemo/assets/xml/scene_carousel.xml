@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MotionScene for the bidirectional Carousel showcase. Three ConstraintSets share a common rest
+  layout (cs_rest): both transitions START there, so from rest a left drag runs tr_forward
+  (cs_rest -> cs_next) and a right drag runs tr_backward (cs_rest -> cs_prev). This mirrors the
+  AndroidX CarouselExperiments demo_030 (previous/start/next) and is what lets MotionLayout pick the
+  transition by drag direction (bestTransitionFor). On completion Carousel advances its index
+  (forward -> +1 at cs_next, backward -> -1 at cs_prev) and recycles the 3 pool views.
+-->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex" xmlns:android="http://schemas.android.com/apk/res/android"
+    app:defaultDuration="400">
+
+    <!-- forward: drag left -> the right pool view (car_right) grows into the center -->
+    <Transition
+        android:id="@+id/tr_forward"
+        app:constraintSetStart="@+id/cs_rest"
+        app:constraintSetEnd="@+id/cs_next"
+        app:duration="400">
+        <OnSwipe app:dragDirection="dragLeft" app:touchAnchorId="@id/car_center"
+                 app:touchAnchorSide="left"
+                 app:onTouchUp="autoComplete" app:autoCompleteMode="spring"
+                 app:springStiffness="300" app:springDamping="6" app:springMass="1"
+                 app:springStopThreshold="0.01" app:springBoundary="bounceBoth" />
+    </Transition>
+
+    <!-- backward: drag right -> the left pool view (car_left) grows into the center -->
+    <Transition
+        android:id="@+id/tr_backward"
+        app:constraintSetStart="@+id/cs_rest"
+        app:constraintSetEnd="@+id/cs_prev"
+        app:duration="400">
+        <OnSwipe app:dragDirection="dragRight" app:touchAnchorId="@id/car_center"
+                 app:touchAnchorSide="right"
+                 app:onTouchUp="autoComplete" app:autoCompleteMode="spring"
+                 app:springStiffness="300" app:springDamping="6" app:springMass="1"
+                 app:springStopThreshold="0.01" app:springBoundary="bounceBoth" />
+    </Transition>
+
+    <!-- rest: L small left, C big center, R small right -->
+    <ConstraintSet android:id="@+id/cs_rest">
+        <Constraint android:id="@id/car_left" android:layout_width="80dp" android:layout_height="120dp"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+        <Constraint android:id="@id/car_center" android:layout_width="120dp" android:layout_height="180dp"
+                    app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+        <Constraint android:id="@id/car_right" android:layout_width="80dp" android:layout_height="120dp"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+    </ConstraintSet>
+
+    <!-- next (forward end): scrolled one slot left — car_right is now the big center -->
+    <ConstraintSet android:id="@+id/cs_next">
+        <Constraint android:id="@id/car_left" android:layout_width="60dp" android:layout_height="90dp"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+                    android:alpha="0.3" />
+        <Constraint android:id="@id/car_center" android:layout_width="80dp" android:layout_height="120dp"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+        <Constraint android:id="@id/car_right" android:layout_width="120dp" android:layout_height="180dp"
+                    app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+    </ConstraintSet>
+
+    <!-- previous (backward end): scrolled one slot right — car_left is now the big center -->
+    <ConstraintSet android:id="@+id/cs_prev">
+        <Constraint android:id="@id/car_left" android:layout_width="120dp" android:layout_height="180dp"
+                    app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+        <Constraint android:id="@id/car_center" android:layout_width="80dp" android:layout_height="120dp"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+        <Constraint android:id="@id/car_right" android:layout_width="60dp" android:layout_height="90dp"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+                    android:alpha="0.3" />
+    </ConstraintSet>
+
+</MotionScene>

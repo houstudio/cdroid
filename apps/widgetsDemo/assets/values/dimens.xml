@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="page_padding">14dp</dimen>
+    <dimen name="card_padding">14dp</dimen>
+    <dimen name="card_radius">14dp</dimen>
+    <dimen name="card_gap">12dp</dimen>
+    <dimen name="row_gap">10dp</dimen>
+    <dimen name="section_size">13sp</dimen>
+    <dimen name="title_size">17sp</dimen>
+    <dimen name="body_size">14sp</dimen>
+    <dimen name="btn_corner">10dp</dimen>
+    <dimen name="chip_corner">18dp</dimen>
+</resources>

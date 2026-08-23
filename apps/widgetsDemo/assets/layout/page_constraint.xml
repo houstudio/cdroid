@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <!-- ====== ConstraintLayout Showcase ====== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ConstraintLayout"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bias · Guideline · Chain · Ratio · Barrier"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp" />
+
+        <ConstraintLayout
+            android:id="@+id/cl_demo"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:background="#1B1B2F">
+
+            <!-- Horizontal guideline at 35% divides top/bottom -->
+            <View
+                android:id="@+id/cl_h_guideline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintGuide_percent="0.35"
+                android:orientation="horizontal" />
+
+            <!-- Vertical guideline at 50% -->
+            <View
+                android:id="@+id/cl_v_guideline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintGuide_percent="0.5"
+                android:orientation="vertical" />
+
+            <!-- === TOP HALF: Bias + Ratio === -->
+
+            <!-- Left box: bias 0.2 (near left) -->
+            <TextView
+                android:id="@+id/cl_bias_left"
+                android:layout_width="100dp"
+                android:layout_height="60dp"
+                android:background="#EF5350"
+                android:gravity="center"
+                android:text="Bias 0.2"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="@id/cl_v_guideline"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintHorizontal_bias="0.2" />
+
+            <!-- Right box: bias 0.8 (near right) -->
+            <TextView
+                android:id="@+id/cl_bias_right"
+                android:layout_width="100dp"
+                android:layout_height="60dp"
+                android:background="#42A5F5"
+                android:gravity="center"
+                android:text="Bias 0.8"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                app:layout_constraintLeft_toLeftOf="@id/cl_v_guideline"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintHorizontal_bias="0.8" />
+
+            <!-- Ratio box: width=0dp, ratio "2:1" → height driven by width -->
+            <TextView
+                android:id="@+id/cl_ratio"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="#FFCA28"
+                android:gravity="center"
+                android:text="Ratio 2:1"
+                android:textColor="#000000"
+                android:textSize="13sp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cl_bias_left"
+                app:layout_constraintBottom_toBottomOf="@id/cl_h_guideline"
+                app:layout_constraintDimensionRatio="2:1" />
+
+            <!-- === BOTTOM HALF: Chain + 0dp === -->
+
+            <!-- Chain: 3 boxes packed -->
+            <TextView
+                android:id="@+id/cl_chain_a"
+                android:layout_width="70dp"
+                android:layout_height="50dp"
+                android:background="#66BB6A"
+                android:gravity="center"
+                android:text="A"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@id/cl_chain_b"
+                app:layout_constraintTop_toBottomOf="@id/cl_h_guideline"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintHorizontal_bias="0.5" />
+
+            <TextView
+                android:id="@+id/cl_chain_b"
+                android:layout_width="70dp"
+                android:layout_height="50dp"
+                android:background="#26C6DA"
+                android:gravity="center"
+                android:text="B"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                app:layout_constraintLeft_toRightOf="@id/cl_chain_a"
+                app:layout_constraintRight_toLeftOf="@id/cl_chain_c"
+                app:layout_constraintTop_toBottomOf="@id/cl_h_guideline" />
+
+            <TextView
+                android:id="@+id/cl_chain_c"
+                android:layout_width="70dp"
+                android:layout_height="50dp"
+                android:background="#AB47BC"
+                android:gravity="center"
+                android:text="C"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                app:layout_constraintLeft_toRightOf="@id/cl_chain_b"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cl_h_guideline" />
+
+            <!-- 0dp fill at bottom -->
+            <TextView
+                android:id="@+id/cl_fill"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:background="#FF7043"
+                android:gravity="center"
+                android:text="0dp Match Constraint"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cl_chain_a"
+                app:layout_constraintVertical_bias="1.0" />
+
+        </ConstraintLayout>
+
+        <!-- ====== Chain Styles ====== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chain Styles"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="spread · spread_inside · packed"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- spread: boxes distributed evenly across the full width (gaps at edges too) -->
+        <ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="#1B1B2F"
+            android:layout_marginBottom="6dp">
+            <TextView android:id="@+id/cs_spr_a" android:layout_width="60dp" android:layout_height="32dp"
+                android:background="#EF5350" android:gravity="center" android:text="A"
+                android:textColor="#FFFFFF" android:textSize="13sp"
+                app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toLeftOf="@id/cs_spr_b"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintHorizontal_chainStyle="spread" />
+            <TextView android:id="@+id/cs_spr_b" android:layout_width="60dp" android:layout_height="32dp"
+                android:background="#FFCA28" android:gravity="center" android:text="B"
+                android:textColor="#000000" android:textSize="13sp"
+                app:layout_constraintLeft_toRightOf="@id/cs_spr_a" app:layout_constraintRight_toLeftOf="@id/cs_spr_c"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+            <TextView android:id="@+id/cs_spr_c" android:layout_width="60dp" android:layout_height="32dp"
+                android:background="#42A5F5" android:gravity="center" android:text="C"
+                android:textColor="#FFFFFF" android:textSize="13sp"
+                app:layout_constraintLeft_toRightOf="@id/cs_spr_b" app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+        </ConstraintLayout>
+
+        <!-- spread_inside: boxes spread to fill the edges (no edge gaps) -->
+        <ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="#1B1B2F"
+            android:layout_marginBottom="6dp">
+            <TextView android:id="@+id/csi_a" android:layout_width="60dp" android:layout_height="32dp"
+                android:background="#EF5350" android:gravity="center" android:text="A"
+                android:textColor="#FFFFFF" android:textSize="13sp"
+                app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toLeftOf="@id/csi_b"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintHorizontal_chainStyle="spread_inside" />
+            <TextView android:id="@+id/csi_b" android:layout_width="60dp" android:layout_height="32dp"
+                android:background="#FFCA28" android:gravity="center" android:text="B"
+                android:textColor="#000000" android:textSize="13sp"
+                app:layout_constraintLeft_toRightOf="@id/csi_a" app:layout_constraintRight_toLeftOf="@id/csi_c"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+            <TextView android:id="@+id/csi_c" android:layout_width="60dp" android:layout_height="32dp"
+                android:background="#42A5F5" android:gravity="center" android:text="C"
+                android:textColor="#FFFFFF" android:textSize="13sp"
+                app:layout_constraintLeft_toRightOf="@id/csi_b" app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+        </ConstraintLayout>
+
+        <!-- packed: boxes grouped together (default at center; bias shifts them) -->
+        <ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="#1B1B2F"
+            android:layout_marginBottom="16dp">
+            <TextView android:id="@+id/cpk_a" android:layout_width="60dp" android:layout_height="32dp"
+                android:background="#EF5350" android:gravity="center" android:text="A"
+                android:textColor="#FFFFFF" android:textSize="13sp"
+                app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toLeftOf="@id/cpk_b"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintHorizontal_bias="0.2" />
+            <TextView android:id="@+id/cpk_b" android:layout_width="60dp" android:layout_height="32dp"
+                android:background="#FFCA28" android:gravity="center" android:text="B"
+                android:textColor="#000000" android:textSize="13sp"
+                app:layout_constraintLeft_toRightOf="@id/cpk_a" app:layout_constraintRight_toLeftOf="@id/cpk_c"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+            <TextView android:id="@+id/cpk_c" android:layout_width="60dp" android:layout_height="32dp"
+                android:background="#42A5F5" android:gravity="center" android:text="C"
+                android:textColor="#FFFFFF" android:textSize="13sp"
+                app:layout_constraintLeft_toRightOf="@id/cpk_b" app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+        </ConstraintLayout>
+
+        <!-- ====== Flow (referenced ids wired in setupConstraint — XML only resolves numeric) ====== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Flow"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="chips wrap into rows"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
+        <ConstraintLayout
+            android:id="@+id/cl_flow_box"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:background="#1B1B2F"
+            android:layout_marginBottom="16dp">
+            <Flow
+                android:id="@+id/cl_flow"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:constraint_referenced_ids="fl_1, fl_2, fl_3, fl_4, fl_5, fl_6"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:flow_wrapMode="chain"
+                app:flow_horizontalGap="8dp"
+                app:flow_verticalGap="8dp" />
+            <TextView android:id="@+id/fl_1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="#EF5350" android:padding="6dp" android:text="Apple" android:textColor="#FFFFFF" android:textSize="12sp" />
+            <TextView android:id="@+id/fl_2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="#FFCA28" android:padding="6dp" android:text="Banana" android:textColor="#000000" android:textSize="12sp" />
+            <TextView android:id="@+id/fl_3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="#66BB6A" android:padding="6dp" android:text="Cherry" android:textColor="#FFFFFF" android:textSize="12sp" />
+            <TextView android:id="@+id/fl_4" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="#42A5F5" android:padding="6dp" android:text="Durian" android:textColor="#FFFFFF" android:textSize="12sp" />
+            <TextView android:id="@+id/fl_5" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="#AB47BC" android:padding="6dp" android:text="Elderberry" android:textColor="#FFFFFF" android:textSize="12sp" />
+            <TextView android:id="@+id/fl_6" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="#26C6DA" android:padding="6dp" android:text="Fig" android:textColor="#FFFFFF" android:textSize="12sp" />
+        </ConstraintLayout>
+
+        <!-- ====== Barrier (referenced ids wired in setupConstraint) ====== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Barrier"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="the yellow bar tracks the lower of A/B"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
+        <ConstraintLayout
+            android:id="@+id/cl_bar_box"
+            android:layout_width="match_parent"
+            android:layout_height="170dp"
+            android:background="#1B1B2F"
+            android:layout_marginBottom="16dp">
+            <TextView android:id="@+id/bar_a" android:layout_width="0dp" android:layout_height="70dp"
+                android:background="#EF5350" android:gravity="center" android:text="A (tall)"
+                android:textColor="#FFFFFF" android:textSize="13sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@id/bar_b" />
+            <TextView android:id="@+id/bar_b" android:layout_width="0dp" android:layout_height="40dp"
+                android:background="#42A5F5" android:gravity="center" android:text="B (short)"
+                android:textColor="#FFFFFF" android:textSize="13sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/bar_a"
+                app:layout_constraintRight_toRightOf="parent" />
+            <Barrier
+                android:id="@+id/cl_barrier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:constraint_referenced_ids="bar_a, bar_b"
+                app:barrierDirection="bottom" />
+            <TextView android:id="@+id/bar_below" android:layout_width="0dp" android:layout_height="40dp"
+                android:background="#FFCA28" android:gravity="center" android:text="below barrier"
+                android:textColor="#000000" android:textSize="13sp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@id/cl_barrier" />
+        </ConstraintLayout>
+
+        <!-- ====== Guideline modes (begin / end / percent) ====== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Guideline modes"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="begin 60dp · end 60dp · percent 0.5"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
+        <ConstraintLayout
+            android:id="@+id/cl_guide_box"
+            android:layout_width="match_parent"
+            android:layout_height="90dp"
+            android:background="#1B1B2F"
+            android:layout_marginBottom="16dp">
+            <!-- three vertical guidelines: fixed-from-left, fixed-from-right, half -->
+            <View android:id="@+id/g_begin" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                app:layout_constraintGuide_begin="60dp" android:orientation="vertical" />
+            <View android:id="@+id/g_end" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                app:layout_constraintGuide_end="60dp" android:orientation="vertical" />
+            <View android:id="@+id/g_pct" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                app:layout_constraintGuide_percent="0.5" android:orientation="vertical" />
+            <!-- labeled boxes aligned to each guideline (left edge at the guideline) -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="#EF5350" android:padding="6dp" android:text="begin"
+                android:textColor="#FFFFFF" android:textSize="12sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="@id/g_begin" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="#FFCA28" android:padding="6dp" android:text="percent"
+                android:textColor="#000000" android:textSize="12sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="@id/g_pct" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="#42A5F5" android:padding="6dp" android:text="end"
+                android:textColor="#FFFFFF" android:textSize="12sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="@id/g_end" />
+
+        </ConstraintLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#33FFFFFF"
+            android:layout_marginVertical="16dp" />
+
+        <!-- ====== MotionLayout Showcase ====== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MotionLayout"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tap any box — arc paths + easing + multi-child"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp" />
+
+        <MotionLayout
+            android:id="@+id/ml_demo"
+            android:layout_width="match_parent"
+            android:layout_height="360dp"
+            android:background="#1B1B2F"
+            app:layoutDescription="@xml/scene_constraint">
+
+            <TextView
+                android:id="@+id/ml_box1"
+                android:layout_width="100dp"
+                android:layout_height="70dp"
+                android:background="#EF5350"
+                android:gravity="center"
+                android:text="Spline"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/ml_box2"
+                android:layout_width="100dp"
+                android:layout_height="70dp"
+                android:background="#66BB6A"
+                android:gravity="center"
+                android:text="Arc"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/ml_box3"
+                android:layout_width="100dp"
+                android:layout_height="70dp"
+                android:background="#42A5F5"
+                android:gravity="center"
+                android:text="Rotate"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp" />
+        </MotionLayout>
+    </LinearLayout>
+</ScrollView>

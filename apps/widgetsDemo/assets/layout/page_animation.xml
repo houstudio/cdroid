@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/page_padding">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Animation"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/card_gap"
+            android:text="ViewPropertyAnimator — rotate, scale, move, fade and a combo"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/body_size" />
+
+        <!-- Animation stage -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="160dp">
+                <TextView
+                    android:id="@+id/anim_target"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/tile_violet"
+                    android:gravity="center"
+                    android:text="cdroid"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Controls -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Triggers"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/row_gap">
+                <Button
+                    android:id="@+id/anim_rotate"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_primary"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="#FFFFFFFF"
+                    android:text="Rotate" />
+                <Button
+                    android:id="@+id/anim_scale"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_primary"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="#FFFFFFFF"
+                    android:text="Scale" />
+                <Button
+                    android:id="@+id/anim_move"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_primary"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="#FFFFFFFF"
+                    android:text="Move" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+                <Button
+                    android:id="@+id/anim_fade"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="@color/accent"
+                    android:text="Fade" />
+                <Button
+                    android:id="@+id/anim_combo"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="@color/accent"
+                    android:text="Combo" />
+                <Button
+                    android:id="@+id/anim_reset"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="@color/accent"
+                    android:text="Reset" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
