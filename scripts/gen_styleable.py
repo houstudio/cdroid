@@ -222,6 +222,15 @@ def main():
     ap.add_argument('--guard', default='__GENERATED_STYLEABLE_H__')
     ap.add_argument('--header', default=None,
                     help='header filename for the .cc #include (default: basename of out-h)')
+    ap.add_argument('--require-pins', action='store_true',
+                    help='fail when any local attr gets an auto-assigned id '
+                         '(not pinned in a component public.xml). widgetEx builds '
+                         'pass this: the runtime widgetex.pak table comes from '
+                         'aapt2 honoring the same public.xml pins, so an unpinned '
+                         'attr would make this header and widgetex.pak assign the '
+                         'id independently (watermark order vs aapt2 order) and '
+                         'silently disagree. Pin every new attr in its '
+                         'component res/values/public.xml at the watermark id.')
     args = ap.parse_args()
 
     fw_ids = load_id_map(args.fw_ids)
@@ -383,6 +392,17 @@ def main():
 
     print(f"generated {args.out_h} + {args.out_cc}: {len(styleables)} styleables"
           + (f", {len(new_custom)} new custom ids" if new_custom else ""))
+
+    if args.require_pins and new_custom:
+        nxt = max(custom_ids.values()) + 1 if custom_ids else CUSTOM_ID_BASE
+        names = ', '.join(sorted(new_custom))
+        print(f"error: --require-pins: {len(new_custom)} local attr(s) not pinned in any "
+              f"component public.xml: {names}\n"
+              f"       pin each one (e.g. next free id {hex(nxt)}) in its component's "
+              f"res/values/public.xml — gen_styleable and aapt2 (widgetex.pak) must read "
+              f"the same pin or their ids silently diverge.",
+              file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == '__main__':

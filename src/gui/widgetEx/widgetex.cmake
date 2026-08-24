@@ -41,6 +41,7 @@ add_custom_command(
             --attrs ${_WIDGETEX_ATTRS_CSV}
             --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
             --auto-name
+            --require-pins
             --out-h  ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.h
             --out-cc ${PROJECT_SOURCE_DIR}/widgetEx/widgetex_styleable.cc
             --guard __WIDGETEX_STYLEABLE_H__ --header widgetex_styleable.h

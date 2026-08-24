@@ -788,6 +788,100 @@ class PakBuilder:
         # The public.xml pinning (0x0201xxxx) is done ONLY in _compile_shared_lib
         # for widgetex.pak. Pinning 0x02 IDs in a 0x7f app pak would fail aapt2.
 
+    _RES_AUTO_URI = "http://schemas.android.com/apk/res-auto"
+    _WIDGETEX_URI = "http://schemas.android.com/apk/res/cdroid.widgetex"
+    _ANDROID_URI = "http://schemas.android.com/apk/res/android"
+
+    def _widgetex_attr_names(self):
+        """All attr names declared by the widgetEx components (values*/attrs*.xml
+        under src/gui/widgetEx/<comp>/res/, legacy widgetEx/res/, and
+        src/gui/navigation/res/ — the same trees _merge_widgetex_attrs walks)."""
+        import xml.etree.ElementTree as ET
+        sdir = os.path.dirname(os.path.abspath(__file__))
+        wroot = os.path.join(os.path.dirname(sdir), "src", "gui", "widgetEx")
+        names = set()
+        res_trees = []
+        if os.path.isdir(wroot):
+            for name in sorted(os.listdir(wroot)):
+                comp_res = os.path.join(wroot, name, "res")
+                if name != "res" and os.path.isdir(comp_res):
+                    res_trees.append(comp_res)
+            legacy = os.path.join(wroot, "res")
+            if os.path.isdir(legacy):
+                res_trees.append(legacy)
+        navres = os.path.join(os.path.dirname(sdir), "src", "gui", "navigation", "res")
+        if os.path.isdir(navres):
+            res_trees.append(navres)
+        for tree_path in res_trees:
+            for root, dirs, files in os.walk(tree_path):
+                dirs.sort(); files.sort()
+                if not os.path.basename(root).startswith("values"):
+                    continue  # attr names live in values*/attrs*.xml only
+                for f in files:
+                    if f.startswith("attrs") and f.endswith(".xml"):
+                        try:
+                            for el in ET.parse(os.path.join(root, f)).getroot().iter():
+                                if el.tag.split("}")[-1] == "attr" and el.get("name"):
+                                    names.add(el.get("name"))
+                        except Exception:
+                            pass
+        return names
+
+    def _rewrite_res_auto_widgetex_attrs(self, tmpres):
+        """In the staged res tree, move attrs bound to ...res-auto whose local
+        name is a widgetEx attr onto the cdroid.widgetex namespace so aapt2
+        resolves them via -I widgetex.apk (0x02 ids). Source files are never
+        touched — only the build's temp copy. Names the app declares in its own
+        values/attrs.xml stay on res-auto (app package wins, Android order)."""
+        import xml.etree.ElementTree as ET
+        ET.register_namespace("android", self._ANDROID_URI)
+        ET.register_namespace("app", self._RES_AUTO_URI)
+        ET.register_namespace("widgetex", self._WIDGETEX_URI)
+        ET.register_namespace("tools", "http://schemas.android.com/tools")
+        widgetex_names = self._widgetex_attr_names()
+        if not widgetex_names:
+            return
+        app_names = set()  # attrs the app declares itself — res-auto keeps them
+        values_dir = os.path.join(tmpres, "values")
+        if os.path.isdir(values_dir):
+            for f in sorted(os.listdir(values_dir)):
+                if not f.endswith(".xml"):
+                    continue
+                try:
+                    for el in ET.parse(os.path.join(values_dir, f)).getroot().iter():
+                        if el.tag.split("}")[-1] == "attr" and el.get("name"):
+                            app_names.add(el.get("name"))
+                except Exception:
+                    pass
+        res_auto = "{" + self._RES_AUTO_URI + "}"
+        widgetex = "{" + self._WIDGETEX_URI + "}"
+        for root, dirs, files in os.walk(tmpres):
+            dirs.sort(); files.sort()
+            if os.path.relpath(root, tmpres).split(os.sep)[0] == "values":
+                continue  # attr names in values files are not namespaced
+            for f in files:
+                if not f.endswith(".xml") or f == "AndroidManifest.xml":
+                    continue
+                path = os.path.join(root, f)
+                try:
+                    tree = ET.parse(path)
+                except Exception as e:
+                    sys.stderr.write("res-auto rewrite: skip unparseable %s (%s)\n"
+                                     % (os.path.relpath(path, tmpres), e))
+                    continue
+                moved = 0
+                for el in tree.getroot().iter():
+                    for k in list(el.attrib.keys()):
+                        if k.startswith(res_auto):
+                            name = k[len(res_auto):]
+                            if name in widgetex_names and name not in app_names:
+                                el.attrib[widgetex + name] = el.attrib.pop(k)
+                                moved += 1
+                if moved:
+                    tree.write(path, encoding="utf-8", xml_declaration=True)
+                    sys.stderr.write("res-auto rewrite: %s: %d widgetEx attrs -> cdroid.widgetex\n"
+                                     % (os.path.relpath(path, tmpres), moved))
+
     def _compile_shared_lib(self):
         """Build widgetex.pak: a fixed-id 0x02 resource pak (widgetEx attrs only).
         Collects the 5 widgetEx res/values/attrs.xml trees + generates public.xml
@@ -869,6 +963,16 @@ class PakBuilder:
             # back to merging when the shared lib isn't available.
             if not self.use_sdk and not (self.widgetex_apk and os.path.exists(self.widgetex_apk)):
                 self._merge_widgetex_attrs(tmpres)
+            else:
+                # Android Studio's layout editor always writes
+                # xmlns:app="http://schemas.android.com/apk/res-auto"; aapt2
+                # resolves res-auto to the app package only (it never searches
+                # -I shared libs), so widgetEx attrs under it fail to link.
+                # Rewrite the staged copies (sources untouched): attrs under a
+                # res-auto binding whose name is a widgetEx attr move to the
+                # cdroid.widgetex namespace, which -I widgetex.apk resolves to
+                # the stable 0x02 ids the runtime styleable expects.
+                self._rewrite_res_auto_widgetex_attrs(tmpres)
             # Manifest: use the app's own assets/AndroidManifest.xml when present
             # (the runtime parses it for the application theme/label, per-activity
             # theme + configChanges, and the MAIN/LAUNCHER window); otherwise
