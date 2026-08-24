@@ -200,7 +200,10 @@ void CascadingMenuPopup::dismiss() {
     // are received in order from foreground to background.
     const int length = mShowingMenus.size();
     if (length > 0) {
-        auto& addedMenus =mShowingMenus;// mShowingMenus.toArray(new CascadingMenuInfo[length]);
+        // AOSP copies (toArray) before iterating; the copy is load-bearing here:
+        // each info->window->dismiss() re-enters onCloseMenu (:502) which ERASES
+        // from mShowingMenus, so iterating the live vector walks a mutated one.
+        std::vector<CascadingMenuInfo*> addedMenus(mShowingMenus.begin(), mShowingMenus.end());
         for (int i = length - 1; i >= 0; i--) {
             CascadingMenuInfo* info = addedMenus[i];
             if (info->window->isShowing()) {
