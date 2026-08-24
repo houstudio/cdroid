@@ -1181,7 +1181,115 @@ class PakBuilder:
                     # other extensions skipped
 
 
+def build_shared_lib_pak(res_dir, pak_path, rh_path, namespace,
+                         aapt2_path, framework_apk, package_id="0x03"):
+    """Build a plugin shared-library pak at a FIXED package id (the multi-pak
+    recipe: framework 0x01 / widgetEx 0x02 / plugins 0x03+ / app 0x7f — the
+    runtime ResTable dedups by id, first addPackage wins). Same output shape as
+    the widgetex.pak builder plus compiled binary XMLs and an R.h: aapt2
+    compile+link --package-id N --allow-reserved-package-id against the -I
+    framework apk, then pack res/** + resources.arsc (manifest is build-time
+    only). Used by plugin libraries (e.g. app keyboards) via the
+    `pakbuilder.py --shared-lib` CLI so no per-app copy of this recipe exists.
+    Returns True on success."""
+    import subprocess, shutil
+    tmpdir = os.path.join(os.path.dirname(os.path.abspath(pak_path)),
+                          os.path.splitext(os.path.basename(pak_path))[0] + "_pakbuild")
+    if os.path.exists(tmpdir):
+        shutil.rmtree(tmpdir)
+    os.makedirs(tmpdir)
+    tmpres = os.path.join(tmpdir, "res")
+    shutil.copytree(res_dir, tmpres)
+    # Drop stale idgen-era ID.xml (aapt2 rejects its CDROID-specific <id> format).
+    _idxml = os.path.join(tmpres, "values", "ID.xml")
+    if os.path.exists(_idxml):
+        os.remove(_idxml)
+
+    compiled = os.path.join(tmpdir, "compiled.zip")
+    _r = subprocess.run([aapt2_path, "compile", "--dir", tmpres, "-o", compiled],
+                        capture_output=True)
+    if _r.returncode != 0:
+        sys.stderr.write("shared-lib compile FAILED (%s):\n%s\n"
+                         % (namespace, _r.stderr.decode()[:2000]))
+        return False
+
+    # Synthesized manifest: package name must be dotted (aapt2 rule) and
+    # minSdk keeps aapt2 from version-splitting into drawable-v1/ layout-v17/…
+    package = namespace if "." in namespace else "cdroid." + namespace
+    mpath = os.path.join(tmpdir, "AndroidManifest.xml")
+    with open(mpath, "w") as fh:
+        fh.write('<?xml version="1.0" encoding="utf-8"?>\n'
+                 '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
+                 ' package="%s">'
+                 '<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>'
+                 '</manifest>\n' % package)
+
+    out_apk = os.path.join(tmpdir, "out.apk")
+    _r = subprocess.run([aapt2_path, "link",
+                         "--package-id", package_id, "--allow-reserved-package-id",
+                         "-I", framework_apk, "--manifest", mpath,
+                         "-o", out_apk, compiled], capture_output=True)
+    if _r.returncode != 0:
+        sys.stderr.write("shared-lib link FAILED (%s):\n%s\n"
+                         % (namespace, _r.stderr.decode()[:2000]))
+        return False
+
+    with zipfile.ZipFile(out_apk) as zf:
+        names = zf.namelist()
+        if "resources.arsc" not in names:
+            sys.stderr.write("shared-lib link produced no resources.arsc (%s)\n" % namespace)
+            return False
+        with zipfile.ZipFile(pak_path, "w") as out:
+            for name in names:
+                if name == "resources.arsc" or not name.startswith("res/"):
+                    continue
+                out.writestr(name[4:], zf.read(name))
+            out.writestr("resources.arsc", zf.read("resources.arsc"), zipfile.ZIP_DEFLATED)
+    sys.stderr.write("%s: built shared-lib pak at package id %s\n" % (namespace, package_id))
+
+    if rh_path:
+        gen = os.path.join(os.path.dirname(os.path.abspath(__file__)), "aapt2_gen_rh.py")
+        _r = subprocess.run([sys.executable, gen, out_apk,
+                             "--aapt2", aapt2_path, "--namespace", namespace,
+                             "-o", rh_path], capture_output=True, text=True)
+        sys.stderr.write("aapt2_gen_rh (%s): rc=%d %s\n"
+                         % (namespace, _r.returncode, (_r.stderr or _r.stdout)[:200]))
+        if _r.returncode != 0:
+            return False
+    return True
+
+
+def _main_shared_lib(argv):
+    """CLI: pakbuilder.py --shared-lib <res_dir> <pak> [<rh>]
+    --namespace X [--package-id 0x03] --aapt2 P -I <framework.apk>"""
+    positional, opts = [], {"package_id": "0x03", "aapt2": None, "I": None,
+                            "namespace": None}
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if a == "--namespace":
+            opts["namespace"] = argv[i + 1]; i += 2
+        elif a == "--package-id":
+            opts["package_id"] = argv[i + 1]; i += 2
+        elif a == "--aapt2":
+            opts["aapt2"] = argv[i + 1]; i += 2
+        elif a in ("-I", "--framework-apk"):
+            opts["I"] = argv[i + 1]; i += 2
+        else:
+            positional.append(a); i += 1
+    if len(positional) < 2 or not opts["namespace"] or not opts["aapt2"] or not opts["I"]:
+        sys.exit("usage: pakbuilder.py --shared-lib <res_dir> <pak> [<rh>] "
+                 "--namespace X [--package-id 0x03] --aapt2 P -I <framework.apk>")
+    ok = build_shared_lib_pak(positional[0], positional[1],
+                              positional[2] if len(positional) > 2 else None,
+                              opts["namespace"], opts["aapt2"], opts["I"],
+                              opts["package_id"])
+    sys.exit(0 if ok else 1)
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "--shared-lib":
+        _main_shared_lib(sys.argv[2:])
     if len(sys.argv) < 5:
         sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar] [sdk_res] [filter.json] [--widgetex-apk <apk>] [--framework-apk-out <apk>] [--overlay <dir>]...")
     # Pull --widgetex-apk / --framework-apk-out <path> out of argv first: they are
