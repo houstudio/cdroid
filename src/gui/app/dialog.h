@@ -21,6 +21,12 @@
 #include <widget/cdwindow.h>
 namespace cdroid{
 
+/* Dismiss-only lifetime (the unified transient-popup contract, shared with
+   PopupMenu): allocate, configure, show(), and never delete - the destructor
+   is protected on purpose. dismiss() is the only teardown: it tears the window
+   down through Window::close's posted-free and is idempotent. The dialog
+   shell stays allocated after dismiss (small, one allocation per dialog);
+   dismiss is FINAL - showing again after it is not supported. */
 class Dialog:public DialogInterface,KeyEvent::Callback{
 private:
     Context*mContext;

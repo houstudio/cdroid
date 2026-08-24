@@ -406,11 +406,6 @@ REGISTER_FRAGMENT(MaintainFragment);
 
 // ---------------------------------------------------------------------------
 class SettingsFragment : public cdroid::fragment::Fragment{
-    // Owned here (not self-deleting in onDismiss — that would free the popup
-    // while the dismiss notification is still unwinding through
-    // MenuPopupHelper::onDismiss); reaped on view teardown, which the
-    // locale-switch recreate posts, so it never lands on a callback stack.
-    cdroid::PopupMenu* mLangMenu = nullptr;
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
         cdroid::fragment::Fragment::onCreate(savedInstanceState);
@@ -420,11 +415,6 @@ public:
     cdroid::View* onCreateView(cdroid::LayoutInflater* inflater, cdroid::ViewGroup* container,
                                cdroid::Bundle*) override{
         return inflater->inflate(printerdemo::R::layout::fragment_settings, container, false);
-    }
-    void onDestroyView() override{
-        delete mLangMenu;
-        mLangMenu = nullptr;
-        cdroid::fragment::Fragment::onDestroyView();
     }
     void onViewCreated(cdroid::View* view, cdroid::Bundle*) override{
         cdroid::fragment::Fragment::onViewCreated(view, nullptr);
@@ -444,31 +434,31 @@ public:
         // values-<locale> tables; the unqualified values/ base (stored in the
         // arsc without a locale tag) is the app's base language, en-US here.
         if(cdroid::View* row = view->findViewById(printerdemo::R::id::row_language)){
-            row->setOnClickListener([this, row](cdroid::View& v){
+            row->setOnClickListener([](cdroid::View& v){
                 std::vector<std::string> tags{ "en-US" };   // the values/ base language
                 for(const std::string& t : cdroid::App::getInstance().getAssets().getNonSystemLocales())
                     if(!t.empty() && std::find(tags.begin(), tags.end(), t) == tags.end())
                         tags.push_back(t);
-                // Gravity.RIGHT aligns the popup's right edge with the row's
-                // right edge (the only horizontal alignment PopupWindow
-                // special-cases, same as AOSP): the menu drops below the row's
-                // right end instead of the easily-missed far-left corner the
-                // default bottom-left-of-anchor produces on a 1280px screen.
-                delete mLangMenu;   // a previous popup may still be around
-                mLangMenu = new cdroid::PopupMenu(v.getContext(), &v, cdroid::Gravity::RIGHT);
-                cdroid::Menu* menu = mLangMenu->getMenu();
+                // Fire-and-forget (the unified transient-popup contract): the
+                // menu owns itself after show() and self-destructs once its
+                // dismiss cascade completes — no member, no delete, one fresh
+                // menu per click. Gravity.RIGHT aligns the popup's right edge
+                // with the row's right edge (the only horizontal alignment
+                // PopupWindow special-cases, same as AOSP).
+                cdroid::PopupMenu* menu = new cdroid::PopupMenu(v.getContext(), &v, cdroid::Gravity::RIGHT);
+                cdroid::Menu* m = menu->getMenu();
                 for(size_t i = 0; i < tags.size(); i++){
                     const cdroid::Locale l = cdroid::Locale::forLanguageTag(tags[i]);
-                    cdroid::MenuItem* mi = menu->add(cdroid::Menu::NONE, (int)i, (int)i,
+                    cdroid::MenuItem* mi = m->add(cdroid::Menu::NONE, (int)i, (int)i,
                             l.getDisplayName(l));   // self-name, the picker convention
                     mi->setCheckable(true);
                     mi->setChecked(tags[i] == sLocaleTag);
                 }
-                mLangMenu->setOnMenuItemClickListener([tags](cdroid::MenuItem& item){
+                menu->setOnMenuItemClickListener([tags](cdroid::MenuItem& item){
                     applyLocale(tags[item.getItemId()]);
                     return true;
                 });
-                mLangMenu->show();
+                menu->show();
             });
         }
     }
