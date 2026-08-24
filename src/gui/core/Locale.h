@@ -25,7 +25,6 @@
  *   - Unicode locale extensions / keywords ("-u-ca-buddhist", "-x-…") — parsed
  *     tags carrying extensions keep language/script/region and drop the rest.
  *   - Locale.Builder / Locale.Category(FORMAT/DISPLAY) variants.
- *   - getDisplayName/getDisplayLanguage/… (ICU localized names).
  *   - ISO3 conversions (getISO3Language/getISO3Country) — need the ISO tables.
  * The empty Locale (all fields "") is Java's Locale.ROOT; get() out-of-range
  * and not-found results use it as the null sentinel (no std::optional).
@@ -91,6 +90,24 @@ public:
     std::string getScript()   const { return mScript;   }   // ISO-15924, title-case
     std::string getCountry()  const { return mCountry;  }   // ISO-3166/UN M49, upper-case
     std::string getVariant()  const { return mVariant;  }   // '_'-joined, upper-case
+
+    // AOSP getDisplayName family. Names come from i18n.dat's
+    // LANGUAGES_DISPLAY/TERRITORIES_DISPLAY slots (native/self names, mined
+    // from the glibc locale database) via I18nBridge; a miss falls back to
+    // the code-based string exactly like AOSP's ICU-miss path. Cross-language
+    // display (showing zh's name in German) is NOT carried by the data — the
+    // inLocale overloads accept the AOSP signature but return the native
+    // name (the common language-menu presentation).
+    std::string getDisplayName() const;                    // inLocale = getDefault()
+    std::string getDisplayName(const Locale& inLocale) const;
+    std::string getDisplayLanguage() const;
+    std::string getDisplayLanguage(const Locale& inLocale) const;
+    std::string getDisplayCountry() const;
+    std::string getDisplayCountry(const Locale& inLocale) const;
+    std::string getDisplayScript() const;
+    std::string getDisplayScript(const Locale& inLocale) const;
+    std::string getDisplayVariant() const;
+    std::string getDisplayVariant(const Locale& inLocale) const;
 
     bool operator==(const Locale& other) const;
     bool operator!=(const Locale& other) const { return !(*this == other); }

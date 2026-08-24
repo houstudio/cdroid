@@ -1406,6 +1406,16 @@ TEST_F(I18NTest, LocaleBridgeHelper)
     EXPECT_TRUE(I18nBridge::groupingSeparator(Locale("de", "DE")).compare(".") == 0);
     EXPECT_TRUE(I18nBridge::decimalSeparator(Locale("ar", "EG")).size() == 2); // U+066B "٫"
 
+    // getDisplayName family: native names from the i18n.dat display slots
+    // (glibc-mined); a miss falls back to the code (AOSP ICU-miss shape).
+    EXPECT_TRUE(Locale::SIMPLIFIED_CHINESE.getDisplayLanguage().compare("中文") == 0);
+    EXPECT_TRUE(Locale::SIMPLIFIED_CHINESE.getDisplayCountry().compare("中华人民共和国") == 0);
+    EXPECT_TRUE(Locale::SIMPLIFIED_CHINESE.getDisplayName().compare("中文 (中华人民共和国)") == 0);
+    EXPECT_TRUE(Locale::GERMANY.getDisplayName().compare("Deutsch (Deutschland)") == 0);
+    // No entry (jv) → the raw codes, not garbage.
+    EXPECT_TRUE(Locale("jv").getDisplayLanguage().compare("jv") == 0);
+    EXPECT_TRUE(Locale::TRADITIONAL_CHINESE.getDisplayName().find("中文") == 0); // zh-Hant falls back onto zh's entry
+
     // java.text facade: cdroid::NumberFormat locale factories are localized.
     auto nf = cdroid::NumberFormat::getInstance(Locale("de", "DE"));
     EXPECT_TRUE(nf->format(1234567.5).compare("1.234.567,500") == 0);

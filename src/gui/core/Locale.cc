@@ -21,6 +21,10 @@
  * See core/Locale.h for the ported-scope notes.
  */
 #include <core/Locale.h>
+#include <gui_features.h>
+#ifdef ENABLE_I18N
+#include <core/i18nbridge.h>
+#endif
 
 #include <algorithm>
 #include <cctype>
@@ -219,6 +223,80 @@ std::string Locale::toString() const {
     if (!mCountry.empty())  { if (!out.empty()) out += "_"; out += mCountry; }
     if (!mVariant.empty())  { if (!out.empty()) out += "_"; out += mVariant; }
     return out;
+}
+
+// ---- AOSP getDisplayName family -------------------------------------------
+// Names come from i18n.dat's LANGUAGES_DISPLAY / TERRITORIES_DISPLAY slots
+// (native/self names via I18nBridge); a miss falls back to the code itself,
+// the same shape as AOSP's ICU-miss path. The data carries only the SELF
+// name, so the inLocale overloads return the native name (the common
+// language-menu presentation) — see Locale.h.
+namespace {
+std::string displayOr(const std::string& name, const std::string& code) {
+    return name.empty() ? code : name;
+}
+} // namespace
+
+std::string Locale::getDisplayLanguage(const Locale&) const {
+#ifdef ENABLE_I18N
+    return displayOr(I18nBridge::languageDisplayName(*this), mLanguage);
+#else
+    return mLanguage;
+#endif
+}
+
+std::string Locale::getDisplayLanguage() const {
+    return getDisplayLanguage(getDefault());
+}
+
+std::string Locale::getDisplayCountry(const Locale&) const {
+#ifdef ENABLE_I18N
+    return displayOr(I18nBridge::regionDisplayName(*this), mCountry);
+#else
+    return mCountry;
+#endif
+}
+
+std::string Locale::getDisplayCountry() const {
+    return getDisplayCountry(getDefault());
+}
+
+std::string Locale::getDisplayScript(const Locale&) const {
+    // No script-name table in the data — always the code (AOSP ICU-miss shape).
+    return mScript;
+}
+
+std::string Locale::getDisplayScript() const {
+    return getDisplayScript(getDefault());
+}
+
+std::string Locale::getDisplayVariant(const Locale&) const {
+    // Variant names are rare enough that AOSP itself mostly shows the raw
+    // code; no table carries them.
+    return mVariant;
+}
+
+std::string Locale::getDisplayVariant() const {
+    return getDisplayVariant(getDefault());
+}
+
+std::string Locale::getDisplayName(const Locale& inLocale) const {
+    // Java.util.Locale.getDisplayName: language (country[,variant]) — the
+    // parentheses parts appear only for the fields this locale carries.
+    const std::string languageName = getDisplayLanguage(inLocale);
+    if (mCountry.empty() && mVariant.empty()) return languageName;
+    std::string out = languageName + " (";
+    if (!mCountry.empty()) out += getDisplayCountry(inLocale);
+    if (!mVariant.empty()) {
+        if (!mCountry.empty()) out += ",";
+        out += getDisplayVariant(inLocale);
+    }
+    out += ")";
+    return out;
+}
+
+std::string Locale::getDisplayName() const {
+    return getDisplayName(getDefault());
 }
 
 bool Locale::operator==(const Locale& other) const {

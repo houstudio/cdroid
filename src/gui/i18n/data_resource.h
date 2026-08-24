@@ -92,7 +92,9 @@ enum DataResourceType {
     DECIMAL_PLURAL, // 20
     MINUS_SIGN, // 21
     MEASURE_FORMAT_PATTERNS, // 22
-    RESOURCE_TYPE_END // 23
+    LANGUAGES_DISPLAY, // 23 — native language names (languages-display.json)
+    TERRITORIES_DISPLAY, // 24 — native country/region names (territories-display.json)
+    RESOURCE_TYPE_END // 25
 };
 
 class DataResource {

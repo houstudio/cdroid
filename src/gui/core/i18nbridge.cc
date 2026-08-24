@@ -90,5 +90,38 @@ std::string I18nBridge::groupingSeparator(const Locale& locale)
     return middleNonDigits(engine.Format(1234, status));
 }
 
+namespace {
+// The DataResource mask chain always terminates on the en-US default, so a
+// locale with no entry of its own (jv) silently resolves to the en-US value
+// ("English"/"United States"). For display names that default is wrong —
+// treat "equal to en-US's own entry while not being an en locale" as a miss
+// so callers fall back to the raw codes.
+std::string displayValueGuarded(const Locale& locale, i18n::DataResourceType type)
+{
+    i18n::LocaleInfo info = I18nBridge::toLocaleInfo(locale);
+    i18n::DataResource resource(&info);
+    if (!resource.Init()) return std::string();
+    std::string out;
+    resource.GetString(type, out);
+    if (out.empty() || locale.getLanguage() == "en") return out;
+
+    i18n::LocaleInfo enUS("en", "US");
+    i18n::DataResource enRes(&enUS);
+    std::string enOut;
+    if (enRes.Init()) enRes.GetString(type, enOut);
+    return (out == enOut) ? std::string() : out;
+}
+} // namespace
+
+std::string I18nBridge::languageDisplayName(const Locale& locale)
+{
+    return displayValueGuarded(locale, i18n::LANGUAGES_DISPLAY);
+}
+
+std::string I18nBridge::regionDisplayName(const Locale& locale)
+{
+    return displayValueGuarded(locale, i18n::TERRITORIES_DISPLAY);
+}
+
 } // namespace cdroid
 #endif // ENABLE_I18N

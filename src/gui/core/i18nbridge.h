@@ -31,6 +31,13 @@ public:
     // Empty when the engine has no data for the locale (caller keeps default).
     static std::string decimalSeparator(const Locale& locale);
     static std::string groupingSeparator(const Locale& locale);
+
+    // Native display names (self display — the name in the locale's own
+    // language: zh-Hans-CN → "中文" / "中华人民共和国"), from the i18n.dat
+    // LANGUAGES_DISPLAY/TERRITORIES_DISPLAY slots mined out of the glibc
+    // locale database. Empty when no entry (caller falls back to codes).
+    static std::string languageDisplayName(const Locale& locale);
+    static std::string regionDisplayName(const Locale& locale);
 };
 
 } // namespace cdroid
