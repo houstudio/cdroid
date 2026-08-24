@@ -123,6 +123,13 @@ AnimatorSet::AnimatorSet(const AnimatorSet&other){
 }
 
 AnimatorSet::~AnimatorSet(){
+    // The AnimationHandler's callback list holds raw AnimationFrameCallback*
+    // entries: a set deleted while registered (running / paused / delayed)
+    // would dangle there and the next ObjectAnimator::start() ->
+    // autoCancelBasedOn() dynamic_casts freed memory. Java never hits this
+    // (the handler's reference keeps a running set reachable); mirror that by
+    // unregistering on destruction, exactly like ~ValueAnimator does.
+    removeAnimationCallback();
     for(auto nd:mNodeMap){
         delete nd.first;
     }
