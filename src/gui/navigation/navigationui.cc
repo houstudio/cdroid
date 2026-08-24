@@ -220,7 +220,10 @@ bool NavigationUI::onNavDestinationSelected(MenuItem* item, NavController* navCo
     // androidx throws/catches IllegalArgumentException when the id cannot be
     // resolved from the current destination; CDROID's navigate(int) returns
     // silently, and matchDestination decides success below.
+    // navigate() only READS the options (popUpTo/singleTop/restoreState) and
+    // never stores the pointer - CDROID has no GC, so free it here.
     navController->navigate(item->getItemId(), nullptr, options);
+    delete options;
     // Return true only if the destination we've navigated to matches the MenuItem.
     NavDestination* current = navController->getCurrentDestination();
     const bool matched = current != nullptr && matchDestination(current, item->getItemId());

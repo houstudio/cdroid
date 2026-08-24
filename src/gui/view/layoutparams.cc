@@ -8,6 +8,11 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 LayoutParams::LayoutParams(){
+    // AOSP LayoutParams() defaults - width/height left uninitialized here were
+    // read downstream (e.g. PopupWindow::createDecorView's WRAP_CONTENT check)
+    // with garbage (valgrind: conditional jump on uninitialised value).
+    width = WRAP_CONTENT;
+    height= WRAP_CONTENT;
     layoutAnimationParameters =nullptr;
 }
 
