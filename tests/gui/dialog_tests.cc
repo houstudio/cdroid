@@ -127,10 +127,11 @@ TEST_F(DIALOG,PopupWindowDropdownAnimations){
    ActivityTransition*enter=decor->getEnterTransition();
    ASSERT_NE(enter,nullptr);
    EXPECT_EQ(enter->getType(),ActivityTransition::Type::FADE);
-   /* ENTER ONLY: an animated exit defers the decor's detach past owners freeing borrowed
-      content at dismiss (a ListView's adapter deleted right after PopupWindow::dismiss
-      crashed exactly so); dismiss stays synchronous. */
-   EXPECT_EQ(decor->getExitTransition(),nullptr);
+   /* AOSP semantics: BOTH enter and exit install (the dropdown pair). The exit defers the
+      decor teardown - and the dismiss listener - to the animation end (the no-GC contract:
+      owners free borrowed state in or after onDismiss; the menu chain's fire-and-forget
+      self-delete rides the deferred listener, so its content survives the animation). */
+   EXPECT_NE(decor->getExitTransition(),nullptr);
    /* The enter animation actually RAN: the surface starts at 0 (snap) and fades toward 1 —
       mid-fade right after the first pump window, opaque once the 150-220ms fade completes. */
    const float midFade=decor->getAlpha();
@@ -143,11 +144,12 @@ TEST_F(DIALOG,PopupWindowDropdownAnimations){
    // popup objects are never deleted right after dismiss.
 }
 
-/* The overflow-menu ownership pattern on a ListPopupWindow: dismiss() then immediately
-   delete the (borrowed) adapter — exactly what ~CascadingMenuInfo does. With an animated
-   popup exit this crashed: the deferred detach ran after the adapter free. Popups animate
-   the ENTER only, so dismiss tears the decor down synchronously and the later view-tree
-   destruction never touches the freed adapter. */
+/* The overflow-menu ownership pattern on a ListPopupWindow with an animated exit:
+   the decor teardown - and with it the dismiss listener - is deferred to the exit
+   animation end. The no-GC contract: borrowed state (the adapter) is freed IN or
+   AFTER onDismiss, which fires at teardown-complete; freeing it right after
+   dismiss() returns would dangle inside the still-animating list. The menu chain
+   pays the same discipline (~CascadingMenuInfo runs at the deferred teardown). */
 namespace {
 class OneRowAdapter : public BaseAdapter { // BaseAdapter == Adapter (widget/adapter.h typedef)
 public:
@@ -174,10 +176,15 @@ TEST_F(DIALOG,ListPopupWindowBorrowedAdapterDismiss){
    lpw->show();
    pumpFor(100);
 
+   bool adapterFreed = false;
+   lpw->setOnDismissListener([&adapterFreed](){ adapterFreed = true; });
    lpw->dismiss();
-   delete adapter;  // the menu's pattern: the borrowed adapter dies right after dismiss
+   pumpFor(600);    // exit animation (150-220ms) ends; teardown + the deferred
+                    // listener run while everything is still alive
+   EXPECT_TRUE(adapterFreed);   // the contract fired at teardown-complete
+   delete adapter;              // borrowed state freed AFTER onDismiss
    delete lpw;
-   pumpFor(200);    // any deferred window teardown must not touch the freed adapter
+   pumpFor(200);
 
    GUIEnvironment::content()->removeView(anchor);
    delete anchor;
@@ -217,8 +224,11 @@ TEST_F(DIALOG,MenuPopupEnterAnimation){
    pumpFor(400); // fade (150-220ms) finishes -> opaque
    EXPECT_FLOAT_EQ(decor->getAlpha(),1.0f);
 
-   helper->dismiss();  // the overflow-menu dismiss path
-   pumpFor(200);
+   helper->dismiss();  // the overflow-menu dismiss path (animated exit:
+                       // teardown + the deferred dismiss chain run at anim end)
+   pumpFor(600);       // wait past the exit animation before freeing anything -
+                       // the deferred listener (CMP::onDismiss cascade) must
+                       // have run while helper/menu are still alive
    delete helper;
    delete menu;
    GUIEnvironment::content()->removeView(anchor);
@@ -277,12 +287,13 @@ TEST_F(DIALOG,PopupWindowDeleteWhileShowing){
    popup->setContentView(content);   // borrowed: handed back by the dtor
    popup->setWidth(200); popup->setHeight(100);
    popup->showAsDropDown(anchor,0,0);
-   pumpFor(50);
+   pumpFor(600);   // enter completes: the force-teardown close() then takes the
+                   // animated exit path deterministically
    const int showing=testWindowCount();
 
    delete popup;   // no dismiss() - the dtor does the full teardown
-   EXPECT_EQ(testWindowCount(),showing-1); // compositor release is immediate
-   pumpFor(200);   // the posted decor delete runs; nothing may touch it
+   pumpFor(600);   // the animated close finishes: compositor release + posted delete
+   EXPECT_EQ(testWindowCount(),showing-1);
 
    GUIEnvironment::content()->removeView(anchor);
    delete anchor;
