@@ -2,7 +2,7 @@
 <!-- Fragment enter/exit use android.transition (Slide), set per-Fragment in onCreate.
      No legacy enterAnim/exitAnim here (those flicker in CDROID; transition clone is clean). -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
     app:startDestination="home">
 

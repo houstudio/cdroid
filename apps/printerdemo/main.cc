@@ -13,6 +13,7 @@
 #include <cdroid.h>
 #include <core/build.h>
 #include <core/activityfactory.h>
+#include <core/assetmanager.h>
 #include <cdlog.h>
 #include <widget/toolbar.h>
 #include <widget/textview.h>
@@ -42,6 +43,7 @@
 #include <menu/menu.h>
 #include <menu/menuitem.h>
 #include <menu/menuinflater.h>
+#include <menu/popupmenu.h>
 #include <widget/radiogroup.h>
 #include <lifecycle/viewmodelprovider.h>
 #include "printer_viewmodel.h"
@@ -131,7 +133,22 @@ static void bindPrinter(cdroid::View* root, printerdemo::PrinterViewModel& vm){
 // onCreate re-reads the persisted selection).
 static bool sDarkTheme = false;
 // Persisted locale choice (zh-CN default, matching the pre-locale-switch UI).
-static bool sChineseLocale = true;
+// Single source of truth: the settings language picker and the toolbar quick
+// toggle both write the tag.
+static std::string sLocaleTag = "zh-CN";
+
+// AOSP locale switch: route a locale Configuration change through the "system"
+// — the arsc language/region gets repacked (values-<locale> variants reselect)
+// and the activity recreates under the new locale (Window::recreate posts the
+// teardown, so this is safe from inside any menu/click dispatch).
+static void applyLocale(const std::string& tag){
+    if(tag == sLocaleTag) return;
+    sLocaleTag = tag;
+    cdroid::Configuration c = cdroid::App::getInstance().getResources().getConfiguration();
+    c.setLocales(cdroid::LocaleList(std::vector<cdroid::Locale>{
+            cdroid::Locale::forLanguageTag(tag)}));
+    cdroid::App::getInstance().handleConfigurationChanged(c);
+}
 
 // ---------------------------------------------------------------------------
 class HomeFragment : public cdroid::fragment::Fragment{
@@ -389,6 +406,11 @@ REGISTER_FRAGMENT(MaintainFragment);
 
 // ---------------------------------------------------------------------------
 class SettingsFragment : public cdroid::fragment::Fragment{
+    // Owned here (not self-deleting in onDismiss — that would free the popup
+    // while the dismiss notification is still unwinding through
+    // MenuPopupHelper::onDismiss); reaped on view teardown, which the
+    // locale-switch recreate posts, so it never lands on a callback stack.
+    cdroid::PopupMenu* mLangMenu = nullptr;
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
         cdroid::fragment::Fragment::onCreate(savedInstanceState);
@@ -398,6 +420,11 @@ public:
     cdroid::View* onCreateView(cdroid::LayoutInflater* inflater, cdroid::ViewGroup* container,
                                cdroid::Bundle*) override{
         return inflater->inflate(printerdemo::R::layout::fragment_settings, container, false);
+    }
+    void onDestroyView() override{
+        delete mLangMenu;
+        mLangMenu = nullptr;
+        cdroid::fragment::Fragment::onDestroyView();
     }
     void onViewCreated(cdroid::View* view, cdroid::Bundle*) override{
         cdroid::fragment::Fragment::onViewCreated(view, nullptr);
@@ -411,6 +438,38 @@ public:
             l.onStartTrackingTouch = [](cdroid::SeekBar&){};
             l.onStopTrackingTouch  = [](cdroid::SeekBar&){};
             seek->setOnSeekBarChangeListener(l);
+        }
+        // Language picker: the offered set is what the app's resources actually
+        // carry — AssetManager.getNonSystemLocales() enumerates the app pak's
+        // values-<locale> tables; the unqualified values/ base (stored in the
+        // arsc without a locale tag) is the app's base language, en-US here.
+        if(cdroid::View* row = view->findViewById(printerdemo::R::id::row_language)){
+            row->setOnClickListener([this, row](cdroid::View& v){
+                std::vector<std::string> tags{ "en-US" };   // the values/ base language
+                for(const std::string& t : cdroid::App::getInstance().getAssets().getNonSystemLocales())
+                    if(!t.empty() && std::find(tags.begin(), tags.end(), t) == tags.end())
+                        tags.push_back(t);
+                // Gravity.RIGHT aligns the popup's right edge with the row's
+                // right edge (the only horizontal alignment PopupWindow
+                // special-cases, same as AOSP): the menu drops below the row's
+                // right end instead of the easily-missed far-left corner the
+                // default bottom-left-of-anchor produces on a 1280px screen.
+                delete mLangMenu;   // a previous popup may still be around
+                mLangMenu = new cdroid::PopupMenu(v.getContext(), &v, cdroid::Gravity::RIGHT);
+                cdroid::Menu* menu = mLangMenu->getMenu();
+                for(size_t i = 0; i < tags.size(); i++){
+                    const cdroid::Locale l = cdroid::Locale::forLanguageTag(tags[i]);
+                    cdroid::MenuItem* mi = menu->add(cdroid::Menu::NONE, (int)i, (int)i,
+                            l.getDisplayName(l));   // self-name, the picker convention
+                    mi->setCheckable(true);
+                    mi->setChecked(tags[i] == sLocaleTag);
+                }
+                mLangMenu->setOnMenuItemClickListener([tags](cdroid::MenuItem& item){
+                    applyLocale(tags[item.getItemId()]);
+                    return true;
+                });
+                mLangMenu->show();
+            });
         }
     }
 };
@@ -439,7 +498,7 @@ public:
         // hardcoded app version — the demo ships against whatever CDROID builds.
         if(cdroid::TextView* sub = (cdroid::TextView*)view->findViewById(printerdemo::R::id::about_subtitle))
             sub->setText(std::string("CDroid ") + cdroid::Build::VERSION::RELEASE
-                         + " · " + (sChineseLocale ? "逐行 C++ 移植 · Android UI"
+                         + " · " + (sLocaleTag.compare(0, 2, "zh") == 0 ? "逐行 C++ 移植 · Android UI"
                                                     : "Line-by-line C++ port · Android UI"));
         set(printerdemo::R::id::about_intro,
             "<big><b><font color='#FF4A90E2'>CDroid<sup>™</sup></font></b></big> 是 <b>Android UI 框架</b>"
@@ -547,15 +606,9 @@ public:
                 return true;
             }
             if(item.getItemId() == printerdemo::R::id::action_toggle_language){
-                // AOSP locale switch: update the persisted choice, then route a
-                // locale Configuration change through the "system" — the arsc
-                // language/region gets repacked (values-zh-rCN variants
-                // reselect) and the activity recreates under the new locale.
-                sChineseLocale = !sChineseLocale;
-                cdroid::Configuration c = cdroid::App::getInstance().getResources().getConfiguration();
-                c.setLocales(cdroid::LocaleList(std::vector<cdroid::Locale>{
-                        cdroid::Locale::forLanguageTag(sChineseLocale ? "zh-CN" : "en-US")}));
-                cdroid::App::getInstance().handleConfigurationChanged(c);
+                // Quick toggle between the app's two shipped locales; the
+                // settings page offers the resource-driven picker.
+                applyLocale(sLocaleTag.compare(0, 2, "zh") == 0 ? "en-US" : "zh-CN");
                 return true;
             }
             if(item.getItemId() == printerdemo::R::id::action_about){
@@ -578,13 +631,13 @@ int main(int argc, const char* argv[]){
     // app-wide before any window is created (AOSP: the stored
     // android:isUiEnabled/night mode is applied at process start).
     if(sDarkTheme) app.setTheme(printerdemo::R::style::AppTheme_Dark);
-    // Seed the live Configuration with the startup locale (zh-CN) so the
-    // resource layer selects the Chinese variants from the start; a language
-    // switch later flips this via handleConfigurationChanged (recreate).
+    // Seed the live Configuration with the startup locale so the resource
+    // layer selects the right variants from the start; a language switch later
+    // flips this via applyLocale() -> handleConfigurationChanged (recreate).
     {
         cdroid::Configuration c = app.getResources().getConfiguration();
         c.setLocales(cdroid::LocaleList(std::vector<cdroid::Locale>{
-                cdroid::Locale::forLanguageTag(sChineseLocale ? "zh-CN" : "en-US")}));
+                cdroid::Locale::forLanguageTag(sLocaleTag)}));
         app.handleConfigurationChanged(c);   // no windows yet — resources only
     }
     // The launcher activity starts itself: exec() launches the manifest's

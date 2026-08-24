@@ -17,9 +17,6 @@
         <enum name="withText" value="4" />
         <enum name="collapseActionView" value="8" />
     </attr>
-    <attr name="destination" format="reference" />
-    <attr name="route" format="string" />
-    <attr name="startDestination" format="string" />
     <attr name="buttonGravity" format="enum">
         <enum name="top" value="48" />
         <enum name="bottom" value="80" />

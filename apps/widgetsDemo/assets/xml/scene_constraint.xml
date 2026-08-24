@@ -4,7 +4,7 @@
   tap any box to toggle the 800ms ease-in-out transition. Box 1 arcs, Box 2 fades, Box 3 rotates.
   No code wires this — MotionLayout reads it via app:layoutDescription="@xml/scene_constraint".
 -->
-<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex" xmlns:android="http://schemas.android.com/apk/res/android"
+<MotionScene xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android"
     app:defaultDuration="800">
 
     <Transition

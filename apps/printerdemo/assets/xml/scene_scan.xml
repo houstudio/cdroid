@@ -4,7 +4,7 @@
   The motion (path/easing/duration) is fully declarative here; ScanFragment only triggers
   transitionToEnd()/transitionToStart() and bounces on onTransitionCompleted for the loop.
 -->
-<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex" xmlns:android="http://schemas.android.com/apk/res/android"
+<MotionScene xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android"
     app:defaultDuration="850">
 
     <Transition

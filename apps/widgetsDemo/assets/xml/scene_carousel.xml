@@ -7,7 +7,7 @@
   transition by drag direction (bestTransitionFor). On completion Carousel advances its index
   (forward -> +1 at cs_next, backward -> -1 at cs_prev) and recycles the 3 pool views.
 -->
-<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex" xmlns:android="http://schemas.android.com/apk/res/android"
+<MotionScene xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android"
     app:defaultDuration="400">
 
     <!-- forward: drag left -> the right pool view (car_right) grows into the center -->
