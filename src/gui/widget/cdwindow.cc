@@ -1031,6 +1031,12 @@ void Window::close(){
     // animation). Then, if a close transition (returnTransition, else exitTransition) is configured,
     // play it before tearing down — the Window stays in mWindows (visible to composeSurfaces) until
     // the animation ends, at which point finishClose() runs removeWindow + posts the deletes.
+    // Idempotence: close() may be re-entered (a dismiss listener closing again, a second close
+    // during the exit animation — the else branch would run finishClose() immediately). Without
+    // the guard the second call posts a second `delete self` for the same Window: a double free.
+    // Mirrors Dialog::dismiss's mShowing guard.
+    if (mClosePending) return;
+    mClosePending = true;
     App::getInstance().dispatchPendingResult(this);
     ActivityTransition* t = mReturnTransition ? mReturnTransition : mExitTransition;
     if (t && t->getType() != ActivityTransition::Type::NONE

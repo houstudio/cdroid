@@ -73,6 +73,7 @@ private:
     bool mPendingEnterAnim  = false; // run mEnterTransition after the first doTraversal (content drawn)
     bool mInTransition      = false; // close()/re-enter re-entrancy guard
     bool mDestroyed         = false; // set in ~Window so the animator end-callback skips finishClose
+    bool mClosePending      = false; // close() idempotence: a second close must not post a second delete
     // AOSP LayoutParams.windowAnimations source: an explicit animation STYLE overriding the
     // theme's windowAnimationStyle (setWindowAnimations). 0 -> resolve from the theme.
     int mWindowAnimationStyle = 0;
