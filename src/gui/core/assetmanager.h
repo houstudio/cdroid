@@ -104,6 +104,20 @@ public:
     // The complete resource table (lazily built from each path's resources.arsc).
     const ResTable& getResources(bool required = true) const;
 
+    // AOSP AssetManager.getLocales(): the locales this resource table carries —
+    // one "xx-YY" tag per distinct config (language lower-case, region
+    // upper-case, no script; the default config carries no locale and is
+    // skipped). Feed each tag to Locale::forLanguageTag() to pull the
+    // language/script/country apart. Empty when no arsc is loaded.
+    std::vector<std::string> getLocales() const;
+    // AOSP AssetManager.getNonSystemLocales(): same, minus locales provided
+    // ONLY by the framework (the android package) — the app's own languages.
+    std::vector<std::string> getNonSystemLocales() const;
+    // AOSP Resources.getSystem().getAssets().getLocales() equivalent: CDROID
+    // merges framework and app paks into one table, so the "system" set is the
+    // android-package (runtime id 0x01) set of that same table.
+    std::vector<std::string> getSystemLocales() const;
+
     // Inject a pre-built ResTable so getResources()/getResTable() return it
     // verbatim instead of re-reading and re-parsing resources.arsc from each
     // asset path. The table is BORROWED (non-owning): the caller owns it and it

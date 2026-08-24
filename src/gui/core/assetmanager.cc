@@ -304,6 +304,29 @@ void AssetManager::updateResourceParams() const {
     res->setParameters(mConfig);
 }
 
+std::vector<std::string> AssetManager::getLocales() const
+{
+    // AOSP AssetManager.getLocales → ResTable::getLocales: distinct "xx-YY"
+    // configs across every registered asset path's arsc.
+    std::vector<std::string> out;
+    getResources(false).getLocales(out);
+    return out;
+}
+
+std::vector<std::string> AssetManager::getNonSystemLocales() const
+{
+    std::vector<std::string> out;
+    getResources(false).getNonSystemLocales(out);
+    return out;
+}
+
+std::vector<std::string> AssetManager::getSystemLocales() const
+{
+    std::vector<std::string> out;
+    getResources(false).getSystemLocales(out);
+    return out;
+}
+
 const ResTable& AssetManager::getResources(bool required) const {
     const ResTable* rt = getResTable(required);
     return *rt;

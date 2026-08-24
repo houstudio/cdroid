@@ -544,7 +544,7 @@ void ResourcesImpl::updateConfiguration(const Configuration* config, const Displ
     if ((changes & Configuration::CONFIG_LOCALE) != 0 && locales.size() > 1) {
         std::vector<std::string> availableLocales;
         // getResources() is const (AOSP facade); the table is a mutable cache.
-        const_cast<ResTable&>(mAssets->getResources(false)).getLocales(&availableLocales);
+        const_cast<ResTable&>(mAssets->getResources(false)).getLocales(availableLocales);
         if (LocaleList::isPseudoLocalesOnly(&availableLocales)) {
             availableLocales.clear();
         }

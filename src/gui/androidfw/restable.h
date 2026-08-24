@@ -110,7 +110,16 @@ public:
     // AOSP native ResTable::getLocales: every distinct locale in the table as
     // BCP-47-ish "xx" / "xx-YY" tags (language lower-case, region upper-case),
     // language-less entries skipped. Used by ResourcesImpl's locale negotiation.
-    void getLocales(std::vector<std::string>* out) const;
+    void getLocales(std::vector<std::string>& out) const;
+    // AOSP getLocales(locales, includeSystemLocales=false): drops locales
+    // provided ONLY by the android package (framework-res) — the
+    // AssetManager.getNonSystemLocales() primitive ("the app's own languages").
+    void getNonSystemLocales(std::vector<std::string>& out) const;
+    // Locales of the android package alone (framework-res) — CDROID's concrete
+    // for AOSP Resources.getSystem().getAssets().getLocales(): CDROID merges
+    // framework and app paks into ONE table, so the "system" set is the
+    // android-package (runtime id 0x01) set of that same table.
+    void getSystemLocales(std::vector<std::string>& out) const;
     // Names of all loaded packages.
     std::vector<std::string> listPackageNames() const;
 
@@ -237,6 +246,10 @@ private:
         const uint32_t*      specFlags = nullptr;
         std::vector<const ResTable_type*> configs;
     };
+    // One walk attributing each config's locale to the android package
+    // (runtime id 0x01, framework-res) or the rest; both sets deduped.
+    void gatherLocaleSets(std::vector<std::string>& system,
+                          std::vector<std::string>& other) const;
     // One ResTable_package chunk (AOSP Package). Belongs to a Header + a
     // (runtime) id; carries its DynamicRefTable for build->runtime id translation.
     struct Package {

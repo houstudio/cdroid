@@ -13,6 +13,8 @@
 #include <guienvironment.h>
 #include <widget/internal_R.h>
 #include <core/typedarray.h>
+#include <core/Locale.h>
+#include <core/assetmanager.h>
 using namespace cdroid;
 
 class ASSETS:public testing::Test{
@@ -186,4 +188,46 @@ TEST_F(ASSETS, theme_face){
     ASSERT_NE(v2.data,(uint32_t)0xFF123456) << "rebase did not restore the setTo state";
 
     theme.dump("theme_face");
+}
+
+// AOSP AssetManager.getLocales via the Assets face: the distinct "xx-YY"
+// configs the loaded arsc carries (framework values-* survive the SDK filter
+// — locales:[] keeps all). Each tag feeds Locale::forLanguageTag(), which is
+// the "language list → matching country" pairing apps need for a language
+// settings menu.
+TEST_F(ASSETS, locales)
+{
+    App& app = App::getInstance();
+    const std::vector<std::string> locales = app.getAssets().getLocales();
+    ASSERT_GT(locales.size(), (size_t)0);
+
+    auto has = [&locales](const char* t) {
+        return std::find(locales.begin(), locales.end(), t) != locales.end();
+    };
+    // Framework res carries values-zh-rCN / values-zh-rTW / values-ar.
+    EXPECT_TRUE(has("zh-CN"));
+    EXPECT_TRUE(has("zh-TW"));
+    EXPECT_TRUE(has("ar"));
+
+    // Two AOSP paths: system locales (framework-res / android package alone)
+    // vs non-system (the app's own languages).
+    const std::vector<std::string> system = app.getAssets().getSystemLocales();
+    ASSERT_GT(system.size(), (size_t)0);
+    auto sysHas = [&system](const char* t) {
+        return std::find(system.begin(), system.end(), t) != system.end();
+    };
+    EXPECT_TRUE(sysHas("zh-CN"));   // framework values-zh-rCN
+    EXPECT_TRUE(sysHas("ar"));
+    // Every non-system locale is a subset of the full list.
+    const std::vector<std::string> nonSystem = app.getAssets().getNonSystemLocales();
+    for (const std::string& l : nonSystem) {
+        EXPECT_TRUE(has(l.c_str())) << "non-system locale missing from union: " << l;
+    }
+
+    // Language → country pairing straight off the tag.
+    const Locale zhCN = Locale::forLanguageTag("zh-CN");
+    EXPECT_EQ(zhCN.getLanguage(), "zh");
+    EXPECT_EQ(zhCN.getCountry(), "CN");
+    const Locale zhTW = Locale::forLanguageTag("zh-TW");
+    EXPECT_EQ(zhTW.getCountry(), "TW");
 }
