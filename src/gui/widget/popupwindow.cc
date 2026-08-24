@@ -70,6 +70,29 @@ PopupWindow::PopupWindow(int width, int height):PopupWindow(nullptr,width,height
 
 PopupWindow::~PopupWindow(){
     LOGD("destroy PopupWindow %p mBackground=%p",this,mBackground);
+    // Delete-at-any-time teardown: a still-showing popup's decor Window must be
+    // torn down here -- it would otherwise stay on screen forever holding a
+    // dangling mPop back-pointer. Mechanical teardown only, mirroring
+    // dismissImmediate: no dismiss notification fires (the owner is destroying
+    // the object, not closing it). Window::close() removes the decor from the
+    // compositor NOW and posts its delete, so input cannot reach it afterwards.
+    if (mDecorView != nullptr) {
+        if (!mOwnsContentView && (mContentView != nullptr)
+                && (mContentView->getParent() != nullptr)) {
+            // Borrowed content goes back to the owner before the decor tree
+            // (which frees owned content) is posted for deletion.
+            ViewGroup* holder = dynamic_cast<ViewGroup*>(mContentView->getParent());
+            if (holder != nullptr) {
+                holder->removeView(mContentView);
+            }
+        }
+        ((Window*)mDecorView)->close();
+        mDecorView->detachOwner();
+        mDecorView = nullptr;
+    }
+    // Symmetric unregister of the anchor/anchor-root listeners (they capture
+    // this) - dismiss() normally does this, the destructor must too.
+    detachFromAnchor();
     delete mBackground;
     delete mAboveAnchorBackgroundDrawable;
     delete mBelowAnchorBackgroundDrawable;
@@ -922,8 +945,14 @@ void PopupWindow::dismiss(){
 
     // Clears the anchor view.
     detachFromAnchor();
-    if (mOnDismissListener != nullptr) {
-        mOnDismissListener();
+    // Fire the dismiss listener from a stack copy, clearing the member first:
+    // the owner may delete this PopupWindow inside the listener
+    // (delete-at-any-time), which would destroy the member std::function while
+    // it is still executing. Nothing below touches members.
+    OnDismissListener onDismissListener = mOnDismissListener;
+    mOnDismissListener = OnDismissListener();
+    if (onDismissListener != nullptr) {
+        onDismissListener();
     }
 }
 
@@ -1233,7 +1262,8 @@ bool PopupWindow::PopupDecorView::dispatchKeyEvent(KeyEvent& event){
         } else if (event.getAction() == KeyEvent::ACTION_UP) {
             KeyEvent::DispatcherState* state = getKeyDispatcherState();
             if (state && state->isTracking(event) && !event.isCanceled()) {
-                mPop->dismiss();
+                // mPop may be detached (owner destroyed; our delete is posted).
+                if (mPop != nullptr) mPop->dismiss();
                 return true;
             }
         }
@@ -1256,10 +1286,11 @@ bool PopupWindow::PopupDecorView::onTouchEvent(MotionEvent& event){
 
     if ((event.getAction() == MotionEvent::ACTION_DOWN)
            && ((x < 0) || (x >= getWidth()) || (y < 0) || (y >= getHeight()))) {
-        mPop->dismiss();
+        // mPop may be detached (owner destroyed; our delete is posted).
+        if (mPop != nullptr) mPop->dismiss();
         return true;
     } else if (event.getAction() == MotionEvent::ACTION_OUTSIDE) {
-        mPop->dismiss();
+        if (mPop != nullptr) mPop->dismiss();
         return true;
     } else {
         return Window::onTouchEvent(event);

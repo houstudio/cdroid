@@ -35,6 +35,10 @@ private:
     private:
         PopupWindow*mPop;
     public:
+        // Neutralize the back-pointer once the owner PopupWindow is gone: the
+        // decor's own delete is posted (Window::close) and may run later than
+        // the owner's destruction, so its dispatch handlers must not touch mPop.
+        void detachOwner(){ mPop = nullptr; }
         bool dispatchKeyEvent(KeyEvent& event)override;
         bool dispatchTouchEvent(MotionEvent& ev)override;
         bool onTouchEvent(MotionEvent& event)override;
