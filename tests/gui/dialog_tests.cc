@@ -7,6 +7,7 @@
 #include <core/windowmanager.h>
 #include <menu/menubuilder.h>
 #include <menu/menupopuphelper.h>
+#include <menu/popupmenu.h>
 #include <menu/cascadingmenupopup.h>
 #include <widget/adapter.h>
 #include <widget/activitytransition.h>
@@ -358,6 +359,125 @@ TEST_F(DIALOG,CascadingMenuDismissDuringCascade){
    delete cmp;           // dtor unregisters from both menus' presenters
    delete menu1;
    delete menu2;
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
+}
+
+/* ---- PopupMenu fire-and-forget lifetime (Stage 1) ------------------------ */
+
+namespace {
+int sCountingMenusAlive = 0;
+class CountingPopupMenu : public PopupMenu {
+public:
+    CountingPopupMenu(Context* c, View* a) : PopupMenu(c, a) { sCountingMenusAlive++; }
+    ~CountingPopupMenu() { sCountingMenusAlive--; }
+};
+} // namespace
+
+/* The contract: show() hands ownership to the menu itself - after the dismiss
+   cascade completes it self-destructs on the next looper drain, with no app
+   delete anywhere. */
+TEST_F(DIALOG,PopupMenuFireAndForget){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("pm anchor");
+   GUIEnvironment::content()->addView(anchor,new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   CountingPopupMenu*menu=new CountingPopupMenu(&app,anchor);
+   menu->getMenu()->add("One");
+   menu->getMenu()->add("Two");
+   menu->show();
+   pumpFor(100);
+   EXPECT_EQ(sCountingMenusAlive,1);
+
+   menu->dismiss();      // last touch: the cascade stages the self-delete
+   pumpFor(300);         // the posted delete runs
+   EXPECT_EQ(sCountingMenusAlive,0);
+
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
+}
+
+/* Legacy ownership stays safe during the rollout: a menu dismissed but deleted
+   by its owner BEFORE the posted self-delete runs - the destructor purges the
+   pending post, no double free. */
+TEST_F(DIALOG,PopupMenuLegacyDeleteAfterDismiss){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("pm anchor2");
+   GUIEnvironment::content()->addView(anchor,new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   CountingPopupMenu*menu=new CountingPopupMenu(&app,anchor);
+   menu->getMenu()->add("One");
+   menu->show();
+   pumpFor(100);
+   menu->dismiss();
+   delete menu;          // before the posted self-delete runs
+   EXPECT_EQ(sCountingMenusAlive,0);
+   pumpFor(300);         // the purged post must not fire
+
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
+}
+
+/* A menu that was never shown never entered the cascade - the owner keeps it
+   and deletes it normally. */
+TEST_F(DIALOG,PopupMenuNeverShownDelete){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("pm anchor3");
+   GUIEnvironment::content()->addView(anchor,new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   CountingPopupMenu*menu=new CountingPopupMenu(&app,anchor);
+   menu->getMenu()->add("One");
+   delete menu;          // no show() happened: plain ownership
+   EXPECT_EQ(sCountingMenusAlive,0);
+   pumpFor(100);
+
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
+}
+
+/* show() is one-shot: after dismissal the object is logically dead (or freed).
+   The re-show must be refused before re-entering the popup machinery - called
+   here BEFORE the pump (the object is still alive; after the pump it is freed
+   and must simply never be touched again). */
+TEST_F(DIALOG,PopupMenuShowAfterDismiss){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("pm anchor4");
+   GUIEnvironment::content()->addView(anchor,new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   CountingPopupMenu*menu=new CountingPopupMenu(&app,anchor);
+   menu->getMenu()->add("One");
+   menu->show();
+   pumpFor(100);
+   menu->dismiss();
+   menu->show();         // refused (one-shot): no window ever re-appears
+   EXPECT_FALSE(menu->getMenuListView());   // not showing anymore
+   pumpFor(300);         // the posted self-delete runs
+   EXPECT_EQ(sCountingMenusAlive,0);
+
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
+}
+
+/* Double dismiss is a no-op: the second call is refused before any cascade. */
+TEST_F(DIALOG,PopupMenuDismissTwice){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("pm anchor5");
+   GUIEnvironment::content()->addView(anchor,new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   CountingPopupMenu*menu=new CountingPopupMenu(&app,anchor);
+   menu->getMenu()->add("One");
+   menu->show();
+   pumpFor(100);
+   menu->dismiss();
+   menu->dismiss();      // not showing anymore: refused inside the helper
+   pumpFor(300);
+   EXPECT_EQ(sCountingMenusAlive,0);
+
    GUIEnvironment::content()->removeView(anchor);
    delete anchor;
 }
