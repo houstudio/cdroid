@@ -25,6 +25,7 @@
 #include <cstring>      // memset/memcpy/memcmp
 #include <atomic>       // Theme::nextGeneration counter
 #include <algorithm>    // std::lower_bound (sparse type entries)
+#include <unordered_map> // applyStyleChain parent pre-merge
 
 namespace cdroid {
 
@@ -753,42 +754,49 @@ status_t ResTable::Theme::applyStyle(uint32_t resID, bool force) {
     return applyStyleChain(resID, force, 0);
 }
 
-// Parent inheritance: apply THIS (most-derived) style's items first, then walk
-// up the parent chain. Combined with the "overwrite only if slot is null" rule
-// below, a child's already-set value is sticky and the parent only fills gaps.
+// AOSP Theme::ApplyStyle applies ONE pre-merged bag: GetBag folds the style's
+// parent chain up front with the most-derived style winning, and the merged
+// set is applied with the caller's force flag. Emulate that pre-merge here:
+// walk the ancestors nearest-first letting nearer entries win, then apply the
+// merged set once — so a FORCED style='s inherited values override earlier
+// sticky defaults too, while the style's own values still beat its parents'.
 status_t ResTable::Theme::applyStyleChain(uint32_t resID, bool force, int depth) {
     if (depth > 16) return BAD_VALUE;
-    size_t count = 0;
-    ResTable_config cfg;
-    ssize_t block = -1;
-    uint32_t specFlags = 0;
-    const ResTable_map* map = mTable.getBag(resID, &count, &cfg, &block, &specFlags);
-    if (!map) return NAME_NOT_FOUND;  // not a (complex) style
-    mTypeSpecFlags |= specFlags;  // aggregate config axes (for getChangingConfigurations)
+    std::unordered_map<uint32_t, std::pair<Res_value, ssize_t>> merged; // attr -> (value, block)
+    uint32_t cur = resID;
+    while (cur != 0) {
+        size_t count = 0;
+        ResTable_config cfg;
+        ssize_t block = -1;
+        uint32_t specFlags = 0;
+        const ResTable_map* map = mTable.getBag(cur, &count, &cfg, &block, &specFlags);
+        if (!map) break;
+        mTypeSpecFlags |= specFlags;  // aggregate config axes (for getChangingConfigurations)
+        for (size_t i = 0; i < count; i++) {
+            const uint32_t attrRes = dtohl(map[i].name.ident);
+            Res_value v;
+            v.copyFrom_dtoh(map[i].value);
+            merged.emplace(attrRes, std::make_pair(v, block)); // first (nearest) wins
+        }
+        uint32_t parent = mTable.getBagParent(cur);
+        if (parent == 0 || parent == cur) break;
+        cur = parent;
+    }
+    if (merged.empty()) return NAME_NOT_FOUND;  // not a (complex) style
 
-    for (size_t i = 0; i < count; i++) {
-        const uint32_t attrRes = dtohl(map[i].name.ident);
-        Res_value v;
-        v.copyFrom_dtoh(map[i].value);
-        ThemedItem& it = mEntries[attrRes];
+    for (const auto& kv : merged) {
+        ThemedItem& it = mEntries[kv.first];
         // AOSP override rule: force wins; otherwise an unset slot, or a slot
         // holding TYPE_NULL undefined, is overwritten (sticky otherwise).
         const bool overwrite = force || !it.set ||
             (it.value.dataType == Res_value::TYPE_NULL &&
              it.value.data == Res_value::DATA_NULL_UNDEFINED);
         if (overwrite) {
-            it.value = v;
-            it.stringBlock = block;
+            it.value = kv.second.first;
+            it.stringBlock = kv.second.second;
             it.typeSpecFlags = mTypeSpecFlags;
             it.set = true;
         }
-    }
-
-    // Now the parent fills any attributes this style didn't set.
-    uint32_t parent = mTable.getBagParent(resID);
-    if (parent != 0 && parent != resID) {
-        status_t err = applyStyleChain(parent, force, depth + 1);
-        if (err != NO_ERROR && err != NAME_NOT_FOUND) return err;
     }
     return NO_ERROR;
 }
@@ -865,21 +873,32 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
     }
     if (xml.getEventType() != ResXMLParser::START_TAG) return;
 
-    // The element's style= attribute (no namespace, name "style") -> style resId.
     uint32_t styleRes = 0;
     ssize_t styleIdx = xml.indexOfAttribute(nullptr, "style");
     if (styleIdx >= 0) {
         Res_value sv;
-        if (xml.getAttributeValue((size_t)styleIdx, &sv) == sizeof(Res_value) &&
-            (sv.dataType == Res_value::TYPE_REFERENCE || sv.dataType == Res_value::TYPE_ATTRIBUTE)) {
-            styleRes = sv.data;
+        if (xml.getAttributeValue((size_t)styleIdx, &sv) == sizeof(Res_value)) {
+            if (sv.dataType == Res_value::TYPE_ATTRIBUTE
+                    || sv.dataType == Res_value::TYPE_DYNAMIC_ATTRIBUTE) {
+                Res_value dv;
+                if (theme && theme->getAttribute(sv.data, &dv) >= 0 &&
+                    (dv.dataType == Res_value::TYPE_REFERENCE
+                            || dv.dataType == Res_value::TYPE_ATTRIBUTE
+                            || dv.dataType == Res_value::TYPE_DYNAMIC_REFERENCE)) {
+                    styleRes = dv.data;
+                }
+            } else if (sv.dataType == Res_value::TYPE_REFERENCE
+                    || sv.dataType == Res_value::TYPE_DYNAMIC_REFERENCE) {
+                styleRes = sv.data;
+            }
         }
     }
 
-    // Style/theme fallback chain. Lowest priority is applied first so the
-    // sticky "first-set wins" rule yields the right precedence.
+    // Style/theme fallback chain, AOSP ApplyStyle order: defStyleAttr has
+    // precedence over defStyleRes (both non-forced, sticky "first-set wins"),
+    // and the XML style= is applied LAST and FORCED — "the most specific" —
+    // so it overrides the sticky default-style values.
     ResTable::Theme chain(table);
-    if (defStyleRes) chain.applyStyle(defStyleRes);
     if (defStyleAttr && theme) {
         Res_value dv;
         if (theme->getAttribute(defStyleAttr, &dv) >= 0 &&
@@ -887,7 +906,8 @@ void obtainStyledAttributes(const ResXMLTree& xml, const ResTable& table,
             chain.applyStyle(dv.data);
         }
     }
-    if (styleRes) chain.applyStyle(styleRes);
+    if (defStyleRes) chain.applyStyle(defStyleRes);
+    if (styleRes) chain.applyStyle(styleRes, true /*force*/);
 
     const size_t elemCount = xml.getAttributeCount();
     for (size_t i = 0; attrs[i] != 0; i++) {
@@ -956,10 +976,9 @@ void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
         out[i].set = false; out[i].stringBlock = -1; out[i].resourceId = 0;
     }
 
-    // Style/theme fallback chain. Lowest priority is applied first so the
-    // sticky "first-set wins" rule yields the right precedence.
+    // Style/theme fallback chain, AOSP ApplyStyle order: defStyleAttr has
+    // precedence over defStyleRes (both non-forced, sticky "first-set wins").
     ResTable::Theme chain(table);
-    if (defStyleRes) chain.applyStyle(defStyleRes);
     if (defStyleAttr && theme) {
         Res_value dv;
         if (theme->getAttribute(defStyleAttr, &dv) >= 0 &&
@@ -967,6 +986,7 @@ void obtainStyledAttributes(const ResTable& table, const ResTable::Theme* theme,
             chain.applyStyle(dv.data);
         }
     }
+    if (defStyleRes) chain.applyStyle(defStyleRes);
 
     for (size_t i = 0; attrs[i] != 0; i++) {
         const uint32_t a = attrs[i];
