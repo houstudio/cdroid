@@ -63,6 +63,17 @@ ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet* atts, int 
         mDropDownVerticalOffset   = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownVerticalOffset, 0);
     }
     mPopup = new PopupWindow(mContext,atts,defStyleAttr,defStyleRes);
+    // The inner dismiss wrapper (ALWAYS installed - with or without an app
+    // listener): run this object's post-dismiss member cleanup, then hand
+    // control to the app listener (if any). By the time the app listener runs,
+    // deleting this ListPopupWindow inside it is safe end to end; see dismiss()
+    // for why nothing may follow the inner dismiss when it fired.
+    mPopup->setOnDismissListener([this](){
+        completeDismiss();
+        if (mOnDismissListener != nullptr) {
+            mOnDismissListener();
+        }
+    });
     mResizePopupRunnable =[this](){
         if ((mDropDownList != nullptr) && mDropDownList->isAttachedToWindow()
                 && (mDropDownList->getCount() > mDropDownList->getChildCount())
@@ -386,7 +397,24 @@ void ListPopupWindow::show() {
 }
 
 void ListPopupWindow::dismiss() {
+    // When showing, the inner PopupWindow::dismiss fires the wrapper installed
+    // by initPopupWindow(), which runs completeDismiss() and then the app
+    // listener - and that listener may DELETE this ListPopupWindow, so after
+    // mPopup->dismiss() returns we must not touch members. The stack flag
+    // decides: not-showing means the wrapper never fired and `this` is alive,
+    // so clean up here.
+    const bool wasShowing = mPopup->isShowing();
     mPopup->dismiss();
+    if (!wasShowing) {
+        completeDismiss();
+    }
+}
+
+// Post-dismiss member cleanup, factored out of dismiss() so the wrapper
+// listener can run it BEFORE the app-facing listener takes control: an app
+// that deletes this ListPopupWindow inside its dismiss listener would
+// otherwise leave dismiss() about to touch freed members.
+void ListPopupWindow::completeDismiss() {
     removePromptView();
     mPopup->setContentView(nullptr);
     // mDropDownList is owned by mPopup (setOwnsContentView): it is freed when the
@@ -396,7 +424,14 @@ void ListPopupWindow::dismiss() {
 }
 
 void ListPopupWindow::setOnDismissListener(const PopupWindow::OnDismissListener& listener) {
-     mPopup->setOnDismissListener(listener);
+     // The app listener is stored here, NOT forwarded to the inner PopupWindow:
+     // the wrapper installed by initPopupWindow() runs this object's member
+     // cleanup first and hands control to the app only afterwards, so an owner
+     // deleting this ListPopupWindow inside the listener is safe end to end
+     // (the inner PopupWindow::dismiss fires its listener from a stack copy,
+     // and ~ListPopupWindow deleting mPopup mid-notification is covered by the
+     // PopupWindow delete-at-any-time teardown).
+     mOnDismissListener = listener;
 }
 
 void ListPopupWindow::removePromptView() {

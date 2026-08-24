@@ -55,11 +55,18 @@ private:
     Runnable mShowDropDownRunnable;
     Runnable mHideSelector;
     View::OnTouchListener mTouchInterceptor;
+    // The app-facing dismiss listener, kept HERE (not forwarded to the inner
+    // PopupWindow): the wrapper installed on mPopup runs this ListPopupWindow's
+    // post-dismiss member cleanup before handing control to the app, so an
+    // owner deleting it inside the listener no longer leaves dismiss() about to
+    // touch freed members (delete-at-any-time).
+    PopupWindow::OnDismissListener mOnDismissListener;
 protected:
     PopupWindow*mPopup;
 private:
     void initPopupWindow();
     void removePromptView();
+    void completeDismiss();
     int  buildDropDown();
 public:
     ListPopupWindow(Context*ctx);   // AOSP ListPopupWindow(Context)
