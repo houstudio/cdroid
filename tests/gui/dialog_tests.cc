@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <core/app.h>
+#include <core/activityfactory.h>
 #include <app/alertdialog.h>
 #include <core/windowmanager.h>
 #include <menu/menubuilder.h>
@@ -491,4 +492,91 @@ TEST_F(DIALOG,PopupMenuDismissTwice){
 
    GUIEnvironment::content()->removeView(anchor);
    delete anchor;
+}
+
+/* The item-CLICK dismissal path (what a real menu tap takes): invoke() runs
+   the app click listener first, then close(true) dismisses through
+   CascadingMenuPopup::onCloseMenu while the popup's own window dismiss takes
+   the animated exit branch. The menu self-deletes on the next drain; the
+   decor finishes its exit and self-frees - nothing may crash or leak. */
+TEST_F(DIALOG,PopupMenuItemClickDismiss){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("pm anchor6");
+   GUIEnvironment::content()->addView(anchor,new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   CountingPopupMenu*menu=new CountingPopupMenu(&app,anchor);
+   Menu* m=menu->getMenu();
+   m->add(0,1000,0,"Pick me");
+   bool clicked=false;
+   menu->setOnMenuItemClickListener([&clicked](MenuItem&){ clicked=true; return true; });
+   menu->show();
+   pumpFor(600);   // enter completes; the exit branch is then deterministic
+   EXPECT_EQ(sCountingMenusAlive,1);
+
+   menu->getMenu()->performIdentifierAction(1000,0);   // the item tap
+   EXPECT_TRUE(clicked);
+   pumpFor(600);   // exit animation + teardown + the posted self-delete
+   EXPECT_EQ(sCountingMenusAlive,0);
+
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
+}
+
+/* printerdemo's exact crash recipe (2nd language switch): a REGISTER_ACTIVITY
+   window hosts the anchor; each round opens a fire-and-forget PopupMenu whose
+   item listener routes a locale change through App::handleConfigurationChanged
+   (activity recreate) from INSIDE the item-click dispatch. The menu decor's
+   animated teardown lands ~200ms later; its dropdown ListView must detach
+   without touching a freed adapter. */
+namespace {
+static PopupMenu* sReproMenu = nullptr;
+class MenuReproWindow: public Window{
+public:
+    MenuReproWindow():Window(0,0,480,320){
+    }
+    void onActive() override{
+        Window::onActive();
+        FrameLayout*root=new FrameLayout(getContext());
+        TextView*anchor=new TextView(getContext()); anchor->setText("repro anchor");
+        anchor->setLayoutParams(new ViewGroup::LayoutParams(200,48));
+        root->addView(anchor,new ViewGroup::LayoutParams(200,48));
+        addView(root);
+        anchor->setOnClickListener([this](View& v){
+            sReproMenu = new PopupMenu(v.getContext(),&v);
+            sReproMenu->getMenu()->add(0,2000,0,"Switch");
+            sReproMenu->setOnMenuItemClickListener([](MenuItem&){
+                Configuration c = App::getInstance().getResources().getConfiguration();
+                const bool zh = (c.getLocales().size()
+                        && c.getLocales().get(0).getLanguage() == "zh");
+                c.setLocales(LocaleList(std::vector<Locale>{
+                        Locale::forLanguageTag(zh ? "en-US" : "zh-CN")}));
+                App::getInstance().handleConfigurationChanged(c);   // recreate()
+                return true;
+            });
+            sReproMenu->show();
+        });
+        anchor->performClick();   // open the menu right away
+    }
+};
+REGISTER_ACTIVITY(MenuReproWindow);
+} // namespace
+
+TEST_F(DIALOG,PopupMenuItemClickWithRecreate){
+   App&app=App::getInstance();
+   Intent intent("");  intent.setComponent(ComponentName("","MenuReproWindow"));
+   app.startActivity(intent);
+   pumpFor(600);       // window up, menu shown (enter completes)
+   ASSERT_NE(sReproMenu,nullptr);
+   PopupMenu*menu1=sReproMenu;
+
+   menu1->getMenu()->performIdentifierAction(2000,0);  // 1st switch: recreate
+   sReproMenu=nullptr;
+   pumpFor(600);       // recreate + menu teardown settle
+   ASSERT_NE(sReproMenu,nullptr);   // the recreated window opened a fresh menu
+   PopupMenu*menu2=sReproMenu;
+
+   menu2->getMenu()->performIdentifierAction(2000,0);  // 2nd switch
+   sReproMenu=nullptr;
+   pumpFor(800);       // the 2nd menu decor's animated teardown lands here
 }
