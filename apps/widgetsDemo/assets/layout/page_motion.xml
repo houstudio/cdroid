@@ -72,5 +72,168 @@
                 android:textColor="#FFFFFF"
                 android:textSize="14sp" />
         </MotionLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#33FFFFFF"
+            android:layout_marginVertical="16dp" />
+
+        <!-- ====== MotionLayout Showcase ====== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MotionLayout"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tap any box — arc paths + easing + multi-child"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp" />
+
+        <MotionLayout
+            android:id="@+id/ml_demo"
+            android:layout_width="match_parent"
+            android:layout_height="360dp"
+            android:background="#1B1B2F"
+            app:layoutDescription="@xml/scene_constraint">
+
+            <TextView
+                android:id="@+id/ml_box1"
+                android:layout_width="100dp"
+                android:layout_height="70dp"
+                android:background="#EF5350"
+                android:gravity="center"
+                android:text="Spline"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/ml_box2"
+                android:layout_width="100dp"
+                android:layout_height="70dp"
+                android:background="#66BB6A"
+                android:gravity="center"
+                android:text="Arc"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/ml_box3"
+                android:layout_width="100dp"
+                android:layout_height="70dp"
+                android:background="#42A5F5"
+                android:gravity="center"
+                android:text="Rotate"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp" />
+        </MotionLayout>
+
+        <!-- ====== Rotary Dial (CircularFlow ring + governor return animation) ====== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rotary Dial"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="drag the ring clockwise past a digit, release — the dial spins back and dials"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp" />
+
+        <ConstraintLayout
+            android:id="@+id/dial_box"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:background="#1B1B2F">
+
+            <!-- disc plate behind the holes -->
+            <View
+                android:id="@+id/dial_disc"
+                android:layout_width="296dp"
+                android:layout_height="296dp"
+                android:background="@drawable/dial_disc"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <!-- finger stop: the digit under it is dialed on release -->
+            <View
+                android:id="@+id/dial_stop"
+                android:layout_width="4dp"
+                android:layout_height="20dp"
+                android:background="#FFCA28"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/dial_center"
+                android:layout_width="76dp"
+                android:layout_height="76dp"
+                android:background="@drawable/circle_accent"
+                android:gravity="center"
+                android:text=""
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <!-- rest angles: digit 1 at 300° (just past the top stop), 30° steps
+                 clockwise, 0 ends at 210° — the 90° rest gap sits under the stop. -->
+            <CircularFlow
+                android:id="@+id/dial_flow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:circularflow_viewCenter="@id/dial_center"
+                app:circularflow_angles="300,330,0,30,60,90,120,150,180,210"
+                app:circularflow_radiusInDP="110,110,110,110,110,110,110,110,110,110"
+                app:constraint_referenced_ids="dial_1,dial_2,dial_3,dial_4,dial_5,dial_6,dial_7,dial_8,dial_9,dial_0" />
+
+            <TextView android:id="@+id/dial_1" android:layout_width="36dp" android:layout_height="36dp"
+                android:background="@drawable/dial_hole" android:gravity="center" android:text="1"
+                android:textColor="#FFFFFF" android:textSize="14sp" />
+            <TextView android:id="@+id/dial_2" android:layout_width="36dp" android:layout_height="36dp"
+                android:background="@drawable/dial_hole" android:gravity="center" android:text="2"
+                android:textColor="#FFFFFF" android:textSize="14sp" />
+            <TextView android:id="@+id/dial_3" android:layout_width="36dp" android:layout_height="36dp"
+                android:background="@drawable/dial_hole" android:gravity="center" android:text="3"
+                android:textColor="#FFFFFF" android:textSize="14sp" />
+            <TextView android:id="@+id/dial_4" android:layout_width="36dp" android:layout_height="36dp"
+                android:background="@drawable/dial_hole" android:gravity="center" android:text="4"
+                android:textColor="#FFFFFF" android:textSize="14sp" />
+            <TextView android:id="@+id/dial_5" android:layout_width="36dp" android:layout_height="36dp"
+                android:background="@drawable/dial_hole" android:gravity="center" android:text="5"
+                android:textColor="#FFFFFF" android:textSize="14sp" />
+            <TextView android:id="@+id/dial_6" android:layout_width="36dp" android:layout_height="36dp"
+                android:background="@drawable/dial_hole" android:gravity="center" android:text="6"
+                android:textColor="#FFFFFF" android:textSize="14sp" />
+            <TextView android:id="@+id/dial_7" android:layout_width="36dp" android:layout_height="36dp"
+                android:background="@drawable/dial_hole" android:gravity="center" android:text="7"
+                android:textColor="#FFFFFF" android:textSize="14sp" />
+            <TextView android:id="@+id/dial_8" android:layout_width="36dp" android:layout_height="36dp"
+                android:background="@drawable/dial_hole" android:gravity="center" android:text="8"
+                android:textColor="#FFFFFF" android:textSize="14sp" />
+            <TextView android:id="@+id/dial_9" android:layout_width="36dp" android:layout_height="36dp"
+                android:background="@drawable/dial_hole" android:gravity="center" android:text="9"
+                android:textColor="#FFFFFF" android:textSize="14sp" />
+            <TextView android:id="@+id/dial_0" android:layout_width="36dp" android:layout_height="36dp"
+                android:background="@drawable/dial_hole" android:gravity="center" android:text="0"
+                android:textColor="#FFFFFF" android:textSize="14sp" />
+        </ConstraintLayout>
     </LinearLayout>
 </ScrollView>

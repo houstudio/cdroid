@@ -246,7 +246,7 @@
                 app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
         </ConstraintLayout>
 
-        <!-- ====== Flow (referenced ids wired in setupConstraint — XML only resolves numeric) ====== -->
+        <!-- ====== Flow (referenced ids resolve at inflate time via ConstraintHelper) ====== -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -293,7 +293,7 @@
                 android:background="#26C6DA" android:padding="6dp" android:text="Fig" android:textColor="#FFFFFF" android:textSize="12sp" />
         </ConstraintLayout>
 
-        <!-- ====== Barrier (referenced ids wired in setupConstraint) ====== -->
+        <!-- ====== Barrier (referenced ids resolve at inflate time via ConstraintHelper) ====== -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -359,8 +359,7 @@
             android:id="@+id/cl_guide_box"
             android:layout_width="match_parent"
             android:layout_height="90dp"
-            android:background="#1B1B2F"
-            android:layout_marginBottom="16dp">
+            android:background="#1B1B2F">
             <!-- three vertical guidelines: fixed-from-left, fixed-from-right, half -->
             <View android:id="@+id/g_begin" android:layout_width="wrap_content" android:layout_height="wrap_content"
                 app:layout_constraintGuide_begin="60dp" android:orientation="vertical" />
@@ -390,65 +389,144 @@
 
         </ConstraintLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#33FFFFFF"
-            android:layout_marginVertical="16dp" />
-
-        <!-- ====== MotionLayout Showcase ====== -->
+        <!-- ====== Grid helper (ConstraintHelper — arranges referenced views into rows×columns) ====== -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="MotionLayout"
+            android:text="Grid Helper"
             android:textColor="@color/text_primary"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tap any box — arc paths + easing + multi-child"
+            android:text="3×3 cells · spans 1x2 / 2x1 · gaps 4dp"
             android:textColor="@color/text_secondary"
-            android:textSize="14sp"
-            android:layout_marginBottom="12dp" />
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
 
-        <MotionLayout
-            android:id="@+id/ml_demo"
+        <ConstraintLayout
+            android:id="@+id/cl_grid_box"
             android:layout_width="match_parent"
-            android:layout_height="360dp"
-            android:background="#1B1B2F"
-            app:layoutDescription="@xml/scene_constraint">
+            android:layout_height="220dp"
+            android:background="#1B1B2F">
+
+            <!-- The helper itself is the grid bounding box; referenced views are
+                 constrained to invisible per-row/per-column box views it creates. -->
+            <Grid
+                android:id="@+id/cl_grid"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:grid_rows="3"
+                app:grid_columns="3"
+                app:grid_spans="0:1x2,4:2x1"
+                app:grid_horizontalGaps="4dp"
+                app:grid_verticalGaps="4dp"
+                app:constraint_referenced_ids="grid_a, grid_b, grid_c, grid_d, grid_e, grid_f, grid_g" />
+
+            <!-- 0dp views fill their cell; grid_a spans 2 columns, grid_b spans 2 rows,
+                 the rest fill the remaining cells in reading order. -->
+            <TextView android:id="@+id/grid_a" android:layout_width="0dp" android:layout_height="0dp"
+                android:background="#EF5350" android:gravity="center" android:text="1x2"
+                android:textColor="#FFFFFF" android:textSize="13sp" />
+            <TextView android:id="@+id/grid_b" android:layout_width="0dp" android:layout_height="0dp"
+                android:background="#66BB6A" android:gravity="center" android:text="2x1"
+                android:textColor="#FFFFFF" android:textSize="13sp" />
+            <TextView android:id="@+id/grid_c" android:layout_width="0dp" android:layout_height="0dp"
+                android:background="#42A5F5" android:gravity="center" android:text="3"
+                android:textColor="#FFFFFF" android:textSize="13sp" />
+            <TextView android:id="@+id/grid_d" android:layout_width="0dp" android:layout_height="0dp"
+                android:background="#FFCA28" android:gravity="center" android:text="4"
+                android:textColor="#000000" android:textSize="13sp" />
+            <TextView android:id="@+id/grid_e" android:layout_width="0dp" android:layout_height="0dp"
+                android:background="#AB47BC" android:gravity="center" android:text="5"
+                android:textColor="#FFFFFF" android:textSize="13sp" />
+            <TextView android:id="@+id/grid_f" android:layout_width="0dp" android:layout_height="0dp"
+                android:background="#26C6DA" android:gravity="center" android:text="6"
+                android:textColor="#000000" android:textSize="13sp" />
+            <TextView android:id="@+id/grid_g" android:layout_width="0dp" android:layout_height="0dp"
+                android:background="#FF7043" android:gravity="center" android:text="7"
+                android:textColor="#FFFFFF" android:textSize="13sp" />
+        </ConstraintLayout>
+
+        <!-- ====== CircularFlow helper (referenced views on a circle around a center) ====== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CircularFlow"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="8 satellites · angles 0°…315° · radius 100dp (0° = right, clockwise)"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
+
+        <ConstraintLayout
+            android:id="@+id/cl_circle_box"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:background="#1B1B2F">
+
+            <!-- Invisible helper: writes circleConstraint/circleAngle/circleRadius onto each
+                 referenced view's LayoutParams (angle in degrees, radius in dp → px). -->
+            <CircularFlow
+                android:id="@+id/cl_circular"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:circularflow_viewCenter="@id/circle_center"
+                app:circularflow_angles="0,45,90,135,180,225,270,315"
+                app:circularflow_radiusInDP="100,100,100,100,100,100,100,100"
+                app:constraint_referenced_ids="cf_0,cf_45,cf_90,cf_135,cf_180,cf_225,cf_270,cf_315" />
 
             <TextView
-                android:id="@+id/ml_box1"
-                android:layout_width="100dp"
-                android:layout_height="70dp"
-                android:background="#EF5350"
+                android:id="@+id/circle_center"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/circle_accent"
                 android:gravity="center"
-                android:text="Spline"
+                android:text="C"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp" />
+                android:textSize="18sp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
-            <TextView
-                android:id="@+id/ml_box2"
-                android:layout_width="100dp"
-                android:layout_height="70dp"
-                android:background="#66BB6A"
-                android:gravity="center"
-                android:text="Arc"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/ml_box3"
-                android:layout_width="100dp"
-                android:layout_height="70dp"
-                android:background="#42A5F5"
-                android:gravity="center"
-                android:text="Rotate"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp" />
-        </MotionLayout>
+            <!-- Satellites carry no constraints of their own — CircularFlow places them. -->
+            <TextView android:id="@+id/cf_0" android:layout_width="44dp" android:layout_height="44dp"
+                android:background="#EF5350" android:gravity="center" android:text="0°"
+                android:textColor="#FFFFFF" android:textSize="11sp" />
+            <TextView android:id="@+id/cf_45" android:layout_width="44dp" android:layout_height="44dp"
+                android:background="#66BB6A" android:gravity="center" android:text="45°"
+                android:textColor="#FFFFFF" android:textSize="11sp" />
+            <TextView android:id="@+id/cf_90" android:layout_width="44dp" android:layout_height="44dp"
+                android:background="#42A5F5" android:gravity="center" android:text="90°"
+                android:textColor="#FFFFFF" android:textSize="11sp" />
+            <TextView android:id="@+id/cf_135" android:layout_width="44dp" android:layout_height="44dp"
+                android:background="#FFCA28" android:gravity="center" android:text="135°"
+                android:textColor="#000000" android:textSize="11sp" />
+            <TextView android:id="@+id/cf_180" android:layout_width="44dp" android:layout_height="44dp"
+                android:background="#AB47BC" android:gravity="center" android:text="180°"
+                android:textColor="#FFFFFF" android:textSize="11sp" />
+            <TextView android:id="@+id/cf_225" android:layout_width="44dp" android:layout_height="44dp"
+                android:background="#26C6DA" android:gravity="center" android:text="225°"
+                android:textColor="#000000" android:textSize="11sp" />
+            <TextView android:id="@+id/cf_270" android:layout_width="44dp" android:layout_height="44dp"
+                android:background="#FF7043" android:gravity="center" android:text="270°"
+                android:textColor="#FFFFFF" android:textSize="11sp" />
+            <TextView android:id="@+id/cf_315" android:layout_width="44dp" android:layout_height="44dp"
+                android:background="#EC407A" android:gravity="center" android:text="315°"
+                android:textColor="#FFFFFF" android:textSize="11sp" />
+        </ConstraintLayout>
     </LinearLayout>
 </ScrollView>

@@ -36,6 +36,11 @@
 #include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/constraintlayout/helpers/barrier.h>
 #include <widgetEx/constraintlayout/helpers/flow.h>
+#include <widgetEx/constraintlayout/helpers/circularflow.h>
+#include <animation/valueanimator.h>
+#include <animation/interpolators.h>
+#include <algorithm>
+#include <cmath>
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
@@ -526,20 +531,7 @@ void setupDateTime(View* page) {
 }
 
 // ============================================================================
-// ConstraintLayout + MotionLayout page — XML inflation + programmatic motion wiring
-// ============================================================================
-void setupConstraint(View* page) {
-    // Fully XML-driven now:
-    //  - ConstraintLayout solves from the layout_constraint* attributes in page_constraint.xml.
-    //  - Flow/Barrier resolve their constraint_referenced_ids (bare names) at inflate time via
-    //    ConstraintHelper → Context::getId (Android's getIdentifier(name,"id",pkg) equivalent).
-    //  - MotionLayout reads its <MotionScene> via app:layoutDescription="@xml/scene_constraint".
-    // Nothing left to wire here.
-    (void) page;
-}
-
-// ============================================================================
-// MotionLayout + Carousel page — supply a Carousel.Adapter (everything else is XML-driven).
+// ConstraintLayout page — XML inflation + Grid/CircularFlow helper showcases
 // ============================================================================
 namespace {
 constexpr uint32_t kCarouselColors[] = {0xFFEF5350, 0xFF66BB6A, 0xFF42A5F5, 0xFFFFCA28, 0xFFAB47BC};
@@ -555,9 +547,131 @@ class DemoCarouselAdapter : public Carousel::Adapter {
 };
 } // namespace
 
+void setupConstraint(View* page) {
+    // Fully XML-driven:
+    //  - ConstraintLayout solves from the layout_constraint* attributes in page_constraint.xml.
+    //  - Flow/Barrier/Grid/CircularFlow resolve their constraint_referenced_ids (bare names) at
+    //    inflate time via ConstraintHelper → Context::getId (Android's getIdentifier(name,"id",pkg)
+    //    equivalent); CircularFlow writes circle angle/radius onto each referenced view.
+    // Nothing left to wire here.
+    (void) page;
+}
+
+// ============================================================================
+// Motion page — Carousel (supply an Adapter) + MotionLayout showcase
+// (arc/easing scene via app:layoutDescription="@xml/scene_constraint").
+// Everything except the adapter is XML-driven.
+// ============================================================================
+
+// ============================================================================
+// Rotary dial — CircularFlow ring dragged by touch; on release a constant-speed
+// "governor" return (linear ValueAnimator) spins the ring back to rest, dialing
+// the digit that reached the finger stop. Classic rotary telephone behavior:
+// clockwise only, hard stop at max rotation, digits accumulate in the center.
+// ============================================================================
+namespace {
+struct RotaryDialState {
+    CircularFlow* flow = nullptr;
+    ConstraintLayout* box = nullptr;
+    TextView* center = nullptr;
+    std::vector<float> base;               // rest angle of each referenced digit
+    std::vector<std::string> digits;       // label per referenced digit
+    std::shared_ptr<ValueAnimator> anim;   // governor return
+    float rot = 0;                         // current clockwise rotation [0..240]
+    float lastAngle = 0;                   // finger angle at the previous event
+    std::string dialed;                    // accumulated digits shown in the center
+
+    // Finger angle around the box center; 0° = right, clockwise (screen y is
+    // down), matching CircularFlow's convention.
+    float angleAt(const MotionEvent& e) const {
+        float dx = e.getX() - box->getWidth() / 2.f;
+        float dy = e.getY() - box->getHeight() / 2.f;
+        return std::atan2(dy, dx) * 180.f / 3.14159265f;
+    }
+
+    void apply() {
+        std::vector<float> angles(base.size());
+        for (size_t i = 0; i < base.size(); i++) angles[i] = base[i] + rot;
+        flow->setAngles(angles);
+        box->requestLayout();  // next layout pass re-anchors via updatePreLayout
+    }
+
+    // Referenced digit whose current angle is nearest the stop (top, 270°).
+    int indexAtStop() const {
+        int best = -1;
+        float bestDelta = 1e9f;
+        for (size_t i = 0; i < base.size(); i++) {
+            float d = std::fmod(base[i] + rot - 270.f + 540.f, 360.f) - 180.f;
+            if (std::fabs(d) < bestDelta) { bestDelta = std::fabs(d); best = (int) i; }
+        }
+        return best;
+    }
+};
+} // namespace
+
 void setupMotion(View* page) {
     Carousel* carousel = (Carousel*)page->findViewById(widgetsDemo::R::id::carousel);
     if (carousel != nullptr) {
         carousel->setAdapter(new DemoCarouselAdapter());
+    }
+
+    auto* dialBox = dynamic_cast<ConstraintLayout*>(page->findViewById(widgetsDemo::R::id::dial_box));
+    auto* dialFlow = dynamic_cast<CircularFlow*>(page->findViewById(widgetsDemo::R::id::dial_flow));
+    auto* dialCenter = dynamic_cast<TextView*>(page->findViewById(widgetsDemo::R::id::dial_center));
+    if (dialBox != nullptr && dialFlow != nullptr && dialCenter != nullptr) {
+        auto st = std::make_shared<RotaryDialState>();
+        st->flow = dialFlow;
+        st->box = dialBox;
+        st->center = dialCenter;
+        // Must mirror the XML rest angles / referenced order (dial_1..dial_9, dial_0).
+        st->base = {300, 330, 0, 30, 60, 90, 120, 150, 180, 210};
+        st->digits = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
+
+        // The animator's update listener holds a weak ref so state ownership
+        // flows the other way (state owns the animator) — no refcount cycle.
+        st->anim = std::make_shared<ValueAnimator>();
+        st->anim->setInterpolator(new LinearInterpolator());
+        std::weak_ptr<RotaryDialState> weak(st);
+        st->anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([weak](ValueAnimator& va) {
+            auto s = weak.lock();
+            if (!s) return;
+            s->rot = va.getAnimatedValue().get<float>();
+            s->apply();
+        }));
+
+        dialBox->setOnTouchListener([st](View& v, MotionEvent& e) {
+            switch (e.getActionMasked()) {
+            case MotionEvent::ACTION_DOWN:
+                // Keep the gesture away from the ViewPager/ScrollView.
+                if (v.getParent() != nullptr) v.getParent()->requestDisallowInterceptTouchEvent(true);
+                if (st->anim->isRunning()) st->anim->cancel();
+                st->lastAngle = st->angleAt(e);
+                return true;
+            case MotionEvent::ACTION_MOVE: {
+                float cur = st->angleAt(e);
+                float d = cur - st->lastAngle;
+                if (d > 180.f) d -= 360.f; else if (d < -180.f) d += 360.f;
+                st->lastAngle = cur;
+                // Clockwise only, mechanical stop at 240°.
+                st->rot = std::min(std::max(st->rot + d, 0.f), 240.f);
+                st->apply();
+                return true;
+            }
+            case MotionEvent::ACTION_UP:
+            case MotionEvent::ACTION_CANCEL:
+                if (v.getParent() != nullptr) v.getParent()->requestDisallowInterceptTouchEvent(false);
+                if (e.getActionMasked() == MotionEvent::ACTION_UP && st->rot >= 25.f) {
+                    st->dialed += st->digits[st->indexAtStop()];
+                    if (st->dialed.size() > 6) st->dialed = st->dialed.substr(st->dialed.size() - 6);
+                    st->center->setText(st->dialed);
+                }
+                // Governor return: constant angular speed, ~2.4 ms per degree.
+                st->anim->setFloatValues({st->rot, 0.f});
+                st->anim->setDuration((int64_t)(st->rot * 2.4f));
+                st->anim->start();
+                return true;
+            }
+            return false;
+        });
     }
 }
