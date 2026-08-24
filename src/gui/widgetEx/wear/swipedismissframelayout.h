@@ -17,7 +17,7 @@
 */
 #ifndef __SWIPE_DISMISS_FRAMELAYOUT_H__
 #define __SWIPE_DISMISS_FRAMELAYOUT_H__
-#include <widgetEx/wear/dismissableframelayout.h>
+#include <widgetEx/wear/dismissibleframelayout.h>
 namespace cdroid{
 class SwipeDismissFrameLayout:public DismissibleFrameLayout {
 public:
