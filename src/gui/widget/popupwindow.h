@@ -135,11 +135,6 @@ private:
     PopupDecorView* createDecorView(View* contentView);
     void invokePopup(WindowManager::LayoutParams* p);
     void setLayoutDirectionFromAnchor();
-    // AOSP setAnimationStyle/getAnimationStyle: an explicit animation STYLE res id
-    // (0 = explicitly none) overriding the dropdown default; resolved onto the decor
-    // window at invokePopup time (computeAnimationResource).
-    void setAnimationStyle(int animationStyle);
-    int getAnimationStyle() const;
     const int computeAnimationResource();
     void update(View* anchor, bool updateLocation, int xoff, int yoff, int width, int height);
     bool tryFitVertical(WindowManager::LayoutParams* outParams, int yOffset, int height, int anchorHeight,
@@ -183,6 +178,12 @@ public:
     Transition* getEnterTransition()const;
     void setExitTransition(Transition* exitTransition);
     Transition* getExitTransition()const;
+    // AOSP setAnimationStyle/getAnimationStyle (public API): an explicit
+    // animation STYLE res id (0 = explicitly none) overriding the dropdown
+    // default; resolved onto the decor window at invokePopup time
+    // (computeAnimationResource).
+    void setAnimationStyle(int animationStyle);
+    int getAnimationStyle() const;
     void setEpicenterBounds(const Rect& bounds);
     Drawable* getBackground();
     void  setBackgroundDrawable(Drawable* background);

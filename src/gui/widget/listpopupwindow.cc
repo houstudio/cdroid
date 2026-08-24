@@ -196,13 +196,13 @@ void ListPopupWindow::setBackgroundDrawable(Drawable* d) {
     mPopup->setBackgroundDrawable(d);
 }
 
-void ListPopupWindow::setAnimationStyle(const std::string&animationStyle){
-    //mPopup->setAnimationStyle(animationStyle);
+void ListPopupWindow::setAnimationStyle(int animationStyle){
+    mPopup->setAnimationStyle(animationStyle);
 }
 
 
-std::string ListPopupWindow::getAnimationStyle(){
-    return std::string();//mPopup->getAnimationStyle();
+int ListPopupWindow::getAnimationStyle() const{
+    return mPopup->getAnimationStyle();
 }
 
 View* ListPopupWindow::getAnchorView() {

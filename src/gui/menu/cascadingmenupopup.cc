@@ -549,7 +549,7 @@ void CascadingMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)
     // animated exits.
     info->window->setExitTransition(nullptr);
     if (mShouldCloseImmediately) {
-        info->window->setAnimationStyle("");
+        info->window->setAnimationStyle(0);
     }
     info->window->dismiss();
 

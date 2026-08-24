@@ -87,8 +87,8 @@ public:
     void setListSelector(Drawable* selector);
     Drawable* getBackground();
     void setBackgroundDrawable(Drawable* d);
-    void setAnimationStyle(const std::string&);
-    std::string getAnimationStyle();
+    void setAnimationStyle(int animationStyle);
+    int getAnimationStyle() const;
     View* getAnchorView();
     void setAnchorView(View* anchor);
     int getHorizontalOffset()const;

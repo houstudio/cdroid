@@ -70,13 +70,19 @@ PopupWindow::PopupWindow(int width, int height):PopupWindow(nullptr,width,height
 
 PopupWindow::~PopupWindow(){
     LOGD("destroy PopupWindow %p mBackground=%p",this,mBackground);
-    // Delete-at-any-time teardown: a still-showing popup's decor Window must be
-    // torn down here -- it would otherwise stay on screen forever holding a
+    // Delete-at-any-time teardown. A STILL-SHOWING popup's decor Window must
+    // be torn down here -- it would otherwise stay on screen forever holding a
     // dangling mPop back-pointer. Mechanical teardown only, mirroring
     // dismissImmediate: no dismiss notification fires (the owner is destroying
-    // the object, not closing it). Window::close() removes the decor from the
-    // compositor NOW and posts its delete, so input cannot reach it afterwards.
-    if (mDecorView != nullptr) {
+    // the object, not closing it).
+    // An already-DISMISSED popup (mIsShowing false) must NOT close again: its
+    // decor is self-owned and mid-way through its own teardown (the sync path
+    // already removed it and posted the delete; the animated path's
+    // finishClose is still pending) - calling close() on that half-torn state
+    // re-enters WindowManager::removeWindow on a window that is no longer in a
+    // consistent state. Cancel the pending teardown notification and let the
+    // decor finish itself.
+    if ((mDecorView != nullptr) && mIsShowing) {
         if (!mOwnsContentView && (mContentView != nullptr)
                 && (mContentView->getParent() != nullptr)) {
             // Borrowed content goes back to the owner before the decor tree
@@ -87,6 +93,8 @@ PopupWindow::~PopupWindow(){
             }
         }
         ((Window*)mDecorView)->close();
+    }
+    if (mDecorView != nullptr) {
         mDecorView->detachOwner();
         mDecorView = nullptr;
     }
