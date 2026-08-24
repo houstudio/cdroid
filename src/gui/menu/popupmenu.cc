@@ -27,8 +27,11 @@ PopupMenu::PopupMenu(Context* context, View* anchor)
 }
 
 PopupMenu::~PopupMenu(){
-    delete mMenu;
+    // mPopup (~MenuPopupHelper -> ~CascadingMenuPopup) unregisters itself from
+    // mMenu's presenter list on teardown, so the helper chain must die while
+    // mMenu is still alive -- delete it first.
     delete mPopup;
+    delete mMenu;
     delete mMenuForwardingListener;
 }
 

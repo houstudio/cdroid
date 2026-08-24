@@ -143,6 +143,17 @@ CascadingMenuPopup::~CascadingMenuPopup(){
     // being iterated. mRecycledMenus holds windows already dismissed via
     // onCloseMenu; mShowingMenus holds windows that may still be showing
     // (force close) -- their decor Window is reclaimed by ~WindowManager.
+    // Collect the menus still registering this presenter BEFORE freeing the
+    // infos (their ->menu would dangle): shown menus (force close skips
+    // onCloseMenu's removeMenuPresenter) and never-shown pending ones; the
+    // recycled menus already unregistered themselves in onCloseMenu.
+    std::vector<MenuBuilder*> menus;
+    for (CascadingMenuInfo* info : mShowingMenus){
+        menus.push_back(info->menu);
+    }
+    for (MenuBuilder* menu : mPendingMenus){
+        menus.push_back(menu);
+    }
     for (CascadingMenuInfo* info : mShowingMenus){
         delete info;
     }
@@ -150,6 +161,21 @@ CascadingMenuPopup::~CascadingMenuPopup(){
         delete info;
     }
     delete mSubMenuHoverHandler;
+    // Symmetric unregister (CDROID has no GC): the presenter entry and the
+    // anchor listeners below hold lambdas capturing this; a later menu close,
+    // global layout or attach event would call into freed memory otherwise.
+    for (MenuBuilder* menu : menus){
+        menu->removeMenuPresenter(this);
+    }
+    if (mTreeObserver != nullptr) {
+        if (mTreeObserver->isAlive()) {
+            mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
+        }
+        mTreeObserver = nullptr;
+    }
+    if (mShownAnchorView != nullptr) {
+        mShownAnchorView->removeOnAttachStateChangeListener(mAttachStateChangeListener);
+    }
 }
 
 void CascadingMenuPopup::setForceShowIcon(bool forceShow) {
