@@ -419,7 +419,19 @@ void ListPopupWindow::completeDismiss() {
     mPopup->setContentView(nullptr);
     // mDropDownList is owned by mPopup (setOwnsContentView): it is freed when the
     // popup window is torn down, so just drop our pointer here.
-    mDropDownList = nullptr;
+    // No-GC discipline BEFORE dropping the pointer: the adapter is BORROWED
+    // (the menu chain's ~CascadingMenuInfo owns and frees it after the dismiss
+    // cascade) - make the list drop it NOW while it is guaranteed alive. The
+    // later decor detach (onDetachedFromWindow unregisters the observer)
+    // otherwise dereferences freed memory. This also closes the window where
+    // ~CascadingMenuInfo's own discipline missed: it looks the list up via
+    // getListView(), which this very function nulls. (In the animated-exit
+    // flow the info dtor runs first and drops it there; setAdapter(nullptr)
+    // on an already-cleared list is a no-op.)
+    if (mDropDownList != nullptr) {
+        mDropDownList->setAdapter(nullptr);
+        mDropDownList = nullptr;
+    }
     mHandler->removeCallbacks(mResizePopupRunnable);
 }
 
