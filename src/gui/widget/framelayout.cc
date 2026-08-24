@@ -34,20 +34,16 @@ FrameLayout::FrameLayout(Context* context,const AttributeSet* attrs):FrameLayout
 FrameLayout::FrameLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context,pAttrs, defStyleAttr){
     mMeasureAllChildren = false;
-    {
-        auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::FrameLayout, defStyleAttr);
-    
-    
+
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::FrameLayout, defStyleAttr);
     for (size_t n = ta->getIndexCount(); n > 0; ) {
         size_t i = ta->getIndex(--n);
         if (i == R::styleable::FrameLayout_measureAllChildren)
             mMeasureAllChildren = ta->getBoolean(i, false);
     }
 
-
     mForegroundPaddingLeft = mForegroundPaddingRight  = 0;
     mForegroundPaddingTop  = mForegroundPaddingBottom = 0;
-    }
 }
 
 //@android.view.RemotableViewMethod

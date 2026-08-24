@@ -23,7 +23,7 @@ namespace cdroid{
 namespace hwui{
     class PropertyValuesAnimatorSet;
 };
-class AnimatedVectorDrawable: public Drawable{// implements Animatable2 {
+class AnimatedVectorDrawable: public Drawable, public Animatable2{
 public:
     class AnimatedVectorDrawableState;
 private:
@@ -82,15 +82,15 @@ public:
     void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&,const Resources::Theme* theme)override;
     void applyTheme(const Resources::Theme& t)override;    void forceAnimationOnUI();
     bool canApplyTheme()override;
-    bool isRunning();
+    bool isRunning() override;
     void reset();
-    void start();
+    void start() override;
     void ensureAnimatorSet();
-    void stop();
+    void stop() override;
     void reverse();
     bool canReverse();
-    void registerAnimationCallback(const Animatable2::AnimationCallback& callback);
-    bool unregisterAnimationCallback(const Animatable2::AnimationCallback& callback);
+    void registerAnimationCallback(const Animatable2::AnimationCallback& callback) override;
+    bool unregisterAnimationCallback(const Animatable2::AnimationCallback& callback) override;
     void removeAnimatorSetListener();
     void clearAnimationCallbacks();
 };
