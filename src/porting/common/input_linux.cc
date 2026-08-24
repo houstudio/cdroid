@@ -63,10 +63,7 @@ typedef struct {
     }
 } INPUTDEVICE;
 
-// Exit-order guard: this static's vector dtor runs from _dl_fini after
-// other subsystems tore down (exit crash seen once the .so layout moved)
-// — leak it deliberately; a reference alias keeps every dev. usage.
-static INPUTDEVICE& dev = *new INPUTDEVICE();
+static INPUTDEVICE dev= {0,0};
 #define WATCHED_PATH "/dev/input"
 int32_t InputInit() {
     if(dev.pipe[0] > 0)
