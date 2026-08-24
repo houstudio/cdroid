@@ -17,6 +17,7 @@
 #include <widget/listpopupwindow.h>
 #include <widget/popupwindow.h>
 #include <widget/textview.h>
+#include <widget/toolbar.h>
 #include <guienvironment.h>
 
 using namespace cdroid;
@@ -532,16 +533,24 @@ TEST_F(DIALOG,PopupMenuItemClickDismiss){
 namespace {
 static PopupMenu* sReproMenu = nullptr;
 class MenuReproWindow: public Window{
+    Toolbar* mToolbar = nullptr;
 public:
     MenuReproWindow():Window(0,0,480,320){
     }
     void onActive() override{
         Window::onActive();
+        if (mToolbar != nullptr) return;   // only the first instance builds UI
         FrameLayout*root=new FrameLayout(getContext());
         TextView*anchor=new TextView(getContext()); anchor->setText("repro anchor");
         anchor->setLayoutParams(new ViewGroup::LayoutParams(200,48));
         root->addView(anchor,new ViewGroup::LayoutParams(200,48));
+        mToolbar = new Toolbar(getContext());
+        root->addView(mToolbar,new ViewGroup::LayoutParams(480,56));
         addView(root);
+        if (Menu* menu = mToolbar->getMenu()) {
+            menu->add("Toolbar One");
+            menu->add("Toolbar Two");
+        }
         anchor->setOnClickListener([this](View& v){
             sReproMenu = new PopupMenu(v.getContext(),&v);
             sReproMenu->getMenu()->add(0,2000,0,"Switch");
@@ -576,7 +585,12 @@ TEST_F(DIALOG,PopupMenuItemClickWithRecreate){
    ASSERT_NE(sReproMenu,nullptr);   // the recreated window opened a fresh menu
    PopupMenu*menu2=sReproMenu;
 
-   menu2->getMenu()->performIdentifierAction(2000,0);  // 2nd switch
-   sReproMenu=nullptr;
-   pumpFor(800);       // the 2nd menu decor's animated teardown lands here
+   for (int round = 2; round <= 4; round++) {   // extra rounds: the interleaving
+       PopupMenu*menu=sReproMenu;                 // is timing-flaky; more rounds
+       sReproMenu=nullptr;                         // make the UAF deterministic
+       if (menu==nullptr) break;
+       menu->getMenu()->performIdentifierAction(2000,0);
+       pumpFor(400);
+   }
+   pumpFor(800);
 }
