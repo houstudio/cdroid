@@ -31,6 +31,55 @@ static const char *DATA_RESOURCE_PATH = "system/i18n/i18n.dat";
 static const char *DATA_RESOURCE_PATH = "./i18n.dat";//"/storage/data/i18n.dat";
 #endif
 
+// Process-wide in-memory copy of i18n.dat. Loaded ONCE (first Init or
+// SetData); all subsequent Init() calls do per-instance locale extraction
+// from this buffer with zero syscalls (no open/dup/lseek/read/close).
+const char *DataResource::s_data = nullptr;
+size_t DataResource::s_dataSize = 0;
+bool DataResource::s_dataLoaded = false;
+
+void DataResource::SetData(const char *data, size_t size)
+{
+    s_data = data;
+    s_dataSize = size;
+    s_dataLoaded = (data != nullptr && size > 0);
+}
+
+bool DataResource::EnsureDataLoaded()
+{
+    if (s_dataLoaded) return true;
+    // If App set a buffer via SetData (pak-loaded), use it.
+    if (s_data != nullptr && s_dataSize > 0) {
+        s_dataLoaded = true;
+        return true;
+    }
+    // Fallback: read the entire sidecar file into a buffer (never freed —
+    // process lifetime, same as the pak buffer would be).
+    int32_t infile = open(DATA_RESOURCE_PATH, O_RDONLY);
+    if (infile < 0) {
+#ifdef I18N_PRODUCT
+        HILOG_ERROR(HILOG_MODULE_GLOBAL, "DataResource::EnsureDataLoaded: open failed, errno(%d)!", errno);
+#endif
+        return false;
+    }
+    off_t end = lseek(infile, 0, SEEK_END);
+    if (end <= 0) { close(infile); return false; }
+    s_dataSize = (size_t)end;
+    s_data = reinterpret_cast<const char *>(I18nMalloc(s_dataSize));
+    if (!s_data) { close(infile); return false; }
+    lseek(infile, 0, SEEK_SET);
+    ssize_t n = read(infile, const_cast<char *>(s_data), s_dataSize);
+    close(infile);
+    if ((size_t)n != s_dataSize) {
+        I18nFree(const_cast<char *>(s_data));
+        s_data = nullptr;
+        s_dataSize = 0;
+        return false;
+    }
+    s_dataLoaded = true;
+    return true;
+}
+
 DataResource::DataResource(const LocaleInfo *localeInfo)
 {
     uint32_t enMask = LocaleInfo("en", "US").GetMask();
@@ -146,58 +195,36 @@ char *DataResource::BinarySearchString(uint32_t *indexArray, uint32_t length, ui
     return nullptr;
 }
 
-bool DataResource::Init(void)
+bool DataResource::Init()
 {
-    int32_t infile = open(DATA_RESOURCE_PATH, O_RDONLY);
-    if (infile < 0) {
-#ifdef I18N_PRODUCT
-        HILOG_ERROR(HILOG_MODULE_GLOBAL, "DataResource::Init: open DATA_RESOURCE_PATH failed, errno(%d)!", errno);
-#endif
-        return false;
-    }
-    bool ret = ReadHeader(infile);
-    if (!ret) {
-        close(infile);
-        return false;
-    }
-    if ((localesCount < 1) || (localesCount > MAX_LOCALE_ITEM_SIZE)) {
-        close(infile);
-        return false;
-    }
-    ret = PrepareData(infile);
-    close(infile);
-    return ret;
+    // Load the static buffer once (first call). Subsequent calls skip this
+    // and go straight to per-instance locale extraction from the buffer.
+    if (!EnsureDataLoaded()) return false;
+    if (!ReadHeader()) return false;
+    if ((localesCount < 1) || (localesCount > MAX_LOCALE_ITEM_SIZE)) return false;
+    return PrepareData();
 }
 
-bool DataResource::ReadHeader(int32_t infile)
+bool DataResource::ReadHeader()
 {
-    int32_t seekSize = lseek(infile, GLOBAL_RESOURCE_HEADER_SKIP, SEEK_SET);
-    if (seekSize < 0) {
+    if (!s_data || s_dataSize < GLOBAL_RESOURCE_HEADER_SKIP + GLOBAL_RESOURCE_HEADER_LEFT) {
         return false;
     }
-    char cache[GLOBAL_RESOURCE_HEADER_LEFT] = {0};
-    int32_t readSize = read(infile, cache, GLOBAL_RESOURCE_HEADER_LEFT);
-    if (readSize != GLOBAL_RESOURCE_HEADER_LEFT) {
-        return false;
-    }
+    const char *cache = s_data + GLOBAL_RESOURCE_HEADER_SKIP;
     localesCount = ((static_cast<unsigned char>(cache[0]) << SHIFT_ONE_BYTE) | (static_cast<unsigned char>(cache[1])));
     stringPoolOffset = ((static_cast<unsigned char>(cache[GLOBAL_RESOURCE_INDEX_OFFSET]) << SHIFT_ONE_BYTE) |
         (static_cast<unsigned char>(cache[GLOBAL_RESOURCE_INDEX_OFFSET + 1])));
     return true;
 }
 
-bool DataResource::PrepareData(int32_t infile)
+bool DataResource::PrepareData()
 {
     uint32_t localeSize = localesCount * GLOBAL_LOCALE_MASK_ITEM_SIZE;
-    char *locales = reinterpret_cast<char *>(I18nMalloc(localeSize));
-    if (locales == nullptr) {
-        return false;
-    }
-    int32_t readSize = read(infile, locales, localeSize);
-    if (readSize < 0 || localeSize != static_cast<uint32_t>(readSize)) {
-        I18nFree(static_cast<void *>(locales));
-        return false;
-    }
+    // Locale table follows the header in the buffer — direct pointer, no malloc.
+    size_t localeBase = GLOBAL_RESOURCE_HEADER_SKIP + GLOBAL_RESOURCE_HEADER_LEFT;
+    if (s_dataSize < localeBase + localeSize) return false;
+    char *locales = const_cast<char *>(s_data + localeBase);
+
     int32_t localeIndex = BinarySearchLocale(localeMask, reinterpret_cast<unsigned char*>(locales));
     int32_t fallbackLocaleIndex = -1;
     int32_t defaultLocaleIndex = -1;
@@ -213,17 +240,17 @@ bool DataResource::PrepareData(int32_t infile)
     uint32_t defaultConfigOffset = 0;
     GetFallbackAndDefaultInfo(fallbackLocaleIndex, defaultLocaleIndex, fallbackConfigOffset, defaultConfigOffset,
         locales);
-    I18nFree(static_cast<void *>(locales));
+    // No I18nFree(locales) — it's a pointer into the static buffer.
     bool ret = true;
     if (IsTypeNeeded(localeIndex, resourceCount)) {
-        ret = PrepareLocaleData(infile, configOffset, resourceCount, LocaleDataType::RESOURCE);
+        ret = PrepareLocaleData(configOffset, resourceCount, LocaleDataType::RESOURCE);
     }
     if (IsTypeNeeded(fallbackLocaleIndex, fallbackResourceCount)) {
-        ret = PrepareLocaleData(infile, fallbackConfigOffset, fallbackResourceCount,
+        ret = PrepareLocaleData(fallbackConfigOffset, fallbackResourceCount,
             LocaleDataType::FALLBACK_RESOURCE);
     }
     if (IsTypeNeeded(defaultLocaleIndex, defaultResourceCount)) {
-        ret = PrepareLocaleData(infile, defaultConfigOffset, defaultResourceCount, LocaleDataType::DEFAULT_RESOURCE);
+        ret = PrepareLocaleData(defaultConfigOffset, defaultResourceCount, LocaleDataType::DEFAULT_RESOURCE);
     }
     return ret;
 }
@@ -264,29 +291,20 @@ void DataResource::GetFallbackAndDefaultInfo(const int32_t &fallbackLocaleIndex,
     }
 }
 
-bool DataResource::PrepareLocaleData(int32_t infile, uint32_t configOffset, uint32_t count, LocaleDataType type)
+bool DataResource::PrepareLocaleData(uint32_t configOffset, uint32_t count, LocaleDataType type)
 {
     currentType = type;
     if (count < 1 || count > DataResourceType::RESOURCE_TYPE_END) {
         return false;
     }
     uint32_t resourceSize = count * GLOBAL_RESOURCE_CONFIG_SIZE;
-    char *configs = reinterpret_cast<char *>(I18nMalloc(resourceSize));
-    if (configs == nullptr) {
+    if (s_dataSize < configOffset + resourceSize) {
         return false;
     }
-    int32_t seekSize = lseek(infile, configOffset, SEEK_SET);
-    if (configOffset != static_cast<uint32_t>(seekSize)) {
-        I18nFree(static_cast<void *>(configs));
-        return false;
-    }
-    int32_t readSize = read(infile, configs, resourceSize);
-    if (readSize != resourceSize) {
-        I18nFree(static_cast<void *>(configs));
-        return false;
-    }
-    bool ret = GetStringFromStringPool(configs, resourceSize, infile, type);
-    I18nFree(static_cast<void *>(configs));
+    // Configs are a direct pointer into the static buffer — no malloc, no read.
+    char *configs = const_cast<char *>(s_data + configOffset);
+    bool ret = GetStringFromStringPool(configs, resourceSize, type);
+    // No I18nFree(configs) — it's part of the static buffer.
     return ret;
 }
 
@@ -322,8 +340,7 @@ uint32_t DataResource::GetFinalCount(char *configs, uint32_t configSize, LocaleD
     return finalCount;
 }
 
-bool DataResource::GetStringFromStringPool(char *configs, const uint32_t configsSize, int32_t infile,
-    LocaleDataType type)
+bool DataResource::GetStringFromStringPool(char *configs, const uint32_t configsSize, LocaleDataType type)
 {
     uint32_t finalCount = GetFinalCount(configs, configsSize, type);
     if (finalCount == 0) {
@@ -358,7 +375,7 @@ bool DataResource::GetStringFromStringPool(char *configs, const uint32_t configs
     if (!ApplyForResource(index, wanted, finalCount)) {
         return false;
     }
-    return Retrieve(configs, configsSize, infile, originalCount, type);
+    return Retrieve(configs, configsSize, originalCount, type);
 }
 
 void DataResource::GetType(char** &adjustResource, uint32_t* &adjustResourceIndex, uint32_t &count,
@@ -386,7 +403,7 @@ void DataResource::GetType(char** &adjustResource, uint32_t* &adjustResourceInde
     }
 }
 
-bool DataResource::Retrieve(char *configs, uint32_t configsSize, int32_t infile, const uint32_t orginalCount,
+bool DataResource::Retrieve(char *configs, uint32_t configsSize, const uint32_t orginalCount,
     LocaleDataType type)
 {
     uint32_t count = 0;
@@ -403,22 +420,19 @@ bool DataResource::Retrieve(char *configs, uint32_t configsSize, int32_t infile,
             GLOBAL_RESOURCE_CONFIG_SIZE + GLOBAL_RESOURCE_INDEX_OFFSET));
         uint32_t length = ConvertUChar(reinterpret_cast<unsigned char*>(configs + i *
             GLOBAL_RESOURCE_CONFIG_SIZE + GLOBAL_RESOURCE_MASK_OFFSET));
-        int32_t seekSize = lseek(infile, stringPoolOffset + offset, SEEK_SET);
-        if ((length == 0) || (seekSize != static_cast<uint32_t>(stringPoolOffset + offset))) {
+        size_t strPos = stringPoolOffset + offset;
+        if ((length == 0) || (s_dataSize < strPos + length)) {
             adjustResource[currentIndex] = nullptr;
             adjustResourceIndex[currentIndex] = index;
         } else {
+            // Copy from the static buffer into a owned, null-terminated string.
             char *temp = reinterpret_cast<char *>(I18nMalloc(length + 1));
             if (temp == nullptr) {
                 loaded[index] = DataResourceType::RESOURCE_TYPE_END;
                 return false;
             }
-            int32_t readSize = read(infile, temp, length);
+            memcpy(temp, s_data + strPos, length);
             temp[length] = 0;
-            if ((readSize < 0) || (static_cast<uint32_t>(readSize) != length)) {
-                I18nFree(static_cast<void *>(temp));
-                return false;
-            }
             adjustResource[currentIndex] = temp;
             adjustResourceIndex[currentIndex] = index;
         }

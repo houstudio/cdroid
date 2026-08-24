@@ -23,6 +23,14 @@ set(CDROID_SDK_RES_FILTER "${CMAKE_SOURCE_DIR}/scripts/sdk_res_filter.json" CACH
 # binary instead. ID-defining entries (attr/public/symbols) are rejected.
 set(CDROID_OVERLAY "" CACHE PATH "optional global res overlay dir applied to the shared cdroid.pak")
 
+# i18n data (src/gui/i18n/i18n.dat) carried as an internal cdroid.pak resource
+# (raw/i18n.dat) so DataResource::Init can read from the pak instead of a sidecar
+# .dat file — lowers deployment friction (one fewer loose file to ship). Single
+# source stays in src/gui/i18n/; configure-time copy mirrors the header-copy
+# auto-sync pattern.
+file(COPY "${CMAKE_SOURCE_DIR}/src/gui/i18n/i18n.dat"
+     DESTINATION "${CMAKE_SOURCE_DIR}/src/gui/res/raw")
+
 # Enable ctest at the top level so registered tests (e.g. the standalone androidfw
 # sub-library unit tests) are discoverable via `ctest` from the build root.
 enable_testing()

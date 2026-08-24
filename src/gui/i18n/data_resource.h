@@ -98,17 +98,29 @@ enum DataResourceType {
 class DataResource {
 public:
     explicit DataResource(const LocaleInfo *localeInfo);
+    // Load i18n.dat into the static buffer (first call only — subsequent
+    // calls skip straight to per-instance locale extraction from the
+    // in-memory buffer, zero syscalls). The buffer is set via SetData (pak)
+    // or loaded from the ./i18n.dat sidecar as a fallback.
     bool Init();
     char *GetString(DataResourceType type) const;
     virtual ~DataResource();
     void GetString(DataResourceType type, std::string &ret) const;
+    // Set the process-wide i18n.dat buffer (called once at App startup when
+    // the data is loaded from cdroid.pak). Data must live for the process
+    // lifetime (App never frees it). Null = fall back to sidecar file.
+    static void SetData(const char *data, size_t size);
 
 private:
+    static const char *s_data;       // the entire i18n.dat in RAM
+    static size_t s_dataSize;
+    static bool s_dataLoaded;        // first Init() loads; rest skip
+    static bool EnsureDataLoaded();
     static uint32_t GetFallbackMask(const LocaleInfo &src);
-    bool ReadHeader(int32_t infile);
-    bool PrepareData(int32_t infile);
+    bool ReadHeader();
+    bool PrepareData();
     int32_t BinarySearchLocale(const uint32_t mask, unsigned char *locales);
-    bool GetStringFromStringPool(char *configs, const uint32_t configsSize, int32_t infile, LocaleDataType type);
+    bool GetStringFromStringPool(char *configs, const uint32_t configsSize, LocaleDataType type);
     uint32_t ConvertUint(unsigned char *src);
     uint32_t ConvertUChar(unsigned char *src);
     char *GetString2(DataResourceType type) const;
@@ -120,9 +132,9 @@ private:
         char *locales);
     void GetFallbackAndDefaultInfo(const int32_t &fallbackLocaleIndex, const int32_t &defaultLocaleIndex,
         uint32_t &fallbackConfigOffset, uint32_t &defaultConfigOffset, char *locales);
-    bool Retrieve(char *configs, const uint32_t configsSize, int32_t infile, const uint32_t originalCount,
+    bool Retrieve(char *configs, const uint32_t configsSize, const uint32_t originalCount,
         LocaleDataType type);
-    bool PrepareLocaleData(int32_t infile, uint32_t configOffset, uint32_t count, LocaleDataType type);
+    bool PrepareLocaleData(uint32_t configOffset, uint32_t count, LocaleDataType type);
     bool FullLoaded();
     void GetType(char** &adjustResource, uint32_t* &adjustResourceIndex, uint32_t &count, LocaleDataType type);
     uint32_t GetFinalCount(char *configs, uint32_t configSize, LocaleDataType type);

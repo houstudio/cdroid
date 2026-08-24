@@ -34,7 +34,11 @@
 #include <core/intent.h>
 #include <core/activityfactory.h>
 #include <widget/cdwindow.h>
+#include <widget/internal_R.h>
 #include <gui_features.h>
+#include <cstdio>
+#include <iterator>
+#include "data_resource.h"
 #include <core/cxxopts.h>
 #include <core/inputeventsource.h>
 #include <core/windowmanager.h>
@@ -223,6 +227,21 @@ void App::onInit(){
     const std::string pak = findSharedPak("cdroid.pak");
     if (!pak.empty()) addResource(pak, "cdroid");
     else addResource("cdroid.pak", "cdroid");   // keep the old failure log
+    // i18n data: load raw/i18n.dat from cdroid.pak into a process-lifetime
+    // buffer so DataResource::Init reads from RAM (no fd/lseek/read per format
+    // class). The string is heap-allocated and never deleted — its buffer is
+    // the backing store for DataResource's static pointer. Falls back to the
+    // ./i18n.dat sidecar when the pak entry is absent.
+    if (auto stream = getInputStream("cdroid:raw/i18n.dat")) {
+        auto* data = new std::string((std::istreambuf_iterator<char>(*stream)),
+                                     std::istreambuf_iterator<char>());
+        if (!data->empty()) {
+            i18n::DataResource::SetData(data->data(), data->size());
+            LOGD("i18n.dat from pak: %zu bytes (buffer-based)", data->size());
+        }
+    } else {
+        LOGW("cdroid:raw/i18n.dat not found in pak — i18n falls back to ./i18n.dat");
+    }
     // widgetEx shared resource pak (package-id 0x02 — ConstraintLayout/TabLayout/
     // RecyclerView/etc. custom attrs). Built once, shared by all apps.
     const std::string wpak = findSharedPak("widgetex.pak");
