@@ -403,6 +403,8 @@ void PopupWindow::showAtLocation(View* parent, int gravity, int x, int y){
     if (isShowing() || (mContentView == nullptr)) {
         return;
     }
+    // Fresh show: clear the exit-transition state (see showAsDropDown).
+    mIsTransitioningToDismiss = false;
     //TransitionManager.endTransitions(mDecorView);
 
     detachFromAnchor();
@@ -431,6 +433,10 @@ void PopupWindow::showAsDropDown(View* anchor, int xoff, int yoff,int gravity){
     if (isShowing() || !hasContentView()) {
         return;
     }
+    // Fresh show: clear the transitioning-to-dismiss state left by an exit-
+    // animated dismiss (its callback deliberately does not touch this object -
+    // see dismiss(); the sync path resets the flag in dismissImmediate).
+    mIsTransitioningToDismiss = false;
 
     //TransitionManager::endTransitions(mDecorView);
 
@@ -559,13 +565,13 @@ void PopupWindow::invokePopup(WindowManager::LayoutParams* p){
     // HERE — after the anchor alignment above — so an enter snap captures the final
     // resting position (the theme windowAnimationStyle path cannot be used from the
     // ctor for exactly that reason; see PopupDecorView's note).
-    // ENTER ONLY: an exit animation would defer the decor's detach to the animation end,
-    // past the moment owners free borrowed content at dismiss (a ListView's adapter
-    // deleted right after PopupWindow::dismiss crashed exactly so). AOSP pays the same
-    // deferred detach, surviving only because GC keeps the freed memory alive.
+    // AOSP semantics: BOTH enter and exit install (AOSP always animates popup
+    // exits). The no-GC discipline for the deferred teardown lives in dismiss()'s
+    // exit branch: borrowed-content owners must setAdapter(nullptr) before freeing
+    // (the menu chain does; see the dismiss() comment).
     p->windowAnimations = computeAnimationResource();
     if (p->windowAnimations != 0) {
-        ((Window*)mDecorView)->setWindowAnimations(p->windowAnimations, /*enableExit=*/false);
+        ((Window*)mDecorView)->setWindowAnimations(p->windowAnimations, /*enableExit=*/true);
     }
     //mWindowManager->addView(mDecorView, p);
     /*if (mEnterTransition != nullptr) {
@@ -896,7 +902,7 @@ int PopupWindow::getMaxAvailableHeight(View* anchor, int yOffset,bool ignoreBott
 }
 
 void PopupWindow::dismiss(){
-    if (!isShowing() /*|| isTransitioningToDismiss()*/) {
+    if (!isShowing() || mIsTransitioningToDismiss) {   // AOSP's second guard restored
         return;
     }
     PopupDecorView* decorView = mDecorView;
@@ -916,32 +922,51 @@ void PopupWindow::dismiss(){
     // isAttachedToWindow() during execution of this method; however, we
     // can expect the OnAttachStateChangeListener to have been called prior
     // to executing this method, so we can rely on that instead.
-    /*Transition exitTransition = mExitTransition;
-    if (exitTransition && decorView->isLaidOut()
+    //
+    // AOSP exit branch (restored, on the window-level animation machinery):
+    // when the decor carries an exit transition, the teardown is DEFERRED to
+    // the transition end - the decor stays visible, animating out, with the
+    // content still attached. Window::close(onTeardown) starts the exit
+    // animation and invokes the callback at finishClose time - after the
+    // animation, while the view tree is still intact - which is exactly
+    // AOSP's onTransitionEnd -> dismissImmediate point: the borrowed content
+    // returns to its owner then, and the owned content is freed with the
+    // decor's teardown cascade.
+    // DEVIATION from AOSP (documented): the dismiss LISTENER fires at
+    // teardown-complete instead of immediately. Firing it immediately would
+    // let the whole owner chain (a menu's fire-and-forget self-delete) free
+    // the content while the decor is still animating it - AOSP survives that
+    // only because GC keeps everything reachable until the real detach. With
+    // the deferred fire, borrowed-resource owners get the natural contract:
+    // free adapters and other borrowed state in or after onDismiss.
+    // The callback MUST NOT capture this: the PopupWindow may legitimately be
+    // destroyed before the animation ends, and the decor outlives it
+    // self-owned. The listener copy holds the shared functor (CallbackBase
+    // copies alias), so it fires safely post-free. mIsTransitioningToDismiss
+    // is reset at the next show entry (the sync path resets it in
+    // dismissImmediate).
+    ActivityTransition* exitT = ((Window*)decorView)->getExitTransition();
+    if (exitT && exitT->getType() != ActivityTransition::Type::NONE
+            && decorView->isLaidOut()
             && (mIsAnchorRootAttached || mAnchorRoot == nullptr)) {
-        // The decor view is non-interactive and non-IME-focusable during exit transitions.
-        LayoutParams p = (LayoutParams) decorView.getLayoutParams();
-        p.flags |= LayoutParams.FLAG_NOT_TOUCHABLE;
-        p.flags |= LayoutParams.FLAG_NOT_FOCUSABLE;
-        p.flags &= ~LayoutParams.FLAG_ALT_FOCUSABLE_IM;
-        mWindowManager.updateViewLayout(decorView, p);
-
-        View anchorRoot = mAnchorRoot != null ? mAnchorRoot.get() : null;
-        Rect epicenter = getTransitionEpicenter();
-
-        // Once we start dismissing the decor view, all state (including
-        // the anchor root) needs to be moved to the decor view since we
-        // may open another popup while it's busy exiting.
-        decorView.startExitTransition(exitTransition, anchorRoot, epicenter,
-                new TransitionListenerAdapter() {
-                    @Override
-                    public void onTransitionEnd(Transition transition) {
-                        dismissImmediate(decorView, contentHolder, contentView);
-                    }
-                });
-    } else */{
-        dismissImmediate(decorView, contentHolder, contentView);
+        const bool ownsContent = mOwnsContentView;
+        OnDismissListener onDismissListener = mOnDismissListener;
+        mOnDismissListener = OnDismissListener();
+        // Clears the anchor view (AOSP runs this before the notification).
+        detachFromAnchor();
+        ((Window*)decorView)->close([ownsContent, contentHolder, contentView,
+                                     onDismissListener](){
+            if (!ownsContent && (contentHolder != nullptr)) {
+                // Give the borrowed content back to its owner for reuse.
+                contentHolder->removeView(contentView);
+            }
+            if (onDismissListener != nullptr) {
+                onDismissListener();
+            }
+        });
+        return;
     }
+    dismissImmediate(decorView, contentHolder, contentView);
 
     // Clears the anchor view.
     detachFromAnchor();

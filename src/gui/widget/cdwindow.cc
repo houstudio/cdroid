@@ -1027,6 +1027,10 @@ void Window::startActivityForResult(const Intent& intent, int requestCode){
 }
 
 void Window::close(){
+    close(nullptr);
+}
+
+void Window::close(const std::function<void()>& onTeardown){
     // Deliver pending activity result synchronously (onActivityResult must not wait on the exit
     // animation). Then, if a close transition (returnTransition, else exitTransition) is configured,
     // play it before tearing down — the Window stays in mWindows (visible to composeSurfaces) until
@@ -1037,6 +1041,7 @@ void Window::close(){
     // Mirrors Dialog::dismiss's mShowing guard.
     if (mClosePending) return;
     mClosePending = true;
+    mTeardownCb = onTeardown;
     App::getInstance().dispatchPendingResult(this);
     ActivityTransition* t = mReturnTransition ? mReturnTransition : mExitTransition;
     if (t && t->getType() != ActivityTransition::Type::NONE
@@ -1048,6 +1053,15 @@ void Window::close(){
 }
 
 void Window::finishClose(){
+    // The teardown callback runs FIRST: after the exit transition (when one
+    // played) but before removeWindow detaches the tree - the caller's last
+    // point with the view hierarchy intact. detachOwner() clears it when the
+    // owner dies mid-animation (cancel the pending notification).
+    if (mTeardownCb) {
+        std::function<void()> cb = mTeardownCb;
+        mTeardownCb = nullptr;
+        cb();
+    }
     // removeWindow detaches the view tree (nulls mAttachInfo), so stash AttachInfo first; the
     // posted lambda frees it + the window. removeWindow runs IMMEDIATELY (window leaves the
     // compositor at once). The deletes are deferred so the current call stack can still touch this

@@ -119,6 +119,14 @@ private:
     void snapEnterStart(ActivityTransition* t); // pre-snap to the start state so the first frame isn't a fully-shown flash
     static void computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y);
     void finishClose(); // close()'s tail: post (onDestroy + delete) + removeWindow
+protected:
+    // The teardown callback handed to close(cb): invoked at finishClose time
+    // (after the exit transition, view tree still intact). Stored as a member
+    // so the owner can CANCEL it (see PopupDecorView::detachOwner) when it
+    // dies before the animation ends - a pending notification must never fire
+    // into a freed owner chain.
+    std::function<void()> mTeardownCb;
+private:
     // Build the default enter/exit ActivityTransitions from mWindowAnimationStyle or (when 0)
     // the theme's windowAnimationStyle (AOSP PhoneWindow.generateLayout records the style;
     // AppTransition resolves the actual animations from it — simplified to an enter/exit pair).
@@ -313,11 +321,11 @@ public:
     void requestTransitionStart(LayoutTransition* transition)override;
     // AOSP Window.setWindowAnimations: an explicit animation STYLE res id overriding the theme's
     // windowAnimationStyle for this window's enter/exit (0 restores the theme resolution).
-    // enableExit=false installs the ENTER animation only: an exit animation defers the view
-    // tree's detach to the animation end, which breaks owners that free borrowed content at
-    // dismiss (e.g. a ListView's adapter deleted right after PopupWindow::dismiss — AOSP only
-    // gets away with animated popup exits because GC keeps that memory alive). Popups pass
-    // false; app windows keep the full pair.
+    // enableExit=false installs the ENTER animation only. AOSP always installs the full pair
+    // (it survives animated popup exits on GC); popups also pass true now - the no-GC
+    // discipline for the deferred teardown (borrowed-content owners must detach their
+    // adapter before freeing it) is documented on PopupWindow::dismiss. The parameter stays
+    // for substrate callers that need the legacy synchronous-teardown behavior.
     void setWindowAnimations(int resId, bool enableExit = true);
     // Window-level Activity transitions (android.app.Activity transition API names). Each setter
     // takes ownership of the passed ActivityTransition* (replacing/deleting any previous one).
@@ -330,6 +338,12 @@ public:
     ActivityTransition* getReturnTransition()  const { return mReturnTransition; }
     ActivityTransition* getReenterTransition() const { return mReenterTransition; }
     void close();
+    // Substrate extension (not an AOSP mirror): close() with a teardown
+    // callback, invoked at finishClose time - after the exit transition (when
+    // one plays) but while the view tree is still intact, i.e. the caller's
+    // last safe point before the window teardown cascade. PopupWindow's exit
+    // branch uses it to return borrowed content at the AOSP-specified moment.
+    void close(const std::function<void()>& onTeardown);
 };
 using Activity=Window;
 
