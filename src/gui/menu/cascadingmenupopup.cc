@@ -567,8 +567,12 @@ void CascadingMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)
         mShownAnchorView->removeOnAttachStateChangeListener(mAttachStateChangeListener);
 
         // If every [sub]menu was dismissed, that means the whole thing was
-        // dismissed, so notify the owner.
-        mOnDismissListener();//.onDismiss();
+        // dismissed, so notify the owner. AOSP null-checks the listener here;
+        // it is only installed when the popup runs under a MenuPopupHelper
+        // (direct CascadingMenuPopup users have none).
+        if (mOnDismissListener != nullptr) {
+            mOnDismissListener();
+        }
     } else if (allMenusAreClosing) {
         // Close all menus starting from the root. This will recursively
         // close any remaining menus, so we don't need to propagate the
