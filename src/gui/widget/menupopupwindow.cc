@@ -25,6 +25,20 @@ void MenuPopupWindow::setEnterTransition(Transition* enterTransition) {
 
 void MenuPopupWindow::setExitTransition(Transition* exitTransition) {
     mPopup->setExitTransition(exitTransition);
+    // CDROID no-GC adaptation: menu windows always close SYNCHRONOUSLY (see
+    // CascadingMenuPopup::onCloseMenu) - the fire-and-forget menu chain, and
+    // third-party teardowns like activity recreation, cannot guarantee the
+    // owner graph survives an exit animation. The PopupWindow-level
+    // Transition above feeds the (unported) AOSP view-scene branch; the DECOR
+    // window's ActivityTransition is what drives the animated teardown here,
+    // so clear it too or the deferred cascade fires into freed owners.
+    if (mPopup->isShowing()) {
+        if (View* content = mPopup->getContentView()) {
+            if (Window* decor = dynamic_cast<Window*>(content->getRootView())) {
+                decor->setExitTransition(nullptr);
+            }
+        }
+    }
 }
 
 void MenuPopupWindow::setHoverListener(const MenuItemHoverListener& hoverListener) {

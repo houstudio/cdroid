@@ -50,8 +50,16 @@ void CascadingMenuPopup::onViewDetachedFromWindow(View& v) {
             mTreeObserver = v.getViewTreeObserver();
         }
         mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
+        mTreeObserver = nullptr;   // dies with the anchor tree; ~CMP must not touch it
     }
     v.removeOnAttachStateChangeListener(mAttachStateChangeListener);
+    // The anchor tree is being torn down (e.g. activity recreation) - its
+    // views are freed right after this notification. Drop the anchor pointer
+    // so ~CascadingMenuPopup's cleanup (which would otherwise dereference the
+    // freed view) knows the listeners above are already gone.
+    if (mShownAnchorView == &v) {
+        mShownAnchorView = nullptr;
+    }
 }
 
 //MenuItemHoverListener mMenuItemHoverListener = new MenuItemHoverListener() {
@@ -530,9 +538,17 @@ void CascadingMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)
     CascadingMenuInfo* info = mShowingMenus.at(menuIndex);
     mShowingMenus.erase(mShowingMenus.begin()+menuIndex);
     info->menu->removeMenuPresenter(this);
+    // CDROID no-GC adaptation: EVERY menu close is synchronous (AOSP's
+    // shouldCloseImmediately semantic, menu-wide). The fire-and-forget menu
+    // chain dies right after the dismiss cascade, and third-party teardowns
+    // (activity recreation freeing the ActionBar/MenuBuilder) can land inside
+    // an exit-animation window - an animated decor teardown defers its
+    // notification past both and fires into freed owners. MenuPopupWindow::
+    // setExitTransition(nullptr) clears the View-level transition AND the
+    // decor window's ActivityTransition; direct PopupWindow owners keep
+    // animated exits.
+    info->window->setExitTransition(nullptr);
     if (mShouldCloseImmediately) {
-        // Disable all exit animations.
-        info->window->setExitTransition(nullptr);
         info->window->setAnimationStyle("");
     }
     info->window->dismiss();
@@ -564,7 +580,12 @@ void CascadingMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)
             }
             mTreeObserver = nullptr;
         }
-        mShownAnchorView->removeOnAttachStateChangeListener(mAttachStateChangeListener);
+        // Null when the anchor tree was torn down (onViewDetachedFromWindow
+        // already removed the listener and dropped the pointer) - e.g. the
+        // menu outlived an activity recreation.
+        if (mShownAnchorView != nullptr) {
+            mShownAnchorView->removeOnAttachStateChangeListener(mAttachStateChangeListener);
+        }
 
         // If every [sub]menu was dismissed, that means the whole thing was
         // dismissed, so notify the owner. AOSP null-checks the listener here;
