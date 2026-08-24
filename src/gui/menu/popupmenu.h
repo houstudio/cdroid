@@ -88,7 +88,15 @@ public:
      *        to not look for defaults.
      */
     PopupMenu(Context* context, View* anchor, int gravity, int popupStyleAttr, int popupStyleRes);
+
+    /** Protected on purpose (mirrors Dialog): PopupMenu is fire-and-forget -
+        after show() it owns itself and self-destructs once its dismiss cascade
+        completes. Deleting a shown menu is prevented at compile time; the
+        destructor's purge guard keeps derived classes that expose a public
+        destructor (or never-shown menus) safe at runtime. */
+protected:
     virtual ~PopupMenu();
+public:
 
     /**
      * Sets the gravity used to align the popup window to its anchor view.
