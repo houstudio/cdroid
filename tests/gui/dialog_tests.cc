@@ -7,6 +7,7 @@
 #include <core/windowmanager.h>
 #include <menu/menubuilder.h>
 #include <menu/menupopuphelper.h>
+#include <menu/cascadingmenupopup.h>
 #include <widget/adapter.h>
 #include <widget/activitytransition.h>
 #include <widget/cdwindow.h>
@@ -240,4 +241,123 @@ TEST_F(DIALOG,Choices){
    ASSERT_NE(dlg,nullptr);
    pumpFor(300);
    dlg->dismiss();
+}
+
+/* ---- teardown-complete protocol: delete-at-any-time (Stage 0) ------------ */
+
+static int testWindowCount(){
+   std::vector<Window*>windows;
+   WindowManager::getInstance().getWindows(windows);
+   return (int)windows.size();
+}
+
+/* close() idempotence: a second close() while the first is still pending must
+   not post a second `delete self` for the same Window (double free). */
+TEST_F(DIALOG,WindowDoubleClose){
+   App&app=App::getInstance();
+   Window*w=new Window(&app,0,0,100,100,Window::TYPE_APPLICATION);
+   pumpFor(50);
+   w->close();
+   w->close();   // re-entry: guarded, no second posted delete
+   pumpFor(200); // the single posted delete runs
+}
+
+/* Destroying a SHOWING PopupWindow directly (no dismiss first): the dtor must
+   tear the decor down - compositor release immediate, delete posted - instead
+   of leaving it on screen with a dangling mPop back-pointer. */
+TEST_F(DIALOG,PopupWindowDeleteWhileShowing){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("anchor3");
+   GUIEnvironment::content()->addView(anchor,new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   PopupWindow*popup=new PopupWindow(&app,nullptr,(int)cdroid::internal::R::attr::popupMenuStyle,0);
+   TextView*content=new TextView(&app); content->setText("popup");
+   popup->setContentView(content);   // borrowed: handed back by the dtor
+   popup->setWidth(200); popup->setHeight(100);
+   popup->showAsDropDown(anchor,0,0);
+   pumpFor(50);
+   const int showing=testWindowCount();
+
+   delete popup;   // no dismiss() - the dtor does the full teardown
+   EXPECT_EQ(testWindowCount(),showing-1); // compositor release is immediate
+   pumpFor(200);   // the posted decor delete runs; nothing may touch it
+
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
+   delete content; // the borrowed content was returned to us, we own it again
+}
+
+/* Deleting the PopupWindow from inside its own dismiss listener: the listener
+   fires from a stack copy with the member cleared first, so the executing
+   function object survives its own destruction. */
+TEST_F(DIALOG,PopupWindowDeleteInsideDismissListener){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("anchor4");
+   GUIEnvironment::content()->addView(anchor,new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   PopupWindow*popup=new PopupWindow(&app,nullptr,(int)cdroid::internal::R::attr::popupMenuStyle,0);
+   TextView*content=new TextView(&app); content->setText("popup");
+   popup->setContentView(content);
+   popup->setWidth(200); popup->setHeight(100);
+   popup->showAsDropDown(anchor,0,0);
+   pumpFor(50);
+   popup->setOnDismissListener([popup](){ delete popup; });
+   popup->dismiss();  // the listener deletes the object mid-notification
+   pumpFor(200);
+
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
+   delete content;    // dtor returned the borrowed content before the decor free
+}
+
+/* Same protocol one level up: the app listener on a ListPopupWindow runs AFTER
+   its member cleanup, so deleting the ListPopupWindow inside that listener is
+   safe end to end (its dtor deletes the inner PopupWindow mid-notification,
+   which the PopupWindow teardown covers). */
+TEST_F(DIALOG,ListPopupWindowDeleteInsideDismissListener){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("anchor5");
+   GUIEnvironment::content()->addView(anchor,new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   ListPopupWindow*lpw=new ListPopupWindow(&app,nullptr,(int)cdroid::internal::R::attr::popupMenuStyle,0);
+   lpw->setAdapter(new OneRowAdapter());
+   lpw->setAnchorView(anchor);
+   lpw->show();
+   pumpFor(50);
+   lpw->setOnDismissListener([lpw](){ delete lpw; }); // deletes itself mid-notification
+   lpw->dismiss();
+   pumpFor(200);
+
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
+}
+
+/* CascadingMenuPopup::dismiss iterates a COPY of mShowingMenus: each window
+   dismiss re-enters onCloseMenu, which erases from the live vector mid-loop.
+   Two showing windows (the cascading-submenu shape) must walk the copy. Also
+   exercises the dtor's symmetric unregister from both menus' presenters. */
+TEST_F(DIALOG,CascadingMenuDismissDuringCascade){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("anchor6");
+   GUIEnvironment::content()->addView(anchor,new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   CascadingMenuPopup*cmp=new CascadingMenuPopup(&app,anchor,
+         (int)cdroid::internal::R::attr::popupMenuStyle,0,true);
+   MenuBuilder*menu1=new MenuBuilder(&app); menu1->add("One"); menu1->add("Two");
+   MenuBuilder*menu2=new MenuBuilder(&app); menu2->add("Sub");
+   cmp->addMenu(menu1);  // pending (not showing yet)
+   cmp->show();
+   cmp->addMenu(menu2);  // showing -> second window: the cascade shape
+   pumpFor(50);
+   cmp->dismiss();       // copy-iterated dismiss-all
+   pumpFor(200);
+   delete cmp;           // dtor unregisters from both menus' presenters
+   delete menu1;
+   delete menu2;
+   GUIEnvironment::content()->removeView(anchor);
+   delete anchor;
 }
