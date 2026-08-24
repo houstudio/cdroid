@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 namespace cdroid{
+class Locale;  // core/Locale.h — java.util.Locale port
 class NumberFormat {
 protected:
     int fMinimumIntegerDigits = 1;
@@ -19,8 +20,11 @@ protected:
     int fMinimumFractionDigits = 0;
     int fMaximumFractionDigits = 3;
     bool fGroupingUsed = true;
-    char fDecimalSeparator = '.';
-    char fGroupingSeparator = ',';
+    // String, not char: locale separators from CLDR can be multi-byte UTF-8
+    // (ar decimal "٫" U+066B, fr grouping U+202F). The Locale factory
+    // overloads localize these through the i18n engine.
+    std::string fDecimalSeparator = ".";
+    std::string fGroupingSeparator = ",";
     int fMultiplier = 1;
     bool fParseIntegerOnly = false;
     
@@ -62,8 +66,19 @@ public:
     static std::unique_ptr<NumberFormat> getCurrencyInstance();
     static std::unique_ptr<NumberFormat> getPercentInstance();
     static std::unique_ptr<NumberFormat> getIntegerInstance();
+
+    // java.text.NumberFormat locale overloads: same factories, localized
+    // decimal/grouping separators from the i18n CLDR data (build with
+    // ENABLE_I18N; without it the Locale is accepted but separators stay
+    // '.'/','). Signatures match java.text.NumberFormat verbatim.
+    static std::unique_ptr<NumberFormat> getInstance(const Locale& inLocale);
+    static std::unique_ptr<NumberFormat> getNumberInstance(const Locale& inLocale);
+    static std::unique_ptr<NumberFormat> getCurrencyInstance(const Locale& inLocale);
+    static std::unique_ptr<NumberFormat> getPercentInstance(const Locale& inLocale);
+    static std::unique_ptr<NumberFormat> getIntegerInstance(const Locale& inLocale);
 protected:
     std::string applyGrouping(const std::string& input) const;
+    static void applyLocaleSeparators(NumberFormat* nf, const Locale& inLocale);
 };
 
 class DecimalFormat : public NumberFormat {

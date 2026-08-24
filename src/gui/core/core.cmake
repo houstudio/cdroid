@@ -33,6 +33,7 @@ SET(CORE_SOURCES
     core/canvas.cc
     core/color.cc
     core/numberformat.cc
+    core/i18nbridge.cc     # I18nBridge: cdroid::Locale → i18n::LocaleInfo adapter (vendored i18n untouched)
     core/display.cc
     core/displaymetrics.cc
     core/epollwrapper.cc

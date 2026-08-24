@@ -3,6 +3,11 @@
 #include <iomanip>
 #include <memory>
 #include <cmath>
+#include <core/Locale.h>
+#include <gui_features.h>
+#ifdef ENABLE_I18N
+#include <core/i18nbridge.h>
+#endif
 #include <cctype>
 #include <algorithm>
 #include <regex>
@@ -11,7 +16,11 @@
 namespace cdroid{
 
 std::string NumberFormat::format(double number) const {
-    double scaledNumber = number * fMultiplier / 100.0;
+    // java.text: format multiplies by the multiplier (percent=100 → "50" from
+    // 0.5). The old unconditional "/100" scaled EVERY number down — plain
+    // format(5) produced "0.050" — and paired with a compensating "*100" in
+    // parse(). Zero in-tree consumers, so realigned to java.text semantics.
+    double scaledNumber = number * fMultiplier;
     
     std::ostringstream oss;
     oss.imbue(std::locale::classic());
@@ -85,11 +94,17 @@ std::pair<double, size_t> NumberFormat::parse(const std::string& text, size_t po
     
     while (pos < text.length()) {
         char c = text[pos];
-        
-        if (c == fDecimalSeparator) {
+
+        // Separators may be multi-byte UTF-8 (locale factories localize them);
+        // match at the byte level instead of comparing single chars.
+        auto sepAt = [&text, pos](const std::string& sep) -> bool {
+            return !sep.empty() && text.compare(pos, sep.size(), sep) == 0;
+        };
+
+        if (sepAt(fDecimalSeparator)) {
             if (hasDecimalPoint || fParseIntegerOnly) break;
             hasDecimalPoint = true;
-            ++pos;
+            pos += fDecimalSeparator.size();
         } else if (std::isdigit(c)) {
             int digit = c - '0';
             
@@ -100,8 +115,8 @@ std::pair<double, size_t> NumberFormat::parse(const std::string& text, size_t po
                 result += digit / fractionalDivisor;
             }
             ++pos;
-        } else if (c == fGroupingSeparator && fGroupingUsed) {
-            ++pos;
+        } else if (sepAt(fGroupingSeparator) && fGroupingUsed) {
+            pos += fGroupingSeparator.size();
         } else if (std::isspace(c)) {
             ++pos; // 跳过空格
         } else {
@@ -114,7 +129,8 @@ std::pair<double, size_t> NumberFormat::parse(const std::string& text, size_t po
     }
     
     result *= (negative ? -1.0 : 1.0);
-    result = result * 100.0 / fMultiplier;
+    // java.text: parse divides by the multiplier (inverse of format's multiply).
+    result = result / fMultiplier;
     
     return {result, pos - start};
 }
@@ -143,6 +159,51 @@ std::unique_ptr<NumberFormat>  NumberFormat::getIntegerInstance() {
     nf->setMinimumFractionDigits(0);
     nf->setMaximumFractionDigits(0);
     nf->setParseIntegerOnly(true);
+    return nf;
+}
+
+// Locale overloads (java.text.NumberFormat): build the same instance as the
+// no-locale factory, then localize the separators from the i18n CLDR data
+// through I18nBridge (the vendored i18n engine stays untouched).
+// ENABLE_I18N off → separators stay '.'/',''.
+void NumberFormat::applyLocaleSeparators(NumberFormat* nf, const Locale& inLocale)
+{
+#ifdef ENABLE_I18N
+    const std::string dec = I18nBridge::decimalSeparator(inLocale);
+    const std::string grp = I18nBridge::groupingSeparator(inLocale);
+    if (!dec.empty()) nf->fDecimalSeparator = dec;
+    if (!grp.empty()) nf->fGroupingSeparator = grp;
+#else
+    (void)nf; (void)inLocale;
+#endif
+}
+
+std::unique_ptr<NumberFormat>  NumberFormat::getInstance(const Locale& inLocale) {
+    auto nf = getInstance();
+    applyLocaleSeparators(nf.get(), inLocale);
+    return nf;
+}
+
+std::unique_ptr<NumberFormat>  NumberFormat::getNumberInstance(const Locale& inLocale) {
+    // java.text: getNumberInstance(Locale) ≡ getInstance(Locale).
+    return getInstance(inLocale);
+}
+
+std::unique_ptr<NumberFormat>  NumberFormat::getCurrencyInstance(const Locale& inLocale) {
+    auto nf = getCurrencyInstance();
+    applyLocaleSeparators(nf.get(), inLocale);
+    return nf;
+}
+
+std::unique_ptr<NumberFormat>  NumberFormat::getPercentInstance(const Locale& inLocale) {
+    auto nf = getPercentInstance();
+    applyLocaleSeparators(nf.get(), inLocale);
+    return nf;
+}
+
+std::unique_ptr<NumberFormat>  NumberFormat::getIntegerInstance(const Locale& inLocale) {
+    auto nf = getIntegerInstance();
+    applyLocaleSeparators(nf.get(), inLocale);
     return nf;
 }
 

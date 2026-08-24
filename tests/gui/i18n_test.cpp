@@ -22,6 +22,9 @@
 #include "i18n/types.h"
 #include "i18n/week_info.h"
 #include <gui_features.h>
+#include <core/Locale.h>
+#include <core/i18nbridge.h>
+#include <core/numberformat.h>
 using namespace std;
 
 namespace cdroid {
@@ -1371,6 +1374,43 @@ TEST_F(I18NTest, I18nFuncTest062)
     out = formatter.Format(1, unit, status, MeasureFormatType::MEASURE_FULL);
     EXPECT_TRUE(expect.compare(out) == 0);
 }
+
+/**
+ * @tc.name: LocaleBridgeHelper
+ * @tc.desc: cdroid::Locale is the API face; Android-shaped entries convert
+ *   through the CDROID-owned I18nBridge helper (the vendored i18n engine is
+ *   never modified). Verifies the BCP-47 round-trip, the engine fed through
+ *   the bridge, and the java.text-shaped cdroid::NumberFormat locale
+ *   factories (including multi-byte UTF-8 separators).
+ */
+TEST_F(I18NTest, LocaleBridgeHelper)
+{
+    using cdroid::Locale;
+    using cdroid::I18nBridge;
+
+    // Bridge round-trip: language/script/region survive the tag conversion.
+    i18n::LocaleInfo info = I18nBridge::toLocaleInfo(Locale::SIMPLIFIED_CHINESE);
+    ASSERT_TRUE(info.GetLanguage() != nullptr && std::string(info.GetLanguage()) == "zh");
+    ASSERT_TRUE(info.GetScript() != nullptr && std::string(info.GetScript()) == "Hans");
+    ASSERT_TRUE(info.GetRegion() != nullptr && std::string(info.GetRegion()) == "CN");
+
+    // Engine classes fed through the bridge (de: decimal ',' grouping '.').
+    int status = 0;
+    i18n::LocaleInfo de = I18nBridge::toLocaleInfo(Locale("de", "DE"));
+    NumberFormat engine(de, status);
+    EXPECT_TRUE(status == 0);
+    EXPECT_TRUE(engine.Format(1234, status).compare("1.234") == 0);
+
+    // Separator probes: std::string, not char — multi-byte UTF-8 locales.
+    EXPECT_TRUE(I18nBridge::decimalSeparator(Locale("de", "DE")).compare(",") == 0);
+    EXPECT_TRUE(I18nBridge::groupingSeparator(Locale("de", "DE")).compare(".") == 0);
+    EXPECT_TRUE(I18nBridge::decimalSeparator(Locale("ar", "EG")).size() == 2); // U+066B "٫"
+
+    // java.text facade: cdroid::NumberFormat locale factories are localized.
+    auto nf = cdroid::NumberFormat::getInstance(Locale("de", "DE"));
+    EXPECT_TRUE(nf->format(1234567.5).compare("1.234.567,500") == 0);
+}
+
 #endif
 } // namespace I18N
 } // namespace OHOS
