@@ -2,6 +2,7 @@
 # (the layout styleables use nested names in AOSP; CDROID uses concatenated names)
 ViewGroup_Layout Layout
 ViewGroup_MarginLayout MarginLayout
+AbsoluteLayout_Layout AbsoluteLayoutLayout
 LinearLayout_Layout LinearLayoutLayout
 GridLayout_Layout GridLayoutLayout
 TableRow_Cell TableRowLayout
