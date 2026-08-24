@@ -5,6 +5,7 @@
 
 # --- widgets (View/ViewGroup subclasses) ---
 AbsListView
+AbsoluteLayoutLayout
 AndroidManifestAction
 AndroidManifestActivity
 AndroidManifestApplication
