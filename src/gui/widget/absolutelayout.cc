@@ -17,43 +17,45 @@
  *********************************************************************************/
 #include <widget/absolutelayout.h>
 #include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(AbsoluteLayout)
 
 AbsoluteLayout::LayoutParams::LayoutParams(int width, int height, int x, int y)
     :ViewGroup::LayoutParams(width,height){
-    this->x=x;
-    this->y=y;
+    this->x = x;
+    this->y = y;
 }
 
 AbsoluteLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     :ViewGroup::LayoutParams(c,attrs){
-    // AOSP: obtainStyledAttributes(attrs, R.styleable.AbsoluteLayout_Layout).
-    static const uint32_t ABS_LAYOUT_ATTRS[] = {
-        (uint32_t)cdroid::internal::R::attr::layout_x, (uint32_t)cdroid::internal::R::attr::layout_y, 0 };
-    auto ta = c->obtainStyledAttributes(attrs, ABS_LAYOUT_ATTRS);
-    x=ta->getDimensionPixelOffset(0, 0);
-    y=ta->getDimensionPixelOffset(1, 0);
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::AbsoluteLayoutLayout);
+    x = ta->getDimensionPixelOffset(R::styleable::AbsoluteLayoutLayout_layout_x, 0);
+    y = ta->getDimensionPixelOffset(R::styleable::AbsoluteLayoutLayout_layout_y, 0);
 }
 
 AbsoluteLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
     :ViewGroup::LayoutParams(source){
-    x=0;
-    y=0;
+    x = 0;
+    y = 0;
 }
 AbsoluteLayout::LayoutParams::LayoutParams(const LayoutParams& source)
     :ViewGroup::LayoutParams(source){
-    x=source.x;
-    y=source.y;
+    x = source.x;
+    y = source.y;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 AbsoluteLayout::AbsoluteLayout(Context*ctx)
-    :AbsoluteLayout(ctx,nullptr){}
+    :AbsoluteLayout(ctx,nullptr){
+}
 
-AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet* attrs):AbsoluteLayout(context,attrs,0){}
+AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet* attrs)
+    :AbsoluteLayout(context,attrs,0){
+}
 
 AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context,pAttrs, defStyleAttr){
