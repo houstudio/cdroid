@@ -21,6 +21,11 @@ namespace internal { namespace R { namespace styleable {
     constexpr int AbsListView_choiceMode = 10;
     constexpr int AbsListView_fastScrollAlwaysVisible = 11;
 
+    // AbsoluteLayoutLayout (2 attrs)
+    extern const uint32_t AbsoluteLayoutLayout[];
+    constexpr int AbsoluteLayoutLayout_layout_x = 0;
+    constexpr int AbsoluteLayoutLayout_layout_y = 1;
+
     // AndroidManifestAction (1 attrs)
     extern const uint32_t AndroidManifestAction[];
     constexpr int AndroidManifestAction_name = 0;

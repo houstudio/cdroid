@@ -5,6 +5,7 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t AbsListView[] = {
         0x010100fb, 0x010100fc, 0x010100fd, 0x010100fe, 0x010100ff, 0x01010100, 0x01010101,
         0x01010226, 0x010103f7, 0x01010231, 0x0101012b, 0x01010335, 0 };
+    const uint32_t AbsoluteLayoutLayout[] = { 0x0101017f, 0x01010180, 0 };
     const uint32_t AndroidManifestAction[] = { 0x01010003, 0 };
     const uint32_t AndroidManifestActivity[] = {
         0x01010003, 0x01010000, 0x01010001, 0x01010020, 0x01010002, 0x0101052c, 0x010103f2,

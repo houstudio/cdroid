@@ -39,7 +39,7 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int l, int t,int w, int h)override;
 public:
-    AbsoluteLayout(Context*ctx);   // AOSP AbsoluteLayout(Context)
+    AbsoluteLayout(Context*ctx);
     AbsoluteLayout(Context* context,const AttributeSet* attrs);
     AbsoluteLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
