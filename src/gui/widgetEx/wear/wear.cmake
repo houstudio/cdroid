@@ -10,7 +10,7 @@ SET(WEAR_SOURCES
     widgetEx/wear/circularprogressdrawable.cc
     widgetEx/wear/circularprogresslayout.cc
     widgetEx/wear/wearablerecyclerview.cc
-    widgetEx/wear/dismissableframelayout.cc
+    widgetEx/wear/dismissibleframelayout.cc
     widgetEx/wear/swipedismisscontroller.cc
     widgetEx/wear/swipedismisscontroller.cc
     widgetEx/wear/curvinglayoutcallback.cc
