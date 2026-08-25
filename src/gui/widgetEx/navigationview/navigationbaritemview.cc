@@ -46,8 +46,12 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
     // LinearLayout - the small/large pair still drives the shifting scale).
     mActiveIndicatorView = new View(context);
     mActiveIndicatorView->setVisibility(View::INVISIBLE);
-    mActiveIndicatorView->setLayoutParams(new FrameLayout::LayoutParams(
-            LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT, Gravity::CENTER));
+    // FIXED dims, not WRAP: a bare View measures to the full AT_MOST spec
+    // (getDefaultSize), so a wrap-content indicator frame stretches the item
+    // to the parent height. Material's indicator view carries fixed dims from
+    // the item layout and resize events; start at 0x0 (invisible until an
+    // enabled indicator pill sets real bounds in maybeSetActiveIndicatorPill).
+    mActiveIndicatorView->setLayoutParams(new FrameLayout::LayoutParams(0, 0, Gravity::CENTER));
     addView(mActiveIndicatorView);
 
     mContentContainer = new LinearLayout(context);
@@ -191,6 +195,12 @@ void NavigationBarItemView::setIconTintList(const RefPtr<ColorStateList>& tint) 
 }
 
 void NavigationBarItemView::setIconSize(int iconSize) {
+    // AOSP defaults to design_bottom_navigation_icon_size (24dp) when no
+    // explicit itemIconSize is set; 0 would measure the icon frame empty and
+    // the glyph disappears.
+    if (iconSize <= 0) {
+        iconSize = (int)(24 * getContext()->getResources().getDisplayMetrics().density);
+    }
     FrameLayout::LayoutParams* lp = (FrameLayout::LayoutParams*)mIcon->getLayoutParams();
     lp->width = lp->height = iconSize;
     mIcon->setLayoutParams(lp);
@@ -300,7 +310,9 @@ void NavigationBarItemView::updateItemIconGravity() {
     iconLp->rightMargin = iconAtStart ? mIconLabelHorizontalSpacing : 0;
     mIconContainer->setLayoutParams(iconLp);
     const int side = iconAtStart ? mActiveIndicatorMarginHorizontal : 0;
-    setPadding(side, 0, side, 0);
+    // AOSP's item layout carries the design_bottom_navigation_margin vertical
+    // padding; without it the bar collapses to bare icon+label height.
+    setPadding(side, mItemPaddingTop, side, mItemPaddingBottom);
 }
 
 void NavigationBarItemView::setItemIconGravity(int iconGravity) {
@@ -441,6 +453,10 @@ void NavigationBarItemView::onMeasure(int widthMeasureSpec, int heightMeasureSpe
         mLabelGroup->setLayoutParams(lp);
     }
     FrameLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
+    LOGD("NBIV.onMeasure wspec=%dx%d hspec=%dx%d -> %dx%d",
+         MeasureSpec::getMode(widthMeasureSpec),MeasureSpec::getSize(widthMeasureSpec),
+         MeasureSpec::getMode(heightMeasureSpec),MeasureSpec::getSize(heightMeasureSpec),
+         getMeasuredWidth(),getMeasuredHeight());
 }
 
 } // namespace cdroid
