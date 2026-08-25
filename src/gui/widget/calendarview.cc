@@ -131,6 +131,10 @@ int CalendarView::getDateTextAppearance() const{
     return mDelegate->getDateTextAppearance();
 }
 
+void CalendarView::setWeekDayNameLength(int length) {
+    mDelegate->setWeekDayNameLength(length);
+}
+
 int64_t CalendarView::getMinDate() const{
     return mDelegate->getMinDate();
 }

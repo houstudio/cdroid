@@ -184,6 +184,22 @@ Configuration::Configuration(const Configuration& o) {
 /* This brings mLocaleList in sync with locale in case a user of the older API who doesn't know
  * about setLocales() has changed locale directly. */
 void Configuration::fixUpLocaleList() const {
+	/* CDROID bootstrap: there is no ActivityManager to hand every Configuration
+	   a device-level locale, so an untouched one (deprecated field empty AND
+	   list empty) would report "und" forever — unlike Android, where the
+	   system config always carries a locale. Seed such Configurations from the
+	   process default (env-derived Locale::getDefault()); an explicit
+	   setLocales()/locale assignment still overrides this. The deprecated
+	   field is written too, or the AOSP reconcile below would treat the
+	   freshly seeded list as stale (locale == null && !isEmpty) and clear it
+	   again — und/zh-CN flip-flop across getLocales() calls. */
+	if (locale.empty() && mLocaleList.isEmpty()) {
+		mLocaleList = LocaleList::getDefault();
+		if (!mLocaleList.isEmpty()) {
+			locale = mLocaleList.get(0).toLanguageTag();
+		}
+		return;
+	}
 	/* AOSP:
 	   if ((locale == null && !mLocaleList.isEmpty()) ||
 	           (locale != null && !locale.equals(mLocaleList.get(0)))) {

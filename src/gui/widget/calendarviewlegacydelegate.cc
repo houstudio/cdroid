@@ -231,6 +231,11 @@ int CalendarViewLegacyDelegate::getWeekDayTextAppearance() const{
     return mWeekDayTextAppearanceResId;
 }
 
+void CalendarViewLegacyDelegate::setWeekDayNameLength(int length) {
+    mWeekDayNameLength = length;
+    setUpHeader();
+}
+
 void CalendarViewLegacyDelegate::setDateTextAppearance(int resourceId) {
     if (mDateTextAppearanceResId != resourceId) {
         mDateTextAppearanceResId = resourceId;
@@ -445,8 +450,12 @@ void CalendarViewLegacyDelegate::setUpHeader() {
     // narrow (tiny) and full weekday names from the locale's symbols tables.
     // The tables are 8 entries: index 0 is empty, 1..7 = SUNDAY..SATURDAY.
     // The symbols object must outlive the references (getters return refs into it).
+    // The name length is a CDROID extension (0 narrow = AOSP, 1/2 shown labels).
     const DateFormatSymbols dfs(mCurrentLocale);
-    const auto& dayNamesShort = dfs.getTinyWeekdays();
+    const std::vector<std::string>* shortSource = &dfs.getTinyWeekdays();
+    if (mWeekDayNameLength == 1) shortSource = &dfs.getShortWeekdays();
+    else if (mWeekDayNameLength == 2) shortSource = &dfs.getWeekdays();
+    const auto& dayNamesShort = *shortSource;
     const auto& dayNamesLong  = dfs.getWeekdays();
 
     // Java allocated new String[mDaysPerWeek]; the vector members start empty, so

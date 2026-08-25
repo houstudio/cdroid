@@ -78,7 +78,8 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* pAttrs,int defS
 }
 
 SimpleMonthView::~SimpleMonthView(){
-    delete mTouchHelper;
+    // mTouchHelper is owned by View (mAccessibilityDelegate, deleted in ~View);
+    // deleting it here double-frees.
 }
 
 void SimpleMonthView::initMonthView(){
@@ -147,19 +148,28 @@ void SimpleMonthView::updateMonthYearLabel(){
     mMonthYearLabel = formatter.format(mCalendar.getTimeInMillis());
 }
 
+void SimpleMonthView::setDayOfWeekNameLength(int length) {
+    mDayOfWeekNameLength = length;
+    updateDayOfWeekLabels();
+    invalidate();
+}
+
 void SimpleMonthView::updateDayOfWeekLabels(){
     // AOSP SimpleMonthView.updateDayOfWeekLabels: tiny (single-character)
     // weekday names from DateFormatSymbols (ICU NARROW; the i18n engine
-    // approximates narrow as the short name's first code point). The table
-    // layout matches Calendar days, e.g. SUNDAY is index 1; the column for
-    // index i is the weekday mWeekStart + i.
+    // approximates narrow from the short name). The table layout matches
+    // Calendar days, e.g. SUNDAY is index 1; the column for index i is the
+    // weekday mWeekStart + i. The name length is a CDROID extension
+    // (0 narrow = AOSP, 1 abbreviated, 2 wide).
     const Locale locale = Locale::getDefault();
-    // The symbols object must outlive the reference (getTinyWeekdays returns a
-    // ref into it; binding to the temporary directly dangles).
+    // The symbols object must outlive the references (getters return refs
+    // into it; binding to the temporary directly dangles).
     const DateFormatSymbols dfs(locale);
-    const auto& tinyWeekdayNames = dfs.getTinyWeekdays();
+    const std::vector<std::string>* names = &dfs.getTinyWeekdays();
+    if (mDayOfWeekNameLength == 1) names = &dfs.getShortWeekdays();
+    else if (mDayOfWeekNameLength == 2) names = &dfs.getWeekdays();
     for (int i = 0; i < DAYS_IN_WEEK; i++) {
-        mDayOfWeekLabels[i] = tinyWeekdayNames[(mWeekStart + i - 1) % DAYS_IN_WEEK + 1];
+        mDayOfWeekLabels[i] = (*names)[(mWeekStart + i - 1) % DAYS_IN_WEEK + 1];
     }
 }
 

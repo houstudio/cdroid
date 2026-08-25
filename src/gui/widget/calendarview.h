@@ -26,6 +26,13 @@ private:
     static constexpr int MODE_HOLO = 0;
     static constexpr int MODE_MATERIAL = 1;
 public:
+    /* CDROID extension (AOSP calendar headers hardcode narrow weekday
+       labels): select the weekday-name length shown in the header. */
+    enum WeekDayNameLength {
+        WEEK_DAY_NAME_SHORTEST = 0,  // narrow, AOSP default
+        WEEK_DAY_NAME_SHORT    = 1,  // abbreviated ("Sun" / "周日")
+        WEEK_DAY_NAME_LONG     = 2,  // wide ("Sunday" / "星期日")
+    };
     class CalendarViewDelegate;
     class AbstractCalendarViewDelegate;
     DECLARE_UIEVENT(void,OnDateChangeListener,CalendarView& view, int year, int month, int dayOfMonth);
@@ -61,6 +68,7 @@ public:
 
     void setWeekDayTextAppearance(int resourceId);
     int  getWeekDayTextAppearance()const;
+    void setWeekDayNameLength(int length);
     void setDateTextAppearance(int resourceId);
     int  getDateTextAppearance()const;
 
@@ -116,6 +124,9 @@ public:
 
     virtual void setWeekDayTextAppearance(int resourceId)=0;
     virtual int getWeekDayTextAppearance()const=0;
+
+    /* CDROID extension; default keeps the AOSP narrow header. */
+    virtual void setWeekDayNameLength(int length){(void)length;}
 
     virtual void setDateTextAppearance(int resourceId)=0;
     virtual int getDateTextAppearance()const=0;

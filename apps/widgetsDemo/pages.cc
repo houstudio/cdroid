@@ -493,6 +493,9 @@ void setupDateTime(View* page) {
     DatePicker*   dpCal   = (DatePicker*)page->findViewById(widgetsDemo::R::id::dt_dp_cal);
     CalendarView* calView = (CalendarView*)page->findViewById(widgetsDemo::R::id::dt_calview);
     CalendarView* calViewMat = (CalendarView*)page->findViewById(widgetsDemo::R::id::dt_calview_mat);
+    // Full-width calendars: show wide weekday names in the header.
+    calView->setWeekDayNameLength(CalendarView::WEEK_DAY_NAME_LONG);
+    calViewMat->setWeekDayNameLength(CalendarView::WEEK_DAY_NAME_LONG);
     // Each picker mirrors its live value into the TextView that shares its row.
     TextView*     tvClock = (TextView*)page->findViewById(widgetsDemo::R::id::dt_tp_clock_val);
     TextView*     tvSpin  = (TextView*)page->findViewById(widgetsDemo::R::id::dt_tp_spinner_val);

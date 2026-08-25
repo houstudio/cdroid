@@ -33,6 +33,8 @@ public:
     void setWeekDayTextAppearance(int resId) override;
     int getWeekDayTextAppearance() const override;
 
+    void setWeekDayNameLength(int length) override;
+
     void setDateTextAppearance(int resId) override;
     int getDateTextAppearance() const override;
 

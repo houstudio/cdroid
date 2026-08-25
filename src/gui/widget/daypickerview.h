@@ -66,6 +66,7 @@ public:
     DayPickerView(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~DayPickerView()override;
     void setDayOfWeekTextAppearance(int resId);
+    void setDayOfWeekNameLength(int length);
     int getDayOfWeekTextAppearance();
     void  setDayTextAppearance(int resId);
     int getDayTextAppearance();

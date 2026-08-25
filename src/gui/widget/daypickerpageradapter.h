@@ -50,6 +50,7 @@ private:
     int mMonthTextAppearance = 0;
     int mDayOfWeekTextAppearance = 0;
     int mDayTextAppearance = 0;
+    int mDayOfWeekNameLength = 0;  // 0 narrow (AOSP), 1 abbreviated, 2 wide
 
     cdroid::RefPtr<ColorStateList> mCalendarTextColor;
     cdroid::RefPtr<ColorStateList> mDaySelectorColor;
@@ -79,6 +80,8 @@ public:
     void setMonthTextAppearance(int resId);
     void setDayOfWeekTextAppearance(int resId);
     int getDayOfWeekTextAppearance();
+
+    void setDayOfWeekNameLength(int length);
 
     void setDayTextAppearance(int resId);
     int getDayTextAppearance();

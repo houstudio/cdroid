@@ -37,6 +37,7 @@ private:
 
     Calendar mCalendar;
     std::string mDayOfWeekLabels[7];
+    int mDayOfWeekNameLength = 0;  // 0 narrow (AOSP), 1 abbreviated, 2 wide
     MonthViewTouchHelper*mTouchHelper;
 
     // Text paints: rendered via Paint::drawTextRun, which honors Paint::Align
@@ -139,6 +140,10 @@ public:
     void setMonthTextAppearance(int resId);
     void setDayOfWeekTextAppearance(int resId);
     void setDayTextAppearance(int resId);
+
+    /* CDROID extension (AOSP hardcodes narrow weekday labels): 0 = narrow
+       (AOSP default), 1 = abbreviated, 2 = wide weekday names. */
+    void setDayOfWeekNameLength(int length);
 
     void setMonthTextColor(const cdroid::RefPtr<ColorStateList>& monthTextColor);
     void setDayOfWeekTextColor(const cdroid::RefPtr<ColorStateList>& dayOfWeekTextColor);

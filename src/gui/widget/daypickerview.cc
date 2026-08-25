@@ -233,6 +233,10 @@ void DayPickerView::setDayOfWeekTextAppearance(int resId) {
     mAdapter->setDayOfWeekTextAppearance(resId);
 }
 
+void DayPickerView::setDayOfWeekNameLength(int length) {
+    mAdapter->setDayOfWeekNameLength(length);
+}
+
 int DayPickerView::getDayOfWeekTextAppearance() {
     return mAdapter->getDayOfWeekTextAppearance();
 }

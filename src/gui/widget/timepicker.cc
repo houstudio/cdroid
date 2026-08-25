@@ -23,6 +23,7 @@
 #include <widget/framework_styleable.h>
 #include <core/typedarray.h>
 #include <content/dateformatsymbols.h>
+#include <text/textutils.h>
 namespace cdroid{
 using namespace cdroid::internal;
 TimePicker::TimePicker(Context*ctx)
@@ -159,23 +160,22 @@ View* TimePicker::getPmView() {
 }
 
 std::vector<std::string> TimePicker::getAmPmStrings(Context* context) {
+    // AOSP: DateFormat.getIcuDateFormatSymbols(locale), then pick wide vs narrow
+    // by the marker's UTF-16 length (Java String.length(); "上午" is 2 units,
+    // so it stays whole). The symbols object must outlive the references
+    // (getters return refs into it; binding to a temporary would dangle).
     const Locale locale = context->getResources().getConfiguration().getLocales().get(0);
-    // Bind the symbols object to a local: getAmPmStrings() returns a reference
-    // into the DateFormatSymbols, so a temporary would dangle here.
     const DateFormatSymbols dfs(locale);
     const auto& amPm = dfs.getAmPmStrings();
-    // AOSP falls back to dfs.getAmpmNarrowStrings(); the i18n engine has no
-    // narrow AM/PM pool, so approximate with the first code point (the same
-    // approximation DateFormatSymbols uses for its tiny* tables).
-    auto narrow = [](const std::string& s) {
-        size_t len = 1;
-        while (len < s.length() && ((unsigned char)s[len] & 0xC0) == 0x80) len++;
-        return s.substr(0, len);
+    const auto& narrowAmPm = dfs.getAmpmNarrowStrings();
+
+    auto utf16Length = [](const std::string& s) {
+        return TextUtils::utf8_utf16(s).length();
     };
 
     std::vector<std::string> result;
-    result.push_back(amPm[0].length() > 4 ? narrow(amPm[0]) : amPm[0]);
-    result.push_back(amPm[1].length() > 4 ? narrow(amPm[1]) : amPm[1]);
+    result.push_back(utf16Length(amPm[0]) > 4 ? narrowAmPm[0] : amPm[0]);
+    result.push_back(utf16Length(amPm[1]) > 4 ? narrowAmPm[1] : amPm[1]);
     return result;
 }
 

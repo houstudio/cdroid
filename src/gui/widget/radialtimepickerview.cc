@@ -220,7 +220,8 @@ RadialTimePickerView::~RadialTimePickerView() {
         delete mHoursToMinutesAnimator;
         mHoursToMinutesAnimator = nullptr;
     }
-    delete mTouchHelper;
+    // mTouchHelper is owned by View (mAccessibilityDelegate, deleted in ~View);
+    // deleting it here double-frees.
     delete mSelectorPath;
 }
 

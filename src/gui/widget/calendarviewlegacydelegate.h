@@ -133,6 +133,7 @@ private:
     ViewGroup* mDayNamesHeader;
 
     std::vector<std::string> mDayNamesShort;
+    int mWeekDayNameLength = 0;  // 0 narrow (AOSP), 1 abbreviated, 2 wide
 
     std::vector<std::string> mDayNamesLong;
 
@@ -192,6 +193,8 @@ public:
     void setWeekDayTextAppearance(int resourceId) override;
 
     int getWeekDayTextAppearance() const override;
+
+    void setWeekDayNameLength(int length) override;
 
     void setDateTextAppearance(int resourceId) override;
 

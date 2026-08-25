@@ -59,6 +59,17 @@ void DayPickerPagerAdapter::setRange(Calendar& min,Calendar& max) {
     notifyDataSetChanged();
 }
 
+void DayPickerPagerAdapter::setDayOfWeekNameLength(int length) {
+    mDayOfWeekNameLength = length;
+
+    // Update displayed views.
+    int count = mItems.size();
+    for (int i = 0; i < count; i++) {
+        SimpleMonthView* monthView = mItems.valueAt(i)->calendar;
+        monthView->setDayOfWeekNameLength(length);
+    }
+}
+
 void DayPickerPagerAdapter::setFirstDayOfWeek(int weekStart) {
     mFirstDayOfWeek = weekStart;
 
@@ -192,6 +203,7 @@ void* DayPickerPagerAdapter::instantiateItem(ViewGroup* container, int position)
     v->setOnDayClickListener(mOnDayClickListener);
     v->setMonthTextAppearance(mMonthTextAppearance);
     v->setDayOfWeekTextAppearance(mDayOfWeekTextAppearance);
+    v->setDayOfWeekNameLength(mDayOfWeekNameLength);
     v->setDayTextAppearance(mDayTextAppearance);
 
     if (mDaySelectorColor != nullptr) {

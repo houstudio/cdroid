@@ -61,8 +61,9 @@ public:
     /** AOSP: @Deprecated public Locale locale — kept as the primary locale's
      *  BCP-47 tag string ("zh-CN"); synced by setLocales()/setLocale() and
      *  reconciled into mLocaleList by fixUpLocaleList(). Empty = undefined
-     *  (Java null). getLocales().get(0) is the preferred accessor. */
-    std::string locale;
+     *  (Java null). getLocales().get(0) is the preferred accessor.
+     *  Mutable: the lazy fix-up/default-seed writes it through const. */
+    mutable std::string locale;
 
     // ---- AOSP android.content.pm.ActivityInfo.CONFIG_* bit values ----------
     // CDROID has no android.content.pm, so the bits live here (needNewResources

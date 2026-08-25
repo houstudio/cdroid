@@ -49,6 +49,10 @@ void CalendarViewMaterialDelegate::setDateTextAppearance(int resId){
     mDayPickerView->setDayTextAppearance(resId);
 }
 
+void CalendarViewMaterialDelegate::setWeekDayNameLength(int length){
+    mDayPickerView->setDayOfWeekNameLength(length);
+}
+
 int CalendarViewMaterialDelegate::getDateTextAppearance() const{
     return mDayPickerView->getDayTextAppearance();
 }
