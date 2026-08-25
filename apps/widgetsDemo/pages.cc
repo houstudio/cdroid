@@ -261,9 +261,12 @@ void setupText(View* page) {
         static std::vector<std::unique_ptr<Drawable>> sInlineImages;
         Html::ImageGetter imageGetter = [span](const std::string&) -> Drawable* {
             if (!sInlineImages.empty()) return sInlineImages.front().get();
+            // getDrawable returns a caller-owned instance (shares only the
+            // resource's ConstantState), so delete the prototype after copying.
             Drawable* proto = span->getContext()
                     ->getDrawable(cdroid::internal::R::drawable::ic_settings_24dp);
             Drawable* d = proto->getConstantState()->newDrawable();
+            delete proto;
             // The vector's paths are #FF000000; tint it to the text color so the
             // icon stays visible on both light and dark themes.
             d->setTint(span->getCurrentTextColor());
@@ -809,8 +812,9 @@ void setupFlipper(View* page) {
     }
 
     // ImageSwitcher: 2 s auto cycle + manual next over the mipmap photos.
-    // getDrawable() returns the shared cache instance, so hand the switcher a
-    // fresh ConstantState copy (its drawable setter owns/deletes what it holds).
+    // getDrawable() returns a caller-owned instance (only the ConstantState is
+    // shared per resource), and the switcher's drawable setter owns/deletes
+    // what it holds — so hand it a fresh ConstantState copy and delete proto.
     ImageSwitcher* isw = (ImageSwitcher*)page->findViewById(widgetsDemo::R::id::isw_switcher);
     TextView* iswStatus = (TextView*)page->findViewById(widgetsDemo::R::id::isw_status);
     if (isw) {
@@ -826,6 +830,7 @@ void setupFlipper(View* page) {
             *which = (*which + step + kPhotoCount) % kPhotoCount;
             Drawable* proto = ctx->getDrawable(kPhotos[*which]);
             isw->setImageDrawable(proto->getConstantState()->newDrawable());
+            delete proto;
             if (iswStatus) {
                 iswStatus->setText(std::string("ImageSwitcher · 第 ") +
                         std::to_string(*which + 1) + " / " + std::to_string(kPhotoCount) +

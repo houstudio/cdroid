@@ -7,6 +7,7 @@
  *********************************************************************************/
 #include <cdroid.h>
 #include <core/activityfactory.h>
+#include <app/alertdialog.h>
 #include <view/layoutinflater.h>
 #include <widget/viewpager.h>
 #include <widgetEx/tablayout/tablayout.h>
@@ -17,8 +18,6 @@
 #include "fragments.h"
 
 using namespace cdroid;
-
-static void pager_post(std::function<void()>* fn);
 
 class WidgetsDemoActivity : public fragment::FragmentActivity {
     TabLayout* mTabs = nullptr;
@@ -44,29 +43,46 @@ public:
                     ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
             if (mTabs) mTabs->setupWithViewPager(pager);
 
+            // TEMP STRESS HOOK: PRD_DIALOG=1 opens and dismisses the misc-page
+            // AlertDialog every 400ms (deterministic repro for the decor leak;
+            // input clicks vary in timing). Same builder chain as pages.cc btn_dialog.
+            if (getenv("PRD_DIALOG")) {
+                static AlertDialog* sDialog = nullptr;
+                auto step = new std::function<void()>;
+                ViewPager* p = pager;
+                *step = [step, p]() {
+                    if (sDialog && sDialog->isShowing()) {
+                        sDialog->dismiss();  // same as tapping OK
+                    } else {
+                        auto noop = [](DialogInterface&, int) {};
+                        sDialog = AlertDialog::Builder(&App::getInstance())
+                            .setTitle("cdroid")
+                            .setMessage("stress dialog")
+                            .setPositiveButton("OK", noop)
+                            .setNegativeButton("Cancel", noop)
+                            .show();
+                    }
+                    p->postDelayed([step](){ (*step)(); }, 400);
+                };
+                pager->postDelayed([step](){ (*step)(); }, 400);
+            }
+
             // TEMP STRESS HOOK: PRD_STRESS=1 pages through tabs every 250ms
             // (deterministic repro for the teardown UAF; input clicks vary in timing).
             if (getenv("PRD_STRESS")) {
-                static ViewPager* sPager = pager;
-                static int sNext = 0;
                 auto step = new std::function<void()>;
-                *step = [step]() {
-                    sPager->setCurrentItem(sNext, false);
+                ViewPager* p = pager;
+                *step = [step, p]() {
+                    static int sNext = 0;
+                    p->setCurrentItem(sNext, false);
                     sNext = (sNext + 1) % 10;
-                    pager_post(step);
+                    p->postDelayed([step](){ (*step)(); }, 250);
                 };
-                pager_post(step);
+                pager->postDelayed([step](){ (*step)(); }, 250);
             }
         }
     }
 };
-
-static std::function<void()>* gStep;
-static Handler gPagerTimer;
-static void pager_post(std::function<void()>* fn) {
-    gStep = fn;
-    gPagerTimer.postDelayed([](){ if (gStep) (*gStep)(); }, 250);
-}
 
 REGISTER_ACTIVITY(WidgetsDemoActivity);
 
