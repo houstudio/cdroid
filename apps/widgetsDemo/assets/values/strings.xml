@@ -67,4 +67,12 @@
     <string name="ellip_marquee_hint">ellipsize=marquee · marqueeRepeatLimit=forever</string>
     <string name="ellip_caps_text">textAllCaps + lineSpacingExtra: automatic capitalization with relaxed line spacing.</string>
     <string name="ellip_caps_hint">textAllCaps=true · lineSpacingExtra=4dp</string>
+    <string name="sec_justify">Justification 与断行词组</string>
+    <string name="justify_demo_text">CDROID ports the Android text stack line by line, from StaticLayout line breaking down to minikin glyph measurement, so a paragraph here wraps exactly where an Android device would wrap it. A justified paragraph stretches the spacing between words until every line meets both margins exactly, the way a book page or a newspaper column is typeset. Compare this card with the one above: the ragged right edge disappears, every full line lands flush on both sides, and only the final line of the paragraph is allowed to stay ragged. Inter-word justification widens the spaces and leaves the letters untouched, which is why it stays readable even when a line is stretched hard; inter-character justification distributes the extra room across every letter pair instead, trading letter spacing for perfectly even color across the column. The layout engine measures each candidate break, re-measures the stretched line, and repaints through the same Cairo pipeline used everywhere else in this demo.</string>
+    <string name="justify_none_hint">justificationMode 未设置 · 默认右端参差</string>
+    <string name="justify_word_hint">justificationMode=inter_word · 拉伸词间距两端对齐</string>
+    <string name="justify_char_hint">justificationMode=inter_character · 拉伸字符间距两端对齐</string>
+    <string name="phrase_demo_text">Wrap me at spaces only: a state-of-the-art line breaker may also split after hyphens, commas, slashes and periods, so a long compound like mother-in-law, a build tag like android-14.0.0_r2, a path like src/gui/text, or a numbered list item ending in v1.0.2 can all be torn apart mid-token. Phrase-based wrapping keeps each of them glued together as one unbreakable phrase, moving the whole token to the next line instead of breaking it at the first hyphen, comma, slash or dot it runs out of room at — watch the right edge of both paragraphs and where each token lands.</string>
+    <string name="phrase_none_hint">lineBreakWordStyle 默认 · 连字符与标点后可断行</string>
+    <string name="phrase_word_hint">lineBreakWordStyle=phrase · 仅在空格处换行，词组保持完整</string>
 </resources>

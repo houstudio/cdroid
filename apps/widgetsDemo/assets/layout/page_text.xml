@@ -47,6 +47,95 @@
                 android:textSize="18sp" />
         </LinearLayout>
 
+        <!-- Justification & phrase-based line breaking -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_justify"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/justify_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/justify_none_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:justificationMode="inter_word"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/justify_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/justify_word_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:justificationMode="inter_character"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/justify_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/justify_char_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/phrase_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/phrase_none_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:lineBreakWordStyle="phrase"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/phrase_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/phrase_word_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+        </LinearLayout>
+
         <!-- Marquee -->
         <LinearLayout
             android:layout_width="match_parent"
