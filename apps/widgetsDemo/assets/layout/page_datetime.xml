@@ -26,7 +26,6 @@
 
         <!-- Live clock -->
         <LinearLayout
-            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -53,7 +52,6 @@
 
         <!-- TimePicker: clock mode. Picker on the left, live time on the right, same row. -->
         <LinearLayout
-            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -91,7 +89,6 @@
 
         <!-- TimePicker: spinner mode -->
         <LinearLayout
-            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -129,7 +126,6 @@
 
         <!-- DatePicker: spinner mode -->
         <LinearLayout
-            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
