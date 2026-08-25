@@ -529,6 +529,7 @@ VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableSta
     // with android:tint but no android:tintMode (e.g. btn_radio_*_mtrl) got no tint
     // and onStateChange skipped re-resolution -> no color transition on check.
     mTintMode = DEFAULT_TINT_MODE;
+    mCachedTintMode = PorterDuff::Mode::NOOP;
     mCachedAutoMirrored = false;
     if (copy != nullptr) {
         mThemeAttrs = copy->mThemeAttrs;

@@ -116,6 +116,7 @@ void PopupWindow::init(){
     mOutsideTouchable = false;
     mClippingEnabled  = true;
     mSplitTouchEnabled= -1;
+    mWindowLayoutType = 0;
     mGravity = Gravity::NO_GRAVITY;
     mInputMethodMode = INPUT_METHOD_FROM_FOCUSABLE;
     mIsTransitioningToDismiss = false;
