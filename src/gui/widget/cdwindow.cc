@@ -1137,6 +1137,14 @@ struct TranslateDeltaReader : TranslateAnimation {
 // a FADE. Returns nullptr when the animation expresses nothing mappable.
 static ActivityTransition* transitionFromAnimation(Animation* anim, bool enter) {
     if (anim == nullptr) return nullptr;
+    // OWNS anim: the caller loads a fresh Animation just for this parameter
+    // extraction (AnimationUtils::loadAnimation), and ~AnimationSet frees the
+    // child parts - free the whole tree on every exit or every window-style
+    // apply (every popup show!) leaks it (valgrind: 2KB per record).
+    struct AnimGuard {
+        Animation* a;
+        ~AnimGuard() { delete a; }
+    } guard{anim};
     std::vector<Animation*> parts;
     if (auto* set = dynamic_cast<AnimationSet*>(anim)) {
         parts = set->getAnimations();

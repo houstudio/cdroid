@@ -117,7 +117,9 @@ private:
     /** Animators that require a theme before inflation. */
     std::vector<PendingAnimator*> mPendingAnims;
     /** Fully inflated animators awaiting cloning into an AnimatorSet. */
-    std::vector<Animator*> mAnimators;
+    // Shared with every state copy (AOSP copies share the same Animator
+    // references and relies on GC); shared_ptr is the no-GC equivalent.
+    std::vector<std::shared_ptr<Animator>> mAnimators;
     /** Map of animators to their target object names */
     std::unordered_map<Animator*, std::string> mTargetNameMap;
 public:
