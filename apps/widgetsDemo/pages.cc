@@ -3,9 +3,11 @@
 #include <widget/R.h>
 #include <core/systemclock.h>
 #include <text/String.h>
+#include <text/html.h>
 #include <text/spannablestringbuilder.h>
 #include <text/style/characterstyles.h>
 #include <text/style/metricaffectingspan.h>
+#include <widget/internal_R.h>
 #include <widget/ratingbar.h>
 #include <widget/chronometer.h>
 #include <widget/timepicker.h>
@@ -249,16 +251,30 @@ void setupProgress(View* page) {
 void setupText(View* page) {
     TextView* span = (TextView*)page->findViewById(widgetsDemo::R::id::span_tv);
     if (span) {
-        SpannableStringBuilder* sb = new SpannableStringBuilder();
-        sb->append(u"Bold ", new StyleSpan(Typeface::BOLD), 0);
-        sb->append(u"colored ", new ForegroundColorSpan(0xFF4EA1FF), 0);
-        sb->append(u"underline ", new UnderlineSpan(), 0);
-        sb->append(u"strike ", new StrikethroughSpan(), 0);
-        sb->append(u"big ", new AbsoluteSizeSpan(28), 0);
-        sb->append(u"x", 0, 1);
-        sb->append(u"2", new SuperscriptSpan(), 0);
-        sb->append(u" highlight", new BackgroundColorSpan(0xFF7C5CFF), 0);
-        span->setText(sb);
+        // ImageGetter for Html.fromHtml's <img>: serves the framework material
+        // settings gear as a fresh drawable scaled to one text line. ImageSpan
+        // borrows drawables (never deletes them), so cache them for app lifetime.
+        static std::vector<std::unique_ptr<Drawable>> sInlineImages;
+        Html::ImageGetter imageGetter = [span](const std::string&) -> Drawable* {
+            if (!sInlineImages.empty()) return sInlineImages.front().get();
+            Drawable* proto = span->getContext()
+                    ->getDrawable(cdroid::internal::R::drawable::ic_settings_24dp);
+            Drawable* d = proto->getConstantState()->newDrawable();
+            // The vector's paths are #FF000000; tint it to the text color so the
+            // icon stays visible on both light and dark themes.
+            d->setTint(span->getCurrentTextColor());
+            const Paint::FontMetricsInt fm = span->getPaint().getFontMetricsInt();
+            const int size = fm.bottom - fm.top;
+            d->setBounds(0, 0, size, size);
+            sInlineImages.emplace_back(d);
+            return d;
+        };
+        const std::string html =
+                "<img src=\"settings\" align=\"center\"/> <b>Bold</b> "
+                "<font color=\"#4EA1FF\">colored</font> <u>underline</u> "
+                "<s>strike</s> <big>big</big> x<sup>2</sup> "
+                "<span style=\"background-color:#7C5CFF\">highlight</span>";
+        span->setText(Html::fromHtml(html, 0, imageGetter, nullptr));
     }
 
     // Marquee only animates on a selected/focused view.
