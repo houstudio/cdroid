@@ -16,9 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/viewflipper.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+#include <core/assets.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DECLARE_WIDGET(ViewFlipper)
 
@@ -30,6 +34,33 @@ ViewFlipper::ViewFlipper(Context* context,const AttributeSet* attrs):ViewFlipper
 ViewFlipper::ViewFlipper(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
   :ViewAnimator(context,pAttrs, defStyleAttr){
     mFlipRunnable = [this](){doFlip();};
+    // AOSP reads the ViewFlipper styleable; this tree declares the same two
+    // attrs under AdapterViewFlipper with identical ids and order.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::AdapterViewFlipper, defStyleAttr);
+    if (ta) {
+        mFlipInterval = ta->getInt(R::styleable::AdapterViewFlipper_flipInterval, DEFAULT_INTERVAL);
+        mAutoStart = ta->getBoolean(R::styleable::AdapterViewFlipper_autoStart, false);
+    }
+}
+
+void ViewFlipper::onAttachedToWindow(){
+    ViewAnimator::onAttachedToWindow();
+    if (mAutoStart) {
+        // Automatically start when requested
+        startFlipping();
+    }
+}
+
+void ViewFlipper::onDetachedFromWindow(){
+    ViewAnimator::onDetachedFromWindow();
+    mVisible = false;
+    updateRunning(true);
+}
+
+void ViewFlipper::onWindowVisibilityChanged(int visibility){
+    ViewAnimator::onWindowVisibilityChanged(visibility);
+    mVisible = (visibility == View::VISIBLE);
+    updateRunning(false);
 }
 
 void ViewFlipper::doFlip(){

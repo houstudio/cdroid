@@ -34,6 +34,10 @@ private:
 private:
     void updateRunning(bool flipNow);
     void doFlip();
+protected:
+    void onAttachedToWindow()override;
+    void onDetachedFromWindow()override;
+    void onWindowVisibilityChanged(int visibility)override;
 public:
     ViewFlipper(Context*ctx);   // AOSP ViewFlipper(Context)
     ViewFlipper(Context* context,const AttributeSet* attrs);
