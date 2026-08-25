@@ -168,8 +168,12 @@ LayerDrawable*LayerDrawable::LayerState::newDrawable(){
     // resource (two SeekBars bled 40% ↔ 80%).
     LayerDrawable* dr = new LayerDrawable();
     dr->mLayerState = std::make_shared<LayerState>(this, dr);
-    dr->ensurePadding();
-    dr->refreshPadding();
+    // AOSP LayerDrawable(LayerState, Resources) refreshes padding only when
+    // the copied state has children.
+    if (!dr->mLayerState->mChildren.empty()) {
+        dr->ensurePadding();
+        dr->refreshPadding();
+    }
     return dr;
 }
 

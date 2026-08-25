@@ -41,6 +41,7 @@ StateListDrawable*StateListDrawable::StateListState::newDrawable(){
     // bounds/level into every other view of the same resource.
     StateListDrawable* dr = new StateListDrawable();
     dr->setConstantState(std::make_shared<StateListState>(this, dr));
+    dr->onStateChange(dr->getState());
     return dr;
 }
 
