@@ -40,7 +40,11 @@
 #include <widgetEx/constraintlayout/helpers/flow.h>
 #include <widgetEx/constraintlayout/helpers/circularflow.h>
 #include <animation/valueanimator.h>
+#include <animation/animationutils.h>
 #include <animation/interpolators.h>
+#include <widget/viewflipper.h>
+#include <widget/textswitcher.h>
+#include <widget/imageswitcher.h>
 #include <algorithm>
 #include <cmath>
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
@@ -359,6 +363,13 @@ void setupAnimation(View* page) {
     if (b) b->setOnClickListener([target](View&) {
         target->animate().setDuration(300)
             .translationX(0).rotation(0).scaleX(1.f).scaleY(1.f).alpha(1.f).start();
+    });
+
+    // AnimatedStateListDrawable star: toggling the activated state plays the
+    // matching <transition> AVD (spin + pop) from asld_star.xml.
+    ImageView* star = (ImageView*)page->findViewById(widgetsDemo::R::id::asld_star);
+    if (star) star->setOnClickListener([star](View&) {
+        star->setActivated(!star->isActivated());
     });
 }
 void setupLists(View* page) {
@@ -690,6 +701,163 @@ void setupMotion(View* page) {
                 return true;
             }
             return false;
+        });
+    }
+}
+
+// ViewFlipper / TextSwitcher / ImageSwitcher page: auto-flipping stage with
+// manual controls, a cycling text ticker and an alternating image.
+void setupFlipper(View* page) {
+    Context* ctx = page->getContext();
+
+    ViewFlipper* vf = (ViewFlipper*)page->findViewById(widgetsDemo::R::id::flipper);
+    TextView* status = (TextView*)page->findViewById(widgetsDemo::R::id::flip_status);
+    auto updateStatus = [vf, status](View& v) {
+        (void)v;
+        if (vf && status) {
+            status->setText(std::string("ViewFlipper · 第 ") +
+                    std::to_string(vf->getDisplayedChild() + 1) + " / " +
+                    std::to_string(vf->getChildCount()) + " 页 · " +
+                    (vf->isFlipping() ? "自动翻页中" : "已暂停"));
+        }
+    };
+    if (vf) {
+        // flipInterval/autoStart come from XML; attach → onWindowVisibilityChanged
+        // → updateRunning kicks the 2 s auto-flip loop.
+        vf->setInAnimation(AnimationUtils::loadAnimation(
+                ctx, cdroid::internal::R::anim::slide_in_right));
+        vf->setOutAnimation(AnimationUtils::loadAnimation(
+                ctx, cdroid::internal::R::anim::slide_out_left));
+        updateStatus(*vf);
+    }
+
+    Button* b = (Button*)page->findViewById(widgetsDemo::R::id::flip_prev);
+    if (b) b->setOnClickListener([vf, updateStatus](View& v) {
+        if (vf) vf->showPrevious();
+        updateStatus(v);
+    });
+    b = (Button*)page->findViewById(widgetsDemo::R::id::flip_next);
+    if (b) b->setOnClickListener([vf, updateStatus](View& v) {
+        if (vf) vf->showNext();
+        updateStatus(v);
+    });
+    b = (Button*)page->findViewById(widgetsDemo::R::id::flip_auto);
+    if (b) b->setOnClickListener([vf, updateStatus, b](View& v) {
+        if (!vf) return;
+        if (vf->isFlipping()) {
+            vf->stopFlipping();
+            b->setText("开始自动");
+        } else {
+            vf->startFlipping();
+            b->setText("暂停自动");
+        }
+        updateStatus(v);
+    });
+
+    // TextSwitcher: 2 s auto ticker + manual advance, same interaction as the
+    // ViewFlipper card. ViewSwitcher has no built-in timer, so drive it with a
+    // self-reposting View::postDelayed loop.
+    TextSwitcher* ts = (TextSwitcher*)page->findViewById(widgetsDemo::R::id::ts_switcher);
+    TextView* tsStatus = (TextView*)page->findViewById(widgetsDemo::R::id::ts_status);
+    if (ts) {
+        static const std::vector<std::string> kTicker = {
+            "StaticLayout 断行 · minikin 度量",
+            "Spannable 富文本 · BiDi 算法",
+            "ViewFlipper 自动翻页 · ViewAnimator 家族",
+            "TextSwitcher 双 TextView 交替",
+        };
+        auto idx = std::make_shared<size_t>(0);
+        auto tsAuto = std::make_shared<bool>(true);
+        auto updateTsStatus = [tsStatus, idx, tsAuto]() {
+            if (!tsStatus) return;
+            tsStatus->setText(std::string("TextSwitcher · 第 ") +
+                    std::to_string(*idx + 1) + " / " + std::to_string(kTicker.size()) +
+                    " 条 · " + (*tsAuto ? "自动轮播中" : "已暂停"));
+        };
+        auto tsTick = std::make_shared<Runnable>();
+        *tsTick = [ts, idx, tsAuto, tsTick, updateTsStatus]() {
+            if (!ts->isAttachedToWindow()) return;  // page offscreen: stop reposting
+            *idx = (*idx + 1) % kTicker.size();
+            ts->setCurrentText(kTicker[*idx]);
+            updateTsStatus();
+            if (*tsAuto) ts->postDelayed(*tsTick, 2000);
+        };
+        ts->setInAnimation(AnimationUtils::loadAnimation(
+                ctx, cdroid::internal::R::anim::slide_in_right));
+        ts->setOutAnimation(AnimationUtils::loadAnimation(
+                ctx, cdroid::internal::R::anim::slide_out_left));
+        ts->setCurrentText(kTicker[0]);
+        updateTsStatus();
+        ts->postDelayed(*tsTick, 2000);
+        Button* tb = (Button*)page->findViewById(widgetsDemo::R::id::ts_next);
+        if (tb) tb->setOnClickListener([ts, idx, tsAuto, tsTick](View&) {
+            *idx = (*idx + 1) % kTicker.size();
+            ts->setCurrentText(kTicker[*idx]);
+            if (*tsAuto) {  // restart the auto window from the manual step
+                ts->removeCallbacks(*tsTick);
+                ts->postDelayed(*tsTick, 2000);
+            }
+        });
+        tb = (Button*)page->findViewById(widgetsDemo::R::id::ts_auto);
+        if (tb) tb->setOnClickListener([ts, tsAuto, tsTick, tb, updateTsStatus](View&) {
+            *tsAuto = !*tsAuto;
+            tb->setText(*tsAuto ? "暂停自动" : "开始自动");
+            if (*tsAuto) ts->postDelayed(*tsTick, 2000);
+            else ts->removeCallbacks(*tsTick);
+            updateTsStatus();
+        });
+    }
+
+    // ImageSwitcher: 2 s auto cycle + manual next over the mipmap photos.
+    // getDrawable() returns the shared cache instance, so hand the switcher a
+    // fresh ConstantState copy (its drawable setter owns/deletes what it holds).
+    ImageSwitcher* isw = (ImageSwitcher*)page->findViewById(widgetsDemo::R::id::isw_switcher);
+    TextView* iswStatus = (TextView*)page->findViewById(widgetsDemo::R::id::isw_status);
+    if (isw) {
+        static const int kPhotos[] = {
+            widgetsDemo::R::mipmap::demo_photo, widgetsDemo::R::mipmap::demo_photo2,
+            widgetsDemo::R::mipmap::demo_photo3, widgetsDemo::R::mipmap::demo_photo4,
+            widgetsDemo::R::mipmap::demo_photo5,
+        };
+        constexpr int kPhotoCount = (int)(sizeof(kPhotos) / sizeof(kPhotos[0]));
+        auto which = std::make_shared<int>(0);
+        auto iswAuto = std::make_shared<bool>(true);
+        auto showPhoto = [isw, ctx, which, iswStatus](int step) {
+            *which = (*which + step + kPhotoCount) % kPhotoCount;
+            Drawable* proto = ctx->getDrawable(kPhotos[*which]);
+            isw->setImageDrawable(proto->getConstantState()->newDrawable());
+            if (iswStatus) {
+                iswStatus->setText(std::string("ImageSwitcher · 第 ") +
+                        std::to_string(*which + 1) + " / " + std::to_string(kPhotoCount) +
+                        " 张 · 640x360");
+            }
+        };
+        auto iswTick = std::make_shared<Runnable>();
+        *iswTick = [isw, iswAuto, iswTick, showPhoto]() {
+            if (!isw->isAttachedToWindow()) return;
+            showPhoto(1);
+            if (*iswAuto) isw->postDelayed(*iswTick, 2000);
+        };
+        isw->setInAnimation(AnimationUtils::loadAnimation(
+                ctx, cdroid::internal::R::anim::slide_in_right));
+        isw->setOutAnimation(AnimationUtils::loadAnimation(
+                ctx, cdroid::internal::R::anim::slide_out_left));
+        showPhoto(0);
+        isw->postDelayed(*iswTick, 2000);
+        Button* ib = (Button*)page->findViewById(widgetsDemo::R::id::isw_next);
+        if (ib) ib->setOnClickListener([isw, iswAuto, iswTick, showPhoto](View&) {
+            showPhoto(1);
+            if (*iswAuto) {
+                isw->removeCallbacks(*iswTick);
+                isw->postDelayed(*iswTick, 2000);
+            }
+        });
+        ib = (Button*)page->findViewById(widgetsDemo::R::id::isw_auto);
+        if (ib) ib->setOnClickListener([isw, iswAuto, iswTick, ib](View&) {
+            *iswAuto = !*iswAuto;
+            ib->setText(*iswAuto ? "暂停自动" : "开始自动");
+            if (*iswAuto) isw->postDelayed(*iswTick, 2000);
+            else isw->removeCallbacks(*iswTick);
         });
     }
 }

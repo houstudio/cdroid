@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ASLD transition drawable (marked -> unmarked): outline star spins back and shrinks. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/star_outline">
+    <target
+        android:name="star"
+        android:animation="@anim/star_spin" />
+    <target
+        android:name="star"
+        android:animation="@anim/star_pop_out" />
+</animated-vector>

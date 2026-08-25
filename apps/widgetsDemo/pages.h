@@ -14,3 +14,4 @@ void setupMisc(cdroid::View* page);
 void setupDateTime(cdroid::View* page);
 void setupConstraint(cdroid::View* page);
 void setupMotion(cdroid::View* page);
+void setupFlipper(cdroid::View* page);

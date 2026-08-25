@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/page_padding">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ph_flipper_t"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/card_gap"
+            android:text="@string/ph_flipper_d"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/body_size" />
+
+        <!-- ViewFlipper -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_flipper"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <ViewFlipper
+                android:id="@+id/flipper"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="@dimen/row_gap"
+                android:flipInterval="2000"
+                android:autoStart="true">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/tile_blue"
+                    android:gravity="center"
+                    android:text="@string/flip_page1"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/tile_violet"
+                    android:gravity="center"
+                    android:text="@string/flip_page2"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/tile_teal"
+                    android:gravity="center"
+                    android:text="@string/flip_page3"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </ViewFlipper>
+            <TextView
+                android:id="@+id/flip_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+                <Button
+                    android:id="@+id/flip_prev"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_outline"
+                    android:textColor="@color/accent"
+                    android:text="@string/flip_prev" />
+                <Button
+                    android:id="@+id/flip_auto"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_primary"
+                    android:textColor="#FFFFFFFF"
+                    android:text="@string/flip_auto_stop" />
+                <Button
+                    android:id="@+id/flip_next"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_outline"
+                    android:textColor="@color/accent"
+                    android:text="@string/flip_next" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- TextSwitcher -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_textswitcher"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <TextSwitcher
+                android:id="@+id/ts_switcher"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+            </TextSwitcher>
+            <TextView
+                android:id="@+id/ts_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+                <Button
+                    android:id="@+id/ts_next"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_outline"
+                    android:textColor="@color/accent"
+                    android:text="@string/flip_ts_next" />
+                <Button
+                    android:id="@+id/ts_auto"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_primary"
+                    android:textColor="#FFFFFFFF"
+                    android:text="@string/flip_auto_stop" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ImageSwitcher -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_imageswitcher"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <ImageSwitcher
+                android:id="@+id/isw_switcher"
+                android:layout_width="match_parent"
+                android:layout_height="170dp"
+                android:layout_marginTop="@dimen/row_gap">
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerInside" />
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerInside" />
+            </ImageSwitcher>
+            <TextView
+                android:id="@+id/isw_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+                <Button
+                    android:id="@+id/isw_next"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_outline"
+                    android:textColor="@color/accent"
+                    android:text="@string/flip_isw_next" />
+                <Button
+                    android:id="@+id/isw_auto"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_primary"
+                    android:textColor="#FFFFFFFF"
+                    android:text="@string/flip_auto_stop" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

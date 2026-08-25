@@ -75,4 +75,22 @@
     <string name="phrase_demo_text">Wrap me at spaces only: a state-of-the-art line breaker may also split after hyphens, commas, slashes and periods, so a long compound like mother-in-law, a build tag like android-14.0.0_r2, a path like src/gui/text, or a numbered list item ending in v1.0.2 can all be torn apart mid-token. Phrase-based wrapping keeps each of them glued together as one unbreakable phrase, moving the whole token to the next line instead of breaking it at the first hyphen, comma, slash or dot it runs out of room at — watch the right edge of both paragraphs and where each token lands.</string>
     <string name="phrase_none_hint">lineBreakWordStyle 默认 · 连字符与标点后可断行</string>
     <string name="phrase_word_hint">lineBreakWordStyle=phrase · 仅在空格处换行，词组保持完整</string>
+    <string name="sec_asld">AnimatedStateListDrawable</string>
+    <string name="asld_hint">点按星星切换 activated 状态&#10;asld_star.xml · &lt;transition&gt; = AVD(spin+pop)</string>
+    <string name="asld_cb_text">框架内置&#10;CheckBox ASLD</string>
+    <string name="tab_flipper">翻页</string>
+    <string name="ph_flipper_t">翻页与切换</string>
+    <string name="ph_flipper_d">ViewFlipper 自动翻页 · TextSwitcher 文字轮播 · ImageSwitcher 图片切换</string>
+    <string name="sec_flipper">ViewFlipper · 2 秒自动翻页</string>
+    <string name="flip_page1">第 1 页 · ViewFlipper</string>
+    <string name="flip_page2">第 2 页 · ViewAnimator</string>
+    <string name="flip_page3">第 3 页 · showNext/showPrevious</string>
+    <string name="flip_prev">上一页</string>
+    <string name="flip_next">下一页</string>
+    <string name="flip_auto_stop">暂停自动</string>
+    <string name="flip_auto_start">开始自动</string>
+    <string name="sec_textswitcher">TextSwitcher · 2 秒自动轮播</string>
+    <string name="flip_ts_next">下一条消息</string>
+    <string name="sec_imageswitcher">ImageSwitcher · 2 秒自动切换</string>
+    <string name="flip_isw_next">下一张图片</string>
 </resources>

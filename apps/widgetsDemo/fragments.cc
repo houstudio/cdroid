@@ -4,7 +4,7 @@
 using namespace cdroid;
 
 namespace {
-constexpr int kPageCount = 10;
+constexpr int kPageCount = 11;
 
 int pageLayout(int page) {
     namespace R = widgetsDemo::R;
@@ -12,7 +12,7 @@ int pageLayout(int page) {
         R::layout::page_buttons, R::layout::page_progress, R::layout::page_text,
         R::layout::page_images, R::layout::page_animation, R::layout::page_lists,
         R::layout::page_misc, R::layout::page_datetime, R::layout::page_constraint,
-        R::layout::page_motion,
+        R::layout::page_motion, R::layout::page_flipper,
     };
     return LAYOUTS[page];
 }
@@ -21,6 +21,7 @@ void (*pageSetup(int page))(View*) {
     static void (*const SETUP[kPageCount])(View*) = {
         setupButtons, setupProgress, setupText, setupImages, setupAnimation,
         setupLists, setupMisc, setupDateTime, setupConstraint, setupMotion,
+        setupFlipper,
     };
     return SETUP[page];
 }
@@ -68,7 +69,7 @@ std::string DemoFragmentPagerAdapter::getPageTitle(int position) {
         R::string::tab_lights, R::string::tab_energy, R::string::tab_messages,
         R::string::tab_gallery, R::string::tab_motion_fx, R::string::tab_devices,
         R::string::tab_dashboard, R::string::tab_schedule, R::string::tab_climate,
-        R::string::tab_curtain,
+        R::string::tab_curtain, R::string::tab_flipper,
     };
     Context* ctx = &App::getInstance();
     return ctx->getString(TITLES[position]);
