@@ -122,6 +122,8 @@ public:
 
     void setIs24Hour(bool is24Hour) override;
 
+    void onConfigurationChanged(Configuration& newConfig) override;
+
     bool is24Hour() override;
 
     void setEnabled(bool enabled) override;

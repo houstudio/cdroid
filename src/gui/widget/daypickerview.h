@@ -67,6 +67,7 @@ public:
     ~DayPickerView()override;
     void setDayOfWeekTextAppearance(int resId);
     void setDayOfWeekNameLength(int length);
+    void onConfigurationChanged(Configuration& newConfig)override;
     int getDayOfWeekTextAppearance();
     void  setDayTextAppearance(int resId);
     int getDayTextAppearance();

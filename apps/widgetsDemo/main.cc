@@ -7,8 +7,10 @@
  *********************************************************************************/
 #include <cdroid.h>
 #include <core/activityfactory.h>
+#include <core/LocaleList.h>
 #include <app/alertdialog.h>
 #include <view/layoutinflater.h>
+#include <widget/button.h>
 #include <widget/viewpager.h>
 #include <widgetEx/tablayout/tablayout.h>
 #include <fragment/fragmentactivity.h>
@@ -42,6 +44,32 @@ public:
             host->addView(pager, new ViewGroup::LayoutParams(
                     ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
             if (mTabs) mTabs->setupWithViewPager(pager);
+
+        // Locale cycle button (top-right): flips zh-CN <-> en-US through the
+        // AOSP-style configuration-change path. The manifest declares
+        // android:configChanges="locale", so the window takes the in-place
+        // dispatch (View.onConfigurationChanged) instead of recreate().
+        if (Button* localeBtn = (Button*)root->findViewById(widgetsDemo::R::id::btn_locale)) {
+            auto applyButtonLabel = [localeBtn]() {
+                const std::string cur = App::getInstance().getResources()
+                        .getConfiguration().getLocales().get(0).toLanguageTag();
+                localeBtn->setText(cur == "zh-CN" ? "EN" : "中文");
+            };
+            localeBtn->setOnClickListener([applyButtonLabel](View&) {
+                App& app = App::getInstance();
+                const std::string cur = app.getResources().getConfiguration()
+                        .getLocales().get(0).toLanguageTag();
+                const char* next = (cur == "zh-CN") ? "en-US" : "zh-CN";
+                // Copy the live config and change only the locale, so the
+                // diff is CONFIG_LOCALE alone.
+                Configuration cfg = app.getResources().getConfiguration();
+                cfg.setLocales(LocaleList(std::vector<Locale>{
+                        Locale::forLanguageTag(next)}));
+                app.handleConfigurationChanged(cfg);
+                applyButtonLabel();
+            });
+            applyButtonLabel();
+        }
 
             // TEMP STRESS HOOK: PRD_DIALOG=1 opens and dismisses the misc-page
             // AlertDialog every 400ms (deterministic repro for the decor leak;

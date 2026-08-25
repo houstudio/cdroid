@@ -59,6 +59,13 @@ void DayPickerPagerAdapter::setRange(Calendar& min,Calendar& max) {
     notifyDataSetChanged();
 }
 
+void DayPickerPagerAdapter::onLocaleChanged() {
+    int count = mItems.size();
+    for (int i = 0; i < count; i++) {
+        mItems.valueAt(i)->calendar->onLocaleChanged();
+    }
+}
+
 void DayPickerPagerAdapter::setDayOfWeekNameLength(int length) {
     mDayOfWeekNameLength = length;
 

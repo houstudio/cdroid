@@ -313,6 +313,26 @@ void TimePickerClockDelegate::ensureMinimumTextWidth(TextView* v) {
     v->setMinimumWidth(minWidth);
 }
 
+void TimePickerClockDelegate::onConfigurationChanged(Configuration& newConfig) {
+    (void)newConfig;
+    // CDROID runtime-locale extension (AOSP rebuilds the activity instead):
+    // re-localize the AM/PM labels, the accessibility strings and the hour format.
+    const std::vector<std::string> amPmStrings = TimePicker::getAmPmStrings(mContext);
+    if (mAmLabel) {
+        mAmLabel->setText(obtainVerbatim(amPmStrings[0]));
+        ensureMinimumTextWidth(mAmLabel);
+    }
+    if (mPmLabel) {
+        mPmLabel->setText(obtainVerbatim(amPmStrings[1]));
+        ensureMinimumTextWidth(mPmLabel);
+    }
+    mSelectHours = mContext->getString(R::string::select_hours);
+    mSelectMinutes = mContext->getString(R::string::select_minutes);
+    mRadialTimePickerModeEnabledDescription = mContext->getString(R::string::time_picker_radial_mode_description);
+    mTextInputPickerModeEnabledDescription = mContext->getString(R::string::time_picker_text_input_mode_description);
+    updateHourFormat();
+}
+
 void TimePickerClockDelegate::updateHourFormat() {
     // DEFERRED: android.text.format.DateFormat.getBestDateTimePattern(Locale, skeleton) not
     // ported. Single 'h' matches the 12-hour skeleton of most locales (en "h:mm a",

@@ -7,7 +7,7 @@
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>
     <application android:label="@string/app_title" android:theme="@style/AppTheme">
         <activity android:name="WidgetsDemoActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden">
+            android:configChanges="orientation|screenSize|keyboardHidden|locale">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

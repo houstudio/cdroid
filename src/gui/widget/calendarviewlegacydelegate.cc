@@ -384,6 +384,17 @@ void CalendarViewLegacyDelegate::setCurrentLocale(const Locale& locale) {
     mFirstDayOfMonth = getCalendarForLocale(mFirstDayOfMonth, locale);
     mMinDate = getCalendarForLocale(mMinDate, locale);
     mMaxDate = getCalendarForLocale(mMaxDate, locale);
+
+    // CDROID runtime-locale extension: AOSP rebuilds the whole activity on a
+    // locale change, so its setCurrentLocale never touches views; when the
+    // Configuration change is dispatched in place, rebuild the locale-dependent
+    // header (weekday names, month label) too. The ctor calls this before the
+    // views exist — guard.
+    if (mDayNamesHeader != nullptr && mListView != nullptr && mMonthName != nullptr) {
+        setUpHeader();
+        setMonthDisplayed(mFirstDayOfMonth);
+        invalidateAllWeekViews();
+    }
 }
 
 void CalendarViewLegacyDelegate::updateDateTextSize() {

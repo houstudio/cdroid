@@ -145,6 +145,10 @@ public:
        (AOSP default), 1 = abbreviated, 2 = wide weekday names. */
     void setDayOfWeekNameLength(int length);
 
+    /* CDROID runtime-locale extension: rebuild the month-year title and the
+       weekday header from the current locale's symbols. */
+    void onLocaleChanged();
+
     void setMonthTextColor(const cdroid::RefPtr<ColorStateList>& monthTextColor);
     void setDayOfWeekTextColor(const cdroid::RefPtr<ColorStateList>& dayOfWeekTextColor);
     void setDayTextColor(const cdroid::RefPtr<ColorStateList>& dayTextColor);

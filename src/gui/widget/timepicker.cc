@@ -71,6 +71,13 @@ TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleA
     });*/
 }
 
+void TimePicker::onConfigurationChanged(Configuration& newConfig) {
+    FrameLayout::onConfigurationChanged(newConfig);
+    // CDROID runtime-locale extension: re-localize the delegate in place
+    // (AOSP android-36 rebuilds the activity instead).
+    mDelegate->onConfigurationChanged(newConfig);
+}
+
 TimePicker::~TimePicker(){
     delete mDelegate;
 }

@@ -148,6 +148,12 @@ void SimpleMonthView::updateMonthYearLabel(){
     mMonthYearLabel = formatter.format(mCalendar.getTimeInMillis());
 }
 
+void SimpleMonthView::onLocaleChanged() {
+    updateMonthYearLabel();
+    updateDayOfWeekLabels();
+    invalidate();
+}
+
 void SimpleMonthView::setDayOfWeekNameLength(int length) {
     mDayOfWeekNameLength = length;
     updateDayOfWeekLabels();

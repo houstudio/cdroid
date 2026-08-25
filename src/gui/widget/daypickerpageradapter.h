@@ -83,6 +83,9 @@ public:
 
     void setDayOfWeekNameLength(int length);
 
+    /* CDROID runtime-locale extension: re-localize every instantiated page. */
+    void onLocaleChanged();
+
     void setDayTextAppearance(int resId);
     int getDayTextAppearance();
 

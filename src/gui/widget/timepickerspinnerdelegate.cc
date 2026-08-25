@@ -329,6 +329,17 @@ void TimePickerSpinnerDelegate::updateAmPmControl() {
     mDelegator->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
 }
 
+void TimePickerSpinnerDelegate::onConfigurationChanged(Configuration& newConfig) {
+    (void)newConfig;
+    // CDROID runtime-locale extension (AOSP rebuilds the activity instead):
+    // re-localize the AM/PM strings and the control showing them.
+    mAmPmStrings = TimePicker::getAmPmStrings(mContext);
+    if (mAmPmSpinner != nullptr) {
+        mAmPmSpinner->setDisplayedValues(mAmPmStrings);
+    }
+    updateAmPmControl();
+}
+
 void TimePickerSpinnerDelegate::onTimeChanged() {
     mDelegator->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
     if (mOnTimeChangedListener) {

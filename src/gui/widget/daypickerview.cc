@@ -237,6 +237,13 @@ void DayPickerView::setDayOfWeekNameLength(int length) {
     mAdapter->setDayOfWeekNameLength(length);
 }
 
+void DayPickerView::onConfigurationChanged(Configuration& newConfig) {
+    ViewGroup::onConfigurationChanged(newConfig);
+    // CDROID runtime-locale extension: re-localize the instantiated month
+    // pages (month-year titles, weekday headers).
+    mAdapter->onLocaleChanged();
+}
+
 int DayPickerView::getDayOfWeekTextAppearance() {
     return mAdapter->getDayOfWeekTextAppearance();
 }
