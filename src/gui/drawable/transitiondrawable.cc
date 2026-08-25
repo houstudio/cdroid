@@ -53,6 +53,7 @@ TransitionDrawable::TransitionDrawable(const std::vector<Drawable*>drawables)
 TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state)
     :LayerDrawable(state){    
     mAlpha = 0;
+    mReverse = false;
     mCrossFade = false;
     mTransitionState = TRANSITION_NONE;
 }

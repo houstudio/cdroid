@@ -49,15 +49,41 @@ NavOptions::NavOptions(int launchMode, const std::string& popUpTo, bool popUpToI
     mShouldPopUpToSaveState = shouldPopUpToSaveState;
 }
 
-bool NavOptions::shouldLaunchSingleTop() const{ return (mLaunchMode & LAUNCH_SINGLE_TOP) != 0; }
-bool NavOptions::shouldLaunchDocument() const{ return (mLaunchMode & LAUNCH_DOCUMENT) != 0; }
-bool NavOptions::shouldClearTask() const{ return (mLaunchMode & LAUNCH_CLEAR_TASK) != 0; }
-const std::string NavOptions::getPopUpTo() const{ return mPopUpTo; }
-bool NavOptions::isPopUpToInclusive() const{ return mPopUpToInclusive; }
-int NavOptions::getEnterAnim() const{ return mEnterAnim; }
-int NavOptions::getExitAnim() const{ return mExitAnim; }
-int NavOptions::getPopEnterAnim() const{ return mPopEnterAnim; }
-int NavOptions::getPopExitAnim() const{ return mPopExitAnim; }
+bool NavOptions::shouldLaunchSingleTop() const{
+    return (mLaunchMode & LAUNCH_SINGLE_TOP) != 0;
+}
+
+bool NavOptions::shouldLaunchDocument() const{
+    return (mLaunchMode & LAUNCH_DOCUMENT) != 0;
+}
+
+bool NavOptions::shouldClearTask() const{
+    return (mLaunchMode & LAUNCH_CLEAR_TASK) != 0;
+}
+
+const std::string NavOptions::getPopUpTo() const{
+    return mPopUpTo;
+}
+
+bool NavOptions::isPopUpToInclusive() const{
+    return mPopUpToInclusive;
+}
+
+int NavOptions::getEnterAnim() const{
+    return mEnterAnim;
+}
+
+int NavOptions::getExitAnim() const{
+    return mExitAnim;
+}
+
+int NavOptions::getPopEnterAnim() const{
+    return mPopEnterAnim;
+}
+
+int NavOptions::getPopExitAnim() const{
+    return mPopExitAnim;
+}
 
 Bundle* NavOptions::toBundle() {
     Bundle* b = new Bundle();
@@ -78,23 +104,36 @@ NavOptions* NavOptions::fromBundle(const Bundle& b) {
 NavOptions::Builder::Builder() {}
 
 NavOptions::Builder& NavOptions::Builder::setLaunchSingleTop(bool singleTop) {
-    if (singleTop) mLaunchMode |= LAUNCH_SINGLE_TOP; else mLaunchMode &= ~LAUNCH_SINGLE_TOP;
+    if (singleTop)
+        mLaunchMode |= LAUNCH_SINGLE_TOP;
+    else
+        mLaunchMode &= ~LAUNCH_SINGLE_TOP;
     return *this;
 }
+
 NavOptions::Builder& NavOptions::Builder::setLaunchDocument(bool launchDocument) {
-    if (launchDocument) mLaunchMode |= LAUNCH_DOCUMENT; else mLaunchMode &= ~LAUNCH_DOCUMENT;
+    if (launchDocument)
+        mLaunchMode |= LAUNCH_DOCUMENT;
+    else
+        mLaunchMode &= ~LAUNCH_DOCUMENT;
     return *this;
 }
+
 NavOptions::Builder& NavOptions::Builder::setClearTask(bool clearTask) {
-    if (clearTask) mLaunchMode |= LAUNCH_CLEAR_TASK; else mLaunchMode &= ~LAUNCH_CLEAR_TASK;
+    if (clearTask)
+        mLaunchMode |= LAUNCH_CLEAR_TASK;
+    else
+        mLaunchMode &= ~LAUNCH_CLEAR_TASK;
     return *this;
 }
+
 NavOptions::Builder& NavOptions::Builder::setPopUpTo(const std::string& destinationId, bool inclusive) {
     mPopUpTo = destinationId;
     mPopUpToId = -1; // mutually exclusive with the id form
     mPopUpToInclusive = inclusive;
     return *this;
 }
+
 NavOptions::Builder& NavOptions::Builder::setPopUpTo(const std::string& route, bool inclusive, bool saveState) {
     mPopUpTo = route;
     mPopUpToId = -1; // mutually exclusive with the id form
@@ -102,12 +141,14 @@ NavOptions::Builder& NavOptions::Builder::setPopUpTo(const std::string& route, b
     mShouldPopUpToSaveState = saveState;
     return *this;
 }
+
 NavOptions::Builder& NavOptions::Builder::setPopUpTo(int destinationId, bool inclusive) {
     mPopUpToId = destinationId;
     mPopUpTo.clear(); // mutually exclusive with the route form
     mPopUpToInclusive = inclusive;
     return *this;
 }
+
 NavOptions::Builder& NavOptions::Builder::setPopUpTo(int destinationId, bool inclusive, bool saveState) {
     mPopUpToId = destinationId;
     mPopUpTo.clear(); // mutually exclusive with the route form
@@ -115,14 +156,31 @@ NavOptions::Builder& NavOptions::Builder::setPopUpTo(int destinationId, bool inc
     mShouldPopUpToSaveState = saveState;
     return *this;
 }
+
 NavOptions::Builder& NavOptions::Builder::setRestoreState(bool restoreState) {
     mShouldRestoreState = restoreState;
     return *this;
 }
-NavOptions::Builder& NavOptions::Builder::setEnterAnim(int enterAnim) { mEnterAnim = enterAnim; return *this; }
-NavOptions::Builder& NavOptions::Builder::setExitAnim(int exitAnim) { mExitAnim = exitAnim; return *this; }
-NavOptions::Builder& NavOptions::Builder::setPopEnterAnim(int popEnterAnim) { mPopEnterAnim = popEnterAnim; return *this; }
-NavOptions::Builder& NavOptions::Builder::setPopExitAnim(int popExitAnim) { mPopExitAnim = popExitAnim; return *this; }
+
+NavOptions::Builder& NavOptions::Builder::setEnterAnim(int enterAnim) {
+    mEnterAnim = enterAnim;
+    return *this;
+}
+
+NavOptions::Builder& NavOptions::Builder::setExitAnim(int exitAnim) {
+    mExitAnim = exitAnim;
+    return *this;
+}
+
+NavOptions::Builder& NavOptions::Builder::setPopEnterAnim(int popEnterAnim) {
+    mPopEnterAnim = popEnterAnim;
+    return *this;
+}
+
+NavOptions::Builder& NavOptions::Builder::setPopExitAnim(int popExitAnim) {
+    mPopExitAnim = popExitAnim;
+    return *this;
+}
 
 NavOptions* NavOptions::Builder::build() {
     return new NavOptions(mLaunchMode, mPopUpTo, mPopUpToInclusive,

@@ -29,13 +29,13 @@ private:
 private:
     int  mTransitionState;
     bool mReverse;
+    bool mCrossFade;
     int64_t mStartTimeMillis;
     int  mFrom;
     int  mTo;
     int  mDuration;
     int  mOriginalDuration;
     int  mAlpha;
-    bool mCrossFade;
 
     class TransitionState:public LayerDrawable::LayerState{
     public:
