@@ -13,6 +13,8 @@
 #include <expat.h>
 #include <text/spannablestringbuilder.h>
 #include <core/color.h>
+#include <core/app.h>
+#include <widget/internal_R.h>
 #include <regex>
 #include <cstdint>
 #include <initializer_list>
@@ -539,10 +541,16 @@ private:
     }
 
     void startImg(const XML_Char** atts) {
-        // Reserved: ImageSpan/ImageGetter are unavailable in this port. Re-enable
-        // once ImageSpan exists (mirrors Android's behavior):
         std::string src = getAttr(atts, "src");
         Drawable* d = mImageGetter ? mImageGetter(src) : nullptr;
+        if (d == nullptr) {
+            // AOSP Html.startImg: when the ImageGetter is absent or yields null,
+            // fall back to the system "unknown image" placeholder at intrinsic
+            // bounds. Without this the bare U+FFFC replacement char renders as a
+            // tofu box where the picture belongs.
+            d = App::getInstance().getDrawable(internal::R::drawable::unknown_image);
+            d->setBounds(0, 0, d->getIntrinsicWidth(), d->getIntrinsicHeight());
+        }
 
         // 解析对齐参数：优先使用 img 的 align 属性，其次在 style 中解析 vertical-align
         int valign = DynamicDrawableSpan::ALIGN_BOTTOM;

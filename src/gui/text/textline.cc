@@ -805,6 +805,10 @@ float TextLine::handleText(TextPaint& wp, int start, int end,
 
             wp.setColor(wp.bgColor);
             wp.setStyle(Paint::Style::FILL);
+            // AOSP drawRect(..., wp) draws with the paint; cairo fills with the
+            // active source, so the bg color must go to the canvas explicitly —
+            // otherwise the rect fills with whatever source the previous run left.
+            c->set_color(wp.bgColor);
             c->rectangle(leftX,top,totalWidth,bottom-top);//drawRect(leftX, top, rightX, bottom, wp);
             c->fill();
             wp.setStyle(previousStyle);
