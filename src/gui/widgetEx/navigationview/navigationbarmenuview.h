@@ -102,6 +102,10 @@ public:
     void initialize(MenuBuilder* menu) override;
     int getWindowAnimations() override { return 0; }
 
+    // AOSP public helper: the default label ColorStateList built from a theme
+    // base color + colorPrimary (checked state); null when the theme lacks
+    // the base attribute.
+    RefPtr<ColorStateList> createDefaultColorStateList(int baseColorThemeAttr);
     void setIconTintList(const RefPtr<ColorStateList>& tint);
     const RefPtr<ColorStateList> getIconTintList() const;
     void setItemIconSize(int iconSize);

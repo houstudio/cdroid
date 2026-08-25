@@ -198,6 +198,12 @@ void NavigationBarItemView::setIconSize(int iconSize) {
 
 void NavigationBarItemView::setTextColor(const RefPtr<ColorStateList>& color) {
     mTextColor = color;
+    // AOSP's theme always resolves the default color list, so the null case
+    // never reaches TextView there; guard the unresolvable-theme case here -
+    // TextView::setTextColor(empty) dereferences in updateTextColors.
+    if (color == nullptr) {
+        return;
+    }
     mSmallLabel->setTextColor(color);
     mLargeLabel->setTextColor(color);
 }
@@ -397,8 +403,21 @@ void NavigationBarItemView::updateActiveIndicatorLayoutParams(int availableWidth
 
 void NavigationBarItemView::setIcon(Drawable* icon) {
     mOriginalIconDrawable = icon;
-    if (icon != nullptr) {
-        mIcon->setImageDrawable(icon);
+    if (icon == nullptr) {
+        mIcon->setImageDrawable(nullptr);
+        return;
+    }
+    // The icon drawable belongs to the MenuItemImpl (shared, freed with the
+    // menu); ImageView::setImageDrawable OWNS what it is handed (it deletes
+    // the previous one on replace), and updateMenuView re-initializes items -
+    // handing the borrowed instance would free the menu's drawable on the
+    // second pass. Derive a private copy from the constant state instead
+    // (resource-loaded icons always have one).
+    auto cs = icon->getConstantState();
+    if (cs != nullptr) {
+        mIcon->setImageDrawable(cs->newDrawable());
+    } else {
+        LOGE("NavigationBarItemView: icon without constant state is not settable");
     }
 }
 

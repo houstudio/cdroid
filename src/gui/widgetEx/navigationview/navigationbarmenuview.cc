@@ -19,6 +19,7 @@
 #include <widgetEx/navigationview/navigationbarview.h>
 #include <widgetEx/navigationview/navigationbarpresenter.h>
 #include <menu/menubuilder.h>
+#include <widget/internal_R.h>
 #include <menu/menuitemimpl.h>
 #include <cdlog.h>
 #include <algorithm>
@@ -41,6 +42,10 @@ NavigationBarMenuView::NavigationBarMenuView(Context* context, const AttributeSe
     , mItemGravity(NavigationBarView::ITEM_GRAVITY_TOP_CENTER)
     , mItemActiveIndicatorColor(0)
     , mPresenter(nullptr) {
+    // AOSP: itemTextColorDefault = createDefaultColorStateList(textColorSecondary).
+    mItemTextColorDefault = createDefaultColorStateList(
+            (int)cdroid::internal::R::attr::textColorSecondary);
+
     mOnClickListener = [this](View& v){
         NavigationBarItemView* itemView = (NavigationBarItemView*)&v;
         MenuItem* item = itemView->getItemData();
@@ -440,12 +445,14 @@ void NavigationBarMenuView::buildMenuView() {
     if (mSelectedItemPosition >= 0 && mButtons[mSelectedItemPosition] != nullptr) {
         setCheckedItem(mButtons[mSelectedItemPosition]->getItemData());
     }
-    // oldChildren were either pooled (released above, alive) or non-item
-    // views; only the latter are freed here.
+    // An old child is still live if it was REUSED this build (getNewItem
+    // popped it from the pool and addView re-attached it - it is no longer in
+    // mItemPool but has a parent again) or remains parked in the pool; only
+    // the leftovers (detached and pool-less) are freed.
     for (View* old : oldChildren) {
         bool pooled = false;
         for (NavigationBarItemView* p : mItemPool) pooled |= (p == old);
-        if (!pooled) delete old;
+        if (!pooled && old->getParent() == nullptr) delete old;
     }
 }
 
@@ -534,6 +541,34 @@ void NavigationBarMenuView::tryRestoreSelectedItemId(int itemId) {
             break;
         }
     }
+}
+
+RefPtr<ColorStateList> NavigationBarMenuView::createDefaultColorStateList(int baseColorThemeAttr) {
+    TypedValue value;
+    if (!getContext()->getTheme().resolveAttribute(baseColorThemeAttr, &value, true)) {
+        return nullptr;
+    }
+    RefPtr<ColorStateList> baseColor = getContext()->getColorStateList(value.resourceId);
+    if (baseColor == nullptr) {
+        return nullptr;
+    }
+    if (!getContext()->getTheme().resolveAttribute(
+            (int)cdroid::internal::R::attr::colorPrimary, &value, true)) {
+        return nullptr;
+    }
+    const int colorPrimary = value.data;
+    const int defaultColor = baseColor->getDefaultColor();
+    const std::vector<std::vector<int>> states = {
+        {-cdroid::internal::R::attr::state_enabled},              // DISABLED_STATE_SET
+        { cdroid::internal::R::attr::state_checked},              // CHECKED_STATE_SET
+        {},                                                         // EMPTY_STATE_SET
+    };
+    const std::vector<int> colors = {
+        baseColor->getColorForState(states[0], defaultColor),
+        colorPrimary,
+        defaultColor,
+    };
+    return RefPtr<ColorStateList>(new ColorStateList(states, colors));
 }
 
 bool NavigationBarMenuView::isShifting(int labelVisibilityMode, int childCount) const {
