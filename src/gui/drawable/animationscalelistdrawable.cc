@@ -32,6 +32,18 @@ AnimationScaleListDrawable::AnimationScaleListDrawable(std::shared_ptr<Animation
     onStateChange(getState());
 }
 
+// AOSP AnimationScaleListDrawable.applyTheme: only the super dispatch and a
+// state re-selection (scale-dependent child may have changed via theming).
+void AnimationScaleListDrawable::applyTheme(const Resources::Theme& t) {
+    DrawableContainer::applyTheme(t);
+    onStateChange(getState());
+}
+
+bool AnimationScaleListDrawable::canApplyTheme() {
+    return (mAnimationScaleListState && mAnimationScaleListState->canApplyTheme())
+            || DrawableContainer::canApplyTheme();
+}
+
 /**
  * Set the current drawable according to the animation scale. If scale is 0, then pick the
  * static drawable, otherwise, pick the animatable drawable.
@@ -145,7 +157,7 @@ AnimationScaleListDrawable::AnimationScaleListState::AnimationScaleListState(con
 
     if (orig != nullptr) {
         // Perform a shallow copy and rely on mutate() to deep-copy.
-        //mThemeAttrs = orig->mThemeAttrs;
+        mThemeAttrs = orig->mThemeAttrs;
 
         mStaticDrawableIndex = orig->mStaticDrawableIndex;
         mAnimatableDrawableIndex = orig->mAnimatableDrawableIndex;
@@ -154,7 +166,7 @@ AnimationScaleListDrawable::AnimationScaleListState::AnimationScaleListState(con
 }
 
 void AnimationScaleListDrawable::AnimationScaleListState::mutate() {
-    //mThemeAttrs = mThemeAttrs != null ? mThemeAttrs.clone() : null;
+    // std::vector copies by value, matching AOSP's mThemeAttrs.clone().
 }
 
 /**
@@ -174,6 +186,11 @@ int AnimationScaleListDrawable::AnimationScaleListState::addDrawable(Drawable* d
 
 AnimationScaleListDrawable* AnimationScaleListDrawable::AnimationScaleListState::newDrawable(){
     return new AnimationScaleListDrawable(std::dynamic_pointer_cast<AnimationScaleListState>(shared_from_this()));
+}
+
+// AOSP AnimationScaleListState.canApplyTheme.
+bool AnimationScaleListDrawable::AnimationScaleListState::canApplyTheme() {
+    return !mThemeAttrs.empty() || DrawableContainerState::canApplyTheme();
 }
 
 /*bool AnimationScaleListDrawable::AnimationScaleListState::canApplyTheme() {

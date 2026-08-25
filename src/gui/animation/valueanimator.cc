@@ -73,7 +73,10 @@ ValueAnimator::ValueAnimator(const ValueAnimator&o){
     mCurrentFraction = 0;
     mSelfPulse = true;
     mSuppressSelfPulseRequested = false;
-    mInterpolator = sDefaultInterpolator;
+    // AOSP clone() is a shallow copy that keeps the source interpolator;
+    // resetting to the default here silently linearized/accel-decelerated
+    // every cloned animator (AVD animators are always cloned on start).
+    mInterpolator = o.mInterpolator ? o.mInterpolator : sDefaultInterpolator;
     mDuration   = o.mDuration;
     mReversing  = o.mReversing;
     mRepeatMode = o.mRepeatMode;

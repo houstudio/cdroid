@@ -111,17 +111,6 @@ void AnimatedVectorDrawable::draw(Canvas& canvas) {
     }
 #endif
     mAnimatorSet->onDraw(canvas);
-    {   // PBDBG probe: which AVD instance is being drawn (once per instance)
-        static void* sSeenAVD[32];
-        static int sSeenCount = 0;
-        bool seen = false;
-        for (int i = 0; i < sSeenCount; i++) seen |= (sSeenAVD[i] == this);
-        if (!seen && sSeenCount < 32) {
-            sSeenAVD[sSeenCount++] = this;
-            LOGD("PBDBG AVD::draw-once this=%p vector=%p", this,
-                    (void*)mAnimatedVectorState->mVectorDrawable);
-        }
-    }
     mAnimatedVectorState->mVectorDrawable->draw(canvas);
 }
 
@@ -283,8 +272,6 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
             PropertyValuesHolder* pvh = holders[i];
             const std::string propertyName = pvh->getPropertyName();
             void* targetNameObj = vectorDrawable->getTargetByName(targetName);
-            LOGD("PBDBG target '%s' obj=%p prop=%s", targetName.c_str(), targetNameObj,
-                    propertyName.c_str());
             const Property* property = nullptr;
             /* AOSP: the two instanceof branches both fail for a null target —
                property stays null and the holder is skipped. The pointer
@@ -299,8 +286,7 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
                 property = ((VectorDrawable::VObject*) targetNameObj)->getProperty(propertyName);
             }
             if (property != nullptr) {
-                LOGD("PBDBG bind %s.%s property=%p type prop=%d pvh=%d", targetName.c_str(),
-                        propertyName.c_str(), property, property->getType(), pvh->getValueType());
+                LOGV("pvh=%p %s.%s",pvh,targetName.c_str(),propertyName.c_str());
                 if (containsSameValueType(pvh, property)) {
                     pvh->setProperty((Property*)property);
                 } else if (!ignoreInvalidAnim) {
@@ -579,8 +565,6 @@ void AnimatedVectorDrawable::reset() {
 }
 
 void AnimatedVectorDrawable::start() {
-    LOGD("PBDBG AVD::start %p vector=%p", this,
-            (void*)mAnimatedVectorState->mVectorDrawable);
     ensureAnimatorSet();
     if (DBG_ANIMATION_VECTOR_DRAWABLE) {
         auto vds = mAnimatedVectorState->mVectorDrawable->getConstantState();
@@ -723,7 +707,6 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::init(AnimatorSet* set) {
 // Although start(), reset() and reverse() should call init() already, it is better to
 // protect these functions from NPE in any situation.
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::start() {
-    LOGD("PBDBG VDAUI::start %p mSet=%p started=%d", this, mSet, mSet?mSet->isStarted():false);
     if ((mSet == nullptr) || mSet->isStarted()) {
         return;
     }

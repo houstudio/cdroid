@@ -22,6 +22,10 @@ namespace cdroid{
 class AnimationScaleListDrawable:public DrawableContainer,public Animatable {
 protected:
     class AnimationScaleListState:public DrawableContainerState {
+        // AOSP int[] mThemeAttrs: theme-dependent attr ids, shallow-copied from
+        // the source state on clone (AOSP never assigns it at inflate here, so
+        // it stays empty unless a subclass fills it; kept for parity).
+        std::vector<int> mThemeAttrs;
         // The index of the last static drawable.
         int mStaticDrawableIndex = -1;
         // The index of the last animatable drawable.
@@ -31,7 +35,7 @@ protected:
         void mutate()override;
         int addDrawable(Drawable* drawable);
         AnimationScaleListDrawable* newDrawable() override;
-        //bool canApplyTheme() override;
+        bool canApplyTheme() override;
         int getCurrentDrawableIndexBasedOnScale();
     };
 private:
@@ -48,6 +52,8 @@ public:
     void inflate(Resources& r, XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme)override;
     AnimationScaleListDrawable* mutate() override;
     void clearMutated() override;
+    void applyTheme(const Resources::Theme& t) override;
+    bool canApplyTheme() override;
     void start() override;
     void stop() override;
     bool isRunning()override;

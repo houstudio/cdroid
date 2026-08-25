@@ -163,6 +163,7 @@ float AccelerateDecelerateInterpolator::getInterpolation(float input)const{
 }
 
 PathInterpolator::PathInterpolator(cdroid::Path&path){
+    initPath(path);
 }
 
 PathInterpolator::PathInterpolator(float controlX, float controlY) {
@@ -261,6 +262,10 @@ float PathInterpolator::getInterpolation(float t)const {
         return 0;
     } else if (t >= 1) {
         return 1;
+    }
+    // An uninitialized path (empty samples) has nothing to interpolate.
+    if (mX.size() < 2) {
+        return t;
     }
     // Do a binary search for the correct x to interpolate between.
     int startIndex = 0;

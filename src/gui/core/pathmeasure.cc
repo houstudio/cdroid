@@ -329,12 +329,21 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
         const Segment& s = mSegments[segIndex];
         const PointD* pts = mPoints.data() + s.ptIndex;
         segEnd += s.distance;
+        // Segments outside the [start, stop] window contribute nothing;
+        // without these guards their t0/t1 fall outside [0,1] and the
+        // extrapolated points garbage up the destination path (Skia skips
+        // them the same way).
+        if (segEnd <= start) {
+            segStart = segEnd;
+            continue;
+        }
+        if (segStart >= stop) break;
         const double t0 = (start >segStart) ? (start - segStart) / s.distance : 0.0;
         const double t1 = (stop < segEnd) ? (stop  - segStart) / s.distance : 1.0;
         if (s.type == Segment::Line) {
             PointD p0 = interpolate(pts[0],pts[1],t0);
             PointD p1 = interpolate(pts[0],pts[1],t1);
-            if (needsMove) { 
+            if (needsMove) {
                 dst->moveTo(p0.x, p0.y);
                 needsMove = false;
             }
@@ -345,8 +354,12 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
                 q0 = pts[0]; q1 = pts[1]; q2 = pts[2]; q3 = pts[3];
             } else if(t1>t0+FLT_EPSILON){
                 bezierSplit(pts[0],pts[1],pts[2],pts[3],t0,t1, q0, q1, q2, q3);
+            } else {
+                // Zero-width window inside this segment: nothing to emit.
+                segStart = segEnd;
+                continue;
             }
-            if (needsMove) { 
+            if (needsMove) {
                 dst->moveTo(q0.x, q0.y);
                 needsMove = false;
             }
