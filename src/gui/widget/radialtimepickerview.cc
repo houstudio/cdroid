@@ -184,6 +184,7 @@ RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* 
     mShowHours = true;
     mHoursToMinutes = (float) HOURS;
     mIs24HourMode = false;
+    mIsOnInnerCircle = false;
     mAmOrPm = AM;
     mHoursToMinutesAnimator = nullptr;
     mSelectorPath = new Path();

@@ -10,6 +10,9 @@ NumericTextView::NumericTextView(Context* context,const AttributeSet* attrs):Num
 
 NumericTextView::NumericTextView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :TextView(context, pAttrs, defStyleAttr){
+    mValue = 0;
+    mCount = 0;
+    mPreviousValue = 0;
     // Generate the hint text color based on disabled state.
     const int textColorDisabled = getTextColors()->getColorForState(StateSet::get(0), 0);
     setHintTextColor(textColorDisabled);
