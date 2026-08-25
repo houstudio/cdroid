@@ -26,6 +26,8 @@
 
 namespace cdroid{
 
+class Context; // for is24HourFormat(Context*) below
+
 /* java.text.DateFormat (android-36 port): the abstract date/time formatting
    superclass. Use the getDateInstance/getTimeInstance/getDateTimeInstance
    factories to obtain a locale-default formatter (a SimpleDateFormat), or
@@ -108,6 +110,27 @@ public:
        NumberFormat, so implementations compare the pattern too. */
     virtual bool operator==(const DateFormat& that) const;
     bool operator!=(const DateFormat& that) const { return !(*this == that); }
+
+    /* ---- android.text.format.DateFormat statics ----
+       AOSP keeps these on a separate android.text.format.DateFormat utility
+       (a thin wrapper over java.text.SimpleDateFormat); CDROID folds them
+       onto this class. */
+    /* AOSP is24HourFormat(Context): the 12/24-hour preference. CDROID has no
+       Settings.System.TIME_12_24 store, so it resolves the locale's default
+       hour cycle from the i18n engine (the resources-configuration locale,
+       falling back to Locale::getDefault()). */
+    static bool is24HourFormat(Context* context);
+    /* AOSP hasSeconds(CharSequence): true when the pattern contains 's'/'S'. */
+    static bool hasSeconds(const std::string& inFormat);
+    /* AOSP format(CharSequence, Calendar): formats with a default-locale
+       SimpleDateFormat that ADOPTS the calendar's time zone. Non-const:
+       reading the millis lazily completes the Calendar's fields. */
+    static std::string format(const std::string& inFormat, Calendar& inCalendar);
+    /* AOSP getBestDateTimePattern(Locale, skeleton) — ICU DTPG. The i18n
+       engine has no DTPG; the two skeletons TextClock uses map onto the
+       locale's hour+minute pattern pools ("hm" = 12-hour, "Hm" = 24-hour).
+       Other skeletons come back unchanged (documented DTPG gap). */
+    static std::string getBestDateTimePattern(const Locale& locale, const std::string& skeleton);
 
     DateFormat(const DateFormat&) = delete;
     DateFormat& operator=(const DateFormat&) = delete;

@@ -17,7 +17,84 @@
  *********************************************************************************/
 #include <content/dateformat.h>
 #include <content/simpledateformat.h>
+#include <core/Locale.h>
+#include <cstring>
 #include <stdexcept>
+
+#ifdef ENABLE_I18N
+// Locale-dependent hour cycle and hour+minute pattern pools come from the
+// i18n engine; these includes stay inside the library.
+#include <core/i18nbridge.h>
+#include <i18n/data_resource.h>
+#include <i18n/str_util.h>
+#endif
+
+namespace cdroid {
+
+// ---- android.text.format.DateFormat statics ----
+
+#ifdef ENABLE_I18N
+// The locale's default hour cycle, straight from the DEFAULT_HOUR pool
+// ('H' = 24-hour, 'h' = 12-hour).
+static bool localePrefers24Hour(const Locale& locale) {
+    i18n::LocaleInfo localeInfo = I18nBridge::toLocaleInfo(locale);
+    i18n::DataResource resource(&localeInfo);
+    if (!resource.Init()) return false;
+    char* defaultHour = resource.GetString(i18n::DataResourceType::DEFAULT_HOUR);
+    return defaultHour && std::strlen(defaultHour) >= 1 && defaultHour[0] == 'H';
+}
+
+// Hour+minute pattern from the i18n time-pattern pool: index 0 = 12-hour
+// ("h:mm a"), index 1 = 24-hour ("H:mm"); both already localized.
+static std::string localeHourMinutePattern(const Locale& locale, bool hour12) {
+    i18n::LocaleInfo localeInfo = I18nBridge::toLocaleInfo(locale);
+    i18n::DataResource resource(&localeInfo);
+    if (!resource.Init()) return std::string();
+    char* timePatterns = resource.GetString(i18n::DataResourceType::GREGORIAN_TIME_PATTERNS);
+    if (timePatterns == nullptr || std::strlen(timePatterns) == 0) return std::string();
+    return i18n::Parse(timePatterns, hour12 ? 0 : 1);
+}
+#endif
+
+bool DateFormat::is24HourFormat(Context* context) {
+    // AOSP consults Settings.System.TIME_12_24 first; CDROID has no settings
+    // store, so the locale's natural hour cycle is the answer (the context's
+    // resources locale once per-Context config lookups grow, default for now).
+    (void)context;
+#ifdef ENABLE_I18N
+    return localePrefers24Hour(Locale::getDefault());
+#else
+    return false; // en default hour cycle is 12-hour
+#endif
+}
+
+bool DateFormat::hasSeconds(const std::string& inFormat) {
+    return inFormat.find('s') != std::string::npos
+        || inFormat.find('S') != std::string::npos;
+}
+
+std::string DateFormat::format(const std::string& inFormat, Calendar& inCalendar) {
+    SimpleDateFormat formatter(inFormat, Locale::getDefault());
+    // AOSP android.text.format.DateFormat.format(CharSequence, Calendar):
+    // the formatter adopts the calendar's time zone.
+    formatter.setTimeZone(inCalendar.getTimeZone());
+    return formatter.format(inCalendar.getTimeInMillis());
+}
+
+std::string DateFormat::getBestDateTimePattern(const Locale& locale, const std::string& skeleton) {
+#ifdef ENABLE_I18N
+    // DTPG is not ported; the two skeletons TextClock uses map onto the
+    // i18n hour+minute pools directly (already locale-appropriate).
+    if (skeleton == "hm") return localeHourMinutePattern(locale, true);
+    if (skeleton == "Hm") return localeHourMinutePattern(locale, false);
+#else
+    (void)locale;
+#endif
+    // Unsupported skeletons: hand back the skeleton itself (DTPG gap).
+    return skeleton;
+}
+
+} // namespace cdroid
 
 namespace cdroid{
 
