@@ -116,6 +116,16 @@ public:
     View* getSelectedView()override;
     void deferNotifyDataSetChanged();
     virtual void advance();
+
+    class SavedState : public View::BaseSavedState {
+    public:
+        int whichChild;
+        SavedState(Parcelable& superState, int whichChild);
+        SavedState(Parcel& in);
+        void writeToParcel(Parcel& dest, int flags) override;
+    };
+    Parcelable* onSaveInstanceState() override;
+    void onRestoreInstanceState(Parcelable& state) override;
 };
 
 }//namepace

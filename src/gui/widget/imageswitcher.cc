@@ -37,6 +37,12 @@ void ImageSwitcher::setImageResource(const std::string&resid){
     showNext();
 }
 
+void ImageSwitcher::setImageURI(const std::string&uri){
+    ImageView* image = (ImageView*)getNextView();
+    image->setImageURI(uri);
+    showNext();
+}
+
 void ImageSwitcher::setImageDrawable(Drawable* drawable){
     ImageView* image = (ImageView*)getNextView();
     image->setImageDrawable(drawable);

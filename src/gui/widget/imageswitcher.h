@@ -27,6 +27,7 @@ public:
     ImageSwitcher(Context*ctx,const AttributeSet*atts);
     ImageSwitcher(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     void setImageResource(const std::string&res);
+    void setImageURI(const std::string&uri);
     void setImageDrawable(Drawable* drawable);
     std::string getAccessibilityClassName()const override;
 };

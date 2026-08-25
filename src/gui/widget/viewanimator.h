@@ -53,9 +53,12 @@ public:
     void setInAnimation(Animation* inAnimation);
     Animation* getOutAnimation()const;
     void setOutAnimation(Animation* outAnimation);
+    void setInAnimation(Context* context, int resourceID);
+    void setOutAnimation(Context* context, int resourceID);
     bool getAnimateFirstView()const;
     void setAnimateFirstView(bool animate);
     int getBaseline()override;
+    std::string getAccessibilityClassName()const;
 };
 }//namespace
 #endif

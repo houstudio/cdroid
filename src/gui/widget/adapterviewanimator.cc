@@ -625,3 +625,31 @@ void AdapterViewAnimator::advance() {
 }
 
 }//endof namespace
+
+AdapterViewAnimator::SavedState::SavedState(Parcelable& superState, int whichChild)
+    : View::BaseSavedState(&superState) {
+    this->whichChild = whichChild;
+}
+
+AdapterViewAnimator::SavedState::SavedState(Parcel& in)
+    : View::BaseSavedState(in) {
+    whichChild = in.readInt();
+}
+
+void AdapterViewAnimator::SavedState::writeToParcel(Parcel& dest, int flags) {
+    View::BaseSavedState::writeToParcel(dest, flags);
+    dest.writeInt(whichChild);
+}
+
+Parcelable* AdapterViewAnimator::onSaveInstanceState() {
+    return new SavedState(*AdapterView::onSaveInstanceState(), mWhichChild);
+}
+
+void AdapterViewAnimator::onRestoreInstanceState(Parcelable& state) {
+    SavedState& ss = (SavedState&)state;
+    AdapterView::onRestoreInstanceState(*ss.getSuperState());
+    // Here we set mWhichChild in addition to setDisplayedChild: setDisplayedChild
+    // alone would not set mWhichChild when mAdapter is null (AOSP parity).
+    mWhichChild = ss.whichChild;
+    setDisplayedChild(mWhichChild, false);
+}

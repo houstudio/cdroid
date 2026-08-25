@@ -31,6 +31,7 @@ public:
     ViewSwitcher(Context*ctx);   // AOSP ViewSwitcher(Context)
     ViewSwitcher(Context*ctx,const AttributeSet*atts);
     ViewSwitcher(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
+    std::string getAccessibilityClassName()const override{return "ViewSwitcher";}
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
     View* getNextView();
     void setFactory(ViewFactory factory);

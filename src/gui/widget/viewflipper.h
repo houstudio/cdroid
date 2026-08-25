@@ -49,6 +49,7 @@ public:
     bool isFlipping()const;
     void setAutoStart(bool autoStart);
     bool isAutoStart()const;
+    std::string getAccessibilityClassName()const override{return "ViewFlipper";}
 };
 }//endof namespace
 
