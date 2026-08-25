@@ -78,6 +78,9 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
         content->removeViewAt(0);
         addView(child);
     }
+    // attachToRoot=false leaves the inflated root owned by this caller; the
+    // emptied shell must be freed (no GC — otherwise it leaks per DayPickerView).
+    delete content;
 
     mPrevButton = (ImageButton*)findViewById(R::id::prev);
     auto clickListener =[this](View&view){onButtonClick(view);};
