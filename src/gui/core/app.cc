@@ -26,6 +26,7 @@
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
 #include <core/app.h>
+#include <core/LocaleList.h>
 #include <private/ziparchive.h>
 #include <widget/framework_styleable.h>
 #include <core/xmlpullparser.h>
@@ -505,6 +506,14 @@ void App::handleConfigurationChanged(const Configuration& newConfig){
     // (ComponentCallbacks), then routes each activity.
     onConfigurationChanged(newConfig);
     const int changes = res.calcConfigChanges(&newConfig);
+    if (changes & Configuration::CONFIG_LOCALE) {
+        // AOSP ActivityThread.handleConfigurationChangedInner: a locale change
+        // first moves the process-wide default (LocaleList.setDefault), so
+        // Locale::getDefault() and locale-defaulted formatters observe the NEW
+        // locale from here on; already-created formatters keep their captured
+        // locale until their view is recreated / re-dispatched below.
+        LocaleList::setDefault(newConfig.getLocales());
+    }
     res.updateConfiguration(&newConfig, nullptr);
     if (changes == 0) return;
 

@@ -28,6 +28,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
+#include <cstring>
 #include <mutex>
 #include <vector>
 
@@ -121,10 +123,48 @@ Locale::Locale(const std::string& language, const std::string& country, const st
 
 // ---- default (process-wide, Java: user.language / user.region) -------------
 namespace {
+// AOSP ojluni Locale.initDefault() reads the host's default locale from
+// user.language/user.country properties. CDROID runs on Linux hosts, where
+// the same information lives in the POSIX locale environment — glibc
+// precedence LC_ALL > LC_MESSAGES > LANG, values like "zh_CN.UTF-8" or
+// "en-US". Parses the language[_TERRITORY] part; anything unparseable
+// ("C", "POSIX", empty) falls back to en_US like ojluni.
+Locale initDefaultFromHostEnv() {
+    const char* spec = nullptr;
+    for (const char* name : {"LC_ALL", "LC_MESSAGES", "LANG"}) {
+        const char* v = std::getenv(name);
+        if (v && *v && std::strcmp(v, "C") != 0 && std::strcmp(v, "POSIX") != 0) {
+            spec = v;
+            break;
+        }
+    }
+    if (spec == nullptr) return Locale("en", "US");
+
+    std::string s(spec);
+    // Strip codeset ("zh_CN.UTF-8") and modifier ("zh_CN.UTF-8@pinyin").
+    const size_t dot = s.find('.');
+    if (dot != std::string::npos) s.resize(dot);
+    const size_t at = s.find('@');
+    if (at != std::string::npos) s.resize(at);
+
+    // BCP-47 dash form ("en-US") goes through forLanguageTag; the POSIX
+    // underscore form ("zh_CN") splits here.
+    if (s.find('-') != std::string::npos) {
+        Locale tagged = Locale::forLanguageTag(s);
+        return tagged;
+    }
+    const size_t us = s.find('_');
+    if (us == std::string::npos) return Locale(s);
+    const std::string language = s.substr(0, us);
+    const std::string country  = s.substr(us + 1);
+    if (country.empty()) return Locale(language);
+    return Locale(language, country);
+}
+
 // One shared default behind a mutex (getDefault/setDefault must observe the
 // same slot; ojluni keeps a per-Category static).
 Locale& defaultLocaleSlot() {
-    static Locale sDefault = Locale("en", "US"); // ojluni initDefault fallback
+    static Locale sDefault = initDefaultFromHostEnv();
     return sDefault;
 }
 std::mutex& defaultLocaleLock() {
