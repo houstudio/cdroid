@@ -377,6 +377,12 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState
 
     if (copy != nullptr) {
         mChangingConfigurations = copy->mChangingConfigurations;
+        // Carry the inflation context: pending animators are loaded through
+        // it at start time (prepareLocalAnimators). A state copy that dropped
+        // it inflated them with a null Context, whose loadAnimator result was
+        // null — the null then reached prepareLocalAnimator's clone() and
+        // segfaulted (gdb: animator == 0x0).
+        mContext = copy->mContext;
 
         if (copy->mVectorDrawable != nullptr) {
             auto cs = copy->mVectorDrawable->getConstantState();
@@ -489,11 +495,19 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnimators(
     // Perform a deep copy of the constant state's animators.
     const size_t count = mAnimators.size();
     if (count > 0) {
-        Animator* firstAnim = prepareLocalAnimator(0);
-        AnimatorSet::Builder* builder = animatorSet->play(firstAnim);
-        for (size_t i = 1; i < count; ++i) {
-            Animator* nextAnim = prepareLocalAnimator(i);
-            builder->with(nextAnim);
+        Animator* firstAnim = nullptr;
+        size_t i = 0;
+        // Skip entries that failed to prepare so the set never holds nulls.
+        for (; i < count; ++i) {
+            firstAnim = prepareLocalAnimator(i);
+            if (firstAnim != nullptr) break;
+        }
+        if (firstAnim != nullptr) {
+            AnimatorSet::Builder* builder = animatorSet->play(firstAnim);
+            for (++i; i < count; ++i) {
+                Animator* nextAnim = prepareLocalAnimator(i);
+                if (nextAnim != nullptr) builder->with(nextAnim);
+            }
         }
     }
 }
@@ -506,6 +520,12 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnimators(
  */
 Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnimator(int index) {
     Animator* animator = mAnimators.at(index).get();
+    if (animator == nullptr) {
+        // Defensive: a null entry must not reach clone() (observed as a
+        // start-time SIGSEGV when a pending animator failed to load).
+        LOGE("mAnimators[%d] is null", index);
+        return nullptr;
+    }
     Animator* localAnimator = animator->clone();
     auto it = mTargetNameMap.find(animator);
     if (it == mTargetNameMap.end()) {
@@ -547,6 +567,13 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::inflatePendingAnimator
         for (int i = 0, count = pendingAnims.size(); i < count; i++) {
             PendingAnimator* pendingAnimator = pendingAnims.at(i);
             Animator* animator = pendingAnimator->newInstance(mContext, t);
+            if (animator == nullptr) {
+                // A null Context (or a failed load) must not seed mAnimators
+                // with null — prepareLocalAnimator would deref it.
+                LOGE("Failed to load pending animator res=0x%x for target %s",
+                     pendingAnimator->animResId, pendingAnimator->target.c_str());
+                continue;
+            }
             updateAnimatorProperty(animator, pendingAnimator->target, mVectorDrawable,mShouldIgnoreInvalidAnim);
             addTargetAnimator(pendingAnimator->target, animator);
         }
