@@ -37,7 +37,8 @@ TextInputTimePickerView::TextInputTimePickerView(Context* context,const Attribut
     :RelativeLayout(context, pAttrs, defStyleAttr){
 
     LayoutInflater::from(context)->inflate(R::layout::time_picker_text_input_material, this);
-
+    mTimeSet = false;
+    mErrorShowing = false;
     mHourEditText = (EditText*)findViewById(R::id::input_hour);
     mMinuteEditText = (EditText*)findViewById(R::id::input_minute);
     mInputSeparatorView = (TextView*)findViewById(R::id::input_separator);

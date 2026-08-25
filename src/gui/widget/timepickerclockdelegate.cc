@@ -79,7 +79,7 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     // used by onPopulateAccessibilityEvent / setContentDescription, which are accessibility-only.
     mSelectHours = "";
     mSelectMinutes = "";
-
+    mIs24Hour = false;
     LayoutInflater* inflater = LayoutInflater::from(mContext);
 
     auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);
