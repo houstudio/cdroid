@@ -38,7 +38,9 @@ namespace cdroid{
      0 always "", index 1-7 = SUNDAY..SATURDAY (Calendar.DAY_OF_WEEK).
    - eras: 2 entries (BC, AD). amPmStrings: 2 entries (AM, PM).
    - tiny* variants: CLDR "narrow" names; i18n.dat has no narrow pool, so
-     they approximate to the first code point of the short name. */
+     they are approximated from the short names — the first code point for
+     Latin-style tables (en "Jan"->"J"), or the distinguishing part when the
+     table shares an affix (zh 周一..周日 -> 一..日, 1月..12月 -> 1..12). */
 class DateFormatSymbols{
 public:
     // AOSP DateFormatSymbols.patternChars — the pattern-letter alphabet,
@@ -59,6 +61,10 @@ public:
     const std::vector<std::string>& getWeekdays()const;
     const std::vector<std::string>& getShortWeekdays()const;
     const std::vector<std::string>& getAmPmStrings()const;
+    /* android.icu.text.DateFormatSymbols.getAmpmNarrowStrings(); i18n.dat has
+       no narrow AM/PM pool, so this approximates from the wide markers (first
+       code point), like the tiny* tables. */
+    const std::vector<std::string>& getAmpmNarrowStrings()const;
     const std::vector<std::string>& getStandAloneMonths()const;
     const std::vector<std::string>& getShortStandAloneMonths()const;
     const std::vector<std::string>& getStandAloneWeekdays()const;
@@ -100,6 +106,7 @@ private:
     std::vector<std::string> weekdays;
     std::vector<std::string> shortWeekdays;
     std::vector<std::string> amPm;
+    std::vector<std::string> amPmNarrow;
     std::vector<std::string> standAloneMonths;
     std::vector<std::string> shortStandAloneMonths;
     std::vector<std::string> standAloneWeekdays;

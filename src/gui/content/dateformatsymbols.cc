@@ -31,9 +31,12 @@
 namespace cdroid{
 
 namespace {
-// CLDR "narrow" is not in i18n.dat yet; approximate it with the first code
-// point of the abbreviated name (matches CLDR for en "Jan"->"J", zh
-// "1月"->"1"; documented approximation).
+// CLDR "narrow" is not in i18n.dat yet; approximate it from the abbreviated
+// names. Latin-style tables abbreviate from the front (en "Jan"->"J"), but
+// CJK-style tables carry a shared affix instead: zh weekdays 周一..周日 share
+// the prefix 周 (narrow 一..日) and zh months 1月..12月 share the suffix 月
+// (narrow 1..12). Detect those shapes and keep the distinguishing part;
+// otherwise fall back to the first code point.
 std::string firstCodePoint(const std::string& s) {
     if (s.empty()) return s;
     const unsigned char c = static_cast<unsigned char>(s[0]);
@@ -42,6 +45,39 @@ std::string firstCodePoint(const std::string& s) {
     else if ((c & 0xF0) == 0xE0) len = 3; // U+0800..
     else if ((c & 0xE0) == 0xC0) len = 2; // U+0080..
     return s.substr(0, std::min(len, s.size()));
+}
+
+std::string lastCodePoint(const std::string& s) {
+    if (s.empty()) return s;
+    size_t i = s.size() - 1;
+    while (i > 0 && (static_cast<unsigned char>(s[i]) & 0xC0) == 0x80) i--;
+    return s.substr(i);
+}
+
+// True when every non-empty name starts with the same code point and has at
+// least one more code point after it (the zh 周一 shape).
+bool sharePrefixWithTail(const std::vector<std::string>& v) {
+    std::string first;
+    for (const auto& s : v) {
+        if (s.empty()) continue;
+        const std::string cp = firstCodePoint(s);
+        if (s.size() <= cp.size()) return false;
+        if (first.empty()) first = cp;
+        else if (cp != first) return false;
+    }
+    return !first.empty();
+}
+
+// True when every non-empty name ends with the same code point (the zh 1月 shape).
+bool shareSuffix(const std::vector<std::string>& v) {
+    std::string last;
+    for (const auto& s : v) {
+        if (s.empty()) continue;
+        const std::string cp = lastCodePoint(s);
+        if (last.empty()) last = cp;
+        else if (cp != last) return false;
+    }
+    return !last.empty();
 }
 
 // AOSP array layouts: months 13 (trailing UNDECIMBER slot), weekdays 8
@@ -64,9 +100,21 @@ void applyLoadedLocale(DateFormatSymbols*,
     padWeekdayArray(weekdays); padWeekdayArray(shortWeekdays);
     padWeekdayArray(standAloneWeekdays); padWeekdayArray(shortStandAloneWeekdays);
     tinyMonths = shortMonths;
-    for (auto& m : tinyMonths) m = firstCodePoint(m);
+    if (shareSuffix(tinyMonths)) {
+        // zh 1月..12月 -> 1..12 (strip the shared suffix).
+        for (auto& m : tinyMonths) {
+            if (!m.empty()) m = m.substr(0, m.size() - lastCodePoint(m).size());
+        }
+    } else {
+        for (auto& m : tinyMonths) if (!m.empty()) m = firstCodePoint(m);
+    }
     tinyWeekdays = shortWeekdays;
-    for (auto& d : tinyWeekdays) d = firstCodePoint(d);
+    if (sharePrefixWithTail(tinyWeekdays)) {
+        // zh 周一..周日 -> 一..日 (keep the distinguishing last code point).
+        for (auto& d : tinyWeekdays) if (!d.empty()) d = lastCodePoint(d);
+    } else {
+        for (auto& d : tinyWeekdays) if (!d.empty()) d = firstCodePoint(d);
+    }
     (void)amPm;
 }
 } // namespace
@@ -92,6 +140,7 @@ void DateFormatSymbols::loadDefaults() {
                 "Thursday", "Friday", "Saturday"};
     shortWeekdays = {"", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     amPm = {"AM", "PM"};
+    amPmNarrow = amPm;
     standAloneMonths = months;
     shortStandAloneMonths = shortMonths;
     standAloneWeekdays = weekdays;
@@ -154,6 +203,10 @@ void DateFormatSymbols::loadFromI18n(const Locale& locale) {
                       amPm, tinyMonths, tinyWeekdays);
     if (!am.empty()) amPm[0] = am;
     if (!pm.empty()) amPm[1] = pm;
+    // No narrow AM/PM pool in i18n.dat: approximate with the first code point
+    // of the wide markers, mirroring the tiny* table approximation.
+    amPmNarrow = amPm;
+    for (auto& s : amPmNarrow) if (!s.empty()) s = firstCodePoint(s);
     tinyStandAloneMonths = tinyMonths;
     tinyStandAloneWeekdays = tinyWeekdays;
     // Era names (BC/AD) have no pool in i18n.dat; the English table stands.
@@ -170,6 +223,7 @@ const std::vector<std::string>& DateFormatSymbols::getShortMonths()const{ return
 const std::vector<std::string>& DateFormatSymbols::getWeekdays()const{ return weekdays; }
 const std::vector<std::string>& DateFormatSymbols::getShortWeekdays()const{ return shortWeekdays; }
 const std::vector<std::string>& DateFormatSymbols::getAmPmStrings()const{ return amPm; }
+const std::vector<std::string>& DateFormatSymbols::getAmpmNarrowStrings()const{ return amPmNarrow; }
 const std::vector<std::string>& DateFormatSymbols::getStandAloneMonths()const{ return standAloneMonths; }
 const std::vector<std::string>& DateFormatSymbols::getShortStandAloneMonths()const{ return shortStandAloneMonths; }
 const std::vector<std::string>& DateFormatSymbols::getStandAloneWeekdays()const{ return standAloneWeekdays; }
