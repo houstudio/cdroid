@@ -410,5 +410,32 @@ void GraphDevice::composeSurfaces(){
     if(commitedRects)GFXFlip(mPrimarySurface);
     mLastComposeTime = SystemClock::uptimeMillis();
     mPendingCompose = 0;
+    // TEMP: screen dump for visual verification (CD_DUMP=n: frame n;
+    // also dumps frame n+600 to cdscreen2.png to diff animated content)
+    // CD_DUMPSEQ=n: dump n frames (every 2nd) starting at frame 100 to
+    // /tmp/cdseq_%03d.png for temporal analysis of animated content.
+    if (const char* seqEnv = getenv("CD_DUMPSEQ")) {
+        static int sSeqCount = atoi(seqEnv);
+        static int sSeqFrame = 0;
+        const int f = sSeqFrame++;
+        if (f >= 100 && ((f - 100) % 2) == 0 && (f - 100) / 2 < sSeqCount && mPrimaryContext) {
+            char name[64];
+            snprintf(name, sizeof(name), "/tmp/cdseq_%03d.png", (f - 100) / 2);
+            try {
+                mPrimaryContext->get_target()->write_to_png(name);
+            } catch (...) {}
+        }
+    }
+    if (const char* dumpEnv = getenv("CD_DUMP")) {
+        static int sDumpAt = atoi(dumpEnv);
+        static int sFrame = 0;
+        const int f = sFrame++;
+        if ((f == sDumpAt || f == sDumpAt + 150) && mPrimaryContext) {
+            try {
+                mPrimaryContext->get_target()->write_to_png(f == sDumpAt ? "/tmp/cdscreen.png" : "/tmp/cdscreen2.png");
+                LOGD("SCREENDUMP frame=%d", f);
+            } catch (...) { LOGD("SCREENDUMP failed"); }
+        }
+    }
 }
 }//end namespace

@@ -413,6 +413,18 @@ void Tree::drawStaging(Canvas& outCanvas) {
         updateBitmapCache(mStagingCache.bitmap, true);
         mStagingCache.dirty = false;
     }
+    // A vector layer fully owns its bounds each frame (hardware rendering
+    // repaints the whole RenderNode region). Clear the destination before
+    // the OVER blit: wherever this frame's cache is transparent, the source-
+    // over composite is a no-op and previous frames' pixels would survive —
+    // an animating AVD (rotating/trimming spinner) then accumulates a
+    // ghost ring from every angle its arc has swept.
+    const Rect& dstBounds = mStagingProperties.getBounds();
+    outCanvas.save();
+    outCanvas.set_operator(Cairo::Context::Operator::CLEAR);
+    outCanvas.rectangle(0, 0, dstBounds.width, dstBounds.height);
+    outCanvas.fill();
+    outCanvas.restore();
 
     /*SkPaint tmpPaint;
     SkPaint* paint = updatePaint(&tmpPaint, &mStagingProperties);
