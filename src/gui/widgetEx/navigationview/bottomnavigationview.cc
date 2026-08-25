@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/navigationview/bottomnavigationview.h>
+#include <widgetEx/navigationview/bottomnavigationmenuview.h>
 #include <widgetEx/widgetex_styleable.h>
 #include <core/typedarray.h>
 
@@ -29,6 +30,10 @@ BottomNavigationView::BottomNavigationView(Context* context, const AttributeSet*
 
 BottomNavigationView::BottomNavigationView(Context* context, const AttributeSet* attrs, int defStyleAttr)
     : NavigationBarView(context, attrs, defStyleAttr) {
+    // AOSP: super() wires menu+presenter, then the subclass installs its
+    // concrete menu view (C++ cannot dispatch the factory from the base ctor).
+    installMenuView(new BottomNavigationMenuView(context));
+
     // BottomNavigationView styleable (0x02).
     auto ta = context->obtainStyledAttributes(attrs,
             cdroid::internal::R::styleable::BottomNavigationView, defStyleAttr);

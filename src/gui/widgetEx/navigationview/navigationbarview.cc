@@ -16,36 +16,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/navigationview/navigationbarview.h>
+#include <widgetEx/navigationview/navigationbarmenuview.h>
+#include <widgetEx/navigationview/navigationbarpresenter.h>
 #include <widget/internal_R.h>
-#include <widgetEx/navigationview/bottomnavigationview.h>
 #include <widgetEx/widgetex_styleable.h>
 #include <menu/menubuilder.h>
 #include <menu/menuinflater.h>
 #include <menu/menuitem.h>
-#include <menu/menuitemimpl.h>
-#include <widget/imageview.h>
-#include <widget/textview.h>
 #include <drawable/colorstatelist.h>
-#include <drawable/gradientdrawable.h>
-#include <drawable/rippledrawable.h>
-#include <drawable/colordrawable.h>
 #include <core/typedarray.h>
-#include <core/typeface.h>
 
 namespace cdroid{
-
-namespace {
-inline int dp(Context* context, int dps) {
-    return (int) (dps * context->getResources().getDisplayMetrics().density + 0.5f);
-}
-} // namespace
 using namespace cdroid::internal;
 
 NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs, int defStyleAttr)
     : FrameLayout(context, attrs, defStyleAttr) {
     mItemSelectedListener = nullptr;
     mItemReselectedListener = nullptr;
+    mPresenter = nullptr;
+    mMenuView = nullptr;
     mItemBackground = nullptr;
+    mItemBackgroundRes = 0;
     mItemIconSize = 0;
     mLabelVisibilityMode = LABEL_VISIBILITY_AUTO;
     mItemGravity = ITEM_GRAVITY_TOP_CENTER;
@@ -65,19 +56,14 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
     mActiveIndicatorMarginX = 0;
     mActiveIndicatorColor = 0;
 
-    // AOSP NavigationBarView ctor: menu, menu view, presenter, then attrs.
+    // AOSP NavigationBarView ctor: menu, presenter, menu view, then attrs.
     mMenu = new MenuBuilder(context);
     MenuBuilder::Callback cb;
     cb.onMenuItemSelected = [this](MenuBuilder&, MenuItem& item)->bool{
         return onMenuItemClick(&item);
     };
     mMenu->setCallback(cb);
-
-    mMenuView = new LinearLayout(context, nullptr, 0);
-    mMenuView->setOrientation(LinearLayout::HORIZONTAL);
-    mMenuView->setPadding(12, 8, 12, 8);
-    addView(mMenuView, new ViewGroup::LayoutParams(
-            ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
+    mPresenter = new NavigationBarPresenter();
 
     // NavigationBarView styleable (0x02 attrs via the GENERATED styleable).
     auto ta = context->obtainStyledAttributes(attrs,
@@ -88,10 +74,9 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
     const int bgRes = ta->getResourceId(cdroid::internal::R::styleable::NavigationBarView_itemBackground, 0);
     if (bgRes) mItemBackground = context->getDrawable(bgRes);
 
-    // AOSP calls the setters here, but they trigger updateMenuView → the
-    // pure-virtual getMaxItemCount() while this base ctor still runs (Java's
-    // ctor virtual dispatch has no C++ counterpart) — assign the fields
-    // directly instead; the first menu inflation rebuilds the items anyway.
+    // AOSP calls the setters here; C++ cannot dispatch to the derived menu
+    // view from this base ctor, so cache the fields - installMenuView() pushes
+    // them in AOSP setter order once the subclass provides the view.
     mLabelVisibilityMode = ta->getInt(
             cdroid::internal::R::styleable::NavigationBarView_labelVisibilityMode,
             LABEL_VISIBILITY_AUTO);
@@ -150,7 +135,51 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
     }
 }
 
+void NavigationBarView::installMenuView(NavigationBarMenuView* menuView) {
+    mMenuView = menuView;
+    mMenuView->setPresenter(mPresenter);
+    mPresenter->setMenuView(mMenuView);
+    mMenu->addMenuPresenter(mPresenter, getContext());   // initForMenu -> initialize
+    addView(mMenuView, new FrameLayout::LayoutParams(
+            LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT, Gravity::CENTER));
+
+    // Push the ctor-cached presentation in AOSP setter order (material's ctor
+    // calls these setters directly on the menu view).
+    const int iconAtStart = (mItemIconGravity == ITEM_ICON_GRAVITY_START);
+    mMenuView->setIconTintList(mItemIconTint);
+    mMenuView->setItemIconSize(mItemIconSize);
+    mMenuView->setItemTextAppearanceInactive(iconAtStart
+            ? mHorizontalItemTextAppearanceInactive : mItemTextAppearanceInactive);
+    mMenuView->setItemTextAppearanceActive(iconAtStart
+            ? mHorizontalItemTextAppearanceActive : mItemTextAppearanceActive);
+    mMenuView->setItemTextAppearanceActiveBoldEnabled(mItemTextAppearanceActiveBoldEnabled);
+    mMenuView->setItemTextColor(mItemTextColor);
+    if (mItemPaddingTop != -1) mMenuView->setItemPaddingTop(mItemPaddingTop);
+    if (mItemPaddingBottom != -1) mMenuView->setItemPaddingBottom(mItemPaddingBottom);
+    if (mActiveIndicatorLabelPadding != -1) mMenuView->setActiveIndicatorLabelPadding(mActiveIndicatorLabelPadding);
+    if (mIconLabelHorizontalSpacing != -1) mMenuView->setIconLabelHorizontalSpacing(mIconLabelHorizontalSpacing);
+    mMenuView->setItemActiveIndicatorWidth(mActiveIndicatorWidth);
+    mMenuView->setItemActiveIndicatorHeight(mActiveIndicatorHeight);
+    mMenuView->setItemActiveIndicatorMarginHorizontal(mActiveIndicatorMarginX);
+    mMenuView->setItemActiveIndicatorColor(mActiveIndicatorColor);
+    mMenuView->setItemActiveIndicatorEnabled(
+            mActiveIndicatorWidth > 0 && mActiveIndicatorHeight > 0);
+    if (mItemBackground != nullptr) mMenuView->setItemBackground(mItemBackground);
+    else mMenuView->setItemBackgroundRes(mItemBackgroundRes);
+    mMenuView->setItemGravity(mItemGravity);
+    mMenuView->setItemIconGravity(mItemIconGravity);
+    mMenuView->setLabelVisibilityMode(mLabelVisibilityMode);
+
+    // AOSP: the ctor ends with the menu inflated; the first build renders it.
+    if (mMenu->size() > 0) {
+        mMenuView->buildMenuView();
+    }
+}
+
 NavigationBarView::~NavigationBarView() {
+    // mMenuView is a child view (freed with the tree); the presenter is the
+    // only extra owner object on this side.
+    delete mPresenter;
     delete mMenu;
 }
 
@@ -180,7 +209,7 @@ const RefPtr<ColorStateList> NavigationBarView::getItemIconTintList() const {
 
 void NavigationBarView::setItemIconTintList(const RefPtr<ColorStateList>& tint) {
     mItemIconTint = tint;
-    updateMenuView();
+    if (mMenuView) mMenuView->setIconTintList(tint);
 }
 
 int NavigationBarView::getItemIconSize() const {
@@ -189,7 +218,7 @@ int NavigationBarView::getItemIconSize() const {
 
 void NavigationBarView::setItemIconSize(int iconSize) {
     mItemIconSize = iconSize;
-    updateMenuView();
+    if (mMenuView) mMenuView->setItemIconSize(iconSize);
 }
 
 void NavigationBarView::setItemIconSizeRes(int iconSizeRes) {
@@ -202,7 +231,7 @@ const RefPtr<ColorStateList> NavigationBarView::getItemTextColor() const {
 
 void NavigationBarView::setItemTextColor(const RefPtr<ColorStateList>& textColor) {
     mItemTextColor = textColor;
-    updateMenuView();
+    if (mMenuView) mMenuView->setItemTextColor(textColor);
 }
 
 Drawable* NavigationBarView::getItemBackground() const {
@@ -210,12 +239,13 @@ Drawable* NavigationBarView::getItemBackground() const {
 }
 
 void NavigationBarView::setItemBackgroundResource(int resId) {
+    mItemBackgroundRes = resId;
     setItemBackground(getContext()->getDrawable(resId));
 }
 
 void NavigationBarView::setItemBackground(Drawable* background) {
     mItemBackground = background;
-    updateMenuView();
+    if (mMenuView) mMenuView->setItemBackground(background);
 }
 
 int NavigationBarView::getLabelVisibilityMode() const {
@@ -224,7 +254,7 @@ int NavigationBarView::getLabelVisibilityMode() const {
 
 void NavigationBarView::setLabelVisibilityMode(int labelVisibilityMode) {
     mLabelVisibilityMode = labelVisibilityMode;
-    updateMenuView();
+    if (mMenuView) mMenuView->setLabelVisibilityMode(labelVisibilityMode);
 }
 
 int NavigationBarView::getItemGravity() const {
@@ -234,7 +264,7 @@ int NavigationBarView::getItemGravity() const {
 void NavigationBarView::setItemGravity(int itemGravity) {
     if (mItemGravity != itemGravity) {
         mItemGravity = itemGravity;
-        updateMenuView();
+        if (mMenuView) mMenuView->setItemGravity(itemGravity);
     }
 }
 
@@ -245,7 +275,7 @@ int NavigationBarView::getItemIconGravity() const {
 void NavigationBarView::setItemIconGravity(int itemIconGravity) {
     if (mItemIconGravity != itemIconGravity) {
         mItemIconGravity = itemIconGravity;
-        updateMenuView();
+        if (mMenuView) mMenuView->setItemIconGravity(itemIconGravity);
     }
 }
 
@@ -256,7 +286,7 @@ int NavigationBarView::getItemTextAppearanceInactive() const {
 void NavigationBarView::setItemTextAppearanceInactive(int textAppearanceRes) {
     if (mItemTextAppearanceInactive != textAppearanceRes) {
         mItemTextAppearanceInactive = textAppearanceRes;
-        updateMenuView();
+        if (mMenuView) mMenuView->setItemTextAppearanceInactive(textAppearanceRes);
     }
 }
 
@@ -267,14 +297,14 @@ int NavigationBarView::getItemTextAppearanceActive() const {
 void NavigationBarView::setItemTextAppearanceActive(int textAppearanceRes) {
     if (mItemTextAppearanceActive != textAppearanceRes) {
         mItemTextAppearanceActive = textAppearanceRes;
-        updateMenuView();
+        if (mMenuView) mMenuView->setItemTextAppearanceActive(textAppearanceRes);
     }
 }
 
 void NavigationBarView::setItemTextAppearanceActiveBoldEnabled(bool isBold) {
     if (mItemTextAppearanceActiveBoldEnabled != isBold) {
         mItemTextAppearanceActiveBoldEnabled = isBold;
-        updateMenuView();
+        if (mMenuView) mMenuView->setItemTextAppearanceActiveBoldEnabled(isBold);
     }
 }
 
@@ -285,7 +315,7 @@ const RefPtr<ColorStateList> NavigationBarView::getItemRippleColor() const {
 void NavigationBarView::setItemRippleColor(const RefPtr<ColorStateList>& itemRippleColor) {
     if (mItemRippleColor != itemRippleColor) {
         mItemRippleColor = itemRippleColor;
-        updateMenuView();
+        if (mMenuView) mMenuView->setItemRippleColor(itemRippleColor);
     }
 }
 
@@ -296,7 +326,7 @@ int NavigationBarView::getItemPaddingTop() const {
 void NavigationBarView::setItemPaddingTop(int paddingTop) {
     if (mItemPaddingTop != paddingTop) {
         mItemPaddingTop = paddingTop;
-        updateMenuView();
+        if (mMenuView) mMenuView->setItemPaddingTop(paddingTop);
     }
 }
 
@@ -307,7 +337,7 @@ int NavigationBarView::getItemPaddingBottom() const {
 void NavigationBarView::setItemPaddingBottom(int paddingBottom) {
     if (mItemPaddingBottom != paddingBottom) {
         mItemPaddingBottom = paddingBottom;
-        updateMenuView();
+        if (mMenuView) mMenuView->setItemPaddingBottom(paddingBottom);
     }
 }
 
@@ -318,7 +348,7 @@ int NavigationBarView::getIconLabelHorizontalSpacing() const {
 void NavigationBarView::setIconLabelHorizontalSpacing(int spacing) {
     if (mIconLabelHorizontalSpacing != spacing) {
         mIconLabelHorizontalSpacing = spacing;
-        updateMenuView();
+        if (mMenuView) mMenuView->setIconLabelHorizontalSpacing(spacing);
     }
 }
 
@@ -329,112 +359,8 @@ int NavigationBarView::getActiveIndicatorLabelPadding() const {
 void NavigationBarView::setActiveIndicatorLabelPadding(int activeIndicatorLabelPadding) {
     if (mActiveIndicatorLabelPadding != activeIndicatorLabelPadding) {
         mActiveIndicatorLabelPadding = activeIndicatorLabelPadding;
-        updateMenuView();
+        if (mMenuView) mMenuView->setActiveIndicatorLabelPadding(activeIndicatorLabelPadding);
     }
-}
-
-// Icon-over-label button (material NavigationBarItemView simplified: no
-// active indicator, no badge, no item animation).
-View* NavigationBarView::createItemView(MenuItem* item) {
-    Context* context = getContext();
-    LinearLayout* column = new LinearLayout(context, nullptr, 0);
-    // itemIconGravity selects the item layout configuration: TOP stacks the
-    // icon over the label, START lays them out side by side (material's
-    // horizontal item).
-    const bool iconAtStart = (mItemIconGravity == ITEM_ICON_GRAVITY_START);
-    column->setOrientation(iconAtStart ? LinearLayout::HORIZONTAL : LinearLayout::VERTICAL);
-    // itemGravity positions the item content inside the item bounds.
-    column->setGravity(mItemGravity);
-    column->setPadding(8, mItemPaddingTop >= 0 ? mItemPaddingTop : 6,
-                       8, mItemPaddingBottom >= 0 ? mItemPaddingBottom : 6);
-    if (item->isChecked() && mActiveIndicatorWidth > 0 && mActiveIndicatorHeight > 0) {
-        // Active indicator pill behind the checked item (a rounded rectangle;
-        // material's shape machinery is not ported).
-        GradientDrawable* pill = new GradientDrawable();
-        pill->setShape(GradientDrawable::RECTANGLE);
-        pill->setColor(mActiveIndicatorColor);
-        pill->setCornerRadius(mActiveIndicatorHeight / 2.f);
-        column->setBackground(pill);
-    } else if (mItemBackground) {
-        // Each item owns its background through View::mBackground. Never share the
-        // template drawable between items: View destruction deletes its background.
-        std::shared_ptr<Drawable::ConstantState> constantState = mItemBackground->getConstantState();
-        Drawable* background = constantState ? constantState->newDrawable() : mItemBackground->mutate();
-        const std::vector<int> state = item->isChecked()
-            ? std::vector<int>{R::attr::state_checked} : std::vector<int>{};
-        background->setState(state);
-        column->setBackground(background);
-    } else if (mItemRippleColor != nullptr) {
-        // No item background: the ripple alone (material resolves the same
-        // either/or in its ctor).
-        column->setBackground(new RippleDrawable(mItemRippleColor, nullptr,
-                new ColorDrawable(0xFFFFFFFF)));
-    }
-    column->setLayoutParams(new LinearLayout::LayoutParams(
-            0, 56, 1.f));
-
-    Drawable* icon = item->getIcon();
-    if (icon) {
-        ImageView* iconView = new ImageView(context, nullptr, 0);
-        iconView->setImageDrawable(icon);
-        // Material's NavigationBarItemView measures the icon into a fixed
-        // iconSize x iconSize frame and centers that frame in the item; a
-        // default MATCH_PARENT-width ImageView relies on the scale-type
-        // transform to center the glyph, which draws off-axis here. Give the
-        // view the material frame so the container gravity centers it.
-        const int iconSize = mItemIconSize > 0 ? mItemIconSize : dp(context, 24);
-        LinearLayout::LayoutParams* iconLp = new LinearLayout::LayoutParams(iconSize, iconSize);
-        iconLp->gravity = iconAtStart ? Gravity::CENTER_VERTICAL : Gravity::CENTER_HORIZONTAL;
-        iconView->setLayoutParams(iconLp);
-        if (mItemIconTint) {
-            const std::vector<int> state = item->isChecked()
-                ? std::vector<int>{R::attr::state_checked} : std::vector<int>{};
-            iconView->setImageTintList(ColorStateList::valueOf(
-                mItemIconTint->getColorForState(state, mItemIconTint->getDefaultColor())));
-        }
-        column->addView(iconView);
-    }
-    // LABEL_VISIBILITY_UNLABELED(2) hides the label; AUTO/SELECTED/LABELED show it.
-    if (mLabelVisibilityMode != LABEL_VISIBILITY_UNLABELED) {
-        TextView* label = new TextView(context, nullptr, 0);
-        label->setText(item->getTitle());
-        const int textAppearance = iconAtStart
-                ? (item->isChecked() ? mHorizontalItemTextAppearanceActive
-                                     : mHorizontalItemTextAppearanceInactive)
-                : (item->isChecked() ? mItemTextAppearanceActive
-                                     : mItemTextAppearanceInactive);
-        if (textAppearance != 0) {
-            label->setTextAppearance(textAppearance);
-            if (item->isChecked() && mItemTextAppearanceActiveBoldEnabled) {
-                label->setTypeface(label->getTypeface(), Typeface::BOLD);
-            }
-        }
-        if (mItemTextColor) {
-            const std::vector<int> state = item->isChecked()
-                ? std::vector<int>{R::attr::state_checked} : std::vector<int>{};
-            label->setTextColor(mItemTextColor->getColorForState(
-                state,
-                    mItemTextColor->getDefaultColor()));
-        }
-        label->setGravity(iconAtStart ? (Gravity::START | Gravity::CENTER_VERTICAL)
-                                      : Gravity::CENTER_HORIZONTAL);
-        // Wrap-content box centered by the column (same container-gravity path
-        // as the icon frame above) instead of relying on full-width text
-        // gravity, so icon and label share one axis.
-        LinearLayout::LayoutParams* labelLp = new LinearLayout::LayoutParams(
-                ViewGroup::LayoutParams::WRAP_CONTENT, ViewGroup::LayoutParams::WRAP_CONTENT);
-        labelLp->gravity = iconAtStart ? (Gravity::START | Gravity::CENTER_VERTICAL)
-                                       : Gravity::CENTER_HORIZONTAL;
-        if (iconAtStart && mIconLabelHorizontalSpacing >= 0) {
-            labelLp->leftMargin = mIconLabelHorizontalSpacing;
-        }
-        column->addView(label, labelLp);
-    }
-
-    column->setOnClickListener([this, item](View&) {
-        onMenuItemClick(item);
-    });
-    return column;
 }
 
 bool NavigationBarView::onMenuItemClick(MenuItem* item) {
@@ -445,15 +371,12 @@ bool NavigationBarView::onMenuItemClick(MenuItem* item) {
 }
 
 void NavigationBarView::updateMenuView() {
-    mMenuView->removeAllViews();
-    const std::vector<MenuItemImpl*>& items = mMenu->getVisibleItems();
-    const int max = getMaxItemCount();
-    int added = 0;
-    for (MenuItemImpl* item : items) {
-        if (added >= max) break;  // AOSP: menus are capped at maxItemCount
-        mMenuView->addView(createItemView(item));
-        added++;
+    if (mMenuView == nullptr) {
+        return;
     }
+    // The presenter route (updateSuspended guard); a direct call is equivalent
+    // and keeps the pre-port refreshMenuView() contract (rebuild the items).
+    mMenuView->updateMenuView();
 }
 
 }//namespace cdroid

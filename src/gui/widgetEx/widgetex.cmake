@@ -116,6 +116,12 @@ list(APPEND WIDGETEX_SOURCES
     widgetEx/navigationview/navigationmenuitemview.cc
     widgetEx/navigationview/navigationmenupresenter.cc
     widgetEx/navigationview/navigationbarview.cc
+    widgetEx/navigationview/navigationbarmenubuilder.cc
+    widgetEx/navigationview/navigationbaritemview.cc
+    widgetEx/navigationview/navigationbarmenuview.cc
+    widgetEx/navigationview/navigationbarpresenter.cc
+    widgetEx/navigationview/bottomnavigationitemview.cc
+    widgetEx/navigationview/bottomnavigationmenuview.cc
     widgetEx/navigationview/bottomnavigationview.cc
     #widgetEx/mathglview.cc
 )

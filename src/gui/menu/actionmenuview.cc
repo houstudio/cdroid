@@ -21,6 +21,11 @@ ActionMenuView::ActionMenuView(Context* context,const AttributeSet* pAttrs,int d
 }
 
 ActionMenuView::~ActionMenuView(){
+    // The presenter (this view's ActionMenuPresenter, created in getMenu) is
+    // NOT owned by the MenuBuilder (~MenuBuilder frees only its items) - free
+    // it while mMenu is still alive, mirroring ~PopupMenu's chain-before-menu
+    // order. Leaked a presenter + its callback set per view before.
+    delete mPresenter;
     delete mMenu;
 }
 

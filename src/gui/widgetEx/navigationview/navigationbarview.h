@@ -17,13 +17,15 @@
  *********************************************************************************/
 #ifndef __NAVIGATION_BAR_VIEW_H__
 #define __NAVIGATION_BAR_VIEW_H__
-// Port of com.google.android.material.navigation.NavigationBarView — the
-// abstract base of BottomNavigationView. CDROID substrate: the menu runs on
-// CDROID's MenuBuilder; items render into a horizontal LinearLayout of
-// icon+label buttons (material's item views/badge/active-indicator machinery
-// is stubbed per AGENTS.md).
+// Port of com.google.android.material.navigation.NavigationBarView - the
+// abstract base of BottomNavigationView. AOSP wiring: a MenuBuilder, a
+// NavigationBarPresenter and a (subclass-provided) NavigationBarMenuView.
+// C++ cannot call the derived createNavigationBarMenuView from this base
+// constructor (Java's virtual ctor dispatch), so the subclass installs the
+// menu view right after the base ctor via installMenuView() and the cached
+// presentation fields are pushed into it then (AOSP pushes them as ctor
+// setters). Badge/active-indicator shape machinery is stubbed per AGENTS.md.
 #include <widget/framelayout.h>
-#include <widget/linearlayout.h>
 #include <cdroid.h>
 
 namespace cdroid{
@@ -31,6 +33,8 @@ class Menu;
 class MenuBuilder;
 class MenuItem;
 class ColorStateList;
+class NavigationBarPresenter;
+class NavigationBarMenuView;
 
 class NavigationBarView : public FrameLayout {
 public:
@@ -63,19 +67,20 @@ public:
     };
 private:
     MenuBuilder* mMenu;
-    LinearLayout* mMenuView;   // horizontal item strip
+    NavigationBarPresenter* mPresenter;
+    NavigationBarMenuView* mMenuView;   // null until the subclass installs it
     OnItemSelectedListener* mItemSelectedListener;
     OnItemReselectedListener* mItemReselectedListener;
-    // Item presentation (material NavigationBarMenuView fields).
+    // Presentation fields cached here until the menu view exists, then kept in
+    // sync with it (material holds them in NavigationBarMenuView).
     RefPtr<ColorStateList> mItemIconTint;
     RefPtr<ColorStateList> mItemTextColor;
     Drawable* mItemBackground;
+    int mItemBackgroundRes;
     int mItemIconSize;
     int mLabelVisibilityMode;  // LABEL_VISIBILITY_*
     int mItemGravity;          // ITEM_GRAVITY_*
     int mItemIconGravity;      // ITEM_ICON_GRAVITY_*
-    // material NavigationBarMenuView presentation fields (merged into this
-    // substrate class; style res ids, 0 = none).
     int mItemTextAppearanceInactive;
     int mItemTextAppearanceActive;
     int mHorizontalItemTextAppearanceInactive;
@@ -93,8 +98,10 @@ private:
 protected:
     NavigationBarView(Context* context, const AttributeSet* attrs, int defStyleAttr);
     virtual int getMaxItemCount() const = 0;
+    /** Subclass hook: install the concrete NavigationBarMenuView (called from
+        the subclass constructor, after this base ctor has run). */
+    void installMenuView(NavigationBarMenuView* menuView);
     void updateMenuView();
-    virtual View* createItemView(MenuItem* item);
     bool onMenuItemClick(MenuItem* item);
 public:
     ~NavigationBarView() override;
