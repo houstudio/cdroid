@@ -360,7 +360,10 @@ int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t he
         img->bits_per_pixel = 32;
         img->bytes_per_line = width*4;
     }
-    img->data= (char*)malloc(height*img->bytes_per_line);
+    /* Zero-initialized like an AOSP Bitmap (nativeCreate calloc's the
+       buffer): uninitialized bytes propagate through pixman composites and
+       XPutImage (valgrind: uninit reads in sse2_composite_over_*, writev). */
+    img->data= (char*)calloc(1,height*img->bytes_per_line);
     *surface = img;
     LOGD("%p  size=%dx%dx%d %db",img,width,height,img->bytes_per_line,img->bits_per_pixel);
     if(hwsurface) {
