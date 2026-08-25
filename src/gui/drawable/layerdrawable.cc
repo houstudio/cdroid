@@ -156,7 +156,21 @@ LayerDrawable::LayerState::~LayerState(){
 }
 
 LayerDrawable*LayerDrawable::LayerState::newDrawable(){
-    return new LayerDrawable(shared_from_this());
+    // AOSP LayerDrawable(LayerState, Resources) routes through
+    // createConstantState() → new LayerState(orig, owner): the copy ctor
+    // deep-copies every ChildDrawable (fresh child instances via each child's
+    // ConstantState). C++ cannot virtually dispatch to a subclass's
+    // createConstantState from the base ctor, so the copy is made HERE, where
+    // the concrete drawable type is already known. Adopting the shared state
+    // instead made every clone from the drawable cache share one
+    // ChildDrawable array: per-view setLevel/setBounds on a layer (e.g. a
+    // ProgressBar's progress layer) poisoned every other view using the same
+    // resource (two SeekBars bled 40% ↔ 80%).
+    LayerDrawable* dr = new LayerDrawable();
+    dr->mLayerState = std::make_shared<LayerState>(this, dr);
+    dr->ensurePadding();
+    dr->refreshPadding();
+    return dr;
 }
 
 int LayerDrawable::LayerState::getChangingConfigurations()const{
@@ -1170,7 +1184,6 @@ void LayerDrawable::inflateLayers(Resources&r,XmlPullParser&parser,const Attribu
         if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-
         ChildDrawable*layer = new ChildDrawable(mLayerState->mDensity);
         // AOSP inflateLayers: obtainAttributes(R.styleable.LayerDrawableItem) per <item>.
         Context* ctx = atts.getContext();

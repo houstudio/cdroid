@@ -7366,10 +7366,10 @@
     <declare-styleable name="ScaleDrawable">
         <!-- Scale width, expressed as a percentage of the drawable's bound. The value's
              format is XX%. For instance: 100%, 12.5%, etc.-->
-        <attr name="scaleWidth" format="string" />
+        <attr name="scaleWidth" format="fraction" />
         <!-- Scale height, expressed as a percentage of the drawable's bound. The value's
              format is XX%. For instance: 100%, 12.5%, etc.-->
-        <attr name="scaleHeight" format="string" />
+        <attr name="scaleHeight" format="fraction" />
         <!-- Specifies where the drawable is positioned after scaling. The default value is
              left. -->
         <attr name="scaleGravity">

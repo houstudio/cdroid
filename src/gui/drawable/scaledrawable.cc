@@ -144,10 +144,13 @@ void ScaleDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&
     auto ta = obtainAttributes(r, theme, atts, R::styleable::ScaleDrawable);
     if (ta) {
         mState->mThemeAttrs = ta->extractThemeAttrs();
-        // AOSP a.getFraction(scaleWidth, ...) — base=100 preserves CDROID's
-        // percent semantics (100% = 100.0, not AOSP's 1.0).
-        mState->mScaleWidth = ta->getFraction(R::styleable::ScaleDrawable_scaleWidth, 100, 100, mState->mScaleWidth);
-        mState->mScaleHeight = ta->getFraction(R::styleable::ScaleDrawable_scaleHeight, 100, 100, mState->mScaleHeight);
+        // AOSP updateStateFromTypedArray: getFraction(scaleWidth, 1, 1, ...) —
+        // a fraction is 0..1 (100% = 1.0). The old base=100 hack assumed the
+        // text-XML string parser's percent units and produced 100.0, which
+        // made onBoundsChange's AOSP formula compute a negative width (no
+        // child bounds were ever set, so the progress layer never drew).
+        mState->mScaleWidth = ta->getFraction(R::styleable::ScaleDrawable_scaleWidth, 1, 1, mState->mScaleWidth);
+        mState->mScaleHeight = ta->getFraction(R::styleable::ScaleDrawable_scaleHeight, 1, 1, mState->mScaleHeight);
         updateStateFromTypedArray(*ta);
     }
     DrawableWrapper::inflate(r,parser,atts, theme);

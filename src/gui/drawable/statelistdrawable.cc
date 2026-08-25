@@ -34,7 +34,14 @@ StateListDrawable::StateListState::StateListState(const StateListState*orig,Stat
 }
 
 StateListDrawable*StateListDrawable::StateListState::newDrawable(){
-    return new StateListDrawable(std::dynamic_pointer_cast<StateListState>(shared_from_this()));
+    // AOSP newDrawable() → ctor → createConstantState() → state copy ctor
+    // (children re-created from their ConstantStates as futures). Adopting the
+    // shared state shared the children across every clone from the drawable
+    // cache — nested inside a LayerDrawable layer this leaked one view's
+    // bounds/level into every other view of the same resource.
+    StateListDrawable* dr = new StateListDrawable();
+    dr->setConstantState(std::make_shared<StateListState>(this, dr));
+    return dr;
 }
 
 void StateListDrawable::StateListState::mutate(){
@@ -191,8 +198,16 @@ void StateListDrawable::updateStateFromTypedArray(const TypedArray& a) {
 void StateListDrawable::inflateChildElements(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
+    // AOSP StateListDrawable.inflateChildElements: the loop must stop at the
+    // selector's own END_TAG (depth < innerDepth). The old
+    // `(next()!=END_DOCUMENT && depth>=innerDepth) || type==END_TAG` grouped
+    // as (A && B) || C, so ANY end tag kept it alive: the loop swallowed the
+    // enclosing tags and only stopped on the NEXT SIBLING's START_TAG, which
+    // the parent loop then never saw (a <selector> followed by a sibling
+    // element lost that sibling — e.g. seekbar_track_material dropped its
+    // progress layer and inflated with 2 layers).
     while( ((type=parser.next())!=XmlPullParser::END_DOCUMENT)
-            &&((depth=parser.getDepth())>=innerDepth)||(type==XmlPullParser::END_TAG)){
+            &&(((depth=parser.getDepth())>=innerDepth)||(type!=XmlPullParser::END_TAG))){
         if(type!=XmlPullParser::START_TAG)continue;
         if((depth>innerDepth)||parser.getName().compare("item"))continue;
 
