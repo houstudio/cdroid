@@ -608,11 +608,18 @@ void AnimatorInflater::setupObjectAnimator(Context*ctx, const Resources::Theme* 
             }
             PropertyValuesHolder* x = nullptr;
             PropertyValuesHolder* y = nullptr;
+            // Only the named axis adopts its keyframes; the other one was
+            // still created above and must be freed (AOSP leans on GC here —
+            // valgrind showed the un-adopted X/Y FloatKeyframes lost).
             if (!propertyXName.empty()) {
                 x = PropertyValuesHolder::ofKeyframes(propertyXName, xKeyframes);
+            } else {
+                delete xKeyframes;
             }
             if (!propertyYName.empty()) {
                 y = PropertyValuesHolder::ofKeyframes(propertyYName, yKeyframes);
+            } else {
+                delete yKeyframes;
             }
             if (x == nullptr) {
                 oa->setValues({y});

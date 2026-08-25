@@ -81,7 +81,16 @@ Drawable* DrawableInflater::inflateFromXmlForDensity(Resources& r,const std::str
         drawable = inflateFromClass(name);
     }*/
     drawable->setSrcDensityOverride(density);
-    drawable->inflate(r, parser, attrs, theme);
+    try {
+        drawable->inflate(r, parser, attrs, theme);
+    } catch (...) {
+        // AOSP lets GC reclaim the half-inflated drawable when inflate throws
+        // ("no path defined", "<item> tag requires a drawable", ...); CDROID
+        // owns it — free before rethrowing (valgrind: one VectorDrawable lost
+        // on a caught inflate exception).
+        delete drawable;
+        throw;
+    }
     return drawable;
 }
 

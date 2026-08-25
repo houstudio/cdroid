@@ -402,8 +402,13 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState
             mTargetNameMap = copy->mTargetNameMap;//new ArrayMap<>(copy->mTargetNameMap);
         }
 
-        if (copy->mPendingAnims.empty()){// != null) {
-            mPendingAnims = copy->mPendingAnims;//new ArrayList<>(copy->mPendingAnims);
+        if (!copy->mPendingAnims.empty()){// != null) {
+            // Deep copy: entries are owned raw pointers (deleted in the dtor
+            // and at consumption) — the old INVERTED condition never copied
+            // them and a shallow copy would have double-freed.
+            for (auto pending : copy->mPendingAnims) {
+                mPendingAnims.push_back(new PendingAnimator(*pending));
+            }
         }
     } else {
         mVectorDrawable = new VectorDrawable();
@@ -415,6 +420,8 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::~AnimatedVectorDrawableStat
     // the last reference frees them - the pre-fix raw-vector version leaked
     // them (valgrind: AnimatorInflater records, ~50KB with the animator-set
     // node graphs per drawable recreation).
+    for (auto pending : mPendingAnims) delete pending;
+    mPendingAnims.clear();
     delete  mVectorDrawable;
 }
 
@@ -473,6 +480,9 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnimators(
                 "a Resources object or applyTheme() must be called with a non-null Theme object.");
         }
 
+        // The entries are owned (AOSP drops them for GC); free on consumption
+        // — clear() alone leaked them.
+        for (auto pending : mPendingAnims) delete pending;
         mPendingAnims.clear();// = null;
     }
 
