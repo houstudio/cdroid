@@ -318,12 +318,14 @@ TEST_F(DIALOG,PopupWindowDeleteInsideDismissListener){
    popup->showAsDropDown(anchor,0,0);
    pumpFor(50);
    popup->setOnDismissListener([popup](){ delete popup; });
-   popup->dismiss();  // the listener deletes the object mid-notification
-   pumpFor(200);
+   popup->dismiss();  // the (deferred) listener deletes the popup at teardown
+   pumpFor(600);      // cover the 150-220ms exit animation: the borrowed
+                      // content is handed back by the deferred fire, so it
+                      // must not be freed before teardown completes
 
    GUIEnvironment::content()->removeView(anchor);
    delete anchor;
-   delete content;    // dtor returned the borrowed content before the decor free
+   delete content;    // returned by the deferred fire above
 }
 
 /* Same protocol one level up: the app listener on a ListPopupWindow runs AFTER

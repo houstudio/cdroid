@@ -38,10 +38,10 @@ private:
         // Neutralize the back-pointer once the owner PopupWindow is gone: the
         // decor's own delete is posted (Window::close) and may run later than
         // the owner's destruction, so its dispatch handlers must not touch mPop.
-        // Also CANCELS the pending teardown callback: an owner dying while the
-        // exit animation still runs must not have the deferred content-return /
-        // dismiss notification fire into its freed chain.
-        void detachOwner(){ mPop = nullptr; mTeardownCb = nullptr; }
+        // (The pending teardown callback is NOT cancelled here: the decor may
+        // already be freed when the owner dies - the callback self-guards on
+        // the owner's alive-flag instead. Only call this on a live decor.)
+        void detachOwner(){ mPop = nullptr; }
         bool dispatchKeyEvent(KeyEvent& event)override;
         bool dispatchTouchEvent(MotionEvent& ev)override;
         bool onTouchEvent(MotionEvent& event)override;
@@ -128,6 +128,10 @@ private:
     bool mOverlapAnchor;
     bool mIsAnchorRootAttached;
     bool mPopupViewInitialLayoutDirectionInherited;
+    // Alive-flag (the Fragment idiom): the animated-exit deferred teardown
+    // callback outlives this popup (the decor is self-owned) and must skip
+    // the dismiss notification when this object is already gone.
+    std::shared_ptr<bool> mAliveFlag;
 private:
     void init();
     int computeGravity();

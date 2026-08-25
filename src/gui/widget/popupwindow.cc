@@ -93,11 +93,16 @@ PopupWindow::~PopupWindow(){
             }
         }
         ((Window*)mDecorView)->close();
-    }
-    if (mDecorView != nullptr) {
+        // The decor was JUST closed by us: alive until its posted delete, so
+        // detaching the back-pointer is safe. In the already-DISMISSED case
+        // below the decor may already be freed - touching it wrote to freed
+        // memory (valgrind: invalid write in detachOwner from ~PopupWindow).
         mDecorView->detachOwner();
-        mDecorView = nullptr;
     }
+    if (mAliveFlag != nullptr) {
+        *mAliveFlag = false;
+    }
+    mDecorView = nullptr;
     // Symmetric unregister of the anchor/anchor-root listeners (they capture
     // this) - dismiss() normally does this, the destructor must too.
     detachFromAnchor();
@@ -107,6 +112,7 @@ PopupWindow::~PopupWindow(){
 }
 
 void PopupWindow::init(){
+    mAliveFlag = std::make_shared<bool>(true);
     mIsShowing = false;
     mIsDropdown= false;
     mFocusable = true;
@@ -961,15 +967,31 @@ void PopupWindow::dismiss(){
         const bool ownsContent = mOwnsContentView;
         OnDismissListener onDismissListener = mOnDismissListener;
         mOnDismissListener = OnDismissListener();
-        // Clears the anchor view (AOSP runs this before the notification).
-        detachFromAnchor();
+        // The deferred fire runs from the decor's finishClose, AFTER this
+        // popup may legitimately be destroyed (the decor is self-owned) - the
+        // dismiss listener copy can capture owner state (the ListPopupWindow
+        // wrapper captures its this), so gate it on the alive-flag. The
+        // borrowed-content return touches only by-value captures and the
+        // still-intact decor tree, and always runs.
+        //
+        // CAUTION: close() may run finishClose - and thus the deferred fire,
+        // which can DELETE this popup (a listener like
+        // setOnDismissListener([p]{delete p;})) - SYNCHRONOUSLY when the exit
+        // transition cannot start (an enter transition still running trips
+        // close()'s mInTransition guard). Every member access therefore
+        // happens BEFORE close(); nothing may follow it.
+        std::weak_ptr<bool> aliveGuard = mAliveFlag;
+        mDecorView = nullptr;   // the decor is self-owned from here: its posted
+                                // delete may run before this popup dies
+        detachFromAnchor();     // AOSP clears the anchor before the transition
         ((Window*)decorView)->close([ownsContent, contentHolder, contentView,
-                                     onDismissListener](){
+                                     onDismissListener, aliveGuard](){
             if (!ownsContent && (contentHolder != nullptr)) {
                 // Give the borrowed content back to its owner for reuse.
                 contentHolder->removeView(contentView);
             }
-            if (onDismissListener != nullptr) {
+            const auto alive = aliveGuard.lock();
+            if (alive && *alive && onDismissListener != nullptr) {
                 onDismissListener();
             }
         });
