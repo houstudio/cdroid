@@ -197,6 +197,7 @@ void setupProgress(View* page) {
     }
 
     SeekBar* sb = (SeekBar*)page->findViewById(widgetsDemo::R::id::seekbar);
+    ProgressBar* ring = (ProgressBar*)page->findViewById(widgetsDemo::R::id::ring_determinate);
     if (sb) {
         Drawable* pd = app.getDrawable(cdroid::R::drawable::progress_horizontal);
         if (pd) sb->setProgressDrawable(pd);
@@ -204,12 +205,19 @@ void setupProgress(View* page) {
         //if (thumb) sb->setThumb(thumb);
         sb->setMax(100);
         sb->setProgress(40);
+        if (ring) ring->setProgress(sb->getProgress());
         SeekBar::OnSeekBarChangeListener l;
-        l.onProgressChanged = [ph](SeekBar&, int progress, bool) {
+        l.onProgressChanged = [ph, ring](SeekBar&, int progress, bool) {
             if (ph) ph->setProgress(progress);
+            if (ring) ring->setProgress(progress);
         };
         sb->setOnSeekBarChangeListener(l);
     }
+
+    // Everything on this page is style-driven: the barberpole tiling comes
+    // from needsTileify descending into animation-list frames, and Material
+    // AVD spinners are started by ProgressBar through the normal Animatable
+    // path — no manual wiring needed.
 
     ProgressBar* spinner = (ProgressBar*)page->findViewById(widgetsDemo::R::id::spinner);
     if (spinner) {

@@ -70,12 +70,14 @@ class RefreshData {
     }
 };
 
-DECLARE_WIDGET(ProgressBar)
+DECLARE_WIDGET2(ProgressBar, internal::R::attr::progressBarStyle)
 
 ProgressBar::ProgressBar(Context*ctx)
     :ProgressBar(ctx,nullptr){}
 
-ProgressBar::ProgressBar(Context*ctx,const AttributeSet* attrs):ProgressBar(ctx,attrs,cdroid::internal::R::attr::progressBarStyle) {}
+ProgressBar::ProgressBar(Context*ctx,const AttributeSet* attrs)
+    :ProgressBar(ctx,attrs,cdroid::internal::R::attr::progressBarStyle) {
+}
 
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     :View(ctx,pAttrs, defStyleAttr) {
@@ -250,6 +252,20 @@ bool ProgressBar::needsTileify(Drawable* dr) {
         }
         return false;
     }
+
+    // Animation-list frames are unwrapped bitmaps too (the classic barberpole
+    // assets): descend into them so the style-declared indeterminate drawable
+    // takes the tiled path straight from XML.
+    if (dynamic_cast<AnimationDrawable*>(dr)) {
+        AnimationDrawable* in = (AnimationDrawable*) dr;
+        const int N = in->getNumberOfFrames();
+        for (int i = 0; i < N; i++) {
+            if (needsTileify(in->getFrame(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
     // If there's a bitmap that's not wrapped with a ClipDrawable or
     // ScaleDrawable, we'll need to wrap it and apply tiling.
     if (dynamic_cast<BitmapDrawable*>(dr)) {
@@ -304,6 +320,19 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip) {
             out->addState(in->getStateSet(i), tileify(in->getStateDrawable(i), clip));
         }
 
+        return out;
+    }
+
+    // Symmetric with the AnimationDrawable branch in needsTileify: rebuild the
+    // animation over tiled frames (the classic barberpole assets).
+    if (dynamic_cast<AnimationDrawable*>(drawable)) {
+        AnimationDrawable* in = (AnimationDrawable*) drawable;
+        AnimationDrawable* out = new AnimationDrawable();
+        out->setOneShot(in->isOneShot());
+        const int N = in->getNumberOfFrames();
+        for (int i = 0; i < N; i++) {
+            out->addFrame(tileify(in->getFrame(i), clip), in->getDuration(i));
+        }
         return out;
     }
 
@@ -917,6 +946,14 @@ void ProgressBar::drawTrack(Canvas&canvas) {
     if(mShouldStartAnimationDrawable && (animatable!=nullptr)) {
         animatable->start();
         mShouldStartAnimationDrawable = false;
+    }
+    // Keep the frame loop alive while an Animatable indeterminate drawable is
+    // running: its per-frame invalidateSelf arrives during draw, where the
+    // mInDrawing guard in invalidateDrawable drops it (AOSP runs AVDs on the
+    // RenderThread instead). Same re-schedule the transformation tween branch
+    // above relies on.
+    if ((animatable != nullptr) && animatable->isRunning()) {
+        postInvalidateOnAnimation();
     }
 }
 

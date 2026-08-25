@@ -41,6 +41,14 @@
     <string name="sec_choice">单选与评分</string>
     <string name="sec_progress">进度与调节</string>
     <string name="sec_chrono">计时器</string>
+    <string name="sec_prog_modes">形态对照 · 确定性 / 不确定性</string>
+    <string name="prog_h_determinate">横向 · 确定性</string>
+    <string name="prog_h_indet_vec">横向 · 不确定性 · 矢量分段</string>
+    <string name="prog_h_indet_anim">横向 · 不确定性 · 帧动画</string>
+    <string name="prog_c_determinate">圆形 · 确定性</string>
+    <string name="prog_c_indeterminate">圆形 · 不确定性</string>
+    <string name="prog_c_indet_large">圆形 · 不确定性 Large</string>
+    <string name="prog_modes_hint">拖动下方 SeekBar，横向与环形确定性进度同步联动</string>
     <string name="tap_hint">点击任意控件，反馈会显示在这里…</string>
     <string name="sec_prog_styles">进度条样式 Variants</string>
     <string name="sec_seek_styles">SeekBar 样式</string>

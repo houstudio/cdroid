@@ -38,6 +38,8 @@ public:
             // FragmentPagerAdapter) instead of tearing down/rebuilding views through
             // the SpecialEffects exit pipeline on every tab hop.
             pager->setOffscreenPageLimit(9);
+            // Start on the progress page (page 1) instead of the buttons page.
+            pager->setCurrentItem(1, false);
             host->addView(pager, new ViewGroup::LayoutParams(
                     ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
             if (mTabs) mTabs->setupWithViewPager(pager);
