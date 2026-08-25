@@ -189,8 +189,6 @@ void setupProgress(View* page) {
 
     ProgressBar* ph = (ProgressBar*)page->findViewById(widgetsDemo::R::id::progress_h);
     if (ph) {
-        Drawable* pd = app.getDrawable(cdroid::R::drawable::progress_horizontal);
-        if (pd) ph->setProgressDrawable(pd);
         ph->setMax(100);
         ph->setProgress(40);
         ph->setSecondaryProgress(60);
@@ -199,10 +197,6 @@ void setupProgress(View* page) {
     SeekBar* sb = (SeekBar*)page->findViewById(widgetsDemo::R::id::seekbar);
     ProgressBar* ring = (ProgressBar*)page->findViewById(widgetsDemo::R::id::ring_determinate);
     if (sb) {
-        Drawable* pd = app.getDrawable(cdroid::R::drawable::progress_horizontal);
-        if (pd) sb->setProgressDrawable(pd);
-        //Drawable* thumb = app.getDrawable(cdroid::R::drawable::seek_thumb);
-        //if (thumb) sb->setThumb(thumb);
         sb->setMax(100);
         sb->setProgress(40);
         if (ring) ring->setProgress(sb->getProgress());
