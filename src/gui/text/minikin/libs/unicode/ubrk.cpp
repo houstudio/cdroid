@@ -11,6 +11,7 @@ struct UBreakIterator {
     int32_t length;
     int32_t current;
     int32_t type;
+    UBool phraseOnly;  // line breaking requested -u-lw-phrase (Android lineBreakWordStyle="phrase")
 };
 
 // Word Break Rule Types (from Unicode UAX #29). Explicit values so generate_unicode_data.py
@@ -501,8 +502,10 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
     return true;
 }
 
-// Check line boundary according to UAX #14 rules with script-specific handling
-static UBool isLineBoundary(const UChar* text, int32_t length, int32_t pos) {
+// Check line boundary according to UAX #14 rules with script-specific handling.
+// phraseOnly enables phrase-based wrapping (Unicode -u-lw-phrase keyword): line breaks
+// are only taken on space-delimited words.
+static UBool isLineBoundary(const UChar* text, int32_t length, int32_t pos, UBool phraseOnly) {
     if (pos <= 0 || pos >= length) {
         return true;
     }
@@ -528,7 +531,18 @@ static UBool isLineBoundary(const UChar* text, int32_t length, int32_t pos) {
     
     // LB4: Zero-width space allows break
     if (prev == 0x200B || curr == 0x200B) return true;
-    
+
+    // Phrase-based line breaking (-u-lw-phrase, Android lineBreakWordStyle="phrase"):
+    // wrapping happens only on space-delimited words, so opportunistic breaks after
+    // hyphens, symbols and punctuation are suppressed. Mandatory breaks (LB1) and the
+    // explicit ZWSP (LB4) above still apply, and ideographic text keeps its per-character
+    // breaks (ID x ID below) — Android only tailors Korean, where syllables never break
+    // anyway (LB5), so the visible effect is punctuation staying attached to its word.
+    if (phraseOnly && propPrev != LBP_WS &&
+        !(propPrev == LBP_ID && propCurr == LBP_ID)) {
+        return false;
+    }
+
     // LB5: Don't break between Hangul syllables
     if ((propPrev == LBP_JL && (propCurr == LBP_JL || propCurr == LBP_JV || propCurr == LBP_H2)) ||
         ((propPrev == LBP_H2 || propPrev == LBP_JV) && (propCurr == LBP_JV || propCurr == LBP_JT || propCurr == LBP_H3)) ||
@@ -668,7 +682,6 @@ static UBool isTitleBoundary(const UChar* text, int32_t length, int32_t pos) {
 }
 
 U_CAPI UBreakIterator* U_EXPORT2 ubrk_open(int32_t type, const char* locale, const UChar* text, int32_t length, UErrorCode* status) {
-    (void)locale;
     if (status == nullptr) {
         return nullptr;
     }
@@ -684,6 +697,10 @@ U_CAPI UBreakIterator* U_EXPORT2 ubrk_open(int32_t type, const char* locale, con
         *status = U_MEMORY_ALLOCATION_ERROR;
         return nullptr;
     }
+    // The only locale tailoring myicu implements is the Unicode line-break word style
+    // keyword (Android lineBreakWordStyle="phrase"). The locale arrives normalized by
+    // uloc_forLanguageTag with '-' replaced by '_', e.g. "ko_u_lw_phrase".
+    bi->phraseOnly = (locale != nullptr && strstr(locale, "u_lw_phrase") != nullptr);
     bi->text = text;
     bi->length = length;
     bi->current = 0;
@@ -745,7 +762,7 @@ U_CAPI int32_t U_EXPORT2 ubrk_next(UBreakIterator* bi) {
         }
         case UBRK_LINE: {
             bi->current++;
-            while (bi->current < bi->length && !isLineBoundary(bi->text, bi->length, bi->current)) {
+            while (bi->current < bi->length && !isLineBoundary(bi->text, bi->length, bi->current, bi->phraseOnly)) {
                 UChar32 c = bi->text[bi->current];
                 if (U16_IS_LEAD(c) && bi->current + 1 < bi->length && U16_IS_TRAIL(bi->text[bi->current + 1])) {
                     bi->current += 2;
@@ -812,7 +829,7 @@ U_CAPI int32_t U_EXPORT2 ubrk_previous(UBreakIterator* bi) {
         }
         case UBRK_LINE: {
             bi->current--;
-            while (bi->current > 0 && !isLineBoundary(bi->text, bi->length, bi->current)) {
+            while (bi->current > 0 && !isLineBoundary(bi->text, bi->length, bi->current, bi->phraseOnly)) {
                 bi->current--;
             }
             break;
@@ -859,7 +876,7 @@ U_CAPI int32_t U_EXPORT2 ubrk_preceding(UBreakIterator* bi, int32_t offset) {
             }
             break;
         case UBRK_LINE:
-            while (bi->current > 0 && !isLineBoundary(bi->text, bi->length, bi->current)) {
+            while (bi->current > 0 && !isLineBoundary(bi->text, bi->length, bi->current, bi->phraseOnly)) {
                 bi->current--;
             }
             break;
@@ -902,7 +919,7 @@ U_CAPI int32_t U_EXPORT2 ubrk_following(UBreakIterator* bi, int32_t offset) {
             break;
         case UBRK_LINE:
             bi->current++;
-            while (bi->current < bi->length && !isLineBoundary(bi->text, bi->length, bi->current)) {
+            while (bi->current < bi->length && !isLineBoundary(bi->text, bi->length, bi->current, bi->phraseOnly)) {
                 bi->current++;
             }
             break;
@@ -952,7 +969,7 @@ U_CAPI UBool U_EXPORT2 ubrk_isBoundary(UBreakIterator* bi, int32_t offset) {
         case UBRK_WORD:
             return isWordBoundary(bi->text, bi->length, offset);
         case UBRK_LINE:
-            return isLineBoundary(bi->text, bi->length, offset);
+            return isLineBoundary(bi->text, bi->length, offset, bi->phraseOnly);
         case UBRK_SENTENCE:
             return isSentenceBoundary(bi->text, bi->length, offset);
         case UBRK_TITLE:

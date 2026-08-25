@@ -370,6 +370,12 @@ TextView::TextView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
         case R::styleable::TextView_hyphenationFrequency:
             hyphenationFrequency = ta->getInt(i, mHyphenationFrequency);
             break;
+        case R::styleable::TextView_lineBreakStyle:
+            mLineBreakStyle = ta->getInt(i, LineBreakConfig::LINE_BREAK_STYLE_NONE);
+            break;
+        case R::styleable::TextView_lineBreakWordStyle:
+            mLineBreakWordStyle = ta->getInt(i, LineBreakConfig::LINE_BREAK_WORD_STYLE_NONE);
+            break;
         case R::styleable::TextView_justificationMode:
             justificationMode = ta->getInt(i, mJustificationMode);
             break;
@@ -3065,9 +3071,11 @@ bool TextView::suggestedSizeFitsInSpace(int suggestedSizeInPx,const RectF& avail
     .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
     .setBreakStrategy(getBreakStrategy())
     .setHyphenationFrequency(mHyphenationFrequency)
-    .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
+    .setJustificationMode(mJustificationMode)
     .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX)
-    .setTextDirection(getTextDirectionHeuristic());
+    .setTextDirection(getTextDirectionHeuristic())
+    .setLineBreakConfig(LineBreakConfig::getLineBreakConfig(mLineBreakStyle, mLineBreakWordStyle))
+    .setUseBoundsForWidth(mUseBoundsForWidth);
 
     StaticLayout* layout = layoutBuilder->build();
     // Lines overflow.
@@ -3386,8 +3394,10 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
             .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
             .setBreakStrategy(mBreakStrategy)
             .setHyphenationFrequency(mHyphenationFrequency)
-            .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
-            .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX);
+            .setJustificationMode(mJustificationMode)
+            .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX)
+            .setLineBreakConfig(LineBreakConfig::getLineBreakConfig(mLineBreakStyle, mLineBreakWordStyle))
+            .setUseBoundsForWidth(mUseBoundsForWidth);
             if (shouldEllipsize) {
                 builder->setEllipsize(mEllipsize)
                 .setEllipsizedWidth(ellipsisWidth);
@@ -3435,7 +3445,9 @@ Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring,
         .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
         .setBreakStrategy(mBreakStrategy)
         .setHyphenationFrequency(mHyphenationFrequency)
-        .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
+        .setJustificationMode(mJustificationMode)
+        .setLineBreakConfig(LineBreakConfig::getLineBreakConfig(mLineBreakStyle, mLineBreakWordStyle))
+        .setUseBoundsForWidth(mUseBoundsForWidth)
         .setEllipsize((getKeyListener()==nullptr)?effectiveEllipsize:TextUtils::TruncateAt::NONE)
         .setEllipsizedWidth(ellipsisWidth);
         result = builder->build();
@@ -3482,8 +3494,10 @@ Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring,
         .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
         .setBreakStrategy(mBreakStrategy)
         .setHyphenationFrequency(mHyphenationFrequency)
-        .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
-        .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX);
+        .setJustificationMode(mJustificationMode)
+        .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX)
+        .setLineBreakConfig(LineBreakConfig::getLineBreakConfig(mLineBreakStyle, mLineBreakWordStyle))
+        .setUseBoundsForWidth(mUseBoundsForWidth);
         if (shouldEllipsize) {
             builder->setEllipsize(effectiveEllipsize)
             .setEllipsizedWidth(ellipsisWidth);
