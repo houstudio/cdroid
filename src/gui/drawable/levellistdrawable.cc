@@ -33,14 +33,19 @@ LevelListDrawable::LevelListState::LevelListState(const LevelListState*orig,Leve
 }
 
 void LevelListDrawable::LevelListState::mutate(){
+    // AOSP runs super.mutate() (mutates every child) before cloning the arrays;
+    // an empty override suppressed the base chain entirely.
+    DrawableContainerState::mutate();
     //mLows = mLows.clone();
     //mHighs = mHighs.clone();
 }
 
 void LevelListDrawable::LevelListState::addLevel(int low,int high,Drawable*drawable){
-    addChild(drawable);
-    mLows.push_back(low);
-    mHighs.push_back(high);
+    const int pos = addChild(drawable);
+    // Keep the parallel arrays in lockstep with addChild's dedupe (see
+    // StateListState::addStateSet).
+    if (pos == (int)mLows.size()) { mLows.push_back(low); mHighs.push_back(high); }
+    else { mLows[pos] = low; mHighs[pos] = high; }
 }
 
 int LevelListDrawable::LevelListState::indexOfLevel(int level)const{

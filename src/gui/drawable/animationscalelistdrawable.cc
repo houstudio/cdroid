@@ -166,6 +166,8 @@ AnimationScaleListDrawable::AnimationScaleListState::AnimationScaleListState(con
 }
 
 void AnimationScaleListDrawable::AnimationScaleListState::mutate() {
+    // AOSP runs super.mutate() (mutates every child) before cloning mThemeAttrs.
+    DrawableContainerState::mutate();
     // std::vector copies by value, matching AOSP's mThemeAttrs.clone().
 }
 

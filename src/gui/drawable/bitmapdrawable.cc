@@ -153,7 +153,13 @@ int BitmapDrawable::getAlpha()const{
 }
 
 void BitmapDrawable::setAlpha(int alpha){
+    // AOSP invalidates when the alpha actually changed; the bare store left
+    // alpha changes unpainted until something else invalidated.
+    const int oldAlpha = mBitmapState->mAlpha;
     mBitmapState->mAlpha = alpha&0xFF;
+    if (mBitmapState->mAlpha != oldAlpha) {
+        invalidateSelf();
+    }
 }
 
 int BitmapDrawable::getGravity()const{
@@ -417,10 +423,12 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.fill();
         } 
     }else {
+        // AOSP draw(): canvas.drawBitmap(bitmap, null, mDstRect, paint) — the
+        // destination is the gravity-applied mDstRect (computed in
+        // updateDstRectAndInsetsIfDirty), not the full bounds. Stretching to
+        // the bounds ignored every non-FILL gravity (center etc.).
         const float sw = float(mBitmapWidth), sh = float(mBitmapHeight);
-        float dx = float(mBounds.left)  , dy = float(mBounds.top);
-        float dw = float(mBounds.width) , dh = float(mBounds.height);
-        const float fx = dw / sw   , fy = dh / sh;
+        const float fx = float(mDstRect.width) / sw, fy = float(mDstRect.height) / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
 
         LOGV_IF(mBitmapState->mFilterBitmap&&(mBitmapWidth*mBitmapHeight>=512*512),
@@ -429,13 +437,12 @@ void BitmapDrawable::draw(Canvas&canvas){
 
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
-        if ( (mBounds.width !=mBitmapWidth) || (mBounds.height != mBitmapHeight) ) {
-            canvas.scale(dw/sw,dh/sh);
-            dx /= fx;
-            dy /= fy;
+        canvas.translate(mDstRect.left, mDstRect.top);
+        if ( (mDstRect.width !=mBitmapWidth) || (mDstRect.height != mBitmapHeight) ) {
+            canvas.scale(fx,fy);
 #if defined(__x86_64__)||defined(__amd64__)||defined(__i386__)
             LOGD_IF((mBitmapWidth*mBitmapHeight>=512*512)||(std::min(fx,fy)<0.1f)||(std::max(fx,fy)>10.f),
-                "%p bitmap %s scaled %dx%d->%d,%d",this,mBitmapState->mResource.c_str() ,mBitmapWidth,mBitmapHeight,mBounds.width,mBounds.height);
+                "%p bitmap %s scaled %dx%d->%d,%d",this,mBitmapState->mResource.c_str() ,mBitmapWidth,mBitmapHeight,mDstRect.width,mDstRect.height);
 #endif
         }
 
@@ -443,7 +450,7 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.translate(mDstRect.width,0);
             canvas.scale(-1.f,1.f);
         }
-        canvas.set_source(mBitmapState->mBitmap, dx, dy);
+        canvas.set_source(mBitmapState->mBitmap, 0, 0);
         if(getOpacity()==PixelFormat::OPAQUE){
             canvas.set_operator(Cairo::Context::Operator::SOURCE);
         }
@@ -469,8 +476,10 @@ void BitmapDrawable::getOutline(Outline& outline) {
     outline.setRect(mDstRect);
 
     // Only opaque Bitmaps can report a non-0 alpha,
-    // since only they are guaranteed to fill their bounds
-    const int opaqueOverShape = getOpacity()==255;//mBitmapState->mBitmap != nullptr&& !mBitmapState->mBitmap->hasAlpha();
+    // since only they are guaranteed to fill their bounds. Compare against
+    // the PixelFormat constant, not the literal 255 (OPAQUE is 3 — the old
+    // comparison could never be true, so outline alpha was always 0).
+    const bool opaqueOverShape = getOpacity() == PixelFormat::OPAQUE;
     outline.setAlpha(opaqueOverShape ? getAlpha() / 255.0f : 0.0f);
 }
 

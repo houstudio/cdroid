@@ -48,7 +48,10 @@ void DrawableWrapper::DrawableWrapperState::setDensity(int targetDensity){
 }
 
 int DrawableWrapper::DrawableWrapperState::getChangingConfigurations()const{
-    return 0;
+    // AOSP: mChangingConfigurations | the wrapped child's (a constant 0
+    // under-reported config changes for cached wrapper states).
+    return mChangingConfigurations
+        | (mDrawableState ? mDrawableState->getChangingConfigurations() : 0);
 }
 
 void DrawableWrapper::DrawableWrapperState::onDensityChanged(int sourceDensity, int targetDensity){
@@ -168,6 +171,25 @@ void DrawableWrapper::getHotspotBounds(Rect& outRect)const{
     else outRect = mBounds;
 }
 
+// AOSP DrawableWrapper forwards opacity/hotspot/layout-direction to the
+// wrapped drawable; without these a wrapped ripple anchored its feedback at
+// 0,0 and wrapped opaque bitmaps reported UNKNOWN opacity.
+int DrawableWrapper::getOpacity()const{
+    return mDrawable ? mDrawable->getOpacity() : PixelFormat::TRANSLUCENT;
+}
+
+void DrawableWrapper::setHotspot(float x,float y){
+    if(mDrawable)mDrawable->setHotspot(x,y);
+}
+
+void DrawableWrapper::setHotspotBounds(int left,int top,int width,int height){
+    if(mDrawable)mDrawable->setHotspotBounds(left,top,width,height);
+}
+
+bool DrawableWrapper::onLayoutDirectionChanged(int layoutDirection){
+    return mDrawable != nullptr && mDrawable->setLayoutDirection(layoutDirection);
+}
+
 std::shared_ptr<DrawableWrapper::DrawableWrapperState> DrawableWrapper::mutateConstantState(){
     // androidx DrawableWrapper.mutateConstantState returns mState as-is (no copy). The
     // DrawableWrapper(Drawable*) ctor leaves mState null (it assigns mDrawable directly instead
@@ -183,7 +205,11 @@ DrawableWrapper*DrawableWrapper::mutate(){
             mDrawable->mutate();
         }
         if (mState != nullptr) {
-            mState->mDrawableState =std::dynamic_pointer_cast<DrawableWrapperState>(mDrawable != nullptr ? mDrawable->getConstantState() : nullptr);
+            // AOSP DrawableWrapper.mutate(): store the child's BASE ConstantState.
+            // The dynamic cast to DrawableWrapperState returned null for every
+            // non-wrapper child (bitmap/gradient/...), so a mutated wrapper lost
+            // its constant state entirely (clones came back childless).
+            mState->mDrawableState = (mDrawable != nullptr) ? mDrawable->getConstantState() : nullptr;
         }
         mMutated = true;
     }
@@ -329,8 +355,15 @@ void DrawableWrapper::updateStateFromTypedArray(const TypedArray& a) {
     // Account for any configuration changes.
     //state.mChangingConfigurations |= a.getChangingConfigurations();
 
-    // Extract the theme attributes, if any.
-    state->mThemeAttrs = a.extractThemeAttrs();
+    // Extract the theme attributes, if any. Java shadows two mThemeAttrs
+    // fields (subclass state vs DrawableWrapperState); C++ has one, so only
+    // overwrite when the WRAPPER-level styleable actually captured entries —
+    // an unconditional assign wiped the subclass extracts done before
+    // DrawableWrapper::inflate (clip/inset/scale/rotate ?attr re-resolution).
+    auto wrapperThemeAttrs = a.extractThemeAttrs();
+    if (!wrapperThemeAttrs.empty()) {
+        state->mThemeAttrs = wrapperThemeAttrs;
+    }
     if (a.hasValue(R::styleable::DrawableWrapper_drawable)) {
         setDrawable(a.getDrawable(R::styleable::DrawableWrapper_drawable));
     }
@@ -340,7 +373,11 @@ void DrawableWrapper::inflateChildDrawable(XmlPullParser& parser,const Attribute
     // Seek to the first child element.
     Drawable* dr = nullptr;
     int type;
-    const int outerDepth = parser.getDepth()+1;
+    // AOSP uses the wrapper's OWN depth (no +1): the loop must stop at the
+    // wrapper's end tag, not at the first child's — with +1 a <rotate> holding
+    // multiple children kept only the first and left the parser inside the
+    // wrapper element, perturbing the parent inflate loop.
+    const int outerDepth = parser.getDepth();
     while ((type = parser.next()) != XmlPullParser::END_DOCUMENT
             && (type != XmlPullParser::END_TAG || parser.getDepth() > outerDepth)) {
         if (type == XmlPullParser::START_TAG) {

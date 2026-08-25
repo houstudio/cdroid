@@ -27,6 +27,7 @@ ScaleDrawable::ScaleState::ScaleState():DrawableWrapperState(){
     mScaleHeight= DO_NOT_SCALE;
     mGravity = Gravity::LEFT;
     mUseIntrinsicSizeAsMin = false;
+    mInitialLevel = 0;
 }
 
 ScaleDrawable::ScaleState::ScaleState(const ScaleState& orig)
@@ -48,6 +49,10 @@ ScaleDrawable::ScaleDrawable():ScaleDrawable(std::make_shared<ScaleState>()){
 
 ScaleDrawable::ScaleDrawable(std::shared_ptr<ScaleState> state):DrawableWrapper(state){
     mState = state;
+    // AOSP ctor ends with updateLocalState(): initialize the local level to
+    // the state's initial level — without it android:level never applied and
+    // clones started at level 0 (invisible for a scale-based progress layer).
+    setLevel(mState->mInitialLevel);
 }
 
 ScaleDrawable::ScaleDrawable(Drawable* drawable, int gravity,float scaleWidth,float scaleHeight)

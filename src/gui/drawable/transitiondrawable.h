@@ -52,6 +52,9 @@ public:
     TransitionDrawable();
     TransitionDrawable(const std::vector<Drawable*>drawables);
     void startTransition(int durationMillis);
+    // @hide AOSP API (TransitionDrawable.java): snap to the second layer with
+    // no transition — framework/SystemUI callers migrating from Android need it.
+    void showSecondLayer();
     void resetTransition();
     void reverseTransition(int duration);
     bool isCrossFadeEnabled()const;

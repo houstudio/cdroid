@@ -85,6 +85,12 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     if(orig == nullptr)
         return;
 
+    // AOSP DrawableContainerState copy ctor keeps the tint list and color
+    // filter; dropping them made a mutate()/clone lose an applied tint.
+    mTintList = orig->mTintList;
+    mColorFilter = orig->mColorFilter;
+    mTintMode = orig->mTintMode;
+
     mChangingConfigurations = orig->mChangingConfigurations;
     mChildrenChangingConfigurations = orig->mChildrenChangingConfigurations;
 
@@ -476,10 +482,14 @@ bool DrawableContainer::getPadding(Rect&padding){
        }
     }
     if (needsMirroring()) {
+        // AOSP mirrors the HORIZONTAL padding pair (left <-> right); this
+        // swapped left with top, exchanging horizontal for vertical padding.
+        // cdroid padding Rects carry right in .width (see the Rect dual
+        // convention).
         const int left = padding.left;
-        const int right= padding.top;
+        const int right= padding.width;
         padding.left= right;
-        padding.top = left;
+        padding.width= left;
     }
     return result;
 }
@@ -751,6 +761,13 @@ void DrawableContainer::initializeDrawableForDisplay(Drawable*d){
 
     d->setCallback(mBlockInvalidateCallback->wrap(d->getCallback()));
 
+    // AOSP propagates remembered hotspot bounds to the newly selected child;
+    // an empty rect means none were set (ripples then anchor per their own
+    // default instead of a stale 0,0 rect).
+    if (!mHotspotBounds.empty()) {
+        d->setHotspotBounds(mHotspotBounds.left, mHotspotBounds.top,
+                mHotspotBounds.width, mHotspotBounds.height);
+    }
     if(mDrawableContainerState->mEnterFadeDuration <= 0 && mHasAlpha){
         d->setAlpha(mAlpha);
     }
@@ -845,8 +862,12 @@ std::shared_ptr<Drawable::ConstantState>DrawableContainer::getConstantState(){
 }
 
 Drawable*DrawableContainer::getChild(int index){
-    auto &drs=mDrawableContainerState->mDrawables;
-    return ((index>=0)&&(index<drs.size())) ? drs[index] : nullptr;
+    // Route through the state so a pending future is materialized first
+    // (AOSP StateListDrawable.getStateDrawable → mStateListState.getChild):
+    // children of a drawable cloned from the cache exist only as ConstantState
+    // futures, and the raw mDrawables slot is still null for them — callers
+    // like ProgressBar::tileify saw null items.
+    return mDrawableContainerState ? mDrawableContainerState->getChild(index) : nullptr;
 }
 
 void DrawableContainer::invalidateDrawable(Drawable& who){

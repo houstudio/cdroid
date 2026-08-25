@@ -512,16 +512,20 @@ void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
     canvas.translate(x, y);
     int color = Color::MAGENTA;
     if(mState->mColor)
-        color = mState->mColor->getColorForState(getState(),0xFF888888);
+        color = mState->mColor->getColorForState(getState(),0xFF000000);// AOSP falls back to Color.BLACK
     canvas.set_color(color);
 
     if (mBackground  && mBackground->isVisible()) {
         mBackground->draw(canvas, 1.f);
     }
     for (auto ripple:mExitingRipples) {
-        const int alpha = int(ripple->getOpacity()*0x80);
-        color = (color&0x00FFFFFF) | (alpha<<24);
-        canvas.set_color(color);
+        // AOSP RippleForeground.drawSoftware: alpha = original paint alpha
+        // (the ripple color's own alpha) * ripple opacity. The old code
+        // stripped the color's alpha and scaled by 0x80, so fading-out
+        // ripples never exceeded ~50% opacity.
+        const int origAlpha = (color >> 24) & 0xFF;
+        const int alpha = int(origAlpha * ripple->getOpacity() + 0.5f);
+        canvas.set_color((color & 0x00FFFFFF) | (alpha << 24));
         ripple->draw(canvas,1.f);
     }
 

@@ -213,6 +213,14 @@ void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
         }
 
         mAnimationState->addFrame(dr, duration);
+        // DELIBERATE divergence from AOSP (which relies on addChild routing
+        // the frame callback to the container): CDROID's
+        // DrawableContainer::scheduleDrawable only forwards while
+        // &who == mCurrDrawable and its own mCallback is wired, which is not
+        // guaranteed mid frame-advance — routing frames straight to the
+        // VIEW-side callback is what actually keeps the frame runnable
+        // scheduled here. Doing it "faithfully" froze the barberpole (and the
+        // host ProgressBar's postInvalidateOnAnimation loop) after a while.
         if (dr != nullptr) {
             dr->setCallback(mCallback);
         }
@@ -231,6 +239,8 @@ AnimationDrawable::AnimationState::AnimationState(const AnimationState*orig,Anim
 }
 
 void AnimationDrawable::AnimationState::mutate(){
+    // AOSP super.mutate() mutates every child; see StateListState::mutate().
+    DrawableContainerState::mutate();
 }
 
 AnimationDrawable*AnimationDrawable::AnimationState::newDrawable(){

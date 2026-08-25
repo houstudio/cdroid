@@ -308,6 +308,8 @@ AnimatedStateListDrawable::AnimatedStateListState::AnimatedStateListState(const 
 }
 
 void AnimatedStateListDrawable::AnimatedStateListState::mutate() {
+    // AOSP runs super.mutate() (mutates every child) before cloning its arrays.
+    DrawableContainerState::mutate();
     //mTransitions = mTransitions->clone();
     //mStateIds = mStateIds.clone();
 }

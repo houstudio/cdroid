@@ -142,7 +142,9 @@ std::shared_ptr<Drawable::ConstantState>RotateDrawable::getConstantState(){
 
 void RotateDrawable::draw(Canvas& canvas) {
     Drawable*d = getDrawable();
-    const Rect bounds = getBounds();
+    // AOSP pivots on the WRAPPED drawable's bounds (equal while bounds
+    // propagate, wrong when the child's bounds are set independently).
+    const Rect bounds = (d != nullptr) ? d->getBounds() : getBounds();
     const float px = bounds.left + (mState->mPivotXRel ? (bounds.width * mState->mPivotX) : mState->mPivotX);
     const float py = bounds.top  + (mState->mPivotYRel ? (bounds.height * mState->mPivotY) : mState->mPivotY);
     LOGV("%p bounds(%d,%d %d,%d) pivot=%f,%f pxy=%f,%f degrees=%f",this,bounds.left,bounds.top,bounds.width,bounds.height,

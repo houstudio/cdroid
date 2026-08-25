@@ -143,7 +143,9 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
         const int bottom= Drawable::scaleFromDensity(mOpticalInsets.bottom, sourceDensity, targetDensity, true);
         mOpticalInsets.set(left, top, right, bottom);
     }
-    if (mPadding.empty()) {
+    // AOSP scales padding only when it was SET (non-empty); the inverted
+    // guard scaled zeroes.
+    if (!mPadding.empty()) {
         mPadding.left  = Drawable::scaleFromDensity(mPadding.left, sourceDensity, targetDensity, false);
         mPadding.top   = Drawable::scaleFromDensity(mPadding.top, sourceDensity, targetDensity, false);
         mPadding.width = Drawable::scaleFromDensity(mPadding.width, sourceDensity, targetDensity, false);
@@ -157,7 +159,7 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
         mRadiusArray[3] = Drawable::scaleFromDensity(static_cast<int>(mRadiusArray[3]), sourceDensity, targetDensity, true);
     }
     if (mStrokeWidth > 0)  mStrokeWidth = Drawable::scaleFromDensity(mStrokeWidth, sourceDensity, targetDensity, true);
-    if (mStrokeDashWidth>0)mStrokeDashWidth = Drawable::scaleFromDensity(mStrokeDashGap, sourceDensity, targetDensity);
+    if (mStrokeDashWidth>0)mStrokeDashWidth = Drawable::scaleFromDensity(mStrokeDashWidth, sourceDensity, targetDensity);
 
     if (mStrokeDashGap > 0)mStrokeDashGap = Drawable::scaleFromDensity(mStrokeDashGap, sourceDensity, targetDensity);
 
@@ -305,7 +307,9 @@ void GradientDrawable::updateLocalState() {
     } else if(state->mImagePattern){
         //mFillPaint = SurfacePattern::create(state->mImagePattern);
     } else {
-        mFillPaint = SolidPattern::create_rgba(0,0,0,1);
+        // No solid color: AOSP leaves the fill paint null — a <shape> with
+        // only a <stroke> renders as an unfilled outline, not a black rect.
+        mFillPaint = nullptr;
     }
     mPadding = state->mPadding;
     if(state->mStrokeWidth>0){
@@ -329,7 +333,10 @@ void GradientDrawable::getOutline(Outline& outline) {
     // either not have a stroke, or have same stroke/fill opacity
     const bool useFillOpacity = st->mOpaqueOverShape && (mGradientState->mStrokeWidth <= 0
             || mStrokePaint == nullptr /*|| mStrokePaint->getAlpha() == mFillPaint->getAlpha()*/);
-    outline.setAlpha(255);//useFillOpacity ? modulateAlpha(mFillPaint->getAlpha()) / 255.0f: 0.0f);
+    // AOSP: report the fill alpha when the shape covers it consistently,
+    // 0 otherwise (a hardcoded 255 drew elevation shadows for translucent
+    // and stroke-only shapes).
+    outline.setAlpha(useFillOpacity ? getAlpha() / 255.0f : 0.0f);
 
     switch (st->mShape) {
         case RECTANGLE:
@@ -866,42 +873,47 @@ bool GradientDrawable::ensureValidRect() {
             if (st.mGradient == LINEAR_GRADIENT) {
                 float x1,y1;
                 const float level = st.mUseLevel ? getLevel() / 10000.0f : 1.0f;
+                // AOSP anchors the gradient vector on right()/bottom()
+                // (absolute coordinates), not width/height — for any rect with
+                // a non-zero origin (layer offsets, stroke inset) the
+                // width/height form reversed the gradient.
+                const float rRight = r.right(), rBottom = r.bottom();
                 switch (st.mOrientation) {
                 case TOP_BOTTOM:
                     x0 = r.left;  y0 = r.top;
-                    x1 = x0;      y1 = level *r.height;
+                    x1 = x0;      y1 = y0 + level * r.height;
                     break;
                 case TR_BL:
-                    x0 = r.width; y0 = r.top;
+                    x0 = rRight;  y0 = r.top;
                     x1 = level * r.left;
-                    y1 = level *r.height;
+                    y1 = level * rBottom;
                     break;
                 case RIGHT_LEFT:
-                    x0 = r.width; y0 = r.top;
+                    x0 = rRight;  y0 = r.top;
                     y1 = y0;      x1 = level * r.left;
                     break;
                 case BR_TL:
-                    x0 = r.width; y0 = r.height;
+                    x0 = rRight;  y0 = rBottom;
                     x1 = level * r.left;
                     y1 = level * r.top;
                     break;
                 case BOTTOM_TOP:
-                    x0 = r.left;  y0 = r.height;
+                    x0 = r.left;  y0 = rBottom;
                     x1 = x0;      y1 = level * r.top;
                     break;
                 case BL_TR:
-                    x0 = r.left;  y0 = r.height;
-                    x1 = level * r.width;
+                    x0 = r.left;  y0 = rBottom;
+                    x1 = level * rRight;
                     y1 = level * r.top;
                     break;
                 case LEFT_RIGHT:
                     x0 = r.left;  y0 = r.top;
-                    y1 = y0;      x1 = level * r.width;
+                    y1 = y0;      x1 = level * rRight;
                     break;
                 default:/*TL_BR*/
                     x0 = r.left;  y0 = r.top;
-                    x1 = level * r.width;
-                    y1 = level *r.height;
+                    x1 = level * rRight;
+                    y1 = level *rBottom;
                     break;
                 }
                 RefPtr<Cairo::LinearGradient>pat = LinearGradient::create(x0, y0, x1, y1);
@@ -942,11 +954,21 @@ bool GradientDrawable::ensureValidRect() {
                 x0 = mRect.left+ mRect.width * st.mCenterX;
                 y0 = mRect.top + mRect.height * st.mCenterY;
                 const double RADIUS = getRadius(mRect,x0,y0);
+                // AOSP: append the last color (n+1 stops) and distribute evenly
+                // unless explicit positions exist; useLevel scales the stop
+                // positions (never all-zero offsets — that collapsed the sweep
+                // to the first color whenever the cairo mesh honored them).
+                const float level = st.mUseLevel ? getLevel() / 10000.0f : 1.0f;
+                const int n = gradientColors.size();
                 std::vector<Cairo::ColorStop> stops;
-                for(int i=0; i<gradientColors.size(); i++) {
+                for(int i=0; i<n; i++) {
                     Color c = gradientColors[i];
-                    stops.push_back({0,c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f});
+                    const float pos = (st.mPositions.size()==(size_t)n)
+                            ? st.mPositions[i] : (n>1)?(float)i/(n-1):0.f;
+                    stops.push_back({pos*level,c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f});
                 }
+                Color cl((uint32_t)gradientColors[n-1]);
+                stops.push_back({1.f,cl.red(),cl.green(),cl.blue(),(cl.alpha()*mAlpha)/255.f});
                 mFillPaint = SweepGradient::create(x0, y0,RADIUS,M_PI*2.0,stops);
             } else if(st.mGradient == BITMAP_PATTERN){
                 //mFillPaint = SurfacePattern::create(st.mImagePattern);
@@ -1096,12 +1118,18 @@ void GradientDrawable::draw(Canvas&canvas) {
             canvas.stroke();
         }
         break;
-    case OVAL:
-        rad = mRect.height/2.f;
-        canvas.scale(double(mRect.width)/mRect.height,1.f);
+    case OVAL: {
+        // AOSP drawOval: always the FULL ellipse centered in the bounds —
+        // useLevel only scales the gradient shader, never clips the shape.
+        // Scale about the center (translate first); the old origin-scale
+        // shifted the arc center to centerX*(w/h).
+        const float cx = mRect.centerX(), cy = mRect.centerY();
+        canvas.translate(cx, cy);
+        canvas.scale(double(mRect.width)/double(mRect.height),1.f);
         canvas.begin_new_sub_path();
-        canvas.arc(mRect.centerX(),mRect.centerY(),rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
+        canvas.arc(0, 0, mRect.height/2.f, 0, M_PI*2.f);
         break;
+    }
     case RING:
         if(0){/*new ring with cdroid::Path*/
             auto path = buildRing(st.get());
@@ -1112,25 +1140,30 @@ void GradientDrawable::draw(Canvas&canvas) {
             RectF bounds= {mRect.left,mRect.top,mRect.width,mRect.height};
             float thickness = st->mThickness!=-1 ? st->mThickness:(bounds.width/st->mThicknessRatio);
             float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :(bounds.width/st->mInnerRadiusRatio);
-            canvas.scale(bounds.width/bounds.height,1.f);
-            RectF innerBounds = bounds;
+            // AOSP buildRing/drawOval center the ring in the bounds. Scale
+            // about the CENTER (translate first), never about the origin:
+            // origin-scaling multiplied the center too, shifting every
+            // non-square ring horizontally.
             const float x = bounds.centerX();
             const float y = bounds.centerY();
+            canvas.translate(x, y);
+            canvas.scale(bounds.width/bounds.height,1.f);
+            RectF innerBounds = bounds;
             if(innerRadius<=0.f)
                 innerRadius=std::min(mRect.width,mRect.height)/2.f-thickness;
             canvas.begin_new_sub_path();
             if( sweep<360.f && sweep>-360.f ) {
                 const double end_angle = M_PI*2*sweep/360.f;
                 canvas.set_fill_rule(Cairo::Context::FillRule::WINDING);//EVEN_ODD);//WINDING);
-                canvas.move_to(x + radius,y);
-                canvas.arc(x,y,radius + thickness,0.f,end_angle);
-                canvas.arc_negative(x,y,radius,end_angle,0.f);
+                canvas.move_to(radius,0);
+                canvas.arc(0,0,radius + thickness,0.f,end_angle);
+                canvas.arc_negative(0,0,radius,end_angle,0.f);
                 canvas.close_path();
             } else {
                 //canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
-                canvas.arc(x,y,radius + thickness,0,M_PI*2.f);
+                canvas.arc(0,0,radius + thickness,0,M_PI*2.f);
                 canvas.begin_new_sub_path();
-                canvas.arc_negative(x,y,radius,M_PI*2.f,0.f);
+                canvas.arc_negative(0,0,radius,M_PI*2.f,0.f);
             }
         }break;
     }/*endof switch*/

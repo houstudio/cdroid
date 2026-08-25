@@ -209,7 +209,12 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
     Context*ctx = attrs.getContext();
     state->mContext = ctx;
     // Parse everything until the end of the animated-vector element.
-    while ( (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
+    // AOSP guards with eventType != END_DOCUMENT first (AnimatedVectorDrawable.
+    // java:529-531): once next() reaches the document end it keeps returning
+    // END_DOCUMENT, which is never END_TAG, so without the guard a truncated
+    // <animated-vector> spins forever.
+    while ( eventType != XmlPullParser::END_DOCUMENT
+            && (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tagName = parser.getName();
             if (tagName.compare(ANIMATED_VECTOR)==0) {
@@ -493,6 +498,11 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
     Animator* animator = mAnimators.at(index).get();
     Animator* localAnimator = animator->clone();
     auto it = mTargetNameMap.find(animator);
+    if (it == mTargetNameMap.end()) {
+        LOGE("No target name recorded for animator %p", animator);
+        delete localAnimator;
+        return nullptr;
+    }
     std::string targetName = it->second;
     void* target = mVectorDrawable->getTargetByName(targetName);
     if (!mShouldIgnoreInvalidAnim) {

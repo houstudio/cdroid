@@ -200,17 +200,30 @@ void InsetDrawable::verifyRequiredAttributes(){
 }
 
 void InsetDrawable::updateStateFromTypedArray(const TypedArray& a){
+    // AOSP getInset(): a fraction value (%) sets the fraction field, anything
+    // else reads as a density-applied dimension offset. The old plain
+    // getFloat lost density scaling (16dp stayed 16px on a 2x display) and
+    // fed the f<1 heuristic in InsetValue::set(float). Absent attributes keep
+    // the existing value (AOSP behavior; android:inset must not be wiped).
+    auto setInset = [&a](InsetDrawable::InsetValue& v, size_t idx) {
+        TypedValue tv;
+        if (!a.getValue(idx, &tv)) return;
+        if (tv.type == TypedValue::TYPE_FRACTION) {
+            v.set(a.getFraction(idx, 1, 1, 0.f), 0);
+        } else {
+            v.set(0.f, a.getDimensionPixelOffset(idx, 0));
+        }
+    };
     if (a.hasValue(R::styleable::InsetDrawable_inset)) {
-        const float inset = a.getFloat(R::styleable::InsetDrawable_inset, 0);
-        mState->mInsetLeft.set(inset);
-        mState->mInsetTop.set(inset);
-        mState->mInsetRight.set(inset);
-        mState->mInsetBottom.set(inset);
+        setInset(mState->mInsetLeft,   R::styleable::InsetDrawable_inset);
+        setInset(mState->mInsetTop,    R::styleable::InsetDrawable_inset);
+        setInset(mState->mInsetRight,  R::styleable::InsetDrawable_inset);
+        setInset(mState->mInsetBottom, R::styleable::InsetDrawable_inset);
     }
-    mState->mInsetLeft.set(a.getFloat(R::styleable::InsetDrawable_insetLeft, 0.f));
-    mState->mInsetTop.set(a.getFloat(R::styleable::InsetDrawable_insetTop, 0.f));
-    mState->mInsetRight.set(a.getFloat(R::styleable::InsetDrawable_insetRight, 0.f));
-    mState->mInsetBottom.set(a.getFloat(R::styleable::InsetDrawable_insetBottom, 0.f));
+    setInset(mState->mInsetLeft,   R::styleable::InsetDrawable_insetLeft);
+    setInset(mState->mInsetTop,    R::styleable::InsetDrawable_insetTop);
+    setInset(mState->mInsetRight,  R::styleable::InsetDrawable_insetRight);
+    setInset(mState->mInsetBottom, R::styleable::InsetDrawable_insetBottom);
 }
 }/*endof namespace*/
 

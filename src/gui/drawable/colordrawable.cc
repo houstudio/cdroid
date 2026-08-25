@@ -71,6 +71,7 @@ ColorDrawable::~ColorDrawable(){
 }
 
 void ColorDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    Drawable::inflate(r,parser,atts, theme);
     auto ta = obtainAttributes(r, theme, atts, R::styleable::ColorDrawable);
     if (ta) {
         // AOSP: extract the theme attributes for later re-resolution (applyTheme).
@@ -147,7 +148,9 @@ bool ColorDrawable::onStateChange(const std::vector<int>&stateSet){
         mTintFilter = updateTintFilter(mTintFilter, mColorState->mTint, mColorState->mTintMode);
         return true;
     }
-    return mColorState->mTint!=nullptr;
+    // AOSP: no tint mode => no change to report (a NOOP-mode tint kept
+    // returning true, forcing needless re-selection on every setState).
+    return false;
 }
 
 int ColorDrawable::getChangingConfigurations()const{

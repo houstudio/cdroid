@@ -180,10 +180,12 @@ void NinePatchDrawable::getOutline(Outline& outline) {
     if (mNinePatchState != nullptr) {
         const Insets insets = mNinePatchState->mOpticalInsets;
         if (insets!=Insets::NONE) {
+            // Subtract BOTH horizontal insets (the second fallback does; this
+            // one omitted insets.left, leaving the outline too wide).
             outline.setRoundRect(bounds.left + insets.left,
                     bounds.top + insets.top,
-                    bounds.width - insets.right,
-                    bounds.height - insets.bottom,
+                    bounds.width - insets.left - insets.right,
+                    bounds.height - insets.top - insets.bottom,
                     mOutlineRadius);
             outline.setAlpha(getAlpha() / 255.0f);
             return;
@@ -270,10 +272,15 @@ void NinePatchDrawable::draw(Canvas&canvas){
         canvas.save();
         ColorFilter* tintFilter = beginTintGroup(canvas, mBounds, mTintFilter.get());
         if(needsMirroring()){
-            const float cx=mBounds.left+mBounds.width/2.f;
-            const float cy=mBounds.left+mBounds.height/2.f;
-            canvas.scale(-1.f,1.f);
+            // AOSP: mirror about the bounds center — canvas.scale(-1, 1, cx, cy).
+            // The old code used mBounds.left for the Y center and a bare
+            // scale(-1,1)+translate, which mirrors about the wrong pivot and
+            // shifts the patch by cy.
+            const float cx = mBounds.left+mBounds.width/2.f;
+            const float cy = mBounds.top+mBounds.height/2.f;
             canvas.translate(cx,cy);
+            canvas.scale(-1.f,1.f);
+            canvas.translate(-cx,-cy);
         }
         mNinePatchState->draw(canvas,mBounds,mAlpha);
         if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
@@ -398,6 +405,7 @@ void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,con
 }
 
 NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
+    mThemeAttrs = orig.mThemeAttrs;   // AOSP keeps them; dropping lost ?attr re-resolution
     mTint = orig.mTint;
     mNinePatch= orig.mNinePatch;
     mTintMode = orig.mTintMode;

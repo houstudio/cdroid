@@ -340,7 +340,9 @@ void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
     auto state = mVectorState;
 
     // Account for any configuration changes.
-    state->mChangingConfigurations = 0;//|= a.getChangingConfigurations();
+    // AOSP ORs a.getChangingConfigurations(); CDROID's TypedArray does not track
+    // per-value config bits yet, so preserve the existing value instead of resetting it.
+    //state->mChangingConfigurations |= a.getChangingConfigurations();
 
     // Extract the theme attributes, if any.
     state->mThemeAttrs = a.extractThemeAttrs();
@@ -548,7 +550,11 @@ VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableSta
         mRootName = copy->mRootName;
         mDensity = copy->mDensity;
         if (!copy->mRootName.empty()) {
-            //mVGTargetsMap.emplace(copy->mRootName, this);
+            // AOSP VectorDrawableState copy ctor: the state itself is the
+            // animation target for the root name (VGroup's copy ctor registers
+            // the group copy under its own name first; Map.put overwrites it —
+            // use operator[] so the state wins, like AOSP).
+            mVGTargetsMap[copy->mRootName] = this;
         }
     } else {
         mRootGroup = new VGroup();
@@ -848,7 +854,8 @@ void VectorDrawable::VGroup::inflate(Resources&r,XmlPullParser&parser,const Attr
 
 void VectorDrawable::VGroup::updateStateFromTypedArray(const TypedArray& a) {
     // Account for any configuration changes.
-    mChangingConfigurations = 0;//|= a.getChangingConfigurations();
+    // AOSP ORs a.getChangingConfigurations(); CDROID's TypedArray does not track
+    // per-value config bits yet, so the existing value is preserved (no reset).
 
     // Extract the theme attributes, if any.
     mThemeAttrs = a.extractThemeAttrs();
@@ -1138,16 +1145,22 @@ bool VectorDrawable::VClipPath::hasFocusStateSpecified()const {
 
 void VectorDrawable::VClipPath::updateStateFromTypedArray(const TypedArray& a) {
     // Account for any configuration changes.
-    mChangingConfigurations =0;//|= a.getChangingConfigurations();
+    // AOSP ORs a.getChangingConfigurations(); CDROID's TypedArray does not track
+    // per-value config bits yet, so the existing value is preserved (no reset).
 
-    const std::string pathName = a.getString(R::styleable::VectorDrawable_name);
+    // The array is obtained with R::styleable::VectorDrawableClipPath (2 attrs:
+    // name=0, pathData=1); reading VectorDrawable_name(7)/VectorDrawablePath_
+    // pathData(6) indexed past it, so every <clip-path> lost BOTH its name and
+    // pathData (AOSP reads the ClipPath indices — VectorDrawable.java:1724,1730;
+    // same index-family bug as the fixed VGroup one).
+    const std::string pathName = a.getString(R::styleable::VectorDrawableClipPath_name);
     if (!pathName.empty()) {
         mPathName = pathName;
         //nSetName(mNativePtr, mPathName);
         mNativePtr->setName(mPathName.c_str());
     }
 
-    const std::string pathDataString = a.getString(R::styleable::VectorDrawablePath_pathData);
+    const std::string pathDataString = a.getString(R::styleable::VectorDrawableClipPath_pathData);
     if (!pathDataString.empty()) {
         mPathData = new PathParser::PathData(pathDataString);
         //nSetPathString(mNativePtr, pathDataString, pathDataString.length());
@@ -1302,7 +1315,8 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const TypedArray& a) {
     //Shader fillGradient = null;
     //Shader strokeGradient = null;
     // Account for any configuration changes.
-    mChangingConfigurations = 0;//!=a.getChangingConfigurations();
+    // AOSP ORs a.getChangingConfigurations(); CDROID's TypedArray does not track
+    // per-value config bits yet, so the existing value is preserved (no reset).
 
     // Extract the theme attributes, if any.
     mThemeAttrs = a.extractThemeAttrs();

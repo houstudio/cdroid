@@ -51,7 +51,18 @@ TransitionDrawable::TransitionDrawable(const std::vector<Drawable*>drawables)
 }
 
 TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state)
-    :LayerDrawable(state){    
+    :LayerDrawable(){
+    // AOSP TransitionDrawable(TransitionState, Resources) → super(state, res) →
+    // LayerDrawable ctor → createConstantState() → LayerState copy ctor, which
+    // deep-copies every ChildDrawable (children re-created via their own
+    // ConstantState). Passing the shared state to the LayerDrawable ctor adopts
+    // it instead, so every clone from the drawable cache shared one children
+    // array and one view's transition alpha/level poisoned its siblings.
+    mLayerState = std::make_shared<TransitionState>(state.get(), this);
+    if (!mLayerState->mChildren.empty()) {
+        ensurePadding();
+        refreshPadding();
+    }
     mAlpha = 0;
     mReverse = false;
     mCrossFade = false;
@@ -60,6 +71,15 @@ TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state)
 
 std::shared_ptr<LayerDrawable::LayerState> TransitionDrawable::createConstantState(LayerState* state,const AttributeSet*attrs){
     return std::make_shared<TransitionState>((TransitionState*) state, this);
+}
+
+void TransitionDrawable::showSecondLayer() {
+    // AOSP TransitionDrawable.showSecondLayer(): display the second layer
+    // immediately, canceling any in-flight transition.
+    mAlpha = 255;
+    mReverse = false;
+    mTransitionState = TRANSITION_NONE;
+    invalidateSelf();
 }
 
 void TransitionDrawable::startTransition(int durationMillis) {

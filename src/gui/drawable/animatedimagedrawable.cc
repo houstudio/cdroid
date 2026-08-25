@@ -99,6 +99,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
     auto frmSequence = FrameSequence::create(ctx,res);
     if(frmSequence==nullptr)return;
     mAnimatedImageState->mFrameSequence = frmSequence;
+    mAnimatedImageState->mOwnsFrameSequence = true;
     mRepeatCount = frmSequence->getDefaultLoopCount();
     if(mRepeatCount<=0)
         mRepeatCount = REPEAT_UNDEFINED;
@@ -178,6 +179,10 @@ void AnimatedImageDrawable::setRepeatCount(int repeatCount){
     }
     if (mRepeatCount != repeatCount) {
         mRepeatCount = repeatCount;
+        // AOSP writes the STATE's repeat count; clones from the constant
+        // state must see the value (the instance field alone left XML
+        // android:repeatCount unapplied to clones).
+        mAnimatedImageState->mRepeatCount = repeatCount;
     }
 }
 
@@ -455,12 +460,15 @@ void AnimatedImageDrawable::onBoundsChange(const Rect& bounds) {
 
 void AnimatedImageDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
     Drawable::inflate(r,parser,atts, theme);
-    updateStateFromTypedArray(atts, mSrcDensityOverride);
+    updateStateFromTypedArray(r, atts, theme, mSrcDensityOverride);
 }
 
-void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride){
+void AnimatedImageDrawable::updateStateFromTypedArray(Resources&r,const AttributeSet&atts,const Resources::Theme* theme,int srcDensityOverride){
     Context* ctx = atts.getContext();
-    auto ta = atts.getContext()->obtainStyledAttributes(atts, R::styleable::AnimatedImageDrawable);
+    // AOSP obtainAttributes(r, theme, attrs, ...): resolving through the theme
+    // lets ?attr values on <animated-image> resolve (the plain Context call
+    // dropped the inflate theme).
+    auto ta = Drawable::obtainAttributes(r, theme, atts, R::styleable::AnimatedImageDrawable);
     const int srcResId = ta->getResourceId(R::styleable::AnimatedImageDrawable_src, 0);
     if(srcResId != 0){
         // Resolve the resource ID to the file path, then load.
@@ -484,6 +492,7 @@ void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,in
         auto frmSequence = FrameSequence::create(atts.getContext(),srcResid);
         if(frmSequence==nullptr)return;
         mAnimatedImageState->mFrameSequence = frmSequence;
+        mAnimatedImageState->mOwnsFrameSequence = true;
         mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
         mIntrinsicWidth = frmSequence->getWidth();
         mIntrinsicHeight= frmSequence->getHeight();
@@ -528,11 +537,14 @@ AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImag
     mRepeatCount= state.mRepeatCount;
     mAlpha      = state.mAlpha;  // was missing — copying state lost the alpha
     mChangingConfigurations = state.mChangingConfigurations;
+    // Borrow only: the state that decoded mFrameSequence keeps owning it
+    // (see mOwnsFrameSequence) — a copying dtor deleted it twice before.
     mFrameSequence = state.mFrameSequence;
+    mOwnsFrameSequence = false;
 }
 
 AnimatedImageDrawable::AnimatedImageState::~AnimatedImageState(){
-    delete mFrameSequence;
+    if (mOwnsFrameSequence) delete mFrameSequence;
 }
 
 AnimatedImageDrawable* AnimatedImageDrawable::AnimatedImageState::newDrawable(){

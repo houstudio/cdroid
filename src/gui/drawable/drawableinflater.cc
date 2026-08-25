@@ -33,6 +33,12 @@ Drawable* DrawableInflater::loadDrawable(Context* context, const std::string&id)
     while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING
     }
+    // AOSP Drawable.createFromXml: "No start tag found" — an empty/truncated
+    // document must not fall through with a garbage root name.
+    if (type != XmlPullParser::START_TAG) {
+        LOGE("%s: no start tag found",id.c_str());
+        return nullptr;
+    }
     return inflateFromXml(context->getResources(),parser.getName(),parser,attrs);
 }
 
@@ -65,6 +71,12 @@ Drawable* DrawableInflater::inflateFromXmlForDensity(Resources& r,const std::str
     }*/
 
     Drawable* drawable = inflateFromTag(name);
+    // AOSP inflateFromClass throws on an unknown tag; dereferencing a null
+    // result crashed instead.
+    if (drawable == nullptr) {
+        LOGE("unknown drawable root tag <%s>",name.c_str());
+        return nullptr;
+    }
     /*if (drawable == nullptr) {
         drawable = inflateFromClass(name);
     }*/

@@ -46,11 +46,18 @@ StateListDrawable*StateListDrawable::StateListState::newDrawable(){
 }
 
 void StateListDrawable::StateListState::mutate(){
+    // AOSP runs super.mutate() (mutates every child) before cloning mStateSets;
+    // an empty override suppressed the base chain entirely.
+    DrawableContainerState::mutate();
 }
 
 int StateListDrawable::StateListState::addStateSet(const std::vector<int>&stateSet, Drawable*drawable){
     const int pos = addChild(drawable);
-    mStateSets.push_back(stateSet);
+    // addChild dedupes a re-added Drawable* (returns the existing index) —
+    // keep mStateSets in lockstep so later indices stay aligned (AOSP always
+    // appends; the unconditional push desynced the parallel arrays).
+    if (pos == (int)mStateSets.size()) mStateSets.push_back(stateSet);
+    else mStateSets[pos] = stateSet;
     return pos;
 }
 

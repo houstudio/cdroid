@@ -39,6 +39,12 @@ private:
         int mAlpha;
         int mChangingConfigurations;
         FrameSequence*mFrameSequence;
+        // AOSP's plain inner State has no clone at all; the C++ ConstantState
+        // extension needs shared/borrowed ownership: the state that DECODED the
+        // FrameSequence owns it, copies (mutate()/state copies) only borrow —
+        // the shallow copy used to delete the same pointer twice, so mutate()
+        // freed the decoder out from under the drawable (UAF on next draw).
+        bool mOwnsFrameSequence = false;
         AnimatedImageState();
         AnimatedImageState(const AnimatedImageState& state);
         ~AnimatedImageState();
@@ -80,7 +86,7 @@ private:
     static std::condition_variable sDecodeCV;
     void postOnAnimationStart();
     void postOnAnimationEnd();
-    void updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride);
+    void updateStateFromTypedArray(Resources&r,const AttributeSet&atts,const Resources::Theme* theme,int srcDensityOverride);
     void submitDecodeTask(int frameIndex, int prevFrame);
     static void decodeWorker();
     AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);

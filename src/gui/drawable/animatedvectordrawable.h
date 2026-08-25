@@ -36,7 +36,10 @@ private:
     /** Local, mutable animator set. */
     VectorDrawableAnimator* mAnimatorSet;
     std::shared_ptr<AnimatedVectorDrawableState> mAnimatedVectorState;
-    Drawable::Callback* mCallback;
+    // Zero-init: the ctor passes this (still null) pointer into the state copy
+    // before mCallback is assigned — an indeterminate value there is a wild
+    // pointer on the first child invalidation (AOSP's field is null at ctor).
+    Drawable::Callback* mCallback = nullptr;
     /** The animator set that is parsed from the xml. */
     AnimatorSet* mAnimatorSetFromXml = nullptr;
 

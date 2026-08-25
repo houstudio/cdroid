@@ -53,6 +53,7 @@ protected:
     bool onStateChange(const std::vector<int>& state)override;
     bool onLevelChange(int level)override;
     void onBoundsChange(const Rect& bounds)override;
+    bool onLayoutDirectionChanged(int layoutDirection)override;
 public:
     DrawableWrapper(Drawable*d=nullptr);
     ~DrawableWrapper()override;
@@ -60,6 +61,13 @@ public:
     int getIntrinsicHeight() override;
     void getOutline(Outline&) override;
     int getChangingConfigurations()const override;
+    // AOSP DrawableWrapper forwards these to the wrapped drawable: without
+    // them a ripple nested in an <inset>/<scale>/<rotate> never received the
+    // hotspot (feedback anchored at 0,0) and wrappers reported UNKNOWN
+    // opacity / never propagated RTL direction changes.
+    int getOpacity()const override;
+    void setHotspot(float x,float y)override;
+    void setHotspotBounds(int left,int top,int width,int height)override;
     void getHotspotBounds(Rect& outRect)const override;
     void setDrawable(Drawable* dr);
     Drawable* getDrawable()const;
