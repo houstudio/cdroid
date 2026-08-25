@@ -28,27 +28,29 @@ namespace cdroid {
 using namespace cdroid::internal;
 
 class ProgressTintInfo {
-  public:
+public:
     cdroid::RefPtr<ColorStateList> mIndeterminateTintList;
+    cdroid::RefPtr<ColorStateList> mProgressTintList;
+    cdroid::RefPtr<ColorStateList> mProgressBackgroundTintList;
+    cdroid::RefPtr<ColorStateList> mSecondaryProgressTintList;
+
     int mIndeterminateTintMode;
+    int mProgressTintMode;
+    int mProgressBackgroundTintMode;
+    int mSecondaryProgressTintMode;
+
     bool mHasIndeterminateTint;
     bool mHasIndeterminateTintMode;
 
-    cdroid::RefPtr<ColorStateList> mProgressTintList;
-    int mProgressTintMode;
     bool mHasProgressTint;
     bool mHasProgressTintMode;
 
-    cdroid::RefPtr<ColorStateList> mProgressBackgroundTintList;
-    int mProgressBackgroundTintMode;
     bool mHasProgressBackgroundTint;
     bool mHasProgressBackgroundTintMode;
 
-    cdroid::RefPtr<ColorStateList> mSecondaryProgressTintList;
-    int mSecondaryProgressTintMode;
     bool mHasSecondaryProgressTint;
     bool mHasSecondaryProgressTintMode;
-  public:
+ public:
     ProgressTintInfo() {
         mIndeterminateTintMode = mProgressTintMode
             = mProgressBackgroundTintMode = mSecondaryProgressTintMode = PorterDuff::Mode::NOOP;
@@ -56,7 +58,7 @@ class ProgressTintInfo {
 };
 
 class RefreshData {
-  public:
+public:
     int progress;
     bool changed;
     bool fromUser;
@@ -73,7 +75,8 @@ class RefreshData {
 DECLARE_WIDGET2(ProgressBar, internal::R::attr::progressBarStyle)
 
 ProgressBar::ProgressBar(Context*ctx)
-    :ProgressBar(ctx,nullptr){}
+    :ProgressBar(ctx,nullptr){
+}
 
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet* attrs)
     :ProgressBar(ctx,attrs,cdroid::internal::R::attr::progressBarStyle) {
@@ -523,7 +526,6 @@ void ProgressBar::onDetachedFromWindow() {
 
 void ProgressBar::setVisualProgress(int id, float progress) {
     mVisualProgress = progress;
-
     Drawable* d = mCurrentDrawable;
     if (dynamic_cast<LayerDrawable*>(d)) {
         d = ((LayerDrawable*) d)->findDrawableByLayerId(id);
