@@ -85,7 +85,9 @@ add_custom_command(TARGET widgetex_assets POST_BUILD
 
 file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
 
-SET(exclude_dirs private image-decoders)
+# i18n headers are internal: the java.text face (content/) wraps the engine,
+# so the vendored i18n/*.h must not be copied into the public include tree.
+SET(exclude_dirs private image-decoders i18n)
 set(filtered_files "")
 
 foreach(file ${allfiles})

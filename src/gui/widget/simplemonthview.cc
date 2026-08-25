@@ -19,6 +19,7 @@
 #include <widget/simplemonthview.h>
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
+#include <content/dateformatsymbols.h>
 #include <cmath>
 #include <text/paint.h>
 #include <text/textutils.h>
@@ -140,12 +141,15 @@ void SimpleMonthView::updateMonthYearLabel(){
 }
 
 void SimpleMonthView::updateDayOfWeekLabels(){
-    // TODO: ICU DateFormatSymbols.getWeekdays(NARROW) gives locale tiny names;
-    // cdroid has no ICU, so use a static English table. The column for index i
-    // is the weekday (mWeekStart + i) mapped to a 0-based table (SUNDAY=1 -> 0).
-    const char*tinyWeekdayNames[]={"SUN","MON","TUE","WED","THU","FRI","SAT"};
+    // AOSP SimpleMonthView.updateDayOfWeekLabels: tiny (single-character)
+    // weekday names from DateFormatSymbols (ICU NARROW; the i18n engine
+    // approximates narrow as the short name's first code point). The table
+    // layout matches Calendar days, e.g. SUNDAY is index 1; the column for
+    // index i is the weekday mWeekStart + i.
+    const Locale locale = Locale::getDefault();
+    const auto& tinyWeekdayNames = DateFormatSymbols(locale).getTinyWeekdays();
     for (int i = 0; i < DAYS_IN_WEEK; i++) {
-        mDayOfWeekLabels[i] = tinyWeekdayNames[(mWeekStart - Calendar::SUNDAY + i) % DAYS_IN_WEEK];
+        mDayOfWeekLabels[i] = tinyWeekdayNames[(mWeekStart + i - 1) % DAYS_IN_WEEK + 1];
     }
 }
 
