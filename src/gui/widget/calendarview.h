@@ -35,6 +35,7 @@ public:
     CalendarView(Context*ctx);   // AOSP CalendarView(Context)
     CalendarView(Context*,const AttributeSet*atts);
     CalendarView(Context*,const AttributeSet* attrs,int defStyleAttr);
+    CalendarView(Context*,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~CalendarView()override;
 
     void setShownWeekCount(int count);
@@ -58,10 +59,10 @@ public:
     void setSelectedDateVerticalBar(Drawable* drawable);
     Drawable* getSelectedDateVerticalBar()const;
 
-    void setWeekDayTextAppearance(const std::string&resid);
-    std::string getWeekDayTextAppearance()const;
-    void setDateTextAppearance(const std::string&resid);
-    std::string getDateTextAppearance()const;
+    void setWeekDayTextAppearance(int resourceId);
+    int  getWeekDayTextAppearance()const;
+    void setDateTextAppearance(int resourceId);
+    int  getDateTextAppearance()const;
 
     void setMinDate(int64_t minDate);/*date from 1970.1.1*/
     int64_t getMinDate()const;
@@ -113,11 +114,11 @@ public:
     virtual void setSelectedDateVerticalBar(Drawable* drawable)=0;
     virtual Drawable* getSelectedDateVerticalBar()const=0;
 
-    virtual void setWeekDayTextAppearance(const std::string& resourceId)=0;
-    virtual std::string getWeekDayTextAppearance()const=0;
+    virtual void setWeekDayTextAppearance(int resourceId)=0;
+    virtual int getWeekDayTextAppearance()const=0;
 
-    virtual void setDateTextAppearance(const std::string&resourceId)=0;
-    virtual std::string getDateTextAppearance()const=0;
+    virtual void setDateTextAppearance(int resourceId)=0;
+    virtual int getDateTextAppearance()const=0;
 
     virtual void setMinDate(int64_t minDate)=0;
     virtual int64_t getMinDate()=0;

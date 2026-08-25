@@ -22,6 +22,7 @@
 #include <widget/timepickerspinnerdelegate.h>
 #include <widget/framework_styleable.h>
 #include <core/typedarray.h>
+#include <content/dateformatsymbols.h>
 namespace cdroid{
 using namespace cdroid::internal;
 TimePicker::TimePicker(Context*ctx)
@@ -30,32 +31,35 @@ TimePicker::TimePicker(Context*ctx)
 TimePicker::TimePicker(Context* context,const AttributeSet* attrs):TimePicker(context,attrs,cdroid::internal::R::attr::timePickerStyle){}
 
 TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
-    :FrameLayout(context, pAttrs, defStyleAttr){
+    :TimePicker(context,pAttrs,defStyleAttr,0){}
+
+TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+    :FrameLayout(context, pAttrs, defStyleAttr, defStyleRes){
 
     // DatePicker is important by default, unless app developer overrode attribute.
     if (getImportantForAutofill() == IMPORTANT_FOR_AUTOFILL_AUTO) {
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);
     }
 
-    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::TimePicker, defStyleAttr);
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::TimePicker, defStyleAttr, defStyleRes);
     const bool isDialogMode = a ? a->getBoolean(R::styleable::TimePicker_dialogMode, false) : false;
     const int requestedMode = a ? a->getInt(R::styleable::TimePicker_timePickerMode, MODE_SPINNER) : MODE_SPINNER;
 
     if (requestedMode == MODE_CLOCK && isDialogMode) {
         // You want MODE_CLOCK? YOU CAN'T HANDLE MODE_CLOCK! Well, maybe
         // you can depending on your screen size. Let's check...
-        mMode = MODE_SPINNER;//context.getResources().getInteger(R.integer.time_picker_mode);
+        mMode = context->getInteger(R::integer::time_picker_mode);
     } else {
         mMode = requestedMode;
     }
 
     switch (mMode) {
     case MODE_CLOCK:
-        mDelegate = new TimePickerClockDelegate(this, context, pAttrs);
+        mDelegate = new TimePickerClockDelegate(this, context, pAttrs, defStyleAttr, defStyleRes);
         break;
     case MODE_SPINNER:
     default:
-        mDelegate = new TimePickerSpinnerDelegate(this, context, pAttrs);
+        mDelegate = new TimePickerSpinnerDelegate(this, context, pAttrs, defStyleAttr, defStyleRes);
         break;
     }
     /*mDelegate->setAutoFillChangeListener((v, h, m) -> {
@@ -155,14 +159,23 @@ View* TimePicker::getPmView() {
 }
 
 std::vector<std::string> TimePicker::getAmPmStrings(Context* context) {
-    //Locale locale = context.getResources().getConfiguration().locale;
-    //DateFormatSymbols dfs = DateFormat.getIcuDateFormatSymbols(locale);
-    std::vector<std::string> amPm={"AM","PM"};// = dfs.getAmPmStrings();
-    std::vector<std::string> narrowAmPm{"AM","PM"};// = dfs.getAmpmNarrowStrings();
+    const Locale locale = context->getResources().getConfiguration().getLocales().get(0);
+    // Bind the symbols object to a local: getAmPmStrings() returns a reference
+    // into the DateFormatSymbols, so a temporary would dangle here.
+    const DateFormatSymbols dfs(locale);
+    const auto& amPm = dfs.getAmPmStrings();
+    // AOSP falls back to dfs.getAmpmNarrowStrings(); the i18n engine has no
+    // narrow AM/PM pool, so approximate with the first code point (the same
+    // approximation DateFormatSymbols uses for its tiny* tables).
+    auto narrow = [](const std::string& s) {
+        size_t len = 1;
+        while (len < s.length() && ((unsigned char)s[len] & 0xC0) == 0x80) len++;
+        return s.substr(0, len);
+    };
 
     std::vector<std::string> result;
-    result.push_back(amPm[0].length() > 4 ? narrowAmPm[0] : amPm[0]);
-    result.push_back(amPm[1].length() > 4 ? narrowAmPm[1] : amPm[1]);
+    result.push_back(amPm[0].length() > 4 ? narrow(amPm[0]) : amPm[0]);
+    result.push_back(amPm[1].length() > 4 ? narrow(amPm[1]) : amPm[1]);
     return result;
 }
 

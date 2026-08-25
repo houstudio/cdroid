@@ -157,7 +157,8 @@ private:
 
     Calendar mMaxDate;
 public:
-    CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet* attrs);
+    CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet* attrs,
+        int defStyleAttr,int defStyleRes);
     ~CalendarViewLegacyDelegate()override;
     void setShownWeekCount(int count) override;
     int getShownWeekCount() const override;
@@ -188,13 +189,13 @@ public:
 
     Drawable* getSelectedDateVerticalBar() const override;
 
-    void setWeekDayTextAppearance(const std::string& resourceId) override;
+    void setWeekDayTextAppearance(int resourceId) override;
 
-    std::string getWeekDayTextAppearance() const override;
+    int getWeekDayTextAppearance() const override;
 
-    void setDateTextAppearance(const std::string& resourceId) override;
+    void setDateTextAppearance(int resourceId) override;
 
-    std::string getDateTextAppearance()const override;
+    int getDateTextAppearance()const override;
 
     void setMinDate(int64_t minDate) override;
 
@@ -289,8 +290,8 @@ private:
 
     std::vector<bool> mFocusDay;
 
-    bool mHasFocusedDay;
-    bool mHasUnfocusedDay;
+    bool mHasFocusedDay = false;
+    bool mHasUnfocusedDay = false;
     bool mHasSelectedDay = false;
 
     Calendar mFirstDay;
@@ -298,10 +299,10 @@ private:
     int mMonthOfFirstWeekDay = -1;
     int mLastWeekDayMonth = -1;
     int mWeek = -1;
-    int mWidth;
-    int mHeight;
+    int mWidth = 0;
+    int mHeight = 0;
     int mSelectedDay = -1;
-    int mNumCells;
+    int mNumCells = 0;
     int mSelectedLeft = -1;
     int mSelectedRight = -1;
 

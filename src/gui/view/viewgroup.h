@@ -305,6 +305,7 @@ public:
     ViewGroup(Context*ctx);   // AOSP ViewGroup(Context)
     ViewGroup(Context*ctx,const AttributeSet* attrs);
     ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
+    ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     virtual ~ViewGroup();
     virtual bool ensureTouchMode(bool);
     bool getTouchscreenBlocksFocus()const;

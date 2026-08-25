@@ -20,6 +20,7 @@
 #include <widget/framework_styleable.h>
 #include <core/assets.h>
 #include <content/dateformatsymbols.h>
+#include <content/simpledateformat.h>
 #include <cmath>
 #include <text/paint.h>
 #include <text/textutils.h>
@@ -137,7 +138,13 @@ void SimpleMonthView::initPaints(){
 }
 
 void SimpleMonthView::updateMonthYearLabel(){
-    mMonthYearLabel = std::to_string(mYear)+"/"+std::to_string(mMonth+(1-Calendar::JANUARY));//mCalendar.get(Calendar::YEAR));
+    // AOSP builds the label from the "MMMMy" skeleton via
+    // DateFormat.getBestDateTimePattern; CDROID has no DTPG, so use the
+    // equivalent standalone-month pattern (LLLL keeps the header form
+    // correct for locales whose standalone months differ from format months).
+    const Locale locale = Locale::getDefault();
+    SimpleDateFormat formatter("LLLL yyyy", locale);
+    mMonthYearLabel = formatter.format(mCalendar.getTimeInMillis());
 }
 
 void SimpleMonthView::updateDayOfWeekLabels(){
@@ -147,7 +154,10 @@ void SimpleMonthView::updateDayOfWeekLabels(){
     // layout matches Calendar days, e.g. SUNDAY is index 1; the column for
     // index i is the weekday mWeekStart + i.
     const Locale locale = Locale::getDefault();
-    const auto& tinyWeekdayNames = DateFormatSymbols(locale).getTinyWeekdays();
+    // The symbols object must outlive the reference (getTinyWeekdays returns a
+    // ref into it; binding to the temporary directly dangles).
+    const DateFormatSymbols dfs(locale);
+    const auto& tinyWeekdayNames = dfs.getTinyWeekdays();
     for (int i = 0; i < DAYS_IN_WEEK; i++) {
         mDayOfWeekLabels[i] = tinyWeekdayNames[(mWeekStart + i - 1) % DAYS_IN_WEEK + 1];
     }

@@ -17,8 +17,7 @@ private:
     static constexpr int DEFAULT_END_YEAR = 2100;
     static constexpr int ANIMATION_DURATION = 300;
 
-    //static final int[] ATTRS_TEXT_COLOR = new int[] {com.android.internal.R.attr.textColor};
-    //static final int[] ATTRS_DISABLED_ALPHA = new int[] {com.android.internal.R.attr.disabledAlpha};
+    // AOSP ATTRS_TEXT_COLOR / ATTRS_DISABLED_ALPHA single-attribute sets live in the .cc.
 
     //DateFormat mYearFormat;       // DEFERRED: CDROID has no DateFormat; header formatted manually.
     //DateFormat mMonthDayFormat;
@@ -41,10 +40,10 @@ private:
     Calendar mMinDate;
     Calendar mMaxDate;
 private:
-    //ColorStateList* applyLegacyColorFixes(ColorStateList* color); // DEFERRED: color theming stubbed.
-    //int multiplyAlphaComponent(int color, float alphaMod);
+    RefPtr<ColorStateList> applyLegacyColorFixes(RefPtr<ColorStateList> color);
+    int multiplyAlphaComponent(int color, float alphaMod);
     void onYearChanged(YearPickerView& view, int year);
-    //void onCurrentDateChanged()override; // DEFERRED: no such virtual in base; header update is inlined.
+    void onCurrentDateChanged();
     void setCurrentView(int viewIndex);
     void setDate(int year, int month, int dayOfMonth);
     void onDateChanged(bool fromUser, bool callbackToClient);
@@ -53,7 +52,8 @@ private:
 protected:
     void onLocaleChanged(const Locale& locale)override;
 public:
-    DatePickerCalendarDelegate(DatePicker* delegator, Context* context,const AttributeSet* attrs);
+    DatePickerCalendarDelegate(DatePicker* delegator, Context* context,const AttributeSet* attrs,
+        int defStyleAttr,int defStyleRes);
 
     void init(int year, int month, int dayOfMonth,const DatePicker::OnDateChangedListener& callBack) override;
     void updateDate(int year, int month, int dayOfMonth) override;

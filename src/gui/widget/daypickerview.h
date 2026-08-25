@@ -63,6 +63,7 @@ public:
     DayPickerView(Context*ctx);   // AOSP DayPickerView(Context)
     DayPickerView(Context* context,const AttributeSet*atts);
     DayPickerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    DayPickerView(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~DayPickerView()override;
     void setDayOfWeekTextAppearance(int resId);
     int getDayOfWeekTextAppearance();

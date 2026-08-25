@@ -40,6 +40,7 @@ public:
     TimePicker(Context*ctx);   // AOSP TimePicker(Context)
     TimePicker(Context* context,const AttributeSet* attrs);
     TimePicker(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    TimePicker(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~TimePicker()override;
     int getMode() const;
 

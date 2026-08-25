@@ -143,8 +143,9 @@ public:
     RadialTimePickerView(Context*ctx);   // AOSP RadialTimePickerView(Context)
     RadialTimePickerView(Context* context,const AttributeSet* attrs);
     RadialTimePickerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    RadialTimePickerView(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~RadialTimePickerView()override;
-    void applyAttributes(const AttributeSet* attrs);
+    void applyAttributes(const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     void initialize(int hour, int minute, bool is24HourMode);
 
     void setCurrentItemShowing(int item, bool animate);

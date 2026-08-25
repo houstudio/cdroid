@@ -30,10 +30,11 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,const AttributeSet* attrs)
+TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,
+        const AttributeSet* attrs, int defStyleAttr, int defStyleRes)
     :AbstractTimePickerDelegate(delegator, context) {
 
-    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, defStyleAttr, defStyleRes);
     const int layoutResourceId = a ? a->getResourceId(R::styleable::TimePicker_legacyLayout, 0) : 0;
     const int layoutRes = layoutResourceId ? layoutResourceId
             : R::layout::time_picker_legacy;
@@ -69,6 +70,7 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
     mMinuteSpinner->setMinValue(0);
     mMinuteSpinner->setMaxValue(59);
     mMinuteSpinner->setOnLongPressUpdateInterval(100);
+    mMinuteSpinner->setFormatter(NumberPicker::getTwoDigitFormatter());
     mMinuteSpinner->setOnValueChangedListener([this](NumberPicker& spinner, int oldVal, int newVal) {
         updateInputState();
         int minValue = mMinuteSpinner->getMinValue();
@@ -324,9 +326,11 @@ void TimePickerSpinnerDelegate::updateAmPmControl() {
             mAmPmButton->setVisibility(View::VISIBLE);
         }
     }
+    mDelegator->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
 }
 
 void TimePickerSpinnerDelegate::onTimeChanged() {
+    mDelegator->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
     if (mOnTimeChangedListener) {
         mOnTimeChangedListener(*mDelegator, getHour(), getMinute());
     }

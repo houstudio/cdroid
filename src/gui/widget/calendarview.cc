@@ -32,21 +32,23 @@ CalendarView::CalendarView(Context*ctx)
 CalendarView::CalendarView(Context*context,const AttributeSet* attrs):CalendarView(context,attrs,cdroid::internal::R::attr::calendarViewStyle){}
 
 CalendarView::CalendarView(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
-  :FrameLayout(context,pAttrs, defStyleAttr){
-    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::CalendarView, defStyleAttr);
+  :CalendarView(context,pAttrs,defStyleAttr,0){}
+
+CalendarView::CalendarView(Context*context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+  :FrameLayout(context,pAttrs, defStyleAttr, defStyleRes){
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::CalendarView, defStyleAttr, defStyleRes);
     const int mode = a ? a->getInt(R::styleable::CalendarView_calendarViewMode, (int)MODE_HOLO) : (int)MODE_HOLO;
     switch (mode) {
     case MODE_HOLO:
-        mDelegate = new CalendarViewLegacyDelegate(this, context, pAttrs);
+        mDelegate = new CalendarViewLegacyDelegate(this, context, pAttrs, defStyleAttr, defStyleRes);
         break;
     case MODE_MATERIAL:
-        mDelegate = new CalendarViewMaterialDelegate(this, context, pAttrs);
+        mDelegate = new CalendarViewMaterialDelegate(this, context, pAttrs, defStyleAttr, defStyleRes);
         break;
     default:
         mDelegate = nullptr;
         throw std::invalid_argument("invalid calendarViewMode attribute");
     }
-    LOGD("%p mode=%d mDelegate=%p",this,mode,mDelegate);
 }
 
 CalendarView::~CalendarView(){
@@ -113,19 +115,19 @@ Drawable* CalendarView::getSelectedDateVerticalBar() const{
     return mDelegate->getSelectedDateVerticalBar();
 }
 
-void CalendarView::setWeekDayTextAppearance(const std::string& resourceId) {
+void CalendarView::setWeekDayTextAppearance(int resourceId) {
     mDelegate->setWeekDayTextAppearance(resourceId);
 }
 
-std::string CalendarView::getWeekDayTextAppearance() const{
+int CalendarView::getWeekDayTextAppearance() const{
     return mDelegate->getWeekDayTextAppearance();
 }
 
-void CalendarView::setDateTextAppearance(const std::string& resourceId) {
+void CalendarView::setDateTextAppearance(int resourceId) {
     mDelegate->setDateTextAppearance(resourceId);
 }
 
-std::string CalendarView::getDateTextAppearance() const{
+int CalendarView::getDateTextAppearance() const{
     return mDelegate->getDateTextAppearance();
 }
 

@@ -145,10 +145,14 @@ DECLARE_WIDGET(RadialTimePickerView);
 RadialTimePickerView::RadialTimePickerView(Context*ctx)
     :RadialTimePickerView(ctx,nullptr){}
 
-RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* attrs):RadialTimePickerView(context,attrs,0){}
+RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* attrs)
+    :RadialTimePickerView(context,attrs,cdroid::internal::R::attr::timePickerStyle){}
 
 RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
-    : View(context, pAttrs, defStyleAttr) {
+    :RadialTimePickerView(context,pAttrs,defStyleAttr,0){}
+
+RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+    : View(context, pAttrs) {
     staticInit();
 
     mHours12Texts.resize(12);
@@ -156,11 +160,12 @@ RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* 
     mInnerHours24Texts.resize(12);
     mMinutesTexts.resize(12);
 
-    applyAttributes(pAttrs);
+    applyAttributes(pAttrs, defStyleAttr, defStyleRes);
 
-    // TODO: theme.resolveAttribute(android.R.attr.disabledAlpha) is not wired in
-    // cdroid; use the platform default disabled alpha until it is.
-    mDisabledAlpha = 0.3f;
+    // Pull disabled alpha from theme (AOSP: getTheme().resolveAttribute(disabledAlpha)).
+    static const uint32_t ATTRS_DISABLED_ALPHA[] = { R::attr::disabledAlpha };
+    auto ta = getContext()->obtainStyledAttributes(ATTRS_DISABLED_ALPHA);
+    mDisabledAlpha = ta ? ta->getFloat(0, 0.30f) : 0.30f;
 
     mTypeface = Typeface::create("sans-serif", Typeface::NORMAL);
 
@@ -219,8 +224,8 @@ RadialTimePickerView::~RadialTimePickerView() {
     delete mSelectorPath;
 }
 
-void RadialTimePickerView::applyAttributes(const AttributeSet* attrs) {
-    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, 0, 0);
+void RadialTimePickerView::applyAttributes(const AttributeSet* attrs,int defStyleAttr,int defStyleRes) {
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, defStyleAttr, defStyleRes);
     RefPtr<ColorStateList> numbersTextColor = a ? a->getColorStateList(R::styleable::TimePicker_numbersTextColor) : nullptr;
     RefPtr<ColorStateList> numbersInnerTextColor = a ? a->getColorStateList(R::styleable::TimePicker_numbersInnerTextColor) : nullptr;
     mTextColor[HOURS] = numbersTextColor ? numbersTextColor : ColorStateList::valueOf(MISSING_COLOR);

@@ -20,8 +20,7 @@ private:
     static constexpr int HOUR_INDEX  = RadialTimePickerView::HOURS;
     static constexpr int MINUTE_INDEX= RadialTimePickerView::MINUTES;
 
-    //static final int[] ATTRS_TEXT_COLOR = new int[] {R.attr.textColor};
-    //static final int[] ATTRS_DISABLED_ALPHA = new int[] {R.attr.disabledAlpha};
+    // AOSP ATTRS_TEXT_COLOR / ATTRS_DISABLED_ALPHA single-attribute sets live in the .cc.
 
     static constexpr int AM = 0;
     static constexpr int PM = 1;
@@ -78,7 +77,7 @@ private:
     void toggleRadialPickerMode();
     static void ensureMinimumTextWidth(TextView* v);
     void updateHourFormat();
-    ColorStateList* applyLegacyColorFixes(ColorStateList* color);
+    RefPtr<ColorStateList> applyLegacyColorFixes(RefPtr<ColorStateList> color);
     int  multiplyAlphaComponent(int color, float alphaMod);
     void initialize(int hourOfDay, int minute, bool is24HourView, int index);
     void updateUI(int index);
@@ -103,7 +102,8 @@ private:
     void onViewClick(View& v);
     void onViewFocusChange(View& v, bool focused);
 public:
-    TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet* attrs);
+    TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet* attrs,
+        int defStyleAttr, int defStyleRes);
 
 
     bool validateInput() override;
@@ -120,7 +120,7 @@ public:
     void setMinute(int minute) override;
     int getMinute() override;
 
-    void setIs24Hour(bool is24Hour);
+    void setIs24Hour(bool is24Hour) override;
 
     bool is24Hour() override;
 

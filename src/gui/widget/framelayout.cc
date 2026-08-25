@@ -32,10 +32,13 @@ FrameLayout::FrameLayout(Context*ctx)
 FrameLayout::FrameLayout(Context* context,const AttributeSet* attrs):FrameLayout(context,attrs,0){}
 
 FrameLayout::FrameLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
-    :ViewGroup(context,pAttrs, defStyleAttr){
+    :FrameLayout(context,pAttrs,defStyleAttr,0){}
+
+FrameLayout::FrameLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+    :ViewGroup(context,pAttrs, defStyleAttr, defStyleRes){
     mMeasureAllChildren = false;
 
-    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::FrameLayout, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::FrameLayout, defStyleAttr, defStyleRes);
     for (size_t n = ta->getIndexCount(); n > 0; ) {
         size_t i = ta->getIndex(--n);
         if (i == R::styleable::FrameLayout_measureAllChildren)

@@ -61,6 +61,7 @@ public:
     FrameLayout(Context*ctx);   // AOSP FrameLayout(Context)
     FrameLayout(Context* context,const AttributeSet* attrs);
     FrameLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    FrameLayout(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     void setForegroundGravity(int foregroundGravity);
     void setMeasureAllChildren(bool measureAll);
     bool getMeasureAllChildren()const;

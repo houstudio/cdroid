@@ -51,7 +51,8 @@ private:
     Calendar mMinDate;
     Calendar mMaxDate;
 public:
-    DatePickerSpinnerDelegate(DatePicker* delegator, Context* context,const AttributeSet* attrs);
+    DatePickerSpinnerDelegate(DatePicker* delegator, Context* context,const AttributeSet* attrs,
+        int defStyleAttr,int defStyleRes);
     void init(int year, int monthOfYear, int dayOfMonth,
               const DatePicker::OnDateChangedListener& onDateChangedListener)override;
     void updateDate(int year, int month, int dayOfMonth) override;

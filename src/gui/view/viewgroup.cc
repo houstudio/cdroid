@@ -136,7 +136,10 @@ ViewGroup::ViewGroup(Context*ctx)
 ViewGroup::ViewGroup(Context*ctx,const AttributeSet* attrs):ViewGroup(ctx,attrs,0){
 }
 
-ViewGroup::ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr):View(ctx,attrs,defStyleAttr){
+ViewGroup::ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr):ViewGroup(ctx,attrs,defStyleAttr,0){
+}
+
+ViewGroup::ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr,int defStyleRes):View(ctx,attrs,defStyleAttr,defStyleRes){
     initGroup();
     initFromAttributes(ctx,attrs);
 }

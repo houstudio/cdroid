@@ -348,10 +348,10 @@ void MediaController::updatePausePlay() {
         return;
 
     if (mPlayer.isPlaying()) {
-        mPauseButton->setImageResource("cdroid:drawable/ic_media_pause");
+        mPauseButton->setImageResource(R::drawable::ic_media_pause);
         mPauseButton->setContentDescription(mPauseDescription);
     } else {
-        mPauseButton->setImageResource("cdroid:drawable/ic_media_play");
+        mPauseButton->setImageResource(R::drawable::ic_media_play);
         mPauseButton->setContentDescription(mPlayDescription);
     }
 }

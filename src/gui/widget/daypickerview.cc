@@ -21,6 +21,7 @@
 #include <widget/calendarview.h>
 #include <widget/framework_styleable.h>
 #include <core/typedarray.h>
+#include <porting/cdlog.h>
 #include <utils/mathutils.h>
 
 namespace cdroid{
@@ -38,10 +39,13 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* attrs)
     :DayPickerView(context, attrs, cdroid::internal::R::attr::calendarViewStyle){}
 
 DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
-    :ViewGroup(context, pAttrs, defStyleAttr){
+    :DayPickerView(context,pAttrs,defStyleAttr,0){}
+
+DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+    :ViewGroup(context, pAttrs, defStyleAttr, defStyleRes){
 
     Calendar tempDate;
-    auto a = mContext->obtainStyledAttributes(pAttrs, R::styleable::CalendarView, defStyleAttr);
+    auto a = mContext->obtainStyledAttributes(pAttrs, R::styleable::CalendarView, defStyleAttr, defStyleRes);
     const int firstDayOfWeek = a ? a->getInt(R::styleable::CalendarView_firstDayOfWeek, tempDate.getFirstDayOfWeek()) : tempDate.getFirstDayOfWeek();
 
     const std::string minDate = a ? a->getString(R::styleable::CalendarView_minDate) : std::string();
@@ -210,18 +214,19 @@ void DayPickerView::onLayout(bool changed, int left, int top, int width, int hei
 
     // Vertically center the previous/next buttons within the month
     // header, horizontally center within the day cell.
+    // NOTE: CDROID View::layout takes (left, top, width, height), unlike
+    // AOSP's (left, top, right, bottom) — pass sizes, not edges.
     int leftDW = leftButton->getMeasuredWidth();
     int leftDH = leftButton->getMeasuredHeight();
     int leftIconTop = monthView->getPaddingTop() + (monthHeight - leftDH) / 2;
     int leftIconLeft = monthView->getPaddingLeft() + (cellWidth - leftDW) / 2;
-        leftButton->layout(leftIconLeft, leftIconTop, leftIconLeft + leftDW, leftIconTop + leftDH);
+        leftButton->layout(leftIconLeft, leftIconTop, leftDW, leftDH);
 
     int rightDW = rightButton->getMeasuredWidth();
     int rightDH = rightButton->getMeasuredHeight();
     int rightIconTop = monthView->getPaddingTop() + (monthHeight - rightDH) / 2;
     int rightIconRight = width - monthView->getPaddingRight() - (cellWidth - rightDW) / 2;
-    rightButton->layout(rightIconRight - rightDW, rightIconTop,
-                rightIconRight, rightIconTop + rightDH);
+    rightButton->layout(rightIconRight - rightDW, rightIconTop, rightDW, rightDH);
 }
 
 void DayPickerView::setDayOfWeekTextAppearance(int resId) {

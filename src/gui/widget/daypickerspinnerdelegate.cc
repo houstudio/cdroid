@@ -23,13 +23,14 @@
 #include <widget/daypickerspinnerdelegate.h>
 #include <widget/framework_styleable.h>
 #include <core/typedarray.h>
+#include <content/dateformatsymbols.h>
 #include <cstdio>
 
 namespace cdroid{
 using namespace cdroid::internal;
 
 DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Context* context,
-        const AttributeSet* attrs)
+        const AttributeSet* attrs, int defStyleAttr, int defStyleRes)
     : AbstractDatePickerDelegate(delegator, context) {
     mDelegator = delegator;
     mContext = context;
@@ -39,17 +40,19 @@ DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Cont
     // it here now that our members are live.
     setCurrentLocale(Locale::getDefault());
 
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::DatePicker, 0, 0);
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::DatePicker, defStyleAttr, defStyleRes);
     const bool spinnersShown = a ? a->getBoolean(R::styleable::DatePicker_spinnersShown, DEFAULT_SPINNERS_SHOWN) : DEFAULT_SPINNERS_SHOWN;
     const bool calendarViewShown = a ? a->getBoolean(R::styleable::DatePicker_calendarViewShown, DEFAULT_CALENDAR_VIEW_SHOWN) : DEFAULT_CALENDAR_VIEW_SHOWN;
     const int startYear = a ? a->getInt(R::styleable::DatePicker_startYear, DEFAULT_START_YEAR) : DEFAULT_START_YEAR;
     const int endYear = a ? a->getInt(R::styleable::DatePicker_endYear, DEFAULT_END_YEAR) : DEFAULT_END_YEAR;
     const std::string minDate = a ? a->getString(R::styleable::DatePicker_minDate) : std::string();
     const std::string maxDate = a ? a->getString(R::styleable::DatePicker_maxDate) : std::string();
+    const int layoutResourceId = a ? a->getResourceId(R::styleable::DatePicker_legacyLayout,
+            R::layout::date_picker_legacy) : R::layout::date_picker_legacy;
 
     LayoutInflater* inflater = LayoutInflater::from(mContext);
-    View* content = inflater->inflate(R::layout::date_picker_legacy, nullptr, false);
-    mDelegator->addView(content);
+    View* content = inflater->inflate(layoutResourceId, mDelegator, true);
+    content->setSaveFromParentEnabled(false);
 
     NumberPicker::OnValueChangeListener onChangeListener =
         [this](NumberPicker& picker, int oldVal, int newVal) {
@@ -176,9 +179,17 @@ void DatePickerSpinnerDelegate::updateDate(int year, int month, int dayOfMonth) 
     notifyDateChanged();
 }
 
-int DatePickerSpinnerDelegate::getYear() { return mCurrentDate.get(Calendar::YEAR); }
-int DatePickerSpinnerDelegate::getMonth() { return mCurrentDate.get(Calendar::MONTH); }
-int DatePickerSpinnerDelegate::getDayOfMonth() { return mCurrentDate.get(Calendar::DAY_OF_MONTH); }
+int DatePickerSpinnerDelegate::getYear() {
+    return mCurrentDate.get(Calendar::YEAR);
+}
+
+int DatePickerSpinnerDelegate::getMonth() {
+    return mCurrentDate.get(Calendar::MONTH);
+}
+
+int DatePickerSpinnerDelegate::getDayOfMonth() {
+    return mCurrentDate.get(Calendar::DAY_OF_MONTH);
+}
 
 void DatePickerSpinnerDelegate::setFirstDayOfWeek(int firstDayOfWeek) {
     mCalendarView->setFirstDayOfWeek(firstDayOfWeek);
@@ -405,12 +416,22 @@ void DatePickerSpinnerDelegate::setCurrentLocale(const Locale& locale) {
     mTempDate = getCalendarForLocale(mTempDate, locale);
     mMinDate = getCalendarForLocale(mMinDate, locale);
     mMaxDate = getCalendarForLocale(mMaxDate, locale);
+    mCurrentDate = getCalendarForLocale(mCurrentDate, locale);
     mNumberOfMonths = mTempDate.getActualMaximum(Calendar::MONTH) + 1;
     mShortMonths.clear();
+    // The symbols object must outlive the reference (getShortMonths returns a ref into it).
+    const DateFormatSymbols dfs(locale);
+    const auto& shortMonths = dfs.getShortMonths();
     for (int i = 0; i < mNumberOfMonths; i++) {
-        // TODO: DateUtils.getMonthString(JANUARY + i, LENGTH_MEDIUM) for the
-        // locale's month names (needs the per-locale symbols tables).
-        mShortMonths.push_back(std::to_string(i + 1));
+        mShortMonths.push_back(shortMonths[i]);
+    }
+    if (usingNumericMonths()) {
+        // We're in a locale where a date should either be all-numeric, or all-text.
+        // All-text would require custom NumberPicker formatters for day and year.
+        mShortMonths.clear();
+        for (int i = 0; i < mNumberOfMonths; i++) {
+            mShortMonths.push_back(std::to_string(i + 1));
+        }
     }
 }
 

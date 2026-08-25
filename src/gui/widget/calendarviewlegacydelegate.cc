@@ -23,10 +23,13 @@
 #include <core/systemclock.h>
 #include <widget/framework_styleable.h>
 #include <core/typedarray.h>
+#include <content/dateformatsymbols.h>
+#include <content/simpledateformat.h>
 namespace cdroid{
 using namespace cdroid::internal;
 
-CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet* attrs)
+CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,
+        const AttributeSet* attrs, int defStyleAttr, int defStyleRes)
     :CalendarView::AbstractCalendarViewDelegate(delegator,context){
     mDelegator = delegator;
     mAdapter = nullptr;
@@ -36,7 +39,7 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
     // virtually into our override; C++ base construction skips it, so re-run
     // it here now that the calendar members are live.
     setCurrentLocale(Locale::getDefault());
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::CalendarView, 0, 0);
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::CalendarView, defStyleAttr, defStyleRes);
     mShowWeekNumber = a ? a->getBoolean(R::styleable::CalendarView_showWeekNumber, DEFAULT_SHOW_WEEK_NUMBER) : DEFAULT_SHOW_WEEK_NUMBER;
     Calendar cal;
     mFirstDayOfWeek = a ? a->getInt(R::styleable::CalendarView_firstDayOfWeek, cal.getFirstDayOfWeek()) : cal.getFirstDayOfWeek();
@@ -52,13 +55,13 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
         throw std::invalid_argument("Max date cannot be before min date.");
     }
     mShownWeekCount = a ? a->getInt(R::styleable::CalendarView_shownWeekCount, DEFAULT_SHOWN_WEEK_COUNT) : DEFAULT_SHOWN_WEEK_COUNT;
-    // CDROID has no theme, so default to visible colors (light text on a dark surface)
-    // instead of AOSP's theme-derived values, which would otherwise be 0 (transparent).
-    mSelectedWeekBackgroundColor = a ? a->getColor(R::styleable::CalendarView_selectedWeekBackgroundColor, 0xFF1E2634) : 0xFF1E2634;
-    mFocusedMonthDateColor = a ? a->getColor(R::styleable::CalendarView_focusedMonthDateColor, 0xFFECEFF2) : 0xFFECEFF2;
-    mUnfocusedMonthDateColor = a ? a->getColor(R::styleable::CalendarView_unfocusedMonthDateColor, 0xFF9BA6B2) : 0xFF9BA6B2;
-    mWeekSeparatorLineColor = a ? a->getColor(R::styleable::CalendarView_weekSeparatorLineColor, 0xFF2B3442) : 0xFF2B3442;
-    mWeekNumberColor = a ? a->getColor(R::styleable::CalendarView_weekNumberColor, 0xFF9BA6B2) : 0xFF9BA6B2;
+    // AOSP defaults are 0; the real values come from the theme's calendarViewStyle
+    // (e.g. Widget.CalendarView in framework res) now that defStyleAttr is threaded.
+    mSelectedWeekBackgroundColor = a ? a->getColor(R::styleable::CalendarView_selectedWeekBackgroundColor, 0) : 0;
+    mFocusedMonthDateColor = a ? a->getColor(R::styleable::CalendarView_focusedMonthDateColor, 0) : 0;
+    mUnfocusedMonthDateColor = a ? a->getColor(R::styleable::CalendarView_unfocusedMonthDateColor, 0) : 0;
+    mWeekSeparatorLineColor = a ? a->getColor(R::styleable::CalendarView_weekSeparatorLineColor, 0) : 0;
+    mWeekNumberColor = a ? a->getColor(R::styleable::CalendarView_weekNumberColor, 0) : 0;
     mSelectedDateVerticalBar = a ? a->getDrawable(R::styleable::CalendarView_selectedDateVerticalBar) : nullptr;
 
     mDateTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_dateTextAppearance, R::style::TextAppearance_Small)
@@ -104,6 +107,7 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
 }
 
 CalendarViewLegacyDelegate::~CalendarViewLegacyDelegate(){
+    delete mSelectedDateVerticalBar;  // owned per CDROID drawable contract
     delete mScrollStateChangedRunnable;
 }
 
@@ -200,6 +204,7 @@ void CalendarViewLegacyDelegate::setSelectedDateVerticalBar(int resourceId) {
 
 void CalendarViewLegacyDelegate::setSelectedDateVerticalBar(Drawable* drawable) {
     if (mSelectedDateVerticalBar != drawable) {
+        delete mSelectedDateVerticalBar;  // owned per CDROID drawable contract
         mSelectedDateVerticalBar = drawable;
         const int childCount = mListView->getChildCount();
         for (int i = 0; i < childCount; i++) {
@@ -215,43 +220,27 @@ Drawable* CalendarViewLegacyDelegate::getSelectedDateVerticalBar() const{
     return mSelectedDateVerticalBar;
 }
 
-// Bridge the legacy "@[package:]type/name" string face to an arsc resource id
-// (CalendarView's public setters stay string-keyed; the members hold ids).
-static int resolveTextAppearanceResId(Context* ctx, const std::string& ref) {
-    const std::string s = (!ref.empty() && ref[0] == '@') ? ref.substr(1) : ref;
-    const size_t slash = s.rfind('/');
-    if (slash == std::string::npos) return 0;
-    const size_t colon = s.rfind(':');
-    const size_t typeStart = (colon == std::string::npos) ? 0 : colon + 1;
-    const std::string name = s.substr(slash + 1);
-    const std::string type = s.substr(typeStart, slash - typeStart);
-    const std::string pkg = (colon == std::string::npos) ? std::string() : s.substr(0, colon);
-    return ctx->getResources().getIdentifier(name, type.empty() ? "style" : type, pkg);
-}
-
-void CalendarViewLegacyDelegate::setWeekDayTextAppearance(const std::string& resourceId) {
-    const int resId = resolveTextAppearanceResId(mDelegator->getContext(), resourceId);
-    if (mWeekDayTextAppearanceResId != resId) {
-        mWeekDayTextAppearanceResId = resId;
+void CalendarViewLegacyDelegate::setWeekDayTextAppearance(int resourceId) {
+    if (mWeekDayTextAppearanceResId != resourceId) {
+        mWeekDayTextAppearanceResId = resourceId;
         setUpHeader();
     }
 }
 
-std::string CalendarViewLegacyDelegate::getWeekDayTextAppearance() const{
-    return mDelegator->getContext()->getResourceName((uint32_t)mWeekDayTextAppearanceResId);
+int CalendarViewLegacyDelegate::getWeekDayTextAppearance() const{
+    return mWeekDayTextAppearanceResId;
 }
 
-void CalendarViewLegacyDelegate::setDateTextAppearance(const std::string& resourceId) {
-    const int resId = resolveTextAppearanceResId(mDelegator->getContext(), resourceId);
-    if (mDateTextAppearanceResId != resId) {
-        mDateTextAppearanceResId = resId;
+void CalendarViewLegacyDelegate::setDateTextAppearance(int resourceId) {
+    if (mDateTextAppearanceResId != resourceId) {
+        mDateTextAppearanceResId = resourceId;
         updateDateTextSize();
         invalidateAllWeekViews();
     }
 }
 
-std::string CalendarViewLegacyDelegate::getDateTextAppearance() const{
-    return mDelegator->getContext()->getResourceName((uint32_t)mDateTextAppearanceResId);
+int CalendarViewLegacyDelegate::getDateTextAppearance() const{
+    return mDateTextAppearanceResId;
 }
 
 void CalendarViewLegacyDelegate::setMinDate(int64_t minDate) {
@@ -452,13 +441,13 @@ void CalendarViewLegacyDelegate::setUpAdapter() {
 }
 
 void CalendarViewLegacyDelegate::setUpHeader() {
-    // TODO: replace with DateUtils::getDayOfWeekString(calendarDay, LENGTH_*) once
-    // DateUtils is ported. No locale weekday-name infrastructure exists in cdroid
-    // yet, so fall back to a static English table indexed by day-of-week
-    // (Calendar::SUNDAY=1 .. Calendar::SATURDAY=7).
-    static const char* kDayNamesShort[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    static const char* kDayNamesLong[]  = {"Sunday", "Monday", "Tuesday", "Wednesday",
-                                           "Thursday", "Friday", "Saturday"};
+    // AOSP: DateUtils.getDayOfWeekString(LENGTH_SHORTEST / LENGTH_LONG) — the
+    // narrow (tiny) and full weekday names from the locale's symbols tables.
+    // The tables are 8 entries: index 0 is empty, 1..7 = SUNDAY..SATURDAY.
+    // The symbols object must outlive the references (getters return refs into it).
+    const DateFormatSymbols dfs(mCurrentLocale);
+    const auto& dayNamesShort = dfs.getTinyWeekdays();
+    const auto& dayNamesLong  = dfs.getWeekdays();
 
     // Java allocated new String[mDaysPerWeek]; the vector members start empty, so
     // size them before indexed assignment (otherwise this is out-of-bounds UB).
@@ -466,8 +455,8 @@ void CalendarViewLegacyDelegate::setUpHeader() {
     mDayNamesLong.assign(mDaysPerWeek, std::string());
     for (int i = mFirstDayOfWeek, count = mFirstDayOfWeek + mDaysPerWeek; i < count; i++) {
         const int calendarDay = (i > Calendar::SATURDAY) ? i - Calendar::SATURDAY : i;
-        mDayNamesShort[i - mFirstDayOfWeek] = kDayNamesShort[calendarDay - 1];
-        mDayNamesLong[i - mFirstDayOfWeek]  = kDayNamesLong[calendarDay - 1];
+        mDayNamesShort[i - mFirstDayOfWeek] = dayNamesShort[calendarDay];
+        mDayNamesLong[i - mFirstDayOfWeek]  = dayNamesLong[calendarDay];
     }
 
     TextView* label = (TextView*) mDayNamesHeader->getChildAt(0);
@@ -632,15 +621,10 @@ void CalendarViewLegacyDelegate::onScroll(AbsListView& view, int firstVisibleIte
 void CalendarViewLegacyDelegate::setMonthDisplayed(Calendar& calendar) {
     mCurrentMonthDisplayed = calendar.get(Calendar::MONTH);
     mAdapter->setFocusMonth(mCurrentMonthDisplayed);
-    // DateUtils.formatDateRange (FORMAT_SHOW_DATE|NO_MONTH_DAY|SHOW_YEAR) is not
-    // ported; approximate its en output "Month Year" via a name table. The bare
-    // std::to_string(MONTH) that was here rendered the month *index* ("0".."11").
-    static const char* const kMonths[] = {"January","February","March","April","May","June",
-        "July","August","September","October","November","December"};
-    const int month = calendar.get(Calendar::MONTH);
-    const int year = calendar.get(Calendar::YEAR);
-    const std::string newMonthName =
-        std::string(kMonths[(month >= 0 && month < 12) ? month : 0]) + " " + std::to_string(year);
+    // AOSP: DateUtils.formatDateRange(FORMAT_SHOW_DATE | FORMAT_NO_MONTH_DAY |
+    // FORMAT_SHOW_YEAR); approximate with the standalone month + year pattern.
+    SimpleDateFormat formatter("LLLL yyyy", mCurrentLocale);
+    const std::string newMonthName = formatter.format(calendar.getTimeInMillis());
     mMonthName->setText(newMonthName);
     mMonthName->invalidate();
 }
@@ -707,8 +691,6 @@ CalendarViewLegacyDelegate::WeeksAdapter::~WeeksAdapter(){
 }
 
 void CalendarViewLegacyDelegate::WeeksAdapter::init() {
-    mFocusedMonth =0;
-    mTotalWeekCount=0;
     mSelectedWeek = mCV->getWeeksSinceMinDate(mSelectedDate);
     mTotalWeekCount = mCV->getWeeksSinceMinDate(mCV->mMaxDate);
     if (mCV->mMinDate.get(Calendar::DAY_OF_WEEK) != mCV->mFirstDayOfWeek
@@ -1000,7 +982,9 @@ void CalendarViewLegacyDelegate::WeekView::drawBackground(Canvas& canvas) {
         recLeft = mCV->mShowWeekNumber ? mWidth / mNumCells : 0;
         recRight = mSelectedLeft - 2;
     }
+    canvas.begin_new_path();
     canvas.rectangle(recLeft,recTop,recRight-recLeft,recBottom-recTop);
+    canvas.fill();
 
     if (bIsLayoutRtl) {
         recLeft = mSelectedRight + 3;
@@ -1010,6 +994,7 @@ void CalendarViewLegacyDelegate::WeekView::drawBackground(Canvas& canvas) {
         recRight = mWidth;
     }
     canvas.rectangle(recLeft,recTop,recRight-recLeft,recBottom-recTop);
+    canvas.fill();
 }
 
 void CalendarViewLegacyDelegate::WeekView::drawWeekNumbersAndDates(Canvas& canvas) {
@@ -1021,29 +1006,36 @@ void CalendarViewLegacyDelegate::WeekView::drawWeekNumbersAndDates(Canvas& canva
     // Day numbers are rendered through mMonthNumDrawPaint (setTextAlign CENTER,
     // routes through minikin for font fallback), matching SimpleMonthView, instead
     // of direct cairo canvas text calls.
-    auto drawDay = [this, &canvas, y](int color, const std::string& text, int centerX) {
-        mMonthNumDrawPaint.setColor(color);
+    auto drawText = [this, &canvas, y](Paint& paint, int color, const std::string& text, int centerX) {
+        paint.setColor(color);
         const std::u16string u16 = TextUtils::utf8_utf16(text);
-        mMonthNumDrawPaint.drawTextRun(canvas, (const char16_t*) u16.c_str(),
+        paint.drawTextRun(canvas, (const char16_t*) u16.c_str(),
                 0, u16.length(), 0, 0, centerX, y, false);
     };
 
+    // AOSP: week numbers draw with mDrawPaint (centered, mDateTextSize, not bold);
+    // day numbers use the bold mMonthNumDrawPaint.
+    mDrawPaint.setTextAlign(Paint::Align::CENTER);
+    mDrawPaint.setTextSize(mCV->mDateTextSize);
+
     if (isLayoutRtl()) {
         for (int i = 0; i < nDays - 1; i++) {
-            drawDay(mFocusDay[i] ? mCV->mFocusedMonthDateColor : mCV->mUnfocusedMonthDateColor,
+            drawText(mMonthNumDrawPaint,
+                    mFocusDay[i] ? mCV->mFocusedMonthDateColor : mCV->mUnfocusedMonthDateColor,
                     mDayNumbers[nDays - 1 - i], (2 * i + 1) * mWidth / divisor);
         }
         if (mCV->mShowWeekNumber) {
-            drawDay(mCV->mWeekNumberColor, mDayNumbers[0], mWidth - mWidth / divisor);
+            drawText(mDrawPaint, mCV->mWeekNumberColor, mDayNumbers[0], mWidth - mWidth / divisor);
         }
     } else {
         int i = 0;
         if (mCV->mShowWeekNumber) {
-            drawDay(mCV->mWeekNumberColor, mDayNumbers[0], mWidth / divisor);
+            drawText(mDrawPaint, mCV->mWeekNumberColor, mDayNumbers[0], mWidth / divisor);
             i++;
         }
         for (; i < nDays; i++) {
-            drawDay(mFocusDay[i] ? mCV->mFocusedMonthDateColor : mCV->mUnfocusedMonthDateColor,
+            drawText(mMonthNumDrawPaint,
+                    mFocusDay[i] ? mCV->mFocusedMonthDateColor : mCV->mUnfocusedMonthDateColor,
                     mDayNumbers[i], (2 * i + 1) * mWidth / divisor);
         }
     }

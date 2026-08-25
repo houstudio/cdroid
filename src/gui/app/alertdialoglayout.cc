@@ -321,6 +321,8 @@ void AlertDialogLayout::onLayout(bool changed,int left,int top,int right,int bot
 }
 
 void AlertDialogLayout::setChildFrame(View* child,int left,int top,int width,int height){
-    child->layout(left, top, left + width, top + height);
+    // CDROID View::layout takes (left, top, width, height), unlike AOSP's
+    // (left, top, right, bottom) — pass sizes, not edges.
+    child->layout(left, top, width, height);
 }
 };//endof namespace
