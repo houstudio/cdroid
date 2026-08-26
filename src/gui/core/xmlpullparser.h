@@ -37,27 +37,38 @@ public:
 private:
     class AttrParser;
     struct Private* mData;
+protected:
+    // Seeding ctors for the implementation hierarchy: the default seeds the
+    // expat text engine; XmlPullParser(false) skips it (binary subclass).
     XmlPullParser();
+    explicit XmlPullParser(bool initTextEngine);
 public:
-    XmlPullParser(Context*ctx,const std::string&resid);
-    XmlPullParser(Context*ctx,int resid);
+    // Text-XML entry: takes the stream (sniffs internally so direct users
+    // keep working). Resource-backed construction goes through
+    // Resources::getXml / XmlPullParser::detectAndCreate.
     XmlPullParser(Context*,std::unique_ptr<std::istream>);
     ~XmlPullParser()override;
-    int getDepth()const;
-    std::string getName()const;
-    std::string getText()const;
-    std::string getPositionDescription()const;
-    int getEventType()const;
-    int getLineNumber()const;
-    int getColumnNumber()const;
-    int next();
-    operator bool()const;
+    // Single sniffing point (binary AXML vs text XML, first two bytes
+    // 0x03 0x00): returns an XmlBlock::Parser for binary data, a text
+    // parser otherwise. A failed stream still yields a usable parser primed
+    // at END_DOCUMENT — never returns nullptr.
+    static std::unique_ptr<XmlPullParser> detectAndCreate(Context*ctx,std::unique_ptr<std::istream>strm,
+            const std::string&resourceId = std::string(),const std::string&pkg = std::string());
+    virtual int getDepth()const;
+    virtual std::string getName()const;
+    virtual std::string getText()const;
+    virtual std::string getPositionDescription()const;
+    virtual int getEventType()const;
+    virtual int getLineNumber()const;
+    virtual int getColumnNumber()const;
+    virtual int next();
+    virtual operator bool()const;
     // Phase 2: expose binary AXML state for TypedArray obtainStyledAttributes.
     // Returns true if parsing binary AXML (has a ResXMLTree).
-    bool isBinaryAXML() const;
+    virtual bool isBinaryAXML() const;
     // Returns the ResXMLTree* (as void* to avoid the heavy androidfw include here).
     // Null for text XML. Caller (which has androidfw) casts to const ResXMLTree*.
-    const void* getBinaryAXMLTree() const;
+    virtual const void* getBinaryAXMLTree() const;
 
     // AOSP AttributeSet id-interface — binary overrides. For binary AXML the
     // index is the ResXMLTree attribute order and values are the typed Res_value

@@ -252,8 +252,8 @@ bool MotionScene::autoTransition(MotionLayout* layout, int currentState) {
 }
 
 void MotionScene::load(Context* ctx, int resourceId) {
-    XmlPullParser parser(ctx, resourceId);
-    load(ctx, parser);
+    auto parser = ctx->getResources().getXml(resourceId);
+    load(ctx, *parser);
 }
 
 void MotionScene::load(Context* ctx, XmlPullParser& parser) {

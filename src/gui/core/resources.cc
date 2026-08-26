@@ -173,17 +173,17 @@ Asset* Resources::openRawResource(int id, TypedValue* o) const {
     return mImpl->openRawResource(id, o);
 }
 
-Asset* Resources::getXml(int id) const {
-    return mImpl->getXml(id);
+std::unique_ptr<XmlPullParser> Resources::getXml(int id) const {
+    return mImpl->loadXmlResourceParser(id);
 }
 
-Asset* Resources::getLayout(int id) const {
-    return mImpl->getLayout(id);
+std::unique_ptr<XmlPullParser> Resources::getXml(const std::string& resid) const {
+    return mImpl->loadXmlResourceParser(resid);
 }
 
-Asset* Resources::getAnimation(int id) const {
-    return mImpl->getAnimation(id);
-}
+
+
+
 
 Typeface* Resources::getFont(int id) const {
     return mImpl->getFont(id);

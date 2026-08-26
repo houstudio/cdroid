@@ -1195,15 +1195,15 @@ TEST(CLConstraintLayout, ConstraintSetCloneAndModify) {
 // transforms, chain style, and ratio.
 TEST(CLConstraintLayout, ConstraintSetXmlLoad) {
     App& app = App::getInstance();
-    XmlPullParser parser(&app, gui_test::R::xml::constraintset_parse);
+    auto parser = app.getResources().getXml(gui_test::R::xml::constraintset_parse);
     // Advance to the <ConstraintSet> START_TAG, then let load() consume through its END_TAG.
-    while (parser.getEventType() != XmlPullParser::START_TAG &&
-           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
-        parser.next();
+    while (parser->getEventType() != XmlPullParser::START_TAG &&
+           parser->getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser->next();
     }
 
     ConstraintSet cs;
-    cs.load(&app, parser);
+    cs.load(&app, *parser);
 
     ASSERT_TRUE(cs.contains(gui_test::R::id::cs_target));
     const auto& c = cs.get(gui_test::R::id::cs_target);
@@ -1226,13 +1226,13 @@ TEST(CLConstraintLayout, ConstraintSetXmlLoad) {
 // attrs (android:), the motion attrs live in the widgetex namespace (app:).
 TEST(CLConstraintLayout, KeyFramesXmlParse) {
     App& app = App::getInstance();
-    XmlPullParser parser(&app, gui_test::R::xml::keyframes_parse);
-    while (parser.getEventType() != XmlPullParser::START_TAG &&
-           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
-        parser.next();
+    auto parser = app.getResources().getXml(gui_test::R::xml::keyframes_parse);
+    while (parser->getEventType() != XmlPullParser::START_TAG &&
+           parser->getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser->next();
     }
 
-    KeyFrames kf(&app, parser);
+    KeyFrames kf(&app, *parser);
     auto keys = kf.getKeysForView(gui_test::R::id::kf_target);
     ASSERT_EQ(keys.size(), 2u);
 
@@ -1360,13 +1360,13 @@ TEST(CLConstraintLayout, ConstraintSetCustomAttribute) {
         });
 
     App& app = App::getInstance();
-    XmlPullParser parser(&app, gui_test::R::xml::constraintset_customattr);
-    while (parser.getEventType() != XmlPullParser::START_TAG &&
-           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
-        parser.next();
+    auto parser = app.getResources().getXml(gui_test::R::xml::constraintset_customattr);
+    while (parser->getEventType() != XmlPullParser::START_TAG &&
+           parser->getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser->next();
     }
     ConstraintSet set;
-    set.load(&app, parser);
+    set.load(&app, *parser);
 
     ASSERT_EQ(set.get(gui_test::R::id::ca_target).mCustomAttributes.size(), 1u);
     const auto& ca = set.get(gui_test::R::id::ca_target).mCustomAttributes[0];
@@ -1476,13 +1476,13 @@ TEST(CLConstraintLayout, MotionLayoutKeyPositionArc) {
 // with matching dims returns the same set.
 TEST(CLConstraintLayout, ConstraintLayoutStatesMatch) {
     App& app = App::getInstance();
-    XmlPullParser parser(&app, gui_test::R::xml::stateset_match);
-    while (parser.getEventType() != XmlPullParser::START_TAG &&
-           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
-        parser.next();
+    auto parser = app.getResources().getXml(gui_test::R::xml::stateset_match);
+    while (parser->getEventType() != XmlPullParser::START_TAG &&
+           parser->getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser->next();
     }
 
-    ConstraintLayoutStates states(&app, nullptr, parser);
+    ConstraintLayoutStates states(&app, nullptr, *parser);
 
     const int baseId    = gui_test::R::id::st_base;
     const int defaultId = gui_test::R::id::st_default;
@@ -1514,13 +1514,13 @@ TEST(CLConstraintLayout, ConstraintLayoutStatesSwitchesOnResize) {
     tv->setId(gui_test::R::id::sw_target);
     cl->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
 
-    XmlPullParser parser(&app, gui_test::R::xml::stateset_switch);
-    while (parser.getEventType() != XmlPullParser::START_TAG &&
-           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
-        parser.next();
+    auto parser = app.getResources().getXml(gui_test::R::xml::stateset_switch);
+    while (parser->getEventType() != XmlPullParser::START_TAG &&
+           parser->getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser->next();
     }
 
-    ConstraintLayoutStates states(&app, cl, parser);
+    ConstraintLayoutStates states(&app, cl, *parser);
     const int baseId = gui_test::R::id::sw_base;
 
     // Narrow (400 wide) -> default "small" set -> child width 100.
@@ -1671,13 +1671,13 @@ TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysWithoutClobbering) {
     EXPECT_EQ(target.get(id).transform.scaleX, 1.0f); // scale untouched so far
 
     // Parse the delta: <ConstraintOverride motionTarget scaleX="1.5"/>.
-    XmlPullParser parser(&app, gui_test::R::xml::vt_delta_scale);
-    while (parser.getEventType() != XmlPullParser::START_TAG &&
-           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
-        parser.next();
+    auto parser = app.getResources().getXml(gui_test::R::xml::vt_delta_scale);
+    while (parser->getEventType() != XmlPullParser::START_TAG &&
+           parser->getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser->next();
     }
     ConstraintSet delta;
-    delta.loadConstraint(parser);
+    delta.loadConstraint(*parser);
 
     ASSERT_TRUE(delta.contains(id));           // motionTarget resolved to the target id
     delta.applyDelta(target.get(id));
@@ -1694,13 +1694,13 @@ TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysLayoutFields) {
     target.get(id).layout.topToTop = 0;    // already anchored top->parent
     target.get(id).layout.leftToLeft = -1; // not yet anchored horizontally
 
-    XmlPullParser parser(&app, gui_test::R::xml::vt_delta_layout);
-    while (parser.getEventType() != XmlPullParser::START_TAG &&
-           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
-        parser.next();
+    auto parser = app.getResources().getXml(gui_test::R::xml::vt_delta_layout);
+    while (parser->getEventType() != XmlPullParser::START_TAG &&
+           parser->getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser->next();
     }
     ConstraintSet delta;
-    delta.loadConstraint(parser);
+    delta.loadConstraint(*parser);
 
     ASSERT_TRUE(delta.contains(id));
     delta.applyDelta(target.get(id));
@@ -1720,13 +1720,13 @@ TEST(CLConstraintLayout, ViewTransitionDeltaAppliesDefaultValuedField) {
     target.get(id).transform.scaleX = 2.0f;       // and scaled
 
     // delta explicitly sets rotation="0" (its default) — should reset rotation, leave scaleX.
-    XmlPullParser parser(&app, gui_test::R::xml::vt_delta_default);
-    while (parser.getEventType() != XmlPullParser::START_TAG &&
-           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
-        parser.next();
+    auto parser = app.getResources().getXml(gui_test::R::xml::vt_delta_default);
+    while (parser->getEventType() != XmlPullParser::START_TAG &&
+           parser->getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser->next();
     }
     ConstraintSet delta;
-    delta.loadConstraint(parser);
+    delta.loadConstraint(*parser);
 
     delta.applyDelta(target.get(id));
     EXPECT_FLOAT_EQ(target.get(id).transform.rotation, 0.0f); // RESET to 0 (precise)
@@ -1920,14 +1920,14 @@ TEST(CLConstraintLayout, ViewTransitionMatchesConstraintTag) {
 // <CustomAttribute> children to loadCustomAttribute.)
 TEST(CLConstraintLayout, ViewTransitionSetLevelCustomAttribute) {
     App& app = App::getInstance();
-    XmlPullParser parser(&app, gui_test::R::xml::vt_customattr_setlevel);
-    while (parser.getEventType() != XmlPullParser::START_TAG &&
-           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
-        parser.next();
+    auto parser = app.getResources().getXml(gui_test::R::xml::vt_customattr_setlevel);
+    while (parser->getEventType() != XmlPullParser::START_TAG &&
+           parser->getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser->next();
     }
 
     ConstraintSet delta;
-    delta.loadCustomAttribute(parser);
+    delta.loadCustomAttribute(*parser);
     ConstraintSet target;
     ConstraintSet::Constraint& c = target.get(1);
     EXPECT_TRUE(c.mCustomAttributes.empty());

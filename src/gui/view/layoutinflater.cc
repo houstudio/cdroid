@@ -215,8 +215,8 @@ View* LayoutInflater::inflate(int resource, ViewGroup* root){
 }
 
 View* LayoutInflater::inflate(int resource, ViewGroup* root, bool attachToRoot){
-    XmlPullParser parser(mContext, resource);
-    return inflate(parser,root,attachToRoot);
+    auto parser = mContext->getResources().getXml(resource);
+    return inflate(*parser,root,attachToRoot);
 }
 
 View* LayoutInflater::createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs){
@@ -417,22 +417,22 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // layout = context.getResources().getIdentifier(value.substring(1), "attr", context.getPackageName());
         }
         int type;
-        XmlPullParser childParser(context,layout);
-        while ((type = childParser.next()) != XmlPullParser::START_TAG &&
+        auto childParser = context->getResources().getXml(layout);
+        while ((type = childParser->next()) != XmlPullParser::START_TAG &&
                 type != XmlPullParser::END_DOCUMENT) {
             // Empty.
         }
 
         if (type != XmlPullParser::START_TAG) {
-            throw std::logic_error(childParser.getPositionDescription()+": No start tag found!");
+            throw std::logic_error(childParser->getPositionDescription()+": No start tag found!");
         }
 
-        const std::string childName = childParser.getName();
-        const AttributeSet& childAttrs = childParser;
+        const std::string childName = childParser->getName();
+        const AttributeSet& childAttrs = *childParser;
 
         if (childName.compare(TAG_MERGE)==0){
             // The <merge> tag doesn't support android:theme, so nothing special to do here.
-            rInflate(childParser, parent, context, childAttrs, false);
+            rInflate(*childParser, parent, context, childAttrs, false);
         } else {
             View* view = createViewFromTag(parent, childName,context, childAttrs, hasThemeOverride);
             ViewGroup* group = (ViewGroup*) parent;
@@ -483,7 +483,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             view->setLayoutParams(params);
 
             // Inflate all children.
-            rInflateChildren(childParser, view, childAttrs, true);
+            rInflateChildren(*childParser, view, childAttrs, true);
 
             if (id != View::NO_ID) {
                 view->setId(id);

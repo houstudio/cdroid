@@ -51,13 +51,13 @@ BadgeDrawable* BadgeDrawable::create(Context* context) {
 
 BadgeDrawable* BadgeDrawable::createFromResource(Context* context, const std::string& id) {
     int type;
-    XmlPullParser parser(context,id);
-    const AttributeSet& attrs = parser;
-    if(!parser)return nullptr;
-    while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
+    auto parser = context->getResources().getXml(id);
+    const AttributeSet& attrs = *parser;
+    if(!*parser)return nullptr;
+    while( ((type=parser->next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING
     }
-    const std::string tag=parser.getName();
+    const std::string tag=parser->getName();
     LOGE_IF(tag.compare("badge"),"invalid resource tag:%s[%s] ",tag.c_str(),id.c_str());
     return new BadgeDrawable(context, id, "","", 0/*style*/);
 }

@@ -47,10 +47,10 @@ NavGraph* NavInflater::inflateMetadataGraph() {
 }
 
 NavGraph* NavInflater::inflate(int graphResId) {
-    XmlPullParser parser(mContext,graphResId);
-    AttributeSet& attrs = parser;
+    auto parser = mContext->getResources().getXml(graphResId);
+    AttributeSet& attrs = *parser;
     int type;
-    while ((type = parser.next()) != XmlPullParser::START_TAG
+    while ((type = parser->next()) != XmlPullParser::START_TAG
             && type != XmlPullParser::END_DOCUMENT) {
         // Empty loop
     }
@@ -58,8 +58,8 @@ NavGraph* NavInflater::inflate(int graphResId) {
         throw std::runtime_error("No start tag found");
     }
 
-    std::string rootElement = parser.getName();
-    NavDestination* destination = inflate(parser, attrs);
+    std::string rootElement = parser->getName();
+    NavDestination* destination = inflate(*parser, attrs);
     if (dynamic_cast<NavGraph*>(destination)==nullptr) {
         throw ("Root element <" + rootElement + ">" + " did not inflate into a NavGraph");
     }

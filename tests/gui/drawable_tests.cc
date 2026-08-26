@@ -104,10 +104,10 @@ public:
     Drawable*fromStream(const std::string&content){
         int type;
         auto txtis=std::make_unique<std::istringstream>(content);
-        XmlPullParser parser(rm,std::move(txtis));
-        AttributeSet& attrs=parser;
-        while((type=parser.next())!=XmlPullParser::START_TAG){}
-        return DrawableInflater::inflateFromXml(App::getInstance().getResources(),parser.getName(),parser,attrs);
+        auto parser=XmlPullParser::detectAndCreate(rm,std::move(txtis));
+        AttributeSet& attrs=*parser;
+        while((type=parser->next())!=XmlPullParser::START_TAG){}
+        return DrawableInflater::inflateFromXml(App::getInstance().getResources(),parser->getName(),*parser,attrs);
     }
 };
 

@@ -12,6 +12,8 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <fstream>
+#include <sstream>
 
 // androidfw native readers — hidden from resourcesimpl.h (the facade contract).
 #include <androidfw/restable.h>       // ResTable, ResTable_config, Res_value, pakPathCandidates
@@ -437,6 +439,34 @@ Asset* ResourcesImpl::getXml(int id) const {
     return openByStringId(id);
 }
 
+std::unique_ptr<XmlPullParser> ResourcesImpl::loadXmlResourceParser(int resid) const {
+    // ID-based path: fetch the bytes via the resource face. Text paks have
+    // no arsc -> getXml returns null -> empty parser.
+    Asset* asset = getXml(resid);
+    std::unique_ptr<std::istream> strm;
+    if(asset){
+        const off64_t sz = asset->getLength();
+        std::string buf((size_t)(sz > 0 ? sz : 0), '\0');
+        if (sz > 0) asset->read(&buf[0], (size_t)sz);
+        delete asset;
+        strm = std::make_unique<std::istringstream>(buf);
+    }
+    return XmlPullParser::detectAndCreate(mCtx, std::move(strm), std::to_string(resid));
+}
+
+std::unique_ptr<XmlPullParser> ResourcesImpl::loadXmlResourceParser(const std::string& resid) const {
+    std::string pkg;
+    std::unique_ptr<std::istream> strm;
+    if(mCtx) strm = mCtx->getInputStream(resid, &pkg);
+    if(((strm==nullptr)||(!*strm))&&resid.size()){
+        auto fs = std::make_unique<std::ifstream>(resid);
+        if(fs->is_open()){
+            strm = std::move(fs);
+        }
+    }
+    return XmlPullParser::detectAndCreate(mCtx, std::move(strm), resid, pkg);
+}
+
 // ---- GUI-object factories: ResourcesImpl owns the AOSP mDrawableCache /
 // mComplexColorCache + loadDrawable/loadComplexColor (cairo + the Context
 // inflation bridge are available now that ResourcesImpl is in the cdroid
@@ -644,12 +674,12 @@ cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/, 
         // which already takes Resources&), else → ImageDecoder::createAsDrawable(id).
         std::string path = u16to8(value.string, value.stringLen);
         if (path.find(".xml") != std::string::npos) {
-            XmlPullParser parser(mCtx, id);
+            auto parser = loadXmlResourceParser(id);
             int type;
-            while ((type = parser.next()) != XmlPullParser::START_TAG &&
+            while ((type = parser->next()) != XmlPullParser::START_TAG &&
                    type != XmlPullParser::END_DOCUMENT) {}
             if (type == XmlPullParser::START_TAG) {
-                const AttributeSet& attrs = parser;
+                const AttributeSet& attrs = *parser;
                 // AOSP loadDrawableForCookie inflates with a null theme and
                 // re-applies via applyTheme(); CDROID has no mThemeAttrs
                 // deferred machinery, so the theme goes straight into the
@@ -658,10 +688,10 @@ cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/, 
                     Resources::Theme themed(mCtx->getResources(),
                                             const_cast<void*>(themeEngine));
                     d = DrawableInflater::inflateFromXml(mCtx->getResources(),
-                                                         parser.getName(), parser, attrs, &themed);
+                                                         parser->getName(), *parser, attrs, &themed);
                 } else {
                     d = DrawableInflater::inflateFromXml(mCtx->getResources(),
-                                                         parser.getName(), parser, attrs);
+                                                         parser->getName(), *parser, attrs);
                 }
             }
         } else {
@@ -702,8 +732,8 @@ std::shared_ptr<cdroid::ComplexColor> ResourcesImpl::loadComplexColor(int id, co
         // from a binary pak (no text path table). AOSP passes the theme into
         // createFromXml so ?attr inside the selector resolves against it.
         try {
-            XmlPullParser parser(mCtx, id);
-            csl = ColorStateList::createFromXml(mCtx->getResources(), parser,
+            auto parser = loadXmlResourceParser(id);
+            csl = ColorStateList::createFromXml(mCtx->getResources(), *parser,
                                                 (ResTable::Theme*)themeEngine);
         } catch (const std::exception&) {
             csl = nullptr;

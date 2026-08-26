@@ -33,8 +33,8 @@ BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std:
 
     // AOSP BadgeState: generateTypedArray parses the badge XML (or picks up its
     // style), then one obtainStyledAttributes over R.styleable.Badge.
-    const AttributeSet attrs = generateTypedArray(context, storedState->badgeResId, defStyleAttr, defStyleRes);
-    auto a = context->obtainStyledAttributes(attrs, R::styleable::Badge);
+    auto badgeParser = generateTypedArray(context, storedState->badgeResId, defStyleAttr, defStyleRes);
+    auto a = context->obtainStyledAttributes(badgeParser.get(), R::styleable::Badge);
 
     mBadgeRadius = a->getDimension(R::styleable::Badge_badgeRadius, (float)BadgeDrawable::BADGE_RADIUS_NOT_SPECIFIED);
 
@@ -223,13 +223,13 @@ BadgeState::~BadgeState(){
     delete overridingState;
 }
 
-AttributeSet BadgeState::generateTypedArray(Context* context,const std::string& badgeResId,const std::string& defStyleAttr,const std::string& defStyleRes) {
-    XmlPullParser parser(context,badgeResId);
-    const AttributeSet& attrs = parser;
+std::unique_ptr<XmlPullParser> BadgeState::generateTypedArray(Context* context,const std::string& badgeResId,const std::string& defStyleAttr,const std::string& defStyleRes) {
+    auto parser = context->getResources().getXml(badgeResId);
     int type;
-    if(!parser)return attrs;
-    while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
-        //NOTHING
+    if(*parser) {
+        while( ((type=parser->next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
+            //NOTHING
+        }
     }
     /*AttributeSet attrs = context->obtainStyledAttributes(badgeResId);
     int style = 0;
@@ -241,7 +241,7 @@ AttributeSet BadgeState::generateTypedArray(Context* context,const std::string& 
         style = defStyleRes;
     }*/
     //return ThemeEnforcement.obtainStyledAttributes(context, attrs, R.styleable.Badge, defStyleAttr, style);
-    return attrs;
+    return parser;
 }
 
 BadgeState::State* BadgeState::getOverridingState() const{

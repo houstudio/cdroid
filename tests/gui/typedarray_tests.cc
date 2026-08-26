@@ -179,10 +179,10 @@ TEST_F(TYPEDARRAY, recycle) {
 // CTS testNonResourceString (adapted): an AXML-inline string (element string
 // pool) IS a non-resource string.
 TEST_F(TYPEDARRAY, nonResourceString) {
-    XmlPullParser parser(&App::getInstance(), gui_test::R::xml::test_color);
-    const AttributeSet& set = parser;
+    auto parser = App::getInstance().getResources().getXml(gui_test::R::xml::test_color);
+    const AttributeSet& set = *parser;
     int type;
-    while (((type = parser.next()) != XmlPullParser::START_TAG)
+    while (((type = parser->next()) != XmlPullParser::START_TAG)
             && (type != XmlPullParser::END_DOCUMENT)) {}
     const uint32_t attrs[] = {(uint32_t)gui_test::R::attr::type13, 0};
     auto ta = App::getInstance().getResources().obtainStyledAttributes(&set, attrs);
@@ -194,10 +194,10 @@ TEST_F(TYPEDARRAY, nonResourceString) {
 // CTS testEmptyXmlAttributeDoesNotFallbackToTheme: an @empty element attr
 // wins over the theme; the entry is present but TYPE_NULL.
 TEST_F(TYPEDARRAY, emptyXmlAttributeDoesNotFallbackToTheme) {
-    XmlPullParser parser(&App::getInstance(), gui_test::R::xml::empty);
-    const AttributeSet& set = parser;
+    auto parser = App::getInstance().getResources().getXml(gui_test::R::xml::empty);
+    const AttributeSet& set = *parser;
     int type;
-    while (((type = parser.next()) != XmlPullParser::START_TAG)
+    while (((type = parser->next()) != XmlPullParser::START_TAG)
             && (type != XmlPullParser::END_DOCUMENT)) {}
 
     auto theme = App::getInstance().getResources().newTheme();

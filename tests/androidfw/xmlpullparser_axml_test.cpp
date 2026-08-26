@@ -42,11 +42,11 @@ TEST(XmlPullParserAxmlTest, ParsesBinaryAxml) {
     // Wrap the binary AXML fixture in an istream.
     auto stream = std::make_unique<std::istringstream>(
         std::string((const char*)kAXML, kAXMLLen));
-    XmlPullParser parser(nullptr, std::move(stream));
+    auto parser = XmlPullParser::detectAndCreate(nullptr, std::move(stream));
 
-    ASSERT_TRUE(parser);  // operator bool — binary tree loaded OK
+    ASSERT_TRUE(*parser);  // operator bool — binary tree loaded OK
 
-    auto tags = walkParser(parser);
+    auto tags = walkParser(*parser);
     ASSERT_EQ(tags.size(), 2u);                        // LinearLayout + TextView
     EXPECT_EQ(tags[0].name, "LinearLayout");
     EXPECT_EQ(tags[0].attrCount, 9);                   // 7 app: + 2 android:
@@ -57,15 +57,58 @@ TEST(XmlPullParserAxmlTest, ParsesBinaryAxml) {
 TEST(XmlPullParserAxmlTest, ReadsAttributeValue) {
     auto stream = std::make_unique<std::istringstream>(
         std::string((const char*)kAXML, kAXMLLen));
-    XmlPullParser parser(nullptr, std::move(stream));
-    parser.next();  // START_DOCUMENT
+    auto parser = XmlPullParser::detectAndCreate(nullptr, std::move(stream));
+    parser->next();  // START_DOCUMENT
 
     // Walk to the first START_TAG (LinearLayout).
-    while (parser.next() != XmlPullParser::START_TAG) {}
-    const auto& attrs = static_cast<cdroid::AttributeSet&>(parser);
+    while (parser->next() != XmlPullParser::START_TAG) {}
+    const auto& attrs = static_cast<cdroid::AttributeSet&>(*parser);
 
     // app:intdec="42" should be readable as a string attribute.
     // The binary AXML stores the rawValue "42".
-    std::string val = attrs.getAttributeValue("intdec");
+    std::string val = attrs.getAttributeValue(std::string(), "intdec");
     EXPECT_FALSE(val.empty());  // some value present
+}
+
+// The factory must pick XmlBlock::Parser for binary bytes and drive it with
+// the same event protocol as the queue-fed parser: the first next() returns
+// the first real event, depths reproduce the queue numbers (root tag = 1).
+TEST(XmlPullParserAxmlTest, DetectAndCreatePicksBinaryParser) {
+    auto stream = std::make_unique<std::istringstream>(
+        std::string((const char*)kAXML, kAXMLLen));
+    auto parser = XmlPullParser::detectAndCreate(nullptr, std::move(stream));
+    ASSERT_TRUE(parser);
+    EXPECT_TRUE(parser->isBinaryAXML());
+
+    EXPECT_EQ(parser->getEventType(), XmlPullParser::START_DOCUMENT);
+    EXPECT_EQ(parser->next(), XmlPullParser::START_TAG);
+    EXPECT_EQ(parser->getName(), "LinearLayout");
+    EXPECT_EQ(parser->getDepth(), 1);
+    // Second tag (TextView) nests one deeper.
+    EXPECT_EQ(parser->next(), XmlPullParser::START_TAG);
+    EXPECT_EQ(parser->getName(), "TextView");
+    EXPECT_EQ(parser->getDepth(), 2);
+    EXPECT_EQ(parser->next(), XmlPullParser::END_TAG);
+    EXPECT_EQ(parser->getDepth(), 2);
+    EXPECT_EQ(parser->next(), XmlPullParser::END_TAG);
+    EXPECT_EQ(parser->getDepth(), 1);
+    EXPECT_EQ(parser->next(), XmlPullParser::END_DOCUMENT);
+    // Steady state: stays at END_DOCUMENT.
+    EXPECT_EQ(parser->next(), XmlPullParser::END_DOCUMENT);
+}
+
+TEST(XmlPullParserAxmlTest, DetectAndCreatePicksTextParser) {
+    auto stream = std::make_unique<std::istringstream>("<root><child/></root>");
+    auto parser = XmlPullParser::detectAndCreate(nullptr, std::move(stream));
+    ASSERT_TRUE(parser);
+    EXPECT_FALSE(parser->isBinaryAXML());
+
+    EXPECT_EQ(parser->next(), XmlPullParser::START_TAG);
+    EXPECT_EQ(parser->getName(), "root");
+    EXPECT_EQ(parser->getDepth(), 1);
+    EXPECT_EQ(parser->next(), XmlPullParser::START_TAG);
+    EXPECT_EQ(parser->getName(), "child");
+    EXPECT_EQ(parser->next(), XmlPullParser::END_TAG);
+    EXPECT_EQ(parser->next(), XmlPullParser::END_TAG);
+    EXPECT_EQ(parser->next(), XmlPullParser::END_DOCUMENT);
 }

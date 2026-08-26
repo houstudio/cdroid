@@ -50,8 +50,8 @@ Animator* AnimatorInflater::loadAnimator(Context* context,int resid,float){
     Resources::Theme theme = context->getTheme();
     Animator* animator = res.obtainCachedAnimator(resid, theme._engineHandle());
     if (animator != nullptr) return animator;
-    XmlPullParser parser(context,resid);
-    animator = createAnimatorFromXml(context, &theme, parser, 1.f);
+    auto parser = context->getResources().getXml(resid);
+    animator = createAnimatorFromXml(context, &theme, *parser, 1.f);
     if (animator != nullptr) {
         // AOSP appends getChangingConfigs(resources, id) so entries self-invalidate
         // via needNewResources; CDROID clears the whole cache on configuration
@@ -70,8 +70,8 @@ Animator* AnimatorInflater::loadAnimator(Context* context,int resid,float){
 
 Animator* AnimatorInflater::loadAnimator(Context* context,const Resources::Theme* theme,int resid,float pathErrorScale){
     if (resid == 0) return nullptr;  // AOSP: 0 → null
-    XmlPullParser parser(context,resid);
-    return createAnimatorFromXml(context, theme, parser, pathErrorScale);
+    auto parser = context->getResources().getXml(resid);
+    return createAnimatorFromXml(context, theme, *parser, pathErrorScale);
 }
 
 
@@ -83,9 +83,9 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,int 
     Resources::Theme theme = context->getTheme();
     StateListAnimator* animator = res.obtainCachedStateListAnimator(resid, theme._engineHandle());
     if (animator != nullptr) return animator;
-    XmlPullParser parser(context, resid);
-    const AttributeSet& attrs = parser;
-    animator = createStateListAnimatorFromXml(context, &theme, parser, attrs);
+    auto parser = context->getResources().getXml(resid);
+    const AttributeSet& attrs = *parser;
+    animator = createStateListAnimatorFromXml(context, &theme, *parser, attrs);
     if (animator != nullptr) {
         // changing-configs per entry unnecessary — see loadAnimator(Context, int).
         const auto constantState = animator->createConstantState();

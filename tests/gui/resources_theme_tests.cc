@@ -46,10 +46,10 @@ TEST_F(RESOURCES_THEME, obtainStyledAttributes) {
 
     // AttributeSet form over a real XML document (binary AXML path); CTS uses
     // R.xml.colors, this pak has the drawable XMLs instead.
-    XmlPullParser parser(&App::getInstance(), gui_test::R::drawable::cts_level_list_correct);
-    const AttributeSet& set = parser;
+    auto parser = App::getInstance().getResources().getXml(gui_test::R::drawable::cts_level_list_correct);
+    const AttributeSet& set = *parser;
     int type;
-    while (((type = parser.next()) != XmlPullParser::START_TAG)
+    while (((type = parser->next()) != XmlPullParser::START_TAG)
             && (type != XmlPullParser::END_DOCUMENT)) {}
     const uint32_t xmlAttrs[] = {(uint32_t)gui_test::R::attr::testString, 0};
     ta = mResTheme.obtainStyledAttributes(&set, xmlAttrs, 0, 0);

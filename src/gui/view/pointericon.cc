@@ -145,9 +145,9 @@ Bitmap PointerIcon::getBitmapFromDrawable(BitmapDrawable* bitmapDrawable) {
 void PointerIcon::loadResource(Context* context, int resourceId) {
     int type;
     float hotSpotX,hotSpotY;
-    XmlPullParser parser(context,resourceId);
-    const AttributeSet& attrs = parser;
-    while ((type=parser.next()) != XmlPullParser::START_TAG
+    auto parser = context->getResources().getXml(resourceId);
+    const AttributeSet& attrs = *parser;
+    while ((type=parser->next()) != XmlPullParser::START_TAG
                && type != XmlPullParser::END_DOCUMENT) {
         //EMPTY
     }

@@ -40,8 +40,8 @@ AudioManager::AudioManager(Context*ctx):mContext(ctx){
 void AudioManager::loadSoundEffects(){
     mSoundPool = std::make_unique<SoundPool>((int)NUM_SOUND_EFFECTS,0,0);
     SOUND_EFFECT_FILES_MAP.resize((int)NUM_SOUND_EFFECTS);
-    auto parser = std::make_unique<XmlPullParser>(mContext,"@xml/audio_assets");
-    if(!(*parser)) parser = std::make_unique<XmlPullParser>(mContext,"@cdroid:xml/audio_assets");
+    auto parser = mContext->getResources().getXml("@xml/audio_assets");
+    if(!*parser) parser = mContext->getResources().getXml("@cdroid:xml/audio_assets");
     int type;
     std::unordered_map<std::string,std::string> sounds;
     const AttributeSet& attrs =(*parser);

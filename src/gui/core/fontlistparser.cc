@@ -104,16 +104,16 @@ FontConfig parseFontConfig(const std::string& xmlPath, const std::string& fontDi
     auto stream = std::make_unique<std::ifstream>(xmlPath);
     if (!stream->good()) return cfg;  // file missing -> empty config (caller falls back)
 
-    XmlPullParser parser(nullptr, std::move(stream));
-    if (!nextStartTag(parser)) return cfg;  // position at <familyset>
+    auto parser = XmlPullParser::detectAndCreate(nullptr, std::move(stream));
+    if (!nextStartTag(*parser)) return cfg;  // position at <familyset>
 
     int ev;
-    while ((ev = parser.next()) != XmlPullParser::END_DOCUMENT) {
+    while ((ev = parser->next()) != XmlPullParser::END_DOCUMENT) {
         if (ev == XmlPullParser::START_TAG) {
-            const std::string tag = parser.getName();
-            if (tag == "family") cfg.families.push_back(readFamily(parser, fontDir));
-            else if (tag == "alias") cfg.aliases.push_back(readAlias(parser));
-            else skipElement(parser);  // <family-list> and other unknowns
+            const std::string tag = parser->getName();
+            if (tag == "family") cfg.families.push_back(readFamily(*parser, fontDir));
+            else if (tag == "alias") cfg.aliases.push_back(readAlias(*parser));
+            else skipElement(*parser);  // <family-list> and other unknowns
         }
         // END_TAG / TEXT / COMMENT between top-level elements: ignore.
     }

@@ -38,6 +38,7 @@ class ColorStateList;      // GUI — opaque (pointer return)
 class Typeface;
 class ComplexColor;
 class Movie;
+class XmlPullParser;      // core — loadXmlResourceParser return
 class Context;
 template <class T> class ConstantState;   // animation/animator.h — opaque here
 class Animator;            // animation — opaque (pointer return)
@@ -117,9 +118,14 @@ public:
 
     // --- raw / xml assets ---
     Asset* openRawResource(int id, TypedValue* outValue = nullptr) const;
-    Asset* getXml(int id) const;        // binary AXML bytes (wrap in ResXMLTree)
-    Asset* getLayout(int id) const { return getXml(id); }
-    Asset* getAnimation(int id) const { return getXml(id); }
+    Asset* getXml(int id) const;        // binary AXML bytes (internal byte fetcher)
+    // AOSP ResourcesImpl.loadXmlResourceParser: opens the xml resource and
+    // returns its parser (the one text/binary sniffing point lives in
+    // XmlPullParser::detectAndCreate). The int overload is the AOSP shape;
+    // the string overload is the CDROID text-pak transitional face (string
+    // refs cannot resolve through the arsc on text paks).
+    std::unique_ptr<XmlPullParser> loadXmlResourceParser(int resid) const;
+    std::unique_ptr<XmlPullParser> loadXmlResourceParser(const std::string& resid) const;
 
     // --- GUI-object factories. ResourcesImpl owns the AOSP mDrawableCache /
     // mComplexColorCache + loadDrawable/loadComplexColor (it lives in the cdroid

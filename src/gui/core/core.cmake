@@ -71,6 +71,7 @@ SET(CORE_SOURCES
     core/systemclock.cc
     core/tokenizer.cc
     core/xmlpullparser.cc
+    core/xmlblock.cc
     core/typeface.cc
     core/fontlistparser.cc
     #core/uieventsource.cc

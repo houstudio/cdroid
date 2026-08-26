@@ -53,12 +53,12 @@ int main(int argc, const char* argv[]) {
         "  </ConstraintSet>"
         "</StateSet>";
     auto stream = std::make_unique<std::stringstream>(xml);
-    XmlPullParser parser(&app, std::move(stream));
-    while (parser.getEventType() != XmlPullParser::START_TAG &&
-           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
-        parser.next();
+    auto parser = XmlPullParser::detectAndCreate(&app, std::move(stream));
+    while (parser->getEventType() != XmlPullParser::START_TAG &&
+           parser->getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser->next();
     }
-    ConstraintLayoutStates* states = new ConstraintLayoutStates(&app, cl, parser);
+    ConstraintLayoutStates* states = new ConstraintLayoutStates(&app, cl, *parser);
     const int baseId = states->getId("@+id/base");
 
     bool wide = false;

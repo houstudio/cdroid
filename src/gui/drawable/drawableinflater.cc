@@ -27,10 +27,10 @@ namespace cdroid{
  */
 Drawable* DrawableInflater::loadDrawable(Context* context, const std::string&id) {
     int type;
-    XmlPullParser parser(context,id);
-    const AttributeSet& attrs = parser;
-    if(!parser)return nullptr;
-    while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
+    auto parser = context->getResources().getXml(id);
+    const AttributeSet& attrs = *parser;
+    if(!*parser)return nullptr;
+    while( ((type=parser->next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING
     }
     // AOSP Drawable.createFromXml: "No start tag found" — an empty/truncated
@@ -39,7 +39,7 @@ Drawable* DrawableInflater::loadDrawable(Context* context, const std::string&id)
         LOGE("%s: no start tag found",id.c_str());
         return nullptr;
     }
-    return inflateFromXml(context->getResources(),parser.getName(),parser,attrs);
+    return inflateFromXml(context->getResources(),parser->getName(),*parser,attrs);
 }
 
 Drawable* DrawableInflater::inflateFromXml(Resources& r,const std::string& name,XmlPullParser& parser,const AttributeSet& attrs){

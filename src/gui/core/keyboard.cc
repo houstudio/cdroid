@@ -356,8 +356,8 @@ Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,i
     mDefaultVerticalGap = 0;
     mDefaultHeight= mDefaultWidth;
     mKeyboardMode = modeId;
-    XmlPullParser parser(context,xmlLayoutResId);
-    loadKeyboard(context,parser);
+    auto parser = context->getResources().getXml(xmlLayoutResId);
+    loadKeyboard(context,*parser);
 }
 
 Keyboard::~Keyboard(){

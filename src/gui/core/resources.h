@@ -28,6 +28,7 @@ class TypedValue;
 class Asset;
 class Context;
 class Drawable;
+class XmlPullParser;    // core — getXml(int) return (AOSP XmlResourceParser role)
 class ColorStateList;
 class Typeface;
 class ComplexColor;
@@ -98,9 +99,11 @@ public:
     // AOSP Resources.openRawResourceFd — returns AssetFileDescriptor. CDROID has
     // no AssetFileDescriptor (fd-based assets); stub returns nullptr.
     Asset* openRawResourceFd(int id) const;
-    Asset* getXml(int id) const;
-    Asset* getLayout(int id) const;
-    Asset* getAnimation(int id) const;
+    // AOSP Resources.getXml(int) -> XmlResourceParser: opens the xml resource
+    // and returns its parser. The string overload is the CDROID text-pak
+    // transitional face (string refs cannot resolve through the arsc).
+    std::unique_ptr<XmlPullParser> getXml(int id) const;
+    std::unique_ptr<XmlPullParser> getXml(const std::string& resid) const;
 
     // --- GUI-object factories (Resources' own; bridge to string-based inflation) ---
     // AOSP face: @Nullable Theme — null theme = unthemed load (shared cache

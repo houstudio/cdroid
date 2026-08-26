@@ -235,14 +235,14 @@ ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int d
     // layoutDescription: build a StateSet (adaptive layout) if the root tag isn't
     // MotionScene (MotionLayout builds its own scene from the same attr).
     if (!layoutDesc.empty()) {
-        XmlPullParser parser(ctx, layoutDesc);
-        while (parser.getEventType() != XmlPullParser::START_TAG &&
-                parser.getEventType() != XmlPullParser::END_DOCUMENT &&
-                parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
-            parser.next();
+        auto parser = ctx->getResources().getXml(layoutDesc);
+        while (parser->getEventType() != XmlPullParser::START_TAG &&
+                parser->getEventType() != XmlPullParser::END_DOCUMENT &&
+                parser->getEventType() != XmlPullParser::BAD_DOCUMENT) {
+            parser->next();
         }
-        if (parser.getEventType() == XmlPullParser::START_TAG && parser.getName() != "MotionScene") {
-            mConstraintLayoutStates = std::make_unique<ConstraintLayoutStates>(ctx, this, parser);
+        if (parser->getEventType() == XmlPullParser::START_TAG && parser->getName() != "MotionScene") {
+            mConstraintLayoutStates = std::make_unique<ConstraintLayoutStates>(ctx, this, *parser);
         }
     }
 }

@@ -18,6 +18,7 @@
 #include <androidfw/resourcetypes.h>   // Res_value/ResXMLTree (boundary lookups)
 #include <core/typedvalue.h>           // TypedValue (typed currency)
 #include <core/xmlpullparser.h>
+#include <core/xmlblock.h>             // XmlBlock::Parser (detectAndCreate product)
 #include <porting/cdlog.h>
 #include <core/context.h>
 #include <core/app.h>
@@ -373,62 +374,25 @@ public:
     }
 };
 
-XmlPullParser::XmlPullParser(){
+XmlPullParser::XmlPullParser():XmlPullParser(true){
+}
+
+XmlPullParser::XmlPullParser(bool initTextEngine){
     mData = new Private;
     mData->depth = 0;
-    mData->parser = XML_ParserCreateNS(nullptr,' ');
-    XML_SetUserData(mData->parser, this);
-    XML_SetElementHandler(mData->parser, AttrParser::startElementHandler, AttrParser::endElementHandler);
-    XML_SetCharacterDataHandler(mData->parser, AttrParser::characterDataHandler);
+    mData->parser = nullptr;
+    if(initTextEngine){
+        mData->parser = XML_ParserCreateNS(nullptr,' ');
+        XML_SetUserData(mData->parser, this);
+        XML_SetElementHandler(mData->parser, AttrParser::startElementHandler, AttrParser::endElementHandler);
+        XML_SetCharacterDataHandler(mData->parser, AttrParser::characterDataHandler);
+    }
 }
 
 XmlPullParser::XmlPullParser(Context*ctx,std::unique_ptr<std::istream>strm):XmlPullParser(){
     mContext = ctx;
     mData->detectBinary(strm);
     mData->stream = std::move(strm);
-    auto event = mData->acquire((mData->isBinary||(mData->stream&&mData->stream->good()))?START_DOCUMENT:END_DOCUMENT);
-    event->depth= mData->depth++;
-    event->lineNumber = 0;
-    mAttrs = event->atts;
-    mData->eventQueue.push(event);
-}
-
-XmlPullParser::XmlPullParser(Context*ctx,const std::string&resid):XmlPullParser(){
-    if(ctx){
-        mContext = ctx;
-        mData->stream = ctx->getInputStream(resid,&mPackage);
-    }
-    if(((mData->stream==nullptr)||(!*mData->stream))&&resid.size()){
-        auto fs = std::make_unique<std::ifstream>(resid);
-        if(fs->is_open()){
-            mData->stream= std::move(fs);
-        }
-    }
-    mData->detectBinary(mData->stream);
-    mData->resourceId = resid;
-    auto event = mData->acquire((mData->isBinary||(mData->stream&&mData->stream->good()))?START_DOCUMENT:END_DOCUMENT);
-    event->depth= mData->depth++;
-    event->lineNumber = 0;
-    mAttrs = event->atts;
-    mData->eventQueue.push(event);
-}
-
-XmlPullParser::XmlPullParser(Context*ctx,int resid):XmlPullParser(){
-    if(ctx){
-        mContext = ctx;
-        // ID-based path: fetch the binary AXML bytes via the resource face.
-        // Text paks have no arsc -> getXml returns null -> empty parser.
-        Asset* asset = ctx->getResources().getXml(resid);
-        if(asset){
-            const off64_t sz = asset->getLength();
-            std::string buf((size_t)(sz > 0 ? sz : 0), '\0');
-            if (sz > 0) asset->read(&buf[0], (size_t)sz);
-            delete asset;
-            mData->stream = std::make_unique<std::istringstream>(buf);
-        }
-    }
-    mData->detectBinary(mData->stream);
-    mData->resourceId = std::to_string(resid);
     auto event = mData->acquire((mData->isBinary||(mData->stream&&mData->stream->good()))?START_DOCUMENT:END_DOCUMENT);
     event->depth= mData->depth++;
     event->lineNumber = 0;
@@ -614,7 +578,7 @@ size_t XmlPullParser::getAttributeCount() const {
 }
 
 XmlPullParser::~XmlPullParser() {
-    XML_ParserFree(mData->parser);
+    if(mData->parser) XML_ParserFree(mData->parser);
     delete mData;
 }
 
@@ -681,6 +645,30 @@ std::string XmlPullParser::getPositionDescription()const{
     std::ostringstream oss;
     oss<<XML_GetCurrentLineNumber(mData->parser)<<":"<<XML_GetCurrentColumnNumber(mData->parser);
     return oss.str();
+}
+
+// Single text/binary sniffing point. Slurps the stream once and dispatches on
+// the RES_XML_TYPE magic; a failed stream still yields a text parser primed at
+// END_DOCUMENT (the object must stay usable — many callers next() blindly).
+std::unique_ptr<XmlPullParser> XmlPullParser::detectAndCreate(Context*ctx,
+        std::unique_ptr<std::istream> strm,const std::string&resourceId,const std::string&pkg){
+    if(strm && *strm){
+        std::string data((std::istreambuf_iterator<char>(*strm)),
+                         std::istreambuf_iterator<char>());
+        strm.reset();
+        if(data.size() >= 2 && (uint8_t)data[0] == 0x03 && (uint8_t)data[1] == 0x00){
+            return XmlBlock::newParser(ctx,pkg,resourceId,
+                    std::vector<uint8_t>(data.begin(),data.end()));
+        }
+        auto parser = std::unique_ptr<XmlPullParser>(new XmlPullParser(ctx,
+                std::make_unique<std::istringstream>(std::move(data))));
+        // resourceId/pkg feed the dev-aid logging and normalize()'s package
+        // qualification (same inputs the resource-id ctors keep in Private).
+        parser->mData->resourceId = resourceId;
+        if(!pkg.empty()) parser->mPackage = pkg;
+        return parser;
+    }
+    return std::unique_ptr<XmlPullParser>(new XmlPullParser(ctx,std::move(strm)));
 }
 
 }/*endof namespace*/

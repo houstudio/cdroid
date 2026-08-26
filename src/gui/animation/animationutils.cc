@@ -32,15 +32,15 @@ int64_t AnimationUtils::currentAnimationTimeMillis(){
 
 Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
     Animation*anim = nullptr;
-    XmlPullParser parser(context,resid);
-    const AttributeSet& attrs = parser;
-    return createAnimationFromXml(context,parser,nullptr,attrs);
+    auto parser = context->getResources().getXml(resid);
+    const AttributeSet& attrs = *parser;
+    return createAnimationFromXml(context,*parser,nullptr,attrs);
 }
 
 Animation* AnimationUtils::loadAnimation(Context* context,int id){
-    XmlPullParser parser(context,id);
-    const AttributeSet& attrs = parser;
-    return createAnimationFromXml(context,parser,nullptr,attrs);
+    auto parser = context->getResources().getXml(id);
+    const AttributeSet& attrs = *parser;
+    return createAnimationFromXml(context,*parser,nullptr,attrs);
 }
 
 Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& parser,AnimationSet* parent,const AttributeSet& attrs){
@@ -82,15 +82,15 @@ Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& par
 }
 
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
-    XmlPullParser parser(context,resid);
-    const AttributeSet& attrs = parser;
-    return createLayoutAnimationFromXml(context,parser,attrs);
+    auto parser = context->getResources().getXml(resid);
+    const AttributeSet& attrs = *parser;
+    return createLayoutAnimationFromXml(context,*parser,attrs);
 }
 
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,int id){
-    XmlPullParser parser(context,id);
-    const AttributeSet& attrs = parser;
-    return createLayoutAnimationFromXml(context,parser,attrs);
+    auto parser = context->getResources().getXml(id);
+    const AttributeSet& attrs = *parser;
+    return createLayoutAnimationFromXml(context,*parser,attrs);
 }
 
 LayoutAnimationController* AnimationUtils::createLayoutAnimationFromXml(Context* c,
@@ -140,18 +140,18 @@ Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
 }
 
 Interpolator* AnimationUtils::loadInterpolator(Context*context,const std::string& id){
-    XmlPullParser parser(context,id);
+    auto parser = context->getResources().getXml(id);
     // Legacy name-based path: no int cache key, so parse fresh. Callers that
     // want caching should resolve the resource id and use loadInterpolator(int).
-    return createInterpolatorFromXml(context, parser).get();
+    return createInterpolatorFromXml(context, *parser).get();
 }
 
 Interpolator* AnimationUtils::loadInterpolator(Context*context,int id){
     if (id == 0) return nullptr;  // AOSP: 0 → null
     auto it = mInterpolators.find(id);
     if (it != mInterpolators.end()) return it->second.get();
-    XmlPullParser parser(context, id);
-    std::shared_ptr<Interpolator> interpolator = createInterpolatorFromXml(context, parser);
+    auto parser = context->getResources().getXml(id);
+    std::shared_ptr<Interpolator> interpolator = createInterpolatorFromXml(context, *parser);
     if (interpolator) mInterpolators.emplace(id, interpolator);
     return interpolator.get();
 }

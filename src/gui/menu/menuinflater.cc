@@ -45,9 +45,9 @@ MenuInflater::MenuInflater(Context* context, void* realOwner) {
 }
 
 void MenuInflater::inflate(int menuRes, Menu* menu) {
-    XmlPullParser parser(mContext,menuRes);
-    AttributeSet& attrs = parser;
-    parseMenu(parser, attrs, menu);
+    auto parser = mContext->getResources().getXml(menuRes);
+    AttributeSet& attrs = *parser;
+    parseMenu(*parser, attrs, menu);
 }
 
 void MenuInflater::parseMenu(XmlPullParser& parser,const AttributeSet& attrs, Menu* menu){

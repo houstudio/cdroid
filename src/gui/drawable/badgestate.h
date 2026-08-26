@@ -17,7 +17,9 @@
  *********************************************************************************/
 #ifndef __BADGE_STATE_H__
 #define __BADGE_STATE_H__
+#include <memory>
 namespace cdroid{
+class XmlPullParser;
 class BadgeState {
 public:
     class State;
@@ -37,7 +39,10 @@ protected:
     int mOffsetAlignmentMode;
     int mBadgeFixedEdge;
 private:
-    AttributeSet generateTypedArray(Context* context, const std::string& badgeResId,
+    // Parses the badge XML up to its start tag and keeps the live parser alive,
+    // so obtainStyledAttributes can read the element attrs on BOTH paths (text
+    // map and binary ResXMLTree — a value-copy snapshot would lose the latter).
+    std::unique_ptr<XmlPullParser> generateTypedArray(Context* context, const std::string& badgeResId,
         const std::string& defStyleAttr, const std::string& defStyleRes);
 public:
     BadgeState(Context* context, const std::string& badgeResId,const std::string& defStyleAttr,
