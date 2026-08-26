@@ -494,10 +494,6 @@ void NavigationBarItemView::onMeasure(int widthMeasureSpec, int heightMeasureSpe
         mLabelGroup->setLayoutParams(lp);
     }
     FrameLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
-    LOGD("NBIV.onMeasure wspec=%dx%d hspec=%dx%d -> %dx%d",
-         MeasureSpec::getMode(widthMeasureSpec),MeasureSpec::getSize(widthMeasureSpec),
-         MeasureSpec::getMode(heightMeasureSpec),MeasureSpec::getSize(heightMeasureSpec),
-         getMeasuredWidth(),getMeasuredHeight());
 }
 
 } // namespace cdroid
