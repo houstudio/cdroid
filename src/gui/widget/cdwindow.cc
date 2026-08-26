@@ -213,7 +213,9 @@ void Window::recreate(){
     close();   // posts removeWindow + onDestroy + delete (async, transition-aware)
     Intent intent("");
     intent.setComponent(ComponentName("", name));
-    App::getInstance().startActivity(intent);
+    // Dispatch through the window's own context (AOSP View/Window route
+    // startActivity via getContext(); App's override resolves the activity).
+    mContext->startActivity(intent);
 }
 
 void Window::setActionBar(Toolbar* toolbar){
