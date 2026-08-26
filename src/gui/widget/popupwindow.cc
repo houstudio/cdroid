@@ -107,8 +107,9 @@ PopupWindow::~PopupWindow(){
     // this) - dismiss() normally does this, the destructor must too.
     detachFromAnchor();
     delete mBackground;
-    delete mAboveAnchorBackgroundDrawable;
-    delete mBelowAnchorBackgroundDrawable;
+    // mAboveAnchor/mBelowAnchorBackgroundDrawable are children borrowed from the
+    // mBackground StateListDrawable — the container owns and deletes them (AOSP
+    // relies on GC here).
 }
 
 void PopupWindow::init(){
@@ -188,6 +189,9 @@ Drawable* PopupWindow::getBackground() {
     return mBackground;
 }
 
+// AOSP PopupWindow.ABOVE_ANCHOR_STATE_SET = { com.android.internal.R.attr.state_above_anchor }.
+static const std::vector<int> ABOVE_ANCHOR_STATE_SET = { R::attr::state_above_anchor };
+
 void PopupWindow::setBackgroundDrawable(Drawable* background) {
     mBackground = background;
 
@@ -195,7 +199,8 @@ void PopupWindow::setBackgroundDrawable(Drawable* background) {
         StateListDrawable* stateList = (StateListDrawable*) mBackground;
 
         // Find the above-anchor view - this one's easy, it should be labeled as such.
-        int aboveAnchorStateIndex = -1;//stateList->getStateDrawableIndex(ABOVE_ANCHOR_STATE_SET);
+        // (AOSP android-36 renamed this call to findStateDrawableIndex.)
+        int aboveAnchorStateIndex = stateList->getStateDrawableIndex(ABOVE_ANCHOR_STATE_SET);
 
         // Now, for the below-anchor view, look for any other drawable specified in the
         // StateListDrawable which is not for the above-anchor state and use that.
@@ -549,7 +554,8 @@ PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){
 }
 
 void PopupWindow::updateAboveAnchor(bool aboveAnchor){
-    if (aboveAnchor != mAboveAnchor) 
+    // Only update if it's a change (AOSP: if (aboveAnchor != mAboveAnchor) {...}).
+    if (aboveAnchor == mAboveAnchor)
         return ;
     mAboveAnchor = aboveAnchor;
 
@@ -558,10 +564,15 @@ void PopupWindow::updateAboveAnchor(bool aboveAnchor){
         // with above-anchor and below-anchor states, use those.
         // Otherwise, rely on refreshDrawableState to do the job.
         if (mAboveAnchorBackgroundDrawable) {
+            // The two anchors are children borrowed from the mBackground container;
+            // setBackground takes ownership, so hand it a clone (preparePopup does
+            // the same for the initial background).
             if (mAboveAnchor) {
-                mBackgroundView->setBackground(mAboveAnchorBackgroundDrawable);
+                mBackgroundView->setBackground(
+                        mAboveAnchorBackgroundDrawable->getConstantState()->newDrawable());
             } else {
-                mBackgroundView->setBackground(mBelowAnchorBackgroundDrawable);
+                mBackgroundView->setBackground(
+                        mBelowAnchorBackgroundDrawable->getConstantState()->newDrawable());
             }
         } else {
             mBackgroundView->refreshDrawableState();
