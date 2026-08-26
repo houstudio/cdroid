@@ -4496,9 +4496,6 @@ void TextView::setTextIsSelectable(bool selectable) {
     mEditor->prepareCursorControllers();
 }
 
-// AOSP TextView.MULTILINE_STATE_SET = { android.R.attr.state_multiline }.
-static const std::vector<int> MULTILINE_STATE_SET = { R::attr::state_multiline };
-
 std::vector<int> TextView::onCreateDrawableState(int extraSpace) {
     std::vector<int>drawableState;
 
@@ -4506,7 +4503,7 @@ std::vector<int> TextView::onCreateDrawableState(int extraSpace) {
         drawableState = View::onCreateDrawableState(extraSpace);
     } else {
         drawableState = View::onCreateDrawableState(extraSpace+1);
-        mergeDrawableStates(drawableState, MULTILINE_STATE_SET);
+        mergeDrawableStates(drawableState, { R::attr::state_multiline });
     }
 
     if (isTextSelectable()) {
