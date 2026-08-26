@@ -201,10 +201,13 @@ public:
         const ResTable& mTable;
         const uint32_t mCacheGeneration;
         struct ThemedItem {
-            Res_value value;
-            ssize_t   stringBlock;   // owning header index (for string values)
-            uint32_t  typeSpecFlags;
-            bool      set;
+            // Default-initialized: applyStyle reads it.set / it.value on a
+            // freshly default-constructed entry (operator[] insert) before
+            // writing it — valgrind flags the reads otherwise.
+            Res_value value{};
+            ssize_t   stringBlock = -1;   // owning header index (for string values)
+            uint32_t  typeSpecFlags = 0;
+            bool      set = false;
         };
         std::map<uint32_t, ThemedItem> mEntries;  // attr resID -> item
         uint32_t mTypeSpecFlags = 0;
