@@ -31,8 +31,8 @@ set(CDROID_OVERLAY "" CACHE PATH "optional global res overlay dir applied to the
 file(COPY "${CMAKE_SOURCE_DIR}/src/gui/content/i18n/i18n.dat"
      DESTINATION "${CMAKE_SOURCE_DIR}/src/gui/res/raw")
 
-# Enable ctest at the top level so registered tests (e.g. the standalone androidfw
-# sub-library unit tests) are discoverable via `ctest` from the build root.
+# Enable ctest at the top level so registered tests (the tests/ gtest suites)
+# are discoverable via `ctest` from the build root.
 enable_testing()
 
 set(CMAKE_POLICY_DEFAULT_CMP0012 NEW)

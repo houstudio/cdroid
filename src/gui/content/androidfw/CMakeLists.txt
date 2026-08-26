@@ -45,79 +45,9 @@ target_compile_options(androidfw PRIVATE -Wall -Wextra -Werror)
 # Asset public API uses off64_t/lseek64 (AOSP-faithful); expose LFS to consumers too.
 target_compile_definitions(androidfw PUBLIC _LARGEFILE64_SOURCE)
 
-# --- Unit tests (no GUI / runtime deps; link the static lib) ---
-enable_testing()
-add_executable(androidfw_resourcetypes_test resourcetypes_test.cc)
-target_link_libraries(androidfw_resourcetypes_test PRIVATE androidfw)
-add_test(NAME resourcetypes COMMAND androidfw_resourcetypes_test)
-
-add_executable(androidfw_resxmltree_test resxmltree_test.cc)
-target_link_libraries(androidfw_resxmltree_test PRIVATE androidfw)
-add_test(NAME resxmltree COMMAND androidfw_resxmltree_test)
-
-add_executable(androidfw_config_test config_test.cc)
-target_link_libraries(androidfw_config_test PRIVATE cdroid)
-add_test(NAME restable_config COMMAND androidfw_config_test)
-
-add_executable(androidfw_dynamicreftable_test dynamicreftable_test.cc)
-target_link_libraries(androidfw_dynamicreftable_test PRIVATE androidfw)
-add_test(NAME dynamicreftable COMMAND androidfw_dynamicreftable_test)
-
-# Multi-package: two 0x7f arscs, one as shared lib -> id remapped + DynamicRefTable.
-add_executable(androidfw_multipackage_test multipackage_test.cc)
-target_link_libraries(androidfw_multipackage_test PRIVATE androidfw)
-add_test(NAME multipackage COMMAND androidfw_multipackage_test)
-
-# Theme: applyStyle with parent inheritance + force/clear semantics.
-add_executable(androidfw_theme_test theme_test.cc)
-target_link_libraries(androidfw_theme_test PRIVATE androidfw)
-add_test(NAME theme COMMAND androidfw_theme_test)
-
-# Full TypedArray: applyStyle priority merge (element > style=) + typed getters.
-add_executable(androidfw_full_typedarray_test full_typedarray_test.cc)
-target_link_libraries(androidfw_full_typedarray_test PRIVATE androidfw)
-add_test(NAME full_typedarray COMMAND androidfw_full_typedarray_test)
-
-# AssetManager2 management: getIdentifier / getResourceName / listPackageNames / getConfigurations.
-add_executable(androidfw_mgmt_test mgmt_test.cc)
-target_link_libraries(androidfw_mgmt_test PRIVATE androidfw)
-add_test(NAME mgmt COMMAND androidfw_mgmt_test)
-
-# The canonical ResTable test: traverse every resource in an arsc and output its
-# full info (id, type/key, value or bag entries), with config-selection + bag
-# fidelity assertions. Replaces the former narrow per-feature tests.
-add_executable(androidfw_traverse_test traverse_test.cc)
-target_link_libraries(androidfw_traverse_test PRIVATE cdroid)
-add_test(NAME traverse COMMAND androidfw_traverse_test)
-
-# Legacy AssetManager: addAssetPath/open/openNonAsset/openDir + ResTable wiring,
-# exercising real apks in testdata/_gen.
-add_executable(androidfw_assetmanager_test assetmanager_test.cc)
-target_link_libraries(androidfw_assetmanager_test PRIVATE cdroid)
-target_compile_definitions(androidfw_assetmanager_test PRIVATE
-    ANDROIDFW_TESTDATA="${CMAKE_CURRENT_SOURCE_DIR}/testdata")
-add_test(NAME assetmanager COMMAND androidfw_assetmanager_test)
-
-# Resources: ID-based value/meta/asset resolution over an AssetManager. Now
-# links cdroid (ResourcesImpl moved to core/, the cairo-aware cdroid layer, so
-# it can own the GUI factories + caches). Uses the arsc testdata apk.
-add_executable(androidfw_resources_test resources_test.cc)
-target_link_libraries(androidfw_resources_test PRIVATE cdroid)
-target_compile_definitions(androidfw_resources_test PRIVATE
-    ANDROIDFW_TESTDATA="${CMAKE_CURRENT_SOURCE_DIR}/testdata")
-add_test(NAME resources COMMAND androidfw_resources_test)
-
-# Closed-loop demo: dump a binary AXML tree (fixture or any file arg), like
-# `aapt2 dump xmltree`. Verifies the parser end to end.
-add_executable(androidfw_axml_dump androidfw_axml_dump.cc)
-target_link_libraries(androidfw_axml_dump PRIVATE androidfw)
-
-# Closed-loop demo: resolve a string across locales and an integer across
-# densities from a real arsc — the multi-language / multi-resolution verification.
-add_executable(androidfw_resource_demo androidfw_resource_demo.cc)
-target_link_libraries(androidfw_resource_demo PRIVATE androidfw)
-
-# Demo: a minimal TypedArray running on the current state (ResXMLTree only) —
-# proves aapt2-typed attrs can be read with the Android TypedArray getter shape.
-add_executable(androidfw_typedarray_demo androidfw_typedarray_demo.cc)
-target_link_libraries(androidfw_typedarray_demo PRIVATE androidfw)
+# The stage-by-stage verification programs (bare-main *_test.cc per feature,
+# three closed-loop demos, in-tree byte fixtures, generated testdata/) that
+# scaffolded the port were retired — they had fallen out of every build path
+# after the move to content/ (only the OBJECT library ever compiled). Coverage
+# lives in tests/androidfw (the gtest suite; axml_fixture.h is still its data).
+# Recoverable from git history should the xmlparser split need them again.
