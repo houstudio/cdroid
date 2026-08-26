@@ -354,7 +354,7 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
     if (!itemActionViewClassName.empty()) {
         // AOSP constructs the action view with the (Context) ctor signature —
         // no XML attributes. Feed the typed path an empty AttributeSet.
-        AttributeSet atts(mContext, std::string());
+        AttributeSet atts;
         View* actionView = LayoutInflater::from(mContext)->createViewFromTag(nullptr,itemActionViewClassName,mContext,atts,true);
             //(View*) newInstance(itemActionViewClassName,ACTION_VIEW_CONSTRUCTOR_SIGNATURE, mActionViewConstructorArguments);
         item->setActionView(actionView);

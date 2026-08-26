@@ -20,11 +20,7 @@
 
 namespace cdroid{
 
-AttributeSet::AttributeSet():AttributeSet(nullptr,""){
-}
-
-AttributeSet::AttributeSet(Context*ctx,const std::string&package)
-    :mContext(ctx),mPackage(package){
+AttributeSet::AttributeSet(){
 }
 
 // ----------------------------------------------------------------------------

@@ -214,21 +214,20 @@ std::string XmlPullParser::getPositionDescription()const{
 // the RES_XML_TYPE magic; a failed stream still yields a text parser primed at
 // END_DOCUMENT (the object must stay usable — many callers next() blindly).
 std::unique_ptr<XmlPullParser> XmlPullParser::detectAndCreate(Context*ctx,
-        std::unique_ptr<std::istream> strm,const std::string&resourceId,const std::string&pkg){
+        std::unique_ptr<std::istream> strm,const std::string&resourceId){
     if(strm && *strm){
         std::string data((std::istreambuf_iterator<char>(*strm)),
                          std::istreambuf_iterator<char>());
         strm.reset();
         if(data.size() >= 2 && (uint8_t)data[0] == 0x03 && (uint8_t)data[1] == 0x00){
-            return XmlBlock::newParser(ctx,pkg,resourceId,
+            return XmlBlock::newParser(ctx,resourceId,
                     std::vector<uint8_t>(data.begin(),data.end()));
         }
         auto parser = std::unique_ptr<XmlPullParser>(new XmlPullParser(ctx,
                 std::make_unique<std::istringstream>(std::move(data))));
-        // resourceId/pkg feed the dev-aid logging (same inputs the
+        // resourceId feeds the dev-aid logging (the same input the
         // resource-id ctors kept in Private).
         parser->mData->resourceId = resourceId;
-        if(!pkg.empty()) parser->mPackage = pkg;
         return parser;
     }
     return std::unique_ptr<XmlPullParser>(new XmlPullParser(ctx,std::move(strm)));

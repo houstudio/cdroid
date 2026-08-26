@@ -42,6 +42,9 @@ private:
     class AttrParser;
     struct Private* mData;
 protected:
+    // The context that opened the stream (impl state: the arsc name->id
+    // bridges in the getters resolve through it).
+    Context*mContext;
     // Current element's attributes, name -> value (normalize()-qualified).
     // Re-pointed at each event; empty outside a START_TAG..END_TAG span.
     std::shared_ptr<std::unordered_map<std::string,std::string>>mAttrs;
@@ -59,7 +62,7 @@ public:
     // parser otherwise. A failed stream still yields a usable parser primed
     // at END_DOCUMENT — never returns nullptr.
     static std::unique_ptr<XmlPullParser> detectAndCreate(Context*ctx,std::unique_ptr<std::istream>strm,
-            const std::string&resourceId = std::string(),const std::string&pkg = std::string());
+            const std::string&resourceId = std::string());
     virtual int getDepth()const;
     virtual std::string getName()const;
     virtual std::string getText()const;

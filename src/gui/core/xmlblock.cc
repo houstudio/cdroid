@@ -73,19 +73,17 @@ bool XmlBlock::valid()const{
     return mTree->getError()==0;
 }
 
-std::unique_ptr<XmlBlock::Parser>XmlBlock::newParser(Context*ctx,const std::string&pkg,
+std::unique_ptr<XmlBlock::Parser>XmlBlock::newParser(Context*ctx,
         const std::string&resourceId,std::vector<uint8_t>data){
-    return std::make_unique<Parser>(ctx,pkg,resourceId,
+    return std::make_unique<Parser>(ctx,resourceId,
             std::unique_ptr<XmlBlock>(new XmlBlock(std::move(data))));
 }
 
-XmlBlock::Parser::Parser(Context*ctx,const std::string&pkg,const std::string&resourceId,
+XmlBlock::Parser::Parser(Context*ctx,const std::string&resourceId,
         std::unique_ptr<XmlBlock>block)
-    :XmlPullParser(false),mBlock(std::move(block)),mTree(mBlock ? mBlock->mTree.get() : nullptr),
+    :XmlPullParser(false),mContext(ctx),mBlock(std::move(block)),mTree(mBlock ? mBlock->mTree.get() : nullptr),
      mEventDepth(0),mDepth(1),mEventType(XmlPullParser::START_DOCUMENT),
      mLineNumber(0),mResourceId(resourceId){
-    mContext = ctx;
-    mPackage = pkg;
 }
 
 XmlBlock::Parser::~Parser(){

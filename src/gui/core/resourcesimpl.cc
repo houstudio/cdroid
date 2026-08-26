@@ -455,16 +455,15 @@ std::unique_ptr<XmlPullParser> ResourcesImpl::loadXmlResourceParser(int resid) c
 }
 
 std::unique_ptr<XmlPullParser> ResourcesImpl::loadXmlResourceParser(const std::string& resid) const {
-    std::string pkg;
     std::unique_ptr<std::istream> strm;
-    if(mCtx) strm = mCtx->getInputStream(resid, &pkg);
+    if(mCtx) strm = mCtx->getInputStream(resid, nullptr);
     if(((strm==nullptr)||(!*strm))&&resid.size()){
         auto fs = std::make_unique<std::ifstream>(resid);
         if(fs->is_open()){
             strm = std::move(fs);
         }
     }
-    return XmlPullParser::detectAndCreate(mCtx, std::move(strm), resid, pkg);
+    return XmlPullParser::detectAndCreate(mCtx, std::move(strm), resid);
 }
 
 // ---- GUI-object factories: ResourcesImpl owns the AOSP mDrawableCache /

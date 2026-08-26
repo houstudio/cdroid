@@ -37,12 +37,8 @@ using RefPtr = std::shared_ptr<T>;
 // which also serves synthetic empty sets (AOSP constructs action views with a
 // null AttributeSet; CDROID passes one of these).
 class AttributeSet{
-protected:
-    std::string mPackage;
-    Context*mContext;
 public:
     AttributeSet();
-    AttributeSet(Context*ctx,const std::string&package);
     virtual ~AttributeSet()=default;
     // The AOSP interface has no value semantics — copying is deleted so a
     // parser-backed set can never be silently sliced into an empty shell.

@@ -44,7 +44,7 @@ public:
     // is handed to the parser — one parser per block, never shared. The tree
     // must also outlive any TypedArray built from the parser (TypedArray
     // keeps the const ResXMLTree*), which this ownership guarantees.
-    static std::unique_ptr<Parser>newParser(Context*ctx,const std::string&pkg,
+    static std::unique_ptr<Parser>newParser(Context*ctx,
             const std::string&resourceId,std::vector<uint8_t>data);
 
 private:
@@ -61,7 +61,7 @@ class XmlBlock::Parser:public XmlPullParser{
 public:
     // AOSP's Parser(long parseState, XmlBlock block) is package-private; the
     // C++ shape takes block ownership (see XmlBlock::newParser).
-    Parser(Context*ctx,const std::string&pkg,const std::string&resourceId,
+    Parser(Context*ctx,const std::string&resourceId,
             std::unique_ptr<XmlBlock>block);
     ~Parser()override;
 
@@ -118,6 +118,9 @@ private:
     // Dev aid: flag attributes aapt2 could not resolve to a resource id.
     void warnUnnamedAttributes()const;
 private:
+    // The context that opened the resource (impl state: reference rendering
+    // and the dev-aid logging resolve through it).
+    Context* mContext;
     std::unique_ptr<XmlBlock> mBlock;
     // Cached tree cursor — AOSP's Parser caches its native mParseState the
     // same way instead of reaching through mBlock on every call.
