@@ -22,6 +22,7 @@
 #include <menu/menuitem.h>
 #include <menu/submenu.h>
 #include <menu/menuitemimpl.h>
+#include <menu/menubuilder.h>
 #include <view/actionprovider.h>
 #include <view/layoutinflater.h>
 #include <core/typedarray.h>
@@ -45,9 +46,20 @@ MenuInflater::MenuInflater(Context* context, void* realOwner) {
 }
 
 void MenuInflater::inflate(int menuRes, Menu* menu) {
+    // Suppress per-add item-change dispatch while inflating (the AOSP panel
+    // idiom wraps inflate this way): menu->add() and the item attr writes in
+    // MenuState::setItem each notify, and an eager presenter rebuild in the
+    // middle re-runs createMenuItem whose setCheckable(true) is then
+    // overwritten by setItem's XML defaults — the last item never got a
+    // following rebuild and stayed non-checkable (bottom nav's final tab
+    // never tinted). One dispatch fires on startDispatchingItemsChanged if
+    // anything changed.
+    MenuBuilder* builder = dynamic_cast<MenuBuilder*>(menu);
+    if (builder) builder->stopDispatchingItemsChanged();
     auto parser = mContext->getResources().getXml(menuRes);
     AttributeSet& attrs = *parser;
     parseMenu(*parser, attrs, menu);
+    if (builder) builder->startDispatchingItemsChanged();
 }
 
 void MenuInflater::parseMenu(XmlPullParser& parser,const AttributeSet& attrs, Menu* menu){
