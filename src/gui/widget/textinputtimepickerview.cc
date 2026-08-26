@@ -24,6 +24,8 @@
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
 #include <widget/textinputtimepickerview.h>
+#include <content/numberformat.h>
+#include <content/Locale.h>
 namespace cdroid {
 using namespace cdroid::internal;
 
@@ -133,13 +135,20 @@ bool TextInputTimePickerView::isTimeSet() const{
     return mTimeSet;
 }
 
+// AOSP updateTextInputValues: hourFormat = "%d", minuteFormat = "%02d", both
+// through String.format — i.e. the DEFAULT-locale NumberFormat (localized
+// digits), never a plain ostringstream.
 static std::string formatNumber(int mValue, int mCount) {
-    std::ostringstream oss;
-    if(mCount)
-        oss << std::setw(mCount) << std::setfill('0') << mValue;
-    else
-        oss<<mValue;
-    return oss.str();
+    static std::string tag;
+    static std::unique_ptr<cdroid::NumberFormat> plain, twoDigit;
+    const std::string cur = Locale::getDefault().toLanguageTag();
+    if (tag != cur || plain == nullptr) {
+        tag = cur;
+        plain = NumberFormat::getIntegerInstance(Locale::getDefault());
+        twoDigit = NumberFormat::getIntegerInstance(Locale::getDefault());
+        twoDigit->setMinimumIntegerDigits(2);
+    }
+    return mCount ? twoDigit->format(mValue) : plain->format(mValue);
 }
 void TextInputTimePickerView::updateTextInputValues(int localizedHour, int minute, int amOrPm, bool is24Hour,
         bool hourFormatStartsAtZero) {

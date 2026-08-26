@@ -23,6 +23,8 @@
 #include <widget/editorinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <core/color.h>
+#include <content/Locale.h>
+#include <content/numberformat.h>
 #include <utils/textutils.h>
 #include <utils/mathutils.h>
 #include <porting/cdlog.h>
@@ -56,9 +58,34 @@ static InflaterRegister<NumberPickerCustomEditText>
     g_numberpicker_customedittext("NumberPicker$CustomEditText", 0);
 
 namespace {
-    static NumberPicker::Formatter sTwoDigitFormatter=[](int value){
-        return TextUtils::stringPrintf("%02d",value);
-    };
+// AOSP formatNumberWithLocale: String.format(Locale.getDefault(), "%d", value).
+// The engine-backed NumberFormat localizes the DIGITS (ar ٠١٢, hi ०१٢), which
+// the old std::to_string weakening never did. Formatters are cached per
+// default-locale tag and rebuilt when the locale changes (CONFIG_LOCALE) —
+// the wheel calls formatNumber every scroll frame.
+struct LocaleFormatterCache {
+    std::string tag;
+    std::unique_ptr<cdroid::NumberFormat> plain;      // "%d"
+    std::unique_ptr<cdroid::NumberFormat> twoDigit;   // "%02d"
+};
+static LocaleFormatterCache& formatterCache() {
+    static LocaleFormatterCache cache;
+    const std::string tag = Locale::getDefault().toLanguageTag();
+    if (cache.tag != tag || cache.plain == nullptr) {
+        cache.tag = tag;
+        cache.plain = NumberFormat::getIntegerInstance(Locale::getDefault());
+        cache.twoDigit = NumberFormat::getIntegerInstance(Locale::getDefault());
+        cache.twoDigit->setMinimumIntegerDigits(2);
+    }
+    return cache;
+}
+static std::string formatNumberWithLocale(int value) {
+    return formatterCache().plain->format(value);
+}
+// AOSP TwoDigitFormatter: locale-aware "%02d" (minutes "01".."59", ar "٠١").
+static NumberPicker::Formatter sTwoDigitFormatter=[](int value){
+    return formatterCache().twoDigit->format(value);
+};
 }
 NumberPicker::NumberPicker(Context*ctx)
     :NumberPicker(ctx,nullptr){}
@@ -950,8 +977,8 @@ void NumberPicker::tryComputeMaxWidth(){
     if (mDisplayedValues.size() == 0) {
         float maxDigitWidth = 0;
         for (int i = 0; i <= 9; i++) {
-            char16_t num='0'+i;
-            const float digitWidth = mSelectorWheelPaint.measureText(&num,0,1);
+            const auto num = TextUtils::utf8_utf16(formatNumberWithLocale(i));
+            const float digitWidth = mSelectorWheelPaint.measureText(num.c_str(),0,num.size());
             if (digitWidth > maxDigitWidth) {
                 maxDigitWidth = digitWidth;
             }
@@ -1747,7 +1774,7 @@ void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
 }
 
 std::string NumberPicker::formatNumber(int value){
-    return (mFormatter != nullptr) ? mFormatter(value):std::to_string(value);
+    return (mFormatter != nullptr) ? mFormatter(value):formatNumberWithLocale(value);
 }
 
 void NumberPicker::validateInputTextView(View* v){

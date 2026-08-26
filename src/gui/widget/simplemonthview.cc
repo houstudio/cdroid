@@ -18,6 +18,8 @@
 #include <widget/internal_R.h>
 #include <core/context.h>
 #include <widget/simplemonthview.h>
+#include <content/numberformat.h>
+#include <content/Locale.h>
 #include <widget/framework_styleable.h>
 #include <content/dateformatsymbols.h>
 #include <content/simpledateformat.h>
@@ -83,6 +85,9 @@ SimpleMonthView::~SimpleMonthView(){
 }
 
 void SimpleMonthView::initMonthView(){
+    // AOSP: mLocale = res config locale; mDayFormatter = NumberFormat.
+    // getIntegerInstance(mLocale) — right after the Calendar init.
+    mDayFormatter = NumberFormat::getIntegerInstance(Locale::getDefault());
     mOnDayClickListener = nullptr;
     mDayTextColor = nullptr;
     mDesiredMonthHeight = 30;
@@ -149,6 +154,9 @@ void SimpleMonthView::updateMonthYearLabel(){
 }
 
 void SimpleMonthView::onLocaleChanged() {
+    // AOSP rebuilds the whole view on a locale change; CDROID re-localizes
+    // in place, so the day formatter rebuilds here too.
+    mDayFormatter = NumberFormat::getIntegerInstance(Locale::getDefault());
     updateMonthYearLabel();
     updateDayOfWeekLabels();
     invalidate();
@@ -610,7 +618,7 @@ void SimpleMonthView::drawDays(Canvas& canvas){
         }
         mDayPaint.setColor(dayTextColor);
 
-        const std::u16string u16 = TextUtils::utf8_utf16(std::to_string(day));
+        const std::u16string u16 = TextUtils::utf8_utf16(mDayFormatter->format(day));
         mDayPaint.drawTextRun(canvas, (const char16_t*) u16.c_str(),
                 0, u16.length(), 0, 0, colCenterRtl, rowCenter - halfLineHeight, false);
 
@@ -965,7 +973,7 @@ std::string SimpleMonthView::MonthViewTouchHelper::getDayDescription(int id) {
  */
 std::string SimpleMonthView::MonthViewTouchHelper::getDayText(int id) {
     if (mSMV->isValidDayOfMonth(id)) {
-        return "";//mDayFormatter.format(id);
+        return mSMV->mDayFormatter->format(id);
     }
 
     return "";

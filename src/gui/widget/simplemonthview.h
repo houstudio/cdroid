@@ -24,10 +24,15 @@
 #include <widget/explorebytouchhelper.h>
 namespace cdroid{
 
+class NumberFormat;   // content/numberformat.h — the day formatter below
+
 class SimpleMonthView:public View{
 public:
     DECLARE_UIEVENT(void,OnDayClickListener,SimpleMonthView& view, Calendar& day);
 private:
+    // AOSP mDayFormatter = NumberFormat.getIntegerInstance(mLocale): the day
+    // numbers are localized digits (ar ٠١٢…), not ASCII.
+    std::unique_ptr<NumberFormat> mDayFormatter;
     static constexpr int DAYS_IN_WEEK =7;
     static constexpr int MAX_WEEKS_IN_MONTH = 6;
     static constexpr int DEFAULT_SELECTED_DAY=-1;

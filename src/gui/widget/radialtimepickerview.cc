@@ -14,6 +14,8 @@
 #include <vector>
 
 #include <widget/radialtimepickerview.h>
+#include <content/numberformat.h>
+#include <content/Locale.h>
 #include <widget/framework_styleable.h>
 #include <content/typedarray.h>
 #include <core/calendar.h>
@@ -92,10 +94,30 @@ float lerpDeg(float start, float end, float amount) {
     return minAngle * amount + start;
 }
 
-std::string fmtInt(const char* spec, int value) {
-    char buf[8];
-    std::snprintf(buf, sizeof(buf), spec, value);
-    return std::string(buf);
+// AOSP String.format("%d") / ("%02d"): the DEFAULT-locale formatter, so the
+// clock digits localize (ar ٠١٢). Cached per default-locale tag, rebuilt on
+// CONFIG_LOCALE — the wheel text tables fill once per picker build.
+struct LocaleIntCache {
+    std::string tag;
+    std::unique_ptr<cdroid::NumberFormat> plain;
+    std::unique_ptr<cdroid::NumberFormat> twoDigit;
+};
+static LocaleIntCache& intCache() {
+    static LocaleIntCache cache;
+    const std::string tag = Locale::getDefault().toLanguageTag();
+    if (cache.tag != tag || cache.plain == nullptr) {
+        cache.tag = tag;
+        cache.plain = NumberFormat::getIntegerInstance(Locale::getDefault());
+        cache.twoDigit = NumberFormat::getIntegerInstance(Locale::getDefault());
+        cache.twoDigit->setMinimumIntegerDigits(2);
+    }
+    return cache;
+}
+static std::string formatWithLocale(int value) {
+    return intCache().plain->format(value);
+}
+static std::string formatTwoDigitsWithLocale(int value) {
+    return intCache().twoDigit->format(value);
 }
 } // namespace
 
@@ -380,10 +402,10 @@ void RadialTimePickerView::showMinutes(bool animate) { showPicker(false, animate
 
 void RadialTimePickerView::initHoursAndMinutesText() {
     for (int i = 0; i < 12; i++) {
-        mHours12Texts[i]      = fmtInt("%d",  HOURS_NUMBERS[i]);
-        mInnerHours24Texts[i] = fmtInt("%02d", HOURS_NUMBERS_24[i]);
-        mOuterHours24Texts[i] = fmtInt("%d",  HOURS_NUMBERS[i]);
-        mMinutesTexts[i]      = fmtInt("%02d", MINUTES_NUMBERS[i]);
+        mHours12Texts[i]      = formatWithLocale(HOURS_NUMBERS[i]);
+        mInnerHours24Texts[i] = formatTwoDigitsWithLocale(HOURS_NUMBERS_24[i]);
+        mOuterHours24Texts[i] = formatWithLocale(HOURS_NUMBERS[i]);
+        mMinutesTexts[i]      = formatTwoDigitsWithLocale(MINUTES_NUMBERS[i]);
     }
 }
 
