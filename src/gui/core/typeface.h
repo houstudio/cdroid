@@ -83,7 +83,6 @@ private:
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
     //Typeface(Cairo::RefPtr<Cairo::FontFace>face);
-    Typeface(const FcPattern&);
     // Build a Typeface directly from font fields (Android fonts.xml path) — no fontconfig.
     // If `family` is empty (a fallback <family lang=...>), the real family is read from the
     // font file's family_name so buildSystemFallback/buildFamily can group it correctly.
@@ -120,15 +119,12 @@ public:
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
     static void buildSystemFallback();
     //static Typeface* findFromCache(AssetManager mgr, const std::string& path);
-    static std::shared_ptr<Typeface> make(const FcPattern& pat);
     static Typeface* create(const std::string& familyName,int style);
     static Typeface* create(Typeface* family,int style);
     static Typeface* create(Typeface* family,int weight, bool italic);
     static Typeface* defaultFromStyle(int style);
     static Typeface* createFromAsset(const std::string path);
     static void loadPreinstalledSystemFontMap();
-    static int loadFromFontConfig();
-    static int loadFromPath(const std::string&path);
     static int loadFaceFromResource(cdroid::Context*context);
     static std::vector<Cairo::RefPtr<Cairo::FontFace>>getFontFaces();
 };
