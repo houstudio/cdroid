@@ -19,7 +19,7 @@
 #define __ANIMATOR_INFLATER_H__
 #include <animation/objectanimator.h>
 #include <animation/statelistanimator.h>
-#include <core/resources.h>
+#include <content/resources.h>
 namespace cdroid{
 class TypedArray;
 class TypedValue;

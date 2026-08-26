@@ -19,7 +19,7 @@
 #ifndef __DRAWABLE_WRAPPER_H__
 #define __DRAWABLE_WRAPPER_H__
 #include <drawable/drawable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 namespace cdroid{
 
 class DrawableWrapper:public Drawable,public Drawable::Callback{

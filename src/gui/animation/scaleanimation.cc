@@ -18,8 +18,8 @@
 #include <animation/scaleanimation.h>
 #include <cdtypes.h>
 #include <cdlog.h>
-#include <core/typedarray.h>
-#include <core/typedvalue.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>
 #include <widget/framework_styleable.h>
 namespace cdroid{
 using namespace cdroid::internal;

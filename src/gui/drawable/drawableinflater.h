@@ -18,7 +18,7 @@
 #ifndef __DRAWABLE_INFLATER_H__
 #define __DRAWABLE_INFLATER_H__
 #include <core/context.h>
-#include <core/resources.h>   // Resources::Theme (themed inflation)
+#include <content/resources.h>   // Resources::Theme (themed inflation)
 namespace cdroid{
 class XmlPullParser;
 class DrawableInflater {

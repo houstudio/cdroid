@@ -21,9 +21,9 @@
 #include <iostream>
 #include <core/context.h>
 #include <core/attributeset.h>
-#include <core/complexcolor.h>
+#include <content/complexcolor.h>
 #include <core/xmlpullparser.h>
-#include <androidfw/restable.h>   // ResTable::Theme (createFromXml theme param)
+#include <content/androidfw/restable.h>   // ResTable::Theme (createFromXml theme param)
 
 namespace cdroid{
 

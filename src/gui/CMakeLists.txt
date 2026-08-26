@@ -10,7 +10,7 @@ endif()
 file(GLOB_RECURSE SRCS_WIDGETEX RELATIVE "${PROJECT_SOURCE_DIR}" "widgetEx/*")
 
 if( ENABLE_I18N )
-    aux_source_directory(i18n SRCS_I18N)
+    aux_source_directory(content/i18n SRCS_I18N)
 endif()
 aux_source_directory(cairomm  SRCS_CAIROMM)
 aux_source_directory(utils SRCS_UTILS)
@@ -54,7 +54,7 @@ target_include_directories(
     cdroid
     PRIVATE
     ${PROJECT_SOURCE_DIR}/
-    ${PROJECT_SOURCE_DIR}/i18n
+    ${PROJECT_SOURCE_DIR}/content/i18n
     ${PROJECT_SOURCE_DIR}/private
     ${PROJECT_SOURCE_DIR}/core
     ${PROJECT_SOURCE_DIR}/view
@@ -87,7 +87,7 @@ file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
 
 # i18n headers are internal: the java.text face (content/) wraps the engine,
 # so the vendored i18n/*.h must not be copied into the public include tree.
-SET(exclude_dirs private image-decoders i18n)
+SET(exclude_dirs private image-decoders content/i18n)
 set(filtered_files "")
 
 foreach(file ${allfiles})

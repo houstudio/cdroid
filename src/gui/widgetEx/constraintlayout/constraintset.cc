@@ -21,7 +21,7 @@
  */
 #include <widget/framework_styleable.h>
 #include <core/context.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/internal_R.h>
 #include <climits>
 #include <cctype>

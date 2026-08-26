@@ -27,7 +27,7 @@
 #include <transition/slide.h>
 #include <transition/transitionmanager.h>
 #include <transition/transitionset.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/framework_styleable.h>
 
 namespace cdroid {

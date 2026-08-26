@@ -6,8 +6,8 @@
 // Build: make -C outX64-Debug androidfw_test (picks up this file via GLOB)
 #include "gtest/gtest.h"
 #include "core/xmlpullparser.h"
-#include "core/xmlblock.h"      // XmlBlock::Parser (the factory's binary product)
-#include "androidfw/axml_fixture.h"  // kAXML: binary AXML (LinearLayout+TextView)
+#include "content/xmlblock.h"      // XmlBlock::Parser (the factory's binary product)
+#include "content/androidfw/axml_fixture.h"  // kAXML: binary AXML (LinearLayout+TextView)
 
 #include <sstream>
 #include <memory>

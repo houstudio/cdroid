@@ -7,13 +7,13 @@
 #include <core/context.h>
 #include <core/app.h>                  // App::getInstance() (getSystem)
 #include <core/attributeset.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <core/xmlpullparser.h>
-#include <core/xmlblock.h>            // XmlBlock::Parser (the binary downcast below)
-#include <androidfw/restable.h>        // obtainStyledAttributes resolver, ResXMLTree, StyledAttr
-#include <core/resourcesimpl.h>   // ResourcesImpl (aggregated)
-#include <core/assetmanager.h>      // AssetManager (getAssets()->getResources)
-#include <core/typedvalue.h>   // TypedValue (getValue/getColorStateList)
+#include <content/xmlblock.h>            // XmlBlock::Parser (the binary downcast below)
+#include <content/androidfw/restable.h>        // obtainStyledAttributes resolver, ResXMLTree, StyledAttr
+#include <content/resourcesimpl.h>   // ResourcesImpl (aggregated)
+#include <content/assetmanager.h>      // AssetManager (getAssets()->getResources)
+#include <content/typedvalue.h>   // TypedValue (getValue/getColorStateList)
 #include <drawable/drawable.h>
 #include <drawable/colorstatelist.h>   // ColorStateList (forward decl in resources.h)
 

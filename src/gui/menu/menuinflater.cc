@@ -25,7 +25,7 @@
 #include <menu/menubuilder.h>
 #include <view/actionprovider.h>
 #include <view/layoutinflater.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/internal_R.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdlog.h>

@@ -33,7 +33,7 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/floatingactionmode.h>
 #include <core/systemclock.h>
-#include <core/typedvalue.h>
+#include <content/typedvalue.h>
 #include <core/windowmanager.h>
 #include <animation/animator.h>
 #include <animation/objectanimator.h>

@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <widget/framework_styleable.h>
 #include <navigation/navgraph.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widgetEx/widgetex_styleable.h>
 #include <navigation/navgraphnavigator.h>
 #include <navigation/navigatorprovider.h>

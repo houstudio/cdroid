@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <widget/cardview.h>
 #include <widget/cardviewimpl.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/framework_styleable.h>
 namespace cdroid{
 using namespace cdroid::internal;

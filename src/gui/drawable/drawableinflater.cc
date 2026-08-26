@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <drawable/drawables.h>
 #include <drawable/animationscalelistdrawable.h>
-#include <core/typedvalue.h>
+#include <content/typedvalue.h>
 #include <image-decoders/imagedecoder.h>  // ImageDecoder::createAsDrawable(Resources, id)
 #include <utils/textutils.h>
 namespace cdroid{

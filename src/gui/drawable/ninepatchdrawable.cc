@@ -19,9 +19,9 @@
 #include <drawable/ninepatchdrawable.h>
 #include <drawable/ninepatchrenderer.h>
 #include <image-decoders/imagedecoder.h>
-#include <core/asset.h>
+#include <content/asset.h>
 #include <widget/framework_styleable.h>
-#include <core/typedvalue.h>
+#include <content/typedvalue.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
 #include <fstream>

@@ -17,11 +17,11 @@
  *********************************************************************************/
 #include <sys/stat.h>
 #include <core/app.h>
-#include <core/typedarray.h>   // TypedArray (constructed in obtainStyledAttributes)
-#include <core/typedvalue.h>   // TypedValue (typed currency of this layer)
-#include <androidfw/restable.h> // ResTable engine + Res_value (boundary lookups)
-#include "androidfw/LocaleData.h"  // localeDataComputeScript (arsc locale config)
-#include "core/assetmanager.h"   // AssetManager
+#include <content/typedarray.h>   // TypedArray (constructed in obtainStyledAttributes)
+#include <content/typedvalue.h>   // TypedValue (typed currency of this layer)
+#include <content/androidfw/restable.h> // ResTable engine + Res_value (boundary lookups)
+#include "content/androidfw/LocaleData.h"  // localeDataComputeScript (arsc locale config)
+#include "content/assetmanager.h"   // AssetManager
 #include "resources.h"         // cdroid::Resources
 #include <algorithm>
 #include <cdtypes.h>
@@ -49,7 +49,7 @@
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
 #include <core/app.h>
-#include <core/LocaleList.h>
+#include <content/LocaleList.h>
 #include <private/ziparchive.h>
 #include <widget/framework_styleable.h>
 #include <core/xmlpullparser.h>

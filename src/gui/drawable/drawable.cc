@@ -19,7 +19,7 @@
 #include <drawable/drawable.h>
 #include <porting/cdlog.h>
 #include <core/windowmanager.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/framework_styleable.h>
 #include <drawable/drawableinflater.h>
 

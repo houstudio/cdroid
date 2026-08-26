@@ -25,7 +25,7 @@
 #include <cairomm/surface.h>
 #include <core/looper.h>
 #include <core/context.h>
-#include <core/typedarray.h>      // TypedArray: consumer-side typed attr view
+#include <content/typedarray.h>      // TypedArray: consumer-side typed attr view
 
 namespace cxxopts{
     class ParseResult;

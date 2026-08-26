@@ -18,7 +18,7 @@
 #ifndef __GRADIENT_DRAWABLE_H__
 #define __GRADIENT_DRAWABLE_H__
 #include <drawable/drawable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 //#include <core/path.h>
 namespace cdroid{
 

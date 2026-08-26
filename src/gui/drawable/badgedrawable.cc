@@ -22,7 +22,7 @@
 #include <widget/framelayout.h>
 #include <widget/internal_R.h>
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 using namespace cdroid::internal;
 #include <core/xmlpullparser.h>
 #include <core/typeface.h>

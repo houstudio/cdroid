@@ -18,8 +18,8 @@
 #include <drawable/colorstatelist.h>
 #include <drawable/stateset.h>
 #include <core/color.h>
-#include <core/resources.h>
-#include <core/typedarray.h>
+#include <content/resources.h>
+#include <content/typedarray.h>
 #include <core/sparsearray.h>
 #include <core/xmlpullparser.h>
 #include <attributeset.h>

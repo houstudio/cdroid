@@ -8,7 +8,7 @@
 #include <core/app.h>
 #include <cdroid.h>
 #include <core/activityfactory.h>
-#include <core/LocaleList.h>
+#include <content/LocaleList.h>
 #include <app/alertdialog.h>
 #include <view/layoutinflater.h>
 #include <widget/button.h>

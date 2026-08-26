@@ -16,10 +16,10 @@
 #include <sstream>
 
 // androidfw native readers — hidden from resourcesimpl.h (the facade contract).
-#include <androidfw/restable.h>       // ResTable, ResTable_config, Res_value, pakPathCandidates
-#include <core/assetmanager.h>        // AssetManager
-#include <core/asset.h>               // Asset
-#include <core/typedvalue.h>     // TypedValue
+#include <content/androidfw/restable.h>       // ResTable, ResTable_config, Res_value, pakPathCandidates
+#include <content/assetmanager.h>        // AssetManager
+#include <content/asset.h>               // Asset
+#include <content/typedvalue.h>     // TypedValue
 
 #include <drawable/drawable.h>        // Drawable::ConstantState
 #include <drawable/colordrawable.h>   // ColorDrawable (color-drawable path)

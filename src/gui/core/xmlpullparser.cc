@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <core/xmlpullparser.h>
-#include <core/xmlblock.h>             // XmlBlock::Parser (detectAndCreate product)
+#include <content/xmlblock.h>             // XmlBlock::Parser (detectAndCreate product)
 #include <porting/cdlog.h>
 #include <core/context.h>
 #include <core/color.h>

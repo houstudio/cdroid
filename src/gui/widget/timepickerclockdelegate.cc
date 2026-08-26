@@ -4,7 +4,7 @@
 #include <widget/timepickerclockdelegate.h>
 #include <text/textutils.h>   // getLayoutDirectionFromLocale (setAmPmStart)
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <drawable/colorstatelist.h>
 #include <drawable/stateset.h>
 #include <widget/radialtimepickerview.h>

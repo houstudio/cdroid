@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <animation/rotateanimation.h>
-#include <core/typedarray.h>
-#include <core/typedvalue.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>
 #include <widget/framework_styleable.h>
 
 using namespace cdroid::internal;

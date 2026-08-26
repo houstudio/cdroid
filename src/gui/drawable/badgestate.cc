@@ -18,7 +18,7 @@
 #include <porting/cdlog.h>
 #include <drawable/badgedrawable.h>
 #include <drawable/badgestate.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/internal_R.h>
 #include <widget/framework_styleable.h>
 

@@ -15,14 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <androidfw/resourcetypes.h>   // Res_value/ResXMLTree
-#include <core/typedvalue.h>           // TypedValue (typed currency)
-#include <core/xmlblock.h>
+#include <content/androidfw/resourcetypes.h>   // Res_value/ResXMLTree
+#include <content/typedvalue.h>           // TypedValue (typed currency)
+#include <content/xmlblock.h>
 #include <porting/cdlog.h>
 #include <core/context.h>
 #include <core/app.h>
 #include <core/app.h>
-#include <core/resources.h>
+#include <content/resources.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

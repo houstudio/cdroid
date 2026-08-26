@@ -18,7 +18,7 @@
 #ifndef __STATELIST_DRAWABLE_H__
 #define __STATELIST_DRAWABLE_H__
 #include <drawable/drawablecontainer.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 namespace cdroid{
 
 class StateListDrawable:public DrawableContainer{

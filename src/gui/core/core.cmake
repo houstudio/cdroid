@@ -1,17 +1,8 @@
 SET(CORE_SOURCES
     core/app.cc
     core/attributeset.cc
-    core/typedarray.cc      # TypedArray (cdroid-side typed attr view over a styleable set)
-    core/typedvalue.cc      # TypedValue (AOSP android.util.TypedValue) + applyDimension
-    core/Locale.cc          # cdroid::Locale (java.util.Locale BCP-47 core)
-    core/LocaleList.cc      # cdroid::LocaleList (android.os.LocaleList)
     core/context.cc         # cdroid::Context AOSP ID-based resource getters (defaults)
     core/contextthemewrapper.cc # cdroid::ContextThemeWrapper: per-object theme overlay
-    core/resourcesimpl.cc   # cdroid::ResourcesImpl: facade hiding androidfw (ResTable/AssetManager)
-    core/resources.cc # cdroid::Resources: GUI factories over ResourcesImpl
-    core/asset.cc           # Asset: read-only byte stream (framework-public)
-    core/assetdir.cc        # AssetDir: directory listing (framework-public)
-    core/assetmanager.cc    # AssetManager: wraps ResTable + zip backend (framework-public)
     #core/basebundle.cc
     #core/bundle.cc
     core/transform.cc
@@ -31,8 +22,6 @@ SET(CORE_SOURCES
     core/hebrewcalendar.cc
     core/canvas.cc
     core/color.cc
-    core/numberformat.cc
-    core/i18nbridge.cc     # I18nBridge: cdroid::Locale → i18n::LocaleInfo adapter (vendored i18n untouched)
     core/display.cc
     core/displaymetrics.cc
     core/epollwrapper.cc
@@ -70,7 +59,6 @@ SET(CORE_SOURCES
     core/systemclock.cc
     core/tokenizer.cc
     core/xmlpullparser.cc
-    core/xmlblock.cc
     core/typeface.cc
     core/fontlistparser.cc
     #core/uieventsource.cc

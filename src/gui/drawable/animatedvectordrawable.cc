@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <widget/internal_R.h>
 #include <core/systemclock.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 #include <animation/animatorinflater.h>

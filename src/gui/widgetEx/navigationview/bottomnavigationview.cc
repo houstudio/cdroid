@@ -18,7 +18,7 @@
 #include <widgetEx/navigationview/bottomnavigationview.h>
 #include <widgetEx/navigationview/bottomnavigationmenuview.h>
 #include <widgetEx/widgetex_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 
 namespace cdroid{
 using namespace cdroid::internal;

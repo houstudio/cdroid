@@ -15,7 +15,7 @@
 
 #include <widget/radialtimepickerview.h>
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <core/calendar.h>
 #include <core/typeface.h>
 #include <core/attributeset.h>

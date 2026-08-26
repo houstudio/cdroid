@@ -17,8 +17,8 @@
  *********************************************************************************/
 #include <animation/cliprectanimation.h>
 #include <core/rect.h>
-#include <core/typedarray.h>
-#include <core/typedvalue.h>   // TypedValue (Description::parseValue)
+#include <content/typedarray.h>
+#include <content/typedvalue.h>   // TypedValue (Description::parseValue)
 #include <widget/framework_styleable.h>
 namespace cdroid{
 using namespace cdroid::internal;

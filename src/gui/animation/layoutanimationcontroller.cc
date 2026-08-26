@@ -19,7 +19,7 @@
 #include <view/viewgroup.h>
 #include <animation/animationutils.h>
 #include <animation/layoutanimationcontroller.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/framework_styleable.h>
 #include <random>
 

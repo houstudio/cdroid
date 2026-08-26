@@ -24,8 +24,8 @@
 #include <drawable/ninepatchdrawable.h>
 #include <drawable/animatedimagedrawable.h>
 #include <image-decoders/imagedecoder.h>
-#include <core/typedvalue.h>  // TypedValue (id-based createAsDrawable path)
-#include <core/asset.h>            // Asset (openRawResource)
+#include <content/typedvalue.h>  // TypedValue (id-based createAsDrawable path)
+#include <content/asset.h>            // Asset (openRawResource)
 #include <utils/textutils.h>
 #include <core/context.h>
 #include <png.h>

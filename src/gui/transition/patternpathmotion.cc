@@ -11,7 +11,7 @@
 #include <core/attributeset.h>
 #include <core/context.h>
 #include <core/pathmeasure.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <drawable/pathparser.h>
 #include <widget/framework_styleable.h>
 

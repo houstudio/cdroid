@@ -19,7 +19,7 @@
 #if ENABLE(QRCODE)
 #include <widgetEx/qrcodegen.h>
 #include <widgetEx/widgetex_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <float.h>
 #include <cdlog.h>
 

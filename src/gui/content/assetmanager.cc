@@ -13,7 +13,7 @@
 
 #define LOG_TAG "asset"
 
-#include "core/assetmanager.h"
+#include "content/assetmanager.h"
 
 #include <porting/cdlog.h>
 #include <zip.h>

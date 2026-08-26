@@ -3,7 +3,7 @@
 // Only the FileInfo::findEntry helper has real logic (the rest is inline in the
 // header, matching how the AOSP class is mostly header-defined).
 
-#include "core/assetdir.h"
+#include "content/assetdir.h"
 
 #include <algorithm>
 

@@ -20,7 +20,7 @@
 #include <widget/calendarviewlegacydelegate.h>
 #include <widget/calendarviewmaterialdelegate.h>
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <cstdio>
 namespace cdroid{
 using namespace cdroid::internal;

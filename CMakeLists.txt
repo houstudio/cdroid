@@ -23,12 +23,12 @@ set(CDROID_SDK_RES_FILTER "${CMAKE_SOURCE_DIR}/scripts/sdk_res_filter.json" CACH
 # binary instead. ID-defining entries (attr/public/symbols) are rejected.
 set(CDROID_OVERLAY "" CACHE PATH "optional global res overlay dir applied to the shared cdroid.pak")
 
-# i18n data (src/gui/i18n/i18n.dat) carried as an internal cdroid.pak resource
+# i18n data (src/gui/content/i18n/i18n.dat) carried as an internal cdroid.pak resource
 # (raw/i18n.dat) so DataResource::Init can read from the pak instead of a sidecar
 # .dat file — lowers deployment friction (one fewer loose file to ship). Single
 # source stays in src/gui/i18n/; configure-time copy mirrors the header-copy
 # auto-sync pattern.
-file(COPY "${CMAKE_SOURCE_DIR}/src/gui/i18n/i18n.dat"
+file(COPY "${CMAKE_SOURCE_DIR}/src/gui/content/i18n/i18n.dat"
      DESTINATION "${CMAKE_SOURCE_DIR}/src/gui/res/raw")
 
 # Enable ctest at the top level so registered tests (e.g. the standalone androidfw
@@ -66,7 +66,7 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
 endif()
 add_subdirectory(src/porting)
 # androidfw must be defined before src/gui so cdroid can link it.
-add_subdirectory(src/gui/androidfw)
+add_subdirectory(src/gui/content/androidfw)
 add_subdirectory(src/gui)
 add_subdirectory(src/modules)
 add_subdirectory(src/3rdparty)

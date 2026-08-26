@@ -35,7 +35,7 @@
 #include <widget/abslistview.h>
 #include <widget/adapter.h>
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/listview.h>
 
 namespace cdroid {

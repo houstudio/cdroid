@@ -25,7 +25,7 @@
 #include <core/attributeset.h>
 #include <core/porterduff.h>
 #include <core/context.h>
-#include <core/resources.h>
+#include <content/resources.h>
 #include <view/gravity.h>
 #include <core/insets.h>
 #include <core/outline.h>

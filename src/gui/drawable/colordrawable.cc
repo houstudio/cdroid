@@ -19,7 +19,7 @@
 #include <drawable/colordrawable.h>
 #include <drawable/colormatrix.h>
 #include <core/context.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 

@@ -35,8 +35,8 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <core/typedvalue.h>     // TypedValue (peekValue/getValue out-param)
-#include <core/resources.h>      // Resources::Theme (mTheme value semantics)
+#include <content/typedvalue.h>     // TypedValue (peekValue/getValue out-param)
+#include <content/resources.h>      // Resources::Theme (mTheme value semantics)
 
 namespace cdroid {
 

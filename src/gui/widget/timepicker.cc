@@ -21,7 +21,7 @@
 #include <widget/timepickerclockdelegate.h>
 #include <widget/timepickerspinnerdelegate.h>
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <content/dateformatsymbols.h>
 #include <text/textutils.h>
 namespace cdroid{

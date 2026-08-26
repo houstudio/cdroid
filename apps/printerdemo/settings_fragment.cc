@@ -15,7 +15,7 @@
 #include <menu/menu.h>
 #include <menu/menuitem.h>
 #include <menu/popupmenu.h>
-#include <core/assetmanager.h>
+#include <content/assetmanager.h>
 #include "printer_common.h"
 #include "R.h"
 

@@ -25,7 +25,7 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 
 namespace cdroid {
 

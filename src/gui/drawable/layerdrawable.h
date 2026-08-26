@@ -18,7 +18,7 @@
 #ifndef __LAYER_DRAWABLE_H__
 #define __LAYER_DRAWABLE_H__
 #include <drawable/drawable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 namespace cdroid{
 
 class LayerDrawable:public Drawable,public Drawable::Callback {

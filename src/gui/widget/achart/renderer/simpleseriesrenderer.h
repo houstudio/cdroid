@@ -16,7 +16,7 @@
 #ifndef SIMPLE_SERIES_RENDERER_H__
 #define SIMPLE_SERIES_RENDERER_H__
 #include <core/color.h>
-#include <core/numberformat.h>
+#include <content/numberformat.h>
 #include <widget/achart/renderer/basicstroke.h>
 namespace cdroid{
 

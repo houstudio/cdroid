@@ -31,7 +31,7 @@
 #ifndef CDROID_CORE_LOCALELIST_H
 #define CDROID_CORE_LOCALELIST_H
 
-#include <core/Locale.h>
+#include <content/Locale.h>
 
 #include <string>
 #include <vector>

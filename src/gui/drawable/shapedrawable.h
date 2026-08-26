@@ -19,7 +19,7 @@
 #define __SHAPE_DRAWABLE_H__
 #include <drawable/drawable.h>
 #include <drawable/shape.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 
 namespace cdroid{
 

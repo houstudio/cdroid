@@ -23,9 +23,9 @@
 #ifdef ENABLE_I18N
 // The i18n engine stays behind this translation unit: nothing below leaks
 // past the public header (apps include <content/dateformatsymbols.h> only).
-#include <core/i18nbridge.h>
-#include <i18n/data_resource.h>
-#include <i18n/date_time_data.h>
+#include <content/i18nbridge.h>
+#include <content/i18n/data_resource.h>
+#include <content/i18n/date_time_data.h>
 #endif
 
 namespace cdroid{

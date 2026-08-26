@@ -25,8 +25,8 @@
 #include <view/viewgroup.h>
 #include <view/floatingactionmode.h>
 #include <widget/framework_styleable.h>
-#include <androidfw/resourcetypes.h>  // Res_value (getFocusableAttribute)
-#include <core/typedarray.h>
+#include <content/androidfw/resourcetypes.h>  // Res_value (getFocusableAttribute)
+#include <content/typedarray.h>
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
 #include <view/handleractionqueue.h>

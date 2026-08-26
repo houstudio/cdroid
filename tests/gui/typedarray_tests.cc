@@ -9,9 +9,9 @@
 //    here — the array frees via RAII).
 #include <gtest/gtest.h>
 #include <core/app.h>
-#include <core/resources.h>
-#include <core/typedarray.h>
-#include <core/typedvalue.h>
+#include <content/resources.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>
 #include <core/xmlpullparser.h>
 #include "R.h"
 #include <widget/internal_R.h>

@@ -3,11 +3,11 @@
 // string/hello = "Hello", integer/grid ∈ {8,12,16} across densities). Exercises
 // every fully-implemented getter; GUI factories are asserted stubbed.
 
-#include <core/resourcesimpl.h>
-#include <core/asset.h>
-#include <core/assetmanager.h>
-#include <androidfw/resourcetypes.h>  // Res_value
-#include <core/typedvalue.h>     // TypedValue, applyDimension
+#include <content/resourcesimpl.h>
+#include <content/asset.h>
+#include <content/assetmanager.h>
+#include <content/androidfw/resourcetypes.h>  // Res_value
+#include <content/typedvalue.h>     // TypedValue, applyDimension
 
 #include <memory>
 #include <string>

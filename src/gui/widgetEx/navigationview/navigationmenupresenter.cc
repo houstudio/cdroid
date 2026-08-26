@@ -24,7 +24,7 @@
 #include <view/layoutinflater.h>
 #include <menu/submenu.h>
 #include <drawable/colordrawable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{

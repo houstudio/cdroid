@@ -17,16 +17,16 @@
  *********************************************************************************/
 #include <content/dateformat.h>
 #include <content/simpledateformat.h>
-#include <core/Locale.h>
+#include <content/Locale.h>
 #include <cstring>
 #include <stdexcept>
 
 #ifdef ENABLE_I18N
 // Locale-dependent hour cycle and hour+minute pattern pools come from the
 // i18n engine; these includes stay inside the library.
-#include <core/i18nbridge.h>
-#include <i18n/data_resource.h>
-#include <i18n/str_util.h>
+#include <content/i18nbridge.h>
+#include <content/i18n/data_resource.h>
+#include <content/i18n/str_util.h>
 #endif
 
 namespace cdroid {

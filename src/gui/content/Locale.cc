@@ -20,10 +20,10 @@
  * Ported to C++ for CDROID from java.util.Locale (ojluni / android-36).
  * See core/Locale.h for the ported-scope notes.
  */
-#include <core/Locale.h>
+#include <content/Locale.h>
 #include <gui_features.h>
 #ifdef ENABLE_I18N
-#include <core/i18nbridge.h>
+#include <content/i18nbridge.h>
 #endif
 
 #include <algorithm>

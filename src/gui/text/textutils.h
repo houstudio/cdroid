@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <stdio.h>
-#include <core/Locale.h>
+#include <content/Locale.h>
 #include <text/textpaint.h>
 #include <text/charsequence.h>
 #include <text/textdirectionheuristics.h>

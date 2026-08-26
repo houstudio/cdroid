@@ -15,8 +15,8 @@
 #include <gui_features.h>
 
 #ifdef ENABLE_I18N
-#include <core/Locale.h>
-#include <i18n/locale_info.h>
+#include <content/Locale.h>
+#include <content/i18n/locale_info.h>
 
 namespace cdroid {
 

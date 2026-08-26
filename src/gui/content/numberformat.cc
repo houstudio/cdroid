@@ -3,19 +3,99 @@
 #include <iomanip>
 #include <memory>
 #include <cmath>
-#include <core/Locale.h>
+#include <content/Locale.h>
 #include <gui_features.h>
 #ifdef ENABLE_I18N
-#include <core/i18nbridge.h>
+#include <content/i18nbridge.h>
+#include <content/i18n/locale_info.h>
+#include <content/i18n/number_format.h>
+#include <content/i18n/types.h>
 #endif
 #include <cctype>
 #include <algorithm>
 #include <regex>
 #include <stdexcept>
-#include <core/numberformat.h>
+#include <content/numberformat.h>
 namespace cdroid{
+// Lazily build the engine formatter for fLocale (default-locale factories
+// stamp Locale::getDefault() at creation, java.text style). Returns false
+// when i18n is compiled out or the engine has no data — callers then use
+// the manual algorithm.
+bool NumberFormat::ensureEngine() const {
+#ifdef ENABLE_I18N
+    if (fEngine != nullptr) return true;
+    Locale loc = fHasLocale ? fLocale : Locale::getDefault();
+    i18n::LocaleInfo info = I18nBridge::toLocaleInfo(loc);
+    int status = 0;
+    // LocaleInfo & — engine wants an lvalue
+    i18n::NumberFormat* engine = new i18n::NumberFormat(info, status);
+    if (status != 0 || !engine->Init()) {
+        delete engine;
+        return false;
+    }
+    fEngine = engine;
+    return true;
+#else
+    return false;
+#endif
+}
 
+// Zero-pad the integer part to fMinimumIntegerDigits: the engine exposes no
+// integer-digit knob, so the face applies java.text's rule on its output
+// (split on the localized decimal separator, pad, re-join).
+std::string NumberFormat::padIntegerDigits(const std::string& s) const {
+    if (fMinimumIntegerDigits <= 1) return s;
+    size_t dotPos = s.find(fDecimalSeparator);
+    const std::string integerPart = (dotPos == std::string::npos) ? s : s.substr(0, dotPos);
+    const std::string rest = (dotPos == std::string::npos) ? std::string() : s.substr(dotPos);
+    bool negative = (!integerPart.empty() && integerPart[0] == '-');
+    size_t digits = integerPart.size() - (negative ? 1 : 0);
+    if ((int)digits >= fMinimumIntegerDigits) return s;
+    std::string padded = integerPart.substr(0, negative ? 1 : 0);
+    padded.append(fMinimumIntegerDigits - (int)digits, '0');
+    padded += integerPart.substr(negative ? 1 : 0);
+    return padded + rest;
+}
+
+// java.text.NumberFormat.format: multiplier applies on the face (the engine's
+// PERCENT type would double-scale), then the engine renders the CLDR pattern
+// (localized separators AND real grouping sizes — hi-IN 2;2;3 etc.), with the
+// fraction bounds pushed through Set{Min,Max}DecimalLength.
 std::string NumberFormat::format(double number) const {
+#ifdef ENABLE_I18N
+    if (ensureEngine()) {
+        fEngine->SetMinDecimalLength(fMinimumFractionDigits);
+        fEngine->SetMaxDecimalLength(fMaximumFractionDigits);
+        int status = 0;
+        const double scaled = number * fMultiplier;
+        std::string out = fGroupingUsed
+                ? fEngine->Format(scaled, i18n::DECIMAL, status)
+                : fEngine->FormatNoGroup(scaled, i18n::DECIMAL, status);
+        if (status == 0 && !out.empty()) {
+            // Zero-fraction configs: the engine keeps a trailing decimal
+            // separator ("50,") — java.text integer output has none.
+            if (fMaximumFractionDigits == 0 && out.size() >= fDecimalSeparator.size()
+                    && out.compare(out.size() - fDecimalSeparator.size(),
+                                   fDecimalSeparator.size(), fDecimalSeparator) == 0) {
+                out.erase(out.size() - fDecimalSeparator.size());
+            }
+            return padIntegerDigits(std::move(out));
+        }
+    }
+#endif
+    return formatManual(number);
+}
+
+NumberFormat::~NumberFormat() {
+#ifdef ENABLE_I18N
+    delete fEngine;
+#endif
+}
+
+
+// The pre-engine hand-rolled algorithm: DecimalFormat's path and the
+// engine-failure fallback.
+std::string NumberFormat::formatManual(double number) const {
     // java.text: format multiplies by the multiplier (percent=100 → "50" from
     // 0.5). The old unconditional "/100" scaled EVERY number down — plain
     // format(5) produced "0.050" — and paired with a compensating "*100" in
@@ -141,6 +221,8 @@ std::unique_ptr<NumberFormat>  NumberFormat::getInstance() {
 
 std::unique_ptr<NumberFormat>  NumberFormat::getCurrencyInstance() {
     auto nf = std::make_unique<NumberFormat>();
+    nf->fLocale = Locale::getDefault();
+    nf->fHasLocale = true;
     nf->setMinimumFractionDigits(2);
     nf->setMaximumFractionDigits(2);
     return nf;
@@ -148,6 +230,8 @@ std::unique_ptr<NumberFormat>  NumberFormat::getCurrencyInstance() {
 
 std::unique_ptr<NumberFormat>  NumberFormat::getPercentInstance() {
     auto nf = std::make_unique<NumberFormat>();
+    nf->fLocale = Locale::getDefault();
+    nf->fHasLocale = true;
     nf->setMultiplier(100);
     nf->setMinimumFractionDigits(0);
     nf->setMaximumFractionDigits(0);
@@ -156,6 +240,8 @@ std::unique_ptr<NumberFormat>  NumberFormat::getPercentInstance() {
 
 std::unique_ptr<NumberFormat>  NumberFormat::getIntegerInstance() {
     auto nf = std::make_unique<NumberFormat>();
+    nf->fLocale = Locale::getDefault();
+    nf->fHasLocale = true;
     nf->setMinimumFractionDigits(0);
     nf->setMaximumFractionDigits(0);
     nf->setParseIntegerOnly(true);
@@ -168,6 +254,8 @@ std::unique_ptr<NumberFormat>  NumberFormat::getIntegerInstance() {
 // ENABLE_I18N off → separators stay '.'/',''.
 void NumberFormat::applyLocaleSeparators(NumberFormat* nf, const Locale& inLocale)
 {
+    nf->fLocale = inLocale;
+    nf->fHasLocale = true;
 #ifdef ENABLE_I18N
     const std::string dec = I18nBridge::decimalSeparator(inLocale);
     const std::string grp = I18nBridge::groupingSeparator(inLocale);

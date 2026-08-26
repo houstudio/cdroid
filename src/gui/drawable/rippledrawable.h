@@ -19,7 +19,7 @@
 #define __RIPPLE_DRAWABLE_H__
 #include <drawable/layerdrawable.h>
 #include <drawable/rippleforeground.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 
 namespace cdroid{
 

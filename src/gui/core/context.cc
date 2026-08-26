@@ -5,10 +5,10 @@
 // getColorStateList(int). Header stays declaration-only.
 
 #include "context.h"
-#include "core/resourcesimpl.h"   // cdroid::ResourcesImpl (+ Theme)
+#include "content/resourcesimpl.h"   // cdroid::ResourcesImpl (+ Theme)
 #include "resources.h"      // cdroid::Resources (full def — getResources() returns it)
-#include <core/typedarray.h>       // TypedArray (constructed below)
-#include <androidfw/restable.h>     // ResTable::Theme + obtainStyledAttributes + StyledAttr
+#include <content/typedarray.h>       // TypedArray (constructed below)
+#include <content/androidfw/restable.h>     // ResTable::Theme + obtainStyledAttributes + StyledAttr
 
 namespace cdroid {
 

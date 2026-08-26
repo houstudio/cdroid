@@ -18,10 +18,10 @@
 #include <widget/internal_R.h>
 #include <drawable/bitmapdrawable.h>
 #include <image-decoders/imagedecoder.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <core/context.h>
-#include <core/typedvalue.h>
-#include <core/asset.h>
+#include <content/typedvalue.h>
+#include <content/asset.h>
 #include <utils/textutils.h>
 #include <widget/framework_styleable.h>
 #include <fstream>

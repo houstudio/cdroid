@@ -20,7 +20,7 @@
 #include <widget/internal_R.h>
 #include <menu/menuinflater.h>
 #include <menu/menuitemimpl.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <stdexcept>
 
 namespace cdroid{

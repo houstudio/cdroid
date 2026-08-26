@@ -24,7 +24,7 @@
 #include <menu/menuinflater.h>
 #include <menu/menuitem.h>
 #include <drawable/colorstatelist.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 
 namespace cdroid{
 using namespace cdroid::internal;

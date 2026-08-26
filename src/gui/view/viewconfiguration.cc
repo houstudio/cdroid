@@ -4,7 +4,7 @@
 #include <view/viewconfiguration.h>
 #include <core/displaymetrics.h>
 #include <core/windowmanager.h>
-#include <core/resources.h>
+#include <content/resources.h>
 #include <widget/internal_R.h>
 using namespace cdroid::internal;
 

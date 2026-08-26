@@ -12,7 +12,7 @@
 #include <core/any.h>
 #include <core/attributeset.h>
 #include <core/context.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <widget/framework_styleable.h>

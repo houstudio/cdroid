@@ -3,7 +3,7 @@
 #include <widgetEx/widgetex_styleable.h>
 #include <drawable/drawable.h>
 #include <drawable/colordrawable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <view/viewgroup.h>
 #include <algorithm>
 

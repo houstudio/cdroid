@@ -4,8 +4,8 @@
 #include <vector>
 #include <core/parcel.h>
 #include <core/displaymetrics.h>
-#include <core/Locale.h>
-#include <core/LocaleList.h>
+#include <content/Locale.h>
+#include <content/LocaleList.h>
 namespace cdroid{
 class XmlPullParser;   // readXmlAttrs (declared, definition disabled below)
 /**

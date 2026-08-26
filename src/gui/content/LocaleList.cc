@@ -20,7 +20,7 @@
  * Ported to C++ for CDROID from android.os.LocaleList (android-36).
  * See core/LocaleList.h for the ported-scope notes.
  */
-#include <core/LocaleList.h>
+#include <content/LocaleList.h>
 
 #include <climits>
 #include <mutex>

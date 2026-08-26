@@ -26,7 +26,7 @@
 #include <view/hapticfeedbackconstants.h>
 #include <core/systemclock.h>
 #include <content/simpledateformat.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <drawable/colorstatelist.h>
 #include <drawable/stateset.h>
 #include <porting/cdlog.h>

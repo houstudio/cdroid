@@ -20,8 +20,8 @@
 #include <view/viewgroup.h>
 #include <animation/animationutils.h>
 #include <animation/gridlayoutanimationcontroller.h>
-#include <core/typedarray.h>
-#include <core/typedvalue.h>   // TypedValue (Description::parseValue)
+#include <content/typedarray.h>
+#include <content/typedvalue.h>   // TypedValue (Description::parseValue)
 #include <widget/framework_styleable.h>
 
 namespace cdroid{

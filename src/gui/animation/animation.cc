@@ -18,8 +18,8 @@
 #include <animation/animation.h>
 #include <animation/animationutils.h>
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
-#include <core/typedvalue.h>   // TypedValue (Description::parseValue)
+#include <content/typedarray.h>
+#include <content/typedvalue.h>   // TypedValue (Description::parseValue)
 #include <systemclock.h>
 #include <limits>
 #include <cdtypes.h>

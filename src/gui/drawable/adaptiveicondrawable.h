@@ -18,7 +18,7 @@
 #ifndef __ADAPTIVE_ICON_DRAWABLE_H__
 #define __ADAPTIVE_ICON_DRAWABLE_H__
 #include <drawable/drawable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 namespace cdroid{
 class AdaptiveIconDrawable:public Drawable,public Drawable::Callback {
 private:

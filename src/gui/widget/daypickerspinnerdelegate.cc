@@ -22,7 +22,7 @@
 #include <core/systemclock.h>
 #include <widget/daypickerspinnerdelegate.h>
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <content/dateformatsymbols.h>
 #include <cstdio>
 

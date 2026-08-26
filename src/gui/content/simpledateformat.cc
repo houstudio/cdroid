@@ -29,10 +29,10 @@
 #ifdef ENABLE_I18N
 // Default locale patterns for the style constructors / DateFormat factories
 // come from the i18n engine — kept inside this translation unit.
-#include <core/i18nbridge.h>
-#include <i18n/data_resource.h>
-#include <i18n/date_time_data.h>
-#include <i18n/str_util.h>
+#include <content/i18nbridge.h>
+#include <content/i18n/data_resource.h>
+#include <content/i18n/date_time_data.h>
+#include <content/i18n/str_util.h>
 #endif
 
 namespace cdroid{

@@ -18,11 +18,11 @@
 #ifndef __CDROID_VECTOR_DRAWABLE_H__
 #define __CDROID_VECTOR_DRAWABLE_H__
 #include <unordered_map>
-#include <core/typedvalue.h>
+#include <content/typedvalue.h>
 #include <drawable/drawable.h>
 #include <drawable/pathparser.h>
 #include <animation/property.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 namespace cdroid{
 namespace hwui{
     class Group;

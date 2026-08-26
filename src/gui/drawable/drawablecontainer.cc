@@ -19,7 +19,7 @@
 #include <core/systemclock.h>
 #include <porting/cdlog.h>
 #include <core/context.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/internal_R.h>
 #include <widget/framework_styleable.h>
 using namespace cdroid::internal;

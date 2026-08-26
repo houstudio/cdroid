@@ -12,9 +12,9 @@
 #include <drawable/bitmapdrawable.h>
 #include <guienvironment.h>
 #include <widget/internal_R.h>
-#include <core/typedarray.h>
-#include <core/Locale.h>
-#include <core/assetmanager.h>
+#include <content/typedarray.h>
+#include <content/Locale.h>
+#include <content/assetmanager.h>
 using namespace cdroid;
 
 class ASSETS:public testing::Test{

@@ -20,7 +20,7 @@
 
 #include <string>
 #include <memory>
-#include <core/Locale.h>
+#include <content/Locale.h>
 #include <core/calendar.h>
 #include <content/parseposition.h>
 

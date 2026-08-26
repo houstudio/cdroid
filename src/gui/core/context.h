@@ -27,8 +27,8 @@
 #include <core/callbackbase.h>
 #include <core/attributeset.h>
 #include <core/displaymetrics.h>
-#include <core/resourcesimpl.h>   // cdroid::ResourcesImpl (+ Theme)
-#include <core/resources.h> // cdroid::Resources (full def — getResources() returns it)
+#include <content/resourcesimpl.h>   // cdroid::ResourcesImpl (+ Theme)
+#include <content/resources.h> // cdroid::Resources (full def — getResources() returns it)
 
 #define USE(FEATURE) (defined(USE_##FEATURE) && USE_##FEATURE)
 #define ENABLE(FEATURE) (defined(ENABLE_##FEATURE) && ENABLE_##FEATURE)

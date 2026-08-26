@@ -1,7 +1,7 @@
-#include <core/i18nbridge.h>
+#include <content/i18nbridge.h>
 
 #ifdef ENABLE_I18N
-#include <i18n/number_format.h>
+#include <content/i18n/number_format.h>
 #include <cctype>
 
 namespace cdroid {

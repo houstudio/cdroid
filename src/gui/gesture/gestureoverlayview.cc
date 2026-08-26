@@ -18,7 +18,7 @@
 #include <gesture/gestureoverlayview.h>
 #include <widget/internal_R.h>
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 namespace cdroid{
 DECLARE_WIDGET(GestureOverlayView)
 GestureOverlayView::GestureOverlayView(Context* context):GestureOverlayView(context,nullptr){}

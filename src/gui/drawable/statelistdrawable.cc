@@ -19,7 +19,7 @@
 #include <drawable/statelistdrawable.h>
 #include <drawable/colordrawable.h>
 #include <core/context.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdtypes.h>
 #include <porting/cdlog.h>

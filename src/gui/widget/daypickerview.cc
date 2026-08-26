@@ -20,7 +20,7 @@
 #include <widget/simplemonthview.h>
 #include <widget/calendarview.h>
 #include <widget/framework_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <porting/cdlog.h>
 #include <utils/mathutils.h>
 

@@ -21,7 +21,7 @@
 #include <widget/textview.h>
 #include <drawable/statelistdrawable.h>
 #include <drawable/colordrawable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <core/typeface.h>
 #include <porting/cdlog.h>
 

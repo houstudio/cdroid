@@ -21,10 +21,10 @@
 // mechanical Res_value decoders; getDrawable/getColorStateList reach back into
 // cdroid::Assets via the opaque mContext pointer.
 //
-#include <core/typedarray.h>
-#include <androidfw/restable.h>        // ResTable (complete def for mTable use)
-#include <core/typedvalue.h>      // TypedValue (getResolved reference resolution)
-#include <core/resources.h>            // Resources (mResources: getDrawable/loadComplexColor/getString)
+#include <content/typedarray.h>
+#include <content/androidfw/restable.h>        // ResTable (complete def for mTable use)
+#include <content/typedvalue.h>      // TypedValue (getResolved reference resolution)
+#include <content/resources.h>            // Resources (mResources: getDrawable/loadComplexColor/getString)
 #include <drawable/colordrawable.h>    // ColorDrawable
 #include <drawable/colorstatelist.h>   // ColorStateList
 #include <cstring>

@@ -14,16 +14,16 @@
  */
 
 #include <gtest/gtest.h>
-#include "i18n/date_time_format.h"
-#include "i18n/locale_info.h"
-#include "i18n/measure_format.h"
-#include "i18n/number_format.h"
-#include "i18n/plural_format.h"
-#include "i18n/types.h"
-#include "i18n/week_info.h"
+#include "content/i18n/date_time_format.h"
+#include "content/i18n/locale_info.h"
+#include "content/i18n/measure_format.h"
+#include "content/i18n/number_format.h"
+#include "content/i18n/plural_format.h"
+#include "content/i18n/types.h"
+#include "content/i18n/week_info.h"
 #include <gui_features.h>
-#include <core/Locale.h>
-#include <core/i18nbridge.h>
+#include <content/Locale.h>
+#include <content/i18nbridge.h>
 #include <core/numberformat.h>
 using namespace std;
 

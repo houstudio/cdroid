@@ -1,6 +1,7 @@
 #ifndef __NUMBER_FORMAT_H__
 #define __NUMBER_FORMAT_H__
 #include <string>
+#include <content/Locale.h>
 #include <sstream>
 #include <iomanip>
 #include <memory>
@@ -11,8 +12,9 @@
 #include <regex>
 #include <stdexcept>
 
+namespace i18n { class NumberFormat; }   // vendored engine (global ns) — opaque here
+
 namespace cdroid{
-class Locale;  // core/Locale.h — java.util.Locale port
 class NumberFormat {
 protected:
     int fMinimumIntegerDigits = 1;
@@ -27,9 +29,16 @@ protected:
     std::string fGroupingSeparator = ",";
     int fMultiplier = 1;
     bool fParseIntegerOnly = false;
+    // The locale this formatter was built for (java factories use the
+    // default locale) and the lazily-built engine formatter behind format():
+    // CLDR patterns (grouping sizes, localized separators) come from the
+    // vendored i18n engine; parse()/integer-digit bounds stay face-local.
+    Locale fLocale;
+    bool fHasLocale = false;
+    mutable i18n::NumberFormat* fEngine = nullptr;
     
 public:
-    virtual ~NumberFormat() = default;
+    virtual ~NumberFormat();
     
     void setMinimumIntegerDigits(int newValue) { fMinimumIntegerDigits = newValue; }
     void setMaximumIntegerDigits(int newValue) { fMaximumIntegerDigits = newValue; }
@@ -79,6 +88,12 @@ public:
 protected:
     std::string applyGrouping(const std::string& input) const;
     static void applyLocaleSeparators(NumberFormat* nf, const Locale& inLocale);
+    // Pre-format() engine setup; false when i18n is off/failed (manual path).
+    bool ensureEngine() const;
+    // The pre-engine hand-rolled algorithm (fallback + DecimalFormat reuse).
+    std::string formatManual(double number) const;
+    // Zero-pad the integer part to fMinimumIntegerDigits (engine has no knob).
+    std::string padIntegerDigits(const std::string& s) const;
 };
 
 class DecimalFormat : public NumberFormat {

@@ -18,7 +18,7 @@
 #include <widget/edgeeffect.h>
 #include <widget/internal_R.h>
 #include <core/systemclock.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <utils/mathutils.h>
 #include <cdtypes.h>
 #include <cdlog.h>

@@ -21,7 +21,7 @@
  */
 #include <widget/internal_R.h>
 #include <core/context.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <widgetEx/constraintlayout/motion/keyframes.h>
 
 #include <widgetEx/widgetex_styleable.h>

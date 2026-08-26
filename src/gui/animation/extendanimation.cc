@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <animation/extendanimation.h>
-#include <core/typedarray.h>
-#include <core/typedvalue.h>   // TypedValue (Description::parseValue)
+#include <content/typedarray.h>
+#include <content/typedvalue.h>   // TypedValue (Description::parseValue)
 #include <widget/framework_styleable.h>
 
 namespace cdroid{

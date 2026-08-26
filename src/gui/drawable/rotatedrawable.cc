@@ -18,7 +18,7 @@
 #include <widget/internal_R.h>
 #include <drawable/rotatedrawable.h>
 #include <utils/mathutils.h>
-#include <core/typedvalue.h>
+#include <content/typedvalue.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 

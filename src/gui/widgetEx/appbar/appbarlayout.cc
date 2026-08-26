@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <widgetEx/appbar/appbarlayout.h>
 #include <widgetEx/widgetex_styleable.h>
-#include <core/typedarray.h>
+#include <content/typedarray.h>
 #include <cdlog.h>
 
 namespace cdroid{
