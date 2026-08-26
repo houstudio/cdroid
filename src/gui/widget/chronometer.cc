@@ -50,6 +50,7 @@ setCountDown(ta->getBoolean(R::styleable::Chronometer_countDown,false));
 void Chronometer::init(){
     mBase = SystemClock::elapsedRealtime();
     mStarted = false;
+    mRunning = false;
     mCountDown = false;
     mVisible = false;
     mLogged = false;
