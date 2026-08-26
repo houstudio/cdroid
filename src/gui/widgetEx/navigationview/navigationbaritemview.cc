@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <widgetEx/navigationview/navigationbaritemview.h>
 #include <widgetEx/navigationview/navigationbarview.h>
+#include <animation/interpolators.h>
 #include <menu/menuitemimpl.h>
 #include <drawable/colordrawable.h>
 #include <drawable/rippledrawable.h>
@@ -57,6 +58,7 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
 
     mContentContainer = new LinearLayout(context);
     mContentContainer->setOrientation(LinearLayout::VERTICAL);
+    mContentContainer->setClipChildren(false);  // material: scaled label must overflow
     mContentContainer->setDuplicateParentStateEnabled(true);
     mContentContainer->setLayoutParams(new FrameLayout::LayoutParams(
             LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT, mItemGravity));
@@ -65,6 +67,7 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
     mInnerContentContainer = new LinearLayout(context);
     mInnerContentContainer->setOrientation(LinearLayout::VERTICAL);
     mInnerContentContainer->setGravity(Gravity::CENTER_HORIZONTAL);
+    mInnerContentContainer->setClipChildren(false);
     mInnerContentContainer->setDuplicateParentStateEnabled(true);
     mInnerContentContainer->setLayoutParams(new LinearLayout::LayoutParams(
             LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
@@ -89,6 +92,7 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
     // label-width the custom onMeasure assigns. FrameLayout + centered
     // children gives the material overlap.
     mLabelGroup = new FrameLayout(context);
+    mLabelGroup->setClipChildren(false);
     mLabelGroup->setDuplicateParentStateEnabled(true);
     mLabelGroup->setLayoutParams(new LinearLayout::LayoutParams(
             LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
@@ -121,6 +125,10 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
     mActiveIndicatorLabelPadding = 0;
     mIconLabelHorizontalSpacing = 0;
 
+    // The checked label scales past the item bounds (material's item layout
+    // disables clipping on the containers; the tight horizontal item needs it
+    // at the root too).
+    setClipChildren(false);
     setFocusable(true);
     calculateTextScaleFactors();
 }
@@ -373,6 +381,15 @@ void NavigationBarItemView::setChecked(bool checked) {
     mLargeLabel->setVisibility(checked ? View::VISIBLE : View::INVISIBLE);
     mSmallLabel->setVisibility(checked ? View::INVISIBLE : View::VISIBLE);
     maybeSetActiveIndicatorPill(mActiveIndicatorView, checked);
+    // Material animates the label pair on selection (AutoTransition scaling
+    // the small->large text swap); apply the same growth through the view
+    // property animator — the 14sp/12sp ratio is the 1.17 scale.
+    mLabelGroup->animate()
+            .setDuration(200)
+            .setInterpolator(OvershootInterpolator::Instance)
+            .scaleX(checked ? mScaleUpFactor : 1.f)
+            .scaleY(checked ? mScaleUpFactor : 1.f)
+            .start();
     // Re-resolve the merged drawable state so the checked entry of
     // itemIconTint/itemTextColor applies to icon and labels.
     refreshDrawableState();

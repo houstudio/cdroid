@@ -42,6 +42,9 @@ NavigationBarMenuView::NavigationBarMenuView(Context* context, const AttributeSe
     , mItemGravity(NavigationBarView::ITEM_GRAVITY_TOP_CENTER)
     , mItemActiveIndicatorColor(0)
     , mPresenter(nullptr) {
+    // The checked item's label scales past its bounds (material's item
+    // layout disables clipping up the chain); let it overflow the bar row.
+    setClipChildren(false);
     // AOSP: itemTextColorDefault = createDefaultColorStateList(textColorSecondary).
     mItemTextColorDefault = createDefaultColorStateList(
             (int)cdroid::internal::R::attr::textColorSecondary);

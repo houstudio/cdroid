@@ -31,6 +31,8 @@ using namespace cdroid::internal;
 
 NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs, int defStyleAttr)
     : FrameLayout(context, attrs, defStyleAttr) {
+    // Checked labels scale past item bounds; don't clip at the bar either.
+    setClipChildren(false);
     mItemSelectedListener = nullptr;
     mItemReselectedListener = nullptr;
     mPresenter = nullptr;
