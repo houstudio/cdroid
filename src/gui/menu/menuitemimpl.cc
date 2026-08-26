@@ -51,6 +51,10 @@ MenuItemImpl::~MenuItemImpl(){
     // base ~MenuBuilder reclaims the submenu's own items without dereferencing the mItem
     // back-pointer. Without this, clearing a menu whose items carry submenus leaks them.
     delete mSubMenu;
+    // Sole owner of the lazily loaded icon too: item views derive private copies
+    // from the constant state (NavigationBarItemView already does; the other item
+    // views switch to the same borrowing contract), so the menu must free it.
+    delete mIconDrawable;
 }
 
 bool MenuItemImpl::invoke() {
@@ -335,6 +339,7 @@ Drawable* MenuItemImpl::getIcon() {
 }
 
 MenuItem& MenuItemImpl::setIcon(Drawable* icon) {
+    if (mIconDrawable != icon) delete mIconDrawable;  // ownership transfers here
     mIconResId = NO_ICON;
     mIconDrawable = icon;
     mNeedToApplyIconTint = true;
@@ -343,6 +348,7 @@ MenuItem& MenuItemImpl::setIcon(Drawable* icon) {
 }
 
 MenuItem& MenuItemImpl::setIcon(int iconResId) {
+    delete mIconDrawable;  // the lazily loaded instance (if any) is menu-owned
     mIconDrawable = nullptr;
     mIconResId = iconResId;
     mNeedToApplyIconTint = true;

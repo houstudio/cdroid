@@ -180,7 +180,10 @@ void NavigationBarView::installMenuView(NavigationBarMenuView* menuView) {
 
 NavigationBarView::~NavigationBarView() {
     // mMenuView is a child view (freed with the tree); the presenter is the
-    // only extra owner object on this side.
+    // only extra owner object on this side. mItemBackground is owned here:
+    // the ctor/getter side hands out fresh instances (getDrawable contract)
+    // and the menu/item views only borrow it (they derive their own copies).
+    delete mItemBackground;
     delete mPresenter;
     delete mMenu;
 }
@@ -246,6 +249,10 @@ void NavigationBarView::setItemBackgroundResource(int resId) {
 }
 
 void NavigationBarView::setItemBackground(Drawable* background) {
+    // Owning setter: AOSP replaces the field and lets GC reclaim the old
+    // drawable; the menu/item views only borrowed it (each holds its own
+    // newDrawable copy), so reclaiming here is the no-GC equivalent.
+    if (mItemBackground && mItemBackground != background) delete mItemBackground;
     mItemBackground = background;
     if (mMenuView) mMenuView->setItemBackground(background);
 }

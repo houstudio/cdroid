@@ -170,6 +170,11 @@ void ActionMenuItemView::updateTextButtonVisibility() {
 void ActionMenuItemView::setIcon(Drawable* icon) {
     mIcon = icon;
     if (icon != nullptr) {
+        // The icon belongs to the MenuItemImpl; the compound-drawable slot OWNS
+        // what it is handed, so derive a private copy from the constant state.
+        auto cs = icon->getConstantState();
+        if (cs != nullptr) icon = cs->newDrawable();
+        else LOGE("ActionMenuItemView: icon without constant state");
         int width = icon->getIntrinsicWidth();
         int height = icon->getIntrinsicHeight();
         if (width > mMaxIconSize) {

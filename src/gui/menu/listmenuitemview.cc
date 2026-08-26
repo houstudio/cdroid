@@ -219,7 +219,17 @@ void ListMenuItemView::setIcon(Drawable* icon) {
     }
 
     if ((icon != nullptr) || mPreserveIconSpacing) {
-        mIconView->setImageDrawable(showIcon ? icon : nullptr);
+        // The icon belongs to the MenuItemImpl (freed with the menu); the view
+        // must not hand the borrowed instance to ImageView::setImageDrawable,
+        // which OWNS what it is given. Derive a private copy (same contract as
+        // NavigationBarItemView::setIcon).
+        Drawable* own = nullptr;
+        if (icon != nullptr) {
+            auto cs = icon->getConstantState();
+            if (cs != nullptr) own = cs->newDrawable();
+            else LOGE("ListMenuItemView: icon without constant state");
+        }
+        mIconView->setImageDrawable(showIcon ? own : nullptr);
 
         if (mIconView->getVisibility() != VISIBLE) {
             mIconView->setVisibility(VISIBLE);

@@ -140,6 +140,11 @@ void IconMenuItemView::setIcon(Drawable* icon) {
     mIcon = icon;
 
     if (icon != nullptr) {
+        // The icon belongs to the MenuItemImpl; setCompoundDrawables OWNS what
+        // it is handed, so derive a private copy from the constant state.
+        auto cs = icon->getConstantState();
+        if (cs != nullptr) icon = cs->newDrawable();
+        else LOGE("IconMenuItemView: icon without constant state");
 
         /* Set the bounds of the icon since setCompoundDrawables needs it. */
         icon->setBounds(0, 0, icon->getIntrinsicWidth(), icon->getIntrinsicHeight());
