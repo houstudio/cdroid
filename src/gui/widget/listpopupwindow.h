@@ -39,6 +39,7 @@ private:
     int mDropDownGravity = Gravity::NO_GRAVITY;
     int mPromptPosition = POSITION_PROMPT_BELOW;
     int mListItemExpandMaximum = 0;
+    bool mModal = true;
     bool mDropDownAlwaysVisible = false;
     bool mForceIgnoreOutsideTouch = false;
     DataSetObserver*mObserver;
@@ -49,7 +50,6 @@ private:
     AdapterView::OnItemSelectedListener mItemSelectedListener;
     ListView::OnScrollListener mScrollListener;
     Rect mEpicenterBounds;
-    bool mModal = true;
     uint8_t mOverlapAnchor;/*0xFF unset 1:true,0:false*/
     Runnable mResizePopupRunnable;
     Runnable mShowDropDownRunnable;
