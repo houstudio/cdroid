@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single-label selection grow: the stateListAnimator replaces material's
+     small/large label pair — one TextView, ColorStateList for the color and
+     this SLA for the 12sp->14sp equivalent scale (1.2x, overshoot). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_activated="true">
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:duration="200"
+                android:valueTo="1.2"
+                android:interpolator="@android:anim/overshoot_interpolator" />
+            <objectAnimator
+                android:propertyName="scaleY"
+                android:duration="200"
+                android:valueTo="1.2"
+                android:interpolator="@android:anim/overshoot_interpolator" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:duration="140"
+                android:valueTo="1.0"
+                android:interpolator="@android:anim/accelerate_decelerate_interpolator" />
+            <objectAnimator
+                android:propertyName="scaleY"
+                android:duration="140"
+                android:valueTo="1.0"
+                android:interpolator="@android:anim/accelerate_decelerate_interpolator" />
+        </set>
+    </item>
+</selector>

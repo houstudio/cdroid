@@ -374,6 +374,24 @@ void setupAnimation(View* page) {
     if (star) star->setOnClickListener([star](View&) {
         star->setActivated(!star->isActivated());
     });
+
+    // Single-label selection grow: one TextView per tab, ColorStateList for
+    // the checked color and a stateListAnimator for the 1.2x scale — the
+    // material small/large label pair replaced by view-property animation.
+    TextView* slaTabs[] = {
+        (TextView*)page->findViewById(widgetsDemo::R::id::sla_tab1),
+        (TextView*)page->findViewById(widgetsDemo::R::id::sla_tab2),
+        (TextView*)page->findViewById(widgetsDemo::R::id::sla_tab3),
+    };
+    if (slaTabs[0]) slaTabs[0]->setActivated(true);  // android:activated not in this tree's attrs
+    for (TextView* tab : slaTabs) {
+        if (!tab) continue;
+        tab->setOnClickListener([slaTabs, tab](View&) {
+            for (TextView* other : slaTabs) {
+                if (other) other->setActivated(other == tab);
+            }
+        });
+    }
 }
 void setupLists(View* page) {
     RecyclerView* rv = (RecyclerView*)page->findViewById(widgetsDemo::R::id::list_rv);

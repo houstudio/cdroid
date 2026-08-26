@@ -78,6 +78,11 @@
     <string name="sec_asld">AnimatedStateListDrawable</string>
     <string name="asld_hint">点按星星切换 activated 状态&#10;asld_star.xml · &lt;transition&gt; = AVD(spin+pop)</string>
     <string name="asld_cb_text">框架内置&#10;CheckBox ASLD</string>
+    <string name="sec_sla_grow">StateListAnimator 单标签选中放大</string>
+    <string name="sla_tab1">文本</string>
+    <string name="sla_tab2">图像</string>
+    <string name="sla_tab3">设置</string>
+    <string name="sla_hint">单 TextView + ColorStateList + SLA(scale 1.2)&#10;替代 material 双 label 的选中放大机制</string>
     <string name="tab_flipper">翻页</string>
     <string name="ph_flipper_t">翻页与切换</string>
     <string name="ph_flipper_d">ViewFlipper 自动翻页 · TextSwitcher 文字轮播 · ImageSwitcher 图片切换</string>

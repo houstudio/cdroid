@@ -95,6 +95,73 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- StateListAnimator single-label selection grow -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_sla_grow"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/row_gap">
+                <TextView
+                    android:id="@+id/sla_tab1"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/nav_label_sla"
+                    android:textColor="@color/sla_label_color"
+                    android:textSize="14sp"
+                    android:text="@string/sla_tab1" />
+                <TextView
+                    android:id="@+id/sla_tab2"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="8dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/nav_label_sla"
+                    android:textColor="@color/sla_label_color"
+                    android:textSize="14sp"
+                    android:text="@string/sla_tab2" />
+                <TextView
+                    android:id="@+id/sla_tab3"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="8dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/nav_label_sla"
+                    android:textColor="@color/sla_label_color"
+                    android:textSize="14sp"
+                    android:text="@string/sla_tab3" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/sla_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+        </LinearLayout>
+
         <!-- Controls -->
         <LinearLayout
             android:layout_width="match_parent"
