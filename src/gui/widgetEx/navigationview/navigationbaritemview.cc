@@ -83,8 +83,12 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
             LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT, Gravity::CENTER));
     mIconContainer->addView(mIcon);
 
-    mLabelGroup = new LinearLayout(context);
-    mLabelGroup->setOrientation(LinearLayout::HORIZONTAL);
+    // Material's BaselineLayout stacks the small/large labels on top of each
+    // other (only one visible); a horizontal LinearLayout would lay them out
+    // side by side and squeeze the second one to EXACTLY(0) inside the
+    // label-width the custom onMeasure assigns. FrameLayout + centered
+    // children gives the material overlap.
+    mLabelGroup = new FrameLayout(context);
     mLabelGroup->setDuplicateParentStateEnabled(true);
     mLabelGroup->setLayoutParams(new LinearLayout::LayoutParams(
             LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
@@ -95,8 +99,8 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
     mSmallLabel->setMaxLines(1);
     mSmallLabel->setIncludeFontPadding(false);
     mSmallLabel->setGravity(Gravity::CENTER);
-    mSmallLabel->setLayoutParams(new LinearLayout::LayoutParams(
-            LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
+    mSmallLabel->setLayoutParams(new FrameLayout::LayoutParams(
+            LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT, Gravity::CENTER));
     mLabelGroup->addView(mSmallLabel);
 
     // The large label sits over the small one (both centered in the group);
@@ -107,8 +111,8 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
     mLargeLabel->setIncludeFontPadding(false);
     mLargeLabel->setGravity(Gravity::CENTER);
     mLargeLabel->setVisibility(View::INVISIBLE);
-    mLargeLabel->setLayoutParams(new LinearLayout::LayoutParams(
-            LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
+    mLargeLabel->setLayoutParams(new FrameLayout::LayoutParams(
+            LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT, Gravity::CENTER));
     mLabelGroup->addView(mLargeLabel);
 
     // design_bottom_navigation_margin (12dp in material).
@@ -164,7 +168,7 @@ int NavigationBarItemView::getItemPosition() const {
     return mItemPosition;
 }
 
-LinearLayout* NavigationBarItemView::getLabelGroup() {
+FrameLayout* NavigationBarItemView::getLabelGroup() {
     return mLabelGroup;
 }
 

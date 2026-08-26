@@ -60,7 +60,7 @@ private:
     View* mActiveIndicatorView;
     FrameLayout* mIconContainer;
     ImageView* mIcon;
-    LinearLayout* mLabelGroup;   // BaselineLayout in material; a centered
+    FrameLayout* mLabelGroup;    // BaselineLayout in material: small/large
     TextView* mSmallLabel;       // LinearLayout serves the same role here.
     TextView* mLargeLabel;
 
@@ -117,7 +117,7 @@ public:
     void setItemPosition(int position);
     int getItemPosition() const;
 
-    LinearLayout* getLabelGroup();
+    FrameLayout* getLabelGroup();
     void setShifting(bool shifting);
     void setItemBackground(Drawable* background);
     void setItemBackground(int backgroundResId);
