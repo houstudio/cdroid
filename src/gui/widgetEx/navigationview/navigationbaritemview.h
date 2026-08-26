@@ -105,6 +105,7 @@ public:
     void setTitle(const std::string& title) override;
     void setCheckable(bool checkable) override;
     void setChecked(bool checked) override;
+    std::vector<int> onCreateDrawableState(int extraSpace) override;
     void setEnabled(bool enabled) override;
     void setShortcut(bool showShortcut, int shortcutKey) override {}
     void setIcon(Drawable* icon) override;

@@ -758,8 +758,11 @@ protected:
     bool hasOpaqueScrollbars()const;
     virtual void resolveDrawables();
     bool areDrawablesResolved()const;
+public:
+    // AOSP: public API (android:duplicateParentState is its XML form).
     void setDuplicateParentStateEnabled(bool);
     bool isDuplicateParentStateEnabled()const;
+protected:
 
     int getWindowAttachCount()const;
     void recomputePadding();

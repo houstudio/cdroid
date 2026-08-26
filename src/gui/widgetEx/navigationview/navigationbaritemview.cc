@@ -21,6 +21,7 @@
 #include <drawable/colordrawable.h>
 #include <drawable/rippledrawable.h>
 #include <drawable/statelistdrawable.h>
+#include <drawable/stateset.h>
 #include <cdlog.h>
 
 namespace cdroid{
@@ -56,6 +57,7 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
 
     mContentContainer = new LinearLayout(context);
     mContentContainer->setOrientation(LinearLayout::VERTICAL);
+    mContentContainer->setDuplicateParentStateEnabled(true);
     mContentContainer->setLayoutParams(new FrameLayout::LayoutParams(
             LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT, mItemGravity));
     addView(mContentContainer);
@@ -63,28 +65,33 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
     mInnerContentContainer = new LinearLayout(context);
     mInnerContentContainer->setOrientation(LinearLayout::VERTICAL);
     mInnerContentContainer->setGravity(Gravity::CENTER_HORIZONTAL);
+    mInnerContentContainer->setDuplicateParentStateEnabled(true);
     mInnerContentContainer->setLayoutParams(new LinearLayout::LayoutParams(
             LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
     mContentContainer->addView(mInnerContentContainer);
 
     mIconContainer = new FrameLayout(context);
+    mIconContainer->setDuplicateParentStateEnabled(true);
     mIconContainer->setLayoutParams(new LinearLayout::LayoutParams(
             LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
     mInnerContentContainer->addView(mIconContainer);
 
     mIcon = new ImageView(context);
     mIcon->setScaleType(CENTER_INSIDE);
+    mIcon->setDuplicateParentStateEnabled(true);
     mIcon->setLayoutParams(new FrameLayout::LayoutParams(
             LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT, Gravity::CENTER));
     mIconContainer->addView(mIcon);
 
     mLabelGroup = new LinearLayout(context);
     mLabelGroup->setOrientation(LinearLayout::HORIZONTAL);
+    mLabelGroup->setDuplicateParentStateEnabled(true);
     mLabelGroup->setLayoutParams(new LinearLayout::LayoutParams(
             LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
     mInnerContentContainer->addView(mLabelGroup);
 
     mSmallLabel = new TextView(context);
+    mSmallLabel->setDuplicateParentStateEnabled(true);
     mSmallLabel->setMaxLines(1);
     mSmallLabel->setIncludeFontPadding(false);
     mSmallLabel->setGravity(Gravity::CENTER);
@@ -95,6 +102,7 @@ NavigationBarItemView::NavigationBarItemView(Context* context, const AttributeSe
     // The large label sits over the small one (both centered in the group);
     // only one is visible at a time (refreshChecked).
     mLargeLabel = new TextView(context);
+    mLargeLabel->setDuplicateParentStateEnabled(true);
     mLargeLabel->setMaxLines(1);
     mLargeLabel->setIncludeFontPadding(false);
     mLargeLabel->setGravity(Gravity::CENTER);
@@ -353,6 +361,7 @@ void NavigationBarItemView::setTitle(const std::string& title) {
 
 void NavigationBarItemView::setCheckable(bool checkable) {
     refreshChecked();
+    refreshDrawableState();
 }
 
 void NavigationBarItemView::setChecked(bool checked) {
@@ -360,6 +369,17 @@ void NavigationBarItemView::setChecked(bool checked) {
     mLargeLabel->setVisibility(checked ? View::VISIBLE : View::INVISIBLE);
     mSmallLabel->setVisibility(checked ? View::INVISIBLE : View::VISIBLE);
     maybeSetActiveIndicatorPill(mActiveIndicatorView, checked);
+    // Re-resolve the merged drawable state so the checked entry of
+    // itemIconTint/itemTextColor applies to icon and labels.
+    refreshDrawableState();
+}
+
+std::vector<int> NavigationBarItemView::onCreateDrawableState(int extraSpace) {
+    std::vector<int> state = FrameLayout::onCreateDrawableState(extraSpace + 1);
+    if (mItemData != nullptr && mItemData->isCheckable() && mItemData->isChecked()) {
+        mergeDrawableStates(state, StateSet::CHECKED_STATE_SET);
+    }
+    return state;
 }
 
 void NavigationBarItemView::refreshChecked() {

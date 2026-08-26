@@ -4899,6 +4899,16 @@ bool View::setFrame(int left,int top,int width,int height){
         LOGV("%p:%d (%d,%d %d,%d)",this,mID,left,top,width,height);
         mPrivateFlags |= PFLAG_HAS_BOUNDS;
 
+        // AOSP setFrame flags these on every frame assignment (not only on
+        // size change): a background REPLACED while the view keeps its size
+        // (e.g. pooled nav items rebound in place) otherwise never gets its
+        // bounds and draws 0x0.
+        mBackgroundSizeChanged = true;
+        mDefaultFocusHighlightSizeChanged = true;
+        if (mForegroundInfo != nullptr) {
+            mForegroundInfo->mBoundsChanged = true;
+        }
+
         if (sizeChanged)
             sizeChange(newWidth, newHeight, oldWidth, oldHeight);
 

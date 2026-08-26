@@ -162,21 +162,22 @@ void BottomNavigationMenuView::onMeasure(int widthMeasureSpec, int heightMeasure
     setMeasuredDimension(totalWidth, std::max(maxHeight, getSuggestedMinimumHeight()));
 }
 
-void BottomNavigationMenuView::onLayout(bool changed, int left, int top, int right, int bottom) {
+void BottomNavigationMenuView::onLayout(bool changed, int left, int top, int width, int height) {
     const int count = getChildCount();
-    const int width = right - left;
-    const int height = bottom - top;
     int used = 0;
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->getVisibility() == View::GONE) {
             continue;
         }
+        // View::layout takes (l, t, w, h) here, not AOSP's (l, t, r, b):
+        // passing right/used+measuredWidth as the width made each item grow
+        // by the sum of its predecessors (205/410/615/... px).
         if (getLayoutDirection() == View::LAYOUT_DIRECTION_RTL) {
             child->layout(width - used - child->getMeasuredWidth(), 0,
-                    width - used, height);
+                    child->getMeasuredWidth(), child->getMeasuredHeight());
         } else {
-            child->layout(used, 0, child->getMeasuredWidth() + used, height);
+            child->layout(used, 0, child->getMeasuredWidth(), child->getMeasuredHeight());
         }
         used += child->getMeasuredWidth();
     }
