@@ -212,6 +212,10 @@ App::~App(){
     LOGD("~App %p",this);
     auto inst = InputMethodManager::peekInstance();
     if(inst)inst->shutDown();
+    // Detach the i18n buffer BEFORE mI18nData (member) frees: anything touching
+    // DataResource after this falls back to the sidecar-load path instead of
+    // reading freed memory.
+    i18n::DataResource::SetData(nullptr, 0);
     delete &WindowManager::getInstance();
     delete Looper::getMainLooper();
     delete &GraphDevice::getInstance();
@@ -251,17 +255,17 @@ void App::onInit(){
     const std::string pak = findSharedPak("cdroid.pak");
     if (!pak.empty()) addResource(pak, "cdroid");
     else addResource("cdroid.pak", "cdroid");   // keep the old failure log
-    // i18n data: load raw/i18n.dat from cdroid.pak into a process-lifetime
-    // buffer so DataResource::Init reads from RAM (no fd/lseek/read per format
-    // class). The string is heap-allocated and never deleted — its buffer is
-    // the backing store for DataResource's static pointer. Falls back to the
-    // ./i18n.dat sidecar when the pak entry is absent.
+    // i18n data: load raw/i18n.dat from cdroid.pak into an App-lifetime buffer
+    // so DataResource::Init reads from RAM (no fd/lseek/read per format class).
+    // The buffer backs DataResource's static pointer — filled once, never
+    // modified, and detached in ~App before the member frees. Falls back to
+    // the ./i18n.dat sidecar when the pak entry is absent.
     if (auto stream = getInputStream("cdroid:raw/i18n.dat")) {
-        auto* data = new std::string((std::istreambuf_iterator<char>(*stream)),
-                                     std::istreambuf_iterator<char>());
-        if (!data->empty()) {
-            i18n::DataResource::SetData(data->data(), data->size());
-            LOGD("i18n.dat from pak: %zu bytes (buffer-based)", data->size());
+        mI18nData.assign(std::istreambuf_iterator<char>(*stream),
+                         std::istreambuf_iterator<char>());
+        if (!mI18nData.empty()) {
+            i18n::DataResource::SetData(mI18nData.data(), mI18nData.size());
+            LOGD("i18n.dat from pak: %zu bytes (buffer-based)", mI18nData.size());
         }
     } else {
         LOGW("cdroid:raw/i18n.dat not found in pak — i18n falls back to ./i18n.dat");

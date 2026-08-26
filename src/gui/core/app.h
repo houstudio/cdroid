@@ -20,6 +20,7 @@
 #include <string>
 #include <map>
 #include <atomic>
+#include <vector>
 #include <unordered_map>
 #include <istream>
 #include <cairomm/surface.h>
@@ -83,6 +84,12 @@ private:
 
     int mNextAutofillViewId = 100000;
     std::string mLanguage;
+    // i18n.dat contents loaded from cdroid.pak (App::onInit) — a binary blob, hence
+    // vector<char>. Its heap buffer is the backing store for i18n::DataResource's static
+    // pointer, so it is filled ONCE and must never be modified afterwards (a reallocating
+    // write would dangle the static pointer). ~App detaches the pointer
+    // (DataResource::SetData(nullptr, 0)) before this member frees.
+    std::vector<char> mI18nData;
     std::unordered_map<std::string,class ZIPArchive*>mResources;
     ResTable* mResTable = nullptr;   // loaded from resources.arsc in pak (null if no arsc)
     // arsc theme engine (ResTable::Theme*), kept opaque so this header needs no
