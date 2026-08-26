@@ -59,7 +59,9 @@ int main(int argc, const char* argv[]) {
         parser->next();
     }
     ConstraintLayoutStates* states = new ConstraintLayoutStates(&app, cl, *parser);
-    const int baseId = states->getId("@+id/base");
+    // defaultState="@+id/base" resolves to its resource id at parse time;
+    // the retired string-key getId() call is the same value.
+    const int baseId = states->getDefaultState();
 
     bool wide = false;
     auto apply = [&]() {

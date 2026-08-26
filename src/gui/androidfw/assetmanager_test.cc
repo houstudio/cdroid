@@ -148,8 +148,7 @@ int main() {
         am.getConfiguration(&out);
         CHECK(out.size == cfg.size);
 
-        std::vector<std::string> locales;
-        am.getLocales(locales);
+        std::vector<std::string> locales = am.getLocales();
         CHECK(!locales.empty());   // arsc declares default / zh / es
     }
 
