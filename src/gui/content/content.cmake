@@ -14,6 +14,7 @@ set(CONTENT_SOURCES
     content/typedvalue.cc
     content/xmlblock.cc
     content/numberformat.cc   # java.text.NumberFormat face over the i18n engine
+    content/dateutils.cc     # android.text.format.DateUtils (in-tree subset)
     content/dateformat.cc
     content/dateformatsymbols.cc
     content/simpledateformat.cc

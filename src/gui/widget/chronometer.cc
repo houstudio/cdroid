@@ -18,6 +18,7 @@
 #include <widget/internal_R.h>
 #include <core/context.h>
 #include <widget/chronometer.h>
+#include <content/dateutils.h>
 #include <widget/framework_styleable.h>
 #include <systemclock.h>
 namespace cdroid{
@@ -127,7 +128,7 @@ void Chronometer::updateText(int64_t now) {
         seconds = -seconds;
         negative = true;
     }
-    std::string text ;//= DateUtils.formatElapsedTime(mRecycle, seconds);
+    std::string text = DateUtils::formatElapsedTime(&mRecycle, seconds);
     if (negative) {
         //text = getResources().getString(R.string.negative_duration, text);
     }

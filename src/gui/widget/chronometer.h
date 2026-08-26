@@ -34,6 +34,7 @@ private:
     bool mColonBlinking;
     Runnable mTickRunnable;
     std::string mFormat;
+    std::string mRecycle;   // AOSP: recycled StringBuilder for formatElapsedTime
     Formatter mFormatter;
     OnChronometerTickListener mOnChronometerTickListener;
     bool mCountDown;

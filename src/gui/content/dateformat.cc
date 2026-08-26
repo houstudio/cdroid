@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <content/dateformat.h>
+#include <cctype>
 #include <content/simpledateformat.h>
 #include <content/Locale.h>
 #include <cstring>
@@ -83,15 +84,65 @@ std::string DateFormat::format(const std::string& inFormat, Calendar& inCalendar
 
 std::string DateFormat::getBestDateTimePattern(const Locale& locale, const std::string& skeleton) {
 #ifdef ENABLE_I18N
-    // DTPG is not ported; the two skeletons TextClock uses map onto the
-    // i18n hour+minute pools directly (already locale-appropriate).
-    if (skeleton == "hm") return localeHourMinutePattern(locale, true);
-    if (skeleton == "Hm") return localeHourMinutePattern(locale, false);
+    // DTPG-lite: map the skeleton's field requests onto the engine pools —
+    // GREGORIAN_FULL_MEDIUM_SHORT_PATTERN holds the locale-ordered combined
+    // date patterns [full(with weekday), medium, short], and the hour-minute
+    // pool carries the localized time pattern. ICU's real DTPG would
+    // per-field best-match; this subset covers the DateUtils skeletons.
+    i18n::LocaleInfo localeInfo = I18nBridge::toLocaleInfo(locale);
+    i18n::DataResource resource(&localeInfo);
+    if (!resource.Init()) return skeleton;
+    char* fms = resource.GetString(i18n::DataResourceType::GREGORIAN_FULL_MEDIUM_SHORT_PATTERN);
+    if (fms == nullptr || std::strlen(fms) == 0) return skeleton;
+
+    // Field census of the skeleton.
+    auto has = [&](char c) { return skeleton.find(c) != std::string::npos; };
+    const bool wantWeekday = has('E');
+    const bool wantYear    = has('y');
+    const bool wantTime    = has('h') || has('H') || has('j') || has('K') || has('k');
+    const bool numeric     = has('M') && skeleton.find("MMM") == std::string::npos;
+
+    // Date part: full (weekday) / medium (y+M+d) / short (numeric), all in
+    // the locale's own field order.
+    std::string datePart;
+    if (wantWeekday) {
+        datePart = i18n::Parse(fms, 0);
+    } else if (numeric) {
+        datePart = i18n::Parse(fms, 2);
+    } else {
+        datePart = i18n::Parse(fms, 1);
+        if (!wantYear) {
+            // Month+day only: strip the year token and one adjacent
+            // separator ("," / "年" style joins degrade to the space).
+            size_t ypos = datePart.find('y');
+            if (ypos != std::string::npos) {
+                size_t b = ypos, e = ypos;
+                while (b > 0 && !std::isalpha((unsigned char)datePart[b-1])) b--;
+                while (e < datePart.size() && !std::isalpha((unsigned char)datePart[e])) e++;
+                while (e < datePart.size() && std::isalpha((unsigned char)datePart[e])) e++;
+                datePart = datePart.substr(0, b) + datePart.substr(e);
+            }
+        }
+    }
+
+    if (!wantTime) return datePart;
+
+    // Time part: 'j' resolves by the locale's natural hour cycle; an explicit
+    // h/H skeleton forces it (AOSP DateTimeFormat semantics).
+    bool hour12;
+    if (has('H')) hour12 = false;
+    else if (has('h')) hour12 = true;
+    else hour12 = !localePrefers24Hour(locale);
+    const std::string timePart = localeHourMinutePattern(locale, hour12);
+
+    // ICU joins date and time through the locale's {1}/{0} glue; the engine
+    // pool has no glue slot, so the common ", " join stands in (a DTPG-gap
+    // simplification, fine for the subset).
+    return datePart + ", " + timePart;
 #else
     (void)locale;
-#endif
-    // Unsupported skeletons: hand back the skeleton itself (DTPG gap).
     return skeleton;
+#endif
 }
 
 } // namespace cdroid

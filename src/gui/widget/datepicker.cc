@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <widget/internal_R.h>
 #include <widget/datepicker.h>
+#include <content/dateutils.h>
 #include <widget/daypickerspinnerdelegate.h>
 #include <widget/daypickercalendardelegate.h>
 #include <widget/framework_styleable.h>
@@ -276,9 +277,9 @@ void DatePicker::AbstractDatePickerDelegate::onPopulateAccessibilityEvent(Access
 }
 
 std::string DatePicker::AbstractDatePickerDelegate::getFormattedCurrentDate() {
-   return "";/*DateUtils::formatDateTime(mContext, mCurrentDate.getTimeInMillis(),
+   return DateUtils::formatDateTime(mContext, mCurrentDate.getTimeInMillis(),
            DateUtils::FORMAT_SHOW_DATE | DateUtils::FORMAT_SHOW_YEAR
-                   | DateUtils::FORMAT_SHOW_WEEKDAY);*/
+                   | DateUtils::FORMAT_SHOW_WEEKDAY);
 }
 
 /////////////////DatePicker::AbstractDatePickerDelegate::SavedState///////////////////////
