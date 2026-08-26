@@ -1190,7 +1190,6 @@ void LayerDrawable::inflateLayers(Resources&r,XmlPullParser&parser,const Attribu
         }
         ChildDrawable*layer = new ChildDrawable(mLayerState->mDensity);
         // AOSP inflateLayers: obtainAttributes(R.styleable.LayerDrawableItem) per <item>.
-        Context* ctx = atts.getContext();
         auto ta = obtainAttributes(r, theme, atts, R::styleable::LayerDrawableItem);
         if (ta) updateLayerFromTypedArray(layer, *ta);
 

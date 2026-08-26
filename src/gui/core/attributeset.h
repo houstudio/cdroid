@@ -48,7 +48,6 @@ public:
     // parser-backed set can never be silently sliced into an empty shell.
     AttributeSet(const AttributeSet&) = delete;
     AttributeSet& operator =(const AttributeSet&) = delete;
-    Context*getContext()const;
 
     // --- AOSP android.util.AttributeSet interface ----------------------------
     // Ported verbatim from frameworks/base/core/java/android/util/AttributeSet.java.

@@ -27,10 +27,6 @@ AttributeSet::AttributeSet(Context*ctx,const std::string&package)
     :mContext(ctx),mPackage(package){
 }
 
-Context*AttributeSet::getContext()const{
-    return mContext;
-}
-
 // ----------------------------------------------------------------------------
 // AOSP android.util.AttributeSet — interface defaults. The parsers implement
 // the real answers (text XmlPullParser / binary XmlBlock::Parser); these

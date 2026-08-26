@@ -94,11 +94,11 @@ ViewTransition::ViewTransition(MotionScene& scene, Context* ctx, XmlPullParser& 
                 mKeyFrames = std::make_unique<KeyFrames>(ctx, parser); // consumes through </KeyFrameSet>
             } else if (tag == "Constraint" || tag == "ConstraintOverride") {
                 // A per-view override that becomes the delta applied in currentState/allStates mode.
-                mConstraintDelta.loadConstraint(parser); // consumes through </Constraint>
+                mConstraintDelta.loadConstraint(ctx, parser); // consumes through </Constraint>
             } else if (tag == "CustomAttribute" || tag == "CustomMethod") {
                 // A ViewTransition-level custom attribute: stored on the delta's set-level collection
                 // and applied to every target via applyDelta.
-                mConstraintDelta.loadCustomAttribute(parser);
+                mConstraintDelta.loadCustomAttribute(ctx, parser);
             }
         } else if (eventType == XmlPullParser::END_TAG) {
             if (parser.getName() == "ViewTransition") return;

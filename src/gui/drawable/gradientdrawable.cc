@@ -1263,7 +1263,6 @@ void GradientDrawable::updateStateFromTypedArray(const TypedArray& a) {
 void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
-    Context* ctx = atts.getContext();
 
     while (((type=parser.next()) != XmlPullParser::END_DOCUMENT)
            && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
@@ -1281,7 +1280,7 @@ void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,co
             // CDROID-private "pattern" attr (image pattern for gradient fill).
             { auto ta2 = obtainAttributes(r, theme, atts, R::styleable::GradientDrawablePattern);
               auto pattern = ta2->getString(R::styleable::GradientDrawablePattern_pattern);
-              if (!pattern.empty()) setImagePattern(atts.getContext(), pattern);
+              if (!pattern.empty()) setImagePattern(r.getContext(), pattern);
             }
         } else if (name.compare("solid")==0) {
             auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawableSolid);

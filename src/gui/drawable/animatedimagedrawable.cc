@@ -464,7 +464,6 @@ void AnimatedImageDrawable::inflate(Resources& r,XmlPullParser&parser,const Attr
 }
 
 void AnimatedImageDrawable::updateStateFromTypedArray(Resources&r,const AttributeSet&atts,const Resources::Theme* theme,int srcDensityOverride){
-    Context* ctx = atts.getContext();
     // AOSP obtainAttributes(r, theme, attrs, ...): resolving through the theme
     // lets ?attr values on <animated-image> resolve (the plain Context call
     // dropped the inflate theme).
@@ -474,7 +473,7 @@ void AnimatedImageDrawable::updateStateFromTypedArray(Resources&r,const Attribut
         // Resolve the resource ID to the file path, then load.
         TypedValue tv;
         std::string srcResid;
-        if (ctx->getResources().getValue(srcResId, &tv, true) && tv.string) {
+        if (r.getValue(srcResId, &tv, true) && tv.string) {
             srcResid = TextUtils::utf16_utf8((const uint16_t*)tv.string, tv.stringLen);
         }
         if(!srcResid.empty()){
@@ -489,7 +488,7 @@ void AnimatedImageDrawable::updateStateFromTypedArray(Resources&r,const Attribut
         if (repeatCount != REPEAT_UNDEFINED) {
             this.setRepeatCount(repeatCount);
         }*/
-        auto frmSequence = FrameSequence::create(atts.getContext(),srcResid);
+        auto frmSequence = FrameSequence::create(r.getContext(),srcResid);
         if(frmSequence==nullptr)return;
         mAnimatedImageState->mFrameSequence = frmSequence;
         mAnimatedImageState->mOwnsFrameSequence = true;

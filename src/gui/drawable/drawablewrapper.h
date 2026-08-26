@@ -46,7 +46,7 @@ protected:
     std::shared_ptr<DrawableWrapperState>mState;
     void updateLocalState();
     void updateStateFromTypedArray(const TypedArray& a);
-    void inflateChildDrawable(XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme);
+    void inflateChildDrawable(Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme);
 protected:
     virtual std::shared_ptr<DrawableWrapperState> mutateConstantState();
     DrawableWrapper(std::shared_ptr<DrawableWrapperState>state);

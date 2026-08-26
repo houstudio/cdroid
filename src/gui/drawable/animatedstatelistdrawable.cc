@@ -200,7 +200,6 @@ void AnimatedStateListDrawable::inflate(Resources& r,XmlPullParser&parser,const 
     (void)r;
     StateListDrawable::inflateWithAttributes(parser,atts);
 
-    Context* ctx = atts.getContext();
     auto ta = obtainAttributes(r, theme, atts, R::styleable::AnimatedStateListDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     //updateDensity();

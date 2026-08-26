@@ -163,13 +163,12 @@ ConstraintSet::Constraint& ConstraintSet::get(int id) {
     return c;
 }
 
-ConstraintSet::CustomAttribute ConstraintSet::parseCustomAttribute(const AttributeSet& parser) {
+ConstraintSet::CustomAttribute ConstraintSet::parseCustomAttribute(Context* ctx, const AttributeSet& parser) {
     using CustomAttribute = ConstraintSet::CustomAttribute;
     CustomAttribute ca;
     // androidx ConstraintAttribute.extractAttributes: TypedArray index-count loop; presence is
     // "the authored index appears", each value read with the type-matching getter (aapt2 has
     // already resolved @color/@string refs and numeric formats into typed values).
-    Context* ctx = parser.getContext();
     if (ctx == nullptr) return ca;
     auto ta = ctx->obtainStyledAttributes(parser, R::styleable::CustomAttribute);
     if (!ta) return ca;
@@ -198,8 +197,8 @@ ConstraintSet::CustomAttribute ConstraintSet::parseCustomAttribute(const Attribu
     return ca;
 }
 
-void ConstraintSet::loadCustomAttribute(const AttributeSet& parser) {
-    mCustomAttributes.push_back(parseCustomAttribute(parser));
+void ConstraintSet::loadCustomAttribute(Context* ctx, const AttributeSet& parser) {
+    mCustomAttributes.push_back(parseCustomAttribute(ctx, parser));
 }
 
 void ConstraintSet::clone(ConstraintLayout* constraintLayout) {
@@ -651,7 +650,7 @@ void ConstraintSet::createHorizontalChainRtl(int startId, int startSide, int end
 // Java iterating only the present attrs).
 // ===========================================================================
 
-void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
+void ConstraintSet::Constraint::fillFromAttributeList(Context* ctx, const AttributeSet& a) {
     // Any parsed attribute marks these sub-structs as authored (Java sets mApply on each present attr).
     layout.mApply = transform.mApply = propertySet.mApply = motion.mApply = true;
 
@@ -663,7 +662,6 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     // obtainStyledAttributes returns null only for a null mCtx, which never
     // happens post-init (a null return means the widget is unusable: a dev-time
     // bug to fix, not a condition to guard against). Dereferenced unconditionally.
-    Context* ctx = a.getContext();
     auto ta = ctx->obtainStyledAttributes(a, R::styleable::Constraint);
 
     // Record every styleable index this element actually authored, so applyDelta overlays precisely
@@ -799,7 +797,7 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     m.mQuantizeMotionPhase = ta->getFloat(R::styleable::Constraint_quantizeMotionPhase, m.mQuantizeMotionPhase);
 }
 
-void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
+void ConstraintSet::load(Context* context, XmlPullParser& parser) {
     // Caller positions `parser` at the <ConstraintSet> START_TAG. We consume through its END_TAG.
     auto toLower = [](std::string s) {
         for (auto& c : s) c = (char)std::tolower((unsigned char)c);
@@ -815,7 +813,7 @@ void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
             const std::string tag = parser.getName();
             if (tag == "Constraint" || tag == "ConstraintOverride" ||
                     tag == "Guideline"   || tag == "Barrier") {
-                loadConstraint(parser); // consumes through the element's END_TAG
+                loadConstraint(context, parser); // consumes through the element's END_TAG
             }
         } else if (eventType == XmlPullParser::END_TAG) {
             if (toLower(parser.getName()) == "constraintset") {
@@ -826,12 +824,12 @@ void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
     }
 }
 
-void ConstraintSet::loadConstraint(XmlPullParser& parser) {
+void ConstraintSet::loadConstraint(Context* ctx, XmlPullParser& parser) {
     // `parser` is at the <Constraint>/<ConstraintOverride>/<Guideline>/<Barrier> START_TAG. Read its
     // own attributes, then its nested sub-elements, and consume through the matching END_TAG.
     Constraint current;
     const std::string openTag = parser.getName();
-    current.fillFromAttributeList(parser); // parser IS-A AttributeSet
+    current.fillFromAttributeList(ctx, parser); // parser IS-A AttributeSet
     if (openTag == "Guideline") {
         current.layout.mIsGuideline = true;
         current.layout.mApply = true;
@@ -852,9 +850,9 @@ void ConstraintSet::loadConstraint(XmlPullParser& parser) {
             const std::string tag = parser.getName();
             if (tag == "PropertySet" || tag == "Transform" ||
                     tag == "Layout" || tag == "Motion") {
-                current.fillFromAttributeList(parser); // nested sub-element dispatches into sub-structs
+                current.fillFromAttributeList(ctx, parser); // nested sub-element dispatches into sub-structs
             } else if (tag == "CustomAttribute" || tag == "CustomMethod") {
-                current.mCustomAttributes.push_back(parseCustomAttribute(parser));
+                current.mCustomAttributes.push_back(parseCustomAttribute(ctx, parser));
             }
         } else if (eventType == XmlPullParser::END_TAG) {
             if (toLower(parser.getName()) == openLower) break; // matching close of this constraint

@@ -201,13 +201,11 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
 }
 
 void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&attrs, const Resources::Theme* theme){
-    (void)r;
     auto state = mAnimatedVectorState;
     int eventType= parser.getEventType();//XmlPullParser::START_TAG;
     float pathErrorScale = 1;
     const int innerDepth = parser.getDepth()+1;
-    Context*ctx = attrs.getContext();
-    state->mContext = ctx;
+    state->mContext = r.getContext();   // CDROID seam (the inflation bridge)
     // Parse everything until the end of the animated-vector element.
     // AOSP guards with eventType != END_DOCUMENT first (AnimatedVectorDrawable.
     // java:529-531): once next() reaches the document end it keeps returning
@@ -246,10 +244,11 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
                 if (animResId != 0) {
                     if (theme != nullptr) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
-                        Animator* animator = AnimatorInflater::loadAnimator(ctx, theme, animResId, pathErrorScale);
+                        Animator* animator = AnimatorInflater::loadAnimator(r.getContext(), theme, animResId, pathErrorScale);
                         updateAnimatorProperty(animator, target, state->mVectorDrawable,state->mShouldIgnoreInvalidAnim);
                         state->addTargetAnimator(target, animator);
-                        LOGV("%s -> %s %p",target.c_str(),ctx->getResourceName(animResId).c_str(),animator);
+                        std::string animName; r.getResourceName(animResId, &animName);
+                        LOGV("%s -> %s %p",target.c_str(),animName.c_str(),animator);
                     } else {
                         // The animation may be theme-dependent. As a
                         // workaround until Animator has full support for

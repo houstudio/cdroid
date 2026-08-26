@@ -49,7 +49,7 @@ private:
     ShapeDrawable(std::shared_ptr<ShapeState>state);
     void updateLocalState();
     void updateStateFromTypedArray(const TypedArray& a);
-    int inflateTag(const std::string&,XmlPullParser&,const AttributeSet&);
+    int inflateTag(const std::string&,Resources&,XmlPullParser&,const AttributeSet&);
 protected:
     void onBoundsChange(const Rect&bounds)override;
     bool onStateChange(const std::vector<int>&stateset)override;

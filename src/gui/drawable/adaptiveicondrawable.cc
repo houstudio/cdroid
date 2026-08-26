@@ -305,8 +305,7 @@ void AdaptiveIconDrawable::inflateLayers(Resources& r,XmlPullParser& parser,cons
         ChildDrawable* layer = new ChildDrawable(state->mDensity);
         // Resolve this child tag's attributes against the framework arsc,
         // matching AOSP's obtainAttributes(r, theme, attrs, R.styleable.AdaptiveIconDrawableLayer).
-        Context* ctx = attrs.getContext();
-        auto a = r.obtainStyledAttributes(&attrs, R::styleable::AdaptiveIconDrawableLayer);
+        auto a = Drawable::obtainAttributes(r, theme, attrs, R::styleable::AdaptiveIconDrawableLayer);
         if (a) {
             updateLayerFromTypedArray(layer, *a);
         }

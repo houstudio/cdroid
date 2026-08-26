@@ -161,9 +161,9 @@ class ConstraintSet {
 
     // Parse a <CustomAttribute> element (attributeName + one of customColorValue/customIntegerValue/
     // customFloatValue/customStringValue/customBooleanValue) at `parser`'s current START_TAG.
-    static CustomAttribute parseCustomAttribute(const AttributeSet& parser);
+    static CustomAttribute parseCustomAttribute(Context* ctx, const AttributeSet& parser);
     // Parse a <CustomAttribute> at `parser` and append it to this set's set-level custom collection.
-    void loadCustomAttribute(const AttributeSet& parser);
+    void loadCustomAttribute(Context* ctx, const AttributeSet& parser);
 
     // Java: ConstraintSet.Constraint — one per referenced view id.
     struct Constraint {
@@ -182,7 +182,7 @@ class ConstraintSet {
         void applyTo(ConstraintLayout::LayoutParams& param) const;
         // Read every attribute on the current START_TAG (a <Constraint>/<Layout>/<Transform>/
         // <PropertySet>/<Motion> element) into the matching sub-struct. (Java: populateConstraint.)
-        void fillFromAttributeList(const AttributeSet& attrs);
+        void fillFromAttributeList(Context* ctx, const AttributeSet& attrs);
     };
 
     // --- core API ---
@@ -197,7 +197,7 @@ class ConstraintSet {
     // element's START_TAG; this reads its attributes + nested <PropertySet>/<Transform>/<Layout>/
     // <Motion>/<CustomAttribute> children and consumes through the matching END_TAG. Shared by load()
     // and ViewTransition (which builds its mConstraintDelta from <Constraint> children).
-    void loadConstraint(XmlPullParser& parser);
+    void loadConstraint(Context* ctx, XmlPullParser& parser);
     // Overlay this set's constraint for target.mViewId onto `target` — each authored sub-struct
     // (Layout/Transform/PropertySet/Motion, gated by mApply) replaces the target's; custom attributes
     // are appended. (Java: ConstraintSet.applyDelta(Constraint).)

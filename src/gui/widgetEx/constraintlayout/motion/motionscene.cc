@@ -37,11 +37,10 @@ using namespace cdroid::internal;
 // ===========================================================================
 // MotionScene::Transition
 // ===========================================================================
-MotionScene::Transition::Transition(MotionScene& scene, const AttributeSet& a)
+MotionScene::Transition::Transition(MotionScene& scene, Context* ctx, const AttributeSet& a)
     : mDuration(scene.mDefaultDuration) {
     // TypedArray reads typed binary AXML values directly (AOSP pattern); the default
     // arg covers an absent attr, so no name-based fallback is needed.
-    Context* ctx = a.getContext();
     auto ta = ctx->obtainStyledAttributes(a, R::styleable::Transition);
     if (ta) {
         namespace TR = R::styleable;
@@ -268,7 +267,7 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
             if (tag == "MotionScene") {
                 mDefaultDuration = parser.getAttributeIntValue(std::string(), "defaultDuration", mDefaultDuration);
             } else if (tag == "Transition") {
-                auto t = std::make_unique<Transition>(*this, parser);
+                auto t = std::make_unique<Transition>(*this, ctx, parser);
                 Transition* raw = t.get();
                 mTransitionList.push_back(std::move(t));
                 currentTransition = raw;

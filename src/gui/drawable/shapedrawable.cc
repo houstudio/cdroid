@@ -236,11 +236,10 @@ void ShapeDrawable::draw(Canvas&canvas){
     }
 }
 
-int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const AttributeSet&a){
+int ShapeDrawable::inflateTag(const std::string&name,Resources&r,XmlPullParser&parser,const AttributeSet&a){
     if (name.compare("padding")==0) {
         // AOSP ShapeDrawable.inflateTag: r.obtainAttributes(attrs, R.styleable.ShapeDrawablePadding).
-        Context* ctx = a.getContext();
-        auto ta = ctx ? ctx->obtainStyledAttributes(a, R::styleable::ShapeDrawablePadding) : nullptr;
+        auto ta = r.obtainAttributes(&a, R::styleable::ShapeDrawablePadding);
         if (ta) {
             setPadding(ta->getDimensionPixelOffset(R::styleable::ShapeDrawablePadding_left, 0),
                     ta->getDimensionPixelOffset(R::styleable::ShapeDrawablePadding_top, 0),
@@ -269,7 +268,7 @@ void ShapeDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet
 
         const std::string name = parser.getName();
         // call our subclass
-        if (!inflateTag(name,parser,atts)) {
+        if (!inflateTag(name,r,parser,atts)) {
             LOGW("Unknown element: %s for ShapeDrawable %p",name.c_str(),this);
         }
     }

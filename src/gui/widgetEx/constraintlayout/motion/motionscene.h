@@ -113,7 +113,7 @@ class MotionScene {
         // Read the <Transition> element's own attributes from `attrs` (the parser is at the
         // START_TAG). Child elements (<KeyFrameSet>/<OnClick>) are handled by MotionScene::load
         // via setKeyFrames()/addOnClick().
-        Transition(MotionScene& scene, const AttributeSet& attrs);
+        Transition(MotionScene&, Context* scene, const AttributeSet& attrs);
 
         int getDuration() const {
             return mDuration;

@@ -1677,7 +1677,7 @@ TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysWithoutClobbering) {
         parser->next();
     }
     ConstraintSet delta;
-    delta.loadConstraint(*parser);
+    delta.loadConstraint(&app, *parser);
 
     ASSERT_TRUE(delta.contains(id));           // motionTarget resolved to the target id
     delta.applyDelta(target.get(id));
@@ -1700,7 +1700,7 @@ TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysLayoutFields) {
         parser->next();
     }
     ConstraintSet delta;
-    delta.loadConstraint(*parser);
+    delta.loadConstraint(&app, *parser);
 
     ASSERT_TRUE(delta.contains(id));
     delta.applyDelta(target.get(id));
@@ -1726,7 +1726,7 @@ TEST(CLConstraintLayout, ViewTransitionDeltaAppliesDefaultValuedField) {
         parser->next();
     }
     ConstraintSet delta;
-    delta.loadConstraint(*parser);
+    delta.loadConstraint(&app, *parser);
 
     delta.applyDelta(target.get(id));
     EXPECT_FLOAT_EQ(target.get(id).transform.rotation, 0.0f); // RESET to 0 (precise)
@@ -1927,7 +1927,7 @@ TEST(CLConstraintLayout, ViewTransitionSetLevelCustomAttribute) {
     }
 
     ConstraintSet delta;
-    delta.loadCustomAttribute(*parser);
+    delta.loadCustomAttribute(&app, *parser);
     ConstraintSet target;
     ConstraintSet::Constraint& c = target.get(1);
     EXPECT_TRUE(c.mCustomAttributes.empty());

@@ -180,7 +180,6 @@ void StateListDrawable::applyTheme(const Resources::Theme& t){
 void StateListDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     (void)r;
     Drawable::inflateWithAttributes(parser,atts);
-    Context* ctx = atts.getContext();
     auto ta = obtainAttributes(r, theme, atts, R::styleable::StateListDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     inflateChildElements(r,parser,atts, theme);
@@ -220,7 +219,6 @@ void StateListDrawable::inflateChildElements(Resources&r,XmlPullParser&parser,co
         if((depth>innerDepth)||parser.getName().compare("item"))continue;
 
         std::vector<int>states;
-        Context* ctx = atts.getContext();
         auto ta = obtainAttributes(r, theme, atts, R::styleable::StateListDrawableItem);
         Drawable*dr = ta ? ta->getDrawable(R::styleable::StateListDrawableItem_drawable) : nullptr;
         StateSet::parseState(states,atts);
