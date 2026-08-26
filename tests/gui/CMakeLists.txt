@@ -1,10 +1,12 @@
 project(gui_test C CXX)
 # Root-level test sources (non-recursive).
 file(GLOB SRCS_GUI_TESTS CONFIGURE_DEPENDS *.cc *.cpp)
-# androidx.constraintlayout.core test ports live under constraintlayout/ (mirrors the Java package).
+# androidx.constraintlayout.core test ports live under constraintlayout/ (mirrors the Java package);
+# AOSP keyboard-focus-navigation test ports live under keynav/.
 file(GLOB_RECURSE SRCS_GUI_TESTS_SUB CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/constraintlayout/*.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/drawable/*.cc)
+    ${CMAKE_CURRENT_SOURCE_DIR}/drawable/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/keynav/*.cc)
 list(APPEND SRCS_GUI_TESTS ${SRCS_GUI_TESTS_SUB})
 find_package(GTEST REQUIRED)
 find_package(Pixman REQUIRED)
