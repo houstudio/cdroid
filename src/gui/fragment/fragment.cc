@@ -92,6 +92,18 @@ Fragment::~Fragment(){
     delete mChildHost;
     delete mViewLifecycleOwner;
     // mChildFragmentManager (unique_ptr) releases automatically.
+    // Last-resort reclaim for the fragment view. Its sole deleter is the exit effect's
+    // scheduleDelete post (SpecialEffectsController), which needs the transition clone to end
+    // and the looper to still run. At process exit neither holds: App::exit drains the queue
+    // while the clone never gets another frame, so a view that was already detached by
+    // TransitionEffect (removeView) is orphaned — the host window's view-tree teardown cannot
+    // see it either. A non-null mView with no parent here IS that orphan tree; one still
+    // parented (normal close, effect never detached it) stays owned by the container and must
+    // not be freed here (the tree teardown would double-free it).
+    if (mView != nullptr && mView->getParent() == nullptr) {
+        delete mView;
+        mView = nullptr;
+    }
 }
 
 // Fragment owns its 6 Transition* (androidx fields; GC reclaims there). On replace, delete the
