@@ -27,11 +27,11 @@ private:
     Context* mContext;
     // Immutable cached popup menu properties.
     MenuBuilder* mMenu;
-    bool mOverflowOnly;
-    bool mForceShowIcon;
+    bool mOverflowOnly = false;
+    bool mForceShowIcon = false;
     int mDropDownGravity = Gravity::START;
-    int mPopupStyleAttr;
-    int mPopupStyleRes;
+    int mPopupStyleAttr = 0;
+    int mPopupStyleRes = 0;
 
     View* mAnchorView;
     MenuPresenter::Callback mPresenterCallback;

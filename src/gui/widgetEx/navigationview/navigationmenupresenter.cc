@@ -37,11 +37,13 @@ int dp(Context* context,int dps){
 }
 
 // design_navigation_item_subheader.xml theme references.
+// Terminating 0 is mandatory: obtainStyledAttributes counts attrs until 0.
 const uint32_t SUBHEADER_THEME_ATTRS[] = {
     R::attr::listPreferredItemHeightSmall,
     R::attr::listPreferredItemPaddingStart,
     R::attr::listPreferredItemPaddingEnd,
     R::attr::textColorSecondary,
+    0,
 };
 constexpr int IDX_HEIGHT_SMALL   = 0;
 constexpr int IDX_PADDING_START  = 1;

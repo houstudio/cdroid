@@ -185,7 +185,7 @@ RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* 
     applyAttributes(pAttrs, defStyleAttr, defStyleRes);
 
     // Pull disabled alpha from theme (AOSP: getTheme().resolveAttribute(disabledAlpha)).
-    static const uint32_t ATTRS_DISABLED_ALPHA[] = { R::attr::disabledAlpha };
+    static const uint32_t ATTRS_DISABLED_ALPHA[] = { R::attr::disabledAlpha, 0 };
     auto ta = getContext()->obtainStyledAttributes(ATTRS_DISABLED_ALPHA);
     mDisabledAlpha = ta ? ta->getFloat(0, 0.30f) : 0.30f;
 

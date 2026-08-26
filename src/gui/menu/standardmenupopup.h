@@ -28,9 +28,9 @@ private:
     Context* mContext;
     MenuBuilder* mMenu;
     MenuAdapter* mAdapter;
-    int mPopupMaxWidth;
-    int mPopupStyleAttr;
-    int mPopupStyleRes;
+    int mPopupMaxWidth = 0;
+    int mPopupStyleAttr = 0;
+    int mPopupStyleRes = 0;
 
     MenuPopupWindow* mPopup;
     PopupWindow::OnDismissListener mOnDismissListener;
@@ -42,13 +42,13 @@ private:
     ViewTreeObserver* mTreeObserver;
 
     /** Whether the popup has been dismissed. Once dismissed, it cannot be opened again. */
-    bool mWasDismissed;
+    bool mWasDismissed = false;
     /** Whether the cached content width value is valid. */
-    bool mHasContentWidth;
-    bool mShowTitle;
-    bool mOverflowOnly;
+    bool mHasContentWidth = false;
+    bool mShowTitle = false;
+    bool mOverflowOnly = false;
     /** Cached content width. */
-    int mContentWidth;
+    int mContentWidth = 0;
     int mDropDownGravity = Gravity::NO_GRAVITY;
 private:
     void onGlobalLayout();

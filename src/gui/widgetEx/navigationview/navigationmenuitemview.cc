@@ -31,10 +31,12 @@ using namespace cdroid::internal;
 namespace{
 // Framework theme attrs resolved for the code-built layouts (the XML layouts
 // reference them through ?attr/?android:attr).
+// Terminating 0 is mandatory: obtainStyledAttributes counts attrs until 0.
 const uint32_t ITEM_THEME_ATTRS[] = {
     R::attr::listPreferredItemHeightSmall,
     R::attr::listPreferredItemPaddingStart,
     R::attr::listPreferredItemPaddingEnd,
+    0,
 };
 constexpr int IDX_HEIGHT_SMALL   = 0;
 constexpr int IDX_PADDING_START  = 1;

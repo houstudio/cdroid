@@ -37,8 +37,8 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 // AOSP DatePickerCalendarDelegate ATTRS_TEXT_COLOR / ATTRS_DISABLED_ALPHA.
-static const uint32_t ATTRS_TEXT_COLOR[] = { R::attr::textColor };
-static const uint32_t ATTRS_DISABLED_ALPHA[] = { R::attr::disabledAlpha };
+static const uint32_t ATTRS_TEXT_COLOR[] = { R::attr::textColor, 0 };
+static const uint32_t ATTRS_DISABLED_ALPHA[] = { R::attr::disabledAlpha, 0 };
 
 DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Context* context,
         const AttributeSet* attrs, int defStyleAttr, int defStyleRes)
