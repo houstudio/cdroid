@@ -43,6 +43,12 @@ private:
     void tickRunner();
     void updateText(int64_t now);
     void updateRunning();
+    // AOSP: aim the tick at the actual second boundary instead of drifting
+    // on a flat 1000ms cadence.
+    void postTickOnNextSecond();
+    // AOSP visibility hooks drive mVisible → updateRunning.
+    void onWindowVisibilityChanged(int visibility)override;
+    void onVisibilityChanged(View& changedView,int visibility)override;
     static std::string formatDuration(int64_t ms);
 protected:
     void dispatchChronometerTick();

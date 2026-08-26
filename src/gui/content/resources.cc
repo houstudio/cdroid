@@ -222,6 +222,20 @@ std::string formatWithArgs(const std::string& fmt, const std::vector<std::string
     size_t ai = 0;
     for (size_t i = 0; i < fmt.size(); i++) {
         if (fmt[i] == '%' && i + 1 < fmt.size() && ai < args.size()) {
+            // Positional form "%1$s" (how aapt-stored plurals/strings spell
+            // it): the digits before '$' pick the argument, the letter after
+            // is the (string-substituted) conversion.
+            size_t j = i + 1;
+            while (j < fmt.size() && fmt[j] >= '0' && fmt[j] <= '9') j++;
+            if (j > i + 1 && j < fmt.size() && fmt[j] == '$' && j + 1 < fmt.size()
+                    && (fmt[j + 1] == 's' || fmt[j + 1] == 'd')) {
+                const size_t idx = (size_t)atoi(fmt.substr(i + 1, j - i - 1).c_str());
+                if (idx >= 1 && idx <= args.size()) {
+                    out += args[idx - 1];
+                    i = j + 1;
+                    continue;
+                }
+            }
             const char c = fmt[i + 1];
             if (c == 's' || c == 'd' || c == 'f') { out += args[ai++]; i++; continue; }
         }
