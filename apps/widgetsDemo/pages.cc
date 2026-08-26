@@ -799,36 +799,47 @@ void setupFlipper(View* page) {
                     std::to_string(*idx + 1) + " / " + std::to_string(kTicker.size()) +
                     " 条 · " + (*tsAuto ? "自动轮播中" : "已暂停"));
         };
-        auto tsTick = std::make_shared<Runnable>();
-        *tsTick = [ts, idx, tsAuto, tsTick, updateTsStatus]() {
-            if (!ts->isAttachedToWindow()) return;  // page offscreen: stop reposting
+        // 2 s auto ticker driven by an infinitely RESTARTing ValueAnimator — the AOSP
+        // loop primitive. A self-reposting Runnable cannot be written without a heap
+        // self-reference (a local cannot capture itself, a make_shared<Runnable>
+        // self-capture is an ownership cycle that leaked on every page build); the
+        // animator has no such cycle. The view owns it via the detach listener:
+        // page leaves the window -> cancel, which also retires the running animator.
+        auto tsAnim = std::shared_ptr<ValueAnimator>(ValueAnimator::ofFloat({0.f, 1.f}));
+        tsAnim->setDuration(2000);
+        tsAnim->setRepeatCount(ValueAnimator::INFINITE);
+        Animator::AnimatorListener tsTick;
+        tsTick.onAnimationRepeat = [ts, idx, updateTsStatus](Animator&) {
             *idx = (*idx + 1) % kTicker.size();
             ts->setCurrentText(kTicker[*idx]);
             updateTsStatus();
-            if (*tsAuto) ts->postDelayed(*tsTick, 2000);
         };
+        tsAnim->addListener(tsTick);
+        View::OnAttachStateChangeListener tsTickerStop;
+        tsTickerStop.onViewDetachedFromWindow = [tsAnim](View&) { tsAnim->cancel(); };
+        ts->addOnAttachStateChangeListener(tsTickerStop);
         ts->setInAnimation(AnimationUtils::loadAnimation(
                 ctx, cdroid::internal::R::anim::slide_in_right));
         ts->setOutAnimation(AnimationUtils::loadAnimation(
                 ctx, cdroid::internal::R::anim::slide_out_left));
         ts->setCurrentText(kTicker[0]);
         updateTsStatus();
-        ts->postDelayed(*tsTick, 2000);
+        tsAnim->start();
         Button* tb = (Button*)page->findViewById(widgetsDemo::R::id::ts_next);
-        if (tb) tb->setOnClickListener([ts, idx, tsAuto, tsTick](View&) {
+        if (tb) tb->setOnClickListener([ts, idx, tsAuto, tsAnim](View&) {
             *idx = (*idx + 1) % kTicker.size();
             ts->setCurrentText(kTicker[*idx]);
             if (*tsAuto) {  // restart the auto window from the manual step
-                ts->removeCallbacks(*tsTick);
-                ts->postDelayed(*tsTick, 2000);
+                tsAnim->cancel();
+                tsAnim->start();
             }
         });
         tb = (Button*)page->findViewById(widgetsDemo::R::id::ts_auto);
-        if (tb) tb->setOnClickListener([ts, tsAuto, tsTick, tb, updateTsStatus](View&) {
+        if (tb) tb->setOnClickListener([ts, tsAuto, tsAnim, tb, updateTsStatus](View&) {
             *tsAuto = !*tsAuto;
             tb->setText(*tsAuto ? "暂停自动" : "开始自动");
-            if (*tsAuto) ts->postDelayed(*tsTick, 2000);
-            else ts->removeCallbacks(*tsTick);
+            if (*tsAuto) tsAnim->start();
+            else tsAnim->cancel();
             updateTsStatus();
         });
     }
@@ -859,32 +870,37 @@ void setupFlipper(View* page) {
                         " 张 · 640x360");
             }
         };
-        auto iswTick = std::make_shared<Runnable>();
-        *iswTick = [isw, iswAuto, iswTick, showPhoto]() {
-            if (!isw->isAttachedToWindow()) return;
-            showPhoto(1);
-            if (*iswAuto) isw->postDelayed(*iswTick, 2000);
-        };
+        // Same ticker shape as the TextSwitcher above: RESTARTing ValueAnimator,
+        // view-owned via the detach listener — no self-reposting Runnable.
+        auto iswAnim = std::shared_ptr<ValueAnimator>(ValueAnimator::ofFloat({0.f, 1.f}));
+        iswAnim->setDuration(2000);
+        iswAnim->setRepeatCount(ValueAnimator::INFINITE);
+        Animator::AnimatorListener iswTick;
+        iswTick.onAnimationRepeat = [isw, showPhoto](Animator&) { showPhoto(1); };
+        iswAnim->addListener(iswTick);
+        View::OnAttachStateChangeListener iswTickerStop;
+        iswTickerStop.onViewDetachedFromWindow = [iswAnim](View&) { iswAnim->cancel(); };
+        isw->addOnAttachStateChangeListener(iswTickerStop);
         isw->setInAnimation(AnimationUtils::loadAnimation(
                 ctx, cdroid::internal::R::anim::slide_in_right));
         isw->setOutAnimation(AnimationUtils::loadAnimation(
                 ctx, cdroid::internal::R::anim::slide_out_left));
         showPhoto(0);
-        isw->postDelayed(*iswTick, 2000);
+        iswAnim->start();
         Button* ib = (Button*)page->findViewById(widgetsDemo::R::id::isw_next);
-        if (ib) ib->setOnClickListener([isw, iswAuto, iswTick, showPhoto](View&) {
+        if (ib) ib->setOnClickListener([isw, iswAuto, iswAnim, showPhoto](View&) {
             showPhoto(1);
             if (*iswAuto) {
-                isw->removeCallbacks(*iswTick);
-                isw->postDelayed(*iswTick, 2000);
+                iswAnim->cancel();
+                iswAnim->start();
             }
         });
         ib = (Button*)page->findViewById(widgetsDemo::R::id::isw_auto);
-        if (ib) ib->setOnClickListener([isw, iswAuto, iswTick, ib](View&) {
+        if (ib) ib->setOnClickListener([isw, iswAuto, iswAnim, ib](View&) {
             *iswAuto = !*iswAuto;
             ib->setText(*iswAuto ? "暂停自动" : "开始自动");
-            if (*iswAuto) isw->postDelayed(*iswTick, 2000);
-            else isw->removeCallbacks(*iswTick);
+            if (*iswAuto) iswAnim->start();
+            else iswAnim->cancel();
         });
     }
 }
