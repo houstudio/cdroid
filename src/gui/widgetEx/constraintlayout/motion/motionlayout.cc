@@ -406,11 +406,14 @@ void MotionLayout::transitionToEnd()   {
     animateTo(1.0f);
 }
 
-void MotionLayout::transitionToEnd(const std::function<void()>& onEnd) {
+void MotionLayout::transitionToEnd(const Runnable& onEnd) {
     transitionToEnd();
     if (onEnd && mAnimator != nullptr) {
         Animator::AnimatorListener listener;
-        listener.onAnimationEnd = [onEnd](Animator&, bool) { onEnd(); };
+        // init-capture drops the source const (a by-value capture of a const& parameter
+        // keeps a const closure member); mutable because CallbackBase::operator() is
+        // non-const.
+        listener.onAnimationEnd = [cb = onEnd](Animator&, bool) mutable { cb(); };
         mAnimator->addListener(listener);
     }
 }

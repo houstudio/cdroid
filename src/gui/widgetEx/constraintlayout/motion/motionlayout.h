@@ -88,8 +88,11 @@ class MotionLayout : public ConstraintLayout {
     void transitionToStart();
     void transitionToEnd();
     // transitionToEnd with a callback invoked once the animation reaches the end (used by
-    // ViewTransition delta modes to set/clear tags on completion).
-    void transitionToEnd(const std::function<void()>& onEnd);
+    // ViewTransition delta modes to set/clear tags on completion). A Runnable (value
+    // semantics, identity-comparable) so callers can re-arm/self-chain without heap
+    // gymnastics — a std::function parameter forced apps into make_shared self-reference
+    // cycles just to recurse.
+    void transitionToEnd(const Runnable& onEnd);
     // Spring-settle to `target` (0 or 1) carrying `startVelocity` (progress/sec). Uses the OnSwipe
     // spring parameters; the spring stops itself via its energy threshold.
     void animateToWithSpring(float target, float startVelocity,

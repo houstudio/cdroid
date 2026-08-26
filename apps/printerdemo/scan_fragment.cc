@@ -4,7 +4,6 @@
  *********************************************************************************/
 #include <cdroid.h>
 #include <functional>
-#include <memory>
 #include <fragment/fragment.h>
 #include <fragment/fragmentfactory.h>
 #include <transition/slide.h>
@@ -18,6 +17,10 @@
 // ---------------------------------------------------------------------------
 class ScanFragment : public cdroid::fragment::Fragment{
     bool mScanning = false;
+    // Self-re-arming sweep callback. A member Runnable recurses through `this` — the old
+    // make_shared<std::function> self-capture was a reference cycle that leaked (valgrind
+    // 80B/blk in ScanFragment::onViewCreated).
+    cdroid::Runnable mSweep;
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
         cdroid::fragment::Fragment::onCreate(savedInstanceState);
@@ -37,25 +40,24 @@ public:
             // The MotionLayout's app:layoutDescription="@xml/scene_scan" loads the <MotionScene> on
             // first measure (MotionLayout::buildScene), registering the scan_start (beam at top) ->
             // scan_end (beam at bottom) transition with the mid-sweep KeyAttribute. transitionToEnd
-            // animates top->bottom; on completion snap back to top (setProgressInstant 0) and re-arm,
-            // chained via the completion callback.
-            auto sweep = std::make_shared<std::function<void()>>();
-            *sweep = [this, ml, sweep](){
+            // animates top->bottom; on completion snap back to top (setProgressInstant 0) and re-arm
+            // via mSweep (member Runnable — recurses through `this`, no heap self-reference).
+            mSweep = [this, ml](){
                 if(!mScanning) return;
-                ml->transitionToEnd([this, ml, sweep](){
+                ml->transitionToEnd([this, ml](){
                     if(!mScanning) return;          // stopped / fragment gone — don't touch ml
                     ml->setProgressInstant(0.f);    // snap beam back to the top
-                    (*sweep)();                      // sweep again
+                    mSweep();                       // sweep again
                 });
             };
 
-            btn->setOnClickListener([this, ml, btn, status, sweep](cdroid::View&){
+            btn->setOnClickListener([this, ml, btn, status](cdroid::View&){
                 if(!mScanning){
                     mScanning = true;
                     btn->setText("停止扫描");
                     status->setText("扫描中…");
                     status->setTextColor(0xFF188038);
-                    (*sweep)();
+                    mSweep();
                 } else {
                     mScanning = false;
                     ml->setProgressInstant(0.f);
