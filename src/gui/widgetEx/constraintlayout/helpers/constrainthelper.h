@@ -89,7 +89,7 @@ class ConstraintHelper : public View {
   private:
     void addRscID(int id);
     void addID(int id);
-    void setIds(const AttributeSet&atts, const std::string& idList);
+    void setIds(const std::string& idList);
     void setReferenceTags(ConstraintLayout* container, const std::string& tagList);
     void addTag(ConstraintLayout* container, const std::string& tagString);
 };

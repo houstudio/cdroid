@@ -81,7 +81,6 @@ public:
     // resId/name, not position (real AXML order only on XmlBlock::Parser).
     // Every overload is declared here, so no base-name hiding can occur.
     size_t getAttributeCount()const override;
-    bool hasAttribute(const std::string&key)const override;
     std::string getAttributeNamespace(int index) const override;          // "" (expat keys are bare localnames)
     std::string getAttributeName(int index) const override;
     std::string getAttributeValue(int index) const override;

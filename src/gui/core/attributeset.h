@@ -49,10 +49,6 @@ public:
     AttributeSet(const AttributeSet&) = delete;
     AttributeSet& operator =(const AttributeSet&) = delete;
     Context*getContext()const;
-    void setContext(Context*,const std::string&package);
-    // Qualify a bare XML value ("@mipmap/x", "?attr/x") into "pkg:type/name"
-    // form. Used by the text-XML paths building string attribute sets.
-    static std::string normalize(const std::string&pkg,const std::string&property);
 
     // --- AOSP android.util.AttributeSet interface ----------------------------
     // Ported verbatim from frameworks/base/core/java/android/util/AttributeSet.java.
@@ -60,7 +56,6 @@ public:
     // String return values use std::string (empty == AOSP null).
 
     virtual size_t getAttributeCount()const;                              // 0
-    virtual bool hasAttribute(const std::string&key)const;                // false
     virtual std::string getAttributeNamespace(int index) const;           // default ""
     virtual std::string getAttributeName(int index) const;                // "" if not found
     virtual std::string getAttributeValue(int index) const;               // "" if not found

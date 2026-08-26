@@ -6,17 +6,15 @@
 namespace cdroid {
 
 static std::string attr(XmlPullParser& p, const char* key) {
-    return p.hasAttribute(key) ? p.getAttributeValue(std::string(), key) : std::string();
+    return p.getAttributeValue(std::string(), key);
 }
 
 static int parseInt(XmlPullParser& p, const char* key, int defVal) {
-    if (!p.hasAttribute(key)) return defVal;
     try { return std::stoi(p.getAttributeValue(std::string(), key)); }
     catch (...) { return defVal; }
 }
 
 static float parseFloat(XmlPullParser& p, const char* key, float defVal) {
-    if (!p.hasAttribute(key)) return defVal;
     try { return std::stof(p.getAttributeValue(std::string(), key)); }
     catch (...) { return defVal; }
 }
@@ -51,7 +49,7 @@ static void readAxis(XmlPullParser& p, std::vector<FontVariationAxis>& axes) {
 static FontConfig::Font readFont(XmlPullParser& p, const std::string& fontDir) {
     FontConfig::Font f;
     f.weight = parseInt(p, "weight", 400);
-    f.italic = p.hasAttribute("style") && p.getAttributeValue(std::string(), "style") == "italic";
+    f.italic = p.getAttributeValue(std::string(), "style") == "italic";
     f.index = parseInt(p, "index", 0);
     std::string text;
     int ev;

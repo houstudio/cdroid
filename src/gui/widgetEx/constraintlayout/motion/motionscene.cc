@@ -135,28 +135,29 @@ int MotionScene::getId(const std::string& idString) const {
 }
 
 int MotionScene::parseConstraintSet(Context* ctx, XmlPullParser& parser) {
-    // <ConstraintSet android:id="@+id/start" deriveConstraintsFrom="@id/..."> ...children... </ConstraintSet>
-    // Both are references. Binary AXML stores them as typed values the name-based
-    // getAttributeValue cannot decode, so read the resource id via the index path — this
-    // is the SAME int the Transition's constraintSetStart/End resolve to, so the map keys
-    // match. Text XML falls back to getId(getAttributeValue(name)).
-    int id = UNSET, deriveId = UNSET;
-    const int acount = parser.getAttributeCount();
-    for (int i = 0; i < acount; i++) {
-        const std::string nm = parser.getAttributeName(i);
-        if      (nm == "id")                     id       = parser.getAttributeResourceValue(i, UNSET);
-        else if (nm == "deriveConstraintsFrom")  deriveId = parser.getAttributeResourceValue(i, UNSET);
-    }
-    if (id == UNSET) id = getId(parser.getAttributeValue(std::string(), "id"));          // text-XML fallback
-    if (id == UNSET) return UNSET;
+    // androidx scans (getAttributeName(i), getAttributeValue(i)) and decodes the
+    // id strings by hand (getId / stripID; stateLabels/constraintRotate unported
+    // — ConstraintSet has neither feature). CDROID's string render drops the
+    // package and getPackageName() may be a path, so the re-resolution cannot
+    // work; the equivalent is the typed index read, which serves both parsers
+    // (binary: the aapt2 resId — the SAME int the Transition's
+    // constraintSetStart/End resolve to, so the map keys match; text: the
+    // by-name reference resolver). stripID still keys the by-name map.
     auto set = std::make_unique<ConstraintSet>();
+    const int acount = parser.getAttributeCount();
+    int id = UNSET, derivedId = UNSET;
+    for (int i = 0; i < acount; i++) {
+        const std::string name = parser.getAttributeName(i);
+        if      (name == "id") {
+            id = parser.getAttributeResourceValue(i, UNSET);
+            mConstraintSetIdMap[stripId(parser.getAttributeValue(i))] = id;
+        }
+        else if (name == "deriveConstraintsFrom") derivedId = parser.getAttributeResourceValue(i, UNSET);
+    }
+    if (id == UNSET) return UNSET;
     set->load(ctx, parser); // consumes through </ConstraintSet>
     mConstraintSetMap[id] = std::move(set);
-    if (deriveId == UNSET) {
-        const std::string deriveStr = parser.getAttributeValue(std::string(), "deriveConstraintsFrom");
-        if (!deriveStr.empty()) deriveId = getId(deriveStr);
-    }
-    if (deriveId != UNSET) mDeriveFrom[id] = deriveId; // base merged lazily in getConstraintSet
+    if (derivedId != UNSET) mDeriveFrom[id] = derivedId; // base merged lazily in getConstraintSet
     return id;
 }
 

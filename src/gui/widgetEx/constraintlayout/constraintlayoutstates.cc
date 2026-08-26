@@ -77,22 +77,24 @@ ConstraintLayoutStates::ConstraintLayoutStates(Context* ctx, ConstraintLayout* l
 
 int ConstraintLayoutStates::parseConstraintSet(Context* ctx, XmlPullParser& parser) {
     // <ConstraintSet android:id="@+id/cs1"> ...children... </ConstraintSet>
-    // androidx ConstraintLayoutStates.parseConstraintSet scans parser attribute names for "id";
-    // binary AXML stores the @+id ref as a typed value, so read it by index (name-based
-    // getAttributeValue cannot decode a reference).
-    int id = -1;
-    const int acount = parser.getAttributeCount();
-    for (int i = 0; i < acount; i++) {
+    // androidx scans (getAttributeName(i), getAttributeValue(i)) and re-resolves
+    // the "@+id/name" string through getIdentifier — sound on Android, where
+    // aapt keeps the rawValue and getPackageName() names the single package.
+    // CDROID's render drops the package ("@id/x") and getPackageName() may be
+    // a path, so the string round-trip cannot resolve; the equivalent is the
+    // typed index read, which serves both parsers (binary: the aapt2 resId;
+    // text: the by-name reference resolver).
+    const int count = parser.getAttributeCount();
+    for (int i = 0; i < count; i++) {
         if (parser.getAttributeName(i) == "id") {
-            id = parser.getAttributeResourceValue(i, -1);
-            break;
+            const int id = parser.getAttributeResourceValue(i, -1);
+            auto set = std::make_unique<ConstraintSet>();
+            set->load(ctx, parser); // consumes through </ConstraintSet>
+            mConstraintSetMap[id] = std::move(set);
+            return id;
         }
     }
-    if (id == -1) return -1;
-    auto set = std::make_unique<ConstraintSet>();
-    set->load(ctx, parser); // consumes through </ConstraintSet>
-    mConstraintSetMap[id] = std::move(set);
-    return id;
+    return -1;
 }
 
 void ConstraintLayoutStates::parse(Context* ctx, XmlPullParser& parser) {

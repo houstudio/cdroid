@@ -105,7 +105,6 @@ public:
             const std::string&attribute,int defaultValue)const override;
     std::string getAttributeValue(const std::string&namespace_,
             const std::string&name)const override;
-    bool hasAttribute(const std::string&key)const override;
     size_t getAttributeCount()const override;
     void dump()const override;
 private:

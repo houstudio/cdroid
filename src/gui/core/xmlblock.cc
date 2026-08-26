@@ -84,7 +84,8 @@ XmlBlock::Parser::Parser(Context*ctx,const std::string&pkg,const std::string&res
     :XmlPullParser(false),mBlock(std::move(block)),mTree(mBlock ? mBlock->mTree.get() : nullptr),
      mEventDepth(0),mDepth(1),mEventType(XmlPullParser::START_DOCUMENT),
      mLineNumber(0),mResourceId(resourceId){
-    setContext(ctx,pkg);
+    mContext = ctx;
+    mPackage = pkg;
 }
 
 XmlBlock::Parser::~Parser(){
@@ -335,10 +336,6 @@ int XmlBlock::Parser::getAttributeIntValue(const std::string& /*namespace_*/,
         const std::string& attribute, int defaultValue) const {
     const int i = binaryAttrIndex(attribute);
     return i >= 0 ? getAttributeIntValue(i, defaultValue) : defaultValue;
-}
-
-bool XmlBlock::Parser::hasAttribute(const std::string& key) const {
-    return binaryAttrIndex(key) >= 0;
 }
 
 size_t XmlBlock::Parser::getAttributeCount() const {

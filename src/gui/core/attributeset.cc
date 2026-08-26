@@ -31,41 +31,6 @@ Context*AttributeSet::getContext()const{
     return mContext;
 }
 
-void AttributeSet::setContext(Context*ctx,const std::string&package){
-    mContext = ctx;
-    mPackage = package;
-}
-
-/*@android:+id/title ,?android:attr/windowContentOverlay*/
-std::string AttributeSet::normalize(const std::string&pkg,const std::string&property){
-    const bool hasColon = property.find(':')!=std::string::npos;
-    const bool hasAT = property.size() && (property[0]=='@');
-    if(hasColon&&(hasAT==false)) {
-        if(property.compare(0,8,"android:")==0){
-            std::string value = property;
-            value[1] = 'c';/*android cahnge to cdroid*/
-            return value.substr(1);
-        }
-        return property;
-    }else {
-        std::string value= property;
-        const bool hasAsk= value.size() && (property[0]=='?');
-        const bool hasSlash = value.find('/')!=std::string::npos;
-        const bool isRes = (hasAT|hasAsk);// && hasSlash;
-        if(isRes && (property.size()>1) ) {
-            value.erase(0,1);
-        }
-        if(hasColon==false) {
-            if( isRes && hasSlash ){
-                value = std::string(pkg+":"+value);
-            }else if(hasAsk && (property.size()>1) ) {
-                value = std::string(pkg + ":attr/" + value);
-            }
-        }
-        return value;
-    }
-}
-
 // ----------------------------------------------------------------------------
 // AOSP android.util.AttributeSet — interface defaults. The parsers implement
 // the real answers (text XmlPullParser / binary XmlBlock::Parser); these
@@ -73,10 +38,6 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
 // ----------------------------------------------------------------------------
 size_t AttributeSet::getAttributeCount()const{
     return 0;
-}
-
-bool AttributeSet::hasAttribute(const std::string&)const{
-    return false;
 }
 
 std::string AttributeSet::getAttributeNamespace(int) const {

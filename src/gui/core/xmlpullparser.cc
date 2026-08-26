@@ -31,6 +31,39 @@
 
 namespace cdroid{
 
+// Qualify a bare XML value ("@mipmap/x", "?attr/x") into "pkg:type/name"
+// form. Text-XML-only concern (the expat handler stores the result), so it
+// lives here rather than on the AttributeSet interface.
+/*@android:+id/title ,?android:attr/windowContentOverlay*/
+static std::string normalize(const std::string&pkg,const std::string&property){
+    const bool hasColon = property.find(':')!=std::string::npos;
+    const bool hasAT = property.size() && (property[0]=='@');
+    if(hasColon&&(hasAT==false)) {
+        if(property.compare(0,8,"android:")==0){
+            std::string value = property;
+            value[1] = 'c';/*android cahnge to cdroid*/
+            return value.substr(1);
+        }
+        return property;
+    }else {
+        std::string value= property;
+        const bool hasAsk= value.size() && (property[0]=='?');
+        const bool hasSlash = value.find('/')!=std::string::npos;
+        const bool isRes = (hasAT|hasAsk);// && hasSlash;
+        if(isRes && (property.size()>1) ) {
+            value.erase(0,1);
+        }
+        if(hasColon==false) {
+            if( isRes && hasSlash ){
+                value = std::string(pkg+":"+value);
+            }else if(hasAsk && (property.size()>1) ) {
+                value = std::string(pkg + ":attr/" + value);
+            }
+        }
+        return value;
+    }
+}
+
 struct XmlEvent {
     XmlPullParser::EventType type;
     int depth;
@@ -99,7 +132,7 @@ public:
             const char* nmsp= strrchr(attrs[i],' ');
             const char* attr= attrs[i+1];
             const char* key = nmsp?(nmsp+1):attrs[i];
-            event->atts->insert({std::string(key),AttributeSet::normalize(parser->mPackage,std::string(attr))});
+            event->atts->insert({std::string(key),normalize(parser->mPackage,std::string(attr))});
         }
         data->eventQueue.push(event);
     }
@@ -265,10 +298,6 @@ bool keyAt(const std::unordered_map<std::string,std::string>& m, size_t idx, std
 
 size_t XmlPullParser::getAttributeCount()const{
     return mAttrs->size();
-}
-
-bool XmlPullParser::hasAttribute(const std::string&key)const{
-    return mAttrs->find(key)!=mAttrs->end();
 }
 
 std::string XmlPullParser::getAttributeNamespace(int /*index*/) const {

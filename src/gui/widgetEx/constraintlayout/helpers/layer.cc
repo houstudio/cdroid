@@ -52,7 +52,7 @@ void Layer::init(const AttributeSet* attrs) {
     if (attrs == nullptr) return;
     // Mirror AndroidX Layer.init: scan only the attrs actually present and flag visibility/
     // elevation so onAttachedToWindow propagates them to the referenced views. Binary AXML stores
-    // framework attrs by resource id (not name), so the name-based hasAttribute can't see them —
+    // framework attrs by resource id (not name), so name-based lookups can't see them —
     // TypedArray's present-index iteration (getIndexCount/getIndex) is the faithful AOSP way.
     auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
     if (ta) {

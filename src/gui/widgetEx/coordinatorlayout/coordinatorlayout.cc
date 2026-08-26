@@ -1696,8 +1696,7 @@ CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeS
 
     insetEdge = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_insetEdge, Gravity::NO_GRAVITY);
     dodgeInsetEdges = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_dodgeInsetEdges, Gravity::NO_GRAVITY);
-    mBehaviorResolved = ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_behavior)
-            || attrs.hasAttribute("layout_behavior");
+    mBehaviorResolved = ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_behavior);
     if (mBehaviorResolved) {
         mBehavior = parseBehavior(context, &attrs,
                 ta->getString(R::styleable::CoordinatorLayoutLayout_layout_behavior));

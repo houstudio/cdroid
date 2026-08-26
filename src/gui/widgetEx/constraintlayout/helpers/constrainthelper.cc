@@ -50,7 +50,7 @@ void ConstraintHelper::init(const AttributeSet* attrs) {
         mReferenceTags = ta->getString(R::styleable::ConstraintLayoutLayout_constraint_referenced_tags);
     }
     if (!mReferenceIds.empty()) {
-        setIds(*attrs, mReferenceIds);
+        setIds(mReferenceIds);
     }
 }
 
@@ -67,7 +67,12 @@ void ConstraintHelper::addID(int id) {
     }
 }
 
-void ConstraintHelper::setIds(const AttributeSet& atts, const std::string& idList) {
+// androidx setIds(String): split on ',', each bare name (no @id/ prefix —
+// that is the attribute's documented form) resolved through
+// Resources.getIdentifier (androidx's addID/findId scans the container's
+// sibling names first; the arsc lookup alone covers the binary resource
+// world, so that fallback loop is not carried over).
+void ConstraintHelper::setIds(const std::string& idList) {
     mReferenceIds = idList;
     if (idList.empty()) {
         return;
@@ -88,11 +93,10 @@ void ConstraintHelper::setIds(const AttributeSet& atts, const std::string& idLis
                                  ? idList.substr(begin)
                                  : idList.substr(begin, end - begin));
         if (!token.empty()) {
-            // androidx resolves constraint_referenced_ids bare names via
-            // Resources.getIdentifier(name, "id", pkg) — the arsc lookup, not the
-            // text id-table strtol (Context::getId) which missed scene/app ids.
-            int id = atts.getContext()->getResources().getIdentifier(token, "id", "");
-            if (id == 0) { // getIdentifier's not-found is 0, not View::NO_ID (-1)
+            // getIdentifier resolves bare names through the arsc — not the
+            // retired text id-table. Not-found is 0, not View::NO_ID (-1).
+            int id = getContext()->getResources().getIdentifier(token, "id", "");
+            if (id == 0) {
                 LOGW("ConstraintHelper: could not resolve referenced id \"%s\"", token.c_str());
             }
             addID(id);
