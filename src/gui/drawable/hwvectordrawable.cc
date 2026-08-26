@@ -413,18 +413,15 @@ void Tree::drawStaging(Canvas& outCanvas) {
         updateBitmapCache(mStagingCache.bitmap, true);
         mStagingCache.dirty = false;
     }
-    // A vector layer fully owns its bounds each frame (hardware rendering
-    // repaints the whole RenderNode region). Clear the destination before
-    // the OVER blit: wherever this frame's cache is transparent, the source-
-    // over composite is a no-op and previous frames' pixels would survive —
-    // an animating AVD (rotating/trimming spinner) then accumulates a
-    // ghost ring from every angle its arc has swept.
-    const Rect& dstBounds = mStagingProperties.getBounds();
-    outCanvas.save();
-    outCanvas.set_operator(Cairo::Context::Operator::CLEAR);
-    outCanvas.rectangle(0, 0, dstBounds.width, dstBounds.height);
-    outCanvas.fill();
-    outCanvas.restore();
+    // No destination clear here: on this rendering model draw() composites
+    // straight onto the window surface, so erasing the bounds (CLEAR or
+    // SOURCE) punches transparent holes into the already-painted host content
+    // beneath — printerdemo's home icons showed as glyphs on black boxes, and
+    // even a "transparent" clear renders black once the surface is flipped
+    // without alpha compositing. Previous-frame leftovers within an animating
+    // vector's bounds are handled by invalidation instead: AVD ticks call
+    // invalidateSelf() (full bounds), the view repaints its background and
+    // the OVER blit lands on fresh content.
 
     /*SkPaint tmpPaint;
     SkPaint* paint = updatePaint(&tmpPaint, &mStagingProperties);
