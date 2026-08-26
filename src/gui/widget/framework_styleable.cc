@@ -304,5 +304,11 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t PatternPathMotion[] = { 0x010104ca, 0 };
     const uint32_t ChangeBounds[] = { 0x010104cf, 0 };
     const uint32_t TransitionManager[] = { 0x010103df, 0x010103dd, 0x010103de, 0 };
+    const uint32_t WindowAnimation[] = {
+        0x010100b4, 0x010100b5, 0x010100b6, 0x010100b7, 0x010100b8, 0x010100b9, 0x010100ba,
+        0x010100bb, 0x010d0043, 0x010d0044, 0x010d0045, 0x010100bc, 0x010100bd, 0x01010491,
+        0x01010492, 0x010100be, 0x010100bf, 0x010100c0, 0x010100c1, 0x010100c2, 0x010100c3,
+        0x01010293, 0x01010294, 0x01010295, 0x01010296, 0x01010297, 0x01010298, 0x01010299,
+        0x0101029a, 0x010d000c, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

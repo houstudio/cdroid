@@ -23,6 +23,7 @@
 #include <widget/toolbar.h>
 #include <widget/toolbaractionbar.h>
 #include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 #include <menu/menu.h>
 #include <menu/menuitem.h>
 #include <menu/menuinflater.h>
@@ -1192,18 +1193,16 @@ void Window::setWindowAnimations(int resId, bool enableExit) {
 
 void Window::applyWindowAnimationStyle(int styleRes) {
     if (styleRes == 0 || mContext == nullptr) return;
-    // AOSP R.styleable.WindowAnimation subset: the plain window names, falling back to the
-    // Activity open/close names Animation.Activity carries (the windowAnimationStyle target).
-    constexpr uint32_t WINDOW_ANIM_ATTRS[] = {
-        (uint32_t)R::attr::windowEnterAnimation,       // 0
-        (uint32_t)R::attr::windowExitAnimation,        // 1
-        (uint32_t)R::attr::activityOpenEnterAnimation, // 2
-        (uint32_t)R::attr::activityCloseExitAnimation, // 3
-    };
-    auto ta = mContext->getTheme().obtainStyledAttributes(styleRes, WINDOW_ANIM_ATTRS);
+    // AOSP R.styleable.WindowAnimation: the plain window names, falling back to the Activity
+    // open/close names Animation.Activity carries (the windowAnimationStyle target). The
+    // generated styleable array carries its terminating 0 sentinel (gen_styleable.py appends
+    // one), so the hand-maintained attr list and sentinel are gone.
+    auto ta = mContext->getTheme().obtainStyledAttributes(styleRes, R::styleable::WindowAnimation);
     if (!ta) return;
-    const int enterRes = ta->getResourceId(0, ta->getResourceId(2, 0));
-    const int exitRes  = ta->getResourceId(1, ta->getResourceId(3, 0));
+    const int enterRes = ta->getResourceId(R::styleable::WindowAnimation_windowEnterAnimation,
+                          ta->getResourceId(R::styleable::WindowAnimation_activityOpenEnterAnimation, 0));
+    const int exitRes  = ta->getResourceId(R::styleable::WindowAnimation_windowExitAnimation,
+                          ta->getResourceId(R::styleable::WindowAnimation_activityCloseExitAnimation, 0));
 
     // Install like setEnterTransition would, but reuse the resting position captured by an
     // earlier install — after the first snap getLeft()/getTop() are the OFFSCREEN start, and

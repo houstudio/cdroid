@@ -164,3 +164,6 @@ Fade
 PatternPathMotion
 ChangeBounds
 TransitionManager
+
+# --- window animations (framework attrs.xml) ---
+WindowAnimation

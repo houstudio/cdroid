@@ -1723,6 +1723,39 @@ namespace internal { namespace R { namespace styleable {
     constexpr int TransitionManager_fromScene = 1;
     constexpr int TransitionManager_toScene = 2;
 
+    // WindowAnimation (30 attrs)
+    extern const uint32_t WindowAnimation[];
+    constexpr int WindowAnimation_windowEnterAnimation = 0;
+    constexpr int WindowAnimation_windowExitAnimation = 1;
+    constexpr int WindowAnimation_windowShowAnimation = 2;
+    constexpr int WindowAnimation_windowHideAnimation = 3;
+    constexpr int WindowAnimation_activityOpenEnterAnimation = 4;
+    constexpr int WindowAnimation_activityOpenExitAnimation = 5;
+    constexpr int WindowAnimation_activityCloseEnterAnimation = 6;
+    constexpr int WindowAnimation_activityCloseExitAnimation = 7;
+    constexpr int WindowAnimation_dreamActivityCloseExitAnimation = 8;
+    constexpr int WindowAnimation_dreamActivityOpenEnterAnimation = 9;
+    constexpr int WindowAnimation_dreamActivityOpenExitAnimation = 10;
+    constexpr int WindowAnimation_taskOpenEnterAnimation = 11;
+    constexpr int WindowAnimation_taskOpenExitAnimation = 12;
+    constexpr int WindowAnimation_launchTaskBehindTargetAnimation = 13;
+    constexpr int WindowAnimation_launchTaskBehindSourceAnimation = 14;
+    constexpr int WindowAnimation_taskCloseEnterAnimation = 15;
+    constexpr int WindowAnimation_taskCloseExitAnimation = 16;
+    constexpr int WindowAnimation_taskToFrontEnterAnimation = 17;
+    constexpr int WindowAnimation_taskToFrontExitAnimation = 18;
+    constexpr int WindowAnimation_taskToBackEnterAnimation = 19;
+    constexpr int WindowAnimation_taskToBackExitAnimation = 20;
+    constexpr int WindowAnimation_wallpaperOpenEnterAnimation = 21;
+    constexpr int WindowAnimation_wallpaperOpenExitAnimation = 22;
+    constexpr int WindowAnimation_wallpaperCloseEnterAnimation = 23;
+    constexpr int WindowAnimation_wallpaperCloseExitAnimation = 24;
+    constexpr int WindowAnimation_wallpaperIntraOpenEnterAnimation = 25;
+    constexpr int WindowAnimation_wallpaperIntraOpenExitAnimation = 26;
+    constexpr int WindowAnimation_wallpaperIntraCloseEnterAnimation = 27;
+    constexpr int WindowAnimation_wallpaperIntraCloseExitAnimation = 28;
+    constexpr int WindowAnimation_activityOpenRemoteViewsEnterAnimation = 29;
+
 } } } // namespace internal::R::styleable
 } // namespace cdroid
 #endif // __FRAMEWORK_STYLEABLE_H__
