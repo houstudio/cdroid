@@ -9,6 +9,7 @@
 #include <core/attributeset.h>
 #include <core/typedarray.h>
 #include <core/xmlpullparser.h>
+#include <core/xmlblock.h>            // XmlBlock::Parser (the binary downcast below)
 #include <androidfw/restable.h>        // obtainStyledAttributes resolver, ResXMLTree, StyledAttr
 #include <core/resourcesimpl.h>   // ResourcesImpl (aggregated)
 #include <core/assetmanager.h>      // AssetManager (getAssets()->getResources)
@@ -299,10 +300,10 @@ static void applyTextElementAttrs(const AttributeSet& set, const ResTable& table
             } else if (v[0] == '?' || v[0] == '@'
                        || (v[0] == ':' && v.find('/') != std::string::npos)
                        || v.compare(0, 7, "cdroid:") == 0) {
-                // Reference forms: raw "?attr/name"/"@type/name", or the
-                // normalized AttributeSet form (AttributeSet::normalize rewrites
-                // a leading '?' to a package prefix: ":attr/name" /
-                // "cdroid:attr/name"). Strip to name(+type).
+                // Reference forms: raw "?attr/name"/"@type/name" (verbatim,
+                // the way AOSP text XML spells them); the ':' and "cdroid:"
+                // spellings are the legacy pre-qualification forms, kept for
+                // robustness. Strip to name(+type).
                 char kind = v[0];
                 std::string body = (kind == '?' || kind == '@') ? v.substr(1) : v;
                 if (kind != '?' && kind != '@') {
@@ -361,9 +362,11 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
     std::vector<StyledAttr> styled(count);
 
     if (set != nullptr) {
-        const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(set);
-        if (parser && parser->isBinaryAXML()) {
-            const ResXMLTree* xml = static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree());
+        // AOSP ResourcesImpl.applyStyle: hard downcast to the binary parser
+        // for the parse state; text sets take the string-coercion path below.
+        const XmlBlock::Parser* parser = dynamic_cast<const XmlBlock::Parser*>(set);
+        if (parser) {
+            const ResXMLTree* xml = parser->getResXMLTree();
             if (xml) {
                 cdroid::obtainStyledAttributes(*xml, rt, theme, attrs,
                                                (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
@@ -411,9 +414,8 @@ std::unique_ptr<TypedArray> Resources::obtainAttributes(const AttributeSet* set,
     size_t count = 0;
     while (attrs[count]) ++count;   // sentinel-terminated
     std::vector<StyledAttr> styled(count);
-    const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(set);
-    const ResXMLTree* xml = (parser && parser->isBinaryAXML())
-            ? static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree()) : nullptr;
+    const XmlBlock::Parser* parser = dynamic_cast<const XmlBlock::Parser*>(set);
+    const ResXMLTree* xml = parser ? parser->getResXMLTree() : nullptr;
     if (xml) {
         cdroid::obtainStyledAttributes(*xml, rt, /*theme*/nullptr, attrs, 0, 0, styled.data());
     } else {
@@ -542,9 +544,11 @@ std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(const Attri
     std::vector<StyledAttr> styled(count);
 
     if (set != nullptr) {
-        const XmlPullParser* parser = dynamic_cast<const XmlPullParser*>(set);
-        if (parser && parser->isBinaryAXML()) {
-            const ResXMLTree* xml = static_cast<const ResXMLTree*>(parser->getBinaryAXMLTree());
+        // AOSP ResourcesImpl.applyStyle: hard downcast to the binary parser
+        // for the parse state; text sets take the string-coercion path below.
+        const XmlBlock::Parser* parser = dynamic_cast<const XmlBlock::Parser*>(set);
+        if (parser) {
+            const ResXMLTree* xml = parser->getResXMLTree();
             if (xml) {
                 cdroid::obtainStyledAttributes(*xml, rt, theme, attrs,
                                                (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());

@@ -123,12 +123,8 @@ XmlBlock::Parser::operator bool()const{
     return mTree && mTree->getError()==0;
 }
 
-bool XmlBlock::Parser::isBinaryAXML()const{
-    return mTree && mTree->getError()==0;
-}
-
-const void* XmlBlock::Parser::getBinaryAXMLTree()const{
-    return isBinaryAXML() ? static_cast<const void*>(mTree) : nullptr;
+const ResXMLTree* XmlBlock::Parser::getResXMLTree()const{
+    return (mTree && mTree->getError()==0) ? mTree : nullptr;
 }
 
 // Drive the ResXMLParser one event at a time (the AOSP XmlBlock.Parser.next

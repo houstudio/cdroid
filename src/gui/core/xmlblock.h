@@ -75,8 +75,11 @@ public:
     int next()override;
     operator bool()const override;
 
-    bool isBinaryAXML()const override;
-    const void* getBinaryAXMLTree()const override;
+    // The binary parse state (AOSP keeps mParseState package-visible for
+    // AssetManager.applyStyle; CDROID's resolver reaches it the same way,
+    // by downcasting to this concrete class). Typed, unlike the old base
+    // void* seam. Null when the tree did not parse clean.
+    const ResXMLTree* getResXMLTree()const;
 
     // AOSP android.util.AttributeSet interface (index/id-based). The
     // using-declarations keep the name-keyed overloads visible (the (int)

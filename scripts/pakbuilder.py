@@ -1103,6 +1103,16 @@ class PakBuilder:
             return
         # SDK mode: build complete framework from SDK data/res/ via aapt2 -x.
         sdk_data = self._compile_sdk_res() if self.use_sdk else {}
+        # aapt2 renames qualifier-less density dirs with the -v4 suffix
+        # (drawable-nodpi/ -> drawable-nodpi-v4/); the staged walk compares
+        # against the ORIGINAL names, so normalize the sdk keys for the
+        # duplicate check or every such file ships twice (binary + text).
+        _sdk_rel_norm = set()
+        for _rel in sdk_data:
+            _sdk_rel_norm.add(_rel)
+            _head, _sep, _tail = _rel.partition('/')
+            if _sep and '-v' in _head:
+                _sdk_rel_norm.add(_head.split('-v')[0] + '/' + _tail)
         # App mode: compile the app's own res/ via aapt2 (optional).
         # Skip when use_sdk: cdroid.pak's res_dir IS the framework res
         # (src/gui/res, carrying public-final.xml 0x01 IDs), already built as
@@ -1114,13 +1124,13 @@ class PakBuilder:
         binary_ok = bool(sdk_data) or (app_arsc is not None)
         with zipfile.ZipFile(self.pak_path, "w") as zf:
             # SDK framework: store binary AXML + arsc + drawables. Skip values/
-            # and color/ here — cdroid ships its own TEXT versions of those
-            # (loadKeyValues needs text; binary selectors can't be parsed as
-            # text). Writing both would create duplicate entries that corrupt
+            # here — values resolve from the arsc (the text-cache loadKeyValues
+            # consumer is retired). Writing both a text and a binary entry for
+            # the same rel path would create duplicate zip entries that corrupt
             # libzip's local-header offsets and break reading of large entries
             # such as the 47MB resources.arsc.
             for rel, data in sorted(sdk_data.items()):
-                if rel.startswith("values/") or rel.startswith("color/"):
+                if rel.startswith("values/"):
                     continue
                 zf.writestr(rel, data, zipfile.ZIP_DEFLATED)
             # App's own resources.arsc (multi-package: resolved by Assets
@@ -1154,11 +1164,11 @@ class PakBuilder:
                         continue
                     if binary_ok and (rel.startswith("values/") or rel.startswith("values-")):
                         continue
-                    if self.use_sdk and rel in sdk_data:
-                        # SDK binary replaces layout/drawable (inflation targets).
-                        # But keep cdroid's own values/color text — loadKeyValues
-                        # needs them (binary selectors can't be parsed as text).
-                        if not (rel.startswith("values/") or rel.startswith("color/")):
+                    if self.use_sdk and (rel in sdk_data or rel in _sdk_rel_norm):
+                        # SDK binary replaces layout/drawable/color (inflation
+                        # targets; the text-cache loadKeyValues consumer that
+                        # needed text color/ files is retired).
+                        if not rel.startswith("values/"):
                             continue
                     if f.endswith(".xml"):
                         if rel in binary_xmls:

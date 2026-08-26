@@ -6,6 +6,7 @@
 // Build: make -C outX64-Debug androidfw_test (picks up this file via GLOB)
 #include "gtest/gtest.h"
 #include "core/xmlpullparser.h"
+#include "core/xmlblock.h"      // XmlBlock::Parser (the factory's binary product)
 #include "androidfw/axml_fixture.h"  // kAXML: binary AXML (LinearLayout+TextView)
 
 #include <sstream>
@@ -78,7 +79,7 @@ TEST(XmlPullParserAxmlTest, DetectAndCreatePicksBinaryParser) {
         std::string((const char*)kAXML, kAXMLLen));
     auto parser = XmlPullParser::detectAndCreate(nullptr, std::move(stream));
     ASSERT_TRUE(parser);
-    EXPECT_TRUE(parser->isBinaryAXML());
+    EXPECT_NE(dynamic_cast<cdroid::XmlBlock::Parser*>(parser.get()), nullptr);
 
     EXPECT_EQ(parser->getEventType(), XmlPullParser::START_DOCUMENT);
     EXPECT_EQ(parser->next(), XmlPullParser::START_TAG);
@@ -101,7 +102,7 @@ TEST(XmlPullParserAxmlTest, DetectAndCreatePicksTextParser) {
     auto stream = std::make_unique<std::istringstream>("<root><child/></root>");
     auto parser = XmlPullParser::detectAndCreate(nullptr, std::move(stream));
     ASSERT_TRUE(parser);
-    EXPECT_FALSE(parser->isBinaryAXML());
+    EXPECT_EQ(dynamic_cast<cdroid::XmlBlock::Parser*>(parser.get()), nullptr);
 
     EXPECT_EQ(parser->next(), XmlPullParser::START_TAG);
     EXPECT_EQ(parser->getName(), "root");

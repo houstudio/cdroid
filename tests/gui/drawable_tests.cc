@@ -503,10 +503,10 @@ TEST_F(DRAWABLE,inflateclip){
 
 TEST_F(DRAWABLE,inflatelayer){
    const char*text=R"(<layer-list xmlns:cdroid="http://schemas.android.com/apk/res/android">
-        <item cdroid:id="@cdroid:id/background"> <shape cdroid:shape="rectangle"> <corners cdroid:radius="5dip" />
+        <item cdroid:id="@id/background"> <shape cdroid:shape="rectangle"> <corners cdroid:radius="5dip" />
             <gradient cdroid:type="linear" cdroid:startColor="#ff9d9e9d" cdroid:centerColor="#ff5a5d5a"
                 cdroid:centerY="0.75" cdroid:endColor="#ff747674" cdroid:angle="45"/> </shape></item>
-        <item cdroid:id="@cdroid:id/progress"> <clip> <shape cdroid:shape="rectangle"> <corners cdroid:radius="100dip" />
+        <item cdroid:id="@id/progress"> <clip> <shape cdroid:shape="rectangle"> <corners cdroid:radius="100dip" />
         <gradient cdroid:type="linear" cdroid:startColor="#80ffd300" cdroid:centerColor="#8000ffb6"
               cdroid:centerX="0.5" cdroid:centerY="0.5" cdroid:endColor="#a0ff00ff" cdroid:angle="90"/>
             </shape> </clip> </item></layer-list>)";

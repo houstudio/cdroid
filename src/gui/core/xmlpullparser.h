@@ -69,14 +69,10 @@ public:
     virtual int getColumnNumber()const;
     virtual int next();
     virtual operator bool()const;
-    // Binary AXML state for TypedArray obtainStyledAttributes: always
-    // false/nullptr on the text parser (XmlBlock::Parser overrides both).
-    virtual bool isBinaryAXML() const;
-    virtual const void* getBinaryAXMLTree() const;
 
     // --- AOSP android.util.AttributeSet — text-XML implementation -----------
-    // Values are the normalize()-qualified strings the expat handler stored;
-    // typed getters coerce them (the XmlUtils.convertValueTo* role). Index
+    // Values are stored verbatim by the expat handler; typed getters coerce
+    // them (the XmlUtils.convertValueTo* role). Index
     // walks the current element's map — unordered, and resolution matches by
     // resId/name, not position (real AXML order only on XmlBlock::Parser).
     // Every overload is declared here, so no base-name hiding can occur.
