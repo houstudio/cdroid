@@ -15,42 +15,22 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <androidfw/resourcetypes.h>   // Res_value/ResXMLTree (boundary lookups)
-#include <core/typedvalue.h>           // TypedValue (typed currency)
 #include <core/xmlpullparser.h>
 #include <core/xmlblock.h>             // XmlBlock::Parser (detectAndCreate product)
 #include <porting/cdlog.h>
 #include <core/context.h>
-#include <core/app.h>
-#include <core/assets.h>
-#include <core/resources.h>  // cdroid::Resources (full def — getResources().getXml())
-#include <core/asset.h>            // Asset (getXml result: getLength/read)
+#include <core/color.h>
 #include <expat.h>
 #include <array>
-#include <fstream>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
 namespace cdroid{
 
-// androidfw glue (same seam as typedarray.cc/assets.cc): fill a TypedValue
-// from the raw Res_value the AXML tree hands out.
-static TypedValue tvOf(const Res_value& rv) {
-    TypedValue tv; tv.type = rv.dataType; tv.data = rv.data; return tv;
-}
-
-// Decode a TYPE_DIMENSION complex value to its float magnitude.
-static float axmlComplexToFloat(uint32_t data) {
-    const uint32_t radix = (data >> TypedValue::COMPLEX_RADIX_SHIFT) & TypedValue::COMPLEX_RADIX_MASK;
-    const uint32_t mantissa = (data >> TypedValue::COMPLEX_MANTISSA_SHIFT) & TypedValue::COMPLEX_MANTISSA_MASK;
-    switch (radix) {
-        case TypedValue::COMPLEX_RADIX_23p0: return (float)(int32_t)mantissa;
-        case TypedValue::COMPLEX_RADIX_16p7: return mantissa * (1.0f / (1 << 7));
-        case TypedValue::COMPLEX_RADIX_8p15: return mantissa * (1.0f / (1 << 15));
-        default: return mantissa * (1.0f / (1 << 23));
-    }
-}
 struct XmlEvent {
     XmlPullParser::EventType type;
     int depth;
@@ -80,10 +60,6 @@ struct Private{
     std::unique_ptr <std::istream> stream;
     std::queue <XmlEvent*> eventQueue;
     std::queue <XmlEvent*> eventPool;
-    // Binary AXML support (additive; expat path unchanged when isBinary is false).
-    bool isBinary = false;
-    ResXMLTree* axmlTree = nullptr;
-    std::vector<uint8_t> axmlData;
     ~Private(){
         while(eventQueue.size()){
             delete eventQueue.front();
@@ -93,7 +69,6 @@ struct Private{
             delete eventPool.front();
             eventPool.pop();
         }
-        delete axmlTree;
     }
     XmlEvent*acquire(XmlPullParser::EventType type,const std::string&text = std::string()){
         if(eventPool.size()==0) eventPool.push(new XmlEvent());
@@ -103,242 +78,12 @@ struct Private{
         event->atts->clear();
         event->text.clear();
         event->lineNumber = XML_GetCurrentLineNumber(parser);
-        event->columnNumber=XML_GetCurrentColumnNumber(parser);
+        event->columnNumber= XML_GetCurrentColumnNumber(parser);
         eventPool.pop();
         return event;
     }
     void release(XmlEvent*event){
         eventPool.push(event);
-    }
-    // Sniff the istream for binary AXML (first byte 0x03 = RES_XML_TYPE). If
-    // detected, slurp into axmlData and create a ResXMLTree; otherwise re-wrap
-    // the data in a new istringstream for the expat path.
-    void detectBinary(std::unique_ptr<std::istream>& strm){
-        if(!strm || !*strm) return;
-        std::string data((std::istreambuf_iterator<char>(*strm)),
-                         std::istreambuf_iterator<char>());
-        strm.reset();
-        if(data.size() >= 2 && (uint8_t)data[0] == 0x03 && (uint8_t)data[1] == 0x00){
-            isBinary = true;
-            axmlData.assign(data.begin(), data.end());
-            axmlTree = new ResXMLTree();
-            axmlTree->setTo(axmlData.data(), axmlData.size());
-        } else {
-            strm = std::make_unique<std::istringstream>(std::move(data));
-        }
-    }
-    // Drive ResXMLParser to produce one XmlEvent (skip namespace events that
-    // CDROID's pull model doesn't use). Returns false at END_DOCUMENT.
-    bool feedFromAxml(const std::string& pkg, Context* ctx){
-        if(!axmlTree) return false;
-        size_t iters = 0;
-        while(true){
-            ResXMLParser::event_code_t ev = axmlTree->next();
-            if(++iters > 200){ LOGE("feedFromAxml spin (iter>200) ev=%d — aborting element", (int)ev); return false; }
-            switch(ev){
-                case ResXMLParser::START_TAG:{
-                    size_t nl = 0;
-                    const char16_t* n16 = axmlTree->getElementName(&nl);
-                    auto event = acquire(XmlPullParser::START_TAG, u16toUtf8(n16, nl));
-                    event->depth = depth++;
-                    event->lineNumber = axmlTree->getLineNumber();
-                    // Dev aid: an attribute aapt2 could not resolve to a resource id
-                    // (typically a missing android:/app: prefix — unprefixed names get
-                    // no id baked into the binary AXML) is invisible to every id-based
-                    // lookup (obtainStyledAttributes / getAttributeNameResource) and is
-                    // silently dropped. Android behaves the same, but it breaks layouts
-                    // in confusing ways (e.g. an unprefixed layout_width in a MotionScene
-                    // <Constraint> collapses the view to 0dp), so flag it here.
-                    // Directive tags (<merge>/<requestFocus>/<tag>) carry no
-                    // view attributes at all — nothing to warn about there.
-                    if (event->name != "merge" && event->name != "requestFocus"
-                            && event->name != "tag") {
-                        const size_t ac = axmlTree->getAttributeCount();
-                        for (size_t i = 0; i < ac; i++) {
-                            if (axmlTree->getAttributeNameResID(i) != 0) continue;
-                            size_t anLen = 0;
-                            const char16_t* an = axmlTree->getAttributeName(i, &anLen);
-                            const std::string attrName = u16toUtf8(an, anLen);
-                            // Namespace-less system attributes are read BY NAME
-                            // in AOSP (getAttributeValue(null, ...)) and
-                            // legitimately carry no resource id: style,
-                            // <view>/<fragment> class, <include> layout.
-                            if (attrName == "style" || attrName == "class"
-                                    || attrName == "layout") continue;
-                            // Best-effort source name: the resource-id ctor stores a
-                            // numeric id string; resolve it to pkg:type/name for the log.
-                            std::string src = resourceId;
-                            if (ctx != nullptr && !resourceId.empty()
-                                    && resourceId.find_first_not_of("0123456789") == std::string::npos) {
-                                std::string resName;
-                                if (ctx->getResources().getResourceName(
-                                        atoi(resourceId.c_str()), &resName)) src = resName;
-                            }
-                            LOGD("binary AXML '%s' line %d: attribute '%s' on <%s> has no "
-                                 "resource id (missing android:/app: prefix?) — id-based "
-                                 "lookups will ignore it",
-                                 src.c_str(), event->lineNumber,
-                                 attrName.c_str(), event->name.c_str());
-                        }
-                    }
-                    // Attribute values are NO LONGER rendered into mAttrs (the
-                    // string bridge is retired). Name-based lookups
-                    // (getString/hasAttribute/getAttributeCount, the AOSP id-
-                    // interface, getStyleAttribute/getIdAttributeResourceValue)
-                    // resolve straight from the ResXMLTree via the binary
-                    // overrides in XmlPullParser; widget TypedArray resolution
-                    // reads the ResXMLTree directly via obtainStyledAttributes.
-                    // aapt2's style= attribute is likewise read by name, not mAttrs.
-                    eventQueue.push(event);
-                    return true;
-                }
-                case ResXMLParser::END_TAG:{
-                    size_t nl = 0;
-                    const char16_t* n16 = axmlTree->getElementName(&nl);
-                    auto event = acquire(XmlPullParser::END_TAG, u16toUtf8(n16, nl));
-                    event->depth = --depth;
-                    event->lineNumber = axmlTree->getLineNumber();
-                    eventQueue.push(event);
-                    return true;
-                }
-                case ResXMLParser::TEXT:{
-                    size_t tl = 0;
-                    const char16_t* t16 = axmlTree->getText(&tl);
-                    if(tl > 0){
-                        auto event = acquire(XmlPullParser::TEXT);
-                        event->text = u16toUtf8(t16, tl);
-                        event->depth = depth;
-                        event->lineNumber = axmlTree->getLineNumber();
-                        eventQueue.push(event);
-                        return true;
-                    }
-                    break; // empty text — skip
-                }
-                case ResXMLParser::END_DOCUMENT:
-                case ResXMLParser::BAD_DOCUMENT:
-                    return false;
-                default: // START_DOCUMENT, START/END_NAMESPACE — CDROID skips
-                    break;
-            }
-        }
-    }
-    // Render a typed Res_value to a string when no rawValue is available.
-    // ctx: the Context (App/Assets) for resolving references through arsc.
-    std::string renderTypedValue(size_t attrIdx, Context* ctx) const {
-        Res_value rv;
-        if(axmlTree->getAttributeValue(attrIdx, &rv) != sizeof(Res_value)) return "";
-        const TypedValue v = tvOf(rv);
-        char buf[32];
-        switch(v.type){
-            case TypedValue::TYPE_STRING:{
-                size_t len = 0;
-                const char16_t* s = axmlTree->getStrings().stringAt(v.data, &len);
-                return s ? u16toUtf8(s, len) : "";
-            }
-            case TypedValue::TYPE_INT_DEC:
-                snprintf(buf, sizeof(buf), "%d", (int)v.data);
-                return buf;
-            case TypedValue::TYPE_INT_HEX:
-                snprintf(buf, sizeof(buf), "0x%x", v.data);
-                return buf;
-            case TypedValue::TYPE_INT_BOOLEAN:
-                return v.data ? "true" : "false";
-            case TypedValue::TYPE_INT_COLOR_ARGB8:
-            case TypedValue::TYPE_INT_COLOR_RGB8:
-            case TypedValue::TYPE_INT_COLOR_ARGB4:
-            case TypedValue::TYPE_INT_COLOR_RGB4:
-                snprintf(buf, sizeof(buf), "#%08x", v.data);
-                return buf;
-            case TypedValue::TYPE_DIMENSION:{
-                float mag = axmlComplexToFloat(v.data);
-                int unit = (v.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
-                const char* u = unit == TypedValue::COMPLEX_UNIT_SP ? "sp"
-                              : unit == TypedValue::COMPLEX_UNIT_DIP ? "dp" : "px";
-                snprintf(buf, sizeof(buf), "%d%s", (int)mag, u);
-                return buf;
-            }
-            case TypedValue::TYPE_FLOAT:{
-                snprintf(buf, sizeof(buf), "%f", v.getFloat());
-                return buf;
-            }
-            case TypedValue::TYPE_REFERENCE:
-            case TypedValue::TYPE_DYNAMIC_REFERENCE:
-                // Render as an "@type/key" reference string (e.g. "@drawable/bg",
-                // "@string/hello", "@android:color/holo_orange") — the same form
-                // text XML uses — so the consuming widget's resolver
-                // (getDrawable/getString/getColor/...) handles it unchanged.
-                // Falls back to "@0xRESID" if the arsc can't name the resource.
-                if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
-                    Assets* assets = dynamic_cast<Assets*>(ctx);
-                    if(assets){
-                        std::string ref = ctx->getResourceName(v.data);
-                        if(!ref.empty()) return ref;
-                    }
-                }
-                snprintf(buf, sizeof(buf), "@0x%08x", v.data);
-                return buf;
-            case TypedValue::TYPE_ATTRIBUTE:
-            case TypedValue::TYPE_DYNAMIC_ATTRIBUTE:
-                // A theme-attribute reference "?type/key" (e.g. "?android:attr/
-                // colorPrimary"). Rendered with '?' so AttributeSet routes it to
-                // obtainStyledAttributes (theme lookup) instead of treating it as
-                // a plain resource reference and handing it to getInputStream.
-                if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
-                    Assets* assets = dynamic_cast<Assets*>(ctx);
-                    if(assets){
-                        TypedValue tv;
-                        if(assets->arscThemeAttribute(v.data, &tv)){
-                            switch(tv.type){
-                                case TypedValue::TYPE_INT_COLOR_ARGB8:
-                                case TypedValue::TYPE_INT_COLOR_RGB8:
-                                case TypedValue::TYPE_INT_COLOR_ARGB4:
-                                case TypedValue::TYPE_INT_COLOR_RGB4:
-                                    snprintf(buf, sizeof(buf), "#%08x", tv.data); return buf;
-                                case TypedValue::TYPE_INT_DEC:
-                                    snprintf(buf, sizeof(buf), "%d", (int)tv.data); return buf;
-                                case TypedValue::TYPE_INT_HEX:
-                                    snprintf(buf, sizeof(buf), "0x%x", tv.data); return buf;
-                                case TypedValue::TYPE_INT_BOOLEAN:
-                                    return tv.data ? "true" : "false";
-                                case TypedValue::TYPE_DIMENSION:{
-                                    float mag = axmlComplexToFloat(tv.data);
-                                    int unit = (tv.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
-                                    const char* u = unit == TypedValue::COMPLEX_UNIT_SP ? "sp"
-                                                  : unit == TypedValue::COMPLEX_UNIT_DIP ? "dp" : "px";
-                                    snprintf(buf, sizeof(buf), "%d%s", (int)mag, u); return buf;
-                                }
-                                case TypedValue::TYPE_REFERENCE:
-                                case TypedValue::TYPE_DYNAMIC_REFERENCE:{
-                                    std::string ref = ctx->getResourceName(tv.data);
-                                    if(!ref.empty()) return ref;
-                                    break;
-                                }
-                                default: break;  // STRING etc. — fall through to ?type/key
-                            }
-                        }
-                        std::string ref = ctx->getResourceName(v.data);
-                        if(!ref.empty()){ if(ref[0] == '@') ref[0] = '?'; return ref; }
-                    }
-                }
-                snprintf(buf, sizeof(buf), "?0x%08x", v.data);
-                return buf;
-            default:
-                snprintf(buf, sizeof(buf), "0x%08x", v.data);
-                return buf;
-        }
-    }
-    static std::string u16toUtf8(const char16_t* s, size_t len){
-        std::string out;
-        for(size_t i = 0; s && i < len; i++){
-            uint32_t c = s[i];
-            if(c >= 0xD800 && c <= 0xDBFF && i + 1 < len && s[i+1] >= 0xDC00)
-                c = 0x10000 + ((c - 0xD800) << 10) + (s[++i] - 0xDC00);
-            if(c < 0x80) out += (char)c;
-            else if(c < 0x800){ out += (char)(0xC0|(c>>6)); out += (char)(0x80|(c&0x3F)); }
-            else if(c < 0x10000){ out += (char)(0xE0|(c>>12)); out += (char)(0x80|((c>>6)&0x3F)); out += (char)(0x80|(c&0x3F)); }
-            else { out += (char)(0xF0|(c>>18)); out += (char)(0x80|((c>>12)&0x3F)); out += (char)(0x80|((c>>6)&0x3F)); out += (char)(0x80|(c&0x3F)); }
-        }
-        return out;
     }
 };
 
@@ -391,9 +136,8 @@ XmlPullParser::XmlPullParser(bool initTextEngine){
 
 XmlPullParser::XmlPullParser(Context*ctx,std::unique_ptr<std::istream>strm):XmlPullParser(){
     mContext = ctx;
-    mData->detectBinary(strm);
     mData->stream = std::move(strm);
-    auto event = mData->acquire((mData->isBinary||(mData->stream&&mData->stream->good()))?START_DOCUMENT:END_DOCUMENT);
+    auto event = mData->acquire((mData->stream&&mData->stream->good())?START_DOCUMENT:END_DOCUMENT);
     event->depth= mData->depth++;
     event->lineNumber = 0;
     mAttrs = event->atts;
@@ -401,180 +145,15 @@ XmlPullParser::XmlPullParser(Context*ctx,std::unique_ptr<std::istream>strm):XmlP
 }
 
 XmlPullParser::operator bool()const{
-   if(mData->isBinary) return mData->axmlTree && mData->axmlTree->getError()==0;
-   return (mData->stream!=nullptr)&&(*mData->stream);
+    return (mData->stream!=nullptr)&&(*mData->stream);
 }
 
 bool XmlPullParser::isBinaryAXML() const {
-    return mData->isBinary && mData->axmlTree && mData->axmlTree->getError() == 0;
+    return false;
 }
 
 const void* XmlPullParser::getBinaryAXMLTree() const {
-    return isBinaryAXML() ? static_cast<const void*>(mData->axmlTree) : nullptr;
-}
-
-// AOSP AttributeSet id-interface — binary AXML overrides. Index = ResXMLTree
-// attribute order; values come straight from the typed Res_value (aapt2 already
-// resolved enums/refs). Non-binary parsers fall through to AttributeSet's text impl.
-std::string XmlPullParser::getAttributeName(int index) const {
-    if (isBinaryAXML()) {
-        size_t len = 0;
-        const char16_t* n = mData->axmlTree->getAttributeName((size_t)index, &len);
-        return n ? mData->u16toUtf8(n, len) : std::string();
-    }
-    return AttributeSet::getAttributeName(index);
-}
-
-std::string XmlPullParser::getAttributeValue(int index) const {
-    if (isBinaryAXML()) return mData->renderTypedValue((size_t)index, mContext);
-    return AttributeSet::getAttributeValue(index);
-}
-
-int XmlPullParser::getAttributeNameResource(int index) const {
-    if (isBinaryAXML()) return (int)mData->axmlTree->getAttributeNameResID((size_t)index);
-    return AttributeSet::getAttributeNameResource(index);
-}
-
-bool XmlPullParser::getAttributeBooleanValue(int index, bool defaultValue) const {
-    if (isBinaryAXML()) {
-        Res_value v;
-        if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
-            && v.dataType == TypedValue::TYPE_INT_BOOLEAN) return v.data != 0;
-        return defaultValue;
-    }
-    return AttributeSet::getAttributeBooleanValue(index, defaultValue);
-}
-
-int XmlPullParser::getAttributeResourceValue(int index, int defaultValue) const {
-    if (isBinaryAXML()) {
-        Res_value v;
-        if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
-            && (v.dataType == TypedValue::TYPE_REFERENCE || v.dataType == TypedValue::TYPE_ATTRIBUTE
-                || v.dataType == TypedValue::TYPE_DYNAMIC_REFERENCE)) return (int)v.data;
-        return defaultValue;
-    }
-    return AttributeSet::getAttributeResourceValue(index, defaultValue);
-}
-
-int XmlPullParser::getAttributeIntValue(int index, int defaultValue) const {
-    if (isBinaryAXML()) {
-        Res_value v;
-        if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
-            && (v.dataType == TypedValue::TYPE_INT_DEC || v.dataType == TypedValue::TYPE_INT_HEX)) return (int)v.data;
-        return defaultValue;
-    }
-    return AttributeSet::getAttributeIntValue(index, defaultValue);
-}
-
-int XmlPullParser::getAttributeUnsignedIntValue(int index, int defaultValue) const {
-    if (isBinaryAXML()) {
-        Res_value v;
-        if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
-            && (v.dataType == TypedValue::TYPE_INT_DEC || v.dataType == TypedValue::TYPE_INT_HEX)) return (int)v.data;
-        return defaultValue;
-    }
-    return AttributeSet::getAttributeUnsignedIntValue(index, defaultValue);
-}
-
-float XmlPullParser::getAttributeFloatValue(int index, float defaultValue) const {
-    if (isBinaryAXML()) {
-        Res_value v;
-        if (mData->axmlTree->getAttributeValue((size_t)index, &v) == sizeof(Res_value)
-            && v.dataType == TypedValue::TYPE_FLOAT) {
-            float f; memcpy(&f, &v.data, sizeof(f)); return f;
-        }
-        return defaultValue;
-    }
-    return AttributeSet::getAttributeFloatValue(index, defaultValue);
-}
-
-// Find a binary-AXML attribute by bare localname (iterate ResXMLTree attrs).
-int XmlPullParser::binaryAttrIndex(const std::string& name) const {
-    if (!isBinaryAXML()) return -1;
-    const size_t ac = mData->axmlTree->getAttributeCount();
-    for (size_t i = 0; i < ac; i++) {
-        size_t nl = 0;
-        const char16_t* n = mData->axmlTree->getAttributeName(i, &nl);
-        if (n && mData->u16toUtf8(n, nl) == name) return (int)i;
-    }
-    return -1;
-}
-
-// AOSP getAttributeValue(ns, name): binary resolves by name from ResXMLTree
-// (rendered), so name-based reads work without the mAttrs string bridge.
-std::string XmlPullParser::getAttributeValue(const std::string& /*namespace_*/,
-                                             const std::string& name) const {
-    if (isBinaryAXML()) {
-        const int i = binaryAttrIndex(name);
-        return i >= 0 ? getAttributeValue(i) : std::string();
-    }
-    return AttributeSet::getAttributeValue(std::string(), name);
-}
-
-// Debug dump — binary AXML prints the raw typed data (attr resId + Res_value
-// type/data, same shape as the resources dump) plus the rendered text value.
-void XmlPullParser::dump() const {
-    if (isBinaryAXML()) {
-        const size_t ac = mData->axmlTree->getAttributeCount();
-        for (size_t i = 0; i < ac; i++) {
-            Res_value v;
-            const bool have = mData->axmlTree->getAttributeValue(i, &v) == sizeof(Res_value);
-            LOGD("[%zu] %s (attr 0x%08x): type=0x%x data=0x%x  \"%s\"", i,
-                 getAttributeName((int)i).c_str(),
-                 mData->axmlTree->getAttributeNameResID(i),
-                 have ? v.dataType : 0, have ? v.data : 0u,
-                 getAttributeValue((int)i).c_str());
-        }
-        return;
-    }
-    AttributeSet::dump();
-}
-
-// Name-keyed typed lookups: binary resolves the attr index by name, then reads
-// the typed Res_value through the (int) overrides above.
-int XmlPullParser::getStyleAttribute() const {
-    if (isBinaryAXML()) {
-        const int i = binaryAttrIndex("style");
-        return i >= 0 ? getAttributeResourceValue(i, 0) : 0;
-    }
-    return AttributeSet::getStyleAttribute();
-}
-
-bool XmlPullParser::getAttributeBooleanValue(const std::string& /*namespace_*/,
-        const std::string& attribute, bool defaultValue) const {
-    if (isBinaryAXML()) {
-        const int i = binaryAttrIndex(attribute);
-        return i >= 0 ? getAttributeBooleanValue(i, defaultValue) : defaultValue;
-    }
-    return AttributeSet::getAttributeBooleanValue(std::string(), attribute, defaultValue);
-}
-
-int XmlPullParser::getAttributeResourceValue(const std::string& /*namespace_*/,
-        const std::string& attribute, int defaultValue) const {
-    if (isBinaryAXML()) {
-        const int i = binaryAttrIndex(attribute);
-        return i >= 0 ? getAttributeResourceValue(i, defaultValue) : defaultValue;
-    }
-    return AttributeSet::getAttributeResourceValue(std::string(), attribute, defaultValue);
-}
-
-int XmlPullParser::getAttributeIntValue(const std::string& /*namespace_*/,
-        const std::string& attribute, int defaultValue) const {
-    if (isBinaryAXML()) {
-        const int i = binaryAttrIndex(attribute);
-        return i >= 0 ? getAttributeIntValue(i, defaultValue) : defaultValue;
-    }
-    return AttributeSet::getAttributeIntValue(std::string(), attribute, defaultValue);
-}
-
-bool XmlPullParser::hasAttribute(const std::string& key) const {
-    if (isBinaryAXML()) return binaryAttrIndex(key) >= 0;
-    return AttributeSet::hasAttribute(key);
-}
-
-size_t XmlPullParser::getAttributeCount() const {
-    if (isBinaryAXML()) return mData->axmlTree->getAttributeCount();
-    return AttributeSet::getAttributeCount();
+    return nullptr;
 }
 
 XmlPullParser::~XmlPullParser() {
@@ -614,27 +193,19 @@ int XmlPullParser::next(){
     mData->release(mData->eventQueue.front());
     mData->eventQueue.pop();
     while(mData->eventQueue.empty()){
-        if(mData->isBinary){
-            // Binary AXML: drive ResXMLParser to produce events.
-            if(!mData->feedFromAxml(mPackage, mContext)){
-                mData->eventQueue.push(mData->acquire(END_DOCUMENT));
-            }
-        } else {
-            // Existing expat text-XML path (unchanged).
-            std::streamsize len;
-            mData->stream->read(mData->buffer.data(),mData->buffer.size());
-            len = mData->stream->gcount();
-            const bool done = mData->stream->eof();
-            if(XML_Parse(mData->parser,mData->buffer.data(),len,done)==XML_STATUS_ERROR){
-                const XML_Error xmlError = XML_GetErrorCode(mData->parser);
-                const char*errMsg = XML_ErrorString(xmlError);
-                LOGE("%d:%s %s:%s",xmlError,errMsg,mData->resourceId.c_str(),getPositionDescription().c_str());
-                mData->eventQueue.push(mData->acquire(BAD_DOCUMENT));
-                break;
-            }
-            if(done){
-                mData->eventQueue.push(mData->acquire(END_DOCUMENT));
-            }
+        std::streamsize len;
+        mData->stream->read(mData->buffer.data(),mData->buffer.size());
+        len = mData->stream->gcount();
+        const bool done = mData->stream->eof();
+        if(XML_Parse(mData->parser,mData->buffer.data(),len,done)==XML_STATUS_ERROR){
+            const XML_Error xmlError = XML_GetErrorCode(mData->parser);
+            const char*errMsg = XML_ErrorString(xmlError);
+            LOGE("%d:%s %s:%s",xmlError,errMsg,mData->resourceId.c_str(),getPositionDescription().c_str());
+            mData->eventQueue.push(mData->acquire(BAD_DOCUMENT));
+            break;
+        }
+        if(done){
+            mData->eventQueue.push(mData->acquire(END_DOCUMENT));
         }
     }
     mAttrs = mData->eventQueue.front()->atts;
@@ -663,12 +234,199 @@ std::unique_ptr<XmlPullParser> XmlPullParser::detectAndCreate(Context*ctx,
         auto parser = std::unique_ptr<XmlPullParser>(new XmlPullParser(ctx,
                 std::make_unique<std::istringstream>(std::move(data))));
         // resourceId/pkg feed the dev-aid logging and normalize()'s package
-        // qualification (same inputs the resource-id ctors keep in Private).
+        // qualification (same inputs the resource-id ctors kept in Private).
         parser->mData->resourceId = resourceId;
         if(!pkg.empty()) parser->mPackage = pkg;
         return parser;
     }
     return std::unique_ptr<XmlPullParser>(new XmlPullParser(ctx,std::move(strm)));
+}
+
+// ----------------------------------------------------------------------------
+// AOSP android.util.AttributeSet — text-XML implementation. The expat handler
+// stores normalize()-qualified strings; these coerce them (the
+// XmlUtils.convertValueTo* role). Index walks mAttrs (small N; resolution
+// matches by resId/name, not position, so the unordered order is fine).
+// ----------------------------------------------------------------------------
+namespace {
+bool keyAt(const std::unordered_map<std::string,std::string>& m, size_t idx, std::string* out) {
+    if (idx >= m.size()) return false;
+    size_t i = 0;
+    for (const auto& kv : m) {
+        if (i == idx) {
+            *out = kv.first;
+            return true;
+        }
+        i++;
+    }
+    return false;
+}
+}
+
+size_t XmlPullParser::getAttributeCount()const{
+    return mAttrs->size();
+}
+
+bool XmlPullParser::hasAttribute(const std::string&key)const{
+    return mAttrs->find(key)!=mAttrs->end();
+}
+
+std::string XmlPullParser::getAttributeNamespace(int /*index*/) const {
+    return std::string();   // text carries no namespace (bare localname keys)
+}
+
+std::string XmlPullParser::getAttributeName(int index) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? k : std::string();
+}
+
+std::string XmlPullParser::getAttributeValue(int index) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeValue(std::string(), k) : std::string();
+}
+
+std::string XmlPullParser::getAttributeValue(const std::string& /*namespace_*/,
+                        const std::string& name) const {
+    auto it = mAttrs->find(name);   // namespace-agnostic for text (bare localname keys)
+    return it != mAttrs->end() ? it->second : std::string();
+}
+
+int XmlPullParser::getAttributeNameResource(int index) const {
+    // Text-built sets carry no attr resource ids natively (binary AXML does).
+    // Resolve the attribute NAME through the arsc attr table instead —
+    // obtainStyledAttributes matches element attributes BY RESOURCE ID, so a
+    // text XML (e.g. res/color/ selectors packed as text) otherwise never
+    // matches and its items fall to defaults (the MAGENTA ColorStateList bug).
+    // Name form: "prefix:name" (prefix is a package) or bare "name".
+    std::string key;
+    if (!keyAt(*mAttrs, (size_t)index, &key)) return 0;
+    std::string pkg, name = key;
+    const size_t colon = key.rfind(':');
+    if (colon != std::string::npos) {
+        pkg = key.substr(0, colon);
+        name = key.substr(colon + 1);
+    }
+    if (name.empty() || mContext == nullptr) return 0;
+    return mContext->getResources().getIdentifier(name, "attr", pkg);
+}
+
+int XmlPullParser::getAttributeListValue(int index,
+        const std::vector<std::string>& options, int defaultValue) const {
+    const std::string v = getAttributeValue(index);
+    for (size_t i = 0; i < options.size(); i++){
+        if (options[i] == v) return (int)i;
+    }
+    return defaultValue;
+}
+
+int XmlPullParser::getAttributeListValue(const std::string& /*namespace_*/,const std::string& attribute,
+            const std::vector<std::string>& options, int defaultValue) const {
+    const std::string v = getAttributeValue(std::string(), attribute);
+    for (size_t i = 0; i < options.size(); i++) if (options[i] == v) return (int)i;
+    return defaultValue;
+}
+
+bool XmlPullParser::getAttributeBooleanValue(int index, bool defaultValue) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeBooleanValue(std::string(), k, defaultValue) : defaultValue;
+}
+
+int XmlPullParser::getAttributeResourceValue(int index, int defaultValue) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeResourceValue(std::string(), k, defaultValue) : defaultValue;
+}
+
+int XmlPullParser::getAttributeIntValue(int index, int defaultValue) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeIntValue(std::string(), k, defaultValue) : defaultValue;
+}
+
+int XmlPullParser::getAttributeUnsignedIntValue(int index, int defaultValue) const {
+    std::string k;
+    if (!keyAt(*mAttrs, (size_t)index, &k)) return defaultValue;
+    const std::string v = getAttributeValue(std::string(), k);
+    if (!v.empty()) {
+        if (v[0] == '#') return (int)Color::parseColor(v);
+        if (v.size() >= 2 && v[0] == '0' && (v[1] == 'x' || v[1] == 'X'))
+            return (int)strtoul(v.c_str() + 2, nullptr, 16);
+    }
+    return getAttributeIntValue(std::string(), k, defaultValue);
+}
+
+float XmlPullParser::getAttributeFloatValue(int index, float defaultValue) const {
+    std::string k;
+    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeFloatValue(std::string(), k, defaultValue) : defaultValue;
+}
+
+bool XmlPullParser::getAttributeBooleanValue(const std::string& /*namespace_*/,
+            const std::string& attribute, bool defaultValue) const {
+    const std::string v = getAttributeValue(std::string(), attribute);
+    if (v.empty()) return defaultValue;
+    return v.compare("true") == 0;
+}
+
+int XmlPullParser::getAttributeResourceValue(const std::string& /*namespace_*/,
+            const std::string& attribute,int defaultValue) const {
+    const std::string v = getAttributeValue(std::string(), attribute);
+    if (v.empty()) return defaultValue;
+    // "parent" is the ConstraintLayout/RelativeLayout anchor sentinel meaning
+    // the parent view (id 0) — NOT a named resource; resolving it hits an
+    // unrelated arsc entry named "parent" and breaks parent anchors.
+    if (v == "parent") return 0;
+    if (v.find_first_of("@+/") != std::string::npos) {
+        std::string name = v;
+        const size_t slash = name.rfind('/');
+        if (slash != std::string::npos) name = name.substr(slash + 1);
+        size_t at = 0;
+        while (at < name.size() && (name[at]=='@'||name[at]=='+')) at++;
+        if (at > 0) name = name.substr(at);
+        const int value = mContext ? mContext->getResources().getIdentifier(name, "id", "") : 0;
+        return value ? value : defaultValue;
+    }
+    return (int)std::strtoul(v.c_str(), nullptr, 10);
+}
+
+int XmlPullParser::getAttributeIntValue(const std::string& /*namespace_*/,
+            const std::string& attribute, int defaultValue) const {
+    const std::string v = getAttributeValue(std::string(), attribute);
+    if (v.empty() || ((v[0] >= 'a') && (v[0] <= 'z'))) return defaultValue;
+    const int base = (((v.length() > 2) && (v[1]=='x'||v[1]=='X')) || (v[0]=='#')) ? 16 : 10;
+    return (int)std::strtol(v.c_str(), nullptr, base);
+}
+
+int XmlPullParser::getAttributeUnsignedIntValue(const std::string& /*namespace_*/,
+            const std::string& attribute, int defaultValue) const {
+    const std::string v = getAttributeValue(std::string(), attribute);
+    if (!v.empty()) {
+        if (v[0] == '#')
+            return (int)Color::parseColor(v);
+        if (v.size() >= 2 && v[0] == '0' && (v[1] == 'x' || v[1] == 'X'))
+            return (int)strtoul(v.c_str() + 2, nullptr, 16);
+    }
+    return getAttributeIntValue(std::string(), attribute, defaultValue);
+}
+
+float XmlPullParser::getAttributeFloatValue(const std::string& /*namespace_*/,
+            const std::string& attribute,float defaultValue) const {
+    const std::string v = getAttributeValue(std::string(), attribute);
+    if (v.empty()) return defaultValue;
+    return std::strtof(v.c_str(), nullptr);
+}
+
+std::string XmlPullParser::getIdAttribute() const {
+    return getAttributeValue(std::string(), "id");
+}
+
+std::string XmlPullParser::getClassAttribute() const {
+    return getAttributeValue(std::string(), "class");
+}
+
+int XmlPullParser::getIdAttributeResourceValue(int defaultValue) const {
+    return getAttributeResourceValue(std::string(), "id", defaultValue);
+}
+
+int XmlPullParser::getStyleAttribute() const {
+    return getAttributeResourceValue(std::string(), "style", 0);
 }
 
 }/*endof namespace*/

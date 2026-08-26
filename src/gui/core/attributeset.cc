@@ -16,14 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <core/attributeset.h>
-#include <widget/linearlayout.h>
-#include <core/windowmanager.h>
-#include <core/porterduff.h>
-#include <core/xmlpullparser.h>
-#include <core/color.h>
-#include <vector>
-#include <cstring>
-#include <cstdlib>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -33,22 +25,6 @@ AttributeSet::AttributeSet():AttributeSet(nullptr,""){
 
 AttributeSet::AttributeSet(Context*ctx,const std::string&package)
     :mContext(ctx),mPackage(package){
-    mAttrs = std::make_shared<std::unordered_map<std::string,std::string>>();
-}
-
-AttributeSet::AttributeSet(const AttributeSet&other):AttributeSet(other.mContext,other.mPackage){
-    for(auto& a:*other.mAttrs){
-        mAttrs->insert({a.first,a.second});
-    }
-}
-
-AttributeSet& AttributeSet::operator =(const AttributeSet&other){
-    mContext = other.mContext;
-    mPackage = other.mPackage;
-    for(auto& a:*other.mAttrs){
-        mAttrs->insert({a.first,a.second});
-    }
-    return *this;
 }
 
 Context*AttributeSet::getContext()const{
@@ -90,195 +66,96 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
     }
 }
 
-bool AttributeSet::add(const std::string&key,const std::string&value){
-    auto itr = mAttrs->find(key);
-    std::string ks = key;
-    size_t pos = ks.find(' ');
-    if( pos != std::string::npos )ks = ks.substr(pos+1);
-    if(itr == mAttrs->end()) {
-        mAttrs->insert({(std::string)ks,normalize(mPackage,value)});
-    } else {
-        itr->second = value;
-    }
-    return true;
-}
-
-bool AttributeSet::hasAttribute(const std::string&key)const{
-    return mAttrs->find(key)!=mAttrs->end();
-}
-
+// ----------------------------------------------------------------------------
+// AOSP android.util.AttributeSet — interface defaults. The parsers implement
+// the real answers (text XmlPullParser / binary XmlBlock::Parser); these
+// defaults are what a synthetic empty set observes.
+// ----------------------------------------------------------------------------
 size_t AttributeSet::getAttributeCount()const{
-    return mAttrs->size();
+    return 0;
 }
 
-// ----------------------------------------------------------------------------
-// AOSP android.util.AttributeSet — index/id-based methods (base / text impl).
-// Ported from frameworks/base/core/java/android/util/AttributeSet.java. Index
-// iterates mAttrs (small N; resolution matches by resId/name, not position, so
-// the unordered order is fine). Each typed getter delegates to the existing
-// string-key getter (reusing the parsing). Binary XmlPullParser overrides these
-// via ResXMLTree (stable AXML order + typed Res_value + real attr resIds); the
-// text/style path stays here.
-// ----------------------------------------------------------------------------
-namespace {
-bool keyAt(const std::unordered_map<std::string,std::string>& m, size_t idx, std::string* out) {
-    if (idx >= m.size()) return false;
-    size_t i = 0;
-    for (const auto& kv : m) {
-        if (i == idx) {
-            *out = kv.first;
-            return true; 
-        }
-        i++;
-    }
+bool AttributeSet::hasAttribute(const std::string&)const{
     return false;
 }
+
+std::string AttributeSet::getAttributeNamespace(int) const {
+    return std::string();
 }
 
-std::string AttributeSet::getAttributeNamespace(int /*index*/) const {
-    return std::string();   // text AttributeSet carries no namespace (bare localname keys)
+std::string AttributeSet::getAttributeName(int) const {
+    return std::string();
 }
 
-std::string AttributeSet::getAttributeName(int index) const {
-    std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? k : std::string();
+std::string AttributeSet::getAttributeValue(int) const {
+    return std::string();
 }
 
-std::string AttributeSet::getAttributeValue(int index) const {
-    std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeValue(std::string(), k) : std::string();
-}
-
-std::string AttributeSet::getAttributeValue(const std::string& /*namespace_*/,
-                        const std::string& name) const {
-    auto it = mAttrs->find(name);   // namespace-agnostic for text (bare localname keys)
-    return it != mAttrs->end() ? it->second : std::string();
+std::string AttributeSet::getAttributeValue(const std::string&, const std::string&) const {
+    return std::string();
 }
 
 std::string AttributeSet::getPositionDescription() const {
     return std::string();
 }
 
-int AttributeSet::getAttributeNameResource(int index) const {
-    // Text-built sets carry no attr resource ids natively (binary AXML does).
-    // Resolve the attribute NAME through the arsc attr table instead —
-    // obtainStyledAttributes matches element attributes BY RESOURCE ID, so a
-    // text XML (e.g. res/color/ selectors packed as text) otherwise never
-    // matches and its items fall to defaults (the MAGENTA ColorStateList bug).
-    // Name form: "prefix:name" (prefix is a package) or bare "name".
-    std::string key;
-    if (!keyAt(*mAttrs, (size_t)index, &key)) return 0;
-    std::string pkg, name = key;
-    const size_t colon = key.rfind(':');
-    if (colon != std::string::npos) {
-        pkg = key.substr(0, colon);
-        name = key.substr(colon + 1);
-    }
-    if (name.empty() || mContext == nullptr) return 0;
-    return mContext->getResources().getIdentifier(name, "attr", pkg);
+int AttributeSet::getAttributeNameResource(int) const {
+    return 0;
 }
 
-int AttributeSet::getAttributeListValue(int index,
+int AttributeSet::getAttributeListValue(int, const std::vector<std::string>& options,
+        int defaultValue) const {
+    return defaultValue;
+}
+
+bool AttributeSet::getAttributeBooleanValue(int, bool defaultValue) const {
+    return defaultValue;
+}
+
+int AttributeSet::getAttributeResourceValue(int, int defaultValue) const {
+    return defaultValue;
+}
+
+int AttributeSet::getAttributeIntValue(int, int defaultValue) const {
+    return defaultValue;
+}
+
+int AttributeSet::getAttributeUnsignedIntValue(int, int defaultValue) const {
+    return defaultValue;
+}
+
+float AttributeSet::getAttributeFloatValue(int, float defaultValue) const {
+    return defaultValue;
+}
+
+int AttributeSet::getAttributeListValue(const std::string&, const std::string&,
         const std::vector<std::string>& options, int defaultValue) const {
-    const std::string v = getAttributeValue(index);
-    for (size_t i = 0; i < options.size(); i++){
-        if (options[i] == v) return (int)i;
-    }
     return defaultValue;
 }
 
-bool AttributeSet::getAttributeBooleanValue(int index, bool defaultValue) const {
-    std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeBooleanValue(std::string(), k, defaultValue) : defaultValue;
-}
-
-int AttributeSet::getAttributeResourceValue(int index, int defaultValue) const {
-    std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeResourceValue(std::string(), k, defaultValue) : defaultValue;
-}
-
-int AttributeSet::getAttributeIntValue(int index, int defaultValue) const {
-    std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeIntValue(std::string(), k, defaultValue) : defaultValue;
-}
-
-int AttributeSet::getAttributeUnsignedIntValue(int index, int defaultValue) const {
-    std::string k;
-    if (!keyAt(*mAttrs, (size_t)index, &k)) return defaultValue;
-    const std::string v = getAttributeValue(std::string(), k);
-    if (!v.empty()) {
-        if (v[0] == '#') return (int)Color::parseColor(v);
-        if (v.size() >= 2 && v[0] == '0' && (v[1] == 'x' || v[1] == 'X'))
-            return (int)strtoul(v.c_str() + 2, nullptr, 16);
-    }
-    return getAttributeIntValue(std::string(), k, defaultValue);
-}
-
-float AttributeSet::getAttributeFloatValue(int index, float defaultValue) const {
-    std::string k;
-    return keyAt(*mAttrs, (size_t)index, &k) ? getAttributeFloatValue(std::string(), k, defaultValue) : defaultValue;
-}
-
-int AttributeSet::getAttributeListValue(const std::string& /*namespace_*/,const std::string& attribute,
-            const std::vector<std::string>& options, int defaultValue) const {
-    const std::string v = getAttributeValue(std::string(), attribute);
-    for (size_t i = 0; i < options.size(); i++) if (options[i] == v) return (int)i;
+bool AttributeSet::getAttributeBooleanValue(const std::string&, const std::string&,
+        bool defaultValue) const {
     return defaultValue;
 }
 
-bool AttributeSet::getAttributeBooleanValue(const std::string& /*namespace_*/,
-            const std::string& attribute, bool defaultValue) const {
-    const std::string v = getAttributeValue(std::string(), attribute);
-    if (v.empty()) return defaultValue;
-    return v.compare("true") == 0;
+int AttributeSet::getAttributeResourceValue(const std::string&, const std::string&,
+        int defaultValue) const {
+    return defaultValue;
 }
 
-int AttributeSet::getAttributeResourceValue(const std::string& /*namespace_*/,
-            const std::string& attribute,int defaultValue) const {
-    const std::string v = getAttributeValue(std::string(), attribute);
-    if (v.empty()) return defaultValue;
-    // "parent" is the ConstraintLayout/RelativeLayout anchor sentinel meaning
-    // the parent view (id 0) — NOT a named resource; resolving it hits an
-    // unrelated arsc entry named "parent" and breaks parent anchors.
-    if (v == "parent") return 0;
-    if (v.find_first_of("@+/") != std::string::npos) {
-        std::string name = v;
-        const size_t slash = name.rfind('/');
-        if (slash != std::string::npos) name = name.substr(slash + 1);
-        size_t at = 0;
-        while (at < name.size() && (name[at]=='@'||name[at]=='+')) at++;
-        if (at > 0) name = name.substr(at);
-        const int value = mContext ? mContext->getResources().getIdentifier(name, "id", "") : 0;
-        return value ? value : defaultValue;
-    }
-    return (int)std::strtoul(v.c_str(), nullptr, 10);
+int AttributeSet::getAttributeIntValue(const std::string&, const std::string&,
+        int defaultValue) const {
+    return defaultValue;
 }
 
-int AttributeSet::getAttributeIntValue(const std::string& /*namespace_*/,
-            const std::string& attribute, int defaultValue) const {
-    const std::string v = getAttributeValue(std::string(), attribute);
-    if (v.empty() || ((v[0] >= 'a') && (v[0] <= 'z'))) return defaultValue;
-    const int base = (((v.length() > 2) && (v[1]=='x'||v[1]=='X')) || (v[0]=='#')) ? 16 : 10;
-    return (int)std::strtol(v.c_str(), nullptr, base);
+int AttributeSet::getAttributeUnsignedIntValue(const std::string&, const std::string&,
+        int defaultValue) const {
+    return defaultValue;
 }
 
-int AttributeSet::getAttributeUnsignedIntValue(const std::string& /*namespace_*/,
-            const std::string& attribute, int defaultValue) const {
-    const std::string v = getAttributeValue(std::string(), attribute);
-    if (!v.empty()) {
-        if (v[0] == '#')
-            return (int)Color::parseColor(v);
-        if (v.size() >= 2 && v[0] == '0' && (v[1] == 'x' || v[1] == 'X'))
-            return (int)strtoul(v.c_str() + 2, nullptr, 16);
-    }
-    return getAttributeIntValue(std::string(), attribute, defaultValue);
-}
-
-float AttributeSet::getAttributeFloatValue(const std::string& /*namespace_*/,
-            const std::string& attribute,float defaultValue) const {
-    const std::string v = getAttributeValue(std::string(), attribute);
-    if (v.empty()) return defaultValue;
-    return std::strtof(v.c_str(), nullptr);
+float AttributeSet::getAttributeFloatValue(const std::string&, const std::string&,
+        float defaultValue) const {
+    return defaultValue;
 }
 
 std::string AttributeSet::getIdAttribute() const {
@@ -298,9 +175,6 @@ int AttributeSet::getStyleAttribute() const {
 }
 
 void AttributeSet::dump()const{
-    // Virtual index API: on a binary XmlPullParser this prints the parser's
-    // ResXMLTree attributes (typed values rendered as text); on a plain
-    // string-built set it prints mAttrs.
     for (size_t i = 0; i < getAttributeCount(); i++) {
         LOGD("[%zu] %s = %s", i, getAttributeName((int)i).c_str(), getAttributeValue((int)i).c_str());
     }
