@@ -96,6 +96,10 @@ public:
     std::vector<int>            getIntArray(int id) const;
 
     Asset* openRawResource(int id, TypedValue* outValue = nullptr) const;
+    // CDROID seam: the Context that owns this Resources (inflation bridge);
+    // AOSP Resources has none. Used by resource-level loaders that need a
+    // Context (e.g. ImageDecoder's animated-image reopen by path).
+    Context* getContext() const;
     // AOSP Resources.openRawResourceFd — returns AssetFileDescriptor. CDROID has
     // no AssetFileDescriptor (fd-based assets); stub returns nullptr.
     Asset* openRawResourceFd(int id) const;

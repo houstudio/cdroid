@@ -17,17 +17,44 @@
  *********************************************************************************/
 #include <drawable/drawables.h>
 #include <drawable/animationscalelistdrawable.h>
+#include <core/typedvalue.h>
+#include <image-decoders/imagedecoder.h>  // ImageDecoder::createAsDrawable(Resources, id)
+#include <utils/textutils.h>
 namespace cdroid{
 /**
- * Loads the drawable resource with the specified identifier.
+ * Loads the drawable resource with the specified identifier (AOSP
+ * DrawableInflater.loadDrawable(Resources res, int id, Theme theme)).
  *
- * @param context the context in which the drawable should be loaded
+ * @param res the resources from which the drawable is loaded
  * @param id the identifier of the drawable resource
+ * @param theme the theme against which the drawable should be inflated, or
+ *              {@code null} to not inflate against a theme
  * @return a drawable, or {@code null} if the drawable failed to load
  */
-Drawable* DrawableInflater::loadDrawable(Context* context, const std::string&id) {
+Drawable* DrawableInflater::loadDrawable(Resources& res, int id, const Resources::Theme* theme) {
+    // AOSP: res.getValue(id, value, true) then loadDrawableForDensity(...).
+    TypedValue value;
+    if(!res.getValue(id, &value, true)) return nullptr;
+    return loadDrawableForDensity(res, value, id, 0, theme);
+}
+
+/**
+ * AOSP DrawableInflater.loadDrawableForDensity(Resources, TypedValue, id,
+ * density, Theme) — the xml branch (createFromXmlForDensity role): open the
+ * xml by id, walk to the root tag, inflate themed. Color ints and bitmap
+ * files are routed by the caller (ResourcesImpl::getDrawableForDensity).
+ */
+Drawable* DrawableInflater::loadDrawableForDensity(Resources& res, const TypedValue& value,
+        int id, int density, const Resources::Theme* theme) {
+    if(value.type != TypedValue::TYPE_STRING) return nullptr;
+    // AOSP split: file drawables decode through ImageDecoder
+    // (createSource(Resources, id)); xml files inflate below.
+    const std::string path = TextUtils::utf16_utf8(
+            reinterpret_cast<const uint16_t*>(value.string), value.stringLen);
+    if(path.find(".xml") == std::string::npos)
+        return ImageDecoder::createAsDrawable(res, id);
     int type;
-    auto parser = context->getResources().getXml(id);
+    auto parser = res.getXml(id);
     const AttributeSet& attrs = *parser;
     if(!*parser)return nullptr;
     while( ((type=parser->next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
@@ -36,10 +63,10 @@ Drawable* DrawableInflater::loadDrawable(Context* context, const std::string&id)
     // AOSP Drawable.createFromXml: "No start tag found" — an empty/truncated
     // document must not fall through with a garbage root name.
     if (type != XmlPullParser::START_TAG) {
-        LOGE("%s: no start tag found",id.c_str());
+        LOGE("%08x: no start tag found", id);
         return nullptr;
     }
-    return inflateFromXml(context->getResources(),parser->getName(),*parser,attrs);
+    return inflateFromXmlForDensity(res,parser->getName(),*parser,attrs,density,theme);
 }
 
 Drawable* DrawableInflater::inflateFromXml(Resources& r,const std::string& name,XmlPullParser& parser,const AttributeSet& attrs){

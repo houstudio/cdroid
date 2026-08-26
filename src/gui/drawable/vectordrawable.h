@@ -103,7 +103,6 @@ public:
      * @hide
      */
     float getPixelSize();
-    static VectorDrawable* create(Context*,const std::string&resId);
     int getChangingConfigurations()const override;
     void setAutoMirrored(bool mirrored) override;
     bool isAutoMirrored() const override;

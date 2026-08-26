@@ -672,30 +672,19 @@ cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/, 
         // (opens by id, inflates) — not via Context.getDrawable(string). value.string
         // is the file path; .xml → DrawableInflater (id-based parser + inflateFromXml,
         // which already takes Resources&), else → ImageDecoder::createAsDrawable(id).
-        std::string path = u16to8(value.string, value.stringLen);
-        if (path.find(".xml") != std::string::npos) {
-            auto parser = loadXmlResourceParser(id);
-            int type;
-            while ((type = parser->next()) != XmlPullParser::START_TAG &&
-                   type != XmlPullParser::END_DOCUMENT) {}
-            if (type == XmlPullParser::START_TAG) {
-                const AttributeSet& attrs = *parser;
-                // AOSP loadDrawableForCookie inflates with a null theme and
-                // re-applies via applyTheme(); CDROID has no mThemeAttrs
-                // deferred machinery, so the theme goes straight into the
-                // inflation (the same route AOSP uses for ColorStateList).
-                if (themeEngine) {
-                    Resources::Theme themed(mCtx->getResources(),
-                                            const_cast<void*>(themeEngine));
-                    d = DrawableInflater::inflateFromXml(mCtx->getResources(),
-                                                         parser->getName(), *parser, attrs, &themed);
-                } else {
-                    d = DrawableInflater::inflateFromXml(mCtx->getResources(),
-                                                         parser->getName(), *parser, attrs);
-                }
-            }
+        // AOSP ResourcesImpl.loadDrawable delegates TYPE_STRING entirely to
+        // DrawableInflater.loadDrawableForDensity: .xml inflates themed (AOSP
+        // loadDrawableForCookie inflates null-themed then re-applies
+        // applyTheme(); CDROID has no mThemeAttrs deferred machinery, so the
+        // theme goes straight into the inflation — the same route AOSP uses
+        // for ColorStateList), other files decode through ImageDecoder
+        // (createSource(Resources, id)).
+        if (themeEngine) {
+            Resources::Theme themed(mCtx->getResources(),
+                                    const_cast<void*>(themeEngine));
+            d = DrawableInflater::loadDrawableForDensity(mCtx->getResources(), value, id, 0, &themed);
         } else {
-            d = ImageDecoder::createAsDrawable(mCtx, id);
+            d = DrawableInflater::loadDrawableForDensity(mCtx->getResources(), value, id, 0, nullptr);
         }
     }
     if (d && mDrawableCache) mDrawableCache->put(themedCacheKey(id, themeEngine), d->getConstantState());

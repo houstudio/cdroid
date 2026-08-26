@@ -153,6 +153,10 @@ public:
     // after construction. Null until set → GUI factories that need inflation
     // return nullptr.
     void setContext(Context* ctx) { mCtx = ctx; }
+    // The Context that bridged this impl (inflation bridge, see setContext);
+    // AOSP Resources has none — CDROID seam used by resource-level loaders
+    // that need a Context (e.g. animated-image reopen by path).
+    Context* getContext() const { return mCtx; }
 
     // AOSP ResourcesImpl.getAnimatorCache()/getStateListAnimatorCache()
     // (ConfigurationBoundResourceCache) — used by AnimatorInflater's int-id

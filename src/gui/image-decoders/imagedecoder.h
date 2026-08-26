@@ -70,10 +70,12 @@ public:
     static Cairo::RefPtr<Cairo::ImageSurface>loadImage(Context*ctx,const std::string&,int width=-1,int height=-1);
     static Drawable*createAsDrawable(Context*ctx,const std::string&resourceId);
     static Drawable*decodeDrawableStream(Context*ctx,std::unique_ptr<std::istream>,const std::string&path);
-    // ID-based: opens the asset by resource id (ResourcesImpl self-loads by id,
-    // no string-name round-trip). Resolves the file path via getValue for the
-    // 9-patch / animated-extension checks.
-    static Drawable*createAsDrawable(Context*ctx,int id);
+    // ID-based (AOSP ImageDecoder.createSource(Resources, resId)): opens the
+    // asset by resource id through the Resources face — no Context* needed.
+    // Resolves the file path via getValue for the 9-patch /
+    // animated-extension checks; the animated branch reaches its Context
+    // through Resources::getContext (CDROID inflation bridge).
+    static Drawable*createAsDrawable(Resources&res,int id);
 };
 
 class GIFDecoder:public ImageDecoder{

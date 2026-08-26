@@ -28,11 +28,27 @@ public:
     /**
      * Loads the drawable resource with the specified identifier.
      *
-     * @param context the context in which the drawable should be loaded
+     * <p>AOSP DrawableInflater.loadDrawable(Resources res, int id, Theme theme):
+     * resolves the value by id and dispatches to the xml inflater. Color ints
+     * and bitmap files stay with the caller (ResourcesImpl::
+     * getDrawableForDensity — CDROID's ImageDecoder takes a Context*, AOSP's
+     * goes through AssetManager streams).
+     *
+     * @param res the resources from which the drawable is loaded
      * @param id the identifier of the drawable resource
+     * @param theme the theme against which the drawable should be inflated, or
+     *              {@code null} to not inflate against a theme
      * @return a drawable, or {@code null} if the drawable failed to load
      */
-    static Drawable* loadDrawable(Context* context, const std::string&id);
+    static Drawable* loadDrawable(Resources& res, int id, const Resources::Theme* theme = nullptr);
+
+    /**
+     * Version of {@link #loadDrawable(Resources, int, Theme)} that accepts a
+     * resolved TypedValue plus an override density (AOSP
+     * DrawableInflater.loadDrawableForDensity(Resources, TypedValue, int, int, Theme)).
+     */
+    static Drawable* loadDrawableForDensity(Resources& res, const TypedValue& value,
+            int id, int density, const Resources::Theme* theme = nullptr);
 
     /**
      * Inflates a drawable from inside an XML document using an optional

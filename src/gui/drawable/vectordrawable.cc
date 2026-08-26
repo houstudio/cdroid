@@ -293,12 +293,6 @@ float VectorDrawable::getPixelSize() {
     return std::min(scaleX, scaleY);
 }
 
-VectorDrawable* VectorDrawable::create(Context*ctx, const std::string&rid) {
-    VectorDrawable* drawable = (VectorDrawable*)DrawableInflater::loadDrawable(ctx,rid);//new VectorDrawable();
-    //drawable->inflate(ctx,rid);
-    return drawable;
-}
-
 void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
     if (mVectorState->mRootGroup != nullptr || mVectorState->mNativeTree != nullptr) {
         // This VD has been used to display other VD resource content, clean up.

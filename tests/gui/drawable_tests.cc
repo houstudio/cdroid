@@ -503,10 +503,10 @@ TEST_F(DRAWABLE,inflateclip){
 
 TEST_F(DRAWABLE,inflatelayer){
    const char*text=R"(<layer-list xmlns:cdroid="http://schemas.android.com/apk/res/android">
-        <item cdroid:id="123"> <shape cdroid:shape="rectangle"> <corners cdroid:radius="5dip" />
+        <item cdroid:id="@cdroid:id/background"> <shape cdroid:shape="rectangle"> <corners cdroid:radius="5dip" />
             <gradient cdroid:type="linear" cdroid:startColor="#ff9d9e9d" cdroid:centerColor="#ff5a5d5a"
                 cdroid:centerY="0.75" cdroid:endColor="#ff747674" cdroid:angle="45"/> </shape></item>
-        <item cdroid:id="456"> <clip> <shape cdroid:shape="rectangle"> <corners cdroid:radius="100dip" />
+        <item cdroid:id="@cdroid:id/progress"> <clip> <shape cdroid:shape="rectangle"> <corners cdroid:radius="100dip" />
         <gradient cdroid:type="linear" cdroid:startColor="#80ffd300" cdroid:centerColor="#8000ffb6"
               cdroid:centerX="0.5" cdroid:centerY="0.5" cdroid:endColor="#a0ff00ff" cdroid:angle="90"/>
             </shape> </clip> </item></layer-list>)";
@@ -516,12 +516,16 @@ TEST_F(DRAWABLE,inflatelayer){
    int64_t t2=SystemClock::uptimeMillis();
    LayerDrawable*ld=dynamic_cast<LayerDrawable*>(d);
    ASSERT_NE((void*)nullptr,ld);
-   ASSERT_NE((void*)nullptr,ld->findDrawableByLayerId(123));
-   ASSERT_NE((void*)nullptr,ld->findDrawableByLayerId(456));
-   ASSERT_EQ(ld->getId(0),123);
-   ASSERT_EQ(ld->getId(1),456);
+   // android:id takes a reference (@id/...), never a raw decimal — use the
+   // framework ids progress_horizontal's layers really carry.
+   const int backgroundId=(int)cdroid::internal::R::id::background;
+   const int progressId=(int)cdroid::internal::R::id::progress;
+   ASSERT_NE((void*)nullptr,ld->findDrawableByLayerId(backgroundId));
+   ASSERT_NE((void*)nullptr,ld->findDrawableByLayerId(progressId));
+   ASSERT_EQ(ld->getId(0),backgroundId);
+   ASSERT_EQ(ld->getId(1),progressId);
    ASSERT_EQ(2,ld->getNumberOfLayers());
-   ClipDrawable*cd=dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(456));
+   ClipDrawable*cd=dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(progressId));
    //cd->setGravity(Gravity::CENTER);
    for(int i=0;i<10000;i+=200){
        ctx->set_source_rgba(0,0,0,1);

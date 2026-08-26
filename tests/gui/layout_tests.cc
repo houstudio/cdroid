@@ -15,6 +15,7 @@
 #include <widget/gridlayout.h>
 #include <widget/radiogroup.h>
 #include <drawable/drawable.h>
+#include <widget/internal_R.h>
 #include <drawable/drawableinflater.h>
 #include <drawable/colordrawable.h>
 #include <drawable/shapedrawable.h>
@@ -67,7 +68,7 @@ TEST_F(LAYOUT,linear){
 #endif
 #if 10
     ProgressBar*pb2=new ProgressBar(&app);
-    Drawable*d=DrawableInflater::loadDrawable(&app,"@cdroid:drawable/progress_large");
+    Drawable*d=app.getDrawable(cdroid::internal::R::drawable::progress_large);
     lp =new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);//,1.0f);
     lp->gravity=Gravity::BOTTOM;//CENTER_VERTICAL);
     pb2->setIndeterminateDrawable(d);
@@ -93,7 +94,7 @@ TEST_F(LAYOUT,radiogroup){
         RadioButton*rb=new RadioButton(&app); rb->setText(captions[i]);
         rb->setId(100+i);
         rb->setPadding(0,8,0,8);
-        Drawable*d=DrawableInflater::loadDrawable(&app,"@cdroid:drawable/btn_radio");
+        Drawable*d=app.getDrawable(cdroid::internal::R::drawable::btn_radio);
         rb->setButtonDrawable(d);
         rb->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         rb->setTextColor(0xFFFF0000);

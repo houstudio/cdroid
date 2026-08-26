@@ -173,6 +173,10 @@ Asset* Resources::openRawResource(int id, TypedValue* o) const {
     return mImpl->openRawResource(id, o);
 }
 
+Context* Resources::getContext() const {
+    return mImpl ? mImpl->getContext() : nullptr;
+}
+
 std::unique_ptr<XmlPullParser> Resources::getXml(int id) const {
     return mImpl->loadXmlResourceParser(id);
 }

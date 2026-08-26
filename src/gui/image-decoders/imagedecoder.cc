@@ -302,20 +302,20 @@ Drawable* ImageDecoder::decodeDrawableStream(Context* ctx,
     return nullptr;
 }
 
-Drawable* ImageDecoder::createAsDrawable(Context* ctx, int id) {
-    if (ctx == nullptr) return nullptr;
-    // Resolve the file path (for 9-patch / animated-extension checks) + open the
-    // asset by id. ResourcesImpl self-loads by id, so no string-name round-trip.
+Drawable* ImageDecoder::createAsDrawable(Resources& res, int id) {
+    // AOSP ImageDecoder.createSource(Resources, resId): resolve the file path
+    // (for 9-patch / animated-extension checks) + open the asset by id, all
+    // through the Resources face.
     TypedValue tv;
-    if (!ctx->getResources().getValue(id, &tv, true) || tv.type != TypedValue::TYPE_STRING) return nullptr;
+    if (!res.getValue(id, &tv, true) || tv.type != TypedValue::TYPE_STRING) return nullptr;
     std::string path = TextUtils::utf16_utf8(reinterpret_cast<const uint16_t*>(tv.string), tv.stringLen);
-    std::unique_ptr<Asset> asset(ctx->openRawResource(id));
+    std::unique_ptr<Asset> asset(res.openRawResource(id));
     if (asset == nullptr) return nullptr;
     const off64_t sz = asset->getLength();
     if (sz <= 0) return nullptr;
     std::string buf((size_t)sz, '\0');
     asset->read(&buf[0], (size_t)sz);
-    return decodeDrawableStream(ctx, std::make_unique<std::istringstream>(std::move(buf)), path);
+    return decodeDrawableStream(res.getContext(), std::make_unique<std::istringstream>(std::move(buf)), path);
 }
 
 }/*endof namespace*/
