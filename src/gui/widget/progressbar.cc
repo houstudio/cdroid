@@ -18,6 +18,8 @@
 #include <widget/internal_R.h>
 #include <core/context.h>
 #include <widget/progressbar.h>
+#include <content/numberformat.h>
+#include <content/Locale.h>
 #include <widget/framework_styleable.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/objectanimator.h>
@@ -182,6 +184,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr
 }
 
 ProgressBar::~ProgressBar() {
+    delete mPercentFormat;
     if(mProgressDrawable)mProgressDrawable->setCallback(nullptr);
     if(mIndeterminateDrawable)mIndeterminateDrawable->setCallback(nullptr);
     //for(auto rd:mRefreshData)rd->recycle();
@@ -587,16 +590,18 @@ float ProgressBar::getPercent(int progress) const {
 }
 
 std::string ProgressBar::formatStateDescription(int progress) const {
-    // Cache the locale-appropriate NumberFormat.  Configuration locale is guaranteed
-    // non-null, so the first time this is called we will always get the appropriate
-    // NumberFormat, then never regenerate it unless the locale changes on the fly.
-    /*final Locale curLocale = mContext.getResources().getConfiguration().getLocales().get(0);
-    if (!curLocale.equals(mCachedLocale)) {
-        mCachedLocale = curLocale;
-        mPercentFormat = NumberFormat.getPercentInstance(curLocale);
+    // Cache the locale-appropriate NumberFormat.  Configuration locale is
+    // guaranteed non-null, so the first time this is called we will always
+    // get the appropriate NumberFormat, then never regenerate it unless the
+    // locale changes on the fly. (The engine's DECIMAL type carries no
+    // percent SIGN — the symbol slot is a number_data backlog.)
+    const Locale curLocale = Locale::getDefault();
+    if (mCachedLocaleTag != curLocale.toLanguageTag() || mPercentFormat == nullptr) {
+        mCachedLocaleTag = curLocale.toLanguageTag();
+        delete mPercentFormat;
+        mPercentFormat = NumberFormat::getPercentInstance(curLocale).release();
     }
-    return mPercentFormat.format(getPercent(progress));*/
-    return "";
+    return mPercentFormat->format(getPercent(progress));
 }
 
 void ProgressBar::setStateDescription(const std::string& stateDescription) {

@@ -17,6 +17,8 @@
  *********************************************************************************/
 #include <widget/internal_R.h>
 #include <widget/calendarviewlegacydelegate.h>
+#include <content/numberformat.h>
+#include <content/Locale.h>
 #include <widget/listview.h>
 #include <widget/calendarview.h>
 #include <text/textutils.h>
@@ -26,6 +28,20 @@
 #include <content/dateformatsymbols.h>
 #include <content/simpledateformat.h>
 namespace cdroid{
+// AOSP String.format(Locale.getDefault(), "%d", n) for the week-strip day
+// numbers: the engine-backed integer NumberFormat (localized digits), cached
+// per default-locale tag and rebuilt on CONFIG_LOCALE.
+static std::string formatDayWithLocale(int value) {
+    static std::string tag;
+    static std::unique_ptr<NumberFormat> nf;
+    const std::string cur = Locale::getDefault().toLanguageTag();
+    if (tag != cur || nf == nullptr) {
+        tag = cur;
+        nf = NumberFormat::getIntegerInstance(Locale::getDefault());
+    }
+    return nf->format(value);
+}
+
 using namespace cdroid::internal;
 
 CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,
@@ -830,7 +846,8 @@ void CalendarViewLegacyDelegate::WeekView::init(int weekNumber, int selectedWeek
     // If we're showing the week number calculate it based on Monday
     int i = 0;
     if (mCV->mShowWeekNumber) {
-        mDayNumbers[0] = std::to_string(mTempDate.get(Calendar::WEEK_OF_YEAR));
+        // AOSP: String.format(Locale.getDefault(), "%d", week) — localized digits.
+        mDayNumbers[0] = formatDayWithLocale(mTempDate.get(Calendar::WEEK_OF_YEAR));
         i++;
     }
 
@@ -851,7 +868,7 @@ void CalendarViewLegacyDelegate::WeekView::init(int weekNumber, int selectedWeek
         if (mTempDate.before(mCV->mMinDate) || mTempDate.after(mCV->mMaxDate)) {
             mDayNumbers[i] = "";
         } else {
-            mDayNumbers[i] = std::to_string(mTempDate.get(Calendar::DAY_OF_MONTH));
+            mDayNumbers[i] = formatDayWithLocale(mTempDate.get(Calendar::DAY_OF_MONTH));
         }
         mTempDate.add(Calendar::DAY_OF_MONTH, 1);
     }

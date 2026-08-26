@@ -24,6 +24,8 @@
 
 namespace cdroid{
 
+class NumberFormat;   // content/numberformat.h — the percent formatter below
+
 class ProgressBar:public View{
 private:
     static constexpr int MAX_LEVEL = 10000;
@@ -67,6 +69,12 @@ private:
     void scheduleAccessibilityEventSender();
     float getPercent(int progress)const;
     std::string formatStateDescription(int progress)const;
+private:
+    // AOSP mPercentFormat/mCachedLocale: the cached locale-appropriate
+    // percent formatter behind formatStateDescription. Raw pointer — the
+    // public header keeps NumberFormat incomplete (freed in ~ProgressBar).
+    mutable std::string mCachedLocaleTag;
+    mutable NumberFormat* mPercentFormat = nullptr;
 protected:
     static constexpr int HORIZONTAL= 0;
     static constexpr int VERTICAL  = 1;
