@@ -109,9 +109,25 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
             message(STATUS "CreatePAK(${project}): app binary AXML mode (own res only)")
         endif()
     endif()
+    # Apps that bundle their own fonts/ directory (beside assets/, with or
+    # without a legacy fonts.conf) get an Android-format fonts.xml generated
+    # next to the app binary at build time — Typeface probes it by walking up
+    # from the executable, so the app's own font world wins over the shared
+    # out-root snapshot without any runtime configuration.
+    set(_app_fonts_cmd "")
+    set(_app_fonts_dir "${ResourceDIR}/../fonts")
+    if(EXISTS "${_app_fonts_dir}" AND NOT DEFINED CDROID_FC_SCAN)
+        find_program(CDROID_FC_SCAN fc-scan)
+    endif()
+    if(EXISTS "${_app_fonts_dir}" AND CDROID_FC_SCAN)
+        set(_app_fonts_cmd COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/genfontsxml.sh
+                --dir "${_app_fonts_dir}" "${CMAKE_CURRENT_BINARY_DIR}/fonts.xml")
+        message(STATUS "CreatePAK(${project}): app fonts -> ${CMAKE_CURRENT_BINARY_DIR}/fonts.xml")
+    endif()
     add_custom_target(${project}_assets
         COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py
                 ${project} ${ResourceDIR} ${PakPath} ${rhpath} ${extra_args}
+        ${_app_fonts_cmd}
         COMMAND cp ${PakPath} ${CMAKE_BINARY_DIR}
         WORKING_DIRECTORY ${ResourceDIR}
         COMMENT "Package Assets from ${ResourceDIR} to:${PakPath}")
