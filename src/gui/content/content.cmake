@@ -15,6 +15,7 @@ set(CONTENT_SOURCES
     content/xmlblock.cc
     content/numberformat.cc   # java.text.NumberFormat face over the i18n engine
     content/dateutils.cc     # android.text.format.DateUtils (in-tree subset)
+    content/decimalformatsymbols.cc # java.text.DecimalFormatSymbols (symbol face over number_data)
     content/dateformat.cc
     content/dateformatsymbols.cc
     content/simpledateformat.cc
