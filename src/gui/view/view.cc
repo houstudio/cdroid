@@ -3890,14 +3890,8 @@ const Rect View::getBound()const{
     return Rect::MakeLTRB(mLeft,mTop,mRight,mBottom);
 }
 
-const Rect View::getDrawingRect()const{
-    Rect ret;
-    ret.set(mScrollX,mScrollY,mScrollX+getWidth(),mScrollY+getHeight());
-    return ret;
-}
-
 void View::getFocusedRect(Rect&r){
-    r.set(mLeft,mTop,mRight-mLeft,mBottom-mTop);
+    getDrawingRect(r);
 }
 
 void View::setId(int id){
