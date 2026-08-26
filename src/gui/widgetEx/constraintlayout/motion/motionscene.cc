@@ -20,9 +20,9 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.MotionScene.
  */
 #include <widget/internal_R.h>
+#include <core/context.h>
 #include <widgetEx/constraintlayout/motion/motionscene.h>
 #include <widgetEx/widgetex_styleable.h>
-#include <core/assets.h>
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/motion/touchresponse.h>
 #include <widgetEx/constraintlayout/motion/viewtransition.h>

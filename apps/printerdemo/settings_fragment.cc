@@ -3,6 +3,7 @@
  * picker: AssetManager.getNonSystemLocales() enumerates the app pak's locales,
  * PopupMenu offers them by self-name, applyLocale() switches and recreates.
  *********************************************************************************/
+#include <core/app.h>
 #include <cdroid.h>
 #include <algorithm>
 #include <vector>

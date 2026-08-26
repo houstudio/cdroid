@@ -18,6 +18,7 @@
 #ifndef __GRAPH_DEVICE_H__
 #define __GRAPH_DEVICE_H__
 #include <core/rect.h>
+#include <cairomm/region.h>   // Cairo::Region (computeVisibleRegion)
 #include <cairomm/context.h>
 #include <mutex>
 #include <condition_variable>

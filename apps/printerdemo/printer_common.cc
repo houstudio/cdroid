@@ -1,6 +1,7 @@
 /*********************************************************************************
  * Definitions for the cross-page helpers declared in printer_common.h.
  *********************************************************************************/
+#include <core/app.h>
 #include "printer_common.h"
 #include <cdroid.h>
 #include <navigation/navhostfragment.h>

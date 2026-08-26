@@ -1,7 +1,7 @@
 #include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/abslistview.h>
 #include <widget/framework_styleable.h>
-#include <core/assets.h>
 #include <widget/checkable.h>
 #include <widget/recyclebin.h>
 #include <widget/fastscroller.h>

@@ -1,7 +1,7 @@
 #include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/keyboardview.h>
 #include <widget/framework_styleable.h>
-#include <core/assets.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
 #include <widget/popupwindow.h>

@@ -20,9 +20,9 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.helper.widget.MotionEffect.
  */
 #include <widget/internal_R.h>
+#include <core/context.h>
 #include <widgetEx/constraintlayout/motion/motioneffect.h>
 #include <widgetEx/widgetex_styleable.h>
-#include <core/assets.h>
 
 #include <cmath>
 

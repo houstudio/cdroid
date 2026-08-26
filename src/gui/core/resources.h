@@ -203,7 +203,7 @@ public:
     void* _engineHandle() const { return mEngine; }   // cdroid::ResTable::Theme* (borrowed or owned)
 private:
     friend class Resources;       // newTheme() (owned engine)
-    friend class Assets;          // Assets/App construct it from their engine
+    friend class App;           // App constructs it from its engine
     friend class ResourcesImpl;   // wraps a caller-passed engine (themed drawable loads)
     Theme(Resources& res, void* engine) : mRes(res), mEngine(engine) {}
     Resources& mRes;

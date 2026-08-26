@@ -20,11 +20,12 @@
 #include <string>
 #include <map>
 #include <atomic>
+#include <unordered_map>
 #include <istream>
 #include <cairomm/surface.h>
 #include <core/looper.h>
 #include <core/context.h>
-#include <core/assets.h>
+#include <core/typedarray.h>      // TypedArray: consumer-side typed attr view
 
 namespace cxxopts{
     class ParseResult;
@@ -32,6 +33,10 @@ namespace cxxopts{
 namespace cdroid{
 
 class Window;
+class ZIPArchive;   // private/ziparchive.h — pak registry below
+class ResTable;     // androidfw/restable.h — arsc engine, opaque here
+// AssetManager is forward-declared at global scope in context.h.
+
 struct ActivityPendingResult { Window* caller; int requestCode; Window* target; };
 
 // AOSP android.content.pm.ActivityInfo (micro): the fields CDROID consumes
@@ -45,7 +50,12 @@ struct ActivityInfo {
     bool launchable = false;     // MAIN/LAUNCHER intent-filter present
 };
 
-class App:public Assets{
+// The Application AND the one ContextImpl: CDROID has no separate
+// ActivityThread/ContextImpl machinery, so App directly implements Context
+// (AOSP Application wraps a ContextImpl; here the roles merge into the
+// process singleton) and owns the resource stack (pak registry, AssetManager,
+// Resources, the live arsc theme) plus the main loop / window management.
+class App:public Context{
 private:
     bool mQuitFlag;
     int mExitCode;
@@ -61,7 +71,44 @@ private:
     int mPendingActivityTheme = 0;
     void parsePackageManifest(const std::string& pakPath);
     Window* mLastStartedWindow = nullptr;
+
+    // --- resource stack (the former Assets; the ContextImpl role) ---------
+    // Lazy ID-based resource layer (AOSP Resources/AssetManager), built
+    // on first getResources()/getAssets() from the pak paths recorded in
+    // addResource().
+    std::vector<std::string>        mPakPaths;
+    mutable AssetManager*  mAssetManager = nullptr;
+    mutable cdroid::Resources*      mCdroidResources = nullptr;
+    void ensureCdroidResources() const;
+
+    int mNextAutofillViewId = 100000;
+    std::string mLanguage;
+    std::unordered_map<std::string,class ZIPArchive*>mResources;
+    ResTable* mResTable = nullptr;   // loaded from resources.arsc in pak (null if no arsc)
+    // arsc theme engine (ResTable::Theme*), kept opaque so this header needs no
+    // androidfw include; the .cc casts.
+    void* mArscTheme = nullptr;
+    // arsc identifier lookup: tries the given package first, then "android"
+    // (framework arsc compiled with package="android" via aapt2 -x, but pak
+    // registered under "cdroid" — the names don't match, so we fall back).
+    uint32_t arscGetIdentifier(const std::string& name, const std::string& type, const std::string& pkg) const;
+    bool arscResolveHexRef(const std::string& s, TypedValue* out) const;
+    const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
+    void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
+    ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
+    // Open an arsc-recorded file path (e.g. "res/drawable-hdpi-v4/x.png")
+    // against the pak layout via pakPathCandidates() (androidfw): returns the
+    // owning pak + the actual entry name.
+    ZIPArchive*findPakForPath(const std::string&package,const std::string&arscPath,std::string*outResname)const;
+    // Rebuild the live arsc theme for `resid` (setTheme's engine side).
+    void applyTheme(int resid);
+    // Release the resource stack (called from ~App after the UI is down).
+    void destroyResourceState();
 protected:
+    std::string mName;
+    DisplayMetrics mDisplayMetrics;
+    void applyLocale(const std::string&lan);
+    int addResource(const std::string&path,const std::string&name=std::string());
     std::unique_ptr<cxxopts::ParseResult> mArgsResult;
     static std::atomic<App*>mInst;
     void onInit();
@@ -108,7 +155,7 @@ public:
     // AOSP ApplicationInfo.theme / ActivityInfo lookups.
     int getApplicationTheme() const { return mApplicationTheme; }
     // App-wide setTheme (the "apply it app-wide" lever): besides rebuilding the
-    // live theme (Assets::setTheme), the runtime choice becomes the
+    // live theme (applyTheme), the runtime choice becomes the
     // manifest-equivalent default so windows launched afterwards — including
     // Window::recreate() relaunches — build their ContextThemeWrapper under it
     // (startActivity reads mApplicationTheme when the activity has no
@@ -120,6 +167,46 @@ public:
     // The MAIN/LAUNCHER activity (empty when the manifest has none).
     std::string getLauncherActivity() const;
     friend class Window;   // consumes mPendingActivityTheme in its Context ctor
+
+    // --- Context implementation (the ContextImpl face) ---------------------
+    // Binary-AXML bridge (transitional): resolve a resource ID / fetch a string
+    // from the loaded arsc so the parsers can render typed attribute values.
+    bool arscResolveId(uint32_t resId, TypedValue* out) const;
+    const char16_t* arscStringAt(uint32_t resId, size_t* outLen) const;
+    // Render a resource ID as an "@type/key" reference string (e.g.
+    // "@drawable/bg", "@string/hello") matching text-XML form, so CDROID's
+    // existing string-based resolvers consume binary-AXML references unchanged.
+    std::string getResourceName(uint32_t resId) const override;
+    // Resolve a theme-attribute reference (?attr/<id>) through the arsc Theme:
+    // getAttribute + resolveAttributeReference, so ?android:colorPrimary etc.
+    // flatten to a concrete value. Returns true if the theme had the attr.
+    // When outBlock != null, *outBlock receives the owning string-pool block of
+    // the resolved value (needed to resolve TYPE_STRING values via stringAtBlock).
+    bool arscThemeAttribute(uint32_t attrId, TypedValue* out, ssize_t* outBlock = nullptr) const;
+    const std::string getPackageName()const override;
+    Resources::Theme getTheme() override;
+    const DisplayMetrics&getDisplayMetrics()const override;
+    int getNextAutofillId()override;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&,int width,int height)override;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height)override;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(int id,int width,int height)override;
+    std::unique_ptr<std::istream> getInputStream(const std::string&resname,std::string*outpkg=nullptr)override;
+    // AOSP ID-based resource face.
+    Resources&      getResources() override;
+    AssetManager&   getAssets() override;
+    // getDrawable/getColorStateList: inherit Context's AOSP-final themed
+    // defaults (getResources().getDrawable(id, getTheme())).
+    // Bring the ID-based obtainStyledAttributes(const uint32_t*) overloads from
+    // Context into App scope; otherwise the string overload above hides them
+    // (C++ name hiding).
+    using Context::obtainStyledAttributes;
+    // AOSP Context.obtainStyledAttributes(AttributeSet, int[], defStyleAttr, defStyleRes).
+    // `attrs` is nullable (AOSP new View(ctx, null, defStyleAttr)); `styleable` is a
+    // sentinel-terminated attr-id array (internal::R::styleable::X). Overrides Context's pure
+    // virtual with arsc resolution (element > style= > defStyleAttr > defStyleRes).
+    std::unique_ptr<TypedArray> obtainStyledAttributes(
+        const AttributeSet* attrs, const uint32_t* styleable,
+        int32_t defStyleAttr = 0, int32_t defStyleRes = 0) override;
 };
 
 }/*end ofnamespace*/

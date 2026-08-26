@@ -20,6 +20,7 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.ConstraintSet.
  */
 #include <widget/framework_styleable.h>
+#include <core/context.h>
 #include <core/typedarray.h>
 #include <widget/internal_R.h>
 #include <climits>
@@ -31,7 +32,6 @@
 #include <view/view.h>
 #include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/widgetex_styleable.h>
-#include <core/assets.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 
 namespace cdroid {

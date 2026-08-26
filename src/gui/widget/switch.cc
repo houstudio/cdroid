@@ -1,8 +1,8 @@
 #include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/switch.h>
 #include <widget/framework_styleable.h>
 #include <widget/internal_R.h>
-#include <core/assets.h>
 #include <utils/mathutils.h>
 #include <text/textutils.h>
 #include <view/viewgroup.h>

@@ -29,7 +29,6 @@
 #include <drawable/layerdrawable.h>
 #include <drawable/drawables.h>
 #include <drawable/statelistdrawable.h>
-#include <core/app.h>
 #include <core/rect.h>
 #include <view/view.h>
 #include <view/gravity.h>

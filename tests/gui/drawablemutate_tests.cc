@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <core/assets.h>
+#include <core/app.h>
 #include <drawable/drawables.h>
 #include <drawable/drawableinflater.h>
 #include <fstream>

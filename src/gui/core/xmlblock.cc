@@ -21,7 +21,7 @@
 #include <porting/cdlog.h>
 #include <core/context.h>
 #include <core/app.h>
-#include <core/assets.h>
+#include <core/app.h>
 #include <core/resources.h>
 #include <cstdio>
 #include <cstdlib>
@@ -383,7 +383,7 @@ std::string XmlBlock::Parser::renderTypedValue(size_t attrIdx) const {
             // (getDrawable/getString/getColor/...) handles it unchanged.
             // Falls back to "@0xRESID" if the arsc can't name the resource.
             if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
-                Assets* assets = dynamic_cast<Assets*>(ctx);
+                App* assets = dynamic_cast<App*>(ctx);
                 if(assets){
                     std::string ref = ctx->getResourceName(v.data);
                     if(!ref.empty()) return ref;
@@ -398,7 +398,7 @@ std::string XmlBlock::Parser::renderTypedValue(size_t attrIdx) const {
             // obtainStyledAttributes (theme lookup) instead of treating it as
             // a plain resource reference and handing it to getInputStream.
             if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
-                Assets* assets = dynamic_cast<Assets*>(ctx);
+                App* assets = dynamic_cast<App*>(ctx);
                 if(assets){
                     TypedValue tv;
                     if(assets->arscThemeAttribute(v.data, &tv)){

@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/viewanimator.h>
+#include <core/context.h>
 #include <widget/internal_R.h>
 #include <widget/framework_styleable.h>
 #include <animation/animationutils.h>
-#include <core/assets.h>
 #include <cdlog.h>
 
 namespace cdroid{

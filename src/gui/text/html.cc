@@ -1,3 +1,4 @@
+#include <drawable/drawable.h>
 #include <text/html.h>
 #include <text/textutils.h>
 #include <text/style/alignmentspan.h>

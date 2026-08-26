@@ -27,7 +27,6 @@
 #include <text/method/offsetmapping.h>
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
-#include <core/app.h>
 #include <widget/framework_styleable.h>
 #include <text/layout.h>
 #include <text/selection.h>

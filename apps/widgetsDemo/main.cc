@@ -5,6 +5,7 @@
  * with TabLayout wired via setupWithViewPager. The per-page widget demos and
  * their wiring live in pages.cc.
  *********************************************************************************/
+#include <core/app.h>
 #include <cdroid.h>
 #include <core/activityfactory.h>
 #include <core/LocaleList.h>

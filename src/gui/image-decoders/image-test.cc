@@ -4,7 +4,6 @@
 #include <cdlog.h>
 #include <framesequence.h>
 #include <gui/cdroid.h>
-#include <core/app.h>
 #include <utils/textutils.h>
 #include <image-decoders/framesequence.h>
 #include <dirent.h>

@@ -18,6 +18,7 @@
  * enterAnim/exitAnim — see navdemo_transition. IDs (R.h / ID.xml) are
  * auto-generated.
  *********************************************************************************/
+#include <core/app.h>
 #include <cdroid.h>
 #include <cdlog.h>
 #include <core/activityfactory.h>

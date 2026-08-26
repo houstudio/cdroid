@@ -21,9 +21,9 @@
  * Faithful port — see header for the supported feature surface.
  */
 #include <widget/internal_R.h>
+#include <core/context.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <widgetEx/widgetex_styleable.h>
-#include <core/assets.h>
 #include <core/xmlpullparser.h>
 #include <widgetEx/constraintlayout/constraintlayoutstates.h>
 #include <widgetEx/constraintlayout/sharedvalues.h>

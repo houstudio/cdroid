@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/internal_R.h>
+#include <core/context.h>
 #include <text/textutils.h>
 #include <widget/toolbar.h>
 #include <widget/framework_styleable.h>
-#include <core/assets.h>
 #include <menu/actionmenupresenter.h>
 #include <gui_features.h>
 

@@ -1,3 +1,4 @@
+#include <core/app.h>
 #include "fragments.h"
 #include <R.h>
 

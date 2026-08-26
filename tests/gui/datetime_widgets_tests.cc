@@ -5,6 +5,7 @@
 #include <widget/calendarview.h>
 #include <view/layoutinflater.h>
 #include <content/dateformatsymbols.h>
+#include <core/app.h>
 #include "R.h"
 
 // Date/time widget regressions: locale symbol resolution, construction/

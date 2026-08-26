@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/scrollview.h>
 #include <widget/framework_styleable.h>
-#include <core/assets.h>
 #include <view/focusfinder.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
 #include <view/hapticscrollfeedbackprovider.h>

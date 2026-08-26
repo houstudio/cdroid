@@ -20,10 +20,11 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.KeyFrames.
  */
 #include <widget/internal_R.h>
+#include <core/context.h>
+#include <core/typedarray.h>
 #include <widgetEx/constraintlayout/motion/keyframes.h>
 
 #include <widgetEx/widgetex_styleable.h>
-#include <core/assets.h>
 #include <core/xmlpullparser.h>
 
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>

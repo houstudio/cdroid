@@ -37,7 +37,7 @@ public:
 class DRAWABLE:public testing::Test{
 public:
     static Canvas*ctx;
-    static Assets*rm;
+    static App*rm;
     static int mScreenWidth,mScreenHeight;
     static cdroid::RefPtr<ImageSurface>sImage;
     SurfaceBlitView*mView=nullptr;
@@ -48,8 +48,8 @@ public:
            happens via SurfaceBlitView in the shared content area. */
         auto surface=Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mScreenWidth,mScreenHeight);
         /* Reuse the global App (built by GUIEnvironment) as the resource Context —
-           App is-a Assets, so getDrawable()/XmlPullParser resolve against the same
-           .pak the rest of the harness uses. No private Assets, nothing to free. */
+           App is-a App, so getDrawable()/XmlPullParser resolve against the same
+           .pak the rest of the harness uses. No private App, nothing to free. */
         rm=&App::getInstance();
         ctx=new Canvas(surface);
         sImage=ImageSurface::create(Surface::Format::ARGB32,400,400);
@@ -112,7 +112,7 @@ public:
 };
 
 Canvas* DRAWABLE::ctx=nullptr;
-Assets* DRAWABLE::rm =nullptr;
+App* DRAWABLE::rm =nullptr;
 int DRAWABLE::mScreenWidth=0;
 int DRAWABLE::mScreenHeight=0;
 cdroid::RefPtr<ImageSurface>DRAWABLE::sImage;

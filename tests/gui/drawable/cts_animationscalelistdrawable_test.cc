@@ -28,7 +28,6 @@
 #include <drawable/drawables.h>
 #include <drawable/animationdrawable.h>
 #include <animation/valueanimator.h>
-#include <core/app.h>
 #include <guienvironment.h>
 
 using namespace cdroid;

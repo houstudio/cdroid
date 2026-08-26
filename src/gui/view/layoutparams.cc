@@ -1,7 +1,7 @@
 #include <widget/internal_R.h>
+#include <core/context.h>
 #include <view/layoutparams.h>
 #include <widget/framework_styleable.h>
-#include <core/assets.h>
 #include <view/viewgroup.h>
 #include <cdlog.h>
 namespace cdroid{

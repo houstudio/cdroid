@@ -1,3 +1,4 @@
+#include <core/app.h>
 #include "pages.h"
 #include <R.h>
 #include <widget/R.h>

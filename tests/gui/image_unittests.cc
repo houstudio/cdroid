@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
+#include <core/context.h>
 #include <cdgraph.h>
 #include <core/canvas.h>
-#include <core/assets.h>
 #include <cdinput.h>
 #include <sys/types.h>
 #include <sys/stat.h>

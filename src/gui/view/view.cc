@@ -27,7 +27,6 @@
 #include <widget/framework_styleable.h>
 #include <androidfw/resourcetypes.h>  // Res_value (getFocusableAttribute)
 #include <core/typedarray.h>
-#include <core/assets.h>
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
 #include <view/handleractionqueue.h>
@@ -45,7 +44,7 @@
 #include <core/systemclock.h>
 #include <core/windowmanager.h>
 #include <core/inputmethodmanager.h>
-#include <core/app.h>
+#include <core/context.h>
 #include <core/color.h>
 #include <core/handler.h>
 #include <porting/cdlog.h>

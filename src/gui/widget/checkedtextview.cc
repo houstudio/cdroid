@@ -1,7 +1,7 @@
 #include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/checkedtextview.h>
 #include <widget/framework_styleable.h>
-#include <core/assets.h>
 namespace cdroid{
 using namespace cdroid::internal;
 

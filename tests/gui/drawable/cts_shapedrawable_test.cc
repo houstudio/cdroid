@@ -23,7 +23,6 @@
 #include <drawable/drawables.h>   // ColorDrawable (unused directly but keeps drawables header grouped)
 #include <drawable/colorfilters.h>
 #include <core/porterduff.h>
-#include <core/app.h>
 #include <core/rect.h>
 #include <guienvironment.h>
 
