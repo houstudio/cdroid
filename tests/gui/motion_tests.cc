@@ -32,12 +32,10 @@ class MOTIONEVENT:public testing::Test{
    }
 };
 
-TEST_F(MOTIONEVENT,Coords){
-   for(int i=0;i<100;i++){
-       PointerCoords *p=new PointerCoords;
-       delete p;
-   }
-}
+// Coords (bare PointerCoords new/delete smoke) dropped — assertion-free, and the
+// obtain/axis surfaces live in CtsMotionEventTest. Time/offset/Rotation stay:
+// the local CTS subset does NOT port testObtain*/testOffsetLocation/testTransform,
+// so these are the only coverage for coordinate round-trips and transform math.
 
 TEST_F(MOTIONEVENT,Alloc_Free){
    PointerCoords coords[128];
