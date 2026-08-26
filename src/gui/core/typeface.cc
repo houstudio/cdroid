@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <climits>
 #include <memory>
 #include <list>
 #include <set>
@@ -746,20 +747,47 @@ void Typeface::buildSystemFallback() {
     }
 }
 
+// Walk up from the executable looking for a fonts.xml beside the build
+// artifacts (build.sh snapshots the host fontconfig into <out>/fonts.xml,
+// the same level as cdroid.pak), mirroring App::findSharedPak's probe.
+static std::string findFontsXmlNearExecutable() {
+#if defined(__linux__)
+    char rp[PATH_MAX] = {0};
+    if (!realpath("/proc/self/exe", rp)) return std::string();
+    std::string dir = rp;
+    const size_t slash = dir.find_last_of('/');
+    if (slash == std::string::npos) return std::string();
+    dir = dir.substr(0, slash);
+    for (int up = 0; up < 4 && !dir.empty(); up++) {
+        std::string candidate = dir + "/fonts.xml";
+        std::ifstream test(candidate);
+        if (test.good()) return candidate;
+        const size_t s = dir.find_last_of('/');
+        if (s == std::string::npos || s == 0) break;
+        dir = dir.substr(0, s);
+    }
+#endif
+    return std::string();
+}
+
 void Typeface::loadPreinstalledSystemFontMap() {
     if(sSystemFontMap.size()) return;
 
     // Prefer an Android fonts.xml / font_fallback.xml (curated named families + ordered
-    // fallback chain). Try the explicitly-configured path, an env override, then common
-    // system locations. Only fall back to fontconfig discovery if no XML loads any font.
+    // fallback chain). Try the explicitly-configured path, an env override, the
+    // build-tree snapshot next to the executable, then common system locations.
+    // Fontconfig enumeration stays as the last resort only — a full desktop
+    // font set makes startup crawl.
     bool loadedFromXml = false;
     std::vector<std::string> candidates;
     if (!sFontConfigXml.empty()) candidates.push_back(sFontConfigXml);
     if (const char* env = getenv("CDROID_FONTS_XML")) if (*env) candidates.push_back(env);
+    candidates.push_back(findFontsXmlNearExecutable());
     candidates.push_back("/system/etc/font_fallback.xml");
     candidates.push_back("/system/etc/fonts.xml");
     candidates.push_back("/etc/fonts/fonts.xml");
     for (const auto& path : candidates) {
+        if (path.empty()) continue;
         std::ifstream test(path);
         if (!test.good()) continue;
         test.close();

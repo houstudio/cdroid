@@ -190,3 +190,14 @@ cmake ${BUILDWITHNINJA} \
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
     ${CMAKE_SWITCHES} \
         ..
+
+# Host/desktop builds: snapshot the build machine's fontconfig into an
+# Android-format fonts.xml at the out root. The runtime prefers it over
+# enumerating every installed font (product devices keep their own
+# /system/etc/fonts.xml). Cross builds skip this — the target device
+# supplies its own fonts.xml.
+if command -v fc-match >/dev/null 2>&1; then
+    bash ${TOPDIR}/scripts/genfontsxml.sh "${TOPDIR}/${OUTDIR}/fonts.xml"
+fi
+
+popd

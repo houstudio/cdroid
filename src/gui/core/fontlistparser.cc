@@ -68,7 +68,10 @@ static FontConfig::Font readFont(XmlPullParser& p, const std::string& fontDir) {
         auto b = text.find_last_not_of(" \t\r\n");
         f.fontName = text.substr(a, b - a + 1);
     }
-    f.fileName = fontDir + f.fontName;
+    // Android fonts.xml lists files relative to the xml's directory;
+    // generated snapshots (genfontsxml.sh) use absolute paths.
+    f.fileName = (!f.fontName.empty() && f.fontName[0] == '/')
+            ? f.fontName : fontDir + f.fontName;
     return f;
 }
 
