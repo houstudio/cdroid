@@ -104,6 +104,11 @@ Fragment::~Fragment(){
         delete mView;
         mView = nullptr;
     }
+    // setArguments owns (delete-then-assign); the dtor must close that ownership
+    // too or every fragment created with arguments leaks its Bundle (valgrind:
+    // the newInstance 56B records).
+    delete mArguments;
+    mArguments = nullptr;
 }
 
 // Fragment owns its 6 Transition* (androidx fields; GC reclaims there). On replace, delete the
