@@ -74,6 +74,97 @@ bool DateFormat::hasSeconds(const std::string& inFormat) {
         || inFormat.find('S') != std::string::npos;
 }
 
+bool DateFormat::hasDesignator(const std::string& inFormat, char designator) {
+    const size_t length = inFormat.length();
+
+    bool insideQuote = false;
+    for (size_t i = 0; i < length; i++) {
+        const char c = inFormat[i];
+        if (c == QUOTE) {
+            insideQuote = !insideQuote;
+        } else if (!insideQuote) {
+            if (c == designator) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool DateFormat::is24HourLocale(const Locale& locale) {
+    // AOSP caches one (locale, result) pair behind sLocaleLock; CDROID's UI is
+    // single-threaded, so the plain statics below carry the same behavior.
+    static Locale cachedLocale;
+    static bool cachedResult = false;
+    static bool cacheValid = false;
+    if (cacheValid && cachedLocale == locale) {
+        return cachedResult;
+    }
+
+    const bool is24Hour = [&]() {
+        // java.text.DateFormat.getTimeInstance(LONG, locale); AOSP down-casts
+        // to SimpleDateFormat and inspects the pattern for 'H'.
+        DateFormat* natural = getTimeInstance(LONG, locale);
+        SimpleDateFormat* sdf = dynamic_cast<SimpleDateFormat*>(natural);
+        bool result = false;
+        if (sdf != nullptr) {
+            result = hasDesignator(sdf->toPattern(), 'H');
+        }
+        delete natural;
+        return result;
+    }();
+
+    cachedLocale = locale;
+    cachedResult = is24Hour;
+    cacheValid = true;
+    return is24Hour;
+}
+
+std::array<char, 3> DateFormat::getDateFormatOrder(const std::string& pattern) {
+    std::array<char, 3> result = { '\0', '\0', '\0' };
+    int resultIndex = 0;
+    bool sawDay = false;
+    bool sawMonth = false;
+    bool sawYear = false;
+
+    const size_t length = pattern.length();
+    for (size_t i = 0; i < length; ++i) {
+        const char ch = pattern[i];
+        if (ch == 'd' || ch == 'L' || ch == 'M' || ch == 'y') {
+            if (ch == 'd' && !sawDay) {
+                result[resultIndex++] = 'd';
+                sawDay = true;
+            } else if ((ch == 'L' || ch == 'M') && !sawMonth) {
+                result[resultIndex++] = 'M';
+                sawMonth = true;
+            } else if ((ch == 'y') && !sawYear) {
+                result[resultIndex++] = 'y';
+                sawYear = true;
+            }
+        } else if (ch == 'G') {
+            // Ignore the era specifier, if present.
+        } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+            throw std::invalid_argument("Bad pattern character '" + std::string(1, ch)
+                    + "' in " + pattern);
+        } else if (ch == '\'') {
+            if (i < length - 1 && pattern[i + 1] == '\'') {
+                ++i;
+            } else {
+                const size_t close = pattern.find('\'', i + 1);
+                if (close == std::string::npos) {
+                    throw std::invalid_argument("Bad quoting in " + pattern);
+                }
+                i = close;
+                ++i;
+            }
+        } else {
+            // Ignore spaces and punctuation.
+        }
+    }
+    return result;
+}
+
 std::string DateFormat::format(const std::string& inFormat, Calendar& inCalendar) {
     SimpleDateFormat formatter(inFormat, Locale::getDefault());
     // AOSP android.text.format.DateFormat.format(CharSequence, Calendar):

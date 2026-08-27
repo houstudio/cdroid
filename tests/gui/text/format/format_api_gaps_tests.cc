@@ -22,50 +22,17 @@
 namespace {
 
 // ---- DateUtilsTest.java (4 cases) ------------------------------------------
-// CDROID's DateUtils is a deliberate in-tree SUBSET (see content/dateutils.h):
-// the elapsed-time ("MM:SS") and formatDateTime paths only. The APIs these
-// cases exercise fall outside that subset —
-//   - formatDuration(millis[, LENGTH_*]): the "1 second"/"1 min"/"1h" relative
-//     duration strings (formatElapsedTime's clock format is a different API
-//     and has no coretests coverage);
-//   - formatSameDayTime: java.text.DateFormat style constants exist, the API
-//     does not.
-// Re-enable when the subset is extended; the expected values are in the AOSP
-// test and need no porting work beyond the call itself.
-TEST(CoreFormatDateUtilsTest, test_formatDuration_seconds) {
-    GTEST_SKIP() << "outside the deliberate DateUtils in-tree subset "
-                    "(content/dateutils.h): formatDuration not implemented";
-}
-TEST(CoreFormatDateUtilsTest, test_formatDuration_Minutes) {
-    GTEST_SKIP() << "outside the DateUtils in-tree subset: formatDuration";
-}
-TEST(CoreFormatDateUtilsTest, test_formatDuration_Hours) {
-    GTEST_SKIP() << "outside the DateUtils in-tree subset: formatDuration";
-}
-TEST(CoreFormatDateUtilsTest, testFormatSameDayTime) {
-    GTEST_SKIP() << "outside the DateUtils in-tree subset: formatSameDayTime";
-}
+// Ported for real in dateutils_tests.cc: formatDuration (the en-US unit table
+// for the ICU MeasureFormat widths) and formatSameDayTime (Calendar compare +
+// java.text factories; the zone-name spellings of FULL/LONG time styles are
+// the no-TimeZone-class deviation candidates).
 
 // ---- DateFormatTest.java (7 cases) -----------------------------------------
-// hasDesignator/Char constants, is24HourLocale, getDateFormatOrder and
-// getIcuDateFormatSymbols are not ported. getBestDateTimePattern exists but
-// without the ICU DTPG engine (documented gap in content/dateformat.h:36), so
-// the skeleton-order tests cannot assert AOSP values.
-TEST(CoreFormatDateFormatTest, testHasDesignator) {
-    GTEST_SKIP() << "android.text.format.DateFormat.hasDesignator not ported";
-}
-TEST(CoreFormatDateFormatTest, testHasDesignatorEscaped) {
-    GTEST_SKIP() << "hasDesignator not ported";
-}
-TEST(CoreFormatDateFormatTest, testIs24HourLocale) {
-    GTEST_SKIP() << "DateFormat.is24HourLocale not ported";
-}
-TEST(CoreFormatDateFormatTest, testgetIcuDateFormatSymbols) {
-    GTEST_SKIP() << "DateFormat.getIcuDateFormatSymbols not ported";
-}
-TEST(CoreFormatDateFormatTest, testGetDateFormatOrder) {
-    GTEST_SKIP() << "DateFormat.getDateFormatOrder not ported (needs DTPG)";
-}
+// hasDesignator/hasDesignatorEscaped/is24HourLocale/getIcuDateFormatSymbols/
+// getDateFormatOrder are ported for real in dateformat_tests.cc (the statics
+// live on the folded java.text.DateFormat class — see content/dateformat.h).
+// Still skipped here: the two DISALLOW_DUPLICATE_FIELD_IN_SKELETON
+// compat-change cases (no platform compat framework, no full DTPG).
 TEST(CoreFormatDateFormatTest, testGetBestDateTimePattern_disableDuplicateField) {
     GTEST_SKIP() << "DISALLOW_DUPLICATE_FIELD_IN_SKELETON compat change + DTPG not ported";
 }

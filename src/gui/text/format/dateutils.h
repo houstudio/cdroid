@@ -85,6 +85,21 @@ std::string getMonthString(int month, int abbrev);
 std::string formatElapsedTime(int64_t elapsedSeconds);
 std::string formatElapsedTime(std::string* recycle, int64_t elapsedSeconds);
 
+// ---- duration (AOSP formatDuration, @hide) ---------------------------------
+// "4 minutes" / "1 second": only the largest meaningful unit, seconds up to
+// hours. LENGTH_LONG/SHORT/SHORTEST select the ICU MeasureFormat
+// WIDE/SHORT/NARROW widths (en-US unit table — see dateutils.cc note).
+std::string formatDuration(int64_t millis);
+std::string formatDuration(int64_t millis, int abbrev);
+
+// ---- same-day (AOSP formatSameDayTime) --------------------------------------
+// Time if `then` is on the same day as `now`, date otherwise. dateStyle/
+// timeStyle are java.text.DateFormat Style constants (DateFormat::FULL..).
+std::string formatSameDayTime(int64_t then, int64_t now, int dateStyle, int timeStyle);
+
+// ---- day check (AOSP isToday) -----------------------------------------------
+bool isToday(int64_t when);
+
 // ---- date-time (AOSP formatDateTime = same-millis range path) --------------
 // flags→skeleton (DateUtilsBridge.toSkeleton) → getBestDateTimePattern →
 // SimpleDateFormat. Only flags valid for a single instant apply (noon/midnight

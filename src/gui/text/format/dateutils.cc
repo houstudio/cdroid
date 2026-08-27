@@ -23,6 +23,7 @@
 #include <content/numberformat.h>
 #include <core/calendar.h>
 #include <core/context.h>
+#include <core/systemclock.h>
 #include <gui_features.h>
 #include <content/i18nbridge.h>
 #ifdef ENABLE_I18N
@@ -210,6 +211,105 @@ std::string formatDateTime(Context* /*context*/, int64_t millis, int flags) {
     const std::string pattern = DateFormat::getBestDateTimePattern(locale, skeleton);
     SimpleDateFormat formatter(pattern, locale);
     return formatter.format(calendar->getTimeInMillis());
+}
+
+// ---- duration (AOSP formatDuration, DateUtils.java:384/:400) ----------------
+
+// ICU MeasureFormat WIDE/SHORT/NARROW stand-in for the duration units, same
+// en-US unit-word convention as Formatter's elapsed-time table (see
+// formatter.cc): non-en locales get the English units until an i18n
+// measure-word table exists.
+static std::string durationMeasure(int64_t value, int width,
+        const char* wideSingle, const char* widePlural,
+        const char* shortUnit, const char* narrowUnit) {
+    char buf[48];
+    switch (width) {
+        case 0:  // WIDE
+            snprintf(buf, sizeof(buf), "%lld %s", (long long)value,
+                    value == 1 ? wideSingle : widePlural);
+            break;
+        case 1:  // SHORT
+            snprintf(buf, sizeof(buf), "%lld %s", (long long)value, shortUnit);
+            break;
+        default: // NARROW
+            snprintf(buf, sizeof(buf), "%lld%s", (long long)value, narrowUnit);
+            break;
+    }
+    return buf;
+}
+
+std::string formatDuration(int64_t millis) {
+    return formatDuration(millis, LENGTH_LONG);
+}
+
+std::string formatDuration(int64_t millis, int abbrev) {
+    int width;  // MeasureFormat FormatWidth: 0=WIDE, 1=SHORT, 2=NARROW
+    switch (abbrev) {
+        case LENGTH_LONG:
+            width = 0;
+            break;
+        case LENGTH_SHORT:
+        case LENGTH_SHORTER:
+        case LENGTH_MEDIUM:
+            width = 1;
+            break;
+        case LENGTH_SHORTEST:
+            width = 2;
+            break;
+        default:
+            width = 0;
+    }
+    if (millis >= HOUR_IN_MILLIS) {
+        const int hours = (int)((millis + 1800000) / HOUR_IN_MILLIS);
+        return durationMeasure(hours, width, "hour", "hours", "hr", "h");
+    } else if (millis >= MINUTE_IN_MILLIS) {
+        const int minutes = (int)((millis + 30000) / MINUTE_IN_MILLIS);
+        return durationMeasure(minutes, width, "minute", "minutes", "min", "m");
+    } else {
+        const int seconds = (int)((millis + 500) / SECOND_IN_MILLIS);
+        return durationMeasure(seconds, width, "second", "seconds", "sec", "s");
+    }
+}
+
+// ---- same-day (AOSP formatSameDayTime, DateUtils.java:499) ------------------
+
+std::string formatSameDayTime(int64_t then, int64_t now, int dateStyle, int timeStyle) {
+    auto thenCal = Calendar::getInstance(Locale::getDefault());
+    thenCal->setTimeInMillis(then);
+    auto nowCal = Calendar::getInstance(Locale::getDefault());
+    nowCal->setTimeInMillis(now);
+
+    // AOSP getTimeInstance for the same day, getDateInstance otherwise; the
+    // factories return a new DateFormat the caller owns.
+    DateFormat* f;
+    if (thenCal->get(Calendar::YEAR) == nowCal->get(Calendar::YEAR)
+            && thenCal->get(Calendar::MONTH) == nowCal->get(Calendar::MONTH)
+            && thenCal->get(Calendar::DAY_OF_MONTH) == nowCal->get(Calendar::DAY_OF_MONTH)) {
+        f = DateFormat::getTimeInstance(timeStyle);
+    } else {
+        f = DateFormat::getDateInstance(dateStyle);
+    }
+    const std::string result = f->format(thenCal->getTimeInMillis());
+    delete f;
+    return result;
+}
+
+// ---- day check (AOSP isToday / isSameDate, DateUtils.java:522/:526) ---------
+
+static bool isSameDate(int64_t oneMillis, int64_t twoMillis) {
+    // AOSP compares LocalDateTime fields in the system zone; Calendar in the
+    // default zone carries the same fields.
+    auto one = Calendar::getInstance(Locale::getDefault());
+    one->setTimeInMillis(oneMillis);
+    auto two = Calendar::getInstance(Locale::getDefault());
+    two->setTimeInMillis(twoMillis);
+    return one->get(Calendar::YEAR) == two->get(Calendar::YEAR)
+            && one->get(Calendar::MONTH) == two->get(Calendar::MONTH)
+            && one->get(Calendar::DAY_OF_MONTH) == two->get(Calendar::DAY_OF_MONTH);
+}
+
+bool isToday(int64_t when) {
+    return isSameDate(when, SystemClock::currentTimeMillis());
 }
 
 } // namespace DateUtils

@@ -20,6 +20,7 @@
 
 #include <string>
 #include <memory>
+#include <array>
 #include <content/Locale.h>
 #include <core/calendar.h>
 #include <content/parseposition.h>
@@ -122,6 +123,26 @@ public:
     static bool is24HourFormat(Context* context);
     /* AOSP hasSeconds(CharSequence): true when the pattern contains 's'/'S'. */
     static bool hasSeconds(const std::string& inFormat);
+    /* AOSP hasDesignator(CharSequence, char): true when the pattern contains
+       the designator outside quoted literals. (AOSP's null-inFormat guard has
+       no std::string equivalent.) */
+    static bool hasDesignator(const std::string& inFormat, char designator);
+    /* AOSP is24HourLocale(Locale): the locale's natural hour cycle, read off
+       the LONG time instance's pattern ('H' present → 24-hour). */
+    static bool is24HourLocale(const Locale& locale);
+    /* AOSP getDateFormatOrder(String): the [d/M/y] field order of a date
+       pattern; throws std::invalid_argument on a bad pattern character or
+       quoting (AOSP: IllegalArgumentException). The Context overload needs
+       the Settings date-format string and is not ported. */
+    static std::array<char, 3> getDateFormatOrder(const std::string& pattern);
+
+    /* AOSP pattern designator constants (DateFormat.QUOTE/DATE/MINUTE/MONTH/
+       YEAR; Calendar field names live on Calendar, so no clash here). */
+    static constexpr char QUOTE        = '\'';
+    static constexpr char DATE         = 'd';
+    static constexpr char MINUTE       = 'm';
+    static constexpr char MONTH        = 'M';
+    static constexpr char YEAR         = 'y';
     /* AOSP format(CharSequence, Calendar): formats with a default-locale
        SimpleDateFormat that ADOPTS the calendar's time zone. Non-const:
        reading the millis lazily completes the Calendar's fields. */
