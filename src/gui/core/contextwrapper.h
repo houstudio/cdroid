@@ -28,7 +28,7 @@ public:
     const DisplayMetrics& getDisplayMetrics() const override { return mBase->getDisplayMetrics(); }
     int getNextAutofillId() override { return mBase->getNextAutofillId(); }
     //const std::string getString(const std::string& id, const std::string& lan="") override { return mBase->getString(id, lan); }
-    std::unique_ptr<std::istream> getInputStream(const std::string& resname, std::string* outpkg=nullptr) override { return mBase->getInputStream(resname, outpkg); }
+    std::unique_ptr<std::istream> getInputStream(const std::string& resname) override { return mBase->getInputStream(resname); }
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string& resname, int w, int h) override { return mBase->loadImage(resname, w, h); }
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(int id, int w, int h) override { return mBase->loadImage(id, w, h); }
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream& stream, int w, int h) override { return mBase->loadImage(stream, w, h); }

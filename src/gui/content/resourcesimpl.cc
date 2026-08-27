@@ -456,7 +456,7 @@ std::unique_ptr<XmlPullParser> ResourcesImpl::loadXmlResourceParser(int resid) c
 
 std::unique_ptr<XmlPullParser> ResourcesImpl::loadXmlResourceParser(const std::string& resid) const {
     std::unique_ptr<std::istream> strm;
-    if(mCtx) strm = mCtx->getInputStream(resid, nullptr);
+    if(mCtx) strm = mCtx->getInputStream(resid);
     if(((strm==nullptr)||(!*strm))&&resid.size()){
         auto fs = std::make_unique<std::ifstream>(resid);
         if(fs->is_open()){

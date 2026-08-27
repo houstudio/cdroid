@@ -25,7 +25,7 @@
 #include <istream>
 #include <cairomm/surface.h>
 #include <core/looper.h>
-#include <core/context.h>
+#include <core/contextimpl.h>
 #include <content/typedarray.h>      // TypedArray: consumer-side typed attr view
 
 namespace cxxopts{
@@ -34,8 +34,6 @@ namespace cxxopts{
 namespace cdroid{
 
 class Window;
-class ZIPArchive;   // private/ziparchive.h — pak registry below
-class ResTable;     // androidfw/restable.h — arsc engine, opaque here
 // AssetManager is forward-declared at global scope in context.h.
 
 struct ActivityPendingResult { Window* caller; int requestCode; Window* target; };
@@ -52,11 +50,10 @@ struct ActivityInfo {
 };
 
 // The Application AND the one ContextImpl: CDROID has no separate
-// ActivityThread/ContextImpl machinery, so App directly implements Context
-// (AOSP Application wraps a ContextImpl; here the roles merge into the
-// process singleton) and owns the resource stack (pak registry, AssetManager,
-// Resources, the live arsc theme) plus the main loop / window management.
-class App:public Context{
+// ActivityThread machinery, so App derives from ContextImpl (the resource
+// stack owner) and merges the Application role into the process singleton,
+// plus the main loop / window management.
+class App:public ContextImpl{
 private:
     bool mQuitFlag;
     int mExitCode;
@@ -90,23 +87,10 @@ private:
     // write would dangle the static pointer). ~App detaches the pointer
     // (DataResource::SetData(nullptr, 0)) before this member frees.
     std::vector<char> mI18nData;
-    std::unordered_map<std::string,class ZIPArchive*>mResources;
-    ResTable* mResTable = nullptr;   // loaded from resources.arsc in pak (null if no arsc)
-    // arsc theme engine (ResTable::Theme*), kept opaque so this header needs no
-    // androidfw include; the .cc casts.
-    void* mArscTheme = nullptr;
-    // arsc identifier lookup: tries the given package first, then "android"
-    // (framework arsc compiled with package="android" via aapt2 -x, but pak
-    // registered under "cdroid" — the names don't match, so we fall back).
-    uint32_t arscGetIdentifier(const std::string& name, const std::string& type, const std::string& pkg) const;
+    // The pak registry (mResources) and the arsc engine state (mResTable /
+    // mArscTheme) live on Context (the ContextImpl role); App inherits them.
     bool arscResolveHexRef(const std::string& s, TypedValue* out) const;
-    const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
-    ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
-    // Open an arsc-recorded file path (e.g. "res/drawable-hdpi-v4/x.png")
-    // against the pak layout via pakPathCandidates() (androidfw): returns the
-    // owning pak + the actual entry name.
-    ZIPArchive*findPakForPath(const std::string&package,const std::string&arscPath,std::string*outResname)const;
     // Rebuild the live arsc theme for `resid` (setTheme's engine side).
     void applyTheme(int resid);
     // Release the resource stack (called from ~App after the UI is down).
@@ -194,10 +178,7 @@ public:
     Resources::Theme getTheme() override;
     const DisplayMetrics&getDisplayMetrics()const override;
     int getNextAutofillId()override;
-    Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&,int width,int height)override;
-    Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height)override;
-    Cairo::RefPtr<Cairo::ImageSurface> loadImage(int id,int width,int height)override;
-    std::unique_ptr<std::istream> getInputStream(const std::string&resname,std::string*outpkg=nullptr)override;
+    // loadImage/getInputStream: inherited from Context (impls in context.cc).
     // AOSP ID-based resource face.
     Resources&      getResources() override;
     AssetManager&   getAssets() override;

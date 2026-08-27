@@ -59,7 +59,7 @@ public:
     virtual void setTheme(int resid) = 0;
     virtual const DisplayMetrics&getDisplayMetrics() const = 0;
     virtual int getNextAutofillId() = 0;
-    virtual std::unique_ptr<std::istream>getInputStream(const std::string&,std::string*outpkg=nullptr) = 0;
+    virtual std::unique_ptr<std::istream>getInputStream(const std::string&resname) = 0;
 
     virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height) = 0;
     // Int face (binary paks): opens the resource by id via openRawResource —

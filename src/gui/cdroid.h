@@ -17,6 +17,7 @@
  */
 //#include <core/build.h>
 #include <gui/gui_features.h>
+#include <core/app.h>
 #include <view/viewgroup.h>
 #include <view/viewoverlay.h>
 #include <widget/viewpager.h>

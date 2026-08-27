@@ -56,7 +56,7 @@ public:
     bool load() override{
         if (!mResourceId.empty()) {
             if(mContext){
-                auto fs=mContext->getInputStream(mResourceId,nullptr);
+                auto fs=mContext->getInputStream(mResourceId);
                 if(fs&&(*fs))mStore->load(*fs);
             }else{
                 std::ifstream fs(mResourceId);
