@@ -157,6 +157,13 @@ protected:
     Cairo::RefPtr<Canvas>getCanvas();
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
 public:
+    // Terminal focus-search resolver (public like AOSP's ViewRootImpl.focusSearch —
+    // a ViewParent interface method). The Window IS the root view in CDROID
+    // (mParent == nullptr), so the ViewGroup parent-chain ends here — this
+    // override stands in for AOSP's ViewRootImpl.focusSearch, which is where
+    // the chain terminates on Android.
+    View* focusSearch(View* focused, int direction)override;
+
     using Callback = WindowCallback;
     typedef enum{
         TYPE_WALLPAPER    = 1,

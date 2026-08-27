@@ -2200,14 +2200,20 @@ ListView::ArrowScrollFocusResult* ListView::arrowScrollFocused(int direction) {
             int listTop = mListPadding.top + (topFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
             int ySearchPoint =(selectedView != nullptr  && selectedView->getTop() > listTop) ?
                               selectedView->getTop() : listTop;
-            mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
+            // AOSP mTempRect.set(0, ySearchPoint, 0, ySearchPoint) passes
+            // left,top,right,bottom — a ZERO-WIDTH, ZERO-HEIGHT point rect.
+            // cdroid Rect::set takes (left, top, width, height), so the last
+            // two args must both be 0 (passing ySearchPoint as the height
+            // gave the search rect a tall span that wrongly excluded
+            // adjacent candidates in isCandidate).
+            mTempRect.set(0, ySearchPoint, 0, 0);
         } else {
             bool bottomFadingEdgeShowing = (mFirstPosition + getChildCount() - 1) < mItemCount;
             int listBottom = getHeight() - mListPadding.height -
                              (bottomFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
             int ySearchPoint = (selectedView != nullptr && selectedView->getBottom() < listBottom) ?
                                selectedView->getBottom() : listBottom;
-            mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
+            mTempRect.set(0, ySearchPoint, 0, 0);
         }
         newFocus = FocusFinder::getInstance().findNextFocusFromRect(this, &mTempRect, direction);
     }

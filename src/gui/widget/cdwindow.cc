@@ -33,6 +33,7 @@
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/floatingactionmode.h>
+#include <view/focusfinder.h>
 #include <core/systemclock.h>
 #include <content/typedvalue.h>
 #include <core/windowmanager.h>
@@ -922,6 +923,22 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
         handled = View::dispatchKeyEvent(event);
     }
     return handled;
+}
+
+View* Window::focusSearch(View* focused, int direction){
+    /* Alternative (i), kept for the record: mark the window itself as root
+       namespace, letting ViewGroup::focusSearch's isRootNamespace() branch
+       make the same FocusFinder call below. Works, but the root-namespace
+       flag also carries "top of a LocalActivityManager activity tower"
+       semantics (see popupwindow.cc's decor view, its only user), so (ii) —
+       an explicit override mirroring ViewRootImpl.focusSearch — is preferred.
+    //setIsRootNamespace(true);
+    */
+    // AOSP ViewRootImpl.focusSearch(ViewRootImpl.java:8093): the chain's
+    // terminal resolver runs FocusFinder on the window's view tree. CDROID's
+    // Window is its own root view (no ViewRootImpl), so the parent chain that
+    // starts at View::focusSearch(int) ends at THIS override.
+    return FocusFinder::getInstance().findNextFocus((ViewGroup*)this, focused, direction);
 }
 
 bool Window::performFocusNavigation(KeyEvent& event){

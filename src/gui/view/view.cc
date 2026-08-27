@@ -6822,7 +6822,7 @@ void View::transformMatrixToLocal(Matrix& matrix){
 
 View*View::focusSearch(int direction)const{
     if(mParent)
-        mParent->focusSearch((View*)this,direction);
+        return mParent->focusSearch((View*)this,direction);
     return nullptr;
 }
 
