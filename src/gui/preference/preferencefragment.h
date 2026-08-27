@@ -159,6 +159,10 @@ protected:
      */
     virtual fragment::Fragment* getCallbackFragment();
 
+    // androidx public constant (was private here, blocking apps that show
+    // their own dialog fragments through onDisplayPreferenceDialog overrides).
+    static constexpr const char* DIALOG_FRAGMENT_TAG = "androidx.preference.PreferenceFragment.DIALOG";
+
 private:
     void requirePreferenceManager();
     void postBindPreferences();
@@ -168,7 +172,6 @@ private:
 
     static constexpr int MSG_BIND_PREFERENCES = 1;
     static constexpr const char* PREFERENCES_TAG = "android:preferences";
-    static constexpr const char* DIALOG_FRAGMENT_TAG = "androidx.preference.PreferenceFragment.DIALOG";
 
     class DividerDecoration;
     class ScrollToPreferenceObserver;

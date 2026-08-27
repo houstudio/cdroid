@@ -21,6 +21,8 @@
 #include <porting/cdgraph.h>
 #include <core/graphdevice.h>
 #include <core/windowmanager.h>
+#include <widget/cdwindow.h>
+#include <view/gravity.h>
 #include <mutex>
 
 namespace cdroid {
@@ -212,6 +214,28 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
 void WindowManager::moveWindow(Window*w,int x,int y){
     moveWindow(w,x,y,-1,-1);
 }
+
+void WindowManager::relayoutWindow(Window*w){
+    WindowManager::LayoutParams& attrs = w->getAttributes();
+    Point ds;
+    getDefaultDisplay().getSize(ds);
+    const Rect display = Rect::Make(0, 0, ds.x, ds.y);
+    const int pw = display.width, ph = display.height;
+
+    // AOSP WindowState.applyGravityAndUpdateFrame: MATCH_PARENT resolves to the
+    // containing frame; any other value is used as-is (the host pushes the
+    // measured wrap-content size into the attributes — ViewRootImpl's role).
+    const int wsize = (attrs.width  == LayoutParams::MATCH_PARENT) ? pw : attrs.width;
+    const int hsize = (attrs.height == LayoutParams::MATCH_PARENT) ? ph : attrs.height;
+
+    // Set the frame, then make sure the window fits in the display frame —
+    // the exact Gravity::apply / Gravity::applyDisplay pair WMS runs.
+    Rect frame;
+    Gravity::apply(attrs.gravity, wsize, hsize, display, attrs.x, attrs.y, frame);
+    Gravity::applyDisplay(attrs.gravity, display, frame);
+    moveWindow(w, frame.left, frame.top, frame.width, frame.height);
+}
+
 
 void WindowManager::moveWindow(Window*w,int x,int y,int width,int height){
     Rect rcw = w->getBound();

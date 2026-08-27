@@ -61,6 +61,10 @@ Window::Window(Context*ctx,const AttributeSet*atts)
     initWindow();
     Point pt;
     WindowManager::getInstance().getDefaultDisplay().getSize(pt);
+    // Full-screen window: attributes mirror the frame laid out below (a later
+    // relayoutWindow on MATCH_PARENT keeps it display-sized at (0,0)).
+    mWindowAttributes.width  = WindowManager::LayoutParams::MATCH_PARENT;
+    mWindowAttributes.height = WindowManager::LayoutParams::MATCH_PARENT;
     setFrame(0,0,pt.x,pt.y);
     WindowManager::getInstance().addWindow(this);
     mAttachInfo->mPlaySoundEffect = std::bind(&Window::playSoundImpl,this,std::placeholders::_1);
@@ -78,6 +82,10 @@ Window::Window(int x,int y,int width,int height,int type)
     WindowManager::getInstance().getDefaultDisplay().getSize(size);
     if(width<0)  width = size.x;
     if(height<0) height= size.y;
+    mWindowAttributes.x = x;
+    mWindowAttributes.y = y;
+    mWindowAttributes.width  = width;
+    mWindowAttributes.height = height;
     setFrame(x, y, width, height);
     mPendingRgn->do_union({0,0,width,height});
     WindowManager::getInstance().addWindow(this);
@@ -114,6 +122,10 @@ void Window::initWindow(){
     mAccessibilityManager =&AccessibilityManager::getInstance(mContext);
     mSendWindowContentChangedAccessibilityEvent = nullptr;
     mPendingRgn = Cairo::Region::create();
+    // window_type is member-initialized before initWindow() runs; mirror it into
+    // the window attributes (AOSP keeps type only on LayoutParams — CDROID's
+    // compositor layering reads Window::window_type, so the two stay in sync).
+    mWindowAttributes.type = window_type;
     mActionBar = nullptr;
     mActionMode = nullptr;
     mMenuInflater = nullptr;
@@ -697,6 +709,18 @@ void Window::setPos(int x,int y){
         mAttachInfo->mWindowTop = y;
     }
     GraphDevice::getInstance().flip();
+}
+
+WindowManager::LayoutParams& Window::getAttributes(){
+    return mWindowAttributes;
+}
+
+const WindowManager::LayoutParams& Window::getAttributes()const{
+    return mWindowAttributes;
+}
+
+void Window::setAttributes(const WindowManager::LayoutParams& a){
+    mWindowAttributes = a;
 }
 
 View& Window::setAlpha(float alpha){

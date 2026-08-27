@@ -30,6 +30,7 @@
 #include <core/googlepinyin.h>
 #include <core/imeselectioncontroller.h>
 #include <core/windowmanager.h>
+#include <widget/cdwindow.h>
 
 namespace cdroid{
 using namespace cdroid::internal;

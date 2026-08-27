@@ -27,6 +27,7 @@
 #include <cairomm/fontface.h>
 #include <image-decoders/imagedecoder.h>
 #include <windowmanager.h>
+#include <widget/cdwindow.h>
 #include <systemclock.h>
 #include <thread>
 #if defined(__linux__)||defined(__unix__)

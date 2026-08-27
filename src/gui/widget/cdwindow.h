@@ -2,6 +2,7 @@
 #define __CDROID_WINDOW_H__
 #include <widget/framelayout.h>
 #include <core/handler.h>
+#include <core/windowmanager.h>
 #include <view/choreographer.h>
 #include <view/actionmode.h>
 #include <widget/windowcallback.h>
@@ -139,10 +140,14 @@ private:
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
-    /*mPendingRgn init by mInvalidRgn,and also can be modified by windowmanager,if the window above the window 
+    /*mPendingRgn init by mInvalidRgn,and also can be modified by windowmanager,if the window above the window
      *is resized or moved*/
     Cairo::RefPtr<Cairo::Region>mPendingRgn;
     int window_type = TYPE_APPLICATION;/*window type*/
+    // AOSP Window.mWindowAttributes: the WindowManager::LayoutParams this window
+    // is placed by (WindowManager::relayoutWindow — the WMS applyGravityAndUpdateFrame
+    // equivalent). Kept in sync with window_type in initWindow().
+    WindowManager::LayoutParams mWindowAttributes;
     int mLayer;/*surface layer*/
     std::string mText;
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
@@ -192,6 +197,12 @@ public:
     virtual void setText(const std::string&);
     const std::string getText()const;
     void setPos(int x,int y);
+    // AOSP Window.getAttributes/setAttributes. getAttributes returns the LIVE
+    // object — mutate fields on it and call WindowManager::relayoutWindow,
+    // exactly how AOSP dialogs tune their window before showing.
+    WindowManager::LayoutParams& getAttributes();
+    const WindowManager::LayoutParams& getAttributes()const;
+    void setAttributes(const WindowManager::LayoutParams& a);
     bool ensureTouchMode(bool inTouchMode)override;
     View& setAlpha(float a);
     void sendToBack();

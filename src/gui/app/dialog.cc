@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <app/dialog.h>
 #include <core/windowmanager.h>
+#include <view/gravity.h>
 #include <content/contextthemewrapper.h>
 #include <widget/internal_R.h>
 namespace cdroid{
@@ -109,7 +110,19 @@ void Dialog::show(){
     heightSpec = frm->getChildMeasureSpec(heightSpec,0,lp->height);
     frm->measure(widthSpec,heightSpec);
     LOGD("spec=%x/%x measured=%dx%d",widthSpec,heightSpec,frm->getMeasuredWidth(),frm->getMeasuredHeight());
-    mWindow->layout(mWindow->getLeft(),mWindow->getTop(),frm->getMeasuredWidth()+horzMargin,frm->getMeasuredHeight()+vertMargin);
+
+    // AOSP: Dialog never places its own window. ViewRootImpl hands WMS the
+    // measured wrap-content size via WindowManager.LayoutParams and WMS's
+    // applyGravityAndUpdateFrame places the frame — Gravity::apply with the
+    // default gravity (NO_GRAVITY, the LayoutParams default) centers each axis,
+    // which is what centers dialogs on Android. gravity is NOT touched here:
+    // hosts may stamp window attributes before show (AOSP Dialog.show never
+    // writes gravity either).
+    WindowManager::LayoutParams& attrs = mWindow->getAttributes();
+    attrs.width  = frm->getMeasuredWidth()  + horzMargin;
+    attrs.height = frm->getMeasuredHeight() + vertMargin;
+    WindowManager::getInstance().relayoutWindow(mWindow);
+
     LOGD("size=%dx%d %d,%d",frm->getMeasuredWidth(),frm->getMeasuredHeight(),mWindow->getWidth(),mWindow->getHeight());
     frm->layout(lp->leftMargin,lp->topMargin,mWindow->getWidth()-horzMargin, mWindow->getHeight()-vertMargin);
     mShowing = true;

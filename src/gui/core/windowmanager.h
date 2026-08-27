@@ -18,7 +18,9 @@
 #ifndef __CDROID_WINDOWMANAGER_H__
 #define __CDROID_WINDOWMANAGER_H__
 
-#include <widget/cdwindow.h>
+// cdwindow.h includes this header (Window owns a WindowManager::LayoutParams),
+// so Window can only be forward-declared here.
+#include <view/viewgroup.h>
 #include <core/display.h>
 #include <vector>
 #include <stdint.h>
@@ -26,6 +28,8 @@
 #include <unordered_set>
 
 namespace cdroid {
+
+class Window;
 
 class WindowManager {
 private:
@@ -39,15 +43,18 @@ private:
     WindowManager();
 public:
     DECLARE_UIEVENT(bool,WNDENUMPROC,Window*);
+    // AOSP WindowManager.LayoutParams: width/height are INHERITED from
+    // ViewGroup.LayoutParams (the previous duplicate declaration here shadowed
+    // the base members — reads and writes hit different ints). Java field
+    // defaults are zero; gravity 0 == NO_GRAVITY.
     class LayoutParams:public ViewGroup::LayoutParams{
     public:
-        int type;
-        int format;
-        int x,y;
-        int width,height;
-        int gravity;
-        int flags;
-        int privateFlags;
+        int type = 0;
+        int format = 0;
+        int x = 0, y = 0;
+        int gravity = 0;          // NO_GRAVITY: WMS centers each axis
+        int flags = 0;
+        int privateFlags = 0;
         int windowAnimations = 0; // AOSP LayoutParams.windowAnimations (animation STYLE res id)
     };
 public:
@@ -62,6 +69,17 @@ public:
     void removeWindows(const std::vector<Window*>&);
     void moveWindow(Window*w,int x,int y);
     void moveWindow(Window*w,int x,int y,int width,int height);
+    /* AOSP WindowState.applyGravityAndUpdateFrame (the placement half of WMS
+     * window layout), driven by the window's WindowManager::LayoutParams:
+     * resolve the size (MATCH_PARENT -> display, else the value the host
+     * pushed — ViewRootImpl hands WMS the measured wrap-content size), place
+     * the frame with Gravity::apply, then fit it to the display with
+     * Gravity::applyDisplay. Gravity 0 (NO_GRAVITY, the LayoutParams default)
+     * centers each axis — this is what centers dialogs on Android. Hosts call
+     * this when the size is known (Dialog::show); addWindow never places a
+     * window (AOSP places on relayout, not on add — popups compute their
+     * anchor position only after being added). */
+    void relayoutWindow(Window*w);
     /* Hide a window: set it INVISIBLE and dirty the screen area it covered on
      * every other window, so composeSurfaces repaints the uncovered region from
      * the windows below. This is the WindowManager-owned equivalent of the old
