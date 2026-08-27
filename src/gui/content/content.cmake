@@ -13,6 +13,7 @@ set(CONTENT_SOURCES
     content/asset.cc
     content/assetdir.cc
     content/assetmanager.cc
+    content/configuration.cc
     content/resources.cc
     content/resourcesimpl.cc
     content/typedarray.cc

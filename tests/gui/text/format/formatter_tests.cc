@@ -15,7 +15,7 @@
 #include <text/format/formatter.h>
 #include <content/Locale.h>
 #include <content/LocaleList.h>
-#include <view/configuration.h>
+#include <content/configuration.h>
 #include <core/app.h>
 #include <gtest/gtest.h>
 #include <string>

@@ -15,7 +15,7 @@
 #include <memory>
 #include <cstdint>
 #include <vector>
-#include <view/configuration.h>   // Configuration (getConfiguration face)
+#include <content/configuration.h>   // Configuration (getConfiguration face)
 
 namespace cdroid {
 

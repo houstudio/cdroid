@@ -22,7 +22,7 @@
 #include <vector>
 
 #include <core/displaymetrics.h>
-#include <view/configuration.h>   // Configuration (live config face)      // cdroid::DisplayMetrics (value member mMetrics)
+#include <content/configuration.h>   // Configuration (live config face)      // cdroid::DisplayMetrics (value member mMetrics)
 
 // ResourcesImpl is the facade that HIDES the androidfw native readers (ResTable,
 // ResTable_config, AssetManager, Asset, TypedValue) — those headers live in the

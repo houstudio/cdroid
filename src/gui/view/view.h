@@ -49,7 +49,7 @@
 #include <view/touchdelegate.h>
 #include <view/velocitytracker.h>
 #include <view/layoutinflater.h>
-#include <view/configuration.h>
+#include <content/configuration.h>
 #include <view/viewpropertyanimator.h>
 #include <view/viewconfiguration.h>
 #include <view/viewtreeobserver.h>
