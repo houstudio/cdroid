@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <widget/internal_R.h>
 #include <widget/timepickerspinnerdelegate.h>
-#include <content/dateutils.h>
+#include <text/format/dateutils.h>
 #include <widget/framework_styleable.h>
 #include <content/typedarray.h>
 #include <widget/numberpicker.h>

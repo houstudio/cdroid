@@ -2,7 +2,7 @@
 #include <climits>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
-#include <content/dateutils.h>
+#include <text/format/dateutils.h>
 #include <text/textutils.h>   // getLayoutDirectionFromLocale (setAmPmStart)
 #include <widget/framework_styleable.h>
 #include <content/typedarray.h>

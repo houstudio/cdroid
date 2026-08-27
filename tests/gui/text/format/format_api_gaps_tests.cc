@@ -73,24 +73,11 @@ TEST(CoreFormatDateFormatTest, testGetBestDateTimePattern_enableDuplicateField) 
     GTEST_SKIP() << "getBestDateTimePattern has no DTPG engine (hm/Hm only)";
 }
 
-// ---- FormatterTest.java (5 cases: testFormatBytes, testFormatBytesSi,
-//      testFormatBytesIec, testFormatShortElapsedTime,
-//      testFormatShortElapsedTimeRoundingUpToMinutes) -------------------------
-TEST(CoreFormatFormatterTest, testFormatBytes) {
-    GTEST_SKIP() << "android.text.format.Formatter.formatFileSize/formatBytes not ported";
-}
-TEST(CoreFormatFormatterTest, testFormatBytesSi) {
-    GTEST_SKIP() << "Formatter.formatBytes not ported";
-}
-TEST(CoreFormatFormatterTest, testFormatBytesIec) {
-    GTEST_SKIP() << "Formatter.formatBytes not ported";
-}
-TEST(CoreFormatFormatterTest, testFormatShortElapsedTime) {
-    GTEST_SKIP() << "Formatter.formatShortElapsedTime not ported";
-}
-TEST(CoreFormatFormatterTest, testFormatShortElapsedTimeRoundingUpToMinutes) {
-    GTEST_SKIP() << "Formatter.formatShortElapsedTime not ported";
-}
+// ---- FormatterTest.java (5 cases) -------------------------------------------
+// Ported for real in formatter_tests.cc (android.text.format.Formatter landed
+// in text/format/): testFormatBytes/Si/Iec pass; the FR/RU locale variants of
+// the two elapsed-time cases stay red (en-US unit-word table only — ICU
+// MeasureFormat is not ported).
 
 // ---- TimeTest.java (33 cases: normalize/switchTimezone/ctor/
 //      getActualMaximum/clear/compare/format/parse/... the android.text.format

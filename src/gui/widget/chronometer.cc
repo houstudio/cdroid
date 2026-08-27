@@ -18,7 +18,7 @@
 #include <widget/internal_R.h>
 #include <core/context.h>
 #include <widget/chronometer.h>
-#include <content/dateutils.h>
+#include <text/format/dateutils.h>
 #include <utils/textutils.h>
 #include <cmath>
 #include <cstdlib>

@@ -669,6 +669,11 @@
   <java-symbol type="string" name="badPin" />
   <java-symbol type="string" name="badPuk" />
   <java-symbol type="string" name="byteShort" />
+  <java-symbol type="string" name="kilobyteShort" />
+  <java-symbol type="string" name="megabyteShort" />
+  <java-symbol type="string" name="gigabyteShort" />
+  <java-symbol type="string" name="terabyteShort" />
+  <java-symbol type="string" name="petabyteShort" />
   <java-symbol type="string" name="capability_title_canRequestFilterKeyEvents" />
   <java-symbol type="string" name="capability_desc_canRequestTouchExploration" />
   <java-symbol type="string" name="capability_desc_canRetrieveWindowContent" />

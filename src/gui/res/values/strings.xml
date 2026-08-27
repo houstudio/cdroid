@@ -20,6 +20,13 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Suffix added to a number to signify size in bytes. -->
     <string name="byteShort">B</string>
+    <!-- Suffixes added to a number to signify size in kilobytes/megabytes/
+         gigabytes/terabytes/petabytes (SI multiples of bytes). -->
+    <string name="kilobyteShort">KB</string>
+    <string name="megabyteShort">MB</string>
+    <string name="gigabyteShort">GB</string>
+    <string name="terabyteShort">TB</string>
+    <string name="petabyteShort">PB</string>
     <!-- Format string used to add a suffix like "B" to a number
          to display a size in bytes.
          Some languages may want to remove the space between the placeholders

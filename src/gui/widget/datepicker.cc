@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <widget/internal_R.h>
 #include <widget/datepicker.h>
-#include <content/dateutils.h>
+#include <text/format/dateutils.h>
 #include <widget/daypickerspinnerdelegate.h>
 #include <widget/daypickercalendardelegate.h>
 #include <widget/framework_styleable.h>
