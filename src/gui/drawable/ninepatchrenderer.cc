@@ -403,11 +403,6 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image,
         //throw new ExceptionNot9Patch;
         throw "Not ninepatch image!";
     }
-    const bool haveLayoutBounds = (mOpticalInsets.left|mOpticalInsets.top|mOpticalInsets.right|mOpticalInsets.bottom)!=0;
-    LOGD_IF(haveLayoutBounds,"OutlineInsets=(%d,%d,%d,%d) OpticalInsets=(%d,%d,%d,%d) padding=(%d,%d,%d,%d)",
-            mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
-            mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
-            mPadding.left,mPadding.top,mPadding.width,mPadding.height);
 }
 
 NinePatchRenderer::NinePatchRenderer(Context*ctx,const std::string&resid)
