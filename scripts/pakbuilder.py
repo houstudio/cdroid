@@ -983,6 +983,27 @@ class PakBuilder:
             mpath = os.path.join(tmpdir, "AndroidManifest.xml")
             if os.path.exists(app_manifest):
                 shutil.copyfile(app_manifest, mpath)
+                # uses-sdk guard: without <uses-sdk> aapt2 assumes minSdk=1 and
+                # synthesizes -v1/-v17 compatibility copies of layouts that use
+                # newer attrs (paddingStart etc.). The runtime best-match then
+                # selects a -v17 variant that never made it into the pak (only
+                # the source qualifier dirs are packaged), and every layout
+                # inflates empty — a black window. Inject the same floor the
+                # synthesized manifest uses so an app manifest can never
+                # regress to that.
+                with open(mpath, "r", encoding="utf-8") as fh:
+                    mtext = fh.read()
+                if "<uses-sdk" not in mtext:
+                    mopen = mtext.find(">", mtext.find("<manifest"))
+                    if mopen != -1:
+                        mtext = (mtext[:mopen + 1]
+                                 + '\n    <uses-sdk android:minSdkVersion="26"'
+                                   ' android:targetSdkVersion="36"/>'
+                                 + mtext[mopen + 1:])
+                        with open(mpath, "w", encoding="utf-8") as fh:
+                            fh.write(mtext)
+                        print("pakbuilder: %s lacks <uses-sdk> — injected min 26 /"
+                              " target 36 (v1/v17 synthesis guard)" % app_manifest)
             else:
                 manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
                             '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'

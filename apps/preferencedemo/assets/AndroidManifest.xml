@@ -9,6 +9,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="cdroid.preferencedemo">
 
+    <!-- Without uses-sdk aapt2 assumes minSdk=1 and synthesizes -v1/-v17
+         compatibility copies of layouts that use newer attrs (paddingStart
+         etc.); the runtime then selects the -v17 variant, which never made
+         it into the pak, and every layout inflates empty. pakbuilder now
+         injects this line when an app manifest forgets it. -->
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36" />
+
     <application android:label="Preference Demo">
         <activity android:name=".SettingsActivity"
             android:screenOrientation="portrait">
