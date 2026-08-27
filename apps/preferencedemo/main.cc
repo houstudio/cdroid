@@ -245,7 +245,9 @@ public:
         // Framework theme carries the whole palette (text appearances,
         // ripples, window background); the opaque backdrops below only
         // guarantee no desktop leak from the transparent window surface.
-        setTheme((int)internal::R::style::Theme_Material_Light);
+        setTheme((getenv("PREFDEMO_DARK") != nullptr)
+                ? (int)internal::R::style::Theme_Material
+                : (int)internal::R::style::Theme_Material_Light);
     }
 
     bool onPreferenceStartScreen(PreferenceFragment& /*caller*/,
@@ -343,7 +345,12 @@ int main(int argc, const char* argv[]) {
     // chain resolves ?android:attr/textAppearance against the App context,
     // so the Material Light palette reaches the row TextViews (a Window-only
     // setTheme would not propagate to those contexts).
-    app.setTheme((int)internal::R::style::Theme_Material);
+    // PREFDEMO_DARK=1 selects the dark Material theme (chrome colors all
+    // resolve from the live theme, so both palettes exercise the same code).
+    const int themeId = (getenv("PREFDEMO_DARK") != nullptr)
+            ? (int)internal::R::style::Theme_Material
+            : (int)internal::R::style::Theme_Material_Light;
+    app.setTheme(themeId);
     auto* w = new SettingsActivity();
     if (argc > 1) w->setLaunchRoot(argv[1]);
     LOGD("settings demo window created");
