@@ -113,9 +113,15 @@ Looper::Looper(bool allowNonCallbacks) :
 #define FLAG_REMOVED 1
 Looper::~Looper() {
     LOGD("~Looper %p sMainLooper=%p",this,sMainLooper);
+    if (sMainLooper == this) sMainLooper = nullptr; // getMainLooper() must not dangle
     delete mQueue;
     mQueue = nullptr;
     closeWakeFds();
+    // Detach registered Handlers before dying: C++ has no GC, and Handlers can
+    // outlive the Looper (function-local statics like App's sLaunchHandler are
+    // destroyed at exit(), long after ~App freed the main Looper). Nulling their
+    // back-pointers turns a late ~Handler() into a no-op instead of a UAF.
+    for(MessageHandler* handler : mHandlers) handler->onLooperDestroyed();
     mHandlers.clear();
     delete mEpoll;
     for(EventHandler*hdl:mEventHandlers){

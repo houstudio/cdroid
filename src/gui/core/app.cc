@@ -220,9 +220,13 @@ App::~App(){
     // reading freed memory.
     i18n::DataResource::SetData(nullptr, 0);
     delete &WindowManager::getInstance();
-    delete Looper::getMainLooper();
-    delete &GraphDevice::getInstance();
+    // InputEventSource unregisters itself from the main Looper in its dtor, so it
+    // must die BEFORE the Looper — the old order (Looper first) left its
+    // removeEventHandler() call reading a freed Looper (valgrind UAF).
     delete &InputEventSource::getInstance();
+    delete &GraphDevice::getInstance();
+    // The main Looper goes last: every other subsystem above still talks to it.
+    delete Looper::getMainLooper();
     LOGD("~App %p",this);    destroyResourceState();
 }
 

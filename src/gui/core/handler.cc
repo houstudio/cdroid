@@ -38,6 +38,14 @@ Handler::~Handler(){
     }
 }
 
+void Handler::onLooperDestroyed(){
+    // The owning Looper (and its MessageQueue) is gone; ~Handler() above must
+    // stay a no-op for the late-destroyed static handlers (App::sLaunchHandler,
+    // Choreographer's frame handler, ...).
+    mLooper = nullptr;
+    mQueue = nullptr;
+}
+
 // Handler.java:980-992
 Message* Handler::getPostMessage(const Runnable& r){
     Message* m = Message::obtain();

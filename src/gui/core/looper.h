@@ -50,6 +50,10 @@ public:
     virtual void dispatchMessage(Message&);
     virtual void handleMessage(Message& message)=0;
     virtual void handleIdle();
+    // CDROID: called by ~Looper for every registered handler. The Looper owns
+    // the MessageQueue, so handlers still holding back-pointers must drop them
+    // here or a handler destroyed after the Looper reads freed memory.
+    virtual void onLooperDestroyed(){}
 };
 
 class EventHandler{

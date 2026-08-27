@@ -62,6 +62,9 @@ public:
     virtual void dispatchMessage(Message* msg);
 
     void handleIdle()override;
+    // MessageHandler: drop back-pointers when the owning Looper dies (late
+    // static handlers must not touch the freed Looper/MessageQueue).
+    void onLooperDestroyed()override;
     Looper* getLooper()const;
     MessageQueue* getQueue()const;
 

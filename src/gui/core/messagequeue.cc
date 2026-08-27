@@ -24,6 +24,13 @@ MessageQueue::MessageQueue(bool quitAllowed, cdroid::Looper* nativeLooper)
 }
 
 MessageQueue::~MessageQueue(){
+    // Drain messages still queued at teardown: no one can dispatch them anymore
+    // and their callbacks (std::function payloads) would otherwise leak (Java
+    // relies on GC; main queue never goes through quit(), which it rejects).
+    {
+        std::lock_guard<std::recursive_mutex> lock(mLock);
+        removeAllMessagesLocked();
+    }
     nativeDestroy();
 }
 
