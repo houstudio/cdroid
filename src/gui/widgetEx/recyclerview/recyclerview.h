@@ -945,7 +945,13 @@ protected:
     void attachForPoolingContainer(Adapter*adapter);
     void detachForPoolingContainer(Adapter*adapter, bool isBeingReplaced);
 public:
-    static constexpr int DEFAULT_MAX_SCRAP = 5;
+    // AOSP default is 5. TEMPORARY MITIGATION (dedicated study pending):
+    // pool overflow DELETES the ViewHolder+itemView, while a live transition
+    // clone (default Fade on fragment replace) still holds those views in its
+    // captured startValues -> UAF at preDraw. A larger default keeps typical
+    // screens (the 14-row Settings root) from spilling; the overflow-delete
+    // vs transition-lifetime problem itself is tracked for a proper fix.
+    static constexpr int DEFAULT_MAX_SCRAP = 32;
     RecycledViewPool();
     virtual ~RecycledViewPool();
     void clear();
