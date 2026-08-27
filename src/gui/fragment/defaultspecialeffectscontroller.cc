@@ -213,7 +213,16 @@ void TransitionEffect::onCommit(ViewGroup* container){
                                                      : std::weak_ptr<bool>();
             auto scheduleDelete = [cont, view, fragment, fragAlive, fired, hook](){
                 if(*fired) return; *fired = true;
-                cont->post([cont, view, fragment, fragAlive, hook]{
+                // Retry until NO transition is pending/running on the container:
+                // a still-active clone (e.g. a dialog round's Fade that captured the
+                // whole tree) dereferences this view from its startValues at preDraw.
+                auto retry = std::make_shared<std::function<void()>>();
+                *retry = [cont, view, fragment, fragAlive, hook, retry]{
+                    if(TransitionManager::hasActiveTransitions(cont)){
+                        cont->post([retry]{ (*retry)(); });
+                        return;
+                    }
+                    {
                     // Detach from the parent BEFORE delete: ~View only does mParent->removeViewInternal
                     // (mChildren), and an addDisappearingView'd view has mParent==null while still
                     // listed in mDisappearingChildren — so ~View wouldn't pull it out, leaving the
@@ -231,7 +240,9 @@ void TransitionEffect::onCommit(ViewGroup* container){
                         delete view;
                     }
                     if(hook) hook();
-                });
+                    }
+                };
+                cont->post([retry]{ (*retry)(); });
             };
             if(clone){
                 Transition::TransitionListener lst;

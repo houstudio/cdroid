@@ -276,6 +276,16 @@ void TransitionManager::sceneChangeSetup(ViewGroup* sceneRoot, Transition* trans
     }
 }
 
+
+bool TransitionManager::hasActiveTransitions(ViewGroup* sceneRoot) {
+    if (sceneRoot == nullptr) return false;
+    for (const auto& listener : MultiListener::activeListeners()) {
+        if (listener && listener->mSceneRoot == sceneRoot) return true;
+    }
+    auto* running = getRunningTransitions().get(sceneRoot);
+    return running != nullptr && !running->empty();
+}
+
 void TransitionManager::sceneChangeRunTransition(ViewGroup* sceneRoot, Transition* transition) {
     if (transition != nullptr && sceneRoot != nullptr) {
         std::shared_ptr<MultiListener> listener = std::make_shared<MultiListener>(transition, sceneRoot);
