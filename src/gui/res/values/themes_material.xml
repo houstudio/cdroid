@@ -420,6 +420,7 @@ please see themes_device_defaults.xml.
     <style name="Theme.Material.Light" parent="Theme.Light">
         <item name="spinnerStyle">?attr/dropDownSpinnerStyle</item>
         <item name="dropDownSpinnerStyle">@style/Widget.Material.Light.Spinner.DropDown</item>
+        <item name="spinnerDropDownItemStyle">@style/Widget.Material.Light.DropDownItem.Spinner</item>
         <item name="colorForeground">@color/foreground_material_light</item>
         <item name="colorForegroundInverse">@color/foreground_material_dark</item>
         <item name="colorBackground">@color/background_material_light</item>
@@ -653,6 +654,7 @@ please see themes_device_defaults.xml.
         <item name="horizontalScrollViewStyle">@style/Widget.Material.Light.HorizontalScrollView</item>
         <item name="spinnerStyle">?attr/dropDownSpinnerStyle</item>
         <item name="dropDownSpinnerStyle">@style/Widget.Material.Light.Spinner.DropDown</item>
+        <item name="spinnerDropDownItemStyle">@style/Widget.Material.Light.DropDownItem.Spinner</item>
         <item name="starStyle">@style/Widget.Material.Light.CompoundButton.Star</item>
         <item name="tabWidgetStyle">@style/Widget.Material.Light.TabWidget</item>
         <item name="textViewStyle">@style/Widget.Material.Light.TextView</item>

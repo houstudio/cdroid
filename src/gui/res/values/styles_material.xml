@@ -1194,14 +1194,24 @@ please see styles_device_defaults.xml.
     <style name="Widget.Material.Light.ScrollView" parent="Widget.Material.ScrollView"/>
     <style name="Widget.Material.Light.HorizontalScrollView" parent="Widget.Material.HorizontalScrollView"/>
     <style name="Widget.Material.Light.Spinner" parent="Widget.Material.Spinner" />
-    <style name="Widget.Material.Light.Spinner.DropDown" parent="Widget.Material.Spinner.DropDown"/>
+    <style name="Widget.Material.Light.Spinner.DropDown" parent="Widget.Material.Spinner.DropDown">
+        <!-- The slim-res trim left the parent empty (no popupBackground at
+             all), which fell back to the raw popup window's dark surface.
+             Material Light dropdown card: light surface + amber selector. -->
+        <item name="spinnerMode">dropdown</item>
+        <item name="popupBackground">@drawable/spinner_dropdown_background_material_light</item>
+        <item name="dropDownSelector">@drawable/list_selector_background</item>
+    </style>
+
+    <style name="Widget.Material.Light.DropDownItem.Spinner" parent="Widget.DropDownItem.Spinner">
+        <item name="textColor">#DE000000</item>
+    </style>
     <style name="Widget.Material.Light.Spinner.DropDown.ActionBar" parent="Widget.Material.Spinner.DropDown.ActionBar"/>
     <style name="Widget.Material.Light.Spinner.Underlined" parent="Widget.Material.Spinner.Underlined" />
     <style name="Widget.Material.Light.TabWidget" parent="Widget.Material.TabWidget"/>
     <style name="Widget.Material.Light.WebTextView" parent="Widget.Material.WebTextView"/>
     <style name="Widget.Material.Light.WebView" parent="Widget.Material.WebView"/>
     <style name="Widget.Material.Light.DropDownItem" parent="Widget.Material.DropDownItem"/>
-    <style name="Widget.Material.Light.DropDownItem.Spinner" parent="Widget.Material.DropDownItem.Spinner"/>
     <style name="Widget.Material.Light.KeyboardView" parent="Widget.Material.KeyboardView"/>
     <style name="Widget.Material.Light.QuickContactBadge.WindowSmall" parent="Widget.Material.QuickContactBadge.WindowSmall"/>
     <style name="Widget.Material.Light.QuickContactBadge.WindowMedium" parent="Widget.Material.QuickContactBadge.WindowMedium"/>
