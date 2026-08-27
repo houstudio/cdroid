@@ -77,6 +77,24 @@ void Dialog::show(){
     if(!mCreated) dispatchOnCreate(nullptr);
     onStart();
 
+    // Theme backdrop (AOSP DecorView role): the dialog window surface is
+    // opaque black; when the content supplied no background, paint the live
+    // theme's colorBackground on the frame so unpainted areas follow the
+    // theme (Light shows light — dialogTheme's ThemeOverlay resolves
+    // colorBackground per host theme) instead of raw black.
+    {
+        ViewGroup* frame = (ViewGroup*)mWindow->getChildAt(0);
+        if (frame != nullptr && frame->getBackground() == nullptr) {
+            TypedValue bgValue;
+            if (mContext->getTheme().resolveAttribute(
+                    (int)internal::R::attr::colorBackground, &bgValue, true)) {
+                int bgColor = bgValue.data;
+                if (bgValue.resourceId != 0) bgColor = mContext->getColor((int)bgValue.resourceId);
+                frame->setBackground(new ColorDrawable(bgColor));
+            }
+        }
+    }
+
     ViewGroup*frm=(ViewGroup*)mWindow->getChildAt(0);
     MarginLayoutParams*lp=(MarginLayoutParams*)frm->getLayoutParams();
     const int horzMargin = lp->leftMargin+ lp->rightMargin;

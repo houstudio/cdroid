@@ -18,6 +18,7 @@
 #include <widget/internal_R.h>
 #include <widget/popupwindow.h>
 #include <widget/framework_styleable.h>
+#include <content/typedvalue.h>
 #include <cdlog.h>
 namespace cdroid{
 using namespace cdroid::internal;
@@ -488,6 +489,22 @@ void PopupWindow::preparePopup(WindowManager::LayoutParams*p){
         mBackgroundView->setBackground(bg);//mBackground);
     } else {
         mBackgroundView = mContentView;
+        // No explicit background drawable (style provided none): the window
+        // surface underneath is opaque black, and any unpainted area of the
+        // popup would surface it (dropdowns/dialogs read as black under a
+        // Light theme). Fall back to the live theme's colorBackground so the
+        // popup base follows the theme — Light shows light, Dark shows dark.
+        if (mContext != nullptr) {
+            TypedValue bgValue;
+            if (mContext->getTheme().resolveAttribute(
+                    (int)internal::R::attr::colorBackground, &bgValue, true)) {
+                int bgColor = bgValue.data;
+                if (bgValue.resourceId != 0) {
+                    bgColor = mContext->getColor((int)bgValue.resourceId);
+                }
+                mBackgroundView->setBackground(new ColorDrawable(bgColor));
+            }
+        }
     }
 
     mDecorView = createDecorView(mBackgroundView);
