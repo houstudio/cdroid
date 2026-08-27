@@ -283,18 +283,34 @@ static std::string getDateTimeFormat(int timeStyle, int dateStyle, const Locale&
                 && std::strlen(datePatterns) >= 1 && std::strlen(timePatterns) >= 1;
         if (poolsUsable) {
             if (dateStyle >= 0 && dateStyle <= 3) {
+                // AOSP en-US styles: FULL "EEEE, MMMM d, y" / LONG "MMMM d, y"
+                // / MEDIUM "MMM d, y" / SHORT "M/d/yy". The Style enum values
+                // (0..3) do NOT index the three-slot fullMediumShortPatterns
+                // pool — map explicitly (the old code fed dateStyle straight
+                // in, so MEDIUM hit the SHORT slot and SHORT ran off the end).
                 if (dateStyle == DateFormat::Style::LONG) {
-                    datePattern = i18n::Parse(datePatterns, 7);
+                    datePattern = i18n::Parse(datePatterns, 7);        // MMMM d, y
+                } else if (dateStyle == DateFormat::Style::MEDIUM) {
+                    datePattern = i18n::Parse(fullMediumShortPatterns, 1); // MMM d, y
+                } else if (dateStyle == DateFormat::Style::FULL) {
+                    datePattern = i18n::Parse(fullMediumShortPatterns, 0); // EEEE, MMMM d, y
                 } else {
-                    // fullMediumShortPatterns pool: 0=FULL, 1=MEDIUM, 2=SHORT.
-                    datePattern = i18n::Parse(fullMediumShortPatterns, dateStyle);
+                    datePattern = i18n::Parse(fullMediumShortPatterns, 2); // M/d/yy
                 }
             }
             if (timeStyle >= 0 && timeStyle <= 3) {
-                timePattern = (timeStyle == DateFormat::Style::MEDIUM)
-                        ? i18n::Parse(hourMinuteSecondPatterns, 2)
-                        : i18n::Parse(timePatterns, 2);
-                if (timeStyle == DateFormat::Style::FULL || timeStyle == DateFormat::Style::LONG) timePattern += " z";
+                // AOSP en-US: FULL/LONG "h:mm:ss a z" (same pool, zone
+                // appended), MEDIUM "h:mm:ss a", SHORT "h:mm a". FULL/LONG
+                // carry seconds — the seconds pool, not the minute pool.
+                if (timeStyle == DateFormat::Style::FULL
+                        || timeStyle == DateFormat::Style::LONG) {
+                    timePattern = i18n::Parse(hourMinuteSecondPatterns, 2);
+                    timePattern += " z";
+                } else if (timeStyle == DateFormat::Style::MEDIUM) {
+                    timePattern = i18n::Parse(hourMinuteSecondPatterns, 2);
+                } else {
+                    timePattern = i18n::Parse(timePatterns, 2);
+                }
             }
         }
     }

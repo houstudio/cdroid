@@ -94,7 +94,8 @@ enum DataResourceType {
     MEASURE_FORMAT_PATTERNS, // 22
     LANGUAGES_DISPLAY, // 23 — native language names (languages-display.json)
     TERRITORIES_DISPLAY, // 24 — native country/region names (territories-display.json)
-    RESOURCE_TYPE_END // 25
+    GREGORIAN_AM_PMS_NARROW, // 25 — CLDR narrow am/pm markers (am-pm-narrow.json)
+    RESOURCE_TYPE_END // 26
 };
 
 class DataResource {

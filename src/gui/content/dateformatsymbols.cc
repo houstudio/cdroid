@@ -203,10 +203,24 @@ void DateFormatSymbols::loadFromI18n(const Locale& locale) {
                       amPm, tinyMonths, tinyWeekdays);
     if (!am.empty()) amPm[0] = am;
     if (!pm.empty()) amPm[1] = pm;
-    // No narrow AM/PM pool in i18n.dat: approximate with the first code point
-    // of the wide markers, mirroring the tiny* table approximation.
-    amPmNarrow = amPm;
-    for (auto& s : amPmNarrow) if (!s.empty()) s = firstCodePoint(s);
+    // Narrow AM/PM: the CLDR narrow pool when the locale carries one; else
+    // approximate with the first code point of the wide markers (the tiny*
+    // table approximation).
+    char* amPmNarrowPool = resource.GetString(
+            i18n::DataResourceType::GREGORIAN_AM_PMS_NARROW);
+    if (amPmNarrowPool != nullptr && std::strlen(amPmNarrowPool) > 0) {
+        const std::string amN = i18n::Parse(amPmNarrowPool, 0);
+        const std::string pmN = i18n::Parse(amPmNarrowPool, 1);
+        if (!amN.empty() && !pmN.empty()) {
+            amPmNarrow = { amN, pmN };
+        } else {
+            amPmNarrow = amPm;
+            for (auto& s : amPmNarrow) if (!s.empty()) s = firstCodePoint(s);
+        }
+    } else {
+        amPmNarrow = amPm;
+        for (auto& s : amPmNarrow) if (!s.empty()) s = firstCodePoint(s);
+    }
     tinyStandAloneMonths = tinyMonths;
     tinyStandAloneWeekdays = tinyWeekdays;
     // Era names (BC/AD) have no pool in i18n.dat; the English table stands.

@@ -120,7 +120,7 @@ TEST(CoreRelativeTimeTest, relativeDateTimeString) {
 TEST(CoreFormatDateRangeTest, singleInstant) {
     // 2007-10-09 10:15 UTC.
     const int64_t t = 1191924900000LL;
-    EXPECT_EQ("Oct 9, 2007", DateUtils::formatDateRange(nullptr, t, t,
+    EXPECT_EQ("October 9, 2007", DateUtils::formatDateRange(nullptr, t, t,
             DateUtils::FORMAT_SHOW_DATE));
     EXPECT_EQ("10:15 AM", DateUtils::formatDateRange(nullptr, t, t,
             DateUtils::FORMAT_SHOW_TIME | DateUtils::FORMAT_12HOUR));
@@ -137,7 +137,7 @@ TEST(CoreFormatDateRangeTest, timeRange) {
 TEST(CoreFormatDateRangeTest, sameMonthDayRange) {
     // Oct 9-10, 2007.
     const int64_t day = 1191888000000LL;
-    EXPECT_EQ("Oct 9 \u2013 10, 2007", DateUtils::formatDateRange(nullptr,
+    EXPECT_EQ("October 9 \u2013 10, 2007", DateUtils::formatDateRange(nullptr,
             day + 15 * HOUR, day + 36 * HOUR, DateUtils::FORMAT_SHOW_DATE));
 }
 
@@ -145,14 +145,14 @@ TEST(CoreFormatDateRangeTest, midnightEndFudge) {
     // Nov 10 8pm → Nov 12 00:00 with no time shown: the end day rolls back
     // (AOSP javadoc: "Nov 10 – 11").
     const int64_t nov10 = 1194652800000LL;        // 2007-11-10T00:00Z
-    EXPECT_EQ("Nov 10 \u2013 11, 2007", DateUtils::formatDateRange(nullptr,
+    EXPECT_EQ("November 10 \u2013 11, 2007", DateUtils::formatDateRange(nullptr,
             nov10 + 20 * HOUR, nov10 + 48 * HOUR, DateUtils::FORMAT_SHOW_DATE));
 }
 
 TEST(CoreFormatDateRangeTest, crossYearRange) {
     // Dec 31, 2007 – Jan 1, 2008.
     const int64_t dec31 = 1199059200000LL;        // 2007-12-31T00:00Z
-    EXPECT_EQ("Dec 31, 2007 \u2013 Jan 1, 2008", DateUtils::formatDateRange(nullptr,
+    EXPECT_EQ("December 31, 2007 \u2013 January 1, 2008", DateUtils::formatDateRange(nullptr,
             dec31 + 12 * HOUR, dec31 + 36 * HOUR, DateUtils::FORMAT_SHOW_DATE));
 }
 

@@ -196,24 +196,37 @@ std::string DateFormat::getBestDateTimePattern(const Locale& locale, const std::
     // Date part: full (weekday) / medium (y+M+d) / short (numeric), all in
     // the locale's own field order.
     std::string datePart;
+    // Month+day-only year stripping (shared by the wide-month and
+    // abbreviated-month slots): remove the year token and one adjacent
+    // separator ("," / "年" style joins degrade to the space).
+    const auto stripYear = [&datePart]() {
+        size_t ypos = datePart.find('y');
+        if (ypos != std::string::npos) {
+            size_t b = ypos, e = ypos;
+            while (b > 0 && !std::isalpha((unsigned char)datePart[b-1])) b--;
+            while (e < datePart.size() && !std::isalpha((unsigned char)datePart[e])) e++;
+            while (e < datePart.size() && std::isalpha((unsigned char)datePart[e])) e++;
+            datePart = datePart.substr(0, b) + datePart.substr(e);
+        }
+    };
+    const bool fullMonth = skeleton.find("MMMM") != std::string::npos;
     if (wantWeekday) {
         datePart = i18n::Parse(fms, 0);
+    } else if (fullMonth) {
+        // Wide month without weekday: the "MMMM d, y" slot of the date
+        // patterns pool (date-patterns.json[7]), e.g. "January 5" / "January
+        // 5, 2010" — the full/medium/short pool only carries abbreviated
+        // months below its weekday-full slot.
+        char* datePatterns =
+                resource.GetString(i18n::DataResourceType::GREGORIAN_DATE_PATTERNS);
+        datePart = (datePatterns != nullptr && std::strlen(datePatterns) > 0)
+                ? i18n::Parse(datePatterns, 7) : i18n::Parse(fms, 1);
+        if (!wantYear) stripYear();
     } else if (numeric) {
         datePart = i18n::Parse(fms, 2);
     } else {
         datePart = i18n::Parse(fms, 1);
-        if (!wantYear) {
-            // Month+day only: strip the year token and one adjacent
-            // separator ("," / "年" style joins degrade to the space).
-            size_t ypos = datePart.find('y');
-            if (ypos != std::string::npos) {
-                size_t b = ypos, e = ypos;
-                while (b > 0 && !std::isalpha((unsigned char)datePart[b-1])) b--;
-                while (e < datePart.size() && !std::isalpha((unsigned char)datePart[e])) e++;
-                while (e < datePart.size() && std::isalpha((unsigned char)datePart[e])) e++;
-                datePart = datePart.substr(0, b) + datePart.substr(e);
-            }
-        }
+        if (!wantYear) stripYear();
     }
 
     if (!wantTime) return datePart;

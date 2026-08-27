@@ -86,9 +86,7 @@ TEST(CoreFormatDateUtilsTest, testFormatSameDayTime) {
     EXPECT_EQ("Saturday, January 24, 2009", DateUtils::formatSameDayTime(
             fixedTime + dayDuration, fixedTime, DateFormat::FULL,
             DateFormat::FULL));
-    // KNOWN DEVIATION (i18n pattern pools): DEFAULT/MEDIUM date falls back to
-    // the short numeric pattern ("1/24/09") — the en medium pool is not
-    // populated; FULL/LONG/SHORT are correct.
+    // (DEFAULT/MEDIUM date was a style-slot bug — fixed; "Jan 24, 2009" now.)
     EXPECT_EQ("Jan 24, 2009", DateUtils::formatSameDayTime(fixedTime + dayDuration,
             fixedTime, DateFormat::DEFAULT, DateFormat::FULL));
     EXPECT_EQ("January 24, 2009", DateUtils::formatSameDayTime(fixedTime + dayDuration,
@@ -99,10 +97,9 @@ TEST(CoreFormatDateUtilsTest, testFormatSameDayTime) {
             fixedTime, DateFormat::SHORT, DateFormat::FULL));
 
     const int64_t hourDuration = 2LL * 60 * 60 * 1000;
-    // KNOWN DEVIATION (i18n pattern pools + no TimeZone class): the FULL/LONG
-    // time styles lose the seconds and spell the zone numerically
-    // ("5:30 AM GMT+00:00") instead of "5:30:15 AM Greenwich Mean Time"/
-    // "...GMT"; DEFAULT/MEDIUM/SHORT styles are correct.
+    // KNOWN DEVIATION (no TimeZone class → no zone display names): FULL/LONG
+    // time styles now carry the seconds ("5:30:15 AM") but spell the zone
+    // numerically ("GMT+00:00") instead of "Greenwich Mean Time"/"GMT".
     EXPECT_EQ("5:30:15 AM Greenwich Mean Time", DateUtils::formatSameDayTime(
             fixedTime + hourDuration, fixedTime, DateFormat::FULL,
             DateFormat::FULL));
