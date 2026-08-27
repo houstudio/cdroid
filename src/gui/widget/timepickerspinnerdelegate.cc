@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <widget/internal_R.h>
 #include <widget/timepickerspinnerdelegate.h>
+#include <content/dateutils.h>
 #include <widget/framework_styleable.h>
 #include <content/typedarray.h>
 #include <widget/numberpicker.h>
@@ -296,8 +297,18 @@ bool TimePickerSpinnerDelegate::dispatchPopulateAccessibilityEvent(Accessibility
     return true;
 }
 
-void TimePickerSpinnerDelegate::onPopulateAccessibilityEvent(AccessibilityEvent&) {
-    // DEFERRED: DateUtils.formatDateTime not ported.
+void TimePickerSpinnerDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    int flags = DateUtils::FORMAT_SHOW_TIME;
+    if (mIs24HourView) {
+        flags |= DateUtils::FORMAT_24HOUR;
+    } else {
+        flags |= DateUtils::FORMAT_12HOUR;
+    }
+    mTempCalendar.set(Calendar::HOUR_OF_DAY, getHour());
+    mTempCalendar.set(Calendar::MINUTE, getMinute());
+    const std::string selectedDateUtterance = DateUtils::formatDateTime(mDelegator->getContext(),
+            mTempCalendar.getTimeInMillis(), flags);
+    event.getText().push_back(selectedDateUtterance);
 }
 
 View* TimePickerSpinnerDelegate::getHourView() { return mHourSpinnerInput; }

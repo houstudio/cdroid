@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawable/badgedrawable.h>
+#include <content/numberformat.h>
 #include <drawable/badgeutils.h>
 #include <drawable/badgestate.h>
 #include <animation/animationutils.h>
@@ -819,7 +820,9 @@ std::string BadgeDrawable::getTextBadgeText() const{
 std::string BadgeDrawable::getNumberBadgeText() const{
     // If number exceeds max count, show badgeMaxCount+ instead of the number.
     if (mMaxBadgeNumber == BADGE_CONTENT_NOT_TRUNCATED || getNumber() <= mMaxBadgeNumber) {
-        return std::to_string(getNumber());//NumberFormat.getInstance(state.getNumberLocale()).format(getNumber());
+        // material master: NumberFormat.getInstance(numberLocale).format —
+        // the badge number localizes with everything else now.
+        return NumberFormat::getInstance()->format(getNumber());
     } else {
         if(mContext==nullptr){
             return "";

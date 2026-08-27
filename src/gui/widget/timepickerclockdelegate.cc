@@ -2,6 +2,7 @@
 #include <climits>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
+#include <content/dateutils.h>
 #include <text/textutils.h>   // getLayoutDirectionFromLocale (setAmPmStart)
 #include <widget/framework_styleable.h>
 #include <content/typedarray.h>
@@ -646,8 +647,18 @@ bool TimePickerClockDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEv
     return true;
 }
 
-void TimePickerClockDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& /*event*/) {
-    // DEFERRED: DateUtils.formatDateTime not ported.
+void TimePickerClockDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    int flags = DateUtils::FORMAT_SHOW_TIME;
+    if (mIs24Hour) {
+        flags |= DateUtils::FORMAT_24HOUR;
+    } else {
+        flags |= DateUtils::FORMAT_12HOUR;
+    }
+    mTempCalendar.set(Calendar::HOUR_OF_DAY, getHour());
+    mTempCalendar.set(Calendar::MINUTE, getMinute());
+    const std::string selectedDateUtterance = DateUtils::formatDateTime(mDelegator->getContext(),
+            mTempCalendar.getTimeInMillis(), flags);
+    event.getText().push_back(selectedDateUtterance);
 }
 
 View* TimePickerClockDelegate::getHourView() {
