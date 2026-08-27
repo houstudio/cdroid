@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/apps.xml. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="apps_management_screen"
+    android:title="Apps">
+
+    <Preference
+        android:key="all_apps"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="See all apps" />
+
+    <PreferenceCategory android:title="Default apps">
+
+        <ListPreference
+            android:key="default_browser"
+            android:title="Browser app"
+            android:entries="@array/prefdemo_browser_entries"
+            android:entryValues="@array/prefdemo_browser_values"
+            android:defaultValue="chrome" />
+
+        <ListPreference
+            android:key="default_assistant"
+            android:title="Digital assistant app"
+            android:entries="@array/prefdemo_assistant_entries"
+            android:entryValues="@array/prefdemo_assistant_values"
+            android:defaultValue="assistant" />
+
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="default_sms" android:title="SMS app" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="General">
+
+        <SwitchPreference
+            android:key="install_unknown_apps"
+            android:title="Install unknown apps"
+            android:summary="Allow apps from other sources"
+            android:defaultValue="false" />
+
+        <EditTextPreference
+            android:key="app_pref_device_alias"
+            android:title="Apps alias"
+            android:summary="Not set" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Special app access">
+
+        <Preference android:key="app_access_notifications" android:title="Notification access" />
+        <Preference android:key="app_access_battery" android:title="Battery optimization" />
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="app_access_data" android:title="Data usage" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
