@@ -571,10 +571,12 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::inflatePendingAnimator
                 // with null — prepareLocalAnimator would deref it.
                 LOGE("Failed to load pending animator res=0x%x for target %s",
                      pendingAnimator->animResId, pendingAnimator->target.c_str());
+                delete pendingAnimator;   // consumed: ours to free (Java GC)
                 continue;
             }
             updateAnimatorProperty(animator, pendingAnimator->target, mVectorDrawable,mShouldIgnoreInvalidAnim);
             addTargetAnimator(pendingAnimator->target, animator);
+            delete pendingAnimator;       // consumed: ours to free (Java GC)
         }
     }
 };
