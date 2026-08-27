@@ -1054,6 +1054,17 @@ void pakPathCandidates(const std::string& arscPath, std::vector<std::string>& ou
         start = slash + 1;
     }
     if (candidate != stripped) out.push_back(candidate);
+    // ".9.png"-stripped filename variants: aapt2's arsc keeps the 9-patch ".9"
+    // infix of the source filename ("res/drawable/foo.9.png"), while
+    // pakbuilder-compiled entries are stored borderless under the plain name
+    // ("drawable/foo.png"). The framework pak keeps ".9" on its aapt2-stored
+    // drawable-*-v4 entries, so both spellings must be probed.
+    const size_t baseCount = out.size();
+    for (size_t i = 0; i < baseCount; i++) {
+        const std::string& c = out[i];
+        if (c.size() > 6 && c.compare(c.size() - 6, 6, ".9.png") == 0)
+            out.push_back(c.substr(0, c.size() - 6) + ".png");
+    }
 }
 
 
