@@ -20,6 +20,8 @@
 #include <preference/switchpreference.h>
 #include <preference/edittextpreference.h>
 #include <preference/listpreference.h>
+#include <preference/listpreferencedialogfragment.h>
+#include <preference/preferencedialogfragment.h>
 #include <preference/multiselectlistpreference.h>
 #include <fragment/fragmentactivity.h>
 #include <fragment/fragmentmanager.h>
@@ -77,6 +79,33 @@ int screenXmlFor(const std::string& key) {
 
 class SettingsActivity;
 
+/** Window-gravity testbed (placement experiment): a ListPreferenceDialogFragment
+ *  that stamps an explicit window gravity on the dialog before Dialog::show
+ *  applies it through WindowManager::relayoutWindow. "Default browser app"
+ *  routes CENTER, "Digital assistant app" routes BOTTOM, so the WMS-style
+ *  placement is directly visible side by side. Remove once confirmed. */
+class GravityListDialogFragment : public cdroid::ListPreferenceDialogFragment {
+public:
+    static GravityListDialogFragment* newInstance(const std::string& key, int gravity) {
+        auto* f = new GravityListDialogFragment();
+        auto* args = new cdroid::Bundle();
+        args->putString(cdroid::PreferenceDialogFragment::ARG_KEY, key);
+        args->putInt("prefdemo.gravity", gravity);
+        f->setArguments(args);
+        return f;
+    }
+
+    cdroid::Dialog* onCreateDialog(cdroid::Bundle* savedInstanceState) override {
+        cdroid::Dialog* dialog = ListPreferenceDialogFragment::onCreateDialog(savedInstanceState);
+        const cdroid::Bundle* args = getArguments();
+        const int gravity = args ? args->getValue<int>("prefdemo.gravity", 0) : 0;
+        LOGD("[gravity-experiment] onCreateDialog gravity=%d", gravity);
+        // AOSP idiom: tune the window attributes between create() and show().
+        dialog->getWindow()->getAttributes().gravity = gravity;
+        return dialog;
+    }
+};
+
 class SettingsFragment : public PreferenceFragment {
 public:
     void onCreatePreferences(cdroid::Bundle* /*savedInstanceState*/,
@@ -106,58 +135,92 @@ public:
         }
     }
 
-    /** PreferenceFragment layout wrapped with an in-screen header bar
-     *  (the AOSP Settings screen title — CDROID windows have no title API). */
+    /** PreferenceFragment layout wrapped with the settings chrome (the AOSP
+     *  Settings screen title — CDROID windows have no title API). The chrome
+     *  inflates from R::layout::prefdemo_settings: layout/ is header-above-
+     *  list, the layout-land/ twin is a title column beside the list — same
+     *  ids and view types, so this one wiring path serves both. */
     cdroid::View* onCreateView(cdroid::LayoutInflater* inflater, cdroid::ViewGroup* container,
             cdroid::Bundle* savedInstanceState) override {
         cdroid::View* content = PreferenceFragment::onCreateView(inflater, container,
                 savedInstanceState);
-        auto* root = new cdroid::LinearLayout(requireContext());
-        root->setOrientation(cdroid::LinearLayout::VERTICAL);
-        // The window surface is transparent — this root must carry a fully
-        // opaque background or the preference list floats over the desktop.
+        auto* root = dynamic_cast<cdroid::ViewGroup*>(inflater->inflate(
+                (int)preferencedemo::R::layout::prefdemo_settings, container, false));
+        // The window surface is transparent — the chrome must carry fully
+        // opaque backgrounds or the preference list floats over the desktop.
         // Both colors follow the live theme (?android:attr/colorBackground /
         // textColorPrimary), so switching Material <-> Material.Light restyles
         // the chrome with no per-theme constants.
         const int bg = themeColor(*requireContext(),
                 (int)internal::R::attr::colorBackground, 0xFFF8F9FA);
-        root->setBackgroundColor(bg);
-        auto* bar = new cdroid::LinearLayout(requireContext());
-        bar->setOrientation(cdroid::LinearLayout::HORIZONTAL);
-        bar->setGravity(cdroid::Gravity::CENTER_VERTICAL);
-        bar->setBackgroundColor(bg);
-        bar->setPadding(16, 12, 24, 12);
         const int fg = themeColor(*requireContext(),
                 (int)internal::R::attr::textColorPrimary, 0xFF1B1B1F);
-        const bool nested = !mRootKey.empty();
-        if (nested) {
-            // Up affordance (the AOSP Settings app bar arrow): pops this
-            // screen back to its parent, independent of keyboard BACK.
-            auto* up = new cdroid::TextView(requireContext());
-            up->setText(u8"\u2190");
-            up->setTextSize(24);
-            up->setTextColor(fg);
-            up->setPadding(12, 8, 20, 8);
-            up->setClickable(true);
-            up->setOnClickListener([this](cdroid::View&) { requestGoBack(); });
-            bar->addView(up);
-        }
-        auto* header = new cdroid::TextView(requireContext());
+        if (root != nullptr) root->setBackgroundColor(bg);
+        if (auto* header = root ? root->findViewById((int)preferencedemo::R::id::prefdemo_header)
+                                : nullptr)
+            header->setBackgroundColor(bg);
         const std::string title = getPreferenceScreen() && !getPreferenceScreen()->getTitle().empty()
                 ? getPreferenceScreen()->getTitle() : std::string("Settings");
-        header->setText(title);
-        header->setTextSize(22);
-        header->setTextColor(fg);
-        bar->addView(header);
-        root->addView(bar);
-        if (content != nullptr) {
-            root->addView(content, new cdroid::LinearLayout::LayoutParams(
-                    cdroid::LayoutParams::MATCH_PARENT, 0, 1.0f));
+        auto* titleView = dynamic_cast<cdroid::TextView*>(
+                root ? root->findViewById((int)preferencedemo::R::id::prefdemo_title) : nullptr);
+        if (titleView != nullptr) {
+            titleView->setText(title);
+            titleView->setTextColor(fg);
+        }
+        // Up affordance (the AOSP Settings app bar arrow): present in the XML,
+        // visible only on portrait nested screens (push navigation). Landscape
+        // runs two-pane — selecting on the left replaces the right pane, there
+        // is no parent to pop; independent of keyboard BACK either way.
+        auto* up = dynamic_cast<cdroid::TextView*>(
+                root ? root->findViewById((int)preferencedemo::R::id::prefdemo_back) : nullptr);
+        const bool portrait = requireContext()->getResources().getConfiguration().orientation
+                != cdroid::Configuration::ORIENTATION_LANDSCAPE;
+        if (up != nullptr) {
+            up->setText(u8"←");
+            up->setTextColor(fg);
+            up->setClickable(true);
+            up->setVisibility((!mRootKey.empty() && portrait)
+                    ? cdroid::View::VISIBLE : cdroid::View::GONE);
+            up->setOnClickListener([this](cdroid::View&) { requestGoBack(); });
+        }
+        auto* host = dynamic_cast<cdroid::ViewGroup*>(
+                root ? root->findViewById((int)preferencedemo::R::id::prefdemo_content) : nullptr);
+        if (host != nullptr) {
+            host->setBackgroundColor(bg);
+            if (content != nullptr) {
+                host->addView(content, new cdroid::LinearLayout::LayoutParams(
+                        cdroid::LayoutParams::MATCH_PARENT,
+                        cdroid::LayoutParams::MATCH_PARENT));
+            }
+        } else {
+            LOGW("prefdemo_settings layout has no prefdemo_content host");
         }
         return root;
     }
 
     bool onPreferenceTreeClick(Preference& preference) override;
+
+    // Window-gravity testbed (placement experiment): browser -> CENTER,
+    // assistant -> BOTTOM; everything else uses the stock dialog fragments.
+    void onDisplayPreferenceDialog(Preference& preference) override {
+        const std::string key = preference.getKey();
+        int gravity;
+        if (key == "default_browser") {
+            gravity = cdroid::Gravity::CENTER;
+        } else if (key == "default_assistant") {
+            gravity = cdroid::Gravity::BOTTOM | cdroid::Gravity::CENTER_HORIZONTAL;
+        } else {
+            PreferenceFragment::onDisplayPreferenceDialog(preference);
+            return;
+        }
+        if (getParentFragmentManager()->findFragmentByTag(DIALOG_FRAGMENT_TAG) != nullptr) {
+            return; // a dialog is already showing
+        }
+        auto* f = GravityListDialogFragment::newInstance(key, gravity);
+        f->setTargetFragment(this, 0);
+        f->show(getParentFragmentManager(), DIALOG_FRAGMENT_TAG);
+    }
+
     // Top-level entries (plain Preferences, the androidx app:fragment
     // equivalent) navigate via the host; defined after SettingsActivity
     // (the host type must be complete for the cast). The second-level
@@ -252,16 +315,21 @@ public:
 
     bool onPreferenceStartScreen(PreferenceFragment& /*caller*/,
             PreferenceScreen& pref) override {
-        openScreen(pref.getKey(), pref.getTitle());
+        navigateTo(pref.getKey(), pref.getTitle());
         return true;
     }
 
-    /** Push the second-level screen; Back pops it (onBackPressed). */
-    void openScreen(const std::string& key, const std::string& title) {
-        auto* fragment = new SettingsFragment();
-        auto* args = new cdroid::Bundle();
-        args->putString(PreferenceFragment::ARG_PREFERENCE_ROOT, key);
-        fragment->setArguments(args);
+    /** Route a second-level screen by orientation: portrait pushes it onto
+     *  the back stack (Back pops), landscape swaps the detail pane in place
+     *  (two-pane has no back navigation). */
+    void navigateTo(const std::string& key, const std::string& title) {
+        if (mLandscape) showDetail(key);
+        else openScreen(key, title);
+    }
+
+    /** Portrait: push the second-level screen; Back pops it (onBackPressed). */
+    void openScreen(const std::string& key, const std::string& /*title*/) {
+        auto* fragment = newFragmentForKey(key);
         auto* tx = getSupportFragmentManager()->beginTransaction();
         // PREFDEMO_NO_ANIM=1 skips the custom slides so the push rides the
         // DEFAULT Fade (the transition path whose per-op clone bug was fixed).
@@ -271,39 +339,74 @@ public:
                                     (int)preferencedemo::R::anim::slide_in_left,
                                     (int)preferencedemo::R::anim::slide_out_right);
         }
-        tx->replace(getFragmentContainerId(), fragment)
+        tx->replace((int)preferencedemo::R::id::prefdemo_single, fragment)
            .addToBackStack(key)
            .commit();
+    }
+
+    /** Landscape: swap the right pane to the selected second-level screen. */
+    void showDetail(const std::string& key) {
+        getSupportFragmentManager()->beginTransaction()
+            ->replace((int)preferencedemo::R::id::prefdemo_detail, newFragmentForKey(key))
+            .commit();
+    }
+
+    static SettingsFragment* newFragmentForKey(const std::string& key) {
+        auto* fragment = new SettingsFragment();
+        auto* args = new cdroid::Bundle();
+        args->putString(PreferenceFragment::ARG_PREFERENCE_ROOT, key);
+        fragment->setArguments(args);
+        return fragment;
     }
 
 protected:
     void onCreate(cdroid::Bundle* savedInstanceState) override {
         FragmentActivity::onCreate(savedInstanceState);
-        // The window surface is transparent: back the fragment container with
-        // an opaque color too, so nested-screen swaps never leak the desktop.
-        cdroid::View* container = findViewById(getFragmentContainerId());
-        if (container != nullptr) {
-            container->setBackgroundColor(themeColor(*getContext(),
-                    (int)internal::R::attr::colorBackground, 0xFFF8F9FA));
+        mLandscape = getContext()->getResources().getConfiguration().orientation
+                == cdroid::Configuration::ORIENTATION_LANDSCAPE;
+        // Activity content comes from R::layout::prefdemo_main: layout/ is a
+        // single slot, the layout-land/ twin is master + detail (two-pane).
+        // The window surface is transparent: back the slots with an opaque
+        // color too, so pane swaps never leak the desktop.
+        auto* host = dynamic_cast<cdroid::ViewGroup*>(findViewById(getFragmentContainerId()));
+        if (host == nullptr) {
+            LOGW("no fragment container to host prefdemo_main");
+            return;
         }
+        auto* main = cdroid::LayoutInflater::from(getContext())->inflate(
+                (int)preferencedemo::R::layout::prefdemo_main, host, true);
+        main->setBackgroundColor(themeColor(*getContext(),
+                (int)internal::R::attr::colorBackground, 0xFFF8F9FA));
         // Optional argv[1]: start directly at a nested screen (smoke-testing
         // every second-level page without touch input), e.g.
         //   ./preferencedemo screen_network
         std::string initialRoot;
         if (mLaunchArg != nullptr) initialRoot = mLaunchArg;
-        auto* fragment = new SettingsFragment();
-        if (!initialRoot.empty()) {
-            auto* args = new cdroid::Bundle();
-            args->putString(PreferenceFragment::ARG_PREFERENCE_ROOT, initialRoot);
-            fragment->setArguments(args);
+        if (mLandscape) {
+            // Two-pane: master carries the top-level list, detail starts at
+            // the given (or first) top-level entry's screen.
+            // NOTE: two separate transactions — CDROID's BackStackRecord
+            // executes only the first replace op of a record (AOSP runs all),
+            // so batching both panes into one commit drops the second pane.
+            auto* txMaster = getSupportFragmentManager()->beginTransaction();
+            txMaster->replace((int)preferencedemo::R::id::prefdemo_master, new SettingsFragment());
+            txMaster->commitNow();
+            auto* txDetail = getSupportFragmentManager()->beginTransaction();
+            txDetail->replace((int)preferencedemo::R::id::prefdemo_detail,
+                    newFragmentForKey(initialRoot.empty() ? "screen_network" : initialRoot));
+            txDetail->commitNow();
+        } else {
+            auto* fragment = new SettingsFragment();
+            if (!initialRoot.empty()) fragment = newFragmentForKey(initialRoot);
+            getSupportFragmentManager()->beginTransaction()
+                ->replace((int)preferencedemo::R::id::prefdemo_single, fragment)
+                .commit();
         }
-        getSupportFragmentManager()->beginTransaction()
-            ->replace(getFragmentContainerId(), fragment)
-            .commit();
     }
 
 private:
     const char* mLaunchArg = nullptr;
+    bool mLandscape = false;   // set in onCreate from the resource config
 
 public:
     void setLaunchRoot(const char* key) { mLaunchArg = key; }
@@ -332,7 +435,7 @@ bool SettingsFragment::onPreferenceTreeClick(Preference& preference) {
     if (screenXmlFor(preference.getKey()) != 0) {
         auto* host = dynamic_cast<SettingsActivity*>(getActivity());
         if (host != nullptr) {
-            host->openScreen(preference.getKey(), preference.getTitle());
+            host->navigateTo(preference.getKey(), preference.getTitle());
             return true;
         }
     }
@@ -341,6 +444,40 @@ bool SettingsFragment::onPreferenceTreeClick(Preference& preference) {
 
 int main(int argc, const char* argv[]) {
     cdroid::App app(argc, argv);
+
+    // Orientation -> resource config: makes the arsc ResTable prefer -land
+    // variants (layout-land/, values-land/). PREFDEMO_ORIENTATION=land|
+    // landscape|port|portrait forces a variant (like PREFDEMO_DARK below);
+    // otherwise the screen shape decides. Must run before the first inflate
+    // (SettingsActivity below) so layouts resolve under the right config.
+    cdroid::Resources& res = app.getResources();
+    cdroid::Configuration cfg = res.getConfiguration();
+    int orientation = 0;
+    const char* source = "auto";
+    const char* forced = getenv("PREFDEMO_ORIENTATION");
+    if (forced != nullptr && forced[0] != '\0') {
+        const std::string v = forced;
+        if (v == "land" || v == "landscape")
+            orientation = cdroid::Configuration::ORIENTATION_LANDSCAPE;
+        else if (v == "port" || v == "portrait")
+            orientation = cdroid::Configuration::ORIENTATION_PORTRAIT;
+        else
+            LOGW("PREFDEMO_ORIENTATION='%s' invalid (land|landscape|port|portrait)",
+                 forced);
+        if (orientation != 0) source = "env";
+    }
+    const cdroid::DisplayMetrics& dm = res.getDisplayMetrics();
+    if (orientation == 0) {
+        orientation = (dm.widthPixels >= dm.heightPixels)
+                ? cdroid::Configuration::ORIENTATION_LANDSCAPE
+                : cdroid::Configuration::ORIENTATION_PORTRAIT;
+    }
+    cfg.orientation = orientation;
+    res.updateConfiguration(&cfg, nullptr);
+    LOGI("prefdemo orientation=%s (%s, screen %dx%d)",
+         orientation == cdroid::Configuration::ORIENTATION_LANDSCAPE
+                 ? "landscape" : "portrait",
+         source, dm.widthPixels, dm.heightPixels);
     // App-level theme: every LayoutInflater::from(ctx) in the preference
     // chain resolves ?android:attr/textAppearance against the App context,
     // so the Material Light palette reaches the row TextViews (a Window-only

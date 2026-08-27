@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Activity content, landscape: two-pane master-detail. The left slot
+     carries the top-level list (settings_root), the right one shows the
+     second-level screen of the selected top-level entry — selecting on the
+     left replaces the right pane in place (no push, no back stack). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/prefdemo_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <FrameLayout android:id="@+id/prefdemo_master"
+        android:layout_width="@dimen/prefdemo_master_width"
+        android:layout_height="match_parent" />
+
+    <FrameLayout android:id="@+id/prefdemo_detail"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
+</LinearLayout>

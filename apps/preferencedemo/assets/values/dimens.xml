@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Defaults for the settings chrome (portrait unless overridden). Every
+     dimen is declared here — values-land/ carries overrides only, so a
+     portrait lookup always has a default to fall back to. -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Portrait header bar height (landscape column is match_parent tall). -->
+    <dimen name="prefdemo_header_height">56dp</dimen>
+    <!-- Landscape master pane width (two-pane prefdemo_main). -->
+    <dimen name="prefdemo_master_width">300dp</dimen>
+    <dimen name="prefdemo_title_size">22sp</dimen>
+    <dimen name="prefdemo_back_size">24sp</dimen>
+</resources>

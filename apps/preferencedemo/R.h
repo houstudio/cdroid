@@ -43,41 +43,61 @@ namespace R{
         };
     }/*namespace array*/
 
+    namespace dimen{
+        enum : int {
+            prefdemo_back_size = 0x7f030000,
+            prefdemo_header_height = 0x7f030001,
+            prefdemo_master_width = 0x7f030002,
+            prefdemo_title_size = 0x7f030003,
+        };
+    }/*namespace dimen*/
+
     namespace drawable{
         enum : int {
-            ic_chevron_right = 0x7f030000,
+            ic_chevron_right = 0x7f040000,
         };
     }/*namespace drawable*/
 
     namespace id{
         enum : int {
-            prefdemo_chevron = 0x7f040000,
+            prefdemo_back = 0x7f050000,
+            prefdemo_chevron = 0x7f050001,
+            prefdemo_content = 0x7f050002,
+            prefdemo_detail = 0x7f050003,
+            prefdemo_header = 0x7f050004,
+            prefdemo_main = 0x7f050005,
+            prefdemo_master = 0x7f050006,
+            prefdemo_root = 0x7f050007,
+            prefdemo_single = 0x7f050008,
+            prefdemo_title = 0x7f050009,
         };
     }/*namespace id*/
 
     namespace layout{
         enum : int {
-            prefdemo_chevron = 0x7f050000,
+            prefdemo_chevron = 0x7f060000,
+            prefdemo_main = 0x7f060001,
+            prefdemo_settings = 0x7f060002,
         };
     }/*namespace layout*/
 
     namespace xml{
         enum : int {
-            settings_about = 0x7f060000,
-            settings_accessibility = 0x7f060001,
-            settings_apps = 0x7f060002,
-            settings_battery = 0x7f060003,
-            settings_connected = 0x7f060004,
-            settings_display = 0x7f060005,
-            settings_location = 0x7f060006,
-            settings_network = 0x7f060007,
-            settings_notifications = 0x7f060008,
-            settings_privacy = 0x7f060009,
-            settings_root = 0x7f06000a,
-            settings_security = 0x7f06000b,
-            settings_sound = 0x7f06000c,
-            settings_storage = 0x7f06000d,
-            settings_system = 0x7f06000e,
+            settings_about = 0x7f070000,
+            settings_accessibility = 0x7f070001,
+            settings_apps = 0x7f070002,
+            settings_battery = 0x7f070003,
+            settings_connected = 0x7f070004,
+            settings_display = 0x7f070005,
+            settings_location = 0x7f070006,
+            settings_network = 0x7f070007,
+            settings_notifications = 0x7f070008,
+            settings_privacy = 0x7f070009,
+            settings_root = 0x7f07000a,
+            settings_security = 0x7f07000b,
+            settings_sound = 0x7f07000c,
+            settings_storage = 0x7f07000d,
+            settings_system = 0x7f07000e,
         };
     }/*namespace xml*/
 
