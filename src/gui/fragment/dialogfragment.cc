@@ -110,6 +110,12 @@ void DialogFragment::dismissAllowingStateLoss(){
     dismissInternal(true, false);
 }
 
+void DialogFragment::onDismiss(cdroid::DialogInterface* /*dialog*/){
+    // androidx :896 — dismiss through the internal path when the backing
+    // Dialog reports dismissal (removes the fragment from the manager).
+    dismissInternal(true, true);
+}
+
 void DialogFragment::dismissInternal(bool /*allowStateLoss*/, bool fromOnDismiss){
     // androidx dismissInternal :572. Idempotent (no-op if already dismissed).
     if(mDismissed) return;

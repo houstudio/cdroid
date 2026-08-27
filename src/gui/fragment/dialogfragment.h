@@ -78,7 +78,10 @@ public:
 
     // DialogInterface callbacks (androidx onCancel :891 / onDismiss :896). Subclasses override.
     virtual void onCancel(cdroid::DialogInterface* dialog){ (void)dialog; }
-    virtual void onDismiss(cdroid::DialogInterface* dialog){ (void)dialog; }
+    // androidx DialogFragment.onDismiss :896 — the default DOES dismissInternal,
+    // otherwise a dismissed dialog's fragment stays registered and blocks the
+    // next show (findFragmentByTag guard).
+    virtual void onDismiss(cdroid::DialogInterface* dialog);
 
     // Lifecycle overrides (androidx DialogFragment lifecycle hooks).
     void onCreate(cdroid::Bundle* savedInstanceState) override;
