@@ -103,10 +103,17 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defSt
 }
 
 RecyclerView::~RecyclerView(){
-    for(ItemDecoration*id:mItemDecorations){
+    // CDROID ownership design: the RecyclerView owns its registered
+    // ItemDecorations. Sever ownership (mOwnerRV = null) BEFORE each delete:
+    // the decoration dtor's self-detach must be a no-op here — it would
+    // otherwise re-enter this half-destructed RV, and erasing from the list
+    // being iterated would be UB. Moving the list out first is the second
+    // belt (self-detach finds an empty list).
+    std::vector<ItemDecoration*> ownedDecorations = std::move(mItemDecorations);
+    for(ItemDecoration*id:ownedDecorations){
+        id->mOwnerRV = nullptr;
         delete id;
     }
-    mItemDecorations.clear();
     if(mVelocityTracker)
         mVelocityTracker->recycle();
     delete mChildHelper;
@@ -801,8 +808,21 @@ void RecyclerView::addItemDecoration(ItemDecoration* decor, int index) {
     } else {
         mItemDecorations.insert(mItemDecorations.begin()+index,decor);//add(index, decor);
     }
+    decor->mOwnerRV = this;   // registered: the RV owns it until detach
     markItemDecorInsetsDirty();
     requestLayout();
+}
+
+void RecyclerView::detachItemDecoration(ItemDecoration* decor) {
+    if (decor != nullptr) decor->mOwnerRV = nullptr;
+    auto it = std::find(mItemDecorations.begin(), mItemDecorations.end(), decor);
+    if (it != mItemDecorations.end()) {
+        mItemDecorations.erase(it);
+    }
+    if (mItemDecorations.empty()) {
+        setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
+    }
+    markItemDecorInsetsDirty();
 }
 
 void RecyclerView::addItemDecoration(ItemDecoration* decor) {

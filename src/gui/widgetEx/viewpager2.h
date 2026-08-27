@@ -138,6 +138,8 @@ public:
     void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;
     bool performAccessibilityAction(int action, Bundle* arguments)override;
 
+    // Detach without deleting (ItemDecoration ownership protocol).
+    void detachItemDecoration(RecyclerView::ItemDecoration* decor);
     void addItemDecoration(RecyclerView::ItemDecoration* decor);
     void addItemDecoration(RecyclerView::ItemDecoration* decor, int index);
     RecyclerView::ItemDecoration* getItemDecorationAt(int index);

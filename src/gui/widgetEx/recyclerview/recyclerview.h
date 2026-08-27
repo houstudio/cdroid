@@ -460,6 +460,9 @@ public:
     void setItemViewCacheSize(int size);
     int getScrollState()const;
     void setScrollState(int state);
+    // Ownership seam: unregister WITHOUT deleting (self-detach path and
+    // self-registering helpers whose `this` the RV must never free).
+    void detachItemDecoration(ItemDecoration* decor);
     void addItemDecoration(ItemDecoration* decor, int index);
     void addItemDecoration(ItemDecoration* decor);
     ItemDecoration* getItemDecorationAt(int index);
@@ -664,10 +667,24 @@ public:
 
 class RecyclerView::ItemDecoration{
 public:
-    virtual ~ItemDecoration()=default;
+    // Ownership protocol: while registered, the decoration is owned by its
+    // RecyclerView (the RV frees it in its own dtor). Destructing it early
+    // (external delete) self-detaches from the owner, so both "delete it
+    // yourself" and "let the RV reclaim it" are safe. A registered decoration
+    // must NOT be deleted by the RV path AND the owner simultaneously: the RV
+    // dtor moves the list out before deleting, which makes the self-detach a
+    // no-op there.
+    virtual ~ItemDecoration(){
+        if(mOwnerRV){
+            mOwnerRV->detachItemDecoration(this);
+        }
+    }
     virtual void onDraw(Canvas& c,RecyclerView& parent,State& state);
     virtual void onDrawOver(Canvas& c,RecyclerView& parent,State& state);
     virtual void getItemOffsets(Rect& outRect, View& view,RecyclerView& parent, State& state);
+private:
+    RecyclerView* mOwnerRV = nullptr;
+    friend class RecyclerView;
 };
 
 class RecyclerView::OnItemTouchListener:public EventSet{

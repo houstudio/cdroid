@@ -86,6 +86,9 @@ ItemTouchHelper::~ItemTouchHelper(){
     mRecoverAnimations.clear();
     mOverdrawChild = nullptr;
     mOverdrawChildPosition = -1;
+    if(mRecyclerView){
+        mRecyclerView->detachItemDecoration(this); // detach only: remove deletes
+    }
     releaseVelocityTracker();
     stopGestureDetection();
 }
@@ -241,6 +244,9 @@ void ItemTouchHelper::destroyCallbacks() {
     mRecoverAnimations.clear();
     mOverdrawChild = nullptr;
     mOverdrawChildPosition = -1;
+    if(mRecyclerView){
+        mRecyclerView->detachItemDecoration(this); // detach only: remove deletes
+    }
     releaseVelocityTracker();
     stopGestureDetection();
 }

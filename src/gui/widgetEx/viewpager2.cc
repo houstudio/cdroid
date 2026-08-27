@@ -690,6 +690,10 @@ View* ViewPager2::PagerSnapHelperImpl::findSnapView(RecyclerView::LayoutManager&
 }
 
 
+void ViewPager2::detachItemDecoration(RecyclerView::ItemDecoration* decor) {
+    mRecyclerView->detachItemDecoration(decor);
+}
+
 void ViewPager2::addItemDecoration(RecyclerView::ItemDecoration* decor) {
     mRecyclerView->addItemDecoration(decor);
 }
