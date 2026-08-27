@@ -13,10 +13,13 @@
 #include <widget/internal_R.h>
 #include <cdroid.h>
 #include <drawable/drawables.h>
+#include <drawable/ninepatchdrawable.h>
+#include <drawable/animatedstatelistdrawable.h>
 #include <core/systemclock.h>
 #include <core/graphdevice.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <widget/switch.h>
 #include <core/path.h>
 #include <image-decoders/imagedecoder.h>
 #include <guienvironment.h>
@@ -148,6 +151,56 @@ TEST_F(DRAWABLE_CDT,ninepatch2){
         usleep(5000);
     }
     delete d;
+}
+
+// hdpi-only 9-patch on the (160dpi) test display: the decode-time density
+// resample (AOSP BitmapFactory.decodeResourceStream semantics) must bring the
+// intrinsic size into display pixels — 78x42 hdpi content scales 240→160 to
+// 52x28 — instead of the legacy raw-pixel rendering.
+TEST_F(DRAWABLE_CDT,ninepatch3_density_scale){
+    NinePatchDrawable*d = (NinePatchDrawable*)rm->getDrawable(cdroid::internal::R::drawable::switch_thumb_holo_dark);
+    ASSERT_NE(nullptr,d);
+    const DisplayMetrics& dm = rm->getResources().getDisplayMetrics();
+    if (dm.densityDpi == 160) {
+        EXPECT_EQ(52, d->getIntrinsicWidth());
+        EXPECT_EQ(28, d->getIntrinsicHeight());
+    }
+    delete d;
+}
+
+// ASLD steady state (never toggled): getCurrent() must be the selected ITEM
+// drawable, not a transition container — AOSP shows the transition only while
+// a state change animates. Exposed by the Material switch thumb
+// (switch_thumb_material_anim): off item = <nine-patch>, transitions = <animation-list>.
+TEST_F(DRAWABLE_CDT, asld_steady_state_current_item){
+    Drawable* d = rm->getDrawable(cdroid::internal::R::drawable::switch_thumb_material_anim);
+    ASSERT_NE(nullptr, d);
+    auto* asld = dynamic_cast<AnimatedStateListDrawable*>(d);
+    ASSERT_NE(nullptr, asld);
+    asld->setState(std::vector<int>{});  // default (unchecked) keyframe
+    Drawable* current = asld->getCurrent();
+    ASSERT_NE(nullptr, current);
+    EXPECT_TRUE(dynamic_cast<NinePatchDrawable*>(current) != nullptr)
+            << "steady-state current is " << typeid(*current).name();
+    delete d;
+}
+
+// Same drawable through the REAL Switch construction path (as the original
+// probe saw it): the thumb's steady-state current must still be the item
+// nine-patch, not the transition's AnimationDrawable.
+TEST_F(DRAWABLE_CDT, asld_steady_state_via_switch){
+    Switch* sw = new Switch(rm);
+    sw->setText("probe");
+    sw->setChecked(false);
+    const int wspec = MeasureSpec::makeMeasureSpec(600, MeasureSpec::EXACTLY);
+    const int hspec = MeasureSpec::makeMeasureSpec(200, MeasureSpec::AT_MOST);
+    sw->measure(wspec, hspec);
+    sw->layout(0, 0, sw->getMeasuredWidth(), sw->getMeasuredHeight());
+    Drawable* current = sw->getThumbDrawable()->getCurrent();
+    ASSERT_NE(nullptr, current);
+    EXPECT_TRUE(dynamic_cast<NinePatchDrawable*>(current) != nullptr)
+            << "switch thumb steady-state current is " << typeid(*current).name();
+    delete sw;
 }
 
 // PictureDrawable: RecordingSurface capture -> replay through a drawable.
