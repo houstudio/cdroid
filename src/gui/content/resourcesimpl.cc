@@ -20,6 +20,7 @@
 #include <content/assetmanager.h>        // AssetManager
 #include <content/asset.h>               // Asset
 #include <content/typedvalue.h>     // TypedValue
+#include <core/typeface.h>               // Typeface (getFont → createFromResourcePath)
 
 #include <drawable/drawable.h>        // Drawable::ConstantState
 #include <drawable/colordrawable.h>   // ColorDrawable (color-drawable path)
@@ -733,8 +734,13 @@ std::shared_ptr<cdroid::ComplexColor> ResourcesImpl::loadComplexColor(int id, co
     return csl;
 }
 
-cdroid::Typeface* ResourcesImpl::getFont(int /*id*/) const {
-    return nullptr;
+cdroid::Typeface* ResourcesImpl::getFont(int id) const {
+    // AOSP Resources.getFont: the value of a raw-ttf R.font entry is the
+    // pak-relative file path (TYPE_STRING); Typeface.createFromResources loads
+    // it via openNonAsset with a per-path instance cache.
+    TypedValue value;
+    if (!getValue(id, &value, true) || value.type != Res_value::TYPE_STRING) return nullptr;
+    return cdroid::Typeface::createFromResourcePath(u16to8(value.string, value.stringLen));
 }
 
 cdroid::Movie* ResourcesImpl::getMovie(int /*id*/) const {

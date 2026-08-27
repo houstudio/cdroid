@@ -1756,6 +1756,110 @@ namespace internal { namespace R { namespace styleable {
     constexpr int WindowAnimation_wallpaperIntraCloseExitAnimation = 28;
     constexpr int WindowAnimation_activityOpenRemoteViewsEnterAnimation = 29;
 
+    // Preference (21 attrs)
+    extern const uint32_t Preference[];
+    constexpr int Preference_icon = 0;
+    constexpr int Preference_key = 1;
+    constexpr int Preference_title = 2;
+    constexpr int Preference_summary = 3;
+    constexpr int Preference_order = 4;
+    constexpr int Preference_fragment = 5;
+    constexpr int Preference_layout = 6;
+    constexpr int Preference_widgetLayout = 7;
+    constexpr int Preference_enabled = 8;
+    constexpr int Preference_selectable = 9;
+    constexpr int Preference_dependency = 10;
+    constexpr int Preference_persistent = 11;
+    constexpr int Preference_defaultValue = 12;
+    constexpr int Preference_shouldDisableView = 13;
+    constexpr int Preference_recycleEnabled = 14;
+    constexpr int Preference_singleLineTitle = 15;
+    constexpr int Preference_iconSpaceReserved = 16;
+    constexpr int Preference_isPreferenceVisible = 17;
+    constexpr int Preference_allowDividerAbove = 18;
+    constexpr int Preference_allowDividerBelow = 19;
+    constexpr int Preference_enableCopying = 20;
+
+    // PreferenceGroup (2 attrs)
+    extern const uint32_t PreferenceGroup[];
+    constexpr int PreferenceGroup_orderingFromXml = 0;
+    constexpr int PreferenceGroup_initialExpandedChildrenCount = 1;
+
+    // PreferenceScreen (2 attrs)
+    extern const uint32_t PreferenceScreen[];
+    constexpr int PreferenceScreen_screenLayout = 0;
+    constexpr int PreferenceScreen_divider = 1;
+
+    // PreferenceHeader (7 attrs)
+    extern const uint32_t PreferenceHeader[];
+    constexpr int PreferenceHeader_id = 0;
+    constexpr int PreferenceHeader_title = 1;
+    constexpr int PreferenceHeader_summary = 2;
+    constexpr int PreferenceHeader_breadCrumbTitle = 3;
+    constexpr int PreferenceHeader_breadCrumbShortTitle = 4;
+    constexpr int PreferenceHeader_icon = 5;
+    constexpr int PreferenceHeader_fragment = 6;
+
+    // CheckBoxPreference (3 attrs)
+    extern const uint32_t CheckBoxPreference[];
+    constexpr int CheckBoxPreference_summaryOn = 0;
+    constexpr int CheckBoxPreference_summaryOff = 1;
+    constexpr int CheckBoxPreference_disableDependentsState = 2;
+
+    // DialogPreference (6 attrs)
+    extern const uint32_t DialogPreference[];
+    constexpr int DialogPreference_dialogTitle = 0;
+    constexpr int DialogPreference_dialogMessage = 1;
+    constexpr int DialogPreference_dialogIcon = 2;
+    constexpr int DialogPreference_positiveButtonText = 3;
+    constexpr int DialogPreference_negativeButtonText = 4;
+    constexpr int DialogPreference_dialogLayout = 5;
+
+    // EditTextPreference (1 attrs)
+    extern const uint32_t EditTextPreference[];
+    constexpr int EditTextPreference_useSimpleSummaryProvider = 0;
+
+    // ListPreference (3 attrs)
+    extern const uint32_t ListPreference[];
+    constexpr int ListPreference_entries = 0;
+    constexpr int ListPreference_entryValues = 1;
+    constexpr int ListPreference_useSimpleSummaryProvider = 2;
+
+    // MultiSelectListPreference (2 attrs)
+    extern const uint32_t MultiSelectListPreference[];
+    constexpr int MultiSelectListPreference_entries = 0;
+    constexpr int MultiSelectListPreference_entryValues = 1;
+
+    // SwitchPreference (5 attrs)
+    extern const uint32_t SwitchPreference[];
+    constexpr int SwitchPreference_summaryOn = 0;
+    constexpr int SwitchPreference_summaryOff = 1;
+    constexpr int SwitchPreference_switchTextOn = 2;
+    constexpr int SwitchPreference_switchTextOff = 3;
+    constexpr int SwitchPreference_disableDependentsState = 4;
+
+    // SeekBarPreference (7 attrs)
+    extern const uint32_t SeekBarPreference[];
+    constexpr int SeekBarPreference_layout = 0;
+    constexpr int SeekBarPreference_min = 1;
+    constexpr int SeekBarPreference_max = 2;
+    constexpr int SeekBarPreference_seekBarIncrement = 3;
+    constexpr int SeekBarPreference_adjustable = 4;
+    constexpr int SeekBarPreference_showSeekBarValue = 5;
+    constexpr int SeekBarPreference_updatesContinuously = 6;
+
+    // PreferenceFragment (4 attrs)
+    extern const uint32_t PreferenceFragment[];
+    constexpr int PreferenceFragment_layout = 0;
+    constexpr int PreferenceFragment_divider = 1;
+    constexpr int PreferenceFragment_dividerHeight = 2;
+    constexpr int PreferenceFragment_allowDividerAfterLastItem = 3;
+
+    // PreferenceImageView (2 attrs)
+    extern const uint32_t PreferenceImageView[];
+    constexpr int PreferenceImageView_maxWidth = 0;
+    constexpr int PreferenceImageView_maxHeight = 1;
+
 } } } // namespace internal::R::styleable
 } // namespace cdroid
 #endif // __FRAMEWORK_STYLEABLE_H__

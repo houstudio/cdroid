@@ -43,6 +43,7 @@ class Typeface;
 class Intent;
 class TypedArray;
 class Resources;       // cdroid::Resources (resources.h) — the GUI subclass
+class SharedPreferences;
 class Context{
 public:
     virtual ~Context() = default;
@@ -119,6 +120,18 @@ public:
     virtual Drawable*       getDrawable(int id);
     virtual std::shared_ptr<ColorStateList> getColorStateList(int id);
     virtual Typeface*       getFont(int id);   // default nullptr (deferred)
+
+    // File creation mode: the default (and only modeled) mode, from
+    // android.content.Context (MODE_PRIVATE = 0x00000000).
+    static constexpr int MODE_PRIVATE = 0;
+
+    // AOSP Context.getSharedPreferences(String, int): retrieve and hold the
+    // contents of the preferences file, returning a SharedPreferences through
+    // which you can retrieve and modify its values. Only MODE_PRIVATE is
+    // modeled. The default implementation (context.cc) caches instances by
+    // name so the same file always yields the same object, like AOSP.
+    virtual std::shared_ptr<SharedPreferences> getSharedPreferences(
+            const std::string& name, int mode);
 };
 
 }

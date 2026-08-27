@@ -96,7 +96,7 @@ public:
     Paint(const Paint&);
     virtual ~Paint();
     Typeface* getTypeface()const{return mTypeface;}
-    void setTypeface(Typeface*face){mTypeface=face;}
+    void setTypeface(Typeface*face);
     minikin::MinikinPaint* getMinikinPaint()const{return mMinikinPaint.get();}
     virtual void set(const Paint&);
     bool hasEqualAttributes(const Paint&other)const;

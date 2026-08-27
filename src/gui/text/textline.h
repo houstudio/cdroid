@@ -9,6 +9,7 @@ namespace cdroid{
 class Directions;
 class TabStops;
 class PrecomputedText;
+class SpanSet;   // members below use it pointer-only (text/spanset.h)
 class TextLine {
 private:
     class DecorationInfo {

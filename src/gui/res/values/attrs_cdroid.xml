@@ -111,6 +111,31 @@
         <attr name="autoAdjustToWithinGrandparentBounds" format="boolean" />
     </declare-styleable>
 
+    <!-- androidx.preference port: attrs added by androidx that the framework
+         preference library never had. Format definitions live here (id block
+         0x01011040+); the framework-side declare-styleables reference them by
+         name from values/attrs.xml. -->
+    <attr name="isPreferenceVisible" format="boolean" />
+    <attr name="allowDividerAbove" format="boolean" />
+    <attr name="allowDividerBelow" format="boolean" />
+    <attr name="enableCopying" format="boolean" />
+    <attr name="initialExpandedChildrenCount" format="integer" />
+    <attr name="seekBarIncrement" format="integer" />
+    <attr name="updatesContinuously" format="boolean" />
+    <attr name="allowDividerAfterLastItem" format="boolean" />
+    <attr name="useSimpleSummaryProvider" format="boolean" />
+
+    <!-- androidx.preference styleable EditTextPreference. -->
+    <declare-styleable name="EditTextPreference">
+        <attr name="useSimpleSummaryProvider" />
+    </declare-styleable>
+
+    <!-- androidx.preference internal PreferenceImageView. -->
+    <declare-styleable name="PreferenceImageView">
+        <attr name="maxWidth" />
+        <attr name="maxHeight" />
+    </declare-styleable>
+
     <!-- androidx CardView (androidx.cardview.widget styleable CardView);
          minWidth/minHeight reuse the framework attrs (android:minWidth). -->
     <declare-styleable name="CardView">

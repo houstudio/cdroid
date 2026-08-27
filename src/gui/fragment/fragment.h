@@ -91,6 +91,9 @@ public:
     cdroid::Bundle* mArguments = nullptr;
     std::string mTag;
     std::string mTargetWho;
+    // Runtime target-fragment pointer (androidx Fragment.setTargetFragment
+    // keeps the object reference; mTargetWho is the save-state who-string).
+    Fragment* mTargetFragment = nullptr;
     std::string mPreviousWho;
     int mFragmentId = 0;
     int mContainerId = 0;
@@ -195,6 +198,15 @@ public:
     cdroid::View* getView() const { return mView; }
     cdroid::Bundle* getArguments() const { return mArguments; }
     void setArguments(cdroid::Bundle* args);
+    // androidx Fragment.setTargetFragment/getTargetFragment (Fragment.java):
+    // optional target for result-flow between fragments. Borrowed pointer —
+    // the target fragment must outlive this fragment's dialog use of it.
+    void setTargetFragment(Fragment* fragment, int requestCode) {
+        mTargetFragment = fragment;
+        mTargetRequestCode = requestCode;
+    }
+    Fragment* getTargetFragment() const { return mTargetFragment; }
+    int getTargetRequestCode() const { return mTargetRequestCode; }
     FragmentManager* getParentFragmentManager();
     FragmentManager* getChildFragmentManager();
     Fragment* getParentFragment() const { return mParentFragment; }

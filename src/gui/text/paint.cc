@@ -58,6 +58,17 @@ Paint::Paint(const Paint&other){
 Paint::~Paint(){
 }
 
+// AOSP Paint.setTypeface only swaps the field (minikin reads paint->typeface
+// per call); cdroid's MinikinPaint caches the resolved FontCollection, so the
+// collection must follow the typeface here or every later measurement keeps
+// drawing with the previous face.
+void Paint::setTypeface(Typeface*face){
+    mTypeface=face;
+    if(face!=nullptr && mMinikinPaint!=nullptr){
+        mMinikinPaint->font = face->getFontCollection();
+    }
+}
+
 void Paint::set(const Paint&o){
     mTypeface=o.mTypeface;
     mColor = o.mColor;

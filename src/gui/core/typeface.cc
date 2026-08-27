@@ -29,6 +29,9 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <cdlog.h>
+#include <core/app.h>
+#include <content/asset.h>
+#include <content/assetmanager.h>
 #include <core/typeface.h>
 #include <core/fontlistparser.h>
 #include <functional>
@@ -331,6 +334,68 @@ Typeface::Typeface(const std::string& family, int weight, bool italic,
     }
 }
 
+namespace {
+// Faces loaded from pak entries (asset or R.font resource), cached per resolved
+// path for the process lifetime: repeated calls return the SAME instance (AOSP
+// parity) and one FT_Face/FontCollection is shared across every paint using it.
+std::unordered_map<std::string, std::shared_ptr<Typeface>>& assetTypefaceCache() {
+    static std::unordered_map<std::string, std::shared_ptr<Typeface>> cache;
+    return cache;
+}
+} // namespace
+
+// Typeface.createFromAsset (AOSP returns an app-held object backed by GC; here
+// the face is cached per asset path and owned by the cache for the process
+// lifetime, so repeated calls share one FreeType face and callers never free).
+// Reads through AssetManager.open like the AOSP original — not getInputStream.
+Typeface* Typeface::createFromAsset(const std::string path) {
+    auto& cache = assetTypefaceCache();
+    auto it = cache.find(path);
+    if (it != cache.end()) return it->second.get();
+
+    Asset* asset = App::getInstance().getAssets().open(path.c_str(), Asset::ACCESS_BUFFER);
+    return finishAssetTypeface(path, asset, "createFromAsset");
+}
+
+// AOSP Typeface.createFromResources: R.font resource route. Same cache and
+// loading, but the path comes from the arsc and is opened via openNonAsset
+// (zip root path, no assets/ prefix). aapt2 records apk-style "res/<type>/<f>"
+// paths while cdroid paks store entries with the "res/" prefix stripped (the
+// pak naming convention) — normalize, like openPakPath does for -v4 suffixes.
+Typeface* Typeface::createFromResourcePath(const std::string path) {
+    std::string entry = (path.rfind("res/", 0) == 0) ? path.substr(4) : path;
+
+    auto& cache = assetTypefaceCache();
+    auto it = cache.find(entry);
+    if (it != cache.end()) return it->second.get();
+
+    Asset* asset = App::getInstance().getAssets().openNonAsset(entry.c_str(), Asset::ACCESS_BUFFER);
+    return finishAssetTypeface(entry, asset, "createFromResourcePath");
+}
+
+Typeface* Typeface::finishAssetTypeface(const std::string& path, Asset* asset, const char* tag) {
+    auto& cache = assetTypefaceCache();
+    if (asset == nullptr) {
+        LOGW("%s: not found: %s", tag, path.c_str());
+        return nullptr;
+    }
+    const ssize_t size = (ssize_t)asset->getLength();
+    auto fontData = std::make_shared<std::vector<uint8_t>>();
+    if (size > 0) {
+        const uint8_t* buffer = static_cast<const uint8_t*>(asset->getBuffer(true));
+        if (buffer != nullptr) fontData->assign(buffer, buffer + size);
+    }
+    delete asset; // AOSP closes the Asset after reading the bytes
+    if (fontData->empty()) {
+        LOGW("%s: empty: %s", tag, path.c_str());
+        return nullptr;
+    }
+    auto tf = std::shared_ptr<Typeface>(new Typeface("", 400 /* normal */, false, fontData, 0),
+                                        Deleter{});
+    cache[path] = tf;
+    return tf.get();
+}
+
 // Memory-backed Typeface (PAK @font): font bytes live in `fontData`. FT_Face via
 // FT_New_Memory_Face; the MinikinFont is the memory variant (GetFontData returns the
 // buffer) so it obeys the standard blob contract without needing a file path.
@@ -356,6 +421,12 @@ Typeface::Typeface(const std::string& family, int weight, bool italic,
     auto ftFaceRef = std::dynamic_pointer_cast<Cairo::FtFontFace>(mFontFace);
     if (ftFaceRef) {
         mMinikinFont = std::make_shared<FullMinikinFont>(ftFaceRef, fontData, faceIndex);
+        // And a DEDICATED single-font collection: getFontCollection()'s lazy
+        // path resolves by family name against the system registry, which
+        // knows nothing about asset/resource fonts (they would silently
+        // measure with the default face). Pre-setting skips that lookup.
+        mFontCollection = minikin::FontCollection::create(
+                {minikin::FontFamily::create({minikin::Font::Builder(mMinikinFont).build()})});
     }
 }
 

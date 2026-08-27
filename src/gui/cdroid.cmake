@@ -12,6 +12,7 @@ include(fragment/fragment.cmake)
 include(widgetEx/widgetex.cmake)
 include(navigation/navigation.cmake)
 include(content/content.cmake)
+include(preference/preference.cmake)
 
 list(APPEND CDROID_SOURCES
     private/inputeventlabels.cc
@@ -29,6 +30,7 @@ list(APPEND CDROID_SOURCES
     ${WEAR_SOURCES}
     ${NAVIGATION_SOURCES}
     ${CONTENT_SOURCES}
+    ${PREFERENCE_SOURCES}
 )
 
 if(ENABLE_AUDIO)

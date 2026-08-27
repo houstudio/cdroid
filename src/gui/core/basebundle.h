@@ -106,6 +106,22 @@ public:
         return getValue<int>(key);
     }
 
+    // android.os.Bundle getXxx(key, defaultValue) overloads: return the
+    // default when the key is absent (AOSP semantics; the single-arg form
+    // above cannot express "missing").
+    int getInt(const std::string& key, int def) const {
+        return containsKey(key) ? getValue<int>(key) : def;
+    }
+    int64_t getLong(const std::string& key, int64_t def) const {
+        return containsKey(key) ? getValue<int64_t>(key) : def;
+    }
+    float getFloat(const std::string& key, float def) const {
+        return containsKey(key) ? getValue<float>(key) : def;
+    }
+    bool getBoolean(const std::string& key, bool def) const {
+        return containsKey(key) ? getValue<bool>(key) : def;
+    }
+
     int64_t getLong(const std::string& key) const {
         return getValue<int64_t>(key);
     }

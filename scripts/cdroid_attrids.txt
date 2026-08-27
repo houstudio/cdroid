@@ -68,3 +68,12 @@
 0x0101103d contentPaddingTop
 0x0101103e contentPaddingRight
 0x0101103f contentPaddingBottom
+0x010d0079 isPreferenceVisible
+0x010d0011 allowDividerAbove
+0x010d0013 allowDividerBelow
+0x010d004d enableCopying
+0x010d0071 initialExpandedChildrenCount
+0x010d00f2 seekBarIncrement
+0x010d0127 updatesContinuously
+0x010d0012 allowDividerAfterLastItem
+0x010d0129 useSimpleSummaryProvider

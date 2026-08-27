@@ -6873,4 +6873,10 @@ ul.</string>
     <!-- Fingerprint failed rate too high notification msg -->
     <string name="fingerprint_frr_notification_msg">Tap to review tips to improve your unlocking experience</string>
 
+    <!-- androidx.preference port strings (preference/res/values/strings.xml) -->
+    <string name="expand_button_title">Advanced</string>
+    <string name="summary_collapsed_preference_list">"%1$s", "%2$s"</string>
+    <string name="preference_copied">"%1$s" copied to clipboard.</string>
+    <string name="not_set">Not set</string>
+
 </resources>

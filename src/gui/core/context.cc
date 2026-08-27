@@ -9,6 +9,8 @@
 #include "resources.h"      // cdroid::Resources (full def — getResources() returns it)
 #include <content/typedarray.h>       // TypedArray (constructed below)
 #include <content/androidfw/restable.h>     // ResTable::Theme + obtainStyledAttributes + StyledAttr
+#include <content/sharedpreferences.h>      // SharedPreferencesImpl (getSharedPreferences)
+#include <map>
 
 namespace cdroid {
 
@@ -63,10 +65,9 @@ Asset* Context::openRawResource(int id) {
     return getResources().openRawResource(id);
 }
 
-// Font resource resolution is deferred (stub returns nullptr).
+// AOSP Context.getFont: plain delegation to Resources.getFont.
 Typeface* Context::getFont(int id) {
-    (void)id;
-    return nullptr;
+    return getResources().getFont(id);
 }
 
 // AOSP Resources.Theme.obtainStyledAttributes(attrs): resolve each attr against
@@ -107,6 +108,22 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const AttributeSet* 
 std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const AttributeSet& attrs,
         const uint32_t* styleable, int32_t defStyleAttr, int32_t defStyleRes) {
     return obtainStyledAttributes(&attrs, styleable, defStyleAttr, defStyleRes);
+}
+
+// AOSP Context.getSharedPreferences(String, int): one SharedPreferences
+// instance per (file) name for the lifetime of the process (AOSP semantics —
+// same name must return the same object so listeners and writes stay
+// coherent). The default store persists under the CDROID prefs directory.
+std::shared_ptr<SharedPreferences> Context::getSharedPreferences(
+        const std::string& name, int mode) {
+    static std::map<std::string, std::weak_ptr<SharedPreferences>> cache;
+    auto& slot = cache[name];
+    std::shared_ptr<SharedPreferences> sp = slot.lock();
+    if (!sp) {
+        sp = std::make_shared<SharedPreferencesImpl>(name, mode);
+        slot = sp;
+    }
+    return sp;
 }
 
 } // namespace cdroid

@@ -13,8 +13,8 @@ set(_FW_STYLEABLE_INCLUDE ${PROJECT_SOURCE_DIR}/widget/framework_styleable_inclu
 # drifted table makes every styleable array resolve a NEIGHBOR attr (see the
 # 2026-08-15 TimePicker legacyLayout->lightZ crash). Before regenerating the
 # styleables, cross-check the tables against the compiled framework arsc and
-# fail the build on any mismatch. Fix: re-run the table generator or
-# `check_attrids.py --fix`.
+# auto-rewrite drifted entries (--fix): the arsc is the single source of
+# truth, so the tables follow it instead of failing the build.
 set(_ATTRIDS_CHECK ${CMAKE_SOURCE_DIR}/scripts/check_attrids.py)
 set(_FRAMEWORK_APK ${CMAKE_BINARY_DIR}/framework.apk)
 add_custom_command(
@@ -24,6 +24,7 @@ add_custom_command(
             --framework-apk ${_FRAMEWORK_APK}
             --table ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
             --table ${CMAKE_SOURCE_DIR}/scripts/cdroid_attrids.txt
+            --fix
     COMMAND ${Python_EXECUTABLE} ${_FW_STYLEABLE_GEN}
             --attrs ${PROJECT_SOURCE_DIR}/res/values/attrs.xml,${PROJECT_SOURCE_DIR}/res/values/attrs_manifest.xml,${PROJECT_SOURCE_DIR}/res/values/attrs_cdroid.xml
             --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt

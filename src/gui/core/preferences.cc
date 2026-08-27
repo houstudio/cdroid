@@ -128,6 +128,22 @@ bool Preferences::hasSection(const std::string&section)const{
     return mPrefs.find(section) != mPrefs.end();
 }
 
+int Preferences::getKeys(const std::string&section, std::vector<std::string>&keys) const{
+    keys.clear();
+    auto sec = mPrefs.find(section);
+    if(sec == mPrefs.end()) return 0;
+    for(auto& kv : sec->second)
+        keys.push_back(kv.first);
+    return keys.size();
+}
+
+void Preferences::remove(const std::string&section, const std::string&key){
+    auto sec = mPrefs.find(section);
+    if(sec == mPrefs.end()) return;
+    if(sec->second.erase(key) > 0)
+        updates++;
+}
+
 int Preferences::getUpdates()const{
     return updates;
 }

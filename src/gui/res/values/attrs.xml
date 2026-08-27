@@ -8705,6 +8705,10 @@
              If this is false, the ordering will follow the Preference order attribute and
              default to alphabetic for those without the order attribute. -->
         <attr name="orderingFromXml" format="boolean" />
+        <!-- The maximal number of children that are shown when the preference group is launched
+             where the rest of the children will be hidden. If some children are hidden an expand
+             button will be provided to show all the hidden children. -->
+        <attr name="initialExpandedChildrenCount" />
     </declare-styleable>
 
     <!-- Attribute for a header describing the item shown in the top-level list
@@ -8783,6 +8787,15 @@
              icon view visibility will be set to GONE when there is no icon provided, so the default
              value of this attribute is false. -->
         <attr name="iconSpaceReserved" format="boolean" />
+        <!-- Whether the Preference is visible. By default, this is set to true. -->
+        <attr name="isPreferenceVisible" />
+        <!-- Whether the preference allows displaying divider on top -->
+        <attr name="allowDividerAbove" />
+        <!-- Whether the preference allows displaying divider below it -->
+        <attr name="allowDividerBelow" />
+        <!-- Whether the summary of this preference can be copied to the clipboard by long pressing
+             on the preference. By default, this is set to false. -->
+        <attr name="enableCopying" />
     </declare-styleable>
 
     <!-- Base attributes available to CheckBoxPreference. -->
@@ -8828,6 +8841,7 @@
              entries is selected. If a user clicks on the second item in entries, the
              second item in this array will be saved to the preference. -->
         <attr name="entryValues" format="reference" />
+        <attr name="useSimpleSummaryProvider" />
     </declare-styleable>
 
     <declare-styleable name="MultiSelectListPreference">
@@ -10004,6 +10018,11 @@
 
     <declare-styleable name="SeekBarPreference">
         <attr name="layout" />
+        <attr name="min" />
+        <attr name="android:max" />
+        <!--Attribute controlling the amount to increment or decrement the seekbar when the user
+        presses the arrow keys-->
+        <attr name="seekBarIncrement" />
         <!-- Attribute indicating whether the slider within this preference can be adjusted, that is
         pressing left/right keys when this preference is focused will move the slider accordingly
         (for example, inline adjustable preferences). False, if the slider within the preference is
@@ -10012,6 +10031,9 @@
         <!-- Flag indicating whether the TextView next to the seekbar that shows the current seekbar value will be
         displayed. If true, the view is VISIBLE; if false, the view will be GONE. By default, this view is VISIBLE. -->
         <attr name="showSeekBarValue" format="boolean" />
+        <!-- Flag indicating whether the SeekBarPreference should continuously save the Seekbar
+        value while the Seekbar is being dragged. By default, this boolean is false. -->
+        <attr name="updatesContinuously" />
     </declare-styleable>
 
     <!-- Base attributes available to PreferenceFragment. -->
@@ -10019,6 +10041,9 @@
         <!-- The layout for the PreferenceFragment. This should rarely need to be changed. -->
         <attr name="layout" />
         <attr name="divider" />
+        <attr name="android:dividerHeight" />
+        <!-- Whether a divider is allowed to draw after the last item -->
+        <attr name="allowDividerAfterLastItem" />
     </declare-styleable>
 
     <!-- Base attributes available to PreferenceScreen. -->

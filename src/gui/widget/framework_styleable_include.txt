@@ -167,3 +167,18 @@ TransitionManager
 
 # --- window animations (framework attrs.xml) ---
 WindowAnimation
+
+# --- androidx.preference port (framework attrs.xml + attrs_cdroid.xml) ---
+Preference
+PreferenceGroup
+PreferenceScreen
+PreferenceHeader
+CheckBoxPreference
+DialogPreference
+EditTextPreference
+ListPreference
+MultiSelectListPreference
+SwitchPreference
+SeekBarPreference
+PreferenceFragment
+PreferenceImageView

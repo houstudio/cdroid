@@ -18,6 +18,7 @@
 #ifndef __TYPEFACE_H__
 #define __TYPEFACE_H__
 #include <string>
+namespace cdroid{ class Asset; }  // content/asset.h (finishAssetTypeface param, fwd-only here)
 #include <unordered_map>
 #include <vector>
 #include <memory>
@@ -124,8 +125,17 @@ public:
     static Typeface* create(Typeface* family,int weight, bool italic);
     static Typeface* defaultFromStyle(int style);
     static Typeface* createFromAsset(const std::string path);
+    // AOSP Typeface.createFromResources: the R.font/<name> resource route.
+    // The arsc value for a raw ttf font resource is the pak-relative file
+    // path; loaded via AssetManager.openNonAsset (zip root path, no assets/
+    // prefix) and cached per path like createFromAsset.
+    static Typeface* createFromResourcePath(const std::string path);
     static void loadPreinstalledSystemFontMap();
     static int loadFaceFromResource(cdroid::Context*context);
+private:
+    // Shared tail of the two pak-font factories: read the Asset bytes, build
+    // the memory-backed face, store it in the per-path cache.
+    static Typeface* finishAssetTypeface(const std::string& path, Asset* asset, const char* tag);
     static std::vector<Cairo::RefPtr<Cairo::FontFace>>getFontFaces();
 };
 

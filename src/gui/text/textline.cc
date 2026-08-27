@@ -25,8 +25,7 @@ TextLine* TextLine::recycle(TextLine* tl) {
     tl->mPaint = nullptr;
     tl->mDirections = nullptr;
     tl->mSpanned = nullptr;
-    delete tl->mTabs;
-    tl->mTabs = nullptr;
+    tl->mTabs = nullptr;   // borrowed (see ~TextLine) — just drop the reference
     tl->mChars.clear();//mChars = nullptr;
     tl->mComputed = nullptr;
 
@@ -51,7 +50,10 @@ TextLine::TextLine(){
 }
 
 TextLine::~TextLine(){
-    delete mTabs;
+    // mTabs is BORROWED (AOSP TextLine.set stores the caller's TabStops
+    // reference; callers pass stack objects) — never delete it here or in
+    // recycle(); doing so deleted caller-owned memory once a tabbed line was
+    // recycled (first exposed by the coretests TextLine tab measurements).
     delete mMetricAffectingSpanSpanSet;
     delete mCharacterStyleSpanSet;
     delete mReplacementSpanSpanSet;

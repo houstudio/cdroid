@@ -24,7 +24,7 @@
 #include <gui_features.h>
 #include <content/Locale.h>
 #include <content/i18nbridge.h>
-#include <core/numberformat.h>
+#include <content/numberformat.h>
 using namespace std;
 
 namespace cdroid {
