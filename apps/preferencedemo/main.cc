@@ -260,14 +260,18 @@ public:
         auto* args = new cdroid::Bundle();
         args->putString(PreferenceFragment::ARG_PREFERENCE_ROOT, key);
         fragment->setArguments(args);
-        getSupportFragmentManager()->beginTransaction()
-            ->setCustomAnimations((int)preferencedemo::R::anim::slide_in_right,
-                                  (int)preferencedemo::R::anim::slide_out_left,
-                                  (int)preferencedemo::R::anim::slide_in_left,
-                                  (int)preferencedemo::R::anim::slide_out_right)
-                                  .replace(getFragmentContainerId(), fragment)
-                                  .addToBackStack(key)
-                                  .commit();
+        auto* tx = getSupportFragmentManager()->beginTransaction();
+        // PREFDEMO_NO_ANIM=1 skips the custom slides so the push rides the
+        // DEFAULT Fade (the transition path whose per-op clone bug was fixed).
+        if (getenv("PREFDEMO_NO_ANIM") == nullptr) {
+            tx->setCustomAnimations((int)preferencedemo::R::anim::slide_in_right,
+                                    (int)preferencedemo::R::anim::slide_out_left,
+                                    (int)preferencedemo::R::anim::slide_in_left,
+                                    (int)preferencedemo::R::anim::slide_out_right);
+        }
+        tx->replace(getFragmentContainerId(), fragment)
+           .addToBackStack(key)
+           .commit();
     }
 
 protected:
@@ -339,7 +343,7 @@ int main(int argc, const char* argv[]) {
     // chain resolves ?android:attr/textAppearance against the App context,
     // so the Material Light palette reaches the row TextViews (a Window-only
     // setTheme would not propagate to those contexts).
-    app.setTheme((int)internal::R::style::Theme_Material_Light);
+    app.setTheme((int)internal::R::style::Theme_Material);
     auto* w = new SettingsActivity();
     if (argc > 1) w->setLaunchRoot(argv[1]);
     LOGD("settings demo window created");
