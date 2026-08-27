@@ -335,16 +335,11 @@ protected:
         if (mLandscape) {
             // Two-pane: master carries the top-level list, detail starts at
             // the given (or first) top-level entry's screen.
-            // NOTE: two separate transactions — CDROID's BackStackRecord
-            // executes only the first replace op of a record (AOSP runs all),
-            // so batching both panes into one commit drops the second pane.
-            auto* txMaster = getSupportFragmentManager()->beginTransaction();
-            txMaster->replace((int)preferencedemo::R::id::prefdemo_master, new SettingsFragment());
-            txMaster->commitNow();
-            auto* txDetail = getSupportFragmentManager()->beginTransaction();
-            txDetail->replace((int)preferencedemo::R::id::prefdemo_detail,
+            auto* tx = getSupportFragmentManager()->beginTransaction();
+            tx->replace((int)preferencedemo::R::id::prefdemo_master, new SettingsFragment());
+            tx->replace((int)preferencedemo::R::id::prefdemo_detail,
                     newFragmentForKey(initialRoot.empty() ? "screen_network" : initialRoot));
-            txDetail->commitNow();
+            tx->commit();
         } else {
             auto* fragment = new SettingsFragment();
             if (!initialRoot.empty()) fragment = newFragmentForKey(initialRoot);
