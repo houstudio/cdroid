@@ -87,6 +87,54 @@ void DefaultSpecialEffectsController::collectEffects(std::vector<Operation*>& op
     }
 }
 
+namespace { // file-local: retry-until-idle view reclaim
+
+// Self-repost WITHOUT a self-referencing closure. A closure cannot reference
+// itself safely:
+//  - capturing its own shared_ptr<function> is an unbreakable cycle (leak);
+//  - capturing its own Runnable BY VALUE copies the PRE-assignment (empty)
+//    functor — CallbackBase copies share mFunctor and the capture happens
+//    before operator= installs the real one, so the in-body repost no-ops
+//    (repro'd: the reclaim body never runs at all);
+//  - capturing by reference dangles once the enclosing lambda returns.
+// Recursion sidesteps all three: each hop builds a FRESH Runnable from the
+// by-value state and posts it, so no closure ever references itself.
+void scheduleViewReclaim(ViewGroup* cont, View* view, Fragment* fragment,
+                         std::weak_ptr<bool> fragAlive, std::function<void()> hook) {
+    Runnable retry;
+    retry = [cont, view, fragment, fragAlive, hook](){
+        // Retry until NO transition is pending/running on the container:
+        // a still-active clone (e.g. a dialog round's Fade that captured the
+        // whole tree) dereferences this view from its startValues at preDraw.
+        if(TransitionManager::hasActiveTransitions(cont)){
+            scheduleViewReclaim(cont, view, fragment, fragAlive, hook); // next hop: fresh Runnable
+            return;
+        }
+        {
+        // Detach from the parent BEFORE delete: ~View only does mParent->removeViewInternal
+        // (mChildren), and an addDisappearingView'd view has mParent==null while still
+        // listed in mDisappearingChildren — so ~View wouldn't pull it out, leaving the
+        // parent drawing a freed view. Remove explicitly so neither list retains it.
+        if(fragAlive.lock()){
+            endAnimatorsOver(view);
+            if(fragment && fragment->mView == view){
+                fragment->performDestroyView();
+                fragment->mView = nullptr;
+            }
+            // Re-attached meanwhile with a NEW view: leave the fragment
+            // alone (performDestroyView would kill the live view) — only
+            // free the stale captured one.
+            if(view->getParent()) view->getParent()->removeView(view);
+            delete view;
+        }
+        if(hook) hook();
+        }
+    };
+    cont->post(retry);
+}
+
+} // anonymous namespace
+
 void AnimationEffect::onCommit(ViewGroup* container){
     Fragment* f = mOperation->mFragment;
     if(!f || !f->mView || !mAnimation){ mOperation->completeEffect(this); return; }
@@ -213,36 +261,10 @@ void TransitionEffect::onCommit(ViewGroup* container){
                                                      : std::weak_ptr<bool>();
             auto scheduleDelete = [cont, view, fragment, fragAlive, fired, hook](){
                 if(*fired) return; *fired = true;
-                // Retry until NO transition is pending/running on the container:
-                // a still-active clone (e.g. a dialog round's Fade that captured the
-                // whole tree) dereferences this view from its startValues at preDraw.
-                auto retry = std::make_shared<std::function<void()>>();
-                *retry = [cont, view, fragment, fragAlive, hook, retry]{
-                    if(TransitionManager::hasActiveTransitions(cont)){
-                        cont->post([retry]{ (*retry)(); });
-                        return;
-                    }
-                    {
-                    // Detach from the parent BEFORE delete: ~View only does mParent->removeViewInternal
-                    // (mChildren), and an addDisappearingView'd view has mParent==null while still
-                    // listed in mDisappearingChildren — so ~View wouldn't pull it out, leaving the
-                    // parent drawing a freed view. Remove explicitly so neither list retains it.
-                    if(fragAlive.lock()){
-                        endAnimatorsOver(view);
-                        if(fragment && fragment->mView == view){
-                            fragment->performDestroyView();
-                            fragment->mView = nullptr;
-                        }
-                        // Re-attached meanwhile with a NEW view: leave the fragment
-                        // alone (performDestroyView would kill the live view) — only
-                        // free the stale captured one.
-                        if(view->getParent()) view->getParent()->removeView(view);
-                        delete view;
-                    }
-                    if(hook) hook();
-                    }
-                };
-                cont->post([retry]{ (*retry)(); });
+                // Retry-until-no-transitions lives in scheduleViewReclaim():
+                // recursion gives the self-repost without any closure referencing
+                // itself (see the rationale there).
+                scheduleViewReclaim(cont, view, fragment, fragAlive, hook);
             };
             if(clone){
                 Transition::TransitionListener lst;
