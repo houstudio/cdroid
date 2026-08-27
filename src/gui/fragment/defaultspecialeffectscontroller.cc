@@ -33,6 +33,7 @@ namespace cdroid{
 namespace fragment{
 
 void DefaultSpecialEffectsController::collectEffects(std::vector<Operation*>& operations, bool isPop){
+    roundClones().clear();   // per-round: effects of one burst share one clone per container
     // syncAnimations: the last operation's anims propagate to every fragment in the batch (androidx),
     // so sibling fragments in one transaction share the same enter/exit set.
     if(!operations.empty()){
@@ -162,7 +163,21 @@ void TransitionEffect::onCommit(ViewGroup* container){
     // animates). clone() no longer inherits the original's listeners (copyCloneFields clears them),
     // so to reclaim the fragment view when the clone truly ends we addListener() on the returned
     // clone directly — not on mTransition, not on op-completion.
-    Transition* clone = TransitionManager::beginDelayedTransition(container, mTransition);
+    //
+    // Round-sharing: a replace produces enter+exit effects on the SAME container; the second
+    // beginDelayedTransition would return null (container pending) and its else-branch would
+    // delete the view immediately while the first clone's captured startValues still reference
+    // it (UAF in Visibility::onDisappear). Every effect of the round reuses the first clone.
+    auto* controller = static_cast<DefaultSpecialEffectsController*>(mOperation->mController);
+    Transition* clone = nullptr;
+    auto& roundClones = controller->roundClones();
+    auto cached = roundClones.find(container);
+    if (cached != roundClones.end()) {
+        clone = cached->second;                      // this round's shared clone
+    } else {
+        clone = TransitionManager::beginDelayedTransition(container, mTransition);
+        if (clone != nullptr) roundClones[container] = clone;
+    }
     // Reclaim legacy-Animation exit views (deferred by a sibling AnimationEffect) when this clone
     // truly ends — by then its ObjectAnimator no longer dereferences them, so freeing is safe.
     // The alive-guard makes the callback a no-op if the controller is already destroyed.
@@ -223,9 +238,16 @@ void TransitionEffect::onCommit(ViewGroup* container){
                 lst.onTransitionEnd = [scheduleDelete](Transition&){ scheduleDelete(); };
                 lst.onTransitionCancel = [scheduleDelete](Transition&){ scheduleDelete(); };
                 clone->addListener(lst);
-            } else {
-                // no-op (not laid out / already pending): no clone, no animator referencing the view.
+            } else if (roundClones.find(container) == roundClones.end()) {
+                // No clone at all (not laid out): nothing animates the view.
                 scheduleDelete();
+            } else {
+                // Shared round clone exists: defer this view's delete to that clone's end,
+                // exactly like the clone-owner path above.
+                Transition::TransitionListener lst;
+                lst.onTransitionEnd = [scheduleDelete](Transition&){ scheduleDelete(); };
+                lst.onTransitionCancel = [scheduleDelete](Transition&){ scheduleDelete(); };
+                roundClones[container]->addListener(lst);
             }
         }
     }
