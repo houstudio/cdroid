@@ -31,13 +31,16 @@ using namespace cdroid::internal;   // framework R namespace (suffix string ids)
 
 // AOSP localeFromContext(); CDROID convention is Locale::getDefault() (see
 // header note) — the tests drive it with Locale::setDefault().
-static Locale localeFromContext(Context* context) {
-    (void)context;
-    return Locale::getDefault();
+static Locale localeFromContext(Context& context) {
+    return context.getResources().getConfiguration().getLocales().get(0);
 }
 
 // AOSP bidiWrap(); BidiFormatter is not ported — return the source as-is.
-static std::string bidiWrap(Context* /*context*/, std::string source) {
+static std::string bidiWrap(Context& context, std::string source) {
+    // AOSP consults the locale's layout direction and wraps through
+    // BidiFormatter in RTL locales; BidiFormatter is not ported, so the source
+    // comes back unchanged (recorded deviation, file header).
+    (void)context;
     return source;
 }
 
@@ -49,8 +52,8 @@ std::string Formatter::formatFileSize(Context* context, int64_t sizeBytes, int f
     if (context == nullptr) {
         return "";
     }
-    const BytesResult res = formatBytes(&context->getResources(), sizeBytes, flags);
-    return bidiWrap(context, context->getResources().getString(R::string::fileSizeSuffix,
+    const BytesResult res = formatBytes(context->getResources(), sizeBytes, flags);
+    return bidiWrap(*context, context->getResources().getString(R::string::fileSizeSuffix,
             { res.value, res.units }));
 }
 
@@ -58,13 +61,13 @@ std::string Formatter::formatShortFileSize(Context* context, int64_t sizeBytes) 
     if (context == nullptr) {
         return "";
     }
-    const BytesResult res = formatBytes(&context->getResources(), sizeBytes,
+    const BytesResult res = formatBytes(context->getResources(), sizeBytes,
             FLAG_SI_UNITS | FLAG_SHORTER);
-    return bidiWrap(context, context->getResources().getString(R::string::fileSizeSuffix,
+    return bidiWrap(*context, context->getResources().getString(R::string::fileSizeSuffix,
             { res.value, res.units }));
 }
 
-Formatter::BytesResult Formatter::formatBytes(Resources* res, int64_t sizeBytes, int flags) {
+Formatter::BytesResult Formatter::formatBytes(Resources& res, int64_t sizeBytes, int flags) {
     const int unit = ((flags & FLAG_IEC_UNITS) != 0) ? 1024 : 1000;
     const bool isNegative = (sizeBytes < 0);
     float result = isNegative ? (float)-sizeBytes : (float)sizeBytes;
@@ -139,9 +142,9 @@ Formatter::BytesResult Formatter::formatBytes(Resources* res, int64_t sizeBytes,
             (flags & FLAG_CALCULATE_ROUNDED) == 0 ? 0
             : (((int64_t) std::llround(result * roundFactor)) * mult / roundFactor);
 
-    const std::string units = res != nullptr ? res->getString(suffix) : std::string();
+    const std::string units = res.getString(suffix);
 
-    const Locale locale = localeFromContext(nullptr);
+    const Locale locale = res.getConfiguration().getLocales().get(0);
     std::unique_ptr<NumberFormat> numberFormatter = NumberFormat::getInstance(locale);
     numberFormatter->setMinimumFractionDigits(fractionDigits);
     numberFormatter->setMaximumFractionDigits(fractionDigits);
@@ -174,7 +177,9 @@ static std::string joinMeasures(const std::string& a, const std::string& b) {
     return a + ", " + b;
 }
 
-std::string Formatter::formatShortElapsedTime(Context* /*context*/, int64_t millis) {
+std::string Formatter::formatShortElapsedTime(Context& /*context*/, int64_t millis) {
+    // AOSP builds a locale MeasureFormat here; the en-US unit-word table
+    // (file header) needs no locale, so the parameter goes unused.
     int64_t secondsLong = millis / 1000;
 
     int days = 0, hours = 0, minutes = 0;
@@ -212,7 +217,7 @@ std::string Formatter::formatShortElapsedTime(Context* /*context*/, int64_t mill
     }
 }
 
-std::string Formatter::formatShortElapsedTimeRoundingUpToMinutes(Context* context,
+std::string Formatter::formatShortElapsedTimeRoundingUpToMinutes(Context& context,
         int64_t millis) {
     const int64_t minutesRoundedUp = (millis + MILLIS_PER_MINUTE - 1) / MILLIS_PER_MINUTE;
 

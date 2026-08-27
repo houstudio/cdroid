@@ -14,6 +14,8 @@
  *********************************************************************************/
 #include <text/format/formatter.h>
 #include <content/Locale.h>
+#include <content/LocaleList.h>
+#include <view/configuration.h>
 #include <core/app.h>
 #include <gtest/gtest.h>
 #include <string>
@@ -38,6 +40,11 @@ protected:
     }
 
     void setLocale(const Locale& locale) {
+        // AOSP FormatterTest.setLocale: update the Resources configuration
+        // (what formatBytes reads) and Locale.setDefault.
+        Configuration config = App::getInstance().getResources().getConfiguration();
+        config.setLocales(LocaleList(locale, nullptr));
+        App::getInstance().getResources().updateConfiguration(&config, nullptr);
         Locale::setDefault(locale);
     }
 
@@ -50,7 +57,7 @@ protected:
     void checkFormatBytes(int64_t bytes, int flags,
             const std::string& expectedString, int64_t expectedRounded) {
         const Formatter::BytesResult r = Formatter::formatBytes(
-                &App::getInstance().getResources(), bytes,
+                App::getInstance().getResources(), bytes,
                 Formatter::FLAG_CALCULATE_ROUNDED | flags);
         EXPECT_EQ(expectedString, r.value);
         EXPECT_EQ(expectedRounded, r.roundedBytes);
@@ -97,7 +104,7 @@ TEST_F(FormatterTest, testFormatBytes) {
 
     // Missing FLAG_CALCULATE_ROUNDED case.
     const Formatter::BytesResult r = Formatter::formatBytes(
-            &App::getInstance().getResources(), 1, 0);
+            App::getInstance().getResources(), 1, 0);
     EXPECT_EQ("1", r.value);
     EXPECT_EQ(0, r.roundedBytes); // Didn't pass FLAG_CALCULATE_ROUNDED
 
@@ -128,81 +135,81 @@ TEST_F(FormatterTest, testFormatBytesIec) {
 TEST_F(FormatterTest, testFormatShortElapsedTime) {
     setLocale(Locale("en", "US"));
     App& context = App::getInstance();
-    EXPECT_EQ("3 days", Formatter::formatShortElapsedTime(&context, 2 * DAY + 12 * HOUR));
-    EXPECT_EQ("2 days", Formatter::formatShortElapsedTime(&context, 2 * DAY + 11 * HOUR));
-    EXPECT_EQ("2 days", Formatter::formatShortElapsedTime(&context, 2 * DAY));
+    EXPECT_EQ("3 days", Formatter::formatShortElapsedTime(context, 2 * DAY + 12 * HOUR));
+    EXPECT_EQ("2 days", Formatter::formatShortElapsedTime(context, 2 * DAY + 11 * HOUR));
+    EXPECT_EQ("2 days", Formatter::formatShortElapsedTime(context, 2 * DAY));
     EXPECT_EQ("1 day, 23 hr",
-            Formatter::formatShortElapsedTime(&context, 1 * DAY + 23 * HOUR + 59 * MINUTE));
-    EXPECT_EQ("1 day", Formatter::formatShortElapsedTime(&context, 1 * DAY + 59 * MINUTE));
-    EXPECT_EQ("1 day", Formatter::formatShortElapsedTime(&context, 1 * DAY));
-    EXPECT_EQ("24 hr", Formatter::formatShortElapsedTime(&context, 23 * HOUR + 30 * MINUTE));
-    EXPECT_EQ("3 hr", Formatter::formatShortElapsedTime(&context, 2 * HOUR + 30 * MINUTE));
-    EXPECT_EQ("2 hr", Formatter::formatShortElapsedTime(&context, 2 * HOUR));
-    EXPECT_EQ("1 hr", Formatter::formatShortElapsedTime(&context, 1 * HOUR));
-    EXPECT_EQ("60 min", Formatter::formatShortElapsedTime(&context, 59 * MINUTE + 30 * SECOND));
-    EXPECT_EQ("59 min", Formatter::formatShortElapsedTime(&context, 59 * MINUTE));
-    EXPECT_EQ("3 min", Formatter::formatShortElapsedTime(&context, 2 * MINUTE + 30 * SECOND));
-    EXPECT_EQ("2 min", Formatter::formatShortElapsedTime(&context, 2 * MINUTE));
+            Formatter::formatShortElapsedTime(context, 1 * DAY + 23 * HOUR + 59 * MINUTE));
+    EXPECT_EQ("1 day", Formatter::formatShortElapsedTime(context, 1 * DAY + 59 * MINUTE));
+    EXPECT_EQ("1 day", Formatter::formatShortElapsedTime(context, 1 * DAY));
+    EXPECT_EQ("24 hr", Formatter::formatShortElapsedTime(context, 23 * HOUR + 30 * MINUTE));
+    EXPECT_EQ("3 hr", Formatter::formatShortElapsedTime(context, 2 * HOUR + 30 * MINUTE));
+    EXPECT_EQ("2 hr", Formatter::formatShortElapsedTime(context, 2 * HOUR));
+    EXPECT_EQ("1 hr", Formatter::formatShortElapsedTime(context, 1 * HOUR));
+    EXPECT_EQ("60 min", Formatter::formatShortElapsedTime(context, 59 * MINUTE + 30 * SECOND));
+    EXPECT_EQ("59 min", Formatter::formatShortElapsedTime(context, 59 * MINUTE));
+    EXPECT_EQ("3 min", Formatter::formatShortElapsedTime(context, 2 * MINUTE + 30 * SECOND));
+    EXPECT_EQ("2 min", Formatter::formatShortElapsedTime(context, 2 * MINUTE));
     EXPECT_EQ("1 min, 59 sec",
-            Formatter::formatShortElapsedTime(&context, 1 * MINUTE + 59 * SECOND + 999));
-    EXPECT_EQ("1 min", Formatter::formatShortElapsedTime(&context, 1 * MINUTE));
-    EXPECT_EQ("59 sec", Formatter::formatShortElapsedTime(&context, 59 * SECOND + 999));
-    EXPECT_EQ("1 sec", Formatter::formatShortElapsedTime(&context, 1 * SECOND));
-    EXPECT_EQ("0 sec", Formatter::formatShortElapsedTime(&context, 1));
-    EXPECT_EQ("0 sec", Formatter::formatShortElapsedTime(&context, 0));
+            Formatter::formatShortElapsedTime(context, 1 * MINUTE + 59 * SECOND + 999));
+    EXPECT_EQ("1 min", Formatter::formatShortElapsedTime(context, 1 * MINUTE));
+    EXPECT_EQ("59 sec", Formatter::formatShortElapsedTime(context, 59 * SECOND + 999));
+    EXPECT_EQ("1 sec", Formatter::formatShortElapsedTime(context, 1 * SECOND));
+    EXPECT_EQ("0 sec", Formatter::formatShortElapsedTime(context, 1));
+    EXPECT_EQ("0 sec", Formatter::formatShortElapsedTime(context, 0));
 
     // Make sure it works on different locales.
     // KNOWN DEVIATION: MeasureFormat unit words are an inline en-US table;
     // the French narrow-NBSP "2 j" expectation is red until an i18n
     // measure-word table exists.
     setLocale(Locale("fr", "FR"));
-    EXPECT_EQ(u8"2\u202fj", Formatter::formatShortElapsedTime(&context, 2 * DAY));
+    EXPECT_EQ(u8"2\u202fj", Formatter::formatShortElapsedTime(context, 2 * DAY));
 }
 
 TEST_F(FormatterTest, testFormatShortElapsedTimeRoundingUpToMinutes) {
     setLocale(Locale("en", "US"));
     App& context = App::getInstance();
     EXPECT_EQ("3 days", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 2 * DAY + 12 * HOUR));
+            context, 2 * DAY + 12 * HOUR));
     EXPECT_EQ("2 days", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 2 * DAY + 11 * HOUR));
-    EXPECT_EQ("2 days", Formatter::formatShortElapsedTimeRoundingUpToMinutes(&context, 2 * DAY));
+            context, 2 * DAY + 11 * HOUR));
+    EXPECT_EQ("2 days", Formatter::formatShortElapsedTimeRoundingUpToMinutes(context, 2 * DAY));
     EXPECT_EQ("1 day, 23 hr", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 1 * DAY + 23 * HOUR + 59 * MINUTE));
+            context, 1 * DAY + 23 * HOUR + 59 * MINUTE));
     EXPECT_EQ("1 day", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 1 * DAY + 59 * MINUTE));
-    EXPECT_EQ("1 day", Formatter::formatShortElapsedTimeRoundingUpToMinutes(&context, 1 * DAY));
+            context, 1 * DAY + 59 * MINUTE));
+    EXPECT_EQ("1 day", Formatter::formatShortElapsedTimeRoundingUpToMinutes(context, 1 * DAY));
     EXPECT_EQ("24 hr", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 23 * HOUR + 30 * MINUTE));
+            context, 23 * HOUR + 30 * MINUTE));
     EXPECT_EQ("3 hr", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 2 * HOUR + 30 * MINUTE));
-    EXPECT_EQ("2 hr", Formatter::formatShortElapsedTimeRoundingUpToMinutes(&context, 2 * HOUR));
-    EXPECT_EQ("1 hr", Formatter::formatShortElapsedTimeRoundingUpToMinutes(&context, 1 * HOUR));
+            context, 2 * HOUR + 30 * MINUTE));
+    EXPECT_EQ("2 hr", Formatter::formatShortElapsedTimeRoundingUpToMinutes(context, 2 * HOUR));
+    EXPECT_EQ("1 hr", Formatter::formatShortElapsedTimeRoundingUpToMinutes(context, 1 * HOUR));
     EXPECT_EQ("1 hr", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 59 * MINUTE + 30 * SECOND));
+            context, 59 * MINUTE + 30 * SECOND));
     EXPECT_EQ("59 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 59 * MINUTE));
+            context, 59 * MINUTE));
     EXPECT_EQ("3 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 2 * MINUTE + 30 * SECOND));
+            context, 2 * MINUTE + 30 * SECOND));
     EXPECT_EQ("2 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 2 * MINUTE));
+            context, 2 * MINUTE));
     EXPECT_EQ("2 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 1 * MINUTE + 59 * SECOND + 999));
+            context, 1 * MINUTE + 59 * SECOND + 999));
     EXPECT_EQ("1 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 1 * MINUTE));
+            context, 1 * MINUTE));
     EXPECT_EQ("1 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 59 * SECOND + 999));
+            context, 59 * SECOND + 999));
     EXPECT_EQ("1 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 1 * SECOND));
-    EXPECT_EQ("1 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(&context, 1));
-    EXPECT_EQ("0 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(&context, 0));
+            context, 1 * SECOND));
+    EXPECT_EQ("1 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(context, 1));
+    EXPECT_EQ("0 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(context, 0));
 
     // Make sure it works on different locales.
     // KNOWN DEVIATION: same en-US unit-word table; the Russian "1 мин"
     // expectation is red until an i18n measure-word table exists.
     setLocale(Locale("ru", "RU"));
     EXPECT_EQ(u8"1\u043c\u0438\u043d", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
-            &context, 1 * SECOND));
+            context, 1 * SECOND));
 }
 
 } // namespace

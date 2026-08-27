@@ -57,7 +57,7 @@ public:
     static std::string formatShortFileSize(Context* context, int64_t sizeBytes);
 
     /** @hide */
-    static BytesResult formatBytes(Resources* res, int64_t sizeBytes, int flags);
+    static BytesResult formatBytes(Resources& res, int64_t sizeBytes, int flags);
 
     /** Returns a string in the canonical IPv4 format ###.###.###.### from a
         packed integer containing the IP address, little-endian (LSB first):
@@ -67,11 +67,11 @@ public:
     /** Returns elapsed time for the given millis, in the following format:
         1 day, 5 hr; will include at most two units, can go down to seconds
         precision. @hide */
-    static std::string formatShortElapsedTime(Context* context, int64_t millis);
+    static std::string formatShortElapsedTime(Context& context, int64_t millis);
     /** Returns elapsed time for the given millis, in the following format:
         1 day, 5 hr; will include at most two units, can go down to minutes
         precision. @hide */
-    static std::string formatShortElapsedTimeRoundingUpToMinutes(Context* context,
+    static std::string formatShortElapsedTimeRoundingUpToMinutes(Context& context,
             int64_t millis);
 
 private:
