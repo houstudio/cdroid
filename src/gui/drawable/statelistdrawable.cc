@@ -158,7 +158,9 @@ bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
     const bool changed = DrawableContainer::onStateChange(stateSet);
     int  idx = mStateListState->indexOfStateSet(stateSet);
     if(idx<0)idx = mStateListState->indexOfStateSet(StateSet::WILD_CARD);
-    LOGV("%p set stateIndex[%d/%d]=%p",this,idx,getChildCount(),getChild(idx));
+    // idx may stay -1 when nothing matches (no wildcard item); selectDrawable
+    // handles that — never call getChild with it (bounds-checked .at throws).
+    LOGV("%p set stateIndex[%d/%d]",this,idx,getChildCount());
     return selectDrawable(idx)||changed;
 }
 

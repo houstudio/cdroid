@@ -224,6 +224,9 @@ std::vector<Drawable*> DrawableContainer::DrawableContainerState::getChildren(){
 }
 
 Drawable*DrawableContainer::DrawableContainerState::getChild(int index){
+    // A freshly cloned state keeps its children as futures and mDrawables
+    // empty — .at() would throw on any index then (and always on index<0).
+    if (index < 0 || index >= (int)mDrawables.size()) return nullptr;
     Drawable*dr = mDrawables.at(index);
     if(dr)return dr;
     if (mDrawableFutures.size()) {
