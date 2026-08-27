@@ -39,7 +39,7 @@ NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
     mMutated = false;
     mFilterBitmap = false;
     mTintFilter = nullptr;
-    mTargetDensity=160;
+    mTargetDensity = state->mTargetDensity;
     mOutlineRadius=0.f;
     mPadding.setEmpty();
     computeBitmapSize();
@@ -58,7 +58,7 @@ void NinePatchDrawable::computeBitmapSize(){
     if ( (mNinePatchState->mNinePatch==nullptr)|| (mNinePatchState->mNinePatch->mImage==nullptr))return;
     const RefPtr<ImageSurface> ninePatch = mNinePatchState->mNinePatch->mImage;
 
-    const int sourceDensity =160;// ninePatch.getDensity();
+    const int sourceDensity = mNinePatchState->mSourceDensity;
     const int targetDensity = mTargetDensity;
 
     const Insets sourceOpticalInsets = mNinePatchState->mOpticalInsets;
@@ -95,9 +95,30 @@ void NinePatchDrawable::setTargetDensity(int density){
     }
     if (mTargetDensity != density) {
         mTargetDensity = density;
+        mNinePatchState->mTargetDensity = density;
+        // Keep the shared renderer in lock-step: after the decode-time resample
+        // the renderer's pixel space equals the target density, so computeBitmapSize's
+        // density conversions pass the numbers through unchanged.
+        if (mNinePatchState->mNinePatch && mNinePatchState->mSourceDensity != density) {
+            mNinePatchState->mNinePatch->applyDensityScale(
+                    (float)density / mNinePatchState->mSourceDensity);
+            mNinePatchState->mPadding = mNinePatchState->mNinePatch->getPadding();
+            mNinePatchState->mOpticalInsets = mNinePatchState->mNinePatch->getOpticalInsets();
+            mNinePatchState->mSourceDensity = density;
+        }
         computeBitmapSize();
         invalidateSelf();
     }
+}
+
+void NinePatchDrawable::setSourceDensity(int density){
+    // Decode-seam density fixup (AOSP: BitmapFactory.decodeResourceStream reads the
+    // asset density from TypedValue.density). Records which pixel space the
+    // renderer was decoded in, so the subsequent setTargetDensity(display) can
+    // resample once. DENSITY_NONE (0, unqualified res/) keeps the legacy
+    // default-density treatment.
+    if (density == TypedValue::DENSITY_NONE) density = DisplayMetrics::DENSITY_DEFAULT;
+    mNinePatchState->mSourceDensity = density;
 }
 
 Insets NinePatchDrawable::getOpticalInsets(){
@@ -351,6 +372,11 @@ void NinePatchDrawable::updateStateFromTypedArray(const TypedArray& a){
                         state->mPadding = state->mNinePatch->getPadding();
                         mOutlineRadius = state->mNinePatch->getRadius();
                         state->mOpticalInsets = state->mNinePatch->getOpticalInsets();
+                        // Decode-time density fixup (AOSP folds this into
+                        // BitmapFactory): record the asset's density, then resample
+                        // into the display's pixel space once.
+                        setSourceDensity(density);
+                        setTargetDensity(r.getDisplayMetrics().densityDpi);
                     }
                 } else {
                     LOGW("<nine-patch> src did not decode (0x%x)", srcResId);
@@ -388,6 +414,8 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
     mAutoMirrored =false;
     mPadding.set(0,0,0,0);
     mOpticalInsets.set(0,0,0,0);
+    mSourceDensity = DisplayMetrics::DENSITY_DEFAULT;
+    mTargetDensity = DisplayMetrics::DENSITY_DEFAULT;
 }
 
 void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,const Rect*padding,
@@ -411,6 +439,8 @@ NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
     mTintMode = orig.mTintMode;
     mPadding = orig.mPadding;
     mOpticalInsets = orig.mOpticalInsets;
+    mSourceDensity = orig.mSourceDensity;
+    mTargetDensity = orig.mTargetDensity;
     mBaseAlpha = orig.mBaseAlpha;
     mDither = orig.mDither;
     mChangingConfigurations=orig.mChangingConfigurations;

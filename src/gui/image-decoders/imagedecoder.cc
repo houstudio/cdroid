@@ -315,7 +315,14 @@ Drawable* ImageDecoder::createAsDrawable(Resources& res, int id) {
     if (sz <= 0) return nullptr;
     std::string buf((size_t)sz, '\0');
     asset->read(&buf[0], (size_t)sz);
-    return decodeDrawableStream(res.getContext(), std::make_unique<std::istringstream>(std::move(buf)), path);
+    Drawable* d = decodeDrawableStream(res.getContext(), std::make_unique<std::istringstream>(std::move(buf)), path);
+    // Decode-time density fixup for 9-patches (AOSP BitmapFactory.decodeResourceStream):
+    // source density comes from the TypedValue, target from the display metrics.
+    if (auto* npd = dynamic_cast<NinePatchDrawable*>(d)) {
+        npd->setSourceDensity(tv.density);
+        npd->setTargetDensity(res.getDisplayMetrics().densityDpi);
+    }
+    return d;
 }
 
 }/*endof namespace*/

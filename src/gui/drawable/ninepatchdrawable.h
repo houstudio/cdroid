@@ -35,6 +35,12 @@ private:
         Insets mOpticalInsets;
         int mTintMode;
         int mChangingConfigurations;
+        // Density of the renderer's current pixel space (the asset's source
+        // density at decode; becomes the target density once the decode-time
+        // resample has run — AOSP keeps the equivalent in Bitmap.mDensity) and
+        // the density numbers should render at (AOSP NinePatchState.mTargetDensity).
+        int mSourceDensity;
+        int mTargetDensity;
         cdroid::RefPtr<ColorStateList>mTint;
         Cairo::RefPtr<NinePatchRenderer>mNinePatch;
         NinePatchState();
@@ -67,6 +73,10 @@ public:
     NinePatchDrawable(Cairo::RefPtr<Cairo::ImageSurface>bmp,const std::vector<uint8_t>*ninePatchChunk=nullptr);
     ~NinePatchDrawable();
     void setTargetDensity(int density);
+    // Decode-seam density fixup (AOSP folds this into BitmapFactory.decodeResourceStream):
+    // records the asset's source density so the decode site can resample the
+    // bitmap + chunk into the display's pixel space once, up front.
+    void setSourceDensity(int density);
     Insets getOpticalInsets()override;
     void setAlpha(int alpha)override;
     bool getPadding(Rect& padding) override;

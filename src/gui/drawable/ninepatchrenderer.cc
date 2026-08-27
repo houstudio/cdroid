@@ -449,6 +449,43 @@ void NinePatchRenderer::setImageSize(int width, int height) {
     }
 }
 
+void NinePatchRenderer::applyDensityScale(float scale) {
+    if (scale <= 0.f || scale == 1.f) return;
+    const int oldW = mImage->get_width();
+    const int oldH = mImage->get_height();
+    const int newW = std::max(1, (int)(oldW * scale + 0.5f));
+    const int newH = std::max(1, (int)(oldH * scale + 0.5f));
+    if (newW != oldW || newH != oldH) {
+        Cairo::RefPtr<ImageSurface> scaled = ImageSurface::create(Surface::Format::ARGB32, newW, newH);
+        auto cr = Cairo::Context::create(scaled);
+        cr->scale((double)newW / oldW, (double)newH / oldH);
+        cr->set_source(mImage, 0.0, 0.0);
+        if (auto spat = std::dynamic_pointer_cast<Cairo::SurfacePattern>(cr->get_source()))
+            spat->set_filter(SurfacePattern::Filter::GOOD);
+        cr->paint();
+        mImage = scaled;
+    }
+
+    const auto scaledInt = [scale](int v) { return (int)(v * scale + 0.5f); };
+    // mResizeDistances* hold {start, length} pairs in source pixels.
+    for (auto& r : mResizeDistancesX) { r.first = scaledInt(r.first); r.second = scaledInt(r.second); }
+    for (auto& r : mResizeDistancesY) { r.first = scaledInt(r.first); r.second = scaledInt(r.second); }
+    mPadding.set(scaledInt(mPadding.left), scaledInt(mPadding.top),
+                 scaledInt(mPadding.width), scaledInt(mPadding.height));
+    mOpticalInsets = Insets::of(scaledInt(mOpticalInsets.left), scaledInt(mOpticalInsets.top),
+            scaledInt(mOpticalInsets.right), scaledInt(mOpticalInsets.bottom));
+    mOutlineRect.set(scaledInt(mOutlineRect.left), scaledInt(mOutlineRect.top),
+                     scaledInt(mOutlineRect.width), scaledInt(mOutlineRect.height));
+    mOutlineInsets = Insets::of(scaledInt(mOutlineInsets.left), scaledInt(mOutlineInsets.top),
+            scaledInt(mOutlineInsets.right), scaledInt(mOutlineInsets.bottom));
+    mRadius = scaledInt(mRadius);
+
+    // Cached output and derived rects were built in the old pixel space.
+    mCachedImage.reset();
+    mContentArea.set(0, 0, 0, 0);
+    mWidth = mHeight = -1;
+}
+
 Rect NinePatchRenderer::getPadding()const{
     return mPadding;
 }
