@@ -52,7 +52,7 @@ public:
             int defStyleAttr, int defStyleRes);
 
     /** Sets the human-readable entries to be shown in the list. */
-    void setEntries(const std::vector<std::string>& entries);
+    virtual void setEntries(const std::vector<std::string>& entries);
     void setEntries(int entriesResId);
     std::vector<std::string> getEntries() const;
 
@@ -78,7 +78,7 @@ public:
     int findIndexOfValue(const std::string& value) const;
 
     /** Sets the value to the given index from the entry values. */
-    void setValueIndex(int index);
+    virtual void setValueIndex(int index);
 
     std::string getPreferenceClassName() const override { return "ListPreference"; }
 

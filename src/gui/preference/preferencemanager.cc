@@ -21,6 +21,7 @@
 #include <preference/preferencescreen.h>
 #include <preference/preferenceinflater.h>
 #include <preference/twostatepreference.h>
+#include <preference/dropdownpreference.h>
 #include <widget/R.h>
 
 namespace cdroid {
@@ -289,8 +290,10 @@ bool PreferenceManager::SimplePreferenceComparisonCallback::arePreferenceContent
     if (t1 != nullptr && t1->isChecked() != t2->isChecked()) {
         return false;
     }
-    // DropDownPreference branch (must re-bind spinner adapter for a different
-    // object) is deferred until DropDownPreference is ported.
+    if (dynamic_cast<const DropDownPreference*>(&p1) != nullptr && &p1 != &p2) {
+        // Different object, must re-bind spinner adapter
+        return false;
+    }
 
     return true;
 }

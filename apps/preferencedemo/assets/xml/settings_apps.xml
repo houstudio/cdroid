@@ -11,7 +11,7 @@
 
     <PreferenceCategory android:title="Default apps">
 
-        <ListPreference
+        <DropDownPreference
             android:key="default_browser"
             android:title="Browser app"
             android:entries="@array/prefdemo_browser_entries"

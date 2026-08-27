@@ -969,6 +969,9 @@
         <attr name="switchPreferenceStyle" format="reference" />
         <!-- Default style for seekbar preferences. -->
         <attr name="seekBarPreferenceStyle" format="reference" />
+        <!-- androidx.preference DropDown default style (library attr ported
+             onto the framework PreferenceTheme styleable). -->
+        <attr name="dropdownPreferenceStyle" format="reference" />
 
         <!-- ============================ -->
         <!-- Text selection handle styles -->

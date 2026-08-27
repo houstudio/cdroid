@@ -331,7 +331,7 @@ public:
 
 protected:
     /** Should be called when the data of this Preference has changed. */
-    void notifyChanged();
+    virtual void notifyChanged();
     /** Should be called when the ordering should be re-evaluated. */
     void notifyHierarchyChanged();
 

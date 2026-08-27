@@ -27,5 +27,7 @@ set(PREFERENCE_SOURCES
     preference/edittextpreferencedialogfragment.cc
     preference/listpreferencedialogfragment.cc
     preference/multiselectlistpreferencedialogfragment.cc
+    preference/seekbarpreference.cc
+    preference/dropdownpreference.cc
     preference/internal/preferenceimageview.cc
 )

@@ -6,10 +6,11 @@
 
     <PreferenceCategory android:title="Brightness">
 
-        <Preference
+        <SeekBarPreference
             android:key="brightness"
             android:title="Brightness level"
-            android:selectable="false" />
+            android:max="100"
+            android:defaultValue="40" />
 
         <SwitchPreference
             android:key="auto_brightness_entry"
