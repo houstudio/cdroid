@@ -148,6 +148,9 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     // chain. Every pak is loaded before the theme so the manifest parse and the
     // theme's resource references both resolve.
     if (!appPakPath.empty()) parsePackageManifest(appPakPath);
+    // Orientation must land before the first inflate (and ideally before the
+    // theme build below) so -land/-port variants resolve on first lookup.
+    applyOrientationConfig();
     setTheme(mApplicationTheme ? mApplicationTheme
                                : (int)cdroid::internal::R::style::Theme_Material);
     // AOSP: the system starts the manifest's launcher activity — app main()
@@ -500,6 +503,18 @@ void App::parsePackageManifest(const std::string& pakPath) {
                         attrId(R::styleable::AndroidManifestActivity, R::styleable::AndroidManifestActivity_label), "label");
                 current.configChanges = parseConfigChanges(attrValueByName(*parser,
                         attrId(R::styleable::AndroidManifestActivity, R::styleable::AndroidManifestActivity_configChanges), "configChanges"));
+                // android:screenOrientation: aapt2 compiles the enum to a typed
+                // int (landscape=0, portrait=1), read through the indexed int
+                // getter — the string rendering ("landscape") would be rejected
+                // by the string-based parsers as a non-numeric value.
+                for (int i = 0; i < parser->getAttributeCount(); i++) {
+                    if ((uint32_t)parser->getAttributeNameResource(i) == attrId(
+                            R::styleable::AndroidManifestActivity,
+                            R::styleable::AndroidManifestActivity_screenOrientation)) {
+                        current.screenOrientation = parser->getAttributeIntValue(i, -1);
+                        break;
+                    }
+                }
                 sawMainAction = sawLauncherCategory = false;
             } else if (inActivity && tag == "action") {
                 if (attrValueByName(*parser,
@@ -934,6 +949,60 @@ void App::applyLocale(const std::string& lan) {
 
 int App::getNextAutofillId(){
     return mNextAutofillViewId++;
+}
+
+// Orientation into the arsc request config so -land/-port resource variants
+// select. AOSP owns the effective orientation in WMS (rotation + per-
+// activity locks) and ResourcesManager applies it to every Resources; CDROID
+// has no rotation, so it is resolved once here at startup, before the theme
+// build and any inflate: CDROID_ORIENTATION env > launcher activity's
+// android:screenOrientation > device screen shape.
+void App::applyOrientationConfig() {
+    if (mResTable == nullptr) return;
+    int orientation = ResTable_config::ORIENTATION_ANY;
+    const char* source = nullptr;
+    const char* forced = getenv("CDROID_ORIENTATION");
+    if (forced != nullptr && forced[0] != '\0') {
+        const std::string v = forced;
+        if (v == "land" || v == "landscape")
+            orientation = ResTable_config::ORIENTATION_LAND;
+        else if (v == "port" || v == "portrait")
+            orientation = ResTable_config::ORIENTATION_PORT;
+        else
+            LOGW("CDROID_ORIENTATION='%s' invalid (land|landscape|port|portrait)", forced);
+        if (orientation != ResTable_config::ORIENTATION_ANY) source = "env";
+    }
+    if (orientation == ResTable_config::ORIENTATION_ANY) {
+        // ActivityInfo numbering (landscape=0, portrait=1) remaps onto
+        // ResTable_config::ORIENTATION_* (PORT=1, LAND=2).
+        const std::string launcher = getLauncherActivity();
+        if (!launcher.empty()) {
+            const ActivityInfo* info = getActivityInfo(launcher);
+            if (info != nullptr) {
+                if (info->screenOrientation == 0) {
+                    orientation = ResTable_config::ORIENTATION_LAND;
+                    source = "manifest";
+                } else if (info->screenOrientation == 1) {
+                    orientation = ResTable_config::ORIENTATION_PORT;
+                    source = "manifest";
+                }
+            }
+        }
+    }
+    if (orientation == ResTable_config::ORIENTATION_ANY) {
+        orientation = (mDisplayMetrics.widthPixels >= mDisplayMetrics.heightPixels)
+                ? ResTable_config::ORIENTATION_LAND : ResTable_config::ORIENTATION_PORT;
+        source = "auto";
+    }
+    // Read-modify-write like applyLocale: setParameters REPLACES mParams, so
+    // keep the seeded device density instead of wiping it back to unset.
+    ResTable_config cfg = {};
+    mResTable->getParameters(&cfg);
+    cfg.orientation = (uint8_t)orientation;
+    mResTable->setParameters(&cfg);
+    LOGI("orientation=%s (%s)",
+         orientation == ResTable_config::ORIENTATION_LAND ? "landscape" : "portrait",
+         source);
 }
 // AOSP Context.obtainStyledAttributes(AttributeSet, int[], defStyleAttr,
 // defStyleRes) — delegates to Resources.obtainStyledAttributes (the AOSP

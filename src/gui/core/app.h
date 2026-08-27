@@ -47,6 +47,9 @@ struct ActivityInfo {
     int configChanges = 0;       // android:configChanges bits (Configuration::CONFIG_*)
     std::string label;           // android:label
     bool launchable = false;     // MAIN/LAUNCHER intent-filter present
+    // android:screenOrientation in ActivityInfo numbering: landscape=0,
+    // portrait=1, unspecified=-1 (differs from ResTable_config::ORIENTATION_*).
+    int screenOrientation = -1;
 };
 
 // The Application AND the one ContextImpl: CDROID has no separate
@@ -157,6 +160,11 @@ public:
     const ActivityInfo* getActivityInfo(const std::string& name) const;
     // The MAIN/LAUNCHER activity (empty when the manifest has none).
     std::string getLauncherActivity() const;
+    // Orientation into the arsc request config so -land/-port resource
+    // variants select (AOSP: WMS owns the effective orientation; CDROID has
+    // no rotation, so it is resolved once at startup): CDROID_ORIENTATION
+    // env > launcher activity's android:screenOrientation > screen shape.
+    void applyOrientationConfig();
     friend class Window;   // consumes mPendingActivityTheme in its Context ctor
 
     // --- Context implementation (the ContextImpl face) ---------------------

@@ -20,8 +20,6 @@
 #include <preference/switchpreference.h>
 #include <preference/edittextpreference.h>
 #include <preference/listpreference.h>
-#include <preference/listpreferencedialogfragment.h>
-#include <preference/preferencedialogfragment.h>
 #include <preference/multiselectlistpreference.h>
 #include <fragment/fragmentactivity.h>
 #include <fragment/fragmentmanager.h>
@@ -78,33 +76,6 @@ int screenXmlFor(const std::string& key) {
 } // namespace
 
 class SettingsActivity;
-
-/** Window-gravity testbed (placement experiment): a ListPreferenceDialogFragment
- *  that stamps an explicit window gravity on the dialog before Dialog::show
- *  applies it through WindowManager::relayoutWindow. "Default browser app"
- *  routes CENTER, "Digital assistant app" routes BOTTOM, so the WMS-style
- *  placement is directly visible side by side. Remove once confirmed. */
-class GravityListDialogFragment : public cdroid::ListPreferenceDialogFragment {
-public:
-    static GravityListDialogFragment* newInstance(const std::string& key, int gravity) {
-        auto* f = new GravityListDialogFragment();
-        auto* args = new cdroid::Bundle();
-        args->putString(cdroid::PreferenceDialogFragment::ARG_KEY, key);
-        args->putInt("prefdemo.gravity", gravity);
-        f->setArguments(args);
-        return f;
-    }
-
-    cdroid::Dialog* onCreateDialog(cdroid::Bundle* savedInstanceState) override {
-        cdroid::Dialog* dialog = ListPreferenceDialogFragment::onCreateDialog(savedInstanceState);
-        const cdroid::Bundle* args = getArguments();
-        const int gravity = args ? args->getValue<int>("prefdemo.gravity", 0) : 0;
-        LOGD("[gravity-experiment] onCreateDialog gravity=%d", gravity);
-        // AOSP idiom: tune the window attributes between create() and show().
-        dialog->getWindow()->getAttributes().gravity = gravity;
-        return dialog;
-    }
-};
 
 class SettingsFragment : public PreferenceFragment {
 public:
@@ -199,27 +170,6 @@ public:
     }
 
     bool onPreferenceTreeClick(Preference& preference) override;
-
-    // Window-gravity testbed (placement experiment): browser -> CENTER,
-    // assistant -> BOTTOM; everything else uses the stock dialog fragments.
-    void onDisplayPreferenceDialog(Preference& preference) override {
-        const std::string key = preference.getKey();
-        int gravity;
-        if (key == "default_browser") {
-            gravity = cdroid::Gravity::CENTER;
-        } else if (key == "default_assistant") {
-            gravity = cdroid::Gravity::BOTTOM | cdroid::Gravity::CENTER_HORIZONTAL;
-        } else {
-            PreferenceFragment::onDisplayPreferenceDialog(preference);
-            return;
-        }
-        if (getParentFragmentManager()->findFragmentByTag(DIALOG_FRAGMENT_TAG) != nullptr) {
-            return; // a dialog is already showing
-        }
-        auto* f = GravityListDialogFragment::newInstance(key, gravity);
-        f->setTargetFragment(this, 0);
-        f->show(getParentFragmentManager(), DIALOG_FRAGMENT_TAG);
-    }
 
     // Top-level entries (plain Preferences, the androidx app:fragment
     // equivalent) navigate via the host; defined after SettingsActivity
@@ -445,15 +395,13 @@ bool SettingsFragment::onPreferenceTreeClick(Preference& preference) {
 int main(int argc, const char* argv[]) {
     cdroid::App app(argc, argv);
 
-    // Orientation -> resource config: makes the arsc ResTable prefer -land
-    // variants (layout-land/, values-land/). PREFDEMO_ORIENTATION=land|
-    // landscape|port|portrait forces a variant (like PREFDEMO_DARK below);
-    // otherwise the screen shape decides. Must run before the first inflate
+    // Orientation -> resource config: PREFDEMO_ORIENTATION forces a variant
+    // here (like PREFDEMO_DARK below); with no env the framework already
+    // resolved it in App::applyOrientationConfig (CDROID_ORIENTATION env >
+    // the manifest's android:screenOrientation > screen shape), so there is
+    // nothing to redo. Either way this stays before the first inflate
     // (SettingsActivity below) so layouts resolve under the right config.
-    cdroid::Resources& res = app.getResources();
-    cdroid::Configuration cfg = res.getConfiguration();
     int orientation = 0;
-    const char* source = "auto";
     const char* forced = getenv("PREFDEMO_ORIENTATION");
     if (forced != nullptr && forced[0] != '\0') {
         const std::string v = forced;
@@ -464,20 +412,16 @@ int main(int argc, const char* argv[]) {
         else
             LOGW("PREFDEMO_ORIENTATION='%s' invalid (land|landscape|port|portrait)",
                  forced);
-        if (orientation != 0) source = "env";
     }
-    const cdroid::DisplayMetrics& dm = res.getDisplayMetrics();
-    if (orientation == 0) {
-        orientation = (dm.widthPixels >= dm.heightPixels)
-                ? cdroid::Configuration::ORIENTATION_LANDSCAPE
-                : cdroid::Configuration::ORIENTATION_PORTRAIT;
+    if (orientation != 0) {
+        cdroid::Resources& res = app.getResources();
+        cdroid::Configuration cfg = res.getConfiguration();
+        cfg.orientation = orientation;
+        res.updateConfiguration(&cfg, nullptr);
+        LOGI("prefdemo orientation=%s (env override)",
+             orientation == cdroid::Configuration::ORIENTATION_LANDSCAPE
+                     ? "landscape" : "portrait");
     }
-    cfg.orientation = orientation;
-    res.updateConfiguration(&cfg, nullptr);
-    LOGI("prefdemo orientation=%s (%s, screen %dx%d)",
-         orientation == cdroid::Configuration::ORIENTATION_LANDSCAPE
-                 ? "landscape" : "portrait",
-         source, dm.widthPixels, dm.heightPixels);
     // App-level theme: every LayoutInflater::from(ctx) in the preference
     // chain resolves ?android:attr/textAppearance against the App context,
     // so the Material Light palette reaches the row TextViews (a Window-only
