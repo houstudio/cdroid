@@ -234,6 +234,21 @@ void WindowManager::relayoutWindow(Window*w){
     Gravity::apply(attrs.gravity, wsize, hsize, display, attrs.x, attrs.y, frame);
     Gravity::applyDisplay(attrs.gravity, display, frame);
     moveWindow(w, frame.left, frame.top, frame.width, frame.height);
+
+    // The enter transition captured its resting position at install time (the
+    // Window ctor snap — e.g. a dialog pre-positioned at (0,0,640,320)) and
+    // pre-snapped offscreen against THAT frame. Placement just moved the
+    // resting point, so: refresh the captured rest to the placed frame, and
+    // re-snap so the first drawn frame doesn't flash the resting position
+    // before the slide/fade-in. Without this the enter animation slides the
+    // window back to the stale pre-placement spot (a gravity-centered dialog
+    // dragged up to the top).
+    if (w->mPendingEnterAnim && !w->mInTransition && w->mEnterRestValid
+            && w->mEnterTransition != nullptr) {
+        w->mEnterRestX = frame.left;
+        w->mEnterRestY = frame.top;
+        w->snapEnterStart(w->mEnterTransition);
+    }
 }
 
 
