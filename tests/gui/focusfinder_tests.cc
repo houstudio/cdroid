@@ -112,8 +112,33 @@ TEST(FocusFinderTest, testAboveInBeamTrumpsSlightlyCloserOutOfBeam) {
     assertBetterCandidate(View::FOCUS_DOWN, M(0,0,30,30), M(0,40,30,70), M(31,41,61,71));
 }
 
+// Restored to the AOSP body (FocusFinderTest.java:212). The previous one-line
+// port invented a FOCUS_DOWN scenario whose "better" rect (31,0,61,30) fails
+// isCandidate for FOCUS_DOWN even under AOSP's algorithm — the upstream test
+// is a FOCUS_UP scenario with a two-step threshold walk.
 TEST(FocusFinderTest, testOutOfBeamBeatsInBeamUp) {
-    assertBetterCandidate(View::FOCUS_DOWN, M(0,0,30,30), M(31,0,61,30), M(0,31,30,61));
+    R src = M(0, 0, 50, 50); // (left, top, right, bottom)
+
+    R aboveLeftOfBeam = src;
+    aboveLeftOfBeam.offset(-(src.width + 1), -src.height);
+    assertBeamsDontOverlap(View::FOCUS_UP, src, aboveLeftOfBeam);
+
+    R aboveInBeam = src;
+    aboveInBeam.offset(0, -src.height);
+    assertBeamsOverlap(View::FOCUS_UP, src, aboveInBeam);
+
+    // in beam wins
+    assertBetterCandidate(View::FOCUS_UP, src, aboveInBeam, aboveLeftOfBeam);
+
+    // still wins while aboveInBeam's bottom edge is < out of beams' top
+    aboveInBeam.offset(0, -(aboveLeftOfBeam.height - 1));
+    EXPECT_TRUE(aboveInBeam.bottom() > aboveLeftOfBeam.top);
+    assertBetterCandidate(View::FOCUS_UP, src, aboveInBeam, aboveLeftOfBeam);
+
+    // cross the threshold: the out of beam prevails
+    aboveInBeam.offset(0, -1);
+    EXPECT_EQ(aboveInBeam.bottom(), aboveLeftOfBeam.top);
+    assertBetterCandidate(View::FOCUS_UP, src, aboveLeftOfBeam, aboveInBeam);
 }
 
 TEST(FocusFinderTest, testSomeCandidateBetterThanNonCandidate) {

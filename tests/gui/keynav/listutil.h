@@ -22,10 +22,22 @@ public:
     ListUtil(cdroid::ListView* listView, cdroid::Window* target)
           : mListView(listView), mTarget(target) {}
 
-    /* Set the selected position of the list view. */
+    /* Set the selected position of the list view. AOSP's waitForIdleSync also
+       waits for the traversal that follows the posted setSelection — the new
+       selection only lands on mSelectedPosition at the next layoutChildren.
+       Fixed frame counts proved luck-dependent in batch runs, so wait for the
+       observable outcome instead: getSelectedView() is derived from
+       mSelectedPosition, i.e. it only reflects pos once layout has consumed
+       it. Note setSelection==setSelectionFromTop(pos,0): when the list has to
+       scroll, the selected child lands at getChildAt(pos - firstVisible), so
+       normalize by firstVisiblePosition. */
     void setSelectedPosition(int pos) {
+        pumpUntilIdle(); // let the fresh activity window finish attaching first
         mListView->post([this, pos]() { mListView->setSelection(pos); });
-        pumpUntilIdle();
+        pumpUntil([this, pos]() {
+            return mListView->getSelectedView() ==
+                   mListView->getChildAt(pos - mListView->getFirstVisiblePosition());
+        });
     }
 
     /* Get the top of the list. */

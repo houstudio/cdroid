@@ -128,6 +128,17 @@ TEST_F(RequestFocusTest, testWrongThreadRequestFocusFails) {
     GTEST_SKIP() << "gtest runs on the UI thread; wrong-thread requestFocus is not expressible";
 }
 
+/* KNOWN-RED, kept red on purpose (AOSP code cannot satisfy the expectation —
+   verified line-by-line against android-12 and android-36 View.java):
+   clearFocus() clears PFLAG_FOCUSED on the leaf and nulls the mFocused chain
+   (clearChildFocus), so at the synchronous refocus inside clearFocusInternal
+   the new focus resolver getRootView().findFocus() NECESSARILY returns null
+   (plain View.findFocus checks the leaf's own flag; the chain no longer leads
+   anywhere). handleFocusGainInternal therefore dispatches
+   onGlobalFocusChanged(null, firstFocusable) — not (old, new) as the upstream
+   Mockito verify demands. The expectation (clearing, gaining) is
+   unsatisfiable by the very framework code under test; the CDROID port is
+   faithful, these two upstream tests are believed stale upstream. */
 TEST_F(RequestFocusTest, testOnFocusChangeCallbackOrderWhenClearingFocusOfFirstFocusable) {
     /* Get the first focusable: getRootView().getParent() is the ViewRoot —
        here, the window. */
@@ -156,6 +167,10 @@ TEST_F(RequestFocusTest, testOnFocusChangeCallbackOrderWhenClearingFocusOfFirstF
     EXPECT_EQ("onFocusChange left_top true", recorder.calls[2]);
 }
 
+/* KNOWN-RED — same derivation as
+   testOnFocusChangeCallbackOrderWhenClearingFocusOfFirstFocusable above:
+   oldFocus is forced to null by the flag/chain clear, (right_top, left_top)
+   is unsatisfiable under faithful AOSP logic. */
 TEST_F(RequestFocusTest, testOnFocusChangeCallbackOrderWhenClearingFocusOfNotFirstFocusable) {
     Button* clearingFocusButton = mTopRightButton;
     Button* gainingFocusButton = mTopLeftButton;

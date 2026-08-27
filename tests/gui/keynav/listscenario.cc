@@ -251,14 +251,21 @@ void ListScenario::launch() {
         mWindow->addView(mLinearLayout);
     }
 
+    /* AOSP ListScenario is Activity-based: onCreate runs (and focus lands on
+       the list) BEFORE the first traversal, so AbsListView::layoutChildren's
+       "selected item takes over focus" block — gated on the list having
+       focus — fires during that traversal. With restoreDefaultFocus after the
+       explicit measure/layout the gate never opened: the list stayed focused
+       but the selected item never claimed it, and the first DPAD went to the
+       top-most focusable instead of the selected row. Grant focus first. */
+    mLinearLayout->restoreDefaultFocus();
+
     /* setContentView: explicit first traversal (View::layout takes l,t,w,h) */
     const int w = mWindow->getWidth() > 0 ? mWindow->getWidth() : 1080;
     mLinearLayout->measure(MeasureSpec::makeMeasureSpec(w, MeasureSpec::EXACTLY),
                            MeasureSpec::makeMeasureSpec(mScreenHeight, MeasureSpec::EXACTLY));
     mLinearLayout->layout(0, 0, w, mScreenHeight);
     pumpUntilIdle();
-
-    mLinearLayout->restoreDefaultFocus();
 }
 
 void ListScenario::positionSelected(int position) {
