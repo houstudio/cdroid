@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <porting/cdlog.h>
 #include <fragment/defaultspecialeffectscontroller.h>
 #include <fragment/fragment.h>
 #include <fragment/fragmentanim.h>
@@ -121,6 +122,14 @@ void AnimationEffect::onCommit(ViewGroup* container){
             // freed view whose mParent is null — the navdemo crash).
             cont->post([cont, v, op, self, hook](){
                 v->setAnimation(nullptr);              // delete the ended animClone; clear mCurrentAnimation
+                // Mirror TransitionEffect's scheduleDelete: destroy the fragment's
+                // view lifecycle BEFORE freeing the tree, so a later pop re-add
+                // cannot observe a dangling fragment->mView.
+                Fragment* frag = op->mFragment;
+                if(frag && frag->mView == v){
+                    frag->performDestroyView();
+                    frag->mView = nullptr;
+                }
                 op->completeEffect(self);
                 if(hook) hook();                       // reclaim fragment now (independent of the view)
                 if(op->mController && op->mController->hasTransitionEffect()){

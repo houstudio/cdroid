@@ -111,9 +111,11 @@ public:
      */
     void setPreferencesFromResource(int preferencesResId, const std::string& key);
 
-    bool onPreferenceTreeClick(Preference& preference);
-    void onNavigateToScreen(PreferenceScreen& preferenceScreen);
-    void onDisplayPreferenceDialog(Preference& preference);
+    // AOSP: implemented from the PreferenceManager listener interfaces and
+    // meant to be overridden by apps — virtual here.
+    virtual bool onPreferenceTreeClick(Preference& preference);
+    virtual void onNavigateToScreen(PreferenceScreen& preferenceScreen);
+    virtual void onDisplayPreferenceDialog(Preference& preference);
 
     Preference* findPreference(const std::string& key) const;
 

@@ -162,8 +162,9 @@ public:
 };
 
 PreferenceFragment::~PreferenceFragment() {
+    // mDividerDecoration is owned by the list RecyclerView (RV owns its
+    // decorations by design); it dies with the view tree.
     delete mPreferenceManager;
-    delete mDividerDecoration;
 }
 
 void PreferenceFragment::onCreate(Bundle* savedInstanceState) {
@@ -245,10 +246,14 @@ View* PreferenceFragment::onCreateView(LayoutInflater* inflater, ViewGroup* cont
 }
 
 void PreferenceFragment::setDivider(Drawable* divider) {
+    // The decoration is owned by the list RecyclerView; it only exists
+    // between onCreateView and onDestroyView (mList delimits that window).
+    if (mList == nullptr || mDividerDecoration == nullptr) return;
     mDividerDecoration->setDivider(divider);
 }
 
 void PreferenceFragment::setDividerHeight(int height) {
+    if (mList == nullptr || mDividerDecoration == nullptr) return;
     mDividerDecoration->setDividerHeight(height);
 }
 
