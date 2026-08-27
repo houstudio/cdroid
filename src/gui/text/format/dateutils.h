@@ -97,6 +97,29 @@ std::string formatDuration(int64_t millis, int abbrev);
 // timeStyle are java.text.DateFormat Style constants (DateFormat::FULL..).
 std::string formatSameDayTime(int64_t then, int64_t now, int dateStyle, int timeStyle);
 
+// ---- relative time (AOSP getRelativeTimeSpanString / getRelativeDateTimeString)
+// "42 minutes ago" / "In 42 minutes" / "yesterday" / "today" / "tomorrow".
+// The per-locale word tables are the en-US CLDR set (ICU RelativeDateTimeFormatter
+// stand-in — see dateutils.cc); FORMAT_ABBREV_RELATIVE selects the short units.
+std::string getRelativeTimeSpanString(int64_t startTime);
+std::string getRelativeTimeSpanString(int64_t time, int64_t now, int64_t minResolution);
+std::string getRelativeTimeSpanString(int64_t time, int64_t now, int64_t minResolution,
+        int flags);
+// "[relative time/date], [time]": "3 min. ago, 10:15 AM" / "yesterday, 12:20 PM".
+std::string getRelativeDateTimeString(Context* c, int64_t time, int64_t minResolution,
+        int64_t transitionResolution, int flags);
+
+// ---- date range (AOSP formatDateRange) --------------------------------------
+// "Oct 9", "3:00 – 4:00 PM", "Oct 28 – Nov 3, 2007" — the ICU interval merge
+// is the prefix/suffix-strip approximation (see dateutils.cc). The
+// java.util.Formatter-append overloads are not ported (string returns).
+std::string formatDateRange(Context* context, int64_t startMillis, int64_t endMillis,
+        int flags);
+// The olsonId is accepted for signature parity; CDROID has no TimeZone class,
+// so the default zone is used regardless.
+std::string formatDateRange(Context* context, int64_t startMillis, int64_t endMillis,
+        int flags, const std::string& timeZone);
+
 // ---- day check (AOSP isToday) -----------------------------------------------
 bool isToday(int64_t when);
 

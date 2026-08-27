@@ -134,9 +134,32 @@ static bool isThisYear(Calendar& c) {
     return now->get(Calendar::YEAR) == c.get(Calendar::YEAR);
 }
 
-// AOSP DateUtilsBridge.toSkeleton, single-calendar form (start == end, so
-// every fallOnDifferent*/fallInSame* check is trivially resolved).
-static std::string toSkeleton(Calendar& calendar, int flags) {
+// AOSP DateUtilsBridge.fallOnDifferentDates / fallInSameMonth / fallInSameYear
+// and isDisplayMidnightUsingSkeleton (:165-187).
+static bool fallOnDifferentDates(Calendar& c1, Calendar& c2) {
+    return c1.get(Calendar::YEAR) != c2.get(Calendar::YEAR)
+            || c1.get(Calendar::MONTH) != c2.get(Calendar::MONTH)
+            || c1.get(Calendar::DAY_OF_MONTH) != c2.get(Calendar::DAY_OF_MONTH);
+}
+
+static bool fallInSameMonth(Calendar& c1, Calendar& c2) {
+    return c1.get(Calendar::MONTH) == c2.get(Calendar::MONTH);
+}
+
+static bool fallInSameYear(Calendar& c1, Calendar& c2) {
+    return c1.get(Calendar::YEAR) == c2.get(Calendar::YEAR);
+}
+
+static bool isDisplayMidnightUsingSkeleton(Calendar& c) {
+    // All the skeletons returned by toSkeleton have minute precision (they may
+    // abbreviate 4:00 PM to 4 PM but will still show the following minute).
+    return c.get(Calendar::HOUR_OF_DAY) == 0 && c.get(Calendar::MINUTE) == 0;
+}
+
+// AOSP DateUtilsBridge.toSkeleton(startCalendar, endCalendar, flags) — the
+// single-instant callers pass the same calendar twice (the AOSP same-millis
+// range path).
+static std::string toSkeleton(Calendar& startCalendar, Calendar& endCalendar, int flags) {
     if ((flags & FORMAT_ABBREV_ALL) != 0) {
         flags |= FORMAT_ABBREV_MONTH | FORMAT_ABBREV_TIME | FORMAT_ABBREV_WEEKDAY;
     }
@@ -160,26 +183,40 @@ static std::string toSkeleton(Calendar& calendar, int flags) {
         timePart = "h";
     }
 
-    // Not abbreviating, or 24-hour: include minutes ("4 PM", never "16").
+    // If we've not been asked to abbreviate times, or we're using the 24-hour
+    // clock (where it never makes sense to leave out the minutes), include
+    // minutes. This gets us times like "4 PM" while avoiding "16" for 16:00.
     if ((flags & FORMAT_ABBREV_TIME) == 0 || (flags & FORMAT_24HOUR) != 0) {
         timePart += "m";
-    } else if (onTheHour(calendar)) {
-        // Abbreviated 12-hour on the hour: no minutes.
     } else {
-        timePart += "m";
+        // Abbreviating a 12-hour time: only show the minutes if they're not
+        // both "00".
+        if (!(onTheHour(startCalendar) && onTheHour(endCalendar))) {
+            timePart += "m";
+        }
+    }
+
+    if (fallOnDifferentDates(startCalendar, endCalendar)) {
+        flags |= FORMAT_SHOW_DATE;
+    }
+
+    if (fallInSameMonth(startCalendar, endCalendar) && (flags & FORMAT_NO_MONTH_DAY) != 0) {
+        flags &= ~FORMAT_SHOW_WEEKDAY;
+        flags &= ~FORMAT_SHOW_TIME;
     }
 
     if ((flags & (FORMAT_SHOW_DATE | FORMAT_SHOW_TIME | FORMAT_SHOW_WEEKDAY)) == 0) {
         flags |= FORMAT_SHOW_DATE;
     }
 
-    // Show the year? Explicit SHOW_YEAR/NO_YEAR wins; else this-year elision.
+    // If we've been asked to show the date, work out whether to show the year.
     if ((flags & FORMAT_SHOW_DATE) != 0) {
         if ((flags & FORMAT_SHOW_YEAR) != 0) {
             // The caller explicitly wants us to show the year.
         } else if ((flags & FORMAT_NO_YEAR) != 0) {
-            // The caller explicitly doesn't want the year.
-        } else if (!isThisYear(calendar)) {
+            // The caller explicitly doesn't want the year, even if we
+            // otherwise would.
+        } else if (!fallInSameYear(startCalendar, endCalendar) || !isThisYear(startCalendar)) {
             flags |= FORMAT_SHOW_YEAR;
         }
     }
@@ -206,7 +243,7 @@ static std::string toSkeleton(Calendar& calendar, int flags) {
 std::string formatDateTime(Context* /*context*/, int64_t millis, int flags) {
     auto calendar = Calendar::getInstance(Locale::getDefault());
     calendar->setTimeInMillis(millis);
-    const std::string skeleton = toSkeleton(*calendar, flags);
+    const std::string skeleton = toSkeleton(*calendar, *calendar, flags);
     const Locale locale = Locale::getDefault();
     const std::string pattern = DateFormat::getBestDateTimePattern(locale, skeleton);
     SimpleDateFormat formatter(pattern, locale);
@@ -273,8 +310,7 @@ std::string formatDuration(int64_t millis, int abbrev) {
 
 // ---- same-day (AOSP formatSameDayTime, DateUtils.java:499) ------------------
 
-std::string formatSameDayTime(int64_t then, int64_t now, int dateStyle, int timeStyle) {
-    auto thenCal = Calendar::getInstance(Locale::getDefault());
+std::string formatSameDayTime(int64_t then, int64_t now, int dateStyle, int timeStyle) {    auto thenCal = Calendar::getInstance(Locale::getDefault());
     thenCal->setTimeInMillis(then);
     auto nowCal = Calendar::getInstance(Locale::getDefault());
     nowCal->setTimeInMillis(now);
@@ -310,6 +346,375 @@ static bool isSameDate(int64_t oneMillis, int64_t twoMillis) {
 
 bool isToday(int64_t when) {
     return isSameDate(when, SystemClock::currentTimeMillis());
+}
+
+// ---- relative time (AOSP RelativeDateTimeFormatter.java, the @hide framework
+// helper DateUtils forwards to; skeleton ported line-for-line, the ICU
+// formatter itself is an en-US CLDR word table) -------------------------------
+
+namespace {
+
+// RelativeDateTimeFormatter.Direction / RelativeUnit / AbsoluteUnit.DAY,
+// internalized.
+enum class RelDirection { LAST, NEXT, THIS, LAST_2, NEXT_2 };
+enum class RelUnit { SECONDS, MINUTES, HOURS, DAYS, WEEKS };
+
+// CLDR en relative-unit patterns (LONG / SHORT). ICU resolves the plural
+// category per count; the English table only distinguishes one/other.
+struct RelUnitWords {
+    const char* oneLong;  const char* oneShort;
+    const char* otherLong; const char* otherShort;
+};
+const RelUnitWords kRelUnits[] = {
+    { "second", "sec.",  "seconds", "sec."  },  // SECONDS
+    { "minute", "min.",  "minutes", "min."  },  // MINUTES
+    { "hour",   "hr.",   "hours",   "hr."   },  // HOURS
+    { "day",    "dy.",   "days",    "dy."   },  // DAYS
+    { "week",   "wk.",   "weeks",   "wk."   },  // WEEKS
+};
+
+// icu RelativeDateTimeFormatter.format(count, direction, unit): CLDR en
+// patterns are "{0} seconds ago" (LAST) / "in {0} seconds" (NEXT), with the
+// short variant "in {0} sec.".
+std::string relFormatNumeric(int count, RelDirection direction, RelUnit unit, bool shortStyle) {
+    const RelUnitWords& words = kRelUnits[(int)unit];
+    const bool one = (count == 1);
+    const char* unitWord = shortStyle ? (one ? words.oneShort : words.otherShort)
+                                      : (one ? words.oneLong : words.otherLong);
+    char buf[64];
+    if (direction == RelDirection::LAST) {
+        snprintf(buf, sizeof(buf), "%d %s ago", count, unitWord);
+    } else {  // NEXT
+        snprintf(buf, sizeof(buf), "in %d %s", count, unitWord);
+    }
+    return buf;
+}
+
+// icu RelativeDateTimeFormatter.format(direction, AbsoluteUnit.DAY): the
+// absolute day words. English has no "2 days ago" special (LAST_2/NEXT_2 come
+// back empty and the caller falls through — preserved by returning "").
+std::string relFormatAbsoluteDay(RelDirection direction) {
+    switch (direction) {
+        case RelDirection::THIS:   return "today";
+        case RelDirection::LAST:   return "yesterday";
+        case RelDirection::NEXT:   return "tomorrow";
+        default:                   return std::string();  // LAST_2 / NEXT_2: none in en
+    }
+}
+
+// icu RelativeDateTimeFormatter.combineDateAndTime: "{date}, {time}".
+std::string relCombineDateAndTime(const std::string& dateClause, const std::string& timeClause) {
+    return dateClause + ", " + timeClause;
+}
+
+// RelativeDateTimeFormatter.julianDay over the default-zone calendar fields.
+// Gregorian calendar date → Julian day number (integer division truncates
+// toward zero, same as the Java arithmetic the formula is written for).
+static int julianDayOf(const Calendar& cal) {
+    const int y = cal.get(Calendar::YEAR);
+    const int m = cal.get(Calendar::MONTH) + 1;   // Calendar.MONTH is 0-based
+    const int d = cal.get(Calendar::DAY_OF_MONTH);
+    const int a = (m - 14) / 12;
+    return (1461 * (y + 4800 + a)) / 4
+            + (367 * (m - 2 - 12 * a)) / 12
+            - (3 * ((y + 4900 + a) / 100)) / 4
+            + d - 32075;
+}
+
+// RelativeDateTimeFormatter.dayDistance: end's local day minus start's.
+static int dayDistance(int64_t startTime, int64_t endTime) {
+    auto startCal = Calendar::getInstance(Locale::getDefault());
+    startCal->setTimeInMillis(startTime);
+    auto endCal = Calendar::getInstance(Locale::getDefault());
+    endCal->setTimeInMillis(endTime);
+    return julianDayOf(*endCal) - julianDayOf(*startCal);
+}
+
+// DateUtilsBridge.DateTimeFormat.format(locale, calendar, flags, context):
+// the flags→skeleton→pattern path formatDateTime runs (no Context face).
+static std::string dateTimeFormatFlags(Calendar& calendar, int flags) {
+    const std::string skeleton = toSkeleton(calendar, calendar, flags);
+    const Locale locale = Locale::getDefault();
+    const std::string pattern = DateFormat::getBestDateTimePattern(locale, skeleton);
+    SimpleDateFormat formatter(pattern, locale);
+    return formatter.format(calendar.getTimeInMillis());
+}
+
+// RelativeDateTimeFormatter.getRelativeTimeSpanString core (:118).
+std::string relativeTimeSpanString(int64_t time, int64_t now, int64_t minResolution,
+        int flags) {
+    const int64_t duration = (now - time) < 0 ? -(now - time) : (now - time);
+    const bool past = (now >= time);
+
+    const bool shortStyle = (flags & (FORMAT_ABBREV_RELATIVE | FORMAT_ABBREV_ALL)) != 0;
+
+    RelDirection direction = past ? RelDirection::LAST : RelDirection::NEXT;
+
+    // 'relative' defaults to true; set false for the no-quantity day words.
+    bool relative = true;
+    int count = 0;
+    RelUnit unit = RelUnit::SECONDS;
+
+    if (duration < MINUTE_IN_MILLIS && minResolution < MINUTE_IN_MILLIS) {
+        count = (int)(duration / SECOND_IN_MILLIS);
+        unit = RelUnit::SECONDS;
+    } else if (duration < HOUR_IN_MILLIS && minResolution < HOUR_IN_MILLIS) {
+        count = (int)(duration / MINUTE_IN_MILLIS);
+        unit = RelUnit::MINUTES;
+    } else if (duration < DAY_IN_MILLIS && minResolution < DAY_IN_MILLIS) {
+        // Even if 'time' actually happened yesterday, we don't format it as
+        // "yesterday" in this case. Unless the duration is longer than a day,
+        // or minResolution is specified as DAY_IN_MILLIS by user.
+        count = (int)(duration / HOUR_IN_MILLIS);
+        unit = RelUnit::HOURS;
+    } else if (duration < WEEK_IN_MILLIS && minResolution < WEEK_IN_MILLIS) {
+        count = dayDistance(time, now);
+        if (count < 0) count = -count;
+        unit = RelUnit::DAYS;
+
+        if (count == 2) {
+            // Some locales have special terms for "2 days ago". Return them if
+            // available (English has none — the empty result falls through to
+            // "2 days ago", mirroring the AOSP structure).
+            std::string str = relFormatAbsoluteDay(past ? RelDirection::LAST_2
+                                                        : RelDirection::NEXT_2);
+            if (!str.empty()) {
+                return str;
+            }
+            // Fall back to show something like "2 days ago".
+        } else if (count == 1) {
+            // Show "yesterday / tomorrow" instead of "1 day ago / in 1 day".
+            relative = false;
+        } else if (count == 0) {
+            // Show "today" if time and now are on the same day.
+            direction = RelDirection::THIS;
+            relative = false;
+        }
+    } else if (minResolution == WEEK_IN_MILLIS) {
+        count = (int)(duration / WEEK_IN_MILLIS);
+        unit = RelUnit::WEEKS;
+    } else {
+        auto timeCalendar = Calendar::getInstance(Locale::getDefault());
+        timeCalendar->setTimeInMillis(time);
+        // The duration is longer than a week and minResolution is not
+        // WEEK_IN_MILLIS. Return the absolute date instead of relative time.
+
+        // Bug 19822016: without an explicit year flag, show/hide the year
+        // based on time vs now, not the current system time.
+        if ((flags & (FORMAT_NO_YEAR | FORMAT_SHOW_YEAR)) == 0) {
+            auto nowCalendar = Calendar::getInstance(Locale::getDefault());
+            nowCalendar->setTimeInMillis(now);
+            if (timeCalendar->get(Calendar::YEAR) != nowCalendar->get(Calendar::YEAR)) {
+                flags |= FORMAT_SHOW_YEAR;
+            } else {
+                flags |= FORMAT_NO_YEAR;
+            }
+        }
+        return dateTimeFormatFlags(*timeCalendar, flags);
+    }
+
+    if (relative) {
+        return relFormatNumeric(count, direction, unit, shortStyle);
+    } else {
+        // The absolute-day words: direction was flipped to THIS for count==0;
+        // count==1 keeps the LAST/NEXT direction set at the top.
+        return relFormatAbsoluteDay(direction);
+    }
+}
+
+} // namespace
+
+std::string getRelativeTimeSpanString(int64_t startTime) {
+    return getRelativeTimeSpanString(startTime, SystemClock::currentTimeMillis(),
+            MINUTE_IN_MILLIS);
+}
+
+std::string getRelativeTimeSpanString(int64_t time, int64_t now, int64_t minResolution) {
+    const int flags = FORMAT_SHOW_DATE | FORMAT_SHOW_YEAR | FORMAT_ABBREV_MONTH;
+    return getRelativeTimeSpanString(time, now, minResolution, flags);
+}
+
+std::string getRelativeTimeSpanString(int64_t time, int64_t now, int64_t minResolution,
+        int flags) {
+    return relativeTimeSpanString(time, now, minResolution, flags);
+}
+
+std::string getRelativeDateTimeString(Context* c, int64_t time, int64_t minResolution,
+        int64_t transitionResolution, int flags) {
+    // Same reason as in formatDateRange() to explicitly indicate 12- or 24-hour format.
+    if ((flags & (FORMAT_SHOW_TIME | FORMAT_12HOUR | FORMAT_24HOUR)) == FORMAT_SHOW_TIME) {
+        flags |= DateFormat::is24HourFormat(c) ? FORMAT_24HOUR : FORMAT_12HOUR;
+    }
+
+    const int64_t now = SystemClock::currentTimeMillis();
+    const int64_t duration = (now - time) < 0 ? -(now - time) : (now - time);
+    // It doesn't make much sense to have results like: "1 week ago, 10:50 AM".
+    if (transitionResolution > WEEK_IN_MILLIS) {
+        transitionResolution = WEEK_IN_MILLIS;
+    }
+
+    auto timeCalendar = Calendar::getInstance(Locale::getDefault());
+    timeCalendar->setTimeInMillis(time);
+    auto nowCalendar = Calendar::getInstance(Locale::getDefault());
+    nowCalendar->setTimeInMillis(now);
+
+    const int days = dayDistance(time, now) < 0 ? -dayDistance(time, now) : dayDistance(time, now);
+
+    // Now get the date clause, either in relative format or the actual date.
+    std::string dateClause;
+    if (duration < transitionResolution) {
+        // Bug 5252772: any date difference promotes minResolution to
+        // DAY_IN_MILLIS so the date shows instead of "x hours/minutes ago".
+        if (days > 0 && minResolution < DAY_IN_MILLIS) {
+            minResolution = DAY_IN_MILLIS;
+        }
+        dateClause = relativeTimeSpanString(time, now, minResolution, flags);
+    } else {
+        // We always use fixed flags to format the date clause. User-supplied
+        // flags are ignored.
+        if (timeCalendar->get(Calendar::YEAR) != nowCalendar->get(Calendar::YEAR)) {
+            // Different years
+            flags = FORMAT_SHOW_DATE | FORMAT_SHOW_YEAR | FORMAT_NUMERIC_DATE;
+        } else {
+            // Default
+            flags = FORMAT_SHOW_DATE | FORMAT_NO_YEAR | FORMAT_ABBREV_MONTH;
+        }
+        dateClause = dateTimeFormatFlags(*timeCalendar, flags);
+    }
+
+    std::string timeClause = dateTimeFormatFlags(*timeCalendar, FORMAT_SHOW_TIME);
+
+    // Combine the two clauses, such as '5 days ago, 10:50 AM'.
+    return relCombineDateAndTime(dateClause, timeClause);
+}
+
+// ---- date range (AOSP DateUtils.formatDateRange + the @hide framework
+// DateIntervalFormat.formatDateRange, :751/DateIntervalFormat.java:68) --------
+// The ICU DateIntervalFormat merge (per-locale interval patterns, per-field
+// elision) is approximated by formatting both ends with the shared skeleton
+// pattern and stripping the common prefix/suffix — the en-US "{start} – {end}"
+// behavior ("Oct 9 – 10", "Oct 28 – Nov 3, 2007", "3:00 – 4:00 PM").
+// KNOWN DEVIATIONS: java.util.Formatter-append overloads are not ported
+// (string returns); the olsonId/FORMAT_UTC zone selection has no TimeZone
+// class to act on (the default zone is used); FORMAT_NO_NOON/CAP_NOON/
+// NO_MIDNIGHT/CAP_MIDNIGHT are ignored (android_12 relies on ICU patterns).
+
+// android.icu.text.DateIntervalFormat.format(start, end) stand-in.
+static std::string formatInterval(Calendar& startCalendar, Calendar& endCalendar,
+        const std::string& skeleton) {
+    const Locale locale = Locale::getDefault();
+    const std::string pattern = DateFormat::getBestDateTimePattern(locale, skeleton);
+    SimpleDateFormat formatter(pattern, locale);
+    const std::string s1 = formatter.format(startCalendar.getTimeInMillis());
+    if (&startCalendar == &endCalendar) return s1;
+    const std::string s2 = formatter.format(endCalendar.getTimeInMillis());
+    if (s1 == s2) return s1;
+
+    // Longest common prefix/suffix; the differing middles join with u8" \u2013 "
+    // (CLDR en interval separator, en dash).
+    size_t prefix = 0;
+    const size_t minLen = s1.size() < s2.size() ? s1.size() : s2.size();
+    while (prefix < minLen && s1[prefix] == s2[prefix]) prefix++;
+    size_t suffix = 0;
+    while (suffix < minLen - prefix && s1[s1.size() - 1 - suffix] == s2[s2.size() - 1 - suffix]) {
+        suffix++;
+    }
+    // Field-boundary sanity (ICU merges at field granularity, we work on
+    // strings): if the common prefix ends inside a digit run, back it off to
+    // the run start so half a number never lands in the prefix ("Nov 10, 2007"
+    // vs "Nov 11, 2007" keeps mid "10"/"11" instead of "0"/"1"). Same for the
+    // suffix.
+    const auto isDigit = [](char c) { return c >= '0' && c <= '9'; };
+    if (prefix > 0 && isDigit(s1[prefix - 1])) {
+        while (prefix > 0 && isDigit(s1[prefix - 1])) prefix--;
+    }
+    if (suffix > 0 && isDigit(s1[s1.size() - suffix])) {
+        while (suffix > 0 && isDigit(s1[s1.size() - suffix])) suffix--;
+    }
+    // Time-field sanity: a bare numeric mid whose suffix starts with
+    // separator+digit-run is a split minute ("3" + ":00 PM") — hand the
+    // separator+run back so the middles become "3:00"/"4:00" (ICU keeps whole
+    // time fields: "3:00 – 4:00 PM"). Guarded by a non-letter prefix end so a
+    // date mid ("Nov " + "10") never hands its ", 2007" year suffix over.
+    if (suffix > 0 && prefix < s1.size() && suffix <= s1.size()) {
+        const bool midWouldBeNumeric =
+                prefix < s1.size() - suffix
+                && std::all_of(s1.begin() + prefix, s1.begin() + s1.size() - suffix,
+                        [](char c) { return c >= '0' && c <= '9'; });
+        const bool prefixEndsNonLetter = prefix == 0 || !std::isalpha((unsigned char)s1[prefix - 1]);
+        const size_t f = s1.size() - suffix;      // suffix's first char index
+        if (midWouldBeNumeric && prefixEndsNonLetter && f < s1.size()
+                && !isDigit(s1[f]) && !std::isalpha((unsigned char)s1[f])) {
+            size_t k = f + 1;
+            while (k < s1.size() && isDigit(s1[k])) k++;
+            if (k > f + 1) {
+                suffix -= (k - f);   // separator + digit run leave the suffix
+            }
+        }
+    }
+    const std::string mid1 = s1.substr(prefix, s1.size() - prefix - suffix);
+    const std::string mid2 = s2.substr(prefix, s2.size() - prefix - suffix);
+    if (mid1.empty()) return s2;   // s1's differing part vanished: show s2 only
+    if (mid2.empty()) return s1;
+    return s1.substr(0, prefix) + mid1 + u8" \u2013 " + mid2
+            + s1.substr(s1.size() - suffix);
+}
+
+// DateIntervalFormat.isExactlyMidnight.
+static bool isExactlyMidnight(Calendar& c) {
+    return c.get(Calendar::HOUR_OF_DAY) == 0 && c.get(Calendar::MINUTE) == 0
+            && c.get(Calendar::SECOND) == 0 && c.get(Calendar::MILLISECOND) == 0;
+}
+
+static std::string formatDateRangeCore(int64_t startMs, int64_t endMs, int flags) {
+    auto startCalendar = Calendar::getInstance(Locale::getDefault());
+    startCalendar->setTimeInMillis(startMs);
+    // AOSP shares the Calendar reference for start == end; the pointer alias
+    // below carries that (formatInterval compares addresses).
+    Calendar* endCalendar = startCalendar.get();
+    std::unique_ptr<Calendar> endCalendarOwner;
+    if (startMs != endMs) {
+        endCalendarOwner = Calendar::getInstance(Locale::getDefault());
+        endCalendarOwner->setTimeInMillis(endMs);
+        endCalendar = endCalendarOwner.get();
+    }
+
+    // Special handling when the range ends at midnight (DateIntervalFormat.java:78):
+    // - not showing times and the range is non-empty → fudge the end date so
+    //   we don't count the day that's about to start;
+    // - showing times and the range ends at exactly 00:00 of the day following
+    //   its start (24:00 the same day) → fudge so the dates aren't shown,
+    //   unless the start is itself displayed as 00:00 (disambiguate).
+    if (isExactlyMidnight(*endCalendar)) {
+        const bool showTime = (flags & FORMAT_SHOW_TIME) == FORMAT_SHOW_TIME;
+        const bool endsDayAfterStart = julianDayOf(*endCalendar) - julianDayOf(*startCalendar) == 1;
+        if ((!showTime && startMs != endMs)
+                || (endsDayAfterStart && !isDisplayMidnightUsingSkeleton(*startCalendar))) {
+            endCalendar->set(Calendar::DAY_OF_MONTH, endCalendar->get(Calendar::DAY_OF_MONTH) - 1);
+        }
+    }
+
+    const std::string skeleton = toSkeleton(*startCalendar, *endCalendar, flags);
+    return formatInterval(*startCalendar, *endCalendar, skeleton);
+}
+
+std::string formatDateRange(Context* context, int64_t startMillis, int64_t endMillis,
+        int flags) {
+    return formatDateRange(context, startMillis, endMillis, flags, std::string());
+}
+
+std::string formatDateRange(Context* context, int64_t startMillis, int64_t endMillis,
+        int flags, const std::string& timeZone) {
+    // If we're being asked to format a time without being explicitly told
+    // whether to use the 12- or 24-hour clock, fall back to the user's
+    // preference (AOSP comment; icu4c would fall back to the locale's).
+    if ((flags & (FORMAT_SHOW_TIME | FORMAT_12HOUR | FORMAT_24HOUR)) == FORMAT_SHOW_TIME) {
+        flags |= DateFormat::is24HourFormat(context) ? FORMAT_24HOUR : FORMAT_12HOUR;
+    }
+    // `timeZone` (olsonId) and FORMAT_UTC: no TimeZone class — the default
+    // zone is used (see the section note above).
+    (void)timeZone;
+    return formatDateRangeCore(startMillis, endMillis, flags);
 }
 
 } // namespace DateUtils

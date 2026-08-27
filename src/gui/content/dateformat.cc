@@ -226,6 +226,12 @@ std::string DateFormat::getBestDateTimePattern(const Locale& locale, const std::
     else hour12 = !localePrefers24Hour(locale);
     const std::string timePart = localeHourMinutePattern(locale, hour12);
 
+    // A time-only skeleton (no date fields requested at all) maps to the bare
+    // time pattern, like ICU's DTPG ("hm" → "h:mm a", not a glued date-time).
+    const bool wantAnyDateField = wantWeekday || wantYear || has('M') || has('d')
+            || has('L') || has('E');
+    if (!wantAnyDateField) return timePart;
+
     // ICU joins date and time through the locale's {1}/{0} glue; the engine
     // pool has no glue slot, so the common ", " join stands in (a DTPG-gap
     // simplification, fine for the subset).
