@@ -39,13 +39,19 @@ using cdroid::fragment::FragmentActivity;
 
 namespace {
 
-/** Resolve a theme color (fallback = the hardcoded Material Light value). */
+/** Resolve a theme color (fallback = the hardcoded Material Light value).
+ *  Attrs like textColorPrimary resolve to a ColorStateList reference — the
+ *  resourceId must be loaded (->getDefaultColor), not used as a raw ARGB. */
 int themeColor(cdroid::Context& ctx, int attr, int fallback) {
     cdroid::TypedValue v;
-    if (ctx.getTheme().resolveAttribute(attr, &v, true)) {
-        return v.data;
+    if (!ctx.getTheme().resolveAttribute(attr, &v, true)) {
+        return fallback;
     }
-    return fallback;
+    if (v.resourceId != 0) {
+        auto csl = ctx.getColorStateList((int)v.resourceId);
+        if (csl != nullptr) return csl->getDefaultColor();
+    }
+    return v.data;
 }
 
 /** Nested-screen key -> preference XML resource (both under assets/xml/). */
@@ -333,7 +339,7 @@ int main(int argc, const char* argv[]) {
     // chain resolves ?android:attr/textAppearance against the App context,
     // so the Material Light palette reaches the row TextViews (a Window-only
     // setTheme would not propagate to those contexts).
-    app.setTheme((int)internal::R::style::Theme_Material);
+    app.setTheme((int)internal::R::style::Theme_Material_Light);
     auto* w = new SettingsActivity();
     if (argc > 1) w->setLaunchRoot(argv[1]);
     LOGD("settings demo window created");
