@@ -299,6 +299,9 @@ void setupText(View* page) {
         adapter->add("High");
         adapter->add("Turbo");
         spinner->setAdapter(adapter);
+        // Creator-owns rule: anchor the demo adapter's deletion to the spinner.
+        spinner->setTag(View::generateViewId(), adapter,
+                        [](void* p) { delete static_cast<StringSpinnerAdapter*>(p); });
         spinner->setSelection(1);
     }
 }
@@ -411,6 +414,14 @@ void setupLists(View* page) {
     ListTouchCallback* cb = new ListTouchCallback(adapter);
     ItemTouchHelper* helper = new ItemTouchHelper(cb);
     helper->attachToRecyclerView(rv);
+    // Creator-owns rule: the adapter and the touch callback are ours (RecyclerView
+    // deletes neither). The ItemTouchHelper itself is NOT anchored — RecyclerView
+    // owns every attached ItemDecoration (helper included) and deletes it in its
+    // own dtor; a second delete here would double-free.
+    rv->setTag(View::generateViewId(), adapter,
+               [](void* p) { delete static_cast<DemoListAdapter*>(p); });
+    rv->setTag(View::generateViewId(), cb,
+               [](void* p) { delete static_cast<ListTouchCallback*>(p); });
 }
 void setupMisc(View* page) {
     // NumberPickers: temperature (16..30) and fan speed (0..5).
@@ -666,7 +677,12 @@ struct RotaryDialState {
 void setupMotion(View* page) {
     Carousel* carousel = (Carousel*)page->findViewById(widgetsDemo::R::id::carousel);
     if (carousel != nullptr) {
-        carousel->setAdapter(new DemoCarouselAdapter());
+        // RecyclerView does not own its adapter (androidx semantics): anchor the
+        // demo adapter's lifetime to the view itself via an owned keyed tag.
+        auto* adapter = new DemoCarouselAdapter();
+        carousel->setAdapter(adapter);
+        carousel->setTag(View::generateViewId(), adapter,
+                         [](void* p) { delete static_cast<DemoCarouselAdapter*>(p); });
     }
 
     auto* dialBox = dynamic_cast<ConstraintLayout*>(page->findViewById(widgetsDemo::R::id::dial_box));
@@ -684,7 +700,9 @@ void setupMotion(View* page) {
         // The animator's update listener holds a weak ref so state ownership
         // flows the other way (state owns the animator) — no refcount cycle.
         st->anim = std::make_shared<ValueAnimator>();
-        st->anim->setInterpolator(new LinearInterpolator());
+        // ValueAnimator does not own the interpolator — pass the shared singleton
+        // (same as ValueAnimator's own default) instead of leaking a new one.
+        st->anim->setInterpolator(LinearInterpolator::Instance);
         std::weak_ptr<RotaryDialState> weak(st);
         st->anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([weak](ValueAnimator& va) {
             auto s = weak.lock();

@@ -35,7 +35,12 @@ public:
             // so the pager is created here and hosted in the layout's container.
             ViewPager* pager = new ViewPager(getContext());
             pager->setId(View::generateViewId());  // unique tag base for pager fragments
-            pager->setAdapter(new DemoFragmentPagerAdapter(getSupportFragmentManager()));
+            // Creator-owns rule: the adapter is ours, not the pager's — anchor its
+            // deletion to the pager's lifetime with an owned keyed tag.
+            auto* pagerAdapter = new DemoFragmentPagerAdapter(getSupportFragmentManager());
+            pager->setAdapter(pagerAdapter);
+            pager->setTag(View::generateViewId(), pagerAdapter,
+                          [](void* p) { delete static_cast<DemoFragmentPagerAdapter*>(p); });
             // 10 small static pages: keep them all attached (androidx guidance for
             // FragmentPagerAdapter) instead of tearing down/rebuilding views through
             // the SpecialEffects exit pipeline on every tab hop.
@@ -45,6 +50,22 @@ public:
             host->addView(pager, new ViewGroup::LayoutParams(
                     ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
             if (mTabs) mTabs->setupWithViewPager(pager);
+
+            // Valgrind/CI driver: WIDGETSDEMO_AUTOCYCLE sweeps every page once
+            // (0..count-1), then exits cleanly so the leak-check report lands.
+            // No input path involved — valgrind's serialized virtual CPU makes
+            // evdev/touch interaction impractical (clicks starve).
+            if (getenv("WIDGETSDEMO_AUTOCYCLE")) {
+                struct Cycle {
+                    static void step(ViewPager* p, int page) {
+                        const int n = (p->getAdapter() != nullptr) ? p->getAdapter()->getCount() : 0;
+                        if (n == 0 || page >= n) { App::getInstance().exit(0); return; }
+                        p->setCurrentItem(page, false);
+                        p->postDelayed([p, page]() { Cycle::step(p, page + 1); }, 5000);
+                    }
+                };
+                pager->postDelayed([pager]() { Cycle::step(pager, 0); }, 5000);
+            }
 
         // Locale cycle button (top-right): flips zh-CN <-> en-US through the
         // AOSP-style configuration-change path. The manifest declares
