@@ -644,7 +644,7 @@ class PakBuilder:
             manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
                         '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
                         ' package="android">'
-                        '<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>'
+                        '<uses-sdk android:minSdkVersion="28" android:targetSdkVersion="36"/>'
                         '</manifest>')
             mpath = os.path.join(tmpdir, "AndroidManifest.xml")
             with open(mpath, "w") as f: f.write(manifest)
@@ -997,7 +997,7 @@ class PakBuilder:
                     mopen = mtext.find(">", mtext.find("<manifest"))
                     if mopen != -1:
                         mtext = (mtext[:mopen + 1]
-                                 + '\n    <uses-sdk android:minSdkVersion="26"'
+                                 + '\n    <uses-sdk android:minSdkVersion="28"'
                                    ' android:targetSdkVersion="36"/>'
                                  + mtext[mopen + 1:])
                         with open(mpath, "w", encoding="utf-8") as fh:
@@ -1008,7 +1008,7 @@ class PakBuilder:
                 manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
                             '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
                             ' package="%s">'
-                            '<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>'
+                            '<uses-sdk android:minSdkVersion="28" android:targetSdkVersion="36"/>'
                             '</manifest>' % pkg)
                 with open(mpath, "w") as fh:
                     fh.write(manifest)
@@ -1252,7 +1252,7 @@ def build_shared_lib_pak(res_dir, pak_path, rh_path, namespace,
         fh.write('<?xml version="1.0" encoding="utf-8"?>\n'
                  '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
                  ' package="%s">'
-                 '<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>'
+                 '<uses-sdk android:minSdkVersion="28" android:targetSdkVersion="36"/>'
                  '</manifest>\n' % package)
 
     out_apk = os.path.join(tmpdir, "out.apk")
