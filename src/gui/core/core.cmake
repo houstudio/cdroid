@@ -2,8 +2,6 @@ SET(CORE_SOURCES
     core/app.cc
     core/attributeset.cc
     core/context.cc         # cdroid::Context AOSP ID-based resource getters (defaults)
-    core/contextimpl.cc     # cdroid::ContextImpl: pak registry + string-key stream access
-    core/contextthemewrapper.cc # cdroid::ContextThemeWrapper: per-object theme overlay
     #core/basebundle.cc
     #core/bundle.cc
     core/transform.cc

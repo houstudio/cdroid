@@ -25,7 +25,7 @@
 #include <istream>
 #include <cairomm/surface.h>
 #include <core/looper.h>
-#include <core/contextimpl.h>
+#include <content/contextimpl.h>
 #include <content/typedarray.h>      // TypedArray: consumer-side typed attr view
 
 namespace cxxopts{

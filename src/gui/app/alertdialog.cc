@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <app/alertdialog.h>
-#include <core/contextthemewrapper.h>
+#include <content/contextthemewrapper.h>
 #include <widget/internal_R.h>
 namespace cdroid{
 

@@ -1,6 +1,11 @@
 # java.text date formatting: DateFormat / SimpleDateFormat / DateFormatSymbols,
 # locale data served by the vendored i18n engine (internal to the library).
 set(CONTENT_SOURCES
+    # android.content: Context family (ContextImpl/ContextWrapper/ContextThemeWrapper)
+    content/contextimpl.cc
+    content/contextthemewrapper.cc
+    # android.content: SharedPreferences (file-backed preference store)
+    content/sharedpreferences.cc
     # android.content.res: the resource stack (moved from core/)
     content/Locale.cc
     content/LocaleList.cc

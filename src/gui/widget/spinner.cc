@@ -19,7 +19,7 @@
 #include <core/context.h>
 #include <widget/spinner.h>
 #include <widget/framework_styleable.h>
-#include <core/contextthemewrapper.h>
+#include <content/contextthemewrapper.h>
 #include <widget/listview.h>
 #include <widget/dropdownlistview.h>
 #include <widget/forwardinglistener.h>

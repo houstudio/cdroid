@@ -15,7 +15,7 @@
  */
 //#include <cdroid.h>
 #include <core/app.h>
-#include <core/contextthemewrapper.h>
+#include <content/contextthemewrapper.h>
 #include <core/intent.h>
 #include <core/componentname.h>
 #include <core/looper.h>

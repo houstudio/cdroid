@@ -19,7 +19,7 @@
 #define __LAYOUT_INFLATE_H__
 #include <core/attributeset.h>
 #include <core/context.h>
-#include <core/contextthemewrapper.h>
+#include <content/contextthemewrapper.h>
 #include <core/xmlpullparser.h>
 
 namespace cdroid{

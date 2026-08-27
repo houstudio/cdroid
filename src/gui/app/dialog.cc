@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <app/dialog.h>
 #include <core/windowmanager.h>
-#include <core/contextthemewrapper.h>
+#include <content/contextthemewrapper.h>
 #include <widget/internal_R.h>
 namespace cdroid{
 using namespace cdroid::internal;

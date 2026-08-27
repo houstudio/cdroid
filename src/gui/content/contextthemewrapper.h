@@ -17,7 +17,7 @@
  *********************************************************************************/
 #ifndef __CONTEXT_THEME_WRAPPER_H__
 #define __CONTEXT_THEME_WRAPPER_H__
-#include <core/contextwrapper.h>
+#include <content/contextwrapper.h>
 namespace cdroid{
 
 /** A context wrapper that allows you to modify or replace the theme of the
