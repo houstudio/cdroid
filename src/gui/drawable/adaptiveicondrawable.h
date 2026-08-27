@@ -148,7 +148,7 @@ class AdaptiveIconDrawable::ChildDrawable {
 public:
     std::vector<int> mThemeAttrs;   // AOSP int[] mThemeAttrs; empty == null
     int mDensity = DisplayMetrics::DENSITY_DEFAULT;
-    Drawable* mDrawable;
+    Drawable* mDrawable = nullptr;
 
     ChildDrawable(int density);
     ChildDrawable(ChildDrawable* orig,AdaptiveIconDrawable* owner);
@@ -159,6 +159,10 @@ public:
 class AdaptiveIconDrawable::LayerState:public Drawable::ConstantState {
     static constexpr int N_CHILDREN = 3;
     std::vector<ChildDrawable*> mChildren;
+    // AOSP's Java ChildDrawable[] elements are always non-null; the C++ raw
+    // pointers leave unfilled slots null (e.g. no monochrome layer), so every
+    // child access must go through this guard.
+    Drawable* childAt(int i) const;
 
     // The density at which to render the drawable and its children.
     int mDensity;
