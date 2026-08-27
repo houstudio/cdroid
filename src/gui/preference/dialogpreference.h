@@ -38,7 +38,7 @@ public:
     class TargetFragment {
     public:
         virtual ~TargetFragment() = default;
-        virtual Preference* findPreference(const std::string& key) = 0;
+        virtual Preference* findPreference(const std::string& key) const = 0;
     };
 
     DialogPreference(Context& context);

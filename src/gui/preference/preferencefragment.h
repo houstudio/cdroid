@@ -24,6 +24,7 @@
 #include <fragment/fragment.h>
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <preference/preference.h>
+#include <preference/dialogpreference.h>
 #include <preference/preferencemanager.h>
 
 namespace cdroid {
@@ -72,7 +73,7 @@ public:
  * This Fragment displays a hierarchy of Preference objects to the user. It
  * also handles persisting values to the device.
  */
-class PreferenceFragment : public fragment::Fragment {
+class PreferenceFragment : public fragment::Fragment, public virtual DialogPreference::TargetFragment {
 public:
     /**
      * Fragment argument used to specify the tag of the desired root
@@ -117,7 +118,10 @@ public:
     virtual void onNavigateToScreen(PreferenceScreen& preferenceScreen);
     virtual void onDisplayPreferenceDialog(Preference& preference);
 
-    Preference* findPreference(const std::string& key) const;
+    // DialogPreference::TargetFragment: lets dialog fragments find the
+    // preference that launched them (AOSP PreferenceFragmentCompat
+    // implements the same interface).
+    Preference* findPreference(const std::string& key) const override;
 
     RecyclerView* getListView() const;
 

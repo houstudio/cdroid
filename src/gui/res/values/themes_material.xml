@@ -418,6 +418,8 @@ please see themes_device_defaults.xml.
 
     <!-- Material theme (light version). -->
     <style name="Theme.Material.Light" parent="Theme.Light">
+        <item name="spinnerStyle">?attr/dropDownSpinnerStyle</item>
+        <item name="dropDownSpinnerStyle">@style/Widget.Material.Light.Spinner.DropDown</item>
         <item name="colorForeground">@color/foreground_material_light</item>
         <item name="colorForegroundInverse">@color/foreground_material_dark</item>
         <item name="colorBackground">@color/background_material_light</item>
