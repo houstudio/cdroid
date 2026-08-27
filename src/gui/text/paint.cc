@@ -24,6 +24,11 @@ namespace cdroid{
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Paint::Paint(){
+    // AOSP Paint.DEFAULT: the initial color is BLACK — an uninitialized
+    // mColor reads as fully transparent ARGB(0), which made every TextView
+    // without an explicit textColor draw invisible text (dropdown/dialog
+    // list items, spinner labels).
+    mColor = 0xFF000000;
     mTypeface = Typeface::DEFAULT;
     mStartHyphenEdit=0;
     mEndHyphenEdit=0;

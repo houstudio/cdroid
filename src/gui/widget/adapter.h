@@ -67,6 +67,12 @@ private:
 };
 
 typedef Adapter ListAdapter,SpinnerAdapter,BaseAdapter;
+
+// AOSP ArrayAdapter item -> CharSequence: strings verbatim, arithmetic via
+// std::to_string (AOSP calls toString()).
+template <typename U> struct AdapterItemText { static std::string get(const U& v){ return std::to_string(v); } };
+template <> struct AdapterItemText<std::string> { static const std::string& get(const std::string& v){ return v; } };
+
 template<class T>
 class ArrayAdapter:public Adapter{
 private:
@@ -77,14 +83,24 @@ protected:
     int mResource;
     int mDropDownResource;
 private:
+     // AOSP ArrayAdapter.createViewFromResource (verbatim structure):
+     // inflate with the real parent (attachToRoot=false), whole view is the
+     // TextView when mFieldId==0, and ALWAYS (re)bind the text — recycled
+     // convertView included (the bind was missing entirely before, leaving
+     // spinner dropdown items blank).
      View* createViewFromResource(int position,View* convertView,ViewGroup* parent,int resource) {
-        View*view = convertView;
-        if((view==nullptr)&&(resource!=0)){
-            view = LayoutInflater::from(mContext)->inflate(resource,nullptr, false);
-            //If no custom field is assigned, assume the whole resource is a TextView
-            //Otherwise, find the TextView field within the layout
-            TextView* text = (mFieldId==0)?(TextView*)view:(TextView*)view->findViewById(mFieldId);
-            T& item = getItemAt(position);
+        View* view = convertView;
+        if (view == nullptr && resource != 0) {
+            view = LayoutInflater::from(mContext)->inflate(resource, parent, false);
+        }
+        TextView* text;
+        if (mFieldId == 0) {
+            text = dynamic_cast<TextView*>(view);
+        } else {
+            text = (TextView*)view->findViewById(mFieldId);
+        }
+        if (text != nullptr) {
+            text->setText(AdapterItemText<T>::get(getItemAt(position)));
         }
         return view;
     }
