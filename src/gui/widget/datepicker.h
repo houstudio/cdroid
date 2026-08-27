@@ -47,6 +47,7 @@ public:
     DatePicker(Context* context,const AttributeSet* attrs);
     DatePicker(Context* context,const AttributeSet* attrs,int defStyleAttr);
     DatePicker(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
+    ~DatePicker() override;   // deletes mDelegate (Java relies on GC)
     int getMode();
 
     void init(int year, int monthOfYear, int dayOfMonth,const OnDateChangedListener& onDateChangedListener);

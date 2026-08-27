@@ -147,6 +147,13 @@ YearPickerView::YearPickerView(Context*ctx,const AttributeSet* pAttrs,int defSty
     });
 }
 
+YearPickerView::~YearPickerView(){
+    // mAdapter is new'ed in the ctor and exclusively ours (AdapterView does
+    // not own adapters — the creator frees them).
+    delete mAdapter;
+    mAdapter = nullptr;
+}
+
 void YearPickerView::setOnYearSelectedListener(const OnYearSelectedListener& listener) {
     mOnYearSelectedListener = listener;
 }

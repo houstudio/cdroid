@@ -45,6 +45,11 @@ DayPickerPagerAdapter::~DayPickerPagerAdapter(){
     //delete mCalendarTextColor;
     //delete mDaySelectorColor;
     //delete mDayHighlightColor;
+    // Pages still cached at teardown (ViewPager never destroyItem'd them): the
+    // holders are ours (new'ed in instantiateItem), the views themselves stay
+    // owned by their container.
+    for (int i = 0; i < mItems.size(); i++) delete mItems.valueAt(i);
+    mItems.clear();
 }
 
 void DayPickerPagerAdapter::setRange(Calendar& min,Calendar& max) {
@@ -267,6 +272,7 @@ void DayPickerPagerAdapter::destroyItem(ViewGroup* container, int position,void*
     ViewHolder* holder = (ViewHolder*) object;
     container->removeView(holder->container);
     mItems.remove(position);
+    delete holder;   // allocated in instantiateItem; Java relies on GC
 }
 
 int DayPickerPagerAdapter::getItemPosition(void* object) {

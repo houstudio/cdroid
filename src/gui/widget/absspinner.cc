@@ -55,6 +55,9 @@ AbsSpinner::AbsSpinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
 
 AbsSpinner::~AbsSpinner(){
     delete mRecycler;
+    // Mirror AbsListView: the DataSetObserver we allocated in setAdapter() is
+    // ours — without this every Spinner leaks one (valgrind "definitely lost").
+    delete mDataSetObserver;
 }
 
 void AbsSpinner::initAbsSpinner() {
@@ -67,6 +70,7 @@ void AbsSpinner::initAbsSpinner() {
     setFocusable(true);
     setWillNotDraw(false);
     mSpinnerPadding.setEmpty();
+    mDataSetObserver = nullptr;   // dtor/setAdapter delete it: must start null
     mRecycler=new RecycleBin(this);
 }
 
@@ -77,6 +81,8 @@ int AbsSpinner::getCount(){
 void AbsSpinner::setAdapter(Adapter* adapter) {
     if (mAdapter) {
         mAdapter->unregisterDataSetObserver(mDataSetObserver);
+        delete mDataSetObserver;      // swap path: same ownership rule as AbsListView
+        mDataSetObserver = nullptr;
         resetList();
     }
     mAdapter=adapter;

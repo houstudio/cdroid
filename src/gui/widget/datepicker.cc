@@ -76,6 +76,13 @@ DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleA
     });*/
 }
 
+DatePicker::~DatePicker(){
+    // mDelegate is created by (and solely owned by) the ctor — without this
+    // every DatePicker leaks its whole delegate subtree (valgrind ~1.2-1.7KB).
+    delete mDelegate;
+    mDelegate = nullptr;
+}
+
 DatePicker::DatePickerDelegate* DatePicker::createSpinnerUIDelegate(Context* context,
         const AttributeSet* attrs, int defStyleAttr, int defStyleRes) {
     return new DatePickerSpinnerDelegate(this, context, attrs, defStyleAttr, defStyleRes);
