@@ -15,6 +15,10 @@ private:
     int mEllipsizedWidth, mEllipsizedStart, mEllipsizedCount;
     float mMax;
     RectF mDrawingBounds;
+    // The ellipsize paths (master ctor / replaceOrMake) install a FRESH text from
+    // TextUtils::ellipsize into Layout::mText — nobody else owns that copy, so this
+    // layout does. Layout itself never deletes mText.
+    bool mOwnsText = false;
 
     static bool hasAnyInterestingChars(CharSequence* text, int textLength);
 public:
@@ -52,6 +56,8 @@ public:
 
     BoringLayout(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
             float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad);
+
+    ~BoringLayout() override;   // frees the ellipsized text when mOwnsText
 
     BoringLayout(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
             float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad,
