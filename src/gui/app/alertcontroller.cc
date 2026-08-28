@@ -247,6 +247,7 @@ ViewGroup* AlertController::resolvePanel(View* customPanel,View* defaultPanel){
     if(defaultPanel){
         ViewGroup*parent=defaultPanel->getParent();
         parent->removeView(defaultPanel);
+        delete defaultPanel;  // AOSP relies on GC for the replaced default panel
     }
     return (ViewGroup*)customPanel;
 }
@@ -429,11 +430,15 @@ void AlertController::setupContent(ViewGroup* contentPanel){
     } else {
         mMessageView->setVisibility(View::GONE);
         mScrollView->removeView(mMessageView);
+        delete mMessageView;    // AOSP relies on GC after the detach
+        mMessageView = nullptr;
 
         if (mListView != nullptr) {
             ViewGroup* scrollParent = (ViewGroup*) mScrollView->getParent();
             const int childIndex = scrollParent->indexOfChild(mScrollView);
             scrollParent->removeViewAt(childIndex);
+            delete mScrollView; // AOSP relies on GC; frees the detached subtree
+            mScrollView = nullptr;
             mListView->setMinimumHeight(200); 
             scrollParent->addView(mListView, childIndex,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
             //scrollParent->requestLayout();
