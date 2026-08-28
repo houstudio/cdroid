@@ -171,6 +171,11 @@ private:
     // teardown hands back a fresh floating observer and the remove misses the
     // real one, leaving a dangling listener that crashes the next layout.
     ViewTreeObserver* mTouchObserverRegistered = nullptr;
+    // Weak-liveness flag (the PopupWindow mAliveFlag pattern): copies of the
+    // listener captured by tree observers share it; the dtor flips it so a
+    // stale registration can never dereference the dead list. AOSP relies on
+    // GC for exactly this window.
+    std::shared_ptr<bool> mAliveFlag;
     AbsListView::PerformClick* mPerformClick;
     FlingRunnable* mFlingRunnable;
     Runnable mTouchModeReset;

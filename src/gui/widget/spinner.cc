@@ -699,8 +699,14 @@ void Spinner::DialogPopup::setAdapter(Adapter*adapter){
         if (mPopup == nullptr || !mPopup->isShowing()) {
             delete mListAdapter;
         } else {
-            Adapter* old = mListAdapter;
-            mSpinner->post([old]() { delete old; });
+            // Defer past the dialog's OWN death, not just off this stack: the
+            // popup ListView keeps calling mAdapter (layoutChildren via the
+            // touchMode dispatch) until the dialog tree is destroyed, and a
+            // looper-order delete of the wrap crashed it (UAF in
+            // ListView::layoutChildren reading freed mAdapter). The dialog's
+            // posted teardown frees this wrap after its tree.
+            delete mPendingAdapterDelete;
+            mPendingAdapterDelete = mListAdapter;
         }
     }
     mListAdapter = adapter;
@@ -742,7 +748,12 @@ void Spinner::DialogPopup::dismiss(){
     // and the pointer-corruption fallout showed up as the 239K/632K "leak"
     // clusters). AOSP survives the same reentry on GC.
     Dialog* owner = mPopup;
-    mSpinner->post([owner]() { delete owner; });
+    Adapter* pendingWrap = mPendingAdapterDelete;
+    mPendingAdapterDelete = nullptr;
+    mSpinner->post([owner, pendingWrap]() {
+        delete owner;          // dialog dies first (its ListView stops touching mAdapter)
+        delete pendingWrap;    // then the retired wrap is safe to free
+    });
     mPopup = nullptr;
 }
 

@@ -57,6 +57,9 @@ private:
         Spinner *mSpinner;
         Adapter *mListAdapter = nullptr;
         class AlertDialog*mPopup = nullptr;
+        // Wrap replaced while a popup was up: freed AFTER the dialog's tree
+        // dies (the popup ListView keeps dereferencing mAdapter until then).
+        Adapter* mPendingAdapterDelete = nullptr;
         std::string mPrompt;
         void onClick(DialogInterface& dialog, int which);
     public:

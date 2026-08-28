@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <execinfo.h>
 #include <algorithm>
 #include <view/viewtreeobserver.h>
 #include <cdlog.h>
@@ -211,9 +212,12 @@ void ViewTreeObserver::addOnPreDrawListener(const OnPreDrawListener& listener) {
 
 void ViewTreeObserver::removeOnPreDrawListener(const OnPreDrawListener& victim) {
     checkIsAlive();
-    auto it = std::find(mOnPreDrawListeners.begin(),mOnPreDrawListeners.end(),victim);
-    if(it!=mOnPreDrawListeners.end()){
-	    mOnPreDrawListeners.erase(it);
+    // Erase ALL equal entries: a double-attach adds the same listener twice,
+    // and a single-erase remove left the second copy registered — it fired on
+    // freed views after teardown (the popup preDraw/touchMode crashes).
+    for (auto it = mOnPreDrawListeners.begin(); it != mOnPreDrawListeners.end();) {
+        if (*it == victim) it = mOnPreDrawListeners.erase(it);
+        else ++it;
     }
 }
 
@@ -284,9 +288,12 @@ void ViewTreeObserver::addOnTouchModeChangeListener(const OnTouchModeChangeListe
 
 void ViewTreeObserver::removeOnTouchModeChangeListener(const OnTouchModeChangeListener& victim) {
     checkIsAlive();
-    auto it = std::find(mOnTouchModeChangeListeners.begin(),mOnTouchModeChangeListeners.end(),victim);
-    if(it != mOnTouchModeChangeListeners.end())
-       mOnTouchModeChangeListeners.erase(it);
+    // Same all-equal-entries erase as removeOnPreDrawListener (double-attach
+    // left a second copy that crashed the next popup's layout).
+    for (auto it = mOnTouchModeChangeListeners.begin(); it != mOnTouchModeChangeListeners.end();) {
+        if (*it == victim) it = mOnTouchModeChangeListeners.erase(it);
+        else ++it;
+    }
 }
 
 void ViewTreeObserver::addOnComputeInternalInsetsListener(const OnComputeInternalInsetsListener& listener) {

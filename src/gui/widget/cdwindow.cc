@@ -1128,8 +1128,14 @@ void Window::finishClose(){
         Choreographer::getInstance().removeCallbacks(
             Choreographer::CALLBACK_TRAVERSAL, nullptr, self);
         self->mTraversalScheduled = false;
-        delete info;
+        // Delete the WINDOW first, the AttachInfo (tree observer) after: the
+        // tree's destructor belts (AbsListView/TextView observer unregisters)
+        // resolve their pinned observer while it is still alive — with the old
+        // order the observer died first and the removes read freed memory,
+        // leaving dangling listeners that crashed the NEXT popup's layout
+        // (pure virtual in AdapterView::removeViewAt).
         delete self;
+        delete info;
         delete h;
     });
     WindowManager::getInstance().removeWindow(this);

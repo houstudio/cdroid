@@ -72,7 +72,9 @@ void AbsListView::initAbsListView() {
     mGlobalLayoutListener =[this](){
         onGlobalLayout();
     };
-    mTouchModeChangeListener=[this](bool isInTouchMode){
+    mAliveFlag = std::make_shared<bool>(true);
+    mTouchModeChangeListener=[this, flag = mAliveFlag](bool isInTouchMode){
+        if (!*flag) return;   // stale registration: the list is destroyed
         onTouchModeChanged(isInTouchMode);
     };
 
@@ -139,6 +141,7 @@ void AbsListView::readAbsListViewAttrs(const AttributeSet* atts) {
 }
 
 AbsListView::~AbsListView() {
+    *mAliveFlag = false;   // stale listener copies become no-ops
     // Death-belt (same pattern as ~TextView's preDraw unregister): paths that
     // delete the tree without the detach dispatch leave the tree-observer
     // touchMode listener registered — it fired on a freed ListView
