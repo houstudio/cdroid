@@ -179,6 +179,10 @@ private:
     DividerDecoration* mDividerDecoration = nullptr;
     PreferenceManager* mPreferenceManager = nullptr;
     RecyclerView* mList = nullptr;
+    // The adapter bindPreferences() pushed into mList (created by
+    // onCreateAdapter). RecyclerView does not own its adapter (AOSP leaves it
+    // to the caller / GC), so the fragment tracks and frees it.
+    RecyclerView::Adapter* mBoundAdapter = nullptr;
     bool mHavePrefs = false;
     bool mInitDone = false;
     int mLayoutResId = 0 /* internal::R::layout::preference_list_fragment */;

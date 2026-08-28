@@ -101,6 +101,10 @@ void DropDownPreference::notifyChanged() {
     }
 }
 
+DropDownPreference::~DropDownPreference() {
+    delete mAdapter;
+}
+
 void DropDownPreference::onBindViewHolder(PreferenceViewHolder& holder) {
     mSpinner = dynamic_cast<Spinner*>(holder.findViewById((int)internal::R::id::spinner));
     if (mSpinner != nullptr) {

@@ -30,6 +30,11 @@
 
 namespace cdroid {
 
+PreferenceGroup::~PreferenceGroup() {
+    for (Preference* p : mPreferences) delete p;
+    mPreferences.clear();
+}
+
 PreferenceGroup::PreferenceGroup(Context& context, const AttributeSet& attrs,
         int defStyleAttr, int defStyleRes)
     : Preference(context, attrs, defStyleAttr, defStyleRes) {

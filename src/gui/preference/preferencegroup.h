@@ -59,6 +59,10 @@ public:
     PreferenceGroup(Context& context, const AttributeSet& attrs);
     PreferenceGroup(Context& context, const AttributeSet& attrs, int defStyleAttr);
     PreferenceGroup(Context& context, const AttributeSet& attrs, int defStyleAttr, int defStyleRes);
+    // AOSP relies on GC for the preference tree; CDROID's group owns its
+    // children — the destructor frees the whole subtree (removePreference
+    // stays non-owning: an explicitly removed preference is handed back).
+    ~PreferenceGroup() override;
 
     void setOrderingAsAdded(bool orderingAsAdded);
     bool isOrderingAsAdded() const;

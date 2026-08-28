@@ -164,6 +164,7 @@ public:
 PreferenceFragment::~PreferenceFragment() {
     // mDividerDecoration is owned by the list RecyclerView (RV owns its
     // decorations by design); it dies with the view tree.
+    delete mBoundAdapter;   // belt: onDestroyView normally unbinds first
     delete mPreferenceManager;
 }
 
@@ -424,7 +425,12 @@ void PreferenceFragment::postBindPreferences() {
 void PreferenceFragment::bindPreferences() {
     PreferenceScreen* preferenceScreen = getPreferenceScreen();
     if (preferenceScreen != nullptr) {
-        getListView()->setAdapter(onCreateAdapter(preferenceScreen));
+        // RecyclerView does not own adapters (AOSP relies on GC); the fragment
+        // owns whatever it installs — free the previous binding first
+        // (bindPreferences re-runs on preferences reloads).
+        delete mBoundAdapter;
+        mBoundAdapter = onCreateAdapter(preferenceScreen);
+        getListView()->setAdapter(mBoundAdapter);
         preferenceScreen->onAttached();
     }
     onBindPreferences();
@@ -432,6 +438,8 @@ void PreferenceFragment::bindPreferences() {
 
 void PreferenceFragment::unbindPreferences() {
     getListView()->setAdapter(nullptr);
+    delete mBoundAdapter;
+    mBoundAdapter = nullptr;
     PreferenceScreen* preferenceScreen = getPreferenceScreen();
     if (preferenceScreen != nullptr) {
         preferenceScreen->onDetached();

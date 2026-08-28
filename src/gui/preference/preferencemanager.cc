@@ -156,10 +156,15 @@ PreferenceScreen* PreferenceManager::getPreferenceScreen() const {
     return mPreferenceScreen;
 }
 
+PreferenceManager::~PreferenceManager() {
+    delete mPreferenceScreen;
+}
+
 bool PreferenceManager::setPreferences(PreferenceScreen* preferenceScreen) {
     if (preferenceScreen != mPreferenceScreen) {
         if (mPreferenceScreen != nullptr) {
             mPreferenceScreen->onDetached();
+            delete mPreferenceScreen;   // CDROID owns the tree (AOSP: GC)
         }
         mPreferenceScreen = preferenceScreen;
         return true;

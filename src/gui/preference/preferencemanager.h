@@ -39,6 +39,10 @@ class DropDownPreference;
  */
 class PreferenceManager {
 public:
+    // CDROID ownership: the manager owns the root screen (androidx relies on
+    // GC) — replacing or destroying it frees the whole preference subtree.
+    ~PreferenceManager();
+
     static constexpr const char* KEY_HAS_SET_DEFAULT_VALUES = "_has_set_default_values";
 
     using OnPreferenceTreeClickListener = std::function<bool(Preference& preference)>;

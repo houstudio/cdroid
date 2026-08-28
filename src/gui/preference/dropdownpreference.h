@@ -39,6 +39,9 @@ public:
     DropDownPreference(Context& context, const AttributeSet& attrs, int defStyleAttr);
     DropDownPreference(Context& context, const AttributeSet& attrs,
             int defStyleAttr, int defStyleRes);
+    // CDROID ownership: we new the entries adapter in the ctor (AOSP: GC) —
+    // Spinner/DialogPopup take their own wrap, this one stays ours.
+    ~DropDownPreference() override;
 
     void onClick() override;
 
