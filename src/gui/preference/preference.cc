@@ -42,6 +42,14 @@ Preference::Preference(Context& context, const AttributeSet& attrs, int defStyle
     : mContext(context) {
     namespace ns = internal::R::styleable;
 
+    // androidx Preference ctor: mViewId = View.generateViewId() — every preference row's itemView
+    // gets a unique NONZERO id (onBindViewHolder does itemView.setId(mViewId)). The C++ default of 0
+    // made every id-less row share id 0, so FragmentManager's container lookup for a container-less
+    // fragment (mContainerId == 0, e.g. DialogFragment) hit the FIRST preference row via
+    // findViewById(0) — the row then became mContainer, got the SEC tagged on it, and dangled after
+    // RecycledViewPool::clear freed it (valgrind: destroySpecialEffectsController getTag UAF).
+    mViewId = View::generateViewId();
+
     auto a = context.obtainStyledAttributes(attrs, ns::Preference, defStyleAttr, defStyleRes);
 
     mIconResId = (int)a->getResourceId(ns::Preference_icon, 0);
