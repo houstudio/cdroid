@@ -62,6 +62,7 @@ void MenuDialogHelper::show() {
 
     // Show the menu
     mDialog = builder->create();
+    delete builder;  // the shell only: create() moved P into the dialog (GC in AOSP)
     mDialog->setOnDismissListener([this](DialogInterface& dialog){
             onDismiss(dialog);
         });

@@ -157,7 +157,9 @@ private:
                 });
         builder->setNegativeButton(
                 ctx->getString(internal::R::string::cancel), nullptr);
-        builder->create()->show();
+        AlertDialog* dialog = builder->create();
+        delete builder;  // the shell only: create() moved P into the dialog (GC in AOSP)
+        dialog->show();
     }
 };
 

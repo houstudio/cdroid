@@ -87,6 +87,7 @@ Dialog* PreferenceDialogFragment::onCreateDialog(Bundle* savedInstanceState) {
 
     // Create the dialog
     AlertDialog* dialog = builder->create();
+    delete builder;  // the shell only: create() moved P into the dialog (GC in AOSP)
     // needInputMethod()/requestInputMethod(): CDROID has no soft-input
     // window service — the IME hooks are skipped (hardware keys drive input).
     (void)savedInstanceState;
