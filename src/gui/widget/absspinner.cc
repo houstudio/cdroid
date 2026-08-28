@@ -144,9 +144,16 @@ void AbsSpinner::resetList() {
     // one tree per round-trip selection, SPY-traced to this exact spot).
     // NOT via recycleAllViews(): the bin is keyed by position, and a
     // *different* adapter set next must never reuse this adapter's views.
+    // clearAnimation first: a running animation (e.g. the checkmark ASLD)
+    // makes removeViewInternal route the child to the disappearing list
+    // instead of dispatching detach — the tree-observer preDraw listener
+    // then fired on the deleted view (SIGSEGV in TextView::assumeLayout);
+    // endViewTransition is the belt that drops any such dangling entry.
     while (getChildCount() > 0) {
         View* v = getChildAt(0);
+        v->clearAnimation();
         removeViewAt(0);
+        endViewTransition(v);
         delete v;
     }
     removeAllViewsInLayout();
