@@ -769,6 +769,17 @@ void TextView::onConfigurationChanged(Configuration& newConfig){
 }
 
 TextView::~TextView() {
+    // Belt: every "delete the tree without a detach dispatch" path
+    // (AbsListView scrap clears, our resetList, ...) reaches here with the
+    // preDraw listener still registered — the tree observer then fires it on
+    // the freed view (SPY: preReg=1 at dtor, zero detach-rm calls; SIGSEGV
+    // in onPreDraw). While attached we still resolve the REAL observer
+    // (mAttachInfo), so unregister here; after a proper detach the flag is
+    // already down and this is a no-op.
+    if (mPreDrawRegistered) {
+        getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
+        mPreDrawRegistered = false;
+    }
     // mHint is always a freshly-allocated stringOrSpannedString result (see
     // setHintInternal), so it never aliases mText/mCharWrapper — no alias-drop
     // is needed; delete mHint below frees exactly the one owned hint object.

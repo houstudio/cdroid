@@ -152,8 +152,12 @@ void AbsSpinner::resetList() {
     while (getChildCount() > 0) {
         View* v = getChildAt(0);
         v->clearAnimation();
-        removeViewAt(0);
+        // BEFORE removeViewAt: the remove path checks isViewTransitioning()
+        // and would route the child to the disappearing list, skipping the
+        // detach dispatch — the tree-observer listeners then outlived the
+        // deleted view (preDraw SIGSEGV).
         endViewTransition(v);
+        removeViewAt(0);
         delete v;
     }
     removeAllViewsInLayout();
