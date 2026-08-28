@@ -379,18 +379,20 @@ int App::exec(){
 }
 
 void App::exit(int code){
-    mQuitFlag = true;
     mExitCode = code;
-    // With the blocking loop above, exit() must wake the loop or it stays parked
-    // in next()/pollInner and never notices mQuitFlag. quitSafely semantics
-    // (quit(true)): due messages — the windows' posted teardown deletes
-    // (finishClose) — still run before the loop drains, then next() returns
-    // null. quit(false) discarded them and stranded whole dialog/window trees
-    // (valgrind: one alert-dialog tree per un-drained popup at exit).
-    MessageQueue* q = Looper::getMainLooper()->getQueue();
-    if(q){
-        q->quit(true);
-    }
+    // Sentinel quit: posting AFTER everything already queued lets the message
+    // queue's FIFO run the windows' posted teardown deletes (finishClose)
+    // BEFORE the loop stops — messages sort by when, so due deletes stay ahead
+    // of this sentinel and not-yet-due work sorts behind it and is dropped.
+    // A direct quit(false) here would discard the backlog outright; quit(true)
+    // (quitSafely) only drains already-due messages — the sentinel covers both
+    // and supersedes the quitSafely detour (3cc609130).
+    static Handler sExitHandler(Looper::getMainLooper());
+    sExitHandler.post([this]() {
+        mQuitFlag = true;   // exec()'s loop stops on this iteration
+        MessageQueue* q = Looper::getMainLooper()->getQueue();
+        if (q) q->quit(false);
+    });
 }
 
 // AOSP ActivityThread.handleConfigurationChanged(Configuration): update the
