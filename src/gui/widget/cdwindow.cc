@@ -169,6 +169,7 @@ Window::~Window(){
     delete mActionBar;
     delete mMenuInflater;
     delete mSendWindowContentChangedAccessibilityEvent;
+    delete mAccessibilityFocusedVirtualView;  // the host View dies with the tree; the node is ours
     mDestroyed = true;  // the transition end-callback skips finishClose during teardown
     if (mCurrentTransitionAnimator) {
         Animator* a = mCurrentTransitionAnimator;
@@ -509,6 +510,7 @@ void Window::handleWindowContentChangedEvent(AccessibilityEvent& event){
     // Refresh the node for the focused virtual view.
     Rect oldBounds;
     mAccessibilityFocusedVirtualView->getBoundsInScreen(oldBounds);
+    delete mAccessibilityFocusedVirtualView;  // AOSP recycles the replaced node
     mAccessibilityFocusedVirtualView = provider->createAccessibilityNodeInfo(focusedChildId);
     if (mAccessibilityFocusedVirtualView == nullptr) {
         // Error state: The node no longer exists. Clear focus.
@@ -583,8 +585,55 @@ bool Window::requestSendAccessibilityEvent(View* child, AccessibilityEvent& even
     return true;
 }
 
+// AOSP ViewRootImpl.setAccessibilityFocus: track where accessibility focus sits
+// (a host View plus, for virtual trees, the focused virtual node). Wiping the
+// outgoing state BEFORE calling into the provider matters — the provider's
+// CLEAR_FOCUS action fires an event that re-enters this method, and it must
+// see clean state (the same reason handleWindowContentChangedEvent's
+// early-guard reads both members).
 void Window::setAccessibilityFocus(View* view, AccessibilityNodeInfo* node){
+    // If we have a virtual view with accessibility focus we need
+    // to clear the focus and invalidate the virtual view bounds.
+    if (mAccessibilityFocusedVirtualView != nullptr) {
+        AccessibilityNodeInfo* focusNode = mAccessibilityFocusedVirtualView;
+        View* focusHost = mAccessibilityFocusedHost;
 
+        // Wipe the state of the current accessibility focus since
+        // the call into the provider to clear accessibility focus
+        // will fire an accessibility event which will end up calling
+        // this method and we want to have clean state when this
+        // invocation happens.
+        mAccessibilityFocusedHost = nullptr;
+        mAccessibilityFocusedVirtualView = nullptr;
+
+        // Clear accessibility focus on the host after clearing state since
+        // this method may be reentrant.
+        focusHost->clearAccessibilityFocusNoCallbacks(
+                AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+
+        AccessibilityNodeProvider* provider = focusHost->getAccessibilityNodeProvider();
+        if (provider != nullptr) {
+            // Invalidate the area of the cleared accessibility focus.
+            Rect focusBounds;
+            focusNode->getBoundsInParent(focusBounds);
+            focusHost->invalidate(focusBounds);
+            // Clear accessibility focus in the virtual node.
+            const int virtualNodeId = AccessibilityNodeInfo::getVirtualDescendantId(
+                    focusNode->getSourceNodeId());
+            provider->performAction(virtualNodeId,
+                    AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS, nullptr);
+        }
+        delete focusNode;
+    }
+    if ((mAccessibilityFocusedHost != nullptr) && (mAccessibilityFocusedHost != view))  {
+        // Clear accessibility focus in the view.
+        mAccessibilityFocusedHost->clearAccessibilityFocusNoCallbacks(
+                AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+    }
+
+    // Set the new focus host and node.
+    mAccessibilityFocusedHost = view;
+    mAccessibilityFocusedVirtualView = node;
 }
 
 bool Window::ensureTouchMode(bool inTouchMode) {
