@@ -382,11 +382,14 @@ void App::exit(int code){
     mQuitFlag = true;
     mExitCode = code;
     // With the blocking loop above, exit() must wake the loop or it stays parked
-    // in next()/pollInner and never notices mQuitFlag. quit() clears the queue
-    // and calls nativeWake() -> Looper::wake(), unblocking next() to return null.
+    // in next()/pollInner and never notices mQuitFlag. quitSafely semantics
+    // (quit(true)): due messages — the windows' posted teardown deletes
+    // (finishClose) — still run before the loop drains, then next() returns
+    // null. quit(false) discarded them and stranded whole dialog/window trees
+    // (valgrind: one alert-dialog tree per un-drained popup at exit).
     MessageQueue* q = Looper::getMainLooper()->getQueue();
     if(q){
-        q->quit(false);
+        q->quit(true);
     }
 }
 
