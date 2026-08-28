@@ -225,11 +225,23 @@ void TabWidget::dispatchDraw(Canvas& canvas){
         bounds.left = selectedChild->getLeft();
         bounds.width = selectedChild->getWidth();
         int myHeight = getHeight();
-        if(mLeftStrip)
-            mLeftStrip->setBounds(std::min(0, bounds.left - mLeftStrip->getIntrinsicWidth()),
-                myHeight - mLeftStrip->getIntrinsicHeight(), bounds.left, myHeight);
-        if(mRightStrip)mRightStrip->setBounds(bounds.right(), myHeight - mRightStrip->getIntrinsicHeight(),
-                std::max(getWidth(), bounds.width + mRightStrip->getIntrinsicWidth()), myHeight);
+        // AOSP TabWidget passes (left, top, right, bottom) — Drawable::setBounds
+        // here takes (x, y, WIDTH, HEIGHT) (the Rect (l,t,w,h) convention), so the
+        // right/bottom edges convert below. The right strip's far edge is
+        // bounds.right + intrinsicWidth in AOSP (NOT bounds.width + iw — with a
+        // negative-margin tab at left < 0 those differ by exactly left).
+        if (mLeftStrip) {
+            const int l = std::min(0, bounds.left - mLeftStrip->getIntrinsicWidth());
+            const int t = myHeight - mLeftStrip->getIntrinsicHeight();
+            mLeftStrip->setBounds(l, t, bounds.left - l, myHeight - t);
+        }
+        if (mRightStrip) {
+            const int l = bounds.right();
+            const int t = myHeight - mRightStrip->getIntrinsicHeight();
+            mRightStrip->setBounds(l, t,
+                    std::max(getWidth(), bounds.right() + mRightStrip->getIntrinsicWidth()) - l,
+                    myHeight - t);
+        }
         mStripMoved = false;
     }
     if(mLeftStrip )mLeftStrip->draw(canvas);
