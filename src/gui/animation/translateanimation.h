@@ -27,6 +27,13 @@ public:
             int fromYType, float fromYValue, int toYType, float toYValue);
     void initialize(int width, int height, int parentWidth, int parentHeight)override;
     TranslateAnimation*clone()const override;
+    // CDROID extension: read a delta WITHOUT running initialize() (which also
+    // resets timing state). The window-transition parameter-extraction path
+    // only needs the sign; a unit size preserves it for every type.
+    float resolveFromX(int size, int parentSize) { return resolveSize(mFromXType, mFromXValue, size, parentSize); }
+    float resolveToX(int size, int parentSize)   { return resolveSize(mToXType, mToXValue, size, parentSize); }
+    float resolveFromY(int size, int parentSize) { return resolveSize(mFromYType, mFromYValue, size, parentSize); }
+    float resolveToY(int size, int parentSize)   { return resolveSize(mToYType, mToYValue, size, parentSize); }
 };
 
 class TranslateXAnimation :public TranslateAnimation{

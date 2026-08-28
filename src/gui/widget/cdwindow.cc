@@ -1166,11 +1166,15 @@ void Window::setReenterTransition(ActivityTransition* t) { delete mReenterTransi
 // Delta reader for the slide mapping: TranslateAnimation's deltas are protected and carry no
 // getters, so a derived shim exposes them (the standard protected-member access idiom).
 namespace {
+// Deltas are only computed in TranslateAnimation::initialize(), which this
+// parameter-extraction path never runs — resolve the raw (type, value) pair
+// against a unit size instead: ABSOLUTE keeps the value, RELATIVE_* scales by
+// 1, so the sign (the only thing the edge computation uses) survives.
 struct TranslateDeltaReader : TranslateAnimation {
-    static float fromX(const TranslateAnimation* a) { return ((TranslateDeltaReader*)a)->mFromXDelta; }
-    static float toX(const TranslateAnimation* a)   { return ((TranslateDeltaReader*)a)->mToXDelta; }
-    static float fromY(const TranslateAnimation* a) { return ((TranslateDeltaReader*)a)->mFromYDelta; }
-    static float toY(const TranslateAnimation* a)   { return ((TranslateDeltaReader*)a)->mToYDelta; }
+    static float fromX(TranslateAnimation* a) { return a->resolveFromX(1, 1); }
+    static float toX(TranslateAnimation* a)   { return a->resolveToX(1, 1); }
+    static float fromY(TranslateAnimation* a) { return a->resolveFromY(1, 1); }
+    static float toY(TranslateAnimation* a)   { return a->resolveToY(1, 1); }
 };
 } // namespace
 
@@ -1196,7 +1200,7 @@ static ActivityTransition* transitionFromAnimation(Animation* anim, bool enter) 
         parts.push_back(anim);
     }
     int64_t duration = 0;
-    const TranslateAnimation* slide = nullptr;
+    TranslateAnimation* slide = nullptr;
     bool fades = false;
     for (Animation* a : parts) {
         if (a == nullptr) continue;

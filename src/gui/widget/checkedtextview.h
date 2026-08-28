@@ -15,11 +15,11 @@ private:
     bool mHasCheckMarkTint = false;
     bool mHasCheckMarkTintMode = false;
 
-    int mBasePadding;
-    int mCheckMarkWidth;
+    int mBasePadding = 0;          // read by updatePadding before first measure
+    int mCheckMarkWidth = 0;       // only set once the checkmark resolves size
     int mCheckMarkGravity = Gravity::END;
 
-    bool mNeedRequestlayout;
+    bool mNeedRequestlayout = false;
 private:
     void setCheckMarkDrawableInternal(Drawable* d,int resId);
     void applyCheckMarkTint();
