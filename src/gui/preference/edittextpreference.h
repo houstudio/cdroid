@@ -34,27 +34,22 @@ public:
     /**
      * Interface definition for a callback to be invoked when the
      * corresponding dialog view for this preference is bound.
+     *
+     * CallbackBase value type — android's implementers implement the
+     * interface; here it is assigned a lambda.
      */
-    class OnBindEditTextListener {
-    public:
-        virtual ~OnBindEditTextListener() = default;
-        virtual void onBindEditText(EditText& editText) = 0;
-    };
+    using OnBindEditTextListener = CallbackBase<void, EditText&>;
 
     /**
      * A simple SummaryProvider implementation for an EditTextPreference. If
      * no value has been set, the summary displayed will be 'Not set',
      * otherwise the summary displayed will be the value set for this
      * preference.
+     *
+     * android: a singleton subclass of Preference.SummaryProvider with
+     * getInstance(); now a CallbackBase factory returning the provider by value.
      */
-    class SimpleSummaryProvider : public Preference::SummaryProvider {
-    public:
-        static SimpleSummaryProvider* getInstance();
-        std::string provideSummary(Preference& preference) override;
-    private:
-        SimpleSummaryProvider() = default;
-        static SimpleSummaryProvider* sSimpleSummaryProvider;
-    };
+    static Preference::SummaryProvider SimpleSummaryProvider();
 
     EditTextPreference(Context& context);
     EditTextPreference(Context& context, const AttributeSet& attrs);
@@ -72,8 +67,8 @@ public:
     void onSetInitialValue(const any& defaultValue) override;
     bool shouldDisableDependents() const override;
 
-    void setOnBindEditTextListener(OnBindEditTextListener* onBindEditTextListener);
-    OnBindEditTextListener* getOnBindEditTextListener() const;
+    void setOnBindEditTextListener(const OnBindEditTextListener& onBindEditTextListener);
+    OnBindEditTextListener getOnBindEditTextListener() const;
 
     std::string getPreferenceClassName() const override { return "EditTextPreference"; }
 
@@ -91,7 +86,7 @@ protected:
 
 private:
     std::string mText;
-    OnBindEditTextListener* mOnBindEditTextListener = nullptr;
+    OnBindEditTextListener mOnBindEditTextListener;
 };
 
 } // namespace cdroid

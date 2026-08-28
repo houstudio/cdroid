@@ -21,6 +21,7 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <core/callbackbase.h>
 #include <core/context.h>
 #include <content/sharedpreferences.h>
 
@@ -48,23 +49,27 @@ public:
      * Callback class to be used by the RecyclerView Adapter associated with
      * the PreferenceScreen, used to determine when two Preference objects are
      * semantically and visually the same.
+     *
+     * EventSet value type — android's implementers subclass this
+     * (SimplePreferenceComparisonCallback below); here it wires the two
+     * comparison callbacks with lambdas and is set by value (copies share
+     * EventSet mID). No class pointer.
      */
-    class PreferenceComparisonCallback {
+    class PreferenceComparisonCallback : public EventSet {
     public:
-        virtual ~PreferenceComparisonCallback() = default;
-        virtual bool arePreferenceItemsTheSame(const Preference& p1, const Preference& p2) = 0;
-        virtual bool arePreferenceContentsTheSame(const Preference& p1, const Preference& p2) = 0;
+        /** Whether the two Preferences represent the same item. */
+        std::function<bool(const Preference&, const Preference&)> arePreferenceItemsTheSame;
+        /** Whether the displayed contents of the two Preferences are the same. */
+        std::function<bool(const Preference&, const Preference&)> arePreferenceContentsTheSame;
     };
 
     /**
      * A basic implementation of PreferenceComparisonCallback suitable for use
      * with the default Preference classes.
+     *
+     * android: a subclass; now an EventSet factory returning the wired value.
      */
-    class SimplePreferenceComparisonCallback : public PreferenceComparisonCallback {
-    public:
-        bool arePreferenceItemsTheSame(const Preference& p1, const Preference& p2) override;
-        bool arePreferenceContentsTheSame(const Preference& p1, const Preference& p2) override;
-    };
+    static PreferenceComparisonCallback SimplePreferenceComparisonCallback();
 
     explicit PreferenceManager(Context& context);
 
@@ -137,8 +142,8 @@ public:
 
     Context& getContext() const;
 
-    PreferenceComparisonCallback* getPreferenceComparisonCallback() const;
-    void setPreferenceComparisonCallback(PreferenceComparisonCallback* preferenceComparisonCallback);
+    PreferenceComparisonCallback getPreferenceComparisonCallback() const;
+    void setPreferenceComparisonCallback(const PreferenceComparisonCallback& preferenceComparisonCallback);
 
     OnDisplayPreferenceDialogListener getOnDisplayPreferenceDialogListener() const;
     void setOnDisplayPreferenceDialogListener(
@@ -190,7 +195,8 @@ private:
     /** The PreferenceScreen at the root of the preference hierarchy. */
     PreferenceScreen* mPreferenceScreen = nullptr;
 
-    PreferenceComparisonCallback* mPreferenceComparisonCallback = nullptr;
+    // androidx field-initializes this to SimplePreferenceComparisonCallback.
+    PreferenceComparisonCallback mPreferenceComparisonCallback = SimplePreferenceComparisonCallback();
     OnPreferenceTreeClickListener mOnPreferenceTreeClickListener;
     OnDisplayPreferenceDialogListener mOnDisplayPreferenceDialogListener;
     OnNavigateToScreenListener mOnNavigateToScreenListener;

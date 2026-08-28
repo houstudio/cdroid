@@ -51,7 +51,16 @@ PreferenceGroupAdapter::PreferenceGroupAdapter(PreferenceGroup& preferenceGroup)
     mSyncRunnable = [this]() { updatePreferences(); };
 
     // This adapter should be notified when preferences are added or removed from the group
-    mPreferenceGroup.setOnPreferenceChangeInternalListener(this);
+    mInternalListener.onPreferenceChange = [this](Preference& preference) {
+        onPreferenceChange(preference);
+    };
+    mInternalListener.onPreferenceHierarchyChange = [this](Preference& preference) {
+        onPreferenceHierarchyChange(preference);
+    };
+    mInternalListener.onPreferenceVisibilityChange = [this](Preference& preference) {
+        onPreferenceVisibilityChange(preference);
+    };
+    mPreferenceGroup.setOnPreferenceChangeInternalListener(mInternalListener);
 
     auto* screen = dynamic_cast<PreferenceScreen*>(&mPreferenceGroup);
     if (screen != nullptr) {
@@ -79,8 +88,10 @@ void PreferenceGroupAdapter::updatePreferences() {
     mVisiblePreferences = std::move(visiblePreferenceList);
 
     PreferenceManager* preferenceManager = mPreferenceGroup.getPreferenceManager();
+    // Value-typed callback: "is set" reads as the members being wired (the
+    // androidx null check on the callback object).
     if (preferenceManager != nullptr
-            && preferenceManager->getPreferenceComparisonCallback() != nullptr) {
+            && preferenceManager->getPreferenceComparisonCallback().arePreferenceItemsTheSame) {
         // CDROID seam: the recyclerview port has no DiffUtil yet, so the
         // DiffUtil.calculateDiff(dispatchUpdatesTo) path degrades to a full
         // notifyDataSetChanged() — same end state, coarser animations.
@@ -115,7 +126,7 @@ void PreferenceGroupAdapter::flattenPreferenceGroup(std::vector<Preference*>& pr
             flattenPreferenceGroup(preferences, *nestedGroup);
         }
 
-        preference->setOnPreferenceChangeInternalListener(this);
+        preference->setOnPreferenceChangeInternalListener(mInternalListener);
     }
 }
 

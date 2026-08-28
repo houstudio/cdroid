@@ -303,7 +303,7 @@ Drawable* Preference::getIcon() const {
 
 std::string Preference::getSummary() const {
     if (getSummaryProvider() != nullptr) {
-        return getSummaryProvider()->provideSummary(const_cast<Preference&>(*this));
+        return getSummaryProvider()(const_cast<Preference&>(*this));
     }
     return mSummary;
 }
@@ -357,8 +357,8 @@ bool Preference::getShouldDisableView() const {
 void Preference::setVisible(bool visible) {
     if (mVisible != visible) {
         mVisible = visible;
-        if (mListener != nullptr) {
-            mListener->onPreferenceVisibilityChange(*this);
+        if (mListener.onPreferenceVisibilityChange) {
+            mListener.onPreferenceVisibilityChange(*this);
         }
     }
 }
@@ -461,12 +461,12 @@ bool Preference::isCopyingEnabled() const {
     return mCopyingEnabled;
 }
 
-void Preference::setSummaryProvider(Preference::SummaryProvider* summaryProvider) {
+void Preference::setSummaryProvider(const SummaryProvider& summaryProvider) {
     mSummaryProvider = summaryProvider;
     notifyChanged();
 }
 
-Preference::SummaryProvider* Preference::getSummaryProvider() const {
+Preference::SummaryProvider Preference::getSummaryProvider() const {
     return mSummaryProvider;
 }
 
@@ -550,19 +550,23 @@ int Preference::compareTo(const Preference& another) const {
     }
 }
 
-void Preference::setOnPreferenceChangeInternalListener(OnPreferenceChangeInternalListener* listener) {
+void Preference::setOnPreferenceChangeInternalListener(const OnPreferenceChangeInternalListener& listener) {
     mListener = listener;
 }
 
+void Preference::setOnPreferenceChangeInternalListener(std::nullptr_t) {
+    mListener = OnPreferenceChangeInternalListener();
+}
+
 void Preference::notifyChanged() {
-    if (mListener != nullptr) {
-        mListener->onPreferenceChange(*this);
+    if (mListener.onPreferenceChange) {
+        mListener.onPreferenceChange(*this);
     }
 }
 
 void Preference::notifyHierarchyChanged() {
-    if (mListener != nullptr) {
-        mListener->onPreferenceHierarchyChange(*this);
+    if (mListener.onPreferenceHierarchyChange) {
+        mListener.onPreferenceHierarchyChange(*this);
     }
 }
 

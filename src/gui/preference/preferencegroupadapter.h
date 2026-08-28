@@ -37,7 +37,6 @@ class PreferenceGroupAdapter;
  */
 class PreferenceGroupAdapter
     : public RecyclerView::Adapter,
-      public Preference::OnPreferenceChangeInternalListener,
       public PreferenceGroup::PreferencePositionCallback {
 public:
     explicit PreferenceGroupAdapter(PreferenceGroup& preferenceGroup);
@@ -81,9 +80,9 @@ public:
     int getItemCount() override;
     long getItemId(int position) override;
 
-    void onPreferenceChange(Preference& preference) override;
-    void onPreferenceHierarchyChange(Preference& preference) override;
-    void onPreferenceVisibilityChange(Preference& preference) override;
+    void onPreferenceChange(Preference& preference);
+    void onPreferenceHierarchyChange(Preference& preference);
+    void onPreferenceVisibilityChange(Preference& preference);
 
     int getItemViewType(int position) override;
     RecyclerView::ViewHolder* onCreateViewHolder(ViewGroup* parent, int viewType) override;
@@ -129,6 +128,12 @@ private:
      * types for RecyclerView.
      */
     std::vector<PreferenceResourceDescriptor> mPreferenceResourceDescriptors;
+
+    // android: the adapter implements Preference.OnPreferenceChangeInternalListener and
+    // registers `this`. Now an EventSet value member whose callbacks are wired with
+    // lambdas in the ctor and set on the group and each flattened preference (copies
+    // share EventSet mID). No subclass / no class pointer.
+    Preference::OnPreferenceChangeInternalListener mInternalListener;
 
     std::unique_ptr<Handler> mHandler;
     Runnable mSyncRunnable;

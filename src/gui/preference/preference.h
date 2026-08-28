@@ -23,6 +23,7 @@
 #include <set>
 #include <functional>
 #include <core/any.h>
+#include <core/callbackbase.h>
 #include <core/context.h>
 #include <core/attributeset.h>
 #include <core/bundle.h>
@@ -68,27 +69,29 @@ public:
      * Interface definition for a callback to be invoked when this Preference is
      * changed or, if this is a group, there is an addition/removal of
      * Preference(s). Used internally by the adapter.
+     *
+     * EventSet value type — android's implementer (PreferenceGroupAdapter)
+     * subclasses this; here it wires the callbacks below with lambdas and is
+     * set by value (copies share EventSet mID). No class pointer.
      */
-    class OnPreferenceChangeInternalListener {
+    class OnPreferenceChangeInternalListener : public EventSet {
     public:
-        virtual ~OnPreferenceChangeInternalListener() = default;
         /** Called when this preference has changed. */
-        virtual void onPreferenceChange(Preference& preference) = 0;
+        std::function<void(Preference&)> onPreferenceChange;
         /** Called when this group has added/removed Preference(s). */
-        virtual void onPreferenceHierarchyChange(Preference& preference) = 0;
+        std::function<void(Preference&)> onPreferenceHierarchyChange;
         /** Called when this preference has changed its visibility. */
-        virtual void onPreferenceVisibilityChange(Preference& preference) = 0;
+        std::function<void(Preference&)> onPreferenceVisibilityChange;
     };
 
     /**
      * Interface definition for a callback to be invoked when the summary of
      * this Preference is requested.
+     *
+     * CallbackBase value type — android's implementers subclass this (e.g.
+     * ListPreference.SimpleSummaryProvider); here it is assigned a lambda.
      */
-    class SummaryProvider {
-    public:
-        virtual ~SummaryProvider() = default;
-        virtual std::string provideSummary(Preference& preference) = 0;
-    };
+    using SummaryProvider = CallbackBase<std::string, Preference&>;
 
     /**
      * A base class for managing the instance state of a Preference.
@@ -199,8 +202,8 @@ public:
     void setCopyingEnabled(bool enabled);
     bool isCopyingEnabled() const;
 
-    void setSummaryProvider(SummaryProvider* summaryProvider);
-    SummaryProvider* getSummaryProvider() const;
+    void setSummaryProvider(const SummaryProvider& summaryProvider);
+    SummaryProvider getSummaryProvider() const;
 
     /**
      * Call this method after the user changes the preference, but before the
@@ -234,7 +237,9 @@ public:
     bool operator<(const Preference& another) const { return compareTo(another) < 0; }
     bool operator==(const Preference& another) const { return this == &another; }
 
-    void setOnPreferenceChangeInternalListener(OnPreferenceChangeInternalListener* listener);
+    void setOnPreferenceChangeInternalListener(const OnPreferenceChangeInternalListener& listener);
+    /** Java setOnPreferenceChangeInternalListener(null) — detaches the adapter. */
+    void setOnPreferenceChangeInternalListener(std::nullptr_t);
 
     PreferenceManager* getPreferenceManager() const;
 
@@ -399,7 +404,7 @@ private:
     int mLayoutResId = 0 /* internal::R::layout::preference, set in the .cc after R.h */;
     int mWidgetLayoutResId = 0;
 
-    OnPreferenceChangeInternalListener* mListener = nullptr;
+    OnPreferenceChangeInternalListener mListener;
 
     std::vector<Preference*> mDependents;
     PreferenceGroup* mParentGroup = nullptr;
@@ -407,7 +412,7 @@ private:
     bool mWasDetached = false;
     bool mBaseMethodCalled = false;
 
-    SummaryProvider* mSummaryProvider = nullptr;
+    SummaryProvider mSummaryProvider;
 
     std::function<void(View&)> mClickListener;
 };

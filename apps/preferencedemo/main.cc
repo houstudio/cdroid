@@ -204,9 +204,9 @@ public:
         for (int i = 0; i < group->getPreferenceCount(); i++) {
             Preference* p = group->getPreference(i);
             if (auto* lp = dynamic_cast<cdroid::ListPreference*>(p)) {
-                lp->setSummaryProvider(cdroid::ListPreference::SimpleSummaryProvider::getInstance());
+                lp->setSummaryProvider(cdroid::ListPreference::SimpleSummaryProvider());
             } else if (auto* ep = dynamic_cast<cdroid::EditTextPreference*>(p)) {
-                ep->setSummaryProvider(cdroid::EditTextPreference::SimpleSummaryProvider::getInstance());
+                ep->setSummaryProvider(cdroid::EditTextPreference::SimpleSummaryProvider());
             } else if (auto* nested = dynamic_cast<cdroid::PreferenceGroup*>(p)) {
                 applySimpleSummaryProviders(nested);
             }

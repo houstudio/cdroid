@@ -35,15 +35,11 @@ public:
      * A simple SummaryProvider implementation for a ListPreference. If no
      * value has been set, the summary displayed will be 'Not set', otherwise
      * the summary displayed will be the entry set for this preference.
+     *
+     * android: a singleton subclass of Preference.SummaryProvider with
+     * getInstance(); now a CallbackBase factory returning the provider by value.
      */
-    class SimpleSummaryProvider : public Preference::SummaryProvider {
-    public:
-        static SimpleSummaryProvider* getInstance();
-        std::string provideSummary(Preference& preference) override;
-    private:
-        SimpleSummaryProvider() = default;
-        static SimpleSummaryProvider* sSimpleSummaryProvider;
-    };
+    static Preference::SummaryProvider SimpleSummaryProvider();
 
     ListPreference(Context& context);
     ListPreference(Context& context, const AttributeSet& attrs);

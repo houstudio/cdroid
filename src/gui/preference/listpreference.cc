@@ -26,22 +26,15 @@
 
 namespace cdroid {
 
-ListPreference::SimpleSummaryProvider* ListPreference::SimpleSummaryProvider::sSimpleSummaryProvider = nullptr;
-
-ListPreference::SimpleSummaryProvider* ListPreference::SimpleSummaryProvider::getInstance() {
-    if (sSimpleSummaryProvider == nullptr) {
-        sSimpleSummaryProvider = new SimpleSummaryProvider();
-    }
-    return sSimpleSummaryProvider;
-}
-
-std::string ListPreference::SimpleSummaryProvider::provideSummary(Preference& preference) {
-    auto* listPreference = static_cast<ListPreference*>(&preference);
-    if (listPreference->getEntry().empty()) {
-        return listPreference->getContext().getString((int)internal::R::string::not_set);
-    } else {
-        return listPreference->getEntry();
-    }
+Preference::SummaryProvider ListPreference::SimpleSummaryProvider() {
+    return [](Preference& preference) {
+        auto* listPreference = static_cast<ListPreference*>(&preference);
+        if (listPreference->getEntry().empty()) {
+            return listPreference->getContext().getString((int)internal::R::string::not_set);
+        } else {
+            return listPreference->getEntry();
+        }
+    };
 }
 
 ListPreference::ListPreference(Context& context, const AttributeSet& attrs,
@@ -55,7 +48,7 @@ ListPreference::ListPreference(Context& context, const AttributeSet& attrs,
     mEntryValues = a->getTextArray(ns::ListPreference_entryValues);
 
     if (a->getBoolean(ns::ListPreference_useSimpleSummaryProvider, false)) {
-        setSummaryProvider(SimpleSummaryProvider::getInstance());
+        setSummaryProvider(SimpleSummaryProvider());
     }
 
     // Retrieve the Preference summary attribute since it's private in the Preference class.
@@ -106,7 +99,7 @@ void ListPreference::setSummary(const std::string& summary) {
 
 std::string ListPreference::getSummary() const {
     if (getSummaryProvider() != nullptr) {
-        return getSummaryProvider()->provideSummary(const_cast<ListPreference&>(*this));
+        return getSummaryProvider()(const_cast<ListPreference&>(*this));
     }
     const std::string entry = getEntry();
     const std::string summary = DialogPreference::getSummary();

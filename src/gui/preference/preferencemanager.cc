@@ -207,13 +207,13 @@ Context& PreferenceManager::getContext() const {
     return mContext;
 }
 
-PreferenceManager::PreferenceComparisonCallback*
+PreferenceManager::PreferenceComparisonCallback
 PreferenceManager::getPreferenceComparisonCallback() const {
     return mPreferenceComparisonCallback;
 }
 
 void PreferenceManager::setPreferenceComparisonCallback(
-        PreferenceComparisonCallback* preferenceComparisonCallback) {
+        const PreferenceComparisonCallback& preferenceComparisonCallback) {
     mPreferenceComparisonCallback = preferenceComparisonCallback;
 }
 
@@ -253,49 +253,51 @@ PreferenceManager::getOnNavigateToScreenListener() const {
     return mOnNavigateToScreenListener;
 }
 
-bool PreferenceManager::SimplePreferenceComparisonCallback::arePreferenceItemsTheSame(
-        const Preference& p1, const Preference& p2) {
-    return p1.getId() == p2.getId();
-}
+PreferenceManager::PreferenceComparisonCallback
+PreferenceManager::SimplePreferenceComparisonCallback() {
+    PreferenceComparisonCallback callback;
+    callback.arePreferenceItemsTheSame = [](const Preference& p1, const Preference& p2) {
+        return p1.getId() == p2.getId();
+    };
+    callback.arePreferenceContentsTheSame = [](const Preference& p1, const Preference& p2) {
+        if (p1.getPreferenceClassName() != p2.getPreferenceClassName()) {
+            return false;
+        }
+        if (&p1 == &p2 && p1.wasDetached()) {
+            // Defensively handle the case where a preference was removed, updated and re-added.
+            // Hopefully this is rare.
+            return false;
+        }
+        if (p1.getTitle() != p2.getTitle()) {
+            return false;
+        }
+        if (p1.getSummary() != p2.getSummary()) {
+            return false;
+        }
+        const Drawable* p1Icon = p1.getIcon();
+        const Drawable* p2Icon = p2.getIcon();
+        if (p1Icon != p2Icon && (p1Icon == nullptr || p1Icon != p2Icon)) {
+            return false;
+        }
+        if (p1.isEnabled() != p2.isEnabled()) {
+            return false;
+        }
+        if (p1.isSelectable() != p2.isSelectable()) {
+            return false;
+        }
+        const TwoStatePreference* t1 = dynamic_cast<const TwoStatePreference*>(&p1);
+        const TwoStatePreference* t2 = dynamic_cast<const TwoStatePreference*>(&p2);
+        if (t1 != nullptr && t1->isChecked() != t2->isChecked()) {
+            return false;
+        }
+        if (dynamic_cast<const DropDownPreference*>(&p1) != nullptr && &p1 != &p2) {
+            // Different object, must re-bind spinner adapter
+            return false;
+        }
 
-bool PreferenceManager::SimplePreferenceComparisonCallback::arePreferenceContentsTheSame(
-        const Preference& p1, const Preference& p2) {
-    if (p1.getPreferenceClassName() != p2.getPreferenceClassName()) {
-        return false;
-    }
-    if (&p1 == &p2 && p1.wasDetached()) {
-        // Defensively handle the case where a preference was removed, updated and re-added.
-        // Hopefully this is rare.
-        return false;
-    }
-    if (p1.getTitle() != p2.getTitle()) {
-        return false;
-    }
-    if (p1.getSummary() != p2.getSummary()) {
-        return false;
-    }
-    const Drawable* p1Icon = p1.getIcon();
-    const Drawable* p2Icon = p2.getIcon();
-    if (p1Icon != p2Icon && (p1Icon == nullptr || p1Icon != p2Icon)) {
-        return false;
-    }
-    if (p1.isEnabled() != p2.isEnabled()) {
-        return false;
-    }
-    if (p1.isSelectable() != p2.isSelectable()) {
-        return false;
-    }
-    const TwoStatePreference* t1 = dynamic_cast<const TwoStatePreference*>(&p1);
-    const TwoStatePreference* t2 = dynamic_cast<const TwoStatePreference*>(&p2);
-    if (t1 != nullptr && t1->isChecked() != t2->isChecked()) {
-        return false;
-    }
-    if (dynamic_cast<const DropDownPreference*>(&p1) != nullptr && &p1 != &p2) {
-        // Different object, must re-bind spinner adapter
-        return false;
-    }
-
-    return true;
+        return true;
+    };
+    return callback;
 }
 
 } // namespace cdroid

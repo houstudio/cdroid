@@ -61,7 +61,7 @@ void EditTextPreferenceDialogFragment::onBindDialogView(View& view) {
     // Place cursor at the end
     mEditText->setSelection((int)mEditText->getText().length());
     if (getEditTextPreference()->getOnBindEditTextListener() != nullptr) {
-        getEditTextPreference()->getOnBindEditTextListener()->onBindEditText(*mEditText);
+        getEditTextPreference()->getOnBindEditTextListener()(*mEditText);
     }
 }
 

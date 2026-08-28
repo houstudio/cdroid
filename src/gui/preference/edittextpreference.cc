@@ -26,22 +26,15 @@
 
 namespace cdroid {
 
-EditTextPreference::SimpleSummaryProvider* EditTextPreference::SimpleSummaryProvider::sSimpleSummaryProvider = nullptr;
-
-EditTextPreference::SimpleSummaryProvider* EditTextPreference::SimpleSummaryProvider::getInstance() {
-    if (sSimpleSummaryProvider == nullptr) {
-        sSimpleSummaryProvider = new SimpleSummaryProvider();
-    }
-    return sSimpleSummaryProvider;
-}
-
-std::string EditTextPreference::SimpleSummaryProvider::provideSummary(Preference& preference) {
-    auto* editTextPreference = static_cast<EditTextPreference*>(&preference);
-    if (editTextPreference->getText().empty()) {
-        return editTextPreference->getContext().getString((int)internal::R::string::not_set);
-    } else {
-        return editTextPreference->getText();
-    }
+Preference::SummaryProvider EditTextPreference::SimpleSummaryProvider() {
+    return [](Preference& preference) {
+        auto* editTextPreference = static_cast<EditTextPreference*>(&preference);
+        if (editTextPreference->getText().empty()) {
+            return editTextPreference->getContext().getString((int)internal::R::string::not_set);
+        } else {
+            return editTextPreference->getText();
+        }
+    };
 }
 
 EditTextPreference::EditTextPreference(Context& context, const AttributeSet& attrs,
@@ -52,7 +45,7 @@ EditTextPreference::EditTextPreference(Context& context, const AttributeSet& att
     auto a = context.obtainStyledAttributes(attrs, ns::EditTextPreference, defStyleAttr, defStyleRes);
 
     if (a->getBoolean(ns::EditTextPreference_useSimpleSummaryProvider, false)) {
-        setSummaryProvider(SimpleSummaryProvider::getInstance());
+        setSummaryProvider(SimpleSummaryProvider());
     }
 }
 
@@ -128,11 +121,11 @@ void EditTextPreference::onRestoreInstanceState(Parcelable* state) {
     setText(myState->mText);
 }
 
-void EditTextPreference::setOnBindEditTextListener(OnBindEditTextListener* onBindEditTextListener) {
+void EditTextPreference::setOnBindEditTextListener(const OnBindEditTextListener& onBindEditTextListener) {
     mOnBindEditTextListener = onBindEditTextListener;
 }
 
-EditTextPreference::OnBindEditTextListener* EditTextPreference::getOnBindEditTextListener() const {
+EditTextPreference::OnBindEditTextListener EditTextPreference::getOnBindEditTextListener() const {
     return mOnBindEditTextListener;
 }
 
