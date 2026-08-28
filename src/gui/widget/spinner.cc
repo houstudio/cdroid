@@ -379,7 +379,6 @@ View* Spinner::makeView(int position, bool addChild) {
 
     // Nothing found in the recycler -- ask the adapter for a view
     child = mAdapter->getView(position, nullptr, this);
-    // Position the view
     setUpChild(child, addChild);
     return child;
 }
@@ -726,10 +725,15 @@ void Spinner::DialogPopup::onClick(DialogInterface& dialog, int which) {
 void Spinner::DialogPopup::dismiss(){
     mSpinner->mRecycler->clear();
     mPopup->dismiss();
-    // The owner frees the shell after teardown (see dialog.h); via the
-    // public base dtor — ~AlertDialog itself stays protected.
+    // The owner frees the shell after teardown (see dialog.h); via the public
+    // base dtor — ~AlertDialog itself stays protected. Deferred to the looper:
+    // this dismiss runs INSIDE the dialog's item-click callback (AlertController's
+    // lambda touches the dialog after the listener returns — a synchronous
+    // delete was a use-after-free, valgrind: invalid read at alertcontroller.cc:790,
+    // and the pointer-corruption fallout showed up as the 239K/632K "leak"
+    // clusters). AOSP survives the same reentry on GC.
     Dialog* owner = mPopup;
-    delete owner;
+    mSpinner->post([owner]() { delete owner; });
     mPopup = nullptr;
 }
 
