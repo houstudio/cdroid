@@ -25,6 +25,14 @@ AbsSpinner::RecycleBin::RecycleBin(AbsSpinner*abs){
     ABS=abs;
 }
 void AbsSpinner::RecycleBin::put(int position, View* v) {
+    // Owning overwrite: SparseArray::put silently drops the previous entry —
+    // a same-key put (onMeasure's selected tree vs a measure tree) lost the
+    // replaced view tree (valgrind: definite, the checkmark ASLD/AVD cluster).
+    View* old = mScrapHeap.get(position);
+    if (old != nullptr && old != v) {
+        if (old->getParent() == ABS) ABS->removeDetachedView(old, false);
+        delete old;
+    }
     mScrapHeap.put(position, v);
 }
 

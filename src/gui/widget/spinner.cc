@@ -474,11 +474,11 @@ int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
         itemView->measure(widthMeasureSpec, heightMeasureSpec);
         width = std::max(width, itemView->getMeasuredWidth());
     }
-    // Hand the last measure tree to the AbsSpinner recycler (the getBaseline
-    // pattern) instead of dropping it — Spinner re-measures on every
-    // onMeasure, and a dropped tree leaked a full item view (valgrind:
-    // CheckedTextView + its checkmark ASLD/AVD subtree, ~450K per session).
-    if (itemView != nullptr) mRecycler->put(end - 1, itemView);
+    // AOSP drops the measure tree here (GC reclaims it). The bin is NOT the
+    // place for it though: put(end-1) collides with AbsSpinner::onMeasure's
+    // put(selectedPosition) on the same key and used to silently overwrite a
+    // live tree — free the measure tree directly instead.
+    delete itemView;
 
     // Add background padding to measured width
     if (background) {
