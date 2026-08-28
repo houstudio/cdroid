@@ -1106,17 +1106,20 @@ void CalendarViewLegacyDelegate::WeekView::drawSelectedDateVerticalBars(Canvas& 
     if (!mHasSelectedDay || mCV->mSelectedDateVerticalBar == nullptr) {
         return;
     }
+    // AOSP passes (left, top, right, bottom) — Drawable::setBounds here takes
+    // (x, y, WIDTH, HEIGHT), so convert both bars' far edges (same translation
+    // slip as the TabWidget strips: width must be right - left, not right).
     mCV->mSelectedDateVerticalBar->setBounds(
             mSelectedLeft - mCV->mSelectedDateVerticalBarWidth / 2,
             mCV->mWeekSeparatorLineWidth,
-            mSelectedLeft + mCV->mSelectedDateVerticalBarWidth / 2,
-            mHeight);
+            mCV->mSelectedDateVerticalBarWidth,
+            mHeight - mCV->mWeekSeparatorLineWidth);
     mCV->mSelectedDateVerticalBar->draw(canvas);
     mCV->mSelectedDateVerticalBar->setBounds(
             mSelectedRight - mCV->mSelectedDateVerticalBarWidth / 2,
             mCV->mWeekSeparatorLineWidth,
-            mSelectedRight + mCV->mSelectedDateVerticalBarWidth / 2,
-            mHeight);
+            mCV->mSelectedDateVerticalBarWidth,
+            mHeight - mCV->mWeekSeparatorLineWidth);
     mCV->mSelectedDateVerticalBar->draw(canvas);
 }
 
