@@ -282,6 +282,11 @@ RecyclerView::ViewHolder* PreferenceGroupAdapter::onCreateViewHolder(ViewGroup* 
     View* view = inflater->inflate(descriptor.mLayoutResId, parent, false);
     if (view->getBackground() == nullptr) {
         view->setBackground(background);
+    } else {
+        // The layout carries its own background — the resolved
+        // selectableItemBackground clone is ours and would leak (valgrind:
+        // RippleState::newDrawable cluster, one per created item).
+        delete background;
     }
 
     ViewGroup* widgetFrame = dynamic_cast<ViewGroup*>(view->findViewById((int)internal::R::id::widget_frame));
