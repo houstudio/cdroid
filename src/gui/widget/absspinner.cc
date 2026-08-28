@@ -30,6 +30,7 @@ void AbsSpinner::RecycleBin::put(int position, View* v) {
     // replaced view tree (valgrind: definite, the checkmark ASLD/AVD cluster).
     View* old = mScrapHeap.get(position);
     if (old != nullptr && old != v) {
+
         if (old->getParent() == ABS) ABS->removeDetachedView(old, false);
         delete old;
     }
@@ -136,6 +137,18 @@ void AbsSpinner::resetList() {
     mDataChanged = false;
     mNeedSync = false;
 
+    // CDROID ownership: AOSP's removeAllViewsInLayout drops the selection
+    // tree for GC here. Free it explicitly instead — resetList runs on every
+    // setAdapter (DropDownPreference rebinds its Spinner per selection), and
+    // the dropped tree leaked a full item view per selection (valgrind:
+    // one tree per round-trip selection, SPY-traced to this exact spot).
+    // NOT via recycleAllViews(): the bin is keyed by position, and a
+    // *different* adapter set next must never reuse this adapter's views.
+    while (getChildCount() > 0) {
+        View* v = getChildAt(0);
+        removeViewAt(0);
+        delete v;
+    }
     removeAllViewsInLayout();
     mOldSelectedPosition = INVALID_POSITION;
     mOldSelectedRowId = INVALID_ROW_ID;
