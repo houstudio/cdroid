@@ -139,6 +139,13 @@ void AbsListView::readAbsListViewAttrs(const AttributeSet* atts) {
 }
 
 AbsListView::~AbsListView() {
+    // Death-belt (same pattern as ~TextView's preDraw unregister): paths that
+    // delete the tree without the detach dispatch leave the tree-observer
+    // touchMode listener registered — it fired on a freed ListView
+    // ("pure virtual method called" in AdapterView::removeViewAt, UAF in
+    // layoutChildren, crashing the NEXT popup's layout). While still
+    // attached we resolve the real observer via mAttachInfo.
+    getViewTreeObserver()->removeOnTouchModeChangeListener(mTouchModeChangeListener);
     // 结束仍在活跃的多选 ActionMode: wrapper 的 lambda 捕获了 this, 且 ActionMode 由 Window
     // 持有, 先 finish (经 wrapper.onDestroyActionMode 清 mChoiceActionMode + 让 Window 释放)。
     if (mChoiceActionMode != nullptr) {
