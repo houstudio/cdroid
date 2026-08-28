@@ -49,6 +49,11 @@ namespace cdroid {
  */
 class PreferenceFragment::DividerDecoration : public RecyclerView::ItemDecoration {
 public:
+    // CDROID ownership: the RecyclerView owns (and deletes) its decorations,
+    // so the divider handed in by onCreateView must die with the decoration —
+    // without this dtor it leaked one divider clone per fragment view
+    // creation (valgrind: GradientState::newDrawable + its nested shape).
+    ~DividerDecoration() override { delete mDivider; }
     Drawable* mDivider = nullptr;
     int mDividerHeight = 0;
     bool mAllowDividerAfterLastItem = true;

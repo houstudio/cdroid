@@ -23,7 +23,16 @@
 #include <map>
 namespace cdroid{
 
-static Cairo::RefPtr<Cairo::ImageSurface> mPathSurface =Cairo::ImageSurface::create(Cairo::Surface::Format::A8,1,1);
+// Process-wide 1x1 A8 dummy surface every Path's cairo context binds to.
+// RAII holder: released during static destruction (deterministic order),
+// so the underlying pixman/cairo blocks don't outlive valgrind's count.
+struct PathSurfaceHolder {
+    Cairo::RefPtr<Cairo::ImageSurface> surface =
+        Cairo::ImageSurface::create(Cairo::Surface::Format::A8, 1, 1);
+    ~PathSurfaceHolder() { surface.reset(); }
+};
+static PathSurfaceHolder sPathSurfaceHolder;
+static Cairo::RefPtr<Cairo::ImageSurface>& mPathSurface = sPathSurfaceHolder.surface;
 Path::Path(){
     mCTX = Cairo::Context::create(mPathSurface);
 }
