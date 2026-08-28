@@ -169,19 +169,19 @@ Window::~Window(){
     delete mActionBar;
     delete mMenuInflater;
     delete mSendWindowContentChangedAccessibilityEvent;
-    mDestroyed = true;  // signal the transition end-callback to skip finishClose (we're tearing down)
+    mDestroyed = true;  // the transition end-callback skips finishClose during teardown
     if (mCurrentTransitionAnimator) {
         Animator* a = mCurrentTransitionAnimator;
-        mCurrentTransitionAnimator = nullptr;  // end-callback sees null + mDestroyed, skips onEnd
-        a->cancel();   // cancel() fires onAnimationEnd (see animator.cc) — guarded by mDestroyed above
+        mCurrentTransitionAnimator = nullptr;  // end-callback sees null + mDestroyed and skips
+        a->cancel();   // cancel() fires onAnimationEnd (animator.cc)
         delete a;
     }
     delete mEnterTransition;
     delete mExitTransition;
     delete mReturnTransition;
     delete mReenterTransition;
-    // NOTE: the AttachInfo is freed by the lambda posted in close() (which stashed it before
-    // removeWindow detached/null'd mAttachInfo); ~Window does not touch mAttachInfo.
+    // The AttachInfo was stashed by finishClose()'s post, which frees it — ~Window
+    // must not touch mAttachInfo (removeWindow has already detached it).
     LOGD("%p:%d destroied!",this,mID);
 }
 
@@ -968,10 +968,14 @@ View* Window::focusSearch(View* focused, int direction){
 bool Window::performFocusNavigation(KeyEvent& event){
     int direction = -1;
     switch (event.getKeyCode()) {
-    case KeyEvent::KEYCODE_DPAD_LEFT:  direction = View::FOCUS_LEFT;  break;
-    case KeyEvent::KEYCODE_DPAD_RIGHT: direction = View::FOCUS_RIGHT; break;
-    case KeyEvent::KEYCODE_DPAD_UP:    direction = View::FOCUS_UP;    break;
-    case KeyEvent::KEYCODE_DPAD_DOWN:  direction = View::FOCUS_DOWN;  break;
+    case KeyEvent::KEYCODE_DPAD_LEFT:
+        direction = View::FOCUS_LEFT;  break;
+    case KeyEvent::KEYCODE_DPAD_RIGHT:
+        direction = View::FOCUS_RIGHT; break;
+    case KeyEvent::KEYCODE_DPAD_UP:
+        direction = View::FOCUS_UP;    break;
+    case KeyEvent::KEYCODE_DPAD_DOWN:
+        direction = View::FOCUS_DOWN;  break;
     case KeyEvent::KEYCODE_TAB:
         if (event.hasNoModifiers()) {
             direction = View::FOCUS_FORWARD;
@@ -1075,14 +1079,11 @@ void Window::close(){
 }
 
 void Window::close(const std::function<void()>& onTeardown){
-    // Deliver pending activity result synchronously (onActivityResult must not wait on the exit
-    // animation). Then, if a close transition (returnTransition, else exitTransition) is configured,
-    // play it before tearing down — the Window stays in mWindows (visible to composeSurfaces) until
-    // the animation ends, at which point finishClose() runs removeWindow + posts the deletes.
-    // Idempotence: close() may be re-entered (a dismiss listener closing again, a second close
-    // during the exit animation — the else branch would run finishClose() immediately). Without
-    // the guard the second call posts a second `delete self` for the same Window: a double free.
-    // Mirrors Dialog::dismiss's mShowing guard.
+    // Deliver the pending activity result synchronously, play the close transition
+    // (returnTransition, else exitTransition) if one is configured, then finishClose()
+    // runs removeWindow + posts the deletes. Idempotent: a re-entered close (dismiss
+    // listener, second close during the animation) must not post a second delete —
+    // mirrors Dialog::dismiss's mShowing guard.
     if (mClosePending) return;
     mClosePending = true;
     mTeardownCb = onTeardown;
@@ -1097,44 +1098,34 @@ void Window::close(const std::function<void()>& onTeardown){
 }
 
 void Window::finishClose(){
-    // The teardown callback runs FIRST: after the exit transition (when one
-    // played) but before removeWindow detaches the tree - the caller's last
-    // point with the view hierarchy intact. detachOwner() clears it when the
-    // owner dies mid-animation (cancel the pending notification).
+    // Teardown sequence and its ordering constraints:
+    //  1. mTeardownCb runs first — the caller's last point with the hierarchy intact
+    //     (detachOwner() clears it when the owner dies mid-animation).
+    //  2. removeWindow runs immediately — the window leaves the compositor at once and
+    //     the tree is detached (mAttachInfo nulled), so the AttachInfo is stashed first.
+    //  3. The deletes are posted (not run inline) so the current call stack can still
+    //     touch the window; on a standalone heap Handler, NOT View::post — removeWindow
+    //     purges mUIEventHandler's queue, which would drop this very post.
+    //  4. Inside the post: purge the Choreographer traversal callbacks (separate queue,
+    //     re-postable during dispatchDetachedFromWindow), then `delete self` BEFORE
+    //     `delete info` — the tree's destructor belts resolve their pinned observer
+    //     while it is still alive.
     if (mTeardownCb) {
         std::function<void()> cb = mTeardownCb;
         mTeardownCb = nullptr;
         cb();
     }
-    // removeWindow detaches the view tree (nulls mAttachInfo), so stash AttachInfo first; the
-    // posted lambda frees it + the window. removeWindow runs IMMEDIATELY (window leaves the
-    // compositor at once). The deletes are deferred so the current call stack can still touch this
-    // window safely. BUT the post must use a standalone heap Handler, NOT View::post (mAttachInfo's
-    // handler = mUIEventHandler): removeWindow below calls removeEventHandler(mUIEventHandler),
-    // which purges that handler's queued messages — including this delete-window post — so the
-    // window would never be deleted. A heap Handler that self-deletes keeps the post alive past
-    // removeWindow (same pattern as the Transition clone self-delete in Transition::end()).
     auto* info = mAttachInfo;
     Window* self = this;
     Handler* h = new Handler();
     h->post([h, self, info](){
         self->onDestroy();
-        // Purge any Choreographer traversal callback that survived teardown — it captures `self`
-        // and would call doTraversal() on a freed Window. Must run here (last safe point before
-        // `delete self`, after removeWindow fully ran), by token=self. removeWindow purges the
-        // UIEventHandler's messages but NOT Choreographer callbacks (separate queue); and
-        // dispatchDetachedFromWindow -> onWindowVisibilityChanged(GONE) can re-trigger
-        // scheduleTraversals(), re-posting that callback, so removal belongs at the very end.
+        // Last safe point before the delete: purge by token, the queue is separate
+        // from the UIEventHandler's.
         Choreographer::getInstance().removeCallbacks(
             Choreographer::CALLBACK_TRAVERSAL, nullptr, self);
         self->mTraversalScheduled = false;
-        // Delete the WINDOW first, the AttachInfo (tree observer) after: the
-        // tree's destructor belts (AbsListView/TextView observer unregisters)
-        // resolve their pinned observer while it is still alive — with the old
-        // order the observer died first and the removes read freed memory,
-        // leaving dangling listeners that crashed the NEXT popup's layout
-        // (pure virtual in AdapterView::removeViewAt).
-        delete self;
+        delete self;   // before info: the tree's belts need the live observer
         delete info;
         delete h;
     });
@@ -1165,9 +1156,19 @@ void Window::setEnterTransition(ActivityTransition* t) {
         snapEnterStart(t);  // pre-snap to the start state before the first frame (no full-show flash)
     }
 }
-void Window::setExitTransition(ActivityTransition* t)    { delete mExitTransition;    mExitTransition = t; }
-void Window::setReturnTransition(ActivityTransition* t)  { delete mReturnTransition;  mReturnTransition = t; }
-void Window::setReenterTransition(ActivityTransition* t) { delete mReenterTransition; mReenterTransition = t; }
+
+void Window::setExitTransition(ActivityTransition* t){
+    delete mExitTransition;
+    mExitTransition = t;
+}
+void Window::setReturnTransition(ActivityTransition* t)  {
+    delete mReturnTransition;
+    mReturnTransition = t;
+}
+void Window::setReenterTransition(ActivityTransition* t) {
+    delete mReenterTransition;
+    mReenterTransition = t;
+}
 
 // Delta reader for the slide mapping: TranslateAnimation's deltas are protected and carry no
 // getters, so a derived shim exposes them (the standard protected-member access idiom).
