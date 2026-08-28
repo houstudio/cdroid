@@ -236,8 +236,14 @@ void FragmentManager::addFragment(Fragment* f, bool hidden){
     f->mParentFragment = mParent; // nested: set when this FM is a childFragmentManager (parent = NavHostFragment)
     f->mAdded = true;
     f->mHidden = hidden;
-    // Resolve the container ViewGroup fragments inflate into / are added to.
-    f->mContainer = mContainer ? dynamic_cast<cdroid::ViewGroup*>(mContainer->onFindViewById(f->mContainerId)) : nullptr;
+    // Resolve the container ViewGroup fragments inflate into / are added to. androidx
+    // FragmentManager.getFragmentContainer resolves a container ONLY for a real container id
+    // (mContainerId > 0); a container-less fragment (DialogFragment via add(fragment, tag),
+    // mContainerId == 0) stays null. Without the guard the lookup runs findViewById(0) and binds
+    // an arbitrary id-less view as mContainer — that view dies with e.g. RecycledViewPool::clear
+    // and the FSM's mContainer dangles (destroySpecialEffectsController getTag UAF).
+    f->mContainer = (mContainer && f->mContainerId > 0)
+        ? dynamic_cast<cdroid::ViewGroup*>(mContainer->onFindViewById(f->mContainerId)) : nullptr;
     mAdded.push_back(f);
     mActive[f->mWho] = f;
     FragmentStateManager* fsm = getOrCreateStateManager(f);
@@ -332,7 +338,8 @@ void FragmentManager::unretainFragment(Fragment* f){
     f->mAdded = true;
     f->mFragmentManager = this;
     f->mHost = mHost;
-    f->mContainer = mContainer ? dynamic_cast<cdroid::ViewGroup*>(mContainer->onFindViewById(f->mContainerId)) : nullptr;
+    f->mContainer = (mContainer && f->mContainerId > 0)   // getFragmentContainer: cid > 0 only
+        ? dynamic_cast<cdroid::ViewGroup*>(mContainer->onFindViewById(f->mContainerId)) : nullptr;
     mAdded.push_back(f);
     FragmentStateManager* fsm = getOrCreateStateManager(f);
     fsm->setFragmentManagerState(mCurState);

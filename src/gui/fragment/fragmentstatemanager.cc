@@ -230,7 +230,9 @@ void FragmentStateManager::stepUp(){
             // exists — e.g. a deferred commit drained during the host's onCreate, when the host
             // has no mView yet — had mContainer resolved to null at addFragment() time. Re-resolve
             // now so the view can be added; by then the host's view tree is built.
-            if(mFragmentManager->mContainer){
+            // Same cid > 0 guard as androidx getFragmentContainer (see addFragment) — a
+            // container-less fragment must re-resolve to null, not to an id-less view.
+            if(mFragmentManager->mContainer && mFragment->mContainerId > 0){
                 mFragment->mContainer = dynamic_cast<cdroid::ViewGroup*>(
                     mFragmentManager->mContainer->onFindViewById(mFragment->mContainerId));
             }
