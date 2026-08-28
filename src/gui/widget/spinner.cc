@@ -371,7 +371,6 @@ View* Spinner::makeView(int position, bool addChild) {
     if (!mDataChanged) {
         child = mRecycler->get(position);
         if (child != nullptr) {
-            // Position the view
             setUpChild(child, addChild);
             return child;
         }
@@ -691,9 +690,19 @@ Spinner::DialogPopup::~DialogPopup(){
 void Spinner::DialogPopup::setAdapter(Adapter*adapter){
     // Spinner::setAdapter wraps the data adapter in a fresh DropDownAdapter
     // per call; the replaced wrap is ours. A live dialog's ListView still
-    // references the old one, so only delete when no popup is up.
-    if (mListAdapter != nullptr && (mPopup == nullptr || !mPopup->isShowing()))
-        delete mListAdapter;
+    // references the old one, so free it immediately only when no popup is
+    // up — during the dismiss's posted teardown (selection rebinds the row
+    // while isShowing() is still true) hand it to the spinner's looper to
+    // die after the dialog does; dropping it there leaked one wrap per
+    // selection (valgrind: 48B x selections at spinner.cc setAdapter).
+    if (mListAdapter != nullptr && mListAdapter != adapter) {
+        if (mPopup == nullptr || !mPopup->isShowing()) {
+            delete mListAdapter;
+        } else {
+            Adapter* old = mListAdapter;
+            mSpinner->post([old]() { delete old; });
+        }
+    }
     mListAdapter = adapter;
 }
 
