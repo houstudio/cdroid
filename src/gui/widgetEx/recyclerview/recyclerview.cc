@@ -4306,6 +4306,13 @@ RecyclerView::Recycler::Recycler(RecyclerView*rv){
 }
 
 RecyclerView::Recycler::~Recycler(){
+    // The item cache (DEFAULT_CACHE_SIZE per type + prefetch) never entered the
+    // pool, and AOSP frees it via GC. ViewHolder owns its (detached) itemView,
+    // so deleting the holders frees the whole view trees — direct deletion,
+    // not recycleCachedViewAt(), to avoid adapter onViewRecycled callbacks
+    // during teardown. The pool frees its own set in its destructor.
+    for (ViewHolder* vh : mCachedViews) delete vh;
+    mCachedViews.clear();
     delete mRecyclerPool;
     delete mChangedScrap;
 }

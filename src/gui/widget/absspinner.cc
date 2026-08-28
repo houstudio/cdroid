@@ -38,10 +38,20 @@ void AbsSpinner::RecycleBin::clear() {
     int count = mScrapHeap.size();
     for (int i = 0; i < count; i++) {
         View* view = mScrapHeap.valueAt(i);
-        if (view)ABS->removeDetachedView(view, true);
+        if (view == nullptr) continue;
+        // CDROID ownership: the bin owns its (detached) measure/layout views —
+        // AOSP drops them for GC. Detach first in case one is still attached,
+        // then free the tree (setAdapter/resetList run clear() repeatedly,
+        // e.g. DropDownPreference rebinds its Spinner per row bind).
+        if (view->getParent() == ABS) ABS->removeDetachedView(view, false);
+        delete view;
     }
     mScrapHeap.clear();
-}    
+}
+
+AbsSpinner::RecycleBin::~RecycleBin() {
+    clear();
+}
 
 AbsSpinner::AbsSpinner(Context*ctx)
     :AbsSpinner(ctx,nullptr){}
