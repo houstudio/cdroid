@@ -104,7 +104,22 @@ public:
                 cat->setInitialExpandedChildrenCount(3);
             }
         }
+        // Valgrind/CI driver: PREFDEMO_AUTOCYCLE clicks through every root
+        // preference (sub-screens get dwell + Back via the virtual
+        // Window::onBackPressed), then exits cleanly so the leak report lands.
+        // Only the ROOT screen drives — pushed sub-screen fragments would
+        // otherwise start a nested cycle of their own.
+        if (rootKey.empty() && getenv("PREFDEMO_AUTOCYCLE") != nullptr) {
+            // File-local handler (mHandler is private); generous delays —
+            // this runs under valgrind.
+            static cdroid::Handler sCycleHandler(cdroid::Looper::getMainLooper());
+            sCycleHandler.postDelayed([this]() { cycleStep(0); }, 4000);
+        }
     }
+
+    /** AUTOCYCLE walker (see onCreatePreferences). Each step is a fresh
+     *  lambda capturing values only — no self-referencing runnable. */
+    void cycleStep(int index);
 
     /** PreferenceFragment layout wrapped with the settings chrome (the AOSP
      *  Settings screen title — CDROID windows have no title API). The chrome
@@ -250,6 +265,29 @@ public:
         b->create()->show();
     }
 };
+
+void SettingsFragment::cycleStep(int index) {
+    // File-local main-looper handler: PreferenceFragment::mHandler is private.
+    static cdroid::Handler sCycleHandler(cdroid::Looper::getMainLooper());
+    cdroid::PreferenceScreen* screen = getPreferenceScreen();
+    if (screen == nullptr || index >= screen->getPreferenceCount()) {
+        cdroid::App::getInstance().exit(0);
+        return;
+    }
+    cdroid::Preference* p = screen->getPreference(index);
+    const bool isScreen = dynamic_cast<cdroid::PreferenceScreen*>(p) != nullptr;
+    p->performClick();
+    if (isScreen) {
+        // Let the pushed sub-screen settle, pop it via the host Window's
+        // virtual onBackPressed, then walk on.
+        sCycleHandler.postDelayed([this, index]() {
+            getActivity()->onBackPressed();
+            sCycleHandler.postDelayed([this, index]() { cycleStep(index + 1); }, 3000);
+        }, 6000);
+    } else {
+        sCycleHandler.postDelayed([this, index]() { cycleStep(index + 1); }, 2500);
+    }
+}
 
 /** Hosts the settings hierarchy; nested screens push a new SettingsFragment. */
 class SettingsActivity : public FragmentActivity, public cdroid::OnPreferenceStartScreenCallback {

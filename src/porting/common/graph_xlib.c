@@ -23,6 +23,8 @@
 #include <time.h>
 #include <pixman.h>
 static Display*x11Display= NULL;
+static pthread_t xEventThreadId = 0;      // X11EventProc thread; joined in onExit()
+static volatile int xEventRunning = 0;    // its loop flag; cleared by onExit()
 static Window x11Window = 0;
 static Visual *x11Visual = NULL;
 static Atom WM_DELETE_WINDOW;
@@ -90,6 +92,24 @@ static void InjectREL(unsigned long time,int type,int axis,int value) {
 static void onExit() {
     LOGD("X11 Graph shutdown(x11Display=%p)!",x11Display);
     if(x11Display) {
+        // Stop the X11 event thread BEFORE tearing the display down: it sits
+        // blocked in XNextEvent, and XCloseDisplay below frees the xcb state
+        // it dereferences (valgrind: invalid write in xcb_wait_for_event).
+        // pthread_cancel alone hangs the join (XNextEvent blocks inside xcb
+        // mutexes, away from cancellation points) — clear the loop flag and
+        // WAKE the blocked read with a self-addressed ClientMessage instead.
+        if (xEventThreadId) {
+            xEventRunning = 0;
+            XEvent wake;
+            memset(&wake, 0, sizeof(wake));
+            wake.type = ClientMessage;
+            wake.xclient.window = x11Window;
+            wake.xclient.format = 32;
+            XSendEvent(x11Display, x11Window, False, NoEventMask, &wake);
+            XFlush(x11Display);
+            pthread_join(xEventThreadId, NULL);
+            xEventThreadId = 0;
+        }
         XFreePixmap(x11Display,x11Pixmap);
         XFreeGC(x11Display,mainGC);
         XSelectInput(x11Display,x11Window,0);
@@ -104,7 +124,9 @@ int32_t GFXInit() {
     XInitThreads();
     x11Display = XOpenDisplay(NULL);
     if(x11Display) {
-        pthread_t xThreadId;
+        /* xEventThreadId is joinable: onExit() cancels+joins it before
+           XCloseDisplay (the detached variant raced the exit handlers and
+           died on freed xcb state). */
         XSetWindowAttributes winattrs;
         XGCValues values;
         XSizeHints sizehints;
@@ -145,8 +167,7 @@ int32_t GFXInit() {
 #endif
         XFlush(x11Display);
         LOGI("screenMargin=(%d,%d,%d,%d)[%s]",screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h,strMargin);
-        pthread_create(&xThreadId,NULL,X11EventProc,NULL);
-        pthread_detach(xThreadId);
+        pthread_create(&xEventThreadId,NULL,X11EventProc,NULL);
     }
     atexit(onExit);
     return E_OK;
@@ -466,13 +487,13 @@ static struct{int xkey;int key;}X11KEY2CD[]={
 static void* X11EventProc(void*p) {
     XEvent event;
     int i,keysym,key=0,down;
-    bool mRunning = true;
+    xEventRunning = 1;
 #if HAVE_PRCTL
     prctl(PR_SET_NAME,"X11Thread",0,0,0);
 #elif HAVE_PTHREAD_SETNAME_NP
     pthread_setname_np(pthread_self(), "X11Thread");
 #endif
-    while(mRunning) {
+    while(xEventRunning) {
         const int rc = XNextEvent(x11Display, &event);
         switch(event.type) {
         case Expose:
@@ -517,7 +538,7 @@ static void* X11EventProc(void*p) {
         case ClientMessage:
             if ( (Atom) event.xclient.data.l[0] == WM_DELETE_WINDOW) {
                 LOGD("GraphX11.Terminated(WM_DELETE_WINDOW)");
-                mRunning = false;
+                xEventRunning = 0;
             }
             break;
         case UnmapNotify:
