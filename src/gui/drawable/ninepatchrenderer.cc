@@ -413,6 +413,9 @@ NinePatchRenderer::~NinePatchRenderer() {
 }
 
 void NinePatchRenderer::draw(Canvas& painter, int  x, int  y,float alpha) {
+    // No cached image (never rendered, or the last size was degenerate and
+    // updateCachedImage bailed): nothing to blit.
+    if (!mCachedImage) return;
     Cairo::Matrix ctx = painter.get_matrix();
     const double radians = atan2(ctx.yy, ctx.xy);
     const int rotDegrees = int(radians*180.f/M_PI)%90;
