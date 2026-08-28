@@ -21,12 +21,11 @@
 #include <widget/cdwindow.h>
 namespace cdroid{
 
-/* Dismiss-only lifetime (the unified transient-popup contract, shared with
-   PopupMenu): allocate, configure, show(), and never delete - the destructor
-   is protected on purpose. dismiss() is the only teardown: it tears the window
-   down through Window::close's posted-free and is idempotent. The dialog
-   shell stays allocated after dismiss (small, one allocation per dialog);
-   dismiss is FINAL - showing again after it is not supported. */
+/* Owner-managed lifetime: allocate, configure, show(), then dismiss() and
+   delete. dismiss() tears the window down through Window::close's posted-free
+   and is idempotent; ~Dialog also removes a still-live window itself, so
+   deleting an undismissed dialog is safe. dismiss is FINAL - showing again
+   after it is not supported (build a new dialog instead). */
 class Dialog:public DialogInterface,KeyEvent::Callback{
 private:
     Context*mContext;
@@ -45,8 +44,13 @@ protected:
     virtual void onCreate();
     virtual void onStart();
     virtual void onStop();
-    virtual ~Dialog();
 public:
+    // AOSP keeps ~Dialog protected ("use dismiss()") and relies on GC. CDROID
+    // has no GC and no delete-this path, so with a protected dtor every dialog
+    // leaked by construction. Public dtor: owners dismiss() then delete
+    // (subclasses like AlertDialog stay protected-deletable via this base,
+    // virtual dispatch still runs the full destructor chain).
+    virtual ~Dialog();
     // AOSP Dialog(Context) / Dialog(Context, int themeResId, boolean
     // createContextThemeWrapper): when createContextThemeWrapper, themeResId 0
     // resolves ?attr/dialogTheme from the caller's theme and the context is

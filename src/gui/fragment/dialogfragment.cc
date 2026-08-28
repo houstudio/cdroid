@@ -38,8 +38,15 @@ DialogFragment::DialogFragment(){
 }
 
 DialogFragment::~DialogFragment(){
-    // Dialog has a protected dtor — cleanup via dismiss(), not delete.
-    if(mDialog) mDialog->dismiss();
+    // Dialog's dtor is public now (dialog.h: AOSP's protected dtor assumed GC);
+    // we own the dialog prepareDialog created — dismiss tears the window down,
+    // delete frees the shell.
+    if(mDialog){
+        mDialog->setOnDismissListener(nullptr);
+        mDialog->dismiss();
+        delete mDialog;
+        mDialog = nullptr;
+    }
     delete mDialogState;
 }
 
@@ -194,7 +201,10 @@ void DialogFragment::onDestroyView(){
         if(!mDismissed){
             onDismiss(mDialog);
         }
-        mDialog = nullptr; // Dialog cleanup is via dismiss() above; dtor is protected.
+        // androidx sets mDialog = null here (GC reclaims it). CDROID owns it:
+        // dismiss() above tore the window down, delete frees the shell.
+        delete mDialog;
+        mDialog = nullptr;
         mDialogCreated = false;
     }
 }

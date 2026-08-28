@@ -54,9 +54,9 @@ private:
 
     class DialogPopup:public SpinnerPopup{
     private:
-        class AlertDialog*mPopup;
-        Spinner *mSpinner; 
-        Adapter *mListAdapter;
+        Spinner *mSpinner;
+        Adapter *mListAdapter = nullptr;
+        class AlertDialog*mPopup = nullptr;
         std::string mPrompt;
         void onClick(DialogInterface& dialog, int which);
     public:

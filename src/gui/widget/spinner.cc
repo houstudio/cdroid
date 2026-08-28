@@ -463,6 +463,7 @@ int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
         int positionType = adapter->getItemViewType(i);
         if (positionType != itemType) {
             itemType = positionType;
+            delete itemView;   // AOSP drops it for GC; we own the measure tree
             itemView = nullptr;
         }
         itemView = adapter->getView(i, itemView, this);
@@ -473,6 +474,11 @@ int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
         itemView->measure(widthMeasureSpec, heightMeasureSpec);
         width = std::max(width, itemView->getMeasuredWidth());
     }
+    // Hand the last measure tree to the AbsSpinner recycler (the getBaseline
+    // pattern) instead of dropping it — Spinner re-measures on every
+    // onMeasure, and a dropped tree leaked a full item view (valgrind:
+    // CheckedTextView + its checkmark ASLD/AVD subtree, ~450K per session).
+    if (itemView != nullptr) mRecycler->put(end - 1, itemView);
 
     // Add background padding to measured width
     if (background) {
@@ -675,9 +681,20 @@ Spinner::DialogPopup::DialogPopup(Spinner*spinner){
 
 Spinner::DialogPopup::~DialogPopup(){
     delete mListAdapter;
+    // Not dismissed (never opened, or still showing): we own the dialog —
+    // ~Dialog removes a live window itself. ~AlertDialog stays protected
+    // ("use dismiss()"), so delete through the public base dtor; virtual
+    // dispatch still runs the full ~AlertDialog chain.
+    Dialog* owner = mPopup;
+    delete owner;
 }
 
 void Spinner::DialogPopup::setAdapter(Adapter*adapter){
+    // Spinner::setAdapter wraps the data adapter in a fresh DropDownAdapter
+    // per call; the replaced wrap is ours. A live dialog's ListView still
+    // references the old one, so only delete when no popup is up.
+    if (mListAdapter != nullptr && (mPopup == nullptr || !mPopup->isShowing()))
+        delete mListAdapter;
     mListAdapter = adapter;
 }
 
@@ -709,6 +726,10 @@ void Spinner::DialogPopup::onClick(DialogInterface& dialog, int which) {
 void Spinner::DialogPopup::dismiss(){
     mSpinner->mRecycler->clear();
     mPopup->dismiss();
+    // The owner frees the shell after teardown (see dialog.h); via the
+    // public base dtor — ~AlertDialog itself stays protected.
+    Dialog* owner = mPopup;
+    delete owner;
     mPopup = nullptr;
 }
 
