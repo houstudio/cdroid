@@ -1,11 +1,33 @@
 # **5.
-  - add Transition
-  - add Navigation
-  - add Fragment FragmentManger
-  - add ConstrainLayout and MotionLayout(full features)
-  - new TextView(full compatible with andoird) Span support for full feature richtext
-  - add new text Layout StatlicLayout and BoringLayout baseon minikin
-  - add FlexBoxLayut and FlexboxLayoutManager
+  - android.transition framework (31 classes: scene transitions, shared elements)
+  - androidx.navigation (NavHost / NavController / NavGraph)
+  - Fragment / FragmentManager / FragmentStateManager (nested hosts, back stack)
+  - ConstraintLayout and MotionLayout (full features: chains, helpers, Carousel)
+  - new TextView fully compatible with Android, spannable rich text
+  - text layout family on minikin: StaticLayout, DynamicLayout, BoringLayout
+  - FlexboxLayout and FlexboxLayoutManager
+  - Binary AXML resources end to end: androidfw AssetManager port, PakBuilder (aapt2-compiled
+    AXML + resources.arsc + cdNp 9-patch chunks), R.h from real arsc ids; idgen retired
+  - AttributeSet migrated to int resource ids tree-wide (DECLARE_WIDGET2, int defStyle,
+    framework-private attr block); string-key attribute lookups retired
+  - TypedArray/TypedValue aligned with AOSP ResourcesImpl; styleable generation; theme attr
+    chain and themed-cache keys fixed; ResourcesImpl density initialized
+  - Build-time resource overlay (AOSP static-overlay semantics); slim framework-res base;
+    i18n.dat packed into pak; build-time fonts.xml; multi-pak 0x7f id pinning policy
+  - AOSP Music app facade port (apps/music) plus the core fixes it surfaced
+  - Preference listener interfaces moved to value semantics (EventSet/CallbackBase)
+  - Teardown/UAF/leak campaign under valgrind: exit sentinel, window teardown ordering,
+    observer pinning, AbsListView touchMode death-belt, RecycleBin same-key overwrite,
+    AlertController GC points; preferencedemo dialog crashes eliminated
+  - Drawable module audited against AOSP (47 findings); tint/PorterDuff emulation hardened;
+    VectorDrawable cache/tint fixes; AnimatedVectorDrawable leak closed
+  - ContextImpl split into three layers with Context as a pure interface
+  - View/ViewGroup refreshed against android-36; ScrollView/NestedScrollView fixes
+  - Tests: libutils Looper suite, coretests text/ and i18n, key-navigation suite,
+    drawable/os CTS ports, gui_test shared-looper harness
+  - In-process accessibility service building blocks (paused WIP)
+  - preferencedemo: portrait settings chrome, Slide fragment transitions (legacy animation
+    path kept behind PREFDEMO_ANIM), AUTOCYCLE valgrind driver
 # **4.9.6
   - some memleaks
   - add TouchDevice VirtualKeyMap support
