@@ -75,11 +75,13 @@ FastScroller::FastScroller(AbsListView* listView, int styleResId){
         mOverlay->add(mPrimaryText);
         mOverlay->add(mSecondaryText);
     }
-    ViewGroup::OnHierarchyChangeListener hls;
-    hls.onChildViewRemoved=[](View&container,View *view){
-        delete view;
-    };
-    mOverlay->getOverlayView()->setOnHierarchyChangeListener(hls);
+    // Ownership note: the five overlay views are ours (new'd above). They used
+    // to be freed through a hierarchy-change listener installed on the overlay
+    // view group ("onChildViewRemoved = delete view"), but ViewGroup::
+    // removeViewInternal touches the view AFTER dispatchViewRemoved — with a
+    // deleting listener that is a use-after-free on every teardown — and the
+    // listener had no uninstall path. ~FastScroller detaches and deletes them
+    // instead (it runs in ~AbsListView, before ~View tears the overlay down).
     getSectionsFromIndexer();
     updateLongList(mOldChildCount, mOldItemCount);
     setScrollbarPosition(listView->getVerticalScrollbarPosition());
@@ -89,8 +91,16 @@ FastScroller::FastScroller(AbsListView* listView, int styleResId){
 FastScroller::~FastScroller(){
     delete mDecorAnimation;
     delete mPreviewAnimation;
-    //do not delete mOverlay and its children
-    //they are created/freed by View/ViewGroup,
+    // Detach our overlay views first (remove ≠ delete), then free what we
+    // new'd in the ctor — see the ownership note above.
+    if (mOverlay != nullptr) {
+        remove();
+    }
+    delete mTrackImage;
+    delete mThumbImage;
+    delete mPreviewImage;
+    delete mPrimaryText;
+    delete mSecondaryText;
 }
 
 void FastScroller::updateAppearance() {
