@@ -24,6 +24,7 @@
 #include <fragment/fragmentactivity.h>
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenttransaction.h>
+#include <transition/slide.h>
 #include <app/alertdialog.h>
 #include <app/dialoginterface.h>
 #include <widget/toast.h>
@@ -82,6 +83,20 @@ public:
     void onCreatePreferences(cdroid::Bundle* /*savedInstanceState*/,
             const std::string& rootKey) override {
         mRootKey = rootKey;
+        // Pushed screens drive their motion with fragment Transitions (SEC
+        // Priority 1): one scene change on the container, so the enter/exit
+        // pair stays in lock-step. The legacy custom-Animation path remains
+        // selectable (PREFDEMO_ANIM=1 in openScreen) but runs the two ops as
+        // independent Animations whose handoff shows a seam. Slide edges mirror
+        // the old R.anim slides: enter from right / exit to left; pop returns
+        // to right, reenter comes back from left. The root keeps no transition,
+        // so the initial show is static and covering it fades (SEC default).
+        if (!rootKey.empty()) {
+            setEnterTransition(new cdroid::Slide(cdroid::Gravity::RIGHT));
+            setExitTransition(new cdroid::Slide(cdroid::Gravity::LEFT));
+            setReenterTransition(new cdroid::Slide(cdroid::Gravity::LEFT));
+            setReturnTransition(new cdroid::Slide(cdroid::Gravity::RIGHT));
+        }
         // Nested screens load their own XML by key; the root loads everything.
         const int xml = rootKey.empty() ? (int)preferencedemo::R::xml::settings_root
                                         : screenXmlFor(rootKey);
@@ -319,9 +334,10 @@ public:
     void openScreen(const std::string& key, const std::string& /*title*/) {
         auto* fragment = newFragmentForKey(key);
         auto* tx = getSupportFragmentManager()->beginTransaction();
-        // PREFDEMO_NO_ANIM=1 skips the custom slides so the push rides the
-        // DEFAULT Fade (the transition path whose per-op clone bug was fixed).
-        if (getenv("PREFDEMO_NO_ANIM") == nullptr) {
+        // Default motion is the fragment Transitions set in onCreatePreferences
+        // (SEC Priority 1). PREFDEMO_ANIM=1 opts this transaction back into the
+        // legacy custom slides (SEC Priority 2, kept for comparison/regression).
+        if (getenv("PREFDEMO_ANIM") != nullptr) {
             tx->setCustomAnimations((int)preferencedemo::R::anim::slide_in_right,
                                     (int)preferencedemo::R::anim::slide_out_left,
                                     (int)preferencedemo::R::anim::slide_in_left,
