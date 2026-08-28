@@ -42,6 +42,11 @@ EditTextPreference::EditTextPreference(Context& context, const AttributeSet& att
     : DialogPreference(context, attrs, defStyleAttr, defStyleRes) {
     namespace ns = internal::R::styleable;
 
+    // androidx EditTextPreference ctor: the dialog content is the material
+    // layout — the plain preference_dialog_edittext has no @android:id/edit
+    // EditText, and onBindDialogView throws without one.
+    setDialogLayoutResource((int)internal::R::layout::preference_dialog_edittext_material);
+
     auto a = context.obtainStyledAttributes(attrs, ns::EditTextPreference, defStyleAttr, defStyleRes);
 
     if (a->getBoolean(ns::EditTextPreference_useSimpleSummaryProvider, false)) {
