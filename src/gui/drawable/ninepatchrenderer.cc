@@ -442,10 +442,14 @@ void NinePatchRenderer::draw(Canvas& painter, const Rect&rect,float alpha){
 
 void NinePatchRenderer::setImageSize(int width, int height) {
     if((mWidth == width) && (mHeight==height))return;
-    if (width != mWidth || height != mHeight) {
-        mWidth = width;
-        mHeight = height;
+    // Non-positive sizes never render (see updateCachedImage) — record them so
+    // the equality early-out above doesn't thrash, but skip the re-render.
+    mWidth = width;
+    mHeight = height;
+    if (width > 0 && height > 0) {
         updateCachedImage(width, height,nullptr);
+    } else {
+        mCachedImage.reset();
     }
 }
 
@@ -722,6 +726,15 @@ void NinePatchRenderer::drawLattice(int width, int height, Cairo::Context& paint
 }
 
 void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*painterIn) {
+    // Degenerate size (empty or negative bounds — e.g. a view the measure pass
+    // squeezed through negative margins): nothing to render. Skia/AOSP simply
+    // produces no pixels here; cairo would abort the process on
+    // ImageSurface::create(width <= 0), so bail out first (and drop any stale
+    // cache so a later valid size re-renders).
+    if (width <= 0 || height <= 0) {
+        mCachedImage.reset();
+        return;
+    }
     double lostX  = 0.f, lostY  = 0.f;
     double factorX= 0.f, factorY= 0.f;
     int x1 = 0 , y1 = 0; //for image parts X/Y
