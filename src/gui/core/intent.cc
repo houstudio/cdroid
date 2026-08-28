@@ -1374,6 +1374,11 @@ Intent& Intent::putExtra(const std::string& name,const std::string& value) {
     return *this;
 }
 
+Intent& Intent::putExtra(const std::string& name, const char* value) {
+    // see the header: keeps string literals out of the bool overload
+    return putExtra(name, value == nullptr ? std::string() : std::string(value));
+}
+
 Intent& Intent::putExtra(const std::string& name, Parcelable* value) {
     if (mExtras == nullptr) {
         mExtras = new Bundle();
