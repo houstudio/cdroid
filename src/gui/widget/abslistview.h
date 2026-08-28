@@ -166,6 +166,11 @@ private:
     CheckForKeyLongPress* mPendingCheckForKeyLongPress;
     ViewTreeObserver::OnGlobalLayoutListener mGlobalLayoutListener;
     ViewTreeObserver::OnTouchModeChangeListener mTouchModeChangeListener;
+    // The observer instance the touchMode listener was registered on. Removed
+    // from THIS instance only — getViewTreeObserver() after a no-dispatch
+    // teardown hands back a fresh floating observer and the remove misses the
+    // real one, leaving a dangling listener that crashes the next layout.
+    ViewTreeObserver* mTouchObserverRegistered = nullptr;
     AbsListView::PerformClick* mPerformClick;
     FlingRunnable* mFlingRunnable;
     Runnable mTouchModeReset;

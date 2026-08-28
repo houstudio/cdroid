@@ -145,7 +145,10 @@ AbsListView::~AbsListView() {
     // ("pure virtual method called" in AdapterView::removeViewAt, UAF in
     // layoutChildren, crashing the NEXT popup's layout). While still
     // attached we resolve the real observer via mAttachInfo.
-    getViewTreeObserver()->removeOnTouchModeChangeListener(mTouchModeChangeListener);
+    if (mTouchObserverRegistered != nullptr) {
+        mTouchObserverRegistered->removeOnTouchModeChangeListener(mTouchModeChangeListener);
+        mTouchObserverRegistered = nullptr;
+    }
     // 结束仍在活跃的多选 ActionMode: wrapper 的 lambda 捕获了 this, 且 ActionMode 由 Window
     // 持有, 先 finish (经 wrapper.onDestroyActionMode 清 mChoiceActionMode + 让 Window 释放)。
     if (mChoiceActionMode != nullptr) {
@@ -2143,6 +2146,7 @@ void AbsListView::onAttachedToWindow() {
     AdapterView::onAttachedToWindow();
 
     ViewTreeObserver* treeObserver = getViewTreeObserver();
+    mTouchObserverRegistered = treeObserver;
     treeObserver->addOnTouchModeChangeListener(mTouchModeChangeListener);
     if (mTextFilterEnabled && mPopup  && !mGlobalLayoutListenerAddedFilter) {
         treeObserver->addOnGlobalLayoutListener(mGlobalLayoutListener);
@@ -2176,10 +2180,12 @@ void AbsListView::onDetachedFromWindow() {
     if(mSelector)
         unscheduleDrawable(*mSelector);
 
-    ViewTreeObserver* treeObserver = getViewTreeObserver();
-    treeObserver->removeOnTouchModeChangeListener(mTouchModeChangeListener);
+    if (mTouchObserverRegistered != nullptr) {
+        mTouchObserverRegistered->removeOnTouchModeChangeListener(mTouchModeChangeListener);
+        mTouchObserverRegistered = nullptr;
+    }
     if (mTextFilterEnabled && mPopup != nullptr) {
-        treeObserver->removeOnGlobalLayoutListener(mGlobalLayoutListener);
+        getViewTreeObserver()->removeOnGlobalLayoutListener(mGlobalLayoutListener);
         mGlobalLayoutListenerAddedFilter = false;
     }
 
