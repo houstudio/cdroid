@@ -18,6 +18,7 @@
 #include <widget/internal_R.h>
 #include <app/alertcontroller.h>
 #include <app/alertdialog.h>
+#include <core/handler.h>
 #include <widget/framework_styleable.h>
 
 namespace cdroid{
@@ -455,6 +456,19 @@ void AlertController::onButtonClick(DialogInterface::OnClickListener listener,Vi
     case R::id::button3: if(listener)listener(*mDialogInterface,DialogInterface::BUTTON_NEUTRAL)  ; break;
     default :break;
     }
+    // AOSP mButtonHandler (AlertController.java:134) posts MSG_DISMISS_DIALOG after the
+    // click listener ran: "Post a message so we dismiss after the above handlers are
+    // executed". The posted dismiss keeps the window teardown (Window::close runs
+    // removeWindow inline) off the button's click dispatch stack. Dialog::dismiss is
+    // mShowing-guarded, so a listener that already dismissed makes this a no-op.
+    // Standalone heap Handler, NOT View::post — mirrors Window::finishClose: the dialog's
+    // teardown purges view queues that would drop this very post.
+    Handler* handler = new Handler();
+    Dialog* dialog = mDialogInterface;
+    handler->post([handler, dialog](){
+        dialog->dismiss();
+        delete handler;
+    });
 }
 
 void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
@@ -647,6 +661,10 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
 }
 
 
+AlertController::~AlertController() {
+    if (mOwnsAdapter) delete mAdapter;  // AOSP relies on GC for the list adapter
+}
+
 AlertController::AlertParams::AlertParams(Context*context){
     mContext = context;
     mCancelable = true;
@@ -743,6 +761,7 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
     if (mIsMultiChoice) {
         if (mCursor == nullptr) {
             AlertListAdapter*alertadapter = new AlertListAdapter(mContext, dialog->mMultiChoiceItemLayout, R::id::text1);
+            dialog->mOwnsAdapter = true;
             alertadapter->setParams(this,listView);
             alertadapter->addAll(mItems);
             adapter=alertadapter; 
@@ -775,6 +794,7 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
             adapter = mAdapter;
         } else {
             AlertListAdapter*alertadapter =new AlertListAdapter(mContext, layout, R::id::text1);
+            dialog->mOwnsAdapter = true;
             alertadapter->setParams(this,listView);
             alertadapter->addAll(mItems);
             adapter = alertadapter;

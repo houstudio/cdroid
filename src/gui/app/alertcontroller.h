@@ -34,6 +34,8 @@ class TypedArray;
 
 class AlertController{
 public:
+    // Public like ~Dialog (74f99a303): ~AlertDialog deletes the controller.
+    ~AlertController();
     DECLARE_UIEVENT(void,OnPrepareListViewListener,ListView&);
     class RecycleListView:public ListView {
     private:
@@ -141,6 +143,10 @@ private:
     bool mForceInverseBackground;
 
     Adapter* mAdapter;
+    // True when createListView allocated the adapter (AlertListAdapter): the
+    // controller frees it (AOSP relies on GC). An adapter passed through
+    // Builder.setAdapter (Spinner's DropDownAdapter wrap) stays the caller's.
+    bool mOwnsAdapter = false;
 
     int mCheckedItem = -1;
 
