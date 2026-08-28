@@ -3942,15 +3942,25 @@ int View::getAccessibilityTraversalAfter()const{
 }
 
 int View::generateViewId(){
-    static int sNextGeneratedId = 0x0;
-    int newValue = sNextGeneratedId + 1;
-    if(newValue>0xFFFFFF)newValue=1;
+    // AOSP View.generateViewId: counter starts at 1, returns the pre-increment
+    // value, clamped under 0x01000000 ("aapt-generated IDs have the high byte
+    // nonzero; clamp to the range under it"). The id must stay a POSITIVE int —
+    // androidx guards like FragmentManager.getFragmentContainer's
+    // (mContainerId <= 0) reject 0xFFxxxxxx-style values, which are negative
+    // as signed ints (a generated-id container then looks container-less and
+    // its fragment's view is never added — black pager pages).
+    static int sNextGeneratedId = 1;
+    const int result = sNextGeneratedId;
+    int newValue = result + 1;
+    if(newValue > 0x00FFFFFF) newValue = 1; // Roll over to 1, not 0.
     sNextGeneratedId = newValue;
-    return newValue|0xFF000000;
+    return result;
 }
 
+// Note that if the function returns true, it indicates aapt did not generate this id.
+// However false value does not indicate that aapt did generated this id.
 bool View::isViewIdGenerated(int id){
-    return (id&0xFF000000)==0xFF000000;
+    return (id&0xFF000000)==0 && (id&0x00FFFFFF)!=0;
 }
 
 bool View::getKeepScreenOn()const{
