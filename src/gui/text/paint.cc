@@ -18,6 +18,9 @@
 #include <porting/cdlog.h>
 #include <hb.h>
 #include <hb-ft.h>
+#include <cairo-ft.h>
+#include <ft2build.h>
+#include <freetype/freetype.h>
 
 namespace cdroid{
 
@@ -191,6 +194,45 @@ Paint::FontMetricsInt Paint::getFontMetricsInt()const{
     getFontMetricsInt(&fm);
     return fm;
 }
+// Fills the vertical metrics AOSP derives from the font file itself
+// (Skia's FreeType backend): top/bottom from the glyph bounding box scaled
+// by textSize/unitsPerEm, leading from the hhea line gap (face height minus
+// ascender/descender). The FT_Face is borrowed from cairo's scaled font via
+// lock/unlock — locked, its size state already matches this paint.
+static void fillGlyphBoxMetrics(Paint::FontMetricsInt* fmi, const Typeface* typeface,
+        const minikin::MinikinPaint& paint, const minikin::MinikinFont* minikinFont) {
+    std::shared_ptr<Cairo::ScaledFont> scaledFont = typeface->getScaledFont(paint, minikinFont);
+    FT_Face ftFace = nullptr;
+    cairo_scaled_font_t* cobj = (scaledFont ? scaledFont->cobj() : nullptr);
+    if (cobj != nullptr && cairo_scaled_font_get_type(cobj) == CAIRO_FONT_TYPE_FT) {
+        ftFace = cairo_ft_scaled_font_lock_face(cobj);
+    }
+    if (ftFace == nullptr) {
+        fmi->leading = 0;
+        fmi->top = fmi->ascent;
+        fmi->bottom = fmi->descent;
+        return;
+    }
+    if ((ftFace->face_flags & FT_FACE_FLAG_SCALABLE) && ftFace->units_per_EM > 0) {
+        const double scale = paint.size / (double)ftFace->units_per_EM;
+        // floor above the baseline (more negative), ceil below (more
+        // positive) — the conservative rounding android_graphics_Paint applies
+        fmi->top = (int)std::floor(-ftFace->bbox.yMax * scale);
+        fmi->bottom = (int)std::ceil(-ftFace->bbox.yMin * scale);
+        // line gap in DESIGN units (height - ascender + descender, descender
+        // negative): FT_Size_Metrics must NOT be used here — with hinting on,
+        // cairo's face rounds each field to whole pixels and the difference
+        // can go negative (e.g. Noto 18px: 24 - 20 - 6 = -2)
+        const double lineGap = (double)ftFace->height - ftFace->ascender + ftFace->descender;
+        fmi->leading = (int)std::ceil(lineGap * scale);
+    } else {  // bitmap face: keep the collapsed fallback
+        fmi->leading = 0;
+        fmi->top = fmi->ascent;
+        fmi->bottom = fmi->descent;
+    }
+    cairo_ft_scaled_font_unlock_face(cobj);
+}
+
 int Paint::getFontMetricsInt(FontMetricsInt* fmi)const{
     std::shared_ptr<minikin::MinikinFont> minikinFont = mTypeface->getMinikinFont();
     minikin::MinikinExtent extent;
@@ -198,11 +240,9 @@ int Paint::getFontMetricsInt(FontMetricsInt* fmi)const{
     if(fmi){
         fmi->ascent = extent.ascent;
         fmi->descent = extent.descent;
-        fmi->leading = 0;
-        fmi->top = fmi->ascent;           // top 等于 ascent
-        fmi->bottom = fmi->descent;       // bottom 等于 descent
+        fillGlyphBoxMetrics(fmi, mTypeface, *mMinikinPaint, minikinFont.get());
     }
-    return extent.descent - extent.ascent;
+    return (int)(extent.descent - extent.ascent);
 }
 
 float Paint::getTextRunAdvances(const char16_t* chars, int index, int count, int contextIndex,
