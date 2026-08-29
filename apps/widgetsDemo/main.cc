@@ -155,7 +155,10 @@ void dumpNode(AccessibilityNodeInfo* node, int depth) {
     // so the tree always contains ALL pages — readers announce only what is
     // on the display (AOSP isVisibleToUser semantics). Skip offscreen
     // subtrees (children clip inside their parent).
-    if (b.left >= 1280 || b.top >= 720 || b.left + b.width <= 0 || b.top + b.height <= 0) return;
+    if (b.left >= 1280 || b.top >= 720 || b.left + b.width <= 0 || b.top + b.height <= 0) {
+        node->recycle();
+        return;
+    }
     LOGD("A11YTREE %*s%s text=[%s] clickable=%d checkable=%d enabled=%d bounds=(%d,%d %dx%d)",
          depth * 2, "", node->getClassName().c_str(), node->getText().c_str(),
          (int)node->isClickable(), (int)node->isCheckable(), (int)node->isEnabled(),
@@ -163,6 +166,7 @@ void dumpNode(AccessibilityNodeInfo* node, int depth) {
     for (int i = 0; i < node->getChildCount(); i++) {
         dumpNode(node->getChild(i), depth + 1);
     }
+    node->recycle();  // AOSP consumer contract: nodes are recycled after use
 }
 class DumpService : public AccessibilityService {
 public:
@@ -202,7 +206,9 @@ int main(int argc, const char* argv[]) {
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
     App app(argc, argv);
-    static DumpService dumpService;
+    // Stack lifetime (NOT static): unregistering from ~AccessibilityService
+    // during exit() would race the manager's own static destruction order.
+    DumpService dumpService;
     if (getenv("A11Y_DUMP")) {
         AccessibilityManager::getInstance(&app).addAccessibilityService(&dumpService);
     }
