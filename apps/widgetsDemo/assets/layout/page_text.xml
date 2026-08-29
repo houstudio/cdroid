@@ -47,6 +47,51 @@
                 android:textSize="18sp" />
         </LinearLayout>
 
+        <!-- Emoji rendering & cluster editing -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Emoji"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:text="☺ ❤ 😀 ☀ ★ ✓ ✈ ☺️ ❤️" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:text="🇨🇳 🇺🇸 👨‍👩‍👧 👍🏽 1️⃣ ⚠️" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:text="Symbols come from the fallback font in fonts.xml; flags, ZWJ families, skin tones and keycaps need a full emoji font (e.g. Noto Emoji) — boxes until it is added."
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:background="@drawable/btn_outline"
+                android:padding="10dp"
+                android:textColor="@color/text_primary"
+                android:text="☺ ❤ 😀 edit me: caret moves and backspace deletes whole clusters" />
+        </LinearLayout>
+
         <!-- Justification & phrase-based line breaking -->
         <LinearLayout
             android:layout_width="match_parent"
