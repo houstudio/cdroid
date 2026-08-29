@@ -98,6 +98,18 @@ void UiAutoTest::step() {
         stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
         return;
     }
+    // ScrollView pages fold their lower content out of isVisibleToUser —
+    // after each full click cycle, spend one step scrolling the first
+    // scrollable forward (backward ping-pong at the bottom).
+    if (++mStepsSinceScroll > mClickables.size()) {
+        mStepsSinceScroll = 0;
+        // collectClickable already recycled the walk root — take a FRESH
+        // root for the scroll walk (scrollOnce owns this one).
+        scrollOnce(automation.getRootInActiveWindow());
+        stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
+        return;
+    }
+    // collectClickable recycled the walk scaffolding (root included).
     mStepCount++;
     AccessibilityNodeInfo* target = mClickables.at(mStepCount % mClickables.size());
     const std::string label = target->getText().empty()
@@ -118,6 +130,42 @@ void UiAutoTest::step() {
     if (hit) hit->recycle();
 
     stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
+}
+
+bool UiAutoTest::scrollOnce(AccessibilityNodeInfo* root) {
+    // Takes ownership of root. Find the largest visible scrollable, spend one
+    // scroll action on it; ping-pong backward once the forward end is hit.
+    AccessibilityNodeInfo* best = nullptr;
+    Rect bestB;
+    std::function<void(AccessibilityNodeInfo*, int)> visit = [&](AccessibilityNodeInfo* n, int d) {
+        if (!n || d > kMaxDepth) return;
+        const bool candidate = n->isScrollable() && n->isVisibleToUser();
+        Rect b;
+        if (candidate) n->getBoundsInScreen(b);
+        for (int i = 0; i < n->getChildCount(); i++) visit(n->getChild(i), d + 1);
+        if (candidate && (!best || (long)b.width * b.height > (long)bestB.width * bestB.height)) {
+            if (best) best->recycle();
+            best = n; bestB = b;        // kept
+        } else if (n != root) {
+            n->recycle();               // walk scaffolding (root handled below)
+        }
+    };
+    visit(root, 0);
+    if (best == nullptr) {
+        root->recycle();
+        return false;
+    }
+    const int action = (mScrollExhausted >= 1)
+            ? AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD
+            : AccessibilityNodeInfo::ACTION_SCROLL_FORWARD;
+    const bool scrolled = best->performAction(action);
+    best->recycle();
+    if (!scrolled) mScrollExhausted++;
+    else if (action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD) mScrollExhausted = 0;
+    LOGI("AUTOTEST scroll %s -> %s",
+         action == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD ? "forward" : "backward",
+         scrolled ? "ok" : "end");
+    return scrolled;
 }
 
 // --- script mode ------------------------------------------------------------

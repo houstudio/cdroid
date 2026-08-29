@@ -34,6 +34,9 @@ private:
     UiAutoTest() = default;
     void step();
     void collectClickable(AccessibilityNodeInfo* node, int depth);
+    /** One ACTION_SCROLL_FORWARD on the first scrollable node (ping-pong
+     *  backward at the bottom). Returns true when a scroll happened. */
+    bool scrollOnce(AccessibilityNodeInfo* root);
 
     // --- script mode ---
     struct Command {
@@ -54,6 +57,8 @@ private:
     size_t mScanIndex = (size_t)-1;
     bool mKeepIndexOnRebuild = false;  // stale-rebuild resumes, wrap restarts
     Window* mLastActiveWindow = nullptr;  // follow navigation: new window, new snapshot
+    size_t mStepsSinceScroll = 0;         // one scroll per full click cycle
+    int mScrollExhausted = 0;             // consecutive failed forward scrolls
     std::vector<AccessibilityNodeInfo*> mClickables;
 
     // --- script state ---

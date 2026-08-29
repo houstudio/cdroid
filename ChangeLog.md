@@ -25,9 +25,34 @@
   - View/ViewGroup refreshed against android-36; ScrollView/NestedScrollView fixes
   - Tests: libutils Looper suite, coretests text/ and i18n, key-navigation suite,
     drawable/os CTS ports, gui_test shared-looper harness
-  - In-process accessibility service building blocks (paused WIP)
+  - In-process accessibility service end to end: AccessibilityService/
+    AccessibilityServiceInfo port, AccessibilityManager as the in-process AMS
+    (registry + dual-layer event filtering), walkable node tree (providers/
+    virtual views included), ByText/ByViewId search, focus highlight, full
+    event/node recycle contract (zoo valgrind 3.2MB -> 256B)
+  - android.app.UiAutomation port + semantic test drivers: --auto-test sweep
+    (per-step snapshot follows pager/tab navigation, node isVisibleToUser
+    filtering, auto-scroll between cycles) and --test-script line DSL
+    (Tokenizer lexer, wait/click/assert/dump, CI exit code)
   - preferencedemo: portrait settings chrome, Slide fragment transitions (legacy animation
     path kept behind PREFDEMO_ANIM), AUTOCYCLE valgrind driver
+  - Emoji editing semantics on a par with Android: myicu binary properties now generated
+    from UCD emoji-data.txt (Emoji/Modifier/Component/Extended_Pictographic/Variation_
+    Selector; accessor enum-numbering fixed), BaseKeyListener deletes by emoji state
+    machine (flag pairs, ZWJ sequences, variation selectors, keycaps, skin tones, tags),
+    grapheme-cluster cursor movement verified; coretests text battery 276 passed
+  - Emoji display end to end: Paint::getFontMetricsInt fills real top/bottom/leading from
+    the font file, TypedArray::getString astral-codepoint UTF-8 fixed (was mangling emoji
+    into tofu + garbage), TextView renders emoji through the fonts.xml fallback chain;
+    widgetsDemo Text page gained an Emoji card
+  - CBDT color emoji (Noto Color Emoji): color bitmap glyphs render as scaled images —
+    Typeface serves per-glyph ARGB32 bitmaps (dedicated FT faces, strike-bound, cached),
+    Paint::drawTextRun does the blit; requires a freetype built with PNG support
+  - Font system reduced to fonts.xml + R.font: fontconfig-era matching retired
+    (parseStyle/fetchProps/isSameFamily/SYSLANG hack; fallback chain deduped by font file,
+    one mmap per file), legacy string-array PAK font loader removed, TextView resolves
+    android:fontFamily="@font/x" resources with no app code (android-36 parity), plain
+    family names no longer leak into the font asset loader
 # **4.9.6
   - some memleaks
   - add TouchDevice VirtualKeyMap support
