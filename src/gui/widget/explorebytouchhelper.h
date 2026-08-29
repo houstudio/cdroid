@@ -52,7 +52,7 @@ private:
     Context* mContext;
 
     /** Node provider that handles creating nodes and performing actions. */
-    ExploreByTouchNodeProvider* mNodeProvider;
+    ExploreByTouchNodeProvider* mNodeProvider = nullptr;
 
     /** Virtual view id for the currently focused logical item. */
     int mFocusedVirtualViewId = INVALID_ID;
