@@ -3,6 +3,7 @@
 #include <porting/cdlog.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/accessibility/accessibilityevent.h>
+#include <accessibilityservice/accessibilityservice.h>
 namespace cdroid{
 AccessibilityManager& AccessibilityManager::getInstance(Context* context) {
     static AccessibilityManager mInstance(context,0);
@@ -96,23 +97,89 @@ void AccessibilityManager::sendAccessibilityEvent(AccessibilityEvent& event) {
             dispatchedEvent, AccessibilityEvent::eventTypeToString(mRelevantEventTypes).c_str());
         return;
     }
-#if 0
-    userId = mUserId;
 
-    long identityToken = Binder.clearCallingIdentity();
-    try {
-        service.sendAccessibilityEvent(dispatchedEvent, userId);
-    } finally {
-        Binder.restoreCallingIdentity(identityToken);
+    // The in-process AccessibilityManagerService dispatch: deliver to every
+    // bound service whose eventTypes match (AOSP's server-side second filter).
+    // The event is pooled and recycled below — services must copy to retain.
+    for (AccessibilityService* service : mBoundServices) {
+        if ((dispatchedEvent->getEventType() & service->getServiceInfo().eventTypes) != 0) {
+            service->onAccessibilityEvent(*dispatchedEvent);
+        }
     }
-    LOGI_IF(Debug,"send dispatchedEvent %p",dispatchedEvent);
-#endif
-    setStateLocked(0xFFFFFFFF);
     LOGD("%s",event.toString().c_str());
     if (&event != dispatchedEvent) {
         event.recycle();
     }
     dispatchedEvent->recycle();
+}
+
+void AccessibilityManager::addAccessibilityService(AccessibilityService* service) {
+    if (service == nullptr
+            || std::find(mBoundServices.begin(), mBoundServices.end(), service) != mBoundServices.end()) {
+        return;
+    }
+    mBoundServices.push_back(service);
+    // AOSP computeRelevantEventTypesLocked: OR of the bound services' infos.
+    mRelevantEventTypes = 0;
+    for (const AccessibilityService* s : mBoundServices) {
+        mRelevantEventTypes |= s->getServiceInfo().eventTypes;
+    }
+    if (mBoundServices.size() == 1) {
+        // Accessibility became enabled (a bound service exists now).
+        setStateLocked(STATE_FLAG_ACCESSIBILITY_ENABLED);
+    }
+    // AOSP fires onServiceConnected after the connection registered; the
+    // service typically pushes its real info there, so recompute the routing
+    // AFTER the callback returns (mRelevantEventTypes was still 0 above).
+    service->onServiceConnected();
+    service->mConnected = true;
+    onServiceInfoChanged(service);
+}
+
+void AccessibilityManager::removeAccessibilityService(AccessibilityService* service) {
+    auto it = std::find(mBoundServices.begin(), mBoundServices.end(), service);
+    if (it == mBoundServices.end()) {
+        return;
+    }
+    mBoundServices.erase(it);
+    mRelevantEventTypes = 0;
+    for (const AccessibilityService* s : mBoundServices) {
+        mRelevantEventTypes |= s->getServiceInfo().eventTypes;
+    }
+    if (mBoundServices.empty()) {
+        // Accessibility became disabled (no bound service left).
+        setStateLocked(0);
+    }
+}
+
+void AccessibilityManager::onServiceInfoChanged(AccessibilityService* /*service*/) {
+    mRelevantEventTypes = 0;
+    for (const AccessibilityService* s : mBoundServices) {
+        mRelevantEventTypes |= s->getServiceInfo().eventTypes;
+    }
+}
+
+std::vector<AccessibilityServiceInfo> AccessibilityManager::getEnabledAccessibilityServiceList(
+        int feedbackTypeFlags) {
+    std::vector<AccessibilityServiceInfo> services;
+    for (const AccessibilityService* s : mBoundServices) {
+        const AccessibilityServiceInfo info = s->getServiceInfo();
+        if ((info.feedbackType & feedbackTypeFlags) != 0) {
+            services.push_back(info);
+        }
+    }
+    return services;
+}
+
+void AccessibilityManager::interrupt() {
+    if (!isEnabled()) {
+        LOGE("Interrupt called with accessibility disabled");
+        return;
+    }
+    for (AccessibilityService* service : mBoundServices) {
+        service->onInterrupt();
+    }
+    LOGI_IF(Debug,"Requested interrupt from all services");
 }
 
 #if 0
@@ -322,15 +389,15 @@ void AccessibilityManager::setStateLocked(int stateFlags) {
     mIsTouchExplorationEnabled = touchExplorationEnabled;
     mIsHighTextContrastEnabled = highTextContrastEnabled;
 
-    if (wasEnabled != isEnabled()||1) {
+    if (wasEnabled != isEnabled()) {
         notifyAccessibilityStateChanged();
     }
 
-    if (wasTouchExplorationEnabled != touchExplorationEnabled||1) {
+    if (wasTouchExplorationEnabled != touchExplorationEnabled) {
         notifyTouchExplorationStateChanged();
     }
 
-    if (wasHighTextContrastEnabled != highTextContrastEnabled||1) {
+    if (wasHighTextContrastEnabled != highTextContrastEnabled) {
         notifyHighTextContrastStateChanged();
     }
 }
@@ -438,14 +505,14 @@ void AccessibilityManager::tryConnectToServiceLocked(IAccessibilityManager servi
 #endif
 
 void AccessibilityManager::notifyAccessibilityStateChanged() {
-    bool isEnabled;
     std::vector<AccessibilityStateChangeListener>& listeners = mAccessibilityStateChangeListeners;
+    const bool enabled = mIsEnabled;
 
     const int numListeners = listeners.size();
     LOGD("numListeners=%d",numListeners);
     for (int i = 0; i < numListeners; i++) {
         AccessibilityStateChangeListener listener = listeners.at(i);
-        listener(isEnabled);
+        listener(enabled);
     }
 }
 

@@ -29,7 +29,7 @@ private:
     AccessibilityRecord* mNext;
     bool mIsInPool;
 protected:
-    bool mSealed;
+    bool mSealed = false;
     int mBooleanProperties = 0;
     int mCurrentItemIndex = UNDEFINED;
     int mItemCount = UNDEFINED;

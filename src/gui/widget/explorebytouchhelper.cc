@@ -226,10 +226,10 @@ AccessibilityNodeInfo* ExploreByTouchHelper::createNodeForChild(int virtualViewI
     // Manage internal accessibility focus state.
     if (mFocusedVirtualViewId == virtualViewId) {
         node->setAccessibilityFocused(true);
-        node->addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_ACCESSIBILITY_FOCUS.getId());
+        node->addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_ACCESSIBILITY_FOCUS);
     } else {
         node->setAccessibilityFocused(false);
-        node->addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_ACCESSIBILITY_FOCUS.getId());
+        node->addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_ACCESSIBILITY_FOCUS);
     }
 
     // Set the visibility based on the parent bound.

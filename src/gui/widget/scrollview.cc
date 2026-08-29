@@ -753,11 +753,11 @@ void ScrollView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo
             info.setScrollable(true);
             if (mScrollY > 0) {
                 info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
-                info.addAction(R::id::accessibilityActionScrollUp);//AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP);
             }
             if (mScrollY < scrollRange) {
                 info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
-                info.addAction(R::id::accessibilityActionScrollDown);//AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN);
             }
         }
     }

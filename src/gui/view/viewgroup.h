@@ -285,6 +285,7 @@ protected:
     void dispatchDrawableHotspotChanged(float x,float y)override;
     bool hasHoveredChild()const override;
     void addChildrenForAccessibility(std::vector<View*>& outChildren)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     bool pointInHoveredChild(MotionEvent& event)override;
     virtual int getChildDrawingOrder(int childCount, int i);
     std::vector<View*> buildOrderedChildList();

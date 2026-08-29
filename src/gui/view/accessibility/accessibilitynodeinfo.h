@@ -194,7 +194,7 @@ private:
 
     static const AccessibilityNodeInfo DEFAULT;// = new AccessibilityNodeInfo();
 
-    bool mSealed;
+    bool mSealed = false;
 
     // Data.
     int mWindowId;// = AccessibilityWindowInfo::UNDEFINED_WINDOW_ID;
@@ -596,71 +596,71 @@ class AccessibilityNodeInfo::AccessibilityAction {
 public:
     static std::set<AccessibilityAction*> sStandardActions;
 
-    static const AccessibilityAction ACTION_FOCUS;
+    static AccessibilityAction ACTION_FOCUS;
 
-    static const AccessibilityAction ACTION_CLEAR_FOCUS;
+    static AccessibilityAction ACTION_CLEAR_FOCUS;
 
-    static const AccessibilityAction ACTION_SELECT;
+    static AccessibilityAction ACTION_SELECT;
 
-    static const AccessibilityAction ACTION_CLEAR_SELECTION;
+    static AccessibilityAction ACTION_CLEAR_SELECTION;
 
-    static const AccessibilityAction ACTION_CLICK;
+    static AccessibilityAction ACTION_CLICK;
 
-    static const AccessibilityAction ACTION_LONG_CLICK;
+    static AccessibilityAction ACTION_LONG_CLICK;
 
-    static const AccessibilityAction ACTION_ACCESSIBILITY_FOCUS;
+    static AccessibilityAction ACTION_ACCESSIBILITY_FOCUS;
 
-    static const AccessibilityAction ACTION_CLEAR_ACCESSIBILITY_FOCUS;
+    static AccessibilityAction ACTION_CLEAR_ACCESSIBILITY_FOCUS;
 
-    static const AccessibilityAction ACTION_NEXT_AT_MOVEMENT_GRANULARITY;
+    static AccessibilityAction ACTION_NEXT_AT_MOVEMENT_GRANULARITY;
 
-    static const AccessibilityAction ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY;
+    static AccessibilityAction ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY;
 
-    static const AccessibilityAction ACTION_NEXT_HTML_ELEMENT;
+    static AccessibilityAction ACTION_NEXT_HTML_ELEMENT;
 
-    static const AccessibilityAction ACTION_PREVIOUS_HTML_ELEMENT;
+    static AccessibilityAction ACTION_PREVIOUS_HTML_ELEMENT;
 
-    static const AccessibilityAction ACTION_SCROLL_FORWARD;
+    static AccessibilityAction ACTION_SCROLL_FORWARD;
 
-    static const AccessibilityAction ACTION_SCROLL_BACKWARD;
+    static AccessibilityAction ACTION_SCROLL_BACKWARD;
 
-    static const AccessibilityAction ACTION_COPY;
+    static AccessibilityAction ACTION_COPY;
 
-    static const AccessibilityAction ACTION_PASTE;
+    static AccessibilityAction ACTION_PASTE;
 
-    static const AccessibilityAction ACTION_CUT;
+    static AccessibilityAction ACTION_CUT;
 
-    static const AccessibilityAction ACTION_SET_SELECTION;
+    static AccessibilityAction ACTION_SET_SELECTION;
 
-    static const AccessibilityAction ACTION_EXPAND;
+    static AccessibilityAction ACTION_EXPAND;
 
-    static const AccessibilityAction ACTION_COLLAPSE;
+    static AccessibilityAction ACTION_COLLAPSE;
 
-    static const AccessibilityAction ACTION_DISMISS;
+    static AccessibilityAction ACTION_DISMISS;
 
-    static const AccessibilityAction ACTION_SET_TEXT;
+    static AccessibilityAction ACTION_SET_TEXT;
 
-    static const AccessibilityAction ACTION_SHOW_ON_SCREEN;
+    static AccessibilityAction ACTION_SHOW_ON_SCREEN;
 
-    static const AccessibilityAction ACTION_SCROLL_TO_POSITION;
+    static AccessibilityAction ACTION_SCROLL_TO_POSITION;
 
-    static const AccessibilityAction ACTION_SCROLL_UP;
+    static AccessibilityAction ACTION_SCROLL_UP;
 
-    static const AccessibilityAction ACTION_SCROLL_LEFT;
+    static AccessibilityAction ACTION_SCROLL_LEFT;
 
-    static const AccessibilityAction ACTION_SCROLL_DOWN;
+    static AccessibilityAction ACTION_SCROLL_DOWN;
 
-    static const AccessibilityAction ACTION_SCROLL_RIGHT;
+    static AccessibilityAction ACTION_SCROLL_RIGHT;
 
-    static const AccessibilityAction ACTION_CONTEXT_CLICK;
+    static AccessibilityAction ACTION_CONTEXT_CLICK;
 
-    static const AccessibilityAction ACTION_SET_PROGRESS;
+    static AccessibilityAction ACTION_SET_PROGRESS;
 
-    static const AccessibilityAction ACTION_MOVE_WINDOW;
+    static AccessibilityAction ACTION_MOVE_WINDOW;
 
-    static const AccessibilityAction ACTION_SHOW_TOOLTIP;
+    static AccessibilityAction ACTION_SHOW_TOOLTIP;
 
-    static const AccessibilityAction ACTION_HIDE_TOOLTIP;
+    static AccessibilityAction ACTION_HIDE_TOOLTIP;
 
 private:
     int mActionId;

@@ -63,7 +63,7 @@ std::string SeekBar::getAccessibilityClassName()const{
 void SeekBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
     AbsSeekBar::onInitializeAccessibilityNodeInfoInternal(info);
     if (canUserSetProgress()) {
-        info.addAction(R::id::accessibilityActionSetProgress);//AccessibilityNodeInfo::ACTION_SET_PROGRESS);
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS);
     }
 }
 

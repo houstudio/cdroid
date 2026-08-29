@@ -5,9 +5,11 @@
 #include <map>
 #include <core/sparsearray.h>
 #include <core/callbackbase.h>
+#include <accessibilityservice/accessibilityserviceinfo.h>
 namespace cdroid{
 class Context;
 class AccessibilityEvent;
+class AccessibilityService;
 class AccessibilityManager {
 public:
     static constexpr int STATE_FLAG_ACCESSIBILITY_ENABLED = 0x00000001;
@@ -53,6 +55,11 @@ private:
     std::vector<HighTextContrastChangeListener> mHighTextContrastStateChangeListeners;
     std::vector<AccessibilityServicesStateChangeListener>  mServicesStateChangeListeners;
 
+    // In-process AccessibilityManagerService role (the binder seam collapsed,
+    // InputMethodManager-adapter idiom): the bound services. Borrowed pointers —
+    // a service unregisters itself in its destructor; nobody deletes them here.
+    std::vector<AccessibilityService*> mBoundServices;
+
     //SparseArray<std::vector<AccessibilityRequestPreparer>> mRequestPreparerLists;
     //IAccessibilityManagerClient.Stub mClient;
 private:
@@ -81,13 +88,23 @@ public:
 
     void sendAccessibilityEvent(AccessibilityEvent& event);
 
-#if 0
+    // --- In-process AccessibilityManagerService seam -------------------------
+    /** The system binds the service: registers it, recomputes the relevant
+     *  event types, flips the enabled state and fires onServiceConnected. */
+    void addAccessibilityService(AccessibilityService* service);
+    /** Unbind (disableSelf / service destructor); flips enabled off with the
+     *  last service gone. Idempotent. */
+    void removeAccessibilityService(AccessibilityService* service);
+    /** A bound service pushed a new info — refresh the event routing. */
+    void onServiceInfoChanged(AccessibilityService* service);
+    /** The enabled services providing the given feedback types. */
+    std::vector<AccessibilityServiceInfo> getEnabledAccessibilityServiceList(int feedbackTypeFlags);
+    /** All bound services get onInterrupt (AOSP manager.interrupt). */
     void interrupt();
+
+#if 0
     std::vector<ServiceInfo> getAccessibilityServiceList();
-
     std::vector<AccessibilityServiceInfo> getInstalledAccessibilityServiceList();
-
-    std::vector<AccessibilityServiceInfo> getEnabledAccessibilityServiceList( int feedbackTypeFlags);
 #endif
     void addAccessibilityStateChangeListener(const AccessibilityStateChangeListener& listener);
 

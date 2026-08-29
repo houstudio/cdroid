@@ -162,6 +162,11 @@ protected:
     Cairo::RefPtr<Canvas>getCanvas();
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
 public:
+    // The host of the accessibility-focused (virtual) view — the in-process
+    // AccessibilityService's FOCUS_ACCESSIBILITY query (AOSP goes through the
+    // interaction connection; here the window is the connection).
+    View* getAccessibilityFocusedHost() const { return mAccessibilityFocusedHost; }
+
     // Terminal focus-search resolver (public like AOSP's ViewRootImpl.focusSearch —
     // a ViewParent interface method). The Window IS the root view in CDROID
     // (mParent == nullptr), so the ViewGroup parent-chain ends here — this

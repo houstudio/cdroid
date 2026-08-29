@@ -520,6 +520,24 @@ bool ViewGroup::hasHoveredChild() const{
     return mFirstHoverTarget != nullptr;
 }
 
+// AOSP ViewGroup.onInitializeAccessibilityNodeInfoInternal: a container node
+// lists its (a11y-included) children as node ids, so the tree is walkable via
+// getChild(). With a provider the virtual tree replaces the real children.
+void ViewGroup::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
+    View::onInitializeAccessibilityNodeInfoInternal(info);
+    if (getAccessibilityNodeProvider() != nullptr) {
+        return;
+    }
+    if (mAttachInfo != nullptr) {
+        std::vector<View*> childrenForAccessibility;
+        addChildrenForAccessibility(childrenForAccessibility);
+        const size_t childrenForAccessibilityCount = childrenForAccessibility.size();
+        for (size_t i = 0; i < childrenForAccessibilityCount; i++) {
+            info.addChildUnchecked(childrenForAccessibility.at(i));
+        }
+    }
+}
+
 void ViewGroup::addChildrenForAccessibility(std::vector<View*>& outChildren){
     if (getAccessibilityNodeProvider() != nullptr) {
         return;

@@ -7031,11 +7031,17 @@ void View::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
 }
 
 AccessibilityNodeInfo* View::createAccessibilityNodeInfo() {
+    AccessibilityNodeInfo* info;
     if (mAccessibilityDelegate != nullptr) {
-        return mAccessibilityDelegate->createAccessibilityNodeInfo(*this);
+        info = mAccessibilityDelegate->createAccessibilityNodeInfo(*this);
     } else {
-        return createAccessibilityNodeInfoInternal();
+        info = createAccessibilityNodeInfoInternal();
     }
+    // AOSP ViewRootImpl seals a node when it marshals the reply — a node
+    // handed to an accessibility consumer is an immutable snapshot. Seal at
+    // the framework boundary (init ran while unsealed).
+    if (info != nullptr) info->setSealed(true);
+    return info;
 }
 
 AccessibilityNodeInfo* View::createAccessibilityNodeInfoInternal(){
@@ -7136,8 +7142,8 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     if (mTooltipInfo && mTooltipInfo->mTooltipText.size()) {
         info.setTooltipText(mTooltipInfo->mTooltipText);
         info.addAction((mTooltipInfo->mTooltipPopup == nullptr)
-                ? R::id::accessibilityActionShowTooltip/*AccessibilityNodeInfo::ACTION_SHOW_TOOLTIP*/
-                : R::id::accessibilityActionHideTooltip/*AccessibilityNodeInfo::ACTION_HIDE_TOOLTIP*/);
+                ? &AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP
+                : &AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP);
     }
     // TODO: These make sense only if we are in an AdapterView but all
     // views can be selected. Maybe from accessibility perspective
@@ -7163,7 +7169,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
         info.addAction(AccessibilityNodeInfo::ACTION_LONG_CLICK);
     }
     if (isContextClickable() && isEnabled()) {
-        info.addAction(R::id::accessibilityActionContextClick/*AccessibilityNodeInfo::ACTION_CONTEXT_CLICK*/);
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_CONTEXT_CLICK);
     }
     std::string text = getIterableTextForAccessibility();
     if (text.length()) {
@@ -7175,7 +7181,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
                | AccessibilityNodeInfo::MOVEMENT_GRANULARITY_WORD
                | AccessibilityNodeInfo::MOVEMENT_GRANULARITY_PARAGRAPH);
     }
-    info.addAction(R::id::accessibilityActionShowOnScreen/*AccessibilityNodeInfo::ACTION_SHOW_ON_SCREEN*/);
+    info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_ON_SCREEN);
     populateAccessibilityNodeInfoDrawingOrderInParent(info);
     info.setPaneTitle(mAccessibilityPaneTitle);
     info.setHeading(isAccessibilityHeading());
@@ -7198,8 +7204,8 @@ void View::populateAccessibilityNodeInfoDrawingOrderInParent(AccessibilityNodeIn
 
     while (viewAtDrawingLevel != parent) {
         ViewGroup* currentParent = viewAtDrawingLevel->getParent();
-        if (0/*!(currentParent instanceof ViewGroup)*/) {
-            // Should only happen for the Decor
+        if (currentParent == nullptr/*!(currentParent instanceof ViewGroup)*/) {
+            // Should only happen for the Decor (the root view: mParent is null)
             drawingOrderInParent = 0;
             break;
         } else {

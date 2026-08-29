@@ -6456,17 +6456,16 @@ void TextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event)
 void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
     View::onInitializeAccessibilityNodeInfoInternal(info);
     const bool isPassword =  hasPasswordTransformationMethod();
-#if 0
     info.setPassword(isPassword);
-    info.setText(getText());//getTextForAccessibility());
-    info.setHintText(mHint);
-    info.setShowingHintText(isShowingHint());
-    if (mBufferType == BufferType.EDITABLE) {
+    info.setText(getText().toUTF8());  // AOSP: getTextForAccessibility()
+    if (mHint != nullptr) info.setHintText(mHint->toUTF8());
+    if (mBufferType == BufferType::EDITABLE) {
         info.setEditable(true);
         if (isEnabled()) {
-            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_TEXT);
         }
     }
+#if 0
 
     if (mEditor != nullptr) {
         info.setInputType(mEditor->mInputType);

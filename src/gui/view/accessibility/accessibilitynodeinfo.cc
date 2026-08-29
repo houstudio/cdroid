@@ -1,7 +1,12 @@
 #include <view/accessibility/accessibilitynodeinfo.h>
+#include <functional>
 #include <view/accessibility/accessibilitywindowinfo.h>
+#include <view/accessibility/accessibilitynodeprovider.h>
 #include <view/view.h>
+#include <view/viewgroup.h>
 #include <core/bitset.h>
+#include <core/windowmanager.h>
+#include <widget/cdwindow.h>
 #include <utils/mathutils.h>
 #include <widget/internal_R.h>
 
@@ -21,6 +26,24 @@ int AccessibilityNodeInfo::getVirtualDescendantId(long accessibilityNodeId){
 
 int64_t AccessibilityNodeInfo::makeNodeId(int accessibilityViewId, int virtualDescendantId){
     return (int64_t(virtualDescendantId) << VIRTUAL_DESCENDANT_ID_SHIFT) | accessibilityViewId;
+}
+
+// In-process interaction "connection": AOSP round-trips a node id through
+// AccessibilityInteractionClient -> AMS -> the window's ViewRootImpl. With
+// everything in one process the round trip collapses to resolving the view id
+// against the live window list (the active window is walked first) and asking
+// the view (or its provider) for the node.
+static View* findHostViewAcrossWindows(int accessibilityViewId) {
+    View* found = nullptr;
+    WindowManager::getInstance().enumWindows([&](Window* window)->bool{
+        View* view = window->findViewByAccessibilityIdTraversal(accessibilityViewId);
+        if (view != nullptr) {
+            found = view;
+            return false;  // stop enumeration
+        }
+        return true;
+    });
+    return found;
 }
 
 AccessibilityNodeInfo::AccessibilityNodeInfo() {
@@ -44,21 +67,27 @@ void AccessibilityNodeInfo::setSource(View* root, int virtualDescendantId) {
 AccessibilityNodeInfo* AccessibilityNodeInfo::findFocus(int focus) {
     enforceSealed();
     enforceValidFocusType(focus);
-    if (!canPerformRequestOverConnection(mSourceNodeId)) {
+    Window* active = WindowManager::getInstance().getActiveWindow();
+    if (active == nullptr) {
         return nullptr;
     }
-    return nullptr;
-    //return AccessibilityInteractionClient.getInstance().findFocus(mConnectionId, mWindowId,mSourceNodeId, focus);
+    if (focus == FOCUS_ACCESSIBILITY) {
+        View* host = active->getAccessibilityFocusedHost();
+        return host != nullptr ? host->createAccessibilityNodeInfo() : nullptr;
+    }
+    View* focused = active->findFocus();
+    return focused != nullptr ? focused->createAccessibilityNodeInfo() : nullptr;
 }
 
 AccessibilityNodeInfo* AccessibilityNodeInfo::focusSearch(int direction) {
     enforceSealed();
     enforceValidFocusDirection(direction);
-    if (!canPerformRequestOverConnection(mSourceNodeId)) {
+    View* host = findHostViewAcrossWindows(getAccessibilityViewId(mSourceNodeId));
+    if (host == nullptr) {
         return nullptr;
     }
-    return nullptr;
-    //return AccessibilityInteractionClient.getInstance().focusSearch(mConnectionId, mWindowId,mSourceNodeId, direction);
+    View* next = host->focusSearch(direction);
+    return next != nullptr ? next->createAccessibilityNodeInfo() : nullptr;
 }
 
 int AccessibilityNodeInfo::getWindowId() const{
@@ -67,12 +96,8 @@ int AccessibilityNodeInfo::getWindowId() const{
 
 bool AccessibilityNodeInfo::refresh(Bundle* arguments, bool bypassCache) {
     enforceSealed();
-    if (!canPerformRequestOverConnection(mSourceNodeId)) {
-        return false;
-    }
-    AccessibilityNodeInfo* refreshedInfo = nullptr;
-    //AccessibilityInteractionClient client = AccessibilityInteractionClient.getInstance();
-    //refreshedInfo =client.findAccessibilityNodeInfoByAccessibilityId(mConnectionId, mWindowId, mSourceNodeId, bypassCache, 0, arguments);
+    (void)arguments; (void)bypassCache;  // extra-data refresh is a no-op in-process
+    AccessibilityNodeInfo* refreshedInfo = getNodeForAccessibilityId(mSourceNodeId);
     if (refreshedInfo == nullptr) {
         return false;
     }
@@ -115,14 +140,11 @@ AccessibilityNodeInfo* AccessibilityNodeInfo::getChild(int index) {
     if (mChildNodeIds.empty()) {
         return nullptr;
     }
-    if (!canPerformRequestOverConnection(mSourceNodeId)) {
-        return nullptr;
-    }
+    // No canPerformRequestOverConnection gate: that check demands a live binder
+    // connection id, which in-process nodes never carry — resolution itself is
+    // the connection (see findHostViewAcrossWindows).
     const long childId = mChildNodeIds.at(index);
-    //AccessibilityInteractionClient client = AccessibilityInteractionClient.getInstance();
-    /*return client.findAccessibilityNodeInfoByAccessibilityId(mConnectionId, mWindowId,
-            childId, false, FLAG_PREFETCH_DESCENDANTS, nullptr);*/
-    return nullptr;
+    return getNodeForAccessibilityId(childId);
 }
 
 void AccessibilityNodeInfo::addChild(View* child) {
@@ -297,43 +319,60 @@ int AccessibilityNodeInfo::getMovementGranularities() const{
 }
 
 bool AccessibilityNodeInfo::performAction(int action) {
-    enforceSealed();
-    if (!canPerformRequestOverConnection(mSourceNodeId)) {
-        return false;
-    }
-    return true;
-    //AccessibilityInteractionClient client = AccessibilityInteractionClient.getInstance();
-    //return client.performAccessibilityAction(mConnectionId, mWindowId, mSourceNodeId,action, nullptr);
+    return performAction(action, nullptr);
 }
 
 bool AccessibilityNodeInfo::performAction(int action, Bundle* arguments) {
     enforceSealed();
-    if (!canPerformRequestOverConnection(mSourceNodeId)) {
+    View* host = findHostViewAcrossWindows(getAccessibilityViewId(mSourceNodeId));
+    if (host == nullptr) {
         return false;
     }
-    return true;
-    //AccessibilityInteractionClient client = AccessibilityInteractionClient.getInstance();
-    //return client.performAccessibilityAction(mConnectionId, mWindowId, mSourceNodeId,action, arguments);
+    const int virtualId = getVirtualDescendantId(mSourceNodeId);
+    AccessibilityNodeProvider* provider = host->getAccessibilityNodeProvider();
+    if (provider != nullptr && virtualId != AccessibilityNodeProvider::HOST_VIEW_ID) {
+        return provider->performAction(virtualId, action, arguments);
+    }
+    return host->performAccessibilityAction(action, arguments);
 }
 
 std::vector<AccessibilityNodeInfo*> AccessibilityNodeInfo::findAccessibilityNodeInfosByText(const std::string& text) {
     enforceSealed();
-    if (!canPerformRequestOverConnection(mSourceNodeId)) {
-        return std::vector<AccessibilityNodeInfo*>();
+    std::vector<AccessibilityNodeInfo*> result;
+    View* host = findHostViewAcrossWindows(getAccessibilityViewId(mSourceNodeId));
+    if (host == nullptr) {
+        return result;
     }
-    return std::vector<AccessibilityNodeInfo*>();
-    //AccessibilityInteractionClient client = AccessibilityInteractionClient.getInstance();
-    //return client.findAccessibilityNodeInfosByText(mConnectionId, mWindowId, mSourceNodeId,text);
+    // AOSP searches the node subtree for text/contentDescription matches
+    // (indexOf >= 0); in-process the same walk runs against the live tree.
+    std::function<void(View*)> visit = [&](View* view) {
+        AccessibilityNodeInfo* info = view->createAccessibilityNodeInfo();
+        if (info != nullptr) {
+            const std::string nodeText = info->getText();
+            const std::string nodeDesc = info->getContentDescription();
+            if ((nodeText.length() && nodeText.find(text) != std::string::npos)
+                    || (nodeDesc.length() && nodeDesc.find(text) != std::string::npos)) {
+                result.push_back(info);
+            } else {
+                info->recycle();
+            }
+        }
+        ViewGroup* group = dynamic_cast<ViewGroup*>(view);
+        if (group != nullptr) {
+            for (int i = 0; i < group->getChildCount(); i++) {
+                visit(group->getChildAt(i));
+            }
+        }
+    };
+    visit(host);
+    return result;
 }
 
 std::vector<AccessibilityNodeInfo*> AccessibilityNodeInfo::findAccessibilityNodeInfosByViewId(const std::string& viewId) {
     enforceSealed();
-    if (!canPerformRequestOverConnection(mSourceNodeId)) {
-        return std::vector<AccessibilityNodeInfo*>();
-    }
+    // Deferred: matching "pkg:id/name" needs the reverse resource-name lookup
+    // (id -> entry name), which the Resources layer does not expose yet.
     return std::vector<AccessibilityNodeInfo*>();
-    //AccessibilityInteractionClient client = AccessibilityInteractionClient.getInstance();
-    //return client.findAccessibilityNodeInfosByViewId(mConnectionId, mWindowId, mSourceNodeId,viewId);
 }
 
 AccessibilityWindowInfo* AccessibilityNodeInfo::getWindow() {
@@ -1553,13 +1592,19 @@ std::string AccessibilityNodeInfo::toString() {
 }
 
 AccessibilityNodeInfo* AccessibilityNodeInfo::getNodeForAccessibilityId(long accessibilityId) {
-    if (!canPerformRequestOverConnection(accessibilityId)) {
+    View* host = findHostViewAcrossWindows(getAccessibilityViewId(accessibilityId));
+    if (host == nullptr) {
         return nullptr;
     }
-    return nullptr;
-    //AccessibilityInteractionClient client = AccessibilityInteractionClient.getInstance();
-    //return client.findAccessibilityNodeInfoByAccessibilityId(mConnectionId,mWindowId, accessibilityId,
-    //    false, FLAG_PREFETCH_PREDECESSORS | FLAG_PREFETCH_DESCENDANTS | FLAG_PREFETCH_SIBLINGS, nullptr);
+    const int virtualId = getVirtualDescendantId(accessibilityId);
+    AccessibilityNodeProvider* provider = host->getAccessibilityNodeProvider();
+    if (provider != nullptr) {
+        AccessibilityNodeInfo* node = provider->createAccessibilityNodeInfo(virtualId);
+        if (node != nullptr) node->setSealed(true);  // sealed snapshot (see View::createAccessibilityNodeInfo)
+        return node;
+    }
+    return virtualId == AccessibilityNodeProvider::HOST_VIEW_ID
+            ? host->createAccessibilityNodeInfo() : nullptr;
 }
 
 std::string AccessibilityNodeInfo::idToString(long accessibilityId) {
@@ -1583,70 +1628,70 @@ std::string AccessibilityNodeInfo::idItemToString(int item) {
 
 std::set<AccessibilityNodeInfo::AccessibilityAction*> AccessibilityNodeInfo::AccessibilityAction::sStandardActions;
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_FOCUS(AccessibilityNodeInfo::ACTION_FOCUS);
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_FOCUS(AccessibilityNodeInfo::ACTION_CLEAR_FOCUS);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_FOCUS(AccessibilityNodeInfo::ACTION_FOCUS);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_FOCUS(AccessibilityNodeInfo::ACTION_CLEAR_FOCUS);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SELECT (AccessibilityNodeInfo::ACTION_SELECT);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SELECT (AccessibilityNodeInfo::ACTION_SELECT);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_SELECTION (AccessibilityNodeInfo::ACTION_CLEAR_SELECTION);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_SELECTION (AccessibilityNodeInfo::ACTION_CLEAR_SELECTION);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK(AccessibilityNodeInfo::ACTION_CLICK);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK(AccessibilityNodeInfo::ACTION_CLICK);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_LONG_CLICK (AccessibilityNodeInfo::ACTION_LONG_CLICK);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_LONG_CLICK (AccessibilityNodeInfo::ACTION_LONG_CLICK);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_ACCESSIBILITY_FOCUS (AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_ACCESSIBILITY_FOCUS (AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_ACCESSIBILITY_FOCUS (AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_ACCESSIBILITY_FOCUS (AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_NEXT_AT_MOVEMENT_GRANULARITY (AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_NEXT_AT_MOVEMENT_GRANULARITY (AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY(AccessibilityNodeInfo::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY(AccessibilityNodeInfo::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_NEXT_HTML_ELEMENT (AccessibilityNodeInfo::ACTION_NEXT_HTML_ELEMENT);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_NEXT_HTML_ELEMENT (AccessibilityNodeInfo::ACTION_NEXT_HTML_ELEMENT);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_PREVIOUS_HTML_ELEMENT (AccessibilityNodeInfo::ACTION_PREVIOUS_HTML_ELEMENT);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_PREVIOUS_HTML_ELEMENT (AccessibilityNodeInfo::ACTION_PREVIOUS_HTML_ELEMENT);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD (AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD (AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD (AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD (AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_COPY (AccessibilityNodeInfo::ACTION_COPY);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_COPY (AccessibilityNodeInfo::ACTION_COPY);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_PASTE(AccessibilityNodeInfo::ACTION_PASTE);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_PASTE(AccessibilityNodeInfo::ACTION_PASTE);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_CUT(AccessibilityNodeInfo::ACTION_CUT);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_CUT(AccessibilityNodeInfo::ACTION_CUT);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_SELECTION(AccessibilityNodeInfo::ACTION_SET_SELECTION);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_SELECTION(AccessibilityNodeInfo::ACTION_SET_SELECTION);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_EXPAND(AccessibilityNodeInfo::ACTION_EXPAND);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_EXPAND(AccessibilityNodeInfo::ACTION_EXPAND);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_COLLAPSE(AccessibilityNodeInfo::ACTION_COLLAPSE);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_COLLAPSE(AccessibilityNodeInfo::ACTION_COLLAPSE);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_DISMISS (AccessibilityNodeInfo::ACTION_DISMISS);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_DISMISS (AccessibilityNodeInfo::ACTION_DISMISS);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_TEXT(AccessibilityNodeInfo::ACTION_SET_TEXT);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_TEXT(AccessibilityNodeInfo::ACTION_SET_TEXT);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_ON_SCREEN(R::id::accessibilityActionShowOnScreen);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_ON_SCREEN(R::id::accessibilityActionShowOnScreen);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION(R::id::accessibilityActionScrollToPosition);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION(R::id::accessibilityActionScrollToPosition);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP(R::id::accessibilityActionScrollUp);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP(R::id::accessibilityActionScrollUp);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_LEFT (R::id::accessibilityActionScrollLeft);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_LEFT (R::id::accessibilityActionScrollLeft);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN (R::id::accessibilityActionScrollDown);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN (R::id::accessibilityActionScrollDown);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_RIGHT(R::id::accessibilityActionScrollRight);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_RIGHT(R::id::accessibilityActionScrollRight);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_CONTEXT_CLICK(R::id::accessibilityActionContextClick);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_CONTEXT_CLICK(R::id::accessibilityActionContextClick);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS (R::id::accessibilityActionSetProgress);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS (R::id::accessibilityActionSetProgress);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_MOVE_WINDOW(R::id::accessibilityActionMoveWindow);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_MOVE_WINDOW(R::id::accessibilityActionMoveWindow);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP(R::id::accessibilityActionShowTooltip);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP(R::id::accessibilityActionShowTooltip);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP (R::id::accessibilityActionHideTooltip);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP (R::id::accessibilityActionHideTooltip);
 
 AccessibilityNodeInfo::AccessibilityAction::AccessibilityAction(int actionId, const std::string& label) {
     if ((actionId & ACTION_TYPE_MASK) == 0 && BitSet32::count(actionId) != 1) {

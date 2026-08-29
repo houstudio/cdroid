@@ -39,5 +39,6 @@ SET(VIEW_SOURCES
     view/accessibility/accessibilitywindowinfo.cc
     view/accessibility/accessibilitynodeinfo.cc
     view/accessibility/accessibilitymanager.cc
+    accessibilityservice/accessibilityservice.cc
 )
 

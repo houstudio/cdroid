@@ -1681,7 +1681,7 @@ void GridView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
      info.setCollectionInfo(collectionInfo);
 
      if (columnsCount > 0 || rowsCount > 0) {
-         info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION.getId());
+         info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION);
      }
 }
 
