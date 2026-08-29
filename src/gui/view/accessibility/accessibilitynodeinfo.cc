@@ -344,27 +344,31 @@ std::vector<AccessibilityNodeInfo*> AccessibilityNodeInfo::findAccessibilityNode
         return result;
     }
     // AOSP searches the node subtree for text/contentDescription matches
-    // (indexOf >= 0); in-process the same walk runs against the live tree.
-    std::function<void(View*)> visit = [&](View* view) {
-        AccessibilityNodeInfo* info = view->createAccessibilityNodeInfo();
-        if (info != nullptr) {
-            const std::string nodeText = info->getText();
-            const std::string nodeDesc = info->getContentDescription();
-            if ((nodeText.length() && nodeText.find(text) != std::string::npos)
-                    || (nodeDesc.length() && nodeDesc.find(text) != std::string::npos)) {
-                result.push_back(info);
-            } else {
-                info->recycle();
+    // (indexOf >= 0); walk NODES so provider virtual children participate too.
+    std::function<void(AccessibilityNodeInfo*, int)> visit =
+        [&](AccessibilityNodeInfo* node, int depth) {
+            if (node == nullptr || depth > 20) return;
+            const std::string nodeText = node->getText();
+            const std::string nodeDesc = node->getContentDescription();
+            const bool match = (nodeText.length() && nodeText.find(text) != std::string::npos)
+                    || (nodeDesc.length() && nodeDesc.find(text) != std::string::npos);
+            // Post-order: the child list must stay valid while descending —
+            // recycle non-matches only after their subtree was walked.
+            for (int i = 0; i < node->getChildCount(); i++) {
+                visit(node->getChild(i), depth + 1);
             }
-        }
-        ViewGroup* group = dynamic_cast<ViewGroup*>(view);
-        if (group != nullptr) {
-            for (int i = 0; i < group->getChildCount(); i++) {
-                visit(group->getChildAt(i));
+            if (match) {
+                node->setSealed(true);  // sealed snapshot at the boundary
+                result.push_back(node);
+            } else if (node != this) {
+                node->recycle();
             }
-        }
-    };
-    visit(host);
+        };
+    // Walk a fresh root (this node may be a leaf); children resolve live.
+    AccessibilityNodeInfo* root = getNodeForAccessibilityId(mSourceNodeId);
+    if (root != nullptr) {
+        visit(root, 0);
+    }
     return result;
 }
 
@@ -1722,6 +1726,8 @@ AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityA
 
 AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_MOVE_WINDOW(R::id::accessibilityActionMoveWindow);
 
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_UP(R::id::accessibilityActionPageUp);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_DOWN(R::id::accessibilityActionPageDown);
 AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP(R::id::accessibilityActionShowTooltip);
 
 AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP (R::id::accessibilityActionHideTooltip);

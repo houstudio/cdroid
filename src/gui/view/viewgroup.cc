@@ -2866,9 +2866,11 @@ bool ViewGroup::requestSendAccessibilityEvent(View* child, AccessibilityEvent& e
     if (!propagate) {
         return false;
     }
-    const bool rc= mParent->requestSendAccessibilityEvent(this, event);
-    AccessibilityManager::getInstance(mContext).sendAccessibilityEvent(event);
-    return true;
+    // AOSP bubbles to the parent and returns ITS result — the terminal
+    // ViewRootImpl (CDROID: Window) sends to the manager. The direct send
+    // here was a port addition: with recycle-on-every-exit it double-sent
+    // (and double-recycled) every event ("Already in the pool").
+    return mParent->requestSendAccessibilityEvent(this, event);
 }
 
 bool ViewGroup::onRequestSendAccessibilityEvent(View* child, AccessibilityEvent& event){

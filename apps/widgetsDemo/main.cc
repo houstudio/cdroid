@@ -11,6 +11,7 @@
 #include <core/handler.h>
 #include <core/looper.h>
 #include <accessibilityservice/accessibilityservice.h>
+#include <app/uiautomation.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/accessibility/accessibilityevent.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
@@ -168,6 +169,40 @@ void dumpNode(AccessibilityNodeInfo* node, int depth) {
     }
     node->recycle();  // AOSP consumer contract: nodes are recycled after use
 }
+// A11Y_DRIVE=1: after each page's dump, drive the page semantically — find
+// the first on-screen clickable, activate it with performAction(ACTION_CLICK)
+// and wait for the resulting TYPE_VIEW_CLICKED event through UiAutomation.
+// This is the xclick replacement: no coordinates, no window geometry.
+void driveStep(UiAutomation& automation) {
+    AccessibilityNodeInfo* root = automation.getRootInActiveWindow();
+    if (root == nullptr) return;
+    AccessibilityNodeInfo* target = nullptr;
+    std::function<void(AccessibilityNodeInfo*, int)> pick =
+        [&](AccessibilityNodeInfo* node, int depth) {
+            if (target != nullptr || node == nullptr || depth > 12) return;
+            Rect b; node->getBoundsInScreen(b);
+            if (b.left < 1280 && b.top < 720 && b.left + b.width > 0 && b.top + b.height > 0) {
+                const std::string text = node->getText();
+                if (node->isClickable() && text != "EN") { target = node; return; }
+            }
+            for (int i = 0; i < node->getChildCount() && target == nullptr; i++) {
+                pick(node->getChild(i), depth + 1);
+            }
+        };
+    pick(root, 0);
+    if (target == nullptr) { LOGD("A11YDRIVE no clickable on this page"); root->recycle(); return; }
+    const std::string label = target->getText();
+    AccessibilityNodeInfo* keepRoot = root;  (void)keepRoot;
+    AccessibilityEvent* hit = automation.executeAndWaitForEvent(
+        [target]() { target->performAction(AccessibilityNodeInfo::ACTION_CLICK); },
+        [](AccessibilityEvent& e) { return e.getEventType() == AccessibilityEvent::TYPE_VIEW_CLICKED; },
+        1500);
+    LOGD("A11YDRIVE click [%s] -> %s", label.c_str(), hit ? "event HIT" : "timeout");
+    if (hit) hit->recycle();
+    // NOTE: picked/target nodes ride the same pool as the walk; the pool
+    // recycles them on later obtains — the driver demo keeps it simple.
+}
+
 class DumpService : public AccessibilityService {
 public:
     void onServiceConnected() override {
@@ -194,12 +229,18 @@ public:
             LOGD("A11YTREE ==== page begin ====");
             dumpNode(root, 0);
             LOGD("A11YTREE ==== page end ====");
+            if (sDrive != nullptr) {
+                driveStep(*sDrive);
+            }
         });
     }
     void onInterrupt() override {}
+
+    static UiAutomation* sDrive;  // non-null under A11Y_DRIVE
 private:
     long mLastDumpMs = 0;
 };
+UiAutomation* DumpService::sDrive = nullptr;
 }// namespace
 
 int main(int argc, const char* argv[]) {
@@ -211,6 +252,11 @@ int main(int argc, const char* argv[]) {
     DumpService dumpService;
     if (getenv("A11Y_DUMP")) {
         AccessibilityManager::getInstance(&app).addAccessibilityService(&dumpService);
+    }
+    UiAutomation driveAutomation;
+    if (getenv("A11Y_DRIVE")) {
+        driveAutomation.connect();
+        DumpService::sDrive = &driveAutomation;
     }
     // The launcher activity starts itself from the manifest (App plays the
     // system side when no window is up).

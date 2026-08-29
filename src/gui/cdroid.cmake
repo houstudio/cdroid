@@ -63,6 +63,8 @@ if(ENABLE_DIALOGS OR ENABLE_SPINNER)
         app/alertdialoglayout.cc   # com.android.internal.widget.AlertDialogLayout
         app/buttonbarlayout.cc     # com.android.internal.widget.ButtonBarLayout
         app/dialog.cc
+        app/uiautomation.cc
+        app/autotest.cc
         app/dialogtitle.cc         # com.android.internal.widget.DialogTitle
         app/progressdialog.cc
     )

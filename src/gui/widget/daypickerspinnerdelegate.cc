@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/internal_R.h>
+#include <content/dateformat.h>
+#include <content/Locale.h>
 #include <widget/numberpicker.h>
 #include <widget/calendarview.h>
 #include <view/layoutinflater.h>
@@ -283,21 +285,46 @@ void DatePickerSpinnerDelegate::onRestoreInstanceState(Parcelable& state) {
     }
 }
 
-bool DatePickerSpinnerDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEvent&) {
-    // DEFERRED: accessibility.
+bool DatePickerSpinnerDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    onPopulateAccessibilityEvent(event);  // AOSP formats the selected date here
     return true;
 }
 
 bool DatePickerSpinnerDelegate::usingNumericMonths() const {
-    // DEFERRED: real check is Character.isDigit(mShortMonths[0].charAt(0)).
-    // No DateFormatSymbols -> months are numeric ("1".."12").
-    return true;
+    // AOSP: Character.isDigit(mShortMonths[Calendar.JANUARY].charAt(0)) — a
+    // locale whose month names start with a digit reports all-numeric dates.
+    return !mShortMonths.empty() && !mShortMonths[0].empty()
+            && isdigit((unsigned char)mShortMonths[0][0]);
 }
 
 void DatePickerSpinnerDelegate::reorderSpinners() {
-    // DEFERRED: Android reorders spinners to the locale date format via
-    // android.text.format.DateFormat. CDROID has no DateFormat -- the inflated
-    // layout's default order is kept. TODO: accept a date-format order attr.
+    mSpinners->removeAllViews();
+    // We use numeric spinners for year and day, but textual months. Ask the
+    // pattern generator what order the user's locale uses for that
+    // combination (AOSP b/7207103).
+    const std::string pattern = DateFormat::getBestDateTimePattern(
+            Locale::getDefault(), "yyyyMMMdd");
+    const std::array<char, 3> order = DateFormat::getDateFormatOrder(pattern);
+    const int spinnerCount = order.size();
+    for (int i = 0; i < spinnerCount; i++) {
+        switch (order[i]) {
+        case 'd':
+            mSpinners->addView(mDaySpinner);
+            setImeOptions(mDaySpinner, spinnerCount, i);
+            break;
+        case 'M':
+            mSpinners->addView(mMonthSpinner);
+            setImeOptions(mMonthSpinner, spinnerCount, i);
+            break;
+        case 'y':
+            mSpinners->addView(mYearSpinner);
+            setImeOptions(mYearSpinner, spinnerCount, i);
+            break;
+        default:
+            LOGE("Unexpected date format order char '%c' from pattern %s",
+                 order[i], pattern.c_str());
+        }
+    }
 }
 
 bool DatePickerSpinnerDelegate::parseDate(const std::string& date, Calendar& outDate) {
@@ -380,8 +407,19 @@ void DatePickerSpinnerDelegate::updateCalendarView() {
     mCalendarView->setDate(mCurrentDate.getTimeInMillis(), false, false);
 }
 
+// AOSP DatePickerSpinnerDelegate.onPopulateAccessibilityEvent: the selected
+// date, formatted with the locale's short month, joins the event text.
+void DatePickerSpinnerDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    const std::string month = usingNumericMonths()
+            ? std::to_string(getMonth() + 1)
+            : (mShortMonths.empty() ? std::to_string(getMonth() + 1) : mShortMonths[getMonth()]);
+    char buf[64];
+    snprintf(buf, sizeof buf, "%s %d, %d", month.c_str(), getDayOfMonth(), getYear());
+    event.getText().push_back(buf);
+}
+
 void DatePickerSpinnerDelegate::notifyDateChanged() {
-    // DEFERRED: mDelegator->sendAccessibilityEvent(TYPE_VIEW_SELECTED).
+    mDelegator->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
     if (mOnDateChangedListener) {
         mOnDateChangedListener(*mDelegator, getYear(), getMonth(), getDayOfMonth());
     }
@@ -395,11 +433,28 @@ void DatePickerSpinnerDelegate::setImeOptions(NumberPicker*, int, int) {
 }
 
 void DatePickerSpinnerDelegate::setContentDescriptions() {
-    // DEFERRED: accessibility content descriptions.
+    // Day
+    trySetContentDescription(mDaySpinner, cdroid::R::id::increment,
+            internal::R::string::date_picker_increment_day_button);
+    trySetContentDescription(mDaySpinner, cdroid::R::id::decrement,
+            internal::R::string::date_picker_decrement_day_button);
+    // Month
+    trySetContentDescription(mMonthSpinner, cdroid::R::id::increment,
+            internal::R::string::date_picker_increment_month_button);
+    trySetContentDescription(mMonthSpinner, cdroid::R::id::decrement,
+            internal::R::string::date_picker_decrement_month_button);
+    // Year
+    trySetContentDescription(mYearSpinner, cdroid::R::id::increment,
+            internal::R::string::date_picker_increment_year_button);
+    trySetContentDescription(mYearSpinner, cdroid::R::id::decrement,
+            internal::R::string::date_picker_decrement_year_button);
 }
 
-void DatePickerSpinnerDelegate::trySetContentDescription(View*, int, int) {
-    // DEFERRED: accessibility content descriptions.
+void DatePickerSpinnerDelegate::trySetContentDescription(View* root, int viewId, int contDescResId) {
+    View* target = root->findViewById(viewId);
+    if (target != nullptr) {
+        target->setContentDescription(mContext->getString(contDescResId));
+    }
 }
 
 void DatePickerSpinnerDelegate::updateInputState() {

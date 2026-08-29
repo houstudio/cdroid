@@ -366,6 +366,15 @@ int Spinner::getBaseline(){
     }
 }
 
+// AOSP Spinner.onInitializeAccessibilityNodeInfoInternal: a Spinner with an
+// adapter opens a popup (dropdown or dialog) — announce that capability.
+void Spinner::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    AbsSpinner::onInitializeAccessibilityNodeInfoInternal(info);
+    if (mAdapter != nullptr) {
+        info.setCanOpenPopup(true);
+    }
+}
+
 View* Spinner::makeView(int position, bool addChild) {
     View* child;
     if (!mDataChanged) {

@@ -118,6 +118,7 @@ public:
     static constexpr int  MODE_DIALOG   = 0;
     static constexpr int  MODE_DROPDOWN = 1;
 private:
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     int  mGravity;
     Context*mPopupContext;
     // true when mPopupContext is a ContextThemeWrapper we new'd (popupTheme);

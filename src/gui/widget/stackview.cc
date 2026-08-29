@@ -1045,24 +1045,24 @@ std::string StackView::getAccessibilityClassName() const{
 void StackView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
     AdapterViewAnimator::onInitializeAccessibilityNodeInfoInternal(info);
     info.setScrollable(getChildCount() > 1);
-    /*if (isEnabled()) {
+    if (isEnabled()) {
         if (getDisplayedChild() < getChildCount() - 1) {
-            info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_SCROLL_FORWARD);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD);
             if (mStackMode == ITEMS_SLIDE_UP) {
-                info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_PAGE_DOWN);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_DOWN);
             } else {
-                info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_PAGE_UP);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_UP);
             }
         }
         if (getDisplayedChild() > 0) {
-            info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_SCROLL_BACKWARD);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD);
             if (mStackMode == ITEMS_SLIDE_UP) {
-                info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_PAGE_UP);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_UP);
             } else {
-                info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_PAGE_DOWN);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_DOWN);
             }
         }
-    }*/
+    }
 }
 
 bool StackView::goForward() {
@@ -1095,20 +1095,20 @@ bool StackView::performAccessibilityActionInternal(int action, Bundle& arguments
     case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD: {
         return goBackward();
     }
-    /*case R.id.accessibilityActionPageUp: {
+    case R::id::accessibilityActionPageUp: {
         if (mStackMode == ITEMS_SLIDE_UP) {
             return goBackward();
         } else {
             return goForward();
         }
     }
-    case R.id.accessibilityActionPageDown: {
+    case R::id::accessibilityActionPageDown: {
         if (mStackMode == ITEMS_SLIDE_UP) {
             return goForward();
         } else {
             return goBackward();
         }
-    }*/
+    }
     }
     return false;
 }

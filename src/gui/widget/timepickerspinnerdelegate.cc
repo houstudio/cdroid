@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/internal_R.h>
+#include <content/dateformat.h>
 #include <widget/timepickerspinnerdelegate.h>
 #include <text/format/dateutils.h>
 #include <widget/framework_styleable.h>
@@ -158,21 +159,48 @@ bool TimePickerSpinnerDelegate::validateInput() {
 }
 
 void TimePickerSpinnerDelegate::getHourFormatData() {
-    // DEFERRED: android.text.format.DateFormat.getBestDateTimePattern not ported.
-    // Default to a 24-hour, two-digit style; updateHourControl uses mIs24HourView too.
-    mHourFormat = 'H';
-    mHourWithTwoDigit = true;
+    const std::string bestDateTimePattern = DateFormat::getBestDateTimePattern(
+            mLocale, mIs24HourView ? "Hm" : "hm");
+    const size_t lengthPattern = bestDateTimePattern.length();
+    mHourWithTwoDigit = false;
+    // Check if the returned pattern is single or double 'H', 'h', 'K', 'k' —
+    // we also save the hour format that we found (AOSP).
+    for (size_t i = 0; i < lengthPattern; i++) {
+        const char c = bestDateTimePattern[i];
+        if (c == 'H' || c == 'h' || c == 'K' || c == 'k') {
+            mHourFormat = c;
+            if (i + 1 < lengthPattern && c == bestDateTimePattern[i + 1]) {
+                mHourWithTwoDigit = true;
+            }
+            break;
+        }
+    }
 }
 
 bool TimePickerSpinnerDelegate::isAmPmAtStart() {
-    // DEFERRED: needs DateFormat; assume am/pm at end.
-    return false;
+    const std::string bestDateTimePattern = DateFormat::getBestDateTimePattern(
+            mLocale, "hm" /* skeleton */);
+    return !bestDateTimePattern.empty() && bestDateTimePattern[0] == 'a';
 }
 
 void TimePickerSpinnerDelegate::setDividerText() {
-    // DEFERRED: locale time separator via DateFormat; default ':'.
+    const std::string bestDateTimePattern = DateFormat::getBestDateTimePattern(
+            mLocale, mIs24HourView ? "Hm" : "hm");
+    std::string separatorText = ":";
+    size_t hourIndex = bestDateTimePattern.rfind('H');
+    if (hourIndex == std::string::npos) {
+        hourIndex = bestDateTimePattern.rfind('h');
+    }
+    if (hourIndex != std::string::npos) {
+        const size_t minuteIndex = bestDateTimePattern.find('m', hourIndex + 1);
+        if (minuteIndex == std::string::npos) {
+            separatorText = std::string(1, bestDateTimePattern[hourIndex + 1]);
+        } else {
+            separatorText = bestDateTimePattern.substr(hourIndex + 1, minuteIndex - hourIndex - 1);
+        }
+    }
     if (mDivider != nullptr) {
-        mDivider->setText(":");
+        mDivider->setText(separatorText);
     }
 }
 
@@ -292,8 +320,8 @@ void TimePickerSpinnerDelegate::onRestoreInstanceState(Parcelable& state) {
     }
 }
 
-bool TimePickerSpinnerDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEvent&) {
-    // DEFERRED: accessibility.
+bool TimePickerSpinnerDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    onPopulateAccessibilityEvent(event);  // AOSP formats the selected time here
     return true;
 }
 

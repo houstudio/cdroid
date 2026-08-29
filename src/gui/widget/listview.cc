@@ -2915,7 +2915,7 @@ void ListView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
     const int rowsCount = getCount();
     const int selectionMode = getSelectionModeForAccessibility();
     AccessibilityNodeInfo::CollectionInfo* collectionInfo = AccessibilityNodeInfo::CollectionInfo::obtain(
-            rowsCount, 1, false, selectionMode);
+            -1, -1, false, selectionMode);  // 1-D list: unknown rows/columns (AOSP)
     info.setCollectionInfo(collectionInfo);
 
     if (rowsCount > 0) {
@@ -2930,7 +2930,8 @@ bool ListView::performAccessibilityActionInternal(int action, Bundle* arguments)
 
     switch (action) {
     case R::id::accessibilityActionScrollToPosition: {
-        const  int row = 0;//TODO arguments.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, -1);
+        const int row = arguments != nullptr
+                ? arguments->getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, -1) : -1;
         const int position = std::min(row, getCount() - 1);
         if (row >= 0) {
             // The accessibility service gets data asynchronously, so

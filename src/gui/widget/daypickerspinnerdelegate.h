@@ -88,6 +88,7 @@ public:
     void onRestoreInstanceState(Parcelable& state)override;
 
     bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event)override;
+    void onPopulateAccessibilityEvent(AccessibilityEvent& event)override;
 protected:
     // Base's setCurrentLocale is protected non-virtual; this shadows it to
     // refresh the spinner labels on locale change.

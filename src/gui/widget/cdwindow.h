@@ -43,6 +43,10 @@ protected:
     };
 private:
     class SendWindowContentChangedAccessibilityEvent;
+    // Liveness guard for the accessibility-state listener registered on the
+    // (static, longer-lived) AccessibilityManager: the manager fires listeners
+    // at exit-time service unregistration, after windows may be gone.
+    std::shared_ptr<bool> mA11yListenerAlive;
     friend SendWindowContentChangedAccessibilityEvent;
     bool mInLayout;
     bool mHandingLayoutInLayoutRequest;

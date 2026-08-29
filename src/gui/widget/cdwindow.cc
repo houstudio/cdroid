@@ -141,7 +141,10 @@ void Window::initWindow(){
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
     setKeyboardNavigationCluster(true);
-    AccessibilityManager::AccessibilityStateChangeListener acsl([this](bool enabled) {
+    mA11yListenerAlive = std::make_shared<bool>(true);
+    AccessibilityManager::AccessibilityStateChangeListener acsl(
+            [this, alive = mA11yListenerAlive](bool enabled) {
+        if (!*alive) return;  // the window is gone (exit-time unbind order)
         LOGD("%d",enabled);
         if (enabled||1) {
             if (mAttachInfo->mHasWindowFocus||1) {
@@ -160,6 +163,7 @@ void Window::initWindow(){
 }
 
 Window::~Window(){
+    *mA11yListenerAlive = false;  // detach the manager's state listener
     if (mOwnsContext) delete mContext;   // the auto-wrapped ContextThemeWrapper
     if (mActionMode != nullptr) {
         ActionMode* mode = mActionMode;

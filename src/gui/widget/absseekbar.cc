@@ -776,11 +776,13 @@ bool AbsSeekBar::performAccessibilityActionInternal(int action, Bundle* argument
          if (!canUserSetProgress()) {
              return false;
          }
-         if (arguments == nullptr /*|| !arguments.containsKey(AccessibilityNodeInfo::ACTION_ARGUMENT_PROGRESS_VALUE)*/) {
+         if (arguments == nullptr || !arguments->containsKey(
+                     AccessibilityNodeInfo::ACTION_ARGUMENT_PROGRESS_VALUE)) {
              return false;
          }
-         //const float value = arguments.getFloat( AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE);
-         return false;//setProgressInternal((int) value, true, true);
+         const float value = arguments->getFloat(
+                 AccessibilityNodeInfo::ACTION_ARGUMENT_PROGRESS_VALUE);
+         return setProgressInternal((int) value, true, true);
      }
      case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD:
      case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD: {

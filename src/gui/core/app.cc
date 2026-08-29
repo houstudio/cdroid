@@ -66,6 +66,7 @@
 #include <core/cxxopts.h>
 #include <core/inputeventsource.h>
 #include <core/windowmanager.h>
+#include <app/autotest.h>
 #include <core/inputmethodmanager.h>
 #include <widget/internal_R.h>
 
@@ -82,7 +83,8 @@ namespace cdroid{
 
 App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     int alpha = 255, rotation = 0, density = 0, frameDelay = 0;
-    bool debug= false,showFPS = false, help = false;
+    bool debug= false,showFPS = false, help = false, autoTest = false;
+    std::string testScript;
     std::string logo, monkey, record, datapath;
     LogParseModules(argc,argv);
     mInst = this;
@@ -98,7 +100,11 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         ("l,logo","show logo",cxxopts::value<std::string>(logo))
         ("m,monkey","events playback path",cxxopts::value<std::string>(monkey))
         ("r,record","events record path",cxxopts::value<std::string>(record))
-        ("data","data directory",cxxopts::value<std::string>(datapath));
+        ("data","data directory",cxxopts::value<std::string>(datapath))
+        ("auto-test","a11y semantic UI sweep (clicks every on-screen clickable and verifies events)",
+         cxxopts::value<bool>(autoTest))
+        ("test-script","line-based a11y test script (wait/click/assert/dump; exit code = failures)",
+         cxxopts::value<std::string>(testScript));
 
     Looper::prepareMainLooper();
     options.allow_unrecognised_options();
@@ -159,6 +165,21 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     // runnable fires once exec()'s loop is turning, after anything main() set
     // up synchronously. Skipped when a window is already up or the manifest
     // declares no activity (app-driven windows keep working as before).
+    // --auto-test (or AUTOTEST=1): the App-level semantic sweep driver — any
+    // app gets a coordinate-free smoke test over the a11y node tree.
+    if (!testScript.empty() || getenv("TEST_SCRIPT")) {
+        const std::string scriptPath = !testScript.empty()
+                ? testScript : std::string(getenv("TEST_SCRIPT"));
+        static Handler sAutoTestHandler(Looper::getMainLooper());
+        sAutoTestHandler.postDelayed([scriptPath]() {
+            UiAutoTest::getInstance().runScript(scriptPath);
+        }, 3000);  // let the launcher window come up first
+    } else if (autoTest || getenv("AUTOTEST")) {
+        static Handler sAutoTestHandler(Looper::getMainLooper());
+        sAutoTestHandler.postDelayed([]() {
+            UiAutoTest::getInstance().start();
+        }, 3000);  // let the launcher window come up first
+    }
     static Handler sLaunchHandler(Looper::getMainLooper());
     sLaunchHandler.post([this](){
         std::vector<Window*> windows;

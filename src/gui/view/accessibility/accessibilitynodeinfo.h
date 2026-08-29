@@ -658,6 +658,10 @@ public:
 
     static AccessibilityAction ACTION_MOVE_WINDOW;
 
+    static AccessibilityAction ACTION_PAGE_UP;
+
+    static AccessibilityAction ACTION_PAGE_DOWN;
+
     static AccessibilityAction ACTION_SHOW_TOOLTIP;
 
     static AccessibilityAction ACTION_HIDE_TOOLTIP;
