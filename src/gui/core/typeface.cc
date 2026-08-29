@@ -48,6 +48,9 @@
 #include <minikin/Measurement.h>
 #include <minikin/MeasuredText.h>
 #include <minikin/SystemFonts.h>
+#include <core/canvas.h>
+#include <unordered_map>
+#include <cstdlib>
 namespace cdroid {
 
 class FullMinikinFont : public minikin::MinikinFont {
@@ -1014,6 +1017,143 @@ int Typeface::loadFaceFromResource(cdroid::Context* context) {
     }
     LOGI("%d font loaded from resource (blob/tmp+mmap)", loaded);
     return loaded;
+}
+
+// ---------------------------------------------------------------------------
+// CBDT/sbix color glyphs — the Skia-equivalent layer. cairo only renders
+// glyphs as A8 alpha masks, so a CBDT font through show_glyphs comes out
+// monochrome (or blank: bitmap-only faces reject cairo's scalable size
+// request and FT_Load_Glyph fails with Unimplemented_Feature). Like Android's
+// SkScalerContext we load the glyph with FT_LOAD_COLOR on a dedicated face
+// and blit the BGRA bitmap as a scaled image; non-color glyphs stay on the
+// normal mask path. The FreeType calls live here (not in paint.cc) so the
+// cdtext static library keeps its symbol surface unchanged.
+// ---------------------------------------------------------------------------
+
+// Converted color-glyph surfaces, cached per (font, glyph): the strike pixels
+// never change, so the BGRA->premultiplied-ARGB32 conversion runs once.
+// Crude full eviction past the cap keeps memory bounded (136px glyphs ~74KB).
+static std::unordered_map<uint64_t, Cairo::RefPtr<Cairo::ImageSurface>>& colorGlyphCache() {
+    static std::unordered_map<uint64_t, Cairo::RefPtr<Cairo::ImageSurface>> cache;
+    return cache;
+}
+static constexpr size_t MAX_COLOR_GLYPH_CACHE = 256;
+
+// Dedicated FT_Face for color-bitmap loading, opened per font and cached for
+// the process. cairo's locked face carries request state cairo owns (and in
+// this build is additionally touched by a second FreeType instance pulled in
+// through the debug vcpkg deps), which reliably leaves CBDT loading broken.
+// A face of our own — bound to a strike right before each load — is immune.
+static std::unordered_map<int32_t, FT_Face>& colorFaceCache() {
+    static std::unordered_map<int32_t, FT_Face> cache;
+    return cache;
+}
+
+// Memory-backed fonts (PAK @font) hand us a blob; keep our own copy so the
+// FT_Face outlives the MinikinFont that provided it.
+static std::unordered_map<int32_t, std::vector<uint8_t>>& colorFaceBlobs() {
+    static std::unordered_map<int32_t, std::vector<uint8_t>> blobs;
+    return blobs;
+}
+
+static FT_Face colorFaceFor(const minikin::MinikinFont* font) {
+    if (font == nullptr) return nullptr;
+    const int32_t id = font->GetSourceId();
+    auto& cache = colorFaceCache();
+    auto it = cache.find(id);
+    if (it != cache.end()) return it->second;
+
+    static FT_Library lib = nullptr;  // process-lifetime, never freed
+    if (lib == nullptr) FT_Init_FreeType(&lib);
+
+    FT_Face face = nullptr;
+    if (!font->GetFontPath().empty()) {
+        FT_New_Face(lib, font->GetFontPath().c_str(), font->GetFontIndex(), &face);
+    }
+    if (face == nullptr && font->GetFontData() != nullptr && font->GetFontSize() > 0) {
+        auto blobIt = colorFaceBlobs().emplace(id,
+                std::vector<uint8_t>((const uint8_t*)font->GetFontData(),
+                                     (const uint8_t*)font->GetFontData() + font->GetFontSize()));
+        FT_New_Memory_Face(lib, blobIt.first->second.data(),
+                           (FT_Long)blobIt.first->second.size(), font->GetFontIndex(), &face);
+    }
+    if (face == nullptr || !FT_HAS_COLOR(face)) {
+        if (face != nullptr) FT_Done_Face(face);
+        cache.emplace(id, nullptr);  // negative entry: not a color font
+        return nullptr;
+    }
+    cache.emplace(id, face);
+    return face;
+}
+
+static Cairo::RefPtr<Cairo::ImageSurface> colorGlyphSurface(int32_t fontId, FT_UInt glyphIndex,
+        FT_Face face) {
+    const uint64_t key = ((uint64_t)(uint32_t)fontId << 32) | glyphIndex;
+    auto& cache = colorGlyphCache();
+    auto it = cache.find(key);
+    if (it != cache.end()) return it->second;
+
+    const FT_Bitmap& bmp = face->glyph->bitmap;
+    auto surf = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,
+                                            bmp.width, bmp.rows);
+    const uint8_t* src = bmp.buffer;  // BGRA, straight (non-premultiplied) alpha
+    uint8_t* dst = surf->get_data();
+    for (unsigned row = 0; row < bmp.rows; row++) {
+        for (unsigned col = 0; col < bmp.width; col++) {
+            const uint8_t b = src[0], g = src[1], r = src[2], a = src[3];
+            *dst++ = (uint8_t)((b * a + 127) / 255);  // premultiplied B
+            *dst++ = (uint8_t)((g * a + 127) / 255);
+            *dst++ = (uint8_t)((r * a + 127) / 255);
+            *dst++ = a;
+            src += 4;
+        }
+        src += bmp.pitch - (int)(bmp.width * 4);
+    }
+    surf->mark_dirty();
+    if (cache.size() >= MAX_COLOR_GLYPH_CACHE) cache.clear();
+    cache.emplace(key, surf);
+    return surf;
+}
+
+bool drawColorGlyph(const minikin::MinikinFont* font, Canvas& c, uint32_t glyphIndex,
+        double glyphX, double glyphY, double textSize) {
+    FT_Face face = colorFaceFor(font);
+    if (face == nullptr) return false;
+    // Bitmap-only (CBDT) faces cannot honor a scalable size request: FreeType
+    // keeps the strike metrics but stays in scalable load mode, and
+    // FT_Load_Glyph then fails with Unimplemented_Feature (it refuses to
+    // scale bitmap strikes). Bind the size to the strike closest to the text
+    // size before loading.
+    if (!(face->face_flags & FT_FACE_FLAG_SCALABLE) && face->num_fixed_sizes > 0) {
+        int best = 0;
+        long bestDiff = labs((long)face->available_sizes[0].height - (long)textSize);
+        for (int i = 1; i < face->num_fixed_sizes; i++) {
+            const long diff = labs((long)face->available_sizes[i].height - (long)textSize);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                best = i;
+            }
+        }
+        FT_Select_Size(face, best);
+    }
+    if (FT_Load_Glyph(face, glyphIndex, FT_LOAD_COLOR) != 0) return false;
+    const FT_GlyphSlot slot = face->glyph;
+    if (slot->format != FT_GLYPH_FORMAT_BITMAP
+            || slot->bitmap.pixel_mode != FT_PIXEL_MODE_BGRA) {
+        return false;
+    }
+    // The bitmap is at the strike's pixel size; scale to the requested size.
+    const double strike = face->size->metrics.y_ppem;
+    const double scale = (strike > 0) ? textSize / strike : 1.0;
+    auto surf = colorGlyphSurface(font->GetSourceId(), glyphIndex, face);
+    c.save();
+    c.translate(glyphX + slot->bitmap_left * scale,
+                glyphY - slot->bitmap_top * scale);
+    c.scale(scale, scale);
+    c.set_source(surf, 0.0, 0.0);
+    c.paint();
+    c.restore();
+    return true;
 }
 
 }

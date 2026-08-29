@@ -30,6 +30,7 @@ namespace minikin{
     class MinikinPaint;
 }
 namespace cdroid{
+class Canvas;
 class Context;
 class FontFamily{};
 class Typeface{
@@ -169,6 +170,13 @@ public:
         return mSlant;
     }
 };
+
+// CBDT/sbix color-glyph blit (impl in typeface.cc; used by Paint::drawTextRun
+// to render color bitmap emoji as scaled images instead of cairo alpha masks).
+// Returns false when the glyph is not a color bitmap and must take the normal
+// glyph-mask path.
+bool drawColorGlyph(const minikin::MinikinFont* font, Canvas& c, uint32_t glyphIndex,
+        double glyphX, double glyphY, double textSize);
 
 }
 

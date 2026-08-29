@@ -377,6 +377,7 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
     default: break;
     }
     std::shared_ptr<const minikin::Font> currentFontRef = nullptr;
+    const minikin::MinikinFont* currentMinikinFont = nullptr;
     Cairo::RefPtr<Cairo::FtScaledFont> currentCairoFontFace = nullptr;
     size_t glyphIdx=0;
     if (mShader) {
@@ -390,10 +391,10 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
         if (glyphFontRef != currentFontRef) {
             currentFontRef = glyphFontRef;
             // 从 Font 获取底层的 MinikinFont
-            const minikin::MinikinFont* minikinFont = glyphFontRef->typeface().get();
+            currentMinikinFont = glyphFontRef->typeface().get();
             if (mTypeface != nullptr && mMinikinPaint != nullptr) {
                 // 使用 Typeface::getScaledFont，传入布局中实际使用的 MinikinFont
-                auto scaledFont = mTypeface->getScaledFont(*mMinikinPaint, minikinFont);
+                auto scaledFont = mTypeface->getScaledFont(*mMinikinPaint, currentMinikinFont);
                 currentCairoFontFace = std::dynamic_pointer_cast<Cairo::FtScaledFont>(scaledFont);
                 if (currentCairoFontFace) {
                     c.set_scaled_font(currentCairoFontFace);
@@ -416,7 +417,17 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
             cairoGlyphs.push_back(glyph);
             glyphIdx++;
         }
-        c.show_glyphs(cairoGlyphs);
+        // Color bitmap glyphs (CBDT/sbix) cannot ride cairo's alpha-mask path:
+        // blit those as scaled images, keep the rest on show_glyphs. The
+        // FreeType side lives in typeface.cc (impl note there).
+        std::vector<cairo_glyph_t> maskGlyphs;
+        for (const cairo_glyph_t& glyph : cairoGlyphs) {
+            if (!drawColorGlyph(currentMinikinFont, c, glyph.index,
+                                glyph.x, glyph.y, mMinikinPaint->size)) {
+                maskGlyphs.push_back(glyph);
+            }
+        }
+        if (!maskGlyphs.empty()) c.show_glyphs(maskGlyphs);
     }
 }
 
