@@ -151,6 +151,11 @@ namespace {
 void dumpNode(AccessibilityNodeInfo* node, int depth) {
     if (node == nullptr || depth > 24) return;
     Rect b; node->getBoundsInScreen(b);
+    // Screen-reader visibility filter: ViewPager keeps every page attached,
+    // so the tree always contains ALL pages — readers announce only what is
+    // on the display (AOSP isVisibleToUser semantics). Skip offscreen
+    // subtrees (children clip inside their parent).
+    if (b.left >= 1280 || b.top >= 720 || b.left + b.width <= 0 || b.top + b.height <= 0) return;
     LOGD("A11YTREE %*s%s text=[%s] clickable=%d checkable=%d enabled=%d bounds=(%d,%d %dx%d)",
          depth * 2, "", node->getClassName().c_str(), node->getText().c_str(),
          (int)node->isClickable(), (int)node->isCheckable(), (int)node->isEnabled(),
