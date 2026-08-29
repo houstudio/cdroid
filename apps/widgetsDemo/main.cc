@@ -7,6 +7,14 @@
  *********************************************************************************/
 #include <core/app.h>
 #include <cdroid.h>
+#include <core/systemclock.h>
+#include <core/handler.h>
+#include <core/looper.h>
+#include <accessibilityservice/accessibilityservice.h>
+#include <view/accessibility/accessibilitymanager.h>
+#include <view/accessibility/accessibilityevent.h>
+#include <view/accessibility/accessibilitynodeinfo.h>
+#include <cstdlib>
 #include <core/activityfactory.h>
 #include <content/LocaleList.h>
 #include <app/alertdialog.h>
@@ -136,10 +144,63 @@ public:
 
 REGISTER_ACTIVITY(WidgetsDemoActivity);
 
+// A11Y_DUMP=1: register a tree-dumping accessibility service and walk every
+// node of the active window on each page switch — combined with
+// WIDGETSDEMO_AUTOCYCLE this is a full-zoo a11y enumeration report.
+namespace {
+void dumpNode(AccessibilityNodeInfo* node, int depth) {
+    if (node == nullptr || depth > 24) return;
+    Rect b; node->getBoundsInScreen(b);
+    LOGD("A11YTREE %*s%s text=[%s] clickable=%d checkable=%d enabled=%d bounds=(%d,%d %dx%d)",
+         depth * 2, "", node->getClassName().c_str(), node->getText().c_str(),
+         (int)node->isClickable(), (int)node->isCheckable(), (int)node->isEnabled(),
+         b.left, b.top, b.width, b.height);
+    for (int i = 0; i < node->getChildCount(); i++) {
+        dumpNode(node->getChild(i), depth + 1);
+    }
+}
+class DumpService : public AccessibilityService {
+public:
+    void onServiceConnected() override {
+        AccessibilityServiceInfo info;
+        info.eventTypes = AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED
+                        | AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED;
+        info.feedbackType = AccessibilityServiceInfo::FEEDBACK_GENERIC;
+        setServiceInfo(info);
+        LOGD("A11YTREE service connected");
+    }
+    void onAccessibilityEvent(AccessibilityEvent& event) override {
+        // ViewPager paging fires content-changed, not window-state; throttle
+        // to one dump per 2s (AUTOCYCLE dwells 5s per page -> ~2 dumps each).
+        const long now = SystemClock::uptimeMillis();
+        if (now - mLastDumpMs < 2000) return;
+        mLastDumpMs = now;
+        // Dump OUT of the event dispatch stack: a page-switch event fires while
+        // the outgoing page is tearing down, and walking that tree dereferences
+        // views the adapter already freed. The posted dump runs a looper turn
+        // later, on the settled tree.
+        static Handler sDumpHandler(Looper::getMainLooper());
+        sDumpHandler.post([this]() {
+            AccessibilityNodeInfo* root = getRootInActiveWindow();
+            LOGD("A11YTREE ==== page begin ====");
+            dumpNode(root, 0);
+            LOGD("A11YTREE ==== page end ====");
+        });
+    }
+    void onInterrupt() override {}
+private:
+    long mLastDumpMs = 0;
+};
+}// namespace
+
 int main(int argc, const char* argv[]) {
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
     App app(argc, argv);
+    static DumpService dumpService;
+    if (getenv("A11Y_DUMP")) {
+        AccessibilityManager::getInstance(&app).addAccessibilityService(&dumpService);
+    }
     // The launcher activity starts itself from the manifest (App plays the
     // system side when no window is up).
     return app.exec();

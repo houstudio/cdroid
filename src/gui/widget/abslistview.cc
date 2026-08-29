@@ -284,13 +284,13 @@ void AbsListView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInf
     AdapterView::onInitializeAccessibilityNodeInfoInternal(info);
     if (isEnabled()) {
         if (canScrollUp()) {
-            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD.getId());
-            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP.getId());
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP);
             info.setScrollable(true);
         }
         if (canScrollDown()) {
-            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD.getId());
-            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN.getId());
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN);
             info.setScrollable(true);
         }
     }

@@ -5877,7 +5877,15 @@ bool View::isShown()const{
         }
         ViewGroup* parent = current->mParent;
         if (parent == nullptr) {
-            return (current->mViewFlags&VISIBILITY_MASK)==VISIBLE;
+            // AOSP: an unattached view (parent null mid-inflation) is NOT shown;
+            // the loop returns true only at the ViewRootImpl boundary. CDROID's
+            // tree root IS the Window (no ViewRootImpl wrapper), so the boundary
+            // is the attach state — a null parent means either a still-inflating
+            // partial tree (not attached: not shown) or the attached Window root.
+            // Returning the view's own visibility here (the old port) let
+            // construction-time events past the gate — TimePicker's delegate
+            // ctor crashed the pipeline with that door open.
+            return current->mAttachInfo != nullptr;
         }
         if (dynamic_cast<View*>(parent)==nullptr) {
             return true;

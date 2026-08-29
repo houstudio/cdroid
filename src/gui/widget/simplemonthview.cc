@@ -928,7 +928,7 @@ void SimpleMonthView::MonthViewTouchHelper::onPopulateNodeForVirtualView(int vir
 
     const bool isDayEnabled = mSMV->isDayEnabled(virtualViewId);
     if (isDayEnabled) {
-        node.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK.getId());
+        node.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK);
     }
 
     node.setEnabled(isDayEnabled);

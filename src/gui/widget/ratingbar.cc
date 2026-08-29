@@ -190,7 +190,7 @@ void RatingBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo&
     AbsSeekBar::onInitializeAccessibilityNodeInfoInternal(info);
 
     if (canUserSetProgress()) {
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS.getId());
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS);
     }
 }
 }

@@ -1273,7 +1273,10 @@ void SlidingPaneLayout::AccessibilityDelegate::copyNodeInfoNoChildren(Accessibil
     dest.setSelected(src.isSelected());
     dest.setLongClickable(src.isLongClickable());
 
-    dest.addAction(src.getActions());
+    // Copy the source's action OBJECTS: getActions() flattens them to an int
+    // bitmask, and modern (resource-id-valued) actions would trip addAction(int)'s
+    // standard-action mask check.
+    for (auto* action : src.getActionList()) dest.addAction(action);
 
     dest.setMovementGranularities(src.getMovementGranularities());
 }
