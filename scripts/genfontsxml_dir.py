@@ -3,17 +3,27 @@
 
 Usage: genfontsxml_dir.py <fontdir> <output.xml>
 
-Each file is scanned with fc-scan (family/weight/slant); files sharing a
-family merge into one <family> with per-file weight/style variants. The
-first family (tree order) also backs the sans-serif/serif/monospace aliases:
-an app's bundled fonts are its whole font world, matching the legacy
-FONTCONFIG_FILE confinement. fc weights (0..210; regular=80, bold=200) map
-to the AOSP 100..900 scale.
+Each file is scanned with fc-scan (family/weight/slant). Every FACE becomes
+its own <family> — the regular weight keeps the bare family name, other
+weights append the weight word ("Family Medium") — because the runtime
+registry resolves families by exact name and cannot select a weight inside
+a multi-weight family. The first family (tree order) also backs the
+sans-serif/serif/monospace aliases: an app's bundled fonts are its whole
+font world, matching the legacy FONTCONFIG_FILE confinement. fc weights
+(0..210; regular=80, bold=200) map to the AOSP 100..900 scale.
 """
 import subprocess, sys, glob, os, re
 
 def fc2aosp(w):
     return int(round((100 + (w / 210.0) * 800) / 100.0)) * 100
+
+# AOSP weight number -> style word for per-weight family names.
+WEIGHT_WORDS = {200: 'ExtraLight', 300: 'Light', 400: '', 500: 'Medium',
+                600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold', 900: 'Black'}
+
+def family_name(fam, weight):
+    word = WEIGHT_WORDS.get(weight, '')
+    return fam if not word else '%s %s' % (fam, word)
 
 def main():
     fontdir, out = sys.argv[1], sys.argv[2]
@@ -31,11 +41,14 @@ def main():
             fam = parts[0].split(',')[0].strip()
             if not fam:
                 continue
+            weight = fc2aosp(int(parts[1] or 80))
+            # one family per FACE (exact-name lookup at runtime cannot pick
+            # a weight inside a merged family)
+            fam = family_name(fam, weight)
             if fam not in families:
                 families[fam] = []
                 order.append(fam)
-            families[fam].append((fc2aosp(int(parts[1] or 80)),
-                                  parts[2] != '0', f))
+            families[fam].append((weight, parts[2] != '0', f))
     for fam in families:
         families[fam].sort(key=lambda v: (v[0], v[1]))  # weight asc, normal first
     with open(out, 'w') as w:
