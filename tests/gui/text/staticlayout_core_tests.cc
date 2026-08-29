@@ -6,11 +6,12 @@
 //  - StaticLayout.Builder::obtain returns a pooled builder whose build()
 //    recycles it — builders are intentionally never deleted here.
 //  - getLineBounds Rect is {l,t,w,h}; AOSP right/bottom map to width/bottom().
-//  - Skipped (API gaps, recorded): testLayoutDoesntModifyPaint (Paint has no
-//    start/end hyphen-edit setters), testLocaleSpanAffectsHyphenation (no
+//  - Skipped (API gaps, recorded): testLocaleSpanAffectsHyphenation (no
 //    LocaleSpan / Paint.setTextLocale / hyphenation engine),
 //    testFallbackLineSpacing (no FontFallbackSetup harness), and the
 //    Normalizer-form variants of testRtlOffset (no java.text.Normalizer).
+//    testLineMetrics_withLargeText skips on leading==0 (AOSP does the same;
+//    the registry default font has zero line gap).
 //  - Accessibility never ported (system policy).
 #include <gtest/gtest.h>
 #include <text/staticlayout.h>
@@ -20,6 +21,7 @@
 #include <text/String.h>
 #include <text/textutils.h>
 #include <core/rect.h>
+#include <core/canvas.h>
 
 using namespace cdroid;
 
@@ -470,8 +472,17 @@ TEST(StaticLayoutTest, SKIPPED_testLocaleSpanAffectsHyphenation) {
                     "engine (not ported)";
 }
 
-TEST(StaticLayoutTest, SKIPPED_testLayoutDoesntModifyPaint) {
-    GTEST_SKIP() << "needs Paint set/get Start/EndHyphenEdit (not ported)";
+TEST(StaticLayoutTest, testLayoutDoesntModifyPaint) {
+    TextPaint paint;
+    paint.setStartHyphenEdit(Paint::START_HYPHEN_EDIT_INSERT_HYPHEN);
+    paint.setEndHyphenEdit(Paint::END_HYPHEN_EDIT_INSERT_HYPHEN);
+    StaticLayout::Builder* b = StaticLayout::Builder::obtain(new String(u""), 0, 0, &paint, 100);
+    StaticLayout* layout = b->build();  // build() recycles the builder
+    Canvas canvas(100, 100);
+    layout->drawText(canvas, 0, 0);
+    EXPECT_EQ((int) Paint::START_HYPHEN_EDIT_INSERT_HYPHEN, paint.getStartHyphenEdit());
+    EXPECT_EQ((int) Paint::END_HYPHEN_EDIT_INSERT_HYPHEN, paint.getEndHyphenEdit());
+    delete layout;
 }
 
 TEST(StaticLayoutTest, SKIPPED_testFallbackLineSpacing) {
