@@ -484,6 +484,7 @@ static struct{int xkey;int key;}X11KEY2CD[]={
    {XK_Tab,61/*TAB*/},{XK_space,62/*SPACE*/}
 };
 
+static int xKeyboardFocusTaken = 0;
 static void* X11EventProc(void*p) {
     XEvent event;
     int i,keysym,key=0,down;
@@ -500,6 +501,14 @@ static void* X11EventProc(void*p) {
             if(mainSurface) {
                 XExposeEvent e = event.xexpose;
                 XCopyArea(x11Display, x11Pixmap, x11Window, mainGC,e.x,e.y,e.width,e.height,e.x,e.y);
+            }
+            // No WM runs on the target: nothing would ever grant keyboard focus,
+            // so key events reached the window only by luck. The window is
+            // viewable by first Expose — take focus once (at map time
+            // XSetInputFocus fails with BadMatch on an unviewable window).
+            if (!xKeyboardFocusTaken) {
+                XSetInputFocus(x11Display, x11Window, RevertToPointerRoot, CurrentTime);
+                xKeyboardFocusTaken = 1;
             }
             break;
         case ConfigureNotify:
