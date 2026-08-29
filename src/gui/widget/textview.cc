@@ -137,7 +137,13 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const TypedArray*a
             if (mTypefaceIndex != -1 && !mFontFamilyExplicit) mFontFamily.clear();
             break;
         case R::styleable::TextAppearance_fontFamily:
-            mFontFamily = a->getString(i);
+            // AOSP 4385: a font RESOURCE (@font/x) resolves through
+            // TypedArray.getFont -> Resources.getFont; only when that yields
+            // nothing is the value treated as a family-name string.
+            mFontTypeface = a->getFont(i);
+            if (mFontTypeface == nullptr) {
+                mFontFamily = a->getString(i);
+            }
             mFontFamilyExplicit = true;
             break;
         case R::styleable::TextAppearance_shadowColor:
@@ -174,7 +180,12 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const TypedArray*a
             break;
         }
     }
-    mFontTypeface = Typeface::create(mFontFamily, mTextStyle);
+    // AOSP leaves mFontTypeface null unless a font resource resolved it (the
+    // face is created in setTypefaceFromAttrs); keep the pre-resolved face
+    // only for the plain-string path, never clobbering a resource font.
+    if (mFontTypeface == nullptr) {
+        mFontTypeface = Typeface::create(mFontFamily, mTextStyle);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
