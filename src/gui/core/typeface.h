@@ -94,8 +94,6 @@ private:
              std::shared_ptr<std::vector<uint8_t>> fontData, int faceIndex);
     static int loadFromFontsXml(const std::string& fontDir, const std::string& xmlPath);
     ~Typeface()=default;
-    static int parseStyle(const std::string&style,std::string&normalizedName);
-    void fetchProps(FT_Face);
     static std::shared_ptr<minikin::FontFamily>buildFamily(const std::string&family,const std::vector<std::shared_ptr<Typeface>>&faces);
 public:
     int getWeight()const;

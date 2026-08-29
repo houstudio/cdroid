@@ -233,15 +233,17 @@ int FullMinikinFont::mFontId=0;
 
 static FT_Library ftLibrary = nullptr;  // shared by FT_New_Face paths (file + fonts.xml)
 
-// Forward decl: defined further down, but getFontCollection() (above its definition) uses it.
-static bool isSameFamily(const std::string& fm1, const std::string& fm2);
-
-// The shared fallback chain: one FontFamily per unique family, built once by
-// buildSystemFallback() and reused by every Typeface's lazily-built FontCollection.
-// This is the Android fallback model: a Typeface renders with [its primary family]
-// followed by the shared chain, which supplies glyphs the primary lacks.
+// The shared fallback chain: one FontFamily per unique font file, built once
+// by buildSystemFallback() and reused by every Typeface's lazily-built
+// FontCollection. This is the Android fallback model: a Typeface renders with
+// [its primary family] followed by the shared chain, which supplies glyphs
+// the primary lacks. fonts.xml carries clean family names and explicit
+// weight/italic per <font>, so family identity is the font FILE — the
+// fontconfig-era fuzzy name matching (isSameFamily/normalizeFamilyPart) is
+// retired.
 struct FallbackFamilyEntry {
     std::string name;
+    std::string file;
     std::shared_ptr<minikin::FontFamily> family;
 };
 static std::vector<FallbackFamilyEntry>& fallbackFamilies() {
@@ -255,14 +257,11 @@ static std::shared_ptr<minikin::FontCollection> collectionForFamily(const std::s
     static std::unordered_map<std::string, std::shared_ptr<minikin::FontCollection>> cache;
     auto exact = cache.find(family);
     if (exact != cache.end()) return exact->second;
-    for (auto& kv : cache) {  // fuzzy isSameFamily hit
-        if (isSameFamily(kv.first, family)) { cache[family] = kv.second; return kv.second; }
-    }
     // Build [this family's primary FontFamily] + [shared fallback chain].
     const auto& chain = fallbackFamilies();
     int primary = -1;
     for (size_t i = 0; i < chain.size(); ++i) {
-        if (isSameFamily(chain[i].name, family)) { primary = (int)i; break; }
+        if (chain[i].name == family) { primary = (int)i; break; }
     }
     std::vector<std::shared_ptr<minikin::FontFamily>> ordered;
     if (primary >= 0) ordered.push_back(chain[primary].family);
@@ -286,8 +285,6 @@ Typeface* Typeface::sDefaults[4];
 std::string Typeface::mSystemLang;
 std::string Typeface::mFallbackFamilyName;
 std::string Typeface::sFontConfigXml;
-
-static constexpr int SYSLANG_MATCHED = 0x80000000;
 
 cdroid::Context* Typeface::mContext;
 std::vector<std::shared_ptr<Typeface>> Typeface::sSystemFontFaces;
@@ -470,38 +467,6 @@ std::vector<Cairo::RefPtr<Cairo::FontFace>>Typeface::getFontFaces(){
 }
 
 
-int Typeface::parseStyle(const std::string&styleName,std::string&normalizedName) {
-    static const struct {
-        const char*styleName;
-        const char*name;
-        int styleProp;
-    } stlMAP[]= {
-        {"(?=.*\\bregular\\b)", "Normal",NORMAL},
-        {"(?=.*\\bnormal\\b)" , "Normal",NORMAL},
-        {"(?=.*\\bstandard\\b)","Normal",NORMAL},
-        {"(?=.*\\bitalic\\b)", "Italic" ,ITALIC},
-        {"(?=.*\\boblique\\b)","Italic" ,ITALIC},
-        {"(?=.*\\bbold\\b)", "Bold",BOLD},
-        {NULL,0}
-    };
-    int style = NORMAL;
-    normalizedName = std::string();
-    for(int i=0; stlMAP[i].styleName; i++) {
-        const std::regex pat(stlMAP[i].styleName, std::regex_constants::icase);
-        if(std::regex_search(styleName,pat)){
-            style |= stlMAP[i].styleProp;
-            if(!normalizedName.empty())normalizedName.append("|");
-            normalizedName.append(stlMAP[i].name);
-        }
-    }
-    return style;
-}
-
-void Typeface::fetchProps(FT_Face face) {
-    mStyle = parseStyle(face->style_name,mStyleName);
-    mFamily= std::string(face->family_name);
-}
-
 int Typeface::getWeight()const {
     return mWeight;
 }
@@ -633,9 +598,6 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
         if( (it != families.end()) || (fontKey.compare(wantFamily) == 0) ) {
             familyMatched++;
         }
-        if(tf->mStyle&SYSLANG_MATCHED) {
-            familyMatched++;
-        }
         if(familyMatched>bestMatched){
             bestMatched = familyMatched;
             bestFace = tf.get();  // 修复：应该设置为当前遍历到的字体
@@ -691,59 +653,10 @@ Typeface* Typeface::getDefault() {
     return sDefaultTypeface;
 }
 
-static std::string normalizeFamilyPart(const std::string& name) {
-    static const std::regex stylePattern(
-        R"(\b(?:Bold|Italic|Regular|Normal|Light|Thin|ExtraLight|UltraLight|
-            Medium|SemiBold|DemiBold|ExtraBold|UltraBold|Black|Heavy|Oblique|
-            Condensed|SemiCondensed|ExtraCondensed|Narrow|Wide|Extended|
-            SemiExtended|ExtraExtended|SC|TC|HK|JP|KR|\d+)\b)",
-        std::regex_constants::icase | std::regex_constants::optimize
-    );
-    
-    std::string result = name;
-    std::transform(result.begin(), result.end(), result.begin(), ::tolower);
-    
-    result = std::regex_replace(result, stylePattern, "");
-    
-    result.erase(std::remove_if(result.begin(), result.end(), 
-        [](char c) { return !std::isalnum(c) && c != ' '; }), result.end());
-    
-    result.erase(std::unique(result.begin(), result.end(), 
-        [](char a, char b) { return a == ' ' && b == ' '; }), result.end());
-    
-    size_t first = result.find_first_not_of(' ');
-    size_t last = result.find_last_not_of(' ');
-    return (first == std::string::npos) ? "" : result.substr(first, last - first + 1);
-}
-
-static bool isSameFamily(const std::string& fm1, const std::string& fm2) {
-    std::vector<std::string> parts1 = TextUtils::split(fm1, ";");
-    std::vector<std::string> parts2 = TextUtils::split(fm2, ";");
-    
-    std::unordered_set<std::string> normalizedParts1;
-    for (const auto& part : parts1) {
-        std::string normalized = normalizeFamilyPart(part);
-        if (!normalized.empty()) {
-            normalizedParts1.insert(normalized);
-        }
-    }
-    
-    for (const auto& part : parts2) {
-        std::string normalized = normalizeFamilyPart(part);
-        if (!normalized.empty() && normalizedParts1.count(normalized)) {
-            LOGV("isSameFamily: '%s' == '%s' (normalized: '%s')", 
-                 fm1.c_str(), fm2.c_str(), normalized.c_str());
-            return true;
-        }
-    }
-    
-    return false;
-}
-
 std::shared_ptr<minikin::FontFamily>Typeface::buildFamily(const std::string&family,const std::vector<std::shared_ptr<Typeface>>&faces){
     std::vector<std::shared_ptr<minikin::Font>> fonts;
     for(auto f:faces){
-        if(isSameFamily(family,f->getFamily())){
+        if(f->mFamily == family){
             auto ft = std::dynamic_pointer_cast<Cairo::FtFontFace>(f->getFontFace());
             auto minikinFont = std::make_shared<FullMinikinFont>(ft, f->mFileName, f->mFaceIndex);
             auto font = minikin::Font::Builder(minikinFont).build();
@@ -754,22 +667,26 @@ std::shared_ptr<minikin::FontFamily>Typeface::buildFamily(const std::string&fami
     return minikin::FontFamily::create(std::move(fonts));
 }
 void Typeface::buildSystemFallback() {
-    // Build the shared fallback chain: one FontFamily per unique family (dedup'd via
-    // isSameFamily), in fontconfig load order. These FontFamily objects — and their
-    // FullMinikinFont / mmap — are built once and shared by every Typeface's lazily-built
-    // FontCollection (see getFontCollection). No per-Typeface FontCollection is built here.
+    // Build the shared fallback chain: one FontFamily per unique font FILE, in
+    // fonts.xml order. These FontFamily objects — and their FullMinikinFont /
+    // mmap — are built once and shared by every Typeface's lazily-built
+    // FontCollection (see getFontCollection). No per-Typeface FontCollection
+    // is built here. (A file listed under several <family> names used to
+    // enter the chain once per name; file identity dedups it to one entry
+    // and one mmap.)
     auto& chain = fallbackFamilies();
     chain.clear();
     for (auto& tf : sSystemFontFaces) {
         bool dup = false;
         for (auto& e : chain) {
-            if (isSameFamily(e.name, tf->mFamily)) { dup = true; break; }
+            if (e.file == tf->mFileName) { dup = true; break; }
         }
         if (dup) continue;
         auto fam = buildFamily(tf->mFamily, sSystemFontFaces);
         if (fam && fam->getNumFonts() > 0) {
-            chain.push_back({tf->mFamily, fam});
-            LOGD("fallback family[%zu]: %s", chain.size() - 1, tf->mFamily.c_str());
+            chain.push_back({tf->mFamily, tf->mFileName, fam});
+            LOGD("fallback family[%zu]: %s (%s)", chain.size() - 1,
+                 tf->mFamily.c_str(), tf->mFileName.c_str());
         }
     }
 }
