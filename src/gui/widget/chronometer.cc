@@ -19,6 +19,7 @@
 #include <core/context.h>
 #include <widget/chronometer.h>
 #include <text/format/dateutils.h>
+#include <text/format/dateutils.h>
 #include <utils/textutils.h>
 #include <cmath>
 #include <cstdlib>
@@ -263,20 +264,13 @@ std::string Chronometer::formatDuration(int64_t ms) {
         m = duration / MIN_IN_SEC;
         duration -= m * MIN_IN_SEC;
     }
-    int s = duration;
+    const int s = duration;
 
-    /*ArrayList<Measure> measures = new ArrayList<Measure>();
-    if (h > 0) {
-        measures.add(new Measure(h, MeasureUnit.HOUR));
-    }
-    if (m > 0) {
-        measures.add(new Measure(m, MeasureUnit.MINUTE));
-    }
-    measures.add(new Measure(s, MeasureUnit.SECOND));
-
-    return MeasureFormat.getInstance(Locale.getDefault(), FormatWidth.WIDE)
-                .formatMeasures(measures.toArray(new Measure[measures.size()]));*/
-    return "";
+    // AOSP formats the h/m/s measures with ICU MeasureFormat (WIDE). CDROID's
+    // wrapped formatter layer is android.text.format.DateUtils (the i18n
+    // engine stays behind it) — formatElapsedTime covers the same semantics
+    // ("H:MM:SS") without widget code touching i18n directly.
+    return DateUtils::formatElapsedTime((int64_t) h * 3600 + m * 60 + s);
 }
 
 std::string Chronometer::getContentDescription()const{

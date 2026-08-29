@@ -1070,3 +1070,6 @@ void ImageView::onDraw(Canvas& canvas) {
 
 }
 
+std::string ImageView::getAccessibilityClassName()const{  // AOSP ImageView.getAccessibilityClassName
+    return "ImageView";
+}

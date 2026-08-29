@@ -625,6 +625,66 @@ void HorizontalScrollView::onOverScrolled(int scrollX, int scrollY,bool clampedX
     awakenScrollBars();
 }
 
+// AOSP HorizontalScrollView a11y block: page-at-a-time horizontal scroll
+// actions, the scrollable flag driven by the range, and event scroll bounds.
+bool HorizontalScrollView::performAccessibilityActionInternal(int action, Bundle* arguments) {
+    if (FrameLayout::performAccessibilityActionInternal(action, arguments)) {
+        return true;
+    }
+    switch (action) {
+    case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD:
+    case R::id::accessibilityActionScrollRight: {
+        if (!isEnabled()) {
+            return false;
+        }
+        const int viewportWidth = getWidth() - mPaddingLeft - mPaddingRight;
+        const int targetScrollX = std::min(mScrollX + viewportWidth, getScrollRange());
+        if (targetScrollX != mScrollX) {
+            smoothScrollTo(targetScrollX, 0);
+            return true;
+        }
+        return false;
+    }
+    case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD:
+    case R::id::accessibilityActionScrollLeft: {
+        if (!isEnabled()) {
+            return false;
+        }
+        const int viewportWidth = getWidth() - mPaddingLeft - mPaddingRight;
+        const int targetScrollX = std::max(0, mScrollX - viewportWidth);
+        if (targetScrollX != mScrollX) {
+            smoothScrollTo(targetScrollX, 0);
+            return true;
+        }
+        return false;
+    }
+    }
+    return false;
+}
+
+void HorizontalScrollView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
+    FrameLayout::onInitializeAccessibilityNodeInfoInternal(info);
+    const int scrollRange = getScrollRange();
+    if (scrollRange > 0) {
+        info.setScrollable(true);
+        if (isEnabled() && mScrollX > 0) {
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_LEFT);
+        }
+        if (isEnabled() && mScrollX < scrollRange) {
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_RIGHT);
+        }
+    }
+}
+
+void HorizontalScrollView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event) {
+    FrameLayout::onInitializeAccessibilityEventInternal(event);
+    event.setScrollable(getScrollRange() > 0);
+    event.setMaxScrollX(getScrollRange());
+    event.setMaxScrollY(mScrollY);
+}
+
 int HorizontalScrollView::getScrollRange() {
     int scrollRange = 0;
     if (getChildCount() > 0) {

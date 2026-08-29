@@ -215,8 +215,8 @@ bool GridLayoutManager::performAccessibilityAction(int action,Bundle* args){
         int noRow = -1;
         int noColumn = -1;
         if (args != nullptr) {
-            int rowArg = -1;//args.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, noRow);
-            int columnArg = -1;//args.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_COLUMN_INT, noColumn);
+            int rowArg = args->getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, noRow);
+            int columnArg = args->getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_COLUMN_INT, noColumn);
 
             if (rowArg == noRow || columnArg == noColumn) {
                 return false;

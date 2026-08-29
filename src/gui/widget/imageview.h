@@ -90,6 +90,7 @@ protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
 public:
+    std::string getAccessibilityClassName()const override;
     ImageView(Context*ctx);   // AOSP ImageView(Context)
     ImageView(Context*ctx,const AttributeSet*attrs);
     ImageView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);

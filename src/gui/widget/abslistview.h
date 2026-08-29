@@ -400,6 +400,8 @@ public:
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
     virtual void onInitializeAccessibilityNodeInfoForItem(View* view, int position, AccessibilityNodeInfo& info);
+    void addAccessibilityActionIfEnabled(AccessibilityNodeInfo* info, bool enabled,
+            AccessibilityNodeInfo::AccessibilityAction* action);
 
     void reportScrollStateChange(int newState);
     void setFastScrollEnabled(bool);

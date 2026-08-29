@@ -482,7 +482,11 @@ int main(int argc, const char* argv[]) {
             : (int)internal::R::style::Theme_Material_Light;
     app.setTheme(themeId);
     auto* w = new SettingsActivity();
-    if (argc > 1) w->setLaunchRoot(argv[1]);
+    // Optional argv[1]: start directly at a nested screen (smoke-testing) —
+    // but skip framework options (--auto-test etc.): App owns those.
+    for (int i = 1; i < argc; i++) {
+        if (argv[i][0] != '-') { w->setLaunchRoot(argv[i]); break; }
+    }
     LOGD("settings demo window created");
     return app.exec();
 }

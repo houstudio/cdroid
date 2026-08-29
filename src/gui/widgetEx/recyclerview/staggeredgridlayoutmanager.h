@@ -174,9 +174,11 @@ public:
     int computeVerticalScrollRange(RecyclerView::State& state)override;
     void onRestoreInstanceState(Parcelable& state)override;
     Parcelable* onSaveInstanceState()override;
+    void onInitializeAccessibilityNodeInfoForItem(RecyclerView::Recycler& recycler,
+            RecyclerView::State& state, View* host, AccessibilityNodeInfo& info)override;
     //void onInitializeAccessibilityNodeInfoForItem(RecyclerView::Recycler& recycler,
     //      RecyclerView::State& state, View host, AccessibilityNodeInfoCompat info)override;
-    //void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
+    void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
     int getRowCountForAccessibility(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     int getColumnCountForAccessibility(RecyclerView::Recycler& recycler,RecyclerView::State& state)override;
 

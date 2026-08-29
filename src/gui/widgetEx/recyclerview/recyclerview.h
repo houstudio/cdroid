@@ -84,6 +84,7 @@ public:
     class ItemDecoration;
     class OnItemTouchListener;
     friend GridLayoutManager;
+    friend class LinearLayoutManager;  // androidx package-private access (a11y scroll-to-position)
     friend RecyclerViewAccessibilityDelegate;
     DECLARE_UIEVENT(bool,OnFlingListener,int,int);
     class ItemAnimator{

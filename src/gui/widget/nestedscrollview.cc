@@ -1944,3 +1944,70 @@ int NestedScrollView::scrollBy(int verticalScrollDistance, int verticalScrollAxi
     return totalScrollOffset;
 }
 }/*endof namespace*/
+
+// androidx NestedScrollView: the a11y surface is identical in shape to the
+// framework ScrollView twin (already ported) — page-height scroll actions,
+// scrollable flag with directional actions, event scroll bounds.
+bool NestedScrollView::performAccessibilityActionInternal(int action, Bundle* arguments) {
+    if (FrameLayout::performAccessibilityActionInternal(action, arguments)) {
+        return true;
+    }
+    if (!isEnabled()) {
+        return false;
+    }
+    switch (action) {
+    case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD:
+    case internal::R::id::accessibilityActionScrollDown: {
+        const int viewportHeight = getHeight() - mPaddingBottom - mPaddingTop;
+        const int targetScrollY = std::min(mScrollY + viewportHeight, getScrollRange());
+        if (targetScrollY != mScrollY) {
+            smoothScrollTo(0, targetScrollY);
+            return true;
+        }
+        return false;
+    }
+    case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD:
+    case internal::R::id::accessibilityActionScrollUp: {
+        const int viewportHeight = getHeight() - mPaddingBottom - mPaddingTop;
+        const int targetScrollY = std::max(mScrollY - viewportHeight, 0);
+        if (targetScrollY != mScrollY) {
+            smoothScrollTo(0, targetScrollY);
+            return true;
+        }
+        return false;
+    }
+    }
+    return false;
+}
+
+void NestedScrollView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
+    FrameLayout::onInitializeAccessibilityNodeInfoInternal(info);
+    if (isEnabled()) {
+        const int scrollRange = getScrollRange();
+        if (scrollRange > 0) {
+            info.setScrollable(true);
+            if (mScrollY > 0) {
+                info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP);
+            }
+            if (mScrollY < scrollRange) {
+                info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN);
+            }
+        }
+    }
+}
+
+void NestedScrollView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event) {
+    FrameLayout::onInitializeAccessibilityEventInternal(event);
+    const bool scrollable = getScrollRange() > 0;
+    event.setScrollable(scrollable);
+    event.setScrollX(mScrollX);
+    event.setScrollY(mScrollY);
+    event.setMaxScrollX(mScrollX);
+    event.setMaxScrollY(getScrollRange());
+}
+
+std::string NestedScrollView::getAccessibilityClassName() const {
+    return "NestedScrollView";
+}

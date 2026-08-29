@@ -8,6 +8,7 @@
 namespace cdroid{
 class MediaController :public FrameLayout{
 public:
+    std::string getAccessibilityClassName()const override;
     struct MediaPlayerControl {
         std::function<void()>start;
         std::function<void()>pause;

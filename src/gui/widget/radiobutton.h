@@ -26,6 +26,7 @@ public:
     RadioButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     void toggle()override;
     std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;
 };
 }/*endof namespace*/
 #endif

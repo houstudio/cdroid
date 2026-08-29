@@ -330,3 +330,13 @@ void TabWidget::onFocusChange(View* v, bool hasFocus) {
 }
 
 }
+
+std::string TabWidget::getAccessibilityClassName()const{  // AOSP TabWidget:475
+    return "TabWidget";
+}
+
+void TabWidget::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){  // AOSP :481
+    LinearLayout::onInitializeAccessibilityEventInternal(event);
+    event.setItemCount(getTabCount());
+    event.setCurrentItemIndex(mSelectedTab);
+}

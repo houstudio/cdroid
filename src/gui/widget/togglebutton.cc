@@ -102,7 +102,7 @@ void ToggleButton::setBackground(Drawable* d){
     updateReferenceToIndicatorDrawable(d);
 }
 
-std::string ToggleButton::getAccessibilityName()const{
+std::string ToggleButton::getAccessibilityClassName()const{
     return "ToggleButton";
 }
 

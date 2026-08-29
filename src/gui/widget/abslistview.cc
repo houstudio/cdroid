@@ -338,28 +338,33 @@ void AbsListView::onInitializeAccessibilityNodeInfoForItem(View* view, int posit
 
     if (position == getSelectedItemPosition()) {
         info.setSelected(true);
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_SELECTION.getId());
+        addAccessibilityActionIfEnabled(&info, isItemActionable,
+                &AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_SELECTION);
     } else {
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SELECT.getId());
+        addAccessibilityActionIfEnabled(&info, isItemActionable,
+                &AccessibilityNodeInfo::AccessibilityAction::ACTION_SELECT);
     }
 
     if (isItemClickable(view)) {
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK.getId());
+        // A disabled item is a separator which should not be clickable.
+        addAccessibilityActionIfEnabled(&info, isItemActionable,
+                &AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK);
         info.setClickable(isItemActionable);
     }
 
     if (isLongClickable()) {
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_LONG_CLICK.getId());
+        addAccessibilityActionIfEnabled(&info, isItemActionable,
+                &AccessibilityNodeInfo::AccessibilityAction::ACTION_LONG_CLICK);
         info.setLongClickable(isItemActionable);
     }
 }
 
-/*void AbsListView::addAccessibilityActionIfEnabled(AccessibilityNodeInfo* info, bool enabled,
-        AccessibilityAction* action) {
+void AbsListView::addAccessibilityActionIfEnabled(AccessibilityNodeInfo* info, bool enabled,
+        AccessibilityNodeInfo::AccessibilityAction* action) {
     if (enabled) {
         info->addAction(action);
     }
-}*/
+}
 
 void AbsListView::setScrollingCacheEnabled(bool enabled) {
     if (mScrollingCacheEnabled && !enabled) {

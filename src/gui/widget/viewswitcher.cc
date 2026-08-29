@@ -67,4 +67,3 @@ void ViewSwitcher::reset() {
 }
 
 }//namespace
-

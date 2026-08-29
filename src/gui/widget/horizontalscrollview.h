@@ -121,6 +121,9 @@ public:
     bool arrowScroll(int direction);
     void smoothScrollBy(int dx, int dy);
     void smoothScrollTo(int x, int y);
+    bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     void computeScroll()override;
     void requestChildFocus(View* child, View* focused)override;
     bool requestChildRectangleOnScreen(View* child, Rect rectangle,bool immediate);

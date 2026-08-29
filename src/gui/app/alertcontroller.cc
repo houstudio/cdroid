@@ -248,6 +248,7 @@ ViewGroup* AlertController::resolvePanel(View* customPanel,View* defaultPanel){
     if(defaultPanel){
         ViewGroup*parent=defaultPanel->getParent();
         parent->removeView(defaultPanel);
+        mWindow->removeSendWindowContentChangedCallback();  // same flush rule
         delete defaultPanel;  // AOSP relies on GC for the replaced default panel
     }
     return (ViewGroup*)customPanel;
@@ -431,6 +432,7 @@ void AlertController::setupContent(ViewGroup* contentPanel){
     } else {
         mMessageView->setVisibility(View::GONE);
         mScrollView->removeView(mMessageView);
+        mWindow->removeSendWindowContentChangedCallback();  // same flush rule
         delete mMessageView;    // AOSP relies on GC after the detach
         mMessageView = nullptr;
 

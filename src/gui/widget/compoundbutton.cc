@@ -18,6 +18,7 @@
 #include <widget/internal_R.h>
 #include <core/context.h>
 #include <widget/compoundbutton.h>
+#include <widget/radiogroup.h>
 #include <widget/framework_styleable.h>
 #include <widget/checkbox.h>
 #include <widget/radiobutton.h>
@@ -372,6 +373,24 @@ void RadioButton::toggle(){
 
 std::string RadioButton::getAccessibilityClassName()const{
     return "RadioButton";
+}
+
+// AOSP RadioButton.onInitializeAccessibilityNodeInfo: inside a RadioGroup the
+// button reports its collection item info (row/column per group orientation,
+// selection flag from the checked state).
+void RadioButton::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) {
+    CompoundButton::onInitializeAccessibilityNodeInfo(info);
+    if (dynamic_cast<RadioGroup*>(getParent())) {
+        RadioGroup* radioGroup = (RadioGroup*) getParent();
+        if (radioGroup->getOrientation() == LinearLayout::HORIZONTAL) {
+            info.setCollectionItemInfo(AccessibilityNodeInfo::CollectionItemInfo::obtain(0, 1,
+                    radioGroup->getIndexWithinVisibleButtons(this), 1, false, isChecked()));
+        } else {
+            info.setCollectionItemInfo(AccessibilityNodeInfo::CollectionItemInfo::obtain(
+                    radioGroup->getIndexWithinVisibleButtons(this), 1, 0, 1,
+                    false, isChecked()));
+        }
+    }
 }
 
 }/*endof namespace*/

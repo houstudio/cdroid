@@ -436,3 +436,7 @@ void MediaController::registerOnBackInvokedCallback() {
 
 }/*endof namespace*/
 #endif
+
+std::string MediaController::getAccessibilityClassName()const{  // AOSP MediaController.getAccessibilityClassName
+    return "MediaController";
+}

@@ -23,6 +23,8 @@ namespace cdroid{
 
 class TabWidget:public LinearLayout{
 public:
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     DECLARE_UIEVENT(void,OnTabSelectionChanged,int,bool);
 private:
     Rect mBounds;

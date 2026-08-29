@@ -4599,13 +4599,10 @@ void RecyclerView::Recycler::attachAccessibilityDelegateOnBind(ViewHolder& holde
             return;
         }
         AccessibilityDelegate* itemDelegate = mRV->mAccessibilityDelegate->getItemDelegate();
-        if (!itemView->getAccessibilityDelegate()){//hasAccessibilityDelegate()) {
-            //holder.addFlags(ViewHolder::FLAG_SET_A11Y_ITEM_DELEGATE);
-            //temView->setAccessibilityDelegate( mRV->mAccessibilityDelegate->getItemDelegate());
-            // If there was already an a11y delegate set on the itemView, store it in the
-            // itemDelegate and then set the itemDelegate as the a11y delegate.
-            ((RecyclerViewAccessibilityDelegate::ItemDelegate*) itemDelegate)->saveOriginalDelegate(itemView);
-        }
+        // androidx: saveOriginalDelegate runs whenever the delegate IS an ItemDelegate
+        // (self/null originals are ignored inside), NOT only when none was set —
+        // the old guard skipped saving app-installed delegates, so chaining broke.
+        ((RecyclerViewAccessibilityDelegate::ItemDelegate*) itemDelegate)->saveOriginalDelegate(itemView);
         itemView->setAccessibilityDelegate(itemDelegate);
     }
 }
@@ -6671,17 +6668,15 @@ bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler& recycler,
 
     float granularScrollAmount = 1.F; // The default value.
 
-    /*if (args != nullptr) {
-        granularScrollAmount = args.getFloat(AccessibilityNodeInfo::ACTION_ARGUMENT_SCROLL_AMOUNT_FLOAT, 1.F);
+    if (args != nullptr) {
+        granularScrollAmount = args->getFloat(
+                AccessibilityNodeInfo::ACTION_ARGUMENT_SCROLL_AMOUNT_FLOAT, 1.F);
         if (granularScrollAmount < 0) {
-            if (sDebugAssertionsEnabled) {
-                throw new IllegalArgumentException(
-                        "attempting to use ACTION_ARGUMENT_SCROLL_AMOUNT_FLOAT with a "
-                                + "negative value (" + granularScrollAmount + ")");
-            }
+            LOGE("attempting to use ACTION_ARGUMENT_SCROLL_AMOUNT_FLOAT with a negative value (%f)",
+                 granularScrollAmount);
             return false;
         }
-    }*/
+    }
 
     if (floatCompare(granularScrollAmount, INFINITY) == 0) {
         // Assume that the client wants to scroll as far as possible. For

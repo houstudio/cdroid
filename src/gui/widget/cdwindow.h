@@ -111,8 +111,12 @@ private:
     View* getCommonPredecessor(View* first, View* second);
     void postSendWindowContentChangedCallback(View*source,int changeType);
     void removeSendWindowContentChangedCallback();
+    friend class AlertController;  // flushes pending posts before freeing swapped panels
     void drawAccessibilityFocusedDrawableIfNeeded(Canvas& canvas);
     bool getAccessibilityFocusedRect(Rect& bounds);
+    // CDROID-specific: detach-then-delete teardown (AlertController's panel
+    // swap) flushes the pending content-changed post BEFORE freeing the tree —
+    // the runnable holds a raw source pointer into it (AOSP: GC keeps it).
     Drawable* getAccessibilityFocusedDrawable();
     void handleWindowContentChangedEvent(AccessibilityEvent& event);
     ActionMode* startActionModeInternal(View* originatingView, const ActionMode::Callback& callback, int type);

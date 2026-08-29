@@ -33,6 +33,10 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* attrs)
 
 CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context, pAttrs, defStyleAttr){
+    // androidx CoordinatorLayout ctor: the layout itself is the a11y container.
+    if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
     initView();
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::CoordinatorLayout, defStyleAttr);
