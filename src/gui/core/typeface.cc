@@ -165,16 +165,6 @@ public:
         static std::list<ScaledFontKey> lru;
         return lru;
     }
-    // Cache statistics
-    static std::atomic<uint64_t>& getCacheHits() {
-        static std::atomic<uint64_t> hits(0);
-        return hits;
-    }
-    static std::atomic<uint64_t>& getCacheMisses() {
-        static std::atomic<uint64_t> misses(0);
-        return misses;
-    }
-
     Cairo::RefPtr<Cairo::FtScaledFont> getScaledFont(const minikin::MinikinPaint& paint) const {
         // ScaledFont depends only on (font, size, scaleX, skewX); font feature settings
         // shape differently but don't change the scaled font, so skip the cache for them
@@ -187,7 +177,6 @@ public:
         auto& lru = getGlobalLruList();
         auto it = cache.find(key);
         if (it != cache.end()) {
-            getCacheHits()++;
             // Move to front (most recently used); splice keeps iterators valid.
             if (it->second.lruIter != lru.begin()) {
                 lru.splice(lru.begin(), lru, it->second.lruIter);
@@ -195,7 +184,6 @@ public:
             }
             return it->second.font;
         }
-        getCacheMisses()++;
         auto newFont = createScaledFont(paint.size, paint.scaleX, paint.skewX);
         // Evict least-recently-used when full (the old code froze the cache once full,
         // so every new (font,paint) combo after 32 entries was never cached).
@@ -289,7 +277,6 @@ std::string Typeface::sFontConfigXml;
 cdroid::Context* Typeface::mContext;
 std::vector<std::shared_ptr<Typeface>> Typeface::sSystemFontFaces;
 std::unordered_map<std::string, std::shared_ptr<Typeface> > Typeface::sSystemFontMap;
-std::vector<Cairo::RefPtr<Cairo::FontFace>> Typeface::mFontFaces;
 
 struct Typeface::Deleter{
     void operator()(Typeface* p) const noexcept {
@@ -310,6 +297,17 @@ void Typeface::setFontConfigXml(const std::string& path) {
 }
 
 // Typeface built directly from Android fonts.xml font fields (no fontconfig).
+// Shared face bootstrap for both ctors: cairo's for-ft-face wrapper does NOT
+// take a reference, so the face is referenced once before the ctor's own Done
+// drops it — registry typefaces stay alive for the process. The family falls
+// back to the face's own name when the caller has none.
+void Typeface::initFace(FT_Face ftFace, const std::string& family) {
+    mFamily = family.empty()
+            ? std::string(ftFace->family_name ? ftFace->family_name : "") : family;
+    FT_Reference_Face(ftFace);
+    mFontFace = Cairo::FtFontFace::create(ftFace, 0);
+}
+
 Typeface::Typeface(const std::string& family, int weight, bool italic,
                    const std::string& fileName, int faceIndex) {
     mFileName = fileName;
@@ -318,20 +316,13 @@ Typeface::Typeface(const std::string& family, int weight, bool italic,
     mStyle = (weight >= 600 ? BOLD : 0) | (italic ? ITALIC : 0);
     if (ftLibrary == nullptr) FT_Init_FreeType(&ftLibrary);
     FT_Face ftFace = nullptr;
-    if (!FT_New_Face(ftLibrary, fileName.c_str(), faceIndex, &ftFace) && ftFace != nullptr) {
-        mFamily = family.empty() ? std::string(ftFace->family_name ? ftFace->family_name : "")
-                                 : family;
-        mStyleName = ftFace->style_name ? ftFace->style_name : "";
-        // cairo's for-ft-face wrapper does NOT take a reference: keep the face
-        // alive for the process (registry typefaces are cached globally) by
-        // bumping the refcount before our own Done drops it.
-        FT_Reference_Face(ftFace);
-        mFontFace = Cairo::FtFontFace::create(ftFace, 0);
-        FT_Done_Face(ftFace);
-    } else {
-        // Font file missing/unreadable: keep the provided family, leave mFontFace null.
+    // Font file missing/unreadable: keep the provided family, leave mFontFace null.
+    if (FT_New_Face(ftLibrary, fileName.c_str(), faceIndex, &ftFace) || ftFace == nullptr) {
         mFamily = family;
+        return;
     }
+    initFace(ftFace, family);
+    FT_Done_Face(ftFace);
 }
 
 namespace {
@@ -411,10 +402,7 @@ Typeface::Typeface(const std::string& family, int weight, bool italic,
         mFamily = family;
         return;
     }
-    mFamily = family.empty() ? std::string(ftFace->family_name ? ftFace->family_name : "") : family;
-    mStyleName = ftFace->style_name ? ftFace->style_name : "";
-    FT_Reference_Face(ftFace);  // cairo's for-ft-face wrapper holds no reference
-    mFontFace = Cairo::FtFontFace::create(ftFace, 0);
+    initFace(ftFace, family);
     FT_Done_Face(ftFace);
     // Eagerly build the memory-backed MinikinFont so getMinikinFont() returns it directly
     // (rather than the file/mmap path, which needs a real file path).
@@ -443,7 +431,6 @@ int Typeface::loadFromFontsXml(const std::string& fontDir, const std::string& xm
                     new Typeface(fam.name, fnt.weight, fnt.italic, fnt.fileName, fnt.index),
                     Deleter{});  // ~Typeface is private; Deleter (a member struct) can call it
             sSystemFontFaces.push_back(tf);
-            mFontFaces.push_back(tf->getFontFace());
             sSystemFontMap.insert({fnt.fileName, tf});               // unique key per font
             const std::string famKey = !fam.name.empty() ? fam.name : tf->getFamily();
             if (!famKey.empty()) sSystemFontMap.insert({famKey, tf}); // family-name key
@@ -461,10 +448,6 @@ int Typeface::loadFromFontsXml(const std::string& fontDir, const std::string& xm
 /*Typeface::Typeface(Cairo::RefPtr<Cairo::FontFace>face) {
     mFontFace = face;
 }*/
-
-std::vector<Cairo::RefPtr<Cairo::FontFace>>Typeface::getFontFaces(){
-    return mFontFaces;
-}
 
 
 int Typeface::getWeight()const {
@@ -485,10 +468,6 @@ bool Typeface::isItalic() const {
 
 std::string Typeface::getFamily()const {
     return mFamily;
-}
-
-std::string Typeface::getStyleName()const{
-    return mStyleName;
 }
 
 Cairo::RefPtr<Cairo::FontFace>Typeface::getFontFace()const {
@@ -533,16 +512,6 @@ std::shared_ptr<minikin::FontCollection> Typeface::getFontCollection() const {
     return mFontCollection;
 }
 
-void Typeface::getScaledFontCacheStats(uint64_t& hits, uint64_t& misses) {
-    hits = FullMinikinFont::getCacheHits().load();
-    misses = FullMinikinFont::getCacheMisses().load();
-}
-
-void Typeface::resetScaledFontCacheStats() {
-    FullMinikinFont::getCacheHits().store(0);
-    FullMinikinFont::getCacheMisses().store(0);
-}
-
 Typeface* Typeface::create(Typeface*family, int style) {
     if ((style & ~STYLE_MASK) != 0) {
         style = NORMAL;
@@ -566,47 +535,24 @@ Typeface* Typeface::create(Typeface*family, int style) {
             bestMactched=match;
         }
     }
-    LOGV("typeface=%p family=%p name=%s style=[%x/%x]%s fontfile=%s",typeface,family,
-       typeface->mFamily.c_str(),style,typeface->mStyle,typeface->mStyleName.c_str(),typeface->mFileName.c_str());
+    LOGV("typeface=%p family=%p name=%s style=[%x/%x] fontfile=%s",typeface,family,
+       typeface->mFamily.c_str(),style,typeface->mStyle,typeface->mFileName.c_str());
     return typeface;
 }
 
 Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
-    Typeface*face = Typeface::DEFAULT;
-    Typeface*bestFace = Typeface::DEFAULT;
-    std::string wantFamily = familyName;
-    int bestMatched = 0;
-    if(!wantFamily.empty()) {
-        if(wantFamily[0]=='@')
-            wantFamily = wantFamily.substr(1);
-        if(wantFamily.find(":")==std::string::npos)
-            wantFamily = mContext->getPackageName()+":"+wantFamily;
-    }
-    if(wantFamily.find(":")!=std::string::npos){
-        //only for family @font/font-name
-        auto it =sSystemFontMap.find(wantFamily);
-        if(it!=sSystemFontMap.end())
-            return it->second.get();
-    }
-    for(auto i= sSystemFontMap.begin(); i!= sSystemFontMap.end(); i++) {
-        auto tf = i->second;
-        int familyMatched = 0;
-        const std::string fontKey= i->first;
-        const std::string family = tf->getFamily();
-        std::vector<std::string>families = TextUtils::split(family,";");
-        auto it = std::find(families.begin(),families.end(),familyName);
-        if( (it != families.end()) || (fontKey.compare(wantFamily) == 0) ) {
-            familyMatched++;
-        }
-        if(familyMatched>bestMatched){
-            bestMatched = familyMatched;
-            bestFace = tf.get();  // 修复：应该设置为当前遍历到的字体
+    // fonts.xml registry keys: file names, fonts.xml family names/aliases and
+    // the faces' own family names — an exact lookup covers them all. (The
+    // fontconfig-era scoring loop and the @font string mangling are retired;
+    // app fonts load through Context::getFont / R.font instead.)
+    auto it = sSystemFontMap.find(familyName);
+    if (it != sSystemFontMap.end()) return it->second.get();
+    for (auto& tf : sSystemFontFaces) {  // face family names may list "A;B"
+        for (auto& name : TextUtils::split(tf->getFamily(), ";")) {
+            if (name == familyName) return tf.get();
         }
     }
-    face = bestFace;
-    LOGV_IF(face,"want %s got %s/%s style=[%x]%s",familyName.c_str(),
-         face->getFamily().c_str(),wantFamily.c_str(),face->mStyle,face->mStyleName.c_str());
-    return bestFace;
+    return Typeface::DEFAULT;
 }
 
 Typeface* Typeface::create(cdroid::Typeface*family, int weight, bool italic) {
@@ -812,128 +758,6 @@ static void extractMetaFromFace(FT_Face ftFace, std::string& family, int& weight
     } else {
         weight = (ftFace->style_flags & FT_STYLE_FLAG_BOLD) ? 700 : 400;
     }
-}
-
-int Typeface::loadFaceFromResource(cdroid::Context* context) {
-    std::vector<std::string> fonts;
-    // The font lists are string-array resources ("fonts"/"font"); resolve them
-    // by identifier (the string-keyed Context::getArray is retired).
-    const std::string pkg = context->getPackageName();
-    for (const char* name : { "fonts", "font" }) {
-        const int id = context->getResources().getIdentifier(name, "array", pkg);
-        if (id != 0) {
-            const auto arr = context->getResources().getStringArray(id);
-            fonts.insert(fonts.end(), arr.begin(), arr.end());
-        }
-    }
-    if (ftLibrary == nullptr) FT_Init_FreeType(&ftLibrary);
-    // Small fonts (below the threshold) are read fully into an in-memory blob; large ones are
-    // streamed to a tmp file and mmap'd (lazy paging, low RAM). Non-intrusive: only uses
-    // context->getInputStream — no Context/Assets/ziparchive changes.
-    constexpr size_t LARGE_FONT_THRESHOLD = 256 * 1024;
-    const std::string tmpDir = "/tmp/" + context->getPackageName();
-    mkdir(tmpDir.c_str(), 0700);  // ignore EEXIST
-    int loaded = 0;
-
-    // Build + register per-face Typefaces from in-memory font bytes (small-font path).
-    auto processMemory = [&](const uint8_t* data, size_t size, const std::string& key,
-                             const std::function<std::shared_ptr<Typeface>(
-                                     const std::string&, int, bool, int)>& makeFace) {
-        FT_Face probe = nullptr;
-        if (FT_New_Memory_Face(ftLibrary, data, size, 0, &probe) || !probe) return 0;
-        const int numFaces = probe->num_faces;
-        FT_Done_Face(probe);
-        int n = 0;
-        for (int fi = 0; fi < numFaces; ++fi) {
-            FT_Face ft = nullptr;
-            if (FT_New_Memory_Face(ftLibrary, data, size, fi, &ft) || !ft) continue;
-            std::string family; int weight = 400; bool italic = false;
-            extractMetaFromFace(ft, family, weight, italic);
-            FT_Done_Face(ft);
-            auto tf = makeFace(family, weight, italic, fi);
-            if (!tf) continue;
-            sSystemFontFaces.push_back(tf);
-            mFontFaces.push_back(tf->getFontFace());
-            sSystemFontMap.insert({key + (numFaces > 1 ? ("@" + std::to_string(fi)) : ""), tf});
-            if (!family.empty()) sSystemFontMap.insert({family, tf});
-            LOGD("@%s [%s] face[%d/%d] (blob)", key.c_str(), family.c_str(), fi, numFaces);
-            ++n;
-        }
-        return n;
-    };
-
-    // Build + register per-face Typefaces from a file path (large-font path: file ctor mmaps it).
-    auto processFile = [&](const std::string& path, const std::string& key) {
-        FT_Face probe = nullptr;
-        if (FT_New_Face(ftLibrary, path.c_str(), 0, &probe) || !probe) return 0;
-        const int numFaces = probe->num_faces;
-        FT_Done_Face(probe);
-        int n = 0;
-        for (int fi = 0; fi < numFaces; ++fi) {
-            FT_Face ft = nullptr;
-            if (FT_New_Face(ftLibrary, path.c_str(), fi, &ft) || !ft) continue;
-            std::string family; int weight = 400; bool italic = false;
-            extractMetaFromFace(ft, family, weight, italic);
-            FT_Done_Face(ft);
-            auto tf = std::shared_ptr<Typeface>(new Typeface(family, weight, italic, path, fi), Deleter{});
-            sSystemFontFaces.push_back(tf);
-            mFontFaces.push_back(tf->getFontFace());
-            sSystemFontMap.insert({key + (numFaces > 1 ? ("@" + std::to_string(fi)) : ""), tf});
-            if (!family.empty()) sSystemFontMap.insert({family, tf});
-            LOGD("@%s [%s] face[%d/%d] (mmap %s)", key.c_str(), family.c_str(), fi, numFaces, path.c_str());
-            ++n;
-        }
-        return n;
-    };
-
-    for (const auto& fontUrl : fonts) {
-        std::string key = fontUrl;
-        size_t d = key.find_last_of('.');
-        if (d != std::string::npos) key = key.substr(0, d);
-        d = key.find("fonts");
-        if (d != std::string::npos) key.replace(d, 5, "font");
-        std::string baseName = fontUrl;
-        d = baseName.find_last_of('/');
-        if (d != std::string::npos) baseName = baseName.substr(d + 1);
-        d = baseName.find_last_of('.');
-        if (d != std::string::npos) baseName = baseName.substr(0, d);
-
-        std::unique_ptr<std::istream> istream = context->getInputStream(fontUrl);
-        if (!istream) continue;
-
-        // Size from the stream (seekable); non-seekable streams fall through to the tmp path.
-        istream->seekg(0, std::ios::end);
-        std::streampos sz = istream->tellg();
-        const bool seekable = (sz != std::streampos(-1));
-        const size_t fontSize = seekable ? (size_t)sz : 0;
-        istream->seekg(0, std::ios::beg);
-
-        if (seekable && fontSize < LARGE_FONT_THRESHOLD) {
-            // Small: read into a vector blob.
-            auto fontData = std::make_shared<std::vector<uint8_t>>(fontSize);
-            if (fontSize > 0) istream->read(reinterpret_cast<char*>(fontData->data()), fontSize);
-            if (static_cast<size_t>(istream->gcount()) != fontSize) continue;
-            loaded += processMemory(fontData->data(), fontData->size(), key,
-                    [&](const std::string& fam, int w, bool it, int fi) {
-                        return std::shared_ptr<Typeface>(new Typeface(fam, w, it, fontData, fi), Deleter{});
-                    });
-        } else {
-            // Large (or non-seekable): stream to a tmp file (cached), then mmap via the file ctor.
-            const std::string tmpPath = tmpDir + "/" + baseName + ".bin";
-            struct stat st;
-            if (stat(tmpPath.c_str(), &st) != 0) {  // not cached yet: extract
-                std::ofstream out(tmpPath, std::ios::binary | std::ios::trunc);
-                if (!out) continue;
-                char buf[65536];
-                while (istream->read(buf, sizeof(buf)) || istream->gcount() > 0)
-                    out.write(buf, istream->gcount());
-                out.close();
-            }
-            loaded += processFile(tmpPath, key);
-        }
-    }
-    LOGI("%d font loaded from resource (blob/tmp+mmap)", loaded);
-    return loaded;
 }
 
 // ---------------------------------------------------------------------------

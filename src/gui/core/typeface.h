@@ -59,7 +59,6 @@ private:
     static std::string mFallbackFamilyName;
     static std::string sFontConfigXml;  // optional Android fonts.xml/font_fallback.xml path
     std::string mFamily;
-    std::string mStyleName;
     std::string mFileName;
     int mFaceIndex = 0;
     int mStyle;
@@ -76,7 +75,6 @@ private:
     static std::unordered_map<std::string,std::shared_ptr<Typeface>> sSystemFontMap;
     static std::unordered_map<std::string,std::vector<FontFamily>>systemFallbackMap;
     static std::unordered_map<void*,Typeface*>sStyledTypefaceCache;
-    static std::vector<Cairo::RefPtr<Cairo::FontFace>>mFontFaces;
 private:
     struct Deleter;
     static void setDefault(Typeface* t);
@@ -101,15 +99,12 @@ public:
     bool isBold() const;
     bool isItalic() const;
     std::string getFamily()const;
-    std::string getStyleName()const;
     Cairo::RefPtr<Cairo::FontFace>getFontFace()const;
     std::shared_ptr<minikin::MinikinFont> getMinikinFont() const;
     std::shared_ptr<Cairo::ScaledFont> getScaledFont(const minikin::MinikinPaint&,
             const minikin::MinikinFont* minikinFont = nullptr) const;
     std::shared_ptr<minikin::FontCollection> getFontCollection() const;
     // ScaledFont cache statistics
-    static void getScaledFontCacheStats(uint64_t& hits, uint64_t& misses);
-    static void resetScaledFontCacheStats();
     static void setContext(cdroid::Context*);
     static void setFallback(const std::string&);
     // Optional: set an Android fonts.xml / font_fallback.xml path. If set and the file
@@ -130,12 +125,11 @@ public:
     // prefix) and cached per path like createFromAsset.
     static Typeface* createFromResourcePath(const std::string path);
     static void loadPreinstalledSystemFontMap();
-    static int loadFaceFromResource(cdroid::Context*context);
+    void initFace(FT_Face ftFace, const std::string& family);
 private:
     // Shared tail of the two pak-font factories: read the Asset bytes, build
     // the memory-backed face, store it in the per-path cache.
     static Typeface* finishAssetTypeface(const std::string& path, Asset* asset, const char* tag);
-    static std::vector<Cairo::RefPtr<Cairo::FontFace>>getFontFaces();
 };
 
 class FontStyle {

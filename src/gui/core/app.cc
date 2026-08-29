@@ -193,7 +193,6 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     if(density) DisplayMetrics::DENSITY_DEVICE = density;
     if(frameDelay) Choreographer::setFrameDelay(frameDelay);
     Typeface::loadPreinstalledSystemFontMap();
-    Typeface::loadFaceFromResource(this);
 
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);
