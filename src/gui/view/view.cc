@@ -6959,6 +6959,12 @@ void View::sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event){
     const bool isWindowDisappearedEvent = isWindowStateChanged && ((event.getContentChangeTypes()
             & AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_DISAPPEARED) != 0);
     if (!isShown() && !isWindowDisappearedEvent) {
+        // The event is consumed by the send pipeline (recycled once handed
+        // off); AOSP drops it for GC here. CDROID must recycle on every drop
+        // path — this gate fires for construction-time/unattached senders
+        // (e.g. CompoundButton::setChecked during inflate) and was the last
+        // big obtain-then-leak family.
+        event.recycle();
         return ;
     }
     onInitializeAccessibilityEvent(event);

@@ -88,6 +88,7 @@ void AccessibilityManager::sendAccessibilityEvent(AccessibilityEvent& event) {
             throw std::runtime_error("Accessibility off. Did you forget to check that?");
         } else {
             LOGE("AccessibilityEvent sent with accessibility disabled");
+            dispatchedEvent->recycle();  // consumed by the send pipeline
             return;
         }
     }
@@ -95,6 +96,7 @@ void AccessibilityManager::sendAccessibilityEvent(AccessibilityEvent& event) {
     if ((dispatchedEvent->getEventType() & mRelevantEventTypes) == 0) {
         LOGI_IF(Debug,"Not dispatching irrelevant event: %p that is not among ",
             dispatchedEvent, AccessibilityEvent::eventTypeToString(mRelevantEventTypes).c_str());
+        dispatchedEvent->recycle();  // consumed by the send pipeline (GC in AOSP)
         return;
     }
 

@@ -194,7 +194,8 @@ AccessibilityEvent*AccessibilityEvent::obtain() {
 
 void AccessibilityEvent::recycle() {
     clear();
-    sPool.release(this);
+    // Pool-full overflow is GC'd in AOSP; delete here (see NodeInfo::recycle).
+    if (!sPool.release(this)) delete this;
 }
 
 void AccessibilityEvent::clear() {

@@ -6559,6 +6559,7 @@ void TextView::sendAccessibilityEventUnchecked(AccessibilityEvent& event) {
     // accessibility and second such events a generated too frequently.
     // For details see the implementation of bringTextIntoView().
     if (event.getEventType() == AccessibilityEvent::TYPE_VIEW_SCROLLED) {
+        event.recycle();  // AOSP drops it for GC; the caller obtained it
         return;
     }
     View::sendAccessibilityEventUnchecked(event);

@@ -615,10 +615,9 @@ void ProgressBar::setStateDescription(const std::string& stateDescription) {
 
 void ProgressBar::onProgressRefresh(float scale, bool fromUser, int progress) {
     if (AccessibilityManager::getInstance(mContext).isEnabled() && !isIndeterminate()) {
-        AccessibilityEvent* event = AccessibilityEvent::obtain();
-        event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
-        //event->setContentChangeTypes(AccessibilityEvent::CONTENT_CHANGE_TYPE_STATE_DESCRIPTION);
-        //sendAccessibilityEventUnchecked(event);
+        // AOSP schedules the (deferred) sender only — no event is built here.
+        // The old obtain() here leaked the event: it was never sent nor
+        // recycled (AOSP drops nothing because it never obtains).
         scheduleAccessibilityEventSender();
     }
 }

@@ -977,7 +977,9 @@ AccessibilityNodeInfo* AccessibilityNodeInfo::obtain(const AccessibilityNodeInfo
 
 void AccessibilityNodeInfo::recycle() {
     clear();
-    sPool.release(this);
+    // AOSP: a full pool means the object is simply garbage-collected. CDROID
+    // owns its memory — free it when the pool cannot take it back.
+    if (!sPool.release(this)) delete this;
     sNumInstancesInUse--;
 }
 
