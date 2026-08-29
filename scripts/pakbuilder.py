@@ -1290,6 +1290,52 @@ def build_shared_lib_pak(res_dir, pak_path, rh_path, namespace,
     return True
 
 
+def embed_exe(pak_path, exe_path):
+    """Embed a linked app executable into its pak as a `bin/<name>` entry,
+    turning pak+ELF into ONE adb-installable bundle (the APK's lib/<abi>/*
+    slot equivalent; pm extracts it back out at install time).
+
+    Idempotent + incremental-safe: rewrites the zip only when the pak has no
+    bin/ entry yet (fresh res-only rebuild wiped it) or the ELF is newer than
+    the pak; otherwise skips. The rewrite goes through a temp file + atomic
+    rename, and REPLACES any prior bin/ entry (duplicate zip entries corrupt
+    libzip's local-header offsets — see the note in PakBuilder.build).
+
+    CLI: pakbuilder.py --embed-exe <app.pak> <exe>
+    """
+    if not os.path.exists(exe_path):
+        raise SystemExit("embed-exe: executable not found: %s" % exe_path)
+    if not os.path.exists(pak_path):
+        raise SystemExit("embed-exe: pak not found: %s (build the pak first)" % pak_path)
+    entry = "bin/" + os.path.basename(exe_path)
+    with zipfile.ZipFile(pak_path) as zf:
+        names = zf.namelist()
+        if entry in names and os.path.getmtime(exe_path) <= os.path.getmtime(pak_path):
+            sys.stderr.write("embed-exe: %s up to date (has %s), skipping\n" % (pak_path, entry))
+            return
+    tmp = pak_path + ".tmp"
+    with zipfile.ZipFile(pak_path) as zin, \
+         zipfile.ZipFile(tmp, "w") as zout:
+        for name in zin.namelist():
+            if name.startswith("bin/") and name != entry:
+                sys.stderr.write("embed-exe: dropping stale %s\n" % name)
+                continue
+            if name == entry:
+                continue          # replaced by the fresh ELF below
+            zout.writestr(name, zin.read(name))
+        zout.writestr(entry, open(exe_path, "rb").read(), zipfile.ZIP_DEFLATED)
+    os.replace(tmp, pak_path)
+    sys.stderr.write("embed-exe: %s embedded as %s (%d bytes) -> %s\n"
+                     % (os.path.basename(exe_path), entry,
+                        os.path.getsize(exe_path), pak_path))
+
+
+def _main_embed_exe(argv):
+    if len(argv) != 2:
+        sys.exit("usage: pakbuilder.py --embed-exe <app.pak> <exe>")
+    embed_exe(argv[0], argv[1])
+
+
 def _main_shared_lib(argv):
     """CLI: pakbuilder.py --shared-lib <res_dir> <pak> [<rh>]
     --namespace X [--package-id 0x03] --aapt2 P -I <framework.apk>"""
@@ -1321,6 +1367,9 @@ def _main_shared_lib(argv):
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--shared-lib":
         _main_shared_lib(sys.argv[2:])
+    if len(sys.argv) > 1 and sys.argv[1] == "--embed-exe":
+        _main_embed_exe(sys.argv[2:])
+        sys.exit(0)
     if len(sys.argv) < 5:
         sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar] [sdk_res] [filter.json] [--widgetex-apk <apk>] [--framework-apk-out <apk>] [--overlay <dir>]...")
     # Pull --widgetex-apk / --framework-apk-out <path> out of argv first: they are

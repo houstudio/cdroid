@@ -236,9 +236,11 @@ void App::onInit(){
     // Locate a shared pak (cdroid.pak / widgetex.pak): data path first, then
     // the executable's directory (build-tree layout puts the app binary in
     // apps/<name>/ with cdroid.pak at the binary-root, so walk up a couple of
-    // levels), then the cwd. Without the framework pak every framework style
-    // resolves empty — a themed app silently loses its parent chain and the
-    // overflow menu renders with no background style at all.
+    // levels), then the cwd, then system install paths ($CDROID_PAK_PATH,
+    // /usr/share/cdroid, /opt/cdroid) for pm-installed apps. Without the
+    // framework pak every framework style resolves empty — a themed app
+    // silently loses its parent chain and the overflow menu renders with no
+    // background style at all.
     auto findSharedPak = [this](const std::string& name) -> std::string {
         std::vector<std::string> cands;
         cands.push_back(getDataPath() + name);
@@ -254,6 +256,24 @@ void App::onInit(){
             cands.push_back(dir + PATH_SEP + name);
         }
         cands.push_back(name);   // cwd
+        // System search paths: an installed app (pm install layout:
+        // /data/app/cdroid/<pkg>/...) can't reach the out-tree root by walking
+        // up, so probe the standard install locations. CDROID_PAK_PATH is a
+        // colon-separated extra list (same role as LD_LIBRARY_PATH).
+        if (const char* env = getenv("CDROID_PAK_PATH")) {
+            std::string list(env);
+            size_t pos = 0;
+            while (pos <= list.size()) {
+                const size_t colon = list.find(':', pos);
+                const std::string dir = list.substr(pos,
+                        colon == std::string::npos ? std::string::npos : colon - pos);
+                if (!dir.empty()) cands.push_back(dir + PATH_SEP + name);
+                if (colon == std::string::npos) break;
+                pos = colon + 1;
+            }
+        }
+        cands.push_back(std::string("/usr/share/cdroid") + PATH_SEP + name);
+        cands.push_back(std::string("/opt/cdroid") + PATH_SEP + name);
         for (const auto& c : cands)
             if (0 == access(c.c_str(), F_OK)) return c;
         return std::string();

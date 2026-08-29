@@ -15,7 +15,7 @@ aux_source_directory(./ DEMO_SRCS)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 add_executable(widgetsDemo ${DEMO_SRCS})
 
-CreatePAK(widgetsDemo ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/widgetsDemo.pak ${PROJECT_SOURCE_DIR}/R.h)
+CreatePAK(widgetsDemo ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/widgetsDemo.pak ${PROJECT_SOURCE_DIR}/R.h EMBED_EXE)
 
 message("widgetsDemo: CDROID_LIBRARIES=${CDROID_LIBRARIES} CDROID_INCLUDE_DIRS=${CDROID_INCLUDE_DIRS}")
 target_link_libraries(widgetsDemo PRIVATE cdroid)

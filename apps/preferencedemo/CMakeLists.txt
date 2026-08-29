@@ -19,7 +19,7 @@ add_executable(preferencedemo main.cc)
 # App pak: the settings preference XMLs + value arrays, compiled to binary
 # AXML/arsc (aapt2, -I framework.apk + widgetex.apk) and loaded at runtime
 # as preferencedemo.pak beside the binary.
-CreatePAK(preferencedemo ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/preferencedemo.pak ${PROJECT_SOURCE_DIR}/R.h)
+CreatePAK(preferencedemo ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/preferencedemo.pak ${PROJECT_SOURCE_DIR}/R.h EMBED_EXE)
 
 target_link_libraries(preferencedemo PRIVATE cdroid)
 install(TARGETS preferencedemo DESTINATION bin)

@@ -70,6 +70,8 @@ add_subdirectory(src/gui/content/androidfw)
 add_subdirectory(src/gui)
 add_subdirectory(src/modules)
 add_subdirectory(src/3rdparty)
+# pm/am device-side CLI tools (adb-install chain) — after src/gui: they link cdroid.
+add_subdirectory(src/cmds)
 
 add_subdirectory(apps)
 

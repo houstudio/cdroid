@@ -47,7 +47,7 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
     # ONLY a shared pak works too. NAMESPACE feeds the R.h namespace and the
     # manifest package (dotted-qualified, e.g. cdroid.<ns>); PACKAGE_ID
     # defaults to 0x03.
-    set(_pak_options SHARED_LIB)
+    set(_pak_options SHARED_LIB EMBED_EXE)
     set(_pak_one_value NAMESPACE PACKAGE_ID)
     cmake_parse_arguments(PAK "${_pak_options}" "${_pak_one_value}" "" ${ARGN})
     if(PAK_SHARED_LIB)
@@ -184,6 +184,27 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
             COMMENT "Deploy overlaid cdroid.pak beside ${project} binary")
         add_dependencies(${project} ${project}_framework_assets)
         message(STATUS "CreatePAK(${project}): framework overlay from ${CMAKE_CURRENT_SOURCE_DIR}/overlay")
+    endif()
+    # EMBED_EXE: bundle the linked app binary into the pak as a `bin/<name>`
+    # entry (the APK lib/<abi>/* slot) — one self-contained file for
+    # `adb install` / `pm install`. A custom target (not POST_BUILD) so a
+    # res-only pak rebuild — which wipes the bin/ entry — re-embeds too; the
+    # script itself is idempotent (skips when the entry is current).
+    if(PAK_EMBED_EXE)
+        if(NOT TARGET ${project})
+            message(FATAL_ERROR "CreatePAK(${project}): EMBED_EXE needs an executable target named ${project}")
+        endif()
+        add_custom_target(${project}_embed_exe ALL
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py --embed-exe
+                    ${PakPath} $<TARGET_FILE:${project}>
+            COMMAND ${CMAKE_COMMAND} -E copy ${PakPath} ${CMAKE_BINARY_DIR}
+            DEPENDS ${project} ${project}_assets
+            COMMENT "Embed ${project} exe into ${PakPath} (installable bundle)")
+        # The pak itself is rebuilt by ${project}_assets; embed reads it after.
+        # The copy refreshes the binary-root copy AFTER embedding — the one in
+        # ${project}_assets predates the bin/ entry, so without this the root
+        # copy ships without the binary.
+        add_dependencies(${project}_embed_exe ${project}_assets)
     endif()
     install(FILES ${PakPath} DESTINATION data)
 endfunction()
