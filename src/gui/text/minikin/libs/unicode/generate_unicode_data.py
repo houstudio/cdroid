@@ -104,7 +104,14 @@ BIN_ALIASES = {'Alphabetic':'ALPHABETIC','Uppercase':'UPPERCASE','Lowercase':'LO
                'White_Space':'WHITE_SPACE','Hex_Digit':'HEX_DIGIT','ID_Start':'ID_START',
                'ID_Continue':'ID_CONTINUE','Ideographic':'IDEOGRAPHIC',
                'Grapheme_Extend':'GRAPHEME_EXTEND','Math':'MATH','Dash':'DASH',
-               'Extended_Pictographic':'EXTENDED_PICTOGRAPHIC'}
+               'Extended_Pictographic':'EXTENDED_PICTOGRAPHIC',
+               # emoji-data.txt properties (Emoji, Emoji_Presentation, Emoji_Modifier,
+               # Emoji_Modifier_Base, Emoji_Component) share the UCD "# range ; prop" format.
+               'Emoji':'EMOJI','Emoji_Presentation':'EMOJI_PRESENTATION',
+               'Emoji_Modifier':'EMOJI_MODIFIER','Emoji_Modifier_Base':'EMOJI_MODIFIER_BASE',
+               'Emoji_Component':'EMOJI_COMPONENT',
+               # BaseKeyListener.isVariationSelector needs this binary prop
+               'Variation_Selector':'VARIATION_SELECTOR'}
 
 # UAX#29 WordBreakProperty.txt label -> ubrk WBProperty enum value.
 # Values are PARSED from ubrk.cpp's WBProperty enum (explicit values) to prevent drift —
@@ -192,6 +199,18 @@ def main():
     # 5b) PropList.txt — the rest of the binary props (White_Space, Hex_Digit,
     #     Ideographic, Bidi_Mirrored, ...). These are NOT in DerivedCoreProperties.
     for s, e, val in each_prop_range(os.path.join(UCD, "PropList.txt")):
+        key = BIN_ALIASES.get(val)
+        if not key or key not in BIN_BIT: continue
+        bit = BIN_BIT[key]
+        setprop(s, e, lambda p, bit=bit: p.__setitem__(6, p[6] | (1 << bit)))
+
+    # 5c) emoji/emoji-data.txt — emoji binary props (Emoji, Emoji_Presentation,
+    #     Emoji_Modifier, Emoji_Modifier_Base, Emoji_Component, Extended_Pictographic).
+    #     GraphemeBreak's GB11 ZWJ rule and minikin/Emoji.h predicates need these.
+    emoji_data = os.path.join(UCD, "emoji", "emoji-data.txt")
+    if not os.path.exists(emoji_data):
+        emoji_data = os.path.join(UCD, "emoji-data.txt")  # flat-layout fallback
+    for s, e, val in each_prop_range(emoji_data):
         key = BIN_ALIASES.get(val)
         if not key or key not in BIN_BIT: continue
         bit = BIN_BIT[key]

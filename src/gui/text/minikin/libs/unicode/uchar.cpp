@@ -23,35 +23,35 @@ U_CAPI UChar32 U_EXPORT2 u_charMirror(UChar32 c) {
 
 U_CAPI int32_t U_EXPORT2 u_getIntPropertyValue(UChar32 c, UProperty property) {
     const auto* range = findUnicodeRange(c);
-    
+
     switch (property) {
         case UCHAR_BIDI_CLASS:
             return range->directionality;
-        
+
         case UCHAR_GENERAL_CATEGORY:
             return range->category;
-        
+
         case UCHAR_GRAPHEME_CLUSTER_BREAK:
             return range->gcb;
-        
+
         case UCHAR_LINE_BREAK:
             return range->lb;
-        
+
         case UCHAR_CANONICAL_COMBINING_CLASS:
             return range->ccc;
-        
+
+        // Binary properties: pass the myicu enum value itself — the earlier
+        // hardcoded 8/151/149/150 were upstream ICU numbering, which indexes
+        // unrelated bits (and 151 is beyond the 0..127 bitmap, always false).
         case UCHAR_EMOJI:
-            return range->hasBinaryProperty(8) ? 1 : 0;
-        
-        case UCHAR_EXTENDED_PICTOGRAPHIC:
-            return range->hasBinaryProperty(151) ? 1 : 0;
-        
+        case UCHAR_EMOJI_PRESENTATION:
         case UCHAR_EMOJI_MODIFIER:
-            return range->hasBinaryProperty(149) ? 1 : 0;
-        
         case UCHAR_EMOJI_MODIFIER_BASE:
-            return range->hasBinaryProperty(150) ? 1 : 0;
-        
+        case UCHAR_EMOJI_COMPONENT:
+        case UCHAR_REGIONAL_INDICATOR:
+        case UCHAR_EXTENDED_PICTOGRAPHIC:
+            return range->hasBinaryProperty(property) ? 1 : 0;
+
         default:
             return 0;
     }
