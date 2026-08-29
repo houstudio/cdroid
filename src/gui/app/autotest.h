@@ -7,6 +7,7 @@
 namespace cdroid {
 
 class AccessibilityNodeInfo;
+class Window;
 
 /**
  * App-level semantic UI sweep (--auto-test): a generic driver on top of
@@ -51,6 +52,8 @@ private:
     long mStepIntervalMs = 2500;
     int mStepCount = 0;
     size_t mScanIndex = (size_t)-1;
+    bool mKeepIndexOnRebuild = false;  // stale-rebuild resumes, wrap restarts
+    Window* mLastActiveWindow = nullptr;  // follow navigation: new window, new snapshot
     std::vector<AccessibilityNodeInfo*> mClickables;
 
     // --- script state ---

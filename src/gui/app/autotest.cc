@@ -4,6 +4,7 @@
 #include <core/app.h>
 #include <core/handler.h>
 #include <core/systemclock.h>
+#include <core/windowmanager.h>
 #include <core/tokenizer.h>
 #include <view/accessibility/accessibilityevent.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
@@ -15,9 +16,6 @@
 namespace cdroid {
 
 namespace {
-// Screen clip for the visibility filter (the active window's frame).
-constexpr int kScreenWidth = 1280;
-constexpr int kScreenHeight = 720;
 constexpr int kMaxDepth = 16;
 // A standing handler: the posted steps must outlive each call frame (the
 // cdwindow teardown-post idiom — a temporary Handler can drop them).
@@ -50,57 +48,61 @@ void UiAutoTest::stop() {
 
 void UiAutoTest::collectClickable(AccessibilityNodeInfo* node, int depth) {
     if (node == nullptr || depth > kMaxDepth) return;
-    Rect b; node->getBoundsInScreen(b);
-    if (b.left < kScreenWidth && b.top < kScreenHeight
-            && b.left + b.width > 0 && b.top + b.height > 0
-            && node->isClickable() && node->isEnabled()) {
+    if (node->isVisibleToUser() && node->isClickable() && node->isEnabled()) {
         mClickables.push_back(node);
-        return;  // clickable subtrees are activation units; don't descend
+        // Keep descending anyway: a clickable CONTAINER (fragment roots often
+        // carry clickable=true) still holds independent child targets —
+        // stopping here is why the sweep only ever reached the tab row.
     }
     for (int i = 0; i < node->getChildCount(); i++) {
         collectClickable(node->getChild(i), depth + 1);
     }
-    // Non-branching intermediate nodes were only walk scaffolding.
-    if (depth > 0) node->recycle();
+    if (std::find(mClickables.begin(), mClickables.end(), node) == mClickables.end()) {
+        node->recycle();  // walk scaffolding (kept clickables stay alive)
+    }
 }
 
 void UiAutoTest::step() {
     if (!mRunning) return;
     UiAutomation& automation = UiAutomation::getInstance();
+    // Follow window navigation (dialogs/sub-activities): stale snapshot would
+    // click a now-background window invisibly.
+    if (Window* active = WindowManager::getInstance().getActiveWindow()) {
+        if (active != mLastActiveWindow) {
+            LOGI("AUTOTEST active window %p -> %p", (void*)mLastActiveWindow, (void*)active);
+            mLastActiveWindow = active;
+        }
+    }
     AccessibilityNodeInfo* root = automation.getRootInActiveWindow();
     if (root == nullptr) {  // no window yet (or between windows) — retry
         stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
         return;
     }
-    // Refresh the snapshot on wrap (position-stable otherwise), like the
-    // switchaccess scanner.
-    if (mClickables.empty() || mScanIndex + 1 >= mClickables.size()) {
-        for (auto* stale : mClickables) stale->recycle();
-        mClickables.clear();
-        mScanIndex = (size_t)-1;
-        collectClickable(root, 0);
-        std::sort(mClickables.begin(), mClickables.end(),
-                  [](AccessibilityNodeInfo* a, AccessibilityNodeInfo* b) {
-                      Rect ra, rb;
-                      a->getBoundsInScreen(ra);
-                      b->getBoundsInScreen(rb);
-                      if (ra.top != rb.top) return ra.top < rb.top;
-                      return ra.left < rb.left;
-                  });
-        root->recycle();  // walk scaffolding; clickables are separate objects
-    } else {
-        root->recycle();
-    }
-    if (mClickables.empty()) {  // root already recycled above on both paths
+    // Rebuild the snapshot EVERY step. Tab clicks flip ViewPager pages whose
+    // outgoing fragment views stay alive-but-offscreen — refresh() cannot
+    // detect that, and a kept snapshot ends up clicking invisible pages. A
+    // fresh position-sorted walk each step makes the sweep follow the UI;
+    // mStepCount % size still cycles through a stable page systematically.
+    for (auto* stale : mClickables) stale->recycle();
+    mClickables.clear();
+    collectClickable(root, 0);
+    std::sort(mClickables.begin(), mClickables.end(),
+              [](AccessibilityNodeInfo* a, AccessibilityNodeInfo* b) {
+                  Rect ra, rb;
+                  a->getBoundsInScreen(ra);
+                  b->getBoundsInScreen(rb);
+                  if (ra.top != rb.top) return ra.top < rb.top;
+                  return ra.left < rb.left;
+              });
+    if (mClickables.empty()) {
         stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
         return;
     }
-    mScanIndex = (mScanIndex + 1) % mClickables.size();
-    AccessibilityNodeInfo* target = mClickables.at(mScanIndex);
+    mStepCount++;
+    AccessibilityNodeInfo* target = mClickables.at(mStepCount % mClickables.size());
     const std::string label = target->getText().empty()
             ? target->getContentDescription() : target->getText();
 
-    mStepCount++;
     // Visual feedback: a semantic click fires no pressed-state animation —
     // park the accessibility focus highlight on the target so the sweep is
     // observable on screen (the scanner's own highlight path).
@@ -110,8 +112,9 @@ void UiAutoTest::step() {
         [](AccessibilityEvent& e) {
             return e.getEventType() == AccessibilityEvent::TYPE_VIEW_CLICKED; },
         1500);
-    LOGI("AUTOTEST [%d] %2zu/%zu [%s] -> %s", mStepCount, mScanIndex + 1,
-         mClickables.size(), label.c_str(), hit ? "PASS" : "no-event");
+    LOGI("AUTOTEST [%d] %2zu/%zu [%s] -> %s", mStepCount,
+         mStepCount % mClickables.size() + 1, mClickables.size(),
+         label.c_str(), hit ? "PASS" : "no-event");
     if (hit) hit->recycle();
 
     stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);

@@ -1759,7 +1759,11 @@ bool ViewGroup::isViewDescendantOf(View* child, View* parent) {
         return true;
     }
     ViewGroup* theParent = child->getParent();
-    return isViewDescendantOf((View*) theParent, parent);
+    // android-36 (ViewRootImpl.isViewDescendantOf): '(theParent instanceof
+    // ViewGroup) && recurse' — the walk ends at the ViewRootImpl boundary.
+    // CDROID's tree root has a null parent (no ViewRootImpl wrapper), which
+    // is the same boundary.
+    return theParent != nullptr && isViewDescendantOf((View*) theParent, parent);
 }
 
 void ViewGroup::addView(View* view){

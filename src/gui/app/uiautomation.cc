@@ -23,6 +23,9 @@ public:
         info.eventTypes = AccessibilityEvent::TYPES_ALL_MASK;
         info.feedbackType = AccessibilityServiceInfo::FEEDBACK_GENERIC;
         info.setCapabilities(AccessibilityServiceInfo::CAPABILITY_CAN_RETRIEVE_WINDOW_CONTENT);
+        // The focus-rect drawing is gated on touch-exploration state; a test
+        // driver wants its operations visible on screen, same as the scanner.
+        info.flags = AccessibilityServiceInfo::FLAG_REQUEST_TOUCH_EXPLORATION_MODE;
         setServiceInfo(info);
     }
 
