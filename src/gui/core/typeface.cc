@@ -1115,10 +1115,10 @@ static Cairo::RefPtr<Cairo::ImageSurface> colorGlyphSurface(int32_t fontId, FT_U
     return surf;
 }
 
-bool drawColorGlyph(const minikin::MinikinFont* font, Canvas& c, uint32_t glyphIndex,
-        double glyphX, double glyphY, double textSize) {
+const ColorGlyph* getColorGlyph(const minikin::MinikinFont* font,
+        uint32_t glyphIndex, double textSize) {
     FT_Face face = colorFaceFor(font);
-    if (face == nullptr) return false;
+    if (face == nullptr) return nullptr;
     // Bitmap-only (CBDT) faces cannot honor a scalable size request: FreeType
     // keeps the strike metrics but stays in scalable load mode, and
     // FT_Load_Glyph then fails with Unimplemented_Feature (it refuses to
@@ -1136,24 +1136,24 @@ bool drawColorGlyph(const minikin::MinikinFont* font, Canvas& c, uint32_t glyphI
         }
         FT_Select_Size(face, best);
     }
-    if (FT_Load_Glyph(face, glyphIndex, FT_LOAD_COLOR) != 0) return false;
+    if (FT_Load_Glyph(face, glyphIndex, FT_LOAD_COLOR) != 0) return nullptr;
     const FT_GlyphSlot slot = face->glyph;
     if (slot->format != FT_GLYPH_FORMAT_BITMAP
             || slot->bitmap.pixel_mode != FT_PIXEL_MODE_BGRA) {
-        return false;
+        return nullptr;
     }
-    // The bitmap is at the strike's pixel size; scale to the requested size.
+    // The bitmap is at the strike's pixel size; report placement pre-scaled
+    // to the requested text size (the surface itself stays at strike
+    // resolution and the caller scales it when painting).
     const double strike = face->size->metrics.y_ppem;
     const double scale = (strike > 0) ? textSize / strike : 1.0;
     auto surf = colorGlyphSurface(font->GetSourceId(), glyphIndex, face);
-    c.save();
-    c.translate(glyphX + slot->bitmap_left * scale,
-                glyphY - slot->bitmap_top * scale);
-    c.scale(scale, scale);
-    c.set_source(surf, 0.0, 0.0);
-    c.paint();
-    c.restore();
-    return true;
+    static thread_local ColorGlyph out;
+    out.surface = surf;
+    out.left = slot->bitmap_left * scale;
+    out.top = -(double)slot->bitmap_top * scale;
+    out.scale = scale;
+    return &out;
 }
 
 }

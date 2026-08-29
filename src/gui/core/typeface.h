@@ -23,6 +23,7 @@ namespace cdroid{ class Asset; }  // content/asset.h (finishAssetTypeface param,
 #include <vector>
 #include <memory>
 #include <cairomm/scaledfont.h>
+#include <cairomm/surface.h>
 namespace minikin{
     class FontFamily;
     class FontCollection;
@@ -30,7 +31,6 @@ namespace minikin{
     class MinikinPaint;
 }
 namespace cdroid{
-class Canvas;
 class Context;
 class FontFamily{};
 class Typeface{
@@ -171,12 +171,20 @@ public:
     }
 };
 
-// CBDT/sbix color-glyph blit (impl in typeface.cc; used by Paint::drawTextRun
-// to render color bitmap emoji as scaled images instead of cairo alpha masks).
-// Returns false when the glyph is not a color bitmap and must take the normal
-// glyph-mask path.
-bool drawColorGlyph(const minikin::MinikinFont* font, Canvas& c, uint32_t glyphIndex,
-        double glyphX, double glyphY, double textSize);
+// CBDT/sbix color-glyph data (impl in typeface.cc). Pure font-resource
+// access — the glyph's color bitmap as an ARGB32 surface plus its placement
+// relative to the pen position at `textSize` — mirroring how MinikinFont
+// serves GetBounds/GetFontExtent. Painting it is the caller's (Paint's) job.
+struct ColorGlyph {
+    Cairo::RefPtr<Cairo::ImageSurface> surface;  // premultiplied ARGB32, strike resolution
+    double left;    // bitmap_left already scaled to textSize
+    double top;     // -bitmap_top already scaled to textSize
+    double scale;   // textSize / strike ppem — paint scales the surface by this
+};
+// Returns nullptr when the glyph is not a color bitmap glyph and must take
+// the normal alpha-mask path.
+const ColorGlyph* getColorGlyph(const minikin::MinikinFont* font,
+        uint32_t glyphIndex, double textSize);
 
 }
 
