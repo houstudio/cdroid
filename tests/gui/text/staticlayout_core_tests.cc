@@ -115,7 +115,16 @@ struct EditorState {
                 const size_t sp = spec.find(' ', i);
                 const std::string hex = spec.substr(i + 2,
                         (sp == std::string::npos ? spec.size() : sp) - i - 2);
-                text.push_back((char16_t) std::stoul(hex, nullptr, 16));
+                // emit surrogate pairs like AOSP's appendCodePoint — casting a
+                // supplementary code point straight to char16_t truncates it
+                const uint32_t cp = std::stoul(hex, nullptr, 16);
+                if (cp >= 0x10000) {
+                    const uint32_t v = cp - 0x10000;
+                    text.push_back((char16_t)(0xD800 + (v >> 10)));
+                    text.push_back((char16_t)(0xDC00 + (v & 0x3FF)));
+                } else {
+                    text.push_back((char16_t)cp);
+                }
                 i = (sp == std::string::npos) ? spec.size() : sp;
             } else if (spec[i] == '|') {
                 cursor = (int) text.size();
