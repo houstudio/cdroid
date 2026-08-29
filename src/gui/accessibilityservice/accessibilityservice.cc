@@ -53,7 +53,11 @@ AccessibilityNodeInfo* AccessibilityService::getRootInActiveWindow() {
     if (active == nullptr) {
         return nullptr;
     }
-    return active->createAccessibilityNodeInfo();
+    // Seal at the service boundary (AOSP: sealed when ViewRootImpl marshals
+    // the reply) — the framework keeps factory nodes unsealed.
+    AccessibilityNodeInfo* root = active->createAccessibilityNodeInfo();
+    if (root != nullptr) root->setSealed(true);
+    return root;
 }
 
 AccessibilityNodeInfo* AccessibilityService::findFocus(int focus) {
@@ -61,12 +65,16 @@ AccessibilityNodeInfo* AccessibilityService::findFocus(int focus) {
     if (active == nullptr) {
         return nullptr;
     }
+    View* source = nullptr;
     if (focus == FOCUS_ACCESSIBILITY) {
-        View* host = active->getAccessibilityFocusedHost();
-        return host != nullptr ? host->createAccessibilityNodeInfo() : nullptr;
+        source = active->getAccessibilityFocusedHost();
+    } else {
+        source = active->findFocus();
     }
-    View* focused = active->findFocus();
-    return focused != nullptr ? focused->createAccessibilityNodeInfo() : nullptr;
+    if (source == nullptr) return nullptr;
+    AccessibilityNodeInfo* node = source->createAccessibilityNodeInfo();
+    if (node != nullptr) node->setSealed(true);  // sealed snapshot at the boundary
+    return node;
 }
 
 bool AccessibilityService::performGlobalAction(int action) {

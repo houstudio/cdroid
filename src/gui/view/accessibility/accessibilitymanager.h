@@ -64,6 +64,9 @@ private:
     //IAccessibilityManagerClient.Stub mClient;
 private:
     void setStateLocked(int stateFlags);
+    // Recompute enabled/touch-exploration/relevant-event state from the
+    // bound services (AOSP: AMS state push on bind/unbind/info change).
+    void updateBoundServicesStateLocked();
     //IAccessibilityManager getServiceLocked();
     //void tryConnectToServiceLocked(IAccessibilityManager service);
     void notifyAccessibilityStateChanged();

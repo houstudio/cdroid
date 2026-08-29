@@ -9,7 +9,9 @@
 //
 // F1/F2 land on the Window first; the demo buttons show the clicks happening.
 #include <cdroid.h>
+#include <widget/R.h>
 #include <cdlog.h>
+#include <algorithm>
 #include <accessibilityservice/accessibilityservice.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/accessibility/accessibilityevent.h>
@@ -39,6 +41,9 @@ public:
         info.eventTypes = AccessibilityEvent::TYPES_ALL_MASK;
         info.feedbackType = AccessibilityServiceInfo::FEEDBACK_GENERIC;
         info.setCapabilities(AccessibilityServiceInfo::CAPABILITY_CAN_RETRIEVE_WINDOW_CONTENT);
+        // Drives the manager's touch-exploration state, which gates the
+        // accessibility focus highlight drawing.
+        info.flags = AccessibilityServiceInfo::FLAG_REQUEST_TOUCH_EXPLORATION_MODE;
         setServiceInfo(info);
         LOGD("SwitchScanner connected");
     }
@@ -49,19 +54,41 @@ public:
     void onInterrupt() override {}
 
     // One switch = advance; the other = activate (the classic two-switch scan).
+    // The list is a SNAPSHOT sorted by screen position: re-collecting on every
+    // key made the order wobble (the picker's virtual nodes appear/disappear
+    // with focus, 9<->10 items), so the index jumped around. Rebuild only on
+    // wrap or when the scanned node no longer resolves.
     void scan(Window* window) {
-        AccessibilityNodeInfo* root = getRootInActiveWindow();
-        if (root == nullptr) return;
-        mClickable.clear();
-        collectClickable(root, mClickable);
+        if (mClickable.empty()) rebuild();
         if (mClickable.empty()) { LOGD("no clickable nodes"); return; }
         mScanIndex = (mScanIndex + 1) % mClickable.size();
+        if (mScanIndex == 0) {  // wrapped: refresh the snapshot
+            rebuild();
+            if (mClickable.empty()) { LOGD("no clickable nodes"); return; }
+            mScanIndex = 0;
+        }
         AccessibilityNodeInfo* node = mClickable.at(mScanIndex);
-        // Input focus gives a visible highlight (the a11y-focus drawable is TODO).
+        // Accessibility focus draws the highlight (view_accessibility_focused).
+        node->performAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
         node->performAction(AccessibilityNodeInfo::ACTION_FOCUS);
         Rect bounds; node->getBoundsInScreen(bounds);
         LOGD("scan[%zu/%zu] %s bounds=(%d,%d %dx%d)", mScanIndex + 1, mClickable.size(),
                 nodeLabel(node).c_str(), bounds.left, bounds.top, bounds.width, bounds.height);
+    }
+    void rebuild() {
+        mClickable.clear();
+        mScanIndex = (size_t)-1;
+        AccessibilityNodeInfo* root = getRootInActiveWindow();
+        if (root == nullptr) return;
+        collectClickable(root, mClickable);
+        std::sort(mClickable.begin(), mClickable.end(),
+                  [](AccessibilityNodeInfo* a, AccessibilityNodeInfo* b) {
+                      Rect ra, rb;
+                      a->getBoundsInScreen(ra);
+                      b->getBoundsInScreen(rb);
+                      if (ra.top != rb.top) return ra.top < rb.top;
+                      return ra.left < rb.left;
+                  });
     }
     void activate() {
         if (mScanIndex >= mClickable.size()) return;
@@ -78,6 +105,7 @@ class DemoWindow : public Window {
 private:
     SwitchScanner* mScanner;
     TextView* mLog;
+    std::string mNpInputName;
 public:
     DemoWindow(SwitchScanner* scanner) : Window(0, 0, -1, -1), mScanner(scanner) {
         setBackgroundColor(0xFF202830);
@@ -104,11 +132,45 @@ public:
         CheckBox* chk = new CheckBox(&App::getInstance());
         chk->setText("a checkbox too");
         content->addView(chk);
+
+        // Virtual-view exercise: NumberPicker exposes its +/-/input as virtual
+        // nodes via its AccessibilityNodeProvider — the scanner walks them like
+        // any other node, and clicking the increment virtual node drives the
+        // real picker (onValueChanged below proves it end-to-end).
+        NumberPicker* np = new NumberPicker(&App::getInstance());
+        View* npInput = np->findViewById(cdroid::R::id::numberpicker_input);
+        std::string npInputName;
+        if (npInput != nullptr) {
+            App::getInstance().getResources().getResourceName(npInput->getId(), &npInputName);
+            LOGD("picker input view id name: %s", npInputName.c_str());
+        }
+        mNpInputName = npInputName;
+        np->setMinValue(1);
+        np->setMaxValue(12);
+        np->setValue(7);
+        np->setMinHeight(160);
+        np->setOnValueChangedListener([](NumberPicker&, int prev, int value) {
+            LOGD("numberpicker value %d->%d (virtual click worked)", prev, value);
+        });
+        content->addView(np);
     }
     bool onKeyDown(int keyCode, KeyEvent& event) override {
         if (keyCode == KeyEvent::KEYCODE_F1) { mScanner->scan(this); return true; }
         if (keyCode == KeyEvent::KEYCODE_F2) { mScanner->activate(); return true; }
         if (keyCode == KeyEvent::KEYCODE_F3) { performGlobalActionFromScanner(); return true; }
+        if (keyCode == KeyEvent::KEYCODE_F4) {
+            // ByViewId exercise: search the tree by the picker input's
+            // fully-qualified resource name.
+            AccessibilityNodeInfo* root = mScanner->getRootInActiveWindow();
+            if (root != nullptr && mNpInputName.length()) {
+                auto hits = root->findAccessibilityNodeInfosByViewId(mNpInputName);
+                for (auto* n : hits) {
+                    LOGD("ByViewId hit: %s (text=%s)", mNpInputName.c_str(), n->getText().c_str());
+                }
+                LOGD("ByViewId %s -> %zu hit(s)", mNpInputName.c_str(), hits.size());
+            }
+            return true;
+        }
         return Window::onKeyDown(keyCode, event);
     }
     void performGlobalActionFromScanner() {

@@ -1633,10 +1633,15 @@ bool Window::getAccessibilityFocusedRect(Rect& bounds){
 }
 
 Drawable* Window::getAccessibilityFocusedDrawable(){
-    // Lazily load the accessibility focus drawable.
+    // Lazily load the accessibility focus drawable from the theme
+    // (AOSP ViewRootImpl: accessibilityFocusedDrawable -> view_accessibility_focused).
     if (mAttachInfo->mAccessibilityFocusDrawable == nullptr) {
-        LOGD("TODO");
-        //mAttachInfo->mAccessibilityFocusDrawable = mContext->getDrawable(value.resourceId);
+        TypedValue value;
+        const bool resolved = mContext->getTheme().resolveAttribute(
+                (int)internal::R::attr::accessibilityFocusedDrawable, &value, true);
+        if (resolved && value.resourceId != 0) {
+            mAttachInfo->mAccessibilityFocusDrawable = mContext->getDrawable(value.resourceId);
+        }
     }
     return mAttachInfo->mAccessibilityFocusDrawable;
 }

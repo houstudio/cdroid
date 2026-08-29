@@ -7031,17 +7031,11 @@ void View::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
 }
 
 AccessibilityNodeInfo* View::createAccessibilityNodeInfo() {
-    AccessibilityNodeInfo* info;
     if (mAccessibilityDelegate != nullptr) {
-        info = mAccessibilityDelegate->createAccessibilityNodeInfo(*this);
+        return mAccessibilityDelegate->createAccessibilityNodeInfo(*this);
     } else {
-        info = createAccessibilityNodeInfoInternal();
+        return createAccessibilityNodeInfoInternal();
     }
-    // AOSP ViewRootImpl seals a node when it marshals the reply — a node
-    // handed to an accessibility consumer is an immutable snapshot. Seal at
-    // the framework boundary (init ran while unsealed).
-    if (info != nullptr) info->setSealed(true);
-    return info;
 }
 
 AccessibilityNodeInfo* View::createAccessibilityNodeInfoInternal(){

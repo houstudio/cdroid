@@ -370,9 +370,35 @@ std::vector<AccessibilityNodeInfo*> AccessibilityNodeInfo::findAccessibilityNode
 
 std::vector<AccessibilityNodeInfo*> AccessibilityNodeInfo::findAccessibilityNodeInfosByViewId(const std::string& viewId) {
     enforceSealed();
-    // Deferred: matching "pkg:id/name" needs the reverse resource-name lookup
-    // (id -> entry name), which the Resources layer does not expose yet.
-    return std::vector<AccessibilityNodeInfo*>();
+    std::vector<AccessibilityNodeInfo*> result;
+    View* host = findHostViewAcrossWindows(getAccessibilityViewId(mSourceNodeId));
+    if (host == nullptr) {
+        return result;
+    }
+    // AOSP matches the fully-qualified name ("pkg:id/name") the node carries
+    // (populated under FLAG_REPORT_VIEW_IDS); in-process we resolve the name
+    // at match time against the live tree — same string, both sides from
+    // Resources.getResourceName.
+    std::function<void(View*)> visit = [&](View* view) {
+        if (view->getId() != View::NO_ID) {
+            std::string name;
+            if (view->getResources().getResourceName(view->getId(), &name) && name == viewId) {
+                AccessibilityNodeInfo* node = view->createAccessibilityNodeInfo();
+                if (node != nullptr) {
+                    node->setSealed(true);  // sealed snapshot at the boundary
+                    result.push_back(node);
+                }
+            }
+        }
+        ViewGroup* group = dynamic_cast<ViewGroup*>(view);
+        if (group != nullptr) {
+            for (int i = 0; i < group->getChildCount(); i++) {
+                visit(group->getChildAt(i));
+            }
+        }
+    };
+    visit(host);
+    return result;
 }
 
 AccessibilityWindowInfo* AccessibilityNodeInfo::getWindow() {
@@ -1598,13 +1624,18 @@ AccessibilityNodeInfo* AccessibilityNodeInfo::getNodeForAccessibilityId(long acc
     }
     const int virtualId = getVirtualDescendantId(accessibilityId);
     AccessibilityNodeProvider* provider = host->getAccessibilityNodeProvider();
+    AccessibilityNodeInfo* node = nullptr;
     if (provider != nullptr) {
-        AccessibilityNodeInfo* node = provider->createAccessibilityNodeInfo(virtualId);
-        if (node != nullptr) node->setSealed(true);  // sealed snapshot (see View::createAccessibilityNodeInfo)
-        return node;
+        node = provider->createAccessibilityNodeInfo(virtualId);
+    } else if (virtualId == AccessibilityNodeProvider::HOST_VIEW_ID) {
+        node = host->createAccessibilityNodeInfo();
     }
-    return virtualId == AccessibilityNodeProvider::HOST_VIEW_ID
-            ? host->createAccessibilityNodeInfo() : nullptr;
+    // AOSP seals when ViewRootImpl marshals the reply to the caller — the node
+    // must stay unsealed INSIDE the framework (providers legitimately keep
+    // mutating a created node, e.g. NumberPicker re-sources the input node),
+    // and arrives to an accessibility consumer as an immutable snapshot.
+    if (node != nullptr) node->setSealed(true);
+    return node;
 }
 
 std::string AccessibilityNodeInfo::idToString(long accessibilityId) {

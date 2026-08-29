@@ -113,27 +113,34 @@ void AccessibilityManager::sendAccessibilityEvent(AccessibilityEvent& event) {
     dispatchedEvent->recycle();
 }
 
+// AOSP: touch exploration is on while a bound service requested it (there it
+// also needs user consent; in-process the bound service IS the consent).
+void AccessibilityManager::updateBoundServicesStateLocked() {
+    int relevant = 0;
+    bool wantsTouchExploration = false;
+    for (const AccessibilityService* s : mBoundServices) {
+        const AccessibilityServiceInfo info = s->getServiceInfo();
+        relevant |= info.eventTypes;
+        wantsTouchExploration |= (info.flags
+                & AccessibilityServiceInfo::FLAG_REQUEST_TOUCH_EXPLORATION_MODE) != 0;
+    }
+    mRelevantEventTypes = relevant;
+    setStateLocked((mBoundServices.empty() ? 0 : STATE_FLAG_ACCESSIBILITY_ENABLED)
+            | (wantsTouchExploration ? STATE_FLAG_TOUCH_EXPLORATION_ENABLED : 0));
+}
+
 void AccessibilityManager::addAccessibilityService(AccessibilityService* service) {
     if (service == nullptr
             || std::find(mBoundServices.begin(), mBoundServices.end(), service) != mBoundServices.end()) {
         return;
     }
     mBoundServices.push_back(service);
-    // AOSP computeRelevantEventTypesLocked: OR of the bound services' infos.
-    mRelevantEventTypes = 0;
-    for (const AccessibilityService* s : mBoundServices) {
-        mRelevantEventTypes |= s->getServiceInfo().eventTypes;
-    }
-    if (mBoundServices.size() == 1) {
-        // Accessibility became enabled (a bound service exists now).
-        setStateLocked(STATE_FLAG_ACCESSIBILITY_ENABLED);
-    }
     // AOSP fires onServiceConnected after the connection registered; the
-    // service typically pushes its real info there, so recompute the routing
-    // AFTER the callback returns (mRelevantEventTypes was still 0 above).
+    // service typically pushes its real info there, so compute the routing
+    // AFTER the callback returns (the info was still default above).
     service->onServiceConnected();
     service->mConnected = true;
-    onServiceInfoChanged(service);
+    updateBoundServicesStateLocked();
 }
 
 void AccessibilityManager::removeAccessibilityService(AccessibilityService* service) {
@@ -142,21 +149,11 @@ void AccessibilityManager::removeAccessibilityService(AccessibilityService* serv
         return;
     }
     mBoundServices.erase(it);
-    mRelevantEventTypes = 0;
-    for (const AccessibilityService* s : mBoundServices) {
-        mRelevantEventTypes |= s->getServiceInfo().eventTypes;
-    }
-    if (mBoundServices.empty()) {
-        // Accessibility became disabled (no bound service left).
-        setStateLocked(0);
-    }
+    updateBoundServicesStateLocked();
 }
 
 void AccessibilityManager::onServiceInfoChanged(AccessibilityService* /*service*/) {
-    mRelevantEventTypes = 0;
-    for (const AccessibilityService* s : mBoundServices) {
-        mRelevantEventTypes |= s->getServiceInfo().eventTypes;
-    }
+    updateBoundServicesStateLocked();
 }
 
 std::vector<AccessibilityServiceInfo> AccessibilityManager::getEnabledAccessibilityServiceList(

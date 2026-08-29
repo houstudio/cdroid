@@ -6524,7 +6524,16 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
 }
 
 bool TextView::performAccessibilityActionInternal(int action, Bundle* arguments) {
-    return true;
+    switch (action) {
+    // TODO (AOSP implements these here): NEXT/PREVIOUS_AT_MOVEMENT_GRANULARITY
+    // (traverseAtGranularity), ACTION_SET_SELECTION/CLEAR_SELECTION,
+    // COPY/PASTE/CUT, ACTION_SET_TEXT — deferred until Editor/Selection land.
+    default:
+        // Everything else (CLICK, FOCUS, ACCESSIBILITY_FOCUS, ...) is the View
+        // implementation — the old stub returned true unconditionally, faking
+        // success for every action on every TextView descendant.
+        return View::performAccessibilityActionInternal(action, arguments);
+    }
 }
 void TextView::sendAccessibilityEventInternal(int eventType) {
     LOGD_IF(AccessibilityManager::getInstance(mContext).isEnabled(),"TODO");
