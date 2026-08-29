@@ -20,6 +20,7 @@
 #include <string>
 #include <map>
 #include <atomic>
+#include <functional>
 #include <vector>
 #include <unordered_map>
 #include <istream>
@@ -30,6 +31,7 @@
 
 namespace cxxopts{
     class ParseResult;
+    class OptionAdder;
 }
 namespace cdroid{
 
@@ -110,6 +112,12 @@ public:
      App(int argc=0,const char*argv[]=NULL);
      ~App()override;
      static App&getInstance();
+     // Register application-specific command line options at static-init time
+     // (before App is constructed): App's --help then lists them in their own
+     // `group` beside the framework's. The application still reads the values
+     // from its own cxxopts pass — this only merges the help listing.
+     static bool addAppOptions(const std::string& group,
+             const std::function<void(cxxopts::OptionAdder&)>& adder);
      const std::string getDataPath()const;
      virtual void setOpacity(unsigned char alpha);
      virtual const std::string getName()const;

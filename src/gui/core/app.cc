@@ -81,6 +81,29 @@ extern "C" unsigned long  GetModuleFileNameA(void* hModule, char* lpFilename, un
 
 namespace cdroid{
 
+namespace {
+// App-option registrations collected at static-init time (App::addAppOptions,
+// DECLARE_WIDGET-style) and replayed into App's cxxopts table in the ctor,
+// before parse — so --help lists the application's options beside the
+// framework's. Function-local static: no static-init-order dependency on
+// whichever TU registers first.
+struct AppOptionEntry {
+    std::string group;
+    std::function<void(cxxopts::OptionAdder&)> adder;
+};
+std::vector<AppOptionEntry>& appOptionRegistry() {
+    static std::vector<AppOptionEntry> registry;
+    return registry;
+}
+} // namespace
+
+bool App::addAppOptions(const std::string& group,
+        const std::function<void(cxxopts::OptionAdder&)>& adder) {
+    if (!adder) return false;
+    appOptionRegistry().push_back({group, adder});
+    return true;
+}
+
 App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     int alpha = 255, rotation = 0, density = 0, frameDelay = 0;
     bool debug= false,showFPS = false, help = false, autoTest = false;
@@ -90,8 +113,8 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     mInst = this;
     cxxopts::Options options("cdroid","cdroid application");
     options.add_options()
-        ("d,debug","enable debuig mode",cxxopts::value<bool>(debug))
-        ("h,help","print helps",cxxopts::value<bool>(help))
+        ("d,debug","enable debug mode",cxxopts::value<bool>(debug))
+        ("h,help","print this help, then exit",cxxopts::value<bool>(help))
         ("fps", "show fps info",cxxopts::value<bool>(showFPS))
         ("a,alpha","UI layer global alpha[0,255]",cxxopts::value<int>(alpha)->default_value("255"))
         ("f,framedelay","animation frame delay",cxxopts::value<int>(frameDelay))
@@ -116,6 +139,18 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     GetModuleFileNameA(nullptr,progName,sizeof(progName));
     mName = progName;
 #endif
+    // Replay the application's registered options (App::addAppOptions) into
+    // the same table before parsing, so --help shows them too.
+    for (const auto& entry : appOptionRegistry()) {
+        try {
+            // add_options returns the OptionAdder by value; hold it in an
+            // lvalue so the registered callback can take it by reference.
+            cxxopts::OptionAdder adder = options.add_options(entry.group);
+            entry.adder(adder);
+        } catch (const std::exception& e) {
+            LOGE("app option group '%s': %s", entry.group.c_str(), e.what());
+        }
+    }
     try{
         if((argc == 0) || (argv == nullptr)){
             const char*dummy[] = {mName.c_str(), nullptr};
@@ -127,11 +162,13 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         LOGE("%s",e.what());
     }
     if(help){
+        // std::exit, qualified: a bare exit(int) here resolves to App::exit
+        // (post the quit sentinel), which does NOT terminate — the ctor would
+        // return early with fonts/resources uninitialized and main would keep
+        // running into a null-Typeface crash. The code path below was written
+        // as if unreachable; with a real exit it actually is, so it is gone.
         std::cout<<options.help()<<std::endl;
-        exit(EXIT_SUCCESS);
-        LogSetModuleLevel(nullptr,LOG_FATAL);
-        mQuitFlag = true;
-        return;
+        std::exit(EXIT_SUCCESS);
     }
     Typeface::setContext(this);
     onInit();

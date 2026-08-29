@@ -3,6 +3,14 @@
 #include <fstream>
 #include <core/cxxopts.h>
 
+// Registered at static init, before App's ctor parses argv: App's --help then
+// lists this app's options beside the framework's. Values are still read from
+// this app's own cxxopts pass in main().
+static const bool sAppOptionsRegistered = App::addAppOptions("Application",
+        [](cxxopts::OptionAdder& add){
+            add("u,url","image url",cxxopts::value<std::string>());
+        });
+
 int main(int argc,const char*argv[]){
     App app(argc,argv);
 
