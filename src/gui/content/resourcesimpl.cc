@@ -740,7 +740,13 @@ cdroid::Typeface* ResourcesImpl::getFont(int id) const {
     // it via openNonAsset with a per-path instance cache.
     TypedValue value;
     if (!getValue(id, &value, true) || value.type != Res_value::TYPE_STRING) return nullptr;
-    return cdroid::Typeface::createFromResourcePath(u16to8(value.string, value.stringLen));
+    std::string path = u16to8(value.string, value.stringLen);
+    // Font resource values are pak-relative FILE paths ("font/x.ttf");
+    // plain family names ("sans-serif") that reached here through a string
+    // attr are not font resources — return null like AOSP instead of routing
+    // them into the asset loader.
+    if (path.find('/') == std::string::npos) return nullptr;
+    return cdroid::Typeface::createFromResourcePath(path);
 }
 
 cdroid::Movie* ResourcesImpl::getMovie(int /*id*/) const {

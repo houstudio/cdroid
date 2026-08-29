@@ -367,7 +367,11 @@ Typeface* Typeface::createFromResourcePath(const std::string path) {
 Typeface* Typeface::finishAssetTypeface(const std::string& path, Asset* asset, const char* tag) {
     auto& cache = assetTypefaceCache();
     if (asset == nullptr) {
+        // Negative cache: cache.emplace with nullptr keeps the miss, so a bad
+        // path logs and pays the openNonAsset roundtrip exactly once instead
+        // of once per TextView that carries the value.
         LOGW("%s: not found: %s", tag, path.c_str());
+        cache.emplace(path, nullptr);
         return nullptr;
     }
     const ssize_t size = (ssize_t)asset->getLength();
