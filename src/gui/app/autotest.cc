@@ -353,15 +353,36 @@ bool UiAutoTest::scrollOnce(AccessibilityNodeInfo* root) {
 // with the failure count when the script ends (CI exit code).
 AccessibilityNodeInfo* UiAutoTest::findOne(const Command& c) {
     UiAutomation& automation = UiAutomation::getInstance();
+    // Search the whole visible surface (the sweep's rule): the active
+    // application window first, then any VISIBLE system-layer windows — a
+    // shown IME's keys are only findable there (the app root never covers
+    // them; replayed keyboard clicks would all miss otherwise).
+    std::vector<AccessibilityNodeInfo*> roots;
     AccessibilityNodeInfo* root = automation.getRootInActiveWindow();
-    if (root == nullptr) return nullptr;
-    std::vector<AccessibilityNodeInfo*> hits = c.byText
-            ? root->findAccessibilityNodeInfosByText(c.selector)
-            : root->findAccessibilityNodeInfosByViewId(c.selector);
-    AccessibilityNodeInfo* first = hits.empty() ? nullptr : hits.front();
-    for (size_t i = 1; i < hits.size(); i++) hits[i]->recycle();
-    root->recycle();
-    return first;  // caller recycles
+    if (root != nullptr) roots.push_back(root);
+    std::vector<Window*> visible;
+    WindowManager::getInstance().getVisibleWindows(visible);
+    for (Window* w : visible) {
+        if (w->getAttributes().type < Window::TYPE_SYSTEM_WINDOW) continue;
+        AccessibilityNodeInfo* sysRoot = w->createAccessibilityNodeInfo();
+        if (sysRoot != nullptr) {
+            sysRoot->setSealed(true);   // boundary rule; getChild enforces it
+            roots.push_back(sysRoot);
+        }
+    }
+    for (AccessibilityNodeInfo* r : roots) {
+        std::vector<AccessibilityNodeInfo*> hits = c.byText
+                ? r->findAccessibilityNodeInfosByText(c.selector)
+                : r->findAccessibilityNodeInfosByViewId(c.selector);
+        if (!hits.empty()) {
+            AccessibilityNodeInfo* first = hits.front();
+            for (size_t i = 1; i < hits.size(); i++) hits[i]->recycle();
+            for (AccessibilityNodeInfo* other : roots) other->recycle();
+            return first;  // caller recycles
+        }
+    }
+    for (AccessibilityNodeInfo* r : roots) r->recycle();
+    return nullptr;
 }
 
 bool UiAutoTest::parseScript(const std::string& path) {
@@ -530,6 +551,12 @@ void UiAutoTest::scriptNext() {
             if (parent == nullptr) break;
             if (clickTarget != node) clickTarget->recycle();
             clickTarget = parent;
+        }
+        // Editors get focus first (same AOSP ACTION_FOCUS as the sweep): a
+        // plain ACTION_CLICK never focuses, so a replaying script could never
+        // raise the IME — every recorded keyboard click would miss.
+        if (clickTarget->isEditable()) {
+            clickTarget->performAction(AccessibilityNodeInfo::ACTION_FOCUS);
         }
         clickTarget->performAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);  // visible target
         AccessibilityEvent* hit = automation.executeAndWaitForEvent(
