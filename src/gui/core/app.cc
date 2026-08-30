@@ -106,7 +106,7 @@ bool App::addAppOptions(const std::string& group,
 App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     int alpha = 255, rotation = 0, density = 0, frameDelay = 0;
     bool debug= false,showFPS = false, help = false;
-    std::string autoTest, testScript, orientation;
+    std::string autoTest, autoTestRecord, testScript, orientation;
     std::string logo, monkey, record, datapath;
     LogParseModules(argc,argv);
     mInst = this;
@@ -129,6 +129,9 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         ("auto-test","a11y semantic UI sweep (clicks every on-screen clickable and verifies "
          "events); bare = deterministic per-page traversal, =SEED = monkey-style random walk",
          cxxopts::value<std::string>(autoTest)->implicit_value("1"))
+        ("auto-test-record","record the --auto-test sweep into a replayable --test-script "
+         "(one wait+click pair per PASS step); implies --auto-test",
+         cxxopts::value<std::string>(autoTestRecord))
         ("test-script","line-based a11y test script (wait/click/assert/dump; exit code = failures)",
          cxxopts::value<std::string>(testScript));
 
@@ -212,10 +215,11 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         sAutoTestHandler.postDelayed([scriptPath = testScript]() {
             UiAutoTest::getInstance().runScript(scriptPath);
         }, 3000);  // let the launcher window come up first
-    } else if (!autoTest.empty()) {
+    } else if (!autoTest.empty() || !autoTestRecord.empty()) {
         // --auto-test[=SEED]: seed >= 0 selects the Monkey-style seeded-random
         // walk, anything else the deterministic per-page traversal (see
-        // UiAutoTest::start).
+        // UiAutoTest::start). --auto-test-record implies the sweep and records
+        // it as a replayable script.
         long autoSeed = -1;
         const std::string seedSrc = (autoTest != "1" && autoTest != "true")
                 ? autoTest : "";
@@ -227,7 +231,9 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
                       seedSrc.c_str());
         }
         static Handler sAutoTestHandler(Looper::getMainLooper());
-        sAutoTestHandler.postDelayed([autoSeed]() {
+        sAutoTestHandler.postDelayed([autoSeed, autoTestRecord]() {
+            if (!autoTestRecord.empty())
+                UiAutoTest::getInstance().setScriptRecorder(autoTestRecord);
             UiAutoTest::getInstance().start(2500, autoSeed);
         }, 3000);  // let the launcher window come up first
     }

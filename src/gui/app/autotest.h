@@ -39,6 +39,14 @@ public:
      *  comment); the process exits with the failure count when done. */
     bool runScript(const std::string& path);
 
+    /** Records the sweep as a replayable --test-script (the Espresso Test
+     *  Recorder idea over our own DSL): one `wait`+`click` pair per PASS
+     *  step — `wait` carries the poll/timeout so replay survives timing.
+     *  Targets without a text label (no text/contentDescription) become
+     *  comments: the script grammar has no coordinate form. Set before
+     *  start(); closed with a trailer on stop. */
+    void setScriptRecorder(const std::string& path);
+
 private:
     UiAutoTest() = default;
     ~UiAutoTest();
@@ -80,12 +88,19 @@ private:
      * target, neither ever matches, and the sweep ping-pongs on item 1 of both
      * pages forever. */
     std::map<std::string, TargetKey> mPageCursor;
+    /* The identity touched on the previous step — the resume anchor when the
+     * next snapshot is an unknown page (see step()): shared chrome (tab strips)
+     * keeps its identity across page swaps, so the walk continues down the
+     * strip in one pass instead of resetting to the first item. */
+    TargetKey mLastClicked;
+    bool mLastClickedValid = false;
     Window* mLastActiveWindow = nullptr;  // follow navigation: new window, new snapshot
     size_t mStepsSinceScroll = 0;         // one scroll per full click cycle
     int mScrollExhausted = 0;             // consecutive failed forward scrolls
     int mEmptySteps = 0;                  // consecutive steps with zero clickables
     int mEscapeRounds = 0;                // BACK rounds that changed nothing
     std::vector<AccessibilityNodeInfo*> mClickables;
+    std::ofstream mRecord;               // sweep script-recorder sink
 
     // --- script state ---
     std::vector<Command> mScript;

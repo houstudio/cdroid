@@ -559,6 +559,7 @@ static void* X11EventProc(void*p) {
         };
     }
     LOGD("X11EventProc exit");
-    exit(0);
+    return NULL;   /* onExit() joins us — exit(0) here would preempt the process
+                      exit code (e.g. --test-script's failure count) with 0. */
 }
 

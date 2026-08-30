@@ -37,6 +37,7 @@ void UiAutoTest::start(long stepIntervalMs, long seed) {
     mRunning = true;
     mStepCount = 0;
     mPageCursor.clear();
+    mLastClickedValid = false;
     mRandomWalk = seed >= 0;
     if (mRandomWalk) mRng.seed((uint32_t)seed);
     LOGI("AUTOTEST sweep start (interval %ldms, %s)", mStepIntervalMs,
@@ -52,6 +53,10 @@ UiAutoTest::~UiAutoTest() {
 void UiAutoTest::stop() {
     mRunning = false;
     LOGI("AUTOTEST sweep stop after %d steps", mStepCount);
+    if (mRecord.is_open()) {
+        mRecord << "# sweep stopped after " << mStepCount << " steps\n";
+        mRecord.close();
+    }
     // The kept clickables are pool objects — the app may quit right after the
     // sweep stops (or the sweep dies when its window closes), and un-recycled
     // pooled nodes then read as definite leaks (9 blocks / ~4.7K on pd).
@@ -197,12 +202,31 @@ void UiAutoTest::step() {
             pageSig += std::to_string(b.top);
             pageSig += ';';
         }
+        bool cursorHit = false;
         auto cursorIt = mPageCursor.find(pageSig);
         if (cursorIt != mPageCursor.end()) {
             for (size_t i = 0; i < mClickables.size(); i++) {
                 Rect b; mClickables[i]->getBoundsInScreen(b);
                 if (mClickables[i]->getClassName() == cursorIt->second.cls
                         && b.left == cursorIt->second.left && b.top == cursorIt->second.top) {
+                    idx = (i + 1) % mClickables.size();
+                    cursorHit = true;
+                    break;
+                }
+            }
+        }
+        if (!cursorHit && mLastClickedValid) {
+            // Unknown page (first visit, or the cursor identity left the
+            // viewport): resume AFTER the identity touched on the previous
+            // step when this snapshot still contains it. Shared chrome — a
+            // TabLayout strip keeps the same tabs on every page — then
+            // advances one tab per step in a single pass, instead of every
+            // navigation resetting the walk to the first tab (widgetsDemo
+            // spent whole rounds up in the strip otherwise).
+            for (size_t i = 0; i < mClickables.size(); i++) {
+                Rect b; mClickables[i]->getBoundsInScreen(b);
+                if (mClickables[i]->getClassName() == mLastClicked.cls
+                        && b.left == mLastClicked.left && b.top == mLastClicked.top) {
                     idx = (i + 1) % mClickables.size();
                     break;
                 }
@@ -212,9 +236,12 @@ void UiAutoTest::step() {
     AccessibilityNodeInfo* target = mClickables.at(idx);
     if (!mRandomWalk) {
         // Remember the target we are ABOUT to click, so the next visit to this
-        // page resumes after it.
+        // page resumes after it — and an unknown next page resumes after the
+        // same identity (mLastClicked).
         Rect tb; target->getBoundsInScreen(tb);
         mPageCursor[pageSig] = { target->getClassName(), tb.left, tb.top };
+        mLastClicked = { target->getClassName(), tb.left, tb.top };
+        mLastClickedValid = true;
     }
     const std::string label = target->getText().empty()
             ? targetLabel(target) : target->getText();
@@ -231,7 +258,23 @@ void UiAutoTest::step() {
     LOGI("AUTOTEST [%d] %2zu/%zu [%s] -> %s", mStepCount,
          idx + 1, mClickables.size(),
          label.c_str(), hit ? "PASS" : "no-event");
-    if (hit) hit->recycle();
+    if (hit) {
+        hit->recycle();
+        if (mRecord.is_open()) {
+            std::string sel = label;
+            for (auto& ch : sel) if (ch == '"' || ch == '\n' || ch == '\r') ch = ' ';
+            if (!sel.empty()) {
+                // wait carries the poll budget (click alone fails fast on a
+                // not-yet-arrived page), so replay survives timing.
+                mRecord << "wait \"text=" << sel << "\" 5000\n"
+                        << "click \"text=" << sel << "\"\n";
+            } else {
+                mRecord << "# step " << mStepCount << ": " << target->getClassName()
+                        << " — no text selector\n";
+            }
+            mRecord.flush();   // keep the script usable if the sweep dies mid-run
+        }
+    }
 
     stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
 }
@@ -355,6 +398,17 @@ bool UiAutoTest::runScript(const std::string& path) {
     return true;
 }
 
+void UiAutoTest::setScriptRecorder(const std::string& path) {
+    if (mRecord.is_open()) mRecord.close();
+    mRecord.open(path);
+    if (!mRecord.is_open()) {
+        LOGW("AUTOTEST cannot open script record file %s", path.c_str());
+        return;
+    }
+    mRecord << "# AUTOTEST sweep recording — replay with --test-script\n";
+    mRecord.flush();
+}
+
 void UiAutoTest::scriptNext() {
     if (!mRunning || mScriptIndex >= mScript.size()) { scriptDone(); return; }
     const Command& cmd = mScript[mScriptIndex];
@@ -429,9 +483,20 @@ void UiAutoTest::scriptNext() {
             stepHandler().post([this]() { scriptNext(); });
             return;
         }
-        node->performAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);  // visible target
+        // A text selector matches the TextView carrying the text, not the
+        // clickable row that owns it (uiautomator hides this behind a
+        // coordinate tap on the node bounds); semantic ACTION_CLICK needs the
+        // nearest clickable ancestor.
+        AccessibilityNodeInfo* clickTarget = node;
+        while (!clickTarget->isClickable()) {
+            AccessibilityNodeInfo* parent = clickTarget->getParent();
+            if (parent == nullptr) break;
+            if (clickTarget != node) clickTarget->recycle();
+            clickTarget = parent;
+        }
+        clickTarget->performAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);  // visible target
         AccessibilityEvent* hit = automation.executeAndWaitForEvent(
-            [node]() { node->performAction(AccessibilityNodeInfo::ACTION_CLICK); },
+            [clickTarget]() { clickTarget->performAction(AccessibilityNodeInfo::ACTION_CLICK); },
             [](AccessibilityEvent& e) {
                 return e.getEventType() == AccessibilityEvent::TYPE_VIEW_CLICKED; },
             1500);
@@ -439,6 +504,7 @@ void UiAutoTest::scriptNext() {
              hit ? "OK" : "no-event (FAIL)");
         if (!hit) mScriptFails++;
         if (hit) hit->recycle();
+        if (clickTarget != node) clickTarget->recycle();
         node->recycle();
         mScriptIndex++;
         stepHandler().post([this]() { scriptNext(); });
