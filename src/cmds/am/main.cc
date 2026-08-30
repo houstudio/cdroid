@@ -37,6 +37,8 @@ static void usage() {
         "  am start [-n] <package>[/<activity>]   launch installed package\n"
         "        activity shorthand: '.Act' expands to '<package>.Act';\n"
         "        a full activity name passes through\n"
+        "  am start --exec [-n] <package>         replace THIS process with the\n"
+        "        app (no fork, no detach) — for init respawn supervisors\n"
         "  am force-stop <package>                SIGKILL the package's processes\n");
 }
 
@@ -50,8 +52,10 @@ static std::string expandComponent(const std::string& pkg, const std::string& ac
 
 static int cmdStart(int argc, char** argv) {
     std::string comp;
+    bool execSelf = false;
     for (int i = 0; i < argc; i++) {
-        if (!strcmp(argv[i], "-n") && i + 1 < argc) comp = argv[++i];
+        if (!strcmp(argv[i], "--exec")) execSelf = true;
+        else if (!strcmp(argv[i], "-n") && i + 1 < argc) comp = argv[++i];
         else if (argv[i][0] != '-') comp = argv[i];   // bare "am start pkg/.Act"
     }
     const size_t slash = comp.find('/');
@@ -75,6 +79,16 @@ static int cmdStart(int argc, char** argv) {
     // ActivityManagerService's startProcess: the exec replaces the binder
     // handoff. CDROID's App parses the manifest itself and posts the launcher
     // activity once its loop turns, so argv stays bare.
+    if (execSelf) {
+        // Supervisor mode: replace THIS process with the app (no fork, no
+        // detach, stdio untouched). Under `init`-style respawn this makes the
+        // supervisor own the whole lifecycle for free — the app exiting IS am
+        // exiting, so ::respawn/systemd Restart re-launches it (AOSP
+        // persistent-app restart + Home-return in one line of init config).
+        execl(e->exePath().c_str(), e->exeName.c_str(), (char*)nullptr);
+        fprintf(stderr, "Error: cannot exec %s\n", e->exePath().c_str());
+        return 127;
+    }
     const pid_t pid = fork();
     if (pid < 0) { perror("fork"); return 1; }
     if (pid == 0) {
