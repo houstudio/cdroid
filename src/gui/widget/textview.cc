@@ -2335,7 +2335,9 @@ void TextView::checkForResize() {
 void TextView::checkForRelayout() {
     // If we have a fixed width, we can just swap in a new text layout
     // if the text height stays the same or if the view height is fixed.
-    if(mLayoutParams==nullptr) return;
+    // mLayout can still be null when an edit arrives before the first
+    // measure (AOSP's setText always makes one; CDROID defers to layout).
+    if(mLayoutParams==nullptr || mLayout==nullptr) return;
     if (( (mLayoutParams->width != LayoutParams::WRAP_CONTENT)
             || (mMaxWidthMode == mMinWidthMode && mMaxWidth == mMinWidth))
             && ((mHint==nullptr)||(mHintLayout==nullptr) )
