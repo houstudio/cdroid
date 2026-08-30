@@ -76,6 +76,12 @@ AccessibilityNodeInfo* UiAutomation::getRootInActiveWindow() {
     return mService ? mService->getRootInActiveWindow() : nullptr;
 }
 
+// AOSP routes this over the service connection (IAccessibilityServiceConnection
+// → AccessibilityManagerService); in-process that is the backing service.
+bool UiAutomation::performGlobalAction(int action) {
+    return mService ? mService->performGlobalAction(action) : false;
+}
+
 AccessibilityEvent* UiAutomation::executeAndWaitForEvent(const std::function<void()>& command,
         const AccessibilityEventFilter& filter, long timeoutMillis) {
     if (!mService) return nullptr;

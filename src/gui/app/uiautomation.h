@@ -63,6 +63,12 @@ public:
     AccessibilityEvent* executeAndWaitForEvent(const std::function<void()>& command,
             const AccessibilityEventFilter& filter, long timeoutMillis);
 
+    /** AOSP UiAutomation.performGlobalAction(int): a system-level action
+     *  (AccessibilityService::GLOBAL_ACTION_*). False when unsupported —
+     *  HOME/RECENTS/... need an activity-stack manager CDROID does not have
+     *  (AOSP returns false for undeliverable actions too). */
+    bool performGlobalAction(int action);
+
 private:
     class BackingService;   // the registered AccessibilityService
     friend class BackingService;

@@ -8,6 +8,7 @@
 #include <core/tokenizer.h>
 #include <view/accessibility/accessibilityevent.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
+#include <accessibilityservice/accessibilityservice.h>   // GLOBAL_ACTION_BACK
 #include <porting/cdlog.h>
 #include <algorithm>
 #include <sstream>
@@ -150,17 +151,10 @@ void UiAutoTest::step() {
             }
             LOGW("AUTOTEST no clickables in window %p for 3 steps — sending BACK (round %d)",
                  (void*)mLastActiveWindow, mEscapeRounds);
-            const nsecs_t now = SystemClock::uptimeMillis();
-            KeyEvent* down = KeyEvent::obtain(now, now, KeyEvent::ACTION_DOWN,
-                    KeyEvent::KEYCODE_BACK, 0, 0, 0, KeyEvent::KEYCODE_BACK, 0,
-                    0x101 /* SOURCE_KEYBOARD */);
-            WindowManager::getInstance().processEvent(*down);
-            down->recycle();
-            KeyEvent* up = KeyEvent::obtain(now, now, KeyEvent::ACTION_UP,
-                    KeyEvent::KEYCODE_BACK, 0, 0, 0, KeyEvent::KEYCODE_BACK, 0,
-                    0x101 /* SOURCE_KEYBOARD */);
-            WindowManager::getInstance().processEvent(*up);
-            up->recycle();
+            // AOSP: the escape is a global BACK (UiAutomation.performGlobalAction
+            // → the service synthesizes the key through the input pipeline).
+            UiAutomation::getInstance().performGlobalAction(
+                    AccessibilityService::GLOBAL_ACTION_BACK);
             mEmptySteps = 0;
         }
         stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
@@ -415,6 +409,18 @@ void UiAutoTest::scriptNext() {
     const int lineNo = mScript[mScriptIndex].line;
     UiAutomation& automation = UiAutomation::getInstance();
 
+    if (cmd.verb == "back") {
+        // Global BACK (no selector) — the same navigation escape the sweep
+        // uses; lets recorded scripts express "return" without hunting for a
+        // back-arrow label.
+        const bool ok = automation.performGlobalAction(
+                AccessibilityService::GLOBAL_ACTION_BACK);
+        LOGI("SCRIPT %zu back -> %s", lineNo, ok ? "OK" : "unsupported (FAIL)");
+        if (!ok) mScriptFails++;
+        mScriptIndex++;
+        stepHandler().post([this]() { scriptNext(); });
+        return;
+    }
     if (cmd.verb == "sleep") {
         mScriptIndex++;
         stepHandler().postDelayed([this]() { scriptNext(); }, cmd.timeoutMs);

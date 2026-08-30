@@ -58,7 +58,7 @@ private:
 
     // --- script mode ---
     struct Command {
-        std::string verb;        // wait/click/assert/assert-absent/dump/sleep
+        std::string verb;        // wait/click/assert/assert-absent/dump/sleep/back
         bool byText = true;      // selector kind: text= / id=
         std::string selector;
         long timeoutMs = 3000;   // wait poll budget

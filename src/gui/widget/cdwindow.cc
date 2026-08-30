@@ -1011,7 +1011,7 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
         // the window's callback when the window itself isn't PFLAG_FOCUSED (root windows rarely are;
         // focus lives in a child like EditText). Mirrors androidx: an unhandled key falls back to
         // the window/Activity callback. View::dispatchKeyEvent -> event.dispatch -> onKeyDown/onKeyUp
-        // (Window::onKeyDown ESC startTracking; Window::onKeyUp ESC isTracking -> onBackPressed).
+        // (Window::onKeyDown BACK startTracking; Window::onKeyUp BACK isTracking -> onBackPressed).
         handled = View::dispatchKeyEvent(event);
     }
     return handled;
@@ -1086,7 +1086,12 @@ bool Window::performFocusNavigation(KeyEvent& event){
 
 bool Window::onKeyDown(int keyCode,KeyEvent& evt){
     switch(keyCode){
-    case KeyEvent::KEYCODE_ESCAPE:
+    case KeyEvent::KEYCODE_BACK:
+        // AOSP DecorView/View: BACK tracks on DOWN; the UP side fires
+        // onBackPressed (the overridden chain: FragmentActivity pops its
+        // back stack, the Window default finishes). ESC used to stand in
+        // for BACK — a desktop-testing convenience that made KEYCODE_BACK
+        // itself a dead key.
         evt.startTracking();
         LOGD("recv %d %s flags=%x",keyCode,KeyEvent::keyCodeToString(keyCode).c_str(),evt.getFlags());
         return true;
@@ -1094,7 +1099,7 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
         //return performFocusNavigation(evt);
         LOGV("recv %d %s",keyCode,KeyEvent::keyCodeToString(keyCode).c_str());
         return FrameLayout::onKeyDown(keyCode,evt);
-    } 
+    }
     return false;
 }
 
@@ -1102,7 +1107,7 @@ bool Window::onKeyUp(int keyCode,KeyEvent& evt){
     LOGV("recv %d %s flags=%x track=%d cance=%d",keyCode,KeyEvent::keyCodeToString(keyCode).c_str(),
             evt.getFlags(),evt.isTracking(),evt.isCanceled());
     switch(keyCode){
-    case KeyEvent::KEYCODE_ESCAPE:
+    case KeyEvent::KEYCODE_BACK:
         if(evt.isTracking()&&!evt.isCanceled()){
             onBackPressed();
             return true;

@@ -77,8 +77,10 @@ public:
    bool onKeyUp(int keyCode,KeyEvent& evt)override{
        LOGD("...%d flags=%x",keyCode,evt.getFlags());
        switch(keyCode){
-       case KeyEvent::KEYCODE_ESCAPE:setVisibility(View::INVISIBLE);return true;
-       default: return Window::onKeyDown(keyCode,evt);
+       // AOSP InputMethodService.onBackPressed: BACK hides the IME (the app
+       // below must NOT see it). ESC was the desktop-testing stand-in.
+       case KeyEvent::KEYCODE_BACK:setVisibility(View::INVISIBLE);return true;
+       default: return Window::onKeyUp(keyCode,evt);
        }
    }
    /* Deliver a committed UTF-8 string to the editor (the controller's committer
