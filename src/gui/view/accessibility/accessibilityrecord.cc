@@ -324,14 +324,21 @@ void AccessibilityRecord::recycle() {
         throw std::logic_error("Record already recycled!");
     }
     clear();
-    //synchronized (sPoolLock) 
+    // AOSP: a full pool means the object is simply garbage-collected. CDROID
+    // owns its memory — free it when the pool cannot take it back (same
+    // release-or-delete contract as AccessibilityEvent/NodeInfo; the old code
+    // dropped pool-overflow records on the floor, leaking every record of any
+    // event recycled while the pool was full).
+    //synchronized (sPoolLock)
     {
         LOGD("sPoolSize=%d",sPoolSize);
-        if (sPoolSize <= MAX_POOL_SIZE) {
+        if (sPoolSize < MAX_POOL_SIZE) {
             mNext = sPool;
             sPool = this;
             mIsInPool = true;
             sPoolSize++;
+        } else {
+            delete this;
         }
     }
 }
