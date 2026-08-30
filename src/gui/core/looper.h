@@ -185,6 +185,11 @@ public:
     bool loopOnce();
     void loop();
     void wake();
+    // Looper.java:382 — shut down this looper (drops pending messages).
+    // The main thread's queue is not allowed to quit (MessageQueue guard).
+    void quit();
+    // Looper.java:391 — process already-due messages, then shut down.
+    void quitSafely();
     int  addFd(int fd, int ident, int events, Looper_callbackFunc callback, void* data);
     int  addFd(int fd, int ident, int events, const LooperCallback* callback, void* data);
     int  removeFd(int fd);

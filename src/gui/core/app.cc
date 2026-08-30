@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <sys/stat.h>
 #include <core/app.h>
+#include <core/queuedwork.h>   // exit-path flush of async writes
 #include <content/typedarray.h>   // TypedArray (constructed in obtainStyledAttributes)
 #include <content/typedvalue.h>   // TypedValue (typed currency of this layer)
 #include <content/androidfw/restable.h> // ResTable engine + Res_value (boundary lookups)
@@ -302,6 +303,10 @@ App::~App(){
     // removeEventHandler() call reading a freed Looper (valgrind UAF).
     delete &InputEventSource::getInstance();
     delete &GraphDevice::getInstance();
+    // Covers a plain return from exec() (no App::exit): flush any queued
+    // async writes, then park the QueuedWork thread (idempotent).
+    QueuedWork::waitToFinish();
+    QueuedWork::quitSafely();
     // The main Looper goes last: every other subsystem above still talks to it.
     delete Looper::getMainLooper();
     LOGD("~App %p",this);    destroyResourceState();
@@ -473,6 +478,11 @@ void App::exit(int code){
     // and supersedes the quitSafely detour (3cc609130).
     static Handler sExitHandler(Looper::getMainLooper());
     sExitHandler.post([this]() {
+        // AOSP flushes QueuedWork (async SharedPreferences writes) at the
+        // lifecycle checkpoints (Activity.onPause etc.); the exit sentinel
+        // is CDROID's checkpoint — all already-queued UI work has run by
+        // now, drain the outstanding disk work before the loop stops.
+        QueuedWork::waitToFinish();
         mQuitFlag = true;   // exec()'s loop stops on this iteration
         MessageQueue* q = Looper::getMainLooper()->getQueue();
         if (q) q->quit(false);

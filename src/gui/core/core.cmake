@@ -28,6 +28,7 @@ SET(CORE_SOURCES
     core/graphdevice.cc
     core/googlepinyin.cc
     core/handler.cc
+    core/handlerthread.cc   # android.os.HandlerThread
     core/inputdevice.cc
     #core/virtualinputdevice.cc
     core/inputeventsource.cc
@@ -53,6 +54,7 @@ SET(CORE_SOURCES
     core/porterduff.cc
     core/preferences.cc
     core/process.cc
+    core/queuedwork.cc       # android.app.QueuedWork (core placement: generic infra)
     core/countdowntimer.cc
     core/scheduler.cc
     core/systemclock.cc

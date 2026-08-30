@@ -286,6 +286,17 @@ void Looper::loop(){
     while(loopOnce()) {}
 }
 
+// Looper.java:382-395
+void Looper::quit(){
+    MessageQueue* queue = getQueue();
+    if (queue) queue->quit(false);
+}
+
+void Looper::quitSafely(){
+    MessageQueue* queue = getQueue();
+    if (queue) queue->quit(true);
+}
+
 void Looper::drainMessageQueue(){
     if (mQueue == nullptr) return;
     while (auto* msg = mQueue->nextDue()) {
