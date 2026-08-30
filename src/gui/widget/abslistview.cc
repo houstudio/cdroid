@@ -813,6 +813,12 @@ bool AbsListView::MultiChoiceModeWrapper::hasWrappedCallback() const {
 void AbsListView::resetList() {
     std::vector<View*>children = mChildren;
     removeAllViewsInLayout();
+    // The deletes below make this the sole owner of the old children — the
+    // recycler must forget them first. AOSP leaves the stale references (the
+    // previous layout's fillActiveViews mirrored these views into
+    // mActiveViews) alive to GC; here a survivor would be handed back by
+    // getActiveView as a "recycled" convertView and re-attached as a corpse.
+    mRecycler->forgetViews(children);
     for(auto child:children){
         delete child;
     }
@@ -1800,9 +1806,11 @@ View*AbsListView::obtainView(int position, bool*outMetadata) {
 
     if (AccessibilityManager::getInstance(mContext).isEnabled()) {
         if (mAccessibilityDelegate == nullptr) {
-            //TODO mAccessibilityDelegate = new ListItemAccessibilityDelegate();
+            mAccessibilityDelegate = std::make_shared<ListItemAccessibilityDelegate>(this);
         }
         if (child->getAccessibilityDelegate() == nullptr) {
+            // Owning set (shared_ptr overload): one delegate instance goes to
+            // every child, so children must share the refcount, not borrow.
             child->setAccessibilityDelegate(mAccessibilityDelegate);
         }
     }
@@ -4678,67 +4686,65 @@ void AbsListView::ListItemAccessibilityDelegate::onInitializeAccessibilityNodeIn
 
 
 bool AbsListView::ListItemAccessibilityDelegate::performAccessibilityAction(View& host, int action, Bundle* arguments) {
-#if 0
     if (AccessibilityDelegate::performAccessibilityAction(host, action, arguments)) {
         return true;
     }
 
-    const int position = getPositionForView(host);
-    if (position == INVALID_POSITION || mAdapter == null) {
+    const int position = mHost->getPositionForView(&host);
+    if (position == AdapterView::INVALID_POSITION || mHost->mAdapter == nullptr) {
         // Cannot perform actions on invalid items.
         return false;
     }
 
-    if (position >= mAdapter.getCount()) {
+    if (position >= mHost->mAdapter->getCount()) {
         // The position is no longer valid, likely due to a data set
         // change. We could fail here for all data set changes, since
         // there is a chance that the data bound to the view may no
-        // longer exist at the same position within the adapter, but
-        // it's more consistent with the standard touch interaction to
-        // click at whatever may have moved into that position.
+        // longer exist at the same position, but it's more consistent
+        // with the standard touch interaction to click at whatever may
+        // have moved into that position.
         return false;
     }
 
     bool isItemEnabled;
     const ViewGroup::LayoutParams* lp = host.getLayoutParams();
-    if (dynamic_cast<AbsListView::LayoutParams*>(lp)) {
+    if (dynamic_cast<AbsListView::LayoutParams*>((ViewGroup::LayoutParams*)lp)) {
         isItemEnabled = ((AbsListView::LayoutParams*) lp)->isEnabled;
     } else {
         isItemEnabled = false;
     }
 
-    if (!isEnabled() || !isItemEnabled) {
+    if (!mHost->isEnabled() || !isItemEnabled) {
         // Cannot perform actions on disabled items.
         return false;
     }
 
     switch (action) {
     case AccessibilityNodeInfo::ACTION_CLEAR_SELECTION:
-        if (getSelectedItemPosition() == position) {
-            setSelection(INVALID_POSITION);
+        if (mHost->getSelectedItemPosition() == position) {
+            mHost->setSelection(INVALID_POSITION);
             return true;
         }
         return false;
     case AccessibilityNodeInfo::ACTION_SELECT:
-        if (getSelectedItemPosition() != position) {
-            setSelection(position);
+        if (mHost->getSelectedItemPosition() != position) {
+            mHost->setSelection(position);
             return true;
         }
         return false;
     case AccessibilityNodeInfo::ACTION_CLICK:
-        if (isItemClickable(host)) {
-            const long id = getItemIdAtPosition(position);
-            return performItemClick(host, position, id);
+        if (isItemClickable(&host)) {
+            const long id = mHost->getItemIdAtPosition(position);
+            return mHost->performItemClick(host, position, id);
         }
         return false;
     case AccessibilityNodeInfo::ACTION_LONG_CLICK:
-        if (isLongClickable()) {
-            const long id = getItemIdAtPosition(position);
-            return performLongPress(host, position, id);
+        if (mHost->isLongClickable()) {
+            const long id = mHost->getItemIdAtPosition(position);
+            return mHost->performLongPress(&host, position, id);
         }
         return false;
     }
-#endif
     return false;
 }
 }//namespace

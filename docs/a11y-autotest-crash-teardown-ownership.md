@@ -75,19 +75,42 @@ One family remains open (see *Open item*).
 - `sendAccessibilityEventUncheckedInternal`'s `mChildren` self-comparison is
   **not** a liveness proof: a dangling entry compares equal to itself.
 
-## Open item (deferred, architectural)
+## Open item — CLOSED (2026-08-30, fix pending commit)
 
-The remaining crash (rounds 36–37, deterministic per run, timing-sensitive
-across runs) is a synchronous `AdapterView` selection dispatch reading a
-child that `fragment::scheduleViewReclaim` (SpecialEffectsController's
-GC-simulation deferred delete) has already freed while the hosting
-AdapterView is still alive. `addViewInner` rejects double-parenting, so the
-stale entry enters through the scrap/clone bookkeeping rather than plain
-`addView`. Closing it needs a unified answer to "who may delete a view that
-an AdapterView still lists" — likely moving AbsListView scrap views to a
-refcounted handle or registering containers as deletion observers. Until
-then the guard at the AdapterView consumption sites keeps it from faulting
-in the common paths.
+The round-36/37 crash family is solved. It was never a stale `mChildren`
+entry: the faulting frame chain (`AdapterView::dispatchPopulateAccessibility
+EventInternal` → `View::dispatchPopulateAccessibilityEvent` → delegate
+virtual call) had a LIVE child whose `mAccessibilityDelegate` held heap
+garbage. Death notes proved the "corpse" address had never passed `~View`,
+and a RAWSET trace pinned the writer: `AbsListView::obtainView`'s
+AOSP-parity block —
+
+```java
+if (mAccessibilityDelegate == null) { mAccessibilityDelegate = new ListItemAccessibilityDelegate(); }
+if (child.getAccessibilityDelegate() == null) { child.setAccessibilityDelegate(mAccessibilityDelegate); }
+```
+
+— was ported with the lazy `new` TODO'd out while the member stayed a raw
+`ListItemAccessibilityDelegate*` that the constructor never initialized.
+The uninit garbage survived the `== nullptr` check and was raw-set on every
+measured child; when the accessibility manager is enabled (auto-test), the
+first event dispatch through any such child jumps through a garbage
+vtable. Same disease class as the `ExploreByTouchHelper::mNodeProvider`
+poisoning. Fix (android-36 parity): the member is a null-default
+`std::shared_ptr<ListItemAccessibilityDelegate>`, lazily created via
+`make_shared` and handed to children through the OWNING delegate setter
+(one instance on every child — the shared-delegate rule), and the
+previously dormant `#if 0` delegate bodies
+(`onInitializeAccessibilityNodeInfo` / `performAccessibilityAction` with
+SELECT/CLEAR_SELECTION/CLICK/LONG_CLICK) are enabled behind a borrowed
+`AbsListView* mHost` back-pointer (AOSP's inner-class `this`).
+
+An adjacent hole closed in the same sweep: `AbsListView::resetList` deletes
+the old children while the previous layout's `fillActiveViews` mirror
+(`mActiveViews`) still lists them — a later `getActiveView` handed the
+freed view back as a convertView and re-attached it into `mChildren`
+(AOSP survives this on GC). `RecycleBin::forgetViews` now purges every
+recycler array before those deletes.
 
 ## Files touched
 
@@ -117,7 +140,7 @@ Same runs under valgrind (--auto-test / WIDGETSDEMO_AUTOCYCLE+A11Y_DUMP),
 | preferencedemo (--auto-test, 36-58 sweep rounds) | 19,880 B / 67 blocks | 0 |
 | widgetsDemo (AUTOCYCLE+A11Y_DUMP, 29 pages) | 12,860 B / 43 blocks | 0 |
 | printerdemo (--auto-test, 20 rounds, then the open crash) | n/a | 0 |
-| kaidu_ms7 | not measurable on a 1280x720 display — the UI is a 1920x440 strip and the sweep finds no targets; retest on a matching display | |
+| kaidu_ms7 (1920x440 retest) | framework side clean, zero crashes | framework-clean; sweep found **zero targets** — the app's own UI exposes no clickable a11y nodes (app-side gap, not a framework leak) |
 
 Additional leak fixes found by these sweeps:
 
@@ -149,3 +172,29 @@ Measurement notes: put env vars BEFORE the tool (`VAR=1 valgrind ./app`) —
 `valgrind ... env VAR=1 ./app` loses the summary report on exec; verify the
 library really rebuilt (a make run from the source root silently does
 nothing — run make from outX64-Debug).
+
+## A-fix verification matrix (2026-08-30, fix in working tree, pending commit)
+
+Runs with the AbsListView delegate fix + `RecycleBin::forgetViews` purge +
+sweeper escape hatch applied, under valgrind. All rounds: **0 invalid
+reads**; the only "definitely lost" residue is third-party (fontconfig
+256 B / glibc baseline).
+
+| app | rounds | result |
+|---|---|---|
+| preferencedemo | 3 | 242 / 197 / 113 PASS — historically it crashed by round 58 at the deepest |
+| widgetsDemo | 3 | all RC=0; 364 B / 2 blocks = fontconfig + glibc baseline |
+| printerdemo | 2 | 21 PASS, clean self-stop (historically crashed within 20 rounds) |
+| hauswirt_63343 | 1 | 309 PASS, then SIGABRT — **pure app-side bug**: assigning to a joinable `std::thread` at `apps/hauswirt_63343/src/app/windows/layout/layout_curve.cc:446` → `std::terminate`. Its 12,984 B / 62 blocks split into two families: 10,824 B of `ValueAnimator`s new'd and never deleted by the app's `ViewUtils::animateBackgroundColor` (`view_utils.cc:63`, pop_home_sidebar chain), and 6,562 B of the driver's own a11y node snapshots — lost only because the abort skipped teardown (clean-stop apps show none) |
+| kaidu_ms7 (1920x440) | 1 | framework side clean, zero crashes; sweep found zero targets — the app does not expose clickable a11y nodes (app-side gap) |
+
+Sweeper escape hatch (new blind spot reached once A opened up CLICK): with
+zero target windows (e.g. the "more options" PopupWindow), take 3 empty
+steps then BACK; if BACK fails three times in a row, `stop()` ends the sweep
+instead of spinning.
+
+Temporary instrumentation (death notes / RAWSET trace) was removed and the
+final rounds re-verified on a clean build. Working tree awaiting commit:
+`abslistview.{h,cc}`, `recyclebin.{h,cc}`, `autotest.{h,cc}`, this document,
+plus the input trio (`inputeventsource.{h,cc}`, `input_linux.cc`,
+`wininput.cc`) held back per instruction.

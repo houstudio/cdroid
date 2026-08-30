@@ -95,9 +95,43 @@ void UiAutoTest::step() {
                   return ra.left < rb.left;
               });
     if (mClickables.empty()) {
+        // A window with no a11y targets (e.g. a menu PopupWindow whose items
+        // are not exposed as clickable) would loop here silently forever —
+        // escape it the way a screen-reader user would: synthesize BACK
+        // after a few empty passes (dismisses the popup; on a bare main
+        // window BACK ends the app, which also terminates a sweep that has
+        // nothing left to test).
+        if (++mEmptySteps >= 3) {
+            mEmptySteps = 0;
+            if (++mEscapeRounds > 3) {
+                // BACK did not change the situation — this window is a dead
+                // end the driver cannot interact with or dismiss. End the
+                // sweep instead of looping forever.
+                LOGW("AUTOTEST escape failed %d rounds on window %p — stopping sweep",
+                     mEscapeRounds - 1, (void*)mLastActiveWindow);
+                stop();
+                return;
+            }
+            LOGW("AUTOTEST no clickables in window %p for 3 steps — sending BACK (round %d)",
+                 (void*)mLastActiveWindow, mEscapeRounds);
+            const nsecs_t now = SystemClock::uptimeMillis();
+            KeyEvent* down = KeyEvent::obtain(now, now, KeyEvent::ACTION_DOWN,
+                    KeyEvent::KEYCODE_BACK, 0, 0, 0, KeyEvent::KEYCODE_BACK, 0,
+                    0x101 /* SOURCE_KEYBOARD */);
+            WindowManager::getInstance().processEvent(*down);
+            down->recycle();
+            KeyEvent* up = KeyEvent::obtain(now, now, KeyEvent::ACTION_UP,
+                    KeyEvent::KEYCODE_BACK, 0, 0, 0, KeyEvent::KEYCODE_BACK, 0,
+                    0x101 /* SOURCE_KEYBOARD */);
+            WindowManager::getInstance().processEvent(*up);
+            up->recycle();
+            mEmptySteps = 0;
+        }
         stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
         return;
     }
+    mEmptySteps = 0;
+    mEscapeRounds = 0;  // a productive step also proves the last escape worked
     // ScrollView pages fold their lower content out of isVisibleToUser —
     // after each full click cycle, spend one step scrolling the first
     // scrollable forward (backward ping-pong at the bottom).

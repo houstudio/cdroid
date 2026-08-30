@@ -78,7 +78,11 @@ public:
     };
 protected:
     class ListItemAccessibilityDelegate:public AccessibilityDelegate{
+    private:
+       // Borrowed back-pointer (AOSP's inner class holds AbsListView.this).
+       AbsListView* mHost;
     public:
+       explicit ListItemAccessibilityDelegate(AbsListView* host):mHost(host){}
        void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
        bool performAccessibilityAction(View& host, int action, Bundle* arguments)override;
     };
@@ -160,7 +164,13 @@ private:
     int mLastScrollState;
     int mLastAccessibilityScrollEventFromIndex;
     int mLastAccessibilityScrollEventToIndex;
-    ListItemAccessibilityDelegate* mAccessibilityDelegate;
+    // Shared item delegate (AOSP sets it on EVERY child from obtainView);
+    // refcounted per the delegate-ownership rules — children borrow a
+    // reference, the last ref frees. Was a raw pointer that the ctor never
+    // initialized and the lazy-create was TODO'd out: heap garbage survived
+    // the null check and got raw-set on every measured child (auto-test
+    // SIGSEGV in the delegate virtual call).
+    std::shared_ptr<ListItemAccessibilityDelegate> mAccessibilityDelegate;
     CheckForLongPress* mPendingCheckForLongPress;
     CheckForTap* mPendingCheckForTap;
     CheckForKeyLongPress* mPendingCheckForKeyLongPress;

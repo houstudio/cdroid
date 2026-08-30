@@ -19,6 +19,7 @@
 #include <widget/abslistview.h>
 #include <cdtypes.h>
 #include <cdlog.h>
+#include <algorithm>
 
 namespace cdroid {
 
@@ -438,6 +439,26 @@ void RecycleBin::removeFromTreeIfPresent(View* v) {
     const int idx = LV->indexOfChild(v);
     if (idx >= 0) LV->removeViewAt(idx);
     else removeDetachedView(v, false);
+}
+
+void RecycleBin::forgetViews(const std::vector<View*>& views) {
+    if (views.empty()) return;
+    for (View* v : views) {
+        for (View*& slot : mActiveViews) {
+            if (slot == v) slot = nullptr;
+        }
+        for (std::vector<View*>& pile : mScrapViews) {
+            pile.erase(std::remove(pile.begin(), pile.end(), v), pile.end());
+        }
+        mSkippedScrap.erase(std::remove(mSkippedScrap.begin(), mSkippedScrap.end(), v),
+                            mSkippedScrap.end());
+        for (int i = int(mTransientStateViews.size()) - 1; i >= 0; i--) {
+            if (mTransientStateViews.valueAt(i) == v) mTransientStateViews.removeAt(i);
+        }
+        for (int i = int(mTransientStateViewsById.size()) - 1; i >= 0; i--) {
+            if (mTransientStateViewsById.valueAt(i) == v) mTransientStateViewsById.removeAt(i);
+        }
+    }
 }
 
 void RecycleBin::removeDetachedView(View* child, bool animate) {

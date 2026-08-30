@@ -50,6 +50,13 @@ private:
     void removeFromTreeIfPresent(View* v);
 public:
     RecycleBin(AbsListView*);
+    // CDROID ownership: an owner deleting views outside the RecycleBin
+    // (AbsListView::resetList deletes the old children) must purge every
+    // array reference first — a surviving entry hands the corpse back out
+    // (getActiveView/getScrapView -> resurrection into mChildren) or
+    // double-deletes it later. AOSP needs none of this: GC keeps the objects
+    // alive under the stale references.
+    void forgetViews(const std::vector<View*>& views);
     void setViewTypeCount(int viewTypeCount);
     void markChildrenDirty();
     bool shouldRecycleViewType(int viewType) {

@@ -59,6 +59,8 @@ private:
     Window* mLastActiveWindow = nullptr;  // follow navigation: new window, new snapshot
     size_t mStepsSinceScroll = 0;         // one scroll per full click cycle
     int mScrollExhausted = 0;             // consecutive failed forward scrolls
+    int mEmptySteps = 0;                  // consecutive steps with zero clickables
+    int mEscapeRounds = 0;                // BACK rounds that changed nothing
     std::vector<AccessibilityNodeInfo*> mClickables;
 
     // --- script state ---
