@@ -26,8 +26,6 @@
 
 namespace cdroid {
 
-class Preferences;
-
 /**
  * Port of android.content.SharedPreferences. The interface face follows AOSP
  * verbatim; the default implementation (SharedPreferencesImpl) persists to a
@@ -168,18 +166,30 @@ public:
 /**
  * Port of android.app.SharedPreferencesImpl — the backing implementation of
  * {@link SharedPreferences} used by {@link Context#getSharedPreferences}.
- * Storage is a {@link Preferences} INI file persisted under the CDROID data
- * directory ($HOME/.cdroid/prefs/&lt;name&gt;.ini). All value types are
- * stringified into the single flat namespace, exactly like Android's XML
- * shared_prefs files (one key namespace per file).
+ * Storage matches AOSP byte for byte: an XML shared_prefs file
+ * (&lt;map&gt; root with typed &lt;int/long/float/boolean/string/set&gt;
+ * entries, the XmlUtils.writeMapXml format) persisted under the CDROID data
+ * directory ($HOME/.cdroid/prefs/&lt;name&gt;.xml — no /data/data sandbox on
+ * CDROID targets) with a &lt;name&gt;.xml.bak rollover backup. Loads run on
+ * a shared executor thread; apply() writes land through QueuedWork.
+ *
+ * CDROID seams (see sharedpreferences.cc for the full notes): a cross-type
+ * get returns the default instead of throwing ClassCastException, clear()
+ * notifies an empty key instead of null, and the file reader rejects
+ * foreign AOSP value tags (double/arrays/null) wholesale instead of
+ * partially loading them.
  */
 class SharedPreferencesImpl : public SharedPreferences {
 public:
+    // Pimpl state (AOSP mFile/mBackupFile/mLock/mMap/... fields); public
+    // name so the .cc's helpers can name the type.
+    struct Private;
+
     /**
      * Constructor: opens (loads) the file named {@code name} under the CDROID
      * prefs directory, creating an empty store when it does not exist yet.
      * {@code mode} mirrors AOSP's Context.MODE_PRIVATE (other file creation
-     * modes have no meaning on the CDROID targets and are ignored).
+     * modes have no meaning on the CDROID targets and are warned about).
      */
     SharedPreferencesImpl(const std::string& name, int mode);
     ~SharedPreferencesImpl() override;
@@ -199,20 +209,15 @@ public:
     void unregisterOnSharedPreferenceChangeListener(
             const OnSharedPreferenceChangeListener& listener) override;
 
-    /**
-     * Flush the current in-memory map to disk (called by the Editor on
-     * commit/apply).
-     */
-    void persist();
-
 private:
     class EditorImpl;
-    std::string mFilePath;
-    std::unique_ptr<Preferences> mPrefs;
+    // Shared with every async task (load/write/finisher): the impl may be
+    // dropped while a write is still in flight (AOSP leans on GC for this).
+    std::shared_ptr<Private> mP;
+    // AOSP news an EditorImpl per edit() call and lets GC reclaim it; the
+    // C++ reference-returning face needs an owner, so one editor lives with
+    // the impl (every edit() chain batches through it).
     std::unique_ptr<Editor> mEditor;
-    std::vector<OnSharedPreferenceChangeListener> mListeners;
-
-    void notifyListeners(const std::string& key);
 };
 
 } // namespace cdroid
