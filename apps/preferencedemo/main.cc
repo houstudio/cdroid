@@ -446,8 +446,8 @@ int main(int argc, const char* argv[]) {
 
     // Orientation -> resource config: PREFDEMO_ORIENTATION forces a variant
     // here (like PREFDEMO_DARK below); with no env the framework already
-    // resolved it in App::applyOrientationConfig (CDROID_ORIENTATION env >
-    // the manifest's android:screenOrientation > screen shape), so there is
+    // resolved it in App::applyOrientationConfig (the manifest's
+    // android:screenOrientation > screen shape), so there is
     // nothing to redo. Either way this stays before the first inflate
     // (SettingsActivity below) so layouts resolve under the right config.
     int orientation = 0;

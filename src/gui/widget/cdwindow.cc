@@ -764,6 +764,21 @@ void Window::setPos(int x,int y){
     GraphDevice::getInstance().flip();
 }
 
+void Window::setSurfaceTranslation(int dx,int dy){
+    if (dx == mSurfaceDx && dy == mSurfaceDy) return;
+    // Damage model for a moving surface (AOSP's SurfaceFlinger recomposites everything; CDROID's
+    // damage-region compositor must be told): the area the surface VACATES at the old offset is
+    // repainted from the windows below, and this window's full extent re-blits at the new offset.
+    const Rect vacated = Rect::Make(getLeft() + mSurfaceDx, getTop() + mSurfaceDy, getWidth(), getHeight());
+    mSurfaceDx = dx;
+    mSurfaceDy = dy;
+    if (isAttachedToWindow())
+        WindowManager::getInstance().exposeRegionBelow(this, vacated);
+    const Rect selfLocal = Rect::Make(0, 0, getWidth(), getHeight());
+    mPendingRgn->do_union((Cairo::RectangleInt&)selfLocal);
+    GraphDevice::getInstance().flip();
+}
+
 WindowManager::LayoutParams& Window::getAttributes(){
     return mWindowAttributes;
 }
@@ -1197,14 +1212,8 @@ void Window::setEnterTransition(ActivityTransition* t) {
     delete mEnterTransition;
     mEnterTransition = t;
     if (t && t->getType() != ActivityTransition::Type::NONE) {
-        // Capture the resting position BEFORE snapEnterStart moves us offscreen: snapEnterStart calls
-        // setPos (-> moveWindow -> setFrame), which overwrites mLeft/mTop with the offscreen start.
-        // Reading getLeft()/getTop() later would return that offscreen value, so the enter animation
-        // would slide entirely off-screen (resting pos corrupted by exactly +width/+height). The Window
-        // ctor already ran setFrame(0,0,W,H), so getLeft()/getTop() here ARE the final resting pos.
-        mEnterRestX = getLeft();
-        mEnterRestY = getTop();
-        mEnterRestValid = true;
+        // The snap is a visual-only offset (snapEnterStart -> setSurfaceTranslation), so
+        // getLeft()/getTop() stay the resting position — no capture dance needed.
         mPendingEnterAnim = true;
         snapEnterStart(t);  // pre-snap to the start state before the first frame (no full-show flash)
     }
@@ -1309,19 +1318,13 @@ void Window::applyWindowAnimationStyle(int styleRes) {
     const int exitRes  = ta->getResourceId(R::styleable::WindowAnimation_windowExitAnimation,
                           ta->getResourceId(R::styleable::WindowAnimation_activityCloseExitAnimation, 0));
 
-    // Install like setEnterTransition would, but reuse the resting position captured by an
-    // earlier install — after the first snap getLeft()/getTop() are the OFFSCREEN start, and
-    // re-capturing them would corrupt the resting point (the exact bug its comment describes).
+    // Install like setEnterTransition would — the snap is visual-only, so re-installing on a
+    // window whose snap already ran just re-snaps the offset (getLeft()/getTop() never corrupted).
     auto enterT = enterRes != 0
         ? transitionFromAnimation(AnimationUtils::loadAnimation(mContext, enterRes), true) : nullptr;
     if (enterT != nullptr) {
         delete mEnterTransition;
         mEnterTransition = enterT;
-        if (!mEnterRestValid) {
-            mEnterRestX = getLeft();
-            mEnterRestY = getTop();
-            mEnterRestValid = true;
-        }
         mPendingEnterAnim = true;
         snapEnterStart(enterT);
     }
@@ -1375,7 +1378,7 @@ void Window::snapEnterStart(ActivityTransition* t) {
     } else if (t->getType() == ActivityTransition::Type::SLIDE) {
         int x, y;
         computeSlidePos(t->getSlideEdge(), getLeft(), getTop(), getWidth(), getHeight(), true, x, y);
-        setPos(x, y);
+        setSurfaceTranslation(x - getLeft(), y - getTop());
     }
 }
 
@@ -1396,9 +1399,13 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
     mInTransition = true;
     const int64_t duration = t->getDuration();
     Animator::AnimatorListener endListener;
-    endListener.onAnimationEnd = [this, onEnd](Animator&, bool) {
+    endListener.onAnimationEnd = [this, onEnd, enter](Animator&, bool) {
         if (mDestroyed) return;  // ~Window is tearing us down — don't run finishClose / replace
         mInTransition = false;
+        // Identity landing (AOSP onAnimationFinished commits the final surface transaction):
+        // the surface must end exactly on the frame. Exit animations skip this — the window
+        // is removed/hidden right after, and an interrupted exit's re-enter lands here anyway.
+        if (enter) setSurfaceTranslation(0, 0);
         if (onEnd) onEnd();
         // The animator is NOT deleted here (delete-in-end-callback). It stays in
         // mCurrentTransitionAnimator and is freed by ~Window or the next runActivityTransition.
@@ -1415,28 +1422,25 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
         anim->addListener(endListener);
         mCurrentTransitionAnimator = anim;
         anim->start();
-    } else { // SLIDE — translate the whole window surface via setPos/moveWindow.
-        const int w = getWidth(), h = getHeight();
-        // Enter slides back to the resting position captured in setEnterTransition (snapEnterStart has
-        // since moved the window offscreen, so getLeft()/getTop() are no longer the resting pos).
-        // Exit slides from the live resting pos — the window is at rest when close() starts the exit.
-        const int ox = (enter && mEnterRestValid) ? mEnterRestX : getLeft();
-        const int oy = (enter && mEnterRestValid) ? mEnterRestY : getTop();
+    } else { // SLIDE — animate the compose-time visual translation only. The real frame stays
+             // at the resting position (getLeft()/getTop() are ALWAYS the rest — no capture),
+             // so a11y bounds, input routing and WMS placement are stable mid-animation.
         int offX, offY;
-        computeSlidePos(t->getSlideEdge(), ox, oy, w, h, true, offX, offY);
-        const int startX = enter ? offX : ox;
-        const int startY = enter ? offY : oy;
-        const int endX   = enter ? ox  : offX;
-        const int endY   = enter ? oy  : offY;
+        computeSlidePos(t->getSlideEdge(), getLeft(), getTop(), getWidth(), getHeight(), true, offX, offY);
+        const int startX = enter ? offX - getLeft() : 0;
+        const int startY = enter ? offY - getTop() : 0;
+        const int endX   = enter ? 0 : offX - getLeft();
+        const int endY   = enter ? 0 : offY - getTop();
         ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
         anim->setDuration(duration);
         anim->addUpdateListener([this, startX, startY, endX, endY](ValueAnimator& a) {
             const float f = a.getAnimatedFraction();
-            setPos((int)(startX + (endX - startX) * f), (int)(startY + (endY - startY) * f));
+            setSurfaceTranslation((int)(startX + (endX - startX) * f),
+                                  (int)(startY + (endY - startY) * f));
         });
         anim->addListener(endListener);
         mCurrentTransitionAnimator = anim;
-        if (enter) setPos(startX, startY);  // ensure offscreen before the first animated frame
+        if (enter) setSurfaceTranslation(startX, startY);  // offscreen visual before the first frame
         anim->start();
     }
 }

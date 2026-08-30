@@ -149,21 +149,29 @@ public:
         }
     };
 
-    struct ScaledFontEntry {
-        Cairo::RefPtr<Cairo::FtScaledFont> font;
-        std::list<ScaledFontKey>::iterator lruIter;
-    };
+
 
     // Global LRU cache for ScaledFonts, shared by all FullMinikinFont instances
     // Reduced from 64 to 32 for better cache locality
     static constexpr size_t MAX_SCALED_FONT_CACHE = 32;
-    static std::unordered_map<ScaledFontKey, ScaledFontEntry, ScaledFontKeyHash>& getGlobalScaledFontCache() {
-        static std::unordered_map<ScaledFontKey, ScaledFontEntry, ScaledFontKeyHash> cache;
-        return cache;
-    }
-    static std::list<ScaledFontKey>& getGlobalLruList() {
-        static std::list<ScaledFontKey> lru;
+    // LRU shape (android::LruCache-style): the list OWNS the {key, font} nodes and
+    // defines the recency order; the map only holds iterators into the list. One
+    // source of truth — the previous "map of values + parallel key list" could
+    // desync (map erase no-ops / duplicate keys), leaving freed nodes linked in
+    // either container (valgrind: invalid read/write of size 8 in _Hashtable /
+    // _M_hook during heavy cache churn, e.g. IME typing through the candidate bar).
+    struct ScaledFontLruEntry {
+        ScaledFontKey key;
+        Cairo::RefPtr<Cairo::FtScaledFont> font;
+    };
+    using ScaledFontLru = std::list<ScaledFontLruEntry>;
+    static ScaledFontLru& getGlobalScaledFontLru() {
+        static ScaledFontLru lru;
         return lru;
+    }
+    static std::unordered_map<ScaledFontKey, ScaledFontLru::iterator, ScaledFontKeyHash>& getGlobalScaledFontCache() {
+        static std::unordered_map<ScaledFontKey, ScaledFontLru::iterator, ScaledFontKeyHash> cache;
+        return cache;
     }
     Cairo::RefPtr<Cairo::FtScaledFont> getScaledFont(const minikin::MinikinPaint& paint) const {
         // ScaledFont depends only on (font, size, scaleX, skewX); font feature settings
@@ -174,25 +182,23 @@ public:
         }
         ScaledFontKey key{mSourceId, paint.hash()};
         auto& cache = getGlobalScaledFontCache();
-        auto& lru = getGlobalLruList();
+        auto& lru = getGlobalScaledFontLru();
         auto it = cache.find(key);
         if (it != cache.end()) {
-            // Move to front (most recently used); splice keeps iterators valid.
-            if (it->second.lruIter != lru.begin()) {
-                lru.splice(lru.begin(), lru, it->second.lruIter);
-                it->second.lruIter = lru.begin();
-            }
-            return it->second.font;
+            // Move to front (most recently used); splice keeps node identity, so the
+            // stored iterator stays valid.
+            lru.splice(lru.begin(), lru, it->second);
+            return it->second->font;
         }
         auto newFont = createScaledFont(paint.size, paint.scaleX, paint.skewX);
         // Evict least-recently-used when full (the old code froze the cache once full,
         // so every new (font,paint) combo after 32 entries was never cached).
-        if (lru.size() >= MAX_SCALED_FONT_CACHE) {
-            cache.erase(lru.back());
+        if (cache.size() >= MAX_SCALED_FONT_CACHE) {
+            cache.erase(lru.back().key);
             lru.pop_back();
         }
-        lru.push_front(key);
-        cache[key] = {newFont, lru.begin()};
+        lru.push_front({key, newFont});
+        cache.emplace(key, lru.begin());
         return newFont;
     }
 private:
@@ -670,14 +676,13 @@ void Typeface::loadPreinstalledSystemFontMap() {
     sLoadAttempted = true;
 
     // Prefer an Android fonts.xml / font_fallback.xml (curated named families + ordered
-    // fallback chain). Try the explicitly-configured path, an env override, the
-    // build-tree snapshot next to the executable, then common system locations.
+    // fallback chain). Try the explicitly-configured path, the build-tree snapshot
+    // next to the executable, then common system locations.
     // Fontconfig enumeration stays as the last resort only — a full desktop
     // font set makes startup crawl.
     bool loadedFromXml = false;
     std::vector<std::string> candidates;
     if (!sFontConfigXml.empty()) candidates.push_back(sFontConfigXml);
-    if (const char* env = getenv("CDROID_FONTS_XML")) if (*env) candidates.push_back(env);
     candidates.push_back(findFontsXmlNearExecutable());
     candidates.push_back("/system/etc/font_fallback.xml");
     candidates.push_back("/system/etc/fonts.xml");

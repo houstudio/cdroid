@@ -74,7 +74,7 @@ class TextAppearanceAttributes {
     cdroid::RefPtr<ColorStateList> mTextColorLink;
     int mTextSize = -1;   // AOSP 4195: -1 = unset (ctor seeds 15)
     std::string mFontFamily;
-    Typeface* mFontTypeface;
+    Typeface* mFontTypeface = nullptr;   // AOSP: JVM null default (uninit garbage flowed into setTypeface)
     int mTypefaceIndex = -1;
     int mTextStyle = 0;
     int mFontWeight = -1;

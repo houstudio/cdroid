@@ -4678,10 +4678,8 @@ void AbsListView::FlingRunnable::checkFlyWheel() {
 
 void AbsListView::ListItemAccessibilityDelegate::onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) {
     AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, info);
-#if 0
-    const int position = getPositionForView(host);
-    onInitializeAccessibilityNodeInfoForItem(host, position, info);
-#endif
+    const int position = mHost->getPositionForView(&host);
+    mHost->onInitializeAccessibilityNodeInfoForItem(&host, position, info);
 }
 
 

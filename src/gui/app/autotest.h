@@ -2,6 +2,8 @@
 #define __CDROID_AUTOTEST_H__
 #include <string>
 #include <vector>
+#include <map>
+#include <random>
 #include <fstream>
 
 namespace cdroid {
@@ -14,15 +16,22 @@ class Window;
  * UiAutomation that walks the active window's node tree, activates every
  * on-screen clickable in reading order and verifies each activation produced
  * its TYPE_VIEW_CLICKED event. No per-app test code — any CDROID app runs
- * `./app --auto-test` (or AUTOTEST=1) to get a semantic, coordinate-free
- * smoke test that also exercises the whole a11y pipeline.
+ * `./app --auto-test` to get a semantic, coordinate-free smoke test that also
+ * exercises the whole a11y pipeline.
+ *
+ * Two target-selection modes (Android has both): the default deterministic
+ * per-page traversal, or `--auto-test=<seed>` for a Monkey-style seeded-random
+ * walk (com.android.commands.monkey -s: the seed alone makes the run
+ * reproducible; no cursor state at all).
  */
 class UiAutoTest {
 public:
     static UiAutoTest& getInstance();
 
-    /** Starts the sweep: one activation step every stepIntervalMs. */
-    void start(long stepIntervalMs = 2500);
+    /** Starts the sweep: one activation step every stepIntervalMs. seed >= 0
+     *  selects the Monkey-style seeded-random walk; seed < 0 (the default)
+     *  the deterministic per-page traversal. */
+    void start(long stepIntervalMs = 2500, long seed = -1);
     void stop();
     bool isRunning() const { return mRunning; }
 
@@ -32,6 +41,7 @@ public:
 
 private:
     UiAutoTest() = default;
+    ~UiAutoTest();
     void step();
     void collectClickable(AccessibilityNodeInfo* node, int depth);
     /** One ACTION_SCROLL_FORWARD on the first scrollable node (ping-pong
@@ -54,8 +64,22 @@ private:
     bool mRunning = false;
     long mStepIntervalMs = 2500;
     int mStepCount = 0;
-    size_t mScanIndex = (size_t)-1;
-    bool mKeepIndexOnRebuild = false;  // stale-rebuild resumes, wrap restarts
+    bool mRandomWalk = false;             // Monkey mode (--auto-test=SEED)
+    std::mt19937 mRng;                     // seeded in start(); drives idx picks
+    /* Identity of a swept target within a page: class + position. Labels are
+     * excluded — a toggle row's label flips "ON,"/"OFF," on every click, which
+     * would break identity matching from one visit to the next. */
+    struct TargetKey {
+        std::string cls;
+        int left = 0, top = 0;
+    };
+    /* Last-clicked target per PAGE, keyed by a signature of the page's clickable
+     * set (classes + geometry), NOT by Window*: apps swap pages inside one window
+     * (preferencedemo's detail screens), so a Window*-keyed cursor makes the main
+     * page and its detail page share one slot — each overwrites the other's
+     * target, neither ever matches, and the sweep ping-pongs on item 1 of both
+     * pages forever. */
+    std::map<std::string, TargetKey> mPageCursor;
     Window* mLastActiveWindow = nullptr;  // follow navigation: new window, new snapshot
     size_t mStepsSinceScroll = 0;         // one scroll per full click cycle
     int mScrollExhausted = 0;             // consecutive failed forward scrolls

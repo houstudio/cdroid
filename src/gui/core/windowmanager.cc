@@ -234,20 +234,17 @@ void WindowManager::relayoutWindow(Window*w){
     Gravity::apply(attrs.gravity, wsize, hsize, display, attrs.x, attrs.y, frame);
     Gravity::applyDisplay(attrs.gravity, display, frame);
     moveWindow(w, frame.left, frame.top, frame.width, frame.height);
+}
 
-    // The enter transition captured its resting position at install time (the
-    // Window ctor snap — e.g. a dialog pre-positioned at (0,0,640,320)) and
-    // pre-snapped offscreen against THAT frame. Placement just moved the
-    // resting point, so: refresh the captured rest to the placed frame, and
-    // re-snap so the first drawn frame doesn't flash the resting position
-    // before the slide/fade-in. Without this the enter animation slides the
-    // window back to the stale pre-placement spot (a gravity-centered dialog
-    // dragged up to the top).
-    if (w->mPendingEnterAnim && !w->mInTransition && w->mEnterRestValid
-            && w->mEnterTransition != nullptr) {
-        w->mEnterRestX = frame.left;
-        w->mEnterRestY = frame.top;
-        w->snapEnterStart(w->mEnterTransition);
+void WindowManager::exposeRegionBelow(Window*w,const Rect&grc){
+    // Repaint a global rect from the windows BELOW w (they are the ones the moving
+    // surface uncovers): translate the rect into each window's local space and union
+    // it into its pending region — the same damage pattern moveWindow/hideWindow use.
+    const auto itw = std::find(mWindows.begin(), mWindows.end(), w);
+    for(auto it = mWindows.begin(); it < itw; it++){
+        Rect local = grc;
+        local.offset(-(*it)->getLeft(), -(*it)->getTop());
+        (*it)->mPendingRgn->do_union((Cairo::RectangleInt&)local);
     }
 }
 

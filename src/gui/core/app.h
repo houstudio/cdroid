@@ -103,7 +103,6 @@ private:
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
-    void applyLocale(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
     std::unique_ptr<cxxopts::ParseResult> mArgsResult;
     static std::atomic<App*>mInst;
@@ -170,9 +169,9 @@ public:
     std::string getLauncherActivity() const;
     // Orientation into the arsc request config so -land/-port resource
     // variants select (AOSP: WMS owns the effective orientation; CDROID has
-    // no rotation, so it is resolved once at startup): CDROID_ORIENTATION
-    // env > launcher activity's android:screenOrientation > screen shape.
-    void applyOrientationConfig();
+    // no rotation, so it is resolved once at startup): --orientation switch >
+    // launcher activity's android:screenOrientation > screen shape.
+    void applyOrientationConfig(const std::string& forced = std::string());
     friend class Window;   // consumes mPendingActivityTheme in its Context ctor
 
     // --- Context implementation (the ContextImpl face) ---------------------

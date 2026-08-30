@@ -30,20 +30,33 @@ UiAutoTest& UiAutoTest::getInstance() {
     return sInstance;
 }
 
-void UiAutoTest::start(long stepIntervalMs) {
+void UiAutoTest::start(long stepIntervalMs, long seed) {
     mStepIntervalMs = stepIntervalMs;
     if (mRunning) return;
     UiAutomation::getInstance().connect();  // the backing service (idempotent)
     mRunning = true;
     mStepCount = 0;
-    mScanIndex = (size_t)-1;
-    LOGI("AUTOTEST sweep start (interval %ldms)", mStepIntervalMs);
+    mPageCursor.clear();
+    mRandomWalk = seed >= 0;
+    if (mRandomWalk) mRng.seed((uint32_t)seed);
+    LOGI("AUTOTEST sweep start (interval %ldms, %s)", mStepIntervalMs,
+         mRandomWalk ? "monkey-style seeded random" : "deterministic traversal");
     stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
+}
+
+UiAutoTest::~UiAutoTest() {
+    for (auto* stale : mClickables) stale->recycle();
+    mClickables.clear();
 }
 
 void UiAutoTest::stop() {
     mRunning = false;
     LOGI("AUTOTEST sweep stop after %d steps", mStepCount);
+    // The kept clickables are pool objects — the app may quit right after the
+    // sweep stops (or the sweep dies when its window closes), and un-recycled
+    // pooled nodes then read as definite leaks (9 blocks / ~4.7K on pd).
+    for (auto* stale : mClickables) stale->recycle();
+    mClickables.clear();
 }
 
 void UiAutoTest::collectClickable(AccessibilityNodeInfo* node, int depth) {
@@ -61,6 +74,24 @@ void UiAutoTest::collectClickable(AccessibilityNodeInfo* node, int depth) {
         node->recycle();  // walk scaffolding (kept clickables stay alive)
     }
 }
+
+namespace {
+// Identity label for a swept target: its own text/content description, else the
+// first non-empty descendant text (list rows carry their title in a child).
+std::string targetLabel(AccessibilityNodeInfo* node, int depth = 0) {
+    if (node == nullptr || depth > 4) return "";
+    std::string own = node->getText();
+    if (own.empty()) own = node->getContentDescription();
+    if (!own.empty()) return own;
+    for (int i = 0; i < node->getChildCount(); i++) {
+        AccessibilityNodeInfo* child = node->getChild(i);
+        const std::string label = targetLabel(child, depth + 1);
+        child->recycle();
+        if (!label.empty()) return label;
+    }
+    return "";
+}
+} // namespace
 
 void UiAutoTest::step() {
     if (!mRunning) return;
@@ -143,11 +174,50 @@ void UiAutoTest::step() {
         stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
         return;
     }
-    // collectClickable recycled the walk scaffolding (root included).
     mStepCount++;
-    AccessibilityNodeInfo* target = mClickables.at(mStepCount % mClickables.size());
+    size_t idx = 0;
+    std::string pageSig;  // deterministic mode: identity of this page for the cursor
+    if (mRandomWalk) {
+        // Monkey -s semantics: pick uniformly from the fresh snapshot — the seed
+        // alone makes the walk reproducible, so there is no cursor state to keep.
+        idx = mRng() % mClickables.size();
+    } else {
+        // Identity-following cursor: the snapshot is rebuilt every step, so "next" means
+        // "the item AFTER the one we clicked last on this page", found by identity in the
+        // fresh vector. An index into a resized/re-sorted vector would skip or repeat items
+        // (dialog opens, toggles re-layout, scrolling exposes rows). Unknown page → top.
+        // Page identity = the clickable set's classes + geometry (see mPageCursor); labels
+        // are excluded so a toggled row doesn't fork the page.
+        for (auto* n : mClickables) {
+            Rect b; n->getBoundsInScreen(b);
+            pageSig += n->getClassName();
+            pageSig += '@';
+            pageSig += std::to_string(b.left);
+            pageSig += ',';
+            pageSig += std::to_string(b.top);
+            pageSig += ';';
+        }
+        auto cursorIt = mPageCursor.find(pageSig);
+        if (cursorIt != mPageCursor.end()) {
+            for (size_t i = 0; i < mClickables.size(); i++) {
+                Rect b; mClickables[i]->getBoundsInScreen(b);
+                if (mClickables[i]->getClassName() == cursorIt->second.cls
+                        && b.left == cursorIt->second.left && b.top == cursorIt->second.top) {
+                    idx = (i + 1) % mClickables.size();
+                    break;
+                }
+            }
+        }
+    }
+    AccessibilityNodeInfo* target = mClickables.at(idx);
+    if (!mRandomWalk) {
+        // Remember the target we are ABOUT to click, so the next visit to this
+        // page resumes after it.
+        Rect tb; target->getBoundsInScreen(tb);
+        mPageCursor[pageSig] = { target->getClassName(), tb.left, tb.top };
+    }
     const std::string label = target->getText().empty()
-            ? target->getContentDescription() : target->getText();
+            ? targetLabel(target) : target->getText();
 
     // Visual feedback: a semantic click fires no pressed-state animation —
     // park the accessibility focus highlight on the target so the sweep is
@@ -159,7 +229,7 @@ void UiAutoTest::step() {
             return e.getEventType() == AccessibilityEvent::TYPE_VIEW_CLICKED; },
         1500);
     LOGI("AUTOTEST [%d] %2zu/%zu [%s] -> %s", mStepCount,
-         mStepCount % mClickables.size() + 1, mClickables.size(),
+         idx + 1, mClickables.size(),
          label.c_str(), hit ? "PASS" : "no-event");
     if (hit) hit->recycle();
 
@@ -303,8 +373,9 @@ void UiAutoTest::scriptNext() {
         std::function<void(AccessibilityNodeInfo*, int)> dump = [&](AccessibilityNodeInfo* n, int d) {
             if (!n || d > 20) return;
             Rect b; n->getBoundsInScreen(b);
-            LOGI("  %*s%s [%s] (%d,%d %dx%d)", d * 2, "", n->getClassName().c_str(),
-                 n->getText().c_str(), b.left, b.top, b.width, b.height);
+            LOGI("  %*s%s [%s] (%d,%d %dx%d) clk=%d vis=%d en=%d", d * 2, "", n->getClassName().c_str(),
+                 n->getText().c_str(), b.left, b.top, b.width, b.height,
+                 n->isClickable(), n->isVisibleToUser(), n->isEnabled());
             for (int i = 0; i < n->getChildCount(); i++) dump(n->getChild(i), d + 1);
         };
         dump(root, 0);

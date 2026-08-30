@@ -69,12 +69,13 @@ private:
     ActivityTransition* mReturnTransition  = nullptr; // shown on close/back (null => use mExitTransition)
     ActivityTransition* mReenterTransition = nullptr; // shown returning to this Window (null => use mEnterTransition)
     Animator* mCurrentTransitionAnimator   = nullptr; // owned (cancel+delete on replace/~Window)
-    // Resting window position captured in setEnterTransition BEFORE snapEnterStart shifts the window
-    // offscreen — setPos rewrites mLeft/mTop, so getLeft()/getTop() read AFTER snap are the offscreen
-    // start, not the resting pos. The enter animation must slide back to this captured resting point.
-    int  mEnterRestX = 0;
-    int  mEnterRestY = 0;
-    bool mEnterRestValid = false;
+    // Compose-time visual translation — CDROID's SurfaceControl::setPosition. The SLIDE activity
+    // transition animates ONLY this offset (composeSurfaces adds it to the blit); the real frame
+    // (getBound/mLeft/mTop) stays at the resting position, so a11y bounds, input hit-testing and
+    // WMS placement are stable mid-animation — AOSP semantics (window animations are surface-side
+    // transforms; WindowState's frame never moves).
+    int  mSurfaceDx = 0;
+    int  mSurfaceDy = 0;
     bool mPendingEnterAnim  = false; // run mEnterTransition after the first doTraversal (content drawn)
     bool mInTransition      = false; // close()/re-enter re-entrancy guard
     bool mDestroyed         = false; // set in ~Window so the animator end-callback skips finishClose
@@ -210,6 +211,8 @@ public:
     virtual void setText(const std::string&);
     const std::string getText()const;
     void setPos(int x,int y);
+    /* Visual-only surface translation (see mSurfaceDx). Real moves go through setPos. */
+    void setSurfaceTranslation(int dx,int dy);
     // AOSP Window.getAttributes/setAttributes. getAttributes returns the LIVE
     // object — mutate fields on it and call WindowManager::relayoutWindow,
     // exactly how AOSP dialogs tune their window before showing.

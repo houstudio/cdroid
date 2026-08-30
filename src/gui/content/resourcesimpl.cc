@@ -17,6 +17,7 @@
 
 // androidfw native readers — hidden from resourcesimpl.h (the facade contract).
 #include <content/androidfw/restable.h>       // ResTable, ResTable_config, Res_value, pakPathCandidates
+#include <content/androidfw/LocaleData.h>     // localeDataComputeScript (arsc locale config)
 #include <content/assetmanager.h>        // AssetManager
 #include <content/asset.h>               // Asset
 #include <content/typedvalue.h>     // TypedValue
@@ -109,6 +110,13 @@ static ResTable_config toResTableConfig(const Configuration& c, const DisplayMet
         if (!script.empty()) {
             strncpy(cfg.localeScript, script.c_str(), sizeof(cfg.localeScript));
             cfg.localeScriptWasComputed = false;
+        } else {
+            // AOSP android_util_AssetManager: a locale without an explicit
+            // script gets one computed from language+region.
+            char computed[4] = {0, 0, 0, 0};
+            localeDataComputeScript(computed, cfg.language, cfg.country);
+            memcpy(cfg.localeScript, computed, 4);
+            cfg.localeScriptWasComputed = true;
         }
     }
     cfg.orientation = (uint8_t)c.orientation;

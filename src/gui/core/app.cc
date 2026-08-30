@@ -20,9 +20,8 @@
 #include <content/typedarray.h>   // TypedArray (constructed in obtainStyledAttributes)
 #include <content/typedvalue.h>   // TypedValue (typed currency of this layer)
 #include <content/androidfw/restable.h> // ResTable engine + Res_value (boundary lookups)
-#include "content/androidfw/LocaleData.h"  // localeDataComputeScript (arsc locale config)
-#include "content/assetmanager.h"   // AssetManager
-#include "resources.h"         // cdroid::Resources
+#include <content/assetmanager.h>   // AssetManager
+#include <content/resources.h> // cdroid::Resources
 #include <algorithm>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -62,7 +61,7 @@
 #include <gui_features.h>
 #include <cstdio>
 #include <iterator>
-#include "data_resource.h"
+#include <content/i18n/data_resource.h>
 #include <core/cxxopts.h>
 #include <core/inputeventsource.h>
 #include <core/windowmanager.h>
@@ -106,8 +105,8 @@ bool App::addAppOptions(const std::string& group,
 
 App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     int alpha = 255, rotation = 0, density = 0, frameDelay = 0;
-    bool debug= false,showFPS = false, help = false, autoTest = false;
-    std::string testScript;
+    bool debug= false,showFPS = false, help = false;
+    std::string autoTest, testScript, orientation;
     std::string logo, monkey, record, datapath;
     LogParseModules(argc,argv);
     mInst = this;
@@ -119,13 +118,17 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         ("a,alpha","UI layer global alpha[0,255]",cxxopts::value<int>(alpha)->default_value("255"))
         ("f,framedelay","animation frame delay",cxxopts::value<int>(frameDelay))
         ("density","UI Density",cxxopts::value<int>(density))
+        ("orientation","force resource orientation (land|landscape|port|portrait; "
+         "default: launcher manifest's screenOrientation > screen shape)",
+         cxxopts::value<std::string>(orientation))
         ("R,rotate","display rotate(90*n)",cxxopts::value<int>(rotation)->default_value("0"))
         ("l,logo","show logo",cxxopts::value<std::string>(logo))
         ("m,monkey","events playback path",cxxopts::value<std::string>(monkey))
         ("r,record","events record path",cxxopts::value<std::string>(record))
         ("data","data directory",cxxopts::value<std::string>(datapath))
-        ("auto-test","a11y semantic UI sweep (clicks every on-screen clickable and verifies events)",
-         cxxopts::value<bool>(autoTest))
+        ("auto-test","a11y semantic UI sweep (clicks every on-screen clickable and verifies "
+         "events); bare = deterministic per-page traversal, =SEED = monkey-style random walk",
+         cxxopts::value<std::string>(autoTest)->implicit_value("1"))
         ("test-script","line-based a11y test script (wait/click/assert/dump; exit code = failures)",
          cxxopts::value<std::string>(testScript));
 
@@ -193,7 +196,7 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     if (!appPakPath.empty()) parsePackageManifest(appPakPath);
     // Orientation must land before the first inflate (and ideally before the
     // theme build below) so -land/-port variants resolve on first lookup.
-    applyOrientationConfig();
+    applyOrientationConfig(orientation);
     setTheme(mApplicationTheme ? mApplicationTheme
                                : (int)cdroid::internal::R::style::Theme_Material);
     // AOSP: the system starts the manifest's launcher activity — app main()
@@ -202,19 +205,30 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     // runnable fires once exec()'s loop is turning, after anything main() set
     // up synchronously. Skipped when a window is already up or the manifest
     // declares no activity (app-driven windows keep working as before).
-    // --auto-test (or AUTOTEST=1): the App-level semantic sweep driver — any
+    // --auto-test / --test-script: the App-level semantic sweep driver — any
     // app gets a coordinate-free smoke test over the a11y node tree.
-    if (!testScript.empty() || getenv("TEST_SCRIPT")) {
-        const std::string scriptPath = !testScript.empty()
-                ? testScript : std::string(getenv("TEST_SCRIPT"));
+    if (!testScript.empty()) {
         static Handler sAutoTestHandler(Looper::getMainLooper());
-        sAutoTestHandler.postDelayed([scriptPath]() {
+        sAutoTestHandler.postDelayed([scriptPath = testScript]() {
             UiAutoTest::getInstance().runScript(scriptPath);
         }, 3000);  // let the launcher window come up first
-    } else if (autoTest || getenv("AUTOTEST")) {
+    } else if (!autoTest.empty()) {
+        // --auto-test[=SEED]: seed >= 0 selects the Monkey-style seeded-random
+        // walk, anything else the deterministic per-page traversal (see
+        // UiAutoTest::start).
+        long autoSeed = -1;
+        const std::string seedSrc = (autoTest != "1" && autoTest != "true")
+                ? autoTest : "";
+        if (!seedSrc.empty()) {
+            char* end = nullptr;
+            const long s = strtol(seedSrc.c_str(), &end, 10);
+            if (end != nullptr && *end == '\0' && s >= 0) autoSeed = s;
+            else LOGW("--auto-test=%s: not a non-negative seed, using deterministic sweep",
+                      seedSrc.c_str());
+        }
         static Handler sAutoTestHandler(Looper::getMainLooper());
-        sAutoTestHandler.postDelayed([]() {
-            UiAutoTest::getInstance().start();
+        sAutoTestHandler.postDelayed([autoSeed]() {
+            UiAutoTest::getInstance().start(2500, autoSeed);
         }, 3000);  // let the launcher window come up first
     }
     static Handler sLaunchHandler(Looper::getMainLooper());
@@ -316,20 +330,7 @@ void App::onInit(){
         cands.push_back(name);   // cwd
         // System search paths: an installed app (pm install layout:
         // /data/app/cdroid/<pkg>/...) can't reach the out-tree root by walking
-        // up, so probe the standard install locations. CDROID_PAK_PATH is a
-        // colon-separated extra list (same role as LD_LIBRARY_PATH).
-        if (const char* env = getenv("CDROID_PAK_PATH")) {
-            std::string list(env);
-            size_t pos = 0;
-            while (pos <= list.size()) {
-                const size_t colon = list.find(':', pos);
-                const std::string dir = list.substr(pos,
-                        colon == std::string::npos ? std::string::npos : colon - pos);
-                if (!dir.empty()) cands.push_back(dir + PATH_SEP + name);
-                if (colon == std::string::npos) break;
-                pos = colon + 1;
-            }
-        }
+        // up, so probe the standard install locations.
         cands.push_back(std::string("/usr/share/cdroid") + PATH_SEP + name);
         cands.push_back(std::string("/opt/cdroid") + PATH_SEP + name);
         for (const auto& c : cands)
@@ -1009,30 +1010,6 @@ int App::addResource(const std::string&path,const std::string&name) {
     return pak?0:-1;
 }
 
-// Set the arsc request locale so getResource/getResourceString pick the matching
-// locale variant (mirrors the test config construction: packLanguage/Region +
-// localeDataComputeScript). Localized strings come from the arsc (the retired
-// text-XML loadStrings parsed them into write-only caches).
-void App::applyLocale(const std::string& lan) {
-    if (!mResTable || lan.empty()) return;
-    std::string lang = lan, region;
-    size_t sep = lan.find_first_of("_-");
-    if (sep != std::string::npos) { lang = lan.substr(0, sep); region = lan.substr(sep + 1); }
-    // Read-modify-write: setParameters REPLACES mParams, so start from the
-    // current config (device density etc.) instead of a zeroed one — otherwise
-    // a locale switch would wipe the requested density back to unset.
-    ResTable_config cfg = {};
-    mResTable->getParameters(&cfg);
-    if (lang.size() >= 2) cfg.packLanguage(lang.substr(0, 2).c_str());
-    if (region.size() >= 2) cfg.packRegion(region.substr(0, 2).c_str());
-    char script[4] = {0, 0, 0, 0};
-    localeDataComputeScript(script, cfg.language, cfg.country);
-    memcpy(cfg.localeScript, script, 4);
-    cfg.localeScriptWasComputed = true;
-    mResTable->setParameters(&cfg);
-}
-
-
 int App::getNextAutofillId(){
     return mNextAutofillViewId++;
 }
@@ -1041,22 +1018,20 @@ int App::getNextAutofillId(){
 // select. AOSP owns the effective orientation in WMS (rotation + per-
 // activity locks) and ResourcesManager applies it to every Resources; CDROID
 // has no rotation, so it is resolved once here at startup, before the theme
-// build and any inflate: CDROID_ORIENTATION env > launcher activity's
+// build and any inflate: --orientation switch > launcher activity's
 // android:screenOrientation > device screen shape.
-void App::applyOrientationConfig() {
+void App::applyOrientationConfig(const std::string& forced) {
     if (mResTable == nullptr) return;
     int orientation = ResTable_config::ORIENTATION_ANY;
     const char* source = nullptr;
-    const char* forced = getenv("CDROID_ORIENTATION");
-    if (forced != nullptr && forced[0] != '\0') {
-        const std::string v = forced;
-        if (v == "land" || v == "landscape")
+    if (!forced.empty()) {
+        if (forced == "land" || forced == "landscape")
             orientation = ResTable_config::ORIENTATION_LAND;
-        else if (v == "port" || v == "portrait")
+        else if (forced == "port" || forced == "portrait")
             orientation = ResTable_config::ORIENTATION_PORT;
         else
-            LOGW("CDROID_ORIENTATION='%s' invalid (land|landscape|port|portrait)", forced);
-        if (orientation != ResTable_config::ORIENTATION_ANY) source = "env";
+            LOGW("--orientation='%s' invalid (land|landscape|port|portrait)", forced.c_str());
+        if (orientation != ResTable_config::ORIENTATION_ANY) source = "switch";
     }
     if (orientation == ResTable_config::ORIENTATION_ANY) {
         // ActivityInfo numbering (landscape=0, portrait=1) remaps onto
@@ -1080,12 +1055,18 @@ void App::applyOrientationConfig() {
                 ? ResTable_config::ORIENTATION_LAND : ResTable_config::ORIENTATION_PORT;
         source = "auto";
     }
-    // Read-modify-write like applyLocale: setParameters REPLACES mParams, so
-    // keep the seeded device density instead of wiping it back to unset.
-    ResTable_config cfg = {};
-    mResTable->getParameters(&cfg);
-    cfg.orientation = (uint8_t)orientation;
-    mResTable->setParameters(&cfg);
+    // Apply through the AOSP face: the system layer (App, standing in for
+    // ActivityThread/WMS) computes the effective Configuration, and
+    // Resources.updateConfiguration pushes it via ResourcesImpl — metrics
+    // sync, locale best-match, arsc reselect, cache flush. Writing mResTable
+    // directly would bypass all that and desync ResourcesImpl::mConfig.
+    // Read-modify-write keeps the rest of the live configuration intact.
+    Resources& res = getResources();
+    Configuration cfg = res.getConfiguration();
+    cfg.orientation = (orientation == ResTable_config::ORIENTATION_LAND)
+            ? Configuration::ORIENTATION_LANDSCAPE
+            : Configuration::ORIENTATION_PORTRAIT;
+    res.updateConfiguration(&cfg, nullptr);
     LOGI("orientation=%s (%s)",
          orientation == ResTable_config::ORIENTATION_LAND ? "landscape" : "portrait",
          source);
