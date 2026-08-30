@@ -189,7 +189,14 @@ void AnimationEffect::onCommit(ViewGroup* container){
                     // CALLBACK_ANIMATION -> UAF. Keep v alive (GONE, still parented) and hand it to the
                     // controller; the clone's true end (TransitionEffect listener) reclaims it once
                     // nothing references it anymore.
+                    // The clone's ObjectAnimator only needs v ALIVE (setTransitionAlpha), not
+                    // parented. Detach v now and hand sole ownership to the controller: while it
+                    // stays in mChildren, a window/host teardown that deletes the tree races the
+                    // clone-end reclaim post (whoever runs second touches a freed view). Off-tree,
+                    // the tree delete can never reach it and the reclaim (removeView-belt +
+                    // delete) stays single-owner.
                     v->setVisibility(cdroid::View::GONE);
+                    if(v->getParent()) v->getParent()->removeView(v);
                     op->mController->deferExitViewDelete(v);
                 } else {
                     // No Transition clone on this container -> nothing references v post-anim. Safe to

@@ -43,7 +43,7 @@ private:
     Calendar mCalendar;
     std::string mDayOfWeekLabels[7];
     int mDayOfWeekNameLength = 0;  // 0 narrow (AOSP), 1 abbreviated, 2 wide
-    MonthViewTouchHelper*mTouchHelper;
+    std::shared_ptr<MonthViewTouchHelper> mTouchHelper;
 
     // Text paints: rendered via Paint::drawTextRun, which honors Paint::Align
     // and routes through minikin for font fallback (direct cairo font calls do

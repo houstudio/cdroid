@@ -21,6 +21,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
+    android:importantForAccessibility="no"
     android:maxWidth="@dimen/toast_width"
     android:background="@android:drawable/toast_frame"
     android:elevation="@dimen/toast_elevation"

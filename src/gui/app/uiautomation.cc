@@ -79,6 +79,10 @@ AccessibilityNodeInfo* UiAutomation::getRootInActiveWindow() {
 AccessibilityEvent* UiAutomation::executeAndWaitForEvent(const std::function<void()>& command,
         const AccessibilityEventFilter& filter, long timeoutMillis) {
     if (!mService) return nullptr;
+    // The pump below can run a posted, already-due step of the caller (a
+    // re-entrant wait): this entry then overwrites a match the OUTER wait has
+    // not returned yet — recycle the orphan first, nobody else will.
+    if (mWaitMatch) mWaitMatch->recycle();
     mWaitMatch = nullptr;
     mWaitFilter = filter;
     // A standing heap handler, not a temporary: the posted command must
@@ -92,7 +96,11 @@ AccessibilityEvent* UiAutomation::executeAndWaitForEvent(const std::function<voi
         Looper::getMainLooper()->pollOnce(20);
     }
     mWaitFilter = nullptr;
-    return mWaitMatch;  // caller recycles; nullptr on timeout
+    // Transfer the match to the caller (it recycles); clearing the member
+    // also stops a re-entrant wait from stomping a live pointer.
+    AccessibilityEvent* result = mWaitMatch;
+    mWaitMatch = nullptr;
+    return result;
 }
 
 } /*endof namespace*/

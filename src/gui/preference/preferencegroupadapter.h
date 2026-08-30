@@ -40,6 +40,7 @@ class PreferenceGroupAdapter
       public PreferenceGroup::PreferencePositionCallback {
 public:
     explicit PreferenceGroupAdapter(PreferenceGroup& preferenceGroup);
+    ~PreferenceGroupAdapter() override;
 
     /**
      * Updates mPreferences and mVisiblePreferences as well as notifying

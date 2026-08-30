@@ -69,6 +69,7 @@ public:
      * @param forView View whose logical children are exposed by this helper.
      */
     ExploreByTouchHelper(View* forView);
+    virtual ~ExploreByTouchHelper();
 
     /**
      * Returns the {@link android.view.accessibility.AccessibilityNodeProvider} for this helper.

@@ -724,7 +724,12 @@ protected:
     bool mCachingFailed;
     bool mLastIsOpaque;
     bool mSendingHoverAccessibilityEvents;
-    AccessibilityDelegate* mAccessibilityDelegate;
+    // Refcounted: owning setters (the shared_ptr overload) release on the last
+    // view/ref; the raw-pointer setter stays AOSP's borrowed contract (the view
+    // never frees it — wrapped with a no-op deleter). One delegate instance may
+    // be set on many views (RecyclerViewAccessibilityDelegate::ItemDelegate),
+    // which is why the field cannot be a plain owned pointer.
+    std::shared_ptr<AccessibilityDelegate> mAccessibilityDelegate;
     Rect mClipBounds;
     std::string mContentDescription;
     std::string mStateDescription;
@@ -1197,6 +1202,7 @@ public:
 
     AccessibilityDelegate* getAccessibilityDelegate()const;
     void setAccessibilityDelegate(AccessibilityDelegate* delegate);
+    void setAccessibilityDelegate(std::shared_ptr<AccessibilityDelegate> delegate);
     virtual AccessibilityNodeProvider* getAccessibilityNodeProvider();
     bool isActionableForAccessibility()const;
     void notifyViewAccessibilityStateChangedIfNeeded(int changeType);

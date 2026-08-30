@@ -43,6 +43,11 @@ private:
     void clearScrap(std::vector<View*>& scrap);
     void clearScrapForRebind(View* view);
     void removeDetachedView(View* child, bool animate) ;
+    // Full-detach before an explicit delete: a scrap view taken by
+    // trackMotionScroll is only TEMP-detached and still sits in mChildren —
+    // AOSP's removeDetachedView assumes it left the array already. Deleting
+    // without removing left a dangling child entry.
+    void removeFromTreeIfPresent(View* v);
 public:
     RecycleBin(AbsListView*);
     void setViewTypeCount(int viewTypeCount);

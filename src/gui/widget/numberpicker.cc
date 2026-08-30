@@ -1809,7 +1809,7 @@ bool NumberPicker::updateInputTextView(){
                 event->setAddedCount(text.length());
                 event->setBeforeText(beforeText);
                 event->setSource(this, AccessibilityNodeProviderImpl::VIRTUAL_VIEW_ID_INPUT);
-                requestSendAccessibilityEvent(this, *event);
+                if (!requestSendAccessibilityEvent(this, *event)) event->recycle();  // AOSP: GC on drop
             }
             return true;
         }
@@ -2233,7 +2233,7 @@ void NumberPicker::AccessibilityNodeProviderImpl::sendAccessibilityEventForVirtu
         mNP->mInputText->onInitializeAccessibilityEvent(*event);
         mNP->mInputText->onPopulateAccessibilityEvent(*event);
         event->setSource(mNP, VIRTUAL_VIEW_ID_INPUT);
-        mNP->requestSendAccessibilityEvent(mNP, *event);
+        if (!mNP->requestSendAccessibilityEvent(mNP, *event)) event->recycle();  // AOSP: GC on drop
     }
 }
 
@@ -2245,7 +2245,7 @@ void NumberPicker::AccessibilityNodeProviderImpl::sendAccessibilityEventForVirtu
         event->getText().push_back(text);
         event->setEnabled(mNP->isEnabled());
         event->setSource(mNP, virtualViewId);
-        mNP->requestSendAccessibilityEvent(mNP, *event);
+        if (!mNP->requestSendAccessibilityEvent(mNP, *event)) event->recycle();  // AOSP: GC on drop
     }
 }
 

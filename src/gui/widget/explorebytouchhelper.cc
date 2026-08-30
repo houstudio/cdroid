@@ -29,6 +29,12 @@ ExploreByTouchHelper::ExploreByTouchHelper(View* forView) {
     mManager = &AccessibilityManager::getInstance(mContext);
 }
 
+ExploreByTouchHelper::~ExploreByTouchHelper() {
+    // The lazily created provider is owned by the helper (AOSP: GC).
+    delete mNodeProvider;
+    mNodeProvider = nullptr;
+}
+
 AccessibilityNodeProvider* ExploreByTouchHelper::getAccessibilityNodeProvider(View& host) {
     if (mNodeProvider == nullptr) {
         mNodeProvider = new ExploreByTouchNodeProvider(this);
@@ -68,9 +74,10 @@ bool ExploreByTouchHelper::sendEventForVirtualView(int virtualViewId, int eventT
         return false;
     }
 
-    //AccessibilityEvent* event = createEvent(virtualViewId, eventType);
-    //return parent->requestSendAccessibilityEvent(mView, *event);
-    return false;
+    AccessibilityEvent* event = createEvent(virtualViewId, eventType);
+    const bool sent = parent->requestSendAccessibilityEvent(mView, *event);
+    if (!sent) event->recycle();  // AOSP drops the unsent event for GC
+    return sent;
 }
 
 void ExploreByTouchHelper::invalidateRoot() {
@@ -88,7 +95,9 @@ void ExploreByTouchHelper::invalidateVirtualView(int virtualViewId, int changeTy
             AccessibilityEvent* event = createEvent(virtualViewId,
                     AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
             event->setContentChangeTypes(changeTypes);
-            //parent->requestSendAccessibilityEvent(mView, *event);
+            if (!parent->requestSendAccessibilityEvent(mView, *event)) {
+                event->recycle();  // AOSP drops the unsent event for GC
+            }
         }
     }
 }

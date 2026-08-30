@@ -674,6 +674,8 @@ bool ViewGroup::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& e
     }
 
     // Let our children have a shot in populating the event.
+    // AOSP wraps this walk in try/finally to recycle the ChildList; the
+    // port's early returns leaked the pooled list (and its holders).
     ChildListForAccessibility* children = ChildListForAccessibility::obtain(this, true);
     const int childCount = children->getChildCount();
     for (int i = 0; i < childCount; i++) {
@@ -681,13 +683,13 @@ bool ViewGroup::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& e
         if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
             handled = child->dispatchPopulateAccessibilityEvent(event);
             if (handled) {
-                return handled;
+                break;
             }
         }
     }
     children->recycle();
 
-    return false;
+    return handled;
 }
 
 bool ViewGroup::dispatchGenericPointerEvent(MotionEvent& event) {
@@ -4511,7 +4513,8 @@ void ViewGroup::ViewLocationHolder::setComparisonStrategy(int strategy) {
 
 void ViewGroup::ViewLocationHolder::recycle() {
     clear();
-    sPool.release(this);
+    // Pool-full overflow is GC'd in AOSP; free here (AccessibilityEvent::recycle idiom).
+    if (!sPool.release(this)) delete this;
 }
 
 int  ViewGroup::ViewLocationHolder::compareTo(ViewLocationHolder* another) {
@@ -4633,7 +4636,8 @@ ViewGroup::ChildListForAccessibility* ViewGroup::ChildListForAccessibility::obta
 
 void ViewGroup::ChildListForAccessibility::recycle() {
     clear();
-    sPool.release(this);
+    // Pool-full overflow is GC'd in AOSP; free here (AccessibilityEvent::recycle idiom).
+    if (!sPool.release(this)) delete this;
 }
 
 int ViewGroup::ChildListForAccessibility::getChildCount() {

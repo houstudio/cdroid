@@ -217,7 +217,7 @@ RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* 
     mSelectorPath = new Path();
 
     // Set up accessibility components.
-    mTouchHelper = new RadialPickerTouchHelper(this);
+    mTouchHelper = std::make_shared<RadialPickerTouchHelper>(this);
     setAccessibilityDelegate(mTouchHelper);
     if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -242,8 +242,8 @@ RadialTimePickerView::~RadialTimePickerView() {
         delete mHoursToMinutesAnimator;
         mHoursToMinutesAnimator = nullptr;
     }
-    // mTouchHelper is owned by View (mAccessibilityDelegate, deleted in ~View);
-    // deleting it here double-frees.
+    // mTouchHelper is a refcounted member (also set on View as the owning
+    // accessibility delegate) — released with its last ref automatically.
     delete mSelectorPath;
 }
 

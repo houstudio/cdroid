@@ -343,7 +343,9 @@ protected:
     GapWorker* mGapWorker;
     /*GapWorker::LayoutPrefetchRegistryImpl*/void* mPrefetchRegistry;
     State* mState;
-    RecyclerViewAccessibilityDelegate* mAccessibilityDelegate;
+    // Refcounted: the ctor-created delegate is owned (freed with the last
+    // ref); the setter's raw-pointer variant stays borrowed (AOSP contract).
+    std::shared_ptr<RecyclerViewAccessibilityDelegate> mAccessibilityDelegate;
     std::vector<ViewHolder*> mPendingAccessibilityImportanceChange;
 
     void initAdapterManager();

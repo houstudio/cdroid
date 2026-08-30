@@ -18,6 +18,7 @@
 #ifndef __RECYCLERVIEW_ACCESSIBILITY_DELEGATE_H__
 #define __RECYCLERVIEW_ACCESSIBILITY_DELEGATE_H__
 #include <view/view.h>
+#include <memory>
 namespace cdroid{
 class RecyclerViewAccessibilityDelegate:public View::AccessibilityDelegate{
 protected:
@@ -42,8 +43,13 @@ public:
      * item views.
      */
     AccessibilityDelegate* getItemDelegate()const;
+    /** Owning handle to the shared per-item delegate. One instance is set on
+     *  EVERY item view, so it is refcounted: the last view (or this delegate)
+     *  to drop it frees it — a plain owned pointer on View deleted it with the
+     *  first recycled item, leaving every live item's delegate dangling. */
+    std::shared_ptr<ItemDelegate> getItemDelegateRef()const;
 private:
-    ItemDelegate* mItemDelegate;
+    std::shared_ptr<ItemDelegate> mItemDelegate;
 };
 
 /**
@@ -55,6 +61,9 @@ private:
  * the parent as necessary.
  */
 class RecyclerViewAccessibilityDelegate::ItemDelegate:public View::AccessibilityDelegate{
+    // Borrowed back-pointer (androidx holds a Java reference): lives exactly
+    // as long as the owning RecyclerViewAccessibilityDelegate. A strong ref
+    // here would form a cycle with the parent's mItemDelegate and never free.
     RecyclerViewAccessibilityDelegate* mRecyclerViewDelegate;
 private:
     std::unordered_map<View*, AccessibilityDelegate*> mOriginalItemDelegates;

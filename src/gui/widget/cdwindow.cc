@@ -1708,6 +1708,11 @@ void Window::SendWindowContentChangedAccessibilityEvent::runOrPost(View* source,
 
 void Window::SendWindowContentChangedAccessibilityEvent::removeCallbacks(){
     mWin->removeCallbacks(mRunnable);
+    // CDROID addition beyond AOSP: also drop the source — detach-then-delete
+    // teardown frees the source between the post and the run, and both
+    // runOrPost's dedup path (getCommonPredecessor) and run() would read it.
+    mSource = nullptr;
+    mChangeTypes = 0;
 }
 
 void Window::SendWindowContentChangedAccessibilityEvent::removeCallbacksAndRun() {

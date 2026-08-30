@@ -23,14 +23,23 @@ RecyclerViewAccessibilityDelegate::RecyclerViewAccessibilityDelegate(RecyclerVie
     mItemDelegate = nullptr;
     AccessibilityDelegate* itemDelegate = getItemDelegate();
     if (itemDelegate && dynamic_cast<ItemDelegate*>(itemDelegate)) {
-        mItemDelegate = (ItemDelegate*) itemDelegate;
+        // A subclass-overridden getItemDelegate() (virtual in ctor resolves to
+        // the base here in C++): borrowed, not owned — the provider keeps it.
+        mItemDelegate = std::shared_ptr<ItemDelegate>((ItemDelegate*) itemDelegate,
+                [](ItemDelegate*) {});
     } else {
-        mItemDelegate = new ItemDelegate(this);
+        mItemDelegate = std::make_shared<ItemDelegate>(this);
     }
 }
 
 RecyclerViewAccessibilityDelegate::~RecyclerViewAccessibilityDelegate(){
-    delete mItemDelegate;
+    // mItemDelegate is refcounted: freed when the last item view referencing
+    // it (and this delegate) is gone.
+}
+
+std::shared_ptr<RecyclerViewAccessibilityDelegate::ItemDelegate>
+RecyclerViewAccessibilityDelegate::getItemDelegateRef() const {
+    return mItemDelegate;
 }
 
 bool RecyclerViewAccessibilityDelegate::shouldIgnore() {
@@ -74,7 +83,7 @@ void RecyclerViewAccessibilityDelegate::onInitializeAccessibilityEvent(View& hos
  * item views.
  */
 View::AccessibilityDelegate* RecyclerViewAccessibilityDelegate::getItemDelegate() const{
-    return mItemDelegate;
+    return mItemDelegate.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

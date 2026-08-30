@@ -80,8 +80,8 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* pAttrs,int defS
 }
 
 SimpleMonthView::~SimpleMonthView(){
-    // mTouchHelper is owned by View (mAccessibilityDelegate, deleted in ~View);
-    // deleting it here double-frees.
+    // mTouchHelper is a refcounted member (also set on View as the owning
+    // accessibility delegate) — released with its last ref automatically.
 }
 
 void SimpleMonthView::initMonthView(){
@@ -99,7 +99,7 @@ void SimpleMonthView::initMonthView(){
     mDayHeight=20;
     mPaddedWidth = 0;
     mPaddedHeight= 0;
-    mTouchHelper = new MonthViewTouchHelper(this);
+    mTouchHelper = std::make_shared<MonthViewTouchHelper>(this);
     initPaints();
 }
 

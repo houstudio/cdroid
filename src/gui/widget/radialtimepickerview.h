@@ -67,7 +67,7 @@ private:
 
     int mSelectionDegrees[2];
 
-    RadialPickerTouchHelper* mTouchHelper;
+    std::shared_ptr<RadialPickerTouchHelper> mTouchHelper;
 
     Path* mSelectorPath;
 

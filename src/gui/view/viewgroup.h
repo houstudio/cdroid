@@ -82,6 +82,9 @@ public:
 public:
     using LayoutParams =cdroid::LayoutParams;
     using MarginLayoutParams=cdroid::MarginLayoutParams;
+    // AOSP ViewGroup.requestSendAccessibilityEvent is public (ViewParent
+    // surface) — ExploreByTouchHelper and other non-child callers rely on it.
+    virtual bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
     typedef struct{
         std::function<void(View&/*parent*/,View* /*child*/)>onChildViewAdded;
         std::function<void(View&/*parent*/,View* /*child*/)>onChildViewRemoved;
@@ -223,7 +226,6 @@ protected:
     bool dispatchTooltipHoverEvent(MotionEvent& event)override;
     virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);
-    virtual bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
     virtual ActionMode* startActionModeForChild(View* child, const ActionMode::Callback& callback);
     virtual ActionMode* startActionModeForChild(View* child, const ActionMode::Callback& callback, int type);
     virtual bool onRequestSendAccessibilityEvent(View* child, AccessibilityEvent& event);

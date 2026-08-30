@@ -77,7 +77,7 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defSt
     if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
-    setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
+    mAccessibilityDelegate = std::make_shared<RecyclerViewAccessibilityDelegate>(this);
 
     std::string layoutManagerName = ta->getString(R::styleable::RecyclerView_layoutManager);
     const int descendantFocusability = ta->getInt(R::styleable::RecyclerView_descendantFocusability, -1);
@@ -133,7 +133,8 @@ RecyclerView::~RecyclerView(){
     delete mScrollingChildHelper;
     delete mScrollFeedbackProvider;
     delete mPendingSavedState;
-    delete mAccessibilityDelegate;
+    // mAccessibilityDelegate is refcounted now — freed with its last ref
+    // (item views may still hold the shared ItemDelegate during teardown).
     delete (GapWorker::LayoutPrefetchRegistryImpl*)mPrefetchRegistry;
     delete (ViewInfoStore::ProcessCallback*)mViewInfoProcessCallback;
 }
@@ -280,11 +281,15 @@ void RecyclerView::doAnimatorFinished(ViewHolder& item) {
 }
 
 RecyclerViewAccessibilityDelegate* RecyclerView::getCompatAccessibilityDelegate() {
-    return mAccessibilityDelegate;
+    return mAccessibilityDelegate.get();
 }
 
 void RecyclerView::setAccessibilityDelegate(RecyclerViewAccessibilityDelegate* accessibilityDelegate) {
-    mAccessibilityDelegate = accessibilityDelegate;
+    // Borrowed (AOSP contract): the caller keeps ownership of a raw-pointer
+    // replacement; assigning drops the previous owning ref (the ctor-created
+    // delegate) automatically.
+    mAccessibilityDelegate = std::shared_ptr<RecyclerViewAccessibilityDelegate>(
+            accessibilityDelegate, [](RecyclerViewAccessibilityDelegate*) {});
 }
 
 // java createLayoutManager resolves the class by reflection — the 4-arg ctor
@@ -2657,6 +2662,12 @@ bool RecyclerView::shouldDeferAccessibilityEvent(AccessibilityEvent& event) {
 
 void RecyclerView::sendAccessibilityEventUnchecked(AccessibilityEvent& event) {
     if (shouldDeferAccessibilityEvent(event)) {
+        // androidx accumulates the change types into mEatenAccessibilityChangeFlags
+        // (dispatchContentChangedIfNecessary re-emits them after layout) — the
+        // port dropped both the accumulation AND the event; AOSP relies on GC
+        // for the discarded object, here it must be recycled.
+        mEatenAccessibilityChangeFlags |= event.getContentChangeTypes();
+        event.recycle();
         return;
     }
     ViewGroup::sendAccessibilityEventUnchecked(event);
@@ -4603,7 +4614,8 @@ void RecyclerView::Recycler::attachAccessibilityDelegateOnBind(ViewHolder& holde
         // (self/null originals are ignored inside), NOT only when none was set —
         // the old guard skipped saving app-installed delegates, so chaining broke.
         ((RecyclerViewAccessibilityDelegate::ItemDelegate*) itemDelegate)->saveOriginalDelegate(itemView);
-        itemView->setAccessibilityDelegate(itemDelegate);
+        // Owning set: the shared ItemDelegate outlives any single item view.
+        itemView->setAccessibilityDelegate(mRV->mAccessibilityDelegate->getItemDelegateRef());
     }
 }
 

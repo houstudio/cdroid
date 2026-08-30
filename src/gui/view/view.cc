@@ -865,7 +865,8 @@ View::~View(){
     delete mOverlay;
     delete mAnimator;
     delete mFloatingTreeObserver;
-    delete mAccessibilityDelegate;
+    // mAccessibilityDelegate is refcounted: an owning setter's last ref frees
+    // it here automatically; borrowed (raw-set) delegates are the caller's.
     delete mRunQueue;
 }
 
@@ -4132,11 +4133,22 @@ void View::setKeyedTag(int key,void* tag, std::function<void(void*)> dtor){
 }
 
 View::AccessibilityDelegate* View::getAccessibilityDelegate() const{
-    return mAccessibilityDelegate;
+    return mAccessibilityDelegate.get();
 }
 
 void View::setAccessibilityDelegate(AccessibilityDelegate* delegate) {
-    mAccessibilityDelegate = delegate;
+    // AOSP contract: a raw-pointer delegate stays owned by the caller — the
+    // view never frees it. Wrap it with a no-op deleter; replacing the field
+    // releases the previous ref without touching a borrowed raw pointer.
+    mAccessibilityDelegate = std::shared_ptr<AccessibilityDelegate>(delegate,
+            [](AccessibilityDelegate*) {});
+}
+
+void View::setAccessibilityDelegate(std::shared_ptr<AccessibilityDelegate> delegate) {
+    // Owning variant for framework-internal delegates that outlive individual
+    // hosts (RecyclerViewAccessibilityDelegate::ItemDelegate is set on every
+    // item view); the last reference frees the delegate.
+    mAccessibilityDelegate = std::move(delegate);
 }
 
 AccessibilityNodeProvider* View::getAccessibilityNodeProvider(){
@@ -4192,12 +4204,12 @@ void View::setStateDescription(const std::string& stateDescription) {
             && getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
-    if (AccessibilityManager::getInstance(mContext).isEnabled()) {
-        AccessibilityEvent* event = AccessibilityEvent::obtain();
-        event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
-        //event->setContentChangeTypes(AccessibilityEvent::CONTENT_CHANGE_TYPE_STATE_DESCRIPTION);
-        sendAccessibilityEventUnchecked(*event);
-    }
+    // AOSP routes the change through notifySubtreeAccessibilityStateChanged-
+    // IfNeeded (CONTENT_CHANGE_TYPE_STATE_DESCRIPTION) — the throttled,
+    // source-deduplicated pipeline — NOT a direct obtain+send. The direct
+    // send leaked the event on every drop exit the pipeline has.
+    notifyViewAccessibilityStateChangedIfNeeded(
+            AccessibilityEvent::CONTENT_CHANGE_TYPE_STATE_DESCRIPTION);
 }
 
 bool View::isActionableForAccessibility()const{
@@ -4229,7 +4241,13 @@ void View::notifyViewAccessibilityStateChangedIfNeeded(int changeType){
             event->setSource(this);
             onPopulateAccessibilityEvent(*event);
             if (mParent != nullptr) {
-                mParent->requestSendAccessibilityEvent(this, *event);
+                if (!mParent->requestSendAccessibilityEvent(this, *event)) {
+                    // Dropped in the bubble — recycle (obtain-then-drop).
+                    event->recycle();
+                }
+            } else {
+                // Unattached pane: nobody will dispatch this event.
+                event->recycle();
             }
             return;
         }
@@ -6975,7 +6993,17 @@ void View::sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event){
     // In the beginning we called #isShown(), so we know that getParent() is not null.
     ViewGroup* parent = getParent();
     if (parent != nullptr) {
-        getParent()->requestSendAccessibilityEvent(this, event);
+        if (!parent->requestSendAccessibilityEvent(this, event)) {
+            // The bubble refused (unattached subtree or an onRequestSend
+            // filter): the event was dropped mid-pipeline. AOSP leans on GC
+            // here; CDROID must recycle (the obtain-then-drop contract).
+            event.recycle();
+        }
+    } else {
+        // Mid-teardown (parent already cleared, mAttachInfo not yet): a
+        // delayed event (e.g. SendViewScrolledAccessibilityEvent) fires after
+        // the tree detached this view — nobody will ever dispatch it.
+        event.recycle();
     }
 }
 

@@ -73,6 +73,14 @@ PreferenceGroupAdapter::PreferenceGroupAdapter(PreferenceGroup& preferenceGroup)
     updatePreferences();
 }
 
+PreferenceGroupAdapter::~PreferenceGroupAdapter() {
+    // Adapter-owned ephemerals in the last visible list (androidx: GC);
+    // real preferences are owned by the PreferenceGroup tree and survive.
+    for (Preference* p : mVisiblePreferences) {
+        if (dynamic_cast<ExpandButton*>(p) != nullptr) delete p;
+    }
+}
+
 void PreferenceGroupAdapter::updatePreferences() {
     for (Preference* preference : mPreferences) {
         // Clear out the listeners in anticipation of some items being removed. This listener
@@ -103,6 +111,13 @@ void PreferenceGroupAdapter::updatePreferences() {
 
     for (Preference* preference : mPreferences) {
         preference->clearWasDetached();
+    }
+    // The visible list is rebuilt wholesale. ExpandButton instances are
+    // adapter-owned ephemerals (androidx leaves them to GC); real preferences
+    // belong to the PreferenceGroup tree and must survive. Free the stale
+    // expand buttons from the replaced list.
+    for (Preference* old : oldVisibleList) {
+        if (dynamic_cast<ExpandButton*>(old) != nullptr) delete old;
     }
 }
 
