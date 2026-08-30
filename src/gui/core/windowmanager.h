@@ -97,6 +97,10 @@ public:
     int getWindows(std::vector<Window*>&);
     int getVisibleWindows(std::vector<Window*>&);
     Window*getActiveWindow()const;
+    /* The top-most APPLICATION window (the stack may carry system-layer
+     * windows above it — IME, toasts, system alerts — which can hold input
+     * focus without being the top application window). Null when none. */
+    Window*getActiveApplicationWindow();
 protected:
     virtual void onKeyEvent(KeyEvent&key);
     virtual void onMotion(MotionEvent&event);

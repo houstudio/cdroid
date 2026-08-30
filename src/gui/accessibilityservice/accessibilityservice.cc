@@ -49,7 +49,10 @@ std::vector<Window*> AccessibilityService::getWindows() {
 }
 
 AccessibilityNodeInfo* AccessibilityService::getRootInActiveWindow() {
-    Window* active = WindowManager::getInstance().getActiveWindow();
+    // AOSP's active window is the top APPLICATION window: the IME may hold
+    // input focus (and the key dispatch) without ever becoming the a11y
+    // active window — reading its tree here starved drivers while typing.
+    Window* active = WindowManager::getInstance().getActiveApplicationWindow();
     if (active == nullptr) {
         return nullptr;
     }
@@ -61,7 +64,7 @@ AccessibilityNodeInfo* AccessibilityService::getRootInActiveWindow() {
 }
 
 AccessibilityNodeInfo* AccessibilityService::findFocus(int focus) {
-    Window* active = WindowManager::getInstance().getActiveWindow();
+    Window* active = WindowManager::getInstance().getActiveApplicationWindow();
     if (active == nullptr) {
         return nullptr;
     }

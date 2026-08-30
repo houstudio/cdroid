@@ -84,6 +84,10 @@ Window::Window(int x,int y,int width,int height,int type)
     if(height<0) height= size.y;
     mWindowAttributes.x = x;
     mWindowAttributes.y = y;
+    // AOSP carries the window type in LayoutParams.type (the ctor's type
+    // parameter) — it was only landing in the parallel window_type member,
+    // so every getAttributes().type read saw 0 (application).
+    mWindowAttributes.type = type;
     mWindowAttributes.width  = width;
     mWindowAttributes.height = height;
     setFrame(x, y, width, height);

@@ -298,6 +298,15 @@ Window*WindowManager::getActiveWindow()const{
     return mActiveWindow;
 }
 
+Window*WindowManager::getActiveApplicationWindow(){
+    // mWindows is bottom-up: the first application window from the top.
+    for(auto it = mWindows.rbegin(); it != mWindows.rend(); it++){
+        if((*it)->getAttributes().type < Window::TYPE_SYSTEM_WINDOW)
+            return *it;
+    }
+    return nullptr;
+}
+
 void WindowManager::sendToBack(Window*win){
     win->mLayer = (win->window_type<<16);/*make win's layer to lowerest*/
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){

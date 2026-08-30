@@ -6,8 +6,10 @@
 #include <core/systemclock.h>
 #include <core/windowmanager.h>
 #include <core/tokenizer.h>
+#include <widget/cdwindow.h>   // Window (createAccessibilityNodeInfo, TYPE_SYSTEM_WINDOW)
 #include <view/accessibility/accessibilityevent.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
+#include <view/accessibility/accessibilitymanager.h>   // getActiveApplicationWindow
 #include <accessibilityservice/accessibilityservice.h>   // GLOBAL_ACTION_BACK
 #include <porting/cdlog.h>
 #include <algorithm>
@@ -103,8 +105,10 @@ void UiAutoTest::step() {
     if (!mRunning) return;
     UiAutomation& automation = UiAutomation::getInstance();
     // Follow window navigation (dialogs/sub-activities): stale snapshot would
-    // click a now-background window invisibly.
-    if (Window* active = WindowManager::getInstance().getActiveWindow()) {
+    // click a now-background window invisibly. The a11y active window (top
+    // application window — the IME never becomes it), same rule the root
+    // query uses.
+    if (Window* active = WindowManager::getInstance().getActiveApplicationWindow()) {
         if (active != mLastActiveWindow) {
             LOGI("AUTOTEST active window %p -> %p", (void*)mLastActiveWindow, (void*)active);
             mLastActiveWindow = active;
@@ -123,6 +127,24 @@ void UiAutoTest::step() {
     for (auto* stale : mClickables) stale->recycle();
     mClickables.clear();
     collectClickable(root, 0);
+    // Sweep the whole visible surface (uiautomator searches across windows):
+    // after the active application window, walk the VISIBLE system-layer
+    // windows too — a shown IME's keys are targets (B's virtual-key views),
+    // a hidden one is not visible and stays out, so the sweep neither stalls
+    // on it nor skips the keyboard. The geometry sort below places the keys
+    // below the app content, reading order intact.
+    std::vector<Window*> visible;
+    WindowManager::getInstance().getVisibleWindows(visible);
+    for (Window* w : visible) {
+        if (w->getAttributes().type < Window::TYPE_SYSTEM_WINDOW) continue;
+        AccessibilityNodeInfo* sysRoot = w->createAccessibilityNodeInfo();
+        if (sysRoot != nullptr) {
+            // Seal at the boundary exactly like the service's root query —
+            // getChild() enforces the sealed state (AOSP) and throws otherwise.
+            sysRoot->setSealed(true);
+            collectClickable(sysRoot, 0);
+        }
+    }
     std::sort(mClickables.begin(), mClickables.end(),
               [](AccessibilityNodeInfo* a, AccessibilityNodeInfo* b) {
                   Rect ra, rb;
@@ -239,6 +261,15 @@ void UiAutoTest::step() {
     }
     const std::string label = target->getText().empty()
             ? targetLabel(target) : target->getText();
+
+    // AOSP ACTION_FOCUS (= requestFocus): a semantic ACTION_CLICK never
+    // focuses (performClick doesn't) — without this an editable target could
+    // never raise the IME, and the keyboard would stay unswept. Focus the
+    // editor first; showSoftInput rides the focus change, and the keyboard's
+    // keys then join the sweep through the visible-system-window walk.
+    if (target->isEditable()) {
+        target->performAction(AccessibilityNodeInfo::ACTION_FOCUS);
+    }
 
     // Visual feedback: a semantic click fires no pressed-state animation —
     // park the accessibility focus highlight on the target so the sweep is
