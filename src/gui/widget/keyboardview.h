@@ -4,8 +4,10 @@
 #include <widget/edittext.h>
 #include <vector>
 #include <map>
+#include <memory>
 #include <core/keyboard.h>
 #include <core/handler.h>
+#include <widget/explorebytouchhelper.h>
 
 namespace cdroid{
 
@@ -53,6 +55,7 @@ public:
         std::function<void()>swipeUp;
     };
 private:
+    class KeyboardViewTouchHelper;
     static constexpr int NOT_A_KEY = -1;
     static constexpr int MSG_SHOW_PREVIEW = 1;
     static constexpr int MSG_REMOVE_PREVIEW = 2;
@@ -181,6 +184,9 @@ private:
      * after the finger has lifted (which would freeze input behind the popup). */
     bool mInLongPress = false;
     Rect mDirtyRect;
+
+    /* Exposes the keys as virtual a11y views (see KeyboardViewTouchHelper). */
+    std::shared_ptr<KeyboardViewTouchHelper> mTouchHelper;
 private:
     void init();
     std::string adjustCase(const std::string& label);
@@ -233,6 +239,33 @@ public:
     bool onTouchEvent(MotionEvent& me)override;
     void closing();
     void onDetachedFromWindow()override;
+};
+
+/**
+ * Exposes the keyboard's keys as a virtual view hierarchy for accessibility.
+ * AOSP KeyboardView leaves this as a TODO ("We need to implement
+ * AccessibilityNodeProvider for this view"); implemented here with the same
+ * ExploreByTouchHelper pattern SimpleMonthView uses. The virtual view id is
+ * the key index in the current keyboard.
+ */
+class KeyboardView::KeyboardViewTouchHelper:public ExploreByTouchHelper {
+private:
+    KeyboardView* mHost;
+    Rect mTempRect;
+
+    /**
+     * Generates a description for a given key: its label when it has one,
+     * its output text otherwise, else the keycode name (delete/enter/...).
+     */
+    std::string getKeyDescription(int virtualViewId);
+protected:
+    int getVirtualViewAt(float x, float y)override;
+    void getVisibleVirtualViews(std::vector<int>& virtualViewIds)override;
+    void onPopulateEventForVirtualView(int virtualViewId, AccessibilityEvent& event)override;
+    void onPopulateNodeForVirtualView(int virtualViewId, AccessibilityNodeInfo& node)override;
+    bool onPerformActionForVirtualView(int virtualViewId, int action, Bundle* arguments)override;
+public:
+    KeyboardViewTouchHelper(KeyboardView* host);
 };
 }//namespace
 #endif

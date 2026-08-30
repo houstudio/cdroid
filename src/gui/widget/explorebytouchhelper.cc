@@ -318,8 +318,12 @@ bool ExploreByTouchHelper::intersectVisibleToUser(Rect* localRect) {
         viewParent = view->getParent();
     }
 
-    // A null parent implies the view is not visible.
-    if (viewParent == nullptr) {
+    // AOSP requires the ancestor chain to end at ViewRootImpl (= attached to
+    // a window). CDROID's Window is itself a View, so the walk above always
+    // ends at a null parent — checking attachment is the faithful translation
+    // (the old "null parent implies invisible" made every virtual node of
+    // every ExploreByTouchHelper invisible).
+    if (!mView->isAttachedToWindow()) {
         return false;
     }
 

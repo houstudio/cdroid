@@ -200,7 +200,7 @@ private:
     bool mSealed = false;
 
     // Data.
-    int mWindowId;// = AccessibilityWindowInfo::UNDEFINED_WINDOW_ID;
+    int mWindowId = AccessibilityWindowInfo::UNDEFINED_WINDOW_ID;
     int64_t mSourceNodeId = UNDEFINED_NODE_ID;
     int64_t mParentNodeId = UNDEFINED_NODE_ID;
     int64_t mLabelForId = UNDEFINED_NODE_ID;
@@ -208,10 +208,10 @@ private:
     int64_t mTraversalBefore = UNDEFINED_NODE_ID;
     int64_t mTraversalAfter = UNDEFINED_NODE_ID;
 
-    int mBooleanProperties;
+    int mBooleanProperties = 0;   // AOSP: JVM zero-init
     Rect mBoundsInParent;
     Rect mBoundsInScreen;
-    int mDrawingOrderInParent;
+    int mDrawingOrderInParent = 0;
 
     std::string mPackageName;
     std::string mClassName;
@@ -230,15 +230,15 @@ private:
     std::vector<AccessibilityAction*> mActions;
 
     int mMaxTextLength = -1;
-    int mMovementGranularities;
+    int mMovementGranularities = 0;   // AOSP: JVM zero-init
 
     int mTextSelectionStart = UNDEFINED_SELECTION_INDEX;
     int mTextSelectionEnd = UNDEFINED_SELECTION_INDEX;
-    int mInputType;// = InputType::TYPE_NULL;
-    int mLiveRegion;// = View::ACCESSIBILITY_LIVE_REGION_NONE;
+    int mInputType = 0;   // InputType::TYPE_NULL
+    int mLiveRegion = 0;  // View::ACCESSIBILITY_LIVE_REGION_NONE
     int mConnectionId = UNDEFINED_CONNECTION_ID;
 
-    Bundle* mExtras;
+    Bundle* mExtras = nullptr;   // AOSP: JVM null default
 
     RangeInfo *mRangeInfo;
     CollectionInfo* mCollectionInfo;

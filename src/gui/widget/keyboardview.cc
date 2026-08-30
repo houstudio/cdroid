@@ -1,5 +1,6 @@
 #include <widget/internal_R.h>
 #include <core/context.h>
+#include <core/systemclock.h>
 #include <widget/keyboardview.h>
 #include <widget/framework_styleable.h>
 #include <utils/textutils.h>
@@ -50,6 +51,9 @@ void KeyboardView::init(){
     mKeyTextColor = 0xFFFFFFFF;
     mInMultiTap   = false;
     mShowPreview  = false;
+    // Expose the keys as virtual a11y views (AOSP KeyboardView TODOs this).
+    mTouchHelper = std::make_shared<KeyboardViewTouchHelper>(this);
+    setAccessibilityDelegate(mTouchHelper);
     // KeyboardView renders entirely in onDraw (no background drawable, children
     // are drawn manually). Make sure the draw path invokes onDraw instead of
     // taking the WILL_NOT_DRAW / PFLAG_SKIP_DRAW fast path that would skip it.
@@ -116,6 +120,8 @@ void KeyboardView::setKeyboard(Keyboard*keyboard){
     //removeMessages();
     mKeyboard = keyboard;
     mKeys = mKeyboard->getKeys();
+    // The key set changed — the a11y virtual tree must be rebuilt.
+    if (mTouchHelper) mTouchHelper->invalidateRoot();
     requestLayout();
     // Hint to reallocate the buffer if the size changed
     mKeyboardChanged = true;
@@ -916,3 +922,78 @@ float KeyboardView::SwipeTracker::getYVelocity()const{
 }
 
 }//namespace
+
+// ---------------------------------------------------------------------------
+// KeyboardView::KeyboardViewTouchHelper — the keys as virtual a11y views.
+// AOSP KeyboardView TODOs this AccessibilityNodeProvider; implemented with the
+// same ExploreByTouchHelper pattern SimpleMonthView uses. The virtual view id
+// is the key index in the current keyboard (mKeys).
+// ---------------------------------------------------------------------------
+
+KeyboardView::KeyboardViewTouchHelper::KeyboardViewTouchHelper(KeyboardView* host)
+    :ExploreByTouchHelper(host){
+    mHost = host;
+}
+
+int KeyboardView::KeyboardViewTouchHelper::getVirtualViewAt(float x, float y) {
+    const int keyIndex = mHost->getKeyIndices((int)(x + 0.5f), (int)(y + 0.5f), nullptr);
+    if (keyIndex != KeyboardView::NOT_A_KEY) {
+        return keyIndex;
+    }
+    return ExploreByTouchHelper::INVALID_ID;
+}
+
+void KeyboardView::KeyboardViewTouchHelper::getVisibleVirtualViews(std::vector<int>& virtualViewIds) {
+    const int keyCount = (int)mHost->mKeys.size();
+    for (int i = 0; i < keyCount; i++) {
+        virtualViewIds.push_back(i);
+    }
+}
+
+std::string KeyboardView::KeyboardViewTouchHelper::getKeyDescription(int virtualViewId) {
+    Keyboard::Key* key = mHost->mKeys[virtualViewId];
+    if (key->label.size()) return key->label;
+    if (key->text.size()) return key->text;
+    // Label-less keys (enter, delete, shift...) — name the keycode.
+    return KeyEvent::keyCodeToString(key->codes[0]);
+}
+
+void KeyboardView::KeyboardViewTouchHelper::onPopulateEventForVirtualView(int virtualViewId, AccessibilityEvent& event) {
+    event.setContentDescription(getKeyDescription(virtualViewId));
+}
+
+void KeyboardView::KeyboardViewTouchHelper::onPopulateNodeForVirtualView(int virtualViewId, AccessibilityNodeInfo& node) {
+    if (virtualViewId < 0 || virtualViewId >= (int)mHost->mKeys.size()) {
+        // The key is gone (keyboard switched mid-walk) — kill the node.
+        mTempRect.setEmpty();
+        node.setContentDescription("");
+        node.setBoundsInParent(mTempRect);
+        node.setVisibleToUser(false);
+        return;
+    }
+    Keyboard::Key* key = mHost->mKeys[virtualViewId];
+    mTempRect.set(key->x, key->y, key->width, key->height);
+    const std::string description = getKeyDescription(virtualViewId);
+    node.setText(description);
+    node.setContentDescription(description);
+    node.setBoundsInParent(mTempRect);
+    node.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK);
+    node.setEnabled(true);
+    node.setClickable(true);
+}
+
+bool KeyboardView::KeyboardViewTouchHelper::onPerformActionForVirtualView(int virtualViewId, int action, Bundle* arguments) {
+    switch (action) {
+        case AccessibilityNodeInfo::ACTION_CLICK:
+            if (virtualViewId < 0 || virtualViewId >= (int)mHost->mKeys.size()) {
+                return false;
+            }
+            // Same path a real touch takes (press feedback, multi-tap, commit).
+            Keyboard::Key* key = mHost->mKeys[virtualViewId];
+            mHost->detectAndSendKey(virtualViewId, key->x + key->width / 2, key->y + key->height / 2,
+                    SystemClock::uptimeMillis());
+            sendEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_CLICKED);
+            return true;
+    }
+    return false;
+}
