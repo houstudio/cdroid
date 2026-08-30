@@ -115,6 +115,10 @@ Keyboard* KeyboardView::getKeyboard() {
 void KeyboardView::setKeyboard(Keyboard*keyboard){
     if ( mKeyboard ) {
         showPreview(NOT_A_KEY);
+        // The view owns the keyboard it was given (AOSP relies on GC here);
+        // a layout switch must free the old one or every switch leaks its
+        // whole key graph (~6.7K per switch under valgrind).
+        delete mKeyboard;
     }
     // Remove any pending messages
     //removeMessages();

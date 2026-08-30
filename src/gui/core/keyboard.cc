@@ -363,7 +363,10 @@ Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,i
 Keyboard::~Keyboard(){
     for(auto k:mKeys)
        delete k;
-    mKeys.clear(); 
+    mKeys.clear();
+    for(auto r:rows)   // createRowFromXml new'd them; AOSP's GC hid this
+       delete r;
+    rows.clear();
 }
 
 void Keyboard::resize(int newWidth,int newHeight){

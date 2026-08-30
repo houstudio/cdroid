@@ -156,6 +156,12 @@ public:
     std::string popupCharacters;
     Key(Row*parent=nullptr);
     Key(Context*ctx,Row*parent,int x,int y,XmlPullParser&,const AttributeSet&);
+    ~Key() {
+        // The Key ctor's TypedArray::getDrawable hands over owned fresh
+        // instances (getDrawable news one per call — AOSP GC hid this).
+        delete icon;
+        delete iconPreview;
+    }
     void onPressed();
     void onReleased(bool inside);
     int parseCSV(const std::string& value,std::vector<int>& codes);
