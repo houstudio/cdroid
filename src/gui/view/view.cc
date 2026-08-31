@@ -573,9 +573,15 @@ View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr,int defStyleRe
         case R::styleable::View_accessibilityHeading:
             setAccessibilityHeading(a->getBoolean(attr, false));
             break;
+        case R::styleable::View_forceHasOverlappingRendering: {
+            TypedValue value;
+            if (a->peekValue(attr, &value)) {
+                forceHasOverlappingRendering(a->getBoolean(attr, true));
+            }
+            break;
+        }
         // --- not supported (deps not ported): AOSP structure preserved, no-op ---
         case R::styleable::View_pointerIcon:                 // PointerIcon not ported
-        case R::styleable::View_forceHasOverlappingRendering:// RenderNode
         case R::styleable::View_outlineSpotShadowColor:      // shadows unsupported
         case R::styleable::View_outlineAmbientShadowColor:   // shadows unsupported
         case R::styleable::View_forceDarkAllowed:            // RenderNode
@@ -1425,6 +1431,21 @@ void View::setLayerType(int layerType){
     mLayerType = layerType;
     invalidateParentCaches();
     invalidate();
+}
+
+void View::forceHasOverlappingRendering(bool hasOverlappingRendering){
+    mPrivateFlags3 |= PFLAG3_HAS_OVERLAPPING_RENDERING_FORCED;
+    if (hasOverlappingRendering) {
+        mPrivateFlags3 |= PFLAG3_OVERLAPPING_RENDERING_FORCED_VALUE;
+    } else {
+        mPrivateFlags3 &= ~PFLAG3_OVERLAPPING_RENDERING_FORCED_VALUE;
+    }
+}
+
+bool View::getHasOverlappingRendering()const{
+    return (mPrivateFlags3 & PFLAG3_HAS_OVERLAPPING_RENDERING_FORCED) != 0 ?
+            (mPrivateFlags3 & PFLAG3_OVERLAPPING_RENDERING_FORCED_VALUE) != 0 :
+            hasOverlappingRendering();
 }
 
 void View::onAnimationStart() {

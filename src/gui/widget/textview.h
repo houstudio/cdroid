@@ -381,6 +381,7 @@ public:
     int getSelectionStartTransformed() const;
     int getSelectionEndTransformed() const;
     bool hasSelection()const;
+    bool hasOverlappingRendering()const override;
     std::string getSelectedText()const;
     // Text context menu (align android.R.id.*; Editor.java/TextView.java:15179).
     // clipboard 本轮留空: copy/cut/paste 为桩, selectAll 实操。

@@ -105,6 +105,9 @@ public:
     void setScaleType(int st);
     void setImageMatrix(const Cairo::Matrix& matrix);
     Cairo::Matrix getImageMatrix()const;
+    bool hasOverlappingRendering()const override {
+        return (getBackground() != nullptr && getBackground()->getCurrent() != nullptr);
+    }
 
     bool getCropToPadding()const;
     void setCropToPadding(bool cropToPadding);

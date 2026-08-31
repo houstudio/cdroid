@@ -5713,6 +5713,13 @@ bool TextView::hasSelection()const {
     return (selectionStart >= 0) && (selectionEnd > 0) && (selectionStart != selectionEnd);
 }
 
+bool TextView::hasOverlappingRendering()const {
+    // horizontal fading edge causes SaveLayerAlpha, which doesn't support alpha modulation
+    return ((getBackground() != nullptr && getBackground()->getCurrent() != nullptr)
+            || mSpannable != nullptr || hasSelection() || isHorizontalFadingEdgeEnabled()
+            || mShadowColor != 0);
+}
+
 std::string TextView::getSelectedText()const {
     if (!hasSelection()) {
         return std::string();

@@ -1557,9 +1557,15 @@ public:
     const std::string& getTransitionName()const;
     void setTransitionName(const std::string&);
     // Whether this view may have overlapping content needing an offscreen layer
-    // when alpha-animated. Cairo is software 2D with no GPU layer, so the layer
-    // boost transitions rely on (e.g. Fade) is a no-op here; false is correct.
-    virtual bool hasOverlappingRendering()const{return false;}
+    // when alpha-animated. Default true per android-36 View.hasOverlappingRendering
+    // (widget subclasses refine it). With cairo software 2D there is no GPU layer,
+    // so consumers of a true value (e.g. Fade's temporary setLayerType(HARDWARE))
+    // degrade to per-frame cache invalidation instead of an offscreen layer.
+    virtual bool hasOverlappingRendering()const{return true;}
+    // Effective value used internally: the forced value when
+    // forceHasOverlappingRendering() was called, hasOverlappingRendering() otherwise.
+    bool getHasOverlappingRendering()const;
+    void forceHasOverlappingRendering(bool hasOverlappingRendering);
     // Stable per-window handle used by TransitionManager to group running
     // transitions. Single-process: a window-level pointer suffices (no real WindowId type).
     void* getWindowId()const;
