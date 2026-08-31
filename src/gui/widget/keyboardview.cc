@@ -3,7 +3,7 @@
 #include <core/systemclock.h>
 #include <widget/keyboardview.h>
 #include <widget/framework_styleable.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <porting/cdlog.h>
 #include <widget/popupwindow.h>
 #include <view/layoutinflater.h>

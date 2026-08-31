@@ -1,5 +1,5 @@
 #include <core/environment.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <dirent.h>

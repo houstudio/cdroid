@@ -26,7 +26,7 @@
 #include <image-decoders/imagedecoder.h>
 #include <content/typedvalue.h>  // TypedValue (id-based createAsDrawable path)
 #include <content/asset.h>            // Asset (openRawResource)
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <core/context.h>
 #include <png.h>
 #include <porting/cdlog.h>

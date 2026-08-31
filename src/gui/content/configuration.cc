@@ -1,5 +1,5 @@
 #include <core/build.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <text/textutils.h>
 #include <content/configuration.h>
 #include <view/view.h>

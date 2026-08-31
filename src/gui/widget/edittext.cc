@@ -23,7 +23,7 @@
 #include <text/method/textkeylistener.h>
 #include <text/method/arrowkeymovementmethod.h>
 #include <core/inputmethodmanager.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{

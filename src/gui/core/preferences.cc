@@ -21,7 +21,7 @@
 #include <core/preferences.h>
 #include <porting/cdtypes.h>
 #include <porting/cdlog.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <core/attributeset.h>
 #include <core/iostreams.h>
 #include <core/xmlpullparser.h>

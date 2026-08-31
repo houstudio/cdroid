@@ -19,7 +19,7 @@
 #include <drawable/animationscalelistdrawable.h>
 #include <content/typedvalue.h>
 #include <image-decoders/imagedecoder.h>  // ImageDecoder::createAsDrawable(Resources, id)
-#include <utils/textutils.h>
+#include <text/textutils.h>
 namespace cdroid{
 /**
  * Loads the drawable resource with the specified identifier (AOSP

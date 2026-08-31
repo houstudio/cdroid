@@ -212,7 +212,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:max="100"
-                android:progress="40" />
+                android:progress="40"
+                android:contentDescription="Demo seek bar" />
         </LinearLayout>
 
         <!-- Progress style variants: tinted capsule bars, thin line, circles -->
@@ -484,7 +485,8 @@
                 android:layout_height="wrap_content"
                 android:numStars="5"
                 android:rating="3"
-                android:stepSize="1" />
+                android:stepSize="1"
+                android:contentDescription="Star rating" />
         </LinearLayout>
 
     </LinearLayout>

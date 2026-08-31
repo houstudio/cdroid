@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- widgetLayout for navigable preference rows: the chevron shown at the
      trailing edge (inflated into android:id/widget_frame). -->
-<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android" android:importantForAccessibility="no"
     android:id="@+id/prefdemo_chevron"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"

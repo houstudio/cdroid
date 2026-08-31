@@ -13,7 +13,7 @@
 #include <widget/relativelayout.h>
 #include <view/layoutinflater.h>
 #include <view/viewgroup.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 
 namespace cdroid {
 using namespace cdroid::internal;

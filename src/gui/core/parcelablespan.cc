@@ -1,5 +1,5 @@
-#include "parcelablespan.h"
-#include "../utils/textutils.h"
+#include <text/parcelablespan.h>
+#include <text/textutils.h>
 
 namespace cdroid {
 

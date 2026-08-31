@@ -22,7 +22,7 @@
 #include <content/asset.h>
 #include <widget/framework_styleable.h>
 #include <content/typedvalue.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <porting/cdlog.h>
 #include <fstream>
 using namespace Cairo;

@@ -76,7 +76,8 @@
                     android:padding="8dp"
                     android:src="@drawable/asld_star"
                     android:clickable="true"
-                    android:background="@drawable/btn_outline" />
+                    android:background="@drawable/btn_outline"
+                    android:contentDescription="Star state animation" />
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"

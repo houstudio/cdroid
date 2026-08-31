@@ -21,7 +21,7 @@
 #include <widget/listview.h>
 #include <widget/headerviewlistadapter.h>
 #include <utils/mathutils.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <float.h>
 #include <cdlog.h>
 

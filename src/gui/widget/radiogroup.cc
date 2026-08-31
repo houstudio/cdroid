@@ -4,7 +4,7 @@
 #include <widget/framework_styleable.h>
 #include <widget/radiobutton.h>
 #include <porting/cdlog.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 
 namespace cdroid{
 using namespace cdroid::internal;

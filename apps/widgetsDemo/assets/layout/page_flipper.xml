@@ -197,11 +197,11 @@
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="centerInside" />
+                    android:scaleType="centerInside"  android:importantForAccessibility="no"/>
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="centerInside" />
+                    android:scaleType="centerInside"  android:importantForAccessibility="no"/>
             </ImageSwitcher>
             <TextView
                 android:id="@+id/isw_status"

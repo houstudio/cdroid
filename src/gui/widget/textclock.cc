@@ -21,7 +21,7 @@
 #include <widget/framework_styleable.h>
 #include <core/systemclock.h>
 #include <content/dateformat.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <climits>
 #include <cstdio>
 #include <ctime>

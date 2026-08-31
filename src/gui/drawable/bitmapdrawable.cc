@@ -22,7 +22,7 @@
 #include <core/context.h>
 #include <content/typedvalue.h>
 #include <content/asset.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <widget/framework_styleable.h>
 #include <fstream>
 #include <app.h>

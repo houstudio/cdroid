@@ -21,7 +21,7 @@
 #include <widgetEx/widgetex_styleable.h>
 #include <widget/framework_styleable.h>
 #include <core/build.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <utils/mathutils.h>
 #include <porting/cdlog.h>
 

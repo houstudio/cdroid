@@ -89,7 +89,8 @@
                 android:background="@drawable/btn_outline"
                 android:padding="10dp"
                 android:textColor="@color/text_primary"
-                android:text="☺ ❤ 😀 edit me: caret moves and backspace deletes whole clusters" />
+                android:text="☺ ❤ 😀 edit me: caret moves and backspace deletes whole clusters"
+                android:hint="Emoji cluster editing" />
         </LinearLayout>
 
         <!-- Justification & phrase-based line breaking -->
@@ -370,7 +371,8 @@
                 android:padding="10dp"
                 android:textColor="@color/text_primary"
                 android:password="true"
-                android:text="secret" />
+                android:text="secret"
+                android:hint="Password field" />
             <EditText
                 android:id="@+id/edit_num"
                 android:layout_width="match_parent"
@@ -380,7 +382,8 @@
                 android:padding="10dp"
                 android:inputType="number"
                 android:textColor="@color/text_primary"
-                android:text="12345" />
+                android:text="12345"
+                android:hint="Number field" />
         </LinearLayout>
 
         <!-- Spinner -->

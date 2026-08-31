@@ -25,7 +25,7 @@
 #include <core/color.h>
 #include <content/Locale.h>
 #include <content/numberformat.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <utils/mathutils.h>
 #include <porting/cdlog.h>
 

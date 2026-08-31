@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <utils/mathutils.h>
 #include <widget/achart/util/mathhelper.h>
 #include <widget/achart/chart/abstractchart.h>

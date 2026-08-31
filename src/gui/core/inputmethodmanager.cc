@@ -22,7 +22,7 @@
 #include <chrono>
 #include <fstream>
 #include <keycharactermap.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <widget/candidateview.h>
 #include <widget/internal_R.h>
 #include <core/app.h>

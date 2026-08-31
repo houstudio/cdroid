@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <porting/cdlog.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <core/keyboard.h>
 #include <core/tokenizer.h>
 #include <core/xmlpullparser.h>

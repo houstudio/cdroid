@@ -20,7 +20,7 @@
 #include <utility>
 #include <text/character.h>
 #include <widget/candidateview.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{

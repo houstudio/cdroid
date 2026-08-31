@@ -34,7 +34,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <cerrno>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <core/systemclock.h>
 #include <drawable/drawables.h>
 #include <drawable/drawableinflater.h>

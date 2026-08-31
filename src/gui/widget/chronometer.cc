@@ -20,7 +20,7 @@
 #include <widget/chronometer.h>
 #include <text/format/dateutils.h>
 #include <text/format/dateutils.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <cmath>
 #include <cstdlib>
 #include <widget/framework_styleable.h>

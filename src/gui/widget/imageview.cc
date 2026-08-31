@@ -21,7 +21,7 @@
 #include <widget/framework_styleable.h>
 #include <core/uri.h>
 #include <image-decoders/imagedecoder.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <porting/cdlog.h>
 #include <fstream>
 using namespace Cairo;

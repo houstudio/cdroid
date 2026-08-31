@@ -19,7 +19,7 @@
 #include <text/textwatcher.h>
 #include <text/editable.h>
 #include <widget/internal_R.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <utils/mathutils.h>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>

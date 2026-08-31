@@ -37,7 +37,7 @@
                 android:layout_gravity="center_vertical|end"
                 android:layout_marginEnd="36dp"
                 android:alpha="0.55"
-                android:src="@drawable/ic_printer_white"/>
+                android:src="@drawable/ic_printer_white" android:importantForAccessibility="no"/>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -75,7 +75,7 @@
                 <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:layout_marginTop="18dp" android:orientation="horizontal" android:gravity="center_vertical">
                     <ImageView android:layout_width="15dp" android:layout_height="15dp"
-                        android:src="@drawable/ic_wifi_white"/>
+                        android:src="@drawable/ic_wifi_white" android:importantForAccessibility="no"/>
                     <TextView android:id="@+id/network_text" android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:layout_marginStart="6dp" android:text="Wi-Fi · CDROID-Net · 192.168.1.50"
                         android:textSize="12sp" android:textColor="#E6FFFFFF"/>
@@ -151,7 +151,7 @@
             android:padding="14dp">
             <FrameLayout android:layout_width="42dp" android:layout_height="42dp" android:background="@drawable/chip_blue">
                 <ImageView android:layout_width="22dp" android:layout_height="22dp" android:layout_gravity="center"
-                    android:src="@drawable/ic_doc_green"/>
+                    android:src="@drawable/ic_doc_green" android:importantForAccessibility="no"/>
             </FrameLayout>
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
                 <TextView android:id="@+id/paper_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/paper_tray" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
@@ -208,7 +208,7 @@
                 android:padding="14dp" android:visibility="invisible">
                 <FrameLayout android:layout_width="46dp" android:layout_height="46dp" android:background="@drawable/chip_blue">
                     <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
-                        android:src="@drawable/ic_copy_blue"/>
+                        android:src="@drawable/ic_copy_blue" android:importantForAccessibility="no"/>
                 </FrameLayout>
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                     android:layout_marginStart="13dp" android:layout_marginEnd="8dp" android:orientation="vertical">
@@ -217,7 +217,7 @@
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:layout_marginTop="2dp" android:text="@string/sub_copy" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
                 </LinearLayout>
-                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron"/>
+                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron" android:importantForAccessibility="no"/>
             </LinearLayout>
             <View android:layout_width="10dp" android:layout_height="0dp"/>
 <LinearLayout android:id="@+id/card_scan"
@@ -228,7 +228,7 @@
                 android:padding="14dp" android:visibility="invisible">
                 <FrameLayout android:layout_width="46dp" android:layout_height="46dp" android:background="@drawable/chip_green">
                     <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
-                        android:src="@drawable/ic_scan_green"/>
+                        android:src="@drawable/ic_scan_green" android:importantForAccessibility="no"/>
                 </FrameLayout>
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                     android:layout_marginStart="13dp" android:layout_marginEnd="8dp" android:orientation="vertical">
@@ -237,7 +237,7 @@
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:layout_marginTop="2dp" android:text="@string/sub_scan" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
                 </LinearLayout>
-                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron"/>
+                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron" android:importantForAccessibility="no"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -250,7 +250,7 @@
                 android:padding="14dp" android:visibility="invisible">
                 <FrameLayout android:layout_width="46dp" android:layout_height="46dp" android:background="@drawable/chip_amber">
                     <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
-                        android:src="@drawable/ic_wrench_amber"/>
+                        android:src="@drawable/ic_wrench_amber" android:importantForAccessibility="no"/>
                 </FrameLayout>
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                     android:layout_marginStart="13dp" android:layout_marginEnd="8dp" android:orientation="vertical">
@@ -259,7 +259,7 @@
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:layout_marginTop="2dp" android:text="@string/sub_maintain" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
                 </LinearLayout>
-                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron"/>
+                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron" android:importantForAccessibility="no"/>
             </LinearLayout>
             <View android:layout_width="10dp" android:layout_height="0dp"/>
 <LinearLayout android:id="@+id/card_settings"
@@ -270,7 +270,7 @@
                 android:padding="14dp" android:visibility="invisible">
                 <FrameLayout android:layout_width="46dp" android:layout_height="46dp" android:background="@drawable/chip_purple">
                     <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
-                        android:src="@drawable/ic_gear_purple"/>
+                        android:src="@drawable/ic_gear_purple" android:importantForAccessibility="no"/>
                 </FrameLayout>
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                     android:layout_marginStart="13dp" android:layout_marginEnd="8dp" android:orientation="vertical">
@@ -279,7 +279,7 @@
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:layout_marginTop="2dp" android:text="@string/sub_settings" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
                 </LinearLayout>
-                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron"/>
+                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_chevron" android:importantForAccessibility="no"/>
             </LinearLayout>
         </LinearLayout>
 

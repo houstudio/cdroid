@@ -20,7 +20,7 @@
 #include <view/keyevent.h>
 #include <menu/menuitemimpl.h>
 #include <menu/menubuilder.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <menu/submenubuilder.h>
 #include <menu/menupresenter.h>
 #include <view/actionprovider.h>

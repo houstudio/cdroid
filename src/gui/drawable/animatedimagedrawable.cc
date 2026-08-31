@@ -20,7 +20,7 @@
 #include <core/systemclock.h>
 #include <content/typedarray.h>
 #include <content/typedvalue.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 #include <view/view.h>
