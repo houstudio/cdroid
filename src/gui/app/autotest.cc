@@ -283,7 +283,8 @@ void UiAutoTest::stop() {
 }
 
 void UiAutoTest::collectClickable(AccessibilityNodeInfo* node, int depth) {
-    if (node == nullptr || depth > kMaxDepth) return;
+    if (node == nullptr) return;
+    if (depth > kMaxDepth) { node->recycle(); return; }   // cut node is still owned
     // Progress ranges (SeekBar & friends) are not clickable — AOSP drives
     // them with ACTION_SET_PROGRESS / the SCROLL_* actions AbsSeekBar
     // advertises, so collect nodes advertising SET_PROGRESS as targets too
@@ -593,7 +594,8 @@ bool UiAutoTest::scrollOnce(AccessibilityNodeInfo* root) {
     AccessibilityNodeInfo* best = nullptr;
     Rect bestB;
     std::function<void(AccessibilityNodeInfo*, int)> visit = [&](AccessibilityNodeInfo* n, int d) {
-        if (!n || d > kMaxDepth) return;
+        if (!n) return;
+        if (d > kMaxDepth) { n->recycle(); return; }   // cut node is still owned
         const bool candidate = n->isScrollable() && n->isVisibleToUser();
         Rect b;
         if (candidate) n->getBoundsInScreen(b);
@@ -806,7 +808,8 @@ void UiAutoTest::scriptNext() {
         AccessibilityNodeInfo* root = automation.getRootInActiveWindow();
         LOGI("SCRIPT %zu dump:", lineNo);
         std::function<void(AccessibilityNodeInfo*, int)> dump = [&](AccessibilityNodeInfo* n, int d) {
-            if (!n || d > 20) return;
+            if (!n) return;
+            if (d > 20) { n->recycle(); return; }   // cut node is still owned
             Rect b; n->getBoundsInScreen(b);
             // TalkBack reading order: content description stands in when the
             // node has no text (uiautomator dump shows both attributes).
@@ -819,9 +822,9 @@ void UiAutoTest::scriptNext() {
                  label.c_str(), state.c_str(), b.left, b.top, b.width, b.height,
                  n->isClickable(), n->isVisibleToUser(), n->isEnabled());
             for (int i = 0; i < n->getChildCount(); i++) dump(n->getChild(i), d + 1);
+            n->recycle();   // every walked node is pool-owned, root included
         };
         dump(root, 0);
-        if (root) root->recycle();
         mScriptIndex++;
         stepHandler().post([this]() { scriptNext(); });
         return;
