@@ -1506,8 +1506,20 @@ std::string AccessibilityNodeInfo::getActionSymbolicName(int action){
     case R::id::accessibilityActionScrollRight:   return "ACTION_SCROLL_RIGHT";
     case R::id::accessibilityActionSetProgress:   return "ACTION_SET_PROGRESS";
     case R::id::accessibilityActionContextClick:  return "ACTION_CONTEXT_CLICK";
+    case R::id::accessibilityActionMoveWindow:    return "ACTION_MOVE_WINDOW";
+    case R::id::accessibilityActionPageUp:        return "ACTION_PAGE_UP";
+    case R::id::accessibilityActionPageDown:      return "ACTION_PAGE_DOWN";
+    case R::id::accessibilityActionPageLeft:      return "ACTION_PAGE_LEFT";
+    case R::id::accessibilityActionPageRight:     return "ACTION_PAGE_RIGHT";
     case R::id::accessibilityActionShowTooltip:   return "ACTION_SHOW_TOOLTIP";
     case R::id::accessibilityActionHideTooltip:   return "ACTION_HIDE_TOOLTIP";
+    case R::id::accessibilityActionPressAndHold:  return "ACTION_PRESS_AND_HOLD";
+    case R::id::accessibilityActionImeEnter:      return "ACTION_IME_ENTER";
+    case R::id::accessibilityActionDragStart:     return "ACTION_DRAG_START";
+    case R::id::accessibilityActionDragDrop:      return "ACTION_DRAG_DROP";
+    case R::id::accessibilityActionDragCancel:    return "ACTION_DRAG_CANCEL";
+    case R::id::accessibilityActionShowTextSuggestions: return "ACTION_SHOW_TEXT_SUGGESTIONS";
+    case R::id::accessibilityActionScrollInDirection:   return "ACTION_SCROLL_IN_DIRECTION";
 
     default:        return "ACTION_UNKNOWN";
     }
@@ -1731,6 +1743,17 @@ AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityA
 AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP(R::id::accessibilityActionShowTooltip);
 
 AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP (R::id::accessibilityActionHideTooltip);
+
+/*android-36 singletons CDROID was missing (see header comment).*/
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_PRESS_AND_HOLD (R::id::accessibilityActionPressAndHold);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_IME_ENTER (R::id::accessibilityActionImeEnter);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_DRAG_START (R::id::accessibilityActionDragStart);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_DRAG_DROP (R::id::accessibilityActionDragDrop);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_DRAG_CANCEL (R::id::accessibilityActionDragCancel);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TEXT_SUGGESTIONS (R::id::accessibilityActionShowTextSuggestions);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_IN_DIRECTION (R::id::accessibilityActionScrollInDirection);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_LEFT (R::id::accessibilityActionPageLeft);
+AccessibilityNodeInfo::AccessibilityAction AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_RIGHT (R::id::accessibilityActionPageRight);
 
 AccessibilityNodeInfo::AccessibilityAction::AccessibilityAction(int actionId, const std::string& label) {
     if ((actionId & ACTION_TYPE_MASK) == 0 && BitSet32::count(actionId) != 1) {

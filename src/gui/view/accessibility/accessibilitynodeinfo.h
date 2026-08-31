@@ -669,6 +669,21 @@ public:
 
     static AccessibilityAction ACTION_HIDE_TOOLTIP;
 
+    /*android-36 singletons CDROID was missing — ids are the frozen public
+      framework ids (android.R.id.accessibilityAction*), all already pinned
+      in internal_R, so no generated file changes. Defined in android-36
+      declaration order; appended after HIDE_TOOLTIP to keep every existing
+      serialization flag stable (the flag is bitAt(insertion order)).*/
+    static AccessibilityAction ACTION_PRESS_AND_HOLD;
+    static AccessibilityAction ACTION_IME_ENTER;
+    static AccessibilityAction ACTION_DRAG_START;
+    static AccessibilityAction ACTION_DRAG_DROP;
+    static AccessibilityAction ACTION_DRAG_CANCEL;
+    static AccessibilityAction ACTION_SHOW_TEXT_SUGGESTIONS;
+    static AccessibilityAction ACTION_SCROLL_IN_DIRECTION;
+    static AccessibilityAction ACTION_PAGE_LEFT;
+    static AccessibilityAction ACTION_PAGE_RIGHT;
+
 private:
     int mActionId;
     std::string mLabel;
