@@ -5,6 +5,7 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
 #include <accessibilityservice/accessibilityservice.h>
+#include <core/inputeventsource.h>
 #include <porting/cdlog.h>
 
 namespace cdroid {
@@ -80,6 +81,18 @@ AccessibilityNodeInfo* UiAutomation::getRootInActiveWindow() {
 // → AccessibilityManagerService); in-process that is the backing service.
 bool UiAutomation::performGlobalAction(int action) {
     return mService ? mService->performGlobalAction(action) : false;
+}
+
+// AOSP routes injection over the IUiAutomationConnection to InputManager;
+// in-process the InputEventSource queue (the InputDispatcher analog) plays
+// that role — the event rides the same drain as device input.
+bool UiAutomation::injectInputEvent(InputEvent& event, bool sync) {
+    return injectInputEvent(event, sync ? InputEventSource::INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH
+                                        : InputEventSource::INJECT_INPUT_EVENT_MODE_ASYNC);
+}
+
+bool UiAutomation::injectInputEvent(InputEvent& event, int injectMode) {
+    return InputEventSource::getInstance().injectInputEvent(event, injectMode);
 }
 
 AccessibilityEvent* UiAutomation::executeAndWaitForEvent(const std::function<void()>& command,

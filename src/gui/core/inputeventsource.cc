@@ -196,6 +196,7 @@ int InputEventSource::checkEvents(){
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     const nsecs_t now = SystemClock::uptimeMillis();
     int count = 0;
+    count += (int)mInjectedEvents.size();
     for(auto item:mDevices){
         auto dev = item.second;
         const int devEvents= dev->getEventCount();
@@ -248,6 +249,15 @@ int InputEventSource::handleEvents(){
             e->recycle();
         });
     }
+    /*Injected events ride the same drain — process then recycle, exactly
+      like device-queued ones (the InputDispatcher injection-entry analog).*/
+    while(!mInjectedEvents.empty()){
+        InputEvent*e = mInjectedEvents.front();
+        mInjectedEvents.pop();
+        wm.processEvent(*e);
+        e->recycle();
+        ret++;
+    }
     return ret;
 }
 
@@ -260,6 +270,12 @@ void InputEventSource::clearEvents(){
     for (auto& it : mDevices) {
         it.second->drainEvents(events);
     }
+    // The injection queue too — InputEventSource is never destroyed, so
+    // undelivered injected events would otherwise leak at exit.
+    while (!mInjectedEvents.empty()) {
+        events.push_back(mInjectedEvents.front());
+        mInjectedEvents.pop();
+    }
     for (InputEvent* e : events) {
         e->recycle();
     }
@@ -267,6 +283,21 @@ void InputEventSource::clearEvents(){
 
 void InputEventSource::sendEvent(InputEvent&event){
     WindowManager::getInstance().processEvent(event);
+}
+
+bool InputEventSource::injectInputEvent(InputEvent&event,int mode){
+    /*AOSP IInputManager.injectInputEvent queues an injection entry on the
+      InputDispatcher and dispatches it through the normal channel path —
+      an injected event is indistinguishable from a device event and never
+      short-circuits into the window. Mirror that here: park a copy on the
+      drain queue; handleEvents() delivers it on the main looper and recycles
+      it. mode is kept for API fidelity — a blocking WAIT_* mode cannot work
+      on the delivery thread itself, so every mode enqueues and returns.*/
+    InputEvent* injected = event.copy();
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+    mInjectedEvents.push(injected);
+    LOGV("injectInputEvent(mode=%d) queued", mode);
+    return true;
 }
 
 int32_t InputEventSource::getGlobalMetaState()const{

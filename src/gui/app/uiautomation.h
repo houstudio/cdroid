@@ -10,6 +10,7 @@ namespace cdroid {
 class AccessibilityNodeInfo;
 class AccessibilityService;
 class Handler;
+class InputEvent;
 class Looper;
 
 /**
@@ -68,6 +69,22 @@ public:
      *  HOME/RECENTS/... need an activity-stack manager CDROID does not have
      *  (AOSP returns false for undeliverable actions too). */
     bool performGlobalAction(int action);
+
+    /** AOSP UiAutomation.injectInputEvent(InputEvent, boolean): inject an
+     *  input event through the input pipeline. AOSP routes it over the
+     *  IUiAutomationConnection to InputManager, where the InputDispatcher
+     *  queues it behind real events and dispatches it like a device event;
+     *  in-process the InputEventSource drain queue plays that role. The
+     *  caller keeps ownership of its event. sync=true maps to
+     *  INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH, false to ASYNC — both only
+     *  enqueue here: this class runs on the UI (delivery) thread, so a
+     *  blocking wait would deadlock (AOSP blocks its instrumentation thread
+     *  instead). Pump the looper (executeAndWaitForEvent) to observe the
+     *  delivery. */
+    bool injectInputEvent(InputEvent& event, bool sync);
+
+    /** The hidden variant taking the InputManager mode directly. */
+    bool injectInputEvent(InputEvent& event, int injectMode);
 
 private:
     class BackingService;   // the registered AccessibilityService
