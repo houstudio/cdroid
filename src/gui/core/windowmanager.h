@@ -101,6 +101,16 @@ public:
      * windows above it — IME, toasts, system alerts — which can hold input
      * focus without being the top application window). Null when none. */
     Window*getActiveApplicationWindow();
+
+    /* AccessibilityInteractionController.setAccessibilityFetchFlags
+     * (android-36 :973): the ViewRootImpl side writes the client's fetch
+     * flags into the fetched root's AttachInfo before nodes materialize —
+     * FLAG_REPORT_VIEW_IDS / FLAG_INCLUDE_NOT_IMPORTANT_VIEWS gate per-node
+     * reporting in View.onInitializeAccessibilityNodeInfo. In-process note:
+     * nodes are created lazily while the client walks the tree, so there is
+     * no reset-on-reply point like AOSP's resetAccessibilityFetchFlags();
+     * the flags stay set for this single trusted in-process client. */
+    void setAccessibilityFetchFlags(Window* window, int flags);
 protected:
     virtual void onKeyEvent(KeyEvent&key);
     virtual void onMotion(MotionEvent&event);

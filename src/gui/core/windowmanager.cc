@@ -298,6 +298,15 @@ Window*WindowManager::getActiveWindow()const{
     return mActiveWindow;
 }
 
+void WindowManager::setAccessibilityFetchFlags(Window* window, int flags) {
+    // AccessibilityInteractionController.java:973 — the ViewRootImpl side
+    // writes the client's fetch flags into the fetched root's AttachInfo
+    // (WindowManager creates and owns that AttachInfo, the ViewRootImpl role).
+    if (window != nullptr && window->mAttachInfo != nullptr) {
+        window->mAttachInfo->mAccessibilityFetchFlags = flags;
+    }
+}
+
 Window*WindowManager::getActiveApplicationWindow(){
     // mWindows is bottom-up: the first application window from the top.
     for(auto it = mWindows.rbegin(); it != mWindows.rend(); it++){

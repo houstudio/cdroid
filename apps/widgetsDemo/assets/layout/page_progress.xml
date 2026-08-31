@@ -395,6 +395,7 @@
                 android:textSize="@dimen/title_size" />
 
             <SeekBar
+                android:id="@+id/seek_styled"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/row_gap"
@@ -407,13 +408,15 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:progressDrawable="@drawable/progress_purple"
-                android:max="100" android:progress="35" />
+                android:max="100" android:progress="35"
+                android:contentDescription="Seek bar (purple track)" />
             <SeekBar
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:enabled="false"
-                android:max="100" android:progress="80" />
+                android:max="100" android:progress="80"
+                android:contentDescription="Seek bar (disabled)" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

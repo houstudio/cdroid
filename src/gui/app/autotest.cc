@@ -507,10 +507,31 @@ void UiAutoTest::step() {
         if (hit) {
             hit->recycle();
             if (mRecord.is_open()) {
-                // No click replay for a seek target — the recorder grammar
-                // has one verb per activation and this was a scroll.
-                mRecord << "# step " << mStepCount << ": " << target->getClassName()
-                        << " — seek target (scroll action), no click verb\n";
+                // Same shape as a click step: the wait carries the poll
+                // budget, and the scroll verb mirrors the action the sweep
+                // actually drove (AbsSeekBar advertises FORWARD below max,
+                // BACKWARD above min, so the direction is what was advertised).
+                // findAccessibilityNodeInfosByText matches content
+                // descriptions too, so labeled seek bars replay cleanly.
+                std::string sel = label;
+                for (auto& ch : sel) if (ch == '"' || ch == '\n' || ch == '\r') ch = ' ';
+                const std::string resName = target->getViewIdResourceName();
+                if (!sel.empty()) {
+                    mRecord << "wait \"text=" << sel << "\" 5000\n"
+                            << "scroll \"text=" << sel << "\" "
+                            << (seekAction == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD
+                                ? "forward" : "backward") << "\n";
+                } else if (!resName.empty()) {
+                    // uiautomator records by resource-id when text is absent
+                    // (FLAG_REPORT_VIEW_IDS makes nodes carry it).
+                    mRecord << "wait id=" << resName << " 5000\n"
+                            << "scroll id=" << resName << " "
+                            << (seekAction == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD
+                                ? "forward" : "backward") << "\n";
+                } else {
+                    mRecord << "# step " << mStepCount << ": " << target->getClassName()
+                            << " — seek target, no selector\n";
+                }
                 mRecord.flush();
             }
         }
@@ -544,14 +565,20 @@ void UiAutoTest::step() {
         if (mRecord.is_open()) {
             std::string sel = label;
             for (auto& ch : sel) if (ch == '"' || ch == '\n' || ch == '\r') ch = ' ';
+            const std::string resName = target->getViewIdResourceName();
             if (!sel.empty()) {
                 // wait carries the poll budget (click alone fails fast on a
                 // not-yet-arrived page), so replay survives timing.
                 mRecord << "wait \"text=" << sel << "\" 5000\n"
                         << "click \"text=" << sel << "\"\n";
+            } else if (!resName.empty()) {
+                // uiautomator records by resource-id when text is absent
+                // (FLAG_REPORT_VIEW_IDS makes nodes carry it).
+                mRecord << "wait id=" << resName << " 5000\n"
+                        << "click id=" << resName << "\n";
             } else {
                 mRecord << "# step " << mStepCount << ": " << target->getClassName()
-                        << " — no text selector\n";
+                        << " — no selector\n";
             }
             mRecord.flush();   // keep the script usable if the sweep dies mid-run
         }

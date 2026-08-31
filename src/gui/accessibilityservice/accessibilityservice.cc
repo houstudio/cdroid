@@ -56,6 +56,20 @@ AccessibilityNodeInfo* AccessibilityService::getRootInActiveWindow() {
     if (active == nullptr) {
         return nullptr;
     }
+    // AOSP's AccessibilityInteractionClient maps the service's capability
+    // flags onto the per-request node fetch flags, and the ViewRootImpl side
+    // writes them into AttachInfo before nodes materialize — mirror that on
+    // the in-process bridge (they gate viewIdResourceName reporting and
+    // include-not-important filtering in View.onInitializeAccessibilityNodeInfo).
+    int fetchFlags = 0;
+    const int serviceFlags = getServiceInfo().flags;
+    if (serviceFlags & AccessibilityServiceInfo::FLAG_REPORT_VIEW_IDS) {
+        fetchFlags |= AccessibilityNodeInfo::FLAG_REPORT_VIEW_IDS;
+    }
+    if (serviceFlags & AccessibilityServiceInfo::FLAG_INCLUDE_NOT_IMPORTANT_VIEWS) {
+        fetchFlags |= AccessibilityNodeInfo::FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;
+    }
+    WindowManager::getInstance().setAccessibilityFetchFlags(active, fetchFlags);
     // Seal at the service boundary (AOSP: sealed when ViewRootImpl marshals
     // the reply) — the framework keeps factory nodes unsealed.
     AccessibilityNodeInfo* root = active->createAccessibilityNodeInfo();
