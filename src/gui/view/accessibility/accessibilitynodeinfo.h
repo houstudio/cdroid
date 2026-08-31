@@ -223,6 +223,7 @@ private:
     std::string mPaneTitle;
     std::string mContentDescription;
     std::string mTooltipText;
+    std::string mStateDescription;
     std::string mViewIdResourceName;
     std::vector<std::string> mExtraDataKeys;
 
@@ -525,6 +526,9 @@ public:
 
     void setTooltipText(const std::string& tooltipText);
 
+    std::string getStateDescription() const;
+    void setStateDescription(const std::string& stateDescription);
+
     void setLabelFor(View* labeled);
 
     void setLabelFor(View* root, int virtualDescendantId);
@@ -708,6 +712,12 @@ public:
     static constexpr int RANGE_TYPE_INT = 0;
     static constexpr int RANGE_TYPE_FLOAT = 1;
     static constexpr int RANGE_TYPE_PERCENT = 2;
+    /** Range type: indeterminate — API 35+, flag-gated in AOSP. */
+    static constexpr int RANGE_TYPE_INDETERMINATE = 3;
+    /** AOSP RangeInfo.INDETERMINATE — the shared sentinel for ranges with
+        unknown extent. Safe to alias: nodes borrow a RangeInfo without
+        owning it (setRangeInfo stores the pointer, clear() only nulls). */
+    static RangeInfo INDETERMINATE;
 
 private:
     static Pools::SimplePool<RangeInfo> sPool;

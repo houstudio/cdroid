@@ -82,6 +82,7 @@ class HandlerActionQueue;
 class LayoutInflater;
 class ScrollBarDrawable;
 class HapticScrollFeedbackProvider;
+class TextSegmentIterator;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 private:
     static constexpr int POPULATING_ACCESSIBILITY_EVENT_TYPES=
@@ -926,6 +927,8 @@ protected:
     virtual void onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,const Rect&);
     virtual void resetSubtreeAccessibilityStateChanged();
     bool traverseAtGranularity(int granularity, bool forward,  bool extendSelection);
+    void sendViewTextTraversedAtGranularityEvent(int action, int granularity,
+            int fromIndex, int toIndex);
     void ensureTransformationInfo();
 public:
     View(Context*ctx);   // AOSP View(Context)
@@ -1210,11 +1213,13 @@ public:
     bool dispatchNestedPrePerformAccessibilityAction(int action, Bundle* arguments);
     virtual bool performAccessibilityAction(int action, Bundle* arguments);
     virtual bool performAccessibilityActionInternal(int action, Bundle* arguments);
-    std::string getIterableTextForAccessibility();
-    bool isAccessibilitySelectionExtendable()const;
-    int getAccessibilitySelectionStart()const;
-    int getAccessibilitySelectionEnd()const;
-    void setAccessibilitySelection(int start, int end);
+    virtual std::string getIterableTextForAccessibility();
+    virtual bool isAccessibilitySelectionExtendable()const;
+    virtual int getAccessibilitySelectionStart()const;
+    virtual int getAccessibilitySelectionEnd()const;
+    virtual void setAccessibilitySelection(int start, int end);
+    virtual void prepareForExtendedAccessibilitySelection();
+    virtual TextSegmentIterator* getIteratorForGranularity(int granularity);
     void setTransitionVisibility(int visibility);
 
     bool isTemporarilyDetached()const;
@@ -1250,6 +1255,10 @@ public:
     void setContentDescription(const std::string&);
     virtual std::string getContentDescription()const;
     virtual void setStateDescription(const std::string& stateDescription);
+    std::string getStateDescription() const;
+    /** AOSP View.announceForAccessibility: send a TYPE_ANNOUNCEMENT event
+     *  carrying the given text — screen readers speak it immediately. */
+    void announceForAccessibility(const std::string& text);
     void setIsRootNamespace(bool);
     bool isRootNamespace()const;
     cdroid::Context*getContext()const;

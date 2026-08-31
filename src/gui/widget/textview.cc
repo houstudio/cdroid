@@ -20,6 +20,7 @@
 #include <text/String.h>
 #include <widget/editor.h>
 #include <widget/editorinfo.h>
+#include <widget/accessibilityiterators.h>
 #include <widget/textview.h>
 #include <text/method/movementmethod.h>
 #include <text/method/arrowkeymovementmethod.h>
@@ -6459,6 +6460,174 @@ std::string TextView::getAccessibilityClassName()const {
     return "TextView";
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//  Accessibility text traversal (android-36 TextView.java:16099+).
+
+std::string TextView::getIterableTextForAccessibility() {
+    return mText ? std::string(mText->toUTF8()) : std::string();
+}
+
+TextSegmentIterator* TextView::getIteratorForGranularity(int granularity) {
+    switch (granularity) {
+        case AccessibilityNodeInfo::MOVEMENT_GRANULARITY_LINE: {
+            const std::string text = getIterableTextForAccessibility();
+            if (!text.empty() && getLayout() != nullptr) {
+                LineTextSegmentIterator* iterator = LineTextSegmentIterator::getInstance();
+                iterator->initialize(TextUtils::utf8_utf16(text), getLayout());
+                return iterator;
+            }
+        } break;
+        case AccessibilityNodeInfo::MOVEMENT_GRANULARITY_PAGE: {
+            const std::string text = getIterableTextForAccessibility();
+            if (!text.empty() && getLayout() != nullptr) {
+                PageTextSegmentIterator* iterator = PageTextSegmentIterator::getInstance();
+                iterator->initialize(this);
+                return iterator;
+            }
+        } break;
+    }
+    return View::getIteratorForGranularity(granularity);
+}
+
+int TextView::getAccessibilitySelectionStart()const {
+    return getSelectionStart();
+}
+
+int TextView::getAccessibilitySelectionEnd()const {
+    return getSelectionEnd();
+}
+
+bool TextView::isAccessibilitySelectionExtendable()const {
+    return true;
+}
+
+void TextView::prepareForExtendedAccessibilitySelection() {
+    requestFocusOnNonEditableSelectableText();
+}
+
+void TextView::requestFocusOnNonEditableSelectableText() {
+    if (!isTextEditable() && isTextSelectable()) {
+        if (!isEnabled()) {
+            return;
+        }
+
+        if (isFocusable() && !isFocused()) {
+            requestFocus();
+        }
+    }
+}
+
+void TextView::setAccessibilitySelection(int start, int end) {
+    if (getAccessibilitySelectionStart() == start
+            && getAccessibilitySelectionEnd() == end) {
+        return;
+    }
+    Spannable* text = dynamic_cast<Spannable*>(mText);   // AOSP blind-casts to Spannable
+    // Length in UTF-16 code units — the Selection coordinates.
+    const int textLength = mText ? (int)mText->length() : 0;
+    if (text != nullptr && std::min(start, end) >= 0 && std::max(start, end) <= textLength) {
+        Selection::setSelection(text, start, end);
+    } else if (text != nullptr) {
+        Selection::removeSelection(text);
+    }
+    // Hide all selection controllers used for adjusting selection
+    // since we are doing so explicitlty by other means and these
+    // controllers interact with how selection behaves.
+    if (mEditor != nullptr) {
+        mEditor->hideCursorAndSpanControllers();
+        mEditor->stopTextActionMode();
+    }
+}
+
+void TextView::ensureIterableTextForAccessibilitySelectable() {
+    if (dynamic_cast<Spannable*>(mText) == nullptr) {
+        setText(mText, BufferType::SPANNABLE);
+        if (getLayout() == nullptr) {
+            assumeLayout();
+        }
+    }
+}
+
+// android-36 TextView.java:14933+. The Editor pre-hooks (process-text /
+// smart actions), ACCESSIBILITY_ACTION_SHARE and ime-enter are not ported
+// (no Editor machinery for them yet); unmatched actions fall to View's
+// dispatcher exactly like AOSP's default branch.
+bool TextView::performAccessibilityActionInternal(int action, Bundle* arguments) {
+    switch (action) {
+        case AccessibilityNodeInfo::ACTION_COPY: {
+            if (isFocused() && canCopy()) {
+                if (onTextContextMenuItem(ID_COPY)) {
+                    return true;
+                }
+            }
+        } return false;
+        case AccessibilityNodeInfo::ACTION_PASTE: {
+            if (isFocused() && canPaste()) {
+                if (onTextContextMenuItem(ID_PASTE)) {
+                    return true;
+                }
+            }
+        } return false;
+        case AccessibilityNodeInfo::ACTION_CUT: {
+            if (isFocused() && canCut()) {
+                if (onTextContextMenuItem(ID_CUT)) {
+                    return true;
+                }
+            }
+        } return false;
+        case AccessibilityNodeInfo::ACTION_SET_SELECTION: {
+            ensureIterableTextForAccessibilitySelectable();
+            Spannable* text = dynamic_cast<Spannable*>(mText);
+            if (text == nullptr) {
+                return false;
+            }
+            const int start = (arguments != nullptr) ? arguments->getInt(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_SELECTION_START_INT, -1) : -1;
+            const int end = (arguments != nullptr) ? arguments->getInt(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_SELECTION_END_INT, -1) : -1;
+            if ((getSelectionStart() != start || getSelectionEnd() != end)) {
+                // No arguments clears the selection.
+                if (start == end && end == -1) {
+                    Selection::removeSelection(text);
+                    return true;
+                }
+                if (start >= 0 && start <= end && end <= (int)text->length()) {
+                    requestFocusOnNonEditableSelectableText();
+                    Selection::setSelection(text, start, end);
+                    // Make sure selection mode is engaged. AOSP does this via
+                    // startSelectionActionModeAsync; CDROID has the sync variant only.
+                    if (mEditor != nullptr) {
+                        mEditor->startSelectionActionMode();
+                    }
+                    return true;
+                }
+            }
+        } return false;
+        case AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY:
+        case AccessibilityNodeInfo::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY: {
+            ensureIterableTextForAccessibilitySelectable();
+            return View::performAccessibilityActionInternal(action, arguments);
+        }
+        case AccessibilityNodeInfo::ACTION_SET_TEXT: {
+            if (!isEnabled() || (mBufferType != BufferType::EDITABLE)) {
+                return false;
+            }
+            std::string text = (arguments != nullptr) ? arguments->getString(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE) : std::string();
+            setText(new String(text));
+            if (mText != nullptr) {
+                int updatedTextLength = (int)mText->length();
+                if (updatedTextLength > 0 && mSpannable != nullptr) {
+                    Selection::setSelection(mSpannable, updatedTextLength);
+                }
+            }
+        } return true;
+        default: {
+            return View::performAccessibilityActionInternal(action, arguments);
+        }
+    }
+}
+
 void TextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event) {
     View::onInitializeAccessibilityEventInternal(event);
 
@@ -6543,18 +6712,6 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
     }
 }
 
-bool TextView::performAccessibilityActionInternal(int action, Bundle* arguments) {
-    switch (action) {
-    // TODO (AOSP implements these here): NEXT/PREVIOUS_AT_MOVEMENT_GRANULARITY
-    // (traverseAtGranularity), ACTION_SET_SELECTION/CLEAR_SELECTION,
-    // COPY/PASTE/CUT, ACTION_SET_TEXT — deferred until Editor/Selection land.
-    default:
-        // Everything else (CLICK, FOCUS, ACCESSIBILITY_FOCUS, ...) is the View
-        // implementation — the old stub returned true unconditionally, faking
-        // success for every action on every TextView descendant.
-        return View::performAccessibilityActionInternal(action, arguments);
-    }
-}
 void TextView::sendAccessibilityEventInternal(int eventType) {
     LOGD_IF(AccessibilityManager::getInstance(mContext).isEnabled(),"TODO");
     /*if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED && mEditor != nullptr) {

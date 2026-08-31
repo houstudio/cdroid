@@ -33,6 +33,7 @@
 #include <view/hapticscrollfeedbackprovider.h>
 #include <view/accessibility/accessibilitywindowinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
+#include <view/accessibilityiterators.h>
 #include <view/focusfinder.h>
 #include <menu/menubuilder.h>
 #include <widget/scrollbardrawable.h>
@@ -40,7 +41,7 @@
 #include <widget/cdwindow.h>
 #include <widget/scrollbarutils.h>
 #include <animation/animationutils.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <core/systemclock.h>
 #include <core/windowmanager.h>
 #include <core/inputmethodmanager.h>
@@ -4241,6 +4242,23 @@ void View::setStateDescription(const std::string& stateDescription) {
             AccessibilityEvent::CONTENT_CHANGE_TYPE_STATE_DESCRIPTION);
 }
 
+std::string View::getStateDescription() const{
+    return mStateDescription;
+}
+
+void View::announceForAccessibility(const std::string& text) {
+    // AOSP View.announceForAccessibility: gate on the manager and a parent
+    // (the event travels the requestSendAccessibilityEvent chain), build a
+    // TYPE_ANNOUNCEMENT, initialize it, and put the text in the event text.
+    if (AccessibilityManager::getInstance(mContext).isEnabled() && mParent != nullptr) {
+        AccessibilityEvent* event = AccessibilityEvent::obtain(
+                AccessibilityEvent::TYPE_ANNOUNCEMENT);
+        onInitializeAccessibilityEventInternal(*event);
+        event->getText().push_back(text);
+        mParent->requestSendAccessibilityEvent(this, *event);
+    }
+}
+
 bool View::isActionableForAccessibility()const{
     return (isClickable() || isLongClickable() || isFocusable());
 }
@@ -4407,33 +4425,34 @@ bool View::performAccessibilityActionInternal(int action, Bundle* arguments) {
             return true;
         }
         break;
-#if 0
     case AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY: {
         if (arguments != nullptr) {
-            const int granularity = arguments.getInt(
+            const int granularity = arguments->getInt(
                     AccessibilityNodeInfo::ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
-            const bool extendSelection = arguments.getBoolean(
-                    AccessibilityNodeInfo::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
+            // Java's getBoolean(key) defaults to false when the key is absent;
+            // the single-arg CDROID getter throws instead, so pass the default.
+            const bool extendSelection = arguments->getBoolean(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN, false);
             return traverseAtGranularity(granularity, true, extendSelection);
         }
     } break;
     case AccessibilityNodeInfo::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY: {
         if (arguments != nullptr) {
-            const int granularity = arguments.getInt(
+            const int granularity = arguments->getInt(
                     AccessibilityNodeInfo::ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
-            const bool extendSelection = arguments.getBoolean(
-                    AccessibilityNodeInfo::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
+            const bool extendSelection = arguments->getBoolean(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN, false);
             return traverseAtGranularity(granularity, false, extendSelection);
         }
     } break;
     case AccessibilityNodeInfo::ACTION_SET_SELECTION: {
-        std::string text = getIterableTextForAccessibility();
+        const std::string text = getIterableTextForAccessibility();
         if (text.empty()) {
             return false;
         }
-        const int start = (arguments != nullptr) ? arguments.getInt(
+        const int start = (arguments != nullptr) ? arguments->getInt(
                 AccessibilityNodeInfo::ACTION_ARGUMENT_SELECTION_START_INT, -1) : -1;
-        const int end = (arguments != nullptr) ? arguments.getInt(
+        const int end = (arguments != nullptr) ? arguments->getInt(
         AccessibilityNodeInfo::ACTION_ARGUMENT_SELECTION_END_INT, -1) : -1;
         // Only cursor position can be specified (selection length == 0)
         if ((getAccessibilitySelectionStart() != start
@@ -4462,7 +4481,7 @@ bool View::performAccessibilityActionInternal(int action, Bundle* arguments) {
             return false;
         }
         return showLongClickTooltip(0, 0);
-    }
+    } break;
     case R::id::accessibilityActionHideTooltip: {
         if ((mTooltipInfo == nullptr) || (mTooltipInfo->mTooltipPopup == nullptr)) {
             // No tooltip showing
@@ -4470,49 +4489,106 @@ bool View::performAccessibilityActionInternal(int action, Bundle* arguments) {
         }
         hideTooltip();
         return true;
-    }
-#endif
+    } break;
     }
     return false;
 }
 
 bool View::traverseAtGranularity(int granularity, bool forward,  bool extendSelection) {
-    std::string text = getIterableTextForAccessibility();
-    if (text.empty()) {
+    const std::string utf8Text = getIterableTextForAccessibility();
+    if (utf8Text.empty()) {
         return false;
     }
-#if 0
-    TextSegmentIterator iterator = getIteratorForGranularity(granularity);
-    if (iterator == null) {
+    // Iterator/cursor coordinates are UTF-16 code units (Android String
+    // coordinates), so measure the text in UTF-16 here.
+    const std::u16string text = TextUtils::utf8_utf16(utf8Text);
+    TextSegmentIterator* iterator = getIteratorForGranularity(granularity);
+    if (iterator == nullptr) {
         return false;
     }
     int current = getAccessibilitySelectionEnd();
     if (current == ACCESSIBILITY_CURSOR_POSITION_UNDEFINED) {
-        current = forward ? 0 : text.length();
+        current = forward ? 0 : (int)text.length();
     }
-    final int[] range = forward ? iterator.following(current) : iterator.preceding(current);
-    if (range == null) {
+    int* range = forward ? iterator->following(current) : iterator->preceding(current);
+    if (range == nullptr) {
         return false;
     }
-    final int segmentStart = range[0];
-    final int segmentEnd = range[1];
+    const int segmentStart = range[0];
+    const int segmentEnd = range[1];
     int selectionStart;
     int selectionEnd;
     if (extendSelection && isAccessibilitySelectionExtendable()) {
+        prepareForExtendedAccessibilitySelection();
         selectionStart = getAccessibilitySelectionStart();
         if (selectionStart == ACCESSIBILITY_CURSOR_POSITION_UNDEFINED) {
             selectionStart = forward ? segmentStart : segmentEnd;
         }
         selectionEnd = forward ? segmentEnd : segmentStart;
     } else {
-        selectionStart = selectionEnd= forward ? segmentEnd : segmentStart;
+        selectionStart = selectionEnd = forward ? segmentEnd : segmentStart;
     }
     setAccessibilitySelection(selectionStart, selectionEnd);
     const int action = forward ? AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY
             : AccessibilityNodeInfo::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY;
     sendViewTextTraversedAtGranularityEvent(action, granularity, segmentStart, segmentEnd);
-#endif
-    return false;//true
+    return true;
+}
+
+void View::sendViewTextTraversedAtGranularityEvent(int action, int granularity,
+        int fromIndex, int toIndex) {
+    if (mParent == nullptr) {
+        return;
+    }
+    AccessibilityEvent* event = AccessibilityEvent::obtain(
+            AccessibilityEvent::TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+    onInitializeAccessibilityEvent(*event);
+    onPopulateAccessibilityEvent(*event);
+    event->setFromIndex(fromIndex);
+    event->setToIndex(toIndex);
+    event->setAction(action);
+    event->setMovementGranularity(granularity);
+    mParent->requestSendAccessibilityEvent(this, *event);
+}
+
+TextSegmentIterator* View::getIteratorForGranularity(int granularity) {
+    switch (granularity) {
+        case AccessibilityNodeInfo::MOVEMENT_GRANULARITY_CHARACTER: {
+            const std::string text = getIterableTextForAccessibility();
+            if (text.length() > 0) {
+                CharacterTextSegmentIterator* iterator =
+                    CharacterTextSegmentIterator::getInstance(
+                            getContext()->getResources().getConfiguration().getLocales().get(0));
+                iterator->initialize(TextUtils::utf8_utf16(text));
+                return iterator;
+            }
+        } break;
+        case AccessibilityNodeInfo::MOVEMENT_GRANULARITY_WORD: {
+            const std::string text = getIterableTextForAccessibility();
+            if (text.length() > 0) {
+                WordTextSegmentIterator* iterator =
+                    WordTextSegmentIterator::getInstance(
+                            getContext()->getResources().getConfiguration().getLocales().get(0));
+                iterator->initialize(TextUtils::utf8_utf16(text));
+                return iterator;
+            }
+        } break;
+        case AccessibilityNodeInfo::MOVEMENT_GRANULARITY_PARAGRAPH: {
+            const std::string text = getIterableTextForAccessibility();
+            if (text.length() > 0) {
+                ParagraphTextSegmentIterator* iterator =
+                    ParagraphTextSegmentIterator::getInstance();
+                iterator->initialize(TextUtils::utf8_utf16(text));
+                return iterator;
+            }
+        } break;
+    }
+    return nullptr;
+}
+
+void View::prepareForExtendedAccessibilitySelection() {
+    // Base implementation does nothing; TextView overrides to focus non-editable
+    // selectable text before an extended selection starts.
 }
 
 std::string View::getIterableTextForAccessibility(){
@@ -4535,7 +4611,10 @@ void View::setAccessibilitySelection(int start, int end){
     if (start ==  end && end == mAccessibilityCursorPosition) {
         return;
     }
-    if ((start >= 0) && (start == end) && (end <= getIterableTextForAccessibility().length())) {
+    // Cursor positions are UTF-16 code-unit offsets (Android String
+    // coordinates), so validate against the UTF-16 length.
+    if ((start >= 0) && (start == end)
+            && (end <= (int)TextUtils::utf8_utf16(getIterableTextForAccessibility()).length())) {
         mAccessibilityCursorPosition = start;
     } else {
         mAccessibilityCursorPosition = ACCESSIBILITY_CURSOR_POSITION_UNDEFINED;
@@ -7155,8 +7234,12 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
         if ((mAttachInfo->mAccessibilityFetchFlags
                & AccessibilityNodeInfo::FLAG_REPORT_VIEW_IDS) != 0
                /*&& Resources.resourceHasPackage(mID)*/) {
-           //std::string viewId = getResources().getResourceName(mID);
-           //info.setViewIdResourceName(viewId);
+            // AOSP Resources.getResourceName(mID) — the same string
+            // findAccessibilityNodeInfosByViewId matches on.
+            std::string viewId;
+            if (getResources().getResourceName(mID, &viewId)) {
+                info.setViewIdResourceName(viewId);
+            }
         }
     }
     if (mLabelForId != View::NO_ID) {
@@ -7193,6 +7276,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     info.setImportantForAccessibility(isImportantForAccessibility());
     info.setPackageName(mContext->getPackageName());
     info.setClassName(getAccessibilityClassName());
+    info.setStateDescription(getStateDescription());
     info.setContentDescription(getContentDescription());
     info.setEnabled(isEnabled());
     info.setClickable(isClickable());

@@ -55,6 +55,7 @@ public:
     AbsSpinner(Context*,const AttributeSet*atts);
     AbsSpinner(Context*,const AttributeSet* attrs,int defStyleAttr);
     virtual ~AbsSpinner();
+    std::string getAccessibilityClassName()const override;
     int getCount()override;
     View* getSelectedView()override;
     void setAdapter(Adapter*adapter)override;

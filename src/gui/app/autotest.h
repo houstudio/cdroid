@@ -58,7 +58,7 @@ private:
 
     // --- script mode ---
     struct Command {
-        std::string verb;        // wait/click/long-click/scroll/set-progress/set-text/tap/perform/assert/assert-absent/dump/sleep/back
+        std::string verb;        // wait/wait-absent/click/long-click/scroll/set-progress/set-text/tap/perform/assert/assert-absent/dump/sleep/back
         bool byText = true;      // selector kind: text= / id=
         std::string selector;
         std::vector<std::string> args;  // verb payload: value / direction / key=value pairs

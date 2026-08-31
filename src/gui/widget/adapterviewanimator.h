@@ -96,6 +96,7 @@ public:
     AdapterViewAnimator(Context* context,const AttributeSet* attrs);
     AdapterViewAnimator(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~AdapterViewAnimator()override;
+    std::string getAccessibilityClassName()const override;
     void setDisplayedChild(int whichChild);
     int getDisplayedChild();
     virtual void showNext();

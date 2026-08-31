@@ -26,7 +26,10 @@ public:
         info.setCapabilities(AccessibilityServiceInfo::CAPABILITY_CAN_RETRIEVE_WINDOW_CONTENT);
         // The focus-rect drawing is gated on touch-exploration state; a test
         // driver wants its operations visible on screen, same as the scanner.
-        info.flags = AccessibilityServiceInfo::FLAG_REQUEST_TOUCH_EXPLORATION_MODE;
+        // FLAG_REPORT_VIEW_IDS is what AOSP's UiAutomation connection sets —
+        // nodes then carry viewIdResourceName (id= selectors see real ids).
+        info.flags = AccessibilityServiceInfo::FLAG_REQUEST_TOUCH_EXPLORATION_MODE
+                | AccessibilityServiceInfo::FLAG_REPORT_VIEW_IDS;
         setServiceInfo(info);
     }
 

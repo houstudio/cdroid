@@ -17,6 +17,7 @@
 #include <core/bundle.h>
 #include <porting/cdlog.h>
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <strings.h>   // strcasecmp (argument-key tail matching)
@@ -183,6 +184,59 @@ bool buildArguments(const std::vector<std::string>& tokens, Bundle& out, std::st
         case ArgSpec::Float:    out.putFloat(spec->key, strtof(value.c_str(), nullptr)); break;
         case ArgSpec::Boolean:  out.putBoolean(spec->key, value == "true" || value == "1"); break;
         case ArgSpec::String:   out.putString(spec->key, value); break;
+        }
+    }
+    return true;
+}
+
+/** Espresso check(matches(...)) over the standard node properties — the
+ *  getters uiautomator's UiObject2 exposes, one "key=value" token per
+ *  property: checked/selected/enabled/clickable/long-clickable/focusable/
+ *  focused/visible/scrollable/editable/password/multi-line/dismissable
+ *  (true/false), text/class (exact string), progress (RangeInfo current).
+ *  Unknown keys fail loudly — a typo'd assertion must never read as a pass.
+ *  Tokens without '=' (the wait budget) are skipped. */
+bool checkNodeProperties(AccessibilityNodeInfo* n, const std::vector<std::string>& tokens,
+                         std::string& why) {
+    for (const std::string& token : tokens) {
+        const size_t eq = token.find('=');
+        if (eq == std::string::npos) continue;   // the numeric budget token
+        const std::string key = token.substr(0, eq);
+        const std::string value = token.substr(eq + 1);
+        const bool wantBool = (value == "true" || value == "1");
+        bool ok = false;
+        if (key == "checked")              ok = n->isChecked() == wantBool;
+        else if (key == "selected")        ok = n->isSelected() == wantBool;
+        else if (key == "enabled")         ok = n->isEnabled() == wantBool;
+        else if (key == "clickable")       ok = n->isClickable() == wantBool;
+        else if (key == "long-clickable")  ok = n->isLongClickable() == wantBool;
+        else if (key == "focusable")       ok = n->isFocusable() == wantBool;
+        else if (key == "focused")         ok = n->isFocused() == wantBool;
+        else if (key == "visible")         ok = n->isVisibleToUser() == wantBool;
+        else if (key == "scrollable")      ok = n->isScrollable() == wantBool;
+        else if (key == "editable")        ok = n->isEditable() == wantBool;
+        else if (key == "password")        ok = n->isPassword() == wantBool;
+        else if (key == "multi-line")      ok = n->isMultiLine() == wantBool;
+        else if (key == "dismissable")     ok = n->isDismissable() == wantBool;
+        else if (key == "text")            ok = n->getText() == value;
+        else if (key == "class")           ok = n->getClassName() == value;
+        // AccessibilityNodeInfo.getContentDescription() / getStateDescription()
+        // (API 30+): the string faces TalkBack reads aloud.
+        else if (key == "content-desc")    ok = n->getContentDescription() == value;
+        else if (key == "state-desc")      ok = n->getStateDescription() == value;
+        else if (key == "progress") {
+            // The UiObject2.getRangeInfo() check — closes the set-progress
+            // loop without needing a readout TextView on the page.
+            const AccessibilityNodeInfo::RangeInfo* range = n->getRangeInfo();
+            const float want = strtof(value.c_str(), nullptr);
+            ok = range != nullptr && fabsf(range->getCurrent() - want) < 0.5f;
+        } else {
+            why = "unknown predicate '" + key + "'";
+            return false;
+        }
+        if (!ok) {
+            why = key + "=" + value + " does not hold";
+            return false;
         }
     }
     return true;
@@ -545,6 +599,10 @@ bool UiAutoTest::scrollOnce(AccessibilityNodeInfo* root) {
 // --- script mode ------------------------------------------------------------
 // Line-based DSL ('#' comments; whitespace-separated):
 //   wait   text=登录 3000     poll until a matching node exists (default 3000ms)
+//   wait   text=x checked=true 5000
+//                             Until.hasObject with criteria: the match must
+//                             also satisfy the property predicates
+//   wait-absent text=弹窗 3000 Until.gone: poll until NO match remains
 //   click  text=登录          highlight + semantic click, wait VIEW_CLICKED
 //   long-click text=行        ACTION_LONG_CLICK, wait TYPE_VIEW_LONG_CLICKED
 //   scroll text=列表 forward  ACTION_SCROLL_FORWARD/BACKWARD on the matched
@@ -562,7 +620,15 @@ bool UiAutoTest::scrollOnce(AccessibilityNodeInfo* root) {
 //                             standard a11y action by name (focus, copy,
 //                             expand, page-up, scroll-up, press-and-hold …),
 //                             typed arguments by the standard key table
-//   assert text=欢迎          fail if no match RIGHT NOW
+//   assert text=欢迎 checked=true
+//                             Espresso check(matches(...)): fail when absent
+//                             or a predicate fails. Predicates (the standard
+//                             node properties UiObject2 exposes):
+//                             checked/selected/enabled/clickable/
+//                             long-clickable/focusable/focused/visible/
+//                             scrollable/editable/password/multi-line/
+//                             dismissable = true|false, text/class = exact
+//                             string, progress = RangeInfo current value
 //   assert-absent text=错误   fail if a match exists
 //   dump   [file.log]         append the on-screen tree (stdout when empty)
 //   sleep  500                ms
@@ -643,9 +709,16 @@ bool UiAutoTest::parseScript(const std::string& path) {
             cmd.args.push_back(t->nextToken(" \t\r"));
             t->skipDelimiters(" \t\r");
         }
-        // wait/sleep keep the legacy first-token-is-milliseconds meaning.
-        if ((cmd.verb == "wait" || cmd.verb == "sleep") && !cmd.args.empty()) {
-            cmd.timeoutMs = atol(cmd.args[0].c_str());
+        // wait/sleep keep the milliseconds meaning — a bare number anywhere
+        // in the payload is the budget, because predicate tokens (key=value)
+        // may precede it ("wait text=x checked=true 5000").
+        if (cmd.verb == "wait" || cmd.verb == "sleep" || cmd.verb == "wait-absent") {
+            for (const std::string& a : cmd.args) {
+                if (a.find('=') == std::string::npos) {
+                    cmd.timeoutMs = atol(a.c_str());
+                    break;
+                }
+            }
         }
         t->nextLine();
         mScript.push_back(cmd);
@@ -708,8 +781,15 @@ void UiAutoTest::scriptNext() {
         std::function<void(AccessibilityNodeInfo*, int)> dump = [&](AccessibilityNodeInfo* n, int d) {
             if (!n || d > 20) return;
             Rect b; n->getBoundsInScreen(b);
-            LOGI("  %*s%s [%s] (%d,%d %dx%d) clk=%d vis=%d en=%d", d * 2, "", n->getClassName().c_str(),
-                 n->getText().c_str(), b.left, b.top, b.width, b.height,
+            // TalkBack reading order: content description stands in when the
+            // node has no text (uiautomator dump shows both attributes).
+            std::string label = n->getText();
+            if (label.empty()) label = n->getContentDescription();
+            // State description (API 30+): ProgressBar %, Switch on/off, …
+            std::string state = n->getStateDescription();
+            if (!state.empty()) state = " state='" + state + "'";
+            LOGI("  %*s%s [%s]%s (%d,%d %dx%d) clk=%d vis=%d en=%d", d * 2, "", n->getClassName().c_str(),
+                 label.c_str(), state.c_str(), b.left, b.top, b.width, b.height,
                  n->isClickable(), n->isVisibleToUser(), n->isEnabled());
             for (int i = 0; i < n->getChildCount(); i++) dump(n->getChild(i), d + 1);
         };
@@ -722,9 +802,13 @@ void UiAutoTest::scriptNext() {
 
     AccessibilityNodeInfo* node = findOne(cmd);
     if (cmd.verb == "wait") {
-        if (node != nullptr) {
+        // Until.hasObject with criteria: a node that exists but fails the
+        // predicates keeps polling like a not-yet-arrived one.
+        std::string why;
+        const bool satisfied = node != nullptr && checkNodeProperties(node, cmd.args, why);
+        if (node != nullptr) node->recycle();
+        if (satisfied) {
             LOGI("SCRIPT %zu wait %s -> FOUND", lineNo, cmd.selector.c_str());
-            node->recycle();
             mScriptIndex++;
             stepHandler().post([this]() { scriptNext(); });
         } else if (cmd.timeoutMs > 0) {
@@ -732,18 +816,48 @@ void UiAutoTest::scriptNext() {
             mScript[mScriptIndex].timeoutMs -= 250;
             stepHandler().postDelayed([this]() { scriptNext(); }, 250);
         } else {
-            LOGE("SCRIPT %zu wait %s -> TIMEOUT (FAIL)", lineNo, cmd.selector.c_str());
+            LOGE("SCRIPT %zu wait %s -> TIMEOUT%s (FAIL)", lineNo, cmd.selector.c_str(),
+                 why.empty() ? "" : (" (" + why + ")").c_str());
             mScriptFails++;
             mScriptIndex++;
             stepHandler().post([this]() { scriptNext(); });
         }
         return;
     }
+    if (cmd.verb == "wait-absent") {
+        // Until.gone: poll until no match remains (a menu that dismisses on
+        // selection, a dialog that closes) — the inverse budget of wait.
+        if (node == nullptr) {
+            LOGI("SCRIPT %zu wait-absent %s -> GONE", lineNo, cmd.selector.c_str());
+            mScriptIndex++;
+            stepHandler().post([this]() { scriptNext(); });
+        } else {
+            node->recycle();
+            if (cmd.timeoutMs > 0) {
+                mScript[mScriptIndex].timeoutMs -= 250;
+                stepHandler().postDelayed([this]() { scriptNext(); }, 250);
+            } else {
+                LOGE("SCRIPT %zu wait-absent %s -> STILL PRESENT (FAIL)",
+                     lineNo, cmd.selector.c_str());
+                mScriptFails++;
+                mScriptIndex++;
+                stepHandler().post([this]() { scriptNext(); });
+            }
+        }
+        return;
+    }
     if (cmd.verb == "assert") {
-        const bool ok = node != nullptr;
-        LOGI("SCRIPT %zu assert %s -> %s", lineNo, cmd.selector.c_str(), ok ? "OK" : "FAIL");
+        // check(matches(...)): absent fails, and so does any predicate that
+        // does not hold — the reason lands in the log for free.
+        std::string why = "not found";
+        bool ok = false;
+        if (node != nullptr) {
+            ok = checkNodeProperties(node, cmd.args, why);
+            node->recycle();
+        }
+        LOGI("SCRIPT %zu assert %s -> %s%s", lineNo, cmd.selector.c_str(),
+             ok ? "OK" : "FAIL", ok ? "" : (" (" + why + ")").c_str());
         if (!ok) mScriptFails++;
-        if (node) node->recycle();
         mScriptIndex++;
         stepHandler().post([this]() { scriptNext(); });
         return;

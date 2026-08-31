@@ -303,4 +303,8 @@ void AbsSpinner::requestLayout() {
         AdapterView::requestLayout();
     }
 }
+
+std::string AbsSpinner::getAccessibilityClassName()const{
+    return "AbsSpinner";
+}
 }

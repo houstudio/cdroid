@@ -1290,6 +1290,19 @@ void ProgressBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInf
                     getProgress());
         info.setRangeInfo(rangeInfo);
     }
+    /*AOSP android-36 also swaps in RangeInfo.INDETERMINATE for the
+      indeterminate case behind the (default-off) indeterminateRangeInfo
+      flag — flag-off semantics: no range info, as here.*/
+
+    // Only set the default state description when the custom one is unset
+    // (AOSP compares getStateDescription() == null; empty means unset here).
+    if (getStateDescription().empty()) {
+        if (isIndeterminate()) {
+            info.setStateDescription(getResources().getString(R::string::in_progress));
+        } else {
+            info.setStateDescription(formatStateDescription(mProgress));
+        }
+    }
 }
 
 }//end namespace

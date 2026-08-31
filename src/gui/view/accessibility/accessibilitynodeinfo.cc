@@ -802,6 +802,15 @@ void AccessibilityNodeInfo::setTooltipText(const std::string& tooltipText) {
     mTooltipText = tooltipText;
 }
 
+std::string AccessibilityNodeInfo::getStateDescription() const{
+    return mStateDescription;
+}
+
+void AccessibilityNodeInfo::setStateDescription(const std::string& stateDescription) {
+    enforceNotSealed();
+    mStateDescription = stateDescription;
+}
+
 void AccessibilityNodeInfo::setLabelFor(View* labeled) {
     setLabelFor(labeled, AccessibilityNodeProvider::HOST_VIEW_ID);
 }
@@ -1069,6 +1078,10 @@ void AccessibilityNodeInfo::writeToParcelNoRecycle(Parcel parcel, int flags) {
         nonDefaultFields |= bitAt(fieldIndex);
     }
     fieldIndex++;
+    if (mStateDescription!=DEFAULT.mStateDescription) {
+        nonDefaultFields |= bitAt(fieldIndex);
+    }
+    fieldIndex++;
     if (mViewIdResourceName!=DEFAULT.mViewIdResourceName) {
         nonDefaultFields |= bitAt(fieldIndex);
     }
@@ -1190,6 +1203,7 @@ void AccessibilityNodeInfo::writeToParcelNoRecycle(Parcel parcel, int flags) {
     }
     if (isBitSet(nonDefaultFields, fieldIndex++)) parcel.writeCharSequence(mPaneTitle);
     if (isBitSet(nonDefaultFields, fieldIndex++)) parcel.writeCharSequence(mTooltipText);
+    if (isBitSet(nonDefaultFields, fieldIndex++)) parcel.writeCharSequence(mStateDescription);
 
     if (isBitSet(nonDefaultFields, fieldIndex++)) parcel.writeString(mViewIdResourceName);
 
@@ -1255,6 +1269,7 @@ void AccessibilityNodeInfo::init(const AccessibilityNodeInfo& other) {
     mContentDescription = other.mContentDescription;
     mPaneTitle = other.mPaneTitle;
     mTooltipText = other.mTooltipText;
+    mStateDescription = other.mStateDescription;
     mViewIdResourceName = other.mViewIdResourceName;
 
     mActions.clear();
@@ -1371,6 +1386,7 @@ void AccessibilityNodeInfo::initFromParcel(Parcel parcel) {
     }
     if (isBitSet(nonDefaultFields, fieldIndex++)) mPaneTitle = parcel.readCharSequence();
     if (isBitSet(nonDefaultFields, fieldIndex++)) mTooltipText = parcel.readCharSequence();
+    if (isBitSet(nonDefaultFields, fieldIndex++)) mStateDescription = parcel.readCharSequence();
     if (isBitSet(nonDefaultFields, fieldIndex++)) mViewIdResourceName = parcel.readString();
 
     if (isBitSet(nonDefaultFields, fieldIndex++)) mTextSelectionStart = parcel.readInt();
@@ -1615,6 +1631,7 @@ std::string AccessibilityNodeInfo::toString() {
     builder<<"; maxTextLength: "<<mMaxTextLength;
     builder<<"; contentDescription: "<<mContentDescription;
     builder<<"; tooltipText: "<<mTooltipText;
+    builder<<"; stateDescription: "<<mStateDescription;
     builder<<"; viewIdResName: "<<mViewIdResourceName;
 
     builder<<"; checkable: "<<isCheckable();
@@ -1803,6 +1820,9 @@ std::string AccessibilityNodeInfo::AccessibilityAction::toString() const{
 ////////////public static final class RangeInfo {
 
 Pools::SimplePool<AccessibilityNodeInfo::RangeInfo> AccessibilityNodeInfo::RangeInfo::sPool(AccessibilityNodeInfo::RangeInfo::MAX_POOL_SIZE);
+
+AccessibilityNodeInfo::RangeInfo AccessibilityNodeInfo::RangeInfo::INDETERMINATE(
+        AccessibilityNodeInfo::RangeInfo::RANGE_TYPE_INDETERMINATE, 0.0f, 0.0f, 0.0f);
 
 AccessibilityNodeInfo::RangeInfo* AccessibilityNodeInfo::RangeInfo::obtain(const RangeInfo& other) {
     return obtain(other.mType, other.mMin, other.mMax, other.mCurrent);

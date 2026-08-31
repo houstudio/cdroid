@@ -24,4 +24,6 @@ set(CONTENT_SOURCES
     content/dateformat.cc
     content/dateformatsymbols.cc
     content/simpledateformat.cc
+    # java.text.BreakIterator (ubrk face) — android.view.AccessibilityIterators dep
+    content/breakiterator.cc
 )

@@ -653,3 +653,7 @@ void AdapterViewAnimator::onRestoreInstanceState(Parcelable& state) {
     mWhichChild = ss.whichChild;
     setDisplayedChild(mWhichChild, false);
 }
+
+std::string AdapterViewAnimator::getAccessibilityClassName()const{
+    return "AdapterViewAnimator";
+}

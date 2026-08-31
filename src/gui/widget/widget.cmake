@@ -77,6 +77,8 @@ list(APPEND WIDGET_SOURCES
     widget/ratingbar.cc
     widget/space.cc
     widget/textview.cc
+    # android.widget.AccessibilityIterators (widget half: Line/Page)
+    widget/accessibilityiterators.cc
     widget/editor.cc
     widget/edittext.cc
     widget/textclock.cc

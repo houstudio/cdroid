@@ -381,6 +381,20 @@ public:
     int getSelectionStartTransformed() const;
     int getSelectionEndTransformed() const;
     bool hasSelection()const;
+    // Accessibility text-traversal hooks (android-36 TextView.java:16099+):
+    // iterable text = mText, selection mirrors the real Selection spans, and
+    // LINE/PAGE granularities resolve against the current Layout.
+    std::string getIterableTextForAccessibility()override;
+    TextSegmentIterator* getIteratorForGranularity(int granularity)override;
+    int getAccessibilitySelectionStart()const override;
+    int getAccessibilitySelectionEnd()const override;
+    bool isAccessibilitySelectionExtendable()const override;
+    void setAccessibilitySelection(int start, int end)override;
+    void prepareForExtendedAccessibilitySelection()override;
+private:
+    void requestFocusOnNonEditableSelectableText();
+    void ensureIterableTextForAccessibilitySelectable();
+public:
     bool hasOverlappingRendering()const override;
     std::string getSelectedText()const;
     // Text context menu (align android.R.id.*; Editor.java/TextView.java:15179).
