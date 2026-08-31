@@ -295,7 +295,10 @@ void SpannableString::setSpan(const ParcelableSpan* what, int start, int end, in
         throw std::out_of_range("setSpan starts before 0");
     }
 
-    if (start >= end) return;
+    // Zero-length spans (start == end) are legal and MUST be stored
+    // (SpannableStringInternal.setSpan / checkRange only rejects start > end):
+    // Selection's SELECTION_START/SELECTION_END markers are zero-length, so
+    // dropping them made every Selection on a SpannableString a silent no-op.
 
     for (auto& r : mSpans) {
         if (r.span == what) {

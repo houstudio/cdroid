@@ -238,7 +238,17 @@ uint32_t TypedArray::getResourceId(size_t idx, uint32_t def) const {
 }
 
 std::string TypedArray::getString(size_t idx) const {
-    TypedValue v; if (!get(idx, &v) || v.type != TypedValue::TYPE_STRING) return "";
+    TypedValue v; if (!get(idx, &v)) return "";
+    // AOSP's AssetManager.retrieveAttributes resolves @string/foo references
+    // before the TypedValue reaches Java, so TypedArray.getString returns the
+    // referenced value. CDROID's XmlBlock keeps the raw TYPE_REFERENCE, so
+    // resolve it here (same as getText) — android:contentDescription="@string/…"
+    // and every other string attr read via getString otherwise read as empty.
+    if (v.type == TypedValue::TYPE_REFERENCE || v.type == TypedValue::TYPE_DYNAMIC_REFERENCE) {
+        if (mResources) return mResources->getString((int)v.data);
+        return "";
+    }
+    if (v.type != TypedValue::TYPE_STRING) return "";
     const char16_t* s = nullptr;
     size_t len = 0;
     if (mVals[idx].stringBlock == -2 && mXml) {
