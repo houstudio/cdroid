@@ -110,7 +110,7 @@ std::string formatElapsedTime(std::string* recycle, int64_t elapsedSeconds) {
     }
 #endif
     // No-i18n / engine-miss fallback: the plain "%d:%02d:%02d" / "%02d:%02d".
-    char buf[32];
+    char buf[64];
     if (hours > 0) snprintf(buf, sizeof(buf), "%lld:%02lld:%02lld",
                             (long long)hours, (long long)minutes, (long long)seconds);
     else           snprintf(buf, sizeof(buf), "%02lld:%02lld",
