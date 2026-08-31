@@ -21,6 +21,12 @@ class ScanFragment : public cdroid::fragment::Fragment{
     // make_shared<std::function> self-capture was a reference cycle that leaked (valgrind
     // 80B/blk in ScanFragment::onViewCreated).
     cdroid::Runnable mSweep;
+    // Weak-liveness flag (the PopupWindow/AbsListView mAliveFlag pattern): the sweep's
+    // async re-arm rides MotionLayout's transition-end callback, which can fire after
+    // this fragment — not just its view — is freed; the mScanning bail would then read
+    // the dead fragment. The flag is refcounted with its captured copies and flipped in
+    // onDestroyView, so a stale callback no-ops without touching `this`.
+    std::shared_ptr<bool> mAliveFlag;
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
         cdroid::fragment::Fragment::onCreate(savedInstanceState);
@@ -37,15 +43,16 @@ public:
         cdroid::TextView* status = (cdroid::TextView*)view->findViewById(printerdemo::R::id::scan_status);
         cdroid::Button* btn = (cdroid::Button*)view->findViewById(printerdemo::R::id::btn_scan);
         if(ml && btn && status){
+            mAliveFlag = std::make_shared<bool>(true);
             // The MotionLayout's app:layoutDescription="@xml/scene_scan" loads the <MotionScene> on
             // first measure (MotionLayout::buildScene), registering the scan_start (beam at top) ->
             // scan_end (beam at bottom) transition with the mid-sweep KeyAttribute. transitionToEnd
             // animates top->bottom; on completion snap back to top (setProgressInstant 0) and re-arm
             // via mSweep (member Runnable — recurses through `this`, no heap self-reference).
-            mSweep = [this, ml](){
-                if(!mScanning) return;
-                ml->transitionToEnd([this, ml](){
-                    if(!mScanning) return;          // stopped / fragment gone — don't touch ml
+            mSweep = [this, ml, flag = mAliveFlag](){
+                if(!*flag || !mScanning) return;    // view/fragment gone — flag first (refcounted)
+                ml->transitionToEnd([this, ml, flag](){
+                    if(!*flag || !mScanning) return;  // stopped / fragment gone — don't touch ml
                     ml->setProgressInstant(0.f);    // snap beam back to the top
                     mSweep();                       // sweep again
                 });
@@ -72,6 +79,7 @@ public:
     }
     void onDestroyView() override{
         mScanning = false;   // halt the sweep so any pending callback bails before touching ml
+        if(mAliveFlag) *mAliveFlag = false;   // ... and that bail itself must not read the dead fragment
         cdroid::fragment::Fragment::onDestroyView();
     }
 };
