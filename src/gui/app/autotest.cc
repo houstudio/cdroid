@@ -321,12 +321,13 @@ void UiAutoTest::step() {
                   return ra.left < rb.left;
               });
     if (mClickables.empty()) {
-        // A window with no a11y targets (e.g. a menu PopupWindow whose items
-        // are not exposed as clickable) would loop here silently forever —
+        // A window with no a11y targets would loop here silently forever —
         // escape it the way a screen-reader user would: synthesize BACK
-        // after a few empty passes (dismisses the popup; on a bare main
-        // window BACK ends the app, which also terminates a sweep that has
-        // nothing left to test).
+        // after a few empty passes (dismisses a target-less popup; on a bare
+        // main window BACK ends the app, which also terminates a sweep that
+        // has nothing left to test). Menu popups are NOT such a window:
+        // AbsListView's ListItemAccessibilityDelegate exposes their items
+        // as clickable (verified on printerdemo's language PopupMenu).
         if (++mEmptySteps >= 3) {
             mEmptySteps = 0;
             if (++mEscapeRounds > 3) {

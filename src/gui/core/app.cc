@@ -314,6 +314,7 @@ App::~App(){
 
 void App::onInit(){
     LOGD("onInit");
+    InputInit();
     GFXInit();
     mDisplayMetrics.setToDefaults();
     // Locate a shared pak (cdroid.pak / widgetex.pak): data path first, then
