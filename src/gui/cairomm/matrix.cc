@@ -134,10 +134,17 @@ void Matrix::transform_rectangle(Rectangle& io)const{
 void Matrix::transform_rectangle(RectangleInt& io)const{
     Rectangle tmp = {(double)io.x,(double)io.y,(double)io.width,(double)io.height};
     transform_rectangle(tmp);
-    io.x = std::floor(tmp.x);
-    io.y = std::floor(tmp.y);
-    io.width = std::ceil(tmp.width);
-    io.height= std::ceil(tmp.height);
+    // Bounding box of the mapped rect: floor the min edge, ceil the max edge
+    // (matches AOSP ViewGroup.invalidateChild's floor/ceil on the mapped RectF).
+    // ceil()-ing the *size* instead of the max edge loses the trailing pixel
+    // whenever frac(max) <= frac(min) -- transformed views then leave 1px
+    // trailing-edge ghosts that no later dirty rect ever covers.
+    const int left = (int)std::floor(tmp.x);
+    const int top  = (int)std::floor(tmp.y);
+    io.width  = (int)std::ceil(tmp.x + tmp.width)  - left;
+    io.height = (int)std::ceil(tmp.y + tmp.height) - top;
+    io.x = left;
+    io.y = top;
 }
 
 } // namespace Cairo
