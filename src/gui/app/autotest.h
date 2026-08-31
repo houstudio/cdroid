@@ -58,9 +58,10 @@ private:
 
     // --- script mode ---
     struct Command {
-        std::string verb;        // wait/click/assert/assert-absent/dump/sleep/back
+        std::string verb;        // wait/click/long-click/scroll/set-progress/set-text/tap/perform/assert/assert-absent/dump/sleep/back
         bool byText = true;      // selector kind: text= / id=
         std::string selector;
+        std::vector<std::string> args;  // verb payload: value / direction / key=value pairs
         long timeoutMs = 3000;   // wait poll budget
         int line = 0;             // source line (error reporting)
     };

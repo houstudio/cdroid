@@ -7,12 +7,19 @@
 #include <core/windowmanager.h>
 #include <core/tokenizer.h>
 #include <widget/cdwindow.h>   // Window (createAccessibilityNodeInfo, TYPE_SYSTEM_WINDOW)
+#include <widget/internal_R.h>   // R::id::accessibilityAction* (frozen framework ids)
 #include <view/accessibility/accessibilityevent.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
 #include <view/accessibility/accessibilitymanager.h>   // getActiveApplicationWindow
 #include <accessibilityservice/accessibilityservice.h>   // GLOBAL_ACTION_BACK
+#include <view/motionevent.h>
+#include <core/inputdevice.h>   // SOURCE_TOUCHSCREEN
+#include <core/bundle.h>
 #include <porting/cdlog.h>
 #include <algorithm>
+#include <cstdlib>
+#include <cstring>
+#include <strings.h>   // strcasecmp (argument-key tail matching)
 #include <sstream>
 #include <functional>
 
@@ -20,11 +27,165 @@ namespace cdroid {
 
 namespace {
 constexpr int kMaxDepth = 16;
+// InteractionController.REGULAR_CLICK_LENGTH: the press duration between an
+// injected DOWN and UP (legacy uiautomator sleeps it on its own thread; the
+// driver runs on the UI thread, so the UP is posted instead).
+constexpr long REGULAR_CLICK_LENGTH = 100;
 // A standing handler: the posted steps must outlive each call frame (the
 // cdwindow teardown-post idiom — a temporary Handler can drop them).
 Handler& stepHandler() {
     static Handler sHandler(Looper::getMainLooper());
     return sHandler;
+}
+
+/** Whether the node advertises the action id in its action list. */
+bool advertises(AccessibilityNodeInfo* node, int actionId) {
+    for (AccessibilityNodeInfo::AccessibilityAction* a : node->getActionList()) {
+        if (a->getId() == actionId) return true;
+    }
+    return false;
+}
+
+/** Nearest self-or-ancestor node that advertises actionId — a selector match
+ *  is often a label TextView while the action lives on the widget (the same
+ *  ancestor-walk the click verb does on isClickable). Returns nullptr when
+ *  nobody up the chain advertises it. `node` itself is never recycled;
+ *  intermediate nodes are; the caller owns the result (and `node`). */
+AccessibilityNodeInfo* resolveByAction(AccessibilityNodeInfo* node, int actionId) {
+    AccessibilityNodeInfo* cur = node;
+    while (cur != nullptr) {
+        if (advertises(cur, actionId)) return cur;
+        AccessibilityNodeInfo* parent = cur->getParent();
+        if (cur != node) cur->recycle();
+        cur = parent;
+    }
+    return nullptr;
+}
+
+// The standard accessibility actions by name — every AccessibilityNodeInfo
+// legacy constant and R::id singleton of the android-36 surface (no
+// CDROID-invented actions). The perform verb resolves names through this
+// table: the passthrough equivalent of UiObject2.performAction(action, bundle).
+const std::map<std::string, int>& standardActionTable() {
+    typedef AccessibilityNodeInfo ANI;
+    namespace R = cdroid::internal::R;
+    static const std::map<std::string, int> table = {
+        // (int) casts: the legacy constexpr action ids are ODR-used by the
+        // map's forwarding-reference initializers otherwise (no definition).
+        {"focus", (int)ANI::ACTION_FOCUS},
+        {"clear-focus", (int)ANI::ACTION_CLEAR_FOCUS},
+        {"select", (int)ANI::ACTION_SELECT},
+        {"clear-selection", (int)ANI::ACTION_CLEAR_SELECTION},
+        {"click", (int)ANI::ACTION_CLICK},
+        {"long-click", (int)ANI::ACTION_LONG_CLICK},
+        {"accessibility-focus", (int)ANI::ACTION_ACCESSIBILITY_FOCUS},
+        {"clear-accessibility-focus", (int)ANI::ACTION_CLEAR_ACCESSIBILITY_FOCUS},
+        {"next-at-movement-granularity", (int)ANI::ACTION_NEXT_AT_MOVEMENT_GRANULARITY},
+        {"previous-at-movement-granularity", (int)ANI::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY},
+        {"next-html-element", (int)ANI::ACTION_NEXT_HTML_ELEMENT},
+        {"previous-html-element", (int)ANI::ACTION_PREVIOUS_HTML_ELEMENT},
+        {"scroll-forward", (int)ANI::ACTION_SCROLL_FORWARD},
+        {"scroll-backward", (int)ANI::ACTION_SCROLL_BACKWARD},
+        {"copy", (int)ANI::ACTION_COPY},
+        {"paste", (int)ANI::ACTION_PASTE},
+        {"cut", (int)ANI::ACTION_CUT},
+        {"set-selection", (int)ANI::ACTION_SET_SELECTION},
+        {"expand", (int)ANI::ACTION_EXPAND},
+        {"collapse", (int)ANI::ACTION_COLLAPSE},
+        {"dismiss", (int)ANI::ACTION_DISMISS},
+        {"set-text", (int)ANI::ACTION_SET_TEXT},
+        {"show-on-screen", R::id::accessibilityActionShowOnScreen},
+        {"scroll-to-position", R::id::accessibilityActionScrollToPosition},
+        {"scroll-up", R::id::accessibilityActionScrollUp},
+        {"scroll-left", R::id::accessibilityActionScrollLeft},
+        {"scroll-down", R::id::accessibilityActionScrollDown},
+        {"scroll-right", R::id::accessibilityActionScrollRight},
+        {"context-click", R::id::accessibilityActionContextClick},
+        {"set-progress", R::id::accessibilityActionSetProgress},
+        {"move-window", R::id::accessibilityActionMoveWindow},
+        {"page-up", R::id::accessibilityActionPageUp},
+        {"page-down", R::id::accessibilityActionPageDown},
+        {"page-left", R::id::accessibilityActionPageLeft},
+        {"page-right", R::id::accessibilityActionPageRight},
+        {"show-tooltip", R::id::accessibilityActionShowTooltip},
+        {"hide-tooltip", R::id::accessibilityActionHideTooltip},
+        {"press-and-hold", R::id::accessibilityActionPressAndHold},
+        {"ime-enter", R::id::accessibilityActionImeEnter},
+        {"drag-start", R::id::accessibilityActionDragStart},
+        {"drag-drop", R::id::accessibilityActionDragDrop},
+        {"drag-cancel", R::id::accessibilityActionDragCancel},
+        {"show-text-suggestions", R::id::accessibilityActionShowTextSuggestions},
+        {"scroll-in-direction", R::id::accessibilityActionScrollInDirection},
+    };
+    return table;
+}
+
+// The standard ACTION_ARGUMENT_* keys with their canonical types (the
+// perform verb types its key=value payload from this table — android-36).
+struct ArgSpec {
+    const char* key;
+    enum Type { Int, Float, Boolean, String } type;
+};
+const std::vector<ArgSpec>& standardArgumentTable() {
+    typedef AccessibilityNodeInfo ANI;
+    static const std::vector<ArgSpec> table = {
+        {ANI::ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT, ArgSpec::Int},
+        {ANI::ACTION_ARGUMENT_HTML_ELEMENT_STRING, ArgSpec::String},
+        {ANI::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN, ArgSpec::Boolean},
+        {ANI::ACTION_ARGUMENT_SELECTION_START_INT, ArgSpec::Int},
+        {ANI::ACTION_ARGUMENT_SELECTION_END_INT, ArgSpec::Int},
+        {ANI::ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, ArgSpec::String},
+        {ANI::ACTION_ARGUMENT_ROW_INT, ArgSpec::Int},
+        {ANI::ACTION_ARGUMENT_COLUMN_INT, ArgSpec::Int},
+        {ANI::ACTION_ARGUMENT_PROGRESS_VALUE, ArgSpec::Float},
+        {ANI::ACTION_ARGUMENT_MOVE_WINDOW_X, ArgSpec::Int},
+        {ANI::ACTION_ARGUMENT_MOVE_WINDOW_Y, ArgSpec::Int},
+        {ANI::ACTION_ARGUMENT_SCROLL_AMOUNT_FLOAT, ArgSpec::Float},
+    };
+    return table;
+}
+
+/** Builds the perform-verb arguments Bundle from "key=value" tokens. Keys
+ *  accept the full AOSP constant or its distinctive tail ("progress_value",
+ *  "selection_start_int" — matched case-insensitively against the constant's
+ *  end, on a '_'/'.' word boundary). Returns false (with reason) on an
+ *  unknown key or a malformed token — silently guessing a type would
+ *  misdeliver the action. */
+bool buildArguments(const std::vector<std::string>& tokens, Bundle& out, std::string& error) {
+    for (const std::string& token : tokens) {
+        const size_t eq = token.find('=');
+        if (eq == std::string::npos) {
+            error = "expected key=value, got '" + token + "'";
+            return false;
+        }
+        const std::string key = token.substr(0, eq);
+        const std::string value = token.substr(eq + 1);
+        const ArgSpec* spec = nullptr;
+        for (const ArgSpec& s : standardArgumentTable()) {
+            const size_t klen = strlen(s.key);
+            if (key.size() > klen) continue;
+            if (strcasecmp(s.key + klen - key.size(), key.c_str()) != 0) continue;
+            // Word boundary before the matched tail (a mid-word hit like
+            // "ress_value" must not count).
+            if (key.size() < klen) {
+                const char boundary = s.key[klen - key.size() - 1];
+                if (boundary != '_' && boundary != '.' && boundary != '/') continue;
+            }
+            spec = &s;
+            break;
+        }
+        if (spec == nullptr) {
+            error = "unknown argument key '" + key + "'";
+            return false;
+        }
+        switch (spec->type) {
+        case ArgSpec::Int:      out.putInt(spec->key, atoi(value.c_str())); break;
+        case ArgSpec::Float:    out.putFloat(spec->key, strtof(value.c_str(), nullptr)); break;
+        case ArgSpec::Boolean:  out.putBoolean(spec->key, value == "true" || value == "1"); break;
+        case ArgSpec::String:   out.putString(spec->key, value); break;
+        }
+    }
+    return true;
 }
 } // namespace
 
@@ -69,7 +230,13 @@ void UiAutoTest::stop() {
 
 void UiAutoTest::collectClickable(AccessibilityNodeInfo* node, int depth) {
     if (node == nullptr || depth > kMaxDepth) return;
-    if (node->isVisibleToUser() && node->isClickable() && node->isEnabled()) {
+    // Progress ranges (SeekBar & friends) are not clickable — AOSP drives
+    // them with ACTION_SET_PROGRESS / the SCROLL_* actions AbsSeekBar
+    // advertises, so collect nodes advertising SET_PROGRESS as targets too
+    // (a click-only sweep could never move them).
+    if (node->isVisibleToUser() && node->isEnabled()
+            && (node->isClickable()
+                || advertises(node, cdroid::internal::R::id::accessibilityActionSetProgress))) {
         mClickables.push_back(node);
         // Keep descending anyway: a clickable CONTAINER (fragment roots often
         // carry clickable=true) still holds independent child targets —
@@ -262,6 +429,40 @@ void UiAutoTest::step() {
     const std::string label = target->getText().empty()
             ? targetLabel(target) : target->getText();
 
+    // Non-clickable targets are progress ranges (the only other kind the
+    // sweep collects). Drive them with the SCROLL_* action the node itself
+    // advertises — AbsSeekBar adds SCROLL_FORWARD while progress < max and
+    // SCROLL_BACKWARD while progress > min, so the advertised set picks the
+    // direction and the walk ping-pongs at the ends — and verify the
+    // deferred TYPE_VIEW_SELECTED ProgressBar schedules on user progress
+    // changes (AOSP uiautomator drives seek bars exactly this way when it
+    // is not injecting a tap gesture).
+    if (!target->isClickable()) {
+        const int seekAction = advertises(target, AccessibilityNodeInfo::ACTION_SCROLL_FORWARD)
+                ? AccessibilityNodeInfo::ACTION_SCROLL_FORWARD
+                : AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD;
+        target->performAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+        AccessibilityEvent* hit = automation.executeAndWaitForEvent(
+            [target, seekAction]() { target->performAction(seekAction); },
+            [](AccessibilityEvent& e) {
+                return e.getEventType() == AccessibilityEvent::TYPE_VIEW_SELECTED; },
+            1500);
+        LOGI("AUTOTEST [%d] %2zu/%zu [%s] -> %s (seek)", mStepCount,
+             idx + 1, mClickables.size(), label.c_str(), hit ? "PASS" : "no-event");
+        if (hit) {
+            hit->recycle();
+            if (mRecord.is_open()) {
+                // No click replay for a seek target — the recorder grammar
+                // has one verb per activation and this was a scroll.
+                mRecord << "# step " << mStepCount << ": " << target->getClassName()
+                        << " — seek target (scroll action), no click verb\n";
+                mRecord.flush();
+            }
+        }
+        stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
+        return;
+    }
+
     // AOSP ACTION_FOCUS (= requestFocus): a semantic ACTION_CLICK never
     // focuses (performClick doesn't) — without this an editable target could
     // never raise the IME, and the keyboard would stay unswept. Focus the
@@ -344,6 +545,22 @@ bool UiAutoTest::scrollOnce(AccessibilityNodeInfo* root) {
 // Line-based DSL ('#' comments; whitespace-separated):
 //   wait   text=登录 3000     poll until a matching node exists (default 3000ms)
 //   click  text=登录          highlight + semantic click, wait VIEW_CLICKED
+//   long-click text=行        ACTION_LONG_CLICK, wait TYPE_VIEW_LONG_CLICKED
+//   scroll text=列表 forward  ACTION_SCROLL_FORWARD/BACKWARD on the matched
+//                             node (backward at the list end)
+//   set-progress text=音量 75 UiObject2.setProgress: ACTION_SET_PROGRESS with
+//                             ARGUMENT_PROGRESS_VALUE — the standard way to
+//                             drive a SeekBar/ProgressBar
+//   set-text text=框 hello    ACTION_SET_TEXT with ARGUMENT_SET_TEXT
+//   tap    text=滑条          the gesture wheel: an injected coordinate tap
+//                             (DOWN + UP after 100ms) through the input
+//                             pipeline, uiautomator's actual click; a tap on
+//                             a SeekBar seeks to that position (tap-to-seek)
+//   perform text=x <action> [key=value ...]
+//                             UiObject2.performAction(action, bundle): any
+//                             standard a11y action by name (focus, copy,
+//                             expand, page-up, scroll-up, press-and-hold …),
+//                             typed arguments by the standard key table
 //   assert text=欢迎          fail if no match RIGHT NOW
 //   assert-absent text=错误   fail if a match exists
 //   dump   [file.log]         append the on-screen tree (stdout when empty)
@@ -421,8 +638,13 @@ bool UiAutoTest::parseScript(const std::string& path) {
         else if (sel.rfind("id=", 0) == 0) { cmd.byText = false; cmd.selector = sel.substr(3); stripQuotes(cmd.selector); }
         else { cmd.byText = true; cmd.selector = sel; stripQuotes(cmd.selector); }  // bare == text=
         t->skipDelimiters(" \t\r");
-        if (!t->isEol() && t->peekChar() != '#') {  // optional ms argument
-            cmd.timeoutMs = atol(t->nextToken(" \t\r").c_str());
+        while (!t->isEol() && t->peekChar() != '#') {  // verb payload tokens
+            cmd.args.push_back(t->nextToken(" \t\r"));
+            t->skipDelimiters(" \t\r");
+        }
+        // wait/sleep keep the legacy first-token-is-milliseconds meaning.
+        if ((cmd.verb == "wait" || cmd.verb == "sleep") && !cmd.args.empty()) {
+            cmd.timeoutMs = atol(cmd.args[0].c_str());
         }
         t->nextLine();
         mScript.push_back(cmd);
@@ -570,6 +792,198 @@ void UiAutoTest::scriptNext() {
         if (hit) hit->recycle();
         if (clickTarget != node) clickTarget->recycle();
         node->recycle();
+        mScriptIndex++;
+        stepHandler().post([this]() { scriptNext(); });
+        return;
+    }
+    if (cmd.verb == "long-click") {
+        if (node == nullptr) {
+            LOGE("SCRIPT %zu long-click %s -> NOT FOUND (FAIL)", lineNo, cmd.selector.c_str());
+            mScriptFails++;
+            mScriptIndex++;
+            stepHandler().post([this]() { scriptNext(); });
+            return;
+        }
+        // Same ancestor-walk as click, plus long-clickable itself (AOSP's
+        // ACTION_LONG_CLICK handler gates on isLongClickable).
+        AccessibilityNodeInfo* clickTarget = node;
+        while (!clickTarget->isClickable() && !clickTarget->isLongClickable()) {
+            AccessibilityNodeInfo* parent = clickTarget->getParent();
+            if (parent == nullptr) break;
+            if (clickTarget != node) clickTarget->recycle();
+            clickTarget = parent;
+        }
+        clickTarget->performAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+        AccessibilityEvent* hit = automation.executeAndWaitForEvent(
+            [clickTarget]() { clickTarget->performAction(AccessibilityNodeInfo::ACTION_LONG_CLICK); },
+            [](AccessibilityEvent& e) {
+                return e.getEventType() == AccessibilityEvent::TYPE_VIEW_LONG_CLICKED; },
+            1500);
+        LOGI("SCRIPT %zu long-click %s -> %s", lineNo, cmd.selector.c_str(),
+             hit ? "OK" : "no-event (FAIL)");
+        if (!hit) mScriptFails++;
+        if (hit) hit->recycle();
+        if (clickTarget != node) clickTarget->recycle();
+        node->recycle();
+        mScriptIndex++;
+        stepHandler().post([this]() { scriptNext(); });
+        return;
+    }
+    if (cmd.verb == "scroll") {
+        // ACTION_SCROLL_FORWARD/BACKWARD performed on the node that
+        // advertises it (selector matches are often the row label).
+        const bool forward = cmd.args.empty() || cmd.args[0] != "backward";
+        const int action = forward ? AccessibilityNodeInfo::ACTION_SCROLL_FORWARD
+                                   : AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD;
+        AccessibilityNodeInfo* target = (node == nullptr) ? nullptr
+                : resolveByAction(node, action);
+        const bool ok = target != nullptr && target->performAction(action);
+        LOGI("SCRIPT %zu scroll %s %s -> %s", lineNo, cmd.selector.c_str(),
+             forward ? "forward" : "backward", ok ? "OK" : "FAIL");
+        if (!ok) mScriptFails++;
+        if (target != nullptr && target != node) target->recycle();
+        if (node != nullptr) node->recycle();
+        mScriptIndex++;
+        stepHandler().post([this]() { scriptNext(); });
+        return;
+    }
+    if (cmd.verb == "set-progress") {
+        // UiObject2.setProgress(float): ACTION_SET_PROGRESS with
+        // ARGUMENT_PROGRESS_VALUE — the standard automation way to drive a
+        // SeekBar (AbsSeekBar clamps and notifies with fromUser=true).
+        const float value = cmd.args.empty() ? 0.0f : strtof(cmd.args[0].c_str(), nullptr);
+        AccessibilityNodeInfo* target = (node == nullptr) ? nullptr
+                : resolveByAction(node, cdroid::internal::R::id::accessibilityActionSetProgress);
+        bool ok = false;
+        if (target != nullptr && !cmd.args.empty()) {
+            Bundle arguments;
+            arguments.putFloat(AccessibilityNodeInfo::ACTION_ARGUMENT_PROGRESS_VALUE, value);
+            ok = target->performAction(
+                    cdroid::internal::R::id::accessibilityActionSetProgress, &arguments);
+        }
+        LOGI("SCRIPT %zu set-progress %s -> %g : %s", lineNo, cmd.selector.c_str(),
+             value, ok ? "OK" : "FAIL");
+        if (!ok) mScriptFails++;
+        if (target != nullptr && target != node) target->recycle();
+        if (node != nullptr) node->recycle();
+        mScriptIndex++;
+        stepHandler().post([this]() { scriptNext(); });
+        return;
+    }
+    if (cmd.verb == "set-text") {
+        // ACTION_SET_TEXT with ARGUMENT_SET_TEXT (editors advertise it; the
+        // standard action is performed regardless of CDROID's handler state).
+        std::string value;
+        for (size_t i = 0; i < cmd.args.size(); i++) {
+            if (i > 0) value += ' ';
+            value += cmd.args[i];
+        }
+        AccessibilityNodeInfo* target = (node == nullptr) ? nullptr
+                : resolveByAction(node, AccessibilityNodeInfo::ACTION_SET_TEXT);
+        bool ok = false;
+        if (target != nullptr) {
+            Bundle arguments;
+            arguments.putString(AccessibilityNodeInfo::ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value);
+            ok = target->performAction(AccessibilityNodeInfo::ACTION_SET_TEXT, &arguments);
+        }
+        LOGI("SCRIPT %zu set-text %s -> %s", lineNo, cmd.selector.c_str(), ok ? "OK" : "FAIL");
+        if (!ok) mScriptFails++;
+        if (target != nullptr && target != node) target->recycle();
+        if (node != nullptr) node->recycle();
+        mScriptIndex++;
+        stepHandler().post([this]() { scriptNext(); });
+        return;
+    }
+    if (cmd.verb == "tap") {
+        // The gesture wheel: an injected coordinate tap (DOWN, UP after
+        // REGULAR_CLICK_LENGTH) through the input pipeline — what legacy
+        // uiautomator's click actually is. A tap on a SeekBar seeks to that
+        // position (tap-to-seek); such targets produce no VIEW_CLICKED, so
+        // the filter accepts VIEW_SELECTED/CONTENT_CHANGED too — the exact
+        // set legacy clickAndSync waits on.
+        bool ok = false;
+        if (node != nullptr) {
+            Rect b;
+            node->getBoundsInScreen(b);
+            if (b.width > 0 && b.height > 0) {
+                const float x = b.left + b.width / 2.0f;
+                const float y = b.top + b.height / 2.0f;
+                const nsecs_t downTime = SystemClock::uptimeMillis();
+                MotionEvent* down = MotionEvent::obtain(downTime, downTime,
+                        MotionEvent::ACTION_DOWN, x, y, 0);
+                down->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+                automation.injectInputEvent(*down, true);
+                down->recycle();
+                AccessibilityEvent* hit = automation.executeAndWaitForEvent(
+                    [&automation, x, y, downTime]() {
+                        stepHandler().postDelayed([&automation, x, y, downTime]() {
+                            MotionEvent* up = MotionEvent::obtain(downTime,
+                                    SystemClock::uptimeMillis(), MotionEvent::ACTION_UP, x, y, 0);
+                            up->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+                            automation.injectInputEvent(*up, true);
+                            up->recycle();
+                        }, REGULAR_CLICK_LENGTH);
+                    },
+                    [](AccessibilityEvent& e) {
+                        return e.getEventType() == AccessibilityEvent::TYPE_VIEW_CLICKED
+                                || e.getEventType() == AccessibilityEvent::TYPE_VIEW_SELECTED
+                                || e.getEventType() == AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED; },
+                    1500);
+                ok = hit != nullptr;
+                if (hit) hit->recycle();
+            }
+        }
+        LOGI("SCRIPT %zu tap %s -> %s", lineNo, cmd.selector.c_str(),
+             ok ? "OK" : "no-event (FAIL)");
+        if (!ok) mScriptFails++;
+        if (node != nullptr) node->recycle();
+        mScriptIndex++;
+        stepHandler().post([this]() { scriptNext(); });
+        return;
+    }
+    if (cmd.verb == "perform") {
+        // UiObject2.performAction(action, bundle): any standard action by
+        // name, typed arguments from the standard key table.
+        if (cmd.args.empty()) {
+            LOGE("SCRIPT %zu perform: missing action name (FAIL)", lineNo);
+            mScriptFails++;
+            mScriptIndex++;
+            stepHandler().post([this]() { scriptNext(); });
+            return;
+        }
+        const auto entry = standardActionTable().find(cmd.args[0]);
+        if (entry == standardActionTable().end()) {
+            LOGE("SCRIPT %zu perform: unknown action '%s' (FAIL)", lineNo, cmd.args[0].c_str());
+            mScriptFails++;
+            if (node != nullptr) node->recycle();
+            mScriptIndex++;
+            stepHandler().post([this]() { scriptNext(); });
+            return;
+        }
+        Bundle arguments;
+        std::string argError;
+        if (!buildArguments(std::vector<std::string>(cmd.args.begin() + 1, cmd.args.end()),
+                            arguments, argError)) {
+            LOGE("SCRIPT %zu perform: %s (FAIL)", lineNo, argError.c_str());
+            mScriptFails++;
+            if (node != nullptr) node->recycle();
+            mScriptIndex++;
+            stepHandler().post([this]() { scriptNext(); });
+            return;
+        }
+        const int actionId = entry->second;
+        // Resolve to the node advertising the action when the selector match
+        // is a label child; otherwise perform on the matched node itself
+        // (the raw passthrough — UiObject2 performs on the found object).
+        AccessibilityNodeInfo* target = (node == nullptr) ? nullptr
+                : resolveByAction(node, actionId);
+        if (target == nullptr) target = node;
+        const bool ok = target != nullptr && target->performAction(actionId, &arguments);
+        LOGI("SCRIPT %zu perform %s %s -> %s", lineNo, cmd.args[0].c_str(),
+             cmd.selector.c_str(), ok ? "OK" : "FAIL");
+        if (!ok) mScriptFails++;
+        if (target != node && target != nullptr) target->recycle();
+        if (node != nullptr) node->recycle();
         mScriptIndex++;
         stepHandler().post([this]() { scriptNext(); });
         return;
