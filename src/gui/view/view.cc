@@ -3855,6 +3855,14 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
             if ((mPrivateFlags & PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) {
                 mPrivateFlags &= ~PFLAG_DIRTY_MASK;
                 dispatchDraw(canvas);
+                drawAutofilledHighlight(canvas);
+                // android View.java:24347: the overlay must be drawn on this fast path
+                // too -- without it, views added to a skip-draw host's overlay (e.g.
+                // TransitionUtils.copyViewImage snapshots under Visibility) are never
+                // painted at all.
+                if (mOverlay && !mOverlay->isEmpty()) {
+                    mOverlay->getOverlayView()->draw(canvas);
+                }
             } else {
                 draw(canvas);
             }
@@ -9247,6 +9255,13 @@ ViewOverlay*View::getOverlay(){
     if (mOverlay == nullptr) {
         mOverlay = new ViewOverlay(mContext, this);
         mOverlay->getOverlayView()->setFrame(mLeft,mTop,mRight-mLeft,mBottom-mTop);
+        // android OverlayViewGroup ctor: mAttachInfo = mHostView.mAttachInfo. The host is
+        // usually already attached when its overlay is created lazily, and its
+        // dispatchAttachedToWindow will not fire again -- without this the overlay group
+        // (and views added to it) never get AttachInfo, so their invalidations dead-end
+        // in ViewGroup::invalidateChild's mAttachInfo guard and overlay content is
+        // never repainted.
+        mOverlay->getOverlayView()->mAttachInfo = mAttachInfo;
     }
     return mOverlay;
 }

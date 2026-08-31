@@ -270,14 +270,14 @@ void ViewOverlay::OverlayViewGroup::invalidateParentIfNeeded() {
 ViewGroup* ViewOverlay::OverlayViewGroup::invalidateChildInParent(int* location,Rect& dirty) {
     if (mHostView) {
         dirty.offset(location[0], location[1]);
-        if (dynamic_cast<ViewGroup*>(mHostView)) {
-            location[0] = 0;
-            location[1] = 0;
-            ViewGroup::invalidateChildInParent(location, dirty);
-            return ((ViewGroup*) mHostView)->invalidateChildInParent(location, dirty);
-        } else {
-            invalidate(dirty);
-        }
+        // android continues the parent walk into the host here. CDROID's
+        // ViewGroup::invalidateChild ends that walk by unioning the rect into
+        // getRootView()'s invalid region -- and this group is parentless, so the
+        // union would land in the overlay's own (never-read) region instead of the
+        // window root's. Forward the rect through the host's own invalidation
+        // instead; the overlay exactly covers the host, so host-local ==
+        // overlay-local and the rect needs no further adjustment.
+        mHostView->invalidate(dirty);
     }
     return nullptr;
 }

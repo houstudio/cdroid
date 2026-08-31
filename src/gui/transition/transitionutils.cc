@@ -3,7 +3,7 @@
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
+ * License as published by the Free Software Foundation, either
  * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
@@ -13,16 +13,27 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02101-1301  USA
  *********************************************************************************/
 #include <transition/transitionutils.h>
 
+#include <cmath>
+
 #include <animation/animatorset.h>
 #include <porting/cdlog.h>
+#include <core/canvas.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <view/viewgroupoverlay.h>
+#include <widget/imageview.h>
 
 namespace cdroid {
+
+namespace {
+// android TransitionUtils.MAX_IMAGE_SIZE: snapshots are scaled uniformly down so
+// that width * height stays within this many pixels.
+constexpr int MAX_IMAGE_SIZE = 1024 * 1024;
+} // namespace
 
 Animator* TransitionUtils::mergeAnimators(Animator* animator1, Animator* animator2) {
     if (animator1 == nullptr) {
@@ -36,10 +47,69 @@ Animator* TransitionUtils::mergeAnimators(Animator* animator1, Animator* animato
     }
 }
 
-View* TransitionUtils::copyViewImage(ViewGroup* /*sceneRoot*/, View* /*view*/, ViewGroup* /*parent*/) {
-    // TODO: snapshot the view into an overlay image (deferred — cairo 2D has no DisplayList).
-    LOGW("TransitionUtils::copyViewImage not yet implemented; overlay snapshot skipped");
-    return nullptr;
+View* TransitionUtils::copyViewImage(ViewGroup* sceneRoot, View* view, ViewGroup* parent) {
+    Matrix matrix = Cairo::identity_matrix();
+    matrix.translate(-parent->getScrollX(), -parent->getScrollY());
+    view->transformMatrixToGlobal(matrix);
+    sceneRoot->transformMatrixToLocal(matrix);
+    Cairo::Rectangle bounds = {0.0, 0.0, (double)view->getWidth(), (double)view->getHeight()};
+    matrix.transform_rectangle(bounds);
+    const int left   = (int)lround(bounds.x);
+    const int top    = (int)lround(bounds.y);
+    const int right  = (int)lround(bounds.x + bounds.width);
+    const int bottom = (int)lround(bounds.y + bounds.height);
+
+    // android: ImageView copy with CENTER_CROP; createViewBitmap may hand back a
+    // MAX_IMAGE_SIZE-scaled bitmap, which the scale type maps onto the copy's
+    // measured bounds. The copy is returned even when the bitmap is null.
+    ImageView* copy = new ImageView(view->getContext());
+    copy->setScaleType(CENTER_CROP);
+    Cairo::RefPtr<Cairo::ImageSurface> bitmap = createViewBitmap(view, matrix, bounds, sceneRoot);
+    if (bitmap) {
+        copy->setImageBitmap(bitmap);
+    }
+    const int widthSpec  = MeasureSpec::makeMeasureSpec(right - left, MeasureSpec::EXACTLY);
+    const int heightSpec = MeasureSpec::makeMeasureSpec(bottom - top, MeasureSpec::EXACTLY);
+    copy->measure(widthSpec, heightSpec);
+    copy->layout(left, top, right - left, bottom - top);
+    return copy;
+}
+
+Cairo::RefPtr<Cairo::ImageSurface> TransitionUtils::createViewBitmap(View* view, Matrix& matrix,
+        Cairo::Rectangle& bounds, ViewGroup* sceneRoot) {
+    const bool addToOverlay = !view->isAttachedToWindow();
+    ViewGroup* parent = nullptr;
+    int indexInParent = 0;
+    if (addToOverlay) {
+        if (sceneRoot == nullptr || !sceneRoot->isAttachedToWindow()) {
+            return nullptr;
+        }
+        parent = static_cast<ViewGroup*>(view->getParent());
+        indexInParent = parent->indexOfChild(view);
+        static_cast<ViewGroupOverlay*>(sceneRoot->getOverlay())->add(view);
+    }
+    Cairo::RefPtr<Cairo::ImageSurface> bitmap;
+    const int bitmapWidth  = (int)lround(bounds.width);
+    const int bitmapHeight = (int)lround(bounds.height);
+    if (bitmapWidth > 0 && bitmapHeight > 0) {
+        const float scale = std::min(1.f,
+                ((float)MAX_IMAGE_SIZE) / ((float)bitmapWidth * (float)bitmapHeight));
+        const int scaledWidth  = (int)(bitmapWidth * scale);
+        const int scaledHeight = (int)(bitmapHeight * scale);
+        matrix.translate(-bounds.x, -bounds.y);
+        matrix.scale(scale, scale);
+        // android records a Picture and converts it to a Bitmap; CDROID renders the
+        // view straight into an ARGB32 ImageSurface (the Crossfade snapshot recipe).
+        bitmap = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, scaledWidth, scaledHeight);
+        Canvas canvas(bitmap);
+        canvas.transform(matrix);
+        view->draw(canvas);
+    }
+    if (addToOverlay) {
+        static_cast<ViewGroupOverlay*>(sceneRoot->getOverlay())->remove(view);
+        parent->addView(view, indexInParent);
+    }
+    return bitmap;
 }
 
 } // namespace cdroid

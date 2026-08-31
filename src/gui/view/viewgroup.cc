@@ -1481,6 +1481,11 @@ ViewGroupOverlay* ViewGroup::getOverlay() {
     if (mOverlay == nullptr) {
         mOverlay = new ViewGroupOverlay(mContext, this);
         mOverlay->getOverlayView()->setFrame(mLeft,mTop,mRight-mLeft,mBottom-mTop);
+        // android OverlayViewGroup ctor: mAttachInfo = mHostView.mAttachInfo (see the
+        // matching line in View::getOverlay -- the host is usually already attached
+        // when its overlay is created lazily, so no dispatchAttachedToWindow will
+        // deliver it later).
+        mOverlay->getOverlayView()->mAttachInfo = mAttachInfo;
     }
     return (ViewGroupOverlay*)mOverlay;
 }

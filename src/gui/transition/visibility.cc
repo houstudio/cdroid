@@ -202,6 +202,11 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
     View* overlayView = nullptr;
     View* viewToKeep = nullptr;
     bool reusingOverlayView = false;
+    // android: the copyViewImage snapshot is GC'd after the overlay drops it. C++:
+    // we own exactly the overlay views TransitionUtils::copyViewImage allocated
+    // (borrowed real views stay owned by the app hierarchy) and delete them in the
+    // cleanup paths below, once the overlay has detached them.
+    bool ownsOverlayView = false;
 
     View* savedOverlayView = static_cast<View*>(startView->getTag(R::id::transition_overlay_view_tag));
     if (savedOverlayView != nullptr) {
@@ -242,6 +247,7 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
                 VisibilityInfo parentVisibilityInfo = getVisibilityChangeInfo(startParentValues, endParentValues);
                 if (!parentVisibilityInfo.visibilityChange) {
                     overlayView = TransitionUtils::copyViewImage(sceneRoot, startView, static_cast<ViewGroup*>(startParent));
+                    ownsOverlayView = (overlayView != nullptr);
                 } else {
                     int id = startParent->getId();
                     if (startParent->getParent() == nullptr && id != View::NO_ID
@@ -272,6 +278,7 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
         if (!reusingOverlayView) {
             if (animator == nullptr) {
                 overlay->remove(overlayView);
+                if (ownsOverlayView) delete overlayView;
             } else {
                 startView->setTag(R::id::transition_overlay_view_tag, overlayView);
                 Transition::TransitionListener l;
@@ -285,9 +292,10 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
                         transition.cancel();
                     }
                 };
-                l.onTransitionEnd = [startView, overlay, overlayView](Transition&) {
+                l.onTransitionEnd = [startView, overlay, overlayView, ownsOverlayView](Transition&) {
                     startView->setTag(R::id::transition_overlay_view_tag, nullptr);
                     overlay->remove(overlayView);
+                    if (ownsOverlayView) delete overlayView;
                 };
                 addListener(l);
             }
