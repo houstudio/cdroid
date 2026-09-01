@@ -547,7 +547,16 @@ static void* X11EventProc(void*p) {
         case ClientMessage:
             if ( (Atom) event.xclient.data.l[0] == WM_DELETE_WINDOW) {
                 LOGD("GraphX11.Terminated(WM_DELETE_WINDOW)");
+                // The hal never calls up into the app. Closing the host window
+                // is the desktop's power-off gesture, so behave exactly like
+                // the power button hardware: inject a POWER key pair down the
+                // input pipe (which also wakes the app's event loop) and stop
+                // reading X events. The framework decides what POWER means —
+                // WindowManager::interceptKeyBeforeQueueing answers it with
+                // the orderly Looper::quitSafely exit.
                 xEventRunning = 0;
+                SENDKEY(26/*AKEYCODE_POWER*/,1);
+                SENDKEY(26/*AKEYCODE_POWER*/,0);
             }
             break;
         case UnmapNotify:
