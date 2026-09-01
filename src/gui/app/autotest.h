@@ -75,12 +75,17 @@ private:
     int mStepCount = 0;
     bool mRandomWalk = false;             // Monkey mode (--auto-test=SEED)
     std::mt19937 mRng;                     // seeded in start(); drives idx picks
-    /* Identity of a swept target within a page: class + position. Labels are
-     * excluded — a toggle row's label flips "ON,"/"OFF," on every click, which
-     * would break identity matching from one visit to the next. */
+    /* Identity of a swept target within a page: class + position + the
+     * occurrence ordinal among same-position twins. Labels are excluded — a
+     * toggle row's label flips "ON,"/"OFF," on every click, which would break
+     * identity matching from one visit to the next. The rank disambiguates
+     * STACKED targets (dial-style UIs layer clickables at identical bounds):
+     * without it "find cursor, take next" always hits the first twin and the
+     * sweep pins on one node forever (hauswirt's "2/11" 40-click loop). */
     struct TargetKey {
         std::string cls;
         int left = 0, top = 0;
+        int rank = 0;  // Nth node with this cls+left+top in the sorted snapshot
     };
     /* Last-clicked target per PAGE, keyed by a signature of the page's clickable
      * set (classes + geometry), NOT by Window*: apps swap pages inside one window
@@ -88,6 +93,13 @@ private:
      * page and its detail page share one slot — each overwrites the other's
      * target, neither ever matches, and the sweep ping-pongs on item 1 of both
      * pages forever. */
+    /** Index AFTER the node matching key (cls+left+top+rank) in the sorted
+     *  snapshot, wrapping to 0 past the end; SIZE_MAX when the identity is
+     *  not present. Falls back to the first occurrence when the stored rank
+     *  no longer exists (twins left the snapshot between steps). */
+    static size_t advancePastIdentity(const std::vector<AccessibilityNodeInfo*>& nodes,
+            const TargetKey& key);
+
     std::map<std::string, TargetKey> mPageCursor;
     /* The identity touched on the previous step — the resume anchor when the
      * next snapshot is an unknown page (see step()): shared chrome (tab strips)
@@ -95,6 +107,10 @@ private:
      * strip in one pass instead of resetting to the first item. */
     TargetKey mLastClicked;
     bool mLastClickedValid = false;
+    /* Pin-breaker: consecutive steps that chose the SAME target identity.
+     * A correct cursor advance never repeats (it takes the item AFTER the
+     * cursor); repeats mean identity collision or a self-reverting control. */
+    int mPinStreak = 0;
     Window* mLastActiveWindow = nullptr;  // follow navigation: new window, new snapshot
     size_t mStepsSinceScroll = 0;         // one scroll per full click cycle
     int mScrollExhausted = 0;             // consecutive failed forward scrolls

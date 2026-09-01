@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <app/autotest.h>
 #include <app/uiautomation.h>
 #include <core/looper.h>
@@ -323,6 +324,28 @@ std::string targetLabel(AccessibilityNodeInfo* node, int depth = 0) {
 }
 } // namespace
 
+// static
+size_t UiAutoTest::advancePastIdentity(const std::vector<AccessibilityNodeInfo*>& nodes,
+        const TargetKey& key) {
+    size_t seen = 0;
+    size_t fallback = SIZE_MAX;
+    for (size_t i = 0; i < nodes.size(); i++) {
+        Rect b; nodes[i]->getBoundsInScreen(b);
+        if (nodes[i]->getClassName() == key.cls
+                && b.left == key.left && b.top == key.top) {
+            if (fallback == SIZE_MAX) fallback = i;
+            if ((int)seen == key.rank) {
+                return (i + 1) % nodes.size();
+            }
+            seen++;
+        }
+    }
+    if (fallback != SIZE_MAX) {
+        return (fallback + 1) % nodes.size();
+    }
+    return SIZE_MAX;
+}
+
 void UiAutoTest::step() {
     if (!mRunning) return;
     UiAutomation& automation = UiAutomation::getInstance();
@@ -444,15 +467,8 @@ void UiAutoTest::step() {
         bool cursorHit = false;
         auto cursorIt = mPageCursor.find(pageSig);
         if (cursorIt != mPageCursor.end()) {
-            for (size_t i = 0; i < mClickables.size(); i++) {
-                Rect b; mClickables[i]->getBoundsInScreen(b);
-                if (mClickables[i]->getClassName() == cursorIt->second.cls
-                        && b.left == cursorIt->second.left && b.top == cursorIt->second.top) {
-                    idx = (i + 1) % mClickables.size();
-                    cursorHit = true;
-                    break;
-                }
-            }
+            idx = advancePastIdentity(mClickables, cursorIt->second);
+            cursorHit = (idx != SIZE_MAX);
         }
         if (!cursorHit && mLastClickedValid) {
             // Unknown page (first visit, or the cursor identity left the
@@ -462,24 +478,40 @@ void UiAutoTest::step() {
             // advances one tab per step in a single pass, instead of every
             // navigation resetting the walk to the first tab (widgetsDemo
             // spent whole rounds up in the strip otherwise).
-            for (size_t i = 0; i < mClickables.size(); i++) {
-                Rect b; mClickables[i]->getBoundsInScreen(b);
-                if (mClickables[i]->getClassName() == mLastClicked.cls
-                        && b.left == mLastClicked.left && b.top == mLastClicked.top) {
-                    idx = (i + 1) % mClickables.size();
-                    break;
-                }
-            }
+            const size_t resumed = advancePastIdentity(mClickables, mLastClicked);
+            if (resumed != SIZE_MAX) idx = resumed;
+        }
+        // Pin-breaker: the cursor advance NEVER re-picks the item it stored
+        // last step unless identities collide (stacked twins) or the control
+        // re-creates itself at the same place. A few repeats are tolerated;
+        // a longer streak means the sweep is nailed to one node — hop over
+        // it instead of testing it forever (hauswirt main page pinned 40+).
+        if (mPinStreak >= 4) {
+            LOGW("AUTOTEST target pinned %d steps — skipping one ahead", mPinStreak);
+            idx = (idx + 1) % mClickables.size();
+            mPinStreak = 0;
         }
     }
     AccessibilityNodeInfo* target = mClickables.at(idx);
     if (!mRandomWalk) {
         // Remember the target we are ABOUT to click, so the next visit to this
         // page resumes after it — and an unknown next page resumes after the
-        // same identity (mLastClicked).
+        // same identity (mLastClicked). rank = how many earlier nodes in this
+        // sorted snapshot share the identity (stacked-twin disambiguation).
         Rect tb; target->getBoundsInScreen(tb);
-        mPageCursor[pageSig] = { target->getClassName(), tb.left, tb.top };
-        mLastClicked = { target->getClassName(), tb.left, tb.top };
+        TargetKey key{target->getClassName(), tb.left, tb.top, 0};
+        for (size_t i = 0; i < idx; i++) {
+            Rect b; mClickables[i]->getBoundsInScreen(b);
+            if (mClickables[i]->getClassName() == key.cls
+                    && b.left == key.left && b.top == key.top) {
+                key.rank++;
+            }
+        }
+        mPinStreak = (mLastClickedValid && key.cls == mLastClicked.cls
+                && key.left == mLastClicked.left && key.top == mLastClicked.top
+                && key.rank == mLastClicked.rank) ? mPinStreak + 1 : 0;
+        mPageCursor[pageSig] = key;
+        mLastClicked = key;
         mLastClickedValid = true;
     }
     const std::string label = target->getText().empty()
