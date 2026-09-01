@@ -92,6 +92,11 @@ public:
     void sendToBack(Window*w);
     void bringToFront(Window*w);
     void processEvent(InputEvent&e);
+private:
+    /** PhoneWindowManager.interceptKeyBeforeQueueing: system keys consumed
+     *  by policy before any window sees them. True = consumed (drop). */
+    bool interceptKeyBeforeQueueing(KeyEvent& event);
+public:
     void clip(Window*win);
     int enumWindows(WNDENUMPROC cbk);
     int getWindows(std::vector<Window*>&);

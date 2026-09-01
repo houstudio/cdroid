@@ -17,6 +17,7 @@
  *********************************************************************************/
 
 #include <core/app.h>
+#include <core/looper.h>
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
 #include <core/graphdevice.h>
@@ -381,6 +382,10 @@ int WindowManager::getVisibleWindows(std::vector<Window*>&wins){
 }
 
 void WindowManager::processEvent(InputEvent&e){
+   if(e.getType()==InputEvent::INPUT_EVENT_TYPE_KEY
+           && interceptKeyBeforeQueueing((KeyEvent&)e)){
+       return;   // consumed by system policy — never routed to a window
+   }
    switch(e.getType()){
    case InputEvent::INPUT_EVENT_TYPE_KEY: onKeyEvent((KeyEvent&)e); break;
    case InputEvent::INPUT_EVENT_TYPE_MOTION: onMotion((MotionEvent&)e);break;
@@ -471,6 +476,27 @@ void WindowManager::onMotion(MotionEvent&event) {
 
    // If no target and we had a hovered window already, clear it (hover exit already sent above).
    return;
+}
+
+/*static-like policy: runs in the non-virtual processEvent path, BEFORE
+  onKeyEvent/any Window dispatch — apps overriding Window::processKeyEvent
+  (their right) cannot defeat a system key. */
+bool WindowManager::interceptKeyBeforeQueueing(KeyEvent& event) {
+    // POWER is consumed before the app sees it — PhoneWindowManager's
+    // interceptKeyBeforeQueueing position. The hal injects it as the host
+    // window system's close gesture (xlib WM_DELETE_WINDOW, see graph_xlib.c):
+    // closing the emulator window is the desktop's power-off. The exit request
+    // stays in pure Looper vocabulary — no App reach-up from this policy path:
+    // quitSafely keeps already-due messages (window teardown deletes) and
+    // drops future ones; exec()'s loopOnce() returns false once they drain,
+    // and ~App owns the aftermath (QueuedWork flush + subsystem teardown,
+    // the "plain return from exec()" path).
+    if (event.getKeyCode() == KeyEvent::KEYCODE_POWER
+            && event.getAction() == KeyEvent::ACTION_UP) {
+        Looper::getMainLooper()->quitSafely();
+        return true;
+    }
+    return false;
 }
 
 void WindowManager::onKeyEvent(KeyEvent&event) {
