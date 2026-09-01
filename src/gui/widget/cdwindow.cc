@@ -642,6 +642,13 @@ void Window::setAccessibilityFocus(View* view, AccessibilityNodeInfo* node){
     // Set the new focus host and node.
     mAccessibilityFocusedHost = view;
     mAccessibilityFocusedVirtualView = node;
+    // AOSP tail: requestInvalidateRootRenderNode() + scheduleTraversals().
+    // The focus drawable is painted by Window::draw, so without invalidating
+    // the window here the OLD box pixels stay composited on screen until
+    // something else repaints the region — stale green boxes over pages that
+    // changed, and the box lagging animated hosts.
+    invalidate();
+    scheduleTraversals();
 }
 
 bool Window::ensureTouchMode(bool inTouchMode) {
