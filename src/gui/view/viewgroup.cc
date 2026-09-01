@@ -3140,7 +3140,12 @@ bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset,bool forcePar
     rect.set(r.left,r.top,r.width,r.height);
 
     if (!child->hasIdentityMatrix()) {
-        child->getMatrix().transform_rectangle((Cairo::Rectangle&)rect);
+        Cairo::Rectangle tmp = { rect.left, rect.top, rect.width, rect.height };
+        child->getMatrix().transform_rectangle(tmp);
+        rect.left   = tmp.x;
+        rect.top    = tmp.y;
+        rect.width  = tmp.width;
+        rect.height = tmp.height;
     }
 
     const int dx = child->mLeft - mScrollX;
@@ -3172,9 +3177,8 @@ bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset,bool forcePar
 
     if ((forceParentCheck || rectIsVisible)  && ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK)) {
         // Clip to padding.
-        rectIsVisible = rect.intersect(mPaddingLeft, mPaddingTop,  
-			width - mPaddingRight-mPaddingLeft, 
-			height - mPaddingBottom-mPaddingTop);
+        rectIsVisible = rect.intersect(mPaddingLeft, mPaddingTop, 
+			width - mPaddingRight-mPaddingLeft, height - mPaddingBottom-mPaddingTop);
     }
 
     if ((forceParentCheck || rectIsVisible) && (mClipBounds.empty()==false)) {
