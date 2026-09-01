@@ -730,8 +730,11 @@ std::shared_ptr<cdroid::ComplexColor> ResourcesImpl::loadComplexColor(int id, co
         // createFromXml so ?attr inside the selector resolves against it.
         try {
             auto parser = loadXmlResourceParser(id);
+            // Wrap the caller's engine handle in the Theme view (same shape as
+            // the themed drawable load above) for ColorStateList::createFromXml.
+            Resources::Theme themed(mCtx->getResources(), const_cast<void*>(themeEngine));
             csl = ColorStateList::createFromXml(mCtx->getResources(), *parser,
-                                                (ResTable::Theme*)themeEngine);
+                                                themeEngine ? &themed : nullptr);
         } catch (const std::exception&) {
             csl = nullptr;
         }

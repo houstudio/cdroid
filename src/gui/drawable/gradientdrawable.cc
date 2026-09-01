@@ -735,10 +735,14 @@ bool GradientDrawable::onStateChange(const std::vector<int>& stateSet) {
         }
     }
 
-    /*if (st->mTint != nullptr && st.mBlendMode != null) {
-        mBlendModeColorFilter = updateBlendModeFilter(mBlendModeColorFilter, st.mTint, s.mBlendMode);
-        invalidateSelf = true;
-    }*/
+    if (st->mTint != nullptr && st->mTintMode != PorterDuff::Mode::NOOP) {
+        // AOSP GradientDrawable.onStateChange re-resolves the tint filter on
+        // every state change (updateBlendModeFilter) — without it a stateful
+        // tint freezes at the load-time default state (e.g. the Switch track's
+        // @color/switch_track_material never turning the checked color).
+        mTintFilter = updateTintFilter(mTintFilter, st->mTint, st->mTintMode);
+        bInvalidateSelf = true;
+    }
 
     if (bInvalidateSelf) {
         invalidateSelf();

@@ -23,7 +23,6 @@
 #include <core/attributeset.h>
 #include <content/complexcolor.h>
 #include <core/xmlpullparser.h>
-#include <content/androidfw/restable.h>   // ResTable::Theme (createFromXml theme param)
 
 namespace cdroid{
 
@@ -37,11 +36,12 @@ private:
     std::vector<int>mColors;
     std::vector<std::vector<int>>mStateSpecs;
 private:
-    // AOSP private inflate(Resources, XmlPullParser, AttributeSet, Theme). Theme
-    // is threaded for arity but currently a no-op (obtainStyledAttributes(Theme)
-    // is not ported); see the DEFERRED note in the .cc. Resources is taken const
-    // -- inflate only reads from it (obtainStyledAttributes is const).
-    void inflate(const Resources&r,XmlPullParser& parser,const AttributeSet&atts,ResTable::Theme* theme);
+    // AOSP private inflate(Resources, XmlPullParser, AttributeSet, Theme): each
+    // <item> resolves through Resources.obtainAttributes(r, theme, ...) so
+    // ?attr colors (res/color selectors like switch_track_material) bake
+    // against the live theme. Resources is taken const -- inflate only reads
+    // from it (obtainStyledAttributes is const).
+    void inflate(const Resources&r,XmlPullParser& parser,const AttributeSet&atts,const Resources::Theme* theme);
     void onColorsChanged();
     static int modulateColor(int baseColor, float alphaMod, float lStar);
 public:
@@ -65,8 +65,8 @@ public:
     std::string toString()const;
     static cdroid::RefPtr<ColorStateList> valueOf(int color);
     static cdroid::RefPtr<ColorStateList> createFromXml(const Resources& r,XmlPullParser& parser);
-    static cdroid::RefPtr<ColorStateList> createFromXml(const Resources& r,XmlPullParser& parser,ResTable::Theme* theme);
-    static cdroid::RefPtr<ColorStateList> createFromXmlInner(const Resources& r,XmlPullParser& parser,const AttributeSet& attrs,ResTable::Theme* theme);
+    static cdroid::RefPtr<ColorStateList> createFromXml(const Resources& r,XmlPullParser& parser,const Resources::Theme* theme);
+    static cdroid::RefPtr<ColorStateList> createFromXmlInner(const Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme);
 };
 }
 #endif

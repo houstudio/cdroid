@@ -81,14 +81,11 @@ cdroid::RefPtr<ColorStateList>ColorStateList::withAlpha(int alpha)const{
     return std::make_shared<ColorStateList>(mStateSpecs,colors);
 }
 
-void ColorStateList::inflate(const Resources&r,XmlPullParser& parser,const AttributeSet&attrs,ResTable::Theme* theme){
+void ColorStateList::inflate(const Resources&r,XmlPullParser& parser,const AttributeSet&attrs,const Resources::Theme* theme){
     // AOSP private inflate(Resources, XmlPullParser, AttributeSet, Theme): resolve
     // each <item> through the arsc via obtainStyledAttributes(R.styleable.
     // ColorStateListItem) and walk the raw AttributeSet by attribute resource id
     // to collect state specifiers -- no string attribute lookup.
-    // NOTE: `theme` is threaded for AOSP arity but currently unused --
-    // Resources::obtainStyledAttributes(Theme) is not ported (DEFERRED).
-    (void)theme;
 
     const int innerDepth = parser.getDepth()+1;
     int depth, type;
@@ -102,8 +99,13 @@ void ColorStateList::inflate(const Resources&r,XmlPullParser& parser,const Attri
             continue;
         }
 
-        // AOSP: Resources.obtainAttributes(r, theme, attrs, R.styleable.ColorStateListItem).
-        auto a = r.obtainStyledAttributes(attrs, R::styleable::ColorStateListItem);
+        // AOSP: Resources.obtainAttributes(r, theme, attrs, R.styleable.ColorStateListItem)
+        // -- themed resolution so ?attr item colors (e.g. switch_track_material's
+        // ?attr/colorControlActivated) bake against the live theme; the themeless
+        // fallback collapses every ?attr to the TypedArray default.
+        std::unique_ptr<TypedArray> a = theme
+                ? theme->obtainStyledAttributes(&attrs, R::styleable::ColorStateListItem)
+                : r.obtainStyledAttributes(&attrs, R::styleable::ColorStateListItem);
         const int baseColor = (int)a->getColor(R::styleable::ColorStateListItem_color, Color::MAGENTA);
         const float alphaMod = a->getFloat(R::styleable::ColorStateListItem_alpha, 1.0f);
         const float lStar = a->getFloat(R::styleable::ColorStateListItem_lStar, -1.0f);
@@ -147,7 +149,7 @@ cdroid::RefPtr<ColorStateList> ColorStateList::createFromXml(const Resources& r,
     return createFromXml(r, parser, nullptr);
 }
 
-cdroid::RefPtr<ColorStateList> ColorStateList::createFromXml(const Resources& r,XmlPullParser& parser,ResTable::Theme* theme){
+cdroid::RefPtr<ColorStateList> ColorStateList::createFromXml(const Resources& r,XmlPullParser& parser,const Resources::Theme* theme){
     const AttributeSet& attrs = parser; // AOSP Xml.asAttributeSet(parser)
     int type;
     while ((type = parser.next()) != XmlPullParser::START_TAG
@@ -160,7 +162,7 @@ cdroid::RefPtr<ColorStateList> ColorStateList::createFromXml(const Resources& r,
     return createFromXmlInner(r, parser, attrs, theme);
 }
 
-cdroid::RefPtr<ColorStateList> ColorStateList::createFromXmlInner(const Resources& r,XmlPullParser& parser,const AttributeSet& attrs,ResTable::Theme* theme){
+cdroid::RefPtr<ColorStateList> ColorStateList::createFromXmlInner(const Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme){
     const std::string name = parser.getName();
     if (name.compare("selector")) {
         throw std::runtime_error(parser.getPositionDescription()
