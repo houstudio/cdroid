@@ -108,7 +108,6 @@ void AccessibilityManager::sendAccessibilityEvent(AccessibilityEvent& event) {
             service->onAccessibilityEvent(*dispatchedEvent);
         }
     }
-    LOGD("%s",event.toString().c_str());
     if (&event != dispatchedEvent) {
         event.recycle();
     }
