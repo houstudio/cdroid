@@ -1046,6 +1046,13 @@ void ImageView::onDraw(Canvas& canvas) {
     }
 
     if (IsIdentity(mDrawMatrix) && mPaddingTop == 0 && mPaddingLeft == 0) {
+        // android-36 ImageView.applyAlpha: mutate before pushing the view
+        // alpha into the drawable. The drawable can be shared through its
+        // ConstantState — two views alternating alpha on one instance beat
+        // the setAlpha changed-guard every frame, invalidating per traversal
+        // (the hauswirt frame storm: setAlpha(191) -> invalidateSelf at
+        // 100% CPU until the page left the screen).
+        mDrawable = mDrawable->mutate();
         mDrawable->setAlpha(getAlpha()*255);
         mDrawable->draw(canvas);
     } else {

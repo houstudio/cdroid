@@ -7993,7 +7993,14 @@ bool View::isInLayout()const{
     // viewRoot == getRootView() == itself.
     ViewGroup* viewRoot = (mAttachInfo && mAttachInfo->mRootView)
                           ? mAttachInfo->mRootView : nullptr;
-    return (viewRoot && viewRoot->isInLayout());
+    // A self-rooted dispatch means the tree root is not a live Window: either
+    // a detached subtree (stale AttachInfo) or a Window mid-destruction whose
+    // vtable has already rewound past the Window override — dispatching
+    // virtually would land right back here and recurse forever (the teardown
+    // stack overflow). Both cases mean "not in layout", matching AOSP's
+    // detached-viewRoot==null result.
+    if (viewRoot == nullptr || viewRoot == this) return false;
+    return viewRoot->isInLayout();
 }
 
 void View::onLayout(bool change,int l,int t,int w,int h){
