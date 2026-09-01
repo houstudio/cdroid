@@ -64,10 +64,22 @@ endif()
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
    add_link_options("LINKER:-rpath-link,${CMAKE_SOURCE_DIR}/src/porting/${CDROID_CHIPSET}/lib")
 endif()
+# In-tree seed for find_package(CDROID): apps/tests resolve to the build
+# tree's exported public header face (<build>/include/gui, the auto-synced
+# install-parity copies) instead of NOTFOUND on a fresh configure. Deliberately
+# a seed, not FORCE: an explicit -DCDROID_INCLUDE_DIRS=<installed cdroid>
+# enters the cache before this runs and wins — the two entry points (in-tree
+# face vs installed cdroid via FindCDROID/pkg-config) never fight. The paths
+# need not exist at configure time; headers are synced while building cdroid.
+set(CDROID_INCLUDE_DIRS "${CMAKE_BINARY_DIR}/include/gui" CACHE PATH "cdroid public header face (in-tree seed)")
+set(CDROID_PORTING_DIRS "${CMAKE_BINARY_DIR}/include"     CACHE PATH "cdroid porting headers (in-tree seed)")
+
 add_subdirectory(src/porting)
 # androidfw must be defined before src/gui so cdroid can link it.
 add_subdirectory(src/gui/content/androidfw)
 add_subdirectory(src/gui)
+# testkit (uiautomation + autotest + espresso) after gui: links cdroid.
+add_subdirectory(src/testkit)
 add_subdirectory(src/modules)
 add_subdirectory(src/3rdparty)
 # pm/am device-side CLI tools (adb-install chain) — after src/gui: they link cdroid.
