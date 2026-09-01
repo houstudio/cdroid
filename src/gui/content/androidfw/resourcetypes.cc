@@ -1562,8 +1562,13 @@ ResXMLParser::event_code_t ResXMLParser::nextNode() {
     }
 
     do {
-        static thread_local int sNodeIters = 0;
-        if (++sNodeIters > 100000) {
+        // Runaway guard, per CALL: the loop pointer advances monotonically
+        // toward mDataEnd, so only a broken document can spin here. This was
+        // once a never-reset thread_local counter, which after 100k lifetime
+        // node steps (hours of autotest fragment churn) killed every later
+        // parse as BAD_DOCUMENT.
+        int iters = 0;
+        if (++iters > 100000) {
             LOGW("nextNode spun >100k iters at offset %d type=0x%x — aborting",
                  (int)(((const uint8_t*)mCurNode) - ((const uint8_t*)mTree.mHeader)),
                  (int)dtohs(mCurNode->header.type));
