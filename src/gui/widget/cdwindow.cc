@@ -631,7 +631,10 @@ void Window::setAccessibilityFocus(View* view, AccessibilityNodeInfo* node){
             provider->performAction(virtualNodeId,
                     AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS, nullptr);
         }
-        delete focusNode;
+        // AOSP: focusNode.recycle() (ViewRootImpl:6449) — a bare delete
+        // poisons the node pool: the pointer stays in sPool and is handed
+        // out again after the free.
+        focusNode->recycle();
     }
     if ((mAccessibilityFocusedHost != nullptr) && (mAccessibilityFocusedHost != view))  {
         // Clear accessibility focus in the view.
