@@ -108,7 +108,7 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     int alpha = 255, rotation = 0, density = 0, frameDelay = 0;
     bool debug= false,showFPS = false, help = false;
     std::string autoTest, autoTestRecord, testScript, orientation;
-    std::string logo, monkey, record, datapath;
+    std::string logo, datapath;
     LogParseModules(argc,argv);
     mInst = this;
     cxxopts::Options options("cdroid","cdroid application");
@@ -124,8 +124,6 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
          cxxopts::value<std::string>(orientation))
         ("R,rotate","display rotate(90*n)",cxxopts::value<int>(rotation)->default_value("0"))
         ("l,logo","show logo",cxxopts::value<std::string>(logo))
-        ("m,monkey","events playback path",cxxopts::value<std::string>(monkey))
-        ("r,record","events record path",cxxopts::value<std::string>(record))
         ("data","data directory",cxxopts::value<std::string>(datapath))
         ("auto-test","a11y semantic UI sweep (clicks every on-screen clickable and verifies "
          "events); bare = deterministic per-page traversal, =SEED = monkey-style random walk",
@@ -273,11 +271,8 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     if(frameDelay) Choreographer::setFrameDelay(frameDelay);
     Typeface::loadPreinstalledSystemFontMap();
 
-    InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
+    InputEventSource*inputsource=&InputEventSource::getInstance();
     addEventHandler(inputsource);
-    if(!monkey.empty()){
-        inputsource->playback(monkey);
-    }
     AnimationHandler::getInstance();
     // IMM is a process-wide service (Android: created early, peekInstance() then
     // returns non-null once the app is up). Create it here so the View focus path

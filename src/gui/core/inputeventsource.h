@@ -37,11 +37,8 @@ private:
     int mScreenSaveTimeOut;
     bool mInited;
     bool mRunning;
-    bool mIsPlayback;
     bool mIsScreenSaveActived;
-    nsecs_t mLastPlaybackEventTime;/*for event record and playback*/
     nsecs_t mLastInputEventTime;/*for screensaver*/
-    std::ofstream frecord;
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
     /*Injected events (injectInputEvent) waiting for the main-looper drain —
       the InputDispatcher injection queue analog; guarded by mtxEvents.*/
@@ -50,8 +47,6 @@ private:
     std::shared_ptr<InputDevice>getDevice(int fd);
     void doEventsConsume();
     bool needCancel(InputDevice*dev);
-    void recordEvent(InputEvent&);
-    InputEvent*parseEvent(const char*);
 protected:
     InputEventSource();
     void onDeviceChanged(const INPUTEVENT*es);
@@ -62,8 +57,6 @@ public:
     void setScreenSaver(ScreenSaver func,int timeout);
     void closeScreenSaver();
     bool isScreenSaverActived()const;
-    void record(const std::string&fname);
-    void playback(const std::string&fname);
     int checkEvents()override;
     int handleEvents()override;
     /*Drain every device's pending event queue and return the events to the
