@@ -24,7 +24,7 @@ int main(int argc,const char*argv[]){
         LOGD("view=%p,res=%d parent=%p",view,res,parent);
         if(parent&&view)parent->addView(view);
     };
-    al.inflate(app.getResources().getIdentifier("notexists","layout",nullptr),nullptr,cbk);
+    al.inflate(app.getResources().getIdentifier("notexists","layout",""),nullptr,cbk);
     al.inflate(app.getResources().getIdentifier("alert_dialog","layout","cdroid"),w,cbk);
     return app.exec();
 }
