@@ -74,7 +74,7 @@ target_include_directories(
 
 CreatePAK(cdroid ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
 
-# widgetEx shared resource pak (package-id 0x02, attrs only; built once, loaded by all apps).
+# widgetEx shared resource pak (package-id 0x02; attrs + compiled res files; built once, loaded by all apps).
 add_custom_target(widgetex)
 CreatePAK(widgetex ${PROJECT_SOURCE_DIR}/widgetEx  ${PROJECT_BINARY_DIR}/widgetex.pak ${PROJECT_BINARY_DIR}/widgetex_R.h)
 add_dependencies(cdroid widgetex_assets)

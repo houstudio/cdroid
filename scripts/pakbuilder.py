@@ -883,10 +883,11 @@ class PakBuilder:
                                      % (os.path.relpath(path, tmpres), moved))
 
     def _compile_shared_lib(self):
-        """Build widgetex.pak: a fixed-id 0x02 resource pak (widgetEx attrs only).
-        Collects the 5 widgetEx res/values/attrs.xml trees + generates public.xml
-        at 0x0201xxxx, then aapt2 link --package-id 0x02 --allow-reserved-package-id.
-        Output: widgetex.pak (arsc only) + widgetex.apk (kept for app -I linking)."""
+        """Build widgetex.pak: a fixed-id 0x02 resource pak (widgetEx attrs +
+        compiled res files). Collects the widgetEx component res trees, then
+        aapt2 link --package-id 0x02 --allow-reserved-package-id.
+        Output: widgetex.pak (arsc + compiled res/) + widgetex.apk (kept for
+        app -I linking)."""
         import subprocess, shutil
         tmpdir = self._workdir()   # out tree; kept after the build (inspectable)
         try:
@@ -909,7 +910,9 @@ class PakBuilder:
             with open(mpath, "w") as fh:
                 fh.write('<?xml version="1.0" encoding="utf-8"?>\n'
                          '<manifest xmlns:android="http://schemas.android.com/apk/res/android"\n'
-                         '    package="cdroid.widgetex" android:versionCode="1" android:versionName="1.0"/>\n')
+                         '    package="cdroid.widgetex" android:versionCode="1" android:versionName="1.0">\n'
+                         '    <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="36"/>\n'
+                         '</manifest>\n')
             # aapt2 link with fixed package-id 0x02.
             out_apk = os.path.join(tmpdir, "widgetex.apk")
             link_cmd = [self.aapt2_path, "link",
@@ -920,13 +923,23 @@ class PakBuilder:
             if _r.returncode != 0:
                 sys.stderr.write("widgetex link FAILED:\n%s\n" % _r.stderr.decode()[:2000])
                 return False
-            # Extract resources.arsc → widgetex.pak.
+            # Extract resources.arsc → widgetex.pak. Compiled res/ files (drawables,
+            # color selectors, ...) ride along too: the shared pak is the ONLY place
+            # widgetEx file-backed resources live for apps without their own copy of
+            # the merged tree, so an arsc-only pak would leave those entries
+            # unopenable at runtime (getDrawable → null).
             arsc = None
+            res_files = []
             with zipfile.ZipFile(out_apk) as zf:
                 arsc = zf.read("resources.arsc") if "resources.arsc" in zf.namelist() else None
+                for name in zf.namelist():
+                    if name.startswith("res/"):
+                        res_files.append((name, zf.read(name)))
             with zipfile.ZipFile(self.pak_path, "w") as zf:
                 if arsc:
                     zf.writestr("resources.arsc", arsc, zipfile.ZIP_DEFLATED)
+                for name, data in res_files:
+                    zf.writestr(name, data, zipfile.ZIP_DEFLATED)
             # Keep the intermediate widgetex.apk for app -I linking.
             bin_dir = os.path.dirname(self.pak_path)
             shutil.copyfile(out_apk, os.path.join(bin_dir, "widgetex.apk"))
