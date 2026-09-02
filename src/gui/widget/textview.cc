@@ -3289,7 +3289,16 @@ void TextView::nullLayouts() {
     if( (mHintLayout!=nullptr) && (mSavedHintLayout!=mHintLayout) ) {
         delete mHintLayout;
     }
+    // AOSP just nulls the parked marquee layout (GC reclaims it); ours is an
+    // owned pointer (see ~TextView) — free it, unless it aliases one of the
+    // BoringLayout caches parked above (makeSingleLayout's useSaved path can
+    // hand the same object to both mSavedLayout and mSavedMarqueeModeLayout).
+    Layout* oldMarquee = mSavedMarqueeModeLayout;
     mSavedMarqueeModeLayout = mLayout = mHintLayout = nullptr;
+    if (oldMarquee != nullptr && oldMarquee != mSavedLayout
+            && oldMarquee != mSavedHintLayout) {
+        delete oldMarquee;
+    }
     delete mBoring;
     delete mHintBoring;
     mBoring = mHintBoring = nullptr;
