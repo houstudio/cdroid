@@ -720,8 +720,28 @@ AccessibilityNodeInfo* UiAutoTest::findOne(const Command& c) {
                 ? r->findAccessibilityNodeInfosByText(c.selector)
                 : r->findAccessibilityNodeInfosByViewId(c.selector);
         if (!hits.empty()) {
-            AccessibilityNodeInfo* first = hits.front();
-            for (size_t i = 1; i < hits.size(); i++) hits[i]->recycle();
+            // "Visible surface" must mean the hits too: the app root keeps every
+            // offscreen ViewPager page attached, and without this filter the
+            // first tree-order match can be an offscreen twin (its performClick
+            // still fires VIEW_CLICKED, so a script click "passes" while the UI
+            // never moves). Prefer the first visible hit; keep the first overall
+            // as fallback so text on a scrolled-away row stays addressable.
+            AccessibilityNodeInfo* first = nullptr;
+            AccessibilityNodeInfo* fallback = nullptr;
+            for (AccessibilityNodeInfo* hit : hits) {
+                if (first == nullptr && hit->isVisibleToUser()) {
+                    first = hit;
+                } else if (fallback == nullptr) {
+                    fallback = hit;
+                } else {
+                    hit->recycle();
+                }
+            }
+            if (first == nullptr) {
+                first = fallback;   // no visible hit: fall back to the first overall
+            } else if (fallback != nullptr) {
+                fallback->recycle(); // visible hit won — the fallback is unconsumed
+            }
             for (AccessibilityNodeInfo* other : roots) other->recycle();
             return first;  // caller recycles
         }
