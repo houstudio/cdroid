@@ -53,7 +53,11 @@ private:
 private:
     static constexpr int DEFAULT_ANCHORED_GRAVITY = Gravity::TOP | Gravity::START;
     static constexpr int ANIMATION_STYLE_DEFAULT = -1;
-    Context* mContext;
+    // Java field default (null). The (int,int) -> (nullptr,...) ctor chain
+    // reaches setContentView without ever assigning mContext, and its
+    // null-check there read an indeterminate value (valgrind: KeyboardView's
+    // popup, 155 conditional-jump errors on the pref sweep).
+    Context* mContext = nullptr;
     View* mParentRootView;
     bool mIsShowing;
     bool mIsTransitioningToDismiss;
