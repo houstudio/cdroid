@@ -65,6 +65,11 @@ AnimatedVectorDrawable::~AnimatedVectorDrawable(){
 
 AnimatedVectorDrawable* AnimatedVectorDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
+        // Retire, not free: keep the outgoing state alive when animators are
+        // already bound into its tree (see mRetiredStates).
+        if (mAnimatorSetFromXml != nullptr) {
+            mRetiredStates.push_back(mAnimatedVectorState);
+        }
         mAnimatedVectorState = std::make_shared<AnimatedVectorDrawableState>(mAnimatedVectorState, mCallback);
         mMutated = true;
     }

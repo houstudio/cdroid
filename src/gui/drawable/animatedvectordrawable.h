@@ -42,6 +42,13 @@ private:
     Drawable::Callback* mCallback = nullptr;
     /** The animator set that is parsed from the xml. */
     AnimatorSet* mAnimatorSetFromXml = nullptr;
+    // States retired by mutate() while an animator set was already prepared.
+    // A prepared set holds raw targets into its state's vector tree; AOSP's
+    // GC keeps such a tree reachable after mutate (the running animation just
+    // detaches from the rendering tree). This is the C++ counterpart — retain
+    // the outgoing state so a post-start mutate (ImageView applyAlpha's
+    // mutate on first draw) can't free the tree under the running animators.
+    std::vector<std::shared_ptr<AnimatedVectorDrawableState>> mRetiredStates;
 
     bool mMutated;
 
