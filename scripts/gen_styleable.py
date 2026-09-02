@@ -72,6 +72,28 @@ def load_public_xml_ids(path):
 
 
 
+def load_public_xml_typed_pins(path):
+    """Load non-attr <public type="T" .../> pins (same sibling public.xml files;
+    typed pins there are the constants widget code references by id, e.g.
+    style/Widget.Design.TabLayout -> 0x02090007,
+    layout/ws_overlay_confirmation -> 0x02080000).
+    Returns {type: [(name, int_id), ...]}."""
+    pins = {}
+    if not os.path.isfile(path):
+        return pins
+    txt = open(path, encoding='utf-8').read()
+    for m in re.finditer(r'<public\s+[^>]*/>', txt):
+        tag = m.group(0)
+        tp = re.search(r'type="([A-Za-z0-9_]+)"', tag)
+        if not tp or tp.group(1) == 'attr':
+            continue
+        nm = re.search(r'name="([^"]+)"', tag)
+        idv = re.search(r'id="(0x[0-9a-fA-F]+)"', tag)
+        if nm and idv:
+            pins.setdefault(tp.group(1), []).append((nm.group(1), int(idv.group(1), 16)))
+    return pins
+
+
 def load_name_map(path):
     """Load a 'attrsname outname' file -> {attrsname: outname}."""
     m = {}
@@ -265,8 +287,18 @@ def main():
     # its attrs.xml — androidx per-component structure, the single source of truth for
     # the stable 0x02 ids the runtime widgetex.apk carries).
     custom_ids = {}
+    typed_pins = {}   # resource type -> {name: pinned id} (non-attr public pins)
     for attrs_path in [p.strip() for p in args.attrs.split(',') if p.strip()]:
-        custom_ids.update(load_public_xml_ids(os.path.join(os.path.dirname(attrs_path), 'public.xml')))
+        pub = os.path.join(os.path.dirname(attrs_path), 'public.xml')
+        custom_ids.update(load_public_xml_ids(pub))
+        for ptype, plist in load_public_xml_typed_pins(pub).items():
+            bucket = typed_pins.setdefault(ptype, {})
+            for pname, pid in plist:
+                if pname in bucket and bucket[pname] != pid:
+                    print(f"error: {ptype} '{pname}' pinned twice with different ids "
+                          f"(0x{bucket[pname]:08x} vs 0x{pid:08x})", file=sys.stderr)
+                    sys.exit(1)
+                bucket[pname] = pid
     custom_next = CUSTOM_ID_BASE
     if custom_ids:
         custom_next = max(custom_ids.values()) + 1
@@ -349,6 +381,13 @@ def main():
         for an, idv in standalone_resolved:
             L.append(f'    constexpr uint32_t {cident(an)} = 0x{idv:08x};')
         L.append('} } } // namespace internal::R::attr')
+    for ptype in sorted(typed_pins):
+        L.append(f'namespace internal {{ namespace R {{ namespace {ptype} {{')
+        L.append('    // Resources pinned in the component res/values/public.xml')
+        L.append('    // (0x02 shared-lib); the R constants widget code references by id.')
+        for pname in sorted(typed_pins[ptype]):
+            L.append(f'    constexpr uint32_t {cident(pname)} = 0x{typed_pins[ptype][pname]:08x};')
+        L.append(f'}} }} }} // namespace internal::R::{ptype}')
     L.append('namespace internal { namespace R { namespace styleable {')
     for out_name, resolved in styleables:
         sn = cident(out_name)

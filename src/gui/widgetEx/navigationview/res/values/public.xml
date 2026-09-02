@@ -49,4 +49,7 @@
     <public type="attr" name="height" id="0x02010166"/>
     <public type="attr" name="marginX" id="0x02010167"/>
     <public type="attr" name="color" id="0x02010168"/>
+    <!-- module styles (DEF_STYLE_RES constants; style type = 0x09) -->
+    <public type="style" name="Widget.Design.BottomNavigationView" id="0x02090003"/>
+    <public type="style" name="Widget.Design.NavigationView" id="0x02090004"/>
 </resources>

@@ -33,7 +33,8 @@ CollapsingToolbarLayout::CollapsingToolbarLayout(Context* context,
         const AttributeSet* attrs, int defStyleAttr)
     : FrameLayout(context, attrs, defStyleAttr), mCollapsingTextHelper(this) {
     auto ta = context->obtainStyledAttributes(*attrs,
-            R::styleable::CollapsingToolbarLayout, defStyleAttr, 0);
+            R::styleable::CollapsingToolbarLayout, defStyleAttr,
+            R::style::Widget_Design_CollapsingToolbar);
     mToolbarId = ta->getResourceId(R::styleable::CollapsingToolbarLayout_toolbarId, View::NO_ID);
     mTitleCollapseMode = ta->getInt(
             R::styleable::CollapsingToolbarLayout_titleCollapseMode, TITLE_COLLAPSE_MODE_SCALE);

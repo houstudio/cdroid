@@ -185,6 +185,35 @@ namespace internal { namespace R { namespace attr {
     constexpr uint32_t nullable = 0x0201012f;
     constexpr uint32_t dataPattern = 0x02010132;
 } } } // namespace internal::R::attr
+namespace internal { namespace R { namespace drawable {
+    // Resources pinned in the component res/values/public.xml
+    // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t confirmation_animation = 0x0204003a;
+    constexpr uint32_t failure_animation = 0x0204003b;
+    constexpr uint32_t open_on_phone_animation = 0x0204003d;
+} } } // namespace internal::R::drawable
+namespace internal { namespace R { namespace id {
+    // Resources pinned in the component res/values/public.xml
+    // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t wearable_support_confirmation_overlay_image = 0x020600b5;
+    constexpr uint32_t wearable_support_confirmation_overlay_message = 0x020600b6;
+} } } // namespace internal::R::id
+namespace internal { namespace R { namespace layout {
+    // Resources pinned in the component res/values/public.xml
+    // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t ws_overlay_confirmation = 0x02080000;
+} } } // namespace internal::R::layout
+namespace internal { namespace R { namespace style {
+    // Resources pinned in the component res/values/public.xml
+    // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t Base_Widget_Design_TabLayout = 0x02090005;
+    constexpr uint32_t TextAppearance_Design_Tab = 0x02090006;
+    constexpr uint32_t Widget_Design_AppBarLayout = 0x02090001;
+    constexpr uint32_t Widget_Design_BottomNavigationView = 0x02090003;
+    constexpr uint32_t Widget_Design_CollapsingToolbar = 0x02090002;
+    constexpr uint32_t Widget_Design_NavigationView = 0x02090004;
+    constexpr uint32_t Widget_Design_TabLayout = 0x02090007;
+} } } // namespace internal::R::style
 namespace internal { namespace R { namespace styleable {
     // CoordinatorLayout (2 attrs)
     extern const uint32_t CoordinatorLayout[];

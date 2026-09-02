@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tab text color selector (material/tabs/res/color/mtrl_tabs_legacy_text_color_selector.xml). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:color="?android:attr/textColorPrimary" android:state_selected="true"/>
+  <item android:color="?android:attr/textColorSecondary"/>
+</selector>

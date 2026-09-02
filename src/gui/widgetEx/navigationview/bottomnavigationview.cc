@@ -28,15 +28,23 @@ DECLARE_WIDGET(BottomNavigationView)
 BottomNavigationView::BottomNavigationView(Context* context, const AttributeSet* attrs)
     : BottomNavigationView(context, attrs, 0) {}
 
+// AOSP 3-arg ctor chains into the 4-arg with R.style.Widget_Design_BottomNavigationView
+// (the classic defStyleRes delegation; CDROID declares no bottomNavigationStyle attr,
+// so defStyleAttr stays whatever the caller passed).
 BottomNavigationView::BottomNavigationView(Context* context, const AttributeSet* attrs, int defStyleAttr)
-    : NavigationBarView(context, attrs, defStyleAttr) {
+    : BottomNavigationView(context, attrs, defStyleAttr,
+            cdroid::internal::R::style::Widget_Design_BottomNavigationView) {}
+
+BottomNavigationView::BottomNavigationView(Context* context, const AttributeSet* attrs,
+        int defStyleAttr, int defStyleRes)
+    : NavigationBarView(context, attrs, defStyleAttr, defStyleRes) {
     // AOSP: super() wires menu+presenter, then the subclass installs its
     // concrete menu view (C++ cannot dispatch the factory from the base ctor).
     installMenuView(new BottomNavigationMenuView(context));
 
     // BottomNavigationView styleable (0x02).
     auto ta = context->obtainStyledAttributes(attrs,
-            cdroid::internal::R::styleable::BottomNavigationView, defStyleAttr);
+            cdroid::internal::R::styleable::BottomNavigationView, defStyleAttr, defStyleRes);
     (void)ta;
     // android:minHeight comes through the framework attr by name.
     const int minHeight = attrs ? attrs->getAttributeIntValue(std::string(), "minHeight", 0) : 0;

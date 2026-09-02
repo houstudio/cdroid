@@ -30,6 +30,10 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs, int defStyleAttr)
+    : NavigationBarView(context, attrs, defStyleAttr, 0) {}
+
+NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs,
+        int defStyleAttr, int defStyleRes)
     : FrameLayout(context, attrs, defStyleAttr) {
     // Checked labels scale past item bounds; don't clip at the bar either.
     setClipChildren(false);
@@ -69,7 +73,7 @@ NavigationBarView::NavigationBarView(Context* context, const AttributeSet* attrs
 
     // NavigationBarView styleable (0x02 attrs via the GENERATED styleable).
     auto ta = context->obtainStyledAttributes(attrs,
-            cdroid::internal::R::styleable::NavigationBarView, defStyleAttr);
+            cdroid::internal::R::styleable::NavigationBarView, defStyleAttr, defStyleRes);
     mItemIconTint = ta->getColorStateList(cdroid::internal::R::styleable::NavigationBarView_itemIconTint);
     mItemIconSize = ta->getDimensionPixelSize(cdroid::internal::R::styleable::NavigationBarView_itemIconSize, 0);
     mItemTextColor = ta->getColorStateList(cdroid::internal::R::styleable::NavigationBarView_itemTextColor);

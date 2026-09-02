@@ -97,6 +97,7 @@ private:
     int mActiveIndicatorColor;
 protected:
     NavigationBarView(Context* context, const AttributeSet* attrs, int defStyleAttr);
+    NavigationBarView(Context* context, const AttributeSet* attrs, int defStyleAttr, int defStyleRes);
     virtual int getMaxItemCount() const = 0;
     /** Subclass hook: install the concrete NavigationBarMenuView (called from
         the subclass constructor, after this base ctor has run). */

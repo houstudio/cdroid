@@ -9,4 +9,7 @@
     <public type="attr" name="statusBarScrim" id="0x02010156" />
     <public type="attr" name="layout_collapseMode" id="0x02010157" />
     <public type="attr" name="layout_collapseParallaxMultiplier" id="0x02010158" />
+    <!-- module styles (DEF_STYLE_RES constants; style type = 0x09) -->
+    <public type="style" name="Widget.Design.AppBarLayout" id="0x02090001" />
+    <public type="style" name="Widget.Design.CollapsingToolbar" id="0x02090002" />
 </resources>

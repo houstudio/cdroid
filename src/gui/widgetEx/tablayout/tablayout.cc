@@ -49,7 +49,8 @@ TabLayout::TabLayout(Context*context,const AttributeSet* pAttrs,int defStyleAttr
     // aapt2 has already resolved the enum attrs (tabIndicatorAnimationMode /
     // tabIndicatorGravity / tabMode / tabGravity) at compile time, so getInt reads
     // them directly — no runtime enum map needed.
-    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::TabLayout, defStyleAttr);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::TabLayout, defStyleAttr,
+            R::style::Widget_Design_TabLayout);
     
 
     setTabIndicatorAnimationMode(ta->getInt(R::styleable::TabLayout_tabIndicatorAnimationMode, INDICATOR_ANIMATION_MODE_LINEAR));

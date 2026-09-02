@@ -38,6 +38,11 @@
     (add/remove/replaceAccessibilityAction + hasAccessibilityDelegate),
     wired into ViewPager2 / DrawerLayout / SlidingPaneLayout /
     AppBarLayout / ViewPager
+  - Material default styles (defStyleRes) for AppBarLayout / CollapsingToolbarLayout /
+    BottomNavigationView / NavigationView / TabLayout: per-module Widget_Design_* styles
+    with pinned 0x0209xxxx ids; gen_styleable emits typed public pins (style/layout/id/
+    drawable); widgetex.pak ships compiled res files (uses-sdk added — without it aapt2
+    strips attributes into -v1 variants); wear ConfirmationOverlay on pinned R constants
   - preferencedemo: portrait settings chrome, Slide fragment transitions (legacy animation
     path kept behind PREFDEMO_ANIM), AUTOCYCLE valgrind driver
   - Emoji editing semantics on a par with Android: myicu binary properties now generated

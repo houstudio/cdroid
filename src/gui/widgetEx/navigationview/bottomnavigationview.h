@@ -30,6 +30,8 @@ protected:
 public:
     BottomNavigationView(Context* context, const AttributeSet* attrs);
     BottomNavigationView(Context* context, const AttributeSet* attrs, int defStyleAttr);
+    BottomNavigationView(Context* context, const AttributeSet* attrs,
+                         int defStyleAttr, int defStyleRes);
     bool onTouchEvent(MotionEvent& event) override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
 };

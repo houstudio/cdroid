@@ -282,9 +282,12 @@ AppBarLayout::AppBarLayout(Context* context, const AttributeSet* attrs, int defS
     mBehavior = new Behavior();
     AttachedBehavior::getBehavior = [this]() { return mBehavior; };
 
-    // AppBarLayout styleable (lift-on-scroll etc. deferred).
+    // AppBarLayout styleable (lift-on-scroll etc. deferred). DEF_STYLE_RES =
+    // Widget_Design_AppBarLayout (upstream's android:* items in that style are
+    // inert through the View ctor chain, matching upstream behavior).
     auto ta = context->obtainStyledAttributes(attrs,
-            cdroid::internal::R::styleable::AppBarLayout, defStyleAttr, 0);
+            cdroid::internal::R::styleable::AppBarLayout, defStyleAttr,
+            cdroid::internal::R::style::Widget_Design_AppBarLayout);
     (void)ta;
 }
 

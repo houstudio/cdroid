@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AppBar module default styles (material-components port; source:
+     material/appbar/res/values/styles.xml). Widget.Design.AppBarLayout is
+     AppBarLayout's DEF_STYLE_RES, Widget.Design.CollapsingToolbar is
+     CollapsingToolbarLayout's. The upstream android:stateListAnimator item
+     (@animator/design_appbar_state_list_animator) is trimmed: the animator
+     resource is not ported, and the item is inert through the View ctor
+     resolution chain anyway (View reads it via defStyleAttr only, matching
+     upstream behavior for these styles). -->
+<resources>
+
+  <style name="Widget.Design.AppBarLayout" parent="android:Widget">
+    <item name="android:background">?android:attr/colorPrimary</item>
+    <item name="android:keyboardNavigationCluster">false</item>
+    <item name="android:touchscreenBlocksFocus">false</item>
+  </style>
+
+  <style name="Widget.Design.CollapsingToolbar" parent="android:Widget">
+    <item name="expandedTitleMargin">32dp</item>
+    <item name="statusBarScrim">?android:attr/colorPrimaryDark</item>
+  </style>
+
+</resources>

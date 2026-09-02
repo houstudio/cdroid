@@ -32,4 +32,8 @@
     <public type="attr" name="tabTextAppearance" id="0x020100e6"/>
     <public type="attr" name="tabTextColor" id="0x020100e7"/>
     <public type="attr" name="tabUnboundedRipple" id="0x020100f1"/>
+    <!-- module styles (DEF_STYLE_RES constants; style type = 0x09) -->
+    <public type="style" name="Base.Widget.Design.TabLayout" id="0x02090005"/>
+    <public type="style" name="TextAppearance.Design.Tab" id="0x02090006"/>
+    <public type="style" name="Widget.Design.TabLayout" id="0x02090007"/>
 </resources>

@@ -52,9 +52,11 @@ void NavigationView::init(Context* context, const AttributeSet* attrs, int defSt
 
     mPresenter = new NavigationMenuPresenter();
 
-    // Custom attributes
+    // Custom attributes (DEF_STYLE_RES = Widget_Design_NavigationView, the
+    // upstream MaterialThemeOverlay.wrap idiom's style-resolution effect).
     auto ta = context->obtainStyledAttributes(attrs,
-            cdroid::internal::R::styleable::NavigationView, defStyleAttr);
+            cdroid::internal::R::styleable::NavigationView, defStyleAttr,
+            cdroid::internal::R::style::Widget_Design_NavigationView);
 
     RefPtr<ColorStateList> subheaderColor;
     if (ta->hasValue(cdroid::internal::R::styleable::NavigationView_subheaderColor)) {
