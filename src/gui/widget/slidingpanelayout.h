@@ -194,10 +194,11 @@ public:
 };
 
 class SlidingPaneLayout::SavedState:public AbsSavedState {
+public:
     bool isOpen;
     int mLockMode;
 public:
-    SavedState(Parcelable superState);
+    SavedState(Parcelable* superState);
     //SavedState(Parcel in, ClassLoader loader);
     void writeToParcel(Parcel& out, int flags)override;
 };
@@ -210,7 +211,7 @@ public:
     void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event) override;
     bool onRequestSendAccessibilityEvent(ViewGroup& host, View& child, AccessibilityEvent& event) override;
 
-    bool filter(View child);
+    bool filter(View* child);
 };
 
 class SlidingPaneLayout::TouchBlocker:public FrameLayout {

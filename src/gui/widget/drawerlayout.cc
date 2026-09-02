@@ -26,6 +26,7 @@ DECLARE_WIDGET(DrawerLayout)
 
 void DrawerLayout::initView(){
     mInLayout = false;
+    mActionDismiss.init(this);
     mStatusBarBackground = nullptr;
     mShadowLeftResolved  = nullptr;
     mShadowRightResolved = nullptr;
@@ -69,6 +70,8 @@ void DrawerLayout::initView(){
     // So that we can catch the back button
     setFocusableInTouchMode(true);
 
+    setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
+    setAccessibilityDelegate(std::make_shared<DrawerLayout::AccessibilityDelegate>());
     setMotionEventSplittingEnabled(false);
     mDrawerElevation = DRAWER_ELEVATION * density;
 }
@@ -77,6 +80,28 @@ DrawerLayout::DrawerLayout(Context*ctx)
     :DrawerLayout(ctx,nullptr){}
 
 DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet* atts):DrawerLayout(ctx,atts,0){}
+
+void DrawerLayout::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(View& host,
+        AccessibilityNodeInfo& info) {
+    View::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, info);
+
+    info.setClassName(ACCESSIBILITY_CLASS_NAME);
+
+    // This view reports itself as focusable so that it can intercept
+    // the back button, but we should prevent this view from reporting
+    // itself as focusable to accessibility services.
+    info.setFocusable(false);
+    info.setFocused(false);
+    info.removeAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_FOCUS);
+    info.removeAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_FOCUS);
+}
+
+void DrawerLayout::AccessibilityDelegate::onInitializeAccessibilityEvent(View& host,
+        AccessibilityEvent& event) {
+    View::AccessibilityDelegate::onInitializeAccessibilityEvent(host, event);
+
+    event.setClassName(ACCESSIBILITY_CLASS_NAME);
+}
 
 DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :ViewGroup(ctx,pAttrs, defStyleAttr){
@@ -431,6 +456,7 @@ void DrawerLayout::dispatchOnDrawerClosed(View* drawerView) {
         }
 
         updateChildrenImportantForAccessibility(drawerView, false);
+        updateChildAccessibilityAction(drawerView);
 
         // Only send WINDOW_STATE_CHANGE if the host has window focus. This
         // may change if support for multiple foreground windows (e.g. IME)
@@ -457,6 +483,7 @@ void DrawerLayout::dispatchOnDrawerOpened(View* drawerView) {
         }
 
         updateChildrenImportantForAccessibility(drawerView, true);
+        updateChildAccessibilityAction(drawerView);
 
         // Only send WINDOW_STATE_CHANGE if the host has window focus.
         if (hasWindowFocus()) {
@@ -480,10 +507,22 @@ void DrawerLayout::updateChildrenImportantForAccessibility(View* drawerView, boo
 }
 
 void DrawerLayout::updateChildAccessibilityAction(View* child) {
-    /*child->removeAccessibilityAction(ACTION_DISMISS.getId());
-    if (isDrawerOpen(child)  && getDrawerLockMode(child) != LOCK_MODE_LOCKED_OPEN) {
-        child->replaceAccessibilityAction(ACTION_DISMISS, nullptr, mActionDismiss);
-    }*/
+    child->removeAccessibilityAction(
+            AccessibilityNodeInfo::AccessibilityAction::ACTION_DISMISS.getId());
+    if (isDrawerOpen(child) && getDrawerLockMode(child) != LOCK_MODE_LOCKED_OPEN) {
+        child->replaceAccessibilityAction(
+                AccessibilityNodeInfo::AccessibilityAction::ACTION_DISMISS,
+                nullptr, &mActionDismiss);
+    }
+}
+
+bool DrawerLayout::DismissDrawerCommand::perform(View& view, CommandArguments*) {
+    if (mLayout->isDrawerOpen(&view)
+            && mLayout->getDrawerLockMode(&view) != LOCK_MODE_LOCKED_OPEN) {
+        mLayout->closeDrawer(&view);
+        return true;
+    }
+    return false;
 }
 
 void DrawerLayout::dispatchOnDrawerSlide(View* drawerView, float slideOffset) {
@@ -1247,6 +1286,7 @@ void DrawerLayout::openDrawer(View* drawerView, bool animate) {
         lp->onScreen = 1.f;
         lp->openState = LayoutParams::FLAG_IS_OPENED;
         updateChildrenImportantForAccessibility(drawerView, true);
+        updateChildAccessibilityAction(drawerView);
     } else if (animate) {
         lp->openState |= LayoutParams::FLAG_IS_OPENING;
         switch(getDrawerViewAbsoluteGravity(drawerView)){
@@ -1528,7 +1568,9 @@ void DrawerLayout::addView(View* child, int index, ViewGroup::LayoutParams* para
     }
 
     // We only need a delegate here if the framework doesn't understand
-    // NO_HIDE_DESCENDANTS importance.
+    // NO_HIDE_DESCENDANTS importance. CDROID does (CAN_HIDE_DESCENDANTS, like
+    // every API 19+), so androidx's ChildAccessibilityDelegate never attaches —
+    // not ported.
     if (!CAN_HIDE_DESCENDANTS) {
         //child->setAccessibilityDelegate(mChildAccessibilityDelegate);
     }

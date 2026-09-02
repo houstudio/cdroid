@@ -101,7 +101,135 @@ bool AppBarLayout::Behavior::onMeasureChild(CoordinatorLayout& /*parent*/, View&
 bool AppBarLayout::Behavior::onLayoutChild(CoordinatorLayout& parent, View& child, int layoutDirection) {
     // Lay out like the parent would, then apply the current offset.
     parent.onLayoutChild(&child, layoutDirection);
+    AppBarLayout* abl = dynamic_cast<AppBarLayout*>(&child);
+    if (abl != nullptr) {
+        addAccessibilityDelegateIfNeeded(parent, *abl);
+    }
     return true;
+}
+
+// Material HeaderBehavior.addAccessibilityDelegateIfNeeded: the CoordinatorLayout
+// is presented to accessibility as a ScrollView carrying the bar's collapse/
+// expand actions.
+void AppBarLayout::Behavior::addAccessibilityDelegateIfNeeded(
+        CoordinatorLayout& coordinatorLayout, AppBarLayout& appBarLayout) {
+    if (!coordinatorLayout.hasAccessibilityDelegate()) {
+        coordinatorLayout.setAccessibilityDelegate(
+                std::make_shared<AccessibilityDelegate>(this, &coordinatorLayout, &appBarLayout));
+    }
+}
+
+AppBarLayout::Behavior::AccessibilityDelegate::AccessibilityDelegate(
+        Behavior* behavior, CoordinatorLayout* parent, AppBarLayout* appBarLayout)
+    : mBehavior(behavior), mParent(parent), mAppBarLayout(appBarLayout) {
+}
+
+View* AppBarLayout::Behavior::AccessibilityDelegate::getChildWithScrollingBehavior(
+        CoordinatorLayout& coordinatorLayout) {
+    const int childCount = coordinatorLayout.getChildCount();
+    for (int i = 0; i < childCount; i++) {
+        View* child = coordinatorLayout.getChildAt(i);
+        CoordinatorLayout::LayoutParams* lp =
+                (CoordinatorLayout::LayoutParams*) child->getLayoutParams();
+        if (dynamic_cast<AppBarLayout::ScrollingViewBehavior*>(lp->getBehavior()) != nullptr) {
+            return child;
+        }
+    }
+    return nullptr;
+}
+
+bool AppBarLayout::Behavior::AccessibilityDelegate::childrenHaveScrollFlags(
+        AppBarLayout& appBarLayout) {
+    const int childCount = appBarLayout.getChildCount();
+    for (int i = 0; i < childCount; i++) {
+        View* child = appBarLayout.getChildAt(i);
+        LayoutParams* childLp = (LayoutParams*) child->getLayoutParams();
+        const int flags = childLp->scrollFlags;
+        if (flags != LayoutParams::SCROLL_FLAG_NO_SCROLL) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void AppBarLayout::Behavior::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(
+        View& host, AccessibilityNodeInfo& info) {
+    View::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, info);
+    info.setClassName("android.widget.ScrollView");
+    if (mAppBarLayout->getTotalScrollRange() == 0) {
+        return;
+    }
+    View* scrollingView = getChildWithScrollingBehavior(*mParent);
+    // Don't add actions if a child view doesn't have the behavior that will cause the
+    // ABL to scroll.
+    if (scrollingView == nullptr) {
+        return;
+    }
+
+    // Don't add actions if the children do not have scrolling flags.
+    if (!childrenHaveScrollFlags(*mAppBarLayout)) {
+        return;
+    }
+
+    // CDROID substrate: the offset the scrolling sibling sees is the ABL's own
+    // current offset (material HeaderBehavior.getTopBottomOffsetForScrollingSibling).
+    const int offsetForScrollingSibling = mAppBarLayout->getCurrentOffset();
+
+    if (offsetForScrollingSibling != -mAppBarLayout->getTotalScrollRange()) {
+        // Add a collapsing action/forward if the view offset isn't the ABL scroll range.
+        // (The same offset means the view is completely collapsed).
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD);
+        info.setScrollable(true);
+    }
+
+    // Don't add an expanding action if the sibling offset is 0, which would mean the
+    // ABL is completely expanded.
+    if (offsetForScrollingSibling != 0) {
+        if (scrollingView->canScrollVertically(-1)) {
+            const int dy = -mAppBarLayout->getDownNestedPreScrollRange();
+            // Offset by non-zero.
+            if (dy != 0) {
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD);
+                info.setScrollable(true);
+            }
+        } else {
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD);
+            info.setScrollable(true);
+        }
+    }
+}
+
+bool AppBarLayout::Behavior::AccessibilityDelegate::performAccessibilityAction(
+        View& host, int action, Bundle* args) {
+    if (action == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD) {
+        mAppBarLayout->setExpanded(false);
+        return true;
+    } else if (action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD) {
+        if (mAppBarLayout->getCurrentOffset() != 0) {
+            View* scrollingView = getChildWithScrollingBehavior(*mParent);
+            if (scrollingView == nullptr) return false;
+            if (scrollingView->canScrollVertically(-1)) {
+                // Expanding action. If the view can scroll down, expand the app bar
+                // reflecting the logic in onNestedPreScroll.
+                const int dy = -mAppBarLayout->getDownNestedPreScrollRange();
+                // Offset by non-zero.
+                if (dy != 0) {
+                    int consumed[2] = {0, 0};
+                    mBehavior->onNestedPreScroll(*mParent, static_cast<View&>(*mAppBarLayout),
+                            *scrollingView, 0, dy, consumed, View::TYPE_NON_TOUCH);
+                    return true;
+                }
+            } else {
+                // If the view can't scroll down, we are probably at the top of the
+                // scrolling content so expand completely.
+                mAppBarLayout->setExpanded(true);
+                return true;
+            }
+        }
+    } else {
+        return View::AccessibilityDelegate::performAccessibilityAction(host, action, args);
+    }
+    return false;
 }
 
 // --- ScrollingViewBehavior: pin the content below the header -----------------
@@ -223,6 +351,50 @@ int AppBarLayout::getTotalScrollRange() {
 
 bool AppBarLayout::hasScrollableChildren() {
     return getTotalScrollRange() != 0;
+}
+
+int AppBarLayout::getDownNestedPreScrollRange() {
+    if (mDownPreScrollRange != INVALID_SCROLL_RANGE) {
+        // If we already have a valid value, return it
+        return mDownPreScrollRange;
+    }
+
+    int range = 0;
+    for (int i = getChildCount() - 1; i >= 0; i--) {
+        View* child = getChildAt(i);
+        if (child->getVisibility() == View::GONE) {
+            // Gone views should not be included in the scroll range calculation.
+            continue;
+        }
+        LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+        const int childHeight = child->getMeasuredHeight();
+        const int flags = lp->scrollFlags;
+
+        if ((flags & LayoutParams::FLAG_QUICK_RETURN) == LayoutParams::FLAG_QUICK_RETURN) {
+            // First take the margin into account
+            int childRange = lp->topMargin + lp->bottomMargin;
+            // The view has the quick return flag combination...
+            if ((flags & LayoutParams::SCROLL_FLAG_ENTER_ALWAYS_COLLAPSED) != 0) {
+                // If they're set to enter collapsed, use the minimum height
+                childRange += child->getMinimumHeight();
+            } else if ((flags & LayoutParams::SCROLL_FLAG_EXIT_UNTIL_COLLAPSED) != 0) {
+                // Only enter by the amount of the collapsed height
+                childRange += childHeight - child->getMinimumHeight();
+            } else {
+                // Else use the full height
+                childRange += childHeight;
+            }
+            // Material's first-child fitsSystemWindows clamp runs against
+            // childHeight - getTopInset(); the inset machinery is not ported
+            // (top inset is always 0), so the clamp is a no-op here.
+            range += childRange;
+        } else if (range > 0) {
+            // If we've hit an non-quick return scrollable view, and we've already hit a
+            // quick return view, return now
+            break;
+        }
+    }
+    return mDownPreScrollRange = std::max(0, range);
 }
 
 DECLARE_WIDGET(AppBarLayout)

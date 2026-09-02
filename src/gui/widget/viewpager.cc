@@ -113,6 +113,11 @@ void ViewPager::initViewPager(const AttributeSet*atts){
     mCloseEnough   = (int) (CLOSE_ENOUGH * density);
     mDefaultGutterSize = (int) (DEFAULT_GUTTER_SIZE * density);
     mGutterSize = 0;
+
+    setAccessibilityDelegate(std::make_shared<ViewPager::MyAccessibilityDelegate>());
+    if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
     mEndScrollRunnable=[this](){
         setScrollState(SCROLL_STATE_IDLE);
         populate();	
@@ -2233,6 +2238,58 @@ ViewPager::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts)
     needsMeasure= true;
     position  = -1;
     childIndex= -1;
+}
+
+//androidx ViewPager.MyAccessibilityDelegate
+void ViewPager::MyAccessibilityDelegate::onInitializeAccessibilityEvent(View& host,
+        AccessibilityEvent& event) {
+    View::AccessibilityDelegate::onInitializeAccessibilityEvent(host, event);
+    ViewPager& pager = (ViewPager&)host;
+    event.setClassName(ACCESSIBILITY_CLASS_NAME);
+    event.setScrollable(pager.canScroll());
+    if (event.getEventType() == AccessibilityEvent::TYPE_VIEW_SCROLLED
+            && pager.mAdapter != nullptr) {
+        event.setItemCount(pager.mAdapter->getCount());
+        event.setFromIndex(pager.mCurItem);
+        event.setToIndex(pager.mCurItem);
+    }
+}
+
+void ViewPager::MyAccessibilityDelegate::onInitializeAccessibilityNodeInfo(View& host,
+        AccessibilityNodeInfo& info) {
+    View::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, info);
+    ViewPager& pager = (ViewPager&)host;
+    info.setClassName(ACCESSIBILITY_CLASS_NAME);
+    info.setScrollable(pager.canScroll());
+    if (pager.canScrollHorizontally(1)) {
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD);
+    }
+    if (pager.canScrollHorizontally(-1)) {
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD);
+    }
+}
+
+bool ViewPager::MyAccessibilityDelegate::performAccessibilityAction(View& host,
+        int action, Bundle* arguments) {
+    if (View::AccessibilityDelegate::performAccessibilityAction(host, action, arguments)) {
+        return true;
+    }
+    ViewPager& pager = (ViewPager&)host;
+    switch (action) {
+    case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD: {
+        if (pager.canScrollHorizontally(1)) {
+            pager.setCurrentItem(pager.mCurItem + 1);
+            return true;
+        }
+    } return false;
+    case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD: {
+        if (pager.canScrollHorizontally(-1)) {
+            pager.setCurrentItem(pager.mCurItem - 1);
+            return true;
+        }
+    } return false;
+    }
+    return false;
 }
 
 }//endof namespace

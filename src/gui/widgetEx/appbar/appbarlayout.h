@@ -35,11 +35,14 @@ public:
 
     class LayoutParams : public LinearLayout::LayoutParams {
     public:
+        static constexpr int SCROLL_FLAG_NO_SCROLL = 0;
         static constexpr int SCROLL_FLAG_SCROLL = 0x1;
         static constexpr int SCROLL_FLAG_EXIT_UNTIL_COLLAPSED = 0x2;
         static constexpr int SCROLL_FLAG_ENTER_ALWAYS = 0x4;
         static constexpr int SCROLL_FLAG_ENTER_ALWAYS_COLLAPSED = 0x8;
         static constexpr int SCROLL_FLAG_SNAP = 0x10;
+        /** Material: SCROLL_FLAG_SCROLL | SCROLL_FLAG_ENTER_ALWAYS. */
+        static constexpr int FLAG_QUICK_RETURN = SCROLL_FLAG_SCROLL | SCROLL_FLAG_ENTER_ALWAYS;
 
         int scrollFlags = 0;
         LayoutParams(Context* c, const AttributeSet& attrs);
@@ -52,6 +55,26 @@ public:
     protected:
         int mOffsetDelta = 0;
         bool mSkipNestedPreScroll = false;
+    private:
+        // Material HeaderBehavior.addAccessibilityDelegateIfNeeded: a delegate on
+        // the CoordinatorLayout presenting the bar as a ScrollView with collapse/
+        // expand actions. material's helpers (getChildWithScrollingBehavior,
+        // childrenHaveScrollFlags) live on the anonymous class here.
+        class AccessibilityDelegate : public View::AccessibilityDelegate {
+        private:
+            Behavior* mBehavior;
+            CoordinatorLayout* mParent;
+            AppBarLayout* mAppBarLayout;
+            View* getChildWithScrollingBehavior(CoordinatorLayout& coordinatorLayout);
+            bool childrenHaveScrollFlags(AppBarLayout& appBarLayout);
+        public:
+            AccessibilityDelegate(Behavior* behavior, CoordinatorLayout* parent,
+                    AppBarLayout* appBarLayout);
+            void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) override;
+            bool performAccessibilityAction(View& host, int action, Bundle* args) override;
+        };
+        void addAccessibilityDelegateIfNeeded(CoordinatorLayout& coordinatorLayout,
+                AppBarLayout& appBarLayout);
     public:
         bool onStartNestedScroll(CoordinatorLayout& parent, View& child, View& directTargetChild,
                 View& target, int axes) override;
@@ -82,6 +105,7 @@ private:
     static constexpr int INVALID_SCROLL_RANGE = -1;
     int mCurrentOffset = 0;
     int mTotalScrollRange = INVALID_SCROLL_RANGE;
+    int mDownPreScrollRange = INVALID_SCROLL_RANGE;
     std::vector<OnOffsetChangedListener> mListeners;
     Behavior* mBehavior = nullptr;
 protected:
@@ -93,6 +117,9 @@ public:
 
     void addOnOffsetChangedListener(const OnOffsetChangedListener& listener);
     int getTotalScrollRange();
+    /** Material getDownNestedPreScrollRange: the range the bar re-enters for
+        a downward nested scroll (enter-always/quick-return children). */
+    int getDownNestedPreScrollRange();
     bool hasScrollableChildren();
     int getCurrentOffset() const { return mCurrentOffset; }
     // Header offset control: negative offsets scroll the bar up (AOSP setExpanded

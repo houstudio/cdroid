@@ -18,6 +18,7 @@
 #ifndef __DRAWER_LAYOUT_H__
 #define __DRAWER_LAYOUT_H__
 #include <view/viewgroup.h>
+#include <view/accessibility/accessibilityviewcommand.h>
 #include <widget/viewdraghelper.h>
 #include <widget/openable.h>
 namespace cdroid{
@@ -93,6 +94,29 @@ private:
     static constexpr float TOUCH_SLOP_SENSITIVITY = 1.f;
     static constexpr bool CAN_HIDE_DESCENDANTS=true;
     static constexpr bool SET_DRAWER_SHADOW_FROM_ELEVATION=false;
+
+    static constexpr const char* ACCESSIBILITY_CLASS_NAME = "androidx.drawerlayout.widget.DrawerLayout";
+
+    /*androidx DrawerLayout.AccessibilityDelegate: this view reports itself
+      focusable-in-touch-mode only to intercept the back button — hide that
+      from accessibility services.*/
+    class AccessibilityDelegate:public View::AccessibilityDelegate {
+    public:
+        void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
+        void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event)override;
+    };
+
+    /*androidx mActionDismiss lambda: closes an open, unlocked drawer child.
+      Bound to this layout at initView (the lambda captures the outer this).*/
+    class DismissDrawerCommand:public AccessibilityViewCommand {
+    public:
+        DismissDrawerCommand():mLayout(nullptr){}
+        void init(DrawerLayout* layout){ mLayout = layout; }
+        bool perform(View& view, CommandArguments* arguments)override;
+    private:
+        DrawerLayout* mLayout;
+    };
+    DismissDrawerCommand mActionDismiss;
 
     class ViewDragCallback:public ViewDragHelper::Callback{
     private:

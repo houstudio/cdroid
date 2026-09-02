@@ -34,6 +34,10 @@
     (per-step snapshot follows pager/tab navigation, node isVisibleToUser
     filtering, auto-scroll between cycles) and --test-script line DSL
     (Tokenizer lexer, wait/click/assert/dump, CI exit code)
+  - androidx ViewCompat a11y action API collapsed onto View
+    (add/remove/replaceAccessibilityAction + hasAccessibilityDelegate),
+    wired into ViewPager2 / DrawerLayout / SlidingPaneLayout /
+    AppBarLayout / ViewPager
   - preferencedemo: portrait settings chrome, Slide fragment transitions (legacy animation
     path kept behind PREFDEMO_ANIM), AUTOCYCLE valgrind driver
   - Emoji editing semantics on a par with Android: myicu binary properties now generated

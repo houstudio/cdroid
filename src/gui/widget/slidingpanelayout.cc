@@ -49,7 +49,7 @@ void SlidingPaneLayout::initView(){
     mIsUnableToDrag = false;
     mPreservedOpenState = false;
     //setWillNotDraw(false);
-    //setAccessibilityDelegate(new AccessibilityDelegate());
+    setAccessibilityDelegate(std::make_shared<SlidingPaneLayout::AccessibilityDelegate>());
     setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
     mDragHelper = ViewDragHelper::create(this, 0.5f, new DragHelperCallback(this));
     mDragHelper->setMinVelocity(MIN_FLING_VELOCITY * density);
@@ -1189,7 +1189,6 @@ SlidingPaneLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& at
     this->weight = attrs.getAttributeFloatValue(std::string(), "weight", 0);
 }
 
-#if 0
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //static class SavedState extends AbsSavedState
 
@@ -1210,23 +1209,26 @@ void SlidingPaneLayout::SavedState::writeToParcel(Parcel& out, int flags) {
 //class AccessibilityDelegate extends AccessibilityDelegate {
 void SlidingPaneLayout::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) {
     AccessibilityNodeInfo* superNode = AccessibilityNodeInfo::obtain(info);
-    View::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, superNode);
-    copyNodeInfoNoChildren(info, superNode);
-    superNode.recycle();
+    View::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, *superNode);
+    copyNodeInfoNoChildren(info, *superNode);
+    superNode->recycle();
 
     info.setClassName("SlidingPaneLayout");
-    info.setSource(host);
+    info.setSource(&host);
 
-    final ViewParent parent = ViewCompat.getParentForAccessibility(host);
-    if (parent instanceof View) {
-        info.setParent((View) parent);
+    // Java: ViewCompat.getParentForAccessibility(host) instanceof View — CDROID's
+    // parent-for-accessibility is already a View subclass (ViewGroup).
+    ViewGroup* parent = host.getParentForAccessibility();
+    if (parent != nullptr) {
+        info.setParent(parent);
     }
 
     // This is a best-approximation of addChildrenForAccessibility()
     // that accounts for filtering.
-    const int childCount = getChildCount();
+    SlidingPaneLayout* layout = (SlidingPaneLayout*)&host; // this delegate only attaches here
+    const int childCount = layout->getChildCount();
     for (int i = 0; i < childCount; i++) {
-        View* child = getChildAt(i);
+        View* child = layout->getChildAt(i);
         if (!filter(child) && (child->getVisibility() == View::VISIBLE)) {
             // Force importance to "yes" since we can't read the value.
             child->setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -1240,15 +1242,18 @@ void SlidingPaneLayout::AccessibilityDelegate::onInitializeAccessibilityEvent(Vi
     event.setClassName("SlidingPaneLayout");
 }
 
-bool SlidingPaneLayout::AccessibilityDelegate::onRequestSendAccessibilityEvent(ViewGroup& host, View* child, AccessibilityEvent& event) {
-    if (!filter(child)) {
+bool SlidingPaneLayout::AccessibilityDelegate::onRequestSendAccessibilityEvent(ViewGroup& host, View& child, AccessibilityEvent& event) {
+    if (!filter(&child)) {
         return View::AccessibilityDelegate::onRequestSendAccessibilityEvent(host, child, event);
     }
     return false;
 }
 
-bool SlidingPaneLayout::AccessibilityDelegate::filter(View child) {
-    return isDimmed(child);
+bool SlidingPaneLayout::AccessibilityDelegate::filter(View* child) {
+    // Java inner class calls the outer isDimmed implicitly; this delegate only
+    // ever sees direct children of its host SlidingPaneLayout.
+    SlidingPaneLayout* layout = (SlidingPaneLayout*)child->getParent();
+    return layout->isDimmed(child);
 }
 
 void SlidingPaneLayout::AccessibilityDelegate::copyNodeInfoNoChildren(AccessibilityNodeInfo& dest, AccessibilityNodeInfo& src) {
@@ -1280,7 +1285,6 @@ void SlidingPaneLayout::AccessibilityDelegate::copyNodeInfoNoChildren(Accessibil
 
     dest.setMovementGranularities(src.getMovementGranularities());
 }
-#endif
 
 SlidingPaneLayout::DisableLayerRunnable::DisableLayerRunnable(View*v,View* childView):ViewRunnable(v) {
     mChildView = childView;

@@ -160,6 +160,17 @@ private:
     PagerAdapter* mAdapter;
     std::vector<OnAdapterChangeListener> mAdapterChangeListeners;
 private:
+    static constexpr const char* ACCESSIBILITY_CLASS_NAME = "androidx.viewpager.widget.ViewPager";
+
+    /*androidx ViewPager.MyAccessibilityDelegate: scroll actions + page counts
+      on events; the anonymous inner class reaches the outer pager directly.*/
+    class MyAccessibilityDelegate:public View::AccessibilityDelegate {
+    public:
+        void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event)override;
+        void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
+        bool performAccessibilityAction(View& host, int action, Bundle* arguments)override;
+    };
+
     void removeNonDecorViews();
     int getClientWidth();
     bool isGutterDrag(float x, float dx);

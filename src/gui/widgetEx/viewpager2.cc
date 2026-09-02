@@ -852,30 +852,25 @@ std::string ViewPager2::BasicAccessibilityProvider::onRvGetAccessibilityClassNam
 }
 
 ////////////////////class PageAwareAccessibilityProvider extends AccessibilityProvider//////////////////////////////
-/*private final AccessibilityViewCommand mActionPageForward =
-    new AccessibilityViewCommand() {
-        @Override
-        public bool perform(@NonNull View view,
-                @Nullable CommandArguments arguments) {
-            ViewPager2 viewPager = (ViewPager2) view;
-            setCurrentItemFromAccessibilityCommand(viewPager.getCurrentItem() + 1);
-            return true;
-        }
-    };
 
-private final AccessibilityViewCommand mActionPageBackward =
-    new AccessibilityViewCommand() {
-        @Override
-        public bool perform(@NonNull View view,
-                @Nullable CommandArguments arguments) {
-            ViewPager2 viewPager = (ViewPager2) view;
-            setCurrentItemFromAccessibilityCommand(viewPager.getCurrentItem() - 1);
-            return true;
-        }
-    };*/
+ViewPager2::PageAwareAccessibilityProvider::PageActionCommand::PageActionCommand(
+        PageAwareAccessibilityProvider* provider, int direction)
+    :mProvider(provider), mDirection(direction){
+}
+
+bool ViewPager2::PageAwareAccessibilityProvider::PageActionCommand::perform(View&,
+        CommandArguments*){
+    // androidx: ViewPager2 viewPager = (ViewPager2) view;
+    // setCurrentItemFromAccessibilityCommand(viewPager.getCurrentItem() ± 1);
+    mProvider->setCurrentItemFromAccessibilityCommand(
+            mProvider->mVP->getCurrentItem() + mDirection);
+    return true;
+}
 
 ViewPager2::PageAwareAccessibilityProvider::PageAwareAccessibilityProvider(ViewPager2*v)
-    :AccessibilityProvider(v){
+    :AccessibilityProvider(v),
+    mActionPageForward(this, +1),
+    mActionPageBackward(this, -1){
     mAdapterDataObserver = nullptr;
 }
 
@@ -986,7 +981,6 @@ void ViewPager2::PageAwareAccessibilityProvider::setCurrentItemFromAccessibility
 
 void ViewPager2::PageAwareAccessibilityProvider::updatePageAccessibilityActions() {
     ViewPager2* viewPager = mVP;
-#if 0
     constexpr int actionIdPageLeft = R::id::accessibilityActionPageLeft;
     constexpr int actionIdPageRight = R::id::accessibilityActionPageRight;
     constexpr int actionIdPageUp = R::id::accessibilityActionPageUp;
@@ -1017,27 +1011,26 @@ void ViewPager2::PageAwareAccessibilityProvider::updatePageAccessibilityActions(
 
         if (mVP->mCurrentItem < itemCount - 1) {
             viewPager->replaceAccessibilityAction(
-                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageForward, nullptr), nullptr,
-                    mActionPageForward);
+                    AccessibilityNodeInfo::AccessibilityAction(actionIdPageForward, std::string()),
+                    nullptr, &mActionPageForward);
         }
         if (mVP->mCurrentItem > 0) {
             viewPager->replaceAccessibilityAction(
-                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageBackward, nullptr), nullptr,
-                    mActionPageBackward);
+                    AccessibilityNodeInfo::AccessibilityAction(actionIdPageBackward, std::string()),
+                    nullptr, &mActionPageBackward);
         }
     } else {
         if (mVP->mCurrentItem < itemCount - 1) {
             viewPager->replaceAccessibilityAction(
-                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageDown, nullptr), nullptr,
-                    mActionPageForward);
+                    AccessibilityNodeInfo::AccessibilityAction(actionIdPageDown, std::string()),
+                    nullptr, &mActionPageForward);
         }
         if (mVP->mCurrentItem > 0) {
             viewPager->replaceAccessibilityAction(
-                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageUp, nullptr), nullptr,
-                    mActionPageBackward);
+                    AccessibilityNodeInfo::AccessibilityAction(actionIdPageUp, std::string()),
+                    nullptr, &mActionPageBackward);
         }
     }
-#endif
 }
 
 void ViewPager2::PageAwareAccessibilityProvider::addCollectionInfo(AccessibilityNodeInfo& info) {

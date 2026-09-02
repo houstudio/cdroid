@@ -18,6 +18,7 @@
 #ifndef __VIEWPAGER2_H__
 #define __VIEWPAGER2_H__
 #include <view/viewgroup.h>
+#include <view/accessibility/accessibilityviewcommand.h>
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/recyclerview/linearlayoutmanager.h>
 #include <widgetEx/recyclerview/pagersnaphelper.h>
@@ -188,8 +189,19 @@ public:
 
 class ViewPager2::PageAwareAccessibilityProvider:public ViewPager2::AccessibilityProvider {
 private:
-    AccessibilityViewCommand* mActionPageForward;
-    AccessibilityViewCommand* mActionPageBackward;
+    // androidx has two anonymous AccessibilityViewCommands calling
+    // setCurrentItemFromAccessibilityCommand(currentItem ± 1); collapsed here
+    // into one command class carrying the direction.
+    class PageActionCommand : public AccessibilityViewCommand {
+    public:
+        PageActionCommand(PageAwareAccessibilityProvider* provider, int direction);
+        bool perform(View& view, CommandArguments* arguments) override;
+    private:
+        PageAwareAccessibilityProvider* mProvider;
+        int mDirection;
+    };
+    PageActionCommand mActionPageForward;
+    PageActionCommand mActionPageBackward;
     RecyclerView::AdapterDataObserver* mAdapterDataObserver;
     void addCollectionInfo(AccessibilityNodeInfo& info);
     void addScrollActions(AccessibilityNodeInfo& info);
