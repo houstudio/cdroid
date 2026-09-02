@@ -465,6 +465,13 @@ void MessageQueue::removeAllFutureMessagesLocked(){  // :2093
 // returns nullptr when nothing is due.
 // ============================================================================
 
+Message* MessageQueue::peek() const {
+    // The raw pending head, barriers included — what upstream espresso's
+    // QueueInterrogator reflects out of the private mMessages.
+    std::lock_guard<std::recursive_mutex> lock(mLock);
+    return mMessages;
+}
+
 Message* MessageQueue::nextDue(){
     std::lock_guard<std::recursive_mutex> lock(mLock);
     const int64_t now = SystemClock::uptimeMillis();

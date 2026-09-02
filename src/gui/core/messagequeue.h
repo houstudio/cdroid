@@ -90,6 +90,13 @@ public:
     // messages (does not block / compute timeout).
     Message* nextDue();
 
+    /** Non-destructive read of the pending head (the message the next poll would
+        dispatch; a sync barrier stays the head — target == nullptr). Borrowed:
+        do not dispatch or recycle. android.os keeps the head private — upstream
+        espresso reaches it by reflection (QueueInterrogator); the in-process
+        port exposes it read-only instead. */
+    Message* peek() const;
+
     // IdleHandler is managed separately: runs the pending IdleHandlers once when the queue is
     // idle (no message due now), mirroring the idle segment of MessageQueue.java next()
     // (:971-1012). Called from Looper::drainMessageQueue — the single pump choke point reached
