@@ -250,7 +250,10 @@ bool AccessibilityNodeInfo::removeAction(AccessibilityAction* action) {
         return false;
     }
     auto it =std::find(mActions.begin(),mActions.end(),action);
-    if(it==mActions.end()){
+    // The condition was historically inverted (== erased end() -> UB when the
+    // action was absent, and present actions were silently kept); first real
+    // caller is DrawerLayout's delegate removing ACTION_FOCUS.
+    if(it!=mActions.end()){
         mActions.erase(it);
         return true;
     }
