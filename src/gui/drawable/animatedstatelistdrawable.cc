@@ -395,7 +395,7 @@ int  AnimatedStateListDrawable::FrameInterpolator::updateFrames(AnimationDrawabl
     return totalDuration;
 }
 
-int  AnimatedStateListDrawable::FrameInterpolator::getTotalDuration(){
+int  AnimatedStateListDrawable::FrameInterpolator::getTotalDuration()const{
     return mTotalDuration;
 }
 
@@ -448,13 +448,15 @@ void AnimatedStateListDrawable::AnimatableTransition::stop() {
 namespace{
     class PROP_CURRENT_INDEX:public Property{
     public:
-        PROP_CURRENT_INDEX():Property("currentIndex"){
+        // Property::get/set are const virtuals: a signature without `const`
+        // hides them instead of overriding, so every animator tick landed in
+        // the (empty) base bodies and the transition froze on its first frame.
+        PROP_CURRENT_INDEX():Property("currentIndex",INT_TYPE){
         }
-        AnimateValue get(void* object){
-            AnimateValue v = ((AnimationDrawable*)object)->getCurrentIndex();
-            return v;
+        AnimateValue get(void* object) const override {
+            return ((AnimationDrawable*)object)->getCurrentIndex();
         }
-        void set(void* object,const AnimateValue& value){
+        void set(void* object,const AnimateValue& value) const override {
             AnimationDrawable*ad=(AnimationDrawable*)object;
             ad->setCurrentIndex(GET_VARIANT(value,int));
         }
