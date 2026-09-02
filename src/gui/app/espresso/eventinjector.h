@@ -17,6 +17,7 @@
 
 #include <view/keyevent.h>
 #include <view/motionevent.h>
+#include <core/inputdevice.h>
 
 #include <app/uiautomation.h>
 
@@ -40,9 +41,16 @@ public:
 class UiAutomationEventInjector : public EventInjector {
 public:
     bool injectKeyEvent(KeyEvent& event) override {
+        // AOSP Instrumentation.sendKeySync sets the keyboard source at this
+        // seam; without it the dispatch layer drops the event.
+        event.setSource(InputDevice::SOURCE_KEYBOARD);
         return UiAutomation::getInstance().injectInputEvent(event, true /* sync */);
     }
     bool injectMotionEvent(MotionEvent& event) override {
+        // AOSP Instrumentation.sendPointerSync sets SOURCE_TOUCHSCREEN here —
+        // same seam (events built with the default source were dropped before
+        // reaching touch dispatch).
+        event.setSource(InputDevice::SOURCE_TOUCHSCREEN);
         return UiAutomation::getInstance().injectInputEvent(event, true /* sync */);
     }
 };

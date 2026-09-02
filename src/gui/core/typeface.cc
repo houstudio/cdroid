@@ -658,7 +658,9 @@ static std::string findFontsXmlNearExecutable() {
     const size_t slash = dir.find_last_of('/');
     if (slash == std::string::npos) return std::string();
     dir = dir.substr(0, slash);
-    for (int up = 0; up < 4 && !dir.empty(); up++) {
+    // Walk up until the filesystem root (the old <4 hops missed executables
+    // nested deeper in the out tree, e.g. src/gui/app/espresso — 5 levels).
+    for (; !dir.empty(); ) {
         std::string candidate = dir + "/fonts.xml";
         std::ifstream test(candidate);
         if (test.good()) return candidate;

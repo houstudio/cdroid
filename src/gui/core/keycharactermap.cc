@@ -208,7 +208,27 @@ KeyCharacterMap* KeyCharacterMap::getDefault() {
             }
             return map;
         };
-        sDefault = tryLoad("Generic.kcm");
+        // Bare filenames resolve CWD-relative; an executable run from a
+        // nested build directory (e.g. src/gui/app/espresso) missed BOTH and
+        // the empty map silently killed char translation (typed keys stopped
+        // at the focused view). Walk up from the executable first — same
+        // discovery shape as the build-tree fonts.xml snapshot.
+        char rp[PATH_MAX] = {0};
+        if (realpath("/proc/self/exe", rp)) {
+            std::string dir = rp;
+            const size_t slash = dir.find_last_of('/');
+            if (slash != std::string::npos) dir = dir.substr(0, slash);
+            for (int up = 0; up < 6 && sDefault == nullptr && !dir.empty(); up++) {
+                for (const char* name : {"Generic.kcm", "qwerty.kcm"}) {
+                    sDefault = tryLoad(dir + "/" + name);
+                    if (sDefault != nullptr) break;
+                }
+                const size_t s = dir.find_last_of('/');
+                if (s == std::string::npos || s == 0) break;
+                dir = dir.substr(0, s);
+            }
+        }
+        if (sDefault == nullptr) sDefault = tryLoad("Generic.kcm");
         if (sDefault == nullptr) sDefault = tryLoad("qwerty.kcm");
         if (sDefault == nullptr) sDefault = KeyCharacterMap::empty();   // last resort
     });

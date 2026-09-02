@@ -499,12 +499,27 @@ bool WindowManager::interceptKeyBeforeQueueing(KeyEvent& event) {
     return false;
 }
 
+Window* WindowManager::getFocusedWindow() {
+    // AOSP WindowManagerService's focused window (see header): a system-layer
+    // active window (an open IME keyboard) does not take the application's
+    // input focus — keys keep going to the active application window.
+    if (mActiveWindow != nullptr && mActiveWindow->getVisibility() == View::VISIBLE
+            && mActiveWindow->getAttributes().type >= Window::TYPE_SYSTEM_WINDOW) {
+        Window* appWindow = getActiveApplicationWindow();
+        if (appWindow != nullptr && appWindow->getVisibility() == View::VISIBLE) {
+            return appWindow;
+        }
+    }
+    return mActiveWindow;
+}
+
 void WindowManager::onKeyEvent(KeyEvent&event) {
     // Notify the focused child. Skip an active window that is not visible (e.g.
     // a dismissed IME window hidden via setVisibility(INVISIBLE)) so it does not
     // keep consuming key events; fall through to the next visible focusable window.
-    if(mActiveWindow && mActiveWindow->getVisibility()==View::VISIBLE){
-        mActiveWindow->processKeyEvent(event);
+    Window* keyTarget = getFocusedWindow();
+    if(keyTarget && keyTarget->getVisibility()==View::VISIBLE){
+        keyTarget->processKeyEvent(event);
         return ;
     }
     for (auto itr = mWindows.rbegin() ;itr != mWindows.rend();itr++) {

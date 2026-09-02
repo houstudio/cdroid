@@ -1686,7 +1686,6 @@ void Window::SendWindowContentChangedAccessibilityEvent::run(){
     // we're multithreaded.
     View* source = mSource;
     mSource = nullptr;
-    LOGD("mSource=%p mChangeTypes=%d",source,mChangeTypes);
     if (source == nullptr) {
         LOGE("Accessibility content change has no source");
         return;

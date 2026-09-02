@@ -58,11 +58,13 @@ int main(int argc, const char* argv[]){
     toggle->setOnClickListener([sceneRoot, sidePanel, fade, box, &inScene](View&){
         // NOTE: scoping the transition to sceneRoot animates the leaving side only
         // (snapshot fade-out via copyViewImage); the box appears instantly in
-        // sidePanel -- a transition animates just its own subtree. A second
-        // beginDelayedTransition(sidePanel, ...) to fade the arrival in is a
-        // separate cross-root scenario: the second transition's running-animator
-        // cleanup currently cancels the first's snapshot animator mid-flight
-        // (under investigation), so the demo stays on the single-root form.
+        // sidePanel -- a transition animates just its own subtree. Adding a second
+        // beginDelayedTransition(sidePanel, ...) is android takeover semantics, not
+        // two independent animations: the second-playing transition cancels the
+        // first's animator on the shared view (Visibility.getVisibilityChangeInfo
+        // null-side branches, verified experimentally identical to android-36).
+        // Animating both sides of a container move the android way is a single
+        // transition on the common ancestor (e.g. ChangeBounds glide).
         TransitionManager::beginDelayedTransition(sceneRoot, fade);
         ViewGroup* from = inScene ? static_cast<ViewGroup*>(sceneRoot) : static_cast<ViewGroup*>(sidePanel);
         ViewGroup* to   = inScene ? static_cast<ViewGroup*>(sidePanel)  : static_cast<ViewGroup*>(sceneRoot);

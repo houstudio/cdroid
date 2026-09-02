@@ -92,42 +92,49 @@ int main(int argc, const char* argv[]) {
     layout->setOrientation(LinearLayout::VERTICAL);
     window->addView(layout);
 
-    LinearLayout::LayoutParams* match =
-            new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT);
+    // One LayoutParams per child: addView adopts the params into the view,
+    // and each View deletes its own at teardown (a single shared pointer
+    // here would be a five-way double-free — Java samples share one object
+    // only because the GC tolerates aliasing).
+    auto match = [] {
+        return new LinearLayout::LayoutParams(
+                LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT);
+    };
 
     auto* title = new TextView(&App::getInstance());
     title->setText("Espresso Demo");
     title->setTextSize(28);
     title->setId(ID_TITLE);
-    layout->addView(title, match);
+    layout->addView(title, match());
 
     gStatus = new TextView(&App::getInstance());
     gStatus->setText("Not clicked");
     gStatus->setId(ID_STATUS);
     gStatus->setTextSize(20);
-    layout->addView(gStatus, match);
+    layout->addView(gStatus, match());
 
     auto* button = new Button(&App::getInstance());
     button->setText("Click Me");
     button->setId(ID_BUTTON);
     button->setOnClickListener([](View&) { gStatus->setText("Clicked!"); });
-    layout->addView(button, match);
+    layout->addView(button, match());
 
     auto* edit = new EditText(&App::getInstance());
     edit->setHint("Type here");
     edit->setId(ID_EDIT);
-    layout->addView(edit, match);
+    layout->addView(edit, match());
 
     auto* check = new CheckBox(&App::getInstance());
     check->setText("Check me");
     check->setId(ID_CHECK);
-    layout->addView(check, match);
+    layout->addView(check, match());
 
     // The "test runner": once the first frame is up, drive the registered
     // tests on the main thread (AOSP: the instrumentation thread posts the
-    // JUnit run into the app's main looper).
-    Handler(Looper::getMainLooper()).postDelayed(
-            [] { EspressoTestRegistry::getInstance().runAll(); }, 800);
+    // JUnit run into the app's main looper). The Handler must outlive the
+    // post — a temporary drops the message before it is dispatched.
+    static Handler runner(Looper::getMainLooper());
+    runner.postDelayed([] { EspressoTestRegistry::getInstance().runAll(); }, 800);
 
     return app.exec();
 }

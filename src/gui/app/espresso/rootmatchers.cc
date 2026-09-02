@@ -17,16 +17,23 @@ static constexpr int FLAG_NOT_TOUCHABLE = 0x00000010;
 // AOSP window-layer values (Window::window_type mirrors them into
 // LayoutParams.type — see cdwindow.cc initWindow).
 static constexpr int TYPE_BASE_APPLICATION = 1;
+static constexpr int FIRST_APPLICATION_WINDOW = 1;
 static constexpr int LAST_APPLICATION_WINDOW = 99;
 static constexpr int FIRST_SUB_WINDOW = 1000;
 static constexpr int LAST_SUB_WINDOW = 1999;
 
 bool viewHasWindowFocus(View* view) {
     // AOSP View.hasWindowFocus (public there; protected in the CDROID port).
-    // In-process equivalent: the view's root window is the active window.
+    // AOSP window focus stays on the application window while an IME is up
+    // (input-method panels never take it), but the raw getActiveWindow flips
+    // to the last-added window — an open keyboard made every app root report
+    // unfocused and the RootViewPicker spun. Compare against the active
+    // APPLICATION window instead, which system windows (IME among them)
+    // cannot steal.
     if (view == nullptr || view->getRootView() == nullptr) return false;
     Window* window = dynamic_cast<Window*>(view->getRootView());
-    return window != nullptr && window == WindowManager::getInstance().getActiveWindow();
+    return window != nullptr
+            && window == WindowManager::getInstance().getActiveApplicationWindow();
 }
 
 namespace {
@@ -141,10 +148,19 @@ RootMatcherPtr RootMatchers::isSubwindowOfCurrentActivity() {
     class IsSubwindow : public RootMatcher {
     public:
         IsSubwindow() : RootMatcher("is subwindow of current activity") {}
-        bool matchesSafely(const Root& /*root*/) const override {
-            // Single-process model: every root belongs to the one running
-            // application (AOSP checks the resumed Activity's window tokens).
-            return true;
+        bool matchesSafely(const Root& root) const override {
+            // AOSP: the window's type falls in the application range or the
+            // sub-window range of the resumed activity's token. The port was
+            // unconditionally true ("single-process"), which let DEFAULT also
+            // match system windows — an IME keyboard popping over a focused
+            // EditText hijacked the root selection. Type ranges are the
+            // CDROID equivalent of the token check.
+            if (root.getWindowLayoutParams() == nullptr) return false;
+            const int type = root.getWindowLayoutParams()->type;
+            if (type >= FIRST_APPLICATION_WINDOW && type <= LAST_APPLICATION_WINDOW) {
+                return true;
+            }
+            return type >= FIRST_SUB_WINDOW && type <= LAST_SUB_WINDOW;
         }
     };
     return std::make_shared<IsSubwindow>();

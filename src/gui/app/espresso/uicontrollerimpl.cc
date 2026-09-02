@@ -1,5 +1,9 @@
 #include <app/espresso/uicontrollerimpl.h>
 
+#include <climits>
+#include <fstream>
+#include <mutex>
+
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -132,7 +136,8 @@ bool UiControllerImpl::injectString(const std::string& str) {
 // static
 KeyCharacterMap* UiControllerImpl::getKeyCharacterMap() {
     // AOSP loads KeyCharacterMap.VIRTUAL_KEYBOARD; CDROID's KeyCharacterMap
-    // port exposes the combined default map instead.
+    // port exposes the combined default map instead (which now also probes
+    // upward from the executable — see KeyCharacterMap::getDefault).
     return KeyCharacterMap::getDefault();
 }
 

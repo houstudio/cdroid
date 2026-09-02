@@ -96,13 +96,12 @@ ViewMatchers::Ptr ViewMatchers::isDisplayingAtLeast(int areaPercentage) {
             Rect visibleRect;
             View& v = const_cast<View&>(view);
             const bool visibleAtLeast = v.getGlobalVisibleRect(visibleRect, nullptr);
-            // AOSP computes maxArea from the display metrics minus the
-            // not-visible screen area — the whole display here (no system bars).
-            Point size;
-            WindowManager::getInstance().getDefaultDisplay().getSize(size);
+            // AOSP: maxArea is the VIEW's own area (width*height), not the
+            // display — the matcher asks how much of the view is on screen.
             const int64_t visibleViewArea =
                     (int64_t)visibleRect.width * (int64_t)visibleRect.height;
-            const int64_t maxArea = (int64_t)size.x * (int64_t)size.y;
+            const int64_t maxArea =
+                    (int64_t)v.getWidth() * (int64_t)v.getHeight();
             return visibleAtLeast && (visibleViewArea * 100 >= maxArea * mAreaPercentage);
         }
     private:

@@ -106,6 +106,12 @@ public:
      * windows above it — IME, toasts, system alerts — which can hold input
      * focus without being the top application window). Null when none. */
     Window*getActiveApplicationWindow();
+    /* AOSP WindowManagerService's focused window: the window key input goes
+     * to. mActiveWindow is "last added/touched"; a system-layer window being
+     * active (an open IME) does not take the application's input focus —
+     * fall through to the active application window, as AOSP keeps the app
+     * window focused while the IME is up. */
+    Window*getFocusedWindow();
 
     /* AccessibilityInteractionController.setAccessibilityFetchFlags
      * (android-36 :973): the ViewRootImpl side writes the client's fetch

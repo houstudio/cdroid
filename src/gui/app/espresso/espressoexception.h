@@ -36,6 +36,8 @@ public:
 
     std::string getActionDescription() const { return mActionDescription; }
     std::string getViewDescription() const { return mViewDescription; }
+    /** Throwable.getCause() — null (empty) when absent. */
+    std::exception_ptr getCause() const { return mCause; }
 
 private:
     friend class Builder;

@@ -551,6 +551,9 @@ void Editor::updateCursorPosition() {
         return ;
     }
     Layout* layout = mTextView->getLayout();
+    // No layout yet (empty text before the first traversal — AOSP always has a
+    // Layout instance, the port builds lazily): nothing to position against.
+    if (layout == nullptr) return;
     // Ported from Android Editor.updateCursorPosition() (Editor.java:2428): use
     // selection START and map through OffsetMapping with the CURSOR strategy so a
     // length-altering transformation (e.g. password dots) positions the caret right.
