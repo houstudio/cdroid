@@ -39,7 +39,11 @@ private:
     int mColorOther;
     int mVerticalPadding;
     int mTargetScrollX;
-    int mTotalWidth;
+    // Java field default (0). Only onMeasure assigns it; the ctor enables the
+    // horizontal fading edge, so a draw between inflate and the first measure
+    // read garbage through computeHorizontalScrollRange (valgrind: uninit in
+    // getRightFadingEdgeStrength on the pref sweep, origin = makeView<CandidateView>).
+    int mTotalWidth = 0;
     bool mScrolled;
     bool mTypedWordValid;
     std::vector<std::string>mSuggestions;
