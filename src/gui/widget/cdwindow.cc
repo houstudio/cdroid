@@ -478,8 +478,13 @@ void Window::handleWindowContentChangedEvent(AccessibilityEvent& event){
     AccessibilityNodeProvider* provider = focusedHost->getAccessibilityNodeProvider();
     if (provider == nullptr) {
         // Error state: virtual view with no provider. Clear focus.
+        AccessibilityNodeInfo* stale = mAccessibilityFocusedVirtualView;
         mAccessibilityFocusedHost = nullptr;
         mAccessibilityFocusedVirtualView = nullptr;
+        // AOSP nulls the reference and lets the GC collect the node; the pool
+        // node is ours to return — recycle(), not a bare delete (a delete on
+        // pooled memory poisons the pool; see setAccessibilityFocus below).
+        stale->recycle();
         focusedHost->clearAccessibilityFocusNoCallbacks(0);
         return;
     }
