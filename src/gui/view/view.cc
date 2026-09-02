@@ -1833,8 +1833,15 @@ void View::transformFromViewToWindowSpace(int*inOutLocation){
 }
 
 void View::mapRectFromViewToScreenCoords(RectF& rect, bool clipToParent){
+    // The matrix transforms need a real cairo Rectangle (4 doubles); punning the
+    // RectF (4 floats) to RectangleInt reinterprets float bit patterns as ints —
+    // every transformed view reported garbage bounds (a11y dumps showed the
+    // scaled SLA tab at INT_MIN). Same trap and pattern as getHitRect below.
+    Rectangle tmp;
     if (!hasIdentityMatrix()) {
-        getMatrix().transform_rectangle((RectangleInt&)rect);//mapRect(rect);
+        tmp.x = rect.left; tmp.y = rect.top; tmp.width = rect.width; tmp.height = rect.height;
+        getMatrix().transform_rectangle(tmp);
+        rect.set((float)tmp.x, (float)tmp.y, (float)tmp.width, (float)tmp.height);
     }
     rect.offset(mLeft, mTop);
 
@@ -1850,7 +1857,9 @@ void View::mapRectFromViewToScreenCoords(RectF& rect, bool clipToParent){
             rect.height=std::min(rect.height,(float)parentView->getHeight());//rect.bottom = std::min(rect.bottom, parentView->getHeight());
         }
         if (!parentView->hasIdentityMatrix()) {
-            parentView->getMatrix().transform_rectangle((RectangleInt&)rect);//mapRect(rect);
+            tmp.x = rect.left; tmp.y = rect.top; tmp.width = rect.width; tmp.height = rect.height;
+            parentView->getMatrix().transform_rectangle(tmp);
+            rect.set((float)tmp.x, (float)tmp.y, (float)tmp.width, (float)tmp.height);
         }
         rect.offset(parentView->mLeft, parentView->mTop);
         parent = parentView->mParent;
