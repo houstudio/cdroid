@@ -550,6 +550,15 @@ void Spinner::DropdownPopup::setAdapter(Adapter* adapter){
 
 void Spinner::DropdownPopup::dismiss(){
     mSpinner->mRecycler->clear();
+    // AOSP removes the layout listener from its OnDismissListener, which fires
+    // synchronously at dismiss; CDROID defers the dismiss listener to the
+    // decor's teardown-complete, so remove it here instead — otherwise the
+    // selection's layout pass re-fires the listener and re-shows the popup
+    // right after the pick (and before the list was released, crashed on it).
+    ViewTreeObserver* vto = mSpinner->getViewTreeObserver();
+    if (vto != nullptr) {
+        vto->removeOnGlobalLayoutListener(mLayoutListener);
+    }
     ListPopupWindow::dismiss();
 }
 

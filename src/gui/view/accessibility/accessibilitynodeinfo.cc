@@ -350,7 +350,10 @@ std::vector<AccessibilityNodeInfo*> AccessibilityNodeInfo::findAccessibilityNode
     // (indexOf >= 0); walk NODES so provider virtual children participate too.
     std::function<void(AccessibilityNodeInfo*, int)> visit =
         [&](AccessibilityNodeInfo* node, int depth) {
-            if (node == nullptr || depth > 20) return;
+            if (node == nullptr) return;
+            // Depth-cut node is pool-owned — recycle it (the dump verb's rule;
+            // returning without recycling leaked the obtain, 592B per walk).
+            if (depth > 20) { node->recycle(); return; }
             const std::string nodeText = node->getText();
             const std::string nodeDesc = node->getContentDescription();
             const bool match = (nodeText.length() && nodeText.find(text) != std::string::npos)

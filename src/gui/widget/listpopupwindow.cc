@@ -400,14 +400,19 @@ void ListPopupWindow::dismiss() {
     // When showing, the inner PopupWindow::dismiss fires the wrapper installed
     // by initPopupWindow(), which runs completeDismiss() and then the app
     // listener - and that listener may DELETE this ListPopupWindow, so after
-    // mPopup->dismiss() returns we must not touch members. The stack flag
-    // decides: not-showing means the wrapper never fired and `this` is alive,
-    // so clean up here.
-    const bool wasShowing = mPopup->isShowing();
+    // mPopup->dismiss() returns we must not touch members... UNLESS the inner
+    // dismiss took the deferred (exit-transition) branch: there the wrapper —
+    // and with it this object's cleanup — only runs at the decor's
+    // teardown-complete. AOSP releases the drop-down list synchronously in
+    // dismiss() (ListPopupWindow.dismiss: setContentView(null); mDropDownList
+    // = null), and the difference matters: a re-show inside the animation
+    // window (Spinner's global-layout listener re-shows on the selection's
+    // layout pass) reused a list still parented to the dying decor and died on
+    // "child already has a parent". Release the list NOW; the wrapper's later
+    // completeDismiss() is idempotent (setContentView early-returns while
+    // showing, setAdapter(nullptr) on a cleared list is a no-op).
     mPopup->dismiss();
-    if (!wasShowing) {
-        completeDismiss();
-    }
+    completeDismiss();
 }
 
 // Post-dismiss member cleanup, factored out of dismiss() so the wrapper
