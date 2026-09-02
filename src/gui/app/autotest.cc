@@ -757,6 +757,17 @@ bool UiAutoTest::parseScript(const std::string& path) {
             t->skipDelimiters("\"");
         } else if (!t->isEol() && t->peekChar() != '#') {
             sel = t->nextToken(" \t\r");
+            // A value quote opened mid-token (text="a b) spans words — keep
+            // consuming tokens until its closing quote.
+            if (!sel.empty() && sel.find('"') != std::string::npos && sel.back() != '"') {
+                while (!t->isEol()) {
+                    t->skipDelimiters(" \t\r");
+                    if (t->isEol() || t->peekChar() == '#') break;
+                    sel += ' ';
+                    sel += t->nextToken(" \t\r");
+                    if (!sel.empty() && sel.back() == '"') break;
+                }
+            }
         }
         // Quotes may wrap the whole selector ("a b") or the value (text="a b").
         auto stripQuotes = [](std::string& s) {
