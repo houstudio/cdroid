@@ -106,7 +106,6 @@ private:
     int  mPreviewHeight;
     int  mCoordinates[2];
     View* mPopupParent;
-    bool mMiniKeyboardOnScreen;
     int  mMiniKeyboardOffsetX;
     int  mMiniKeyboardOffsetY;
     /* The popup-keyboard container layout (AOSP android:popupKeyboard). Empty
@@ -127,9 +126,20 @@ private:
     int  mVerticalCorrection;
     int  mProximityThreshold;
 
+    bool mMiniKeyboardOnScreen=false;
     bool mPreviewCentered = false;
     bool mShowPreview = true;
     bool mShowTouchPoints = true;
+    
+    bool mAbortKey=false;
+    bool mPossiblePoly = false;
+    bool mDisambiguateSwipe = false;
+    bool mProximityCorrectOn = false;
+    
+    bool mInMultiTap=false;
+    bool mKeyboardChanged=false;
+    bool mInLongPress = false;
+    
     int  mPopupPreviewX;
     int  mPopupPreviewY;
 
@@ -138,7 +148,6 @@ private:
     int  mStartX;
     int  mStartY;
 
-    bool mProximityCorrectOn;
 
     Paint mPaint;
     Rect mPadding;
@@ -157,13 +166,10 @@ private:
     int  mPopupX;
     int  mPopupY;
     int  mRepeatKeyIndex = NOT_A_KEY;
-    bool mAbortKey;
     Keyboard::Key* mInvalidatedKey;
     Rect mClipRegion;
-    bool mPossiblePoly;
     //SwipeTracker *mSwipeTracker;
     int  mSwipeThreshold;
-    bool mDisambiguateSwipe;
 
     // Variables for dealing with multiple pointers
     int  mOldPointerCount = 1;
@@ -177,12 +183,6 @@ private:
     int  mLastSentIndex;
     int  mTapCount;
     int64_t mLastTapTime;
-    bool mInMultiTap;
-    bool mKeyboardChanged;
-    /* True while a finger is down on a key (DOWN..UP/CANCEL). Gates the
-     * MSG_LONGPRESS callback so a flaky removeMessages() can't fire the popup
-     * after the finger has lifted (which would freeze input behind the popup). */
-    bool mInLongPress = false;
     Rect mDirtyRect;
 
     /* Exposes the keys as virtual a11y views (see KeyboardViewTouchHelper). */
