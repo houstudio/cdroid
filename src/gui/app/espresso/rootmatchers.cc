@@ -1,0 +1,165 @@
+#include <app/espresso/rootmatchers.h>
+
+#include <core/windowmanager.h>
+#include <widget/cdwindow.h>
+
+#include <app/espresso/viewmatchers.h>
+
+namespace cdroid {
+namespace espresso {
+
+// AOSP WindowManager.LayoutParams flag bits (CDROID LayoutParams carries the
+// field; nothing sets these today, so the matchers reduce to true until an
+// app opts in).
+static constexpr int FLAG_NOT_FOCUSABLE = 0x00000002;
+static constexpr int FLAG_NOT_TOUCHABLE = 0x00000010;
+
+// AOSP window-layer values (Window::window_type mirrors them into
+// LayoutParams.type — see cdwindow.cc initWindow).
+static constexpr int TYPE_BASE_APPLICATION = 1;
+static constexpr int LAST_APPLICATION_WINDOW = 99;
+static constexpr int FIRST_SUB_WINDOW = 1000;
+static constexpr int LAST_SUB_WINDOW = 1999;
+
+bool viewHasWindowFocus(View* view) {
+    // AOSP View.hasWindowFocus (public there; protected in the CDROID port).
+    // In-process equivalent: the view's root window is the active window.
+    if (view == nullptr || view->getRootView() == nullptr) return false;
+    Window* window = dynamic_cast<Window*>(view->getRootView());
+    return window != nullptr && window == WindowManager::getInstance().getActiveWindow();
+}
+
+namespace {
+
+/** Local TypeSafeMatcher<Root> base for the anonymous AOSP classes below. */
+class RootMatcher : public TypeSafeMatcher<Root> {
+public:
+    explicit RootMatcher(std::string description) : mDescription(std::move(description)) {}
+    void describeTo(Description& description) const override {
+        description.appendText(mDescription);
+    }
+private:
+    std::string mDescription;
+};
+
+} // namespace
+
+RootMatcherPtr RootMatchers::hasWindowLayoutParams() {
+    class HasWindowLayoutParams : public RootMatcher {
+    public:
+        HasWindowLayoutParams() : RootMatcher("has window layout params") {}
+        bool matchesSafely(const Root& root) const override {
+            return root.getWindowLayoutParams() != nullptr;
+        }
+    };
+    return std::make_shared<HasWindowLayoutParams>();
+}
+
+RootMatcherPtr RootMatchers::isFocusable() {
+    class IsFocusable : public RootMatcher {
+    public:
+        IsFocusable() : RootMatcher("is focusable") {}
+        bool matchesSafely(const Root& root) const override {
+            if (root.getWindowLayoutParams() != nullptr) {
+                return 0 == (root.getWindowLayoutParams()->flags & FLAG_NOT_FOCUSABLE);
+            }
+            return false;
+        }
+    };
+    return std::make_shared<IsFocusable>();
+}
+
+RootMatcherPtr RootMatchers::isTouchable() {
+    class IsTouchable : public RootMatcher {
+    public:
+        IsTouchable() : RootMatcher("is touchable") {}
+        bool matchesSafely(const Root& root) const override {
+            if (root.getWindowLayoutParams() != nullptr) {
+                return 0 == (root.getWindowLayoutParams()->flags & FLAG_NOT_TOUCHABLE);
+            }
+            return false;
+        }
+    };
+    return std::make_shared<IsTouchable>();
+}
+
+RootMatcherPtr RootMatchers::isDialog() {
+    class IsDialog : public RootMatcher {
+    public:
+        IsDialog() : RootMatcher("is dialog") {}
+        bool matchesSafely(const Root& root) const override {
+            if (root.getWindowLayoutParams() == nullptr) return false;
+            const int type = root.getWindowLayoutParams()->type;
+            if (!(type != TYPE_BASE_APPLICATION && type <= LAST_APPLICATION_WINDOW)) {
+                return false;
+            }
+            // AOSP distinguishes the activity's base window (token identity)
+            // from dialogs; CDROID windows share TYPE_APPLICATION, so the
+            // base window is recognized as the active application window.
+            return root.getWindow() == nullptr
+                    || root.getWindow() != WindowManager::getInstance().getActiveApplicationWindow();
+        }
+    };
+    return std::make_shared<IsDialog>();
+}
+
+RootMatcherPtr RootMatchers::isPlatformPopup() {
+    class IsPlatformPopup : public RootMatcher {
+    public:
+        IsPlatformPopup() : RootMatcher("is platform popup") {}
+        bool matchesSafely(const Root& root) const override {
+            // AOSP matches PopupWindow$PopupViewContainer by class name;
+            // CDROID mirrors sub-window layering into LayoutParams.type
+            // (no window occupies the range today — matcher kept dormant).
+            return root.getWindowLayoutParams() != nullptr
+                    && root.getWindowLayoutParams()->type >= FIRST_SUB_WINDOW
+                    && root.getWindowLayoutParams()->type <= LAST_SUB_WINDOW;
+        }
+    };
+    return std::make_shared<IsPlatformPopup>();
+}
+
+RootMatcherPtr RootMatchers::withDecorView(MatcherPtr<View> decorViewMatcher) {
+    class WithDecorView : public RootMatcher {
+    public:
+        explicit WithDecorView(MatcherPtr<View> matcher, std::string description)
+            : RootMatcher(std::move(description)), mMatcher(std::move(matcher)) {}
+        bool matchesSafely(const Root& root) const override {
+            return root.getDecorView() != nullptr && mMatcher->matches(*root.getDecorView());
+        }
+    private:
+        MatcherPtr<View> mMatcher;
+    };
+    // AOSP: describeTo().appendText("with decor view ").appendDescriptionOf(matcher)
+    // — composed once here since RootMatcher's describeTo is fixed-string.
+    StringDescription described;
+    described.appendText("with decor view ").appendDescriptionOf(*decorViewMatcher);
+    return std::make_shared<WithDecorView>(std::move(decorViewMatcher), described.str());
+}
+
+RootMatcherPtr RootMatchers::isSubwindowOfCurrentActivity() {
+    class IsSubwindow : public RootMatcher {
+    public:
+        IsSubwindow() : RootMatcher("is subwindow of current activity") {}
+        bool matchesSafely(const Root& /*root*/) const override {
+            // Single-process model: every root belongs to the one running
+            // application (AOSP checks the resumed Activity's window tokens).
+            return true;
+        }
+    };
+    return std::make_shared<IsSubwindow>();
+}
+
+RootMatcherPtr RootMatchers::DEFAULT() {
+    // AOSP DEFAULT:
+    // allOf(hasWindowLayoutParams(), allOf(anyOf(
+    //     allOf(isDialog(), withDecorView(hasWindowFocus())),
+    //     isSubwindowOfCurrentActivity()), isFocusable()));
+    return allOf(hasWindowLayoutParams(),
+            allOf(anyOf(allOf(isDialog(), withDecorView(ViewMatchers::hasWindowFocus())),
+                    isSubwindowOfCurrentActivity()),
+            isFocusable()));
+}
+
+} /*endof namespace espresso*/
+} /*endof namespace cdroid*/
