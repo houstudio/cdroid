@@ -50,6 +50,12 @@ private:
     void removeFromTreeIfPresent(View* v);
 public:
     RecycleBin(AbsListView*);
+    // Death-belt: dialog teardown deletes view trees without the detach
+    // dispatch, so onDetachedFromWindow's mRecycler->clear() never runs —
+    // every scrap/skipped/transient view still held here would leak
+    // (AOSP frees them via GC). mActiveViews aliases the ListView's live
+    // children, which ~ViewGroup owns: release them without deleting.
+    ~RecycleBin();
     // CDROID ownership: an owner deleting views outside the RecycleBin
     // (AbsListView::resetList deletes the old children) must purge every
     // array reference first — a surviving entry hands the corpse back out

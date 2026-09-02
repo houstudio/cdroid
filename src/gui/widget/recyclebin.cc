@@ -29,6 +29,16 @@ RecycleBin::RecycleBin(AbsListView*lv){
     mViewTypeCount=0;
 }
 
+RecycleBin::~RecycleBin() {
+    // Runs from ~AbsListView's body, while mChildren is still intact, so
+    // removeFromTreeIfPresent can still unhook a temp-detached scrap view
+    // before it is freed. mActiveViews is cleared WITHOUT deleting: those
+    // are the live children, owned and freed by ~ViewGroup.
+    clear();
+    removeSkippedScrap();
+    mActiveViews.clear();
+}
+
 Adapter*RecycleBin::getAdapter(){
     return LV->mAdapter;
 }
