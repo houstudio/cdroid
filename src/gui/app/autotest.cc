@@ -644,6 +644,13 @@ bool UiAutoTest::scrollOnce(AccessibilityNodeInfo* root) {
         root->recycle();
         return false;
     }
+    // The walk's else-branch skips the root itself ("handled below"), so the
+    // best==nullptr case above is NOT the only one that must return it: when
+    // the scrollable is a descendant, root is neither kept nor recycled — it
+    // was a definite-lost 958B block on printerdemo's valgrind sweep (the
+    // record's :362 allocation stack is the pool handing out this block's
+    // first life; the drop happens here).
+    if (best != root) root->recycle();
     const int action = (mScrollExhausted >= 1)
             ? AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD
             : AccessibilityNodeInfo::ACTION_SCROLL_FORWARD;
