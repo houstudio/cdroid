@@ -9,8 +9,7 @@
  * AOSP wires the graph (UiController/RootViewPicker/ViewFinder/FailureHandler)
  * through Dagger at instrumentation startup; the port assembles the same
  * objects lazily on first use, on the main thread (the in-process "test
- * runner" is posted there — see espressotests.h). onData(DataInteraction) is
- * not yet ported.
+ * runner" is posted there — see espressotests.h).
  */
 
 #include <memory>
@@ -25,6 +24,7 @@ class View;
 
 namespace espresso {
 
+class DataInteraction;
 class ViewInteraction;
 
 class Espresso {
@@ -33,9 +33,17 @@ public:
      * Creates a ViewInteraction for a given view. Note: the view has to be
      * part of the view hierarchy. This may not be the case if it is rendered
      * as part of an Adapter (e.g. ListView). If this is the case, use
-     * Espresso.onData instead (not yet ported).
+     * Espresso.onData instead.
      */
     static ViewInteraction onView(MatcherPtr<View> viewMatcher);
+
+    /**
+     * Creates a DataInteraction for a given data matcher. This should be
+     * used in preference to a ViewInteraction when the underlying data is
+     * rendered into an AdapterView (e.g. a ListView). The data model is
+     * void* (Adapter::getItem), so the matcher matches against that.
+     */
+    static DataInteraction onData(MatcherPtr<void*> dataMatcher);
 
     /**
      * Sets the failure handler for Espresso (AOSP: setFailureHandler).

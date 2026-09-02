@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include <app/espresso/datainteraction.h>
 #include <app/espresso/defaultfailurehandler.h>
 #include <app/espresso/rootmatchers.h>
 #include <app/espresso/rootsoracle.h>
@@ -57,6 +58,10 @@ ViewInteraction Espresso::onView(MatcherPtr<View> viewMatcher) {
     auto viewFinder = std::make_shared<ViewFinderImpl>(viewMatcher, *g.rootViewPicker);
     return ViewInteraction(*g.uiController, std::move(viewFinder), *g.failureHandler,
             std::move(viewMatcher), g.rootMatcherRef);
+}
+
+DataInteraction Espresso::onData(MatcherPtr<void*> dataMatcher) {
+    return DataInteraction(std::move(dataMatcher));
 }
 
 void Espresso::setFailureHandler(FailureHandler* failureHandler) {

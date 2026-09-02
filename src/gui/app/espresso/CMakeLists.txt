@@ -59,6 +59,10 @@ add_library(testkit SHARED
    swipe.cc
    viewactions.cc
    viewinteraction.cc
+   adapterviewprotocol.cc
+   adapterviewprotocols.cc
+   adapterdataloaderaction.cc
+   datainteraction.cc
    espresso.cc
    espressotests.cc
 )
