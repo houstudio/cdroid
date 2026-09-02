@@ -1140,6 +1140,14 @@ void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
             compoundRect = start->getBounds();
             start->setCallback(this);
 
+            // Replace: AOSP's GC reclaims the previous relative drawable; ours
+            // is owned (see ~Drawables) — delete it unless the showing slot or
+            // the caller still holds the same instance.
+            if (dr->mDrawableStart && dr->mDrawableStart != start
+                    && dr->mDrawableStart != dr->mShowing[Drawables::LEFT]) {
+                dr->mDrawableStart->setCallback(nullptr);
+                delete dr->mDrawableStart;
+            }
             dr->mDrawableStart = start;
             dr->mDrawableSizeStart = compoundRect.width;
             dr->mDrawableHeightStart = compoundRect.height;
@@ -1152,6 +1160,11 @@ void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
             compoundRect = end->getBounds();
             end->setCallback(this);
 
+            if (dr->mDrawableEnd && dr->mDrawableEnd != end
+                    && dr->mDrawableEnd != dr->mShowing[Drawables::RIGHT]) {
+                dr->mDrawableEnd->setCallback(nullptr);
+                delete dr->mDrawableEnd;
+            }
             dr->mDrawableEnd = end;
             dr->mDrawableSizeEnd = compoundRect.width;
             dr->mDrawableHeightEnd = compoundRect.height;
@@ -3751,9 +3764,18 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
     // We're switching to absolute, discard relative.
     Drawables*dr = mDrawables;
     if (dr != nullptr) {
-        if (dr->mDrawableStart != nullptr)dr->mDrawableStart->setCallback(nullptr);
+        // Discarding the relative drawables. AOSP drops the references (GC
+        // reclaims them); delete ours unless the showing slot still owns the
+        // same instance (resolve may have aliased start/end into mShowing).
+        if (dr->mDrawableStart != nullptr) {
+            dr->mDrawableStart->setCallback(nullptr);
+            if (dr->mDrawableStart != dr->mShowing[Drawables::LEFT]) delete dr->mDrawableStart;
+        }
         dr->mDrawableStart = nullptr;
-        if (dr->mDrawableEnd != nullptr) dr->mDrawableEnd->setCallback(nullptr);
+        if (dr->mDrawableEnd != nullptr) {
+            dr->mDrawableEnd->setCallback(nullptr);
+            if (dr->mDrawableEnd != dr->mShowing[Drawables::RIGHT]) delete dr->mDrawableEnd;
+        }
         dr->mDrawableEnd = nullptr;
         dr->mDrawableSizeStart= dr->mDrawableHeightStart = 0;
         dr->mDrawableSizeEnd  = dr->mDrawableHeightEnd = 0;
@@ -6753,9 +6775,15 @@ TextView::Drawables::Drawables(Context*ctx) {
 }
 
 TextView::Drawables::~Drawables() {
-    for(int i=0; i<4; i++) {
-        delete mShowing[i];
-    }
+    // resolveWithLayoutDirection/applyErrorDrawableIfNeeded swap the
+    // start/end/error/initial slots INTO mShowing, so the six side slots alias
+    // the showing ones. AOSP frees every compound drawable via GC; delete all
+    // owned slots exactly once by deduping on pointer identity (same pattern
+    // as ~TextView's layout set).
+    std::set<Drawable*> owned = { mShowing[LEFT], mShowing[TOP], mShowing[RIGHT],
+        mShowing[BOTTOM], mDrawableStart, mDrawableEnd, mDrawableError,
+        mDrawableTemp, mDrawableLeftInitial, mDrawableRightInitial };
+    for (Drawable* d : owned) delete d;
 }
 
 bool TextView::Drawables::hasMetadata()const {
@@ -6823,6 +6851,12 @@ bool TextView::Drawables::resolveWithLayoutDirection(int layoutDirection) {
 void TextView::Drawables::setErrorDrawable(Drawable* dr, TextView* tv) {
     if ((mDrawableError != dr) && (mDrawableError != nullptr)) {
         mDrawableError->setCallback(nullptr);
+        // AOSP's GC reclaims the replaced error drawable; ours is owned. If a
+        // showing slot currently displays it, ownership moves to that slot
+        // (replaced/deleted there later) — don't delete what mShowing holds.
+        if (mDrawableError != mShowing[LEFT] && mDrawableError != mShowing[RIGHT]) {
+            delete mDrawableError;
+        }
     }
     mDrawableError = dr;
 

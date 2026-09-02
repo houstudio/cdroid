@@ -88,6 +88,13 @@ void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,int resId){
 
     mNeedRequestlayout = (d != mCheckMarkDrawable);
 
+    // AOSP's GC reclaims the replaced check mark; ours is an owned pointer
+    // (see ~CheckedTextView) — delete it unless the same instance was re-set.
+    if (mCheckMarkDrawable && d != mCheckMarkDrawable) {
+        delete mCheckMarkDrawable;
+        mCheckMarkDrawable = nullptr;
+    }
+
     if (d != nullptr) {
         d->setCallback(this);
         d->setVisible(getVisibility() == VISIBLE, false);
