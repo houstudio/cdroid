@@ -11,6 +11,7 @@
 #include <view/accessibility/accessibilitywindowinfo.h>
 namespace cdroid{
 class View;
+class AccessibilityViewCommand;
 class AccessibilityWindowInfo;
 class AccessibilityNodeInfo{// implements Parcelable {
 private:
@@ -691,12 +692,18 @@ public:
 private:
     int mActionId;
     std::string mLabel;
+    // Collapsed from androidx AccessibilityActionCompat: a custom/replacement
+    // action installed by View::add/replaceAccessibilityAction may carry the
+    // command to run. Borrowed — the command's owner outlives the host view.
+    AccessibilityViewCommand* mCommand = nullptr;
     AccessibilityAction(int standardActionId);
 public:
     long mSerializationFlag = -1L;
 
     AccessibilityAction(int actionId,const std::string& label);
+    AccessibilityAction(int actionId,const std::string& label, AccessibilityViewCommand* command);
     int getId() const;
+    AccessibilityViewCommand* getCommand() const;
 
     std::string getLabel() const;
 

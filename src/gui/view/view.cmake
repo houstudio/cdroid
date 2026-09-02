@@ -38,6 +38,7 @@ SET(VIEW_SOURCES
     view/accessibility/accessibilityrecord.cc
     view/accessibility/accessibilitywindowinfo.cc
     view/accessibility/accessibilitynodeinfo.cc
+    view/accessibility/accessibilityviewcommand.cc
     view/accessibility/accessibilitymanager.cc
     # android.view.AccessibilityIterators (view half: Character/Word/Paragraph)
     view/accessibilityiterators.cc

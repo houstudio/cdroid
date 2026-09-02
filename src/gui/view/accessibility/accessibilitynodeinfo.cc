@@ -1789,8 +1789,18 @@ AccessibilityNodeInfo::AccessibilityAction::AccessibilityAction(int standardActi
     sStandardActions.insert(this);
 }
 
+AccessibilityNodeInfo::AccessibilityAction::AccessibilityAction(int actionId,
+        const std::string& label, AccessibilityViewCommand* command)
+    :AccessibilityAction(actionId, label){
+    mCommand = command;
+}
+
 int AccessibilityNodeInfo::AccessibilityAction::getId() const{
     return mActionId;
+}
+
+AccessibilityViewCommand* AccessibilityNodeInfo::AccessibilityAction::getCommand() const{
+    return mCommand;
 }
 
 std::string AccessibilityNodeInfo::AccessibilityAction::getLabel() const{

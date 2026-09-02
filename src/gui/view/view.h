@@ -58,6 +58,7 @@
 #include <view/scrollfeedbackprovider.h>
 #include <view/accessibility/accessibilityevent.h>
 #include <view/accessibility/accessibilitymanager.h>
+#include <view/accessibility/accessibilitynodeinfo.h>
 #include <view/accessibility/accessibilitynodeprovider.h>
 #include <view/inputeventconsistencyverifier.h>
 #include <view/viewoutlineprovider.h>
@@ -731,6 +732,15 @@ protected:
     // be set on many views (RecyclerViewAccessibilityDelegate::ItemDelegate),
     // which is why the field cannot be a plain owned pointer.
     std::shared_ptr<AccessibilityDelegate> mAccessibilityDelegate;
+    // androidx ViewCompat action list (custom + replacement actions). The view
+    // owns the action instances; the AccessibilityViewCommand each carries is
+    // borrowed (caller-owned), like every other listener in the tree.
+    std::vector<AccessibilityNodeInfo::AccessibilityAction*> mAccessibilityActions;
+    void ensureAccessibilityDelegateForActions();
+    void addAccessibilityAction(AccessibilityNodeInfo::AccessibilityAction* action);
+    void removeActionWithId(int actionId);
+    int getAvailableActionId(const std::string& label) const;
+    bool dispatchViewCommandAction(int action, Bundle* arguments);
     Rect mClipBounds;
     std::string mContentDescription;
     std::string mStateDescription;
@@ -1206,6 +1216,17 @@ public:
     AccessibilityDelegate* getAccessibilityDelegate()const;
     void setAccessibilityDelegate(AccessibilityDelegate* delegate);
     void setAccessibilityDelegate(std::shared_ptr<AccessibilityDelegate> delegate);
+    // androidx.core.view.ViewCompat's accessibility-action helpers, collapsed
+    // onto View per the Compat-strip rule (android-36 View itself has none).
+    bool hasAccessibilityDelegate() const;
+    /** Adds a custom action; @return its id, or NO_ID when all 32 slots are
+        taken (androidx hands out accessibility_custom_action_0..31). */
+    int addAccessibilityAction(const std::string& label, AccessibilityViewCommand* command);
+    void removeAccessibilityAction(int actionId);
+    /** Replaces an action's behavior/label — label==nullptr && command==nullptr
+        removes it (androidx replaceAccessibilityAction semantics). */
+    void replaceAccessibilityAction(const AccessibilityNodeInfo::AccessibilityAction& replacedAction,
+            const char* label, AccessibilityViewCommand* command);
     virtual AccessibilityNodeProvider* getAccessibilityNodeProvider();
     bool isActionableForAccessibility()const;
     void notifyViewAccessibilityStateChangedIfNeeded(int changeType);

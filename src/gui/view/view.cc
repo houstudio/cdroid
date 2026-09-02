@@ -33,6 +33,7 @@
 #include <view/hapticscrollfeedbackprovider.h>
 #include <view/accessibility/accessibilitywindowinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
+#include <view/accessibility/accessibilityviewcommand.h>
 #include <view/accessibilityiterators.h>
 #include <view/focusfinder.h>
 #include <menu/menubuilder.h>
@@ -859,6 +860,7 @@ View::~View(){
     delete mScrollFeedbackProvider;
     delete mInputEventConsistencyVerifier;
     delete mSendViewScrolledAccessibilityEvent;
+    for (auto* action : mAccessibilityActions) delete action;
 
     delete mBackground;
     delete mBackgroundTint;
@@ -4181,6 +4183,130 @@ void View::setAccessibilityDelegate(std::shared_ptr<AccessibilityDelegate> deleg
     mAccessibilityDelegate = std::move(delegate);
 }
 
+// ---------------------------------------------------------------------------
+// androidx.core.view.ViewCompat accessibility-action helpers (collapsed onto
+// View per the Compat-strip rule; android-36 View itself has no such API).
+// android.R has no accessibility_custom_action_* ids either (verified
+// android-12..36) — CDROID pins the 32 ids right past the AOSP watermark.
+// ---------------------------------------------------------------------------
+
+// androidx ViewCompat.ACCESSIBILITY_ACTIONS_RESOURCE_IDS
+static const int ACCESSIBILITY_ACTIONS_RESOURCE_IDS[] = {
+    R::id::accessibility_custom_action_0,  R::id::accessibility_custom_action_1,
+    R::id::accessibility_custom_action_2,  R::id::accessibility_custom_action_3,
+    R::id::accessibility_custom_action_4,  R::id::accessibility_custom_action_5,
+    R::id::accessibility_custom_action_6,  R::id::accessibility_custom_action_7,
+    R::id::accessibility_custom_action_8,  R::id::accessibility_custom_action_9,
+    R::id::accessibility_custom_action_10, R::id::accessibility_custom_action_11,
+    R::id::accessibility_custom_action_12, R::id::accessibility_custom_action_13,
+    R::id::accessibility_custom_action_14, R::id::accessibility_custom_action_15,
+    R::id::accessibility_custom_action_16, R::id::accessibility_custom_action_17,
+    R::id::accessibility_custom_action_18, R::id::accessibility_custom_action_19,
+    R::id::accessibility_custom_action_20, R::id::accessibility_custom_action_21,
+    R::id::accessibility_custom_action_22, R::id::accessibility_custom_action_23,
+    R::id::accessibility_custom_action_24, R::id::accessibility_custom_action_25,
+    R::id::accessibility_custom_action_26, R::id::accessibility_custom_action_27,
+    R::id::accessibility_custom_action_28, R::id::accessibility_custom_action_29,
+    R::id::accessibility_custom_action_30, R::id::accessibility_custom_action_31,
+};
+
+bool View::hasAccessibilityDelegate() const {
+    // androidx: getAccessibilityDelegateInternal(view) != null
+    return mAccessibilityDelegate != nullptr;
+}
+
+void View::ensureAccessibilityDelegateForActions() {
+    // androidx ViewCompat.ensureAccessibilityDelegateCompat: with no delegate
+    // set, install a plain default one so the delegate-driven population path
+    // (which is what surfaces mAccessibilityActions) is active.
+    if (mAccessibilityDelegate == nullptr) {
+        setAccessibilityDelegate(std::make_shared<AccessibilityDelegate>());
+    }
+}
+
+int View::getAvailableActionId(const std::string& label) const {
+    // androidx getAvailableActionIdFromResources: reuse the id of an existing
+    // action with the same label, else the first free custom-action id.
+    int result = View::NO_ID;
+    for (const auto* action : mAccessibilityActions) {
+        if (action->getLabel() == label) {
+            return action->getId();
+        }
+    }
+    for (int id : ACCESSIBILITY_ACTIONS_RESOURCE_IDS) {
+        bool idAvailable = true;
+        for (const auto* action : mAccessibilityActions) {
+            idAvailable &= (action->getId() != id);
+        }
+        if (idAvailable) {
+            result = id;
+            break;
+        }
+    }
+    return result;
+}
+
+void View::removeActionWithId(int actionId) {
+    for (size_t i = 0; i < mAccessibilityActions.size(); i++) {
+        if (mAccessibilityActions[i]->getId() == actionId) {
+            delete mAccessibilityActions[i]; // CDROID: the view owns its list entries
+            mAccessibilityActions.erase(mAccessibilityActions.begin() + i);
+            break;
+        }
+    }
+}
+
+void View::addAccessibilityAction(AccessibilityNodeInfo::AccessibilityAction* action) {
+    // androidx private addAccessibilityAction(view, action)
+    ensureAccessibilityDelegateForActions();
+    removeActionWithId(action->getId());
+    mAccessibilityActions.push_back(action);
+    notifyViewAccessibilityStateChangedIfNeeded(
+            AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+}
+
+int View::addAccessibilityAction(const std::string& label, AccessibilityViewCommand* command) {
+    int actionId = getAvailableActionId(label);
+    if (actionId != View::NO_ID) {
+        addAccessibilityAction(new AccessibilityNodeInfo::AccessibilityAction(actionId, label, command));
+    }
+    return actionId;
+}
+
+void View::removeAccessibilityAction(int actionId) {
+    removeActionWithId(actionId);
+    notifyViewAccessibilityStateChangedIfNeeded(
+            AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+}
+
+void View::replaceAccessibilityAction(const AccessibilityNodeInfo::AccessibilityAction& replacedAction,
+        const char* label, AccessibilityViewCommand* command) {
+    // androidx: label==null && command==null removes the action; otherwise the
+    // replacement keeps the source id and carries the new label/command
+    // (createReplacementAction).
+    if (command == nullptr && label == nullptr) {
+        removeAccessibilityAction(replacedAction.getId());
+    } else {
+        addAccessibilityAction(new AccessibilityNodeInfo::AccessibilityAction(
+                replacedAction.getId(), label ? std::string(label) : std::string(), command));
+    }
+}
+
+bool View::dispatchViewCommandAction(int action, Bundle* arguments) {
+    // androidx AccessibilityDelegateCompat.performAccessibilityAction: the
+    // matching action's command runs before the delegate/internal handling.
+    for (auto* candidate : mAccessibilityActions) {
+        if (candidate->getId() != action) continue;
+        AccessibilityViewCommand* command = candidate->getCommand();
+        if (command == nullptr) return false; // matched, but nothing to run here
+        std::unique_ptr<AccessibilityViewCommand::CommandArguments> commandArguments(
+                createCommandArguments(action));
+        if (commandArguments) commandArguments->setBundle(arguments);
+        return command->perform(*this, commandArguments.get());
+    }
+    return false;
+}
+
 AccessibilityNodeProvider* View::getAccessibilityNodeProvider(){
     if (mAccessibilityDelegate != nullptr) {
         return mAccessibilityDelegate->getAccessibilityNodeProvider(*(View*)this);
@@ -4355,6 +4481,11 @@ bool View::dispatchNestedPrePerformAccessibilityAction(int action, Bundle* argum
 }
 
 bool View::performAccessibilityAction(int action, Bundle* arguments) {
+    // androidx AccessibilityDelegateCompat's bridge dispatches the ViewCompat
+    // view-command actions before falling through to the delegate/internal path.
+    if (dispatchViewCommandAction(action, arguments)) {
+        return true;
+    }
     if (mAccessibilityDelegate != nullptr) {
         return mAccessibilityDelegate->performAccessibilityAction(*this, action, arguments);
     } else {
@@ -7205,6 +7336,11 @@ void View::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info){
         mAccessibilityDelegate->onInitializeAccessibilityNodeInfo(*this, info);
     } else {
         onInitializeAccessibilityNodeInfoInternal(info);
+    }
+    // androidx AccessibilityDelegateCompat's bridge appends the ViewCompat
+    // action list (custom + replacement actions) after the standard population.
+    for (AccessibilityNodeInfo::AccessibilityAction* action : mAccessibilityActions) {
+        info.addAction(action);
     }
 }
 

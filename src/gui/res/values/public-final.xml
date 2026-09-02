@@ -3465,6 +3465,40 @@
   <public type="id" name="italic" id="0x0102005c" />
   <public type="id" name="underline" id="0x0102005d" />
   <public type="id" name="accessibilityActionScrollInDirection" id="0x0102005e" />
+  <!-- androidx core's custom a11y action ids (android.R has none); pinned
+       0x0102005f-0x0102007e, the first free run past the AOSP watermark. -->
+  <public type="id" name="accessibility_custom_action_0" id="0x0102005f" />
+  <public type="id" name="accessibility_custom_action_1" id="0x01020060" />
+  <public type="id" name="accessibility_custom_action_2" id="0x01020061" />
+  <public type="id" name="accessibility_custom_action_3" id="0x01020062" />
+  <public type="id" name="accessibility_custom_action_4" id="0x01020063" />
+  <public type="id" name="accessibility_custom_action_5" id="0x01020064" />
+  <public type="id" name="accessibility_custom_action_6" id="0x01020065" />
+  <public type="id" name="accessibility_custom_action_7" id="0x01020066" />
+  <public type="id" name="accessibility_custom_action_8" id="0x01020067" />
+  <public type="id" name="accessibility_custom_action_9" id="0x01020068" />
+  <public type="id" name="accessibility_custom_action_10" id="0x01020069" />
+  <public type="id" name="accessibility_custom_action_11" id="0x0102006a" />
+  <public type="id" name="accessibility_custom_action_12" id="0x0102006b" />
+  <public type="id" name="accessibility_custom_action_13" id="0x0102006c" />
+  <public type="id" name="accessibility_custom_action_14" id="0x0102006d" />
+  <public type="id" name="accessibility_custom_action_15" id="0x0102006e" />
+  <public type="id" name="accessibility_custom_action_16" id="0x0102006f" />
+  <public type="id" name="accessibility_custom_action_17" id="0x01020070" />
+  <public type="id" name="accessibility_custom_action_18" id="0x01020071" />
+  <public type="id" name="accessibility_custom_action_19" id="0x01020072" />
+  <public type="id" name="accessibility_custom_action_20" id="0x01020073" />
+  <public type="id" name="accessibility_custom_action_21" id="0x01020074" />
+  <public type="id" name="accessibility_custom_action_22" id="0x01020075" />
+  <public type="id" name="accessibility_custom_action_23" id="0x01020076" />
+  <public type="id" name="accessibility_custom_action_24" id="0x01020077" />
+  <public type="id" name="accessibility_custom_action_25" id="0x01020078" />
+  <public type="id" name="accessibility_custom_action_26" id="0x01020079" />
+  <public type="id" name="accessibility_custom_action_27" id="0x0102007a" />
+  <public type="id" name="accessibility_custom_action_28" id="0x0102007b" />
+  <public type="id" name="accessibility_custom_action_29" id="0x0102007c" />
+  <public type="id" name="accessibility_custom_action_30" id="0x0102007d" />
+  <public type="id" name="accessibility_custom_action_31" id="0x0102007e" />
 
   <staging-public-group-final type="string" first-id="0x01cb0000">
     <!-- @hide @SystemApi -->
