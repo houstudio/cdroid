@@ -76,6 +76,11 @@ public:
         void addAccessibilityDelegateIfNeeded(CoordinatorLayout& coordinatorLayout,
                 AppBarLayout& appBarLayout);
     public:
+        // androidx ViewOffsetBehavior/HeaderBehavior ctors (XML Behavior inflation).
+        Behavior() = default;
+        Behavior(Context* context, const AttributeSet* attrs)
+            : CoordinatorLayout::Behavior(context, attrs) {}
+
         bool onStartNestedScroll(CoordinatorLayout& parent, View& child, View& directTargetChild,
                 View& target, int axes) override;
         void onNestedPreScroll(CoordinatorLayout& parent, View& child, View& target,
@@ -95,6 +100,11 @@ public:
     protected:
         int mOverlayTop = 0;
     public:
+        // androidx HeaderScrollingViewBehavior ctors (XML Behavior inflation).
+        ScrollingViewBehavior() = default;
+        ScrollingViewBehavior(Context* context, const AttributeSet* attrs)
+            : CoordinatorLayout::Behavior(context, attrs) {}
+
         bool layoutDependsOn(CoordinatorLayout& parent, View& child, View& dependency) override;
         bool onDependentViewChanged(CoordinatorLayout& parent, View& child, View& dependency) override;
         bool onMeasureChild(CoordinatorLayout& parent, View& child,

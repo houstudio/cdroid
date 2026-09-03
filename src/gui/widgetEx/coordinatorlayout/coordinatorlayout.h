@@ -34,6 +34,10 @@ public:
         bool mDidChangeAfterNestedScroll;
     protected:
         Behavior* mBehavior;
+        /** True when the params created the behavior from XML (parseBehavior) and
+         *  must free it; AttachedBehavior pointers stay owned by their view
+         *  (upstream relies on GC — AppBarLayout deletes its own member). */
+        bool mBehaviorOwned = false;
         friend class CoordinatorLayout;
         bool mBehaviorResolved = false;
     public: 
@@ -221,6 +225,23 @@ public:
     struct AttachedBehavior {
         std::function<Behavior*()> getBehavior;
     };
+
+    /**
+     * Static factory registry for XML-declared Behaviors. AOSP
+     * CoordinatorLayout.parseBehavior reflects the Behavior subclass by its
+     * fully-qualified name; CDROID replaces the reflection with constructors
+     * self-registered at static-init (the DECLARE_WIDGET pattern). A lookup
+     * accepts the registered key or any fully-qualified name whose last
+     * '.'-segment matches one (upstream XML values are FQCNs such as
+     * "com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior").
+     */
+    class BehaviorFactory {
+    public:
+        typedef std::function<Behavior*(Context*, const AttributeSet*)> Constructor;
+        static void registerBehavior(const std::string& className, const Constructor& ctor);
+        static Behavior* create(const std::string& className, Context* context,
+                                const AttributeSet* attrs);
+    };
 };
 
 /**
@@ -371,4 +392,16 @@ class CoordinatorLayout::SavedState extends AbsSavedState {
 }
 #endif
 }/*endof namespace*/
+
+/** Registers a CoordinatorLayout::Behavior constructor under the given class-name
+ *  key (see CoordinatorLayout::BehaviorFactory). `id` is an identifier-safe suffix
+ *  for the static registrar ($ is legal in the upstream key, not in C++). */
+#define REGISTER_BEHAVIOR(Class, id, registeredName)                                    \
+    static const int _cdroid_behavior_reg_##id =                                        \
+        (::cdroid::CoordinatorLayout::BehaviorFactory::registerBehavior(registeredName, \
+            [](::cdroid::Context* c, const ::cdroid::AttributeSet* a)                   \
+                    -> ::cdroid::CoordinatorLayout::Behavior* {                         \
+                return new Class(c, a);                                                 \
+            }), 0)
+
 #endif/*__COORDINATOR_LAYOUT_H__*/

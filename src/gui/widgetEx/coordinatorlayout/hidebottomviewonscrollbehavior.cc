@@ -174,4 +174,7 @@ void HideBottomViewOnScrollBehavior::disableOnTouchExploration(bool disableOnTou
 bool HideBottomViewOnScrollBehavior::isDisabledOnTouchExploration() const{
     return mDisableOnTouchExploration;
 }
+
+REGISTER_BEHAVIOR(HideBottomViewOnScrollBehavior, HideBottomViewOnScrollBehavior,
+                 "HideBottomViewOnScrollBehavior");
 }

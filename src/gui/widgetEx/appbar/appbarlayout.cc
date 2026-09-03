@@ -402,4 +402,9 @@ int AppBarLayout::getDownNestedPreScrollRange() {
 
 DECLARE_WIDGET(AppBarLayout)
 
+// XML-declared behaviors (CoordinatorLayout app:layout_behavior values).
+REGISTER_BEHAVIOR(AppBarLayout::Behavior, AppBarLayout_Behavior, "AppBarLayout$Behavior");
+REGISTER_BEHAVIOR(AppBarLayout::ScrollingViewBehavior, AppBarLayout_ScrollingViewBehavior,
+                 "AppBarLayout$ScrollingViewBehavior");
+
 }//namespace cdroid
