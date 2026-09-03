@@ -218,6 +218,29 @@ void FragmentStateManager::moveToState(int explicitTarget){
     mMovingToState = false;
 }
 
+void FragmentStateManager::ensureInflatedView(){
+    // androidx FragmentStateManager.ensureInflatedView. CDROID has no
+    // mPerformedCreateView flag — a non-null mView is the equivalent
+    // "already performed" witness (performCreateView assigns it).
+    if(mFragment->mFromLayout && mFragment->mInLayout && mFragment->mView == nullptr){
+        cdroid::LayoutInflater* inflater = mFragmentManager->mHost
+            ? mFragmentManager->mHost->onGetLayoutInflater() : nullptr;
+        // Null container on purpose: the LayoutInflater places the returned view
+        // into the XML parent itself (androidx passes null here too).
+        mFragment->performCreateView(inflater, nullptr, savedInstanceState());
+        if(mFragment->mView != nullptr){
+            // The fragment's view is parented by the layout XML, so parent-mediated
+            // view-state saving must not save/restore through it (androidx
+            // setSaveFromParentEnabled(false); the androidx container-view tag
+            // R.id.fragment_container_view_tag has no CDROID equivalent — skipped).
+            mFragment->mView->setSaveFromParentEnabled(false);
+            if(mFragment->mHidden) mFragment->mView->setVisibility(cdroid::View::GONE);
+            mFragment->performViewCreated(savedInstanceState());
+            mFragment->mState = Fragment::VIEW_CREATED;
+        }
+    }
+}
+
 void FragmentStateManager::stepUp(){
     switch(mFragment->mState){
         case Fragment::INITIALIZING:
@@ -225,6 +248,17 @@ void FragmentStateManager::stepUp(){
         case Fragment::ATTACHED:
             mFragment->performCreate(savedInstanceState()); mFragment->mState = Fragment::CREATED; break;
         case Fragment::CREATED: {
+            // androidx stepUp case VIEW_CREATED runs ensureInflatedView() first: a
+            // <fragment>-tag fragment (mFromLayout) creates its view through the
+            // XML-inflation path and never takes the container/addView route below.
+            ensureInflatedView();
+            if(mFragment->mFromLayout){
+                // An androidx <fragment>-tag fragment must return a view — the
+                // FragmentManager::onCreateView caller throws "did not create a view".
+                // Advance regardless so the state machine never stalls on CREATED.
+                mFragment->mState = Fragment::VIEW_CREATED;
+                break;
+            }
             // Resolve the container ViewGroup at view-creation time, by id (androidx
             // FragmentManager.getFragmentContainer): a fragment added before its host's view
             // exists — e.g. a deferred commit drained during the host's onCreate, when the host

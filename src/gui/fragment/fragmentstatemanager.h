@@ -60,6 +60,11 @@ public:
     // Drive to an explicit target state (used by remove/retain which want INITIALIZING/CREATED
     // regardless of computeExpectedState). Also re-entrancy-guarded.
     void moveToState(int explicitTarget);
+    // androidx FragmentStateManager.ensureInflatedView: the <fragment>-tag inflation path.
+    // A fragment inflated from a layout (mFromLayout + mInLayout) creates its view here —
+    // during layout inflation, with a null container (the LayoutInflater places the returned
+    // view into the XML parent itself) — instead of the regular CREATED-step route.
+    void ensureInflatedView();
     // androidx SpecialEffectsController.forceCompleteAll: complete every pending/running effect op
     // for this fragment's container so awaiting-effect clamps lift and the ops retire. Used by the
     // FragmentManager teardown paths so a fragment mid-effect is not left stranded.

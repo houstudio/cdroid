@@ -33,7 +33,9 @@
 #include <fragment/fragment.h>
 #include <core/callbackbase.h>
 #include <fragment/fragmentstate.h>
+#include <view/layoutinflater.h>
 namespace cdroid{
+class AttributeSet;
 class LayoutInflater;
 class View;
 class Menu;
@@ -134,6 +136,13 @@ public:
 
     FragmentHostCallback* getHost() const { return mHost; }
     Fragment* getParent() const { return mParent; }
+
+    // androidx FragmentManager.getLayoutInflaterFactory(): the Factory2 this manager hands
+    // to the host's LayoutInflater (androidx composes it as FragmentLayoutInflaterFactory,
+    // whose body is onCreateView below — the <fragment> XML tag handler).
+    LayoutInflater::Factory2 getLayoutInflaterFactory();
+    View* onCreateView(View* parent, const std::string& name, Context* context,
+                       const AttributeSet& attrs);
 
     // Alive-guard for posted fragment-reclaim hooks: a shared_ptr<bool> whose weak alias is captured
     // into each SEC reclaim hook. ~FragmentManager releases the shared_ptr, expiring the weak, so a
