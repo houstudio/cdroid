@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/internal_R.h>
+#include <view/viewstub.h>
 #include <app/alertcontroller.h>
 #include <app/alertdialog.h>
 #include <core/handler.h>
@@ -242,14 +243,26 @@ bool AlertController::onKeyUp(int keyCode, KeyEvent& event){
 }
 
 ViewGroup* AlertController::resolvePanel(View* customPanel,View* defaultPanel){
+    // AOSP AlertController.resolvePanel: panels in the material alert layout are
+    // ViewStubs (button bar / title) that must be inflated here before use.
     if(customPanel==nullptr){
+        // Inflate the default panel, if needed.
+        if(dynamic_cast<ViewStub*>(defaultPanel)!=nullptr){
+            defaultPanel=((ViewStub*)defaultPanel)->inflate();
+        }
         return (ViewGroup*)defaultPanel;
     }
     if(defaultPanel){
         ViewGroup*parent=defaultPanel->getParent();
-        parent->removeView(defaultPanel);
-        mWindow->removeSendWindowContentChangedCallback();  // same flush rule
-        delete defaultPanel;  // AOSP relies on GC for the replaced default panel
+        if(parent){
+            parent->removeView(defaultPanel);
+            mWindow->removeSendWindowContentChangedCallback();  // same flush rule
+            delete defaultPanel;  // AOSP relies on GC for the replaced default panel
+        }
+    }
+    // Inflate the custom panel, if needed.
+    if(dynamic_cast<ViewStub*>(customPanel)!=nullptr){
+        customPanel=((ViewStub*)customPanel)->inflate();
     }
     return (ViewGroup*)customPanel;
 }

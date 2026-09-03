@@ -150,3 +150,12 @@ bool ButtonBarLayout::isStacked()const{
     return getOrientation() == LinearLayout::VERTICAL;
 }
 };//endof namespace
+
+// The material alert layout carries the internal FQCN com.android.internal
+// .widget.ButtonBarLayout; the inflater matches tags on their last '.'-segment,
+// so registering the bare name serves both spellings.
+static const bool _cdroid_reg_buttonbarlayout =
+    cdroid::LayoutInflater::registerInflater("ButtonBarLayout", 0,
+        [](cdroid::Context* ctx, const cdroid::AttributeSet& attrs) -> cdroid::View* {
+            return new cdroid::ButtonBarLayout(ctx, &attrs);
+        });
