@@ -1,7 +1,7 @@
 // Direct ports of androidx.constraintlayout.core.ChainWrapContentTest. Each scenario runs at both
 // OPTIMIZATION_NONE (0) and OPTIMIZATION_STANDARD (=DIRECT=1), via a value-parameterized fixture.
-// WRAP_CONTENT cases currently FAIL on CDROID (core layout() does not collapse WRAP_CONTENT — needs
-// the View-layer measure pass); those failures are kept as CDROID bug markers.
+// The min-width/height scenarios need the "layout override 2" clamp in
+// ConstraintWidgetContainer::layout() (enforce the min, re-solve, restore the behaviours).
 //
 // Source: /home/houzh/research/constraintlayout/.../androidx/constraintlayout/core/ChainWrapContentTest.java
 #include <gtest/gtest.h>

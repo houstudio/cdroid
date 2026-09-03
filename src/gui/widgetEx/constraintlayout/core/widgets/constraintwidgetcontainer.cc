@@ -277,6 +277,12 @@ void ConstraintWidgetContainer::layout() {
     resetFinalResolution();
     const int count = (int) mChildren.size();
 
+    // Behaviours as handed to us; restored at the exit if a wrap override changed
+    // them (ConstraintWidgetContainer.java:684-686, restore at :1001-1004).
+    const DimensionBehaviour originalHorizontal = mListDimensionBehaviors[DIMENSION_HORIZONTAL];
+    const DimensionBehaviour originalVertical = mListDimensionBehaviors[VERTICAL];
+    bool wrapOverride = false;
+
     // Layout nested containers first.
     for (int i = 0; i < count; i++) {
         if (auto* c = dynamic_cast<WidgetContainer*>(mChildren[i])) {
@@ -351,6 +357,40 @@ void ConstraintWidgetContainer::layout() {
             mChildren[i]->updateFromSolver(&mSystem, /*optimize=*/false);
         }
         needsSolving = false; // per-iteration flag (BasicMeasure drives the outer match-constraint loop)
+
+        // AndroidX "layout override 2" (ConstraintWidgetContainer.java:931-951): the solved
+        // size must respect mMinWidth/mMinHeight. setFrame() already floors mWidth/mHeight
+        // at the min during the read-back, but the children were solved against the smaller
+        // wrap extent — so when the wrap pass solved below the min, enforce it: set the size,
+        // flip that dimension to FIXED and re-solve (the chains then spread their
+        // MATCH_CONSTRAINT elements across the enforced size). The solved extent is read
+        // from the anchor variables because mWidth/mHeight are already clamped by now.
+        if (mMinWidth > 0) {
+            const int solvedRight = mSystem.getObjectVariableValue(&mRight);
+            if (solvedRight != INT_MIN && solvedRight != INT_MAX && solvedRight < mMinWidth) {
+                setWidth(mMinWidth);
+                mListDimensionBehaviors[DIMENSION_HORIZONTAL] = DimensionBehaviour::FIXED;
+                wrapOverride = true;
+                needsSolving = true;
+            }
+        }
+        if (mMinHeight > 0) {
+            const int solvedBottom = mSystem.getObjectVariableValue(&mBottom);
+            if (solvedBottom != INT_MIN && solvedBottom != INT_MAX && solvedBottom < mMinHeight) {
+                setHeight(mMinHeight);
+                mListDimensionBehaviors[VERTICAL] = DimensionBehaviour::FIXED;
+                wrapOverride = true;
+                needsSolving = true;
+            }
+        }
+    }
+
+    // AndroidX restores the caller's behaviours after a wrap override — the container
+    // is laid out at the enforced size but keeps reporting WRAP_CONTENT to its caller
+    // (ConstraintWidgetContainer.java:1001-1004).
+    if (wrapOverride) {
+        mListDimensionBehaviors[DIMENSION_HORIZONTAL] = originalHorizontal;
+        mListDimensionBehaviors[VERTICAL] = originalVertical;
     }
 }
 
