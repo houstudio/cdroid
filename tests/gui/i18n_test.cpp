@@ -1418,7 +1418,10 @@ TEST_F(I18NTest, LocaleBridgeHelper)
 
     // java.text facade: cdroid::NumberFormat locale factories are localized.
     auto nf = cdroid::NumberFormat::getInstance(Locale("de", "DE"));
-    EXPECT_TRUE(nf->format(1234567.5).compare("1.234.567,500") == 0);
+    /* java.text.NumberFormat.getInstance defaults are minFractionDigits=0 /
+       maxFractionDigits=3, so de-DE renders 1234567.5 as "1.234.567,5" (the
+       trailing-zero ",500" shape is a printf %0.3f notion, not java.text). */
+    EXPECT_TRUE(nf->format(1234567.5).compare("1.234.567,5") == 0);
 }
 
 #endif
