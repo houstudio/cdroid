@@ -63,6 +63,14 @@ public:
         mListView->setItemsCanFocus(true);
 
         mWindow->addView(mListView);
+        /* AOSP ordering: the window grants focus BEFORE the first traversal
+           (ViewRootImpl assigns focus at traversal start, layout runs after),
+           so ListView::layoutChildren's "selected item takes focus when
+           itemsCanFocus" handoff fires on the first layout and the item
+           starts focused at row 0 (the first assert of every test expects
+           that). Request focus before emulating the first traversal with
+           the manual measure/layout below. */
+        mListView->requestFocus();
         const int w = mWindow->getWidth() > 0 ? mWindow->getWidth() : 1080;
         mListView->measure(MeasureSpec::makeMeasureSpec(w, MeasureSpec::EXACTLY),
                            MeasureSpec::makeMeasureSpec(mScreenHeight, MeasureSpec::EXACTLY));

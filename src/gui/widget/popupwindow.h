@@ -236,6 +236,7 @@ public:
     int  getHeight()const;
     void setHeight(int);
     bool isShowing()const;
+
     void showAtLocation(View* parent, int gravity, int x, int y);
     void showAsDropDown(View* anchor);
     void showAsDropDown(View* anchor, int xoff, int yoff);

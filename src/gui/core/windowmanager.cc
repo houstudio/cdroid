@@ -124,6 +124,14 @@ void WindowManager::addWindow(Window*win){
 }
 
 void WindowManager::removeWindow(Window*w){
+    // Membership check first (AOSP WMS removes by token lookup): a window can
+    // reach here twice — e.g. close()'s finishClose() removes it, then the
+    // posted delete self -> ~Window removes it again — and erasing end() is
+    // UB (memmove past the vector block corrupts the heap; a later string
+    // allocation then throws std::length_error, see the DIALOG suite).
+    auto itw = std::find(mWindows.begin(),mWindows.end(),w);
+    if(itw == mWindows.end()) return;
+
     if(w == mActiveWindow){
         mActiveWindow = nullptr;
         w->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
@@ -133,7 +141,6 @@ void WindowManager::removeWindow(Window*w){
         w->onPause();
         w->onStop();
     }
-    auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     const Rect wrect = w->getBound();
     mWindows.erase(itw);
     for(auto itr=mWindows.begin();itr!=mWindows.end();itr++){

@@ -18,6 +18,7 @@
 #ifndef __LISTPOPUP_WINDOW_H__
 #define __LISTPOPUP_WINDOW_H__
 #include <widget/dropdownlistview.h>
+#include <memory>
 #include <widget/popupwindow.h>
 namespace cdroid{
 
@@ -29,6 +30,7 @@ public:
 private:
     Context*mContext;
     Handler*mHandler;
+    std::shared_ptr<bool> mAliveFlag;  // gates the inner dismiss wrapper (dtor lowers it)
     ListAdapter* mAdapter;
     DropDownListView*mDropDownList;
     int mDropDownHeight = LayoutParams::WRAP_CONTENT;
@@ -110,6 +112,7 @@ public:
     void postShow();
     void show();
     void dismiss();
+    void releaseDropDownList();
     void setOnDismissListener(const PopupWindow::OnDismissListener& listener);
     void setInputMethodMode(int mode);
     int getInputMethodMode()const;

@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <core/app.h>
 #include <core/looper.h>
+#include <core/messagequeue.h>
 #include <core/systemclock.h>
 #include <widget/cdwindow.h>
 #include <widget/drawerlayout.h>
@@ -138,7 +139,17 @@ inline void pumpUntilIdle(int maxMs=1000){
     if(!lp) return;
     cdroid::nsecs_t end = cdroid::SystemClock::uptimeMillis() + maxMs;
     while(cdroid::SystemClock::uptimeMillis() < end){
-        if(lp->pollOnce(5) == cdroid::Looper::POLL_TIMEOUT) break;
+        if(lp->pollOnce(5) == cdroid::Looper::POLL_TIMEOUT){
+            /* POLL_TIMEOUT only says THIS 5ms poll expired — a message due a
+               few ms out (Choreographer posts doFrame via sendMessageAtTime,
+               so a scheduled traversal is a delayed message) still counts as
+               pending work: pollOnce would time out again while it matures.
+               Idle = the queue has nothing scheduled at all; otherwise grind
+               with pollAll(1), which dispatches due messages as they mature. */
+            cdroid::Message* head = lp->getQueue()->peek();
+            if(head == nullptr) break;
+            lp->pollAll(1);
+        }
     }
 }
 

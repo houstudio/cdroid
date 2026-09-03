@@ -68,7 +68,8 @@ ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet* atts, int 
     // control to the app listener (if any). By the time the app listener runs,
     // deleting this ListPopupWindow inside it is safe end to end; see dismiss()
     // for why nothing may follow the inner dismiss when it fired.
-    mPopup->setOnDismissListener([this](){
+    mPopup->setOnDismissListener([this, alive = mAliveFlag](){
+        if (!*alive) return;  // this ListPopupWindow died before teardown-complete
         completeDismiss();
         if (mOnDismissListener != nullptr) {
             mOnDismissListener();
@@ -86,6 +87,7 @@ ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet* atts, int 
 }
 
 ListPopupWindow::~ListPopupWindow(){
+    *mAliveFlag = false;  // the dismiss wrapper must not run on a dead object
     LOGD("%p mPopup=%p",this,mPopup);
     delete mHandler;
     delete mPopup;
@@ -94,6 +96,7 @@ ListPopupWindow::~ListPopupWindow(){
 }
 
 void ListPopupWindow::initPopupWindow(){
+    mAliveFlag = std::make_shared<bool>(true);
     mOverlapAnchor = 0xFF;
     mDropDownAlwaysVisible  = false;
     mForceIgnoreOutsideTouch= false;
@@ -397,22 +400,43 @@ void ListPopupWindow::show() {
 }
 
 void ListPopupWindow::dismiss() {
-    // When showing, the inner PopupWindow::dismiss fires the wrapper installed
-    // by initPopupWindow(), which runs completeDismiss() and then the app
-    // listener - and that listener may DELETE this ListPopupWindow, so after
-    // mPopup->dismiss() returns we must not touch members... UNLESS the inner
-    // dismiss took the deferred (exit-transition) branch: there the wrapper —
-    // and with it this object's cleanup — only runs at the decor's
-    // teardown-complete. AOSP releases the drop-down list synchronously in
-    // dismiss() (ListPopupWindow.dismiss: setContentView(null); mDropDownList
-    // = null), and the difference matters: a re-show inside the animation
-    // window (Spinner's global-layout listener re-shows on the selection's
-    // layout pass) reused a list still parented to the dying decor and died on
-    // "child already has a parent". Release the list NOW; the wrapper's later
-    // completeDismiss() is idempotent (setContentView early-returns while
-    // showing, setAdapter(nullptr) on a cleared list is a no-op).
+    // AOSP dismiss() is synchronous (mPopup.dismiss(); removePromptView();
+    // mPopup.setContentView(null); mDropDownList = null) and its body may
+    // touch members after the inner dismiss because GC keeps everything
+    // reachable. Here the inner teardown can fire the app dismiss listener
+    // synchronously - and that listener may DELETE this ListPopupWindow -
+    // even when the teardown LOOKS deferred: an in-flight enter transition
+    // trips Window::close's mInTransition guard and collapses the exit
+    // animation to a synchronous finishClose (see PopupWindow::dismiss's
+    // CAUTION). NOTHING may follow mPopup->dismiss(); run this object's
+    // cleanup BEFORE it instead.
+    //
+    // The drop-down list is released up front (not via the wrapper's
+    // completeDismiss, whose setContentView(nullptr) early-returns while
+    // showing): a re-show inside the deferred exit-animation window
+    // (Spinner's global-layout listener re-shows on the selection's layout
+    // pass) must not find a list still parented to the dying decor ("child
+    // already has a parent"). The wrapper still runs completeDismiss()
+    // before the app listener on BOTH teardown branches for the rest of the
+    // cleanup (prompt view, content view, resize runnable) - idempotent with
+    // the early release below.
+    releaseDropDownList();
     mPopup->dismiss();
-    completeDismiss();
+}
+
+// Drop the borrowed adapter and our pointer to the drop-down list. The list
+// VIEW itself is owned by mPopup (setOwnsContentView) and dies with the
+// decor's teardown; the adapter is BORROWED (the menu chain's
+// ~CascadingMenuInfo owns and frees it after the dismiss cascade) - make the
+// list drop it NOW while it is guaranteed alive, or the later decor detach
+// (onDetachedFromWindow unregisters the observer) dereferences freed memory.
+// Idempotent: dismiss() runs it eagerly, completeDismiss() re-runs it as a
+// no-op guard for paths that reach the wrapper first.
+void ListPopupWindow::releaseDropDownList() {
+    if (mDropDownList != nullptr) {
+        mDropDownList->setAdapter(nullptr);
+        mDropDownList = nullptr;
+    }
 }
 
 // Post-dismiss member cleanup, factored out of dismiss() so the wrapper
@@ -433,10 +457,7 @@ void ListPopupWindow::completeDismiss() {
     // getListView(), which this very function nulls. (In the animated-exit
     // flow the info dtor runs first and drops it there; setAdapter(nullptr)
     // on an already-cleared list is a no-op.)
-    if (mDropDownList != nullptr) {
-        mDropDownList->setAdapter(nullptr);
-        mDropDownList = nullptr;
-    }
+    releaseDropDownList();
     mHandler->removeCallbacks(mResizePopupRunnable);
 }
 
