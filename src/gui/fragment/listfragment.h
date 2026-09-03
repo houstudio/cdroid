@@ -24,7 +24,6 @@
 #include <fragment/fragment.h>
 #include <widget/listview.h>
 namespace cdroid{
-namespace fragment{
 
 class ListFragment : public Fragment{
 public:
@@ -43,6 +42,5 @@ private:
     cdroid::Adapter* mAdapter = nullptr;
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

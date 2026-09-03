@@ -21,7 +21,6 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
-namespace fragment{
 
 FragmentPagerAdapter::FragmentPagerAdapter(FragmentManager* fm)
     : FragmentPagerAdapter(fm, BEHAVIOR_SET_USER_VISIBLE_HINT){
@@ -150,5 +149,4 @@ std::string FragmentPagerAdapter::makeFragmentName(int viewId, long id){
     return "android:switcher:" + std::to_string(viewId) + ":" + std::to_string(id);
 }
 
-}/*endof namespace fragment*/
 }/*endof namespace cdroid*/

@@ -44,7 +44,7 @@
 static bool sDarkTheme = false;
 
 // ---------------------------------------------------------------------------
-class PrinterDemoWindow : public cdroid::fragment::FragmentActivity{
+class PrinterDemoWindow : public cdroid::FragmentActivity{
     cdroid::NavHostFragment* mNavHost = nullptr;
     cdroid::Toolbar* mToolbar = nullptr;
     cdroid::BottomNavigationView* mBottomNavigation = nullptr;
@@ -70,7 +70,7 @@ public:
             .commit();
     }
     void onActive() override{
-        cdroid::fragment::FragmentActivity::onActive();
+        cdroid::FragmentActivity::onActive();
         if(mInited) return;
         mInited = true;
         if(!mToolbar || !mNavHost) return;

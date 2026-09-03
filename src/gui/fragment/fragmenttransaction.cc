@@ -18,7 +18,6 @@
 #include <fragment/fragmenttransaction.h>
 #include <fragment/fragment.h>
 namespace cdroid{
-namespace fragment{
 
 FragmentTransaction& FragmentTransaction::addOp(const Op& op){
     Op o = op;
@@ -140,5 +139,4 @@ FragmentTransaction& FragmentTransaction::addSharedElement(cdroid::View* sharedE
     return *this;
 }
 
-}//namespace fragment
 }//namespace cdroid

@@ -27,7 +27,6 @@
 #include <map>
 #include <transition/transition.h>
 namespace cdroid{
-namespace fragment{
 
 class DefaultSpecialEffectsController : public SpecialEffectsController{
 public:
@@ -71,5 +70,5 @@ private:
     Transition* mTransition;
 };
 
-}}//namespace fragment::cdroid
+}//namespace cdroid
 #endif/*__DEFAULTSPECIALEFFECTSCONTROLLER_H__*/

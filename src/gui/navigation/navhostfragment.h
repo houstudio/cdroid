@@ -30,7 +30,7 @@ namespace cdroid{
 class NavGraph;
 class FragmentNavigator;
 
-class NavHostFragment : public fragment::Fragment, public NavHost{
+class NavHostFragment : public Fragment, public NavHost{
 public:
     // graphRef: optional navigation-graph resource ref (e.g. "@navigation/nav_graph"). When set,
     // the graph is inflated and applied on resume, auto-navigating to its startDestination — no

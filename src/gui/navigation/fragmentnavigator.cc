@@ -25,7 +25,7 @@
 
 namespace cdroid{
 
-FragmentNavigator::FragmentNavigator(fragment::FragmentManager* fm, int containerId)
+FragmentNavigator::FragmentNavigator(FragmentManager* fm, int containerId)
     : mFragmentManager(fm), mContainerId(containerId){
     mName = "fragment";
 }
@@ -72,11 +72,11 @@ void FragmentNavigator::navigate(NavBackStackEntry* entry, NavOptions* navOption
         if(getState()) getState()->push(entry);
         return;
     }
-    fragment::FragmentFactory factory;
-    fragment::Fragment* fragment = factory.instantiate(d->getClassName());
+    FragmentFactory factory;
+    Fragment* fragment = factory.instantiate(d->getClassName());
     if(!fragment) return;
     fragment->setArguments(entry->getArguments() ? new Bundle(*entry->getArguments()) : nullptr);
-    fragment::FragmentTransaction* t = mFragmentManager->beginTransaction();
+    FragmentTransaction* t = mFragmentManager->beginTransaction();
     // Apply custom animations from NavOptions (androidx createFragmentTransaction :530-539).
     if(navOptions){
         const int enter = navOptions->getEnterAnim();
@@ -109,7 +109,7 @@ void FragmentNavigator::popBackStack(NavBackStackEntry* popUpTo, bool savedState
             mSavedIds.insert(popUpTo->getId());
         }
     } else if(mFragmentManager){
-        mFragmentManager->popBackStackImmediate(popUpTo->getId(), fragment::FragmentManager::POP_BACK_STACK_INCLUSIVE);
+        mFragmentManager->popBackStackImmediate(popUpTo->getId(), FragmentManager::POP_BACK_STACK_INCLUSIVE);
     }
     if(getState()) getState()->pop(popUpTo, savedState);
 }

@@ -27,7 +27,6 @@
  * https://github.com/androidx/androidx/blob/androidx-main/fragment/fragment/src/main/java/androidx/fragment/app/FragmentPagerAdapter.java
  * */
 namespace cdroid{
-namespace fragment{
 
 /**
  * Implementation of {@link PagerAdapter} that represents each page as a {@link Fragment}
@@ -75,6 +74,5 @@ public:
     static std::string makeFragmentName(int viewId, long id);
 };
 
-}/*endof namespace fragment*/
 }/*endof namespace cdroid*/
 #endif/*__FRAGMENT_PAGER_ADAPTER_H__*/

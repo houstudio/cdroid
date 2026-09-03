@@ -21,7 +21,6 @@
 #include <animation/animationutils.h>
 #include <core/context.h>
 namespace cdroid{
-namespace fragment{
 
 Animation* FragmentAnim::loadEnterAnimation(Fragment* /*fragment*/){
     // Legacy default: fade in.
@@ -47,5 +46,4 @@ int FragmentAnim::getNextAnim(Fragment* fragment, bool enter, bool isPop){
     return enter ? fragment->mEnterAnim : fragment->mExitAnim;
 }
 
-}//namespace fragment
 }//namespace cdroid

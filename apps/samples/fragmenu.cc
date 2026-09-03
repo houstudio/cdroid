@@ -24,8 +24,8 @@
 #include <core/attributeset.h>
 #include <porting/cdlog.h>
 
-using cdroid::fragment::Fragment;
-using cdroid::fragment::FragmentActivity;
+using cdroid::Fragment;
+using cdroid::FragmentActivity;
 
 // A headless Fragment (no UI) that contributes toolbar menu items via the dispatch chain.
 class MenuFragment : public Fragment{

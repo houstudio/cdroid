@@ -31,7 +31,7 @@
 
 using namespace cdroid;
 
-class WidgetsDemoActivity : public fragment::FragmentActivity {
+class WidgetsDemoActivity : public FragmentActivity {
     TabLayout* mTabs = nullptr;
 public:
     WidgetsDemoActivity() : FragmentActivity(0, 0, -1, -1) {

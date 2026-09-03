@@ -26,7 +26,6 @@
 #include <core/handler.h>
 
 namespace cdroid{
-namespace fragment{
 
 // FragmentHostCallback implementation bound to the FragmentActivity.
 class FragmentActivity::HostCallbacks : public FragmentHostCallback{
@@ -177,5 +176,4 @@ FragmentManager* FragmentActivity::getSupportFragmentManager(){
     return mFragmentManager;
 }
 
-}//namespace fragment
 }//namespace cdroid

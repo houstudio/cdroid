@@ -39,7 +39,6 @@
 #include <savedstate/savedstate.h>
 #include <lifecycle/lifecycle.h>
 namespace cdroid{
-namespace fragment{
 
 struct FragmentState{
     // --- androidx FragmentState fields (FragmentState.java:29-43), exact port ---
@@ -95,6 +94,5 @@ struct BackStackState{
     std::vector<BackStackRecordState> transactions;
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif/*__FRAGMENTSTATE_H__*/

@@ -14,7 +14,7 @@
 #include "R.h"
 
 // ---------------------------------------------------------------------------
-class MaintainFragment : public cdroid::fragment::Fragment{
+class MaintainFragment : public cdroid::Fragment{
     // Weak-liveness flag (the PopupWindow/AbsListView mAliveFlag pattern), same
     // reason as CopyFragment: the progress posts capture raw view pointers and
     // can outlive the view (navigate away / recreate within 1.7s of the click —
@@ -23,7 +23,7 @@ class MaintainFragment : public cdroid::fragment::Fragment{
     std::shared_ptr<bool> mAliveFlag;
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
-        cdroid::fragment::Fragment::onCreate(savedInstanceState);
+        cdroid::Fragment::onCreate(savedInstanceState);
         setEnterTransition(new cdroid::Slide(cdroid::Gravity::END));
         setExitTransition(new cdroid::Slide(cdroid::Gravity::END));
     }
@@ -32,7 +32,7 @@ public:
         return inflater->inflate(printerdemo::R::layout::fragment_maintain, container, false);
     }
     void onViewCreated(cdroid::View* view, cdroid::Bundle*) override{
-        cdroid::fragment::Fragment::onViewCreated(view, nullptr);
+        cdroid::Fragment::onViewCreated(view, nullptr);
         mAliveFlag = std::make_shared<bool>(true);
         cdroid::View* overlay = view->findViewById(printerdemo::R::id::maint_overlay);
         cdroid::View* fill = view->findViewById(printerdemo::R::id::maint_fill);
@@ -69,7 +69,7 @@ public:
     }
     void onDestroyView() override{
         if(mAliveFlag) *mAliveFlag = false;   // pending progress posts become no-ops
-        cdroid::fragment::Fragment::onDestroyView();
+        cdroid::Fragment::onDestroyView();
     }
 };
 REGISTER_FRAGMENT(MaintainFragment);

@@ -22,7 +22,6 @@
 #include <lifecycle/creationextras.h>
 
 namespace cdroid{
-namespace fragment{
 
 namespace{
 class FMVMFactory : public lifecycle::ViewModelProvider::Factory{
@@ -124,5 +123,4 @@ void FragmentManagerViewModel::clearNonConfigState(const std::string& who, bool 
     clearNonConfigStateInternal(who, destroyChildNonConfig);
 }
 
-}//namespace fragment
 }//namespace cdroid

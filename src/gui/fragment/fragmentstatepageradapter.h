@@ -28,7 +28,6 @@
  * https://github.com/androidx/androidx/blob/androidx-main/fragment/fragment/src/main/java/androidx/fragment/app/FragmentStatePagerAdapter.java
  * */
 namespace cdroid{
-namespace fragment{
 
 /**
  * Implementation of {@link PagerAdapter} that uses a {@link Fragment} to manage each page.
@@ -73,6 +72,5 @@ public:
     void restoreState(Parcelable* state)override;
 };
 
-}/*endof namespace fragment*/
 }/*endof namespace cdroid*/
 #endif/*__FRAGMENT_STATE_PAGER_ADAPTER_H__*/

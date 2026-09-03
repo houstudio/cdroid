@@ -45,7 +45,7 @@
 #include <menu/menuinflater.h>
 
 namespace cdroid{
-namespace fragment{ struct FragmentState; }
+struct FragmentState;
 class Context;
 class Bundle;
 class View;
@@ -54,7 +54,6 @@ class LayoutInflater;
 class AttributeSet;
 class Handler;
 
-namespace fragment{
 class FragmentManager;
 class Window;
 class FragmentHostCallback;
@@ -282,6 +281,5 @@ private:
     static std::string generateWho();
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

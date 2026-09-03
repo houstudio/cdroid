@@ -13,14 +13,12 @@
 
 namespace cdroid {
 class NavController;
-namespace fragment {
 class Fragment;
-} // namespace fragment
 } // namespace cdroid
 
-cdroid::NavController* navControllerOf(cdroid::fragment::Fragment* f);
+cdroid::NavController* navControllerOf(cdroid::Fragment* f);
 
-printerdemo::PrinterViewModel* sharedPrinterVM(cdroid::fragment::Fragment* f);
+printerdemo::PrinterViewModel* sharedPrinterVM(cdroid::Fragment* f);
 
 // Persisted locale choice (zh-CN default, matching the pre-locale-switch UI).
 extern std::string sLocaleTag;

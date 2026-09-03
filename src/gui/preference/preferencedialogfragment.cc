@@ -27,9 +27,9 @@
 namespace cdroid {
 
 void PreferenceDialogFragment::onCreate(Bundle* savedInstanceState) {
-    fragment::DialogFragment::onCreate(savedInstanceState);
+    DialogFragment::onCreate(savedInstanceState);
 
-    fragment::Fragment* rawFragment = getTargetFragment();
+    Fragment* rawFragment = getTargetFragment();
     auto* target = dynamic_cast<DialogPreference::TargetFragment*>(rawFragment);
     if (target == nullptr) {
         throw std::logic_error("Target fragment must implement TargetFragment interface");
@@ -55,7 +55,7 @@ void PreferenceDialogFragment::onCreate(Bundle* savedInstanceState) {
 }
 
 void PreferenceDialogFragment::onSaveInstanceState(Bundle* outState) {
-    fragment::DialogFragment::onSaveInstanceState(outState);
+    DialogFragment::onSaveInstanceState(outState);
 
     outState->putString(SAVE_STATE_TITLE, mDialogTitle);
     outState->putString(SAVE_STATE_POSITIVE_TEXT, mPositiveButtonText);
@@ -148,7 +148,7 @@ void PreferenceDialogFragment::onClick(DialogInterface& /*dialog*/, int which) {
 }
 
 void PreferenceDialogFragment::onDismiss(DialogInterface* dialog) {
-    fragment::DialogFragment::onDismiss(dialog);
+    DialogFragment::onDismiss(dialog);
     onDialogClosed(mWhichButtonClicked == DialogInterface::BUTTON_POSITIVE);
 }
 

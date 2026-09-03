@@ -17,7 +17,7 @@
 #include "R.h"
 
 // ---------------------------------------------------------------------------
-class CopyFragment : public cdroid::fragment::Fragment{
+class CopyFragment : public cdroid::Fragment{
     int mCopies = 1;
     // Weak-liveness flag (the PopupWindow/AbsListView mAliveFlag pattern): the
     // print-job posts capture raw view pointers and can outlive the view — a
@@ -29,7 +29,7 @@ class CopyFragment : public cdroid::fragment::Fragment{
     std::shared_ptr<bool> mAliveFlag;
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
-        cdroid::fragment::Fragment::onCreate(savedInstanceState);
+        cdroid::Fragment::onCreate(savedInstanceState);
         setEnterTransition(new cdroid::Slide(cdroid::Gravity::END));
         setExitTransition(new cdroid::Slide(cdroid::Gravity::END));
     }
@@ -38,7 +38,7 @@ public:
         return inflater->inflate(printerdemo::R::layout::fragment_copy, container, false);
     }
     void onViewCreated(cdroid::View* view, cdroid::Bundle*) override{
-        cdroid::fragment::Fragment::onViewCreated(view, nullptr);
+        cdroid::Fragment::onViewCreated(view, nullptr);
         mAliveFlag = std::make_shared<bool>(true);
 
         cdroid::TextView* tvCopies = (cdroid::TextView*)view->findViewById(printerdemo::R::id::tv_copies);
@@ -105,7 +105,7 @@ public:
     }
     void onDestroyView() override{
         if(mAliveFlag) *mAliveFlag = false;   // pending job posts become no-ops
-        cdroid::fragment::Fragment::onDestroyView();
+        cdroid::Fragment::onDestroyView();
     }
 };
 REGISTER_FRAGMENT(CopyFragment);

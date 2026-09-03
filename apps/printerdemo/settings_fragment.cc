@@ -20,10 +20,10 @@
 #include "R.h"
 
 // ---------------------------------------------------------------------------
-class SettingsFragment : public cdroid::fragment::Fragment{
+class SettingsFragment : public cdroid::Fragment{
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
-        cdroid::fragment::Fragment::onCreate(savedInstanceState);
+        cdroid::Fragment::onCreate(savedInstanceState);
         setEnterTransition(new cdroid::Slide(cdroid::Gravity::END));
         setExitTransition(new cdroid::Slide(cdroid::Gravity::END));
     }
@@ -32,7 +32,7 @@ public:
         return inflater->inflate(printerdemo::R::layout::fragment_settings, container, false);
     }
     void onViewCreated(cdroid::View* view, cdroid::Bundle*) override{
-        cdroid::fragment::Fragment::onViewCreated(view, nullptr);
+        cdroid::Fragment::onViewCreated(view, nullptr);
         cdroid::SeekBar* seek = (cdroid::SeekBar*)view->findViewById(printerdemo::R::id::seek_brightness);
         cdroid::TextView* tv = (cdroid::TextView*)view->findViewById(printerdemo::R::id::tv_brightness);
         if(seek && tv){

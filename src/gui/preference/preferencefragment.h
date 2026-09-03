@@ -73,7 +73,7 @@ public:
  * This Fragment displays a hierarchy of Preference objects to the user. It
  * also handles persisting values to the device.
  */
-class PreferenceFragment : public fragment::Fragment, public virtual DialogPreference::TargetFragment {
+class PreferenceFragment : public Fragment, public virtual DialogPreference::TargetFragment {
 public:
     /**
      * Fragment argument used to specify the tag of the desired root
@@ -157,7 +157,7 @@ protected:
      * A wrapper for getParentFragment which is v17+. Used by the leanback
      * preference lib.
      */
-    virtual fragment::Fragment* getCallbackFragment();
+    virtual Fragment* getCallbackFragment();
 
     // androidx public constant (was private here, blocking apps that show
     // their own dialog fragments through onDisplayPreferenceDialog overrides).

@@ -14,10 +14,10 @@
 #include "R.h"
 
 // ---------------------------------------------------------------------------
-class AboutFragment : public cdroid::fragment::Fragment{
+class AboutFragment : public cdroid::Fragment{
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
-        cdroid::fragment::Fragment::onCreate(savedInstanceState);
+        cdroid::Fragment::onCreate(savedInstanceState);
         setEnterTransition(new cdroid::Slide(cdroid::Gravity::END));
         setExitTransition(new cdroid::Slide(cdroid::Gravity::END));
     }
@@ -26,7 +26,7 @@ public:
         return inflater->inflate(printerdemo::R::layout::fragment_about, container, false);
     }
     void onViewCreated(cdroid::View* view, cdroid::Bundle*) override{
-        cdroid::fragment::Fragment::onViewCreated(view, nullptr);
+        cdroid::Fragment::onViewCreated(view, nullptr);
         // Rich text via Html.fromHtml (bold headers, brand-colored bullets/emphasis).
         auto set = [view](int id, const std::string& html){
             cdroid::TextView* tv = (cdroid::TextView*)view->findViewById(id);

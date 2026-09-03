@@ -29,8 +29,7 @@
  * mInDynamicContainer, mDeferStart, mTransitioning, saved-state plumbing.
  *********************************************************************************/
 namespace cdroid{
-class Bundle; // cdroid::Bundle forward decl (NOT cdroid::fragment::Bundle)
-namespace fragment{
+class Bundle; // cdroid::Bundle forward decl (NOT cdroid::Bundle)
 
 class Fragment;
 class FragmentManager;
@@ -97,5 +96,5 @@ private:
     Bundle* savedInstanceState() const;
 };
 
-}}//namespace fragment::cdroid
+}//namespace cdroid
 #endif/*__FRAGMENTSTATEMANAGER_H__*/

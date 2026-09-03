@@ -53,10 +53,10 @@ void DemoPageFragment::onViewCreated(View* view, Bundle* savedInstanceState) {
 }
 
 // ---------------------------------------------------------------------------
-DemoFragmentPagerAdapter::DemoFragmentPagerAdapter(fragment::FragmentManager* fm)
-    : fragment::FragmentPagerAdapter(fm, fragment::FragmentPagerAdapter::BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {}
+DemoFragmentPagerAdapter::DemoFragmentPagerAdapter(FragmentManager* fm)
+    : FragmentPagerAdapter(fm, FragmentPagerAdapter::BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {}
 
-fragment::Fragment* DemoFragmentPagerAdapter::getItem(int position) {
+Fragment* DemoFragmentPagerAdapter::getItem(int position) {
     return DemoPageFragment::newInstance(position);
 }
 

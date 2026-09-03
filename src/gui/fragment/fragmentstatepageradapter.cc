@@ -21,7 +21,6 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
-namespace fragment{
 
 FragmentStatePagerAdapter::FragmentStatePagerAdapter(FragmentManager* fm)
     : FragmentStatePagerAdapter(fm, BEHAVIOR_SET_USER_VISIBLE_HINT){
@@ -161,5 +160,4 @@ Parcelable* FragmentStatePagerAdapter::saveState(){
 void FragmentStatePagerAdapter::restoreState(Parcelable* state){
 }
 
-}/*endof namespace fragment*/
 }/*endof namespace cdroid*/

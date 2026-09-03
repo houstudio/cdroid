@@ -36,7 +36,7 @@
 
 using cdroid::PreferenceFragment;
 using cdroid::PreferenceScreen;
-using cdroid::fragment::FragmentActivity;
+using cdroid::FragmentActivity;
 
 namespace {
 

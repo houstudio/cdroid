@@ -30,7 +30,6 @@
 #include <stdexcept>
 
 namespace cdroid{
-namespace fragment{
 
 std::string Fragment::generateWho(){
     static std::atomic<long> sCounter{0};
@@ -377,5 +376,4 @@ void Fragment::performOptionsMenuClosed(Menu& menu){
     }
 }
 
-}//namespace fragment
 }//namespace cdroid

@@ -41,7 +41,6 @@ class View;
 class Menu;
 class MenuInflater;
 class MenuItem;
-namespace fragment{
 
 class Fragment;
 class FragmentHostCallback;
@@ -232,6 +231,5 @@ private:
     std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);  // see getAlive()
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

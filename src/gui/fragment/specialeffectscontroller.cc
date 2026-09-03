@@ -27,7 +27,6 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
-namespace fragment{
 
 static SpecialEffectsController::Operation::State visibilityToState(int vis){
     if(vis == (int)cdroid::View::GONE) return SpecialEffectsController::Operation::State::GONE;
@@ -249,4 +248,4 @@ void FragmentStateManagerOperation::complete(){
     if(fsm) fsm->moveToExpectedState(); // re-enter the FSM; awaiting-effect clamp lifts
 }
 
-}}//namespace fragment::cdroid
+}//namespace cdroid

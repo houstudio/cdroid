@@ -13,7 +13,7 @@
 
 std::string sLocaleTag = "zh-CN";
 
-cdroid::NavController* navControllerOf(cdroid::fragment::Fragment* f){
+cdroid::NavController* navControllerOf(cdroid::Fragment* f){
     cdroid::NavHostFragment* host = dynamic_cast<cdroid::NavHostFragment*>(f->getParentFragment());
     return host ? host->getNavController() : nullptr;
 }
@@ -26,9 +26,9 @@ cdroid::NavController* navControllerOf(cdroid::fragment::Fragment* f){
 //   (Home -> Copy -> back rebuilds Home's view and re-reads the updated counters/ink).
 //   Mirrors ViewModelProvider(requireActivity()).get(PrinterViewModel::class.java).
 // ---------------------------------------------------------------------------
-printerdemo::PrinterViewModel* sharedPrinterVM(cdroid::fragment::Fragment* f){
+printerdemo::PrinterViewModel* sharedPrinterVM(cdroid::Fragment* f){
     static printerdemo::PrinterViewModelFactory sFactory;
-    auto* act = dynamic_cast<cdroid::fragment::FragmentActivity*>(f->getActivity());
+    auto* act = dynamic_cast<cdroid::FragmentActivity*>(f->getActivity());
     if(!act) return nullptr;
     cdroid::lifecycle::ViewModelProvider provider(&act->getViewModelStore(), &sFactory, nullptr);
     return provider.get<printerdemo::PrinterViewModel>("PrinterViewModel");

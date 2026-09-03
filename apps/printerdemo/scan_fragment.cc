@@ -15,7 +15,7 @@
 #include "R.h"
 
 // ---------------------------------------------------------------------------
-class ScanFragment : public cdroid::fragment::Fragment{
+class ScanFragment : public cdroid::Fragment{
     bool mScanning = false;
     // Self-re-arming sweep callback. A member Runnable recurses through `this` — the old
     // make_shared<std::function> self-capture was a reference cycle that leaked (valgrind
@@ -29,7 +29,7 @@ class ScanFragment : public cdroid::fragment::Fragment{
     std::shared_ptr<bool> mAliveFlag;
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
-        cdroid::fragment::Fragment::onCreate(savedInstanceState);
+        cdroid::Fragment::onCreate(savedInstanceState);
         setEnterTransition(new cdroid::Slide(cdroid::Gravity::END));
         setExitTransition(new cdroid::Slide(cdroid::Gravity::END));
     }
@@ -38,7 +38,7 @@ public:
         return inflater->inflate(printerdemo::R::layout::fragment_scan, container, false);
     }
     void onViewCreated(cdroid::View* view, cdroid::Bundle*) override{
-        cdroid::fragment::Fragment::onViewCreated(view, nullptr);
+        cdroid::Fragment::onViewCreated(view, nullptr);
         cdroid::MotionLayout* ml = (cdroid::MotionLayout*)view->findViewById(printerdemo::R::id::scan_preview);
         cdroid::TextView* status = (cdroid::TextView*)view->findViewById(printerdemo::R::id::scan_status);
         cdroid::Button* btn = (cdroid::Button*)view->findViewById(printerdemo::R::id::btn_scan);
@@ -80,7 +80,7 @@ public:
     void onDestroyView() override{
         mScanning = false;   // halt the sweep so any pending callback bails before touching ml
         if(mAliveFlag) *mAliveFlag = false;   // ... and that bail itself must not read the dead fragment
-        cdroid::fragment::Fragment::onDestroyView();
+        cdroid::Fragment::onDestroyView();
     }
 };
 REGISTER_FRAGMENT(ScanFragment);

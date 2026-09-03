@@ -34,7 +34,7 @@ class View;
  * suffix is dropped) — abstract base class which presents a dialog associated
  * with a DialogPreference.
  */
-class PreferenceDialogFragment : public fragment::DialogFragment {
+class PreferenceDialogFragment : public DialogFragment {
 public:
     static constexpr const char* ARG_KEY = "key";
 

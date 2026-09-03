@@ -35,7 +35,7 @@ NavHostFragment::~NavHostFragment(){
 }
 
 void NavHostFragment::onCreate(Bundle* savedInstanceState){
-    fragment::Fragment::onCreate(savedInstanceState);
+    Fragment::onCreate(savedInstanceState);
     mNavController = onCreateNavController();
     if(mNavController){
         mNavController->setLifecycleOwner(this);
@@ -65,7 +65,7 @@ void NavHostFragment::onCreate(Bundle* savedInstanceState){
 }
 
 void NavHostFragment::onResume(){
-    fragment::Fragment::onResume();
+    Fragment::onResume();
 }
 
 NavController* NavHostFragment::onCreateNavController(){
@@ -84,7 +84,7 @@ cdroid::View* NavHostFragment::onCreateView(cdroid::LayoutInflater* inflater,
 }
 
 void NavHostFragment::onViewCreated(View* view, Bundle* savedInstanceState){
-    fragment::Fragment::onViewCreated(view, savedInstanceState);
+    Fragment::onViewCreated(view, savedInstanceState);
     // Publish this host's NavController on the host View so any descendant — e.g. a button
     // inside a destination Fragment swapped in by FragmentNavigator — resolves it through
     // Navigation::findNavController(view) (androidx NavHostFragment.onViewCreated).
@@ -121,7 +121,7 @@ void NavHostFragment::onDestroyView(){
             parent = parent->getParent();
         }
     }
-    fragment::Fragment::onDestroyView();
+    Fragment::onDestroyView();
 }
 
 void NavHostFragment::setGraph(NavGraph* graph){

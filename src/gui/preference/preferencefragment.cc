@@ -379,7 +379,7 @@ bool PreferenceFragment::onPreferenceTreeClick(Preference& preference) {
     // just logs.
     if (!preference.getFragment().empty()) {
         bool handled = false;
-        fragment::Fragment* callbackFragment = this;
+        Fragment* callbackFragment = this;
         while (!handled && callbackFragment != nullptr) {
             auto* cb = dynamic_cast<OnPreferenceStartFragmentCallback*>(callbackFragment);
             if (cb != nullptr) {
@@ -399,7 +399,7 @@ bool PreferenceFragment::onPreferenceTreeClick(Preference& preference) {
 
 void PreferenceFragment::onNavigateToScreen(PreferenceScreen& preferenceScreen) {
     bool handled = false;
-    fragment::Fragment* callbackFragment = this;
+    Fragment* callbackFragment = this;
     while (!handled && callbackFragment != nullptr) {
         auto* cb = dynamic_cast<OnPreferenceStartScreenCallback*>(callbackFragment);
         if (cb != nullptr) {
@@ -483,7 +483,7 @@ RecyclerView::Adapter* PreferenceFragment::onCreateAdapter(PreferenceScreen* pre
 
 void PreferenceFragment::onDisplayPreferenceDialog(Preference& preference) {
     bool handled = false;
-    fragment::Fragment* callbackFragment = this;
+    Fragment* callbackFragment = this;
     while (!handled && callbackFragment != nullptr) {
         auto* cb = dynamic_cast<OnPreferenceDisplayDialogCallback*>(callbackFragment);
         if (cb != nullptr) {
@@ -501,7 +501,7 @@ void PreferenceFragment::onDisplayPreferenceDialog(Preference& preference) {
         return;
     }
 
-    fragment::DialogFragment* f = nullptr;
+    DialogFragment* f = nullptr;
     if (dynamic_cast<EditTextPreference*>(&preference) != nullptr) {
         f = EditTextPreferenceDialogFragment::newInstance(preference.getKey());
     } else if (dynamic_cast<ListPreference*>(&preference) != nullptr) {
@@ -519,7 +519,7 @@ void PreferenceFragment::onDisplayPreferenceDialog(Preference& preference) {
     f->show(getParentFragmentManager(), DIALOG_FRAGMENT_TAG);
 }
 
-fragment::Fragment* PreferenceFragment::getCallbackFragment() {
+Fragment* PreferenceFragment::getCallbackFragment() {
     return nullptr;
 }
 

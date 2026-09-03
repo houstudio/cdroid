@@ -30,7 +30,6 @@
 namespace cdroid{
 class ViewGroup;
 class View;
-namespace fragment{
 class Fragment;
 class FragmentStateManager;
 
@@ -148,5 +147,5 @@ private:
     FragmentStateManager* mFSM;
 };
 
-}}//namespace fragment::cdroid
+}//namespace cdroid
 #endif/*__SPECIALEFFECTSCONTROLLER_H__*/

@@ -26,7 +26,6 @@
 #include <string>
 namespace cdroid{
 class Context;
-namespace fragment{
 class Fragment;
 class FragmentAnim{
 public:
@@ -40,6 +39,5 @@ private:
     // 4-anim matrix: forward enter/exit, pop popEnter/popExit (androidx FragmentAnim.getNextAnim).
     static int getNextAnim(Fragment* fragment, bool enter, bool isPop);
 };
-}//namespace fragment
 }//namespace cdroid
 #endif

@@ -27,7 +27,6 @@
 #include <lifecycle/lifecycle.h>
 namespace cdroid{
 class View;
-namespace fragment{
 
 class Fragment;
 class FragmentFactory;
@@ -106,6 +105,5 @@ protected:
     int mEnterAnim = 0, mExitAnim = 0, mPopEnterAnim = 0, mPopExitAnim = 0;
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

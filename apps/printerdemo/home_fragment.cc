@@ -77,11 +77,11 @@ static void bindPrinter(cdroid::View* root, printerdemo::PrinterViewModel& vm){
 }
 
 // ---------------------------------------------------------------------------
-class HomeFragment : public cdroid::fragment::Fragment{
+class HomeFragment : public cdroid::Fragment{
     cdroid::ValueAnimator* mHeroAnim = nullptr;
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
-        cdroid::fragment::Fragment::onCreate(savedInstanceState);
+        cdroid::Fragment::onCreate(savedInstanceState);
         setEnterTransition(new cdroid::Slide(cdroid::Gravity::START));
         setExitTransition(new cdroid::Slide(cdroid::Gravity::START));
     }
@@ -90,7 +90,7 @@ public:
         return inflater->inflate(printerdemo::R::layout::fragment_home, container, false);
     }
     void onViewCreated(cdroid::View* view, cdroid::Bundle*) override{
-        cdroid::fragment::Fragment::onViewCreated(view, nullptr);
+        cdroid::Fragment::onViewCreated(view, nullptr);
         auto go = [this, view](int cardId, int actionId){
             cdroid::View* card = view->findViewById(cardId);
             if(card) card->setOnClickListener([this, actionId](cdroid::View&){
@@ -140,7 +140,7 @@ public:
     }
     void onDestroyView() override{
         if(mHeroAnim){ mHeroAnim->cancel(); mHeroAnim = nullptr; }
-        cdroid::fragment::Fragment::onDestroyView();
+        cdroid::Fragment::onDestroyView();
     }
 };
 REGISTER_FRAGMENT(HomeFragment);

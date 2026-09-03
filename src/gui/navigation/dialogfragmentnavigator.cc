@@ -34,7 +34,7 @@ void DialogFragmentNavigator::Destination::onInflate(cdroid::Context* context, c
          getRoute().c_str(), getClassName().c_str());
 }
 
-DialogFragmentNavigator::DialogFragmentNavigator(Context* context, fragment::FragmentManager* fm)
+DialogFragmentNavigator::DialogFragmentNavigator(Context* context, FragmentManager* fm)
     : mContext(context), mFragmentManager(fm){
     mName = "dialog";
 }
@@ -55,10 +55,10 @@ void DialogFragmentNavigator::navigate(NavBackStackEntry* entry, NavOptions* /*n
     // androidx DialogFragmentNavigator.kt:171-181 — createDialogFragment + show + state.push.
     Destination* d = dynamic_cast<Destination*>(entry->getDestination());
     if(!d || !mFragmentManager) return;
-    fragment::FragmentFactory factory;
-    fragment::Fragment* f = factory.instantiate(d->getClassName());
+    FragmentFactory factory;
+    Fragment* f = factory.instantiate(d->getClassName());
     if(!f) return;
-    auto* dialogFragment = dynamic_cast<fragment::DialogFragment*>(f);
+    auto* dialogFragment = dynamic_cast<DialogFragment*>(f);
     if(!dialogFragment){ LOGE("DialogFragmentNavigator: %s is not a DialogFragment", d->getClassName().c_str()); delete f; return; }
     dialogFragment->setArguments(entry->getArguments() ? new Bundle(*entry->getArguments()) : nullptr);
     // androidx :173 — show(fm, entry.id) adds the dialog fragment tagged with the entry id.
@@ -71,9 +71,9 @@ void DialogFragmentNavigator::popBackStack(NavBackStackEntry* popUpTo, bool save
     // androidx DialogFragmentNavigator.kt:115-135 — dismiss the dialog by finding the fragment
     // by entry id (tag), then pop the entry off this navigator's state.
     if(mFragmentManager){
-        fragment::Fragment* f = mFragmentManager->findFragmentByTag(popUpTo->getId());
+        Fragment* f = mFragmentManager->findFragmentByTag(popUpTo->getId());
         if(f){
-            auto* df = dynamic_cast<fragment::DialogFragment*>(f);
+            auto* df = dynamic_cast<DialogFragment*>(f);
             if(df) df->dismiss();
         }
     }

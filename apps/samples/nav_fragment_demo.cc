@@ -20,8 +20,8 @@
 #include <view/keyevent.h>
 #include <porting/cdlog.h>
 
-using cdroid::fragment::Fragment;
-using cdroid::fragment::FragmentActivity;
+using cdroid::Fragment;
+using cdroid::FragmentActivity;
 
 class AFrag : public Fragment{
 public:

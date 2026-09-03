@@ -18,7 +18,6 @@
 #include <fragment/listfragment.h>
 #include <widget/adapter.h>
 namespace cdroid{
-namespace fragment{
 
 ListFragment::ListFragment(){}
 
@@ -39,5 +38,4 @@ void ListFragment::setListAdapter(cdroid::Adapter* adapter){
     if(mList) mList->setAdapter(adapter);
 }
 
-}//namespace fragment
 }//namespace cdroid

@@ -22,7 +22,7 @@ using namespace cdroid;
 
 // Backs the <fragment> destinations in nav_host_test.xml. At global scope (with using namespace
 // cdroid) so REGISTER_FRAGMENT can reference it by unqualified name.
-class NavTestFragment : public fragment::Fragment {
+class NavTestFragment : public Fragment {
 public:
     View* onCreateView(LayoutInflater*, ViewGroup*, Bundle*) override {
         return new View(&App::getInstance());
@@ -32,7 +32,7 @@ REGISTER_FRAGMENT(NavTestFragment);
 
 namespace {
 
-class TestFragmentActivity : public fragment::FragmentActivity {
+class TestFragmentActivity : public FragmentActivity {
 public:
     TestFragmentActivity() : FragmentActivity(0, 0, -1, -1) {}
 };

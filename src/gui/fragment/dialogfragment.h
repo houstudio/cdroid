@@ -28,7 +28,6 @@
 #include <app/dialog.h>
 #include <app/dialoginterface.h>
 namespace cdroid{
-namespace fragment{
 
 class FragmentManager;
 class FragmentTransaction;
@@ -112,6 +111,5 @@ private:
     void setupDialog(cdroid::Dialog* dialog, int style);
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

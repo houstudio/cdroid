@@ -30,7 +30,6 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
-namespace fragment{
 
 // Map a Lifecycle::State ceiling to the Fragment int-state it permits (androidx
 // FragmentStateManager.computeExpectedState clamps managerState by mFragment.mMaxState).
@@ -382,5 +381,4 @@ void FragmentStateManager::stepDown(){
     }
 }
 
-}//namespace fragment
 }//namespace cdroid

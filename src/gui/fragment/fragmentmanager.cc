@@ -40,7 +40,6 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
-namespace fragment{
 
 FragmentManager::FragmentManager(){
     // mExecCommit is assigned exactly once and never rebound. Runnable identity is its shared
@@ -848,5 +847,4 @@ cdroid::View* FragmentManager::findViewByTransitionName(cdroid::View* root, cons
     return nullptr;
 }
 
-}//namespace fragment
 }//namespace cdroid

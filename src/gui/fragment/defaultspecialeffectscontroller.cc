@@ -30,7 +30,6 @@
 #include <memory>
 
 namespace cdroid{
-namespace fragment{
 
 void DefaultSpecialEffectsController::collectEffects(std::vector<Operation*>& operations, bool isPop){
     roundClones().clear();   // per-round: effects of one burst share one clone per container
@@ -294,4 +293,4 @@ void TransitionEffect::onCommit(ViewGroup* container){
     mOperation->completeEffect(this);  // synchronous: retire op now (running->completed), dodge the clamp
 }
 
-}}//namespace fragment::cdroid
+}//namespace cdroid

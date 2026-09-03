@@ -25,7 +25,6 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
-namespace fragment{
 
 // Saved-state keys (androidx DialogFragment.java:341-350).
 static const char* SAVED_DIALOG_STATE_TAG = "android:savedDialogState";
@@ -270,5 +269,4 @@ void DialogFragment::setupDialog(Dialog* dialog, int style){
     (void)style;
 }
 
-}//namespace fragment
 }//namespace cdroid
