@@ -2073,16 +2073,31 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         text = TextUtils::stringOrSpannedString(text);
     }
     if (mAutoLinkMask != 0) {
-        // AOSP wraps non-Spannable buffers via mSpannableFactory.newSpannable;
-        // CDROID hasn't ported that factory, so only already-Spannable buffers
-        // (the editable / Spannable cases) get auto-linked here.
+        // AOSP wraps non-Spannable buffers via mSpannableFactory.newSpannable
+        // before addLinks; `text = s2` only on success (the wrapped copy is
+        // discarded otherwise — AOSP relies on GC there).
         Spannable* s2 = dynamic_cast<Spannable*>(text);
+        CharSequence* original = nullptr;
+        if (s2 == nullptr) {
+            original = text;
+            s2 = dynamic_cast<Spannable*>(mSpannableFactory(text));
+        }
         if (s2 != nullptr && Linkify::addLinks(s2, mAutoLinkMask)) {
+            if (original != nullptr) {
+                text = s2;
+                if (original != mCharWrapper && original != prevText && original != prevTransformed) {
+                    delete original;
+                }
+                if (type != BufferType::EDITABLE) type = BufferType::SPANNABLE;
+            }
             setTextInternal(text);
-            // ported yet, so gate only on linksClickable.
+            // Do not change the movement method for text that support text selection as it
+            // would prevent an arbitrary cursor displacement.
             if (mLinksClickable &&!textCanBeSelected()) {
                 setMovementMethod(LinkMovementMethod::getInstance());
             }
+        } else if (original != nullptr) {
+            delete s2; // addLinks failed — discard the wrapped copy (AOSP: GC)
         }
     }
     mBufferType = type;
