@@ -74,11 +74,13 @@ public:
             LOGE("All nodes must be present in the graph before being added as an edge");
         }
         auto it = mGraph.find(node);
-        std::vector<T*>* edges = (it==mGraph.end())?it->second:nullptr;// mGraph.get(node);
+        std::vector<T*>* edges = (it!=mGraph.end())?it->second:nullptr;// mGraph.get(node);
         if (edges == nullptr) {
             // If edges is null, we should try and get one from the pool and add it to the graph
             edges = getEmptyList();
-            mGraph.insert({ node, edges });
+            // operator[] assigns: insert() would be a no-op for an existing key
+            // (addNode inserts the key with a null edge list).
+            mGraph[node] = edges;
         }
         // Finally add the edge to the list
         edges->push_back(incomingEdge);
