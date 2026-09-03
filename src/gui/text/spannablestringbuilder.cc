@@ -1,4 +1,5 @@
 #include <text/spannablestringbuilder.h>
+#include <text/String.h>
 #include <text/inputfilter.h>
 #include <text/textwatcher.h>
 #include <porting/cdlog.h>
@@ -98,8 +99,14 @@ void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta
 }
 
 SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string&text,int flags){
-     mText.append(text);
-     return *this;
+    /*AOSP append(text) == replace(length(), length(), text): route through
+      replace so TextWatchers fire and span edges adjust (MARK/POINT). The old
+      raw mText.append bypassed both — a whole-text watcher span registered on
+      an empty builder stayed degenerate [0,0] forever, so DynamicLayout never
+      heard about appended text or spans added past offset 0.*/
+    String s(text);
+    replace((int)mText.length(), (int)mText.length(), s);
+    return *this;
 }
 
 SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string&text, const ParcelableSpan* what, int flags){
@@ -121,10 +128,9 @@ SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string& tex
 }
 
 Editable& SpannableStringBuilder::append(const CharSequence& text) {
-    const int textLen = (int)text.length();
-    for (int i = 0; i < textLen; i++) {
-        mText += (char16_t)text.charAt(i);
-    }
+    // AOSP append(text) == replace(length(), length(), text) — see the
+    // std::u16string overload above for why the raw mText path is wrong.
+    replace((int)mText.length(), (int)mText.length(), text);
     return *this;
 }
 
@@ -153,9 +159,8 @@ Editable& SpannableStringBuilder::append(const CharSequence& text, int start, in
     if (start < 0) start = 0;
     if (end > (int)text.length()) end = (int)text.length();
     if (start >= end) return *this;
-    for (int i = start; i < end; i++) {
-        mText += (char16_t)text.charAt(i);
-    }
+    // AOSP: append(text, start, end) == replace(length(), length(), text, start, end)
+    replace((int)mText.length(), (int)mText.length(), text, start, end);
     return *this;
 }
 
@@ -256,7 +261,54 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
     } else if (st < en) {
         mText.erase(st, replacedLen);
     }
+    /*AOSP change() -> removeSpansForChange (SpannableStringBuilder.java): when
+      text is replaced, a span whose range lies entirely inside the replaced
+      region and collapses to empty is REMOVED, and removeSpan broadcasts
+      onSpanRemoved before the text watchers run (onSpanAdded/Changed go after).
+      DynamicLayout depends on this: deleting the text that carried a
+      ReplacementSpan must un-flag the block (getBlocksAlwaysNeedToBeRedrawn).
+      Candidates are captured with pre-adjustment coordinates (the sweep must
+      see the original range — post-adjust it is already degenerate and
+      indistinguishable from a span that was always empty), then the ranges are
+      adjusted, then the doomed spans are removed and notified so the span set
+      is already consistent when the watcher's reflow reads the new text.
+      Spans that were already zero-length before the edit (Selection markers)
+      only moved; they are kept. A span exactly covering the replaced region
+      survives the non-empty-replacement case (it ends up covering the
+      replacement text), per AOSP's (textIsRemoved || spanStart > start ||
+      spanEnd < end) guard.*/
+    std::vector<std::pair<const ParcelableSpan*, std::pair<int, int>>> doomed;
+    if (replacedLen > 0) {
+        for (const auto& r : mSpans) {
+            const bool inside = r.start >= st && r.end <= en;
+            const bool collapses = insertLen == 0 || r.start > st || r.end < en;
+            if (inside && collapses && r.start != r.end) {
+                doomed.push_back({r.span, {r.start, r.end}});
+            }
+        }
+    }
     adjustSpansForReplace(st, en, insertLen - replacedLen);
+    if (!doomed.empty()) {
+        /*Order matters under the raw-pointer span model: notify FIRST (the
+          watcher's dynamic_cast touches the span object), free LAST — AOSP
+          relies on GC here and orders freely. The records are detached from
+          mSpans up front so the span set is already consistent when the
+          watcher's reflow reads it back.*/
+        std::vector<SpanRecord> removed;
+        removed.reserve(doomed.size());
+        for (auto it = mSpans.begin(); it != mSpans.end();) {
+            bool hit = false;
+            for (const auto& d : doomed) hit |= (d.first == it->span);
+            if (hit) { removed.push_back(*it); it = mSpans.erase(it); }
+            else ++it;
+        }
+        for (const auto& d : doomed) {
+            sendSpanRemoved(d.first, d.second.first, d.second.second);
+        }
+        for (auto& r : removed) {
+            disposeSpan(r);
+        }
+    }
 
     // Copy spans carried by the source CharSequence (when it is a Spanned) into this builder,
     // mapping source[tbstart..tbend) coords to dest[st..st+insertLen). Mirrors AOSP
