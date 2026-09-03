@@ -331,8 +331,27 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
                         continue;  // invalid paragraph span in the destination context -> discard
                     }
                 }
+                /*AOSP change(): "Add span only if this object is not yet used
+                  as a span in this string" — getSpanStart(spans[i]) < 0. For
+                  insert(src) of text whose spans are already in this builder,
+                  the adjust pass has just MOVED the existing records, and
+                  propagating again would duplicate them (AOSP's SpannedTest
+                  .testAppend: insert(0, ss) leaves the span at [4,8) with no
+                  copy at [0,4)).*/
+                if (getSpanStart(span) >= 0) {
+                    continue;
+                }
                 if (ParcelableSpan* clone = span->clone()) {
                     setSpan(clone, ndStart, ndEnd, flags);
+                } else if (dynamic_cast<const NoCopySpan*>(span)) {
+                    /*AOSP replace() propagates the source's span REFERENCES —
+                      including NoCopySpans; the ignoreNoCopySpan flag only
+                      belongs to the explicit copy constructors. Carry a
+                      NoCopySpan into the destination as BORROWED (same pointer,
+                      addSpan marks it owned=false), so e.g. TextUtils.concat of
+                      Spannables keeps marker spans at their shifted offsets
+                      (CTS asserts span identity through concat).*/
+                    setSpan(span, ndStart, ndEnd, flags);
                 }
             }
         }

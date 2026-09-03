@@ -198,19 +198,24 @@ TEST(CoreSpannedTest, testSpannableStringBuilder) {
 }
 
 TEST(CoreSpannedTest, testAppend) {
-    UnderlineSpan* o = new UnderlineSpan;
+    /*AOSP asserts the span OBJECT travels through append/insert (Java
+      references). Under the C++ span-ownership model an owned value-span is
+      CLONED on propagation, so pointer identity only holds for NoCopySpans —
+      they are carried BORROWED (same pointer). Use a NoCopy marker to keep the
+      AOSP assertions verbatim (same trick as textutils_core_tests' MarkSpan).*/
+    struct MarkerSpan : NoCopySpan {} o;
     SpannableString ss(u"Test");
-    ss.setSpan(o, 0, (int)ss.length(), Spannable::SPAN_EXCLUSIVE_EXCLUSIVE);
+    ss.setSpan(&o, 0, (int)ss.length(), Spannable::SPAN_EXCLUSIVE_EXCLUSIVE);
 
     SpannableStringBuilder ssb;
     ssb.append(ss);
-    EXPECT_EQ(0, ssb.getSpanStart(o));
-    EXPECT_EQ(4, ssb.getSpanEnd(o));
+    EXPECT_EQ(0, ssb.getSpanStart(&o));
+    EXPECT_EQ(4, ssb.getSpanEnd(&o));
     EXPECT_EQ(1u, ssb.getSpans(0, 4, make_span_filter<ParcelableSpan>()).size());
 
     ssb.insert(0, ss);
-    EXPECT_EQ(4, ssb.getSpanStart(o));
-    EXPECT_EQ(8, ssb.getSpanEnd(o));
+    EXPECT_EQ(4, ssb.getSpanStart(&o));
+    EXPECT_EQ(8, ssb.getSpanEnd(&o));
     EXPECT_EQ(0u, ssb.getSpans(0, 4, make_span_filter<ParcelableSpan>()).size());
     EXPECT_EQ(1u, ssb.getSpans(4, 8, make_span_filter<ParcelableSpan>()).size());
 }

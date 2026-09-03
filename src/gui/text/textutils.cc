@@ -627,6 +627,7 @@ CharSequence* TextUtils::toUpperCase(const CharSequence* source, bool copySpans)
     const std::u16string s = source->toUTF16();
     std::u16string out;
     out.reserve(s.size());
+    bool changed = false;
     for (size_t i = 0; i < s.size(); ) {
         char16_t c = s[i];
         int cp;
@@ -639,6 +640,13 @@ CharSequence* TextUtils::toUpperCase(const CharSequence* source, bool copySpans)
             i += 1;
         }
         int upper = Character::toUpperCase(cp);
+        if (upper != cp) {
+            /*AOSP CaseMap/Edits: `return edits.hasChanges() ? result : source;`
+              — an already-uppercase input comes back as the SAME object. Track
+              it so the no-change path below can return the source itself
+              (borrowed: the caller does not own that instance).*/
+            changed = true;
+        }
         if (upper <= 0xFFFF) {
             out.push_back((char16_t)upper);
         } else {
@@ -646,6 +654,10 @@ CharSequence* TextUtils::toUpperCase(const CharSequence* source, bool copySpans)
             out.push_back((char16_t)(0xD800 + (upper >> 10)));
             out.push_back((char16_t)(0xDC00 + (upper & 0x3FF)));
         }
+    }
+
+    if (!changed) {
+        return const_cast<CharSequence*>(source);
     }
 
     if (spanned != nullptr) {
@@ -869,6 +881,15 @@ CharSequence* TextUtils::concat(const std::vector<CharSequence*>&text) {
         return new String();   // AOSP: "" for no args
     }
     if (text.size() == 1) {
+        /*AOSP returns text[0] itself, keeping a Spanned input a Spanned (the
+          CTS test asserts the span is still there). Under the owned-return
+          contract a fresh SpannableString copy is the equivalent: appendSpanCopy
+          clones owned spans and SHARES NoCopySpans (borrowed, same pointer), so
+          both the type and the span identities survive; a plain input still
+          yields a plain String copy as before.*/
+        if (dynamic_cast<Spanned*>(text[0])) {
+            return new SpannableString(text[0], /*ignoreNoCopySpan=*/false);
+        }
         return new String(text[0]->toUTF8());
     }
     // If any piece is a Spanned, preserve spans via SpannableStringBuilder (AOSP does the same);
@@ -1144,6 +1165,13 @@ int TextUtils::getLayoutDirectionFromLocale(const Locale& locale) {
             for (const char* rtl : {"ar", "dv", "fa", "he", "iw", "nqo",
                                     "ps", "sd", "ug", "ur", "yi"}) {
                 if (language == rtl) return LayoutDirection::RTL;
+            }
+            // Likely-subtag pairs whose maximal form resolves to an RTL script
+            // (ICU supplemental data): "az-IR" maximizes to az-Arab-IR, so the
+            // region — not the language, whose default script is Latn — decides.
+            // ICU's ULocale.isRightToLeft() consults exactly that expansion.
+            if (language == "az" && locale.getCountry() == "IR") {
+                return LayoutDirection::RTL;
             }
         }
     }

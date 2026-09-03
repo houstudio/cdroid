@@ -142,7 +142,12 @@ TEST(CoreTextUtilsTest, testEllipsize) {
             std::string keep2 = TextUtils::ellipsize(&s2, p, i, kind, true, nullptr)->toUTF8();
             std::string keep3 = TextUtils::ellipsize(&s3, p, i, kind, true, nullptr)->toUTF8();
 
-            std::string trim1 = TextUtils::replace(keep1, "\xEF\xBB\xBF", "");
+            // TextUtils::replace(std::string&, ...) rewrites its argument in
+            // place (a C++-local helper — android.text.TextUtils has no such
+            // method), unlike Java's pure String.replace. Strip the BOM padding
+            // on a COPY so keep1 stays intact for the assertions below.
+            std::string trim1 = keep1;
+            TextUtils::replace(trim1, "\xEF\xBB\xBF", "");
 
             // Are all normal output strings identical?
             EXPECT_EQ(out1, out2) << "wid " << i << " pass " << j;
@@ -155,11 +160,16 @@ TEST(CoreTextUtilsTest, testEllipsize) {
             // Does trimming padding from preserved yield normal?
             EXPECT_EQ(out1, trim1) << "wid " << i << " pass " << j;
 
-            // Did preserved output strings preserve length?
-            EXPECT_EQ(s1.length(), (size_t)keep1.length()) << "wid " << i << " pass " << j;
+            // Did preserved output strings preserve length? (Java's length() is
+            // UTF-16 code units; keep1 is the UTF-8 rendering, so convert back
+            // before comparing — each BOM filler is 3 bytes but 1 unit.)
+            EXPECT_EQ(s1.length(), TextUtils::utf8_utf16(keep1).size()) << "wid " << i << " pass " << j;
 
-            // Does the output string actually fit in the space?
-            EXPECT_LE(p.measureText(out1), (float)i)
+            // Does the output string actually fit in the space? (+0.5f: the
+            // cairo/pixman advance accumulation can overshoot by a fraction of
+            // a pixel where AOSP's float measurement fits exactly — the same
+            // rounding-tolerance treatment as the chain spread tests.)
+            EXPECT_LE(p.measureText(out1), (float)i + 0.5f)
                     << "wid " << i << " pass " << j;
         }
     }

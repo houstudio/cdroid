@@ -152,6 +152,13 @@ int SpannableStringInternal::charAt(int idx) const {
 }
 
 std::vector<const ParcelableSpan*> SpannableStringInternal::getSpans(int queryStart, int queryEnd, const SpanFilter& filter) const {
+    /*Zero-priority spans come back in storage order, priority spans jump
+      ahead of lower priorities — AOSP walks its interval-tree ARRAY linearly,
+      and the tree layout (built by insertions + rotations) yields insertion
+      order for the simple cases (its CTS test asserts priority-then-insertion;
+      the sortsByPriorityEvenWhenSortParamIsFalse case additionally depends on
+      the tree's rotation layout, which the flat vector does not replicate —
+      that one test stays a known red until the interval tree is ported).*/
     std::vector<const ParcelableSpan*> result;
 
     for (const auto& r : mSpans) {
