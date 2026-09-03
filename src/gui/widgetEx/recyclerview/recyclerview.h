@@ -97,6 +97,7 @@ public:
             int bottom;
             int changeFlags;
             ItemHolderInfo();
+            virtual ~ItemHolderInfo() = default;
             ItemHolderInfo* setFrom(RecyclerView::ViewHolder& holder);
             ItemHolderInfo* setFrom(RecyclerView::ViewHolder& holder,int flags);
         };
@@ -136,7 +137,7 @@ public:
         void setRemoveDuration(long removeDuration);
         long getChangeDuration()const;
         void setChangeDuration(long changeDuration);
-        ItemHolderInfo* recordPreLayoutInformation(State& state,ViewHolder& viewHolder, int changeFlags,std::vector<Object*>& payloads);
+        virtual ItemHolderInfo* recordPreLayoutInformation(State& state,ViewHolder& viewHolder, int changeFlags,std::vector<Object*>& payloads);
         ItemHolderInfo* recordPostLayoutInformation(State& state,ViewHolder& viewHolder);
 
         virtual bool animateDisappearance(ViewHolder& viewHolder,ItemHolderInfo& preLayoutInfo, ItemHolderInfo* postLayoutInfo)=0;
@@ -155,7 +156,7 @@ public:
         virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder);
         virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder,std::vector<Object*>& payloads);
         void dispatchAnimationsFinished();/*final*/
-        ItemHolderInfo* obtainHolderInfo();
+        virtual ItemHolderInfo* obtainHolderInfo();
     };
     class LayoutParams:public ViewGroup::MarginLayoutParams{
     protected:
