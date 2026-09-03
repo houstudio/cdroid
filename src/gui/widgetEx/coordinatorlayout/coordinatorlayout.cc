@@ -465,8 +465,10 @@ CoordinatorLayout::Behavior* CoordinatorLayout::parseBehavior(Context* context,c
 CoordinatorLayout::LayoutParams* CoordinatorLayout::getResolvedLayoutParams(View* child) {
     LayoutParams* result = (LayoutParams*) child->getLayoutParams();
     if (!result->mBehaviorResolved) {
-        if (dynamic_cast<AttachedBehavior*>(child)) {
-            Behavior* attachedBehavior = ((AttachedBehavior*) child)->getBehavior();
+        // Reuse the dynamic_cast result: a C-style cast from View* would not apply
+        // the multiple-inheritance offset to the AttachedBehavior subobject.
+        if (AttachedBehavior* attachedBehaviorChild = dynamic_cast<AttachedBehavior*>(child)) {
+            Behavior* attachedBehavior = attachedBehaviorChild->getBehavior();
             if (attachedBehavior == nullptr) {
                 LOGE("Attached behavior class is null");
             }
