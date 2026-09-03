@@ -672,31 +672,37 @@ void DynamicLayout::updateBlocks(int startLine, int endLine, int newLineCount) {
         return;
     }
 
-    if (newNumberOfBlocks > mBlockEndLines.size()) {
-        /*int[] blockEndLines = ArrayUtils.newUnpaddedIntArray( std::max(mBlockEndLines.length * 2, newNumberOfBlocks));
-        int[] blockIndices = new int[blockEndLines.length];
-        System.arraycopy(mBlockEndLines, 0, blockEndLines, 0, firstBlock);
-        System.arraycopy(mBlockIndices, 0, blockIndices, 0, firstBlock);
-        System.arraycopy(mBlockEndLines, lastBlock + 1, blockEndLines, firstBlock + numAddedBlocks, mNumberOfBlocks - lastBlock - 1);
-        System.arraycopy(mBlockIndices, lastBlock + 1, blockIndices, firstBlock + numAddedBlocks, mNumberOfBlocks - lastBlock - 1);
-        mBlockEndLines = blockEndLines;
-        mBlockIndices = blockIndices;*/
-        
-        const int newSize = std::max(static_cast<int>(mBlockEndLines.size()) * 2, newNumberOfBlocks);
+    /*Both branches below do AOSP's tail shift — System.arraycopy(mBlockEndLines,
+      lastBlock + 1, mBlockEndLines, firstBlock + numAddedBlocks,
+      mNumberOfBlocks - lastBlock - 1) (+ the mBlockIndices twin). arraycopy is
+      memmove: the destination may overlap the source on either side (blocks
+      removed vs added), so the copy goes through scratch buffers. The old
+      std::copy_backward translation passed the DESTINATION END where arraycopy
+      takes the destination START, landing the tail `tailCount` slots too low:
+      multi-block edits reported unsorted end lines and lost indices, and when
+      the tail moves to slot 0 it even wrote one slot BEFORE the buffer — the
+      "double free or corruption" heap crash in testFrom2RemoveFromFirst.*/
+    if (newNumberOfBlocks > (int) mBlockEndLines.size()) {
+        const int newSize = std::max((int) mBlockEndLines.size() * 2, newNumberOfBlocks);
+        const std::vector<int> tailEnds(mBlockEndLines.begin() + lastBlock + 1,
+                mBlockEndLines.begin() + mNumberOfBlocks);
+        const std::vector<int> tailIndices(mBlockIndices.begin() + lastBlock + 1,
+                mBlockIndices.begin() + mNumberOfBlocks);
         mBlockEndLines.resize(newSize);
         mBlockIndices.resize(newSize);
-        std::copy_backward(mBlockEndLines.begin() + lastBlock + 1, mBlockEndLines.begin() + mNumberOfBlocks,
-                       mBlockEndLines.begin() + firstBlock + numAddedBlocks);
-        std::copy_backward(mBlockIndices.begin() + lastBlock + 1, mBlockIndices.begin() + mNumberOfBlocks,
-                       mBlockIndices.begin() + firstBlock + numAddedBlocks);
-
+        std::copy(tailEnds.begin(), tailEnds.end(),
+                mBlockEndLines.begin() + firstBlock + numAddedBlocks);
+        std::copy(tailIndices.begin(), tailIndices.end(),
+                mBlockIndices.begin() + firstBlock + numAddedBlocks);
     } else if (numAddedBlocks + numRemovedBlocks != 0) {
-        //System.arraycopy(mBlockEndLines, lastBlock + 1, mBlockEndLines, firstBlock + numAddedBlocks, mNumberOfBlocks - lastBlock - 1);
-        //System.arraycopy(mBlockIndices, lastBlock + 1, mBlockIndices, firstBlock + numAddedBlocks, mNumberOfBlocks - lastBlock - 1);
-        std::copy_backward(mBlockEndLines.begin() + lastBlock + 1, mBlockEndLines.begin() + mNumberOfBlocks,
-                       mBlockEndLines.begin() + firstBlock + numAddedBlocks);
-        std::copy_backward(mBlockIndices.begin() + lastBlock + 1, mBlockIndices.begin() + mNumberOfBlocks,
-                       mBlockIndices.begin() + firstBlock + numAddedBlocks);
+        const std::vector<int> tailEnds(mBlockEndLines.begin() + lastBlock + 1,
+                mBlockEndLines.begin() + mNumberOfBlocks);
+        const std::vector<int> tailIndices(mBlockIndices.begin() + lastBlock + 1,
+                mBlockIndices.begin() + mNumberOfBlocks);
+        std::copy(tailEnds.begin(), tailEnds.end(),
+                mBlockEndLines.begin() + firstBlock + numAddedBlocks);
+        std::copy(tailIndices.begin(), tailIndices.end(),
+                mBlockIndices.begin() + firstBlock + numAddedBlocks);
     }
 
     if ((numAddedBlocks + numRemovedBlocks != 0) && mBlocksAlwaysNeedToBeRedrawn.size()) {

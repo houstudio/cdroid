@@ -7,14 +7,8 @@
 // end-lines/indices must match the AOSP expectations exactly (___ = INVALID).
 // The three redraw-state cases (en/replacementSpan/thai) live in
 // dynamiclayout_core_tests.cc; this file carries the From0..From3 series.
-//
-// KNOWN DEVIATIONS (red, framework fix needs separate authorization):
-//  - testFrom2ReplaceFrom{FirstLine,FirstBlock,BottomBoundary}: after an edit
-//    that spans the first block's end line, updateBlocks reports the surviving
-//    trailing block's end line ~10 lines low (45 where AOSP expects 55/65) —
-//    the multi-block boundary shift is off by the replaced-line delta.
-//  - testFrom2RemoveFromFirst / From3Replace*: same family (assertion red);
-//    RemoveFromFirst additionally corrupts the heap (see its note).
+// (All green since 2026-09-03, when the copy_backward mistranslation of the
+// System.arraycopy tail shift was replaced by moveTailBlocks.)
 #include <gtest/gtest.h>
 #include <text/dynamiclayout.h>
 #include <text/textpaint.h>
@@ -237,13 +231,11 @@ TEST_F(BlocksFixture, testFrom2ReplaceFromSecondBlock) {
     assertState({ 11, 14 - 11, 50 }, { 123, ___, ___ });
 }
 
-// KNOWN CRASH (framework, needs separate authorization to fix): this exact
-// scenario (remove the whole first block of a 2-block layout) corrupts the
-// heap inside DynamicLayout::updateBlocks — "double free or corruption (out)"
-// kills the process. AOSP expects the surviving block {20-10} to keep index
-// 456. Disabled so the binary survives; re-enable once the block-index
-// maintenance is fixed.
-TEST_F(BlocksFixture, DISABLED_testFrom2RemoveFromFirst) {
+// Re-enabled 2026-09-03: the "double free or corruption" heap crash was the
+// std::copy_backward mistranslation in updateBlocks writing one slot before
+// the buffer (moveTailBlocks now carries the System.arraycopy memmove
+// semantics). AOSP expects the surviving block {20-10} to keep index 456.
+TEST_F(BlocksFixture, testFrom2RemoveFromFirst) {
     defineInitialState({ 10, 20 }, { 123, 456 });
 
     update(0, 4, 0);
