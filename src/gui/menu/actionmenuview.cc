@@ -525,7 +525,7 @@ Menu* ActionMenuView::getMenu() {
         mPresenter->setReserveOverflow(true);
         if((mActionMenuPresenterCallback.onOpenSubMenu==nullptr)&&(mActionMenuPresenterCallback.onCloseMenu==nullptr)){
             mActionMenuPresenterCallback.onCloseMenu=[](MenuBuilder& menu,bool){};
-            mActionMenuPresenterCallback.onOpenSubMenu=[](MenuBuilder&){return false;};
+            mActionMenuPresenterCallback.onOpenSubMenu=[](MenuBuilder*){return false;};
         }
         mPresenter->setCallback(mActionMenuPresenterCallback);
         mMenu->addMenuPresenter(mPresenter, mPopupContext);

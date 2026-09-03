@@ -45,7 +45,8 @@ public:
     void onClick(DialogInterface& dialog, int which);
 
     void onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing);
-    bool onOpenSubMenu(MenuBuilder& subMenu);
+    /** @param subMenu nullable: the overflow-opening advertisement passes null. */
+    bool onOpenSubMenu(MenuBuilder* subMenu);
 };
 }/*endof namespace*/
 #endif/*__MENU_DIALOG_HELPER_H__*/

@@ -234,7 +234,7 @@ bool StandardMenuPopup::onSubMenuSelected(SubMenuBuilder* subMenu) {
 
         if (subPopup->tryShow(horizontalOffset, verticalOffset)) {
             if (mPresenterCallback.onOpenSubMenu != nullptr) {
-                mPresenterCallback.onOpenSubMenu(*subMenu);
+                mPresenterCallback.onOpenSubMenu(subMenu);
             }
             return true;
         }

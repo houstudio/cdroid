@@ -85,7 +85,7 @@ bool ListMenuPresenter::onSubMenuSelected(SubMenuBuilder* subMenu) {
     // The window manager will give us a token.
     //new MenuDialogHelper(subMenu).show(nullptr);
     if (mCallback.onOpenSubMenu != nullptr) {
-        mCallback.onOpenSubMenu(*subMenu);
+        mCallback.onOpenSubMenu(subMenu);
     }
     return true;
 }

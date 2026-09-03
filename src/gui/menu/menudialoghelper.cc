@@ -38,7 +38,7 @@ void MenuDialogHelper::show() {
     mpc.onCloseMenu=[this](MenuBuilder& menu, bool allMenusAreClosing){
         onCloseMenu(menu,allMenusAreClosing);
     };
-    mpc.onOpenSubMenu =[this](MenuBuilder& menu){
+    mpc.onOpenSubMenu =[this](MenuBuilder* menu){
         return onOpenSubMenu(menu);
     };
     mPresenter->setCallback(mpc);
@@ -142,7 +142,8 @@ void MenuDialogHelper::onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing) {
     }
 }
 
-bool MenuDialogHelper::onOpenSubMenu(MenuBuilder& subMenu) {
+bool MenuDialogHelper::onOpenSubMenu(MenuBuilder* subMenu) {
+    if (subMenu == nullptr) return false;
     if (mPresenterCallback.onOpenSubMenu != nullptr) {
         return mPresenterCallback.onOpenSubMenu(subMenu);
     }

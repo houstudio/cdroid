@@ -503,7 +503,7 @@ bool CascadingMenuPopup::onSubMenuSelected(SubMenuBuilder* subMenu) {
         addMenu(subMenu);
 
         if (mPresenterCallback.onOpenSubMenu != nullptr) {
-            mPresenterCallback.onOpenSubMenu(*subMenu);
+            mPresenterCallback.onOpenSubMenu(subMenu);
         }
         return true;
     }

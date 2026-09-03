@@ -132,10 +132,10 @@ void BaseMenuPresenter::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing) 
 
 bool BaseMenuPresenter::onSubMenuSelected(SubMenuBuilder* menu) {
     if (mCallback.onOpenSubMenu != nullptr) {
-        // menu is a SubMenuBuilder* whose pointee IS-A MenuBuilder (direct, non-virtual
-        // base); dereference for an implicit upcast to MenuBuilder&. The old (MenuBuilder&)menu
-        // cast the *pointer* (not the pointee) and bound the reference to the pointer's storage.
-        return mCallback.onOpenSubMenu(*menu);
+        // menu may be null: showOverflowMenu passes null to advertise that the overflow
+        // menu is opening (upstream onOpenSubMenu(null) contract) — pass the pointer
+        // through; SubMenuBuilder* upcasts to MenuBuilder* implicitly (direct base).
+        return mCallback.onOpenSubMenu(menu);
     }
     return false;
 }
