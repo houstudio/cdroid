@@ -24,6 +24,7 @@
 #include <media/soundpool.h>
 #include <media/audiomanager.h>
 #include <view/soundeffectconstants.h>
+#include <widget/internal_R.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -40,8 +41,13 @@ AudioManager::AudioManager(Context*ctx):mContext(ctx){
 void AudioManager::loadSoundEffects(){
     mSoundPool = std::make_unique<SoundPool>((int)NUM_SOUND_EFFECTS,0,0);
     SOUND_EFFECT_FILES_MAP.resize((int)NUM_SOUND_EFFECTS);
-    auto parser = mContext->getResources().getXml("@xml/audio_assets");
-    if(!*parser) parser = mContext->getResources().getXml("@cdroid:xml/audio_assets");
+    // AOSP AudioService reads android.R.xml.audio_assets from the framework
+    // package; an app may ship its own override (checked first, matching the
+    // old string-ref fallback order).
+    Resources& res = mContext->getResources();
+    int audioAssetsRes = res.getIdentifier("audio_assets", "xml", mContext->getPackageName());
+    if(audioAssetsRes == 0) audioAssetsRes = cdroid::internal::R::xml::audio_assets;
+    auto parser = res.getXml(audioAssetsRes);
     int type;
     std::unordered_map<std::string,std::string> sounds;
     const AttributeSet& attrs =(*parser);

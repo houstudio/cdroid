@@ -42,11 +42,11 @@ private:
     // Parses the badge XML up to its start tag and keeps the live parser alive,
     // so obtainStyledAttributes can read the element attrs on BOTH paths (text
     // map and binary ResXMLTree — a value-copy snapshot would lose the latter).
-    std::unique_ptr<XmlPullParser> generateTypedArray(Context* context, const std::string& badgeResId,
-        const std::string& defStyleAttr, const std::string& defStyleRes);
+    std::unique_ptr<XmlPullParser> generateTypedArray(Context* context, int badgeResId,
+        int defStyleAttr, int defStyleRes);
 public:
-    BadgeState(Context* context, const std::string& badgeResId,const std::string& defStyleAttr,
-            const std::string& defStyleRes,State* storedState);
+    BadgeState(Context* context, int badgeResId, int defStyleAttr,
+            int defStyleRes,State* storedState);
     ~BadgeState();
     State* getOverridingState() const;
     bool isVisible() const;
@@ -161,7 +161,7 @@ private:
     static constexpr int BADGE_NUMBER_NONE = -1;
     static constexpr int NOT_SET = -2;
     friend BadgeState;
-    std::string badgeResId;
+    int badgeResId = 0;
     int backgroundColor;
     int badgeTextColor;
 

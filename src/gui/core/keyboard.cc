@@ -298,7 +298,7 @@ Keyboard* Keyboard::createMiniKeyboard(Context* context,const std::string& chara
 
 /* AOSP Keyboard(Context, int xmlLayoutResId, int modeId): load from XML using
  * the display dimensions. */
-Keyboard::Keyboard(Context* context,const std::string& xmlLayoutResId,int modeId)
+Keyboard::Keyboard(Context* context,int xmlLayoutResId,int modeId)
     : Keyboard(context, xmlLayoutResId,
                context->getDisplayMetrics().widthPixels,
                context->getDisplayMetrics().heightPixels, modeId){
@@ -307,7 +307,7 @@ Keyboard::Keyboard(Context* context,const std::string& xmlLayoutResId,int modeId
 /* AOSP Keyboard(Context, int layoutTemplateResId, CharSequence characters,
  * int columns, int horizontalPadding): build a mini-keyboard (one row of the
  * popup characters), sizing keys from the template's defaults. */
-Keyboard::Keyboard(Context* context,const std::string& layoutTemplateResId,
+Keyboard::Keyboard(Context* context,int layoutTemplateResId,
                    const std::string& characters,int columns,int horizontalPadding)
     : Keyboard(context, layoutTemplateResId, 0){
     int x = 0, y = 0, column = 0;
@@ -345,7 +345,7 @@ Keyboard::Keyboard(Context* context,const std::string& layoutTemplateResId,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,int height,int modeId){
+Keyboard::Keyboard(Context*context,int xmlLayoutResId,int width,int height,int modeId){
     const DisplayMetrics& dm = context->getDisplayMetrics();
     mDisplayWidth = width;//dm.widthPixels;
     mDisplayHeight= height;//dm.heightPixels;

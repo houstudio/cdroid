@@ -463,18 +463,6 @@ std::unique_ptr<XmlPullParser> ResourcesImpl::loadXmlResourceParser(int resid) c
     return XmlPullParser::detectAndCreate(mCtx, std::move(strm), std::to_string(resid));
 }
 
-std::unique_ptr<XmlPullParser> ResourcesImpl::loadXmlResourceParser(const std::string& resid) const {
-    std::unique_ptr<std::istream> strm;
-    if(mCtx) strm = mCtx->getInputStream(resid);
-    if(((strm==nullptr)||(!*strm))&&resid.size()){
-        auto fs = std::make_unique<std::ifstream>(resid);
-        if(fs->is_open()){
-            strm = std::move(fs);
-        }
-    }
-    return XmlPullParser::detectAndCreate(mCtx, std::move(strm), resid);
-}
-
 // ---- GUI-object factories: ResourcesImpl owns the AOSP mDrawableCache /
 // mComplexColorCache + loadDrawable/loadComplexColor (cairo + the Context
 // inflation bridge are available now that ResourcesImpl is in the cdroid

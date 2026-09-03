@@ -178,12 +178,13 @@ Context* Resources::getContext() const {
     return mImpl ? mImpl->getContext() : nullptr;
 }
 
-std::unique_ptr<XmlPullParser> Resources::getXml(int id) const {
+std::unique_ptr<XmlResourceParser> Resources::getXml(int id) const {
     return mImpl->loadXmlResourceParser(id);
 }
 
-std::unique_ptr<XmlPullParser> Resources::getXml(const std::string& resid) const {
-    return mImpl->loadXmlResourceParser(resid);
+std::unique_ptr<XmlResourceParser> Resources::getLayout(int id) const {
+    // AOSP getLayout = loadXmlPullParser under a layout-flavored name.
+    return mImpl->loadXmlResourceParser(id);
 }
 
 

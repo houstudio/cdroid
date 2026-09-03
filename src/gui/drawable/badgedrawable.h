@@ -72,8 +72,8 @@ private:
     void onBadgeShapeAppearanceUpdated();
     void onBadgeContentUpdated();
     //static int readColorFromAttributes(Context* context, TypedArray a, int index);
-    BadgeDrawable(Context* context,const std::string&badgeResId, const std::string&defStyleAttr,
-            const std::string&defStyleRes, BadgeState::State*state);
+    BadgeDrawable(Context* context,int badgeResId, int defStyleAttr,
+            int defStyleRes, BadgeState::State*state);
     void tryWrapAnchorInCompatParent(View* anchorView);
     void updateCenterAndBounds();
     int getTotalVerticalOffsetForState() const;
@@ -129,7 +129,7 @@ public:
    
     static BadgeDrawable* create(Context* context);
     static BadgeDrawable* createFromState(Context* context, BadgeState::State* savedState);
-    static BadgeDrawable* createFromResource(Context* context,const std::string& id);
+    static BadgeDrawable* createFromResource(Context* context,int id);
     ~BadgeDrawable()override;
   
     void setVisible(bool visible);

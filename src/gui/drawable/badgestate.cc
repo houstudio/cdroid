@@ -24,7 +24,7 @@
 
 namespace cdroid{
 using namespace cdroid::internal;
-BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std::string& defStyleAttr,const std::string& defStyleRes,State* storedState) {
+BadgeState::BadgeState(Context* context,int badgeResId,int defStyleAttr,int defStyleRes,State* storedState) {
     currentState = new State();
     if (storedState == nullptr) {
         storedState = new State();
@@ -223,7 +223,7 @@ BadgeState::~BadgeState(){
     delete overridingState;
 }
 
-std::unique_ptr<XmlPullParser> BadgeState::generateTypedArray(Context* context,const std::string& badgeResId,const std::string& defStyleAttr,const std::string& defStyleRes) {
+std::unique_ptr<XmlPullParser> BadgeState::generateTypedArray(Context* context,int badgeResId,int defStyleAttr,int defStyleRes) {
     auto parser = context->getResources().getXml(badgeResId);
     int type;
     if(*parser) {

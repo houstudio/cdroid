@@ -37,7 +37,7 @@ BadgeState::State*BadgeDrawable::getSavedState()const{
 }
 
 BadgeDrawable* BadgeDrawable::createFromState(Context* context, BadgeState::State* savedState) {
-    BadgeDrawable* badge = new BadgeDrawable(context,"","","",savedState);
+    BadgeDrawable* badge = new BadgeDrawable(context, 0, 0, 0, savedState);
     return badge;
 }
 
@@ -47,10 +47,10 @@ BadgeDrawable::~BadgeDrawable(){
 }
 
 BadgeDrawable* BadgeDrawable::create(Context* context) {
-    return new BadgeDrawable(context,"","","", nullptr);
+    return new BadgeDrawable(context, 0, 0, 0, nullptr);
 }
 
-BadgeDrawable* BadgeDrawable::createFromResource(Context* context, const std::string& id) {
+BadgeDrawable* BadgeDrawable::createFromResource(Context* context, int id) {
     int type;
     auto parser = context->getResources().getXml(id);
     const AttributeSet& attrs = *parser;
@@ -59,8 +59,8 @@ BadgeDrawable* BadgeDrawable::createFromResource(Context* context, const std::st
         //NOTHING
     }
     const std::string tag=parser->getName();
-    LOGE_IF(tag.compare("badge"),"invalid resource tag:%s[%s] ",tag.c_str(),id.c_str());
-    return new BadgeDrawable(context, id, "","", 0/*style*/);
+    LOGE_IF(tag.compare("badge"),"invalid resource tag:%s[0x%x] ",tag.c_str(),id);
+    return new BadgeDrawable(context, id, 0, 0, nullptr/*style*/);
 }
 
 void BadgeDrawable::setVisible(bool visible) {
@@ -96,8 +96,8 @@ void BadgeDrawable::restoreState() {
     onVisibilityUpdated();
 }
 
-BadgeDrawable::BadgeDrawable(Context* context,const std::string&badgeResId,
-            const std::string&defStyleAttr,const std::string&defStyleRes,BadgeState::State*savedState) {
+BadgeDrawable::BadgeDrawable(Context* context,int badgeResId,
+            int defStyleAttr,int defStyleRes,BadgeState::State*savedState) {
     mContext = context;
     mAnchorView = nullptr;
     mCustomBadgeParent = nullptr;

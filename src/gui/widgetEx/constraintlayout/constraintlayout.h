@@ -156,7 +156,7 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
     // Adaptive layouts (<StateSet>): load a state-set resource so setState can swap ConstraintSets
     // when the layout's size or a logical state changes. (MotionLayout overrides layoutDescription
     // for <MotionScene> and does not use this.)
-    void loadLayoutDescription(const std::string& resource);
+    void loadLayoutDescription(int resource);
     // Apply the ConstraintSet selected by (id, screenWidth, screenHeight) from the loaded StateSet.
     void setState(int id, int screenWidth, int screenHeight);
 

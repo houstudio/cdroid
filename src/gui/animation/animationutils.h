@@ -35,14 +35,11 @@ private:
     static std::shared_ptr<Interpolator> createInterpolatorFromXml(Context* context,XmlPullParser& parser);
 public:
     static int64_t currentAnimationTimeMillis();
-    static Animation* loadAnimation(Context* context,const std::string&id);
     static Animation* loadAnimation(Context* context,int id);
-    static LayoutAnimationController* loadLayoutAnimation(Context* context,const std::string&id);
     static LayoutAnimationController* loadLayoutAnimation(Context* context,int id);
     static Animation* makeInAnimation(Context* c, bool fromLeft);
     static Animation* makeOutAnimation(Context* c, bool toRight);
     static Animation* makeInChildBottomAnimation(Context* c);
-    static Interpolator* loadInterpolator(Context*,const std::string& id);
     // AOSP AnimationUtils.loadInterpolator(Context, @InterpolatorRes int): the
     // resource is opened by id (binary AXML via Resources.getXml); id 0 → null.
     static Interpolator* loadInterpolator(Context*,int id);

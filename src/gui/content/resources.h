@@ -29,6 +29,13 @@ class Asset;
 class Context;
 class Drawable;
 class XmlPullParser;    // core — getXml(int) return (AOSP XmlResourceParser role)
+// android.content.res.XmlResourceParser (AOSP: the same package as Resources)
+// — the merged XmlPullParser + AttributeSet interface getXml/getLayout
+// return. CDROID's XmlPullParser base already carries AttributeSet through
+// single inheritance (the XmlPullAttributes role is built in), so the
+// resource-parser role type is an alias; AOSP's AutoCloseable close() is the
+// owning unique_ptr's destructor (RAII for the manual lifecycle).
+using XmlResourceParser = XmlPullParser;
 class ColorStateList;
 class Typeface;
 class ComplexColor;
@@ -103,11 +110,12 @@ public:
     // AOSP Resources.openRawResourceFd — returns AssetFileDescriptor. CDROID has
     // no AssetFileDescriptor (fd-based assets); stub returns nullptr.
     Asset* openRawResourceFd(int id) const;
-    // AOSP Resources.getXml(int) -> XmlResourceParser: opens the xml resource
-    // and returns its parser. The string overload is the CDROID text-pak
-    // transitional face (string refs cannot resolve through the arsc).
-    std::unique_ptr<XmlPullParser> getXml(int id) const;
-    std::unique_ptr<XmlPullParser> getXml(const std::string& resid) const;
+    // AOSP Resources.getXml(@XmlRes int) -> XmlResourceParser.
+    std::unique_ptr<XmlResourceParser> getXml(int id) const;
+    // AOSP Resources.getLayout(@LayoutRes int): the same loadXmlPullParser
+    // under a layout-flavored name (types the resource as a layout; no extra
+    // behavior).
+    std::unique_ptr<XmlResourceParser> getLayout(int id) const;
 
     // --- GUI-object factories (Resources' own; bridge to string-based inflation) ---
     // AOSP face: @Nullable Theme — null theme = unthemed load (shared cache

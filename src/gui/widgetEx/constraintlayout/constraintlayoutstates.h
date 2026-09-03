@@ -65,7 +65,7 @@ class ConstraintLayoutStates {
     };
 
     // Load from a resource path (e.g. "xml/states" or "@xml/states").
-    ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout, const std::string& resourceId);
+    ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout, int resourceId);
     // Load directly from a parser (for tests / pre-opened streams).
     ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout, XmlPullParser& parser);
 

@@ -125,7 +125,6 @@ public:
     // the string overload is the CDROID text-pak transitional face (string
     // refs cannot resolve through the arsc on text paks).
     std::unique_ptr<XmlPullParser> loadXmlResourceParser(int resid) const;
-    std::unique_ptr<XmlPullParser> loadXmlResourceParser(const std::string& resid) const;
 
     // --- GUI-object factories. ResourcesImpl owns the AOSP mDrawableCache /
     // mComplexColorCache + loadDrawable/loadComplexColor (it lives in the cdroid

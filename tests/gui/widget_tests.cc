@@ -163,7 +163,8 @@ TEST_F(WIDGET,Keyboard){
     ViewGroup*w=GUIEnvironment::content();
     KeyboardView*kbv=new KeyboardView(&App::getInstance());
     kbv->setBackgroundColor(0xFFEEEEEE);
-    Keyboard*kbd=new Keyboard(&app,"cdroid:xml/qwerty.xml",800,200);
+    const int qwertyRes = app.getResources().getIdentifier("qwerty", "xml", "android");
+    Keyboard*kbd=new Keyboard(&app,qwertyRes,800,200);
     kbv->setKeyboard(kbd);
     w->addView(kbv);
     kbv->layout(20,10,800,300);

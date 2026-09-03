@@ -41,18 +41,8 @@ Transition* TransitionInflater::inflateTransition(int resourceId) {
     return createTransitionFromXml(*parser, nullptr);
 }
 
-Transition* TransitionInflater::inflateTransition(const std::string& resource) {
-    auto parser = mContext->getResources().getXml(resource);
-    return createTransitionFromXml(*parser, nullptr);
-}
-
 TransitionManager* TransitionInflater::inflateTransitionManager(int resourceId, ViewGroup* sceneRoot) {
     auto parser = mContext->getResources().getXml(resourceId);
-    return createTransitionManagerFromXml(*parser, sceneRoot);
-}
-
-TransitionManager* TransitionInflater::inflateTransitionManager(const std::string& resource, ViewGroup* sceneRoot) {
-    auto parser = mContext->getResources().getXml(resource);
     return createTransitionManagerFromXml(*parser, sceneRoot);
 }
 

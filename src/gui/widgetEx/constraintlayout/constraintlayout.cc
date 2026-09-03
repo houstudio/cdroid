@@ -218,7 +218,7 @@ ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int d
     // optimizationLevel/layoutDescription/constraintSet).
     auto ta = ctx->obtainStyledAttributes(*pAttrs, R::styleable::ConstraintLayoutLayout, defStyleAttr);
     namespace SCL = R::styleable;
-    std::string layoutDesc;
+    int layoutDesc = 0;   // android:description is a @reference attr (getResourceId)
     for (size_t k = 0, n = ta->getIndexCount(); k < n; k++) {
         size_t i = ta->getIndex(k);
         switch (i) {
@@ -227,14 +227,14 @@ ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int d
         case SCL::ConstraintLayoutLayout_maxWidth:  mMaxWidth  = ta->getDimensionPixelSize(i, INT_MAX); break;
         case SCL::ConstraintLayoutLayout_maxHeight: mMaxHeight = ta->getDimensionPixelSize(i, INT_MAX); break;
         case SCL::ConstraintLayoutLayout_layout_optimizationLevel: /* TODO */ break;
-        case SCL::ConstraintLayoutLayout_layoutDescription: layoutDesc = ta->getString(i); break;
+        case SCL::ConstraintLayoutLayout_layoutDescription: layoutDesc = ta->getResourceId(i, 0); break;
         default: break;
         }
     }
 
     // layoutDescription: build a StateSet (adaptive layout) if the root tag isn't
     // MotionScene (MotionLayout builds its own scene from the same attr).
-    if (!layoutDesc.empty()) {
+    if (layoutDesc != 0) {
         auto parser = ctx->getResources().getXml(layoutDesc);
         while (parser->getEventType() != XmlPullParser::START_TAG &&
                 parser->getEventType() != XmlPullParser::END_DOCUMENT &&
@@ -251,7 +251,7 @@ ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int d
 // destroys with a complete type.
 ConstraintLayout::~ConstraintLayout() = default;
 
-void ConstraintLayout::loadLayoutDescription(const std::string& resource) {
+void ConstraintLayout::loadLayoutDescription(int resource) {
     mConstraintLayoutStates = std::make_unique<ConstraintLayoutStates>(getContext(), this, resource);
 }
 

@@ -30,12 +30,6 @@ int64_t AnimationUtils::currentAnimationTimeMillis(){
     return SystemClock::uptimeMillis();
 }
 
-Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
-    Animation*anim = nullptr;
-    auto parser = context->getResources().getXml(resid);
-    const AttributeSet& attrs = *parser;
-    return createAnimationFromXml(context,*parser,nullptr,attrs);
-}
 
 Animation* AnimationUtils::loadAnimation(Context* context,int id){
     auto parser = context->getResources().getXml(id);
@@ -81,11 +75,6 @@ Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& par
     return anim;
 }
 
-LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
-    auto parser = context->getResources().getXml(resid);
-    const AttributeSet& attrs = *parser;
-    return createLayoutAnimationFromXml(context,*parser,attrs);
-}
 
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,int id){
     auto parser = context->getResources().getXml(id);
@@ -139,12 +128,6 @@ Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
     return a;
 }
 
-Interpolator* AnimationUtils::loadInterpolator(Context*context,const std::string& id){
-    auto parser = context->getResources().getXml(id);
-    // Legacy name-based path: no int cache key, so parse fresh. Callers that
-    // want caching should resolve the resource id and use loadInterpolator(int).
-    return createInterpolatorFromXml(context, *parser).get();
-}
 
 Interpolator* AnimationUtils::loadInterpolator(Context*context,int id){
     if (id == 0) return nullptr;  // AOSP: 0 → null

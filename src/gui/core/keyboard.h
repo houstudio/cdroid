@@ -89,12 +89,12 @@ protected:
     Key* createKeyFromXml(Context*context,Row*parent, int x, int y,XmlPullParser&,const AttributeSet&);
     void loadKeyboard(Context*context, XmlPullParser& parser);
 public:
-    Keyboard(Context* context,const std::string&resid,int w,int h,int modeId=0);
-    Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId=0);
+    Keyboard(Context* context,int xmlLayoutResId,int w,int h,int modeId=0);
+    Keyboard(Context* context,int xmlLayoutResId, int modeId=0);
     /* AOSP Keyboard(Context, layoutTemplateResId, characters, columns,
      * horizontalPadding): build a mini-keyboard (the long-press accent popup)
      * from a popupCharacters string, sizing keys from the template. */
-    Keyboard(Context* context,const std::string& layoutTemplateResId,const std::string& characters,int columns,int horizontalPadding);
+    Keyboard(Context* context,int layoutTemplateResId,const std::string& characters,int columns,int horizontalPadding);
     /* Build a one-row mini-keyboard (the long-press accent popup) from a
      * popupCharacters string, each key sized keyWidth x keyHeight. CDROID's
      * main keyboard is created with non-display dims and resized, so the

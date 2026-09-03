@@ -379,6 +379,32 @@ void InputMethodManager::setInputType(int inputType){
     // the focus/touch flow (viewClicked/focusIn/showSoftInput).
 }
 
+// Resolve an "@[package:]xml/name[.xml]" layout reference to R.xml.<name>
+// (0 = unresolved — the built-in number/phone/datetime defaults ship no
+// resource and keep yielding an empty keyboard, exactly like the old
+// unresolvable string refs did).
+static int resolveXmlResId(Context* ctx, const std::string& ref) {
+    if(ref.empty() || ref[0] != '@') return 0;
+    std::string pkg, rest = ref.substr(1);
+    const size_t colon = rest.find(':');
+    if(colon != std::string::npos) {
+        // The "@cdroid:" prefix is CDROID's framework namespace; the framework
+        // arsc carries it as package "android" (pakbuilder synthesizes
+        // package="android" for the framework pak).
+        pkg = rest.substr(0, colon) == "cdroid" ? "android" : rest.substr(0, colon);
+        rest = rest.substr(colon + 1);
+    } else {
+        pkg = ctx->getPackageName();
+    }
+    const size_t slash = rest.find('/');
+    if(slash == std::string::npos) return 0;
+    const std::string type = rest.substr(0, slash);
+    std::string name = rest.substr(slash + 1);
+    const size_t dot = name.rfind(".xml");
+    if(dot != std::string::npos) name = name.substr(0, dot);
+    return ctx->getResources().getIdentifier(name, type, pkg);
+}
+
 void InputMethodManager::applyKeyboard(const std::string&layout){
     if(imeWindow==nullptr) return;
     // AOSP sizes a Keyboard from the display metrics (the %p base). CDROID's
@@ -392,7 +418,8 @@ void InputMethodManager::applyKeyboard(const std::string&layout){
     const int rot = dp.getRotation();
     dp.getRealSize(dspSize);
     const int screenW = (rot==Display::ROTATION_90||rot==Display::ROTATION_270) ? dspSize.y : dspSize.x;
-    Keyboard*kbd = new Keyboard(imeWindow->getContext(),layout,screenW,240);
+    Keyboard*kbd = new Keyboard(imeWindow->getContext(),
+            resolveXmlResId(imeWindow->getContext(), layout), screenW, 240);
     imeWindow->kbdView->setKeyboard(kbd);
     // A product's InputMethod may supply a custom long-press popup container
     // (getKeyboardLayout(POPUP)); apply it as the KeyboardView's popup layout so

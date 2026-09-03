@@ -63,7 +63,7 @@ const ConstraintLayoutStates::State* ConstraintLayoutStates::findState(int id) c
 // construction / parse
 // ===========================================================================
 ConstraintLayoutStates::ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout,
-        const std::string& resourceId)
+        int resourceId)
     : mLayout(layout), mContext(ctx) {
     auto parser = ctx->getResources().getXml(resourceId);
     parse(ctx, *parser);
