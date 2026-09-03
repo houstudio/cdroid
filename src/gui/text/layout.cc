@@ -1375,7 +1375,7 @@ void Layout::getCursorPath(int point, Path& dest, CharSequence* editingBuffer) {
         dest.moveTo(h1 - dist, bottom + dist - 0.5f);
         dest.lineTo(h1 + dist, bottom + dist - 0.5f);
 
-        dest.lineTo(h1 + dist, bottom + dist);
+        dest.moveTo(h1 + dist, bottom + dist);
         dest.lineTo(h1, bottom);
     }
 
@@ -1391,7 +1391,7 @@ void Layout::getCursorPath(int point, Path& dest, CharSequence* editingBuffer) {
         dest.moveTo(h1 - dist, top - dist + 0.5f);
         dest.lineTo(h1 + dist, top - dist + 0.5f);
 
-        dest.lineTo(h1 + dist, top - dist);
+        dest.moveTo(h1 + dist, top - dist);
         dest.lineTo(h1, top);
     }
 }
