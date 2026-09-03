@@ -97,9 +97,9 @@ TEST(CoreFormatDateUtilsTest, testFormatSameDayTime) {
             fixedTime, DateFormat::SHORT, DateFormat::FULL));
 
     const int64_t hourDuration = 2LL * 60 * 60 * 1000;
-    // KNOWN DEVIATION (no TimeZone class → no zone display names): FULL/LONG
-    // time styles now carry the seconds ("5:30:15 AM") but spell the zone
-    // numerically ("GMT+00:00") instead of "Greenwich Mean Time"/"GMT".
+    // Offset-0 zones carry tzdata's canonical names (long "Greenwich Mean
+    // Time", short "GMT"); non-zero offsets still fall back to the numeric
+    // GMT+hh:mm ID (no full display-name table in the i18n engine).
     EXPECT_EQ("5:30:15 AM Greenwich Mean Time", DateUtils::formatSameDayTime(
             fixedTime + hourDuration, fixedTime, DateFormat::FULL,
             DateFormat::FULL));

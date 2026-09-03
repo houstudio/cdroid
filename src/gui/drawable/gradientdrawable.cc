@@ -35,6 +35,10 @@ GradientDrawable::GradientState::GradientState() {
     mStrokeColors= nullptr;
     mImagePattern= nullptr;
     mAngle = 0;
+    /*AOSP field initializer: Orientation mOrientation = TOP_BOTTOM — leaving
+      it unset made the default orientation read as garbage (the CTS test
+      constructs GradientDrawable() and expects TOP_BOTTOM).*/
+    mOrientation = DEFAULT_ORIENTATION;
     //mStrokeColor=mSolidColor=0;
     mStrokeWidth = -1;//if >= 0 use stroking
     mStrokeDashWidth = 0.0f;

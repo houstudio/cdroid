@@ -20,6 +20,7 @@
 #include <core/systemclock.h>
 #include <content/typedarray.h>
 #include <widget/framework_styleable.h>
+#include <stdexcept>
 #include <porting/cdlog.h>
 namespace cdroid{
 using namespace cdroid::internal;
@@ -94,6 +95,12 @@ int AnimationDrawable::getNumberOfFrames()const{
 }
 
 Drawable* AnimationDrawable::getFrame(int index)const{
+    /*AOSP backs the frames with an ArrayList — getFrame(-1)/getFrame(n) throws
+      ArrayIndexOutOfBoundsException straight from ArrayList.get. The explicit
+      check is the C++ equivalent (tests expect std::out_of_range).*/
+    if (index < 0 || index >= mAnimationState->getChildCount()) {
+        throw std::out_of_range("getFrame index out of bounds");
+    }
     return mAnimationState->getChild(index);
 }
 

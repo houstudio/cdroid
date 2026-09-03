@@ -150,8 +150,8 @@ TEST_F(WordIteratorTest, testSetCharSequence) {
     const String text(u"text");
     WordIterator wordIterator("en");
 
-    // KNOWN DEVIATION: Android throws IndexOutOfBoundsException for invalid
-    // start/end; CDROID's setCharSequence silently returns.
+    // Android throws IndexOutOfBoundsException for invalid start/end;
+    // setCharSequence throws std::out_of_range for the same windows.
     EXPECT_ANY_THROW(wordIterator.setCharSequence(&text, 100, 100));
     EXPECT_ANY_THROW(wordIterator.setCharSequence(&text, -100, -100));
 

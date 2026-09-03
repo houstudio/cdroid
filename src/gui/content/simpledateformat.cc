@@ -299,11 +299,14 @@ static std::string getDateTimeFormat(int timeStyle, int dateStyle, const Locale&
                 }
             }
             if (timeStyle >= 0 && timeStyle <= 3) {
-                // AOSP en-US: FULL/LONG "h:mm:ss a z" (same pool, zone
-                // appended), MEDIUM "h:mm:ss a", SHORT "h:mm a". FULL/LONG
-                // carry seconds — the seconds pool, not the minute pool.
-                if (timeStyle == DateFormat::Style::FULL
-                        || timeStyle == DateFormat::Style::LONG) {
+                // AOSP en-US (CLDR): FULL "h:mm:ss a zzzz" (long zone name),
+                // LONG "h:mm:ss a z" (short zone name), MEDIUM "h:mm:ss a",
+                // SHORT "h:mm a". FULL/LONG carry seconds — the seconds pool,
+                // not the minute pool.
+                if (timeStyle == DateFormat::Style::FULL) {
+                    timePattern = i18n::Parse(hourMinuteSecondPatterns, 2);
+                    timePattern += " zzzz";
+                } else if (timeStyle == DateFormat::Style::LONG) {
                     timePattern = i18n::Parse(hourMinuteSecondPatterns, 2);
                     timePattern += " z";
                 } else if (timeStyle == DateFormat::Style::MEDIUM) {
@@ -321,7 +324,8 @@ static std::string getDateTimeFormat(int timeStyle, int dateStyle, const Locale&
         datePattern = dates[dateStyle <= 3 ? dateStyle : 3];
     }
     if (timePattern.empty() && timeStyle >= 0) {
-        const char* times[] = {"h:mm:ss a z", "h:mm:ss a z", "h:mm:ss a", "h:mm a"};
+        // CLDR en-US: FULL zzzz (long zone name), LONG z (short name).
+        const char* times[] = {"h:mm:ss a zzzz", "h:mm:ss a z", "h:mm:ss a", "h:mm a"};
         timePattern = times[timeStyle <= 3 ? timeStyle : 3];
     }
     if (datePattern.empty()) return timePattern;
@@ -670,10 +674,17 @@ void SimpleDateFormat::subFormat(int patternCharIndex, int count, std::string& b
     }
 
     case PATTERN_ZONE_NAME: { // 'z'
-        // No zone display-name table in the i18n engine: always the AOSP
-        // fallback — the custom GMT offset ID.
+        /*No zone display-name table in the i18n engine. For an offset-0 zone
+          (the GMT/UTC family — Europe/London in winter included) tzdata's
+          canonical names apply: short "GMT", long "Greenwich Mean Time"
+          (Locale.US). Every other offset keeps the AOSP no-data fallback —
+          the custom GMT offset ID (TimeZone.createGmtOffsetString).*/
         value = calendar->get(Calendar::ZONE_OFFSET) + calendar->get(Calendar::DST_OFFSET);
-        buffer += createGmtOffsetString(true, true, value);
+        if (value == 0) {
+            current = (count >= 4) ? "Greenwich Mean Time" : "GMT";
+        } else {
+            buffer += createGmtOffsetString(true, true, value);
+        }
         break;
     }
 
