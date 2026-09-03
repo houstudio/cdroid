@@ -38,6 +38,12 @@ public:
     // locale database. Empty when no entry (caller falls back to codes).
     static std::string languageDisplayName(const Locale& locale);
     static std::string regionDisplayName(const Locale& locale);
+
+    // MeasureFormat SHORT duration units ("2 days" en / "2 j" fr /
+    // "2 дн." ru) via the engine's MEASURE_FORMAT_PATTERN table (values mined
+    // from ICU — scripts/extract_measure_units.cc). Empty when the locale or
+    // unit is not in the table (caller keeps its own words).
+    static std::string measureUnitShort(const Locale& locale, int value, const char* unit);
 };
 
 } // namespace cdroid

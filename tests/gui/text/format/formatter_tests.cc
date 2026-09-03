@@ -205,10 +205,12 @@ TEST_F(FormatterTest, testFormatShortElapsedTimeRoundingUpToMinutes) {
     EXPECT_EQ("0 min", Formatter::formatShortElapsedTimeRoundingUpToMinutes(context, 0));
 
     // Make sure it works on different locales.
-    // KNOWN DEVIATION: same en-US unit-word table; the Russian "1 мин"
-    // expectation is red until an i18n measure-word table exists.
+    // ru durations come from the i18n measure table (mined from host ICU 70:
+    // "дн./ч/мин/с" joined by a plain space — the port's original spaceless
+    // "1мин" matches no ICU-70 width, so the expectation follows the ICU
+    // output).
     setLocale(Locale("ru", "RU"));
-    EXPECT_EQ(u8"1\u043c\u0438\u043d", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
+    EXPECT_EQ(u8"1 \u043c\u0438\u043d", Formatter::formatShortElapsedTimeRoundingUpToMinutes(
             context, 1 * SECOND));
 }
 

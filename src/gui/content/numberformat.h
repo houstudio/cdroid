@@ -12,9 +12,13 @@
 #include <regex>
 #include <stdexcept>
 
-namespace i18n { class NumberFormat; }   // vendored engine (global ns) — opaque here
+namespace cdroid {
+// The vendored engine lives in cdroid::i18n (content/i18n/*.h). Declared
+// here (inside cdroid) so the member below binds the ENGINE namespace, not a
+// global ::i18n — including i18nbridge.h first would otherwise shadow-bind
+// and fail to find the type.
+namespace i18n { class NumberFormat; }
 
-namespace cdroid{
 class NumberFormat {
 protected:
     int fMinimumIntegerDigits = 1;

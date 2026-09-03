@@ -2,6 +2,7 @@
 
 #ifdef ENABLE_I18N
 #include <content/i18n/number_format.h>
+#include <content/i18n/measure_format.h>
 #include <cctype>
 
 namespace cdroid {
@@ -121,6 +122,18 @@ std::string I18nBridge::languageDisplayName(const Locale& locale)
 std::string I18nBridge::regionDisplayName(const Locale& locale)
 {
     return displayValueGuarded(locale, i18n::TERRITORIES_DISPLAY);
+}
+
+std::string I18nBridge::measureUnitShort(const Locale& locale, int value, const char* unit)
+{
+    i18n::I18nStatus status = i18n::I18nStatus::ISUCCESS;
+    i18n::LocaleInfo info = toLocaleInfo(locale);
+    i18n::MeasureFormat engine(info, status);
+    if (status != 0) return std::string();
+    std::string unitStr(unit);
+    const std::string out = engine.Format(value, unitStr, status, i18n::MEASURE_SHORT);
+    if (status != 0 || out.empty()) return std::string();
+    return out;
 }
 
 } // namespace cdroid

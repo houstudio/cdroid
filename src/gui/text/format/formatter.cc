@@ -5,10 +5,12 @@
  * KNOWN DEVIATIONS vs AOSP:
  *  - bidiWrap: android.text.BidiFormatter is not ported (see the text API-gap
  *    records), so RTL locales get the unwrapped string.
- *  - formatShortElapsedTime's MeasureFormat SHORT units are an inline en-US
- *    table (day/days, hr, min, sec, joined by ", "); other locales get the
- *    English units until an i18n measure-word table exists (FormatterTest's
- *    FR/RU assertions cover this gap).
+ *  - formatShortElapsedTime goes through the i18n MeasureFormat (SHORT) with
+ *    the duration units of resource/measure-format-patterns.json (mined from
+ *    ICU, scripts/extract_measure_units.cc); locales/units missing from that
+ *    table fall back to the inline en-US words (day/days, hr, min, sec, joined
+ *    by ", "). zh-Hans joins with a space where ICU uses none (the engine's
+ *    join pattern is per-locale and shared with the fitness units).
  *  - String.format("%.Nf")'s HALF_UP is reproduced by pre-rounding through
  *    llround(result * roundFactor) — exactly the arithmetic AOSP uses for
  *    roundedBytes — before handing the value to NumberFormat, so the printed
@@ -16,6 +18,7 @@
  *    half-even "9.12" vs "9.13" drift on ties).
  *********************************************************************************/
 #include <text/format/formatter.h>
+#include <content/i18nbridge.h>
 #include <content/resources.h>
 #include <content/Locale.h>
 #include <content/numberformat.h>
@@ -164,9 +167,21 @@ static constexpr int SECONDS_PER_HOUR = 60 * 60;
 static constexpr int SECONDS_PER_DAY = 24 * 60 * 60;
 static constexpr int64_t MILLIS_PER_MINUTE = 1000 * 60;
 
-// ICU MeasureFormat SHORT (en-US) stand-in: unit words for the value counts,
-// pluralized the way ICU's short units read ("1 day, 23 hr", "3 days").
-static std::string measureShort(int64_t value, const char* single, const char* plural) {
+// AOSP: MeasureFormat.getInstance(locale, SHORT) with the locale from the
+// context configuration. The i18n engine supplies the localized duration
+// units (day/hour/minute/second in resource/measure-format-patterns.json —
+// values mined from ICU, see scripts/extract_measure_units.cc); any miss
+// (locale or unit not in the table) falls back to the inline en-US words, so
+// uncovered locales keep today's behavior.
+static std::string measureShort(Context& context, int64_t value, const char* unit,
+        const char* single, const char* plural) {
+    const Locale locale = localeFromContext(context);
+    const std::string formatted = I18nBridge::measureUnitShort(locale, (int)value, unit);
+    if (!formatted.empty()) {
+        return formatted;
+    }
+    // Inline en-US fallback (the previous behavior), pluralized the way ICU's
+    // short units read ("1 day, 23 hr", "3 days").
     char buf[32];
     snprintf(buf, sizeof(buf), "%lld %s", (long long)value,
             value == 1 ? single : plural);
@@ -177,9 +192,7 @@ static std::string joinMeasures(const std::string& a, const std::string& b) {
     return a + ", " + b;
 }
 
-std::string Formatter::formatShortElapsedTime(Context& /*context*/, int64_t millis) {
-    // AOSP builds a locale MeasureFormat here; the en-US unit-word table
-    // (file header) needs no locale, so the parameter goes unused.
+std::string Formatter::formatShortElapsedTime(Context& context, int64_t millis) {
     int64_t secondsLong = millis / 1000;
 
     int days = 0, hours = 0, minutes = 0;
@@ -199,21 +212,21 @@ std::string Formatter::formatShortElapsedTime(Context& /*context*/, int64_t mill
 
     if (days >= 2 || (days > 0 && hours == 0)) {
         days += (hours + 12) / 24;
-        return measureShort(days, "day", "days");
+        return measureShort(context, days, "day", "day", "days");
     } else if (days > 0) {
-        return joinMeasures(measureShort(days, "day", "days"), measureShort(hours, "hr", "hr"));
+        return joinMeasures(measureShort(context, days, "day", "day", "days"), measureShort(context, hours, "hour", "hr", "hr"));
     } else if (hours >= 2 || (hours > 0 && minutes == 0)) {
         hours += (minutes + 30) / 60;
-        return measureShort(hours, "hr", "hr");
+        return measureShort(context, hours, "hour", "hr", "hr");
     } else if (hours > 0) {
-        return joinMeasures(measureShort(hours, "hr", "hr"), measureShort(minutes, "min", "min"));
+        return joinMeasures(measureShort(context, hours, "hour", "hr", "hr"), measureShort(context, minutes, "minute", "min", "min"));
     } else if (minutes >= 2 || (minutes > 0 && seconds == 0)) {
         minutes += (seconds + 30) / 60;
-        return measureShort(minutes, "min", "min");
+        return measureShort(context, minutes, "minute", "min", "min");
     } else if (minutes > 0) {
-        return joinMeasures(measureShort(minutes, "min", "min"), measureShort(seconds, "sec", "sec"));
+        return joinMeasures(measureShort(context, minutes, "minute", "min", "min"), measureShort(context, seconds, "second", "sec", "sec"));
     } else {
-        return measureShort(seconds, "sec", "sec");
+        return measureShort(context, seconds, "second", "sec", "sec");
     }
 }
 
@@ -222,7 +235,7 @@ std::string Formatter::formatShortElapsedTimeRoundingUpToMinutes(Context& contex
     const int64_t minutesRoundedUp = (millis + MILLIS_PER_MINUTE - 1) / MILLIS_PER_MINUTE;
 
     if (minutesRoundedUp == 0 || minutesRoundedUp == 1) {
-        return measureShort(minutesRoundedUp, "min", "min");
+        return measureShort(context, minutesRoundedUp, "minute", "min", "min");
     }
 
     return formatShortElapsedTime(context, minutesRoundedUp * MILLIS_PER_MINUTE);
