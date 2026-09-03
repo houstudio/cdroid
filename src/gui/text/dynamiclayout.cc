@@ -878,6 +878,21 @@ LineBreakConfig DynamicLayout::getLineBreakConfig() const{
 
 DynamicLayout::ChangeWatcher::ChangeWatcher(DynamicLayout* layout) {
     mLayout = layout;
+    /*SpannableStringBuilder::replace dispatches TextWatcher callbacks through
+      the std::function members (the port's TextWatcher shape), so bind them to
+      the member functions. Qualified names — the member functions below hide
+      the base's function objects in this scope.*/
+    TextWatcher::beforeTextChanged =
+            [this](CharSequence& s, int where, int before, int after) {
+                beforeTextChanged(&s, where, before, after);
+            };
+    TextWatcher::onTextChanged =
+            [this](CharSequence& s, int where, int before, int after) {
+                onTextChanged(&s, where, before, after);
+            };
+    TextWatcher::afterTextChanged = [this](Editable& s) {
+        afterTextChanged(&s);
+    };
 }
 
 void DynamicLayout::ChangeWatcher::reflow(CharSequence* s, int where, int before, int after) {
@@ -944,25 +959,25 @@ void DynamicLayout::ChangeWatcher::transformAndReflow(Spannable* s, int start, i
     reflow(s, start, end - start, end - start);
 }
 
-void DynamicLayout::ChangeWatcher::onSpanAdded(Spannable* s, ParcelableSpan* o, int start, int end) {
-    if (dynamic_cast<UpdateLayout*>(o))
-        transformAndReflow(s, start, end);
+void DynamicLayout::ChangeWatcher::onSpanAdded(Spannable& s, const ParcelableSpan* o, int start, int end) {
+    if (dynamic_cast<const UpdateLayout*>(o))
+        transformAndReflow(&s, start, end);
 }
 
-void DynamicLayout::ChangeWatcher::onSpanRemoved(Spannable* s, ParcelableSpan* o, int start, int end) {
-    if (dynamic_cast<UpdateLayout*>(o))
-        transformAndReflow(s, start, end);
+void DynamicLayout::ChangeWatcher::onSpanRemoved(Spannable& s, const ParcelableSpan* o, int start, int end) {
+    if (dynamic_cast<const UpdateLayout*>(o))
+        transformAndReflow(&s, start, end);
 }
 
-void DynamicLayout::ChangeWatcher::onSpanChanged(Spannable* s, ParcelableSpan* o, int start, int end, int nstart, int nend) {
-    if (dynamic_cast<UpdateLayout*>(o)) {
+void DynamicLayout::ChangeWatcher::onSpanChanged(Spannable& s, const ParcelableSpan* o, int start, int end, int nstart, int nend) {
+    if (dynamic_cast<const UpdateLayout*>(o)) {
         if (start > end) {
             // Bug: 67926915 start cannot be determined, fallback to reflow from start
             // instead of causing an exception
             start = 0;
         }
-        transformAndReflow(s, start, end);
-        transformAndReflow(s, nstart, nend);
+        transformAndReflow(&s, start, end);
+        transformAndReflow(&s, nstart, nend);
     }
 }
 

@@ -34,12 +34,17 @@ public:
     virtual ~ParagraphStyle() = default;
 };
 
-class UpdateAppearance : public ParcelableSpan {
+/*Virtual ParcelableSpan inheritance throughout: MetricAffectingSpan joins
+  CharacterStyle (already a virtual ParcelableSpan base) with UpdateLayout, and
+  the shared virtual base keeps exactly one ParcelableSpan subobject — a
+  non-virtual chain here would make dynamic_cast<ParcelableSpan*> ambiguous
+  (every span is stored as ParcelableSpan*).*/
+class UpdateAppearance : virtual public ParcelableSpan {
 public:
     virtual ~UpdateAppearance() = default;
 };
 
-class UpdateLayout : public UpdateAppearance {
+class UpdateLayout : virtual public UpdateAppearance {
 public:
     virtual ~UpdateLayout() = default;
 };
