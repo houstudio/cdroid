@@ -30,6 +30,27 @@ public:
 /* A DrawView sized to fill the shared content area (fallback 1280x720 before the
    first layout pass). Drawing coordinates are the same absolute ones the cases
    always used. */
+/* cairo save/restore with RAII: a case's clip/transform state must not leak
+   into the next case's draws (the draw pipeline reuses the canvas), and a
+   bare restore() is skipped when a case throws mid-draw - cairo refuses
+   copy_clip_rectangle_list on a curved clip (CLIP_NOT_REPRESENTABLE), and
+   that throw used to leave the shared canvas clipped, hanging Clip3. */
+struct CanvasStateGuard{
+    Canvas& c;
+    explicit CanvasStateGuard(Canvas&ctx):c(ctx){ c.save(); }
+    ~CanvasStateGuard(){ c.restore(); }
+};
+
+/* PNG fixtures live beside this source file; resolve from __FILE__ so the
+   cases work regardless of the binary's working directory (light.png and
+   im_game.png were never in the tree - tests used to load them from the CWD
+   and failed with "file not found"). */
+static cdroid::RefPtr<ImageSurface> loadFixturePng(const std::string& name){
+    std::string path = __FILE__;
+    const auto slash = path.find_last_of('/');
+    return ImageSurface::create_from_png(path.substr(0, slash + 1) + name);
+}
+
 static DrawView* newDrawView(std::function<void(Canvas&)>d){
     ViewGroup*content=GUIEnvironment::content();
     int w = content ? content->getWidth()  : 0; if(w<=0) w=1280;
@@ -45,6 +66,7 @@ public :
 
 TEST_F(CDCONTEXT,TEXT_ALIGNMENT){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         cdroid::Rect rect={100,100,800,120};
         ctx.set_font_size(40);
         ctx.set_color(0xFFFFFFFF); ctx.rectangle(0,0,1280,720); ctx.fill();
@@ -65,6 +87,7 @@ TEST_F(CDCONTEXT,circle){
         pts[i].y=RADIUS*sin(M_PI*2.f*i/PTCOUNT);
     }
     GUIEnvironment::content()->addView(newDrawView([=](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         ctx.set_source_rgb(.1,.1,.1);
         ctx.rectangle(0,0,800,600);
         ctx.fill();
@@ -87,6 +110,7 @@ TEST_F(CDCONTEXT,circle){
 
 TEST_F(CDCONTEXT,Translate){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         ctx.set_color(0xFFFFFFFF); ctx.rectangle(0,0,800,600); ctx.fill();
         ctx.set_color(0xFFFF0000); ctx.rectangle(0,0,200,200); ctx.fill();
         ctx.translate(100,100);
@@ -100,8 +124,9 @@ TEST_F(CDCONTEXT,Translate){
 }
 
 TEST_F(CDCONTEXT,Clip){
-    cdroid::RefPtr<ImageSurface>img=ImageSurface::create_from_png("light.png");
+    cdroid::RefPtr<ImageSurface>img=loadFixturePng("light.png");
     GUIEnvironment::content()->addView(newDrawView([img](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         cdroid::Rect rect={0,0,800,600};
         ctx.set_color(0xFFFFFFFF); ctx.rectangle(0,0,800,600); ctx.fill();
         ctx.arc(400,300,100,0,M_PI*2);
@@ -113,6 +138,7 @@ TEST_F(CDCONTEXT,Clip){
 
 TEST_F(CDCONTEXT,Clip1){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         ctx.set_color(0xFF888888); ctx.rectangle(-100,-100,1280,720); ctx.fill();
         ctx.rectangle(10,10,60,60);
         ctx.rectangle(100,100,400,400);
@@ -133,13 +159,18 @@ TEST_F(CDCONTEXT,Clip1){
 
 TEST_F(CDCONTEXT,Clip2){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         ctx.reset_clip();
         ctx.arc(100,100,50,0,M_PI*2.f);
         ctx.clip();
         double x1=0,y1=0,x2=0,y2=0;
         ctx.get_clip_extents(x1,y1,x2,y2);
         std::vector<Cairo::Rectangle>lst;
-        ctx.copy_clip_rectangle_list(lst);
+        /* A curved clip has no rectangle-list representation by cairo's
+           design (CLIP_NOT_REPRESENTABLE); reset the clip so the state does
+           not leak into later draws and take the empty list. */
+        try { ctx.copy_clip_rectangle_list(lst); }
+        catch (const std::exception&) { ctx.reset_clip(); lst.clear(); }
         printf("CLIPS(%f,%f,%f,%f) lst.size=%lu\r\n",x1,y1,x2,y2,(unsigned long)lst.size());
     }));
     pumpFor(1500);
@@ -147,6 +178,7 @@ TEST_F(CDCONTEXT,Clip2){
 
 TEST_F(CDCONTEXT,Clip3){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         ctx.reset_clip();
         ctx.rectangle(0,0,200,200);
         ctx.clip();
@@ -161,8 +193,9 @@ TEST_F(CDCONTEXT,Clip3){
 }
 
 TEST_F(CDCONTEXT,Mask){
-    cdroid::RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");
+    cdroid::RefPtr<ImageSurface>img=loadFixturePng("im_game.png");
     GUIEnvironment::content()->addView(newDrawView([img](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         cdroid::RefPtr<Pattern>pat1=SurfacePattern::create(img);
         cdroid::RefPtr<Pattern>pat2=SolidPattern::create_rgba(0,1.0,0,.5);
         ctx.set_source(pat1);
@@ -174,8 +207,9 @@ TEST_F(CDCONTEXT,Mask){
 }
 
 TEST_F(CDCONTEXT,ImageSurface){
-    cdroid::RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");
+    cdroid::RefPtr<ImageSurface>img=loadFixturePng("im_game.png");
     GUIEnvironment::content()->addView(newDrawView([img](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         cdroid::RefPtr<Cairo::Context>ictx=Cairo::Context::create(img);
         cdroid::RefPtr<Gradient>pat=LinearGradient::create(0,0,400,0);
         cdroid::RefPtr<Pattern>pat1=SolidPattern::create_rgba(1,0,0,.51);
@@ -196,6 +230,7 @@ TEST_F(CDCONTEXT,ImageSurface){
 
 TEST_F(CDCONTEXT,Pattern_Line){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         int i, j;
         cdroid::RefPtr<RadialGradient>radpat(RadialGradient::create(200, 150, 80, 400, 300, 400));
         cdroid::RefPtr<LinearGradient>linpat(LinearGradient::create(200, 210, 600, 390));
@@ -220,6 +255,7 @@ TEST_F(CDCONTEXT,Pattern_Line){
 
 TEST_F(CDCONTEXT,Pattern_Radio){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         cdroid::RefPtr<RadialGradient>radpat(RadialGradient::create(200, 200, 10, 200, 200, 150));
         radpat->add_color_stop_rgb ( .0, 1., 1., 1.);
         radpat->add_color_stop_rgb ( 1., 1., .0,.0);
@@ -236,6 +272,7 @@ TEST_F(CDCONTEXT,Font){
         "Innovation in China 0123456789"
     };
     GUIEnvironment::content()->addView(newDrawView([=](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         ctx.set_color(0xffffffff); ctx.rectangle(0,0,1280,720); ctx.fill();
         int y=10;
         for(int i=0;i<10;i++){
@@ -268,6 +305,7 @@ TEST_F(CDCONTEXT,Font){
 
 TEST_F(CDCONTEXT,ALPHA){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         ctx.set_color(0xFFFFFFFF); ctx.rectangle(0,0,1280,720); ctx.fill();
         ctx.set_color(0x80FF0000); ctx.rectangle(200,200,480,320); ctx.fill();
     }));
@@ -276,6 +314,7 @@ TEST_F(CDCONTEXT,ALPHA){
 
 TEST_F(CDCONTEXT,Hole){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         ctx.set_color(0xFFFFFFFF); ctx.rectangle(0,0,1280,720); ctx.fill();
         ctx.set_color(0); ctx.rectangle(200,200,480,320); ctx.fill();
     }));
@@ -284,6 +323,7 @@ TEST_F(CDCONTEXT,Hole){
 
 TEST_F(CDCONTEXT,Hole2){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         ctx.set_color(0xFFFFFFFF); ctx.rectangle(0,0,1280,720); ctx.fill();
         ctx.set_source_rgba(0,0,0,0); ctx.rectangle(200,200,480,320); ctx.fill();
     }));
@@ -292,6 +332,7 @@ TEST_F(CDCONTEXT,Hole2){
 
 TEST_F(CDCONTEXT,Hole3){
     GUIEnvironment::content()->addView(newDrawView([](Canvas&ctx){
+            CanvasStateGuard _canvasGuard(ctx);
         cdroid::RefPtr<ImageSurface>img=ImageSurface::create(Surface::Format::ARGB32,1280,720);
         cdroid::RefPtr<Cairo::Context>ctx1=Cairo::Context::create(img);
         ctx1->set_source_rgb(1,0.5,1);
