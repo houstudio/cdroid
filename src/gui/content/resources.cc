@@ -280,87 +280,6 @@ std::shared_ptr<ColorStateList> Resources::getColorStateList(int id, const Theme
 }
 
 
-// Text-XML element attributes for the non-binary obtainStyledAttributes path:
-// the theme-only androidfw resolver has no element step (by design — AOSP
-// Theme.obtainStyledAttributes), but AOSP's set-based resolution always
-// prefers element attrs. Text XML (text-mode XmlPullParser / plain
-// AttributeSet) therefore layers this ON TOP: each styleable attr whose id
-// matches an element attribute (AttributeSet::getAttributeNameResource
-// resolves text names through the arsc) overrides the theme/style fallback
-// with the parsed text value — the missing piece that made text-packed
-// res/color/ selectors (text_color_primary.xml) read no android:color at all
-// and fall to MAGENTA.
-static void applyTextElementAttrs(const AttributeSet& set, const ResTable& table,
-                                  const uint32_t* attrs, StyledAttr* out) {
-    const int n = set.getAttributeCount();
-    if (n <= 0) return;
-    for (size_t i = 0; attrs[i] != 0; i++) {
-        for (int j = 0; j < n; j++) {
-            if ((uint32_t)set.getAttributeNameResource(j) != attrs[i]) continue;
-            const std::string v = set.getAttributeValue(j);
-            if (v.empty()) break;
-            Res_value rv = {};
-            if (v[0] == '#') {
-                // Color literal.
-                uint32_t argb = 0; unsigned r=0,g=0,b=0,a=0xff;
-                if (v.size()==4) { sscanf(v.c_str(), "#%1x%1x%1x", &r,&g,&b);
-                    argb = (a<<24)|(r<<20)|(g<<12)|(b<<4); rv.dataType = Res_value::TYPE_INT_COLOR_RGB4; }
-                else if (v.size()==5) { sscanf(v.c_str(), "#%1x%1x%1x%1x", &a,&r,&g,&b);
-                    argb = (a<<28)|(r<<20)|(g<<12)|(b<<4); rv.dataType = Res_value::TYPE_INT_COLOR_ARGB4; }
-                else if (v.size()==7) { sscanf(v.c_str(), "#%2x%2x%2x", &r,&g,&b);
-                    argb = (a<<24)|(r<<16)|(g<<8)|b; rv.dataType = Res_value::TYPE_INT_COLOR_RGB8; }
-                else { sscanf(v.c_str(), "#%2x%2x%2x%2x", &a,&r,&g,&b);
-                    argb = (a<<24)|(r<<16)|(g<<8)|b; rv.dataType = Res_value::TYPE_INT_COLOR_ARGB8; }
-                rv.data = argb;
-            } else if (v[0] == '?' || v[0] == '@'
-                       || (v[0] == ':' && v.find('/') != std::string::npos)
-                       || v.compare(0, 7, "cdroid:") == 0) {
-                // Reference forms: raw "?attr/name"/"@type/name" (verbatim,
-                // the way AOSP text XML spells them); the ':' and "cdroid:"
-                // spellings are the legacy pre-qualification forms, kept for
-                // robustness. Strip to name(+type).
-                char kind = v[0];
-                std::string body = (kind == '?' || kind == '@') ? v.substr(1) : v;
-                if (kind != '?' && kind != '@') {
-                    // Normalized form ":type/name" — the leading '@'/'?' was
-                    // stripped: "attr/" means a ?attr reference, any other
-                    // type is an @resource reference.
-                    const size_t colon2 = body.find(':');
-                    if (colon2 != std::string::npos) body = body.substr(colon2 + 1);
-                    kind = (body.compare(0, 5, "attr/") == 0) ? '?' : '@';
-                }
-                std::string pkg, rest = body;
-                const size_t colon = body.find(':');
-                if (colon != std::string::npos) { pkg = body.substr(0, colon); rest = body.substr(colon + 1); }
-                std::string type = (v[0] == '?') ? "attr" : "attr";
-                std::string name = rest;
-                if (rest.compare(0, 4, "attr/") == 0) name = rest.substr(4);
-                else { const size_t slash = rest.find('/'); if (slash != std::string::npos) { type = rest.substr(0, slash); name = rest.substr(slash + 1); } }
-                const uint32_t id = table.getIdentifier(name, type, pkg.empty() ? "" : pkg.c_str());
-                if (id != 0) {
-                    rv.data = id;
-                    rv.dataType = (kind == '?') ? Res_value::TYPE_ATTRIBUTE : Res_value::TYPE_REFERENCE;
-                    out[i].resourceId = id;
-                } else break;   // unresolvable: keep the fallback value
-            } else if (v == "true" || v == "false") {
-                rv.data = (v == "true") ? 1 : 0;
-                rv.dataType = Res_value::TYPE_INT_BOOLEAN;
-            } else {
-                // Decimal int (enum/flag values land here after normalize).
-                char* end = nullptr;
-                const long num = strtol(v.c_str(), &end, 10);
-                if (end && *end == '\0' && end != v.c_str()) {
-                    rv.data = (uint32_t)num;
-                    rv.dataType = Res_value::TYPE_INT_DEC;
-                } else break;   // free-form string: no pool here, keep fallback
-            }
-            out[i].value = rv;
-            out[i].stringBlock = -2;   // element-sourced (no pool block)
-            out[i].set = true;
-            break;
-        }
-    }
-}
 
 // ===========================================================================
 // AOSP Resources.obtainStyledAttributes(...)
@@ -378,7 +297,8 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
 
     if (set != nullptr) {
         // AOSP ResourcesImpl.applyStyle: hard downcast to the binary parser
-        // for the parse state; text sets take the string-coercion path below.
+        // for the parse state. Non-binary sets get theme/style-only resolution
+        // below (text-mode paks are retired — paks are binary-only).
         const XmlBlock::Parser* parser = dynamic_cast<const XmlBlock::Parser*>(set);
         if (parser) {
             const ResXMLTree* xml = parser->getResXMLTree();
@@ -389,12 +309,11 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
             }
         }
     }
+    // Non-binary sets (text-mode paks) are retired: paks are binary-only since
+    // the res/ unification, so this tail only serves a null set — theme/style
+    // resolution with no element step (AOSP Theme.obtainStyledAttributes).
     cdroid::obtainStyledAttributes(rt, theme, attrs,
                                    (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
-    if (set != nullptr) {
-        // AOSP precedence: element attrs override the style/theme fallback.
-        applyTextElementAttrs(*set, rt, attrs, styled.data());
-    }
     return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, &_th);
 }
 

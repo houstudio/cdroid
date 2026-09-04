@@ -31,6 +31,7 @@
 #include <image-decoders/imagedecoder.h>  // ImageDecoder::createAsDrawable(id) (image self-load)
 #include <core/context.h>             // inflation bridge (mCtx)
 #include <core/xmlpullparser.h>       // ColorStateList::createFromXml inline inflate
+#include <content/xmlblock.h>          // XmlBlock::Parser (binary-strict getXml sniff)
 #include <animation/animator.h>             // AnimatorCache: ConstantState<Animator*>
 #include <animation/statelistanimator.h>    // StateListAnimatorCache
 
@@ -469,7 +470,15 @@ std::unique_ptr<XmlPullParser> ResourcesImpl::loadXmlResourceParser(int resid) c
         delete asset;
         strm = std::make_unique<std::istringstream>(buf);
     }
-    return XmlPullParser::detectAndCreate(mCtx, std::move(strm), std::to_string(resid));
+    auto parser = XmlPullParser::detectAndCreate(mCtx, std::move(strm), std::to_string(resid));
+    if (dynamic_cast<const XmlBlock::Parser*>(parser.get()) == nullptr) {
+        // Paks are binary-only since the res/ unification (text-mode paks are
+        // retired): text bytes here mean a broken or stale pak. Keep the
+        // (END_DOCUMENT-primed) parser for null-safety — callers next()
+        // blindly — but fail loud.
+        LOGE("getXml(0x%x): text XML in a binary-only pak (stale pak?)", resid);
+    }
+    return parser;
 }
 
 // ---- GUI-object factories: ResourcesImpl owns the AOSP mDrawableCache /
