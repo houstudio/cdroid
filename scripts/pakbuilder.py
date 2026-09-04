@@ -936,6 +936,10 @@ class PakBuilder:
                         res_files.append((name, zf.read(name)))
             with zipfile.ZipFile(self.pak_path, "w") as zf:
                 if arsc:
+                    # AOSP storage policy (pre-30 profile): everything DEFLATED —
+                    # arsc goes STORED only when an entry-level mmap consumer
+                    # exists (Play delivery/AssetManager2 mmap; CDROID reads it
+                    # via libzip into a buffer).
                     zf.writestr("resources.arsc", arsc, zipfile.ZIP_DEFLATED)
                 for name, data in res_files:
                     zf.writestr(name, data, zipfile.ZIP_DEFLATED)
@@ -1157,6 +1161,17 @@ class PakBuilder:
             _head, _sep, _tail = _body.partition('/')
             if _sep and '-v' in _head:
                 _sdk_rel_norm.add(_head.split('-v')[0] + '/' + _tail)
+
+        # App mode: compile the app's own res/ via aapt2 (optional).
+        # Skip when use_sdk: cdroid.pak's res_dir IS the framework res
+        # (src/gui/res, carrying public-final.xml 0x01 IDs), already built as
+        # framework -x by _compile_sdk_res. Running app-mode link on it collides
+        # (framework package-1 IDs vs app 0x7f space → "can't assign ID
+        # 0x010a0004 ... package already has ID 1"). _compile_aapt2 is for real
+        # app paks only (use_aapt2 and not use_sdk).
+        binary_xmls, app_arsc, app_apk_files = \
+            self._compile_aapt2() if (self.use_aapt2 and not self.use_sdk) else ({}, None, set())
+
         # Resource-identity set of everything aapt2 emitted (framework apk +
         # app apk): ("drawable", "ic_add_24dp") for ANY variant path. The walk
         # drops TEXT copies of XML resources aapt2 adjudicated away — minSdk>=21
@@ -1175,15 +1190,6 @@ class PakBuilder:
                     _stem = _stem[:-len(_ext)]
                     break
             _apk_identity.add((_head.split('-')[0], _stem))
-        # App mode: compile the app's own res/ via aapt2 (optional).
-        # Skip when use_sdk: cdroid.pak's res_dir IS the framework res
-        # (src/gui/res, carrying public-final.xml 0x01 IDs), already built as
-        # framework -x by _compile_sdk_res. Running app-mode link on it collides
-        # (framework package-1 IDs vs app 0x7f space → "can't assign ID
-        # 0x010a0004 ... package already has ID 1"). _compile_aapt2 is for real
-        # app paks only (use_aapt2 and not use_sdk).
-        binary_xmls, app_arsc, app_apk_files = \
-            self._compile_aapt2() if (self.use_aapt2 and not self.use_sdk) else ({}, None, set())
         binary_ok = bool(sdk_data) or (app_arsc is not None)
         with zipfile.ZipFile(self.pak_path, "w") as zf:
             # SDK framework: store binary AXML + arsc + drawables. Skip values/
@@ -1239,31 +1245,36 @@ class PakBuilder:
                     # callers); root-level files (fonts.xml &c) keep bare names.
                     zname = ("res/" + rel) if "/" in rel else rel
                     if f.endswith(".xml"):
-                        # aapt2 emitted some variant of this resource? The arsc
-                        # is authoritative — do not also ship this text copy.
+                        if zname in binary_xmls:
+                            zf.writestr(zname, binary_xmls[zname], zipfile.ZIP_DEFLATED)
+                            continue
+                        # No binary for THIS path — but aapt2 emitted some other
+                        # variant of the resource (version collapse, density
+                        # adjudication)? The arsc points at that variant, so this
+                        # text copy is dead weight; do not ship it.
                         _rh, _rs, _rt = rel.partition('/')
                         _stem = f[:-4]
                         if _stem.endswith(".9"):
                             _stem = _stem[:-2]
                         if _rs and (_rh.split('-')[0], _stem) in _apk_identity:
                             continue
-                        if zname in binary_xmls:
-                            zf.writestr(zname, binary_xmls[zname], zipfile.ZIP_DEFLATED)
-                        else:
-                            # cdroid's values/*.xml kept as text (SDK provides
-                            # layouts/drawables as binary, but NOT values/ files).
-                            zf.writestr(zname, self._strip_xml(p), zipfile.ZIP_DEFLATED)
+                        # cdroid's values/*.xml kept as text (SDK provides
+                        # layouts/drawables as binary, but NOT values/ files).
+                        zf.writestr(zname, self._strip_xml(p), zipfile.ZIP_DEFLATED)
                     elif f.endswith(".9.png"):               # MUST precede the .png branch
                         arc = zname[:-6] + ".png"            # foo.9.png -> foo.png
                         try:
                             data = self._compile_9patch(p)
                             zf.writestr(arc, data if data else open(p, "rb").read(),
-                                        zipfile.ZIP_STORED)
+                                        zipfile.ZIP_DEFLATED)
                         except Exception as e:
                             sys.stderr.write("9patch embed failed for %s: %s; storing as-is\n" % (p, e))
-                            zf.writestr(arc, open(p, "rb").read(), zipfile.ZIP_STORED)
+                            zf.writestr(arc, open(p, "rb").read(), zipfile.ZIP_DEFLATED)
                     elif f.endswith(BIN_EXTS):
-                        zf.writestr(zname, open(p, "rb").read(), zipfile.ZIP_STORED)
+                        # AOSP storage policy: resource files (bitmaps/fonts/
+                        # raw) are DEFLATED in the zip; only arsc and
+                        # mmap'd native libs are STORED.
+                        zf.writestr(zname, open(p, "rb").read(), zipfile.ZIP_DEFLATED)
                     # other extensions skipped
 
 
@@ -1329,7 +1340,7 @@ def build_shared_lib_pak(res_dir, pak_path, rh_path, namespace,
             for name in names:
                 if name == "resources.arsc" or not name.startswith("res/"):
                     continue
-                out.writestr(name[4:], zf.read(name))
+                out.writestr(name[4:], zf.read(name), zipfile.ZIP_DEFLATED)
             out.writestr("resources.arsc", zf.read("resources.arsc"), zipfile.ZIP_DEFLATED)
     sys.stderr.write("%s: built shared-lib pak at package id %s\n" % (namespace, package_id))
 
