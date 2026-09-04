@@ -2,6 +2,7 @@
 #include <core/context.h>
 #include <core/systemclock.h>
 #include <widget/keyboardview.h>
+#include <widget/editorinfo.h>
 #include <widget/framework_styleable.h>
 #include <text/textutils.h>
 #include <porting/cdlog.h>
@@ -199,6 +200,31 @@ void KeyboardView::setPopupLayout(int popupLayoutResId) {
         // Cached popups were inflated from the old layout; drop them so the next
         // long-press re-inflates with the new container.
         mMiniKeyboardCache.clear();
+    }
+}
+
+void KeyboardView::setImeAction(int actionId) {
+    // AOSP keyboards relabel the enter key with the editor's IME action; an
+    // empty label falls back to the key icon (the return arrow).
+    if (mKeyboard == nullptr) return;
+    int strId = 0;
+    switch (actionId) {
+    case EditorInfo::IME_ACTION_GO:       strId = R::string::ime_action_go; break;
+    case EditorInfo::IME_ACTION_SEARCH:   strId = R::string::ime_action_search; break;
+    case EditorInfo::IME_ACTION_SEND:     strId = R::string::ime_action_send; break;
+    case EditorInfo::IME_ACTION_NEXT:     strId = R::string::ime_action_next; break;
+    case EditorInfo::IME_ACTION_DONE:     strId = R::string::ime_action_done; break;
+    case EditorInfo::IME_ACTION_PREVIOUS: strId = R::string::ime_action_previous; break;
+    default: strId = 0; break;
+    }
+    for (size_t i = 0; i < mKeys.size(); i++) {
+        Keyboard::Key* key = mKeys[i];
+        if (key->codes.empty()) continue;
+        const bool isEnterKey = key->codes[0] == 10 /* KEYCODE_ENTER */
+                || key->codes[0] == Keyboard::KEYCODE_DONE;
+        if (!isEnterKey) continue;
+        key->label = strId != 0 ? getContext()->getString(strId) : std::string();
+        invalidateKey((int) i);
     }
 }
 

@@ -24,6 +24,8 @@
 #include <keycharactermap.h>
 #include <text/textutils.h>
 #include <widget/candidateview.h>
+#include <widget/editorinfo.h>
+#include <widget/textview.h>
 #include <widget/internal_R.h>
 #include <core/app.h>
 #include <core/englishinputmethod.h>
@@ -88,6 +90,19 @@ public:
    void commitText(const std::string&txt){
        const std::wstring uniTxt = TextUtils::utf8tounicode(txt);
        if(mBuddy)mBuddy->commitText(uniTxt);
+   }
+   /* AOSP: an IME that finds an action in the editor's EditorInfo calls
+    * performEditorAction(actionId) instead of delivering a plain enter. This
+    * is the in-process equivalent: hand the focused editor its explicit ime
+    * action. Returns false when the editor has no explicit action (< GO), so
+    * the caller keeps the legacy behavior (hide on DONE, newline on enter). */
+   bool deliverEditorAction(){
+       TextView* tv = dynamic_cast<TextView*>(mBuddy);
+       if(tv == nullptr) return false;
+       const int actionId = tv->getImeOptions() & EditorInfo::IME_MASK_ACTION;
+       if(actionId < EditorInfo::IME_ACTION_GO) return false;
+       tv->onEditorAction(actionId);
+       return true;
    }
    void changeCapital(){
        Keyboard*keyboard = kbdView->getKeyboard();
@@ -162,9 +177,11 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
         case Keyboard::KEYCODE_MODE_CHANGE: imm.toggleSymbolMode(); break;
         case Keyboard::KEYCODE_SHIFT    :  changeCapital();break;
         case Keyboard::KEYCODE_DONE     :
-             // The keyboard's done key: same as BACK — hide the IME (the
-             // editor keeps focus; tapping the field brings it back).
-             setVisibility(View::INVISIBLE); break;
+             // The keyboard's done key: deliver the editor's ime action when it
+             // declared one (AOSP: performEditorAction); otherwise same as
+             // BACK — hide the IME (the editor keeps focus; tapping the field
+             // brings it back).
+             if(!deliverEditorAction()) setVisibility(View::INVISIBLE); break;
         case Keyboard::KEYCODE_DELETE:
         case Keyboard::KEYCODE_BACKSPACE:
              // Composing-aware: while a pinyin is in progress the backspace edits
@@ -182,15 +199,22 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
              // accent arrives here while the popup is still showing -- commit
              // it directly (pickChar) instead of composing (onChar).
              if(primaryCode>0){
+                 // The enter key (codes=10): with an explicit ime action it IS
+                 // the action key (AOSP relabels the enter key and calls
+                 // performEditorAction), not a newline.
+                 if(primaryCode=='\n'){
+                     if(deliverEditorAction()) break;
+                     if(mDirectCommit)
+                         // Numeric/phone/datetime are single-line fields: no
+                         // action declared, so treat the return key as DONE
+                         // (hide the IME) rather than commit a newline.
+                         { setVisibility(View::INVISIBLE); break; }
+                 }
                  if(mDirectCommit)
                      // Numeric/phone/datetime: commit straight to the editor,
                      // no composition / candidate strip (a digit through onChar
-                     // would be held as composing and never committed). The
-                     // symbol page's return key carries codes="10" ('\n');
-                     // these are single-line fields, so treat it as DONE (hide
-                     // the IME) rather than commit a newline.
-                     if(primaryCode=='\n') setVisibility(View::INVISIBLE);
-                     else commitText(std::string(1,(char)primaryCode));
+                     // would be held as composing and never committed).
+                     commitText(std::string(1,(char)primaryCode));
                  else if(kbdView && kbdView->isMiniKeyboardOnScreen())
                      mController->pickChar(primaryCode);
                  else
@@ -290,6 +314,7 @@ void InputMethodManager::viewClicked(View*view){
 
 void InputMethodManager::focusIn(View*view){
     if(imeWindow)imeWindow->mBuddy = view;
+    refreshImeAction();
     LOGD("imeWindow=%d buddy=%p %d",imeWindow,view,view->getId());
 }
 
@@ -414,7 +439,16 @@ void InputMethodManager::applyKeyboard(int xmlLayoutResId){
         const int popup = im->getKeyboardLayout(InputMethod::POPUP);
         if(popup != 0) imeWindow->kbdView->setPopupLayout(popup);
     }
+    // AOSP keyboards relabel the enter key after the focused editor's ime action.
+    refreshImeAction();
     LOGD("applyKeyboard layout=0x%08x w=%d %p %d keys",xmlLayoutResId,screenW,kbd,kbd->getKeys().size());
+}
+
+void InputMethodManager::refreshImeAction(){
+    if(imeWindow==nullptr || imeWindow->kbdView==nullptr) return;
+    TextView* tv = dynamic_cast<TextView*>(imeWindow->mBuddy);
+    imeWindow->kbdView->setImeAction(
+            tv ? (tv->getImeOptions() & EditorInfo::IME_MASK_ACTION) : 0);
 }
 
 int InputMethodManager::activeTextLayout() const {

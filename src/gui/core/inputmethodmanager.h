@@ -48,6 +48,9 @@ private:
      * LETTER layout if it supplies one, else its registered ImMethod layout,
      * else the first registered, else qwerty. Returns a layout resource id. */
     int activeTextLayout() const;
+    /* AOSP keyboards relabel the enter key with the focused editor's ime
+     * action; refresh after every keyboard install and focus change. */
+    void refreshImeAction();
     /* 123/ABC toggle on the text keyboard: flip between the symbols page and the
      * active text method's layout. Independent of inputType (the field is still
      * text); reset by setInputType on every editor change. */

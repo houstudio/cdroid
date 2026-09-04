@@ -446,6 +446,11 @@ public:
     int getImeOptions()const;
     bool isInputMethodTarget()const;
     void setImeOptions(int imeOptions);
+    /* AOSP TextView.onEditorAction(actionCode): the IME's action key lands here
+     * (in-process stand-in for InputConnection.performEditorAction). Virtual:
+     * widgets override instead of installing a listener (e.g. NumberPicker
+     * clears focus on IME_ACTION_DONE). */
+    virtual void onEditorAction(int actionCode);
     // Sets the languages the user is supposed to switch to (an empty list
     // clears the hint — Java null maps to LocaleList::getEmptyLocaleList()).
     void setImeHintLocales(const LocaleList& hintLocales);

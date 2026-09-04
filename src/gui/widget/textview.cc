@@ -5452,6 +5452,57 @@ int TextView::getInputType()const {
     return mEditor ? mEditor->mInputType : EditorInfo::TYPE_NULL;
 }
 
+void TextView::onEditorAction(int actionCode) {
+    // AOSP TextView.onEditorAction(actionCode): listener first, then the
+    // default NEXT/PREVIOUS/DONE handling, else an ENTER key pair flagged
+    // EDITOR_ACTION dispatched from the IME (the insert/advance logic lives in
+    // onKeyUp). Event times are zero -- no handler consults them.
+    Editor::InputContentType* ict = (mEditor != nullptr) ? mEditor->mInputContentType : nullptr;
+    if (ict != nullptr) {
+        if (ict->onEditorActionListener) {
+            // Android hands the listener a null KeyEvent; the CDROID listener
+            // signature takes a reference, so stand in a synthetic soft-keyboard
+            // ENTER up-event flagged EDITOR_ACTION.
+            KeyEvent event;
+            event.initialize(0, InputDevice::SOURCE_KEYBOARD, 0, KeyEvent::ACTION_UP,
+                    KeyEvent::FLAG_SOFT_KEYBOARD | KeyEvent::FLAG_EDITOR_ACTION,
+                    KeyEvent::KEYCODE_ENTER, 0, 0, 0, 0, 0);
+            if (ict->onEditorActionListener(*this, actionCode, event)) {
+                return;
+            }
+        }
+        // Default handling (AOSP): NEXT/PREVIOUS advance focus, DONE hides the IME.
+        if (actionCode == EditorInfo::IME_ACTION_NEXT) {
+            View* v = focusSearch(View::FOCUS_FORWARD);
+            if (v != nullptr && !v->requestFocus(View::FOCUS_FORWARD)) {
+                LOGE("focus search returned a view that wasn't able to take focus!");
+            }
+            return;
+        } else if (actionCode == EditorInfo::IME_ACTION_PREVIOUS) {
+            View* v = focusSearch(View::FOCUS_BACKWARD);
+            if (v != nullptr && !v->requestFocus(View::FOCUS_BACKWARD)) {
+                LOGE("focus search returned a view that wasn't able to take focus!");
+            }
+            return;
+        } else if (actionCode == EditorInfo::IME_ACTION_DONE) {
+            InputMethodManager* imm = getInputMethodManager();
+            if (imm != nullptr) {
+                imm->hideSoftInputFromWindow(this, 0);
+            }
+            return;
+        }
+    }
+    const int flags = KeyEvent::FLAG_SOFT_KEYBOARD | KeyEvent::FLAG_KEEP_TOUCH_MODE
+            | KeyEvent::FLAG_EDITOR_ACTION;
+    KeyEvent down, up;
+    down.initialize(0, InputDevice::SOURCE_KEYBOARD, 0, KeyEvent::ACTION_DOWN, flags,
+            KeyEvent::KEYCODE_ENTER, 0, 0, 0, 0, 0);
+    up.initialize(0, InputDevice::SOURCE_KEYBOARD, 0, KeyEvent::ACTION_UP, flags,
+            KeyEvent::KEYCODE_ENTER, 0, 0, 0, 0, 0);
+    dispatchKeyEvent(down);
+    dispatchKeyEvent(up);
+}
+
 int TextView::getImeOptions() const {
     return (mEditor != nullptr) && (mEditor->mInputContentType != nullptr)
            ? mEditor->mInputContentType->imeOptions : EditorInfo::IME_NULL;

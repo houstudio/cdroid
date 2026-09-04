@@ -228,6 +228,9 @@ public:
      * (POPUP) feeds this so a product can customize the popup appearance. 0
      * keeps the layout declared via android:popupLayout. */
     void setPopupLayout(int popupLayoutResId);
+    /* AOSP keyboards relabel the enter key with the focused editor's IME action
+     * (Go/Search/Send/Next/Done/Previous). 0 restores the plain return icon. */
+    void setImeAction(int actionId);
     void setProximityCorrectionEnabled(bool enabled);
     bool isProximityCorrectionEnabled()const;
     void onClick(View&v);
