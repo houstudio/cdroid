@@ -295,7 +295,9 @@ void WindowManager::onSoftInputShown(Window* ime){
         if(adjust == LayoutParams::SOFT_INPUT_ADJUST_NOTHING) continue;
         if(w->getBottom() <= imeTop) continue; // already clear of the IME
         mSoftInputBackup[w] = w->getBound();
-        w->layout(w->getLeft(), w->getTop(), w->getRight(), imeTop);
+        // View::layout takes (x, y, width, height): shrink the height to end at
+        // the IME's top edge.
+        w->layout(w->getLeft(), w->getTop(), w->getWidth(), imeTop - w->getTop());
         LOGV("softinput resize win=%p %d->%d",w,w->getHeight(),imeTop-w->getTop());
     }
 }
@@ -306,7 +308,7 @@ void WindowManager::onSoftInputHidden(Window* ime){
     for(auto& kv : mSoftInputBackup){
         Window* w = kv.first;
         const Rect& r = kv.second;
-        w->layout(r.left, r.top, r.right, r.bottom);
+        w->layout(r.left, r.top, r.width, r.height);
     }
     mSoftInputBackup.clear();
 }

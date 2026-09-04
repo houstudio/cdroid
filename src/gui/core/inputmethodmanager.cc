@@ -113,6 +113,17 @@ public:
            k.codes[0]=islower(k.codes[0])?toupper(k.codes[0]):tolower(k.codes[0]);
        }
    }
+   void onVisibilityChanged(View& changedView,int visibility)override{
+       Window::onVisibilityChanged(changedView,visibility);
+       // windowSoftInputMode driving (AOSP adjustResize): the WMS lays every
+       // visible application window out inside the area left above us while we
+       // are up, and restores their frames when we go away.
+       if(&changedView==this){
+           WindowManager& wms = WindowManager::getInstance();
+           if(visibility==View::VISIBLE)      wms.onSoftInputShown(this);
+           else if(visibility==View::INVISIBLE) wms.onSoftInputHidden(this);
+       }
+   }
    void onCloseKeyboard(View&v){
        LOGD("close IME'sKeyboard");
        // Just hide. setVisibility(INVISIBLE) triggers Window::onVisibilityChanged,
