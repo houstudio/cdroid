@@ -41,9 +41,9 @@ using namespace cdroid::internal;
 class IMEWindow:public Window{
 protected:
    friend InputMethodManager;
-   View* mBuddy;
+   View* mBuddy=nullptr;
    KeyboardView* kbdView;
-   CandidateView* candidateView;
+   CandidateView* candidateView=nullptr;
    /* Owns all the 1/2-level selection logic (search/choose/predict/backspace),
     * decoupled from this window so other keyboards can reuse it. */
    ImeSelectionController* mController = nullptr;

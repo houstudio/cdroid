@@ -25,19 +25,27 @@
 #include <core/inputdevice.h>
 #include <unordered_map>
 #include <mutex>
+#include <atomic>
+#include <thread>
 
 namespace cdroid{
 
 class InputEventSource:public EventHandler{
-public:	
+public:
     typedef std::function<void(bool)>ScreenSaver;
 private:
     mutable std::recursive_mutex mtxEvents;
     ScreenSaver mScreenSaver;
     int mScreenSaveTimeOut;
     bool mInited;
-    bool mRunning;
+    /*Cross-thread loop flag (read on the input thread, cleared on the main
+      thread at teardown) — plain bool was a data race.*/
+    std::atomic<bool> mRunning;
     bool mIsScreenSaveActived;
+    /*The input thread handle. Kept joinable so ~InputEventSource can stop the
+      thread BEFORE the object (and mtxEvents) dies — the detached version
+      left the thread locking a freed mutex at process teardown (valgrind).*/
+    std::thread mInputThread;
     nsecs_t mLastInputEventTime;/*for screensaver*/
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
     /*Injected events (injectInputEvent) waiting for the main-looper drain —

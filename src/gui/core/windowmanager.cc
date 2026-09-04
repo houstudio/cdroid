@@ -282,6 +282,35 @@ void WindowManager::moveWindow(Window*w,int x,int y,int width,int height){
     }
 }
 
+void WindowManager::onSoftInputShown(Window* ime){
+    // AOSP adjustResize: with the IME visible the application window lays out
+    // inside the remaining screen area. The IME docks at the screen bottom, so
+    // the new bottom edge is the IME's top.
+    if(ime==nullptr) return;
+    const int imeTop = ime->getTop();
+    for(Window* w : mWindows){
+        if(w==ime || w->getVisibility()!=View::VISIBLE) continue;
+        if(w->getAttributes().type >= Window::TYPE_SYSTEM_WINDOW) continue; // IME/popups: no adjust
+        const int adjust = w->getAttributes().softInputMode & LayoutParams::SOFT_INPUT_MASK_ADJUST;
+        if(adjust == LayoutParams::SOFT_INPUT_ADJUST_NOTHING) continue;
+        if(w->getBottom() <= imeTop) continue; // already clear of the IME
+        mSoftInputBackup[w] = w->getBound();
+        w->layout(w->getLeft(), w->getTop(), w->getRight(), imeTop);
+        LOGV("softinput resize win=%p %d->%d",w,w->getHeight(),imeTop-w->getTop());
+    }
+}
+
+void WindowManager::onSoftInputHidden(Window* ime){
+    // Restore the backed-up frames; the windows relayout to full size and the
+    // exposeRegionBelow damage from hideWindow repaints the uncovered band.
+    for(auto& kv : mSoftInputBackup){
+        Window* w = kv.first;
+        const Rect& r = kv.second;
+        w->layout(r.left, r.top, r.right, r.bottom);
+    }
+    mSoftInputBackup.clear();
+}
+
 void WindowManager::hideWindow(Window*w){
     if(w==nullptr) return;
     const Rect wrect = w->getBound();
@@ -389,6 +418,9 @@ int WindowManager::getVisibleWindows(std::vector<Window*>&wins){
 }
 
 void WindowManager::processEvent(InputEvent&e){
+   /* Observer sees EVERYTHING the user physically did, before system-key
+    * policy — a recorder must capture keys the policy eats (BACK) too. */
+   if (sInputEventObserver) sInputEventObserver(e);
    if(e.getType()==InputEvent::INPUT_EVENT_TYPE_KEY
            && interceptKeyBeforeQueueing((KeyEvent&)e)){
        return;   // consumed by system policy — never routed to a window
@@ -398,6 +430,12 @@ void WindowManager::processEvent(InputEvent&e){
    case InputEvent::INPUT_EVENT_TYPE_MOTION: onMotion((MotionEvent&)e);break;
    default:break;
    }
+}
+
+InputEventObserver WindowManager::sInputEventObserver = nullptr;
+
+void WindowManager::setInputEventObserver(InputEventObserver observer) {
+    sInputEventObserver = std::move(observer);
 }
 
 

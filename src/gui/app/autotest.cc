@@ -14,6 +14,8 @@
 #include <view/accessibility/accessibilitymanager.h>   // getActiveApplicationWindow
 #include <accessibilityservice/accessibilityservice.h>   // GLOBAL_ACTION_BACK
 #include <view/motionevent.h>
+#include <view/keyevent.h>
+#include <view/viewconfiguration.h>
 #include <core/inputdevice.h>   // SOURCE_TOUCHSCREEN
 #include <core/bundle.h>
 #include <porting/cdlog.h>
@@ -26,6 +28,12 @@
 #include <functional>
 
 namespace cdroid {
+
+// static constexpr members are odr-used (std::min passes them by reference)
+constexpr int32_t UiAutoTest::FLAG_INJECTED_BY_TEST;
+constexpr long UiAutoTest::LONGPRESS_TIMEOUT_MS;
+constexpr long UiAutoTest::GAP_THRESHOLD_MS;
+constexpr long UiAutoTest::GAP_SLEEP_CAP_MS;
 
 namespace {
 constexpr int kMaxDepth = 16;
@@ -322,6 +330,15 @@ std::string targetLabel(AccessibilityNodeInfo* node, int depth = 0) {
     }
     return "";
 }
+
+// "540,1200" — the manual recorder's coordinate form (tap/drag selectors).
+bool parseCoordPair(const std::string& s, float* x, float* y) {
+    const size_t comma = s.find(',');
+    if (comma == std::string::npos) return false;
+    *x = strtof(s.c_str(), nullptr);
+    *y = strtof(s.c_str() + comma + 1, nullptr);
+    return true;
+}
 } // namespace
 
 // static
@@ -546,19 +563,10 @@ void UiAutoTest::step() {
                 // BACKWARD above min, so the direction is what was advertised).
                 // findAccessibilityNodeInfosByText matches content
                 // descriptions too, so labeled seek bars replay cleanly.
-                std::string sel = label;
-                for (auto& ch : sel) if (ch == '"' || ch == '\n' || ch == '\r') ch = ' ';
-                const std::string resName = target->getViewIdResourceName();
+                const std::string sel = selectorFor(target);
                 if (!sel.empty()) {
-                    mRecord << "wait \"text=" << sel << "\" 5000\n"
-                            << "scroll \"text=" << sel << "\" "
-                            << (seekAction == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD
-                                ? "forward" : "backward") << "\n";
-                } else if (!resName.empty()) {
-                    // uiautomator records by resource-id when text is absent
-                    // (FLAG_REPORT_VIEW_IDS makes nodes carry it).
-                    mRecord << "wait id=" << resName << " 5000\n"
-                            << "scroll id=" << resName << " "
+                    mRecord << "wait " << sel << " 5000\n"
+                            << "scroll " << sel << " "
                             << (seekAction == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD
                                 ? "forward" : "backward") << "\n";
                 } else {
@@ -596,19 +604,13 @@ void UiAutoTest::step() {
     if (hit) {
         hit->recycle();
         if (mRecord.is_open()) {
-            std::string sel = label;
-            for (auto& ch : sel) if (ch == '"' || ch == '\n' || ch == '\r') ch = ' ';
-            const std::string resName = target->getViewIdResourceName();
+            // selectorFor is the SAME basis the manual recorder uses; the
+            // wait carries the poll budget (click alone fails fast on a
+            // not-yet-arrived page), so replay survives timing.
+            const std::string sel = selectorFor(target);
             if (!sel.empty()) {
-                // wait carries the poll budget (click alone fails fast on a
-                // not-yet-arrived page), so replay survives timing.
-                mRecord << "wait \"text=" << sel << "\" 5000\n"
-                        << "click \"text=" << sel << "\"\n";
-            } else if (!resName.empty()) {
-                // uiautomator records by resource-id when text is absent
-                // (FLAG_REPORT_VIEW_IDS makes nodes carry it).
-                mRecord << "wait id=" << resName << " 5000\n"
-                        << "click id=" << resName << "\n";
+                mRecord << "wait " << sel << " 5000\n"
+                        << "click " << sel << "\n";
             } else {
                 mRecord << "# step " << mStepCount << ": " << target->getClassName()
                         << " — no selector\n";
@@ -846,8 +848,188 @@ void UiAutoTest::setScriptRecorder(const std::string& path) {
         LOGW("AUTOTEST cannot open script record file %s", path.c_str());
         return;
     }
-    mRecord << "# AUTOTEST sweep recording — replay with --test-script\n";
+    mRecord << "# AUTOTEST recording — replay with --test-script\n";
     mRecord.flush();
+}
+
+// ============================================================================
+//  Recording: manual operations + sweep steps, one shared sink/DSL basis
+//  (Android's three manual-recording approaches collapsed into one: capture
+//  at the WindowManager dispatch seam — the in-process equivalent of
+//  Espresso Test Recorder's framework breakpoints; MonkeyRecorder's faithful
+//  coordinate+wait lines for targets without a semantic identity; replay
+//  re-injects through the same pipeline, getevent-style.)
+// ============================================================================
+
+void UiAutoTest::recordLine(const std::string& line) {
+    if (!mRecord.is_open()) return;
+    mRecord << line << "\n";
+    mRecord.flush();   // keep the script usable if the session dies mid-record
+}
+
+void UiAutoTest::recordGapSleep() {
+    // MonkeyRecorder's WAIT semantics: preserve the human's pacing (capped)
+    // between recorded ops so replay timing tracks the recording.
+    const int64_t now = SystemClock::uptimeMillis();
+    if (mLastRecordedOpAtMs != 0) {
+        const long gap = (long)(now - mLastRecordedOpAtMs);
+        if (gap > GAP_THRESHOLD_MS) {
+            recordLine("sleep " + std::to_string(std::min(gap, GAP_SLEEP_CAP_MS)));
+        }
+    }
+    mLastRecordedOpAtMs = now;
+}
+
+// static
+std::string UiAutoTest::selectorFor(AccessibilityNodeInfo* node) {
+    /*The shared selector basis for BOTH recording producers: the sweep's
+      identity label (text -> contentDescription -> first descendant text),
+      else the resource id. Returns the whole selector token — "text=..."
+      (quoted) or id=... — or empty when the target has neither; callers
+      fall back to a comment (sweep) or the coordinate form (manual).*/
+    std::string label = targetLabel(node);
+    for (auto& ch : label) if (ch == '"' || ch == '\n' || ch == '\r') ch = ' ';
+    if (!label.empty()) return "\"text=" + label + "\"";
+    const std::string resName = node->getViewIdResourceName();
+    if (!resName.empty()) return "id=" + resName;
+    return std::string();
+}
+
+// static
+AccessibilityNodeInfo* UiAutoTest::findDeepestAt(AccessibilityNodeInfo* node, int x, int y) {
+    /*Deepest visible node whose screen bounds contain the point — the
+      point->node inverse of the sweep's node->click direction. Children win
+      over parents; a hit recycles every intermediate node it walked. The
+      caller owns (recycles) the returned node. Nodes the a11y layer cannot
+      reach (IME window trees) simply never match — the caller falls back to
+      the coordinate form, which is exactly the truthful recording.*/
+    if (node == nullptr) return nullptr;
+    Rect b;
+    node->getBoundsInScreen(b);
+    if (!b.contains(x, y)) { node->recycle(); return nullptr; }
+    const int n = node->getChildCount();
+    for (int i = 0; i < n; i++) {
+        AccessibilityNodeInfo* child = node->getChild(i);
+        if (child == nullptr) continue;
+        AccessibilityNodeInfo* hit = findDeepestAt(child, x, y);
+        if (hit != nullptr) { node->recycle(); return hit; }
+        // child (and its subtree) did not contain the point — already recycled
+    }
+    return node;
+}
+
+void UiAutoTest::recordManualClick(const char* verb, float fx, float fy) {
+    /*Resolve the point to an a11y node for a stable selector — the same
+      wait+verb pair shape the sweep records. Anything without a reachable
+      node (IME keys, candidates, plain background) records as a coordinate
+      tap, which replays through the identical input pipeline.*/
+    const int x = (int)fx, y = (int)fy;
+    std::string line;
+    AccessibilityNodeInfo* root = UiAutomation::getInstance().getRootInActiveWindow();
+    AccessibilityNodeInfo* hit = findDeepestAt(root, x, y);
+    if (hit != nullptr) {
+        const std::string sel = selectorFor(hit);
+        hit->recycle();
+        if (!sel.empty()) {
+            recordLine("wait " + sel + " 5000");
+            line = std::string(verb) + " " + sel;
+        }
+    }
+    if (line.empty()) {
+        char coords[32];
+        snprintf(coords, sizeof(coords), "%d,%d", x, y);
+        line = std::string("tap ") + coords;
+    }
+    recordLine(line);
+}
+
+void UiAutoTest::observeInput(const InputEvent& e) {
+    if (!mRecord.is_open()) return;
+    /*Skip our own injections (replay / sweep tap verb): the producer flags
+      them FLAG_INJECTED_BY_TEST — the stand-in for AOSP's dispatcher-side
+      POLICY_FLAG_INJECTED. InputEvent's flags live on the subclasses.*/
+    const int32_t flags = (e.getType() == InputEvent::INPUT_EVENT_TYPE_KEY)
+            ? ((const KeyEvent&)e).getFlags() : ((const MotionEvent&)e).getFlags();
+    if (flags & FLAG_INJECTED_BY_TEST) return;
+
+    if (e.getType() == InputEvent::INPUT_EVENT_TYPE_MOTION) {
+        const MotionEvent& me = (const MotionEvent&)e;
+        if (!me.isFromSource(InputDevice::SOURCE_CLASS_POINTER)) return;
+        const int action = me.getActionMasked();
+        const float x = me.getX(), y = me.getY();
+        switch (action) {
+        case MotionEvent::ACTION_DOWN:
+            mGesture = Gesture{};
+            mGesture.down = true;
+            mGesture.x0 = mGesture.x = x;
+            mGesture.y0 = mGesture.y = y;
+            mGesture.downAtMs = SystemClock::uptimeMillis();
+            break;
+        case MotionEvent::ACTION_POINTER_DOWN:   // pinch: not expressible in the DSL yet
+            mGesture.multiPointer = true;
+            break;
+        case MotionEvent::ACTION_MOVE:
+            if (mGesture.down) {
+                const float dx = x - mGesture.x0, dy = y - mGesture.y0;
+                mGesture.maxDist = std::max(mGesture.maxDist,
+                        std::sqrt(dx * dx + dy * dy));
+                mGesture.x = x;
+                mGesture.y = y;
+            }
+            break;
+        case MotionEvent::ACTION_UP: {
+            if (!mGesture.down) break;
+            const bool multi = mGesture.multiPointer;
+            const float x0 = mGesture.x0, y0 = mGesture.y0;
+            const float maxDist = mGesture.maxDist;
+            const long durMs = SystemClock::uptimeMillis() - mGesture.downAtMs;
+            mGesture.down = false;
+            recordGapSleep();
+            if (multi) { recordLine("# multi-pointer gesture elided"); break; }
+            const float dx = x - x0, dy = y - y0;
+            const float dist = std::sqrt(dx * dx + dy * dy);
+            if (mTouchSlop < 0) {
+                mTouchSlop = ViewConfiguration::get(&App::getInstance()).getScaledTouchSlop();
+            }
+            if (dist <= mTouchSlop && maxDist <= mTouchSlop) {
+                // AOSP ViewConfiguration.getLongPressTimeout() == 400ms
+                recordManualClick(durMs >= LONGPRESS_TIMEOUT_MS ? "long-click" : "click", x, y);
+            } else {
+                char coords[64];
+                snprintf(coords, sizeof(coords), "drag %d,%d %d,%d 10",
+                         (int)x0, (int)y0, (int)x, (int)y);
+                recordLine(coords);
+            }
+            break;
+        }
+        case MotionEvent::ACTION_CANCEL:
+            mGesture.down = false;   // system aborted the gesture — nothing happened
+            break;
+        default:
+            break;
+        }
+        return;
+    }
+
+    // Key: record on ACTION_DOWN only (UP/repeats would double every press).
+    const KeyEvent& ke = (const KeyEvent&)e;
+    if (ke.getAction() != KeyEvent::ACTION_DOWN || ke.getRepeatCount() > 0) return;
+    recordGapSleep();
+    if (ke.getKeyCode() == KeyEvent::KEYCODE_BACK) {
+        recordLine("back");   // the DSL's global-BACK verb
+    } else {
+        recordLine("key " + std::to_string(ke.getKeyCode()));
+    }
+}
+
+// static
+void UiAutoTest::injectMarkedMotion(int action, float x, float y,
+        int64_t downTimeMs, int64_t eventTimeMs) {
+    MotionEvent* e = MotionEvent::obtain(downTimeMs, eventTimeMs, action, x, y, 0);
+    e->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+    e->setFlags(e->getFlags() | FLAG_INJECTED_BY_TEST);
+    UiAutomation::getInstance().injectInputEvent(*e, true);
+    e->recycle();
 }
 
 void UiAutoTest::scriptNext() {
@@ -897,6 +1079,74 @@ void UiAutoTest::scriptNext() {
         dump(root, 0);
         mScriptIndex++;
         stepHandler().post([this]() { scriptNext(); });
+        return;
+    }
+
+    if (cmd.verb == "key") {
+        /*Raw key injection (the manual recorder writes one line per key
+          press — the replay walks the REAL input path, IME/KeyListener and
+          all). Stack KeyEvent + initialize: injectInputEvent copies the
+          event, so nothing leaks. FLAG_INJECTED_BY_TEST keeps a concurrent
+          recorder from echoing the replay into its script.*/
+        const int keyCode = atoi(cmd.selector.c_str());
+        KeyEvent down, up;
+        const int64_t now = SystemClock::uptimeMillis();
+        down.initialize(0, InputDevice::SOURCE_KEYBOARD, 0, KeyEvent::ACTION_DOWN,
+                FLAG_INJECTED_BY_TEST, keyCode, 0, 0, 0, now, now);
+        up.initialize(0, InputDevice::SOURCE_KEYBOARD, 0, KeyEvent::ACTION_UP,
+                FLAG_INJECTED_BY_TEST, keyCode, 0, 0, 0, now, now + 50);
+        LOGI("SCRIPT %zu key %d", lineNo, keyCode);
+        automation.injectInputEvent(down, true);
+        automation.injectInputEvent(up, true);
+        mScriptIndex++;
+        stepHandler().post([this]() { scriptNext(); });
+        return;
+    }
+    if (cmd.verb == "drag") {
+        /*Coordinate drag (manual recorder): DOWN at the start, interpolated
+          MOVEs (~16ms apart, eventTime rising so velocity math sees a real
+          gesture), UP last. The step completes only after the UP lands, so
+          the next verb observes the scrolled layout.*/
+        float x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+        int steps = 10;
+        parseCoordPair(cmd.selector, &x0, &y0);
+        if (!cmd.args.empty()) parseCoordPair(cmd.args[0], &x1, &y1);
+        if (cmd.args.size() > 1) steps = std::max(1, atoi(cmd.args[1].c_str()));
+        const int64_t downTime = SystemClock::uptimeMillis();
+        LOGI("SCRIPT %zu drag %g,%g -> %g,%g (%d steps)", lineNo, x0, y0, x1, y1, steps);
+        injectMarkedMotion(MotionEvent::ACTION_DOWN, x0, y0, downTime, downTime);
+        for (int i = 1; i <= steps; i++) {
+            const float t = (float)i / steps;
+            stepHandler().postDelayed([this, x0, y0, x1, y1, t, downTime, i]() {
+                injectMarkedMotion(MotionEvent::ACTION_MOVE,
+                        x0 + (x1 - x0) * t, y0 + (y1 - y0) * t,
+                        downTime, SystemClock::uptimeMillis());
+            }, i * 16);
+        }
+        stepHandler().postDelayed([this, x1, y1, downTime, steps]() {
+            injectMarkedMotion(MotionEvent::ACTION_UP, x1, y1,
+                    downTime, SystemClock::uptimeMillis());
+            mScriptIndex++;
+            stepHandler().post([this]() { scriptNext(); });
+        }, (steps + 1) * 16);
+        return;
+    }
+    float tapX = 0, tapY = 0;
+    if (cmd.verb == "tap" && cmd.selector.find(',') != std::string::npos
+            && parseCoordPair(cmd.selector, &tapX, &tapY)) {
+        /*Coordinate form (manual recorder): fire-and-forget DOWN/UP at the
+          raw point. The recorded target may have no a11y node (IME keys,
+          candidates) — no TYPE_VIEW_CLICKED arbitration and no FAIL on
+          silence; the touch pipeline itself is the verification.*/
+        LOGI("SCRIPT %zu tap %g,%g (coords)", lineNo, tapX, tapY);
+        const int64_t downTime = SystemClock::uptimeMillis();
+        injectMarkedMotion(MotionEvent::ACTION_DOWN, tapX, tapY, downTime, downTime);
+        stepHandler().postDelayed([this, x = tapX, y = tapY, downTime]() {
+            injectMarkedMotion(MotionEvent::ACTION_UP, x, y,
+                    downTime, SystemClock::uptimeMillis());
+        }, REGULAR_CLICK_LENGTH);
+        mScriptIndex++;
+        stepHandler().postDelayed([this]() { scriptNext(); }, REGULAR_CLICK_LENGTH + 50);
         return;
     }
 
@@ -1127,6 +1377,7 @@ void UiAutoTest::scriptNext() {
                 MotionEvent* down = MotionEvent::obtain(downTime, downTime,
                         MotionEvent::ACTION_DOWN, x, y, 0);
                 down->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+                down->setFlags(down->getFlags() | FLAG_INJECTED_BY_TEST);
                 automation.injectInputEvent(*down, true);
                 down->recycle();
                 AccessibilityEvent* hit = automation.executeAndWaitForEvent(
@@ -1135,6 +1386,7 @@ void UiAutoTest::scriptNext() {
                             MotionEvent* up = MotionEvent::obtain(downTime,
                                     SystemClock::uptimeMillis(), MotionEvent::ACTION_UP, x, y, 0);
                             up->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+                            up->setFlags(up->getFlags() | FLAG_INJECTED_BY_TEST);
                             automation.injectInputEvent(*up, true);
                             up->recycle();
                         }, REGULAR_CLICK_LENGTH);

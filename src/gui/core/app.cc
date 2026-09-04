@@ -128,8 +128,9 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         ("auto-test","a11y semantic UI sweep (clicks every on-screen clickable and verifies "
          "events); bare = deterministic per-page traversal, =SEED = monkey-style random walk",
          cxxopts::value<std::string>(autoTest)->implicit_value("1"))
-        ("auto-test-record","record the --auto-test sweep into a replayable --test-script "
-         "(one wait+click pair per PASS step); implies --auto-test",
+        ("auto-test-record","record operations into a replayable --test-script: manual "
+         "touches/keys always (click/long-click/drag/tap-by-coordinate/key/back); "
+         "combined with --auto-test the sweep's steps join the same script",
          cxxopts::value<std::string>(autoTestRecord))
         ("test-script","line-based a11y test script (wait/click/assert/dump; exit code = failures)",
          cxxopts::value<std::string>(testScript));
@@ -207,34 +208,45 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     // runnable fires once exec()'s loop is turning, after anything main() set
     // up synchronously. Skipped when a window is already up or the manifest
     // declares no activity (app-driven windows keep working as before).
-    // --auto-test / --test-script: the App-level semantic sweep driver — any
-    // app gets a coordinate-free smoke test over the a11y node tree.
+    // --auto-test / --auto-test-record / --test-script: the App-level semantic
+    // UI driver — any app gets a coordinate-free smoke test over the a11y node
+    // tree, and the manual-operation recorder.
     if (!testScript.empty()) {
         static Handler sAutoTestHandler(Looper::getMainLooper());
         sAutoTestHandler.postDelayed([scriptPath = testScript]() {
             UiAutoTest::getInstance().runScript(scriptPath);
         }, 3000);  // let the launcher window come up first
-    } else if (!autoTest.empty() || !autoTestRecord.empty()) {
-        // --auto-test[=SEED]: seed >= 0 selects the Monkey-style seeded-random
-        // walk, anything else the deterministic per-page traversal (see
-        // UiAutoTest::start). --auto-test-record implies the sweep and records
-        // it as a replayable script.
-        long autoSeed = -1;
-        const std::string seedSrc = (autoTest != "1" && autoTest != "true")
-                ? autoTest : "";
-        if (!seedSrc.empty()) {
-            char* end = nullptr;
-            const long s = strtol(seedSrc.c_str(), &end, 10);
-            if (end != nullptr && *end == '\0' && s >= 0) autoSeed = s;
-            else LOGW("--auto-test=%s: not a non-negative seed, using deterministic sweep",
-                      seedSrc.c_str());
+    } else {
+        // --auto-test-record=<file> opens the SHARED recording sink and hooks
+        // the WindowManager input observer IMMEDIATELY (manual recording must
+        // catch the very first click, not the ones after a 3s delay). Alone
+        // it records manual operations only; combined with --auto-test the
+        // sweep's steps join the same script in chronological order.
+        if (!autoTestRecord.empty()) {
+            UiAutoTest::getInstance().setScriptRecorder(autoTestRecord);
+            WindowManager::setInputEventObserver([](const InputEvent& e) {
+                UiAutoTest::getInstance().observeInput(e);
+            });
         }
-        static Handler sAutoTestHandler(Looper::getMainLooper());
-        sAutoTestHandler.postDelayed([autoSeed, autoTestRecord]() {
-            if (!autoTestRecord.empty())
-                UiAutoTest::getInstance().setScriptRecorder(autoTestRecord);
-            UiAutoTest::getInstance().start(2500, autoSeed);
-        }, 3000);  // let the launcher window come up first
+        if (!autoTest.empty()) {
+            // --auto-test[=SEED]: seed >= 0 selects the Monkey-style seeded-
+            // random walk, anything else the deterministic per-page traversal
+            // (see UiAutoTest::start).
+            long autoSeed = -1;
+            const std::string seedSrc = (autoTest != "1" && autoTest != "true")
+                    ? autoTest : "";
+            if (!seedSrc.empty()) {
+                char* end = nullptr;
+                const long s = strtol(seedSrc.c_str(), &end, 10);
+                if (end != nullptr && *end == '\0' && s >= 0) autoSeed = s;
+                else LOGW("--auto-test=%s: not a non-negative seed, using deterministic sweep",
+                          seedSrc.c_str());
+            }
+            static Handler sAutoTestHandler(Looper::getMainLooper());
+            sAutoTestHandler.postDelayed([autoSeed]() {
+                UiAutoTest::getInstance().start(2500, autoSeed);
+            }, 3000);  // let the launcher window come up first
+        }
     }
     static Handler sLaunchHandler(Looper::getMainLooper());
     sLaunchHandler.post([this](){

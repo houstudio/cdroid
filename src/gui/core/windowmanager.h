@@ -25,11 +25,19 @@
 #include <vector>
 #include <stdint.h>
 #include <queue>
+#include <functional>
 #include <unordered_set>
+#include <unordered_map>
 
 namespace cdroid {
 
 class Window;
+
+/* Pre-dispatch observer over every key/motion event the WindowManager routes
+ * (device AND injected — AOSP tags injected ones POLICY_FLAG_INJECTED at the
+ * InputDispatcher; here the producer marks its own events instead). The
+ * manual-operation script recorder (UiAutoTest) hooks this seam. Main thread. */
+using InputEventObserver = std::function<void(const InputEvent&)>;
 
 class WindowManager {
 private:
@@ -38,6 +46,8 @@ private:
     std::vector< Window* > mWindows;
     Window* mHoveredWindow;
     std::vector< Display > mDisplays;
+    /* adjustResize backups: window -> its pre-IME frame (restored on hide). */
+    std::unordered_map<Window*, Rect> mSoftInputBackup;
 private:
     friend class GraphDevice;
     WindowManager();
@@ -49,6 +59,20 @@ public:
     // defaults are zero; gravity 0 == NO_GRAVITY.
     class LayoutParams:public ViewGroup::LayoutParams{
     public:
+        /* AOSP WindowManager.LayoutParams softInputMode constants (values and
+         * semantics match android.view.WindowManager.LayoutParams). */
+        static constexpr int SOFT_INPUT_STATE_UNSPECIFIED = 0;
+        static constexpr int SOFT_INPUT_STATE_UNCHANGED   = 1;
+        static constexpr int SOFT_INPUT_STATE_HIDDEN      = 2;
+        static constexpr int SOFT_INPUT_STATE_ALWAYS_HIDDEN = 3;
+        static constexpr int SOFT_INPUT_STATE_VISIBLE     = 5;
+        static constexpr int SOFT_INPUT_STATE_ALWAYS_VISIBLE = 6;
+        static constexpr int SOFT_INPUT_MASK_STATE        = 0x0f;
+        static constexpr int SOFT_INPUT_ADJUST_UNSPECIFIED = 0x00;
+        static constexpr int SOFT_INPUT_ADJUST_NOTHING     = 0x10;
+        static constexpr int SOFT_INPUT_ADJUST_PAN         = 0x20;
+        static constexpr int SOFT_INPUT_ADJUST_RESIZE      = 0x30;
+        static constexpr int SOFT_INPUT_MASK_ADJUST        = 0xf0;
         int type = 0;
         int format = 0;
         int x = 0, y = 0;
@@ -56,6 +80,7 @@ public:
         int flags = 0;
         int privateFlags = 0;
         int windowAnimations = 0; // AOSP LayoutParams.windowAnimations (animation STYLE res id)
+        int softInputMode = SOFT_INPUT_ADJUST_UNSPECIFIED; // how the window reacts to the IME
     };
 public:
     virtual ~WindowManager();
@@ -89,10 +114,23 @@ public:
      * — hiding + damage propagation is a window-stack concern, not a graph one.
      * Required by dirty-rect backends (xlib); harmless on full-flush ones. */
     void hideWindow(Window*w);
+    /* AOSP windowSoftInputMode driving (adjustResize half): the IME window
+     * reports its visibility here; every visible application window below it
+     * whose softInputMode is not ADJUST_NOTHING gets its bottom edge laid out
+     * up to the IME's top (ADJUST_RESIZE; UNSPECIFIED defaults to resize — the
+     * in-process IME rides the window stack, so the view tree relayouts and a
+     * ScrollView keeps the focused field reachable). Hidden restores the
+     * backed-up frames. ADJUST_PAN arrives with the insets pass. */
+    void onSoftInputShown(Window* ime);
+    void onSoftInputHidden(Window* ime);
     void sendToBack(Window*w);
     void bringToFront(Window*w);
     void processEvent(InputEvent&e);
+    /* Install/clear the pre-dispatch input observer (recording seam, see
+     * InputEventObserver above). Pass nullptr to remove. */
+    static void setInputEventObserver(InputEventObserver observer);
 private:
+    static InputEventObserver sInputEventObserver;
     /** PhoneWindowManager.interceptKeyBeforeQueueing: system keys consumed
      *  by policy before any window sees them. True = consumed (drop). */
     bool interceptKeyBeforeQueueing(KeyEvent& event);

@@ -5,6 +5,7 @@
   - ConstraintLayout and MotionLayout (full features: chains, helpers, Carousel)
   - new TextView fully compatible with Android, spannable rich text
   - text layout family on minikin: StaticLayout, DynamicLayout, BoringLayout
+  
   - FlexboxLayout and FlexboxLayoutManager
   - Binary AXML resources end to end: androidfw AssetManager port, PakBuilder (aapt2-compiled
     AXML + resources.arsc + cdNp 9-patch chunks), R.h from real arsc ids; idgen retired

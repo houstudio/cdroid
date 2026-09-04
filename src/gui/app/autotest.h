@@ -5,10 +5,12 @@
 #include <map>
 #include <random>
 #include <fstream>
+#include <cstdint>
 
 namespace cdroid {
 
 class AccessibilityNodeInfo;
+class InputEvent;
 class Window;
 
 /**
@@ -39,13 +41,24 @@ public:
      *  comment); the process exits with the failure count when done. */
     bool runScript(const std::string& path);
 
-    /** Records the sweep as a replayable --test-script (the Espresso Test
-     *  Recorder idea over our own DSL): one `wait`+`click` pair per PASS
-     *  step — `wait` carries the poll/timeout so replay survives timing.
-     *  Targets without a text label (no text/contentDescription) become
-     *  comments: the script grammar has no coordinate form. Set before
-     *  start(); closed with a trailer on stop. */
+    /** Opens the shared recording sink (replayable via --test-script). Both
+     *  producers write the same DSL through it:
+     *  - the sweep (--auto-test --auto-test-record=x): one `wait`+`click`
+     *    pair per PASS step;
+     *  - MANUAL operations (--auto-test-record=x alone): the WindowManager
+     *    input observer classifies every real touch/key (click / long-click /
+     *    drag / tap-by-coordinate / key / back) and writes it with the same
+     *    selector basis (text=/id= when the point resolves to an a11y node,
+     *    coordinates otherwise — IME keys/candidates have no reachable node
+     *    tree, they record as `tap x,y`). Recording starts immediately.
+     *  See observeInput(); closed with a trailer on stop. */
     void setScriptRecorder(const std::string& path);
+
+    /** The manual-operation capture path: install as WindowManager's input
+     *  observer (setInputEventObserver). Classifies gestures and keys into
+     *  script lines. Events flagged FLAG_INJECTED_BY_TEST (our own replay
+     *  injections) are ignored. No-op when no recorder sink is open. */
+    void observeInput(const InputEvent& e);
 
 private:
     UiAutoTest() = default;
@@ -117,7 +130,38 @@ private:
     int mEmptySteps = 0;                  // consecutive steps with zero clickables
     int mEscapeRounds = 0;                // BACK rounds that changed nothing
     std::vector<AccessibilityNodeInfo*> mClickables;
-    std::ofstream mRecord;               // sweep script-recorder sink
+    std::ofstream mRecord;               // shared script-recorder sink (sweep + manual)
+
+    // --- manual recording (WindowManager input observer) ---
+    /* Producer-side stand-in for AOSP POLICY_FLAG_INJECTED: every event THIS
+     * class injects (replay, sweep seek) carries this private bit so the
+     * recording observer can tell its own injections from the user's hand. */
+    static constexpr int32_t FLAG_INJECTED_BY_TEST = 0x20000000;
+    /* Gesture classification thresholds. AOSP ViewConfiguration:
+     * getLongPressTimeout() == 400ms; the gap/sleep caps keep replay pacing
+     * sane without distorting short pauses. */
+    static constexpr long LONGPRESS_TIMEOUT_MS = 400;
+    static constexpr long GAP_THRESHOLD_MS = 200;
+    static constexpr long GAP_SLEEP_CAP_MS = 5000;
+    struct Gesture {
+        bool down = false;
+        float x0 = 0, y0 = 0;     // ACTION_DOWN position
+        float x = 0, y = 0;       // latest position
+        int64_t downAtMs = 0;     // SystemClock::uptimeMillis at DOWN
+        float maxDist = 0;        // max distance from the DOWN point (slop test)
+        bool multiPointer = false;
+    } mGesture;
+    int64_t mLastRecordedOpAtMs = 0;
+    int mTouchSlop = -1;                 // resolved lazily via ViewConfiguration
+    void recordLine(const std::string& line);
+    void recordGapSleep();
+    void recordManualClick(const char* verb, float x, float y);
+    static std::string selectorFor(AccessibilityNodeInfo* node);
+    static AccessibilityNodeInfo* findDeepestAt(AccessibilityNodeInfo* node, int x, int y);
+    /* Inject a touchscreen motion event carrying FLAG_INJECTED_BY_TEST (used
+     * by the replay side of the manual-recording verbs: coordinate tap/drag). */
+    static void injectMarkedMotion(int action, float x, float y,
+            int64_t downTimeMs, int64_t eventTimeMs);
 
     // --- script state ---
     std::vector<Command> mScript;
