@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of DeskClock res/xml/screensaver_settings.xml, consumed by
+     ScreensaverSettingsActivity.PrefsFragment. Keys mirror the SettingsDAO
+     SCREENSAVER_KEY_* constants the DataModel reads. -->
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/app_label">
+
+    <ListPreference
+        android:defaultValue="@string/default_clock_style"
+        android:dialogTitle="@string/clock_style"
+        android:entries="@array/clock_style_entries"
+        android:entryValues="@array/clock_style_values"
+        android:key="screensaver_clock_style"
+        android:title="@string/clock_style" />
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="screensaver_night_mode"
+        android:summary="@string/night_mode_summary"
+        android:title="@string/night_mode_title" />
+
+</PreferenceScreen>

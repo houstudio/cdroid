@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2016 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+
+<!-- CDROID adaptation: appcompat theme parents/items are remapped to the
+     framework Material equivalents (Theme.Material.NoActionBar, android:*
+     attribute names). All referenced attrs exist as platform attrs; the
+     androidx.appcompat package itself is not part of this port. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.DeskClock" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorBackgroundFloating" tools:targetApi="23">
+            ?android:attr/colorBackgroundFloating
+        </item>
+        <item name="android:navigationBarColor" tools:targetApi="21">?android:attr/colorPrimaryDark</item>
+        <item name="android:popupTheme" tools:targetApi="21">@style/ThemeOverlay.Popup</item>
+        <item name="android:timePickerStyle" tools:targetApi="21">@style/Widget.TimePicker</item>
+        <item name="android:windowBackground">@color/default_background</item>
+        <item name="android:windowContentOverlay">@null</item>
+
+        <!-- Attributes from androidx.appcompat.appcompat, mapped to android: -->
+        <item name="android:colorAccent">#DA4336</item>
+        <item name="android:colorBackgroundFloating">#303030</item>
+        <item name="android:colorControlActivated">@android:color/white</item>
+        <item name="android:colorControlNormal">?android:attr/textColorPrimary</item>
+        <item name="android:colorPrimaryDark">#66000000</item>
+        <item name="android:imageButtonStyle">@style/Widget.ImageButton</item>
+    </style>
+
+    <style name="Theme.DeskClock.Settings">
+        <!-- Attributes from androidx.appcompat.appcompat, mapped to android: -->
+        <item name="android:actionBarStyle">@style/Widget.ActionBar</item>
+        <item name="android:colorControlActivated">?android:attr/colorAccent</item>
+        <item name="android:windowActionBar">true</item>
+        <item name="android:windowNoTitle">false</item>
+        <!-- TODO(preference): androidx preferenceTheme item dropped; wire the
+             cdroid preference overlay style when the settings screen lands. -->
+    </style>
+
+    <style name="Theme.DeskClock.RingtonePicker">
+        <!-- Attributes from androidx.appcompat.appcompat, mapped to android: -->
+        <item name="android:actionBarStyle">@style/Widget.ActionBar</item>
+        <item name="android:windowActionBar">true</item>
+        <item name="android:windowNoTitle">false</item>
+    </style>
+
+    <style name="Theme.DeskClock.CitySelection">
+        <!-- Attributes from androidx.appcompat.appcompat, mapped to android: -->
+        <item name="android:actionBarStyle">@style/Widget.ActionBar.NoTitle</item>
+        <item name="android:windowActionBar">true</item>
+        <item name="android:windowNoTitle">false</item>
+    </style>
+
+    <style name="ThemeOverlay.Control.Accent" parent="android:ThemeOverlay">
+        <!-- Attributes from androidx.appcompat.appcompat, mapped to android: -->
+        <item name="android:colorControlActivated">?android:attr/colorAccent</item>
+    </style>
+
+    <style name="ThemeOverlay.Popup" parent="android:ThemeOverlay">
+        <item name="android:colorBackground">?android:attr/colorBackgroundFloating</item>
+    </style>
+
+</resources>
