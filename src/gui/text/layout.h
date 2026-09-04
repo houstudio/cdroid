@@ -159,10 +159,12 @@ public:
     };
 
     // android-36 TextInclusionStrategy: decides whether a text segment's bounds are "inside" a rect
-    // area. It is the consumer of getRangeForRect. NB: the char-bounds methods that USE it
-    // (getRangeForRect/fillCharacterBounds/forEachCharacterBounds) are deferred — they need
-    // TextLine::measureAllBounds, which needs measureRun's per-char advances + edge-flag support
-    // (the TextShaper/advances gap). The interface + strategies are ported for API completeness.
+    // area. It is the consumer of getRangeForRect. The char-bounds chain is fully wired:
+    // fillCharacterBounds/forEachCharacterBounds/getRangeForRect ride on
+    // TextLine::measureAllBounds (per-char advances via Paint::getTextRunAdvances —
+    // AOSP TextLine shapes clusters through android.text.TextShaper, which is not
+    // ported; grapheme clusters approximate shaping clusters, exact for normal
+    // text, slightly off for ligature-heavy text).
     using TextInclusionStrategy = std::function<bool(const RectF& segmentBounds, const RectF& area)>;
     static const TextInclusionStrategy INCLUSION_STRATEGY_ANY_OVERLAP;
     static const TextInclusionStrategy INCLUSION_STRATEGY_CONTAINS_CENTER;
