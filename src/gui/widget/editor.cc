@@ -775,6 +775,19 @@ void Editor::onTouchUpEvent(MotionEvent& event) {
     mLastUpTime = (int64_t)event.getEventTime();
     mLastUpX = event.getX();
     mLastUpY = event.getY();
+
+    // AOSP Editor.onTouchUpEvent: move the caret to the tapped offset. Focus
+    // was already taken synchronously by View.onTouchEvent's UP branch (the
+    // focusTaken block) before TextView got here, so the FIRST tap on an
+    // unfocused editor both focuses it and positions the caret -- one tap, not
+    // two. selectAllOnFocus keeps its whole-text selection (selectAllGotFocus);
+    // the action-mode/handles/spell-check follow-ups arrive with those passes.
+    const bool selectAllGotFocus = mSelectAllOnFocus && mTextView->didTouchFocusSelect();
+    CharSequence& text = mTextView->getText();
+    if (!selectAllGotFocus && text.length() > 0) {
+        const int offset = mTextView->getOffsetForPosition(event.getX(), event.getY());
+        Selection::setSelection(dynamic_cast<Spannable*>(&text), offset);
+    }
 }
 
 int Editor::getLastTapPosition() const {
