@@ -47,13 +47,23 @@ WindowManager&WindowManager::getInstance(){
 
 WindowManager::~WindowManager() {
     App::getInstance().exit(0);
-    for(Window*w:mWindows){
+    // Detach the window list before deleting: destroying a window tears down
+    // its activity, whose fragment tree dismisses dialogs -> Window::close ->
+    // WindowManager::removeWindow. Mid-destruction that call would (a) erase
+    // from mWindows while this loop is iterating it and (b) run the
+    // "restart the next visible window" block, onStart()/onResume()-ing a
+    // half-destroyed activity whose FragmentManager is already gone
+    // (FragmentStateManager::computeExpectedState then dereferences a dead
+    // Fragment). With mWindows already empty removeWindow no-ops at its
+    // membership check instead.
+    std::vector<Window*> windows = mWindows;
+    mWindows.clear();
+    for(Window*w:windows){
         View::AttachInfo*info = w->mAttachInfo;
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;
     }
-    mWindows.clear();
     LOGD("%p Destroied",this);
 }
 
