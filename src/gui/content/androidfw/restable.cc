@@ -1065,6 +1065,17 @@ void pakPathCandidates(const std::string& arscPath, std::vector<std::string>& ou
         if (c.size() > 6 && c.compare(c.size() - 6, 6, ".9.png") == 0)
             out.push_back(c.substr(0, c.size() - 6) + ".png");
     }
+    // "res/"-re-prefixed variants (appended last): the strip direction above
+    // serves no-res paks fed an arsc ("res/...") path; this direction serves
+    // name-form callers ("raw/i18n.dat", no res/) against res/-aligned paks
+    // (the framework pak keeps the aapt2 apk layout). Both directions coexist
+    // permanently: text-mode app paks never carry the prefix.
+    const size_t variantCount = out.size();
+    for (size_t i = 0; i < variantCount; i++) {
+        const std::string& c = out[i];
+        if (c.compare(0, 4, "res/") != 0)
+            out.push_back("res/" + c);
+    }
 }
 
 

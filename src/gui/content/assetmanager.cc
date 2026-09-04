@@ -14,6 +14,7 @@
 #define LOG_TAG "asset"
 
 #include "content/assetmanager.h"
+#include "content/androidfw/restable.h"   // pakPathCandidates (res/-prefix bridging)
 
 #include <porting/cdlog.h>
 #include <zip.h>
@@ -384,7 +385,20 @@ Asset* AssetManager::openNonAssetInPath(const char* fileName, AccessMode mode, a
     if (zip == nullptr) return nullptr;
 
     zip_int64_t entry = zip_name_locate(zip, fileName, 0);
-    if (entry < 0) return nullptr;
+    if (entry < 0) {
+        // Unified res mode: pak entries carry the apk's "res/" prefix (older
+        // paks don't) and AssetManager callers spell either form — probe the
+        // path-candidate variants instead of failing the exact lookup, the
+        // same bridging ResourcesImpl::openPakPath applies to arsc paths.
+        std::vector<std::string> cands;
+        pakPathCandidates(fileName, cands);
+        for (const std::string& c : cands) {
+            if (c == fileName) continue;
+            entry = zip_name_locate(zip, c.c_str(), 0);
+            if (entry >= 0) break;
+        }
+        if (entry < 0) return nullptr;
+    }
 
     LOGV("FOUND NA in Zip file for %s", fileName);
     Asset* pAsset = openAssetFromZip(zip, entry, mode, std::string(fileName));
