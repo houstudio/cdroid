@@ -672,17 +672,16 @@ class PakBuilder:
             if _r.returncode != 0:
                 sys.stderr.write("SDK res link FAILED stderr:\n%s\n" % _r.stderr.decode()[:3000])
                 raise subprocess.CalledProcessError(_r.returncode, link_cmd)
-            # Extract everything, stripping 'res/' prefix to match pak convention
-            # (the legacy string-based resource lookups build no-'res/' names; the
-            # arsc↔pak res/ mismatch is papered over at runtime). Aligning res/
-            # everywhere requires retiring the string-key system first — see the
-            # string-key migration plan (TODO).
+            # Extract everything, KEEPING the apk's 'res/' layout (AOSP apk form):
+            # the arsc's TYPE_STRING paths are res/-prefixed, so pak entries now
+            # match them byte-for-byte (openPakPath's first candidate hits; the
+            # res/-stripped candidates remain for text-mode/no-res app paks).
+            # (The old strip dated from the string-key era, retired 00d199ad2.)
             result = {}
             with zipfile.ZipFile(out_apk) as zf:
                 for name in zf.namelist():
                     if name.endswith("/"): continue
-                    rel = name[4:] if name.startswith("res/") else name
-                    result[rel] = zf.read(name)
+                    result[name] = zf.read(name)
             sys.stderr.write("SDK res: %d entries (binary AXML + arsc + drawables)\n" % len(result))
             # Persist the framework apk for app -I linking (see __init__).
             if getattr(self, 'framework_apk_out', None):
@@ -951,7 +950,7 @@ class PakBuilder:
 
     def _compile_aapt2(self):
         """Run aapt2 compile+link on res/, return (binary_xmls, arsc) where
-        binary_xmls maps relative XML paths (e.g. 'layout/main.xml') to their
+        binary_xmls maps apk 'res/'-prefixed XML paths (e.g. 'res/layout/main.xml') to their
         binary AXML bytes, and arsc is the app's resources.arsc bytes (or None
         if aapt2 did not produce one). The arsc lets app @string/@color refs
         resolve alongside the framework arsc (multi-package ResTable)."""
@@ -1052,8 +1051,10 @@ class PakBuilder:
                         # role: application/activity theme, configChanges, MAIN).
                         manifest_bin = zf.read(name)
                     elif name.startswith("res/") and name.endswith(".xml"):
-                        rel = name[4:]  # strip "res/" prefix -> layout/main.xml
-                        result[rel] = zf.read(name)
+                        # Unified res mode: keep the apk's res/ layout — the app
+                        # arsc's TYPE_STRING paths are res/-prefixed, so entries
+                        # match them byte-for-byte.
+                        result[name] = zf.read(name)
             # Write app R.h from the app's own arsc (real 0x7f IDs), mirroring
             # _compile_sdk_res. Skip when use_sdk: cdroid's framework R.h is
             # already written by _compile_sdk_res from the full framework apk,
@@ -1076,7 +1077,14 @@ class PakBuilder:
                 sys.stderr.write("aapt2_gen_rh (app): rc=%d %s\n"
                                  % (_r.returncode, (_r.stderr or _r.stdout)[:200]))
             self._app_manifest_bin = manifest_bin
-            return result, arsc
+            # All res/ files of the linked apk (not just the XMLs): the walk's
+            # resource-identity dedup needs to see PNG/other variants too —
+            # aapt2's version collapsing / density adjudication may satisfy a
+            # resource with a different file than the source tree spells.
+            apk_res_files = {name for name in
+                             zipfile.ZipFile(out_apk).namelist()
+                             if name.startswith("res/")}
+            return result, arsc, apk_res_files
         except subprocess.CalledProcessError as e:
             # Surface aapt2's own stderr/stdout (attribute-not-found, etc.) so
             # the actual link/compile error is visible, not just "non-zero exit".
@@ -1138,15 +1146,35 @@ class PakBuilder:
         # SDK mode: build complete framework from SDK data/res/ via aapt2 -x.
         sdk_data = self._compile_sdk_res() if self.use_sdk else {}
         # aapt2 renames qualifier-less density dirs with the -v4 suffix
-        # (drawable-nodpi/ -> drawable-nodpi-v4/); the staged walk compares
-        # against the ORIGINAL names, so normalize the sdk keys for the
-        # duplicate check or every such file ships twice (binary + text).
+        # (drawable-nodpi/ -> drawable-nodpi-v4/), and the sdk keys carry the
+        # apk's 'res/' prefix while the staged walk compares source-tree names
+        # (no 'res/'); normalize both away or every such file ships twice
+        # (binary + text).
         _sdk_rel_norm = set()
         for _rel in sdk_data:
-            _sdk_rel_norm.add(_rel)
-            _head, _sep, _tail = _rel.partition('/')
+            _body = _rel[4:] if _rel.startswith("res/") else _rel
+            _sdk_rel_norm.add(_body)
+            _head, _sep, _tail = _body.partition('/')
             if _sep and '-v' in _head:
                 _sdk_rel_norm.add(_head.split('-v')[0] + '/' + _tail)
+        # Resource-identity set of everything aapt2 emitted (framework apk +
+        # app apk): ("drawable", "ic_add_24dp") for ANY variant path. The walk
+        # drops TEXT copies of XML resources aapt2 adjudicated away — minSdk>=21
+        # collapses drawable-v21 onto the default config, --preferred-density
+        # lets a PNG sibling win — because the arsc points at the surviving
+        # file and the text copy is dead weight.
+        _apk_identity = set()
+        for _rel in list(sdk_data) + list(app_apk_files):
+            _body = _rel[4:] if _rel.startswith("res/") else _rel
+            _head, _sep, _tail = _body.partition('/')
+            if not _sep:
+                continue
+            _stem = _tail
+            for _ext in (".9.png", ".9.webp", ".xml", ".png", ".webp", ".jpg"):
+                if _stem.endswith(_ext):
+                    _stem = _stem[:-len(_ext)]
+                    break
+            _apk_identity.add((_head.split('-')[0], _stem))
         # App mode: compile the app's own res/ via aapt2 (optional).
         # Skip when use_sdk: cdroid.pak's res_dir IS the framework res
         # (src/gui/res, carrying public-final.xml 0x01 IDs), already built as
@@ -1154,7 +1182,8 @@ class PakBuilder:
         # (framework package-1 IDs vs app 0x7f space → "can't assign ID
         # 0x010a0004 ... package already has ID 1"). _compile_aapt2 is for real
         # app paks only (use_aapt2 and not use_sdk).
-        binary_xmls, app_arsc = self._compile_aapt2() if (self.use_aapt2 and not self.use_sdk) else ({}, None)
+        binary_xmls, app_arsc, app_apk_files = \
+            self._compile_aapt2() if (self.use_aapt2 and not self.use_sdk) else ({}, None, set())
         binary_ok = bool(sdk_data) or (app_arsc is not None)
         with zipfile.ZipFile(self.pak_path, "w") as zf:
             # SDK framework: store binary AXML + arsc + drawables. Skip values/
@@ -1198,21 +1227,34 @@ class PakBuilder:
                         continue
                     if binary_ok and (rel.startswith("values/") or rel.startswith("values-")):
                         continue
-                    if self.use_sdk and (rel in sdk_data or rel in _sdk_rel_norm):
+                    if self.use_sdk and rel in _sdk_rel_norm:
                         # SDK binary replaces layout/drawable/color (inflation
                         # targets; the text-cache loadKeyValues consumer that
                         # needed text color/ files is retired).
                         if not rel.startswith("values/"):
                             continue
+                    # Unified res mode: subpath entries ship under "res/" (the
+                    # apk layout both arscs describe — pakPathCandidates'
+                    # re-prefixed variants bridge legacy no-res name-form
+                    # callers); root-level files (fonts.xml &c) keep bare names.
+                    zname = ("res/" + rel) if "/" in rel else rel
                     if f.endswith(".xml"):
-                        if rel in binary_xmls:
-                            zf.writestr(rel, binary_xmls[rel], zipfile.ZIP_DEFLATED)
+                        # aapt2 emitted some variant of this resource? The arsc
+                        # is authoritative — do not also ship this text copy.
+                        _rh, _rs, _rt = rel.partition('/')
+                        _stem = f[:-4]
+                        if _stem.endswith(".9"):
+                            _stem = _stem[:-2]
+                        if _rs and (_rh.split('-')[0], _stem) in _apk_identity:
+                            continue
+                        if zname in binary_xmls:
+                            zf.writestr(zname, binary_xmls[zname], zipfile.ZIP_DEFLATED)
                         else:
                             # cdroid's values/*.xml kept as text (SDK provides
                             # layouts/drawables as binary, but NOT values/ files).
-                            zf.writestr(rel, self._strip_xml(p), zipfile.ZIP_DEFLATED)
+                            zf.writestr(zname, self._strip_xml(p), zipfile.ZIP_DEFLATED)
                     elif f.endswith(".9.png"):               # MUST precede the .png branch
-                        arc = rel[:-6] + ".png"              # foo.9.png -> foo.png
+                        arc = zname[:-6] + ".png"            # foo.9.png -> foo.png
                         try:
                             data = self._compile_9patch(p)
                             zf.writestr(arc, data if data else open(p, "rb").read(),
@@ -1221,7 +1263,7 @@ class PakBuilder:
                             sys.stderr.write("9patch embed failed for %s: %s; storing as-is\n" % (p, e))
                             zf.writestr(arc, open(p, "rb").read(), zipfile.ZIP_STORED)
                     elif f.endswith(BIN_EXTS):
-                        zf.writestr(rel, open(p, "rb").read(), zipfile.ZIP_STORED)
+                        zf.writestr(zname, open(p, "rb").read(), zipfile.ZIP_STORED)
                     # other extensions skipped
 
 
