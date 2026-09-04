@@ -25,4 +25,5 @@
     android:clipToPadding="false"
     android:paddingBottom="@dimen/fab_height"
     android:scrollbarStyle="outsideOverlay"
-    android:scrollbars="vertical" />
+    android:scrollbars="vertical"
+    android:background="#FF303030" />

@@ -86,11 +86,17 @@ void Dialog::show(){
     {
         ViewGroup* frame = (ViewGroup*)mWindow->getChildAt(0);
         if (frame != nullptr && frame->getBackground() == nullptr) {
-            TypedValue bgValue;
-            if (mContext->getTheme().resolveAttribute(
-                    (int)internal::R::attr::colorBackground, &bgValue, true)) {
-                int bgColor = bgValue.data;
-                if (bgValue.resourceId != 0) bgColor = mContext->getColor((int)bgValue.resourceId);
+            // Theme.resolveAttribute flattens a color *reference* to its pool
+            // value (TypedValue.data with resourceId=0) — as an ARGB int that
+            // is effectively transparent, so the frame never wipes the dialog
+            // surface between frames and animating content (e.g. the radial
+            // time picker's crossfade) accumulates on the retained surface.
+            // Resolve through obtainStyledAttributes instead — the same
+            // ResTable path widgets use, which chases the reference.
+            const uint32_t attrs[] = { (uint32_t) internal::R::attr::colorBackground, 0 };
+            auto ta = mContext->obtainStyledAttributes(attrs);
+            if (ta != nullptr) {
+                const int bgColor = (int) ta->getColor(0, 0xFF000000u);
                 frame->setBackground(new ColorDrawable(bgColor));
             }
         }

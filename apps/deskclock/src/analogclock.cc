@@ -8,6 +8,7 @@
 #include <core/systemclock.h>
 #include <view/layoutinflater.h>
 #include <view/view.h>
+#include <drawable/colordrawable.h>
 
 using namespace ::deskclock;
 
@@ -55,6 +56,12 @@ AnalogClock::AnalogClock(Context* context, const AttributeSet* attrs)
     mSecondHand->setImageResource(R::drawable::clock_analog_second);
     if (Drawable* d = mSecondHand->getDrawable()) d->mutate();
     addView(mSecondHand);
+
+    // The dial vector is a transparent ring upstream as well; AOSP shows the
+    // (dark) window background through its center. cdroid windows carry no
+    // background, so the moving hands smear over stale pixels instead — give
+    // the clock an opaque plate.
+    setBackgroundColor(0xFF000000);
 }
 
 void AnalogClock::onAttachedToWindow() {
