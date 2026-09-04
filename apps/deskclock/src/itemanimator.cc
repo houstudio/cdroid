@@ -177,7 +177,7 @@ bool ItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder,
         return false;
     }
 
-    Animator* oldChangeAnimator = ((OnAnimateChangeListener&) oldHolder)
+    Animator* oldChangeAnimator = dynamic_cast<OnAnimateChangeListener&>(oldHolder)
             .onAnimateChange(oldHolder, *newHolder, changeDuration);
     if (oldChangeAnimator != nullptr) {
         Animator::AnimatorListener al;
@@ -196,7 +196,7 @@ bool ItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder,
         dispatchChangeFinished(oldHolder, true);
     }
 
-    Animator* newChangeAnimator = ((OnAnimateChangeListener*) newHolder)
+    Animator* newChangeAnimator = dynamic_cast<OnAnimateChangeListener*>(newHolder)
             ->onAnimateChange(oldHolder, *newHolder, changeDuration);
     if (newChangeAnimator != nullptr) {
         Animator::AnimatorListener al;
