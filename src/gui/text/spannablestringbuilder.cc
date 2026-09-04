@@ -243,9 +243,23 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
     auto asWatcher = [](const ParcelableSpan* p) -> TextWatcher* {
         return dynamic_cast<TextWatcher*>(const_cast<ParcelableSpan*>(p));
     };
+    /*AOSP change() walks its cached TextWatcher[] across all the notify phases and
+      relies on GC to keep a watcher alive even after a callback removed it from the
+      buffer. Under the raw-pointer span model a removed NoCopySpan can also be
+      DELETED by its owner mid-change: Selection::removeMemory deletes its
+      MemoryTextWatcher from inside a re-entrant setSelection (e.g. TextView's
+      updateAfterEdit -> bringPointIntoView clamp runs synchronously inside
+      onTextChanged), which would leave this snapshot dangling and crash the later
+      dynamic_cast passes on freed memory. Skip entries that are no longer recorded
+      in mSpans — a pure pointer lookup that never dereferences p — before every
+      cast/call. (Divergence from AOSP: a watcher detached during this change does
+      not receive the remaining phases; Java's object stays callable, a deleted C++
+      one cannot.)*/
+    auto isRecorded = [this](const ParcelableSpan* p) { return getSpanStart(p) >= 0; };
 
     // 1) beforeTextChanged
     for (const ParcelableSpan* p : watchers) {
+        if (!isRecorded(p)) continue;
         if (TextWatcher* w = asWatcher(p)) {
             if (w->beforeTextChanged) w->beforeTextChanged(*this, st, replacedLen, insertLen);
         }
@@ -359,12 +373,14 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
 
     // 3) onTextChanged
     for (const ParcelableSpan* p : watchers) {
+        if (!isRecorded(p)) continue;
         if (TextWatcher* w = asWatcher(p)) {
             if (w->onTextChanged) w->onTextChanged(*this, st, replacedLen, insertLen);
         }
     }
     // 4) afterTextChanged
     for (const ParcelableSpan* p : watchers) {
+        if (!isRecorded(p)) continue;
         if (TextWatcher* w = asWatcher(p)) {
             if (w->afterTextChanged) w->afterTextChanged(*this);
         }
