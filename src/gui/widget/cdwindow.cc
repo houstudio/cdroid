@@ -806,6 +806,15 @@ const WindowManager::LayoutParams& Window::getAttributes()const{
     return mWindowAttributes;
 }
 
+void Window::setSoftInputMode(int mode){
+    // AOSP Window.setSoftInputMode writes mWindowAttributes.softInputMode.
+    mWindowAttributes.softInputMode = mode;
+}
+
+int Window::getSoftInputMode()const{
+    return mWindowAttributes.softInputMode;
+}
+
 void Window::setAttributes(const WindowManager::LayoutParams& a){
     mWindowAttributes = a;
 }

@@ -219,6 +219,11 @@ public:
     WindowManager::LayoutParams& getAttributes();
     const WindowManager::LayoutParams& getAttributes()const;
     void setAttributes(const WindowManager::LayoutParams& a);
+    /* AOSP Window.setSoftInputMode: how this window reacts to the IME being
+     * shown (SOFT_INPUT_ADJUST_RESIZE / _PAN / _NOTHING, from android
+     * windowSoftInputMode). */
+    void setSoftInputMode(int mode);
+    int getSoftInputMode()const;
     bool ensureTouchMode(bool inTouchMode)override;
     View& setAlpha(float a);
     void sendToBack();
