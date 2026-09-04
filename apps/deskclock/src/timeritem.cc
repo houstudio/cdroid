@@ -32,12 +32,17 @@ void TimerItem::onFinishInflate() {
     int colorAccent = 0xFFDA4336;
     int textColorPrimary = 0xFFFFFFFF;
     {
-        TypedValue value;
-        if (c.getTheme().resolveAttribute(0x01010435 /* android:colorAccent */, &value, true)) {
-            colorAccent = value.data;
-        }
-        if (c.getTheme().resolveAttribute(0x01010036 /* android:textColorPrimary */, &value, true)) {
-            textColorPrimary = value.data;
+        // Same as StopwatchFragment: Theme.resolveAttribute flattens a
+        // color-selector reference to a pool value (TypedValue.data with
+        // resourceId=0) — as an ARGB int that is effectively transparent, so
+        // the countdown digits never rasterize. obtainStyledAttributes is the
+        // ResTable path that chases the reference.
+        const uint32_t attrs[] = {0x01010435 /* android:colorAccent */,
+                                  0x01010036 /* android:textColorPrimary */, 0};
+        auto ta = c.obtainStyledAttributes(attrs);
+        if (ta != nullptr) {
+            colorAccent = (int) ta->getColor(0, (uint32_t) colorAccent);
+            textColorPrimary = (int) ta->getColor(1, (uint32_t) textColorPrimary);
         }
     }
     auto colors = std::make_shared<ColorStateList>(

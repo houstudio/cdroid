@@ -28,7 +28,10 @@ private:
     /** The size of the stroke that paints the timer circle. */
     float mStrokeSize;
 
-    const data::Timer* mTimer = nullptr;
+    /** Upstream holds a live Timer reference; cdroid callers pass by-value
+     *  copies from transient stack frames, so keep a value snapshot here. */
+    data::Timer mTimer;
+    bool mHasTimer = false;
 
 public:
     TimerCircleView(Context* context, const AttributeSet* attrs);

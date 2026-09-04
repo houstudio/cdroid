@@ -25,25 +25,35 @@ TimerCircleView::TimerCircleView(Context* context, const AttributeSet* attrs)
     mRadiusOffset = Utils::calculateRadiusOffset(mStrokeSize, dotDiameter, 0.0f);
 
     mRemainderColor = 0xFFFFFFFF; // Color.WHITE
-    // ThemeUtils.resolveColor(context, R.attr.colorAccent) == android:colorAccent (0x01010435).
+    // Upstream: ThemeUtils.resolveColor(context, R.attr.colorAccent). Like the
+    // other DeskClock views, resolve through obtainStyledAttributes: the theme
+    // colorAccent is a reference and Theme.resolveAttribute flattens references
+    // to pool values (TypedValue.data with resourceId=0) that are transparent
+    // when consumed as ARGB.
     mCompletedColor = 0xFFDA4336;
     {
-        TypedValue value;
-        if (context->getTheme().resolveAttribute(0x01010435, &value, true)) {
-            mCompletedColor = value.data;
+        const uint32_t attrs[] = {0x01010435 /* android:colorAccent */, 0};
+        auto ta = context->obtainStyledAttributes(attrs);
+        if (ta != nullptr) {
+            mCompletedColor = (int) ta->getColor(0, (uint32_t) mCompletedColor);
         }
     }
 }
 
 void TimerCircleView::update(const data::Timer& timer) {
-    if (mTimer != &timer) {
-        mTimer = &timer;
+    // Upstream invalidates when the Timer instance changes; the by-value model
+    // hands out copies, so key the identity check on the timer id and refresh
+    // the snapshot every call (onDraw advances the arc off the stored value).
+    const bool changed = !mHasTimer || mTimer.id != timer.id;
+    mTimer = timer;
+    mHasTimer = true;
+    if (changed) {
         postInvalidateOnAnimation();
     }
 }
 
 void TimerCircleView::onDraw(Canvas& canvas) {
-    if (mTimer == nullptr) {
+    if (!mHasTimer) {
         return;
     }
 
@@ -57,7 +67,7 @@ void TimerCircleView::onDraw(Canvas& canvas) {
 
     // If the timer is reset, draw a simple white circle.
     float redPercent;
-    if (mTimer->isReset()) {
+    if (mTimer.isReset()) {
         // Draw a complete white circle; no red arc required.
         canvas.set_color(mRemainderColor);
         canvas.arc(xCenter, yCenter, radius, 0.0, 2.0 * M_PI);
@@ -65,7 +75,7 @@ void TimerCircleView::onDraw(Canvas& canvas) {
 
         // Red percent is 0 since no timer progress has been made.
         redPercent = 0.0f;
-    } else if (mTimer->isExpired()) {
+    } else if (mTimer.isExpired()) {
         canvas.set_color(mCompletedColor);
 
         // Draw a complete accent circle; no white arc required.
@@ -77,7 +87,7 @@ void TimerCircleView::onDraw(Canvas& canvas) {
     } else {
         // Draw a combination of accent and white arcs to create a circle.
         redPercent = std::min(1.0f,
-                (float) mTimer->getElapsedTime() / (float) mTimer->totalLength);
+                (float) mTimer.getElapsedTime() / (float) mTimer.totalLength);
         const float whitePercent = 1.0f - redPercent;
 
         // Draw a white arc to indicate the amount of timer that remains.
@@ -108,7 +118,7 @@ void TimerCircleView::onDraw(Canvas& canvas) {
     canvas.arc(dotX, dotY, mDotRadius, 0.0, 2.0 * M_PI);
     canvas.fill();
 
-    if (mTimer->isRunning()) {
+    if (mTimer.isRunning()) {
         postInvalidateOnAnimation();
     }
 }
