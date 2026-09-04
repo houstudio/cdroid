@@ -1026,7 +1026,7 @@ public:
     int getAlignmentValue(View* view, int viewSize, int mode) const override{
         return GridLayout::UNDEFINED;
     }
-    int getSizeInCell(View* view, int viewSize, int cellSize) {
+    int getSizeInCell(View* view, int viewSize, int cellSize) const override {
         return cellSize;
     }
 };

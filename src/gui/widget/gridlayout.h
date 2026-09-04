@@ -93,7 +93,7 @@ public:
         virtual ~Alignment()=default;
         virtual int getGravityOffset(View*view,int dellDelta)const=0;
         virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)const=0;
-        int getSizeInCell(View*v,int viewSize,int cellSize)const{
+        virtual int getSizeInCell(View*v,int viewSize,int cellSize)const{
             return viewSize;
         }
         virtual std::shared_ptr<Bounds> getBounds()const;
