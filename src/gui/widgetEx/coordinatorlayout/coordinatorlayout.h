@@ -105,13 +105,13 @@ private:
     std::vector<int> mKeylines;
     std::vector<View*> mTempDependenciesList;
 
-    View* mBehaviorTouchView;
-    View* mNestedScrollingTarget;
+    View* mBehaviorTouchView = nullptr;
+    View* mNestedScrollingTarget = nullptr;
 
     ViewTreeObserver::OnPreDrawListener mOnPreDrawListener;
 
-    WindowInsets* mLastInsets;
-    Drawable* mStatusBarBackground;
+    WindowInsets* mLastInsets = nullptr;
+    Drawable* mStatusBarBackground = nullptr;
 
     ViewGroup::OnHierarchyChangeListener mOnHierarchyChangeListener;
     View::OnApplyWindowInsetsListener mApplyWindowInsetsListener;
@@ -148,7 +148,9 @@ protected:
     int getSuggestedMinimumWidth()override;
     int getSuggestedMinimumHeight()override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-    void onLayout(bool changed, int l, int t, int r, int b)override;
+    // View::layout(l, t, w, h) forwards the SAME axes to onLayout — the last
+    // two ints are width/height, not right/bottom as AOSP names suggest.
+    void onLayout(bool changed, int x, int y, int width, int height)override;
     void recordLastChildRect(View* child, Rect& r);
     void getLastChildRect(View* child, Rect& out);
     void getChildRect(View* child, bool transform, Rect& out);

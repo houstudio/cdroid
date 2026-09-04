@@ -692,7 +692,7 @@ void CoordinatorLayout::onLayoutChild(View* child, int layoutDirection) {
     }
 }
 
-void CoordinatorLayout::onLayout(bool changed, int l, int t, int r, int b) {
+void CoordinatorLayout::onLayout(bool changed, int x, int y, int width, int height) {
     const int layoutDirection = getLayoutDirection();
     const size_t childCount = mDependencySortedChildren.size();
     for (size_t i = 0; i < childCount; i++) {
@@ -823,7 +823,7 @@ void CoordinatorLayout::getDesiredAnchoredChildRectWithoutConstraints(View* chil
         break;
     }
 
-    out.set(left, top, left + childWidth, top + childHeight);
+    out.set(left, top, childWidth, childHeight);
 }
 
 void CoordinatorLayout::constrainChildRect(const LayoutParams& lp, Rect& out, int childWidth, int childHeight) {
@@ -912,10 +912,12 @@ void CoordinatorLayout::layoutChildWithKeyline(View* child, int keyline, int lay
 void CoordinatorLayout::layoutChild(View* child, int layoutDirection) {
     const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
     Rect parent,out;
+    // Rect::set takes (x, y, width, height) — the available box is the parent
+    // inset by padding and margins, not the AOSP right/bottom edges.
     parent.set(getPaddingLeft() + lp->leftMargin,
             getPaddingTop() + lp->topMargin,
-            getWidth() - getPaddingRight() - lp->rightMargin,
-            getHeight() - getPaddingBottom() - lp->bottomMargin);
+            getWidth() - getPaddingLeft() - getPaddingRight() - lp->leftMargin - lp->rightMargin,
+            getHeight() - getPaddingTop() - getPaddingBottom() - lp->topMargin - lp->bottomMargin);
 
     if (mLastInsets && getFitsSystemWindows() && !child->getFitsSystemWindows()) {
         // If we're set to handle insets but this child isn't, then it has been measured as

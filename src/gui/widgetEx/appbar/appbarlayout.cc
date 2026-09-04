@@ -250,6 +250,39 @@ bool AppBarLayout::ScrollingViewBehavior::onDependentViewChanged(
     return false;
 }
 
+bool AppBarLayout::ScrollingViewBehavior::onLayoutChild(
+        CoordinatorLayout& parent, View& child, int /*layoutDirection*/) {
+    // AOSP HeaderScrollingViewBehavior.onLayoutChild: the scrolling view is
+    // positioned below the (possibly scrolled) header at LAYOUT time. The
+    // preDraw dependency pass (onDependentViewChanged) only follows LATER
+    // header changes — without this, any re-layout of the content (an item
+    // expand, a change animation) puts it back at the top of the parent and
+    // it covers the header, because the header's own rect did not change so
+    // no dependency dispatch fires.
+    AppBarLayout* abl = nullptr;
+    for (size_t i = 0; i < parent.getChildCount(); i++) {
+        if ((abl = dynamic_cast<AppBarLayout*>(parent.getChildAt(i))) != nullptr) break;
+    }
+    if (abl == nullptr || abl->getVisibility() == View::GONE) return false; // default layout
+    CoordinatorLayout::LayoutParams* lp =
+            (CoordinatorLayout::LayoutParams*) child.getLayoutParams();
+    Rect available;
+    // Rect::set takes (x, y, width, height) — subtract the insets, not the AOSP
+    // right/bottom edges.
+    available.set(parent.getPaddingLeft() + lp->leftMargin,
+                  parent.getPaddingTop() + lp->topMargin,
+                  parent.getWidth() - parent.getPaddingLeft() - parent.getPaddingRight()
+                          - lp->leftMargin - lp->rightMargin,
+                  parent.getHeight() - parent.getPaddingTop() - parent.getPaddingBottom()
+                          - lp->topMargin - lp->bottomMargin);
+    const int top = abl->getBottom() - mOverlayTop;
+    // View::layout takes (x, y, width, height): the height is the REMAINING
+    // space below the header, not the child's full measured height.
+    const int height = std::max(0, available.height - (top - available.top));
+    child.layout(available.left, top, available.width, height);
+    return true;
+}
+
 bool AppBarLayout::ScrollingViewBehavior::onMeasureChild(
         CoordinatorLayout& parent, View& child,
         int parentWidthMeasureSpec, int widthUsed,

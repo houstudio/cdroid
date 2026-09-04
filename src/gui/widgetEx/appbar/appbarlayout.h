@@ -110,6 +110,7 @@ public:
         bool onMeasureChild(CoordinatorLayout& parent, View& child,
                 int parentWidthMeasureSpec, int widthUsed,
                 int parentHeightMeasureSpec, int heightUsed) override;
+        bool onLayoutChild(CoordinatorLayout& parent, View& child, int layoutDirection) override;
     };
 private:
     static constexpr int INVALID_SCROLL_RANGE = -1;
