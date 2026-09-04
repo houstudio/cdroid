@@ -43,7 +43,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:keyBackground="@drawable/key_background_material"
+        android:keyBackground="@drawable/btn_keyboard_key"
         android:keyTextColor="#ffffff"
         android:popupLayout="@android:layout/keyboard_popup_keyboard"/>
 </LinearLayout>

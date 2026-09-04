@@ -25,21 +25,32 @@ DECLARE_WIDGET(KeyboardView)
 KeyboardView::KeyboardView(Context*ctx)
     :KeyboardView(ctx,nullptr){}
 
-KeyboardView::KeyboardView(Context*ctx,const AttributeSet* atts):KeyboardView(ctx,atts,0){}
+// AOSP ctor chain: the 2-arg form supplies keyboardViewStyle so the theme's
+// Widget.*.KeyboardView style (keyBackground/keyTextSize/background/...) applies;
+// the 3-arg form adds defStyleRes=0; only the 4-arg form does real work.
+KeyboardView::KeyboardView(Context*ctx,const AttributeSet* atts)
+    :KeyboardView(ctx,atts, R::attr::keyboardViewStyle){}
 
 KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
-  :View(ctx,pAttrs, defStyleAttr){
+    :KeyboardView(ctx,pAttrs,defStyleAttr,0){}
+
+KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+  :View(ctx,pAttrs, defStyleAttr, defStyleRes){
     init();
-    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::KeyboardView, defStyleAttr);
-    Drawable *dr = ta ? ta->getDrawable(R::styleable::KeyboardView_keyBackground) : nullptr;
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::KeyboardView, defStyleAttr, defStyleRes);
+    Drawable *dr = ta->getDrawable(R::styleable::KeyboardView_keyBackground);
     mKeyBackground = dr ? dr:new ColorDrawable(0xFF889988);
-    mVerticalCorrection= ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_verticalCorrection,0) : 0;
-    mPreviewOffset     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewOffset,0) : 0;
-    mPreviewHeight     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewHeight,0) : 0;
-    mKeyTextSize       = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyTextSize,20) : 20;
-    mKeyTextColor      = ta ? ta->getColor(R::styleable::KeyboardView_keyTextColor,0xFF000000) : 0xFF000000;
-    mLabelTextSize     = ta ? ta->getDimensionPixelOffset(R::styleable::KeyboardView_labelTextSize,20) : 20;
-    mPopupLayout       = ta ? ta->getResourceId(R::styleable::KeyboardView_popupLayout, 0) : 0;
+    // AOSP KeyboardView ctor: mKeyBackground.getPadding(mPadding) — the 9-patch
+    // key background's padding insets labels/icons; the classic keyboard's
+    // visual key separation lives in the 9-patch's transparent border.
+    mKeyBackground->getPadding(mPadding);
+    mVerticalCorrection= ta->getDimensionPixelOffset(R::styleable::KeyboardView_verticalCorrection,0);
+    mPreviewOffset     = ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewOffset,0);
+    mPreviewHeight     = ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewHeight,0);
+    mKeyTextSize       = ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyTextSize,20);
+    mKeyTextColor      = ta->getColor(R::styleable::KeyboardView_keyTextColor,0xFF000000);
+    mLabelTextSize     = ta->getDimensionPixelOffset(R::styleable::KeyboardView_labelTextSize,20);
+    mPopupLayout       = ta->getResourceId(R::styleable::KeyboardView_popupLayout, 0);
     mPaint.setTextSize(mLabelTextSize);
     mPaint.setTextAlign(Paint::Align::CENTER);
     resetMultiTap();

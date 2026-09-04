@@ -208,6 +208,7 @@ public:
     KeyboardView(Context*ctx);   // AOSP KeyboardView(Context)
     KeyboardView(Context*context,const AttributeSet*atts);
     KeyboardView(Context*context,const AttributeSet* attrs,int defStyleAttr);
+    KeyboardView(Context*context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~KeyboardView()override;
     void setOnKeyboardActionListener(const OnKeyboardActionListener& listener);
     Keyboard*getKeyboard();
