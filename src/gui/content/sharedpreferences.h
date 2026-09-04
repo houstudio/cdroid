@@ -186,12 +186,15 @@ public:
     struct Private;
 
     /**
-     * Constructor: opens (loads) the file named {@code name} under the CDROID
-     * prefs directory, creating an empty store when it does not exist yet.
+     * AOSP SharedPreferencesImpl(File file, int mode): the caller (Context::
+     * getSharedPreferences) passes the full getSharedPreferencesPath() result
+     * (<dataDir>/shared_prefs/<name>.xml), creating an empty store when it
+     * does not exist yet. The pre-migration flat store (~/.cdroid/prefs/)
+     * serves as a read fallback until the first write migrates the content.
      * {@code mode} mirrors AOSP's Context.MODE_PRIVATE (other file creation
      * modes have no meaning on the CDROID targets and are warned about).
      */
-    SharedPreferencesImpl(const std::string& name, int mode);
+    SharedPreferencesImpl(const std::string& file, int mode);
     ~SharedPreferencesImpl() override;
 
     std::vector<std::pair<std::string, std::string>> getAll() override;

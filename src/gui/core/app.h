@@ -66,6 +66,9 @@ private:
     // Manifest-derived app metadata (PackageManager role).
     int mApplicationTheme = 0;                 // <application android:theme>
     std::string mApplicationLabel;             // <application android:label>
+    std::string mPackageName;                  // <manifest package="..."> (stable id;
+                                               // AOSP ContextImpl's package comes from
+                                               // the same manifest attr via PackageManager)
     std::map<std::string, ActivityInfo> mActivityInfos;
     // Theme to apply to the NEXT instantiated activity window (set by
     // startActivity from the manifest, consumed by Window's Context ctor —

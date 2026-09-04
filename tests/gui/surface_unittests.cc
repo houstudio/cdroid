@@ -347,3 +347,63 @@ TEST_F(CDCONTEXT,Hole3){
     }));
     pumpFor(1500);
 }
+
+// ===========================================================================
+// AOSP app-data directories + manifest package (docs/app-data-directory-layout-plan.md)
+// ===========================================================================
+#include <cstdio>
+#include <sys/stat.h>
+#include <cstdlib>
+#include <unistd.h>
+#include <content/sharedpreferences.h>
+
+TEST_F(CDCONTEXT, PackageNameIsStableManifestId) {
+    const std::string pkg = App::getInstance().getPackageName();
+    EXPECT_FALSE(pkg.empty());
+    // A package id is never a path (the old text-era behavior returned the
+    // exe path, which leaked into prefs/dirs as nested directory trees).
+    EXPECT_EQ(std::string::npos, pkg.find('/'));
+    EXPECT_EQ(std::string::npos, pkg.find('\\'));
+}
+
+TEST_F(CDCONTEXT, DataDirsFollowAospShape) {
+    App& app = App::getInstance();
+    const std::string pkg = app.getPackageName();
+    const std::string dataDir = app.getDataDir();
+    EXPECT_NE(std::string::npos, dataDir.find("/data/" + pkg));
+    EXPECT_NE(std::string::npos, app.getFilesDir().find(dataDir + "/files"));
+    EXPECT_NE(std::string::npos, app.getCacheDir().find(dataDir + "/cache"));
+    // AOSP ContextImpl.getDir prefixes "app_".
+    EXPECT_NE(std::string::npos, app.getDir("probe", 0).find(dataDir + "/app_probe"));
+    const std::string prefsPath = app.getSharedPreferencesPath("probe_prefs");
+    EXPECT_NE(std::string::npos, prefsPath.find(dataDir + "/shared_prefs/probe_prefs.xml"));
+    EXPECT_NE(std::string::npos, app.getFileStreamPath("f.txt").find("/files/f.txt"));
+    // External resolves through the Environment builders (emulated volume).
+    EXPECT_NE(std::string::npos, app.getExternalFilesDir().find("Android/data/" + pkg + "/files"));
+}
+
+TEST_F(CDCONTEXT, PrefsReadLegacyFlatStore) {
+    // Pre-migration flat store (~/.cdroid/prefs/<n>.xml) is a read fallback;
+    // the first write migrates the content to shared_prefs/.
+    const char* home = getenv("HOME");
+    ASSERT_NE(nullptr, home);
+    const std::string legacyDir = std::string(home) + "/.cdroid/prefs";
+    mkdir(legacyDir.c_str(), 0755);
+    const std::string legacyFile = legacyDir + "/legacyprobe.xml";
+    FILE* f = fopen(legacyFile.c_str(), "w");
+    ASSERT_NE(nullptr, f);
+    fputs("<?xml version='1.0' encoding='utf-8' standalone='yes' ?>\n"
+          "<map>\n    <string name=\"legacy_key\">legacy_value</string>\n</map>\n", f);
+    fclose(f);
+
+    auto sp = App::getInstance().getSharedPreferences("legacyprobe", 0);
+    EXPECT_EQ("legacy_value", sp->getString("legacy_key", ""));
+    // First write lands under the per-app shared_prefs/ tree.
+    sp->edit().putString("migrated_key", "new_home").commit();
+    const std::string newPath = App::getInstance().getSharedPreferencesPath("legacyprobe");
+    FILE* nf = fopen(newPath.c_str(), "r");
+    ASSERT_NE(nullptr, nf) << newPath;
+    fclose(nf);
+    unlink(legacyFile.c_str());
+    unlink(newPath.c_str());
+}

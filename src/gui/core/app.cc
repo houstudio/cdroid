@@ -598,7 +598,13 @@ void App::parsePackageManifest(const std::string& pakPath) {
     while ((type = parser->next()) != XmlPullParser::END_DOCUMENT) {
         if (type == XmlPullParser::START_TAG) {
             const std::string tag = parser->getName();
-            if (tag == "application") {
+            if (tag == "manifest") {
+                // Root package attr: plain string (no namespace, no resource id —
+                // aapt2 keeps it in the string pool), so read by bare name
+                // directly (an id-0 walk would hit whichever id-less attribute
+                // comes first, e.g. platformBuildVersionCode).
+                mPackageName = parser->getAttributeValue(std::string(), "package");
+            } else if (tag == "application") {
                 mApplicationLabel = attrValueByName(*parser,
                         attrId(R::styleable::AndroidManifestApplication, R::styleable::AndroidManifestApplication_label), "label");
                 mApplicationTheme = resIdFromRef(attrValueByName(*parser,
@@ -935,7 +941,12 @@ const DisplayMetrics& App::getDisplayMetrics()const{
 }
 
 const std::string App::getPackageName()const {
-    return mName;
+    // AOSP: the package id from the parsed manifest (stable). Synthesized paks
+    // without a manifest fall back to the executable basename — never the full
+    // path (a path-valued name leaks into prefs/dirs as nested directory trees).
+    if (!mPackageName.empty()) return mPackageName;
+    const size_t pos = mName.rfind(PATH_SEP);
+    return (pos == std::string::npos) ? mName : mName.substr(pos + 1);
 }
 
 Resources::Theme App::getTheme() {

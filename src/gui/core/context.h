@@ -94,6 +94,24 @@ public:
     // the CDROID counterpart of AOSP Resources.getResourceName(resId). Default
     // empty; Assets overrides with arsc resolution.
     virtual std::string getResourceName(uint32_t resId) const { return std::string(); }
+
+    // --- AOSP app-data directories (Context.java:1404-2040; paths, no File type). ---
+    // Default impls (context.cc) resolve Environment + getPackageName(): the
+    // data root is $ANDROID_DATA when set (AOSP contract), else /data when
+    // writable, else ~/.cdroid (the host fallback). Wrappers need no extra
+    // forwarding — the impls only call the virtual getPackageName().
+    // getDataDir(): /data/data/<pkg>; getFilesDir(): <dataDir>/files;
+    // getCacheDir(): <dataDir>/cache; getDir(): <dataDir>/app_<name> (AOSP
+    // prefixes "app_"); getSharedPreferencesPath(): <dataDir>/shared_prefs/<n>.xml;
+    // getFileStreamPath(): <filesDir>/<name>; external: <storage>/…/Android/data/<pkg>/… .
+    virtual std::string getDataDir() const;
+    virtual std::string getFilesDir() const;
+    virtual std::string getCacheDir() const;
+    virtual std::string getDir(const std::string& name, int mode) const;
+    virtual std::string getExternalFilesDir(const std::string& type = std::string()) const;
+    virtual std::string getExternalCacheDir() const;
+    virtual std::string getFileStreamPath(const std::string& name) const;
+    virtual std::string getSharedPreferencesPath(const std::string& name) const;
     // Convenience overload for a non-null AttributeSet& (delegates to the pointer
     // form). Defined out-of-line (context.cc) since it returns unique_ptr<TypedArray>.
     std::unique_ptr<TypedArray> obtainStyledAttributes(const AttributeSet& attrs,

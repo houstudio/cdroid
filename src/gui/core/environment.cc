@@ -412,7 +412,13 @@ Environment::UserEnvironment::UserEnvironment(int userId)
 
 std::vector<std::string> Environment::UserEnvironment::getExternalDirs() {
     //StorageVolume[] volumes = StorageManager.getVolumeList(mUserId,StorageManager.FLAG_FOR_WRITE);
+    // CDROID has no StorageManager; return the default EMULATED volume
+    // (<storage>/emulated/<userId>, ANDROID_STORAGE-aware) so callers taking
+    // [0] (getExternalStorageDirectory etc.) resolve a canonical path instead
+    // of indexing an empty vector.
     std::vector<std::string> files;// = new File[volumes.length];
+    files.push_back(buildPath(getDirectory(ENV_ANDROID_STORAGE, "/storage"),
+            {"emulated", std::to_string(mUserId)}));
     /*for (int i = 0; i < volumes.length; i++) {
         files[i] = volumes[i].getPathFile();
     }*/

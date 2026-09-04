@@ -353,6 +353,10 @@ static bool readMapXml(const std::string& path, PrefMap& outMap) {
 struct SharedPreferencesImpl::Private {
     std::string file;         // mFile
     std::string backupFile;   // makeBackupFile(mFile) = <path>.bak
+    // Pre-layout-migration flat store (~/.cdroid/prefs/<name>.xml): read
+    // fallback only — writes always target `file`, so the first save
+    // migrates the content to the per-app shared_prefs/ tree.
+    std::string legacyFile;
     int mode = 0;
 
     // Lock ordering rules (AOSP):
@@ -479,14 +483,21 @@ static void loadFromDisk(std::shared_ptr<SharedPreferencesImpl::Private> p) {
     PrefMap map;
     struct stat st {};
     bool haveStat = false;
-    if (::stat(p->file.c_str(), &st) == 0) {
+    std::string readFrom = p->file;
+    if (::stat(p->file.c_str(), &st) != 0
+            && !p->legacyFile.empty() && ::stat(p->legacyFile.c_str(), &st) == 0) {
+        // New location absent, legacy flat store present: read it (writes
+        // still target the new location — first save migrates the content).
+        readFrom = p->legacyFile;
+    }
+    if (::stat(readFrom.c_str(), &st) == 0) {
         haveStat = true;
         PrefMap loaded;
-        if (readMapXml(p->file, loaded)) {
+        if (readMapXml(readFrom, loaded)) {
             map = std::move(loaded);
         } else {
             LOGW("Cannot read %s (corrupt or foreign format); starting empty",
-                    p->file.c_str());
+                    readFrom.c_str());
         }
     }
 
@@ -839,10 +850,16 @@ private:
  * SharedPreferencesImpl
  *============================================================================*/
 
-SharedPreferencesImpl::SharedPreferencesImpl(const std::string& name, int mode)
+// AOSP SharedPreferencesImpl(File file, int mode): constructed with the FULL
+// path resolved by ContextImpl.getSharedPreferencesPath (the caller, Context::
+// getSharedPreferences, passes it). The legacy flat store serves as a read
+// fallback until the first write migrates the content.
+SharedPreferencesImpl::SharedPreferencesImpl(const std::string& file, int mode)
     : mP(std::make_shared<Private>()) {
-    mP->file = prefsDirectory() + "/" + name + ".xml";
+    mP->file = file;
     mP->backupFile = mP->file + ".bak";   // makeBackupFile
+    const size_t slash = file.find_last_of('/');
+    mP->legacyFile = prefsDirectory() + "/" + file.substr(slash + 1);
     mP->mode = mode;
     if (mode != 0) {   // Context::MODE_PRIVATE
         LOGW("SharedPreferences mode %d unsupported (only MODE_PRIVATE); ignored", mode);

@@ -2,6 +2,7 @@ SET(CORE_SOURCES
     core/app.cc
     core/attributeset.cc
     core/context.cc         # cdroid::Context AOSP ID-based resource getters (defaults)
+    core/environment.cc     # android.os.Environment port (data/storage roots)
     #core/basebundle.cc
     #core/bundle.cc
     core/transform.cc

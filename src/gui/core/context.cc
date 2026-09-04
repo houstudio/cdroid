@@ -10,6 +10,10 @@
 #include <content/typedarray.h>       // TypedArray (constructed below)
 #include <content/androidfw/restable.h>     // ResTable::Theme + obtainStyledAttributes + StyledAttr
 #include <content/sharedpreferences.h>      // SharedPreferencesImpl (getSharedPreferences)
+#include <core/environment.h>        // android.os.Environment port (data/storage roots)
+#include <cstdlib>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <map>
 
 namespace cdroid {
@@ -113,17 +117,107 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const AttributeSet& 
 // AOSP Context.getSharedPreferences(String, int): one SharedPreferences
 // instance per (file) name for the lifetime of the process (AOSP semantics —
 // same name must return the same object so listeners and writes stay
-// coherent). The default store persists under the CDROID prefs directory.
+// coherent). AOSP's static cache is keyed by the resolved FILE PATH
+// (ContextImpl.sSharedPrefsCache); CDROID keys by package+name, which is the
+// same key once getSharedPreferencesPath() is deterministic.
 std::shared_ptr<SharedPreferences> Context::getSharedPreferences(
         const std::string& name, int mode) {
+    const std::string file = getSharedPreferencesPath(name);
     static std::map<std::string, std::weak_ptr<SharedPreferences>> cache;
-    auto& slot = cache[name];
+    auto& slot = cache[file];
     std::shared_ptr<SharedPreferences> sp = slot.lock();
     if (!sp) {
-        sp = std::make_shared<SharedPreferencesImpl>(name, mode);
+        sp = std::make_shared<SharedPreferencesImpl>(file, mode);
         slot = sp;
     }
     return sp;
+}
+
+// ===========================================================================
+// AOSP app-data directories (Context.java:1404-2040). The data root follows
+// the AOSP contract: $ANDROID_DATA when set (Environment.getDataDirectory()
+// reads it), else /data when writable, else ~/.cdroid — the host fallback
+// that keeps dev machines working without root. Everything below the root is
+// the AOSP shape: data/data/<pkg>/{files,cache,shared_prefs,...} and
+// <storage>/…/Android/data/<pkg>/{files,cache}.
+// ===========================================================================
+
+static std::string appDataRoot() {
+    // AOSP: the runtime owns /data via ANDROID_DATA; an explicit env value is
+    // trusted as-is (contract). Without it, /data is used only when the
+    // process can actually write it (device); otherwise fall back to $HOME.
+    const std::string data = Environment::getDataDirectory();
+    if (!data.empty() && getenv("ANDROID_DATA") != nullptr) return data;
+    if (access("/data", W_OK) == 0) return "/data";
+    const char* home = getenv("HOME");
+    return std::string((home && *home) ? home : "/tmp") + "/.cdroid";
+}
+
+// mkdir -p for the data-directory chain (AOSP ensures dirs on demand).
+static void ensureDir(const std::string& path) {
+    std::string cur;
+    for (size_t i = 0; i <= path.size(); i++) {
+        const char c = (i < path.size()) ? path[i] : '/';
+        if (c == '/' && !cur.empty()) {
+            mkdir(cur.c_str(), 0770);
+        }
+        if (i < path.size()) cur += c;
+    }
+}
+
+// Context.getDataDir(): /data/data/<pkg> (AOSP :1437; the user_ce dir).
+std::string Context::getDataDir() const {
+    const std::string dir = appDataRoot() + "/data/" + getPackageName();
+    ensureDir(dir);
+    return dir;
+}
+
+// Context.getFilesDir(): <dataDir>/files (AOSP :1454).
+std::string Context::getFilesDir() const {
+    const std::string dir = getDataDir() + "/files";
+    ensureDir(dir);
+    return dir;
+}
+
+// Context.getCacheDir(): <dataDir>/cache (AOSP :1805).
+std::string Context::getCacheDir() const {
+    const std::string dir = getDataDir() + "/cache";
+    ensureDir(dir);
+    return dir;
+}
+
+// Context.getDir(name, mode): <dataDir>/app_<name> — AOSP ContextImpl
+// prefixes "app_" (:2040). The mode governs permissions only; path shape is
+// mode-independent.
+std::string Context::getDir(const std::string& name, int /*mode*/) const {
+    const std::string dir = getDataDir() + "/app_" + name;
+    ensureDir(dir);
+    return dir;
+}
+
+// Context.getExternalStorage…: <storage>/…/Android/data/<pkg>/… resolved
+// through the Environment port's UserEnvironment builders (AOSP :1589/:1883).
+std::string Context::getExternalFilesDir(const std::string& type) const {
+    std::vector<std::string> dirs = Environment::buildExternalStorageAppFilesDirs(getPackageName());
+    std::string path = dirs.empty() ? std::string() : dirs[0];
+    if (!type.empty()) path = path.empty() ? path : path + "/" + type;
+    return path;
+}
+
+std::string Context::getExternalCacheDir() const {
+    std::vector<std::string> dirs = Environment::buildExternalStorageAppCacheDirs(getPackageName());
+    return dirs.empty() ? std::string() : dirs[0];
+}
+
+// Context.getSharedPreferencesPath(name): <dataDir>/shared_prefs/<n>.xml
+// (AOSP :1420).
+std::string Context::getSharedPreferencesPath(const std::string& name) const {
+    return getDataDir() + "/shared_prefs/" + name + ".xml";
+}
+
+// Context.getFileStreamPath(name): <filesDir>/<name> (AOSP :1404).
+std::string Context::getFileStreamPath(const std::string& name) const {
+    return getFilesDir() + "/" + name;
 }
 
 } // namespace cdroid
