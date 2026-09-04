@@ -18,6 +18,7 @@
 // androidfw native readers — hidden from resourcesimpl.h (the facade contract).
 #include <content/androidfw/restable.h>       // ResTable, ResTable_config, Res_value, pakPathCandidates
 #include <content/androidfw/LocaleData.h>     // localeDataComputeScript (arsc locale config)
+#include <content/LocaleList.h>               // LocaleList::getDefault (start-up locale seed)
 #include <content/assetmanager.h>        // AssetManager
 #include <content/asset.h>               // Asset
 #include <content/typedvalue.h>     // TypedValue
@@ -78,6 +79,14 @@ ResourcesImpl::ResourcesImpl(AssetManager* am, const ResTable_config* config,
     if (metrics != nullptr) mMetrics = *metrics;  // else default density=1
     // AOSP seeds the live configuration from the device defaults (density).
     mConfiguration.setToDefaults();
+    // ...and from the device locale. On CDROID the "device" locale is the
+    // POSIX environment (LC_ALL/LC_MESSAGES/LANG), which Locale::getDefault()
+    // already parses — seed it so framework strings (ime_action_*, date
+    // formats, ...) resolve localized from process start. An explicit
+    // updateConfiguration (printerdemo's language switch) still overrides.
+    if (mConfiguration.getLocales().isEmpty()) {
+        mConfiguration.setLocales(LocaleList::getDefault());
+    }
     if (metrics != nullptr) mConfiguration.densityDpi = mMetrics.densityDpi;
     mDrawableCache = std::make_unique<DrawableCache>();
     mColorStateListCache = std::make_unique<ColorStateListCache>();
