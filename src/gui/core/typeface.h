@@ -54,6 +54,10 @@ public:
     static Typeface* SERIF;
     /** The NORMAL style of the default monospace typeface. */
     static Typeface* MONOSPACE;
+    // AOSP Typeface.getDefault(): public @NonNull — "the default NORMAL
+    // typeface object" (returns sDefaults[NORMAL]). Paint's null-face
+    // fallback resolves through here.
+    static Typeface* getDefault();
 private:
     static constexpr int STYLE_MASK  = 0x03;
     static std::string mFallbackFamilyName;
@@ -78,7 +82,6 @@ private:
 private:
     struct Deleter;
     static void setDefault(Typeface* t);
-    static Typeface* getDefault();
     static bool hasFontFamily(const std::string&familyName);
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);

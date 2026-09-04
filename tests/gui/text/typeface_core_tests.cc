@@ -44,6 +44,35 @@ TEST(CoreTypefaceTest, contextGetFont_resolvesFontResource) {
     EXPECT_EQ(face, App::getInstance().getFont(gui_test::R::font::StaticLayoutLineBreakingTestFont));
 }
 
+// AOSP Paint.setTypeface(null) is the documented "clear" (Paint.java: "Pass
+// null to clear any previous typeface"): the field stays null while text ops
+// fall back to the default typeface. A failed font load used to hand Paint a
+// null face that metrics dereferenced (the LayoutBidiCursorPath segfault).
+TEST(CoreTypefaceTest, setTypefaceNullFallsBackToDefault) {
+    TextPaint paint;
+    paint.setTypeface(nullptr);
+    EXPECT_EQ(nullptr, paint.getTypeface());   // field keeps the null contract
+
+    Paint::FontMetricsInt fmi;
+    const int lineHeight = paint.getFontMetricsInt(&fmi);
+    EXPECT_GT(lineHeight, 0);
+    EXPECT_LT(fmi.ascent, 0);
+    EXPECT_GT(fmi.descent, 0);
+    // ascent()/descent() go through the same fallback (float extent vs the
+    // int-truncated FontMetricsInt — same font, so within 1px).
+    EXPECT_NEAR(paint.ascent(), (float) fmi.ascent, 1.0f);
+    EXPECT_NEAR(paint.descent(), (float) fmi.descent, 1.0f);
+
+    // Clearing an already-set face restores the default's metrics, not the
+    // previous face's (the cached FontCollection must follow the null).
+    paint.setTypeface(Typeface::createFromAsset("font/StaticLayoutLineBreakingTestFont.ttf"));
+    paint.setTypeface(nullptr);
+    Paint::FontMetricsInt cleared;
+    paint.getFontMetricsInt(&cleared);
+    EXPECT_EQ(cleared.ascent, fmi.ascent);
+    EXPECT_EQ(cleared.descent, fmi.descent);
+}
+
 TEST(CoreTypefaceTest, contextGetFont_unknownIdReturnsNull) {
     EXPECT_EQ(nullptr, App::getInstance().getFont(0x7fffffff));
 }

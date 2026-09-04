@@ -63,6 +63,10 @@ public:
         RIGHT=2
     };
 private:
+    // AOSP Paint.setTypeface(null) "clears" the face: the field stays null
+    // (getTypeface() keeps the contract) while text ops resolve the default
+    // typeface. Every mTypeface consumer goes through here.
+    Typeface* effectiveTypeface() const;
     Typeface*mTypeface;
     std::shared_ptr<minikin::MinikinPaint>mMinikinPaint;
     int mColor;

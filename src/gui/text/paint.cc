@@ -69,12 +69,20 @@ Paint::~Paint(){
 // AOSP Paint.setTypeface only swaps the field (minikin reads paint->typeface
 // per call); cdroid's MinikinPaint caches the resolved FontCollection, so the
 // collection must follow the typeface here or every later measurement keeps
-// drawing with the previous face.
+// drawing with the previous face. null "clears" — the cached collection falls
+// back to the default typeface's, never the stale previous face's.
 void Paint::setTypeface(Typeface*face){
     mTypeface=face;
-    if(face!=nullptr && mMinikinPaint!=nullptr){
-        mMinikinPaint->font = face->getFontCollection();
+    Typeface* effective = effectiveTypeface();
+    if(effective!=nullptr && mMinikinPaint!=nullptr){
+        mMinikinPaint->font = effective->getFontCollection();
     }
+}
+
+// AOSP Paint.setTypeface(null): "Pass null to clear any previous typeface" —
+// the field stays null and metrics/draw use the default font (Paint.java:1586).
+Typeface* Paint::effectiveTypeface() const {
+    return mTypeface ? mTypeface : Typeface::getDefault();
 }
 
 void Paint::set(const Paint&o){
@@ -142,7 +150,7 @@ void Paint::setTextSkewX(float v){
 float Paint::ascent()const{
     minikin::MinikinExtent extent;
     minikin::FontFakery  ffk;
-    auto minikinFont = mTypeface->getMinikinFont();
+    auto minikinFont = effectiveTypeface()->getMinikinFont();
     minikinFont->GetFontExtent(&extent,*mMinikinPaint,ffk);
     return extent.ascent;
 }
@@ -150,7 +158,7 @@ float Paint::ascent()const{
 float Paint::descent()const{
     minikin::MinikinExtent extent;
     minikin::FontFakery  ffk;
-    auto minikinFont = mTypeface->getMinikinFont();
+    auto minikinFont = effectiveTypeface()->getMinikinFont();
     minikinFont->GetFontExtent(&extent,*mMinikinPaint,ffk);
     return extent.descent;
 }
@@ -234,13 +242,14 @@ static void fillGlyphBoxMetrics(Paint::FontMetricsInt* fmi, const Typeface* type
 }
 
 int Paint::getFontMetricsInt(FontMetricsInt* fmi)const{
-    std::shared_ptr<minikin::MinikinFont> minikinFont = mTypeface->getMinikinFont();
+    Typeface* tf = effectiveTypeface();
+    std::shared_ptr<minikin::MinikinFont> minikinFont = tf->getMinikinFont();
     minikin::MinikinExtent extent;
     minikinFont->GetFontExtent(&extent, *mMinikinPaint, minikin::FontFakery());
     if(fmi){
         fmi->ascent = extent.ascent;
         fmi->descent = extent.descent;
-        fillGlyphBoxMetrics(fmi, mTypeface, *mMinikinPaint, minikinFont.get());
+        fillGlyphBoxMetrics(fmi, tf, *mMinikinPaint, minikinFont.get());
     }
     return (int)(extent.descent - extent.ascent);
 }
