@@ -224,9 +224,9 @@ public:
     void setPopupOffset(int x, int y);
     /* Override the long-press accent popup's container layout (the window that
      * hosts the mini KeyboardView). The active InputMethod's getKeyboardLayout
-     * (POPUP) feeds this so a product can customize the popup appearance. Empty
+     * (POPUP) feeds this so a product can customize the popup appearance. 0
      * keeps the layout declared via android:popupLayout. */
-    void setPopupLayout(const std::string& popupLayout);
+    void setPopupLayout(int popupLayoutResId);
     void setProximityCorrectionEnabled(bool enabled);
     bool isProximityCorrectionEnabled()const;
     void onClick(View&v);

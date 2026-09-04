@@ -51,9 +51,8 @@ public:
 
    /* Custom keyboard layout provisioning (per-product customization).
     *
-    * Return the layout resource for the given inputType (e.g.
-    * "@myprod:xml/keypad.xml", resolved from the product's app pak the same way
-    * "@cdroid:xml/qwerty.xml" is, or a filesystem path), or empty to use the
+    * Return the layout resource id (R.xml.<name> from the product's app pak,
+    * or cdroid's internal R::xml) for the given inputType, or 0 to use the
     * IME's built-in default.
     *
     * - A real editor inputType (>= 0): the field-driven keyboard. The value can
@@ -63,13 +62,14 @@ public:
     *   popup is not inputType-driven, so it is requested via this sentinel.
     *
     * The 123 symbol page is IME-internal and uses the built-in symbols.xml
-    * (not routed through here). Defaults return empty, so the bundled
+    * (not routed through here). Defaults return 0, so the bundled
     * English/Pinyin methods are unchanged -- override in a product subclass to
     * ship custom keyboards without modifying CDROID. */
    static constexpr int POPUP = -1;  // sentinel inputType: request the popup layout
-   /* Returns the system-default keyboard set (inherited unchanged by the bundled
-    * English/Pinyin methods). Override in a product subclass to customize. */
-   virtual std::string getKeyboardLayout(int inputType)const;
+   /* Returns the system-default keyboard set as resource ids (inherited
+    * unchanged by the bundled English/Pinyin methods). Override in a product
+    * subclass to customize. */
+   virtual int getKeyboardLayout(int inputType)const;
 };
 
 };

@@ -24,13 +24,14 @@ namespace cdroid{
 
 class InputMethodManager{
 public:
-    /* A registered input method + the keyboard layout it uses. The layout lives
-     * here (a UI concern), not on InputMethod (an engine), so the engine stays
-     * decoupled from the keyboard UI. */
+    /* A registered input method + the keyboard layout it uses (a layout
+     * resource id, R.xml.<name>; 0 = none). The layout lives here (a UI
+     * concern), not on InputMethod (an engine), so the engine stays decoupled
+     * from the keyboard UI. */
     struct ImMethod{
         std::string name;
         InputMethod* method;
-        std::string layout;
+        int layout;
     };
 private:
     friend class IMEWindow;
@@ -39,14 +40,14 @@ private:
     int setInputMethod(InputMethod*,const std::string&name);
     void ensureIMEWindow();   // lazily create the on-screen IMEWindow
     void positionIMEWindow(); // place it docked to the bottom of the screen (undo any off-screen hide)
-    /* Load a Keyboard from the given XML layout id and install it on the IME
-     * window's KeyboardView. Shared by setInputType (class-driven layout) and
-     * setInputMethod (method-switch layout). */
-    void applyKeyboard(const std::string&layout);
+    /* Load a Keyboard from the given XML layout resource id and install it on
+     * the IME window's KeyboardView. Shared by setInputType (class-driven
+     * layout) and setInputMethod (method-switch layout). */
+    void applyKeyboard(int xmlLayoutResId);
     /* Resolve the letter (TYPE_CLASS_TEXT) layout: the active method's custom
      * LETTER layout if it supplies one, else its registered ImMethod layout,
-     * else the first registered, else qwerty. */
-    std::string activeTextLayout() const;
+     * else the first registered, else qwerty. Returns a layout resource id. */
+    int activeTextLayout() const;
     /* 123/ABC toggle on the text keyboard: flip between the symbols page and the
      * active text method's layout. Independent of inputType (the field is still
      * text); reset by setInputType on every editor change. */
@@ -60,7 +61,7 @@ protected:
 public:
     static InputMethodManager&getInstance();
     static InputMethodManager*peekInstance();
-    int registeMethod(const std::string&name,InputMethod*,const std::string&layout);
+    int registeMethod(const std::string&name,InputMethod*,int layoutResId);
     std::vector<std::string>getInputMethods(std::vector<InputMethod*>*methods);
     int getInputMethodCount()const;
     InputMethod*getInputMethod(int idx);

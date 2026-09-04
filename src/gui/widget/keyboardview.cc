@@ -179,17 +179,12 @@ void KeyboardView::setPopupOffset(int x, int y) {
     }*/
 }
 
-void KeyboardView::setPopupLayout(const std::string& popupLayout) {
-    // Runtime product override (InputMethodManager passes a layout name);
-    // resolve it to an id — the inflater is id-keyed.
-    if(popupLayout.empty()) return;
-    std::string name = popupLayout;
-    const size_t slash = name.rfind('/');
-    if (slash != std::string::npos) name = name.substr(slash + 1);
-    const int resId = getContext()->getResources().getIdentifier(name, "layout", "cdroid");
-    if(resId == 0) return;
-    if(mPopupLayout != resId){
-        mPopupLayout = resId;
+void KeyboardView::setPopupLayout(int popupLayoutResId) {
+    // Runtime product override (InputMethodManager passes a layout resource id;
+    // the inflater is id-keyed).
+    if(popupLayoutResId == 0) return;
+    if(mPopupLayout != popupLayoutResId){
+        mPopupLayout = popupLayoutResId;
         // Cached popups were inflated from the old layout; drop them so the next
         // long-press re-inflates with the new container.
         mMiniKeyboardCache.clear();
