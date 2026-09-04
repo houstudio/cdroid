@@ -74,12 +74,6 @@ void InputEventSource::doEventsConsume(){
 
 InputEventSource::~InputEventSource(){
     mRunning = false;
-    // Join before the object dies: the input thread parks in InputGetEvents
-    // with a 20ms timeout, so it observes the flag and exits within one poll;
-    // after this, mtxEvents/mDevices outlive their only reader.
-    if (mInputThread.joinable()) {
-        mInputThread.join();
-    }
     Looper::getMainLooper()->removeEventHandler(this);
     LOGD("%p Destroied",this);
 }
@@ -187,10 +181,11 @@ int InputEventSource::checkEvents(){
         const auto numCore = std::thread::hardware_concurrency();
         auto coreId= sched_getcpu();
         auto func = std::bind(&InputEventSource::doEventsConsume,this);
-        mInputThread = std::thread(func);
+        std::thread th(func);
         if(numCore>1){
-            setThreadAffinity(mInputThread,coreId-1>=0?coreId-1:coreId+1);
+            setThreadAffinity(th,coreId-1>=0?coreId-1:coreId+1);
         }
+        th.detach();
         LOGI("MainLoop on %d/%d",coreId,numCore);
         mInited = true;
     }
