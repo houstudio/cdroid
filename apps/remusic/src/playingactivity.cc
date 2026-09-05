@@ -2,6 +2,8 @@
 // album carousel (AlbumViewPager→ViewPager alias), needle, lyrics view,
 // transport controls + progress. Lean cut: needle rotation animation and the
 // comment/download tools land with the polish pass.
+#include <algorithm>
+
 #include <cdroid.h>
 #include <cmath>
 #include <functional>
@@ -172,23 +174,52 @@ private:
     void updateTrackInfo() {
         // Lyrics: sibling .lrc if present.
         mLrc->setLrcRows(parseLrc(loadLrcFor(MusicPlayer::getPath())));
+        const std::string cover = MusicPlayer::currentTrackInfo()
+                ? MusicPlayer::currentTrackInfo()->albumData : std::string();
         if (auto* art = (ImageView*) findViewById(R::id::albumArt)) {
-            const std::string cover = MusicPlayer::currentTrackInfo()
-                    ? MusicPlayer::currentTrackInfo()->albumData : std::string();
+            // Static backdrop: dimmed cover fill (no rotation).
             if (!cover.empty()) art->setImageURIAsync("file://" + cover);
             else art->setImageResource(R::drawable::placeholder_disk_210);
         }
+        if (mDisc) {
+            if (!cover.empty()) mDisc->setImageURIAsync("file://" + cover);
+            else mDisc->setImageResource(R::drawable::placeholder_disk_210);
+        }
     }
 
-    // The original spins the album disc while playing and lifts/lowers the
-    // tonearm (rotate about its pivot end).
+    // The original spins the ALBUM DISC while playing and lifts/lowers the
+    // tonearm. The disc is its own view (circular-cropped cover, left of
+    // center under the needle's pivot) — NOT the full-screen albumArt
+    // backdrop, which must stay static.
     void wireNeedleAndDisc() {
         mNeedle = (ImageView*) findViewById(R::id::needle);
-        mDisc = (ImageView*) findViewById(R::id::albumArt);
         if (mNeedle) {
-            mNeedle->setPivotX(0.75f * mNeedle->getWidth() + 1);   // set after layout
             post([this] {
                 if (mNeedle) mNeedle->setPivotX(mNeedle->getWidth() * 0.72f);
+            });
+        }
+        // Dedicated disc view, added over the (empty) album pager area.
+        View* pagerView = findViewById(R::id::view_pager);
+        ViewGroup* pagerArea = pagerView ? (ViewGroup*) pagerView->getParent() : nullptr;
+        if (pagerArea != nullptr) {
+            mDisc = new ImageView(getContext());
+            mDisc->setScaleType(ScaleType::FIT_XY);
+            mDisc->setImageResource(R::drawable::placeholder_disk_210);
+            mDisc->setAdjustViewBounds(false);
+            auto* lp = new ViewGroup::MarginLayoutParams(0, 0);
+            mDisc->setLayoutParams(lp);
+            pagerArea->addView(mDisc);
+            post([this] {
+                if (mDisc == nullptr) return;
+                const int w = getWidth();
+                const int disc = std::min(340, (int)(w * 0.66f));
+                auto* lp = (ViewGroup::MarginLayoutParams*) mDisc->getLayoutParams();
+                lp->width = disc;
+                lp->height = disc;
+                lp->leftMargin = (int)(w * 0.5f) - disc - 24;   // left of center: needle lands on its rim
+                lp->topMargin = 132;
+                mDisc->setLayoutParams(lp);
+                mDisc->setCornerRadii((int)(disc / 2));   // circular crop
             });
         }
         mSpinKeepalive = [this]() -> bool {
@@ -215,6 +246,8 @@ private:
             c->setVisibility(showLrc ? View::VISIBLE : View::GONE);
         if (auto* p = findViewById(R::id::view_pager))
             p->setVisibility(showLrc ? View::GONE : View::VISIBLE);
+        if (mDisc) mDisc->setVisibility(showLrc ? View::GONE : View::VISIBLE);
+        if (mNeedle) mNeedle->setVisibility(showLrc ? View::GONE : View::VISIBLE);
     }
 
     // PlayQueueFragment, lean port: a scrimmed bottom sheet listing the
