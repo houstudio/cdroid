@@ -528,6 +528,28 @@ void MediaPlaybackService::restoreQueueIfNeeded() {
     notifyChange(MediaServiceActions::META_CHANGED);
 }
 
+// ---- sleep timer ----
+void MediaPlaybackService::timing(int msec) {
+    ++mTimingGen;                       // cancel any pending firing
+    if (msec <= 0) {
+        mTimingDeadline = 0;
+        return;
+    }
+    mTimingDeadline = cdroid::SystemClock::uptimeMillis() + msec;
+    const int gen = mTimingGen;
+    mTickHandler.postDelayed([this, gen] {
+        if (gen != mTimingGen || mTimingDeadline == 0) return;
+        mTimingDeadline = 0;
+        if (isPlaying()) pause();
+    }, msec);
+}
+
+long MediaPlaybackService::timingRemainingMs() const {
+    if (mTimingDeadline == 0) return 0;
+    const long now = cdroid::SystemClock::uptimeMillis();
+    return mTimingDeadline > now ? mTimingDeadline - now : 0;
+}
+
 // ---- tick ----
 void MediaPlaybackService::scheduleTick() {
     if (mTickScheduled) return;

@@ -14,6 +14,8 @@
 #include <widget/textview.h>
 
 #include "mediaplaybackservice.h"
+#include "downloadmanager.h"
+#include "sildingfinish.h"
 #include "musicplayer.h"
 #include "musicprovider.h"
 #include "themestore.h"
@@ -47,7 +49,14 @@ public:
         mList = new ListView(getContext());
         root->addView(mList, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
-        addView(root);
+        // SildingFinishLayout wraps the page: swipe right to finish, like
+        // the original's detail screens.
+        auto* silding = new SildingFinishLayout(getContext());
+        silding->addView(root, new ViewGroup::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
+        silding->setOnSildingFinishListener([this] { close(); });
+        addView(silding, new ViewGroup::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
         onContentReady();
     }
 
@@ -94,12 +103,36 @@ class DownActivity : public HeaderActivity {
 public:
     DownActivity() : HeaderActivity("下载管理") {}
     void onContentReady() override {
-        auto* menu = mList;
-        std::vector<std::string> rows = {"在线下载已离线"};
+        bindList();
+        DownloadManager::get().addListener(this, [this] { bindList(); });
+    }
+    void onDestroy() override {
+        DownloadManager::get().removeListener(this);
+        HeaderActivity::onDestroy();
+    }
+private:
+    // DownMusicFragment's list, string rows: "[status/percent] name".
+    void bindList() {
+        std::vector<std::string> rows;
+        for (const auto& t : DownloadManager::get().tasks()) {
+            const char* st = t.status == DownloadManager::DONE ? "完成"
+                    : t.status == DownloadManager::FAILED ? "失败"
+                    : t.status == DownloadManager::RUNNING ? "下载中" : "排队";
+            char info[48];
+            if (t.status == DownloadManager::RUNNING && t.total > 0)
+                snprintf(info, sizeof(info), "%.0f%%", 100.0 * t.done / t.total);
+            else if (t.status == DownloadManager::RUNNING)
+                snprintf(info, sizeof(info), "%.1fMB", t.done / 1048576.0);
+            else
+                snprintf(info, sizeof(info), "%s", st);
+            rows.push_back(std::string("[") + info + "] " + t.name);
+        }
+        if (rows.empty())
+            rows.push_back("在线页播放的曲目,点播放页的下载箭头加入下载");
         auto* adapter = new ArrayAdapter<std::string>(
                 getContext(), R::layout::design_drawer_item, 0);
         adapter->addAll(rows);
-        menu->setAdapter(adapter);
+        mList->setAdapter(adapter);
     }
 };
 REGISTER_ACTIVITY(DownActivity);

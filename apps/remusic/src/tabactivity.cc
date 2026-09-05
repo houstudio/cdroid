@@ -9,7 +9,10 @@
 #include <fragment/fragment.h>
 #include <fragment/fragmentactivity.h>
 #include <fragment/fragmentpageradapter.h>
+#include <strings.h>
+
 #include <widget/adapter.h>
+#include <widget/framelayout.h>
 #include <widget/linearlayout.h>
 #include <widget/listview.h>
 #include <widget/textview.h>
@@ -18,11 +21,13 @@
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/tablayout/tablayout.h>
 
+#include "converpinyin.h"
 #include "musicfragment.h"
 #include "musicplayer.h"
 #include "musicprovider.h"
 #include "themestore.h"
 #include "quickcontrols.h"
+#include "sidebar.h"
 
 using namespace cdroid;
 using namespace remusic;
@@ -35,10 +40,34 @@ public:
     explicit GroupListFragment(Kind kind) : mKind(kind) {}
 
     View* onCreateView(LayoutInflater* inflater, ViewGroup* /*container*/, Bundle*) override {
-        auto* recyclerView = new RecyclerView(inflater->getContext());
-        recyclerView->setLayoutManager(new LinearLayoutManager(inflater->getContext()));
+        Context* ctx = inflater->getContext();
+        auto* recyclerView = new RecyclerView(ctx);
+        recyclerView->setLayoutManager(new LinearLayoutManager(ctx));
         recyclerView->setAdapter(new GroupAdapter(this));
-        return recyclerView;
+        mRecycler = recyclerView;
+        // SideBar (A..# pinyin index) overlaid on the right edge, plus the
+        // mid-screen letter bubble it drives — the ArtistFragment wiring.
+        auto* host = new FrameLayout(ctx);
+        host->addView(recyclerView, new FrameLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
+        auto* bubble = new TextView(ctx);
+        bubble->setTextSize(32);
+        bubble->setTextColor(0xFFFFFFFF);
+        bubble->setBackgroundColor(0x80333333);
+        bubble->setGravity(Gravity::CENTER);
+        bubble->setVisibility(View::INVISIBLE);
+        host->addView(bubble, new FrameLayout::LayoutParams(120, 120, Gravity::CENTER));
+        mSideBar = new SideBar(ctx);
+        mSideBar->setView(bubble);
+        mSideBar->setOnTouchingLetterChangedListener([this](const std::string& s) {
+            auto it = mSectionPos.find(s);
+            if (it == mSectionPos.end() || mRecycler == nullptr) return;
+            ((LinearLayoutManager*) mRecycler->getLayoutManager())
+                    ->scrollToPositionWithOffset(it->second, 0);
+        });
+        host->addView(mSideBar, new FrameLayout::LayoutParams(28,
+                ViewGroup::LayoutParams::MATCH_PARENT, Gravity::RIGHT | Gravity::CENTER_VERTICAL));
+        return host;
     }
 
     void onResume() override {
@@ -63,8 +92,20 @@ public:
                 mEntries.push_back({name.empty() ? kv.first : name, kv.first, kv.second});
             }
         }
-        if (getView() != nullptr && ((RecyclerView*) getView())->getAdapter())
-            ((RecyclerView*) getView())->getAdapter()->notifyDataSetChanged();
+        // A-Z pinyin order (the original's default artist/album sort) so the
+        // SideBar sections line up with the list; case-insensitive so
+        // "Linkin Park" and "limp bizkit" interleave correctly.
+        std::sort(mEntries.begin(), mEntries.end(), [](const Entry& a, const Entry& b) {
+            const int c = strcasecmp(getFullSpell(a.name).c_str(),
+                                     getFullSpell(b.name).c_str());
+            if (c != 0) return c < 0;
+            return a.name < b.name;
+        });
+        mSectionPos.clear();
+        for (int i = 0; i < (int) mEntries.size(); i++)
+            mSectionPos.emplace(std::string(1, sectionLetter(mEntries[i].name)), i);
+        if (getView() != nullptr && mRecycler != nullptr && mRecycler->getAdapter())
+            mRecycler->getAdapter()->notifyDataSetChanged();
     }
 
     std::string modeName() const {
@@ -108,6 +149,9 @@ private:
 
     Kind mKind;
     std::vector<Entry> mEntries;
+    RecyclerView* mRecycler = nullptr;
+    SideBar* mSideBar = nullptr;
+    std::map<std::string, int> mSectionPos;   // first adapter position per letter
 };
 
 class TabPagerAdapter : public FragmentPagerAdapter {

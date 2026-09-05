@@ -12,6 +12,11 @@
 
 namespace remusic {
 
+// TimingFragment, faithful port: the fixed sleep-timer presets as a bottom
+// sheet appended to `host` (any activity). Shared by the playing screen's
+// overflow (⋮) and the drawer's 定时关闭 entry.
+void showTimingSheet(cdroid::ViewGroup& host);
+
 class QuickControls {
 public:
     static QuickControls& get();

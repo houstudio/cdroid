@@ -15,12 +15,12 @@
 
 namespace remusic {
 
-void RadioBrowser::searchByTag(const std::string& tag,
+static void searchStations(const std::string& query,
         std::function<void(std::vector<RadioStation>)> onDone) {
-    std::thread([tag, onDone = std::move(onDone)]() mutable {
+    std::thread([query, onDone = std::move(onDone)]() mutable {
         const std::string url =
                 "https://de1.api.radio-browser.info/json/stations/search"
-                "?limit=60&order=clickcount&reverse=true&hidebroken=true&tagList=" + tag;
+                "?limit=60&order=clickcount&reverse=true&hidebroken=true&" + query;
         std::vector<RadioStation> stations;
         const std::string body = httpGet(url);
         Json::Value root;
@@ -72,6 +72,16 @@ void RadioBrowser::searchByTag(const std::string& tag,
             onDone(std::move(stations));
         });
     }).detach();
+}
+
+void RadioBrowser::searchByTag(const std::string& tag,
+        std::function<void(std::vector<RadioStation>)> onDone) {
+    searchStations("tagList=" + tag, std::move(onDone));
+}
+
+void RadioBrowser::searchByName(const std::string& term,
+        std::function<void(std::vector<RadioStation>)> onDone) {
+    searchStations("name=" + urlEncode(term), std::move(onDone));
 }
 
 } // namespace remusic

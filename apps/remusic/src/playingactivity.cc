@@ -17,7 +17,11 @@
 #include <widget/framelayout.h>
 #include <widget/linearlayout.h>
 #include <widget/listview.h>
+#include <widgetEx/recyclerview/linearlayoutmanager.h>
+#include <widgetEx/recyclerview/recyclerview.h>
+#include <widgetEx/recyclerview/itemtouchhelper.h>
 #include <widget/toolbar.h>
+#include <widget/toast.h>
 #include <view/keyevent.h>
 #include <widget/adapter.h>
 
@@ -26,6 +30,8 @@
 #include "lrcview.h"
 #include "mediaplaybackservice.h"
 #include "musicplayer.h"
+#include "downloadmanager.h"
+#include "quickcontrols.h"
 #include "musicprovider.h"
 
 using namespace cdroid;
@@ -113,8 +119,28 @@ public:
         mMode->setOnClickListener([](View&) { MusicPlayer::cycleRepeat(); });
         if (auto* playlist = findViewById(R::id::playing_playlist))
             playlist->setOnClickListener([this](View&) { showQueueSheet(); });
-        // Tool row: favorite/download/comment/more — offline stubs for now.
-        for (int id : {R::id::playing_fav, R::id::playing_down, R::id::playing_cmt, R::id::playing_more})
+        // Tool row: favorite/download/comment are offline stubs; the overflow
+        // (⋮) opens the sleep timer (TimingFragment in the original, reached
+        // through the same overflow menu).
+        if (auto* more = findViewById(R::id::playing_more))
+            more->setOnClickListener([this](View&) { showTimingSheet(*this); });
+        // Download arrow: AddDownTask for online (http) tracks — the file
+        // lands in ~/Music and the library picks it up on the next scan.
+        if (auto* down = findViewById(R::id::playing_down))
+            down->setOnClickListener([this](View&) {
+                const std::string url = MusicPlayer::getPath();
+                const bool online = url.compare(0, 7, "http://") == 0
+                        || url.compare(0, 8, "https://") == 0;
+                if (!online) {
+                    Toast::makeText(getContext(), "仅在线曲目可下载")->show();
+                    return;
+                }
+                const std::string name = MusicPlayer::getTrackName()
+                        + " - " + MusicPlayer::getArtistName();
+                if (DownloadManager::get().addTask(url, name) != 0)
+                    Toast::makeText(getContext(), "已加入下载队列,见下载管理")->show();
+            });
+        for (int id : {R::id::playing_fav, R::id::playing_cmt})
             if (auto* v = findViewById(id)) v->setOnClickListener([](View&) {});
 
         if (auto* toolbar = (Toolbar*) findViewById(R::id::toolbar)) {
@@ -284,8 +310,9 @@ private:
         if (mNeedle) mNeedle->setVisibility(showLrc ? View::GONE : View::VISIBLE);
     }
 
-    // PlayQueueFragment, lean port: a scrimmed bottom sheet listing the
-    // queue; tap a row to jump, tap the scrim to dismiss.
+    // PlayQueueFragment, port: scrimmed bottom sheet listing the queue; tap
+    // a row to jump, long-press-drag to reorder (DragSortRecycler's role in
+    // the original, done with the ported androidx ItemTouchHelper here).
     void showQueueSheet() {
         if (mQueueSheet == nullptr) {
             mQueueScrim = new FrameLayout(getContext());
@@ -301,43 +328,89 @@ private:
             title->setPadding(24, 18, 24, 18);
             sheet->addView(title, new LinearLayout::LayoutParams(
                     ViewGroup::LayoutParams::MATCH_PARENT, 56));
-            auto* list = new ListView(getContext());
+            auto* list = new RecyclerView(getContext());
+            list->setLayoutManager(new LinearLayoutManager(getContext()));
+            mQueueIds = MusicPlayer::getQueue();
+            list->setAdapter(mQueueAdapter = new QueueAdapter(this));
+            mQueueTouchCb = new QueueTouchCallback(this);
+            mQueueTouch = new ItemTouchHelper(mQueueTouchCb);
+            mQueueTouch->attachToRecyclerView(list);
             sheet->addView(list, new LinearLayout::LayoutParams(
                     ViewGroup::LayoutParams::MATCH_PARENT, 420));
             mQueueScrim->addView(sheet, new FrameLayout::LayoutParams(
-                    ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT,
+                    ViewGroup::LayoutParams::MATCH_PARENT,
+                    ViewGroup::LayoutParams::WRAP_CONTENT,
                     Gravity::BOTTOM));
             addView(mQueueScrim, new FrameLayout::LayoutParams(
-                    ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
-
-            std::vector<std::string> rows;
-            const auto& queue = MusicPlayer::getQueue();
-            const auto& infos = MusicPlayer::getPlayinfos();
-            const int current = MusicPlayer::getQueuePosition();
-            for (size_t i = 0; i < queue.size(); i++) {
-                auto it = infos.find(queue[i]);
-                std::string row = it != infos.end()
-                        ? (it->second.musicName + " - " + it->second.artist)
-                        : std::to_string(queue[i]);
-                if ((int)i == current) row = "▶ " + row;
-                rows.push_back(row);
-            }
-            auto* adapter = new ArrayAdapter<std::string>(
-                    getContext(), R::layout::design_drawer_item, 0);
-            adapter->addAll(rows);
-            list->setAdapter(adapter);
-            list->setOnItemClickListener([this, queue](AdapterView&, View&, int position, long) {
-                if (position >= (int)queue.size()) return;
-                MusicPlayer::setQueuePosition(position);
-                hideQueueSheet();
-            });
+                    ViewGroup::LayoutParams::MATCH_PARENT,
+                    ViewGroup::LayoutParams::MATCH_PARENT));
             mQueueSheet = list;
         }
+        mQueueIds = MusicPlayer::getQueue();
+        if (mQueueAdapter) mQueueAdapter->notifyDataSetChanged();
         mQueueScrim->setVisibility(View::VISIBLE);
     }
     void hideQueueSheet() {
         if (mQueueScrim) mQueueScrim->setVisibility(View::GONE);
     }
+
+    // Rows: "name - artist", the playing row marked with a play glyph; tap jumps.
+    class QueueAdapter : public RecyclerView::Adapter {
+    public:
+        explicit QueueAdapter(PlayingActivity* host) : mHost(host) {}
+        RecyclerView::ViewHolder* onCreateViewHolder(ViewGroup* parent, int) override {
+            View* v = LayoutInflater::from(parent->getContext())
+                    ->inflate(R::layout::design_drawer_item, parent, false);
+            return new RecyclerView::ViewHolder(v);
+        }
+        void onBindViewHolder(RecyclerView::ViewHolder& holder, int position) override {
+            if (position >= (int) mHost->mQueueIds.size()) return;
+            const long id = mHost->mQueueIds[position];
+            const auto& infos = MusicPlayer::getPlayinfos();
+            auto it = infos.find(id);
+            std::string row = it != infos.end()
+                    ? (it->second.musicName + " - " + it->second.artist)
+                    : std::to_string(id);
+            if (position == MusicPlayer::getQueuePosition()) row = "> " + row;
+            ((TextView*) holder.itemView)->setText(row);
+            holder.itemView->setOnClickListener([this, position](View&) {
+                if (position >= (int) mHost->mQueueIds.size()) return;
+                MusicPlayer::setQueuePosition(position);
+                mHost->mQueueAdapter->notifyDataSetChanged();
+            });
+        }
+        int getItemCount() override { return (int) mHost->mQueueIds.size(); }
+    private:
+        PlayingActivity* mHost;
+    };
+    friend class QueueAdapter;
+
+    // Long-press drag = the service's moveQueueItem.
+    class QueueTouchCallback : public ItemTouchHelper::SimpleCallback {
+    public:
+        explicit QueueTouchCallback(PlayingActivity* host)
+                : ItemTouchHelper::SimpleCallback(
+                        ItemTouchHelper::UP | ItemTouchHelper::DOWN, 0), mHost(host) {}
+        bool onMove(RecyclerView&, RecyclerView::ViewHolder& vh,
+                    RecyclerView::ViewHolder& target) override {
+            const int from = vh.getLayoutPosition();
+            const int to = target.getLayoutPosition();
+            if (from < 0 || to < 0 || from == to
+                    || from >= (int) mHost->mQueueIds.size()
+                    || to >= (int) mHost->mQueueIds.size())
+                return false;
+            MusicPlayer::moveQueueItem(from, to);
+            const long id = mHost->mQueueIds[from];
+            mHost->mQueueIds.erase(mHost->mQueueIds.begin() + from);
+            mHost->mQueueIds.insert(mHost->mQueueIds.begin() + to, id);
+            mHost->mQueueAdapter->notifyItemMoved(from, to);
+            return true;
+        }
+        void onSwiped(RecyclerView::ViewHolder&, int) override {}
+    private:
+        PlayingActivity* mHost;
+    };
+    friend class QueueTouchCallback;
 
     bool onKeyDown(int keyCode, KeyEvent& event) override {
         if (keyCode == KeyEvent::KEYCODE_BACK || keyCode == KeyEvent::KEYCODE_ESCAPE) {
@@ -362,7 +435,11 @@ private:
     bool mScrubbing = false;
     long mScrubbingMs = 0;
     FrameLayout* mQueueScrim = nullptr;
-    ListView* mQueueSheet = nullptr;
+    RecyclerView* mQueueSheet = nullptr;
+    std::vector<long> mQueueIds;
+    QueueAdapter* mQueueAdapter = nullptr;
+    ItemTouchHelper* mQueueTouch = nullptr;
+    QueueTouchCallback* mQueueTouchCb = nullptr;
     std::function<bool()> mRefresh;
 };
 REGISTER_ACTIVITY(PlayingActivity);

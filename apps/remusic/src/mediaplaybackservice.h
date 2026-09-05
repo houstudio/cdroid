@@ -124,6 +124,12 @@ public:
     // ---- modes / queries (MusicPlayer facade surface) ----
     void cycleRepeat();
     void cycleShuffle();
+
+    // Sleep timer (TimingFragment -> MusicPlayer.timing): pause after msec,
+    // 0 cancels. The original arms AlarmManager with a PAUSE_ACTION broadcast.
+    void timing(int msec);
+    bool timingActive() const { return mTimingDeadline != 0; }
+    long timingRemainingMs() const;
     int  shuffleMode() const { return mShuffleMode; }
     void setShuffleMode(int mode);
     int  repeatMode() const { return mRepeatMode; }
@@ -178,6 +184,8 @@ private:
     bool mQueueIsSaveable = false;
     bool mServiceInUse = false;
     bool mErrorNotified = false;
+    long mTimingDeadline = 0;       // uptimeMillis; 0 = timer off
+    int mTimingGen = 0;             // cancels stale postDelayed firings
 
     PlayerBackend* mBackend = nullptr;      // owned default
     WallClockPlayerBackend mClock;

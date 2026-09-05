@@ -74,6 +74,10 @@ set(REMUSIC_SRCS
     src/playliststore.cc
     src/localsearchactivity.cc
     src/themestore.cc
+    src/converpinyin.cc
+    src/downloadmanager.cc
+    src/sidebar.cc
+    src/sildingfinish.cc
 )
 if(REMUSIC_FFMPEG)
     list(APPEND REMUSIC_SRCS src/ffmpegbackend.cc)

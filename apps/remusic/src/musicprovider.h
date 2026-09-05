@@ -20,6 +20,8 @@ public:
 
     /** Scan the standard roots (./music, $HOME/Music) once; rescans cheap. */
     void scanIfNeeded();
+    /** Force a rescan (download completion drops new files into ~/Music). */
+    void rescan() { mScanned = false; scanIfNeeded(); }
     void addRoot(const std::string& dir);
 
     // ---- MusicUtils query shapes ----

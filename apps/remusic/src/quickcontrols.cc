@@ -6,6 +6,9 @@
 #include <widget/imageview.h>
 #include <widget/progressbar.h>
 #include <widget/textview.h>
+#include <widget/toast.h>
+#include <widget/framelayout.h>
+#include <widget/linearlayout.h>
 
 #include "musicplayer.h"
 #include "themestore.h"
@@ -95,4 +98,39 @@ void QuickControls::updateInfo() {
         // ships only in some builds — reuse play for now).
         control->setImageResource(R::drawable::playbar_btn_play);
     }
+}
+
+// ---- TimingFragment (shared bottom sheet) ----
+void remusic::showTimingSheet(ViewGroup& host) {
+    Context* ctx = host.getContext();
+    auto* scrim = new FrameLayout(ctx);
+    scrim->setBackgroundColor(0x88000000u);
+    scrim->setOnClickListener([scrim](View&) { scrim->setVisibility(View::GONE); });
+    auto* sheet = new LinearLayout(ctx);
+    sheet->setOrientation(LinearLayout::VERTICAL);
+    sheet->setBackgroundColor(0xFFF5F5F5);
+    auto addRow = [&](const std::string& text, int minutes) {
+        auto* row = new TextView(ctx);
+        row->setText(text);
+        row->setTextSize(minutes < 0 ? 18 : 15);           // -1 = header
+        row->setTextColor(minutes < 0 ? 0xFF333333 : 0xFF666666);
+        row->setPadding(40, 16, 24, 16);
+        sheet->addView(row, new LinearLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, 52));
+        if (minutes >= 0) row->setOnClickListener([scrim, minutes](View&) {
+            MusicPlayer::timing(minutes * 60 * 1000);
+            Toast::makeText(scrim->getContext(), minutes > 0
+                    ? "将在" + std::to_string(minutes) + "分钟后停止播放"
+                    : "已取消定时")->show();
+            scrim->setVisibility(View::GONE);
+        });
+    };
+    addRow("定时停止播放", -1);
+    addRow(MusicPlayer::timingActive() ? "取消定时" : "不开启", 0);
+    for (int m : {10, 20, 30, 45, 60, 90}) addRow(std::to_string(m) + "分钟后", m);
+    scrim->addView(sheet, new FrameLayout::LayoutParams(
+            ViewGroup::LayoutParams::MATCH_PARENT,
+            ViewGroup::LayoutParams::WRAP_CONTENT, Gravity::BOTTOM));
+    host.addView(scrim, new ViewGroup::LayoutParams(
+            ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
 }

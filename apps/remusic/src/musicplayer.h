@@ -30,6 +30,8 @@ public:
     static int  removeTrack(long id) { return service().removeTrack(id); }
     static void cycleRepeat() { service().cycleRepeat(); }
     static void cycleShuffle() { service().cycleShuffle(); }
+    static void timing(int msec) { service().timing(msec); }
+    static bool timingActive() { return service().timingActive(); }
     static void setShuffleMode(int mode) { service().setShuffleMode(mode); }
 
     static void playAll(const std::map<long, MusicInfo>& infos,

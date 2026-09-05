@@ -4,6 +4,7 @@
 // hosts MainFragment exactly like the original page 1.
 #include <cdroid.h>
 #include <functional>
+#include <memory>
 #include <R.h>
 #include <core/activityfactory.h>
 #include <core/intent.h>
@@ -118,6 +119,30 @@ private:
         panel->addView(chipsScroll, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
 
+        // Name search row (NetSearchWordsActivity's stand-in on the radio
+        // panel): term + 搜索 button, results land in the same list.
+        auto* searchRow = new LinearLayout(ctx);
+        searchRow->setOrientation(LinearLayout::HORIZONTAL);
+        mSearchBox = new EditText(ctx);
+        mSearchBox->setHint("电台名称,如 jazz");
+        mSearchBox->setTextSize(14);
+        mSearchBox->setSingleLine(true);
+        searchRow->addView(mSearchBox, new LinearLayout::LayoutParams(0,
+                ViewGroup::LayoutParams::WRAP_CONTENT, 1.f));
+        auto* go = new TextView(ctx);
+        go->setText("搜索");
+        go->setTextSize(15);
+        go->setPadding(28, 12, 28, 12);
+        go->setBackgroundColor(0xFFD43C33);
+        go->setTextColor(0xFFFFFFFF);
+        go->setClickable(true);
+        go->setOnClickListener([this](View&) { runNameSearch(); });
+        searchRow->addView(go, new LinearLayout::LayoutParams(
+                ViewGroup::LayoutParams::WRAP_CONTENT,
+                ViewGroup::LayoutParams::WRAP_CONTENT, 0.f));
+        panel->addView(searchRow, new LinearLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
+
         mStatus = new TextView(ctx);
         mStatus->setText("加载电台中…");
         mStatus->setTextSize(14);
@@ -133,6 +158,32 @@ private:
         return panel;
     }
 
+    // Name query: chips unhighlight (no tag active), list header says 搜索.
+    void runNameSearch() {
+        if (mSearchBox == nullptr || getView() == nullptr) return;
+        cdroid::String* text = mSearchBox->getText().toString();
+        std::string term = text ? text->str() : std::string();
+        delete text;
+        while (!term.empty() && (term.back() == ' ' || term.back() == '\n')) term.pop_back();
+        if (term.empty()) return;
+        for (TextView* c : mChipViews) {
+            c->setBackgroundColor(0xFFDDDDDD);
+            c->setTextColor(0xFF444444);
+        }
+        mStatus->setText("搜索 \"" + term + "\" 中…");
+        auto alive = mAlive;
+        RadioBrowser::searchByName(term, [this, alive](std::vector<RadioStation> stations) {
+            if (!*alive || getView() == nullptr) return;
+            mStations = std::move(stations);
+            bindList();
+        });
+    }
+
+    void onDestroy() override {
+        *mAlive = false;
+        Fragment::onDestroy();
+    }
+
     void selectTag(const std::string& tag) {
         mTag = tag;
         for (size_t i = 0; i < mChipViews.size(); i++) {
@@ -141,8 +192,9 @@ private:
             mChipViews[i]->setTextColor(sel ? 0xFFFFFFFF : 0xFF444444);
         }
         mStatus->setText("加载 " + tag + " 电台中…");
-        RadioBrowser::searchByTag(tag, [this](std::vector<RadioStation> stations) {
-            if (getView() == nullptr) return;
+        auto alive = mAlive;
+        RadioBrowser::searchByTag(tag, [this, alive](std::vector<RadioStation> stations) {
+            if (!*alive || getView() == nullptr) return;
             mStations = std::move(stations);
             bindList();
         });
@@ -157,8 +209,9 @@ private:
     // Station rows: favicon (FaviconCache disk cache) over a two-line text.
     class StationAdapter : public Adapter {
     public:
-        StationAdapter(Context* ctx, std::vector<RadioStation>* stations)
-                : mCtx(ctx), mStations(stations) {}
+        StationAdapter(Context* ctx, std::vector<RadioStation>* stations,
+                std::shared_ptr<bool> alive)
+                : mCtx(ctx), mStations(stations), mAlive(std::move(alive)) {}
         int getCount() const override { return (int)mStations->size() + 1; }
         void* getItem(int position) const override { return nullptr; }
         long getItemId(int position) const override { return position; }
@@ -190,7 +243,9 @@ private:
             }
             if (img) {
                 img->setImageResource(R::drawable::placeholder_disk_210);   // recycle guard
-                FaviconCache::load(mCtx, st.favicon, [img](const std::string& file) {
+                auto alive = mAlive;
+                FaviconCache::load(mCtx, st.favicon, [img, alive](const std::string& file) {
+                    if (!*alive) return;
                     if (!file.empty()) img->setImageURIAsync("file://" + file);
                 });
             }
@@ -199,6 +254,7 @@ private:
     private:
         Context* mCtx;
         std::vector<RadioStation>* mStations;
+        std::shared_ptr<bool> mAlive;   // rows die with the fragment
     };
 
     void bindList() {
@@ -207,7 +263,7 @@ private:
         } else {
             mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 点击播放直播流");
         }
-        mList->setAdapter(new StationAdapter(getContext(), &mStations));
+        mList->setAdapter(new StationAdapter(getContext(), &mStations, mAlive));
         mList->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
             if (position >= (int)mStations.size()) return;
             const RadioStation& st = mStations[position];
@@ -272,8 +328,9 @@ private:
         delete value;
         if (artist.empty()) return;
         mLiveStatus->setText("搜索 " + artist + " 的演出…");
-        ArchiveOrg::searchConcerts(artist, [this](std::vector<ArchiveConcert> concerts) {
-            if (getView() == nullptr) return;
+        auto alive = mAlive;
+        ArchiveOrg::searchConcerts(artist, [this, alive](std::vector<ArchiveConcert> concerts) {
+            if (!*alive || getView() == nullptr) return;
             mConcerts = std::move(concerts);
             std::vector<std::string> rows;
             for (auto& c : mConcerts) {
@@ -300,8 +357,9 @@ private:
 
     void playConcert(const ArchiveConcert& concert) {
         mLiveStatus->setText("读取曲目… " + concert.title);
-        ArchiveOrg::fetchTracks(concert.identifier, [this, concert](std::vector<ArchiveTrack> tracks) {
-            if (getView() == nullptr) return;
+        auto alive = mAlive;
+        ArchiveOrg::fetchTracks(concert.identifier, [this, concert, alive](std::vector<ArchiveTrack> tracks) {
+            if (!*alive || getView() == nullptr) return;
             if (tracks.empty()) {
                 mLiveStatus->setText("曲目读取失败(或 archive.org 不可达)");
                 return;
@@ -329,7 +387,12 @@ private:
     TextView* mSegLive = nullptr;
     FrameLayout* mBody = nullptr;
 
+    // Network callbacks capture raw `this`; recreate() (the splash handoff)
+    // deletes the fragment while requests are in flight, so every callback
+    // checks this heap flag before touching the object.
+    std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);
     LinearLayout* mChips = nullptr;
+    EditText* mSearchBox = nullptr;
     TextView* mStatus = nullptr;
     ListView* mList = nullptr;
     std::vector<TextView*> mChipViews;
@@ -379,6 +442,29 @@ public:
         setupPager();
         setupTopBar();
         QuickControls::get().attachTo(*this);
+
+        // LoadingActivity equivalent: the 1.6s full-bleed brand splash
+        // (SPLASH_DELAY_MILLIS). An Activity-level splash raced the window
+        // swap in cdroid's compositor, so the original art runs as an
+        // overlay inside MainActivity instead — visually identical.
+        auto* splash = new ImageView(getContext());
+        splash->setScaleType(ScaleType::CENTER_CROP);
+        splash->setImageResource(R::drawable::art_login_bg);
+        addView(splash, new ViewGroup::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
+        if (getIntent().getBooleanExtra("no_splash", false)) return;
+        postDelayed([this, splash] {
+            // A splash covering the window's first frame leaves the surface
+            // stale underneath once hidden — cdroid's compositor never
+            // repaints a region that was covered from frame one (only a new
+            // window or an input event wakes it). recreate() gives the main
+            // screen a fresh surface; "no_splash" stops the loop.
+            Intent again = getIntent();
+            again.putExtra("no_splash", true);
+            setIntent(again);
+            splash->setVisibility(View::GONE);
+            recreate();
+        }, 1600);
     }
 
 private:
@@ -392,6 +478,7 @@ private:
             menu->setAdapter(adapter);
             menu->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
                 if (position == 3) { close(); return; }
+                if (position == 1) { showTimingSheet(*this); return; }
                 // TODO(remusic): theme picker / sleep timer / settings screens.
             });
         }
