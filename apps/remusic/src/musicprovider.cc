@@ -61,7 +61,11 @@ void MusicProvider::scanIfNeeded() {
     if (mRoots.empty()) {
         mRoots.push_back("./music");
         const char* home = getenv("HOME");
-        if (home) mRoots.push_back(std::string(home) + "/Music");
+        if (home) {
+            // ~/Music plus the localized XDG music dir (~/音乐 on zh Ubuntu).
+            mRoots.push_back(std::string(home) + "/Music");
+            mRoots.push_back(std::string(home) + "/音乐");
+        }
     }
     scan();
     mScanned = true;

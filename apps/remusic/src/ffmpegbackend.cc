@@ -81,7 +81,11 @@ bool FFmpegPlayerBackend::openInput() {
     if (swr_alloc_set_opts2(&swr,
             &outLayout, AV_SAMPLE_FMT_S16, mOutRate,
             (AVChannelLayout*) &cctx->ch_layout, cctx->sample_fmt, cctx->sample_rate,
-            0, nullptr) < 0 || swr == nullptr) {
+            0, nullptr) < 0 || swr == nullptr || swr_init(swr) < 0) {
+        // swr_alloc_set_opts2 only ALLOCATES: without swr_init every later
+        // swr_convert rejects with "Context has not been initialized" and the
+        // ring stays empty — silent playback.
+        if (swr) swr_free(&swr);
         avcodec_free_context(&cctx);
         avformat_close_input(&fmt);
         return false;
@@ -207,7 +211,9 @@ int FFmpegPlayerBackend::position() const {
 }
 
 int FFmpegPlayerBackend::duration() const {
-    return mDurationMs > 0 ? (int)mDurationMs : 210000;
+    // 0 = live/unknown (radio streams, failed opens) — the UI shows 00:00
+    // and the service's tick never auto-advances.
+    return mDurationMs > 0 ? (int)mDurationMs : 0;
 }
 
 bool FFmpegPlayerBackend::ringFree() const {
