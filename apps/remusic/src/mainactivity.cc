@@ -22,7 +22,7 @@
 #include "quickcontrols.h"
 #ifdef REMUSIC_ONLINE
 #include "radiobrowser.h"
-#include "archiveorg.h"
+#include "audius.h"
 #include "faviconcache.h"
 #include <text/String.h>
 #include <widget/edittext.h>
@@ -59,7 +59,7 @@ public:
         mSegRadio = new TextView(ctx);
         mSegRadio->setText("电台");
         mSegLive = new TextView(ctx);
-        mSegLive->setText("现场点播");
+        mSegLive->setText("点歌");
         for (TextView* segBtn : {mSegRadio, mSegLive}) {
             segBtn->setTextSize(16);
             segBtn->setGravity(Gravity::CENTER);
@@ -75,7 +75,7 @@ public:
         mBody = new FrameLayout(ctx);
         mBody->addView(buildRadioPanel(ctx), new FrameLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
-        mBody->addView(buildLivePanel(ctx), new FrameLayout::LayoutParams(
+        mBody->addView(buildSongsPanel(ctx), new FrameLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
         root->addView(mBody, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
@@ -281,49 +281,20 @@ private:
         });
     }
 
-    // ---- panel 2: archive.org etree — artist search over concerts ----
-    View* buildLivePanel(Context* ctx) {
+    // ---- panel 2: Audius on-demand songs (the Baidu-ting stand-in that
+    // IS reachable from mainland networks; archive.org is not) — trending
+    // on open, by-name search on demand ----
+    View* buildSongsPanel(Context* ctx) {
         auto* panel = new LinearLayout(ctx);
         panel->setOrientation(LinearLayout::VERTICAL);
-
-        // 热门现场: etree's most-archived artists as one-tap chips — the
-        // on-demand tab opens browsable instead of waiting for a search.
-        auto* hotScroll = new HorizontalScrollView(ctx);
-        auto* hot = new LinearLayout(ctx);
-        hot->setOrientation(LinearLayout::HORIZONTAL);
-        hot->setPadding(8, 8, 8, 8);
-        for (const char* artist : {"Grateful Dead", "Phish", "Dave Matthews Band",
-                "String Cheese Incident", "Ween", "Jack Johnson", "Ben Harper",
-                "Smashing Pumpkins", "Weezer", "Metallica"}) {
-            auto* chip = new TextView(ctx);
-            chip->setText(artist);
-            chip->setTextSize(14);
-            chip->setPadding(24, 10, 24, 10);
-            chip->setClickable(true);
-            const std::string a = artist;
-            chip->setOnClickListener([this, a](View&) {
-                mLiveStatus->setText("加载 " + a + " 的现场…");
-                auto alive = mAlive;
-                ArchiveOrg::searchConcerts(a, [this, alive, a](std::vector<ArchiveConcert> concerts) {
-                    if (!*alive || getView() == nullptr) return;
-                    bindConcerts(std::move(concerts), a + " · 现场演出");
-                });
-            });
-            hot->addView(chip, new LinearLayout::LayoutParams(
-                    ViewGroup::LayoutParams::WRAP_CONTENT,
-                    ViewGroup::LayoutParams::WRAP_CONTENT));
-        }
-        hotScroll->addView(hot);
-        panel->addView(hotScroll, new LinearLayout::LayoutParams(
-                ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
 
         auto* bar = new LinearLayout(ctx);
         bar->setOrientation(LinearLayout::HORIZONTAL);
         bar->setPadding(12, 10, 12, 10);
-        mArtist = new EditText(ctx);
-        mArtist->setHint("艺人名(英文最佳,如 Grateful Dead)");
-        mArtist->setSingleLine(true);
-        bar->addView(mArtist, new LinearLayout::LayoutParams(0, 52, 1.f));
+        mSongQuery = new EditText(ctx);
+        mSongQuery->setHint("歌名 / 艺人");
+        mSongQuery->setSingleLine(true);
+        bar->addView(mSongQuery, new LinearLayout::LayoutParams(0, 52, 1.f));
         auto* go = new TextView(ctx);
         go->setText("搜索");
         go->setTextSize(16);
@@ -332,101 +303,98 @@ private:
         go->setGravity(Gravity::CENTER);
         go->setPadding(28, 0, 28, 0);
         go->setClickable(true);
-        go->setOnClickListener([this](View&) { searchLive(); });
+        go->setOnClickListener([this](View&) { searchSongs(); });
         bar->addView(go, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::WRAP_CONTENT, 52));
         panel->addView(bar, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
 
-        mLiveStatus = new TextView(ctx);
-        mLiveStatus->setText("热门免费专辑加载中…");
-        mLiveStatus->setTextSize(14);
-        mLiveStatus->setTextColor(0xFF888888);
-        mLiveStatus->setPadding(20, 8, 20, 8);
-        panel->addView(mLiveStatus, new LinearLayout::LayoutParams(
+        mSongStatus = new TextView(ctx);
+        mSongStatus->setText("热门歌曲加载中…");
+        mSongStatus->setTextSize(14);
+        mSongStatus->setTextColor(0xFF888888);
+        mSongStatus->setPadding(20, 8, 20, 8);
+        panel->addView(mSongStatus, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
 
-        mLiveList = new ListView(ctx);
-        panel->addView(mLiveList, new LinearLayout::LayoutParams(
+        mSongList = new ListView(ctx);
+        panel->addView(mSongList, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
-        // On open: the netlabels catalog (free albums by popularity) — a
-        // browsable 点播 list before any typing happens.
+        // Open browsable: the trending chart needs no search.
         auto alive = mAlive;
-        ArchiveOrg::browseNetlabels([this, alive](std::vector<ArchiveConcert> albums) {
+        Audius::trending([this, alive](std::vector<AudiusTrack> tracks) {
             if (!*alive || getView() == nullptr) return;
-            bindConcerts(std::move(albums), "热门免费专辑 · 点专辑整张连播");
+            bindSongs(std::move(tracks), "热门");
         });
         return panel;
     }
 
-    // Concerts and netlabel albums share the list; `label` sets the status
-    // line so the user knows what they are looking at.
-    void bindConcerts(std::vector<ArchiveConcert> items, const std::string& label) {
-        mConcerts = std::move(items);
+    void searchSongs() {
+        if (mSongQuery == nullptr) return;
+        String* value = mSongQuery->getText().toString();
+        const std::string query = value ? value->str() : std::string();
+        delete value;
+        if (query.empty()) return;
+        mSongStatus->setText("搜索 \"" + query + "\" …");
+        auto alive = mAlive;
+        Audius::search(query, [this, alive, query](std::vector<AudiusTrack> tracks) {
+            if (!*alive || getView() == nullptr) return;
+            bindSongs(std::move(tracks), query);
+        });
+    }
+
+    // Rows "title - artist · m:ss"; tapping queues the whole result list at
+    // that position (Netease-style: the results ARE the playlist).
+    void bindSongs(std::vector<AudiusTrack> tracks, const std::string& label) {
+        mSongs = std::move(tracks);
         std::vector<std::string> rows;
-        for (auto& c : mConcerts) {
-            std::string row = c.title.empty() ? c.identifier : c.title;
-            if (!c.year.empty()) row += "  (" + c.year + ")";
+        for (const auto& t : mSongs) {
+            std::string row = t.title + " - " + t.artist;
+            if (t.durationMs > 0) {
+                char tail[16];
+                snprintf(tail, sizeof(tail), "  · %d:%02d",
+                        t.durationMs / 60000, (t.durationMs / 1000) % 60);
+                row += tail;
+            }
             rows.push_back(row);
         }
         if (rows.empty()) {
-            rows.push_back("无结果(或 archive.org 不可达)");
-            mLiveStatus->setText(label + " · 无结果");
+            rows.push_back("无结果(或 audius 不可达)");
+            mSongStatus->setText(label + " · 无结果");
         } else {
-            mLiveStatus->setText(std::to_string(rows.size()) + " 项 · " + label + " · 点击连播");
+            mSongStatus->setText(std::to_string(rows.size()) + " 首 · " + label + " · 点击播放");
         }
         auto* adapter = new ArrayAdapter<std::string>(
                 getContext(), R::layout::design_drawer_item, 0);
         adapter->addAll(rows);
-        mLiveList->setAdapter(adapter);
-        mLiveList->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
-            if (position >= (int)mConcerts.size()) return;
-            playConcert(mConcerts[position]);
-        });
-    }
-
-    void searchLive() {
-        if (mArtist == nullptr) return;
-        String* value = mArtist->getText().toString();
-        const std::string artist = value ? value->str() : std::string();
-        delete value;
-        if (artist.empty()) return;
-        mLiveStatus->setText("搜索 " + artist + " 的演出…");
-        auto alive = mAlive;
-        ArchiveOrg::searchConcerts(artist, [this, alive, artist](std::vector<ArchiveConcert> concerts) {
-            if (!*alive || getView() == nullptr) return;
-            bindConcerts(std::move(concerts), artist + " · 现场演出");
-        });
-    }
-
-    void playConcert(const ArchiveConcert& concert) {
-        mLiveStatus->setText("读取曲目… " + concert.title);
-        auto alive = mAlive;
-        ArchiveOrg::fetchTracks(concert.identifier, [this, concert, alive](std::vector<ArchiveTrack> tracks) {
-            if (!*alive || getView() == nullptr) return;
-            if (tracks.empty()) {
-                mLiveStatus->setText("曲目读取失败(或 archive.org 不可达)");
-                return;
-            }
+        mSongList->setAdapter(adapter);
+        mSongList->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
+            if (position >= (int) mSongs.size()) return;
             std::map<long, MusicInfo> infos;
             std::vector<long> ids;
-            for (auto& t : tracks) {
+            for (size_t i = 0; i < mSongs.size(); i++) {
+                const AudiusTrack& t = mSongs[i];
                 MusicInfo info;
-                info.songId = std::hash<std::string>{}(t.url) & 0x7fffffff;
+                info.songId = std::hash<std::string>{}(t.id) & 0x7fffffff;
                 info.musicName = t.title;
-                info.artist = concert.creator;
-                info.albumName = concert.title;
-                info.data = t.url;
+                info.artist = t.artist;
+                info.albumName = "Audius";
+                info.data = Audius::streamUrl(t.id);
                 info.islocal = true;
                 info.duration = t.durationMs;   // real lengths: auto-advance works
                 infos[info.songId] = info;
                 ids.push_back(info.songId);
             }
-            mLiveStatus->setText("▶ " + std::to_string(tracks.size()) + " 首 · " + concert.title);
-            MusicPlayer::playAll(infos, ids, 0, false);
+            mSongStatus->setText("▶ " + mSongs[position].title);
+            MusicPlayer::playAll(infos, ids, position, false);
         });
     }
 
+
+    EditText* mSongQuery = nullptr;
+    TextView* mSongStatus = nullptr;
+    ListView* mSongList = nullptr;
+    std::vector<AudiusTrack> mSongs;
     TextView* mSegRadio = nullptr;
     TextView* mSegLive = nullptr;
     FrameLayout* mBody = nullptr;
@@ -443,10 +411,6 @@ private:
     std::vector<RadioStation> mStations;
     std::string mTag;
 
-    EditText* mArtist = nullptr;
-    TextView* mLiveStatus = nullptr;
-    ListView* mLiveList = nullptr;
-    std::vector<ArchiveConcert> mConcerts;
 };
 #else
 class OnlineStubFragment : public Fragment {
