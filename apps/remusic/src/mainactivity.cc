@@ -447,22 +447,26 @@ public:
         // (SPLASH_DELAY_MILLIS). An Activity-level splash raced the window
         // swap in cdroid's compositor, so the original art runs as an
         // overlay inside MainActivity instead — visually identical.
+        // Once per process (static): recreate() below relaunches this
+        // activity and its instance state is gone with it.
+        static bool sSplashShown = false;
+        if (sSplashShown) return;
+        sSplashShown = true;
         auto* splash = new ImageView(getContext());
         splash->setScaleType(ScaleType::CENTER_CROP);
         splash->setImageResource(R::drawable::art_login_bg);
         addView(splash, new ViewGroup::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
-        if (getIntent().getBooleanExtra("no_splash", false)) return;
-        postDelayed([this, splash] {
+        postDelayed([this] {
             // A splash covering the window's first frame leaves the surface
             // stale underneath once hidden — cdroid's compositor never
             // repaints a region that was covered from frame one (only a new
             // window or an input event wakes it). recreate() gives the main
-            // screen a fresh surface; "no_splash" stops the loop.
-            Intent again = getIntent();
-            again.putExtra("no_splash", true);
-            setIntent(again);
-            splash->setVisibility(View::GONE);
+            // screen a fresh surface; the one-shot static flag (latched
+            // above, before the overlay went up) keeps the relaunched
+            // instance splash-free, so the cycle runs exactly once per
+            // process — Window::recreate() ships a fresh intent without
+            // extras, an intent-borne flag would loop forever.
             recreate();
         }, 1600);
     }

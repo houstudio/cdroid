@@ -28,6 +28,9 @@ public:
     static void setQueuePosition(int position) { service().setQueuePosition(position); }
     static void moveQueueItem(int from, int to) { service().moveQueueItem(from, to); }
     static int  removeTrack(long id) { return service().removeTrack(id); }
+    static bool removeTrackAtPosition(long id, int position) {
+        return service().removeTrackAtPosition(id, position);
+    }
     static void cycleRepeat() { service().cycleRepeat(); }
     static void cycleShuffle() { service().cycleShuffle(); }
     static void timing(int msec) { service().timing(msec); }

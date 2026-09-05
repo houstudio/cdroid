@@ -385,12 +385,13 @@ private:
     };
     friend class QueueAdapter;
 
-    // Long-press drag = the service's moveQueueItem.
+    // Long-press drag = the service's moveQueueItem; swipe aside removes
+    // the row (PlayQueueFragment's delete).
     class QueueTouchCallback : public ItemTouchHelper::SimpleCallback {
     public:
         explicit QueueTouchCallback(PlayingActivity* host)
-                : ItemTouchHelper::SimpleCallback(
-                        ItemTouchHelper::UP | ItemTouchHelper::DOWN, 0), mHost(host) {}
+                : ItemTouchHelper::SimpleCallback(ItemTouchHelper::UP | ItemTouchHelper::DOWN,
+                        ItemTouchHelper::LEFT | ItemTouchHelper::RIGHT), mHost(host) {}
         bool onMove(RecyclerView&, RecyclerView::ViewHolder& vh,
                     RecyclerView::ViewHolder& target) override {
             const int from = vh.getLayoutPosition();
@@ -406,7 +407,14 @@ private:
             mHost->mQueueAdapter->notifyItemMoved(from, to);
             return true;
         }
-        void onSwiped(RecyclerView::ViewHolder&, int) override {}
+        void onSwiped(RecyclerView::ViewHolder& vh, int) override {
+            const int pos = vh.getLayoutPosition();
+            if (pos < 0 || pos >= (int) mHost->mQueueIds.size()) return;
+            const long id = mHost->mQueueIds[pos];
+            MusicPlayer::removeTrackAtPosition(id, pos);
+            mHost->mQueueIds.erase(mHost->mQueueIds.begin() + pos);
+            mHost->mQueueAdapter->notifyItemRemoved(pos);
+        }
     private:
         PlayingActivity* mHost;
     };
