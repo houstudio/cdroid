@@ -6,7 +6,9 @@
         <item name="android:actionOverflowButtonStyle">@style/MyOverflowStyle</item>
         <!-- Customize your theme here. -->
         <item name="android:alertDialogTheme">@style/AppTheme.Dialog.Alert</item>
-        <item name="android:windowBackground">@null</item>
+        <!-- CDROID/X11 has no compositor-side clear: a @null window background
+             shows uninitialized surface memory (garbage). Solid bg instead. -->
+        <item name="android:windowBackground">@color/normalBackground</item>
         <item name="android:windowAnimationStyle">@style/NoAnimation</item>
         <!--导航栏的颜色-->
 
@@ -31,7 +33,7 @@
 
     <style name="LoadTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="android:windowBackground">@null</item>
+        <item name="android:windowBackground">@color/normalBackground</item>
         <!--导航栏的颜色-->
 
         <!--状态栏的颜色-->

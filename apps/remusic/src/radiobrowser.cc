@@ -5,42 +5,14 @@
 #include <sstream>
 #include <thread>
 
-#include <curl/curl.h>
 #include <json/json.h>
 
+#include "httputil.h"
 #include <core/handler.h>
 #include <core/looper.h>
 #include <porting/cdlog.h>
 
 namespace remusic {
-
-static size_t writeCb(char* ptr, size_t size, size_t nmemb, void* userdata) {
-    ((std::string*)userdata)->append(ptr, size * nmemb);
-    return size * nmemb;
-}
-
-static std::string httpGet(const std::string& url) {
-    static const bool sInit = curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
-    (void) sInit;
-    std::string body;
-    CURL* curl = curl_easy_init();
-    if (curl == nullptr) return body;
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
-    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-    // radio-browser asks clients to identify themselves.
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "remusic-cdroid/1.0");
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCb);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body);
-    const CURLcode rc = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-    if (rc != CURLE_OK) {
-        LOGE("radio-browser: curl %s", curl_easy_strerror(rc));
-        body.clear();
-    }
-    return body;
-}
 
 void RadioBrowser::searchByTag(const std::string& tag,
         std::function<void(std::vector<RadioStation>)> onDone) {
