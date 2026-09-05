@@ -233,17 +233,26 @@ private:
                 lp->topMargin = pagerView->getTop();
                 mDisc->setLayoutParams(lp);
                 mDisc->setCornerRadii(side / 2);            // circular crop
-                // Needle: intrinsic 276x414 raw px would dwarf small screens;
-                // rescale to the design grid (92x138dp at 360dp width).
+                // Needle: intrinsic 276x414 raw px would dwarf small screens,
+                // and the XML anchors it parent-right+100dp — tuned for the
+                // 360dp design width, so on wider windows the post drifts
+                // right while the disc stays centered. Lock the arm to the
+                // DISC instead: every quantity is a fraction of the disc side
+                // (design ratios 92:263 / 138:263; post circle at 0.170/0.096
+                // of the art per play_needle.png; post offset from the disc
+                // center = +0.0114/-0.732 of the side), so needle and record
+                // can never decouple at any resolution.
                 if (mNeedle != nullptr) {
-                    const float scale = getWidth() / 360.f;
-                    auto* nlp = (ViewGroup::MarginLayoutParams*) mNeedle->getLayoutParams();
-                    nlp->width = (int)(92 * scale);
-                    nlp->height = (int)(138 * scale);
+                    auto* nlp = new ViewGroup::MarginLayoutParams(
+                            (int)(side * 92.f / 263.f), (int)(side * 138.f / 263.f));
+                    const float pivotX = nlp->width * 0.170f;
+                    const float pivotY = nlp->height * 0.096f;
+                    const int discCx = lp->leftMargin + side / 2;
+                    nlp->leftMargin = (int)(discCx + side * 0.0114f - pivotX);
+                    nlp->topMargin = (int)(lp->topMargin - side * 0.232f - pivotY);
                     mNeedle->setLayoutParams(nlp);
-                    // Tonearm post = 15.1dp from the arm's top-left.
-                    mNeedle->setPivotX(nlp->width * 0.164f);
-                    mNeedle->setPivotY(nlp->height * 0.109f);
+                    mNeedle->setPivotX(pivotX);
+                    mNeedle->setPivotY(pivotY);
                 }
             });
         }

@@ -18,11 +18,20 @@ static void segvTrace(int sig) {
 }
 
 #include <R.h>
+#include <core/cxxopts.h>
 #include <core/intent.h>
 
 #include "src/musicplayer.h"
 #include "src/playliststore.h"
 #include "src/themestore.h"
+
+// Registered at static init, before App's ctor parses argv (deskclock pattern).
+// Dev/test hook: skip the library and land on the now-playing screen directly.
+static const bool sAppOptionsRegistered = cdroid::App::addAppOptions("remusic",
+        [](cxxopts::OptionAdder& add){
+            add("open-playing","launch straight into the now-playing screen",
+                cxxopts::value<bool>()->implicit_value("1"));
+        });
 
 int main(int argc, const char* argv[]) {
     signal(SIGSEGV, segvTrace);
@@ -37,7 +46,8 @@ int main(int argc, const char* argv[]) {
     // Launch through the ActivityFactory registry (REGISTER_ACTIVITY keys),
     // the same path the manifest launcher intent resolves to.
     cdroid::Intent intent;
-    intent.setClassName("cdroid.remusic", "MainActivity")
+    intent.setClassName("cdroid.remusic",
+            app.hasSwitch("open-playing") ? "PlayingActivity" : "MainActivity")
           .setAction(cdroid::Intent::ACTION_MAIN);
     app.startActivity(intent);
 
