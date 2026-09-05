@@ -127,6 +127,13 @@ public:
     ~AppBarLayout() override;
 
     void addOnOffsetChangedListener(const OnOffsetChangedListener& listener);
+    // androidx AppBarLayout.generateLayoutParams(AttributeSet): children of the
+    // bar inflate with AppBarLayout.LayoutParams so scrollFlags live where the
+    // (LayoutParams*) casts in getTotalScrollRange() expect them (base-class
+    // params made those casts read out of bounds).
+    LayoutParams* generateLayoutParams(const AttributeSet& attrs) const override {
+        return new LayoutParams(getContext(), attrs);
+    }
     int getTotalScrollRange();
     /** Material getDownNestedPreScrollRange: the range the bar re-enters for
         a downward nested scroll (enter-always/quick-return children). */

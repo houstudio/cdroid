@@ -715,7 +715,10 @@ protected:
     int mUserPaddingLeftInitial;
     /* Cache initial right padding*/
     int mUserPaddingRightInitial;
-    int mSystemUiVisibility;
+    // Java zero-initializes instance fields; the first setSystemUiVisibility()
+    // compares against this member before any assignment (android-36 View.java
+    // declares it bare and leans on that language guarantee).
+    int mSystemUiVisibility = 0;
     int mTransientStateCount;
     int mWindowAttachCount;
     int mLabelForId;
@@ -1666,7 +1669,7 @@ public:
     int mWindowTop;
     int mAccessibilityWindowId;
     int mAccessibilityFetchFlags;
-    int mSystemUiVisibility;
+    int mSystemUiVisibility = 0;
     int mDisabledSystemUiVisibility;
     int mGlobalSystemUiVisibility;
     int mDisplayState;
