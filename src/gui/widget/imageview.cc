@@ -44,8 +44,13 @@ ImageView::ImageView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
     mBaseline = ta->getDimensionPixelSize(R::styleable::ImageView_baseline,-1);
     setAdjustViewBounds(ta->getBoolean(R::styleable::ImageView_adjustViewBounds,false));
     mCropToPadding = ta->getBoolean(R::styleable::ImageView_cropToPadding,false);
-    const int scaleType = ta->getInt(R::styleable::ImageView_scaleType,0);
-    if(scaleType>=0)setScaleType(scaleType);
+    // AOSP reads the attr with a -1 "absent" sentinel (ImageView.java:217);
+    // 0 is the legitimate `matrix` enum value. With 0 as the default, every
+    // XML-inflated ImageView without android:scaleType silently ran as MATRIX
+    // (identity matrix, drawable pinned at intrinsic size to the content box's
+    // top-left) instead of the FIT_CENTER default.
+    const int scaleType = ta->getInt(R::styleable::ImageView_scaleType, -1);
+    if (scaleType >= 0) setScaleType(scaleType);
     Drawable*d = ta->getDrawable(R::styleable::ImageView_src);
     if(d)setImageDrawable(d);
     { auto csl = ta->getColorStateList(R::styleable::ImageView_tint);
