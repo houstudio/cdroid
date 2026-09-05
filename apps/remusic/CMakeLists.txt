@@ -47,6 +47,16 @@ if(REMUSIC_FFMPEG)
     message(STATUS "remusic: real audio backend ON (triplet ${REMUSIC_TRIPLET_USED})")
 endif()
 
+# Online radio (radio-browser.info, key-free): libcurl fetch + JsonCpp parse.
+# Plain file probe + raw link (find_package CONFIG needs the vcpkg toolchain
+# in scope; the ffmpeg block above already set _VCPKG_TRIPLET + include/link dirs).
+if(_VCPKG_TRIPLET
+        AND EXISTS "${_VCPKG_TRIPLET}/include/curl/curl.h"
+        AND EXISTS "${_VCPKG_TRIPLET}/include/json/json.h")
+    set(REMUSIC_ONLINE ON)
+    message(STATUS "remusic: online radio ON (curl+jsoncpp)")
+endif()
+
 set(REMUSIC_SRCS
     main.cc
     src/mainactivity.cc
@@ -68,6 +78,10 @@ set(REMUSIC_SRCS
 if(REMUSIC_FFMPEG)
     list(APPEND REMUSIC_SRCS src/ffmpegbackend.cc)
 endif()
+if(REMUSIC_ONLINE)
+    list(APPEND REMUSIC_SRCS src/radiobrowser.cc)
+    add_definitions(-DREMUSIC_ONLINE)
+endif()
 
 if(REMUSIC_FFMPEG)
     add_definitions(-DREMUSIC_ENABLE_FFMPEG)
@@ -76,7 +90,9 @@ if(REMUSIC_FFMPEG)
         add_definitions(-DREMUSIC_WALLCLOCK_ONLY)
     endif()
     include_directories(${_VCPKG_TRIPLET}/include)
-    link_directories(${_VCPKG_TRIPLET}/debug/lib)
+    # debug/ first (matches the Debug flavor of the framework libs); release
+    # lib/ backs the ports that ship no debug build naming (-lcurl etc.).
+    link_directories(${_VCPKG_TRIPLET}/debug/lib ${_VCPKG_TRIPLET}/lib)
 endif()
 
 add_executable(remusic ${REMUSIC_SRCS})
@@ -84,6 +100,9 @@ if(REMUSIC_FFMPEG)
     target_link_libraries(remusic PRIVATE cdroid avformat avcodec avutil swresample rtaudio)
 else()
     target_link_libraries(remusic PRIVATE cdroid)
+endif()
+if(REMUSIC_ONLINE)
+    target_link_libraries(remusic PRIVATE curl jsoncpp)
 endif()
 
 CreatePAK(remusic ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/remusic.pak ${PROJECT_SOURCE_DIR}/R.h)
