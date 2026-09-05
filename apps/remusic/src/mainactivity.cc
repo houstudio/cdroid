@@ -361,9 +361,10 @@ private:
         }
         if (mSongStatus) mSongStatus->setText((genre.empty() ? "热门" : genre) + "榜加载中…");
         auto alive = mAlive;
-        auto done = [this, alive, genre](std::vector<AudiusTrack> tracks) {
+        auto done = [this, alive, genre](std::vector<AudiusTrack> tracks,
+                const std::string& error) {
             if (!*alive || getView() == nullptr) return;
-            bindSongs(std::move(tracks), genre.empty() ? "热门" : genre);
+            bindSongs(std::move(tracks), genre.empty() ? "热门" : genre, error);
         };
         if (genre.empty()) Audius::trending(done);
         else Audius::trendingGenre(genre, done);
@@ -377,15 +378,17 @@ private:
         if (query.empty()) return;
         mSongStatus->setText("搜索 \"" + query + "\" …");
         auto alive = mAlive;
-        Audius::search(query, [this, alive, query](std::vector<AudiusTrack> tracks) {
+        Audius::search(query, [this, alive, query](std::vector<AudiusTrack> tracks,
+                const std::string& error) {
             if (!*alive || getView() == nullptr) return;
-            bindSongs(std::move(tracks), query);
+            bindSongs(std::move(tracks), query, error);
         });
     }
 
     // Rows "title - artist · m:ss"; tapping queues the whole result list at
     // that position (Netease-style: the results ARE the playlist).
-    void bindSongs(std::vector<AudiusTrack> tracks, const std::string& label) {
+    void bindSongs(std::vector<AudiusTrack> tracks, const std::string& label,
+            const std::string& error = std::string()) {
         mSongs = std::move(tracks);
         std::vector<std::string> rows;
         for (const auto& t : mSongs) {
@@ -399,8 +402,9 @@ private:
             rows.push_back(row);
         }
         if (rows.empty()) {
-            rows.push_back("无结果(或 audius 不可达)");
-            mSongStatus->setText(label + " · 无结果");
+            rows.push_back(error.empty() ? "无结果" : "加载失败: " + error);
+            mSongStatus->setText(label + " · 无结果"
+                    + (error.empty() ? "" : " (" + error + ")"));
         } else {
             mSongStatus->setText(std::to_string(rows.size()) + " 首 · " + label + " · 点击播放");
         }

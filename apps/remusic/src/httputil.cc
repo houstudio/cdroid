@@ -15,6 +15,10 @@ static size_t writeCb(char* ptr, size_t size, size_t nmemb, void* userdata) {
     return size * nmemb;
 }
 
+static thread_local std::string tLastError;
+
+std::string lastHttpError() { return tLastError; }
+
 std::string httpGet(const std::string& url) {
     static const bool sInit = curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
     (void) sInit;
@@ -30,8 +34,10 @@ std::string httpGet(const std::string& url) {
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body);
     const CURLcode rc = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
+    tLastError.clear();
     if (rc != CURLE_OK) {
         LOGE("httpGet: curl %s (%s)", curl_easy_strerror(rc), url.c_str());
+        tLastError = curl_easy_strerror(rc);
         body.clear();
     }
     return body;

@@ -22,12 +22,14 @@ struct AudiusTrack {
 
 class Audius {
 public:
-    static void trending(std::function<void(std::vector<AudiusTrack>)> onDone);
+    /** Delivers the parsed tracks; on failure the list is empty and `error`
+     *  carries the last curl reason (empty string on success). */
+    using TracksCb = std::function<void(std::vector<AudiusTrack>, const std::string& error)>;
+
+    static void trending(TracksCb onDone);
     /** Trending within one genre ("Electronic", "Hip-Hop/Rap", ...). */
-    static void trendingGenre(const std::string& genre,
-            std::function<void(std::vector<AudiusTrack>)> onDone);
-    static void search(const std::string& query,
-            std::function<void(std::vector<AudiusTrack>)> onDone);
+    static void trendingGenre(const std::string& genre, TracksCb onDone);
+    static void search(const std::string& query, TracksCb onDone);
     /** Playable URL for a track id (FFmpeg follows the redirect chain). */
     static std::string streamUrl(const std::string& trackId);
 };

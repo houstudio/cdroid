@@ -14,10 +14,17 @@
 
 namespace remusic {
 
-// Discovery host selection: api.audius.co returns the candidate list; the
-// first entry is the standard endpoint (kept simple — the list rarely
-// changes and any host serves the same API).
-static const char* kHost = "https://api.audius.co";
+// Discovery hosts, all serving the same API. Different mainland routes
+// reach different ones, so every request walks the list (cached winner
+// first) until a host answers — a single blocked host must not blank the
+// on-demand tab.
+static const char* const kHosts[] = {
+        "https://api.audius.co",
+        "https://discoveryprovider.audius.co",
+        "https://discoveryprovider2.audius.co",
+        "https://discoveryprovider3.audius.co",
+};
+static std::string sWorkingHost;   // first host that answered (empty = none yet)
 static const char* kApp = "remusic-cdroid";
 
 static void postToMain(std::function<void()> fn) {
@@ -60,35 +67,54 @@ static std::vector<AudiusTrack> parseTracks(const std::string& body) {
     return out;
 }
 
-static void fetch(const std::string& url,
-        std::function<void(std::vector<AudiusTrack>)> onDone) {
-    std::thread([url, onDone = std::move(onDone)]() mutable {
-        // The redirect chain lands on an audio/mpeg node; FFmpeg follows it.
-        std::vector<AudiusTrack> tracks = parseTracks(httpGet(url));
-        postToMain([tracks = std::move(tracks), onDone = std::move(onDone)]() mutable {
-            onDone(std::move(tracks));
+// `path` carries "/v1/...&app_name="; hosts are walked outside.
+static void fetch(const std::string& path, Audius::TracksCb onDone) {
+    std::thread([path, onDone = std::move(onDone)]() mutable {
+        std::vector<AudiusTrack> tracks;
+        std::string error = "no host attempted";
+        // Cached winner first, then the rest — first non-empty body wins.
+        for (int round = 0; round < 2 && tracks.empty(); round++) {
+            for (const char* host : kHosts) {
+                const std::string h = host;
+                if (round == 0 && !sWorkingHost.empty() && h != sWorkingHost) continue;
+                if (round == 1 && h == sWorkingHost) continue;
+                const std::string body = httpGet(h + path);
+                error = lastHttpError();
+                if (body.empty()) continue;
+                tracks = parseTracks(body);
+                if (!tracks.empty()) {
+                    sWorkingHost = h;
+                    error.clear();
+                    break;
+                }
+                error = "empty chart from " + h;
+            }
+        }
+        postToMain([tracks = std::move(tracks), error, onDone = std::move(onDone)]() mutable {
+            onDone(std::move(tracks), error);
         });
     }).detach();
 }
 
-void Audius::trending(std::function<void(std::vector<AudiusTrack>)> onDone) {
-    fetch(std::string(kHost) + "/v1/tracks/trending?app_name=" + kApp, std::move(onDone));
+void Audius::trending(Audius::TracksCb onDone) {
+    fetch("/v1/tracks/trending?app_name=" + std::string(kApp), std::move(onDone));
 }
 
-void Audius::trendingGenre(const std::string& genre,
-        std::function<void(std::vector<AudiusTrack>)> onDone) {
-    fetch(std::string(kHost) + "/v1/tracks/trending?genre=" + urlEncode(genre)
-            + "&app_name=" + kApp, std::move(onDone));
+void Audius::trendingGenre(const std::string& genre, Audius::TracksCb onDone) {
+    fetch("/v1/tracks/trending?genre=" + urlEncode(genre)
+            + "&app_name=" + std::string(kApp), std::move(onDone));
 }
 
-void Audius::search(const std::string& query,
-        std::function<void(std::vector<AudiusTrack>)> onDone) {
-    fetch(std::string(kHost) + "/v1/tracks/search?query=" + urlEncode(query)
-            + "&app_name=" + kApp, std::move(onDone));
+void Audius::search(const std::string& query, Audius::TracksCb onDone) {
+    fetch("/v1/tracks/search?query=" + urlEncode(query)
+            + "&app_name=" + std::string(kApp), std::move(onDone));
 }
 
 std::string Audius::streamUrl(const std::string& trackId) {
-    return std::string(kHost) + "/v1/tracks/" + trackId + "/stream?app_name=" + kApp;
+    // Any discovery host can issue the redirect chain; prefer the one that
+    // already answered (it is the route this network can reach).
+    const std::string host = sWorkingHost.empty() ? kHosts[0] : sWorkingHost;
+    return host + "/v1/tracks/" + trackId + "/stream?app_name=" + kApp;
 }
 
 } // namespace remusic
