@@ -23,6 +23,9 @@ struct AudiusTrack {
 class Audius {
 public:
     static void trending(std::function<void(std::vector<AudiusTrack>)> onDone);
+    /** Trending within one genre ("Electronic", "Hip-Hop/Rap", ...). */
+    static void trendingGenre(const std::string& genre,
+            std::function<void(std::vector<AudiusTrack>)> onDone);
     static void search(const std::string& query,
             std::function<void(std::vector<AudiusTrack>)> onDone);
     /** Playable URL for a track id (FFmpeg follows the redirect chain). */

@@ -75,6 +75,12 @@ void Audius::trending(std::function<void(std::vector<AudiusTrack>)> onDone) {
     fetch(std::string(kHost) + "/v1/tracks/trending?app_name=" + kApp, std::move(onDone));
 }
 
+void Audius::trendingGenre(const std::string& genre,
+        std::function<void(std::vector<AudiusTrack>)> onDone) {
+    fetch(std::string(kHost) + "/v1/tracks/trending?genre=" + urlEncode(genre)
+            + "&app_name=" + kApp, std::move(onDone));
+}
+
 void Audius::search(const std::string& query,
         std::function<void(std::vector<AudiusTrack>)> onDone) {
     fetch(std::string(kHost) + "/v1/tracks/search?query=" + urlEncode(query)

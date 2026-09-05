@@ -288,6 +288,30 @@ private:
         auto* panel = new LinearLayout(ctx);
         panel->setOrientation(LinearLayout::VERTICAL);
 
+        // Genre chips ("" = all-genres 热门): the page stays browsable even
+        // when the default chart request fails — any chip is a fresh chart.
+        auto* chipsScroll = new HorizontalScrollView(ctx);
+        mSongChips = new LinearLayout(ctx);
+        mSongChips->setOrientation(LinearLayout::HORIZONTAL);
+        mSongChips->setPadding(8, 8, 8, 8);
+        for (const char* genre : {"热门", "Electronic", "Hip-Hop/Rap", "Rock", "Pop",
+                "Lo-Fi", "Ambient", "Jazz", "House", "R&B/Soul", "Metal"}) {
+            auto* chip = new TextView(ctx);
+            chip->setText(genre);
+            chip->setTextSize(14);
+            chip->setPadding(24, 10, 24, 10);
+            chip->setClickable(true);
+            const std::string g = genre == std::string("热门") ? std::string() : genre;
+            chip->setOnClickListener([this, g](View&) { selectSongGenre(g); });
+            mSongChips->addView(chip, new LinearLayout::LayoutParams(
+                    ViewGroup::LayoutParams::WRAP_CONTENT,
+                    ViewGroup::LayoutParams::WRAP_CONTENT));
+            mSongChipViews.push_back(chip);
+        }
+        chipsScroll->addView(mSongChips);
+        panel->addView(chipsScroll, new LinearLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
+
         auto* bar = new LinearLayout(ctx);
         bar->setOrientation(LinearLayout::HORIZONTAL);
         bar->setPadding(12, 10, 12, 10);
@@ -321,12 +345,28 @@ private:
         panel->addView(mSongList, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
         // Open browsable: the trending chart needs no search.
-        auto alive = mAlive;
-        Audius::trending([this, alive](std::vector<AudiusTrack> tracks) {
-            if (!*alive || getView() == nullptr) return;
-            bindSongs(std::move(tracks), "热门");
-        });
+        selectSongGenre(std::string());
         return panel;
+    }
+
+    // "" = the all-genres trending chart (chip 热门); otherwise a genre chart.
+    void selectSongGenre(const std::string& genre) {
+        mSongGenre = genre;
+        for (size_t i = 0; i < mSongChipViews.size(); i++) {
+            const std::string label = genre.empty() ? "热门" : genre;
+            const std::string text = mSongChipViews[i]->getText();
+            const bool sel = text == label;
+            mSongChipViews[i]->setBackgroundColor(sel ? 0xFFD43C33 : 0xFFDDDDDD);
+            mSongChipViews[i]->setTextColor(sel ? 0xFFFFFFFF : 0xFF444444);
+        }
+        if (mSongStatus) mSongStatus->setText((genre.empty() ? "热门" : genre) + "榜加载中…");
+        auto alive = mAlive;
+        auto done = [this, alive, genre](std::vector<AudiusTrack> tracks) {
+            if (!*alive || getView() == nullptr) return;
+            bindSongs(std::move(tracks), genre.empty() ? "热门" : genre);
+        };
+        if (genre.empty()) Audius::trending(done);
+        else Audius::trendingGenre(genre, done);
     }
 
     void searchSongs() {
@@ -391,6 +431,9 @@ private:
     }
 
 
+    LinearLayout* mSongChips = nullptr;
+    std::vector<TextView*> mSongChipViews;
+    std::string mSongGenre;
     EditText* mSongQuery = nullptr;
     TextView* mSongStatus = nullptr;
     ListView* mSongList = nullptr;
