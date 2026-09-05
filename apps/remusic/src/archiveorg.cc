@@ -125,7 +125,10 @@ void ArchiveOrg::fetchTracks(const std::string& identifier,
                     const size_t dot = name.rfind('.');
                     t.title = dot == std::string::npos ? name : name.substr(0, dot);
                 }
-                t.url = "https://archive.org/download/" + identifier
+                // http:// first: the bundled FFmpeg has no TLS backend, and
+                // archive.org's download nodes still serve plain http (a
+                // redirect to https here is the openssl-rebuild tell).
+                t.url = "http://archive.org/download/" + identifier
                         + "/" + urlEncode(f->get("name", "").asString());
                 t.durationMs = lengthToMs(f->get("length", "").asString());
                 if (!t.url.empty()) out.push_back(std::move(t));
