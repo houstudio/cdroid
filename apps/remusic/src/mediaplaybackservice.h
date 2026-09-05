@@ -63,6 +63,8 @@ public:
     virtual bool isPlaying() const = 0;
     virtual int position() const = 0;   // ms
     virtual int duration() const = 0;   // ms
+    /** Async prepare failed (bad stream / unreachable URL). */
+    virtual bool errored() const { return false; }
 };
 
 /** MediaPlayer-free wall-clock driver: advances position on a 200ms Handler
@@ -175,6 +177,7 @@ private:
     int mRepeatMode = REPEAT_ALL;
     bool mQueueIsSaveable = false;
     bool mServiceInUse = false;
+    bool mErrorNotified = false;
 
     PlayerBackend* mBackend = nullptr;      // owned default
     WallClockPlayerBackend mClock;

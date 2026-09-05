@@ -31,6 +31,7 @@ public:
     void stop() override;
     void seek(int msec) override;
     bool isPlaying() const override { return mPlaying; }
+    bool errored() const override { return mOpenFailed; }
     int position() const override;   // ms
     int duration() const override;   // ms
 
@@ -50,6 +51,7 @@ private:
     std::string mPath;
     std::atomic<bool> mWantPlaying{false};   // desired state (UI thread sets)
     std::atomic<bool> mPendingOpen{false};   // decode thread owns the actual open
+    std::atomic<bool> mOpenFailed{false};
     std::atomic<bool> mPlaying{false};       // actual: stream running
     std::atomic<bool> mQuit{false};
     std::atomic<bool> mSeeking{false};

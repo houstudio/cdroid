@@ -3,6 +3,7 @@
 #ifdef REMUSIC_ONLINE
 
 #include <sstream>
+#include <cstring>
 #include <thread>
 
 #include <json/json.h>
@@ -38,11 +39,28 @@ void RadioBrowser::searchByTag(const std::string& tag,
                 st.codec = s.get("codec", "").asString();
                 st.country = s.get("country", "").asString();
                 st.bitrate = s.get("bitrate", 0).asInt();
+                if (st.name.empty()) continue;
+                // Playlist containers (.pls/.m3u/...) are not openable
+                // streams for FFmpeg — drop them instead of failing on tap.
+                static const char* kPlaylistSuffix[] = {
+                        ".pls", ".m3u", ".m3u8", ".asx", ".qtl", ".ram"};
+                bool playlist = false;
+                for (const char* suf : kPlaylistSuffix) {
+                    const size_t n = strlen(suf);
+                    if (st.url.size() >= n
+                            && strcasecmp(st.url.c_str() + st.url.size() - n, suf) == 0) {
+                        playlist = true;
+                        break;
+                    }
+                }
+                if (playlist) continue;
                 const bool http = st.url.compare(0, 7, "http://") == 0;
                 const bool https = st.url.compare(0, 8, "https://") == 0;
-                if (st.name.empty() || !(http || https)) continue;
+                if (!http && !https) continue;
                 // The bundled FFmpeg carries the https protocol name but no
-                // TLS backend — plain-http streams lead so taps play.
+                // TLS backend — plain-http streams lead so taps play, and
+                // https-only stations are marked in the row.
+                if (https && !http) st.name += " [https]";
                 if (http) stations.insert(stations.begin(), std::move(st));
                 else stations.push_back(std::move(st));
             }

@@ -284,12 +284,18 @@ void FFmpegPlayerBackend::decodeLoop() {
             std::lock_guard<std::mutex> state(mStateMutex);
             if (mPendingOpen) {
                 mPendingOpen = false;
+                mOpenFailed = false;
                 if (mAudio && mAudio->isStreamRunning()) { mAudio->stopStream(); }
                 mPlaying = false;
                 closeInput();
                 std::string path;
                 { std::lock_guard<std::mutex> p(mPathMutex); path = mPath; }
-                if (!path.empty() && openInput()) {
+                if (path.empty() || !openInput()) {
+                    // Corrupt file / dead URL: surface it instead of silently
+                    // sitting at 00:00 (TRACK_ERROR in the service tick).
+                    mOpenFailed = true;
+                    mWantPlaying = false;
+                } else {
                     std::lock_guard<std::mutex> r(mRingMutex);
                     mRingFill = 0;
                     mRingHead = 0;

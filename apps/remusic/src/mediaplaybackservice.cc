@@ -69,6 +69,7 @@ MediaPlaybackService& MediaPlaybackService::getInstance() {
 
 MediaPlaybackService::MediaPlaybackService()
         : mTickHandler(cdroid::Looper::getMainLooper()) {
+    // (error latch reset on every open)
     mClock.setEndListener([this] { next(); });   // auto-advance at track end
     setBackend(&mClock);
 #ifdef REMUSIC_REAL_AUDIO
@@ -179,6 +180,7 @@ void MediaPlaybackService::playOrPause() {
 bool MediaPlaybackService::openCurrent() {
     const MusicInfo* info = currentInfo();
     if (info == nullptr) return false;
+    mErrorNotified = false;   // latch: one TRACK_ERROR per open attempt
     mBackend->open(info->data, info->duration);
     return true;
 }
@@ -536,6 +538,10 @@ void MediaPlaybackService::scheduleTick() {
         // End-of-track: the clock backend fires via tick(); a real decoder
         // reports position >= duration.
         mClock.tick();
+        if (!mErrorNotified && mBackend->errored()) {
+            mErrorNotified = true;
+            notifyChange(MediaServiceActions::TRACK_ERROR);
+        }
         if (mBackend != (PlayerBackend*) &mClock && mBackend->position() >= mBackend->duration())
             next();
         if (mBackend->isPlaying()) scheduleTick();

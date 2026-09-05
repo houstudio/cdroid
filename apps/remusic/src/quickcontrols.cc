@@ -57,8 +57,15 @@ void QuickControls::attachTo(Window& host) {
     if (title) title->setOnClickListener(openPlaying);
     if (artist) artist->setOnClickListener(openPlaying);
 
-    // PlaybackStatus receiver: refresh on meta/playstate changes.
+    // PlaybackStatus receiver: refresh on meta/playstate changes; open
+    // failures surface as a warning in the bar (TRACK_ERROR).
     MediaPlaybackService::getInstance().addListener(this, [this, title, artist, control](const std::string& what) {
+        if (what == MediaServiceActions::TRACK_ERROR) {
+            if (title != nullptr)
+                title->setText("⚠ 无法播放:" + MusicPlayer::getTrackName()
+                        + "(换台/换曲试试)");
+            return;
+        }
         if (what != MediaServiceActions::META_CHANGED
                 && what != MediaServiceActions::PLAYSTATE_CHANGED) return;
         updateInfo();
