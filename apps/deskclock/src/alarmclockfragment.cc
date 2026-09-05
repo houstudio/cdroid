@@ -168,6 +168,9 @@ void AlarmClockFragment::reloadAlarms() {
 }
 
 void AlarmClockFragment::setAdapterItems(std::vector<alarms::AlarmItemHolder*>* items) {
+    // setItems deletes the outgoing holders; the click handler's selected alarm
+    // borrows into that memory, so drop it first (the re-expand below restores it).
+    mAlarmTimeClickHandler->setSelectedAlarm(nullptr);
     mItemAdapter->setItems(items);
 
     // Show or hide the empty view as appropriate (EmptyViewController inline).

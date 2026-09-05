@@ -37,8 +37,11 @@ void AlarmItemViewHolder::onBindItemView(ItemHolder& itemHolder) {
     bindOnOffSwitch(alarm);
     bindClock(alarm);
     Context& context = *itemView->getContext();
-    itemView->setContentDescription(clock->getText().toString()->str() + " "
+    // String::toString() returns an owned copy (caller deletes).
+    String* clockText = clock->getText().toString();
+    itemView->setContentDescription(clockText->str() + " "
             + alarm.getLabelOrDefault(context));
+    delete clockText;
 }
 
 void AlarmItemViewHolder::bindOnOffSwitch(const data::Alarm& alarm) {

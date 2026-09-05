@@ -211,7 +211,14 @@ public:
         };
     }
 
-    ~ItemAdapter() override { delete items; }
+    ~ItemAdapter() override {
+        // The adapter owns the holders, not just the vector holding them
+        // (upstream leans on GC; reloads pass a fresh heap vector each time).
+        if (items != nullptr) {
+            for (ItemHolder* itemHolder : *items) delete itemHolder;
+        }
+        delete items;
+    }
 
     /** Convenience for calling setHasStableIds(true); returns *this for chaining. */
     ItemAdapter<T>& setHasStableIds() {
@@ -266,6 +273,11 @@ public:
                 }
             }
 
+            // Ownership passes with each set: free the outgoing holders before
+            // the vector (upstream's GC makes this a no-op there).
+            if (oldItemHolders != nullptr) {
+                for (ItemHolder* oldItemHolder : *oldItemHolders) delete oldItemHolder;
+            }
             delete oldItemHolders;
             items = itemHolders;
             notifyDataSetChanged();
