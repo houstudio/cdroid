@@ -23,6 +23,7 @@
 #ifdef REMUSIC_ONLINE
 #include "radiobrowser.h"
 #include "audius.h"
+#include "ccmixter.h"
 #include "faviconcache.h"
 #include <text/String.h>
 #include <widget/edittext.h>
@@ -44,6 +45,10 @@ using MenuAdapter = ArrayAdapter<std::string>;
 // radio-browser.info directory: genre chips over a station list; tapping a
 // station plays its live stream through the same queue/player pipeline
 // (FFmpeg opens http(s) stream URLs natively; duration 0 = live, the tick
+// Whichever on-demand source answered last is tried first on the next
+// chart (see OnlineFragment::loadChartWithFallback).
+static std::string sLastGoodSongSource;
+
 // never auto-advances it).
 class OnlineFragment : public Fragment {
 public:
@@ -360,14 +365,82 @@ private:
             mSongChipViews[i]->setTextColor(sel ? 0xFFFFFFFF : 0xFF444444);
         }
         if (mSongStatus) mSongStatus->setText((genre.empty() ? "热门" : genre) + "榜加载中…");
+        loadChartWithFallback(genre);
+    }
+
+    // Audius first; when its whole host list is unreachable (mainland
+    // routes often are), ccMixter's rank chart serves the same tab so the
+    // page is never blank-without-search.
+    void loadChartWithFallback(const std::string& genre) {
+        const std::string label = genre.empty() ? "热门" : genre;
         auto alive = mAlive;
-        auto done = [this, alive, genre](std::vector<AudiusTrack> tracks,
+        auto audiusDone = [this, alive, genre, label](std::vector<AudiusTrack> tracks,
                 const std::string& error) {
             if (!*alive || getView() == nullptr) return;
-            bindSongs(std::move(tracks), genre.empty() ? "热门" : genre, error);
+            if (!tracks.empty()) {
+                bindSongs(std::move(tracks), label, "Audius");
+                return;
+            }
+            CcMixter::chart(genre, [this, alive, label, error](std::vector<AudiusTrack> cc,
+                    const std::string& ccError) {
+                if (!*alive || getView() == nullptr) return;
+                if (!cc.empty()) bindSongs(std::move(cc), label, "ccMixter");
+                else bindSongs(std::move(cc), label,
+                        ccError.empty() ? error : ccError + " / " + error);
+            });
         };
-        if (genre.empty()) Audius::trending(done);
-        else Audius::trendingGenre(genre, done);
+        if (sLastGoodSongSource == "ccmixter") {
+            ccFirst(label, genre, alive);
+        } else {
+            audiusFirst(label, genre, alive);
+        }
+    }
+
+    // Audius is the richer catalog, so it leads unless it failed here
+    // before (mainland routes); whichever source answered last is tried
+    // first on the next chart — a blocked network pays the fallback wait
+    // exactly once per process.
+    void audiusFirst(const std::string& label, const std::string& genre,
+            std::shared_ptr<bool> alive) {
+        auto audiusDone = [this, alive, label, genre](std::vector<AudiusTrack> tracks,
+                const std::string& error) {
+            if (!*alive || getView() == nullptr) return;
+            if (!tracks.empty()) {
+                sLastGoodSongSource = "audius";
+                bindSongs(std::move(tracks), label, "Audius");
+                return;
+            }
+            ccFirst(label, genre, alive);
+        };
+        if (genre.empty()) Audius::trending(audiusDone);
+        else Audius::trendingGenre(genre, audiusDone);
+    }
+
+    void ccFirst(const std::string& label, const std::string& genre,
+            std::shared_ptr<bool> alive) {
+        CcMixter::chart(genre, [this, alive, label, genre](std::vector<AudiusTrack> cc,
+                const std::string&) {
+            if (!*alive || getView() == nullptr) return;
+            if (!cc.empty()) {
+                sLastGoodSongSource = "ccmixter";
+                bindSongs(std::move(cc), label, "ccMixter");
+                return;
+            }
+            // ccMixter whiffed too — give Audius the last word (it may have
+            // recovered, or this chip's tag just has no ccMixter matches).
+            auto audiusDone = [this, alive, label, cc](std::vector<AudiusTrack> tracks,
+                    const std::string&) {
+                if (!*alive || getView() == nullptr) return;
+                if (!tracks.empty()) {
+                    sLastGoodSongSource = "audius";
+                    bindSongs(std::move(tracks), label, "Audius");
+                } else {
+                    bindSongs(std::move(cc), label);   // empty: show the miss
+                }
+            };
+            if (genre.empty()) Audius::trending(audiusDone);
+            else Audius::trendingGenre(genre, audiusDone);
+        });
     }
 
     void searchSongs() {
@@ -381,13 +454,26 @@ private:
         Audius::search(query, [this, alive, query](std::vector<AudiusTrack> tracks,
                 const std::string& error) {
             if (!*alive || getView() == nullptr) return;
-            bindSongs(std::move(tracks), query, error);
+            if (!tracks.empty()) {
+                bindSongs(std::move(tracks), query, "Audius");
+                return;
+            }
+            // Empty chart (or unreachable) — let ccMixter try the same text
+            // (it also matches usertags, so genre words work as queries).
+            CcMixter::search(query, [this, alive, query, error](std::vector<AudiusTrack> cc,
+                    const std::string& ccError) {
+                if (!*alive || getView() == nullptr) return;
+                if (!cc.empty()) bindSongs(std::move(cc), query, "ccMixter");
+                else bindSongs(std::move(cc), query,
+                        ccError.empty() ? error : ccError + " / " + error);
+            });
         });
     }
 
     // Rows "title - artist · m:ss"; tapping queues the whole result list at
     // that position (Netease-style: the results ARE the playlist).
     void bindSongs(std::vector<AudiusTrack> tracks, const std::string& label,
+            const std::string& source = std::string(),
             const std::string& error = std::string()) {
         mSongs = std::move(tracks);
         std::vector<std::string> rows;
@@ -406,7 +492,8 @@ private:
             mSongStatus->setText(label + " · 无结果"
                     + (error.empty() ? "" : " (" + error + ")"));
         } else {
-            mSongStatus->setText(std::to_string(rows.size()) + " 首 · " + label + " · 点击播放");
+            mSongStatus->setText(std::to_string(rows.size()) + " 首 · " + label
+                    + (source.empty() ? "" : " · " + source) + " · 点击播放");
         }
         auto* adapter = new ArrayAdapter<std::string>(
                 getContext(), R::layout::design_drawer_item, 0);
@@ -423,7 +510,7 @@ private:
                 info.musicName = t.title;
                 info.artist = t.artist;
                 info.albumName = "Audius";
-                info.data = Audius::streamUrl(t.id);
+                info.data = t.url.empty() ? Audius::streamUrl(t.id) : t.url;
                 info.islocal = true;
                 info.duration = t.durationMs;   // real lengths: auto-advance works
                 infos[info.songId] = info;

@@ -83,7 +83,7 @@ if(REMUSIC_FFMPEG)
     list(APPEND REMUSIC_SRCS src/ffmpegbackend.cc)
 endif()
 if(REMUSIC_ONLINE)
-    list(APPEND REMUSIC_SRCS src/radiobrowser.cc src/audius.cc src/archiveorg.cc src/httputil.cc src/faviconcache.cc)
+    list(APPEND REMUSIC_SRCS src/radiobrowser.cc src/audius.cc src/ccmixter.cc src/archiveorg.cc src/httputil.cc src/faviconcache.cc)
     add_definitions(-DREMUSIC_ONLINE)
 endif()
 

@@ -45,7 +45,14 @@ FFmpegPlayerBackend::~FFmpegPlayerBackend() {
 
 bool FFmpegPlayerBackend::openInput() {
     AVFormatContext* fmt = nullptr;
-    if (avformat_open_input(&fmt, mPath.c_str(), nullptr, nullptr) != 0 || fmt == nullptr) {
+    // ccMixter's media host hotlink-checks Referer (403 without one); other
+    // sources don't care, so send it only for that domain.
+    AVDictionary* opts = nullptr;
+    if (mPath.find("ccmixter.org") != std::string::npos)
+        av_dict_set(&opts, "referer", "https://ccmixter.org/", 0);
+    const int openRc = avformat_open_input(&fmt, mPath.c_str(), nullptr, &opts);
+    av_dict_free(&opts);
+    if (openRc != 0 || fmt == nullptr) {
         LOGE("ffmpeg: open failed %s", mPath.c_str());
         return false;
     }

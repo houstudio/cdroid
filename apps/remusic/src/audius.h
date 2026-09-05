@@ -12,11 +12,14 @@
 
 namespace remusic {
 
+// Generic on-demand row (the panel's model): Audius fills id/url via
+// streamUrl, the ccMixter fallback fills url with its download_url.
 struct AudiusTrack {
     std::string id;
     std::string title;
     std::string artist;
     std::string artwork;   // direct https URL ("" when absent)
+    std::string url;       // playable stream URL (empty only for legacy rows)
     int durationMs = 0;
 };
 

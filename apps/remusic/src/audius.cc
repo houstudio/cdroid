@@ -27,6 +27,14 @@ static const char* const kHosts[] = {
 static std::string sWorkingHost;   // first host that answered (empty = none yet)
 static const char* kApp = "remusic-cdroid";
 
+
+// Host for a track's redirect chain: prefer the host this network already
+// reached (empty = none yet, use the primary).
+std::string Audius::streamUrl(const std::string& trackId) {
+    const std::string host = sWorkingHost.empty() ? kHosts[0] : sWorkingHost;
+    return host + "/v1/tracks/" + trackId + "/stream?app_name=" + kApp;
+}
+
 static void postToMain(std::function<void()> fn) {
     static cdroid::Handler sMain(cdroid::Looper::getMainLooper());
     sMain.post(std::move(fn));
@@ -62,6 +70,7 @@ static std::vector<AudiusTrack> parseTracks(const std::string& body) {
             track.artwork = art.get(size, "").asString();
             if (!track.artwork.empty()) break;
         }
+        track.url = Audius::streamUrl(track.id);
         if (!track.id.empty() && !track.title.empty()) out.push_back(std::move(track));
     }
     return out;
@@ -110,12 +119,6 @@ void Audius::search(const std::string& query, Audius::TracksCb onDone) {
             + "&app_name=" + std::string(kApp), std::move(onDone));
 }
 
-std::string Audius::streamUrl(const std::string& trackId) {
-    // Any discovery host can issue the redirect chain; prefer the one that
-    // already answered (it is the route this network can reach).
-    const std::string host = sWorkingHost.empty() ? kHosts[0] : sWorkingHost;
-    return host + "/v1/tracks/" + trackId + "/stream?app_name=" + kApp;
-}
 
 } // namespace remusic
 
