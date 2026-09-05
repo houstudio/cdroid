@@ -180,9 +180,13 @@ private:
         const std::string cover = MusicPlayer::currentTrackInfo()
                 ? MusicPlayer::currentTrackInfo()->albumData : std::string();
         if (auto* art = (ImageView*) findViewById(R::id::albumArt)) {
-            // Static backdrop: dimmed cover fill (no rotation).
+            // Static backdrop: the cover fill; plain dark when absent (the
+            // disc placeholder here painted giant concentric rings).
             if (!cover.empty()) art->setImageURIAsync("file://" + cover);
-            else art->setImageResource(R::drawable::placeholder_disk_210);
+            else {
+                art->setImageDrawable(nullptr);
+                art->setBackgroundColor(0xFF232323);
+            }
         }
         if (mDisc) {
             if (!cover.empty()) mDisc->setImageURIAsync("file://" + cover);
@@ -191,46 +195,64 @@ private:
     }
 
     // The original spins the ALBUM DISC while playing and lifts/lowers the
-    // tonearm. The disc is its own view (circular-cropped cover, left of
-    // center under the needle's pivot) — NOT the full-screen albumArt
-    // backdrop, which must stay static.
+    // tonearm. Geometry is RESOLUTION-INDEPENDENT by construction:
+    //  - the disc takes its bounds from view_pager's laid-out frame (the
+    //    XML sizes/centers that area in dp for every screen);
+    //  - the needle's intrinsic drawable is raw pixels (no density buckets),
+    //    so the arm is rescaled onto the 360dp design grid and the pivot is
+    //    set as FRACTIONS of the view (15.1dp of 92x138dp = 0.164 / 0.109),
+    //    which stay put under uniform scaling.
     void wireNeedleAndDisc() {
         mNeedle = (ImageView*) findViewById(R::id::needle);
-        if (mNeedle) {
-            post([this] {
-                if (mNeedle) mNeedle->setPivotX(mNeedle->getWidth() * 0.72f);
-            });
-        }
         // Dedicated disc view, added over the (empty) album pager area.
         View* pagerView = findViewById(R::id::view_pager);
         ViewGroup* pagerArea = pagerView ? (ViewGroup*) pagerView->getParent() : nullptr;
         if (pagerArea != nullptr) {
             mDisc = new ImageView(getContext());
             mDisc->setScaleType(ScaleType::FIT_XY);
-            mDisc->setImageResource(R::drawable::placeholder_disk_210);
-            mDisc->setAdjustViewBounds(false);
+            mDisc->setImageResource(R::drawable::placeholder_disk_play_song);
             auto* lp = new ViewGroup::MarginLayoutParams(0, 0);
             mDisc->setLayoutParams(lp);
-            pagerArea->addView(mDisc);
-            post([this] {
-                if (mDisc == nullptr) return;
-                const int w = getWidth();
-                const int disc = std::min(340, (int)(w * 0.66f));
+            // Z-order: above the pager, BELOW the needle (the arm rests on
+            // the record, not under it). RelativeLayout draws later children
+            // on top, so insert just before the needle.
+            int at = pagerArea->getChildCount();
+            for (int i = 0; i < pagerArea->getChildCount(); i++)
+                if (pagerArea->getChildAt(i)->getId() == R::id::needle) { at = i; break; }
+            pagerArea->addView(mDisc, at);
+            post([this, pagerView] {
+                if (mDisc == nullptr || pagerView == nullptr) return;
+                // Disc = the album area the XML already laid out (match_parent
+                // x 263dp, centered): square on its height, centered on its
+                // own center — correct at any resolution.
+                const int side = pagerView->getHeight();
                 auto* lp = (ViewGroup::MarginLayoutParams*) mDisc->getLayoutParams();
-                lp->width = disc;
-                lp->height = disc;
-                lp->leftMargin = (int)(w * 0.5f) - disc - 24;   // left of center: needle lands on its rim
-                lp->topMargin = 132;
+                lp->width = side;
+                lp->height = side;
+                lp->leftMargin = pagerView->getLeft() + (pagerView->getWidth() - side) / 2;
+                lp->topMargin = pagerView->getTop();
                 mDisc->setLayoutParams(lp);
-                mDisc->setCornerRadii((int)(disc / 2));   // circular crop
+                mDisc->setCornerRadii(side / 2);            // circular crop
+                // Needle: intrinsic 276x414 raw px would dwarf small screens;
+                // rescale to the design grid (92x138dp at 360dp width).
+                if (mNeedle != nullptr) {
+                    const float scale = getWidth() / 360.f;
+                    auto* nlp = (ViewGroup::MarginLayoutParams*) mNeedle->getLayoutParams();
+                    nlp->width = (int)(92 * scale);
+                    nlp->height = (int)(138 * scale);
+                    mNeedle->setLayoutParams(nlp);
+                    // Tonearm post = 15.1dp from the arm's top-left.
+                    mNeedle->setPivotX(nlp->width * 0.164f);
+                    mNeedle->setPivotY(nlp->height * 0.109f);
+                }
             });
         }
         mSpinKeepalive = [this]() -> bool {
             if (MusicPlayer::isPlaying()) {
                 if (mDisc) mDisc->setRotation(mDisc->getRotation() + 0.6f);
-                if (mNeedle) mNeedle->setRotation(-22.f);   // arm down on the record
+                if (mNeedle) mNeedle->setRotation(0.f);     // resting on the record
             } else if (mNeedle) {
-                mNeedle->setRotation(0.f);                  // arm lifted
+                mNeedle->setRotation(-30.f);                // lifted (XML initial)
             }
             postDelayed(mSpinKeepalive, 40);
             return true;
