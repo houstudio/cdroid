@@ -130,11 +130,19 @@ int InsetDrawable::getOpacity() const{
 
 void InsetDrawable::onBoundsChange(const Rect&bounds){
     Rect r = bounds;
-  
-    r.left  += mState->mInsetLeft.getDimension(bounds.width);
-    r.top   += mState->mInsetTop.getDimension(bounds.height);
-    r.width -= mState->mInsetRight.getDimension(bounds.width);
-    r.height-= mState->mInsetBottom.getDimension(bounds.height);
+
+    // AOSP builds an ltrb rect (left+insetL, top+insetT, right-insetR,
+    // bottom-insetB); cdroid's Rect is left/top/width/height, so BOTH insets
+    // come off each axis — subtracting only the trailing one shrank the rect
+    // by half and left it flush against the far edge.
+    const int il = (int)mState->mInsetLeft.getDimension(bounds.width);
+    const int it = (int)mState->mInsetTop.getDimension(bounds.height);
+    const int ir = (int)mState->mInsetRight.getDimension(bounds.width);
+    const int ib = (int)mState->mInsetBottom.getDimension(bounds.height);
+    r.left   += il;
+    r.top    += it;
+    r.width  -= il + ir;
+    r.height -= it + ib;
     DrawableWrapper::onBoundsChange(r);
 }
 
