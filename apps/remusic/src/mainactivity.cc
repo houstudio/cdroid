@@ -286,6 +286,37 @@ private:
         auto* panel = new LinearLayout(ctx);
         panel->setOrientation(LinearLayout::VERTICAL);
 
+        // 热门现场: etree's most-archived artists as one-tap chips — the
+        // on-demand tab opens browsable instead of waiting for a search.
+        auto* hotScroll = new HorizontalScrollView(ctx);
+        auto* hot = new LinearLayout(ctx);
+        hot->setOrientation(LinearLayout::HORIZONTAL);
+        hot->setPadding(8, 8, 8, 8);
+        for (const char* artist : {"Grateful Dead", "Phish", "Dave Matthews Band",
+                "String Cheese Incident", "Ween", "Jack Johnson", "Ben Harper",
+                "Smashing Pumpkins", "Weezer", "Metallica"}) {
+            auto* chip = new TextView(ctx);
+            chip->setText(artist);
+            chip->setTextSize(14);
+            chip->setPadding(24, 10, 24, 10);
+            chip->setClickable(true);
+            const std::string a = artist;
+            chip->setOnClickListener([this, a](View&) {
+                mLiveStatus->setText("加载 " + a + " 的现场…");
+                auto alive = mAlive;
+                ArchiveOrg::searchConcerts(a, [this, alive, a](std::vector<ArchiveConcert> concerts) {
+                    if (!*alive || getView() == nullptr) return;
+                    bindConcerts(std::move(concerts), a + " · 现场演出");
+                });
+            });
+            hot->addView(chip, new LinearLayout::LayoutParams(
+                    ViewGroup::LayoutParams::WRAP_CONTENT,
+                    ViewGroup::LayoutParams::WRAP_CONTENT));
+        }
+        hotScroll->addView(hot);
+        panel->addView(hotScroll, new LinearLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
+
         auto* bar = new LinearLayout(ctx);
         bar->setOrientation(LinearLayout::HORIZONTAL);
         bar->setPadding(12, 10, 12, 10);
@@ -308,7 +339,7 @@ private:
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
 
         mLiveStatus = new TextView(ctx);
-        mLiveStatus->setText("搜艺人 → 列出可传播现场演出");
+        mLiveStatus->setText("热门免费专辑加载中…");
         mLiveStatus->setTextSize(14);
         mLiveStatus->setTextColor(0xFF888888);
         mLiveStatus->setPadding(20, 8, 20, 8);
@@ -318,7 +349,40 @@ private:
         mLiveList = new ListView(ctx);
         panel->addView(mLiveList, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
+        // On open: the netlabels catalog (free albums by popularity) — a
+        // browsable 点播 list before any typing happens.
+        auto alive = mAlive;
+        ArchiveOrg::browseNetlabels([this, alive](std::vector<ArchiveConcert> albums) {
+            if (!*alive || getView() == nullptr) return;
+            bindConcerts(std::move(albums), "热门免费专辑 · 点专辑整张连播");
+        });
         return panel;
+    }
+
+    // Concerts and netlabel albums share the list; `label` sets the status
+    // line so the user knows what they are looking at.
+    void bindConcerts(std::vector<ArchiveConcert> items, const std::string& label) {
+        mConcerts = std::move(items);
+        std::vector<std::string> rows;
+        for (auto& c : mConcerts) {
+            std::string row = c.title.empty() ? c.identifier : c.title;
+            if (!c.year.empty()) row += "  (" + c.year + ")";
+            rows.push_back(row);
+        }
+        if (rows.empty()) {
+            rows.push_back("无结果(或 archive.org 不可达)");
+            mLiveStatus->setText(label + " · 无结果");
+        } else {
+            mLiveStatus->setText(std::to_string(rows.size()) + " 项 · " + label + " · 点击连播");
+        }
+        auto* adapter = new ArrayAdapter<std::string>(
+                getContext(), R::layout::design_drawer_item, 0);
+        adapter->addAll(rows);
+        mLiveList->setAdapter(adapter);
+        mLiveList->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
+            if (position >= (int)mConcerts.size()) return;
+            playConcert(mConcerts[position]);
+        });
     }
 
     void searchLive() {
@@ -329,29 +393,9 @@ private:
         if (artist.empty()) return;
         mLiveStatus->setText("搜索 " + artist + " 的演出…");
         auto alive = mAlive;
-        ArchiveOrg::searchConcerts(artist, [this, alive](std::vector<ArchiveConcert> concerts) {
+        ArchiveOrg::searchConcerts(artist, [this, alive, artist](std::vector<ArchiveConcert> concerts) {
             if (!*alive || getView() == nullptr) return;
-            mConcerts = std::move(concerts);
-            std::vector<std::string> rows;
-            for (auto& c : mConcerts) {
-                std::string row = c.title.empty() ? c.identifier : c.title;
-                if (!c.year.empty()) row += "  (" + c.year + ")";
-                rows.push_back(row);
-            }
-            if (rows.empty()) {
-                rows.push_back("无结果(或 archive.org 不可达)");
-                mLiveStatus->setText("无结果");
-            } else {
-                mLiveStatus->setText(std::to_string(rows.size()) + " 场演出 · 点击整场连播");
-            }
-            auto* adapter = new ArrayAdapter<std::string>(
-                    getContext(), R::layout::design_drawer_item, 0);
-            adapter->addAll(rows);
-            mLiveList->setAdapter(adapter);
-            mLiveList->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
-                if (position >= (int)mConcerts.size()) return;
-                playConcert(mConcerts[position]);
-            });
+            bindConcerts(std::move(concerts), artist + " · 现场演出");
         });
     }
 

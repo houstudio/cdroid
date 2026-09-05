@@ -34,14 +34,17 @@ static Json::Value parseJson(const std::string& body) {
     return root;
 }
 
-void ArchiveOrg::searchConcerts(const std::string& artist,
+// Shared advancedsearch fetch+parse; `query` is the raw q= expression,
+// `sort` the optional sort[]= clause.
+static void searchAdvanced(const std::string& query, const std::string& sort,
         std::function<void(std::vector<ArchiveConcert>)> onDone) {
-    std::thread([artist, onDone = std::move(onDone)]() mutable {
-        const std::string url =
+    std::thread([query, sort, onDone = std::move(onDone)]() mutable {
+        std::string url =
                 "https://archive.org/advancedsearch.php"
-                "?q=collection%3Aetree+AND+creator%3A%22" + urlEncode(artist) +
-                "%22&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=year"
-                "&fl%5B%5D=creator&rows=40&output=json";
+                "?q=" + query +
+                "&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=year"
+                "&fl%5B%5D=creator&rows=60&output=json";
+        if (!sort.empty()) url += "&sort%5B%5D=" + sort;
         std::vector<ArchiveConcert> out;
         const Json::Value root = parseJson(httpGet(url));
         const Json::Value docs = root["response"]["docs"];
@@ -52,7 +55,7 @@ void ArchiveOrg::searchConcerts(const std::string& artist,
                 c.title = d.get("title", "").asString();
                 c.year = d.get("year", "").asString();
                 c.creator = d.get("creator", "").asString();
-                if (c.creator.empty()) c.creator = artist;
+                // (browse callers have no "artist" to fall back on)
                 if (!c.identifier.empty()) out.push_back(std::move(c));
             }
         }
@@ -60,6 +63,20 @@ void ArchiveOrg::searchConcerts(const std::string& artist,
             onDone(std::move(out));
         });
     }).detach();
+}
+
+void ArchiveOrg::searchConcerts(const std::string& artist,
+        std::function<void(std::vector<ArchiveConcert>)> onDone) {
+    searchAdvanced("collection%3Aetree+AND+creator%3A%22" + urlEncode(artist) + "%22",
+            std::string(), std::move(onDone));
+}
+
+void ArchiveOrg::browseNetlabels(
+        std::function<void(std::vector<ArchiveConcert>)> onDone) {
+    // Netlabels = freely-distributable album releases; most-downloaded
+    // first, so the on-demand tab has a browsable catalog with no search.
+    searchAdvanced("collection%3Anetlabels+AND+mediatype%3Aaudio",
+            "downloads+desc", std::move(onDone));
 }
 
 // "241.23" seconds or "4:01" mm:ss -> ms

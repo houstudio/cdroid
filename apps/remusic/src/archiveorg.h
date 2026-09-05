@@ -26,6 +26,9 @@ struct ArchiveTrack {
 
 class ArchiveOrg {
 public:
+    /** Browse the netlabels collection (free albums) by popularity — the
+     *  点播 catalog that needs no search term. */
+    static void browseNetlabels(std::function<void(std::vector<ArchiveConcert>)> onDone);
     static void searchConcerts(const std::string& artist,
             std::function<void(std::vector<ArchiveConcert>)> onDone);
     static void fetchTracks(const std::string& identifier,
