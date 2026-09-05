@@ -11,7 +11,6 @@ namespace deskclock {
 
 namespace {
 constexpr int SIZE_NORMAL_DP = 56; // design_fab_size_normal
-constexpr int CONTENT_INSET_DP = 12; // design_fab_content_size padding
 }
 
 FloatingActionButton::FloatingActionButton(Context* context, const AttributeSet* attrs)
@@ -37,8 +36,11 @@ FloatingActionButton::FloatingActionButton(Context* context, const AttributeSet*
     const float density = context->getDisplayMetrics().density;
     setMinimumWidth((int) (SIZE_NORMAL_DP * density));
     setMinimumHeight((int) (SIZE_NORMAL_DP * density));
-    const int inset = (int) (CONTENT_INSET_DP * density);
-    setPadding(inset, inset, inset, inset);
+    // Upstream draws the FAB icon at its intrinsic size, centered in the
+    // circle (24dp add/globe/stop AND the 48dp play/pause morph icons share
+    // one FAB). CENTER keeps intrinsic size; FIT_CENTER would crush the 48dp
+    // icons into the content box, and any padding would shrink them further.
+    setScaleType(ScaleType::CENTER);
 
     setBackgroundTintColor(mBackgroundTint);
 }
