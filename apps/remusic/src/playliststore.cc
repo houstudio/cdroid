@@ -72,6 +72,18 @@ bool PlaylistStore::createPlaylist(const std::string& name) {
     return true;
 }
 
+bool PlaylistStore::renamePlaylist(const std::string& from, const std::string& to) {
+    auto lists = getPlaylists();
+    for (auto& pl : lists) {
+        if (pl.name == from) {
+            pl.name = to;
+            save(lists);
+            return true;
+        }
+    }
+    return false;
+}
+
 bool PlaylistStore::deletePlaylist(const std::string& name) {
     auto lists = getPlaylists();
     for (size_t i = 0; i < lists.size(); i++) {

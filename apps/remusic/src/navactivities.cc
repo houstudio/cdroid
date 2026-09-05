@@ -141,6 +141,114 @@ REGISTER_ACTIVITY(DownActivity);
 //  - playlist detail (extra "playlist" = name): the playlist's songs, tap to play
 //  - NEW_PLAYLIST action: the AddPlaylistDialog (name input)
 //  - ADD_TO action + extra "songId": PlaylistSelectActivity (pick a target list)
+// PlaylistManagerActivity: rename/delete playlists. Rows list every
+// playlist; a tap opens the row's actions (重命名 with an input dialog,
+// 删除 with the same confirm UX).
+class PlaylistManagerActivity : public HeaderActivity {
+public:
+    PlaylistManagerActivity() : HeaderActivity("歌单管理") {}
+    void onContentReady() override {
+        bind();
+    }
+private:
+    void bind() {
+        auto lists = PlaylistStore::get().getPlaylists();
+        std::vector<std::string> rows;
+        for (auto& pl : lists) rows.push_back(pl.name + "  (" + std::to_string(pl.songIds.size()) + "首)");
+        if (rows.empty()) rows.push_back("还没有歌单");
+        auto* adapter = new ArrayAdapter<std::string>(
+                getContext(), R::layout::design_drawer_item, 0);
+        adapter->addAll(rows);
+        mList->setAdapter(adapter);
+        mList->setOnItemClickListener([this, lists](AdapterView&, View&, int position, long) {
+            if (position >= (int) lists.size()) return;
+            showActions(lists[position].name);
+        });
+    }
+
+    void showActions(const std::string& name) {
+        auto* wrap = new FrameLayout(getContext());
+        wrap->setBackgroundColor(0x88000000u);
+        wrap->setOnClickListener([wrap](View&) {
+            if (wrap->getParent() != nullptr)
+                ((ViewGroup*) wrap->getParent())->removeView(wrap);
+        });
+        auto* panel = new LinearLayout(getContext());
+        panel->setOrientation(LinearLayout::VERTICAL);
+        panel->setBackgroundColor(0xFFF5F5F5u);
+        auto addRow = [this, panel, name, wrap](const char* label, auto fn) {
+            auto* row = new TextView(getContext());
+            row->setText(label);
+            row->setTextSize(17);
+            row->setTextColor(0xFF333333);
+            row->setPadding(28, 18, 28, 18);
+            row->setClickable(true);
+            row->setOnClickListener([fn, wrap, name](View&) {
+                fn(name);
+                if (wrap->getParent() != nullptr)
+                    ((ViewGroup*) wrap->getParent())->removeView(wrap);
+            });
+            panel->addView(row, new LinearLayout::LayoutParams(
+                    ViewGroup::LayoutParams::MATCH_PARENT, 58));
+        };
+        addRow("重命名", [this](const std::string& name) { showRename(name); });
+        addRow("删除歌单", [this](const std::string& name) {
+            PlaylistStore::get().deletePlaylist(name);
+            bind();
+        });
+        wrap->addView(panel, new FrameLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT,
+                ViewGroup::LayoutParams::WRAP_CONTENT, Gravity::BOTTOM));
+        addView(wrap, new FrameLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT,
+                ViewGroup::LayoutParams::MATCH_PARENT));
+    }
+
+    // Same single-entry panel shape as AddPlaylistDialog, pre-filled.
+    void showRename(const std::string& name) {
+        auto* panel = new LinearLayout(getContext());
+        panel->setOrientation(LinearLayout::VERTICAL);
+        panel->setBackgroundColor(0xFFFFFFFFu);
+        auto* title = new TextView(getContext());
+        title->setText("重命名歌单");
+        title->setTextSize(20);
+        title->setTextColor(0xFF333333);
+        title->setPadding(24, 20, 24, 12);
+        auto* input = new EditText(getContext());
+        input->setText(name);
+        input->setPadding(24, 8, 24, 16);
+        auto* ok = new TextView(getContext());
+        ok->setText("确定");
+        ok->setTextSize(18);
+        ok->setTextColor(ThemeStore::get().accent());
+        ok->setGravity(Gravity::CENTER);
+        ok->setPadding(24, 16, 24, 16);
+        ok->setOnClickListener([this, input, name](View&) {
+            String* value = input->getText().toString();
+            const std::string to = value ? value->str() : std::string();
+            delete value;
+            if (!to.empty() && to != name)
+                PlaylistStore::get().renamePlaylist(name, to);
+            bind();
+        });
+        panel->addView(title, new LinearLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, 64));
+        panel->addView(input, new LinearLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, 96));
+        panel->addView(ok, new LinearLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, 64));
+        auto* wrap = new FrameLayout(getContext());
+        wrap->setBackgroundColor(0x88000000u);
+        wrap->addView(panel, new FrameLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT,
+                ViewGroup::LayoutParams::WRAP_CONTENT, Gravity::CENTER));
+        addView(wrap, new FrameLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT,
+                ViewGroup::LayoutParams::MATCH_PARENT));
+    }
+};
+REGISTER_ACTIVITY(PlaylistManagerActivity);
+
 class PlaylistActivity : public HeaderActivity {
 public:
     PlaylistActivity() : HeaderActivity("歌单") {}

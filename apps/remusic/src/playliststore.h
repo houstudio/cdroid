@@ -25,6 +25,7 @@ public:
     std::vector<Playlist> getPlaylists() const;
     bool createPlaylist(const std::string& name);
     bool deletePlaylist(const std::string& name);
+    bool renamePlaylist(const std::string& from, const std::string& to);
     void addSong(const std::string& name, long songId);
     void removeSong(const std::string& name, long songId);
 

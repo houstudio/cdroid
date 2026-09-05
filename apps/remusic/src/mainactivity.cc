@@ -616,15 +616,21 @@ public:
 private:
     void setupDrawer() {
         // MenuItemAdapter's four entries; only exit is wired so far.
-        std::vector<std::string> items = {"主题色", "定时关闭", "设置", "退出应用"};
+        std::vector<std::string> items = {"主题色", "定时关闭", "歌单管理", "设置", "退出应用"};
         auto* menu = (ListView*) findViewById(R::id::id_lv_left_menu);
         if (menu) {
             auto* adapter = new MenuAdapter(getContext(), R::layout::design_drawer_item, 0);
             adapter->addAll(items);
             menu->setAdapter(adapter);
             menu->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
-                if (position == 3) { close(); return; }
+                if (position == 4) { close(); return; }
                 if (position == 1) { showTimingSheet(*this); return; }
+                if (position == 2) {
+                    Intent intent;
+                    intent.setClassName("cdroid.remusic", "PlaylistManagerActivity");
+                    App::getInstance().startActivity(intent);
+                    return;
+                }
                 // TODO(remusic): theme picker / sleep timer / settings screens.
             });
         }

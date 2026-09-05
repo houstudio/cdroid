@@ -6,11 +6,13 @@
 #include <widget/imageview.h>
 #include <widget/linearlayout.h>
 #include <widget/textview.h>
+#include <widget/toast.h>
 #include <widgetEx/recyclerview/linearlayoutmanager.h>
 #include <widgetEx/recyclerview/recyclerview.h>
 
 #include "musicplayer.h"
 #include "musicprovider.h"
+#include "playliststore.h"
 
 using namespace cdroid;
 using namespace remusic;
@@ -85,6 +87,18 @@ private:
             panel->addView(row, new LinearLayout::LayoutParams(
                     ViewGroup::LayoutParams::MATCH_PARENT, 58));
         };
+        add("下一首播放", [ctx](const MusicInfo& s) {
+            // MusicPlayer.playNext: this song goes in right after the
+            // current one.
+            MusicPlayer::playNext({{s.songId, s}}, {s.songId});
+            Toast::makeText(ctx, "已加入下一首播放")->show();
+        });
+        add("收藏", [ctx](const MusicInfo& s) {
+            // The original's favorite toggle targets a local list; addSong
+            // creates 我的收藏 on first use.
+            PlaylistStore::get().addSong("我的收藏", s.songId);
+            Toast::makeText(ctx, "已收藏")->show();
+        });
         add("加入歌单", [](const MusicInfo& s) {
             Intent intent;
             intent.setClassName("cdroid.remusic", "PlaylistActivity")
