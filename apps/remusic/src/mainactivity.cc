@@ -22,6 +22,7 @@
 #ifdef REMUSIC_ONLINE
 #include "radiobrowser.h"
 #include "archiveorg.h"
+#include "faviconcache.h"
 #include <text/String.h>
 #include <widget/edittext.h>
 #include <widget/horizontalscrollview.h>
@@ -153,24 +154,60 @@ private:
         return tags[i];
     }
 
-    void bindList() {
-        std::vector<std::string> rows;
-        for (auto& st : mStations) {
-            std::string row = st.name;
-            if (st.bitrate > 0) row += "  " + std::to_string(st.bitrate) + "kbps";
-            if (!st.country.empty()) row += "  ·  " + st.country;
-            rows.push_back(row);
+    // Station rows: favicon (FaviconCache disk cache) over a two-line text.
+    class StationAdapter : public Adapter {
+    public:
+        StationAdapter(Context* ctx, std::vector<RadioStation>* stations)
+                : mCtx(ctx), mStations(stations) {}
+        int getCount() const override { return (int)mStations->size() + 1; }
+        void* getItem(int position) const override { return nullptr; }
+        long getItemId(int position) const override { return position; }
+        View* getView(int position, View* convertView, ViewGroup* parent) override {
+            View* v = convertView;
+            if (v == nullptr)
+                v = LayoutInflater::from(mCtx)->inflate(R::layout::recyclerview_common_item, parent, false);
+            auto* img = (ImageView*) v->findViewById(R::id::viewpager_list_img);
+            auto* top = (TextView*) v->findViewById(R::id::viewpager_list_toptext);
+            auto* sub = (TextView*) v->findViewById(R::id::viewpager_list_bottom_text);
+            if (auto* more = v->findViewById(R::id::viewpager_list_button))
+                more->setVisibility(View::GONE);
+            if (auto* state = v->findViewById(R::id::play_state))
+                state->setVisibility(View::GONE);
+            if (position >= (int)mStations->size()) {
+                if (img) img->setImageResource(R::drawable::placeholder_disk_210);
+                if (top) top->setText("加载失败或无电台(检查网络)");
+                if (sub) sub->setText("");
+                return v;
+            }
+            const RadioStation& st = mStations->at(position);
+            if (top) top->setText(st.name);
+            if (sub) {
+                std::string line;
+                if (!st.country.empty()) line += st.country;
+                if (st.bitrate > 0) line += (line.empty() ? "" : " · ") + std::to_string(st.bitrate) + "kbps";
+                if (!st.codec.empty()) line += (line.empty() ? "" : " · ") + st.codec;
+                sub->setText(line);
+            }
+            if (img) {
+                img->setImageResource(R::drawable::placeholder_disk_210);   // recycle guard
+                FaviconCache::load(mCtx, st.favicon, [img](const std::string& file) {
+                    if (!file.empty()) img->setImageURIAsync("file://" + file);
+                });
+            }
+            return v;
         }
-        if (rows.empty()) {
-            rows.push_back("加载失败或无电台(检查网络)");
+    private:
+        Context* mCtx;
+        std::vector<RadioStation>* mStations;
+    };
+
+    void bindList() {
+        if (mStations.empty()) {
             mStatus->setText("无结果");
         } else {
-            mStatus->setText(std::to_string(rows.size()) + " 个电台 · 点击播放直播流");
+            mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 点击播放直播流");
         }
-        auto* adapter = new ArrayAdapter<std::string>(
-                getContext(), R::layout::design_drawer_item, 0);
-        adapter->addAll(rows);
-        mList->setAdapter(adapter);
+        mList->setAdapter(new StationAdapter(getContext(), &mStations));
         mList->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
             if (position >= (int)mStations.size()) return;
             const RadioStation& st = mStations[position];

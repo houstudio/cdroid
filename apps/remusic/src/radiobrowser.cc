@@ -38,6 +38,7 @@ void RadioBrowser::searchByTag(const std::string& tag,
                 st.tags = s.get("tags", "").asString();
                 st.codec = s.get("codec", "").asString();
                 st.country = s.get("country", "").asString();
+                st.favicon = s.get("favicon", "").asString();
                 st.bitrate = s.get("bitrate", 0).asInt();
                 if (st.name.empty()) continue;
                 // Playlist containers (.pls/.m3u/...) are not openable

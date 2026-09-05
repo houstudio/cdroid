@@ -16,6 +16,7 @@ struct RadioStation {
     std::string tags;
     std::string codec;
     std::string country;
+    std::string favicon;  // station logo URL
     int bitrate = 0;      // kbps
 };
 
