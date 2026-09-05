@@ -18,6 +18,7 @@
 #include <widget/linearlayout.h>
 #include <widget/listview.h>
 #include <widget/toolbar.h>
+#include <view/keyevent.h>
 #include <widget/adapter.h>
 
 #include <widget/viewpager.h>
@@ -116,8 +117,10 @@ public:
         for (int id : {R::id::playing_fav, R::id::playing_down, R::id::playing_cmt, R::id::playing_more})
             if (auto* v = findViewById(id)) v->setOnClickListener([](View&) {});
 
-        if (auto* toolbar = (Toolbar*) findViewById(R::id::toolbar))
+        if (auto* toolbar = (Toolbar*) findViewById(R::id::toolbar)) {
+            toolbar->setNavigationIcon(getContext()->getDrawable(R::drawable::actionbar_back));
             toolbar->setNavigationOnClickListener([this](View&) { close(); });
+        }
 
         // Disc <-> lyrics toggle: single tap on the disc (AlbumViewPager).
         if (auto* pager = findViewById(R::id::view_pager))
@@ -303,6 +306,14 @@ private:
     }
     void hideQueueSheet() {
         if (mQueueScrim) mQueueScrim->setVisibility(View::GONE);
+    }
+
+    bool onKeyDown(int keyCode, KeyEvent& event) override {
+        if (keyCode == KeyEvent::KEYCODE_BACK || keyCode == KeyEvent::KEYCODE_ESCAPE) {
+            close();
+            return true;
+        }
+        return FragmentActivity::onKeyDown(keyCode, event);
     }
 
     ImageView* mNeedle = nullptr;
