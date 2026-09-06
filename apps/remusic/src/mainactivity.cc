@@ -309,9 +309,9 @@ private:
 
     void bindList() {
         mStaOffset = (int) mStations.size();
-        // A short FIRST page (page size 60) means the directory is exhausted
-        // for this query — don't advertise more (e.g. tag=chinese: 21 total).
-        mStaDone = mStations.empty() || (int) mStations.size() < 60;
+        // A short FIRST page means the directory is exhausted for this query
+        // — don't advertise more (e.g. tag=chinese: 21 total).
+        mStaDone = mStations.empty() || (int) mStations.size() < RadioBrowser::kPageSize;
         mStaPaging = false;
         if (mStations.empty()) {
             mStatus->setText("无结果 · 检查网络或换关键词");
@@ -365,7 +365,7 @@ private:
             mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 没有更多了");
             return;
         }
-        const bool shortPage = (int) stations.size() < 60;   // radiobrowser.cc page size
+        const bool shortPage = (int) stations.size() < RadioBrowser::kPageSize;
         if ((int) mStations.size() >= kMaxListRows) { stations.clear(); }   // memory cap
         mStations.insert(mStations.end(), stations.begin(), stations.end());
         mStaOffset = (int) mStations.size();
@@ -562,8 +562,61 @@ private:
         });
     }
 
-    // Rows "title - artist · m:ss"; tapping queues the whole result list at
-    // that position (Netease-style: the results ARE the playlist).
+    // On-demand rows: two-line text over the track's artwork — the listing
+    // APIs carry artwork URLs (Audius always, ccMixter rarely), cached to
+    // disk by FaviconCache exactly like the station favicons. Tapping a row
+    // queues the whole result list at that position (Netease-style: the
+    // results ARE the playlist).
+    class SongAdapter : public Adapter {
+    public:
+        SongAdapter(Context* ctx, std::vector<AudiusTrack>* songs,
+                std::shared_ptr<bool> alive)
+                : mCtx(ctx), mSongs(songs), mAlive(std::move(alive)) {}
+        int getCount() const override { return (int) mSongs->size(); }
+        void* getItem(int position) const override { return nullptr; }
+        long getItemId(int position) const override { return position; }
+        View* getView(int position, View* convertView, ViewGroup* parent) override {
+            View* v = convertView;
+            if (v == nullptr)
+                v = LayoutInflater::from(mCtx)->inflate(R::layout::recyclerview_common_item, parent, false);
+            auto* img = (ImageView*) v->findViewById(R::id::viewpager_list_img);
+            auto* top = (TextView*) v->findViewById(R::id::viewpager_list_toptext);
+            auto* sub = (TextView*) v->findViewById(R::id::viewpager_list_bottom_text);
+            if (auto* more = v->findViewById(R::id::viewpager_list_button))
+                more->setVisibility(View::GONE);
+            if (auto* state = v->findViewById(R::id::play_state))
+                state->setVisibility(View::GONE);
+            if (position >= (int) mSongs->size()) return v;   // defensive only
+            const AudiusTrack& t = mSongs->at(position);
+            if (top) top->setText(t.title);
+            if (sub) {
+                std::string line = t.artist;
+                if (t.durationMs > 0) {
+                    char tail[16];
+                    snprintf(tail, sizeof(tail), "  · %d:%02d",
+                            t.durationMs / 60000, (t.durationMs / 1000) % 60);
+                    line += tail;
+                }
+                sub->setText(line);
+            }
+            if (img) {
+                img->setImageResource(R::drawable::placeholder_disk_210);   // recycle guard
+                if (!t.artwork.empty()) {
+                    auto alive = mAlive;
+                    FaviconCache::load(mCtx, t.artwork, [img, alive](const std::string& file) {
+                        if (!*alive) return;
+                        if (!file.empty()) img->setImageURIAsync("file://" + file);
+                    });
+                }
+            }
+            return v;
+        }
+    private:
+        Context* mCtx;
+        std::vector<AudiusTrack>* mSongs;
+        std::shared_ptr<bool> mAlive;
+    };
+
     void bindSongs(std::vector<AudiusTrack> tracks, const std::string& label,
             const std::string& source = std::string(),
             const std::string& error = std::string()) {
@@ -572,32 +625,17 @@ private:
         mSongLabel = label;
         mSongSource = mSongs.empty() ? std::string() : source;
         mSongOffset = (int) mSongs.size();
-        mSongDone = mSongs.empty();
         mSongPaging = false;
         mSongPageSize = mSongSource == "Audius" ? 50 : 25;   // the two clients' page sizes
         mSongDone = mSongs.empty() || (int) mSongs.size() < mSongPageSize;   // short page-0 = exhausted
-        std::vector<std::string> rows;
-        for (const auto& t : mSongs) {
-            std::string row = t.title + " - " + t.artist;
-            if (t.durationMs > 0) {
-                char tail[16];
-                snprintf(tail, sizeof(tail), "  · %d:%02d",
-                        t.durationMs / 60000, (t.durationMs / 1000) % 60);
-                row += tail;
-            }
-            rows.push_back(row);
-        }
-        if (rows.empty()) {
-            rows.push_back(error.empty() ? "无结果" : "加载失败: " + error);
+        if (mSongs.empty()) {
             mSongStatus->setText(label + " · 无结果"
                     + (error.empty() ? "" : " (" + error + ")"));
         } else {
-            mSongStatus->setText(std::to_string(rows.size()) + " 首 · " + label
+            mSongStatus->setText(std::to_string(mSongs.size()) + " 首 · " + label
                     + (source.empty() ? "" : " · " + source) + " · 点击播放");
         }
-        mSongAdapter = new ArrayAdapter<std::string>(
-                getContext(), R::layout::design_drawer_item, 0);
-        mSongAdapter->addAll(rows);
+        mSongAdapter = new SongAdapter(getContext(), &mSongs, mAlive);
         mSongList->setAdapter(mSongAdapter);
         mSongList->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
             if (position >= (int) mSongs.size()) return;
@@ -610,6 +648,7 @@ private:
                 info.musicName = t.title;
                 info.artist = t.artist;
                 info.albumName = "Audius";
+                info.albumData = t.artwork;   // remote cover url (http(s))
                 info.data = t.url.empty() ? Audius::streamUrl(t.id) : t.url;
                 info.islocal = true;
                 info.duration = t.durationMs;   // real lengths: auto-advance works
@@ -662,17 +701,7 @@ private:
         if ((int) mSongs.size() >= kMaxListRows) tracks.clear();   // cap: stop growing
         for (auto& t : tracks) mSongs.push_back(std::move(t));
         mSongOffset = (int) mSongs.size();
-        for (size_t i = mSongs.size() - tracks.size(); i < mSongs.size(); i++) {
-            const AudiusTrack& t = mSongs[i];
-            std::string row = t.title + " - " + t.artist;
-            if (t.durationMs > 0) {
-                char tail[16];
-                snprintf(tail, sizeof(tail), "  · %d:%02d",
-                        t.durationMs / 60000, (t.durationMs / 1000) % 60);
-                row += tail;
-            }
-            mSongAdapter->add(row);
-        }
+        mSongAdapter->notifyDataSetChanged();   // the adapter wraps &mSongs
         const bool shortPage = (int) tracks.size() < mSongPageSize;
         const bool capped = (int) mSongs.size() >= kMaxListRows;
         if (shortPage || capped) mSongDone = true;
@@ -693,7 +722,7 @@ private:
     int mSongPageSize = 25;       // per-source page size (matches the clients)
     bool mSongPaging = false;     // one page fetch in flight
     bool mSongDone = false;       // source exhausted
-    ArrayAdapter<std::string>* mSongAdapter = nullptr;
+    SongAdapter* mSongAdapter = nullptr;
     EditText* mSongQuery = nullptr;
     TextView* mSongStatus = nullptr;
     ListView* mSongList = nullptr;

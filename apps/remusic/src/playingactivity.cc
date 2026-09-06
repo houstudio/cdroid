@@ -33,6 +33,7 @@
 #include <core/handler.h>
 #include <core/looper.h>
 #include "lrclib.h"
+#include "faviconcache.h"
 #endif
 #include "mediaplaybackservice.h"
 #include "musicplayer.h"
@@ -258,19 +259,39 @@ private:
         }
         const std::string cover = MusicPlayer::currentTrackInfo()
                 ? MusicPlayer::currentTrackInfo()->albumData : std::string();
+        // On-demand tracks carry their cover as a REMOTE url (the listing
+        // APIs' artwork) — those route through the disk cache below.
+        const bool remote = cover.compare(0, 7, "http://") == 0
+                || cover.compare(0, 8, "https://") == 0;
         if (auto* art = (ImageView*) findViewById(R::id::albumArt)) {
             // Static backdrop: the cover fill; plain dark when absent (the
             // disc placeholder here painted giant concentric rings).
-            if (!cover.empty()) art->setImageURIAsync("file://" + cover);
-            else {
-                art->setImageDrawable(nullptr);
-                art->setBackgroundColor(0xFF232323);
+            if (!remote) {
+                if (!cover.empty()) art->setImageURIAsync("file://" + cover);
+                else {
+                    art->setImageDrawable(nullptr);
+                    art->setBackgroundColor(0xFF232323);
+                }
             }
         }
         if (mDisc) {
-            if (!cover.empty()) mDisc->setImageURIAsync("file://" + cover);
-            else mDisc->setImageResource(R::drawable::placeholder_disk_210);
+            if (!remote) {
+                if (!cover.empty()) mDisc->setImageURIAsync("file://" + cover);
+                else mDisc->setImageResource(R::drawable::placeholder_disk_210);
+            }
         }
+#ifdef REMUSIC_ONLINE
+        if (remote) {
+            auto alive = mAlive;
+            FaviconCache::load(getContext(), cover,
+                    [this, alive](const std::string& file) {
+                if (!*alive || file.empty()) return;
+                if (auto* art = (ImageView*) findViewById(R::id::albumArt))
+                    art->setImageURIAsync("file://" + file);
+                if (mDisc) mDisc->setImageURIAsync("file://" + file);
+            });
+        }
+#endif
     }
 
     // The original spins the ALBUM DISC while playing and lifts/lowers the
