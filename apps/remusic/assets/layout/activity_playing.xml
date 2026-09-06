@@ -146,6 +146,53 @@
                 android:layout_marginTop="10dp" />
         </RelativeLayout>
 
+        <!-- Tool row anchored UNDER the disc area, not inside the
+             bottom-anchored block: the disc hangs from the top while
+             bottom_control rises with the window bottom, so on tall windows
+             the row would climb into the disc. Below headerView it tracks
+             the disc at any height (matches the design-size look). -->
+        <LinearLayout
+            android:id="@+id/music_tool"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/headerView"
+            android:layout_marginLeft="70dp"
+            android:layout_marginRight="70dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/playing_fav"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:src="@drawable/play_rdi_icn_love" />
+
+            <ImageView
+                android:id="@+id/playing_down"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:src="@drawable/play_icn_dlded_dis" />
+
+            <ImageView
+                android:id="@+id/playing_cmt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:src="@drawable/play_icn_cmt_number_dis" />
+
+            <ImageView
+                android:id="@+id/playing_more"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:src="@drawable/play_icn_more" />
+        </LinearLayout>
+
         <LinearLayout
             android:id="@+id/bottom_control"
             android:layout_width="match_parent"
@@ -155,48 +202,6 @@
             android:layout_marginBottom="15dp"
             android:gravity="center_horizontal|center_vertical"
             android:orientation="vertical">
-
-            <LinearLayout
-                android:id="@+id/music_tool"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="70dp"
-                android:layout_marginRight="70dp"
-                android:layout_marginTop="-10dp"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/playing_fav"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:src="@drawable/play_rdi_icn_love" />
-
-                <ImageView
-                    android:id="@+id/playing_down"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:src="@drawable/play_icn_dlded_dis" />
-
-                <ImageView
-                    android:id="@+id/playing_cmt"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:src="@drawable/play_icn_cmt_number_dis" />
-
-                <ImageView
-                    android:id="@+id/playing_more"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:src="@drawable/play_icn_more" />
-            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -250,7 +255,7 @@
                 <ImageView
                     android:id="@+id/playing_mode"
                     android:layout_width="wrap_content"
-                    android:layout_height="3dp"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:src="@drawable/play_icn_loop_prs" />
