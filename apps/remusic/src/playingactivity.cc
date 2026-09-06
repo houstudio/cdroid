@@ -248,6 +248,14 @@ private:
 #ifdef REMUSIC_ONLINE
         fetchOnlineLyrics(lrcData.empty());
 #endif
+        // Toolbar: song name + artist — the page's only track header.
+        if (auto* toolbar = (Toolbar*) findViewById(R::id::toolbar)) {
+            const MusicInfo* info = MusicPlayer::currentTrackInfo();
+            toolbar->setTitleTextColor(0xFFFFFFFF);
+            toolbar->setSubtitleTextColor(0xB3FFFFFF);
+            toolbar->setTitle(info ? info->musicName : std::string());
+            toolbar->setSubtitle(info ? info->artist : std::string());
+        }
         const std::string cover = MusicPlayer::currentTrackInfo()
                 ? MusicPlayer::currentTrackInfo()->albumData : std::string();
         if (auto* art = (ImageView*) findViewById(R::id::albumArt)) {
@@ -273,6 +281,61 @@ private:
     //    so the arm is rescaled onto the 360dp design grid and the pivot is
     //    set as FRACTIONS of the view (15.1dp of 92x138dp = 0.164 / 0.109),
     //    which stay put under uniform scaling.
+    // Derive the disc + needle geometry from view_pager's CURRENT frame.
+    // Idempotent (re-derives only what actually changed), so the layout
+    // listener below can call it on every pager layout without looping.
+    void syncDiscAndNeedleGeometry() {
+        View* pagerView = findViewById(R::id::view_pager);
+        if (mDisc == nullptr || pagerView == nullptr) return;
+        // Disc = the album area the XML already laid out (match_parent
+        // x 263dp, centered): square on its height, centered on its
+        // own center — correct at any resolution.
+        const int side = pagerView->getHeight();
+        if (side <= 0) return;   // not laid out yet; the listener retries
+        auto* lp = (ViewGroup::MarginLayoutParams*) mDisc->getLayoutParams();
+        const int discL = pagerView->getLeft() + (pagerView->getWidth() - side) / 2;
+        const int discT = pagerView->getTop();
+        if (lp->width != side || lp->height != side
+                || lp->leftMargin != discL || lp->topMargin != discT) {
+            lp->width = side;
+            lp->height = side;
+            lp->leftMargin = discL;
+            lp->topMargin = discT;
+            mDisc->setLayoutParams(lp);
+        }
+        mDisc->setCornerRadii(side / 2);            // circular crop
+        // Needle: intrinsic 276x414 raw px would dwarf small screens,
+        // and the XML anchors it parent-right+100dp — tuned for the
+        // 360dp design width, so on wider windows the post drifts
+        // right while the disc stays centered. Lock the arm to the
+        // DISC instead: every quantity is a fraction of the disc side
+        // (design ratios 92:263 / 138:263; post circle at 0.170/0.096
+        // of the art per play_needle.png; post offset from the disc
+        // center = +0.0114/-0.732 of the side), so needle and record
+        // can never decouple at any resolution.
+        if (mNeedle != nullptr) {
+            const int w = (int)(side * 92.f / 263.f);
+            const int h = (int)(side * 138.f / 263.f);
+            const float pivotX = w * 0.170f;
+            const float pivotY = h * 0.096f;
+            const int nL = (int)(discL + side / 2 + side * 0.0114f - pivotX);
+            const int nT = (int)(discT - side * 0.232f - pivotY);
+            auto* cur = (ViewGroup::MarginLayoutParams*) mNeedle->getLayoutParams();
+            if (cur == nullptr || cur->width != w || cur->height != h
+                    || cur->leftMargin != nL || cur->topMargin != nT) {
+                // Fresh rule-less params: absolute positioning in the
+                // RelativeLayout (replacing, not mutating, drops the XML
+                // parent-right anchor rules for good).
+                auto* nlp = new ViewGroup::MarginLayoutParams(w, h);
+                nlp->leftMargin = nL;
+                nlp->topMargin = nT;
+                mNeedle->setLayoutParams(nlp);
+                mNeedle->setPivotX(pivotX);
+                mNeedle->setPivotY(pivotY);
+            }
+        }
+    }
+
     void wireNeedleAndDisc() {
         mNeedle = (ImageView*) findViewById(R::id::needle);
         // Dedicated disc view, added over the (empty) album pager area.
@@ -291,41 +354,15 @@ private:
             for (int i = 0; i < pagerArea->getChildCount(); i++)
                 if (pagerArea->getChildAt(i)->getId() == R::id::needle) { at = i; break; }
             pagerArea->addView(mDisc, at);
-            post([this, pagerView] {
-                if (mDisc == nullptr || pagerView == nullptr) return;
-                // Disc = the album area the XML already laid out (match_parent
-                // x 263dp, centered): square on its height, centered on its
-                // own center — correct at any resolution.
-                const int side = pagerView->getHeight();
-                auto* lp = (ViewGroup::MarginLayoutParams*) mDisc->getLayoutParams();
-                lp->width = side;
-                lp->height = side;
-                lp->leftMargin = pagerView->getLeft() + (pagerView->getWidth() - side) / 2;
-                lp->topMargin = pagerView->getTop();
-                mDisc->setLayoutParams(lp);
-                mDisc->setCornerRadii(side / 2);            // circular crop
-                // Needle: intrinsic 276x414 raw px would dwarf small screens,
-                // and the XML anchors it parent-right+100dp — tuned for the
-                // 360dp design width, so on wider windows the post drifts
-                // right while the disc stays centered. Lock the arm to the
-                // DISC instead: every quantity is a fraction of the disc side
-                // (design ratios 92:263 / 138:263; post circle at 0.170/0.096
-                // of the art per play_needle.png; post offset from the disc
-                // center = +0.0114/-0.732 of the side), so needle and record
-                // can never decouple at any resolution.
-                if (mNeedle != nullptr) {
-                    auto* nlp = new ViewGroup::MarginLayoutParams(
-                            (int)(side * 92.f / 263.f), (int)(side * 138.f / 263.f));
-                    const float pivotX = nlp->width * 0.170f;
-                    const float pivotY = nlp->height * 0.096f;
-                    const int discCx = lp->leftMargin + side / 2;
-                    nlp->leftMargin = (int)(discCx + side * 0.0114f - pivotX);
-                    nlp->topMargin = (int)(lp->topMargin - side * 0.232f - pivotY);
-                    mNeedle->setLayoutParams(nlp);
-                    mNeedle->setPivotX(pivotX);
-                    mNeedle->setPivotY(pivotY);
-                }
+            // Sync off every pager LAYOUT, not a one-shot post(): the post
+            // raced the first traversal on some runs (needle stuck at its
+            // XML parent-right anchor, disc left 0x0) and never retried.
+            // The listener dies with the content view, so `this` is safe.
+            pagerView->addOnLayoutChangeListener(
+                    [this](View&, int, int, int, int, int, int, int, int) {
+                syncDiscAndNeedleGeometry();
             });
+            syncDiscAndNeedleGeometry();
         }
         mSpinKeepalive = [this]() -> bool {
             if (MusicPlayer::isPlaying()) {
