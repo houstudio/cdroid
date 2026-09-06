@@ -49,6 +49,41 @@ using MenuAdapter = ArrayAdapter<std::string>;
 // chart (see OnlineFragment::loadChartWithFallback).
 static std::string sLastGoodSongSource;
 
+// Lean pull-to-refresh for the on-demand ListView: while the list sits at
+// its top, a further downward drag rubber-bands it (damped translationY);
+// releasing past the threshold fires onRefresh. SwipeRefreshLayout's role,
+// ListView-shaped — the touch still flows through super so item clicks and
+// the list's own scrolling stay untouched.
+class PullListView : public ListView {
+public:
+    explicit PullListView(Context* ctx) : ListView(ctx) {}
+    std::function<void()> onRefresh;
+
+    bool onTouchEvent(MotionEvent& ev) override {
+        const int action = ev.getActionMasked();
+        const bool atTop = getFirstVisiblePosition() == 0
+                && (getChildCount() == 0 || getChildAt(0)->getTop() >= 0);
+        if (action == MotionEvent::ACTION_MOVE) {
+            const int dy = (int) ev.getY() - mLastY;
+            mLastY = (int) ev.getY();
+            if (atTop || mPull > 0) {
+                mPull = std::max(0, std::min(220, mPull + dy));
+                setTranslationY(mPull / 2);
+            }
+        } else if (action == MotionEvent::ACTION_DOWN) {
+            mLastY = (int) ev.getY();
+        } else if (action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_CANCEL) {
+            if (mPull > 110 && atTop && onRefresh) onRefresh();
+            mPull = 0;
+            setTranslationY(0);
+        }
+        return ListView::onTouchEvent(ev);
+    }
+private:
+    int mLastY = 0;
+    int mPull = 0;
+};
+
 // never auto-advances it).
 class OnlineFragment : public Fragment {
 public:
@@ -346,9 +381,21 @@ private:
         panel->addView(mSongStatus, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
 
-        mSongList = new ListView(ctx);
+        mSongList = new PullListView(ctx);
         panel->addView(mSongList, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
+        ((PullListView*) mSongList)->onRefresh = [this] {
+            mSongStatus->setText("刷新中…");
+            if (mSongMode == "search" && !mSongQueryText.empty()) searchSongs();
+            else selectSongGenre(mSongGenre);
+        };
+        // Infinite list: near the end, fetch the next page of whatever
+        // source fed the current one.
+        AbsListView::OnScrollListener sl;
+        sl.onScroll = [this](AbsListView&, int first, int visible, int total) {
+            if (total > 0 && first + visible + 4 >= total) loadMoreSongs();
+        };
+        mSongList->setOnScrollListener(sl);
         // Open browsable: the trending chart needs no search.
         selectSongGenre(std::string());
         return panel;
@@ -357,6 +404,8 @@ private:
     // "" = the all-genres trending chart (chip 热门); otherwise a genre chart.
     void selectSongGenre(const std::string& genre) {
         mSongGenre = genre;
+        mSongMode = "chart";
+        mSongQueryText.clear();
         for (size_t i = 0; i < mSongChipViews.size(); i++) {
             const std::string label = genre.empty() ? "热门" : genre;
             const std::string text = mSongChipViews[i]->getText();
@@ -374,21 +423,6 @@ private:
     void loadChartWithFallback(const std::string& genre) {
         const std::string label = genre.empty() ? "热门" : genre;
         auto alive = mAlive;
-        auto audiusDone = [this, alive, genre, label](std::vector<AudiusTrack> tracks,
-                const std::string& error) {
-            if (!*alive || getView() == nullptr) return;
-            if (!tracks.empty()) {
-                bindSongs(std::move(tracks), label, "Audius");
-                return;
-            }
-            CcMixter::chart(genre, [this, alive, label, error](std::vector<AudiusTrack> cc,
-                    const std::string& ccError) {
-                if (!*alive || getView() == nullptr) return;
-                if (!cc.empty()) bindSongs(std::move(cc), label, "ccMixter");
-                else bindSongs(std::move(cc), label,
-                        ccError.empty() ? error : ccError + " / " + error);
-            });
-        };
         if (sLastGoodSongSource == "ccmixter") {
             ccFirst(label, genre, alive);
         } else {
@@ -449,6 +483,8 @@ private:
         const std::string query = value ? value->str() : std::string();
         delete value;
         if (query.empty()) return;
+        mSongMode = "search";
+        mSongQueryText = query;
         mSongStatus->setText("搜索 \"" + query + "\" …");
         auto alive = mAlive;
         Audius::search(query, [this, alive, query](std::vector<AudiusTrack> tracks,
@@ -476,6 +512,13 @@ private:
             const std::string& source = std::string(),
             const std::string& error = std::string()) {
         mSongs = std::move(tracks);
+        // Pagination context: whichever source fed page 0 feeds the rest.
+        mSongLabel = label;
+        mSongSource = mSongs.empty() ? std::string() : source;
+        mSongOffset = (int) mSongs.size();
+        mSongDone = mSongs.empty();
+        mSongPaging = false;
+        mSongPageSize = mSongSource == "Audius" ? 50 : 25;   // the two clients' page sizes
         std::vector<std::string> rows;
         for (const auto& t : mSongs) {
             std::string row = t.title + " - " + t.artist;
@@ -495,10 +538,10 @@ private:
             mSongStatus->setText(std::to_string(rows.size()) + " 首 · " + label
                     + (source.empty() ? "" : " · " + source) + " · 点击播放");
         }
-        auto* adapter = new ArrayAdapter<std::string>(
+        mSongAdapter = new ArrayAdapter<std::string>(
                 getContext(), R::layout::design_drawer_item, 0);
-        adapter->addAll(rows);
-        mSongList->setAdapter(adapter);
+        mSongAdapter->addAll(rows);
+        mSongList->setAdapter(mSongAdapter);
         mSongList->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
             if (position >= (int) mSongs.size()) return;
             std::map<long, MusicInfo> infos;
@@ -521,10 +564,70 @@ private:
         });
     }
 
+    // Next page of the current list's source (near-end scroll calls this);
+    // appended in place — no setAdapter, so the scroll position survives.
+    void loadMoreSongs() {
+        if (mSongPaging || mSongDone || mSongSource.empty() || mSongs.empty()) return;
+        mSongPaging = true;
+        auto alive = mAlive;
+        const std::string src = mSongSource;
+        const std::string genre = mSongGenre;
+        const std::string query = mSongQueryText;
+        const int offset = mSongOffset;
+        auto done = [this, alive](std::vector<AudiusTrack> tracks, const std::string&) {
+            if (!*alive || getView() == nullptr) return;
+            mSongPaging = false;
+            appendSongs(std::move(tracks));
+        };
+        if (src == "Audius") {
+            if (mSongMode == "search") Audius::search(query, done, offset);
+            else if (genre.empty()) Audius::trending(done, offset);
+            else Audius::trendingGenre(genre, done, offset);
+        } else {
+            if (mSongMode == "search") CcMixter::search(query, done, offset);
+            else CcMixter::chart(genre, done, offset);
+        }
+    }
+
+    void appendSongs(std::vector<AudiusTrack> tracks) {
+        if (mSongAdapter == nullptr) return;
+        if (tracks.empty()) {
+            mSongDone = true;
+            mSongStatus->setText(std::to_string(mSongs.size()) + " 首 · " + mSongLabel
+                    + " · 没有更多了");
+            return;
+        }
+        for (auto& t : tracks) mSongs.push_back(std::move(t));
+        mSongOffset = (int) mSongs.size();
+        for (size_t i = mSongs.size() - tracks.size(); i < mSongs.size(); i++) {
+            const AudiusTrack& t = mSongs[i];
+            std::string row = t.title + " - " + t.artist;
+            if (t.durationMs > 0) {
+                char tail[16];
+                snprintf(tail, sizeof(tail), "  · %d:%02d",
+                        t.durationMs / 60000, (t.durationMs / 1000) % 60);
+                row += tail;
+            }
+            mSongAdapter->add(row);
+        }
+        if ((int) tracks.size() < mSongPageSize) mSongDone = true;
+        mSongStatus->setText(std::to_string(mSongs.size()) + " 首 · " + mSongLabel
+                + " · 继续下滑加载更多");
+    }
+
 
     LinearLayout* mSongChips = nullptr;
     std::vector<TextView*> mSongChipViews;
     std::string mSongGenre;
+    std::string mSongMode;        // "chart" | "search" — how the current list was built
+    std::string mSongQueryText;   // search mode's query ("" in chart mode)
+    std::string mSongLabel;       // status prefix (genre chip label or the query)
+    std::string mSongSource;      // "" until page 0 lands; "Audius" / "ccMixter"
+    int mSongOffset = 0;          // next page start into the source
+    int mSongPageSize = 25;       // per-source page size (matches the clients)
+    bool mSongPaging = false;     // one page fetch in flight
+    bool mSongDone = false;       // source exhausted
+    ArrayAdapter<std::string>* mSongAdapter = nullptr;
     EditText* mSongQuery = nullptr;
     TextView* mSongStatus = nullptr;
     ListView* mSongList = nullptr;

@@ -85,14 +85,16 @@ static void fetch(const std::string& url, CcMixter::Cb onDone) {
     }).detach();
 }
 
-void CcMixter::chart(const std::string& tag, Cb onDone) {
-    std::string url = std::string(kBase) + "&sort=rank";
+void CcMixter::chart(const std::string& tag, Cb onDone, int offset) {
+    std::string url = std::string(kBase) + "&sort=rank"
+            + "&offset=" + std::to_string(offset);
     if (!tag.empty()) url += "&search_text=" + urlEncode(tag);
     fetch(url, std::move(onDone));
 }
 
-void CcMixter::search(const std::string& text, Cb onDone) {
-    fetch(std::string(kBase) + "&search_text=" + urlEncode(text), std::move(onDone));
+void CcMixter::search(const std::string& text, Cb onDone, int offset) {
+    fetch(std::string(kBase) + "&search_text=" + urlEncode(text)
+            + "&offset=" + std::to_string(offset), std::move(onDone));
 }
 
 } // namespace remusic

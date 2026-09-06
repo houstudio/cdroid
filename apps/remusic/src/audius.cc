@@ -46,11 +46,15 @@ static std::vector<AudiusTrack> parseTracks(const std::string& body) {
     Json::CharReaderBuilder rb;
     std::string errs;
     std::istringstream in(body);
-    if (body.empty() || !Json::parseFromStream(rb, in, &root, &errs) || !root.isArray()) {
+    if (body.empty() || !Json::parseFromStream(rb, in, &root, &errs)) {
         if (!errs.empty()) LOGE("audius json: %s", errs.c_str());
         return out;
     }
-    for (const auto& t : root) {
+    // The API wraps arrays in {"data": [...]} (gateway and discovery hosts
+    // alike); bare arrays were the old shape — accept both.
+    const Json::Value arr = root.isArray() ? root : root.get("data", Json::Value());
+    if (!arr.isArray()) return out;
+    for (const auto& t : arr) {
         if (!t.isObject()) continue;
         AudiusTrack track;
         track.id = t.get("id", "").asString();
@@ -105,18 +109,27 @@ static void fetch(const std::string& path, Audius::TracksCb onDone) {
     }).detach();
 }
 
-void Audius::trending(Audius::TracksCb onDone) {
-    fetch("/v1/tracks/trending?app_name=" + std::string(kApp), std::move(onDone));
+// Page size for the trending/search pagination (the panel's infinite list).
+static const int kAudiusPage = 50;
+
+void Audius::trending(TracksCb onDone, int offset) {
+    fetch("/v1/tracks/trending?app_name=" + std::string(kApp)
+            + "&limit=" + std::to_string(kAudiusPage)
+            + "&offset=" + std::to_string(offset), std::move(onDone));
 }
 
-void Audius::trendingGenre(const std::string& genre, Audius::TracksCb onDone) {
+void Audius::trendingGenre(const std::string& genre, TracksCb onDone, int offset) {
     fetch("/v1/tracks/trending?genre=" + urlEncode(genre)
-            + "&app_name=" + std::string(kApp), std::move(onDone));
+            + "&app_name=" + std::string(kApp)
+            + "&limit=" + std::to_string(kAudiusPage)
+            + "&offset=" + std::to_string(offset), std::move(onDone));
 }
 
-void Audius::search(const std::string& query, Audius::TracksCb onDone) {
+void Audius::search(const std::string& query, TracksCb onDone, int offset) {
     fetch("/v1/tracks/search?query=" + urlEncode(query)
-            + "&app_name=" + std::string(kApp), std::move(onDone));
+            + "&app_name=" + std::string(kApp)
+            + "&limit=" + std::to_string(kAudiusPage)
+            + "&offset=" + std::to_string(offset), std::move(onDone));
 }
 
 

@@ -20,9 +20,10 @@ public:
     using Cb = std::function<void(std::vector<AudiusTrack>, const std::string& error)>;
 
     /** Rank-sorted chart; `tag` narrows it (usertags like "electronic"),
-     *  empty = the whole chart — browsable with no search term. */
-    static void chart(const std::string& tag, Cb onDone);
-    static void search(const std::string& text, Cb onDone);
+     *  empty = the whole chart — browsable with no search term. Pages of 25
+     *  (the API's hard limit) walk with `offset`. */
+    static void chart(const std::string& tag, Cb onDone, int offset = 0);
+    static void search(const std::string& text, Cb onDone, int offset = 0);
 };
 
 } // namespace remusic

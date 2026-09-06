@@ -29,10 +29,10 @@ public:
      *  carries the last curl reason (empty string on success). */
     using TracksCb = std::function<void(std::vector<AudiusTrack>, const std::string& error)>;
 
-    static void trending(TracksCb onDone);
+    static void trending(TracksCb onDone, int offset = 0);
     /** Trending within one genre ("Electronic", "Hip-Hop/Rap", ...). */
-    static void trendingGenre(const std::string& genre, TracksCb onDone);
-    static void search(const std::string& query, TracksCb onDone);
+    static void trendingGenre(const std::string& genre, TracksCb onDone, int offset = 0);
+    static void search(const std::string& query, TracksCb onDone, int offset = 0);
     /** Playable URL for a track id (FFmpeg follows the redirect chain). */
     static std::string streamUrl(const std::string& trackId);
 };
