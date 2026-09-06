@@ -379,9 +379,15 @@ private:
             // raced the first traversal on some runs (needle stuck at its
             // XML parent-right anchor, disc left 0x0) and never retried.
             // The listener dies with the content view, so `this` is safe.
+            // NEVER swap LayoutParams synchronously here — this fires INSIDE
+            // the parent RelativeLayout's layout walk, which still holds the
+            // needle's old params from measure (the swap frees them → the
+            // walk lays the needle out off a dangling pointer → garbage
+            // bounds → pixman "Invalid rectangle"). Defer to after the
+            // traversal; the sync is idempotent so re-posts are free.
             pagerView->addOnLayoutChangeListener(
                     [this](View&, int, int, int, int, int, int, int, int) {
-                syncDiscAndNeedleGeometry();
+                post([this] { syncDiscAndNeedleGeometry(); });
             });
             syncDiscAndNeedleGeometry();
         }
