@@ -7,6 +7,7 @@
 #include <cdroid.h>
 #include <cmath>
 #include <functional>
+#include <thread>
 #include <R.h>
 #include <text/String.h>
 #include <core/activityfactory.h>
@@ -28,6 +29,11 @@
 #include <widget/viewpager.h>
 
 #include "lrcview.h"
+#ifdef REMUSIC_ONLINE
+#include <core/handler.h>
+#include <core/looper.h>
+#include "lrclib.h"
+#endif
 #include "mediaplaybackservice.h"
 #include "musicplayer.h"
 #include "downloadmanager.h"
@@ -47,6 +53,15 @@ std::string mmss(long ms) {
 
 // Look for a sibling .lrc (song.mp3 -> song.lrc), like the original's
 // /remusic/lrc/<id> cache fallback path.
+#ifdef REMUSIC_ONLINE
+// Worker -> UI handoff, same idiom as the online clients: a Handler on the
+// main looper (View::post in this file is only ever called on the UI thread).
+static void postToMain(std::function<void()> fn) {
+    static cdroid::Handler sMain(cdroid::Looper::getMainLooper());
+    sMain.post(std::move(fn));
+}
+#endif
+
 std::string loadLrcFor(const std::string& audioPath) {
     if (audioPath.empty()) return "";
     const size_t dot = audioPath.rfind('.');
@@ -167,6 +182,7 @@ public:
     }
 
     void onDestroy() override {
+        *mAlive = false;   // in-flight lyrics fetch must not touch the corpse
         MediaPlaybackService::getInstance().removeListener(this);
         FragmentActivity::onDestroy();
     }
@@ -200,9 +216,38 @@ private:
         postDelayed(mRefresh, 500);
     }
 
+#ifdef REMUSIC_ONLINE
+    // Lyrics for tracks with no sibling .lrc — the on-demand (Audius/
+    // ccMixter) songs. Blocking fetch on a worker thread, applied on the UI
+    // thread under a generation tag: a result landing after the track
+    // switched (gen) or the activity died (mAlive) is dropped, not applied.
+    void fetchOnlineLyrics(bool needed) {
+        const int gen = ++mLrcGen;   // any track change invalidates in-flight fetches
+        if (!needed) return;
+        const MusicInfo* info = MusicPlayer::currentTrackInfo();
+        if (info == nullptr || info->musicName.empty() || info->duration <= 0) return;
+        const std::string title = info->musicName;
+        const std::string artist = info->artist;
+        const long durationMs = info->duration;
+        auto alive = mAlive;
+        std::thread([this, alive, gen, title, artist, durationMs] {
+            const std::string lrc = LrcLib::fetchSyncedLyrics(title, artist, durationMs);
+            postToMain([this, alive, gen, lrc] {
+                if (!*alive || gen != mLrcGen || lrc.empty()) return;
+                mLrc->setLrcRows(parseLrc(lrc));   // refreshProgress() re-seeks
+            });
+        }).detach();
+    }
+#endif
+
     void updateTrackInfo() {
-        // Lyrics: sibling .lrc if present.
-        mLrc->setLrcRows(parseLrc(loadLrcFor(MusicPlayer::getPath())));
+        // Lyrics: sibling .lrc first; a miss (on-demand tracks ship none)
+        // falls through to LRCLIB in the background.
+        const std::string lrcData = loadLrcFor(MusicPlayer::getPath());
+        mLrc->setLrcRows(parseLrc(lrcData));
+#ifdef REMUSIC_ONLINE
+        fetchOnlineLyrics(lrcData.empty());
+#endif
         const std::string cover = MusicPlayer::currentTrackInfo()
                 ? MusicPlayer::currentTrackInfo()->albumData : std::string();
         if (auto* art = (ImageView*) findViewById(R::id::albumArt)) {
@@ -430,6 +475,8 @@ private:
 
     ImageView* mNeedle = nullptr;
     ImageView* mDisc = nullptr;
+    std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);  // teardown guard
+    int mLrcGen = 0;                       // online-lyrics fetch generation tag
     std::function<bool()> mSpinKeepalive;
     ImageView* mPlay = nullptr;
     ImageView* mPre = nullptr;
