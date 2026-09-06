@@ -22,6 +22,11 @@ struct RadioStation {
 
 class RadioBrowser {
 public:
+    /** Fetch page size: one 200-row page covers most tags outright (radio
+     *  directories are small — tag=chinese totals 21); the panel's infinite
+     *  scroll remains the safety net for the few huge ones. */
+    static constexpr int kPageSize = 200;
+
     static void searchByTag(const std::string& tag,
             std::function<void(std::vector<RadioStation>)> onDone, int offset = 0);
     /** NetSearchWordsActivity's stand-in: stations whose name contains term. */

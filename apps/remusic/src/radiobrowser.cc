@@ -20,7 +20,8 @@ static void searchStations(const std::string& query,
     std::thread([query, offset, onDone = std::move(onDone)]() mutable {
         const std::string url =
                 "https://de1.api.radio-browser.info/json/stations/search"
-                "?limit=60&order=clickcount&reverse=true&hidebroken=true&offset="
+                "?limit=" + std::to_string(RadioBrowser::kPageSize)
+                + "&order=clickcount&reverse=true&hidebroken=true&offset="
                 + std::to_string(offset) + "&" + query;
         std::vector<RadioStation> stations;
         const std::string body = httpGet(url);
