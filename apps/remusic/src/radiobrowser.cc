@@ -16,11 +16,12 @@
 namespace remusic {
 
 static void searchStations(const std::string& query,
-        std::function<void(std::vector<RadioStation>)> onDone) {
-    std::thread([query, onDone = std::move(onDone)]() mutable {
+        std::function<void(std::vector<RadioStation>)> onDone, int offset) {
+    std::thread([query, offset, onDone = std::move(onDone)]() mutable {
         const std::string url =
                 "https://de1.api.radio-browser.info/json/stations/search"
-                "?limit=60&order=clickcount&reverse=true&hidebroken=true&" + query;
+                "?limit=60&order=clickcount&reverse=true&hidebroken=true&offset="
+                + std::to_string(offset) + "&" + query;
         std::vector<RadioStation> stations;
         const std::string body = httpGet(url);
         Json::Value root;
@@ -75,13 +76,13 @@ static void searchStations(const std::string& query,
 }
 
 void RadioBrowser::searchByTag(const std::string& tag,
-        std::function<void(std::vector<RadioStation>)> onDone) {
-    searchStations("tagList=" + tag, std::move(onDone));
+        std::function<void(std::vector<RadioStation>)> onDone, int offset) {
+    searchStations("tagList=" + tag, std::move(onDone), offset);
 }
 
 void RadioBrowser::searchByName(const std::string& term,
-        std::function<void(std::vector<RadioStation>)> onDone) {
-    searchStations("name=" + urlEncode(term), std::move(onDone));
+        std::function<void(std::vector<RadioStation>)> onDone, int offset) {
+    searchStations("name=" + urlEncode(term), std::move(onDone), offset);
 }
 
 } // namespace remusic

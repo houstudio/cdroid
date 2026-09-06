@@ -191,7 +191,18 @@ private:
         panel->addView(mStatus, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::WRAP_CONTENT));
 
-        mList = new ListView(ctx);
+        mList = new PullListView(ctx);
+        ((PullListView*) mList)->onRefresh = [this] {
+            mStatus->setText("刷新中…");
+            if (mStaMode == "name" && !mStaTerm.empty()) runNameSearch();
+            else if (!mTag.empty()) selectTag(mTag);
+            else selectTag("chinese");
+        };
+        AbsListView::OnScrollListener sl;
+        sl.onScroll = [this](AbsListView&, int first, int visible, int total) {
+            if (total > 1 && first + visible + 2 >= total) loadMoreStations();
+        };
+        mList->setOnScrollListener(sl);
         panel->addView(mList, new LinearLayout::LayoutParams(
                 ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
         selectTag("chinese");
@@ -206,6 +217,8 @@ private:
         delete text;
         while (!term.empty() && (term.back() == ' ' || term.back() == '\n')) term.pop_back();
         if (term.empty()) return;
+        mStaMode = "name";
+        mStaTerm = term;
         for (TextView* c : mChipViews) {
             c->setBackgroundColor(0xFFDDDDDD);
             c->setTextColor(0xFF444444);
@@ -226,6 +239,8 @@ private:
 
     void selectTag(const std::string& tag) {
         mTag = tag;
+        mStaMode = "tag";
+        mStaTerm.clear();
         for (size_t i = 0; i < mChipViews.size(); i++) {
             const bool sel = mChipTags(i) == tag;
             mChipViews[i]->setBackgroundColor(sel ? 0xFFD43C33 : 0xFFDDDDDD);
@@ -252,6 +267,9 @@ private:
         StationAdapter(Context* ctx, std::vector<RadioStation>* stations,
                 std::shared_ptr<bool> alive)
                 : mCtx(ctx), mStations(stations), mAlive(std::move(alive)) {}
+        // Trailing (+1) row text: the infinite-list footer ("上滑加载更多…"
+        // / "没有更多了"); empty falls back to the load-failure wording.
+        std::string footerText;
         int getCount() const override { return (int)mStations->size() + 1; }
         void* getItem(int position) const override { return nullptr; }
         long getItemId(int position) const override { return position; }
@@ -268,7 +286,8 @@ private:
                 state->setVisibility(View::GONE);
             if (position >= (int)mStations->size()) {
                 if (img) img->setImageResource(R::drawable::placeholder_disk_210);
-                if (top) top->setText("加载失败或无电台(检查网络)");
+                if (top) top->setText(footerText.empty()
+                        ? std::string("加载失败或无电台(检查网络)") : footerText);
                 if (sub) sub->setText("");
                 return v;
             }
@@ -298,12 +317,17 @@ private:
     };
 
     void bindList() {
+        mStaOffset = (int) mStations.size();
+        mStaDone = mStations.empty();
+        mStaPaging = false;
         if (mStations.empty()) {
             mStatus->setText("无结果");
         } else {
-            mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 点击播放直播流");
+            mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 点击播放直播流 · 下滑加载更多");
         }
-        mList->setAdapter(new StationAdapter(getContext(), &mStations, mAlive));
+        mStaAdapter = new StationAdapter(getContext(), &mStations, mAlive);
+        mStaAdapter->footerText = "上滑加载更多…";
+        mList->setAdapter(mStaAdapter);
         mList->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
             if (position >= (int)mStations.size()) return;
             const RadioStation& st = mStations[position];
@@ -319,6 +343,50 @@ private:
             std::vector<long> ids{info.songId};
             MusicPlayer::playAll(infos, ids, 0, false);
         });
+    }
+
+    // Near-end scroll: next page of the current tag/name query. The adapter
+    // wraps &mStations, so appending is push_back + notifyDataSetChanged.
+    void loadMoreStations() {
+        if (mStaPaging || mStaDone || mStaAdapter == nullptr || mStations.empty()) return;
+        mStaPaging = true;
+        mStaAdapter->footerText = "加载更多…";
+        mStaAdapter->notifyDataSetChanged();
+        auto alive = mAlive;
+        const std::string tag = mTag;
+        const std::string term = mStaTerm;
+        const bool byName = mStaMode == "name";
+        const int offset = mStaOffset;
+        auto done = [this, alive](std::vector<RadioStation> stations) {
+            if (!*alive || getView() == nullptr) return;
+            mStaPaging = false;
+            appendStations(std::move(stations));
+        };
+        if (byName) RadioBrowser::searchByName(term, done, offset);
+        else RadioBrowser::searchByTag(tag, done, offset);
+    }
+
+    void appendStations(std::vector<RadioStation> stations) {
+        if (stations.empty()) {
+            mStaDone = true;
+            if (mStaAdapter) {
+                mStaAdapter->footerText = "没有更多了";
+                mStaAdapter->notifyDataSetChanged();
+            }
+            return;
+        }
+        const bool shortPage = (int) stations.size() < 60;   // radiobrowser.cc page size
+        if ((int) mStations.size() >= kMaxListRows) { stations.clear(); }   // memory cap
+        mStations.insert(mStations.end(), stations.begin(), stations.end());
+        mStaOffset = (int) mStations.size();
+        const bool capped = (int) mStations.size() >= kMaxListRows;
+        if (shortPage || capped) mStaDone = true;
+        if (mStaAdapter) {
+            mStaAdapter->footerText = !mStaDone ? "上滑加载更多…"
+                    : (capped && !shortPage ? "已到浏览上限" : "没有更多了");
+            mStaAdapter->notifyDataSetChanged();
+        }
+        mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 点击播放直播流");
     }
 
     // ---- panel 2: Audius on-demand songs (the Baidu-ting stand-in that
@@ -589,6 +657,11 @@ private:
         }
     }
 
+    // Infinite to scroll, bounded in memory: both panels cap how many rows
+    // they RETAIN (embedded targets must not accumulate tens of thousands of
+    // remote-chart rows). The list view itself recycles its item views.
+    static constexpr int kMaxListRows = 500;
+
     void appendSongs(std::vector<AudiusTrack> tracks) {
         if (mSongAdapter == nullptr) return;
         if (tracks.empty()) {
@@ -597,6 +670,7 @@ private:
                     + " · 没有更多了");
             return;
         }
+        if ((int) mSongs.size() >= kMaxListRows) tracks.clear();   // cap: stop growing
         for (auto& t : tracks) mSongs.push_back(std::move(t));
         mSongOffset = (int) mSongs.size();
         for (size_t i = mSongs.size() - tracks.size(); i < mSongs.size(); i++) {
@@ -610,9 +684,12 @@ private:
             }
             mSongAdapter->add(row);
         }
-        if ((int) tracks.size() < mSongPageSize) mSongDone = true;
+        const bool shortPage = (int) tracks.size() < mSongPageSize;
+        const bool capped = (int) mSongs.size() >= kMaxListRows;
+        if (shortPage || capped) mSongDone = true;
         mSongStatus->setText(std::to_string(mSongs.size()) + " 首 · " + mSongLabel
-                + " · 继续下滑加载更多");
+                + (mSongDone ? (capped && !shortPage ? " · 已到浏览上限" : " · 没有更多了")
+                             : " · 继续下滑加载更多"));
     }
 
 
@@ -644,8 +721,14 @@ private:
     EditText* mSearchBox = nullptr;
     TextView* mStatus = nullptr;
     ListView* mList = nullptr;
+    std::string mStaMode;        // "tag" | "name" — how the current list was built
+    std::string mStaTerm;        // name-search term ("" in tag mode)
+    int mStaOffset = 0;          // next page start (60-station pages)
+    bool mStaPaging = false;
+    bool mStaDone = false;
     std::vector<TextView*> mChipViews;
     std::vector<RadioStation> mStations;
+    StationAdapter* mStaAdapter = nullptr;
     std::string mTag;
 
 };

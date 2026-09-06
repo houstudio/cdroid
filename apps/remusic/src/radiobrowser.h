@@ -23,10 +23,10 @@ struct RadioStation {
 class RadioBrowser {
 public:
     static void searchByTag(const std::string& tag,
-            std::function<void(std::vector<RadioStation>)> onDone);
+            std::function<void(std::vector<RadioStation>)> onDone, int offset = 0);
     /** NetSearchWordsActivity's stand-in: stations whose name contains term. */
     static void searchByName(const std::string& term,
-            std::function<void(std::vector<RadioStation>)> onDone);
+            std::function<void(std::vector<RadioStation>)> onDone, int offset = 0);
 };
 
 } // namespace remusic
