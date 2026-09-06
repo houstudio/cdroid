@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -34,6 +35,7 @@ public:
     bool errored() const override { return mOpenFailed; }
     int position() const override;   // ms
     int duration() const override;   // ms
+    void setOnPlayingChanged(const std::function<void(bool)>& cb) override;
 
 private:
     void decodeLoop();
@@ -49,6 +51,7 @@ private:
             uint32_t /*status*/, void* userData);
 
     std::string mPath;
+    std::function<void(bool)> mOnPlayingChanged;   // decode thread fires on the async flip
     std::atomic<bool> mWantPlaying{false};   // desired state (UI thread sets)
     std::atomic<bool> mPendingOpen{false};   // decode thread owns the actual open
     std::atomic<bool> mOpenFailed{false};

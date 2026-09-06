@@ -81,6 +81,12 @@ MediaPlaybackService::MediaPlaybackService()
 void MediaPlaybackService::setBackend(PlayerBackend* backend) {
     if (mBackend && mBackend != backend) mBackend->stop();
     mBackend = backend;
+    // Async prepare: the PLAYSTATE_CHANGED sent right after start() can
+    // precede the backend actually playing. The backend reports the actual
+    // flip from its decode thread; hop to the UI thread and re-notify.
+    backend->setOnPlayingChanged([this](bool) {
+        mTickHandler.post([this] { notifyChange(MediaServiceActions::PLAYSTATE_CHANGED); });
+    });
 }
 
 void MediaPlaybackService::addListener(void* token, Listener listener) {

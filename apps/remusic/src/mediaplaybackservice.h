@@ -65,6 +65,13 @@ public:
     virtual int duration() const = 0;   // ms
     /** Async prepare failed (bad stream / unreachable URL). */
     virtual bool errored() const { return false; }
+    /** Fired when the ACTUAL playing state flips asynchronously (async
+     *  prepare completing on the decode thread) — MediaPlayer's
+     *  OnPreparedListener role. Invoked on the backend's own thread;
+     *  marshal to the UI thread before touching anything. Default: backends
+     *  whose state only changes synchronously on the caller's thread don't
+     *  need it. */
+    virtual void setOnPlayingChanged(const std::function<void(bool)>& cb) { (void)cb; }
 };
 
 /** MediaPlayer-free wall-clock driver: advances position on a 200ms Handler

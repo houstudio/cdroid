@@ -32,6 +32,10 @@ FFmpegPlayerBackend::FFmpegPlayerBackend() {
     mDecodeThread = std::thread([this] { decodeLoop(); });
 }
 
+void FFmpegPlayerBackend::setOnPlayingChanged(const std::function<void(bool)>& cb) {
+    mOnPlayingChanged = cb;   // wired once at service construction, before any open
+}
+
 FFmpegPlayerBackend::~FFmpegPlayerBackend() {
     mQuit = true;
     mRingSpace.notify_all();
@@ -326,6 +330,12 @@ void FFmpegPlayerBackend::decodeLoop() {
                 if (mAudio->isStreamOpen()) {
                     if (!mAudio->isStreamRunning()) mAudio->startStream();
                     mPlaying = true;
+                    // Async-prepare completion: the PLAYSTATE_CHANGED the
+                    // service fired right after start() raced this open and
+                    // said "not playing". Report the flip (OnPreparedListener's
+                    // second notify) so listeners catch up. The callback only
+                    // hops to the UI thread — safe under mStateMutex.
+                    if (mOnPlayingChanged) mOnPlayingChanged(true);
                 } else {
                     LOGE("ffmpeg: RtAudio open failed");
                     mWantPlaying = false;
