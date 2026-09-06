@@ -200,7 +200,7 @@ private:
         };
         AbsListView::OnScrollListener sl;
         sl.onScroll = [this](AbsListView&, int first, int visible, int total) {
-            if (total > 1 && first + visible + 2 >= total) loadMoreStations();
+            if (total > 0 && first + visible + 4 >= total) loadMoreStations();
         };
         mList->setOnScrollListener(sl);
         panel->addView(mList, new LinearLayout::LayoutParams(
@@ -267,10 +267,7 @@ private:
         StationAdapter(Context* ctx, std::vector<RadioStation>* stations,
                 std::shared_ptr<bool> alive)
                 : mCtx(ctx), mStations(stations), mAlive(std::move(alive)) {}
-        // Trailing (+1) row text: the infinite-list footer ("上滑加载更多…"
-        // / "没有更多了"); empty falls back to the load-failure wording.
-        std::string footerText;
-        int getCount() const override { return (int)mStations->size() + 1; }
+        int getCount() const override { return (int)mStations->size(); }
         void* getItem(int position) const override { return nullptr; }
         long getItemId(int position) const override { return position; }
         View* getView(int position, View* convertView, ViewGroup* parent) override {
@@ -284,13 +281,7 @@ private:
                 more->setVisibility(View::GONE);
             if (auto* state = v->findViewById(R::id::play_state))
                 state->setVisibility(View::GONE);
-            if (position >= (int)mStations->size()) {
-                if (img) img->setImageResource(R::drawable::placeholder_disk_210);
-                if (top) top->setText(footerText.empty()
-                        ? std::string("加载失败或无电台(检查网络)") : footerText);
-                if (sub) sub->setText("");
-                return v;
-            }
+            if (position >= (int)mStations->size()) return v;   // defensive only
             const RadioStation& st = mStations->at(position);
             if (top) top->setText(st.name);
             if (sub) {
@@ -318,15 +309,17 @@ private:
 
     void bindList() {
         mStaOffset = (int) mStations.size();
-        mStaDone = mStations.empty();
+        // A short FIRST page (page size 60) means the directory is exhausted
+        // for this query — don't advertise more (e.g. tag=chinese: 21 total).
+        mStaDone = mStations.empty() || (int) mStations.size() < 60;
         mStaPaging = false;
         if (mStations.empty()) {
-            mStatus->setText("无结果");
+            mStatus->setText("无结果 · 检查网络或换关键词");
         } else {
-            mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 点击播放直播流 · 下滑加载更多");
+            mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 点击播放直播流"
+                    + (mStaDone ? " · 没有更多了" : " · 下滑加载更多"));
         }
         mStaAdapter = new StationAdapter(getContext(), &mStations, mAlive);
-        mStaAdapter->footerText = "上滑加载更多…";
         mList->setAdapter(mStaAdapter);
         mList->setOnItemClickListener([this](AdapterView&, View&, int position, long) {
             if (position >= (int)mStations.size()) return;
@@ -347,11 +340,11 @@ private:
 
     // Near-end scroll: next page of the current tag/name query. The adapter
     // wraps &mStations, so appending is push_back + notifyDataSetChanged.
+    // Same shape as the songs panel: silent auto-load, status-line feedback,
+    // nothing rendered inside the list itself.
     void loadMoreStations() {
         if (mStaPaging || mStaDone || mStaAdapter == nullptr || mStations.empty()) return;
         mStaPaging = true;
-        mStaAdapter->footerText = "加载更多…";
-        mStaAdapter->notifyDataSetChanged();
         auto alive = mAlive;
         const std::string tag = mTag;
         const std::string term = mStaTerm;
@@ -369,10 +362,7 @@ private:
     void appendStations(std::vector<RadioStation> stations) {
         if (stations.empty()) {
             mStaDone = true;
-            if (mStaAdapter) {
-                mStaAdapter->footerText = "没有更多了";
-                mStaAdapter->notifyDataSetChanged();
-            }
+            mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 没有更多了");
             return;
         }
         const bool shortPage = (int) stations.size() < 60;   // radiobrowser.cc page size
@@ -381,12 +371,10 @@ private:
         mStaOffset = (int) mStations.size();
         const bool capped = (int) mStations.size() >= kMaxListRows;
         if (shortPage || capped) mStaDone = true;
-        if (mStaAdapter) {
-            mStaAdapter->footerText = !mStaDone ? "上滑加载更多…"
-                    : (capped && !shortPage ? "已到浏览上限" : "没有更多了");
-            mStaAdapter->notifyDataSetChanged();
-        }
-        mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 点击播放直播流");
+        if (mStaAdapter) mStaAdapter->notifyDataSetChanged();
+        mStatus->setText(std::to_string(mStations.size()) + " 个电台 · 点击播放直播流"
+                + (mStaDone ? (capped && !shortPage ? " · 已到浏览上限" : " · 没有更多了")
+                            : " · 下滑加载更多"));
     }
 
     // ---- panel 2: Audius on-demand songs (the Baidu-ting stand-in that
@@ -587,6 +575,7 @@ private:
         mSongDone = mSongs.empty();
         mSongPaging = false;
         mSongPageSize = mSongSource == "Audius" ? 50 : 25;   // the two clients' page sizes
+        mSongDone = mSongs.empty() || (int) mSongs.size() < mSongPageSize;   // short page-0 = exhausted
         std::vector<std::string> rows;
         for (const auto& t : mSongs) {
             std::string row = t.title + " - " + t.artist;
