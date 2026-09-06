@@ -100,10 +100,11 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginLeft="20dp"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/play_icn_speaker" />
 
                 <SeekBar
@@ -160,36 +161,45 @@
             android:layout_marginRight="70dp"
             android:orientation="horizontal">
 
+            <!-- Explicit sizes: the icon PNGs come from the original app's
+                 mixed density buckets and cdroid does no density scaling,
+                 so wrap_content renders each at its own raw pixel size (a
+                 36-56px patchwork in one row). Pin everything to one grid:
+                 tools 48dp, transport 64dp, play 96dp (1.5x). -->
             <ImageView
                 android:id="@+id/playing_fav"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
+                android:scaleType="fitCenter"
                 android:src="@drawable/play_rdi_icn_love" />
 
             <ImageView
                 android:id="@+id/playing_down"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
+                android:scaleType="fitCenter"
                 android:src="@drawable/play_icn_dlded_dis" />
 
             <ImageView
                 android:id="@+id/playing_cmt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
+                android:scaleType="fitCenter"
                 android:src="@drawable/play_icn_cmt_number_dis" />
 
             <ImageView
                 android:id="@+id/playing_more"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
+                android:scaleType="fitCenter"
                 android:src="@drawable/play_icn_more" />
         </LinearLayout>
 
@@ -220,7 +230,7 @@
                     android:singleLine="true"
                     android:text="00:00"
                     android:textColor="@color/white_text"
-                    android:textSize="10sp" />
+                    android:textSize="18sp" />
 
                 <com.wm.remusic.widget.PlayerSeekBar
                     android:id="@+id/play_seek"
@@ -244,7 +254,7 @@
                     android:singleLine="true"
                     android:text="00:00"
                     android:textColor="@color/white_text"
-                    android:textSize="10sp" />
+                    android:textSize="18sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -254,42 +264,47 @@
 
                 <ImageView
                     android:id="@+id/playing_mode"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/play_icn_loop_prs" />
 
                 <ImageView
                     android:id="@+id/playing_pre"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/play_btn_prev" />
 
                 <ImageView
                     android:id="@+id/playing_play"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/play_rdi_btn_play" />
 
                 <ImageView
                     android:id="@+id/playing_next"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/play_btn_next" />
 
                 <ImageView
                     android:id="@+id/playing_playlist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/play_icn_src_prs" />
 
             </LinearLayout>
