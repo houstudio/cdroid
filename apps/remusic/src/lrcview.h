@@ -33,6 +33,9 @@ public:
     void setLrcRows(const std::vector<LrcRow>& rows);
     void seekTo(int timeMs, bool fromUser);
     void setOnSeekListener(std::function<void(int)> fn) { mOnSeek = std::move(fn); }
+    /** Day theme wants dark lyrics on the light page; night keeps the
+     *  light-on-dark pair. */
+    void setColors(uint32_t current, uint32_t normal) { mCurColor = current; mNormColor = normal; invalidate(); }
 
 protected:
     void onDraw(cdroid::Canvas& canvas) override;
@@ -46,6 +49,8 @@ private:
 
     std::vector<LrcRow> mRows;
     int mCurrentRow = -1;
+    uint32_t mCurColor = 0xFF3333FF;
+    uint32_t mNormColor = 0xFFAAAAAA;
     float mScrollY = 0;         // px, row-area offset (grows downward)
     float mTargetScrollY = 0;
     int mLineHeight = 64;

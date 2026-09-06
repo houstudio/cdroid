@@ -32,4 +32,15 @@ void ThemeStore::setAccent(uint32_t color) {
             "accent", (int)color).apply();
 }
 
+bool ThemeStore::night() const {
+    if (mContext == nullptr) return false;
+    return mContext->getSharedPreferences("theme", 0)->getBoolean("night", false);
+}
+
+void ThemeStore::setNight(bool night) {
+    if (mContext == nullptr) return;
+    mContext->getSharedPreferences("theme", 0)->edit().putBoolean(
+            "night", night).apply();
+}
+
 } // namespace remusic

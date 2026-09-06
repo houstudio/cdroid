@@ -11,9 +11,20 @@
         android:src="@drawable/login_bg_night" />
 
     <View
+        android:id="@+id/page_scrim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#70000000" />
+
+    <!-- The original is a portrait phone page (360x640 design); this window
+         is wide. Render the design in a centered column and scale it to the
+         window height in code (PlayingActivity), so proportions match the
+         original screenshots at any window size. -->
+    <FrameLayout
+        android:id="@+id/design_column"
+        android:layout_width="360dp"
+        android:layout_height="640dp"
+        android:layout_gravity="center">
 
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -31,6 +42,37 @@
             android:minHeight="@dimen/action_bar_size"
             android:theme="@android:style/Theme.Material"
             android:popupTheme="@android:style/ThemeOverlay.Material.Light" />
+
+        <!-- Original's header: centered song name + artist at the very top. -->
+        <LinearLayout
+            android:id="@+id/title_block"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/toolbar"
+            android:layout_centerHorizontal="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/play_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:singleLine="true"
+                android:text=""
+                android:textColor="#FF3B3B3B"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/play_artist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:singleLine="true"
+                android:text=""
+                android:textColor="#FF8A8A8A"
+                android:textSize="13sp" />
+        </LinearLayout>
 
         <FrameLayout
             android:id="@+id/headerView"
@@ -100,8 +142,8 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginLeft="20dp"
                     android:scaleType="fitCenter"
@@ -168,8 +210,8 @@
                  tools 48dp, transport 64dp, play 96dp (1.5x). -->
             <ImageView
                 android:id="@+id/playing_fav"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:scaleType="fitCenter"
@@ -177,8 +219,8 @@
 
             <ImageView
                 android:id="@+id/playing_down"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:scaleType="fitCenter"
@@ -186,8 +228,8 @@
 
             <ImageView
                 android:id="@+id/playing_cmt"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:scaleType="fitCenter"
@@ -195,8 +237,8 @@
 
             <ImageView
                 android:id="@+id/playing_more"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:scaleType="fitCenter"
@@ -230,7 +272,7 @@
                     android:singleLine="true"
                     android:text="00:00"
                     android:textColor="@color/white_text"
-                    android:textSize="18sp" />
+                    android:textSize="12sp" />
 
                 <com.wm.remusic.widget.PlayerSeekBar
                     android:id="@+id/play_seek"
@@ -254,7 +296,7 @@
                     android:singleLine="true"
                     android:text="00:00"
                     android:textColor="@color/white_text"
-                    android:textSize="18sp" />
+                    android:textSize="12sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -264,8 +306,8 @@
 
                 <ImageView
                     android:id="@+id/playing_mode"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
@@ -273,8 +315,8 @@
 
                 <ImageView
                     android:id="@+id/playing_pre"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
@@ -282,8 +324,8 @@
 
                 <ImageView
                     android:id="@+id/playing_play"
-                    android:layout_width="96dp"
-                    android:layout_height="96dp"
+                    android:layout_width="76dp"
+                    android:layout_height="76dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
@@ -291,8 +333,8 @@
 
                 <ImageView
                     android:id="@+id/playing_next"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
@@ -300,8 +342,8 @@
 
                 <ImageView
                     android:id="@+id/playing_playlist"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
@@ -310,4 +352,5 @@
             </LinearLayout>
         </LinearLayout>
     </RelativeLayout>
+    </FrameLayout>
 </FrameLayout>

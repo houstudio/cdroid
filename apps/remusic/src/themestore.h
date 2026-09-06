@@ -22,6 +22,12 @@ public:
     uint32_t accent() const;
     void setAccent(uint32_t color);
 
+    /** The original's day/night toggle (Settings). Day is the default and
+     *  matches the reference screenshots; night is the port's long-standing
+     *  dark look. */
+    bool night() const;
+    void setNight(bool night);
+
 private:
     ThemeStore() = default;
     cdroid::Context* mContext = nullptr;

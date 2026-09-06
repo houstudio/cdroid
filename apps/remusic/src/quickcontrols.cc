@@ -128,6 +128,24 @@ void remusic::showTimingSheet(ViewGroup& host) {
     addRow("定时停止播放", -1);
     addRow(MusicPlayer::timingActive() ? "取消定时" : "不开启", 0);
     for (int m : {10, 20, 30, 45, 60, 90}) addRow(std::to_string(m) + "分钟后", m);
+    {   // The original's day/night theme toggle (Settings' lean stand-in).
+        auto* row = new TextView(ctx);
+        const bool night = ThemeStore::get().night();
+        row->setText(std::string("主题:") + (night ? "夜间" : "白天"));
+        row->setTextSize(15);
+        row->setTextColor(0xFF666666);
+        row->setPadding(40, 16, 24, 16);
+        sheet->addView(row, new LinearLayout::LayoutParams(
+                ViewGroup::LayoutParams::MATCH_PARENT, 52));
+        row->setOnClickListener([scrim](View&) {
+            const bool toNight = !ThemeStore::get().night();
+            ThemeStore::get().setNight(toNight);
+            Toast::makeText(scrim->getContext(), toNight
+                    ? "已切到夜间主题(重开播放页生效)"
+                    : "已切到白天主题(重开播放页生效)")->show();
+            scrim->setVisibility(View::GONE);
+        });
+    }
     scrim->addView(sheet, new FrameLayout::LayoutParams(
             ViewGroup::LayoutParams::MATCH_PARENT,
             ViewGroup::LayoutParams::WRAP_CONTENT, Gravity::BOTTOM));

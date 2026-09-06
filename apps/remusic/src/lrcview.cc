@@ -122,10 +122,10 @@ void LrcView::onDraw(Canvas& canvas) {
         const int cy = centerYForRow(i);
         if (cy < -mLineHeight || cy > getHeight() + mLineHeight) continue;
         if (i == mCurrentRow) {
-            canvas.set_color(0xFF3333FFu);            // theme red (ARGB)
+            canvas.set_color(mCurColor);
             canvas.set_font_size(mTextSize + 2);
         } else {
-            canvas.set_color(0xFFAAAAAAu);
+            canvas.set_color(mNormColor);
             canvas.set_font_size(mTextSize);
         }
         Rect line;

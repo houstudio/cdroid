@@ -29,6 +29,7 @@
 #include <widget/viewpager.h>
 
 #include "lrcview.h"
+#include "themestore.h"
 #ifdef REMUSIC_ONLINE
 #include <core/handler.h>
 #include <core/looper.h>
@@ -172,6 +173,22 @@ public:
 
         wireNeedleAndDisc();
         wireSeek();
+        applyPlayTheme();
+        // The 360x640 design column scales to the window height: the page
+        // keeps the original's phone proportions at any window size (the
+        // needle/disc geometry sync works in pre-scale coordinates and the
+        // column scales as a whole; touch dispatch inverse-transforms).
+        if (auto* col = findViewById(R::id::design_column)) {
+            post([this, col] {
+                if (!*mAlive || col->getParent() == nullptr) return;
+                auto* root = (View*) col->getParent();
+                const float s = (float) root->getHeight() / 640.f;
+                if (s > 0.1f) {
+                    col->setScaleX(s);
+                    col->setScaleY(s);
+                }
+            });
+        }
 
         MediaPlaybackService::getInstance().addListener(this,
                 [this](const std::string& what) {
@@ -217,6 +234,27 @@ private:
         postDelayed(mRefresh, 500);
     }
 
+    // Day (default — the original's look in the reference screenshots) or
+    // night: page scrim, text colors, nav-icon tint, lyric colors.
+    void applyPlayTheme() {
+        const bool night = ThemeStore::get().night();
+        if (auto* scrim = findViewById(R::id::page_scrim))
+            scrim->setBackgroundColor(night ? 0x70000000u : 0xE6FFFFFFu);
+        const uint32_t main = night ? 0xFFFFFFFFu : 0xFF3B3B3Bu;
+        const uint32_t sub = night ? 0xB3FFFFFFu : 0xFF8A8A8Au;
+        for (int id : {R::id::play_title, R::id::music_duration_played,
+                R::id::music_duration})
+            if (auto* v = (TextView*) findViewById(id))
+                v->setTextColor(id == R::id::play_title ? main : sub);
+        if (auto* artist = (TextView*) findViewById(R::id::play_artist))
+            artist->setTextColor(sub);
+        if (auto* toolbar = (Toolbar*) findViewById(R::id::toolbar))
+            if (Drawable* icon = toolbar->getNavigationIcon())
+                icon->setTint(night ? 0xFFFFFFFFu : 0xFF3B3B3Bu);
+        mLrc->setColors(night ? 0xFF3333FFu : 0xFFD43C33u,
+                        night ? 0xFFAAAAAAu : 0xFF9E9E9Eu);
+    }
+
 #ifdef REMUSIC_ONLINE
     // Lyrics for tracks with no sibling .lrc — the on-demand (Audius/
     // ccMixter) songs. Blocking fetch on a worker thread, applied on the UI
@@ -249,14 +287,12 @@ private:
 #ifdef REMUSIC_ONLINE
         fetchOnlineLyrics(lrcData.empty());
 #endif
-        // Toolbar: song name + artist — the page's only track header.
-        if (auto* toolbar = (Toolbar*) findViewById(R::id::toolbar)) {
-            const MusicInfo* info = MusicPlayer::currentTrackInfo();
-            toolbar->setTitleTextColor(0xFFFFFFFF);
-            toolbar->setSubtitleTextColor(0xB3FFFFFF);
-            toolbar->setTitle(info ? info->musicName : std::string());
-            toolbar->setSubtitle(info ? info->artist : std::string());
-        }
+        // Centered header (the original's): song name + artist, colors per theme.
+        const MusicInfo* info = MusicPlayer::currentTrackInfo();
+        if (auto* t = (TextView*) findViewById(R::id::play_title))
+            t->setText(info ? info->musicName : std::string());
+        if (auto* a = (TextView*) findViewById(R::id::play_artist))
+            a->setText(info ? info->artist : std::string());
         const std::string cover = MusicPlayer::currentTrackInfo()
                 ? MusicPlayer::currentTrackInfo()->albumData : std::string();
         // On-demand tracks carry their cover as a REMOTE url (the listing
