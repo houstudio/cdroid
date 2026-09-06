@@ -84,6 +84,18 @@ VARIANTS
         [ -z "$f" ] && continue
         printf '    <family lang="%s">\n        <font weight="400" style="normal">%s</font>\n    </family>\n' "$lg" "$f"
     done
+    # Color emoji (CBDT) + a monochrome base-symbol fallback. The renderer
+    # side (Typeface::getColorGlyph / Paint::drawTextRun) keys off these
+    # family names — without them a rebuild silently drops color emoji.
+    for ef in "$HOME/.fonts/NotoColorEmoji.ttf" \
+              /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf; do
+        [ -f "$ef" ] || continue
+        case "$ef" in
+            *NotoColorEmoji*) name="emoji";;
+            *) name="emoji-fallback";;
+        esac
+        printf '    <family name="%s">\n        <font weight="400" style="normal">%s</font>\n    </family>\n' "$name" "$ef"
+    done
     echo '</familyset>'
 } > "$OUT"
 
