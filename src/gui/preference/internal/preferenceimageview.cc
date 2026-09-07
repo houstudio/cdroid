@@ -90,9 +90,6 @@ void PreferenceImageView::onMeasure(int widthMeasureSpec, int heightMeasureSpec)
 } // namespace cdroid
 
 // The framework preference_material layout references this view by its
-// com.android.internal.widget name; LayoutInflater::getInflater strips the
-// package prefix before the registry lookup, so the registration key is the
-// bare class name (hand-written registration: the DECLARE_WIDGET macros
-// token-paste the name into an identifier, which a dotted tag cannot provide).
+// com.android.internal.widget name.
 typedef cdroid::PreferenceImageView PreferenceImageView;
-DECLARE_WIDGET2(PreferenceImageView, "PreferenceImageView");
+DECLARE_WIDGET2(PreferenceImageView, "com.android.internal.widget.PreferenceImageView");

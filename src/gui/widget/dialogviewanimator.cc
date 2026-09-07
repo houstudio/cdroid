@@ -22,7 +22,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(DialogViewAnimator)
+DECLARE_WIDGET2(DialogViewAnimator, "com.android.internal.widget.DialogViewAnimator")
 
 DialogViewAnimator::DialogViewAnimator(Context*ctx)
     :DialogViewAnimator(ctx,nullptr){}

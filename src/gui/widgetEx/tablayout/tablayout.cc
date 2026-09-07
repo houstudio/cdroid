@@ -1136,7 +1136,7 @@ int TabLayout::getTabMaxWidth() const{
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 typedef TabLayout::TabItem TabItem;
-DECLARE_WIDGET2(TabItem, "TabItem");
+DECLARE_WIDGET2(TabItem, "com.google.android.material.tabs.TabLayout$TabItem");
 
 TabLayout::TabItem::TabItem(Context* context,const AttributeSet* attrs):View(context,attrs){
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::TabItem);

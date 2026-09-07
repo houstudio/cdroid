@@ -75,7 +75,8 @@ LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name)
            porting fingerprint: upstream such a tag is the app's own subclass,
            and folding silently drops its overridden behavior. */
         static const std::string kFoldingPackages[] = {
-            "android.", "androidx.", "com.google.android.material."
+            "android.", "androidx.", "com.google.android.material.",
+            "com.android.internal."
         };
         bool folding = false;
         for (const auto& prefix : kFoldingPackages) {

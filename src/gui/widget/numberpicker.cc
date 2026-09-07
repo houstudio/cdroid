@@ -54,7 +54,7 @@ public:
         : EditText(context, pAttrs, defStyleAttr) {}
 };
 } // namespace
-DECLARE_WIDGET2(NumberPickerCustomEditText, "NumberPicker$CustomEditText");
+DECLARE_WIDGET2(NumberPickerCustomEditText, "android.widget.NumberPicker$CustomEditText");
 
 namespace {
 // AOSP formatNumberWithLocale: String.format(Locale.getDefault(), "%d", value).

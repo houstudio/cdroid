@@ -856,7 +856,7 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
 
 /////////////////////////////////////////////////////////////////////////////////
 typedef AlertController::RecycleListView RecycleListView;
-DECLARE_WIDGET2(RecycleListView, "AlertController$RecycleListView");
+DECLARE_WIDGET2(RecycleListView, "androidx.appcompat.app.AlertController$RecycleListView");
 
 bool AlertController::RecycleListView::recycleOnMeasure() {
     return mRecycleOnMeasure;

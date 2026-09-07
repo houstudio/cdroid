@@ -24,7 +24,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(ButtonBarLayout, "ButtonBarLayout");
+DECLARE_WIDGET2(ButtonBarLayout, "androidx.appcompat.widget.ButtonBarLayout");
 
 ButtonBarLayout::ButtonBarLayout(Context* context,const AttributeSet* attrs)
   :ButtonBarLayout(context, attrs,0){

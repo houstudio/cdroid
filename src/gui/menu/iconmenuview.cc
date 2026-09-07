@@ -24,7 +24,7 @@ namespace cdroid{
 using namespace cdroid::internal;
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(IconMenuView)
+DECLARE_WIDGET2(IconMenuView, "com.android.internal.view.menu.IconMenuView")
 IconMenuView::IconMenuView(Context* context,const AttributeSet* attrs):IconMenuView(context,attrs,0){}
 
 IconMenuView::IconMenuView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)

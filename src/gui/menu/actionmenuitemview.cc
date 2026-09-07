@@ -21,7 +21,7 @@
 #include <widget/internal_R.h>
 namespace cdroid{
 
-DECLARE_WIDGET(ActionMenuItemView)
+DECLARE_WIDGET2(ActionMenuItemView, "androidx.appcompat.view.menu.ActionMenuItemView")
 ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet* attrs):ActionMenuItemView(context,attrs,0){}
 
 ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
