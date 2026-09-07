@@ -76,7 +76,6 @@ public:
     // the inflater factory passes straight to each widget's AOSP ctor — no string
     // resolution (DECLARE_WIDGET2/3 take the int directly).
     static bool registerInflater(const std::string&name,int defStyleAttr,ViewInflater fun);
-    int getDefaultStyle(const std::string&name)const;
     Context*getContext()const;
     Factory getFactory()const;
     Factory2 getFactory2()const;

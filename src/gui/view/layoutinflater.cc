@@ -36,7 +36,6 @@ static constexpr const char* ATTR_LAYOUT = "layout";
 // attr-id array (trailing 0), the C++ analog of AOSP's int[].
 static const uint32_t ATTRS_THEME[] = { (uint32_t)cdroid::internal::R::attr::theme, 0 };
 
-static std::unordered_map<std::string,int> mDefaultStyle;
 static std::unordered_map<std::string,LayoutInflater::ViewInflater> mFlateMapper;
 static std::unordered_map<Context*,std::shared_ptr<LayoutInflater>> mInflaters;
 
@@ -55,12 +54,6 @@ LayoutInflater*LayoutInflater::from(Context*context) {
     return it->second.get();
 }
 
-int LayoutInflater::getDefaultStyle(const std::string&name)const {
-    auto& maps = mDefaultStyle;
-    auto it = maps.find(name);
-    return it==maps.end()?0:it->second;
-}
-
 LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name) {
     const size_t  pt = name.rfind('.');
     auto &maps = mFlateMapper;
@@ -71,7 +64,6 @@ LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name)
 
 bool LayoutInflater::registerInflater(const std::string&name,int defStyleAttr,LayoutInflater::ViewInflater inflater) {
     auto& maps = mFlateMapper;
-    auto& smap = mDefaultStyle;
     auto flaterIter = maps.find(name);
 
     /*disable widget inflater's hack*/
@@ -80,7 +72,6 @@ bool LayoutInflater::registerInflater(const std::string&name,int defStyleAttr,La
         return false;
     }
     maps.insert({name,inflater});
-    smap.insert({name,defStyleAttr});
     return true;
 }
 
