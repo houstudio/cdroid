@@ -16,7 +16,7 @@
         <FrameLayout
             android:id="@+id/hero"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
+            android:layout_height="92dp"
             android:background="@drawable/hero_bg">
             <View
                 android:layout_width="210dp"
@@ -57,9 +57,21 @@
                         android:orientation="vertical">
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                             android:text="@string/home_title" android:textSize="25sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp" android:text="@string/home_tagline"
-                            android:textSize="12sp" android:textColor="#B3FFFFFF"/>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                                android:layout_weight="1" android:text="@string/home_tagline"
+                                android:textSize="12sp" android:textColor="#B3FFFFFF"/>
+                            <ImageView android:layout_width="15dp" android:layout_height="15dp"
+                                android:src="@drawable/ic_wifi_white" android:importantForAccessibility="no"/>
+                            <TextView android:id="@+id/network_text" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp" android:text="Wi-Fi · CDROID-Net · 192.168.1.50"
+                                android:textSize="12sp" android:textColor="#E6FFFFFF"/>
+                        </LinearLayout>
                     </LinearLayout>
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -71,14 +83,6 @@
                             android:layout_marginStart="7dp" android:text="@string/status_ready" android:textSize="12sp"
                             android:textStyle="bold" android:textColor="#FFFFFFFF"/>
                     </LinearLayout>
-                </LinearLayout>
-                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp" android:orientation="horizontal" android:gravity="center_vertical">
-                    <ImageView android:layout_width="15dp" android:layout_height="15dp"
-                        android:src="@drawable/ic_wifi_white" android:importantForAccessibility="no"/>
-                    <TextView android:id="@+id/network_text" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp" android:text="Wi-Fi · CDROID-Net · 192.168.1.50"
-                        android:textSize="12sp" android:textColor="#E6FFFFFF"/>
                 </LinearLayout>
             </LinearLayout>
         </FrameLayout>
