@@ -76,6 +76,7 @@ void CircleButtonsLayout::remeasureViews() {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::CircleButtonsLayout, CircleButtonsLayout, 0);
+typedef cdroid::deskclock::CircleButtonsLayout CircleButtonsLayout;
+DECLARE_WIDGET2(CircleButtonsLayout, "CircleButtonsLayout");
 
 } // namespace cdroid

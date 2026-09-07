@@ -75,6 +75,7 @@ void TextTime::updateTime() {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::TextTime, TextTime, 0);
+typedef cdroid::deskclock::TextTime TextTime;
+DECLARE_WIDGET2(TextTime, "TextTime");
 
 } // namespace cdroid

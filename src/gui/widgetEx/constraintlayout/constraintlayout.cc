@@ -47,7 +47,7 @@
 #include <widgetEx/constraintlayout/helpers/layer.h>
 #include <widgetEx/constraintlayout/helpers/placeholder.h>
 
-DECLARE_WIDGET(ConstraintLayout)
+DECLARE_WIDGET2(ConstraintLayout, "androidx.constraintlayout.widget.ConstraintLayout");
 
 namespace cdroid {
 using namespace cdroid::internal;

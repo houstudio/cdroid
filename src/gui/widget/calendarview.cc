@@ -25,7 +25,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(CalendarView, R::attr::calendarViewStyle);
+DECLARE_WIDGET2(CalendarView, "android.widget.CalendarView");
 CalendarView::CalendarView(Context*ctx)
     :CalendarView(ctx,nullptr){}
 

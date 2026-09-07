@@ -9,7 +9,7 @@
 namespace cdroid {
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(GridView,R::attr::gridViewStyle)
+DECLARE_WIDGET2(GridView, "android.widget.GridView");
 
 GridView::GridView(Context*ctx)
     :GridView(ctx,nullptr){}

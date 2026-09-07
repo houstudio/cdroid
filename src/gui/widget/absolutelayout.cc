@@ -21,7 +21,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(AbsoluteLayout)
+DECLARE_WIDGET2(AbsoluteLayout, "android.widget.AbsoluteLayout");
 
 AbsoluteLayout::LayoutParams::LayoutParams(int width, int height, int x, int y)
     :ViewGroup::LayoutParams(width,height){

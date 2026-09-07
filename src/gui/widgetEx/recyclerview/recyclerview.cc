@@ -52,7 +52,7 @@ static QuinticInterpolator sQuinticInterpolator;
 
 // androidx inflation path: RecyclerView(context, attrs) ->
 // defStyleAttr = R.attr.recyclerViewStyle (library attr, 0x02 shared-lib).
-DECLARE_WIDGET2(RecyclerView, (int)R::attr::recyclerViewStyle)
+DECLARE_WIDGET2(RecyclerView, "androidx.recyclerview.widget.RecyclerView");
 
 RecyclerView::RecyclerView(Context*ctx):RecyclerView(ctx,nullptr){}
 

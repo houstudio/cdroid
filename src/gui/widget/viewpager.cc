@@ -39,7 +39,7 @@ public:
 
 static VPInterpolator sVPInterpolator;
 
-DECLARE_WIDGET(ViewPager);
+DECLARE_WIDGET2(ViewPager, "androidx.viewpager.widget.ViewPager");
 
 ViewPager::~ViewPager(){
     delete mObserver;

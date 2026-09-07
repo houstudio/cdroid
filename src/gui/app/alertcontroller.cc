@@ -855,7 +855,8 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-DECLARE_WIDGET3(AlertController::RecycleListView,AlertController$RecycleListView,0);
+typedef AlertController::RecycleListView RecycleListView;
+DECLARE_WIDGET2(RecycleListView, "AlertController$RecycleListView");
 
 bool AlertController::RecycleListView::recycleOnMeasure() {
     return mRecycleOnMeasure;

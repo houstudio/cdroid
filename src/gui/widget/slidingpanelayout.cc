@@ -19,7 +19,7 @@
 #include <core/build.h>
 namespace cdroid{
 
-DECLARE_WIDGET(SlidingPaneLayout)
+DECLARE_WIDGET2(SlidingPaneLayout, "android.widget.SlidingPaneLayout");
 
 SlidingPaneLayout::SlidingPaneLayout(Context*ctx)
     :SlidingPaneLayout(ctx,nullptr){}

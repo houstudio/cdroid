@@ -26,7 +26,7 @@
 #include <widget/internal_R.h>
 #include <widgetEx/widgetex_styleable.h>
 
-DECLARE_WIDGET(Flow)
+DECLARE_WIDGET2(Flow, "androidx.constraintlayout.helper.widget.Flow");
 
 namespace cdroid {
 using namespace cdroid::internal;

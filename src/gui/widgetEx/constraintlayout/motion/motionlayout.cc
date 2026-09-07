@@ -41,7 +41,7 @@
 #include <widgetEx/constraintlayout/core/motion/springstopengine.h>
 #include <widgetEx/constraintlayout/core/motion/stoplogicengine.h>
 
-DECLARE_WIDGET(MotionLayout)
+DECLARE_WIDGET2(MotionLayout, "androidx.constraintlayout.motion.widget.MotionLayout");
 
 namespace cdroid {
 using namespace cdroid::internal;

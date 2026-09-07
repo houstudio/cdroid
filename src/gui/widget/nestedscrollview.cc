@@ -49,12 +49,12 @@ private:
     NestedScrollView* mOuter;
 };
 
-DECLARE_WIDGET2(NestedScrollView,R::attr::scrollViewStyle)
+DECLARE_WIDGET2(NestedScrollView, "androidx.core.widget.NestedScrollView");
 
 NestedScrollView::NestedScrollView(Context*ctx)
     :NestedScrollView(ctx,nullptr){}
 
-NestedScrollView::NestedScrollView(Context* context,const AttributeSet* attrs):NestedScrollView(context,attrs,0){}
+NestedScrollView::NestedScrollView(Context* context,const AttributeSet* attrs):NestedScrollView(context,attrs,R::attr::scrollViewStyle){}
 
 NestedScrollView::NestedScrollView(Context* context,const AttributeSet* pAttrs,int defStyleAttr):FrameLayout(context,pAttrs, defStyleAttr){
     initScrollView(pAttrs);

@@ -20,7 +20,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(SeekBar,R::attr::seekBarStyle)
+DECLARE_WIDGET2(SeekBar, "android.widget.SeekBar");
 
 SeekBar::SeekBar(Context*ctx)
     :SeekBar(ctx,nullptr){}

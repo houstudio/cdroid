@@ -24,7 +24,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(ButtonBarLayout);
+DECLARE_WIDGET2(ButtonBarLayout, "ButtonBarLayout");
 
 ButtonBarLayout::ButtonBarLayout(Context* context,const AttributeSet* attrs)
   :ButtonBarLayout(context, attrs,0){
@@ -155,7 +155,7 @@ bool ButtonBarLayout::isStacked()const{
 // .widget.ButtonBarLayout; the inflater matches tags on their last '.'-segment,
 // so registering the bare name serves both spellings.
 static const bool _cdroid_reg_buttonbarlayout =
-    cdroid::LayoutInflater::registerInflater("ButtonBarLayout", 0,
+    cdroid::LayoutInflater::registerInflater("ButtonBarLayout",
         [](cdroid::Context* ctx, const cdroid::AttributeSet& attrs) -> cdroid::View* {
             return new cdroid::ButtonBarLayout(ctx, &attrs);
         });

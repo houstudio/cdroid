@@ -25,7 +25,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(ViewAnimator)
+DECLARE_WIDGET2(ViewAnimator, "android.widget.ViewAnimator");
 
 ViewAnimator::ViewAnimator(Context*ctx):ViewAnimator(ctx,nullptr){}
 

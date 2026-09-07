@@ -107,13 +107,13 @@ private:
     bool mMoved = false;
     std::function<void()> mToggle;
 };
-static const bool sAlbumPagerRegistered = (LayoutInflater::registerInflater("AlbumViewPager", 0,
+static const bool sAlbumPagerRegistered = (LayoutInflater::registerInflater("AlbumViewPager",
         [](Context* ctx, const AttributeSet& attr) -> View* {
     return new AlbumViewPager(ctx, &attr);
 }), true);
 // FQCN twin for the layout's original spelling (exact-first resolution).
 static const bool sAlbumPagerFqcnRegistered = (LayoutInflater::registerInflater(
-        "com.wm.remusic.widget.AlbumViewPager", 0,
+        "com.wm.remusic.widget.AlbumViewPager",
         [](Context* ctx, const AttributeSet& attr) -> View* {
     return new AlbumViewPager(ctx, &attr);
 }), true);

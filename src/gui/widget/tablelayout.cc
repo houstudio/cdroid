@@ -20,7 +20,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(TableLayout)
+DECLARE_WIDGET2(TableLayout, "android.widget.TableLayout");
 
 TableLayout::LayoutParams::LayoutParams()
     :LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT){

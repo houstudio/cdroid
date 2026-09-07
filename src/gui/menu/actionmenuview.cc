@@ -4,7 +4,7 @@
 #include <menu/actionmenupresenter.h>
 namespace cdroid{
 
-DECLARE_WIDGET(ActionMenuView)
+DECLARE_WIDGET2(ActionMenuView, "androidx.appcompat.widget.ActionMenuView");
 ActionMenuView::ActionMenuView(Context* context,const AttributeSet* attrs):ActionMenuView(context,attrs,0){}
 
 ActionMenuView::ActionMenuView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)

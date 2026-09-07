@@ -19,7 +19,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(Space)
+DECLARE_WIDGET2(Space, "android.widget.Space");
 Space::Space(Context*ctx)
     :Space(ctx,nullptr){}
 

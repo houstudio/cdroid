@@ -119,6 +119,7 @@ void TimerItem::update(const data::Timer& timer) {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::TimerItem, TimerItem, 0);
+typedef cdroid::deskclock::TimerItem TimerItem;
+DECLARE_WIDGET2(TimerItem, "TimerItem");
 
 } // namespace cdroid

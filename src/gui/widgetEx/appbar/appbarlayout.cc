@@ -433,7 +433,7 @@ int AppBarLayout::getDownNestedPreScrollRange() {
     return mDownPreScrollRange = std::max(0, range);
 }
 
-DECLARE_WIDGET(AppBarLayout)
+DECLARE_WIDGET2(AppBarLayout, "com.google.android.material.appbar.AppBarLayout");
 
 // XML-declared behaviors (CoordinatorLayout app:layout_behavior values).
 REGISTER_BEHAVIOR(AppBarLayout::Behavior, AppBarLayout_Behavior, "AppBarLayout$Behavior");

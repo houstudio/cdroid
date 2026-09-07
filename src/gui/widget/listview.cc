@@ -27,7 +27,7 @@
 namespace cdroid {
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(ListView,R::attr::listViewStyle)
+DECLARE_WIDGET2(ListView, "android.widget.ListView");
 
 ListView::ListView(Context*ctx)
     :ListView(ctx,nullptr){}

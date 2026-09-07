@@ -28,7 +28,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(Chronometer)
+DECLARE_WIDGET2(Chronometer, "android.widget.Chronometer");
 
 Chronometer::Chronometer(Context*ctx)
     :Chronometer(ctx,nullptr){}

@@ -26,7 +26,7 @@ using namespace cdroid::internal;
 //kf5plotting: https://invent.kde.org/frameworks/kplotting
 namespace cdroid{
 
-DECLARE_WIDGET(PlotView)
+DECLARE_WIDGET2(PlotView, "android.widget.PlotView");
 
 class PlotView::Private
 {

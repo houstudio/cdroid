@@ -29,7 +29,7 @@
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 
-DECLARE_WIDGET(Layer)
+DECLARE_WIDGET2(Layer, "androidx.constraintlayout.widget.Layer");
 
 namespace cdroid {
 using namespace cdroid::internal;

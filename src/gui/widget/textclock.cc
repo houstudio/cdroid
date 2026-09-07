@@ -59,7 +59,7 @@ private final BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
 };
 #endif
 
-DECLARE_WIDGET(TextClock)
+DECLARE_WIDGET2(TextClock, "android.widget.TextClock");
 
 namespace {
 // TimeZone.getDefault() analog: the host's local UTC offset (TZ env), in

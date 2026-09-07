@@ -24,7 +24,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(ViewFlipper)
+DECLARE_WIDGET2(ViewFlipper, "android.widget.ViewFlipper");
 
 ViewFlipper::ViewFlipper(Context*ctx)
     :ViewFlipper(ctx,nullptr){}

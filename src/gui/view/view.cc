@@ -55,7 +55,7 @@ using namespace Cairo;
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(View)
+DECLARE_WIDGET2(View, "android.view.View");
 
 bool View::sIgnoreMeasureCache = false;//targetSdkVersion < Build.VERSION_CODES.KITKAT;
 bool View::sAlwaysRemeasureExactly = false;//targetSdkVersion <= Build.VERSION_CODES.M;

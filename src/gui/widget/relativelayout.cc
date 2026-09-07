@@ -43,7 +43,7 @@ static constexpr int RULES_HORIZONTAL[] = {
     RelativeLayout::ALIGN_END
 };
 
-DECLARE_WIDGET(RelativeLayout)
+DECLARE_WIDGET2(RelativeLayout, "android.widget.RelativeLayout");
 
 RelativeLayout::RelativeLayout(Context*ctx)
     :RelativeLayout(ctx,nullptr){}

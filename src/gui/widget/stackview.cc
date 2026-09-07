@@ -21,7 +21,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(StackView);
+DECLARE_WIDGET2(StackView, "android.widget.StackView");
 
 std::shared_ptr<StackView::HolographicHelper> StackView::sHolographicHelper;
 

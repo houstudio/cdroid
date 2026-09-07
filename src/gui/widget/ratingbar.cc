@@ -23,7 +23,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(RatingBar,R::attr::ratingBarStyle)
+DECLARE_WIDGET2(RatingBar, "android.widget.RatingBar");
 
 RatingBar::RatingBar(Context*ctx)
     :RatingBar(ctx,nullptr){}

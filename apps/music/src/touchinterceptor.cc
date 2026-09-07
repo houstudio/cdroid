@@ -9,10 +9,10 @@ namespace music {
 // Layout tag is "com.android.music.TouchInterceptor": registered under the
 // short key and under the upstream FQCN (getInflater resolves dotted tags
 // exactly first).
-DECLARE_WIDGET3(TouchInterceptor, TouchInterceptor, internal::R::attr::listViewStyle)
+DECLARE_WIDGET2(TouchInterceptor, "TouchInterceptor");
 
 static const int sTouchInterceptorFqcn = (LayoutInflater::registerInflater(
-        "com.android.music.TouchInterceptor", internal::R::attr::listViewStyle,
+        "com.android.music.TouchInterceptor",
         [](Context* ctx, const AttributeSet& attr) -> View* {
     return new TouchInterceptor(ctx, &attr, internal::R::attr::listViewStyle);
 }), 0);

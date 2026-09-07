@@ -23,7 +23,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(DialogTitle);
+DECLARE_WIDGET2(DialogTitle, "androidx.appcompat.widget.DialogTitle");
 
 DialogTitle::DialogTitle(Context* context):TextView(context,nullptr,0){
 }

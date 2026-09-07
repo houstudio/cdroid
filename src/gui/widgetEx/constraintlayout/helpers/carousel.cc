@@ -28,7 +28,7 @@
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/motion/motionscene.h>
 
-DECLARE_WIDGET(Carousel)
+DECLARE_WIDGET2(Carousel, "androidx.constraintlayout.helper.widget.Carousel");
 
 namespace cdroid {
 using namespace cdroid::internal;

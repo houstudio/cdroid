@@ -23,7 +23,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(BottomNavigationView)
+DECLARE_WIDGET2(BottomNavigationView, "com.google.android.material.bottomnavigation.BottomNavigationView");
 
 BottomNavigationView::BottomNavigationView(Context* context, const AttributeSet* attrs)
     : BottomNavigationView(context, attrs, 0) {}

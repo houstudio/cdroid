@@ -28,7 +28,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(AbsSeekBar)
+DECLARE_WIDGET2(AbsSeekBar, "android.widget.AbsSeekBar");
 
 AbsSeekBar::AbsSeekBar(Context*ctx)
     :AbsSeekBar(ctx,nullptr){}

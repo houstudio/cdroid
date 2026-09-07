@@ -5,7 +5,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(MediaController)
+DECLARE_WIDGET2(MediaController, "android.widget.MediaController");
 
 MediaController::MediaController(Context*ctx)
     :MediaController(ctx,nullptr){}

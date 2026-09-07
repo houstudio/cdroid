@@ -38,7 +38,9 @@ void AutoSizingTextView::requestLayout() {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::AutoSizingTextClock, AutoSizingTextClock, 0);
-DECLARE_WIDGET3(cdroid::deskclock::AutoSizingTextView, AutoSizingTextView, 0);
+typedef cdroid::deskclock::AutoSizingTextClock AutoSizingTextClock;
+DECLARE_WIDGET2(AutoSizingTextClock, "AutoSizingTextClock");
+typedef cdroid::deskclock::AutoSizingTextView AutoSizingTextView;
+DECLARE_WIDGET2(AutoSizingTextView, "AutoSizingTextView");
 
 } // namespace cdroid

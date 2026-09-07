@@ -74,7 +74,7 @@ public:
     }
 };
 
-DECLARE_WIDGET2(ProgressBar, internal::R::attr::progressBarStyle)
+DECLARE_WIDGET2(ProgressBar, "android.widget.ProgressBar");
 
 ProgressBar::ProgressBar(Context*ctx)
     :ProgressBar(ctx,nullptr){

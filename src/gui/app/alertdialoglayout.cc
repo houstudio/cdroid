@@ -23,7 +23,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(AlertDialogLayout);
+DECLARE_WIDGET2(AlertDialogLayout, "AlertDialogLayout");
 
 AlertDialogLayout::AlertDialogLayout(Context* context)
   :LinearLayout(context){

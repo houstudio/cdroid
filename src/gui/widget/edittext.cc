@@ -29,7 +29,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(EditText,R::attr::editTextStyle)
+DECLARE_WIDGET2(EditText, "android.widget.EditText");
 
 EditText::EditText(Context*ctx)
     :EditText(ctx,nullptr){

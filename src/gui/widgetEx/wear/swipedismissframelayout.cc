@@ -18,7 +18,7 @@
 #include <widgetEx/wear/swipedismissframelayout.h>
 namespace cdroid{
 
-DECLARE_WIDGET(SwipeDismissFrameLayout);
+DECLARE_WIDGET2(SwipeDismissFrameLayout, "androidx.wear.widget.SwipeDismissFrameLayout");
 
 SwipeDismissFrameLayout::SwipeDismissFrameLayout(Context* context,const AttributeSet* attrs):SwipeDismissFrameLayout(context,attrs,0){}
 

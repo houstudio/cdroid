@@ -28,7 +28,7 @@ using namespace Cairo;
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(ImageView)
+DECLARE_WIDGET2(ImageView, "android.widget.ImageView");
 
 ImageView::ImageView(Context*ctx)
     :ImageView(ctx,nullptr){}

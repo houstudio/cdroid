@@ -26,7 +26,7 @@
 namespace cdroid {
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(ScrollView,R::attr::scrollViewStyle)
+DECLARE_WIDGET2(ScrollView, "android.widget.ScrollView");
 
 ScrollView::ScrollView(Context*ctx)
     :ScrollView(ctx,nullptr){}

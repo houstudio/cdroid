@@ -94,5 +94,5 @@ void PreferenceImageView::onMeasure(int widthMeasureSpec, int heightMeasureSpec)
 // package prefix before the registry lookup, so the registration key is the
 // bare class name (hand-written registration: the DECLARE_WIDGET macros
 // token-paste the name into an identifier, which a dotted tag cannot provide).
-static cdroid::InflaterRegister<cdroid::PreferenceImageView>
-        widget_inflater_preference_image_view("PreferenceImageView", 0);
+typedef cdroid::PreferenceImageView PreferenceImageView;
+DECLARE_WIDGET2(PreferenceImageView, "PreferenceImageView");

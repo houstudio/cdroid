@@ -64,6 +64,7 @@ void EllipsizeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::EllipsizeLayout, EllipsizeLayout, 0);
+typedef cdroid::deskclock::EllipsizeLayout EllipsizeLayout;
+DECLARE_WIDGET2(EllipsizeLayout, "EllipsizeLayout");
 
 } // namespace cdroid

@@ -217,6 +217,7 @@ const Property* CircleView::RADIUS() {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::CircleView, CircleView, 0);
+typedef cdroid::deskclock::CircleView CircleView;
+DECLARE_WIDGET2(CircleView, "CircleView");
 
 } // namespace cdroid

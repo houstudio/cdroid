@@ -75,6 +75,7 @@ MotionEvent& VerticalViewPager::flipXY(MotionEvent& ev) {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::VerticalViewPager, VerticalViewPager, 0);
+typedef cdroid::deskclock::VerticalViewPager VerticalViewPager;
+DECLARE_WIDGET2(VerticalViewPager, "VerticalViewPager");
 
 } // namespace cdroid

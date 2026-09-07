@@ -162,7 +162,7 @@ int RadialTimePickerView::snapOnly30s(int degrees, int forceHigherOrLower) {
     return degrees;
 }
 
-DECLARE_WIDGET(RadialTimePickerView);
+DECLARE_WIDGET2(RadialTimePickerView, "android.widget.RadialTimePickerView");
 
 RadialTimePickerView::RadialTimePickerView(Context*ctx)
     :RadialTimePickerView(ctx,nullptr){}

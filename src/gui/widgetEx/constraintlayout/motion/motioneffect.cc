@@ -31,7 +31,7 @@
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 
-DECLARE_WIDGET(MotionEffect)
+DECLARE_WIDGET2(MotionEffect, "androidx.constraintlayout.helper.widget.MotionEffect");
 
 namespace cdroid {
 using namespace cdroid::internal;

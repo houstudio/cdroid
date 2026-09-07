@@ -9,11 +9,11 @@ namespace music {
 
 // Layout tag is "com.android.music.RepeatingImageButton" (see touchinterceptor.cc
 // for the last-segment registration note).
-DECLARE_WIDGET3(RepeatingImageButton, RepeatingImageButton, internal::R::attr::imageButtonStyle)
+DECLARE_WIDGET2(RepeatingImageButton, "RepeatingImageButton");
 
 // FQCN twin for the layout's original spelling (exact-first resolution).
 static const int sRepeatingImageButtonFqcn = (LayoutInflater::registerInflater(
-        "com.android.music.RepeatingImageButton", 0,
+        "com.android.music.RepeatingImageButton",
         [](Context* ctx, const AttributeSet& attr) -> View* {
     return new RepeatingImageButton(ctx, &attr);
 }), 0);

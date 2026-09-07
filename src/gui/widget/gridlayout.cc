@@ -27,7 +27,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(GridLayout)
+DECLARE_WIDGET2(GridLayout, "android.widget.GridLayout");
 
 GridLayout::LayoutParams::LayoutParams(int width, int height,
         int left, int top, int right, int bottom,

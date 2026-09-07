@@ -22,7 +22,7 @@ template <typename T>
 void alias(const char* xmlName) {
     // Ignore the duplicate-registration refusal: framework classes that share
     // the short name keep their own, richer inflater.
-    LayoutInflater::registerInflater(xmlName, 0, [](Context* ctx, const AttributeSet& attr) -> View* {
+    LayoutInflater::registerInflater(xmlName, [](Context* ctx, const AttributeSet& attr) -> View* {
         return new T(ctx, &attr);
     });
 }
@@ -41,11 +41,11 @@ const bool sRegistered = [] {
     // plain ViewPager until a no-swipe subclass is needed.
     alias<ViewPager>("CustomViewPager");
     // com.wm.remusic.widget.PlayerSeekBar: themed seekbar — plain SeekBar.
-    LayoutInflater::registerInflater("PlayerSeekBar", 0, [](Context* ctx, const AttributeSet& attr) -> View* {
+    LayoutInflater::registerInflater("PlayerSeekBar", [](Context* ctx, const AttributeSet& attr) -> View* {
         return new SeekBar(ctx, &attr);
     });
     // com.wm.remusic.widget.SideBar: A-Z index bar — placeholder View stub.
-    LayoutInflater::registerInflater("SideBar", 0, [](Context* ctx, const AttributeSet& attr) -> View* {
+    LayoutInflater::registerInflater("SideBar", [](Context* ctx, const AttributeSet& attr) -> View* {
         return new View(ctx, &attr);
     });
 
@@ -59,10 +59,10 @@ const bool sRegistered = [] {
     alias<ImageView>("com.facebook.drawee.view.SimpleDraweeView");
     alias<FrameLayout>("android.support.v4.widget.SwipeRefreshLayout");
     alias<ViewPager>("com.wm.remusic.widget.CustomViewPager");
-    LayoutInflater::registerInflater("com.wm.remusic.widget.PlayerSeekBar", 0, [](Context* ctx, const AttributeSet& attr) -> View* {
+    LayoutInflater::registerInflater("com.wm.remusic.widget.PlayerSeekBar", [](Context* ctx, const AttributeSet& attr) -> View* {
         return new SeekBar(ctx, &attr);
     });
-    LayoutInflater::registerInflater("com.wm.remusic.widget.SideBar", 0, [](Context* ctx, const AttributeSet& attr) -> View* {
+    LayoutInflater::registerInflater("com.wm.remusic.widget.SideBar", [](Context* ctx, const AttributeSet& attr) -> View* {
         return new View(ctx, &attr);
     });
     return true;

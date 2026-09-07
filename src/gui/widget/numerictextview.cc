@@ -2,7 +2,7 @@
 #include <widget/numerictextview.h>
 namespace cdroid{
 
-DECLARE_WIDGET(NumericTextView);
+DECLARE_WIDGET2(NumericTextView, "NumericTextView");
 NumericTextView::NumericTextView(Context*ctx)
     :NumericTextView(ctx,nullptr){}
 

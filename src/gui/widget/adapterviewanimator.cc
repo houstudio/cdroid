@@ -23,7 +23,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(AdapterViewAnimator)
+DECLARE_WIDGET2(AdapterViewAnimator, "android.widget.AdapterViewAnimator");
 
 AdapterViewAnimator::AdapterViewAnimator(Context*ctx)
     :AdapterViewAnimator(ctx,nullptr){}

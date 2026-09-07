@@ -29,7 +29,7 @@
 #include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
-DECLARE_WIDGET(Grid)
+DECLARE_WIDGET2(Grid, "androidx.constraintlayout.helper.widget.Grid");
 
 namespace cdroid {
 using namespace cdroid::internal;

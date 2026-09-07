@@ -20,7 +20,7 @@
 #include <widget/framework_styleable.h>
 #include <content/typedarray.h>
 namespace cdroid{
-DECLARE_WIDGET(GestureOverlayView)
+DECLARE_WIDGET2(GestureOverlayView, "android.gesture.GestureOverlayView");
 GestureOverlayView::GestureOverlayView(Context* context):GestureOverlayView(context,nullptr){}
 
 GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet* attrs):GestureOverlayView(context,attrs,0){}

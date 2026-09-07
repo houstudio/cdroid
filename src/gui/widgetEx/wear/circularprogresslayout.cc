@@ -25,7 +25,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(CircularProgressLayout)
+DECLARE_WIDGET2(CircularProgressLayout, "androidx.wear.widget.CircularProgressLayout");
 
 CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet* attrs):CircularProgressLayout(context,attrs,0){}
 

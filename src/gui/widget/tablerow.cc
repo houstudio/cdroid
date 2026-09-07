@@ -6,7 +6,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(TableRow)
+DECLARE_WIDGET2(TableRow, "android.widget.TableRow");
 
 TableRow::LayoutParams::LayoutParams()
     :LinearLayout::LayoutParams(MATCH_PARENT, WRAP_CONTENT){

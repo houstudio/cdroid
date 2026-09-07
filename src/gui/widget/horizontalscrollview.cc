@@ -26,7 +26,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(HorizontalScrollView,R::attr::horizontalScrollViewStyle)
+DECLARE_WIDGET2(HorizontalScrollView, "android.widget.HorizontalScrollView");
  
 HorizontalScrollView::HorizontalScrollView(Context*ctx)
     :HorizontalScrollView(ctx,nullptr){}

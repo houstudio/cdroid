@@ -29,7 +29,7 @@
 namespace cdroid {
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(TextInputTimePickerView);
+DECLARE_WIDGET2(TextInputTimePickerView, "android.widget.TextInputTimePickerView");
 TextInputTimePickerView::TextInputTimePickerView(Context*ctx)
     :TextInputTimePickerView(ctx,nullptr){}
 

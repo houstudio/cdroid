@@ -29,7 +29,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(AnalogClock)
+DECLARE_WIDGET2(AnalogClock, "android.widget.AnalogClock");
 
 AnalogClock::AnalogClock(Context*ctx)
     :AnalogClock(ctx,nullptr){}

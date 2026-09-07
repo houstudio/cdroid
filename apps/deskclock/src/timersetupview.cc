@@ -263,6 +263,7 @@ void TimerSetupView::setState(const std::vector<int>& state) {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::TimerSetupView, TimerSetupView, 0);
+typedef cdroid::deskclock::TimerSetupView TimerSetupView;
+DECLARE_WIDGET2(TimerSetupView, "TimerSetupView");
 
 } // namespace cdroid

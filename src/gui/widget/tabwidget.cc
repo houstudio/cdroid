@@ -24,12 +24,12 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(TabWidget,R::attr::tabWidgetStyle)
+DECLARE_WIDGET2(TabWidget, "android.widget.TabWidget");
 
 TabWidget::TabWidget(Context*ctx)
     :TabWidget(ctx,nullptr){}
 
-TabWidget::TabWidget(Context*ctx,const AttributeSet* atts):TabWidget(ctx,atts,0){}
+TabWidget::TabWidget(Context*ctx,const AttributeSet* atts):TabWidget(ctx,atts,R::attr::tabWidgetStyle){}
 
 TabWidget::TabWidget(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
   :LinearLayout(ctx,pAttrs, defStyleAttr){

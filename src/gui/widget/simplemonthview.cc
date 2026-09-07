@@ -35,7 +35,7 @@
 
 namespace cdroid{
 using namespace cdroid::internal;
-DECLARE_WIDGET(SimpleMonthView);
+DECLARE_WIDGET2(SimpleMonthView, "android.widget.SimpleMonthView");
 SimpleMonthView::SimpleMonthView(Context*ctx)
     :SimpleMonthView(ctx,nullptr){}
 

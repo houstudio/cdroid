@@ -24,7 +24,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(FrameLayout)
+DECLARE_WIDGET2(FrameLayout, "android.widget.FrameLayout");
 
 FrameLayout::FrameLayout(Context*ctx)
     :FrameLayout(ctx,nullptr){}

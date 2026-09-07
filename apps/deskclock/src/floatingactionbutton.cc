@@ -59,6 +59,7 @@ void FloatingActionButton::setBackgroundTintColor(int color) {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::FloatingActionButton, FloatingActionButton, 0);
+typedef cdroid::deskclock::FloatingActionButton FloatingActionButton;
+DECLARE_WIDGET2(FloatingActionButton, "FloatingActionButton");
 
 } // namespace cdroid

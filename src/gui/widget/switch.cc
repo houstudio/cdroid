@@ -11,7 +11,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(Switch,R::attr::switchStyle)
+DECLARE_WIDGET2(Switch, "android.widget.Switch");
 
 Switch::Switch(Context*ctx)
     :Switch(ctx,nullptr){}

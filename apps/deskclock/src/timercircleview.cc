@@ -125,6 +125,7 @@ void TimerCircleView::onDraw(Canvas& canvas) {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::TimerCircleView, TimerCircleView, 0);
+typedef cdroid::deskclock::TimerCircleView TimerCircleView;
+DECLARE_WIDGET2(TimerCircleView, "TimerCircleView");
 
 } // namespace cdroid

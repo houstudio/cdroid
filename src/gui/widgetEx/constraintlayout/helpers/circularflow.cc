@@ -29,7 +29,7 @@
 #include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
-DECLARE_WIDGET(CircularFlow)
+DECLARE_WIDGET2(CircularFlow, "androidx.constraintlayout.helper.widget.CircularFlow");
 
 namespace cdroid {
 using namespace cdroid::internal;

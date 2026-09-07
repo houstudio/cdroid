@@ -64,7 +64,7 @@ static constexpr int ID_PASTE      = R::id::paste;
 static constexpr int ID_SHARE      = R::id::shareText;
 static constexpr int ID_REPLACE    = R::id::replaceText;
 
-DECLARE_WIDGET2(TextView,R::attr::textViewStyle)
+DECLARE_WIDGET2(TextView, "android.widget.TextView");
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TextAppearanceAttributes {

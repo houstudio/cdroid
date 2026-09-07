@@ -20,7 +20,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(ImageSwitcher)
+DECLARE_WIDGET2(ImageSwitcher, "android.widget.ImageSwitcher");
 
 ImageSwitcher::ImageSwitcher(Context*ctx)
     :ImageSwitcher(ctx,nullptr){}

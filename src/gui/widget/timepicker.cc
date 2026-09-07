@@ -301,6 +301,6 @@ AutofillValue TimePicker::getAutofillValue() {
     return isEnabled() ? mDelegate->getAutofillValue() : null;
 }
 #endif
-DECLARE_WIDGET2(TimePicker, R::attr::timePickerStyle);
+DECLARE_WIDGET2(TimePicker, "android.widget.TimePicker");
 }/*endof namespace*/
 

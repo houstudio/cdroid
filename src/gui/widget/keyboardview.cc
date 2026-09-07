@@ -21,7 +21,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(KeyboardView)
+DECLARE_WIDGET2(KeyboardView, "android.inputmethodservice.KeyboardView");
 
 KeyboardView::KeyboardView(Context*ctx)
     :KeyboardView(ctx,nullptr){}

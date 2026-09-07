@@ -75,7 +75,7 @@ static CardViewApi21Impl mCardViewApi21Impl;
 static CardViewBaseImpl mCardViewBaseImpl;
 CardViewImpl* CardView::IMPL = &mCardViewBaseImpl;//&mCardViewApi21Impl;
 
-DECLARE_WIDGET(CardView);
+DECLARE_WIDGET2(CardView, "androidx.cardview.widget.CardView");
 
 CardView::CardView(Context*ctx)
     :CardView(ctx,nullptr){}

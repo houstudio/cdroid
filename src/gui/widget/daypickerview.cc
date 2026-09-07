@@ -27,7 +27,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(DayPickerView);
+DECLARE_WIDGET2(DayPickerView, "android.widget.DayPickerView");
 
 DayPickerView::DayPickerView(Context*ctx)
     :DayPickerView(ctx,nullptr){}

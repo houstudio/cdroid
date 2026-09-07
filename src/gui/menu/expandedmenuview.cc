@@ -22,7 +22,7 @@ using namespace cdroid::internal;
 
 namespace cdroid{
 
-DECLARE_WIDGET(ExpandedMenuView)
+DECLARE_WIDGET2(ExpandedMenuView, "androidx.appcompat.view.menu.ExpandedMenuView");
 ExpandedMenuView::ExpandedMenuView(Context* context,const AttributeSet* attrs)
     :ExpandedMenuView(context,attrs,(int)R::attr::listViewStyle){}
 

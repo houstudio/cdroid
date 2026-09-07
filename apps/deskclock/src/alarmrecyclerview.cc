@@ -28,6 +28,7 @@ void AlarmRecyclerView::requestLayout() {
 
 } // namespace deskclock
 
-DECLARE_WIDGET3(cdroid::deskclock::AlarmRecyclerView, AlarmRecyclerView, 0);
+typedef cdroid::deskclock::AlarmRecyclerView AlarmRecyclerView;
+DECLARE_WIDGET2(AlarmRecyclerView, "AlarmRecyclerView");
 
 } // namespace cdroid

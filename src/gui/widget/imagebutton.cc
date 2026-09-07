@@ -22,7 +22,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(ImageButton,R::attr::imageButtonStyle)
+DECLARE_WIDGET2(ImageButton, "android.widget.ImageButton");
 
 ImageButton::ImageButton(Context*ctx)
     :ImageButton(ctx,nullptr){}

@@ -9,7 +9,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(RadioGroup)
+DECLARE_WIDGET2(RadioGroup, "android.widget.RadioGroup");
 
 RadioGroup::RadioGroup(Context*ctx)
     :RadioGroup(ctx,nullptr){}

@@ -24,7 +24,7 @@
 namespace cdroid {
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(LinearLayout)
+DECLARE_WIDGET2(LinearLayout, "android.widget.LinearLayout");
 
 LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :ViewGroup::MarginLayoutParams(c,attrs){

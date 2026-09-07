@@ -21,7 +21,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(Button,R::attr::buttonStyle)
+DECLARE_WIDGET2(Button, "android.widget.Button");
 
 Button::Button(Context*ctx)
     :Button(ctx,nullptr){}

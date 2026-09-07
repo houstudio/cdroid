@@ -26,7 +26,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(CompoundButton)
+DECLARE_WIDGET2(CompoundButton, "android.widget.CompoundButton");
 
 CompoundButton::CompoundButton(Context*ctx)
     :CompoundButton(ctx,nullptr){}
@@ -339,7 +339,7 @@ void CompoundButton::onDraw(Canvas&canvas){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-DECLARE_WIDGET2(CheckBox,R::attr::checkboxStyle)
+DECLARE_WIDGET2(CheckBox, "android.widget.CheckBox");
 CheckBox::CheckBox(Context*ctx):CheckBox(ctx,nullptr){}
 
 CheckBox::CheckBox(Context*ctx,const AttributeSet* attrs)
@@ -356,7 +356,7 @@ std::string CheckBox::getAccessibilityClassName()const{
 //////////////////////////////////////////////////////////////
 //class RadioButton:public CompoundButton
 
-DECLARE_WIDGET2(RadioButton,R::attr::radioButtonStyle)
+DECLARE_WIDGET2(RadioButton, "android.widget.RadioButton");
 RadioButton::RadioButton(Context*ctx):RadioButton(ctx,nullptr){}
 
 RadioButton::RadioButton(Context*ctx,const AttributeSet* attrs)

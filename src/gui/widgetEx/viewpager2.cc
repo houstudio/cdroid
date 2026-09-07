@@ -25,7 +25,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(ViewPager2)
+DECLARE_WIDGET2(ViewPager2, "androidx.viewpager2.widget.ViewPager2");
 
 class PageTransformerAdapter:public ViewPager2::OnPageChangeCallback {
 private:

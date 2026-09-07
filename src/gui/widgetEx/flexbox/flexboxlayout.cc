@@ -23,7 +23,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(FlexboxLayout)
+DECLARE_WIDGET2(FlexboxLayout, "com.google.android.flexbox.FlexboxLayout");
 
 FlexboxLayout::FlexboxLayout(Context*ctx):FlexboxLayout(ctx,nullptr){}
 

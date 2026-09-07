@@ -22,7 +22,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(DrawerLayout)
+DECLARE_WIDGET2(DrawerLayout, "androidx.drawerlayout.widget.DrawerLayout");
 
 void DrawerLayout::initView(){
     mInLayout = false;

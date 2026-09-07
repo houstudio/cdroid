@@ -217,6 +217,6 @@ CollapsingToolbarLayout::LayoutParams* CollapsingToolbarLayout::generateLayoutPa
     return new LayoutParams(mContext, attrs);
 }
 
-DECLARE_WIDGET(CollapsingToolbarLayout)
+DECLARE_WIDGET2(CollapsingToolbarLayout, "com.google.android.material.appbar.CollapsingToolbarLayout");
 
 }

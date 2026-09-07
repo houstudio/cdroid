@@ -59,7 +59,7 @@ void ArcLayout::LayoutParams::setWeight(float weight) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-DECLARE_WIDGET(ArcLayout)
+DECLARE_WIDGET2(ArcLayout, "androidx.wear.widget.ArcLayout");
 
 ArcLayout::ArcLayout(Context* context,const AttributeSet* attrs):ArcLayout(context,attrs,0){}
 

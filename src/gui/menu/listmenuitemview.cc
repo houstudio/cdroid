@@ -25,11 +25,13 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(ListMenuItemView,R::attr::listMenuViewStyle)
-ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* attrs):ListMenuItemView(context,attrs,0){}
+DECLARE_WIDGET2(ListMenuItemView, "androidx.appcompat.view.menu.ListMenuItemView");
+ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* attrs):ListMenuItemView(context,attrs,R::attr::listMenuViewStyle){}
 
 ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
-    :LinearLayout(context, pAttrs, defStyleAttr){
+    // Upstream super(context, attrs): the base LinearLayout gets defStyleAttr 0;
+    // listMenuViewStyle only feeds the MenuView styleable reads below.
+    :LinearLayout(context, pAttrs){
 
     // AOSP: obtainStyledAttributes(attrs, R.styleable.ListMenuItemView, defStyleAttr).
     // The item attrs carry no generated styleable; resolve them by attr id directly.

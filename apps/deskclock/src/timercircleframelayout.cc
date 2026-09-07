@@ -41,7 +41,8 @@ void TimerCircleFrameLayout::onMeasure(int widthMeasureSpec, int heightMeasureSp
             MeasureSpec::makeMeasureSpec(size + paddingTop + paddingBottom, MeasureSpec::EXACTLY));
 }
 
-DECLARE_WIDGET3(cdroid::deskclock::TimerCircleFrameLayout, TimerCircleFrameLayout, 0);
+typedef cdroid::deskclock::TimerCircleFrameLayout TimerCircleFrameLayout;
+DECLARE_WIDGET2(TimerCircleFrameLayout, "TimerCircleFrameLayout");
 
 } // namespace deskclock
 } // namespace cdroid

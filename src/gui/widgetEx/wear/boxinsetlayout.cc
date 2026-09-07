@@ -18,7 +18,7 @@
 #include <widgetEx/wear/boxinsetlayout.h>
 namespace cdroid{
 
-DECLARE_WIDGET(BoxInsetLayout);
+DECLARE_WIDGET2(BoxInsetLayout, "androidx.wear.widget.BoxInsetLayout");
 
 BoxInsetLayout::BoxInsetLayout(Context* context,const AttributeSet* attrs):BoxInsetLayout(context,attrs,0){}
 

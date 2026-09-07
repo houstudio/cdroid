@@ -25,7 +25,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(DatePicker, R::attr::datePickerStyle);
+DECLARE_WIDGET2(DatePicker, "android.widget.DatePicker");
 DatePicker::DatePicker(Context*ctx)
     :DatePicker(ctx,nullptr){}
 

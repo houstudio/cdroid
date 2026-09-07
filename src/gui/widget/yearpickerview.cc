@@ -22,7 +22,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(YearPickerView)
+DECLARE_WIDGET2(YearPickerView, "android.widget.YearPickerView");
 
 class YearAdapter:public ArrayAdapter<int> {
 private:

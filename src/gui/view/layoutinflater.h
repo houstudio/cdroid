@@ -72,10 +72,10 @@ protected:
 public:
     static LayoutInflater*from(Context*context);
     static ViewInflater getInflater(const std::string&);
-    // defStyleAttr is the framework attr resource id (e.g. R::attr::textViewStyle)
-    // the inflater factory passes straight to each widget's AOSP ctor — no string
-    // resolution (DECLARE_WIDGET2/3 take the int directly).
-    static bool registerInflater(const std::string&name,int defStyleAttr,ViewInflater fun);
+    // The factory lambda already carries any defStyleAttr (the DECLARE_WIDGET
+    // macros bake it into the closure that calls the widget's AOSP ctor), so
+    // the registration entry only pairs a tag key with a factory.
+    static bool registerInflater(const std::string&name,ViewInflater fun);
     Context*getContext()const;
     Factory getFactory()const;
     Factory2 getFactory2()const;
@@ -118,33 +118,30 @@ public:
     virtual View* onCreateView(Context* viewContext, View* parent, const std::string& name,const AttributeSet& attrs);
 };
 
-// SFINAE factory: prefer the AOSP pointer ctor when T has one; otherwise fall
-// back to the ref ctor (a few niche widgets — StackView/PlotView — are not yet
-// converted; they need the arsc layer fully ready first).
-namespace detail {
-template<typename T>
-inline View* makeView(Context*ctx,const AttributeSet*attr,int da,std::true_type){
-    return new T(ctx,attr,da);
-}
-template<typename T>
-inline View* makeView(Context*ctx,const AttributeSet*attr,int,std::false_type){
-    return new T(ctx,attr);   // widget family without the 3-arg ctor
-}
-}
-
+// AOSP LayoutInflater instantiates views through ctor(Context, AttributeSet)
+// alone — defStyleAttr/defStyleRes are per-class constants each widget injects
+// by delegating its 2-arg ctor to the styled one (see TextView), never inputs
+// of the inflation path. The registration factory follows that contract.
 template<typename T>
 class InflaterRegister{
 public:
-    InflaterRegister(const std::string&name,int defStyleAttr){
-        LayoutInflater::registerInflater(name,defStyleAttr,[defStyleAttr](Context*ctx,const AttributeSet&attr)->View*{
-            return detail::makeView<T>(ctx,&attr,defStyleAttr,
-                std::is_constructible<T,Context*,const AttributeSet*,int>{});
+    explicit InflaterRegister(const std::string&name){
+        LayoutInflater::registerInflater(name,[](Context*ctx,const AttributeSet&attr)->View*{
+            return new T(ctx,&attr);
         });
     }
 };
 
-#define DECLARE_WIDGET(T) static InflaterRegister<T> widget_inflater_##T(#T,0);
-#define DECLARE_WIDGET2(T,style) static InflaterRegister<T> widget_inflater_##T(#T,style);
-#define DECLARE_WIDGET3(T,name,style) static InflaterRegister<T> widget_inflater_##name(#name,style);
+/* Registration macros. DECLARE_WIDGET(T) keys the bare class name.
+   DECLARE_WIDGET2(T, key) takes the registry key as a string — either the
+   bare name ("TimerItem") or the upstream fully-qualified tag
+   ("android.widget.TextView", "androidx.recyclerview.widget.RecyclerView");
+   library FQCNs also answer to their simple XML shorthand — see
+   registerInflater's alias rule. T must be a simple identifier — bring
+   namespace-qualified names into scope with a using-declaration first.
+   Default styles are per-class ctor constants (each widget's 2-arg ctor
+   delegates them, AOSP shape), never registration inputs. */
+#define DECLARE_WIDGET(T) static InflaterRegister<T> widget_inflater_##T(#T);
+#define DECLARE_WIDGET2(T,key) static InflaterRegister<T> widget_inflater_##T(key);
 }//endof namespace
 #endif

@@ -33,7 +33,7 @@ using namespace cdroid::internal;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-DECLARE_WIDGET2(Spinner,R::attr::spinnerStyle)
+DECLARE_WIDGET2(Spinner, "android.widget.Spinner");
 
 Spinner::SpinnerForwardingListener::SpinnerForwardingListener(View*v,Spinner::DropdownPopup*d)
 :ForwardingListener(v){

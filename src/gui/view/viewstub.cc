@@ -5,7 +5,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(ViewStub)
+DECLARE_WIDGET2(ViewStub, "android.view.ViewStub");
 
 ViewStub::ViewStub(Context*ctx)
     :ViewStub(ctx,nullptr){}

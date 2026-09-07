@@ -27,7 +27,7 @@
 #include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
-DECLARE_WIDGET(Placeholder)
+DECLARE_WIDGET2(Placeholder, "androidx.constraintlayout.widget.Placeholder");
 
 namespace cdroid {
 using namespace cdroid::internal;

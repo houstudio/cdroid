@@ -123,11 +123,11 @@ void AnalogClock::enableSeconds(bool enable) {
 // original tag now reaches this app class without colliding with the
 // framework android.widget.AnalogClock (bare "AnalogClock") registration.
 static const int _cdroid_act_reg_deskclock_AnalogClock =
-    (LayoutInflater::registerInflater("DeskClockAnalogClock", 0,
+    (LayoutInflater::registerInflater("DeskClockAnalogClock",
         [](Context* ctx, const AttributeSet& attr) -> View* {
             return new cdroid::deskclock::AnalogClock(ctx, &attr);
         }),
-     LayoutInflater::registerInflater("com.android.deskclock.AnalogClock", 0,
+     LayoutInflater::registerInflater("com.android.deskclock.AnalogClock",
         [](Context* ctx, const AttributeSet& attr) -> View* {
             return new cdroid::deskclock::AnalogClock(ctx, &attr);
         }), 0);

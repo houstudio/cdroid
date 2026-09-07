@@ -26,7 +26,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(NavigationView)
+DECLARE_WIDGET2(NavigationView, "com.google.android.material.navigation.NavigationView");
 
 NavigationView::NavigationView(Context* context, const AttributeSet* attrs)
     : NavigationView(context, attrs, 0) {}

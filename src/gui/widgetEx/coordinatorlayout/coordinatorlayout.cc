@@ -39,7 +39,7 @@ behaviorRegistry() {
 }
 } // namespace
 
-DECLARE_WIDGET(CoordinatorLayout)
+DECLARE_WIDGET2(CoordinatorLayout, "androidx.coordinatorlayout.widget.CoordinatorLayout");
 
 CoordinatorLayout::CoordinatorLayout(Context*ctx):CoordinatorLayout(ctx,nullptr){}
 

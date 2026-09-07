@@ -26,7 +26,7 @@
 #include <widget/internal_R.h>
 #include <widgetEx/widgetex_styleable.h>
 
-DECLARE_WIDGET(Barrier)
+DECLARE_WIDGET2(Barrier, "androidx.constraintlayout.widget.Barrier");
 
 namespace cdroid {
 using namespace cdroid::internal;

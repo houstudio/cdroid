@@ -32,7 +32,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(TabLayout,R::attr::tabStyle)
+DECLARE_WIDGET2(TabLayout, "com.google.android.material.tabs.TabLayout");
 
 TabLayout::TabLayout(Context*ctx):TabLayout(ctx,nullptr){}
 
@@ -1135,7 +1135,8 @@ int TabLayout::getTabMaxWidth() const{
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-DECLARE_WIDGET3(TabLayout::TabItem,TabItem,0)
+typedef TabLayout::TabItem TabItem;
+DECLARE_WIDGET2(TabItem, "TabItem");
 
 TabLayout::TabItem::TabItem(Context* context,const AttributeSet* attrs):View(context,attrs){
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::TabItem);

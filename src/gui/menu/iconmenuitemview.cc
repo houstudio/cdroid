@@ -21,7 +21,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(IconMenuItemView)
+DECLARE_WIDGET2(IconMenuItemView, "androidx.appcompat.view.menu.IconMenuItemView");
 std::string IconMenuItemView::sPrependShortcutLabel;
 IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet* attrs):IconMenuItemView(context,attrs,0){}
 

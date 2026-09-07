@@ -19,7 +19,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(ViewSwitcher)
+DECLARE_WIDGET2(ViewSwitcher, "android.widget.ViewSwitcher");
 
 ViewSwitcher::ViewSwitcher(Context*ctx)
     :ViewSwitcher(ctx,nullptr){}

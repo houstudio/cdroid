@@ -25,7 +25,7 @@
 #include <view/view.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
-DECLARE_WIDGET(Group)
+DECLARE_WIDGET2(Group, "androidx.constraintlayout.widget.Group");
 
 namespace cdroid {
 

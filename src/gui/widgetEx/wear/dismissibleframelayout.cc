@@ -19,7 +19,7 @@
 #include <widgetEx/wear/backbuttondismisscontroller.h>
 namespace cdroid{
 
-DECLARE_WIDGET(DismissibleFrameLayout);
+DECLARE_WIDGET2(DismissibleFrameLayout, "androidx.wear.widget.DismissibleFrameLayout");
 
 DismissibleFrameLayout::DismissibleFrameLayout(Context* context,const AttributeSet* attrs):DismissibleFrameLayout(context,attrs,0){}
 

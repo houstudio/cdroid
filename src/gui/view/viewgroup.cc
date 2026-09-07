@@ -33,7 +33,7 @@ using namespace Cairo;
 namespace cdroid {
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(ViewGroup)
+DECLARE_WIDGET2(ViewGroup, "android.view.ViewGroup");
 
 class TouchTarget{
 private:

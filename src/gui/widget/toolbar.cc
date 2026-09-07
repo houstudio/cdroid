@@ -26,7 +26,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(Toolbar)
+DECLARE_WIDGET2(Toolbar, "android.widget.Toolbar");
 
 Toolbar::Toolbar(Context*ctx)
     :Toolbar(ctx,nullptr){}

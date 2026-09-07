@@ -5,7 +5,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(CheckedTextView)
+DECLARE_WIDGET2(CheckedTextView, "android.widget.CheckedTextView");
 
 // AOSP CheckedTextView.CHECKED_STATE_SET = { android.R.attr.state_checked }.
 static const std::vector<int> CHECKED_STATE_SET = { R::attr::state_checked };

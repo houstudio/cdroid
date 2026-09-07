@@ -34,7 +34,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET2(NumberPicker,R::attr::numberPickerStyle)
+DECLARE_WIDGET2(NumberPicker, "android.widget.NumberPicker");
 const int DEFAULT_LAYOUT_VERT = R::layout::number_picker;
 const int DEFAULT_LAYOUT_HORZ = R::layout::number_picker; // no horizontal layout exists
 
@@ -54,8 +54,7 @@ public:
         : EditText(context, pAttrs, defStyleAttr) {}
 };
 } // namespace
-static InflaterRegister<NumberPickerCustomEditText>
-    g_numberpicker_customedittext("NumberPicker$CustomEditText", 0);
+DECLARE_WIDGET2(NumberPickerCustomEditText, "NumberPicker$CustomEditText");
 
 namespace {
 // AOSP formatNumberWithLocale: String.format(Locale.getDefault(), "%d", value).

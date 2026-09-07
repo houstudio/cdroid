@@ -126,7 +126,8 @@ void StopwatchCircleView::onDraw(Canvas& canvas) {
 
 } // namespace stopwatch
 
-DECLARE_WIDGET3(cdroid::deskclock::stopwatch::StopwatchCircleView, StopwatchCircleView, 0);
+typedef cdroid::deskclock::stopwatch::StopwatchCircleView StopwatchCircleView;
+DECLARE_WIDGET2(StopwatchCircleView, "StopwatchCircleView");
 
 } // namespace deskclock
 } // namespace cdroid

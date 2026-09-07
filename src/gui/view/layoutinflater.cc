@@ -106,7 +106,7 @@ LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name)
     return nullptr;
 }
 
-bool LayoutInflater::registerInflater(const std::string&name,int defStyleAttr,LayoutInflater::ViewInflater inflater) {
+bool LayoutInflater::registerInflater(const std::string&name,LayoutInflater::ViewInflater inflater) {
     auto& maps = mFlateMapper;
     auto flaterIter = maps.find(name);
 
@@ -116,6 +116,24 @@ bool LayoutInflater::registerInflater(const std::string&name,int defStyleAttr,La
         return false;
     }
     maps.insert({name,inflater});
+    /* Library FQCNs also answer to their simple name (XML shorthand) — the
+       registry analog of PhoneLayoutInflater's prefix list. Only for packages
+       the core itself ports, and only while the simple name is free: insert
+       is a no-op on an existing key, and an occupied simple name is the
+       same-name collision case where the FQCN key above is the exact
+       reference. App-package FQCNs stay single-key on purpose. */
+    static const std::string kLibraryPrefixes[] = {
+        "android.", "androidx.", "com.google.android.material."
+    };
+    const size_t pt = name.rfind('.');
+    if (pt != std::string::npos) {
+        for (const auto& prefix : kLibraryPrefixes) {
+            if (name.compare(0, prefix.size(), prefix) == 0) {
+                maps.insert({name.substr(pt + 1), inflater});
+                break;
+            }
+        }
+    }
     return true;
 }
 

@@ -22,7 +22,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-DECLARE_WIDGET(WearableRecyclerView);
+DECLARE_WIDGET2(WearableRecyclerView, "androidx.wear.widget.WearableRecyclerView");
 
 WearableRecyclerView::WearableRecyclerView(Context*ctx):WearableRecyclerView(ctx,nullptr){}
 

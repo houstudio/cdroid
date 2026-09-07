@@ -25,7 +25,7 @@ namespace cdroid{
 using namespace cdroid::internal;
 #define NO_ALPHA 0xFF
 
-DECLARE_WIDGET2(ToggleButton,R::attr::buttonStyleToggle)
+DECLARE_WIDGET2(ToggleButton, "android.widget.ToggleButton");
 
 ToggleButton::ToggleButton(Context*ctx)
     :ToggleButton(ctx,nullptr){}

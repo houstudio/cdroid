@@ -20,7 +20,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(TextSwitcher)
+DECLARE_WIDGET2(TextSwitcher, "android.widget.TextSwitcher");
 
 TextSwitcher::TextSwitcher(Context*ctx)
     :TextSwitcher(ctx,nullptr){}

@@ -103,8 +103,8 @@ void StopwatchLandscapeLayout::onLayout(bool /*changed*/, int /*left*/, int /*to
 
 } // namespace stopwatch
 
-DECLARE_WIDGET3(cdroid::deskclock::stopwatch::StopwatchLandscapeLayout,
-                StopwatchLandscapeLayout, 0);
+typedef cdroid::deskclock::stopwatch::StopwatchLandscapeLayout StopwatchLandscapeLayout;
+DECLARE_WIDGET2(StopwatchLandscapeLayout, "StopwatchLandscapeLayout");
 
 } // namespace deskclock
 } // namespace cdroid
