@@ -55,11 +55,55 @@ LayoutInflater*LayoutInflater::from(Context*context) {
 }
 
 LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name) {
-    const size_t  pt = name.rfind('.');
-    auto &maps = mFlateMapper;
-    const std::string sname = (pt!=std::string::npos)?name.substr(pt+1):name;
-    auto it = maps.find(sname);
-    return (it!=maps.end())?it->second:nullptr;
+    auto& maps = mFlateMapper;
+    /* AOSP createViewFromTag: a dotted tag names a precise class and is never
+       stripped — an exact registration under any spelling wins first. This is
+       what lets an app register its own class under the upstream FQCN while
+       the framework keeps the bare simple-name key. */
+    auto it = maps.find(name);
+    if (it != maps.end()) return it->second;
+
+    const size_t pt = name.rfind('.');
+    const std::string sname = (pt != std::string::npos) ? name.substr(pt + 1) : name;
+
+    if (pt != std::string::npos) {
+        /* Library packages — the android./androidx./support/material families
+           the core itself ports, plus app aliases riding the same simple name
+           (e.g. androidx.swiperefreshlayout... folding onto an app-registered
+           "SwipeRefreshLayout") — fold onto the simple-name key silently. Any
+           OTHER dotted tag folding onto a simple-name registration leaves a
+           porting fingerprint: upstream such a tag is the app's own subclass,
+           and folding silently drops its overridden behavior. */
+        static const std::string kFoldingPackages[] = {
+            "android.", "androidx.", "com.google.android.material."
+        };
+        bool folding = false;
+        for (const auto& prefix : kFoldingPackages) {
+            if (name.compare(0, prefix.size(), prefix) == 0) { folding = true; break; }
+        }
+        auto it2 = maps.find(sname);
+        if (it2 != maps.end()) {
+            if (!folding) {
+                LOGW("inflater: '%s' has no exact registration; folding onto '%s'"
+                     " (register the FQCN if this is a custom view)",
+                     name.c_str(), sname.c_str());
+            }
+            return it2->second;
+        }
+        return nullptr;
+    }
+
+    /* Bare name the registry does not know: PhoneLayoutInflater's
+       sClassPrefixList — android.widget., android.webkit., android.app., then
+       the base LayoutInflater's android.view. — first registered key wins. */
+    static const char* const kClassPrefixes[] = {
+        "android.widget.", "android.webkit.", "android.app.", "android.view."
+    };
+    for (const char* prefix : kClassPrefixes) {
+        auto it3 = maps.find(prefix + name);
+        if (it3 != maps.end()) return it3->second;
+    }
+    return nullptr;
 }
 
 bool LayoutInflater::registerInflater(const std::string&name,int defStyleAttr,LayoutInflater::ViewInflater inflater) {

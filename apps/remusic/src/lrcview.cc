@@ -162,9 +162,14 @@ bool LrcView::onTouchEvent(MotionEvent& event) {
 
 } // namespace remusic
 
-// XML tag com.wm.remusic.lrc.LrcView — the inflater registry keys on the
-// short class name.
+// XML tag com.wm.remusic.lrc.LrcView — registered under both the short key
+// and the upstream FQCN (getInflater resolves dotted tags exactly first).
 static const int sLrcViewRegistered = (LayoutInflater::registerInflater("LrcView", 0,
+        [](Context* ctx, const AttributeSet& attr) -> View* {
+    return new remusic::LrcView(ctx, &attr);
+}), 0);
+static const int sLrcViewFqcnRegistered = (LayoutInflater::registerInflater(
+        "com.wm.remusic.lrc.LrcView", 0,
         [](Context* ctx, const AttributeSet& attr) -> View* {
     return new remusic::LrcView(ctx, &attr);
 }), 0);

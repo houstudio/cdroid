@@ -111,6 +111,12 @@ static const bool sAlbumPagerRegistered = (LayoutInflater::registerInflater("Alb
         [](Context* ctx, const AttributeSet& attr) -> View* {
     return new AlbumViewPager(ctx, &attr);
 }), true);
+// FQCN twin for the layout's original spelling (exact-first resolution).
+static const bool sAlbumPagerFqcnRegistered = (LayoutInflater::registerInflater(
+        "com.wm.remusic.widget.AlbumViewPager", 0,
+        [](Context* ctx, const AttributeSet& attr) -> View* {
+    return new AlbumViewPager(ctx, &attr);
+}), true);
 
 class PlayingActivity : public FragmentActivity {
 public:

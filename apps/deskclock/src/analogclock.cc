@@ -118,11 +118,16 @@ void AnalogClock::enableSeconds(bool enable) {
 
 } // namespace deskclock
 
-// Registered as "DeskClockAnalogClock": cdroid's LayoutInflater.getInflater
-// truncates dotted tags to the last segment, so the original FQCN tag would
-// collide with the framework android.widget.AnalogClock registration.
+// Registered under the legacy invented key "DeskClockAnalogClock" and under
+// the upstream FQCN: getInflater resolves a dotted tag exactly first, so the
+// original tag now reaches this app class without colliding with the
+// framework android.widget.AnalogClock (bare "AnalogClock") registration.
 static const int _cdroid_act_reg_deskclock_AnalogClock =
     (LayoutInflater::registerInflater("DeskClockAnalogClock", 0,
+        [](Context* ctx, const AttributeSet& attr) -> View* {
+            return new cdroid::deskclock::AnalogClock(ctx, &attr);
+        }),
+     LayoutInflater::registerInflater("com.android.deskclock.AnalogClock", 0,
         [](Context* ctx, const AttributeSet& attr) -> View* {
             return new cdroid::deskclock::AnalogClock(ctx, &attr);
         }), 0);

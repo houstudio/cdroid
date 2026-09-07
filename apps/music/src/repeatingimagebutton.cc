@@ -11,6 +11,13 @@ namespace music {
 // for the last-segment registration note).
 DECLARE_WIDGET3(RepeatingImageButton, RepeatingImageButton, internal::R::attr::imageButtonStyle)
 
+// FQCN twin for the layout's original spelling (exact-first resolution).
+static const int sRepeatingImageButtonFqcn = (LayoutInflater::registerInflater(
+        "com.android.music.RepeatingImageButton", 0,
+        [](Context* ctx, const AttributeSet& attr) -> View* {
+    return new RepeatingImageButton(ctx, &attr);
+}), 0);
+
 RepeatingImageButton::RepeatingImageButton(Context* ctx)
     : RepeatingImageButton(ctx, nullptr) {
 }

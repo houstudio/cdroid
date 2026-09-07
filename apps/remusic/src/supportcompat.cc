@@ -48,6 +48,23 @@ const bool sRegistered = [] {
     LayoutInflater::registerInflater("SideBar", 0, [](Context* ctx, const AttributeSet& attr) -> View* {
         return new View(ctx, &attr);
     });
+
+    // FQCN twins: getInflater resolves a dotted tag EXACTLY first (AOSP
+    // createViewFromTag never strips a dotted name), so the original library
+    // spellings in the layouts hit these without the folding fingerprint.
+    // Spellings mirror the layouts verbatim.
+    alias<Toolbar>("com.bilibili.magicasakura.widgets.TintToolbar");
+    alias<ImageView>("com.bilibili.magicasakura.widgets.TintImageView");
+    alias<ProgressBar>("com.bilibili.magicasakura.widgets.TintProgressBar");
+    alias<ImageView>("com.facebook.drawee.view.SimpleDraweeView");
+    alias<FrameLayout>("android.support.v4.widget.SwipeRefreshLayout");
+    alias<ViewPager>("com.wm.remusic.widget.CustomViewPager");
+    LayoutInflater::registerInflater("com.wm.remusic.widget.PlayerSeekBar", 0, [](Context* ctx, const AttributeSet& attr) -> View* {
+        return new SeekBar(ctx, &attr);
+    });
+    LayoutInflater::registerInflater("com.wm.remusic.widget.SideBar", 0, [](Context* ctx, const AttributeSet& attr) -> View* {
+        return new View(ctx, &attr);
+    });
     return true;
 }();
 
