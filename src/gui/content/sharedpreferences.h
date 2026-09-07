@@ -24,6 +24,8 @@
 #include <memory>
 #include <functional>
 
+#include <core/callbackbase.h>
+
 namespace cdroid {
 
 /**
@@ -36,10 +38,13 @@ class SharedPreferences {
 public:
     /**
      * Interface definition for a callback to be invoked when a shared
-     * preference is changed.
+     * preference is changed. CallbackBase (not a bare std::function): its
+     * shared-functor identity IS the WeakHashMap object identity AOSP's
+     * register/unregister set semantics need — and std::function::target()
+     * with a function type is ill-formed, which GCC 7.5/libstdc++ 9 reject.
      */
     using OnSharedPreferenceChangeListener =
-            std::function<void(SharedPreferences& sharedPreferences, const std::string& key)>;
+            CallbackBase<void, SharedPreferences&, const std::string&>;
 
     /**
      * Interface used for modifying values in a {@link SharedPreferences}

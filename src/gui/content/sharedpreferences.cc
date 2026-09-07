@@ -827,13 +827,16 @@ private:
         if (mcr->keysCleared) {
             // AOSP (R+, CALLBACK_ON_CLEAR_CHANGE) notifies a null key on
             // clear; the listener face here has no null, "" plays it.
-            for (const auto& l : mcr->listeners) {
+            // (By value: CallbackBase::operator() is not const-qualified, so a
+            // const snapshot element cannot be invoked in place; the copy
+            // shares the functor.)
+            for (auto l : mcr->listeners) {
                 if (l) l(mParent, "");
             }
         }
         for (size_t i = mcr->keysModified.size(); i-- > 0; ) {
             const std::string& key = mcr->keysModified[i];
-            for (const auto& l : mcr->listeners) {
+            for (auto l : mcr->listeners) {
                 if (l) l(mParent, key);
             }
         }
@@ -995,11 +998,9 @@ void SharedPreferencesImpl::registerOnSharedPreferenceChangeListener(
         const OnSharedPreferenceChangeListener& listener) {
     std::lock_guard<std::mutex> lk(mP->mLock);
     // AOSP uses a WeakHashMap (set semantics): re-registering an identical
-    // listener keeps one entry.
+    // listener keeps one entry (CallbackBase shared-functor identity).
     for (const auto& l : mP->mListeners) {
-        if (l && listener
-                && l.template target<void(SharedPreferences&, const std::string&)>() ==
-                   listener.template target<void(SharedPreferences&, const std::string&)>()) {
+        if (l && listener && l == listener) {
             return;
         }
     }
@@ -1010,11 +1011,8 @@ void SharedPreferencesImpl::unregisterOnSharedPreferenceChangeListener(
         const OnSharedPreferenceChangeListener& listener) {
     std::lock_guard<std::mutex> lk(mP->mLock);
     for (auto it = mP->mListeners.begin(); it != mP->mListeners.end(); ++it) {
-        // std::function target identity: erase the first callable registered
-        // with the same target address (the WeakHashMap#remove role).
-        if (*it && listener
-                && it->template target<void(SharedPreferences&, const std::string&)>() ==
-                   listener.template target<void(SharedPreferences&, const std::string&)>()) {
+        // CallbackBase shared-functor identity (the WeakHashMap#remove role).
+        if (*it && listener && *it == listener) {
             mP->mListeners.erase(it);
             return;
         }
