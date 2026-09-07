@@ -53,5 +53,29 @@ int main(int argc, const char* argv[]) {
           .setAction(cdroid::Intent::ACTION_MAIN);
     app.startActivity(intent);
 
+    // BOOT_COMPLETED stand-in (upstream: TimerReceiver/AlarmNotifications pick
+    // this up as a broadcast after the process starts). CDROID has no system
+    // AlarmManager, so the expiry schedule dies with the process — without this
+    // reconciliation a timer that came due while the process was down would sit
+    // RUNNING with a negative remaining time and no expiry posted, counting
+    // negative forever. updateTimersAfterReboot re-bases the timers and re-arms
+    // the next expiry (past-due ones fire immediately; far-past-due ones miss()).
+    static cdroid::Handler sBootHandler(cdroid::Looper::getMainLooper());
+    sBootHandler.postDelayed([]() {
+        auto& dm = cdroid::deskclock::data::DataModel::getDataModel();
+        dm.updateAfterReboot();
+        // Timers that expired in a previous session (or just now via the re-armed
+        // schedule) surface through the takeover activity — the in-process
+        // stand-in for upstream's persistent heads-up notification, which keeps
+        // reappearing until the expired timers are handled.
+        if (!dm.getExpiredTimers().empty()) {
+            cdroid::Intent takeover;
+            takeover.setClassName("cdroid.deskclock", "ExpiredTimersActivity")
+                    .setAction(cdroid::Intent::ACTION_MAIN)
+                    .setFlags(cdroid::Intent::FLAG_ACTIVITY_NEW_TASK);
+            cdroid::App::getInstance().startActivity(takeover);
+        }
+    }, 2000);  // let the launcher window come up underneath first
+
     return app.exec();
 }

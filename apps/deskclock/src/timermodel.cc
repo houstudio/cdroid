@@ -5,10 +5,12 @@
 
 #include <content/sharedpreferences.h>
 #include <core/context.h>
+#include <core/intent.h>
 #include <core/systemclock.h>
 
 #include <settingsdao.h>
 #include <timerdao.h>
+#include <timerklaxon.h>
 #include <utils.h>
 
 using namespace ::deskclock;
@@ -447,13 +449,24 @@ void TimerModel::updateRinger(const Timer* before, const Timer* after) {
 
     // If the timer is the first to expire, start ringing.
     if (afterExpired && mRingingIds.insert(after->id).second && mRingingIds.size() == 1) {
-        // AlarmAlertWakeLock.acquireScreenCpuWakeLock + TimerKlaxon.start:
-        // no wake locks or audio backend on cdroid; the expiry UI drives instead.
+        // AlarmAlertWakeLock.acquireScreenCpuWakeLock: no wake locks on cdroid.
+        timer::TimerKlaxon::start(mContext);
+        // Upstream the heads-up notification (updateHeadsUpNotification) carries
+        // a fullScreenIntent to ExpiredTimersActivity; with no notification
+        // surface on cdroid, the in-process equivalent launches the takeover
+        // directly — the expired timers are resolved there, not left to count
+        // negative on the timers page.
+        Intent intent;
+        intent.setClassName("cdroid.deskclock", "ExpiredTimersActivity")
+              .setAction(Intent::ACTION_MAIN)
+              .setFlags(Intent::FLAG_ACTIVITY_NEW_TASK);
+        mContext.startActivity(intent);
     }
 
     // If the expired timer was the last to reset, stop ringing.
     if (beforeExpired && mRingingIds.erase(before->id) > 0 && mRingingIds.empty()) {
-        // TimerKlaxon.stop + AlarmAlertWakeLock.release: stubs.
+        timer::TimerKlaxon::stop(mContext);
+        // AlarmAlertWakeLock.releaseCpuLock: no wake locks on cdroid.
     }
 }
 

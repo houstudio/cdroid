@@ -61,7 +61,9 @@ set(DESKCLOCK_SRCS
     src/timerstringformatter.cc
     src/timeritem.cc
     src/timersetupview.cc
+    src/timerklaxon.cc
     src/timeritemfragment.cc
+    src/expiredtimersactivity.cc
     src/timerpageradapter.cc
     src/timerfragment.cc
     src/labeldialogfragment.cc
