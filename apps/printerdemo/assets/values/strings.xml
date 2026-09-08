@@ -89,7 +89,6 @@
     <string name="duplex_short">Short-edge</string>
     <string name="quality_high">High</string>
     <string name="quality_photo">Photo</string>
-    <string name="scan_change">Change ›</string>
     <string name="scan_mode_summary">Color · 300 dpi · PDF</string>
     <string name="scan_source">Flatbed / ADF</string>
     <string name="scan_summary_label">Scan settings</string>

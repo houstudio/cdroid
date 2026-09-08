@@ -85,7 +85,6 @@
     <string name="duplex_short">短边装订</string>
     <string name="quality_high">高</string>
     <string name="quality_photo">照片</string>
-    <string name="scan_change">更改 ›</string>
     <string name="scan_mode_summary">彩色 · 300 dpi · PDF</string>
     <string name="scan_source">稿台 / ADF</string>
     <string name="scan_summary_label">扫描设置</string>

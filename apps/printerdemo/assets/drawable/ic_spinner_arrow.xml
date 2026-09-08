@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="12dp" android:height="8dp"
+    android:viewportWidth="12" android:viewportHeight="8">
+    <!-- material arrow_drop_down, tight viewport: no baked-in side insets -->
+    <path android:fillColor="#FF5F6B7A" android:pathData="M2,1 L10,1 L6,7 Z"/>
+</vector>

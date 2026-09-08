@@ -7,12 +7,18 @@
 #include <fragment/fragment.h>
 #include <fragment/fragmentfactory.h>
 #include <transition/slide.h>
+#include <widget/adapter.h>
+#include <widget/spinner.h>
 #include <widget/textview.h>
 #include <widget/button.h>
 #include <widget/toast.h>
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include "printer_common.h"
 #include "R.h"
+
+// DPI choices offered by the scan-settings Spinner (position order).
+static const char* kScanDpiChoices[] = {"150 dpi", "300 dpi", "600 dpi", "1200 dpi"};
+static const int kScanDpiDefault = 1;   // 300 dpi — matches scan_mode_summary
 
 // ---------------------------------------------------------------------------
 class ScanFragment : public cdroid::Fragment{
@@ -27,6 +33,9 @@ class ScanFragment : public cdroid::Fragment{
     // the dead fragment. The flag is refcounted with its captured copies and flipped in
     // onDestroyView, so a stale callback no-ops without touching `this`.
     std::shared_ptr<bool> mAliveFlag;
+    // DPI Spinner adapter — app-owned (the AdapterView keeps a raw pointer),
+    // freed in onDestroy once the view tree (and its popup ListView) is gone.
+    cdroid::ArrayAdapter<std::string>* mDpiAdapter = nullptr;
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override{
         cdroid::Fragment::onCreate(savedInstanceState);
@@ -39,6 +48,27 @@ public:
     }
     void onViewCreated(cdroid::View* view, cdroid::Bundle*) override{
         cdroid::Fragment::onViewCreated(view, nullptr);
+        // DPI Spinner: dropdown of scan resolutions; the selection re-renders the
+        // summary line ("彩色 · 300 dpi · PDF").
+        cdroid::Spinner* dpi = (cdroid::Spinner*)view->findViewById(printerdemo::R::id::spinner_dpi);
+        cdroid::TextView* summary = (cdroid::TextView*)view->findViewById(printerdemo::R::id::scan_summary);
+        if(dpi && summary){
+            delete mDpiAdapter;   // view re-created: the previous adapter's tree is gone
+            mDpiAdapter = new cdroid::ArrayAdapter<std::string>(
+                    getContext(), printerdemo::R::layout::spinner_item,
+                    printerdemo::R::id::spinner_item_text);
+            // closed row carries the drop-down arrow; popup rows stay plain
+            mDpiAdapter->setDropDownViewResource(printerdemo::R::layout::spinner_item_dropdown);
+            for(const char* c : kScanDpiChoices) mDpiAdapter->add(c);
+            dpi->setAdapter(mDpiAdapter);
+            dpi->setSelection(kScanDpiDefault);
+
+            cdroid::AdapterView::OnItemSelectedListener dpiListener;
+            dpiListener.onItemSelected = [summary](cdroid::AdapterView&, cdroid::View&, int position, long){
+                summary->setText(std::string("彩色 · ") + kScanDpiChoices[position] + " · PDF");
+            };
+            dpi->setOnItemSelectedListener(dpiListener);
+        }
         cdroid::MotionLayout* ml = (cdroid::MotionLayout*)view->findViewById(printerdemo::R::id::scan_preview);
         cdroid::TextView* status = (cdroid::TextView*)view->findViewById(printerdemo::R::id::scan_status);
         cdroid::Button* btn = (cdroid::Button*)view->findViewById(printerdemo::R::id::btn_scan);
@@ -81,6 +111,12 @@ public:
         mScanning = false;   // halt the sweep so any pending callback bails before touching ml
         if(mAliveFlag) *mAliveFlag = false;   // ... and that bail itself must not read the dead fragment
         cdroid::Fragment::onDestroyView();
+    }
+    void onDestroy() override{
+        // After the view tree (Spinner + its popup ListView) is destroyed.
+        delete mDpiAdapter;
+        mDpiAdapter = nullptr;
+        cdroid::Fragment::onDestroy();
     }
 };
 REGISTER_FRAGMENT(ScanFragment);

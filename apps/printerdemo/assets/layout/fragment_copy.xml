@@ -30,14 +30,12 @@
                     </FrameLayout>
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/copy_copies" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
-                    <Button android:id="@+id/btn_minus" android:layout_width="44dp" android:layout_height="44dp"
-                        android:background="@drawable/btn_stepper" android:text="－" android:textSize="18sp"
-                        android:textColor="#FF1A73E8" android:minWidth="44dp" android:minHeight="44dp"/>
-                    <TextView android:id="@+id/tv_copies" android:layout_width="52dp" android:layout_height="wrap_content"
-                        android:gravity="center" android:text="1" android:textSize="22sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
-                    <Button android:id="@+id/btn_plus" android:layout_width="44dp" android:layout_height="44dp"
-                        android:background="@drawable/btn_stepper" android:text="＋" android:textSize="18sp"
-                        android:textColor="#FF1A73E8" android:minWidth="44dp" android:minHeight="44dp"/>
+                    <!-- Copies: horizontal Material wheel (virtual +/- tap zones,
+                         drag/fling to scroll, tap the value to type). -->
+                    <NumberPicker android:id="@+id/np_copies"
+                        android:layout_width="170dp"
+                        android:layout_height="48dp"
+                        android:orientation="horizontal"/>
                 </LinearLayout>
 
                 <!-- Color mode -->

@@ -15,6 +15,9 @@
         <item name="android:colorPrimary">#ff1a73e8</item>
         <item name="android:colorAccent">#ff1a73e8</item>
         <item name="android:colorBackground">#fff5f7fa</item>
+        <!-- selectableItemBackground ripples (NumberPicker virtual buttons,
+             cards) read this; leaving it unresolved renders presses invisible. -->
+        <item name="android:colorControlHighlight">#1f000000</item>
         <!-- Text state colors go through ColorStateList selectors
              (res/color/app_text_*.xml), like AOSP's primary_text_material_*. -->
         <item name="android:textColorPrimary">@color/app_text_primary</item>
@@ -35,6 +38,7 @@
         <item name="android:colorPrimary">#ff173b66</item>
         <item name="android:colorAccent">#ff5b9bff</item>
         <item name="android:colorBackground">#ff15171b</item>
+        <item name="android:colorControlHighlight">#33ffffff</item>
         <item name="android:textColorPrimary">@color/app_text_primary_dark</item>
         <item name="android:textColorSecondary">@color/app_text_secondary_dark</item>
         <item name="cardBackground">@drawable/card_bg_dark</item>

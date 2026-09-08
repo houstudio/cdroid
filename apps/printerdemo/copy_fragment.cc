@@ -9,6 +9,7 @@
 #include <transition/slide.h>
 #include <widget/textview.h>
 #include <widget/button.h>
+#include <widget/numberpicker.h>
 #include <widget/seekbar.h>
 #include <widget/linearlayout.h>
 #include <widget/radiogroup.h>
@@ -41,15 +42,17 @@ public:
         cdroid::Fragment::onViewCreated(view, nullptr);
         mAliveFlag = std::make_shared<bool>(true);
 
-        cdroid::TextView* tvCopies = (cdroid::TextView*)view->findViewById(printerdemo::R::id::tv_copies);
-        cdroid::Button* minus = (cdroid::Button*)view->findViewById(printerdemo::R::id::btn_minus);
-        cdroid::Button* plus   = (cdroid::Button*)view->findViewById(printerdemo::R::id::btn_plus);
-        if(minus && tvCopies) minus->setOnClickListener([this, tvCopies](cdroid::View&){
-            if(mCopies > 1){ mCopies--; tvCopies->setText(std::to_string(mCopies)); }
-        });
-        if(plus && tvCopies) plus->setOnClickListener([this, tvCopies](cdroid::View&){
-            if(mCopies < 99){ mCopies++; tvCopies->setText(std::to_string(mCopies)); }
-        });
+        // Copies: horizontal NumberPicker (the old −/+ stepper collapsed into one control).
+        cdroid::NumberPicker* npCopies = (cdroid::NumberPicker*)view->findViewById(printerdemo::R::id::np_copies);
+        if(npCopies){
+            npCopies->setMinValue(1);
+            npCopies->setMaxValue(99);
+            npCopies->setValue(mCopies);
+            npCopies->setWrapSelectorWheel(false);
+            npCopies->setOnValueChangedListener([this](cdroid::NumberPicker&, int, int newVal){
+                mCopies = newVal;
+            });
+        }
 
         cdroid::SeekBar* seek = (cdroid::SeekBar*)view->findViewById(printerdemo::R::id::seek_zoom);
         cdroid::TextView* tvZoom = (cdroid::TextView*)view->findViewById(printerdemo::R::id::tv_zoom);
