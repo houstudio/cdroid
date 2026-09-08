@@ -194,7 +194,20 @@ Drawable* PopupWindow::getBackground() {
 static const std::vector<int> ABOVE_ANCHOR_STATE_SET = { R::attr::state_above_anchor };
 
 void PopupWindow::setBackgroundDrawable(Drawable* background) {
-    mBackground = background;
+    if (mBackground != background) {
+        // The old background is owned (ctor-inflated theme default, or a
+        // previous set) — delete it on replace. AOSP leans on GC here; in C++
+        // the Spinner sequence (PopupWindow ctor reads the THEME default
+        // popupBackground, then Spinner applies android:popupBackground from
+        // its styleable) leaks the first drawable without this. The above/
+        // below anchor drawables borrow from the old container's children —
+        // drop them before it goes (the extraction below re-derives them
+        // from the new background, or leaves null for a non-state-list one).
+        mAboveAnchorBackgroundDrawable = nullptr;
+        mBelowAnchorBackgroundDrawable = nullptr;
+        delete mBackground;
+        mBackground = background;
+    }
 
     if (dynamic_cast<StateListDrawable*>(mBackground)) {
         StateListDrawable* stateList = (StateListDrawable*) mBackground;

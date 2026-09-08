@@ -696,6 +696,12 @@ int ListPopupWindow::buildDropDown() {
         mDropDownList = createDropDownListView(context, !mModal);
         if (mDropDownListHighlight != nullptr) {
             mDropDownList->setSelector(mDropDownListHighlight);
+            // Ownership transfers with the install: AbsListView owns (and
+            // deletes) mSelector. Keeping the member set made the list AND
+            // ~ListPopupWindow both delete it — a double free that only
+            // survived on allocator luck (a recycled chunk handed to a live
+            // view's drawable turns it into a guaranteed UAF).
+            mDropDownListHighlight = nullptr;
         }
         mDropDownList->setAdapter(mAdapter);
         mDropDownList->setOnItemClickListener(mItemClickListener);
