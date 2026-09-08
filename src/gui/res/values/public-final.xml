@@ -4109,4 +4109,12 @@
        input EditText (R::id::numberpicker_input); private ids can't be
        referenced from app res, so expose it. -->
   <public type="id" name="numberpicker_input" id="0x01020442" />
+
+  <!-- Same rationale for the button ids: android:internalLayout is the single
+     NumberPicker layout switch, so an app building a button-mode layout of its
+     own (e.g. a horizontal -/+ stepper) references
+     @android:id/increment / @android:id/decrement. Documents already-assigned
+     ids, nothing renumbered. -->
+  <public type="id" name="increment" id="0x010203a0" />
+  <public type="id" name="decrement" id="0x010202f1" />
 </resources>

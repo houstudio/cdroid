@@ -35,8 +35,6 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 DECLARE_WIDGET2(NumberPicker, "android.widget.NumberPicker");
-const int DEFAULT_LAYOUT_VERT = R::layout::number_picker;
-const int DEFAULT_LAYOUT_HORZ = R::layout::number_picker; // no horizontal layout exists
 
 // AOSP's NumberPicker$CustomEditText (a static inner EditText subclass; AOSP also
 // overrides onEditorAction to clearFocus() on IME_ACTION_DONE, which CDROID's
@@ -140,15 +138,31 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* attrs,int defSty
     // getString path broke under binary AXML: the style item is a reference and
     // getString rendered it as the arsc file path ("res/layout/..."), which the
     // string inflate path cannot open.
-    const int defaultLayoutRes = (getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ);
+    // internalLayout is the single layout switch (element attr > theme style >
+    // the vertical-button fallback). number_picker (vertical up/down buttons)
+    // is the only non-wheel framework layout; anything else — the
+    // Material/selector-wheel twins or an app's custom layout (e.g. an app
+    // horizontal -/+ stepper built on @android:id/increment/decrement) —
+    // means the wheel renders on this view's canvas.
     int layoutRes = (int)ta->getResourceId(R::styleable::NumberPicker_internalLayout, 0);
-    if (layoutRes == 0) layoutRes = defaultLayoutRes;
+    if (layoutRes == 0) layoutRes = R::layout::number_picker;
     setWheelItemCount(taCd->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount));
-    mHasSelectorWheel = (defaultLayoutRes!=layoutRes)||(mWheelItemCount!=DEFAULT_WHEEL_ITEM_COUNT);
     LayoutInflater::from(mContext)->inflate(layoutRes,this);
+    // Wheel vs buttons, decided by what the layout actually supplies: a layout
+    // with the increment/decrement button views is a button layout (the
+    // framework number_picker, or an app's custom stepper via
+    // android:internalLayout); a button-less layout (the Material/selector
+    // wheel twins, an app wheel layout) renders the canvas wheel. A
+    // wheelItemCount != default still forces the wheel (dreame-style layouts).
+    mHasSelectorWheel = (findViewById(R::id::increment) == nullptr)
+            || (findViewById(R::id::decrement) == nullptr)
+            || (mWheelItemCount != DEFAULT_WHEEL_ITEM_COUNT);
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     mVirtualButtonPressedDrawable = ta->getDrawable(R::styleable::NumberPicker_virtualButtonPressedDrawable);
+    // AOSP parity: the ripple animates its frames through the callback —
+    // without it the manually-drawn press feedback stays on frame 0 (invisible).
+    if (mVirtualButtonPressedDrawable) mVirtualButtonPressedDrawable->setCallback(this);
     setWillNotDraw(false);
 
     mInputText =(EditText*)findViewById(R::id::numberpicker_input);
@@ -214,7 +228,18 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* attrs,int defSty
     // (the old "textSize2" name read was dead — that attr was never declared anywhere).
     mTextSize2 = taCd->getDimensionPixelSize(R::styleable::NumberPickerCdroid_selectedTextSize, mTextSize);
     setSelectedTextSize(mTextSize2);
-    setTextColor(ta->getColor(R::styleable::NumberPicker_textColor, 0xFFFFFFFF));
+    // AOSP derives the wheel paint's default color from the input's THEMED
+    // text color (NumberPicker ctor: mInputText.getTextColors().getColorForState(
+    // ENABLED_STATE_SET, Color.WHITE)); a hardcoded white painted invisible
+    // neighbor values on light themes. An explicit android:textColor still wins.
+    if (ta && ta->hasValue(R::styleable::NumberPicker_textColor)) {
+        setTextColor(ta->getColor(R::styleable::NumberPicker_textColor, 0xFFFFFFFF));
+    } else {
+        auto colors = mInputText->getTextColors();
+        setTextColor(colors
+                ? colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), 0xFFFFFFFF)
+                : (int)0xFFFFFFFF);
+    }
     setTextColor(mTextColor, taCd->getColor(R::styleable::NumberPickerCdroid_textColor2, mTextColor));
     // selectedTextColor: an explicit XML attr wins. Otherwise derive it from the
     // input text's THEMED colors — and read them BEFORE any setSelectedTextColor
@@ -393,13 +418,16 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
             mIncrementButton->layout( 0, 0, width, btnh);
             mDecrementButton->layout( 0, height - btnh, width, btnh);
         }else{
-            const int btnw = mIncrementButton->getMeasuredWidth();
-            if(!isLayoutRtl()){
-                mIncrementButton->layout( 0, 0, btnw, height);
-                mDecrementButton->layout( width - btnw, 0, btnw, height);
+            // Stepper order: - on the leading edge, + on the trailing one
+            // (number_picker_horz declares its children in the same order).
+            const int incw = mIncrementButton->getMeasuredWidth();
+            const int decw = mDecrementButton->getMeasuredWidth();
+            if(isLayoutRtl()){
+                mIncrementButton->layout( 0, 0, incw, height);
+                mDecrementButton->layout( width - decw, 0, decw, height);
             }else{
-                mDecrementButton->layout( 0, 0, btnw, height);
-                mIncrementButton->layout( width - btnw, 0, btnw, height);
+                mDecrementButton->layout( 0, 0, decw, height);
+                mIncrementButton->layout( width - incw, 0, incw, height);
             }
         }
     }
@@ -645,8 +673,10 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                         int selectorIndexOffset = (eventX / mSelectorElementSize) - mWheelMiddleItemIndex;
                         if (selectorIndexOffset > 0) {
                             changeValueByOne(true);
+                            mPressedStateHelper->buttonTapped(PressedStateHelper::BUTTON_INCREMENT);
                         } else if (selectorIndexOffset < 0) {
                             changeValueByOne(false);
+                            mPressedStateHelper->buttonTapped(PressedStateHelper::BUTTON_DECREMENT);
                         } else {
                             ensureScrollWheelAdjusted();
                         }
@@ -1336,22 +1366,33 @@ void NumberPicker::onDraw(Canvas&canvas){
             canvas.clip();
         }
     }
-    if (showSelectorWheel && mVirtualButtonPressedDrawable && (mScrollState == OnScrollListener::SCROLL_STATE_IDLE)){
+    // Virtual-button press feedback: a flat translucent wash over the pressed
+    // zone (the theme's colorControlHighlight). AOSP hands this to the style's
+    // ripple drawable, but its enabled&&pressed gate never opens for the bare
+    // PRESSED_STATE_SET NumberPicker passes — a long-standing AOSP quirk that
+    // leaves the stock virtual buttons with no visible feedback; and driving a
+    // full ripple lifecycle from this manual draw leaves unpainted ghost frames
+    // on damage-composited surfaces. A single fill is deterministic and
+    // self-clearing (the parent background repaints the zone on release).
+    if (showSelectorWheel && (mScrollState == OnScrollListener::SCROLL_STATE_IDLE)
+            && (mDecrementVirtualButtonPressed || mIncrementVirtualButtonPressed)) {
+        const uint32_t highlightAttrs[1] = {(uint32_t) internal::R::attr::colorControlHighlight};
+        auto ta = getContext()->obtainStyledAttributes(highlightAttrs);
+        const int highlight = ta->getColor(0, 0x1F000000);   // AOSP ripple_material_light
+        canvas.set_color(highlight);
         if (mDecrementVirtualButtonPressed) {
-            mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
-            if(!isHorizontalMode())
-                mVirtualButtonPressedDrawable->setBounds(0, 0, getWidth() , mStartDividerStart);
+            if (isHorizontalMode())
+                canvas.rectangle(0, 0, mStartDividerStart, getHeight());
             else
-                mVirtualButtonPressedDrawable->setBounds(0, 0, mStartDividerStart , getHeight());
-            mVirtualButtonPressedDrawable->draw(canvas);
+                canvas.rectangle(0, 0, getWidth(), mStartDividerStart);
+            canvas.fill();
         }
         if (mIncrementVirtualButtonPressed) {
-            mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
-            if(!isHorizontalMode())
-                mVirtualButtonPressedDrawable->setBounds(0, mEndDividerEnd, getWidth(), getHeight() - mEndDividerEnd);
+            if (isHorizontalMode())
+                canvas.rectangle(mEndDividerEnd, 0, getWidth() - mEndDividerEnd, getHeight());
             else
-                mVirtualButtonPressedDrawable->setBounds(mEndDividerEnd, 0, getWidth() - mEndDividerEnd, getHeight());
-            mVirtualButtonPressedDrawable->draw(canvas);
+                canvas.rectangle(0, mEndDividerEnd, getWidth(), getHeight() - mEndDividerEnd);
+            canvas.fill();
         }
     }
     if( mTextColor != mTextColor2 ){
@@ -1457,7 +1498,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     canvas.restore();
 
     // draw the dividers
-    if (showSelectorWheel && mDividerDrawable) {
+    if (showSelectorWheel && mDividerDrawable && (mDividerThickness>0) ) {
         if (isHorizontalMode())
             drawHorizontalDividers(canvas);
         else
@@ -1470,12 +1511,16 @@ void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
 
     switch (mDividerType) {
     case SIDE_LINES:
-        if (mDividerThickness > 0 && mDividerDistance <= mMaxHeight) {
-            top = (mMaxHeight - mDividerDistance) / 2;
+        // AOSP draws the dividers against the VIEW's height (the selected
+        // slot centered in the picker); the old mMaxHeight math styled the
+        // slot for the style's internalMaxHeight (180dp) and landed entirely
+        // outside a short horizontal picker.
+        if (mDividerThickness > 0 && mDividerDistance <= getHeight()) {
+            top = (getHeight() - mDividerDistance) / 2;
             bottom = top + mDividerDistance;
         } else {
             top = 0;
-            bottom = getBottom();
+            bottom = getHeight();
         }
         // draw the left divider
         mDividerDrawable->setBounds(mStartDividerStart, top, mDividerThickness, bottom-top);
