@@ -28,8 +28,13 @@
 #include <view/choreographer.h>
 #include <image-decoders/imagedecoder.h>
 #include <image-decoders/framesequence.h>
+#include <content/asset.h>
+#include <content/resources.h>
+#include <core/context.h>
 #include <porting/cdgraph.h>
 #include <cstring>
+#include <fcntl.h>
+#include <unistd.h>
 #include <future>
 #include <thread>
 #include <mutex>
@@ -94,12 +99,12 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
     };
 }
 
-AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::string&res)
-   :AnimatedImageDrawable(){
-    auto frmSequence = FrameSequence::create(ctx,res);
+// Shared tail of every source ctor: adopt a created FrameSequence and set up
+// the decode surfaces (the old string-ctor body).
+void AnimatedImageDrawable::setFrameSequence(FrameSequence* frmSequence,const char* source){
     if(frmSequence==nullptr)return;
-    mAnimatedImageState->mFrameSequence = frmSequence;
-    mAnimatedImageState->mOwnsFrameSequence = true;
+    mAnimatedImageState->mFrameSequence.reset(frmSequence);
+    
     mRepeatCount = frmSequence->getDefaultLoopCount();
     if(mRepeatCount<=0)
         mRepeatCount = REPEAT_UNDEFINED;
@@ -111,13 +116,58 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
 #else
     mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight());
 #endif
-    LOGD("%p %s %dx%dx%d frmSequence=%p",this,res.c_str(),frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount(),frmSequence);
+    LOGD("%p %s %dx%dx%d frmSequence=%p",this,source?source:"?",frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount(),frmSequence);
     mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
     mRenderImage = mImage;
     mDecodeImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, frmSequence->getWidth(), frmSequence->getHeight());
     mDecodeInProgress = false;
     mDecodeFuture = std::shared_future<void>();
     std::call_once(sDecodeOnce, []{ sDecodeThread = std::thread(decodeWorker); });
+}
+
+// AOSP setInputStream(InputStream) analog: the drawable itself only consumes a
+// decoded source; loading a resource/file is the caller's (ImageDecoder's) job.
+// getBuffer() is the zero-copy view for stored pak entries; the sequence
+// slurps everything inside create(), so the Asset is closed right here.
+AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Asset* asset)
+   :AnimatedImageDrawable(){
+    if(asset==nullptr)return;
+    const void* data = asset->getBuffer(false);
+    const size_t size = (size_t)asset->getLength();
+    FrameSequence* frmSequence = (data&&size) ? FrameSequence::create(data,size) : nullptr;
+    const std::string source = asset->getAssetSource();   // copy: the Asset dies below
+    asset->close();
+    delete asset;
+    setFrameSequence(frmSequence,source.c_str());
+}
+
+// AOSP ImageDecoder.createSource(Resources, resId) analog.
+AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,int resid)
+   :AnimatedImageDrawable(){
+    if(ctx==nullptr)return;
+    std::unique_ptr<Asset> asset(ctx->getResources().openRawResource(resid));
+    if(asset==nullptr)return;
+    const void* data = asset->getBuffer(false);
+    const size_t size = (size_t)asset->getLength();
+    FrameSequence* frmSequence = (data&&size) ? FrameSequence::create(data,size) : nullptr;
+    const std::string source = asset->getAssetSource();   // copy: the Asset dies below
+    asset->close();
+    setFrameSequence(frmSequence,source.c_str());
+}
+
+// AOSP ImageDecoder.createSource(File) analog: read through an ACCESS_BUFFER
+// Asset (stored files map straight through).
+AnimatedImageDrawable::AnimatedImageDrawable(const std::string& path)
+   :AnimatedImageDrawable(){
+    const int fd = ::open(path.c_str(), O_RDONLY);
+    if(fd<0)return;
+    std::unique_ptr<Asset> asset(Asset::createFromFd(fd,path.c_str(),Asset::ACCESS_BUFFER));
+    if(asset==nullptr)return;
+    const void* data = asset->getBuffer(false);
+    const size_t size = (size_t)asset->getLength();
+    FrameSequence* frmSequence = (data&&size) ? FrameSequence::create(data,size) : nullptr;
+    asset->close();
+    setFrameSequence(frmSequence,path.c_str());
 }
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
@@ -470,13 +520,9 @@ void AnimatedImageDrawable::updateStateFromTypedArray(Resources&r,const Attribut
     auto ta = Drawable::obtainAttributes(r, theme, atts, R::styleable::AnimatedImageDrawable);
     const int srcResId = ta->getResourceId(R::styleable::AnimatedImageDrawable_src, 0);
     if(srcResId != 0){
-        // Resolve the resource ID to the file path, then load.
-        TypedValue tv;
-        std::string srcResid;
-        if (r.getValue(srcResId, &tv, true) && tv.string) {
-            srcResid = TextUtils::utf16_utf8((const uint16_t*)tv.string, tv.stringLen);
-        }
-        if(!srcResid.empty()){
+        // The id path decodes straight from the asset's zero-copy buffer
+        // (the old resolve-to-path + string reopen is gone).
+        if(true){
         Drawable* drawable = nullptr;
         /*const int repeatCount = mState->mRepeatCount;
         // Transfer the state of other to this one. other will be discarded.
@@ -488,10 +534,10 @@ void AnimatedImageDrawable::updateStateFromTypedArray(Resources&r,const Attribut
         if (repeatCount != REPEAT_UNDEFINED) {
             this.setRepeatCount(repeatCount);
         }*/
-        auto frmSequence = FrameSequence::create(r.getContext(),srcResid);
+        auto frmSequence = FrameSequence::create(r.getContext(),srcResId);
         if(frmSequence==nullptr)return;
-        mAnimatedImageState->mFrameSequence = frmSequence;
-        mAnimatedImageState->mOwnsFrameSequence = true;
+        mAnimatedImageState->mFrameSequence.reset(frmSequence);
+        
         mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
         mIntrinsicWidth = frmSequence->getWidth();
         mIntrinsicHeight= frmSequence->getHeight();
@@ -536,14 +582,11 @@ AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImag
     mRepeatCount= state.mRepeatCount;
     mAlpha      = state.mAlpha;  // was missing — copying state lost the alpha
     mChangingConfigurations = state.mChangingConfigurations;
-    // Borrow only: the state that decoded mFrameSequence keeps owning it
-    // (see mOwnsFrameSequence) — a copying dtor deleted it twice before.
+    // Shares the sequence refcount — see the member comment (the GC role).
     mFrameSequence = state.mFrameSequence;
-    mOwnsFrameSequence = false;
 }
 
 AnimatedImageDrawable::AnimatedImageState::~AnimatedImageState(){
-    if (mOwnsFrameSequence) delete mFrameSequence;
 }
 
 AnimatedImageDrawable* AnimatedImageDrawable::AnimatedImageState::newDrawable(){

@@ -1,6 +1,7 @@
 #include <htmlview.h>
 #include <litehtml/url_path.h>
 #include <litehtml/url.h>
+#include <core/iostreams.h>   // AssetInputStream
 #include <chrono>
 #include <ostream>
 #include <fstream>
@@ -96,9 +97,12 @@ Cairo::RefPtr<Cairo::ImageSurface> HtmlView::get_image(const char* url, bool red
         ptr =Cairo::ImageSurface::create_from_stream(fs);
     }else if(uri.scheme().compare("assets")==0){
         const std::string cdroiduri = uri2cdroid(uri.authority()+uri.path());
-        auto istrm = getContext()->getInputStream(cdroiduri);
-        LOGE_IF(istrm==nullptr,"%s is not exist or it is an invalid uri",cdroiduri.c_str());
-	if(istrm) ptr = Cairo::ImageSurface::create_from_stream(*istrm);
+        Asset*asset = getContext()->openAsset(cdroiduri);
+        LOGE_IF(asset==nullptr,"%s is not exist or it is an invalid uri",cdroiduri.c_str());
+        if(asset){
+            AssetInputStream istrm(asset);   // owns and deletes the Asset
+            ptr = Cairo::ImageSurface::create_from_stream(istrm);
+        }
     }
     return ptr;
 }
@@ -212,14 +216,17 @@ void HtmlView::load_text_file(const litehtml::tstring& url, litehtml::tstring& o
         }
     }else if(uri.scheme().compare("assets")==0){
         const std::string cdroiduri = uri2cdroid( uri.authority()+uri.path() );
-	auto istrm = getContext()->getInputStream(cdroiduri);
-	LOGE_IF(istrm==nullptr,"%s is not exist or it is an invalid uri",url);
-	while(istrm && !istrm->eof()){
-            istrm->read(buf,sizeof(buf));
-            size_t len=istrm->gcount();
-            buf[len]=0;
-            out.append(buf);
-	}
+        Asset*asset = getContext()->openAsset(cdroiduri);
+        LOGE_IF(asset==nullptr,"%s is not exist or it is an invalid uri",url);
+        if(asset){
+            AssetInputStream istrm(asset);   // owns and deletes the Asset
+            while(!istrm.eof()){
+                istrm.read(buf,sizeof(buf));
+                size_t len=istrm.gcount();
+                buf[len]=0;
+                out.append(buf);
+            }
+        }
     }
 }
 

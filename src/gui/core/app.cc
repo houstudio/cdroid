@@ -22,11 +22,12 @@
 #include <content/typedvalue.h>   // TypedValue (typed currency of this layer)
 #include <content/androidfw/restable.h> // ResTable engine + Res_value (boundary lookups)
 #include <content/assetmanager.h>   // AssetManager
+#include <content/asset.h>          // Asset (openAsset face: getBuffer/getLength)
 #include <content/resources.h> // cdroid::Resources
 #include <algorithm>
 #include <cdtypes.h>
 #include <cdlog.h>
-#include <ziparchive.h>
+#include <zip.h>
 #include <iostreams.h>
 #include <iostream>
 #include <fstream>
@@ -50,7 +51,6 @@
 #include <porting/cdgraph.h>
 #include <core/app.h>
 #include <content/LocaleList.h>
-#include <private/ziparchive.h>
 #include <widget/framework_styleable.h>
 #include <core/xmlpullparser.h>
 #include <core/build.h>
@@ -364,9 +364,10 @@ void App::onInit(){
     // The buffer backs DataResource's static pointer — filled once, never
     // modified, and detached in ~App before the member frees. Falls back to
     // the ./i18n.dat sidecar when the pak entry is absent.
-    if (auto stream = getInputStream("cdroid:raw/i18n.dat")) {
-        mI18nData.assign(std::istreambuf_iterator<char>(*stream),
-                         std::istreambuf_iterator<char>());
+    if (Asset* asset = openAsset("cdroid:raw/i18n.dat")) {
+        const char* base = (const char*)asset->getBuffer(false);
+        mI18nData.assign(base, base + asset->getLength());
+        delete asset;
         if (!mI18nData.empty()) {
             i18n::DataResource::SetData(mI18nData.data(), mI18nData.size());
             LOGD("i18n.dat from pak: %zu bytes (buffer-based)", mI18nData.size());
@@ -521,12 +522,32 @@ std::string App::getLauncherActivity() const {
     return std::string();
 }
 
+// --- pak entry readers (the former ZIPArchive face) -------------------------
+// Entry opens go through zip_fopen: on paks with duplicate entries (cdroid.pak's
+// doubled color/ set) libzip's name-locate can fail to resolve names that
+// zip_fopen still opens.
+
+static bool slurpZipEntry(struct zip* pak, const char* entry, std::string& data) {
+    zip_file_t* zf = zip_fopen(pak, entry, ZIP_RDONLY);
+    if (zf == nullptr) return false;
+    char buf[65536];
+    zip_int64_t n;
+    while ((n = zip_fread(zf, buf, sizeof(buf))) > 0)
+        data.append(buf, (size_t)n);
+    zip_fclose(zf);
+    return true;
+}
+
 void App::parsePackageManifest(const std::string& pakPath) {
     using namespace cdroid::internal;
-    ZIPArchive pak(pakPath);
-    std::istream* stm = pak.getInputStream("AndroidManifest.xml");
-    if (stm == nullptr) return;   // no manifest (synthesized paks carry none)
-    auto stream = std::unique_ptr<std::istream>(stm);
+    int zerr = 0;
+    struct zip* pak = zip_open(pakPath.c_str(), ZIP_CHECKCONS | ZIP_RDONLY, &zerr);
+    if (pak == nullptr) return;   // not a pak/zip at all
+    std::string data;
+    const bool have = slurpZipEntry(pak, "AndroidManifest.xml", data);
+    zip_close(pak);
+    if (!have) return;   // no manifest (synthesized paks carry none)
+    auto stream = std::make_unique<std::istringstream>(data);
     auto parser = XmlPullParser::detectAndCreate(this, std::move(stream));
 
     // Manifest attribute ids come from the AOSP attrs_manifest.xml
@@ -893,7 +914,7 @@ void App::destroyResourceState(){
     delete mResTable;
 
     for(auto it=mResources.begin(); it!=mResources.end(); it++) {
-        delete it->second;
+        if(it->second) zip_close(it->second);
     }
     mResources.clear();
     LOGD("~App resource state %p!",this);
@@ -994,7 +1015,7 @@ int App::addResource(const std::string&path,const std::string&name) {
     // every app layout inflate returns null.
     LOGD("Loaded %s",name.c_str());
     if (mAssetManager) mAssetManager->addAssetPath(path, nullptr);
-    ZIPArchive*pak = new ZIPArchive(path);
+    struct zip* pak = zip_open(path.c_str(), ZIP_CHECKCONS | ZIP_RDONLY, nullptr);
     std::string package = name;
     if(name.empty()) {
         size_t pos=path.find_last_of('/');
@@ -1008,16 +1029,15 @@ int App::addResource(const std::string&path,const std::string&name) {
 
     int count=0;
     auto sttm = SystemClock::uptimeMillis();
-    // Load resources.arsc if present. Try getInputStream directly rather than
-    // hasEntry: cdroid.pak carries duplicate color/ entries (SDK + own), and
-    // libzip's zip_name_locate (used by hasEntry) fails to resolve some names
-    // in such archives, while zip_fopen (getInputStream) still works. Each pak
-    // is one add() = one owning Header; copyData=true makes ResTable malloc its
-    // own copy, so the local buffer can be freed safely across multiple paks.
-    auto stream = std::unique_ptr<std::istream>(pak->getInputStream("resources.arsc"));
-    if (stream && *stream) {
-        std::string data((std::istreambuf_iterator<char>(*stream)),
-                         std::istreambuf_iterator<char>());
+    // Load resources.arsc if present. Open via zip_fopen rather than
+    // zip_name_locate: cdroid.pak carries duplicate color/ entries (SDK + own),
+    // and libzip's zip_name_locate fails to resolve some names in such
+    // archives, while zip_fopen still works. Each pak is one add() = one owning
+    // Header; copyData=true makes ResTable malloc its own copy, so the local
+    // buffer can be freed safely across multiple paks.
+    std::string data;
+    if (pak) slurpZipEntry(pak, "resources.arsc", data);
+    if (!data.empty()) {
         if (!mResTable) {
             mResTable = new ResTable();
             // Seed the requested config from the device metrics (AOSP

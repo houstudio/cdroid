@@ -23,10 +23,8 @@
 // implemented; the legacy single-shot form is what scripts and CI use.
 #include <cmds/packagedb.h>
 
-#include <private/ziparchive.h>
+#include <zip.h>
 #include <porting/cdlog.h>
-
-using cdroid::ZIPArchive;
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -75,21 +73,31 @@ static bool removeTree(const std::string& path) {
 }
 
 // Streams one zip entry out to a file (the bin/<exe> extraction), then chmods
-// it executable. 0755, like installd does for native bridge binaries.
+// it executable. 0755, like installd does for native bridge binaries. Entry
+// opens go through zip_fopen — libzip's name-locate can miss names in paks
+// with duplicate entries while zip_fopen resolves them.
 static bool extractEntry(const std::string& pakPath, const std::string& entry,
                          const std::string& outPath, mode_t mode) {
-    ZIPArchive pak(pakPath);
-    std::istream* stm = pak.getInputStream(entry);
-    if (!stm) {
-        fprintf(stderr, "Error: %s has no %s entry\n", pakPath.c_str(), entry.c_str());
+    int zerr = 0;
+    struct zip* pak = zip_open(pakPath.c_str(), ZIP_CHECKCONS | ZIP_RDONLY, &zerr);
+    if (pak == nullptr) {
+        fprintf(stderr, "Error: cannot open %s\n", pakPath.c_str());
         return false;
     }
-    std::unique_ptr<std::istream> hold(stm);
+    zip_file_t* zf = zip_fopen(pak, entry.c_str(), ZIP_RDONLY);
+    if (zf == nullptr) {
+        fprintf(stderr, "Error: %s has no %s entry\n", pakPath.c_str(), entry.c_str());
+        zip_close(pak);
+        return false;
+    }
     std::ofstream out(outPath, std::ios::binary | std::ios::trunc);
-    if (!out) return false;
+    if (!out) { zip_fclose(zf); zip_close(pak); return false; }
     char buf[64 * 1024];
-    while (stm->read(buf, sizeof(buf)) || stm->gcount() > 0)
-        out.write(buf, stm->gcount());
+    zip_int64_t n;
+    while ((n = zip_fread(zf, buf, sizeof(buf))) > 0)
+        out.write(buf, (size_t)n);
+    zip_fclose(zf);
+    zip_close(pak);
     out.flush();
     if (!out) return false;
     return ::chmod(outPath.c_str(), mode) == 0;

@@ -18,7 +18,7 @@
 #include <drawable/drawables.h>
 #include <drawable/animationscalelistdrawable.h>
 #include <content/typedvalue.h>
-#include <image-decoders/imagedecoder.h>  // ImageDecoder::createAsDrawable(Resources, id)
+#include <image-decoders/imagedecoder.h>  // ImageDecoder::decodeDrawable(Resources, id)
 #include <text/textutils.h>
 namespace cdroid{
 /**
@@ -52,7 +52,7 @@ Drawable* DrawableInflater::loadDrawableForDensity(Resources& res, const TypedVa
     const std::string path = TextUtils::utf16_utf8(
             reinterpret_cast<const uint16_t*>(value.string), value.stringLen);
     if(path.find(".xml") == std::string::npos)
-        return ImageDecoder::createAsDrawable(res, id);
+        return ImageDecoder::decodeDrawable(res, id);
     int type;
     auto parser = res.getXml(id);
     const AttributeSet& attrs = *parser;

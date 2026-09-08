@@ -18,30 +18,128 @@
 #include "contextimpl.h"
 #include <content/androidfw/restable.h>     // ResTable + pakPathCandidates + Res_value
 #include <content/typedvalue.h>             // TypedValue (tvOf / TYPE_STRING)
-#include <content/asset.h>                  // Asset (openRawResource path)
-#include <private/ziparchive.h>             // ZIPArchive (pak registry streams)
+#include <content/asset.h>                  // Asset / _FileAsset (buffer-backed)
+#include <core/iostreams.h>                 // AssetInputStream
 #include <image-decoders/imagedecoder.h>    // ImageDecoder::loadImage
 #include <text/textutils.h>                 // TextUtils::utf16_utf8
 #include <porting/cdlog.h>                  // LOGD/LOGV_IF
+#include <zip.h>                            // libzip (pak registry handles)
 #include <unistd.h>                         // access() (local-file fallback)
+#include <fcntl.h>                          // ::open (file-backed Asset)
+#include <sys/stat.h>                       // fstat (file-backed Asset)
+#include <cstring>                          // memcpy
 #include <fstream>
 #include <sstream>
 
 namespace cdroid{
 
-// --- pak registry / string-key resource streams (the ContextImpl role) -----
+// --- pak registry / string-key resource access (the ContextImpl role) ------
+// The registry holds libzip handles (zip_t) directly — the former ZIPArchive
+// wrapper retired; the resolution semantics below mirror it exactly.
 
-static bool guessExtension(ZIPArchive*pak,std::string&ioname) {
+// ZIPArchive::hasEntry semantics (zip_name_locate with the UTF-8 flag).
+static bool zipHasEntry(struct zip*pak,const std::string&name) {
+    return zip_name_locate(pak,name.c_str(),ZIP_FL_ENC_UTF_8) >= 0;
+}
+
+static bool guessExtension(struct zip*pak,std::string&ioname) {
     static const char* exts[]={".xml",".9.png",".png",".jpg",".gif",".apng",".webp",nullptr};
     if(ioname.find('.')!=std::string::npos)
         return true;
     for(int i=0;exts[i];i++){
-        if(pak->hasEntry(ioname+exts[i],false)){
+        if(zipHasEntry(pak,ioname+exts[i])){
             ioname += exts[i];
             return true;
         }
     }
     return false;
+}
+
+// ZIPArchive::getInputStream semantics: entry opens go through zip_fopen —
+// on paks with duplicate entries (cdroid.pak's doubled color/ set) zip's
+// name-locate can fail to resolve names zip_fopen still opens.
+static zip_file_t* zipOpenEntry(struct zip*pak,const std::string&name) {
+    return zip_fopen(pak,name.c_str(),ZIP_RDONLY);
+}
+
+// Slurp an open zip entry into a buffer-backed, self-owning Asset. Zip entries
+// pass through libzip decompression, so a full read is unavoidable — the same
+// trade AssetManager::openAssetFromZip makes for deflated entries. The
+// central-directory size lets us read straight into the final buffer (one
+// allocation, Asset::inflateToBuffer shape).
+static Asset* assetFromEntryHandle(zip_file_t*zf, zip_uint64_t size) {
+    char* owned = new char[size];
+    zip_uint64_t got = 0;
+    while(got < size){
+        zip_int64_t n = zip_fread(zf, owned + got, size - got);
+        if(n <= 0) break;
+        got += (zip_uint64_t)n;
+    }
+    zip_fclose(zf);
+    if(got != size){ delete[] owned; return nullptr; }
+    _FileAsset* asset = new _FileAsset();
+    if(asset->openChunk(owned,(size_t)size,/*owned*/true)!=0){
+        delete asset;
+        return nullptr;
+    }
+    return asset;
+}
+
+// Fallback for paks whose central-directory name lookup cannot resolve an
+// entry zip_fopen still opens (duplicate-entry paks): accumulate, then hand
+// over one buffer.
+static Asset* assetFromEntryHandleStreaming(zip_file_t*zf) {
+    std::string data;
+    char buf[65536];
+    zip_int64_t n;
+    while((n=zip_fread(zf,buf,sizeof(buf)))>0)
+        data.append(buf,(size_t)n);
+    zip_fclose(zf);
+    char* owned = new char[data.size()];
+    memcpy(owned,data.data(),data.size());
+    _FileAsset* asset = new _FileAsset();
+    if(asset->openChunk(owned,data.size(),/*owned*/true)!=0){
+        delete asset;
+        return nullptr;
+    }
+    return asset;
+}
+
+static Asset* assetFromOpenEntry(struct zip*pak,const std::string&name,zip_file_t*zf) {
+    zip_stat_t st;
+    zip_stat_init(&st);
+    if(zip_stat(pak,name.c_str(),0,&st)==0 && (st.valid & ZIP_STAT_SIZE))
+        return assetFromEntryHandle(zf,st.size);
+    return assetFromEntryHandleStreaming(zf);
+}
+
+static Asset* assetFromZipEntry(struct zip*pak,const std::string&name) {
+    zip_file_t*zf = zipOpenEntry(pak,name);
+    return zf ? assetFromOpenEntry(pak,name,zf) : nullptr;
+}
+
+// File-backed Asset for on-disk paths (the former ifstream fallback).
+static Asset* assetFromFile(const std::string&path) {
+    int fd = ::open(path.c_str(),O_RDONLY
+#ifdef O_BINARY
+        |O_BINARY
+#endif
+    );
+    if(fd<0) return nullptr;
+    struct stat st;
+    if(fstat(fd,&st)!=0 || !S_ISREG(st.st_mode)){ ::close(fd); return nullptr; }
+    _FileAsset* asset = new _FileAsset();
+    if(asset->openChunk(path.c_str(),fd,0,(size_t)st.st_size)!=0){
+        delete asset;   // fd not yet fdopen-owned on this path
+        ::close(fd);
+        return nullptr;
+    }
+    return asset;
+}
+
+ContextImpl::~ContextImpl() {
+    for(auto&kv:mResources)
+        if(kv.second) zip_close(kv.second);
 }
 
 static TypedValue tvOf(const Res_value& rv) {
@@ -97,47 +195,47 @@ uint32_t ContextImpl::arscGetIdentifier(const std::string& name, const std::stri
     return mResTable->getIdentifier(cleanName, type, "");  // any package
 }
 
-ZIPArchive*ContextImpl::getResource(const std::string&fullResId,std::string*relativeResID,std::string*outPackage)const {
+struct zip*ContextImpl::getResource(const std::string&fullResId,std::string*relativeResID,std::string*outPackage)const {
     std::string package,resname;
     parseResource(fullResId,&resname,&package);
     auto it = mResources.find(package);
-    ZIPArchive* pak = nullptr;
+    struct zip* pak = nullptr;
     if(outPackage) *outPackage = package;
     if(it != mResources.end()) { //convert noextname ->extname.
         pak = it->second;
-        guessExtension(pak,resname);
+        if(pak) guessExtension(pak,resname);
         if(relativeResID) *relativeResID = resname;
     }
     LOGV_IF(pak==nullptr && resname.size(),"resource for [%s] is%s found",fullResId.c_str(),(pak?"":" not"));
     return pak;
 }
 
-ZIPArchive* ContextImpl::findPakForPath(const std::string&package,const std::string&arscPath,
+struct zip* ContextImpl::findPakForPath(const std::string&package,const std::string&arscPath,
                                    std::string*outResname)const{
     std::vector<std::string> cands;
     pakPathCandidates(arscPath, cands);
     for (const auto& c : cands) {
         std::string resname;
-        ZIPArchive* pak = getResource(package.empty() ? c : package + ":" + c, &resname, nullptr);
+        struct zip* pak = getResource(package.empty() ? c : package + ":" + c, &resname, nullptr);
         if (!pak) continue;
         // getResource resolves the PACKAGE only — it never checks the entry
         // exists. Probe-open to verify (zip_name_locate is unreliable on some
-        // paks, so use getInputStream like the real open would).
-        std::istream* probe = pak->getInputStream(resname);
-        if (probe) { delete probe; if (outResname) *outResname = resname; return pak; }
+        // paks, so open via zip_fopen like the real open would).
+        zip_file_t* probe = zipOpenEntry(pak,resname);
+        if (probe) { zip_fclose(probe); if (outResname) *outResname = resname; return pak; }
     }
     return nullptr;
 }
 
-std::unique_ptr<std::istream> ContextImpl::getInputStream(const std::string&fullresid) {
+Asset* ContextImpl::openAsset(const std::string&fullresid) {
     std::string resname,package;
-    ZIPArchive*pak = getResource(fullresid,&resname,&package);
-    std::istream*stream = pak ? pak->getInputStream(resname) : nullptr;
+    struct zip*pak = getResource(fullresid,&resname,&package);
+    Asset*asset = pak ? assetFromZipEntry(pak,resname) : nullptr;
     // Fallback: a "@drawable/..." reference names a resource, not a file —
     // resolve it through the arsc to the qualified PNG path (e.g.
     // drawable-hdpi-v4/foo.9.png), like getDrawable does. Needed for 9-patch
-    // src and other image loads that go through getInputStream.
-    if(!stream && mResTable && fullresid.find("drawable/") != std::string::npos){
+    // src and other image loads that go through openAsset.
+    if(!asset && mResTable && fullresid.find("drawable/") != std::string::npos){
         std::string rawName;
         parseResource(fullresid, &rawName, &package);
         uint32_t id = arscGetIdentifier(rawName, "drawable", package);
@@ -154,8 +252,8 @@ std::unique_ptr<std::istream> ContextImpl::getInputStream(const std::string&full
                         // arsc path ("res/drawable-hdpi-v4/x.png") -> pak entry
                         // ("drawable-hdpi/x.png"): res/ strip + "-vN" strip,
                         // shared with ResourcesImpl::openPakPath.
-                        ZIPArchive* pak2 = findPakForPath(package, path, &resname);
-                        if(pak2) stream = pak2->getInputStream(resname);
+                        struct zip* pak2 = findPakForPath(package, path, &resname);
+                        if(pak2) asset = assetFromZipEntry(pak2,resname);
                     }
                 }
             }
@@ -166,21 +264,21 @@ std::unique_ptr<std::istream> ContextImpl::getInputStream(const std::string&full
     // ("kaidu_ms7:res/drawable-hdpi-v4/x.png") — the open above missed because
     // the pak stores the source dir name. Retry the pakPathCandidates variants
     // against the resolved pak (probes the zip, unlike getResource).
-    if(!stream && pak && !resname.empty()){
+    if(!asset && pak && !resname.empty()){
         std::vector<std::string> cands;
         pakPathCandidates(resname, cands);
         for(const auto& c : cands){
             if(c == resname) continue;
-            std::istream* s2 = pak->getInputStream(c);
-            if(s2){ stream = s2; break; }
+            zip_file_t* s2 = zipOpenEntry(pak,c);
+            if(s2){ asset = assetFromOpenEntry(pak,c,s2); break; }
         }
     }
-    if(stream)return std::unique_ptr<std::istream>(stream);
+    if(asset) return asset;
     if( fullresid.empty() || resname.empty() || (access(fullresid.c_str(),F_OK)<0)){
         LOGD("resoure:\"%s\" not found",fullresid.c_str());
         return nullptr;
     }
-    return std::make_unique<std::ifstream>(fullresid);
+    return assetFromFile(fullresid);
 }
 
 Cairo::RefPtr<Cairo::ImageSurface> ContextImpl::loadImage(std::istream&stream,int width,int height){
@@ -189,8 +287,11 @@ Cairo::RefPtr<Cairo::ImageSurface> ContextImpl::loadImage(std::istream&stream,in
 
 Cairo::RefPtr<Cairo::ImageSurface> ContextImpl::loadImage(const std::string&resname,int width,int height){
     if(!resname.empty()&&resname.compare("null")){
-        std::unique_ptr<std::istream> stm = getInputStream(resname);
-        if(stm) return loadImage(*stm,width,height);
+        Asset*asset = openAsset(resname);
+        if(asset){
+            AssetInputStream stm(asset);   // owns and deletes the Asset
+            return loadImage(stm,width,height);
+        }
     }
     return nullptr;
 }

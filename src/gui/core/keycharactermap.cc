@@ -9,6 +9,7 @@
 #include <fstream>
 #include <chrono>
 #include <mutex>
+#include <core/iostreams.h>   // AssetInputStream
 #include <core/app.h>
 // Enables debug output for the parser.
 #define DEBUG_PARSER 0
@@ -203,8 +204,10 @@ KeyCharacterMap* KeyCharacterMap::getDefault() {
             if (fs.good()) {
                 KeyCharacterMap::load(filename, fs, FORMAT_ANY, map);
             } else {
-                std::shared_ptr<std::istream> in = App::getInstance().getInputStream(filename);
-                if (in) KeyCharacterMap::load(filename, *in, FORMAT_ANY, map);
+                if (Asset* asset = App::getInstance().openAsset(filename)) {
+                    std::shared_ptr<std::istream> in = std::make_shared<AssetInputStream>(asset);
+                    KeyCharacterMap::load(filename, *in, FORMAT_ANY, map);
+                }
             }
             return map;
         };

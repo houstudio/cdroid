@@ -87,7 +87,11 @@ file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
 
 # i18n headers are internal: the java.text face (content/) wraps the engine,
 # so the vendored i18n/*.h must not be copied into the public include tree.
+# image-decoders stays private (codec internals) except imagedecoder.h below —
+# android.graphics.ImageDecoder is public SDK and apps load drawables through
+# ImageDecoder::decodeDrawable.
 SET(exclude_dirs private image-decoders content/i18n)
+set(filtered_files "")
 set(filtered_files "")
 
 foreach(file ${allfiles})
@@ -103,6 +107,9 @@ foreach(file ${allfiles})
         list(APPEND filtered_files ${file})
     endif()
 endforeach()
+# Public-SDK exception: ImageDecoder is the app-facing decode entry
+# (decodeDrawable); the rest of image-decoders stays private.
+list(APPEND filtered_files "image-decoders/imagedecoder.h")
 # Re-run the header copy below whenever any tracked header changes. file(COPY) only runs at
 # configure time; without this, editing a src header leaves the ${CMAKE_BINARY_DIR}/include/gui
 # copy stale (apps include the copy) until you touch CMakeLists / re-run cmake by hand.

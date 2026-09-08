@@ -66,7 +66,6 @@ SET(CORE_SOURCES
     #core/uieventsource.cc
     core/virtualkeymap.cc
     core/windowmanager.cc
-    core/ziparchive.cc
 )
 
 list(APPEND CORE_SOURCES

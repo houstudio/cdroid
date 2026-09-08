@@ -200,10 +200,10 @@ Drawable* ImageView::getDrawableFromUri(const Uri& uri){
         LOGW("Unable to open content: %s",uri.toString().c_str());
     } else {
         /*No (or unknown) scheme: plain file/asset path. AOSP calls
-          Drawable.createFromPath(uri.toString()); ImageDecoder::createAsDrawable
+          Drawable.createFromPath(uri.toString()); ImageDecoder::decodeDrawable
           is its CDROID equivalent (pak name or filesystem path, no density
           scaling, 9-patch/animated aware).*/
-        return ImageDecoder::createAsDrawable(getContext(),uri.toString());
+        return ImageDecoder::decodeDrawable(getContext(),uri.toString());
     }
     return nullptr;
 }

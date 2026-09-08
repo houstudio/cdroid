@@ -23,9 +23,11 @@
 #include <drawable/bitmapdrawable.h>
 #include <drawable/ninepatchdrawable.h>
 #include <drawable/animatedimagedrawable.h>
+#include <image-decoders/framesequence.h>
 #include <image-decoders/imagedecoder.h>
-#include <content/typedvalue.h>  // TypedValue (id-based createAsDrawable path)
-#include <content/asset.h>            // Asset (openRawResource)
+#include <content/typedvalue.h>  // TypedValue (id-based decodeDrawable path)
+#include <content/asset.h>            // Asset (openRawResource / openAsset face)
+#include <core/iostreams.h>           // AssetInputStream
 #include <text/textutils.h>
 #include <core/context.h>
 #include <png.h>
@@ -213,10 +215,9 @@ std::unique_ptr<ImageDecoder>ImageDecoder::getDecoder(std::istream&istm){
 Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int width,int height,
                                                           std::vector<uint8_t>* ninePatchChunk){
     float scale = 1.f;
-    // getDetector reads the magic then seeks back to 0; ZipStreamBuf's seek is
-    // unreliable on compressed pak entries (framework 9-patches are DEFLATED),
-    // so a raw ZipInputStream decodes as "Not a PNG". Slurp into a seekable
-    // istringstream first — same fix createAsDrawable uses.
+    // getDetector reads the magic then seeks back to 0, so the source stream
+    // must seek reliably. Slurp into a seekable istringstream first — same fix
+    // decodeDrawable uses.
     std::string data((std::istreambuf_iterator<char>(istm)), std::istreambuf_iterator<char>());
     std::istringstream seekable(std::move(data));
     std::unique_ptr<ImageDecoder>decoder = getDecoder(seekable);
@@ -240,32 +241,35 @@ Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int
 
 Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std::string&resourceId,int width,int height){
     std::unique_ptr<ImageDecoder>decoder;
-    std::unique_ptr<std::istream>istm = ctx ? ctx->getInputStream(resourceId) : std::make_unique<std::ifstream>(resourceId);
+    std::unique_ptr<std::istream>istm;
+    if(ctx){
+        Asset*asset = ctx->openAsset(resourceId);
+        if(asset) istm = std::unique_ptr<std::istream>(new AssetInputStream(asset));
+    }else istm = std::make_unique<std::ifstream>(resourceId);
     if((istm == nullptr)||(!*istm))
         return nullptr;
     return loadImage(*istm,width,height);
 }
 
-Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
-    std::unique_ptr<std::istream> istm = ctx ? ctx->getInputStream(resourceId) : std::make_unique<std::ifstream>(resourceId);
+Drawable*ImageDecoder::decodeDrawable(Context*ctx,const std::string&resourceId){
+    std::unique_ptr<std::istream> istm;
+    if(ctx){
+        Asset*asset = ctx->openAsset(resourceId);
+        if(asset) istm = std::unique_ptr<std::istream>(new AssetInputStream(asset));
+    }else istm = std::make_unique<std::ifstream>(resourceId);
     if((istm==nullptr)||(!*istm)) return nullptr;
-    // Slurp into a seekable in-memory buffer (see decodeStream note).
-    auto seekable = std::make_unique<std::istringstream>(
-        std::string((std::istreambuf_iterator<char>(*istm)), std::istreambuf_iterator<char>()));
-    return decodeDrawableStream(ctx, std::move(seekable), resourceId);
+    return decodeDrawableStream(ctx, std::move(istm), resourceId);
 }
 
-// Shared decode core for createAsDrawable(string) and createAsDrawable(int).
+// Shared decode core for decodeDrawable(string) and decodeDrawable(int).
 // `path` is the file path (for 9-patch/.gif/.webp/.png checks + AnimatedImage).
 Drawable* ImageDecoder::decodeDrawableStream(Context* ctx,
         std::unique_ptr<std::istream> istm, const std::string& path) {
     if ((istm == nullptr) || (!*istm)) return nullptr;
     // Slurp into a seekable in-memory buffer. getDetector reads the magic then
-    // seeks back to 0 (libpng re-reads the signature), but ZipStreamBuf's seek
-    // is unreliable on compressed (DEFLATED) pak entries — it works on STORED
-    // entries (e.g. app pngs) yet fails on the framework's deflated drawables,
-    // so the decoder read from offset 14 and reported "Not a PNG file". An
-    // istringstream seeks reliably regardless of the source pak's compression.
+    // seeks back to 0 (libpng re-reads the signature), so the decode needs a
+    // reliably seekable stream; an istringstream seeks regardless of the
+    // source stream's seek behavior.
     auto seekable = std::make_unique<std::istringstream>(
         std::string((std::istreambuf_iterator<char>(*istm)), std::istreambuf_iterator<char>()));
     std::unique_ptr<ImageDecoder> decoder = getDecoder(*seekable);
@@ -292,7 +296,10 @@ Drawable* ImageDecoder::decodeDrawableStream(Context* ctx,
 
     if( ((istm!=nullptr)&&(*istm)) && (TextUtils::endWith(path,".gif")||TextUtils::endWith(path,".webp")
             ||TextUtils::endWith(path,".apng")||TextUtils::endWith(path,".png"))){
-	    Drawable* d = new AnimatedImageDrawable(ctx,path);
+        // AOSP ImageDecoder.createSource(File) vs (Resources,resId): a Context
+        // means the path is a pak asset, otherwise it is a plain file.
+        Drawable* d = ctx ? (Drawable*)new AnimatedImageDrawable(ctx->openAsset(path))
+                          : (Drawable*)new AnimatedImageDrawable(path);
         LOGD_IF(d==nullptr,"%s load failed!",path.c_str());
         if(d != nullptr){
             d->getConstantState()->mResource=path;
@@ -302,7 +309,7 @@ Drawable* ImageDecoder::decodeDrawableStream(Context* ctx,
     return nullptr;
 }
 
-Drawable* ImageDecoder::createAsDrawable(Resources& res, int id) {
+Drawable* ImageDecoder::decodeDrawable(Resources& res, int id) {
     // AOSP ImageDecoder.createSource(Resources, resId): resolve the file path
     // (for 9-patch / animated-extension checks) + open the asset by id, all
     // through the Resources face.
@@ -313,9 +320,21 @@ Drawable* ImageDecoder::createAsDrawable(Resources& res, int id) {
     if (asset == nullptr) return nullptr;
     const off64_t sz = asset->getLength();
     if (sz <= 0) return nullptr;
-    std::string buf((size_t)sz, '\0');
-    asset->read(&buf[0], (size_t)sz);
-    Drawable* d = decodeDrawableStream(res.getContext(), std::make_unique<std::istringstream>(std::move(buf)), path);
+    // Animated formats take the zero-copy fast path: one asset open, the
+    // buffer handed straight to AnimatedImageDrawable (no slurp, no reopen).
+    if (FrameSequence::isAnimated(asset->getBuffer(false), (size_t)sz)) {
+        Drawable* d = new AnimatedImageDrawable(asset.release());
+        if (d) {
+            d->getConstantState()->mResource = path;
+            return d;
+        }
+        return nullptr;
+    }
+    // Static formats decode through the same zero-copy view (the Asset outlives
+    // the synchronous decode below) — the old slurp-into-string copy is gone.
+    Drawable* d = decodeDrawableStream(res.getContext(),
+            std::unique_ptr<std::istream>(new MemoryInputStream(
+                    (const char*)asset->getBuffer(false), (size_t)sz)), path);
     // Decode-time density fixup for 9-patches (AOSP BitmapFactory.decodeResourceStream):
     // source density comes from the TypedValue, target from the display metrics.
     if (auto* npd = dynamic_cast<NinePatchDrawable*>(d)) {

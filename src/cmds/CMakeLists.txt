@@ -1,9 +1,9 @@
 # Device-side package-management CLI tools — the AOSP frameworks/base/cmds
 # role: pm (install/uninstall/list, the PackageManagerService face) and am
 # (start/force-stop, the ActivityManagerService face) for adb-installable pak
-# bundles. Both link cdroid ONLY for ZIPArchive + XmlPullParser (bundle
-# manifest / packages.xml parsing); they never instantiate App and pull no
-# graphics stack.
+# bundles. Both link cdroid ONLY for XmlPullParser (bundle manifest /
+# packages.xml parsing — zip access goes through libzip directly); they never
+# instantiate App and pull no graphics stack.
 project(cdroid-cmds CXX)
 
 set(CMAKE_CXX_STANDARD 14)

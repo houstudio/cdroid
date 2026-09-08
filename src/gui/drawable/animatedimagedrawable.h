@@ -26,6 +26,7 @@
 #include <queue>
 #include <atomic>
 namespace cdroid{
+class Asset;
 class FrameSequence;
 class FrameSequenceState;
 /*for drawing animated images (like GIFi/apng/webp)*/
@@ -38,13 +39,13 @@ private:
         int mRepeatCount;
         int mAlpha;
         int mChangingConfigurations;
-        FrameSequence*mFrameSequence;
-        // AOSP's plain inner State has no clone at all; the C++ ConstantState
-        // extension needs shared/borrowed ownership: the state that DECODED the
-        // FrameSequence owns it, copies (mutate()/state copies) only borrow —
-        // the shallow copy used to delete the same pointer twice, so mutate()
-        // freed the decoder out from under the drawable (UAF on next draw).
-        bool mOwnsFrameSequence = false;
+        // Shared with every state copy (mutate()/newDrawable()): AOSP leans on
+        // GC here — any state keeps the decoder alive. A raw pointer + an
+        // "owner" flag can't express that under refcounting: mutate()'s
+        // copy-on-write dropped the LAST owning state and freed the sequence
+        // out from under the borrowing copies (kaidu_ms7 startup crash in
+        // DrawableContainer::addChild's mutate()). The shared_ptr IS the GC.
+        std::shared_ptr<FrameSequence>mFrameSequence;
         AnimatedImageState();
         AnimatedImageState(const AnimatedImageState& state);
         ~AnimatedImageState();
@@ -89,6 +90,21 @@ private:
     void updateStateFromTypedArray(Resources&r,const AttributeSet&atts,const Resources::Theme* theme,int srcDensityOverride);
     void submitDecodeTask(int frameIndex, int prevFrame);
     static void decodeWorker();
+    // Shared tail of the source ctors: adopt a sequence, build the surfaces.
+    void setFrameSequence(FrameSequence* frmSequence, const char* source);
+private:
+    // ImageDecoder's factories (the AOSP decodeDrawable internals): resource
+    // id / decoded-source Asset / plain file. Not for app use.
+    friend class ImageDecoder;
+    /** Zero-copy consume of a decoded source held by an Asset (getBuffer is a
+        view for stored pak entries; compressed entries inflate once). The
+        Asset is closed before returning — the frame-sequence backends slurp
+        the whole stream inside FrameSequence::create(), nothing borrows it. */
+    AnimatedImageDrawable(cdroid::Asset* asset);
+    /** AOSP ImageDecoder.createSource(Resources, resId) analog. */
+    AnimatedImageDrawable(cdroid::Context*, int resid);
+    /** AOSP ImageDecoder.createSource(File) analog. */
+    AnimatedImageDrawable(const std::string& path);
     AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);
 protected:
     void onBoundsChange(const Rect& bounds)override;
@@ -97,8 +113,10 @@ public:
     static constexpr int LOOP_INFINITE = REPEAT_INFINITE;
     static constexpr int REPEAT_UNDEFINED = -2;
 public:
+    // AOSP surface: a public no-arg ctor only. Loading is ImageDecoder's job
+    // ("Created by ImageDecoder#decodeDrawable" — the P-era setInputStream is
+    // long gone); these loading ctors are ImageDecoder's private factories.
     AnimatedImageDrawable();
-    AnimatedImageDrawable(cdroid::Context*,const std::string&res);
     ~AnimatedImageDrawable();
     std::shared_ptr<ConstantState>getConstantState()override;
     int getChangingConfigurations()const override;

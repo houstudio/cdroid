@@ -28,7 +28,7 @@
 #include <drawable/colordrawable.h>   // ColorDrawable (color-drawable path)
 #include <drawable/colorstatelist.h>  // ColorStateList cache + createFromXml
 #include <drawable/drawableinflater.h>  // DrawableInflater::inflateFromXml (xml drawable self-load)
-#include <image-decoders/imagedecoder.h>  // ImageDecoder::createAsDrawable(id) (image self-load)
+#include <image-decoders/imagedecoder.h>  // ImageDecoder::decodeDrawable(id) (image self-load)
 #include <core/context.h>             // inflation bridge (mCtx)
 #include <core/xmlpullparser.h>       // ColorStateList::createFromXml inline inflate
 #include <content/xmlblock.h>          // XmlBlock::Parser (binary-strict getXml sniff)
@@ -685,7 +685,7 @@ cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/, 
         // AOSP loadDrawableForCookie: ResourcesImpl loads the file drawable ITSELF
         // (opens by id, inflates) — not via Context.getDrawable(string). value.string
         // is the file path; .xml → DrawableInflater (id-based parser + inflateFromXml,
-        // which already takes Resources&), else → ImageDecoder::createAsDrawable(id).
+        // which already takes Resources&), else → ImageDecoder::decodeDrawable(id).
         // AOSP ResourcesImpl.loadDrawable delegates TYPE_STRING entirely to
         // DrawableInflater.loadDrawableForDensity: .xml inflates themed (AOSP
         // loadDrawableForCookie inflates null-themed then re-applies

@@ -196,7 +196,7 @@ public:
     Resources::Theme getTheme() override;
     const DisplayMetrics&getDisplayMetrics()const override;
     int getNextAutofillId()override;
-    // loadImage/getInputStream: inherited from Context (impls in context.cc).
+    // loadImage/openAsset: inherited from Context (impls in contextimpl.cc).
     // AOSP ID-based resource face.
     Resources&      getResources() override;
     AssetManager&   getAssets() override;

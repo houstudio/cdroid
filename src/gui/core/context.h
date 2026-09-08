@@ -60,7 +60,11 @@ public:
     virtual void setTheme(int resid) = 0;
     virtual const DisplayMetrics&getDisplayMetrics() const = 0;
     virtual int getNextAutofillId() = 0;
-    virtual std::unique_ptr<std::istream>getInputStream(const std::string&resname) = 0;
+    // String-key raw access (the former getInputStream istream face): resolves
+    // "@[package:]type/name" refs and pak entry paths into a buffer-backed
+    // Asset (file-backed for on-disk paths). Caller owns the returned Asset;
+    // AssetInputStream (core/iostreams.h) is the owning istream wrapper.
+    virtual Asset* openAsset(const std::string&resname) = 0;
 
     virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height) = 0;
     // Int face (binary paks): opens the resource by id via openRawResource —

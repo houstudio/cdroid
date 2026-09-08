@@ -79,8 +79,9 @@ private:
     std::vector<PackageEntry> mEntries;
 };
 
-// Parses a bundle pak's compiled AndroidManifest.xml + bin/ listing using the
-// framework's own ZIPArchive/XmlPullParser (no App instance, no graphics).
+// Parses a bundle pak's compiled AndroidManifest.xml + bin/ listing using
+// libzip directly + the framework's own XmlPullParser (no App instance, no
+// graphics).
 // Returns false with an error line on stderr when the file is not a valid
 // installable bundle (no manifest / no embedded binary).
 bool readPakInfo(const std::string& pakPath, PakInfo& out);

@@ -19,11 +19,10 @@
 // values are plain strings/ints.
 #include <cmds/packagedb.h>
 
-#include <private/ziparchive.h>
+#include <zip.h>
 #include <core/xmlpullparser.h>
 
 using cdroid::XmlPullParser;
-using cdroid::ZIPArchive;
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -33,6 +32,7 @@ using cdroid::ZIPArchive;
 #include <cstring>
 #include <fstream>
 #include <memory>
+#include <sstream>
 #include <sstream>
 
 namespace cmds {
@@ -114,33 +114,52 @@ bool PackageDB::remove(const std::string& pkg) {
 }
 
 bool readPakInfo(const std::string& pakPath, PakInfo& out) {
-    ZIPArchive pak(pakPath.c_str());
+    int zerr = 0;
+    struct zip* pak = zip_open(pakPath.c_str(), ZIP_CHECKCONS | ZIP_RDONLY, &zerr);
+    if (pak == nullptr) {
+        fprintf(stderr, "Error: cannot open %s\n", pakPath.c_str());
+        return false;
+    }
 
     // Sole embedded binary: bin/<name> (the bundle contract).
-    std::vector<std::string> entries;
-    pak.getEntries(entries);
-    for (const auto& e : entries) {
-        if (e.compare(0, 4, "bin/") != 0 || e.size() <= 4) continue;
+    const zip_int64_t count = zip_get_num_entries(pak, ZIP_FL_UNCHANGED);
+    for (zip_int64_t i = 0; i < count; i++) {
+        const char* e = zip_get_name(pak, (zip_uint64_t)i, 0);
+        if (e == nullptr) continue;
+        if (strncmp(e, "bin/", 4) != 0 || e[4] == '\0') continue;
         if (!out.exeName.empty()) {
             fprintf(stderr, "Error: bundle carries more than one bin/ entry "
-                    "(%s and %s)\n", out.exeName.c_str(), e.c_str() + 4);
+                    "(%s and %s)\n", out.exeName.c_str(), e + 4);
+            zip_close(pak);
             return false;
         }
-        out.exeName = e.substr(4);
+        out.exeName = e + 4;
     }
+
+    // Manifest: slurp via zip_fopen (name-locate can miss names in paks with
+    // duplicate entries — same reason App's arsc read uses zip_fopen).
+    std::string manifest;
+    zip_file_t* mzf = zip_fopen(pak, "AndroidManifest.xml", ZIP_RDONLY);
+    if (mzf != nullptr) {
+        char buf[64 * 1024];
+        zip_int64_t n;
+        while ((n = zip_fread(mzf, buf, sizeof(buf))) > 0)
+            manifest.append(buf, (size_t)n);
+        zip_fclose(mzf);
+    }
+    zip_close(pak);
+
     if (out.exeName.empty()) {
         fprintf(stderr, "Error: no bin/ entry in %s — not an installable bundle "
                 "(rebuild with CreatePAK EMBED_EXE)\n", pakPath.c_str());
         return false;
     }
-
-    std::istream* stm = pak.getInputStream("AndroidManifest.xml");
-    if (!stm) {
+    if (mzf == nullptr) {
         fprintf(stderr, "Error: no AndroidManifest.xml in %s\n", pakPath.c_str());
         return false;
     }
     auto parser = XmlPullParser::detectAndCreate(nullptr,
-            std::unique_ptr<std::istream>(stm));
+            std::make_unique<std::istringstream>(manifest));
 
     // Same walk as App::parsePackageManifest, bare-name attribute lookups.
     bool inActivity = false, sawMain = false, sawLauncher = false;
