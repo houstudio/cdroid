@@ -32,6 +32,7 @@ namespace minikin{
 }
 namespace cdroid{
 class Context;
+class FontData;  // core/typeface.cc (blob holder: Asset-backed mmap font bytes)
 class FontFamily{};
 class Typeface{
 public:
@@ -71,6 +72,10 @@ private:
     Cairo::RefPtr<Cairo::FontFace>mFontFace;
     mutable std::shared_ptr<minikin::FontCollection>mFontCollection;
     std::shared_ptr<minikin::MinikinFont> mMinikinFont;
+    // The font bytes backing every FT_Face of this Typeface (file mmap or pak
+    // window). FT memory faces read lazily, so the blob must outlive them —
+    // it is held here and pinned process-lifetime inside FontData.
+    std::shared_ptr<FontData> mFontData;
     static cdroid::Context*mContext;
     static std::string mSystemLang;
     static Typeface* sDefaultTypeface;
@@ -90,9 +95,10 @@ private:
     // If `family` is empty (a fallback <family lang=...>), the real family is read from the
     // font file's family_name so buildSystemFallback/buildFamily can group it correctly.
     Typeface(const std::string& family, int weight, bool italic, const std::string& fileName, int faceIndex);
-    // Memory-backed Typeface (e.g. PAK @font): font bytes live in `fontData`.
+    // Memory-backed Typeface (e.g. PAK @font): font bytes live in the FontData
+    // mapping held by this instance (AOSP Font.createBuffer mmap model).
     Typeface(const std::string& family, int weight, bool italic,
-             std::shared_ptr<std::vector<uint8_t>> fontData, int faceIndex);
+             std::shared_ptr<FontData> fontData, int faceIndex);
     static int loadFromFontsXml(const std::string& fontDir, const std::string& xmlPath);
     ~Typeface()=default;
     static std::shared_ptr<minikin::FontFamily>buildFamily(const std::string&family,const std::vector<std::shared_ptr<Typeface>>&faces);
@@ -130,8 +136,8 @@ public:
     static void loadPreinstalledSystemFontMap();
     void initFace(FT_Face ftFace, const std::string& family);
 private:
-    // Shared tail of the two pak-font factories: read the Asset bytes, build
-    // the memory-backed face, store it in the per-path cache.
+    // Shared tail of the two pak-font factories: adopt the Asset's mapping as
+    // the FontData blob, build the memory-backed face, store it per path.
     static Typeface* finishAssetTypeface(const std::string& path, Asset* asset, const char* tag);
 };
 

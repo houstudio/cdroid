@@ -27,7 +27,6 @@
 #include <iterator>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <sys/mman.h>
 #include <cdlog.h>
 #include <core/app.h>
 #include <content/asset.h>
@@ -40,7 +39,6 @@
 #include <core/context.h>
 #include <ft2build.h>
 #include <freetype/freetype.h>
-#include <freetype/tttables.h>
 #include <hb.h>
 #include <hb-ft.h>
 #include <minikin/GraphemeBreak.h>
@@ -53,45 +51,87 @@
 #include <cstdlib>
 namespace cdroid {
 
+// ---------------------------------------------------------------------------
+// FontData — the AOSP Font.createBuffer analog: the font bytes as a read-only
+// mapping held for the lifetime of every face reading them.
+//   - pak fonts: the opened Asset IS the mapping. STORED entries hand
+//     getBuffer() a view straight into the archive window (the fc.map
+//     success path); a compressed entry keeps its one-time inflated copy
+//     inside the Asset (the stream-read ByteBuffer fallback).
+//   - file fonts (fonts.xml): a whole-file mmap window (AOSP Builder(File)).
+// getBuffer(false) everywhere: FreeType's memory-face reads are byte-wise, so
+// _MappedAsset's 4-byte-aligned heap-copy fallback is never taken.
+// The bytes back FT_New_Memory_Face faces, which read LAZILY during
+// rasterization — the holder must outlive them, hence the process-lifetime
+// pin (the same retention class as sSystemFontFaces itself; it is also what
+// lets colorFaceCache keep raw FT_Faces over the blobs with no copy).
+// ---------------------------------------------------------------------------
+class FontData {
+public:
+    // Whole-file mmap (AOSP Builder(File) fc.map). openWindow maps the fd but
+    // does not take it over; the mapping outlives the closed descriptor.
+    // One FontData per file path (AOSP SkTypeface cache semantics): fonts.xml
+    // lists the same file under several families/weights, and they share the
+    // mapping instead of opening a window each.
+    static std::shared_ptr<FontData> fromFile(const std::string& path) {
+        static std::unordered_map<std::string, std::shared_ptr<FontData>> byPath;
+        auto it = byPath.find(path);
+        if (it != byPath.end()) return it->second;
+        const int fd = ::open(path.c_str(), O_RDONLY);
+        if (fd < 0) return nullptr;
+        struct stat st;
+        if (fstat(fd, &st) != 0 || st.st_size <= 0) {
+            ::close(fd);
+            return nullptr;
+        }
+        std::unique_ptr<Asset> asset(Asset::createFromMappedWindow(
+                fd, path.c_str(), 0, (size_t)st.st_size, Asset::ACCESS_BUFFER));
+        ::close(fd);
+        auto out = fromAsset(std::move(asset));
+        if (out) byPath.emplace(path, out);
+        return out;
+    }
+    // Adopt an opened Asset (pak window / directory provider window /
+    // inflated heap). Takes ownership: the Asset lives as long as the blob.
+    static std::shared_ptr<FontData> fromAsset(std::unique_ptr<Asset> asset) {
+        if (asset == nullptr) return nullptr;
+        const void* data = asset->getBuffer(false);
+        const size_t size = (size_t)asset->getLength();
+        if (data == nullptr || size == 0) return nullptr;
+        auto out = std::shared_ptr<FontData>(new FontData);
+        out->mAsset = std::move(asset);
+        out->mData = data;
+        out->mSize = size;
+        keepAlive().push_back(out);
+        return out;
+    }
+    const void* data() const { return mData; }
+    size_t size() const { return mSize; }
+private:
+    static std::vector<std::shared_ptr<FontData>>& keepAlive() {
+        static std::vector<std::shared_ptr<FontData>> pinned;
+        return pinned;
+    }
+    FontData() = default;
+    std::unique_ptr<Asset> mAsset;   // owns the mmap window / inflated buffer
+    const void* mData = nullptr;
+    size_t mSize = 0;
+};
+
 class FullMinikinFont : public minikin::MinikinFont {
 public:
+    // One variant for every source: the bytes always come from `fontData`
+    // (the Typeface-held FontData — pak window / file mmap / inflated heap);
+    // the shared_ptr keeps the mapping alive for the faces' lazy reads.
+    // `filePath` is informational (registry grouping, GetFontPath); asset
+    // fonts pass it empty, matching the old memory-variant shape.
     FullMinikinFont(const Cairo::RefPtr<Cairo::FtFontFace>& fontFace,
+                    std::shared_ptr<FontData> fontData,
                     const std::string& filePath = {}, int faceIndex = 0)
-        : mFontFace(fontFace), mFilePath(filePath), mFaceIndex(faceIndex) {
+        : mFontFace(fontFace), mFilePath(filePath), mFaceIndex(faceIndex),
+          mFontData(std::move(fontData)) {
         mSourceId = mFontId++;
-        // mmap the font file so GetFontData/GetFontSize expose a lazy, page-backed blob:
-        // only the cmap/gsub/gpos pages harfbuzz touches get paged in, and the kernel can
-        // reclaim them under memory pressure. Avoids copying the whole file into RAM
-        // (important for embedded) — same approach upstream minikin/android uses.
-        if (!mFilePath.empty()) {
-            int fd = open(mFilePath.c_str(), O_RDONLY);
-            if (fd >= 0) {
-                struct stat st;
-                if (fstat(fd, &st) == 0 && st.st_size > 0) {
-                    void* p = mmap(nullptr, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-                    if (p != MAP_FAILED) {
-                        mMappedData = p;
-                        mMappedSize = st.st_size;
-                        mData = mMappedData;
-                        mSize = mMappedSize;
-                    }
-                }
-                close(fd);
-            }
-        }
-    }
-    ~FullMinikinFont() override {
-        if (mMappedData != nullptr) {
-            munmap(mMappedData, mMappedSize);
-        }
-    }
-    // Memory-backed variant (e.g. PAK @font): the font bytes live in `fontData` (kept alive
-    // by the shared_ptr). Same GetFontData/GetFontSize contract as the mmap file variant.
-    FullMinikinFont(const Cairo::RefPtr<Cairo::FtFontFace>& fontFace,
-                    std::shared_ptr<std::vector<uint8_t>> fontData, int faceIndex = 0)
-        : mFontFace(fontFace), mFaceIndex(faceIndex), mFontData(std::move(fontData)) {
-        mSourceId = mFontId++;
-        mData = mFontData ? (const void*)mFontData->data() : nullptr;
+        mData = mFontData ? mFontData->data() : nullptr;
         mSize = mFontData ? mFontData->size() : 0;
     }
     int32_t GetSourceId() const override{
@@ -217,15 +257,13 @@ private:
     Cairo::RefPtr<Cairo::FtFontFace> mFontFace;
     std::string mFilePath;
     int mFaceIndex;
-    void* mMappedData = nullptr;
-    size_t mMappedSize = 0;
-    std::shared_ptr<std::vector<uint8_t>> mFontData;  // memory-backed (PAK) bytes
-    const void* mData = nullptr;  // unified blob ptr: mMappedData or mFontData->data()
+    std::shared_ptr<FontData> mFontData;  // the blob (mData/mSize) owner
+    const void* mData = nullptr;  // mFontData->data()
     size_t mSize = 0;
 };
 int FullMinikinFont::mFontId=0;
 
-static FT_Library ftLibrary = nullptr;  // shared by FT_New_Face paths (file + fonts.xml)
+static FT_Library ftLibrary = nullptr;  // shared by the FT_New_Memory_Face paths (file + pak)
 
 // The shared fallback chain: one FontFamily per unique font file, built once
 // by buildSystemFallback() and reused by every Typeface's lazily-built
@@ -321,9 +359,16 @@ Typeface::Typeface(const std::string& family, int weight, bool italic,
     mWeight = weight;
     mStyle = (weight >= 600 ? BOLD : 0) | (italic ? ITALIC : 0);
     if (ftLibrary == nullptr) FT_Init_FreeType(&ftLibrary);
+    // AOSP Builder(File) fc.map: the whole file maps once (FontData) and the
+    // bytes back the memory face — no FT stdio stream, no heap copy; only the
+    // tables/glyph pages actually read get paged in.
+    mFontData = FontData::fromFile(fileName);
     FT_Face ftFace = nullptr;
     // Font file missing/unreadable: keep the provided family, leave mFontFace null.
-    if (FT_New_Face(ftLibrary, fileName.c_str(), faceIndex, &ftFace) || ftFace == nullptr) {
+    if (!mFontData
+            || FT_New_Memory_Face(ftLibrary, (const FT_Byte*)mFontData->data(),
+                                  (FT_Long)mFontData->size(), faceIndex, &ftFace) || !ftFace) {
+        mFontData.reset();  // don't pin a mapping nothing reads
         mFamily = family;
         return;
     }
@@ -380,14 +425,12 @@ Typeface* Typeface::finishAssetTypeface(const std::string& path, Asset* asset, c
         cache.emplace(path, nullptr);
         return nullptr;
     }
-    const ssize_t size = (ssize_t)asset->getLength();
-    auto fontData = std::make_shared<std::vector<uint8_t>>();
-    if (size > 0) {
-        const uint8_t* buffer = static_cast<const uint8_t*>(asset->getBuffer(true));
-        if (buffer != nullptr) fontData->assign(buffer, buffer + size);
-    }
-    delete asset; // AOSP closes the Asset after reading the bytes
-    if (fontData->empty()) {
+    // AOSP Font.createBuffer: the STORED pak entry maps straight through (the
+    // openFd + fc.map path); only a compressed entry carries the one-time
+    // inflated copy inside the Asset. No bytes are copied here — the Typeface
+    // (process cache) holds the window for the faces' lazy reads.
+    auto fontData = FontData::fromAsset(std::unique_ptr<Asset>(asset));
+    if (!fontData) {
         LOGW("%s: empty: %s", tag, path.c_str());
         return nullptr;
     }
@@ -397,28 +440,33 @@ Typeface* Typeface::finishAssetTypeface(const std::string& path, Asset* asset, c
     return tf.get();
 }
 
-// Memory-backed Typeface (PAK @font): font bytes live in `fontData`. FT_Face via
-// FT_New_Memory_Face; the MinikinFont is the memory variant (GetFontData returns the
-// buffer) so it obeys the standard blob contract without needing a file path.
+// Memory-backed Typeface (PAK @font / R.font): the bytes live in the FontData
+// mapping (pak window, or the Asset's inflated copy for a compressed entry).
+// FT_New_Memory_Face reads lazily — mFontData keeps the window mapped for the
+// face's (process) lifetime. The MinikinFont serves the same blob, so
+// GetFontData() obeys the standard contract without needing a file path.
 Typeface::Typeface(const std::string& family, int weight, bool italic,
-                   std::shared_ptr<std::vector<uint8_t>> fontData, int faceIndex) {
+                   std::shared_ptr<FontData> fontData, int faceIndex) {
     mWeight = weight;
     mStyle = (weight >= 600 ? BOLD : 0) | (italic ? ITALIC : 0);
     mFaceIndex = faceIndex;
     if (ftLibrary == nullptr) FT_Init_FreeType(&ftLibrary);
-    if (!fontData || fontData->empty()) { mFamily = family; return; }
+    if (!fontData || fontData->size() == 0) { mFamily = family; return; }
+    mFontData = fontData;
     FT_Face ftFace = nullptr;
-    if (FT_New_Memory_Face(ftLibrary, fontData->data(), fontData->size(), faceIndex, &ftFace) || !ftFace) {
+    if (FT_New_Memory_Face(ftLibrary, (const FT_Byte*)fontData->data(),
+                           (FT_Long)fontData->size(), faceIndex, &ftFace) || !ftFace) {
+        mFontData.reset();  // don't pin a mapping nothing reads
         mFamily = family;
         return;
     }
     initFace(ftFace, family);
     FT_Done_Face(ftFace);
-    // Eagerly build the memory-backed MinikinFont so getMinikinFont() returns it directly
-    // (rather than the file/mmap path, which needs a real file path).
+    // Eagerly build the blob-backed MinikinFont so getMinikinFont() returns it
+    // directly (the lazy path groups by file path, which asset fonts lack).
     auto ftFaceRef = std::dynamic_pointer_cast<Cairo::FtFontFace>(mFontFace);
     if (ftFaceRef) {
-        mMinikinFont = std::make_shared<FullMinikinFont>(ftFaceRef, fontData, faceIndex);
+        mMinikinFont = std::make_shared<FullMinikinFont>(ftFaceRef, fontData, std::string(), faceIndex);
         // And a DEDICATED single-font collection: getFontCollection()'s lazy
         // path resolves by family name against the system registry, which
         // knows nothing about asset/resource fonts (they would silently
@@ -488,7 +536,8 @@ std::shared_ptr<minikin::MinikinFont> Typeface::getMinikinFont() const {
     if (!mMinikinFont && mFontFace) {
         auto ftFace = std::dynamic_pointer_cast<Cairo::FtFontFace>(mFontFace);
         if (ftFace) {
-            const_cast<Typeface*>(this)->mMinikinFont = std::make_shared<FullMinikinFont>(ftFace, mFileName, mFaceIndex);
+            const_cast<Typeface*>(this)->mMinikinFont =
+                std::make_shared<FullMinikinFont>(ftFace, mFontData, mFileName, mFaceIndex);
         }
     }
     return mMinikinFont;
@@ -614,7 +663,7 @@ std::shared_ptr<minikin::FontFamily>Typeface::buildFamily(const std::string&fami
     for(auto f:faces){
         if(f->mFamily == family){
             auto ft = std::dynamic_pointer_cast<Cairo::FtFontFace>(f->getFontFace());
-            auto minikinFont = std::make_shared<FullMinikinFont>(ft, f->mFileName, f->mFaceIndex);
+            auto minikinFont = std::make_shared<FullMinikinFont>(ft, f->mFontData, f->mFileName, f->mFaceIndex);
             auto font = minikin::Font::Builder(minikinFont).build();
             fonts.push_back(font);
             LOGD("    ->[%d](%s): %s",fonts.size()-1,f->getFamily().c_str(),f->mFileName.c_str());
@@ -756,21 +805,6 @@ void Typeface::loadPreinstalledSystemFontMap() {
 
 
 
-// Pull (family, weight, italic) straight from the FreeType face (no fontconfig):
-// family from the name table, weight from OS/2 usWeightClass (bold style flag as
-// fallback), italic from the style flags. Shared by the in-memory (small font →
-// vector blob) and file-backed (large font → tmp + mmap) PAK paths.
-static void extractMetaFromFace(FT_Face ftFace, std::string& family, int& weight, bool& italic) {
-    family = ftFace->family_name ? ftFace->family_name : "";
-    italic = (ftFace->style_flags & FT_STYLE_FLAG_ITALIC) != 0;
-    const TT_OS2* os2 = (const TT_OS2*)FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2);
-    if (os2 != nullptr && os2->usWeightClass >= 100) {
-        weight = os2->usWeightClass;
-    } else {
-        weight = (ftFace->style_flags & FT_STYLE_FLAG_BOLD) ? 700 : 400;
-    }
-}
-
 // ---------------------------------------------------------------------------
 // CBDT/sbix color glyphs — the Skia-equivalent layer. cairo only renders
 // glyphs as A8 alpha masks, so a CBDT font through show_glyphs comes out
@@ -801,13 +835,6 @@ static std::unordered_map<int32_t, FT_Face>& colorFaceCache() {
     return cache;
 }
 
-// Memory-backed fonts (PAK @font) hand us a blob; keep our own copy so the
-// FT_Face outlives the MinikinFont that provided it.
-static std::unordered_map<int32_t, std::vector<uint8_t>>& colorFaceBlobs() {
-    static std::unordered_map<int32_t, std::vector<uint8_t>> blobs;
-    return blobs;
-}
-
 static FT_Face colorFaceFor(const minikin::MinikinFont* font) {
     if (font == nullptr) return nullptr;
     const int32_t id = font->GetSourceId();
@@ -818,16 +845,14 @@ static FT_Face colorFaceFor(const minikin::MinikinFont* font) {
     static FT_Library lib = nullptr;  // process-lifetime, never freed
     if (lib == nullptr) FT_Init_FreeType(&lib);
 
+    // Every MinikinFont now serves the Typeface-held FontData blob, pinned
+    // process-lifetime (see FontData) — one memory face over it, no file
+    // reopen and no defensive copy (colorFaceBlobs existed because the blob's
+    // owner could die before this cached face; the pin closes that hole).
     FT_Face face = nullptr;
-    if (!font->GetFontPath().empty()) {
-        FT_New_Face(lib, font->GetFontPath().c_str(), font->GetFontIndex(), &face);
-    }
-    if (face == nullptr && font->GetFontData() != nullptr && font->GetFontSize() > 0) {
-        auto blobIt = colorFaceBlobs().emplace(id,
-                std::vector<uint8_t>((const uint8_t*)font->GetFontData(),
-                                     (const uint8_t*)font->GetFontData() + font->GetFontSize()));
-        FT_New_Memory_Face(lib, blobIt.first->second.data(),
-                           (FT_Long)blobIt.first->second.size(), font->GetFontIndex(), &face);
+    if (font->GetFontData() != nullptr && font->GetFontSize() > 0) {
+        FT_New_Memory_Face(lib, (const FT_Byte*)font->GetFontData(),
+                           (FT_Long)font->GetFontSize(), font->GetFontIndex(), &face);
     }
     if (face == nullptr || !FT_HAS_COLOR(face)) {
         if (face != nullptr) FT_Done_Face(face);
