@@ -4,7 +4,9 @@
 
 #include <core/app.h>
 #include <core/looper.h>
+#include <core/intent.h>
 
+#include <alarmklaxon.h>
 #include <datamodel.h>
 
 namespace cdroid {
@@ -128,11 +130,21 @@ void AlarmStateManager::setHighNotificationState(Context& context, Alarminstance
 }
 
 void AlarmStateManager::setFiredState(Context& context, Alarminstance& instance) {
-    LOGI("Setting fire state to instance %lld (firing UX: AlarmActivity TODO)",
-         (long long) instance.mId);
+    LOGI("Setting fire state to instance %lld", (long long) instance.mId);
 
     instance.mAlarmState = Alarminstance::FIRED_STATE;
     Alarminstance::updateInstance(*prefs(context), instance);
+
+    // Upstream: the FIRE broadcast starts AlarmService (klaxon) and the
+    // heads-up notification's fullScreenIntent shows AlarmActivity over
+    // everything. No service/notification layer on cdroid — start both here.
+    AlarmKlaxon::start(context, instance);
+    Intent alarmIntent;
+    alarmIntent.setClassName("cdroid.deskclock", "AlarmActivity")
+              .setAction(Intent::ACTION_MAIN)
+              .setFlags(Intent::FLAG_ACTIVITY_NEW_TASK)
+              .putExtra("alarmInstanceId", (int64_t) instance.mId);
+    context.startActivity(alarmIntent);
 
     // if the time changed *backward* and pushed an instance from missed back to fired,
     // remove any other scheduled instances that may exist

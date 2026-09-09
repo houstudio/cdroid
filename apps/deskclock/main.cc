@@ -11,6 +11,7 @@
 #include <core/cxxopts.h>
 #include <core/intent.h>
 
+#include <alarmstatemanager.h>
 #include <datamodel.h>
 #include <uidata.h>
 
@@ -64,6 +65,13 @@ int main(int argc, const char* argv[]) {
     sBootHandler.postDelayed([]() {
         auto& dm = cdroid::deskclock::data::DataModel::getDataModel();
         dm.updateAfterReboot();
+        // AlarmInitReceiver's alarm half: reconcile instance states with the
+        // wall clock that moved while the process was down, then (re)arm the
+        // next state transition — the in-process schedule died with the
+        // process, so a seeded/restored FIRE-able instance never fires
+        // without this.
+        cdroid::deskclock::alarms::AlarmStateManager::fixAlarmInstances(
+                cdroid::App::getInstance());
         // Timers that expired in a previous session (or just now via the re-armed
         // schedule) surface through the takeover activity — the in-process
         // stand-in for upstream's persistent heads-up notification, which keeps

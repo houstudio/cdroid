@@ -25,6 +25,7 @@
 
     <!-- Setting label on Set alarm screen: Label -->
     <string name="label">Label</string>
+    <string name="alarm">Alarm</string>
 
     <!-- Default label to display for an alarm -->
     <string name="default_label">Alarm</string>
