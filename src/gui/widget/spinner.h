@@ -86,6 +86,10 @@ private:
         std::string mHintText;
         Spinner *mSpinner;
         Adapter *mAdapter;
+        // Wrap replaced while the dropdown tree was up: freed after the tree
+        // dies (the popup ListView dereferences mAdapter until then) — the
+        // same contract DialogPopup::mPendingAdapterDelete implements.
+        Adapter* mPendingAdapterDelete = nullptr;
         ViewTreeObserver::OnGlobalLayoutListener mLayoutListener;
     public:
         DropdownPopup(Context*context,Spinner*spinner,int defStyleAttr);

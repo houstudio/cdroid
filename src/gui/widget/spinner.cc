@@ -540,12 +540,44 @@ Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp,int defStyleAtt
 }
 
 Spinner::DropdownPopup::~DropdownPopup(){
-    delete mAdapter;
+    // The ListPopupWindow base (popup window + dropdown ListView) destructs
+    // AFTER this body, and the ListView dereferences mAdapter until its tree
+    // dies — deleting the wrap here was the Spinner::~Spinner 0x0 virtual
+    // call during an active show. With the tree up, hand both wraps to the
+    // spinner's looper so they die once this object (and the base's window
+    // teardown) has completed; otherwise free them now. Teardown-time posts
+    // can be dropped by a dying looper — same accepted edge as
+    // DialogPopup::dismiss's owner deletion.
+    Adapter* current = mAdapter;
+    Adapter* pending = mPendingAdapterDelete;
+    mAdapter = nullptr;
+    mPendingAdapterDelete = nullptr;
+    if (current == nullptr && pending == nullptr) return;
+    if (isShowing()) {
+        mSpinner->post([current, pending]() { delete current; delete pending; });
+    } else {
+        delete current;
+        delete pending;
+    }
 }
 
 void Spinner::DropdownPopup::setAdapter(Adapter* adapter){
+    // Spinner::setAdapter wraps the data adapter in a fresh DropDownAdapter
+    // per call; the replaced wrap is ours to retire. ListPopupWindow::
+    // setAdapter unregisters the observer from (and swaps the live list off)
+    // the OLD wrap, so it must stay alive for that call — retire it right
+    // after, immediately when no tree is up, deferred while it is (the
+    // popup ListView keeps calling into a retired wrap until teardown).
+    Adapter* retired = (mAdapter != nullptr && mAdapter != adapter) ? mAdapter : nullptr;
     mAdapter = adapter;
     ListPopupWindow::setAdapter(adapter);
+    if (retired == nullptr) return;
+    if (isShowing()) {
+        delete mPendingAdapterDelete;
+        mPendingAdapterDelete = retired;
+    } else {
+        delete retired;
+    }
 }
 
 void Spinner::DropdownPopup::dismiss(){
@@ -560,6 +592,14 @@ void Spinner::DropdownPopup::dismiss(){
         vto->removeOnGlobalLayoutListener(mLayoutListener);
     }
     ListPopupWindow::dismiss();
+    // Flush a wrap retired during a show now that the dismiss has queued the
+    // decor teardown — posted AFTER it, the looper order frees the wrap only
+    // once the popup ListView has stopped touching it (DialogPopup pattern).
+    if (mPendingAdapterDelete != nullptr) {
+        Adapter* pending = mPendingAdapterDelete;
+        mPendingAdapterDelete = nullptr;
+        mSpinner->post([pending]() { delete pending; });
+    }
 }
 
 bool Spinner::DropdownPopup::isShowing(){
