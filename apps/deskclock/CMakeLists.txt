@@ -88,6 +88,20 @@ set(DESKCLOCK_SRCS
     src/alarmklaxon.cc
     src/ringtonepreviewklaxon.cc
     src/ringtonebackend.cc
+    src/alarmactivity.cc
+    src/customringtone.cc
+    src/customringtonedao.cc
+    src/ringtonemodel.cc
+    src/headerholder.cc
+    src/ringtoneholder.cc
+    src/systemringtoneholder.cc
+    src/customringtoneholder.cc
+    src/addcustomringtoneholder.cc
+    src/headerviewholder.cc
+    src/ringtoneviewholder.cc
+    src/addcustomringtoneviewholder.cc
+    src/ringtoneloader.cc
+    src/ringtonepickeractivity.cc
 )
 
 # Real audio backend for the ringtone stack (AsyncRingtonePlayer -> FFmpeg

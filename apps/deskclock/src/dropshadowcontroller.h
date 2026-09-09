@@ -11,6 +11,8 @@
 #include <animatorutils.h>
 #include <uidata.h>
 
+#include <widgetEx/recyclerview/recyclerview.h>
+
 namespace cdroid {
 
 class View;
@@ -36,9 +38,15 @@ private:
 
     uidata::UiDataModel* mUiDataModel = nullptr;
 
+    /** The RecyclerView whose scroll state drives the shadow (RV variant). */
+    RecyclerView* mSourceRecyclerView = nullptr;
+    RecyclerView::OnScrollListener mScrollListener;
+
 public:
     DropShadowController(View& dropShadowView, uidata::UiDataModel& uiDataModel,
                          View& hairlineView);
+    /** The RecyclerView source variant (upstream's second constructor). */
+    DropShadowController(View& dropShadowView, RecyclerView& recyclerView);
     ~DropShadowController();
 
     void stop();

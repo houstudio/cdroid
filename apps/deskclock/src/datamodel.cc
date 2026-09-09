@@ -25,12 +25,14 @@ void DataModel::init(Context& context, SharedPreferences& prefs) {
         delete mTimerModel;
         delete mCityModel;
         delete mSettingsModel;
+        delete mRingtoneModel;
 
         mSettingsModel = new SettingsModel(context, prefs);
         mNotificationModel = new NotificationModel();
         mCityModel = new CityModel(context, prefs, *mSettingsModel);
         mTimerModel = new TimerModel(context, prefs, *mSettingsModel, *mNotificationModel);
         mStopwatchModel = new StopwatchModel(context, prefs, *mNotificationModel);
+        mRingtoneModel = new RingtoneModel(context, prefs);
         mHandler.reset(new Handler(Looper::getMainLooper()));
     }
 }
@@ -171,6 +173,41 @@ Uri* DataModel::getTimerRingtoneUri() { return mTimerModel->getTimerRingtoneUri(
 std::string DataModel::getTimerRingtoneTitle() { return mTimerModel->getTimerRingtoneTitle(); }
 int64_t DataModel::getTimerCrescendoDuration() const { return mTimerModel->getTimerCrescendoDuration(); }
 void DataModel::setTimerRingtoneUri(const Uri* uri) { mTimerModel->setTimerRingtoneUri(uri); }
+
+// --- Ringtone ---
+
+Uri* DataModel::getDefaultAlarmRingtoneUri() {
+    return mSettingsModel->getDefaultAlarmRingtoneUri();
+}
+
+void DataModel::setDefaultAlarmRingtoneUri(const Uri* uri) {
+    mSettingsModel->setDefaultAlarmRingtoneUri(uri);
+}
+
+const std::vector<CustomRingtone>& DataModel::getCustomRingtones() {
+    return mRingtoneModel->getCustomRingtones();
+}
+
+const CustomRingtone* DataModel::addCustomRingtone(const std::string& uri,
+        const std::string& title) {
+    return mRingtoneModel->addCustomRingtone(uri, title);
+}
+
+void DataModel::removeCustomRingtone(const std::string& uri) {
+    mRingtoneModel->removeCustomRingtone(uri);
+}
+
+const std::vector<std::pair<std::string, std::string>>& DataModel::getSystemRingtones() {
+    return mRingtoneModel->getSystemRingtones();
+}
+
+void DataModel::loadRingtoneTitles() { mRingtoneModel->loadRingtoneTitles(); }
+
+void DataModel::loadRingtonePermissions() { mRingtoneModel->loadRingtonePermissions(); }
+
+std::string DataModel::getRingtoneTitle(const std::string& uri) {
+    return mRingtoneModel->getRingtoneTitle(uri);
+}
 bool DataModel::getTimerVibrate() const { return mTimerModel->getTimerVibrate(); }
 void DataModel::setTimerVibrate(bool enabled) { mTimerModel->setTimerVibrate(enabled); }
 

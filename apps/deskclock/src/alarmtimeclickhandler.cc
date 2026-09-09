@@ -8,6 +8,7 @@
 #include <alarmclockfragment.h>
 #include <alarmitemholder.h>
 #include <alarmstatemanager.h>
+#include <ringtonepickeractivity.h>
 #include <datamodel.h>
 #include <labeldialogfragment.h>
 #include <timepickerdialogfragment.h>
@@ -127,11 +128,12 @@ void AlarmTimeClickHandler::dismissAlarmInstance(const Alarminstance& alarmInsta
     mAlarmUpdateHandler->showPredismissToast(instance);
 }
 
-void AlarmTimeClickHandler::onRingtoneClicked(Context& /*context*/, const Alarm& alarm) {
+void AlarmTimeClickHandler::onRingtoneClicked(Context& context, const Alarm& alarm) {
     mSelectedAlarm = alarm;
     mHasSelectedAlarm = true;
-    // RingtonePickerActivity lands with #11; the click is recorded.
-    LOGI("ringtone picker for alarm %lld (module #11 pending)", (long long) alarm.id);
+    // Upstream: startActivity(RingtonePickerActivity.createAlarmRingtonePickerIntent(...)).
+    context.startActivity(ringtone::RingtonePickerActivity::createAlarmRingtonePickerIntent(
+            context, alarm));
 }
 
 void AlarmTimeClickHandler::onEditLabelClicked(const Alarm& alarm) {

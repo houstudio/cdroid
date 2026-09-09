@@ -16,6 +16,7 @@
 #include <widget/cdwindow.h>
 
 #include <datamodel.h>
+#include <ringtonepickeractivity.h>
 #include <searchmenuitemcontroller.h>
 #include <settingsdao.h>
 #include <uidata.h>
@@ -160,12 +161,17 @@ private:
 
         // date_time opens the system date settings (no system settings app on cdroid;
         // click consumed as no-op). timer_ringtone opens the RingtonePickerActivity
-        // (ringtone module deferred).
+        // (upstream: startActivity(createTimerRingtonePickerIntent)).
         if (Preference* p = findPreference("date_time")) {
             p->setOnPreferenceClickListener([](Preference&) { return true; });
         }
         if (Preference* p = findPreference(data::KEY_TIMER_RINGTONE)) {
-            p->setOnPreferenceClickListener([](Preference&) { return true; });
+            p->setOnPreferenceClickListener([](Preference& pref) {
+                Context& context = pref.getContext();
+                context.startActivity(ringtone::RingtonePickerActivity::
+                        createTimerRingtonePickerIntent(context));
+                return true;
+            });
         }
     }
 };

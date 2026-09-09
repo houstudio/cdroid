@@ -18,6 +18,7 @@
 #include <citymodel.h>
 #include <datalisteners.h>
 #include <notificationmodel.h>
+#include <ringtonemodel.h>
 #include <settingsdao.h>
 #include <stopwatchmodel.h>
 #include <timermodel.h>
@@ -39,6 +40,7 @@ private:
     TimerModel* mTimerModel = nullptr;
     StopwatchModel* mStopwatchModel = nullptr;
     NotificationModel* mNotificationModel = nullptr;
+    RingtoneModel* mRingtoneModel = nullptr;
 
     std::vector<OnSilentSettingsListener> mSilentSettingsListeners;
 
@@ -110,6 +112,18 @@ public:
     void setTimerRingtoneUri(const Uri* uri);
     bool getTimerVibrate() const;
     void setTimerVibrate(bool enabled);
+
+    // --- Ringtone (AOSP "ringtone data" surface) ---
+    /** @return a heap Uri owned by the caller. */
+    Uri* getDefaultAlarmRingtoneUri();
+    void setDefaultAlarmRingtoneUri(const Uri* uri);
+    const std::vector<CustomRingtone>& getCustomRingtones();
+    const CustomRingtone* addCustomRingtone(const std::string& uri, const std::string& title);
+    void removeCustomRingtone(const std::string& uri);
+    const std::vector<std::pair<std::string, std::string>>& getSystemRingtones();
+    void loadRingtoneTitles();
+    void loadRingtonePermissions();
+    std::string getRingtoneTitle(const std::string& uri);
 
     // --- Stopwatch ---
     void addStopwatchListener(const StopwatchListener& stopwatchListener);

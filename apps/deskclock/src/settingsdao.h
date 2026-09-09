@@ -137,6 +137,8 @@ public:
     bool getShowHomeClock() const;
 
     /** @return a heap Uri owned by the caller. */
+    Uri* getDefaultAlarmRingtoneUri();
+    void setDefaultAlarmRingtoneUri(const Uri* uri);
     Uri* getDefaultTimerRingtoneUri();
     Uri* getTimerRingtoneUri();
     void setTimerRingtoneUri(const Uri* uri);

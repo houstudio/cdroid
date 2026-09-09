@@ -1,6 +1,7 @@
 #include <dropshadowcontroller.h>
 
 #include <view/view.h>
+#include <widgetEx/recyclerview/recyclerview.h>
 
 #include <datamodel.h>
 #include <utils.h>
@@ -25,6 +26,21 @@ DropShadowController::DropShadowController(View& dropShadowView,
     updateDropShadow(!uiDataModel.isSelectedTabScrolledToTop());
 }
 
+DropShadowController::DropShadowController(View& dropShadowView, RecyclerView& recyclerView)
+    : mDropShadowView(dropShadowView) {
+    mDropShadowAnimator = AnimatorUtils::getAlphaAnimator(&dropShadowView, {0.0f, 1.0f});
+    mDropShadowAnimator->setDuration(
+            uidata::UiDataModel::getUiDataModel().getShortAnimationDuration());
+
+    mSourceRecyclerView = &recyclerView;
+    mScrollListener.onScrolled = [this](RecyclerView& rv, int, int) {
+        // ScrollChangeWatcher: shadow shows while the list can scroll up.
+        updateDropShadow(rv.canScrollVertically(-1));
+    };
+    recyclerView.addOnScrollListener(mScrollListener);
+    updateDropShadow(recyclerView.canScrollVertically(-1));
+}
+
 DropShadowController::~DropShadowController() {
     delete mDropShadowAnimator;
 }
@@ -33,6 +49,10 @@ void DropShadowController::stop() {
     if (mUiDataModel != nullptr) {
         mUiDataModel->removeTabScrollListener(mScrollChangeWatcher);
         mUiDataModel = nullptr;
+    }
+    if (mSourceRecyclerView != nullptr) {
+        mSourceRecyclerView->removeOnScrollListener(mScrollListener);
+        mSourceRecyclerView = nullptr;
     }
 }
 

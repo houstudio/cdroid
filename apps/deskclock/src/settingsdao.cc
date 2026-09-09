@@ -316,6 +316,14 @@ bool SettingsModel::getShowHomeClock() const {
     return homeTimeZone.getOffset(now) != defaultTZ.getOffset(now);
 }
 
+Uri* SettingsModel::getDefaultAlarmRingtoneUri() {
+    return SettingsDAO::getDefaultAlarmRingtoneUri(mPrefs);
+}
+
+void SettingsModel::setDefaultAlarmRingtoneUri(const Uri* uri) {
+    SettingsDAO::setDefaultAlarmRingtoneUri(mPrefs, uri);
+}
+
 Uri* SettingsModel::getDefaultTimerRingtoneUri() {
     if (mDefaultTimerRingtoneUriString.empty()) {
         // Utils.getResourceUri(mContext, R.raw.timer_expire)
