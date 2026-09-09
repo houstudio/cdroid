@@ -30,8 +30,8 @@
 #include <content/androidfw/apkassets.h>       // ApkAssets (owned list)
 #include <content/androidfw/assetmanager2.h>   // AssetManager2 (the table engine)
 #include <content/androidfw/misc.h>
-#include "content/asset.h"
-#include "content/assetdir.h"
+#include <content/asset.h>
+#include <content/assetdir.h>
 
 // Native-app access is via the opaque AAssetManager (C namespace). Matches AOSP.
 struct AAssetManager { };
@@ -146,10 +146,7 @@ private:
         bool         isSystemOverlay = false;
         bool         isSystemAsset = false;
         bool         assumeOwnership = false;
-        mutable struct zip* zip = nullptr;   // cached libzip handle
-        mutable bool zipTried = false;
         time_t modWhen = 0;                  // mtime at addAssetPath time (isUpToDate)
-        ~asset_path();
     };
 
     Asset* openNonAssetInPath(const char* fileName, AccessMode mode, asset_path& ap);

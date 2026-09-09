@@ -10,8 +10,8 @@
 
 #define LOG_TAG "asset"
 
-#include "content/assetmanager.h"
-#include "content/androidfw/resourcetypes.h"   // pakPathCandidates (res/-prefix bridging)
+#include <content/assetmanager.h>
+#include <content/androidfw/resourcetypes.h>   // pakPathCandidates (res/-prefix bridging)
 #include <text/textutils.h>                    // utf16_utf8 (getResourceName)
 
 #include <porting/cdlog.h>
@@ -21,6 +21,8 @@
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
+#include <memory>
+#include <unordered_map>
 #include <set>
 #include <stdlib.h>
 #include <string.h>
@@ -54,13 +56,8 @@ static char* strdupNew(const char* str) {
 // ===========================================================================
 // asset_path
 // ===========================================================================
-
-AssetManager::asset_path::~asset_path() {
-    if (zip != nullptr) {
-        zip_close(zip);
-        zip = nullptr;
-    }
-}
+// Plain value type (see the header note): the libzip handle cache below owns
+// the handles, so copies of an asset_path share nothing dangling.
 
 // ===========================================================================
 // AssetManager
@@ -83,7 +80,10 @@ AssetManager::~AssetManager() {
     if (kIsDebug) LOGI("Destroying AssetManager %p #%d", this, gAmCount);
 
     for (size_t i = 0; i < mAssetPaths.size(); i++) {
-        if (mAssetPaths[i].rawFd >= 0 && mAssetPaths[i].zip == nullptr) {
+        if (mAssetPaths[i].rawFd >= 0) {
+            // getZipFile opens by path and never adopts this fd (the old
+            // zip == nullptr guard mirrored AOSP's SharedZip(fd) takeover,
+            // which this port never does), so it always stays ours to close.
             close(mAssetPaths[i].rawFd);
         }
     }
@@ -444,19 +444,39 @@ std::string AssetManager::createPathName(const asset_path& ap, const char* rootD
     return path;
 }
 
-// Get (lazily opening) the libzip handle for an asset path.
+// Get (lazily opening) the libzip handle for an asset path. AOSP caches these
+// in SharedZip's global per-path map (gOpen) with shared ownership; the same
+// shape here — a process-lifetime cache keyed by path — replaces the old
+// mutable handle stored inside asset_path, which dangled after mAssetPaths
+// vector growth (growth copies elements; the dying copy zip_closed the handle
+// the surviving copy still pointed at). Open failures are cached too, the
+// role zipTried used to play.
+namespace {
+struct SharedZip {
+    zip_t* zip = nullptr;
+    ~SharedZip() { if (zip != nullptr) zip_close(zip); }
+};
+std::unordered_map<std::string, std::shared_ptr<SharedZip>>& sharedZips() {
+    static std::unordered_map<std::string, std::shared_ptr<SharedZip>> cache;
+    return cache;
+}
+} // namespace
+
 struct zip* AssetManager::getZipFile(const asset_path& ap) {
-    if (ap.zip != nullptr) return ap.zip;
-    if (ap.zipTried) return nullptr;
-    ap.zipTried = true;
+    auto& cache = sharedZips();
+    const auto it = cache.find(ap.path);
+    if (it != cache.end()) return it->second->zip;
 
     int err = 0;
     zip_t* z = zip_open(ap.path.c_str(), ZIP_RDONLY, &err);
     if (z == nullptr) {
         LOGW("Failed opening zip %s (libzip err=%d)", ap.path.c_str(), err);
+        cache.emplace(ap.path, std::make_shared<SharedZip>());   // negative cache
         return nullptr;
     }
-    ap.zip = z;
+    const auto shared = std::make_shared<SharedZip>();
+    shared->zip = z;
+    cache.emplace(ap.path, shared);
     return z;
 }
 
