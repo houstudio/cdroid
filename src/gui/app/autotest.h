@@ -6,6 +6,7 @@
 #include <random>
 #include <fstream>
 #include <cstdint>
+#include <core/rect.h>
 
 namespace cdroid {
 
@@ -71,8 +72,10 @@ private:
 
     // --- script mode ---
     struct Command {
-        std::string verb;        // wait/wait-absent/click/long-click/scroll/set-progress/set-text/tap/perform/assert/assert-absent/dump/sleep/back
+        std::string verb;        // wait/wait-absent/click/long-click/scroll/set-progress/set-text/tap/perform/assert/assert-absent/dump/sleep/back/sclick
         bool byText = true;      // selector kind: text= / id=
+        bool exact = false;      // quoted selector: exact label match (AOSP By.text(Pattern "^...$"));
+                                 // bare word keeps findAccessibilityNodeInfosByText's containment semantics
         std::string selector;
         std::vector<std::string> args;  // verb payload: value / direction / key=value pairs
         long timeoutMs = 3000;   // wait poll budget
@@ -82,6 +85,19 @@ private:
     void scriptDone();
     bool parseScript(const std::string& path);
     static AccessibilityNodeInfo* findOne(const Command& c);
+    // Shared tail of the click/sclick verbs: walk to the nearest clickable
+    // ancestor, focus editors, a11y-focus, ACTION_CLICK with VIEW_CLICKED
+    // arbitration, log, advance the script. Consumes (recycles) node.
+    void performScriptClick(AccessibilityNodeInfo* node, size_t lineNo, const std::string& label);
+    // sclick scan state: which command owns the scan (line number), its
+    // phase — 0 paging backward, 1 paging forward (uiautomator
+    // UiScrollable.getChildByText order) — and the cross-frame stability gate
+    // for the tap: a rect is only tapped when a re-read 200ms later matches
+    // (a coasting fling shows identical rects within one frame).
+    size_t mSclickLine = 0;
+    int mSclickPhase = 0;
+    bool mSclickHasPending = false;
+    Rect mSclickPending;
 
     bool mRunning = false;
     long mStepIntervalMs = 2500;

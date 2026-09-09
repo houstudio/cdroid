@@ -72,6 +72,24 @@ AccessibilityNodeInfo* resolveByAction(AccessibilityNodeInfo* node, int actionId
     return nullptr;
 }
 
+/** First depth-first node advertising actionId below (and including) `node` —
+ *  the downward counterpart of resolveByAction: a dialog's scrollable ListView
+ *  lives BELOW the window root, so the ancestor walk can never reach it from a
+ *  root. `node` itself is never recycled (the resolveByAction contract —
+ *  recycling it here double-frees it against the caller's own recycle);
+ *  walked intermediates are; the caller owns the result (and `node`). */
+AccessibilityNodeInfo* findActionDescendant(AccessibilityNodeInfo* node, int actionId) {
+    if (node == nullptr) return nullptr;
+    if (advertises(node, actionId)) return node;
+    AccessibilityNodeInfo* found = nullptr;
+    for (int i = 0; found == nullptr && i < node->getChildCount(); i++) {
+        AccessibilityNodeInfo* child = node->getChild(i);
+        found = findActionDescendant(child, actionId);
+        if (child != found) child->recycle();
+    }
+    return found;
+}
+
 // The standard accessibility actions by name — every AccessibilityNodeInfo
 // legacy constant and R::id singleton of the android-36 surface (no
 // CDROID-invented actions). The perform verb resolves names through this
@@ -738,6 +756,16 @@ AccessibilityNodeInfo* UiAutoTest::findOne(const Command& c) {
             AccessibilityNodeInfo* first = nullptr;
             AccessibilityNodeInfo* fallback = nullptr;
             for (AccessibilityNodeInfo* hit : hits) {
+                // Quoted selector: exact label. findAccessibilityNodeInfosByText
+                // is containment ("25 minutes" contains "5 minutes") — without
+                // this filter a scrolled choice list matches its "2N minutes"
+                // sibling first and the script clicks the wrong row.
+                if (c.exact && c.byText
+                        && hit->getText() != c.selector
+                        && hit->getContentDescription() != c.selector) {
+                    hit->recycle();
+                    continue;
+                }
                 if (first == nullptr && hit->isVisibleToUser()) {
                     first = hit;
                 } else if (fallback == nullptr) {
@@ -757,6 +785,42 @@ AccessibilityNodeInfo* UiAutoTest::findOne(const Command& c) {
     }
     for (AccessibilityNodeInfo* r : roots) r->recycle();
     return nullptr;
+}
+
+void UiAutoTest::performScriptClick(AccessibilityNodeInfo* node, size_t lineNo,
+                                    const std::string& label) {
+    UiAutomation& automation = UiAutomation::getInstance();
+    // A text selector matches the TextView carrying the text, not the
+    // clickable row that owns it (uiautomator hides this behind a
+    // coordinate tap on the node bounds); semantic ACTION_CLICK needs the
+    // nearest clickable ancestor.
+    AccessibilityNodeInfo* clickTarget = node;
+    while (!clickTarget->isClickable()) {
+        AccessibilityNodeInfo* parent = clickTarget->getParent();
+        if (parent == nullptr) break;
+        if (clickTarget != node) clickTarget->recycle();
+        clickTarget = parent;
+    }
+    // Editors get focus first (same AOSP ACTION_FOCUS as the sweep): a
+    // plain ACTION_CLICK never focuses, so a replaying script could never
+    // raise the IME — every recorded keyboard click would miss.
+    if (clickTarget->isEditable()) {
+        clickTarget->performAction(AccessibilityNodeInfo::ACTION_FOCUS);
+    }
+    clickTarget->performAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);  // visible target
+    AccessibilityEvent* hit = automation.executeAndWaitForEvent(
+        [clickTarget]() { clickTarget->performAction(AccessibilityNodeInfo::ACTION_CLICK); },
+        [](AccessibilityEvent& e) {
+            return e.getEventType() == AccessibilityEvent::TYPE_VIEW_CLICKED; },
+        1500);
+    LOGI("SCRIPT %zu click %s -> %s", lineNo, label.c_str(),
+         hit ? "OK" : "no-event (FAIL)");
+    if (!hit) mScriptFails++;
+    if (hit) hit->recycle();
+    if (clickTarget != node) clickTarget->recycle();
+    node->recycle();
+    mScriptIndex++;
+    stepHandler().post([this]() { scriptNext(); });
 }
 
 bool UiAutoTest::parseScript(const std::string& path) {
@@ -799,12 +863,18 @@ bool UiAutoTest::parseScript(const std::string& path) {
             }
         }
         // Quotes may wrap the whole selector ("a b") or the value (text="a b").
-        auto stripQuotes = [](std::string& s) {
-            if (s.size() >= 2 && s.front() == '"' && s.back() == '"') s = s.substr(1, s.size() - 2);
+        // A quoted selector also means EXACT label matching (the AOSP escape
+        // from findByText's containment: By.text(Pattern "^...$")).
+        auto stripQuotes = [](std::string& s) -> bool {
+            if (s.size() >= 2 && s.front() == '"' && s.back() == '"') {
+                s = s.substr(1, s.size() - 2);
+                return true;
+            }
+            return false;
         };
-        if (sel.rfind("text=", 0) == 0) { cmd.byText = true; cmd.selector = sel.substr(5); stripQuotes(cmd.selector); }
-        else if (sel.rfind("id=", 0) == 0) { cmd.byText = false; cmd.selector = sel.substr(3); stripQuotes(cmd.selector); }
-        else { cmd.byText = true; cmd.selector = sel; stripQuotes(cmd.selector); }  // bare == text=
+        if (sel.rfind("text=", 0) == 0) { cmd.byText = true; cmd.selector = sel.substr(5); cmd.exact = stripQuotes(cmd.selector); }
+        else if (sel.rfind("id=", 0) == 0) { cmd.byText = false; cmd.selector = sel.substr(3); cmd.exact = stripQuotes(cmd.selector); }
+        else { cmd.byText = true; cmd.selector = sel; cmd.exact = stripQuotes(cmd.selector); }  // bare == text=
         t->skipDelimiters(" \t\r");
         while (!t->isEol() && t->peekChar() != '#') {  // verb payload tokens
             cmd.args.push_back(t->nextToken(" \t\r"));
@@ -1220,6 +1290,133 @@ void UiAutoTest::scriptNext() {
         stepHandler().post([this]() { scriptNext(); });
         return;
     }
+    if (cmd.verb == "sclick") {
+        // uiautomator UiScrollable.getChildByText(): page the window's
+        // scrollable until the selector's row is attached and visible, then
+        // click it. ListView materializes only the visible rows — offscreen
+        // items have no a11y nodes at all, so a plain "click text=" can never
+        // address them (a choice list opened with setSelectionFromTop starts
+        // scrolled to the current value). Pages backward first, then forward;
+        // the timeout budget bounds a scrollable that never reaches its edge.
+        if (mSclickLine != (size_t)lineNo) {
+            mSclickLine = lineNo;
+            mSclickPhase = 0;
+            mSclickHasPending = false;
+            mScript[mScriptIndex].timeoutMs = 8000;
+        }
+        if (node != nullptr && node->isVisibleToUser()) {
+            // uiautomator clicks by coordinates (UiObject.getVisibleBounds +
+            // InteractionController.click): a semantic ACTION_CLICK resolves
+            // the row's adapter position through the paged list's internal
+            // mapping, which can be stale right after a scroll (observed:
+            // clicking "5 minutes" selecting "25 minutes" — an exact one-page
+            // offset). The touch pipeline hit-tests the on-screen row, and the
+            // DOWN anchors the stream so the posted UP still lands on it.
+            Rect b; node->getBoundsInScreen(b);
+            node->recycle();
+            // Cross-frame stability gate: the swipe's UP arms a fling, and a
+            // coasting list shows identical rects to two same-frame lookups.
+            // Record the rect, re-read 200ms later, tap only on a match.
+            if (!mSclickHasPending) {
+                mSclickHasPending = true;
+                mSclickPending = b;
+                stepHandler().postDelayed([this]() { scriptNext(); }, 200);
+                return;
+            }
+            const bool stable = mSclickPending.left == b.left && mSclickPending.top == b.top
+                    && mSclickPending.width == b.width && mSclickPending.height == b.height;
+            mSclickHasPending = false;
+            if (!stable) {
+                if ((mScript[mScriptIndex].timeoutMs -= 200) <= 0) {
+                    LOGE("SCRIPT %zu sclick %s -> NOT FOUND (FAIL)", lineNo, cmd.selector.c_str());
+                    mScriptFails++;
+                    mScriptIndex++;
+                    stepHandler().post([this]() { scriptNext(); });
+                    return;
+                }
+                stepHandler().postDelayed([this]() { scriptNext(); }, 200);
+                return;
+            }
+            const float x = b.left + b.width / 2.0f;
+            const float y = b.top + b.height / 2.0f;
+            const int64_t downTime = SystemClock::uptimeMillis();
+            LOGI("SCRIPT %zu sclick %s tap %g,%g", lineNo, cmd.selector.c_str(), x, y);
+            // The coordinate-tap idiom (the tap verb): DOWN inline, UP posted
+            // +REGULAR_CLICK_LENGTH, no TYPE_VIEW_CLICKED arbitration — the
+            // touch pipeline is the verification. (Routing the DOWN through
+            // executeAndWaitForEvent's command handler defers it past the
+            // wait; the back-to-back late dispatch reads as a long press and
+            // the item never clicks.)
+            injectMarkedMotion(MotionEvent::ACTION_DOWN, x, y, downTime, downTime);
+            stepHandler().postDelayed([this, x, y, downTime]() {
+                injectMarkedMotion(MotionEvent::ACTION_UP, x, y,
+                        downTime, SystemClock::uptimeMillis());
+            }, REGULAR_CLICK_LENGTH);
+            mScriptIndex++;
+            stepHandler().postDelayed([this]() { scriptNext(); }, REGULAR_CLICK_LENGTH + 50);
+            return;
+        }
+        if (node != nullptr) node->recycle();
+        // UiScrollable pages with swipe gestures. ACTION_SCROLL_* (a verbatim
+        // android-36 smoothScrollBy) animates through the frame driver, which
+        // never advances on an idle dialog window — the swipe drives the touch
+        // pipeline directly and sticks. Phase 0 swipes down (reveal items
+        // above), phase 1 swipes up.
+        const int action = (mSclickPhase == 0)
+                ? AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD
+                : AccessibilityNodeInfo::ACTION_SCROLL_FORWARD;
+        AccessibilityNodeInfo* root = automation.getRootInActiveWindow();
+        AccessibilityNodeInfo* scroller = (root != nullptr)
+                ? findActionDescendant(root, action) : nullptr;
+        bool paged = false;
+        if (scroller != nullptr) {
+            Rect b; scroller->getBoundsInScreen(b);
+            if (b.width > 0 && b.height > 0) {
+                const float cx = b.left + b.width / 2.0f;
+                const float y0 = b.top + b.height * (mSclickPhase == 0 ? 0.30f : 0.70f);
+                const float y1 = b.top + b.height * (mSclickPhase == 0 ? 0.70f : 0.30f);
+                const int64_t downTime = SystemClock::uptimeMillis();
+                injectMarkedMotion(MotionEvent::ACTION_DOWN, cx, y0, downTime, downTime);
+                // Slow cadence: a fast swipe arms a long fling; ~900px/s
+                // keeps the coast short enough for the settle + stability gate.
+                constexpr int steps = 20;
+                constexpr int cadenceMs = 25;
+                for (int i = 1; i <= steps; i++) {
+                    const float t = (float)i / steps;
+                    stepHandler().postDelayed([this, cx, y0, y1, t, downTime, i, cadenceMs]() {
+                        injectMarkedMotion(MotionEvent::ACTION_MOVE,
+                                cx, y0 + (y1 - y0) * t, downTime, downTime + i * cadenceMs);
+                    }, i * cadenceMs);
+                }
+                stepHandler().postDelayed([this, cx, y1, downTime]() {
+                    injectMarkedMotion(MotionEvent::ACTION_UP, cx, y1, downTime,
+                            SystemClock::uptimeMillis());
+                }, (steps + 1) * cadenceMs);
+                paged = true;
+            }
+        }
+        if (scroller != nullptr) scroller->recycle();
+        if (root != nullptr && root != scroller) root->recycle();
+        if (paged) {
+            // Re-enter only AFTER the swipe's own UP has dispatched (the settle
+            // must exceed the injection cadence) plus a coast margin; the
+            // stability gate covers the fling tail.
+            constexpr int settleMs = (20 + 1) * 25 + 400;
+            mScript[mScriptIndex].timeoutMs -= settleMs;
+            stepHandler().postDelayed([this]() { scriptNext(); }, settleMs);
+            return;
+        }
+        if (!paged && mSclickPhase == 0) {   // no scrollable for this direction — try the other
+            mSclickPhase = 1;
+            stepHandler().post([this]() { scriptNext(); });
+            return;
+        }
+        LOGE("SCRIPT %zu sclick %s -> NOT FOUND (FAIL)", lineNo, cmd.selector.c_str());
+        mScriptFails++;
+        mScriptIndex++;
+        stepHandler().post([this]() { scriptNext(); });
+        return;
+    }
     if (cmd.verb == "click") {
         if (node == nullptr) {
             LOGE("SCRIPT %zu click %s -> NOT FOUND (FAIL)", lineNo, cmd.selector.c_str());
@@ -1228,37 +1425,7 @@ void UiAutoTest::scriptNext() {
             stepHandler().post([this]() { scriptNext(); });
             return;
         }
-        // A text selector matches the TextView carrying the text, not the
-        // clickable row that owns it (uiautomator hides this behind a
-        // coordinate tap on the node bounds); semantic ACTION_CLICK needs the
-        // nearest clickable ancestor.
-        AccessibilityNodeInfo* clickTarget = node;
-        while (!clickTarget->isClickable()) {
-            AccessibilityNodeInfo* parent = clickTarget->getParent();
-            if (parent == nullptr) break;
-            if (clickTarget != node) clickTarget->recycle();
-            clickTarget = parent;
-        }
-        // Editors get focus first (same AOSP ACTION_FOCUS as the sweep): a
-        // plain ACTION_CLICK never focuses, so a replaying script could never
-        // raise the IME — every recorded keyboard click would miss.
-        if (clickTarget->isEditable()) {
-            clickTarget->performAction(AccessibilityNodeInfo::ACTION_FOCUS);
-        }
-        clickTarget->performAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);  // visible target
-        AccessibilityEvent* hit = automation.executeAndWaitForEvent(
-            [clickTarget]() { clickTarget->performAction(AccessibilityNodeInfo::ACTION_CLICK); },
-            [](AccessibilityEvent& e) {
-                return e.getEventType() == AccessibilityEvent::TYPE_VIEW_CLICKED; },
-            1500);
-        LOGI("SCRIPT %zu click %s -> %s", lineNo, cmd.selector.c_str(),
-             hit ? "OK" : "no-event (FAIL)");
-        if (!hit) mScriptFails++;
-        if (hit) hit->recycle();
-        if (clickTarget != node) clickTarget->recycle();
-        node->recycle();
-        mScriptIndex++;
-        stepHandler().post([this]() { scriptNext(); });
+        performScriptClick(node, lineNo, cmd.selector);
         return;
     }
     if (cmd.verb == "long-click") {
