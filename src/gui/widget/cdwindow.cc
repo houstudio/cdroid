@@ -19,6 +19,7 @@
 #include <core/intent.h>
 #include <core/componentname.h>
 #include <core/looper.h>
+#include <fragment/specialeffectscontroller.h>
 #include <widget/cdwindow.h>
 #include <widget/toolbar.h>
 #include <widget/toolbaractionbar.h>
@@ -167,6 +168,16 @@ void Window::initWindow(){
 }
 
 Window::~Window(){
+    // The Window IS the subtree root (FrameLayout): the base ~ViewGroup below
+    // frees every child while a fragment-transition clone's ObjectAnimator
+    // (per-view Fade transitionAlpha) can still be ticking for views in the
+    // tree — a sweep closing one window while opening the next hits this
+    // (valgrind --auto-test: invalid read/write in View::setTransitionAlpha on
+    // a freed ImageView, escalating to SIGSEGV). End everything still running
+    // over the tree, same guard as SpecialEffectsController's delete sites,
+    // before the destructors run.
+    endAnimatorsOver(this);
+    endTransitionsOver(this);
     *mA11yListenerAlive = false;  // detach the manager's state listener
     if (mOwnsContext) delete mContext;   // the auto-wrapped ContextThemeWrapper
     if (mActionMode != nullptr) {

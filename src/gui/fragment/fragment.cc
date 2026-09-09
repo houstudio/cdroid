@@ -20,6 +20,7 @@
 #include <fragment/fragmentstate.h>
 #include <fragment/fragmenthostcallback.h>
 #include <fragment/fragmentviewlifecycleowner.h>
+#include <fragment/specialeffectscontroller.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
@@ -100,6 +101,15 @@ Fragment::~Fragment(){
     // parented (normal close, effect never detached it) stays owned by the container and must
     // not be freed here (the tree teardown would double-free it).
     if (mView != nullptr && mView->getParent() == nullptr) {
+        // A sibling transition clone's ObjectAnimator (per-view Fade
+        // transitionAlpha) can still be ticking for a view in this tree when
+        // the fragment is reclaimed mid-transition — freeing first leaves the
+        // animator dereferencing dead memory (valgrind: invalid read/write in
+        // View::setTransitionAlpha; escalates to SIGSEGV under --auto-test
+        // sweeps). End every running animator over the subtree, same as
+        // scheduleViewReclaim/reclaimDeferredExitViews, before the delete.
+        endAnimatorsOver(mView);
+        endTransitionsOver(mView);
         delete mView;
         mView = nullptr;
     }

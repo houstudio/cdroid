@@ -37,6 +37,10 @@ class FragmentStateManager;
 // final state (listeners fire while the views are alive). Called by both
 // deferred exit-view deleters before freeing the view tree.
 void endAnimatorsOver(View* doomed);
+/** End every delayed/running Transition whose sceneRoot lies in `doomed`'s
+ *  subtree — see the .cc; the companion sweep that fires transition end
+ *  listeners while the views are still alive. */
+void endTransitionsOver(View* doomed);
 
 class SpecialEffectsController{
 public:

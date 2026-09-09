@@ -22,7 +22,9 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <transition/transition.h>
+#include <transition/transitionmanager.h>
 #include <algorithm>
+#include <set>
 #include <memory>
 #include <porting/cdlog.h>
 
@@ -120,13 +122,74 @@ void SpecialEffectsController::deferExitViewDelete(View* v){
 // their end listeners run while the views are still alive.
 void endAnimatorsOver(View* doomed) {
     auto& running = Transition::getRunningAnimators();
+    // Match by DESCENDING the doomed subtree, not by ascending parents: a
+    // Fade-exiting view is removed from mChildren into mDisappearingChildren
+    // with its mParent cleared (removeViewInternal), so the parent walk stops
+    // before ever reaching `doomed`. The descent must also cover each
+    // visited view's OVERLAY: transitions park their animating views in the
+    // host's ViewGroupOverlay (Transition/Visibility addDisappearingView
+    // path), and ~View frees the overlay with its children — those views are
+    // invisible to a plain mChildren walk (valgrind --auto-test: Fade
+    // transitionAlpha ObjectAnimator kept ticking on a ScrollView freed by
+    // ~ViewPager's overlay teardown; SIGSEGV in View::setTransitionAlpha).
+    // peekOverlay(): never creates one — this runs during teardown.
     std::vector<Animator*> toEnd;
-    for (size_t i = 0; i < running.size(); i++) {
-        for (View* p = running.valueAt(i).view; p; p = p->getParent()) {
-            if (p == doomed) { toEnd.push_back(running.keyAt(i)); break; }
+    std::vector<View*> stack{doomed};
+    while (!stack.empty()) {
+        View* v = stack.back();
+        stack.pop_back();
+        for (size_t i = 0; i < running.size(); i++) {
+            Animator* anim = running.keyAt(i);
+            if (std::find(toEnd.begin(), toEnd.end(), anim) != toEnd.end()) continue;
+            // info.view is the CAPTURED view; a Visibility disappear animates a
+            // SPAWNED copy inflated into the overlay (onDisappear) — the
+            // animator's real target. Match either.
+            ObjectAnimator* oa = dynamic_cast<ObjectAnimator*>(anim);
+            if (running.valueAt(i).view == v || (oa && oa->getTarget() == (void*)v)) {
+                toEnd.push_back(anim);
+            }
+        }
+        if (ViewOverlay* overlay = v->peekOverlay()) {
+            stack.push_back(overlay->getOverlayView());
+        }
+        if (ViewGroup* g = dynamic_cast<ViewGroup*>(v)) {
+            for (int i = 0; i < g->getChildCount(); i++) stack.push_back(g->getChildAt(i));
         }
     }
     for (Animator* a : toEnd) a->end();
+}
+
+// Companion to endAnimatorsOver for the transitions themselves: every
+// delayed transition whose sceneRoot lies in `doomed`'s subtree must end NOW,
+// while its views are still alive — its end listeners (Visibility's overlay
+// remove + spawned-copy delete, DisappearState's setTransitionVisibility)
+// capture raw View*s and fire when the LAST animator ends, which without this
+// can happen after the tree is freed (valgrind --auto-test: SIGSEGV inside
+// disappearHideWhenNotCanceled via Transition::end after window teardown).
+void endTransitionsOver(View* doomed) {
+    auto& running = TransitionManager::getRunningTransitions();
+    if (running.size() == 0) return;
+    // Match sceneRoots by POINTER against the live subtree set. Never walk a
+    // key's parent chain: a stale key (sceneRoot freed without endTransitions)
+    // would UAF right here — observed as exactly that in a valgrind sweep.
+    std::set<View*> subtree;
+    std::vector<View*> stack{doomed};
+    while (!stack.empty()) {
+        View* v = stack.back();
+        stack.pop_back();
+        if (!subtree.insert(v).second) continue;
+        if (ViewOverlay* overlay = v->peekOverlay()) {
+            stack.push_back(overlay->getOverlayView());
+        }
+        if (ViewGroup* g = dynamic_cast<ViewGroup*>(v)) {
+            for (int i = 0; i < g->getChildCount(); i++) stack.push_back(g->getChildAt(i));
+        }
+    }
+    std::vector<ViewGroup*> roots;
+    for (size_t i = 0; i < running.size(); i++) {
+        if (subtree.count(running.keyAt(i))) roots.push_back(running.keyAt(i));
+    }
+    for (ViewGroup* root : roots) TransitionManager::endTransitions(root);
 }
 
 void SpecialEffectsController::reclaimDeferredExitViews(){
@@ -135,6 +198,7 @@ void SpecialEffectsController::reclaimDeferredExitViews(){
     // ObjectAnimator derefs these views anymore, so freeing is safe.
     for(View* v : mLingeryExitViews){
         endAnimatorsOver(v);
+        endTransitionsOver(v);
         if(v->getParent()) v->getParent()->removeView(v);
         delete v;
     }

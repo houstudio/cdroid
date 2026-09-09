@@ -116,6 +116,7 @@ void scheduleViewReclaim(ViewGroup* cont, View* view, Fragment* fragment,
         // parent drawing a freed view. Remove explicitly so neither list retains it.
         if(fragAlive.lock()){
             endAnimatorsOver(view);
+            endTransitionsOver(view);
             if(fragment && fragment->mView == view){
                 fragment->performDestroyView();
                 fragment->mView = nullptr;
@@ -201,6 +202,12 @@ void AnimationEffect::onCommit(ViewGroup* container){
                     // No Transition clone on this container -> nothing references v post-anim. Safe to
                     // detach + free now (mCurrentAnimation already cleared above so removeView takes
                     // the plain detach branch instead of addDisappearingView).
+                    // hasTransitionEffect() only sees THIS controller's effects; a clone started by
+                    // another operation/controller (round-sharing, sibling container) can still hold a
+                    // running animator over v — end anything still ticking over the subtree (no-op
+                    // when nothing runs), same guard as scheduleViewReclaim.
+                    endAnimatorsOver(v);
+                    endTransitionsOver(v);
                     if(v->getParent()) cont->removeView(v);
                     delete v;
                 }
