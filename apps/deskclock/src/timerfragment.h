@@ -9,6 +9,7 @@
 #include <widget/imageview.h>
 #include <widget/viewpager.h>
 #include <view/viewtreeobserver.h>
+#include <animation/animatorset.h>
 
 #include <datalisteners.h>
 #include <deskclockfragment.h>
@@ -52,6 +53,12 @@ private:
     View* mAnimToView = nullptr;
     const data::Timer* mAnimTimerToRemove = nullptr;
     bool mAnimAnimateDown = false;
+
+    // The page-flip AnimatorSet built by the pre-draw callback. AOSP leaves it
+    // to the GC after start(); with no GC the fragment owns it — replace-delete
+    // on re-entry and delete in ~TimerFragment (valgrind: the set's child
+    // fade/translate ObjectAnimators lost at timerfragment.cc:68 each flip).
+    AnimatorSet* mPageFlipAnimator = nullptr;
 
 public:
     TimerFragment();

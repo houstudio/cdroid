@@ -106,6 +106,14 @@ TimerFragment::TimerFragment() : DeskClockFragment(uidata::Tab::TIMERS) {
             mCreateTimerView->setAlpha(1.0f);
         };
         animatorSet->addListener(setListener);
+        // No GC: the fragment owns this set (AOSP lets it be collected after
+        // the anonymous run). Kill any still-running predecessor first so a
+        // rapid flip cannot leave two sets animating the same views.
+        if (mPageFlipAnimator != nullptr) {
+            mPageFlipAnimator->cancel();
+            delete mPageFlipAnimator;
+        }
+        mPageFlipAnimator = animatorSet;
         animatorSet->start();
 
         return true;
@@ -186,6 +194,8 @@ TimerFragment::TimerFragment() : DeskClockFragment(uidata::Tab::TIMERS) {
 }
 
 TimerFragment::~TimerFragment() {
+    // ~AnimatorSet unregisters from the AnimationHandler even mid-flip.
+    delete mPageFlipAnimator;
     delete mAdapter;
 }
 

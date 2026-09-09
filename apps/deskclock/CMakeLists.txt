@@ -147,7 +147,9 @@ add_executable(deskclock ${DESKCLOCK_SRCS})
 # runtime as deskclock.pak beside the binary.
 CreatePAK(deskclock ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/deskclock.pak ${PROJECT_SOURCE_DIR}/R.h)
 
-target_link_libraries(deskclock PRIVATE cdroid)
+# asyncringtoneplayer's std::thread references pthread_create directly; cdroid
+# links -pthread PRIVATE, so the app must ask for it itself.
+target_link_libraries(deskclock PRIVATE cdroid pthread)
 if(DESKCLOCK_FFMPEG)
     target_link_libraries(deskclock PRIVATE avformat avcodec avutil swresample rtaudio)
 endif()

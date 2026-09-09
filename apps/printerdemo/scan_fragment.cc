@@ -35,8 +35,12 @@ class ScanFragment : public cdroid::Fragment{
     std::shared_ptr<bool> mAliveFlag;
     // DPI Spinner adapter — app-owned (the AdapterView keeps a raw pointer),
     // freed in onDestroy once the view tree (and its popup ListView) is gone.
+    // onDestroy can be skipped when a back-stack fragment is destroyed without
+    // its full lifecycle, so the dtor frees it too (valgrind: 232B lost at
+    // onViewCreated's `new ArrayAdapter`).
     cdroid::ArrayAdapter<std::string>* mDpiAdapter = nullptr;
 public:
+    ~ScanFragment() override { delete mDpiAdapter; }
     void onCreate(cdroid::Bundle* savedInstanceState) override{
         cdroid::Fragment::onCreate(savedInstanceState);
         setEnterTransition(new cdroid::Slide(cdroid::Gravity::END));
