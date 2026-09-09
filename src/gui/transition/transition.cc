@@ -951,12 +951,16 @@ void Transition::forceToEnd(ViewGroup* sceneRoot) {
         return;
     }
     void* windowId = sceneRoot->getWindowId();
-    ArrayMap<Animator*, AnimationInfo> oldAnimators(runningAnimators);
-    runningAnimators.clear();
+    // AOSP iterates the LIVE map backwards (Animator.end() -> the runAnimator
+    // listener removes the entry). The port's copy-then-clear() unregistered
+    // every NON-matching animator too — other windows' animators kept ticking
+    // in AnimationHandler with no map entry, invisible to endAnimatorsOver
+    // until their target view was freed (valgrind --auto-test: SIGSEGV in
+    // View::setTransitionAlpha on a freed ImageView during window teardown).
     for (int i = numOldAnims - 1; i >= 0; i--) {
-        AnimationInfo* info = oldAnimators.valueAtPtr(i);
+        AnimationInfo* info = runningAnimators.valueAtPtr(i);
         if (info && info->view != nullptr && windowId != nullptr && windowId == info->windowId) {
-            Animator* anim = oldAnimators.keyAt(i);
+            Animator* anim = runningAnimators.keyAt(i);
             anim->end();
         }
     }
