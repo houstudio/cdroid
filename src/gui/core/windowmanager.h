@@ -45,6 +45,13 @@ private:
     Window*mActiveWindow;
     std::vector< Window* > mWindows;
     Window* mHoveredWindow;
+    // True while ~WindowManager sweeps the remaining windows. removeWindow stays
+    // functional (nested removals from the sweep's detach cascades must unlist +
+    // detach their windows), but the restart-next-window block and the active-
+    // window invalidate are suppressed: resurrecting focus onto a half-destroyed
+    // activity whose FragmentManager is already gone crashes
+    // FragmentStateManager::computeExpectedState on a dead Fragment.
+    bool mTearingDown = false;
     std::vector< Display > mDisplays;
     /* adjustResize backups: window -> its pre-IME frame (restored on hide). */
     std::unordered_map<Window*, Rect> mSoftInputBackup;

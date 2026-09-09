@@ -17,6 +17,8 @@
  *********************************************************************************/
 #include <app/dialog.h>
 #include <core/windowmanager.h>
+#include <core/looper.h>
+#include <core/messagequeue.h>
 #include <view/gravity.h>
 #include <content/contextthemewrapper.h>
 #include <widget/internal_R.h>
@@ -52,6 +54,14 @@ Dialog::Dialog(Context* context,int themeResId,bool createContextThemeWrapper){
 Dialog::~Dialog(){
     if(mWindow){
         WindowManager::getInstance().removeWindow(mWindow);
+    } else if (mDismissedWindow && Looper::getMainLooper()->getQueue()->isQuitting()) {
+        // Dismissed earlier: the window's teardown was handed to close()'s exit
+        // animation + posted deletes. At quit those posts are dropped by the
+        // dying looper, so the shell stays alive but the tree may never be
+        // detached — remove it here (idempotent, membership-checked). Runtime
+        // never consults the stash: the post may have freed the window and the
+        // address reused by an unrelated one.
+        WindowManager::getInstance().removeWindow(mDismissedWindow);
     }
     if(mOwnsContext){
         delete mContext;
@@ -155,6 +165,7 @@ void Dialog::dismissDialog(){
     if(mWindow){
         mWindow->setVisibility(View::INVISIBLE);
         mWindow->close();          // proper window lifecycle cleanup (posts remove + onDestroy)
+        mDismissedWindow = mWindow; // keep the arbitration handle (see dialog.h)
         mWindow = nullptr;         // idempotent: prevent double-close crash on re-entry
     }
 }

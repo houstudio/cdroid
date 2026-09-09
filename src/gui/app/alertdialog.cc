@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <app/alertdialog.h>
+#include <core/looper.h>
+#include <core/messagequeue.h>
 #include <content/contextthemewrapper.h>
 #include <widget/internal_R.h>
 namespace cdroid{
@@ -74,6 +76,15 @@ AlertDialog::~AlertDialog(){
     // removeWindow re-run is idempotent for the same reason.
     if (Window* w = getWindow()) {
         WindowManager::getInstance().removeWindow(w);
+    } else if (mDismissedWindow && Looper::getMainLooper()->getQueue()->isQuitting()) {
+        // Dismissed earlier and we're quitting: close()'s exit animation + posted
+        // deletes were dropped by the dying looper, so the window may still be
+        // listed with its tree attached — unlist + detach it NOW, before
+        // delete mAlert frees the list adapter the dialog ListView still points
+        // at (the quit-path shape of the crash e3aad50eb fixed for the
+        // never-dismissed case). Runtime never consults the stash — the post
+        // may have freed the window and the address reused by an unrelated one.
+        WindowManager::getInstance().removeWindow(mDismissedWindow);
     }
     delete mAlert;
     delete P;

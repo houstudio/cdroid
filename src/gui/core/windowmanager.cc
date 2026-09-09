@@ -47,23 +47,39 @@ WindowManager&WindowManager::getInstance(){
 
 WindowManager::~WindowManager() {
     App::getInstance().exit(0);
-    // Detach the window list before deleting: destroying a window tears down
-    // its activity, whose fragment tree dismisses dialogs -> Window::close ->
-    // WindowManager::removeWindow. Mid-destruction that call would (a) erase
-    // from mWindows while this loop is iterating it and (b) run the
-    // "restart the next visible window" block, onStart()/onResume()-ing a
-    // half-destroyed activity whose FragmentManager is already gone
-    // (FragmentStateManager::computeExpectedState then dereferences a dead
-    // Fragment). With mWindows already empty removeWindow no-ops at its
-    // membership check instead.
+    // Sweep the remaining windows by dispatching detach through each tree —
+    // and that cascade tears down fragments -> dialogs -> Window::close/
+    // finishClose -> WindowManager::removeWindow for the OTHER windows. Those
+    // nested removals must actually work: a dialog dismissed during an earlier
+    // window's cascade has to be unlisted + DETACHED before its AlertDialog
+    // frees the list adapter the dialog ListView still points at (emptying
+    // mWindows first made removeWindow silently no-op and left the tree
+    // attached — AbsListView::onDetachedFromWindow then hit the freed adapter).
+    // So: keep mWindows live, iterate a COPY (nested erases can't invalidate
+    // us), and set mTearingDown to suppress removeWindow's restart-next-window
+    // block — onStart()/onResume()-ing a half-destroyed activity whose
+    // FragmentManager is already gone crashed FragmentStateManager::
+    // computeExpectedState on a dead Fragment.
+    mTearingDown = true;
     std::vector<Window*> windows = mWindows;
-    mWindows.clear();
     for(Window*w:windows){
         View::AttachInfo*info = w->mAttachInfo;
-        w->dispatchDetachedFromWindow();
+        const bool listed = std::find(mWindows.begin(),mWindows.end(),w) != mWindows.end();
+        if (listed) {
+            // Full proper teardown: focus bookkeeping (suppressed parts aside),
+            // erase, dispatchDetachedFromWindow. Windows already removed by a
+            // cascade were detached there — re-dispatching would re-run
+            // onDetachedFromWindow on a tree whose adapter is gone.
+            removeWindow(w);
+        }
+        // close()'s posted deletes were dropped by the quitting looper — free
+        // the shell here. info was stashed before the detach (which nulls
+        // w->mAttachInfo); for cascade-removed windows it is already null and
+        // the stash died with the dropped post (accepted quit-path leak).
         delete info;
         delete w;
     }
+    mWindows.clear();
     LOGD("%p Destroied",this);
 }
 
@@ -144,7 +160,9 @@ void WindowManager::removeWindow(Window*w){
 
     if(w == mActiveWindow){
         mActiveWindow = nullptr;
-        w->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
+        if (w->mAttachInfo) {   // guard: a detached-but-still-active edge
+            w->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
+        }
     }
     if(w->hasFlag(View::FOCUSABLE)){
         w->dispatchWindowFocusChanged(false);
@@ -167,20 +185,26 @@ void WindowManager::removeWindow(Window*w){
     // it only drops the window from the compositor list so a replacement shown in the same tick
     // doesn't race a still-listed window.
     w->dispatchDetachedFromWindow();
-    for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
-        if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
-            if((*it)!=mActiveWindow){
-                 (*it)->dispatchWindowFocusChanged(true);
-                 (*it)->onStart();
-                 (*it)->onResume();
+    if (!mTearingDown) {
+        // Restart the next visible window. Suppressed during ~WindowManager's
+        // sweep: mActiveWindow may point at a window the sweep already deleted,
+        // and focusing a half-destroyed activity re-enters its dead
+        // FragmentManager.
+        for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
+            if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
+                if((*it)!=mActiveWindow){
+                     (*it)->dispatchWindowFocusChanged(true);
+                     (*it)->onStart();
+                     (*it)->onResume();
+                }
+                mActiveWindow = (*it);
+                break;
             }
-            mActiveWindow = (*it);
-            break;
         }
+        // The removed window may have been the last one (single-window apps,
+        // Window::recreate before the replacement is added): no window to focus.
+        if(mActiveWindow) mActiveWindow->invalidate();
     }
-    // The removed window may have been the last one (single-window apps,
-    // Window::recreate before the replacement is added): no window to focus.
-    if(mActiveWindow) mActiveWindow->invalidate();
     GraphDevice::getInstance().flip();
     LOGI("w=%p windows.size=%d",w,mWindows.size());
 }

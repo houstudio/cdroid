@@ -39,6 +39,12 @@ private:
     OnCancelListener mOnCancelListener;
     OnKeyListener mOnKeyListener;
 protected:
+    // Window whose dismissal already started (dismissDialog nulls mWindow while
+    // close()'s exit animation + posted deletes still own the teardown). Only
+    // consulted while App::isQuitting() — at quit the posts are dropped so the
+    // object is guaranteed alive; at runtime the post may have freed it and the
+    // address reused by an unrelated window.
+    Window* mDismissedWindow = nullptr;
     bool mCancelable = true;
     void dispatchOnCreate(void*buddle);
     virtual void onCreate();
