@@ -278,7 +278,11 @@ def _serialize_cdNp(nptc, nplb, npol):
 
 
 # Binary asset extensions stored verbatim (PNGs are already compressed -> ZIP_STORED).
-BIN_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".apng", ".webp", ".ttf", ".otf", ".ttc", ".dat")
+# Audio feeds the ringtone stack (raw/*.ogg open through Resources::openRawResource);
+# without the extension the file is dropped from the pak while the arsc still
+# names it — openRawResource returns null at runtime.
+BIN_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".apng", ".webp", ".ttf", ".otf", ".ttc", ".dat",
+            ".ogg", ".oga", ".mp3", ".wav", ".flac", ".m4a", ".opus")
 
 
 class PakBuilder:

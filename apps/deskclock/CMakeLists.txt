@@ -84,7 +84,47 @@ set(DESKCLOCK_SRCS
     src/alarmrecyclerview.cc
     src/settingsactivity.cc
     src/screensaveractivity.cc
+    src/asyncringtoneplayer.cc
+    src/alarmklaxon.cc
+    src/ringtonepreviewklaxon.cc
+    src/ringtonebackend.cc
 )
+
+# Real audio backend for the ringtone stack (AsyncRingtonePlayer -> FFmpeg
+# decode + RtAudio output), detected exactly like remusic's: the vcpkg triplet
+# the CURRENT toolchain uses, falling back to probing every installed triplet.
+# Absent everywhere -> the player degrades to its logging stub.
+# Board bring-up: vcpkg install ffmpeg "rtaudio[alsa]" --triplet <board>.
+set(_VCPKG_ROOT "$ENV{VCPKG_ROOT}")
+if(NOT _VCPKG_ROOT AND DEFINED ENV{VCPKG_INSTALLATION_ROOT})
+    set(_VCPKG_ROOT "$ENV{VCPKG_INSTALLATION_ROOT}")
+endif()
+if(NOT _VCPKG_ROOT AND EXISTS "/home/houzh/vcpkg/installed")
+    set(_VCPKG_ROOT "/home/houzh/vcpkg")
+endif()
+set(_CAND_TRIPLETS "")
+if(DEFINED ENV{VCPKG_TARGET_TRIPLET})
+    list(APPEND _CAND_TRIPLETS "$ENV{VCPKG_TARGET_TRIPLET}")
+endif()
+if(_VCPKG_ROOT AND EXISTS "${_VCPKG_ROOT}/installed")
+    file(GLOB _INSTALLED_TRIPLETS RELATIVE "${_VCPKG_ROOT}/installed" "${_VCPKG_ROOT}/installed/*-linux*")
+    list(APPEND _CAND_TRIPLETS ${_INSTALLED_TRIPLETS})
+endif()
+foreach(_t ${_CAND_TRIPLETS})
+    if(NOT DESKCLOCK_FFMPEG AND _VCPKG_ROOT
+            AND EXISTS "${_VCPKG_ROOT}/installed/${_t}/include/libavcodec/avcodec.h"
+            AND EXISTS "${_VCPKG_ROOT}/installed/${_t}/include/rtaudio")
+        set(_VCPKG_TRIPLET "${_VCPKG_ROOT}/installed/${_t}")
+        set(DESKCLOCK_FFMPEG ON)
+        set(DESKCLOCK_TRIPLET_USED "${_t}")
+    endif()
+endforeach()
+if(DESKCLOCK_FFMPEG)
+    message(STATUS "deskclock: ringtone audio backend ON (triplet ${DESKCLOCK_TRIPLET_USED})")
+    add_definitions(-DDESKCLOCK_ENABLE_FFMPEG)
+    include_directories("${_VCPKG_TRIPLET}/include")
+    link_directories("${_VCPKG_TRIPLET}/lib")
+endif()
 
 add_executable(deskclock ${DESKCLOCK_SRCS})
 
@@ -94,4 +134,7 @@ add_executable(deskclock ${DESKCLOCK_SRCS})
 CreatePAK(deskclock ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/deskclock.pak ${PROJECT_SOURCE_DIR}/R.h)
 
 target_link_libraries(deskclock PRIVATE cdroid)
+if(DESKCLOCK_FFMPEG)
+    target_link_libraries(deskclock PRIVATE avformat avcodec avutil swresample rtaudio)
+endif()
 install(TARGETS deskclock DESTINATION bin)

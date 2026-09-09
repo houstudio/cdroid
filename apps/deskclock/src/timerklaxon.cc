@@ -3,7 +3,9 @@
 #include <memory>
 
 #include <porting/cdlog.h>
+#include <core/app.h>
 
+#include <asyncringtoneplayer.h>
 #include <datamodel.h>
 
 namespace cdroid {
@@ -13,13 +15,22 @@ namespace timer {
 using data::DataModel;
 
 bool TimerKlaxon::sStarted = false;
+AsyncRingtonePlayer* TimerKlaxon::sAsyncRingtonePlayer = nullptr;
 
-void TimerKlaxon::stop(Context& /*context*/) {
+AsyncRingtonePlayer* TimerKlaxon::getAsyncRingtonePlayer(Context& /*context*/) {
+    // AOSP binds the application context; the App singleton is cdroid's.
+    if (sAsyncRingtonePlayer == nullptr) {
+        sAsyncRingtonePlayer = new AsyncRingtonePlayer(&App::getInstance());
+    }
+    return sAsyncRingtonePlayer;
+}
+
+void TimerKlaxon::stop(Context& context) {
     if (sStarted) {
         LOGI("TimerKlaxon.stop()");
         sStarted = false;
-        // AsyncRingtonePlayer.stop() + Vibrator.cancel(): no audio/vibrator
-        // backend on cdroid — DEFERRED until one lands.
+        getAsyncRingtonePlayer(context)->stop();
+        // Vibrator.cancel(): no vibrator backend on cdroid — DEFERRED.
     }
 }
 
@@ -33,12 +44,9 @@ void TimerKlaxon::start(Context& context) {
         // Special case: Silent ringtone.
         LOGI("Playing silent ringtone for timer");
     } else {
-        // AsyncRingtonePlayer.play(uri, crescendoDuration): DEFERRED (no audio
-        // backend); log what would ring so the settings chain stays observable.
         std::unique_ptr<Uri> uri(DataModel::getDataModel().getTimerRingtoneUri());
-        LOGI("TimerKlaxon: would play ringtone %s with crescendo %lldms",
-             uri ? uri->toString().c_str() : "(none)",
-             (long long) DataModel::getDataModel().getTimerCrescendoDuration());
+        const int64_t crescendoDuration = DataModel::getDataModel().getTimerCrescendoDuration();
+        getAsyncRingtonePlayer(context)->play(uri.get(), crescendoDuration);
     }
 
     if (DataModel::getDataModel().getTimerVibrate()) {
