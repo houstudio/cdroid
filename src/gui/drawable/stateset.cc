@@ -135,27 +135,4 @@ bool StateSet::containsAttribute(const std::vector<std::vector<int>>& stateSpecs
     return false;
 }
 
-// AOSP StateListDrawable.extractStateSet: walks the <item> AttributeSet by
-// index, takes each attribute's name resource id, and pushes +attrId or
-// -attrId from its boolean value. Attributes without a resource id (and the
-// StateListDrawableItem drawable/id attrs) are skipped.
-int StateSet::parseState(std::vector<int>&states,const AttributeSet&atts){
-    const int numAttrs = atts.getAttributeCount();
-    for (int i = 0; i < numAttrs; i++) {
-        const int stateResId = atts.getAttributeNameResource(i);
-        switch (stateResId) {
-            case 0:
-                break;
-            case attr::drawable:
-            case attr::id:
-                // Ignore attributes from StateListDrawableItem and
-                // AnimatedStateListDrawableItem.
-                continue;
-            default:
-                states.push_back(atts.getAttributeBooleanValue(i, false) ? stateResId : -stateResId);
-        }
-    }
-    return (int)states.size();
-}
-
 }

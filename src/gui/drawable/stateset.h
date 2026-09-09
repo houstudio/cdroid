@@ -59,7 +59,6 @@ public:
     static bool stateSetMatches(const std::vector<int>&stateSpec,const std::vector<int>&stateSet);
     static bool stateSetMatches(const std::vector<int>&stateSpec,int state);
     static bool containsAttribute(const std::vector<std::vector<int>>&stateSpecs,int attr);
-    static int parseState(std::vector<int>&states,const AttributeSet&atts);
     static std::vector<int> get(int mask);
 };
 }

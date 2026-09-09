@@ -108,7 +108,7 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,const Resource
      std::vector<Animator*> childAnims;
 
     // Make sure we are on a start tag.
-    int type = 0,depth = 0;
+    int type = 0;
     const int innerDepth = parser.getDepth()+1;
     while ((((type = parser.next()) != XmlPullParser::END_TAG) || (parser.getDepth() >= innerDepth))
             && (type != XmlPullParser::END_DOCUMENT) && (type != XmlPullParser::BAD_DOCUMENT) ) {
@@ -163,15 +163,19 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
         case XmlPullParser::END_TAG:  return stateListAnimator;
         case XmlPullParser::START_TAG:// parse item
             if (name.compare("item")==0) {
+                // AOSP createStateListAnimatorFromXml: one pass over the item's
+                // attrs — android:animation loads the animator through the
+                // cached public loadAnimator (hit returns a clone), every other
+                // attr is a state (+id when true, -id when false).
                 std::vector<int>states;
                 Animator* animator = nullptr;
-                StateSet::parseState(states,attrs);
-                // AOSP: scan the item's attrs for android:animation (@animator/... ref)
                 const int attributeCount = (int)attrs.getAttributeCount();
                 for (int i = 0; i < attributeCount; i++) {
-                    if (attrs.getAttributeNameResource(i) == R::attr::animation) {
-                        animator = loadAnimator(context, theme, attrs.getAttributeResourceValue(i, 0), 1.f);
-                        break;
+                    const int attrName = attrs.getAttributeNameResource(i);
+                    if (attrName == R::attr::animation) {
+                        animator = loadAnimator(context, attrs.getAttributeResourceValue(i, 0));
+                    } else {
+                        states.push_back(attrs.getAttributeBooleanValue(i, false) ? attrName : -attrName);
                     }
                 }
                 if (animator == nullptr) {
@@ -378,51 +382,48 @@ void AnimatorInflater::distributeKeyframes(std::vector<Keyframe*>& keyframes, fl
 // (The old propertyName→valueType map was a text-XML shim — binary values
 // carry their own type; AOSP infers from the raw TypedValues.)
 
-int AnimatorInflater::inferValueTypeFromType(const TypedValue& tv) {
-    // AOSP AnimatorInflater.inferValueTypeFromType, verbatim.
-    if (tv.type == TypedValue::TYPE_FLOAT) {
-        return VALUE_TYPE_FLOAT;
-    } else if (tv.type >= TypedValue::TYPE_FIRST_INT && tv.type <= TypedValue::TYPE_LAST_INT) {
-        // Disregard the actual int type for now.
-        return VALUE_TYPE_INT;
-    } else if (tv.type == TypedValue::TYPE_STRING) {
-        return VALUE_TYPE_PATH;
-    }
-    return VALUE_TYPE_UNDEFINED;
-}
-
 int AnimatorInflater::inferValueTypeFromValues(const TypedArray& a, int valueFromId, int valueToId) {
-    // AOSP AnimatorInflater.inferValueTypeFromValues: prefer valueFrom's type.
-    TypedValue tv;
-    if (a.peekValue(valueFromId, &tv)) {
-        return inferValueTypeFromType(tv);
+    // AOSP AnimatorInflater.inferValueTypeFromValues (android-36), verbatim:
+    // a color-typed endpoint forces COLOR, everything else falls back to FLOAT.
+    TypedValue tvFrom;
+    const bool hasFrom = a.peekValue(valueFromId, &tvFrom);
+    const int fromType = hasFrom ? tvFrom.type : 0;
+    TypedValue tvTo;
+    const bool hasTo = a.peekValue(valueToId, &tvTo);
+    const int toType = hasTo ? tvTo.type : 0;
+
+    if ((hasFrom && isColorType(fromType)) || (hasTo && isColorType(toType))) {
+        return VALUE_TYPE_COLOR;
     }
-    if (a.peekValue(valueToId, &tv)) {
-        return inferValueTypeFromType(tv);
-    }
-    return VALUE_TYPE_UNDEFINED;
+    return VALUE_TYPE_FLOAT;
 }
 
 PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const Resources::Theme* theme,const AttributeSet&atts, int valueType,const std::string& propertyName){
-    // AOSP AnimatorInflater.getPVH: typed face — hasValue presence, getFloat/
-    // getInt reads (both coerce across int/float), VALUE_TYPE_* space. The old
-    // string probing (sFrom/sTo via getString) lost every typed value.
+    // AOSP AnimatorInflater.getPVH (android-36), line-by-line: peek the raw
+    // TypedValues for the type test, infer COLOR/FLOAT when unspecified (never
+    // bail), read DIMENSION endpoints through getDimension, color endpoints
+    // through getColor, and always build the degenerate single-value holder
+    // when only valueTo (or neither) is set.
     auto ta = obtainAttributes(ctx, theme, atts, R::styleable::PropertyValuesHolder);
-    PropertyValuesHolder* returnValue = nullptr;
-    const bool hasFrom = ta->hasValue(R::styleable::PropertyValuesHolder_valueFrom);
-    const bool hasTo   = ta->hasValue(R::styleable::PropertyValuesHolder_valueTo);
+    TypedValue tvFrom;
+    const bool hasFrom = ta->peekValue(R::styleable::PropertyValuesHolder_valueFrom, &tvFrom);
+    const int fromType = hasFrom ? tvFrom.type : 0;
+    TypedValue tvTo;
+    const bool hasTo = ta->peekValue(R::styleable::PropertyValuesHolder_valueTo, &tvTo);
+    const int toType = hasTo ? tvTo.type : 0;
 
     if (valueType == VALUE_TYPE_UNDEFINED) {
-        // Infer the value type if unspecified.
-        valueType = inferValueTypeFromValues(*ta, R::styleable::PropertyValuesHolder_valueFrom,
-                R::styleable::PropertyValuesHolder_valueTo);
-        if (valueType == VALUE_TYPE_UNDEFINED) {
-            // Not enough information to infer the value type.
-            return returnValue;
+        // Check whether it's color type. If not, fall back to default type (i.e. float type)
+        if ((hasFrom && isColorType(fromType)) || (hasTo && isColorType(toType))) {
+            valueType = VALUE_TYPE_COLOR;
+        } else {
+            valueType = VALUE_TYPE_FLOAT;
         }
     }
 
     const bool getFloats = (valueType == VALUE_TYPE_FLOAT);
+
+    PropertyValuesHolder* returnValue = nullptr;
 
     if (valueType == VALUE_TYPE_PATH) {
         const std::string fromString = ta->getString(R::styleable::PropertyValuesHolder_valueFrom);
@@ -432,9 +433,7 @@ PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const Resources::Them
 
         if (fromString.size() || toString.size()) {
             if (fromString.size()) {
-                PathParser::PathData nodesFrom(fromString);
                 if (toString.size()) {
-                    PathParser::PathData nodesTo(toString);
                     if (!PathParser::canMorph(nodesFrom, nodesTo)) {
                         throw std::runtime_error(std::string(" Can't morph from") + fromString + " to " + toString);
                     }
@@ -443,7 +442,6 @@ PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const Resources::Them
                     returnValue = PropertyValuesHolder::ofObject(propertyName, {nodesFrom});
                 }
             } else if (toString.size()) {
-                PathParser::PathData nodesTo(toString);
                 returnValue = PropertyValuesHolder::ofObject(propertyName,{nodesTo});
             }
             if(returnValue)returnValue->setEvaluator(PropertyValuesHolder::PathDataEvaluator);
@@ -458,32 +456,56 @@ PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const Resources::Them
         if (getFloats) {
             float valueFrom = 0, valueTo = 0;
             if (hasFrom) {
-                valueFrom = ta->getFloat(R::styleable::PropertyValuesHolder_valueFrom, 0);
-            }
-            if (hasTo) {
-                valueTo = ta->getFloat(R::styleable::PropertyValuesHolder_valueTo, 0);
-            }
-            if (hasFrom && hasTo) {
-                returnValue = PropertyValuesHolder::ofFloat(propertyName, {valueFrom, valueTo});
-            } else if (hasFrom) {
-                returnValue = PropertyValuesHolder::ofFloat(propertyName, {valueFrom});
-            } else if (hasTo) {
+                valueFrom = (fromType == TypedValue::TYPE_DIMENSION)
+                        ? ta->getDimension(R::styleable::PropertyValuesHolder_valueFrom, 0.f)
+                        : ta->getFloat(R::styleable::PropertyValuesHolder_valueFrom, 0.f);
+                if (hasTo) {
+                    valueTo = (toType == TypedValue::TYPE_DIMENSION)
+                            ? ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0.f)
+                            : ta->getFloat(R::styleable::PropertyValuesHolder_valueTo, 0.f);
+                    returnValue = PropertyValuesHolder::ofFloat(propertyName, {valueFrom, valueTo});
+                } else {
+                    returnValue = PropertyValuesHolder::ofFloat(propertyName, {valueFrom});
+                }
+            } else {
+                valueTo = (toType == TypedValue::TYPE_DIMENSION)
+                        ? ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0.f)
+                        : ta->getFloat(R::styleable::PropertyValuesHolder_valueTo, 0.f);
                 returnValue = PropertyValuesHolder::ofFloat(propertyName, {valueTo});
             }
         } else {
             int valueFrom = 0, valueTo = 0;
             if (hasFrom) {
-                valueFrom = ta->getInt(R::styleable::PropertyValuesHolder_valueFrom, 0);
-            }
-            if (hasTo) {
-                valueTo = ta->getInt(R::styleable::PropertyValuesHolder_valueTo, 0);
-            }
-            if (hasFrom && hasTo) {
-                returnValue = PropertyValuesHolder::ofInt(propertyName, {valueFrom, valueTo});
-            } else if (hasFrom) {
-                returnValue = PropertyValuesHolder::ofInt(propertyName, {valueFrom});
-            } else if (hasTo) {
-                returnValue = PropertyValuesHolder::ofInt(propertyName, {valueTo});
+                if (fromType == TypedValue::TYPE_DIMENSION) {
+                    valueFrom = (int) ta->getDimension(R::styleable::PropertyValuesHolder_valueFrom, 0.f);
+                } else if (isColorType(fromType)) {
+                    valueFrom = (int) ta->getColor(R::styleable::PropertyValuesHolder_valueFrom, 0);
+                } else {
+                    valueFrom = ta->getInt(R::styleable::PropertyValuesHolder_valueFrom, 0);
+                }
+                if (hasTo) {
+                    if (toType == TypedValue::TYPE_DIMENSION) {
+                        valueTo = (int) ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0.f);
+                    } else if (isColorType(toType)) {
+                        valueTo = (int) ta->getColor(R::styleable::PropertyValuesHolder_valueTo, 0);
+                    } else {
+                        valueTo = ta->getInt(R::styleable::PropertyValuesHolder_valueTo, 0);
+                    }
+                    returnValue = PropertyValuesHolder::ofInt(propertyName, {valueFrom, valueTo});
+                } else {
+                    returnValue = PropertyValuesHolder::ofInt(propertyName, {valueFrom});
+                }
+            } else {
+                if (hasTo) {
+                    if (toType == TypedValue::TYPE_DIMENSION) {
+                        valueTo = (int) ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0.f);
+                    } else if (isColorType(toType)) {
+                        valueTo = (int) ta->getColor(R::styleable::PropertyValuesHolder_valueTo, 0);
+                    } else {
+                        valueTo = ta->getInt(R::styleable::PropertyValuesHolder_valueTo, 0);
+                    }
+                    returnValue = PropertyValuesHolder::ofInt(propertyName, {valueTo});
+                }
             }
         }
         if (returnValue != nullptr && evaluator != nullptr) {
@@ -635,6 +657,79 @@ void AnimatorInflater::setupObjectAnimator(Context*ctx, const Resources::Theme* 
     }
 }
 
+// AOSP AnimatorInflater.setupValues: pushes the endpoint values straight onto
+// the animator via setFloatValues/setIntValues. (Dead upstream too — no caller
+// in android-36, the value inflow goes through getPVH; kept implemented for
+// parity, like setupAnimatorForPath above.)
+void AnimatorInflater::setupValues(ValueAnimator* anim, const TypedArray& arrayAnimator,
+        bool getFloats, bool hasFrom, int fromType, bool hasTo, int toType) {
+    const int valueFromIndex = R::styleable::Animator_valueFrom;
+    const int valueToIndex = R::styleable::Animator_valueTo;
+    if (getFloats) {
+        float valueFrom;
+        float valueTo;
+        if (hasFrom) {
+            if (fromType == TypedValue::TYPE_DIMENSION) {
+                valueFrom = arrayAnimator.getDimension(valueFromIndex, 0.f);
+            } else {
+                valueFrom = arrayAnimator.getFloat(valueFromIndex, 0.f);
+            }
+            if (hasTo) {
+                if (toType == TypedValue::TYPE_DIMENSION) {
+                    valueTo = arrayAnimator.getDimension(valueToIndex, 0.f);
+                } else {
+                    valueTo = arrayAnimator.getFloat(valueToIndex, 0.f);
+                }
+                anim->setFloatValues({valueFrom, valueTo});
+            } else {
+                anim->setFloatValues({valueFrom});
+            }
+        } else {
+            if (toType == TypedValue::TYPE_DIMENSION) {
+                valueTo = arrayAnimator.getDimension(valueToIndex, 0.f);
+            } else {
+                valueTo = arrayAnimator.getFloat(valueToIndex, 0.f);
+            }
+            anim->setFloatValues({valueTo});
+        }
+    } else {
+        int valueFrom;
+        int valueTo;
+        if (hasFrom) {
+            if (fromType == TypedValue::TYPE_DIMENSION) {
+                valueFrom = (int) arrayAnimator.getDimension(valueFromIndex, 0.f);
+            } else if (isColorType(fromType)) {
+                valueFrom = (int) arrayAnimator.getColor(valueFromIndex, 0);
+            } else {
+                valueFrom = arrayAnimator.getInt(valueFromIndex, 0);
+            }
+            if (hasTo) {
+                if (toType == TypedValue::TYPE_DIMENSION) {
+                    valueTo = (int) arrayAnimator.getDimension(valueToIndex, 0.f);
+                } else if (isColorType(toType)) {
+                    valueTo = (int) arrayAnimator.getColor(valueToIndex, 0);
+                } else {
+                    valueTo = arrayAnimator.getInt(valueToIndex, 0);
+                }
+                anim->setIntValues({valueFrom, valueTo});
+            } else {
+                anim->setIntValues({valueFrom});
+            }
+        } else {
+            if (hasTo) {
+                if (toType == TypedValue::TYPE_DIMENSION) {
+                    valueTo = (int) arrayAnimator.getDimension(valueToIndex, 0.f);
+                } else if (isColorType(toType)) {
+                    valueTo = (int) arrayAnimator.getColor(valueToIndex, 0);
+                } else {
+                    valueTo = arrayAnimator.getInt(valueToIndex, 0);
+                }
+                anim->setIntValues({valueTo});
+            }
+        }
+    }
+}
+
 ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const Resources::Theme* theme,const AttributeSet& atts,float){
     ObjectAnimator*anim = new ObjectAnimator();
     loadAnimator(ctx,theme,atts,anim,1.f);
@@ -643,19 +738,9 @@ ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const Resources
 
 ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const Resources::Theme* theme,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale){
     // If anim is not null, then it is an object animator.
-    /*if (anim != nullptr) {
-        if (theme != null) {
-            arrayObjectAnimator = theme.obtainStyledAttributes(attrs,R.styleable.PropertyAnimator, 0, 0);
-        } else {
-            arrayObjectAnimator = res.obtainAttributes(attrs, R.styleable.PropertyAnimator);
-        }
-        anim.appendChangingConfigurations(arrayObjectAnimator.getChangingConfigurations());
-    }*/
-
     if (anim == nullptr) {
         anim = new ValueAnimator();
     }
-    //anim->appendChangingConfigurations(arrayAnimator.getChangingConfigurations());
 
     parseAnimatorFromTypeArray(context,theme,anim,attrs, pathErrorScale);
 
@@ -668,37 +753,5 @@ ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const Resources::T
     return anim;
 }
 
-ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const Resources::Theme* theme,const AttributeSet& atts, ValueAnimator*anim,float){
-    auto ta = obtainAttributes(context, theme, atts, R::styleable::Animator);
-    auto taPvh = obtainAttributes(context, theme, atts, R::styleable::PropertyValuesHolder);
-    // AOSP: valueType from the attr; if unspecified, infer from valueFrom/valueTo.
-    int valueType = ta->getInt(R::styleable::Animator_valueType, VALUE_TYPE_UNDEFINED);
-    if (valueType == VALUE_TYPE_UNDEFINED) {
-        valueType = inferValueTypeFromValues(*ta, R::styleable::Animator_valueFrom,
-                R::styleable::Animator_valueTo);
-    }
-
-    const std::string propertyName = taPvh->getString(R::styleable::PropertyValuesHolder_propertyName);
-    const int intpResource = ta->getResourceId(R::styleable::Animator_interpolator, 0);
-    Interpolator* interpolator = nullptr;
-    if (intpResource != 0) {
-        interpolator = AnimationUtils::loadInterpolator(context, intpResource);
-    }
-    if(anim==nullptr){
-        anim = new ValueAnimator();
-    }
-    if(interpolator){
-        anim->setInterpolator(interpolator);
-    }
-    anim->setDuration(ta->getInt(R::styleable::Animator_duration, 300));
-    anim->setStartDelay(ta->getInt(R::styleable::Animator_startOffset, 0));
-    anim->setRepeatCount(ta->getInt(R::styleable::Animator_repeatCount, 0));
-    anim->setRepeatMode(ta->getInt(R::styleable::Animator_repeatMode, ValueAnimator::RESTART));
-
-    PropertyValuesHolder* pvh = getPVH(context,theme,atts,valueType,propertyName);
-    if(pvh)
-        anim->setValues({pvh});
-    return anim;
 }
 
-}

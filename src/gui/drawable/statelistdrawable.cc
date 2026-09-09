@@ -223,7 +223,7 @@ void StateListDrawable::inflateChildElements(Resources&r,XmlPullParser&parser,co
         std::vector<int>states;
         auto ta = obtainAttributes(r, theme, atts, R::styleable::StateListDrawableItem);
         Drawable*dr = ta->getDrawable(R::styleable::StateListDrawableItem_drawable);
-        StateSet::parseState(states,atts);
+        states = extractStateSet(atts);
         if(dr==nullptr){
             while((type=parser.next())==XmlPullParser::TEXT){}
             if(type!=XmlPullParser::START_TAG)
@@ -232,6 +232,31 @@ void StateListDrawable::inflateChildElements(Resources&r,XmlPullParser&parser,co
         }
         mStateListState->addStateSet(states,dr);
     }
+}
+
+// AOSP StateListDrawable.extractStateSet, verbatim: the fixed-size array and
+// the trailing trimStateSet collapse to the pushed entries (the vector only
+// ever holds the valid states).
+std::vector<int> StateListDrawable::extractStateSet(const AttributeSet& attrs) const {
+    int j = 0;
+    const int numAttrs = attrs.getAttributeCount();
+    std::vector<int> states(numAttrs);
+    for (int i = 0; i < numAttrs; i++) {
+        const int stateResId = attrs.getAttributeNameResource(i);
+        switch (stateResId) {
+            case 0:
+                break;
+            case R::attr::drawable:
+            case R::attr::id:
+                // Ignore attributes from StateListDrawableItem and
+                // AnimatedStateListDrawableItem.
+                continue;
+            default:
+                states[j++] = attrs.getAttributeBooleanValue(i, false) ? stateResId : -stateResId;
+        }
+    }
+    StateSet::trimStateSet(states, j);
+    return states;
 }
 
 }

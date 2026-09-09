@@ -249,8 +249,7 @@ int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const
     const int keyframeId = ta->getResourceId(R::styleable::AnimatedStateListDrawableItem_id, 0);
     Drawable* dr = ta->getDrawable(R::styleable::AnimatedStateListDrawableItem_drawable);
 
-    std::vector<int> states;
-    StateSet::parseState(states,atts);
+    std::vector<int> states = extractStateSet(atts);
 
     // Loading child elements modifies the state of the AttributeSet's
     // underlying parser, so it needs to happen after obtaining

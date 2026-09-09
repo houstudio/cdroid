@@ -48,13 +48,14 @@ private:
     // AOSP AnimatorInflater: infer the value type from valueFrom/valueTo's raw
     // TypedValues (typed/binary face; the old propertyName map was a text-XML shim).
     static int inferValueTypeFromValues(const TypedArray& a, int valueFromId, int valueToId);
-    static int inferValueTypeFromType(const TypedValue& tv);
     static PropertyValuesHolder* getPVH(Context*ctx,const Resources::Theme* theme,const AttributeSet&atts, int valueType,const std::string& propertyName);
     static void parseAnimatorFromTypeArray(Context*ctx,const Resources::Theme* theme,ValueAnimator* anim,const AttributeSet&atts, float pixelSize);
     static TypeEvaluator setupAnimatorForPath(Context*ctx,const Resources::Theme* theme,ValueAnimator* anim,const AttributeSet&arrayAnimator);
     static void setupObjectAnimator(Context*ctx,const Resources::Theme* theme,ValueAnimator* anim,const AttributeSet&arrayObjectAnimator,int valueType,float pixelSize);
+    // AOSP setupValues: dead upstream (no caller in android-36); kept for parity.
+    static void setupValues(ValueAnimator* anim, const TypedArray& arrayAnimator,
+            bool getFloats, bool hasFrom, int fromType, bool hasTo, int toType);
     static ObjectAnimator* loadObjectAnimator(Context*ctx,const Resources::Theme* theme,const AttributeSet& attrs,float );
-    static ValueAnimator* loadValueAnimator(Context*context,const Resources::Theme* theme,const AttributeSet& attrs, ValueAnimator*anim,float);
     static ValueAnimator* loadAnimator(Context*ctx,const Resources::Theme* theme,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale);
     static std::vector<PropertyValuesHolder*> loadValues(Context*ctx,const Resources::Theme* theme,XmlPullParser& parser,const  AttributeSet& attrs);
     // AOSP loadPvh(res, theme, parser, propertyName, valueType): parses nested

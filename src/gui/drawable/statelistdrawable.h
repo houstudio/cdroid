@@ -40,6 +40,11 @@ private:
     void updateStateFromTypedArray(const TypedArray& a);
 protected:
     StateListDrawable(std::shared_ptr<StateListState>state);
+    // AOSP StateListDrawable.extractStateSet (package-private, shared with the
+    // AnimatedStateListDrawable subclass): extracts state_ attributes from an
+    // item's AttributeSet. AnimatorInflater inlines its own loop instead (the
+    // android:animation attr needs the load-animator side effect).
+    std::vector<int> extractStateSet(const AttributeSet& attrs) const;
     int indexOfStateSet(const std::vector<int>&states)const;
     bool onStateChange(const std::vector<int>&stateSet)override;
     std::shared_ptr<DrawableContainerState>cloneConstantState()override;
