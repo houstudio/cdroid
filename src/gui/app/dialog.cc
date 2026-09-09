@@ -92,7 +92,7 @@ void Dialog::show(){
             // surface between frames and animating content (e.g. the radial
             // time picker's crossfade) accumulates on the retained surface.
             // Resolve through obtainStyledAttributes instead — the same
-            // ResTable path widgets use, which chases the reference.
+            // engine path widgets use, which chases the reference.
             const uint32_t attrs[] = { (uint32_t) internal::R::attr::colorBackground, 0 };
             auto ta = mContext->obtainStyledAttributes(attrs);
             if (ta != nullptr) {

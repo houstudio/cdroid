@@ -936,11 +936,11 @@ class PakBuilder:
                         res_files.append((name, zf.read(name)))
             with zipfile.ZipFile(self.pak_path, "w") as zf:
                 if arsc:
-                    # AOSP storage policy (pre-30 profile): everything DEFLATED —
-                    # arsc goes STORED only when an entry-level mmap consumer
-                    # exists (Play delivery/AssetManager2 mmap; CDROID reads it
-                    # via libzip into a buffer).
-                    zf.writestr("resources.arsc", arsc, zipfile.ZIP_DEFLATED)
+                    # AOSP aapt2 policy: resources.arsc is STORED — the AM2
+                    # runtime (AssetsProvider zero-copy reader) mmaps it as a
+                    # base+offset view. Forward-safe: libzip reads STORED fine,
+                    # the old runtime path is unaffected.
+                    zf.writestr("resources.arsc", arsc, zipfile.ZIP_STORED)
                 for name, data in res_files:
                     zf.writestr(name, data, zipfile.ZIP_DEFLATED)
             # Keep the intermediate widgetex.apk for app -I linking.
@@ -1201,11 +1201,17 @@ class PakBuilder:
             for rel, data in sorted(sdk_data.items()):
                 if rel.startswith("values/"):
                     continue
+                # resources.arsc rides in sdk_data (framework -x output): the
+                # AM2 runtime mmaps it — STORED per AOSP aapt2, zero-copy view.
+                if rel == "resources.arsc":
+                    zf.writestr(rel, data, zipfile.ZIP_STORED)
+                    continue
                 zf.writestr(rel, data, zipfile.ZIP_DEFLATED)
             # App's own resources.arsc (multi-package: resolved by Assets
             # alongside the framework arsc; lets app @string/@color refs work).
+            # STORED per AOSP aapt2 (see the framework arsc note above).
             if app_arsc:
-                zf.writestr("resources.arsc", app_arsc, zipfile.ZIP_DEFLATED)
+                zf.writestr("resources.arsc", app_arsc, zipfile.ZIP_STORED)
             _manifest_bin = getattr(self, '_app_manifest_bin', None)
             if _manifest_bin:
                 zf.writestr("AndroidManifest.xml", _manifest_bin, zipfile.ZIP_DEFLATED)
@@ -1271,10 +1277,12 @@ class PakBuilder:
                             sys.stderr.write("9patch embed failed for %s: %s; storing as-is\n" % (p, e))
                             zf.writestr(arc, open(p, "rb").read(), zipfile.ZIP_DEFLATED)
                     elif f.endswith(BIN_EXTS):
-                        # AOSP storage policy: resource files (bitmaps/fonts/
-                        # raw) are DEFLATED in the zip; only arsc and
-                        # mmap'd native libs are STORED.
-                        zf.writestr(zname, open(p, "rb").read(), zipfile.ZIP_DEFLATED)
+                        # Already-compressed media (png/jpg/webp/fonts):
+                        # DEFLATE wins nothing and costs a full inflate per
+                        # open. STORED (the AOSP pre-30 resource profile for
+                        # these) lets the zero-copy reader hand decoders a
+                        # view straight into the mapped pak.
+                        zf.writestr(zname, open(p, "rb").read(), zipfile.ZIP_STORED)
                     # other extensions skipped
 
 

@@ -139,6 +139,7 @@ void PopupWindow::init(){
     mWidthMode = mHeightMode =0;
     mParentRootView = nullptr;
     mAnchor = nullptr;
+    mDecorView  = nullptr;
     mAnchorRoot = nullptr;
     mBackground = nullptr;
     mBackgroundView = nullptr;

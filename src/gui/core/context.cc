@@ -8,7 +8,8 @@
 #include "content/resourcesimpl.h"   // cdroid::ResourcesImpl (+ Theme)
 #include "resources.h"      // cdroid::Resources (full def — getResources() returns it)
 #include <content/typedarray.h>       // TypedArray (constructed below)
-#include <content/androidfw/restable.h>     // ResTable::Theme + obtainStyledAttributes + StyledAttr
+#include <content/androidfw/assetmanager2.h>   // AM2 engine + cdroid::Theme
+#include <content/androidfw/attributeresolution.h>  // ResolveAttrs
 #include <content/sharedpreferences.h>      // SharedPreferencesImpl (getSharedPreferences)
 #include <core/environment.h>        // android.os.Environment port (data/storage roots)
 #include <cstdlib>
@@ -78,12 +79,14 @@ Typeface* Context::getFont(int id) {
 // the live theme (defStyleAttr=0, defStyleRes=0). Delegates to getTheme() like
 // the Java final in android.content.Context. `attrs` is sentinel-terminated.
 std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const uint32_t* attrs) {
-    Resources::Theme _th = getTheme(); ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
-    const ResTable& table = theme->getResTable();
+    Resources::Theme _th = getTheme(); cdroid::Theme* theme = static_cast<cdroid::Theme*>(_th._engineHandle());
+    AssetManager2& am2 = *theme->GetAssetManager();
     size_t n = 0; while (attrs[n]) ++n;  // count up to the trailing-0 sentinel
+    std::vector<uint32_t> values(n * STYLE_NUM_ENTRIES);
+    ResolveAttrs(theme, 0, 0, nullptr, 0, attrs, n, values.data(), nullptr);
     std::vector<StyledAttr> styled(n);
-    cdroid::obtainStyledAttributes(table, theme, attrs, 0, 0, styled.data());
-    return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
+    styledAttrsFromBlocks(values.data(), n, styled.data());
+    return std::make_unique<TypedArray>(&am2, std::move(styled), nullptr,
                                         getResources().getDisplayMetrics().density, &getResources(), &_th);
 }
 
@@ -91,12 +94,14 @@ std::unique_ptr<TypedArray> Context::obtainStyledAttributes(const uint32_t* attr
 // top of the theme (defStyleAttr=0, defStyleRes=resId). `attrs` is sentinel-
 // terminated.
 std::unique_ptr<TypedArray> Context::obtainStyledAttributes(int resid, const uint32_t* attrs) {
-    Resources::Theme _th = getTheme(); ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
-    const ResTable& table = theme->getResTable();
+    Resources::Theme _th = getTheme(); cdroid::Theme* theme = static_cast<cdroid::Theme*>(_th._engineHandle());
+    AssetManager2& am2 = *theme->GetAssetManager();
     size_t n = 0; while (attrs[n]) ++n;
+    std::vector<uint32_t> values(n * STYLE_NUM_ENTRIES);
+    ResolveAttrs(theme, 0, (uint32_t)resid, nullptr, 0, attrs, n, values.data(), nullptr);
     std::vector<StyledAttr> styled(n);
-    cdroid::obtainStyledAttributes(table, theme, attrs, 0, (uint32_t)resid, styled.data());
-    return std::make_unique<TypedArray>(table, std::move(styled), nullptr,
+    styledAttrsFromBlocks(values.data(), n, styled.data());
+    return std::make_unique<TypedArray>(&am2, std::move(styled), nullptr,
                                         getResources().getDisplayMetrics().density, &getResources(), &_th);
 }
 

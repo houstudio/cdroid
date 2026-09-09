@@ -36,6 +36,7 @@ namespace cxxopts{
 namespace cdroid{
 
 class Window;
+class AssetManager2;   // androidfw (arscEngine return; defined in assetmanager2.h)
 // AssetManager is forward-declared at global scope in context.h.
 
 struct ActivityPendingResult { Window* caller; int requestCode; Window* target; };
@@ -95,8 +96,8 @@ private:
     // write would dangle the static pointer). ~App detaches the pointer
     // (DataResource::SetData(nullptr, 0)) before this member frees.
     std::vector<char> mI18nData;
-    // The pak registry (mResources) and the arsc engine state (mResTable /
-    // mArscTheme) live on Context (the ContextImpl role); App inherits them.
+    // The pak registry (mResources) and the arsc theme engine (mArscTheme)
+    // live on Context (the ContextImpl role); App inherits them.
     bool arscResolveHexRef(const std::string& s, TypedValue* out) const;
     void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
     // Rebuild the live arsc theme for `resid` (setTheme's engine side).
@@ -178,6 +179,8 @@ public:
     friend class Window;   // consumes mPendingActivityTheme in its Context ctor
 
     // --- Context implementation (the ContextImpl face) ---------------------
+    // The AM2 table behind this App's AssetManager (ContextImpl::arscEngine).
+    AssetManager2* arscEngine() const override;
     // Binary-AXML bridge (transitional): resolve a resource ID / fetch a string
     // from the loaded arsc so the parsers can render typed attribute values.
     bool arscResolveId(uint32_t resId, TypedValue* out) const;

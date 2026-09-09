@@ -220,7 +220,7 @@ View* StopwatchFragment::onCreateView(LayoutInflater* inflater, ViewGroup* conta
         // Upstream reads these through ThemeUtils.resolveColor. cdroid's
         // Theme.resolveAttribute flattens a color-selector reference to a
         // pool index (TypedValue.data without a resourceId), so resolve the
-        // attrs through obtainStyledAttributes instead — the same ResTable
+        // attrs through obtainStyledAttributes instead — the same engine
         // path widgets use, which handles color-selector file resources.
         const uint32_t attrs[] = {0x01010435 /* android:colorAccent */,
                                   0x01010036 /* android:textColorPrimary */, 0};

@@ -16,7 +16,8 @@
 #include <sstream>
 
 // androidfw native readers — hidden from resourcesimpl.h (the facade contract).
-#include <content/androidfw/restable.h>       // ResTable, ResTable_config, Res_value, pakPathCandidates
+#include <content/androidfw/resourcetypes.h>  // ResTable_config, Res_value, pakPathCandidates
+#include <content/androidfw/assetmanager2.h>  // AM2 engine (ResolvedBag, SelectedValue)
 #include <content/androidfw/LocaleData.h>     // localeDataComputeScript (arsc locale config)
 #include <content/LocaleList.h>               // LocaleList::getDefault (start-up locale seed)
 #include <content/assetmanager.h>        // AssetManager
@@ -36,7 +37,6 @@
 #include <animation/statelistanimator.h>    // StateListAnimatorCache
 
 using namespace cdroid;
-using cdroid::ResTable;
 using cdroid::ResTable_config;
 using cdroid::Res_value;
 
@@ -185,13 +185,13 @@ int ResourcesImpl::calcConfigChanges(const Configuration* config) {
 int ResourcesImpl::getIdentifier(const std::string& name,
         const std::string& type, const std::string& package) const {
     if (mAssets == nullptr) return 0;
-    return (int)mAssets->getResources(false).getIdentifier(name, type, package);
+    return mAssets->getIdentifier(name, type, package);   // ladder incl. any-package
 }
 
 bool ResourcesImpl::getResourceName(int id, std::string* out) const {
     std::string pkg, type, key;
     if (mAssets == nullptr) return false;
-    if (!mAssets->getResources(false).getResourceName((uint32_t)id, &pkg, &type, &key)) return false;
+    if (!mAssets->getResourceName((uint32_t)id, &pkg, &type, &key)) return false;
     if (out) *out = pkg + ":" + type + "/" + key;
     return true;
 }
@@ -199,7 +199,7 @@ bool ResourcesImpl::getResourceName(int id, std::string* out) const {
 bool ResourcesImpl::getResourcePackageName(int id, std::string* out) const {
     std::string pkg, type, key;
     if (mAssets == nullptr) return false;
-    if (!mAssets->getResources(false).getResourceName((uint32_t)id, &pkg, &type, &key)) return false;
+    if (!mAssets->getResourceName((uint32_t)id, &pkg, &type, &key)) return false;
     if (out) *out = pkg;
     return true;
 }
@@ -207,7 +207,7 @@ bool ResourcesImpl::getResourcePackageName(int id, std::string* out) const {
 bool ResourcesImpl::getResourceTypeName(int id, std::string* out) const {
     std::string pkg, type, key;
     if (mAssets == nullptr) return false;
-    if (!mAssets->getResources(false).getResourceName((uint32_t)id, &pkg, &type, &key)) return false;
+    if (!mAssets->getResourceName((uint32_t)id, &pkg, &type, &key)) return false;
     if (out) *out = type;
     return true;
 }
@@ -215,36 +215,34 @@ bool ResourcesImpl::getResourceTypeName(int id, std::string* out) const {
 bool ResourcesImpl::getResourceEntryName(int id, std::string* out) const {
     std::string pkg, type, key;
     if (mAssets == nullptr) return false;
-    if (!mAssets->getResources(false).getResourceName((uint32_t)id, &pkg, &type, &key)) return false;
+    if (!mAssets->getResourceName((uint32_t)id, &pkg, &type, &key)) return false;
     if (out) *out = key;
     return true;
 }
 
 bool ResourcesImpl::getValue(int id, TypedValue* outValue, bool resolveRefs) const {
     if (mAssets == nullptr || id <= 0 || outValue == nullptr) return false;
-    const ResTable& rt = mAssets->getResources(false);
+    AssetManager2& am2 = mAssets->getAssetManager2();
 
-    Res_value v;
-    ResTable_config cfg;
-    memset(&cfg, 0, sizeof(cfg));
-    ssize_t block = rt.getResource((uint32_t)id, &v, false, 0, nullptr, &cfg);
-    if (block < 0) return false;
+    auto result = am2.GetResource((uint32_t)id);
+    if (!result.has_value()) return false;
+    AssetManager2::SelectedValue v = *result;
 
     if (resolveRefs) {
-        block = rt.resolveReference(&v, block, nullptr, nullptr, &cfg);
-        if (block < 0) return false;
+        if (!am2.ResolveReference(v).has_value()) return false;
     }
 
-    outValue->type = v.dataType;
+    outValue->type = v.type;
     outValue->data = v.data;
     outValue->resourceId = (uint32_t)id;
-    outValue->density = (int)cfg.density;
-    outValue->changingConfigurations = 0;
+    outValue->density = (int)v.config.density;
+    outValue->changingConfigurations = v.flags;
     outValue->string = nullptr;
     outValue->stringLen = 0;
-    if (v.dataType == Res_value::TYPE_STRING) {
+    if (v.type == Res_value::TYPE_STRING) {
         size_t len = 0;
-        const char16_t* s = rt.stringAtBlock(block, v.data, &len);
+        const ResStringPool* pool = am2.GetStringPoolForCookie(v.cookie);
+        const char16_t* s = pool ? pool->stringAt(v.data, &len) : nullptr;
         outValue->string = s;
         outValue->stringLen = len;
     }
@@ -280,15 +278,17 @@ std::u16string ResourcesImpl::getText(int id, const std::u16string& def) const {
 // for the caller to follow (rare in arrays).
 std::vector<std::string> ResourcesImpl::getStringArray(int id) const {
     std::vector<std::string> out;
-    const ResTable& rt = getAssets()->getResources(false);
-    size_t count = 0; ssize_t block = -1;
-    const ResTable_map* map = rt.getBag((uint32_t)id, &count, nullptr, &block);
-    if (!map) return out;
+    AssetManager2& am2 = getAssets()->getAssetManager2();
+    auto bagResult = am2.GetBag((uint32_t)id);
+    if (!bagResult.has_value()) return out;
+    const ResolvedBag* bag = *bagResult;
+    const size_t count = bag->entry_count;
     for (size_t i = 0; i < count; i++) {
-        const Res_value& v = map[i].value;
+        const Res_value& v = bag->entries[i].value;
         if (v.dataType == Res_value::TYPE_STRING) {
             size_t len = 0;
-            const char16_t* s = rt.stringAtBlock(block, v.data, &len);
+            const ResStringPool* pool = am2.GetStringPoolForCookie(bag->entries[i].cookie);
+            const char16_t* s = pool ? pool->stringAt(v.data, &len) : nullptr;
             if (s && len) out.push_back(u16to8(s, len));
         }
     }
@@ -297,15 +297,17 @@ std::vector<std::string> ResourcesImpl::getStringArray(int id) const {
 
 std::vector<std::u16string> ResourcesImpl::getTextArray(int id) const {
     std::vector<std::u16string> out;
-    const ResTable& rt = getAssets()->getResources(false);
-    size_t count = 0; ssize_t block = -1;
-    const ResTable_map* map = rt.getBag((uint32_t)id, &count, nullptr, &block);
-    if (!map) return out;
+    AssetManager2& am2 = getAssets()->getAssetManager2();
+    auto bagResult = am2.GetBag((uint32_t)id);
+    if (!bagResult.has_value()) return out;
+    const ResolvedBag* bag = *bagResult;
+    const size_t count = bag->entry_count;
     for (size_t i = 0; i < count; i++) {
-        const Res_value& v = map[i].value;
+        const Res_value& v = bag->entries[i].value;
         if (v.dataType == Res_value::TYPE_STRING) {
             size_t len = 0;
-            const char16_t* s = rt.stringAtBlock(block, v.data, &len);
+            const ResStringPool* pool = am2.GetStringPoolForCookie(bag->entries[i].cookie);
+            const char16_t* s = pool ? pool->stringAt(v.data, &len) : nullptr;
             if (s && len) out.emplace_back(s, len);
         }
     }
@@ -314,12 +316,13 @@ std::vector<std::u16string> ResourcesImpl::getTextArray(int id) const {
 
 std::vector<int> ResourcesImpl::getIntArray(int id) const {
     std::vector<int> out;
-    const ResTable& rt = getAssets()->getResources(false);
-    size_t count = 0; ssize_t block = -1;
-    const ResTable_map* map = rt.getBag((uint32_t)id, &count, nullptr, &block);
-    if (!map) return out;
+    AssetManager2& am2 = getAssets()->getAssetManager2();
+    auto bagResult = am2.GetBag((uint32_t)id);
+    if (!bagResult.has_value()) return out;
+    const ResolvedBag* bag = *bagResult;
+    const size_t count = bag->entry_count;
     for (size_t i = 0; i < count; i++) {
-        const Res_value& v = map[i].value;
+        const Res_value& v = bag->entries[i].value;
         if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX
             || v.dataType == Res_value::TYPE_INT_BOOLEAN) {
             out.push_back((int)v.data);
@@ -495,7 +498,7 @@ std::unique_ptr<XmlPullParser> ResourcesImpl::loadXmlResourceParser(int resid) c
 // cached drawables/CSLs. Key on the theme's monotonic generation instead.
 static uint64_t themedCacheKey(int id, const void* themeEngine) {
     const uint64_t theme = themeEngine
-            ? static_cast<const ResTable::Theme*>(themeEngine)->cacheGeneration()
+            ? static_cast<const cdroid::Theme*>(themeEngine)->cacheGeneration()
             : 0;
     return (theme << 32) | (uint32_t)id;
 }
@@ -586,9 +589,7 @@ void ResourcesImpl::updateConfiguration(const Configuration* config, const Displ
         localesChanged = true;
     }
     if ((changes & Configuration::CONFIG_LOCALE) != 0 && locales.size() > 1) {
-        std::vector<std::string> availableLocales;
-        // getResources() is const (AOSP facade); the table is a mutable cache.
-        const_cast<ResTable&>(mAssets->getResources(false)).getLocales(availableLocales);
+        std::vector<std::string> availableLocales = mAssets->getLocales();
         if (LocaleList::isPseudoLocalesOnly(&availableLocales)) {
             availableLocales.clear();
         }
@@ -615,9 +616,7 @@ void ResourcesImpl::updateConfiguration(const Configuration* config, const Displ
 
     // AOSP mAssets.setConfigurationInternal(...): reselect resource variants.
     ResTable_config cfg = toResTableConfig(mConfiguration, mMetrics);
-    // getResources() is const (AOSP facade); the underlying table is a mutable
-    // cache (AssetManager owns it via mutable members), so the cast is safe.
-    const_cast<ResTable&>(mAssets->getResources(false)).setParameters(&cfg);
+    mAssets->setConfiguration(cfg);
     *mConfig = cfg;
 
     // AOSP: mDrawableCache/mColorDrawableCache/mComplexColorCache/...

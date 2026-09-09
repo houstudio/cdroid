@@ -31,7 +31,7 @@ public:
     size_t getFileCount() { return mFileInfo.size(); }
     const std::string& getFileName(int idx) { return mFileInfo[idx].getFileName(); }
     const std::string& getSourceName(int idx) { return mFileInfo[idx].getSourceName(); }
-    FileType getFileType(int idx) { return mFileInfo[idx].getFileType(); }
+    ::FileType getFileType(int idx) { return mFileInfo[idx].getFileType(); }
 
 private:
     AssetDir(const AssetDir&) = delete;
@@ -51,12 +51,12 @@ private:
         bool operator<(const FileInfo& rhs) const { return mFileName < rhs.mFileName; }
         bool operator==(const FileInfo& rhs) const { return mFileName == rhs.mFileName; }
 
-        void set(const std::string& path, FileType type) { mFileName = path; mFileType = type; }
+        void set(const std::string& path, ::FileType type) { mFileName = path; mFileType = type; }
 
         const std::string& getFileName() const { return mFileName; }
         void setFileName(const std::string& path) { mFileName = path; }
-        FileType getFileType() const { return mFileType; }
-        void setFileType(FileType type) { mFileType = type; }
+        ::FileType getFileType() const { return mFileType; }
+        void setFileType(::FileType type) { mFileType = type; }
         const std::string& getSourceName() const { return mSourceName; }
         void setSourceName(const std::string& path) { mSourceName = path; }
 
@@ -65,7 +65,7 @@ private:
 
     private:
         std::string mFileName;     // filename only
-        FileType    mFileType = kFileTypeUnknown;
+        ::FileType   mFileType = ::kFileTypeUnknown;
         std::string mSourceName;   // debug only
     };
 

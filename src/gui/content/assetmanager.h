@@ -1,18 +1,17 @@
 // Port of AOSP frameworks/base/libs/androidfw/include/androidfw/AssetManager.h.
 //
-// Asset management class. A faithful C++14 port of the LEGACY AssetManager that
-// wraps a ResTable (the engine CDROID already has). Public class & method
-// signatures match AOSP (String8 -> std::string, Vector -> std::vector). Internal
-// adaptations, all under "内部隐藏类可适当裁剪":
+// Asset management class. Originally a C++14 port of the LEGACY AssetManager
+// over ResTable; the AM2 switch (③-4b) moved the table half onto AssetManager2
+// — the AOSP Java-side shape (AssetManager.java holds the ApkAssets list and
+// commits it atomically via nativeSetApkAssets). Public class & method
+// signatures match AOSP (String8 -> std::string, Vector -> std::vector).
+// Internal adaptations, all under "内部隐藏类可适当裁剪":
 //   - SharedZip / ZipSet (framework shared-table cache + RefBase/sp/wp) replaced
-//     by a per-path libzip handle cache. CDROID has no use for the cross-process
-//     shared framework table.
+//     by a per-path libzip handle cache for the FILE half. The table half reads
+//     through ApkAssets' AssetsProvider (mmap'd, STORED zero-copy).
 //   - ZipFileRO (libziparchive) -> libzip (zip_t), used only inside assetmanager.cc.
 //   - idmap / runtime-resource-overlay machinery stubbed (no RRO in CDROID).
 //   - Mutex/AutoMutex dropped (single-threaded UI resource access).
-//
-// Lives in namespace cdroid (isolated from cdroid::Assets). The wrapped engine
-// types are brought in from the existing cdroid:: port via using-declarations.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,10 +23,12 @@
 
 #include <sys/types.h>
 #include <stdint.h>
+#include <memory>
 #include <string>
 #include <vector>
 
-#include <content/androidfw/restable.h>        // cdroid::ResTable (also pulls resourcetypes.h)
+#include <content/androidfw/apkassets.h>       // ApkAssets (owned list)
+#include <content/androidfw/assetmanager2.h>   // AssetManager2 (the table engine)
 #include <content/androidfw/misc.h>
 #include "content/asset.h"
 #include "content/assetdir.h"
@@ -42,12 +43,11 @@ struct zip;
 
 namespace cdroid {
 
-using cdroid::ResTable;
 using cdroid::ResTable_config;
 
 // Every application that uses assets needs one instance. The AssetManager's
-// purpose is to create Asset objects and to lazily build a ResTable from the
-// resources.arsc found in each registered asset path.
+// purpose is to create Asset objects and to hold the AssetManager2 table
+// built from the resources.arsc of each registered asset path.
 class AssetManager : public AAssetManager {
 public:
     static const char* RESOURCES_FILENAME;
@@ -99,10 +99,25 @@ public:
     AssetDir* openNonAssetDir(int32_t cookie, const char* dirName);
 
     // Quick existence/type test (regular files only).
-    FileType getFileType(const char* fileName);
+    ::FileType getFileType(const char* fileName);   // AOSP misc.h FileType
 
-    // The complete resource table (lazily built from each path's resources.arsc).
-    const ResTable& getResources(bool required = true) const;
+    // The table engine (AM2). AOSP's Java AssetManager holds the ApkAssets
+    // list and commits it to the native AssetManager2; here the same object
+    // owns both, and getResources()'s former ResTable& face is served by it.
+    AssetManager2& getAssetManager2() const { return *mAm2; }
+
+    // CDROID seam on the legacy ResTable::getIdentifier semantics (AOSP's
+    // AM2 GetResourceId needs a package): aapt2 forces a dotted package name
+    // ("cdroid.<ns>") that won't match the pak name, so try the requested
+    // package, its "cdroid."-prefixed form, the framework ("android"), then
+    // every registered package.
+    int getIdentifier(const std::string& name, const std::string& type,
+                      const std::string& package) const;
+    // CDROID seam on the legacy ResTable::getResourceName(id, &pkg, &type,
+    // &key): AM2's ResourceName carries u8-or-u16 faces; flatten here. Empty
+    // parts (missing type/key) report false, like the legacy face.
+    bool getResourceName(uint32_t id, std::string* pkg, std::string* type,
+                         std::string* key) const;
 
     // AOSP AssetManager.getLocales(): the locales this resource table carries —
     // one "xx-YY" tag per distinct config (language lower-case, region
@@ -118,27 +133,15 @@ public:
     // android-package (runtime id 0x01) set of that same table.
     std::vector<std::string> getSystemLocales() const;
 
-    // Inject a pre-built ResTable so getResources()/getResTable() return it
-    // verbatim instead of re-reading and re-parsing resources.arsc from each
-    // asset path. The table is BORROWED (non-owning): the caller owns it and it
-    // must outlive this AssetManager. This lets a host that already parsed the
-    // arsc (e.g. cdroid::Assets::mResTable) share its table with this AOSP layer,
-    // avoiding a duplicate parse of the same data. If this manager had already
-    // built its own table, that owned copy is released first.
-    void setResTable(ResTable* table);
-
     // True if no referenced file has changed since this manager was created.
     bool isUpToDate();
-
-    // Known locales for this manager (from the loaded resource tables).
-    void getLocales(std::vector<std::string>* locales, bool includeSystemLocales = true) const;
 
 private:
     struct asset_path {
         std::string  path;
         int32_t      cookie = 0;       // 1-based index into mAssetPaths
         int          rawFd = -1;
-        FileType     type = kFileTypeRegular;
+        ::FileType   type = ::kFileTypeRegular;   // AOSP misc.h FileType (global scope)
         std::string  idmap;
         bool         isSystemOverlay = false;
         bool         isSystemAsset = false;
@@ -161,10 +164,8 @@ private:
     Asset* openAssetFromZip(struct zip* zip, int64_t entry, AccessMode mode,
                             const std::string& entryName);
 
-    const ResTable* getResTable(bool required = true) const;
     void setLocale(const char* locale);
     void updateResourceParams() const;
-    bool appendPathToResTable(asset_path& ap, bool appAsLib = false);
 
     bool scanAndMergeDir(std::vector<AssetDir::FileInfo>* merged, const asset_path& ap,
                          const char* rootDir, const char* dirName);
@@ -176,8 +177,11 @@ private:
 
     std::vector<asset_path> mAssetPaths;
     char*                   mLocale = nullptr;
-    mutable ResTable*       mResources = nullptr;
-    mutable bool            mOwnsResources = false;   // true when getResTable() new'd mResources
+    // The table engine (AM2) + the ApkAssets it reads. One ApkAssets per
+    // registered pak path (loaded once, kept alive), committed atomically via
+    // SetApkAssets on every add — the AOSP Java setApkAssets shape.
+    std::unique_ptr<AssetManager2>       mAm2;
+    std::vector<std::unique_ptr<ApkAssets>> mApkAssets;
     ResTable_config*        mConfig;
 };
 

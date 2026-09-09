@@ -23,8 +23,8 @@
 // cdroid::Assets/Context, so it belongs with the cdroid layer, not the pure
 // androidfw resource-format library.
 //
-// The low-level resolver it wraps (ResTable + obtainStyledAttributes) stays in
-// androidfw/restable.h; the binary-format value types (Res_value, StyledAttr,
+// The low-level resolver it wraps (AssetManager2 + AttributeResolution) is
+// androidfw (the AM2 switch retired restable); the binary-format value types
 // ResXMLTree) stay in androidfw/resourcetypes.h.
 //
 #ifndef __TYPED_ARRAY_H__
@@ -40,11 +40,17 @@
 
 namespace cdroid {
 
-class ResTable;      // androidfw/restable.h — opaque here (reference member only)
-class ResXMLTree;    // androidfw/resourcetypes.h — opaque pointer
-struct StyledAttr;   // androidfw/resourcetypes.h — opaque pointer members
+class AssetManager2;   // androidfw/assetmanager2.h — opaque here (pointer member)
+class ResXMLTree;      // androidfw/resourcetypes.h — opaque pointer
+struct StyledAttr;     // androidfw/resourcetypes.h — opaque pointer members
+
+// AM2 switch bridge: convert one AttributeResolution wire-format block
+// (androidfw::ApplyStyle/ResolveAttrs/RetrieveAttributes output — the AOSP
+// TypedArray mData layout) into the StyledAttr[] this class consumes.
+// `values` holds `count` slots of STYLE_NUM_ENTRIES uint32_t each.
+void styledAttrsFromBlocks(const uint32_t* values, size_t count, StyledAttr* out);
 class Resources;     // cdroid::Resources — the AOSP mResources holder (loadDrawable/...)
-// cdroid::ResTable::Theme — opaque here (AOSP mTheme; ?attr resolution)
+// cdroid::Theme (AM2) — opaque here (AOSP mTheme; ?attr resolution)
 class Drawable;
 class ColorStateList;
 class Typeface;
@@ -54,12 +60,14 @@ public:
     // theme: AOSP TypedArray(@Nullable Theme) — borrowed for the constructor
     // only; the raw engine handle is copied out (the view itself is stack-side
     // at every call site and must not outlive it).
+    // The engine parameter is the AM2 (string pools by cookie + the
+    // name->id lookup pathToResourceId uses).
     // Non-owning (StyledAttr* must outlive this TypedArray).
-    TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
+    TypedArray(const AssetManager2* am2, const StyledAttr* vals, size_t count,
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
                const Resources* res = nullptr, const Resources::Theme* theme = nullptr);
     // Owning (StyledAttr vector moved in; mVals points into mOwned).
-    TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
+    TypedArray(const AssetManager2* am2, std::vector<StyledAttr>&& vals,
                const ResXMLTree* xmlSrc = nullptr, float density = 1.0f,
                const Resources* res = nullptr, const Resources::Theme* theme = nullptr);
     ~TypedArray();
@@ -126,7 +134,7 @@ private:
     // final value via the owning Resources (AOSP TypedArray resolves refs in
     // getValue). Non-reference values pass through unchanged.
     bool getResolved(size_t idx, TypedValue* out) const;
-    const ResTable&         mTable;
+    const AssetManager2*    mAm;      // engine (string pools / id lookups)
     std::vector<StyledAttr>* mOwned = nullptr;  // heap (opaque in this header); null = non-owning
     const StyledAttr*       mVals;
     size_t                  mCount;

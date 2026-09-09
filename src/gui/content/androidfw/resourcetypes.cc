@@ -22,6 +22,7 @@
 // endian, self-contained utf8<->utf16).
 #include "resourcetypes.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <porting/cdlog.h>   // unified project logging (LOGW/LOGD/...); backed by libtvhal
@@ -435,6 +436,132 @@ const char16_t* ResStringPool::stringAt(size_t idx, size_t* outLen) const {
         }
     }
     return nullptr;
+}
+
+// strzcmp16 (libutils/Unicode.cpp): compare two possibly-non-null-terminated
+// UTF-16 strings with explicit lengths, NUL-padded semantics (a shorter
+// string compares less, like strcmp over NUL-terminated buffers).
+static int strzcmp16(const char16_t* s1, size_t n1, const char16_t* s2, size_t n2) {
+    const size_t n = n1 < n2 ? n1 : n2;
+    for (size_t i = 0; i < n; i++) {
+        const char16_t a = s1[i], b = s2[i];
+        if (a != b) return a < b ? -1 : 1;
+    }
+    if (n1 == n2) return 0;
+    return n1 < n2 ? -1 : 1;   // the shorter one is NUL-padded: '\0' < anything
+}
+
+// AOSP ResStringPool::indexOfString (ResourceTypes.cpp), adapted to this
+// pool's raw-pointer stringAt/string8At faces (expected<> -> nullptr checks).
+// Search order follows AOSP: sorted pools binary-search; unsorted pools scan
+// from the back (style-span tags live at the end).
+ssize_t ResStringPool::indexOfString(const char16_t* str, size_t strLen) const {
+    if (mError != NO_ERROR) {
+        return -1;
+    }
+
+    if ((mHeader->flags & ResStringPool_header::UTF8_FLAG) != 0) {
+        // The string pool contains UTF 8 strings; we don't want to cause
+        // temporary UTF-16 strings to be created as we search.
+        if (mHeader->flags & ResStringPool_header::SORTED_FLAG) {
+            // Do a binary search for the string...  this is a little tricky,
+            // because the strings are sorted with strzcmp16().  So to match
+            // the ordering, we need to convert strings in the pool to UTF-16.
+            // But we don't want to hit the cache, so instead we will have a
+            // local temporary allocation for the conversions.
+            size_t convBufferLen = strLen + 4;
+            std::vector<char16_t> convBuffer(convBufferLen);
+            ssize_t l = 0;
+            ssize_t h = mHeader->stringCount - 1;
+
+            ssize_t mid;
+            while (l <= h) {
+                mid = l + (h - l) / 2;
+                int c = -1;
+                size_t sLen = 0;
+                const char* s = string8At(mid, &sLen);
+                if (s) {
+                    const size_t convUsed = utf8_to_utf16(reinterpret_cast<const uint8_t*>(s),
+                            sLen, convBuffer.data(), convBufferLen);
+                    c = strzcmp16(convBuffer.data(), convUsed, str, strLen);
+                }
+                if (c == 0) {
+                    return mid;
+                } else if (c < 0) {
+                    l = mid + 1;
+                } else {
+                    h = mid - 1;
+                }
+            }
+        } else {
+            // It is unusual to get the ID from an unsorted string block...
+            // most often this happens because we want to get IDs for style
+            // span tags; since those always appear at the end of the string
+            // block, start searching at the back.
+            std::string str8;
+            if (strLen) {
+                // UTF-16 -> UTF-8 for the memcmp comparison below.
+                str8.reserve(strLen);
+                for (size_t i = 0; i < strLen; i++) {
+                    char16_t ch = str[i];
+                    if (ch < 0x80) str8.push_back((char)ch);
+                    else {  // non-ASCII: fall back to linear compare via stringAt
+                        str8.clear();
+                        break;
+                    }
+                }
+            }
+            if (!str8.empty()) {
+                for (int i = mHeader->stringCount - 1; i >= 0; i--) {
+                    size_t sLen = 0;
+                    const char* s = string8At(i, &sLen);
+                    if (s && str8.size() == sLen && memcmp(s, str8.data(), sLen) == 0) {
+                        return i;
+                    }
+                }
+            } else {
+                // Non-ASCII caller string: compare via the UTF-16 face.
+                for (int i = mHeader->stringCount - 1; i >= 0; i--) {
+                    size_t sLen = 0;
+                    const char16_t* s = stringAt(i, &sLen);
+                    if (s && strLen == sLen && strzcmp16(s, sLen, str, strLen) == 0) {
+                        return i;
+                    }
+                }
+            }
+        }
+    } else {
+        if (mHeader->flags & ResStringPool_header::SORTED_FLAG) {
+            // Do a binary search for the string...
+            ssize_t l = 0;
+            ssize_t h = mHeader->stringCount - 1;
+
+            ssize_t mid;
+            while (l <= h) {
+                mid = l + (h - l) / 2;
+                size_t sLen = 0;
+                const char16_t* s = stringAt(mid, &sLen);
+                int c = s ? strzcmp16(s, sLen, str, strLen) : -1;
+                if (c == 0) {
+                    return mid;
+                } else if (c < 0) {
+                    l = mid + 1;
+                } else {
+                    h = mid - 1;
+                }
+            }
+        } else {
+            // It is unusual to get the ID from an unsorted string block...
+            for (int i = mHeader->stringCount - 1; i >= 0; i--) {
+                size_t sLen = 0;
+                const char16_t* s = stringAt(i, &sLen);
+                if (s && strLen == sLen && strzcmp16(s, sLen, str, strLen) == 0) {
+                    return i;
+                }
+            }
+        }
+    }
+    return -1;
 }
 
 const char* ResStringPool::string8At(size_t idx, size_t* outLen) const {
@@ -1813,4 +1940,67 @@ status_t ResXMLTree::validateNode(const ResXMLTree_node* node) const {
 // the type's config variants, then read the ResTable_entry).
 // ===========================================================================
 
+// AOSP ResTable_config::toString — the abbreviated config description used by
+// the resolution-log faces (AssetManager2::GetLastResourceResolution etc.).
+std::string ResTable_config::toString() const {
+    char buf[128];
+    const char lang[3] = {(char)(locale & 0x7f), (char)((locale >> 8) & 0x7f), 0};
+    const char region[3] = {(char)((locale >> 16) & 0x7f), (char)((locale >> 24) & 0x7f), 0};
+    snprintf(buf, sizeof buf, "size=%u mcc%03d-mnc%03d %s-%s-%s sw%ddp-w%ddp-h%ddp dens=%u",
+             size, mcc, mnc, (locale & 0x7f) ? lang : "-", (locale >> 16) ? region : "-",
+             localeVariant[0] ? localeVariant : "-",
+             smallestScreenWidthDp, screenWidthDp, screenHeightDp, density);
+    return std::string(buf);
+}
+
+
+void pakPathCandidates(const std::string& arscPath, std::vector<std::string>& out) {
+    out.push_back(arscPath);
+    std::string stripped = arscPath;
+    if (stripped.compare(0, 4, "res/") == 0) {
+        stripped = stripped.substr(4);
+        out.push_back(stripped);
+    }
+    // "-vN"-stripped variant of each directory segment ("drawable-hdpi-v4/t.png"
+    // -> "drawable-hdpi/t.png"); plain segments pass through unchanged.
+    std::string candidate;
+    size_t start = 0;
+    while (start <= stripped.size()) {
+        const size_t slash = stripped.find('/', start);
+        std::string seg = stripped.substr(start,
+                slash == std::string::npos ? std::string::npos : slash - start);
+        const size_t dash = seg.rfind('-');
+        if (dash != std::string::npos && dash + 2 < seg.size()
+                && seg.compare(dash + 1, 1, "v") == 0
+                && seg.find_first_not_of("0123456789", dash + 2) == std::string::npos)
+            seg.resize(dash);
+        candidate += seg;
+        if (slash == std::string::npos) break;
+        candidate += '/';
+        start = slash + 1;
+    }
+    if (candidate != stripped) out.push_back(candidate);
+    // ".9.png"-stripped filename variants: aapt2's arsc keeps the 9-patch ".9"
+    // infix of the source filename ("res/drawable/foo.9.png"), while
+    // pakbuilder-compiled entries are stored borderless under the plain name
+    // ("drawable/foo.png"). The framework pak keeps ".9" on its aapt2-stored
+    // drawable-*-v4 entries, so both spellings must be probed.
+    const size_t baseCount = out.size();
+    for (size_t i = 0; i < baseCount; i++) {
+        const std::string& c = out[i];
+        if (c.size() > 6 && c.compare(c.size() - 6, 6, ".9.png") == 0)
+            out.push_back(c.substr(0, c.size() - 6) + ".png");
+    }
+    // "res/"-re-prefixed variants (appended last): the strip direction above
+    // serves no-res paks fed an arsc ("res/...") path; this direction serves
+    // name-form callers ("raw/i18n.dat", no res/) against res/-aligned paks
+    // (the framework pak keeps the aapt2 apk layout). Both directions coexist
+    // permanently: text-mode app paks never carry the prefix.
+    const size_t variantCount = out.size();
+    for (size_t i = 0; i < variantCount; i++) {
+        const std::string& c = out[i];
+        if (c.compare(0, 4, "res/") != 0)
+            out.push_back("res/" + c);
+    }
+}
 } // namespace cdroid

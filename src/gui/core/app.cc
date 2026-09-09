@@ -20,7 +20,7 @@
 #include <core/queuedwork.h>   // exit-path flush of async writes
 #include <content/typedarray.h>   // TypedArray (constructed in obtainStyledAttributes)
 #include <content/typedvalue.h>   // TypedValue (typed currency of this layer)
-#include <content/androidfw/restable.h> // ResTable engine + Res_value (boundary lookups)
+#include <content/androidfw/assetmanager2.h> // AM2 engine + cdroid::Theme (boundary lookups)
 #include <content/assetmanager.h>   // AssetManager
 #include <content/asset.h>          // Asset (openAsset face: getBuffer/getLength)
 #include <content/resources.h> // cdroid::Resources
@@ -830,65 +830,84 @@ using namespace Cairo;
 namespace cdroid{
 
 // androidfw glue (same seam as typedarray.cc): fill a TypedValue from the raw
-// Res_value handed out by ResTable lookups. AOSP does this fill in the native
+// SelectedValue handed out by AM2 lookups. AOSP does this fill in the native
 // layer; core code speaks TypedValue from here on.
-static TypedValue tvOf(const Res_value& rv) {
-    TypedValue tv; tv.type = rv.dataType; tv.data = rv.data; return tv;
+static TypedValue tvOf(uint8_t type, uint32_t data) {
+    TypedValue tv; tv.type = type; tv.data = data; return tv;
 }
 // mArscTheme is stored opaque in the header (void*) to keep androidfw out of
 // assets.h; cast at the engine boundary.
-static ResTable::Theme* asTheme(void* t) { return (ResTable::Theme*)t; }
+static cdroid::Theme* asTheme(void* t) { return (cdroid::Theme*)t; }
 
+// The AM2 engine behind this App's AssetManager (null before any pak with an
+// arsc was registered). ContextImpl::arscEngine face.
+AssetManager2* App::arscEngine() const {
+    return mAssetManager ? &mAssetManager->getAssetManager2() : nullptr;
+}
 
 // Resolve a resource ID through the loaded arsc.
 bool App::arscResolveId(uint32_t resId, TypedValue* out) const {
-    if (!mResTable || resId == 0 || resId == 0xFFFFFFFF) return false;
-    Res_value rv;
-    if (mResTable->getResource(resId, &rv) < 0) return false;
-    *out = tvOf(rv);
+    AssetManager2* am2 = arscEngine();
+    if (!am2 || resId == 0 || resId == 0xFFFFFFFF) return false;
+    auto value = am2->GetResource(resId);
+    if (!value.has_value()) return false;
+    *out = tvOf(value->type, value->data);
     return true;
 }
 
 // Get a string from the arsc string pool by resource ID.
 const char16_t* App::arscStringAt(uint32_t resId, size_t* outLen) const {
-    if (!mResTable || resId == 0) return nullptr;
-    return mResTable->getResourceString(resId, outLen);
+    AssetManager2* am2 = arscEngine();
+    if (!am2 || resId == 0) return nullptr;
+    auto value = am2->GetResource(resId);
+    if (!value.has_value() || value->type != Res_value::TYPE_STRING) return nullptr;
+    const ResStringPool* pool = am2->GetStringPoolForCookie(value->cookie);
+    return pool ? pool->stringAt(value->data, outLen) : nullptr;
 }
 
 // Render a resource ID as "@type/key" (text-XML reference form) so binary-AXML
 // references flow through the same resolution paths as text XML. Returns "" if
 // the arsc can't name the resource (caller falls back to "@0x..").
 std::string App::getResourceName(uint32_t resId) const {
-    if (!mResTable || resId == 0) return "";
-    std::string pkg, type, key;
-    if (mResTable->getResourceName(resId, &pkg, &type, &key) && !type.empty() && !key.empty()) {
-        // Framework resources need the explicit package prefix ("@android:...");
-        // app resources resolve under the default package, so omit it (matches
-        // text-XML conventions).
-        if (pkg == "android") return "@android:" + type + "/" + key;
-        return "@" + type + "/" + key;
-    }
-    return "";
+    AssetManager2* am2 = arscEngine();
+    if (!am2 || resId == 0) return "";
+    auto name = am2->GetResourceName(resId);
+    if (!name.has_value()) return "";
+    // The Utf8 faces are preferred; only when unavailable are the Utf16
+    // variants populated (the pak's pools are UTF-16).
+    std::string type, entry;
+    if (name->type != nullptr) type.assign(name->type, name->type_len);
+    else if (name->type16 != nullptr) type = TextUtils::utf16_utf8((const uint16_t*)name->type16, name->type_len);
+    if (name->entry != nullptr) entry.assign(name->entry, name->entry_len);
+    else if (name->entry16 != nullptr) entry = TextUtils::utf16_utf8((const uint16_t*)name->entry16, name->entry_len);
+    if (type.empty() || entry.empty()) return "";
+    // Framework resources need the explicit package prefix ("@android:...");
+    // app resources resolve under the default package, so omit it (matches
+    // text-XML conventions).
+    if (name->package != nullptr && strncmp(name->package, "android", name->package_len) == 0
+            && name->package_len == 7)
+        return "@android:" + type + "/" + entry;
+    return "@" + type + "/" + entry;
 }
 
-// Resolve a theme-attribute reference (?attr/<id>) through the arsc Theme.
+// Resolve a theme-attribute reference (?attr/<id>) through the AM2 Theme.
 bool App::arscThemeAttribute(uint32_t attrId, TypedValue* out, ssize_t* outBlock) const {
     if (!mArscTheme || !out) return false;
-    ResTable::Theme* theme = (ResTable::Theme*)mArscTheme;
-    Res_value rv;
-    ssize_t blk = theme->getAttribute(attrId, &rv);
-    if (blk < 0) return false;
+    cdroid::Theme* theme = asTheme(mArscTheme);
+    auto value = theme->GetAttribute(attrId);
+    if (!value.has_value()) return false;
     // Flatten ?attr / @ref chains to a concrete value.
-    blk = theme->resolveAttributeReference(&rv, blk);
-    if (blk < 0) return false;
-    *out = tvOf(rv);
-    if (outBlock) *outBlock = blk;
+    auto resolved = theme->ResolveAttributeReference(*value);
+    if (!resolved.has_value()) return false;
+    *out = tvOf(value->type, value->data);
+    if (outBlock) *outBlock = value->cookie;
     return true;
 }
 
 // Try to resolve a "@0xPPtteeee" hex resource ID string through the arsc.
 bool App::arscResolveHexRef(const std::string& s, TypedValue* out) const {
-    if (!mResTable || s.empty()) return false;
+    AssetManager2* am2 = arscEngine();
+    if (!am2 || s.empty()) return false;
     // Accept "@0x...", "0x...", or a bare hex tail after the last '@'.
     size_t at = s.rfind('@');
     std::string hex = (at != std::string::npos) ? s.substr(at + 1) : s;
@@ -897,9 +916,9 @@ bool App::arscResolveHexRef(const std::string& s, TypedValue* out) const {
     errno = 0;
     unsigned long id = strtoul(hex.c_str() + 2, &end, 16);
     if (errno || end == hex.c_str() + 2 || id == 0 || id == 0xFFFFFFFF) return false;
-    Res_value rv;
-    if (mResTable->getResource((uint32_t)id, &rv) < 0) return false;
-    *out = tvOf(rv);
+    auto value = am2->GetResource((uint32_t)id);
+    if (!value.has_value()) return false;
+    *out = tvOf(value->type, value->data);
     return true;
 }
 
@@ -909,9 +928,8 @@ bool App::arscResolveHexRef(const std::string& s, TypedValue* out) const {
 
 void App::destroyResourceState(){
     delete mCdroidResources;   // holds mAssetManager as a borrowed pointer
-    delete mAssetManager;
+    delete mAssetManager;      // owns the ApkAssets + AssetManager2 table
     delete asTheme(mArscTheme);
-    delete mResTable;
 
     for(auto it=mResources.begin(); it!=mResources.end(); it++) {
         if(it->second) zip_close(it->second);
@@ -921,8 +939,9 @@ void App::destroyResourceState(){
 }
 
 // --- Lazy ID-based resource layer (AOSP Resources/AssetManager) ---
-// Built on first use from the pak paths recorded in addResource(); the legacy
-// string-based mResTable path is untouched.
+// The AssetManager (with the AM2 table) is built eagerly by addResource —
+// every pak commits its ApkAssets there as it registers; only the Resources
+// wrapper is lazy.
 void App::ensureCdroidResources() const {
     if (mCdroidResources != nullptr) return;
     if (mAssetManager == nullptr) {
@@ -930,15 +949,6 @@ void App::ensureCdroidResources() const {
         for (const auto& p : mPakPaths) {
             mAssetManager->addAssetPath(p, nullptr);
         }
-        // Share the arsc table already parsed (addResource reads each
-        // pak's resources.arsc into mResTable once). Without this, the lazy
-        // AssetManager would re-read and re-parse the very same arsc a second
-        // time when getResources() first touches it. mResTable is borrowed here
-        // and freed by destroyResourceState after the AssetManager is destroyed. The Header
-        // cookie differs (-1 here vs 1-based in appendPathToResTable) but the
-        // engine never reads the cookie, and raw files are opened by path
-        // (no-cookie openNonAsset), so sharing is safe.
-        if (mResTable) mAssetManager->setResTable(mResTable);
     }
     mCdroidResources = new cdroid::Resources(mAssetManager, const_cast<App*>(this));
 }
@@ -971,17 +981,17 @@ const std::string App::getPackageName()const {
 }
 
 Resources::Theme App::getTheme() {
-    // Lazily build an arsc theme if none has been applied yet, so the returned
-    // view's engine is valid (AOSP getTheme() never returns a null theme). Binary
-    // mode always has mResTable; the static fallback covers text-only paks.
-    if (!mArscTheme && mResTable) {
-        mArscTheme = new ResTable::Theme(*mResTable);
+    // Lazily build a theme if none has been applied yet, so the returned view's
+    // engine is valid (AOSP getTheme() never returns a null theme). Binary mode
+    // always has the AM2 table; the static fallback covers text-only paks.
+    if (!mArscTheme && arscEngine() != nullptr) {
+        mArscTheme = mAssetManager->getAssetManager2().NewTheme().release();
     }
-    ResTable::Theme* engine = asTheme(mArscTheme);
+    cdroid::Theme* engine = asTheme(mArscTheme);
     if (engine == nullptr) {
-        static ResTable sEmptyTable;
-        static ResTable::Theme sEmptyTheme(sEmptyTable);
-        engine = &sEmptyTheme;
+        static AssetManager2 sEmptyAm2;
+        static std::unique_ptr<cdroid::Theme> sEmptyTheme = sEmptyAm2.NewTheme();
+        engine = sEmptyTheme.get();
     }
     return Resources::Theme(getResources(), engine);
 }
@@ -991,30 +1001,38 @@ void App::applyTheme(int resid) {
     // the style resource id (applyStyle follows the style's parent chain).
     delete asTheme(mArscTheme);
     mArscTheme = nullptr;
-    if (mResTable && resid) {
-        mArscTheme = new ResTable::Theme(*mResTable);
-        if (asTheme(mArscTheme)->applyStyle((uint32_t)resid) != 0) {
+    if (arscEngine() != nullptr && resid) {
+        mArscTheme = mAssetManager->getAssetManager2().NewTheme().release();
+        if (!asTheme(mArscTheme)->ApplyStyle((uint32_t)resid).has_value()) {
             LOGW("arsc Theme applyStyle(resId=0x%08x) failed", resid);
             delete asTheme(mArscTheme);
             mArscTheme = nullptr;
         } else {
-            LOGD("arsc Theme built from %s (resId=0x%08x, gen=%u)",
-                 getResourceName((uint32_t)resid).c_str(), resid,
-                 asTheme(mArscTheme)->cacheGeneration());
+            LOGD("arsc Theme built from %s (resId=0x%08x)",
+                 getResourceName((uint32_t)resid).c_str(), resid);
         }
     }
 }
 
 int App::addResource(const std::string&path,const std::string&name) {
-    mPakPaths.push_back(path);   // recorded for the lazy ID-based AssetManager
-    // If the lazy AssetManager was already built — which happens when an earlier
-    // pak's addResource triggered ensureCdroidResources() via the pending
-    // color-state-list resolve (getColorStateList → getResources) — register this
-    // pak with it too. Otherwise files in later paks (e.g. app layouts in
-    // uidemo1.pak, added after cdroid.pak) are invisible to openNonAsset, and
-    // every app layout inflate returns null.
+    mPakPaths.push_back(path);   // recorded for the (lazy) Resources wrapper
+    // Build the AssetManager eagerly on the first pak: it owns the AM2 table,
+    // and each pak commits its ApkAssets (resources.arsc, zero-copy) as it
+    // registers. addAssetPath on an already-built manager (later paks) keeps
+    // the table current — SetApkAssets rebuilds the package groups atomically.
     LOGD("Loaded %s",name.c_str());
-    if (mAssetManager) mAssetManager->addAssetPath(path, nullptr);
+    if (!mAssetManager) {
+        mAssetManager = new AssetManager();
+        // Seed the requested config from the device metrics (AOSP
+        // ResourcesManager applies the device configuration to every
+        // Resources). densityDpi drives config-variant selection (hdpi vs
+        // default buckets); with no LCD_DENSITY override it is 160 and
+        // selection behaves exactly as before.
+        ResTable_config cfg = {};
+        cfg.density = (uint16_t)mDisplayMetrics.densityDpi;
+        mAssetManager->setConfiguration(cfg);
+    }
+    mAssetManager->addAssetPath(path, nullptr);
     struct zip* pak = zip_open(path.c_str(), ZIP_CHECKCONS | ZIP_RDONLY, nullptr);
     std::string package = name;
     if(name.empty()) {
@@ -1029,34 +1047,8 @@ int App::addResource(const std::string&path,const std::string&name) {
 
     int count=0;
     auto sttm = SystemClock::uptimeMillis();
-    // Load resources.arsc if present. Open via zip_fopen rather than
-    // zip_name_locate: cdroid.pak carries duplicate color/ entries (SDK + own),
-    // and libzip's zip_name_locate fails to resolve some names in such
-    // archives, while zip_fopen still works. Each pak is one add() = one owning
-    // Header; copyData=true makes ResTable malloc its own copy, so the local
-    // buffer can be freed safely across multiple paks.
-    std::string data;
-    if (pak) slurpZipEntry(pak, "resources.arsc", data);
-    if (!data.empty()) {
-        if (!mResTable) {
-            mResTable = new ResTable();
-            // Seed the requested config from the device metrics (AOSP
-            // ResourcesManager applies the device configuration to every
-            // Resources). densityDpi drives config-variant selection (hdpi vs
-            // default buckets); with no LCD_DENSITY override it is 160 and
-            // selection behaves exactly as before.
-            ResTable_config cfg = {};
-            cfg.density = (uint16_t)mDisplayMetrics.densityDpi;
-            mResTable->setParameters(&cfg);
-        }
-        // NOTE: the 4-arg form is required so `true` binds to copyData, not to
-        // the int32_t cookie of the 3-arg overload — otherwise copyData defaults
-        // to false, hdr->data aliases the local buffer, and freeing it on return
-        // leaves every Package type/key pointer dangling (UAF).
-        mResTable->add(data.data(), data.size(), /*cookie*/-1, /*copyData*/true);
-        LOGD("Loaded resources.arsc from %s (%zu bytes, error=%d)",
-             path.c_str(), data.size(), mResTable->getError());
-    }
+    // The arsc itself is read through the AssetManager's ApkAssets (mmap'd,
+    // STORED zero-copy); no slurped copy and no second parse here.
     // The default theme is applied by App's bootstrap (single AOSP-like point
     // after every pak is loaded), not here.
     LOGI("[%s] loaded %d files, %d theme attrs, used %dms",
@@ -1076,7 +1068,7 @@ int App::getNextAutofillId(){
 // build and any inflate: --orientation switch > launcher activity's
 // android:screenOrientation > device screen shape.
 void App::applyOrientationConfig(const std::string& forced) {
-    if (mResTable == nullptr) return;
+    if (arscEngine() == nullptr) return;
     int orientation = ResTable_config::ORIENTATION_ANY;
     const char* source = nullptr;
     if (!forced.empty()) {
@@ -1113,8 +1105,8 @@ void App::applyOrientationConfig(const std::string& forced) {
     // Apply through the AOSP face: the system layer (App, standing in for
     // ActivityThread/WMS) computes the effective Configuration, and
     // Resources.updateConfiguration pushes it via ResourcesImpl — metrics
-    // sync, locale best-match, arsc reselect, cache flush. Writing mResTable
-    // directly would bypass all that and desync ResourcesImpl::mConfig.
+    // sync, locale best-match, arsc reselect, cache flush. Writing the
+    // engine config directly would bypass all that and desync ResourcesImpl::mConfig.
     // Read-modify-write keeps the rest of the live configuration intact.
     Resources& res = getResources();
     Configuration cfg = res.getConfiguration();

@@ -36,7 +36,7 @@ void TimerItem::onFinishInflate() {
         // color-selector reference to a pool value (TypedValue.data with
         // resourceId=0) — as an ARGB int that is effectively transparent, so
         // the countdown digits never rasterize. obtainStyledAttributes is the
-        // ResTable path that chases the reference.
+        // engine path that chases the reference.
         const uint32_t attrs[] = {0x01010435 /* android:colorAccent */,
                                   0x01010036 /* android:textColorPrimary */, 0};
         auto ta = c.obtainStyledAttributes(attrs);

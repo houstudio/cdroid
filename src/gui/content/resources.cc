@@ -10,7 +10,8 @@
 #include <content/typedarray.h>
 #include <core/xmlpullparser.h>
 #include <content/xmlblock.h>            // XmlBlock::Parser (the binary downcast below)
-#include <content/androidfw/restable.h>        // obtainStyledAttributes resolver, ResXMLTree, StyledAttr
+#include <content/androidfw/assetmanager2.h>   // AM2 engine + cdroid::Theme
+#include <content/androidfw/attributeresolution.h>  // ApplyStyle/ResolveAttrs/RetrieveAttributes
 #include <content/resourcesimpl.h>   // ResourcesImpl (aggregated)
 #include <content/assetmanager.h>      // AssetManager (getAssets()->getResources)
 #include <content/typedvalue.h>   // TypedValue (getValue/getColorStateList)
@@ -288,12 +289,13 @@ std::shared_ptr<ColorStateList> Resources::getColorStateList(int id, const Theme
 std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet* set,
          const uint32_t* attrs, int defStyleAttr, int defStyleRes) const {
     if (mCtx == nullptr) return nullptr;
-    const ResTable& rt = getAssets()->getResources(false);
+    AssetManager2& am2 = getAssets()->getAssetManager2();
     Resources::Theme _th = mCtx->getTheme();
-    ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
+    cdroid::Theme* theme = static_cast<cdroid::Theme*>(_th._engineHandle());
     size_t count = 0;
     while (attrs[count]) count++;
-    std::vector<StyledAttr> styled(count);
+    std::vector<uint32_t> values(count * STYLE_NUM_ENTRIES);
+    std::vector<uint32_t> indices(count + 1);
 
     if (set != nullptr) {
         // AOSP ResourcesImpl.applyStyle: hard downcast to the binary parser
@@ -303,18 +305,23 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet
         if (parser) {
             const ResXMLTree* xml = parser->getResXMLTree();
             if (xml) {
-                cdroid::obtainStyledAttributes(*xml, rt, theme, attrs,
-                                               (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
-                return std::make_unique<TypedArray>(rt, std::move(styled), xml, getDisplayMetrics().density, this, &_th);
+                ApplyStyle(theme, xml, (uint32_t)defStyleAttr, (uint32_t)defStyleRes,
+                           attrs, count, values.data(), indices.data());
+                std::vector<StyledAttr> styled(count);
+                styledAttrsFromBlocks(values.data(), count, styled.data());
+                return std::make_unique<TypedArray>(&am2, std::move(styled), xml, getDisplayMetrics().density, this, &_th);
             }
         }
     }
     // Non-binary sets (text-mode paks) are retired: paks are binary-only since
     // the res/ unification, so this tail only serves a null set — theme/style
-    // resolution with no element step (AOSP Theme.obtainStyledAttributes).
-    cdroid::obtainStyledAttributes(rt, theme, attrs,
-                                   (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
-    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, &_th);
+    // resolution with no element step (AOSP Theme.obtainStyledAttributes →
+    // nativeResolveAttrs).
+    ResolveAttrs(theme, (uint32_t)defStyleAttr, (uint32_t)defStyleRes,
+                 nullptr, 0, attrs, count, values.data(), nullptr);
+    std::vector<StyledAttr> styled(count);
+    styledAttrsFromBlocks(values.data(), count, styled.data());
+    return std::make_unique<TypedArray>(&am2, std::move(styled), nullptr, getDisplayMetrics().density, this, &_th);
 }
 
 // Convenience: AttributeSet& → AttributeSet* (for AOSP callers passing the reference).
@@ -344,18 +351,20 @@ void Resources::cacheStateListAnimator(int id, const void* themeEngine,
 // (AOSP ResourcesImpl.obtainStyledAttributes(set, attrs, theme=null)).
 std::unique_ptr<TypedArray> Resources::obtainAttributes(const AttributeSet* set, const uint32_t* attrs) const {
     if (mCtx == nullptr || set == nullptr) return nullptr;
-    const ResTable& rt = getAssets()->getResources(false);
+    AssetManager2& am2 = getAssets()->getAssetManager2();
     size_t count = 0;
     while (attrs[count]) ++count;   // sentinel-terminated
-    std::vector<StyledAttr> styled(count);
     const XmlBlock::Parser* parser = dynamic_cast<const XmlBlock::Parser*>(set);
     const ResXMLTree* xml = parser ? parser->getResXMLTree() : nullptr;
+    std::vector<StyledAttr> styled(count);
     if (xml) {
-        cdroid::obtainStyledAttributes(*xml, rt, /*theme*/nullptr, attrs, 0, 0, styled.data());
-    } else {
-        cdroid::obtainStyledAttributes(rt, /*theme*/nullptr, attrs, 0, 0, styled.data());
+        // AOSP nativeRetrieveAttributes: only the XML's own attributes, no
+        // style/theme resolution.
+        std::vector<uint32_t> values(count * STYLE_NUM_ENTRIES);
+        RetrieveAttributes(&am2, xml, attrs, count, values.data(), nullptr);
+        styledAttrsFromBlocks(values.data(), count, styled.data());
     }
-    return std::make_unique<TypedArray>(rt, std::move(styled), xml,
+    return std::make_unique<TypedArray>(&am2, std::move(styled), xml,
                                         getDisplayMetrics().density, this, /*theme*/nullptr);
 }
 
@@ -365,62 +374,77 @@ std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const uint32_t* at
 
 std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(int resid, const uint32_t* attrs) const {
     if (mCtx == nullptr) return nullptr;
-    const ResTable& rt = getAssets()->getResources(false);
+    AssetManager2& am2 = getAssets()->getAssetManager2();
     Resources::Theme _th = mCtx->getTheme();
-    ResTable::Theme* theme = static_cast<ResTable::Theme*>(_th._engineHandle());
+    cdroid::Theme* theme = static_cast<cdroid::Theme*>(_th._engineHandle());
     size_t count = 0;
     while (attrs[count]) count++;
+    std::vector<uint32_t> values(count * STYLE_NUM_ENTRIES);
+    ResolveAttrs(theme, 0, (uint32_t)resid, nullptr, 0, attrs, count, values.data(), nullptr);
     std::vector<StyledAttr> styled(count);
-    cdroid::obtainStyledAttributes(rt, theme, attrs, 0, (uint32_t)resid, styled.data());
-    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this, &_th);
+    styledAttrsFromBlocks(values.data(), count, styled.data());
+    return std::make_unique<TypedArray>(&am2, std::move(styled), nullptr, getDisplayMetrics().density, this, &_th);
 }
 
 // AOSP Resources.obtainTypedArray(@ArrayRes int id) — TypedArray view over a
 // typed array resource; each index is one element.
 std::unique_ptr<TypedArray> Resources::obtainTypedArray(int id) const {
     if (mCtx == nullptr) return nullptr;
-    const ResTable& rt = getAssets()->getResources(false);
-    size_t count = 0;
-    ssize_t block = -1;
-    const ResTable_map* map = rt.getBag((uint32_t)id, &count, nullptr, &block);
-    if (!map || count == 0) return nullptr;
+    AssetManager2& am2 = getAssets()->getAssetManager2();
+    auto bagResult = am2.GetBag((uint32_t)id);
+    if (!bagResult.has_value() || (*bagResult)->entry_count == 0) return nullptr;
+    const ResolvedBag* bag = *bagResult;
+    const size_t count = bag->entry_count;
     std::vector<StyledAttr> styled(count);
     for (size_t i = 0; i < count; i++) {
-        styled[i].value = map[i].value;
-        styled[i].stringBlock = block;
+        styled[i].value = bag->entries[i].value;
+        styled[i].stringBlock = bag->entries[i].cookie;   // string pool cookie
         styled[i].set = true;
     }
-    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr, getDisplayMetrics().density, this);
+    return std::make_unique<TypedArray>(&am2, std::move(styled), nullptr, getDisplayMetrics().density, this);
 }
 
-// --- Resources::Theme (AOSP Resources.Theme; view over ResTable::Theme) ---
+// --- Resources::Theme (AOSP Resources.Theme; view over the AM2 cdroid::Theme) ---
 
 void Resources::Theme::applyStyle(int resId, bool force) {
-    if (mEngine) static_cast<ResTable::Theme*>(mEngine)->applyStyle((uint32_t)resId, force);
+    if (mEngine) {
+        if (!static_cast<cdroid::Theme*>(mEngine)->ApplyStyle((uint32_t)resId, force).has_value()) {
+            LOGW("Theme::applyStyle(resId=0x%08x) failed", resId);
+        }
+    }
 }
 
 void Resources::Theme::setTo(const Theme& other) {
     if (mEngine == nullptr || other.mEngine == nullptr) return;
-    static_cast<ResTable::Theme*>(mEngine)->setTo(
-            *static_cast<const ResTable::Theme*>(other.mEngine));
+    if (!static_cast<cdroid::Theme*>(mEngine)->SetTo(
+            *static_cast<const cdroid::Theme*>(other.mEngine)).has_value()) {
+        LOGW("Theme::setTo failed");
+    }
 }
 
 bool Resources::Theme::resolveAttribute(int resId, TypedValue* out, bool resolveRefs) const {
     if (mEngine == nullptr || out == nullptr) return false;
-    Res_value v;
-    uint32_t lastRef = 0;
-    if (!static_cast<const ResTable::Theme*>(mEngine)->resolveAttribute(
-            (uint32_t)resId, &v, resolveRefs, &lastRef)) return false;
-    out->type = v.dataType;
-    out->data = v.data;
+    const cdroid::Theme* theme = static_cast<const cdroid::Theme*>(mEngine);
+    auto value = theme->GetAttribute((uint32_t)resId);
+    if (!value.has_value()) return false;
+    if (resolveRefs) {
+        // Flatten ?attr / @ref chains (AOSP Theme.resolveAttribute with
+        // resolveRefs=true).
+        if (!theme->ResolveAttributeReference(*value).has_value() &&
+            value->type == Res_value::TYPE_NULL) {
+            return false;
+        }
+    }
+    out->type = value->type;
+    out->data = value->data;
     // AOSP TypedValue.resourceId: the reference this value came from. With
     // resolveRefs the chain flattens (a color-selector reference becomes its
     // file-path string) and callers like TypedArray still need the id to load
-    // it — keep the LAST traversed reference, falling back to a plain
-    // reference's data.
-    out->resourceId = lastRef != 0 ? lastRef
-            : ((v.dataType == Res_value::TYPE_REFERENCE
-                || v.dataType == Res_value::TYPE_DYNAMIC_REFERENCE) ? v.data : 0);
+    // it — keep the LAST traversed reference (SelectedValue.resid), falling
+    // back to a plain reference's data.
+    out->resourceId = (resolveRefs && value->resid != 0) ? value->resid
+            : ((value->type == Res_value::TYPE_REFERENCE
+                || value->type == Res_value::TYPE_DYNAMIC_REFERENCE) ? value->data : 0);
     return true;
 }
 
@@ -431,20 +455,20 @@ bool Resources::Theme::resolveAttribute(int resId, TypedValue* out, bool resolve
 std::unique_ptr<TypedArray> Resources::Theme::resolveAttributes(
         const std::vector<int>& themeAttrs, const uint32_t* attrs) const {
     if (mEngine == nullptr) return nullptr;
-    const ResTable::Theme* engine = static_cast<const ResTable::Theme*>(mEngine);
-    const ResTable& rt = engine->getResTable();
+    const cdroid::Theme* engine = static_cast<const cdroid::Theme*>(mEngine);
+    const AssetManager2* am2p = engine->GetAssetManager();
     size_t count = 0; while (attrs[count]) ++count;   // sentinel-terminated
     if (themeAttrs.size() < count) count = themeAttrs.size();
+    // AOSP nativeResolveAttrs: the recorded ?attr ids ride in as src_values
+    // (slot i pairs with attrs[i]; 0 slots stay unset).
+    std::vector<uint32_t> src((size_t)count, 0);
+    for (size_t i = 0; i < count; i++) src[i] = (uint32_t)themeAttrs[i];
+    std::vector<uint32_t> values(count * STYLE_NUM_ENTRIES);
+    ResolveAttrs(const_cast<cdroid::Theme*>(engine), 0, 0, src.data(), count,
+                 attrs, count, values.data(), nullptr);
     std::vector<StyledAttr> styled(count);
-    for (size_t i = 0; i < count; i++) {
-        if (themeAttrs[i] == 0) continue;
-        Res_value rv;
-        if (engine->resolveAttribute((uint32_t)themeAttrs[i], &rv, true)) {
-            styled[i].value = rv;
-            styled[i].set = true;
-        }
-    }
-    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr,
+    styledAttrsFromBlocks(values.data(), count, styled.data());
+    return std::make_unique<TypedArray>(am2p, std::move(styled), nullptr,
                                         mRes.getDisplayMetrics().density, &mRes, this);
 }
 
@@ -471,11 +495,12 @@ int Resources::Theme::getColor(int id) const {
 std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(const AttributeSet* set,
         const uint32_t* attrs, int defStyleAttr, int defStyleRes) const {
     if (mEngine == nullptr) return nullptr;
-    const ResTable::Theme* theme = static_cast<const ResTable::Theme*>(mEngine);
-    const ResTable& rt = theme->getResTable();
+    cdroid::Theme* theme = static_cast<cdroid::Theme*>(mEngine);
+    AssetManager2& am2 = *theme->GetAssetManager();
     size_t count = 0;
     while (attrs[count]) count++;
-    std::vector<StyledAttr> styled(count);
+    std::vector<uint32_t> values(count * STYLE_NUM_ENTRIES);
+    std::vector<uint32_t> indices(count + 1);
 
     if (set != nullptr) {
         // AOSP ResourcesImpl.applyStyle: hard downcast to the binary parser
@@ -484,16 +509,20 @@ std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(const Attri
         if (parser) {
             const ResXMLTree* xml = parser->getResXMLTree();
             if (xml) {
-                cdroid::obtainStyledAttributes(*xml, rt, theme, attrs,
-                                               (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
-                return std::make_unique<TypedArray>(rt, std::move(styled), xml,
+                ApplyStyle(theme, xml, (uint32_t)defStyleAttr, (uint32_t)defStyleRes,
+                           attrs, count, values.data(), indices.data());
+                std::vector<StyledAttr> styled(count);
+                styledAttrsFromBlocks(values.data(), count, styled.data());
+                return std::make_unique<TypedArray>(&am2, std::move(styled), xml,
                         mRes.getDisplayMetrics().density, &mRes, this);
             }
         }
     }
-    cdroid::obtainStyledAttributes(rt, theme, attrs,
-                                   (uint32_t)defStyleAttr, (uint32_t)defStyleRes, styled.data());
-    return std::make_unique<TypedArray>(rt, std::move(styled), nullptr,
+    ResolveAttrs(theme, (uint32_t)defStyleAttr, (uint32_t)defStyleRes,
+                 nullptr, 0, attrs, count, values.data(), nullptr);
+    std::vector<StyledAttr> styled(count);
+    styledAttrsFromBlocks(values.data(), count, styled.data());
+    return std::make_unique<TypedArray>(&am2, std::move(styled), nullptr,
             mRes.getDisplayMetrics().density, &mRes, this);
 }
 
@@ -514,8 +543,9 @@ std::unique_ptr<TypedArray> Resources::Theme::obtainStyledAttributes(int resid, 
 // this Resources' table. getTheme()-style views borrow the Context's engine;
 // this one lives as long as the returned Theme (shared ownership on copy).
 Resources::Theme Resources::newTheme() {
-    const ResTable& rt = getAssets()->getResources(false);
-    std::shared_ptr<ResTable::Theme> engine = std::make_shared<ResTable::Theme>(rt);
+    // AOSP Resources.newTheme(): a fresh engine over this Resources' table.
+    AssetManager2& am2 = getAssets()->getAssetManager2();
+    std::shared_ptr<cdroid::Theme> engine = am2.NewTheme();
     Theme theme(*this, engine.get());
     theme.mOwned = engine;
     return theme;
@@ -525,23 +555,25 @@ Resources::Theme Resources::newTheme() {
 
 std::vector<uint32_t> Resources::Theme::getAllAttributes() const {
     std::vector<uint32_t> out;
-    if (mEngine) static_cast<const ResTable::Theme*>(mEngine)->getAllAttributes(out);
+    if (mEngine) static_cast<const cdroid::Theme*>(mEngine)->GetAllAttributes(out);
     return out;
 }
 
 int Resources::Theme::getChangingConfigurations() const {
-    return mEngine ? (int)static_cast<const ResTable::Theme*>(mEngine)->getChangingConfigurations() : 0;
+    return mEngine ? (int)static_cast<const cdroid::Theme*>(mEngine)->GetChangingConfigurations() : 0;
 }
 
 void Resources::Theme::rebase() {
-    if (mEngine) static_cast<ResTable::Theme*>(mEngine)->rebase();
+    // The AM2 engine keeps no setTo snapshot to roll back to (the retired
+    // legacy engine's rebase feature); no in-tree callers — documented no-op.
+    if (mEngine) LOGW("Theme::rebase() is a no-op on the AM2 engine");
 }
 
 void Resources::Theme::dump(const char* tag, const char* prefix) const {
     if (mEngine == nullptr) return;
-    const ResTable::Theme* theme = static_cast<const ResTable::Theme*>(mEngine);
+    const cdroid::Theme* theme = static_cast<const cdroid::Theme*>(mEngine);
     std::vector<uint32_t> attrs;
-    theme->getAllAttributes(attrs);
+    theme->GetAllAttributes(attrs);
     LOGD("%s%sTheme %p: %zu attributes", prefix, tag, mEngine, attrs.size());
     for (uint32_t attr : attrs) {
         TypedValue v;

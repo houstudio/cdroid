@@ -2,7 +2,7 @@
 // a ResourcesImpl (HAS-A) and forwards the value/meta/asset surface to it.
 //
 // resources.h uses forward declarations only — the heavy androidfw headers
-// (resourcesimpl.h -> restable.h -> assetmanager.h -> asset.h) are included in
+// (resourcesimpl.h -> assetmanager.h -> androidfw) are included in
 // resources.cc, NOT here. This keeps resources.h lightweight for the many files
 // that include it (via context.h).
 //
@@ -156,7 +156,7 @@ public:
     void cacheStateListAnimator(int id, const void* themeEngine,
                                 const std::shared_ptr<ConstantState<StateListAnimator*>>& cs) const;
 
-    class Theme;   // AOSP Resources.Theme — defined below (view over ResTable::Theme)
+    class Theme;   // AOSP Resources.Theme — defined below (view over cdroid::Theme)
 
     // AOSP Resources.newTheme(): a NEW empty theme over this Resources' table
     // (framework-internal consumers build their own theme without a Context).
@@ -170,11 +170,12 @@ private:
 };
 
 // AOSP Resources.Theme — a framework-level theme handle. A lightweight,
-// non-owning VIEW over the underlying engine (cdroid::ResTable::Theme, owned by
-// Assets); getTheme() returns it by value. Methods are out-of-line (resources.cc)
-// so this header need not include restable.h. _engineHandle() exposes the engine
-// as void* for the resource layer's obtainStyledAttributes (resources.cc /
-// context.cc) — the only places that need the raw ResTable::Theme*.
+// non-owning VIEW over the underlying engine (cdroid::Theme, the AM2 Theme,
+// owned by App or the creating wrapper); getTheme() returns it by value.
+// Methods are out-of-line (resources.cc) so this header need not include
+// androidfw. _engineHandle() exposes the engine as void* for the resource
+// layer's obtainStyledAttributes (resources.cc / context.cc) — the only
+// places that need the raw cdroid::Theme*.
 class Resources::Theme {
 public:
     Resources& getResources() const { return mRes; }   // CDROID extension (AOSP has getAssets)
@@ -208,7 +209,7 @@ public:
     void rebase();
     // Log the theme's attribute values (AOSP dump(priority, tag, prefix)).
     void dump(const char* tag, const char* prefix = "") const;
-    void* _engineHandle() const { return mEngine; }   // cdroid::ResTable::Theme* (borrowed or owned)
+    void* _engineHandle() const { return mEngine; }   // cdroid::Theme* (AM2; borrowed or owned)
 private:
     friend class Resources;       // newTheme() (owned engine)
     friend class App;           // App constructs it from its engine

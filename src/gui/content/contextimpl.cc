@@ -16,7 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include "contextimpl.h"
-#include <content/androidfw/restable.h>     // ResTable + pakPathCandidates + Res_value
+#include <content/androidfw/resourcetypes.h>  // pakPathCandidates + ResStringPool
+#include <content/androidfw/assetmanager2.h>  // AM2 (arscGetIdentifier engine)
 #include <content/typedvalue.h>             // TypedValue (tvOf / TYPE_STRING)
 #include <content/asset.h>                  // Asset / _FileAsset (buffer-backed)
 #include <core/iostreams.h>                 // AssetInputStream
@@ -142,10 +143,6 @@ ContextImpl::~ContextImpl() {
         if(kv.second) zip_close(kv.second);
 }
 
-static TypedValue tvOf(const Res_value& rv) {
-    TypedValue tv; tv.type = rv.dataType; tv.data = rv.data; return tv;
-}
-
 //"@[package:][+]id/filname"
 // Default package = this context's package name (App's is the exe basename —
 // App::getPackageName already strips the dir part).
@@ -176,23 +173,42 @@ const std::string ContextImpl::parseResource(const std::string&fullResId,std::st
 // trying the requested package and the framework ("android"), fall back to a
 // name-only search across ALL loaded packages (empty package = search all).
 uint32_t ContextImpl::arscGetIdentifier(const std::string& name, const std::string& type, const std::string& pkg) const {
-    if (!mResTable || mResTable->getError() != 0) return 0;
+    AssetManager2* am2 = arscEngine();
+    if (am2 == nullptr) return 0;
     // Strip type prefix: "attr/colorOnPrimary" → "colorOnPrimary"
     std::string cleanName = name;
     size_t slash = cleanName.find('/');
     if (slash != std::string::npos) cleanName = cleanName.substr(slash + 1);
     if (cleanName.empty()) return 0;
     if (!pkg.empty()) {
-        uint32_t id = mResTable->getIdentifier(cleanName, type, pkg);
-        if (id) return id;
+        auto id = am2->GetResourceId(pkg + ":" + type + "/" + cleanName);
+        if (id.has_value()) return *id;
         // aapt2 forces a dotted package name ("cdroid.<ns>"); try that prefix
         // before the expensive all-package scan.
-        id = mResTable->getIdentifier(cleanName, type, "cdroid." + pkg);
-        if (id) return id;
+        id = am2->GetResourceId("cdroid." + pkg + ":" + type + "/" + cleanName);
+        if (id.has_value()) return *id;
     }
-    uint32_t id = mResTable->getIdentifier(cleanName, type, "android");
-    if (id) return id;
-    return mResTable->getIdentifier(cleanName, type, "");  // any package
+    auto id = am2->GetResourceId("android:" + type + "/" + cleanName);
+    if (id.has_value()) return *id;
+    // Any package: AM2's GetResourceId needs a package name, so walk the
+    // registered ones (the legacy getIdentifier(name, type, "") tail).
+    std::vector<std::string> tried;
+    if (!pkg.empty()) tried.push_back(pkg);
+    tried.push_back("cdroid." + pkg);
+    tried.push_back("android");
+    std::vector<std::pair<std::string, uint8_t>> packages;
+    am2->ForEachPackage([&](const std::string& pname, uint8_t) {
+        packages.push_back(std::make_pair(pname, (uint8_t)0));
+        return true;
+    });
+    for (const auto& p : packages) {
+        bool seen = false;
+        for (const auto& t : tried) { if (t == p.first) { seen = true; break; } }
+        if (seen) continue;
+        auto anyId = am2->GetResourceId(p.first + ":" + type + "/" + cleanName);
+        if (anyId.has_value()) return *anyId;
+    }
+    return 0;
 }
 
 struct zip*ContextImpl::getResource(const std::string&fullResId,std::string*relativeResID,std::string*outPackage)const {
@@ -235,17 +251,17 @@ Asset* ContextImpl::openAsset(const std::string&fullresid) {
     // resolve it through the arsc to the qualified PNG path (e.g.
     // drawable-hdpi-v4/foo.9.png), like getDrawable does. Needed for 9-patch
     // src and other image loads that go through openAsset.
-    if(!asset && mResTable && fullresid.find("drawable/") != std::string::npos){
+    if(!asset && fullresid.find("drawable/") != std::string::npos){
         std::string rawName;
         parseResource(fullresid, &rawName, &package);
         uint32_t id = arscGetIdentifier(rawName, "drawable", package);
-        if(id != 0){
-            Res_value rv;
-            if(mResTable->getResource(id, &rv) >= 0){
-            TypedValue v = tvOf(rv);
-            if(v.type == TypedValue::TYPE_STRING){
+        AssetManager2* am2 = arscEngine();
+        if(id != 0 && am2 != nullptr){
+            auto value = am2->GetResource(id);
+            if(value.has_value() && value->type == TypedValue::TYPE_STRING){
                 size_t len = 0;
-                const char16_t* s = mResTable->getResourceString(id, &len);
+                const ResStringPool* pool = am2->GetStringPoolForCookie(value->cookie);
+                const char16_t* s = pool ? pool->stringAt(value->data, &len) : nullptr;
                 if(s && len > 0){
                     std::string path = TextUtils::utf16_utf8((const uint16_t*)s, len);
                     if(!path.empty()){
@@ -256,7 +272,6 @@ Asset* ContextImpl::openAsset(const std::string&fullresid) {
                         if(pak2) asset = assetFromZipEntry(pak2,resname);
                     }
                 }
-            }
             }
         }
     }

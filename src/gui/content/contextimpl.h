@@ -26,18 +26,21 @@ struct zip;   // libzip handle (global namespace, like androidfw/assetmanager.h)
 
 namespace cdroid{
 
-class ResTable;     // androidfw/restable.h
+class AssetManager2;   // androidfw/assetmanager2.h
 
 // CDROID's android.app.ContextImpl: the Context implementation layer that owns
-// the resource stack — the pak registry, the loaded arsc table and its theme
-// engine, plus the string-key asset/image access built on them. App (the
-// Application role) derives from this instead of Context directly; AOSP's
-// Application is a stateless ContextWrapper around a ContextImpl.
+// the resource stack — the pak registry, the AM2 table engine and its theme,
+// plus the string-key asset/image access built on them. App (the Application
+// role) derives from this instead of Context directly; AOSP's Application is a
+// stateless ContextWrapper around a ContextImpl.
 class ContextImpl:public Context{
 protected:
     std::unordered_map<std::string, struct zip*> mResources;
-    ResTable* mResTable = nullptr;   // resources.arsc from the paks (null if none)
-    // arsc theme engine (ResTable::Theme*), kept opaque so this header needs
+    // The arsc table engine (AM2). App owns the cdroid::AssetManager that owns
+    // it; ContextImpl reaches it through the virtual below (null = no arsc
+    // loaded yet), keeping androidfw types out of this header.
+    virtual AssetManager2* arscEngine() const { return nullptr; }
+    // arsc theme engine (AM2 cdroid::Theme*), kept opaque so this header needs
     // no androidfw type; the .cc casts.
     void* mArscTheme = nullptr;
     // "@[package:][+]id/filename" → package + relative name.

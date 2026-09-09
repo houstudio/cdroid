@@ -95,8 +95,8 @@ struct ResChunk_header {
 
     // Validate this chunk header: headerSize/size sane, 4-byte aligned, in bounds.
     // Static member so it is owned by the type it validates and shared by every
-    // chunk-loading path (ResStringPool, ResXMLTree in resourcetypes.cc; ResTable
-    // in restable.cc). A static method does not affect the POD layout of this
+    // chunk-loading path (ResStringPool/ResXMLTree in resourcetypes.cc).
+    // A static method does not affect the POD layout of this
     // AOSP-faithful binary struct.
     static status_t validate_chunk(const ResChunk_header* chunk, size_t minSize,
                                    const uint8_t* dataEnd, const char* name);
@@ -223,6 +223,10 @@ public:
     // UTF-8 or on error. On success *outLen is set to the byte count.
     const char* string8At(size_t idx, size_t* outLen) const;
 
+    // Find the index of the string (UTF-16) in the pool, or -1 when absent
+    // (AOSP ResStringPool::indexOfString; LoadedArsc::FindEntryByName face).
+    ssize_t indexOfString(const char16_t* str, size_t strLen) const;
+
     // Return the style span array for the given string index, or nullptr on
     // error. The returned array is terminated by a span with
     // name.index == ResStringPool_span::END.
@@ -340,7 +344,7 @@ struct Res_value {
 
 // Decode a Res_value COMPLEX_* (dimension/fraction) payload to its float
 // magnitude. Faithful to AOSP Res_value::complexToFloat. Inline header helper
-// so both androidfw (restable.cc) and the cdroid layer (typedarray.cc) share it.
+// so both the androidfw readers and the cdroid layer (typedarray.cc) share it.
 inline float complexToFloat(uint32_t data) {
     const uint32_t radix = (data >> Res_value::COMPLEX_RADIX_SHIFT) & Res_value::COMPLEX_RADIX_MASK;
     const uint32_t mantissa = (data >> Res_value::COMPLEX_MANTISSA_SHIFT) & Res_value::COMPLEX_MANTISSA_MASK;
@@ -591,6 +595,9 @@ struct ResTable_config {
     int compareLogical(const ResTable_config& o) const;
     inline bool operator<(const ResTable_config& o) const { return compare(o) < 0; }
 
+    // AOSP ResTable_config::toString (debug faces: resolution logging/Dump).
+    std::string toString() const;
+
     int  diff(const ResTable_config& o) const;
     bool isMoreSpecificThan(const ResTable_config& o) const;
     int  isLocaleMoreSpecificThan(const ResTable_config& o) const;
@@ -810,6 +817,15 @@ private:
 static inline uint32_t Res_MAKEID(uint32_t packageId, uint32_t typeId, uint32_t entryId) {
     return (((packageId + 1) << 24) | (((typeId + 1) & 0xFF) << 16) | (entryId & 0xFFFF));
 }
+
+// AOSP androidfw/ResourceUtils.h make_resid: plain composition of the FINAL
+// id bytes (1-based). Res_MAKEID above is the classic ResourceTypes.h macro
+// that biases package/type by +1 and takes 0-based ids — the LoadedArsc/
+// AssetManager2 port uses this one, like AOSP does.
+static inline uint32_t make_resid(uint8_t package_id, uint8_t type_id, uint16_t entry_id) {
+    return (static_cast<uint32_t>(package_id) << 24) | (static_cast<uint32_t>(type_id) << 16)
+         | entry_id;
+}
 // Resource-id field accessors (port of ResourceTypes.h macros).
 static inline bool     Res_VALIDID(uint32_t id) { return id != 0; }
 static inline uint32_t Res_GETPACKAGE(uint32_t id) { return ((id >> 24) - 1); }   // 0-based
@@ -842,6 +858,8 @@ public:
     status_t lookupResourceValue(Res_value* value) const;
 
     const std::map<std::string, uint8_t>& entries() const { return mEntries; }
+    uint8_t getAssignedPackageId() const { return mAssignedPackageId; }   // AOSP public field
+    void setAssignedPackageId(uint8_t id) { mAssignedPackageId = id; }   // AOSP assigns the field
 private:
     uint8_t mAssignedPackageId;
     uint8_t mLookupTable[256];
@@ -849,9 +867,70 @@ private:
     bool mAppAsLib;
 };
 
+// Unified-res pak path candidate enumeration (see resourcetypes.cc): the
+// res/-prefix and -vN/.9 spelling variants a caller must probe when opening a
+// path recorded in the arsc against either pak layout.
+void pakPathCandidates(const std::string& arscPath, std::vector<std::string>& out);
+
 // Reference to a unique entry (0xpptteeee) in a resource table.
 struct ResTable_ref {
     uint32_t ident;
+};
+
+// RES_TABLE_LIBRARY_TYPE header: the shared libraries linked in this table.
+// (LoadedArsc reads it into LoadedPackage::dynamic_package_map_ — the
+// LoadAsSharedLibrary / dynamic ref table face.)
+struct ResTable_lib_header {
+    struct ResChunk_header header;
+    // The number of shared libraries linked in this resource table.
+    uint32_t count;
+};
+
+// A shared library package-id to package name entry.
+struct ResTable_lib_entry {
+    // The package-id this shared library was assigned at build time.
+    // We use a uint32 to keep the structure aligned on a uint32 boundary.
+    uint32_t packageId;
+    // The package name of the shared library. \0 terminated.
+    uint16_t packageName[128];
+};
+
+// A map that allows rewriting staged (non-finalized) resource ids to their finalized counterparts.
+struct ResTable_staged_alias_header {
+    struct ResChunk_header header;
+    uint32_t count;   // Number of ResTable_staged_alias_entry pairs that follow.
+};
+
+struct ResTable_staged_alias_entry {
+    // The compile-time staged resource id to rewrite.
+    uint32_t stagedResId;
+    // The compile-time finalized resource id to which the staged resource id should be rewritten.
+    uint32_t finalizedResId;
+};
+
+// Specifies the set of resources that are explicitly allowed to be overlaid by RROs.
+struct ResTable_overlayable_header {
+    struct ResChunk_header header;
+    // The name of the overlayable set of resources that overlays target.
+    uint16_t name[256];
+    // The component responsible for enabling and disabling overlays targeting this chunk.
+    uint16_t actor[256];
+};
+
+// Holds a list of resource ids that are protected from being overlaid by a set of policies.
+struct ResTable_overlayable_policy_header {
+    enum PolicyFlags : uint32_t {
+        NONE              = 0x00000000,
+        PUBLIC            = 0x00000001,
+        SYSTEM_PARTITION  = 0x00000002,
+        VENDOR_PARTITION  = 0x00000004,
+        PRODUCT_PARTITION = 0x00000008,
+        SIGNATURE         = 0x00000010,
+        ACTOR             = 0x00000020,
+    };
+    struct ResChunk_header header;
+    PolicyFlags policy_flags;
+    uint32_t entry_count;   // Number of ResTable_ref entries that follow.
 };
 
 // arsc file header.
@@ -899,6 +978,12 @@ struct ResTable_type {
     uint32_t entriesStart;   // offset from header where entry data starts
     ResTable_config config;  // MUST be last (variable-size across releases)
 };
+
+// The minimum size required to read any version of ResTable_type (AOSP
+// ResourceTypes.h; the config is variable over releases, only its size field
+// is guaranteed on pre-N tables).
+constexpr size_t kResTableTypeMinSize =
+        sizeof(ResTable_type) - sizeof(ResTable_config) + sizeof(ResTable_config::size);
 
 // Sparse entry (when FLAG_SPARSE set): packs entry idx + offset/4.
 union ResTable_sparseTypeEntry {

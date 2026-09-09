@@ -22,7 +22,8 @@
 // cdroid::Assets via the opaque mContext pointer.
 //
 #include <content/typedarray.h>
-#include <content/androidfw/restable.h>        // ResTable (complete def for mTable use)
+#include <content/androidfw/assetmanager2.h>  // AssetManager2 (mAm: pools + id lookups)
+#include <content/androidfw/attributeresolution.h>  // STYLE_* wire slots
 #include <content/typedvalue.h>      // TypedValue (getResolved reference resolution)
 #include <content/resources.h>            // Resources (mResources: getDrawable/loadComplexColor/getString)
 #include <drawable/colordrawable.h>    // ColorDrawable
@@ -35,7 +36,7 @@
 // "@<package>:<type>/<name>" so Assets loads it from whichever pak owns it.
 // aapt2 stores style-bag drawable/color values as the file path (TYPE_STRING),
 // not as a reference id, so the high-level getters must turn the path back into
-// a ref. The owning package is resolved through the ResTable (package="" searches
+// a ref. The owning package is resolved through the engine (package="" searches
 // every loaded pak, so it matches the framework pak "android" or an app pak as
 // appropriate), removing the previous hard-coded "@android:" assumption.
 // Returns empty when the path isn't under "res/" or the name isn't found in the
@@ -45,8 +46,8 @@
 // resource id via the arsc, so TypedArray getters can route through the ID path
 // (Resources.getDrawable/loadComplexColor) instead of the legacy string Assets
 // lookup. Returns 0 if the path isn't a known resource.
-static int pathToResourceId(const cdroid::ResTable& table, const std::string& path) {
-    if (path.compare(0, 4, "res/") != 0) return 0;
+static int pathToResourceId(const cdroid::AssetManager2* am2, const std::string& path) {
+    if (am2 == nullptr || path.compare(0, 4, "res/") != 0) return 0;
     size_t sl = path.find_last_of('/');
     if (sl == std::string::npos || sl <= 4) return 0;
     std::string type = path.substr(4, sl - 4);  // "drawable" / "color" / "drawable-xxhdpi"
@@ -56,8 +57,18 @@ static int pathToResourceId(const cdroid::ResTable& table, const std::string& pa
     std::string base = path.substr(sl + 1,
         (dot != std::string::npos && dot > sl) ? dot - sl - 1 : std::string::npos);
     if (type.empty() || base.empty()) return 0;
-    // package="" -> search all packages (framework "android" + app).
-    return (int)table.getIdentifier(base, type, "");
+    // Search every loaded package (the legacy getIdentifier(name, type, "")
+    // semantics): AM2's GetResourceId needs one package per query.
+    std::vector<std::string> packages;
+    am2->ForEachPackage([&](const std::string& pname, uint8_t) {
+        packages.push_back(pname);
+        return true;
+    });
+    for (const auto& pkg : packages) {
+        auto id = am2->GetResourceId(pkg + ":" + type + "/" + base);
+        if (id.has_value()) return (int)*id;
+    }
+    return 0;
 }
 
 namespace cdroid {
@@ -74,20 +85,49 @@ static void fillTypedValue(const Res_value& rv, TypedValue* out) {
 // The Theme view is stack-side at every call site, so a shared value snapshot
 // is kept (AOSP TypedArray.mTheme — there GC keeps the theme alive).
 
-TypedArray::TypedArray(const ResTable& table, const StyledAttr* vals, size_t count,
+TypedArray::TypedArray(const AssetManager2* am2, const StyledAttr* vals, size_t count,
                        const ResXMLTree* xmlSrc, float density, const Resources* res,
                        const Resources::Theme* theme)
-    : mTable(table), mVals(vals), mCount(count), mXml(xmlSrc),
+    : mAm(am2), mVals(vals), mCount(count), mXml(xmlSrc),
       mDensity(density), mResources(res),
       mTheme(theme ? std::make_shared<Resources::Theme>(*theme) : nullptr) {}
 
-TypedArray::TypedArray(const ResTable& table, std::vector<StyledAttr>&& vals,
+TypedArray::TypedArray(const AssetManager2* am2, std::vector<StyledAttr>&& vals,
                        const ResXMLTree* xmlSrc, float density, const Resources* res,
                        const Resources::Theme* theme)
-    : mTable(table), mOwned(new std::vector<StyledAttr>(std::move(vals))),
+    : mAm(am2), mOwned(new std::vector<StyledAttr>(std::move(vals))),
       mVals(mOwned->data()), mCount(mOwned->size()),
       mXml(xmlSrc), mDensity(density), mResources(res),
       mTheme(theme ? std::make_shared<Resources::Theme>(*theme) : nullptr) {}
+
+// AM2 switch bridge: one AttributeResolution wire block -> StyledAttr[]. The
+// wire slots are the AOSP TypedArray mData layout (STYLE_* in
+// attributeresolution.h); stringBlock carries the ApkAssets cookie for
+// style/theme-sourced strings (-2 keeps the AXML-inline-pool sentinel, -1 no
+// string).
+void styledAttrsFromBlocks(const uint32_t* values, size_t count, StyledAttr* out) {
+    for (size_t i = 0; i < count; i++) {
+        const uint32_t* slot = values + i * STYLE_NUM_ENTRIES;
+        StyledAttr& attr = out[i];
+        attr.value.size = 8;
+        attr.value.res0 = 0;
+        attr.value.dataType = (uint8_t)slot[STYLE_TYPE];
+        attr.value.data = slot[STYLE_DATA];
+        attr.resourceId = slot[STYLE_RESOURCE_ID];
+        const uint8_t type = attr.value.dataType;
+        attr.set = (type != Res_value::TYPE_NULL) || (slot[STYLE_DATA] == Res_value::DATA_NULL_EMPTY);
+        // The wire slot carries the JAVA cookie (raw cookie + 1; 0xFFFFFFFF
+        // = invalid — attributeresolution.cc ApkAssetsCookieToJavaCookie).
+        const uint32_t javaCookie = slot[STYLE_ASSET_COOKIE];
+        if (type == Res_value::TYPE_STRING) {
+            // Invalid cookie on a string = the value came from the AXML's own
+            // pool (the -2 sentinel); otherwise decode the raw cookie.
+            attr.stringBlock = (javaCookie != 0xFFFFFFFFu) ? (ssize_t)(javaCookie - 1) : (ssize_t)-2;
+        } else {
+            attr.stringBlock = -1;
+        }
+    }
+}
 
 TypedArray::~TypedArray() {
     delete mOwned;
@@ -254,12 +294,12 @@ std::string TypedArray::getString(size_t idx) const {
     if (mVals[idx].stringBlock == -2 && mXml) {
         // element-sourced: the AXML's own string pool
         s = mXml->getStrings().stringAt(v.data, &len);
-    } else if (mVals[idx].stringBlock >= 0) {
-        // style/theme-sourced: the owning arsc header's pool (multi-pak table —
-        // the index is into THAT pool, not the first one).
-        s = mTable.stringAtBlock(mVals[idx].stringBlock, v.data, &len);
-    } else {
-        s = mTable.getStringPool().stringAt(v.data, &len);
+    } else if (mVals[idx].stringBlock >= 0 && mAm) {
+        // style/theme-sourced: the owning ApkAssets' global string pool (the
+        // cookie recorded by styledAttrsFromBlocks; the index is into THAT
+        // pool, not the first one).
+        const ResStringPool* pool = mAm->GetStringPoolForCookie((ApkAssetsCookie)mVals[idx].stringBlock);
+        s = pool ? pool->stringAt(v.data, &len) : nullptr;
     }
     std::string out;
     for (size_t i = 0; s && i < len; i++) {
@@ -454,7 +494,7 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
         id = (int)v.data;
     } else if (v.type == TypedValue::TYPE_STRING) {
         id = (int)mVals[idx].resourceId;   // column keeps the source ref id
-        if (id == 0) id = pathToResourceId(mTable, getString(idx));
+        if (id == 0) id = pathToResourceId(mAm, getString(idx));
     }
     // AOSP TypedArray.getDrawable → mResources.getDrawable(id, mTheme): the
     // nested load resolves ?attr in the drawable/CSL XML against THIS theme.
@@ -525,7 +565,7 @@ std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const 
         // source reference id in the column — prefer it over re-parsing the
         // path (the string needs the owning pool block to fetch at all).
         id = (int)mVals[idx].resourceId;
-        if (id == 0) id = pathToResourceId(mTable, getString(idx));
+        if (id == 0) id = pathToResourceId(mAm, getString(idx));
     }
     if (id != 0)
         return std::dynamic_pointer_cast<ColorStateList>(mResources->loadComplexColor(id, mTheme.get()));

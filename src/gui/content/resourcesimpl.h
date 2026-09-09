@@ -24,9 +24,9 @@
 #include <core/displaymetrics.h>
 #include <content/configuration.h>   // Configuration (live config face)      // cdroid::DisplayMetrics (value member mMetrics)
 
-// ResourcesImpl is the facade that HIDES the androidfw native readers (ResTable,
-// ResTable_config, AssetManager, Asset, TypedValue) — those headers live in the
-// .cc only. So the many files that include this (via context.h) don't transitively
+// ResourcesImpl is the facade that HIDES the androidfw native readers
+// (AssetManager2, ResTable_config, Asset, TypedValue) — those headers live in
+// the .cc only. So the many files that include this (via context.h) don't transitively
 // pull androidfw.
 namespace cdroid {
 class AssetManager;        // core — opaque (pointer member + params)
@@ -130,7 +130,7 @@ public:
     // mComplexColorCache + loadDrawable/loadComplexColor (it lives in the cdroid
     // target, so cairo + the Context inflation bridge are available). getFont/
     // getMovie stay stubbed (out of scope).
-    // themeEngine = AOSP Theme parameter (ResTable::Theme*, borrowed; getTheme()
+    // themeEngine = AOSP Theme parameter (cdroid::Theme*, borrowed; getTheme()
     // ._engineHandle()): themes the ComplexColor inflation (AOSP
     // loadComplexColor passes it into createFromXml) and keys the caches, so
     // entries loaded under one theme never leak into another (AOSP
@@ -161,7 +161,7 @@ public:
     // (ConfigurationBoundResourceCache) — used by AnimatorInflater's int-id
     // loadAnimator/loadStateListAnimator. obtain* applies newInstance() on a
     // hit (callers never receive the cached source animator); themeEngine is
-    // the opaque ResTable::Theme* from Resources::Theme::_engineHandle().
+    // the opaque cdroid::Theme* from Resources::Theme::_engineHandle().
     Animator* obtainCachedAnimator(int id, const void* themeEngine) const;
     void cacheAnimator(int id, const void* themeEngine,
                        const std::shared_ptr<ConstantState<Animator*>>& cs) const;
@@ -183,7 +183,7 @@ private:
 
     AssetManager*       mAssets;
     Configuration       mConfiguration;   // AOSP mConfiguration (live config)
-    std::unique_ptr<ResTable_config> mConfig;  // opaque (restable.h hidden in .cc)
+    std::unique_ptr<ResTable_config> mConfig;  // opaque (resourcetypes.h hidden in .cc)
     DisplayMetrics      mMetrics;
     Context*            mCtx = nullptr;   // inflation bridge (see setContext)
     // AOSP mDrawableCache / mComplexColorCache — keyed by resource id. mutable:

@@ -35,7 +35,7 @@
 
 // AOSP-aligned resource types live in namespace cdroid (androidfw sub-library,
 // compiled into cdroid.so). Their full definitions come via <core/resourcesimpl.h>
-// included above (ResourcesImpl / AssetManager / Asset / ResTable::Theme / TypedValue).
+// included above (ResourcesImpl / AssetManager / Asset / TypedValue).
 namespace cdroid{
 class Drawable;
 class ColorStateList;
@@ -54,7 +54,7 @@ public:
     // (e.g. on App) to actually launch. Kept as Context* so Navigator's mContext->startActivity compiles.
     virtual void startActivity(const Intent& /*intent*/) = 0;
     // AOSP-aligned Theme access. getTheme() returns the live Resources::Theme
-    // (engine = cdroid::ResTable::Theme). setTheme(@StyleRes int) applies a
+    // (engine = cdroid::Theme, the AM2 Theme). setTheme(@StyleRes int) applies a
     // style resource (AOSP Context.setTheme).
     virtual Resources::Theme getTheme() = 0;
     virtual void setTheme(int resid) = 0;

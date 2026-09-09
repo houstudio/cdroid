@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <memory.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -465,4 +466,105 @@ const void* _CompressedAsset::getBuffer(bool /*aligned*/) {
     // For a valid gzip stream the inflated size equals ISIZE; trust mUncompressedLen.
     (void)outLen;
     return mBuf;
+}
+
+/*============================================================================*
+ * _MappedAsset — private mmap window (AOSP createFromUncompressedMap)
+ *============================================================================*/
+
+_MappedAsset::_MappedAsset() {}
+
+_MappedAsset::~_MappedAsset() {
+    close();
+}
+
+status_t _MappedAsset::openWindow(const char* debugName, int fd, off64_t offset, size_t length) {
+    if (fd < 0 || length == 0) return BAD_VALUE;
+    // Map [page(offset), page(offset+length)) — mmap needs page alignment,
+    // then slide the data pointer to the requested offset.
+    const off64_t pageSize = sysconf(_SC_PAGESIZE);
+    const off64_t pageBase = (offset / pageSize) * pageSize;
+    const size_t mapLen = (size_t)(offset + (off64_t)length - pageBase);
+    void* m = mmap(nullptr, mapLen, PROT_READ, MAP_SHARED, fd, pageBase);
+    if (m == MAP_FAILED) {
+        LOGE("mmap window of %s failed (offset=%lld len=%zu)", debugName,
+             (long long)offset, length);
+        return UNKNOWN_ERROR;
+    }
+    mMapBase = (uint8_t*)m;
+    mMapSize = mapLen;
+    mData = mMapBase + (size_t)(offset - pageBase);
+    mLength = (off64_t)length;
+    mOffset = 0;
+    setAssetSource(debugName ? debugName : "(mapped)");
+    setAccessMode(ACCESS_BUFFER);
+    return NO_ERROR;
+}
+
+ssize_t _MappedAsset::read(void* buf, size_t count) {
+    if (count > (size_t)(mLength - mOffset)) count = (size_t)(mLength - mOffset);
+    if (count == 0) return 0;
+    memcpy(buf, mData + mOffset, count);
+    mOffset += count;
+    return (ssize_t)count;
+}
+
+off64_t _MappedAsset::seek(off64_t offset, int whence) {
+    off64_t newPos;
+    switch (whence) {
+        case SEEK_SET: newPos = offset; break;
+        case SEEK_CUR: newPos = mOffset + offset; break;
+        case SEEK_END: newPos = mLength + offset; break;
+        default: return (off64_t)-1;
+    }
+    if (newPos < 0) return (off64_t)-1;
+    mOffset = newPos > mLength ? mLength : newPos;
+    return mOffset;
+}
+
+void _MappedAsset::close() {
+    if (mBuf != nullptr) {
+        delete[] mBuf;
+        mBuf = nullptr;
+    }
+    if (mMapBase) {
+        munmap(mMapBase, mMapSize);
+        mMapBase = nullptr;
+        mMapSize = 0;
+        mData = nullptr;
+    }
+}
+
+const void* _MappedAsset::getBuffer(bool aligned) {
+    // AOSP contract: "aligned to 4 bytes when aligned is true". A window into
+    // a pak entry starts wherever the entry data sits in the file (zipalign
+    // normally lands STORED entries on 4; legacy paks may not) — fall back to
+    // a one-time aligned heap copy, exactly AOSP _FileAsset::getBuffer.
+    if (aligned && (((uintptr_t)mData) & 0x03U) != 0) {
+        if (mBuf == nullptr) {
+            mBuf = new (std::nothrow) unsigned char[(size_t)mLength];
+            if (mBuf != nullptr) memcpy(mBuf, mData, (size_t)mLength);
+        }
+        return mBuf;
+    }
+    return mData;
+}
+
+int _MappedAsset::openFileDescriptor(off64_t* outStart, off64_t* outLength) const {
+    // The window's file positions are not recoverable from the mapping alone;
+    // AOSP re-opens by path. Without a path we cannot fabricate an fd.
+    (void)outStart; (void)outLength;
+    return -1;
+}
+
+Asset* Asset::createFromMappedWindow(int fd, const char* debugName,
+                                     off64_t offset, size_t length, AccessMode mode) {
+    if (fd < 0) return nullptr;
+    _MappedAsset* pAsset = new _MappedAsset;
+    status_t result = pAsset->openWindow(debugName, fd, offset, length);
+    if (result != NO_ERROR) {
+        delete pAsset;
+        return nullptr;
+    }
+    return pAsset;
 }

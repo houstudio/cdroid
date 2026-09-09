@@ -3,8 +3,9 @@
 # frameworks/base/libs/androidfw, stages:
 #   1. ResStringPool (string pool reader)            — done
 #   2. ResXMLTree   (binary AXML pull parser)        — done
-#   3a. ResTable_config (config matching engine)     — done (this stage)
-#   3b. ResTable    (arsc table load + getResource)  — later
+#   3a. ResTable_config (config matching engine)     — done
+#   3b. ResTable    (arsc table load + getResource)  — RETIRED with the AM1
+#       retirement (the AM2 switch replaced the engine; restable.{h,cc} deleted)
 #
 # Built and unit-tested in ISOLATION: registered at the top-level CMakeLists
 # scope (not under src/gui), so it does NOT inherit src/gui's directory-scope
@@ -15,7 +16,16 @@ project(androidfw CXX)
 
 set(ANDROIDFW_SOURCES
     resourcetypes.cc        # foundational binary-format types + ResStringPool/ResXMLTree/ResTable_config
-    restable.cc             # ResTable engine (arsc load/getResource) + obtainStyledAttributes
+    # restable.cc (legacy ResTable engine) is RETIRED from the product build —
+    # zero production references since the AM2 switch. Source kept in-tree as
+    # the reconcile-test oracle; tests/androidfw compiles it into its own exe.
+    chunkiterator.cc        # AOSP ChunkIterator (LoadedArsc's chunk walker)
+    loadedarsc.cc           # AM2 stage 1: read-only validated arsc view (LoadedPackage/TypeSpec)
+    zerocopyzip.cc          # AM2 stage 2: mmap'd whole-pak read header (STORED view / DEFLATED inflate)
+    assetsprovider.cc       # AM2 stage 2: AOSP AssetsProvider family on the read header
+    apkassets.cc            # AM2 stage 2: ApkAssets (provider + LoadedArsc)
+    assetmanager2.cc        # AM2 stage 4: AssetManager2 + Theme (bag cache, filter list)
+    attributeresolution.cc  # AM2 stage 4: ResolveAttrs/ApplyStyle/RetrieveAttributes bodies
     LocaleData.cpp          # vendored locale matching engine (CLDR tables)
 )
 
@@ -37,7 +47,8 @@ set_target_properties(androidfw PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # the cdlog LogMessage backend is pulled in for this lib and for the test targets.
 target_include_directories(androidfw
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
-           ${CMAKE_CURRENT_SOURCE_DIR}/..   # src/gui: for <core/displaymetrics.h> (TypedValue)
+           ${CMAKE_CURRENT_SOURCE_DIR}/..   # src/gui/content
+           ${CMAKE_CURRENT_SOURCE_DIR}/../..   # src/gui: for <porting/cdlog.h> etc.
            ${CMAKE_BINARY_DIR}/include
            PRIVATE ${ZIP_INCLUDE_DIRS})
 target_link_libraries(androidfw PUBLIC tvhal ${ZIP_LIBRARIES} ZLIB::ZLIB)
