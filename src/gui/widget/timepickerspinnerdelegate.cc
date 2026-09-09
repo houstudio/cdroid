@@ -37,7 +37,7 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
     :AbstractTimePickerDelegate(delegator, context) {
 
     auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, defStyleAttr, defStyleRes);
-    const int layoutResourceId = a ? a->getResourceId(R::styleable::TimePicker_legacyLayout, 0) : 0;
+    const int layoutResourceId = a->getResourceId(R::styleable::TimePicker_legacyLayout, 0);
     const int layoutRes = layoutResourceId ? layoutResourceId
             : R::layout::time_picker_legacy;
 

@@ -99,7 +99,7 @@ void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts
 void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     auto ta = theme ? obtainAttributes(r, theme, atts, R::styleable::Drawable)
                     : r.obtainStyledAttributes(&atts, R::styleable::Drawable);
-    mVisible = ta ? ta->getBoolean(R::styleable::Drawable_visible, mVisible) : mVisible;
+    mVisible = ta->getBoolean(R::styleable::Drawable_visible, mVisible);
 }
 
 // AOSP Drawable.applyTheme(@NonNull Theme): no-op here (the mThemeAttrs

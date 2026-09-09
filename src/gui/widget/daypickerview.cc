@@ -46,25 +46,25 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
 
     Calendar tempDate;
     auto a = mContext->obtainStyledAttributes(pAttrs, R::styleable::CalendarView, defStyleAttr, defStyleRes);
-    const int firstDayOfWeek = a ? a->getInt(R::styleable::CalendarView_firstDayOfWeek, tempDate.getFirstDayOfWeek()) : tempDate.getFirstDayOfWeek();
+    const int firstDayOfWeek = a->getInt(R::styleable::CalendarView_firstDayOfWeek, tempDate.getFirstDayOfWeek());
 
-    const std::string minDate = a ? a->getString(R::styleable::CalendarView_minDate) : std::string();
-    const std::string maxDate = a ? a->getString(R::styleable::CalendarView_maxDate) : std::string();
+    const std::string minDate = a->getString(R::styleable::CalendarView_minDate);
+    const std::string maxDate = a->getString(R::styleable::CalendarView_maxDate);
 
     // AOSP DayPickerView defaults these to the material calendar text
     // appearances when the styleable doesn't carry them; without the defaults
     // every text falls back to Paint's plain black (invisible on dark themes).
-    const int monthTextAppearanceResId = a ? a->getResourceId(
+    const int monthTextAppearanceResId = a->getResourceId(
             R::styleable::CalendarView_monthTextAppearance,
-            R::style::TextAppearance_Material_Widget_Calendar_Month) : 0;
-    const int dayOfWeekTextAppearanceResId = a ? a->getResourceId(
+            R::style::TextAppearance_Material_Widget_Calendar_Month);
+    const int dayOfWeekTextAppearanceResId = a->getResourceId(
             R::styleable::CalendarView_weekDayTextAppearance,
-            R::style::TextAppearance_Material_Widget_Calendar_DayOfWeek) : 0;
-    const int dayTextAppearanceResId = a ? a->getResourceId(
+            R::style::TextAppearance_Material_Widget_Calendar_DayOfWeek);
+    const int dayTextAppearanceResId = a->getResourceId(
             R::styleable::CalendarView_dateTextAppearance,
-            R::style::TextAppearance_Material_Widget_Calendar_Day) : 0;
+            R::style::TextAppearance_Material_Widget_Calendar_Day);
 
-    auto daySelectorColor = a ? a->getColorStateList(R::styleable::CalendarView_daySelectorColor) : nullptr;
+    auto daySelectorColor = a->getColorStateList(R::styleable::CalendarView_daySelectorColor);
 
     // Set up adapter.
     mAdapter = new DayPickerPagerAdapter(context, R::layout::date_picker_month_item_material, R::id::month_view);
@@ -113,10 +113,10 @@ DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int def
         // style's textColor through its own typed resolution.
         static const uint32_t kTextColor[] = { R::attr::textColor, 0 };
         auto taStyle = mContext->obtainStyledAttributes(monthTextAppearanceResId, R::styleable::TextAppearance);
-        auto monthColor = taStyle ? taStyle->getColorStateList(R::styleable::TextAppearance_textColor) : nullptr;
+        auto monthColor = taStyle->getColorStateList(R::styleable::TextAppearance_textColor);
         if (monthColor == nullptr) {
             auto ta = mContext->obtainStyledAttributes(kTextColor);
-            monthColor = ta ? ta->getColorStateList(0) : nullptr;
+            monthColor = ta->getColorStateList(0);
         }
         if (monthColor != nullptr) {
             mPrevButton->setImageTintList(monthColor);

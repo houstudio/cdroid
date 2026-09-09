@@ -90,7 +90,7 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     mSelectHours = mContext->getString(R::string::select_hours);
     mSelectMinutes = mContext->getString(R::string::select_minutes);
     mIs24Hour = false;
-    const int layoutResourceId = a ? a->getResourceId(R::styleable::TimePicker_internalLayout, 0) : 0;
+    const int layoutResourceId = a->getResourceId(R::styleable::TimePicker_internalLayout, 0);
     const int layoutRes = layoutResourceId ? layoutResourceId : R::layout::time_picker_material;
     View* mainView = inflater->inflate(layoutRes, delegator);
     mainView->setSaveFromParentEnabled(false);
@@ -221,15 +221,15 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     // color from the header time text appearance. If it's set, we'll let
     // that override the "real" header text color.
     RefPtr<ColorStateList> headerTextColor;
-    const int timeHeaderTextAppearance = a ? a->getResourceId(R::styleable::TimePicker_headerTimeTextAppearance, 0) : 0;
+    const int timeHeaderTextAppearance = a->getResourceId(R::styleable::TimePicker_headerTimeTextAppearance, 0);
     if (timeHeaderTextAppearance != 0) {
         auto textAppearance = mContext->obtainStyledAttributes(nullptr, ATTRS_TEXT_COLOR, 0, timeHeaderTextAppearance);
-        RefPtr<ColorStateList> legacyHeaderTextColor = textAppearance ? textAppearance->getColorStateList(0) : nullptr;
+        RefPtr<ColorStateList> legacyHeaderTextColor = textAppearance->getColorStateList(0);
         headerTextColor = applyLegacyColorFixes(legacyHeaderTextColor);
     }
 
     if (!headerTextColor) {
-        headerTextColor = a ? a->getColorStateList(R::styleable::TimePicker_headerTextColor) : nullptr;
+        headerTextColor = a->getColorStateList(R::styleable::TimePicker_headerTextColor);
     }
 
     mTextInputPickerHeader = mainView->findViewById(R::id::input_header);
@@ -394,7 +394,7 @@ RefPtr<ColorStateList> TimePickerClockDelegate::applyLegacyColorFixes(RefPtr<Col
 
         // Generate a non-activated color using the disabled alpha.
         auto ta = mContext->obtainStyledAttributes(ATTRS_DISABLED_ALPHA);
-        const float disabledAlpha = ta ? ta->getFloat(0, 0.30f) : 0.30f;
+        const float disabledAlpha = ta->getFloat(0, 0.30f);
         defaultColor = multiplyAlphaComponent(activatedColor, disabledAlpha);
     }
 

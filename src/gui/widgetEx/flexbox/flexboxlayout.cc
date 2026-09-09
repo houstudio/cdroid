@@ -60,7 +60,7 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet* pAttrs,int def
     if (dividerModeVertical != SHOW_DIVIDER_NONE) {
         mShowDividerVertical = dividerModeVertical;
     }
-    int dividerModeHorizontal = ta&&ta->hasValue(R::styleable::FlexboxLayout_showDividerHorizontal) ? ta->getInt(R::styleable::FlexboxLayout_showDividerHorizontal,SHOW_DIVIDER_NONE) : SHOW_DIVIDER_NONE;
+    int dividerModeHorizontal = ta->hasValue(R::styleable::FlexboxLayout_showDividerHorizontal) ? ta->getInt(R::styleable::FlexboxLayout_showDividerHorizontal,SHOW_DIVIDER_NONE) : SHOW_DIVIDER_NONE;
     if (dividerModeHorizontal != SHOW_DIVIDER_NONE) {
         mShowDividerHorizontal = dividerModeHorizontal;
     }
@@ -1168,7 +1168,7 @@ FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& a
     // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
     auto ta = context->obtainStyledAttributes(attrs, R::styleable::FlexboxLayoutLayout);
 
-    mOrder = ta&&ta->hasValue(R::styleable::FlexboxLayoutLayout_layout_order) ? ta->getInt(R::styleable::FlexboxLayoutLayout_layout_order, (int)ORDER_DEFAULT) : (int)ORDER_DEFAULT;
+    mOrder = ta->hasValue(R::styleable::FlexboxLayoutLayout_layout_order) ? ta->getInt(R::styleable::FlexboxLayoutLayout_layout_order, (int)ORDER_DEFAULT) : (int)ORDER_DEFAULT;
     mFlexGrow = ta->getFloat(R::styleable::FlexboxLayoutLayout_layout_flexGrow, (float)FLEX_GROW_DEFAULT);
     mFlexShrink = ta->getFloat(R::styleable::FlexboxLayoutLayout_layout_flexShrink, (float)FLEX_SHRINK_DEFAULT);
     mAlignSelf = ta->getInt(R::styleable::FlexboxLayoutLayout_layout_alignSelf, (int)AlignSelf::AUTO);

@@ -341,7 +341,7 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
     if (!ignoreThemeAttr) {
         // AOSP: apply a theme wrapper if the tag carries android:theme.
         auto ta = context->obtainStyledAttributes(&attrs, ATTRS_THEME);
-        const int themeResId = ta ? ta->getResourceId(0, 0) : 0;
+        const int themeResId = ta->getResourceId(0, 0);
         if (themeResId != 0) {
             mThemeContexts.emplace_back(new ContextThemeWrapper(context, themeResId));
             context = mThemeContexts.back().get();
@@ -497,8 +497,8 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // map — invisible to the binary AXML typed path — so the include
             // tag's android:id/visibility were silently dropped in binary mode.
             auto ta = context->obtainStyledAttributes(&attrs, R::styleable::Include);
-            const int id = ta ? ta->getResourceId(R::styleable::Include_id, View::NO_ID) : View::NO_ID;
-            const int visibility = ta ? ta->getInt(R::styleable::Include_visibility, -1) : -1;
+            const int id = ta->getResourceId(R::styleable::Include_id, View::NO_ID);
+            const int visibility = ta->getInt(R::styleable::Include_visibility, -1);
 
             // We try to load the layout params set in the <include /> tag.
             // If the parent can't generate layout params (ex. missing width

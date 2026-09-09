@@ -29,7 +29,7 @@ void DialogFragmentNavigator::Destination::onInflate(cdroid::Context* context, c
     NavDestination::onInflate(context, attrs);
     namespace ns = internal::R::styleable;
     auto ta = context->obtainStyledAttributes(attrs, ns::FragmentNavigator);
-    setClassName(ta ? ta->getString(ns::FragmentNavigator_name) : "");
+    setClassName(ta->getString(ns::FragmentNavigator_name));
     LOGV("DialogFragmentNavigator.Destination.onInflate route='%s' className='%s'",
          getRoute().c_str(), getClassName().c_str());
 }

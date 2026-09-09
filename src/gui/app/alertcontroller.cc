@@ -215,7 +215,7 @@ void AlertController::setIcon(Drawable* icon) {
 int AlertController::getIconAttributeResId(int attrId){
     static const uint32_t kAttr[] = { (uint32_t)attrId, 0 };
     auto ta = mContext->obtainStyledAttributes(kAttr);
-    return ta ? ta->getResourceId(0, 0) : 0;
+    return ta->getResourceId(0, 0);
 }
 
 void AlertController::setInverseBackgroundForced(bool forceInverseBackground){
@@ -570,7 +570,7 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
 
     // If the needsDefaultBackgrounds attribute is set, we know we're
     // inheriting from a framework style.
-    bool needsDefaultBackgrounds = a ? a->getBoolean(R::styleable::AlertDialog_needsDefaultBackgrounds, true) : true;
+    bool needsDefaultBackgrounds = a->getBoolean(R::styleable::AlertDialog_needsDefaultBackgrounds, true);
     if (needsDefaultBackgrounds) {
         fullDark = R::drawable::popup_full_dark;
         topDark = R::drawable::popup_top_dark;
@@ -583,10 +583,10 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
         bottomMedium = R::drawable::popup_bottom_medium;
     }
 
-    topBright = a ? a->getResourceId(R::styleable::AlertDialog_topBright, topBright) : topBright;
-    topDark   = a ? a->getResourceId(R::styleable::AlertDialog_topDark, topDark) : topDark;
-    centerBright = a ? a->getResourceId(R::styleable::AlertDialog_centerBright, centerBright) : centerBright;
-    centerDark   = a ? a->getResourceId(R::styleable::AlertDialog_centerDark, centerDark) : centerDark;
+    topBright = a->getResourceId(R::styleable::AlertDialog_topBright, topBright);
+    topDark   = a->getResourceId(R::styleable::AlertDialog_topDark, topDark);
+    centerBright = a->getResourceId(R::styleable::AlertDialog_centerBright, centerBright);
+    centerDark   = a->getResourceId(R::styleable::AlertDialog_centerDark, centerDark);
 
     /* We now set the background of all of the sections of the alert.
      * First collect together each section that is being displayed along
@@ -648,17 +648,17 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
 
     if (lastView) {
         if (setView) {
-            bottomBright = a ? a->getResourceId(R::styleable::AlertDialog_bottomBright, bottomBright) : bottomBright;
-            bottomMedium = a ? a->getResourceId(R::styleable::AlertDialog_bottomMedium, bottomMedium) : bottomMedium;
-            bottomDark   = a ? a->getResourceId(R::styleable::AlertDialog_bottomDark, bottomDark) : bottomDark;
+            bottomBright = a->getResourceId(R::styleable::AlertDialog_bottomBright, bottomBright);
+            bottomMedium = a->getResourceId(R::styleable::AlertDialog_bottomMedium, bottomMedium);
+            bottomDark   = a->getResourceId(R::styleable::AlertDialog_bottomDark, bottomDark);
 
             // ListViews will use the Bright background, but buttons use the
             // Medium background.
             lastView->setBackgroundResource(
                     lastLight ? (hasButtons ? bottomMedium : bottomBright) : bottomDark);
         } else {
-            fullBright = a ? a->getResourceId(R::styleable::AlertDialog_fullBright, fullBright) : fullBright;
-            fullDark   = a ? a->getResourceId(R::styleable::AlertDialog_fullDark, fullDark) : fullDark;
+            fullBright = a->getResourceId(R::styleable::AlertDialog_fullBright, fullBright);
+            fullDark   = a->getResourceId(R::styleable::AlertDialog_fullDark, fullDark);
 
             lastView->setBackgroundResource(lastLight ? fullBright : fullDark);
         }
@@ -670,7 +670,7 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
         if (mCheckedItem > -1) {
             mListView->setItemChecked(mCheckedItem, true);
             mListView->setSelectionFromTop(mCheckedItem,
-                    a ? a->getDimensionPixelSize(R::styleable::AlertDialog_selectionScrollOffset, 0) : 0);
+                    a->getDimensionPixelSize(R::styleable::AlertDialog_selectionScrollOffset, 0));
         }
     }
 }

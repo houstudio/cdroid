@@ -6730,7 +6730,7 @@ Drawable* View::getAutofilledDrawable(){
         // theme value points to @drawable/autofilled_highlight.
         static const uint32_t kAttrs[] = { R::attr::autofilledHighlight, 0 };
         auto ta = getContext()->obtainStyledAttributes(kAttrs);
-        int resId = ta ? ta->getResourceId(0, 0) : 0;
+        int resId = ta->getResourceId(0, 0);
         if (resId) mAttachInfo->mAutofilledDrawable = getContext()->getDrawable(resId);
     }
     return mAttachInfo->mAutofilledDrawable;

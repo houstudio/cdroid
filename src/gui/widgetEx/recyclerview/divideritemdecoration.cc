@@ -25,7 +25,7 @@ DividerItemDecoration::DividerItemDecoration(Context* context, int orientation) 
     // mDivider = a.getDrawable(0);
     static const uint32_t ATTRS[] = { R::attr::listDivider, 0 };
     auto a = context->obtainStyledAttributes(ATTRS);
-    mDivider = a ? a->getDrawable(0) : nullptr;
+    mDivider = a->getDrawable(0);
     LOGW_IF(mDivider == nullptr,"@android:attr/listDivider was not set in the theme used for this "
                "DividerItemDecoration. Please set that attribute all call setDrawable()");
     setOrientation(orientation);

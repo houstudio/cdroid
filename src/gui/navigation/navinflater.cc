@@ -109,10 +109,10 @@ void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs
     // framework attrs; argType/nullable are the 0x02 navigation attrs).
     namespace ns = internal::R::styleable;
     auto ta = mContext->obtainStyledAttributes(attrs, ns::NavArgument);
-    const std::string name    = ta ? ta->getString(ns::NavArgument_name) : "";
-    const std::string argType = ta ? ta->getString(ns::NavArgument_argType) : "";
-    const std::string defValue= ta ? ta->getString(ns::NavArgument_defaultValue) : "";
-    const bool nullable = ta ? ta->getBoolean(ns::NavArgument_nullable, false) : false;
+    const std::string name    = ta->getString(ns::NavArgument_name);
+    const std::string argType = ta->getString(ns::NavArgument_argType);
+    const std::string defValue= ta->getString(ns::NavArgument_defaultValue);
+    const bool nullable = ta->getBoolean(ns::NavArgument_nullable, false);
     NavTypeKind kind = argType.empty() ? NavTypeKind::STRING : navTypeKindFromName(argType);
     NavArgument::Builder builder;
     builder.setType(kind);
@@ -142,7 +142,7 @@ void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attr
     //TypedArray a = res.obtainAttributes(attrs, R.styleable.NavDeepLink);
     namespace nsd = internal::R::styleable;
     auto ta = mContext->obtainStyledAttributes(&attrs, nsd::NavDeepLinkDeclare);
-    std::string uri = ta ? ta->getString(nsd::NavDeepLinkDeclare_uri) : "";
+    std::string uri = ta->getString(nsd::NavDeepLinkDeclare_uri);
     if (uri.empty()){//
         throw std::runtime_error("Every <deepLink> must include an app:uri");
     }
@@ -158,19 +158,19 @@ void NavInflater::inflateAction(NavDestination& dest,const AttributeSet& attrs) 
     // until NavOptions carries ids (TODO).
     namespace ns = internal::R::styleable;
     auto ta = mContext->obtainStyledAttributes(attrs, ns::NavAction);
-    const int id = ta ? ta->getResourceId(ns::NavAction_id, 0) : 0;
-    const int destId = ta ? ta->getResourceId(ns::NavAction_destination, 0) : 0;
+    const int id = ta->getResourceId(ns::NavAction_id, 0);
+    const int destId = ta->getResourceId(ns::NavAction_destination, 0);
     NavAction* action = new NavAction(destId);
     NavOptions::Builder builder;
-    builder.setLaunchSingleTop(ta ? ta->getBoolean(ns::NavAction_launchSingleTop, false) : false);
-    builder.setRestoreState(ta ? ta->getBoolean(ns::NavAction_restoreState, false) : false);
-    builder.setPopUpTo(ta ? ta->getResourceId(ns::NavAction_popUpTo, -1) : -1,
-            ta ? ta->getBoolean(ns::NavAction_popUpToInclusive, false) : false,
-            ta ? ta->getBoolean(ns::NavAction_popUpToSaveState, false) : false);
-    builder.setEnterAnim(ta ? ta->getResourceId(ns::NavAction_enterAnim, 0) : 0);
-    builder.setExitAnim(ta ? ta->getResourceId(ns::NavAction_exitAnim, 0) : 0);
-    builder.setPopEnterAnim(ta ? ta->getResourceId(ns::NavAction_popEnterAnim, 0) : 0);
-    builder.setPopExitAnim(ta ? ta->getResourceId(ns::NavAction_popExitAnim, 0) : 0);
+    builder.setLaunchSingleTop(ta->getBoolean(ns::NavAction_launchSingleTop, false));
+    builder.setRestoreState(ta->getBoolean(ns::NavAction_restoreState, false));
+    builder.setPopUpTo(ta->getResourceId(ns::NavAction_popUpTo, -1),
+            ta->getBoolean(ns::NavAction_popUpToInclusive, false),
+            ta->getBoolean(ns::NavAction_popUpToSaveState, false));
+    builder.setEnterAnim(ta->getResourceId(ns::NavAction_enterAnim, 0));
+    builder.setExitAnim(ta->getResourceId(ns::NavAction_exitAnim, 0));
+    builder.setPopEnterAnim(ta->getResourceId(ns::NavAction_popEnterAnim, 0));
+    builder.setPopExitAnim(ta->getResourceId(ns::NavAction_popExitAnim, 0));
     action->setNavOptions(builder.build());
     // TODO: nested <argument> children should populate action defaultArguments (needs SavedState
     // merge); not required for popUpTo/singleTop, deferred.

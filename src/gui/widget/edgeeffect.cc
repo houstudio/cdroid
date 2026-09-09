@@ -48,17 +48,14 @@ EdgeEffect::EdgeEffect(Context* context,const AttributeSet* attrs){
     mGlowScaleY = 0;
     mGlowScaleYStart = mGlowScaleYFinish = 0.f;
     mStartTime= 0;
-    mColor = 0x4000FF00;
     mEdgeEffectType = TYPE_GLOW;
     mDuration = PULL_DECAY_TIME;
     mDistance = 0;
     mVelocity = 0.f;
-    (void)attrs;
-    // AOSP: colorEdgeEffect is a theme attribute (R.attr.colorEdgeEffect), not a
-    // tag attribute — resolve it through the theme.
     static const uint32_t EDGE_EFFECT_ATTRS[] = { (uint32_t)cdroid::internal::R::attr::colorEdgeEffect, 0 };
-    auto ta = context->obtainStyledAttributes(EDGE_EFFECT_ATTRS);
-    mColor = ta ? ta->getColor(0, 0xff666666) : 0xff666666;
+    auto ta = context->obtainStyledAttributes(attrs, EDGE_EFFECT_ATTRS);
+    const int themeColor = ta->getColor(0, 0xff666666);
+    mColor = (themeColor & 0xffffff) | 0x33000000;
 }
 
 EdgeEffect::~EdgeEffect(){

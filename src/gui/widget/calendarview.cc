@@ -37,7 +37,7 @@ CalendarView::CalendarView(Context*context,const AttributeSet* pAttrs,int defSty
 CalendarView::CalendarView(Context*context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
   :FrameLayout(context,pAttrs, defStyleAttr, defStyleRes){
     auto a = context->obtainStyledAttributes(pAttrs, R::styleable::CalendarView, defStyleAttr, defStyleRes);
-    const int mode = a ? a->getInt(R::styleable::CalendarView_calendarViewMode, (int)MODE_HOLO) : (int)MODE_HOLO;
+    const int mode = a->getInt(R::styleable::CalendarView_calendarViewMode, (int)MODE_HOLO);
     switch (mode) {
     case MODE_HOLO:
         mDelegate = new CalendarViewLegacyDelegate(this, context, pAttrs, defStyleAttr, defStyleRes);

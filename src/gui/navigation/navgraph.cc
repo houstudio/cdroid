@@ -56,9 +56,9 @@ void NavGraph::onInflate(Context* context, const AttributeSet& attrs){
     // or a destination-id reference (0x02 navigation attr).
     namespace ns = internal::R::styleable;
     auto ta = context->obtainStyledAttributes(attrs, ns::NavGraph);
-    const std::string startRoute = ta ? ta->getString(ns::NavGraph_startDestination) : "";
+    const std::string startRoute = ta->getString(ns::NavGraph_startDestination);
     if(!startRoute.empty()) setStartDestination(startRoute);
-    else setStartDestination(ta ? ta->getResourceId(ns::NavGraph_startDestination, 0) : 0);
+    else setStartDestination(ta->getResourceId(ns::NavGraph_startDestination, 0));
 }
 
 std::pair<NavDestination*, Bundle*>* NavGraph::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {

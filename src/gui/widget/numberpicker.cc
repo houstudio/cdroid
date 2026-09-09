@@ -223,7 +223,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet* attrs,int defSty
         }
     }
     //ViewConfiguration configuration = ViewConfiguration::get(context);
-    setTextSize(ta ? ta->getDimensionPixelSize(R::styleable::NumberPicker_textSize,mTextSize) : mTextSize);
+    setTextSize(ta->getDimensionPixelSize(R::styleable::NumberPicker_textSize,mTextSize));
     // selectedTextSize (NumberPickerCdroid): explicit value wins, else default to textSize
     // (the old "textSize2" name read was dead — that attr was never declared anywhere).
     mTextSize2 = taCd->getDimensionPixelSize(R::styleable::NumberPickerCdroid_selectedTextSize, mTextSize);

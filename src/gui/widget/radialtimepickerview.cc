@@ -187,7 +187,7 @@ RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* 
     // Pull disabled alpha from theme (AOSP: getTheme().resolveAttribute(disabledAlpha)).
     static const uint32_t ATTRS_DISABLED_ALPHA[] = { R::attr::disabledAlpha, 0 };
     auto ta = getContext()->obtainStyledAttributes(ATTRS_DISABLED_ALPHA);
-    mDisabledAlpha = ta ? ta->getFloat(0, 0.30f) : 0.30f;
+    mDisabledAlpha = ta->getFloat(0, 0.30f);
 
     mTypeface = Typeface::create("sans-serif", Typeface::NORMAL);
 
@@ -249,15 +249,15 @@ RadialTimePickerView::~RadialTimePickerView() {
 
 void RadialTimePickerView::applyAttributes(const AttributeSet* attrs,int defStyleAttr,int defStyleRes) {
     auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, defStyleAttr, defStyleRes);
-    RefPtr<ColorStateList> numbersTextColor = a ? a->getColorStateList(R::styleable::TimePicker_numbersTextColor) : nullptr;
-    RefPtr<ColorStateList> numbersInnerTextColor = a ? a->getColorStateList(R::styleable::TimePicker_numbersInnerTextColor) : nullptr;
+    RefPtr<ColorStateList> numbersTextColor = a->getColorStateList(R::styleable::TimePicker_numbersTextColor);
+    RefPtr<ColorStateList> numbersInnerTextColor = a->getColorStateList(R::styleable::TimePicker_numbersInnerTextColor);
     mTextColor[HOURS] = numbersTextColor ? numbersTextColor : ColorStateList::valueOf(MISSING_COLOR);
     mTextColor[HOURS_INNER] = numbersInnerTextColor ? numbersInnerTextColor
                                                     : ColorStateList::valueOf(MISSING_COLOR);
     mTextColor[MINUTES] = mTextColor[HOURS];
 
     // Set up various colors derived from the selector "activated" state.
-    RefPtr<ColorStateList> selectorColors = a ? a->getColorStateList(R::styleable::TimePicker_numbersSelectorColor) : nullptr;
+    RefPtr<ColorStateList> selectorColors = a->getColorStateList(R::styleable::TimePicker_numbersSelectorColor);
     int selectorActivatedColor;
     if (selectorColors) {
         const std::vector<int> stateSetEnabledActivated = StateSet::get(
@@ -273,7 +273,7 @@ void RadialTimePickerView::applyAttributes(const AttributeSet* attrs,int defStyl
     mSelectorColor = selectorActivatedColor;
     mSelectorDotColor = mTextColor[HOURS]->getColorForState(stateSetActivated, 0);
 
-    mBackgroundColor = a ? a->getColor(R::styleable::TimePicker_numbersBackgroundColor, 0) : 0;
+    mBackgroundColor = a->getColor(R::styleable::TimePicker_numbersBackgroundColor, 0);
 }
 
 void RadialTimePickerView::initialize(int hour, int minute, bool is24HourMode) {

@@ -43,14 +43,14 @@ DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Cont
     setCurrentLocale(Locale::getDefault());
 
     auto a = context->obtainStyledAttributes(attrs, R::styleable::DatePicker, defStyleAttr, defStyleRes);
-    const bool spinnersShown = a ? a->getBoolean(R::styleable::DatePicker_spinnersShown, DEFAULT_SPINNERS_SHOWN) : DEFAULT_SPINNERS_SHOWN;
-    const bool calendarViewShown = a ? a->getBoolean(R::styleable::DatePicker_calendarViewShown, DEFAULT_CALENDAR_VIEW_SHOWN) : DEFAULT_CALENDAR_VIEW_SHOWN;
-    const int startYear = a ? a->getInt(R::styleable::DatePicker_startYear, DEFAULT_START_YEAR) : DEFAULT_START_YEAR;
-    const int endYear = a ? a->getInt(R::styleable::DatePicker_endYear, DEFAULT_END_YEAR) : DEFAULT_END_YEAR;
-    const std::string minDate = a ? a->getString(R::styleable::DatePicker_minDate) : std::string();
-    const std::string maxDate = a ? a->getString(R::styleable::DatePicker_maxDate) : std::string();
-    const int layoutResourceId = a ? a->getResourceId(R::styleable::DatePicker_legacyLayout,
-            R::layout::date_picker_legacy) : R::layout::date_picker_legacy;
+    const bool spinnersShown = a->getBoolean(R::styleable::DatePicker_spinnersShown, DEFAULT_SPINNERS_SHOWN);
+    const bool calendarViewShown = a->getBoolean(R::styleable::DatePicker_calendarViewShown, DEFAULT_CALENDAR_VIEW_SHOWN);
+    const int startYear = a->getInt(R::styleable::DatePicker_startYear, DEFAULT_START_YEAR);
+    const int endYear = a->getInt(R::styleable::DatePicker_endYear, DEFAULT_END_YEAR);
+    const std::string minDate = a->getString(R::styleable::DatePicker_minDate);
+    const std::string maxDate = a->getString(R::styleable::DatePicker_maxDate);
+    const int layoutResourceId = a->getResourceId(R::styleable::DatePicker_legacyLayout,
+            R::layout::date_picker_legacy);
 
     LayoutInflater* inflater = LayoutInflater::from(mContext);
     View* content = inflater->inflate(layoutResourceId, mDelegator, true);

@@ -56,7 +56,7 @@ ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* pAttrs,i
     static const uint32_t DIVIDER_ATTR[] = { (uint32_t)R::attr::divider, 0 };
     auto b = context->obtainStyledAttributes(nullptr, DIVIDER_ATTR,
             R::attr::dropDownListViewStyle, 0);
-    mHasListDivider = b ? b->hasValue(0) : false;
+    mHasListDivider = b->hasValue(0);
 }
 
 void ListMenuItemView::onFinishInflate() {

@@ -56,35 +56,34 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
     // it here now that the calendar members are live.
     setCurrentLocale(Locale::getDefault());
     auto a = context->obtainStyledAttributes(attrs, R::styleable::CalendarView, defStyleAttr, defStyleRes);
-    mShowWeekNumber = a ? a->getBoolean(R::styleable::CalendarView_showWeekNumber, DEFAULT_SHOW_WEEK_NUMBER) : DEFAULT_SHOW_WEEK_NUMBER;
+    mShowWeekNumber = a->getBoolean(R::styleable::CalendarView_showWeekNumber, DEFAULT_SHOW_WEEK_NUMBER);
     Calendar cal;
-    mFirstDayOfWeek = a ? a->getInt(R::styleable::CalendarView_firstDayOfWeek, cal.getFirstDayOfWeek()) : cal.getFirstDayOfWeek();
-    const std::string minDate = a ? a->getString(R::styleable::CalendarView_minDate) : std::string();
+    mFirstDayOfWeek = a->getInt(R::styleable::CalendarView_firstDayOfWeek, cal.getFirstDayOfWeek());
+    const std::string minDate = a->getString(R::styleable::CalendarView_minDate);
     if (!CalendarView::parseDate(minDate, mMinDate)) {
         CalendarView::parseDate(DEFAULT_MIN_DATE, mMinDate);
     }
-    const std::string maxDate = a ? a->getString(R::styleable::CalendarView_maxDate) : std::string();
+    const std::string maxDate = a->getString(R::styleable::CalendarView_maxDate);
     if (!CalendarView::parseDate(maxDate, mMaxDate)) {
         CalendarView::parseDate(DEFAULT_MAX_DATE, mMaxDate);
     }
     if (mMaxDate.before(mMinDate)) {
         throw std::invalid_argument("Max date cannot be before min date.");
     }
-    mShownWeekCount = a ? a->getInt(R::styleable::CalendarView_shownWeekCount, DEFAULT_SHOWN_WEEK_COUNT) : DEFAULT_SHOWN_WEEK_COUNT;
+    mShownWeekCount = a->getInt(R::styleable::CalendarView_shownWeekCount, DEFAULT_SHOWN_WEEK_COUNT);
     // AOSP defaults are 0; the real values come from the theme's calendarViewStyle
     // (e.g. Widget.CalendarView in framework res) now that defStyleAttr is threaded.
-    mSelectedWeekBackgroundColor = a ? a->getColor(R::styleable::CalendarView_selectedWeekBackgroundColor, 0) : 0;
-    mFocusedMonthDateColor = a ? a->getColor(R::styleable::CalendarView_focusedMonthDateColor, 0) : 0;
-    mUnfocusedMonthDateColor = a ? a->getColor(R::styleable::CalendarView_unfocusedMonthDateColor, 0) : 0;
-    mWeekSeparatorLineColor = a ? a->getColor(R::styleable::CalendarView_weekSeparatorLineColor, 0) : 0;
-    mWeekNumberColor = a ? a->getColor(R::styleable::CalendarView_weekNumberColor, 0) : 0;
-    mSelectedDateVerticalBar = a ? a->getDrawable(R::styleable::CalendarView_selectedDateVerticalBar) : nullptr;
+    mSelectedWeekBackgroundColor = a->getColor(R::styleable::CalendarView_selectedWeekBackgroundColor, 0);
+    mFocusedMonthDateColor = a->getColor(R::styleable::CalendarView_focusedMonthDateColor, 0);
+    mUnfocusedMonthDateColor = a->getColor(R::styleable::CalendarView_unfocusedMonthDateColor, 0);
+    mWeekSeparatorLineColor = a->getColor(R::styleable::CalendarView_weekSeparatorLineColor, 0);
+    mWeekNumberColor = a->getColor(R::styleable::CalendarView_weekNumberColor, 0);
+    mSelectedDateVerticalBar = a->getDrawable(R::styleable::CalendarView_selectedDateVerticalBar);
 
-    mDateTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_dateTextAppearance, R::style::TextAppearance_Small)
-                                 : R::style::TextAppearance_Small;
+    mDateTextAppearanceResId = a->getResourceId(R::styleable::CalendarView_dateTextAppearance, R::style::TextAppearance_Small);
     updateDateTextSize();
 
-    mWeekDayTextAppearanceResId = a ? a->getResourceId(R::styleable::CalendarView_weekDayTextAppearance, 0) : 0;
+    mWeekDayTextAppearanceResId = a->getResourceId(R::styleable::CalendarView_weekDayTextAppearance, 0);
 
     DisplayMetrics displayMetrics = mDelegator->getContext()->getDisplayMetrics();
     mWeekMinVisibleHeight = UNSCALED_WEEK_MIN_VISIBLE_HEIGHT;
@@ -418,8 +417,7 @@ void CalendarViewLegacyDelegate::updateDateTextSize() {
     // Resolve the TextAppearance style typed (framework textSize sub-attr); keep
     // the init default when the style is unset or unresolvable.
     auto ta = ctx->obtainStyledAttributes(mDateTextAppearanceResId, R::styleable::TextAppearance);
-    mDateTextSize = ta ? ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, DEFAULT_DATE_TEXT_SIZE)
-                       : DEFAULT_DATE_TEXT_SIZE;
+    mDateTextSize = ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, DEFAULT_DATE_TEXT_SIZE);
 }
 
 void CalendarViewLegacyDelegate::invalidateAllWeekViews() {

@@ -43,8 +43,8 @@ TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleA
     }
 
     auto a = context->obtainStyledAttributes(pAttrs, R::styleable::TimePicker, defStyleAttr, defStyleRes);
-    const bool isDialogMode = a ? a->getBoolean(R::styleable::TimePicker_dialogMode, false) : false;
-    const int requestedMode = a ? a->getInt(R::styleable::TimePicker_timePickerMode, MODE_SPINNER) : MODE_SPINNER;
+    const bool isDialogMode = a->getBoolean(R::styleable::TimePicker_dialogMode, false);
+    const int requestedMode = a->getInt(R::styleable::TimePicker_timePickerMode, MODE_SPINNER);
 
     if (requestedMode == MODE_CLOCK && isDialogMode) {
         // You want MODE_CLOCK? YOU CAN'T HANDLE MODE_CLOCK! Well, maybe

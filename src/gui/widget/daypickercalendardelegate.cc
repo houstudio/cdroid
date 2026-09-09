@@ -50,8 +50,8 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Co
 
     auto a = mContext->obtainStyledAttributes(attrs, R::styleable::DatePicker, defStyleAttr, defStyleRes);
     LayoutInflater* inflater = LayoutInflater::from(mContext);
-    const int layoutResourceId = a ? a->getResourceId(R::styleable::DatePicker_internalLayout,
-            R::layout::date_picker_material) : R::layout::date_picker_material;
+    const int layoutResourceId = a->getResourceId(R::styleable::DatePicker_internalLayout,
+            R::layout::date_picker_material);
 
     // Set up and attach container.
     mContainer = (ViewGroup*) inflater->inflate(layoutResourceId, mDelegator, false);
@@ -89,15 +89,15 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Co
     // color from the header month text appearance. If it's set, we'll let
     // that override the "real" header text color.
     RefPtr<ColorStateList> headerTextColor;
-    const int monthHeaderTextAppearance = a ? a->getResourceId(R::styleable::DatePicker_headerMonthTextAppearance, 0) : 0;
+    const int monthHeaderTextAppearance = a->getResourceId(R::styleable::DatePicker_headerMonthTextAppearance, 0);
     if (monthHeaderTextAppearance != 0) {
         auto textAppearance = mContext->obtainStyledAttributes(nullptr, ATTRS_TEXT_COLOR, 0, monthHeaderTextAppearance);
-        RefPtr<ColorStateList> legacyHeaderTextColor = textAppearance ? textAppearance->getColorStateList(0) : nullptr;
+        RefPtr<ColorStateList> legacyHeaderTextColor = textAppearance->getColorStateList(0);
         headerTextColor = applyLegacyColorFixes(legacyHeaderTextColor);
     }
 
     if (!headerTextColor) {
-        headerTextColor = a ? a->getColorStateList(R::styleable::DatePicker_headerTextColor) : nullptr;
+        headerTextColor = a->getColorStateList(R::styleable::DatePicker_headerTextColor);
     }
 
     if (headerTextColor) {
@@ -462,7 +462,7 @@ RefPtr<ColorStateList> DatePickerCalendarDelegate::applyLegacyColorFixes(RefPtr<
 
         // Generate a non-activated color using the disabled alpha.
         auto ta = mContext->obtainStyledAttributes(ATTRS_DISABLED_ALPHA);
-        const float disabledAlpha = ta ? ta->getFloat(0, 0.30f) : 0.30f;
+        const float disabledAlpha = ta->getFloat(0, 0.30f);
         defaultColor = multiplyAlphaComponent(activatedColor, disabledAlpha);
     }
 

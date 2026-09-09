@@ -25,7 +25,7 @@ FlexboxItemDecoration::FlexboxItemDecoration(Context* context) {
     // mDrawable = a.getDrawable(0).
     static const uint32_t ATTRS[] = { R::attr::listDivider, 0 };
     auto a = context->obtainStyledAttributes(ATTRS);
-    mDrawable = a ? a->getDrawable(0) : nullptr;
+    mDrawable = a->getDrawable(0);
     LOGW_IF(mDrawable == nullptr,"@android:attr/listDivider was not set in the theme used for this "
                "FlexboxItemDecoration. Please set that attribute all call setDrawable()");
     setOrientation(BOTH);

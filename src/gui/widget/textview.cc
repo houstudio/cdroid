@@ -108,7 +108,7 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const TypedArray*a
     // (no string->enum map). String values (fontFamily/fontFeatureSettings) come
     // through TypedArray::getString.
     (void)ctx;
-    const size_t N = a?a->getIndexCount():0;
+    const size_t N = a->getIndexCount();
     for (size_t k = 0; k < N; k++) {
         const size_t i = a->getIndex(k);
         switch (i) {
