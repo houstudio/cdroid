@@ -37,6 +37,10 @@ private:
     void bindRepeatText(Context& context, const data::Alarm& alarm);
     void bindUpcomingInstance(Context& context, const data::Alarm& alarm);
 
+    Animator* createExpandingAnimator(AlarmItemViewHolder& newHolder, int64_t duration);
+    Animator* createCollapsingAnimator(AlarmItemViewHolder& oldHolder, int64_t duration);
+    void setChangingViewsAlpha(float alpha);
+
 public:
     /** ItemViewHolder.Factory for the collapsed rows. */
     static ItemViewHolder* createViewHolder(LayoutInflater* inflater, ViewGroup* parent,

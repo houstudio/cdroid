@@ -50,8 +50,12 @@ public:
         }
     }
 
-    /** Payload marker for the repeat-days animation (upstream ANIMATE_REPEAT_DAYS). */
-    static constexpr int ANIMATE_REPEAT_DAYS = 1000;
+    /**
+     * Payload marker for the repeat-days animation (upstream
+     * ANIMATE_REPEAT_DAYS — a String const there; notifyItemChanged takes an
+     * Object* here, so the marker is a process-lifetime singleton).
+     */
+    static Object* ANIMATE_REPEAT_DAYS();
 };
 
 } // namespace alarms

@@ -6,6 +6,7 @@
 #include <animation/objectanimator.h>
 #include <view/layoutinflater.h>
 #include <view/view.h>
+#include <view/viewgroup.h>
 #include <core/context.h>
 #include <core/calendar.h>
 
@@ -22,36 +23,125 @@ namespace alarms {
 
 Animator* CollapsedAlarmViewHolder::onAnimateChange(RecyclerView::ViewHolder& oldHolder,
         RecyclerView::ViewHolder& newHolder, int64_t duration) {
-    // Upstream CollapsedAlarmItemHolder: only the collapse FROM the expanded
-    // editor animates (staggered cross-fade); other rebinds stay unanimated.
-    if (dynamic_cast<ExpandedAlarmViewHolder*>(&oldHolder) == nullptr) return nullptr;
-    View* oldView = oldHolder.itemView;
-    View* newView = newHolder.itemView;
-    const float prevOldAlpha = oldView->getAlpha();
-    const float prevNewAlpha = newView->getAlpha();
-    newView->setAlpha(0.0f);
-    std::vector<Animator*> animators;
-    animators.push_back(ObjectAnimator::ofFloat(oldView, View::ALPHA, {0.0f}));
-    animators.push_back(ObjectAnimator::ofFloat(newView, View::ALPHA, {1.0f}));
-    AnimatorSet* set = new AnimatorSet();
-    set->playTogether(animators);
-    set->setDuration(duration);
+    AlarmItemViewHolder* oldItemHolder = dynamic_cast<AlarmItemViewHolder*>(&oldHolder);
+    AlarmItemViewHolder* newItemHolder = dynamic_cast<AlarmItemViewHolder*>(&newHolder);
+    if (oldItemHolder == nullptr || newItemHolder == nullptr) {
+        return nullptr;
+    }
+
+    const bool isCollapsing = this == newItemHolder;
+    setChangingViewsAlpha(isCollapsing ? 0.0f : 1.0f);
+
+    Animator* changeAnimatorSet = isCollapsing
+            ? createCollapsingAnimator(*oldItemHolder, duration)
+            : createExpandingAnimator(*newItemHolder, duration);
     Animator::AnimatorListener listener;
-    listener.onAnimationEnd = [oldView, newView, prevOldAlpha, prevNewAlpha]
-            (Animator& animator, bool) {
+    listener.onAnimationEnd = [this](Animator& animator, bool) {
         animator.removeAllListeners();
-        oldView->setAlpha(prevOldAlpha);
-        newView->setAlpha(prevNewAlpha);
+        clock->setVisibility(View::VISIBLE);
+        onOff->setVisibility(View::VISIBLE);
+        arrow->setVisibility(View::VISIBLE);
+        arrow->setTranslationY(0.0f);
+        setChangingViewsAlpha(1.0f);
+        arrow->jumpDrawablesToCurrentState();
     };
-    set->addListener(listener);
-    return set;
+    changeAnimatorSet->addListener(listener);
+    return changeAnimatorSet;
 }
 
 Animator* CollapsedAlarmViewHolder::onAnimateChange(std::vector<Object*>* /*payloads*/,
         int /*fromLeft*/, int /*fromTop*/, int /*fromRight*/, int /*fromBottom*/,
         int64_t /*duration*/) {
-    // In-place payload animations (repeat-days) arrive with the payload pass.
+    /* There are no possible partial animations for collapsed view holders. */
     return nullptr;
+}
+
+Animator* CollapsedAlarmViewHolder::createExpandingAnimator(AlarmItemViewHolder& newHolder,
+        int64_t duration) {
+    clock->setVisibility(View::INVISIBLE);
+    onOff->setVisibility(View::INVISIBLE);
+    arrow->setVisibility(View::INVISIBLE);
+
+    // (The cdroid layout subset has no preemptive-dismiss button.)
+    std::vector<Animator*> alphaAnimators = {
+        ObjectAnimator::ofFloat(alarmLabel, View::ALPHA, {0.0f}),
+        ObjectAnimator::ofFloat(daysOfWeekView, View::ALPHA, {0.0f}),
+        ObjectAnimator::ofFloat(upcomingInstanceLabel, View::ALPHA, {0.0f}),
+        ObjectAnimator::ofFloat(hairLine, View::ALPHA, {0.0f}),
+    };
+    auto* alphaAnimatorSet = new AnimatorSet();
+    alphaAnimatorSet->playTogether(alphaAnimators);
+    alphaAnimatorSet->setDuration(
+            (int64_t) (duration * ANIM_SHORT_DURATION_MULTIPLIER));
+
+    View* oldView = itemView;
+    View* newView = newHolder.itemView;
+    Animator* boundsAnimator = AnimatorUtils::getBoundsAnimator(*oldView, *oldView, *newView);
+    boundsAnimator->setDuration(duration);
+    boundsAnimator->setInterpolator(AnimatorUtils::INTERPOLATOR_FAST_OUT_SLOW_IN());
+
+    std::vector<Animator*> animators = {alphaAnimatorSet, boundsAnimator};
+    auto* animatorSet = new AnimatorSet();
+    animatorSet->playTogether(animators);
+    return animatorSet;
+}
+
+Animator* CollapsedAlarmViewHolder::createCollapsingAnimator(AlarmItemViewHolder& oldHolder,
+        int64_t duration) {
+    std::vector<Animator*> alphaAnimators = {
+        ObjectAnimator::ofFloat(alarmLabel, View::ALPHA, {1.0f}),
+        ObjectAnimator::ofFloat(daysOfWeekView, View::ALPHA, {1.0f}),
+        ObjectAnimator::ofFloat(upcomingInstanceLabel, View::ALPHA, {1.0f}),
+        ObjectAnimator::ofFloat(hairLine, View::ALPHA, {1.0f}),
+    };
+    auto* alphaAnimatorSet = new AnimatorSet();
+    alphaAnimatorSet->playTogether(alphaAnimators);
+    const int64_t standardDelay = (int64_t) (duration * ANIM_STANDARD_DELAY_MULTIPLIER);
+    alphaAnimatorSet->setDuration(standardDelay);
+    alphaAnimatorSet->setStartDelay(duration - standardDelay);
+
+    View* oldView = oldHolder.itemView;
+    View* newView = itemView;
+    Animator* boundsAnimator = AnimatorUtils::getBoundsAnimator(*newView, *oldView, *newView);
+    boundsAnimator->setDuration(duration);
+    boundsAnimator->setInterpolator(AnimatorUtils::INTERPOLATOR_FAST_OUT_SLOW_IN());
+
+    // The arrow rides from its old editor position down to the collapsed row.
+    View* oldArrow = oldHolder.arrow;
+    Rect oldArrowRect;   // cdroid Rect is l/t/w/h
+    oldArrowRect.set(0, 0, oldArrow->getWidth(), oldArrow->getHeight());
+    Rect newArrowRect;
+    newArrowRect.set(0, 0, arrow->getWidth(), arrow->getHeight());
+    ((ViewGroup*) newView)->offsetDescendantRectToMyCoords(arrow, newArrowRect);
+    ((ViewGroup*) oldView)->offsetDescendantRectToMyCoords(oldArrow, oldArrowRect);
+    const float arrowTranslationY =
+            (float) (oldArrowRect.bottom() - newArrowRect.bottom());
+    arrow->setTranslationY(arrowTranslationY);
+    arrow->setVisibility(View::VISIBLE);
+    clock->setVisibility(View::VISIBLE);
+    onOff->setVisibility(View::VISIBLE);
+
+    Animator* arrowAnimation =
+            ObjectAnimator::ofFloat(arrow, View::TRANSLATION_Y, {0.0f});
+    arrowAnimation->setDuration(duration);
+    arrowAnimation->setInterpolator(AnimatorUtils::INTERPOLATOR_FAST_OUT_SLOW_IN());
+
+    std::vector<Animator*> animators = {alphaAnimatorSet, boundsAnimator, arrowAnimation};
+    auto* animatorSet = new AnimatorSet();
+    animatorSet->playTogether(animators);
+    Animator::AnimatorListener listener;
+    listener.onAnimationStart = [this](Animator&, bool) {
+        AnimatorUtils::startDrawableAnimation(*arrow);
+    };
+    animatorSet->addListener(listener);
+    return animatorSet;
+}
+
+void CollapsedAlarmViewHolder::setChangingViewsAlpha(float alpha) {
+    alarmLabel->setAlpha(alpha);
+    daysOfWeekView->setAlpha(alpha);
+    upcomingInstanceLabel->setAlpha(alpha);
+    hairLine->setAlpha(alpha);
 }
 
 CollapsedAlarmViewHolder::CollapsedAlarmViewHolder(View* itemView)

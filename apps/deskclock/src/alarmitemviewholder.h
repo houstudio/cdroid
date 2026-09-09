@@ -39,6 +39,15 @@ protected:
 
     AlarmTimeClickHandler* getClickHandler();
 
+    // Upstream AlarmItemViewHolder companion constants (stagger timings).
+    static constexpr float ANIM_STANDARD_DELAY_MULTIPLIER = 1.0f / 6.0f;
+    static constexpr float ANIM_LONG_DURATION_MULTIPLIER = 2.0f / 3.0f;
+    static constexpr float ANIM_SHORT_DURATION_MULTIPLIER = 1.0f / 4.0f;
+    static constexpr float ANIM_SHORT_DELAY_INCREMENT_MULTIPLIER =
+            1.0f - ANIM_LONG_DURATION_MULTIPLIER - ANIM_SHORT_DURATION_MULTIPLIER;
+    static constexpr float ANIM_LONG_DELAY_INCREMENT_MULTIPLIER =
+            1.0f - ANIM_STANDARD_DELAY_MULTIPLIER - ANIM_SHORT_DURATION_MULTIPLIER;
+
     static constexpr float CLOCK_ENABLED_ALPHA = 1.0f;
     static constexpr float CLOCK_DISABLED_ALPHA = 0.69f;
 };

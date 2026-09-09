@@ -43,6 +43,12 @@ protected:
 private:
     void bindRingtone(Context& context, const data::Alarm& alarm);
     void bindDaysOfWeekButtons(const data::Alarm& alarm, Context& context);
+
+    Animator* createExpandingAnimator(AlarmItemViewHolder& oldHolder, int64_t duration);
+    Animator* createCollapsingAnimator(AlarmItemViewHolder& newHolder, int64_t duration);
+    void setTranslationY(float repeatDaysTranslationY, float translationY);
+    void setChangingViewsAlpha(float alpha);
+    int countNumberOfItems() const;
     void bindEditLabel(Context& context, const data::Alarm& alarm);
     void bindVibrator(const data::Alarm& alarm);
 
