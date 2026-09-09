@@ -175,6 +175,15 @@ void ValueAnimator::setFloatValues(const std::vector<float>&values){
 }
 
 void ValueAnimator::setValues(const std::vector<PropertyValuesHolder*>&values){
+    // mValues is owned storage (the copy ctor deep-clones it, the dtor deletes
+    // it), so replacing it must free the old holders — AOSP drops the array for
+    // GC here. The raw-pointer port leaked them (valgrind: AnimatorInflater
+    // getPVH holders lost whenever an <objectAnimator>'s values are parsed
+    // twice — the tag's own valueFrom/valueTo first, then its
+    // <propertyValuesHolder> children calling setValues again).
+    if (&values != &mValues) {
+        for (auto old : mValues) delete old;
+    }
     mValues = values;
     mValuesMap.clear();
     for(auto prop:values){

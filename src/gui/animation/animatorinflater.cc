@@ -132,6 +132,10 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,const Resource
             std::vector<PropertyValuesHolder*>values = loadValues(context,theme,parser,attrs);
             if (values.size() && (dynamic_cast<ValueAnimator*>(anim))) {
                 ((ValueAnimator*) anim)->setValues(values);
+            } else {
+                // Unconsumed holders (no ValueAnimator parsed yet): AOSP's
+                // list just goes out of scope for GC; free them here.
+                for (auto v : values) delete v;
             }
             gotValues = true;
         } else {
