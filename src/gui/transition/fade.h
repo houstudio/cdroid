@@ -70,8 +70,9 @@ class Fade: public Visibility {
      */
     struct FadeAnimatorListener {
         View* mView;
+        std::weak_ptr<bool> mViewAlive;   // no-GC seam: bail once ~View ran
         bool mLayerTypeChanged = false;
-        explicit FadeAnimatorListener(View* v): mView(v) {}
+        explicit FadeAnimatorListener(View* v): mView(v), mViewAlive(v->getAliveFlag()) {}
         void onAnimationStart(Animator& animation);
         void onAnimationEnd(Animator& animation);
     };

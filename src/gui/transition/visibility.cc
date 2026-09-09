@@ -38,13 +38,22 @@ using namespace cdroid::internal;
 // Helpers for the disappear listener: shared by the animator-side and transition-side
 // EventSet lambdas (both hold a shared_ptr<Visibility::DisappearState>). Replace the old
 // Visibility::DisappearListener methods.
+// The view (and its parent) may already be destroyed when these fire — the
+// transition ends with its last animator, which can outlive the view tree.
+// Both helpers then no-op on the liveness flag instead of dereferencing.
+static bool disappearTargetAlive(const Visibility::DisappearState& s) {
+    auto alive = s.mViewAlive.lock();
+    return alive && *alive;
+}
 static void disappearSuppressLayout(Visibility::DisappearState& s, bool suppress) {
+    if (!disappearTargetAlive(s)) return;
     if (s.mSuppressLayout && s.mLayoutSuppressed != suppress && s.mParent != nullptr) {
         s.mLayoutSuppressed = suppress;
         s.mParent->suppressLayout(suppress);
     }
 }
 static void disappearHideWhenNotCanceled(Visibility::DisappearState& s) {
+    if (!disappearTargetAlive(s)) return;
     if (!s.mCanceled) {
         // Recreate the parent's display list in case it includes mView.
         s.mView->setTransitionVisibility(s.mFinalVisibility);
@@ -282,18 +291,30 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
             } else {
                 startView->setTag(R::id::transition_overlay_view_tag, overlayView);
                 Transition::TransitionListener l;
-                l.onTransitionPause = [overlay, overlayView](Transition&) {
+                // overlayView lives in the host's overlay: ~ViewOverlay frees
+                // its children, so a transition end AFTER that teardown would
+                // double-free / UAF here. Guard every touch on its liveness
+                // flag (also startView, whose tag must not be reset post-mortem).
+                std::weak_ptr<bool> ovAlive = overlayView->getAliveFlag();
+                std::weak_ptr<bool> startAlive = startView->getAliveFlag();
+                l.onTransitionPause = [overlay, overlayView, ovAlive](Transition&) {
+                    if (!ovAlive.lock()) return;   // overlay group died with its host
                     overlay->remove(overlayView);
                 };
-                l.onTransitionResume = [overlay, overlayView](Transition& transition) {
+                l.onTransitionResume = [overlay, overlayView, ovAlive](Transition& transition) {
+                    if (!ovAlive.lock()) return;
                     if (overlayView->getParent() == nullptr) {
                         overlay->add(overlayView);
                     } else {
                         transition.cancel();
                     }
                 };
-                l.onTransitionEnd = [startView, overlay, overlayView, ownsOverlayView](Transition&) {
-                    startView->setTag(R::id::transition_overlay_view_tag, nullptr);
+                l.onTransitionEnd = [startView, overlay, overlayView, ownsOverlayView,
+                                     ovAlive, startAlive](Transition&) {
+                    if (startAlive.lock()) {
+                        startView->setTag(R::id::transition_overlay_view_tag, nullptr);
+                    }
+                    if (!ovAlive.lock()) return;   // already freed by the overlay's dtor
                     overlay->remove(overlayView);
                     if (ownsOverlayView) delete overlayView;
                 };
@@ -318,16 +339,22 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
             st->mSuppressLayout = mSuppressLayout;
             st->mLayoutSuppressed = false;
             st->mCanceled = false;
+            st->mViewAlive = viewToKeep ? viewToKeep->getAliveFlag()
+                                        : std::weak_ptr<bool>();
             disappearSuppressLayout(*st, true); // android ctor: suppressLayout(true)
             Animator::AnimatorListener al;
             al.onAnimationCancel = [st](Animator&) { st->mCanceled = true; };
             al.onAnimationEnd    = [st](Animator&, bool) { disappearHideWhenNotCanceled(*st); };
             Animator::AnimatorPauseListener apl;
             apl.onAnimationPause  = [st](Animator&) {
-                if (!st->mCanceled) st->mView->setTransitionVisibility(st->mFinalVisibility);
+                if (!st->mCanceled && disappearTargetAlive(*st)) {
+                    st->mView->setTransitionVisibility(st->mFinalVisibility);
+                }
             };
             apl.onAnimationResume = [st](Animator&) {
-                if (!st->mCanceled) st->mView->setTransitionVisibility(View::VISIBLE);
+                if (!st->mCanceled && disappearTargetAlive(*st)) {
+                    st->mView->setTransitionVisibility(View::VISIBLE);
+                }
             };
             animator->addListener(al);
             animator->addPauseListener(apl);

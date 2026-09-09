@@ -554,6 +554,7 @@ private:
     bool mBoundsChangedmDefaultFocusHighlightSizeChanged;
 
     ViewOverlay* mOverlay;
+    std::shared_ptr<bool> mAliveFlag;   // see getAliveFlag(); flipped in ~View
     HandlerActionQueue*mRunQueue;
     PointerIcon* mPointerIcon;
     InputEventConsistencyVerifier* mInputEventConsistencyVerifier;
@@ -1622,6 +1623,18 @@ public:
     bool isLayoutDirectionInherited()const;
     void setLayoutParams(LayoutParams*lp);
     virtual ViewOverlay*getOverlay();
+    /** The existing overlay, or null — unlike getOverlay() this never creates
+     *  one. Teardown-time animator sweeps must not allocate (and the host may
+     *  already be mid-destruction). */
+    ViewOverlay*peekOverlay()const{ return mOverlay; }
+    /** Liveness handle: the shared bool flips false at the TOP of ~View.
+     *  Animation/transition end-listeners hold a weak_ptr and no-op when the
+     *  target view is gone — the no-GC counterpart of the animator target
+     *  reference keeping the view reachable in Java. */
+    std::weak_ptr<bool> getAliveFlag() {
+        if (!mAliveFlag) mAliveFlag = std::make_shared<bool>(true);
+        return mAliveFlag;
+    }
     virtual bool isLayoutRequested()const;
     virtual bool isInLayout()const;
     bool isLayoutValid()const;

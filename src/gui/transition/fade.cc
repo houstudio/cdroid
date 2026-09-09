@@ -114,6 +114,11 @@ float Fade::getStartAlpha(TransitionValues* startValues, float fallbackValue) {
 }
 
 void Fade::FadeAnimatorListener::onAnimationStart(Animator& /*animation*/) {
+    if (auto alive = mViewAlive.lock()) {
+        if (!*alive) return;   // view mid-destruction (flag flips first in ~View)
+    } else {
+        return;                // view destroyed — the fade's reset is moot
+    }
     if (mView->hasOverlappingRendering() && mView->getLayerType() == View::LAYER_TYPE_NONE) {
         mLayerTypeChanged = true;
         mView->setLayerType(View::LAYER_TYPE_HARDWARE); // CDROID setLayerType(int) — no Paint arg
@@ -121,6 +126,11 @@ void Fade::FadeAnimatorListener::onAnimationStart(Animator& /*animation*/) {
 }
 
 void Fade::FadeAnimatorListener::onAnimationEnd(Animator& /*animation*/) {
+    if (auto alive = mViewAlive.lock()) {
+        if (!*alive) return;
+    } else {
+        return;
+    }
     mView->setTransitionAlpha(1);
     if (mLayerTypeChanged) {
         mView->setLayerType(View::LAYER_TYPE_NONE);

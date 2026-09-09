@@ -829,6 +829,12 @@ void View::initView(){
 }
 
 View::~View(){
+    // Flip the liveness flag FIRST: transition/animation end-listeners hold a
+    // weak_ptr to it and must no-op against this view from here on (the
+    // no-GC counterpart of Android's animator-target keeping the view
+    // reachable — valgrind --auto-test: SIGSEGV in setTransitionVisibility /
+    // setTransitionAlpha from Visibility/Fade listeners firing after teardown).
+    if (mAliveFlag) *mAliveFlag = false;
     mViewCount --;
     LOGD_IF(View::VIEW_DEBUG||(mViewCount>1000),"%p:%d mViewCount=%d",this,mID,mViewCount);
 
