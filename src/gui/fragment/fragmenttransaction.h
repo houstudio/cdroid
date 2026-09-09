@@ -74,6 +74,12 @@ public:
     FragmentTransaction& setPrimaryNavigationFragment(Fragment* fragment);
     FragmentTransaction& setMaxLifecycle(Fragment* fragment, lifecycle::Lifecycle::State state);
     FragmentTransaction& addToBackStack(const std::string& name);
+    // AOSP addToBackStack(@Nullable String): a null name is a legal unnamed
+    // back-stack entry (e.g. LabelDialogFragment's addToBackStack(null)).
+    // std::string(nullptr) throws, so nullptr needs its own route.
+    FragmentTransaction& addToBackStack(std::nullptr_t) {
+        return addToBackStack(std::string());
+    }
     FragmentTransaction& disallowAddToBackStack();
     FragmentTransaction& setReorderingAllowed(bool reorderingAllowed);
     FragmentTransaction& setCustomAnimations(int enterAnim, int exitAnim,
