@@ -677,6 +677,10 @@ void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentP
 
 
 AlertController::~AlertController() {
+    // The adapter's lifetime vs. the window's view tree is arbitrated by
+    // ~AlertDialog (window teardown happens there, before this runs), so this
+    // destructor must not touch mListView — on the dismiss path the tree is
+    // already deleted and the pointer is dangling.
     if (mOwnsAdapter) delete mAdapter;  // AOSP relies on GC for the list adapter
 }
 

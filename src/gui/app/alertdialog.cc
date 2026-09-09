@@ -62,6 +62,19 @@ int AlertDialog::resolveDialogTheme(Context* context,int themeResId){
 }
 
 AlertDialog::~AlertDialog(){
+    // Tear the dialog window's view tree down before the controller frees the
+    // list adapter. AOSP keeps the adapter alive until GC reclaims it, i.e.
+    // past ListView's own detach (ListView.mAdapter is a strong reference);
+    // in this port the controller owns the adapter, so without this the
+    // ListView can onDetachedFromWindow() after the adapter is gone (app
+    // teardown path) and call through freed memory. removeWindow is
+    // membership-checked and never dereferences a window that's no longer
+    // listed, so the dismiss path — where the window was already deleted by
+    // close()'s posted delete — falls straight through. Dialog::~Dialog's own
+    // removeWindow re-run is idempotent for the same reason.
+    if (Window* w = getWindow()) {
+        WindowManager::getInstance().removeWindow(w);
+    }
     delete mAlert;
     delete P;
 }
