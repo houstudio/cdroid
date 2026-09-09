@@ -82,6 +82,13 @@ class MultiListener: public std::enable_shared_from_this<MultiListener> {
           mViewTreeObserver(sceneRoot->getViewTreeObserver()) {
     }
 
+    // Set once the clone actually enters the running list (onPreDraw). Until
+    // then this MultiListener is its sole referent: a never-started clone's
+    // setDeleteWhenEnded post can never fire, so ~no-GC CDROID must free it
+    // at the abandonment points (valgrind: TransitionSet::clone lost via
+    // beginDelayedTransition when the scene root is torn down first).
+    bool mStarted = false;
+
     void start() {
         std::weak_ptr<MultiListener> w = shared_from_this();
         mPreDraw = [w]()->bool{
@@ -119,6 +126,9 @@ class MultiListener: public std::enable_shared_from_this<MultiListener> {
         auto& pending = TransitionManager::getPendingTransitions();
         auto pit = std::find(pending.begin(), pending.end(), mSceneRoot);
         if (pit == pending.end()) {
+            // Never started, and never will (someone else cleared pending):
+            // nothing ends this clone (AOSP reclaims it by GC).
+            delete mTransition;
             return true;
         }
         pending.erase(pit);
@@ -135,6 +145,7 @@ class MultiListener: public std::enable_shared_from_this<MultiListener> {
             previousRunningTransitions = *currentTransitions;
         }
         currentTransitions->push_back(mTransition);
+        mStarted = true;   // the running-list end listener now owns the lifecycle
         // android: new RunningEndListener() added to mTransition. EventSet value: capture
         // sceneRoot by value (MultiListener is destroyed before this fires) and fetch the
         // running map via the stable static getter.
@@ -178,6 +189,12 @@ class MultiListener: public std::enable_shared_from_this<MultiListener> {
             }
         }
         mTransition->clearValues(true);
+        // Detached before ever starting (onPreDraw never ran): the clone will
+        // not run and cannot end, so its deleteWhenEnded post never fires —
+        // free it here (Java: unreachable, GC'd).
+        if (!mStarted) {
+            delete mTransition;
+        }
     }
 };
 
