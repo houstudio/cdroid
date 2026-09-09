@@ -58,6 +58,13 @@ private:
           Bitmap.getScaledWidth(mTargetDensity).*/
         int mBitmapDensity;
         Cairo::RefPtr<Cairo::ImageSurface>mBitmap;
+        /* Memoized tinted copy of mBitmap (source space, like AOSP's
+         * paint-side color filter). Keyed by (mBitmap, filter) pointers;
+         * filters like MULTIPLY are not idempotent, so the copy — never
+         * tint mBitmap itself. */
+        mutable Cairo::RefPtr<Cairo::ImageSurface>mTintedCache;
+        mutable const void*mTintedWith = nullptr;
+        mutable const void*mTintedFrom = nullptr;
         BitmapState();
         BitmapState(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
         BitmapState(const BitmapState&bitmapState);
@@ -65,6 +72,10 @@ private:
         BitmapDrawable* newDrawable()override;
         int getChangingConfigurations()const override;
     };
+    /* Source-space tinted bitmap, memoized in the state (see the members
+     * there); replaces the per-draw tint group for this drawable. */
+    static Cairo::RefPtr<Cairo::ImageSurface> tintedBitmap(BitmapState& state,
+            ColorFilter* filter);
     int mBitmapWidth;
     int mBitmapHeight;
     Insets mOpticalInsets;

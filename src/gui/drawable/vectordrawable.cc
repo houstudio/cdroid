@@ -88,12 +88,15 @@ void VectorDrawable::draw(Canvas& canvas) {
         return;
     }
 
-    // setColorFilter (mColorFilter) takes precedence over tint (matches Android: colorFilter beats
-    // tint). beginTintGroup applies whichever wins; the tint path uses mTintFilter here.
     const bool canReuseCache = mVectorState->canReuseCache();
-    ColorFilter* tintFilter = beginTintGroup(canvas, mTmpBounds, mTintFilter.get());
-    const int pixelCount = mVectorState->mNativeTree->draw(canvas,nullptr,mTmpBounds,needMirroring(),canReuseCache);
-    if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
+    // AOSP passes the tint/color filter into the native draw where it rides
+    // the paint on the single cache blit (VectorDrawable.java#draw). The Tree
+    // bakes it into the cache bitmap when (re)built; the former per-draw tint
+    // group (push_group + full-rect filter + composite-back) cost two extra
+    // full-area passes per draw. mColorFilter beats tint, as before.
+    ColorFilter* filter = mColorFilter ? (ColorFilter*) mColorFilter.get() : mTintFilter.get();
+    const int pixelCount = mVectorState->mNativeTree->draw(canvas, filter, mTmpBounds,
+            needMirroring(), canReuseCache);
     if (pixelCount == 0) {
         // Invalid canvas matrix or drawable bounds. This would not affect existing bitmap
         // cache, if any.

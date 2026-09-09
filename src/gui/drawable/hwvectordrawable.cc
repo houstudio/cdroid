@@ -469,6 +469,20 @@ void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
     const float scaleY = cacheHeight / viewportHeight;
     outCanvas.scale(scaleX, scaleY);
     mRootNode->draw(outCanvas, useStagingData);
+
+    // AOSP applies the color filter on the paint during the single cache
+    // blit (Tree::draw's colorFilter argument); cairo has no per-pixel source
+    // filter, so bake it into the cache instead: one full-surface pass
+    // whenever the cache is (re)built, zero per-draw cost. apply() paints the
+    // whole target (CTM-independent), and setColorFilter() already dirties
+    // the cache when the filter object changes, so a tint/state change
+    // re-bakes.
+    const TreeProperties& props = useStagingData ? mStagingProperties : mProperties;
+    if (ColorFilter* filter = props.getColorFilter()) {
+        Rect filterRect;   // (l,t,w,h); apply() targets the whole surface
+        filterRect.set(0, 0, cacheWidth, cacheHeight);
+        filter->apply(outCanvas, filterRect);
+    }
 }
 
 bool Tree::allocateBitmapIfNeeded(Cache& cache, int width, int height) {

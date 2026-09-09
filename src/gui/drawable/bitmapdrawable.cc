@@ -401,6 +401,38 @@ static int getRotateAngle(Canvas&canvas){
     return int(radians*180.f/M_PI);
 }
 
+/* Source-space tinted copy of the bitmap, memoized in the state (AOSP applies
+ * the color filter on the paint during the single draw pass; this bakes it
+ * into a bitmap copy once per (bitmap, filter) pair instead of the per-draw
+ * tint group's push_group + full-rect filter + composite-back passes).
+ * Keyed by pointers: a tint/state change builds a new PorterDuffColorFilter
+ * object, and a new bitmap/new state naturally misses. */
+Cairo::RefPtr<Cairo::ImageSurface> BitmapDrawable::tintedBitmap(BitmapState& state,
+        ColorFilter* filter) {
+    if (state.mTintedCache && state.mTintedWith == filter
+            && state.mTintedFrom == state.mBitmap.get()) {
+        return state.mTintedCache;
+    }
+    Cairo::RefPtr<Cairo::ImageSurface> source = state.mBitmap;
+    Cairo::RefPtr<Cairo::ImageSurface> copy = Cairo::ImageSurface::create(
+            Cairo::Surface::Format::ARGB32, source->get_width(), source->get_height());
+    {
+        Cairo::RefPtr<Cairo::Context> cc = Cairo::Context::create(copy);
+        cc->set_source(source, 0, 0);
+        cc->set_operator(Cairo::Context::Operator::SOURCE);
+        cc->paint();
+    }
+    Canvas filterCanvas(copy);
+    Rect r;   // (l,t,w,h); apply() paints the whole target anyway
+    r.set(0, 0, copy->get_width(), copy->get_height());
+    filter->apply(filterCanvas, r);
+
+    state.mTintedCache = copy;
+    state.mTintedWith = filter;
+    state.mTintedFrom = state.mBitmap.get();
+    return copy;
+}
+
 void BitmapDrawable::draw(Canvas&canvas){
     if(mBitmapState->mBitmap==nullptr) return;
     updateDstRectAndInsetsIfDirty();
@@ -412,7 +444,13 @@ void BitmapDrawable::draw(Canvas&canvas){
     if(mBounds.empty())return;
 
     canvas.save();
-    ColorFilter* tintFilter = beginTintGroup(canvas, mBounds, mTintFilter.get());
+    // mColorFilter beats tint (beginTintGroup's rule); with a filter in
+    // effect the bitmap is swapped for its memoized tinted copy and the
+    // whole draw runs untinted-path (AOSP: the filter rides the paint).
+    ColorFilter* tintFilter = mColorFilter ? (ColorFilter*) mColorFilter.get()
+                                           : mTintFilter.get();
+    Cairo::RefPtr<Cairo::ImageSurface> source = mBitmapState->mBitmap;
+    if (tintFilter) source = tintedBitmap(*mBitmapState, tintFilter);
     const int angle_degrees = getRotateAngle(canvas);
     const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap)||(angle_degrees%90)
                     ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
@@ -425,7 +463,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         canvas.set_antialias(Cairo::ANTIALIAS_DEFAULT);
 
     if((mBitmapState->mTileModeX>=0)||(mBitmapState->mTileModeY>=0)){
-        RefPtr<SurfacePattern> pat =SurfacePattern::create(mBitmapState->mBitmap);
+        RefPtr<SurfacePattern> pat =SurfacePattern::create(source);
         if(mBitmapState->mTileModeX!=TileMode::DISABLED){
             RefPtr<Surface> subs = ImageSurface::create(Surface::Format::ARGB32,mBounds.width,mBitmapHeight);
             RefPtr<Cairo::Context> subcanvas = Cairo::Context::create(subs);
@@ -486,7 +524,7 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.translate(mDstRect.width,0);
             canvas.scale(-1.f,1.f);
         }
-        canvas.set_source(mBitmapState->mBitmap, 0, 0);
+        canvas.set_source(source, 0, 0);
         if(getOpacity()==PixelFormat::OPAQUE){
             canvas.set_operator(Cairo::Context::Operator::SOURCE);
         }
@@ -498,7 +536,6 @@ void BitmapDrawable::draw(Canvas&canvas){
         canvas.paint_with_alpha(alpha);
     }
 
-    if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
     canvas.restore();
 }
 
