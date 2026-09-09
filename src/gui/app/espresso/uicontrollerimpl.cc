@@ -52,9 +52,17 @@ bool UiControllerImpl::injectKeyEvent(KeyEvent& event) {
     loopMainThreadUntilIdle();
 
     // AOSP submits a SignalingTask to the keyEventExecutor and loopUntil()s
-    // until KEY_INJECT_HAS_COMPLETED; with the enqueue-only in-process seam
-    // the injection runs inline and the task's done() signal follows it.
+    // until KEY_INJECT_HAS_COMPLETED; the task body is sendKeySync — a
+    // BLOCKING call that returns only after the event is fully dispatched,
+    // so the done() signal follows the dispatch. The in-process seam is
+    // enqueue-only, so run the looper pass that drains the parked event
+    // (doEventHandlers plays the InputDispatcher) before signaling —
+    // otherwise loopUntil() can exit with the event still parked and it
+    // lands in whatever test pumps the looper next.
     bool injected = mEventInjector->injectKeyEvent(event);
+    if (injected) {
+        mMainLooper->pollOnce(0);
+    }
     sendIdleSignal(KEY_INJECT_HAS_COMPLETED, mGeneration);
 
     loopUntil(KEY_INJECT_HAS_COMPLETED);
@@ -70,6 +78,14 @@ bool UiControllerImpl::injectMotionEvent(MotionEvent& event) {
     initialize();
 
     bool injected = mEventInjector->injectMotionEvent(event);
+    // Same seam as injectKeyEvent: sendPointerSync also blocks until the
+    // event is dispatched, so deliver the parked event before signaling
+    // completion. (Motion only ever drained "by accident" before — the tap
+    // path's loopMainThreadForAtLeast happens to fall into pollOnce; paths
+    // without such a delay would strand the event exactly like typeText.)
+    if (injected) {
+        mMainLooper->pollOnce(0);
+    }
     sendIdleSignal(MOTION_INJECTION_HAS_COMPLETED, mGeneration);
     try {
         loopUntil(MOTION_INJECTION_HAS_COMPLETED);
@@ -121,6 +137,10 @@ bool UiControllerImpl::injectString(const std::string& str) {
             // system rejects too-old events, so re-stamp before injecting.
             KeyEvent* event = changeTimeRepeat(&keyEvent, SystemClock::uptimeMillis(), 0);
             eventInjected = injectKeyEvent(*event);
+            // The injection seam copies the event before parking it, so the
+            // caller-owned original must go back to the pool here (same
+            // convention as the pressKey paths in viewactions.cc).
+            event->recycle();
         }
 
         if (!eventInjected) {
