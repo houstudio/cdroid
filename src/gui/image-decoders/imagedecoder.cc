@@ -340,6 +340,18 @@ Drawable* ImageDecoder::decodeDrawable(Resources& res, int id) {
     if (auto* npd = dynamic_cast<NinePatchDrawable*>(d)) {
         npd->setSourceDensity(tv.density);
         npd->setTargetDensity(res.getDisplayMetrics().densityDpi);
+    } else if (auto* bd = dynamic_cast<BitmapDrawable*>(d)) {
+        // BitmapDrawable.updateStateFromTypedArray's density normalize
+        // (android-36 :843-848): DENSITY_DEFAULT -> DisplayMetrics default,
+        // DENSITY_NONE stays none (raw sizes), anything else is the bucket.
+        int density = 0;   // Bitmap.DENSITY_NONE stand-in
+        if (tv.density == TypedValue::DENSITY_DEFAULT) {
+            density = DisplayMetrics::DENSITY_DEFAULT;
+        } else if (tv.density != TypedValue::DENSITY_NONE) {
+            density = tv.density;
+        }
+        bd->setSourceDensity(density);
+        bd->setTargetDensity(res.getDisplayMetrics().densityDpi);
     }
     return d;
 }

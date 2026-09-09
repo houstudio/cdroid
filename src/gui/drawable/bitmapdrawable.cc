@@ -46,6 +46,7 @@ BitmapDrawable::BitmapState::BitmapState(){
     mAntiAlias = false;
     mSrcDensityOverride = 0;
     mTargetDensity = 160;
+    mBitmapDensity = 0;   // unknown until the decode side reports it
     mChangingConfigurations=0;
 }
 
@@ -67,6 +68,7 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
     mTileModeY = bitmapState.mTileModeY;
     mSrcDensityOverride = bitmapState.mSrcDensityOverride;
     mTargetDensity = bitmapState.mTargetDensity;
+    mBitmapDensity = bitmapState.mBitmapDensity;
     mBaseAlpha = bitmapState.mBaseAlpha;
     mAlpha = bitmapState.mAlpha;
     mDither= bitmapState.mDither;
@@ -179,6 +181,22 @@ int BitmapDrawable::getIntrinsicHeight() {
     return mBitmapHeight;
 }
 
+void BitmapDrawable::setTargetDensity(int density) {
+    if (mBitmapState->mTargetDensity != density) {
+        mBitmapState->mTargetDensity = density;
+        computeBitmapSize();
+        invalidateSelf();
+    }
+}
+
+void BitmapDrawable::setSourceDensity(int density) {
+    if (mBitmapState->mBitmapDensity != density) {
+        mBitmapState->mBitmapDensity = density;
+        computeBitmapSize();
+        invalidateSelf();
+    }
+}
+
 int BitmapDrawable::getTileModeX()const{
     return mBitmapState->mTileModeX;
 }
@@ -287,10 +305,28 @@ bool BitmapDrawable::isFilterBitmap() const{
     return mBitmapState->mFilterBitmap;
 }
 
+namespace {
+/*android-36 Bitmap.scaleFromDensity verbatim (the intrinsics path): DENSITY_NONE
+  on either side — cdroid stand-in 0 — or equal densities keep the size, else
+  scale rounding up. Drawable::scaleFromDensity (the NinePatch path) rounds
+  half-away instead; BitmapDrawable intrinsics use the Bitmap body.*/
+int scaleFromBitmapDensity(int size, int sourceDensity, int targetDensity) {
+    if (sourceDensity == 0 || targetDensity == 0 || sourceDensity == targetDensity)
+        return size;
+    return ((size * targetDensity) + (sourceDensity >> 1)) / sourceDensity;
+}
+}
+
 void BitmapDrawable::computeBitmapSize() {
     if (mBitmapState->mBitmap != nullptr) {
-        mBitmapWidth = mBitmapState->mBitmap->get_width();//getScaledWidth(mTargetDensity);
-        mBitmapHeight= mBitmapState->mBitmap->get_height();//getScaledHeight(mTargetDensity);
+        // AOSP: bitmap.getScaledWidth/Height(mTargetDensity). The surface has no
+        // density metadata; mBitmapDensity is the Bitmap.mDensity stand-in
+        // (0 = DENSITY_NONE/unknown -> raw pixels, so programmatic bitmaps and
+        // density-matched resources keep their exact prior sizes).
+        mBitmapWidth = scaleFromBitmapDensity(mBitmapState->mBitmap->get_width(),
+                mBitmapState->mBitmapDensity, mBitmapState->mTargetDensity);
+        mBitmapHeight = scaleFromBitmapDensity(mBitmapState->mBitmap->get_height(),
+                mBitmapState->mBitmapDensity, mBitmapState->mTargetDensity);
     } else {
         mBitmapWidth = mBitmapHeight = -1;
     }
@@ -504,15 +540,23 @@ void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a, int srcDensi
         if (r.getValue(srcResId, &tv, true) && tv.string) {
             std::string path = TextUtils::utf16_utf8((const uint16_t*)tv.string, tv.stringLen);
             if (!path.empty()) {
-                // Density scaling: if srcDensityOverride is set and the value has a
-                // density, pretend the requested density is the display density so
-                // computeBitmapSize scales correctly downstream.
-                int density = DisplayMetrics::DENSITY_DEFAULT;
-                if (tv.density > 0 && tv.density != TypedValue::DENSITY_NONE) {
-                    density = tv.density;
-                    if (srcDensityOverride > 0 && srcDensityOverride != tv.density) {
-                        density = (tv.density * dm.densityDpi) / srcDensityOverride;
+                // android-36 :833-848: pretend the requested density is the
+                // display density — an exact override match maps to the display
+                // density (no downstream scaling), a mismatch gets the request/
+                // display ratio so computeBitmapSize forces the scaling.
+                if (srcDensityOverride > 0 && tv.density > 0
+                        && tv.density != TypedValue::DENSITY_NONE) {
+                    if (tv.density == srcDensityOverride) {
+                        tv.density = dm.densityDpi;
+                    } else {
+                        tv.density = (tv.density * dm.densityDpi) / srcDensityOverride;
                     }
+                }
+                int density = 0;   // Bitmap.DENSITY_NONE stand-in
+                if (tv.density == TypedValue::DENSITY_DEFAULT) {
+                    density = DisplayMetrics::DENSITY_DEFAULT;
+                } else if (tv.density != TypedValue::DENSITY_NONE) {
+                    density = tv.density;
                 }
                 // AOSP: r.openRawResource(srcResId, value) → InputStream → decode.
                 // CDROID Asset has read(), not getInputStream(); slurp into buffer.
@@ -531,10 +575,11 @@ void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a, int srcDensi
                     }
                     delete asset;
                 }
-                // CDROID ImageSurface doesn't carry density metadata; the density
-                // ratio is applied in computeBitmapSize via mTargetDensity. Store
-                // the source density for NinePatchDrawable's scaleFromDensity path.
-                state.mSrcDensityOverride = srcDensityOverride > 0 ? srcDensityOverride : density;
+                // CDROID ImageSurface doesn't carry density metadata; the
+                // decoded bucket's density lives in mBitmapDensity (the
+                // Bitmap.mDensity stand-in) so computeBitmapSize can scale it
+                // to the target. mSrcDensityOverride keeps its AOSP meaning.
+                state.mBitmapDensity = density;
             }
         }
     }

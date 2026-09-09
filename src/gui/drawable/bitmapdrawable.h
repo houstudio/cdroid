@@ -50,6 +50,13 @@ private:
         int mTileModeY;
         int mSrcDensityOverride;
         int mTargetDensity;
+        /*Stand-in for Bitmap.mDensity: Cairo::ImageSurface carries no density
+          metadata, so the density of the bucket the bitmap was decoded from
+          lives here (0 = unknown → intrinsic sizes stay raw pixels, the
+          pre-fix behavior; resource-loaded bitmaps get a real value).
+          computeBitmapSize scales raw→target through it, like
+          Bitmap.getScaledWidth(mTargetDensity).*/
+        int mBitmapDensity;
         Cairo::RefPtr<Cairo::ImageSurface>mBitmap;
         BitmapState();
         BitmapState(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
@@ -100,6 +107,8 @@ public:
     void setTileModeX(int);
     void setTileModeY(int);
     void setTileModeXY(int,int);
+    void setTargetDensity(int density);
+    void setSourceDensity(int density);
     void setAutoMirrored(bool mirrored)override;
     bool isAutoMirrored()const override;
     void setTintList(const cdroid::RefPtr<ColorStateList>&lst)override;
@@ -118,4 +127,4 @@ public:
 };
 
 }
-#endif
+#endif/*__BITMAP_DRAWABLE_H__*/
