@@ -193,6 +193,9 @@ class Transition {
     virtual void runAnimators();
     virtual void forceToEnd(ViewGroup* sceneRoot);
     virtual void cancel();
+    /** App-exit tail (after WindowManager is gone): free throwaway clones whose
+     *  deferred self-delete post was dropped by the quitting message queue. */
+    static void deleteOrphanedClones();
 
     // addListener/removeListener take TransitionListener by value (EventSet identity via
     // shared mID: a copy compares equal to its original, so removeListener finds it).

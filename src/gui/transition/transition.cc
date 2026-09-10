@@ -909,6 +909,12 @@ void Transition::start() {
     mNumInstances++;
 }
 
+// File-local registry of ended-but-not-yet-self-deleted clones (main thread only).
+// The handler is the one whose self-delete post a quitting queue may drop — the
+// orphan sweep must free it along with the clone.
+struct SelfDeleteEntry { Transition* clone; Handler* handler; };
+static std::vector<SelfDeleteEntry>& pendingSelfDelete();
+
 void Transition::end() {
     --mNumInstances;
     if (mNumInstances == 0) {
@@ -939,9 +945,45 @@ void Transition::end() {
         // delete runs after all end() frames unwind.
         if (mDeleteWhenEnded) {
             Handler* h = new Handler();
-            h->post([h, this](){ delete this; delete h; });
+            // Quit-order safety net: teardown paths (window sweep → endTransitions →
+            // forceToEnd → end) can end a clone AFTER the main queue is already
+            // quitting — enqueueMessage then DROPS the self-delete post, and only
+            // that post deletes the clone (and h). Register BOTH here; the post
+            // unregisters when it runs, and App's exit sweep
+            // (Transition::deleteOrphanedClones) frees whatever is left — a
+            // dropped post otherwise leaks the 72B Handler as well (recreateleak:
+            // definite 72B/1blk, Transition::end → forceToEnd on App teardown).
+            pendingSelfDelete().push_back({this, h});
+            Transition* self = this;
+            h->post([h, self](){
+                auto& v = pendingSelfDelete();
+                v.erase(std::remove_if(v.begin(), v.end(),
+                        [self](const SelfDeleteEntry& e){ return e.clone == self; }), v.end());
+                delete self;
+                delete h;
+            });
         }
     }
+}
+
+// File-local registry of ended-but-not-yet-self-deleted clones (main thread only).
+static std::vector<SelfDeleteEntry>& pendingSelfDelete(){
+    static std::vector<SelfDeleteEntry> v;
+    return v;
+}
+
+
+void Transition::deleteOrphanedClones(){
+    // App-exit tail, after WindowManager is gone: a clone whose self-delete post
+    // was dropped by the quitting queue is leaked otherwise (valgrind: 72B Handler
+    // + the clone with every captured TransitionValues, per late-ended clone).
+    // Safe here: every end() frame has long unwound.
+    auto& v = pendingSelfDelete();
+    for (SelfDeleteEntry& e : v) {
+        delete e.clone;
+        delete e.handler;
+    }
+    v.clear();
 }
 
 void Transition::forceToEnd(ViewGroup* sceneRoot) {

@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <sys/stat.h>
 #include <core/app.h>
+#include <transition/transition.h>  // App-exit clone sweep (deleteOrphanedClones)
 #include <core/queuedwork.h>   // exit-path flush of async writes
 #include <content/typedarray.h>   // TypedArray (constructed in obtainStyledAttributes)
 #include <content/typedvalue.h>   // TypedValue (typed currency of this layer)
@@ -305,6 +306,10 @@ App::~App(){
     // reading freed memory.
     i18n::DataResource::SetData(nullptr, 0);
     delete &WindowManager::getInstance();
+    // Ended-but-orphaned transition clones: their deferred self-delete post is
+    // dropped when the main queue is already quitting at window-sweep time —
+    // nobody else would ever free them (only that post deletes the clone).
+    Transition::deleteOrphanedClones();
     // InputEventSource unregisters itself from the main Looper in its dtor, so it
     // must die BEFORE the Looper — the old order (Looper first) left its
     // removeEventHandler() call reading a freed Looper (valgrind UAF).
