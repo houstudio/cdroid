@@ -524,7 +524,21 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.translate(mDstRect.width,0);
             canvas.scale(-1.f,1.f);
         }
-        canvas.set_source(source, 0, 0);
+        // The surface's PIXELS must be mapped onto the density-scaled bitmap
+        // size (mBitmapWidth/Height, the same numbers the bounds/intrinsic
+        // were computed from). cairo_set_source_surface (and a bare identity
+        // SurfacePattern) render surface pixels 1:1 in USER units — with
+        // density scaling the bounds are e.g. 60 units for a 180px surface,
+        // so only the (transparent) top-left crop landed in the clip and the
+        // drawable painted nothing. Pattern matrix maps USER -> PATTERN
+        // space, so scale = surface px per user unit (AOSP's software
+        // drawBitmap(bitmap, null, dstRect) semantics).
+        Cairo::RefPtr<SurfacePattern> srcPattern = Cairo::SurfacePattern::create(source);
+        Cairo::Matrix srcMatrix = Cairo::identity_matrix();
+        srcMatrix.scale((double)source->get_width() / std::max(1, mBitmapWidth),
+                        (double)source->get_height() / std::max(1, mBitmapHeight));
+        srcPattern->set_matrix(srcMatrix);
+        canvas.set_source(srcPattern);
         if(getOpacity()==PixelFormat::OPAQUE){
             canvas.set_operator(Cairo::Context::Operator::SOURCE);
         }
