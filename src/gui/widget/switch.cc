@@ -655,8 +655,13 @@ void Switch::animateThumbToCheckedState(bool newCheckedState){
     animator->setDuration(THUMB_ANIMATION_DURATION);
     animator->setAutoCancel(true);
     animtorListener.onAnimationEnd=[this](Animator&anim,bool){
-        delete mPositionAnimator;
-        mPositionAnimator = nullptr;
+        // Delete THE ENDING animator (AOSP: anonymous, GC-owned). Never delete
+        // through the field: a rapid re-toggle assigns mPositionAnimator = the
+        // NEW animator BEFORE start() auto-cancels the old one, so the old
+        // animator's end-listener would free the brand-new one mid-start()
+        // (valgrind: invalid writes in ValueAnimator::start, SIGSEGV).
+        if (mPositionAnimator == &anim) mPositionAnimator = nullptr;
+        delete &anim;
     };
     animator->addListener(animtorListener);
     mPositionAnimator = animator;

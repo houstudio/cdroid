@@ -174,7 +174,13 @@ int DrawableContainer::DrawableContainerState::addChild(Drawable* dr){
         if (mDrawables[i] == dr) return (int)i;
     }
     const int pos = (int)mDrawables.size();
-    dr->mutate();
+    // No dr->mutate() here — AOSP's DrawableContainerState.addChild adds the
+    // child as-is. The mutate was text-XML-era code (shared inflate-time
+    // instances needed a private copy); with ConstantState/newDrawable the
+    // child is already private, and forcing a container mutate at add time
+    // clones whole child states per add (valgrind: the switch_thumb
+    // animation-list's 12 nine-patch futures materialized + lost via
+    // setConstantState's getChild refresh — 692KB definite).
     dr->setVisible(false, true);
     dr->setCallback(mOwner);
 

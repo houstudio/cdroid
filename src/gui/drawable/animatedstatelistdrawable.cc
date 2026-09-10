@@ -189,6 +189,21 @@ std::shared_ptr<DrawableContainer::DrawableContainerState> AnimatedStateListDraw
 }
 
 void AnimatedStateListDrawable::setConstantState(std::shared_ptr<DrawableContainerState> state){
+    // No-GC seam, BEFORE the base call installs the new state: swapping the
+    // constant state destroys the old one, which hard-deletes every
+    // materialized child. A RUNNING Transition wrapper captured one of those
+    // children (mAvd / the ObjectAnimator's target) — using it after the swap
+    // is a use-after-free (vptr already zeroed: crash in
+    // AnimatedVectorDrawableTransition::stop after a mid-animation tint
+    // mutate()). AOSP needs nothing here: the old child stays reachable for
+    // the wrapper until GC. Stop the transition while its target is still
+    // alive, then drop it — the teardown half of jumpToCurrentState().
+    if (mTransition != nullptr) {
+        mTransition->stop();
+        mTransition = nullptr;
+        mTransitionFromIndex = -1;
+        mTransitionToIndex = -1;
+    }
     StateListDrawable::setConstantState(state);
 
     if (dynamic_cast<AnimatedStateListState*>(state.get())) {
