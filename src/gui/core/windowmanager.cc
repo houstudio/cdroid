@@ -61,6 +61,16 @@ WindowManager::~WindowManager() {
     // FragmentManager is already gone crashed FragmentStateManager::
     // computeExpectedState on a dead Fragment.
     mTearingDown = true;
+    // Run the still-queued due posts before sweeping. close()'s deferred
+    // deletes (self/AttachInfo/Handler) ride the main-looper queue, and an
+    // exit(0) that outruns them strands all three — the looper is torn down
+    // with the message still queued (72B Handler + the closed window's 408B
+    // AttachInfo were definite-lost whenever exit followed a close() closely).
+    // Draining first lets those lambdas do their own deleting in their own
+    // order (delete self before info); the sweep below then only owns windows
+    // that were never closed. Cascades during the drain hit the mTearingDown
+    // guards set above.
+    Looper::getMainLooper()->drainMessageQueue();
     std::vector<Window*> windows = mWindows;
     for(Window*w:windows){
         View::AttachInfo*info = w->mAttachInfo;
@@ -80,6 +90,15 @@ WindowManager::~WindowManager() {
         delete w;
     }
     mWindows.clear();
+    // The sweep above ends scene-root transitions (ViewGroup::
+    // dispatchDetachedFromWindow -> endTransitions -> forceToEnd), and each
+    // ended throwaway clone DEFERS its delete-this to a zero-delay post
+    // (Transition::end: a synchronous delete-this is unsafe while end()
+    // frames unwind). Without a second drain those posts rot in the quitting
+    // queue: the 72B Handler, its message closure, and the whole clone with
+    // every captured TransitionValues were definite-lost at every exit that
+    // tore a window down mid-transition.
+    Looper::getMainLooper()->drainMessageQueue();
     LOGD("%p Destroied",this);
 }
 

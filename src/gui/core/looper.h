@@ -129,7 +129,6 @@ private:
 private:
     static Looper*sMainLooper;
     int doEventHandlers();
-    void drainMessageQueue();
     int pollInner(int timeoutMillis);
     int removeSequenceNumberLocked(SequenceNumber seq);
     void awoken();
@@ -174,6 +173,10 @@ public:
     static Looper* getForThread();
     bool getAllowNonCallbacks() const;
     MessageQueue* getQueue();
+    /* Dispatch every DUE message + idle handlers, once. Normal pumps reach
+       this through pollInner; quit-time teardown (WindowManager's sweep) calls
+       it directly so deferred posts still run before their owners die. */
+    void drainMessageQueue();
     int  pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData);
     inline int pollOnce(int timeoutMillis) {
         return pollOnce(timeoutMillis, NULL, NULL, NULL);
