@@ -25,11 +25,12 @@
 #include <core/inputdevice.h>
 #include <unordered_map>
 #include <mutex>
+#include <thread>
 
 namespace cdroid{
 
 class InputEventSource:public EventHandler{
-public:	
+public:
     typedef std::function<void(bool)>ScreenSaver;
 private:
     mutable std::recursive_mutex mtxEvents;
@@ -38,6 +39,12 @@ private:
     bool mInited;
     bool mRunning;
     bool mIsScreenSaveActived;
+    /*The reader thread (spawned lazily in checkEvents), kept JOINABLE so the
+      dtor can wait it out: it was detached before, and ~InputEventSource
+      returning while the thread was still inside its 20ms select() left it
+      locking mtxEvents / reading mRunning on freed memory (valgrind: invalid
+      read/write in pthread_mutex_lock from InputThread at every app exit).*/
+    std::thread mInputThread;
     nsecs_t mLastInputEventTime;/*for screensaver*/
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
     /*Injected events (injectInputEvent) waiting for the main-looper drain —
