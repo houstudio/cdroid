@@ -77,16 +77,24 @@ View* TransitionUtils::copyViewImage(ViewGroup* sceneRoot, View* view, ViewGroup
 
 Cairo::RefPtr<Cairo::ImageSurface> TransitionUtils::createViewBitmap(View* view, Matrix& matrix,
         Cairo::Rectangle& bounds, ViewGroup* sceneRoot) {
-    const bool addToOverlay = !view->isAttachedToWindow();
-    ViewGroup* parent = nullptr;
-    int indexInParent = 0;
-    if (addToOverlay) {
+    const bool needAttachment = !view->isAttachedToWindow();
+    bool borrowedToOverlay = false;
+    if (needAttachment) {
         if (sceneRoot == nullptr || !sceneRoot->isAttachedToWindow()) {
             return nullptr;
         }
-        parent = static_cast<ViewGroup*>(view->getParent());
-        indexInParent = parent->indexOfChild(view);
-        static_cast<ViewGroupOverlay*>(sceneRoot->getOverlay())->add(view);
+        ViewGroup* parent = static_cast<ViewGroup*>(view->getParent());
+        if (parent == nullptr) {
+            // Detached with no parent: borrow into the scene root's overlay so
+            // the draw below has an attached tree, then restore (AOSP recipe).
+            static_cast<ViewGroupOverlay*>(sceneRoot->getOverlay())->add(view);
+            borrowedToOverlay = true;
+        }
+        // A disappearing child still holds mParent (removeView routed it to
+        // mDisappearingChildren while its subtree was detached mid-transition):
+        // overlay->add would throw "already has a parent" out of addViewInner
+        // and abort the process (printerdemo sweep, onDisappear -> copyViewImage
+        // over a mid-teardown page). Its parent links are intact — draw in place.
     }
     Cairo::RefPtr<Cairo::ImageSurface> bitmap;
     const int bitmapWidth  = (int)lround(bounds.width);
@@ -105,9 +113,10 @@ Cairo::RefPtr<Cairo::ImageSurface> TransitionUtils::createViewBitmap(View* view,
         canvas.transform(matrix);
         view->draw(canvas);
     }
-    if (addToOverlay) {
+    if (borrowedToOverlay) {
         static_cast<ViewGroupOverlay*>(sceneRoot->getOverlay())->remove(view);
-        parent->addView(view, indexInParent);
+        // parent was null when we borrowed — nothing to restore (AOSP re-adds to the
+        // captured parent/index; a parentless view has none).
     }
     return bitmap;
 }
