@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <execinfo.h>
 #include <algorithm>
+#include <porting/cdlog.h>
 #include <view/viewtreeobserver.h>
 #include <cdlog.h>
 namespace cdroid {
@@ -241,13 +242,9 @@ void ViewTreeObserver::addOnDrawListener(const OnDrawListener& listener) {
     checkIsAlive();
 
     if (mInDispatchOnDraw) {
-        /*IllegalStateException ex = new IllegalStateException(
-            "Cannot call addOnDrawListener inside of onDraw");
-        if (sIllegalOnDrawModificationIsFatal) {
-            throw ex;
-        } else {
-            Log.e("ViewTreeObserver", ex.getMessage(), ex);
-        }*/
+        // AOSP throws IllegalStateException (or logs when non-fatal); the
+        // dispatchOnDraw snapshot makes the mutation safe, so just warn.
+        LOGE("ViewTreeObserver: Cannot call addOnDrawListener inside of onDraw");
     }
     mOnDrawListeners.push_back(listener);
 }
@@ -255,13 +252,7 @@ void ViewTreeObserver::addOnDrawListener(const OnDrawListener& listener) {
 void ViewTreeObserver::removeOnDrawListener(const OnDrawListener& victim) {
     checkIsAlive();
     if (mInDispatchOnDraw) {
-        /*IllegalStateException ex = new IllegalStateException(
-        if (sIllegalOnDrawModificationIsFatal) {
-            FATAL("Cannot call removeOnDrawListener inside of onDraw");
-            
-        } else {
-            Log.e("ViewTreeObserver", ex.getMessage(), ex);
-        }*/
+        LOGE("ViewTreeObserver: Cannot call removeOnDrawListener inside of onDraw");
     }
     auto it = std::find(mOnDrawListeners.begin(),mOnDrawListeners.end(),victim);
     if(it!=mOnDrawListeners.end())mOnDrawListeners.erase(it);
@@ -364,7 +355,12 @@ void ViewTreeObserver::dispatchOnGlobalFocusChange(View* oldFocus, View* newFocu
 void ViewTreeObserver::dispatchOnGlobalLayout() {
     auto &listeners = mOnGlobalLayoutListeners;
     if ( listeners.size() > 0) {
-        for (auto listener: mOnGlobalLayoutListeners) {
+        // Snapshot (AOSP CopyOnWriteArrayList): one-shot listeners remove
+        // themselves in onGlobalLayout — a live range-for then walks a shifted
+        // vector, and an add reallocs it under the loop (same hazard class the
+        // preDraw snapshot below fixed).
+        std::vector<OnGlobalLayoutListener> snapshot = mOnGlobalLayoutListeners;
+        for (auto listener: snapshot) {
             listener();//access.get(i).onGlobalLayout();
         }
     }
@@ -378,7 +374,14 @@ bool ViewTreeObserver::dispatchOnPreDraw() {
     bool cancelDraw = false;
     auto& listeners = mOnPreDrawListeners;
     if ( listeners.size() > 0) {
-        for (auto listener:mOnPreDrawListeners) {
+        // Iterate a SNAPSHOT: a preDraw listener may remove itself (MultiListener
+        // detaches on first fire) or add others mid-dispatch — a live range-for
+        // then walks invalidated iterators (valgrind: invalid read of the shared
+        // control block inside the per-element copy). AOSP copies the list for
+        // the same reason. CallbackBase copies share the mID, so an identity
+        // removal by a running listener still finds its entry.
+        std::vector<CallbackBase<bool>> snapshot = mOnPreDrawListeners;
+        for (auto listener : snapshot) {
             cancelDraw |= !listener();//(access.get(i).onPreDraw());
         }
     }
@@ -389,7 +392,8 @@ void ViewTreeObserver::dispatchOnWindowShown() {
     mWindowShown = true;
     auto&listeners = mOnWindowShownListeners;
     if (listeners.size() > 0) {
-        for (auto listener:mOnWindowShownListeners) {
+        std::vector<OnWindowShownListener> snapshot = mOnWindowShownListeners;
+        for (auto listener:snapshot) {
             listener();//access.get(i).onWindowShown();
         }
     }
@@ -398,7 +402,11 @@ void ViewTreeObserver::dispatchOnWindowShown() {
 void ViewTreeObserver::dispatchOnDraw() {
     if (mOnDrawListeners.size()) {
         mInDispatchOnDraw = true;
-        for (auto listener:mOnDrawListeners) {
+        // Snapshot: add/removeOnDrawListener are illegal inside onDraw (AOSP
+        // throws) but the port only logs — a live range-for would walk a
+        // realloc'd buffer when the guard is ignored.
+        std::vector<OnDrawListener> snapshot = mOnDrawListeners;
+        for (auto listener:snapshot) {
             listener();//onDraw();
         }
         mInDispatchOnDraw = false;
@@ -407,14 +415,16 @@ void ViewTreeObserver::dispatchOnDraw() {
 
 void ViewTreeObserver::dispatchOnTouchModeChanged(bool inTouchMode) {
     auto& listeners = mOnTouchModeChangeListeners;
-    for (OnTouchModeChangeListener listener : listeners) {
+    std::vector<OnTouchModeChangeListener> snapshot = listeners;
+    for (OnTouchModeChangeListener listener : snapshot) {
         listener(inTouchMode);//.onTouchModeChanged(inTouchMode);
     }
 }
 
 void ViewTreeObserver::dispatchOnScrollChanged() {
     auto&listeners = mOnScrollChangedListeners;
-    for (auto listener:mOnScrollChangedListeners) {
+    std::vector<OnScrollChangedListener> snapshot = listeners;
+    for (auto listener:snapshot) {
          listener();//onScrollChanged();
     }
 }
