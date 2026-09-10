@@ -17,6 +17,7 @@
 #include <widget/textview.h>
 #include <widget/framelayout.h>
 #include <widget/linearlayout.h>
+#include <widget/relativelayout.h>
 #include <widget/listview.h>
 #include <widgetEx/recyclerview/linearlayoutmanager.h>
 #include <widgetEx/recyclerview/recyclerview.h>
@@ -248,15 +249,40 @@ private:
             scrim->setBackgroundColor(night ? 0x70000000u : 0xE6FFFFFFu);
         const uint32_t main = night ? 0xFFFFFFFFu : 0xFF3B3B3Bu;
         const uint32_t sub = night ? 0xB3FFFFFFu : 0xFF8A8A8Au;
-        for (int id : {R::id::play_title, R::id::music_duration_played,
-                R::id::music_duration})
+        for (int id : {R::id::music_duration_played, R::id::music_duration})
             if (auto* v = (TextView*) findViewById(id))
-                v->setTextColor(id == R::id::play_title ? main : sub);
-        if (auto* artist = (TextView*) findViewById(R::id::play_artist))
-            artist->setTextColor(sub);
-        if (auto* toolbar = (Toolbar*) findViewById(R::id::toolbar))
+                v->setTextColor(sub);
+        // Title/artist live IN the toolbar (the original's ab.setTitle/
+        // setSubtitle) — color them through it, not a centered block.
+        if (auto* toolbar = (Toolbar*) findViewById(R::id::toolbar)) {
+            toolbar->setTitleTextColor(main);
+            toolbar->setSubtitleTextColor(sub);
             if (Drawable* icon = toolbar->getNavigationIcon())
                 icon->setTint(night ? 0xFFFFFFFFu : 0xFF3B3B3Bu);
+        }
+        // The control icons are WHITE art (drawn for the dark scrim) — on the
+        // day theme's white page they vanish. Same treatment as the nav icon
+        // (Drawable::setTint — ImageView::setColorFilter is avoided: it has a
+        // rendering regression on this stack); the play ring takes the accent
+        // red the seekbar already uses.
+        const uint32_t ctrl = night ? 0xFFFFFFFFu : 0xFF3B3B3Bu;
+        for (int id : {R::id::playing_fav, R::id::playing_down, R::id::playing_cmt,
+                R::id::playing_more, R::id::playing_mode, R::id::playing_pre,
+                R::id::playing_next, R::id::playing_playlist})
+            if (auto* v = (ImageView*) findViewById(id))
+                if (Drawable* d = v->getDrawable())
+                    d->mutate()->setTint(ctrl);
+        if (mPlay)
+            if (Drawable* d = mPlay->getDrawable())
+                d->mutate()->setTint(night ? 0xFFFFFFFFu : 0xFFD43C33u);
+        // Seekbar: keep the red progress, but the light track/thumb need a
+        // visible gray on white (the thumb art is white too).
+        if (mSeek) {
+            mSeek->setProgressBackgroundTintList(
+                    ColorStateList::valueOf(night ? 0xFF6E6E6Eu : 0xFFC0C0C0u));
+            if (Drawable* thumb = mSeek->getThumb())
+                thumb->setTint(night ? 0xFFFFFFFFu : 0xFF3B3B3Bu);
+        }
         mLrc->setColors(night ? 0xFF3333FFu : 0xFFD43C33u,
                         night ? 0xFFAAAAAAu : 0xFF9E9E9Eu);
     }
@@ -293,12 +319,14 @@ private:
 #ifdef REMUSIC_ONLINE
         fetchOnlineLyrics(lrcData.empty());
 #endif
-        // Centered header (the original's): song name + artist, colors per theme.
+        // Toolbar header (PlayingActivity.java:617): ab.setTitle(trackName)
+        // + ab.setSubtitle(artistName) — the title truncates inside the
+        // toolbar and stays clear of the tonearm sweep.
         const MusicInfo* info = MusicPlayer::currentTrackInfo();
-        if (auto* t = (TextView*) findViewById(R::id::play_title))
-            t->setText(info ? info->musicName : std::string());
-        if (auto* a = (TextView*) findViewById(R::id::play_artist))
-            a->setText(info ? info->artist : std::string());
+        if (auto* toolbar = (Toolbar*) findViewById(R::id::toolbar)) {
+            toolbar->setTitle(info ? info->musicName : std::string());
+            toolbar->setSubtitle(info ? info->artist : std::string());
+        }
         const std::string cover = MusicPlayer::currentTrackInfo()
                 ? MusicPlayer::currentTrackInfo()->albumData : std::string();
         // On-demand tracks carry their cover as a REMOTE url (the listing
@@ -319,7 +347,14 @@ private:
         if (mDisc) {
             if (!remote) {
                 if (!cover.empty()) mDisc->setImageURIAsync("file://" + cover);
-                else mDisc->setImageResource(R::drawable::placeholder_disk_210);
+                // No-cover disc = the light ringed placeholder family's
+                // high-res twin. placeholder_disk_210 (105px, the gray look
+                // this page always showed) upscales 2.9x into visible blocks;
+                // placeholder_disk_300 is the same art at 300px — a 1:1 match
+                // for the 306px disc box. (placeholder_disk_play_song is the
+                // DARK vinyl: faithful to RoundView.java, but it swaps the
+                // whole disc look to a black blob.)
+                else mDisc->setImageResource(R::mipmap::placeholder_disk_300);
             }
         }
 #ifdef REMUSIC_ONLINE
@@ -388,8 +423,14 @@ private:
                     || cur->leftMargin != nL || cur->topMargin != nT) {
                 // Fresh rule-less params: absolute positioning in the
                 // RelativeLayout (replacing, not mutating, drops the XML
-                // parent-right anchor rules for good).
-                auto* nlp = new ViewGroup::MarginLayoutParams(w, h);
+                // parent-right anchor rules for good). MUST be
+                // RelativeLayout::LayoutParams — a plain MarginLayoutParams
+                // handed to setLayoutParams() bypasses addView's conversion,
+                // and the parent's DependencyGraph blind-casts getLayoutParams()
+                // to its own LayoutParams and indexes mRules[] out of bounds
+                // (valgrind: invalid read/write past a 56-byte block → heap
+                // corruption, crashes anywhere downstream).
+                auto* nlp = new RelativeLayout::LayoutParams(w, h);
                 nlp->leftMargin = nL;
                 nlp->topMargin = nT;
                 mNeedle->setLayoutParams(nlp);
@@ -408,7 +449,10 @@ private:
             mDisc = new ImageView(getContext());
             mDisc->setScaleType(ScaleType::FIT_XY);
             mDisc->setImageResource(R::drawable::placeholder_disk_play_song);
-            auto* lp = new ViewGroup::MarginLayoutParams(0, 0);
+            // RelativeLayout::LayoutParams: the parent is a RelativeLayout —
+            // addView() would convert a plain MarginLayoutParams, but the
+            // correct type up front keeps getLayoutParams() casts honest.
+            auto* lp = new RelativeLayout::LayoutParams(0, 0);
             mDisc->setLayoutParams(lp);
             // Z-order: above the pager, BELOW the needle (the arm rests on
             // the record, not under it). RelativeLayout draws later children

@@ -43,37 +43,11 @@
             android:theme="@android:style/Theme.Material"
             android:popupTheme="@android:style/ThemeOverlay.Material.Light" />
 
-        <!-- Original's header: centered song name + artist at the very top. -->
-        <LinearLayout
-            android:id="@+id/title_block"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/toolbar"
-            android:layout_centerHorizontal="true"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/play_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:singleLine="true"
-                android:text=""
-                android:textColor="#FF3B3B3B"
-                android:textSize="19sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/play_artist"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:singleLine="true"
-                android:text=""
-                android:textColor="#FF8A8A8A"
-                android:textSize="13sp" />
-        </LinearLayout>
-
+        <!-- No title block: the original shows the song name inside the
+             toolbar (ab.setTitle/setSubtitle, PlayingActivity.java:617) —
+             small, next to the back arrow. The centered block we invented
+             here sat exactly in the tonearm's -30° sweep and the arm
+             covered the text. -->
         <FrameLayout
             android:id="@+id/headerView"
             android:layout_width="match_parent"
