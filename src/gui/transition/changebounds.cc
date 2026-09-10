@@ -299,6 +299,18 @@ Animator* ChangeBounds::createAnimator(ViewGroup* /*sceneRoot*/,
                     ObjectAnimator* bottomRightAnimator = ObjectAnimator::ofObject(viewBounds, &BOTTOM_RIGHT_PROPERTY, nullptr, bottomRightPath);
                     AnimatorSet* set = new AnimatorSet();
                     set->playTogether({topLeftAnimator, bottomRightAnimator});
+                    // viewBounds is shared by both child animators (AOSP news it per
+                    // call and lets GC reclaim). Own it for the set's lifetime: the set
+                    // always ends — normally, or forced by endAnimatorsOver at teardown —
+                    // and its children are finished then (valgrind: 32B definite per
+                    // size-changing ChangeBounds pair otherwise, deskclock sweep).
+                    auto* vb = viewBounds;
+                    auto fired = std::make_shared<bool>(false);
+                    Animator::AnimatorListener vbOwner;
+                    vbOwner.onAnimationEnd = [vb, fired](Animator&, bool){
+                        if(*fired) return; *fired = true; delete vb;
+                    };
+                    set->addListener(vbOwner);
                     anim = set;
                 }
             } else if (startLeft != endLeft || startTop != endTop) {
