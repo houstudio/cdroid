@@ -20,6 +20,8 @@
 #include <widget/relativelayout.h>
 #include <widget/framework_styleable.h>
 #include <cstring>
+#include <stdexcept>
+#include <typeinfo>
 #include <porting/cdlog.h>
 namespace cdroid{
 using namespace cdroid::internal;
@@ -122,6 +124,25 @@ void RelativeLayout::requestLayout() {
     mDirtyHierarchy = true;
 }
 
+/* AOSP: every RelativeLayout measure/layout path casts the child's params to
+ * its own LayoutParams — a foreign type raises ClassCastException right there.
+ * addView() converts via checkLayoutParams/generateLayoutParams; the bypass is
+ * View::setLayoutParams(). Translate the contract with dynamic_cast + throw
+ * (the addView "child already has a parent" throw is the in-tree precedent).
+ * A blind C-style cast instead would index mRules[]/mLeft.. past the end of
+ * e.g. a plain MarginLayoutParams and corrupt the heap. */
+static RelativeLayout::LayoutParams* childLayoutParams(View* child) {
+    RelativeLayout::LayoutParams* lp =
+            dynamic_cast<RelativeLayout::LayoutParams*>(child->getLayoutParams());
+    if (lp == nullptr) {
+        throw std::runtime_error(std::string("RelativeLayout cannot layout child ")
+                + typeid(*child).name()
+                + ": foreign LayoutParams (View::setLayoutParams bypasses"
+                  " addView's conversion; Java would throw ClassCastException)");
+    }
+    return lp;
+}
+
 void RelativeLayout::sortChildren(){
     const int count = getChildCount();
 
@@ -198,7 +219,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     for (int i = 0; i < count; i++) {
         View* child = (*views)[i];
         if (child->getVisibility() != GONE) {
-            LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+            LayoutParams* params = childLayoutParams(child);
             const int*rules = params->getRules(layoutDirection);
 
             applyHorizontalSizeRules(params, myWidth, rules);
@@ -216,7 +237,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     for (int i = 0; i < count; i++) {
         View* child = (*views)[i];
         if (child->getVisibility() != GONE) {
-            LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+            LayoutParams* params = childLayoutParams(child);
 
             applyVerticalSizeRules(params, myHeight, child->getBaseline());
             measureChild(child, params, myWidth, myHeight);
@@ -256,7 +277,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     for (int i = 0; i < count; i++) {
         View* child = (*views)[i];
         if (child->getVisibility() != GONE) {
-            LayoutParams* childParams = (LayoutParams*) child->getLayoutParams();
+            LayoutParams* childParams = childLayoutParams(child);
             if ((baselineView == nullptr) || (baselineParams == nullptr)
                     || compareLayoutPosition(childParams, baselineParams) < 0) {
                 baselineView = child;
@@ -280,7 +301,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             for (int i = 0; i < count; i++) {
                 View* child = (*views)[i];
                 if (child->getVisibility() != GONE) {
-                    LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+                    LayoutParams* params = childLayoutParams(child);
                     const int* rules = params->getRules(layoutDirection);
                     if ((rules[CENTER_IN_PARENT] != 0) || (rules[CENTER_HORIZONTAL] != 0)) {
                         centerHorizontal(child, params, width);
@@ -310,7 +331,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             for (int i = 0; i < count; i++) {
                 View* child = (*views)[i];
                 if (child->getVisibility() != GONE) {
-                    LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+                    LayoutParams* params = childLayoutParams(child);
                     const int* rules = params->getRules(layoutDirection);
                     if ((rules[CENTER_IN_PARENT] != 0) || (rules[CENTER_VERTICAL] != 0)) {
                         centerVertical(child, params, height);
@@ -339,7 +360,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             for (int i = 0; i < count; i++) {
                 View* child = (*views)[i];
                 if ((child->getVisibility() != GONE) && (child != ignore)) {
-                    LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+                    LayoutParams* params = childLayoutParams(child);
                     if (horizontalGravity) {
                         params->mLeft += horizontalOffset;
                         params->mRight += horizontalOffset;
@@ -358,7 +379,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         for (int i = 0; i < count; i++) {
             View* child = (*views)[i];
             if (child->getVisibility() != GONE) {
-                LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+                LayoutParams* params = childLayoutParams(child);
                 params->mLeft -= offsetWidth;
                 params->mRight -= offsetWidth;
             }
@@ -701,7 +722,7 @@ View* RelativeLayout::getRelatedView(const int* rules, int relation){
 
         // Find the first non-GONE view up the chain
         while (v->getVisibility() == View::GONE) {
-            rules = ((LayoutParams*) v->getLayoutParams())->getRules(v->getLayoutDirection());
+            rules = childLayoutParams(v)->getRules(v->getLayoutDirection());
             node = mGraph->mKeyNodes.get((rules[relation]));
             // ignore self dependency. for more info look in git commit: da3003
             if ((node == nullptr) || (v == node->view)) return nullptr;
@@ -761,8 +782,7 @@ void RelativeLayout::onLayout(bool changed, int l, int t, int w, int h) {
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->getVisibility() != GONE) {
-            const RelativeLayout::LayoutParams* st =
-                    (RelativeLayout::LayoutParams*) child->getLayoutParams();
+            const RelativeLayout::LayoutParams* st = childLayoutParams(child);
             child->layout(st->mLeft, st->mTop, st->mRight-st->mLeft, st->mBottom-st->mTop);
         }
     }
@@ -1191,7 +1211,7 @@ std::list<RelativeLayout::DependencyGraph::Node*> RelativeLayout::DependencyGrap
     // Builds up the dependents and dependencies for each node of the graph
     for (Node*node:mNodes) {
 
-        LayoutParams* layoutParams = (LayoutParams*) node->view->getLayoutParams();
+        LayoutParams* layoutParams = childLayoutParams(node->view);
         const int* rules = layoutParams->mRules;
 
         // Look only the the rules passed in parameter, this way we build only the
