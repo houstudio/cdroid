@@ -27,6 +27,7 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <core/context.h>
+#include <core/handler.h>
 #include <memory>
 
 namespace cdroid{
@@ -88,6 +89,25 @@ void DefaultSpecialEffectsController::collectEffects(std::vector<Operation*>& op
 
 namespace { // file-local: retry-until-idle view reclaim
 
+// The reclaim chain's home: a process-lifetime Handler on the main looper.
+// Posting on the CONTAINER (cont->post) dropped the whole chain whenever the
+// container detached before a hop ran — a detached View's posts land in its
+// HandlerActionQueue, which is only flushed by a dispatchAttachedToWindow that
+// a dying tree never gets — so an off-tree fragment view (sole-owned by this
+// closure; applyState already removed it, ~Fragment never deletes mView) was
+// never freed (valgrind: a whole DemoPageFragment inflation, 2.2KB root +
+// 1.28MB subtree, definitely lost on every window recreate that landed while a
+// page-switch exit transition was still settling). First call is post-App
+// (fragment machinery), so the main looper exists. Never deleted: one fixed
+// block, and ~WindowManager's quit-time drainMessageQueue runs any hop still
+// pending at exit instead of leaking it with the dropped message.
+Handler* viewReclaimHandler(){
+    static Handler* h = new Handler();
+    return h;
+}
+
+} // anonymous namespace
+
 // Self-repost WITHOUT a self-referencing closure. A closure cannot reference
 // itself safely:
 //  - capturing its own shared_ptr<function> is an unbreakable cycle (leak);
@@ -99,41 +119,56 @@ namespace { // file-local: retry-until-idle view reclaim
 // Recursion sidesteps all three: each hop builds a FRESH Runnable from the
 // by-value state and posts it, so no closure ever references itself.
 void scheduleViewReclaim(ViewGroup* cont, View* view, Fragment* fragment,
-                         std::weak_ptr<bool> fragAlive, std::function<void()> hook) {
+                         std::weak_ptr<bool> fragAlive, std::weak_ptr<bool> ctrlAlive,
+                         std::function<void()> hook, bool soleOwner) {
     Runnable retry;
-    retry = [cont, view, fragment, fragAlive, hook](){
+    retry = [cont, view, fragment, fragAlive, ctrlAlive, hook, soleOwner](){
+        // Superseded generation (shared-owner path only): the fragment moved on
+        // to a NEW view (stepUp's stale-view hand-off already gave this tree to
+        // a sole-owner hop) or died (~Fragment already freed it). Nothing left
+        // to wait for — exit instead of polling a doomed container's
+        // transitions forever (the unbounded repost storm), and never touch
+        // `view`: its sole owner already ran. A soleOwner hop IS the owner
+        // regardless of what the fragment points at now — never exit early.
+        if(!soleOwner && (fragAlive.expired() || (fragment && fragment->mView != view))){
+            if(hook) hook();
+            return;
+        }
         // Retry until NO transition is pending/running on the container:
         // a still-active clone (e.g. a dialog round's Fade that captured the
         // whole tree) dereferences this view from its startValues at preDraw.
-        if(TransitionManager::hasActiveTransitions(cont)){
-            scheduleViewReclaim(cont, view, fragment, fragAlive, hook); // next hop: fresh Runnable
+        // The SEC is tag-owned by the container: once it is gone the container
+        // itself is dead (or dying), so don't touch cont — and there is nobody
+        // left to wait for: the doomed-subtree teardown already ended every
+        // transition over this view, so fall through and free it.
+        const bool ctrlLive = !ctrlAlive.expired();
+        if(ctrlLive && TransitionManager::hasActiveTransitions(cont)){
+            scheduleViewReclaim(cont, view, fragment, fragAlive, ctrlAlive, hook, soleOwner); // next hop: fresh Runnable
             return;
         }
         {
+        // Free path. Shared-owner: fragAlive holds and mView == view (or the
+        // view is ownerless) — this hop is the sole surviving deleter; it also
+        // runs the view lifecycle. Sole-owner: the caller (stepUp's stale-view
+        // hand-off) already ran performDestroyView and cleared mView — the hop
+        // owns the tree unconditionally and must free it even then.
+        endAnimatorsOver(view);
+        endTransitionsOver(view);
+        if(!soleOwner && fragment && fragment->mView == view){
+            fragment->performDestroyView();
+            fragment->mView = nullptr;
+        }
         // Detach from the parent BEFORE delete: ~View only does mParent->removeViewInternal
         // (mChildren), and an addDisappearingView'd view has mParent==null while still
         // listed in mDisappearingChildren — so ~View wouldn't pull it out, leaving the
         // parent drawing a freed view. Remove explicitly so neither list retains it.
-        if(fragAlive.lock()){
-            endAnimatorsOver(view);
-            endTransitionsOver(view);
-            if(fragment && fragment->mView == view){
-                fragment->performDestroyView();
-                fragment->mView = nullptr;
-            }
-            // Re-attached meanwhile with a NEW view: leave the fragment
-            // alone (performDestroyView would kill the live view) — only
-            // free the stale captured one.
-            if(view->getParent()) view->getParent()->removeView(view);
-            delete view;
-        }
+        if(view->getParent()) view->getParent()->removeView(view);
+        delete view;
         if(hook) hook();
         }
     };
-    cont->post(retry);
+    viewReclaimHandler()->post(retry);
 }
-
-} // anonymous namespace
 
 void AnimationEffect::onCommit(ViewGroup* container){
     Fragment* f = mOperation->mFragment;
@@ -272,12 +307,13 @@ void TransitionEffect::onCommit(ViewGroup* container){
             auto hook = mOperation->mReclaimHook;
             std::weak_ptr<bool> fragAlive = fragment ? std::weak_ptr<bool>(fragment->mAliveFlag)
                                                      : std::weak_ptr<bool>();
-            auto scheduleDelete = [cont, view, fragment, fragAlive, fired, hook](){
+            std::weak_ptr<bool> ctrlAlive2 = ctrl ? ctrl->getAlive() : std::weak_ptr<bool>();
+            auto scheduleDelete = [cont, view, fragment, fragAlive, ctrlAlive2, fired, hook](){
                 if(*fired) return; *fired = true;
                 // Retry-until-no-transitions lives in scheduleViewReclaim():
                 // recursion gives the self-repost without any closure referencing
                 // itself (see the rationale there).
-                scheduleViewReclaim(cont, view, fragment, fragAlive, hook);
+                scheduleViewReclaim(cont, view, fragment, fragAlive, ctrlAlive2, hook);
             };
             if(clone){
                 Transition::TransitionListener lst;

@@ -41,6 +41,15 @@ void endAnimatorsOver(View* doomed);
  *  subtree — see the .cc; the companion sweep that fires transition end
  *  listeners while the views are still alive. */
 void endTransitionsOver(View* doomed);
+/** Retry-until-idle deferred free of a fragment view tree, on a process-
+ *  lifetime handler (see defaultspecialeffectscontroller.cc). Shared-owner
+ *  (SEC exit path): exits superseded when the fragment moved on / died.
+ *  soleOwner=true (stepUp's stale-view hand-off): the caller already ran
+ *  performDestroyView and cleared the fragment pointer — this hop owns the
+ *  tree unconditionally and frees it once no transition references it. */
+void scheduleViewReclaim(ViewGroup* cont, View* view, Fragment* fragment,
+                         std::weak_ptr<bool> fragAlive, std::weak_ptr<bool> ctrlAlive,
+                         std::function<void()> hook = {}, bool soleOwner = false);
 
 class SpecialEffectsController{
 public:

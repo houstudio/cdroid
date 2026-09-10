@@ -23,6 +23,7 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
+#include <transition/transitionmanager.h>
 #include <porting/cdlog.h>
 #include <core/systemclock.h>
 
@@ -4262,6 +4263,15 @@ void ViewGroup::dispatchDetachedFromWindow(){
     for (View*view:mTransientViews){//int i = 0; i < transientCount; ++i) {
         view->dispatchDetachedFromWindow();
     }
+    // A scene root dying with pending/running transition clones (a pager torn
+    // down mid page-flip, a window recreate landing while an exit transition
+    // settles) leaves them keyed in TransitionManager forever: the clone never
+    // gets another frame to end itself, so it leaks with every start/end value
+    // it captured, and hasActiveTransitions stays true making reclaim hops
+    // poll a dead container. End everything keyed on THIS group while the
+    // captured views are still alive (children detached above, tree sweep not
+    // run yet). Android cancels scene-root transitions at detach likewise.
+    TransitionManager::endTransitions(this);
     View::dispatchDetachedFromWindow();
 }
 

@@ -271,6 +271,26 @@ void FragmentStateManager::stepUp(){
             }
             cdroid::LayoutInflater* inflater = mFragmentManager->mHost
                 ? mFragmentManager->mHost->onGetLayoutInflater() : nullptr;
+            // Stale-view guard: a deferred-SEC stepDown (VIEW_CREATED→CREATED with the
+            // exit chain still holding the view) leaves mView set BELOW the VIEW_CREATED
+            // state. Re-entering here — pager re-attach during a window recreate, or a
+            // transaction drained after dispatchDestroy — would overwrite the pointer and
+            // drop the whole inflation (the ~692KB definite root). Run the view lifecycle
+            // now (while the tree is alive), then hand the tree to a sole-owner reclaim
+            // hop: it frees once no pending/running clone still references it. Deleting
+            // inline here SEGVs — a still-pending clone captured this subtree in its
+            // startValues and dereferences it at the next preDraw (widgetsDemo sweep:
+            // Visibility::onDisappear -> resolvePadding on a freed view).
+            if(mFragment->mView != nullptr){
+                mFragment->performDestroyView();
+                std::weak_ptr<bool> ctrlAlive;
+                if(SpecialEffectsController* sec = getSpecialEffectsController())
+                    ctrlAlive = sec->getAlive();
+                scheduleViewReclaim(mFragment->mContainer, mFragment->mView, mFragment,
+                                    std::weak_ptr<bool>(mFragment->mAliveFlag), ctrlAlive,
+                                    {}, /*soleOwner=*/true);
+                mFragment->mView = nullptr;
+            }
             mFragment->performCreateView(inflater, mFragment->mContainer, savedInstanceState());
             LOGD("FSM.stepUp CREATED: who=%s mView=%p mContainer=%p",
                  mFragment->mWho.c_str(), mFragment->mView, mFragment->mContainer);
@@ -364,12 +384,26 @@ void FragmentStateManager::stepDown(){
                     mFragment->mState = Fragment::CREATED;
                     break;
                 } else {
-                    TransitionManager::beginDelayedTransition(mFragment->mContainer,
-                        FragmentTransitionImpl::makeExitTransition());
+                    // No SEC to run the deferred-delete chain: this branch owns the
+                    // view. Starting an exit clone here would capture the very view
+                    // the shared delete below frees (UAF at its onDisappear) — plain
+                    // remove, no transition.
                     mFragment->mContainer->removeView(mFragment->mView);
                 }
             }
             mFragment->performDestroyView();
+            // Fall-through = sole ownership of mView (the SEC path breaks above and
+            // hands the view to scheduleViewReclaim). ~Fragment never sees it again
+            // — mView is nulled right below — so free it HERE or the whole
+            // inflation leaks (valgrind: ~692KB definite root whenever a window
+            // recreate stepped fragments down with no container/SEC, e.g. pages
+            // already detached). end*Over first: a still-ticking animator or
+            // transition clone over this subtree must not outlive the views.
+            if (mFragment->mView) {
+                endAnimatorsOver(mFragment->mView);
+                endTransitionsOver(mFragment->mView);
+                delete mFragment->mView;
+            }
             mFragment->mView = nullptr;
             mFragment->mState = Fragment::CREATED;
             break;
