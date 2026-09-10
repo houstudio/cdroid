@@ -140,7 +140,7 @@ DEPLIBS_DIR=${DEPLIBS[$PRODUCT]}
 
 #Debug version'sDEPLIB seems has some trouble in some platform(r818)
 if [ "${BUILD_TYPE,,}" = "debug" ]; then
-   DEPLIBS_DIR="${DEPLIBS_DIR}" #/debug:${DEPLIBS_DIR}"
+   DEPLIBS_DIR="${DEPLIBS_DIR}/debug:${DEPLIBS_DIR}"
 fi
 
 echo "DEPLIBS_DIR=${DEPLIBS_DIR} product=$PRODUCT"
