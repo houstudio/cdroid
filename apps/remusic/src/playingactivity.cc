@@ -266,15 +266,24 @@ private:
         // rendering regression on this stack); the play ring takes the accent
         // red the seekbar already uses.
         const uint32_t ctrl = night ? 0xFFFFFFFFu : 0xFF3B3B3Bu;
+        // filterBitmap=true: these icons always render scaled (density
+        // bucket -> design column -> whole-column scale), and the default
+        // NEAREST sampling leaves hard stair-steps on every circle/diagonal.
+        // Bilinear keeps the 180px source detail at any final size (AOSP
+        // apps set this the same way; the framework default stays NEAREST).
         for (int id : {R::id::playing_fav, R::id::playing_down, R::id::playing_cmt,
                 R::id::playing_more, R::id::playing_mode, R::id::playing_pre,
                 R::id::playing_next, R::id::playing_playlist})
             if (auto* v = (ImageView*) findViewById(id))
-                if (Drawable* d = v->getDrawable())
-                    d->mutate()->setTint(ctrl);
+                if (Drawable* d = v->getDrawable()) {
+                    d->mutate()->setFilterBitmap(true);
+                    d->setTint(ctrl);
+                }
         if (mPlay)
-            if (Drawable* d = mPlay->getDrawable())
-                d->mutate()->setTint(night ? 0xFFFFFFFFu : 0xFFD43C33u);
+            if (Drawable* d = mPlay->getDrawable()) {
+                d->mutate()->setFilterBitmap(true);
+                d->setTint(night ? 0xFFFFFFFFu : 0xFFD43C33u);
+            }
         // Seekbar: keep the red progress, but the light track/thumb need a
         // visible gray on white (the thumb art is white too).
         if (mSeek) {

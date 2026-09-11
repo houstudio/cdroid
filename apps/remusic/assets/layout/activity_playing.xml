@@ -281,8 +281,8 @@
 
                 <ImageView
                     android:id="@+id/playing_mode"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="54dp"
+                    android:layout_height="54dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
@@ -290,8 +290,8 @@
 
                 <ImageView
                     android:id="@+id/playing_pre"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="71dp"
+                    android:layout_height="71dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
@@ -299,8 +299,8 @@
 
                 <ImageView
                     android:id="@+id/playing_play"
-                    android:layout_width="76dp"
-                    android:layout_height="76dp"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
@@ -308,8 +308,8 @@
 
                 <ImageView
                     android:id="@+id/playing_next"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="71dp"
+                    android:layout_height="71dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
@@ -317,8 +317,8 @@
 
                 <ImageView
                     android:id="@+id/playing_playlist"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="54dp"
+                    android:layout_height="54dp"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
