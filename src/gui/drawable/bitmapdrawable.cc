@@ -499,9 +499,12 @@ void BitmapDrawable::draw(Canvas&canvas){
     Cairo::RefPtr<Cairo::ImageSurface> source = mBitmapState->mBitmap;
     if (tintFilter) source = tintedBitmap(*mBitmapState, tintFilter);
     const int angle_degrees = getRotateAngle(canvas);
+    // GOOD (not BILINEAR) for filtered sampling: a box-class downscale filter.
+    // BILINEAR's 2x2 kernel undersamples on minification (a thin ring at
+    // 0.4x comes out wavy/faded in patches); NEAREST stays the unfiltered
+    // default (AOSP's filterBitmap=false parity).
     const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap)||(angle_degrees%90)
-                    ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
-    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
+                    ? SurfacePattern::Filter::GOOD : SurfacePattern::Filter::NEAREST;
     const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
 
     if((filterMode==SurfacePattern::Filter::NEAREST)||(mBitmapState->mAntiAlias==false))
