@@ -30,6 +30,11 @@ using namespace cdroid::internal;
 Drawable::ConstantState::~ConstantState() {
 }
 
+Drawable* Drawable::ConstantState::newDrawable(Resources* res) {
+    (void)res;
+    return newDrawable();
+}
+
 Drawable::Drawable() {
     mLevel = 0;
     mChangingConfigurations = 0;

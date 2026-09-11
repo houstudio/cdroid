@@ -34,6 +34,7 @@
 namespace cdroid{
 class ColorStateList;
 class Context;
+class Resources;
 
 class Animatable {
 public:
@@ -78,6 +79,7 @@ public:
         std::string mResource;
     public:
         virtual Drawable* newDrawable()=0;
+        virtual Drawable* newDrawable(Resources* res);
         virtual int getChangingConfigurations()const=0;
         // AOSP ConstantState.canApplyTheme(): false unless a subclass holds
         // unresolved theme attrs.
