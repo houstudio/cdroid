@@ -32,45 +32,39 @@ AnimatedVectorDrawable::AnimatedVectorDrawable()
     :AnimatedVectorDrawable(nullptr){
 }
 
-class MyCallback:public Drawable::Callback{
-private:
-    AnimatedVectorDrawable*avd;
-public:
-    MyCallback(AnimatedVectorDrawable*a):avd(a){}
-    void invalidateDrawable(Drawable& who)override{
-        avd->invalidateSelf();
-    }
-    void scheduleDrawable(Drawable& who,const Runnable& what, int64_t when)override{
-        avd->scheduleSelf(what, when);
-    }
-    void unscheduleDrawable(Drawable& who,const Runnable& what)override{
-        avd->unscheduleSelf(what);
-    }
-};
+// Drawable::Callback (see the header): AOSP's anonymous inner class holds the
+// outer reference — this IS that reference.
+void AnimatedVectorDrawable::invalidateDrawable(Drawable& who) {
+    invalidateSelf();
+}
 
-AnimatedVectorDrawable::AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDrawableState> state){
+void AnimatedVectorDrawable::scheduleDrawable(Drawable& who, const Runnable& what, int64_t when) {
+    scheduleSelf(what, when);
+}
+
+void AnimatedVectorDrawable::unscheduleDrawable(Drawable& who, const Runnable& what) {
+    unscheduleSelf(what);
+}
+
+// AOSP java:334: AnimatedVectorDrawable(state, res) — the state copy consumes
+// res, and the drawable holds it for the pending-animator lifetime.
+AnimatedVectorDrawable::AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDrawableState> state, Resources* res){
     mMutated = false;
     mAnimatorSetFromXml = nullptr;
-    mAnimatedVectorState = std::make_shared<AnimatedVectorDrawableState>(state, mCallback);
+    mAnimatedVectorState = std::make_shared<AnimatedVectorDrawableState>(state, this, res);
     mAnimatorSet = new VectorDrawableAnimatorUI(this);
     //mAnimatorSet = new VectorDrawableAnimatorRT(this);
-    mCallback = new MyCallback(this);
+    mRes = res;
 }
 
 AnimatedVectorDrawable::~AnimatedVectorDrawable(){
-    delete mCallback;
     delete mAnimatorSet;
     delete mAnimatorSetFromXml;
 }
 
 AnimatedVectorDrawable* AnimatedVectorDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
-        // Retire, not free: keep the outgoing state alive when animators are
-        // already bound into its tree (see mRetiredStates).
-        if (mAnimatorSetFromXml != nullptr) {
-            mRetiredStates.push_back(mAnimatedVectorState);
-        }
-        mAnimatedVectorState = std::make_shared<AnimatedVectorDrawableState>(mAnimatedVectorState, mCallback);
+        mAnimatedVectorState = std::make_shared<AnimatedVectorDrawableState>(mAnimatedVectorState, this, mRes);
         mMutated = true;
     }
     return this;
@@ -85,13 +79,8 @@ void AnimatedVectorDrawable::clearMutated() {
 }
 
 bool AnimatedVectorDrawable::shouldIgnoreInvalidAnimation() {
-    /*Application app = ActivityThread.currentApplication();
-    if (app == null || app.getApplicationInfo() == null) {
-        return true;
-    }
-    if (app.getApplicationInfo().targetSdkVersion < Build::VERSION_CODES::N) {
-        return true;
-    }*/
+    // AOSP gates on targetSdkVersion >= N via ActivityThread/Application,
+    // which CDROID does not port — always false here.
     return false;
 }
 
@@ -210,7 +199,6 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
     int eventType= parser.getEventType();//XmlPullParser::START_TAG;
     float pathErrorScale = 1;
     const int innerDepth = parser.getDepth()+1;
-    state->mContext = r.getContext();   // CDROID seam (the inflation bridge)
     // Parse everything until the end of the animated-vector element.
     // AOSP guards with eventType != END_DOCUMENT first (AnimatedVectorDrawable.
     // java:529-531): once next() reaches the document end it keeps returning
@@ -227,7 +215,7 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
                 if (dr != nullptr) {
                     VectorDrawable* vectorDrawable = (VectorDrawable*) dr->mutate();
                     vectorDrawable->setAllowCaching(false);
-                    vectorDrawable->setCallback(mCallback);
+                    vectorDrawable->setCallback(this);
                     pathErrorScale = vectorDrawable->getPixelSize();
                     if (state->mVectorDrawable != nullptr) {
                         state->mVectorDrawable->setCallback(nullptr);
@@ -252,8 +240,6 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
                         Animator* animator = AnimatorInflater::loadAnimator(r.getContext(), theme, animResId, pathErrorScale);
                         updateAnimatorProperty(animator, target, state->mVectorDrawable,state->mShouldIgnoreInvalidAnim);
                         state->addTargetAnimator(target, animator);
-                        std::string animName; r.getResourceName(animResId, &animName);
-                        LOGV("%s -> %s %p",target.c_str(),animName.c_str(),animator);
                     } else {
                         // The animation may be theme-dependent. As a
                         // workaround until Animator has full support for
@@ -267,7 +253,8 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
         eventType =parser.next();
     }
     // If we don't have any pending animations, we don't need to hold a
-    // reference to the resources.
+    // reference to the resources (AOSP java:584).
+    mRes = state->mPendingAnims.empty() ? nullptr : &r;
 }
 
 void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const std::string& targetName,VectorDrawable* vectorDrawable, bool ignoreInvalidAnim) {
@@ -276,20 +263,24 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
         // name to a Property object that wraps the setter and getter for modifying that
         // specific property for a given object. By replacing the reflection with a direct call,
         // we can largely reduce the time it takes for a animator to modify a VD property.
-        std::vector<PropertyValuesHolder*> holders = ((ObjectAnimator*) animator)->getValues();
+        std::vector<PropertyValuesHolder*>& holders = ((ObjectAnimator*) animator)->getValues();
+        // Per-animator invariants hoisted out of the holder loop (the lookups are
+        // side-effect free; AOSP repeats them only because Java has no shared_ptr
+        // atomic tax to save).
+        void* targetNameObj = vectorDrawable->getTargetByName(targetName);
+        void* vectorState = vectorDrawable->getConstantState().get();
+        if (targetNameObj == nullptr) {
+            return;
+        }
         for (int i = 0; i < holders.size(); i++) {
             PropertyValuesHolder* pvh = holders[i];
-            const std::string propertyName = pvh->getPropertyName();
-            void* targetNameObj = vectorDrawable->getTargetByName(targetName);
+            const std::string& propertyName = pvh->getPropertyName();
             const Property* property = nullptr;
             /* AOSP: the two instanceof branches both fail for a null target —
                property stays null and the holder is skipped. The pointer
                comparisons here let null fall into the VObject branch and
                crashed on nullptr->getProperty(). */
-            if (targetNameObj == nullptr) {
-                continue;
-            }
-            if (targetNameObj==vectorDrawable->getConstantState().get()){
+            if (targetNameObj == vectorState){
                 property = ((VectorDrawable::VectorDrawableState*) targetNameObj)->getProperty(propertyName);
             }else {
                 property = ((VectorDrawable::VObject*) targetNameObj)->getProperty(propertyName);
@@ -370,29 +361,31 @@ void AnimatedVectorDrawable::applyTheme(const Resources::Theme& t) {
     }
 
     mAnimatedVectorState->inflatePendingAnimators(&t.getResources(), &t);
+    // If we don't have any pending animations, we don't need to hold a
+    // reference to the resources (AOSP java:688-689).
+    if (mAnimatedVectorState->mPendingAnims.empty()) {
+        mRes = nullptr;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 //static class AnimatedVectorDrawableState:public Drawable::ConstantState
-AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState(std::shared_ptr<AnimatedVectorDrawableState> copy,Callback* owner) {
+AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState(
+        std::shared_ptr<AnimatedVectorDrawableState> copy, Drawable::Callback* owner, Resources* res) {
     mShouldIgnoreInvalidAnim = AnimatedVectorDrawable::shouldIgnoreInvalidAnimation();
     mChangingConfigurations =0;
-    mContext = nullptr;
 
     if (copy != nullptr) {
         mChangingConfigurations = copy->mChangingConfigurations;
-        // Carry the inflation context: pending animators are loaded through
-        // it at start time (prepareLocalAnimators). A state copy that dropped
-        // it inflated them with a null Context, whose loadAnimator result was
-        // null — the null then reached prepareLocalAnimator's clone() and
-        // segfaulted (gdb: animator == 0x0).
-        mContext = copy->mContext;
 
         if (copy->mVectorDrawable != nullptr) {
             auto cs = copy->mVectorDrawable->getConstantState();
-            /*if (res != nullptr) {
+            // AOSP java:724-728. ConstantState::newDrawable(Resources) currently
+            // forwards to the no-arg form; VectorDrawable's state gains the
+            // Resources-aware override in the family-wide alignment pass.
+            if (res != nullptr) {
                 mVectorDrawable = (VectorDrawable*) cs->newDrawable(res);
-            } else*/ {
+            } else {
                 mVectorDrawable = (VectorDrawable*) cs->newDrawable();
             }
             mVectorDrawable = (VectorDrawable*) mVectorDrawable->mutate();
@@ -402,23 +395,20 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState
             mVectorDrawable->setAllowCaching(false);
         }
 
-        if (!copy->mAnimators.empty()){// != null) {
+        if (!copy->mAnimators.empty()) {
             // AOSP shares the same Animator references between states (GC);
             // shared_ptr keeps that exact sharing semantics without a GC.
             mAnimators = copy->mAnimators;
         }
 
-        if (!copy->mTargetNameMap.empty()){// != null) {
-            mTargetNameMap = copy->mTargetNameMap;//new ArrayMap<>(copy->mTargetNameMap);
+        if (!copy->mTargetNameMap.empty()) {
+            mTargetNameMap = copy->mTargetNameMap;
         }
 
-        if (!copy->mPendingAnims.empty()){// != null) {
-            // Deep copy: entries are owned raw pointers (deleted in the dtor
-            // and at consumption) — the old INVERTED condition never copied
-            // them and a shallow copy would have double-freed.
-            for (auto pending : copy->mPendingAnims) {
-                mPendingAnims.push_back(new PendingAnimator(*pending));
-            }
+        if (!copy->mPendingAnims.empty()) {
+            // AOSP copies the pending list (new ArrayList<>(aState.mPendingAnims));
+            // value semantics copies the entries.
+            mPendingAnims = copy->mPendingAnims;
         }
     } else {
         mVectorDrawable = new VectorDrawable();
@@ -430,18 +420,21 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::~AnimatedVectorDrawableStat
     // the last reference frees them - the pre-fix raw-vector version leaked
     // them (valgrind: AnimatorInflater records, ~50KB with the animator-set
     // node graphs per drawable recreation).
-    for (auto pending : mPendingAnims) delete pending;
-    mPendingAnims.clear();
     delete  mVectorDrawable;
 }
 
 bool AnimatedVectorDrawable::AnimatedVectorDrawableState::canApplyTheme() {
     return (mVectorDrawable != nullptr && mVectorDrawable->canApplyTheme())
-            || mPendingAnims.size() ;//|| Drawable::canApplyTheme();
+            || mPendingAnims.size();
 }
 
 Drawable* AnimatedVectorDrawable::AnimatedVectorDrawableState::newDrawable() {
-    return new AnimatedVectorDrawable(shared_from_this());//, nullptr);
+    return new AnimatedVectorDrawable(shared_from_this());
+}
+
+// AOSP java:764: newDrawable(Resources).
+Drawable* AnimatedVectorDrawable::AnimatedVectorDrawableState::newDrawable(Resources* res) {
+    return new AnimatedVectorDrawable(shared_from_this(), res);
 }
 
 int AnimatedVectorDrawable::AnimatedVectorDrawableState::getChangingConfigurations() const{
@@ -449,17 +442,10 @@ int AnimatedVectorDrawable::AnimatedVectorDrawableState::getChangingConfiguratio
 }
 
 void AnimatedVectorDrawable::AnimatedVectorDrawableState::addPendingAnimator(int resId, float pathErrorScale, const std::string& target) {
-    /*if (mPendingAnims == null) {
-        mPendingAnims = new ArrayList<>(1);
-    }*/
-    mPendingAnims.push_back(new PendingAnimator(resId, pathErrorScale, target));
+    mPendingAnims.push_back(PendingAnimator(resId, pathErrorScale, target));
 }
 
 void AnimatedVectorDrawable::AnimatedVectorDrawableState::addTargetAnimator(const std::string& targetName, Animator* animator) {
-    /*if (mAnimators == null) {
-        mAnimators = new ArrayList<>(1);
-        mTargetNameMap = new ArrayMap<>(1);
-    }*/
     mAnimators.push_back(std::shared_ptr<Animator>(animator));   // adopts the raw inflate result
     mTargetNameMap.emplace(animator, targetName);
 
@@ -478,22 +464,24 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::addTargetAnimator(cons
  * @param res the resources against which to inflate any pending
  *            animators, or {@code null} if not available
  */
-void AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnimators(AnimatorSet* animatorSet) {
+void AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnimators(
+        AnimatorSet* animatorSet, Resources* res) {
     // Check for uninflated animators. We can remove this after we add
     // support for Animator.applyTheme(). See comments in inflate().
-    if (!mPendingAnims.empty()){// != nullptr) {
-        // Attempt to load animators without applying a theme.
-        if (true/*res != null*/) {
-            inflatePendingAnimators(nullptr, nullptr);
+    if (!mPendingAnims.empty()) {
+        // AOSP (java:805-818): "Attempt to load animators without applying a
+        // theme" when the resource handle is available (the theme argument is
+        // null, exactly like AOSP's call). CDROID's animator loads go through
+        // the state's Context, so res is the availability check only.
+        if (res != nullptr) {
+            inflatePendingAnimators(res, nullptr);
         } else {
             LOGE("Failed to load animators. Either the AnimatedVectorDrawable must be created using "
                 "a Resources object or applyTheme() must be called with a non-null Theme object.");
         }
 
-        // The entries are owned (AOSP drops them for GC); free on consumption
-        // — clear() alone leaked them.
-        for (auto pending : mPendingAnims) delete pending;
-        mPendingAnims.clear();// = null;
+        // The entries are values — clear() destroys them (AOSP drops them for GC).
+        mPendingAnims.clear();
     }
 
     // Perform a deep copy of the constant state's animators.
@@ -542,11 +530,11 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
     if (!mShouldIgnoreInvalidAnim) {
         if (target == nullptr) {
             LOGE("Target with the name %s cannot be found in the VectorDrawable to be animated.",targetName.c_str());
-        } else if ((target!= mVectorDrawable->getConstantState().get())&&false){
-            /*((dynamic_cast<VectorDrawable::VectorDrawableState*>(target))
-              && !(dynamic_cast<VectorDrawable::VObject*>(target)))*/
-            LOGE("Target should be either VGroup, VPath or ConstantState, is not supported");
         }
+        // AOSP also validates instanceof(VGroup|VPath|ConstantState) here
+        // (java:849); getTargetByName's void* values cannot express that test
+        // until mVGTargetsMap is typed (porting backlog) — updateAnimatorProperty
+        // covers the working identity check against the state pointer.
     }
     localAnimator->setTarget(target);
     return localAnimator;
@@ -558,30 +546,27 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
  *
  * @param t the theme against which to inflate the animators
  */
-// AOSP inflatePendingAnimators(Resources res, Theme t): the animators load
-// through CDROID's PendingAnimator::newInstance(Context) — the res/theme
-// parameters are kept for the AOSP call shape (nullable, like the
-// "without applying a theme" call in prepareLocalAnimators).
+// AOSP inflatePendingAnimators(Resources res, Theme t): the Resources drives
+// the animator loads (CDROID's AnimatorInflater takes a Context — reached
+// from res via getContext()).
 void AnimatedVectorDrawable::AnimatedVectorDrawableState::inflatePendingAnimators(Resources* res,const Resources::Theme* t) {
-    (void)res;   // animators load through the Context; only the theme is used
-    std::vector<PendingAnimator*> pendingAnims = mPendingAnims;
-    if (!pendingAnims.empty()){// != null) {
-        mPendingAnims.clear();
-
+    // AOSP takes the list, nulls the member and iterates; the move makes the
+    // snapshot free and the clear implicit (entries are values now — consumed
+    // entries die with this local vector, Java's GC role).
+    std::vector<PendingAnimator> pendingAnims = std::move(mPendingAnims);
+    if (!pendingAnims.empty()) {
         for (int i = 0, count = pendingAnims.size(); i < count; i++) {
-            PendingAnimator* pendingAnimator = pendingAnims.at(i);
-            Animator* animator = pendingAnimator->newInstance(mContext, t);
+            PendingAnimator& pendingAnimator = pendingAnims.at(i);
+            Animator* animator = pendingAnimator.newInstance(res, t);
             if (animator == nullptr) {
                 // A null Context (or a failed load) must not seed mAnimators
                 // with null — prepareLocalAnimator would deref it.
                 LOGE("Failed to load pending animator res=0x%x for target %s",
-                     pendingAnimator->animResId, pendingAnimator->target.c_str());
-                delete pendingAnimator;   // consumed: ours to free (Java GC)
+                     pendingAnimator.animResId, pendingAnimator.target.c_str());
                 continue;
             }
-            updateAnimatorProperty(animator, pendingAnimator->target, mVectorDrawable,mShouldIgnoreInvalidAnim);
-            addTargetAnimator(pendingAnimator->target, animator);
-            delete pendingAnimator;       // consumed: ours to free (Java GC)
+            updateAnimatorProperty(animator, pendingAnimator.target, mVectorDrawable,mShouldIgnoreInvalidAnim);
+            addTargetAnimator(pendingAnimator.target, animator);
         }
     }
 };
@@ -597,8 +582,11 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator::PendingAni
     this->target = target;
 }
 
-Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator::newInstance(Context*ctx,const Resources::Theme* theme) {
-    return AnimatorInflater::loadAnimator(ctx,theme,animResId, pathErrorScale);
+// AOSP java:895: newInstance(Resources res, Theme theme) — a null res (no
+// caller-side handle) must not seed mAnimators; the caller logs the failed load.
+Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator::newInstance(Resources* res,const Resources::Theme* theme) {
+    if (res == nullptr) return nullptr;
+    return AnimatorInflater::loadAnimator(res->getContext(),theme,animResId, pathErrorScale);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -608,12 +596,6 @@ bool AnimatedVectorDrawable::isRunning() {
 }
 void AnimatedVectorDrawable::reset() {
     ensureAnimatorSet();
-    /*if (DBG_ANIMATION_VECTOR_DRAWABLE) {
-        LOGW("calling reset on AVD: " +
-                ((VectorDrawable.VectorDrawableState) ((AnimatedVectorDrawableState)
-                getConstantState()).mVectorDrawable.getConstantState()).mRootName
-                + ", at: " + this);
-    }*/
     mAnimatorSet->reset();
 }
 
@@ -631,19 +613,14 @@ void AnimatedVectorDrawable::ensureAnimatorSet() {
         // TODO: Skip the AnimatorSet creation and init the VectorDrawableAnimator directly
         // with a list of LocalAnimators.
         mAnimatorSetFromXml = new AnimatorSet();
-        mAnimatedVectorState->prepareLocalAnimators(mAnimatorSetFromXml/*,mRes*/);
+        mAnimatedVectorState->prepareLocalAnimators(mAnimatorSetFromXml, mRes);
         mAnimatorSet->init(mAnimatorSetFromXml);
-        //mRes = nullptr;
+        mPreparedState = mAnimatedVectorState;   // keep the bound targets reachable
+        mRes = nullptr;   // AOSP java:940
     }
 }
 
 void AnimatedVectorDrawable::stop() {
-    /*if (DBG_ANIMATION_VECTOR_DRAWABLE) {
-        LOGW(LOGTAG, "calling stop on AVD: %p at:%p"
-                ((VectorDrawableState*) ((AnimatedVectorDrawableState*)
-                        getConstantState())->mVectorDrawable->getConstantState())
-                        ->mRootName.c_str(), this);
-    }*/
     mAnimatorSet->end();
 }
 
@@ -669,28 +646,30 @@ void AnimatedVectorDrawable::registerAnimationCallback(const Animatable2::Animat
     }
 
     // Add listener accordingly.
-    /*if (mAnimationCallbacks == null) {
-        mAnimationCallbacks = new ArrayList<>();
-    }*/
-
     mAnimationCallbacks.push_back(callback);
 
-    mAnimatorListener.onAnimationStart =[this](Animator& animation,bool reverse){
-        auto tmpCallbacks = mAnimationCallbacks;
-        int size = tmpCallbacks.size();
-        for (int i = 0; i < size; i ++) {
-            tmpCallbacks.at(i).onAnimationStart(*this);
-        }
-    };
+    // AOSP (java:1011): the dispatcher listener is created and installed ONCE —
+    // re-registering must not stack additional dispatchers into the AnimatorSet
+    // (Animator::addListener is a plain push_back, so N installs mean N dispatch
+    // loops per animation event).
+    if (mAnimatorListener.onAnimationStart == nullptr && mAnimatorListener.onAnimationEnd == nullptr) {
+        mAnimatorListener.onAnimationStart =[this](Animator& animation,bool reverse){
+            auto tmpCallbacks = mAnimationCallbacks;
+            int size = tmpCallbacks.size();
+            for (int i = 0; i < size; i ++) {
+                tmpCallbacks.at(i).onAnimationStart(*this);
+            }
+        };
 
-    mAnimatorListener.onAnimationEnd=[this](Animator& animation,bool reverse) {
-        auto tmpCallbacks =mAnimationCallbacks;
-        int size = tmpCallbacks.size();
-        for (int i = 0; i < size; i ++) {
-            tmpCallbacks.at(i).onAnimationEnd(*this);
-        }
-    };
-    mAnimatorSet->setListener(mAnimatorListener);
+        mAnimatorListener.onAnimationEnd=[this](Animator& animation,bool reverse) {
+            auto tmpCallbacks =mAnimationCallbacks;
+            int size = tmpCallbacks.size();
+            for (int i = 0; i < size; i ++) {
+                tmpCallbacks.at(i).onAnimationEnd(*this);
+            }
+        };
+        mAnimatorSet->setListener(mAnimatorListener);
+    }
 }
 
 // A helper function to clean up the animator listener in the mAnimatorSet.
@@ -811,7 +790,9 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::removeListener(const Anim
             return;
         }
         auto it =std::find(mListenerArray.begin(),mListenerArray.end(),listener);
-        mListenerArray.erase(it);
+        if (it != mListenerArray.end()) {
+            mListenerArray.erase(it);
+        }
     } else {
         mSet->removeListener(listener);
     }

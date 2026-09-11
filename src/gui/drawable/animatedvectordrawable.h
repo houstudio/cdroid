@@ -20,12 +20,16 @@
 #include <drawable/vectordrawable.h>
 #include <animation/objectanimator.h>
 namespace cdroid{
-namespace hwui{
-    class PropertyValuesAnimatorSet;
-};
-class AnimatedVectorDrawable: public Drawable, public Animatable2{
+
+class AnimatedVectorDrawable: public Drawable, public Animatable2, public Drawable::Callback{
 public:
     class AnimatedVectorDrawableState;
+    // Drawable::Callback (AOSP java:981's anonymous inner class — the drawable IS
+    // its own callback; the multiple-inheritance form is the drawable module's
+    // idiom, e.g. AdaptiveIconDrawable/LayerDrawable).
+    void invalidateDrawable(Drawable& who) override;
+    void scheduleDrawable(Drawable& who, const Runnable& what, int64_t when) override;
+    void unscheduleDrawable(Drawable& who, const Runnable& what) override;
 private:
     static constexpr const char* ANIMATED_VECTOR = "animated-vector";
     static constexpr const char* TARGET = "target";
@@ -36,19 +40,19 @@ private:
     /** Local, mutable animator set. */
     VectorDrawableAnimator* mAnimatorSet;
     std::shared_ptr<AnimatedVectorDrawableState> mAnimatedVectorState;
-    // Zero-init: the ctor passes this (still null) pointer into the state copy
-    // before mCallback is assigned — an indeterminate value there is a wild
-    // pointer on the first child invalidation (AOSP's field is null at ctor).
-    Drawable::Callback* mCallback = nullptr;
     /** The animator set that is parsed from the xml. */
     AnimatorSet* mAnimatorSetFromXml = nullptr;
-    // States retired by mutate() while an animator set was already prepared.
-    // A prepared set holds raw targets into its state's vector tree; AOSP's
-    // GC keeps such a tree reachable after mutate (the running animation just
-    // detaches from the rendering tree). This is the C++ counterpart — retain
-    // the outgoing state so a post-start mutate (ImageView applyAlpha's
-    // mutate on first draw) can't free the tree under the running animators.
-    std::vector<std::shared_ptr<AnimatedVectorDrawableState>> mRetiredStates;
+    // AOSP java:316: held only while pending animators need inflating —
+    // cleared at the first ensureAnimatorSet (java:940) and by applyTheme
+    // once nothing is pending (java:689).
+    Resources* mRes = nullptr;
+    // Reachability for the prepared set's targets: ensureAnimatorSet binds
+    // raw VObject targets (setTarget) from THIS state into mAnimatorSetFromXml
+    // and the UI set's clones; AOSP's GC keeps the state reachable through the
+    // animators' own references for as long as the set lives — this shared_ptr
+    // is that reachability. States created by a later mutate() are never
+    // prepared (the guard builds the set once) and need no retention.
+    std::shared_ptr<AnimatedVectorDrawableState> mPreparedState;
 
     bool mMutated;
 
@@ -66,7 +70,7 @@ protected:
     bool onLevelChange(int level)override;
 public:
     AnimatedVectorDrawable();
-    AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDrawableState> state);
+    AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDrawableState> state, Resources* res = nullptr);
     ~AnimatedVectorDrawable()override;
     AnimatedVectorDrawable*mutate()override;
     void clearMutated()override;
@@ -115,17 +119,16 @@ private:
         float pathErrorScale;
         std::string target;
         PendingAnimator(int animResId, float pathErrorScale, const std::string& target);
-        // AOSP PendingAnimator.newInstance(Resources res, Theme theme): the
-        // caller's theme drives the animator's attribute reads (CDROID opens
-        // the XML through the Context, so the Resources argument is dropped).
-        Animator* newInstance(Context*, const Resources::Theme* theme);
+        // AOSP PendingAnimator.newInstance(Resources res, Theme theme).
+        // CDROID's AnimatorInflater loads through a Context, reached from the
+        // Resources via getContext().
+        Animator* newInstance(Resources* res, const Resources::Theme* theme);
     };
     int mChangingConfigurations;
     bool mShouldIgnoreInvalidAnim;
-    Context*mContext;
     VectorDrawable* mVectorDrawable;
     /** Animators that require a theme before inflation. */
-    std::vector<PendingAnimator*> mPendingAnims;
+    std::vector<PendingAnimator> mPendingAnims;
     /** Fully inflated animators awaiting cloning into an AnimatorSet. */
     // Shared with every state copy (AOSP copies share the same Animator
     // references and relies on GC); shared_ptr is the no-GC equivalent.
@@ -133,14 +136,16 @@ private:
     /** Map of animators to their target object names */
     std::unordered_map<Animator*, std::string> mTargetNameMap;
 public:
-    AnimatedVectorDrawableState(std::shared_ptr<AnimatedVectorDrawableState>copy,Callback* owner);
+    AnimatedVectorDrawableState(std::shared_ptr<AnimatedVectorDrawableState>copy,
+            Drawable::Callback* owner, Resources* res = nullptr);
     ~AnimatedVectorDrawableState()override;
     bool canApplyTheme();
     Drawable*newDrawable()override;
+    Drawable*newDrawable(Resources* res)override;
     int getChangingConfigurations() const override;
     void addPendingAnimator(int resId, float pathErrorScale, const std::string& target);
     void addTargetAnimator(const std::string& targetName, Animator* animator);
-    void prepareLocalAnimators(AnimatorSet* animatorSet);
+    void prepareLocalAnimators(AnimatorSet* animatorSet, Resources* res = nullptr);
     Animator*prepareLocalAnimator(int index);
     void inflatePendingAnimators(Resources* res,const Resources::Theme* t);
 };
@@ -196,6 +201,9 @@ public:
     void resume()override;
 };
 #ifdef ENABLE_VECTOR_RENDER_THREAD
+namespace hwui {
+    class PropertyValuesAnimatorSet;
+};
 //It is now unusable in cdroid disable it 
 class AnimatedVectorDrawable::VectorDrawableAnimatorRT:public VectorDrawableAnimator {
 private:
