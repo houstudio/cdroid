@@ -483,9 +483,12 @@ int main(int argc, const char* argv[]) {
     app.setTheme(themeId);
     auto* w = new SettingsActivity();
     // Optional argv[1]: start directly at a nested screen (smoke-testing) —
-    // but skip framework options (--auto-test etc.): App owns those.
+    // but skip framework options (--auto-test etc.): App owns those. Their
+    // VALUES too: "-f 3000" leaves a bare "3000" in argv, which the old
+    // '-'-prefix check took as a root key and aborted the first inflation
+    // (screenXmlFor -> 0 -> empty parser -> "No start tag found").
     for (int i = 1; i < argc; i++) {
-        if (argv[i][0] != '-') { w->setLaunchRoot(argv[i]); break; }
+        if (argv[i][0] != '-' && screenXmlFor(argv[i]) != 0) { w->setLaunchRoot(argv[i]); break; }
     }
     LOGD("settings demo window created");
     return app.exec();
