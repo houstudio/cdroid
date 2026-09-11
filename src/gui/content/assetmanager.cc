@@ -3,8 +3,11 @@
 // Provide access to read-only assets. Logic translated verbatim from the AOSP
 // legacy AssetManager file half; the table half is AssetManager2 (see header);
 // adaptations (all internal) called out inline:
-//   - SharedZip/ZipSet  -> a per-path libzip (zip_t*) handle cache (getZipFile).
-//   - ZipFileRO         -> libzip (zip_open/zip_name_locate/zip_fopen_index/...).
+//   - SharedZip/ZipSet/ZipFileRO -> RETIRED with the AM2 switch: the file half
+//     delegates to each path's ApkAssets AssetsProvider (the engine's
+//     ZeroCopyZip) — STORED entries hand out a zero-copy mmap window,
+//     DEFLATED an owned inflate buffer (the android-36 open → AM2::Open →
+//     AssetsProvider layering).
 //   - idmap/RRO/overlay   -> trimmed (stubs return false).
 //   - Mutex/AutoMutex     -> dropped (single-threaded UI resource access).
 
@@ -15,14 +18,12 @@
 #include <text/textutils.h>                    // utf16_utf8 (getResourceName)
 
 #include <porting/cdlog.h>
-#include <zip.h>
 
 #include <algorithm>
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <memory>
-#include <unordered_map>
 #include <set>
 #include <stdlib.h>
 #include <string.h>
@@ -126,6 +127,7 @@ bool AssetManager::addAssetPath(const std::string& path, int32_t* cookie,
         std::unique_ptr<ApkAssets> loaded = ApkAssets::Load(ap.path, flags);
         if (loaded != nullptr) {
             mApkAssets.push_back(std::move(loaded));
+            mAssetPaths.back().apkAssets = mApkAssets.back().get();   // borrow (replaces AOSP asset_path::zip)
             mApkAssetsPending = true;
         } else {
             LOGW("addAssetPath: ApkAssets::Load(%s) failed (no table from this path)",
@@ -348,7 +350,9 @@ std::vector<std::string> AssetManager::getSystemLocales() const
 
 bool AssetManager::isUpToDate() {
     for (const auto& ap : mAssetPaths) {
-        if (ap.type == ::kFileTypeRegular && getFileModDate(ap.path.c_str()) != ap.modWhen) {
+        if (ap.type != ::kFileTypeRegular) continue;
+        // The provider tracks its pak's mtime (AOSP ApkAssets::IsUpToDate).
+        if (ap.apkAssets == nullptr || !ap.apkAssets->IsUpToDate()) {
             return false;
         }
     }
@@ -377,14 +381,14 @@ Asset* AssetManager::openNonAssetInPath(const char* fileName, AccessMode mode, a
         return pAsset;
     }
 
-    // Look inside the zip archive.
-    zip_t* zip = getZipFile(ap);
-    if (zip == nullptr) return nullptr;
+    // Look inside the zip archive — through this path's ApkAssets provider
+    // (the engine's own zip backend; the android-36 open → AM2::Open →
+    // AssetsProvider layering).
+    if (ap.apkAssets == nullptr) return nullptr;
+    const AssetsProvider* provider = ap.apkAssets->GetAssetsProvider();
 
-    // ZIP_FL_ENC_RAW: skip libzip's per-call _zip_string_new encoding
-    // guess (1-2 hidden mallocs) — pak entry names are aapt2/pakbuilder ASCII.
-    zip_int64_t entry = zip_name_locate(zip, fileName, ZIP_FL_ENC_RAW);
-    if (entry < 0) {
+    std::unique_ptr<Asset> pAsset = provider->Open(fileName, mode);
+    if (pAsset == nullptr) {
         // Unified res mode: pak entries carry the apk's "res/" prefix (older
         // paks don't) and AssetManager callers spell either form — probe the
         // path-candidate variants instead of failing the exact lookup, the
@@ -393,18 +397,15 @@ Asset* AssetManager::openNonAssetInPath(const char* fileName, AccessMode mode, a
         pakPathCandidates(fileName, cands);
         for (const std::string& c : cands) {
             if (c == fileName) continue;
-            entry = zip_name_locate(zip, c.c_str(), ZIP_FL_ENC_RAW);
-            if (entry >= 0) break;
+            pAsset = provider->Open(c, mode);
+            if (pAsset != nullptr) break;
         }
-        if (entry < 0) return nullptr;
+        if (pAsset == nullptr) return nullptr;
     }
 
     LOGV("FOUND NA in Zip file for %s", fileName);
-    Asset* pAsset = openAssetFromZip(zip, entry, mode, std::string(fileName));
-    if (pAsset != nullptr) {
-        pAsset->setAssetSource(createZipSourceName(ap.path, std::string(), std::string(fileName)));
-    }
-    return pAsset;
+    pAsset->setAssetSource(createZipSourceName(ap.path, std::string(), std::string(fileName)));
+    return pAsset.release();
 }
 
 std::string AssetManager::createZipSourceName(const std::string& zipFileName,
@@ -424,42 +425,6 @@ std::string AssetManager::createPathName(const asset_path& ap, const char* rootD
     return path;
 }
 
-// Get (lazily opening) the libzip handle for an asset path. AOSP caches these
-// in SharedZip's global per-path map (gOpen) with shared ownership; the same
-// shape here — a process-lifetime cache keyed by path — replaces the old
-// mutable handle stored inside asset_path, which dangled after mAssetPaths
-// vector growth (growth copies elements; the dying copy zip_closed the handle
-// the surviving copy still pointed at). Open failures are cached too, the
-// role zipTried used to play.
-namespace {
-struct SharedZip {
-    zip_t* zip = nullptr;
-    ~SharedZip() { if (zip != nullptr) zip_close(zip); }
-};
-std::unordered_map<std::string, std::shared_ptr<SharedZip>>& sharedZips() {
-    static std::unordered_map<std::string, std::shared_ptr<SharedZip>> cache;
-    return cache;
-}
-} // namespace
-
-struct zip* AssetManager::getZipFile(const asset_path& ap) {
-    auto& cache = sharedZips();
-    const auto it = cache.find(ap.path);
-    if (it != cache.end()) return it->second->zip;
-
-    int err = 0;
-    zip_t* z = zip_open(ap.path.c_str(), ZIP_RDONLY, &err);
-    if (z == nullptr) {
-        LOGW("Failed opening zip %s (libzip err=%d)", ap.path.c_str(), err);
-        cache.emplace(ap.path, std::make_shared<SharedZip>());   // negative cache
-        return nullptr;
-    }
-    const auto shared = std::make_shared<SharedZip>();
-    shared->zip = z;
-    cache.emplace(ap.path, shared);
-    return z;
-}
-
 Asset* AssetManager::openAssetFromFile(const std::string& pathName, AccessMode mode) {
     // .gz suffix -> gzip-compressed; otherwise a plain file.
     if (pathName.size() >= 3 &&
@@ -467,52 +432,6 @@ Asset* AssetManager::openAssetFromFile(const std::string& pathName, AccessMode m
         return Asset::createFromCompressedFile(pathName.c_str(), mode);
     }
     return Asset::createFromFile(pathName.c_str(), mode);
-}
-
-// Read a zip entry into memory (libzip decompresses deflated entries) and wrap
-// it as an uncompressed-buffer-backed _FileAsset. Faithful to AOSP
-// openAssetFromZipLocked's observable result; IncFsFileMap replaced by a heap
-// buffer (CDROID has no IncFs).
-Asset* AssetManager::openAssetFromZip(struct zip* zip, int64_t entry, AccessMode mode,
-                                      const std::string& entryName) {
-    zip_stat_t st;
-    zip_stat_init(&st);
-    if (zip_stat_index(zip, (zip_int64_t)entry, 0, &st) != 0 || !(st.valid & ZIP_STAT_SIZE)) {
-        LOGW("getEntryInfo failed");
-        return nullptr;
-    }
-    const size_t uncompressedLen = (size_t)st.size;
-
-    zip_file_t* zf = zip_fopen_index(zip, (zip_uint64_t)entry, 0);
-    if (zf == nullptr) {
-        LOGW("zip_fopen_index failed");
-        return nullptr;
-    }
-
-    unsigned char* buf = new (std::nothrow) unsigned char[uncompressedLen ? uncompressedLen : 1];
-    if (buf == nullptr) {
-        zip_fclose(zf);
-        return nullptr;
-    }
-    size_t got = 0;
-    while (got < uncompressedLen) {
-        ssize_t n = zip_fread(zf, buf + got, uncompressedLen - got);
-        if (n <= 0) break;
-        got += (size_t)n;
-    }
-    zip_fclose(zf);
-    if (got != uncompressedLen) {
-        LOGW("short read of zip entry %s", entryName.c_str());
-        delete[] buf;
-        return nullptr;
-    }
-
-    std::unique_ptr<Asset> pAsset = Asset::createFromUncompressedBuffer(buf, uncompressedLen, mode, true);
-    if (pAsset == nullptr) {
-        delete[] buf;   // createFromUncompressedBuffer only fails on bad args; be safe
-        return nullptr;
-    }
-    return pAsset.release();
 }
 
 // ===========================================================================
@@ -613,10 +532,12 @@ bool AssetManager::scanDirInto(const std::string& path, std::vector<AssetDir::Fi
 // Scan a zip archive's entries under baseDirName (rootDir prefix), inferring
 // subdirectories from path context. Faithful to AOSP scanAndMergeZipLocked;
 // libzip iteration replaces ZipFileRO::startIteration/nextEntry.
+// Faithful to AOSP scanAndMergeZipLocked's observable result; libzip
+// iteration replaced by the provider's ForEachFile (which reports files and
+// subdirectories under the prefix in one pass).
 bool AssetManager::scanAndMergeZip(std::vector<AssetDir::FileInfo>* merged,
                                    const asset_path& ap, const char* rootDir, const char* baseDirName) {
-    zip_t* zip = getZipFile(ap);
-    if (zip == nullptr) {
+    if (ap.apkAssets == nullptr) {
         LOGW("Failure opening zip %s", ap.path.c_str());
         return false;
     }
@@ -627,46 +548,26 @@ bool AssetManager::scanAndMergeZip(std::vector<AssetDir::FileInfo>* merged,
         if (!dirName.empty()) dirName += "/";
         dirName += baseDirName;
     }
-    const size_t dirNameLen = dirName.size();
-
-    std::vector<AssetDir::FileInfo> contents;
-    std::vector<std::string> dirs;
     const std::string zipName = ap.path;
 
-    const zip_int64_t num = zip_get_num_entries(zip, 0);
-    for (zip_int64_t i = 0; i < num; i++) {
-        const char* nameC = zip_get_name(zip, i, ZIP_FL_ENC_GUESS);
-        if (nameC == nullptr) continue;
-        std::string nameBuf(nameC);
-
-        if (dirNameLen == 0 || (nameBuf.size() > dirNameLen && nameBuf[dirNameLen] == '/')) {
-            size_t cp = dirNameLen;
-            if (dirNameLen != 0) cp++;   // advance past the '/'
-
-            // First '/' after the prefix marks a subdirectory; no '/' => a file.
-            std::string rest = (cp < nameBuf.size()) ? nameBuf.substr(cp) : std::string();
-            size_t slash = rest.find('/');
-            if (slash == std::string::npos) {
-                AssetDir::FileInfo info;
-                info.set(rest, ::kFileTypeRegular);
-                info.setSourceName(createZipSourceName(zipName, dirName, rest));
-                contents.push_back(info);
-            } else {
-                std::string subdirName = rest.substr(0, slash);
-                bool have = false;
-                for (const auto& d : dirs) { if (d == subdirName) { have = true; break; } }
-                if (!have) dirs.push_back(subdirName);
+    std::vector<AssetDir::FileInfo> contents;
+    const bool ok = ap.apkAssets->GetAssetsProvider()->ForEachFile(dirName,
+        [&](const std::string& name, ::FileType type) {
+            std::string clean = name;
+            if (clean.size() >= 3 &&
+                strcasecmp(clean.c_str() + clean.size() - 3, ".gz") == 0) {
+                clean.erase(clean.size() - 3);
             }
-        }
-    }
+            AssetDir::FileInfo info;
+            info.set(clean, type);
+            info.setSourceName(createZipSourceName(zipName, dirName, clean));
+            contents.push_back(info);
+        });
+    if (!ok) return false;
 
-    for (const auto& d : dirs) {
-        AssetDir::FileInfo info;
-        info.set(d, ::kFileTypeDirectory);
-        info.setSourceName(createZipSourceName(zipName, dirName, d));
-        contents.push_back(info);
-    }
-
+    // mergeInfo merges two sorted runs; ForEachFile order is stable but not
+    // sorted, so sort first (the old libzip walk happened to be zip order).
+    std::sort(contents.begin(), contents.end());
     mergeInfo(merged, &contents);
     return true;
 }

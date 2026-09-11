@@ -6,10 +6,10 @@
 // commits it atomically via nativeSetApkAssets). Public class & method
 // signatures match AOSP (String8 -> std::string, Vector -> std::vector).
 // Internal adaptations, all under "内部隐藏类可适当裁剪":
-//   - SharedZip / ZipSet (framework shared-table cache + RefBase/sp/wp) replaced
-//     by a per-path libzip handle cache for the FILE half. The table half reads
-//     through ApkAssets' AssetsProvider (mmap'd, STORED zero-copy).
-//   - ZipFileRO (libziparchive) -> libzip (zip_t), used only inside assetmanager.cc.
+//   - SharedZip / ZipSet / ZipFileRO retired with the AM2 switch: the FILE
+//     half delegates to each path's ApkAssets AssetsProvider (the engine's
+//     ZeroCopyZip — STORED zero-copy mmap windows, DEFLATED owned buffers),
+//     the android-36 open → AM2::Open → AssetsProvider layering.
 //   - idmap / runtime-resource-overlay machinery stubbed (no RRO in CDROID).
 //   - Mutex/AutoMutex dropped (single-threaded UI resource access).
 //
@@ -35,11 +35,6 @@
 
 // Native-app access is via the opaque AAssetManager (C namespace). Matches AOSP.
 struct AAssetManager { };
-
-// libzip archive forward declaration. MUST be at global scope: <zip.h> (included
-// only in assetmanager.cc) defines `typedef struct zip zip_t;` at global scope,
-// so `struct zip*` here must refer to ::zip, not android::zip.
-struct zip;
 
 namespace cdroid {
 
@@ -149,6 +144,9 @@ private:
         bool         isSystemAsset = false;
         bool         assumeOwnership = false;
         time_t modWhen = 0;                  // mtime at addAssetPath time (isUpToDate)
+        // Replaces AOSP asset_path::zip (sp<SharedZip>): this path's ApkAssets
+        // (borrowed — mApkAssets owns) whose AssetsProvider serves the file half.
+        ApkAssets*   apkAssets = nullptr;
     };
 
     Asset* openNonAssetInPath(const char* fileName, AccessMode mode, asset_path& ap);
@@ -156,12 +154,7 @@ private:
     std::string createZipSourceName(const std::string& zipFileName,
                                     const std::string& dirName, const std::string& fileName);
 
-    // libzip handle cache (replaces AOSP ZipSet/SharedZip). Caches into the
-    // mutable per-path handle, so it takes a const asset_path&.
-    struct zip* getZipFile(const asset_path& ap);
     Asset* openAssetFromFile(const std::string& pathName, AccessMode mode);
-    Asset* openAssetFromZip(struct zip* zip, int64_t entry, AccessMode mode,
-                            const std::string& entryName);
 
     void updateResourceParams() const;
     // AOSP Java collects the apkAssets list and commits it ONCE
