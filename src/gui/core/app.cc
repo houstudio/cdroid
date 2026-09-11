@@ -881,26 +881,6 @@ AssetManager2* App::arscEngine() const {
     return mAssetManager ? &mAssetManager->getAssetManager2() : nullptr;
 }
 
-// Resolve a resource ID through the loaded arsc.
-bool App::arscResolveId(uint32_t resId, TypedValue* out) const {
-    AssetManager2* am2 = arscEngine();
-    if (!am2 || resId == 0 || resId == 0xFFFFFFFF) return false;
-    auto value = am2->GetResource(resId);
-    if (!value.has_value()) return false;
-    *out = tvOf(value->type, value->data);
-    return true;
-}
-
-// Get a string from the arsc string pool by resource ID.
-const char16_t* App::arscStringAt(uint32_t resId, size_t* outLen) const {
-    AssetManager2* am2 = arscEngine();
-    if (!am2 || resId == 0) return nullptr;
-    auto value = am2->GetResource(resId);
-    if (!value.has_value() || value->type != Res_value::TYPE_STRING) return nullptr;
-    const ResStringPool* pool = am2->GetStringPoolForCookie(value->cookie);
-    return pool ? pool->stringAt(value->data, outLen) : nullptr;
-}
-
 // Render a resource ID as "@type/key" (text-XML reference form) so binary-AXML
 // references flow through the same resolution paths as text XML. Returns "" if
 // the arsc can't name the resource (caller falls back to "@0x..").
@@ -939,27 +919,6 @@ bool App::arscThemeAttribute(uint32_t attrId, TypedValue* out, ssize_t* outBlock
     if (outBlock) *outBlock = value->cookie;
     return true;
 }
-
-// Try to resolve a "@0xPPtteeee" hex resource ID string through the arsc.
-bool App::arscResolveHexRef(const std::string& s, TypedValue* out) const {
-    AssetManager2* am2 = arscEngine();
-    if (!am2 || s.empty()) return false;
-    // Accept "@0x...", "0x...", or a bare hex tail after the last '@'.
-    size_t at = s.rfind('@');
-    std::string hex = (at != std::string::npos) ? s.substr(at + 1) : s;
-    if (hex.compare(0, 2, "0x") != 0 && hex.compare(0, 2, "0X") != 0) return false;
-    char* end = nullptr;
-    errno = 0;
-    unsigned long id = strtoul(hex.c_str() + 2, &end, 16);
-    if (errno || end == hex.c_str() + 2 || id == 0 || id == 0xFFFFFFFF) return false;
-    auto value = am2->GetResource((uint32_t)id);
-    if (!value.has_value()) return false;
-    *out = tvOf(value->type, value->data);
-    return true;
-}
-
-
-// complexToFloat is provided inline by <androidfw/resourcetypes.h>.
 
 
 void App::destroyResourceState(){

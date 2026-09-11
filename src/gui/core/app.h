@@ -101,8 +101,6 @@ private:
     std::vector<char> mI18nData;
     // The pak registry (mResources) and the arsc theme engine (mArscTheme)
     // live on Context (the ContextImpl role); App inherits them.
-    bool arscResolveHexRef(const std::string& s, TypedValue* out) const;
-    void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
     // Rebuild the live arsc theme for `resid` (setTheme's engine side).
     void applyTheme(int resid);
     // Release the resource stack (called from ~App after the UI is down).
@@ -190,10 +188,6 @@ public:
     // --- Context implementation (the ContextImpl face) ---------------------
     // The AM2 table behind this App's AssetManager (ContextImpl::arscEngine).
     AssetManager2* arscEngine() const override;
-    // Binary-AXML bridge (transitional): resolve a resource ID / fetch a string
-    // from the loaded arsc so the parsers can render typed attribute values.
-    bool arscResolveId(uint32_t resId, TypedValue* out) const;
-    const char16_t* arscStringAt(uint32_t resId, size_t* outLen) const;
     // Render a resource ID as an "@type/key" reference string (e.g.
     // "@drawable/bg", "@string/hello") matching text-XML form, so CDROID's
     // existing string-based resolvers consume binary-AXML references unchanged.
@@ -219,8 +213,11 @@ public:
     using Context::obtainStyledAttributes;
     // AOSP Context.obtainStyledAttributes(AttributeSet, int[], defStyleAttr, defStyleRes).
     // `attrs` is nullable (AOSP new View(ctx, null, defStyleAttr)); `styleable` is a
-    // sentinel-terminated attr-id array (internal::R::styleable::X). Overrides Context's pure
-    // virtual with arsc resolution (element > style= > defStyleAttr > defStyleRes).
+    // sentinel-terminated attr-id array (internal::R::styleable::X). AOSP's method is
+    // FINAL and routes through getResources() — this override is that route (the
+    // arsc resolver lives in Resources::obtainStyledAttributes). The Context base
+    // default routes through getTheme() instead; both land on the same theme
+    // engine for App-level callers.
     std::unique_ptr<TypedArray> obtainStyledAttributes(
         const AttributeSet* attrs, const uint32_t* styleable,
         int32_t defStyleAttr = 0, int32_t defStyleRes = 0) override;
