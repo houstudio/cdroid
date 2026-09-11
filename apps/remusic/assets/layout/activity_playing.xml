@@ -173,19 +173,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/headerView"
-            android:layout_marginLeft="70dp"
-            android:layout_marginRight="70dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
             android:orientation="horizontal">
 
-            <!-- Explicit sizes: the icon PNGs come from the original app's
-                 mixed density buckets and cdroid does no density scaling,
-                 so wrap_content renders each at its own raw pixel size (a
-                 36-56px patchwork in one row). Pin everything to one grid:
-                 tools 48dp, transport 64dp, play 96dp (1.5x). -->
+            <!-- Explicit frame sizes inside the 360dp design column. The icon
+                 PNGs are xxhdpi assets (180px = 60dp design size — exactly
+                 what the original showed on a 360dp-wide phone), so the tool
+                 row pins 60dp; wrap_content would now also resolve to the
+                 density-scaled intrinsic, but explicit frames keep the grid
+                 independent of each PNG's bucket. -->
             <ImageView
                 android:id="@+id/playing_fav"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:scaleType="fitCenter"
@@ -193,8 +194,8 @@
 
             <ImageView
                 android:id="@+id/playing_down"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:scaleType="fitCenter"
@@ -202,8 +203,8 @@
 
             <ImageView
                 android:id="@+id/playing_cmt"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:scaleType="fitCenter"
@@ -211,8 +212,8 @@
 
             <ImageView
                 android:id="@+id/playing_more"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:scaleType="fitCenter"
