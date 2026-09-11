@@ -14,6 +14,7 @@
 #include <view/viewgroup.h>
 #include <view/viewgroupoverlay.h>
 #include <widget/cdwindow.h>
+#include <widget/imageview.h>
 
 namespace cdroid {
 
@@ -21,27 +22,6 @@ namespace {
 
 // AOSP's default shared-element duration (a Transition with no explicit duration).
 constexpr int64_t FLIGHT_DURATION_MS = 300;
-
-// The ghost: draws the captured snapshot stretched to this view's frame. AOSP renders the
-// pixels from a Bitmap in an overlay slot; stretching (not aspect-preserving) matches the
-// ChangeBounds+ChangeTransform snapshot morph.
-class SnapshotView : public View {
-public:
-    SnapshotView(Context* ctx, const Cairo::RefPtr<Cairo::ImageSurface>& snapshot)
-        : View(ctx), mSnapshot(snapshot) {}
-protected:
-    void onDraw(Canvas& canvas) override {
-        if (!mSnapshot || getWidth() <= 0 || getHeight() <= 0) return;
-        const double sw = mSnapshot->get_width(), sh = mSnapshot->get_height();
-        canvas.save();
-        canvas.scale(getWidth() / sw, getHeight() / sh);
-        canvas.set_source(mSnapshot, 0, 0);
-        canvas.paint();
-        canvas.restore();
-    }
-private:
-    Cairo::RefPtr<Cairo::ImageSurface> mSnapshot;
-};
 
 // AOSP ActivityTransitionCoordinator.createSnapshots: capture a view's pixels at its
 // current size. createViewBitmap's MAX_IMAGE_SIZE downscale applies (a giant shared
@@ -108,6 +88,23 @@ ActivityTransitionCoordinator::ActivityTransitionCoordinator(Window* host, Windo
     }
 }
 
+// Shared ghost-install tail of both flights (AOSP renders the shared element's pixels
+// from a Bitmap in an overlay slot): an ImageView stretching the captured pixels to its
+// frame — FIT_XY, not aspect-preserving, the ChangeBounds+ChangeTransform morph look —
+// placed at the start bounds, added to the flight window's overlay and registered.
+ActivityTransitionCoordinator::SceneFlight& ActivityTransitionCoordinator::addFlight(
+        Window* host, const Cairo::RefPtr<Cairo::ImageSurface>& snapshot,
+        const Rect& from, const Rect& to) {
+    ImageView* ghost = new ImageView(host->getContext());
+    ghost->setScaleType(FIT_XY);
+    ghost->setImageBitmap(snapshot);
+    // View::layout(l, t, w, h) — pass extents, not right/bottom.
+    ghost->layout(from.left, from.top, from.right() - from.left, from.bottom() - from.top);
+    host->getOverlay()->add(ghost);
+    mSceneFlights.push_back({ghost, from, to});
+    return mSceneFlights.back();
+}
+
 ActivityTransitionCoordinator::~ActivityTransitionCoordinator() {
     mTornDown = true;
     cancelAnimator();
@@ -148,11 +145,7 @@ bool ActivityTransitionCoordinator::prepareEnter() {
         // Hide the real view until landing (AOSP hides shared elements until the ghost
         // settles). Pre-draw, so the very first frame never shows it un-ghosted.
         target->setTransitionVisibility(View::INVISIBLE);
-        SnapshotView* ghost = new SnapshotView(mHost->getContext(), src.snapshot);
-        // View::layout(l, t, w, h) — pass extents, not right/bottom.
-        ghost->layout(from.left, from.top, from.right() - from.left, from.bottom() - from.top);
-        mHost->getOverlay()->add(ghost);
-        mSceneFlights.push_back({ghost, from, to});
+        addFlight(mHost, src.snapshot, from, to);
         mHiddenTargets.push_back(target);
     }
     // Each ghost holds its own RefPtr to its surface and the return flight re-captures
@@ -201,10 +194,7 @@ bool ActivityTransitionCoordinator::startReturn(const std::function<void()>& onE
         Rect to = Rect::MakeLTRB(callerLoc[0] - cl, callerLoc[1] - ct,
                                  callerLoc[0] - cl + src.view->getWidth(),
                                  callerLoc[1] - ct + src.view->getHeight());
-        SnapshotView* ghost = new SnapshotView(mCaller->getContext(), snap);
-        ghost->layout(from.left, from.top, from.right() - from.left, from.bottom() - from.top);
-        mCaller->getOverlay()->add(ghost);
-        mSceneFlights.push_back({ghost, from, to});
+        addFlight(mCaller, snap, from, to);
         // Hide the caller's real target until landing (revealed in finishFlight).
         src.view->setTransitionVisibility(View::INVISIBLE);
         src.view->invalidate();

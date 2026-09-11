@@ -18,6 +18,9 @@
 using namespace cdroid;
 
 namespace {
+// Tree search by transitionName. FragmentManager::findViewByTransitionName is the
+// same walk, but androidx keeps it package-private (the C++ port keeps it private)
+// — test-local copy.
 View* findByTransitionName(View* root, const std::string& name){
     if(!root) return nullptr;
     if(root->getTransitionName() == name) return root;

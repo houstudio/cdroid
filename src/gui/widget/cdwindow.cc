@@ -1009,6 +1009,112 @@ void Window::startActivityForResult(const Intent& intent, int requestCode, Activ
     App::getInstance().startActivityForResultInternal(this, intent, requestCode, options);
 }
 
+// =====================================================================================
+//  DecorView dressing (PhoneWindow.generateLayout's background half + DecorView's
+//  fallback draw). The transition half of generateLayout (window animations) lives in
+//  cdwindowtransitions.cc with the driver it feeds.
+// =====================================================================================
+
+// AOSP PhoneWindow.generateLayout, getContainer()==null branch:
+//     if (mBackgroundDrawable == null && a.hasValue(R.styleable.Window_windowBackground))
+//         mBackgroundDrawable = a.getDrawable(R.styleable.Window_windowBackground);
+//     if (a.hasValue(R.styleable.Window_windowBackgroundFallback))
+//         mBackgroundFallbackDrawable = a.getDrawable(R.styleable.Window_windowBackgroundFallback);
+//     ...
+//     mDecor.setWindowBackground(mBackgroundDrawable);          // -> DecorView.setBackground
+//     if (mDecor.getBackground() == null && mBackgroundFallbackDrawable != null)
+//         mDecor.setBackgroundFallback(mBackgroundFallbackDrawable);
+// The Window IS the fused decor, so the resolved background goes straight to
+// setBackground (View ownership; PhoneWindow's mBackgroundDrawable alias is dropped —
+// a later app setBackground would free what it points at). The hand-built attr array
+// stands in for the generated Window styleable (the trailing 0 is the sentinel
+// obtainStyledAttributes scans to); TypedArray::getDrawable is the full AOSP decode
+// (references, inline colors, file paths).
+void Window::loadThemeWindowBackground() {
+    if (mContext == nullptr) return;
+    static const uint32_t attrs[] = {R::attr::windowBackground, R::attr::windowBackgroundFallback, 0};
+    auto ta = mContext->getTheme().obtainStyledAttributes(attrs);
+    if (!ta) return;
+    if (Drawable* background = ta->getDrawable(0)) {  // null = unset or unresolvable
+        setBackground(background);  // DecorView.setWindowBackground -> setBackground
+        return;  // the fallback only applies when no window background is set
+    }
+    setBackgroundFallback(ta->getDrawable(1));
+}
+
+// AOSP DecorView.setBackgroundFallback (its BackgroundFallback member folded into
+// the fused Window; the drawable is owned here — Java's GC becomes a delete).
+void Window::setBackgroundFallback(Drawable* fallbackDrawable) {
+    if (mBackgroundFallbackDrawable != fallbackDrawable) {
+        delete mBackgroundFallbackDrawable;
+        mBackgroundFallbackDrawable = fallbackDrawable;
+    }
+    setWillNotDraw(getBackground() == nullptr && mBackgroundFallbackDrawable == nullptr);
+}
+
+// AOSP DecorView.onDraw: super, then the background fallback.
+void Window::onDraw(Canvas& canvas) {
+    FrameLayout::onDraw(canvas);
+    drawBackgroundFallback(canvas);
+}
+
+// AOSP com.android.internal.widget.BackgroundFallback.draw(boundsView, root, c, content,
+// coveringView1, coveringView2) with boundsView/root == this Window and null covering
+// views: track the union of the opaque visible children and fill the uncovered strips
+// with the fallback drawable.
+void Window::drawBackgroundFallback(Canvas& canvas) {
+    if (mBackgroundFallbackDrawable == nullptr) return;  // !hasFallback()
+
+    // Draw the fallback in the padding.
+    const int width = getWidth();
+    const int height = getHeight();
+
+    int left = width;
+    int top = height;
+    int right = 0;
+    int bottom = 0;
+
+    const int childCount = getChildCount();
+    for (int i = 0; i < childCount; i++) {
+        View* child = getChildAt(i);
+        Drawable* childBg = child->getBackground();
+        // Potentially translucent or invisible children don't count, and we assume the
+        // content view will cover the whole area if we're in a background fallback
+        // situation.
+        if (child->getVisibility() != View::VISIBLE
+                || childBg == nullptr || childBg->getOpacity() != PixelFormat::OPAQUE) {
+            continue;
+        }
+        left = std::min(left, child->getLeft());
+        top = std::min(top, child->getTop());
+        right = std::max(right, child->getRight());
+        bottom = std::max(bottom, child->getBottom());
+    }
+
+    if (left >= right || top >= bottom) {
+        // No valid area to draw in.
+        return;
+    }
+
+    // CDROID Drawable::setBounds takes (x, y, w, h) — AOSP's (l, t, r, b) strips below.
+    if (top > 0) {
+        mBackgroundFallbackDrawable->setBounds(0, 0, width, top);
+        mBackgroundFallbackDrawable->draw(canvas);
+    }
+    if (left > 0) {
+        mBackgroundFallbackDrawable->setBounds(0, top, left, height - top);
+        mBackgroundFallbackDrawable->draw(canvas);
+    }
+    if (right < width) {
+        mBackgroundFallbackDrawable->setBounds(right, top, width - right, height - top);
+        mBackgroundFallbackDrawable->draw(canvas);
+    }
+    if (bottom < height) {
+        mBackgroundFallbackDrawable->setBounds(left, bottom, right - left, height - bottom);
+        mBackgroundFallbackDrawable->draw(canvas);
+    }
+}
+
 void Window::close(){
     close(nullptr);
 }

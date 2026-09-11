@@ -62,7 +62,7 @@ private:
     };
     // One ghost in flight, in the host's (enter) or the caller's (return) overlay.
     struct SceneFlight {
-        View* ghost = nullptr;  // SnapshotView, owned by the flight
+        View* ghost = nullptr;  // FIT_XY ImageView over the snapshot, owned by the flight
         Rect from;              // start bounds, host-of-the-ghost local coords
         Rect to;                // end bounds, same space
     };
@@ -71,6 +71,9 @@ private:
     void finishFlight(bool enter);
     // Cancel-and-free mAnimator outside its own end callback (delete-in-callback).
     void cancelAnimator();
+    // Build + register one ghost flight (the shared tail of prepareEnter/startReturn).
+    SceneFlight& addFlight(Window* host, const Cairo::RefPtr<Cairo::ImageSurface>& snapshot,
+            const Rect& from, const Rect& to);
 
     Window* mHost = nullptr;    // the window being animated for (not owned)
     Window* mCaller = nullptr;  // the window that started mHost (not owned)
