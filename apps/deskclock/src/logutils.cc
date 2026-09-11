@@ -21,7 +21,9 @@ void logLine(const char* tag, const char* message, va_list args) {
 }
 
 } // namespace
-
+#ifndef DEBUG
+#define DEBUG (!NDEBUG)
+#endif
 bool Logger::isVerboseLoggable() const { return DEBUG; }
 bool Logger::isDebugLoggable() const { return DEBUG; }
 bool Logger::isInfoLoggable() const { return DEBUG; }
