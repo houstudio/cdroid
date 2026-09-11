@@ -426,27 +426,7 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
             cairoGlyphs.push_back(glyph);
             glyphIdx++;
         }
-        // Color bitmap glyphs (CBDT/sbix) cannot ride cairo's alpha-mask
-        // path: blit those as scaled images (Typeface serves the bitmap
-        // data, the painting stays here), keep the rest on show_glyphs.
-        std::vector<cairo_glyph_t> maskGlyphs;
-        for (const cairo_glyph_t& glyph : cairoGlyphs) {
-            const ColorGlyph* colorGlyph =
-                    getColorGlyph(currentMinikinFont, glyph.index, mMinikinPaint->size);
-            if (colorGlyph == nullptr) {
-                maskGlyphs.push_back(glyph);
-                continue;
-            }
-            c.save();
-            c.translate(glyph.x + colorGlyph->left, glyph.y + colorGlyph->top);
-            // The surface is at the strike's pixel resolution; scale it to
-            // the requested text size.
-            c.scale(colorGlyph->scale, colorGlyph->scale);
-            c.set_source(colorGlyph->surface, 0.0, 0.0);
-            c.paint();
-            c.restore();
-        }
-        if (!maskGlyphs.empty()) c.show_glyphs(maskGlyphs);
+        c.show_glyphs(cairoGlyphs);
     }
 }
 

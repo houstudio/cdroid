@@ -172,21 +172,6 @@ public:
     }
 };
 
-// CBDT/sbix color-glyph data (impl in typeface.cc). Pure font-resource
-// access — the glyph's color bitmap as an ARGB32 surface plus its placement
-// relative to the pen position at `textSize` — mirroring how MinikinFont
-// serves GetBounds/GetFontExtent. Painting it is the caller's (Paint's) job.
-struct ColorGlyph {
-    Cairo::RefPtr<Cairo::ImageSurface> surface;  // premultiplied ARGB32, strike resolution
-    double left;    // bitmap_left already scaled to textSize
-    double top;     // -bitmap_top already scaled to textSize
-    double scale;   // textSize / strike ppem — paint scales the surface by this
-};
-// Returns nullptr when the glyph is not a color bitmap glyph and must take
-// the normal alpha-mask path.
-const ColorGlyph* getColorGlyph(const minikin::MinikinFont* font,
-        uint32_t glyphIndex, double textSize);
-
 }
 
 #endif
