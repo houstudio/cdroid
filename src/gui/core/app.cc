@@ -865,12 +865,6 @@ const std::string App::getName()const{
 using namespace Cairo;
 namespace cdroid{
 
-// androidfw glue (same seam as typedarray.cc): fill a TypedValue from the raw
-// SelectedValue handed out by AM2 lookups. AOSP does this fill in the native
-// layer; core code speaks TypedValue from here on.
-static TypedValue tvOf(uint8_t type, uint32_t data) {
-    TypedValue tv; tv.type = type; tv.data = data; return tv;
-}
 // mArscTheme is stored opaque in the header (void*) to keep androidfw out of
 // assets.h; cast at the engine boundary.
 static cdroid::Theme* asTheme(void* t) { return (cdroid::Theme*)t; }
@@ -905,21 +899,6 @@ std::string App::getResourceName(uint32_t resId) const {
         return "@android:" + type + "/" + entry;
     return "@" + type + "/" + entry;
 }
-
-// Resolve a theme-attribute reference (?attr/<id>) through the AM2 Theme.
-bool App::arscThemeAttribute(uint32_t attrId, TypedValue* out, ssize_t* outBlock) const {
-    if (!mArscTheme || !out) return false;
-    cdroid::Theme* theme = asTheme(mArscTheme);
-    auto value = theme->GetAttribute(attrId);
-    if (!value.has_value()) return false;
-    // Flatten ?attr / @ref chains to a concrete value.
-    auto resolved = theme->ResolveAttributeReference(*value);
-    if (!resolved.has_value()) return false;
-    *out = tvOf(value->type, value->data);
-    if (outBlock) *outBlock = value->cookie;
-    return true;
-}
-
 
 void App::destroyResourceState(){
     delete mCdroidResources;   // holds mAssetManager as a borrowed pointer

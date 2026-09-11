@@ -192,12 +192,6 @@ public:
     // "@drawable/bg", "@string/hello") matching text-XML form, so CDROID's
     // existing string-based resolvers consume binary-AXML references unchanged.
     std::string getResourceName(uint32_t resId) const override;
-    // Resolve a theme-attribute reference (?attr/<id>) through the arsc Theme:
-    // getAttribute + resolveAttributeReference, so ?android:colorPrimary etc.
-    // flatten to a concrete value. Returns true if the theme had the attr.
-    // When outBlock != null, *outBlock receives the owning string-pool block of
-    // the resolved value (needed to resolve TYPE_STRING values via stringAtBlock).
-    bool arscThemeAttribute(uint32_t attrId, TypedValue* out, ssize_t* outBlock = nullptr) const;
     std::string getPackageName()const override;
     Resources::Theme getTheme() override;
     const DisplayMetrics&getDisplayMetrics()const override;

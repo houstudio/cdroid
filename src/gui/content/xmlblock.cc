@@ -20,8 +20,6 @@
 #include <content/xmlblock.h>
 #include <porting/cdlog.h>
 #include <core/context.h>
-#include <core/app.h>
-#include <core/app.h>
 #include <content/resources.h>
 #include <cstdio>
 #include <cstdlib>
@@ -383,11 +381,8 @@ std::string XmlBlock::Parser::renderTypedValue(size_t attrIdx) const {
             // (getDrawable/getString/getColor/...) handles it unchanged.
             // Falls back to "@0xRESID" if the arsc can't name the resource.
             if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
-                App* assets = dynamic_cast<App*>(ctx);
-                if(assets){
-                    std::string ref = ctx->getResourceName(v.data);
-                    if(!ref.empty()) return ref;
-                }
+                const std::string ref = ctx->getResourceName(v.data);
+                if(!ref.empty()) return ref;
             }
             snprintf(buf, sizeof(buf), "@0x%08x", v.data);
             return buf;
@@ -398,41 +393,42 @@ std::string XmlBlock::Parser::renderTypedValue(size_t attrIdx) const {
             // obtainStyledAttributes (theme lookup) instead of treating it as
             // a plain resource reference and handing it to getInputStream.
             if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
-                App* assets = dynamic_cast<App*>(ctx);
-                if(assets){
-                    TypedValue tv;
-                    if(assets->arscThemeAttribute(v.data, &tv)){
-                        switch(tv.type){
-                            case TypedValue::TYPE_INT_COLOR_ARGB8:
-                            case TypedValue::TYPE_INT_COLOR_RGB8:
-                            case TypedValue::TYPE_INT_COLOR_ARGB4:
-                            case TypedValue::TYPE_INT_COLOR_RGB4:
-                                snprintf(buf, sizeof(buf), "#%08x", tv.data); return buf;
-                            case TypedValue::TYPE_INT_DEC:
-                                snprintf(buf, sizeof(buf), "%d", (int)tv.data); return buf;
-                            case TypedValue::TYPE_INT_HEX:
-                                snprintf(buf, sizeof(buf), "0x%x", tv.data); return buf;
-                            case TypedValue::TYPE_INT_BOOLEAN:
-                                return tv.data ? "true" : "false";
-                            case TypedValue::TYPE_DIMENSION:{
-                                float mag = axmlComplexToFloat(tv.data);
-                                int unit = (tv.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
-                                const char* u = unit == TypedValue::COMPLEX_UNIT_SP ? "sp"
-                                              : unit == TypedValue::COMPLEX_UNIT_DIP ? "dp" : "px";
-                                snprintf(buf, sizeof(buf), "%d%s", (int)mag, u); return buf;
-                            }
-                            case TypedValue::TYPE_REFERENCE:
-                            case TypedValue::TYPE_DYNAMIC_REFERENCE:{
-                                std::string ref = ctx->getResourceName(tv.data);
-                                if(!ref.empty()) return ref;
-                                break;
-                            }
-                            default: break;  // STRING etc. — fall through to ?type/key
+                TypedValue tv;
+                // AOSP Theme.resolveAttribute(resolveRefs=true) through the
+                // CALLER's theme (getTheme() is virtual, so themed contexts
+                // resolve under their own theme — the old dynamic_cast<App*>
+                // only ever resolved under the App-level one).
+                if(ctx->getTheme().resolveAttribute((int)v.data, &tv, true)){
+                    switch(tv.type){
+                        case TypedValue::TYPE_INT_COLOR_ARGB8:
+                        case TypedValue::TYPE_INT_COLOR_RGB8:
+                        case TypedValue::TYPE_INT_COLOR_ARGB4:
+                        case TypedValue::TYPE_INT_COLOR_RGB4:
+                            snprintf(buf, sizeof(buf), "#%08x", tv.data); return buf;
+                        case TypedValue::TYPE_INT_DEC:
+                            snprintf(buf, sizeof(buf), "%d", (int)tv.data); return buf;
+                        case TypedValue::TYPE_INT_HEX:
+                            snprintf(buf, sizeof(buf), "0x%x", tv.data); return buf;
+                        case TypedValue::TYPE_INT_BOOLEAN:
+                            return tv.data ? "true" : "false";
+                        case TypedValue::TYPE_DIMENSION:{
+                            float mag = axmlComplexToFloat(tv.data);
+                            int unit = (tv.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
+                            const char* u = unit == TypedValue::COMPLEX_UNIT_SP ? "sp"
+                                          : unit == TypedValue::COMPLEX_UNIT_DIP ? "dp" : "px";
+                            snprintf(buf, sizeof(buf), "%d%s", (int)mag, u); return buf;
                         }
+                        case TypedValue::TYPE_REFERENCE:
+                        case TypedValue::TYPE_DYNAMIC_REFERENCE:{
+                            std::string ref = ctx->getResourceName(tv.data);
+                            if(!ref.empty()) return ref;
+                            break;
+                        }
+                        default: break;  // STRING etc. — fall through to ?type/key
                     }
-                    std::string ref = ctx->getResourceName(v.data);
-                    if(!ref.empty()){ if(ref[0] == '@') ref[0] = '?'; return ref; }
                 }
+                std::string ref = ctx->getResourceName(v.data);
+                if(!ref.empty()){ if(ref[0] == '@') ref[0] = '?'; return ref; }
             }
             snprintf(buf, sizeof(buf), "?0x%08x", v.data);
             return buf;

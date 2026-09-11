@@ -288,40 +288,13 @@ std::shared_ptr<ColorStateList> Resources::getColorStateList(int id, const Theme
 
 std::unique_ptr<TypedArray> Resources::obtainStyledAttributes(const AttributeSet* set,
          const uint32_t* attrs, int defStyleAttr, int defStyleRes) const {
+    // The resolver lives once, in Theme::obtainStyledAttributes (same theme
+    // engine, AM2, density and TypedArray wiring — this was a verbatim second
+    // copy that also handed the TypedArray the address of a LOCAL Theme
+    // copy; the Theme version passes the persistent object). mCtx's theme is
+    // exactly the engine the copy below used to extract.
     if (mCtx == nullptr) return nullptr;
-    AssetManager2& am2 = getAssets()->getAssetManager2();
-    Resources::Theme _th = mCtx->getTheme();
-    cdroid::Theme* theme = static_cast<cdroid::Theme*>(_th._engineHandle());
-    size_t count = 0;
-    while (attrs[count]) count++;
-    std::vector<uint32_t> values(count * STYLE_NUM_ENTRIES);
-    std::vector<uint32_t> indices(count + 1);
-
-    if (set != nullptr) {
-        // AOSP ResourcesImpl.applyStyle: hard downcast to the binary parser
-        // for the parse state. Non-binary sets get theme/style-only resolution
-        // below (text-mode paks are retired — paks are binary-only).
-        const XmlBlock::Parser* parser = dynamic_cast<const XmlBlock::Parser*>(set);
-        if (parser) {
-            const ResXMLTree* xml = parser->getResXMLTree();
-            if (xml) {
-                ApplyStyle(theme, xml, (uint32_t)defStyleAttr, (uint32_t)defStyleRes,
-                           attrs, count, values.data(), indices.data());
-                std::vector<StyledAttr> styled(count);
-                styledAttrsFromBlocks(values.data(), count, styled.data());
-                return std::make_unique<TypedArray>(&am2, std::move(styled), xml, getDisplayMetrics().density, this, &_th);
-            }
-        }
-    }
-    // Non-binary sets (text-mode paks) are retired: paks are binary-only since
-    // the res/ unification, so this tail only serves a null set — theme/style
-    // resolution with no element step (AOSP Theme.obtainStyledAttributes →
-    // nativeResolveAttrs).
-    ResolveAttrs(theme, (uint32_t)defStyleAttr, (uint32_t)defStyleRes,
-                 nullptr, 0, attrs, count, values.data(), nullptr);
-    std::vector<StyledAttr> styled(count);
-    styledAttrsFromBlocks(values.data(), count, styled.data());
-    return std::make_unique<TypedArray>(&am2, std::move(styled), nullptr, getDisplayMetrics().density, this, &_th);
+    return mCtx->getTheme().obtainStyledAttributes(set, attrs, defStyleAttr, defStyleRes);
 }
 
 // Convenience: AttributeSet& → AttributeSet* (for AOSP callers passing the reference).
