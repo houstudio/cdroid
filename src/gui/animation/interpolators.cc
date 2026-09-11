@@ -39,8 +39,8 @@ int BaseInterpolator::getChangingConfiguration(){
     return mChangingConfiguration;
 }
 
-AccelerateInterpolator::AccelerateInterpolator(Context*ctx,const AttributeSet&atts){
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::AccelerateInterpolator);
+AccelerateInterpolator::AccelerateInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::AccelerateInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::AccelerateInterpolator);
     mFactor = ta->getFloat(R::styleable::AccelerateInterpolator_factor, 1.f);
     mDoubleFactor = mFactor*2.f;
 }
@@ -58,8 +58,8 @@ float AccelerateInterpolator::getInterpolation(float input)const{
     }
 }
 
-DecelerateInterpolator::DecelerateInterpolator(Context*ctx,const AttributeSet&atts){
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::DecelerateInterpolator);
+DecelerateInterpolator::DecelerateInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::DecelerateInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::DecelerateInterpolator);
     mFactor = ta->getFloat(R::styleable::DecelerateInterpolator_factor, 1.f);
 }
 
@@ -77,8 +77,8 @@ float DecelerateInterpolator::getInterpolation(float input)const{
     return result;
 }
 
-AnticipateInterpolator::AnticipateInterpolator(Context*ctx,const AttributeSet&atts){
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::AnticipateInterpolator);
+AnticipateInterpolator::AnticipateInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::AnticipateInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::AnticipateInterpolator);
     mTension = ta->getFloat(R::styleable::AnticipateInterpolator_tension, 2.f);
 }
 
@@ -90,8 +90,8 @@ float AnticipateInterpolator::getInterpolation(float t)const{
     return t * t * ((mTension + 1) * t - mTension);
 }
 
-CycleInterpolator::CycleInterpolator(Context*ctx,const AttributeSet&atts){
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::CycleInterpolator);
+CycleInterpolator::CycleInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::CycleInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::CycleInterpolator);
     mCycles = ta->getFloat(R::styleable::CycleInterpolator_cycles, 1.f);
 }
 
@@ -103,8 +103,8 @@ float CycleInterpolator::getInterpolation(float input)const{
     return (float)(sin(2 * mCycles * M_PI * input));
 }
 
-OvershootInterpolator::OvershootInterpolator(Context*ctx,const AttributeSet&atts){
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::OvershootInterpolator);
+OvershootInterpolator::OvershootInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::OvershootInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::OvershootInterpolator);
     mTension = ta->getFloat(R::styleable::OvershootInterpolator_tension, 2.f);
 }
 
@@ -117,8 +117,8 @@ float OvershootInterpolator::getInterpolation(float t)const{
     return t * t * ((mTension + 1) * t + mTension) + 1.0f;
 }
 
-AnticipateOvershootInterpolator::AnticipateOvershootInterpolator(Context*ctx,const AttributeSet&atts){
-    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::AnticipateOvershootInterpolator);
+AnticipateOvershootInterpolator::AnticipateOvershootInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::AnticipateOvershootInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::AnticipateOvershootInterpolator);
     mTension = ta->getFloat(R::styleable::AnticipateOvershootInterpolator_tension, 2.f) * ta->getFloat(R::styleable::AnticipateOvershootInterpolator_extraTension, 1.5f);
 }
 
@@ -174,9 +174,9 @@ PathInterpolator::PathInterpolator(float controlX1, float controlY1, float contr
     initCubic(controlX1, controlY1, controlX2, controlY2);
 }
 
-PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
+PathInterpolator::PathInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&a){
     // AOSP PathInterpolator.parseInterpolatorFromTypeArray.
-    auto ta = ctx->obtainStyledAttributes(a, R::styleable::PathInterpolator);
+    auto ta = theme ? theme->obtainStyledAttributes(&a, R::styleable::PathInterpolator) : res->obtainStyledAttributes(&a, R::styleable::PathInterpolator);
     if(ta->hasValue(R::styleable::PathInterpolator_pathData)){
         std::string pathData = ta->getString(R::styleable::PathInterpolator_pathData);
         auto path = PathParser::createPathFromPathData(pathData);

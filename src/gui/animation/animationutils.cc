@@ -24,7 +24,7 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-std::unordered_map<int,std::shared_ptr<Interpolator>>AnimationUtils::mInterpolators;
+std::map<std::pair<int,void*>,std::shared_ptr<Interpolator>>AnimationUtils::mInterpolators;
 
 int64_t AnimationUtils::currentAnimationTimeMillis(){
     return SystemClock::uptimeMillis();
@@ -131,21 +131,31 @@ Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
 
 Interpolator* AnimationUtils::loadInterpolator(Context*context,int id){
     if (id == 0) return nullptr;  // AOSP: 0 → null
-    auto it = mInterpolators.find(id);
+    // AOSP java:413-416: open through the context's resources, style through
+    // its theme (cache key (id, theme engine) — see the header).
+    Resources& res = context->getResources();
+    Resources::Theme theme = context->getTheme();
+    auto it = mInterpolators.find({id, theme._engineHandle()});
     if (it != mInterpolators.end()) return it->second.get();
-    auto parser = context->getResources().getXml(id);
-    std::shared_ptr<Interpolator> interpolator = createInterpolatorFromXml(context, *parser);
-    if (interpolator) mInterpolators.emplace(id, interpolator);
+    auto parser = res.getXml(id);
+    std::shared_ptr<Interpolator> interpolator = createInterpolatorFromXml(&res, &theme, *parser);
+    if (interpolator) mInterpolators.emplace(std::make_pair(id, theme._engineHandle()), interpolator);
     return interpolator.get();
 }
 
-// AOSP @hide loadInterpolator(Resources, Theme, int) (see the header).
+// AOSP @hide loadInterpolator(Resources, Theme, int) (java:435-440).
 Interpolator* AnimationUtils::loadInterpolator(Resources* res,const Resources::Theme* theme,int id){
-    (void)theme;   // interpolator styling goes through the Context's theme chain
-    return loadInterpolator(res ? res->getContext() : nullptr, id);
+    if (id == 0) return nullptr;  // AOSP: 0 → null
+    void* engine = theme ? theme->_engineHandle() : nullptr;
+    auto it = mInterpolators.find({id, engine});
+    if (it != mInterpolators.end()) return it->second.get();
+    auto parser = res->getXml(id);
+    std::shared_ptr<Interpolator> interpolator = createInterpolatorFromXml(res, theme, *parser);
+    if (interpolator) mInterpolators.emplace(std::make_pair(id, engine), interpolator);
+    return interpolator.get();
 }
 
-std::shared_ptr<Interpolator> AnimationUtils::createInterpolatorFromXml(Context* context,XmlPullParser&parser){
+std::shared_ptr<Interpolator> AnimationUtils::createInterpolatorFromXml(Resources* res,const Resources::Theme* theme,XmlPullParser&parser){
     int type;
     const int depth = parser.getDepth();
     std::shared_ptr<BaseInterpolator>interpolator;
@@ -160,23 +170,23 @@ std::shared_ptr<Interpolator> AnimationUtils::createInterpolatorFromXml(Context*
         if (0==name.compare("linearInterpolator")) {
             interpolator = std::make_shared<LinearInterpolator>();
         } else if (0==name.compare("accelerateInterpolator")) {
-            interpolator = std::make_shared<AccelerateInterpolator>(context, attrs);
+            interpolator = std::make_shared<AccelerateInterpolator>(res, theme, attrs);
         } else if (0==name.compare("decelerateInterpolator")) {
-            interpolator = std::make_shared<DecelerateInterpolator>(context, attrs);
+            interpolator = std::make_shared<DecelerateInterpolator>(res, theme, attrs);
         } else if (0==name.compare("accelerateDecelerateInterpolator")) {
             interpolator = std::make_shared<AccelerateDecelerateInterpolator>();
         } else if (0==name.compare("cycleInterpolator")) {
-            interpolator = std::make_shared<CycleInterpolator>(context, attrs);
+            interpolator = std::make_shared<CycleInterpolator>(res, theme, attrs);
         } else if (0==name.compare("anticipateInterpolator")) {
-            interpolator = std::make_shared<AnticipateInterpolator>(context,attrs);
+            interpolator = std::make_shared<AnticipateInterpolator>(res, theme, attrs);
         } else if (0==name.compare("overshootInterpolator")) {
-            interpolator = std::make_shared<OvershootInterpolator>(context, attrs);
+            interpolator = std::make_shared<OvershootInterpolator>(res, theme, attrs);
         } else if (0==name.compare("anticipateOvershootInterpolator")) {
-            interpolator = std::make_shared<AnticipateOvershootInterpolator>(context,attrs);
+            interpolator = std::make_shared<AnticipateOvershootInterpolator>(res, theme, attrs);
         } else if (0==name.compare("bounceInterpolator")) {
             interpolator = std::make_shared<BounceInterpolator>();
         } else if (0==name.compare("pathInterpolator")) {
-            interpolator = std::make_shared<PathInterpolator>(context,attrs);
+            interpolator = std::make_shared<PathInterpolator>(res, theme, attrs);
         } else {
             LOGE("Unknown interpolator name: %s",name.c_str());
         }

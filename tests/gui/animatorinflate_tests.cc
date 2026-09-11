@@ -9,6 +9,8 @@
 #include <animation/keyframeset.h>
 #include <animation/pathkeyframes.h>
 #include <view/view.h>
+#include <content/resources.h>   // Resources::newTheme()/_engineHandle (cache-key test)
+#include <widget/internal_R.h>    // framework interpolator ids
 #include <guienvironment.h>
 #include "R.h"
 using namespace cdroid;
@@ -184,6 +186,46 @@ TEST_F(ANIMATORINFLATOR,slide_in_left){
     Animation*sl=AnimationUtils::loadAnimation(&app,gui_test::R::anim::slide_in_left);
     ASSERT_NE(sl,(void*)nullptr);
     pumpFor(300);
+}
+
+// AnimationUtils' interpolator cache is keyed (id, theme engine): the same
+// interpolator id under the context's theme, under a second independent
+// theme (Resources::newTheme()), and under a null theme must resolve to
+// three DISTINCT entries, while a repeated load under the same key hits the
+// same process-resident instance. Cached interpolators are borrowed — never
+// deleted here (OWNERSHIP note on loadInterpolator).
+TEST_F(ANIMATORINFLATOR,interpolator_cache_theme_keyed){
+    App&app=App::getInstance();
+    Resources&res=app.getResources();
+    const int id=internal::R::interpolator::decelerate_quad;
+
+    // Context overload: cached under (id, context theme engine).
+    Interpolator*a=AnimationUtils::loadInterpolator(&app,id);
+    Interpolator*a2=AnimationUtils::loadInterpolator(&app,id);
+    ASSERT_NE(a,(void*)nullptr);
+    EXPECT_EQ(a,a2) << "same theme engine must hit the cache";
+
+    // @hide overload with an independent engine (newTheme() owns its engine).
+    Resources::Theme other=res.newTheme();
+    ASSERT_NE(other._engineHandle(),app.getTheme()._engineHandle())
+        << "newTheme() must hand out an independent engine";
+    Interpolator*b=AnimationUtils::loadInterpolator(&res,&other,id);
+    Interpolator*b2=AnimationUtils::loadInterpolator(&res,&other,id);
+    ASSERT_NE(b,(void*)nullptr);
+    EXPECT_NE(a,b) << "same id under a different theme engine must not share the entry";
+    EXPECT_EQ(b,b2) << "the second engine must have its own cache hit";
+
+    // Null theme styles themelessly (engine key nullptr) — a third entry.
+    Interpolator*c=AnimationUtils::loadInterpolator(&res,nullptr,id);
+    ASSERT_NE(c,(void*)nullptr);
+    EXPECT_NE(c,a);
+    EXPECT_NE(c,b);
+
+    // All three parsed the same XML: decelerate factor defaults to 1.0, so
+    // 1-(1-t)^2 = 0.75 at t=0.5 — each entry is a functional interpolator.
+    EXPECT_NEAR(a->getInterpolation(0.5f),0.75f,1e-3f);
+    EXPECT_NEAR(b->getInterpolation(0.5f),0.75f,1e-3f);
+    EXPECT_NEAR(c->getInterpolation(0.5f),0.75f,1e-3f);
 }
 
 
