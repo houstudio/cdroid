@@ -672,7 +672,12 @@ cdroid::Drawable* ResourcesImpl::getDrawable(int id, int density, const void* th
 cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/, const void* themeEngine) const {
     if (id == 0 || mCtx == nullptr) return nullptr;
     if (mDrawableCache) {
-        if (auto cs = mDrawableCache->get(themedCacheKey(id, themeEngine))) return cs->newDrawable();
+        // AOSP cache hit (ResourcesImpl.java:787 / DrawableCache.getInstance):
+        // cs.newDrawable(wrapper) — the target Resources is handed to the clone
+        // so density-dependent drawables resolve against it (no-arg would keep
+        // the state's source density).
+        if (auto cs = mDrawableCache->get(themedCacheKey(id, themeEngine)))
+            return cs->newDrawable(&mCtx->getResources());
     }
     TypedValue value;
     if (!getValue(id, &value, true)) return nullptr;
