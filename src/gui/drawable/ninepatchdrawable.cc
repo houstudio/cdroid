@@ -39,9 +39,15 @@ NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state, Resou
     mMutated = false;
     mFilterBitmap = false;
     mTintFilter = nullptr;
-    // AOSP updateLocalState (java:753): resolve the target density against
-    // res; a null res keeps the state's density.
-    mTargetDensity = Drawable::resolveDensity(res, state->mTargetDensity);
+    // AOSP updateLocalState (java:751-756): with no Resources, match the
+    // density of the nine patch itself — the drawable renders 1:1 instead of
+    // scaling toward a stale target. mSourceDensity is CDROID's
+    // Bitmap.getDensity() (the decode-seam record of the bitmap's pixels).
+    if (res == nullptr && state->mNinePatch != nullptr) {
+        mTargetDensity = state->mSourceDensity;
+    } else {
+        mTargetDensity = Drawable::resolveDensity(res, state->mTargetDensity);
+    }
     mOutlineRadius=0.f;
     mPadding.setEmpty();
     computeBitmapSize();
