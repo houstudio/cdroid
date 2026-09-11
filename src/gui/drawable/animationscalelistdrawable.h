@@ -31,7 +31,7 @@ protected:
         // The index of the last animatable drawable.
         int mAnimatableDrawableIndex = -1;
     public:
-        AnimationScaleListState(const AnimationScaleListState* orig, AnimationScaleListDrawable* owner);
+        AnimationScaleListState(const AnimationScaleListState* orig, AnimationScaleListDrawable* owner, Resources* res);
         void mutate()override;
         int addDrawable(Drawable* drawable);
         AnimationScaleListDrawable* newDrawable() override;

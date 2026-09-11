@@ -91,7 +91,11 @@ BitmapDrawable::BitmapState::~BitmapState(){
 }
 
 BitmapDrawable* BitmapDrawable::BitmapState::newDrawable(){
-    return new BitmapDrawable(shared_from_this());
+    return new BitmapDrawable(shared_from_this(), nullptr);
+}
+
+Drawable* BitmapDrawable::BitmapState::newDrawable(Resources* res){
+    return new BitmapDrawable(shared_from_this(), res);
 }
 
 int BitmapDrawable::BitmapState::getChangingConfigurations()const{
@@ -99,7 +103,7 @@ int BitmapDrawable::BitmapState::getChangingConfigurations()const{
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-BitmapDrawable::BitmapDrawable():BitmapDrawable(std::make_shared<BitmapState>(nullptr)){
+BitmapDrawable::BitmapDrawable():BitmapDrawable(std::make_shared<BitmapState>(nullptr), nullptr){
 }
 
 BitmapDrawable::BitmapDrawable(RefPtr<ImageSurface>img){
@@ -109,10 +113,15 @@ BitmapDrawable::BitmapDrawable(RefPtr<ImageSurface>img){
     computeBitmapSize();
 }
 
-BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
+BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state, Resources* res){
     mBitmapState = state;
     mDstRectAndInsetsDirty = true;
     mMutated = false;
+    // AOSP init (java:1063-1070): resolve the target density against res and
+    // write it back into the shared state when a Resources was provided.
+    if (res != nullptr) {
+        mBitmapState->mTargetDensity = Drawable::resolveDensity(res, mBitmapState->mTargetDensity);
+    }
     // AOSP: the One True Constructor ends in updateLocalState() — rebuild the
     // tint filter from the shared state, otherwise every newDrawable()/clone
     // (e.g. ProgressBar.tileify) loses the tint parsed at inflate time.
@@ -121,7 +130,7 @@ BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
 }
 
 BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
-  :BitmapDrawable(std::make_shared<BitmapState>()){
+  :BitmapDrawable(std::make_shared<BitmapState>(), nullptr){
     RefPtr<ImageSurface>b;
     b = ImageDecoder::loadImage(ctx,resname);
     mBitmapState->mResource = resname;
@@ -656,7 +665,7 @@ void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a, int srcDensi
     // AOSP: store density override + resolve target density from the display.
     state.mSrcDensityOverride = srcDensityOverride;
     const DisplayMetrics& dm = r.getDisplayMetrics();
-    state.mTargetDensity = Drawable::resolveDensity(dm.densityDpi);
+    state.mTargetDensity = Drawable::resolveDensity(&r, 0);
 
     // AOSP: src is read HERE (inside updateStateFromTypedArray), not in inflate().
     // Density-aware: getValueForDensity resolves the best config, then the bitmap

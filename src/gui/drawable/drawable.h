@@ -221,7 +221,7 @@ public:
 
     virtual void draw(Canvas&ctx)=0;
     static int resolveOpacity(int op1,int op2);
-    static int resolveDensity(int parentDensity);
+    static int resolveDensity(Resources* r, int parentDensity);
     static PorterDuff::Mode parseTintMode(int value, PorterDuff::Mode defaultMode);
     static float scaleFromDensity(float pixels, int sourceDensity, int targetDensity);
     static int scaleFromDensity(int pixels, int sourceDensity, int targetDensity, bool isSize);

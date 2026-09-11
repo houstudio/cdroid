@@ -47,7 +47,11 @@ RotateDrawable::RotateState::RotateState(const RotateState& orig)
 }
 
 RotateDrawable*RotateDrawable::RotateState::newDrawable(){
-    return new RotateDrawable(std::dynamic_pointer_cast<RotateState>(shared_from_this()));
+    return (RotateDrawable*)newDrawable(nullptr);
+}
+
+Drawable*RotateDrawable::RotateState::newDrawable(Resources* res){
+    return new RotateDrawable(std::dynamic_pointer_cast<RotateState>(shared_from_this()), res);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,12 +60,12 @@ std::shared_ptr<DrawableWrapper::DrawableWrapperState> RotateDrawable::mutateCon
     return mState;
 }
 
-RotateDrawable::RotateDrawable(std::shared_ptr<RotateState>state):DrawableWrapper(state){
+RotateDrawable::RotateDrawable(std::shared_ptr<RotateState>state,Resources*res):DrawableWrapper(state,res){
     mState = state;
 }
 
 RotateDrawable::RotateDrawable(Drawable*d)
-    :RotateDrawable(std::make_shared<RotateState>()){
+    :RotateDrawable(std::make_shared<RotateState>(), nullptr){
     setDrawable(d);
 }
 

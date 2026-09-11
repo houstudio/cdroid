@@ -38,9 +38,10 @@ private:
         ScaleState();
         ScaleState(const ScaleState& orig);
         ScaleDrawable* newDrawable()override;
+        Drawable* newDrawable(Resources* res)override;
     };
     std::shared_ptr<ScaleState>mState;
-    ScaleDrawable(std::shared_ptr<ScaleState> state);
+    ScaleDrawable(std::shared_ptr<ScaleState> state, Resources* res);
     void updateStateFromTypedArray(const TypedArray& a);
 protected:
     void onBoundsChange(const Rect& bounds)override;

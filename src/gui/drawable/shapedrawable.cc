@@ -50,7 +50,14 @@ ShapeDrawable::ShapeState::ShapeState(const ShapeState&orig)
 }
 
 ShapeDrawable* ShapeDrawable::ShapeState::newDrawable(){
-    return new ShapeDrawable(shared_from_this());
+    // AOSP java:597: new ShapeDrawable(new ShapeState(this), null) — every
+    // clone gets its own copy of the state (the mPaint/mShape are cloned by
+    // the copy ctor).
+    return new ShapeDrawable(std::make_shared<ShapeState>(*this), nullptr);
+}
+
+Drawable* ShapeDrawable::ShapeState::newDrawable(Resources* res){
+    return new ShapeDrawable(std::make_shared<ShapeState>(*this), res);
 }
 
 ShapeDrawable::ShapeState::~ShapeState(){
@@ -63,7 +70,7 @@ int ShapeDrawable::ShapeState::getChangingConfigurations()const{
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-ShapeDrawable::ShapeDrawable(std::shared_ptr<ShapeState>state){
+ShapeDrawable::ShapeDrawable(std::shared_ptr<ShapeState>state, Resources* res){
     mShapeState = state;
     mMutated = false;
     mTintFilter = nullptr;

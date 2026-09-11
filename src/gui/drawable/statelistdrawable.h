@@ -28,9 +28,10 @@ protected:
         // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
         std::vector<int> mThemeAttrs;
         std::vector<std::vector<int>>mStateSets;
-        StateListState(const StateListState*orig,StateListDrawable*own);
+        StateListState(const StateListState*orig,StateListDrawable*own,Resources*res);
         void mutate()override;
         StateListDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
         int addStateSet(const std::vector<int>&stateSet, Drawable*drawable);
         int indexOfStateSet(const std::vector<int>&stateSet);
         bool hasFocusStateSpecified()const;
@@ -39,7 +40,7 @@ private:
     std::shared_ptr<StateListState>mStateListState;
     void updateStateFromTypedArray(const TypedArray& a);
 protected:
-    StateListDrawable(std::shared_ptr<StateListState>state);
+    StateListDrawable(std::shared_ptr<StateListState>state,Resources*res);
     // AOSP StateListDrawable.extractStateSet (package-private, shared with the
     // AnimatedStateListDrawable subclass): extracts state_ attributes from an
     // item's AttributeSet. AnimatorInflater inlines its own loop instead (the

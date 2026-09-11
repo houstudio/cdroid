@@ -27,7 +27,7 @@ AnimationScaleListDrawable::AnimationScaleListDrawable():AnimationScaleListDrawa
 
 AnimationScaleListDrawable::AnimationScaleListDrawable(std::shared_ptr<AnimationScaleListState> state) {
     // Every scale list drawable has its own constant state.
-    auto newState = std::make_shared<AnimationScaleListState>(state.get(), this);
+    auto newState = std::make_shared<AnimationScaleListState>(state.get(), this, nullptr);
     setConstantState(newState);
     onStateChange(getState());
 }
@@ -152,8 +152,8 @@ void AnimationScaleListDrawable::setConstantState(std::shared_ptr<DrawableContai
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-AnimationScaleListDrawable::AnimationScaleListState::AnimationScaleListState(const AnimationScaleListState* orig, AnimationScaleListDrawable* owner)
-    :DrawableContainerState(orig, owner){
+AnimationScaleListDrawable::AnimationScaleListState::AnimationScaleListState(const AnimationScaleListState* orig, AnimationScaleListDrawable* owner, Resources* res)
+    :DrawableContainerState(orig, owner, res){
 
     if (orig != nullptr) {
         // Perform a shallow copy and rely on mutate() to deep-copy.

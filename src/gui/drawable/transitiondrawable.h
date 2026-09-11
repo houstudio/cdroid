@@ -39,15 +39,16 @@ private:
 
     class TransitionState:public LayerDrawable::LayerState{
     public:
-        TransitionState(TransitionState* orig, TransitionDrawable* owner);
+        TransitionState(TransitionState* orig, TransitionDrawable* owner, Resources* res);
         TransitionDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
         // Mirrors AOSP TransitionDrawable.TransitionState: reports only this state's own
         // changing configurations (drops the children aggregate folded in by LayerState).
         int getChangingConfigurations()const override;
     };
 
-    TransitionDrawable(std::shared_ptr<TransitionState> state);
-    std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerState* state,const AttributeSet*)override;
+    TransitionDrawable(std::shared_ptr<TransitionState> state, Resources* res);
+    std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerState* state,Resources* res)override;
 public:
     TransitionDrawable();
     TransitionDrawable(const std::vector<Drawable*>drawables);

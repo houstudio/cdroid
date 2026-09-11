@@ -36,9 +36,10 @@ private:
        RotateState();
        RotateState(const RotateState& orig);
        RotateDrawable*newDrawable()override;
+       Drawable*newDrawable(Resources* res)override;
     };
     std::shared_ptr<RotateState>mState;
-    RotateDrawable(std::shared_ptr<RotateState>state);
+    RotateDrawable(std::shared_ptr<RotateState>state,Resources*res);
     void updateStateFromTypedArray(const TypedArray& a);
 protected:
     bool onLevelChange(int level)override;

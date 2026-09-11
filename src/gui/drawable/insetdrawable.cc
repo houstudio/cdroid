@@ -55,14 +55,18 @@ void InsetDrawable::InsetState::onDensityChanged(int sourceDensity, int targetDe
 }
 
 InsetDrawable*InsetDrawable::InsetState::newDrawable(){
-    return new InsetDrawable(std::dynamic_pointer_cast<InsetState>(shared_from_this()));
+    return (InsetDrawable*)newDrawable(nullptr);
 }
 
-InsetDrawable::InsetDrawable():DrawableWrapper(std::make_shared<InsetState>()){
+Drawable*InsetDrawable::InsetState::newDrawable(Resources* res){
+    return new InsetDrawable(std::dynamic_pointer_cast<InsetState>(shared_from_this()), res);
+}
+
+InsetDrawable::InsetDrawable():DrawableWrapper(std::make_shared<InsetState>(), nullptr){
     mState = std::dynamic_pointer_cast<InsetState>(DrawableWrapper::mState);
 }
 
-InsetDrawable::InsetDrawable(std::shared_ptr<InsetState>state):DrawableWrapper(state){
+InsetDrawable::InsetDrawable(std::shared_ptr<InsetState>state,Resources*res):DrawableWrapper(state,res){
     mState = state;
 }
 
@@ -71,7 +75,7 @@ InsetDrawable::InsetDrawable(Drawable*drawable,int inset)
 }
 
 InsetDrawable::InsetDrawable(Drawable* drawable,int insetLeft,int insetTop,int insetRight,int insetBottom)
-    :InsetDrawable(std::make_shared<InsetState>()){
+    :InsetDrawable(std::make_shared<InsetState>(), nullptr){
     setDrawable(drawable);
     mState->mInset.set(insetLeft,insetTop,insetRight,insetBottom);
     mState->mInsetLeft.set(0.f, insetLeft);

@@ -26,11 +26,11 @@ namespace cdroid{
 using namespace cdroid::internal;
 #pragma GCC push_options
 #pragma GCC optimize("O0")
-AnimationDrawable::AnimationDrawable():AnimationDrawable(nullptr){
+AnimationDrawable::AnimationDrawable():AnimationDrawable(nullptr, nullptr){
 }
 
-AnimationDrawable::AnimationDrawable(std::shared_ptr<AnimationDrawable::AnimationState>state){
-    std::shared_ptr<AnimationState>as =std::make_shared<AnimationState>(state.get(),this);
+AnimationDrawable::AnimationDrawable(std::shared_ptr<AnimationDrawable::AnimationState>state, Resources* res){
+    std::shared_ptr<AnimationState>as =std::make_shared<AnimationState>(state.get(),this,res);
     setConstantState(as);
     mRunning  = false;
     mCurFrame = 0;
@@ -159,7 +159,7 @@ AnimationDrawable* AnimationDrawable::mutate(){
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState> AnimationDrawable::cloneConstantState(){
-    return std::make_shared<AnimationState>(mAnimationState.get(),this);
+    return std::make_shared<AnimationState>(mAnimationState.get(),this,nullptr);
 }
 
 void AnimationDrawable::clearMutated(){
@@ -232,8 +232,8 @@ void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-AnimationDrawable::AnimationState::AnimationState(const AnimationState*orig,AnimationDrawable*owner)
-    :DrawableContainer::DrawableContainerState(orig,owner){
+AnimationDrawable::AnimationState::AnimationState(const AnimationState*orig,AnimationDrawable*owner,Resources*res)
+    :DrawableContainer::DrawableContainerState(orig,owner,res){
     if(orig){
         mDurations= orig->mDurations;
         mOneShot  = orig->mOneShot;
@@ -248,7 +248,11 @@ void AnimationDrawable::AnimationState::mutate(){
 }
 
 AnimationDrawable*AnimationDrawable::AnimationState::newDrawable(){
-    return new AnimationDrawable(std::dynamic_pointer_cast<AnimationState>(shared_from_this()));
+    return new AnimationDrawable(std::dynamic_pointer_cast<AnimationState>(shared_from_this()), nullptr);
+}
+
+Drawable*AnimationDrawable::AnimationState::newDrawable(Resources* res){
+    return new AnimationDrawable(std::dynamic_pointer_cast<AnimationState>(shared_from_this()), res);
 }
 
 void AnimationDrawable::AnimationState::addFrame(Drawable*dr,int dur){

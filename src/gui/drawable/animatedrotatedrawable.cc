@@ -48,17 +48,21 @@ AnimatedRotateDrawable::AnimatedRotateState::AnimatedRotateState(const AnimatedR
 }
 
 AnimatedRotateDrawable* AnimatedRotateDrawable::AnimatedRotateState::newDrawable(){
-    return new AnimatedRotateDrawable(std::dynamic_pointer_cast<AnimatedRotateState>(shared_from_this()));
+    return (AnimatedRotateDrawable*)newDrawable(nullptr);
+}
+
+Drawable* AnimatedRotateDrawable::AnimatedRotateState::newDrawable(Resources* res){
+    return new AnimatedRotateDrawable(std::dynamic_pointer_cast<AnimatedRotateState>(shared_from_this()), res);
 }
 int  AnimatedRotateDrawable::AnimatedRotateState::getChangingConfigurations()const{
     return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////
 AnimatedRotateDrawable::AnimatedRotateDrawable()
-    :AnimatedRotateDrawable(std::make_shared<AnimatedRotateState>()){
+    :AnimatedRotateDrawable(std::make_shared<AnimatedRotateState>(), nullptr){
 }
 
-AnimatedRotateDrawable::AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateState> state):DrawableWrapper(state){
+AnimatedRotateDrawable::AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateState> state,Resources*res):DrawableWrapper(state,res){
     mState  = state;
     mRunning= false;
     mIncrement= 360./state->mFramesCount;

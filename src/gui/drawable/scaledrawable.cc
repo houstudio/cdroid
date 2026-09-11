@@ -40,14 +40,18 @@ ScaleDrawable::ScaleState::ScaleState(const ScaleState& orig)
 }
 
 ScaleDrawable* ScaleDrawable::ScaleState::newDrawable(){
-    return new ScaleDrawable(std::dynamic_pointer_cast<ScaleState>(shared_from_this()));
+    return (ScaleDrawable*)newDrawable(nullptr);
+}
+
+Drawable* ScaleDrawable::ScaleState::newDrawable(Resources* res){
+    return new ScaleDrawable(std::dynamic_pointer_cast<ScaleState>(shared_from_this()), res);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-ScaleDrawable::ScaleDrawable():ScaleDrawable(std::make_shared<ScaleState>()){
+ScaleDrawable::ScaleDrawable():ScaleDrawable(std::make_shared<ScaleState>(), nullptr){
 }
 
-ScaleDrawable::ScaleDrawable(std::shared_ptr<ScaleState> state):DrawableWrapper(state){
+ScaleDrawable::ScaleDrawable(std::shared_ptr<ScaleState> state,Resources*res):DrawableWrapper(state,res){
     mState = state;
     // AOSP ctor ends with updateLocalState(): initialize the local level to
     // the state's initial level — without it android:level never applied and
@@ -56,7 +60,7 @@ ScaleDrawable::ScaleDrawable(std::shared_ptr<ScaleState> state):DrawableWrapper(
 }
 
 ScaleDrawable::ScaleDrawable(Drawable* drawable, int gravity,float scaleWidth,float scaleHeight)
-    :ScaleDrawable(std::make_shared<ScaleState>()){
+    :ScaleDrawable(std::make_shared<ScaleState>(), nullptr){
     mState->mGravity    = gravity;
     mState->mScaleWidth = scaleWidth;
     mState->mScaleHeight= scaleHeight;

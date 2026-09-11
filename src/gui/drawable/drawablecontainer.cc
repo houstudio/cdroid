@@ -62,9 +62,12 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DrawableContainer::DrawableContainerState::DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own){
+DrawableContainer::DrawableContainerState::DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own,Resources*res){
     mOwner = own;
-    mDensity = Drawable::resolveDensity(orig? orig->mDensity : 0);
+    // AOSP java:743-744: the source resources survive a null res by falling
+    // back to the copy's, so cloned children keep inflating against them.
+    mSourceRes = res ? res : (orig ? orig->mSourceRes : nullptr);
+    mDensity = Drawable::resolveDensity(res, orig? orig->mDensity : 0);
     mVariablePadding = false;
     mConstantSize = false;
     mCheckedConstantState = true;
@@ -202,13 +205,30 @@ void DrawableContainer::DrawableContainerState::invalidateCache(){
     mCheckedStateful= false;
 }
 
+void DrawableContainer::DrawableContainerState::updateDensity(Resources* res){
+    // AOSP java:955-973: dimension-type attributes need their default values
+    // re-scaled when the density changes.
+    if (res != nullptr) {
+        mSourceRes = res;
+
+        const int targetDensity = Drawable::resolveDensity(res, mDensity);
+        const int sourceDensity = mDensity;
+        mDensity = targetDensity;
+
+        if (sourceDensity != targetDensity) {
+            mCheckedConstantSize = false;
+            mCheckedPadding = false;
+        }
+    }
+}
+
 void DrawableContainer::DrawableContainerState::createAllFutures(){
     const size_t futureCount = mDrawableFutures.size();
     for (size_t keyIndex = 0; keyIndex < futureCount; keyIndex++) {
         const int index= mDrawableFutures.keyAt(keyIndex);
         std::shared_ptr<ConstantState>cs =mDrawableFutures.valueAt(keyIndex);
         delete mDrawables[index];
-        mDrawables[index] = prepareDrawable(cs->newDrawable());
+        mDrawables[index] = prepareDrawable(cs->newDrawable(mSourceRes));
     }
     mDrawableFutures.clear();
 }
@@ -239,7 +259,7 @@ Drawable*DrawableContainer::DrawableContainerState::getChild(int index){
         const int keyIndex = mDrawableFutures.indexOfKey(index);
         if (keyIndex>=0) {
             std::shared_ptr<ConstantState> cs = mDrawableFutures.valueAt(keyIndex);
-            Drawable* prepared = prepareDrawable(cs->newDrawable());
+            Drawable* prepared = prepareDrawable(cs->newDrawable(mSourceRes));
             mDrawables[index] = prepared;
             mDrawableFutures.removeAt(keyIndex);
             LOGV("getChild(%d)=%p",index,prepared);
@@ -345,7 +365,7 @@ bool DrawableContainer::DrawableContainerState::isConstantSize() const{
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState> DrawableContainer::cloneConstantState(){
-    return std::make_shared<DrawableContainerState>(mDrawableContainerState.get(),this);
+    return std::make_shared<DrawableContainerState>(mDrawableContainerState.get(),this,nullptr);
 }
 
 void DrawableContainer::setConstantState(std::shared_ptr<DrawableContainerState>state){
@@ -448,7 +468,7 @@ int DrawableContainer::DrawableContainerState::getOpacity(){
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 DrawableContainer::DrawableContainer(){
-    mDrawableContainerState= std::make_shared<DrawableContainerState>(nullptr,this);
+    mDrawableContainerState= std::make_shared<DrawableContainerState>(nullptr,this,nullptr);
     mHasAlpha = false;
     mMutated  = false;
     mAlpha = 0xFF;

@@ -21,12 +21,16 @@
 
 namespace cdroid{
 
-TransitionDrawable::TransitionState::TransitionState(TransitionState* orig, TransitionDrawable* owner)
-    :LayerState::LayerState(orig,owner){
+TransitionDrawable::TransitionState::TransitionState(TransitionState* orig, TransitionDrawable* owner, Resources* res)
+    :LayerState::LayerState(orig,owner,res){
 }
 
 TransitionDrawable*TransitionDrawable::TransitionState::newDrawable(){
-    return new TransitionDrawable(std::dynamic_pointer_cast<TransitionState>(shared_from_this()));
+    return new TransitionDrawable(std::dynamic_pointer_cast<TransitionState>(shared_from_this()), nullptr);
+}
+
+Drawable*TransitionDrawable::TransitionState::newDrawable(Resources* res){
+    return new TransitionDrawable(std::dynamic_pointer_cast<TransitionState>(shared_from_this()), res);
 }
 
 int TransitionDrawable::TransitionState::getChangingConfigurations()const{
@@ -35,11 +39,11 @@ int TransitionDrawable::TransitionState::getChangingConfigurations()const{
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TransitionDrawable::TransitionDrawable()
-    :LayerDrawable(std::make_shared<TransitionState>(nullptr,this)){
+    :LayerDrawable(std::make_shared<TransitionState>(nullptr,this,nullptr)){
 }
 
 TransitionDrawable::TransitionDrawable(const std::vector<Drawable*>drawables)
-    :TransitionDrawable(std::make_shared<TransitionState>(nullptr,this)){
+    :TransitionDrawable(std::make_shared<TransitionState>(nullptr,this,nullptr), nullptr){
     // AOSP TransitionDrawable(Drawable[]) builds a TransitionState (not the plain LayerState that
     // LayerDrawable(layers) would create), so getConstantState()->newDrawable() yields a
     // TransitionDrawable and the ConstantState round-trip / copy-on-write mutate stay typed.
@@ -50,7 +54,7 @@ TransitionDrawable::TransitionDrawable(const std::vector<Drawable*>drawables)
     refreshPadding();
 }
 
-TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state)
+TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state, Resources* res)
     :LayerDrawable(){
     // AOSP TransitionDrawable(TransitionState, Resources) → super(state, res) →
     // LayerDrawable ctor → createConstantState() → LayerState copy ctor, which
@@ -58,7 +62,7 @@ TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state)
     // ConstantState). Passing the shared state to the LayerDrawable ctor adopts
     // it instead, so every clone from the drawable cache shared one children
     // array and one view's transition alpha/level poisoned its siblings.
-    mLayerState = std::make_shared<TransitionState>(state.get(), this);
+    mLayerState = std::make_shared<TransitionState>(state.get(), this, nullptr);
     if (!mLayerState->mChildren.empty()) {
         ensurePadding();
         refreshPadding();
@@ -69,8 +73,8 @@ TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state)
     mTransitionState = TRANSITION_NONE;
 }
 
-std::shared_ptr<LayerDrawable::LayerState> TransitionDrawable::createConstantState(LayerState* state,const AttributeSet*attrs){
-    return std::make_shared<TransitionState>((TransitionState*) state, this);
+std::shared_ptr<LayerDrawable::LayerState> TransitionDrawable::createConstantState(LayerState* state,Resources*res){
+    return std::make_shared<TransitionState>((TransitionState*) state, this, res);
 }
 
 void TransitionDrawable::showSecondLayer() {

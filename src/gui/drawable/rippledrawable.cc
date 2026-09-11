@@ -23,8 +23,8 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner)
-    :LayerDrawable::LayerState(orig,owner){
+RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner, Resources* res)
+    :LayerDrawable::LayerState(orig,owner,res){
     //mTouchThemeAttrs = orig->mTouchThemeAttrs;
     mColor = nullptr;
     mEffectColor = ColorStateList::valueOf(RippleDrawable::DEFAULT_EFFECT_COLOR);
@@ -57,7 +57,11 @@ void RippleDrawable::RippleState::applyDensityScaling(int sourceDensity, int tar
 }
 
 RippleDrawable* RippleDrawable::RippleState::newDrawable(){
-    return new RippleDrawable(std::dynamic_pointer_cast<RippleState>(shared_from_this()));//, nullptr);
+    return new RippleDrawable(std::dynamic_pointer_cast<RippleState>(shared_from_this()), nullptr);
+}
+
+Drawable* RippleDrawable::RippleState::newDrawable(Resources* res) {
+    return new RippleDrawable(std::dynamic_pointer_cast<RippleState>(shared_from_this()), res);
 }
 
 int RippleDrawable::RippleState::getChangingConfigurations()const{
@@ -67,10 +71,10 @@ int RippleDrawable::RippleState::getChangingConfigurations()const{
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
-    mState.reset(new RippleState(state.get(), this));
+RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state, Resources* res) {
+    mState.reset(new RippleState(state.get(), this, res));
     mLayerState = mState;
-    mDensity = Drawable::resolveDensity(mState->mDensity);
+    mDensity = Drawable::resolveDensity(res, mState->mDensity);
     mRipple  = nullptr;
     mBackground = nullptr;
     mHasPending = false;
@@ -83,11 +87,11 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
     updateLocalState();
 }
 
-RippleDrawable::RippleDrawable():RippleDrawable(std::make_shared<RippleState>(nullptr,this)){
+RippleDrawable::RippleDrawable():RippleDrawable(std::make_shared<RippleState>(nullptr,this,nullptr), nullptr){
 }
 
 RippleDrawable::RippleDrawable(const RefPtr<ColorStateList>& color,Drawable* content,Drawable* mask)
-  :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr)){
+  :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr,nullptr), nullptr){
     if(content)addLayer(content,{0},-1,0,0,0,0);
     if(mask)addLayer(mask,{0},R::id::mask,0,0,0,0);
     setColor(color);
@@ -106,11 +110,11 @@ RippleDrawable::~RippleDrawable(){
 }
 
 std::shared_ptr<LayerDrawable::LayerState> RippleDrawable::createConstantState(
-        LayerDrawable::LayerState* state, const AttributeSet*) {
+        LayerDrawable::LayerState* state, Resources* res) {
     // LayerDrawable::mutate() / getConstantState() route through this factory; producing a
     // RippleState keeps the ripple-specific fields (mColor/mEffectColor/mMaxRadius) live in the
     // copied state and makes newDrawable() yield a RippleDrawable.
-    return std::make_shared<RippleState>(state, this);
+    return std::make_shared<RippleState>(state, this, res);
 }
 
 RippleDrawable* RippleDrawable::mutate(){

@@ -47,9 +47,10 @@ private:
         InsetState(const InsetState& orig);
         void onDensityChanged(int sourceDensity, int targetDensity)override;
         InsetDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
     };
     std::shared_ptr<InsetState>mState;
-    InsetDrawable(std::shared_ptr<InsetState>state);
+    InsetDrawable(std::shared_ptr<InsetState>state,Resources*res);
     void getInsets(Rect& out)const;
     void verifyRequiredAttributes();
     void updateStateFromTypedArray(const TypedArray& a);

@@ -237,7 +237,7 @@ void AnimatedVectorDrawable::inflate(Resources& r,XmlPullParser&parser,const Att
                 if (animResId != 0) {
                     if (theme != nullptr) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
-                        Animator* animator = AnimatorInflater::loadAnimator(r.getContext(), theme, animResId, pathErrorScale);
+                        Animator* animator = AnimatorInflater::loadAnimator(&r, theme, animResId, pathErrorScale);
                         updateAnimatorProperty(animator, target, state->mVectorDrawable,state->mShouldIgnoreInvalidAnim);
                         state->addTargetAnimator(target, animator);
                     } else {
@@ -586,7 +586,7 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator::PendingAni
 // caller-side handle) must not seed mAnimators; the caller logs the failed load.
 Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::PendingAnimator::newInstance(Resources* res,const Resources::Theme* theme) {
     if (res == nullptr) return nullptr;
-    return AnimatorInflater::loadAnimator(res->getContext(),theme,animResId, pathErrorScale);
+    return AnimatorInflater::loadAnimator(res, theme, animResId, pathErrorScale);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

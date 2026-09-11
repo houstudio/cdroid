@@ -48,6 +48,7 @@ private:
         void setBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap,const Rect*padding=nullptr,
                        const std::vector<uint8_t>*ninePatchChunk=nullptr);
         NinePatchDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
         void draw(Canvas&canvas,const Rect&rect,int alpha);
         int getChangingConfigurations()const override;
     };
@@ -64,7 +65,7 @@ private:
     void computeBitmapSize();
     std::shared_ptr<NinePatchState>mNinePatchState;
     cdroid::RefPtr<PorterDuffColorFilter>mTintFilter;
-    NinePatchDrawable(std::shared_ptr<NinePatchState>state);
+    NinePatchDrawable(std::shared_ptr<NinePatchState>state, Resources* res);
     void updateStateFromTypedArray(const TypedArray& a);
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;

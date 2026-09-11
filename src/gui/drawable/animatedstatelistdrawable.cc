@@ -27,16 +27,18 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 AnimatedStateListDrawable::AnimatedStateListDrawable():StateListDrawable(){
-    std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(nullptr,this);
+    std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(nullptr,this,nullptr);
     setConstantState(newState);
     onStateChange(getState());
     mTransition = nullptr;
     jumpToCurrentState();
 }
 
-AnimatedStateListDrawable::AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListDrawable::AnimatedStateListState> state)
-  :StateListDrawable(state){
-    std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(state.get(), this);
+AnimatedStateListDrawable::AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListDrawable::AnimatedStateListState> state, Resources* res)
+  :StateListDrawable(nullptr, nullptr){
+    // AOSP java:669-676: super(null) — every animated state list drawable has
+    // its own constant state; the copy is made exactly once, right here.
+    std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(state.get(), this, res);
     mTransition = nullptr;
     setConstantState(newState);
     onStateChange(getState());
@@ -185,7 +187,7 @@ void AnimatedStateListDrawable::clearMutated(){
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState> AnimatedStateListDrawable::cloneConstantState(){
-    return std::make_shared<AnimatedStateListState>(mState.get(), this);
+    return std::make_shared<AnimatedStateListState>(mState.get(), this, nullptr);
 }
 
 void AnimatedStateListDrawable::setConstantState(std::shared_ptr<DrawableContainerState> state){
@@ -308,8 +310,8 @@ int AnimatedStateListDrawable::parseTransition(Resources& r,XmlPullParser&parser
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-AnimatedStateListDrawable::AnimatedStateListState::AnimatedStateListState(const AnimatedStateListDrawable::AnimatedStateListState* orig,AnimatedStateListDrawable* owner)
-  :StateListState(orig,owner){
+AnimatedStateListDrawable::AnimatedStateListState::AnimatedStateListState(const AnimatedStateListDrawable::AnimatedStateListState* orig,AnimatedStateListDrawable* owner,Resources* res)
+  :StateListState(orig,owner,res){
     if (orig != nullptr) {
         // AOSP clones both arrays (shallow copy). Without this, cloneConstantState()
         // copies lost every keyframe id and transition, so selectTransition() bailed
@@ -377,7 +379,11 @@ bool AnimatedStateListDrawable::AnimatedStateListState::transitionHasReversibleF
 
 //bool canApplyTheme() {return mAnimThemeAttrs != null || super.canApplyTheme();}
 AnimatedStateListDrawable* AnimatedStateListDrawable::AnimatedStateListState::newDrawable(){
-    return new AnimatedStateListDrawable(std::dynamic_pointer_cast<AnimatedStateListState>(shared_from_this()));
+    return new AnimatedStateListDrawable(std::dynamic_pointer_cast<AnimatedStateListState>(shared_from_this()), nullptr);
+}
+
+Drawable* AnimatedStateListDrawable::AnimatedStateListState::newDrawable(Resources* res){
+    return new AnimatedStateListDrawable(std::dynamic_pointer_cast<AnimatedStateListState>(shared_from_this()), res);
 }
 
 int64_t AnimatedStateListDrawable::AnimatedStateListState::generateTransitionKey(int fromId, int toId) {

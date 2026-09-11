@@ -34,13 +34,14 @@ private:
         ColorState();
         ColorState(const ColorState& state);
         ColorDrawable* newDrawable()override;
+        Drawable* newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
     };
 private:
     bool mMutated;
     std::shared_ptr<ColorState>mColorState;
     cdroid::RefPtr<PorterDuffColorFilter> mTintFilter;
-    ColorDrawable(std::shared_ptr<ColorState> state);
+    ColorDrawable(std::shared_ptr<ColorState> state, Resources* res);
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
 public:

@@ -58,7 +58,12 @@ void DrawableWrapper::DrawableWrapperState::onDensityChanged(int sourceDensity, 
 }
 
 DrawableWrapper*DrawableWrapper::DrawableWrapperState::newDrawable(){
-    return new DrawableWrapper(shared_from_this());
+    // AOSP java:554: newDrawable(null) — dispatches to the (Resources) form.
+    return (DrawableWrapper*)newDrawable(nullptr);
+}
+
+Drawable*DrawableWrapper::DrawableWrapperState::newDrawable(Resources* res){
+    return new DrawableWrapper(shared_from_this(), res);
 }
 
 bool DrawableWrapper::DrawableWrapperState::canConstantState()const {
@@ -74,16 +79,16 @@ DrawableWrapper::DrawableWrapper(Drawable*dr){
     if (dr) dr->setCallback(this);  // androidx: ctor routes through setDrawable, which sets the wrapped drawable's callback to this wrapper
 }
 
-DrawableWrapper::DrawableWrapper(std::shared_ptr<DrawableWrapperState>state){
+DrawableWrapper::DrawableWrapper(std::shared_ptr<DrawableWrapperState>state,Resources*res){
     mState = state;
     mDrawable= nullptr;
     mMutated = false;
-    updateLocalState();
+    updateLocalState(res);
 }
 
-void DrawableWrapper::updateLocalState() {
+void DrawableWrapper::updateLocalState(Resources* res) {
     if (mState && mState->mDrawableState) {
-        Drawable* dr = mState->mDrawableState->newDrawable();
+        Drawable* dr = mState->mDrawableState->newDrawable(res);
         setDrawable(dr);
     }
 }

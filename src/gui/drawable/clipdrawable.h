@@ -36,9 +36,10 @@ private:
         ClipState();
         ClipState(const ClipState& state);
         ClipDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
     };
     std::shared_ptr<ClipState>mState;
-    ClipDrawable(std::shared_ptr<ClipState>state);
+    ClipDrawable(std::shared_ptr<ClipState>state,Resources*res);
     void updateStateFromTypedArray(const TypedArray& a);
 protected:
     bool onLevelChange(int level)override;

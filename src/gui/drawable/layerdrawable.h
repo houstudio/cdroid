@@ -39,7 +39,7 @@ protected:
         int mId;
         std::vector<int>mThemeAttrs;
         ChildDrawable(int density);
-        ChildDrawable(ChildDrawable* orig,LayerDrawable*owner);
+        ChildDrawable(ChildDrawable* orig,LayerDrawable*owner,Resources*res);
         ~ChildDrawable();
         void setDensity(int targetDensity);
         void applyDensityScaling(int sourceDensity, int targetDensity);
@@ -62,9 +62,10 @@ protected:
         bool mAutoMirrored;
         std::vector< ChildDrawable*>mChildren;
         LayerState();
-        LayerState(const LayerState*state,LayerDrawable*owner);
+        LayerState(const LayerState*state,LayerDrawable*owner,Resources*res);
         ~LayerState()override;
         LayerDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
         bool canApplyTheme();
         int getOpacity()const;
@@ -102,7 +103,7 @@ private:
     void updateStateFromTypedArray(const TypedArray& a);
     void updateLayerFromTypedArray(ChildDrawable*layer,const TypedArray& a);
 protected:
-    virtual std::shared_ptr<LayerState> createConstantState(LayerState* state,const AttributeSet*);
+    virtual std::shared_ptr<LayerState> createConstantState(LayerState* state,Resources* res);
     void onBoundsChange(const Rect& bounds)override;
     bool onLevelChange(int level)override;
     bool onStateChange(const std::vector<int>& state)override;

@@ -26,23 +26,26 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-StateListDrawable::StateListState::StateListState(const StateListState*orig,StateListDrawable*own)
-    :DrawableContainerState(orig,own){
+StateListDrawable::StateListState::StateListState(const StateListState*orig,StateListDrawable*own,Resources*res)
+    :DrawableContainerState(orig,own,res){
     if(orig){
         mStateSets = orig->mStateSets;
     }
 }
 
 StateListDrawable*StateListDrawable::StateListState::newDrawable(){
-    // AOSP newDrawable() → ctor → createConstantState() → state copy ctor
-    // (children re-created from their ConstantStates as futures). Adopting the
+    // AOSP newDrawable() → ctor → setConstantState(new StateListState(...)):
+    // children re-created from their ConstantStates as futures. Adopting the
     // shared state shared the children across every clone from the drawable
     // cache — nested inside a LayerDrawable layer this leaked one view's
     // bounds/level into every other view of the same resource.
-    StateListDrawable* dr = new StateListDrawable();
-    dr->setConstantState(std::make_shared<StateListState>(this, dr));
-    dr->onStateChange(dr->getState());
-    return dr;
+    return new StateListDrawable(
+            std::dynamic_pointer_cast<StateListState>(shared_from_this()), nullptr);
+}
+
+Drawable*StateListDrawable::StateListState::newDrawable(Resources* res){
+    return new StateListDrawable(
+            std::dynamic_pointer_cast<StateListState>(shared_from_this()), res);
 }
 
 void StateListDrawable::StateListState::mutate(){
@@ -76,12 +79,12 @@ bool StateListDrawable::StateListState::hasFocusStateSpecified()const{
 }
 
 StateListDrawable::StateListDrawable(){
-    auto state = std::make_shared<StateListState>(nullptr,this);
+    auto state = std::make_shared<StateListState>(nullptr,this,nullptr);
     setConstantState(state);
 }
 
 StateListDrawable::StateListDrawable(const ColorStateList&cls){
-    auto state = std::make_shared<StateListState>(nullptr,this);
+    auto state = std::make_shared<StateListState>(nullptr,this,nullptr);
     setConstantState(state);
     const std::vector<int>&colors = cls.getColors();
     const std::vector<std::vector<int>>& states = cls.getStates();
@@ -90,14 +93,14 @@ StateListDrawable::StateListDrawable(const ColorStateList&cls){
     }
 }
 
-StateListDrawable::StateListDrawable(std::shared_ptr<StateListState>state){
-    std::shared_ptr<StateListState>newState = std::make_shared<StateListState>(state.get(), this);
+StateListDrawable::StateListDrawable(std::shared_ptr<StateListState>state,Resources*res){
+    std::shared_ptr<StateListState>newState = std::make_shared<StateListState>(state.get(), this, res);
     setConstantState(newState);
     onStateChange(getState());
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState>StateListDrawable::cloneConstantState(){
-    return std::make_shared<StateListState>(mStateListState.get(),this);
+    return std::make_shared<StateListState>(mStateListState.get(),this,nullptr);
 }
 
 StateListDrawable*StateListDrawable::mutate(){

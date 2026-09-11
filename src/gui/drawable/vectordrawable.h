@@ -60,8 +60,8 @@ private:
     int mDpiScaledHeight = 0;
     Insets mDpiScaledInsets;// = Insets.NONE;
 private:
-    VectorDrawable(std::shared_ptr<VectorDrawableState> state);
-    void updateLocalState();
+    VectorDrawable(std::shared_ptr<VectorDrawableState> state, Resources* res);
+    void updateLocalState(Resources* res);
     bool needMirroring();
     void updateStateFromTypedArray(const TypedArray& a);
     void inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&,const Resources::Theme* theme);
@@ -189,6 +189,7 @@ public:
     void applyTheme(const Resources::Theme& t);
     bool canApplyTheme();
     Drawable* newDrawable()override;
+    Drawable* newDrawable(Resources* res)override;
     int getChangingConfigurations()const override;
     bool isStateful()const;
     bool hasFocusStateSpecified()const;

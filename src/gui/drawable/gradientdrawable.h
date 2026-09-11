@@ -111,12 +111,13 @@ private:
 
        GradientState();
        GradientState(Orientation orientation, const std::vector<int>&gradientColors);
-       GradientState(const GradientState& orig);
+       GradientState(const GradientState& orig, Resources* res = nullptr);
        ~GradientState();
        void setDensity(int targetDensity);
        bool hasCenterColor()const;
        void applyDensityScaling(int sourceDensity, int targetDensity);
        GradientDrawable* newDrawable()override;
+       Drawable* newDrawable(Resources* res)override;
        int getChangingConfigurations()const override;
        void setShape(int shape);
        void setGradientType(int gradient);
@@ -152,8 +153,8 @@ private:
     bool isOpaqueForState()const;
     int modulateAlpha(int alpha);
     void setStrokeInternal(int width, int color, float dashWidth, float dashGap);
-    GradientDrawable(std::shared_ptr<GradientState>state);
-    void updateLocalState();
+    GradientDrawable(std::shared_ptr<GradientState>state, Resources* res);
+    void updateLocalState(Resources* res);
     void prepareStrokeProps(Canvas&canvas);
     void getPatternAlpha(int& strokeAlpha,int& fillApha);
     void updateStateFromTypedArray(const TypedArray& a);

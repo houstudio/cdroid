@@ -35,6 +35,7 @@ private:
         AnimatedRotateState();
         AnimatedRotateState(const AnimatedRotateState& orig);
         AnimatedRotateDrawable* newDrawable()override;
+        Drawable* newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
     };
     Runnable mNextFrame;
@@ -43,7 +44,7 @@ private:
     bool mRunning;
     void updateLocalState();
     std::shared_ptr<AnimatedRotateState>mState;
-    AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateState> state);
+    AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateState> state, Resources* res);
     void updateStateFromTypedArray(const TypedArray& a);
 protected:
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;

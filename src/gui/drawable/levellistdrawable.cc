@@ -24,8 +24,8 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
-LevelListDrawable::LevelListState::LevelListState(const LevelListState*orig,LevelListDrawable*own)
-    :DrawableContainerState(orig,own){
+LevelListDrawable::LevelListState::LevelListState(const LevelListState*orig,LevelListDrawable*own,Resources*res)
+    :DrawableContainerState(orig,own,res){
     if(orig!=nullptr){
         mLows = orig->mLows;
         mHighs= orig->mHighs;
@@ -59,18 +59,22 @@ int LevelListDrawable::LevelListState::indexOfLevel(int level)const{
 }
 
 LevelListDrawable*LevelListDrawable::LevelListState::newDrawable(){
-    return new LevelListDrawable(std::dynamic_pointer_cast<LevelListState>(shared_from_this()));
+    return new LevelListDrawable(std::dynamic_pointer_cast<LevelListState>(shared_from_this()), nullptr);
+}
+
+Drawable*LevelListDrawable::LevelListState::newDrawable(Resources* res){
+    return new LevelListDrawable(std::dynamic_pointer_cast<LevelListState>(shared_from_this()), res);
 }
 
 LevelListDrawable::LevelListDrawable():DrawableContainer(){
     mMutated = false;
-    auto state = std::make_shared<LevelListState>(nullptr,this);
+    auto state = std::make_shared<LevelListState>(nullptr,this,nullptr);
     setConstantState(state);
     onLevelChange(getLevel());
 }
 
-LevelListDrawable::LevelListDrawable(std::shared_ptr<LevelListState>state){
-    auto newState = std::make_shared<LevelListState>(state.get(),this);
+LevelListDrawable::LevelListDrawable(std::shared_ptr<LevelListState>state,Resources*res){
+    auto newState = std::make_shared<LevelListState>(state.get(),this,res);
     mMutated = false;
     setConstantState(newState);
     onLevelChange(getLevel());
@@ -86,7 +90,7 @@ bool LevelListDrawable::onLevelChange(int level){
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState> LevelListDrawable::cloneConstantState(){
-    return std::make_shared<LevelListState>(mLevelListState.get(),this);
+    return std::make_shared<LevelListState>(mLevelListState.get(),this,nullptr);
 }
 
 void LevelListDrawable::setConstantState(std::shared_ptr<DrawableContainerState> state){

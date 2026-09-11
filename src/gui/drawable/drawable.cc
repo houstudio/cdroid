@@ -401,10 +401,10 @@ int Drawable::resolveOpacity(int op1,int op2){
     return PixelFormat::OPAQUE;
 }
 
-int Drawable::resolveDensity(int parentDensity){
-    DisplayMetrics metrics;
-    WindowManager::getInstance().getDefaultDisplay().getMetrics(metrics);
-    const int densityDpi = /*r == null ? parentDensity :*/metrics.densityDpi;
+int Drawable::resolveDensity(Resources* r, int parentDensity){
+    // AOSP java:1669: a null Resources falls back to the parent density (keep
+    // the drawable's own density instead of drifting to the display's).
+    const int densityDpi = (r == nullptr) ? parentDensity : r->getDisplayMetrics().densityDpi;
     return densityDpi == 0 ? DisplayMetrics::DENSITY_DEFAULT : densityDpi;
 }
 

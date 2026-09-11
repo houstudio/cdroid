@@ -37,6 +37,10 @@ protected:
         void setDensity(int targetDensity);
         virtual void onDensityChanged(int sourceDensity, int targetDensity);
         DrawableWrapper* newDrawable()override;
+        // AOSP declares newDrawable(Resources) abstract here; C++ needs a
+        // concrete default for a directly-instantiated DrawableWrapperState
+        // (mirroring the no-arg body) — every subclass overrides both.
+        Drawable* newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
         virtual bool canConstantState()const;
     };
@@ -44,12 +48,12 @@ protected:
     bool mMutated;
     Drawable*mDrawable;
     std::shared_ptr<DrawableWrapperState>mState;
-    void updateLocalState();
+    void updateLocalState(Resources* res);
     void updateStateFromTypedArray(const TypedArray& a);
     void inflateChildDrawable(Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme);
 protected:
     virtual std::shared_ptr<DrawableWrapperState> mutateConstantState();
-    DrawableWrapper(std::shared_ptr<DrawableWrapperState>state);
+    DrawableWrapper(std::shared_ptr<DrawableWrapperState>state,Resources*res);
     bool onStateChange(const std::vector<int>& state)override;
     bool onLevelChange(int level)override;
     void onBoundsChange(const Rect& bounds)override;

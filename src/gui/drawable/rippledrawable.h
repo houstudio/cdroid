@@ -44,11 +44,12 @@ private:
         int mRippleStyle=FORCE_PATTERNED_STYLE?STYLE_PATTERNED:STYLE_SOLID;
         RefPtr<ColorStateList>mColor;
         RefPtr<ColorStateList>mEffectColor;
-        RippleState(LayerState* orig, RippleDrawable* owner);
+        RippleState(LayerState* orig, RippleDrawable* owner, Resources* res);
         ~RippleState()override;
         void onDensityChanged(int sourceDensity, int targetDensity)override;
         void applyDensityScaling(int sourceDensity, int targetDensity);
         RippleDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
         bool canApplyTheme()override;
     };
@@ -77,7 +78,7 @@ private:
     RippleForeground* mRipple;
     ValueAnimator*mBackgroundAnimation;
 private:
-    RippleDrawable(std::shared_ptr<RippleState> state);
+    RippleDrawable(std::shared_ptr<RippleState> state, Resources* res);
     void cancelExitingRipples();
     void setRippleActive(bool active);
     void setBackgroundActive(bool hovered, bool focused, bool pressed);
@@ -105,7 +106,7 @@ protected:
     // Ripple overrides it so the new state is a RippleState (preserving mColor/mEffectColor/
     // mMaxRadius) instead of a plain LayerState that would drop the ripple-specific fields.
     std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerDrawable::LayerState* state,
-            const AttributeSet* attrs) override;
+            Resources* res) override;
 public:
     RippleDrawable();
     RippleDrawable(const RefPtr<ColorStateList>& color,Drawable* content,Drawable* mask);

@@ -30,21 +30,24 @@ namespace cdroid{
 using namespace cdroid::internal;
 
 VectorDrawable::VectorDrawable()
-    :VectorDrawable(std::make_shared<VectorDrawableState>(nullptr)){
+    :VectorDrawable(std::make_shared<VectorDrawableState>(nullptr), nullptr){
 }
 
-VectorDrawable::VectorDrawable(std::shared_ptr<VectorDrawableState> state) {
+VectorDrawable::VectorDrawable(std::shared_ptr<VectorDrawableState> state, Resources* res) {
     mMutated = false;
     mTargetDensity=0;
+    // AOSP java:363-366 defensively copies the state here (thread-safety of
+    // the native tree); CDROID shares it and lets mutate() copy-on-write —
+    // the density resolution below is drawable-local either way.
     mVectorState = state;
-    updateLocalState();
+    updateLocalState(res);
 }
 
 VectorDrawable::~VectorDrawable(){
 }
 
-void VectorDrawable::updateLocalState() {
-    const int density = Drawable::resolveDensity(mVectorState->mDensity);
+void VectorDrawable::updateLocalState(Resources* res) {
+    const int density = Drawable::resolveDensity(res, mVectorState->mDensity);
     if (mTargetDensity != density) {
         mTargetDensity = density;
         mDpiScaledDirty = true;
@@ -248,7 +251,7 @@ void VectorDrawable::applyTheme(const Resources::Theme& t) {
         return;
     }
 
-    const bool changedDensity = mVectorState->setDensity(Drawable::resolveDensity(0));
+    const bool changedDensity = mVectorState->setDensity(Drawable::resolveDensity(&t.getResources(), 0));
     mDpiScaledDirty |= changedDensity;
 
     if (!state->mThemeAttrs.empty()) {
@@ -273,7 +276,7 @@ void VectorDrawable::applyTheme(const Resources::Theme& t) {
     }
 
     // Update local properties.
-    updateLocalState();
+    updateLocalState(&t.getResources());
 }
 
 /**
@@ -316,7 +319,7 @@ void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSe
     }
 
     auto state = mVectorState;
-    mVectorState->setDensity(Drawable::resolveDensity(0));
+    mVectorState->setDensity(Drawable::resolveDensity(&r, 0));
 
     // AOSP VectorDrawable.inflate: obtainAttributes(res, theme, attrs,
     // R.styleable.VectorDrawable) resolves ?attr values up front when a theme
@@ -330,7 +333,7 @@ void VectorDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSe
     inflateChildElements(r,parser,atts,theme);
     mVectorState->onTreeConstructionFinished();
     // Update local properties.
-    updateLocalState();
+    updateLocalState(&r);
 }
 
 void VectorDrawable::updateStateFromTypedArray(const TypedArray& a){
@@ -617,7 +620,11 @@ bool VectorDrawable::VectorDrawableState::canApplyTheme() {
 }
 
 Drawable* VectorDrawable::VectorDrawableState::newDrawable() {
-    return new VectorDrawable(shared_from_this());
+    return new VectorDrawable(shared_from_this(), nullptr);
+}
+
+Drawable* VectorDrawable::VectorDrawableState::newDrawable(Resources* res) {
+    return new VectorDrawable(shared_from_this(), res);
 }
 
 int VectorDrawable::VectorDrawableState::getChangingConfigurations() const{

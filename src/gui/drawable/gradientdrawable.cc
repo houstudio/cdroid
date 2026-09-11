@@ -66,7 +66,7 @@ GradientDrawable::GradientState::GradientState(Orientation orientation, const st
     setGradientColors(gradientColors);
 }
 
-GradientDrawable::GradientState::GradientState(const GradientState& orig) {
+GradientDrawable::GradientState::GradientState(const GradientState& orig, Resources* res) {
     mChangingConfigurations = orig.mChangingConfigurations;
     mShape = orig.mShape;
     mGradient = orig.mGradient;
@@ -111,7 +111,7 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig) {
     mAttrCorners = orig.mAttrCorners;
     mAttrPadding = orig.mAttrPadding;
 
-    mDensity = Drawable::resolveDensity(/*res,*/orig.mDensity);
+    mDensity = Drawable::resolveDensity(res, orig.mDensity);
     if (orig.mDensity != mDensity) {
         applyDensityScaling(orig.mDensity, mDensity);
     }
@@ -176,7 +176,21 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
 
 
 GradientDrawable* GradientDrawable::GradientState::newDrawable() {
-    return new GradientDrawable(shared_from_this());
+    return new GradientDrawable(std::dynamic_pointer_cast<GradientState>(shared_from_this()), nullptr);
+}
+
+Drawable* GradientDrawable::GradientState::newDrawable(Resources* res) {
+    // AOSP java:2366-2377: if this drawable is being created for a different
+    // density, just create a new constant state and call it a day.
+    std::shared_ptr<GradientState> state;
+    const int density = Drawable::resolveDensity(res, mDensity);
+    if (density != mDensity) {
+        state = std::make_shared<GradientState>(*this, res);
+    } else {
+        state = std::dynamic_pointer_cast<GradientState>(shared_from_this());
+    }
+
+    return new GradientDrawable(state, res);
 }
 
 int GradientDrawable::GradientState::getChangingConfigurations()const {
@@ -270,10 +284,10 @@ void GradientDrawable::GradientState::setGradientRadius(float gradientRadius,int
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 GradientDrawable::GradientDrawable()
-    :GradientDrawable(std::make_shared<GradientState>()) {
+    :GradientDrawable(std::make_shared<GradientState>(), nullptr) {
 }
 
-GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state) {
+GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state, Resources* res) {
     mPathIsDirty = mGradientIsDirty = false;
     mPadding.set(0,0,0,0);
     mGradientState = state;
@@ -283,11 +297,11 @@ GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state) {
     mAlpha = 255;
     mRect.setEmpty();
     mPath = std::make_shared<cdroid::Path>();
-    updateLocalState();
+    updateLocalState(res);
 }
 
 GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int>&colors)
-    :GradientDrawable(std::make_shared<GradientState>(orientation,colors)) {
+    :GradientDrawable(std::make_shared<GradientState>(orientation,colors), nullptr) {
 }
 
 GradientDrawable::~GradientDrawable(){
@@ -297,7 +311,7 @@ std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState() {
     return mGradientState;
 }
 
-void GradientDrawable::updateLocalState() {
+void GradientDrawable::updateLocalState(Resources* res) {
     mPathIsDirty = true;
     auto state = mGradientState;
     if(state->mSolidColors) {
@@ -372,7 +386,7 @@ void GradientDrawable::getOutline(Outline& outline) {
 GradientDrawable* GradientDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
         mGradientState=std::make_shared<GradientState>(*mGradientState);
-        updateLocalState();
+        updateLocalState(nullptr);
         mMutated = true;
     }
     return this;
@@ -778,7 +792,7 @@ int  GradientDrawable::getChangingConfigurations()const {
 void  GradientDrawable::setAlpha(int alpha) {
     if (alpha != mAlpha) {
         mAlpha = alpha;
-        updateLocalState();
+        updateLocalState(nullptr);
         invalidateSelf();
     }
 }
@@ -1195,11 +1209,11 @@ void GradientDrawable::draw(Canvas&canvas) {
 
 void GradientDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     Drawable::inflate(r, parser, atts, theme);
-    mGradientState->setDensity(Drawable::resolveDensity( 0));
+    mGradientState->setDensity(Drawable::resolveDensity(&r, 0));
     auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawable);
     if (ta) updateStateFromTypedArray(*ta);
     inflateChildElements(r,parser,atts,theme);
-    updateLocalState();
+    updateLocalState(&r);
 }
 
 // AOSP GradientDrawable.canApplyTheme: theme attrs pending re-resolution.
@@ -1220,7 +1234,7 @@ void GradientDrawable::applyTheme(const Resources::Theme& t){
         if (a) updateStateFromTypedArray(*a);
         state->mThemeAttrs.clear();
     }
-    updateLocalState();
+    updateLocalState(&t.getResources());
 }
 
 void GradientDrawable::updateStateFromTypedArray(const TypedArray& a) {

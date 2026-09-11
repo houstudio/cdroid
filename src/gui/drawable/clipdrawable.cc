@@ -35,21 +35,27 @@ ClipDrawable::ClipState::ClipState(const ClipState& state)
 }
 
 ClipDrawable*ClipDrawable::ClipState::newDrawable(){
-    return new ClipDrawable(std::dynamic_pointer_cast<ClipState>(shared_from_this()));
+    // AOSP overrides only newDrawable(Resources); the no-arg form is the
+    // DrawableWrapperState forward (newDrawable(null)).
+    return (ClipDrawable*)newDrawable(nullptr);
+}
+
+Drawable*ClipDrawable::ClipState::newDrawable(Resources* res){
+    return new ClipDrawable(std::dynamic_pointer_cast<ClipState>(shared_from_this()), res);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 ClipDrawable::ClipDrawable()
-    :ClipDrawable(std::make_shared<ClipState>()){
+    :ClipDrawable(std::make_shared<ClipState>(), nullptr){
 }
 
-ClipDrawable::ClipDrawable(std::shared_ptr<ClipState>state):DrawableWrapper(state){
+ClipDrawable::ClipDrawable(std::shared_ptr<ClipState>state,Resources*res):DrawableWrapper(state,res){
     mState = state;
 }
 
 ClipDrawable::ClipDrawable(Drawable* drawable, int gravity,int orientation)
-    :ClipDrawable(std::make_shared<ClipState>()){
+    :ClipDrawable(std::make_shared<ClipState>(), nullptr){
     mState->mGravity = gravity;
     mState->mOrientation = orientation;
     setDrawable(drawable);

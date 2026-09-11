@@ -70,8 +70,8 @@ protected:
     bool onLevelChange(int level) override;
 public:
     AdaptiveIconDrawable();
-    AdaptiveIconDrawable(LayerState* state);
-    std::shared_ptr<LayerState> createConstantState(LayerState* state);
+    AdaptiveIconDrawable(LayerState* state, Resources* res);
+    std::shared_ptr<LayerState> createConstantState(LayerState* state, Resources* res);
     AdaptiveIconDrawable(Drawable* backgroundDrawable,Drawable* foregroundDrawable);
     AdaptiveIconDrawable(Drawable* backgroundDrawable, Drawable* foregroundDrawable, Drawable* monochromeDrawable);
     void inflate(Resources& r, XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme)override;
@@ -151,7 +151,7 @@ public:
     Drawable* mDrawable = nullptr;
 
     ChildDrawable(int density);
-    ChildDrawable(ChildDrawable* orig,AdaptiveIconDrawable* owner);
+    ChildDrawable(ChildDrawable* orig,AdaptiveIconDrawable* owner,Resources* res);
     bool canApplyTheme()const;
     void setDensity(int targetDensity);
 };
@@ -182,12 +182,13 @@ private:
     bool mAutoMirrored = false;
     friend AdaptiveIconDrawable;
 public:
-    LayerState(LayerState* orig, AdaptiveIconDrawable* owner);
+    LayerState(LayerState* orig, AdaptiveIconDrawable* owner, Resources* res);
 
     void setDensity(int targetDensity);
 
     bool canApplyTheme();
     Drawable* newDrawable()override;
+    Drawable* newDrawable(Resources* res)override;
 
     int getChangingConfigurations() const override;
 

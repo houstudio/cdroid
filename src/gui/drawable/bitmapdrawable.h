@@ -85,6 +85,7 @@ private:
         BitmapState(const BitmapState&bitmapState);
         ~BitmapState()override;
         BitmapDrawable* newDrawable()override;
+        Drawable* newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
     };
     /* Source-space tinted bitmap, memoized in the state (see the members
@@ -99,7 +100,7 @@ private:
     bool needMirroring();
     void computeBitmapSize();
     void updateDstRectAndInsetsIfDirty();
-    BitmapDrawable(std::shared_ptr<BitmapState>state);
+    BitmapDrawable(std::shared_ptr<BitmapState>state, Resources* res);
     void updateStateFromTypedArray(const TypedArray& a, int srcDensityOverride);
 protected:
     bool mMutated;

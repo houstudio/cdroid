@@ -37,7 +37,7 @@ LayerDrawable::ChildDrawable::ChildDrawable(int density){
     mId=-1;
 }
 
-LayerDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig,LayerDrawable*owner):ChildDrawable(160){
+LayerDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig,LayerDrawable*owner,Resources*res):ChildDrawable(orig->mDensity){
     Drawable*dr = orig->mDrawable;
     Drawable*clone=nullptr;
     if(dr){
@@ -46,6 +46,8 @@ LayerDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig,LayerDrawable*ow
             clone=dr;
             LOGW_IF((dr->getCallback()==nullptr),"Invalid drawable added to LayerDrawable Drawable already "
                             "belongs to another owner but does not expose a constant state");
+        }else if (res != nullptr) {
+            clone=cs->newDrawable(res);
         }else
             clone=cs->newDrawable();
         clone->setLayoutDirection(dr->getLayoutDirection());
@@ -54,6 +56,7 @@ LayerDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig,LayerDrawable*ow
         clone->setCallback(owner);
     }
     mDrawable=clone;
+    mThemeAttrs = orig->mThemeAttrs;
     mInsetL = orig->mInsetL;
     mInsetT = orig->mInsetT;
     mInsetR = orig->mInsetR;
@@ -64,6 +67,12 @@ LayerDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig,LayerDrawable*ow
     mHeight = orig->mHeight;
     mGravity = orig->mGravity;
     mId = orig->mId;
+    // AOSP java:1890-1893: re-resolve the child's density against the target
+    // resources, scaling the density-carrying insets when they differ.
+    mDensity = Drawable::resolveDensity(res, orig->mDensity);
+    if (orig->mDensity != mDensity) {
+        applyDensityScaling(orig->mDensity, mDensity);
+    }
 }
 
 LayerDrawable::ChildDrawable::~ChildDrawable(){
@@ -119,17 +128,16 @@ LayerDrawable::LayerState::LayerState(){
     mOpacityOverride = PixelFormat::UNKNOWN;
 }
 
-LayerDrawable::LayerState::LayerState(const LayerState*orig,LayerDrawable*owner):LayerState(){
-    mDensity = Drawable::resolveDensity( orig ? orig->mDensity : 0);
+LayerDrawable::LayerState::LayerState(const LayerState*orig,LayerDrawable*owner,Resources*res):LayerState(){
+    mDensity = Drawable::resolveDensity(res, orig ? orig->mDensity : 0);
     if (orig == nullptr) return;
 
     mChangingConfigurations = orig->mChangingConfigurations;
     mChildrenChangingConfigurations = orig->mChildrenChangingConfigurations;
     mChildren.reserve(orig->mChildren.size());
     for (auto child:orig->mChildren){
-        mChildren.push_back(new ChildDrawable(child, owner));
+        mChildren.push_back(new ChildDrawable(child, owner, res));
     }
-    mDensity = orig->mDensity;
     mCheckedOpacity = orig->mCheckedOpacity;
     mOpacity = orig->mOpacity;
     mCheckedStateful = orig->mCheckedStateful;
@@ -167,9 +175,21 @@ LayerDrawable*LayerDrawable::LayerState::newDrawable(){
     // ProgressBar's progress layer) poisoned every other view using the same
     // resource (two SeekBars bled 40% ↔ 80%).
     LayerDrawable* dr = new LayerDrawable();
-    dr->mLayerState = std::make_shared<LayerState>(this, dr);
+    dr->mLayerState = std::make_shared<LayerState>(this, dr, nullptr);
     // AOSP LayerDrawable(LayerState, Resources) refreshes padding only when
     // the copied state has children.
+    if (!dr->mLayerState->mChildren.empty()) {
+        dr->ensurePadding();
+        dr->refreshPadding();
+    }
+    return dr;
+}
+
+Drawable*LayerDrawable::LayerState::newDrawable(Resources* res){
+    // Same copy-here structure as newDrawable() (see the comment above);
+    // AOSP routes both through LayerDrawable(state, res) → createConstantState.
+    LayerDrawable* dr = new LayerDrawable();
+    dr->mLayerState = std::make_shared<LayerState>(this, dr, res);
     if (!dr->mLayerState->mChildren.empty()) {
         dr->ensurePadding();
         dr->refreshPadding();
@@ -341,8 +361,8 @@ LayerDrawable::~LayerDrawable(){
     }
 }
 
-std::shared_ptr<LayerDrawable::LayerState> LayerDrawable::createConstantState(LayerState* state,const AttributeSet*){
-    return std::make_shared<LayerState>(state, this);
+std::shared_ptr<LayerDrawable::LayerState> LayerDrawable::createConstantState(LayerState* state,Resources*res){
+    return std::make_shared<LayerState>(state, this, res);
 }
 
 void LayerDrawable::setLayerSize(int index, int w, int h){
@@ -1162,7 +1182,7 @@ void LayerDrawable::applyTheme(const Resources::Theme& t){
 
 void LayerDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     Drawable::inflate(r,parser,atts, theme);
-    const int density = Drawable::resolveDensity( 0);
+    const int density = Drawable::resolveDensity(&r, 0);
     mLayerState->setDensity(density);
 
     auto ta = obtainAttributes(r, theme, atts, R::styleable::LayerDrawable);

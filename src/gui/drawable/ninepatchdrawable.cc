@@ -30,16 +30,18 @@ namespace cdroid{
 using namespace cdroid::internal;
 //https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp
 
-NinePatchDrawable::NinePatchDrawable():NinePatchDrawable(std::make_shared<NinePatchState>()){
+NinePatchDrawable::NinePatchDrawable():NinePatchDrawable(std::make_shared<NinePatchState>(), nullptr){
 }
 
-NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
+NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state, Resources* res){
     mNinePatchState = state;
     mAlpha = 255;
     mMutated = false;
     mFilterBitmap = false;
     mTintFilter = nullptr;
-    mTargetDensity = state->mTargetDensity;
+    // AOSP updateLocalState (java:753): resolve the target density against
+    // res; a null res keeps the state's density.
+    mTargetDensity = Drawable::resolveDensity(res, state->mTargetDensity);
     mOutlineRadius=0.f;
     mPadding.setEmpty();
     computeBitmapSize();
@@ -453,7 +455,11 @@ NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
 }
 
 NinePatchDrawable*NinePatchDrawable::NinePatchState::newDrawable(){
-    return new NinePatchDrawable(shared_from_this());
+    return new NinePatchDrawable(shared_from_this(), nullptr);
+}
+
+Drawable*NinePatchDrawable::NinePatchState::newDrawable(Resources* res){
+    return new NinePatchDrawable(shared_from_this(), res);
 }
 
 int NinePatchDrawable::NinePatchState::getChangingConfigurations()const{

@@ -44,7 +44,11 @@ ColorDrawable::ColorState::ColorState(const ColorState& state){
 }
 
 ColorDrawable* ColorDrawable::ColorState::newDrawable(){
-    return new ColorDrawable(shared_from_this());
+    return new ColorDrawable(shared_from_this(), nullptr);
+}
+
+Drawable* ColorDrawable::ColorState::newDrawable(Resources* res){
+    return new ColorDrawable(shared_from_this(), res);
 }
 
 int ColorDrawable::ColorState::getChangingConfigurations()const{
@@ -61,7 +65,7 @@ ColorDrawable::ColorDrawable(int color){
     setColor(color);
 }
 
-ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
+ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state, Resources* res){
     mColorState = state;
     mTintFilter = nullptr;
     mMutated = false;

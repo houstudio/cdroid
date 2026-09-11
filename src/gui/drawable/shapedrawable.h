@@ -40,13 +40,14 @@ private:
         ShapeState(const ShapeState&orig);
         ~ShapeState();
         ShapeDrawable* newDrawable()override;
+        Drawable* newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
     };
     bool mMutated;
     cdroid::RefPtr<PorterDuffColorFilter>mTintFilter;
     std::shared_ptr<ShapeState>mShapeState;
     void updateShape();
-    ShapeDrawable(std::shared_ptr<ShapeState>state);
+    ShapeDrawable(std::shared_ptr<ShapeState>state, Resources* res);
     void updateLocalState();
     void updateStateFromTypedArray(const TypedArray& a);
     int inflateTag(const std::string&,Resources&,XmlPullParser&,const AttributeSet&);

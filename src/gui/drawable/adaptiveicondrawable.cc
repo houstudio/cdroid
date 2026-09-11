@@ -25,11 +25,11 @@ using namespace cdroid::internal;
 using namespace Cairo;
 
 AdaptiveIconDrawable::AdaptiveIconDrawable()
-    :AdaptiveIconDrawable((LayerState*) nullptr){
+    :AdaptiveIconDrawable((LayerState*) nullptr, nullptr){
 }
 
-AdaptiveIconDrawable::AdaptiveIconDrawable(LayerState* state) {
-    mLayerState = createConstantState(state);
+AdaptiveIconDrawable::AdaptiveIconDrawable(LayerState* state, Resources* res) {
+    mLayerState = createConstantState(state, res);
     // config_icon_mask from context bound resource may have been chaged using
     // OverlayManager. Read that one first.
     /*Resources r = ActivityThread.currentActivityThread() == nullptr
@@ -53,8 +53,8 @@ AdaptiveIconDrawable::ChildDrawable*AdaptiveIconDrawable::createChildDrawable(Dr
     return layer;
 }
 
-std::shared_ptr<AdaptiveIconDrawable::LayerState> AdaptiveIconDrawable::createConstantState(LayerState* state) {
-    return std::make_shared<LayerState>(state, this);
+std::shared_ptr<AdaptiveIconDrawable::LayerState> AdaptiveIconDrawable::createConstantState(LayerState* state, Resources* res) {
+    return std::make_shared<LayerState>(state, this, res);
 }
 
 AdaptiveIconDrawable::AdaptiveIconDrawable(Drawable* backgroundDrawable,Drawable* foregroundDrawable)
@@ -63,7 +63,7 @@ AdaptiveIconDrawable::AdaptiveIconDrawable(Drawable* backgroundDrawable,Drawable
 
 AdaptiveIconDrawable::AdaptiveIconDrawable(Drawable* backgroundDrawable,
         Drawable* foregroundDrawable, Drawable* monochromeDrawable)
-    :AdaptiveIconDrawable((LayerState*)nullptr){
+    :AdaptiveIconDrawable((LayerState*)nullptr, nullptr){
     if (backgroundDrawable != nullptr) {
         addLayer(BACKGROUND_ID, createChildDrawable(backgroundDrawable));
     }
@@ -90,7 +90,7 @@ void AdaptiveIconDrawable::inflate(Resources& r, XmlPullParser& parser,const Att
 
     // The density may have changed since the last update. This will
     // apply scaling to any existing constant state properties.
-    const int deviceDensity = Drawable::resolveDensity(0);
+    const int deviceDensity = Drawable::resolveDensity(&r, 0);
     state->setDensity(deviceDensity);
     state->mSrcDensityOverride = mSrcDensityOverride;
     //state->mSourceDrawableId = Resources.getAttributeSetSourceResId(attrs);
@@ -242,7 +242,7 @@ void AdaptiveIconDrawable::applyTheme(const Resources::Theme& t) {
         return;
     }
 
-    const int density = Drawable::resolveDensity(0);
+    const int density = Drawable::resolveDensity(&t.getResources(), 0);
     state->setDensity(density);
 
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
@@ -617,7 +617,7 @@ std::shared_ptr<Drawable::ConstantState> AdaptiveIconDrawable::getConstantState(
 
 Drawable* AdaptiveIconDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
-        mLayerState = createConstantState(mLayerState.get());
+        mLayerState = createConstantState(mLayerState.get(), nullptr);
         for (int i = 0; i < LayerState::N_CHILDREN; i++) {
             Drawable* dr = mLayerState->childAt(i);
             if (dr != nullptr) {
@@ -648,7 +648,7 @@ AdaptiveIconDrawable::ChildDrawable::ChildDrawable(int density) {
     mDensity = density;
 }
 
-AdaptiveIconDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig, AdaptiveIconDrawable* owner) {
+AdaptiveIconDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig, AdaptiveIconDrawable* owner, Resources* res) {
 
     Drawable* dr = orig->mDrawable;
     Drawable* clone;
@@ -656,9 +656,9 @@ AdaptiveIconDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig, Adaptive
         auto cs = dr->getConstantState();
         if (cs == nullptr) {
             clone = dr;
-        }/* else if (res != nullptr) {
+        } else if (res != nullptr) {
             clone = cs->newDrawable(res);
-        }*/ else {
+        } else {
             clone = cs->newDrawable();
         }
         clone->setCallback(owner);
@@ -671,7 +671,7 @@ AdaptiveIconDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig, Adaptive
     mDrawable = clone;
     mThemeAttrs = orig->mThemeAttrs;
 
-    mDensity = Drawable::resolveDensity(orig->mDensity);
+    mDensity = Drawable::resolveDensity(res, orig->mDensity);
 }
 
 bool AdaptiveIconDrawable::ChildDrawable::canApplyTheme() const{
@@ -688,8 +688,8 @@ void AdaptiveIconDrawable::ChildDrawable::setDensity(int targetDensity) {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 //static class LayerState extends ConstantState
-AdaptiveIconDrawable::LayerState::LayerState(LayerState* orig, AdaptiveIconDrawable* owner) {
-    mDensity = Drawable::resolveDensity(orig != nullptr ? orig->mDensity : 0);
+AdaptiveIconDrawable::LayerState::LayerState(LayerState* orig, AdaptiveIconDrawable* owner, Resources* res) {
+    mDensity = Drawable::resolveDensity(res, orig != nullptr ? orig->mDensity : 0);
     mChildren.resize(N_CHILDREN);// = new ChildDrawable[N_CHILDREN];
     if (orig != nullptr) {
         std::vector<ChildDrawable*>& origChildDrawable = orig->mChildren;
@@ -702,7 +702,7 @@ AdaptiveIconDrawable::LayerState::LayerState(LayerState* orig, AdaptiveIconDrawa
             ChildDrawable* orcd = origChildDrawable[i];
             // Sparse slots (unset layer) copy as sparse; ChildDrawable's copy
             // ctor dereferences orig.
-            mChildren[i] = orcd != nullptr ? new ChildDrawable(orcd, owner) : nullptr;
+            mChildren[i] = orcd != nullptr ? new ChildDrawable(orcd, owner, res) : nullptr;
         }
 
         mCheckedOpacity = orig->mCheckedOpacity;
@@ -741,7 +741,11 @@ bool AdaptiveIconDrawable::LayerState::canApplyTheme(){
 }
 
 Drawable* AdaptiveIconDrawable::LayerState::newDrawable() {
-    return new AdaptiveIconDrawable(this);
+    return new AdaptiveIconDrawable(this, nullptr);
+}
+
+Drawable* AdaptiveIconDrawable::LayerState::newDrawable(Resources* res) {
+    return new AdaptiveIconDrawable(this, res);
 }
 
 int AdaptiveIconDrawable::LayerState::getChangingConfigurations() const{

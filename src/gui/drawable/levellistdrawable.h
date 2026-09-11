@@ -25,16 +25,17 @@ private:
     public:
         std::vector<int>mLows;
         std::vector<int>mHighs;
-        LevelListState(const LevelListState*orig,LevelListDrawable*own);
+        LevelListState(const LevelListState*orig,LevelListDrawable*own,Resources*res);
         LevelListState(const LevelListState&state);
         void mutate()override;
         void addLevel(int low,int high,Drawable*drawable);
         int indexOfLevel(int level)const;
         LevelListDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
     };
     bool mMutated;
     std::shared_ptr<LevelListState>mLevelListState;
-    LevelListDrawable(std::shared_ptr<LevelListState>state);
+    LevelListDrawable(std::shared_ptr<LevelListState>state,Resources*res);
 private:
     void inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts);
 protected:
