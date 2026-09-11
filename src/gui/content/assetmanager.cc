@@ -44,15 +44,6 @@ const char* AssetManager::IDMAP_BIN = "/system/bin/idmap";
 const char* AssetManager::VENDOR_OVERLAY_DIR = "/vendor/overlay";
 const char* AssetManager::SYSTEM_RESOURCES_PATH = "framework/framework-res.apk";
 
-// Like strdup(), but uses new[] (freed with delete[]) to match the rest of this port.
-static char* strdupNew(const char* str) {
-    if (str == nullptr) return nullptr;
-    size_t len = strlen(str);
-    char* s = new char[len + 1];
-    memcpy(s, str, len + 1);
-    return s;
-}
-
 // ===========================================================================
 // asset_path
 // ===========================================================================
@@ -68,16 +59,15 @@ int32_t AssetManager::getGlobalCount() {
     return gAmCount;
 }
 
-AssetManager::AssetManager() : mLocale(nullptr), mConfig(new ResTable_config) {
+AssetManager::AssetManager() {
     gAmCount++;
-    memset(mConfig, 0, sizeof(ResTable_config));
     mAm2.reset(new AssetManager2());
-    if (kIsDebug) LOGI("Creating AssetManager %p #%d", this, gAmCount);
+    LOGI_IF(kIsDebug, "Creating AssetManager %p #%d", this, gAmCount);
 }
 
 AssetManager::~AssetManager() {
     gAmCount--;
-    if (kIsDebug) LOGI("Destroying AssetManager %p #%d", this, gAmCount);
+    LOGI_IF(kIsDebug, "Destroying AssetManager %p #%d", this, gAmCount);
 
     for (size_t i = 0; i < mAssetPaths.size(); i++) {
         if (mAssetPaths[i].rawFd >= 0) {
@@ -87,8 +77,6 @@ AssetManager::~AssetManager() {
             close(mAssetPaths[i].rawFd);
         }
     }
-    delete mConfig;
-    delete[] mLocale;
 }
 
 bool AssetManager::addAssetPath(const std::string& path, int32_t* cookie,
@@ -126,11 +114,11 @@ bool AssetManager::addAssetPath(const std::string& path, int32_t* cookie,
 
     if (cookie) *cookie = mAssetPaths.back().cookie;
 
-    // AM2: one immutable ApkAssets per pak path, then an atomic commit of the
-    // whole set (AOSP Java AssetManager collects apkAssets and calls
-    // nativeSetApkAssets). Loading per add keeps later paks visible to the
-    // table without invalidating anything earlier paths resolved —
-    // SetApkAssets rebuilds package groups and flushes the bag caches.
+    // AM2: one immutable ApkAssets per pak path; the whole set commits
+    // atomically, LAZILY, on the first table access (AOSP Java collects the
+    // apkAssets list and calls nativeSetApkAssets once — per-add commits made
+    // startup O(N²), every SetApkAssets rebuilding package groups and
+    // flushing the bag caches).
     if (ap.type == ::kFileTypeRegular) {
         package_property_t flags = 0U;
         if (isSystemAsset) flags |= PROPERTY_SYSTEM;
@@ -138,11 +126,7 @@ bool AssetManager::addAssetPath(const std::string& path, int32_t* cookie,
         std::unique_ptr<ApkAssets> loaded = ApkAssets::Load(ap.path, flags);
         if (loaded != nullptr) {
             mApkAssets.push_back(std::move(loaded));
-            std::vector<const ApkAssets*> commit;
-            commit.reserve(mApkAssets.size());
-            for (const auto& a : mApkAssets) commit.push_back(a.get());
-            mAm2->SetApkAssets(std::move(commit));
-            updateResourceParams();
+            mApkAssetsPending = true;
         } else {
             LOGW("addAssetPath: ApkAssets::Load(%s) failed (no table from this path)",
                  ap.path.c_str());
@@ -182,27 +166,18 @@ std::string AssetManager::getAssetPath(int32_t cookie) const {
     return std::string();
 }
 
-void AssetManager::setLocale(const char* locale) {
-    delete[] mLocale;
-    mLocale = strdupNew(locale);
+void AssetManager::setConfiguration(const ResTable_config& config, const char* locale) {
+    // AOSP native setConfiguration: copy the config, then pack the optional
+    // bcp47 locale string into it (setBcp47Locale) and push it to the table.
+    mConfig = config;
+    if (locale != nullptr) {
+        mConfig.setBcp47Locale(locale);
+    }
     updateResourceParams();
 }
 
-void AssetManager::setConfiguration(const ResTable_config& config, const char* locale) {
-    *mConfig = config;
-    // AOSP repacks a bcp47 `locale` into mConfig via setBcp47Locale; this port's
-    // ResTable_config has no setBcp47Locale, so the caller is expected to set the
-    // language/country fields in `config` directly. We still honor the bcp47
-    // string for record-keeping (mLocale) and push mConfig to the table.
-    if (locale != nullptr) {
-        setLocale(locale);
-    } else {
-        updateResourceParams();
-    }
-}
-
 void AssetManager::getConfiguration(ResTable_config* outConfig) const {
-    *outConfig = *mConfig;
+    *outConfig = mConfig;
 }
 
 Asset* AssetManager::open(const char* fileName, AccessMode mode) {
@@ -257,7 +232,21 @@ Asset* AssetManager::openNonAsset(int32_t cookie, const char* fileName, AccessMo
 // ResTable to append into and no borrowed-table injection seam.
 
 void AssetManager::updateResourceParams() const {
-    mAm2->SetConfiguration(*mConfig);
+    commitApkAssets();
+    mAm2->SetConfiguration(mConfig);
+}
+
+// One atomic commit of the pending ApkAssets batch (see header): SetApkAssets
+// rebuilds package groups, so the configuration is re-pushed after it.
+void AssetManager::commitApkAssets() const {
+    if (!mApkAssetsPending) return;
+    std::vector<const ApkAssets*> commit;
+    commit.reserve(mApkAssets.size());
+    for (const auto& a : mApkAssets) commit.push_back(a.get());
+    mAm2->SetApkAssets(std::move(commit));
+    mAm2->SetConfiguration(mConfig);
+    mPackageNames.clear();   // package set changed
+    mApkAssetsPending = false;
 }
 
 // getIdentifier ladder (see header): the legacy ResTable face the resource
@@ -265,19 +254,16 @@ void AssetManager::updateResourceParams() const {
 // parts of the name string, so the package retry sequence is explicit here.
 int AssetManager::getIdentifier(const std::string& name, const std::string& type,
                                 const std::string& package) const {
+    commitApkAssets();
     // Strip a type prefix carried inside the name ("attr/foo" → "foo"): the
-    // callers pass type separately.
-    std::string cleanName = name;
-    const size_t slash = cleanName.find('/');
-    if (slash != std::string::npos) cleanName = cleanName.substr(slash + 1);
+    // callers pass type separately (bind, don't copy, the common no-slash case).
+    const size_t slash = name.find('/');
+    const std::string& cleanName = (slash == std::string::npos) ? name : name.substr(slash + 1);
     if (cleanName.empty()) return 0;
 
-    std::vector<std::string> tried;
     if (!package.empty()) {
-        tried.push_back(package);
         auto id = mAm2->GetResourceId(package + ":" + type + "/" + cleanName);
         if (id.has_value()) return (int)*id;
-        tried.push_back("cdroid." + package);
         id = mAm2->GetResourceId("cdroid." + package + ":" + type + "/" + cleanName);
         if (id.has_value()) return (int)*id;
     }
@@ -285,15 +271,16 @@ int AssetManager::getIdentifier(const std::string& name, const std::string& type
     if (id.has_value()) return (int)*id;
 
     // Any registered package (the legacy getIdentifier(name, type, "") tail).
-    std::vector<std::string> packages;
-    mAm2->ForEachPackage([&](const std::string& pname, uint8_t) {
-        packages.push_back(pname);
-        return true;
-    });
-    for (const auto& p : packages) {
-        bool seen = false;
-        for (const auto& t : tried) { if (t == p) { seen = true; break; } }
-        if (seen) continue;
+    // Failed probes above are pure table lookups — re-running them against a
+    // matching package name returns the same nullopt, so no skip bookkeeping.
+    // mPackageNames caches the set (cleared on every ApkAssets commit).
+    if (mPackageNames.empty()) {
+        mAm2->ForEachPackage([&](const std::string& pname, uint8_t) {
+            mPackageNames.push_back(pname);
+            return true;
+        });
+    }
+    for (const auto& p : mPackageNames) {
         auto anyId = mAm2->GetResourceId(p + ":" + type + "/" + cleanName);
         if (anyId.has_value()) return (int)*anyId;
     }
@@ -302,6 +289,7 @@ int AssetManager::getIdentifier(const std::string& name, const std::string& type
 
 bool AssetManager::getResourceName(uint32_t id, std::string* pkg, std::string* type,
                                    std::string* key) const {
+    commitApkAssets();
     auto name = mAm2->GetResourceName(id);
     if (!name.has_value()) return false;
     // Utf8 faces preferred; the pak pools are UTF-16, so the u16 variants are
@@ -324,47 +312,37 @@ bool AssetManager::getResourceName(uint32_t id, std::string* pkg, std::string* t
     return true;
 }
 
-// Locale split by package id (legacy ResTable semantics preserved exactly):
-// runtime package 0x01 is the framework ("system") set, everything else the
-// app's. AOSP AM2 offers only the exclude_system flag, which keys off
-// PROPERTY_SYSTEM — this split is what the callers actually consume.
-static void collectLocalesByPackage(const std::vector<std::unique_ptr<ApkAssets>>& apks,
-                                    bool systemSide, std::vector<std::string>* out) {
-    std::set<std::string> seen;
-    std::set<std::string> locales;
-    for (const auto& apk : apks) {
-        const LoadedArsc* arsc = apk->GetLoadedArsc();
-        if (arsc == nullptr) continue;
-        for (const auto& pkg : arsc->GetPackages()) {
-            const bool isFramework = (pkg->GetPackageId() == 0x01);
-            if (isFramework != systemSide) continue;
-            pkg->CollectLocales(false /* canonicalize */, &locales);
-        }
-    }
-    for (const auto& l : locales) {
-        if (seen.insert(l).second) out->push_back(l);
-    }
-}
-
 std::vector<std::string> AssetManager::getLocales() const
 {
+    commitApkAssets();
     // AOSP AssetManager.getLocales → AssetManager2::GetResourceLocales: the
     // distinct "xx-YY" configs across every registered asset path's arsc.
     const std::set<std::string> locs = mAm2->GetResourceLocales();
     return std::vector<std::string>(locs.begin(), locs.end());
 }
 
+// AOSP AssetManager.getNonSystemLocales (AssetManager.java:1543): one delegate
+// to the engine's exclude_system filter — the framework pak registers with
+// PROPERTY_SYSTEM (App::addResource), so LoadedPackage::IsSystem() is the
+// single definition of "system" (the former wrapper-side walk keyed off a
+// hardcoded package id 0x01 instead).
 std::vector<std::string> AssetManager::getNonSystemLocales() const
 {
-    std::vector<std::string> out;
-    collectLocalesByPackage(mApkAssets, false, &out);
-    return out;
+    commitApkAssets();
+    const std::set<std::string> locs = mAm2->GetResourceLocales(true);
+    return std::vector<std::string>(locs.begin(), locs.end());
 }
 
+// CDROID extension (see header): the system subset of getLocales(). With the
+// engine's IsSystem() as the definition, it is the set difference.
 std::vector<std::string> AssetManager::getSystemLocales() const
 {
+    commitApkAssets();
+    const std::set<std::string> all = mAm2->GetResourceLocales();
+    const std::set<std::string> app = mAm2->GetResourceLocales(true);
     std::vector<std::string> out;
-    collectLocalesByPackage(mApkAssets, true, &out);
+    std::set_difference(all.begin(), all.end(), app.begin(), app.end(),
+                        std::back_inserter(out));
     return out;
 }
 
@@ -403,7 +381,9 @@ Asset* AssetManager::openNonAssetInPath(const char* fileName, AccessMode mode, a
     zip_t* zip = getZipFile(ap);
     if (zip == nullptr) return nullptr;
 
-    zip_int64_t entry = zip_name_locate(zip, fileName, 0);
+    // ZIP_FL_ENC_RAW: skip libzip's per-call _zip_string_new encoding
+    // guess (1-2 hidden mallocs) — pak entry names are aapt2/pakbuilder ASCII.
+    zip_int64_t entry = zip_name_locate(zip, fileName, ZIP_FL_ENC_RAW);
     if (entry < 0) {
         // Unified res mode: pak entries carry the apk's "res/" prefix (older
         // paks don't) and AssetManager callers spell either form — probe the
@@ -413,7 +393,7 @@ Asset* AssetManager::openNonAssetInPath(const char* fileName, AccessMode mode, a
         pakPathCandidates(fileName, cands);
         for (const std::string& c : cands) {
             if (c == fileName) continue;
-            entry = zip_name_locate(zip, c.c_str(), 0);
+            entry = zip_name_locate(zip, c.c_str(), ZIP_FL_ENC_RAW);
             if (entry >= 0) break;
         }
         if (entry < 0) return nullptr;
@@ -495,7 +475,6 @@ Asset* AssetManager::openAssetFromFile(const std::string& pathName, AccessMode m
 // buffer (CDROID has no IncFs).
 Asset* AssetManager::openAssetFromZip(struct zip* zip, int64_t entry, AccessMode mode,
                                       const std::string& entryName) {
-    (void)entryName;
     zip_stat_t st;
     zip_stat_init(&st);
     if (zip_stat_index(zip, (zip_int64_t)entry, 0, &st) != 0 || !(st.valid & ZIP_STAT_SIZE)) {

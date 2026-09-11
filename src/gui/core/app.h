@@ -108,7 +108,11 @@ private:
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
-    int addResource(const std::string&path,const std::string&name=std::string());
+    // isSystemAsset flags the framework res pak (cdroid.pak): it registers
+    // with PROPERTY_SYSTEM so the engine's IsSystem()/exclude_system filter
+    // defines "system" in one place (AOSP semantics; see AssetManager).
+    int addResource(const std::string&path,const std::string&name=std::string(),
+                    bool isSystemAsset=false);
     std::unique_ptr<cxxopts::ParseResult> mArgsResult;
     static std::atomic<App*>mInst;
     void onInit();

@@ -611,6 +611,16 @@ struct ResTable_config {
     size_t unpackRegion(char region[4]) const;
     // BCP-47 locale string (e.g. "en-US"), up to RESTABLE_MAX_LOCALE_LEN.
     void getBcp47Locale(char out[40], bool canonicalize = false) const;
+    // AOSP: parse a BCP-47 tag into the locale fields (the inverse of
+    // getBcp47Locale). android-12 ResourceTypes.h:1310.
+    void setBcp47Locale(const char* in);
+    // AOSP ResourceTypes.h:1312: reset every locale field (language, country,
+    // script, variant, numbering system) to zero. (Out-of-line here — header
+    // stays include-light; same placement as computeScript below.)
+    void clearLocale();
+    // AOSP ResourceTypes.h:1320 (out-of-line here: localeDataComputeScript
+    // lives in the vendored LocaleData.cc this header doesn't include).
+    void computeScript();
 };
 
 // ---------------------------------------------------------------------------

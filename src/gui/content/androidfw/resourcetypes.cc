@@ -25,6 +25,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <ctype.h>   // tolower/toupper (setBcp47Locale)
+#include <stdio.h>   // fprintf (setBcp47Locale invalid-tag diagnostic)
 #include <porting/cdlog.h>   // unified project logging (LOGW/LOGD/...); backed by libtvhal
 #include <sys/types.h> // ssize_t
 #include <algorithm>   // std::lower_bound (sparse type entries)
@@ -1376,6 +1378,176 @@ void ResTable_config::getBcp47Locale(char out[40], bool /*canonicalize*/) const 
         if (localeVariant[0]) { *p++ = '-'; memcpy(p, localeVariant, 8); p += 8; }
     }
     *p = 0;
+}
+
+// --- setBcp47Locale machinery (AOSP ResourceTypes.cpp:3090-3230, verbatim) ---
+
+struct LocaleParserState {
+    enum State : uint8_t {
+        BASE, UNICODE_EXTENSION, IGNORE_THE_REST
+    } parserState;
+    enum UnicodeState : uint8_t {
+        /* Initial state after the Unicode singleton is detected. Either a keyword
+         * or an attribute is expected. */
+        NO_KEY,
+        /* Unicode extension key (but not attribute) is expected. Next states:
+         * NO_KEY, IGNORE_KEY or NUMBERING_SYSTEM. */
+        EXPECT_KEY,
+        /* A key is detected, however it is not supported for now. Ignore its
+         * value. Next states: IGNORE_KEY or NUMBERING_SYSTEM. */
+        IGNORE_KEY,
+        /* Numbering system key was detected. Store its value in the configuration
+         * localeNumberingSystem field. Next state: EXPECT_KEY */
+        NUMBERING_SYSTEM
+    } unicodeState;
+
+    LocaleParserState(): parserState(BASE), unicodeState(NO_KEY) {}
+};
+
+static inline LocaleParserState assignLocaleComponent(ResTable_config* config,
+        const char* start, size_t size, LocaleParserState state) {
+
+    /* It is assumed that this function is not invoked with state.parserState
+     * set to IGNORE_THE_REST. The condition is checked by setBcp47Locale
+     * function. */
+
+    if (state.parserState == LocaleParserState::UNICODE_EXTENSION) {
+        switch (size) {
+            case 1:
+                /* Other BCP 47 extensions are not supported at the moment */
+                state.parserState = LocaleParserState::IGNORE_THE_REST;
+                break;
+            case 2:
+                if (state.unicodeState == LocaleParserState::NO_KEY ||
+                    state.unicodeState == LocaleParserState::EXPECT_KEY) {
+                    /* Analyze Unicode extension key. Currently only 'nu'
+                     * (numbering system) is supported.*/
+                    if ((start[0] == 'n' || start[0] == 'N') &&
+                        (start[1] == 'u' || start[1] == 'U')) {
+                        state.unicodeState = LocaleParserState::NUMBERING_SYSTEM;
+                    } else {
+                        state.unicodeState = LocaleParserState::IGNORE_KEY;
+                    }
+                } else {
+                    /* Keys are not allowed in other state allowed, ignore the rest. */
+                    state.parserState = LocaleParserState::IGNORE_THE_REST;
+                }
+                break;
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+                switch (state.unicodeState) {
+                    case LocaleParserState::NUMBERING_SYSTEM:
+                        /* Accept only the first occurrence of the numbering system. */
+                        if (config->localeNumberingSystem[0] == '\0') {
+                            for (size_t i = 0; i < size; ++i) {
+                               config->localeNumberingSystem[i] = tolower(start[i]);
+                            }
+                            state.unicodeState = LocaleParserState::EXPECT_KEY;
+                        } else {
+                            state.parserState = LocaleParserState::IGNORE_THE_REST;
+                        }
+                        break;
+                    case LocaleParserState::IGNORE_KEY:
+                        /* Unsupported Unicode keyword. Ignore. */
+                        state.unicodeState = LocaleParserState::EXPECT_KEY;
+                        break;
+                    case LocaleParserState::EXPECT_KEY:
+                        /* A keyword followed by an attribute is not allowed. */
+                        state.parserState = LocaleParserState::IGNORE_THE_REST;
+                        break;
+                    case LocaleParserState::NO_KEY:
+                        /* Extension attribute. Do nothing. */
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            default:
+                /* Unexpected field length - ignore the rest and treat as an error */
+                state.parserState = LocaleParserState::IGNORE_THE_REST;
+        }
+        return state;
+    }
+
+  switch (size) {
+       case 0:
+           state.parserState = LocaleParserState::IGNORE_THE_REST;
+           break;
+       case 1:
+           state.parserState = (start[0] == 'u' || start[0] == 'U')
+                   ? LocaleParserState::UNICODE_EXTENSION
+                   : LocaleParserState::IGNORE_THE_REST;
+           break;
+       case 2:
+       case 3:
+           config->language[0] ? config->packRegion(start) : config->packLanguage(start);
+           break;
+       case 4:
+           if ('0' <= start[0] && start[0] <= '9') {
+               // this is a variant, so fall through
+           } else {
+               config->localeScript[0] = toupper(start[0]);
+               for (size_t i = 1; i < 4; ++i) {
+                   config->localeScript[i] = tolower(start[i]);
+               }
+               break;
+           }
+           /* fall through */
+       case 5:
+       case 6:
+       case 7:
+       case 8:
+           for (size_t i = 0; i < size; ++i) {
+               config->localeVariant[i] = tolower(start[i]);
+           }
+           break;
+       default:
+           state.parserState = LocaleParserState::IGNORE_THE_REST;
+  }
+
+  return state;
+}
+
+void ResTable_config::setBcp47Locale(const char* in) {
+    clearLocale();
+
+    const char* start = in;
+    LocaleParserState state;
+    while (const char* separator = strchr(start, '-')) {
+        const size_t size = separator - start;
+        state = assignLocaleComponent(this, start, size, state);
+        if (state.parserState == LocaleParserState::IGNORE_THE_REST) {
+            fprintf(stderr, "Invalid BCP-47 locale string: %s\n", in);
+            break;
+        }
+        start = (separator + 1);
+    }
+
+    if (state.parserState != LocaleParserState::IGNORE_THE_REST) {
+        const size_t size = strlen(start);
+        assignLocaleComponent(this, start, size, state);
+    }
+
+    localeScriptWasComputed = (localeScript[0] == '\0');
+    if (localeScriptWasComputed) {
+        computeScript();
+    }
+}
+
+void ResTable_config::clearLocale() {
+    locale = 0;
+    localeScriptWasComputed = false;
+    memset(localeScript, 0, sizeof(localeScript));
+    memset(localeVariant, 0, sizeof(localeVariant));
+    memset(localeNumberingSystem, 0, sizeof(localeNumberingSystem));
+}
+
+void ResTable_config::computeScript() {
+    localeDataComputeScript(localeScript, language, country);
 }
 
 // Resolve a (possibly absent) string-pool entry by id. AOSP folds this into the

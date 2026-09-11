@@ -18,6 +18,7 @@
 #include "contextimpl.h"
 #include <content/androidfw/resourcetypes.h>  // pakPathCandidates + ResStringPool
 #include <content/androidfw/assetmanager2.h>  // AM2 (arscGetIdentifier engine)
+#include <content/assetmanager.h>           // the wrapper (getIdentifier seam)
 #include <content/typedvalue.h>             // TypedValue (tvOf / TYPE_STRING)
 #include <content/asset.h>                  // Asset / _FileAsset (buffer-backed)
 #include <core/iostreams.h>                 // AssetInputStream
@@ -173,42 +174,12 @@ const std::string ContextImpl::parseResource(const std::string&fullResId,std::st
 // trying the requested package and the framework ("android"), fall back to a
 // name-only search across ALL loaded packages (empty package = search all).
 uint32_t ContextImpl::arscGetIdentifier(const std::string& name, const std::string& type, const std::string& pkg) const {
-    AssetManager2* am2 = arscEngine();
-    if (am2 == nullptr) return 0;
-    // Strip type prefix: "attr/colorOnPrimary" → "colorOnPrimary"
-    std::string cleanName = name;
-    size_t slash = cleanName.find('/');
-    if (slash != std::string::npos) cleanName = cleanName.substr(slash + 1);
-    if (cleanName.empty()) return 0;
-    if (!pkg.empty()) {
-        auto id = am2->GetResourceId(pkg + ":" + type + "/" + cleanName);
-        if (id.has_value()) return *id;
-        // aapt2 forces a dotted package name ("cdroid.<ns>"); try that prefix
-        // before the expensive all-package scan.
-        id = am2->GetResourceId("cdroid." + pkg + ":" + type + "/" + cleanName);
-        if (id.has_value()) return *id;
-    }
-    auto id = am2->GetResourceId("android:" + type + "/" + cleanName);
-    if (id.has_value()) return *id;
-    // Any package: AM2's GetResourceId needs a package name, so walk the
-    // registered ones (the legacy getIdentifier(name, type, "") tail).
-    std::vector<std::string> tried;
-    if (!pkg.empty()) tried.push_back(pkg);
-    tried.push_back("cdroid." + pkg);
-    tried.push_back("android");
-    std::vector<std::pair<std::string, uint8_t>> packages;
-    am2->ForEachPackage([&](const std::string& pname, uint8_t) {
-        packages.push_back(std::make_pair(pname, (uint8_t)0));
-        return true;
-    });
-    for (const auto& p : packages) {
-        bool seen = false;
-        for (const auto& t : tried) { if (t == p.first) { seen = true; break; } }
-        if (seen) continue;
-        auto anyId = am2->GetResourceId(p.first + ":" + type + "/" + cleanName);
-        if (anyId.has_value()) return *anyId;
-    }
-    return 0;
+    if (arscEngine() == nullptr) return 0;   // no arsc loaded yet
+    // Single seam: the AssetManager wrapper's ladder (requested package → its
+    // "cdroid."-prefixed form → "android" → any registered package) — this
+    // used to be a verbatim copy of it. (const_cast: Context::getAssets is a
+    // non-const virtual; the lookup itself is const.)
+    return const_cast<ContextImpl*>(this)->getAssets().getIdentifier(name, type, pkg);
 }
 
 struct zip*ContextImpl::getResource(const std::string&fullResId,std::string*relativeResID,std::string*outPackage)const {

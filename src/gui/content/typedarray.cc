@@ -23,6 +23,7 @@
 //
 #include <content/typedarray.h>
 #include <content/androidfw/assetmanager2.h>  // AssetManager2 (mAm: pools + id lookups)
+#include <content/assetmanager.h>           // the wrapper (getIdentifier seam)
 #include <content/androidfw/attributeresolution.h>  // STYLE_* wire slots
 #include <content/typedvalue.h>      // TypedValue (getResolved reference resolution)
 #include <content/resources.h>            // Resources (mResources: getDrawable/loadComplexColor/getString)
@@ -46,8 +47,8 @@
 // resource id via the arsc, so TypedArray getters can route through the ID path
 // (Resources.getDrawable/loadComplexColor) instead of the legacy string Assets
 // lookup. Returns 0 if the path isn't a known resource.
-static int pathToResourceId(const cdroid::AssetManager2* am2, const std::string& path) {
-    if (am2 == nullptr || path.compare(0, 4, "res/") != 0) return 0;
+static int pathToResourceId(const cdroid::Resources* res, const std::string& path) {
+    if (res == nullptr || path.compare(0, 4, "res/") != 0) return 0;
     size_t sl = path.find_last_of('/');
     if (sl == std::string::npos || sl <= 4) return 0;
     std::string type = path.substr(4, sl - 4);  // "drawable" / "color" / "drawable-xxhdpi"
@@ -57,18 +58,10 @@ static int pathToResourceId(const cdroid::AssetManager2* am2, const std::string&
     std::string base = path.substr(sl + 1,
         (dot != std::string::npos && dot > sl) ? dot - sl - 1 : std::string::npos);
     if (type.empty() || base.empty()) return 0;
-    // Search every loaded package (the legacy getIdentifier(name, type, "")
-    // semantics): AM2's GetResourceId needs one package per query.
-    std::vector<std::string> packages;
-    am2->ForEachPackage([&](const std::string& pname, uint8_t) {
-        packages.push_back(pname);
-        return true;
-    });
-    for (const auto& pkg : packages) {
-        auto id = am2->GetResourceId(pkg + ":" + type + "/" + base);
-        if (id.has_value()) return (int)*id;
-    }
-    return 0;
+    // The any-package search is the empty-package case of the single seam —
+    // AssetManager::getIdentifier walks every loaded pak (this used to be a
+    // local copy of that tail).
+    return res->getAssets()->getIdentifier(base, type, std::string());
 }
 
 namespace cdroid {
@@ -494,7 +487,7 @@ Drawable* TypedArray::getDrawable(size_t idx) const {
         id = (int)v.data;
     } else if (v.type == TypedValue::TYPE_STRING) {
         id = (int)mVals[idx].resourceId;   // column keeps the source ref id
-        if (id == 0) id = pathToResourceId(mAm, getString(idx));
+        if (id == 0) id = pathToResourceId(mResources, getString(idx));
     }
     // AOSP TypedArray.getDrawable → mResources.getDrawable(id, mTheme): the
     // nested load resolves ?attr in the drawable/CSL XML against THIS theme.
@@ -565,7 +558,7 @@ std::shared_ptr<ColorStateList> TypedArray::getColorStateList(size_t idx) const 
         // source reference id in the column — prefer it over re-parsing the
         // path (the string needs the owning pool block to fetch at all).
         id = (int)mVals[idx].resourceId;
-        if (id == 0) id = pathToResourceId(mAm, getString(idx));
+        if (id == 0) id = pathToResourceId(mResources, getString(idx));
     }
     if (id != 0)
         return std::dynamic_pointer_cast<ColorStateList>(mResources->loadComplexColor(id, mTheme.get()));

@@ -104,7 +104,8 @@ public:
     // The table engine (AM2). AOSP's Java AssetManager holds the ApkAssets
     // list and commits it to the native AssetManager2; here the same object
     // owns both, and getResources()'s former ResTable& face is served by it.
-    AssetManager2& getAssetManager2() const { return *mAm2; }
+    // Commits any pending addAssetPath batch first (see commitApkAssets).
+    AssetManager2& getAssetManager2() const { commitApkAssets(); return *mAm2; }
 
     // CDROID seam on the legacy ResTable::getIdentifier semantics (AOSP's
     // AM2 GetResourceId needs a package): aapt2 forces a dotted package name
@@ -125,12 +126,13 @@ public:
     // skipped). Feed each tag to Locale::forLanguageTag() to pull the
     // language/script/country apart. Empty when no arsc is loaded.
     std::vector<std::string> getLocales() const;
-    // AOSP AssetManager.getNonSystemLocales(): same, minus locales provided
-    // ONLY by the framework (the android package) — the app's own languages.
+    // AOSP AssetManager.getNonSystemLocales() (AssetManager.java:1543): same,
+    // minus the framework ("system") pak's locales — the app's own languages.
+    // The engine's exclude_system filter keys off PROPERTY_SYSTEM, which the
+    // framework pak is registered with (App::addResource).
     std::vector<std::string> getNonSystemLocales() const;
-    // AOSP Resources.getSystem().getAssets().getLocales() equivalent: CDROID
-    // merges framework and app paks into one table, so the "system" set is the
-    // android-package (runtime id 0x01) set of that same table.
+    // CDROID extension: the system subset of getLocales() — with the engine's
+    // IsSystem() as the single definition, it is the set difference.
     std::vector<std::string> getSystemLocales() const;
 
     // True if no referenced file has changed since this manager was created.
@@ -161,8 +163,12 @@ private:
     Asset* openAssetFromZip(struct zip* zip, int64_t entry, AccessMode mode,
                             const std::string& entryName);
 
-    void setLocale(const char* locale);
     void updateResourceParams() const;
+    // AOSP Java collects the apkAssets list and commits it ONCE
+    // (nativeSetApkAssets); per-add commits made startup O(N²) (every
+    // SetApkAssets rebuilds the package groups and flushes the bag caches),
+    // so addAssetPath only marks pending and the first table access commits.
+    void commitApkAssets() const;
 
     bool scanAndMergeDir(std::vector<AssetDir::FileInfo>* merged, const asset_path& ap,
                          const char* rootDir, const char* dirName);
@@ -173,13 +179,18 @@ private:
                    const std::vector<AssetDir::FileInfo>* contents);
 
     std::vector<asset_path> mAssetPaths;
-    char*                   mLocale = nullptr;
     // The table engine (AM2) + the ApkAssets it reads. One ApkAssets per
     // registered pak path (loaded once, kept alive), committed atomically via
-    // SetApkAssets on every add — the AOSP Java setApkAssets shape.
+    // SetApkAssets — once, lazily, on the first table access after the add
+    // loop (the AOSP Java setApkAssets shape: collect, then one commit).
     std::unique_ptr<AssetManager2>       mAm2;
     std::vector<std::unique_ptr<ApkAssets>> mApkAssets;
-    ResTable_config*        mConfig;
+    mutable bool mApkAssetsPending = false;
+    // Package-name cache for getIdentifier's any-package tail (the set only
+    // changes on commitApkAssets, which clears it).
+    mutable std::vector<std::string> mPackageNames;
+    // By value (internal): a plain aggregate — no manual new/memset/delete.
+    ResTable_config         mConfig{};
 };
 
 } // namespace cdroid

@@ -363,8 +363,8 @@ void App::onInit(){
         return std::string();
     };
     const std::string pak = findSharedPak("cdroid.pak");
-    if (!pak.empty()) addResource(pak, "cdroid");
-    else addResource("cdroid.pak", "cdroid");   // keep the old failure log
+    if (!pak.empty()) addResource(pak, "cdroid", /* isSystemAsset */ true);
+    else addResource("cdroid.pak", "cdroid", /* isSystemAsset */ true);   // keep the old failure log
     // i18n data: load raw/i18n.dat from cdroid.pak into an App-lifetime buffer
     // so DataResource::Init reads from RAM (no fd/lseek/read per format class).
     // The buffer backs DataResource's static pointer — filled once, never
@@ -988,7 +988,7 @@ void App::applyTheme(int resid) {
     }
 }
 
-int App::addResource(const std::string&path,const std::string&name) {
+int App::addResource(const std::string&path,const std::string&name,bool isSystemAsset) {
     mPakPaths.push_back(path);   // recorded for the (lazy) Resources wrapper
     // Build the AssetManager eagerly on the first pak: it owns the AM2 table,
     // and each pak commits its ApkAssets (resources.arsc, zero-copy) as it
@@ -1006,7 +1006,7 @@ int App::addResource(const std::string&path,const std::string&name) {
         cfg.density = (uint16_t)mDisplayMetrics.densityDpi;
         mAssetManager->setConfiguration(cfg);
     }
-    mAssetManager->addAssetPath(path, nullptr);
+    mAssetManager->addAssetPath(path, nullptr, /* appAsLib */ false, isSystemAsset);
     struct zip* pak = zip_open(path.c_str(), ZIP_CHECKCONS | ZIP_RDONLY, nullptr);
     std::string package = name;
     if(name.empty()) {
