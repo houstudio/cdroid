@@ -20,6 +20,8 @@ class MenuInflater;
 class ContextMenu;
 class ContextMenuInfo;
 class Animator;  // forward — drives Window-level Activity transitions (ObjectAnimator/ValueAnimator)
+class ActivityOptions; // forward — scene-transition (shared element) options for startActivityForResult
+class ActivityTransitionCoordinator; // forward — the shared-element flight engine (B route)
 class Window : public FrameLayout, public WindowCallback {
 protected:
     friend class WindowManager;
@@ -84,6 +86,13 @@ private:
     // theme's windowAnimationStyle (setWindowAnimations). 0 -> resolve from the theme.
     int mWindowAnimationStyle = 0;
     bool mWindowExitAnimationsEnabled = true; // setWindowAnimations(enableExit=false) skips the exit pair
+    // B route (shared-element scene transitions): the whole flight engine lives in
+    // ActivityTransitionCoordinator (the android.app class owns it in AOSP too); the Window
+    // only hosts it — stamp at startActivity, hook the first traversal, consult at close().
+    // mSceneLiveness is the token OTHER windows' return flights watch (weak_ptr) to see this
+    // window die without dereferencing it; it is destroyed with the Window.
+    ActivityTransitionCoordinator* mSceneTransition = nullptr; // owned
+    std::shared_ptr<bool> mSceneLiveness;
     // True when the Context ctor auto-wrapped the caller's plain context in a
     // ContextThemeWrapper (AOSP: an Activity IS a themed context); freed in ~Window.
     bool mOwnsContext       = false;
@@ -146,6 +155,19 @@ private:
     // Shared body of loadThemeWindowAnimations/setWindowAnimations: resolve enter/exit anims
     // out of `styleRes` and install them (capturing the resting pos / snapping pre-first-frame).
     void applyWindowAnimationStyle(int styleRes);
+    // AOSP PhoneWindow.generateLayout (getContainer()==null branch): resolve the theme's
+    // windowBackground and install it as the decor background — CDROID's Window IS the
+    // decor, so that is plain setBackground (DecorView.setWindowBackground). Loaded from
+    // the final themed context like the animations; popup decor windows opt out with the
+    // same flag (AOSP popup decors never take a theme window background).
+    void loadThemeWindowBackground();
+    // AOSP DecorView.setBackgroundFallback (its BackgroundFallback member folded into the
+    // fused Window). Owns the drawable — Java's GC becomes a delete.
+    void setBackgroundFallback(Drawable* fallbackDrawable);
+    // AOSP com.android.internal.widget.BackgroundFallback.draw, with boundsView/root being
+    // this Window and null content/covering views (no separate mContentRoot or status/nav
+    // bar views): fill the strips no opaque child covers with the fallback drawable.
+    void drawBackgroundFallback(Canvas& canvas);
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
@@ -161,9 +183,15 @@ protected:
     std::string mText;
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
     bool mTraversalScheduled = false;  // scheduleTraversals re-entrancy guard
+    // AOSP PhoneWindow.mBackgroundFallbackDrawable — owned here (it is never attached
+    // to a View) and drawn by drawBackgroundFallback. The window background itself is
+    // View::mBackground (setBackground transfers ownership).
+    Drawable* mBackgroundFallbackDrawable = nullptr;
     void onFinishInflate()override;
     void onSizeChanged(int w,int h,int oldw,int oldh)override;
     void onVisibilityChanged(View& changedView,int visibility)override;
+    // AOSP DecorView.onDraw: super, then the background fallback.
+    void onDraw(Canvas&)override;
     ViewGroup*invalidateChildInParent(int* location,Rect& dirty)override;
     int processInputEvent(InputEvent&event);
     int processKeyEvent(KeyEvent&event);
@@ -197,11 +225,12 @@ public:
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
     // AOSP PhoneWindow(context): themed (ContextThemeWrapper) dialog contexts
     // drive inflation through this overload instead of the global App.
-    // themeWindowAnimations=false opts out of the theme windowAnimationStyle load —
-    // AOSP's windowAnimationStyle belongs to app/activity windows only; popup decor
-    // windows (PopupDecorView) animate via their own popup window animation style,
-    // never the theme (and CDROID popups align to their anchor after creation, so a
-    // ctor-time snap would use a stale resting position — see loadThemeWindowAnimations).
+    // themeWindowAnimations=false opts out of the theme window dressing loads (the
+    // windowAnimationStyle pair AND windowBackground/windowBackgroundFallback) —
+    // AOSP's windowAnimationStyle/windowBackground belong to app/activity windows only;
+    // popup decor windows (PopupDecorView) animate via their own popup window animation
+    // style, never the theme (and CDROID popups align to their anchor after creation, so
+    // a ctor-time snap would use a stale resting position — see loadThemeWindowAnimations).
     Window(Context*ctx,int x,int y,int w,int h,int type=TYPE_APPLICATION,
            bool themeWindowAnimations = true);
     Window(Context*,const AttributeSet*);
@@ -242,7 +271,8 @@ public:
     virtual void onNewIntent(const Intent& /*intent*/) {}
     // android.app.Activity result API: startActivityForResult → target setResult → close →
     // caller.onActivityResult. App mediates the result delivery (see App::dispatchPendingResult).
-    void startActivityForResult(const Intent& intent, int requestCode);
+    // The options overload mirrors AOSP Activity.startActivityForResult(Intent, int, Bundle).
+    void startActivityForResult(const Intent& intent, int requestCode, ActivityOptions* options = nullptr);
     void setResult(int resultCode, Intent* data = nullptr) { mResultCode = resultCode; mResultData = data; }
     int getResultCode() const { return mResultCode; }
     Intent* getResultData() const { return mResultData; }
@@ -366,9 +396,30 @@ public:
     // adapter before freeing it) is documented on PopupWindow::dismiss. The parameter stays
     // for substrate callers that need the legacy synchronous-teardown behavior.
     void setWindowAnimations(int resId, bool enableExit = true);
+    // Shared-element scene transition (ActivityOptions.makeSceneTransitionAnimation): App::
+    // startActivity stamps the captured caller sources here after creating the window. Creates
+    // mSceneTransition; an empty capture set is dropped by the doTraversal hook (prepareEnter
+    // returns false) and the window-level enter stays untouched (AOSP's app-transition fallback).
+    void setSharedElementEnter(Window* caller, const std::vector<std::pair<View*, std::string>>& sharedElements);
+    // Liveness token for OTHER windows' return flights (see mSceneLiveness): hold a weak_ptr to
+    // it to watch this window die without dereferencing it.
+    const std::shared_ptr<bool>& getSceneLiveness() const { return mSceneLiveness; }
+    // Shared-element return flight's "hide at once" (AOSP stopSharedElementAnimation hides the
+    // exiting decor — GONE). CDROID's compositor is damage-incremental: a hidden-but-listed
+    // window would keep its stale pixels on screen AND occlude the caller's visible region, so
+    // the hide is removeWindow — drop from the compose list, mark the caller's pending region
+    // with the vacated rect (the caller repaints over the stale pixels) and restart it (focus
+    // + onStart/onResume, the reenter semantics). Idempotent (membership-checked), so
+    // finishClose()'s own removeWindow stays a no-op.
+    void retireFromCompositor();
     // Window-level Activity transitions (android.app.Activity transition API names). Each setter
     // takes ownership of the passed ActivityTransition* (replacing/deleting any previous one).
     void setEnterTransition(ActivityTransition* t);
+    // Undo an installed enter transition before anything composes — the scene-transition
+    // suppression (AOSP never starts the themed app transition when a scene transition won):
+    // deletes the transition, clears the pending flag and undoes the themed pre-snap
+    // (alpha 0 / offscreen translation).
+    void clearEnterTransition();
     void setExitTransition(ActivityTransition* t);
     void setReturnTransition(ActivityTransition* t);
     void setReenterTransition(ActivityTransition* t);

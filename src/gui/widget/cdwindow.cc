@@ -18,37 +18,19 @@
 #include <content/contextthemewrapper.h>
 #include <core/intent.h>
 #include <core/componentname.h>
-#include <core/looper.h>
-#include <fragment/specialeffectscontroller.h>
 #include <widget/cdwindow.h>
-#include <widget/toolbar.h>
-#include <widget/toolbaractionbar.h>
+#include <widget/actionbar.h>
+#include <widget/activitytransitioncoordinator.h>
 #include <widget/internal_R.h>
-#include <widget/framework_styleable.h>
-#include <menu/menu.h>
-#include <menu/menuitem.h>
 #include <menu/menuinflater.h>
-#include <menu/contextmenubuilder.h>
-#include <menu/contextmenu.h>
-#include <menu/menudialoghelper.h>
-#include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
-#include <view/floatingactionmode.h>
 #include <view/focusfinder.h>
 #include <core/systemclock.h>
 #include <content/typedvalue.h>
 #include <core/windowmanager.h>
 #include <animation/animator.h>
-#include <animation/objectanimator.h>
-#include <animation/valueanimator.h>
-#include <animation/animationutils.h>
-#include <animation/animationset.h>
-#include <animation/alphaanimation.h>
-#include <animation/translateanimation.h>
-#include <view/gravity.h>
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
-#include <fstream>
 
 using namespace Cairo;
 namespace cdroid {
@@ -70,6 +52,7 @@ Window::Window(Context*ctx,const AttributeSet*atts)
     WindowManager::getInstance().addWindow(this);
     mAttachInfo->mPlaySoundEffect = std::bind(&Window::playSoundImpl,this,std::placeholders::_1);
     loadThemeWindowAnimations();
+    loadThemeWindowBackground();
 }
 
 Window::Window(int x,int y,int width,int height,int type)
@@ -119,7 +102,10 @@ Window::Window(Context*ctx,int x,int y,int width,int height,int type, bool theme
     // Theme-driven window animations resolve against the FINAL context (the themed overlay
     // above), which did not exist when the delegated geometric ctor ran — load them here.
     // PopupDecorView opts out (see the ctor declaration note).
-    if (themeWindowAnimations) loadThemeWindowAnimations();
+    if (themeWindowAnimations) {
+        loadThemeWindowAnimations();
+        loadThemeWindowBackground();
+    }
 }
 
 void Window::initWindow(){
@@ -147,6 +133,9 @@ void Window::initWindow(){
     setFocusable(true);
     setKeyboardNavigationCluster(true);
     mA11yListenerAlive = std::make_shared<bool>(true);
+    // Shared-element liveness token: other windows' return flights weak_ptr-watch it to see
+    // this window die without dereferencing it (see ActivityTransitionCoordinator).
+    mSceneLiveness = std::make_shared<bool>(true);
     AccessibilityManager::AccessibilityStateChangeListener acsl(
             [this, alive = mA11yListenerAlive](bool enabled) {
         if (!*alive) return;  // the window is gone (exit-time unbind order)
@@ -168,16 +157,6 @@ void Window::initWindow(){
 }
 
 Window::~Window(){
-    // The Window IS the subtree root (FrameLayout): the base ~ViewGroup below
-    // frees every child while a fragment-transition clone's ObjectAnimator
-    // (per-view Fade transitionAlpha) can still be ticking for views in the
-    // tree — a sweep closing one window while opening the next hits this
-    // (valgrind --auto-test: invalid read/write in View::setTransitionAlpha on
-    // a freed ImageView, escalating to SIGSEGV). End everything still running
-    // over the tree, same guard as SpecialEffectsController's delete sites,
-    // before the destructors run.
-    endAnimatorsOver(this);
-    endTransitionsOver(this);
     *mA11yListenerAlive = false;  // detach the manager's state listener
     if (mOwnsContext) delete mContext;   // the auto-wrapped ContextThemeWrapper
     if (mActionMode != nullptr) {
@@ -187,6 +166,7 @@ Window::~Window(){
     }
     delete mActionBar;
     delete mMenuInflater;
+    delete mBackgroundFallbackDrawable;
     delete mSendWindowContentChangedAccessibilityEvent;
     delete mAccessibilityFocusedVirtualView;  // the host View dies with the tree; the node is ours
     mDestroyed = true;  // the transition end-callback skips finishClose during teardown
@@ -196,6 +176,11 @@ Window::~Window(){
         a->cancel();   // cancel() fires onAnimationEnd (animator.cc)
         delete a;
     }
+    // Shared-element coordinator: its dtor cancels its animator safely (own mTornDown guard)
+    // and returns any ghosts still parked in the caller's overlay. Runs while this window's
+    // view tree is still intact — before the base ~ViewGroup frees the overlay.
+    delete mSceneTransition;
+    mSceneTransition = nullptr;
     delete mEnterTransition;
     delete mExitTransition;
     delete mReturnTransition;
@@ -252,172 +237,8 @@ void Window::recreate(){
     mContext->startActivity(intent);
 }
 
-void Window::setActionBar(Toolbar* toolbar){
-    delete mActionBar;
-    // CDROID's Activity plays the AppCompatActivity role: adopting a Toolbar builds a
-    // ToolbarActionBar that bridges it (mirrors androidx AppCompatDelegateImpl +
-    // framework Activity.setActionBar).
-    mActionBar = toolbar ? new ToolbarActionBar(toolbar, getText(), this) : nullptr;
-    if(mActionBar) mActionBar->invalidateOptionsMenu();
-}
-
-ActionBar* Window::getActionBar(){
-    return mActionBar;
-}
-
-bool Window::onCreateOptionsMenu(Menu& /*menu*/){
-    return true;
-}
-
-bool Window::onPrepareOptionsMenu(Menu& /*menu*/){
-    return true;
-}
-
-bool Window::onOptionsItemSelected(MenuItem& /*item*/){
-    // Non-home options items reach FragmentActivity's override (which dispatches to Fragments).
-    // Home/up is folded to onNavigateUp() upstream in onMenuItemSelected (mirrors AOSP
-    // Activity.onMenuItemSelected for FEATURE_OPTIONS_PANEL), so it never arrives here.
-    return false;
-}
-
-bool Window::onContextItemSelected(MenuItem& /*item*/){
-    return false;
-}
-
-bool Window::onNavigateUp(){
-    // CDROID has no manifest parentActivityIntent; the default Up behavior finishes the
-    // activity (mirrors androidx Activity.onNavigateUp -> finish when no parent). Override
-    // in subclasses (e.g. NavController-driven hosts) for custom Up handling.
-    close();
-    return true;
-}
-
-void Window::invalidateOptionsMenu(){
-    if(mActionBar) mActionBar->invalidateOptionsMenu();
-}
-
-MenuInflater* Window::getMenuInflater(){
-    if(!mMenuInflater) mMenuInflater = new MenuInflater(getContext());
-    return mMenuInflater;
-}
-
-void Window::openOptionsMenu(){
-    if(mActionBar) mActionBar->openOptionsMenu();
-}
-
-void Window::closeOptionsMenu(){
-    if(mActionBar) mActionBar->closeOptionsMenu();
-}
-
-// --- WindowCallback (android.view.Window.Callback, panel/options subset) ---
-// CDROID honours a single options panel (FEATURE_OPTIONS_PANEL); other feature ids are no-ops.
-View* Window::onCreatePanelView(int /*featureId*/){
-    return nullptr; // no custom panel view -> standard options menu
-}
-
-bool Window::onCreatePanelMenu(int featureId, Menu& menu){
-    return (featureId == FEATURE_OPTIONS_PANEL) ? onCreateOptionsMenu(menu) : false;
-}
-
-bool Window::onPreparePanel(int featureId, View* /*view*/, Menu& menu){
-    return (featureId == FEATURE_OPTIONS_PANEL) ? onPrepareOptionsMenu(menu) : true;
-}
-
-bool Window::onMenuOpened(int /*featureId*/, Menu& /*menu*/){
-    return true;
-}
-
-bool Window::onMenuItemSelected(int featureId, MenuItem& item){
-    // Home -> Up fold. AOSP does this in Activity.onMenuItemSelected for FEATURE_OPTIONS_PANEL;
-    // CDROID folds it here (the Window.Callback entry point ToolbarActionBar dispatches through).
-    if(featureId == FEATURE_OPTIONS_PANEL && item.getItemId() == R::id::home && mActionBar &&
-       (mActionBar->getDisplayOptions() & ActionBar::DISPLAY_HOME_AS_UP)){
-        return onNavigateUp();
-    }
-    return onOptionsItemSelected(item);
-}
-
-void Window::onPanelClosed(int /*featureId*/, Menu& /*menu*/){
-    // No PhoneWindow panel state machine beyond the toolbar popup; nothing to do here.
-}
-
-// =====================================================================================
-//  Context menu
-// =====================================================================================
-bool Window::showContextMenuForChild(View* originalView){
-    if(originalView == nullptr) return false;
-    ContextMenuBuilder* builder = new ContextMenuBuilder(getContext());
-    MenuBuilder::Callback cb;
-    cb.onMenuItemSelected = [this](MenuBuilder&, MenuItem& item)->bool{
-        return onContextItemSelected(item);
-    };
-    builder->setCallback(cb);
-    // showDialog builds the menu via originalView.createContextMenu (which invokes the
-    // OnCreateContextMenuListener registered by registerForContextMenu -> onCreateContextMenu)
-    // and presents it as a dialog; item selection routes back through the callback above.
-    MenuDialogHelper* helper = builder->showDialog(originalView);
-    return helper != nullptr;
-}
-
-bool Window::showContextMenuForChild(View* originalView, float /*x*/, float /*y*/){
-    // Anchored variant: CDROID shows the context menu as a centered AlertDialog, so the
-    // touch coordinates are not used (no floating popup anchored to (x,y) here).
-    return showContextMenuForChild(originalView);
-}
-
-void Window::registerForContextMenu(View* view){
-    if(!view) return;
-    view->setOnCreateContextMenuListener(
-        [this](ContextMenu& menu, View& v, ContextMenuInfo* info){ onCreateContextMenu(menu, v, info); });
-}
-
-void Window::unregisterForContextMenu(View* view){
-    if(view) view->setOnCreateContextMenuListener(View::OnCreateContextMenuListener{});
-}
-
-void Window::openContextMenu(View* view){
-    if(view) view->showContextMenu();
-}
-
-void Window::onCreateContextMenu(ContextMenu&, View&, ContextMenuInfo*){}
-
-void Window::closeContextMenu(){
-    // CDROID shows the context menu as a self-dismissing AlertDialog via MenuDialogHelper;
-    // there is no window panel to close programmatically (no FEATURE_CONTEXT_MENU).
-}
-
-// =====================================================================================
-//  ActionMode (DecorView)
-// =====================================================================================
-ActionMode* Window::startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type){
-    return startActionModeInternal(originalView, callback, type);
-}
-
-ActionMode* Window::startActionModeInternal(View* originatingView, const ActionMode::Callback& callback, int type){
-    if (mActionMode != nullptr) {
-        ActionMode* prev = mActionMode;
-        mActionMode = nullptr;
-        prev->finish();
-    }
-
-    // DecorView analog: FloatingActionMode creates its own FloatingToolbar from the root view.
-    FloatingActionMode* mode = new FloatingActionMode(getContext(), callback, originatingView);
-    mode->setType(type);
-    mode->setOnFinishedListener([this, mode]() {
-        mActionMode = nullptr;
-        post(Runnable([mode] { delete mode; }));
-    });
-    if (!mode->show()) {
-        delete mode;
-        return nullptr;
-    }
-    mActionMode = mode;
-    return mode;
-}
-
-void Window::playSoundImpl(int effectId){
-    LOGD("%d",effectId);
-}
+// Menu/panel/context-menu dispatch and the ActionBar/ActionMode plumbing live in
+// cdwindowmenus.cc (AOSP: Activity delegation + Window.Callback panels).
 
 View* Window::getCommonPredecessor(View* first, View* second){
      std::set<View*> seen;
@@ -1182,8 +1003,10 @@ void Window::doLayout(){
 }
 
 
-void Window::startActivityForResult(const Intent& intent, int requestCode){
-    App::getInstance().startActivityForResultInternal(this, intent, requestCode);
+// AOSP Activity.startActivityForResult(Intent, int, Bundle options) — the 2-arg call
+// form is the default-parameter path (options == nullptr).
+void Window::startActivityForResult(const Intent& intent, int requestCode, ActivityOptions* options){
+    App::getInstance().startActivityForResultInternal(this, intent, requestCode, options);
 }
 
 void Window::close(){
@@ -1200,6 +1023,12 @@ void Window::close(const std::function<void()>& onTeardown){
     mClosePending = true;
     mTeardownCb = onTeardown;
     App::getInstance().dispatchPendingResult(this);
+    // Shared-element return flight (B route): ghosts fly in the caller's overlay while this
+    // window hides at once; finishClose runs on landing. No valid pair (caller gone / no
+    // view matches) falls through to the window-level path below.
+    if (mSceneTransition && mSceneTransition->startReturn([this](){ finishClose(); })) {
+        return;
+    }
     ActivityTransition* t = mReturnTransition ? mReturnTransition : mExitTransition;
     if (t && t->getType() != ActivityTransition::Type::NONE
         && !mInTransition && isAttachedToWindow() && getVisibility() == VISIBLE) {
@@ -1244,250 +1073,8 @@ void Window::finishClose(){
     WindowManager::getInstance().removeWindow(this);
 }
 
-// =====================================================================================
-//  Activity transitions (Window-level: setAlpha for Fade, setPos for Slide)
-//  CDROID's Window is the composition root, so only moving the Window itself (setPos) or setting
-//  its surface opacity (setAlpha) produces a visible whole-window transition; a content view's
-//  translationX cannot move the surface (composeSurfaces blits by getBound(), bypassing the View
-//  transform). Mirrors android.app.Activity transition API names; the implementation is NOT
-//  android.transition.Transition (content-level).
-// =====================================================================================
-void Window::setEnterTransition(ActivityTransition* t) {
-    delete mEnterTransition;
-    mEnterTransition = t;
-    if (t && t->getType() != ActivityTransition::Type::NONE) {
-        // The snap is a visual-only offset (snapEnterStart -> setSurfaceTranslation), so
-        // getLeft()/getTop() stay the resting position — no capture dance needed.
-        mPendingEnterAnim = true;
-        snapEnterStart(t);  // pre-snap to the start state before the first frame (no full-show flash)
-    }
-}
-
-void Window::setExitTransition(ActivityTransition* t){
-    delete mExitTransition;
-    mExitTransition = t;
-}
-void Window::setReturnTransition(ActivityTransition* t)  {
-    delete mReturnTransition;
-    mReturnTransition = t;
-}
-void Window::setReenterTransition(ActivityTransition* t) {
-    delete mReenterTransition;
-    mReenterTransition = t;
-}
-
-// Delta reader for the slide mapping: TranslateAnimation's deltas are protected and carry no
-// getters, so a derived shim exposes them (the standard protected-member access idiom).
-namespace {
-// Deltas are only computed in TranslateAnimation::initialize(), which this
-// parameter-extraction path never runs — resolve the raw (type, value) pair
-// against a unit size instead: ABSOLUTE keeps the value, RELATIVE_* scales by
-// 1, so the sign (the only thing the edge computation uses) survives.
-struct TranslateDeltaReader : TranslateAnimation {
-    static float fromX(TranslateAnimation* a) { return a->resolveFromX(1, 1); }
-    static float toX(TranslateAnimation* a)   { return a->resolveToX(1, 1); }
-    static float fromY(TranslateAnimation* a) { return a->resolveFromY(1, 1); }
-    static float toY(TranslateAnimation* a)   { return a->resolveToY(1, 1); }
-};
-} // namespace
-
-// Map an AOSP window-animation resource onto the whole-Window ActivityTransition model.
-// AOSP window animations are usually <set>s of alpha/translate/extend children; the
-// whole-surface model can express one effect, so a translate child (the dominant motion)
-// drives a SLIDE — edge from the offset delta's axis/sign — and an alpha-only set drives
-// a FADE. Returns nullptr when the animation expresses nothing mappable.
-static ActivityTransition* transitionFromAnimation(Animation* anim, bool enter) {
-    if (anim == nullptr) return nullptr;
-    // OWNS anim: the caller loads a fresh Animation just for this parameter
-    // extraction (AnimationUtils::loadAnimation), and ~AnimationSet frees the
-    // child parts - free the whole tree on every exit or every window-style
-    // apply (every popup show!) leaks it (valgrind: 2KB per record).
-    struct AnimGuard {
-        Animation* a;
-        ~AnimGuard() { delete a; }
-    } guard{anim};
-    std::vector<Animation*> parts;
-    if (auto* set = dynamic_cast<AnimationSet*>(anim)) {
-        parts = set->getAnimations();
-    } else {
-        parts.push_back(anim);
-    }
-    int64_t duration = 0;
-    TranslateAnimation* slide = nullptr;
-    bool fades = false;
-    for (Animation* a : parts) {
-        if (a == nullptr) continue;
-        duration = std::max<int64_t>(duration, a->getDuration());
-        if (slide == nullptr) slide = dynamic_cast<TranslateAnimation*>(a);
-        if (dynamic_cast<AlphaAnimation*>(a) != nullptr) fades = true;
-    }
-    if (slide != nullptr) {
-        // The nonzero delta gives the motion axis+direction: an enter animation's from-delta is
-        // the side the window comes FROM; an exit animation's to-delta is the side it leaves TO.
-        const float dx = enter ? TranslateDeltaReader::fromX(slide) : TranslateDeltaReader::toX(slide);
-        const float dy = enter ? TranslateDeltaReader::fromY(slide) : TranslateDeltaReader::toY(slide);
-        int edge = Gravity::RIGHT; // computeSlidePos's default for a degenerate zero delta
-        if      (dx < 0) edge = Gravity::LEFT;
-        else if (dx == 0 && dy < 0) edge = Gravity::TOP;
-        else if (dx == 0 && dy > 0) edge = Gravity::BOTTOM;
-        return ActivityTransition::slide(edge, duration > 0 ? duration : 300);
-    }
-    if (fades) {
-        // A bare whole-surface fade is nearly imperceptible at the resource's own
-        // 150-220ms — the scale component it normally pairs with (the visible part of
-        // grow_fade_in) is not expressible window-level, so hold the fade long enough
-        // to read (window scaling is unsupported).
-        constexpr int64_t MIN_FADE_DURATION_MS = 350;
-        return ActivityTransition::fade(std::max<int64_t>(duration, MIN_FADE_DURATION_MS));
-    }
-    return nullptr;
-}
-
-void Window::setWindowAnimations(int resId, bool enableExit) {
-    mWindowAnimationStyle = resId;
-    mWindowExitAnimationsEnabled = enableExit;
-    if (resId != 0) applyWindowAnimationStyle(resId); // resolve now (AOSP: params.windowAnimations)
-}
-
-void Window::applyWindowAnimationStyle(int styleRes) {
-    if (styleRes == 0 || mContext == nullptr) return;
-    // AOSP R.styleable.WindowAnimation: the plain window names, falling back to the Activity
-    // open/close names Animation.Activity carries (the windowAnimationStyle target). The
-    // generated styleable array carries its terminating 0 sentinel (gen_styleable.py appends
-    // one), so the hand-maintained attr list and sentinel are gone.
-    auto ta = mContext->getTheme().obtainStyledAttributes(styleRes, R::styleable::WindowAnimation);
-    if (!ta) return;
-    const int enterRes = ta->getResourceId(R::styleable::WindowAnimation_windowEnterAnimation,
-                          ta->getResourceId(R::styleable::WindowAnimation_activityOpenEnterAnimation, 0));
-    const int exitRes  = ta->getResourceId(R::styleable::WindowAnimation_windowExitAnimation,
-                          ta->getResourceId(R::styleable::WindowAnimation_activityCloseExitAnimation, 0));
-
-    // Install like setEnterTransition would — the snap is visual-only, so re-installing on a
-    // window whose snap already ran just re-snaps the offset (getLeft()/getTop() never corrupted).
-    auto enterT = enterRes != 0
-        ? transitionFromAnimation(AnimationUtils::loadAnimation(mContext, enterRes), true) : nullptr;
-    if (enterT != nullptr) {
-        delete mEnterTransition;
-        mEnterTransition = enterT;
-        mPendingEnterAnim = true;
-        snapEnterStart(enterT);
-    }
-    auto exitT = (exitRes != 0 && mWindowExitAnimationsEnabled)
-        ? transitionFromAnimation(AnimationUtils::loadAnimation(mContext, exitRes), false) : nullptr;
-    if (exitT != nullptr) {
-        delete mExitTransition;
-        mExitTransition = exitT;
-    }
-}
-
-void Window::loadThemeWindowAnimations() {
-    if (mContext == nullptr) return;
-    if (mWindowAnimationStyle != 0) { // explicit override (AOSP LayoutParams.windowAnimations)
-        applyWindowAnimationStyle(mWindowAnimationStyle);
-        return;
-    }
-    // AOSP PhoneWindow.generateLayout: the theme's windowAnimationStyle carries the window
-    // animation style; a compiled @style item resolves as a reference whose data is the style id.
-    TypedValue styleValue;
-    if (!mContext->getTheme().resolveAttribute(R::attr::windowAnimationStyle, &styleValue, true)) return;
-    const int styleRes = (styleValue.type == TypedValue::TYPE_REFERENCE)
-            ? (int)styleValue.data : (int)styleValue.resourceId;
-    if (styleRes != 0) applyWindowAnimationStyle(styleRes);
-}
-
-void Window::startEnterAnimation() {
-    runActivityTransition(mEnterTransition, true, std::function<void()>());
-}
-
-void Window::startExitAnimation(const std::function<void()>& onEnd) {
-    ActivityTransition* t = mReturnTransition ? mReturnTransition : mExitTransition;
-    runActivityTransition(t, false, onEnd);
-}
-
-void Window::computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y) {
-    if (edge != Gravity::LEFT && edge != Gravity::RIGHT
-        && edge != Gravity::TOP && edge != Gravity::BOTTOM) edge = Gravity::RIGHT;
-    x = ox; y = oy;
-    if (!offscreen) return;
-    if (edge == Gravity::LEFT)        x = ox - w;
-    else if (edge == Gravity::RIGHT)  x = ox + w;
-    else if (edge == Gravity::TOP)    y = oy - h;
-    else                              y = oy + h;  // BOTTOM
-}
-
-void Window::snapEnterStart(ActivityTransition* t) {
-    if (!t || !isAttachedToWindow()) return;
-    if (t->getType() == ActivityTransition::Type::FADE) {
-        setAlpha(0.f);
-    } else if (t->getType() == ActivityTransition::Type::SLIDE) {
-        int x, y;
-        computeSlidePos(t->getSlideEdge(), getLeft(), getTop(), getWidth(), getHeight(), true, x, y);
-        setSurfaceTranslation(x - getLeft(), y - getTop());
-    }
-}
-
-void Window::runActivityTransition(ActivityTransition* t, bool enter, const std::function<void()>& onEnd) {
-    if (!t || t->getType() == ActivityTransition::Type::NONE || !isAttachedToWindow()) {
-        mInTransition = false;
-        if (onEnd) onEnd();
-        return;
-    }
-    // Replace any in-flight transition animator. cancel() fires onAnimationEnd (animator.cc) — the
-    // replaced animator is always an enter (onEnd empty), and ~Window's path is guarded by mDestroyed.
-    if (mCurrentTransitionAnimator) {
-        Animator* prev = mCurrentTransitionAnimator;
-        mCurrentTransitionAnimator = nullptr;
-        prev->cancel();
-        delete prev;
-    }
-    mInTransition = true;
-    const int64_t duration = t->getDuration();
-    Animator::AnimatorListener endListener;
-    endListener.onAnimationEnd = [this, onEnd, enter](Animator&, bool) {
-        if (mDestroyed) return;  // ~Window is tearing us down — don't run finishClose / replace
-        mInTransition = false;
-        // Identity landing (AOSP onAnimationFinished commits the final surface transaction):
-        // the surface must end exactly on the frame. Exit animations skip this — the window
-        // is removed/hidden right after, and an interrupted exit's re-enter lands here anyway.
-        if (enter) setSurfaceTranslation(0, 0);
-        if (onEnd) onEnd();
-        // The animator is NOT deleted here (delete-in-end-callback). It stays in
-        // mCurrentTransitionAnimator and is freed by ~Window or the next runActivityTransition.
-    };
-
-    if (t->getType() == ActivityTransition::Type::FADE) {
-        // ObjectAnimator "alpha" dispatches to View::setAlpha, which Window overrides to
-        // GFXSurfaceSetOpacity (whole-surface opacity). Each frame must re-compose, so schedule
-        // a traversal (setAlpha itself does not invalidate).
-        ObjectAnimator* anim = ObjectAnimator::ofFloat(this, "alpha",
-            std::vector<float>{enter ? 0.f : 1.f, enter ? 1.f : 0.f});
-        anim->setDuration(duration);
-        anim->addUpdateListener([this](ValueAnimator&) { scheduleTraversals(); });
-        anim->addListener(endListener);
-        mCurrentTransitionAnimator = anim;
-        anim->start();
-    } else { // SLIDE — animate the compose-time visual translation only. The real frame stays
-             // at the resting position (getLeft()/getTop() are ALWAYS the rest — no capture),
-             // so a11y bounds, input routing and WMS placement are stable mid-animation.
-        int offX, offY;
-        computeSlidePos(t->getSlideEdge(), getLeft(), getTop(), getWidth(), getHeight(), true, offX, offY);
-        const int startX = enter ? offX - getLeft() : 0;
-        const int startY = enter ? offY - getTop() : 0;
-        const int endX   = enter ? 0 : offX - getLeft();
-        const int endY   = enter ? 0 : offY - getTop();
-        ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
-        anim->setDuration(duration);
-        anim->addUpdateListener([this, startX, startY, endX, endY](ValueAnimator& a) {
-            const float f = a.getAnimatedFraction();
-            setSurfaceTranslation((int)(startX + (endX - startX) * f),
-                                  (int)(startY + (endY - startY) * f));
-        });
-        anim->addListener(endListener);
-        mCurrentTransitionAnimator = anim;
-        if (enter) setSurfaceTranslation(startX, startY);  // offscreen visual before the first frame
-        anim->start();
-    }
-}
+// Activity/window transitions (theme window animations, the A-route FADE/SLIDE driver,
+// and the B-route shared-element stamp) live in cdwindowtransitions.cc.
 
 void Window::scheduleTraversals(){
     if(mTraversalScheduled) return;
@@ -1503,6 +1090,14 @@ void Window::doTraversal(){
     GraphDevice::getInstance().lock();
     if(isAttachedToWindow()){
         if(isLayoutRequested()) doLayout();
+        // Shared-element enter (B route): resolve targets and park the snapshot ghosts between
+        // layout and the first draw, so frame 1 never flashes the targets un-ghosted. No pair
+        // resolves -> drop the coordinator; the window-level enter animation (never suppressed
+        // in that case) takes over via the post-draw hook below (AOSP's app-transition fallback).
+        if (mSceneTransition && !mSceneTransition->prepareEnter()) {
+            delete mSceneTransition;
+            mSceneTransition = nullptr;
+        }
         if(isDirty() && getVisibility() == View::VISIBLE){
             draw();
             GraphDevice::getInstance().flip();

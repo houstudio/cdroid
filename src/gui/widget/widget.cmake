@@ -60,6 +60,9 @@ list(APPEND WIDGET_SOURCES
     widget/nestedscrollinghelper.cc
     widget/scrollbardrawable.cc
     widget/cdwindow.cc
+    widget/cdwindowmenus.cc
+    widget/cdwindowtransitions.cc
+    widget/activitytransitioncoordinator.cc
     widget/cardview.cc
     widget/floatingtoolbar.cc
     widget/localfloatingtoolbarpopup.cc

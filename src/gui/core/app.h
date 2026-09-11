@@ -36,6 +36,7 @@ namespace cxxopts{
 namespace cdroid{
 
 class Window;
+class ActivityOptions; // scene-transition (shared element) options, widget/activityoptions.h
 class AssetManager2;   // androidfw (arscEngine return; defined in assetmanager2.h)
 // AssetManager is forward-declared at global scope in context.h.
 
@@ -77,7 +78,11 @@ private:
     // inflates content; AOSP performs this in performLaunchActivity).
     int mPendingActivityTheme = 0;
     void parsePackageManifest(const std::string& pakPath);
-    Window* mLastStartedWindow = nullptr;
+    // performLaunchActivity's create path: instantiate the Window (its ctor self-registers
+    // with WindowManager) and stamp the Intent. Returns nullptr on the reuse paths
+    // (singleTop / CLEAR_TOP-singleTop / REORDER_TO_FRONT delivered the Intent to an
+    // existing instance) and when no Window is registered for the class name.
+    Window* performLaunch(const Intent& intent);
 
     // --- resource stack (the former Assets; the ContextImpl role) ---------
     // Lazy ID-based resource layer (AOSP Resources/AssetManager), built
@@ -88,8 +93,6 @@ private:
     mutable cdroid::Resources*      mCdroidResources = nullptr;
     void ensureCdroidResources() const;
 
-    int mNextAutofillViewId = 100000;
-    std::string mLanguage;
     // i18n.dat contents loaded from cdroid.pak (App::onInit) — a binary blob, hence
     // vector<char>. Its heap buffer is the backing store for i18n::DataResource's static
     // pointer, so it is filled ONCE and must never be modified afterwards (a reallocating
@@ -137,13 +140,19 @@ public:
      virtual int exec();
      // Activity result mediation: Window.startActivityForResult → target.setResult → close →
      // caller.onActivityResult. App tracks the caller↔target mapping.
-     void startActivityForResultInternal(Window* caller, const Intent& intent, int requestCode);
+     void startActivityForResultInternal(Window* caller, const Intent& intent, int requestCode,
+                                         ActivityOptions* options = nullptr);
      void dispatchPendingResult(Window* target);
      virtual void exit(int code=0);
      // androidx ActivityNavigator ends in context.startActivity(intent). Real impl: resolve the
      // Intent's ComponentName.className via ActivityFactory (REGISTER_ACTIVITY) and `new` the Window
      // (its ctor self-registers with WindowManager, so it shows), then stamp the Intent on it.
      void startActivity(const Intent& intent) override;
+     // AOSP Context/Activity.startActivity(Intent, Bundle options): with an ActivityOptions scene
+     // transition (makeSceneTransitionAnimation), the started Window's coordinator captures the
+     // caller's shared elements and flies them (see Window::setSharedElementEnter). Takes
+     // ownership of `options` (Android hands its Bundle to the system; the object dies here).
+     void startActivity(const Intent& intent, ActivityOptions* options) override;
     // AOSP ActivityThread.handleConfigurationChanged(Configuration): the system
     // side of a configuration change — applies it to the resources (variant
     // reselection + cache invalidation) and then, per activity, either
@@ -195,10 +204,9 @@ public:
     // When outBlock != null, *outBlock receives the owning string-pool block of
     // the resolved value (needed to resolve TYPE_STRING values via stringAtBlock).
     bool arscThemeAttribute(uint32_t attrId, TypedValue* out, ssize_t* outBlock = nullptr) const;
-    const std::string getPackageName()const override;
+    std::string getPackageName()const override;
     Resources::Theme getTheme() override;
     const DisplayMetrics&getDisplayMetrics()const override;
-    int getNextAutofillId()override;
     // loadImage/openAsset: inherited from Context (impls in contextimpl.cc).
     // AOSP ID-based resource face.
     Resources&      getResources() override;

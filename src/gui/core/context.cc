@@ -15,9 +15,28 @@
 #include <cstdlib>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <atomic>
 #include <map>
+#include <core/app.h>
+#include <core/looper.h>
 
 namespace cdroid {
+
+// AOSP Context.sNextAutofillId (atomic, seeded clear of View ids).
+static std::atomic<int> sNextAutofillId{100000};
+
+int Context::getNextAutofillId() {
+    return sNextAutofillId++;
+}
+
+Looper* Context::getMainLooper() {
+    return Looper::getMainLooper();
+}
+
+Context* Context::getApplicationContext() {
+    // The App singleton IS the application context (App : ContextImpl : Context).
+    return &App::getInstance();
+}
 
 std::string Context::getString(int id) {
     return getResources().getString(id);
@@ -29,6 +48,21 @@ std::u16string Context::getText(int id) {
 
 std::string Context::getQuantityString(int id, int quantity) {
     return getResources().getQuantityString(id, quantity);
+}
+
+// AOSP final routing: the format-args forms go straight to Resources (they do
+// NOT route through the single-arg virtual above).
+std::string Context::getString(int id, const std::vector<std::string>& formatArgs) {
+    return getResources().getString(id, formatArgs);
+}
+
+std::string Context::getQuantityString(int id, int quantity,
+        const std::vector<std::string>& formatArgs) {
+    return getResources().getQuantityString(id, quantity, formatArgs);
+}
+
+int Context::getDimensionPixelOffset(int id) {
+    return getResources().getDimensionPixelOffset(id);
 }
 
 int Context::getColor(int id) {

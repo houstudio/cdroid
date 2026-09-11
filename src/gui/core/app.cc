@@ -58,6 +58,7 @@
 #include <core/messagequeue.h>
 #include <core/intent.h>
 #include <core/activityfactory.h>
+#include <widget/activityoptions.h>
 #include <widget/cdwindow.h>
 #include <widget/internal_R.h>
 #include <gui_features.h>
@@ -716,14 +717,18 @@ void App::handleConfigurationChanged(const Configuration& newConfig){
     }
 }
 
-void App::startActivity(const Intent& intent){
-    // Resolve the Intent's ComponentName.className via ActivityFactory (REGISTER_ACTIVITY) and `new`
-    // the Window (its ctor self-registers with WindowManager -> it appears on screen), then stamp the
-    // Intent on it. CDROID's className is the bare C++ class name matching the REGISTER_ACTIVITY key.
+// performLaunchActivity's create path (everything App::startActivity routes through): resolve
+// the Intent's ComponentName.className via ActivityFactory (REGISTER_ACTIVITY) and `new` the
+// Window (its ctor self-registers with WindowManager -> it appears on screen), then stamp the
+// Intent on it. CDROID's className is the bare C++ class name matching the REGISTER_ACTIVITY
+// key. Returns the created window, or nullptr when nothing was created: no component name, no
+// registered class, or a reuse path (singleTop / CLEAR_TOP-singleTop / REORDER_TO_FRONT) that
+// delivered the Intent to an existing instance instead.
+Window* App::performLaunch(const Intent& intent){
     const std::string className = intent.getComponent().getClassName();
     if(className.empty()){
         LOGW("App::startActivity: intent has no component class name");
-        return;
+        return nullptr;
     }
     // Android FLAG_ACTIVITY_NO_HISTORY: existing noHistory windows are auto-finished when
     // navigating to another Activity.
@@ -743,7 +748,7 @@ void App::startActivity(const Intent& intent){
             active->setIntent(intent);
             active->onNewIntent(intent);
             WindowManager::getInstance().bringToFront(active);
-            return;
+            return nullptr;
         }
     }
     // FLAG_ACTIVITY_CLEAR_TOP: if target exists, close everything above it. With SINGLE_TOP, reuse
@@ -758,7 +763,7 @@ void App::startActivity(const Intent& intent){
                     windows[i]->setIntent(intent);
                     windows[i]->onNewIntent(intent);
                     WindowManager::getInstance().bringToFront(windows[i]);
-                    return;
+                    return nullptr;
                 }
                 break; // pop done; fall through to create new (standard mode)
             }
@@ -773,7 +778,7 @@ void App::startActivity(const Intent& intent){
                 w->setIntent(intent);
                 w->onNewIntent(intent);
                 WindowManager::getInstance().bringToFront(w);
-                return;
+                return nullptr;
             }
         }
     }
@@ -791,8 +796,14 @@ void App::startActivity(const Intent& intent){
         if (info && info->configChanges) window->setConfigChanges(info->configChanges);
         window->setIntent(intent);
         if((intent.getFlags() & Intent::FLAG_ACTIVITY_NO_HISTORY) != 0) window->setNoHistory(true);
-        mLastStartedWindow = window;
     } // else: ActivityFactory::instantiate already logged "no Window registered".
+    return window;
+}
+
+// AOSP Context.startActivity(Intent): the plain launch — flags still route to the reuse
+// paths inside performLaunch.
+void App::startActivity(const Intent& intent){
+    performLaunch(intent);
 }
 
 // App-wide setTheme: applyTheme rebuilds the live theme; the override
@@ -805,12 +816,32 @@ void App::setTheme(int resid) {
     applyTheme(resid);
 }
 
-void App::startActivityForResultInternal(Window* caller, const Intent& intent, int requestCode){
-    mLastStartedWindow = nullptr;
-    startActivity(intent); // creates target + sets mLastStartedWindow
-    if(mLastStartedWindow != nullptr){
-        mPendingResults.push_back({caller, requestCode, mLastStartedWindow});
+// Shared tail of the options-carrying launches: stamp a scene-transition ActivityOptions on
+// the freshly created window and consume it. A null `target` (a reuse path delivered the
+// Intent to an existing instance, or nothing was created) means nothing is stamped and no
+// flight plays — the "existing instance already visible" semantics.
+static void stampSceneTransitionOptions(Window* target, ActivityOptions* options) {
+    if (options == nullptr) return;
+    if (target != nullptr && options->hasSceneTransition() && options->getActivity() != nullptr) {
+        target->setSharedElementEnter(options->getActivity(), options->getSharedElements());
     }
+    delete options;  // consumed (Android hands the Bundle to the system; it dies here)
+}
+
+void App::startActivityForResultInternal(Window* caller, const Intent& intent, int requestCode,
+                                          ActivityOptions* options){
+    Window* target = performLaunch(intent);
+    stampSceneTransitionOptions(target, options);
+    if(target != nullptr){
+        mPendingResults.push_back({caller, requestCode, target});
+    }
+}
+
+// AOSP Context.startActivity(Intent, Bundle): the launch returns the created window directly
+// (no last-started side channel — a nested startActivity inside an onActivityResult cannot
+// steal the stamp), and the options are consumed on it in the same message.
+void App::startActivity(const Intent& intent, ActivityOptions* options){
+    stampSceneTransitionOptions(performLaunch(intent), options);
 }
 
 void App::dispatchPendingResult(Window* target){
@@ -976,7 +1007,7 @@ const DisplayMetrics& App::getDisplayMetrics()const{
     return mDisplayMetrics;
 }
 
-const std::string App::getPackageName()const {
+std::string App::getPackageName()const {
     // AOSP: the package id from the parsed manifest (stable). Synthesized paks
     // without a manifest fall back to the executable basename — never the full
     // path (a path-valued name leaks into prefs/dirs as nested directory trees).
@@ -1061,11 +1092,6 @@ int App::addResource(const std::string&path,const std::string&name) {
          int(SystemClock::uptimeMillis()-sttm));
     return pak?0:-1;
 }
-
-int App::getNextAutofillId(){
-    return mNextAutofillViewId++;
-}
-
 // Orientation into the arsc request config so -land/-port resource variants
 // select. AOSP owns the effective orientation in WMS (rotation + per-
 // activity locks) and ResourcesManager applies it to every Resources; CDROID

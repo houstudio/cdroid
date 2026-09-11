@@ -21,8 +21,9 @@ public:
     Context* getBaseContext() const { return mBase; }
 
     // --- delegate ALL pure-virtual Context methods to mBase ---
-    const std::string getPackageName() const override { return mBase->getPackageName(); }
+    std::string getPackageName() const override { return mBase->getPackageName(); }
     void startActivity(const Intent& intent) override { mBase->startActivity(intent); }
+    void startActivity(const Intent& intent, ActivityOptions* options) override { mBase->startActivity(intent, options); }
     Resources::Theme getTheme() override { return mBase->getTheme(); }
     void setTheme(int resid) override { mBase->setTheme(resid); }
     const DisplayMetrics& getDisplayMetrics() const override { return mBase->getDisplayMetrics(); }

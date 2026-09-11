@@ -21,6 +21,7 @@
 #include <iostream>
 #include <functional>
 #include <memory>
+#include <type_traits>
 #include <vector>
 #include <cairomm/refptr.h>
 #include <cairomm/surface.h>
@@ -41,25 +42,47 @@ class Drawable;
 class ColorStateList;
 class Typeface;
 class Intent;
+class ActivityOptions;
 class TypedArray;
 class Resources;       // cdroid::Resources (resources.h) — the GUI subclass
 class SharedPreferences;
+class Looper;
+
+// Porting scope: Context's system-service face — permissions (check/enforce),
+// broadcasts, services, ContentResolver, getSystemService, PackageManager,
+// wallpaper, databases, attribution — is intentionally NOT ported. Those are
+// Binder round-trips to system_server and CDROID has no process boundary; only
+// the in-process faces (resources, themes, app-data dirs, activity launches,
+// prefs) are modeled, with case-by-case seams documented at each method.
 class Context{
 public:
     virtual ~Context() = default;
-    virtual const std::string getPackageName() const = 0;
+    virtual std::string getPackageName() const = 0;
     // CDROID seam: androidx ActivityNavigator ends in context.startActivity(intent). CDROID has no
     // framework "start Activity by Intent" (Activity == Window, instantiated by `new`, not by name),
     // so the default is a no-op. Wiring (className -> Window factory + show) is deferred; override
     // (e.g. on App) to actually launch. Kept as Context* so Navigator's mContext->startActivity compiles.
     virtual void startActivity(const Intent& /*intent*/) = 0;
+    // AOSP Context.startActivity(Intent, Bundle): the options form (ActivityOptions scene
+    // transitions). The default forwards to the plain launch — AOSP's no-options
+    // equivalence; App overrides to consume the scene-transition options.
+    virtual void startActivity(const Intent& intent, ActivityOptions* /*options*/) { startActivity(intent); }
     // AOSP-aligned Theme access. getTheme() returns the live Resources::Theme
     // (engine = cdroid::Theme, the AM2 Theme). setTheme(@StyleRes int) applies a
     // style resource (AOSP Context.setTheme).
     virtual Resources::Theme getTheme() = 0;
     virtual void setTheme(int resid) = 0;
     virtual const DisplayMetrics&getDisplayMetrics() const = 0;
-    virtual int getNextAutofillId() = 0;
+    // AOSP Context.getMainLooper() (abstract there): CDROID's default forwards
+    // to the process main looper (Looper::getMainLooper) — the single looper
+    // every Context in this process serves.
+    virtual Looper* getMainLooper();
+    // AOSP Context.getApplicationContext() (abstract there): the application
+    // scope Context — for CDROID the App singleton (an Activity's application
+    // context is the application, never itself, matching AOSP semantics).
+    virtual Context* getApplicationContext();
+    // AOSP concrete Context.getNextAutofillId(): a process-wide counter.
+    virtual int getNextAutofillId();
     // String-key raw access (the former getInputStream istream face): resolves
     // "@[package:]type/name" refs and pak entry paths into a buffer-backed
     // Asset (file-backed for on-disk paths). Caller owns the returned Asset;
@@ -132,10 +155,32 @@ public:
     virtual std::string    getString(int id);
     virtual std::u16string getText(int id);
     virtual std::string    getQuantityString(int id, int quantity);
+    // AOSP final getString(int, Object...) / getQuantityString(int, int, Object...):
+    // the format-args forms. Non-virtual like their AOSP counterparts — they delegate
+    // to the virtual getResources(), so wrappers and themed subclasses need no override
+    // (the same routing AOSP's final methods use). Args carry pre-stringified values
+    // (Java stringifies via String.valueOf at Resources' door).
+    std::string getQuantityString(int id, int quantity, const std::vector<std::string>& formatArgs);
+    std::string getString(int id, const std::vector<std::string>& formatArgs);
+    // Variadic convenience over the vector form: each argument is converted like
+    // String.valueOf — std::string/const char* pass through, arithmetic values via
+    // std::to_string, bool as "true"/"false". std::u16string args are not accepted
+    // here (the core layer has no TextUtils); convert with TextUtils::utf16_utf8 at
+    // the call site.
+    template<typename... Args>
+    std::string getString(int id, Args&&... args) {
+        return getString(id, std::vector<std::string>{fmtArg(std::forward<Args>(args))...});
+    }
+    template<typename... Args>
+    std::string getQuantityString(int id, int quantity, Args&&... args) {
+        return getQuantityString(id, quantity,
+                std::vector<std::string>{fmtArg(std::forward<Args>(args))...});
+    }
     virtual int            getColor(int id);
     virtual bool           getBoolean(int id);
     virtual int            getInteger(int id);
     virtual float          getDimension(int id);
+    virtual int            getDimensionPixelOffset(int id);
     virtual int            getDimensionPixelSize(int id);
     virtual Asset* openRawResource(int id);
     // AOSP final: resource loads are themed through getTheme() (context.cc).
@@ -154,6 +199,15 @@ public:
     // name so the same file always yields the same object, like AOSP.
     virtual std::shared_ptr<SharedPreferences> getSharedPreferences(
             const std::string& name, int mode);
+
+private:
+    // String.valueOf-shaped argument converters for the variadic getString/
+    // getQuantityString overloads above.
+    static const std::string& fmtArg(const std::string& s) { return s; }
+    static std::string fmtArg(const char* s) { return s; }
+    static std::string fmtArg(bool b) { return b ? "true" : "false"; }
+    template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value>::type>
+    static std::string fmtArg(T v) { return std::to_string(v); }
 };
 
 }
