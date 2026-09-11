@@ -30,28 +30,29 @@ using namespace cdroid::internal;
 
 namespace cdroid{
 
-// AOSP AnimatorInflater private obtainAttributes(res, theme, set, attrs).
-std::unique_ptr<TypedArray> AnimatorInflater::obtainAttributes(Context*ctx,const Resources::Theme* theme,
-        const AttributeSet& set,const uint32_t* attrs){
-    if (theme) return theme->obtainStyledAttributes(&set, attrs);
-    return ctx->obtainStyledAttributes(set, attrs);
-}
-
+// AOSP AnimatorInflater.loadAnimator(Context, int) (java:89): pure forward.
 Animator* AnimatorInflater::loadAnimator(Context* context,int resid){
-    return loadAnimator(context,resid,1.f);
+    if (context == nullptr) return nullptr;
+    Resources::Theme theme = context->getTheme();   // local copy, shared engine
+    return loadAnimator(&context->getResources(), &theme, resid);
 }
 
-Animator* AnimatorInflater::loadAnimator(Context* context,int resid,float){
+// AOSP @hide loadAnimator(Resources, Theme, int) (java:104).
+Animator* AnimatorInflater::loadAnimator(Resources* resources,const Resources::Theme* theme,int resid){
+    return loadAnimator(resources, theme, resid, 1.f);
+}
+
+// AOSP @hide loadAnimator(Resources, Theme, int, float) (java:110): the
+// cache-owning entry.
+Animator* AnimatorInflater::loadAnimator(Resources* resources,const Resources::Theme* theme,int resid,float pathErrorScale){
     if (resid == 0) return nullptr;  // AOSP: 0 → null
-    // AOSP loadAnimator(Resources, Theme, id, pathErrorScale): the
-    // ConfigurationBoundResourceCache on ResourcesImpl serves hits as
+    // AOSP: the ConfigurationBoundResourceCache on ResourcesImpl serves hits as
     // newInstance() — the cached source animator is never handed out.
-    Resources& res = context->getResources();
-    Resources::Theme theme = context->getTheme();
-    Animator* animator = res.obtainCachedAnimator(resid, theme._engineHandle());
+    Animator* animator = resources->obtainCachedAnimator(resid,
+            theme ? theme->_engineHandle() : nullptr);
     if (animator != nullptr) return animator;
-    auto parser = context->getResources().getXml(resid);
-    animator = createAnimatorFromXml(context, &theme, *parser, 1.f);
+    auto parser = resources->getXml(resid);
+    animator = createAnimatorFromXml(resources, theme, *parser, pathErrorScale);
     if (animator != nullptr) {
         // AOSP appends getChangingConfigs(resources, id) so entries self-invalidate
         // via needNewResources; CDROID clears the whole cache on configuration
@@ -60,18 +61,12 @@ Animator* AnimatorInflater::loadAnimator(Context* context,int resid,float){
         // animator to the constant state (AOSP relies on GC).
         const auto constantState = animator->createConstantState();
         if (constantState != nullptr) {
-            res.cacheAnimator(resid, theme._engineHandle(), constantState);
+            resources->cacheAnimator(resid, theme ? theme->_engineHandle() : nullptr, constantState);
             // create a new animator so that cached version is never used by the user
             animator = constantState->newInstance();
         }
     }
     return animator;
-}
-
-Animator* AnimatorInflater::loadAnimator(Context* context,const Resources::Theme* theme,int resid,float pathErrorScale){
-    if (resid == 0) return nullptr;  // AOSP: 0 → null
-    auto parser = context->getResources().getXml(resid);
-    return createAnimatorFromXml(context, theme, *parser, pathErrorScale);
 }
 
 
@@ -97,12 +92,12 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,int 
     }
     return animator;
 }
-Animator* AnimatorInflater::createAnimatorFromXml(Context*context,const Resources::Theme* theme,XmlPullParser& parser,float pixelSize){
+Animator* AnimatorInflater::createAnimatorFromXml(Resources*res,const Resources::Theme* theme,XmlPullParser& parser,float pixelSize){
     const AttributeSet& attrs = parser;
-    return createAnimatorFromXml(context,theme,parser, attrs, nullptr, 0,pixelSize);
+    return createAnimatorFromXml(res,theme,parser, attrs, nullptr, 0,pixelSize);
 }
 
-Animator* AnimatorInflater::createAnimatorFromXml(Context*context,const Resources::Theme* theme,XmlPullParser&parser,const AttributeSet& attrs,
+Animator* AnimatorInflater::createAnimatorFromXml(Resources*res,const Resources::Theme* theme,XmlPullParser&parser,const AttributeSet& attrs,
         AnimatorSet*parent,int sequenceOrdering,float pixelSize){
      Animator* anim = nullptr;
      std::vector<Animator*> childAnims;
@@ -120,16 +115,17 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,const Resource
         std::string name = parser.getName();
         bool gotValues = false;
         if (name.compare("objectAnimator")==0) {
-            anim = loadObjectAnimator(context,theme,attrs, pixelSize);
+            anim = loadObjectAnimator(res,theme,attrs, pixelSize);
         } else if (name.compare("animator")==0) {
-            anim = loadAnimator(context, theme, attrs, nullptr, pixelSize);
+            anim = loadAnimator(res, theme, attrs, nullptr, pixelSize);
         } else if (name.compare("set")==0) {
             anim = new AnimatorSet();
-            auto ta = obtainAttributes(context, theme, attrs, R::styleable::AnimatorSet);
+            // AOSP java:679: res.obtainAttributes (themeless) for the set's ordering.
+            auto ta = res->obtainStyledAttributes(&attrs, R::styleable::AnimatorSet);
             const int ordering = ta->getInt(R::styleable::AnimatorSet_ordering, TOGETHER);
-            createAnimatorFromXml(context, theme, parser, attrs, (AnimatorSet*) anim, ordering,pixelSize);
+            createAnimatorFromXml(res, theme, parser, attrs, (AnimatorSet*) anim, ordering,pixelSize);
         } else if (name.compare("propertyValuesHolder")==0) {
-            std::vector<PropertyValuesHolder*>values = loadValues(context,theme,parser,attrs);
+            std::vector<PropertyValuesHolder*>values = loadValues(res,theme,parser,attrs);
             if (values.size() && (dynamic_cast<ValueAnimator*>(anim))) {
                 ((ValueAnimator*) anim)->setValues(values);
             } else {
@@ -183,7 +179,7 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
                     }
                 }
                 if (animator == nullptr) {
-                    animator = createAnimatorFromXml(context,theme,parser,attrs, nullptr, 0,1.f);
+                    animator = createAnimatorFromXml(&context->getResources(),theme,parser,attrs, nullptr, 0,1.f);
                 }
 
                 if (animator == nullptr) {
@@ -196,7 +192,7 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
     }
 }
  
-std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(Context*ctx,const Resources::Theme* theme,XmlPullParser& parser,const AttributeSet& attrs){
+std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(Resources*res,const Resources::Theme* theme,XmlPullParser& parser,const AttributeSet& attrs){
     std::vector<PropertyValuesHolder*> values;
     int type = XmlPullParser::START_TAG;
     while ((type != XmlPullParser::END_TAG) && (type != XmlPullParser::END_DOCUMENT)) {
@@ -206,13 +202,15 @@ std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(Context*ctx,cons
         }
         std::string name = parser.getName();
         if (name.compare("propertyValuesHolder")==0) {
-            auto ta = obtainAttributes(ctx, theme, attrs, R::styleable::PropertyValuesHolder);
+            // AOSP java:739: res.obtainAttributes (themeless).
+            auto ta = res->obtainStyledAttributes(&attrs, R::styleable::PropertyValuesHolder);
             const std::string propertyName = ta->getString(R::styleable::PropertyValuesHolder_propertyName);
             const int valueType = ta->getInt(R::styleable::PropertyValuesHolder_valueType, VALUE_TYPE_UNDEFINED);
             LOGD("propertyValuesHolder.%s type=%d",propertyName.c_str(),valueType);
-            PropertyValuesHolder* pvh = loadPvh(ctx, theme, parser, propertyName, valueType);
+            PropertyValuesHolder* pvh = loadPvh(res, theme, parser, propertyName, valueType);
             if (pvh == nullptr) {
-                pvh = getPVH(ctx, theme, attrs, valueType, propertyName);
+                pvh = getPVH(*ta, valueType, R::styleable::PropertyValuesHolder_valueFrom,
+                        R::styleable::PropertyValuesHolder_valueTo, propertyName);
             }
             if (pvh != nullptr) {
                 values.push_back(pvh);
@@ -224,7 +222,7 @@ std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(Context*ctx,cons
     return values;
 }
 
-PropertyValuesHolder* AnimatorInflater::loadPvh(Context*ctx,const Resources::Theme* theme,
+PropertyValuesHolder* AnimatorInflater::loadPvh(Resources*res,const Resources::Theme* theme,
         XmlPullParser& parser,const std::string& propertyName, int valueType){
     // AOSP AnimatorInflater.loadPvh, ported: nested <keyframe> elements become
     // an ofKeyframes() holder; fraction gaps are filled/distributed per AOSP.
@@ -238,9 +236,9 @@ PropertyValuesHolder* AnimatorInflater::loadPvh(Context*ctx,const Resources::The
         const std::string name = parser.getName();
         if (name.compare("keyframe")==0) {
             if (valueType == VALUE_TYPE_UNDEFINED) {
-                valueType = inferValueTypeOfKeyframe(ctx, theme, parser);
+                valueType = inferValueTypeOfKeyframe(res, theme, parser);
             }
-            Keyframe* keyframe = loadKeyframe(ctx, theme, parser, valueType);
+            Keyframe* keyframe = loadKeyframe(res, theme, parser, valueType);
             if (keyframe != nullptr) {
                 keyframes.push_back(keyframe);
             }
@@ -312,8 +310,9 @@ static bool isColorType(int type) {
     return type >= TypedValue::TYPE_FIRST_COLOR_INT && type <= TypedValue::TYPE_LAST_COLOR_INT;
 }
 
-int AnimatorInflater::inferValueTypeOfKeyframe(Context*ctx,const Resources::Theme* theme,const AttributeSet& attrs){
-    auto a = obtainAttributes(ctx, theme, attrs, R::styleable::Keyframe);
+int AnimatorInflater::inferValueTypeOfKeyframe(Resources*res,const Resources::Theme* theme,const AttributeSet& attrs){
+    // AOSP java:783: res.obtainAttributes (themeless).
+    auto a = res->obtainStyledAttributes(&attrs, R::styleable::Keyframe);
     TypedValue tv;
     const bool hasValue = a->peekValue(R::styleable::Keyframe_value, &tv);
     // When no value type is provided, check whether it's a color type first.
@@ -322,9 +321,10 @@ int AnimatorInflater::inferValueTypeOfKeyframe(Context*ctx,const Resources::Them
     return valueType;
 }
 
-Keyframe* AnimatorInflater::loadKeyframe(Context*ctx,const Resources::Theme* theme,
+Keyframe* AnimatorInflater::loadKeyframe(Resources*res,const Resources::Theme* theme,
         const AttributeSet& attrs,int valueType){
-    auto a = obtainAttributes(ctx, theme, attrs, R::styleable::Keyframe);
+    // AOSP: res.obtainAttributes (themeless).
+    auto a = res->obtainStyledAttributes(&attrs, R::styleable::Keyframe);
 
     Keyframe* keyframe = nullptr;
 
@@ -355,7 +355,7 @@ Keyframe* AnimatorInflater::loadKeyframe(Context*ctx,const Resources::Theme* the
 
     const int resID = a->getResourceId(R::styleable::Keyframe_interpolator, 0);
     if (resID > 0) {
-        Interpolator* interpolator = AnimationUtils::loadInterpolator(ctx, resID);
+        Interpolator* interpolator = AnimationUtils::loadInterpolator(res, theme, resID);
         keyframe->setInterpolator(interpolator);
     }
     return keyframe;
@@ -402,18 +402,19 @@ int AnimatorInflater::inferValueTypeFromValues(const TypedArray& a, int valueFro
     return VALUE_TYPE_FLOAT;
 }
 
-PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const Resources::Theme* theme,const AttributeSet&atts, int valueType,const std::string& propertyName){
+PropertyValuesHolder*AnimatorInflater::getPVH(const TypedArray& styledAttributes, int valueType,
+        int valueFromId,int valueToId, const std::string& propertyName){
     // AOSP AnimatorInflater.getPVH (android-36), line-by-line: peek the raw
     // TypedValues for the type test, infer COLOR/FLOAT when unspecified (never
     // bail), read DIMENSION endpoints through getDimension, color endpoints
     // through getColor, and always build the degenerate single-value holder
     // when only valueTo (or neither) is set.
-    auto ta = obtainAttributes(ctx, theme, atts, R::styleable::PropertyValuesHolder);
+    const TypedArray& ta = styledAttributes;
     TypedValue tvFrom;
-    const bool hasFrom = ta->peekValue(R::styleable::PropertyValuesHolder_valueFrom, &tvFrom);
+    const bool hasFrom = ta.peekValue(valueFromId, &tvFrom);
     const int fromType = hasFrom ? tvFrom.type : 0;
     TypedValue tvTo;
-    const bool hasTo = ta->peekValue(R::styleable::PropertyValuesHolder_valueTo, &tvTo);
+    const bool hasTo = ta.peekValue(valueToId, &tvTo);
     const int toType = hasTo ? tvTo.type : 0;
 
     if (valueType == VALUE_TYPE_UNDEFINED) {
@@ -430,8 +431,8 @@ PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const Resources::Them
     PropertyValuesHolder* returnValue = nullptr;
 
     if (valueType == VALUE_TYPE_PATH) {
-        const std::string fromString = ta->getString(R::styleable::PropertyValuesHolder_valueFrom);
-        const std::string toString = ta->getString(R::styleable::PropertyValuesHolder_valueTo);
+        const std::string fromString = ta.getString(valueFromId);
+        const std::string toString = ta.getString(valueToId);
         PathParser::PathData nodesFrom = fromString.empty() ? PathParser::PathData() : PathParser::PathData(fromString);
         PathParser::PathData nodesTo = toString.empty()  ? PathParser::PathData() : PathParser::PathData(toString);
 
@@ -461,39 +462,39 @@ PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const Resources::Them
             float valueFrom = 0, valueTo = 0;
             if (hasFrom) {
                 valueFrom = (fromType == TypedValue::TYPE_DIMENSION)
-                        ? ta->getDimension(R::styleable::PropertyValuesHolder_valueFrom, 0.f)
-                        : ta->getFloat(R::styleable::PropertyValuesHolder_valueFrom, 0.f);
+                        ? ta.getDimension(valueFromId, 0.f)
+                        : ta.getFloat(valueFromId, 0.f);
                 if (hasTo) {
                     valueTo = (toType == TypedValue::TYPE_DIMENSION)
-                            ? ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0.f)
-                            : ta->getFloat(R::styleable::PropertyValuesHolder_valueTo, 0.f);
+                            ? ta.getDimension(valueToId, 0.f)
+                            : ta.getFloat(valueToId, 0.f);
                     returnValue = PropertyValuesHolder::ofFloat(propertyName, {valueFrom, valueTo});
                 } else {
                     returnValue = PropertyValuesHolder::ofFloat(propertyName, {valueFrom});
                 }
             } else {
                 valueTo = (toType == TypedValue::TYPE_DIMENSION)
-                        ? ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0.f)
-                        : ta->getFloat(R::styleable::PropertyValuesHolder_valueTo, 0.f);
+                        ? ta.getDimension(valueToId, 0.f)
+                        : ta.getFloat(valueToId, 0.f);
                 returnValue = PropertyValuesHolder::ofFloat(propertyName, {valueTo});
             }
         } else {
             int valueFrom = 0, valueTo = 0;
             if (hasFrom) {
                 if (fromType == TypedValue::TYPE_DIMENSION) {
-                    valueFrom = (int) ta->getDimension(R::styleable::PropertyValuesHolder_valueFrom, 0.f);
+                    valueFrom = (int) ta.getDimension(valueFromId, 0.f);
                 } else if (isColorType(fromType)) {
-                    valueFrom = (int) ta->getColor(R::styleable::PropertyValuesHolder_valueFrom, 0);
+                    valueFrom = (int) ta.getColor(valueFromId, 0);
                 } else {
-                    valueFrom = ta->getInt(R::styleable::PropertyValuesHolder_valueFrom, 0);
+                    valueFrom = ta.getInt(valueFromId, 0);
                 }
                 if (hasTo) {
                     if (toType == TypedValue::TYPE_DIMENSION) {
-                        valueTo = (int) ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0.f);
+                        valueTo = (int) ta.getDimension(valueToId, 0.f);
                     } else if (isColorType(toType)) {
-                        valueTo = (int) ta->getColor(R::styleable::PropertyValuesHolder_valueTo, 0);
+                        valueTo = (int) ta.getColor(valueToId, 0);
                     } else {
-                        valueTo = ta->getInt(R::styleable::PropertyValuesHolder_valueTo, 0);
+                        valueTo = ta.getInt(valueToId, 0);
                     }
                     returnValue = PropertyValuesHolder::ofInt(propertyName, {valueFrom, valueTo});
                 } else {
@@ -502,11 +503,11 @@ PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const Resources::Them
             } else {
                 if (hasTo) {
                     if (toType == TypedValue::TYPE_DIMENSION) {
-                        valueTo = (int) ta->getDimension(R::styleable::PropertyValuesHolder_valueTo, 0.f);
+                        valueTo = (int) ta.getDimension(valueToId, 0.f);
                     } else if (isColorType(toType)) {
-                        valueTo = (int) ta->getColor(R::styleable::PropertyValuesHolder_valueTo, 0);
+                        valueTo = (int) ta.getColor(valueToId, 0);
                     } else {
-                        valueTo = ta->getInt(R::styleable::PropertyValuesHolder_valueTo, 0);
+                        valueTo = ta.getInt(valueToId, 0);
                     }
                     returnValue = PropertyValuesHolder::ofInt(propertyName, {valueTo});
                 }
@@ -519,24 +520,21 @@ PropertyValuesHolder*AnimatorInflater::getPVH(Context*ctx, const Resources::Them
     return returnValue;
 }
 
-void AnimatorInflater::parseAnimatorFromTypeArray(Context*ctx, const Resources::Theme* theme, ValueAnimator* anim,const AttributeSet&atts, float pixelSize) {
-    auto ta = obtainAttributes(ctx, theme, atts, R::styleable::Animator);
-    const long duration = ta->getInt(R::styleable::Animator_duration, 300);
-    const long startDelay = ta->getInt(R::styleable::Animator_startOffset, 0);
-    // propertyName is in PropertyAnimator styleable, not Animator; read via PVH styleable.
-    std::string propertyName;
-    { auto ta2 = obtainAttributes(ctx, theme, atts, R::styleable::PropertyValuesHolder);
-      propertyName = ta2->getString(R::styleable::PropertyValuesHolder_propertyName);
-    }
+void AnimatorInflater::parseAnimatorFromTypeArray(ValueAnimator* anim, const TypedArray& arrayAnimator,
+        const TypedArray* arrayObjectAnimator, float pixelSize) {
+    // AOSP java:413-452: consumes the arrays styled once by loadAnimator.
+    const long duration = arrayAnimator.getInt(R::styleable::Animator_duration, 300);
+    const long startDelay = arrayAnimator.getInt(R::styleable::Animator_startOffset, 0);
 
     // AOSP: valueType from the attr; if unspecified, infer from valueFrom/valueTo.
-    int valueType = ta->getInt(R::styleable::Animator_valueType, VALUE_TYPE_UNDEFINED);
+    int valueType = arrayAnimator.getInt(R::styleable::Animator_valueType, VALUE_TYPE_UNDEFINED);
     if (valueType == VALUE_TYPE_UNDEFINED) {
-        valueType = inferValueTypeFromValues(*ta, R::styleable::Animator_valueFrom,
+        valueType = inferValueTypeFromValues(arrayAnimator, R::styleable::Animator_valueFrom,
                 R::styleable::Animator_valueTo);
     }
 
-    PropertyValuesHolder* pvh = getPVH(ctx,theme,atts, valueType,propertyName);
+    PropertyValuesHolder* pvh = getPVH(arrayAnimator, valueType,
+            R::styleable::Animator_valueFrom, R::styleable::Animator_valueTo, std::string());
     if (pvh != nullptr) {
         anim->setValues({pvh});
     }
@@ -546,27 +544,26 @@ void AnimatorInflater::parseAnimatorFromTypeArray(Context*ctx, const Resources::
 
     // AOSP gates both on hasValue: an absent repeatCount/repeatMode keeps the
     // animator's current setting instead of resetting it to the default.
-    if (ta->hasValue(R::styleable::Animator_repeatCount)) {
-        anim->setRepeatCount(ta->getInt(R::styleable::Animator_repeatCount, 0));
+    if (arrayAnimator.hasValue(R::styleable::Animator_repeatCount)) {
+        anim->setRepeatCount(arrayAnimator.getInt(R::styleable::Animator_repeatCount, 0));
     }
-    if (ta->hasValue(R::styleable::Animator_repeatMode)) {
-        anim->setRepeatMode(ta->getInt(R::styleable::Animator_repeatMode,
+    if (arrayAnimator.hasValue(R::styleable::Animator_repeatMode)) {
+        anim->setRepeatMode(arrayAnimator.getInt(R::styleable::Animator_repeatMode,
                 ValueAnimator::RESTART));
     }
 
     // AOSP: arrayObjectAnimator != null -> setupObjectAnimator(...) — the
     // path (propertyXName/propertyYName) object-animator setup lives there,
     // not in an inline setPropertyName.
-    if (dynamic_cast<ObjectAnimator*>(anim)) {
-        setupObjectAnimator(ctx, theme, anim, atts, valueType, pixelSize);
+    if (arrayObjectAnimator != nullptr) {
+        setupObjectAnimator(anim, *arrayObjectAnimator, valueType, pixelSize);
     }
 }
 
-TypeEvaluator AnimatorInflater::setupAnimatorForPath(Context*ctx, const Resources::Theme* theme, ValueAnimator* anim,const AttributeSet&arrayAnimator){
+TypeEvaluator AnimatorInflater::setupAnimatorForPath(ValueAnimator* anim, const TypedArray& arrayAnimator){
     TypeEvaluator evaluator = nullptr;
-    auto ta = obtainAttributes(ctx, theme, arrayAnimator, R::styleable::Animator);
-    const std::string fromString = ta->getString(R::styleable::Animator_valueFrom);
-    const std::string toString   = ta->getString(R::styleable::Animator_valueTo);
+    const std::string fromString = arrayAnimator.getString(R::styleable::Animator_valueFrom);
+    const std::string toString   = arrayAnimator.getString(R::styleable::Animator_valueTo);
 
     // AOSP setObjectValues(...) + new PathDataEvaluator(): CDROID's Object
     // values are AnimateValues, so the values go in through a PathData PHV.
@@ -593,10 +590,10 @@ TypeEvaluator AnimatorInflater::setupAnimatorForPath(Context*ctx, const Resource
     return evaluator;
 }
 
-void AnimatorInflater::setupObjectAnimator(Context*ctx, const Resources::Theme* theme, ValueAnimator* anim, const AttributeSet&arrayObjectAnimator,int valueType, float pixelSize){
-    auto ta = obtainAttributes(ctx, theme, arrayObjectAnimator, R::styleable::PropertyAnimator);
+void AnimatorInflater::setupObjectAnimator(ValueAnimator* anim, const TypedArray& arrayObjectAnimator, int valueType, float pixelSize){
+    const TypedArray& ta = arrayObjectAnimator;
     ObjectAnimator* oa = (ObjectAnimator*) anim;
-    std::string pathData = ta->getString(R::styleable::PropertyAnimator_pathData);
+    std::string pathData = ta.getString(R::styleable::PropertyAnimator_pathData);
     // Path can be involved in an ObjectAnimator in the following 3 ways:
     // 1) Path morphing: the property to be animated is pathData, and valueFrom and valueTo
     //    are both of pathType. valueType = pathType needs to be explicitly defined.
@@ -606,8 +603,8 @@ void AnimatorInflater::setupObjectAnimator(Context*ctx, const Resources::Theme* 
     // 3) PathInterpolator can also define a path (in pathData) for its interpolation curve.
     // Here we are dealing with case 2:
     if (!pathData.empty()) {
-        std::string propertyXName = ta->getString(R::styleable::PropertyAnimator_propertyXName);
-        std::string propertyYName = ta->getString(R::styleable::PropertyAnimator_propertyYName);
+        std::string propertyXName = ta.getString(R::styleable::PropertyAnimator_propertyXName);
+        std::string propertyYName = ta.getString(R::styleable::PropertyAnimator_propertyYName);
 
         if (valueType == VALUE_TYPE_PATH || valueType == VALUE_TYPE_UNDEFINED) {
             // When pathData is defined, we are in case #2 mentioned above. ValueType can only
@@ -656,7 +653,7 @@ void AnimatorInflater::setupObjectAnimator(Context*ctx, const Resources::Theme* 
             }
         }
     } else {
-        std::string propertyName = ta->getString(R::styleable::PropertyAnimator_propertyName);
+        std::string propertyName = ta.getString(R::styleable::PropertyAnimator_propertyName);
         oa->setPropertyName(propertyName);
     }
 }
@@ -734,24 +731,44 @@ void AnimatorInflater::setupValues(ValueAnimator* anim, const TypedArray& arrayA
     }
 }
 
-ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const Resources::Theme* theme,const AttributeSet& atts,float){
+ObjectAnimator* AnimatorInflater::loadObjectAnimator(Resources* res,const Resources::Theme* theme,const AttributeSet& atts,float pathErrorScale){
     ObjectAnimator*anim = new ObjectAnimator();
-    loadAnimator(ctx,theme,atts,anim,1.f);
+    loadAnimator(res,theme,atts,anim,pathErrorScale);
     return anim;
 }
 
-ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const Resources::Theme* theme,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale){
+ValueAnimator* AnimatorInflater::loadAnimator(Resources* resources,const Resources::Theme* theme,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale){
+    // AOSP java:1028-1067: style both arrays once (theme-driven when a theme
+    // is in play, themeless through res otherwise), parse from them, and load
+    // the interpolator through (res, theme).
+    std::unique_ptr<TypedArray> arrayAnimator;
+    std::unique_ptr<TypedArray> arrayObjectAnimator;
+
+    if (theme != nullptr) {
+        arrayAnimator = theme->obtainStyledAttributes(&attrs, R::styleable::Animator);
+    } else {
+        arrayAnimator = resources->obtainStyledAttributes(&attrs, R::styleable::Animator);
+    }
+
     // If anim is not null, then it is an object animator.
+    if (anim != nullptr) {
+        if (theme != nullptr) {
+            arrayObjectAnimator = theme->obtainStyledAttributes(&attrs, R::styleable::PropertyAnimator);
+        } else {
+            arrayObjectAnimator = resources->obtainStyledAttributes(&attrs, R::styleable::PropertyAnimator);
+        }
+    }
+
     if (anim == nullptr) {
         anim = new ValueAnimator();
     }
 
-    parseAnimatorFromTypeArray(context,theme,anim,attrs, pathErrorScale);
+    parseAnimatorFromTypeArray(anim, *arrayAnimator,
+            arrayObjectAnimator ? arrayObjectAnimator.get() : nullptr, pathErrorScale);
 
-    auto taInt = obtainAttributes(context, theme, attrs, R::styleable::Animator);
-    const int resID = taInt->getResourceId(R::styleable::Animator_interpolator, 0);
-    if (resID != 0) {
-        Interpolator* interpolator = AnimationUtils::loadInterpolator(context, resID);
+    const int resID = arrayAnimator->getResourceId(R::styleable::Animator_interpolator, 0);
+    if (resID > 0) {
+        Interpolator* interpolator = AnimationUtils::loadInterpolator(resources, theme, resID);
         anim->setInterpolator(interpolator);
     }
     return anim;

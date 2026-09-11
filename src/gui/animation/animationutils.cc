@@ -139,6 +139,12 @@ Interpolator* AnimationUtils::loadInterpolator(Context*context,int id){
     return interpolator.get();
 }
 
+// AOSP @hide loadInterpolator(Resources, Theme, int) (see the header).
+Interpolator* AnimationUtils::loadInterpolator(Resources* res,const Resources::Theme* theme,int id){
+    (void)theme;   // interpolator styling goes through the Context's theme chain
+    return loadInterpolator(res ? res->getContext() : nullptr, id);
+}
+
 std::shared_ptr<Interpolator> AnimationUtils::createInterpolatorFromXml(Context* context,XmlPullParser&parser){
     int type;
     const int depth = parser.getDepth();

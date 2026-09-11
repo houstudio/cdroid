@@ -21,6 +21,7 @@
 #include <core/xmlpullparser.h>
 #include <animation/animationset.h>
 #include <animation/layoutanimationcontroller.h>
+#include <content/resources.h>   // Resources::Theme (the @hide loadInterpolator face)
 namespace cdroid{
 
 class AnimationUtils{
@@ -43,6 +44,11 @@ public:
     // AOSP AnimationUtils.loadInterpolator(Context, @InterpolatorRes int): the
     // resource is opened by id (binary AXML via Resources.getXml); id 0 → null.
     static Interpolator* loadInterpolator(Context*,int id);
+    // AOSP @hide AnimationUtils.loadInterpolator(Resources, Theme, int): the
+    // face AnimatorInflater's private chain calls. CDROID's interpolator loads
+    // open the XML through the Context (reached from res via getContext()) —
+    // the theme is not threaded into interpolator styling yet.
+    static Interpolator* loadInterpolator(Resources* res,const Resources::Theme* theme,int id);
 
     static float lerp(float startValue, float endValue, float fraction) {
         return startValue + fraction * (endValue - startValue);
