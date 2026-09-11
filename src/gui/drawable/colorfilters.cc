@@ -130,6 +130,7 @@ void PorterDuffColorFilter::apply(Canvas&canvas,const Rect&rect){
 
 void PorterDuffColorFilter::setColor(int c){
     mColor= c;
+    bumpGeneration();
 }
 
 int PorterDuffColorFilter::getColor()const{
@@ -138,6 +139,7 @@ int PorterDuffColorFilter::getColor()const{
 
 void PorterDuffColorFilter::setMode(int m){
     mMode = m;
+    bumpGeneration();
 }
 
 int PorterDuffColorFilter::getMode()const{
@@ -175,6 +177,7 @@ int LightingColorFilter::getColorMultiply()const{
 
 void LightingColorFilter::setColorMultiply(int mul){
     mMul = mul;
+    bumpGeneration();
 }
 
 int LightingColorFilter::getColorAdd()const{
@@ -183,6 +186,7 @@ int LightingColorFilter::getColorAdd()const{
 
 void LightingColorFilter::setColorAdd(int add){
     mAdd = add;
+    bumpGeneration();
 }
 
 void LightingColorFilter::apply(Canvas&canvas,const Rect&/*rect*/){

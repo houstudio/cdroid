@@ -79,6 +79,10 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
     //mRebuildShader = bitmapState.mRebuildShader;
     mAutoMirrored = bitmapState.mAutoMirrored;
     mResource = bitmapState.mResource;
+    // Carry the baked tint memos: the keys are RefPtr identity + values, so
+    // mutated clones share ONE bake instead of each retaining a full-size copy.
+    for (int i = 0; i < 2; i++) mTintMemo[i] = bitmapState.mTintMemo[i];
+    mTintSlot = bitmapState.mTintSlot;
 }
 
 BitmapDrawable::BitmapState::~BitmapState(){
@@ -145,6 +149,10 @@ RefPtr<ImageSurface> BitmapDrawable::getBitmap()const{
 void BitmapDrawable::setBitmap(RefPtr<ImageSurface>bmp){
     mBitmapState->mBitmap = bmp;
     mBitmapState->mTransparency = ImageDecoder::getTransparency(bmp);
+    // Density rides the Bitmap in AOSP, so a bitmap swap brings its own; the
+    // ImageSurface stand-in carries none — never keep the previous bitmap's
+    // bucket density for the replacement (0 = unknown -> raw pixel sizes).
+    mBitmapState->mBitmapDensity = 0;
     mDstRectAndInsetsDirty = true;
     computeBitmapSize();
     invalidateSelf();
@@ -182,6 +190,8 @@ int BitmapDrawable::getIntrinsicHeight() {
 }
 
 void BitmapDrawable::setTargetDensity(int density) {
+    // AOSP android-36 setTargetDensity(int): 0 means the system default.
+    if (density == 0) density = DisplayMetrics::DENSITY_DEFAULT;
     if (mBitmapState->mTargetDensity != density) {
         mBitmapState->mTargetDensity = density;
         computeBitmapSize();
@@ -401,35 +411,72 @@ static int getRotateAngle(Canvas&canvas){
     return int(radians*180.f/M_PI);
 }
 
+namespace {
+/* Above this many source pixels a memoized bake costs more RAM than the
+  per-frame re-bake saves on the 64/128MB embedded targets (ARGB32 is 4
+  bytes/px, so 256x256 caps the two-slot memo at ~0.5MB per state).*/
+constexpr int TINT_CACHE_MAX_PIXELS = 256 * 256;
+
+/* Value key for the memo: AOSP's tint path always reduces to a (color, mode)
+  pair (Drawable.updateTintFilter builds a fresh PorterDuffColorFilter per
+  color change), so keying on values — not filter identity — lets a
+  pressed/normal state cycle hit the other slot instead of re-baking a
+  full-size copy on every flip. Filters without a compact value key
+  (ColorMatrix) fall back to pointer + generation. */
+enum TintKeyTypeId { TINTKEY_NONE = 0, TINTKEY_PORTERDUFF, TINTKEY_BLENDMODE, TINTKEY_LIGHTING };
+bool tintKeyValue(const ColorFilter* f, int* typeId, int* k1, int* k2) {
+    if (auto* p = dynamic_cast<const PorterDuffColorFilter*>(f)) {
+        *typeId = TINTKEY_PORTERDUFF; *k1 = p->getColor(); *k2 = p->getMode(); return true;
+    }
+    if (auto* b = dynamic_cast<const BlendModeColorFilter*>(f)) {
+        *typeId = TINTKEY_BLENDMODE; *k1 = b->getColor(); *k2 = b->getBlendMode(); return true;
+    }
+    if (auto* l = dynamic_cast<const LightingColorFilter*>(f)) {
+        *typeId = TINTKEY_LIGHTING; *k1 = l->getColorMultiply(); *k2 = l->getColorAdd(); return true;
+    }
+    return false;
+}
+}
+
 /* Source-space tinted copy of the bitmap, memoized in the state (AOSP applies
  * the color filter on the paint during the single draw pass; this bakes it
- * into a bitmap copy once per (bitmap, filter) pair instead of the per-draw
+ * into a bitmap copy once per (bitmap, tint) pair instead of the per-draw
  * tint group's push_group + full-rect filter + composite-back passes).
- * Keyed by pointers: a tint/state change builds a new PorterDuffColorFilter
- * object, and a new bitmap/new state naturally misses. */
+ * Two value-keyed slots (see TintMemo): a stateful tint cycle keeps both
+ * colors resident, and an in-place setColor/setMode changes the value key so
+ * the bake is redone — matching AOSP's live per-draw filter. */
 Cairo::RefPtr<Cairo::ImageSurface> BitmapDrawable::tintedBitmap(BitmapState& state,
-        ColorFilter* filter) {
-    if (state.mTintedCache && state.mTintedWith == filter
-            && state.mTintedFrom == state.mBitmap.get()) {
-        return state.mTintedCache;
+        const Cairo::RefPtr<ColorFilter>& filter) {
+    int typeId = TINTKEY_NONE, k1 = 0, k2 = 0;
+    const bool byValue = tintKeyValue(filter.get(), &typeId, &k1, &k2);
+    const int generation = filter->getGeneration();
+    for (const auto& m : state.mTintMemo) {
+        if (!m.cache || m.from != state.mBitmap) continue;
+        if (byValue ? (m.byValue && m.typeId == typeId && m.key1 == k1 && m.key2 == k2)
+                    : (!m.byValue && m.with == filter && m.generation == generation)) {
+            return m.cache;
+        }
     }
     Cairo::RefPtr<Cairo::ImageSurface> source = state.mBitmap;
     Cairo::RefPtr<Cairo::ImageSurface> copy = Cairo::ImageSurface::create(
             Cairo::Surface::Format::ARGB32, source->get_width(), source->get_height());
-    {
-        Cairo::RefPtr<Cairo::Context> cc = Cairo::Context::create(copy);
-        cc->set_source(source, 0, 0);
-        cc->set_operator(Cairo::Context::Operator::SOURCE);
-        cc->paint();
-    }
-    Canvas filterCanvas(copy);
-    Rect r;   // (l,t,w,h); apply() paints the whole target anyway
-    r.set(0, 0, copy->get_width(), copy->get_height());
-    filter->apply(filterCanvas, r);
+    // One context does both passes (blit, then filter) — the old two-context
+    // form paid a second cairo_t per bake.
+    Canvas cc(copy);
+    cc.set_source(source, 0, 0);
+    cc.set_operator(Cairo::Context::Operator::SOURCE);
+    cc.paint();
+    cc.set_operator(Cairo::Context::Operator::OVER);   // fresh-context default for apply()
+    Rect r = Rect::MakeWH(copy->get_width(), copy->get_height());
+    filter->apply(cc, r);
 
-    state.mTintedCache = copy;
-    state.mTintedWith = filter;
-    state.mTintedFrom = state.mBitmap.get();
+    if (source->get_width() * source->get_height() <= TINT_CACHE_MAX_PIXELS) {
+        BitmapState::TintMemo& m = state.mTintMemo[state.mTintSlot];
+        m.cache = copy; m.from = state.mBitmap; m.with = filter;
+        m.key1 = k1; m.key2 = k2; m.typeId = typeId;
+        m.generation = generation; m.byValue = byValue;
+        state.mTintSlot ^= 1;   // alternate eviction: a two-color cycle stays fully cached
+    }
     return copy;
 }
 
@@ -447,8 +494,8 @@ void BitmapDrawable::draw(Canvas&canvas){
     // mColorFilter beats tint (beginTintGroup's rule); with a filter in
     // effect the bitmap is swapped for its memoized tinted copy and the
     // whole draw runs untinted-path (AOSP: the filter rides the paint).
-    ColorFilter* tintFilter = mColorFilter ? (ColorFilter*) mColorFilter.get()
-                                           : mTintFilter.get();
+    Cairo::RefPtr<ColorFilter> tintFilter = mColorFilter ? mColorFilter
+                                                         : mTintFilter;
     Cairo::RefPtr<Cairo::ImageSurface> source = mBitmapState->mBitmap;
     if (tintFilter) source = tintedBitmap(*mBitmapState, tintFilter);
     const int angle_degrees = getRotateAngle(canvas);
@@ -464,6 +511,14 @@ void BitmapDrawable::draw(Canvas&canvas){
 
     if((mBitmapState->mTileModeX>=0)||(mBitmapState->mTileModeY>=0)){
         RefPtr<SurfacePattern> pat =SurfacePattern::create(source);
+        // AOSP updateShaderMatrix scales the BitmapShader by
+        // targetDensity/sourceDensity in the tile path too: without this
+        // matrix the pattern tiles raw pixels 1:1 while mBitmapWidth/Height
+        // (and the intermediate strips below) are density-scaled units.
+        Cairo::Matrix patMatrix = Cairo::identity_matrix();
+        patMatrix.scale((double)source->get_width()  / std::max(1, mBitmapWidth),
+                        (double)source->get_height() / std::max(1, mBitmapHeight));
+        pat->set_matrix(patMatrix);
         if(mBitmapState->mTileModeX!=TileMode::DISABLED){
             RefPtr<Surface> subs = ImageSurface::create(Surface::Format::ARGB32,mBounds.width,mBitmapHeight);
             RefPtr<Cairo::Context> subcanvas = Cairo::Context::create(subs);
@@ -501,8 +556,21 @@ void BitmapDrawable::draw(Canvas&canvas){
         // destination is the gravity-applied mDstRect (computed in
         // updateDstRectAndInsetsIfDirty), not the full bounds. Stretching to
         // the bounds ignored every non-FILL gravity (center etc.).
-        const float sw = float(mBitmapWidth), sh = float(mBitmapHeight);
+        // max(1,·): a 1-px-wide hi-dpi resource can scale down to a 0
+        // intrinsic; dividing by it feeds cairo a sticky +inf/NaN matrix that
+        // kills the window. AOSP's drawBitmap never divides — it stretches
+        // whatever pixels exist into the destination rect.
+        const float sw = float(std::max(1, mBitmapWidth)), sh = float(std::max(1, mBitmapHeight));
         const float fx = float(mDstRect.width) / sw, fy = float(mDstRect.height) / sh;
+        // Density-matched fast path (see the pattern below): the matrix is the
+        // identity whenever the surface size equals the intrinsic size, so pin
+        // the bare surface source while the CTM is still the identity — cairo
+        // bakes CTM^-1 into set_source(surface) at call time, making it exactly
+        // equivalent to the explicit pattern while skipping the wrapper +
+        // matrix calls every draw.
+        const bool identityDensity = (source->get_width() == mBitmapWidth)
+                && (source->get_height() == mBitmapHeight);
+        if (identityDensity) canvas.set_source(source, 0, 0);
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
 
         LOGV_IF(mBitmapState->mFilterBitmap&&(mBitmapWidth*mBitmapHeight>=512*512),
@@ -533,12 +601,14 @@ void BitmapDrawable::draw(Canvas&canvas){
         // drawable painted nothing. Pattern matrix maps USER -> PATTERN
         // space, so scale = surface px per user unit (AOSP's software
         // drawBitmap(bitmap, null, dstRect) semantics).
-        Cairo::RefPtr<SurfacePattern> srcPattern = Cairo::SurfacePattern::create(source);
-        Cairo::Matrix srcMatrix = Cairo::identity_matrix();
-        srcMatrix.scale((double)source->get_width() / std::max(1, mBitmapWidth),
-                        (double)source->get_height() / std::max(1, mBitmapHeight));
-        srcPattern->set_matrix(srcMatrix);
-        canvas.set_source(srcPattern);
+        if (!identityDensity) {
+            Cairo::RefPtr<SurfacePattern> srcPattern = Cairo::SurfacePattern::create(source);
+            Cairo::Matrix srcMatrix = Cairo::identity_matrix();
+            srcMatrix.scale((double)source->get_width() / std::max(1, mBitmapWidth),
+                            (double)source->get_height() / std::max(1, mBitmapHeight));
+            srcPattern->set_matrix(srcMatrix);
+            canvas.set_source(srcPattern);
+        }
         if(getOpacity()==PixelFormat::OPAQUE){
             canvas.set_operator(Cairo::Context::Operator::SOURCE);
         }
@@ -622,15 +692,17 @@ void BitmapDrawable::updateStateFromTypedArray(const TypedArray& a, int srcDensi
                         if (bmp) {
                             state.mBitmap = bmp;
                             state.mTransparency = ImageDecoder::getTransparency(bmp);
+                            // Commit the bucket density only with a successful
+                            // decode: AOSP throws on a null bitmap and stores
+                            // nothing, so a failed re-resolution keeps the old
+                            // bitmap measured with its own old density. The
+                            // density lives here (the Bitmap.mDensity
+                            // stand-in) because ImageSurface carries none.
+                            state.mBitmapDensity = density;
                         }
                     }
                     delete asset;
                 }
-                // CDROID ImageSurface doesn't carry density metadata; the
-                // decoded bucket's density lives in mBitmapDensity (the
-                // Bitmap.mDensity stand-in) so computeBitmapSize can scale it
-                // to the target. mSrcDensityOverride keeps its AOSP meaning.
-                state.mBitmapDensity = density;
             }
         }
     }
@@ -666,7 +738,8 @@ void BitmapDrawable::applyTheme(const Resources::Theme& t){
     Drawable::applyTheme(t);
     if (mBitmapState && !mBitmapState->mThemeAttrs.empty()) {
         auto a = t.resolveAttributes(mBitmapState->mThemeAttrs, R::styleable::BitmapDrawable);
-        if (a) updateStateFromTypedArray(*a, 0);
+        // AOSP android-36 applyTheme re-resolves with the stored override.
+        if (a) updateStateFromTypedArray(*a, mBitmapState->mSrcDensityOverride);
         mBitmapState->mThemeAttrs.clear();
     }
     // AOSP applyTheme also ends in updateLocalState(): refresh the tint

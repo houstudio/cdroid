@@ -115,9 +115,12 @@ void NinePatchDrawable::setSourceDensity(int density){
     // Decode-seam density fixup (AOSP: BitmapFactory.decodeResourceStream reads the
     // asset density from TypedValue.density). Records which pixel space the
     // renderer was decoded in, so the subsequent setTargetDensity(display) can
-    // resample once. DENSITY_NONE (0, unqualified res/) keeps the legacy
-    // default-density treatment.
-    if (density == TypedValue::DENSITY_NONE) density = DisplayMetrics::DENSITY_DEFAULT;
+    // resample once. The renderer divides by this value, so 0 must never be
+    // stored: DENSITY_NONE (nodpi) and DENSITY_DEFAULT (unqualified res/) both
+    // keep the legacy default-density treatment — a raw 0 made setTargetDensity
+    // resample by density/0 = inf and collapse the 9-patch.
+    if (density == TypedValue::DENSITY_NONE || density == TypedValue::DENSITY_DEFAULT)
+        density = DisplayMetrics::DENSITY_DEFAULT;
     mNinePatchState->mSourceDensity = density;
 }
 

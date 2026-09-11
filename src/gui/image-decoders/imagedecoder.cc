@@ -320,6 +320,20 @@ Drawable* ImageDecoder::decodeDrawable(Resources& res, int id) {
     if (asset == nullptr) return nullptr;
     const off64_t sz = asset->getLength();
     if (sz <= 0) return nullptr;
+    // Decode-time density fixup (AOSP BitmapFactory.decodeResourceStream):
+    // normalize the TypedValue bucket density once — DENSITY_DEFAULT
+    // (unqualified res/) -> display default, DENSITY_NONE (nodpi) -> 0 = raw
+    // sizes, anything else is the bucket as-is (android-36 :843-848, the same
+    // mapping as BitmapDrawable::updateStateFromTypedArray). Static formats
+    // only: animated (FrameSequence) drawables intentionally skip density —
+    // per-frame resampling costs more than it buys (raw frame intrinsics).
+    // Target density comes from the display metrics.
+    int srcDensity = 0;
+    if (tv.density == TypedValue::DENSITY_DEFAULT) {
+        srcDensity = DisplayMetrics::DENSITY_DEFAULT;
+    } else if (tv.density != TypedValue::DENSITY_NONE) {
+        srcDensity = tv.density;
+    }
     // Animated formats take the zero-copy fast path: one asset open, the
     // buffer handed straight to AnimatedImageDrawable (no slurp, no reopen).
     if (FrameSequence::isAnimated(asset->getBuffer(false), (size_t)sz)) {
@@ -335,22 +349,11 @@ Drawable* ImageDecoder::decodeDrawable(Resources& res, int id) {
     Drawable* d = decodeDrawableStream(res.getContext(),
             std::unique_ptr<std::istream>(new MemoryInputStream(
                     (const char*)asset->getBuffer(false), (size_t)sz)), path);
-    // Decode-time density fixup for 9-patches (AOSP BitmapFactory.decodeResourceStream):
-    // source density comes from the TypedValue, target from the display metrics.
     if (auto* npd = dynamic_cast<NinePatchDrawable*>(d)) {
-        npd->setSourceDensity(tv.density);
+        npd->setSourceDensity(srcDensity);
         npd->setTargetDensity(res.getDisplayMetrics().densityDpi);
     } else if (auto* bd = dynamic_cast<BitmapDrawable*>(d)) {
-        // BitmapDrawable.updateStateFromTypedArray's density normalize
-        // (android-36 :843-848): DENSITY_DEFAULT -> DisplayMetrics default,
-        // DENSITY_NONE stays none (raw sizes), anything else is the bucket.
-        int density = 0;   // Bitmap.DENSITY_NONE stand-in
-        if (tv.density == TypedValue::DENSITY_DEFAULT) {
-            density = DisplayMetrics::DENSITY_DEFAULT;
-        } else if (tv.density != TypedValue::DENSITY_NONE) {
-            density = tv.density;
-        }
-        bd->setSourceDensity(density);
+        bd->setSourceDensity(srcDensity);
         bd->setTargetDensity(res.getDisplayMetrics().densityDpi);
     }
     return d;

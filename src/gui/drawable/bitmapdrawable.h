@@ -58,13 +58,28 @@ private:
           Bitmap.getScaledWidth(mTargetDensity).*/
         int mBitmapDensity;
         Cairo::RefPtr<Cairo::ImageSurface>mBitmap;
-        /* Memoized tinted copy of mBitmap (source space, like AOSP's
-         * paint-side color filter). Keyed by (mBitmap, filter) pointers;
-         * filters like MULTIPLY are not idempotent, so the copy — never
-         * tint mBitmap itself. */
-        mutable Cairo::RefPtr<Cairo::ImageSurface>mTintedCache;
-        mutable const void*mTintedWith = nullptr;
-        mutable const void*mTintedFrom = nullptr;
+        /* Two-slot memo of the baked tinted copy of mBitmap (source space,
+         * like AOSP's paint-side color filter). Value-keyed (color, mode) so a
+         * pressed/normal tint cycle hits the other slot instead of re-baking
+         * on every flip (updateTintFilter builds a fresh filter object per
+         * color change, so an identity key always misses); exotic filters
+         * (ColorMatrix) fall back to pointer + generation. Slots hold RefPtrs,
+         * so a recycled heap address can never false-hit, and the copy-ctor
+         * carries them: N mutate() clones share ONE bake. Sources over
+         * TINT_CACHE_MAX_PIXELS are never memoized (re-baked per frame) — on
+         * 64/128MB targets RAM beats CPU. MULTIPLY-style filters are not
+         * idempotent, so the copy — never tint mBitmap itself. */
+        struct TintMemo {
+            Cairo::RefPtr<Cairo::ImageSurface> cache;
+            Cairo::RefPtr<Cairo::ImageSurface> from;
+            Cairo::RefPtr<ColorFilter> with;
+            int key1 = 0, key2 = 0;   // value key: (color, mode/mul/add/blendMode)
+            int typeId = 0;           // which filter type the value key came from
+            int generation = 0;       // in-place-mutation guard (pointer-key path)
+            bool byValue = false;
+        };
+        TintMemo mTintMemo[2];
+        int mTintSlot = 0;
         BitmapState();
         BitmapState(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
         BitmapState(const BitmapState&bitmapState);
@@ -75,7 +90,7 @@ private:
     /* Source-space tinted bitmap, memoized in the state (see the members
      * there); replaces the per-draw tint group for this drawable. */
     static Cairo::RefPtr<Cairo::ImageSurface> tintedBitmap(BitmapState& state,
-            ColorFilter* filter);
+            const Cairo::RefPtr<ColorFilter>& filter);
     int mBitmapWidth;
     int mBitmapHeight;
     Insets mOpticalInsets;
