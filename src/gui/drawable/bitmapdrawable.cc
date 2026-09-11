@@ -609,7 +609,11 @@ void BitmapDrawable::draw(Canvas&canvas){
             srcPattern->set_matrix(srcMatrix);
             canvas.set_source(srcPattern);
         }
-        if(getOpacity()==PixelFormat::OPAQUE){
+        // OPAQUE here only reflects the ORIGINAL bitmap; a color filter can
+        // make the tinted copy translucent (e.g. a half-alpha tint), and
+        // SOURCE would erase the backdrop under it. AOSP's drawBitmap always
+        // blends — the filter rides the paint.
+        if(getOpacity()==PixelFormat::OPAQUE && !tintFilter){
             canvas.set_operator(Cairo::Context::Operator::SOURCE);
         }
         Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
