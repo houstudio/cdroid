@@ -50,6 +50,12 @@ protected:
     // Unique prefs name per case (fresh file per case).
     std::string name() { return "prefs" + std::to_string(mSeq); }
 
+    // SharedPreferencesImpl takes the FULL path (AOSP SharedPreferencesImpl(File):
+    // ContextImpl.getSharedPreferencesPath resolves it — the per-app isolation
+    // contract since 37f0ce0dc). A bare name would resolve relative to the CWD,
+    // colliding with stray files from earlier runs.
+    std::string prefsFile() { return filePath(name()); }
+
     std::string filePath(const std::string& prefsName) {
         return mHome + "/.cdroid/prefs/" + prefsName + ".xml";
     }
@@ -65,7 +71,7 @@ protected:
  * returns the default (AOSP: ClassCastException; CDROID seam: default). */
 TEST_F(SHARED_PREFS, TypedRoundTrip) {
     {
-        SharedPreferencesImpl sp(name(), 0);
+        SharedPreferencesImpl sp(prefsFile(), 0);
         sp.edit()
             .putString("s", "hello")
             .putInt("i", -42)
@@ -74,7 +80,7 @@ TEST_F(SHARED_PREFS, TypedRoundTrip) {
             .putBoolean("b", true)
             .commit();
     }
-    SharedPreferencesImpl sp(name(), 0);   // fresh instance: reload from disk
+    SharedPreferencesImpl sp(prefsFile(), 0);   // fresh instance: reload from disk
     EXPECT_EQ(sp.getString("s", ""), "hello");
     EXPECT_EQ(sp.getInt("i", 0), -42);
     EXPECT_EQ(sp.getLong("l", 0), 9007199254740993LL);
@@ -94,19 +100,19 @@ TEST_F(SHARED_PREFS, TypedRoundTrip) {
 TEST_F(SHARED_PREFS, StringSetRoundTrip) {
     std::set<std::string> in = {"one", "two\nlines", "a<b&c>d\"e'f", "trailing ", " leading"};
     {
-        SharedPreferencesImpl sp(name(), 0);
+        SharedPreferencesImpl sp(prefsFile(), 0);
         sp.edit().putStringSet("set", in).commit();
     }
-    SharedPreferencesImpl sp(name(), 0);
+    SharedPreferencesImpl sp(prefsFile(), 0);
     const std::set<std::string> out = sp.getStringSet("set", {});
     EXPECT_EQ(out, in);
 
     // XML-special strings too.
     {
-        SharedPreferencesImpl sp2(name(), 0);
+        SharedPreferencesImpl sp2(prefsFile(), 0);
         sp2.edit().putString("xml", "<tag attr=\"x\">&amp;'</tag>\n\tsecond").commit();
     }
-    SharedPreferencesImpl sp2(name(), 0);
+    SharedPreferencesImpl sp2(prefsFile(), 0);
     EXPECT_EQ(sp2.getString("xml", ""), "<tag attr=\"x\">&amp;'</tag>\n\tsecond");
 }
 
@@ -114,7 +120,7 @@ TEST_F(SHARED_PREFS, StringSetRoundTrip) {
  * FastXmlSerializer: header, 4-space indent, value= attributes, escaping). */
 TEST_F(SHARED_PREFS, DiskFormatIsAospXml) {
     {
-        SharedPreferencesImpl sp(name(), 0);
+        SharedPreferencesImpl sp(prefsFile(), 0);
         sp.edit()
             .putInt("count", 42)
             .putBoolean("flag", true)
@@ -143,7 +149,7 @@ TEST_F(SHARED_PREFS, CorruptFileStartsEmpty) {
     mkdir((mHome + "/.cdroid").c_str(), 0755);
     mkdir((mHome + "/.cdroid/prefs").c_str(), 0755);
     { std::ofstream f(path, std::ios::trunc); f << "this is not xml at all [section]\nkey=1\n"; }
-    SharedPreferencesImpl sp(name(), 0);
+    SharedPreferencesImpl sp(prefsFile(), 0);
     EXPECT_TRUE(sp.getAll().empty());
     EXPECT_FALSE(sp.contains("key"));
 
@@ -151,7 +157,7 @@ TEST_F(SHARED_PREFS, CorruptFileStartsEmpty) {
     { std::ofstream f(path, std::ios::trunc);
       f << "<?xml version='1.0' encoding='utf-8' standalone='yes' ?>\n<map>\n"
         << "    <double name=\"x\" value=\"1.5\" />\n</map>\n"; }
-    SharedPreferencesImpl sp2(name(), 0);
+    SharedPreferencesImpl sp2(prefsFile(), 0);
     EXPECT_TRUE(sp2.getAll().empty());
 }
 
@@ -160,7 +166,7 @@ TEST_F(SHARED_PREFS, CorruptFileStartsEmpty) {
 TEST_F(SHARED_PREFS, BackupRestoredOnLoad) {
     const std::string path = filePath(name());
     {
-        SharedPreferencesImpl sp(name(), 0);
+        SharedPreferencesImpl sp(prefsFile(), 0);
         sp.edit().putString("k", "good").commit();
     }
     // Simulate the crash window: rename the good file to .bak, leave a
@@ -168,7 +174,7 @@ TEST_F(SHARED_PREFS, BackupRestoredOnLoad) {
     rename(path.c_str(), (path + ".bak").c_str());
     { std::ofstream f(path, std::ios::trunc); f << "<?xml version='1.0' encoding='ut"; }
 
-    SharedPreferencesImpl sp(name(), 0);
+    SharedPreferencesImpl sp(prefsFile(), 0);
     EXPECT_EQ(sp.getString("k", ""), "good");
     // The backup was consumed by the restore.
     EXPECT_NE(access((path + ".bak").c_str(), F_OK), 0);
@@ -176,7 +182,7 @@ TEST_F(SHARED_PREFS, BackupRestoredOnLoad) {
 
 /* commit() is synchronous: it returns only after the file is on disk. */
 TEST_F(SHARED_PREFS, CommitIsSynchronous) {
-    SharedPreferencesImpl sp(name(), 0);
+    SharedPreferencesImpl sp(prefsFile(), 0);
     EXPECT_TRUE(sp.edit().putString("k", "v").commit());
     EXPECT_EQ(access(filePath(name()).c_str(), F_OK), 0);
     EXPECT_EQ(sp.getString("k", ""), "v");
@@ -185,7 +191,7 @@ TEST_F(SHARED_PREFS, CommitIsSynchronous) {
 /* apply() makes the change visible in memory immediately and queues the
  * disk write; QueuedWork::waitToFinish (the exit checkpoint) flushes it. */
 TEST_F(SHARED_PREFS, ApplyFlushesThroughQueuedWork) {
-    SharedPreferencesImpl sp(name(), 0);
+    SharedPreferencesImpl sp(prefsFile(), 0);
     sp.edit().putString("k1", "v1").apply();
     sp.edit().putString("k2", "v2").apply();
     // Memory state is already visible to readers.
@@ -197,7 +203,7 @@ TEST_F(SHARED_PREFS, ApplyFlushesThroughQueuedWork) {
     EXPECT_NE(xml.find("v2"), std::string::npos);
 
     // And a fresh instance sees both keys — the queued writes landed.
-    SharedPreferencesImpl sp2(name(), 0);
+    SharedPreferencesImpl sp2(prefsFile(), 0);
     EXPECT_EQ(sp2.getString("k1", ""), "v1");
     EXPECT_EQ(sp2.getString("k2", ""), "v2");
 }
@@ -206,7 +212,7 @@ TEST_F(SHARED_PREFS, ApplyFlushesThroughQueuedWork) {
  * reverse order, AOSP EditorImpl.notifyListeners), clear fires the "" key
  * (the C++ stand-in for AOSP's null), and unregister stops delivery. */
 TEST_F(SHARED_PREFS, ChangeListeners) {
-    SharedPreferencesImpl sp(name(), 0);
+    SharedPreferencesImpl sp(prefsFile(), 0);
     std::vector<std::string> seen;
     SharedPreferences::OnSharedPreferenceChangeListener listener =
             [&seen](SharedPreferences&, const std::string& key) { seen.push_back(key); };
@@ -238,13 +244,13 @@ TEST_F(SHARED_PREFS, ChangeListeners) {
 /* remove() deletes the key (a Null mutation in the batch, AOSP's
  * this-marker); a remove of a missing key is not a change. */
 TEST_F(SHARED_PREFS, RemoveKey) {
-    SharedPreferencesImpl sp(name(), 0);
+    SharedPreferencesImpl sp(prefsFile(), 0);
     sp.edit().putString("k", "v").commit();
     EXPECT_TRUE(sp.contains("k"));
     sp.edit().remove("k").commit();
     EXPECT_FALSE(sp.contains("k"));
 
-    SharedPreferencesImpl sp2(name(), 0);   // persisted
+    SharedPreferencesImpl sp2(prefsFile(), 0);   // persisted
     EXPECT_FALSE(sp2.contains("k"));
     EXPECT_EQ(sp2.getString("k", "def"), "def");
 }
@@ -265,7 +271,7 @@ TEST_F(SHARED_PREFS, ContextReturnsOneInstancePerName) {
 /* getAll() keeps its string-pair face (values stringified), the interface
  * contract apps already code against. */
 TEST_F(SHARED_PREFS, GetAllStringifies) {
-    SharedPreferencesImpl sp(name(), 0);
+    SharedPreferencesImpl sp(prefsFile(), 0);
     sp.edit().putInt("n", 42).putBoolean("t", false).putString("s", "str").commit();
     std::map<std::string, std::string> all;
     for (auto& kv : sp.getAll()) all[kv.first] = kv.second;
@@ -277,7 +283,7 @@ TEST_F(SHARED_PREFS, GetAllStringifies) {
 
 /* An empty store writes a valid empty <map> document (AOSP shape). */
 TEST_F(SHARED_PREFS, EmptyMapDocument) {
-    SharedPreferencesImpl sp(name(), 0);
+    SharedPreferencesImpl sp(prefsFile(), 0);
     EXPECT_TRUE(sp.edit().putString("k", "v").commit());
     sp.edit().clear().commit();
     const std::string xml = readFile(filePath(name()));
@@ -289,18 +295,18 @@ TEST_F(SHARED_PREFS, EmptyMapDocument) {
  * resetHandler shape) and apply() keeps working across the restart. */
 TEST_F(SHARED_PREFS, QueuedWorkRestartsAfterQuit) {
     {
-        SharedPreferencesImpl sp(name(), 0);
+        SharedPreferencesImpl sp(prefsFile(), 0);
         sp.edit().putString("k", "before").apply();
         QueuedWork::waitToFinish();
     }
     QueuedWork::quitSafely();
 
     {
-        SharedPreferencesImpl sp(name(), 0);
+        SharedPreferencesImpl sp(prefsFile(), 0);
         EXPECT_EQ(sp.getString("k", ""), "before");   // first round landed
         sp.edit().putString("k", "after").apply();
         QueuedWork::waitToFinish();
     }
-    SharedPreferencesImpl sp(name(), 0);
+    SharedPreferencesImpl sp(prefsFile(), 0);
     EXPECT_EQ(sp.getString("k", ""), "after");        // second round landed too
 }
