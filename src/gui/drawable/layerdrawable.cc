@@ -1157,6 +1157,11 @@ bool LayerDrawable::canApplyTheme(){
 void LayerDrawable::applyTheme(const Resources::Theme& t){
     Drawable::applyTheme(t);
     if (mLayerState) {
+        // AOSP java:208-211: the density may have changed since the last
+        // update — re-resolve before handling theme attrs.
+        const int density = Drawable::resolveDensity(&t.getResources(), 0);
+        mLayerState->setDensity(density);
+
         if (!mLayerState->mThemeAttrs.empty()) {
             auto a = t.resolveAttributes(mLayerState->mThemeAttrs, R::styleable::LayerDrawable);
             if (a) updateStateFromTypedArray(*a);
@@ -1164,6 +1169,7 @@ void LayerDrawable::applyTheme(const Resources::Theme& t){
         }
         for (ChildDrawable* child : mLayerState->mChildren) {
             if (child == nullptr) continue;
+            child->setDensity(density); // AOSP java:221
             if (!child->mThemeAttrs.empty()) {
                 auto a = t.resolveAttributes(child->mThemeAttrs, R::styleable::LayerDrawableItem);
                 if (a) updateLayerFromTypedArray(child, *a);
