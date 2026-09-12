@@ -121,8 +121,8 @@ static void testApplyStatus() {
     CHECK_EQ(info.getNetworkId(), 3);
     CHECK(info.getSupplicantState() == SupplicantState::COMPLETED);
     CHECK_EQ(info.getFrequency(), 2412);
-    /* dotted form -> deprecated int getter (a<<24|b<<16|c<<8|d) */
-    CHECK_EQ(info.getIpAddress(), (int)0xC0A80105);
+    /* dotted form -> deprecated int getter (little-endian, a in LSB) */
+    CHECK_EQ(info.getIpAddress(), (int)0x0501A8C0);
     CHECK(info.is24GHz());
 
     WpaResponseParser::applySignalPoll(info, "RSSI=-52\nLINKSPEED=72\nFREQUENCY=2437\n");

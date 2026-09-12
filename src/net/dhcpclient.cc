@@ -251,6 +251,7 @@ public:
         while (nowMs() < deadline) {
             const int type = receiveReply(lease, (int) (deadline - nowMs()));
             if (type == 0) continue;
+            mSeenFrames = mPassedUdp = 0; /* got a real reply */
             if (type == DHCP_NAK) return false;
             if (type == DHCP_OFFER && !requested) {
                 offeredIp = lease.ipAddress;
@@ -266,6 +267,9 @@ public:
                 return true;
             }
         }
+        DHCP_LOGE("request window closed: seen=%d udp68=%d (seen>0 udp68=0: "
+                  "replies arrive but the BOOTP filter drops them; seen=0: "
+                  "nothing reaches this socket)", mSeenFrames, mPassedUdp);
         return false;
     }
 
@@ -359,7 +363,7 @@ private:
         inet_pton(AF_INET, "255.255.255.255", &dst);
         memcpy(ip + 12, &src, 4);
         memcpy(ip + 16, &dst, 4);
-        const uint16_t checksum = ipChecksum(ip, 20);
+        const uint16_t checksum = htons(ipChecksum(ip, 20));
         memcpy(ip + 10, &checksum, sizeof(checksum));
         unsigned char* udp = ip + 20;
         const uint16_t sport = htons(68), dport = htons(67);
@@ -367,6 +371,9 @@ private:
         memcpy(udp + 2, &dport, sizeof(dport));
         const uint16_t udpLen = htons((uint16_t) (8 + bootp.size()));
         memcpy(udp + 4, &udpLen, sizeof(udpLen));      /* checksum 0: legal IPv4 */
+        /* and the payload itself — a frame shipped with an empty cargo hold
+         * decoded as all-zero BOOTP on the wire (caught by tcpdump -v). */
+        memcpy(udp + 8, bootp.data(), bootp.size());
 
         struct sockaddr_ll dest;
         memset(&dest, 0, sizeof(dest));
@@ -384,11 +391,16 @@ private:
         return true;
     }
 
+    /* debug counters, dumped when a request window closes empty */
+    int mSeenFrames = 0;
+    int mPassedUdp = 0;
+
     int receiveReply(Lease& lease, int timeoutMs) {
         if (timeoutMs <= 0) timeoutMs = 1;
         struct pollfd pfd = {mSock, POLLIN, 0};
         const int rc = poll(&pfd, 1, timeoutMs);
         if (rc <= 0) return 0;
+        mSeenFrames++;
         unsigned char buffer[2048];
         const ssize_t len = recv(mSock, buffer, sizeof(buffer), 0);
         if (len < (ssize_t) (20 + 8 + BOOTP_MIN_LEN)) return 0;
@@ -401,6 +413,7 @@ private:
         const unsigned char* udp = ip + ihl;
         const uint16_t dport = (uint16_t) ((udp[2] << 8) | udp[3]);
         if (dport != 68) return 0;
+        mPassedUdp++;
         return DhcpClient::parseReply(udp + 8, (size_t) len - ihl - 8, mTransactionId,
                                       mMac, sizeof(mMac), lease);
     }

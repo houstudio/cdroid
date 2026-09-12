@@ -9,6 +9,7 @@
 
 #include <networkeventmonitor.h>
 #include <wifi/wifiradio.h>
+#include <dhcpclient.h>
 #include <wifi/supplicantclient.h>
 #include <wifi/scanresult.h>
 #include <wifi/wificonfiguration.h>
@@ -120,6 +121,10 @@ public:
 
     /* --- connection info --------------------------------------------------- */
     WifiInfo getConnectionInfo();
+    /* @deprecated last lease obtained by the built-in DHCP client (zeroed
+     * when none). AOSP surface; filled since the wifi IP provisioning
+     * path (the IpClient counterpart) landed. */
+    DhcpInfo getDhcpInfo();
 
     /* --- configured networks ------------------------------------------------ */
     std::vector<WifiConfiguration> getConfiguredNetworks();
@@ -199,6 +204,21 @@ private:
     void startRssiPolling();
     void stopRssiPolling();
     void rssiPollLoop();
+
+    /* wifi IP provisioning (AOSP IpClient counterpart): on supplicant
+     * COMPLETED acquire a lease, apply it (shared ipapplicator), renew at
+     * T1; release on disconnect. */
+    void startDhcpIfNeeded();
+    void stopDhcpAndRelease();
+    /* start DHCP when the live state is already COMPLETED (the connect
+     * event predates the process — auto-reconnected supplicant) */
+    void seedDhcpFromCurrentState();
+    struct WifiDhcpSession {
+        std::thread thread;
+        std::atomic<bool> stop{false};
+    };
+    WifiDhcpSession* mDhcpSession = nullptr;
+    DhcpClient::Lease mLease;
 
     SupplicantClient mClient;
     NetworkEventMonitor* mAddressMonitor = nullptr;

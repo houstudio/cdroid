@@ -1,7 +1,7 @@
 /* Port of android.net.EthernetManager (android-36), ioctl/spawn backed. */
 #include <ethernet/ethernetmanager.h>
 
-#include <netlinkmonitor.h>  /* Linux route backend (RTM_NEWROUTE) */
+#include <ipapplicator.h>  /* shared apply path (was the RTM_NEWROUTE seam) */
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -169,58 +169,9 @@ bool EthernetManager::disableInterface(const std::string& iface) {
 
 void EthernetManager::applyStaticConfiguration(const std::string& iface,
                                                const StaticIpConfiguration& config) {
-    const int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-        NET_LOGE("socket: %s", strerror(errno));
-        return;
-    }
-    struct ifreq ifr;
-    memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, iface.c_str(), IFNAMSIZ - 1);
-
-    /* bring up first, then address + netmask */
-    ifr.ifr_flags = IFF_UP;
-    if (ioctl(fd, SIOCSIFFLAGS, &ifr) != 0)
-        NET_LOGE("SIOCSIFFLAGS(up) %s: %s (need root?)", iface.c_str(), strerror(errno));
-
-    struct sockaddr_in* sin = reinterpret_cast<struct sockaddr_in*>(&ifr.ifr_addr);
-    const LinkAddress& address = config.getIpAddress();
-    if (!address.getAddress().empty()) {
-        sin->sin_family = AF_INET;
-        sin->sin_addr.s_addr = inet_addr(address.getAddress().c_str());
-        if (ioctl(fd, SIOCSIFADDR, &ifr) != 0)
-            NET_LOGE("SIOCSIFADDR %s: %s", address.toString().c_str(), strerror(errno));
-        sin->sin_addr.s_addr = inet_addr(
-                LinkAddress::prefixLengthToNetmaskV4(address.getPrefixLength()).c_str());
-        if (ioctl(fd, SIOCSIFNETMASK, &ifr) != 0)
-            NET_LOGE("SIOCSIFNETMASK: %s", strerror(errno));
-    }
-    close(fd);
-
-    /* default route via rtnetlink RTM_NEWROUTE (AOSP netd RouteController);
-     * replaced the deprecated SIOCADDRT rtentry ioctl */
-    if (!config.getGateway().empty()) {
-        if (!NetlinkMonitor::addDefaultRoute(iface, config.getGateway()))
-            NET_LOGE("RTM_NEWROUTE gw %s on %s failed", config.getGateway().c_str(),
-                     iface.c_str());
-    }
-
-    /* DNS: append nameservers to /etc/resolv.conf when writable (root). */
-    if (!config.getDnsServers().empty() && access("/etc/resolv.conf", W_OK) == 0) {
-        std::ifstream in("/etc/resolv.conf");
-        std::stringstream existing;
-        if (in.is_open()) existing << in.rdbuf();
-        std::string content = existing.str();
-        std::ofstream out("/etc/resolv.conf", std::ios::trunc);
-        if (out.is_open()) {
-            for (const std::string& dns : config.getDnsServers()) {
-                const std::string line = "nameserver " + dns;
-                if (content.find(line) == std::string::npos)
-                    content += line + "\n";
-            }
-            out << content;
-        }
-    }
+    /* shared apply path (AOSP IpClient apply half) — also serves the wifi
+     * DHCP lease */
+    applyIpConfiguration(iface, config);
 }
 
 /* --- DHCP (built-in packet-socket client) ------------------------------------- */

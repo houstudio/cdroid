@@ -6,6 +6,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -26,6 +27,12 @@ static constexpr int RECONNECT_BACKOFF_MS   = 1000;
 namespace cdroid {
 
 const char* SupplicantClient::defaultCtrlPath() {
+    /* wpa_cli-compatible override (same env var, same meaning: the control
+     * socket path) — a development-bench convenience for pointing demos at
+     * e.g. a hwsim supplicant. The canonical configuration point stays
+     * WifiManager::initialize(ctrlPath) for real products. */
+    const char* env = getenv("WPA_CTRL_PATH");
+    if (env && *env) return env;
     return "/var/run/wpa_supplicant/wlan0";
 }
 

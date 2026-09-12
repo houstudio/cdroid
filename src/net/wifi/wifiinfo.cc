@@ -158,7 +158,10 @@ void WifiInfo::setInetAddress(const std::string& address) {
 
 int WifiInfo::getIpAddress() const {
     if (mIpAddress.empty()) return 0;
-    /* Inet4AddressUtils.inet4AddressToIntHTL: a.b.c.d -> a<<24|b<<16|c<<8|d */
+    /* Inet4AddressUtils.inet4AddressToIntHTL: HTL = Host-To-LITTLE — the
+     * int stores a.b.c.d little-endian (a in the LSB), matching the classic
+     * "%d.%d.%d.%d", ip&0xff, ip>>8&0xff... display idiom. Same convention
+     * as DhcpInfo::stringToInt. */
     unsigned int parts[4];
     const char* p = mIpAddress.c_str();
     char* end = nullptr;
@@ -167,7 +170,7 @@ int WifiInfo::getIpAddress() const {
         if (end == p || parts[i] > 255) return 0;
         p = end + 1;
     }
-    return static_cast<int>((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]);
+    return static_cast<int>((parts[3] << 24) | (parts[2] << 16) | (parts[1] << 8) | parts[0]);
 }
 
 bool WifiInfo::getHiddenSSID() const {

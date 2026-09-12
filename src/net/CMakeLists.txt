@@ -84,6 +84,7 @@ add_library(cdnet
     ipconfiguration.cc
     ethernet/ethernetmanager.cc
     dhcpclient.cc
+    ipapplicator.cc
     netlinkmonitor.cc
     connectivitymanager.cc
     wifi/wifissid.cc
