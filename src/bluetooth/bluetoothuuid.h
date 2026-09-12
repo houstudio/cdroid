@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <string>
+#include <vector>
 
 namespace cdroid {
 
@@ -49,6 +50,16 @@ public:
     static BluetoothUuid fromShortUuid(uint16_t u16) {
         return BluetoothUuid(0x0000000000001000ULL | ((uint64_t)u16 << 32),
                              0x800000805F9B34FBULL);
+    }
+
+    /* The 16-byte big-endian wire form (msb bytes first — the java
+     * getUuidBytes analog); the SDP/L2CAP payloads use this. */
+    std::vector<uint8_t> toBytes() const {
+        std::vector<uint8_t> out;
+        out.reserve(16);
+        for (int i = 15; i >= 0; i--)
+            out.push_back((uint8_t)((i < 8 ? lsb : msb) >> ((i % 8) * 8)));
+        return out;
     }
 
     std::string toString() const {

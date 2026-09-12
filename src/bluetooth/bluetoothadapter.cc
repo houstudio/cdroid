@@ -277,21 +277,31 @@ void BluetoothAdapter::onPairingPinRequested(const std::string& address) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     for (BluetoothPairingListener* l : mPairingListeners)
         l->onPairingRequest(BluetoothDevice(address),
-                            BluetoothDevice::PAIRING_VARIANT_PIN);
+                            BluetoothDevice::PAIRING_VARIANT_PIN, 0);
 }
 
 void BluetoothAdapter::onPairingPasskeyRequested(const std::string& address) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     for (BluetoothPairingListener* l : mPairingListeners)
         l->onPairingRequest(BluetoothDevice(address),
-                BluetoothDevice::PAIRING_VARIANT_PASSKEY);
+                BluetoothDevice::PAIRING_VARIANT_PASSKEY, 0);
 }
 
-void BluetoothAdapter::onPairingConfirmationRequested(const std::string& address) {
+void BluetoothAdapter::onPairingConfirmationRequested(const std::string& address,
+                                                    uint32_t passkey) {
+    /* The passkey rides along (AOSP carries it as EXTRA_PAIRING_KEY on
+     * ACTION_PAIRING_REQUEST) — the dialog shows the 6-digit code. */
     std::lock_guard<std::mutex> lock(mListenersMutex);
     for (BluetoothPairingListener* l : mPairingListeners)
         l->onPairingRequest(BluetoothDevice(address),
-                BluetoothDevice::PAIRING_VARIANT_PASSKEY_CONFIRMATION);
+                BluetoothDevice::PAIRING_VARIANT_PASSKEY_CONFIRMATION, passkey);
+}
+
+void BluetoothAdapter::onPairingConsentRequested(const std::string& address) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    for (BluetoothPairingListener* l : mPairingListeners)
+        l->onPairingRequest(BluetoothDevice(address),
+                BluetoothDevice::PAIRING_VARIANT_CONSENT, 0);
 }
 
 void BluetoothAdapter::onDisplayPasskey(const std::string& address,

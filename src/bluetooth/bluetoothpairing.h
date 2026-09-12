@@ -1,6 +1,7 @@
 #ifndef __CDROID_BLUETOOTH_PAIRING_H__
 #define __CDROID_BLUETOOTH_PAIRING_H__
 
+#include <cstdint>
 #include <string>
 
 #include <bluetoothdevice.h>
@@ -21,9 +22,12 @@ namespace cdroid {
 class BluetoothPairingListener {
 public:
     virtual ~BluetoothPairingListener() = default;
-    /* A PIN is required (legacy pairing): answer setPin(). */
+    /* Pairing input required. pairingVariant is one of
+     * BluetoothDevice::PAIRING_VARIANT_*; passkey carries the 6-digit
+     * code for PASSKEY_CONFIRMATION (AOSP's EXTRA_PAIRING_KEY) and is
+     * 0 otherwise. */
     virtual void onPairingRequest(const BluetoothDevice& device,
-                                  int pairingVariant) {}
+                                  int pairingVariant, uint32_t passkey) {}
     /* A 6-digit passkey should be shown for the user to compare /
      * type (PAIRING_VARIANT_DISPLAY_PASSKEY / _PIN). */
     virtual void onDisplayPasskey(const BluetoothDevice& device,

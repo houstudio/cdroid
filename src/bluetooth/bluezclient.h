@@ -106,7 +106,12 @@ public:
          * request is held until replyPairing*() answers it. */
         virtual void onPairingPinRequested(const std::string& address) {}
         virtual void onPairingPasskeyRequested(const std::string& address) {}
-        virtual void onPairingConfirmationRequested(const std::string& address) {}
+        virtual void onPairingConfirmationRequested(const std::string& address,
+                                                   uint32_t passkey) {}
+        /* BlueZ consent-only methods (RequestAuthorization /
+         * AuthorizeService): no passkey exists — AOSP surfaces these
+         * as PAIRING_VARIANT_CONSENT. */
+        virtual void onPairingConsentRequested(const std::string& address) {}
         virtual void onDisplayPasskey(const std::string& address, uint32_t passkey) {}
         virtual void onPairingCancelled() {}
     };
@@ -258,15 +263,21 @@ private:
     std::map<std::string, BluezGattService> mGattServices;
     std::map<std::string, BluezGattCharacteristic> mGattCharacteristics;
 
-    /* pending pairing request: kind 0=pin, 1=passkey, 2=confirmation */
+    /* Request kinds aligned to the AOSP PAIRING_VARIANT_* they
+     * surface as (PIN/PASSKEY/PASSKEY_CONFIRMATION/CONSENT); replies
+     * are kind-checked so a passkey request is never answered with a
+     * PIN signature. */
     struct PendingPairing {
+        enum Kind { NONE = -1, PIN = 0, PASSKEY = 1,
+                    CONFIRMATION = 2, CONSENT = 3 };
         sd_bus_message* message = nullptr;   /* ref-held, replied later */
         std::string address;
-        int kind = -1;
+        Kind kind = NONE;
     };
     std::mutex mPairingMutex;
     PendingPairing mPendingPairing;
     sd_bus_slot* mPairSlot = nullptr;   /* async Pair reply slot */
+    sd_bus_slot* mAgentSlot = nullptr;  /* Agent1 vtable slot */
 
     std::string mAgentCapability;      /* re-registered on every reconnect */
 

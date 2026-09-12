@@ -63,11 +63,6 @@ bool BluetoothDevice::setPin(const std::string& pin) {
     return BluetoothAdapter::getDefaultAdapter().replyPairingPin(pin);
 }
 
-bool BluetoothDevice::setPasskey(const std::string& passkey) {
-    return BluetoothAdapter::getDefaultAdapter().replyPairingPasskey(
-            (uint32_t)strtoul(passkey.c_str(), nullptr, 10));
-}
-
 bool BluetoothDevice::setPairingConfirmation(bool confirm) {
     return BluetoothAdapter::getDefaultAdapter().replyPairingConfirmation(confirm);
 }
@@ -88,32 +83,15 @@ BluetoothSocket* BluetoothDevice::createRfcommSocket(int channel) const {
 
 BluetoothSocket* BluetoothDevice::createRfcommSocketToServiceRecord(
         const BluetoothUuid& uuid) const {
-    /* SDP resolution over L2CAP PSM 1 (internal/sdpclient): the AOSP
-     * behavior — ask the remote which RFCOMM channel serves the UUID.
-     * Falls back to the SPP convention channel 1 when the remote has no
-     * SDP server (legacy embedded peers). */
-    std::vector<uint8_t> uuidBytes;
-    for (int i = 15; i >= 0; i--)
-        uuidBytes.push_back((uint8_t)((i < 8 ? uuid.lsb : uuid.msb)
-                >> ((i % 8) * 8)));
-    const int channel = sdpResolveRfcommChannel(mAddress, uuidBytes);
-    if (channel > 0) return new BluetoothSocket(*this, channel, true);
-    if (uuid == BluetoothUuid::SerialPort())
-        return new BluetoothSocket(*this, 1, true);
-    return nullptr;
+    /* AOSP: no I/O in the factory — the channel stays unresolved (-1)
+     * and connect() runs the SDP lookup, where blocking is the
+     * documented contract (apps keep connect() off the UI thread). */
+    return new BluetoothSocket(*this, -1, true, uuid);
 }
 
 BluetoothSocket* BluetoothDevice::createInsecureRfcommSocketToServiceRecord(
         const BluetoothUuid& uuid) const {
-    std::vector<uint8_t> uuidBytes;
-    for (int i = 15; i >= 0; i--)
-        uuidBytes.push_back((uint8_t)((i < 8 ? uuid.lsb : uuid.msb)
-                >> ((i % 8) * 8)));
-    const int channel = sdpResolveRfcommChannel(mAddress, uuidBytes);
-    if (channel > 0) return new BluetoothSocket(*this, channel, false);
-    if (uuid == BluetoothUuid::SerialPort())
-        return new BluetoothSocket(*this, 1, false);
-    return nullptr;
+    return new BluetoothSocket(*this, -1, false, uuid);
 }
 
 std::string BluetoothDevice::toString() const {

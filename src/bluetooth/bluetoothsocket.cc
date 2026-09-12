@@ -14,6 +14,7 @@
 
 #include <bluetoothsocket.h>
 #include "internal/btuapi.h"
+#include "internal/sdpclient.h"
 
 namespace cdroid {
 
@@ -74,6 +75,13 @@ BluetoothSocket::BluetoothSocket(const BluetoothDevice& device, int channel,
 }
 
 BluetoothSocket::BluetoothSocket(const BluetoothDevice& device, int channel,
+                                 bool secure, const BluetoothUuid& uuid)
+    : mDevice(device), mChannel(channel), mServiceUuid(uuid),
+      mResolveViaSdp(true), mFd(openRfcommSocket()) {
+    if (mFd >= 0) applySecurity(mFd, secure);
+}
+
+BluetoothSocket::BluetoothSocket(const BluetoothDevice& device, int channel,
                                  int fd)
     : mDevice(device), mChannel(channel), mFd(fd) {}
 
@@ -85,6 +93,17 @@ BluetoothSocket::~BluetoothSocket() {
 
 int BluetoothSocket::connect() {
     if (mFd < 0) return -EIO;
+    if (mResolveViaSdp && mChannel < 0) {
+        /* SDP resolve here (the AOSP contract): bounded by the sdpclient
+         * timeouts; SPP falls back to the convention channel for peers
+         * with no SDP server. */
+        const int resolved = sdpResolveRfcommChannel(
+                mDevice.getAddress(), mServiceUuid.toBytes());
+        mChannel = (resolved > 0)
+                ? resolved
+                : (mServiceUuid == BluetoothUuid::SerialPort() ? 1 : -1);
+        if (mChannel < 0) return -ENOENT;
+    }
     struct sockaddr_rc addr;
     memset(&addr, 0, sizeof(addr));
     addr.rc_family = AF_BLUETOOTH;
@@ -119,6 +138,7 @@ BluetoothSocket::OutputStream* BluetoothSocket::getOutputStream() {
 BluetoothServerSocket::BluetoothServerSocket(int channel, bool secure,
                                              const std::string& name)
     : mChannel(channel), mSecure(secure), mName(name),
+      mBindFailed(false),
       mListenFd(openRfcommSocket()) {
     if (mListenFd < 0) return;
     applySecurity(mListenFd, secure);
@@ -129,8 +149,12 @@ BluetoothServerSocket::BluetoothServerSocket(int channel, bool secure,
     bdaddr_t any;   /* BDADDR_ANY: all zeros */
     memset(&any, 0, sizeof(any));
     addr.rc_bdaddr = any;
-    if (::bind(mListenFd, (struct sockaddr*)&addr, sizeof(addr)) < 0 ||
-            ::listen(mListenFd, 1) < 0) {
+    if (::bind(mListenFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+        mBindFailed = true;   /* factory surfaces this as nullptr (AOSP throws) */
+    } else if (::listen(mListenFd, 1) < 0) {
+        mBindFailed = true;
+    }
+    if (mBindFailed) {
         ::close(mListenFd);
         mListenFd = -1;
     }

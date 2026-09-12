@@ -170,8 +170,9 @@ public:
     bool registerPairingAgent(const std::string& capability);
     void addPairingListener(BluetoothPairingListener* listener);
     void removePairingListener(BluetoothPairingListener* listener);
-    /* BluetoothDevice.setPin / setPasskey / setPairingConfirmation land
-     * here (the ACTION_PAIRING_REQUEST answer API). */
+    /* BluetoothDevice.setPin / setPairingConfirmation land here (the
+     * ACTION_PAIRING_REQUEST answer API). replyPairingPasskey serves the
+     * BlueZ RequestPasskey seam (no android-36 device-side setter). */
     bool replyPairingPin(const std::string& pin);
     bool replyPairingPasskey(uint32_t passkey);
     bool replyPairingConfirmation(bool confirm);
@@ -210,7 +211,9 @@ private:
     void onGattCharacteristicChanged(const BluezGattCharacteristic& ch) override;
     void onPairingPinRequested(const std::string& address) override;
     void onPairingPasskeyRequested(const std::string& address) override;
-    void onPairingConfirmationRequested(const std::string& address) override;
+    void onPairingConfirmationRequested(const std::string& address,
+                                        uint32_t passkey) override;
+    void onPairingConsentRequested(const std::string& address) override;
     void onDisplayPasskey(const std::string& address, uint32_t passkey) override;
     void onPairingCancelled() override;
 

@@ -164,9 +164,9 @@ int main(int argc, char** argv) {
         class AutoPin : public BluetoothPairingListener {
         public:
             void onPairingRequest(const BluetoothDevice& device,
-                                  int variant) override {
-                printf("[pair] agent asked %s variant=%d -> setPin(1234)\n",
-                       device.getAddress().c_str(), variant);
+                                  int variant, uint32_t passkey) override {
+                printf("[pair] agent asked %s variant=%d passkey=%u -> setPin(1234)\n",
+                       device.getAddress().c_str(), variant, passkey);
                 BluetoothDevice d = device;   /* setPin is non-const (AOSP) */
                 d.setPin("1234");
             }
@@ -216,7 +216,7 @@ int main(int argc, char** argv) {
         const int channel = atoi(argv[2]);
         cdroid::BluetoothServerSocket* server =
                 adapter.listenUsingRfcommOn(channel);
-        if (server == nullptr || !server->isBound()) {
+        if (server == nullptr) {
             printf("serve: bind failed (no controller?)\n");
             delete server;
             return 1;
@@ -381,11 +381,8 @@ int main(int argc, char** argv) {
         /* SDP resolve over L2CAP PSM 1 (needs a live peer with an SDP
          * server — a real phone/dongle; vhci peers have none) */
         const BluetoothUuid uuid = BluetoothUuid::SerialPort();
-        std::vector<uint8_t> uuidBytes;
-        for (int i = 15; i >= 0; i--)
-            uuidBytes.push_back((uint8_t)((i < 8 ? uuid.lsb : uuid.msb)
-                    >> ((i % 8) * 8)));
-        const int channel = cdroid::sdpResolveRfcommChannel(argv[2], uuidBytes);
+        const int channel = cdroid::sdpResolveRfcommChannel(
+                argv[2], uuid.toBytes());
         printf("sdp: %s SPP channel = %d\n", argv[2], channel);
         return channel > 0 ? 0 : 1;
     }

@@ -5,6 +5,7 @@
 #include <string>
 
 #include <bluetoothdevice.h>
+#include <bluetoothuuid.h>
 
 namespace cdroid {
 
@@ -46,6 +47,9 @@ public:
      * createRfcommSocket()/createRfcommSocketToServiceRecord(); accept()
      * on the server socket mints the connected ones. */
     BluetoothSocket(const BluetoothDevice& device, int channel, bool secure);
+    /* Service-record flavor: channel -1, resolved via SDP in connect(). */
+    BluetoothSocket(const BluetoothDevice& device, int channel, bool secure,
+                    const BluetoothUuid& uuid);
     ~BluetoothSocket();
 
     BluetoothSocket(const BluetoothSocket&) = delete;
@@ -69,7 +73,9 @@ private:
     BluetoothSocket(const BluetoothDevice& device, int channel, int fd);
 
     BluetoothDevice mDevice;
-    int mChannel;
+    int mChannel;                 /* -1 = resolve via SDP in connect() */
+    BluetoothUuid mServiceUuid;   /* service-record sockets */
+    bool mResolveViaSdp = false;
     int mFd;
     InputStream* mIn = nullptr;
     OutputStream* mOut = nullptr;
@@ -95,14 +101,14 @@ public:
     int close();
 
     int getChannel() const { return mChannel; }
-    /* false when the kernel refused the bind (no controller) — the
-     * caller's failure signal. */
-    bool isBound() const { return mListenFd >= 0; }
 
 private:
+    friend class BluetoothAdapter;   /* nullptr-on-bind-failure factory */
+    bool isBoundInternal() const { return mListenFd >= 0; }
     int mChannel;
     bool mSecure;
     std::string mName;
+    bool mBindFailed = false;   /* factory turns this into a nullptr return */
     int mListenFd;
 };
 

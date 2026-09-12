@@ -66,7 +66,13 @@ void BluezClient::stopMonitor() {
     }
     if (mMonitorThread.joinable()) mMonitorThread.join();
     std::lock_guard<std::mutex> lock(mBusMutex);
+    if (mAgentSlot) { sd_bus_slot_unref(mAgentSlot); mAgentSlot = nullptr; }
+    if (mSlotProperties) sd_bus_slot_unref(mSlotProperties);
+    if (mSlotIfAdded) sd_bus_slot_unref(mSlotIfAdded);
+    if (mSlotIfRemoved) sd_bus_slot_unref(mSlotIfRemoved);
+    if (mSlotNameOwner) sd_bus_slot_unref(mSlotNameOwner);
     mSlotProperties = mSlotIfAdded = mSlotIfRemoved = mSlotNameOwner = nullptr;
+    if (mPairSlot) { sd_bus_slot_unref(mPairSlot); mPairSlot = nullptr; }
     if (mBus) {
         sd_bus_flush_close_unref(mBus);
         mBus = nullptr;
@@ -119,17 +125,34 @@ bool BluezClient::connect() {
         sd_bus_message_unref(reply);
         sd_bus_error_free(&err);
 
-        /* RETIRE the previous bus before adopting the new one (the
-         * reconnect path): dropping it releases its match slots and the
-         * Agent1 vtable with it, and skipping this leaked one sd_bus+fd
-         * per daemon restart while leaving every slot pointing at a dead
-         * bus (matches would never re-attach — the review's "permanently
-         * deaf after restart" finding). */
+        /* RETIRE the previous bus before adopting the new one. Ownership
+         * note (review round 2): each sd_bus_add_match slot holds its own
+         * reference on the bus, so unref-ing the bus ALONE never frees it
+         * — the slots must be unref'd first (the same goes for the agent
+         * vtable slot). Skipping both was one leaked sd_bus per daemon
+         * restart. */
+        if (mAgentSlot) { sd_bus_slot_unref(mAgentSlot); mAgentSlot = nullptr; }
+        if (mSlotProperties) sd_bus_slot_unref(mSlotProperties);
+        if (mSlotIfAdded) sd_bus_slot_unref(mSlotIfAdded);
+        if (mSlotIfRemoved) sd_bus_slot_unref(mSlotIfRemoved);
+        if (mSlotNameOwner) sd_bus_slot_unref(mSlotNameOwner);
+        mSlotProperties = mSlotIfAdded = mSlotIfRemoved = mSlotNameOwner = nullptr;
         if (mBus) {
             sd_bus_flush_close_unref(mBus);
             mBus = nullptr;
         }
-        mSlotProperties = mSlotIfAdded = mSlotIfRemoved = mSlotNameOwner = nullptr;
+        /* Drop any held pairing request: its message belongs to the
+         * retired bus (replying on it returns -ENOTCONN) and leaving it
+         * held made the NEXT daemon's first pairing attempt auto-reject
+         * as "superseded" with no user involved (review round 2). */
+        {
+            std::lock_guard<std::mutex> lock(mPairingMutex);
+            if (mPendingPairing.message) {
+                sd_bus_message_unref(mPendingPairing.message);
+                mPendingPairing.message = nullptr;
+                mPendingPairing.kind = PendingPairing::NONE;
+            }
+        }
 
         /* Signal matches attach to THIS bus on every (re)connect. */
         sd_bus_add_match(bus, &mSlotProperties,
@@ -216,7 +239,7 @@ void BluezClient::holdPendingPairing(sd_bus_message* m,
     }
     mPendingPairing.message = m;
     mPendingPairing.address = address;
-    mPendingPairing.kind = kind;
+    mPendingPairing.kind = static_cast<PendingPairing::Kind>(kind);
 }
 
 int BluezClient::agentRequestPinCode(sd_bus_message* m, void* userdata,
@@ -225,7 +248,7 @@ int BluezClient::agentRequestPinCode(sd_bus_message* m, void* userdata,
     const char* dev = nullptr;
     sd_bus_message_read(m, "o", &dev);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
-    self->holdPendingPairing(m, addr, 0);
+    self->holdPendingPairing(m, addr, PendingPairing::PIN);
     LOGD("agent: RequestPinCode for %s (held)", addr.c_str());
     self->queueEvent([addr](Events* e) { e->onPairingPinRequested(addr); });
     /* Return 1: the reply is DEFERRED (setPin answers later). A vtable
@@ -241,7 +264,7 @@ int BluezClient::agentRequestPasskey(sd_bus_message* m, void* userdata,
     const char* dev = nullptr;
     sd_bus_message_read(m, "o", &dev);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
-    self->holdPendingPairing(m, addr, 1);
+    self->holdPendingPairing(m, addr, PendingPairing::PASSKEY);
     self->queueEvent([addr](Events* e) { e->onPairingPasskeyRequested(addr); });
     return 1;   /* deferred reply — see RequestPinCode */
 }
@@ -255,8 +278,10 @@ int BluezClient::agentRequestConfirmation(sd_bus_message* m, void* userdata,
     uint32_t passkey = 0;
     sd_bus_message_read(m, "ou", &dev, &passkey);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
-    self->holdPendingPairing(m, addr, 2);
-    self->queueEvent([addr](Events* e) { e->onPairingConfirmationRequested(addr); });
+    self->holdPendingPairing(m, addr, PendingPairing::CONFIRMATION);
+    self->queueEvent([addr, passkey](Events* e) {
+        e->onPairingConfirmationRequested(addr, passkey);
+    });
     return 1;   /* deferred reply */
 }
 
@@ -266,8 +291,8 @@ int BluezClient::agentRequestAuthorization(sd_bus_message* m, void* userdata,
     const char* dev = nullptr;
     sd_bus_message_read(m, "o", &dev);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
-    self->holdPendingPairing(m, addr, 2);
-    self->queueEvent([addr](Events* e) { e->onPairingConfirmationRequested(addr); });
+    self->holdPendingPairing(m, addr, PendingPairing::CONSENT);
+    self->queueEvent([addr](Events* e) { e->onPairingConsentRequested(addr); });
     return 1;   /* deferred reply */
 }
 
@@ -277,8 +302,8 @@ int BluezClient::agentAuthorizeService(sd_bus_message* m, void* userdata,
     const char* dev = nullptr;
     sd_bus_message_read(m, "os", &dev, nullptr);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
-    self->holdPendingPairing(m, addr, 2);
-    self->queueEvent([addr](Events* e) { e->onPairingConfirmationRequested(addr); });
+    self->holdPendingPairing(m, addr, PendingPairing::CONSENT);
+    self->queueEvent([addr](Events* e) { e->onPairingConsentRequested(addr); });
     return 1;   /* deferred reply */
 }
 
@@ -313,7 +338,7 @@ int BluezClient::agentCancel(sd_bus_message* m, void* userdata, sd_bus_error*) {
         if (self->mPendingPairing.message) {
             sd_bus_message_unref(self->mPendingPairing.message);
             self->mPendingPairing.message = nullptr;
-            self->mPendingPairing.kind = -1;
+            self->mPendingPairing.kind = PendingPairing::NONE;
         }
     }
     self->queueEvent([](Events* e) { e->onPairingCancelled(); });
@@ -351,8 +376,9 @@ bool BluezClient::registerAgent(const std::string& capability) {
             SD_BUS_METHOD("Release", NULL, NULL, BluezClient::agentRelease, 0),
             SD_BUS_VTABLE_END,
         };
-        sd_bus_slot* slot = nullptr;
-        if (sd_bus_add_object_vtable(mBus, &slot, kAgentPath, kAgentIface,
+        if (mAgentSlot) sd_bus_slot_unref(mAgentSlot);
+        mAgentSlot = nullptr;
+        if (sd_bus_add_object_vtable(mBus, &mAgentSlot, kAgentPath, kAgentIface,
                                       agent, this) < 0)
             return false;
         sd_bus_error err = SD_BUS_ERROR_NULL;
@@ -375,10 +401,10 @@ bool BluezClient::replyPairingPin(const std::string& pin) {
     {
         std::lock_guard<std::mutex> lock(mPairingMutex);
         if (mPendingPairing.message == nullptr) return false;
-        if (mPendingPairing.kind != 0) return false;   /* not a PIN request */
+        if (mPendingPairing.kind != PendingPairing::PIN) return false;
         m = mPendingPairing.message;
         mPendingPairing.message = nullptr;
-        mPendingPairing.kind = -1;
+        mPendingPairing.kind = PendingPairing::NONE;
     }
     /* Bus send outside mPairingMutex: the monitor takes mBusMutex first
      * and then mPairingMutex inside agent handlers — holding pairing
@@ -394,10 +420,10 @@ bool BluezClient::replyPairingPasskey(uint32_t passkey) {
     {
         std::lock_guard<std::mutex> lock(mPairingMutex);
         if (mPendingPairing.message == nullptr) return false;
-        if (mPendingPairing.kind != 1) return false;   /* not a passkey req */
+        if (mPendingPairing.kind != PendingPairing::PASSKEY) return false;
         m = mPendingPairing.message;
         mPendingPairing.message = nullptr;
-        mPendingPairing.kind = -1;
+        mPendingPairing.kind = PendingPairing::NONE;
     }
     std::lock_guard<std::mutex> lock(mBusMutex);
     const int rc = mBus ? sd_bus_reply_method_return(m, "u", passkey) : -ENOTCONN;
@@ -410,10 +436,11 @@ bool BluezClient::replyPairingConfirmation(bool confirm) {
     {
         std::lock_guard<std::mutex> lock(mPairingMutex);
         if (mPendingPairing.message == nullptr) return false;
-        if (mPendingPairing.kind != 2) return false;   /* not a confirm req */
+        if (mPendingPairing.kind != PendingPairing::CONFIRMATION
+                && mPendingPairing.kind != PendingPairing::CONSENT) return false;
         m = mPendingPairing.message;
         mPendingPairing.message = nullptr;
-        mPendingPairing.kind = -1;
+        mPendingPairing.kind = PendingPairing::NONE;
     }
     std::lock_guard<std::mutex> lock(mBusMutex);
     int rc;
@@ -436,7 +463,7 @@ void BluezClient::cancelPairingReply() {
         if (mPendingPairing.message == nullptr) return;
         m = mPendingPairing.message;
         mPendingPairing.message = nullptr;
-        mPendingPairing.kind = -1;
+        mPendingPairing.kind = PendingPairing::NONE;
     }
     std::lock_guard<std::mutex> lock(mBusMutex);
     if (mBus) {
