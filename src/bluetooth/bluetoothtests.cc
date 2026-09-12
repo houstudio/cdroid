@@ -9,6 +9,7 @@
 
 #include <bluetoothuuid.h>
 #include <internal/sdppdu.h>
+#include "internal/btuapi.h"
 
 using cdroid::BluetoothUuid;
 using cdroid::sdp::parseSearchAttributeResponse;
@@ -67,6 +68,19 @@ static std::vector<uint8_t> makeResponse(uint8_t channel) {
     return body;
 }
 
+static void testBdaddrByteOrder() {
+    /* bluez str2ba: first pair -> b[5]; round-trips through ba2str */
+    bdaddr_t ba;
+    str2ba("00:AA:01:01:00:00", &ba);
+    CHECK(ba.b[0] == 0x00 && ba.b[1] == 0x00 && ba.b[2] == 0x01
+          && ba.b[3] == 0x01 && ba.b[4] == 0xAA && ba.b[5] == 0x00);
+    char out[18] = {0};
+    ba2str(&ba, out, sizeof(out));
+    CHECK(std::string(out) == "00:AA:01:01:00:00");
+    str2ba("02:00:00:00:01:00", &ba);
+    CHECK(ba.b[0] == 0x00 && ba.b[1] == 0x01 && ba.b[5] == 0x02);
+}
+
 static void testUuidExpansion() {
     CHECK(BluetoothUuid::A2DP_SINK().toString()
           == "0000110B-0000-1000-8000-00805F9B34FB");
@@ -122,6 +136,7 @@ static void testResponseParsing() {
 }
 
 int main() {
+    testBdaddrByteOrder();
     testUuidExpansion();
     testRequestAssembly();
     testResponseParsing();

@@ -45,6 +45,9 @@ struct sockaddr_rc {
 };
 
 /* str2ba/ba2str — the bluez-libs helpers, reimplemented. */
+/* Byte order per bluez-libs str2ba: the string's FIRST pair lands in
+ * b[5] (the address is stored little-endian, printed high-first).
+ * Round-trips with ba2str; pinned by bluetoothtests. */
 static inline void str2ba(const char* str, bdaddr_t* ba) {
     if (!ba) return;
     memset(ba, 0, sizeof(*ba));
