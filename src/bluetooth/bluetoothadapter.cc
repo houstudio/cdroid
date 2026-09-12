@@ -203,6 +203,28 @@ void BluetoothAdapter::onGattCharacteristicChanged(
         gatt->onCharacteristicChangedInternal(ch.objectPath, ch.value);
 }
 
+/* --- profile proxies ----------------------------------------------------------- */
+
+bool BluetoothAdapter::getProfileProxy(
+        BluetoothProfile::ServiceListener* listener, int profile) {
+    if (listener == nullptr) return false;
+    switch (profile) {
+    case BluetoothProfile::A2DP:
+        listener->onServiceConnected(profile, new BluetoothA2dp());
+        return true;
+    case BluetoothProfile::HEADSET:
+        listener->onServiceConnected(profile, new BluetoothHeadset());
+        return true;
+    default:
+        return false;   /* profile not ported */
+    }
+}
+
+void BluetoothAdapter::closeProfileProxy(int /*profile*/,
+                                         BluetoothProfile* proxy) {
+    delete proxy;
+}
+
 /* --- pairing agent ----------------------------------------------------------- */
 
 bool BluetoothAdapter::registerPairingAgent(const std::string& capability) {

@@ -22,6 +22,7 @@ add_library(cdblue
     bluetoothsocket.cc
     bluetoothgatt.cc
     bluetoothle.cc
+    bluetoothprofile.cc
     bluezclient.cc)
 target_include_directories(cdblue PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

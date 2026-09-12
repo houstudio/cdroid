@@ -26,6 +26,7 @@
 #include <bluetoothadapter.h>
 #include <bluetoothdevice.h>
 #include <bluetoothpairing.h>
+#include <bluetoothprofile.h>
 #include <bluetoothgatt.h>
 #include <bluetoothle.h>
 #include <bluetoothsocket.h>
@@ -36,6 +37,9 @@ using cdroid::BluetoothDevice;
 using cdroid::BluetoothUuid;
 using cdroid::BluetoothGatt;
 using cdroid::BluetoothPairingListener;
+using cdroid::BluetoothProfile;
+using cdroid::BluetoothA2dp;
+using cdroid::BluetoothHeadset;
 using cdroid::BluetoothGattCallback;
 using cdroid::BluetoothGattCharacteristic;
 using cdroid::BluetoothGattService;
@@ -344,6 +348,34 @@ int main(int argc, char** argv) {
         gatt->close();
         delete gatt;
         return 0;
+    }
+    if (cmd == "profiles") {
+        /* stub surface check: proxy hand-off + disconnected defaults */
+        class ProxyPrinter : public BluetoothProfile::ServiceListener {
+        public:
+            void onServiceConnected(int profile,
+                                    BluetoothProfile* proxy) override {
+                printf("[proxy] profile %d connected: devices=%d state=%d\n",
+                       profile,
+                       (int)(profile == BluetoothProfile::A2DP
+                             ? ((BluetoothA2dp*)proxy)->getConnectedDevices().size()
+                             : ((BluetoothHeadset*)proxy)->getConnectedDevices().size()),
+                       proxy->getConnectionState(BluetoothDevice("00:00:00:00:00:00")));
+                adapter->closeProfileProxy(profile, proxy);
+            }
+            void onServiceDisconnected(int profile) override {
+                printf("[proxy] profile %d disconnected\n", profile);
+            }
+            BluetoothAdapter* adapter = nullptr;
+        } printer;
+        printer.adapter = &adapter;
+        const bool a2dp = adapter.getProfileProxy(
+                &printer, BluetoothProfile::A2DP);
+        const bool hfp = adapter.getProfileProxy(
+                &printer, BluetoothProfile::HEADSET);
+        printf("profiles: a2dp=%d hfp=%d (stubs until the audio "
+               "pipeline lands)\n", (int)a2dp, (int)hfp);
+        return (a2dp && hfp) ? 0 : 1;
     }
     fprintf(stderr, "unknown command '%s'\n", cmd.c_str());
     return 1;

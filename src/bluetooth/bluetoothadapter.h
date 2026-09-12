@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <bluetoothpairing.h>
+#include <bluetoothprofile.h>
 #include <bluetoothdevice.h>
 #include <bluetoothsocket.h>
 #include <bluetoothuuid.h>
@@ -152,6 +153,14 @@ public:
     void removeDiscoveryListener(DiscoveryListener* listener);
     void addBondStateListener(BondStateListener* listener);
     void removeBondStateListener(BondStateListener* listener);
+
+    /* --- profile proxies ----------------------------------------------------- */
+    /* AOSP getProfileProxy: hands the caller the profile proxy through
+     * the ServiceListener (synchronously here — in-process profiles).
+     * A2DP/HEADSET are faithful stubs until the audio pipeline lands. */
+    bool getProfileProxy(BluetoothProfile::ServiceListener* listener,
+                         int profile);
+    void closeProfileProxy(int profile, BluetoothProfile* proxy);
 
     /* --- pairing agent ----------------------------------------------------- */
     /* Register the pairing agent. capability: "DisplayYesNo" (a UI will
