@@ -5,6 +5,7 @@
  * two-host bench).
  */
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <string.h>
 #include <sys/time.h>
@@ -19,24 +20,12 @@ namespace cdroid {
 
 namespace {
 
-/* minimal L2CAP sockaddr (kernel UAPI subset, vendored alongside the
- * RFCOMM one the day GATT forced it in — SDP needs it first) */
-struct sockaddr_l2 {
-    sa_family_t l2_family;
-    uint16_t    l2_psm;
-    uint8_t     l2_bdaddr_type;
-    bdaddr_t    l2_bdaddr;
-    uint8_t     l2_cid[2];
-};
-#define BTPROTO_L2CAP 0
-
 constexpr uint16_t SDP_PSM = 0x0001;
 
 /* Send the request PDU (header + body) and read response fragments
  * until the continuation state is empty. Each response body is fed to
  * the parser; the first fragment carrying an RFCOMM channel wins. */
-int transact(int fd, const std::vector<uint8_t>& body,
-             const std::vector<uint8_t>& uuid128) {
+int transact(int fd, const std::vector<uint8_t>& uuid128) {
     std::vector<uint8_t> continuation;
     for (int attempt = 0; attempt < 8; attempt++) {
         /* PDU header: id, len(2), tid(2) — params len covers the body */
@@ -65,10 +54,17 @@ int transact(int fd, const std::vector<uint8_t>& body,
         const int channel = sdp::parseSearchAttributeResponse(respBody);
         if (channel > 0) return channel;
 
-        /* continuation state = last byte(s) of the body */
-        const uint8_t contLen = respBody.empty() ? 0 : respBody.back();
-        if (contLen == 0 || respBody.size() < 1 + contLen) return -1;
-        continuation.assign(respBody.end() - contLen, respBody.end());
+        /* continuation = the length byte at [2 + attributeListByteCount]
+         * followed by that many info bytes (NOT the body's last byte —
+         * that is an opaque info byte; review round 2) */
+        if (respBody.size() < 3) return -1;
+        const size_t byteCount2 = ((size_t)respBody[0] << 8) | respBody[1];
+        if (respBody.size() < 2 + byteCount2 + 1) return -1;
+        const uint8_t contLen = respBody[2 + byteCount2];
+        if (contLen == 0
+                || respBody.size() < 2 + byteCount2 + 1 + contLen) return -1;
+        continuation.assign(respBody.begin() + 2 + byteCount2 + 1,
+                            respBody.begin() + 2 + byteCount2 + 1 + contLen);
     }
     return -1;
 }
@@ -103,10 +99,15 @@ int sdpResolveRfcommChannel(const std::string& bdaddr,
             return -1;
         }
     }
-    /* bound reads for the transaction */
+    /* Back to BLOCKING for the transaction: SO_RCVTIMEO is ignored on
+     * O_NONBLOCK sockets (reads would EAGAIN out instantly — review
+     * round 2), and the reply is routinely still in flight when the
+     * first read runs. */
+    const int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
     struct timeval tv = { 3, 0 };
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-    const int channel = transact(fd, uuid128, uuid128);
+    const int channel = transact(fd, uuid128);
     ::close(fd);
     return channel;
 }

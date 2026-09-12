@@ -37,6 +37,21 @@ struct bt_security {
     uint8_t key_size;
 };
 
+/* L2CAP socket address (include/uapi/linux/l2cap.h) — field order is
+ * ABI: family, psm, bdaddr, cid[2], bdaddr_type (NOT the intuitive
+ * bdaddr-before-cid: the kernel reinterprets the byte blob at its own
+ * offsets, and a reordered copy makes every L2CAP connect fail with
+ * EINVAL — see the second review round). */
+#define BTPROTO_L2CAP   0
+
+struct sockaddr_l2 {
+    sa_family_t l2_family;
+    uint16_t    l2_psm;
+    bdaddr_t    l2_bdaddr;
+    uint8_t     l2_cid[2];
+    uint8_t     l2_bdaddr_type;
+};
+
 /* RFCOMM socket address (include/uapi/linux/rfcomm.h) */
 struct sockaddr_rc {
     sa_family_t rc_family;
