@@ -115,7 +115,7 @@ public:
  * resolves services during Device1.Connect — the AOSP equivalent of the
  * service discovery cache).
  */
-class BluetoothGatt {
+class BluetoothGatt : public std::enable_shared_from_this<BluetoothGatt> {
 public:
     static constexpr int STATE_DISCONNECTED = 0;
     static constexpr int STATE_CONNECTING = 1;
@@ -127,6 +127,14 @@ public:
     static constexpr int GATT_ERROR = 133;
 
     ~BluetoothGatt();
+    /* Notification fan-out keeps the session alive across the app
+     * callback (close()-then-delete while a callback is in flight was
+     * a use-after-free — review round 2). Factories return the shared
+     * pointer; AOSP's own binder callback path holds a strong ref the
+     * same way. */
+    static std::shared_ptr<BluetoothGatt> create(const BluetoothDevice& device,
+                                                 bool autoConnect,
+                                                 BluetoothGattCallback* callback);
 
     bool connect();
     void disconnect();
@@ -147,8 +155,8 @@ public:
 private:
     friend class BluetoothDevice;
     friend class BluetoothAdapter;   /* characteristic-changed fan-out */
-    BluetoothGatt(const BluetoothDevice& device, bool autoConnect,
-                  BluetoothGattCallback* callback);
+    explicit BluetoothGatt(const BluetoothDevice& device,
+                           BluetoothGattCallback* callback);
     /* BlueZ characteristic Value/Notifying flip (monitor thread). */
     void onCharacteristicChangedInternal(const std::string& objectPath,
                                          const std::vector<uint8_t>& value);

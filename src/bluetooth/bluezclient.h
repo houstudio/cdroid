@@ -192,10 +192,12 @@ public:
     bool refreshManagedObjects();
 
 private:
-    /* pairing notifications collected under the bus lock and fired off
-     * it (monitor thread only — see flushDeferredPairing) */
-    std::vector<std::pair<std::string, int>> mDeferredPairing;
-    void flushDeferredPairing();
+    /* Deferred Events dispatch: every callback is queued while the bus
+     * lock is held (processBus) and run after it releases, so listener
+     * code may make synchronous client calls freely. */
+    std::vector<std::function<void(Events*)>> mDeferredEvents;
+    void queueEvent(std::function<void(Events*)> fn);
+    void flushDeferredEvents();
     /* shared adapter-request preamble (connect + non-empty path) */
     bool ensureAdapter(std::string& path);
     std::string adapterPathLocked() const;
@@ -219,6 +221,8 @@ private:
     /* one pass over pending bus messages; true when something was handled */
     bool processBus();
     void clearCache();
+    void resetAdapterPropsLocked();
+    void onDaemonLost();
 
     /* signal handlers (raw sd_bus callbacks forward into these) */
     void handlePropertiesChanged(sd_bus_message* m);

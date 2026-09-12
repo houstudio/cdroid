@@ -81,6 +81,14 @@ void BluezClient::stopMonitor() {
 
 bool BluezClient::connect() {
     {
+        /* The monitor exists from the FIRST attempt (even a failed
+         * one): without it a cold start that lost the race to
+         * bluetoothd never retried and the cache-only getters reported
+         * off/empty forever (review round 2). */
+        if (!mRunning.load()) {
+            mRunning.store(true);
+            mMonitorThread = std::thread(&BluezClient::monitorLoop, this);
+        }
         std::lock_guard<std::mutex> lock(mBusMutex);
         if (mConnected.load() && mBus) return true;
 
@@ -144,11 +152,6 @@ bool BluezClient::connect() {
 
         mBus = bus;
         mConnected.store(true);
-        /* monitor thread starts once per client lifetime */
-        if (!mRunning.load()) {
-            mRunning.store(true);
-            mMonitorThread = std::thread(&BluezClient::monitorLoop, this);
-        }
     }   /* mBusMutex released — refresh takes it itself */
 
     /* Initial snapshot (also the reconnect resync): without this the
@@ -165,20 +168,22 @@ bool BluezClient::connect() {
 /* pairing agent (org.bluez.Agent1)                                    */
 /* ------------------------------------------------------------------ */
 
-/* Runs on the monitor thread with NO bus lock held. */
-void BluezClient::flushDeferredPairing() {
-    std::vector<std::pair<std::string, int>> pending;
-    pending.swap(mDeferredPairing);
-    for (const auto& req : pending) {
-        if (mEvents == nullptr) continue;
-        switch (req.second) {
-        case 0: mEvents->onPairingPinRequested(req.first); break;
-        case 1: mEvents->onPairingPasskeyRequested(req.first); break;
-        case 2: mEvents->onPairingConfirmationRequested(req.first); break;
-        case -1: mEvents->onPairingCancelled(); break;
-        default: break;
-        }
-    }
+/* Runs on the monitor thread with NO bus lock held. Every Events
+ * callback is queued while processBus holds the lock and dispatched
+ * here — a listener making any synchronous client call (createBond,
+ * writeCharacteristic, cancelDiscovery, ...) would self-deadlock the
+ * monitor otherwise. The pairing handlers were the first users; this
+ * generalizes the same queue to the whole Events surface (review
+ * round 2). */
+void BluezClient::queueEvent(std::function<void(Events*)> fn) {
+    mDeferredEvents.emplace_back(std::move(fn));
+}
+
+void BluezClient::flushDeferredEvents() {
+    std::vector<std::function<void(Events*)>> pending;
+    pending.swap(mDeferredEvents);
+    if (mEvents == nullptr) return;
+    for (auto& fn : pending) fn(mEvents);
 }
 
 static const char* kAgentPath = "/org/cdroid/agent";
@@ -222,7 +227,7 @@ int BluezClient::agentRequestPinCode(sd_bus_message* m, void* userdata,
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, 0);
     LOGD("agent: RequestPinCode for %s (held)", addr.c_str());
-    self->mDeferredPairing.push_back({addr, 0});   /* fired outside the lock */
+    self->queueEvent([addr](Events* e) { e->onPairingPinRequested(addr); });
     /* Return 1: the reply is DEFERRED (setPin answers later). A vtable
      * method handler returning 0 tells sd-bus "done, nothing owed" and
      * 260 auto-replies UnknownMethod to the caller — the deferred-reply
@@ -237,7 +242,7 @@ int BluezClient::agentRequestPasskey(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "o", &dev);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, 1);
-    self->mDeferredPairing.push_back({addr, 1});
+    self->queueEvent([addr](Events* e) { e->onPairingPasskeyRequested(addr); });
     return 1;   /* deferred reply — see RequestPinCode */
 }
 
@@ -251,7 +256,7 @@ int BluezClient::agentRequestConfirmation(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "ou", &dev, &passkey);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, 2);
-    self->mDeferredPairing.push_back({addr, 2});
+    self->queueEvent([addr](Events* e) { e->onPairingConfirmationRequested(addr); });
     return 1;   /* deferred reply */
 }
 
@@ -262,7 +267,7 @@ int BluezClient::agentRequestAuthorization(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "o", &dev);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, 2);
-    self->mDeferredPairing.push_back({addr, 2});
+    self->queueEvent([addr](Events* e) { e->onPairingConfirmationRequested(addr); });
     return 1;   /* deferred reply */
 }
 
@@ -273,7 +278,7 @@ int BluezClient::agentAuthorizeService(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "os", &dev, nullptr);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, 2);
-    self->mDeferredPairing.push_back({addr, 2});
+    self->queueEvent([addr](Events* e) { e->onPairingConfirmationRequested(addr); });
     return 1;   /* deferred reply */
 }
 
@@ -285,7 +290,9 @@ int BluezClient::agentDisplayPasskey(sd_bus_message* m, void* userdata,
     uint16_t entered = 0;
     sd_bus_message_read(m, "ouq", &dev, &passkey, &entered);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
-    if (self->mEvents) self->mEvents->onDisplayPasskey(addr, passkey);
+    self->queueEvent([addr, passkey](Events* e) {
+        e->onDisplayPasskey(addr, passkey);
+    });
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -295,7 +302,7 @@ int BluezClient::agentDisplayPinCode(sd_bus_message* m, void* userdata,
     const char* dev = nullptr;
     sd_bus_message_read(m, "os", &dev, nullptr);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
-    if (self->mEvents) self->mEvents->onDisplayPasskey(addr, 0);
+    self->queueEvent([addr](Events* e) { e->onDisplayPasskey(addr, 0); });
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -309,7 +316,7 @@ int BluezClient::agentCancel(sd_bus_message* m, void* userdata, sd_bus_error*) {
             self->mPendingPairing.kind = -1;
         }
     }
-    self->mDeferredPairing.push_back({"", -1});   /* cancelled notice */
+    self->queueEvent([](Events* e) { e->onPairingCancelled(); });
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -471,7 +478,7 @@ void BluezClient::monitorLoop() {
          * listener may answer synchronously (setPin -> reply), and the
          * reply takes mBusMutex — dispatching under processBus's lock
          * would self-deadlock the monitor. */
-        flushDeferredPairing();
+        flushDeferredEvents();
 
         /* Wait for the next message WITHOUT holding the bus lock — a
          * sleeping monitor must never block a synchronous caller: poll
@@ -489,7 +496,7 @@ void BluezClient::monitorLoop() {
         if (rc < 0 && errno != EINTR) {
             LOGD("bus poll failed (%s) — will retry", strerror(errno));
             mConnected.store(false);
-            if (mEvents) mEvents->onBluezDisconnected();
+            onDaemonLost();
         }
         /* readable (or the periodic tick for call timeouts): drain */
         if (pfd.revents & (POLLIN | POLLERR | POLLHUP)) processBus();
@@ -510,7 +517,7 @@ bool BluezClient::processBus() {
         if (rc < 0) {
             LOGD("process error %s", strerror(-rc));
             mConnected.store(false);
-            if (mEvents) mEvents->onBluezDisconnected();
+            onDaemonLost();
             return false;
         }
         if (m) sd_bus_message_unref(m);
@@ -528,7 +535,28 @@ bool BluezClient::processBus() {
 void BluezClient::clearCache() {
     std::lock_guard<std::mutex> lock(mCacheMutex);
     mDevices.clear();
+    mGattServices.clear();
+    mGattCharacteristics.clear();
     mAdapterPath.clear();
+    resetAdapterPropsLocked();
+}
+
+/* Daemon gone: the cached Powered/Discovering/Alias/Address are stale
+ * — getState()/isEnabled() reported pre-death values (review round 2).
+ * Cleared here; repopulated by the reconnect snapshot. */
+void BluezClient::resetAdapterPropsLocked() {
+    mPowered = false;
+    mDiscovering = false;
+    mAlias.clear();
+    mAdapterAddress.clear();
+}
+
+void BluezClient::onDaemonLost() {
+    {
+        std::lock_guard<std::mutex> lock(mCacheMutex);
+        resetAdapterPropsLocked();
+    }
+    queueEvent([](Events* e) { e->onBluezDisconnected(); });
 }
 
 namespace {
@@ -765,7 +793,9 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
                         if (name == "Powered") mPowered = v != 0;
                         else if (name == "Discovering") mDiscovering = v != 0;
                     }
-                    if (mEvents) mEvents->onAdapterBoolChanged(name, v != 0);
+                    queueEvent([name, v](Events* e) {
+                        e->onAdapterBoolChanged(name, v != 0);
+                    });
                 }
                 sd_bus_message_exit_container(m);
             } else if (sd_bus_message_enter_container(m, 'v', "s") >= 0) {
@@ -776,7 +806,9 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
                         if (name == "Alias") mAlias = s;
                         else if (name == "Address") mAdapterAddress = s;
                     }
-                    if (mEvents) mEvents->onAdapterStringChanged(name, s);
+                    queueEvent([name, s](Events* e) {
+                        e->onAdapterStringChanged(name, s);
+                    });
                 }
                 sd_bus_message_exit_container(m);
             } else {
@@ -806,7 +838,9 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
             sd_bus_message_exit_container(m);
             it->second = snapshot;
         }
-        if (mEvents) mEvents->onGattCharacteristicChanged(snapshot);
+        queueEvent([snapshot](Events* e) {
+            e->onGattCharacteristicChanged(snapshot);
+        });
         return;
     }
     if (std::string(iface) != kDeviceIface) return;
@@ -832,14 +866,17 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
         sd_bus_message_exit_container(m);
         it->second = snapshot;   /* publish under the same lock */
     }
-    /* Dispatch per changed property NAME — consumers branch on real
-     * names ("Paired" drives the bond-state machine); the old "*"
-     * wildcard left those branches unreachable. Fired OUTSIDE the
-     * cache lock: listeners re-read the cache (getBondState ->
-     * findDevice) and would self-deadlock inside it. */
-    if (mEvents) {
-        for (const std::string& name : changedNames)
-            mEvents->onDevicePropertyChanged(snapshot, name);
+    /* Queue per changed property NAME ("Paired" drives the bond-state
+     * machine; the old "*" wildcard left those branches unreachable).
+     * Queued for the off-bus-lock flush: listeners may both re-read the
+     * cache (findDevice) and make synchronous client calls. The
+     * snapshot is copied into each closure — it lives in the cache map
+     * under the lock this thread is about to release. */
+    for (const std::string& name : changedNames) {
+        BluezDevice snap = snapshot;
+        queueEvent([snap, name](Events* e) {
+            e->onDevicePropertyChanged(snap, name);
+        });
     }
 }
 
@@ -907,7 +944,10 @@ void BluezClient::handleInterfacesAdded(sd_bus_message* m) {
             std::lock_guard<std::mutex> lock(mCacheMutex);
             mDevices[objPath] = dev;
         }
-        if (mEvents) mEvents->onDeviceAdded(dev);
+        {
+        BluezDevice added = dev;
+        queueEvent([added](Events* e) { e->onDeviceAdded(added); });
+    }
     }
     {
         std::lock_guard<std::mutex> lock(mCacheMutex);
@@ -956,7 +996,11 @@ int BluezClient::onInterfacesRemovedStatic(sd_bus_message* m, void* userdata,
                 ++it;
         }
     }
-    if (wasDevice && self->mEvents) self->mEvents->onDeviceRemoved(objPath);
+    if (wasDevice) {
+        self->queueEvent([objPath](Events* e) {
+            e->onDeviceRemoved(objPath);
+        });
+    }
     return 0;
 }
 
@@ -971,7 +1015,7 @@ int BluezClient::onNameOwnerChangedStatic(sd_bus_message* m, void* userdata,
     const bool has = newOwner && *newOwner;
     if (had && !has) {
         self->mConnected.store(false);
-        if (self->mEvents) self->mEvents->onBluezDisconnected();
+        self->onDaemonLost();
     }
     return 0;
 }

@@ -5,6 +5,7 @@
  * same names.
  */
 #include <algorithm>
+#include <memory>
 
 #include <bluetoothadapter.h>
 #include <bluetoothgatt.h>
@@ -44,7 +45,18 @@ BluetoothGattCharacteristic* BluetoothGattService::getCharacteristic(
 /* BluetoothGatt                                                       */
 /* ------------------------------------------------------------------ */
 
-BluetoothGatt::BluetoothGatt(const BluetoothDevice& device, bool autoConnect,
+std::shared_ptr<BluetoothGatt> BluetoothGatt::create(
+        const BluetoothDevice& device, bool autoConnect,
+        BluetoothGattCallback* callback) {
+    /* shared_ptr from the start: enable_shared_from_this needs the
+     * object to be owned by one at construction. autoConnect is
+     * accepted for API parity (background reconnect is not wired). */
+    (void)autoConnect;
+    return std::shared_ptr<BluetoothGatt>(
+            new BluetoothGatt(device, callback));
+}
+
+BluetoothGatt::BluetoothGatt(const BluetoothDevice& device,
                              BluetoothGattCallback* callback)
     : mDevice(device), mCallback(callback),
       mClient(BluetoothAdapter::getDefaultAdapter().client()) {}
@@ -84,7 +96,8 @@ bool BluetoothGatt::connect() {
     }
     {std::lock_guard<std::mutex> lock(mStateMutex);
      mConnectionState = STATE_CONNECTED;}
-    BluetoothAdapter::getDefaultAdapter().registerGattSession(this);
+    auto self = shared_from_this();
+    BluetoothAdapter::getDefaultAdapter().registerGattSession(self);
     if (mCallback)
         mCallback->onConnectionStateChange(this, GATT_SUCCESS,
                                            STATE_CONNECTED);
@@ -197,17 +210,26 @@ bool BluetoothGatt::setCharacteristicNotification(
 
 void BluetoothGatt::onCharacteristicChangedInternal(
         const std::string& objectPath, const std::vector<uint8_t>& value) {
-    std::lock_guard<std::mutex> lock(mStateMutex);
-    if (mClosed) return;
-    for (BluetoothGattService* s : mServices) {
-        for (BluetoothGattCharacteristic* c : s->mCharacteristics) {
-            if (c->mObjectPath == objectPath) {
-                c->setValue(value);
-                if (mCallback) mCallback->onCharacteristicChanged(this, c);
-                return;
+    BluetoothGattCharacteristic* hit = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (mClosed) return;
+        for (BluetoothGattService* s : mServices) {
+            for (BluetoothGattCharacteristic* c : s->mCharacteristics) {
+                if (c->mObjectPath == objectPath) { hit = c; break; }
             }
+            if (hit) break;
         }
+        if (hit) hit->setValue(value);
     }
+    /* Callback OUTSIDE mStateMutex (same rule as onServicesDiscovered):
+     * AOSP-idiomatic listeners call getService()/close() from
+     * onCharacteristicChanged and self-deadlock on a held lock. The
+     * characteristic pointer stays valid — close()/discoverServices()
+     * are the only paths that free it, and both run on the app thread
+     * which is not this (monitor) thread; the adapter's session
+     * registry plus mClosed gate the teardown ordering. */
+    if (hit && mCallback) mCallback->onCharacteristicChanged(this, hit);
 }
 
 } // namespace cdroid

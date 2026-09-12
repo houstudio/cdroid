@@ -1,6 +1,7 @@
 #ifndef __CDROID_BLUETOOTH_DEVICE_H__
 #define __CDROID_BLUETOOTH_DEVICE_H__
 
+#include <memory>
 #include <string>
 
 #include <bluetoothclass.h>
@@ -115,10 +116,12 @@ public:
     }
 
     /* --- GATT client ----------------------------------------------------- */
-    /* connectGatt analog (the context parameter is a no-op here). The
-     * returned BluetoothGatt is caller-owned; close() it when done. */
-    BluetoothGatt* connectGatt(bool autoConnect,
-                               BluetoothGattCallback* callback) const;
+    /* connectGatt analog (the context parameter is a no-op here).
+     * Returns a shared_ptr: the notification fan-out holds the session
+     * across callbacks, so close()-then-release is safe (AOSP holds a
+     * strong ref over its binder callbacks the same way). */
+    std::shared_ptr<BluetoothGatt> connectGatt(
+            bool autoConnect, BluetoothGattCallback* callback) const;
 
     /* --- RFCOMM socket factories -------------------------------------- */
 

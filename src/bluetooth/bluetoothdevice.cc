@@ -77,9 +77,9 @@ bool BluetoothDevice::cancelPairingUserInput() {
     return true;
 }
 
-BluetoothGatt* BluetoothDevice::connectGatt(bool autoConnect,
-                                            BluetoothGattCallback* callback) const {
-    return new BluetoothGatt(*this, autoConnect, callback);
+std::shared_ptr<BluetoothGatt> BluetoothDevice::connectGatt(
+        bool autoConnect, BluetoothGattCallback* callback) const {
+    return BluetoothGatt::create(*this, autoConnect, callback);
 }
 
 BluetoothSocket* BluetoothDevice::createRfcommSocket(int channel) const {

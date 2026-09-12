@@ -332,8 +332,8 @@ int main(int argc, char** argv) {
             }
         } printer;
         BluetoothDevice remote = adapter.getRemoteDevice(argv[2]);
-        BluetoothGatt* gatt = remote.connectGatt(false, &printer);
-        if (!gatt->connect()) { printf("gatt: connect failed\n"); delete gatt; return 1; }
+        auto gatt = remote.connectGatt(false, &printer);
+        if (!gatt->connect()) { printf("gatt: connect failed\n"); return 1; }
         gatt->discoverServices();
         for (BluetoothGattService* s : gatt->getServices()) {
             for (BluetoothGattCharacteristic* c : s->getCharacteristics()) {
@@ -347,7 +347,6 @@ int main(int argc, char** argv) {
         for (int i = 0; i < 12; i++) usleep(500 * 1000);   /* catch notifies */
         gatt->disconnect();
         gatt->close();
-        delete gatt;
         return 0;
     }
     if (cmd == "profiles") {

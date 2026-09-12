@@ -419,7 +419,7 @@ int main() {
     sd_bus_add_object_vtable(bus, nullptr, "/org/bluez",
                              "org.bluez.AgentManager1",
                              kAgentMgrVtable, nullptr);
-    sd_bus_add_object_manager(bus, nullptr, "/org/bluez");
+    sd_bus_add_object_manager(bus, nullptr, "/");   /* real BlueZ registers at the root */
 
     /* seed the object manager with both devices */
     emit_device(bus, &kDevices[0], kDev1);

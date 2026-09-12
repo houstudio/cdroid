@@ -102,14 +102,40 @@ bool BluetoothAdapter::setName(const std::string& name) {
 
 bool BluetoothAdapter::startDiscovery() {
     if (!mClient.startDiscovery()) return false;
-    /* Listeners fire from the Discovering PropertiesChanged only — the
-     * single source of truth. The optimistic fire raced the monitor's
-     * signal dispatch into 1-or-2 deliveries on mixed threads. */
+    /* Listeners fire from the Discovering PropertiesChanged — the
+     * single source of truth — EXCEPT when BlueZ session-refcounting
+     * swallows the flip: discovery already active under another client
+     * makes StartDiscovery succeed with no signal, and the listener
+     * would never fire (review round 2). Mirror the target state into
+     * the local edge detector so both paths deliver exactly once. */
+    bool was = false;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        was = mDiscovering;
+        mDiscovering = true;
+    }
+    if (!was) {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        for (DiscoveryListener* l : mDiscoveryListeners)
+            l->onDiscoveryStarted();
+    }
     return true;
 }
 
 bool BluetoothAdapter::cancelDiscovery() {
     if (!mClient.cancelDiscovery()) return false;
+    /* Same session-refcount consideration as startDiscovery. */
+    bool was = false;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        was = mDiscovering;
+        mDiscovering = false;
+    }
+    if (was) {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        for (DiscoveryListener* l : mDiscoveryListeners)
+            l->onDiscoveryFinished();
+    }
     return true;
 }
 
@@ -158,26 +184,36 @@ BluetoothLeScanner* BluetoothAdapter::getBluetoothLeScanner() {
     return mLeScanner;
 }
 
-void BluetoothAdapter::registerGattSession(BluetoothGatt* session) {
+void BluetoothAdapter::registerGattSession(
+        const std::shared_ptr<BluetoothGatt>& session) {
     std::lock_guard<std::mutex> lock(mStateMutex);
     mGattSessions.push_back(session);
 }
 
 void BluetoothAdapter::unregisterGattSession(BluetoothGatt* session) {
     std::lock_guard<std::mutex> lock(mStateMutex);
-    mGattSessions.erase(std::remove(mGattSessions.begin(),
-                                    mGattSessions.end(), session),
+    mGattSessions.erase(std::remove_if(mGattSessions.begin(),
+                                       mGattSessions.end(),
+                                       [session](const std::weak_ptr<BluetoothGatt>& w) {
+                                           return w.lock().get() == session;
+                                       }),
                         mGattSessions.end());
 }
 
 void BluetoothAdapter::onGattCharacteristicChanged(
         const BluezGattCharacteristic& ch) {
-    std::vector<BluetoothGatt*> sessions;
+    /* Lock the registry into strong refs: a session closed+deleted by
+     * the app between copy and dispatch was a use-after-free (review
+     * round 2) — the strong ref keeps it alive across the callback. */
+    std::vector<std::shared_ptr<BluetoothGatt>> sessions;
     {
         std::lock_guard<std::mutex> lock(mStateMutex);
-        sessions = mGattSessions;
+        sessions.reserve(mGattSessions.size());
+        for (auto& weak : mGattSessions) {
+            if (auto strong = weak.lock()) sessions.push_back(std::move(strong));
+        }
     }
-    for (BluetoothGatt* gatt : sessions)
+    for (const auto& gatt : sessions)
         gatt->onCharacteristicChangedInternal(ch.objectPath, ch.value);
 }
 

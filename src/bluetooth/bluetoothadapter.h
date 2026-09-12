@@ -2,6 +2,7 @@
 #define __CDROID_BLUETOOTH_ADAPTER_H__
 
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -179,7 +180,7 @@ public:
     /* --- internal (BluetoothDevice resolve path; do not use) ------------- */
     BluezClient& client() { return mClient; }
     /* GATT session fan-out (characteristic Value changes). */
-    void registerGattSession(BluetoothGatt* session);
+    void registerGattSession(const std::shared_ptr<BluetoothGatt>& session);
     void unregisterGattSession(BluetoothGatt* session);
     bool resolveDeviceName(const std::string& address, std::string& out) const;
     bool resolveDeviceAlias(const std::string& address, std::string& out) const;
@@ -229,7 +230,7 @@ private:
     std::vector<AdapterStateListener*> mStateListeners;
     std::vector<DiscoveryListener*> mDiscoveryListeners;
     std::vector<BondStateListener*> mBondListeners;
-    std::vector<BluetoothGatt*> mGattSessions;   /* guarded by mStateMutex */
+    std::vector<std::weak_ptr<BluetoothGatt>> mGattSessions;   /* guarded by mStateMutex */
     std::vector<BluetoothPairingListener*> mPairingListeners;
     BluetoothLeScanner* mLeScanner = nullptr;
 };
