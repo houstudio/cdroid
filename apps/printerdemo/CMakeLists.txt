@@ -8,6 +8,7 @@ include_directories(
    ${CMAKE_BINARY_DIR}/include
    ${CMAKE_BINARY_DIR}/include/gui
    ${CMAKE_BINARY_DIR}/include/porting
+   ${CMAKE_SOURCE_DIR}/src/net        # cdnet (android.net.wifi trial page)
 )
 # Explicit source list (aux_source_directory globs at configure time, so newly
 # added page files would not be picked up without a manual reconfigure).
@@ -20,9 +21,10 @@ set(DEMO_SRCS
    maintain_fragment.cc
    settings_fragment.cc
    about_fragment.cc
+   wifi_fragment.cc
 )
-link_directories(${CMAKE_BINARY_DIR}/lib)
+link_directories(${CMAKE_BINARY_DIR}/lib ${CMAKE_BINARY_DIR}/src/net)
 add_executable(printerdemo ${DEMO_SRCS})
 CreatePAK(printerdemo ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/printerdemo.pak ${PROJECT_SOURCE_DIR}/R.h)
-target_link_libraries(printerdemo PRIVATE cdroid)
+target_link_libraries(printerdemo PRIVATE cdroid cdnet)
 install(TARGETS printerdemo DESTINATION bin)

@@ -18,5 +18,6 @@
     <fragment android:id="@+id/scan"     android:name="ScanFragment"     android:label="扫描"                    app:route="scan"/>
     <fragment android:id="@+id/maintain" android:name="MaintainFragment" android:label="@string/maintain_label" app:route="maintain"/>
     <fragment android:id="@+id/settings" android:name="SettingsFragment" android:label="@string/settings_label" app:route="settings"/>
+    <fragment android:id="@+id/wifi"     android:name="WifiFragment"     android:label="Wi-Fi"                  app:route="wifi"/>
     <fragment android:id="@+id/about"    android:name="AboutFragment"    android:label="关于 CDroid"             app:route="about"/>
 </navigation>
