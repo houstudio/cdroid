@@ -71,13 +71,11 @@ public:
         mRoot = view;
         mAlive = true;
 
+        // The transport binds the library default (SupplicantClient::
+        // defaultCtrlPath: WPA_CTRL_PATH if set, else the system socket) and
+        // starts the event pump; idempotent.
         WifiManager& wifi = WifiManager::getInstance();
-        if (!wifi.pingSupplicant()) {
-            // First touch: bind the transport. WPA_CTRL_PATH selects the bench
-            // supplicant (hwsim); unset = the system default socket.
-            if (const char* env = std::getenv("WPA_CTRL_PATH")) wifi.initialize(env);
-            else wifi.initialize();
-        }
+        wifi.initialize();
         wifi.addNetworkStateListener(this);
         wifi.addScanResultsListener(this);
 
