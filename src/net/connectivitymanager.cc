@@ -2,6 +2,8 @@
 #include <connectivitymanager.h>
 
 #include <ifaddrs.h>
+#include <linux/if.h>   /* IFF_LOWER_UP */
+#include <regex>
 
 #include <algorithm>
 
@@ -66,22 +68,32 @@ NetworkInfo ConnectivityManager::buildWifiNetworkInfo() {
 NetworkInfo ConnectivityManager::buildEthernetNetworkInfo() {
     NetworkInfo info(TYPE_ETHERNET);
     EthernetManager& ethernet = EthernetManager::getInstance();
-    for (const std::string& iface : ethernet.getAvailableInterfaces()) {
+    /* One getifaddrs sweep answers both questions (pattern-match available
+     * + IPv4 presence) — the old shape ran one sweep per available
+     * interface and discarded all but the first. */
+    const std::string pattern = ethernet.getInterfacePattern();
+    const std::regex patternRegex(pattern);
+    struct ifaddrs* ifap = nullptr;
+    std::string firstIface;
+    bool firstHasAddress = false;
+    if (getifaddrs(&ifap) == 0) {
+        for (struct ifaddrs* ifa = ifap; ifa; ifa = ifa->ifa_next) {
+            if (!std::regex_search(std::string(ifa->ifa_name), patternRegex)) continue;
+            if ((ifa->ifa_flags & (IFF_UP | IFF_LOWER_UP)) != (IFF_UP | IFF_LOWER_UP)) continue;
+            if (firstIface.empty()) firstIface = ifa->ifa_name;
+            if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET
+                    && ifa->ifa_name == firstIface)
+                firstHasAddress = true;
+        }
+        freeifaddrs(ifap);
+    }
+    if (!firstIface.empty()) {
         info.setIsAvailable(true);
         /* AOSP promotes LINK_UP to CONNECTED once IpClient finishes; we use
          * the presence of an IPv4 address as the same signal. */
-        NetworkInfo::DetailedState::Type detailed = NetworkInfo::DetailedState::DISCONNECTED;
-        struct ifaddrs* ifap = nullptr;
-        bool hasAddress = false;
-        if (getifaddrs(&ifap) == 0) {
-            for (struct ifaddrs* ifa = ifap; ifa; ifa = ifa->ifa_next) {
-                if (iface != ifa->ifa_name) continue;
-                if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) hasAddress = true;
-            }
-            freeifaddrs(ifap);
-        }
-        detailed = hasAddress ? NetworkInfo::DetailedState::CONNECTED : NetworkInfo::DetailedState::OBTAINING_IPADDR;
-        info.setDetailedState(detailed, std::string(), iface);
+        info.setDetailedState(firstHasAddress
+                ? NetworkInfo::DetailedState::CONNECTED
+                : NetworkInfo::DetailedState::OBTAINING_IPADDR, std::string(), firstIface);
         return info;
     }
     info.setIsAvailable(false);

@@ -17,6 +17,7 @@
 #include <dhcpinfo.h>
 #include <ethernet/ethernetmanager.h>
 #include <netlinkmonitor.h>
+#include <hexencoding.h>
 #include <wifi/nl80211radio.h>
 #include <ipconfiguration.h>
 #include <linkaddress.h>
@@ -29,6 +30,7 @@ using cdroid::ConnectivityManager;
 using cdroid::DhcpClient;
 using cdroid::DhcpInfo;
 using cdroid::EthernetManager;
+using cdroid::HexEncoding;
 using cdroid::IpConfiguration;
 using cdroid::LinkAddress;
 using cdroid::NetworkCapabilities;
@@ -376,6 +378,20 @@ static void testNl80211IeHelpers() {
     CHECK_EQ(legacy.mWifiStandard, (int) ScanResult::WIFI_STANDARD_LEGACY);
 }
 
+static void testHexEncoding() {
+    CHECK(HexEncoding::isAllHex("0123456789abcdefABCDEF"));
+    CHECK(!HexEncoding::isAllHex(""));
+    CHECK(!HexEncoding::isAllHex("0x10"));
+    CHECK_EQ(HexEncoding::encode(std::string("\xc3\x28", 2)), std::string("c328"));
+    CHECK_EQ(HexEncoding::decode("c328"), std::string("\xc3\x28", 2));
+    bool threw = false;
+    try { HexEncoding::decode("abc"); } catch (const std::invalid_argument&) { threw = true; }
+    CHECK(threw);
+    threw = false;
+    try { HexEncoding::decode("zz"); } catch (const std::invalid_argument&) { threw = true; }
+    CHECK(threw);
+}
+
 static void testDhcpCodecs() {
     const unsigned char mac[6] = {0x02, 0x00, 0x00, 0x12, 0x34, 0x56};
 
@@ -499,6 +515,7 @@ static void testDhcpCodecs() {
 }
 
 int main() {
+    testHexEncoding();
     testLinkAddress();
     testDhcpInfo();
     testNetworkInfo();

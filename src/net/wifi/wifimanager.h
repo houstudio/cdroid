@@ -200,6 +200,15 @@ private:
     std::string interfaceName() const;
     int addOrUpdateNetwork(const WifiConfiguration& config);
     void setWifiStateAndNotify(int newState);
+    /* Copy-then-dispatch tails shared by the event branches: snapshot the
+     * state under its lock, snapshot the listeners, then call out. */
+    void notifyWifiStateListeners(int state);
+    void notifyScanResultsListeners();
+    void notifyNetworkStateListeners();
+    void notifyRssiListeners(int rssi);
+    /* One STATUS probe mapped through the shared parser; seeds mWifiState
+     * at initialize() (afterwards the event stream keeps it current). */
+    void refreshWifiStateFromSupplicant();
     void updateConnectionInfoFromStatus();
     void startRssiPolling();
     void stopRssiPolling();
@@ -231,6 +240,12 @@ private:
     int mWifiState = WIFI_STATE_UNKNOWN;
     WifiInfo mConnectionInfo;
     std::atomic<int> mLastRssi { WifiInfo::INVALID_RSSI };
+    /* Getter caches (mStateMutex): the UI polls the getters per refresh,
+     * so they must not fan out synchronous RPCs — the event stream is the
+     * writer, SCAN-RESULTS / network mutations are the invalidations. */
+    std::vector<ScanResult> mScanResultsCache;
+    std::vector<WifiConfiguration> mConfiguredNetworksCache;
+    bool mConfigsDirty = true;
 
     std::mutex mListenersMutex;
     std::vector<WifiStateListener*> mWifiStateListeners;

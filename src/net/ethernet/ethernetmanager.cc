@@ -1,6 +1,9 @@
 /* Port of android.net.EthernetManager (android-36), ioctl/spawn backed. */
 #include <ethernet/ethernetmanager.h>
 
+#include <dhcpinfo.h>
+#include <hexencoding.h>
+
 #include <ipapplicator.h>  /* shared apply path (was the RTM_NEWROUTE seam) */
 
 #include <arpa/inet.h>
@@ -140,55 +143,25 @@ void EthernetManager::setConfiguration(const std::string& iface, const IpConfigu
         startDhcp(iface);
     } else if (config.getIpAssignment() == IpConfiguration::IpAssignment::STATIC) {
         stopDhcp(iface);
-        applyStaticConfiguration(iface, config.getStaticIpConfiguration());
+        applyIpConfiguration(iface, config.getStaticIpConfiguration());
     }
 }
 
 /* --- enable/disable (root) ---------------------------------------------------- */
 
-static bool setInterfaceFlags(const std::string& iface, bool up) {
-    const int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) return false;
-    struct ifreq ifr;
-    memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, iface.c_str(), IFNAMSIZ - 1);
-    bool ok = ioctl(fd, SIOCGIFFLAGS, &ifr) == 0;
-    if (ok) {
-        if (up) ifr.ifr_flags |= IFF_UP;
-        else ifr.ifr_flags &= ~IFF_UP;
-        ok = ioctl(fd, SIOCSIFFLAGS, &ifr) == 0;
-    }
-    close(fd);
-    return ok;
-}
-
 bool EthernetManager::enableInterface(const std::string& iface) {
-    return setInterfaceFlags(iface, true);
+    return bringInterfaceUp(iface, true);
 }
 
 bool EthernetManager::disableInterface(const std::string& iface) {
     stopDhcp(iface);
-    return setInterfaceFlags(iface, false);
-}
-
-/* --- static IP application (root) --------------------------------------------- */
-
-void EthernetManager::applyStaticConfiguration(const std::string& iface,
-                                               const StaticIpConfiguration& config) {
-    /* shared apply path (AOSP IpClient apply half) — also serves the wifi
-     * DHCP lease */
-    applyIpConfiguration(iface, config);
+    return bringInterfaceUp(iface, false);
 }
 
 /* --- DHCP (built-in packet-socket client) ------------------------------------- */
 
 void EthernetManager::applyLease(const std::string& iface, const DhcpClient::Lease& lease) {
-    StaticIpConfiguration staticIp;
-    staticIp.setIpAddress(LinkAddress(lease.ipAddress,
-            LinkAddress::netmaskToPrefixLengthV4(lease.netmask)))
-            .setGateway(lease.gateway)
-            .setDnsServers(lease.dnsServers);
-    applyStaticConfiguration(iface, staticIp);
+    applyIpConfiguration(iface, toStaticIpConfiguration(lease));
     {
         std::lock_guard<std::mutex> lock(mConfigMutex);
         mLeases[iface] = lease;
@@ -208,7 +181,7 @@ DhcpInfo EthernetManager::getDhcpInfo(const std::string& iface) {
 
 bool EthernetManager::startDhcp(const std::string& iface) {
     stopDhcp(iface);
-    setInterfaceFlags(iface, true);
+    bringInterfaceUp(iface, true);
     /* built-in client (AOSP DhcpClient port): acquire then renew at T1 —
      * replaces the spawned udhcpc/dhclient system-command dependency. */
     DhcpSession* session = new DhcpSession();
@@ -221,24 +194,11 @@ bool EthernetManager::startDhcp(const std::string& iface) {
         DhcpClient::Lease lease;
         if (client->requestLease(lease)) {
             applyLease(iface, lease);
-            /* renewal loop: wait T1 (or half the lease, RFC default), renew;
-             * on failure fall back to a fresh DISCOVER cycle. */
-            while (!session->stop.load()) {
-                uint32_t waitSec = lease.t1Sec ? lease.t1Sec : lease.leaseDurationSec / 2;
-                if (!waitSec) break;                     /* infinite lease */
-                for (uint32_t waited = 0; waited < waitSec && !session->stop.load(); waited++)
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
-                if (session->stop.load()) break;
-                DhcpClient::Lease renewed;
-                if (client->renewLease(lease, renewed)) {
-                    lease = renewed;
-                    applyLease(iface, lease);
-                } else if (client->requestLease(lease)) {
-                    applyLease(iface, lease);
-                } else {
-                    NET_LOGE("renewal failed on %s — retrying next cycle", iface.c_str());
-                }
-            }
+            runLeaseRenewalLoop(client, lease,
+                    [this, iface](const DhcpClient::Lease& l) { applyLease(iface, l); },
+                    session->stop,
+                    [iface] { NET_LOGE("renewal failed on %s — retrying next cycle",
+                                       iface.c_str()); });
         } else {
             NET_LOGE("no lease on %s (timeout/NAK)", iface.c_str());
         }
@@ -375,20 +335,18 @@ void EthernetManager::setConfigurationStoreDir(const std::string& dir) {
 std::string EthernetManager::parseHexLittleEndianAddress(const std::string& hex) {
     if (hex.size() != 8) return std::string();
     /* /proc/net/route prints the network-order address bytes read as a
-     * little-endian word, formatted as big-endian hex: accumulate the hex
-     * left-to-right, then split the word LSB-first. */
-    unsigned int word = 0;
-    for (int i = 0; i < 8; i++) {
-        const char c = hex[i];
-        int value;
-        if (c >= '0' && c <= '9') value = c - '0';
-        else if (c >= 'a' && c <= 'f') value = c - 'a' + 10;
-        else if (c >= 'A' && c <= 'F') value = c - 'A' + 10;
-        else return std::string();
-        word = (word << 4) | value;
+     * little-endian word, formatted as big-endian hex: the decoded bytes
+     * are the LE word MSB-first, so intToStr's LSB-first split is the
+     * address. Hex digits via the shared HexEncoding, formatting via the
+     * shared DhcpInfo::intToStr. */
+    try {
+        uint32_t word = 0;
+        for (const char c : HexEncoding::decode(hex))
+            word = (word << 8) | static_cast<unsigned char>(c);
+        return DhcpInfo::intToStr(static_cast<int>(word));
+    } catch (const std::invalid_argument&) {
+        return std::string();
     }
-    return std::to_string(word & 0xFF) + "." + std::to_string((word >> 8) & 0xFF)
-            + "." + std::to_string((word >> 16) & 0xFF) + "." + std::to_string((word >> 24) & 0xFF);
 }
 
 std::string EthernetManager::serializeConfiguration(const IpConfiguration& config) {

@@ -1,6 +1,8 @@
 /* Pure wpa_supplicant reply parsers (see wparesponseparser.h). */
 #include <wifi/wparesponseparser.h>
 
+#include <hexencoding.h>
+
 #include <cstdlib>
 #include <functional>
 #include <stdexcept>
@@ -43,13 +45,10 @@ static std::vector<std::string> splitTabs(const std::string& line) {
     return fields;
 }
 
+/* The "is this a raw 64-hex PSK" gate must agree with
+ * WifiSsid::fromString's decoder — one HexEncoding backs both. */
 static bool isAllHex(const std::string& s) {
-    if (s.empty()) return false;
-    for (const char c : s) {
-        const bool hex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-        if (!hex) return false;
-    }
-    return true;
+    return HexEncoding::isAllHex(s);
 }
 
 std::string WpaResponseParser::unquote(const std::string& value) {

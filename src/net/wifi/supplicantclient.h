@@ -102,6 +102,13 @@ private:
     void closeConnections();
     /* Releases the monitor thread's claim on mMonitor (see mMonitorInUse). */
     void releaseMonitorClaim();
+    /* One wpa_ctrl exchange may run at a time, but WITHOUT holding a mutex
+     * across the blocking I/O: the in-flight token serializes the users of
+     * mCtrl (request / open / close), so a hung daemon delays only the
+     * callers actually talking to it instead of everyone sharing
+     * mCtrlMutex. mCtrlMutex reduces to guarding the member swaps. */
+    void acquireRequestSlot();
+    void releaseRequestSlot();
     void dispatch(std::function<void()> runnable);
 
     std::string mCtrlPath;
@@ -118,6 +125,10 @@ private:
     std::mutex mMonitorUseMutex;
     std::condition_variable mMonitorIdleCv;
     bool mMonitorInUse = false;
+    /* In-flight token for mCtrl users (see acquireRequestSlot). */
+    std::mutex mReqSlotMutex;
+    std::condition_variable mReqSlotCv;
+    bool mReqInFlight = false;
     std::thread mMonitorThread;
     std::atomic<bool> mRunning;
     std::atomic<bool> mConnected;

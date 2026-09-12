@@ -71,12 +71,11 @@ target_compile_options(wpa_ctrl PUBLIC -Wall -Wextra -Wno-variadic-macros)
 #   ethernet/   ethernet side (EthernetManager)
 #   wifi/       android.net.wifi (includes the wpa_ctrl backend)
 # Self-contained: does not link cdroid, so it can be consumed (and later
-# graduated into src/gui/net) without touching other modules. The
-# superseded wpasockclient/wifiscanner prototypes stay on disk but out of
-# the build.
+# graduated into src/gui/net) without touching other modules.
 add_library(cdnet
     wifi/supplicantclient.cc
     linkaddress.cc
+    hexencoding.cc
     dhcpinfo.cc
     networkinfo.cc
     networkcapabilities.cc

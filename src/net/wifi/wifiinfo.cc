@@ -5,6 +5,7 @@
 #include <cstdlib>
 
 #include <wifi/wifimanager.h>
+#include <dhcpinfo.h>
 
 namespace cdroid {
 
@@ -165,25 +166,9 @@ int WifiInfo::getIpAddress() const {
     if (mIpAddress.empty()) return 0;
     /* Inet4AddressUtils.inet4AddressToIntHTL: HTL = Host-To-LITTLE — the
      * int stores a.b.c.d little-endian (a in the LSB), matching the classic
-     * "%d.%d.%d.%d", ip&0xff, ip>>8&0xff... display idiom. Same convention
-     * as DhcpInfo::stringToInt. Strict dotted quad — the AOSP field holds
-     * an Inet4Address, so anything but four 0-255 decimal parts separated
-     * by single dots parses as 0. */
-    unsigned int parts[4];
-    const char* p = mIpAddress.c_str();
-    char* end = nullptr;
-    for (int i = 0; i < 4; i++) {
-        parts[i] = strtoul(p, &end, 10);
-        if (end == p || parts[i] > 255) return 0;
-        p = end;
-        if (i < 3) {
-            if (*p != '.') return 0;   /* separator must be a dot */
-            p++;
-        } else if (*p != '\0') {
-            return 0;                   /* trailing garbage */
-        }
-    }
-    return static_cast<int>((parts[3] << 24) | (parts[2] << 16) | (parts[1] << 8) | parts[0]);
+     * "%d.%d.%d.%d", ip&0xff, ip>>8&0xff... display idiom. AOSP shares one
+     * parser with DhcpInfo; so does the port. */
+    return DhcpInfo::stringToInt(mIpAddress);
 }
 
 bool WifiInfo::getHiddenSSID() const {

@@ -109,7 +109,6 @@ private:
     void onLinkStateChanged(const std::string& iface, bool up, bool lowerUp) override;
     void onAddressChanged(const std::string& iface, bool added,
                           const std::string& address) override;
-    void applyStaticConfiguration(const std::string& iface, const StaticIpConfiguration& config);
     void applyLease(const std::string& iface, const DhcpClient::Lease& lease);
     bool startDhcp(const std::string& iface);
     void stopDhcp(const std::string& iface);

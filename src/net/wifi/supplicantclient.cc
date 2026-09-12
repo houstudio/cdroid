@@ -50,11 +50,21 @@ SupplicantClient::~SupplicantClient() {
 }
 
 bool SupplicantClient::connect() {
-    std::lock_guard<std::mutex> lock(mCtrlMutex);
-    if (mRunning.load()) return mConnected.load();
+    acquireRequestSlot();
+    bool opened = false;
+    bool alreadyRunning;
+    {
+        /* Lock order is always slot -> mCtrlMutex (request(), close(), the
+         * monitor reconnect paths) — never release the slot under it. */
+        std::lock_guard<std::mutex> lock(mCtrlMutex);
+        alreadyRunning = mRunning.load();
+        if (!alreadyRunning)
+            opened = openConnections();
+    }
+    releaseRequestSlot();
+    if (alreadyRunning) return mConnected.load();
     /* Even when the daemon is not up yet, start the monitor thread: it owns
      * the reconnect backoff, so a supplicant started later is picked up. */
-    const bool opened = openConnections();
     mRunning.store(true);
     mMonitorThread = std::thread(&SupplicantClient::monitorLoop, this);
     return opened;
@@ -65,8 +75,12 @@ void SupplicantClient::close() {
         mRunning.store(false);
         mMonitorThread.join();
     }
-    std::lock_guard<std::mutex> lock(mCtrlMutex);
-    closeConnections();
+    acquireRequestSlot();
+    {
+        std::lock_guard<std::mutex> lock(mCtrlMutex);
+        closeConnections();
+    }
+    releaseRequestSlot();
 }
 
 void SupplicantClient::setCtrlPath(const std::string& ctrlPath) {
@@ -97,19 +111,43 @@ void SupplicantClient::dispatch(std::function<void()> runnable) {
     else runnable();
 }
 
+void SupplicantClient::acquireRequestSlot() {
+    std::unique_lock<std::mutex> lock(mReqSlotMutex);
+    mReqSlotCv.wait(lock, [this] { return !mReqInFlight; });
+    mReqInFlight = true;
+}
+
+void SupplicantClient::releaseRequestSlot() {
+    {
+        std::lock_guard<std::mutex> lock(mReqSlotMutex);
+        mReqInFlight = false;
+    }
+    mReqSlotCv.notify_all();
+}
+
 bool SupplicantClient::request(const std::string& cmd, std::string& reply) {
-    std::lock_guard<std::mutex> lock(mCtrlMutex);
-    if (!mConnected.load() && !openConnections())
-        return false;
+    /* The in-flight token (not a held mutex) serializes this exchange: the
+     * blocking wpa_ctrl_request runs with no lock held, so a hung daemon
+     * no longer pins every other caller of the client. */
+    acquireRequestSlot();
+    {
+        std::lock_guard<std::mutex> lock(mCtrlMutex);
+        if (!mConnected.load() && !openConnections()) {
+            releaseRequestSlot();
+            return false;
+        }
+    }
     char buf[4096];
     size_t len = sizeof(buf) - 1;
     const int rc = wpa_ctrl_request(mCtrl, cmd.c_str(), cmd.size(), buf, &len, nullptr);
     if (rc != 0) {
         WIFI_LOGE("request('%s') failed rc=%d errno=%d — connection lost", cmd.c_str(), rc, errno);
         mConnected.store(false);
-        closeConnections();
+        closeConnections();   /* the slot is ours: mCtrl is exclusive here */
+        releaseRequestSlot();
         return false;
     }
+    releaseRequestSlot();
     reply.assign(buf, len);
     return true;
 }
@@ -217,8 +255,14 @@ void SupplicantClient::monitorLoop() {
             }
             usleep(RECONNECT_BACKOFF_MS * 1000);
             if (!mRunning.load()) break;
-            std::lock_guard<std::mutex> lock(mCtrlMutex);
-            if (openConnections()) {
+            acquireRequestSlot();
+            bool reconnected = false;
+            {
+                std::lock_guard<std::mutex> lock(mCtrlMutex);
+                reconnected = openConnections();
+            }
+            releaseRequestSlot();
+            if (reconnected) {
                 reportedDisconnect = false;
                 EventCallback* cb;
                 {
@@ -252,8 +296,12 @@ void SupplicantClient::monitorLoop() {
         releaseMonitorClaim();
         if (recvRc != 0) {
             WIFI_LOGE("monitor recv failed — supplicant connection lost");
-            std::lock_guard<std::mutex> lock(mCtrlMutex);
-            closeConnections();
+            acquireRequestSlot();
+            {
+                std::lock_guard<std::mutex> lock(mCtrlMutex);
+                closeConnections();
+            }
+            releaseRequestSlot();
             continue;
         }
         buf[len] = '\0';

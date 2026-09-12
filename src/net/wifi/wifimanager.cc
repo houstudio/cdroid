@@ -10,9 +10,17 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
+#include <cstring>
 
 #include <wifi/wparesponseparser.h>
 #include <linkaddress.h>
+#include <wpa_ctrl.h>   /* WPA_EVENT_* (canonical event spellings) */
+
+/* wpa_ctrl.h also defines INTERFACE_ENABLED/INTERFACE_DISABLED *event*
+ * macros that collide with the SupplicantState enumerators of the same
+ * name; the macros are unused here (the vendored header stays untouched). */
+#undef INTERFACE_ENABLED
+#undef INTERFACE_DISABLED
 
 namespace cdroid {
 
@@ -28,6 +36,13 @@ static const char* const kNetworkVariables[] = {
     "ssid", "bssid", "psk", "key_mgmt", "proto", "pairwise", "group",
     "auth_alg", "priority", "scan_ssid", "disabled",
 };
+
+/* The WPA_EVENT_* macros carry a trailing space (they prefix full wpa
+ * messages); the parsed event name is the bare token — match by length. */
+static bool eventIs(const SupplicantEvent& event, const char* wpaEvent) {
+    const size_t len = strlen(wpaEvent) - 1;
+    return event.name.size() == len && memcmp(event.name.data(), wpaEvent, len) == 0;
+}
 
 WifiManager& WifiManager::getInstance() {
     static WifiManager instance;
@@ -96,6 +111,7 @@ bool WifiManager::initialize(const std::string& ctrlPath) {
             std::lock_guard<std::mutex> lock(mStateMutex);
             mIfaceName = iface;
         }
+        refreshWifiStateFromSupplicant();
         seedDhcpFromCurrentState();
     }
     return ok;
@@ -109,15 +125,24 @@ std::string WifiManager::interfaceName() const {
 /* --- Wi-Fi state ----------------------------------------------------------- */
 
 int WifiManager::getWifiState() {
-    if (!mClient.isConnected()) return WIFI_STATE_UNKNOWN;
-    /* The ctrl iface has no radio state: map the supplicant's view. Radio
-     * control (rfkill / interface up-down) needs a platform hook:
-     * TODO(porting). */
+    /* Cached: the event stream (refreshWifiStateFromSupplicant /
+     * onSupplicantReconnected / setWifiEnabled) is the writer, so UI
+     * refreshes pay no synchronous RPC. Radio control (rfkill / interface
+     * up-down) needs a platform hook: TODO(porting). */
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    return mWifiState;
+}
+
+void WifiManager::refreshWifiStateFromSupplicant() {
+    /* The ctrl iface has no radio state: map the supplicant's view —
+     * through the shared STATUS parser (a raw substring probe would fire
+     * on an SSID that happens to contain the state text). */
     const std::string status = mClient.request("STATUS");
-    if (status.empty()) return WIFI_STATE_UNKNOWN;
-    if (status.find("wpa_state=INTERFACE_DISABLED") != std::string::npos)
-        return WIFI_STATE_DISABLED;
-    return WIFI_STATE_ENABLED;
+    if (status.empty()) return;
+    WifiInfo probe;
+    WpaResponseParser::applyStatus(probe, status);
+    setWifiStateAndNotify(probe.getSupplicantState() == SupplicantState::INTERFACE_DISABLED
+            ? WIFI_STATE_DISABLED : WIFI_STATE_ENABLED);
 }
 
 bool WifiManager::isWifiEnabled() {
@@ -151,35 +176,45 @@ DhcpInfo WifiManager::getDhcpInfo() {
 }
 
 std::vector<ScanResult> WifiManager::getScanResults() {
+    /* Cached per scan generation: WPA_EVENT_SCAN_RESULTS invalidates. The
+     * dump is the most expensive parse in the library and UI refreshes run
+     * several times per scan. */
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (!mScanResultsCache.empty()) return mScanResultsCache;
+    }
     /* AOSP pulls scans from the radio HAL (wificond), not the supplicant:
      * the nl80211 dump is that source — IEs / TSF / channel width — with
      * the ctrl_iface SCAN_RESULTS list as fallback. */
-    if (mRadioData) {
-        const std::vector<ScanResult> results = mRadioData->getScanResults(interfaceName());
-        if (!results.empty()) return results;
-    }
-    return WpaResponseParser::parseScanResults(mClient.request("SCAN_RESULTS"));
+    std::vector<ScanResult> results;
+    if (mRadioData)
+        results = mRadioData->getScanResults(interfaceName());
+    if (results.empty())
+        results = WpaResponseParser::parseScanResults(mClient.request("SCAN_RESULTS"));
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    mScanResultsCache = std::move(results);
+    return mScanResultsCache;
 }
 
 /* --- connection info ------------------------------------------------------------ */
 
 WifiInfo WifiManager::getConnectionInfo() {
-    WifiInfo info;
-    const std::string status = mClient.request("STATUS");
-    if (status.empty()) return info;
-    WpaResponseParser::applyStatus(info, status);
-    WpaResponseParser::applySignalPoll(info, mClient.request("SIGNAL_POLL"));
-    {
-        std::lock_guard<std::mutex> lock(mStateMutex);
-        mConnectionInfo = info;
-        mLastRssi.store(info.getRssi());
-    }
-    return info;
+    /* Cached copy: updateConnectionInfoFromStatus (event stream) and the
+     * RSSI poller are the writers — a UI refresh costs no RPC. */
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    return mConnectionInfo;
 }
 
 /* --- configured networks --------------------------------------------------------- */
 
 std::vector<WifiConfiguration> WifiManager::getConfiguredNetworks() {
+    /* Cached: 1 + 11N synchronous GET_NETWORK round trips per call would
+     * hit every settings-screen refresh. Mutations through this manager
+     * (add/update/remove/enable/disable/save) invalidate. */
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (!mConfigsDirty) return mConfiguredNetworksCache;
+    }
     std::vector<WifiConfiguration> configs;
     const auto entries = WpaResponseParser::parseListNetworks(mClient.request("LIST_NETWORKS"));
     for (const auto& entry : entries) {
@@ -202,7 +237,10 @@ std::vector<WifiConfiguration> WifiManager::getConfiguredNetworks() {
         }
         configs.push_back(config);
     }
-    return configs;
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    mConfiguredNetworksCache = std::move(configs);
+    mConfigsDirty = false;
+    return mConfiguredNetworksCache;
 }
 
 int WifiManager::addOrUpdateNetwork(const WifiConfiguration& config) {
@@ -221,6 +259,10 @@ int WifiManager::addOrUpdateNetwork(const WifiConfiguration& config) {
             return -1;
         }
     }
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mConfigsDirty = true;
+    }
     return networkId;
 }
 
@@ -234,19 +276,34 @@ bool WifiManager::updateNetwork(const WifiConfiguration& config) {
 }
 
 bool WifiManager::removeNetwork(int netId) {
-    return requestOk("REMOVE_NETWORK " + std::to_string(netId));
+    const bool ok = requestOk("REMOVE_NETWORK " + std::to_string(netId));
+    if (ok) {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mConfigsDirty = true;
+    }
+    return ok;
 }
 
 bool WifiManager::enableNetwork(int netId, bool attemptConnect) {
     /* attemptConnect maps to SELECT_NETWORK: it re-enables the network and
      * disables all others (wpa's counterpart of the framework connect flow). */
-    if (attemptConnect)
-        return requestOk("SELECT_NETWORK " + std::to_string(netId));
-    return requestOk("ENABLE_NETWORK " + std::to_string(netId));
+    const bool ok = attemptConnect
+            ? requestOk("SELECT_NETWORK " + std::to_string(netId))
+            : requestOk("ENABLE_NETWORK " + std::to_string(netId));
+    if (ok) {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mConfigsDirty = true;
+    }
+    return ok;
 }
 
 bool WifiManager::disableNetwork(int netId) {
-    return requestOk("DISABLE_NETWORK " + std::to_string(netId));
+    const bool ok = requestOk("DISABLE_NETWORK " + std::to_string(netId));
+    if (ok) {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mConfigsDirty = true;
+    }
+    return ok;
 }
 
 bool WifiManager::saveConfiguration() {
@@ -403,17 +460,7 @@ void WifiManager::refreshAndDispatchNetworkState() {
     /* Any interface address/link change can flip our IP presence; refresh
      * and re-dispatch (delivered on the monitor's event thread). */
     updateConnectionInfoFromStatus();
-    WifiInfo info;
-    {
-        std::lock_guard<std::mutex> lock(mStateMutex);
-        info = mConnectionInfo;
-    }
-    std::vector<NetworkStateListener*> listeners;
-    {
-        std::lock_guard<std::mutex> lock(mListenersMutex);
-        listeners = mNetworkStateListeners;
-    }
-    for (NetworkStateListener* listener : listeners) listener->onNetworkStateChanged(info);
+    notifyNetworkStateListeners();
 }
 
 void WifiManager::onSupplicantDisconnected() {
@@ -427,14 +474,13 @@ void WifiManager::onSupplicantReconnected() {
 }
 
 void WifiManager::onSupplicantEvent(const SupplicantEvent& event) {
-    if (event.name == "CTRL-EVENT-SCAN-RESULTS") {
-        std::vector<ScanResultsListener*> listeners;
+    if (eventIs(event, WPA_EVENT_SCAN_RESULTS)) {
         {
-            std::lock_guard<std::mutex> lock(mListenersMutex);
-            listeners = mScanResultsListeners;
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mScanResultsCache.clear();   /* new scan generation */
         }
-        for (ScanResultsListener* listener : listeners) listener->onScanResultsAvailable();
-    } else if (event.name == "CTRL-EVENT-STATE-CHANGE") {
+        notifyScanResultsListeners();
+    } else if (eventIs(event, WPA_EVENT_STATE_CHANGE)) {
         WifiInfo info;
         {
             std::lock_guard<std::mutex> lock(mStateMutex);
@@ -465,43 +511,18 @@ void WifiManager::onSupplicantEvent(const SupplicantEvent& event) {
             std::lock_guard<std::mutex> lock(mStateMutex);
             mConnectionInfo = info;
         }
-        std::vector<NetworkStateListener*> listeners;
-        {
-            std::lock_guard<std::mutex> lock(mListenersMutex);
-            listeners = mNetworkStateListeners;
-        }
-        for (NetworkStateListener* listener : listeners) listener->onNetworkStateChanged(info);
-    } else if (event.name == "CTRL-EVENT-CONNECTED") {
+        notifyNetworkStateListeners();   /* re-snapshot: includes our write-back */
+    } else if (eventIs(event, WPA_EVENT_CONNECTED)) {
         updateConnectionInfoFromStatus();
         startRssiPolling();
         /* IP provisioning begins with L2 completion (AOSP IpClient) */
         startDhcpIfNeeded();
-        WifiInfo info;
-        {
-            std::lock_guard<std::mutex> lock(mStateMutex);
-            info = mConnectionInfo;
-        }
-        std::vector<NetworkStateListener*> listeners;
-        {
-            std::lock_guard<std::mutex> lock(mListenersMutex);
-            listeners = mNetworkStateListeners;
-        }
-        for (NetworkStateListener* listener : listeners) listener->onNetworkStateChanged(info);
-    } else if (event.name == "CTRL-EVENT-DISCONNECTED") {
+        notifyNetworkStateListeners();
+    } else if (eventIs(event, WPA_EVENT_DISCONNECTED)) {
         stopRssiPolling();
         stopDhcpAndRelease();
         updateConnectionInfoFromStatus();
-        WifiInfo info;
-        {
-            std::lock_guard<std::mutex> lock(mStateMutex);
-            info = mConnectionInfo;
-        }
-        std::vector<NetworkStateListener*> listeners;
-        {
-            std::lock_guard<std::mutex> lock(mListenersMutex);
-            listeners = mNetworkStateListeners;
-        }
-        for (NetworkStateListener* listener : listeners) listener->onNetworkStateChanged(info);
+        notifyNetworkStateListeners();
     }
     /* TODO(porting): WPA: 4-Way Handshake failed → ERROR_AUTHENTICATING
      * surfaced through the connect ActionListener once the async connect
@@ -523,12 +544,48 @@ void WifiManager::setWifiStateAndNotify(int newState) {
         if (previous == newState) return;
         mWifiState = newState;
     }
+    notifyWifiStateListeners(newState);
+}
+
+void WifiManager::notifyWifiStateListeners(int state) {
     std::vector<WifiStateListener*> listeners;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         listeners = mWifiStateListeners;
     }
-    for (WifiStateListener* listener : listeners) listener->onWifiStateChanged(newState);
+    for (WifiStateListener* listener : listeners) listener->onWifiStateChanged(state);
+}
+
+void WifiManager::notifyScanResultsListeners() {
+    std::vector<ScanResultsListener*> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mScanResultsListeners;
+    }
+    for (ScanResultsListener* listener : listeners) listener->onScanResultsAvailable();
+}
+
+void WifiManager::notifyNetworkStateListeners() {
+    WifiInfo info;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        info = mConnectionInfo;
+    }
+    std::vector<NetworkStateListener*> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mNetworkStateListeners;
+    }
+    for (NetworkStateListener* listener : listeners) listener->onNetworkStateChanged(info);
+}
+
+void WifiManager::notifyRssiListeners(int rssi) {
+    std::vector<RssiListener*> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mRssiListeners;
+    }
+    for (RssiListener* listener : listeners) listener->onRssiChanged(rssi);
 }
 
 void WifiManager::updateConnectionInfoFromStatus() {
@@ -540,20 +597,12 @@ void WifiManager::updateConnectionInfoFromStatus() {
     /* AOSP takes the address from IpClient/LinkProperties, never from the
      * supplicant; the supplicant STATUS only knows about its own (unused)
      * DHCP. Read the interface when STATUS did not provide one. */
-    if (info.getIpAddress() == 0 && !interfaceName().empty()) {
-        const std::string iface = interfaceName();
-        struct ifaddrs* ifap = nullptr;
-        if (getifaddrs(&ifap) == 0) {
-            for (struct ifaddrs* ifa = ifap; ifa; ifa = ifa->ifa_next) {
-                if (iface != ifa->ifa_name || !ifa->ifa_addr) continue;
-                if (ifa->ifa_addr->sa_family != AF_INET) continue;
-                char buf[INET_ADDRSTRLEN] = {0};
-                const auto* sin = reinterpret_cast<const struct sockaddr_in*>(ifa->ifa_addr);
-                if (inet_ntop(AF_INET, &sin->sin_addr, buf, sizeof(buf)))
-                    info.setInetAddress(buf);
-            }
-            freeifaddrs(ifap);
-        }
+    if (info.getIpAddress() == 0) {
+        /* AOSP takes the address from IpClient/LinkProperties, never from
+         * the supplicant; the shared single-interface probe is that read. */
+        std::string dotted;
+        if (interfaceHasIpv4Address(interfaceName(), &dotted))
+            info.setInetAddress(dotted);
     }
     std::lock_guard<std::mutex> lock(mStateMutex);
     mConnectionInfo = info;
@@ -589,12 +638,7 @@ void WifiManager::rssiPollLoop() {
             std::lock_guard<std::mutex> lock(mStateMutex);
             mConnectionInfo.setRssi(rssi);
         }
-        std::vector<RssiListener*> listeners;
-        {
-            std::lock_guard<std::mutex> lock(mListenersMutex);
-            listeners = mRssiListeners;
-        }
-        for (RssiListener* listener : listeners) listener->onRssiChanged(rssi);
+        notifyRssiListeners(rssi);
     }
 }
 
@@ -638,38 +682,15 @@ void WifiManager::startDhcpIfNeeded() {
                 fprintf(stdout, "WifiManager: lease on %s: %s gw %s (%us)\n", iface.c_str(),
                         lease.ipAddress.c_str(), lease.gateway.c_str(), lease.leaseDurationSec);
                 fflush(stdout);
-                StaticIpConfiguration staticIp;
-                staticIp.setIpAddress(LinkAddress(lease.ipAddress,
-                        LinkAddress::netmaskToPrefixLengthV4(lease.netmask)))
-                        .setGateway(lease.gateway)
-                        .setDnsServers(lease.dnsServers);
-                applyIpConfiguration(iface, staticIp);
-                {
+                const auto applyLease = [this, iface](const DhcpClient::Lease& l) {
+                    applyIpConfiguration(iface, toStaticIpConfiguration(l));
                     std::lock_guard<std::mutex> lock(mStateMutex);
-                    mLease = lease;
-                }
-                /* renewal loop mirrors the ethernet session: T1 (or half the
-                 * lease), renew, fall back to a fresh DISCOVER on failure. */
-                while (!session->stop.load()) {
-                    uint32_t waitSec = lease.t1Sec ? lease.t1Sec : lease.leaseDurationSec / 2;
-                    if (!waitSec) break;
-                    for (uint32_t waited = 0; waited < waitSec && !session->stop.load(); waited++)
-                        std::this_thread::sleep_for(std::chrono::seconds(1));
-                    if (session->stop.load()) break;
-                    DhcpClient::Lease renewed;
-                    if (client->renewLease(lease, renewed)) lease = renewed;
-                    else if (!client->requestLease(lease)) continue;
-                    StaticIpConfiguration renewedIp;
-                    renewedIp.setIpAddress(LinkAddress(lease.ipAddress,
-                            LinkAddress::netmaskToPrefixLengthV4(lease.netmask)))
-                            .setGateway(lease.gateway)
-                            .setDnsServers(lease.dnsServers);
-                    applyIpConfiguration(iface, renewedIp);
-                    {
-                        std::lock_guard<std::mutex> lock(mStateMutex);
-                        mLease = lease;
-                    }
-                }
+                    mLease = l;
+                };
+                applyLease(lease);
+                /* renewal loop shared with the ethernet session (T1 or half
+                 * the lease, renew, fresh-DISCOVER fallback). */
+                runLeaseRenewalLoop(client, lease, applyLease, session->stop);
             } else {
                 fprintf(stderr, "WifiManager E: no lease on %s (timeout/NAK)\n",
                         iface.c_str());

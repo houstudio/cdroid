@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <chrono>
 #include <fstream>
 #include <ifaddrs.h>
 #include <linux/if.h>
@@ -15,6 +16,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sstream>
+#include <thread>
 #include <unistd.h>
 #include <vector>
 
@@ -76,6 +78,22 @@ std::vector<std::string> rewriteResolvConf(const std::vector<std::string>& remov
 
 } // namespace
 
+bool bringInterfaceUp(const std::string& iface, bool up) {
+    const int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0) return false;
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, iface.c_str(), IFNAMSIZ - 1);
+    bool ok = ioctl(fd, SIOCGIFFLAGS, &ifr) == 0;
+    if (ok) {
+        if (up) ifr.ifr_flags |= IFF_UP;
+        else ifr.ifr_flags &= ~IFF_UP;
+        ok = ioctl(fd, SIOCSIFFLAGS, &ifr) == 0;
+    }
+    close(fd);
+    return ok;
+}
+
 bool applyIpConfiguration(const std::string& iface, const StaticIpConfiguration& config) {
     const int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
@@ -89,9 +107,8 @@ bool applyIpConfiguration(const std::string& iface, const StaticIpConfiguration&
     bool ok = ioctl(fd, SIOCGIFFLAGS, &ifr) == 0;   /* existence check */
     bool applied = true;
     if (ok) {
-        ifr.ifr_flags |= IFF_UP;
-        if (ioctl(fd, SIOCSIFFLAGS, &ifr) != 0)
-            IPA_LOGE("SIOCSIFFLAGS(up) %s: %s (need root?)", iface.c_str(), strerror(errno));
+        if (!bringInterfaceUp(iface, true))
+            IPA_LOGE("SIOCSIFFLAGS(up) %s failed (need root?)", iface.c_str());
 
         struct sockaddr_in* sin = reinterpret_cast<struct sockaddr_in*>(&ifr.ifr_addr);
         const LinkAddress& address = config.getIpAddress();
@@ -180,6 +197,58 @@ bool clearIpConfiguration(const std::string& iface) {
         gAppliedDnsLines.erase(iface);
     }
     return ok;
+}
+
+bool interfaceHasIpv4Address(const std::string& iface, std::string* dotted) {
+    struct ifaddrs* ifap = nullptr;
+    if (getifaddrs(&ifap) != 0) return false;
+    bool found = false;
+    for (struct ifaddrs* ifa = ifap; ifa; ifa = ifa->ifa_next) {
+        if (iface != ifa->ifa_name || !ifa->ifa_addr) continue;
+        if (ifa->ifa_addr->sa_family != AF_INET) continue;
+        char buf[INET_ADDRSTRLEN] = {0};
+        const auto* sin = reinterpret_cast<const struct sockaddr_in*>(ifa->ifa_addr);
+        if (inet_ntop(AF_INET, &sin->sin_addr, buf, sizeof(buf))) {
+            found = true;
+            if (dotted) *dotted = buf;
+            break;
+        }
+    }
+    freeifaddrs(ifap);
+    return found;
+}
+
+StaticIpConfiguration toStaticIpConfiguration(const DhcpClient::Lease& lease) {
+    StaticIpConfiguration staticIp;
+    staticIp.setIpAddress(LinkAddress(lease.ipAddress,
+            LinkAddress::netmaskToPrefixLengthV4(lease.netmask)))
+            .setGateway(lease.gateway)
+            .setDnsServers(lease.dnsServers);
+    return staticIp;
+}
+
+void runLeaseRenewalLoop(DhcpClient* client, DhcpClient::Lease& lease,
+                         const std::function<void(const DhcpClient::Lease&)>& applyLease,
+                         const std::atomic<bool>& stop,
+                         const std::function<void()>& onRenewalFailure) {
+    /* renewal loop shared by both managers: T1 (or half the lease, the RFC
+     * default), renew, fall back to a fresh DISCOVER on failure. */
+    while (!stop.load()) {
+        uint32_t waitSec = lease.t1Sec ? lease.t1Sec : lease.leaseDurationSec / 2;
+        if (!waitSec) break;                     /* infinite lease */
+        for (uint32_t waited = 0; waited < waitSec && !stop.load(); waited++)
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        if (stop.load()) break;
+        DhcpClient::Lease renewed;
+        if (client->renewLease(lease, renewed)) {
+            lease = renewed;
+            applyLease(lease);
+        } else if (client->requestLease(lease)) {
+            applyLease(lease);
+        } else if (onRenewalFailure) {
+            onRenewalFailure();
+        }
+    }
 }
 
 } // namespace cdroid

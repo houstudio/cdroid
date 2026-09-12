@@ -4,41 +4,9 @@
 #include <cstdint>
 #include <stdexcept>
 
+#include <hexencoding.h>
+
 namespace cdroid {
-
-/* android.util.HexEncoding (the subset WifiSsid uses). */
-static int hexValue(char c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    return -1;
-}
-
-static std::string hexDecode(const std::string& in) {
-    if (in.size() % 2 != 0)
-        throw std::invalid_argument("Odd number of characters: " + std::to_string(in.size()));
-    std::string out;
-    out.reserve(in.size() / 2);
-    for (size_t i = 0; i < in.size(); i += 2) {
-        const int hi = hexValue(in[i]);
-        const int lo = hexValue(in[i + 1]);
-        if (hi < 0 || lo < 0)
-            throw std::invalid_argument(std::string("Unexpected hex digit: ") + in[i] + in[i + 1]);
-        out.push_back(static_cast<char>((hi << 4) | lo));
-    }
-    return out;
-}
-
-static std::string hexEncode(const std::string& in) {
-    static const char digits[] = "0123456789abcdef";
-    std::string out;
-    out.reserve(in.size() * 2);
-    for (const unsigned char c : in) {
-        out.push_back(digits[c >> 4]);
-        out.push_back(digits[c & 0xF]);
-    }
-    return out;
-}
 
 WifiSsid::WifiSsid() = default;
 
@@ -57,7 +25,7 @@ WifiSsid WifiSsid::fromString(const std::string& string) {
     const size_t length = string.size();
     if (length > 1 && string[0] == '"' && string[length - 1] == '"')
         return WifiSsid(string.substr(1, length - 2));
-    return WifiSsid(hexDecode(string));
+    return WifiSsid(HexEncoding::decode(string));
 }
 
 std::string WifiSsid::getBytes() const {
@@ -71,7 +39,7 @@ std::string WifiSsid::getUtf8Text() const {
 std::string WifiSsid::toString() const {
     const std::string utf8 = decodeSsid(mBytes);
     if (utf8.empty())
-        return hexEncode(mBytes);
+        return HexEncoding::encode(mBytes);
     return "\"" + utf8 + "\"";
 }
 
