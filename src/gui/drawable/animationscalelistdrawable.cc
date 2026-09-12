@@ -58,14 +58,14 @@ bool AnimationScaleListDrawable::onStateChange(const std::vector<int>& stateSet)
 void AnimationScaleListDrawable::inflate(Resources& r, XmlPullParser& parser,const AttributeSet& attrs, const Resources::Theme* theme){
     (void)r;
     //updateDensity();
-    inflateChildElements(r,parser, attrs);
+    inflateChildElements(r,parser, attrs, theme);
     onStateChange(getState());
 }
 
 /**
  * Inflates child elements from XML.
  */
-void AnimationScaleListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& attrs){
+void AnimationScaleListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme){
     auto state = mAnimationScaleListState;
     int type, depth;
     const int innerDepth = parser.getDepth()+1;
@@ -92,7 +92,7 @@ void AnimationScaleListDrawable::inflateChildElements(Resources& r,XmlPullParser
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            dr = Drawable::createFromXmlInner(r,parser,attrs);
+            dr = Drawable::createFromXmlInner(r,parser,attrs,theme);
         }
         state->addDrawable(dr);
     }

@@ -324,7 +324,7 @@ void AdaptiveIconDrawable::inflateLayers(Resources& r,XmlPullParser& parser,cons
             }
 
             // We found a child drawable. Take ownership.
-            layer->mDrawable = Drawable::createFromXmlInnerForDensity(r,parser, attrs, mLayerState->mSrcDensityOverride);
+            layer->mDrawable = Drawable::createFromXmlInnerForDensity(r,parser, attrs, mLayerState->mSrcDensityOverride, theme);
             layer->mDrawable->setCallback(this);
             state->mChildrenChangingConfigurations |= layer->mDrawable->getChangingConfigurations();
         }

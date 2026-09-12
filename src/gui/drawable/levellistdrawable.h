@@ -37,7 +37,7 @@ private:
     std::shared_ptr<LevelListState>mLevelListState;
     LevelListDrawable(std::shared_ptr<LevelListState>state,Resources*res);
 private:
-    void inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts);
+    void inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts,const Resources::Theme* theme);
 protected:
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableContainerState> cloneConstantState()override;

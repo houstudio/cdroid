@@ -119,10 +119,10 @@ void LevelListDrawable::addLevel(int low,int high,Drawable* drawable) {
 }
 void LevelListDrawable::inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts, const Resources::Theme* theme){
     DrawableContainer::inflate(r,parser,atts, theme);
-    inflateChildElements(r,parser,atts);
+    inflateChildElements(r,parser,atts,theme);
 }
 
-void LevelListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts){
+void LevelListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts,const Resources::Theme* theme){
     int type,depth,low = 0;
     const int innerDepth = parser.getDepth()+1;
     while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
@@ -151,7 +151,7 @@ void LevelListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            dr = Drawable::createFromXmlInner(r,parser,atts);
+            dr = Drawable::createFromXmlInner(r,parser,atts,theme);
         }
         mLevelListState->addLevel(low, high, dr);
     }

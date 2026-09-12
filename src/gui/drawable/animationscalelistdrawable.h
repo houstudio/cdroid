@@ -43,7 +43,7 @@ private:
     std::shared_ptr<AnimationScaleListState> mAnimationScaleListState;
 private:
     AnimationScaleListDrawable(std::shared_ptr<AnimationScaleListState> state);
-    void inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& attrs);
+    void inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme);
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
     void setConstantState(std::shared_ptr<DrawableContainerState> state) override;

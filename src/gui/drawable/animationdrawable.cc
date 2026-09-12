@@ -213,7 +213,7 @@ void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,
                         ": <item> tag requires a 'drawable' attribute or child tag"
                         " defining a drawable");
             }
-            dr = Drawable::createFromXmlInner(r,parser, atts);
+            dr = Drawable::createFromXmlInner(r,parser, atts, theme);
         }
 
         mAnimationState->addFrame(dr, duration);
