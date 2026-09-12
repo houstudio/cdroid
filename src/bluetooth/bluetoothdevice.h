@@ -1,0 +1,103 @@
+#ifndef __CDROID_BLUETOOTH_DEVICE_H__
+#define __CDROID_BLUETOOTH_DEVICE_H__
+
+#include <string>
+
+#include <bluetoothclass.h>
+
+namespace cdroid {
+
+class BluetoothAdapter;
+
+/**
+ * Port of android.bluetooth.BluetoothDevice (android-36), module phase.
+ * Like the Java original this is a remote-device HANDLE: the address is
+ * the identity, every property getter resolves through the stack cache
+ * at call time (the address may not have been seen yet — getters then
+ * return the "unknown" defaults AOSP returns for an unbonded,
+ * undiscovered address).
+ *
+ * Instances are values: copyable, equality/hash on the address, exactly
+ * the parcelable-handle semantics of the Java class.
+ */
+class BluetoothDevice {
+public:
+    /* --- bond state -------------------------------------------------- */
+    static constexpr int BOND_NONE = 10;
+    static constexpr int BOND_BONDING = 11;
+    static constexpr int BOND_BONDED = 12;
+
+    /* --- device type (getType) ---------------------------------------- */
+    static constexpr int DEVICE_TYPE_UNKNOWN = 0;
+    static constexpr int DEVICE_TYPE_CLASSIC = 1;
+    static constexpr int DEVICE_TYPE_LE = 2;
+    static constexpr int DEVICE_TYPE_DUAL = 3;
+
+    /* Broadcast intents, kept as constants for the future broadcast
+     * system (same strings the Java side broadcasts). */
+    static constexpr const char* ACTION_FOUND =
+            "android.bluetooth.device.action.FOUND";
+    static constexpr const char* ACTION_NAME_CHANGED =
+            "android.bluetooth.device.action.NAME_CHANGED";
+    static constexpr const char* ACTION_ALIAS_CHANGED =
+            "android.bluetooth.device.action.ALIAS_CHANGED";
+    static constexpr const char* ACTION_BOND_STATE_CHANGED =
+            "android.bluetooth.device.action.BOND_STATE_CHANGED";
+    static constexpr const char* ACTION_CLASS_CHANGED =
+            "android.bluetooth.device.action.CLASS_CHANGED";
+
+    /* Requires a context is an AOSP note only; here the address must be
+     * non-empty and "AA:BB:CC:DD:EE:FF"-shaped (upper-cased like the
+     * Java helper does). Invalid addresses yield an unusable instance,
+     * matching the Java behavior of throwing — represented by an empty
+     * address the adapter refuses to resolve. */
+    BluetoothDevice() = default;
+    explicit BluetoothDevice(const std::string& address);
+
+    /* Returns the remote bluetooth hardware address. */
+    std::string getAddress() const { return mAddress; }
+
+    /* Get the friendly Bluetooth name (remote name, alias when set). */
+    std::string getName() const;
+    /* User-writable alias (persists across reboots on the BlueZ side). */
+    std::string getAlias() const;
+    bool setAlias(const std::string& alias);
+
+    /* Get the bond state of the remote device. */
+    int getBondState() const;
+    /* Get the Bluetooth Class of Device (CoD) snapshot. */
+    BluetoothClass getBluetoothClass() const;
+    /* Get the device type: CLASSIC / LE / DUAL / UNKNOWN. */
+    int getType() const;
+
+    /* Start the bonding (pairing) process. Blocking on this module-phase
+     * port: AOSP's call is fire-and-forget with the outcome arriving via
+     * ACTION_BOND_STATE_CHANGED; here createBond() returns when
+     * Device1.Pair completes (or fails) and the bond-state listeners
+     * still fire from the property signals. */
+    bool createBond();
+    /* Remove bond (remote side keeps its link key — same caveat as AOSP). */
+    bool removeBond();
+
+    bool operator==(const BluetoothDevice& other) const {
+        return mAddress == other.mAddress;
+    }
+    bool operator!=(const BluetoothDevice& other) const {
+        return mAddress != other.mAddress;
+    }
+    bool operator<(const BluetoothDevice& other) const {
+        return mAddress < other.mAddress;
+    }
+
+    /* AOSP toString: the address in brackets. */
+    std::string toString() const;
+
+private:
+    friend class BluetoothAdapter;
+    /* The adapter mints devices and resolves properties. */
+    std::string mAddress;
+};
+
+} // namespace cdroid
+
+#endif /* __CDROID_BLUETOOTH_DEVICE_H__ */

@@ -77,6 +77,9 @@ set(CDROID_PORTING_DIRS "${CMAKE_BINARY_DIR}/include"     CACHE PATH "cdroid por
 # android.net stack (wifi/ethernet/connectivity) — standalone cdnet lib,
 # consumed by apps/tests; the gui integration hooks land separately.
 add_subdirectory(src/net)
+# android.bluetooth stack — standalone cdblue lib over BlueZ (sd-bus),
+# same module-phase shape as cdnet.
+add_subdirectory(src/bluetooth)
 add_subdirectory(src/porting)
 # androidfw must be defined before src/gui so cdroid can link it.
 add_subdirectory(src/gui/content/androidfw)
