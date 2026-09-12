@@ -77,7 +77,13 @@ WifiManager::~WifiManager() {
 }
 
 bool WifiManager::initialize(const std::string& ctrlPath) {
-    if (mClient.isConnected()) return true;
+    if (mClient.isConnected()) {
+        /* Re-bind path (fragment recreation): the cached state is only as
+         * fresh as the last event — re-seed once so the caller's first
+         * getWifiState()/isWifiEnabled() is not a stale UNKNOWN. */
+        refreshWifiStateFromSupplicant();
+        return true;
+    }
     mClient.setCtrlPath(ctrlPath);
     const bool ok = mClient.connect();
     if (ok) {
@@ -154,11 +160,21 @@ bool WifiManager::setWifiEnabled(bool enabled) {
      * supplicant lifecycle (platform-specific); the module phase only owns
      * the supplicant client side: "enabled" means reaching the daemon,
      * "disabled" detaches from the current network. */
-    if (enabled) return initialize();
+    if (enabled) {
+        const bool ok = initialize();
+        /* AOSP re-associates the saved networks on enable; a supplicant
+         * told to DISCONNECT stays idle until RECONNECT. */
+        if (ok) requestOk("RECONNECT");
+        return ok;
+    }
     const bool ok = requestOk("DISCONNECT");
     if (ok) {
         stopRssiPolling();
         setWifiStateAndNotify(WIFI_STATE_DISABLING);
+        /* The detach is synchronous here (no platform radio path yet), so
+         * the state completes immediately — UI switches bound to the state
+         * stream would otherwise wait forever in DISABLING. */
+        setWifiStateAndNotify(WIFI_STATE_DISABLED);
     }
     return ok;
 }

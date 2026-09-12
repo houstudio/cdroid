@@ -53,6 +53,7 @@ static bool isSecured(const std::string& capabilities) {
 class WifiFragment : public cdroid::Fragment,
                      public WifiManager::NetworkStateListener,
                      public WifiManager::ScanResultsListener,
+                     public WifiManager::WifiStateListener,
                      public WifiManager::ActionListener {
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override {
@@ -78,6 +79,7 @@ public:
         wifi.initialize();
         wifi.addNetworkStateListener(this);
         wifi.addScanResultsListener(this);
+        wifi.addWifiStateListener(this);
 
         mState = (cdroid::TextView*)view->findViewById(printerdemo::R::id::tv_wifi_state);
         mDetail = (cdroid::TextView*)view->findViewById(printerdemo::R::id::tv_wifi_detail);
@@ -90,7 +92,8 @@ public:
         }
         if (cdroid::Switch* sw = (cdroid::Switch*)view->findViewById(printerdemo::R::id::sw_wifi)) {
             sw->setChecked(wifi.isWifiEnabled());
-            sw->setOnCheckedChangeListener([](cdroid::CompoundButton&, bool on){
+            sw->setOnCheckedChangeListener([this](cdroid::CompoundButton&, bool on){
+                if (mSyncingSwitch) return;   /* programmatic setChecked echo */
                 WifiManager::getInstance().setWifiEnabled(on);
             });
         }
@@ -116,6 +119,22 @@ public:
         root->post([this]{ if (mAlive) refreshList(); });
     }
 
+    // --- WifiManager::WifiStateListener (monitor/app threads) ---------------
+    void onWifiStateChanged(int wifiState) override {
+        cdroid::View* root = mRoot;
+        if (root == nullptr || !mAlive) return;
+        root->post([this, wifiState]{
+            if (!mAlive) return;
+            if (cdroid::Switch* sw =
+                    (cdroid::Switch*)mRoot->findViewById(printerdemo::R::id::sw_wifi)) {
+                mSyncingSwitch = true;   /* keep the echo out of the toggle handler */
+                sw->setChecked(wifiState == WifiManager::WIFI_STATE_ENABLED);
+                mSyncingSwitch = false;
+            }
+            refreshStatus();
+        });
+    }
+
     // --- WifiManager::ActionListener (connect result; called back on the
     //     caller thread for connect(config) — we only call it from the UI) ---
     void onSuccess() override { toast("已连接"); }
@@ -127,6 +146,7 @@ private:
         WifiManager& wifi = WifiManager::getInstance();
         wifi.removeNetworkStateListener(this);
         wifi.removeScanResultsListener(this);
+        wifi.removeWifiStateListener(this);
     }
 
     void doScan() {
@@ -243,6 +263,9 @@ private:
     }
 
     std::atomic<bool> mAlive { false };
+    /* Set while the WifiStateListener drives setChecked, so the toggle
+     * handler ignores the resulting change-callback echo. */
+    bool mSyncingSwitch = false;
     cdroid::View* mRoot = nullptr;
     cdroid::TextView* mState = nullptr;
     cdroid::TextView* mDetail = nullptr;
