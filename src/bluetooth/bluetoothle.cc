@@ -37,7 +37,12 @@ bool BluetoothLeScanner::startScan(const std::vector<ScanFilter>& filters,
                                    const ScanSettings& settings,
                                    ScanCallback* callback) {
     if (callback == nullptr) return false;
-    if (mCallback != nullptr) {
+    bool already = false;
+    {
+        std::lock_guard<std::mutex> lock(mScanMutex);
+        already = mCallback != nullptr;
+    }
+    if (already) {
         callback->onScanFailed(ScanCallback::SCAN_FAILED_ALREADY_STARTED);
         return false;
     }
@@ -52,61 +57,66 @@ bool BluetoothLeScanner::startScan(const std::vector<ScanFilter>& filters,
         callback->onScanFailed(ScanCallback::SCAN_FAILED_INTERNAL_ERROR);
         return false;
     }
-    mFilters = filters;
-    mCallback = callback;
+    {
+        std::lock_guard<std::mutex> lock(mScanMutex);
+        mFilters = filters;
+        mCallback = callback;
+    }
     return true;
 }
 
 bool BluetoothLeScanner::stopScan(ScanCallback* /*callback*/) {
-    if (mCallback == nullptr) return false;
-    mCallback = nullptr;
-    mFilters.clear();
+    {
+        std::lock_guard<std::mutex> lock(mScanMutex);
+        if (mCallback == nullptr) return false;
+        mCallback = nullptr;
+        mFilters.clear();
+    }
     return mAdapter.cancelDiscovery();
 }
 
 void BluetoothLeScanner::onDeviceFound(const BluetoothDevice& device) {
-    if (mCallback == nullptr) return;
-    /* Empty filter list accepts everything (AOSP semantics). */
-    if (mFilters.empty()) {
-        BluezDevice snapshot;
-        int rssi = 0;
-        if (mAdapter.client().findDevice(device.getAddress(), snapshot))
-            rssi = snapshot.rssi;
-        const int64_t now = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                std::chrono::steady_clock::now().time_since_epoch()).count();
-        mCallback->onScanResult(1, ScanResult(device, rssi, now));
-        return;
+    /* Snapshot the scan config under the lock; the (caller-owned)
+     * callback runs outside it. One findDevice serves name/uuids/rssi
+     * — the review's triple-lookup note fixed in passing. */
+    ScanCallback* callback = nullptr;
+    std::vector<ScanFilter> filters;
+    {
+        std::lock_guard<std::mutex> lock(mScanMutex);
+        callback = mCallback;
+        filters = mFilters;
     }
-    for (const ScanFilter& f : mFilters) {
+    if (callback == nullptr) return;
+
+    BluezDevice snapshot;
+    mAdapter.client().findDevice(device.getAddress(), snapshot);
+    const std::string name = snapshot.alias.empty() ? snapshot.name : snapshot.alias;
+    const int rssi = snapshot.rssi;
+    const int64_t now = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+
+    /* Empty filter list accepts everything (AOSP semantics). */
+    bool matched = filters.empty();
+    for (const ScanFilter& f : filters) {
         if (!f.getDeviceAddress().empty()
                 && f.getDeviceAddress() != device.getAddress()) continue;
-        if (!f.getDeviceName().empty()
-                && f.getDeviceName() != device.getName()) continue;
+        if (!f.getDeviceName().empty() && f.getDeviceName() != name) continue;
         if (f.hasServiceUuid()) {
-            /* advertisement service list = the device's cached UUIDs
-             * (simplified ScanRecord); match on string form */
-            BluezDevice snapshot;
-            bool matched = false;
-            if (mAdapter.client().findDevice(device.getAddress(), snapshot)) {
-                for (const std::string& u : snapshot.uuids) {
-                    if (BluetoothUuid::fromString(u) == f.getServiceUuid()) {
-                        matched = true;
-                        break;
-                    }
+            bool uuidMatched = false;
+            for (const std::string& u : snapshot.uuids) {
+                if (BluetoothUuid::fromString(u) == f.getServiceUuid()) {
+                    uuidMatched = true;
+                    break;
                 }
             }
-            if (!matched) continue;
+            if (!uuidMatched) continue;
         }
-        BluezDevice snapshot;
-        int rssi = 0;
-        if (mAdapter.client().findDevice(device.getAddress(), snapshot))
-            rssi = snapshot.rssi;
-        const int64_t now = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                std::chrono::steady_clock::now().time_since_epoch()).count();
-        mCallback->onScanResult(1 /* CALLBACK_TYPE_ALL_MATCHES */,
-                                ScanResult(device, rssi, now));
-        return;   /* first matching filter wins (AOSP semantics) */
+        matched = true;   /* first matching filter wins (AOSP semantics) */
+        break;
     }
+    if (matched)
+        callback->onScanResult(1 /* CALLBACK_TYPE_ALL_MATCHES */,
+                               ScanResult(device, rssi, now));
 }
 
 void BluetoothLeScanner::onDiscoveryFinished() {

@@ -186,6 +186,11 @@ public:
     std::vector<BluezDevice> getDevices() const;
     bool findDevice(const std::string& address, BluezDevice& out) const;
 
+    /* Re-enumerate ObjectManager state into the caches (also public
+     * for BluetoothGatt::discoverServices, which refreshes after the
+     * connect so late-arriving GATT objects are visible). */
+    bool refreshManagedObjects();
+
 private:
     /* pairing notifications collected under the bus lock and fired off
      * it (monitor thread only — see flushDeferredPairing) */
@@ -213,8 +218,6 @@ private:
     void stopMonitor();
     /* one pass over pending bus messages; true when something was handled */
     bool processBus();
-    /* (re)enumerate ObjectManager state into the cache */
-    bool refreshManagedObjects();
     void clearCache();
 
     /* signal handlers (raw sd_bus callbacks forward into these) */

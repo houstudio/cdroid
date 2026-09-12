@@ -2,6 +2,7 @@
 #define __CDROID_BLUETOOTH_GATT_H__
 
 #include <cstdint>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -132,7 +133,10 @@ public:
     void close();
 
     bool discoverServices();
-    std::vector<BluetoothGattService*> getServices() const { return mServices; }
+    std::vector<BluetoothGattService*> getServices() const {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        return mServices;
+    }
     BluetoothGattService* getService(const BluetoothUuid& uuid) const;
 
     bool readCharacteristic(BluetoothGattCharacteristic* characteristic);
@@ -153,6 +157,11 @@ private:
     bool mAutoConnect;
     BluetoothGattCallback* mCallback;
     class BluezClient& mClient;      /* shared transport (via the adapter) */
+    /* Services/state are mutated by the app thread (discoverServices/
+     * close) and read by the monitor thread (notification fan-out):
+     * guarded — the adapter's session list lock protects only the
+     * registry, not the sessions' contents (review's UAF finding). */
+    mutable std::mutex mStateMutex;
     int mConnectionState = STATE_DISCONNECTED;
     std::vector<BluetoothGattService*> mServices;
     bool mClosed = false;

@@ -1,6 +1,7 @@
 #ifndef __CDROID_BLUETOOTH_LE_H__
 #define __CDROID_BLUETOOTH_LE_H__
 
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -122,6 +123,9 @@ private:
 
     BluetoothAdapter& mAdapter;
     void* mBridge = nullptr;   /* ScannerBridge (defined in the .cc) */
+    /* Written by startScan/stopScan (caller thread), read by
+     * onDeviceFound (monitor thread) — guarded (review's UAF). */
+    mutable std::mutex mScanMutex;
     std::vector<ScanFilter> mFilters;
     ScanCallback* mCallback = nullptr;
 public:

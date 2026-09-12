@@ -561,6 +561,7 @@ bool readStringProp(sd_bus_message* m, std::string& out) {
     return true;
 }
 bool readByteArrayProp(sd_bus_message* m, std::vector<uint8_t>& out) {
+    out.clear();   /* replace semantics — signal values are whole values */
     uint8_t v = 0;
     if (sd_bus_message_enter_container(m, 'a', "y") < 0) return false;
     while (sd_bus_message_read_basic(m, 'y', &v) > 0) out.push_back(v);
@@ -568,6 +569,7 @@ bool readByteArrayProp(sd_bus_message* m, std::vector<uint8_t>& out) {
     return true;
 }
 bool readStringArrayProp(sd_bus_message* m, std::vector<std::string>& out) {
+    out.clear();
     const char* s = nullptr;
     if (sd_bus_message_enter_container(m, 'a', "s") < 0) return false;
     while (sd_bus_message_read_basic(m, 's', &s) > 0) out.push_back(s);
@@ -848,7 +850,11 @@ int BluezClient::onInterfacesAddedStatic(sd_bus_message* m, void* userdata,
 }
 
 void BluezClient::handleInterfacesAdded(sd_bus_message* m) {
-    /* oa{sa{sv}} */
+    /* oa{sa{sv}} — one pass collects every interface we track:
+     * Device1 (discovery results), GattService1 and
+     * GattCharacteristic1 (created by Device1.Connect on a real
+     * bluetoothd — dropping them left discoverServices empty, review
+     * finding #2). */
     const char* path = nullptr;
     if (sd_bus_message_read_basic(m, 'o', &path) < 0 || !path) return;
     const std::string objPath = path;
@@ -857,6 +863,10 @@ void BluezClient::handleInterfacesAdded(sd_bus_message* m) {
     BluezDevice dev;
     dev.objectPath = objPath;
     bool isDevice = false;
+    std::string svcUuid;
+    bool isService = false;
+    BluezGattCharacteristic gattChar;
+    bool isCharacteristic = false;
     while (sd_bus_message_enter_container(m, 'e', "sa{sv}") > 0) {
         const char* iface = nullptr;
         sd_bus_message_read_basic(m, 's', &iface);
@@ -870,6 +880,14 @@ void BluezClient::handleInterfacesAdded(sd_bus_message* m) {
             if (ifaceName == kDeviceIface) {
                 isDevice = true;
                 applyDeviceProp(propName, m, dev);
+            } else if (ifaceName == "org.bluez.GattService1") {
+                isService = true;
+                if (propName == "UUID") readStringProp(m, svcUuid);
+                else sd_bus_message_skip(m, nullptr);
+            } else if (ifaceName == "org.bluez.GattCharacteristic1") {
+                isCharacteristic = true;
+                gattChar.objectPath = objPath;
+                applyGattCharProp(propName, m, gattChar);
             } else {
                 sd_bus_message_skip(m, nullptr);
             }
@@ -880,16 +898,32 @@ void BluezClient::handleInterfacesAdded(sd_bus_message* m) {
         sd_bus_message_exit_container(m);
     }
     sd_bus_message_exit_container(m);
-    if (!isDevice || dev.address.empty()) return;
 
-    std::transform(dev.address.begin(), dev.address.end(),
-                   dev.address.begin(), ::toupper);
-    if (dev.alias.empty()) dev.alias = dev.name;
+    if (isDevice && !dev.address.empty()) {
+        std::transform(dev.address.begin(), dev.address.end(),
+                       dev.address.begin(), ::toupper);
+        if (dev.alias.empty()) dev.alias = dev.name;
+        {
+            std::lock_guard<std::mutex> lock(mCacheMutex);
+            mDevices[objPath] = dev;
+        }
+        if (mEvents) mEvents->onDeviceAdded(dev);
+    }
     {
         std::lock_guard<std::mutex> lock(mCacheMutex);
-        mDevices[objPath] = dev;
+        if (isService) {
+            BluezGattService s;
+            s.objectPath = objPath;
+            s.uuid = svcUuid;
+            const size_t pos = objPath.find("/service");
+            s.devicePath = pos == std::string::npos ? std::string()
+                        : objPath.substr(0, pos);
+            mGattServices[objPath] = s;
+        }
+        if (isCharacteristic) {
+            mGattCharacteristics[objPath] = gattChar;
+        }
     }
-    if (mEvents) mEvents->onDeviceAdded(dev);
 }
 
 int BluezClient::onInterfacesRemovedStatic(sd_bus_message* m, void* userdata,
@@ -898,11 +932,31 @@ int BluezClient::onInterfacesRemovedStatic(sd_bus_message* m, void* userdata,
     if (sd_bus_message_read_basic(m, 'o', &path) < 0 || !path) return 0;
     const std::string objPath = path;
     auto* self = static_cast<BluezClient*>(userdata);
+    bool wasDevice = false;
     {
         std::lock_guard<std::mutex> lock(self->mCacheMutex);
-        self->mDevices.erase(objPath);
+        wasDevice = self->mDevices.erase(objPath) > 0;
+        /* GATT objects go with their device — never left stale */
+        self->mGattServices.erase(objPath);
+        self->mGattCharacteristics.erase(objPath);
+        for (auto it = self->mGattServices.begin();
+                it != self->mGattServices.end();) {
+            if (objPath == it->second.devicePath
+                    || it->second.objectPath.rfind(objPath + "/", 0) == 0)
+                it = self->mGattServices.erase(it);
+            else
+                ++it;
+        }
+        for (auto it = self->mGattCharacteristics.begin();
+                it != self->mGattCharacteristics.end();) {
+            if (it->second.objectPath.rfind(objPath + "/", 0) == 0
+                    || it->second.servicePath.rfind(objPath + "/", 0) == 0)
+                it = self->mGattCharacteristics.erase(it);
+            else
+                ++it;
+        }
     }
-    if (self->mEvents) self->mEvents->onDeviceRemoved(objPath);
+    if (wasDevice && self->mEvents) self->mEvents->onDeviceRemoved(objPath);
     return 0;
 }
 

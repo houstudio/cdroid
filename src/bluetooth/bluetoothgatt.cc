@@ -54,26 +54,36 @@ BluetoothGatt::~BluetoothGatt() {
 }
 
 void BluetoothGatt::close() {
-    if (mClosed) return;
-    mClosed = true;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (mClosed) return;
+        mClosed = true;
+    }
+    /* unregister first so no NEW fan-out starts, then take the state
+     * lock (a monitor already past the registry may still be inside
+     * onCharacteristicChangedInternal — the lock serializes it) */
     BluetoothAdapter::getDefaultAdapter().unregisterGattSession(this);
+    std::lock_guard<std::mutex> lock(mStateMutex);
     for (BluetoothGattService* s : mServices) delete s;
     mServices.clear();
 }
 
 bool BluetoothGatt::connect() {
     if (mClosed) return false;
-    mConnectionState = STATE_CONNECTING;
+    {std::lock_guard<std::mutex> lock(mStateMutex);
+     mConnectionState = STATE_CONNECTING;}
     if (mCallback)
         mCallback->onConnectionStateChange(this, GATT_SUCCESS, STATE_CONNECTING);
     if (!mClient.connectDevice(mDevice.getAddress())) {
-        mConnectionState = STATE_DISCONNECTED;
+        {std::lock_guard<std::mutex> lock(mStateMutex);
+         mConnectionState = STATE_DISCONNECTED;}
         if (mCallback)
             mCallback->onConnectionStateChange(this, GATT_FAILURE,
                                                STATE_DISCONNECTED);
         return false;
     }
-    mConnectionState = STATE_CONNECTED;
+    {std::lock_guard<std::mutex> lock(mStateMutex);
+     mConnectionState = STATE_CONNECTED;}
     BluetoothAdapter::getDefaultAdapter().registerGattSession(this);
     if (mCallback)
         mCallback->onConnectionStateChange(this, GATT_SUCCESS,
@@ -84,18 +94,28 @@ bool BluetoothGatt::connect() {
 void BluetoothGatt::disconnect() {
     if (mClosed) return;
     mClient.disconnectDevice(mDevice.getAddress());
-    mConnectionState = STATE_DISCONNECTED;
+    {std::lock_guard<std::mutex> lock(mStateMutex);
+     mConnectionState = STATE_DISCONNECTED;}
     if (mCallback)
         mCallback->onConnectionStateChange(this, GATT_SUCCESS,
                                            STATE_DISCONNECTED);
 }
 
 bool BluetoothGatt::discoverServices() {
-    if (mClosed || mConnectionState != STATE_CONNECTED) return false;
-    for (BluetoothGattService* s : mServices) delete s;
-    mServices.clear();
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (mClosed || mConnectionState != STATE_CONNECTED) return false;
+        for (BluetoothGattService* s : mServices) delete s;
+        mServices.clear();
+    }
     /* BlueZ resolves the GATT tree during Connect; enumerate what the
      * cache holds for this device now. */
+    /* A snapshot refresh first: GATT objects created by Device1.Connect
+     * arrive as InterfacesAdded — the cache keeps up now, and an explicit
+     * refresh covers objects that predate the signal wiring (review #2). */
+    mClient.refreshManagedObjects();
+    {
+    std::lock_guard<std::mutex> lock(mStateMutex);
     for (const BluezGattService& svc : mClient.getGattServices(
             mDevice.getAddress())) {
         auto* service = new BluetoothGattService(
@@ -123,11 +143,14 @@ bool BluetoothGatt::discoverServices() {
         }
         mServices.push_back(service);
     }
+    }   /* mStateMutex released before the callback: listeners call
+        * getServices()/getCharacteristics() and would self-deadlock */
     if (mCallback) mCallback->onServicesDiscovered(this, GATT_SUCCESS);
     return true;
 }
 
 BluetoothGattService* BluetoothGatt::getService(const BluetoothUuid& uuid) const {
+    std::lock_guard<std::mutex> lock(mStateMutex);
     for (BluetoothGattService* s : mServices) {
         if (s->getUuid() == uuid) return s;
     }
@@ -174,6 +197,8 @@ bool BluetoothGatt::setCharacteristicNotification(
 
 void BluetoothGatt::onCharacteristicChangedInternal(
         const std::string& objectPath, const std::vector<uint8_t>& value) {
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    if (mClosed) return;
     for (BluetoothGattService* s : mServices) {
         for (BluetoothGattCharacteristic* c : s->mCharacteristics) {
             if (c->mObjectPath == objectPath) {
