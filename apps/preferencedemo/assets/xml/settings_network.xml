@@ -5,6 +5,11 @@
     android:key="network_and_internet_screen"
     android:title="Network &amp; internet">
 
+    <Preference
+        android:key="ip_address"
+        android:title="IP 地址"
+        android:summary="点按查看网络详情" />
+
     <SwitchPreference
         android:key="wifi_enabled"
         android:title="Wi&#8209;Fi"
@@ -15,9 +20,15 @@
     <Preference
         android:key="wifi_status"
         android:title="Wi&#8209;Fi status"
-        android:summary="Connected to AndroidAP"
+        android:summary="…"
         android:dependency="wifi_enabled"
         android:selectable="false" />
+
+    <Preference
+        android:key="wifi_pick"
+        android:title="选择网络"
+        android:summary="扫描可用网络并连接"
+        android:dependency="wifi_enabled" />
 
     <ListPreference
         android:key="wifi_sleep_policy"

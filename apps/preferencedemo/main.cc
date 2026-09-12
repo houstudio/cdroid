@@ -28,6 +28,16 @@
 #include <app/alertdialog.h>
 #include <app/dialoginterface.h>
 #include <widget/toast.h>
+#include <widget/scrollview.h>
+#include <connectivitymanager.h>          // cdnet: aggregation + DhcpInfo views
+#include <ethernet/ethernetmanager.h>
+#include <dhcpinfo.h>
+#include <ipconfiguration.h>
+#include <wifi/wifimanager.h>
+#include <wifi/scanresult.h>
+#include <wifi/wifiinfo.h>
+#include <wifi/wificonfiguration.h>
+#include <cstdlib>
 #include <widget/linearlayout.h>
 #include <widget/textview.h>
 #include <porting/cdlog.h>
@@ -78,7 +88,8 @@ int screenXmlFor(const std::string& key) {
 
 class SettingsActivity;
 
-class SettingsFragment : public PreferenceFragment {
+class SettingsFragment : public PreferenceFragment,
+                          public cdroid::WifiManager::NetworkStateListener {
 public:
     void onCreatePreferences(cdroid::Bundle* /*savedInstanceState*/,
             const std::string& rootKey) override {
@@ -112,6 +123,8 @@ public:
             LOGD("[settings] loaded root=%s items=%d", rootKey.empty() ? "<root>" : rootKey.c_str(),
                  getPreferenceScreen()->getPreferenceCount());
         }
+        if (rootKey == "screen_network") setupNetworkScreen();
+
         if (rootKey == "screen_accessibility") {
             auto* cat = dynamic_cast<cdroid::PreferenceGroup*>(
                     findPreference("category_accessibility_interaction"));
@@ -131,6 +144,28 @@ public:
             sCycleHandler.postDelayed([this]() { cycleStep(0); }, 4000);
         }
     }
+
+    void onDestroy() override {
+        mNetAlive = false;
+        cdroid::WifiManager::getInstance().removeNetworkStateListener(this);
+        PreferenceFragment::onDestroy();
+    }
+
+    // --- Network & internet screen (cdnet: WifiManager + EthernetManager) --
+    // Everything below runs on the main thread except the WifiManager
+    // callback, which marshals through a file-local main-looper Handler.
+    void setupNetworkScreen();
+    void refreshWifiStatus();
+    void refreshIpSummary();
+    void showWifiPicker();
+    void showNetworkDetails();
+    void buildEthernetSection();
+    static std::string ipToString(uint32_t ip);
+    static std::string networkDetailsText();
+    bool mNetAlive = false;
+
+    // WifiManager::NetworkStateListener (monitor thread).
+    void onNetworkStateChanged(const cdroid::WifiInfo&) override;
 
     /** AUTOCYCLE walker (see onCreatePreferences). Each step is a fresh
      *  lambda capturing values only — no self-referencing runnable. */
@@ -280,6 +315,319 @@ public:
         b->create()->show();
     }
 };
+
+// --- Network & internet screen (cdnet) --------------------------------------
+
+std::string SettingsFragment::ipToString(uint32_t ip) {
+    if (!ip) return std::string();
+    // WifiInfo's int is little-endian packed (AOSP): first octet = low byte.
+    return std::to_string(ip & 0xff) + "." + std::to_string((ip >> 8) & 0xff)
+         + "." + std::to_string((ip >> 16) & 0xff) + "." + std::to_string((ip >> 24) & 0xff);
+}
+
+std::string SettingsFragment::networkDetailsText() {
+    std::string text;
+    cdroid::NetworkInfo ni =
+        cdroid::ConnectivityManager::getInstance().getActiveNetworkInfo();
+    text += "活动网络: " + (ni.isConnected() ? ni.getTypeName() + " 已连接"
+                                             : ni.getTypeName() + " 未连接");
+    if (!ni.getExtraInfo().empty()) text += "  (" + ni.getExtraInfo() + ")";
+    text += "\n";
+
+    cdroid::WifiManager& wifi = cdroid::WifiManager::getInstance();
+    text += std::string("\nWi-Fi  ") + (wifi.isWifiEnabled() ? "开" : "关");
+    if (wifi.isWifiEnabled()) {
+        cdroid::WifiInfo info = wifi.getConnectionInfo();
+        const std::string ip = ipToString((uint32_t)info.getIpAddress());
+        const std::string ssid = info.getSSID();
+        text += std::string("\n  IP ") + (ip.empty() ? "未获取" : ip)
+              + "   信号 " + std::to_string(info.getRssi()) + " dBm"
+              + "\n  BSSID " + info.getBSSID()
+              + "   MAC " + info.getMacAddress();
+        if (!ssid.empty()) text += "\n  SSID " + ssid;
+    }
+
+    cdroid::EthernetManager& em = cdroid::EthernetManager::getInstance();
+    const std::vector<std::string> ifaces = em.getAvailableInterfaces();
+    text += "\n以太网";
+    if (ifaces.empty()) {
+        text += "\n  (无可用接口)";
+    } else {
+        for (const std::string& iface : ifaces) {
+            const cdroid::DhcpInfo d = em.getDhcpInfo(iface);
+            const std::string ip = cdroid::DhcpInfo::intToStr(d.ipAddress);
+            text += "\n  " + iface + (em.isAvailable(iface) ? "  up" : "  down")
+                  + "\n    IP " + (ip.empty() || ip == "0.0.0.0" ? "未获取" : ip)
+                  + "  掩码 " + cdroid::DhcpInfo::intToStr(d.netmask)
+                  + "  网关 " + cdroid::DhcpInfo::intToStr(d.gateway)
+                  + "\n    DNS " + cdroid::DhcpInfo::intToStr(d.dns1)
+                  + (d.dns2 ? (" / " + cdroid::DhcpInfo::intToStr(d.dns2)) : std::string())
+                  + "  服务器 " + cdroid::DhcpInfo::intToStr(d.serverAddress)
+                  + "  租约 " + std::to_string(d.leaseDuration) + "s";
+        }
+    }
+    return text;
+}
+
+void SettingsFragment::onNetworkStateChanged(const cdroid::WifiInfo&) {
+    // Supplicant monitor thread -> main looper (the preference UI lives there).
+    if (!mNetAlive) return;
+    static cdroid::Handler sNetHandler(cdroid::Looper::getMainLooper());
+    sNetHandler.post([this]{
+        if (!mNetAlive) return;
+        refreshWifiStatus();
+        refreshIpSummary();
+    });
+}
+
+void SettingsFragment::setupNetworkScreen() {
+    mNetAlive = true;
+    // The transport binds the library default (SupplicantClient::
+    // defaultCtrlPath: WPA_CTRL_PATH if set, else the system socket) and
+    // starts the event pump; idempotent.
+    cdroid::WifiManager& wifi = cdroid::WifiManager::getInstance();
+    wifi.initialize();
+    wifi.addNetworkStateListener(this);
+    if (wifi.isWifiEnabled()) wifi.startScan();   // warm the scan cache
+
+    if (auto* sw = dynamic_cast<cdroid::SwitchPreference*>(findPreference("wifi_enabled"))) {
+        sw->setChecked(wifi.isWifiEnabled());
+        sw->setOnPreferenceChangeListener(
+                [this](cdroid::Preference&, const nonstd::any& newValue) {
+            cdroid::WifiManager::getInstance().setWifiEnabled(nonstd::any_cast<bool>(newValue));
+            refreshWifiStatus();
+            refreshIpSummary();
+            return true;
+        });
+    }
+    if (cdroid::Preference* pick = findPreference("wifi_pick")) {
+        pick->setOnPreferenceClickListener([this](cdroid::Preference&) {
+            showWifiPicker();
+            return true;
+        });
+    }
+    if (cdroid::Preference* ip = findPreference("ip_address")) {
+        ip->setOnPreferenceClickListener([this](cdroid::Preference&) {
+            showNetworkDetails();
+            return true;
+        });
+    }
+    refreshWifiStatus();
+    refreshIpSummary();
+    buildEthernetSection();
+}
+
+void SettingsFragment::refreshWifiStatus() {
+    cdroid::Preference* status = findPreference("wifi_status");
+    if (status == nullptr) return;
+    cdroid::WifiManager& wifi = cdroid::WifiManager::getInstance();
+    if (!wifi.isWifiEnabled()) { status->setSummary("Off"); return; }
+    cdroid::WifiInfo info = wifi.getConnectionInfo();
+    const std::string ssid = info.getSSID();
+    if (ssid.empty() || ssid == cdroid::WifiManager::UNKNOWN_SSID) {
+        status->setSummary("未连接");
+        return;
+    }
+    const std::string ip = ipToString((uint32_t)info.getIpAddress());
+    status->setSummary(ssid + "  " + std::to_string(info.getRssi()) + " dBm  "
+                       + (ip.empty() ? "IP 未获取" : ip));
+}
+
+void SettingsFragment::refreshIpSummary() {
+    cdroid::Preference* p = findPreference("ip_address");
+    if (p == nullptr) return;
+    cdroid::NetworkInfo ni =
+        cdroid::ConnectivityManager::getInstance().getActiveNetworkInfo();
+    if (!ni.isConnected()) { p->setSummary("未连接"); return; }
+    if (ni.getType() == cdroid::ConnectivityManager::TYPE_WIFI) {
+        const std::string ip = ipToString((uint32_t)cdroid::WifiManager::getInstance()
+                                              .getConnectionInfo().getIpAddress());
+        p->setSummary("Wi-Fi · " + (ip.empty() ? "IP 未获取" : ip));
+    } else if (ni.getType() == cdroid::ConnectivityManager::TYPE_ETHERNET) {
+        std::string s = "以太网";
+        cdroid::EthernetManager& em = cdroid::EthernetManager::getInstance();
+        for (const std::string& iface : em.getAvailableInterfaces()) {
+            const std::string ip =
+                cdroid::DhcpInfo::intToStr(em.getDhcpInfo(iface).ipAddress);
+            if (!ip.empty() && ip != "0.0.0.0") { s += " · " + ip; break; }
+        }
+        p->setSummary(s);
+    } else {
+        p->setSummary(ni.getTypeName());
+    }
+}
+
+void SettingsFragment::showWifiPicker() {
+    cdroid::Context* ctx = requireContext();
+    if (ctx == nullptr) return;
+    std::vector<cdroid::ScanResult> results =
+        cdroid::WifiManager::getInstance().getScanResults();
+    std::sort(results.begin(), results.end(),
+              [](const cdroid::ScanResult& a, const cdroid::ScanResult& b) {
+                  return a.level > b.level;
+              });
+    // Hidden APs (empty SSID) are out of scope for the trial.
+    std::vector<cdroid::ScanResult> kept;
+    for (const cdroid::ScanResult& r : results) if (!r.SSID.empty()) kept.push_back(r);
+    if (kept.empty()) {
+        // The supplicant's cache can be empty (fresh daemon, or the ctrl
+        // connection just recovered) — fire a scan so the retry has data.
+        cdroid::WifiManager::getInstance().startScan();
+        cdroid::Toast::makeText(ctx, "无扫描结果,已触发扫描,请稍后重试",
+                                cdroid::Toast::LENGTH_SHORT)->show();
+        return;
+    }
+
+    // Rows built in code (the same shape the printerdemo Wi-Fi page uses):
+    // one TextView per ScanResult, wired for the connect flow below.
+    auto* list = new cdroid::LinearLayout(ctx);
+    list->setOrientation(cdroid::LinearLayout::VERTICAL);
+    cdroid::AlertDialog* dialog = cdroid::AlertDialog::Builder(ctx)
+        .setTitle("选择网络")
+        .setView(list)
+        .setNegativeButton("取消", [](cdroid::DialogInterface&, int) {})
+        .create();
+    for (const cdroid::ScanResult& r : kept) {
+        const bool secured = r.capabilities.find("WPA") != std::string::npos
+                          || r.capabilities.find("WEP") != std::string::npos
+                          || r.capabilities.find("SAE") != std::string::npos;
+        auto* row = new cdroid::TextView(ctx);
+        row->setText(r.SSID + (secured ? "  🔒" : "") + "   "
+                     + std::to_string(r.level) + " dBm");
+        row->setTextSize(15);
+        row->setPadding(48, 28, 48, 28);
+        row->setClickable(true);
+        row->setOnClickListener([this, r, secured, dialog](cdroid::View&) {
+            dialog->dismiss();
+            cdroid::WifiConfiguration cfg;
+            cfg.SSID = "\"" + r.SSID + "\"";
+            if (!secured) {
+                cdroid::WifiManager::getInstance().connect(cfg, nullptr);
+                cdroid::Toast::makeText(requireContext(), "连接 " + r.SSID + " …",
+                                        cdroid::Toast::LENGTH_SHORT)->show();
+                return;
+            }
+            cdroid::Context* c = requireContext();
+            if (c == nullptr) return;
+            auto* input = new cdroid::EditText(c);
+            input->setHint("密码");
+            cdroid::AlertDialog::Builder(c)
+                .setTitle("连接 " + r.SSID)
+                .setView(input)
+                .setPositiveButton("连接",
+                    [this, input, cfg](cdroid::DialogInterface&, int) {
+                    cdroid::WifiConfiguration withPsk = cfg;
+                    withPsk.preSharedKey = "\"" + std::string(input->getText()) + "\"";
+                    cdroid::WifiManager::getInstance().connect(withPsk, nullptr);
+                    cdroid::Toast::makeText(requireContext(), "连接 …",
+                                            cdroid::Toast::LENGTH_SHORT)->show();
+                })
+                .setNegativeButton("取消", [](cdroid::DialogInterface&, int) {})
+                .show();
+        });
+        list->addView(row);
+    }
+    dialog->show();
+}
+
+void SettingsFragment::showNetworkDetails() {
+    cdroid::Context* ctx = requireContext();
+    if (ctx == nullptr) return;
+    auto* body = new cdroid::TextView(ctx);
+    body->setText(networkDetailsText());
+    body->setTextSize(13);
+    body->setPadding(48, 36, 48, 8);
+    auto* scroll = new cdroid::ScrollView(ctx);
+    scroll->addView(body);
+    cdroid::AlertDialog::Builder(ctx)
+        .setTitle("网络详情")
+        .setView(scroll)
+        .setPositiveButton("确定", [](cdroid::DialogInterface&, int) {})
+        .show();
+}
+
+void SettingsFragment::buildEthernetSection() {
+    cdroid::PreferenceScreen* screen = getPreferenceScreen();
+    if (screen == nullptr) return;
+    cdroid::EthernetManager& em = cdroid::EthernetManager::getInstance();
+    const std::vector<std::string> ifaces = em.getAvailableInterfaces();
+    if (ifaces.empty()) return;   // no ethernet section without interfaces
+    cdroid::Context& ctx = *requireContext();
+
+    for (const std::string& iface : ifaces) {
+        auto* cat = new cdroid::PreferenceCategory(ctx);
+        cat->setKey("eth_cat_" + iface);
+        cat->setTitle("以太网 " + iface);
+        screen->addPreference(cat);
+
+        auto* status = new cdroid::Preference(ctx);
+        status->setKey("eth_status_" + iface);
+        status->setTitle("状态");
+        status->setSelectable(false);
+        const cdroid::DhcpInfo d = em.getDhcpInfo(iface);
+        status->setSummary(std::string(em.isAvailable(iface) ? "up" : "down")
+                + "  IP " + cdroid::DhcpInfo::intToStr(d.ipAddress)
+                + "  掩码 " + cdroid::DhcpInfo::intToStr(d.netmask)
+                + "  网关 " + cdroid::DhcpInfo::intToStr(d.gateway));
+        cat->addPreference(status);
+
+        auto* mode = new cdroid::ListPreference(ctx);
+        mode->setKey("eth_mode_" + iface);
+        mode->setTitle("IP 模式");
+        mode->setEntries({"DHCP", "静态"});
+        mode->setEntryValues({"dhcp", "static"});
+        mode->setValue(em.getConfiguration(iface).getIpAssignment()
+                       == cdroid::IpConfiguration::IpAssignment::STATIC ? "static" : "dhcp");
+        mode->setSummary(mode->getValue() == "static" ? "静态" : "DHCP");
+        cat->addPreference(mode);
+
+        static const char* kTitles[5] = {"IP 地址(静态)", "前缀长度", "网关", "DNS 1", "DNS 2"};
+        static const char* kHints[5]   = {"192.168.1.10", "24", "192.168.1.1", "192.168.1.1", "8.8.8.8"};
+        cdroid::EditTextPreference* fields[5];
+        for (int i = 0; i < 5; i++) {
+            fields[i] = new cdroid::EditTextPreference(ctx);
+            fields[i]->setKey("eth_" + iface + "_f" + std::to_string(i));
+            fields[i]->setTitle(kTitles[i]);
+            fields[i]->setText("");
+            fields[i]->setSummary(std::string("如 ") + kHints[i]);
+            cat->addPreference(fields[i]);
+        }
+
+        auto* apply = new cdroid::Preference(ctx);
+        apply->setKey("eth_apply_" + iface);
+        apply->setTitle("应用配置");
+        cdroid::ListPreference* m = mode;
+        cdroid::EditTextPreference* fip = fields[0];
+        cdroid::EditTextPreference* fpx = fields[1];
+        cdroid::EditTextPreference* fgw = fields[2];
+        cdroid::EditTextPreference* fd1 = fields[3];
+        cdroid::EditTextPreference* fd2 = fields[4];
+        apply->setOnPreferenceClickListener(
+                [this, iface, m, fip, fpx, fgw, fd1, fd2](cdroid::Preference&) {
+            cdroid::IpConfiguration cfg;
+            if (m->getValue() == "static") {
+                cdroid::StaticIpConfiguration sc;
+                sc.setIpAddress(cdroid::LinkAddress(fip->getText() + "/" + fpx->getText()));
+                sc.setGateway(fgw->getText());
+                std::vector<std::string> dns;
+                if (!fd1->getText().empty()) dns.push_back(fd1->getText());
+                if (!fd2->getText().empty()) dns.push_back(fd2->getText());
+                sc.setDnsServers(dns);
+                cfg.setStaticIpConfiguration(sc);
+                cfg.setIpAssignment(cdroid::IpConfiguration::IpAssignment::STATIC);
+            } else {
+                cfg.setIpAssignment(cdroid::IpConfiguration::IpAssignment::DHCP);
+            }
+            cfg.setProxySettings(cdroid::IpConfiguration::ProxySettings::NONE);
+            cdroid::EthernetManager::getInstance().setConfiguration(iface, cfg);
+            cdroid::Toast::makeText(requireContext(),
+                    "已下发 " + iface + " 配置(接口写操作需要相应权限)",
+                    cdroid::Toast::LENGTH_SHORT)->show();
+            return true;
+        });
+        cat->addPreference(apply);
+    }
+}
 
 void SettingsFragment::cycleStep(int index) {
     // File-local main-looper handler: PreferenceFragment::mHandler is private.
