@@ -1,6 +1,7 @@
 /* Port of android.net.wifi.SupplicantState (android-36). */
 #include <wifi/supplicantstate.h>
 
+#include <cstdlib>
 #include <stdexcept>
 
 namespace cdroid {
@@ -81,6 +82,19 @@ bool SupplicantState::isDriverActive(State state) {
 }
 
 SupplicantState::State SupplicantState::fromString(const std::string& name) {
+    /* CTRL-EVENT-STATE-CHANGE carries the numeric wpa_states value
+     * (ctrl_iface.c: "id=%d state=%d ..."), and that enum (defs.h) shares
+     * its first ten values with this one, in the same order. */
+    if (!name.empty() && name.find_first_not_of("0123456789") == std::string::npos) {
+        const long value = strtol(name.c_str(), nullptr, 10);
+        if (value < 0 || value > COMPLETED)
+            throw std::invalid_argument("Unknown supplicant state: " + name);
+        return static_cast<State>(value);
+    }
+    /* wpa_supplicant_state_txt() spells the 4-way state "4WAY_HANDSHAKE"
+     * (STATUS wpa_state=); STATUS of an older daemon shape aside, this is
+     * the only wire spelling that differs from the enum names. */
+    if (name == "4WAY_HANDSHAKE") return FOUR_WAY_HANDSHAKE;
     for (int i = 0; i < kStateCount; i++) {
         if (name == kStateNames[i]) return static_cast<State>(i);
     }

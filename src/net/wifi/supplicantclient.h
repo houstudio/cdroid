@@ -2,6 +2,7 @@
 #define __SUPPLICANT_CLIENT_H__
 
 #include <atomic>
+#include <condition_variable>
 #include <functional>
 #include <mutex>
 #include <string>
@@ -99,6 +100,8 @@ private:
     void monitorLoop();
     bool openConnections();
     void closeConnections();
+    /* Releases the monitor thread's claim on mMonitor (see mMonitorInUse). */
+    void releaseMonitorClaim();
     void dispatch(std::function<void()> runnable);
 
     std::string mCtrlPath;
@@ -106,6 +109,15 @@ private:
     struct wpa_ctrl* mMonitor;
     std::mutex mCtrlMutex;      /* serializes every wpa_ctrl_request */
     std::mutex mCallbackMutex;  /* callback/dispatcher vs monitor thread */
+    /* The monitor thread uses mMonitor (select/recv) outside mCtrlMutex;
+     * closeConnections() must not free the handle under it. The monitor
+     * thread sets mMonitorInUse while inside that window (claim taken under
+     * mCtrlMutex, released without it), and closeConnections() waits for the
+     * claim before closing — bounded by the 300 ms select timeout + one
+     * recv. Lock order: mCtrlMutex -> mMonitorUseMutex, never reversed. */
+    std::mutex mMonitorUseMutex;
+    std::condition_variable mMonitorIdleCv;
+    bool mMonitorInUse = false;
     std::thread mMonitorThread;
     std::atomic<bool> mRunning;
     std::atomic<bool> mConnected;

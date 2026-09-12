@@ -90,6 +90,7 @@ bool WifiSsid::operator!=(const WifiSsid& other) const {
 std::string WifiSsid::decodeSsid(const std::string& bytes) {
     std::string out;
     size_t i = 0;
+    size_t chars = 0;   /* the CharBuffer counts chars, not bytes */
     while (i < bytes.size()) {
         const unsigned char b0 = static_cast<unsigned char>(bytes[i]);
         if (b0 < 0x80) {
@@ -122,7 +123,10 @@ std::string WifiSsid::decodeSsid(const std::string& bytes) {
         } else {
             return std::string();
         }
-        if (out.size() >= 32) break;  /* CharBuffer.allocate(32) cap */
+        /* CharBuffer.allocate(32) cap, in decoded characters: multibyte
+         * sequences count as one char each (OVERFLOW is success, the extra
+         * input is simply left undecoded). */
+        if (++chars >= 32) break;
     }
     return out;
 }

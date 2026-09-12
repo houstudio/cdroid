@@ -26,8 +26,13 @@ static constexpr int IE_HT_OP       = 61;
 static constexpr int IE_RSN         = 48;
 static constexpr int IE_VHT_CAP     = 191;
 static constexpr int IE_VHT_OP      = 192;
-static constexpr int IE_HE_CAP      = 232;
-static constexpr int IE_EHT_CAP     = 255;
+/* HE/EHT capabilities ride the extension element: id 255 whose first body
+ * byte is the extension id (kernel uapi ieee80211.h: WLAN_EID_EXTENSION=255,
+ * WLAN_EID_EXT_HE_CAPABILITY=35, WLAN_EID_EXT_EHT_CAPABILITY=106; element
+ * 232 is S1G Operation, not HE). */
+static constexpr int IE_EXTENSION   = 255;
+static constexpr int EXT_HE_CAP     = 35;
+static constexpr int EXT_EHT_CAP    = 106;
 
 static const unsigned char OUI_MICROSOFT_WPA[] = {0x00, 0x50, 0xf2, 0x01};
 
@@ -83,6 +88,16 @@ static const ScanResult::InformationElement* findIe(
         const std::vector<ScanResult::InformationElement>& ies, int id) {
     for (const auto& element : ies)
         if (element.id == id) return &element;
+    return nullptr;
+}
+
+/* Extension element lookup: id 255 whose first body byte is the extension
+ * id (the payload after that byte belongs to the extension). */
+static const ScanResult::InformationElement* findExtIe(
+        const std::vector<ScanResult::InformationElement>& ies, int extId) {
+    for (const auto& element : ies)
+        if (element.id == IE_EXTENSION && !element.bytes.empty()
+                && element.bytes[0] == extId) return &element;
     return nullptr;
 }
 
@@ -166,7 +181,9 @@ void Nl80211Radio::applyScanEnhancements(ScanResult& result) {
         result.wifiSsid = WifiSsid::fromBytes(
                 std::string(reinterpret_cast<const char*>(ssid->bytes.data()),
                             ssid->bytes.size()));
-        result.SSID = result.wifiSsid.toString();
+        /* plain text (ScanResult.java:1706-1713): the quoted form lives in
+         * WifiConfiguration.SSID / WifiSsid::toString, not here. */
+        result.SSID = ScanResult::displaySsid(result.wifiSsid);
     }
     /* channel width: HT operation secondary offset then the VHT operation
      * width field (AOSP InformationElementUtil derivation). */
@@ -190,9 +207,10 @@ void Nl80211Radio::applyScanEnhancements(ScanResult& result) {
             result.centerFreq1 = seg1 * 5;
         }
     }
-    /* standard from the presence of capability elements, newest first */
-    if (findIe(ies, IE_EHT_CAP)) result.mWifiStandard = ScanResult::WIFI_STANDARD_11BE;
-    else if (findIe(ies, IE_HE_CAP)) result.mWifiStandard = ScanResult::WIFI_STANDARD_11AX;
+    /* standard from the presence of capability elements, newest first;
+     * HE/EHT are extension elements (255 + ext id), never bare elements. */
+    if (findExtIe(ies, EXT_EHT_CAP)) result.mWifiStandard = ScanResult::WIFI_STANDARD_11BE;
+    else if (findExtIe(ies, EXT_HE_CAP)) result.mWifiStandard = ScanResult::WIFI_STANDARD_11AX;
     else if (findIe(ies, IE_VHT_CAP)) result.mWifiStandard = ScanResult::WIFI_STANDARD_11AC;
     else if (findIe(ies, IE_HT_CAP)) result.mWifiStandard = ScanResult::WIFI_STANDARD_11N;
     else result.mWifiStandard = ScanResult::WIFI_STANDARD_LEGACY;
@@ -207,7 +225,10 @@ Nl80211Radio::~Nl80211Radio() {
 }
 
 int Nl80211Radio::resolveFamilyId() {
-    unsigned char buffer[512];
+    /* The GETFAMILY reply embeds the full nl80211 policy and runs a few KB
+     * on a stock kernel (2.3KB observed); buffer for it and never trust
+     * nlmsg_len beyond the bytes actually received. */
+    unsigned char buffer[8192];
     memset(buffer, 0, sizeof(buffer));
     auto* nlh = reinterpret_cast<struct nlmsghdr*>(buffer);
     nlh->nlmsg_type = GENL_ID_CTRL;
@@ -226,6 +247,9 @@ int Nl80211Radio::resolveFamilyId() {
     const ssize_t len = recv(mSock, buffer, sizeof(buffer), 0);
     if (len <= 0) return -1;
     const auto* reply = reinterpret_cast<const struct nlmsghdr*>(buffer);
+    /* NLMSG_OK bounds nlmsg_len by the received length: a truncated reply
+     * (nlmsg_len > len) is rejected instead of walked off the buffer. */
+    if (!NLMSG_OK(reply, static_cast<int>(len))) return -1;
     if (reply->nlmsg_type == NLMSG_ERROR) return -1;
     const auto* replyGenl = static_cast<const struct genlmsghdr*>(NLMSG_DATA(reply));
     const size_t attrLen = reply->nlmsg_len - NLMSG_HDRLEN - GENL_HDRLEN;

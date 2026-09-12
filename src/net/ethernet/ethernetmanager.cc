@@ -88,12 +88,16 @@ bool EthernetManager::readInterfaceState(const std::string& iface, InterfaceStat
 
 std::vector<std::string> EthernetManager::getAvailableInterfaces() {
     std::vector<std::string> result;
+    const std::shared_ptr<const std::regex> pattern = [&]() {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        return mInterfacePattern;
+    }();
     struct ifaddrs* ifap = nullptr;
     if (getifaddrs(&ifap) != 0) return result;
     std::map<std::string, bool> up;
     for (struct ifaddrs* ifa = ifap; ifa; ifa = ifa->ifa_next) {
         const std::string name = ifa->ifa_name;
-        if (!std::regex_search(name, mInterfacePattern)) continue;
+        if (!std::regex_search(name, *pattern)) continue;
         if (up.find(name) == up.end())
             up[name] = (ifa->ifa_flags & (IFF_UP | IFF_LOWER_UP)) == (IFF_UP | IFF_LOWER_UP);
         else if ((ifa->ifa_flags & (IFF_UP | IFF_LOWER_UP)) == (IFF_UP | IFF_LOWER_UP))
@@ -130,7 +134,9 @@ void EthernetManager::setConfiguration(const std::string& iface, const IpConfigu
     }
     persistConfiguration(iface, config);
     if (config.getIpAssignment() == IpConfiguration::IpAssignment::DHCP) {
-        applyStaticConfiguration(iface, StaticIpConfiguration()); /* clear addr */
+        /* The old static address/route/DNS must not ride along into the
+         * DORA window — the real teardown, not an empty apply. */
+        clearIpConfiguration(iface);
         startDhcp(iface);
     } else if (config.getIpAssignment() == IpConfiguration::IpAssignment::STATIC) {
         stopDhcp(iface);
@@ -289,12 +295,16 @@ void EthernetManager::onAddressChanged(const std::string&, bool, const std::stri
 }
 
 void EthernetManager::refreshAndNotify() {
+    const std::shared_ptr<const std::regex> pattern = [&]() {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        return mInterfacePattern;
+    }();
     struct ifaddrs* ifap = nullptr;
     if (getifaddrs(&ifap) != 0) return;
     std::map<std::string, InterfaceSnapshot> current;
     for (struct ifaddrs* ifa = ifap; ifa; ifa = ifa->ifa_next) {
         const std::string name = ifa->ifa_name;
-        if (!std::regex_search(name, mInterfacePattern)) continue;
+        if (!std::regex_search(name, *pattern)) continue;
         InterfaceSnapshot& snapshot = current[name];
         snapshot.available = snapshot.available
                 || (ifa->ifa_flags & (IFF_UP | IFF_LOWER_UP)) == (IFF_UP | IFF_LOWER_UP);
@@ -311,6 +321,14 @@ void EthernetManager::refreshAndNotify() {
                     || known->second.available != entry.second.available
                     || known->second.hasAddress != entry.second.hasAddress)
                 changes[entry.first] = entry.second.available;
+        }
+        /* Interfaces absent from the sweep (netdev unregistered — USB dongle
+         * unplugged) never appear in `current`: surface them as unavailable
+         * too, or listeners keep the stale available=true state (AOSP's
+         * EthernetManager.Listener contract requires the false call). */
+        for (const auto& known : mLastSnapshots) {
+            if (current.find(known.first) == current.end())
+                changes[known.first] = false;
         }
         mLastSnapshots = current;
     }
@@ -329,17 +347,22 @@ void EthernetManager::pollLoop() {
 /* --- tuning knobs ----------------------------------------------------------- */
 
 void EthernetManager::setInterfacePattern(const std::string& pattern) {
+    /* Compile first: a regex_error leaves the previous pattern in place. */
     try {
-        mInterfacePattern = std::regex(pattern);
+        auto compiled = std::make_shared<const std::regex>(pattern);
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        mInterfacePattern = compiled;
         mInterfacePatternString = pattern;
     } catch (const std::regex_error& e) {
         NET_LOGE("bad interface pattern '%s': %s", pattern.c_str(), e.what());
     }
 }
 
-const std::string& EthernetManager::getInterfacePattern() const {
+std::string EthernetManager::getInterfacePattern() {
     /* std::regex has no pattern() accessor pre-C++17; keep the literal for
-     * reporting purposes alongside the compiled regex. */
+     * reporting purposes alongside the compiled regex. Returned by value:
+     * the member is swapped by setInterfacePattern at runtime. */
+    std::lock_guard<std::mutex> lock(mListenersMutex);
     return mInterfacePatternString;
 }
 

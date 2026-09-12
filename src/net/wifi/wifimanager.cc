@@ -64,15 +64,45 @@ WifiManager::~WifiManager() {
 bool WifiManager::initialize(const std::string& ctrlPath) {
     if (mClient.isConnected()) return true;
     mClient.setCtrlPath(ctrlPath);
-    /* "/var/run/wpa_supplicant/wlan0" -> "wlan0" for the radio dump. */
-    const size_t slash = ctrlPath.find_last_of('/');
-    mIfaceName = (slash == std::string::npos) ? ctrlPath : ctrlPath.substr(slash + 1);
     const bool ok = mClient.connect();
-    if (ok) seedDhcpFromCurrentState();
+    if (ok) {
+        /* "/var/run/wpa_supplicant/wlan0" -> "wlan0" normally, but the
+         * global socket ("/var/run/wpa_supplicant") would yield the daemon
+         * directory name: ask INTERFACES what the daemon actually serves
+         * and fall back to the path basename. */
+        const size_t slash = ctrlPath.find_last_of('/');
+        const std::string base = (slash == std::string::npos)
+                ? ctrlPath : ctrlPath.substr(slash + 1);
+        std::string iface = base;
+        const std::string listed = mClient.request("INTERFACES");
+        std::vector<std::string> names;
+        size_t pos = 0;
+        while (pos < listed.size()) {
+            const size_t nl = listed.find('\n', pos);
+            std::string name = listed.substr(pos, nl == std::string::npos
+                    ? std::string::npos : nl - pos);
+            while (!name.empty() && (name.back() == '\r' || name.back() == ' '))
+                name.pop_back();
+            if (!name.empty()) names.push_back(name);
+            if (nl == std::string::npos) break;
+            pos = nl + 1;
+        }
+        if (!names.empty()) {
+            iface = names[0];
+            for (const std::string& n : names)   /* a per-if socket keeps its own name */
+                if (n == base) { iface = base; break; }
+        }
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mIfaceName = iface;
+        }
+        seedDhcpFromCurrentState();
+    }
     return ok;
 }
 
 std::string WifiManager::interfaceName() const {
+    std::lock_guard<std::mutex> lock(mStateMutex);
     return mIfaceName;
 }
 
@@ -420,7 +450,17 @@ void WifiManager::onSupplicantEvent(const SupplicantEvent& event) {
             }
         }
         if (event.getArg("BSSID", value)) info.setBSSID(WpaResponseParser::unquote(value));
-        if (event.getArg("SSID", value)) info.setSSID(WifiSsid::fromString(value));
+        if (event.getArg("SSID", value)) {
+            /* The event prints the SSID via wpa_ssid_txt: unquoted printable
+             * text. WifiSsid::fromString only accepts the quoted/hex forms
+             * (AOSP contract), so a bare non-hex token falls back to raw
+             * text like AOSP's WifiMonitor (createFromAsciiEncoded). */
+            try {
+                info.setSSID(WifiSsid::fromString(value));
+            } catch (const std::invalid_argument&) {
+                info.setSSID(WifiSsid::fromUtf8Text(value));
+            }
+        }
         {
             std::lock_guard<std::mutex> lock(mStateMutex);
             mConnectionInfo = info;
@@ -500,11 +540,12 @@ void WifiManager::updateConnectionInfoFromStatus() {
     /* AOSP takes the address from IpClient/LinkProperties, never from the
      * supplicant; the supplicant STATUS only knows about its own (unused)
      * DHCP. Read the interface when STATUS did not provide one. */
-    if (info.getIpAddress() == 0 && !mIfaceName.empty()) {
+    if (info.getIpAddress() == 0 && !interfaceName().empty()) {
+        const std::string iface = interfaceName();
         struct ifaddrs* ifap = nullptr;
         if (getifaddrs(&ifap) == 0) {
             for (struct ifaddrs* ifa = ifap; ifa; ifa = ifa->ifa_next) {
-                if (mIfaceName != ifa->ifa_name || !ifa->ifa_addr) continue;
+                if (iface != ifa->ifa_name || !ifa->ifa_addr) continue;
                 if (ifa->ifa_addr->sa_family != AF_INET) continue;
                 char buf[INET_ADDRSTRLEN] = {0};
                 const auto* sin = reinterpret_cast<const struct sockaddr_in*>(ifa->ifa_addr);
@@ -573,64 +614,82 @@ void WifiManager::seedDhcpFromCurrentState() {
 }
 
 void WifiManager::startDhcpIfNeeded() {
-    if (mIfaceName.empty()) return;
-    {
-        std::lock_guard<std::mutex> lock(mStateMutex);
-        if (mDhcpSession) return;   /* already provisioning/renewing */
-    }
+    const std::string iface = interfaceName();
+    if (iface.empty()) return;
     WifiDhcpSession* session = new WifiDhcpSession();
-    mDhcpSession = session;
-    session->thread = std::thread([this, session]() {
-        DhcpClient* client = DhcpClient::create(mIfaceName);
-        DhcpClient::Lease lease;
-        fprintf(stdout, "WifiManager: dhcp request on %s\n", mIfaceName.c_str());
-        fflush(stdout);
-        if (client->requestLease(lease)) {
-            fprintf(stdout, "WifiManager: lease on %s: %s gw %s (%us)\n", mIfaceName.c_str(),
-                    lease.ipAddress.c_str(), lease.gateway.c_str(), lease.leaseDurationSec);
+    {
+        /* Check-then-set under one lock: the monitor thread's
+         * CTRL-EVENT-CONNECTED races initialize()'s seed here, and the
+         * loser must not orphan a session (its stop flag would never be
+         * set). The thread is created inside the same critical section so
+         * stopDhcpAndRelease never sees a half-constructed session. */
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (mDhcpSession) {   /* already provisioning/renewing */
+            delete session;
+            return;
+        }
+        mDhcpSession = session;
+        session->thread = std::thread([this, session, iface]() {
+            DhcpClient* client = DhcpClient::create(iface);
+            DhcpClient::Lease lease;
+            fprintf(stdout, "WifiManager: dhcp request on %s\n", iface.c_str());
             fflush(stdout);
-            StaticIpConfiguration staticIp;
-            staticIp.setIpAddress(LinkAddress(lease.ipAddress,
-                    LinkAddress::netmaskToPrefixLengthV4(lease.netmask)))
-                    .setGateway(lease.gateway)
-                    .setDnsServers(lease.dnsServers);
-            applyIpConfiguration(mIfaceName, staticIp);
-            {
-                std::lock_guard<std::mutex> lock(mStateMutex);
-                mLease = lease;
-            }
-            /* renewal loop mirrors the ethernet session: T1 (or half the
-             * lease), renew, fall back to a fresh DISCOVER on failure. */
-            while (!session->stop.load()) {
-                uint32_t waitSec = lease.t1Sec ? lease.t1Sec : lease.leaseDurationSec / 2;
-                if (!waitSec) break;
-                for (uint32_t waited = 0; waited < waitSec && !session->stop.load(); waited++)
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
-                if (session->stop.load()) break;
-                DhcpClient::Lease renewed;
-                if (client->renewLease(lease, renewed)) lease = renewed;
-                else if (!client->requestLease(lease)) continue;
-                StaticIpConfiguration renewedIp;
-                renewedIp.setIpAddress(LinkAddress(lease.ipAddress,
+            if (client->requestLease(lease)) {
+                fprintf(stdout, "WifiManager: lease on %s: %s gw %s (%us)\n", iface.c_str(),
+                        lease.ipAddress.c_str(), lease.gateway.c_str(), lease.leaseDurationSec);
+                fflush(stdout);
+                StaticIpConfiguration staticIp;
+                staticIp.setIpAddress(LinkAddress(lease.ipAddress,
                         LinkAddress::netmaskToPrefixLengthV4(lease.netmask)))
                         .setGateway(lease.gateway)
                         .setDnsServers(lease.dnsServers);
-                applyIpConfiguration(mIfaceName, renewedIp);
+                applyIpConfiguration(iface, staticIp);
                 {
                     std::lock_guard<std::mutex> lock(mStateMutex);
                     mLease = lease;
                 }
+                /* renewal loop mirrors the ethernet session: T1 (or half the
+                 * lease), renew, fall back to a fresh DISCOVER on failure. */
+                while (!session->stop.load()) {
+                    uint32_t waitSec = lease.t1Sec ? lease.t1Sec : lease.leaseDurationSec / 2;
+                    if (!waitSec) break;
+                    for (uint32_t waited = 0; waited < waitSec && !session->stop.load(); waited++)
+                        std::this_thread::sleep_for(std::chrono::seconds(1));
+                    if (session->stop.load()) break;
+                    DhcpClient::Lease renewed;
+                    if (client->renewLease(lease, renewed)) lease = renewed;
+                    else if (!client->requestLease(lease)) continue;
+                    StaticIpConfiguration renewedIp;
+                    renewedIp.setIpAddress(LinkAddress(lease.ipAddress,
+                            LinkAddress::netmaskToPrefixLengthV4(lease.netmask)))
+                            .setGateway(lease.gateway)
+                            .setDnsServers(lease.dnsServers);
+                    applyIpConfiguration(iface, renewedIp);
+                    {
+                        std::lock_guard<std::mutex> lock(mStateMutex);
+                        mLease = lease;
+                    }
+                }
+            } else {
+                fprintf(stderr, "WifiManager E: no lease on %s (timeout/NAK)\n",
+                        iface.c_str());
             }
-        }
-        fprintf(stderr, "WifiManager E: no lease on %s (timeout/NAK)\n", mIfaceName.c_str());
-        delete client;
-    });
+            delete client;
+        });
+    }
 }
 
 void WifiManager::stopDhcpAndRelease() {
-    WifiDhcpSession* session = mDhcpSession;
+    /* Take sole ownership under the lock (initializer swap): concurrent
+     * stops (monitor DISCONNECTED vs destructor) must not double-join or
+     * double-delete the same session. */
+    WifiDhcpSession* session = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        session = mDhcpSession;
+        mDhcpSession = nullptr;
+    }
     if (!session) return;
-    mDhcpSession = nullptr;
     session->stop.store(true);
     if (session->thread.joinable()) session->thread.join();
     delete session;
@@ -640,8 +699,9 @@ void WifiManager::stopDhcpAndRelease() {
         lease = mLease;
         mLease = DhcpClient::Lease();
     }
-    if (lease.bound && !mIfaceName.empty()) {
-        DhcpClient* client = DhcpClient::create(mIfaceName);
+    const std::string iface = interfaceName();
+    if (lease.bound && !iface.empty()) {
+        DhcpClient* client = DhcpClient::create(iface);
         client->releaseLease(lease);   /* best effort */
         delete client;
     }

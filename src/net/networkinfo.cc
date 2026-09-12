@@ -53,7 +53,7 @@ NetworkInfo::State::Type NetworkInfo::stateFromDetailedState(
     case DetailedState::VERIFYING_POOR_LINK: return State::CONNECTING;
     case DetailedState::CONNECTED:           return State::CONNECTED;
     case DetailedState::SUSPENDED:           return State::SUSPENDED;
-    case DetailedState::DISCONNECTING:       return State::DISCONNECTED;
+    case DetailedState::DISCONNECTING:       return State::DISCONNECTING;
     case DetailedState::DISCONNECTED:        return State::DISCONNECTED;
     case DetailedState::FAILED:              return State::DISCONNECTED;
     case DetailedState::BLOCKED:             return State::DISCONNECTED;
@@ -90,11 +90,11 @@ std::string NetworkInfo::getExtraInfo() const {
 }
 
 bool NetworkInfo::isConnected() const {
-    return mState == State::CONNECTED && mIsAvailable;
+    return mState == State::CONNECTED;
 }
 
 bool NetworkInfo::isConnectedOrConnecting() const {
-    return (mState == State::CONNECTED || mState == State::CONNECTING) && mIsAvailable;
+    return mState == State::CONNECTED || mState == State::CONNECTING;
 }
 
 bool NetworkInfo::isFailover() const {

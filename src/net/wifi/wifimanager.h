@@ -223,8 +223,11 @@ private:
     SupplicantClient mClient;
     NetworkEventMonitor* mAddressMonitor = nullptr;
     WifiRadioData* mRadioData = nullptr;
+    /* Written once by initialize() (INTERFACES-resolved), read by the
+     * netlink monitor thread, the DHCP session thread and app threads —
+     * every access goes through mStateMutex / interfaceName(). */
     std::string mIfaceName;
-    std::mutex mStateMutex;
+    mutable std::mutex mStateMutex;
     int mWifiState = WIFI_STATE_UNKNOWN;
     WifiInfo mConnectionInfo;
     std::atomic<int> mLastRssi { WifiInfo::INVALID_RSSI };

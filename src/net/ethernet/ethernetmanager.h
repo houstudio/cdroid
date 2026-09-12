@@ -4,6 +4,7 @@
 #include <atomic>
 #include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <regex>
 #include <string>
@@ -71,7 +72,7 @@ public:
     /* Interface-name filter, AOSP config_ethernet_iface_regex (default
      * "eth\d"). Must be set before the poll thread observes anything. */
     void setInterfacePattern(const std::string& pattern);
-    const std::string& getInterfacePattern() const;
+    std::string getInterfacePattern();
     /* Where per-iface configs persist ("" disables persistence). */
     void setConfigurationStoreDir(const std::string& dir);
 
@@ -115,7 +116,13 @@ private:
     void loadPersistedConfiguration(const std::string& iface);
     void persistConfiguration(const std::string& iface, const IpConfiguration& config);
 
-    std::regex mInterfacePattern{R"(eth\d+)"};
+    /* The pattern is swapped by setInterfacePattern at runtime while the
+     * monitor thread and app threads regex_search it — readers copy the
+     * shared_ptr under mListenersMutex and search the immutable regex it
+     * points at (std::regex assignment is not thread-safe to read through).
+     * The pattern string returns by value for the same reason. */
+    std::shared_ptr<const std::regex> mInterfacePattern =
+            std::make_shared<const std::regex>(R"(eth\d+)");
     std::string mInterfacePatternString = R"(eth\d+)";  /* pre-C++17 regex has no pattern() */
     std::string mStoreDir = "/var/lib/cdnet";
     std::mutex mConfigMutex;

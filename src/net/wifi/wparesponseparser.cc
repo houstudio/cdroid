@@ -72,7 +72,10 @@ std::vector<ScanResult> WpaResponseParser::parseScanResults(const std::string& s
         result.level = atoi(fields[2].c_str());
         result.capabilities = fields[3];
         /* SSID: wpa prints quoted UTF-8, unquoted hex, or empty for hidden.
-         * A bare non-hex token (nonstandard reply) falls back to literal. */
+         * A bare non-hex token (nonstandard reply) falls back to literal.
+         * ScanResult.SSID is the plain decoded text (ScanResult.java:84) —
+         * the quoted form belongs to WifiConfiguration.SSID, which callers
+         * build with the '"' + SSID + '"' idiom. */
         result.SSID = fields[4];
         if (!fields[4].empty()) {
             try {
@@ -80,6 +83,7 @@ std::vector<ScanResult> WpaResponseParser::parseScanResults(const std::string& s
             } catch (const std::invalid_argument&) {
                 result.wifiSsid = WifiSsid::fromUtf8Text(fields[4]);
             }
+            result.SSID = ScanResult::displaySsid(result.wifiSsid);
         }
         results.push_back(result);
     }
@@ -397,8 +401,14 @@ std::vector<std::pair<std::string, std::string>> WpaResponseParser::networkVaria
     if (!authAlg.empty())
         vars.push_back({"auth_alg", authAlg});
     for (size_t i = 0; i < config.wepKeys.size(); i++) {
-        if (!config.wepKeys[i].empty())
-            vars.push_back({"wep_key" + std::to_string(i), "\"" + config.wepKeys[i] + "\""});
+        if (config.wepKeys[i].empty()) continue;
+        /* A hex WEP key (40/104/232-bit = 10/26/58 chars) must go raw, or
+         * wpa derives the key from the ASCII characters instead of the hex
+         * bytes (wpa_config_parse_string: unquoted even-length hex is hex).
+         * Real ASCII passphrases are 5/13/29 chars — odd, never misrouted. */
+        const bool hexKey = isAllHex(config.wepKeys[i]) && config.wepKeys[i].size() % 2 == 0;
+        vars.push_back({"wep_key" + std::to_string(i),
+                hexKey ? config.wepKeys[i] : "\"" + config.wepKeys[i] + "\""});
     }
     if (config.wepTxKeyIndex != 0)
         vars.push_back({"wep_tx_key", std::to_string(config.wepTxKeyIndex)});

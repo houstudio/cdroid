@@ -12,6 +12,7 @@
  *********************************************************************************/
 #include <cdroid.h>
 #include <R.h>
+#include <memory>
 #include <preference/preferencefragment.h>
 #include <preference/preferencescreen.h>
 #include <preference/preferencecategory.h>
@@ -146,7 +147,7 @@ public:
     }
 
     void onDestroy() override {
-        mNetAlive = false;
+        *mNetAlive = false;
         cdroid::WifiManager::getInstance().removeNetworkStateListener(this);
         PreferenceFragment::onDestroy();
     }
@@ -162,7 +163,11 @@ public:
     void buildEthernetSection();
     static std::string ipToString(uint32_t ip);
     static std::string networkDetailsText();
-    bool mNetAlive = false;
+    /* Heap-stable lifetime flag: the main-looper lambda captures the
+     * shared_ptr by value, so a post queued on the monitor thread that runs
+     * after the fragment is destroyed reads *mNetAlive==false and returns
+     * without touching the freed fragment. */
+    std::shared_ptr<bool> mNetAlive = std::make_shared<bool>(false);
 
     // WifiManager::NetworkStateListener (monitor thread).
     void onNetworkStateChanged(const cdroid::WifiInfo&) override;
@@ -371,17 +376,19 @@ std::string SettingsFragment::networkDetailsText() {
 
 void SettingsFragment::onNetworkStateChanged(const cdroid::WifiInfo&) {
     // Supplicant monitor thread -> main looper (the preference UI lives there).
-    if (!mNetAlive) return;
+    if (!*mNetAlive) return;
     static cdroid::Handler sNetHandler(cdroid::Looper::getMainLooper());
-    sNetHandler.post([this]{
-        if (!mNetAlive) return;
+    // Capture the lifetime token, not just this: a lambda already queued
+    // when the fragment is destroyed must not dereference it.
+    sNetHandler.post([this, alive = mNetAlive]{
+        if (!*alive) return;
         refreshWifiStatus();
         refreshIpSummary();
     });
 }
 
 void SettingsFragment::setupNetworkScreen() {
-    mNetAlive = true;
+    *mNetAlive = true;
     // The transport binds the library default (SupplicantClient::
     // defaultCtrlPath: WPA_CTRL_PATH if set, else the system socket) and
     // starts the event pump; idempotent.

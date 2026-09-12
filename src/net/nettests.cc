@@ -122,6 +122,13 @@ static void testNetworkInfo() {
     CHECK(text.find("type: WIFI[]") != std::string::npos);
     CHECK(text.find("state: CONNECTED/CONNECTED") != std::string::npos);
     CHECK(text.find("available: true") != std::string::npos);
+    /* AOSP: isConnected() is purely mState — setDetailedState(CONNECTED)
+     * alone suffices, no availability flag gate. */
+    NetworkInfo plain((int) ConnectivityManager::TYPE_WIFI);
+    plain.setDetailedState(NetworkInfo::DetailedState::CONNECTED, std::string(), std::string());
+    CHECK(plain.isConnected());
+    CHECK_EQ((int) NetworkInfo::stateFromDetailedState(NetworkInfo::DetailedState::DISCONNECTING),
+             (int) NetworkInfo::State::DISCONNECTING);
 
     NetworkInfo eth((int) ConnectivityManager::TYPE_ETHERNET);
     CHECK_EQ(eth.getTypeName(), std::string("ETHERNET"));
@@ -268,6 +275,10 @@ static void testNetlinkRouteMessage() {
     /* invalid arguments produce no message */
     CHECK(NetlinkMonitor::buildDefaultRouteMessage(
             "lo", "not-an-ip", buffer, sizeof(buffer)) == 0);
+    /* undersized buffer: rejected before any write (48 bytes needed) */
+    unsigned char small[32];
+    CHECK(NetlinkMonitor::buildDefaultRouteMessage(
+            "lo", "127.0.0.1", small, sizeof(small)) == 0);
 }
 
 static void testNl80211IeHelpers() {
@@ -331,6 +342,38 @@ static void testNl80211IeHelpers() {
     CHECK_EQ(vht.channelWidth, (int) ScanResult::CHANNEL_WIDTH_80MHZ);
     CHECK_EQ(vht.centerFreq0, 1000);
     CHECK_EQ(vht.mWifiStandard, (int) ScanResult::WIFI_STANDARD_11AC);
+
+    /* HE/EHT capabilities are extension elements: 255 + ext id (HE=35,
+     * EHT=106); element 232 is S1G Operation and must not classify as HE. */
+    IE heCap;
+    heCap.id = 255;
+    const unsigned char heBody[] = {35, 0x0f, 0x01, 0x00};
+    heCap.bytes.assign(heBody, heBody + sizeof(heBody));
+    ScanResult he;
+    std::vector<IE> heIes{ssid, heCap};
+    he.informationElements = heIes;
+    Nl80211Radio::applyScanEnhancements(he);
+    CHECK_EQ(he.mWifiStandard, (int) ScanResult::WIFI_STANDARD_11AX);
+
+    IE ehtCap;
+    ehtCap.id = 255;
+    const unsigned char ehtBody[] = {106, 0x08, 0x00};
+    ehtCap.bytes.assign(ehtBody, ehtBody + sizeof(ehtBody));
+    ScanResult eht;
+    std::vector<IE> ehtIes{ssid, ehtCap};
+    eht.informationElements = ehtIes;
+    Nl80211Radio::applyScanEnhancements(eht);
+    CHECK_EQ(eht.mWifiStandard, (int) ScanResult::WIFI_STANDARD_11BE);
+
+    IE s1g;
+    s1g.id = 232;   /* S1G Operation: not HE */
+    const unsigned char s1gBody[] = {0x00};
+    s1g.bytes.assign(s1gBody, s1gBody + sizeof(s1gBody));
+    ScanResult legacy;
+    std::vector<IE> legacyIes{ssid, s1g};
+    legacy.informationElements = legacyIes;
+    Nl80211Radio::applyScanEnhancements(legacy);
+    CHECK_EQ(legacy.mWifiStandard, (int) ScanResult::WIFI_STANDARD_LEGACY);
 }
 
 static void testDhcpCodecs() {

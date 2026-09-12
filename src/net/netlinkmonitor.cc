@@ -163,15 +163,39 @@ static void putRtattr(struct rtattr* rta, int type, const void* data, size_t len
 size_t NetlinkMonitor::buildDefaultRouteMessage(const std::string& iface,
                                                 const std::string& gateway,
                                                 unsigned char* buffer, size_t bufferLen) {
+    return buildRouteMessage(iface, gateway, buffer, bufferLen, RTM_NEWROUTE,
+                             NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL);
+}
+
+size_t NetlinkMonitor::buildDeleteDefaultRouteMessage(const std::string& iface,
+                                                      unsigned char* buffer, size_t bufferLen) {
+    return buildRouteMessage(iface, std::string(), buffer, bufferLen, RTM_DELROUTE,
+                             NLM_F_REQUEST | NLM_F_ACK);
+}
+
+size_t NetlinkMonitor::buildRouteMessage(const std::string& iface,
+                                         const std::string& gateway,
+                                         unsigned char* buffer, size_t bufferLen,
+                                         int msgType, unsigned short msgFlags) {
     struct in_addr gw;
-    if (inet_pton(AF_INET, gateway.c_str(), &gw) != 1) return 0;
+    bool haveGw = false;
+    if (!gateway.empty()) {
+        if (inet_pton(AF_INET, gateway.c_str(), &gw) != 1) return 0;
+        haveGw = true;
+    }
     const unsigned int oif = if_nametoindex(iface.c_str());
     if (oif == 0) return 0;
+    /* Validate the buffer up front: the writes below must never run past
+     * bufferLen (the old check ran only after everything was written). */
+    size_t needed = NLMSG_ALIGN(NLMSG_LENGTH(sizeof(struct rtmsg)))
+            + RTA_ALIGN(RTA_LENGTH(sizeof(oif)));
+    if (haveGw) needed += RTA_ALIGN(RTA_LENGTH(sizeof(gw)));
+    if (buffer == nullptr || bufferLen < needed) return 0;
 
     memset(buffer, 0, bufferLen);
     auto* nlh = reinterpret_cast<struct nlmsghdr*>(buffer);
-    nlh->nlmsg_type = RTM_NEWROUTE;
-    nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
+    nlh->nlmsg_type = static_cast<unsigned short>(msgType);
+    nlh->nlmsg_flags = msgFlags;
     nlh->nlmsg_seq = 1;
 
     auto* rtm = static_cast<struct rtmsg*>(NLMSG_DATA(nlh));
@@ -182,47 +206,74 @@ size_t NetlinkMonitor::buildDefaultRouteMessage(const std::string& iface,
     rtm->rtm_type = RTN_UNICAST;
 
     size_t offset = NLMSG_ALIGN(NLMSG_LENGTH(sizeof(struct rtmsg)));
+    if (haveGw) {
+        struct rtattr* rta = reinterpret_cast<struct rtattr*>(buffer + offset);
+        putRtattr(rta, RTA_GATEWAY, &gw, sizeof(gw));
+        offset += RTA_ALIGN(rta->rta_len);
+    }
     struct rtattr* rta = reinterpret_cast<struct rtattr*>(buffer + offset);
-    putRtattr(rta, RTA_GATEWAY, &gw, sizeof(gw));
-    offset += RTA_ALIGN(rta->rta_len);
-    rta = reinterpret_cast<struct rtattr*>(buffer + offset);
     putRtattr(rta, RTA_OIF, &oif, sizeof(oif));
     offset += RTA_ALIGN(rta->rta_len);
 
     nlh->nlmsg_len = static_cast<unsigned int>(offset);
-    return (offset <= bufferLen) ? offset : 0;
+    return offset;
+}
+
+/* Send a built route message and await the ACK (NLMSG_ERROR error==0).
+ * `ignoredError` is the "already in the desired state" errno: -EEXIST for
+ * add, -ESRCH for delete. Bounded (SO_RCVTIMEO) and EINTR retried — an
+ * interrupted or timed-out wait must not confirm the operation. */
+static bool sendRouteMessageAndAck(const unsigned char* message, size_t len,
+                                   const char* what, int ignoredError) {
+    const int fd = socket(AF_NETLINK, SOCK_DGRAM | SOCK_CLOEXEC, NETLINK_ROUTE);
+    if (fd < 0) return false;
+    struct sockaddr_nl kernel;
+    memset(&kernel, 0, sizeof(kernel));
+    kernel.nl_family = AF_NETLINK;
+    bool ok = sendto(fd, message, len, 0, reinterpret_cast<struct sockaddr*>(&kernel),
+                     sizeof(kernel)) == static_cast<ssize_t>(len);
+    if (ok) {
+        struct timeval tv;
+        tv.tv_sec = 5;
+        tv.tv_usec = 0;
+        setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+        unsigned char reply[128];
+        ssize_t rlen;
+        while ((rlen = recv(fd, reply, sizeof(reply), 0)) < 0 && errno == EINTR) {
+        }
+        if (rlen > 0) {
+            const auto* nlh = reinterpret_cast<const struct nlmsghdr*>(reply);
+            if (nlh->nlmsg_type == NLMSG_ERROR) {
+                const auto* err = static_cast<const struct nlmsgerr*>(NLMSG_DATA(nlh));
+                if (err->error != 0 && err->error != ignoredError) {
+                    errno = -err->error;
+                    NL_LOGE("%s: %s", what, strerror(errno));
+                    ok = false;
+                }
+            }
+        } else {
+            NL_LOGE("%s: no ACK (%s)", what, strerror(errno));
+            ok = false;
+        }
+    }
+    close(fd);
+    return ok;
 }
 
 bool NetlinkMonitor::addDefaultRoute(const std::string& iface, const std::string& gateway) {
     unsigned char buffer[128];
     const size_t len = buildDefaultRouteMessage(iface, gateway, buffer, sizeof(buffer));
     if (len == 0) return false;
-    const int fd = socket(AF_NETLINK, SOCK_DGRAM | SOCK_CLOEXEC, NETLINK_ROUTE);
-    if (fd < 0) return false;
-    struct sockaddr_nl kernel;
-    memset(&kernel, 0, sizeof(kernel));
-    kernel.nl_family = AF_NETLINK;
-    bool ok = sendto(fd, buffer, len, 0, reinterpret_cast<struct sockaddr*>(&kernel),
-                     sizeof(kernel)) == static_cast<ssize_t>(len);
-    if (ok) {
-        /* await the ACK: NLMSG_ERROR with error == 0 */
-        unsigned char reply[128];
-        const ssize_t rlen = recv(fd, reply, sizeof(reply), 0);
-        if (rlen > 0) {
-            const auto* nlh = reinterpret_cast<const struct nlmsghdr*>(reply);
-            if (nlh->nlmsg_type == NLMSG_ERROR) {
-                const auto* err = static_cast<const struct nlmsgerr*>(NLMSG_DATA(nlh));
-                if (err->error != 0 && err->error != -EEXIST) {  /* EEXIST: already there */
-                    errno = -err->error;
-                    NL_LOGE("RTM_NEWROUTE %s via %s: %s", iface.c_str(), gateway.c_str(),
-                            strerror(errno));
-                    ok = false;
-                }
-            }
-        }
-    }
-    close(fd);
-    return ok;
+    const std::string what = "RTM_NEWROUTE " + iface + " via " + gateway;
+    return sendRouteMessageAndAck(buffer, len, what.c_str(), -EEXIST);
+}
+
+bool NetlinkMonitor::deleteDefaultRoute(const std::string& iface) {
+    unsigned char buffer[128];
+    const size_t len = buildDeleteDefaultRouteMessage(iface, buffer, sizeof(buffer));
+    if (len == 0) return false;
+    const std::string what = "RTM_DELROUTE default on " + iface;
+    return sendRouteMessageAndAck(buffer, len, what.c_str(), -ESRCH);
 }
 
 NetworkEventMonitor* NetworkEventMonitor::create() {

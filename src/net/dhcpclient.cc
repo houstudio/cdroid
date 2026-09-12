@@ -1,6 +1,8 @@
 /* Built-in DHCP client (AOSP DhcpClient counterpart, RFC 2131/2132). */
 #include <dhcpclient.h>
 
+#include <algorithm>
+
 #include <arpa/inet.h>
 #include <errno.h>
 #include <linux/if_ether.h>
@@ -248,9 +250,25 @@ public:
             return false;
         bool requested = false;
         std::string offeredIp, serverId;
+        /* RFC 2131 §4.1: retransmit with exponential backoff while the
+         * window is open (AOSP DhcpClient doubles from 2s up to 60s) — a
+         * single lost broadcast must not fail the whole acquisition. */
+        uint32_t retransmitMs = 2000;
         while (nowMs() < deadline) {
-            const int type = receiveReply(lease, (int) (deadline - nowMs()));
-            if (type == 0) continue;
+            const int type = receiveReply(lease, (int) std::min<uint32_t>(
+                    retransmitMs, deadline - nowMs()));
+            if (type == 0) {
+                if (nowMs() >= deadline) break;
+                if (!requested)
+                    sendBootp(DhcpClient::buildDiscover(mTransactionId, mMac, sizeof(mMac)),
+                              "0.0.0.0");
+                else
+                    sendBootp(DhcpClient::buildRequest(mTransactionId, mMac, sizeof(mMac),
+                                                       offeredIp, serverId, false),
+                              "0.0.0.0");
+                retransmitMs = std::min<uint32_t>(retransmitMs * 2, 60000);
+                continue;
+            }
             mSeenFrames = mPassedUdp = 0; /* got a real reply */
             if (type == DHCP_NAK) return false;
             if (type == DHCP_OFFER && !requested) {
@@ -258,6 +276,7 @@ public:
                 serverId = lease.serverId;
                 if (offeredIp.empty()) continue;
                 requested = true;
+                retransmitMs = 2000;   /* fresh backoff for the REQUEST stage */
                 if (!sendBootp(DhcpClient::buildRequest(mTransactionId, mMac, sizeof(mMac),
                                                         offeredIp, serverId, false),
                                "0.0.0.0"))

@@ -70,6 +70,9 @@ void SupplicantClient::close() {
 }
 
 void SupplicantClient::setCtrlPath(const std::string& ctrlPath) {
+    /* mCtrlPath is read by the monitor thread's reconnect backoff
+     * (openConnections under mCtrlMutex); the write must not race it. */
+    std::lock_guard<std::mutex> lock(mCtrlMutex);
     if (!mConnected.load())
         mCtrlPath = ctrlPath;
 }
@@ -158,6 +161,12 @@ bool SupplicantClient::openConnections() {
 }
 
 void SupplicantClient::closeConnections() {
+    /* The monitor thread may be inside select/recv on mMonitor outside
+     * mCtrlMutex; wait for it to release the handle before freeing it. */
+    {
+        std::unique_lock<std::mutex> useLock(mMonitorUseMutex);
+        mMonitorIdleCv.wait(useLock, [this] { return !mMonitorInUse; });
+    }
     /* mMonitor is detached before close, like wpa_cli does. */
     if (mMonitor) {
         wpa_ctrl_detach(mMonitor);
@@ -173,10 +182,29 @@ void SupplicantClient::closeConnections() {
 
 /* --- monitor thread ------------------------------------------------------ */
 
+void SupplicantClient::releaseMonitorClaim() {
+    std::lock_guard<std::mutex> useLock(mMonitorUseMutex);
+    mMonitorInUse = false;
+    mMonitorIdleCv.notify_one();
+}
+
 void SupplicantClient::monitorLoop() {
     bool reportedDisconnect = false;
     while (mRunning.load()) {
-        if (!mMonitor || !mCtrl) {
+        /* Claim the monitor handle for this iteration (under mCtrlMutex, so
+         * the handle cannot be swapped/freed as we take it); the select/recv
+         * below runs outside mCtrlMutex while closeConnections() waits for
+         * the claim. */
+        struct wpa_ctrl* monitor = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(mCtrlMutex);
+            if (mMonitor && mCtrl) {
+                monitor = mMonitor;
+                std::lock_guard<std::mutex> useLock(mMonitorUseMutex);
+                mMonitorInUse = true;
+            }
+        }
+        if (!monitor) {
             /* never connected / lost: report once, then retry with backoff */
             if (!reportedDisconnect) {
                 reportedDisconnect = true;
@@ -201,7 +229,7 @@ void SupplicantClient::monitorLoop() {
             }
             continue;
         }
-        const int fd = wpa_ctrl_get_fd(mMonitor);
+        const int fd = wpa_ctrl_get_fd(monitor);
         fd_set readFds;
         FD_ZERO(&readFds);
         FD_SET(fd, &readFds);
@@ -209,16 +237,20 @@ void SupplicantClient::monitorLoop() {
         tv.tv_sec = 0;
         tv.tv_usec = MONITOR_POLL_MS * 1000;
         const int rc = select(fd + 1, &readFds, nullptr, nullptr, &tv);
-        if (!mRunning.load()) break;
-        if (rc == 0) continue;              /* poll timeout: re-check mRunning */
+        if (!mRunning.load() || rc == 0 || (rc < 0 && errno == EINTR)) {
+            releaseMonitorClaim();
+            continue;              /* poll timeout / spurious wake: re-check */
+        }
         if (rc < 0) {
-            if (errno == EINTR) continue;
+            releaseMonitorClaim();
             WIFI_LOGE("monitor select failed errno=%d", errno);
             break;
         }
         char buf[4096];
         size_t len = sizeof(buf) - 1;
-        if (wpa_ctrl_recv(mMonitor, buf, &len) != 0) {
+        const int recvRc = wpa_ctrl_recv(monitor, buf, &len);
+        releaseMonitorClaim();
+        if (recvRc != 0) {
             WIFI_LOGE("monitor recv failed — supplicant connection lost");
             std::lock_guard<std::mutex> lock(mCtrlMutex);
             closeConnections();

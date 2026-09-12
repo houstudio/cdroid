@@ -20,6 +20,22 @@ std::string ScanResult::wifiStandardToString(int wifiStandard) {
     }
 }
 
+bool ScanResult::isHiddenSsid(const WifiSsid& wifiSsid) {
+    const std::string bytes = wifiSsid.getBytes();
+    if (bytes.empty()) return false;
+    for (const char c : bytes)
+        if (c != '\0') return false;
+    return true;
+}
+
+std::string ScanResult::displaySsid(const WifiSsid& wifiSsid) {
+    if (isHiddenSsid(wifiSsid)) return std::string();   /* legacy "" */
+    const std::string bytes = wifiSsid.getBytes();
+    if (bytes.empty()) return std::string();            /* empty decodes empty */
+    const std::string text = wifiSsid.getUtf8Text();
+    return !text.empty() ? text : std::string(WifiManager::UNKNOWN_SSID);
+}
+
 bool ScanResult::isPasspointNetwork() const {
     /* TODO(porting): FLAG_PASSPOINT_NETWORK bit constant once passpoint
      * data is available; ctrl_iface never sets it today. */

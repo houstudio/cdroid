@@ -135,6 +135,13 @@ public:
     ScanResult();
 
     static std::string wifiStandardToString(int wifiStandard);
+    /* AOSP isHiddenSsid(): an all-zero SSID is the "hidden" encoding. */
+    static bool isHiddenSsid(const WifiSsid& wifiSsid);
+    /* The SSID display mapping AOSP applies where ScanResult instances are
+     * built (ScanResult.java:1706-1713): hidden -> "", decodable -> plain
+     * utf8 text (no quotes — quoting belongs to WifiConfiguration.SSID),
+     * otherwise WifiManager.UNKNOWN_SSID. */
+    static std::string displaySsid(const WifiSsid& wifiSsid);
     bool isPasspointNetwork() const;
     std::string toString() const;
 };

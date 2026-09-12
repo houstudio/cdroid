@@ -87,6 +87,14 @@ static void testWifiSsid() {
     bool threw = false;
     try { WifiSsid::fromString("abc"); } catch (const std::invalid_argument&) { threw = true; }
     CHECK(threw); /* odd-length hex throws */
+
+    /* the 32 cap counts decoded chars, not bytes (CharBuffer.allocate(32)):
+     * 30 CJK chars = 90 utf-8 bytes survive whole; 33 ASCII stops at 32. */
+    std::string cjkBytes;
+    for (int i = 0; i < 30; i++) cjkBytes.append("\xe4\xb8\xad");
+    CHECK_EQ(WifiSsid::fromUtf8Text(cjkBytes).getUtf8Text().size(), (size_t)90);
+    const std::string ascii33(33, 'a');
+    CHECK_EQ(WifiSsid::fromUtf8Text(ascii33).getUtf8Text().size(), (size_t)32);
 }
 
 static void testParseScanResults() {
@@ -100,10 +108,12 @@ static void testParseScanResults() {
     CHECK_EQ(results[0].frequency, 2412);
     CHECK_EQ(results[0].level, -45);
     CHECK_EQ(results[0].capabilities, std::string("[WPA2-PSK-CCMP][ESS]"));
-    CHECK_EQ(results[0].SSID, std::string("\"myssid\""));
+    /* ScanResult.SSID is the plain decoded text (ScanResult.java:84) */
+    CHECK_EQ(results[0].SSID, std::string("myssid"));
     CHECK_EQ(results[0].wifiSsid.getUtf8Text(), std::string("myssid"));
-    /* unquoted token is hex */
+    /* unquoted token is hex; its SSID is the decoded text too */
     CHECK_EQ(results[1].wifiSsid.getBytes(), std::string("hexnet"));
+    CHECK_EQ(results[1].SSID, std::string("hexnet"));
 }
 
 static void testApplyStatus() {
@@ -129,6 +139,36 @@ static void testApplyStatus() {
     CHECK_EQ(info.getRssi(), -52);
     CHECK_EQ(info.getLinkSpeed(), 72);
     CHECK_EQ(info.getFrequency(), 2437);
+}
+
+static void testGetIpAddress() {
+    WifiInfo info;
+    CHECK_EQ(info.getIpAddress(), 0);   /* empty -> 0 */
+    info.setInetAddress("192.168.1.100");
+    /* HTL: first octet in the LSB */
+    CHECK_EQ(info.getIpAddress(), 192 | (168 << 8) | (1 << 16) | (100 << 24));
+    /* strict dotted quad: short, garbage-tailed, bad separator -> 0 */
+    info.setInetAddress("192.168.1");
+    CHECK_EQ(info.getIpAddress(), 0);
+    info.setInetAddress("10.0.2.15 trailing");
+    CHECK_EQ(info.getIpAddress(), 0);
+    info.setInetAddress("10.0 2.15");
+    CHECK_EQ(info.getIpAddress(), 0);
+    info.setInetAddress("10.0.2.300");
+    CHECK_EQ(info.getIpAddress(), 0);
+    info.setInetAddress("::1");
+    CHECK_EQ(info.getIpAddress(), 0);
+}
+
+static void testSetRssiClamp() {
+    /* AOSP clamps into [INVALID_RSSI=-127, MAX_RSSI=200]. */
+    WifiInfo info;
+    info.setRssi(-200);
+    CHECK_EQ(info.getRssi(), (int) WifiInfo::INVALID_RSSI);
+    info.setRssi(300);
+    CHECK_EQ(info.getRssi(), (int) WifiInfo::MAX_RSSI);
+    info.setRssi(-52);
+    CHECK_EQ(info.getRssi(), -52);
 }
 
 static void testParseListNetworks() {
@@ -178,6 +218,18 @@ static void testNetworkVariables() {
     hexKey.preSharedKey = std::string(64, 'a');
     for (const auto& var : WpaResponseParser::networkVariables(hexKey))
         if (var.first == "psk") CHECK_EQ(var.second, std::string(64, 'a'));
+
+    /* hex WEP key (10/26/58 chars) goes raw; ASCII passphrase stays quoted */
+    WifiConfiguration wep;
+    wep.SSID = "\"w\"";
+    wep.wepKeys[0] = "0123456789";   /* 40-bit hex */
+    wep.wepKeys[1] = "abcde";        /* 5-char ASCII passphrase */
+    bool sawHexWep = false, sawAsciiWep = false;
+    for (const auto& var : WpaResponseParser::networkVariables(wep)) {
+        if (var.first == "wep_key0") { sawHexWep = true; CHECK_EQ(var.second, std::string("0123456789")); }
+        if (var.first == "wep_key1") { sawAsciiWep = true; CHECK_EQ(var.second, std::string("\"abcde\"")); }
+    }
+    CHECK(sawHexWep && sawAsciiWep);
 
     /* token tables round-trip coverage lives in testCiphersRoundTrip() */
 }
@@ -231,6 +283,21 @@ static void testSupplicantState() {
     bool threw = false;
     try { SupplicantState::fromString("NO_SUCH"); } catch (const std::invalid_argument&) { threw = true; }
     CHECK(threw);
+    /* Wire forms: STATE-CHANGE prints the numeric wpa_states value
+     * (ctrl_iface.c "state=%d", same order as the first ten enum values);
+     * STATUS wpa_state= spells "4WAY_HANDSHAKE" (wpa_supplicant_state_txt). */
+    CHECK_EQ(SupplicantState::fromString("9"), SupplicantState::COMPLETED);
+    CHECK_EQ(SupplicantState::fromString("7"), SupplicantState::FOUR_WAY_HANDSHAKE);
+    CHECK_EQ(SupplicantState::fromString("0"), SupplicantState::DISCONNECTED);
+    CHECK_EQ(SupplicantState::fromString("2"), SupplicantState::INACTIVE);
+    CHECK_EQ(SupplicantState::fromString("4WAY_HANDSHAKE"),
+             SupplicantState::FOUR_WAY_HANDSHAKE);
+    threw = false;
+    try { SupplicantState::fromString("10"); } catch (const std::invalid_argument&) { threw = true; }
+    CHECK(threw);
+    threw = false;
+    try { SupplicantState::fromString("-1"); } catch (const std::invalid_argument&) { threw = true; }
+    CHECK(threw);
 }
 
 int main() {
@@ -238,6 +305,8 @@ int main() {
     testWifiSsid();
     testParseScanResults();
     testApplyStatus();
+    testGetIpAddress();
+    testSetRssiClamp();
     testParseListNetworks();
     testNetworkVariables();
     testCiphersRoundTrip();
