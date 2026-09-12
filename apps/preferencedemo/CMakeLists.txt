@@ -13,6 +13,7 @@ include_directories(
     ${CMAKE_BINARY_DIR}/include/gui
     ${CMAKE_BINARY_DIR}/include/porting
    ${CMAKE_SOURCE_DIR}/src/net        # cdnet (network settings screen)
+   ${CMAKE_SOURCE_DIR}/src/bluetooth  # cdblue (connected devices screen)
 )
 
 add_executable(preferencedemo main.cc)
@@ -22,5 +23,5 @@ add_executable(preferencedemo main.cc)
 # as preferencedemo.pak beside the binary.
 CreatePAK(preferencedemo ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/preferencedemo.pak ${PROJECT_SOURCE_DIR}/R.h EMBED_EXE)
 
-target_link_libraries(preferencedemo PRIVATE cdroid cdnet)
+target_link_libraries(preferencedemo PRIVATE cdroid cdnet cdblue)
 install(TARGETS preferencedemo DESTINATION bin)

@@ -24,6 +24,12 @@
         android:summary="Android Phone"
         android:dependency="bluetooth_enabled" />
 
+    <!-- Filled at runtime from BluetoothAdapter::getBondedDevices()
+         (buildEthernetSection's dynamic-row pattern). -->
+    <PreferenceCategory
+        android:key="bluetooth_bonded"
+        android:title="已配对设备" />
+
     <PreferenceCategory android:title="NFC">
 
         <SwitchPreference

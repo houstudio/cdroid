@@ -38,6 +38,10 @@
 #include <wifi/scanresult.h>
 #include <wifi/wifiinfo.h>
 #include <wifi/wificonfiguration.h>
+#include <bluetoothadapter.h>            // cdblue: connected devices screen
+#include <bluetoothdevice.h>
+#include <bluetoothpairing.h>
+#include <map>
 #include <cstdlib>
 #include <widget/linearlayout.h>
 #include <widget/textview.h>
@@ -90,7 +94,11 @@ int screenXmlFor(const std::string& key) {
 class SettingsActivity;
 
 class SettingsFragment : public PreferenceFragment,
-                          public cdroid::WifiManager::NetworkStateListener {
+                          public cdroid::WifiManager::NetworkStateListener,
+                          public cdroid::BluetoothAdapter::AdapterStateListener,
+                          public cdroid::BluetoothAdapter::DiscoveryListener,
+                          public cdroid::BluetoothAdapter::BondStateListener,
+                          public cdroid::BluetoothPairingListener {
 public:
     void onCreatePreferences(cdroid::Bundle* /*savedInstanceState*/,
             const std::string& rootKey) override {
@@ -125,6 +133,7 @@ public:
                  getPreferenceScreen()->getPreferenceCount());
         }
         if (rootKey == "screen_network") setupNetworkScreen();
+        if (rootKey == "screen_connected") setupConnectedScreen();
 
         if (rootKey == "screen_accessibility") {
             auto* cat = dynamic_cast<cdroid::PreferenceGroup*>(
@@ -149,6 +158,12 @@ public:
     void onDestroy() override {
         *mNetAlive = false;
         cdroid::WifiManager::getInstance().removeNetworkStateListener(this);
+        *mBtAlive = false;
+        cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
+        bt.removeAdapterStateListener(this);
+        bt.removeDiscoveryListener(this);
+        bt.removeBondStateListener(this);
+        bt.removePairingListener(this);
         PreferenceFragment::onDestroy();
     }
 
@@ -169,8 +184,38 @@ public:
      * without touching the freed fragment. */
     std::shared_ptr<bool> mNetAlive = std::make_shared<bool>(false);
 
+    // --- Connected devices screen (cdblue: BluetoothAdapter) ---------------
+    // Same shape as the network screen: synchronous calls on the main
+    // thread, BlueZ monitor callbacks marshaled through a main-looper
+    // Handler with a heap-stable lifetime token.
+    void setupConnectedScreen();
+    void refreshBluetoothStatus();
+    void rebuildBondedSection();
+    void showBluetoothPicker();
+    void showBluetoothDetails();
+    std::shared_ptr<bool> mBtAlive = std::make_shared<bool>(false);
+    /* Picker bookkeeping — main thread only. */
+    cdroid::AlertDialog* mBtPickerDialog = nullptr;
+    cdroid::LinearLayout* mBtPickerList = nullptr;
+    cdroid::TextView* mBtPickerHint = nullptr;
+    std::map<std::string, std::string> mBtFoundNames;   // address -> display
+
     // WifiManager::NetworkStateListener (monitor thread).
     void onNetworkStateChanged(const cdroid::WifiInfo&) override;
+
+    // BluetoothAdapter listeners (BlueZ monitor thread; marshaled to main).
+    void onAdapterStateChanged(int newState, int prevState) override;
+    void onDiscoveryStarted() override;
+    void onDeviceFound(const cdroid::BluetoothDevice& device) override;
+    void onDiscoveryFinished() override;
+    void onBondStateChanged(const cdroid::BluetoothDevice& device,
+                            int bondState, int prevState) override;
+    // BluetoothPairingListener (agent thread).
+    void onPairingRequest(const cdroid::BluetoothDevice& device,
+                          int pairingVariant) override;
+    void onDisplayPasskey(const cdroid::BluetoothDevice& device,
+                          uint32_t passkey, int pairedDuration) override;
+    void onPairingCancelled(const cdroid::BluetoothDevice& device) override;
 
     /** AUTOCYCLE walker (see onCreatePreferences). Each step is a fresh
      *  lambda capturing values only — no self-referencing runnable. */
@@ -642,6 +687,307 @@ void SettingsFragment::buildEthernetSection() {
         });
         cat->addPreference(apply);
     }
+}
+
+// --- Connected devices screen (cdblue) ---------------------------------------
+
+void SettingsFragment::setupConnectedScreen() {
+    *mBtAlive = true;
+    cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
+    // Interactive pairing: the dialogs below answer the agent's requests
+    // (PIN / passkey / confirmation). Just-works peers never ask.
+    bt.registerPairingAgent("DisplayYesNo");
+    bt.addAdapterStateListener(this);
+    bt.addDiscoveryListener(this);
+    bt.addBondStateListener(this);
+    bt.addPairingListener(this);
+
+    if (auto* sw = dynamic_cast<cdroid::SwitchPreference*>(findPreference("bluetooth_enabled"))) {
+        sw->setChecked(bt.isEnabled());
+        sw->setOnPreferenceChangeListener(
+                [this](cdroid::Preference&, const nonstd::any& newValue) {
+            cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
+            const bool on = nonstd::any_cast<bool>(newValue);
+            if (on) bt.enable(); else bt.disable();
+            refreshBluetoothStatus();
+            rebuildBondedSection();
+            return true;
+        });
+    }
+    if (cdroid::Preference* pick = findPreference("bluetooth_pairing")) {
+        pick->setOnPreferenceClickListener([this](cdroid::Preference&) {
+            showBluetoothPicker();
+            return true;
+        });
+    }
+    if (cdroid::Preference* name = findPreference("bluetooth_device_name")) {
+        name->setOnPreferenceClickListener([this](cdroid::Preference&) {
+            showBluetoothDetails();
+            return true;
+        });
+    }
+    refreshBluetoothStatus();
+    rebuildBondedSection();
+}
+
+void SettingsFragment::refreshBluetoothStatus() {
+    cdroid::Preference* name = findPreference("bluetooth_device_name");
+    if (name == nullptr) return;
+    cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
+    if (!bt.isEnabled()) { name->setSummary("Bluetooth 关"); return; }
+    const std::string addr = bt.getAddress();
+    name->setSummary(bt.getName() + (addr.empty() ? std::string() : "  ·  " + addr));
+}
+
+void SettingsFragment::rebuildBondedSection() {
+    auto* cat = dynamic_cast<cdroid::PreferenceGroup*>(findPreference("bluetooth_bonded"));
+    if (cat == nullptr || getPreferenceScreen() == nullptr) return;
+    cat->removeAll();
+    cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
+    for (cdroid::BluetoothDevice d : bt.getBondedDevices()) {
+        const std::string display = d.getName().empty() ? d.getAddress() : d.getName();
+        auto* row = new cdroid::Preference(*requireContext());
+        row->setKey("bt_bonded_" + d.getAddress());
+        row->setTitle(display);
+        row->setSummary(d.getAddress());
+        row->setOnPreferenceClickListener([this, d](cdroid::Preference&) mutable {
+            cdroid::Context* c = requireContext();
+            if (c == nullptr) return true;
+            cdroid::AlertDialog::Builder(c)
+                   .setTitle(d.getName().empty() ? d.getAddress() : d.getName())
+                   .setMessage("已配对\n" + d.getAddress())
+                   .setPositiveButton("解除配对", [d](cdroid::DialogInterface&, int) mutable {
+                       d.removeBond();
+                   })
+                   .setNegativeButton("取消", [](cdroid::DialogInterface&, int) {})
+                   .show();
+            return true;
+        });
+        cat->addPreference(row);
+    }
+}
+
+void SettingsFragment::showBluetoothPicker() {
+    cdroid::Context* ctx = requireContext();
+    if (ctx == nullptr) return;
+    cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
+    if (!bt.isEnabled()) {
+        cdroid::Toast::makeText(ctx, "蓝牙未开启", cdroid::Toast::LENGTH_SHORT)->show();
+        return;
+    }
+    auto* list = new cdroid::LinearLayout(ctx);
+    list->setOrientation(cdroid::LinearLayout::VERTICAL);
+    cdroid::AlertDialog* dialog = cdroid::AlertDialog::Builder(ctx)
+        .setTitle("扫描设备")
+        .setView(list)
+        .setNegativeButton("取消", [](cdroid::DialogInterface&, int) {})
+        .create();
+    mBtPickerDialog = dialog;
+    mBtPickerList = list;
+    mBtFoundNames.clear();
+    auto* hint = new cdroid::TextView(ctx);
+    hint->setText("扫描中…");
+    hint->setTextSize(15);
+    hint->setPadding(48, 28, 48, 28);
+    list->addView(hint);
+    mBtPickerHint = hint;
+    dialog->show();
+    if (!bt.startDiscovery()) hint->setText("(无法启动扫描)");
+}
+
+void SettingsFragment::showBluetoothDetails() {
+    cdroid::Context* ctx = requireContext();
+    if (ctx == nullptr) return;
+    cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
+    static const char* kStates[] = {"未知", "关闭", "正在打开", "打开", "正在关闭"};
+    std::string text = std::string("状态  ") + kStates[bt.getState() > 13 || bt.getState() < 10 ? 0 : bt.getState() - 10]
+            + "\n名称  " + bt.getName()
+            + "\n地址  " + bt.getAddress()
+            + "\n扫描  " + (bt.isDiscovering() ? "进行中" : "空闲");
+    const std::vector<cdroid::BluetoothDevice> bonded = bt.getBondedDevices();
+    text += "\n已配对  " + std::to_string(bonded.size()) + " 台";
+    for (cdroid::BluetoothDevice d : bonded) {
+        text += std::string("\n  ") + (d.getName().empty() ? d.getAddress() : d.getName());
+    }
+    cdroid::AlertDialog::Builder(ctx)
+        .setTitle("蓝牙详情")
+        .setMessage(text)
+        .setPositiveButton("确定", [](cdroid::DialogInterface&, int) {})
+        .show();
+}
+
+void SettingsFragment::onAdapterStateChanged(int, int) {
+    // BlueZ monitor thread -> main looper.
+    if (!*mBtAlive) return;
+    static cdroid::Handler sBtHandler(cdroid::Looper::getMainLooper());
+    sBtHandler.post([this, alive = mBtAlive]{
+        if (!*alive) return;
+        cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
+        if (auto* sw = dynamic_cast<cdroid::SwitchPreference*>(
+                findPreference("bluetooth_enabled"))) {
+            sw->setChecked(bt.isEnabled());
+        }
+        refreshBluetoothStatus();
+        rebuildBondedSection();
+    });
+}
+
+void SettingsFragment::onDiscoveryStarted() {}
+
+void SettingsFragment::onDeviceFound(const cdroid::BluetoothDevice& device) {
+    if (!*mBtAlive) return;
+    static cdroid::Handler sBtHandler(cdroid::Looper::getMainLooper());
+    sBtHandler.post([this, alive = mBtAlive, device]() mutable {
+        if (!*alive || mBtPickerDialog == nullptr) return;
+        const std::string addr = device.getAddress();
+        if (addr.empty() || mBtFoundNames.count(addr)) return;
+        mBtFoundNames[addr] = device.getName();
+        if (mBtPickerHint != nullptr) {   // first result replaces the hint
+            mBtPickerList->removeView(mBtPickerHint);
+            mBtPickerHint = nullptr;
+        }
+        cdroid::Context* ctx = requireContext();
+        if (ctx == nullptr) return;
+        const std::string display = device.getName().empty() ? addr : device.getName();
+        auto* row = new cdroid::TextView(ctx);
+        row->setText(display + "\n" + addr);
+        row->setTextSize(15);
+        row->setPadding(48, 28, 48, 28);
+        row->setClickable(true);
+        row->setOnClickListener([this, addr, display](cdroid::View&) {
+            if (mBtPickerDialog != nullptr) mBtPickerDialog->dismiss();
+            /* Mint a fresh device handle at click time (the row's captured
+             * copy would be const inside a non-mutable listener). */
+            cdroid::BluetoothAdapter::getDefaultAdapter()
+                    .getRemoteDevice(addr).createBond();
+            cdroid::Context* c = requireContext();
+            if (c != nullptr) {
+                cdroid::Toast::makeText(c, "配对 " + display + " …",
+                                        cdroid::Toast::LENGTH_SHORT)->show();
+            }
+        });
+        mBtPickerList->addView(row);
+    });
+}
+
+void SettingsFragment::onDiscoveryFinished() {
+    if (!*mBtAlive) return;
+    static cdroid::Handler sBtHandler(cdroid::Looper::getMainLooper());
+    sBtHandler.post([this, alive = mBtAlive]{
+        if (!*alive) return;
+        if (mBtPickerDialog == nullptr || mBtPickerHint == nullptr) return;
+        mBtPickerHint->setText("未发现设备(再次点按重新扫描)");
+    });
+}
+
+void SettingsFragment::onBondStateChanged(const cdroid::BluetoothDevice& device,
+                                          int bondState, int) {
+    if (!*mBtAlive) return;
+    static cdroid::Handler sBtHandler(cdroid::Looper::getMainLooper());
+    sBtHandler.post([this, alive = mBtAlive, device, bondState]() mutable {
+        if (!*alive) return;
+        rebuildBondedSection();
+        if (bondState != cdroid::BluetoothDevice::BOND_BONDED) return;
+        cdroid::Context* c = requireContext();
+        if (c == nullptr) return;
+        const std::string display = device.getName().empty()
+                ? device.getAddress() : device.getName();
+        cdroid::Toast::makeText(c, "已配对 " + display,
+                                cdroid::Toast::LENGTH_SHORT)->show();
+    });
+}
+
+void SettingsFragment::onPairingRequest(const cdroid::BluetoothDevice& device,
+                                        int pairingVariant) {
+    if (!*mBtAlive) return;
+    static cdroid::Handler sBtHandler(cdroid::Looper::getMainLooper());
+    sBtHandler.post([this, alive = mBtAlive, device, pairingVariant]() mutable {
+        if (!*alive) return;
+        cdroid::Context* c = requireContext();
+        if (c == nullptr) return;
+        cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
+        const std::string display = device.getName().empty()
+                ? device.getAddress() : device.getName();
+        using cdroid::BluetoothDevice;
+        if (pairingVariant == BluetoothDevice::PAIRING_VARIANT_PIN
+                || pairingVariant == BluetoothDevice::PAIRING_VARIANT_PIN_16_DIGITS) {
+            auto* input = new cdroid::EditText(c);
+            input->setHint("PIN");
+            cdroid::AlertDialog::Builder(c)
+                .setTitle("输入 " + display + " 的 PIN")
+                .setView(input)
+                .setPositiveButton("配对", [input](cdroid::DialogInterface&, int) {
+                    cdroid::BluetoothAdapter::getDefaultAdapter()
+                        .replyPairingPin(std::string(input->getText()));
+                })
+                .setNegativeButton("取消", [](cdroid::DialogInterface&, int) {
+                    cdroid::BluetoothAdapter::getDefaultAdapter()
+                        .cancelPairingUserInput();
+                })
+                .show();
+        } else if (pairingVariant == BluetoothDevice::PAIRING_VARIANT_PASSKEY) {
+            auto* input = new cdroid::EditText(c);
+            input->setHint("6 位数字密钥");
+            cdroid::AlertDialog::Builder(c)
+                .setTitle("输入 " + display + " 的密钥")
+                .setView(input)
+                .setPositiveButton("配对", [input](cdroid::DialogInterface&, int) {
+                    const std::string t = std::string(input->getText());
+                    try { cdroid::BluetoothAdapter::getDefaultAdapter()
+                            .replyPairingPasskey((uint32_t)std::stoul(t)); }
+                    catch (...) { cdroid::BluetoothAdapter::getDefaultAdapter()
+                            .cancelPairingUserInput(); }
+                })
+                .setNegativeButton("取消", [](cdroid::DialogInterface&, int) {
+                    cdroid::BluetoothAdapter::getDefaultAdapter()
+                        .cancelPairingUserInput();
+                })
+                .show();
+        } else if (pairingVariant == BluetoothDevice::PAIRING_VARIANT_PASSKEY_CONFIRMATION
+                || pairingVariant == BluetoothDevice::PAIRING_VARIANT_CONSENT) {
+            cdroid::AlertDialog::Builder(c)
+                .setTitle("配对请求")
+                .setMessage("与 " + display + " 配对?")
+                .setPositiveButton("配对", [](cdroid::DialogInterface&, int) {
+                    cdroid::BluetoothAdapter::getDefaultAdapter()
+                        .replyPairingConfirmation(true);
+                })
+                .setNegativeButton("取消", [](cdroid::DialogInterface&, int) {
+                    cdroid::BluetoothAdapter::getDefaultAdapter()
+                        .replyPairingConfirmation(false);
+                })
+                .show();
+        } else {
+            bt.cancelPairingUserInput();
+        }
+    });
+}
+
+void SettingsFragment::onDisplayPasskey(const cdroid::BluetoothDevice& device,
+                                        uint32_t passkey, int) {
+    if (!*mBtAlive) return;
+    static cdroid::Handler sBtHandler(cdroid::Looper::getMainLooper());
+    sBtHandler.post([this, alive = mBtAlive, device, passkey]() mutable {
+        if (!*alive) return;
+        cdroid::Context* c = requireContext();
+        if (c == nullptr) return;
+        const std::string display = device.getName().empty()
+                ? device.getAddress() : device.getName();
+        cdroid::Toast::makeText(c, "在 " + display + " 上输入密钥 " +
+                std::to_string(passkey), cdroid::Toast::LENGTH_LONG)->show();
+    });
+}
+
+void SettingsFragment::onPairingCancelled(const cdroid::BluetoothDevice&) {
+    if (!*mBtAlive) return;
+    static cdroid::Handler sBtHandler(cdroid::Looper::getMainLooper());
+    sBtHandler.post([this, alive = mBtAlive]{
+        if (!*alive) return;
+        cdroid::Context* c = requireContext();
+        if (c != nullptr) {
+            cdroid::Toast::makeText(c, "配对已取消", cdroid::Toast::LENGTH_SHORT)->show();
+        }
+    });
 }
 
 void SettingsFragment::cycleStep(int index) {
