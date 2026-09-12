@@ -266,6 +266,39 @@ static int testWindowCount(){
 
 /* close() idempotence: a second close() while the first is still pending must
    not post a second `delete self` for the same Window (double free). */
+/* Builder.setItems (plain list, no message, negative-only): the dialog must
+ * render the item rows. Regression for the preferencedemo Wi-Fi picker showing
+ * a blank body — dumps the composited frame to /tmp for pixel inspection. */
+TEST_F(DIALOG,BuilderSetItems){
+   App&app=App::getInstance();
+   // Preferencedemo runs Theme.Material.Light — reproduce under it (a second
+   // run keeps the default theme: argv DIALOG_THEME=default restores).
+   app.setTheme((int)internal::R::style::Theme_Material_Light);
+   std::vector<std::string>items{"alpha-1","beta-2","gamma-3"};
+   AlertDialog*dlg=AlertDialog::Builder(&app)
+         .setTitle("PickOne")
+         .setItems(items,[](DialogInterface&,int){})
+         .setNegativeButton("Cancel",nullptr)
+         .show();
+   ASSERT_NE(dlg,nullptr);
+   pumpFor(600);
+   /* Regression (preferencedemo wifi-picker report): a setItems dialog must
+      lay out one measured row per item — not an empty body. */
+   AbsListView*list=nullptr;
+   std::function<void(cdroid::View*)> findList=[&](cdroid::View* v){
+       if(v==nullptr)return;
+       if(auto*lv=dynamic_cast<AbsListView*>(v))list=lv;
+       if(auto*g=dynamic_cast<cdroid::ViewGroup*>(v))
+           for(int i=0;i<g->getChildCount();i++)findList(g->getChildAt(i));
+   };
+   findList(dlg->getWindow()->getRootView());
+   ASSERT_NE(list,nullptr);
+   EXPECT_EQ(list->getCount(),3);
+   EXPECT_GT(list->getHeight(),0);
+   dlg->dismiss();
+   pumpFor(100);
+}
+
 TEST_F(DIALOG,WindowDoubleClose){
    App&app=App::getInstance();
    Window*w=new Window(&app,0,0,100,100,Window::TYPE_APPLICATION);
