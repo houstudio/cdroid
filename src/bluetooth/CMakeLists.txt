@@ -17,6 +17,8 @@ find_path(SDBUS_INCLUDE_DIR systemd/sd-bus.h)
 find_library(SDBUS_LIBRARY NAMES systemd)
 
 add_library(cdblue
+    internal/sdppdu.cc
+    internal/sdpclient.cc
     bluetoothadapter.cc
     bluetoothdevice.cc
     bluetoothsocket.cc
@@ -41,3 +43,7 @@ target_link_libraries(bttest cdblue)
 add_executable(btmock btmock.cc)
 target_link_libraries(btmock ${SDBUS_LIBRARY})
 target_include_directories(btmock PRIVATE ${SDBUS_INCLUDE_DIR})
+
+# Pure-logic suite (no daemon / privileges required) — the wifitests analog.
+add_executable(bluetoothtests bluetoothtests.cc)
+target_link_libraries(bluetoothtests cdblue)

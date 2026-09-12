@@ -30,6 +30,7 @@
 #include <bluetoothgatt.h>
 #include <bluetoothle.h>
 #include <bluetoothsocket.h>
+#include "internal/sdpclient.h"
 #include <bluetoothuuid.h>
 
 using cdroid::BluetoothAdapter;
@@ -376,6 +377,18 @@ int main(int argc, char** argv) {
         printf("profiles: a2dp=%d hfp=%d (stubs until the audio "
                "pipeline lands)\n", (int)a2dp, (int)hfp);
         return (a2dp && hfp) ? 0 : 1;
+    }
+    if (cmd == "sdp" && argc >= 3) {
+        /* SDP resolve over L2CAP PSM 1 (needs a live peer with an SDP
+         * server — a real phone/dongle; vhci peers have none) */
+        const BluetoothUuid uuid = BluetoothUuid::SerialPort();
+        std::vector<uint8_t> uuidBytes;
+        for (int i = 15; i >= 0; i--)
+            uuidBytes.push_back((uint8_t)((i < 8 ? uuid.lsb : uuid.msb)
+                    >> ((i % 8) * 8)));
+        const int channel = cdroid::sdpResolveRfcommChannel(argv[2], uuidBytes);
+        printf("sdp: %s SPP channel = %d\n", argv[2], channel);
+        return channel > 0 ? 0 : 1;
     }
     fprintf(stderr, "unknown command '%s'\n", cmd.c_str());
     return 1;

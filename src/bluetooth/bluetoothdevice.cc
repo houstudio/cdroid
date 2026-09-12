@@ -11,6 +11,7 @@
 #include <bluetoothdevice.h>
 #include <bluetoothgatt.h>
 #include <bluetoothsocket.h>
+#include "internal/sdpclient.h"
 
 namespace cdroid {
 
@@ -87,9 +88,16 @@ BluetoothSocket* BluetoothDevice::createRfcommSocket(int channel) const {
 
 BluetoothSocket* BluetoothDevice::createRfcommSocketToServiceRecord(
         const BluetoothUuid& uuid) const {
-    /* SDP resolution (L2CAP PSM 1 query) needs a live controller — the
-     * resolver ships with the hardware bench. Interim: SPP maps to
-     * channel 1, the de-facto SPP convention; anything else fails. */
+    /* SDP resolution over L2CAP PSM 1 (internal/sdpclient): the AOSP
+     * behavior — ask the remote which RFCOMM channel serves the UUID.
+     * Falls back to the SPP convention channel 1 when the remote has no
+     * SDP server (legacy embedded peers). */
+    std::vector<uint8_t> uuidBytes;
+    for (int i = 15; i >= 0; i--)
+        uuidBytes.push_back((uint8_t)((i < 8 ? uuid.lsb : uuid.msb)
+                >> ((i % 8) * 8)));
+    const int channel = sdpResolveRfcommChannel(mAddress, uuidBytes);
+    if (channel > 0) return new BluetoothSocket(*this, channel, true);
     if (uuid == BluetoothUuid::SerialPort())
         return new BluetoothSocket(*this, 1, true);
     return nullptr;
@@ -97,6 +105,12 @@ BluetoothSocket* BluetoothDevice::createRfcommSocketToServiceRecord(
 
 BluetoothSocket* BluetoothDevice::createInsecureRfcommSocketToServiceRecord(
         const BluetoothUuid& uuid) const {
+    std::vector<uint8_t> uuidBytes;
+    for (int i = 15; i >= 0; i--)
+        uuidBytes.push_back((uint8_t)((i < 8 ? uuid.lsb : uuid.msb)
+                >> ((i % 8) * 8)));
+    const int channel = sdpResolveRfcommChannel(mAddress, uuidBytes);
+    if (channel > 0) return new BluetoothSocket(*this, channel, false);
     if (uuid == BluetoothUuid::SerialPort())
         return new BluetoothSocket(*this, 1, false);
     return nullptr;
