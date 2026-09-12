@@ -150,11 +150,55 @@ static int device_disconnect(sd_bus_message* m, void*, sd_bus_error*) {
     return sd_bus_emit_properties_changed(bus, path, "org.bluez.Device1",
                                           "Connected", NULL);
 }
+/* Agent manager: remember who registered an agent, so Pair can ask it. */
+static char* gAgentOwner = nullptr;   /* client's unique bus name */
+static char* gAgentPath = nullptr;
+
+static int agentmgr_register(sd_bus_message* m, void*, sd_bus_error*) {
+    const char* path = nullptr, *cap = nullptr;
+    sd_bus_message_read(m, "os", &path, &cap);
+    const char* sender = sd_bus_message_get_sender(m);
+    free(gAgentOwner); free(gAgentPath);
+    gAgentOwner = sender ? strdup(sender) : nullptr;
+    gAgentPath = path ? strdup(path) : nullptr;
+    printf("[btmock] RegisterAgent %s (%s) by %s\n", path, cap, sender);
+    return sd_bus_reply_method_return(m, "");
+}
+static int agentmgr_default(sd_bus_message* m, void*, sd_bus_error*) {
+    return sd_bus_reply_method_return(m, "");
+}
+static const sd_bus_vtable kAgentMgrVtable[] = {
+    SD_BUS_VTABLE_START(0),
+    SD_BUS_METHOD("RegisterAgent", "os", NULL, agentmgr_register, 0),
+    SD_BUS_METHOD("RequestDefaultAgent", "o", NULL, agentmgr_default, 0),
+    SD_BUS_VTABLE_END,
+};
+
 static int pair_device(sd_bus_message* m, void*, sd_bus_error*) {
     sd_bus* bus = sd_bus_message_get_bus(m);
     const char* path = sd_bus_message_get_path(m);
-    sd_bus_reply_method_return(m, "");
     printf("[btmock] Pair %s\n", path);
+    /* real stacks consult the registered agent: ask for a PIN and wait. */
+    if (gAgentOwner && gAgentPath) {
+        sd_bus_error err = SD_BUS_ERROR_NULL;
+        sd_bus_message* reply = nullptr;
+        const int rc = sd_bus_call_method(bus, gAgentOwner, gAgentPath,
+                "org.bluez.Agent1", "RequestPinCode", &err, &reply,
+                "o", path);
+        if (rc >= 0) {
+            const char* pin = nullptr;
+            sd_bus_message_read(reply, "s", &pin);
+            printf("[btmock] agent supplied PIN '%s'\n", pin ? pin : "?");
+            sd_bus_message_unref(reply);
+        } else {
+            printf("[btmock] agent declined (%s)\n",
+                   err.message ? err.message : strerror(-rc));
+            sd_bus_error_free(&err);
+            return sd_bus_reply_method_error(m, &err);
+        }
+        sd_bus_error_free(&err);
+    }
+    sd_bus_reply_method_return(m, "");
     /* bond completed: flip the Paired property and announce it */
     gDev2Paired = true;
     return sd_bus_emit_properties_changed(bus, path, "org.bluez.Device1",
@@ -342,6 +386,9 @@ int main() {
                              kServiceVtable, nullptr);
     sd_bus_add_object_vtable(bus, nullptr, kCharPath, "org.bluez.GattCharacteristic1",
                              kCharVtable, nullptr);
+    sd_bus_add_object_vtable(bus, nullptr, "/org/bluez",
+                             "org.bluez.AgentManager1",
+                             kAgentMgrVtable, nullptr);
     sd_bus_add_object_manager(bus, nullptr, "/org/bluez");
 
     /* seed the object manager with both devices */

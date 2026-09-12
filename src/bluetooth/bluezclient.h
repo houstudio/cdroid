@@ -101,6 +101,12 @@ public:
         /* D-Bus/bluez service lost and re-established (daemon restart). */
         virtual void onBluezDisconnected() {}
         virtual void onBluezReconnected() {}
+        /* Pairing agent requests (org.bluez.Agent1). The pending daemon
+         * request is held until replyPairing*() answers it. */
+        virtual void onPairingPinRequested(const std::string& address) {}
+        virtual void onPairingConfirmationRequested(const std::string& address) {}
+        virtual void onDisplayPasskey(const std::string& address, uint32_t passkey) {}
+        virtual void onPairingCancelled() {}
     };
 
     explicit BluezClient(Events* events);
@@ -158,11 +164,37 @@ public:
                    const std::vector<uint8_t>& value, bool withoutResponse);
     bool gattSetNotify(const std::string& characteristicPath, bool enable);
 
+    /* --- pairing agent ----------------------------------------------------- */
+    /* Register an org.bluez.Agent1 on the shared connection and make it
+     * the default. Capability: "DisplayYesNo" (interactive UI) or
+     * "NoInputNoOutput" (just-works). Requests surface through Events
+     * and stay pending until the reply calls below. */
+    bool registerAgent(const std::string& capability);
+    /* Answer the pending request (from BluetoothDevice.setPin /
+     * setPairingConfirmation / cancelPairingUserInput). */
+    bool replyPairingPin(const std::string& pin);
+    bool replyPairingPasskey(uint32_t passkey);
+    bool replyPairingConfirmation(bool confirm);
+    void cancelPairingReply();
+
     /* --- device cache (maintained by the monitor; copy under lock) ------ */
     std::vector<BluezDevice> getDevices() const;
     bool findDevice(const std::string& address, BluezDevice& out) const;
 
 private:
+    /* agent vtable callbacks */
+    static int agentRequestPinCode(sd_bus_message* m, void* userdata, sd_bus_error* e);
+    static int agentRequestPasskey(sd_bus_message* m, void* userdata, sd_bus_error* e);
+    static int agentRequestAuthorization(sd_bus_message* m, void* userdata, sd_bus_error* e);
+    static int agentAuthorizeService(sd_bus_message* m, void* userdata, sd_bus_error* e);
+    static int agentDisplayPasskey(sd_bus_message* m, void* userdata, sd_bus_error* e);
+    static int agentDisplayPinCode(sd_bus_message* m, void* userdata, sd_bus_error* e);
+    static int agentCancel(sd_bus_message* m, void* userdata, sd_bus_error* e);
+    static int agentRelease(sd_bus_message* m, void* userdata, sd_bus_error* e);
+    /* hold/answer the pending agent request */
+    void holdPendingPairing(sd_bus_message* m, const std::string& address, int kind);
+    std::string addressForDevicePath(const std::string& objectPath) const;
+
     /* monitor thread */
     void monitorLoop();
     void stopMonitor();
@@ -205,6 +237,15 @@ private:
     std::map<std::string, BluezDevice> mDevices;   /* objectPath -> device */
     std::map<std::string, BluezGattService> mGattServices;
     std::map<std::string, BluezGattCharacteristic> mGattCharacteristics;
+
+    /* pending pairing request: kind 0=pin, 1=passkey, 2=confirmation */
+    struct PendingPairing {
+        sd_bus_message* message = nullptr;   /* ref-held, replied later */
+        std::string address;
+        int kind = -1;
+    };
+    std::mutex mPairingMutex;
+    PendingPairing mPendingPairing;
 
     std::mutex mBusMutex;              /* serializes sd_bus request calls */
     std::thread mMonitorThread;

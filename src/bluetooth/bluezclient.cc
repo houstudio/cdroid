@@ -150,6 +150,225 @@ bool BluezClient::connect() {
     return true;
 }
 
+
+/* ------------------------------------------------------------------ */
+/* pairing agent (org.bluez.Agent1)                                    */
+/* ------------------------------------------------------------------ */
+
+static const char* kAgentPath = "/org/cdroid/agent";
+static const char* kAgentIface = "org.bluez.Agent1";
+static const char* kAgentMgrIface = "org.bluez.AgentManager1";
+
+std::string BluezClient::addressForDevicePath(const std::string& objectPath) const {
+    /* ".../dev_AA_BB_CC_DD_EE_FF..." -> "AA:BB:CC:DD:EE:FF" */
+    const size_t pos = objectPath.find("/dev_");
+    if (pos == std::string::npos) return std::string();
+    std::string addr = objectPath.substr(pos + 5);
+    const size_t end = addr.find('/');
+    if (end != std::string::npos) addr = addr.substr(0, end);
+    std::replace(addr.begin(), addr.end(), '_', ':');
+    return addr;
+}
+
+void BluezClient::holdPendingPairing(sd_bus_message* m,
+                                     const std::string& address, int kind) {
+    sd_bus_message_ref(m);
+    std::lock_guard<std::mutex> lock(mPairingMutex);
+    if (mPendingPairing.message) {
+        /* superseded: refuse the old one so the daemon is not stuck */
+        sd_bus_error err = SD_BUS_ERROR_NULL;
+        sd_bus_error_set(&err, "org.bluez.Error.Rejected", "superseded");
+        sd_bus_reply_method_error(m, &err);
+        sd_bus_error_free(&err);
+        sd_bus_message_unref(m);
+        return;
+    }
+    mPendingPairing.message = m;
+    mPendingPairing.address = address;
+    mPendingPairing.kind = kind;
+}
+
+int BluezClient::agentRequestPinCode(sd_bus_message* m, void* userdata,
+                                     sd_bus_error*) {
+    auto* self = static_cast<BluezClient*>(userdata);
+    const char* dev = nullptr;
+    sd_bus_message_read(m, "o", &dev);
+    const std::string addr = self->addressForDevicePath(dev ? dev : "");
+    self->holdPendingPairing(m, addr, 0);
+    LOGD("agent: RequestPinCode for %s (held)", addr.c_str());
+    if (self->mEvents) self->mEvents->onPairingPinRequested(addr);
+    return 0;
+}
+
+int BluezClient::agentRequestPasskey(sd_bus_message* m, void* userdata,
+                                     sd_bus_error*) {
+    auto* self = static_cast<BluezClient*>(userdata);
+    const char* dev = nullptr;
+    sd_bus_message_read(m, "o", &dev);
+    const std::string addr = self->addressForDevicePath(dev ? dev : "");
+    self->holdPendingPairing(m, addr, 1);
+    if (self->mEvents) self->mEvents->onPairingPinRequested(addr);
+    return 0;
+}
+
+int BluezClient::agentRequestAuthorization(sd_bus_message* m, void* userdata,
+                                           sd_bus_error*) {
+    auto* self = static_cast<BluezClient*>(userdata);
+    const char* dev = nullptr;
+    sd_bus_message_read(m, "o", &dev);
+    const std::string addr = self->addressForDevicePath(dev ? dev : "");
+    self->holdPendingPairing(m, addr, 2);
+    if (self->mEvents) self->mEvents->onPairingConfirmationRequested(addr);
+    return 0;
+}
+
+int BluezClient::agentAuthorizeService(sd_bus_message* m, void* userdata,
+                                       sd_bus_error*) {
+    auto* self = static_cast<BluezClient*>(userdata);
+    const char* dev = nullptr;
+    sd_bus_message_read(m, "os", &dev, nullptr);
+    const std::string addr = self->addressForDevicePath(dev ? dev : "");
+    self->holdPendingPairing(m, addr, 2);
+    if (self->mEvents) self->mEvents->onPairingConfirmationRequested(addr);
+    return 0;
+}
+
+int BluezClient::agentDisplayPasskey(sd_bus_message* m, void* userdata,
+                                     sd_bus_error*) {
+    auto* self = static_cast<BluezClient*>(userdata);
+    const char* dev = nullptr;
+    uint32_t passkey = 0;
+    uint16_t entered = 0;
+    sd_bus_message_read(m, "ouq", &dev, &passkey, &entered);
+    const std::string addr = self->addressForDevicePath(dev ? dev : "");
+    if (self->mEvents) self->mEvents->onDisplayPasskey(addr, passkey);
+    return sd_bus_reply_method_return(m, "");
+}
+
+int BluezClient::agentDisplayPinCode(sd_bus_message* m, void* userdata,
+                                     sd_bus_error*) {
+    auto* self = static_cast<BluezClient*>(userdata);
+    const char* dev = nullptr;
+    sd_bus_message_read(m, "os", &dev, nullptr);
+    const std::string addr = self->addressForDevicePath(dev ? dev : "");
+    if (self->mEvents) self->mEvents->onDisplayPasskey(addr, 0);
+    return sd_bus_reply_method_return(m, "");
+}
+
+int BluezClient::agentCancel(sd_bus_message* m, void* userdata, sd_bus_error*) {
+    auto* self = static_cast<BluezClient*>(userdata);
+    {
+        std::lock_guard<std::mutex> lock(self->mPairingMutex);
+        if (self->mPendingPairing.message) {
+            sd_bus_message_unref(self->mPendingPairing.message);
+            self->mPendingPairing.message = nullptr;
+            self->mPendingPairing.kind = -1;
+        }
+    }
+    if (self->mEvents) self->mEvents->onPairingCancelled();
+    return sd_bus_reply_method_return(m, "");
+}
+
+int BluezClient::agentRelease(sd_bus_message* m, void*, sd_bus_error*) {
+    return sd_bus_reply_method_return(m, "");
+}
+
+bool BluezClient::registerAgent(const std::string& capability) {
+    if (!connect()) return false;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        /* vtable with the full method set (member fns are statics) */
+        static const sd_bus_vtable agent[] = {
+            SD_BUS_VTABLE_START(0),
+            SD_BUS_METHOD("RequestPinCode", "o", "s",
+                          BluezClient::agentRequestPinCode, 0),
+            SD_BUS_METHOD("RequestPasskey", "o", "u",
+                          BluezClient::agentRequestPasskey, 0),
+            SD_BUS_METHOD("RequestAuthorization", "o", NULL,
+                          BluezClient::agentRequestAuthorization, 0),
+            SD_BUS_METHOD("AuthorizeService", "os", NULL,
+                          BluezClient::agentAuthorizeService, 0),
+            SD_BUS_METHOD("DisplayPasskey", "ouq", NULL,
+                          BluezClient::agentDisplayPasskey, 0),
+            SD_BUS_METHOD("DisplayPinCode", "os", NULL,
+                          BluezClient::agentDisplayPinCode, 0),
+            SD_BUS_METHOD("Cancel", NULL, NULL, BluezClient::agentCancel, 0),
+            SD_BUS_METHOD("Release", NULL, NULL, BluezClient::agentRelease, 0),
+            SD_BUS_VTABLE_END,
+        };
+        sd_bus_slot* slot = nullptr;
+        if (sd_bus_add_object_vtable(mBus, &slot, kAgentPath, kAgentIface,
+                                     agent, this) < 0)
+            return false;
+        sd_bus_error err = SD_BUS_ERROR_NULL;
+        sd_bus_message* reply = nullptr;
+        const bool ok = sd_bus_call_method(mBus, kBluezService,
+                "/org/bluez", kAgentMgrIface, "RegisterAgent", &err, &reply,
+                "os", kAgentPath, capability.c_str()) >= 0
+         && sd_bus_call_method(mBus, kBluezService, "/org/bluez",
+                kAgentMgrIface, "RequestDefaultAgent", &err, &reply,
+                "o", kAgentPath) >= 0;
+        if (!ok && err.message) LOGD("RegisterAgent failed: %s", err.message);
+        sd_bus_message_unrefp(&reply);
+        sd_bus_error_free(&err);
+        return ok;
+    }
+}
+
+bool BluezClient::replyPairingPin(const std::string& pin) {
+    std::lock_guard<std::mutex> lock(mPairingMutex);
+    if (mPendingPairing.message == nullptr) return false;
+    sd_bus_message* m = mPendingPairing.message;
+    const int rc = sd_bus_reply_method_return(m, "s", pin.c_str());
+    sd_bus_message_unref(m);
+    mPendingPairing.message = nullptr;
+    mPendingPairing.kind = -1;
+    return rc >= 0;
+}
+
+bool BluezClient::replyPairingPasskey(uint32_t passkey) {
+    std::lock_guard<std::mutex> lock(mPairingMutex);
+    if (mPendingPairing.message == nullptr) return false;
+    sd_bus_message* m = mPendingPairing.message;
+    const int rc = sd_bus_reply_method_return(m, "u", passkey);
+    sd_bus_message_unref(m);
+    mPendingPairing.message = nullptr;
+    mPendingPairing.kind = -1;
+    return rc >= 0;
+}
+
+bool BluezClient::replyPairingConfirmation(bool confirm) {
+    std::lock_guard<std::mutex> lock(mPairingMutex);
+    if (mPendingPairing.message == nullptr) return false;
+    sd_bus_message* m = mPendingPairing.message;
+    int rc;
+    if (confirm) {
+        rc = sd_bus_reply_method_return(m, "");
+    } else {
+        sd_bus_error err = SD_BUS_ERROR_NULL;
+        sd_bus_error_set(&err, "org.bluez.Error.Rejected", "rejected by user");
+        rc = sd_bus_reply_method_error(m, &err);
+        sd_bus_error_free(&err);
+    }
+    sd_bus_message_unref(m);
+    mPendingPairing.message = nullptr;
+    mPendingPairing.kind = -1;
+    return rc >= 0;
+}
+
+void BluezClient::cancelPairingReply() {
+    std::lock_guard<std::mutex> lock(mPairingMutex);
+    if (mPendingPairing.message == nullptr) return;
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_error_set(&err, "org.bluez.Error.Canceled", "canceled by user");
+    sd_bus_reply_method_error(mPendingPairing.message, &err);
+    sd_bus_error_free(&err);
+    sd_bus_message_unref(mPendingPairing.message);
+    mPendingPairing.message = nullptr;
+    mPendingPairing.kind = -1;
+}
+
 /* ------------------------------------------------------------------ */
 /* monitor thread                                                      */
 /* ------------------------------------------------------------------ */
@@ -743,8 +962,30 @@ bool BluezClient::deviceCall(const std::string& address, const char* method) {
     return ok;
 }
 
+static int pairNoReply(sd_bus_message* /*reply*/, void*, sd_bus_error*) {
+    return 0;   /* outcome arrives as the Paired property signal */
+}
+
 bool BluezClient::pairDevice(const std::string& address) {
-    return deviceCall(address, "Pair");
+    /* AOSP createBond() is fire-and-forget: the Pair round trip spans
+     * the whole agent negotiation (minutes with a human at the other
+     * end), so a synchronous call would sit on the bus lock and time
+     * out. Send it async; the bond result lands via PropertiesChanged
+     * (Paired) like ACTION_BOND_STATE_CHANGED. */
+    std::string path;
+    {
+        std::lock_guard<std::mutex> lock(mCacheMutex);
+        path = pathForAddressLocked(address);
+    }
+    if (path.empty()) return false;
+    std::lock_guard<std::mutex> lock(mBusMutex);
+    if (!mBus) return false;
+    sd_bus_message* msg = nullptr;
+    if (sd_bus_message_new_method_call(mBus, &msg, kBluezService,
+            path.c_str(), kDeviceIface, "Pair") < 0) return false;
+    const int rc = sd_bus_call_async(mBus, nullptr, msg, pairNoReply, this, 0);
+    sd_bus_message_unref(msg);
+    return rc >= 0;
 }
 
 bool BluezClient::removeDevice(const std::string& address) {

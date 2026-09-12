@@ -203,6 +203,63 @@ void BluetoothAdapter::onGattCharacteristicChanged(
         gatt->onCharacteristicChangedInternal(ch.objectPath, ch.value);
 }
 
+/* --- pairing agent ----------------------------------------------------------- */
+
+bool BluetoothAdapter::registerPairingAgent(const std::string& capability) {
+    return mClient.registerAgent(capability);
+}
+
+void BluetoothAdapter::addPairingListener(BluetoothPairingListener* listener) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    mPairingListeners.push_back(listener);
+}
+
+void BluetoothAdapter::removePairingListener(BluetoothPairingListener* listener) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    mPairingListeners.erase(std::remove(mPairingListeners.begin(),
+                                        mPairingListeners.end(), listener),
+                            mPairingListeners.end());
+}
+
+bool BluetoothAdapter::replyPairingPin(const std::string& pin) {
+    return mClient.replyPairingPin(pin);
+}
+
+bool BluetoothAdapter::replyPairingConfirmation(bool confirm) {
+    return mClient.replyPairingConfirmation(confirm);
+}
+
+void BluetoothAdapter::cancelPairingUserInput() {
+    mClient.cancelPairingReply();
+}
+
+void BluetoothAdapter::onPairingPinRequested(const std::string& address) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    for (BluetoothPairingListener* l : mPairingListeners)
+        l->onPairingRequest(BluetoothDevice(address),
+                            BluetoothDevice::PAIRING_VARIANT_PIN);
+}
+
+void BluetoothAdapter::onPairingConfirmationRequested(const std::string& address) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    for (BluetoothPairingListener* l : mPairingListeners)
+        l->onPairingRequest(BluetoothDevice(address),
+                BluetoothDevice::PAIRING_VARIANT_PASSKEY_CONFIRMATION);
+}
+
+void BluetoothAdapter::onDisplayPasskey(const std::string& address,
+                                        uint32_t passkey) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    for (BluetoothPairingListener* l : mPairingListeners)
+        l->onDisplayPasskey(BluetoothDevice(address), passkey, 0);
+}
+
+void BluetoothAdapter::onPairingCancelled() {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    for (BluetoothPairingListener* l : mPairingListeners)
+        l->onPairingCancelled(BluetoothDevice(std::string()));
+}
+
 /* --- remote devices ------------------------------------------------------- */
 
 BluetoothDevice BluetoothAdapter::getRemoteDevice(const std::string& address) {

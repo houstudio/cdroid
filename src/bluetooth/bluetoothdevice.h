@@ -31,6 +31,16 @@ public:
     static constexpr int BOND_BONDING = 11;
     static constexpr int BOND_BONDED = 12;
 
+    /* --- pairing variants (EXTRA_PAIRING_VARIANT values) ---------------- */
+    static constexpr int PAIRING_VARIANT_PIN = 0;
+    static constexpr int PAIRING_VARIANT_PASSKEY = 1;
+    static constexpr int PAIRING_VARIANT_PASSKEY_CONFIRMATION = 2;
+    static constexpr int PAIRING_VARIANT_CONSENT = 3;
+    static constexpr int PAIRING_VARIANT_DISPLAY_PASSKEY = 4;
+    static constexpr int PAIRING_VARIANT_DISPLAY_PIN = 5;
+    static constexpr int PAIRING_VARIANT_OOB_CONSENT = 6;
+    static constexpr int PAIRING_VARIANT_PIN_16_DIGITS = 7;
+
     /* --- device type (getType) ---------------------------------------- */
     static constexpr int DEVICE_TYPE_UNKNOWN = 0;
     static constexpr int DEVICE_TYPE_CLASSIC = 1;
@@ -82,6 +92,14 @@ public:
     bool createBond();
     /* Remove bond (remote side keeps its link key — same caveat as AOSP). */
     bool removeBond();
+
+    /* --- pairing answers (call from a pairing listener) -------------------- */
+    /* Answer a pending PAIRING_VARIANT_PIN request. */
+    bool setPin(const std::string& pin);
+    /* Answer a PASSKEY_CONFIRMATION/CONSENT request. */
+    bool setPairingConfirmation(bool confirm);
+    /* Abort the pending request. */
+    bool cancelPairingUserInput();
 
     bool operator==(const BluetoothDevice& other) const {
         return mAddress == other.mAddress;

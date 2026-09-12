@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <bluetoothpairing.h>
 #include <bluetoothdevice.h>
 #include <bluetoothsocket.h>
 #include <bluetoothuuid.h>
@@ -152,6 +153,18 @@ public:
     void addBondStateListener(BondStateListener* listener);
     void removeBondStateListener(BondStateListener* listener);
 
+    /* --- pairing agent ----------------------------------------------------- */
+    /* Register the pairing agent. capability: "DisplayYesNo" (a UI will
+     * answer pairing) or "NoInputNoOutput" (just-works). Must be called
+     * before createBond() when interactive pairing is wanted. */
+    bool registerPairingAgent(const std::string& capability);
+    void addPairingListener(BluetoothPairingListener* listener);
+    void removePairingListener(BluetoothPairingListener* listener);
+    /* BluetoothDevice.setPin / setPairingConfirmation land here. */
+    bool replyPairingPin(const std::string& pin);
+    bool replyPairingConfirmation(bool confirm);
+    void cancelPairingUserInput();
+
     /* --- internal (BluetoothDevice resolve path; do not use) ------------- */
     BluezClient& client() { return mClient; }
     /* GATT session fan-out (characteristic Value changes). */
@@ -183,6 +196,10 @@ private:
     void onBluezDisconnected() override;
     void onBluezReconnected() override;
     void onGattCharacteristicChanged(const BluezGattCharacteristic& ch) override;
+    void onPairingPinRequested(const std::string& address) override;
+    void onPairingConfirmationRequested(const std::string& address) override;
+    void onDisplayPasskey(const std::string& address, uint32_t passkey) override;
+    void onPairingCancelled() override;
 
     void setStateAndNotify(int newState);
     void dispatchFound(const BluezDevice& device);
@@ -204,6 +221,7 @@ private:
     std::vector<DiscoveryListener*> mDiscoveryListeners;
     std::vector<BondStateListener*> mBondListeners;
     std::vector<BluetoothGatt*> mGattSessions;   /* guarded by mStateMutex */
+    std::vector<BluetoothPairingListener*> mPairingListeners;
     BluetoothLeScanner* mLeScanner = nullptr;
 };
 

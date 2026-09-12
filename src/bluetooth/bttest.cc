@@ -25,6 +25,7 @@
 
 #include <bluetoothadapter.h>
 #include <bluetoothdevice.h>
+#include <bluetoothpairing.h>
 #include <bluetoothgatt.h>
 #include <bluetoothle.h>
 #include <bluetoothsocket.h>
@@ -34,6 +35,7 @@ using cdroid::BluetoothAdapter;
 using cdroid::BluetoothDevice;
 using cdroid::BluetoothUuid;
 using cdroid::BluetoothGatt;
+using cdroid::BluetoothPairingListener;
 using cdroid::BluetoothGattCallback;
 using cdroid::BluetoothGattCharacteristic;
 using cdroid::BluetoothGattService;
@@ -152,9 +154,30 @@ int main(int argc, char** argv) {
         return 0;
     }
     if (cmd == "pair" && argc >= 3) {
+        /* Register an agent that auto-answers PIN requests — the bench
+         * stand-in for the settings-app pairing dialog. */
+        class AutoPin : public BluetoothPairingListener {
+        public:
+            void onPairingRequest(const BluetoothDevice& device,
+                                  int variant) override {
+                printf("[pair] agent asked %s variant=%d -> setPin(1234)\n",
+                       device.getAddress().c_str(), variant);
+                BluetoothDevice d = device;   /* setPin is non-const (AOSP) */
+                d.setPin("1234");
+            }
+        } agent;
+        adapter.registerPairingAgent("DisplayYesNo");
+        adapter.addPairingListener(&agent);
         const bool ok = adapter.getRemoteDevice(argv[2]).createBond();
-        printf("pair: %s\n", ok ? "ok" : "FAILED (discover it first?)");
-        return ok ? 0 : 1;
+        printf("pair: %s\n", ok ? "ok (agent negotiation follows)" : "FAILED (discover it first?)");
+        /* createBond is fire-and-forget (AOSP): stay alive for the agent
+         * round + the Paired signal before judging the outcome. */
+        for (int i = 0; i < 8 && !adapter.getRemoteDevice(argv[2]).getBondState()
+                          != BluetoothDevice::BOND_BONDED; i++) usleep(500 * 1000);
+        const int bond = adapter.getRemoteDevice(argv[2]).getBondState();
+        printf("bond: %s\n", bondName(bond));
+        adapter.removePairingListener(&agent);
+        return bond == BluetoothDevice::BOND_BONDED ? 0 : 1;
     }
     if (cmd == "remove" && argc >= 3) {
         const bool ok = adapter.getRemoteDevice(argv[2]).removeBond();

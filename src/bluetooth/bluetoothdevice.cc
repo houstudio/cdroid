@@ -57,6 +57,19 @@ bool BluetoothDevice::removeBond() {
     return BluetoothAdapter::getDefaultAdapter().unbondDevice(mAddress);
 }
 
+bool BluetoothDevice::setPin(const std::string& pin) {
+    return BluetoothAdapter::getDefaultAdapter().replyPairingPin(pin);
+}
+
+bool BluetoothDevice::setPairingConfirmation(bool confirm) {
+    return BluetoothAdapter::getDefaultAdapter().replyPairingConfirmation(confirm);
+}
+
+bool BluetoothDevice::cancelPairingUserInput() {
+    BluetoothAdapter::getDefaultAdapter().cancelPairingUserInput();
+    return true;
+}
+
 BluetoothGatt* BluetoothDevice::connectGatt(bool autoConnect,
                                             BluetoothGattCallback* callback) const {
     return new BluetoothGatt(*this, autoConnect, callback);
