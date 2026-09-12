@@ -4,10 +4,12 @@
 #include <string>
 
 #include <bluetoothclass.h>
+#include <bluetoothuuid.h>
 
 namespace cdroid {
 
 class BluetoothAdapter;
+class BluetoothSocket;
 
 /**
  * Port of android.bluetooth.BluetoothDevice (android-36), module phase.
@@ -88,6 +90,21 @@ public:
     bool operator<(const BluetoothDevice& other) const {
         return mAddress < other.mAddress;
     }
+
+    /* --- RFCOMM socket factories -------------------------------------- */
+
+    /* Create an RFCOMM socket ready to connect to the given channel
+     * (AOSP createRfcommSocket — the "expert" API that skips SDP). */
+    BluetoothSocket* createRfcommSocket(int channel) const;
+    /* Create an RFCOMM socket to the remote service named by the UUID.
+     * The SDP lookup (UUID -> channel) needs the radio up: until the
+     * resolver lands this returns a socket on SPP's channel 1 when the
+     * UUID is SerialPort(), nullptr otherwise. */
+    BluetoothSocket* createRfcommSocketToServiceRecord(
+            const BluetoothUuid& uuid) const;
+    /* Same, without authentication/encryption (AOSP insecure flavor). */
+    BluetoothSocket* createInsecureRfcommSocketToServiceRecord(
+            const BluetoothUuid& uuid) const;
 
     /* AOSP toString: the address in brackets. */
     std::string toString() const;

@@ -9,6 +9,7 @@
 #include <porting/cdlog.h>
 #include <bluetoothadapter.h>
 #include <bluezclient.h>
+#include <bluetoothsocket.h>
 
 namespace cdroid {
 
@@ -143,6 +144,33 @@ bool BluetoothAdapter::isDiscovering() {
         mDiscovering = discovering;
     }
     return discovering;
+}
+
+/* --- RFCOMM listeners ------------------------------------------------------- */
+
+BluetoothServerSocket* BluetoothAdapter::listenUsingRfcommOn(int channel) {
+    return new BluetoothServerSocket(channel, true, std::string());
+}
+
+BluetoothServerSocket* BluetoothAdapter::listenUsingInsecureRfcommOn(
+        int channel) {
+    return new BluetoothServerSocket(channel, false, std::string());
+}
+
+BluetoothServerSocket* BluetoothAdapter::listenUsingRfcommWithServiceRecord(
+        const std::string& name, const BluetoothUuid& uuid) {
+    /* SDP record registration needs the radio (deferred with the SDP
+     * resolver); the listener serves the conventional SPP channel. */
+    if (uuid == BluetoothUuid::SerialPort())
+        return new BluetoothServerSocket(1, true, name);
+    return nullptr;
+}
+
+BluetoothServerSocket* BluetoothAdapter::listenUsingInsecureRfcommWithServiceRecord(
+        const std::string& name, const BluetoothUuid& uuid) {
+    if (uuid == BluetoothUuid::SerialPort())
+        return new BluetoothServerSocket(1, false, name);
+    return nullptr;
 }
 
 /* --- remote devices ------------------------------------------------------- */

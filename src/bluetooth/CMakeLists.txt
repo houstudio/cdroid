@@ -19,6 +19,7 @@ find_library(SDBUS_LIBRARY NAMES systemd)
 add_library(cdblue
     bluetoothadapter.cc
     bluetoothdevice.cc
+    bluetoothsocket.cc
     bluezclient.cc)
 target_include_directories(cdblue PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

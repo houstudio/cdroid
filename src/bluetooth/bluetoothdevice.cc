@@ -55,6 +55,27 @@ bool BluetoothDevice::removeBond() {
     return BluetoothAdapter::getDefaultAdapter().unbondDevice(mAddress);
 }
 
+BluetoothSocket* BluetoothDevice::createRfcommSocket(int channel) const {
+    return new BluetoothSocket(*this, channel, true);
+}
+
+BluetoothSocket* BluetoothDevice::createRfcommSocketToServiceRecord(
+        const BluetoothUuid& uuid) const {
+    /* SDP resolution (L2CAP PSM 1 query) needs a live controller — the
+     * resolver ships with the hardware bench. Interim: SPP maps to
+     * channel 1, the de-facto SPP convention; anything else fails. */
+    if (uuid == BluetoothUuid::SerialPort())
+        return new BluetoothSocket(*this, 1, true);
+    return nullptr;
+}
+
+BluetoothSocket* BluetoothDevice::createInsecureRfcommSocketToServiceRecord(
+        const BluetoothUuid& uuid) const {
+    if (uuid == BluetoothUuid::SerialPort())
+        return new BluetoothSocket(*this, 1, false);
+    return nullptr;
+}
+
 std::string BluetoothDevice::toString() const {
     return mAddress.empty() ? std::string() : "<" + mAddress + ">";
 }

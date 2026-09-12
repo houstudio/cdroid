@@ -18,6 +18,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <errno.h>
 #include <string>
 #include <thread>
 #include <unistd.h>
@@ -27,6 +28,7 @@
 
 using cdroid::BluetoothAdapter;
 using cdroid::BluetoothDevice;
+using cdroid::BluetoothUuid;
 
 static const char* stateName(int s) {
     switch (s) {
@@ -167,6 +169,66 @@ int main(int argc, char** argv) {
         for (int i = 0; i < seconds * 2; i++) usleep(500 * 1000);
         driver.join();
         return 0;
+    }
+    if (cmd == "serve" && argc >= 3) {
+        /* RFCOMM echo server on the given channel (needs a controller) */
+        const int channel = atoi(argv[2]);
+        cdroid::BluetoothServerSocket* server =
+                adapter.listenUsingRfcommOn(channel);
+        if (server == nullptr || server->getChannel() != channel) {
+            printf("serve: bind failed (no controller?)\n");
+            delete server;
+            return 1;
+        }
+        printf("serving RFCOMM channel %d (echo; Ctrl-C to stop)\n", channel);
+        for (;;) {
+            cdroid::BluetoothSocket* client = server->accept(1000);
+            if (client == nullptr) continue;
+            printf("client %s connected\n",
+                   client->getRemoteDevice().getAddress().c_str());
+            char buf[512];
+            int n;
+            while ((n = client->getInputStream()->read(buf, sizeof(buf))) > 0) {
+                client->getOutputStream()->write(buf, n);
+                printf("echo %d bytes\n", n);
+            }
+            printf("client gone (%d)\n", n);
+            delete client;
+        }
+    }
+    if (cmd == "chat" && argc >= 5) {
+        /* RFCOMM client: connect ADDR CHANNEL, send stdin lines */
+        BluetoothDevice remote = adapter.getRemoteDevice(argv[2]);
+        cdroid::BluetoothSocket* sock =
+                remote.createRfcommSocket(atoi(argv[3]));
+        const int rc = sock->connect();
+        if (rc != 0) {
+            printf("connect: %s\n", strerror(-rc));
+            delete sock;
+            return 1;
+        }
+        printf("connected to %s channel %s\n", argv[2], argv[3]);
+        char line[512];
+        while (fgets(line, sizeof(line), stdin)) {
+            const int len = (int)strlen(line);
+            if (sock->getOutputStream()->write(line, len) != len) break;
+            const int n = sock->getInputStream()->read(line, sizeof(line));
+            if (n <= 0) break;
+            printf("<< %.*s", n, line);
+        }
+        delete sock;
+        return 0;
+    }
+    if (cmd == "uuid") {
+        /* pure-logic: canonical string round trip of the constants */
+        printf("SPP   %s\n", BluetoothUuid::SerialPort().toString().c_str());
+        printf("HFP   %s\n", BluetoothUuid::Handsfree().toString().c_str());
+        printf("A2DP  %s\n", BluetoothUuid::AudioSink().toString().c_str());
+        const BluetoothUuid parsed =
+                BluetoothUuid::fromString("00001101-0000-1000-8000-00805F9B34FB");
+        printf("round-trip %s\n",
+               parsed == BluetoothUuid::SerialPort() ? "OK" : "MISMATCH");
+        return parsed == BluetoothUuid::SerialPort() ? 0 : 1;
     }
     fprintf(stderr, "unknown command '%s'\n", cmd.c_str());
     return 1;

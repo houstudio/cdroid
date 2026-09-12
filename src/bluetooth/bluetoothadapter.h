@@ -7,6 +7,8 @@
 #include <vector>
 
 #include <bluetoothdevice.h>
+#include <bluetoothsocket.h>
+#include <bluetoothuuid.h>
 #include <bluezclient.h>
 
 namespace cdroid {
@@ -89,6 +91,21 @@ public:
     bool startDiscovery();
     bool cancelDiscovery();
     bool isDiscovering();
+
+    /* --- RFCOMM listeners ------------------------------------------------- */
+    /* Listen for RFCOMM connections on the given channel (AOSP
+     * listenUsingRfcommOn — no SDP registration, clients connect by the
+     * agreed channel). */
+    BluetoothServerSocket* listenUsingRfcommOn(int channel);
+    BluetoothServerSocket* listenUsingInsecureRfcommOn(int channel);
+    /* listenUsingRfcommWithServiceRecord(name, uuid): the SDP record
+     * registration lands with the SDP resolver; the listener itself is
+     * fully live (bound to the RFCOMM channel SPP convention, 1, when
+     * uuid is SerialPort(), else nullptr). */
+    BluetoothServerSocket* listenUsingRfcommWithServiceRecord(
+            const std::string& name, const BluetoothUuid& uuid);
+    BluetoothServerSocket* listenUsingInsecureRfcommWithServiceRecord(
+            const std::string& name, const BluetoothUuid& uuid);
 
     /* --- remote devices -------------------------------------------------- */
     /* Get a BluetoothDevice object for the given hardware address.
