@@ -35,7 +35,7 @@ public:
     static constexpr int MAP_CLIENT = 18;
     static constexpr int HID_DEVICE = 19;
     static constexpr int HEARING_AID = 21;
-    static constexpr int LE_AUDIO = 26;
+    static constexpr int LE_AUDIO = 22;   /* android-36: 26 is LE_AUDIO_BROADCAST */
 
     /* Connection states (PROFILE_*). */
     static constexpr int PROFILE_DISCONNECTED = 0;
@@ -44,7 +44,7 @@ public:
     static constexpr int PROFILE_DISCONNECTING = 3;
 
     /* Priority constants (PRIORITY_* / CONNECTION_PRIORITY_*). */
-    static constexpr int PRIORITY_AUTO_CONNECT = 1;
+    static constexpr int PRIORITY_AUTO_CONNECT = 1000;
     static constexpr int PRIORITY_ON = 100;
     static constexpr int PRIORITY_OFF = 0;
     static constexpr int PRIORITY_UNDEFINED = -1;

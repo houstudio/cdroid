@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <cstdio>
 
-#include <porting/cdlog.h>
 #include <bluetoothadapter.h>
 #include <bluezclient.h>
 #include <bluetoothsocket.h>
@@ -72,30 +71,18 @@ int BluetoothAdapter::getState() {
     std::lock_guard<std::mutex> lock(mStateMutex);
     if (!know) {
         /* no adapter / no bluez: settle out of any transitional state */
-        if (mAdapterState != STATE_OFF) {
-            mPrevAdapterState = mAdapterState;
-            mAdapterState = STATE_OFF;
-        }
+        if (mAdapterState != STATE_OFF) mAdapterState = STATE_OFF;
         return mAdapterState;
     }
     const int target = powered ? STATE_ON : STATE_OFF;
-    if (mAdapterState != target) {
-        mPrevAdapterState = mAdapterState;
-        mAdapterState = target;
-    }
+    if (mAdapterState != target) mAdapterState = target;
     return mAdapterState;
 }
 
 /* --- identity ---------------------------------------------------------- */
 
 std::string BluetoothAdapter::getAddress() {
-    /* The adapter's own address is not on Adapter1 (it is the object
-     * path suffix, exactly how bluetoothctl displays it). */
-    const std::string& path = mClient.adapterPath();
-    const size_t pos = path.find("/hci");
-    if (pos == std::string::npos) return std::string();
-    /* resolve from the cache: the one device-less way BlueZ offers is
-     * the "Address" adapter property on org.bluez.Adapter1 — fetch it. */
+    /* Cached Adapter1.Address (the snapshot + signals maintain it). */
     std::string address;
     if (mClient.getAdapterString("Address", address)) return address;
     return std::string();
@@ -475,7 +462,7 @@ void BluetoothAdapter::setStateAndNotify(int newState) {
     {
         std::lock_guard<std::mutex> lock(mStateMutex);
         if (mAdapterState == newState) return;
-        prev = mPrevAdapterState = mAdapterState;
+        prev = mAdapterState;
         mAdapterState = newState;
     }
     std::lock_guard<std::mutex> lock(mListenersMutex);

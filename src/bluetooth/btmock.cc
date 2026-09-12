@@ -222,8 +222,9 @@ static int pair_device(sd_bus_message* m, void*, sd_bus_error*) {
         } else {
             printf("[btmock] agent declined (%s)\n",
                    err.message ? err.message : strerror(-rc));
+            const int rrc = sd_bus_reply_method_error(m, &err);
             sd_bus_error_free(&err);
-            return sd_bus_reply_method_error(m, &err);
+            return rrc;
         }
         sd_bus_error_free(&err);
     }

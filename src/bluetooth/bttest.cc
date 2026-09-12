@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
         const int channel = atoi(argv[2]);
         cdroid::BluetoothServerSocket* server =
                 adapter.listenUsingRfcommOn(channel);
-        if (server == nullptr || server->getChannel() != channel) {
+        if (server == nullptr || !server->isBound()) {
             printf("serve: bind failed (no controller?)\n");
             delete server;
             return 1;
@@ -262,8 +262,8 @@ int main(int argc, char** argv) {
     if (cmd == "uuid") {
         /* pure-logic: canonical string round trip of the constants */
         printf("SPP   %s\n", BluetoothUuid::SerialPort().toString().c_str());
-        printf("HFP   %s\n", BluetoothUuid::Handsfree().toString().c_str());
-        printf("A2DP  %s\n", BluetoothUuid::AudioSink().toString().c_str());
+        printf("HFP   %s\n", BluetoothUuid::HFP().toString().c_str());
+        printf("A2DP  %s\n", BluetoothUuid::A2DP_SINK().toString().c_str());
         const BluetoothUuid parsed =
                 BluetoothUuid::fromString("00001101-0000-1000-8000-00805F9B34FB");
         printf("round-trip %s\n",

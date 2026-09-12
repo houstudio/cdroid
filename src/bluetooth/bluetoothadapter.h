@@ -215,14 +215,11 @@ private:
 
     void setStateAndNotify(int newState);
     void dispatchFound(const BluezDevice& device);
-    /* BlueZ object path -> address (".../dev_AA_BB_.." or cache lookup). */
-    std::string addressForPath(const std::string& objectPath) const;
 
     BluezClient& mClient;
 
     std::mutex mStateMutex;
     int mAdapterState = STATE_OFF;
-    int mPrevAdapterState = STATE_OFF;
     bool mDiscovering = false;
 
     /* objectPath -> bond state snapshot for listener prev-values */

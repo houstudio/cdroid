@@ -2,15 +2,19 @@
 #define __CDROID_BLUETOOTH_UUID_H__
 
 #include <cstdint>
+#include <cstdio>
 #include <string>
 
 namespace cdroid {
 
 /**
- * Port of android.bluetooth.BluetoothUuid (android-36) constants — the
- * 16-bit well-known UUIDs expanded to full 128-bit form (0000XXXX-0000-
- * 1000-8000-00805F9B34FB) plus the java.util.UUID analog as a plain
- * 16-byte value with the canonical toString().
+ * Port of android.bluetooth.BluetoothUuid (android-36): the well-known
+ * service UUIDs with their 128-bit expansions over the Bluetooth BASE
+ * UUID, plus the java.util.UUID analog as a plain msb/lsb pair with the
+ * canonical toString()/fromString(). Member names and values follow the
+ * android-36 source exactly; SerialPort() is the one deliberate
+ * addition (SPP has no android-36 constant — the RFCOMM data plane
+ * still needs the conventional service id).
  */
 class BluetoothUuid {
 public:
@@ -40,7 +44,8 @@ public:
         return BluetoothUuid(hi, lo);
     }
 
-    /* Expand a 16-bit well-known UUID to its 128-bit form. */
+    /* Expand a 16-bit well-known UUID to its 128-bit form
+     * (uuid * 2^96 + BASE_UUID, BluetoothUuid.java's arithmetic). */
     static BluetoothUuid fromShortUuid(uint16_t u16) {
         return BluetoothUuid(0x0000000000001000ULL | ((uint64_t)u16 << 32),
                              0x800000805F9B34FBULL);
@@ -59,35 +64,47 @@ public:
     bool operator==(const BluetoothUuid& o) const {
         return msb == o.msb && lsb == o.lsb;
     }
+    bool operator!=(const BluetoothUuid& o) const { return !(*this == o); }
 
-    /* --- well-known service classes (BluetoothUuid.*) ------------------- */
-    static BluetoothUuid AudioSink()      { return fromShortUuid(0x110B); }
-    static BluetoothUuid AudioSource()    { return fromShortUuid(0x110A); }
-    static BluetoothUuid AdvAudioDist()   { return fromShortUuid(0x110D); }
-    static BluetoothUuid HSP()            { return fromShortUuid(0x1108); }
-    static BluetoothUuid HSP_AG()         { return fromShortUuid(0x1112); }
-    static BluetoothUuid Handsfree()      { return fromShortUuid(0x111E); }
-    static BluetoothUuid Handsfree_AG()   { return fromShortUuid(0x111F); }
-    static BluetoothUuid AvrcpTarget()    { return fromShortUuid(0x110C); }
-    static BluetoothUuid AvrcpController(){ return fromShortUuid(0x110E); }
-    static BluetoothUuid ObexObjectPush() { return fromShortUuid(0x1105); }
-    static BluetoothUuid ObexFileTransfer()   { return fromShortUuid(0x1106); }
-    static BluetoothUuid ObexSync()       { return fromShortUuid(0x1104); }
-    static BluetoothUuid ObexPbapC()      { return fromShortUuid(0x112E); }
-    static BluetoothUuid ObexMapMns()     { return fromShortUuid(0x1133); }
-    static BluetoothUuid ObexMapMas()     { return fromShortUuid(0x1132); }
-    static BluetoothUuid PANU()           { return fromShortUuid(0x1115); }
-    static BluetoothUuid NAP()            { return fromShortUuid(0x1116); }
-    static BluetoothUuid BIP()            { return fromShortUuid(0x111A); }
-    static BluetoothUuid BIP_Responder()  { return fromShortUuid(0x111B); }
-    static BluetoothUuid SAP()            { return fromShortUuid(0x111D); }
-    static BluetoothUuid HearingAccess()  { return fromShortUuid(0x1100); }
-    /* Serial Port Profile — the classic data service. */
-    static BluetoothUuid SerialPort()     { return fromShortUuid(0x1101); }
+    /* --- well-known UUIDs (android-36 BluetoothUuid members) ---------- */
+    static BluetoothUuid A2DP_SINK()       { return fromShortUuid(0x110B); }
+    static BluetoothUuid A2DP_SOURCE()     { return fromShortUuid(0x110A); }
+    static BluetoothUuid ADV_AUDIO_DIST()  { return fromShortUuid(0x110D); }
+    static BluetoothUuid HSP()             { return fromShortUuid(0x1108); }
+    static BluetoothUuid HSP_AG()          { return fromShortUuid(0x1112); }
+    static BluetoothUuid HFP()             { return fromShortUuid(0x111E); }
+    static BluetoothUuid HFP_AG()          { return fromShortUuid(0x111F); }
+    static BluetoothUuid AVRCP()           { return fromShortUuid(0x110E); }
+    static BluetoothUuid AVRCP_CONTROLLER(){ return fromShortUuid(0x110F); }
+    static BluetoothUuid AVRCP_TARGET()    { return fromShortUuid(0x110C); }
+    static BluetoothUuid OBEX_OBJECT_PUSH(){ return fromShortUuid(0x1105); }
+    static BluetoothUuid HID()             { return fromShortUuid(0x1124); }
+    static BluetoothUuid HOGP()            { return fromShortUuid(0x1812); }
+    static BluetoothUuid PANU()            { return fromShortUuid(0x1115); }
+    static BluetoothUuid NAP()             { return fromShortUuid(0x1116); }
+    static BluetoothUuid BNEP()            { return fromShortUuid(0x000F); }
+    static BluetoothUuid PBAP_PCE()        { return fromShortUuid(0x112E); }
+    static BluetoothUuid PBAP_PSE()        { return fromShortUuid(0x112F); }
+    static BluetoothUuid MAP()             { return fromShortUuid(0x1134); }
+    static BluetoothUuid MNS()             { return fromShortUuid(0x1133); }
+    static BluetoothUuid MAS()             { return fromShortUuid(0x1132); }
+    static BluetoothUuid SAP()             { return fromShortUuid(0x112D); }
+    /* Hearing Aid (LE, 128-bit assigned id — not a 16-bit shorthand). */
+    static BluetoothUuid HEARING_AID() {
+        return fromString("0000FDF0-0000-1000-8000-00805F9B34FB");
+    }
+    /* Hearing Access Service. */
+    static BluetoothUuid HAS()             { return fromShortUuid(0x1854); }
+    static BluetoothUuid MFI_HAS() {
+        return fromString("7D74F4BD-C74A-4431-862C-CCE884371592");
+    }
     /* The base UUID every 16-bit shorthand expands with. */
-    static BluetoothUuid BASE() {
+    static BluetoothUuid BASE_UUID() {
         return fromString("00000000-0000-1000-8000-00805F9B34FB");
     }
+    /* CDROID addition (no android-36 constant): Serial Port Profile —
+     * the conventional RFCOMM data service the socket plane targets. */
+    static BluetoothUuid SerialPort()     { return fromShortUuid(0x1101); }
 };
 
 } // namespace cdroid

@@ -1191,9 +1191,9 @@ bool BluezClient::startLeDiscovery(const std::vector<std::string>& uuidFilter,
     std::string adapterPath;
     if (!ensureAdapter(adapterPath)) return false;
     /* std::string -> char* vector for sd_bus_message_append_strv */
-    std::vector<std::string> owned(uuidFilter.begin(), uuidFilter.end());
     std::vector<char*> strv;
-    for (const std::string& u : owned) strv.push_back(const_cast<char*>(u.c_str()));
+    for (const std::string& u : uuidFilter)
+        strv.push_back(const_cast<char*>(u.c_str()));
     strv.push_back(nullptr);
 
     sd_bus_error err = SD_BUS_ERROR_NULL;
@@ -1219,9 +1219,6 @@ bool BluezClient::startLeDiscovery(const std::vector<std::string>& uuidFilter,
               && sd_bus_message_append_strv(msg, strv.data()) >= 0
               && sd_bus_message_close_container(msg) >= 0
               && sd_bus_message_close_container(msg) >= 0;   /* v, then e */
-            /* fix ordering: close variant then the dict entry — the two
-             * closes above already did both */
-            ok = ok && true;
         }
         if (ok && rssiThreshold > INT16_MIN) {
             ok = sd_bus_message_open_container(msg, 'e', "sv") >= 0

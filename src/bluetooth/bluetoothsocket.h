@@ -95,6 +95,9 @@ public:
     int close();
 
     int getChannel() const { return mChannel; }
+    /* false when the kernel refused the bind (no controller) — the
+     * caller's failure signal. */
+    bool isBound() const { return mListenFd >= 0; }
 
 private:
     int mChannel;

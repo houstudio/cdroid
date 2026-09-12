@@ -46,7 +46,7 @@ BluetoothGattCharacteristic* BluetoothGattService::getCharacteristic(
 
 BluetoothGatt::BluetoothGatt(const BluetoothDevice& device, bool autoConnect,
                              BluetoothGattCallback* callback)
-    : mDevice(device), mAutoConnect(autoConnect), mCallback(callback),
+    : mDevice(device), mCallback(callback),
       mClient(BluetoothAdapter::getDefaultAdapter().client()) {}
 
 BluetoothGatt::~BluetoothGatt() {

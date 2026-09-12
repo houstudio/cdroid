@@ -154,7 +154,6 @@ private:
                                          const std::vector<uint8_t>& value);
 
     BluetoothDevice mDevice;
-    bool mAutoConnect;
     BluetoothGattCallback* mCallback;
     class BluezClient& mClient;      /* shared transport (via the adapter) */
     /* Services/state are mutated by the app thread (discoverServices/

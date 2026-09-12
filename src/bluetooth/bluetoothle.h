@@ -93,7 +93,7 @@ public:
     static constexpr int SCAN_FAILED_INTERNAL_ERROR = 3;
     virtual ~ScanCallback() = default;
     virtual void onScanResult(int callbackType, const ScanResult& result) {}
-    virtual void onBatchScanResultsStored(const std::vector<ScanResult>&) {}
+    virtual void onBatchScanResults(const std::vector<ScanResult>& results) {}
     virtual void onScanFailed(int errorCode) {}
 };
 
