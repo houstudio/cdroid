@@ -212,7 +212,7 @@ public:
                             int bondState, int prevState) override;
     // BluetoothPairingListener (agent thread).
     void onPairingRequest(const cdroid::BluetoothDevice& device,
-                          int pairingVariant) override;
+                          int pairingVariant, uint32_t passkey) override;
     void onDisplayPasskey(const cdroid::BluetoothDevice& device,
                           uint32_t passkey, int pairedDuration) override;
     void onPairingCancelled(const cdroid::BluetoothDevice& device) override;
@@ -898,10 +898,11 @@ void SettingsFragment::onBondStateChanged(const cdroid::BluetoothDevice& device,
 }
 
 void SettingsFragment::onPairingRequest(const cdroid::BluetoothDevice& device,
-                                        int pairingVariant) {
+                                        int pairingVariant, uint32_t passkey) {
     if (!*mBtAlive) return;
     static cdroid::Handler sBtHandler(cdroid::Looper::getMainLooper());
-    sBtHandler.post([this, alive = mBtAlive, device, pairingVariant]() mutable {
+    sBtHandler.post([this, alive = mBtAlive, device, pairingVariant,
+                     passkey]() mutable {
         if (!*alive) return;
         cdroid::Context* c = requireContext();
         if (c == nullptr) return;
@@ -945,9 +946,12 @@ void SettingsFragment::onPairingRequest(const cdroid::BluetoothDevice& device,
                 .show();
         } else if (pairingVariant == BluetoothDevice::PAIRING_VARIANT_PASSKEY_CONFIRMATION
                 || pairingVariant == BluetoothDevice::PAIRING_VARIANT_CONSENT) {
+            const std::string code = (passkey != 0)
+                    ? ("\n核对双方设备显示的数字: " + std::to_string(passkey))
+                    : std::string();
             cdroid::AlertDialog::Builder(c)
                 .setTitle("配对请求")
-                .setMessage("与 " + display + " 配对?")
+                .setMessage("与 " + display + " 配对?" + code)
                 .setPositiveButton("配对", [](cdroid::DialogInterface&, int) {
                     cdroid::BluetoothAdapter::getDefaultAdapter()
                         .replyPairingConfirmation(true);
