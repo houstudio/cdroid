@@ -25,6 +25,7 @@
 #include <wifi/scanresult.h>
 #include <wifi/wifiinfo.h>
 #include <wifi/wificonfiguration.h>
+#include <dhcpinfo.h>
 #include "printer_common.h"
 #include "R.h"
 
@@ -91,10 +92,17 @@ public:
             disc->setOnClickListener([](cdroid::View&){ WifiManager::getInstance().disconnect(); });
         }
         if (cdroid::Switch* sw = (cdroid::Switch*)view->findViewById(printerdemo::R::id::sw_wifi)) {
+            mSwitch = sw;
             sw->setChecked(wifi.isWifiEnabled());
             sw->setOnCheckedChangeListener([this](cdroid::CompoundButton&, bool on){
                 if (mSyncingSwitch) return;   /* programmatic setChecked echo */
-                WifiManager::getInstance().setWifiEnabled(on);
+                if (!WifiManager::getInstance().setWifiEnabled(on)) {
+                    /* failed toggle: roll the knob back to the real state —
+                     * no state event fires on failure, so we correct here */
+                    mSyncingSwitch = true;
+                    if (mSwitch) mSwitch->setChecked(WifiManager::getInstance().isWifiEnabled());
+                    mSyncingSwitch = false;
+                }
             });
         }
         doScan();
@@ -123,14 +131,11 @@ public:
     void onWifiStateChanged(int wifiState) override {
         cdroid::View* root = mRoot;
         if (root == nullptr || !mAlive) return;
-        root->post([this, wifiState]{
+        root->post([this]{
             if (!mAlive) return;
-            if (cdroid::Switch* sw =
-                    (cdroid::Switch*)mRoot->findViewById(printerdemo::R::id::sw_wifi)) {
-                mSyncingSwitch = true;   /* keep the echo out of the toggle handler */
-                sw->setChecked(wifiState == WifiManager::WIFI_STATE_ENABLED);
-                mSyncingSwitch = false;
-            }
+            mSyncingSwitch = true;   /* keep the echo out of the toggle handler */
+            if (mSwitch) mSwitch->setChecked(WifiManager::getInstance().isWifiEnabled());
+            mSyncingSwitch = false;
             refreshStatus();
         });
     }
@@ -165,25 +170,34 @@ private:
         }
         cdroid::WifiInfo info = wifi.getConnectionInfo();
         const std::string ssid = unquoted(info.getSSID());
+        /* SSID validity is the display signal: roaming keeps the SSID with a
+         * live lease, and a COMPLETED-only gate would flap the card through
+         * every SCANNING/ASSOCIATING event. */
+        const bool connected = !ssid.empty() && ssid != WifiManager::UNKNOWN_SSID;
         if (mState) {
-            mState->setText(ssid.empty() || ssid == WifiManager::UNKNOWN_SSID
-                            ? "Wi-Fi 未连接" : "已连接: " + ssid);
+            mState->setText(connected ? "已连接: " + ssid : "Wi-Fi 未连接");
         }
-        if (mDetail) {
-            std::string ipStr = "未获取";
-            if (const uint32_t ip = (uint32_t)info.getIpAddress()) {
-                // AOSP little-endian packing: first octet is the low byte.
-                ipStr = std::to_string(ip & 0xff) + "." + std::to_string((ip >> 8) & 0xff)
-                      + "." + std::to_string((ip >> 16) & 0xff) + "." + std::to_string((ip >> 24) & 0xff);
-            }
-            mDetail->setText("信号 " + std::to_string(info.getRssi()) + " dBm   状态 "
-                             + (info.getSupplicantState() == cdroid::SupplicantState::COMPLETED
-                                ? "COMPLETED" : "…")
-                             + "   IP " + ipStr
-                             + "\nBSSID " + info.getBSSID()
-                             + "   " + std::to_string(info.getFrequency()) + " MHz"
-                             + "\nMAC " + info.getMacAddress());
+        if (!mDetail) return;
+        if (!connected) {
+            /* Placeholder values (INVALID_RSSI, empty BSSID, -1 MHz, the
+             * 02:00.. default MAC) must not reach the screen — they belong
+             * to association-time snapshots. */
+            mDetail->setText("");
+            return;
         }
+        std::string detail;
+        if (info.getRssi() != cdroid::WifiInfo::INVALID_RSSI)
+            detail += "信号 " + std::to_string(info.getRssi()) + " dBm   ";
+        detail += "状态 " + cdroid::SupplicantState::toString(info.getSupplicantState());
+        if (const uint32_t ip = (uint32_t)info.getIpAddress())
+            detail += "   IP " + cdroid::DhcpInfo::intToStr((int) ip);
+        if (!info.getBSSID().empty())
+            detail += "\nBSSID " + info.getBSSID();
+        if (info.getFrequency() > 0)
+            detail += "   " + std::to_string(info.getFrequency()) + " MHz";
+        if (!info.getMacAddress().empty() && info.getMacAddress() != "02:00:00:00:00:00")
+            detail += "\nMAC " + info.getMacAddress();
+        mDetail->setText(detail);
     }
 
     // Mark the connected network's row in the scan list.
@@ -263,6 +277,7 @@ private:
     }
 
     std::atomic<bool> mAlive { false };
+    cdroid::Switch* mSwitch = nullptr;   /* cached like mState/mDetail/mList */
     /* Set while the WifiStateListener drives setChecked, so the toggle
      * handler ignores the resulting change-callback echo. */
     bool mSyncingSwitch = false;

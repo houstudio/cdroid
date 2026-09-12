@@ -131,15 +131,33 @@ std::string WifiManager::interfaceName() const {
 /* --- Wi-Fi state ----------------------------------------------------------- */
 
 int WifiManager::getWifiState() {
-    /* Cached: the event stream (refreshWifiStateFromSupplicant /
-     * onSupplicantReconnected / setWifiEnabled) is the writer, so UI
-     * refreshes pay no synchronous RPC. Radio control (rfkill / interface
-     * up-down) needs a platform hook: TODO(porting). */
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (mWifiState != WIFI_STATE_UNKNOWN) return mWifiState;
+    }
+    /* UNKNOWN means no writer has resolved the state yet — pages that
+     * never call initialize() (the settings summary) ask all the same.
+     * One synchronous STATUS resolves it, but only when the transport is
+     * already connected: a getter must never trigger socket re-opens (a
+     * down daemon would otherwise turn every UI refresh into a reconnect
+     * storm). The event stream owns the value from the first resolve on. */
+    if (mClient.isConnected()) refreshWifiStateFromSupplicant();
     std::lock_guard<std::mutex> lock(mStateMutex);
     return mWifiState;
 }
 
 void WifiManager::refreshWifiStateFromSupplicant() {
+    /* A user-initiated disable owns the state (WifiSettingsStore
+     * semantics): daemon-reachable must not resurrect it. */
+    bool userDisabled;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        userDisabled = mUserDisabled;
+    }
+    if (userDisabled) {
+        setWifiStateAndNotify(WIFI_STATE_DISABLED);
+        return;
+    }
     /* The ctrl iface has no radio state: map the supplicant's view —
      * through the shared STATUS parser (a raw substring probe would fire
      * on an SSID that happens to contain the state text). */
@@ -161,6 +179,10 @@ bool WifiManager::setWifiEnabled(bool enabled) {
      * the supplicant client side: "enabled" means reaching the daemon,
      * "disabled" detaches from the current network. */
     if (enabled) {
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mUserDisabled = false;
+        }
         const bool ok = initialize();
         /* AOSP re-associates the saved networks on enable; a supplicant
          * told to DISCONNECT stays idle until RECONNECT. */
@@ -170,10 +192,12 @@ bool WifiManager::setWifiEnabled(bool enabled) {
     const bool ok = requestOk("DISCONNECT");
     if (ok) {
         stopRssiPolling();
-        setWifiStateAndNotify(WIFI_STATE_DISABLING);
-        /* The detach is synchronous here (no platform radio path yet), so
-         * the state completes immediately — UI switches bound to the state
-         * stream would otherwise wait forever in DISABLING. */
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mUserDisabled = true;
+        }
+        /* The detach is synchronous here (no platform radio path yet):
+         * notify only the completed state, no phantom DISABLING. */
         setWifiStateAndNotify(WIFI_STATE_DISABLED);
     }
     return ok;
@@ -262,6 +286,18 @@ std::vector<WifiConfiguration> WifiManager::getConfiguredNetworks() {
 int WifiManager::addOrUpdateNetwork(const WifiConfiguration& config) {
     bool adding = (config.networkId == WifiConfiguration::INVALID_NETWORK_ID);
     int networkId = config.networkId;
+    if (adding) {
+        /* AOSP's connect reuses the existing block for the same SSID;
+         * ADD_NETWORK on every tap left a trail of disabled duplicates on
+         * the supplicant (SELECT_NETWORK disables all others). */
+        for (const WifiConfiguration& existing : getConfiguredNetworks()) {
+            if (existing.SSID == config.SSID) {
+                adding = false;
+                networkId = existing.networkId;
+                break;
+            }
+        }
+    }
     if (adding) {
         const std::string reply = mClient.request("ADD_NETWORK");
         if (reply.empty() || reply.compare(0, 4, "FAIL") == 0) return -1;
@@ -419,8 +455,15 @@ int WifiManager::compareSignalLevel(int rssiA, int rssiB) {
 /* --- listeners ---------------------------------------------------------------- */
 
 void WifiManager::addWifiStateListener(WifiStateListener* listener) {
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    mWifiStateListeners.push_back(listener);
+    /* Resolve BEFORE enlisting: the resolve's notify chain must not
+     * already contain this listener, or it receives the sticky state
+     * twice (one delivery, like AOSP's sticky broadcast). */
+    const int state = getWifiState();
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        mWifiStateListeners.push_back(listener);
+    }
+    if (state != WIFI_STATE_UNKNOWN) listener->onWifiStateChanged(state);
 }
 
 void WifiManager::removeWifiStateListener(WifiStateListener* listener) {
@@ -441,8 +484,16 @@ void WifiManager::removeScanResultsListener(ScanResultsListener* listener) {
 }
 
 void WifiManager::addNetworkStateListener(NetworkStateListener* listener) {
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    mNetworkStateListeners.push_back(listener);
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        mNetworkStateListeners.push_back(listener);
+    }
+    /* Sticky semantics, like NetworkCallback.onAvailable firing at
+     * registration — but only once something real was reported: replaying
+     * a pristine default WifiInfo is a spurious "not connected" event. */
+    const WifiInfo info = getConnectionInfo();
+    if (info.getSupplicantState() != SupplicantState::UNINITIALIZED)
+        listener->onNetworkStateChanged(info);
 }
 
 void WifiManager::removeNetworkStateListener(NetworkStateListener* listener) {
@@ -485,6 +536,12 @@ void WifiManager::onSupplicantDisconnected() {
 
 void WifiManager::onSupplicantReconnected() {
     updateConnectionInfoFromStatus();
+    /* Daemon-reachable does not mean enabled: a user-disabled wifi stays
+     * disabled across daemon restarts (WifiSettingsStore semantics). */
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (mUserDisabled) return;
+    }
     setWifiStateAndNotify(WIFI_STATE_ENABLED);
     seedDhcpFromCurrentState();
 }
@@ -537,6 +594,15 @@ void WifiManager::onSupplicantEvent(const SupplicantEvent& event) {
     } else if (eventIs(event, WPA_EVENT_DISCONNECTED)) {
         stopRssiPolling();
         stopDhcpAndRelease();
+        /* WifiInfo goes stale the moment L2 drops (AOSP clears SSID/BSSID
+         * on disconnect): without this the card keeps showing the old
+         * "connected <ssid>" with a residual lease IP while the supplicant
+         * is actually SCANNING. */
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mConnectionInfo = WifiInfo();
+            mLastRssi.store(WifiInfo::INVALID_RSSI);
+        }
         updateConnectionInfoFromStatus();
         notifyNetworkStateListeners();
     }

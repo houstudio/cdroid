@@ -128,11 +128,16 @@ void SupplicantClient::releaseRequestSlot() {
 bool SupplicantClient::request(const std::string& cmd, std::string& reply) {
     /* The in-flight token (not a held mutex) serializes this exchange: the
      * blocking wpa_ctrl_request runs with no lock held, so a hung daemon
-     * no longer pins every other caller of the client. */
+     * no longer pins every other caller of the client. The implicit
+     * reopen below is for a daemon bounce AFTER connect(); a client that
+     * was never connected must not secretly open+ATTACH sockets here —
+     * that flips isConnected() without ever starting the monitor thread,
+     * and initialize() would then early-return with a dead event pump. */
     acquireRequestSlot();
     {
         std::lock_guard<std::mutex> lock(mCtrlMutex);
-        if (!mConnected.load() && !openConnections()) {
+        if (!mConnected.load()
+                && (mRunning.load() ? !openConnections() : true)) {
             releaseRequestSlot();
             return false;
         }

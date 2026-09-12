@@ -238,6 +238,10 @@ private:
     std::string mIfaceName;
     mutable std::mutex mStateMutex;
     int mWifiState = WIFI_STATE_UNKNOWN;
+    /* Client-side desired state (AOSP WifiSettingsStore semantics): a
+     * user-initiated disable owns mWifiState — "supplicant reachable"
+     * must not resurrect it. */
+    bool mUserDisabled = false;
     WifiInfo mConnectionInfo;
     std::atomic<int> mLastRssi { WifiInfo::INVALID_RSSI };
     /* Getter caches (mStateMutex): the UI polls the getters per refresh,
