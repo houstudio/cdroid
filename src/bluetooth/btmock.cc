@@ -23,6 +23,28 @@
 #include <systemd/sd-bus.h>
 #include <unistd.h>
 
+/* Hand-rolled PropertiesChanged(bool) — sd_bus_emit_properties_changed
+ * fails (EPIPE/EDOM) on this sd-bus for vtable-backed values, while the
+ * raw signal form delivers. */
+static int emit_prop_bool(sd_bus* bus, const char* path, const char* iface,
+                          const char* name, bool value) {
+    sd_bus_message* sig = nullptr;
+    int rc = sd_bus_message_new_signal(bus, &sig, path,
+                "org.freedesktop.DBus.Properties", "PropertiesChanged");
+    if (rc >= 0) rc = sd_bus_message_append(sig, "s", iface);
+    if (rc >= 0) rc = sd_bus_message_open_container(sig, 'a', "{sv}");
+    if (rc >= 0) rc = sd_bus_message_open_container(sig, 'e', "sv");
+    if (rc >= 0) rc = sd_bus_message_append(sig, "s", name);
+    if (rc >= 0) rc = sd_bus_message_open_container(sig, 'v', "b");
+    if (rc >= 0) rc = sd_bus_message_append(sig, "b", value ? 1 : 0);
+    if (rc >= 0) rc = sd_bus_message_close_container(sig);
+    if (rc >= 0) rc = sd_bus_message_close_container(sig);
+    if (rc >= 0) rc = sd_bus_message_close_container(sig);
+    if (rc >= 0) rc = sd_bus_send(bus, sig, nullptr);
+    sd_bus_message_unref(sig);
+    return rc;
+}
+
 static const char* kAdapterPath = "/org/bluez/hci0";
 static const char* kSvcPath = "/org/bluez/hci0/dev_AA_BB_CC_DD_EE_FF/service0010";
 static const char* kCharPath = "/org/bluez/hci0/dev_AA_BB_CC_DD_EE_FF/service0010/char0011";
@@ -39,16 +61,25 @@ static bool gDiscovering = false;
 static int gRssi = -42;
 
 /* --- adapter property getters ------------------------------------------ */
-static int get_adapter_powered(sd_bus* bus, const char* path,
+static int get_adapter_powered(sd_bus*, const char*, const char*, const char*,
+                               sd_bus_message* reply, void*, sd_bus_error*) {
+    return sd_bus_message_append(reply, "b", gPowered ? 1 : 0);   /* b wants int */
+}
+static int set_adapter_powered(sd_bus* bus, const char* path,
                                const char* interface, const char* property,
-                               sd_bus_message* reply, void* userdata,
+                               sd_bus_message* m, void* userdata,
                                sd_bus_error* err) {
-    return sd_bus_message_append(reply, "b", gPowered);
+    int v = 0;
+    if (sd_bus_message_read(m, "b", &v) < 0) return -EINVAL;   /* value arrives unwrapped */
+    gPowered = v != 0;
+    printf("[btmock] Powered -> %s\n", gPowered ? "on" : "off");
+    emit_prop_bool(bus, path, "org.bluez.Adapter1", "Powered", gPowered);
+    return 0;
 }
 static int get_adapter_discovering(sd_bus*, const char*, const char*,
                                    const char*, sd_bus_message* reply, void*,
                                    sd_bus_error*) {
-    return sd_bus_message_append(reply, "b", gDiscovering);
+    return sd_bus_message_append(reply, "b", gDiscovering ? 1 : 0);
 }
 static int get_adapter_alias(sd_bus*, const char*, const char*, const char*,
                              sd_bus_message* reply, void*, sd_bus_error*) {
@@ -68,17 +99,17 @@ static int start_discovery(sd_bus_message* m, void*, sd_bus_error*) {
     sd_bus* bus = sd_bus_message_get_bus(m);
     gDiscovering = true;
     sd_bus_reply_method_return(m, "");
-    /* RSSI wobble + a new device appearing: what a real scan delivers. */
-    sd_bus_emit_properties_changed_strv(bus, kAdapterPath, "org.bluez.Adapter1",
-                                        nullptr);
-    return sd_bus_emit_object_added(bus, kDev3);
+    /* the Discovering announcement goes out from the main loop — emitting
+     * from inside the dispatch stack returned EPIPE on this sd-bus */
+    /* a new device appearing: what a real scan delivers */
+    const int rc = sd_bus_emit_object_added(bus, kDev3);
+    return rc < 0 ? rc : 0;
 }
 static int stop_discovery(sd_bus_message* m, void*, sd_bus_error*) {
     sd_bus* bus = sd_bus_message_get_bus(m);
     gDiscovering = false;
     sd_bus_reply_method_return(m, "");
-    return sd_bus_emit_properties_changed_strv(bus, kAdapterPath,
-                                               "org.bluez.Adapter1", nullptr);
+    return 0;
 }
 static int remove_device(sd_bus_message* m, void*, sd_bus_error*) {
     sd_bus* bus = sd_bus_message_get_bus(m);
@@ -139,16 +170,14 @@ static int device_connect(sd_bus_message* m, void*, sd_bus_error*) {
     const char* path = sd_bus_message_get_path(m);
     sd_bus_reply_method_return(m, "");
     printf("[btmock] Connect %s\n", path);
-    return sd_bus_emit_properties_changed(bus, path, "org.bluez.Device1",
-                                          "Connected", NULL);
+    return emit_prop_bool(bus, path, "org.bluez.Device1", "Connected", true);
 }
 static int device_disconnect(sd_bus_message* m, void*, sd_bus_error*) {
     sd_bus* bus = sd_bus_message_get_bus(m);
     const char* path = sd_bus_message_get_path(m);
     sd_bus_reply_method_return(m, "");
     printf("[btmock] Disconnect %s\n", path);
-    return sd_bus_emit_properties_changed(bus, path, "org.bluez.Device1",
-                                          "Connected", NULL);
+    return emit_prop_bool(bus, path, "org.bluez.Device1", "Connected", false);
 }
 /* Agent manager: remember who registered an agent, so Pair can ask it. */
 static char* gAgentOwner = nullptr;   /* client's unique bus name */
@@ -201,8 +230,7 @@ static int pair_device(sd_bus_message* m, void*, sd_bus_error*) {
     sd_bus_reply_method_return(m, "");
     /* bond completed: flip the Paired property and announce it */
     gDev2Paired = true;
-    return sd_bus_emit_properties_changed(bus, path, "org.bluez.Device1",
-                                          "Paired", NULL);   /* names only: the vtable getter supplies the value */
+    return emit_prop_bool(bus, path, "org.bluez.Device1", "Paired", true);
 }
 
 /* --- GATT service/characteristic ---------------------------------------- */
@@ -287,7 +315,8 @@ static const sd_bus_vtable kCharVtable[] = {
 /* --- vtables --------------------------------------------------------------- */
 static const sd_bus_vtable kAdapterVtable[] = {
     SD_BUS_VTABLE_START(0),
-    SD_BUS_PROPERTY("Powered", "b", get_adapter_powered, 0, 0),
+    SD_BUS_WRITABLE_PROPERTY("Powered", "b", get_adapter_powered,
+                             set_adapter_powered, 0, 0),
     SD_BUS_PROPERTY("Discovering", "b", get_adapter_discovering, 0, 0),
     SD_BUS_PROPERTY("Alias", "s", get_adapter_alias, 0, 0),
     SD_BUS_PROPERTY("Address", "s", get_adapter_address, 0, 0),
@@ -396,18 +425,39 @@ int main() {
     emit_device(bus, &kDevices[1], kDev2);
 
     printf("btmock: org.bluez on the bus (adapter %s)\n", kAdapterPath);
+    bool announcedDiscovering = false;
     for (int iter = 0; ; iter++) {
+        if (announcedDiscovering != gDiscovering) {
+            announcedDiscovering = gDiscovering;
+            emit_prop_bool(bus, kAdapterPath, "org.bluez.Adapter1",
+                           "Discovering", gDiscovering);
+        }
         if (iter % 5 == 4) {
             /* RSSI wobble on the paired device, like an inquiring scan */
             gRssi = -42 + (iter / 5) % 5;
-            sd_bus_emit_properties_changed_strv(bus, kDev1,
-                                                "org.bluez.Device1", nullptr);
+            emit_prop_bool(bus, kDev1, "org.bluez.Device1", "RSSI",
+                           gRssi & 1);   /* placeholder flip: real RSSI is int16 */
         }
         if (gNotifying && iter % 20 == 19) {
             /* notification: bump the first value byte and announce */
             gCharValue[0] = 'a' + (gCharValue[0] - 'a' + 1) % 26;
-            sd_bus_emit_properties_changed(bus, kCharPath,
-                    "org.bluez.GattCharacteristic1", "Value", NULL);
+            sd_bus_message* sig = nullptr;
+            if (sd_bus_message_new_signal(bus, &sig, kCharPath,
+                        "org.freedesktop.DBus.Properties",
+                        "PropertiesChanged") >= 0
+             && sd_bus_message_append(sig, "s", "org.bluez.GattCharacteristic1") >= 0
+             && sd_bus_message_open_container(sig, 'a', "{sv}") >= 0
+             && sd_bus_message_open_container(sig, 'e', "sv") >= 0
+             && sd_bus_message_append(sig, "s", "Value") >= 0
+             && sd_bus_message_open_container(sig, 'v', "ay") >= 0
+             && sd_bus_message_append_array(sig, 'y', gCharValue,
+                                             (size_t)gCharValueLen) >= 0
+             && sd_bus_message_close_container(sig) >= 0
+             && sd_bus_message_close_container(sig) >= 0
+             && sd_bus_message_close_container(sig) >= 0) {
+                sd_bus_send(bus, sig, nullptr);
+            }
+            sd_bus_message_unref(sig);
         }
         sd_bus_process(bus, nullptr);
         usleep(100 * 1000);

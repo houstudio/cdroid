@@ -7,6 +7,7 @@
 #include <functional>
 #include <map>
 #include <mutex>
+#include <utility>
 #include <string>
 #include <thread>
 #include <vector>
@@ -104,6 +105,7 @@ public:
         /* Pairing agent requests (org.bluez.Agent1). The pending daemon
          * request is held until replyPairing*() answers it. */
         virtual void onPairingPinRequested(const std::string& address) {}
+        virtual void onPairingPasskeyRequested(const std::string& address) {}
         virtual void onPairingConfirmationRequested(const std::string& address) {}
         virtual void onDisplayPasskey(const std::string& address, uint32_t passkey) {}
         virtual void onPairingCancelled() {}
@@ -119,16 +121,19 @@ public:
      * than one round trip; safe to call repeatedly. */
     bool connect();
     bool isConnected() const { return mConnected.load(); }
-    /* true when org.bluez owns objects on the bus (bluetoothd running). */
-    bool hasAdapter() const { return !mAdapterPath.empty(); }
-    std::string adapterPath() const { return mAdapterPath; }
+    /* true when org.bluez owns objects on the bus (bluetoothd running);
+     * both read through the cache lock (mAdapterPath is written there). */
+    bool hasAdapter() const { return !adapterPathLocked().empty(); }
+    std::string adapterPath() const { return adapterPathLocked(); }
 
     /* --- synchronous requests (caller thread) --------------------------- */
 
-    /* Adapter1 property access. getProperty returns false on type mismatch
-     * or transport failure. */
-    bool getAdapterBool(const std::string& name, bool& value);
-    bool getAdapterString(const std::string& name, std::string& value);
+    /* Adapter1 property access. Cached reads (the snapshot + signals
+     * maintain Powered/Discovering/Alias) never touch the bus; the
+     * request methods below do. Returns false on type mismatch,
+     * unknown property, or transport failure. */
+    bool getAdapterBool(const std::string& name, bool& value) const;
+    bool getAdapterString(const std::string& name, std::string& value) const;
     bool setAdapterBool(const std::string& name, bool value);
     bool setAdapterString(const std::string& name, const std::string& value);
 
@@ -182,9 +187,17 @@ public:
     bool findDevice(const std::string& address, BluezDevice& out) const;
 
 private:
+    /* pairing notifications collected under the bus lock and fired off
+     * it (monitor thread only — see flushDeferredPairing) */
+    std::vector<std::pair<std::string, int>> mDeferredPairing;
+    void flushDeferredPairing();
+    /* shared adapter-request preamble (connect + non-empty path) */
+    bool ensureAdapter(std::string& path);
+    std::string adapterPathLocked() const;
     /* agent vtable callbacks */
     static int agentRequestPinCode(sd_bus_message* m, void* userdata, sd_bus_error* e);
     static int agentRequestPasskey(sd_bus_message* m, void* userdata, sd_bus_error* e);
+    static int agentRequestConfirmation(sd_bus_message* m, void* userdata, sd_bus_error* e);
     static int agentRequestAuthorization(sd_bus_message* m, void* userdata, sd_bus_error* e);
     static int agentAuthorizeService(sd_bus_message* m, void* userdata, sd_bus_error* e);
     static int agentDisplayPasskey(sd_bus_message* m, void* userdata, sd_bus_error* e);
@@ -246,6 +259,19 @@ private:
     };
     std::mutex mPairingMutex;
     PendingPairing mPendingPairing;
+    sd_bus_slot* mPairSlot = nullptr;   /* async Pair reply slot */
+
+    std::string mAgentCapability;      /* re-registered on every reconnect */
+
+    /* Adapter property cache — written from the snapshot and the
+     * PropertiesChanged signals (under mCacheMutex), read by the
+     * value-returning getters below so an app-thread getter never pays
+     * a bus round trip (and monitor-thread listeners can never
+     * self-deadlock on mBusMutex). */
+    bool mPowered = false;
+    bool mDiscovering = false;
+    std::string mAlias;
+    std::string mAdapterAddress;
 
     std::mutex mBusMutex;              /* serializes sd_bus request calls */
     std::thread mMonitorThread;

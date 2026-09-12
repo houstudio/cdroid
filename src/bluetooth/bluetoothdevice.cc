@@ -5,6 +5,7 @@
  */
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 
 #include <bluetoothadapter.h>
 #include <bluetoothdevice.h>
@@ -59,6 +60,11 @@ bool BluetoothDevice::removeBond() {
 
 bool BluetoothDevice::setPin(const std::string& pin) {
     return BluetoothAdapter::getDefaultAdapter().replyPairingPin(pin);
+}
+
+bool BluetoothDevice::setPasskey(const std::string& passkey) {
+    return BluetoothAdapter::getDefaultAdapter().replyPairingPasskey(
+            (uint32_t)strtoul(passkey.c_str(), nullptr, 10));
 }
 
 bool BluetoothDevice::setPairingConfirmation(bool confirm) {

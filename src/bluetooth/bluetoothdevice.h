@@ -96,6 +96,9 @@ public:
     /* --- pairing answers (call from a pairing listener) -------------------- */
     /* Answer a pending PAIRING_VARIANT_PIN request. */
     bool setPin(const std::string& pin);
+    /* Answer a pending PAIRING_VARIANT_PASSKEY request (the @SystemApi
+     * byte[] flavor takes a 6-digit decimal value). */
+    bool setPasskey(const std::string& passkey);
     /* Answer a PASSKEY_CONFIRMATION/CONSENT request. */
     bool setPairingConfirmation(bool confirm);
     /* Abort the pending request. */

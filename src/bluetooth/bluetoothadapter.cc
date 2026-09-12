@@ -115,23 +115,14 @@ bool BluetoothAdapter::setName(const std::string& name) {
 
 bool BluetoothAdapter::startDiscovery() {
     if (!mClient.startDiscovery()) return false;
-    {
-        std::lock_guard<std::mutex> lock(mStateMutex);
-        mDiscovering = true;
-    }
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    for (DiscoveryListener* l : mDiscoveryListeners) l->onDiscoveryStarted();
+    /* Listeners fire from the Discovering PropertiesChanged only — the
+     * single source of truth. The optimistic fire raced the monitor's
+     * signal dispatch into 1-or-2 deliveries on mixed threads. */
     return true;
 }
 
 bool BluetoothAdapter::cancelDiscovery() {
     if (!mClient.cancelDiscovery()) return false;
-    {
-        std::lock_guard<std::mutex> lock(mStateMutex);
-        mDiscovering = false;
-    }
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    for (DiscoveryListener* l : mDiscoveryListeners) l->onDiscoveryFinished();
     return true;
 }
 
@@ -247,6 +238,10 @@ bool BluetoothAdapter::replyPairingPin(const std::string& pin) {
     return mClient.replyPairingPin(pin);
 }
 
+bool BluetoothAdapter::replyPairingPasskey(uint32_t passkey) {
+    return mClient.replyPairingPasskey(passkey);
+}
+
 bool BluetoothAdapter::replyPairingConfirmation(bool confirm) {
     return mClient.replyPairingConfirmation(confirm);
 }
@@ -260,6 +255,13 @@ void BluetoothAdapter::onPairingPinRequested(const std::string& address) {
     for (BluetoothPairingListener* l : mPairingListeners)
         l->onPairingRequest(BluetoothDevice(address),
                             BluetoothDevice::PAIRING_VARIANT_PIN);
+}
+
+void BluetoothAdapter::onPairingPasskeyRequested(const std::string& address) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    for (BluetoothPairingListener* l : mPairingListeners)
+        l->onPairingRequest(BluetoothDevice(address),
+                BluetoothDevice::PAIRING_VARIANT_PASSKEY);
 }
 
 void BluetoothAdapter::onPairingConfirmationRequested(const std::string& address) {

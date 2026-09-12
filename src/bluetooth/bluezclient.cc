@@ -84,37 +84,46 @@ bool BluezClient::connect() {
         std::lock_guard<std::mutex> lock(mBusMutex);
         if (mConnected.load() && mBus) return true;
 
-    sd_bus* bus = nullptr;
-    int rc = sd_bus_open_system(&bus);
-    if (rc < 0) {
-        LOGV("no system bus (%s)", strerror(-rc));
-        return false;
-    }
-    /* Bound every synchronous call (default is 25s — an unresponsive
-     * bluetoothd must not hang a caller for that long). */
-    sd_bus_set_method_call_timeout(bus, 5 * 1000ULL * 1000ULL);
+        sd_bus* bus = nullptr;
+        int rc = sd_bus_open_system(&bus);
+        if (rc < 0) {
+            LOGV("no system bus (%s)", strerror(-rc));
+            return false;
+        }
+        /* Bound every synchronous call (default is 25s — an unresponsive
+         * bluetoothd must not hang a caller for that long). */
+        sd_bus_set_method_call_timeout(bus, 5 * 1000ULL * 1000ULL);
 
-    /* Verify org.bluez owns something before declaring connected; use a
-     * cheap ObjectManager call — unknown method/failure both mean "no
-     * bluetoothd on this bus". */
-    sd_bus_error err = SD_BUS_ERROR_NULL;
-    sd_bus_message* reply = nullptr;
-    rc = sd_bus_call_method(bus, kBluezService, "/org/bluez", kObjMgrIface,
-                            "GetManagedObjects", &err, &reply, "");
-    if (rc < 0) {
-        LOGD("org.bluez not available (%s)",
-             err.message ? err.message : strerror(-rc));
+        /* Verify org.bluez owns something before declaring connected; use a
+         * cheap ObjectManager call — unknown method/failure both mean "no
+         * bluetoothd on this bus". */
+        sd_bus_error err = SD_BUS_ERROR_NULL;
+        sd_bus_message* reply = nullptr;
+        rc = sd_bus_call_method(bus, kBluezService, "/org/bluez", kObjMgrIface,
+                                "GetManagedObjects", &err, &reply, "");
+        if (rc < 0) {
+            LOGD("org.bluez not available (%s)",
+                 err.message ? err.message : strerror(-rc));
+            sd_bus_error_free(&err);
+            sd_bus_unref(bus);
+            return false;
+        }
+        sd_bus_message_unref(reply);
         sd_bus_error_free(&err);
-        sd_bus_unref(bus);
-        return false;
-    }
-    sd_bus_message_unref(reply);
-    sd_bus_error_free(&err);
 
-    /* Signal matches attach HERE (and only here) — the same setup path
-     * serves the first connect and every reconnect, so a first connect
-     * can never end up match-less (properties would go silent). */
-    if (mSlotProperties == nullptr) {
+        /* RETIRE the previous bus before adopting the new one (the
+         * reconnect path): dropping it releases its match slots and the
+         * Agent1 vtable with it, and skipping this leaked one sd_bus+fd
+         * per daemon restart while leaving every slot pointing at a dead
+         * bus (matches would never re-attach — the review's "permanently
+         * deaf after restart" finding). */
+        if (mBus) {
+            sd_bus_flush_close_unref(mBus);
+            mBus = nullptr;
+        }
+        mSlotProperties = mSlotIfAdded = mSlotIfRemoved = mSlotNameOwner = nullptr;
+
+        /* Signal matches attach to THIS bus on every (re)connect. */
         sd_bus_add_match(bus, &mSlotProperties,
                 "type='signal',sender='org.bluez',"
                 "interface='org.freedesktop.DBus.Properties',"
@@ -132,7 +141,6 @@ bool BluezClient::connect() {
                 "interface='org.freedesktop.DBus',"
                 "member='NameOwnerChanged',arg0='org.bluez'",
                 onNameOwnerChangedStatic, this);
-    }
 
         mBus = bus;
         mConnected.store(true);
@@ -143,10 +151,12 @@ bool BluezClient::connect() {
         }
     }   /* mBusMutex released — refresh takes it itself */
 
-    /* Initial snapshot: without this the FIRST connect leaves the cache
-     * empty until some getter trips the lazy refresh — and
-     * getBondedDevices() never does. */
+    /* Initial snapshot (also the reconnect resync): without this the
+     * FIRST connect leaves the cache empty until some getter trips the
+     * lazy refresh — and getBondedDevices() never does. */
     refreshManagedObjects();
+    /* Re-register the pairing agent on the fresh bus if one was active. */
+    if (!mAgentCapability.empty()) registerAgent(mAgentCapability);
     return true;
 }
 
@@ -154,6 +164,22 @@ bool BluezClient::connect() {
 /* ------------------------------------------------------------------ */
 /* pairing agent (org.bluez.Agent1)                                    */
 /* ------------------------------------------------------------------ */
+
+/* Runs on the monitor thread with NO bus lock held. */
+void BluezClient::flushDeferredPairing() {
+    std::vector<std::pair<std::string, int>> pending;
+    pending.swap(mDeferredPairing);
+    for (const auto& req : pending) {
+        if (mEvents == nullptr) continue;
+        switch (req.second) {
+        case 0: mEvents->onPairingPinRequested(req.first); break;
+        case 1: mEvents->onPairingPasskeyRequested(req.first); break;
+        case 2: mEvents->onPairingConfirmationRequested(req.first); break;
+        case -1: mEvents->onPairingCancelled(); break;
+        default: break;
+        }
+    }
+}
 
 static const char* kAgentPath = "/org/cdroid/agent";
 static const char* kAgentIface = "org.bluez.Agent1";
@@ -196,8 +222,12 @@ int BluezClient::agentRequestPinCode(sd_bus_message* m, void* userdata,
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, 0);
     LOGD("agent: RequestPinCode for %s (held)", addr.c_str());
-    if (self->mEvents) self->mEvents->onPairingPinRequested(addr);
-    return 0;
+    self->mDeferredPairing.push_back({addr, 0});   /* fired outside the lock */
+    /* Return 1: the reply is DEFERRED (setPin answers later). A vtable
+     * method handler returning 0 tells sd-bus "done, nothing owed" and
+     * 260 auto-replies UnknownMethod to the caller — the deferred-reply
+     * contract is a positive return (message ownership taken). */
+    return 1;
 }
 
 int BluezClient::agentRequestPasskey(sd_bus_message* m, void* userdata,
@@ -207,8 +237,22 @@ int BluezClient::agentRequestPasskey(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "o", &dev);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, 1);
-    if (self->mEvents) self->mEvents->onPairingPinRequested(addr);
-    return 0;
+    self->mDeferredPairing.push_back({addr, 1});
+    return 1;   /* deferred reply — see RequestPinCode */
+}
+
+int BluezClient::agentRequestConfirmation(sd_bus_message* m, void* userdata,
+                                         sd_bus_error*) {
+    /* THE DisplayYesNo method: numeric comparison. Surfaces as the
+     * PASSKEY_CONFIRMATION variant; replyPairingConfirmation answers. */
+    auto* self = static_cast<BluezClient*>(userdata);
+    const char* dev = nullptr;
+    uint32_t passkey = 0;
+    sd_bus_message_read(m, "ou", &dev, &passkey);
+    const std::string addr = self->addressForDevicePath(dev ? dev : "");
+    self->holdPendingPairing(m, addr, 2);
+    self->mDeferredPairing.push_back({addr, 2});
+    return 1;   /* deferred reply */
 }
 
 int BluezClient::agentRequestAuthorization(sd_bus_message* m, void* userdata,
@@ -218,8 +262,8 @@ int BluezClient::agentRequestAuthorization(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "o", &dev);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, 2);
-    if (self->mEvents) self->mEvents->onPairingConfirmationRequested(addr);
-    return 0;
+    self->mDeferredPairing.push_back({addr, 2});
+    return 1;   /* deferred reply */
 }
 
 int BluezClient::agentAuthorizeService(sd_bus_message* m, void* userdata,
@@ -229,8 +273,8 @@ int BluezClient::agentAuthorizeService(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "os", &dev, nullptr);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, 2);
-    if (self->mEvents) self->mEvents->onPairingConfirmationRequested(addr);
-    return 0;
+    self->mDeferredPairing.push_back({addr, 2});
+    return 1;   /* deferred reply */
 }
 
 int BluezClient::agentDisplayPasskey(sd_bus_message* m, void* userdata,
@@ -265,7 +309,7 @@ int BluezClient::agentCancel(sd_bus_message* m, void* userdata, sd_bus_error*) {
             self->mPendingPairing.kind = -1;
         }
     }
-    if (self->mEvents) self->mEvents->onPairingCancelled();
+    self->mDeferredPairing.push_back({"", -1});   /* cancelled notice */
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -275,6 +319,7 @@ int BluezClient::agentRelease(sd_bus_message* m, void*, sd_bus_error*) {
 
 bool BluezClient::registerAgent(const std::string& capability) {
     if (!connect()) return false;
+    mAgentCapability = capability;   /* re-registered on reconnect */
     {
         std::lock_guard<std::mutex> lock(mBusMutex);
         if (!mBus) return false;
@@ -285,6 +330,8 @@ bool BluezClient::registerAgent(const std::string& capability) {
                           BluezClient::agentRequestPinCode, 0),
             SD_BUS_METHOD("RequestPasskey", "o", "u",
                           BluezClient::agentRequestPasskey, 0),
+            SD_BUS_METHOD("RequestConfirmation", "ou", NULL,
+                          BluezClient::agentRequestConfirmation, 0),
             SD_BUS_METHOD("RequestAuthorization", "o", NULL,
                           BluezClient::agentRequestAuthorization, 0),
             SD_BUS_METHOD("AuthorizeService", "os", NULL,
@@ -299,7 +346,7 @@ bool BluezClient::registerAgent(const std::string& capability) {
         };
         sd_bus_slot* slot = nullptr;
         if (sd_bus_add_object_vtable(mBus, &slot, kAgentPath, kAgentIface,
-                                     agent, this) < 0)
+                                      agent, this) < 0)
             return false;
         sd_bus_error err = SD_BUS_ERROR_NULL;
         sd_bus_message* reply = nullptr;
@@ -317,31 +364,51 @@ bool BluezClient::registerAgent(const std::string& capability) {
 }
 
 bool BluezClient::replyPairingPin(const std::string& pin) {
-    std::lock_guard<std::mutex> lock(mPairingMutex);
-    if (mPendingPairing.message == nullptr) return false;
-    sd_bus_message* m = mPendingPairing.message;
-    const int rc = sd_bus_reply_method_return(m, "s", pin.c_str());
+    sd_bus_message* m = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mPairingMutex);
+        if (mPendingPairing.message == nullptr) return false;
+        if (mPendingPairing.kind != 0) return false;   /* not a PIN request */
+        m = mPendingPairing.message;
+        mPendingPairing.message = nullptr;
+        mPendingPairing.kind = -1;
+    }
+    /* Bus send outside mPairingMutex: the monitor takes mBusMutex first
+     * and then mPairingMutex inside agent handlers — holding pairing
+     * while waiting for the bus would invert that order. */
+    std::lock_guard<std::mutex> lock(mBusMutex);
+    const int rc = mBus ? sd_bus_reply_method_return(m, "s", pin.c_str()) : -ENOTCONN;
     sd_bus_message_unref(m);
-    mPendingPairing.message = nullptr;
-    mPendingPairing.kind = -1;
     return rc >= 0;
 }
 
 bool BluezClient::replyPairingPasskey(uint32_t passkey) {
-    std::lock_guard<std::mutex> lock(mPairingMutex);
-    if (mPendingPairing.message == nullptr) return false;
-    sd_bus_message* m = mPendingPairing.message;
-    const int rc = sd_bus_reply_method_return(m, "u", passkey);
+    sd_bus_message* m = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mPairingMutex);
+        if (mPendingPairing.message == nullptr) return false;
+        if (mPendingPairing.kind != 1) return false;   /* not a passkey req */
+        m = mPendingPairing.message;
+        mPendingPairing.message = nullptr;
+        mPendingPairing.kind = -1;
+    }
+    std::lock_guard<std::mutex> lock(mBusMutex);
+    const int rc = mBus ? sd_bus_reply_method_return(m, "u", passkey) : -ENOTCONN;
     sd_bus_message_unref(m);
-    mPendingPairing.message = nullptr;
-    mPendingPairing.kind = -1;
     return rc >= 0;
 }
 
 bool BluezClient::replyPairingConfirmation(bool confirm) {
-    std::lock_guard<std::mutex> lock(mPairingMutex);
-    if (mPendingPairing.message == nullptr) return false;
-    sd_bus_message* m = mPendingPairing.message;
+    sd_bus_message* m = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mPairingMutex);
+        if (mPendingPairing.message == nullptr) return false;
+        if (mPendingPairing.kind != 2) return false;   /* not a confirm req */
+        m = mPendingPairing.message;
+        mPendingPairing.message = nullptr;
+        mPendingPairing.kind = -1;
+    }
+    std::lock_guard<std::mutex> lock(mBusMutex);
     int rc;
     if (confirm) {
         rc = sd_bus_reply_method_return(m, "");
@@ -352,21 +419,26 @@ bool BluezClient::replyPairingConfirmation(bool confirm) {
         sd_bus_error_free(&err);
     }
     sd_bus_message_unref(m);
-    mPendingPairing.message = nullptr;
-    mPendingPairing.kind = -1;
     return rc >= 0;
 }
 
 void BluezClient::cancelPairingReply() {
-    std::lock_guard<std::mutex> lock(mPairingMutex);
-    if (mPendingPairing.message == nullptr) return;
-    sd_bus_error err = SD_BUS_ERROR_NULL;
-    sd_bus_error_set(&err, "org.bluez.Error.Canceled", "canceled by user");
-    sd_bus_reply_method_error(mPendingPairing.message, &err);
-    sd_bus_error_free(&err);
-    sd_bus_message_unref(mPendingPairing.message);
-    mPendingPairing.message = nullptr;
-    mPendingPairing.kind = -1;
+    sd_bus_message* m = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mPairingMutex);
+        if (mPendingPairing.message == nullptr) return;
+        m = mPendingPairing.message;
+        mPendingPairing.message = nullptr;
+        mPendingPairing.kind = -1;
+    }
+    std::lock_guard<std::mutex> lock(mBusMutex);
+    if (mBus) {
+        sd_bus_error err = SD_BUS_ERROR_NULL;
+        sd_bus_error_set(&err, "org.bluez.Error.Canceled", "canceled by user");
+        sd_bus_reply_method_error(m, &err);
+        sd_bus_error_free(&err);
+    }
+    sd_bus_message_unref(m);
 }
 
 /* ------------------------------------------------------------------ */
@@ -395,6 +467,11 @@ void BluezClient::monitorLoop() {
             /* drain everything pending */
         }
         if (!mRunning.load()) break;
+        /* Pairing-agent notifications fire HERE, off the bus lock: a
+         * listener may answer synchronously (setPin -> reply), and the
+         * reply takes mBusMutex — dispatching under processBus's lock
+         * would self-deadlock the monitor. */
+        flushDeferredPairing();
 
         /* Wait for the next message WITHOUT holding the bus lock — a
          * sleeping monitor must never block a synchronous caller: poll
@@ -553,7 +630,7 @@ bool BluezClient::refreshManagedObjects() {
     std::map<std::string, BluezGattCharacteristic> nextChars;
     std::string adapterPath;
     bool adapterPowered = false, adapterDiscovering = false;
-    std::string adapterAlias;
+    std::string adapterAlias, adapterAddress;
     sd_bus_message_enter_container(reply, 'a', "{oa{sa{sv}}}");
     while (sd_bus_message_enter_container(reply, 'e', "oa{sa{sv}}") > 0) {
         const char* path = nullptr;
@@ -583,6 +660,8 @@ bool BluezClient::refreshManagedObjects() {
                         readBoolProp(reply, adapterDiscovering);
                     } else if (propName == "Alias") {
                         readStringProp(reply, adapterAlias);
+                    } else if (propName == "Address") {
+                        readStringProp(reply, adapterAddress);
                     } else {
                         sd_bus_message_skip(reply, nullptr);
                     }
@@ -637,6 +716,10 @@ bool BluezClient::refreshManagedObjects() {
         mGattServices = std::move(nextServices);
         mGattCharacteristics = std::move(nextChars);
         if (!adapterPath.empty()) mAdapterPath = adapterPath;
+        mPowered = adapterPowered;
+        mDiscovering = adapterDiscovering;
+        mAlias = adapterAlias;
+        mAdapterAddress = adapterAddress;
     }
     /* Resync the adapter state from the snapshot — values ride along so
      * handlers never need a synchronous bus call (self-deadlock guard). */
@@ -674,13 +757,25 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
             const std::string name = key ? key : "";
             if (sd_bus_message_enter_container(m, 'v', "b") >= 0) {
                 int v = 0;
-                if (sd_bus_message_read_basic(m, 'b', &v) >= 0 && mEvents)
-                    mEvents->onAdapterBoolChanged(name, v != 0);
+                if (sd_bus_message_read_basic(m, 'b', &v) >= 0) {
+                    {   /* cache the value the getters serve */
+                        std::lock_guard<std::mutex> lock(mCacheMutex);
+                        if (name == "Powered") mPowered = v != 0;
+                        else if (name == "Discovering") mDiscovering = v != 0;
+                    }
+                    if (mEvents) mEvents->onAdapterBoolChanged(name, v != 0);
+                }
                 sd_bus_message_exit_container(m);
             } else if (sd_bus_message_enter_container(m, 'v', "s") >= 0) {
                 const char* s = nullptr;
-                if (sd_bus_message_read_basic(m, 's', &s) >= 0 && mEvents && s)
-                    mEvents->onAdapterStringChanged(name, s);
+                if (sd_bus_message_read_basic(m, 's', &s) >= 0 && s) {
+                    {
+                        std::lock_guard<std::mutex> lock(mCacheMutex);
+                        if (name == "Alias") mAlias = s;
+                        else if (name == "Address") mAdapterAddress = s;
+                    }
+                    if (mEvents) mEvents->onAdapterStringChanged(name, s);
+                }
                 sd_bus_message_exit_container(m);
             } else {
                 sd_bus_message_skip(m, nullptr);
@@ -715,6 +810,7 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
     if (std::string(iface) != kDeviceIface) return;
 
     BluezDevice snapshot;
+    std::vector<std::string> changedNames;
     {
         std::lock_guard<std::mutex> lock(mCacheMutex);
         auto it = mDevices.find(objPath);
@@ -729,14 +825,19 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
             applyDeviceProp(name, m, snapshot);
             sd_bus_message_exit_container(m);
             sd_bus_message_exit_container(m);
+            changedNames.push_back(name);
         }
         sd_bus_message_exit_container(m);
         it->second = snapshot;   /* publish under the same lock */
     }
+    /* Dispatch per changed property NAME — consumers branch on real
+     * names ("Paired" drives the bond-state machine); the old "*"
+     * wildcard left those branches unreachable. Fired OUTSIDE the
+     * cache lock: listeners re-read the cache (getBondState ->
+     * findDevice) and would self-deadlock inside it. */
     if (mEvents) {
-        /* One notification per PropertiesChanged carrying the refreshed
-         * snapshot — the listener re-reads via the adapter anyway. */
-        mEvents->onDevicePropertyChanged(snapshot, "*");
+        for (const std::string& name : changedNames)
+            mEvents->onDevicePropertyChanged(snapshot, name);
     }
 }
 
@@ -825,6 +926,23 @@ int BluezClient::onNameOwnerChangedStatic(sd_bus_message* m, void* userdata,
 /* synchronous requests                                                */
 /* ------------------------------------------------------------------ */
 
+std::string BluezClient::adapterPathLocked() const {
+    std::lock_guard<std::mutex> lock(mCacheMutex);
+    return mAdapterPath;   /* copy while the writer's lock is held */
+}
+
+/* Shared preamble for every adapter-scoped request: a connected
+ * transport plus a non-empty adapter path (refreshing once when the
+ * cache predates a hotplug). */
+bool BluezClient::ensureAdapter(std::string& path) {
+    path = adapterPathLocked();
+    if (!path.empty() && connect()) return true;
+    if (!connect()) return false;
+    if (!refreshManagedObjects()) return false;
+    path = adapterPathLocked();
+    return !path.empty();
+}
+
 std::string BluezClient::pathForAddressLocked(const std::string& address) const {
     for (const auto& kv : mDevices) {
         if (kv.second.address == address) return kv.first;
@@ -832,80 +950,51 @@ std::string BluezClient::pathForAddressLocked(const std::string& address) const 
     return std::string();
 }
 
-bool BluezClient::getAdapterBool(const std::string& name, bool& value) {
-    if (!connect() || mAdapterPath.empty()) {
-        /* try a fresh enumeration — the cache may predate a hotplug */
-        if (!refreshManagedObjects() || mAdapterPath.empty()) return false;
-    }
-    sd_bus_error err = SD_BUS_ERROR_NULL;
-    sd_bus_message* reply = nullptr;
-    int v = 0;
-    bool ok = false;
-    {
-        std::lock_guard<std::mutex> lock(mBusMutex);
-        ok = sd_bus_call_method(mBus, kBluezService, mAdapterPath.c_str(), kPropIface,
-                                "Get", &err, &reply, "ss", kAdapterIface,
-                                name.c_str()) >= 0
-             && sd_bus_message_enter_container(reply, 'v', "b") >= 0
-             && sd_bus_message_read_basic(reply, 'b', &v) >= 0;
-    }
-    if (ok) value = v != 0;
-    sd_bus_message_unrefp(&reply);
-    sd_bus_error_free(&err);
-    return ok;
+/* Cache-first property getters: the snapshot + PropertiesChanged
+ * signals maintain Powered/Discovering/Alias/Address, so an app-thread
+ * getter never pays a bus round trip and a monitor-thread listener can
+ * never self-deadlock on mBusMutex (the review's design finding). */
+bool BluezClient::getAdapterBool(const std::string& name, bool& value) const {
+    std::lock_guard<std::mutex> lock(mCacheMutex);
+    if (name == "Powered") { value = mPowered; return true; }
+    if (name == "Discovering") { value = mDiscovering; return true; }
+    return false;
 }
 
-bool BluezClient::getAdapterString(const std::string& name, std::string& value) {
-    if (!connect() || mAdapterPath.empty()) {
-        if (!refreshManagedObjects() || mAdapterPath.empty()) return false;
-    }
-    sd_bus_error err = SD_BUS_ERROR_NULL;
-    sd_bus_message* reply = nullptr;
-    const char* s = nullptr;
-    bool ok = false;
-    {
-        std::lock_guard<std::mutex> lock(mBusMutex);
-        ok = sd_bus_call_method(mBus, kBluezService, mAdapterPath.c_str(), kPropIface,
-                                "Get", &err, &reply, "ss", kAdapterIface,
-                                name.c_str()) >= 0
-             && sd_bus_message_enter_container(reply, 'v', "s") >= 0
-             && sd_bus_message_read_basic(reply, 's', &s) >= 0
-             && s != nullptr;
-    }
-    if (ok) value = s;
-    sd_bus_message_unrefp(&reply);
-    sd_bus_error_free(&err);
-    return ok;
+bool BluezClient::getAdapterString(const std::string& name, std::string& value) const {
+    std::lock_guard<std::mutex> lock(mCacheMutex);
+    if (name == "Alias") { value = mAlias; return !mAlias.empty(); }
+    if (name == "Address") { value = mAdapterAddress; return !mAdapterAddress.empty(); }
+    return false;
 }
 
 bool BluezClient::setAdapterBool(const std::string& name, bool value) {
-    if (!connect() || mAdapterPath.empty()) {
-        if (!refreshManagedObjects() || mAdapterPath.empty()) return false;
-    }
+    std::string adapterPath;
+    if (!ensureAdapter(adapterPath)) return false;
     sd_bus_error err = SD_BUS_ERROR_NULL;
     sd_bus_message* reply = nullptr;
     bool ok;
     {
         std::lock_guard<std::mutex> lock(mBusMutex);
-        ok = sd_bus_call_method(mBus, kBluezService, mAdapterPath.c_str(), kPropIface,
+        ok = sd_bus_call_method(mBus, kBluezService, adapterPath.c_str(), kPropIface,
                                 "Set", &err, &reply, "ssv", kAdapterIface,
                                 name.c_str(), "b", value ? 1 : 0) >= 0;
     }
+    if (!ok && err.message) LOGD("set %s failed: %s", name.c_str(), err.message);
     sd_bus_message_unrefp(&reply);
     sd_bus_error_free(&err);
     return ok;
 }
 
 bool BluezClient::setAdapterString(const std::string& name, const std::string& value) {
-    if (!connect() || mAdapterPath.empty()) {
-        if (!refreshManagedObjects() || mAdapterPath.empty()) return false;
-    }
+    std::string adapterPath;
+    if (!ensureAdapter(adapterPath)) return false;
     sd_bus_error err = SD_BUS_ERROR_NULL;
     sd_bus_message* reply = nullptr;
     bool ok;
     {
         std::lock_guard<std::mutex> lock(mBusMutex);
-        ok = sd_bus_call_method(mBus, kBluezService, mAdapterPath.c_str(), kPropIface,
+        ok = sd_bus_call_method(mBus, kBluezService, adapterPath.c_str(), kPropIface,
                                 "Set", &err, &reply, "ssv", kAdapterIface,
                                 name.c_str(), "s", value.c_str()) >= 0;
     }
@@ -915,15 +1004,14 @@ bool BluezClient::setAdapterString(const std::string& name, const std::string& v
 }
 
 bool BluezClient::adapterCall(const char* method) {
-    if (!connect() || mAdapterPath.empty()) {
-        if (!refreshManagedObjects() || mAdapterPath.empty()) return false;
-    }
+    std::string adapterPath;
+    if (!ensureAdapter(adapterPath)) return false;
     sd_bus_error err = SD_BUS_ERROR_NULL;
     sd_bus_message* reply = nullptr;
     bool ok;
     {
         std::lock_guard<std::mutex> lock(mBusMutex);
-        ok = sd_bus_call_method(mBus, kBluezService, mAdapterPath.c_str(),
+        ok = sd_bus_call_method(mBus, kBluezService, adapterPath.c_str(),
                                 kAdapterIface, method, &err, &reply, "") >= 0;
     }
     if (!ok && err.message) LOGD("%s failed: %s", method, err.message);
@@ -983,7 +1071,12 @@ bool BluezClient::pairDevice(const std::string& address) {
     sd_bus_message* msg = nullptr;
     if (sd_bus_message_new_method_call(mBus, &msg, kBluezService,
             path.c_str(), kDeviceIface, "Pair") < 0) return false;
-    const int rc = sd_bus_call_async(mBus, nullptr, msg, pairNoReply, this, 0);
+    /* The reply-slot must be owned: a NULL slot with a callback is not a
+     * legal sd-bus call-async form (260 asserts ownership; a stack-dead
+     * slot corrupts the pending-reply bookkeeping — seen as spurious
+     * UnknownMethod replies for unrelated in-flight calls). */
+    if (mPairSlot) sd_bus_slot_unref(mPairSlot);
+    const int rc = sd_bus_call_async(mBus, &mPairSlot, msg, pairNoReply, this, 0);
     sd_bus_message_unref(msg);
     return rc >= 0;
 }
@@ -995,13 +1088,15 @@ bool BluezClient::removeDevice(const std::string& address) {
         path = pathForAddressLocked(address);
     }
     if (path.empty()) return false;
+    std::string adapterPath;
+    if (!ensureAdapter(adapterPath)) return false;
     sd_bus_error err = SD_BUS_ERROR_NULL;
     sd_bus_message* reply = nullptr;
     bool ok;
     {
         std::lock_guard<std::mutex> lock(mBusMutex);
         if (!mBus) return false;
-        ok = sd_bus_call_method(mBus, kBluezService, mAdapterPath.c_str(),
+        ok = sd_bus_call_method(mBus, kBluezService, adapterPath.c_str(),
                                 kAdapterIface, "RemoveDevice", &err, &reply,
                                 "o", path.c_str()) >= 0;
     }
@@ -1039,9 +1134,8 @@ bool BluezClient::setDeviceAlias(const std::string& address, const std::string& 
 
 bool BluezClient::startLeDiscovery(const std::vector<std::string>& uuidFilter,
                                    int16_t rssiThreshold) {
-    if (!connect() || mAdapterPath.empty()) {
-        if (!refreshManagedObjects() || mAdapterPath.empty()) return false;
-    }
+    std::string adapterPath;
+    if (!ensureAdapter(adapterPath)) return false;
     /* std::string -> char* vector for sd_bus_message_append_strv */
     std::vector<std::string> owned(uuidFilter.begin(), uuidFilter.end());
     std::vector<char*> strv;
@@ -1056,7 +1150,7 @@ bool BluezClient::startLeDiscovery(const std::vector<std::string>& uuidFilter,
         std::lock_guard<std::mutex> lock(mBusMutex);
         if (!mBus) return false;
         ok = sd_bus_message_new_method_call(mBus, &msg, kBluezService,
-                mAdapterPath.c_str(), kAdapterIface, "SetDiscoveryFilter") >= 0
+                adapterPath.c_str(), kAdapterIface, "SetDiscoveryFilter") >= 0
           && sd_bus_message_open_container(msg, 'a', "{sv}") >= 0;
         if (ok) {   /* Transport: "le" */
             ok = sd_bus_message_open_container(msg, 'e', "sv") >= 0
@@ -1159,10 +1253,15 @@ bool BluezClient::gattWrite(const std::string& characteristicPath,
         if (!mBus) return false;
         ok = sd_bus_message_new_method_call(mBus, &msg, kBluezService,
                 characteristicPath.c_str(), "org.bluez.GattCharacteristic1",
-                withoutResponse ? "WriteValue" : "WriteValue") >= 0
+                "WriteValue") >= 0
           && sd_bus_message_append_array(msg, 'y', value.data(),
                                          value.size()) >= 0
           && sd_bus_message_open_container(msg, 'a', "{sv}") >= 0
+          && sd_bus_message_open_container(msg, 'e', "sv") >= 0
+          && sd_bus_message_append(msg, "s", "type") >= 0
+          && sd_bus_message_append(msg, "v", "s",
+                  withoutResponse ? "command" : "request") >= 0
+          && sd_bus_message_close_container(msg) >= 0
           && sd_bus_message_close_container(msg) >= 0
           && sd_bus_call(mBus, msg, 0, &err, &reply) >= 0;
     }
