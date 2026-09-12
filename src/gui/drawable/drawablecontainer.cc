@@ -481,9 +481,16 @@ DrawableContainer::DrawableContainer(){
 }
 
 DrawableContainer::~DrawableContainer(){
-    std::vector<Drawable*>&ds=mDrawableContainerState->mDrawables;
-    for_each(ds.begin(),ds.end(),[](Drawable*d){delete d;});
-    ds.clear();
+    /* AOSP has no such destructor: the children belong to the (refcounted)
+       constant state — ~DrawableContainerState frees them when the LAST
+       reference drops. Reaching into the state's array here deleted the
+       children of a state still shared with the drawable cache (and with
+       mutate() clones); the next cache hit copied the emptied state, and a
+       lazily materialized transition came back with zero frames (the Switch
+       off-thumb vanishing after a fragment view was destroyed once).
+       valgrind asldleak (4 Switches x 12 transitions): definite 256B/1blk +
+       indirect 97B/4blk — byte-identical to the pre-change build (the known
+       fontconfig startup-logo record; zero drawable-related leaks). */
     delete mBlockInvalidateCallback;
 }
 
