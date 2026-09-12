@@ -13,6 +13,8 @@
 
 namespace cdroid {
 
+class BluetoothLeScanner;
+
 /**
  * Port of android.bluetooth.BluetoothAdapter (android-36), module phase.
  * Backed directly by BlueZ over the system D-Bus (BluezClient) instead of
@@ -114,6 +116,8 @@ public:
     /* Currently paired/bonded remote devices (BlueZ device cache with
      * Paired=true; AOSP returns the same information as a Set). */
     std::vector<BluetoothDevice> getBondedDevices();
+    /* The BLE scanner (AOSP entry point); null-analog when no adapter. */
+    BluetoothLeScanner* getBluetoothLeScanner();
 
     /* --- listeners (not owned; add/remove pairs, thread-safe) ------------
      * Interim listener surfaces — one per broadcast action — until the
@@ -149,6 +153,10 @@ public:
     void removeBondStateListener(BondStateListener* listener);
 
     /* --- internal (BluetoothDevice resolve path; do not use) ------------- */
+    BluezClient& client() { return mClient; }
+    /* GATT session fan-out (characteristic Value changes). */
+    void registerGattSession(BluetoothGatt* session);
+    void unregisterGattSession(BluetoothGatt* session);
     bool resolveDeviceName(const std::string& address, std::string& out) const;
     bool resolveDeviceAlias(const std::string& address, std::string& out) const;
     bool setDeviceAlias(const std::string& address, const std::string& alias);
@@ -174,6 +182,7 @@ private:
     void onDeviceRemoved(const std::string& objectPath) override;
     void onBluezDisconnected() override;
     void onBluezReconnected() override;
+    void onGattCharacteristicChanged(const BluezGattCharacteristic& ch) override;
 
     void setStateAndNotify(int newState);
     void dispatchFound(const BluezDevice& device);
@@ -194,6 +203,8 @@ private:
     std::vector<AdapterStateListener*> mStateListeners;
     std::vector<DiscoveryListener*> mDiscoveryListeners;
     std::vector<BondStateListener*> mBondListeners;
+    std::vector<BluetoothGatt*> mGattSessions;   /* guarded by mStateMutex */
+    BluetoothLeScanner* mLeScanner = nullptr;
 };
 
 } // namespace cdroid

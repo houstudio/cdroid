@@ -25,10 +25,23 @@
 
 #include <bluetoothadapter.h>
 #include <bluetoothdevice.h>
+#include <bluetoothgatt.h>
+#include <bluetoothle.h>
+#include <bluetoothsocket.h>
+#include <bluetoothuuid.h>
 
 using cdroid::BluetoothAdapter;
 using cdroid::BluetoothDevice;
 using cdroid::BluetoothUuid;
+using cdroid::BluetoothGatt;
+using cdroid::BluetoothGattCallback;
+using cdroid::BluetoothGattCharacteristic;
+using cdroid::BluetoothGattService;
+using cdroid::BluetoothLeScanner;
+using cdroid::ScanCallback;
+using cdroid::ScanFilter;
+using cdroid::ScanResult;
+using cdroid::ScanSettings;
 
 static const char* stateName(int s) {
     switch (s) {
@@ -229,6 +242,85 @@ int main(int argc, char** argv) {
         printf("round-trip %s\n",
                parsed == BluetoothUuid::SerialPort() ? "OK" : "MISMATCH");
         return parsed == BluetoothUuid::SerialPort() ? 0 : 1;
+    }
+    if (cmd == "blescan" && argc >= 3) {
+        const int seconds = atoi(argv[2]);
+        class LePrinter : public ScanCallback {
+        public:
+            void onScanResult(int, const ScanResult& r) override {
+                printf("[ble] %s  rssi=%d  name='%s'\n",
+                       r.getDevice().getAddress().c_str(), r.getRssi(),
+                       r.getDevice().getName().c_str());
+            }
+            void onScanFailed(int err) override {
+                printf("[ble] scan failed err=%d\n", err);
+            }
+        } printer;
+        std::vector<ScanFilter> filters;   /* empty = all */
+        ScanSettings settings;
+        settings.setScanMode(ScanSettings::SCAN_MODE_LOW_LATENCY);
+        BluetoothLeScanner* scanner = adapter.getBluetoothLeScanner();
+        if (scanner == nullptr || !scanner->startScan(filters, settings, &printer)) {
+            printf("blescan: start failed (no adapter?)\n");
+            return 1;
+        }
+        for (int i = 0; i < seconds * 2; i++) usleep(500 * 1000);
+        scanner->stopScan(&printer);
+        return 0;
+    }
+    if (cmd == "gatt" && argc >= 3) {
+        /* connect -> discover -> read -> notify -> write, then exit */
+        class GattPrinter : public BluetoothGattCallback {
+        public:
+            void onConnectionStateChange(BluetoothGatt* g, int status,
+                                         int newState) override {
+                printf("[gatt] state %d -> %d (status %d)\n",
+                       g ? 0 : 0, newState, status);
+            }
+            void onServicesDiscovered(BluetoothGatt* g, int status) override {
+                printf("[gatt] services discovered (status %d):\n", status);
+                for (BluetoothGattService* s : g->getServices()) {
+                    printf("  service %s\n", s->getUuid().toString().c_str());
+                    for (BluetoothGattCharacteristic* c :
+                            s->getCharacteristics())
+                        printf("    char %s props=0x%02x\n",
+                               c->getUuid().toString().c_str(),
+                               c->getProperties());
+                }
+            }
+            void onCharacteristicRead(BluetoothGatt*, BluetoothGattCharacteristic* c,
+                                      int status) override {
+                std::string v((const char*)c->getValue().data(), c->getValue().size());
+                printf("[gatt] read '%s' (status %d)\n", v.c_str(), status);
+            }
+            void onCharacteristicWrite(BluetoothGatt*, BluetoothGattCharacteristic*,
+                                       int status) override {
+                printf("[gatt] write status %d\n", status);
+            }
+            void onCharacteristicChanged(BluetoothGatt*,
+                                         BluetoothGattCharacteristic* c) override {
+                std::string v((const char*)c->getValue().data(), c->getValue().size());
+                printf("[gatt] notify '%s'\n", v.c_str());
+            }
+        } printer;
+        BluetoothDevice remote = adapter.getRemoteDevice(argv[2]);
+        BluetoothGatt* gatt = remote.connectGatt(false, &printer);
+        if (!gatt->connect()) { printf("gatt: connect failed\n"); delete gatt; return 1; }
+        gatt->discoverServices();
+        for (BluetoothGattService* s : gatt->getServices()) {
+            for (BluetoothGattCharacteristic* c : s->getCharacteristics()) {
+                gatt->readCharacteristic(c);
+                gatt->setCharacteristicNotification(c, true);
+                std::vector<uint8_t> ping{'P','I','N','G'};
+                c->setValue(ping);
+                gatt->writeCharacteristic(c);
+            }
+        }
+        for (int i = 0; i < 12; i++) usleep(500 * 1000);   /* catch notifies */
+        gatt->disconnect();
+        gatt->close();
+        delete gatt;
+        return 0;
     }
     fprintf(stderr, "unknown command '%s'\n", cmd.c_str());
     return 1;

@@ -8,6 +8,8 @@
 
 #include <bluetoothadapter.h>
 #include <bluetoothdevice.h>
+#include <bluetoothgatt.h>
+#include <bluetoothsocket.h>
 
 namespace cdroid {
 
@@ -53,6 +55,11 @@ bool BluetoothDevice::createBond() {
 
 bool BluetoothDevice::removeBond() {
     return BluetoothAdapter::getDefaultAdapter().unbondDevice(mAddress);
+}
+
+BluetoothGatt* BluetoothDevice::connectGatt(bool autoConnect,
+                                            BluetoothGattCallback* callback) const {
+    return new BluetoothGatt(*this, autoConnect, callback);
 }
 
 BluetoothSocket* BluetoothDevice::createRfcommSocket(int channel) const {

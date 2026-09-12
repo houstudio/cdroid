@@ -9,6 +9,8 @@
 namespace cdroid {
 
 class BluetoothAdapter;
+class BluetoothGatt;
+class BluetoothGattCallback;
 class BluetoothSocket;
 
 /**
@@ -90,6 +92,12 @@ public:
     bool operator<(const BluetoothDevice& other) const {
         return mAddress < other.mAddress;
     }
+
+    /* --- GATT client ----------------------------------------------------- */
+    /* connectGatt analog (the context parameter is a no-op here). The
+     * returned BluetoothGatt is caller-owned; close() it when done. */
+    BluetoothGatt* connectGatt(bool autoConnect,
+                               BluetoothGattCallback* callback) const;
 
     /* --- RFCOMM socket factories -------------------------------------- */
 

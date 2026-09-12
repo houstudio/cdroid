@@ -252,10 +252,23 @@ bool readInt16Prop(sd_bus_message* m, int16_t& out) {
 bool readUint32Prop(sd_bus_message* m, uint32_t& out) {
     return sd_bus_message_read_basic(m, 'u', &out) >= 0;
 }
+bool readObjectPathProp(sd_bus_message* m, std::string& out) {
+    const char* s = nullptr;
+    if (sd_bus_message_read_basic(m, 'o', &s) < 0 || !s) return false;
+    out = s;
+    return true;
+}
 bool readStringProp(sd_bus_message* m, std::string& out) {
     const char* s = nullptr;
     if (sd_bus_message_read_basic(m, 's', &s) < 0 || !s) return false;
     out = s;
+    return true;
+}
+bool readByteArrayProp(sd_bus_message* m, std::vector<uint8_t>& out) {
+    uint8_t v = 0;
+    if (sd_bus_message_enter_container(m, 'a', "y") < 0) return false;
+    while (sd_bus_message_read_basic(m, 'y', &v) > 0) out.push_back(v);
+    sd_bus_message_exit_container(m);
     return true;
 }
 bool readStringArrayProp(sd_bus_message* m, std::vector<std::string>& out) {
@@ -286,6 +299,21 @@ bool applyDeviceProp(const std::string& name, sd_bus_message* m, BluezDevice& d)
 
 } // namespace
 
+namespace {
+
+bool applyGattCharProp(const std::string& name, sd_bus_message* m,
+                       BluezGattCharacteristic& c) {
+    if (name == "UUID") return readStringProp(m, c.uuid);
+    if (name == "Service") return readObjectPathProp(m, c.servicePath);
+    if (name == "Flags") return readStringArrayProp(m, c.flags);
+    if (name == "Value") return readByteArrayProp(m, c.value);
+    if (name == "Notifying") return readBoolProp(m, c.notifying);
+    sd_bus_message_skip(m, nullptr);
+    return false;
+}
+
+} // namespace
+
 bool BluezClient::refreshManagedObjects() {
     sd_bus_error err = SD_BUS_ERROR_NULL;
     sd_bus_message* reply = nullptr;
@@ -302,6 +330,8 @@ bool BluezClient::refreshManagedObjects() {
 
     /* reply: a{oa{sa{sv}}} */
     std::map<std::string, BluezDevice> next;
+    std::map<std::string, BluezGattService> nextServices;
+    std::map<std::string, BluezGattCharacteristic> nextChars;
     std::string adapterPath;
     bool adapterPowered = false, adapterDiscovering = false;
     std::string adapterAlias;
@@ -313,6 +343,9 @@ bool BluezClient::refreshManagedObjects() {
         BluezDevice dev;
         dev.objectPath = path ? path : "";
         bool isAdapter = false, isDevice = false;
+        std::string svcUuid, svcDevice;
+        BluezGattCharacteristic gattChar;
+        bool isService = false, isCharacteristic = false;
         while (sd_bus_message_enter_container(reply, 'e', "sa{sv}") > 0) {
             const char* iface = nullptr;
             sd_bus_message_read_basic(reply, 's', &iface);
@@ -337,6 +370,14 @@ bool BluezClient::refreshManagedObjects() {
                 } else if (ifaceName == kDeviceIface) {
                     isDevice = true;
                     applyDeviceProp(propName, reply, dev);
+                } else if (ifaceName == "org.bluez.GattService1") {
+                    isService = true;
+                    if (propName == "UUID") readStringProp(reply, svcUuid);
+                    else sd_bus_message_skip(reply, nullptr);
+                } else if (ifaceName == "org.bluez.GattCharacteristic1") {
+                    isCharacteristic = true;
+                    gattChar.objectPath = dev.objectPath;
+                    applyGattCharProp(propName, reply, gattChar);
                 } else {
                     sd_bus_message_skip(reply, nullptr);
                 }
@@ -355,6 +396,17 @@ bool BluezClient::refreshManagedObjects() {
             if (dev.alias.empty()) dev.alias = dev.name;
             next[dev.objectPath] = dev;
         }
+        if (isService) {
+            BluezGattService s;
+            s.objectPath = dev.objectPath;
+            s.uuid = svcUuid;
+            /* the service's device is the path prefix (.../dev_XX/serviceYY) */
+            const size_t pos = s.objectPath.find("/service");
+            s.devicePath = pos == std::string::npos ? std::string()
+                        : s.objectPath.substr(0, pos);
+            nextServices[s.objectPath] = s;
+        }
+        if (isCharacteristic) nextChars[gattChar.objectPath] = gattChar;
     }
     sd_bus_message_exit_container(reply);
     sd_bus_message_unref(reply);
@@ -363,6 +415,8 @@ bool BluezClient::refreshManagedObjects() {
     {
         std::lock_guard<std::mutex> lock(mCacheMutex);
         mDevices = std::move(next);
+        mGattServices = std::move(nextServices);
+        mGattCharacteristics = std::move(nextChars);
         if (!adapterPath.empty()) mAdapterPath = adapterPath;
     }
     /* Resync the adapter state from the snapshot — values ride along so
@@ -415,6 +469,28 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
             sd_bus_message_exit_container(m);
         }
         sd_bus_message_exit_container(m);
+        return;
+    }
+    if (std::string(iface) == "org.bluez.GattCharacteristic1") {
+        BluezGattCharacteristic snapshot;
+        {
+            std::lock_guard<std::mutex> lock(mCacheMutex);
+            auto it = mGattCharacteristics.find(objPath);
+            if (it == mGattCharacteristics.end()) return;
+            snapshot = it->second;
+            if (sd_bus_message_enter_container(m, 'a', "{sv}") < 0) return;
+            while (sd_bus_message_enter_container(m, 'e', "sv") > 0) {
+                const char* key = nullptr;
+                sd_bus_message_read_basic(m, 's', &key);
+                sd_bus_message_enter_container(m, 'v', nullptr);
+                applyGattCharProp(key ? key : "", m, snapshot);
+                sd_bus_message_exit_container(m);
+                sd_bus_message_exit_container(m);
+            }
+            sd_bus_message_exit_container(m);
+            it->second = snapshot;
+        }
+        if (mEvents) mEvents->onGattCharacteristicChanged(snapshot);
         return;
     }
     if (std::string(iface) != kDeviceIface) return;
@@ -710,6 +786,162 @@ bool BluezClient::setDeviceAlias(const std::string& address, const std::string& 
         ok = sd_bus_call_method(mBus, kBluezService, path.c_str(), kPropIface,
                                 "Set", &err, &reply, "ssv", kDeviceIface,
                                 "Alias", "s", alias.c_str()) >= 0;
+    }
+    sd_bus_message_unrefp(&reply);
+    sd_bus_error_free(&err);
+    return ok;
+}
+
+/* ------------------------------------------------------------------ */
+/* BLE / GATT                                                          */
+/* ------------------------------------------------------------------ */
+
+bool BluezClient::startLeDiscovery(const std::vector<std::string>& uuidFilter,
+                                   int16_t rssiThreshold) {
+    if (!connect() || mAdapterPath.empty()) {
+        if (!refreshManagedObjects() || mAdapterPath.empty()) return false;
+    }
+    /* std::string -> char* vector for sd_bus_message_append_strv */
+    std::vector<std::string> owned(uuidFilter.begin(), uuidFilter.end());
+    std::vector<char*> strv;
+    for (const std::string& u : owned) strv.push_back(const_cast<char*>(u.c_str()));
+    strv.push_back(nullptr);
+
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_message* msg = nullptr;
+    sd_bus_message* reply = nullptr;
+    bool ok = false;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        ok = sd_bus_message_new_method_call(mBus, &msg, kBluezService,
+                mAdapterPath.c_str(), kAdapterIface, "SetDiscoveryFilter") >= 0
+          && sd_bus_message_open_container(msg, 'a', "{sv}") >= 0;
+        if (ok) {   /* Transport: "le" */
+            ok = sd_bus_message_open_container(msg, 'e', "sv") >= 0
+              && sd_bus_message_append(msg, "s", "Transport") >= 0
+              && sd_bus_message_append(msg, "v", "s", "le") >= 0
+              && sd_bus_message_close_container(msg) >= 0;
+        }
+        if (ok && !uuidFilter.empty()) {
+            ok = sd_bus_message_open_container(msg, 'e', "sv") >= 0
+              && sd_bus_message_append(msg, "s", "UUIDs") >= 0
+              && sd_bus_message_open_container(msg, 'v', "as") >= 0
+              && sd_bus_message_append_strv(msg, strv.data()) >= 0
+              && sd_bus_message_close_container(msg) >= 0
+              && sd_bus_message_close_container(msg) >= 0;   /* v, then e */
+            /* fix ordering: close variant then the dict entry — the two
+             * closes above already did both */
+            ok = ok && true;
+        }
+        if (ok && rssiThreshold > INT16_MIN) {
+            ok = sd_bus_message_open_container(msg, 'e', "sv") >= 0
+              && sd_bus_message_append(msg, "s", "RSSI") >= 0
+              && sd_bus_message_append(msg, "v", "n", rssiThreshold) >= 0
+              && sd_bus_message_close_container(msg) >= 0;
+        }
+        if (ok) {
+            ok = sd_bus_message_close_container(msg) >= 0   /* a{sv} */
+              && sd_bus_call(mBus, msg, 0, &err, &reply) >= 0;
+        }
+        if (!ok) LOGD("SetDiscoveryFilter failed (%s)",
+                     err.message ? err.message : "build/transport");
+    }
+    sd_bus_message_unref(msg);
+    sd_bus_message_unrefp(&reply);
+    sd_bus_error_free(&err);
+    return ok ? startDiscovery() : false;
+}
+
+bool BluezClient::connectDevice(const std::string& address) {
+    return deviceCall(address, "Connect");
+}
+
+bool BluezClient::disconnectDevice(const std::string& address) {
+    return deviceCall(address, "Disconnect");
+}
+
+std::vector<BluezGattService> BluezClient::getGattServices(
+        const std::string& deviceAddress) const {
+    std::vector<BluezGattService> out;
+    std::lock_guard<std::mutex> lock(mCacheMutex);
+    for (const auto& kv : mGattServices) {
+        /* device match by path prefix dev_XX */
+        const std::string& p = kv.second.devicePath;
+        const size_t pos = p.find("/dev_");
+        if (pos != std::string::npos) {
+            std::string addr = p.substr(pos + 5);
+            std::replace(addr.begin(), addr.end(), '_', ':');
+            if (addr == deviceAddress) out.push_back(kv.second);
+        }
+    }
+    return out;
+}
+
+std::vector<BluezGattCharacteristic> BluezClient::getGattCharacteristics(
+        const std::string& servicePath) const {
+    std::vector<BluezGattCharacteristic> out;
+    std::lock_guard<std::mutex> lock(mCacheMutex);
+    for (const auto& kv : mGattCharacteristics) {
+        if (kv.second.servicePath == servicePath) out.push_back(kv.second);
+    }
+    return out;
+}
+
+bool BluezClient::gattRead(const std::string& characteristicPath,
+                           std::vector<uint8_t>& out) {
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_message* reply = nullptr;
+    bool ok;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        ok = sd_bus_call_method(mBus, kBluezService, characteristicPath.c_str(),
+                "org.bluez.GattCharacteristic1", "ReadValue", &err, &reply,
+                "a{sv}", 0) >= 0;
+    }
+    if (ok) ok = readByteArrayProp(reply, out);
+    sd_bus_message_unrefp(&reply);
+    sd_bus_error_free(&err);
+    return ok;
+}
+
+bool BluezClient::gattWrite(const std::string& characteristicPath,
+                            const std::vector<uint8_t>& value,
+                            bool withoutResponse) {
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_message* reply = nullptr;
+    sd_bus_message* msg = nullptr;
+    bool ok;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        ok = sd_bus_message_new_method_call(mBus, &msg, kBluezService,
+                characteristicPath.c_str(), "org.bluez.GattCharacteristic1",
+                withoutResponse ? "WriteValue" : "WriteValue") >= 0
+          && sd_bus_message_append_array(msg, 'y', value.data(),
+                                         value.size()) >= 0
+          && sd_bus_message_open_container(msg, 'a', "{sv}") >= 0
+          && sd_bus_message_close_container(msg) >= 0
+          && sd_bus_call(mBus, msg, 0, &err, &reply) >= 0;
+    }
+    sd_bus_message_unref(msg);
+    sd_bus_message_unrefp(&reply);
+    sd_bus_error_free(&err);
+    return ok;
+}
+
+bool BluezClient::gattSetNotify(const std::string& characteristicPath,
+                                bool enable) {
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_message* reply = nullptr;
+    bool ok;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        ok = sd_bus_call_method(mBus, kBluezService, characteristicPath.c_str(),
+                "org.bluez.GattCharacteristic1",
+                enable ? "StartNotify" : "StopNotify", &err, &reply, "") >= 0;
     }
     sd_bus_message_unrefp(&reply);
     sd_bus_error_free(&err);

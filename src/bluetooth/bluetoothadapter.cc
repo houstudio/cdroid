@@ -10,6 +10,8 @@
 #include <bluetoothadapter.h>
 #include <bluezclient.h>
 #include <bluetoothsocket.h>
+#include <bluetoothgatt.h>
+#include <bluetoothle.h>
 
 namespace cdroid {
 
@@ -171,6 +173,34 @@ BluetoothServerSocket* BluetoothAdapter::listenUsingInsecureRfcommWithServiceRec
     if (uuid == BluetoothUuid::SerialPort())
         return new BluetoothServerSocket(1, false, name);
     return nullptr;
+}
+
+BluetoothLeScanner* BluetoothAdapter::getBluetoothLeScanner() {
+    if (mLeScanner == nullptr) mLeScanner = new BluetoothLeScanner(*this);
+    return mLeScanner;
+}
+
+void BluetoothAdapter::registerGattSession(BluetoothGatt* session) {
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    mGattSessions.push_back(session);
+}
+
+void BluetoothAdapter::unregisterGattSession(BluetoothGatt* session) {
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    mGattSessions.erase(std::remove(mGattSessions.begin(),
+                                    mGattSessions.end(), session),
+                        mGattSessions.end());
+}
+
+void BluetoothAdapter::onGattCharacteristicChanged(
+        const BluezGattCharacteristic& ch) {
+    std::vector<BluetoothGatt*> sessions;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        sessions = mGattSessions;
+    }
+    for (BluetoothGatt* gatt : sessions)
+        gatt->onCharacteristicChangedInternal(ch.objectPath, ch.value);
 }
 
 /* --- remote devices ------------------------------------------------------- */

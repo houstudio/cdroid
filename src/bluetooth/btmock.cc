@@ -24,6 +24,12 @@
 #include <unistd.h>
 
 static const char* kAdapterPath = "/org/bluez/hci0";
+static const char* kSvcPath = "/org/bluez/hci0/dev_AA_BB_CC_DD_EE_FF/service0010";
+static const char* kCharPath = "/org/bluez/hci0/dev_AA_BB_CC_DD_EE_FF/service0010/char0011";
+static const char* kSvcUuid = "0000ffe0-0000-1000-8000-00805f9b34fb";
+static const char* kCharUuid = "0000ffe1-0000-1000-8000-00805f9b34fb";
+static uint8_t gCharValue[] = { 'h', 'e', 'l', 'l', 'o' };
+static const int gCharValueLen = 5;
 static const char* kDev1 = "/org/bluez/hci0/dev_11_22_33_44_55_66";
 static const char* kDev2 = "/org/bluez/hci0/dev_AA_BB_CC_DD_EE_FF";
 static const char* kDev3 = "/org/bluez/hci0/dev_77_88_99_00_11_22";
@@ -54,6 +60,10 @@ static int get_adapter_address(sd_bus*, const char*, const char*, const char*,
 }
 
 /* --- adapter methods ---------------------------------------------------- */
+static int set_discovery_filter(sd_bus_message* m, void*, sd_bus_error*) {
+    sd_bus_message_skip(m, "a{sv}");
+    return sd_bus_reply_method_return(m, "");
+}
 static int start_discovery(sd_bus_message* m, void*, sd_bus_error*) {
     sd_bus* bus = sd_bus_message_get_bus(m);
     gDiscovering = true;
@@ -124,6 +134,22 @@ static int get_device_paired(sd_bus*, const char* path, const char*,
     return sd_bus_message_append(reply, "b", paired ? 1 : 0);
 }
 
+static int device_connect(sd_bus_message* m, void*, sd_bus_error*) {
+    sd_bus* bus = sd_bus_message_get_bus(m);
+    const char* path = sd_bus_message_get_path(m);
+    sd_bus_reply_method_return(m, "");
+    printf("[btmock] Connect %s\n", path);
+    return sd_bus_emit_properties_changed(bus, path, "org.bluez.Device1",
+                                          "Connected", NULL);
+}
+static int device_disconnect(sd_bus_message* m, void*, sd_bus_error*) {
+    sd_bus* bus = sd_bus_message_get_bus(m);
+    const char* path = sd_bus_message_get_path(m);
+    sd_bus_reply_method_return(m, "");
+    printf("[btmock] Disconnect %s\n", path);
+    return sd_bus_emit_properties_changed(bus, path, "org.bluez.Device1",
+                                          "Connected", NULL);
+}
 static int pair_device(sd_bus_message* m, void*, sd_bus_error*) {
     sd_bus* bus = sd_bus_message_get_bus(m);
     const char* path = sd_bus_message_get_path(m);
@@ -135,6 +161,85 @@ static int pair_device(sd_bus_message* m, void*, sd_bus_error*) {
                                           "Paired", NULL);   /* names only: the vtable getter supplies the value */
 }
 
+/* --- GATT service/characteristic ---------------------------------------- */
+static int get_svc_uuid(sd_bus*, const char*, const char*, const char*,
+                        sd_bus_message* reply, void*, sd_bus_error*) {
+    return sd_bus_message_append(reply, "s", kSvcUuid);
+}
+static int get_svc_device(sd_bus*, const char*, const char*, const char*,
+                          sd_bus_message* reply, void*, sd_bus_error*) {
+    return sd_bus_message_append(reply, "o", kDev2);
+}
+static int get_svc_primary(sd_bus*, const char*, const char*, const char*,
+                           sd_bus_message* reply, void*, sd_bus_error*) {
+    return sd_bus_message_append(reply, "b", 1);
+}
+static int get_char_uuid(sd_bus*, const char*, const char*, const char*,
+                         sd_bus_message* reply, void*, sd_bus_error*) {
+    return sd_bus_message_append(reply, "s", kCharUuid);
+}
+static int get_char_service(sd_bus*, const char*, const char*, const char*,
+                            sd_bus_message* reply, void*, sd_bus_error*) {
+    return sd_bus_message_append(reply, "o", kSvcPath);
+}
+static int get_char_flags(sd_bus*, const char*, const char*, const char*,
+                          sd_bus_message* reply, void*, sd_bus_error*) {
+    return sd_bus_message_append_strv(reply, (char**)(const char* const[]){
+            (char*)"read", (char*)"write", (char*)"notify", nullptr});
+}
+static int get_char_value(sd_bus*, const char*, const char*, const char*,
+                          sd_bus_message* reply, void*, sd_bus_error*) {
+    return sd_bus_message_append_array(reply, 'y', gCharValue, gCharValueLen);
+}
+static bool gNotifying = false;
+static int get_char_notifying(sd_bus*, const char*, const char*, const char*,
+                              sd_bus_message* reply, void*, sd_bus_error*) {
+    return sd_bus_message_append(reply, "b", gNotifying ? 1 : 0);
+}
+
+static int char_read(sd_bus_message* m, void*, sd_bus_error*) {
+    sd_bus_message* reply = nullptr;
+    sd_bus_message_new_method_return(m, &reply);
+    sd_bus_message_append_array(reply, 'y', gCharValue, gCharValueLen);
+    printf("[btmock] ReadValue -> 'hello'\n");
+    return sd_bus_send(NULL, reply, NULL) < 0 ? 0 : sd_bus_message_unref(reply), 0;
+}
+static int char_write(sd_bus_message* m, void*, sd_bus_error*) {
+    const uint8_t* data = nullptr;
+    size_t len = 0;
+    sd_bus_message_read_array(m, 'y', (const void**)&data, &len);
+    printf("[btmock] WriteValue %zu bytes\n", len);
+    sd_bus_message_skip(m, "a{sv}");
+    return sd_bus_reply_method_return(m, "");
+}
+static int char_notify(sd_bus_message* m, void*, sd_bus_error*) {
+    const bool start = strcmp(sd_bus_message_get_member(m), "StartNotify") == 0;
+    gNotifying = start;
+    printf("[btmock] %s\n", start ? "StartNotify" : "StopNotify");
+    return sd_bus_reply_method_return(m, "");
+}
+
+static const sd_bus_vtable kServiceVtable[] = {
+    SD_BUS_VTABLE_START(0),
+    SD_BUS_PROPERTY("UUID", "s", get_svc_uuid, 0, 0),
+    SD_BUS_PROPERTY("Primary", "b", get_svc_primary, 0, 0),
+    SD_BUS_PROPERTY("Device", "o", get_svc_device, 0, 0),
+    SD_BUS_VTABLE_END,
+};
+static const sd_bus_vtable kCharVtable[] = {
+    SD_BUS_VTABLE_START(0),
+    SD_BUS_PROPERTY("UUID", "s", get_char_uuid, 0, 0),
+    SD_BUS_PROPERTY("Service", "o", get_char_service, 0, 0),
+    SD_BUS_PROPERTY("Flags", "as", get_char_flags, 0, 0),
+    SD_BUS_PROPERTY("Value", "ay", get_char_value, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+    SD_BUS_PROPERTY("Notifying", "b", get_char_notifying, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+    SD_BUS_METHOD("ReadValue", "a{sv}", "ay", char_read, 0),
+    SD_BUS_METHOD("WriteValue", "aya{sv}", NULL, char_write, 0),
+    SD_BUS_METHOD("StartNotify", NULL, NULL, char_notify, 0),
+    SD_BUS_METHOD("StopNotify", NULL, NULL, char_notify, 0),
+    SD_BUS_VTABLE_END,
+};
+
 /* --- vtables --------------------------------------------------------------- */
 static const sd_bus_vtable kAdapterVtable[] = {
     SD_BUS_VTABLE_START(0),
@@ -142,6 +247,7 @@ static const sd_bus_vtable kAdapterVtable[] = {
     SD_BUS_PROPERTY("Discovering", "b", get_adapter_discovering, 0, 0),
     SD_BUS_PROPERTY("Alias", "s", get_adapter_alias, 0, 0),
     SD_BUS_PROPERTY("Address", "s", get_adapter_address, 0, 0),
+    SD_BUS_METHOD("SetDiscoveryFilter", "a{sv}", NULL, set_discovery_filter, 0),
     SD_BUS_METHOD("StartDiscovery", NULL, NULL, start_discovery, 0),
     SD_BUS_METHOD("StopDiscovery", NULL, NULL, stop_discovery, 0),
     SD_BUS_METHOD("RemoveDevice", "o", NULL, remove_device, 0),
@@ -154,6 +260,8 @@ static const sd_bus_vtable kDeviceVtable[] = {
     SD_BUS_PROPERTY("Name", "s", get_device_name, 0, 0),
     SD_BUS_PROPERTY("Paired", "b", get_device_paired, 0, 0),
     SD_BUS_METHOD("Pair", NULL, NULL, pair_device, 0),
+    SD_BUS_METHOD("Connect", NULL, NULL, device_connect, 0),
+    SD_BUS_METHOD("Disconnect", NULL, NULL, device_disconnect, 0),
     SD_BUS_VTABLE_END,
 };
 
@@ -230,6 +338,10 @@ int main() {
                              kDeviceVtable, nullptr);
     sd_bus_add_object_vtable(bus, nullptr, kDev3, "org.bluez.Device1",
                              kDeviceVtable, nullptr);
+    sd_bus_add_object_vtable(bus, nullptr, kSvcPath, "org.bluez.GattService1",
+                             kServiceVtable, nullptr);
+    sd_bus_add_object_vtable(bus, nullptr, kCharPath, "org.bluez.GattCharacteristic1",
+                             kCharVtable, nullptr);
     sd_bus_add_object_manager(bus, nullptr, "/org/bluez");
 
     /* seed the object manager with both devices */
@@ -243,6 +355,12 @@ int main() {
             gRssi = -42 + (iter / 5) % 5;
             sd_bus_emit_properties_changed_strv(bus, kDev1,
                                                 "org.bluez.Device1", nullptr);
+        }
+        if (gNotifying && iter % 20 == 19) {
+            /* notification: bump the first value byte and announce */
+            gCharValue[0] = 'a' + (gCharValue[0] - 'a' + 1) % 26;
+            sd_bus_emit_properties_changed(bus, kCharPath,
+                    "org.bluez.GattCharacteristic1", "Value", NULL);
         }
         sd_bus_process(bus, nullptr);
         usleep(100 * 1000);

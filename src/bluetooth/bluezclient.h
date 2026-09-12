@@ -26,6 +26,21 @@ namespace cdroid {
  * already converted to the android.bluetooth shapes (short RSSI, CoD
  * int, address upper-cased like the Java side expects).
  */
+/* org.bluez.GattService1 / GattCharacteristic1 snapshot records. */
+struct BluezGattService {
+    std::string objectPath;
+    std::string devicePath;
+    std::string uuid;
+};
+struct BluezGattCharacteristic {
+    std::string objectPath;
+    std::string servicePath;
+    std::string uuid;
+    std::vector<std::string> flags;   /* "read","write","notify",... */
+    std::vector<uint8_t> value;
+    bool notifying = false;
+};
+
 struct BluezDevice {
     std::string objectPath;   /* "/org/bluez/hci0/dev_AA_BB_CC_DD_EE_FF" */
     std::string address;      /* "AA:BB:CC:DD:EE:FF" */
@@ -81,6 +96,8 @@ public:
                                              const std::string& name) {}
         /* A Device1 object disappeared (unpaired/removed). */
         virtual void onDeviceRemoved(const std::string& objectPath) {}
+        /* A GATT characteristic's Value/Notifying property changed. */
+        virtual void onGattCharacteristicChanged(const BluezGattCharacteristic& ch) {}
         /* D-Bus/bluez service lost and re-established (daemon restart). */
         virtual void onBluezDisconnected() {}
         virtual void onBluezReconnected() {}
@@ -116,6 +133,30 @@ public:
     /* Adapter1.RemoveDevice (forget). */
     bool removeDevice(const std::string& address);
     bool setDeviceAlias(const std::string& address, const std::string& alias);
+
+    /* --- BLE -------------------------------------------------------------- */
+
+    /* Adapter1.SetDiscoveryFilter + StartDiscovery in one shot:
+     * transport "le"/"auto", service-uuid filter list (may be empty),
+     * rssi threshold (INT16_MIN = unset). */
+    bool startLeDiscovery(const std::vector<std::string>& uuidFilter,
+                          int16_t rssiThreshold);
+    /* Device1.Connect / Disconnect (the GATT bearer). */
+    bool connectDevice(const std::string& address);
+    bool disconnectDevice(const std::string& address);
+
+    /* --- GATT cache (from GetManagedObjects, refreshed by signals) ------- */
+    std::vector<BluezGattService> getGattServices(const std::string& deviceAddress) const;
+    std::vector<BluezGattCharacteristic> getGattCharacteristics(
+            const std::string& servicePath) const;
+    /* ReadValue/WriteValue on the characteristic object path; write
+     * without response uses the type flag. Returns the byte vector
+     * (read) / success (write). */
+    bool gattRead(const std::string& characteristicPath,
+                  std::vector<uint8_t>& out);
+    bool gattWrite(const std::string& characteristicPath,
+                   const std::vector<uint8_t>& value, bool withoutResponse);
+    bool gattSetNotify(const std::string& characteristicPath, bool enable);
 
     /* --- device cache (maintained by the monitor; copy under lock) ------ */
     std::vector<BluezDevice> getDevices() const;
@@ -162,6 +203,8 @@ private:
 
     mutable std::mutex mCacheMutex;
     std::map<std::string, BluezDevice> mDevices;   /* objectPath -> device */
+    std::map<std::string, BluezGattService> mGattServices;
+    std::map<std::string, BluezGattCharacteristic> mGattCharacteristics;
 
     std::mutex mBusMutex;              /* serializes sd_bus request calls */
     std::thread mMonitorThread;
