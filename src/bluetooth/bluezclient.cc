@@ -99,7 +99,7 @@ bool BluezClient::connect() {
          * bluetoothd on this bus". */
         sd_bus_error err = SD_BUS_ERROR_NULL;
         sd_bus_message* reply = nullptr;
-        rc = sd_bus_call_method(bus, kBluezService, "/org/bluez", kObjMgrIface,
+        rc = sd_bus_call_method(bus, kBluezService, "/", kObjMgrIface,
                                 "GetManagedObjects", &err, &reply, "");
         if (rc < 0) {
             LOGD("org.bluez not available (%s)",
@@ -618,7 +618,7 @@ bool BluezClient::refreshManagedObjects() {
     {
         std::lock_guard<std::mutex> lock(mBusMutex);
         if (!mBus) return false;
-        int rc = sd_bus_call_method(mBus, kBluezService, "/org/bluez", kObjMgrIface,
+        int rc = sd_bus_call_method(mBus, kBluezService, "/", kObjMgrIface,
                                     "GetManagedObjects", &err, &reply, "");
         if (rc < 0) {
             sd_bus_error_free(&err);

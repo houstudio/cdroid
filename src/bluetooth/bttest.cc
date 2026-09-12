@@ -236,7 +236,7 @@ int main(int argc, char** argv) {
             delete client;
         }
     }
-    if (cmd == "chat" && argc >= 5) {
+    if (cmd == "chat" && argc >= 4) {
         /* RFCOMM client: connect ADDR CHANNEL, send stdin lines */
         BluetoothDevice remote = adapter.getRemoteDevice(argv[2]);
         cdroid::BluetoothSocket* sock =
