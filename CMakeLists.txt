@@ -74,6 +74,9 @@ endif()
 set(CDROID_INCLUDE_DIRS "${CMAKE_BINARY_DIR}/include/gui" CACHE PATH "cdroid public header face (in-tree seed)")
 set(CDROID_PORTING_DIRS "${CMAKE_BINARY_DIR}/include"     CACHE PATH "cdroid porting headers (in-tree seed)")
 
+# android.net stack (wifi/ethernet/connectivity) — standalone cdnet lib,
+# consumed by apps/tests; the gui integration hooks land separately.
+add_subdirectory(src/net)
 add_subdirectory(src/porting)
 # androidfw must be defined before src/gui so cdroid can link it.
 add_subdirectory(src/gui/content/androidfw)
@@ -81,7 +84,6 @@ add_subdirectory(src/gui)
 # testkit (the Espresso port) lives under gui/app next to autotest/uiautomation,
 # but stays OUT of libcdroid: its own SHARED lib, product apps don't link it.
 add_subdirectory(src/gui/app/espresso)
-add_subdirectory(src/modules)
 add_subdirectory(src/3rdparty)
 # pm/am device-side CLI tools (adb-install chain) — after src/gui: they link cdroid.
 add_subdirectory(src/cmds)

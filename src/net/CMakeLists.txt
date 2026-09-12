@@ -54,9 +54,10 @@ if(ANDROID)
         -DANDROID_SOCKET_NAMESPACE_RESERVED=1
         )
 endif()
-add_library(wpa_ctrl wpa_ctrl.c utils/os_unix.c utils/wpabuf.c)
-include_directories(wpa_ctrl PUBLIC 
-   "utils"   "./"
+# Vendor wpa_ctrl library (unmodified wpa_supplicant sources).
+add_library(wpa_ctrl wifi/wpa_ctrl.c wifi/utils/os_unix.c wifi/utils/wpabuf.c)
+include_directories(wpa_ctrl PUBLIC
+   "wifi/utils"   "wifi"
    ${CDROID_INCLUDE_DIRS}
    ${CDROID_DEPINCLUDES}
    ${CMAKE_BINARY_DIR}/include
@@ -64,5 +65,47 @@ include_directories(wpa_ctrl PUBLIC
    ${CMAKE_BINARY_DIR}/include/porting)
 target_compile_options(wpa_ctrl PUBLIC -Wall -Wextra -Wno-variadic-macros)
 
-add_executable(wpatest main.cc wpasockclient.cc wifiscanner.cc)
-target_link_libraries(wpatest wpa_ctrl cdroid)
+# cdnet — android.net + android.net.wifi port on wpa_ctrl, laid out by the
+# android package tree:
+#               shared android.net (NetworkInfo, IpConfiguration, ...)
+#   ethernet/   ethernet side (EthernetManager)
+#   wifi/       android.net.wifi (includes the wpa_ctrl backend)
+# Self-contained: does not link cdroid, so it can be consumed (and later
+# graduated into src/gui/net) without touching other modules. The
+# superseded wpasockclient/wifiscanner prototypes stay on disk but out of
+# the build.
+add_library(cdnet
+    wifi/supplicantclient.cc
+    linkaddress.cc
+    dhcpinfo.cc
+    networkinfo.cc
+    networkcapabilities.cc
+    staticipconfiguration.cc
+    ipconfiguration.cc
+    ethernet/ethernetmanager.cc
+    dhcpclient.cc
+    netlinkmonitor.cc
+    connectivitymanager.cc
+    wifi/wifissid.cc
+    wifi/supplicantstate.cc
+    wifi/scanresult.cc
+    wifi/wifiinfo.cc
+    wifi/wificonfiguration.cc
+    wifi/nl80211radio.cc
+    wifi/wparesponseparser.cc
+    wifi/wifimanager.cc)
+target_include_directories(cdnet PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(cdnet PUBLIC wpa_ctrl pthread)
+
+add_executable(wpatest main.cc)
+target_link_libraries(wpatest cdnet)
+
+add_executable(ethtest ethtest.cc)
+target_link_libraries(ethtest cdnet)
+
+# Pure-logic test suites (no daemon / privileges required).
+add_executable(wifitests wifitests.cc)
+target_link_libraries(wifitests cdnet)
+
+add_executable(nettests nettests.cc)
+target_link_libraries(nettests cdnet)
