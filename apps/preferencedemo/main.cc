@@ -394,7 +394,15 @@ void SettingsFragment::setupNetworkScreen() {
         sw->setChecked(wifi.isWifiEnabled());
         sw->setOnPreferenceChangeListener(
                 [this](cdroid::Preference&, const nonstd::any& newValue) {
-            cdroid::WifiManager::getInstance().setWifiEnabled(nonstd::any_cast<bool>(newValue));
+            cdroid::WifiManager& wifi = cdroid::WifiManager::getInstance();
+            const bool on = nonstd::any_cast<bool>(newValue);
+            wifi.setWifiEnabled(on);
+            /* The module-phase setWifiEnabled(true) only re-attaches the
+             * supplicant client; an explicit DISCONNECT leaves the daemon
+             * idle (wpa does not auto-reconnect), so drive the network
+             * selection ourselves — the AOSP framework does this in
+             * ClientModeImpl when the radio comes back up. */
+            if (on) wifi.reconnect();
             refreshWifiStatus();
             refreshIpSummary();
             return true;
