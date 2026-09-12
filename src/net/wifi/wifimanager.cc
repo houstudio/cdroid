@@ -3,6 +3,7 @@
 
 #include <ifaddrs.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>   // inet_ntop (wpa_control sockaddr dump)
 
 #include <ipapplicator.h>
 
