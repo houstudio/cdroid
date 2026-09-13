@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include <bluetoothadapter.h>
+#include <bluetoothpan.h>
 #include <bluetoothdevice.h>
 #include <bluetoothpairing.h>
 #include <bluetoothprofile.h>
@@ -40,6 +41,7 @@ using cdroid::BluetoothGatt;
 using cdroid::BluetoothPairingListener;
 using cdroid::BluetoothProfile;
 using cdroid::BluetoothA2dp;
+using cdroid::BluetoothPan;
 using cdroid::BluetoothHeadset;
 using cdroid::BluetoothGattCallback;
 using cdroid::BluetoothGattCharacteristic;
@@ -376,6 +378,67 @@ int main(int argc, char** argv) {
         printf("profiles: a2dp=%d hfp=%d (stubs until the audio "
                "pipeline lands)\n", (int)a2dp, (int)hfp);
         return (a2dp && hfp) ? 0 : 1;
+    }
+    if (cmd == "pan" && argc >= 2) {
+        /* PAN: "pan on|off|status" (NAP tethering — bridge bt-pan must
+         * exist: see scripts/bt-bench.sh), "pan connect|disconnect <addr>"
+         * (PANU client over a bonded peer). */
+        class PanGetter : public BluetoothProfile::ServiceListener {
+        public:
+            void onServiceConnected(int profile,
+                                    BluetoothProfile* proxy) override {
+                pan = (BluetoothPan*)proxy;
+            }
+            void onServiceDisconnected(int profile) override {}
+            BluetoothPan* pan = nullptr;
+        } getter;
+        if (!adapter.getProfileProxy(&getter, BluetoothProfile::PAN)
+                || getter.pan == nullptr) {
+            printf("pan: proxy failed\n");
+            return 1;
+        }
+        BluetoothPan* pan = getter.pan;
+        const std::string sub = argv[2];
+        if (sub == "on") {
+            const bool ok = pan->setBluetoothTethering(true);
+            printf("pan tethering on: %s\n", ok ? "ok" : "FAILED "
+                   "(bridge missing? scripts/bt-bench.sh provisions bt-pan)");
+            adapter.closeProfileProxy(BluetoothProfile::PAN, pan);
+            return ok ? 0 : 1;
+        }
+        if (sub == "off") {
+            const bool ok = pan->setBluetoothTethering(false);
+            printf("pan tethering off: %s\n", ok ? "ok" : "FAILED");
+            adapter.closeProfileProxy(BluetoothProfile::PAN, pan);
+            return ok ? 0 : 1;
+        }
+        if (sub == "status") {
+            printf("pan tethering: %s\n",
+                   pan->isTetheringOn() ? "on" : "off");
+            for (const std::string& iface : pan->getTetheredIfaces()) {
+                printf("  tethered iface %s\n", iface.c_str());
+            }
+            adapter.closeProfileProxy(BluetoothProfile::PAN, pan);
+            return 0;
+        }
+        if ((sub == "connect" || sub == "disconnect") && argc >= 4) {
+            const BluetoothDevice remote = adapter.getRemoteDevice(argv[3]);
+            if (sub == "connect") {
+                std::string iface;
+                const bool ok = pan->connect(remote, iface);
+                printf("panu connect %s: %s%s\n", argv[3], ok ? "ok " : "FAILED",
+                       ok ? iface.c_str() : "");
+                adapter.closeProfileProxy(BluetoothProfile::PAN, pan);
+                return ok ? 0 : 1;
+            }
+            const bool ok = pan->disconnect(remote);
+            printf("panu disconnect %s: %s\n", argv[3], ok ? "ok" : "FAILED/not connected");
+            adapter.closeProfileProxy(BluetoothProfile::PAN, pan);
+            return ok ? 0 : 1;
+        }
+        printf("usage: pan on|off|status | pan connect|disconnect <bdaddr>\n");
+        adapter.closeProfileProxy(BluetoothProfile::PAN, pan);
+        return 1;
     }
     if (cmd == "sdp" && argc >= 3) {
         /* SDP resolve over L2CAP PSM 1 (needs a live peer with an SDP

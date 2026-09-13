@@ -1153,6 +1153,116 @@ bool BluezClient::cancelDiscovery() {
     return adapterCall("StopDiscovery");
 }
 
+/* --- PAN (BNEP) ------------------------------------------------------------- */
+
+static const char* kNetworkIface = "org.bluez.Network1";
+static const char* kNetworkServerIface = "org.bluez.NetworkServer1";
+
+bool BluezClient::networkServerRegister(const std::string& role,
+                                        const std::string& bridge) {
+    std::string adapterPath;
+    if (!ensureAdapter(adapterPath)) return false;
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_message* reply = nullptr;
+    bool ok;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        ok = sd_bus_call_method(mBus, kBluezService, adapterPath.c_str(),
+                                kNetworkServerIface, "Register", &err, &reply,
+                                "ss", role.c_str(), bridge.c_str()) >= 0;
+    }
+    if (ok && role == "nap") {
+        std::lock_guard<std::mutex> lock(mCacheMutex);
+        mNapRegistered = true;
+    }
+    if (!ok && err.message) LOGD("NetworkServer Register(%s) failed: %s",
+                                 role.c_str(), err.message);
+    sd_bus_message_unrefp(&reply);
+    sd_bus_error_free(&err);
+    return ok;
+}
+
+bool BluezClient::networkServerUnregister(const std::string& role) {
+    std::string adapterPath;
+    if (!ensureAdapter(adapterPath)) return false;
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_message* reply = nullptr;
+    bool ok;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        ok = sd_bus_call_method(mBus, kBluezService, adapterPath.c_str(),
+                                kNetworkServerIface, "Unregister", &err, &reply,
+                                "s", role.c_str()) >= 0;
+    }
+    if (role == "nap") {
+        std::lock_guard<std::mutex> lock(mCacheMutex);
+        mNapRegistered = ok;
+    }
+    if (!ok && err.message) LOGD("NetworkServer Unregister(%s) failed: %s",
+                                 role.c_str(), err.message);
+    sd_bus_message_unrefp(&reply);
+    sd_bus_error_free(&err);
+    return ok;
+}
+
+bool BluezClient::isNapServerRegistered() const {
+    std::lock_guard<std::mutex> lock(mCacheMutex);
+    return mNapRegistered;
+}
+
+bool BluezClient::networkConnect(const std::string& address,
+                                 const std::string& role, std::string& ifaceOut) {
+    std::string path;
+    {
+        std::lock_guard<std::mutex> lock(mCacheMutex);
+        path = pathForAddressLocked(address);
+    }
+    if (path.empty()) return false;   /* unknown remote — discover it first */
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_message* reply = nullptr;
+    const char* iface = nullptr;
+    bool ok;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        ok = sd_bus_call_method(mBus, kBluezService, path.c_str(),
+                                kNetworkIface, "Connect", &err, &reply,
+                                "s", role.c_str()) >= 0
+             && sd_bus_message_read(reply, "s", &iface) >= 0;
+    }
+    if (!ok && err.message) LOGD("Network Connect(%s) failed: %s",
+                                 role.c_str(), err.message);
+    if (ok && iface != nullptr) ifaceOut = iface;
+    sd_bus_message_unrefp(&reply);
+    sd_bus_error_free(&err);
+    return ok;
+}
+
+bool BluezClient::networkDisconnect(const std::string& address) {
+    std::string path;
+    {
+        std::lock_guard<std::mutex> lock(mCacheMutex);
+        path = pathForAddressLocked(address);
+    }
+    if (path.empty()) return false;
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_message* reply = nullptr;
+    bool ok;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        ok = sd_bus_call_method(mBus, kBluezService, path.c_str(),
+                                kNetworkIface, "Disconnect", &err, &reply,
+                                "") >= 0;
+    }
+    if (!ok && err.message) LOGD("Network Disconnect failed: %s", err.message);
+    sd_bus_message_unrefp(&reply);
+    sd_bus_error_free(&err);
+    return ok;
+}
+
 bool BluezClient::deviceCall(const std::string& address, const char* method) {
     std::string path;
     {

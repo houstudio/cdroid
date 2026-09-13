@@ -7,6 +7,7 @@
 #include <cstdio>
 
 #include <bluetoothadapter.h>
+#include <bluetoothpan.h>
 #include <bluezclient.h>
 #include <bluetoothsocket.h>
 #include <bluetoothgatt.h>
@@ -228,6 +229,10 @@ bool BluetoothAdapter::getProfileProxy(
         return true;
     case BluetoothProfile::HEADSET:
         listener->onServiceConnected(profile, new BluetoothHeadset());
+        return true;
+    case BluetoothProfile::PAN:
+        listener->onServiceConnected(profile,
+                new BluetoothPan(*this));
         return true;
     default:
         return false;   /* profile not ported */

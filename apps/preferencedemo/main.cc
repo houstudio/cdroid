@@ -39,6 +39,7 @@
 #include <wifi/wifiinfo.h>
 #include <wifi/wificonfiguration.h>
 #include <bluetoothadapter.h>            // cdblue: connected devices screen
+#include <bluetoothpan.h>              // cdblue: Bluetooth tethering (network screen)
 #include <bluetoothdevice.h>
 #include <bluetoothpairing.h>
 #include "bluetooth/bluetoothdevicepreference.h"
@@ -167,6 +168,11 @@ public:
                 ->getEventManager()->unregisterCallback(this);
         *mBtAlive = false;
         if (mDeviceList != nullptr) mDeviceList->onStop();
+        if (mBtPan != nullptr) {
+            cdroid::BluetoothAdapter::getDefaultAdapter().closeProfileProxy(
+                    cdroid::BluetoothProfile::PAN, mBtPan);
+            mBtPan = nullptr;
+        }
         cdroid::BluetoothAdapter::getDefaultAdapter().removePairingListener(this);
         PreferenceFragment::onDestroy();
     }
@@ -196,6 +202,16 @@ public:
     std::shared_ptr<bool> mBtAlive = std::make_shared<bool>(false);
     std::unique_ptr<preferencedemo::DeviceListPreferenceFragment> mDeviceList;
     bool mBtPairingAgentRegistered = false;
+    cdroid::BluetoothPan* mBtPan = nullptr;   // network screen; closed in onDestroy
+    void refreshTetheringSummary() {
+        cdroid::Preference* tether = findPreference("bluetooth_tethering");
+        if (tether == nullptr || mBtPan == nullptr) return;
+        const auto ifaces = mBtPan->getTetheredIfaces();
+        tether->setSummary(mBtPan->isTetheringOn()
+                ? (ifaces.empty() ? std::string("On")
+                   : "On · 已接入 " + std::to_string(ifaces.size()) + " 台")
+                : std::string("Off"));
+    }
 
     // WifiManager::NetworkStateListener (monitor thread).
     void onNetworkStateChanged(const cdroid::WifiInfo&) override;
@@ -433,20 +449,43 @@ void SettingsFragment::onNetworkStateChanged(const cdroid::WifiInfo&) {
 void SettingsFragment::setupNetworkScreen() {
     *mNetAlive = true;
     // Bluetooth tethering row (AOSP BluetoothTetherPreferenceController):
-    // available only while the Bluetooth radio is on; the PAN profile is
-    // not ported in cdblue yet, so the toggle answers with a notice.
-    if (cdroid::Preference* tether = findPreference("bluetooth_tethering")) {
+    // the switch drives BluetoothPan::setBluetoothTethering (NAP server on
+    // the bt-pan bridge). The bridge/DHCP/NAT data plane is provisioned by
+    // scripts/bt-bench.sh (AOSP: Tethering/netd's half); the switch works
+    // without it only when bluetoothd accepts the Register.
+    if (auto* tether = dynamic_cast<cdroid::SwitchPreference*>(
+            findPreference("bluetooth_tethering"))) {
         const bool btOn = cdroid::BluetoothAdapter::getDefaultAdapter().isEnabled();
-        tether->setEnabled(btOn);
-        tether->setOnPreferenceChangeListener(
-                [this](cdroid::Preference&, const nonstd::any&) -> bool {
-            cdroid::Context* c = requireContext();
-            if (c != nullptr) {
-                cdroid::Toast::makeText(c, "蓝牙网络共享需要 PAN profile(尚未移植)",
-                                        cdroid::Toast::LENGTH_SHORT)->show();
+        class PanGetter : public cdroid::BluetoothProfile::ServiceListener {
+        public:
+            void onServiceConnected(int, cdroid::BluetoothProfile* proxy) override {
+                pan = (cdroid::BluetoothPan*)proxy;
             }
-            return false;   // reject until the profile layer lands
-        });
+            void onServiceDisconnected(int) override {}
+            cdroid::BluetoothPan* pan = nullptr;
+        } getter;
+        if (cdroid::BluetoothAdapter::getDefaultAdapter().getProfileProxy(
+                &getter, cdroid::BluetoothProfile::PAN) && getter.pan != nullptr) {
+            mBtPan = getter.pan;
+            tether->setEnabled(btOn);
+            tether->setChecked(mBtPan->isTetheringOn());
+            refreshTetheringSummary();
+            tether->setOnPreferenceChangeListener(
+                    [this](cdroid::Preference&, const nonstd::any& newValue) {
+                const bool on = nonstd::any_cast<bool>(newValue);
+                const bool ok = mBtPan != nullptr && mBtPan->setBluetoothTethering(on);
+                if (!ok) {
+                    cdroid::Context* c = requireContext();
+                    if (c != nullptr) {
+                        cdroid::Toast::makeText(c,
+                                "开启失败:bt-pan 桥不存在(scripts/bt-bench.sh 预置)",
+                                cdroid::Toast::LENGTH_SHORT)->show();
+                    }
+                }
+                refreshTetheringSummary();
+                return ok;
+            });
+        }
     }
     // The transport binds the library default (SupplicantClient::
     // defaultCtrlPath: WPA_CTRL_PATH if set, else the system socket) and

@@ -144,6 +144,21 @@ public:
 
     bool startDiscovery();
     bool cancelDiscovery();
+
+    /* --- PAN (BNEP) -------------------------------------------------------- */
+
+    /* Adapter NetworkServer1.Register(role, bridge): accept "nap" / "panu"
+     * connections; bluetoothd enslaves each peer's bnepX to the bridge. The
+     * bridge must already exist (the tethering layer creates it). */
+    bool networkServerRegister(const std::string& role, const std::string& bridge);
+    bool networkServerUnregister(const std::string& role);
+    /* BlueZ exposes no registered-state query; the client tracks the NAP
+     * server for the process (AOSP's PanService holds the same flag). */
+    bool isNapServerRegistered() const;
+    /* Device Network1.Connect(role) -> interface name (e.g. "bnep0"). */
+    bool networkConnect(const std::string& address, const std::string& role,
+                        std::string& ifaceOut);
+    bool networkDisconnect(const std::string& address);
     /* Device1.Pair — object path resolved from the device cache. */
     bool pairDevice(const std::string& address);
     /* Adapter1.RemoveDevice (forget). */
@@ -288,6 +303,7 @@ private:
      * self-deadlock on mBusMutex). */
     bool mPowered = false;
     bool mDiscovering = false;
+    bool mNapRegistered = false;   /* NetworkServer1 nap Register state */
     std::string mAlias;
     std::string mAdapterAddress;
 

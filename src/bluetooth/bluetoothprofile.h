@@ -22,6 +22,12 @@ class BluetoothHeadset;
 class BluetoothProfile {
 public:
     /* Profile id constants (BluetoothProfile.*). */
+    /* Profile connection states (AOSP BluetoothProfile.*). */
+    static constexpr int STATE_DISCONNECTED = 0;
+    static constexpr int STATE_CONNECTING = 1;
+    static constexpr int STATE_CONNECTED = 2;
+    static constexpr int STATE_DISCONNECTING = 3;
+
     static constexpr int HEADSET = 1;
     static constexpr int A2DP = 2;
     static constexpr int HID_HOST = 4;
