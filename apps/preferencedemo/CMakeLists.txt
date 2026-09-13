@@ -16,7 +16,16 @@ include_directories(
    ${CMAKE_SOURCE_DIR}/src/bluetooth  # cdblue (connected devices screen)
 )
 
-add_executable(preferencedemo main.cc)
+add_executable(preferencedemo
+    main.cc
+    bluetooth/localbluetoothmanager.cc
+    bluetooth/cachedbluetoothdevice.cc
+    bluetooth/cachedbluetoothdevicemanager.cc
+    bluetooth/bluetoothutils.cc
+    bluetooth/bluetoothdevicepreference.cc
+    bluetooth/bluetoothprogresscategory.cc
+    bluetooth/devicelistpreferencefragment.cc
+)
 
 # App pak: the settings preference XMLs + value arrays, compiled to binary
 # AXML/arsc (aapt2, -I framework.apk + widgetex.apk) and loaded at runtime

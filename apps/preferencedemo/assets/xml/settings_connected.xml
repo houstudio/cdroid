@@ -11,24 +11,32 @@
         android:summaryOff="Off"
         android:defaultValue="false" />
 
+    <!-- AOSP bluetooth_settings.xml keys: the row key IS the route
+         (onPreferenceTreeClick -> screen_bluetooth_pairing). -->
     <Preference
-        android:key="bluetooth_pairing"
+        android:key="screen_bluetooth_pairing"
         android:widgetLayout="@layout/prefdemo_chevron"
-        android:title="Pair new device"
+        android:title="@string/bluetooth_pair_new_device"
         android:dependency="bluetooth_enabled" />
 
     <Preference
-        android:key="bluetooth_device_name"
+        android:key="device_name"
         android:widgetLayout="@layout/prefdemo_chevron"
-        android:title="Device name"
-        android:summary="Android Phone"
+        android:title="@string/bluetooth_device_name"
+        android:summary="@string/summary_placeholder"
         android:dependency="bluetooth_enabled" />
 
-    <!-- Filled at runtime from BluetoothAdapter::getBondedDevices()
-         (buildEthernetSection's dynamic-row pattern). -->
+    <!-- BluetoothSettings' paired-devices category, filled by
+         DeviceListPreferenceFragment under the BONDED filter. -->
     <PreferenceCategory
-        android:key="bluetooth_bonded"
-        android:title="已配对设备" />
+        android:key="paired_devices"
+        android:title="@string/bluetooth_paired_device_title" />
+
+    <!-- AOSP FooterPreference: the adapter MAC. -->
+    <Preference
+        android:key="bluetooth_footer"
+        android:title="…"
+        android:selectable="false" />
 
     <PreferenceCategory android:title="NFC">
 

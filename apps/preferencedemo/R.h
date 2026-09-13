@@ -70,6 +70,7 @@ namespace R{
             prefdemo_root = 0x7f050007,
             prefdemo_single = 0x7f050008,
             prefdemo_title = 0x7f050009,
+            scanning_progress = 0x7f05000a,
         };
     }/*namespace id*/
 
@@ -78,26 +79,52 @@ namespace R{
             prefdemo_chevron = 0x7f060000,
             prefdemo_main = 0x7f060001,
             prefdemo_settings = 0x7f060002,
+            preference_empty_list = 0x7f060003,
+            preference_progress_category = 0x7f060004,
         };
     }/*namespace layout*/
 
+    namespace string{
+        enum : int {
+            bluetooth_connected = 0x7f070000,
+            bluetooth_connected_noheadset = 0x7f070001,
+            bluetooth_connecting = 0x7f070002,
+            bluetooth_device = 0x7f070003,
+            bluetooth_device_name = 0x7f070004,
+            bluetooth_disconnect_all_profiles = 0x7f070005,
+            bluetooth_disconnect_title = 0x7f070006,
+            bluetooth_disconnecting = 0x7f070007,
+            bluetooth_footer_mac_message = 0x7f070008,
+            bluetooth_no_devices_found = 0x7f070009,
+            bluetooth_pair_new_device = 0x7f07000a,
+            bluetooth_paired_device_title = 0x7f07000b,
+            bluetooth_pairing = 0x7f07000c,
+            bluetooth_pairing_error_message = 0x7f07000d,
+            bluetooth_settings = 0x7f07000e,
+            bluetooth_show_received_files = 0x7f07000f,
+            device_picker = 0x7f070010,
+            summary_placeholder = 0x7f070011,
+        };
+    }/*namespace string*/
+
     namespace xml{
         enum : int {
-            settings_about = 0x7f070000,
-            settings_accessibility = 0x7f070001,
-            settings_apps = 0x7f070002,
-            settings_battery = 0x7f070003,
-            settings_connected = 0x7f070004,
-            settings_display = 0x7f070005,
-            settings_location = 0x7f070006,
-            settings_network = 0x7f070007,
-            settings_notifications = 0x7f070008,
-            settings_privacy = 0x7f070009,
-            settings_root = 0x7f07000a,
-            settings_security = 0x7f07000b,
-            settings_sound = 0x7f07000c,
-            settings_storage = 0x7f07000d,
-            settings_system = 0x7f07000e,
+            settings_about = 0x7f080000,
+            settings_accessibility = 0x7f080001,
+            settings_apps = 0x7f080002,
+            settings_battery = 0x7f080003,
+            settings_bluetooth_pairing = 0x7f080004,
+            settings_connected = 0x7f080005,
+            settings_display = 0x7f080006,
+            settings_location = 0x7f080007,
+            settings_network = 0x7f080008,
+            settings_notifications = 0x7f080009,
+            settings_privacy = 0x7f08000a,
+            settings_root = 0x7f08000b,
+            settings_security = 0x7f08000c,
+            settings_sound = 0x7f08000d,
+            settings_storage = 0x7f08000e,
+            settings_system = 0x7f08000f,
         };
     }/*namespace xml*/
 

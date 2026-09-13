@@ -57,10 +57,15 @@
             android:title="USB tethering"
             android:dependency="wifi_hotspot" />
 
-        <Preference
+        <!-- AOSP: a SwitchPreference (BluetoothTetherPreferenceController);
+             enabled only while Bluetooth is on. The PAN profile is not
+             ported in cdblue yet — the toggle answers with a notice. -->
+        <!-- No wifi_hotspot dependency (AOSP ties this row to the Bluetooth
+             radio, driven from code in setupNetworkScreen). -->
+        <SwitchPreference
             android:key="bluetooth_tethering"
             android:title="Bluetooth tethering"
-            android:dependency="wifi_hotspot" />
+            android:summaryOff="Off" />
 
     </PreferenceCategory>
 
