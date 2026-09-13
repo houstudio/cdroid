@@ -18,12 +18,25 @@ BLUEZ=${BLUEZ:-/tmp/bluez-5.79}
 VHCI_DEV=/dev/vhci
 PIDDIR=${PIDDIR:-/tmp/bt-bench}
 
+stop_bench() {
+    for f in bluetoothd btvirt dbus; do
+        [ -f $PIDDIR/$f.pid ] && kill $(cat $PIDDIR/$f.pid) 2>/dev/null || true
+    done
+    pkill -f 'bluetoothd -n' 2>/dev/null || true
+    pkill -x btvirt 2>/dev/null || true
+    sleep 1
+}
+
 case "${1:-start}" in
 start)
     if [ ! -x "$BLUEZ/emulator/btvirt" ] || [ ! -x "$BLUEZ/src/bluetoothd" ]; then
         echo "bluez build tree not found under $BLUEZ (set BLUEZ=<dir>)" >&2
         exit 1
     fi
+    # Idempotent start: a leftover bluetoothd keeps owning org.bluez (the
+    # new daemon dies with "Name already in use") and duplicate btvirt runs
+    # stack controllers — clear any previous instance first.
+    stop_bench
     mkdir -p $PIDDIR
 
     # org.bluez 总线策略(机器没装系统 bluez,默认 policy 拒绝 own)
@@ -62,11 +75,7 @@ POLICY
     echo "台架就绪。回归:./bttest state && ./bttest discover on && ./bttest listen 5"
     ;;
 stop)
-    for f in bluetoothd btvirt dbus; do
-        [ -f $PIDDIR/$f.pid ] && kill $(cat $PIDDIR/$f.pid) 2>/dev/null || true
-    done
-    pkill -f 'bluetoothd -n' 2>/dev/null || true
-    pkill -x btvirt 2>/dev/null || true
+    stop_bench
     echo stopped
     ;;
 *)
