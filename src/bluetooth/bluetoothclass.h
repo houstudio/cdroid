@@ -145,6 +145,76 @@ public:
         return mClass & Device::BITMASK;
     }
 
+    /** AOSP profile-match heuristic constants. */
+    static constexpr int PROFILE_HEADSET = 0;
+    static constexpr int PROFILE_A2DP = 1;
+    static constexpr int PROFILE_OPP = 2;
+    static constexpr int PROFILE_HID = 3;
+    static constexpr int PROFILE_PANU = 4;
+    static constexpr int PROFILE_NAP = 5;
+    static constexpr int PROFILE_A2DP_SINK = 6;
+
+    /** AOSP doesClassMatch(int): a simple heuristic that guesses profile
+     *  support from the class bits (errs on the side of false positives). */
+    bool doesClassMatch(int profile) const {
+        if (profile == PROFILE_A2DP) {
+            if (hasService(Service::RENDER)) return true;
+            // By the A2DP spec, sinks must indicate the RENDER service.
+            // However we found some that do not (Chordette). So lets also
+            // match on some other class bits.
+            switch (getDeviceClass()) {
+            case Device::AUDIO_VIDEO_HIFI_AUDIO:
+            case Device::AUDIO_VIDEO_HEADPHONES:
+            case Device::AUDIO_VIDEO_LOUDSPEAKER:
+            case Device::AUDIO_VIDEO_CAR_AUDIO:
+                return true;
+            default:
+                return false;
+            }
+        } else if (profile == PROFILE_A2DP_SINK) {
+            if (hasService(Service::CAPTURE)) return true;
+            switch (getDeviceClass()) {
+            case Device::AUDIO_VIDEO_HIFI_AUDIO:
+            case Device::AUDIO_VIDEO_SET_TOP_BOX:
+            case Device::AUDIO_VIDEO_VCR:
+                return true;
+            default:
+                return false;
+            }
+        } else if (profile == PROFILE_HEADSET) {
+            // The render service class is required by the spec for HFP, so
+            // is a pretty good signal.
+            if (hasService(Service::RENDER)) return true;
+            // Just in case they forgot the render service class.
+            switch (getDeviceClass()) {
+            case Device::AUDIO_VIDEO_HANDSFREE:
+            case Device::AUDIO_VIDEO_WEARABLE_HEADSET:
+            case Device::AUDIO_VIDEO_CAR_AUDIO:
+                return true;
+            default:
+                return false;
+            }
+        } else if (profile == PROFILE_OPP) {
+            if (hasService(Service::OBJECT_TRANSFER)) return true;
+            switch (getDeviceClass()) {
+            case Device::COMPUTER_UNCATEGORIZED:
+            case Device::COMPUTER_DESKTOP:
+            case Device::COMPUTER_SERVER:
+            case Device::COMPUTER_LAPTOP:
+            case Device::COMPUTER_HANDHELD_PC_PDA:
+            case Device::COMPUTER_PALM_SIZE_PC_PDA:
+            case Device::COMPUTER_WEARABLE:
+            case Device::PHONE_UNCATEGORIZED:
+            case Device::PHONE_CELLULAR:
+            case Device::PHONE_CORDLESS:
+                return true;
+            default:
+                return false;
+            }
+        }
+        return false;
+    }
+
     int getClassOfDevice() const { return mClass; }
 
     bool operator==(const BluetoothClass& other) const { return mClass == other.mClass; }
