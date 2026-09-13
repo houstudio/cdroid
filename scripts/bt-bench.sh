@@ -25,6 +25,11 @@ stop_bench() {
     pkill -f 'bluetoothd -n' 2>/dev/null || true
     pkill -x btvirt 2>/dev/null || true
     sleep 1
+    # A dead btvirt leaves its kernel vhci controllers behind (zombie hciN
+    # with no live peer); bluetoothd then defaults to the FIRST adapter —
+    # the zombie — and every discovery finds nothing. Unloading the module
+    # clears all of them; start re-modprobes a clean set.
+    rmmod hci_vhci 2>/dev/null || true
 }
 
 case "${1:-start}" in
@@ -37,6 +42,8 @@ start)
     # new daemon dies with "Name already in use") and duplicate btvirt runs
     # stack controllers — clear any previous instance first.
     stop_bench
+    modprobe hci_vhci
+    chmod 666 $VHCI_DEV 2>/dev/null || true
     mkdir -p $PIDDIR
 
     # org.bluez 总线策略(机器没装系统 bluez,默认 policy 拒绝 own)
@@ -54,9 +61,6 @@ start)
   </policy>
 </busconfig>
 POLICY
-
-    modprobe hci_vhci
-    chmod 666 $VHCI_DEV 2>/dev/null || true
 
     # btvirt: -l2 = 两个本地控制器(经典+LE 双模),互为对端
     $BLUEZ/emulator/btvirt -d -l2 > $PIDDIR/btvirt.log 2>&1 &
