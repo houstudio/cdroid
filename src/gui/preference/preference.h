@@ -233,7 +233,7 @@ public:
      * Compares preference objects based on order (if set), otherwise
      * alphabetically on the titles.
      */
-    int compareTo(const Preference& another) const;
+    virtual int compareTo(const Preference& another) const;   // AOSP: overridden by BluetoothDevicePreference-style rows
     bool operator<(const Preference& another) const { return compareTo(another) < 0; }
     bool operator==(const Preference& another) const { return this == &another; }
 
