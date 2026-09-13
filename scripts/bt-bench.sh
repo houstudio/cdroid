@@ -24,12 +24,24 @@ stop_bench() {
     done
     pkill -f 'bluetoothd -n' 2>/dev/null || true
     pkill -x btvirt 2>/dev/null || true
-    sleep 1
+    [ -f $PIDDIR/dnsmasq-pan.pid ] && kill $(cat $PIDDIR/dnsmasq-pan.pid) 2>/dev/null || true
+    ip link del bt-pan 2>/dev/null || true
+    # Wait for the daemons to actually exit: bluetoothd holds raw hci
+    # sockets and btvirt its /dev/vhci fds; rmmod below races them (and
+    # silently fails, leaving the zombie controllers) if we rush.
+    for i in $(seq 1 20); do
+        pgrep -x btvirt >/dev/null || pgrep -f 'bluetoothd -n' >/dev/null || break
+        sleep 0.5
+    done
     # A dead btvirt leaves its kernel vhci controllers behind (zombie hciN
     # with no live peer); bluetoothd then defaults to the FIRST adapter —
     # the zombie — and every discovery finds nothing. Unloading the module
     # clears all of them; start re-modprobes a clean set.
     rmmod hci_vhci 2>/dev/null || true
+    if ls /sys/class/bluetooth 2>/dev/null | grep -q hci; then
+        echo "WARN: hci controllers survived the unload (kernel holds them;" >&2
+        echo "      a reboot is the only cleaner)." >&2
+    fi
 }
 
 case "${1:-start}" in
@@ -71,6 +83,24 @@ POLICY
     $BLUEZ/src/bluetoothd -n -d > $PIDDIR/bluetoothd.log 2>&1 &
     echo $! > $PIDDIR/bluetoothd.pid
     sleep 1
+
+    # PAN tethering 数据面:bt-pan 桥(BluetoothPan 的 NetworkServer1 目标),
+    # bluetoothd 把对端 bnepX 填进桥;DHCP + NAT 走默认路由(hwsim wlan1 同配方)。
+    # AOSP 里这半边由 Tethering/netd 做——这里先由台架(root)供给,app 只控制
+    # NetworkServer1.Register(cdblue 的 BluetoothPan::setBluetoothTethering)。
+    modprobe bnep 2>/dev/null || true
+    ip link add bt-pan type bridge 2>/dev/null || true
+    ip link set bt-pan up
+    ip addr add 192.168.47.1/24 dev bt-pan 2>/dev/null || true
+    sysctl -qw net.ipv4.ip_forward=1
+    iptables -t nat -C POSTROUTING -s 192.168.47.0/24 ! -o bt-pan -j MASQUERADE 2>/dev/null \
+        || iptables -t nat -A POSTROUTING -s 192.168.47.0/24 ! -o bt-pan -j MASQUERADE
+    if [ ! -f $PIDDIR/dnsmasq-pan.pid ] || ! kill -0 $(cat $PIDDIR/dnsmasq-pan.pid) 2>/dev/null; then
+        dnsmasq --interface=bt-pan --bind-interfaces \
+            --dhcp-range=192.168.47.50,192.168.47.60,12h \
+            --log-dhcp --log-facility=$PIDDIR/dnsmasq-pan.log \
+            --pid-file=$PIDDIR/dnsmasq-pan.pid || echo "dnsmasq-pan failed (see log)"
+    fi
 
     echo "== hci 控制器 =="
     ls /sys/class/bluetooth/ || true
