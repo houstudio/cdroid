@@ -382,15 +382,20 @@ bool BluezClient::registerAgent(const std::string& capability) {
                                       agent, this) < 0)
             return false;
         sd_bus_error err = SD_BUS_ERROR_NULL;
-        sd_bus_message* reply = nullptr;
+        /* Two separate reply pointers: chaining the calls through one
+         * variable overwrote (and leaked) the first reply — valgrind
+         * 266KB bus_message_from_malloc rooted here. */
+        sd_bus_message* replyRegister = nullptr;
+        sd_bus_message* replyDefault = nullptr;
         const bool ok = sd_bus_call_method(mBus, kBluezService,
-                "/org/bluez", kAgentMgrIface, "RegisterAgent", &err, &reply,
-                "os", kAgentPath, capability.c_str()) >= 0
+                "/org/bluez", kAgentMgrIface, "RegisterAgent", &err,
+                &replyRegister, "os", kAgentPath, capability.c_str()) >= 0
          && sd_bus_call_method(mBus, kBluezService, "/org/bluez",
-                kAgentMgrIface, "RequestDefaultAgent", &err, &reply,
+                kAgentMgrIface, "RequestDefaultAgent", &err, &replyDefault,
                 "o", kAgentPath) >= 0;
         if (!ok && err.message) LOGD("RegisterAgent failed: %s", err.message);
-        sd_bus_message_unrefp(&reply);
+        sd_bus_message_unrefp(&replyRegister);
+        sd_bus_message_unrefp(&replyDefault);
         sd_bus_error_free(&err);
         return ok;
     }

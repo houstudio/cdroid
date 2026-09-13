@@ -89,9 +89,12 @@ protected:
     // framework alert-dialog styles, real ids pass through, 0 resolves
     // ?attr/alertDialogTheme from the context theme.
     static int resolveDialogTheme(Context* context,int themeResId);
-    ~AlertDialog()override;
     void onCreate()override;
 public:
+    /* Dialog documents the owner-managed contract (dismiss() then delete,
+       public ~Dialog); this override used to sit in the protected section,
+       making every owner's delete a compile error while leaks remained. */
+    ~AlertDialog() override;
     Button* getButton(int whichButton);
     ListView* getListView();
     void setTitle(const std::string& title);

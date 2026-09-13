@@ -6,10 +6,8 @@ namespace preferencedemo {
 
 CachedBluetoothDevice::CachedBluetoothDevice(
         LocalBluetoothAdapter* localAdapter,
-        CachedBluetoothDeviceManager* deviceManager,
         cdroid::BluetoothDevice device)
     : mLocalAdapter(localAdapter),
-      mDeviceManager(deviceManager),
       mDevice(device) {
 }
 

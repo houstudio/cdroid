@@ -54,6 +54,9 @@ private:
     const bool mShowDevicesWithoutNames;
     const int64_t mCurrentTime;
     const int mType;
+    /* The row's class-icon drawable: Preference::setIcon overwrites the raw
+     * pointer without freeing, so the row owns and recycles this clone. */
+    cdroid::Drawable* mClassIcon = nullptr;
     cdroid::AlertDialog* mDisconnectDialog = nullptr;
     bool mIsCallbackRemoved = false;
 };

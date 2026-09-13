@@ -15,6 +15,7 @@
 #ifndef PREFERENCEDRMO_LOCAL_BLUETOOTH_MANAGER_H
 #define PREFERENCEDRMO_LOCAL_BLUETOOTH_MANAGER_H
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -79,6 +80,8 @@ private:
     friend class LocalBluetoothManager;
     BluetoothEventManager(CachedBluetoothDeviceManager* deviceManager);
     void post(std::function<void()> fn);   // monitor thread -> main looper
+    /* AOSP readPairedDevices: seed + dispatch onDeviceAdded per bonded. */
+    void readPairedDevices();
 
     // cdroid::BluetoothAdapter listeners (BlueZ monitor thread).
     void onAdapterStateChanged(int newState, int prevState) override;
@@ -103,6 +106,7 @@ public:
 
 private:
     LocalBluetoothManager();
+    ~LocalBluetoothManager();
 
     LocalBluetoothAdapter mLocalAdapter;
     std::unique_ptr<CachedBluetoothDeviceManager> mDeviceManager;

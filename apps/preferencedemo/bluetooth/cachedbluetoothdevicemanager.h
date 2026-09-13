@@ -13,6 +13,7 @@
 
 #include <functional>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -41,6 +42,10 @@ public:
 private:
     friend class BluetoothEventManager;
     void onBluetoothStateChanged(int state);
+    /* AOSP readPairedDevices (via LocalBluetoothManager): seed the cache
+     * from the adapter's bonded list; returns the newly cached devices so
+     * the event manager can dispatch onDeviceAdded for them. */
+    std::vector<CachedBluetoothDevice*> readPairedDevices();
     /* No-GC seam: deleting an entry must first let every BluetoothCallback
      * drop its rows (AOSP leans on GC here); the event manager installs the
      * fan-out. */
@@ -51,6 +56,9 @@ private:
     LocalBluetoothAdapter* mLocalAdapter;
     std::function<void(CachedBluetoothDevice*)> mOnDeviceDeletedHook;
     std::map<std::string, CachedBluetoothDevice*> mCachedDevices;
+    /* Addresses already dispatched by readPairedDevices (dispatch once,
+     * not on every STATE_ON). */
+    std::set<std::string> mKnownFromRead;
 };
 
 } // namespace preferencedemo

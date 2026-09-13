@@ -379,7 +379,7 @@ int main(int argc, char** argv) {
                "pipeline lands)\n", (int)a2dp, (int)hfp);
         return (a2dp && hfp) ? 0 : 1;
     }
-    if (cmd == "pan" && argc >= 2) {
+    if (cmd == "pan" && argc >= 3) {
         /* PAN: "pan on|off|status" (NAP tethering — bridge bt-pan must
          * exist: see scripts/bt-bench.sh), "pan connect|disconnect <addr>"
          * (PANU client over a bonded peer). */
@@ -424,8 +424,8 @@ int main(int argc, char** argv) {
         if ((sub == "connect" || sub == "disconnect") && argc >= 4) {
             const BluetoothDevice remote = adapter.getRemoteDevice(argv[3]);
             if (sub == "connect") {
-                std::string iface;
-                const bool ok = pan->connect(remote, iface);
+                const bool ok = pan->connect(remote);
+                const std::string iface = pan->getPanuInterface(remote);
                 printf("panu connect %s: %s%s\n", argv[3], ok ? "ok " : "FAILED",
                        ok ? iface.c_str() : "");
                 adapter.closeProfileProxy(BluetoothProfile::PAN, pan);
@@ -436,7 +436,7 @@ int main(int argc, char** argv) {
             adapter.closeProfileProxy(BluetoothProfile::PAN, pan);
             return ok ? 0 : 1;
         }
-        printf("usage: pan on|off|status | pan connect|disconnect <bdaddr>\n");
+        printf("usage: bttest pan on|off|status | pan connect|disconnect <bdaddr>\n");
         adapter.closeProfileProxy(BluetoothProfile::PAN, pan);
         return 1;
     }

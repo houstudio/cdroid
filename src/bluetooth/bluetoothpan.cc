@@ -59,17 +59,22 @@ std::vector<std::string> BluetoothPan::getTetheredIfaces() const {
 
 /* --- PANU (this device uses the remote's network) ----------------------------- */
 
-bool BluetoothPan::connect(const BluetoothDevice& device, std::string& ifaceOut) {
+bool BluetoothPan::connect(const BluetoothDevice& device) {
     const std::string address = device.getAddress();
     if (mPanuIfaces.count(address)) {
-        ifaceOut = mPanuIfaces[address];
         return false;   /* PAN_CONNECT_FAILED_ALREADY_CONNECTED */
     }
-    if (!mAdapter.client().networkConnect(address, "panu", ifaceOut)) {
+    std::string iface;
+    if (!mAdapter.client().networkConnect(address, "panu", iface)) {
         return false;   /* PAN_CONNECT_FAILED_ATTEMPT_FAILED */
     }
-    mPanuIfaces[address] = ifaceOut;
+    mPanuIfaces[address] = iface;
     return true;
+}
+
+std::string BluetoothPan::getPanuInterface(const BluetoothDevice& device) const {
+    const auto it = mPanuIfaces.find(device.getAddress());
+    return it != mPanuIfaces.end() ? it->second : std::string();
 }
 
 bool BluetoothPan::disconnect(const BluetoothDevice& device) {

@@ -48,14 +48,15 @@ public:
     static constexpr int PAN_OPERATION_GENERIC_FAILURE = 1003;
     static constexpr int PAN_OPERATION_SUCCESS = 1004;
 
+    /* Action/extra string values verbatim from android-36 BluetoothPan. */
     static constexpr const char* ACTION_CONNECTION_STATE_CHANGED =
-            "android.bluetooth.pan.action.CONNECTION_STATE_CHANGED";
+            "android.bluetooth.pan.profile.action.CONNECTION_STATE_CHANGED";
     static constexpr const char* ACTION_TETHERING_STATE_CHANGED =
-            "android.bluetooth.pan.action.TETHERING_STATE_CHANGED";
+            "android.bluetooth.action.TETHERING_STATE_CHANGED";
     static constexpr const char* EXTRA_LOCAL_ROLE =
             "android.bluetooth.pan.extra.LOCAL_ROLE";
     static constexpr const char* EXTRA_TETHERING_STATE =
-            "android.bluetooth.pan.extra.TETHERING_STATE";
+            "android.bluetooth.extra.TETHERING_STATE";
 
     /* The bridge bluetoothd enslaves peer bnepX into (AOSP netd's name). */
     static constexpr const char* TETHERING_BRIDGE = "bt-pan";
@@ -75,10 +76,14 @@ public:
 
     /* --- PANU (this device uses the remote's network) -------------------- */
 
-    /* Network1.Connect("panu"): returns the local bnep interface name via
-     * ifaceOut (run a DHCP client on it afterwards). */
-    bool connect(const BluetoothDevice& device, std::string& ifaceOut);
+    /* AOSP connect(BluetoothDevice); Network1.Connect("panu"). The local
+     * bnep interface of an active session comes from getPanuInterface()
+     * (run a DHCP client on it afterwards). */
+    bool connect(const BluetoothDevice& device);
     bool disconnect(const BluetoothDevice& device);
+    /* Non-AOSP accessor: the bnepX Network1.Connect returned for a PANU
+     * session ("" when none). */
+    std::string getPanuInterface(const BluetoothDevice& device) const;
 
     /* --- BluetoothProfile -------------------------------------------------- */
 

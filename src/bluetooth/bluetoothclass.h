@@ -207,10 +207,20 @@ public:
             case Device::PHONE_UNCATEGORIZED:
             case Device::PHONE_CELLULAR:
             case Device::PHONE_CORDLESS:
+            case Device::PHONE_SMART:
+            case Device::PHONE_MODEM_OR_GATEWAY:
+            case Device::PHONE_ISDN:
                 return true;
             default:
                 return false;
             }
+        } else if (profile == PROFILE_HID) {
+            return getMajorDeviceClass() == Device::Major::PERIPHERAL;
+        } else if (profile == PROFILE_PANU || profile == PROFILE_NAP) {
+            if (hasService(Service::NETWORKING)) {
+                return true;
+            }
+            return getMajorDeviceClass() == Device::Major::NETWORKING;
         }
         return false;
     }

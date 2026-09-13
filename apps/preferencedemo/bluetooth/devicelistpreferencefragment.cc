@@ -21,8 +21,16 @@ void DeviceListPreferenceFragment::onStop() {
     // AOSP DevicePickerFragment/PairingDetail onStop: stop scanning (the
     // base class alone does not, but only scanning screens ever enable it).
     disableScanning();
-    // AOSP onStop: remove every device row, then unregister.
-    for (auto& kv : mDevicePreferenceMap) {
+    // AOSP onStop: remove every device row, then unregister. Rows go through
+    // removePreference (not a bare delete): the group owns its children
+    // (~PreferenceGroup would double-free otherwise) and removePreferenceInt
+    // is what invokes onPrepareForRemoval, which unregisters the row's
+    // cached-device callback (a bare delete leaves it dangling in the
+    // process-singleton cache).
+    for (const auto& kv : mDevicePreferenceMap) {
+        if (mDeviceListGroup != nullptr) {
+            mDeviceListGroup->removePreference(kv.second);
+        }
         delete kv.second;
     }
     mDevicePreferenceMap.clear();
@@ -49,13 +57,17 @@ void DeviceListPreferenceFragment::addDeviceCategory(
     preferenceGroup->setTitle(title);
     mDeviceListGroup = preferenceGroup;
     if (addCachedDevices) {
-        const Filter saved = mFilter;
-        mFilter = FILTER_UNBONDED;   // UNBONDED_DEVICE_FILTER while filling
+        // AOSP fills under the UNBONDED filter ("Don't show bonded devices
+        // when screen turned back on") because its bonded rows arrive via
+        // readPairedDevices' onDeviceAdded dispatch instead. This port
+        // fills under the FINAL filter so the paired category (BONDED)
+        // populates from the seeded cache directly — documented divergence;
+        // the picker screens pass ALL and behave identically either way.
+        mFilter = filter;
         for (CachedBluetoothDevice* cachedDevice :
                 mLocalManager->getCachedDeviceManager()->getCachedDevicesCopy()) {
             onDeviceAdded(cachedDevice);
         }
-        mFilter = saved;
     }
     mFilter = filter;
     preferenceGroup->setEnabled(true);

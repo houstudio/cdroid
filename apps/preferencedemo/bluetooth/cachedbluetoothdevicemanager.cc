@@ -1,5 +1,7 @@
 #include "cachedbluetoothdevicemanager.h"
 
+#include <algorithm>
+
 #include <bluetoothadapter.h>
 
 namespace preferencedemo {
@@ -29,7 +31,7 @@ CachedBluetoothDevice* CachedBluetoothDeviceManager::onDeviceAdded(
     const std::string address = device.getAddress();
     CachedBluetoothDevice* cachedDevice = findDevice(address);
     if (cachedDevice == nullptr) {
-        cachedDevice = new CachedBluetoothDevice(mLocalAdapter, this, device);
+        cachedDevice = new CachedBluetoothDevice(mLocalAdapter, device);
         mCachedDevices[address] = cachedDevice;
     }
     return cachedDevice;
@@ -44,13 +46,43 @@ void CachedBluetoothDeviceManager::onDeviceDeleted(CachedBluetoothDevice* cached
     delete cachedDevice;
 }
 
+std::vector<CachedBluetoothDevice*>
+CachedBluetoothDeviceManager::readPairedDevices() {
+    std::vector<CachedBluetoothDevice*> added;
+    if (mLocalAdapter->getState() != cdroid::BluetoothAdapter::STATE_ON) {
+        return added;
+    }
+    for (cdroid::BluetoothDevice device : mLocalAdapter->raw().getBondedDevices()) {
+        CachedBluetoothDevice* cached = onDeviceAdded(device);
+        if (cached != nullptr && cached->getBondState()
+                == cdroid::BluetoothDevice::BOND_BONDED) {
+            // Only genuinely-new entries dispatch (AOSP dispatches a
+            // DEVICE_FOUND-style callback per bonded device it cached).
+            if (std::find(added.begin(), added.end(), cached) == added.end()
+                    && !mKnownFromRead.count(cached->getAddress())) {
+                mKnownFromRead.insert(cached->getAddress());
+                added.push_back(cached);
+            }
+        }
+    }
+    return added;
+}
+
 void CachedBluetoothDeviceManager::onBluetoothStateChanged(int state) {
-    if (state == cdroid::BluetoothAdapter::STATE_TURNING_OFF
-            || state == cdroid::BluetoothAdapter::STATE_OFF) {
-        // AOSP clears the cache when the radio goes down.
+    if (state == cdroid::BluetoothAdapter::STATE_TURNING_OFF) {
+        // AOSP drops only the NON-bonded entries when the radio turns off;
+        // bonded devices stay cached (and readPairedDevices re-seeds on
+        // STATE_ON after a full clear anyway).
+        auto cached = getCachedDevicesCopy();
+        for (CachedBluetoothDevice* d : cached) {
+            if (d->getBondState() != cdroid::BluetoothDevice::BOND_BONDED) {
+                onDeviceDeleted(d);
+            }
+        }
+    } else if (state == cdroid::BluetoothAdapter::STATE_OFF) {
         auto cached = getCachedDevicesCopy();
         for (CachedBluetoothDevice* d : cached) onDeviceDeleted(d);
-        mCachedDevices.clear();
+        mKnownFromRead.clear();
     }
 }
 

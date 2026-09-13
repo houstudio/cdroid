@@ -3,6 +3,8 @@
 #include <core/context.h>
 #include <widget/toast.h>
 
+#include <R.h>
+
 #include "bluetoothutils.h"
 
 #include <core/systemclock.h>
@@ -23,7 +25,13 @@ BluetoothDevicePreference::BluetoothDevicePreference(
 }
 
 void BluetoothDevicePreference::onPreferenceAttributesChanged() {
-    setIcon(getBtClassDrawable(getContext(), *mCachedDevice));
+    // The icon clone is row-owned: Preference::setIcon overwrites the raw
+    // pointer without freeing (and ~Preference is default) — recycle the
+    // previous one or every refresh leaks it.
+    cdroid::Drawable* nextIcon = getBtClassDrawable(getContext(), *mCachedDevice);
+    setIcon(nextIcon);
+    delete mClassIcon;
+    mClassIcon = nextIcon;
 
     setTitle(mCachedDevice->getName());
     setSummary(mCachedDevice->getConnectionSummary());
@@ -47,11 +55,12 @@ void BluetoothDevicePreference::onClicked() {
         // pair()
         if (!mCachedDevice->startPairing()) {
             // Utils.showError: pairing failed toast.
-            std::string name = mCachedDevice->getName();
-            if (name.empty()) name = "未命名的蓝牙设备";
+            const std::string name = mCachedDevice->getName();
             if (context != nullptr) {
                 cdroid::Toast::makeText(context,
-                        "无法与" + name + "配对。",
+                        context->getString(
+                                (int)preferencedemo::R::string::bluetooth_pairing_error_message,
+                                {name}),
                         cdroid::Toast::LENGTH_SHORT)->show();
             }
         }
@@ -61,13 +70,19 @@ void BluetoothDevicePreference::onClicked() {
 void BluetoothDevicePreference::askDisconnect() {
     cdroid::Context* context = &getContext();
     if (context == nullptr) return;
-    std::string name = mCachedDevice->getName();
-    if (name.empty()) name = "未命名的蓝牙设备";
+    const std::string name = mCachedDevice->getName();   // alias-or-address
     CachedBluetoothDevice* device = mCachedDevice;
-    if (mDisconnectDialog != nullptr) mDisconnectDialog->dismiss();
+    // cdroid dialogs are owner-managed (dismiss does not delete).
+    if (mDisconnectDialog != nullptr) {
+        mDisconnectDialog->dismiss();
+        delete mDisconnectDialog;
+    }
     mDisconnectDialog = cdroid::AlertDialog::Builder(context)
-            .setTitle("要断开与该设备的连接吗？")
-            .setMessage("您的设备将断开与" + name + "的连接。")
+            .setTitle(context->getString(
+                    (int)preferencedemo::R::string::bluetooth_disconnect_title))
+            .setMessage(context->getString(
+                    (int)preferencedemo::R::string::bluetooth_disconnect_all_profiles,
+                    {name}))
             .setPositiveButton("断开", [device](cdroid::DialogInterface&, int) {
                 device->disconnect();
             })
@@ -84,8 +99,13 @@ void BluetoothDevicePreference::onPrepareForRemoval() {
     }
     if (mDisconnectDialog != nullptr) {
         mDisconnectDialog->dismiss();
+        delete mDisconnectDialog;   // owner-managed: dismiss does not delete
         mDisconnectDialog = nullptr;
     }
+    // Preference does not free the icon it displays.
+    setIcon(nullptr);
+    delete mClassIcon;
+    mClassIcon = nullptr;
 }
 
 int BluetoothDevicePreference::compareTo(const cdroid::Preference& another) const {
@@ -97,7 +117,10 @@ int BluetoothDevicePreference::compareTo(const cdroid::Preference& another) cons
     case TYPE_DEFAULT:
         return mCachedDevice->compareTo(*other->mCachedDevice);
     case TYPE_FIFO:
-        return mCurrentTime > other->mCurrentTime ? 1 : -1;
+        // AOSP returns (int)(mCurrentTime - another.mCurrentTime); a 1/-1
+        // pair for equal timestamps violates strict weak ordering, which
+        // PreferenceGroup's lower_bound/std::sort depend on.
+        return static_cast<int>(mCurrentTime - other->mCurrentTime);
     default:
         return Preference::compareTo(another);
     }

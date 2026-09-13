@@ -42,11 +42,9 @@
 #include <bluetoothpan.h>              // cdblue: Bluetooth tethering (network screen)
 #include <bluetoothdevice.h>
 #include <bluetoothpairing.h>
-#include "bluetooth/bluetoothdevicepreference.h"
 #include "bluetooth/bluetoothprogresscategory.h"
 #include "bluetooth/devicelistpreferencefragment.h"
 #include "bluetooth/localbluetoothmanager.h"
-#include <map>
 #include <cstdlib>
 #include <widget/linearlayout.h>
 #include <widget/textview.h>
@@ -168,6 +166,11 @@ public:
                 ->getEventManager()->unregisterCallback(this);
         *mBtAlive = false;
         if (mDeviceList != nullptr) mDeviceList->onStop();
+        if (mBtCallbacksRegistered) {
+            preferencedemo::LocalBluetoothManager::getInstance()
+                    ->getEventManager()->unregisterCallback(this);
+            mBtCallbacksRegistered = false;
+        }
         if (mBtPan != nullptr) {
             cdroid::BluetoothAdapter::getDefaultAdapter().closeProfileProxy(
                     cdroid::BluetoothProfile::PAN, mBtPan);
@@ -201,8 +204,22 @@ public:
     void showDeviceRenameDialog();
     std::shared_ptr<bool> mBtAlive = std::make_shared<bool>(false);
     std::unique_ptr<preferencedemo::DeviceListPreferenceFragment> mDeviceList;
-    bool mBtPairingAgentRegistered = false;
     cdroid::BluetoothPan* mBtPan = nullptr;   // network screen; closed in onDestroy
+    /* One guarded registration of the pairing agent + event callback for
+     * every BT screen (BluetoothEventManager::unregisterCallback removes
+     * only the first occurrence, so a second registerCallback would leave a
+     * stale pointer behind onDestroy's single unregister). */
+    bool mBtCallbacksRegistered = false;
+    void ensureBluetoothCallbacks() {
+        if (mBtCallbacksRegistered) return;
+        // Interactive pairing: the dialogs answer the agent's requests
+        // (PIN / passkey / confirmation). Just-works peers never ask.
+        cdroid::BluetoothAdapter::getDefaultAdapter().registerPairingAgent("DisplayYesNo");
+        cdroid::BluetoothAdapter::getDefaultAdapter().addPairingListener(this);
+        preferencedemo::LocalBluetoothManager::getInstance()
+                ->getEventManager()->registerCallback(this);
+        mBtCallbacksRegistered = true;
+    }
     void refreshTetheringSummary() {
         cdroid::Preference* tether = findPreference("bluetooth_tethering");
         if (tether == nullptr || mBtPan == nullptr) return;
@@ -493,8 +510,7 @@ void SettingsFragment::setupNetworkScreen() {
     cdroid::WifiManager& wifi = cdroid::WifiManager::getInstance();
     wifi.initialize();
     wifi.addNetworkStateListener(this);
-    preferencedemo::LocalBluetoothManager::getInstance()
-            ->getEventManager()->registerCallback(this);
+    ensureBluetoothCallbacks();
     if (wifi.isWifiEnabled()) wifi.startScan();   // warm the scan cache
 
     if (auto* sw = dynamic_cast<cdroid::SwitchPreference*>(findPreference("wifi_enabled"))) {
@@ -754,14 +770,7 @@ void SettingsFragment::setupConnectedScreen() {
 
     // BluetoothEnabler: the switch drives the radio; adapter flips come back
     // via onBluetoothStateChanged (the event manager delivers on main).
-    if (!mBtPairingAgentRegistered) {
-        // Interactive pairing: the dialogs below answer the agent's requests
-        // (PIN / passkey / confirmation). Just-works peers never ask.
-        bt.registerPairingAgent("DisplayYesNo");
-        bt.addPairingListener(this);
-        mBtPairingAgentRegistered = true;
-    }
-    manager->getEventManager()->registerCallback(this);
+    ensureBluetoothCallbacks();
 
     if (auto* sw = dynamic_cast<cdroid::SwitchPreference*>(findPreference("bluetooth_enabled"))) {
         sw->setChecked(bt.isEnabled());
@@ -800,12 +809,7 @@ void SettingsFragment::setupBluetoothPairingScreen() {
     preferencedemo::LocalBluetoothManager* manager =
             preferencedemo::LocalBluetoothManager::getInstance();
     cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
-    if (!mBtPairingAgentRegistered) {
-        bt.registerPairingAgent("DisplayYesNo");
-        bt.addPairingListener(this);
-        mBtPairingAgentRegistered = true;
-    }
-    manager->getEventManager()->registerCallback(this);
+    ensureBluetoothCallbacks();
 
     // DevicePickerFragment shape: the available-devices ProgressCategory
     // (spinner while scanning, empty text when a sweep ends empty) replaces
@@ -913,10 +917,10 @@ void SettingsFragment::onScanningStateChanged(bool started) {
 // cdroid::BluetoothPairingListener (agent thread; marshaled to main).
 
 void SettingsFragment::onPairingRequest(const cdroid::BluetoothDevice& device,
-                                        int pairingVariant, uint32_t /*passkey*/) {
+                                        int pairingVariant, uint32_t passkey) {
     if (!*mBtAlive) return;
     static cdroid::Handler sBtHandler(cdroid::Looper::getMainLooper());
-    sBtHandler.post([this, alive = mBtAlive, device, pairingVariant]() mutable {
+    sBtHandler.post([this, alive = mBtAlive, device, pairingVariant, passkey]() mutable {
         if (!*alive) return;
         cdroid::Context* c = requireContext();
         if (c == nullptr) return;
@@ -960,9 +964,16 @@ void SettingsFragment::onPairingRequest(const cdroid::BluetoothDevice& device,
                 .show();
         } else if (pairingVariant == BluetoothDevice::PAIRING_VARIANT_PASSKEY_CONFIRMATION
                 || pairingVariant == BluetoothDevice::PAIRING_VARIANT_CONSENT) {
+            // Numeric comparison: the user must compare the code on both
+            // devices (commit 6a54ac765 added exactly this display).
+            std::string message = "与 " + display + " 配对?";
+            if (pairingVariant == BluetoothDevice::PAIRING_VARIANT_PASSKEY_CONFIRMATION
+                    && passkey != 0) {
+                message += "\n核对双方设备显示的数字: " + std::to_string(passkey);
+            }
             cdroid::AlertDialog::Builder(c)
                 .setTitle("配对请求")
-                .setMessage("与 " + display + " 配对?")
+                .setMessage(message)
                 .setPositiveButton("配对", [](cdroid::DialogInterface&, int) {
                     cdroid::BluetoothAdapter::getDefaultAdapter()
                         .replyPairingConfirmation(true);

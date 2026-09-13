@@ -61,7 +61,9 @@
              enabled only while Bluetooth is on. The PAN profile is not
              ported in cdblue yet — the toggle answers with a notice. -->
         <!-- No wifi_hotspot dependency (AOSP ties this row to the Bluetooth
-             radio, driven from code in setupNetworkScreen). -->
+             radio, driven from code in setupNetworkScreen). The switch drives
+             BluetoothPan::setBluetoothTethering; the bt-pan bridge/DHCP/NAT
+             data plane comes from scripts/bt-bench.sh (AOSP: Tethering/netd). -->
         <SwitchPreference
             android:key="bluetooth_tethering"
             android:title="Bluetooth tethering"

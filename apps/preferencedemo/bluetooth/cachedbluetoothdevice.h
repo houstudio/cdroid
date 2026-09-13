@@ -29,9 +29,8 @@ public:
     /** AOSP CachedBluetoothDevice.Callback (single-method register list). */
     using Callback = std::function<void()>;
 
-    CachedBluetoothDevice(LocalBluetoothAdapter* localAdapter,
-                           CachedBluetoothDeviceManager* deviceManager,
-                           cdroid::BluetoothDevice device);
+    explicit CachedBluetoothDevice(LocalBluetoothAdapter* localAdapter,
+                                    cdroid::BluetoothDevice device);
 
     cdroid::BluetoothDevice getDevice() const { return mDevice; }
     std::string getAddress() const { return mDevice.getAddress(); }
@@ -77,7 +76,6 @@ private:
     void refresh();   // re-read properties after an event
 
     LocalBluetoothAdapter* mLocalAdapter;
-    CachedBluetoothDeviceManager* mDeviceManager;
     cdroid::BluetoothDevice mDevice;
     std::vector<Callback> mCallbacks;   // main thread only
 };

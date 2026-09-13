@@ -21,6 +21,18 @@ LocalBluetoothManager::LocalBluetoothManager()
     mLocalAdapter.raw().addAdapterStateListener(&mEventManager);
     mLocalAdapter.raw().addDiscoveryListener(&mEventManager);
     mLocalAdapter.raw().addBondStateListener(&mEventManager);
+    // AOSP seeds the bonded cache at manager creation.
+    mEventManager.readPairedDevices();
+}
+
+LocalBluetoothManager::~LocalBluetoothManager() {
+    // The manager is a function-local static destroyed before the adapter
+    // static (reverse construction order) while the BlueZ monitor thread may
+    // still be dispatching — detach the listeners first or their next fan-out
+    // calls into the dying BluetoothEventManager.
+    mLocalAdapter.raw().removeAdapterStateListener(&mEventManager);
+    mLocalAdapter.raw().removeDiscoveryListener(&mEventManager);
+    mLocalAdapter.raw().removeBondStateListener(&mEventManager);
 }
 
 // --- BluetoothEventManager ----------------------------------------------------
@@ -51,10 +63,21 @@ void BluetoothEventManager::post(std::function<void()> fn) {
     sHandler.post(std::move(fn));
 }
 
+void BluetoothEventManager::readPairedDevices() {
+    for (CachedBluetoothDevice* cachedDevice : mDeviceManager->readPairedDevices()) {
+        for (auto* cb : mCallbacks) cb->onDeviceAdded(cachedDevice);
+    }
+}
+
 void BluetoothEventManager::onAdapterStateChanged(int newState, int) {
     post([this, newState]{
         mDeviceManager->onBluetoothStateChanged(newState);
         for (auto* cb : mCallbacks) cb->onBluetoothStateChanged(newState);
+        if (newState == cdroid::BluetoothAdapter::STATE_ON) {
+            // AOSP: bonded devices re-enter the cache (and the screens) on
+            // every radio-on transition.
+            readPairedDevices();
+        }
     });
 }
 
@@ -67,11 +90,17 @@ void BluetoothEventManager::onDiscoveryStarted() {
 void BluetoothEventManager::onDeviceFound(const cdroid::BluetoothDevice& device) {
     // Copy the address; mint/cache resolution happens on the main side.
     const std::string address = device.getAddress();
-    post([this, address]{
+    const bool wasCached = mDeviceManager->findDevice(address) != nullptr;
+    post([this, address, wasCached]{
         CachedBluetoothDevice* cached =
                 mDeviceManager->onDeviceAdded(mDeviceManager->getLocalAdapter()
                         ->raw().getRemoteDevice(address));
-        if (cached != nullptr) {
+        if (cached == nullptr) return;
+        if (wasCached) {
+            // The adapter re-fires Found on every Name/RSSI update: refresh
+            // the row (name may have just resolved — it starts hidden).
+            cached->dispatchAttributesChanged();
+        } else {
             for (auto* cb : mCallbacks) cb->onDeviceAdded(cached);
         }
     });
@@ -90,16 +119,12 @@ void BluetoothEventManager::onBondStateChanged(const cdroid::BluetoothDevice& de
         cdroid::BluetoothDevice remote =
                 mDeviceManager->getLocalAdapter()->raw().getRemoteDevice(address);
         CachedBluetoothDevice* cached = mDeviceManager->onDeviceAdded(remote);
-        if (cached != nullptr) {
-            for (auto* cb : mCallbacks) cb->onDeviceBondStateChanged(cached, bondState);
-        }
-        if (bondState == cdroid::BluetoothDevice::BOND_NONE) {
-            if (cached != nullptr) {
-                mDeviceManager->onDeviceDeleted(cached);
-            }
-        } else {
-            if (cached != nullptr) cached->dispatchAttributesChanged();
-        }
+        if (cached == nullptr) return;
+        for (auto* cb : mCallbacks) cb->onDeviceBondStateChanged(cached, bondState);
+        // AOSP keeps the (now unbonded) entry cached — deletion is reserved
+        // for the explicit forget/unpair cascade — so a failed pairing can
+        // be retried from the picker without a fresh discovery sweep.
+        cached->dispatchAttributesChanged();
     });
 }
 

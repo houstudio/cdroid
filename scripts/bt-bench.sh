@@ -95,6 +95,8 @@ POLICY
     sysctl -qw net.ipv4.ip_forward=1
     iptables -t nat -C POSTROUTING -s 192.168.47.0/24 ! -o bt-pan -j MASQUERADE 2>/dev/null \
         || iptables -t nat -A POSTROUTING -s 192.168.47.0/24 ! -o bt-pan -j MASQUERADE
+    # hwsim lesson: ufw's default deny silently eats dnsmasq's udp/67.
+    ufw allow in on bt-pan >/dev/null 2>&1 || true
     if [ ! -f $PIDDIR/dnsmasq-pan.pid ] || ! kill -0 $(cat $PIDDIR/dnsmasq-pan.pid) 2>/dev/null; then
         dnsmasq --interface=bt-pan --bind-interfaces \
             --dhcp-range=192.168.47.50,192.168.47.60,12h \
