@@ -53,6 +53,11 @@ BitmapDrawable::BitmapState::BitmapState(){
 BitmapDrawable::BitmapState::BitmapState(RefPtr<ImageSurface>bitmap)
     :BitmapState(){
     mBitmap = bitmap;
+    /* Untagged surfaces (runtime-baked, or decoders that don't stamp —
+     * JPEG/GIF) resolve in getTransparency via a one-time pixel scan, so
+     * an opaque JPEG keeps the OPAQUE fast path while a baked ring is
+     * TRANSLUCENT (with OPAQUE the draw path's cairo SOURCE shortcut
+     * would erase the backdrop under the ring's transparent pixels). */
     mTransparency = ImageDecoder::getTransparency(bitmap);
 }
 

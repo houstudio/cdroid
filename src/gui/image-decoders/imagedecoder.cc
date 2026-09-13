@@ -141,8 +141,16 @@ int ImageDecoder::getTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
     if(bmp){
         unsigned long len;
         const unsigned char*data= bmp->get_mime_data((const char*)TRANSPARENCY,len);
-        const int transparency = int((unsigned long)data);
-        return transparency?transparency:int(PixelFormat::OPAQUE);
+        if(data) return int((unsigned long)data);
+        /* Untagged = a runtime-baked surface or a decoder that does not
+         * stamp (JPEG/GIF). AOSP's createBitmap(ARGB_8888) defaults
+         * hasAlpha=true, but an actually-opaque JPEG must stay OPAQUE
+         * (the draw path's SOURCE-operator fast path): scan the pixels
+         * once and stamp the verdict, so every later reader (clones,
+         * re-resolution) hits the tag instead of rescanning. */
+        const int transparency = computeTransparency(bmp);
+        setTransparency(bmp, transparency);
+        return transparency;
     }
     return PixelFormat::TRANSPARENT;
 }

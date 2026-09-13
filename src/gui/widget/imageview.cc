@@ -1035,7 +1035,12 @@ void ImageView::animateTransform(const Cairo::Matrix* matrix) {
 
 void ImageView::onDraw(Canvas& canvas) {
     bool needSaveRestore = mRadii[0]||mRadii[1]||mRadii[2]||mRadii[3];
-    if ((mDrawable == nullptr)||(mDrawableWidth == 0) || (mDrawableHeight == 0)) return;
+    /* AOSP checks only mDrawable == null here. The old extra zero-width/
+     * zero-height skip starved density-scaled-to-zero-intrinsic drawables
+     * (a 1px @xhdpi asset measures 0): configureBounds already gave them
+     * the full view bounds (the AOSP dwidth<=0 branch) and BitmapDrawable's
+     * divisions are max(1,·)-guarded, so they draw stretched — not nothing. */
+    if (mDrawable == nullptr) return;
     if(needSaveRestore){
         const double degrees = M_PI / 180.f;
         const int width = getWidth();
