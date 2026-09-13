@@ -69,7 +69,10 @@ public:
             View* view = parent.getChildAt(childViewIndex);
             if (shouldDrawDividerBelow(view, parent)) {
                 int top = (int)view->getY() + view->getHeight();
-                mDivider->setBounds(0, top, width, top + mDividerHeight);
+                // CDROID Rect is (x, y, w, h) — AOSP passes (l, t, r, b) here;
+                // porting kept "top + mDividerHeight" as the 4th arg, which made
+                // the divider slab grow `top` px tall instead of 1px (gray bands).
+                mDivider->setBounds(0, top, width, mDividerHeight);
                 mDivider->draw(c);
             }
         }

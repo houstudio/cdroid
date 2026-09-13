@@ -3017,7 +3017,7 @@ void View::onDrawScrollIndicators(Canvas& canvas){
     if ((mPrivateFlags3 & PFLAG3_SCROLL_INDICATOR_BOTTOM) != 0) {
         const bool canScrollDown = canScrollVertically(1);
         if (canScrollDown) {
-            dr->setBounds(rect.left, rect.bottom() - h, rect.width, rect.height);
+            dr->setBounds(rect.left, rect.bottom() - h, rect.width, h);
             dr->draw(canvas);
         }
     }
