@@ -199,25 +199,36 @@ TEST(CoreSpannedTest, testSpannableStringBuilder) {
 
 TEST(CoreSpannedTest, testAppend) {
     /*AOSP asserts the span OBJECT travels through append/insert (Java
-      references). Under the C++ span-ownership model an owned value-span is
-      CLONED on propagation, so pointer identity only holds for NoCopySpans —
-      they are carried BORROWED (same pointer). Use a NoCopy marker to keep the
-      AOSP assertions verbatim (same trick as textutils_core_tests' MarkSpan).*/
+      references, GC-kept). Under the raw-pointer span model neither half can
+      hold literally: owned value-spans travel as CLONES, and a NoCopySpan may
+      NOT cross containers by borrowed pointer at all (the source dying would
+      leave the builder with a dangling marker) — see the propagation block in
+      SpannableStringBuilder::change(). So identity assertions give way to
+      range assertions plus the explicit no-borrow guarantee.*/
     struct MarkerSpan : NoCopySpan {} o;
     SpannableString ss(u"Test");
     ss.setSpan(&o, 0, (int)ss.length(), Spannable::SPAN_EXCLUSIVE_EXCLUSIVE);
+    ss.setSpan(new UnderlineSpan, 0, (int)ss.length(), Spannable::SPAN_EXCLUSIVE_EXCLUSIVE);
 
     SpannableStringBuilder ssb;
     ssb.append(ss);
-    EXPECT_EQ(0, ssb.getSpanStart(&o));
-    EXPECT_EQ(4, ssb.getSpanEnd(&o));
-    EXPECT_EQ(1u, ssb.getSpans(0, 4, make_span_filter<ParcelableSpan>()).size());
+    // The NoCopy marker stays behind with its owner; the owned span's clone
+    // lands at [0, 4).
+    EXPECT_EQ(-1, ssb.getSpanStart(&o));
+    auto us = ssb.getSpans(0, 4, make_span_filter<UnderlineSpan>());
+    ASSERT_EQ(1u, us.size());
+    EXPECT_EQ(0, ssb.getSpanStart(us[0]));
+    EXPECT_EQ(4, ssb.getSpanEnd(us[0]));
 
     ssb.insert(0, ss);
-    EXPECT_EQ(4, ssb.getSpanStart(&o));
-    EXPECT_EQ(8, ssb.getSpanEnd(&o));
-    EXPECT_EQ(0u, ssb.getSpans(0, 4, make_span_filter<ParcelableSpan>()).size());
-    EXPECT_EQ(1u, ssb.getSpans(4, 8, make_span_filter<ParcelableSpan>()).size());
+    /*Divergence from AOSP: Java's identity dedupe (getSpanStart(spans[i])<0)
+      keeps ONE span object, shifted to [4, 8), and the re-inserted copy at
+      [0, 4) stays unstyled. Clones have no identity to dedupe on, so the
+      fresh source span propagates a second clone at [0, 4) — both copies
+      carry the style. The NoCopy marker still never travels.*/
+    EXPECT_EQ(-1, ssb.getSpanStart(&o));
+    EXPECT_EQ(1u, ssb.getSpans(0, 4, make_span_filter<UnderlineSpan>()).size());
+    EXPECT_EQ(1u, ssb.getSpans(4, 8, make_span_filter<UnderlineSpan>()).size());
 }
 
 TEST(CoreSpannedTest, testWrapParcel) {

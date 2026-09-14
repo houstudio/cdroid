@@ -79,7 +79,11 @@ private:
     float getHorizontal(int offset, bool trailing, int line, bool clamped)const;
     std::vector<float> getLineHorizontals(int line, bool clamped, bool primary);
     float getLineExtent(int line, bool full)const;
-    float getLineExtent(int line, class TabStops& tabStops, bool full)const;
+    /*AOSP passes a nullable TabStops here (Java reference); callers that
+      measured no TabStopSpans hand in nullptr — TextLine falls back to the
+      default tab grid. The pointer (was TabStops&) keeps that contract
+      explicit instead of dereferencing a null reference at the call sites.*/
+    float getLineExtent(int line, class TabStops* tabStops, bool full)const;
     int getLineVisibleEnd(int line, int start, int end)const;
     int getOffsetToLeftRightOf(int caret, bool toLeft)const;
     int getOffsetAtStartOf(int offset)const;

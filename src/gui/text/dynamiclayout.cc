@@ -221,6 +221,14 @@ DynamicLayout::DynamicLayout(const Builder& b)
 }
 
 DynamicLayout::~DynamicLayout(){
+    /*The ellipsized display text (Ellipsizer/SpannedEllipsizer) was new'ed by
+      createEllipsizer and handed to Layout as mText — Layout treats mText as
+      borrowed and never frees it, so this layout owns the wrapper solely.
+      With ellipsize==NONE mText IS the caller's display (borrowed): the
+      mEllipsize flag distinguishes the two (set in generate()).*/
+    if (mEllipsize) {
+        delete getText();
+    }
     // Detach and free our watcher. It is attached to mBase as a NoCopySpan
     // (borrowed), so mBase's Spannable never deletes it; DynamicLayout owns it
     // solely. removeSpan first so no callback fires against a half-destroyed

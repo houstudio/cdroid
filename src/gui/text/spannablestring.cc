@@ -114,9 +114,13 @@ SpannableStringInternal::SpannableStringInternal(const CharSequence* source, int
             int newStart = std::max(start, spanStart) - start;
             int newEnd = std::min(end, spanEnd) - start;
 
-            if (newStart < newEnd) {
-                appendSpanCopy(mSpans, span, newStart, newEnd, spanFlags, ignoreNoCopySpan);
-            }
+            /*AOSP copySpansFromSpanned keeps EVERYTHING getSpans() returned —
+              including ZERO-LENGTH spans (Selection markers) at any offset in
+              [start, end]; the old `newStart < newEnd` test silently dropped
+              them. getSpans above already applied AOSP's isOutOfCopyRange
+              predicate (out-of-range or boundary-touching non-empty spans),
+              so no further filtering is needed here.*/
+            appendSpanCopy(mSpans, span, newStart, newEnd, spanFlags, ignoreNoCopySpan);
         }
     }
 }
@@ -229,11 +233,20 @@ void SpannableStringInternal::getChars(int start, int end, char16_t* dest, int d
     }
 }
 
+/*AOSP's sendSpan* snapshots the watchers and calls them all — safe because
+  GC keeps a detached watcher's Java object alive. Under raw pointers a
+  watcher removed (and freed) by an earlier callback leaves dangling entries
+  in the snapshot, so each recipient is re-checked against the live span set
+  first (the same isRecorded guard SpannableStringBuilder uses for its
+  TextWatcher phases). Divergence: a watcher detached mid-notification does
+  not receive the remaining events; a deleted C++ span cannot be called.*/
+
 void SpannableString::sendSpanAdded(const ParcelableSpan* what, int start, int end) {
     Spannable& self = dynamic_cast<SpannableString&>(*this);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(start, end, watcherFilter);
     for (const ParcelableSpan* w : watchers) {
+        if (getSpanStart(w) < 0) continue;
         SpanWatcher* watcher = const_cast<SpanWatcher*>(dynamic_cast<const SpanWatcher*>(w));
         if (watcher) {
             watcher->onSpanAdded(self, what, start, end);
@@ -246,6 +259,7 @@ void SpannableString::sendSpanRemoved(const ParcelableSpan* what, int start, int
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(start, end, watcherFilter);
     for (const ParcelableSpan* w : watchers) {
+        if (getSpanStart(w) < 0) continue;
         SpanWatcher* watcher = const_cast<SpanWatcher*>(dynamic_cast<const SpanWatcher*>(w));
         if (watcher) {
             watcher->onSpanRemoved(self, what, start, end);
@@ -258,6 +272,7 @@ void SpannableString::sendSpanChanged(const ParcelableSpan* what, int ostart, in
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(std::min(ostart,nstart), std::max(oend,nend), watcherFilter);
     for (const ParcelableSpan* w : watchers) {
+        if (getSpanStart(w) < 0) continue;
         SpanWatcher* watcher = const_cast<SpanWatcher*>(dynamic_cast<const SpanWatcher*>(w));
         if (watcher) {
             watcher->onSpanChanged(self, what, ostart, oend, nstart, nend);

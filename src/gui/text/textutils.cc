@@ -879,12 +879,14 @@ CharSequence* TextUtils::concat(const std::vector<CharSequence*>&text) {
     if (text.size() == 1) {
         /*AOSP returns text[0] itself, keeping a Spanned input a Spanned (the
           CTS test asserts the span is still there). Under the owned-return
-          contract a fresh SpannableString copy is the equivalent: appendSpanCopy
-          clones owned spans and SHARES NoCopySpans (borrowed, same pointer), so
-          both the type and the span identities survive; a plain input still
-          yields a plain String copy as before.*/
+          contract a fresh SpannableString copy is the equivalent: owned spans
+          are cloned so the type and span contents survive. NoCopySpans are
+          NOT carried (ignoreNoCopySpan=true): sharing them by raw pointer
+          would dangle once the caller deletes text[0] — the multi-piece path
+          below only propagates clone()-able spans for the same reason. A
+          plain input still yields a plain String copy as before.*/
         if (dynamic_cast<Spanned*>(text[0])) {
-            return new SpannableString(text[0], /*ignoreNoCopySpan=*/false);
+            return new SpannableString(text[0], /*ignoreNoCopySpan=*/true);
         }
         return new String(text[0]->toUTF8());
     }

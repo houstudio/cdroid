@@ -42,17 +42,26 @@ TEST(CoreTextUtilsTest, testBasic) {
     EXPECT_EQ("foobarbaz", TextUtils::concat({new String(u"foo"), new String(u"bar"),
                                               new String(u"baz")})->toUTF8());
 
+    /*AOSP asserts the SAME span objects land in the concat result (Java
+      references, GC-kept). Under the raw-pointer model concat propagates only
+      clone()-able spans (a NoCopySpan borrowed across would dangle once the
+      source piece dies), so offsets are asserted through an owned UnderlineSpan
+      clone, and the NoCopy markers are asserted to stay behind. Same split as
+      spannable_core_tests' testAppend.*/
     SpannableString foo(u"foo");
     MarkSpan fooSpan;
     foo.setSpan(&fooSpan, 1, 2, Spannable::SPAN_EXCLUSIVE_INCLUSIVE);
+    foo.setSpan(new UnderlineSpan, 1, 2, Spannable::SPAN_EXCLUSIVE_INCLUSIVE);
 
     SpannableString bar(u"bar");
     MarkSpan barSpan;
     bar.setSpan(&barSpan, 1, 2, Spannable::SPAN_EXCLUSIVE_INCLUSIVE);
+    bar.setSpan(new UnderlineSpan, 1, 2, Spannable::SPAN_EXCLUSIVE_INCLUSIVE);
 
     SpannableString baz(u"baz");
     MarkSpan bazSpan;
     baz.setSpan(&bazSpan, 1, 2, Spannable::SPAN_EXCLUSIVE_INCLUSIVE);
+    baz.setSpan(new UnderlineSpan, 1, 2, Spannable::SPAN_EXCLUSIVE_INCLUSIVE);
 
     EXPECT_EQ("foo", TextUtils::concat({&foo})->toUTF8());
     EXPECT_EQ("foobar", TextUtils::concat({&foo, &bar})->toUTF8());
@@ -61,20 +70,30 @@ TEST(CoreTextUtilsTest, testBasic) {
     CharSequence* c1 = TextUtils::concat({&foo});
     Spanned* spanned1 = dynamic_cast<Spanned*>(c1);
     ASSERT_NE(nullptr, spanned1) << "concat of a single Spannable must keep the Spanned type";
-    EXPECT_EQ(1, spanned1->getSpanStart(&fooSpan));
+    EXPECT_EQ(-1, spanned1->getSpanStart(&fooSpan));   // NoCopy never travels
+    ASSERT_EQ(1u, spanned1->getSpans(0, 3, make_span_filter<UnderlineSpan>()).size());
+    EXPECT_EQ(1, spanned1->getSpanStart(
+            spanned1->getSpans(0, 3, make_span_filter<UnderlineSpan>())[0]));
 
     CharSequence* c2 = TextUtils::concat({&foo, &bar});
     Spanned* spanned2 = dynamic_cast<Spanned*>(c2);
     ASSERT_NE(nullptr, spanned2) << "concat of Spannables must keep the Spanned type";
-    EXPECT_EQ(1, spanned2->getSpanStart(&fooSpan));
-    EXPECT_EQ(4, spanned2->getSpanStart(&barSpan));
+    EXPECT_EQ(-1, spanned2->getSpanStart(&fooSpan));
+    EXPECT_EQ(-1, spanned2->getSpanStart(&barSpan));
+    auto us2 = spanned2->getSpans(0, 6, make_span_filter<UnderlineSpan>());
+    ASSERT_EQ(2u, us2.size());
+    EXPECT_EQ(1, spanned2->getSpanStart(us2[0]));
+    EXPECT_EQ(4, spanned2->getSpanStart(us2[1]));
 
     CharSequence* c3 = TextUtils::concat({&foo, &bar, &baz});
     Spanned* spanned3 = dynamic_cast<Spanned*>(c3);
     ASSERT_NE(nullptr, spanned3) << "concat of Spannables must keep the Spanned type";
-    EXPECT_EQ(1, spanned3->getSpanStart(&fooSpan));
-    EXPECT_EQ(4, spanned3->getSpanStart(&barSpan));
-    EXPECT_EQ(7, spanned3->getSpanStart(&bazSpan));
+    EXPECT_EQ(-1, spanned3->getSpanStart(&bazSpan));
+    auto us3 = spanned3->getSpans(0, 9, make_span_filter<UnderlineSpan>());
+    ASSERT_EQ(3u, us3.size());
+    EXPECT_EQ(1, spanned3->getSpanStart(us3[0]));
+    EXPECT_EQ(4, spanned3->getSpanStart(us3[1]));
+    EXPECT_EQ(7, spanned3->getSpanStart(us3[2]));
 
     // plain-text concat yields a String; spanned concat yields a SpannedString
     EXPECT_TRUE(dynamic_cast<String*>(TextUtils::concat({new String(u"foo"),

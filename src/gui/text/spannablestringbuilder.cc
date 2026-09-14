@@ -369,17 +369,17 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
                 if (getSpanStart(span) >= 0) {
                     continue;
                 }
-                if (ParcelableSpan* clone = span->clone()) {
-                    setSpan(clone, ndStart, ndEnd, flags);
-                } else if (dynamic_cast<const NoCopySpan*>(span)) {
-                    /*AOSP replace() propagates the source's span REFERENCES —
-                      including NoCopySpans; the ignoreNoCopySpan flag only
-                      belongs to the explicit copy constructors. Carry a
-                      NoCopySpan into the destination as BORROWED (same pointer,
-                      addSpan marks it owned=false), so e.g. TextUtils.concat of
-                      Spannables keeps marker spans at their shifted offsets
-                      (CTS asserts span identity through concat).*/
-                    setSpan(span, ndStart, ndEnd, flags);
+                /*AOSP change() propagates the source's span REFERENCES for
+                  every span type — safe under GC, impossible under raw
+                  pointers: a NoCopySpan (watcher, selection marker) carried
+                  here by pointer would dangle as soon as the source object
+                  dies or drops the span. Only clone()-able spans propagate;
+                  NoCopySpans stay behind with their owner (the copy
+                  constructors' ignoreNoCopySpan flag makes the same call).*/
+                if (dynamic_cast<const NoCopySpan*>(span) == nullptr) {
+                    ParcelableSpan* clone = span->clone();
+                    assert(clone && "owned span subclass forgot to override clone()");
+                    if (clone) setSpan(clone, ndStart, ndEnd, flags);
                 }
             }
         }

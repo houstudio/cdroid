@@ -15,6 +15,8 @@
 //  - instanceof NoCopySpan -> dynamic_cast<const NoCopySpan*>.
 #include <gtest/gtest.h>
 #include <text/spannablestring.h>
+#include <text/spannablestringbuilder.h>
+#include <text/textutils.h>
 #include <text/parcelablespan.h>
 #include <text/style/characterstyles.h>
 
@@ -151,4 +153,72 @@ TEST(SpannedStringNoCopyTest, testCopyConstructor_doesNotCopyNoCopySpans_OtherSp
     SourceSpans s;
     CustomSpannable custom(s.first);
     doesNotCopyNoCopySpansOtherImpl(custom);
+}
+
+// --- zero-length span survival on copy (Selection-marker semantics) -----
+// AOSP SpannableStringInternal.copySpans keeps EVERYTHING getSpans() returned,
+// including zero-length spans anywhere in [start, end] (the old CDROID filter
+// `newStart < newEnd` silently dropped them — a copied buffer lost its
+// selection markers).
+
+TEST(SpannableStringNoCopyTest, testCopyConstructor_keepsZeroLengthSpans) {
+    SpannableString src{u"t\nest data"};
+    NoCopyConcreteSpan marker;
+    src.setSpan(&marker, 4, 4, Spanned::SPAN_POINT_POINT);
+    src.setSpan(new UnderlineSpan, 6, 6, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
+
+    SpannedString copied(&src);
+    // Borrowed zero-length marker survives at the same offset.
+    EXPECT_EQ(4, copied.getSpanStart(&marker));
+    EXPECT_EQ(4, copied.getSpanEnd(&marker));
+    // Owned zero-length span survives as a clone at the same offset.
+    auto zeroLen = copied.getSpans(0, copied.length(), make_span_filter<UnderlineSpan>());
+    ASSERT_EQ(1u, zeroLen.size());
+    EXPECT_EQ(6, copied.getSpanStart(zeroLen[0]));
+    EXPECT_EQ(6, copied.getSpanEnd(zeroLen[0]));
+    EXPECT_NE(zeroLen[0], src.getSpans(0, src.length(), make_span_filter<UnderlineSpan>())[0]);
+
+    // ignoreNoCopySpan still drops the marker but keeps the owned clone.
+    SpannableString copied2(&src, true /* ignoreNoCopySpan */);
+    EXPECT_EQ(-1, copied2.getSpanStart(&marker));
+    EXPECT_EQ(1u, copied2.getSpans(0, copied2.length(), make_span_filter<UnderlineSpan>()).size());
+}
+
+// --- NoCopySpan never crosses containers by raw pointer ------------------
+// AOSP's replace()/concat propagate span REFERENCES (GC keeps them alive).
+// Under raw pointers a borrowed NoCopySpan in another container would dangle
+// once the source dies, so propagation and single-piece concat carry only
+// clone()-able (owned) spans.
+
+TEST(SpannableStringNoCopyTest, testReplaceDoesNotPropagateBorrowedNoCopySpans) {
+    SpannableStringBuilder dst(u"head|");
+    SpannableString src{u"tail"};
+    NoCopyConcreteSpan noCopy;
+    src.setSpan(&noCopy, 0, 4, Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+    src.setSpan(new UnderlineSpan, 1, 3, Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+
+    dst.append(src);
+    EXPECT_EQ(std::string("head|tail"), dst.toUTF8());
+    EXPECT_EQ(-1, dst.getSpanStart(&noCopy));   // borrowed pointer NOT carried
+    // Owned span propagated as a clone at the mapped offsets.
+    auto us = dst.getSpans(0, dst.length(), make_span_filter<UnderlineSpan>());
+    ASSERT_EQ(1u, us.size());
+    EXPECT_EQ(6, dst.getSpanStart(us[0]));
+    EXPECT_EQ(8, dst.getSpanEnd(us[0]));
+}
+
+TEST(SpannableStringNoCopyTest, testConcatSingleElement_doesNotCarryNoCopySpans) {
+    SpannableString src{u"only"};
+    NoCopyConcreteSpan noCopy;
+    src.setSpan(&noCopy, 0, 4, Spanned::SPAN_POINT_POINT);
+    src.setSpan(new UnderlineSpan, 0, 4, Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+
+    CharSequence* r = TextUtils::concat({&src});
+    ASSERT_NE(nullptr, r);
+    auto* spanned = dynamic_cast<Spanned*>(r);
+    ASSERT_NE(nullptr, spanned);   // spanned in, spanned out (AOSP parity)
+    EXPECT_EQ(-1, spanned->getSpanStart(&noCopy));   // never by raw pointer
+    EXPECT_EQ(1u, spanned->getSpans(0, spanned->length(),
+            make_span_filter<UnderlineSpan>()).size());
+    delete r;   // concat returns an owned CharSequence
 }
