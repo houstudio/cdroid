@@ -70,6 +70,14 @@ protected:
     };
     std::u16string mText;
     std::vector<SpanRecord> mSpans;
+    /*Bumped by every structural mSpans mutation (insert/erase/clear — the
+      centralized mutators and the SSB loops). Notification loops snapshot
+      the recipients together with this counter: while it is unchanged the
+      snapshot is known-valid and the per-recipient getSpanStart() liveness
+      rescan (O(spans) per notified watcher) can be skipped; once a callback
+      mutates the span set the loops fall back to the per-pointer check. AOSP
+      needs none of this — GC keeps detached Java watchers alive.*/
+    uint64_t mMutationEpoch = 0;
 
     // --- centralized span mutation: the owned/borrowed logic lives ONLY here ---
     // Insert. The SINGLE point where const is cast away and `owned` is decided.

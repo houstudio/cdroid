@@ -31,6 +31,7 @@
 #include <content/i18n/types.h>
 #endif
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <mutex>
 
@@ -57,13 +58,32 @@ static NameWidth widthFor(int abbrev) {
     }
 }
 
+/*DateFormatSymbols builds its full name tables per construction; the name
+  getters run per format call, so the default-locale instance is cached and
+  rebuilt only when the default locale changes. The cache hands out a
+  shared_ptr: the tables are returned by reference, and a rebuild must not
+  yank them out from under a concurrent reader (the old instance lives until
+  its last holder lets go).*/
+static std::shared_ptr<const DateFormatSymbols> defaultSymbols() {
+    static std::mutex sMutex;
+    std::lock_guard<std::mutex> lock(sMutex);
+    static std::string tag;
+    static std::shared_ptr<const DateFormatSymbols> cache;
+    const std::string cur = Locale::getDefault().toLanguageTag();
+    if (cache == nullptr || tag != cur) {
+        tag = cur;
+        cache.reset(new DateFormatSymbols(Locale::getDefault()));
+    }
+    return cache;
+}
+
 std::string getDayOfWeekString(int dayOfWeek, int abbrev) {
-    const DateFormatSymbols dfs(Locale::getDefault());
+    const std::shared_ptr<const DateFormatSymbols> dfs = defaultSymbols();
     const std::vector<std::string>* names = nullptr;
     switch (widthFor(abbrev)) {
-        case WIDTH_NARROW:     names = &dfs.getTinyWeekdays(); break;
-        case WIDTH_ABBREVIATED:names = &dfs.getShortWeekdays(); break;
-        default:               names = &dfs.getWeekdays(); break;
+        case WIDTH_NARROW:     names = &dfs->getTinyWeekdays(); break;
+        case WIDTH_ABBREVIATED:names = &dfs->getShortWeekdays(); break;
+        default:               names = &dfs->getWeekdays(); break;
     }
     // Calendar weekday indices are 1-based (SUNDAY..SATURDAY) over an array
     // whose slot 0 is the empty leading entry.
@@ -72,19 +92,19 @@ std::string getDayOfWeekString(int dayOfWeek, int abbrev) {
 }
 
 std::string getAMPMString(int ampm) {
-    const DateFormatSymbols dfs(Locale::getDefault());
-    const std::vector<std::string>& names = dfs.getAmPmStrings();
+    const std::shared_ptr<const DateFormatSymbols> dfs = defaultSymbols();
+    const std::vector<std::string>& names = dfs->getAmPmStrings();
     if (ampm < 0 || ampm >= (int)names.size()) return std::string();
     return names[ampm];
 }
 
 std::string getMonthString(int month, int abbrev) {
-    const DateFormatSymbols dfs(Locale::getDefault());
+    const std::shared_ptr<const DateFormatSymbols> dfs = defaultSymbols();
     const std::vector<std::string>* names = nullptr;
     switch (widthFor(abbrev)) {
-        case WIDTH_NARROW:     names = &dfs.getTinyMonths(); break;
-        case WIDTH_ABBREVIATED:names = &dfs.getShortMonths(); break;
-        default:               names = &dfs.getMonths(); break;
+        case WIDTH_NARROW:     names = &dfs->getTinyMonths(); break;
+        case WIDTH_ABBREVIATED:names = &dfs->getShortMonths(); break;
+        default:               names = &dfs->getMonths(); break;
     }
     if (month < 0 || month >= (int)names->size()) return std::string();
     return (*names)[month];
@@ -614,7 +634,8 @@ std::string getRelativeDateTimeString(Context* c, int64_t time, int64_t minResol
     auto nowCalendar = Calendar::getInstance(Locale::getDefault());
     nowCalendar->setTimeInMillis(now);
 
-    const int days = dayDistance(time, now) < 0 ? -dayDistance(time, now) : dayDistance(time, now);
+    // AOSP: Math.abs(dayDistance(time, now)) — one call, not three.
+    const int days = std::abs(dayDistance(time, now));
 
     // Now get the date clause, either in relative format or the actual date.
     std::string dateClause;

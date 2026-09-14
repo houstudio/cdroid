@@ -90,6 +90,16 @@ private:
     bool mElegantTextHeight = false;   // stored; minikin's MinikinPaint has no
                                        // `elegant` field in this version, so not yet
                                        // propagated to layout (CJK elegant height).
+    /*Per-instance last-result cache for the glyph-box part of
+      getFontMetricsInt (top/bottom/leading depend only on the typeface and
+      the size). mutable — the paint is value-copied freely and a copied
+      cache stays correct because the key travels with the values; a shared
+      cache would need a lock (fillGlyphBoxMetrics locks the FT face).*/
+    mutable const void* mGlyphBoxFace = nullptr;
+    mutable float mGlyphBoxSize = -1.0f;
+    mutable int mGlyphBoxTop = 0;
+    mutable int mGlyphBoxBottom = 0;
+    mutable int mGlyphBoxLeading = 0;
     float mUnderlinePosition;
     float mUnderlineThickness;
     float mStrikeThruPosition;

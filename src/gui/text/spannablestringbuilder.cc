@@ -3,6 +3,7 @@
 #include <text/inputfilter.h>
 #include <text/textwatcher.h>
 #include <porting/cdlog.h>
+#include <unordered_set>
 namespace cdroid{
 // Mutable SpannableStringBuilder: builder-style mutable spannable (similar to Android's SpannableStringBuilder)
 SpannableStringBuilder::SpannableStringBuilder(const std::u16string& text)
@@ -45,15 +46,18 @@ void SpannableStringBuilder::removeSpan(const ParcelableSpan* what) {
     // Fire sendSpanRemoved for each matching record (Android fires it per span),
     // then drop it. disposeSpan frees owned spans and no-ops borrowed ones
     // (NoCopySpan, e.g. Selection markers). Loop covers legacy duplicate records.
+    bool removed = false;
     for (auto it = mSpans.begin(); it != mSpans.end();) {
         if (it->span == what) {
             sendSpanRemoved(what, it->start, it->end);
             disposeSpan(*it);
             it = mSpans.erase(it);
+            removed = true;
         } else {
             ++it;
         }
     }
+    if (removed) ++mMutationEpoch;
 }
 
 void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta) {
@@ -261,22 +265,35 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
       in mSpans — a pure pointer lookup that never dereferences p — before every
       cast/call. (Divergence from AOSP: a watcher detached during this change does
       not receive the remaining phases; Java's object stays callable, a deleted C++
-      one cannot.)*/
-    auto isRecorded = [this](const ParcelableSpan* p) { return getSpanStart(p) >= 0; };
+      one cannot.)
+      getSpanStart() is O(spans) and fires per watcher per keystroke, so each
+      phase baselines mMutationEpoch (bumped by every structural mSpans change):
+      while no callback has touched the span set the whole phase skips the
+      rescan. The baseline is re-taken per phase — phase 2's own erase/insert
+      shifts the epoch by design and must not penalize phases 3/4.*/
+    auto isRecorded = [this](uint64_t epoch, const ParcelableSpan* p) {
+        return mMutationEpoch == epoch || getSpanStart(p) >= 0;
+    };
 
     // 1) beforeTextChanged
-    for (const ParcelableSpan* p : watchers) {
-        if (!isRecorded(p)) continue;
-        if (TextWatcher* w = asWatcher(p)) {
-            if (w->beforeTextChanged) w->beforeTextChanged(*this, st, replacedLen, insertLen);
+    {
+        const uint64_t epoch0 = mMutationEpoch;
+        for (const ParcelableSpan* p : watchers) {
+            if (!isRecorded(epoch0, p)) continue;
+            if (TextWatcher* w = asWatcher(p)) {
+                if (w->beforeTextChanged) w->beforeTextChanged(*this, st, replacedLen, insertLen);
+            }
         }
     }
 
     // 2) mutate the buffer + adjust span ranges
     if (insertLen > 0) {
-        std::u16string ins;
-        ins.reserve(insertLen);
-        for (int i = tbstart; i < tbend; i++) ins += (char16_t)tb->charAt(i);
+        /*AOSP TextUtils.getChars(cs, csStart, csEnd, mText, start): one bulk
+          virtual getChars (String/SSB copy their whole buffer in a stroke)
+          instead of insertLen charAt() virtual calls per replace() call —
+          append() funnels every keystroke through here.*/
+        std::u16string ins(insertLen, u'\0');
+        tb->getChars(tbstart, tbend, &ins[0], 0);   // data() is const until C++17
         if (st < en) mText.replace(st, replacedLen, ins);
         else mText.insert(st, ins);
     } else if (st < en) {
@@ -328,15 +345,23 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
           watcher's dynamic_cast touches the span object), free LAST — AOSP
           relies on GC here and orders freely. The records are detached from
           mSpans up front so the span set is already consistent when the
-          watcher's reflow reads it back.*/
+          watcher's reflow reads it back. The doomed set is hashed: the old
+          nested scan was O(spans x doomed) per edit.*/
         std::vector<SpanRecord> removed;
         removed.reserve(doomed.size());
+        std::unordered_set<const ParcelableSpan*> doomedSet;
+        for (const auto& d : doomed) doomedSet.insert(d.first);
+        bool erasedAny = false;
         for (auto it = mSpans.begin(); it != mSpans.end();) {
-            bool hit = false;
-            for (const auto& d : doomed) hit |= (d.first == it->span);
-            if (hit) { removed.push_back(*it); it = mSpans.erase(it); }
-            else ++it;
+            if (doomedSet.count(it->span) > 0) {
+                removed.push_back(*it);
+                it = mSpans.erase(it);
+                erasedAny = true;
+            } else {
+                ++it;
+            }
         }
+        if (erasedAny) ++mMutationEpoch;
         for (const auto& d : doomed) {
             sendSpanRemoved(d.first, d.second.first, d.second.second);
         }
@@ -393,17 +418,23 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
     }
 
     // 3) onTextChanged
-    for (const ParcelableSpan* p : watchers) {
-        if (!isRecorded(p)) continue;
-        if (TextWatcher* w = asWatcher(p)) {
-            if (w->onTextChanged) w->onTextChanged(*this, st, replacedLen, insertLen);
+    {
+        const uint64_t epoch0 = mMutationEpoch;   // fresh baseline: phase 2 shifted it
+        for (const ParcelableSpan* p : watchers) {
+            if (!isRecorded(epoch0, p)) continue;
+            if (TextWatcher* w = asWatcher(p)) {
+                if (w->onTextChanged) w->onTextChanged(*this, st, replacedLen, insertLen);
+            }
         }
     }
     // 4) afterTextChanged
-    for (const ParcelableSpan* p : watchers) {
-        if (!isRecorded(p)) continue;
-        if (TextWatcher* w = asWatcher(p)) {
-            if (w->afterTextChanged) w->afterTextChanged(*this);
+    {
+        const uint64_t epoch0 = mMutationEpoch;
+        for (const ParcelableSpan* p : watchers) {
+            if (!isRecorded(epoch0, p)) continue;
+            if (TextWatcher* w = asWatcher(p)) {
+                if (w->afterTextChanged) w->afterTextChanged(*this);
+            }
         }
     }
     delete ownedFilterResult;

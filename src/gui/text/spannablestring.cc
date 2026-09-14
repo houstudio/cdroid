@@ -16,6 +16,7 @@ void SpannableStringInternal::addSpan(const ParcelableSpan* span, int start, int
     ParcelableSpan* s = const_cast<ParcelableSpan*>(span);
     const bool owned = (dynamic_cast<NoCopySpan*>(s) == nullptr);
     mSpans.push_back({s, start, end, flags, owned});
+    ++mMutationEpoch;
 }
 
 bool SpannableStringInternal::removeSpanRecord(const ParcelableSpan* span) {
@@ -23,6 +24,7 @@ bool SpannableStringInternal::removeSpanRecord(const ParcelableSpan* span) {
         if (it->span == span) {
             disposeSpan(*it);
             mSpans.erase(it);
+            ++mMutationEpoch;
             return true;
         }
     }
@@ -34,6 +36,7 @@ void SpannableStringInternal::deleteAllOwnedSpans() {
         disposeSpan(r);
     }
     mSpans.clear();
+    ++mMutationEpoch;
 }
 
 void SpannableStringInternal::appendSpanCopy(std::vector<SpanRecord>& dest,
@@ -239,14 +242,17 @@ void SpannableStringInternal::getChars(int start, int end, char16_t* dest, int d
   in the snapshot, so each recipient is re-checked against the live span set
   first (the same isRecorded guard SpannableStringBuilder uses for its
   TextWatcher phases). Divergence: a watcher detached mid-notification does
-  not receive the remaining events; a deleted C++ span cannot be called.*/
+  not receive the remaining events; a deleted C++ span cannot be called.
+  The O(spans) getSpanStart rescan is skipped while mMutationEpoch is
+  unchanged since the snapshot (no callback has touched the span set).*/
 
 void SpannableString::sendSpanAdded(const ParcelableSpan* what, int start, int end) {
     Spannable& self = dynamic_cast<SpannableString&>(*this);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(start, end, watcherFilter);
+    const uint64_t epoch0 = mMutationEpoch;
     for (const ParcelableSpan* w : watchers) {
-        if (getSpanStart(w) < 0) continue;
+        if (mMutationEpoch != epoch0 && getSpanStart(w) < 0) continue;
         SpanWatcher* watcher = const_cast<SpanWatcher*>(dynamic_cast<const SpanWatcher*>(w));
         if (watcher) {
             watcher->onSpanAdded(self, what, start, end);
@@ -258,8 +264,9 @@ void SpannableString::sendSpanRemoved(const ParcelableSpan* what, int start, int
     Spannable& self = dynamic_cast<SpannableString&>(*this);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(start, end, watcherFilter);
+    const uint64_t epoch0 = mMutationEpoch;
     for (const ParcelableSpan* w : watchers) {
-        if (getSpanStart(w) < 0) continue;
+        if (mMutationEpoch != epoch0 && getSpanStart(w) < 0) continue;
         SpanWatcher* watcher = const_cast<SpanWatcher*>(dynamic_cast<const SpanWatcher*>(w));
         if (watcher) {
             watcher->onSpanRemoved(self, what, start, end);
@@ -271,8 +278,9 @@ void SpannableString::sendSpanChanged(const ParcelableSpan* what, int ostart, in
     Spannable& self = dynamic_cast<SpannableString&>(*this);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(std::min(ostart,nstart), std::max(oend,nend), watcherFilter);
+    const uint64_t epoch0 = mMutationEpoch;
     for (const ParcelableSpan* w : watchers) {
-        if (getSpanStart(w) < 0) continue;
+        if (mMutationEpoch != epoch0 && getSpanStart(w) < 0) continue;
         SpanWatcher* watcher = const_cast<SpanWatcher*>(dynamic_cast<const SpanWatcher*>(w));
         if (watcher) {
             watcher->onSpanChanged(self, what, ostart, oend, nstart, nend);
@@ -342,6 +350,7 @@ void SpannableString::removeSpan(const ParcelableSpan* what) {
             this->sendSpanRemoved(what, it->start, it->end);
             disposeSpan(*it);
             mSpans.erase(it);
+            ++mMutationEpoch;
             return;
         }
     }

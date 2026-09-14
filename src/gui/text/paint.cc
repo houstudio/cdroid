@@ -250,7 +250,23 @@ int Paint::getFontMetricsInt(FontMetricsInt* fmi)const{
     if(fmi){
         fmi->ascent = extent.ascent;
         fmi->descent = extent.descent;
-        fillGlyphBoxMetrics(fmi, tf, *mMinikinPaint, minikinFont.get());
+        /*fillGlyphBoxMetrics re-walks the scaled-font LRU and locks the FT
+          face on every call though its triple only depends on (typeface,
+          size) — cache the last key per Paint instance (see paint.h).*/
+        if (mGlyphBoxFace != (const void*)tf || mGlyphBoxSize != mMinikinPaint->size) {
+            FontMetricsInt box;
+            box.ascent = extent.ascent;
+            box.descent = extent.descent;
+            fillGlyphBoxMetrics(&box, tf, *mMinikinPaint, minikinFont.get());
+            mGlyphBoxFace = tf;
+            mGlyphBoxSize = mMinikinPaint->size;
+            mGlyphBoxTop = box.top;
+            mGlyphBoxBottom = box.bottom;
+            mGlyphBoxLeading = box.leading;
+        }
+        fmi->top = mGlyphBoxTop;
+        fmi->bottom = mGlyphBoxBottom;
+        fmi->leading = mGlyphBoxLeading;
     }
     return (int)(extent.descent - extent.ascent);
 }

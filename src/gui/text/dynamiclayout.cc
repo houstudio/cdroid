@@ -1,5 +1,6 @@
 #include <text/dynamiclayout.h>
 #include <text/precomputedtext.h>
+#include <cstring>
 namespace cdroid{
 
 Pools::SynchronizedPool<DynamicLayout::Builder>DynamicLayout::Builder::sPool(3);
@@ -684,33 +685,29 @@ void DynamicLayout::updateBlocks(int startLine, int endLine, int newLineCount) {
       lastBlock + 1, mBlockEndLines, firstBlock + numAddedBlocks,
       mNumberOfBlocks - lastBlock - 1) (+ the mBlockIndices twin). arraycopy is
       memmove: the destination may overlap the source on either side (blocks
-      removed vs added), so the copy goes through scratch buffers. The old
-      std::copy_backward translation passed the DESTINATION END where arraycopy
-      takes the destination START, landing the tail `tailCount` slots too low:
-      multi-block edits reported unsorted end lines and lost indices, and when
-      the tail moves to slot 0 it even wrote one slot BEFORE the buffer — the
-      "double free or corruption" heap crash in testFrom2RemoveFromFirst.*/
+      removed vs added). Growing first keeps the old contents in place
+      (vector::resize preserves them), so one memmove per array does it — no
+      scratch copies. The old std::copy_backward translation passed the
+      DESTINATION END where arraycopy takes the destination START, landing the
+      tail `tailCount` slots too low: multi-block edits reported unsorted end
+      lines and lost indices, and when the tail moves to slot 0 it even wrote
+      one slot BEFORE the buffer — the "double free or corruption" heap crash
+      in testFrom2RemoveFromFirst.*/
     if (newNumberOfBlocks > (int) mBlockEndLines.size()) {
         const int newSize = std::max((int) mBlockEndLines.size() * 2, newNumberOfBlocks);
-        const std::vector<int> tailEnds(mBlockEndLines.begin() + lastBlock + 1,
-                mBlockEndLines.begin() + mNumberOfBlocks);
-        const std::vector<int> tailIndices(mBlockIndices.begin() + lastBlock + 1,
-                mBlockIndices.begin() + mNumberOfBlocks);
         mBlockEndLines.resize(newSize);
         mBlockIndices.resize(newSize);
-        std::copy(tailEnds.begin(), tailEnds.end(),
-                mBlockEndLines.begin() + firstBlock + numAddedBlocks);
-        std::copy(tailIndices.begin(), tailIndices.end(),
-                mBlockIndices.begin() + firstBlock + numAddedBlocks);
-    } else if (numAddedBlocks + numRemovedBlocks != 0) {
-        const std::vector<int> tailEnds(mBlockEndLines.begin() + lastBlock + 1,
-                mBlockEndLines.begin() + mNumberOfBlocks);
-        const std::vector<int> tailIndices(mBlockIndices.begin() + lastBlock + 1,
-                mBlockIndices.begin() + mNumberOfBlocks);
-        std::copy(tailEnds.begin(), tailEnds.end(),
-                mBlockEndLines.begin() + firstBlock + numAddedBlocks);
-        std::copy(tailIndices.begin(), tailIndices.end(),
-                mBlockIndices.begin() + firstBlock + numAddedBlocks);
+    }
+    if (numAddedBlocks + numRemovedBlocks != 0) {
+        const int tailCount = mNumberOfBlocks - lastBlock - 1;
+        if (tailCount > 0) {
+            int* endLines = mBlockEndLines.data();
+            int* indices = mBlockIndices.data();
+            std::memmove(endLines + firstBlock + numAddedBlocks, endLines + lastBlock + 1,
+                    (size_t)tailCount * sizeof(int));
+            std::memmove(indices + firstBlock + numAddedBlocks, indices + lastBlock + 1,
+                    (size_t)tailCount * sizeof(int));
+        }
     }
 
     if ((numAddedBlocks + numRemovedBlocks != 0) && mBlocksAlwaysNeedToBeRedrawn.size()) {
