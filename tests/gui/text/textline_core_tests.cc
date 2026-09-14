@@ -38,11 +38,20 @@ struct StandardTabStopSpan : public TabStopSpan {
     int getTabStop() const override { return tab; }
 };
 
+// getTextLine's TextLine borrows a String and a Directions pointer into a
+// StaticLayout's line storage — the {layout, source} pair is registered here
+// and released by releaseTextLine (TextLine::recycle clears mText/mDirections,
+// so nothing references the pair after the recycle).
+std::vector<std::pair<StaticLayout*, String*>>& textLineBacking() {
+    static std::vector<std::pair<StaticLayout*, String*>> backing;
+    return backing;
+}
+
 TextLine* getTextLine(const std::u16string& str, TextPaint& paint, TabStops* tabStops = nullptr) {
     // TextLine::set BORROWS the CharSequence AND the Directions (a pointer into
     // the layout's line storage): both must outlive the line. AOSP leans on GC;
-    // heap-allocate and leak both for the test's lifetime instead of letting
-    // stack/owned objects dangle after this helper returns.
+    // heap-allocate both and hand the pair to releaseTextLine instead of
+    // letting stack objects dangle after this helper returns.
     String* source = new String(str);
     StaticLayout::Builder* builder =
             StaticLayout::Builder::obtain(source, 0, (int)str.length(), &paint, INT_MAX);
@@ -52,7 +61,18 @@ TextLine* getTextLine(const std::u16string& str, TextPaint& paint, TabStops* tab
             TextDirectionHeuristics::FIRSTSTRONG_LTR->isRtl(source, 0, (int)str.length()) ? -1 : 1,
             layout->getLineDirections(0), tabStops != nullptr, tabStops,
             0, 0 /* no ellipsis */, false /* useFallbackLineSpacing */);
-    return tl; // layout + source intentionally leaked (borrowed by tl)
+    textLineBacking().push_back({layout, source});
+    return tl;
+}
+
+void releaseTextLine(TextLine* tl) {
+    TextLine::recycle(tl);   // clears mText/mDirections — the backing pair dies below
+    auto& backing = textLineBacking();
+    for (auto& entry : backing) {
+        delete entry.first;
+        delete entry.second;
+    }
+    backing.clear();
 }
 
 void assertMeasurements(TextLine* tl, int length, bool trailing, const std::vector<float>& expected) {
@@ -81,7 +101,7 @@ bool stretchesToFullWidth(const std::u16string& line) {
 
     tl->justify(Layout::JUSTIFICATION_MODE_INTER_WORD, expandedWidth);
     const float newWidth = tl->metrics(nullptr);
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
     return std::abs(newWidth - expandedWidth) < 0.5;
 }
 
@@ -122,7 +142,7 @@ TEST(CoreTextLineTest, testMeasure_LTR) {
                        {0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 100.0f});
     assertMeasurements(tl, 6, true,
                        {0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 100.0f});
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testMeasure_RTL) {
@@ -135,7 +155,7 @@ TEST(CoreTextLineTest, testMeasure_RTL) {
                        {0.0f, -10.0f, -20.0f, -30.0f, -40.0f, -50.0f, -100.0f});
     assertMeasurements(tl, 6, true,
                        {0.0f, -10.0f, -20.0f, -30.0f, -40.0f, -50.0f, -100.0f});
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testMeasure_BiDi) {
@@ -148,7 +168,7 @@ TEST(CoreTextLineTest, testMeasure_BiDi) {
                        {0.0f, 10.0f, 40.0f, 30.0f, 40.0f, 50.0f, 60.0f});
     assertMeasurements(tl, 6, true,
                        {0.0f, 10.0f, 20.0f, 30.0f, 20.0f, 50.0f, 60.0f});
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testMeasure_BiDi2) {
@@ -161,7 +181,7 @@ TEST(CoreTextLineTest, testMeasure_BiDi2) {
                        {0.0f, 10.0f, 30.0f, 30.0f, 20.0f, 40.0f, 40.0f, 50.0f});
     assertMeasurements(tl, 7, true,
                        {0.0f, 10.0f, 10.0f, 40.0f, 20.0f, 10.0f, 40.0f, 50.0f});
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testMeasure_BiDi3) {
@@ -174,7 +194,7 @@ TEST(CoreTextLineTest, testMeasure_BiDi3) {
                        {0.0f, -10.0f, -30.0f, -30.0f, -20.0f, -40.0f, -40.0f, -50.0f});
     assertMeasurements(tl, 7, true,
                        {0.0f, -10.0f, -10.0f, -40.0f, -20.0f, -10.0f, -40.0f, -50.0f});
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testMeasure_Tab_LTR) {
@@ -189,7 +209,7 @@ TEST(CoreTextLineTest, testMeasure_Tab_LTR) {
                        {0.0f, 10.0f, 20.0f, 100.0f, 110.0f, 120.0f});
     assertMeasurements(tl, 5, true,
                        {0.0f, 10.0f, 20.0f, 100.0f, 110.0f, 120.0f});
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testMeasure_Tab_RTL) {
@@ -204,7 +224,7 @@ TEST(CoreTextLineTest, testMeasure_Tab_RTL) {
                        {0.0f, -10.0f, -20.0f, -100.0f, -110.0f, -120.0f});
     assertMeasurements(tl, 5, true,
                        {0.0f, -10.0f, -20.0f, -100.0f, -110.0f, -120.0f});
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testMeasure_Tab_BiDi) {
@@ -219,7 +239,7 @@ TEST(CoreTextLineTest, testMeasure_Tab_BiDi) {
                        {0.0f, 20.0f, 20.0f, 100.0f, 120.0f, 120.0f});
     assertMeasurements(tl, 5, true,
                        {0.0f, 10.0f, 10.0f, 100.0f, 110.0f, 110.0f});
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testMeasure_Tab_BiDi2) {
@@ -234,7 +254,7 @@ TEST(CoreTextLineTest, testMeasure_Tab_BiDi2) {
                        {0.0f, -20.0f, -20.0f, -100.0f, -120.0f, -120.0f});
     assertMeasurements(tl, 5, true,
                        {0.0f, -10.0f, -10.0f, -100.0f, -110.0f, -110.0f});
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testMeasure_wordSpacing) {
@@ -245,7 +265,7 @@ TEST(CoreTextLineTest, testMeasure_wordSpacing) {
 
     TextLine* tl = getTextLine(u"I I", paint);
     assertMeasurements(tl, 3, false, {0.0f, 10.0f, 120.0f, 130.0f});
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testHandleRun_ellipsizedReplacementSpan_isSkipped) {
@@ -262,7 +282,7 @@ TEST(CoreTextLineTest, testHandleRun_ellipsizedReplacementSpan_isSkipped) {
     tl->measure((int)text.length(), false /* trailing */, nullptr);
 
     EXPECT_FALSE(span->mIsUsed);
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testHandleRun_notEllipsizedReplacementSpan_isNotSkipped) {
@@ -278,7 +298,7 @@ TEST(CoreTextLineTest, testHandleRun_notEllipsizedReplacementSpan_isNotSkipped) 
     tl->measure((int)text.length(), false /* trailing */, nullptr);
 
     EXPECT_TRUE(span->mIsUsed);
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }
 
 TEST(CoreTextLineTest, testHandleRun_halfEllipsizedReplacementSpan_isNotSkipped) {
@@ -294,5 +314,5 @@ TEST(CoreTextLineTest, testHandleRun_halfEllipsizedReplacementSpan_isNotSkipped)
     tl->measure((int)text.length(), false /* trailing */, nullptr);
 
     EXPECT_TRUE(span->mIsUsed);
-    TextLine::recycle(tl);
+    releaseTextLine(tl);
 }

@@ -30,7 +30,9 @@ static float textWidth(const CharSequence& text) {
     const int largeWidth = 10000; // Enough width so the whole text fits in one line.
     StaticLayout* layout = StaticLayout::Builder::obtain(
             const_cast<CharSequence*>(&text), 0, (int) text.length(), &tp, largeWidth)->build();
-    return layout->getLineWidth(0);
+    const float width = layout->getLineWidth(0);
+    delete layout;   // build() returns an owned layout (only the Builder is pooled)
+    return width;
 }
 
 // Identical to the normal UnderlineSpan test, except that a subclass of UnderlineSpan is used

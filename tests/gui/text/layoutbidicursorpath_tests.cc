@@ -52,8 +52,10 @@ protected:
         builder->setIncludePad(false);
         StaticLayout* layout = builder->build();
         layout->getCursorPath((int) LTR_TEXT.length(), path, &mBidiText);
-        // Builder-obtained layouts recycle their builder; leak the layout like
-        // AOSP's GC (the tests are one-shot).
+        // build() recycles the Builder into its pool (do NOT delete the
+        // builder); the returned layout is owned and spent once the path is
+        // filled — free it here.
+        delete layout;
     }
 
     // AOSP assertArrayEquals(expected.approximate(0f), actual.approximate(0f), 0f)

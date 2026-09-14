@@ -163,23 +163,27 @@ void moveCursorToLeftCursorableOffset(EditorState& state, TextPaint& paint) {
 TEST(StaticLayoutTest, testBuilder_textDirection) {
     TextPaint paint;
     {
+        String* text = new String(LAYOUT_TEXT);
         StaticLayout::Builder* builder = StaticLayout::Builder::obtain(
-                new String(LAYOUT_TEXT), 0, (int) LAYOUT_TEXT.length(),
-                &paint, DEFAULT_OUTER_WIDTH);
+                text, 0, (int) LAYOUT_TEXT.length(), &paint, DEFAULT_OUTER_WIDTH);
         StaticLayout* layout = builder->build();
         // AOSP asserts the heuristic POINTER identity; FIRSTSTRONG_LTR is the
         // documented default.
         EXPECT_EQ(TextDirectionHeuristics::FIRSTSTRONG_LTR,
                   layout->getTextDirectionHeuristic());
+        delete layout;   // build() returns an owned layout (only the Builder is pooled)
+        delete text;     // Layout borrows mText — free after the layout
     }
     {
+        String* text = new String(LAYOUT_TEXT);
         StaticLayout::Builder* builder = StaticLayout::Builder::obtain(
-                new String(LAYOUT_TEXT), 0, (int) LAYOUT_TEXT.length(),
-                &paint, DEFAULT_OUTER_WIDTH);
+                text, 0, (int) LAYOUT_TEXT.length(), &paint, DEFAULT_OUTER_WIDTH);
         builder->setTextDirection(TextDirectionHeuristics::RTL);
         StaticLayout* layout = builder->build();
         EXPECT_EQ(TextDirectionHeuristics::RTL,
                   layout->getTextDirectionHeuristic());
+        delete layout;
+        delete text;
     }
 }
 

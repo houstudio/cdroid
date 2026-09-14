@@ -153,13 +153,24 @@ TEST(CoreTextUtilsTest, testEllipsize) {
             default: kind = TextUtils::TruncateAt::MIDDLE; break;
             }
 
-            std::string out1 = TextUtils::ellipsize(&s1, p, i, kind)->toUTF8();
-            std::string out2 = TextUtils::ellipsize(&s2, p, i, kind)->toUTF8();
-            std::string out3 = TextUtils::ellipsize(&s3, p, i, kind)->toUTF8();
+            // ellipsize returns a CALLER-OWNED CharSequence (AOSP returns the
+            // source or a fresh string under GC; the port always news) — take
+            // the string, delete the wrapper. 1800 leaks per run otherwise.
+            CharSequence* e1 = TextUtils::ellipsize(&s1, p, i, kind);
+            CharSequence* e2 = TextUtils::ellipsize(&s2, p, i, kind);
+            CharSequence* e3 = TextUtils::ellipsize(&s3, p, i, kind);
+            std::string out1 = e1->toUTF8();
+            std::string out2 = e2->toUTF8();
+            std::string out3 = e3->toUTF8();
+            delete e1; delete e2; delete e3;
 
-            std::string keep1 = TextUtils::ellipsize(&s1, p, i, kind, true, nullptr)->toUTF8();
-            std::string keep2 = TextUtils::ellipsize(&s2, p, i, kind, true, nullptr)->toUTF8();
-            std::string keep3 = TextUtils::ellipsize(&s3, p, i, kind, true, nullptr)->toUTF8();
+            CharSequence* k1 = TextUtils::ellipsize(&s1, p, i, kind, true, nullptr);
+            CharSequence* k2 = TextUtils::ellipsize(&s2, p, i, kind, true, nullptr);
+            CharSequence* k3 = TextUtils::ellipsize(&s3, p, i, kind, true, nullptr);
+            std::string keep1 = k1->toUTF8();
+            std::string keep2 = k2->toUTF8();
+            std::string keep3 = k3->toUTF8();
+            delete k1; delete k2; delete k3;
 
             // TextUtils::replace(std::string&, ...) rewrites its argument in
             // place (a C++-local helper — android.text.TextUtils has no such
