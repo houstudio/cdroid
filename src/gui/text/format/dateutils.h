@@ -26,11 +26,11 @@ class Context;
 class Calendar;
 
 // Port of android.text.format.DateUtils (the in-tree subset): the elapsed-time
-// and date-time format helpers plus the FORMAT_* vocabulary. formatDateRange /
-// getRelativeTimeSpanString and the @hide bridge plumbing (DateIntervalFormat,
-// DateTimeFormat, RelativeDateTimeFormatter) are deliberately not ported — no
-// in-tree consumer; formatDateTime covers the single-date flags path through
-// the already-ported getBestDateTimePattern.
+// and date-time format helpers plus the FORMAT_* vocabulary. formatDateRange
+// and getRelativeTimeSpanString are ported (dateutils.cc carries the @hide
+// bridge helpers: the DateUtilsBridge skeleton port line-for-line, the ICU
+// DateIntervalFormat/RelativeDateTimeFormatter formatting approximated
+// through the engine's pattern pools — see the section notes there).
 namespace DateUtils{
 
 // ---- millis constants (AOSP verbatim) --------------------------------------

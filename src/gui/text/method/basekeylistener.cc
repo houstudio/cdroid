@@ -15,6 +15,7 @@
 #include <widget/textview.h>
 #include <view/keyevent.h>
 #include <unicode/uchar.h>
+#include <minikin/Emoji.h>
 #include <algorithm>
 #include <stdexcept>
 
@@ -26,8 +27,11 @@ const NoCopySpan* BaseKeyListener::OLD_SEL_START = new NoCopySpan();
 static constexpr int BI_DONE = -1;
 
 // Port of android.text.Emoji (@hide) — the emoji predicates the delete state
-// machine below runs on. Values come from the myicu binary properties (UCD
-// emoji-data.txt); the two hand-picked modifier bases follow AOSP.
+// machine below runs on. The four UCD-backed predicates are shared code with
+// the layout engine: minikin/Emoji.h implements the same queries (including
+// the two hand-picked Emoji-4.0 modifier bases), so delegate instead of
+// keeping a second copy of the tables. The constants and the keycap/tag
+// predicates below are android.text.Emoji's own.
 namespace {
 struct Emoji {
     static constexpr int COMBINING_ENCLOSING_KEYCAP = 0x20E3;
@@ -36,21 +40,16 @@ struct Emoji {
     static constexpr int CANCEL_TAG = 0xE007F;
 
     static bool isRegionalIndicatorSymbol(int codePoint) {
-        return 0x1F1E6 <= codePoint && codePoint <= 0x1F1FF;
+        return minikin::isRegionalIndicator(codePoint);
     }
     static bool isEmojiModifier(int codePoint) {
-        return u_hasBinaryProperty(codePoint, UCHAR_EMOJI_MODIFIER);
+        return minikin::isEmojiModifier(codePoint);
     }
     static bool isEmojiModifierBase(int c) {
-        // Removed from Emoji_Modifier_Base in Emoji 4.0 but still treated as
-        // bases for compatibility with existing fonts and text (AOSP note).
-        if (c == 0x1F91D || c == 0x1F93C) {
-            return true;
-        }
-        return u_hasBinaryProperty(c, UCHAR_EMOJI_MODIFIER_BASE);
+        return minikin::isEmojiBase(c);
     }
     static bool isEmoji(int codePoint) {
-        return u_hasBinaryProperty(codePoint, UCHAR_EMOJI);
+        return minikin::isEmoji(codePoint);
     }
     // True if the character can be a base of COMBINING ENCLOSING KEYCAP.
     static bool isKeycapBase(int codePoint) {

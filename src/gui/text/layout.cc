@@ -987,41 +987,28 @@ float Layout::getLineWidth(int line) const {
 }
 
 float Layout::getLineExtent(int line, bool full) const{
-    const int start = getLineStart(line);
-    const int end = full ? getLineEnd(line) : getLineVisibleEnd(line);
-
+    /*AOSP's 2-arg overload builds the paragraph's TabStops and delegates to
+      the 3-arg one (Layout.java:1720-1736); the body here used to duplicate
+      the 3-arg measure (the twin-block review finding).*/
     const bool hasTabs = getLineContainsTab(line);
     TabStops* tabStops = nullptr;
     Spanned* spannedText = dynamic_cast<Spanned*>(mText);
     if (hasTabs && spannedText != nullptr) {
         // Just checking this line should be good enough, tabs should be
         // consistent across all lines in a paragraph.
-        auto tabs = getParagraphSpans(spannedText, start, end, TabStopSpanFilter);
+        const int end = full ? getLineEnd(line) : getLineVisibleEnd(line);
+        auto tabs = getParagraphSpans(spannedText, getLineStart(line), end, TabStopSpanFilter);
         if (tabs.size() > 0) {
-            tabStops = new TabStops(TAB_INCREMENT, tabs); // XXX should reuse
+            tabStops = new TabStops(TAB_INCREMENT, tabs);
         }
     }
-    const Directions* directions = getLineDirections(line);
-    // Returned directions can actually be null
-    if (directions == nullptr) {
+    // Returned directions can actually be null (the 3-arg overload has no
+    // such guard — AOSP never checks there either).
+    if (getLineDirections(line) == nullptr) {
         delete tabStops;  // AOSP leaks this to GC; TextLine only borrows it
         return 0.f;
     }
-    const int dir = getParagraphDirection(line);
-
-    TextLine* tl = TextLine::obtain();
-    TextPaint& paint = mWorkPaint;
-    paint.set(*mPaint);
-    paint.setStartHyphenEdit(getStartHyphenEdit(line));
-    paint.setEndHyphenEdit(getEndHyphenEdit(line));
-    tl->set(&paint, mText, start, end, dir, directions, hasTabs, tabStops,
-            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
-            isFallbackLineSpacingEnabled());
-    if (isJustificationRequired(line)) {
-        tl->justify(mJustificationMode, getJustifyWidth(line));
-    }
-    const float width = tl->metrics(nullptr, nullptr, mUseBoundsForWidth, nullptr);
-    TextLine::recycle(tl);
+    const float width = getLineExtent(line, tabStops, full);
     delete tabStops;  // AOSP leaks this to GC; TextLine only borrows it
     return width;
 }

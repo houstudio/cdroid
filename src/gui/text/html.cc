@@ -594,7 +594,6 @@ private:
         }
         /* d == nullptr: no ImageGetter result AND no resolvable placeholder —
            the bare U+FFFC glyph stands in (the pre-placeholder behavior). */
-        (void)mImageGetter;
     }
 
     int getHtmlColor(const std::string& color) const {

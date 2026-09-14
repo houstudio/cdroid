@@ -187,6 +187,22 @@ static bool onTheHour(Calendar& c) {
             && c.get(Calendar::SECOND) == 0;
 }
 
+/*Calendar boilerplate shared by the bridge helpers: the default-locale
+  calendar positioned at a UTC millis (AOSP Calendar.getInstance() +
+  setTimeInMillis()), and the calendar-field date equality the AOSP
+  LocalDateTime comparisons reduce to (three call sites below).*/
+static std::unique_ptr<Calendar> calendarAt(int64_t millis) {
+    auto cal = Calendar::getInstance(Locale::getDefault());
+    cal->setTimeInMillis(millis);
+    return cal;
+}
+
+static bool sameDateFields(const Calendar& a, const Calendar& b) {
+    return a.get(Calendar::YEAR) == b.get(Calendar::YEAR)
+            && a.get(Calendar::MONTH) == b.get(Calendar::MONTH)
+            && a.get(Calendar::DAY_OF_MONTH) == b.get(Calendar::DAY_OF_MONTH);
+}
+
 // AOSP DateUtilsBridge.isThisYear.
 static bool isThisYear(Calendar& c) {
     auto now = Calendar::getInstance(Locale::getDefault());
@@ -196,9 +212,7 @@ static bool isThisYear(Calendar& c) {
 // AOSP DateUtilsBridge.fallOnDifferentDates / fallInSameMonth / fallInSameYear
 // and isDisplayMidnightUsingSkeleton (:165-187).
 static bool fallOnDifferentDates(Calendar& c1, Calendar& c2) {
-    return c1.get(Calendar::YEAR) != c2.get(Calendar::YEAR)
-            || c1.get(Calendar::MONTH) != c2.get(Calendar::MONTH)
-            || c1.get(Calendar::DAY_OF_MONTH) != c2.get(Calendar::DAY_OF_MONTH);
+    return !sameDateFields(c1, c2);
 }
 
 static bool fallInSameMonth(Calendar& c1, Calendar& c2) {
@@ -379,17 +393,14 @@ std::string formatDuration(int64_t millis, int abbrev) {
 
 // ---- same-day (AOSP formatSameDayTime, DateUtils.java:499) ------------------
 
-std::string formatSameDayTime(int64_t then, int64_t now, int dateStyle, int timeStyle) {    auto thenCal = Calendar::getInstance(Locale::getDefault());
-    thenCal->setTimeInMillis(then);
-    auto nowCal = Calendar::getInstance(Locale::getDefault());
-    nowCal->setTimeInMillis(now);
+std::string formatSameDayTime(int64_t then, int64_t now, int dateStyle, int timeStyle) {
+    auto thenCal = calendarAt(then);
+    auto nowCal = calendarAt(now);
 
     // AOSP getTimeInstance for the same day, getDateInstance otherwise; the
     // factories return a new DateFormat the caller owns.
     DateFormat* f;
-    if (thenCal->get(Calendar::YEAR) == nowCal->get(Calendar::YEAR)
-            && thenCal->get(Calendar::MONTH) == nowCal->get(Calendar::MONTH)
-            && thenCal->get(Calendar::DAY_OF_MONTH) == nowCal->get(Calendar::DAY_OF_MONTH)) {
+    if (sameDateFields(*thenCal, *nowCal)) {
         f = DateFormat::getTimeInstance(timeStyle);
     } else {
         f = DateFormat::getDateInstance(dateStyle);
@@ -404,13 +415,9 @@ std::string formatSameDayTime(int64_t then, int64_t now, int dateStyle, int time
 static bool isSameDate(int64_t oneMillis, int64_t twoMillis) {
     // AOSP compares LocalDateTime fields in the system zone; Calendar in the
     // default zone carries the same fields.
-    auto one = Calendar::getInstance(Locale::getDefault());
-    one->setTimeInMillis(oneMillis);
-    auto two = Calendar::getInstance(Locale::getDefault());
-    two->setTimeInMillis(twoMillis);
-    return one->get(Calendar::YEAR) == two->get(Calendar::YEAR)
-            && one->get(Calendar::MONTH) == two->get(Calendar::MONTH)
-            && one->get(Calendar::DAY_OF_MONTH) == two->get(Calendar::DAY_OF_MONTH);
+    auto one = calendarAt(oneMillis);
+    auto two = calendarAt(twoMillis);
+    return sameDateFields(*one, *two);
 }
 
 bool isToday(int64_t when) {
@@ -492,10 +499,8 @@ static int julianDayOf(const Calendar& cal) {
 
 // RelativeDateTimeFormatter.dayDistance: end's local day minus start's.
 static int dayDistance(int64_t startTime, int64_t endTime) {
-    auto startCal = Calendar::getInstance(Locale::getDefault());
-    startCal->setTimeInMillis(startTime);
-    auto endCal = Calendar::getInstance(Locale::getDefault());
-    endCal->setTimeInMillis(endTime);
+    auto startCal = calendarAt(startTime);
+    auto endCal = calendarAt(endTime);
     return julianDayOf(*endCal) - julianDayOf(*startCal);
 }
 
@@ -563,16 +568,14 @@ std::string relativeTimeSpanString(int64_t time, int64_t now, int64_t minResolut
         count = (int)(duration / WEEK_IN_MILLIS);
         unit = RelUnit::WEEKS;
     } else {
-        auto timeCalendar = Calendar::getInstance(Locale::getDefault());
-        timeCalendar->setTimeInMillis(time);
+        auto timeCalendar = calendarAt(time);
         // The duration is longer than a week and minResolution is not
         // WEEK_IN_MILLIS. Return the absolute date instead of relative time.
 
         // Bug 19822016: without an explicit year flag, show/hide the year
         // based on time vs now, not the current system time.
         if ((flags & (FORMAT_NO_YEAR | FORMAT_SHOW_YEAR)) == 0) {
-            auto nowCalendar = Calendar::getInstance(Locale::getDefault());
-            nowCalendar->setTimeInMillis(now);
+            auto nowCalendar = calendarAt(now);
             if (timeCalendar->get(Calendar::YEAR) != nowCalendar->get(Calendar::YEAR)) {
                 flags |= FORMAT_SHOW_YEAR;
             } else {
@@ -629,10 +632,8 @@ std::string getRelativeDateTimeString(Context* c, int64_t time, int64_t minResol
         transitionResolution = WEEK_IN_MILLIS;
     }
 
-    auto timeCalendar = Calendar::getInstance(Locale::getDefault());
-    timeCalendar->setTimeInMillis(time);
-    auto nowCalendar = Calendar::getInstance(Locale::getDefault());
-    nowCalendar->setTimeInMillis(now);
+    auto timeCalendar = calendarAt(time);
+    auto nowCalendar = calendarAt(now);
 
     // AOSP: Math.abs(dayDistance(time, now)) — one call, not three.
     const int days = std::abs(dayDistance(time, now));
@@ -744,15 +745,13 @@ static bool isExactlyMidnight(Calendar& c) {
 }
 
 static std::string formatDateRangeCore(int64_t startMs, int64_t endMs, int flags) {
-    auto startCalendar = Calendar::getInstance(Locale::getDefault());
-    startCalendar->setTimeInMillis(startMs);
+    auto startCalendar = calendarAt(startMs);
     // AOSP shares the Calendar reference for start == end; the pointer alias
     // below carries that (formatInterval compares addresses).
     Calendar* endCalendar = startCalendar.get();
     std::unique_ptr<Calendar> endCalendarOwner;
     if (startMs != endMs) {
-        endCalendarOwner = Calendar::getInstance(Locale::getDefault());
-        endCalendarOwner->setTimeInMillis(endMs);
+        endCalendarOwner = calendarAt(endMs);
         endCalendar = endCalendarOwner.get();
     }
 
