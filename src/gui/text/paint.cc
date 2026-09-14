@@ -100,6 +100,7 @@ void Paint::set(const Paint&o){
     mWordSpace = o.mWordSpace;
     mLetterSpacing = o.mLetterSpacing;
     mFontFeatureSettings = o.mFontFeatureSettings;
+    mElegantTextHeight = o.mElegantTextHeight;   // AOSP nSet copies every field
     // Clone (not share) the MinikinPaint, matching android Paint's nSet deep-copy. Without this,
     // per-line mutations on a work paint (e.g. justify's setWordSpacing/setLetterSpacing) would
     // leak into the source paint's shared MinikinPaint and contaminate later lines.

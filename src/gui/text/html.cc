@@ -585,7 +585,11 @@ private:
         const int len = (int)mBuilder.length();
         mBuilder.append(u'￼');/*0xFFFC*/
         if (d != nullptr) {
-            mBuilder.setSpan(new ImageSpan(d, valign), len, (int)mBuilder.length(),
+            /*AOSP startImg: new ImageSpan(d, src) — the src string rides in
+              the span so toHtml can emit it back (<img src="..."> round-trip).
+              The valign parsing above is CDROID's align extension, passed
+              through the 3-arg constructor variant.*/
+            mBuilder.setSpan(new ImageSpan(d, src, valign), len, (int)mBuilder.length(),
                                 Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         /* d == nullptr: no ImageGetter result AND no resolvable placeholder —
@@ -905,8 +909,11 @@ void Html::withinParagraph(std::stringstream& out,const Spanned& text, int start
                 out<<"\">";
             }
             if (dynamic_cast<const ImageSpan*>(style[j])) {
+                // AOSP appends getSource() directly; a null Java source
+                // (bare-Drawable/resource-id span) prints as "null".
+                const ImageSpan* imgSpan = dynamic_cast<const ImageSpan*>(style[j]);
                 out<<"<img src=\"";
-                out<<dynamic_cast<const ImageSpan*>(style[j])->getSource();
+                out<<(imgSpan->getSource().empty() ? "null" : imgSpan->getSource().c_str());
                 out<<"\">";
 
                 // Don't output the placeholder character underlying the image.

@@ -1152,15 +1152,23 @@ bool TextUtils::isPunctuation(int codePoint) {
 int TextUtils::getLayoutDirectionFromLocale(const Locale& locale) {
     if (!(locale == Locale::ROOT)) {
         const std::string script = locale.getScript();
+        // ICU's RTL script set (u_isRTL): Arab, Hebr, Thaa, Nkoo (the nqo
+        // language's own script — the language fallback below already lists
+        // nqo, so an explicit Nkoo script must agree), Samr, Mand, Adlm,
+        // Aran. Syrc/Rohg are ICU-RTL too but have no likely-subtag entry
+        // in kLikelyScripts; left out until the tables carry them.
         if (script == "Arab" || script == "Hebr" || script == "Thaa"
-                || script == "Aran" || script == "Samr" || script == "Mand"
-                || script == "Adlm") {
+                || script == "Nkoo" || script == "Aran" || script == "Samr"
+                || script == "Mand" || script == "Adlm") {
             return LayoutDirection::RTL;
         }
         if (script.empty()) {
             const std::string language = locale.getLanguage();
-            // Languages whose default script is RTL (ULocale likelihood data).
-            for (const char* rtl : {"ar", "dv", "fa", "he", "iw", "nqo",
+            // Languages whose default script is RTL — kept in lock-step with
+            // kLikelyScripts (content/LocaleList.cc): every language mapping
+            // to an RTL script there must appear here. "ks" (Kashmiri →
+            // Arab) was missing; iw/nqo are Java/ISO legacy codes ICU keeps.
+            for (const char* rtl : {"ar", "dv", "fa", "he", "iw", "ks", "nqo",
                                     "ps", "sd", "ug", "ur", "yi"}) {
                 if (language == rtl) return LayoutDirection::RTL;
             }

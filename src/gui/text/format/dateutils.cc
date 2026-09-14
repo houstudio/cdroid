@@ -32,22 +32,43 @@
 #endif
 #include <cstdio>
 #include <memory>
+#include <mutex>
 
 namespace cdroid{
 namespace DateUtils{
 
 // ---- name getters (AOSP :206/:234/:251) ------------------------------------
-// LENGTH_SHORTEST→tiny, LENGTH_SHORT/MEDIUM/SHORTER→short, else wide (the
-// CDROID DateFormatSymbols three-tier; AOSP's MEDIUM maps through ICU's
-// abbreviated tier, which our short tier carries).
+/*AOSP's width switch, transcribed: LONG→WIDE, SHORTEST→NARROW, and
+  MEDIUM/SHORT/SHORTER plus every undefined value→ABBREVIATED ("in most
+  languages LENGTH_SHORT returns the same as LENGTH_MEDIUM"). The old
+  `abbrev >= LENGTH_SHORT` range test sent LENGTH_MEDIUM (20) and undefined
+  values to the wide tier. CDROID's DateFormatSymbols is three-tier, so
+  WIDE→get*(), ABBREVIATED→getShort*(), NARROW→getTiny*().*/
+enum NameWidth { WIDTH_WIDE, WIDTH_ABBREVIATED, WIDTH_NARROW };
+
+static NameWidth widthFor(int abbrev) {
+    switch (abbrev) {
+        case LENGTH_LONG:     return WIDTH_WIDE;
+        case LENGTH_SHORTEST: return WIDTH_NARROW;
+        case LENGTH_MEDIUM:
+        case LENGTH_SHORT:
+        case LENGTH_SHORTER:
+        default:              return WIDTH_ABBREVIATED;
+    }
+}
+
 std::string getDayOfWeekString(int dayOfWeek, int abbrev) {
     const DateFormatSymbols dfs(Locale::getDefault());
-    const std::vector<std::string>& names = (abbrev == LENGTH_SHORTEST) ? dfs.getTinyWeekdays()
-            : (abbrev >= LENGTH_SHORT) ? dfs.getShortWeekdays() : dfs.getWeekdays();
+    const std::vector<std::string>* names = nullptr;
+    switch (widthFor(abbrev)) {
+        case WIDTH_NARROW:     names = &dfs.getTinyWeekdays(); break;
+        case WIDTH_ABBREVIATED:names = &dfs.getShortWeekdays(); break;
+        default:               names = &dfs.getWeekdays(); break;
+    }
     // Calendar weekday indices are 1-based (SUNDAY..SATURDAY) over an array
     // whose slot 0 is the empty leading entry.
-    if (dayOfWeek < 1 || dayOfWeek >= (int)names.size()) return std::string();
-    return names[dayOfWeek];
+    if (dayOfWeek < 1 || dayOfWeek >= (int)names->size()) return std::string();
+    return (*names)[dayOfWeek];
 }
 
 std::string getAMPMString(int ampm) {
@@ -59,10 +80,14 @@ std::string getAMPMString(int ampm) {
 
 std::string getMonthString(int month, int abbrev) {
     const DateFormatSymbols dfs(Locale::getDefault());
-    const std::vector<std::string>& names = (abbrev == LENGTH_SHORTEST) ? dfs.getTinyMonths()
-            : (abbrev >= LENGTH_SHORT) ? dfs.getShortMonths() : dfs.getMonths();
-    if (month < 0 || month >= (int)names.size()) return std::string();
-    return names[month];
+    const std::vector<std::string>* names = nullptr;
+    switch (widthFor(abbrev)) {
+        case WIDTH_NARROW:     names = &dfs.getTinyMonths(); break;
+        case WIDTH_ABBREVIATED:names = &dfs.getShortMonths(); break;
+        default:               names = &dfs.getMonths(); break;
+    }
+    if (month < 0 || month >= (int)names->size()) return std::string();
+    return (*names)[month];
 }
 
 // ---- elapsed time (AOSP formatElapsedTime, body verbatim) -------------------
@@ -88,6 +113,12 @@ std::string formatElapsedTime(std::string* recycle, int64_t elapsedSeconds) {
     std::string out;
 #ifdef ENABLE_I18N
     {
+        /*The engine cache is process-wide (Java guards its equivalents with
+          synchronized statics); formatElapsedTime is callable from any
+          thread, so the tag/cache pair takes a mutex (LocaleList's
+          DefaultState pattern).*/
+        static std::mutex sEngineMutex;
+        std::lock_guard<std::mutex> engineLock(sEngineMutex);
         static std::string tag;
         static std::unique_ptr<i18n::DateTimeFormat> cache;
         const std::string cur = Locale::getDefault().toLanguageTag();
@@ -248,33 +279,43 @@ static std::string toSkeleton(Calendar& startCalendar, Calendar& endCalendar, in
     return builder;
 }
 
-std::string formatDateTime(Context* /*context*/, int64_t millis, int flags) {
-    auto calendar = Calendar::getInstance(Locale::getDefault());
-    calendar->setTimeInMillis(millis);
-    const std::string skeleton = toSkeleton(*calendar, *calendar, flags);
-    const Locale locale = Locale::getDefault();
-    const std::string pattern = DateFormat::getBestDateTimePattern(locale, skeleton);
-    SimpleDateFormat formatter(pattern, locale);
-    return formatter.format(calendar->getTimeInMillis());
+std::string formatDateTime(Context* context, int64_t millis, int flags) {
+    /*AOSP: formatDateTime(context, millis, flags) == formatDateRange(context,
+      millis, millis, flags) — which includes the user-preference 12/24
+      forcing (a bare FORMAT_SHOW_TIME resolves through
+      DateFormat.is24HourFormat, not the locale's 'j' default). The old
+      direct toSkeleton path skipped that forcing, so a SHOW_TIME-only call
+      always followed the locale's hour cycle.*/
+    return formatDateRange(context, millis, millis, flags);
 }
 
 // ---- duration (AOSP formatDuration, DateUtils.java:384/:400) ----------------
 
-// ICU MeasureFormat WIDE/SHORT/NARROW stand-in for the duration units, same
-// en-US unit-word convention as Formatter's elapsed-time table (see
-// formatter.cc): non-en locales get the English units until an i18n
-// measure-word table exists.
-static std::string durationMeasure(int64_t value, int width,
+/*AOSP formats through ICU MeasureFormat with the locale's unit words per
+  WIDE/SHORT/NARROW. The engine's MEASURE_FORMAT_PATTERN table currently
+  carries the SHORT tier only (4 locales, mined from ICU — see
+  scripts/extract_measure_units.cc), so SHORT routes through I18nBridge
+  (formatter.cc's measureShort uses the same bridge) and WIDE/NARROW keep
+  the inline en-US words until wide/narrow unit data exists. A bridge miss
+  (locale/unit not in the table) falls back to the inline words too, so
+  uncovered locales keep today's behavior.*/
+static std::string durationMeasure(int64_t value, int width, const char* unit,
         const char* wideSingle, const char* widePlural,
         const char* shortUnit, const char* narrowUnit) {
     char buf[48];
     switch (width) {
+        case 1: {  // SHORT
+#ifdef ENABLE_I18N
+            const std::string formatted =
+                    I18nBridge::measureUnitShort(Locale::getDefault(), (int)value, unit);
+            if (!formatted.empty()) return formatted;
+#endif
+            snprintf(buf, sizeof(buf), "%lld %s", (long long)value, shortUnit);
+            break;
+        }
         case 0:  // WIDE
             snprintf(buf, sizeof(buf), "%lld %s", (long long)value,
                     value == 1 ? wideSingle : widePlural);
-            break;
-        case 1:  // SHORT
-            snprintf(buf, sizeof(buf), "%lld %s", (long long)value, shortUnit);
             break;
         default: // NARROW
             snprintf(buf, sizeof(buf), "%lld%s", (long long)value, narrowUnit);
@@ -306,13 +347,13 @@ std::string formatDuration(int64_t millis, int abbrev) {
     }
     if (millis >= HOUR_IN_MILLIS) {
         const int hours = (int)((millis + 1800000) / HOUR_IN_MILLIS);
-        return durationMeasure(hours, width, "hour", "hours", "hr", "h");
+        return durationMeasure(hours, width, "hour", "hour", "hours", "hr", "h");
     } else if (millis >= MINUTE_IN_MILLIS) {
         const int minutes = (int)((millis + 30000) / MINUTE_IN_MILLIS);
-        return durationMeasure(minutes, width, "minute", "minutes", "min", "m");
+        return durationMeasure(minutes, width, "minute", "minute", "minutes", "min", "m");
     } else {
         const int seconds = (int)((millis + 500) / SECOND_IN_MILLIS);
-        return durationMeasure(seconds, width, "second", "seconds", "sec", "s");
+        return durationMeasure(seconds, width, "second", "second", "seconds", "sec", "s");
     }
 }
 
@@ -555,7 +596,14 @@ std::string getRelativeDateTimeString(Context* c, int64_t time, int64_t minResol
     }
 
     const int64_t now = SystemClock::currentTimeMillis();
-    const int64_t duration = (now - time) < 0 ? -(now - time) : (now - time);
+    /*AOSP: Math.abs(now - time). Java's subtraction wraps; C++ signed
+      overflow and the INT64_MIN negation are UB, so wrap in uint64 and map
+      back — identical bits to Java for every |diff| < 2^63, and a 2^63
+      difference lands on INT64_MIN exactly like Java's abs does.*/
+    const uint64_t rawDiff = (uint64_t)now - (uint64_t)time;
+    const int64_t duration = rawDiff <= (uint64_t)INT64_MAX
+            ? (int64_t)rawDiff
+            : (int64_t)(UINT64_MAX - rawDiff + 1);
     // It doesn't make much sense to have results like: "1 week ago, 10:50 AM".
     if (transitionResolution > WEEK_IN_MILLIS) {
         transitionResolution = WEEK_IN_MILLIS;

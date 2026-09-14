@@ -110,19 +110,26 @@ SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string&text
 }
 
 SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string&text, const ParcelableSpan* what, int flags){
-    const size_t start=mText.length();
-    const size_t end=start+text.length();
-    mText.append(text);
-    setSpan(what,start,end,flags);
+    /*Route the text through replace (TextWatchers fire, filters run — see
+      the plain u16string overload above); the old raw mText.append bypassed
+      the whole mutation pipeline. Mirrors the CharSequence span-variants
+      below, which already append-then-setSpan.*/
+    const int start = (int)mText.length();
+    String s(text);
+    replace((int)mText.length(), (int)mText.length(), s);
+    if (what) {
+        setSpan(what, start, (int)mText.length(), flags);
+    }
     return *this;
 }
 
 SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string& text, const std::vector<const ParcelableSpan*>& whats, int flags){
-    const size_t start=mText.length();
-    const size_t end=start+text.length();
-    mText.append(text);
-    for(auto span:whats){
-        setSpan(span,start,end,flags);
+    const int start = (int)mText.length();
+    String s(text);
+    replace((int)mText.length(), (int)mText.length(), s);
+    const int end = (int)mText.length();
+    for(const ParcelableSpan* what : whats){
+        if (what) setSpan(what, start, end, flags);
     }
     return *this;
 }
