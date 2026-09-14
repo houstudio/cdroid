@@ -300,9 +300,19 @@ TEST(CoreTextUtilsTest, testToUpperCase) {
         EXPECT_EQ(Spanned::SPAN_INCLUSIVE_INCLUSIVE, spanned->getSpanFlags(resultSpans[0]));
     }
     {
-        // already-uppercase text: AOSP asserts the SAME instance comes back.
+        // Already-uppercase text: AOSP can return the same instance (GC-safe
+        // identity); under the raw-pointer owned-return contract callers like
+        // InputFilter::AllCaps delete the input and keep the result, so the
+        // no-change path must also return a FRESH object with equal content —
+        // never the borrowed source (that handed AllCaps freed memory).
         String str(u"ABC");
-        EXPECT_EQ(&str, TextUtils::toUpperCase(&str, false));
+        CharSequence* upper = TextUtils::toUpperCase(&str, false);
+        EXPECT_NE(&str, upper);
+        ASSERT_EQ(str.length(), upper->length());
+        for (int i = 0; i < str.length(); i++) {
+            EXPECT_EQ(str.charAt(i), upper->charAt(i));
+        }
+        delete upper;
     }
 }
 

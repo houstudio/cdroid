@@ -627,7 +627,6 @@ CharSequence* TextUtils::toUpperCase(const CharSequence* source, bool copySpans)
     const std::u16string s = source->toUTF16();
     std::u16string out;
     out.reserve(s.size());
-    bool changed = false;
     for (size_t i = 0; i < s.size(); ) {
         char16_t c = s[i];
         int cp;
@@ -640,13 +639,6 @@ CharSequence* TextUtils::toUpperCase(const CharSequence* source, bool copySpans)
             i += 1;
         }
         int upper = Character::toUpperCase(cp);
-        if (upper != cp) {
-            /*AOSP CaseMap/Edits: `return edits.hasChanges() ? result : source;`
-              — an already-uppercase input comes back as the SAME object. Track
-              it so the no-change path below can return the source itself
-              (borrowed: the caller does not own that instance).*/
-            changed = true;
-        }
         if (upper <= 0xFFFF) {
             out.push_back((char16_t)upper);
         } else {
@@ -656,10 +648,14 @@ CharSequence* TextUtils::toUpperCase(const CharSequence* source, bool copySpans)
         }
     }
 
-    if (!changed) {
-        return const_cast<CharSequence*>(source);
-    }
-
+    /* Ownership contract: this function returns an OWNED CharSequence* the
+       caller deletes (InputFilter::AllCaps does `upper = toUpperCase(slice);
+       delete slice; return upper;`). AOSP CaseMap/Edits can return the SAME
+       source on no change because Java has GC; under raw pointers a borrowed
+       return made AllCaps hand back freed memory whenever the input had no
+       uppercase mapping (myicu leaves e.g. U+FB01 ligatures, astral Ll
+       letters unchanged) — so the no-change path also builds a fresh object.
+       The content is then identical to the source; only the identity differs. */
     if (spanned != nullptr) {
         // Clone owned spans into the result (copySpansFrom handles ownership) so
         // the source and this transformed CharSequence never share an owned span.

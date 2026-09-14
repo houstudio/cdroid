@@ -346,3 +346,29 @@ TEST(CtsSpannableStringBuilderTest, testReplace_discardsParagraphSpanIfNoNewLine
     auto spans = dest.getSpans(0, (int)dest.length(), make_span_filter<AlignmentSpan>());
     EXPECT_EQ(0u, spans.size());
 }
+
+// AOSP removeSpansForChange only ever removes SPAN_EXCLUSIVE_EXCLUSIVE spans
+// that lie inside the replaced region (SpannableStringBuilder.java: flag gate +
+// would-become-empty). Regression: the first port of the sweep dropped the
+// gate, so a select-all + DEL erased INCLUSIVE_INCLUSIVE whole-text spans
+// (the ChangeWatchers) with the text, freezing the UI until the next setText.
+TEST(CtsSpannableStringBuilderTest, testRemoveSpansForChangeFlagGate) {
+    SpannableStringBuilder b(u"hello");
+    UnderlineSpan* whole = new UnderlineSpan;   // ChangeWatcher stand-in
+    UnderlineSpan* inner = new UnderlineSpan;
+    b.setSpan(whole, 0, 5, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
+    b.setSpan(inner, 1, 4, Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+
+    b.replace(0, 5, String(u""));               // select-all + DEL
+
+    EXPECT_EQ(0, (int) b.length());
+    // The inclusive-inclusive watcher survives, collapsed to [0,0).
+    EXPECT_EQ(0, b.getSpanStart(whole));
+    EXPECT_EQ(0, b.getSpanEnd(whole));
+    // The exclusive-exclusive span strictly inside the region was removed
+    // (and disposed by the sweep — never touch `inner` afterwards).
+    std::vector<const ParcelableSpan*> spans =
+            b.getSpans(0, 0, make_span_filter<ParcelableSpan>());
+    ASSERT_EQ(1u, spans.size());
+    EXPECT_EQ(whole, spans[0]);
+}

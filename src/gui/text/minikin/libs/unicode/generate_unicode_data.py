@@ -21,7 +21,7 @@ import os, re
 HERE = os.path.dirname(os.path.abspath(__file__))
 INC  = os.path.join(HERE, "../../", "include", "myicu", "unicode")
 UCD  = os.environ.get("UCD_DIR", "/usr/share/unicode")
-OUT  = os.path.join(HERE, "unicode_data_generated.cpp")
+OUT  = os.path.join(HERE, "unicode_data_props.cpp")  # the file minikin/CMakeLists compiles
 MAX_CP = int(os.environ.get("UNICODE_MAX_CP", "0x10FFFF"), 0)
 
 # UCharCategory: UCD 2-letter -> myicu int (matches uchar.h UCharCategory enum)
@@ -197,7 +197,8 @@ def main():
         setprop(s, e, lambda p, bit=bit: p.__setitem__(6, p[6] | (1 << bit)))
 
     # 5b) PropList.txt — the rest of the binary props (White_Space, Hex_Digit,
-    #     Ideographic, Bidi_Mirrored, ...). These are NOT in DerivedCoreProperties.
+    #     Ideographic, ...). These are NOT in DerivedCoreProperties
+    #     (Bidi_Mirrored is in BidiMirroring.txt — see 5d).
     for s, e, val in each_prop_range(os.path.join(UCD, "PropList.txt")):
         key = BIN_ALIASES.get(val)
         if not key or key not in BIN_BIT: continue
@@ -215,6 +216,17 @@ def main():
         if not key or key not in BIN_BIT: continue
         bit = BIN_BIT[key]
         setprop(s, e, lambda p, bit=bit: p.__setitem__(6, p[6] | (1 << bit)))
+
+    # 5d) BidiMirroring.txt — Bidi_Mirrored=Yes pairs (the property lives HERE,
+    #     not in PropList.txt despite the 5b comment's claim; the first field of
+    #     each "xxxx; yyyy" pair is a mirrored code point).
+    mir_bit = BIN_BIT['BIDI_MIRRORED']
+    with open(os.path.join(UCD, "BidiMirroring.txt"), encoding='utf-8') as f:
+        for line in f:
+            line = line.split('#')[0].strip()
+            if not line or ';' not in line: continue
+            cp = int(line.split(';')[0].strip(), 16)
+            setprop(cp, cp, lambda p, bit=mir_bit: p.__setitem__(6, p[6] | (1 << bit)))
 
     # 6) Merge adjacent codepoints with identical property tuples -> ranges
     cps = sorted(props)

@@ -294,9 +294,23 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
     std::vector<std::pair<const ParcelableSpan*, std::pair<int, int>>> doomed;
     if (replacedLen > 0) {
         for (const auto& r : mSpans) {
+            /* AOSP removeSpansForChange gates on
+               (flags & SPAN_EXCLUSIVE_EXCLUSIVE) == SPAN_EXCLUSIVE_EXCLUSIVE:
+               ONLY exclusive-exclusive spans are ever removed here. The first
+               cut of this sweep dropped the gate, so a select-all + DEL erased
+               the INCLUSIVE_INCLUSIVE whole-text ChangeWatchers (and any other
+               flag flavour) along with the text — the buffer kept editing with
+               zero watchers: no reflow, no invalidate, frozen UI until the
+               next setText. AOSP has no "was non-empty" requirement either —
+               a collapsed exclusive-exclusive span inside the region goes
+               too; the zero-length spans that must survive (Selection
+               markers, watchers) are MARK/POINT-anchored and never
+               exclusive-exclusive. */
+            const bool exclusiveExclusive = (r.flags & Spanned::SPAN_EXCLUSIVE_EXCLUSIVE)
+                    == Spanned::SPAN_EXCLUSIVE_EXCLUSIVE;
             const bool inside = r.start >= st && r.end <= en;
             const bool collapses = insertLen == 0 || r.start > st || r.end < en;
-            if (inside && collapses && r.start != r.end) {
+            if (exclusiveExclusive && inside && collapses) {
                 doomed.push_back({r.span, {r.start, r.end}});
             }
         }

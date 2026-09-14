@@ -401,9 +401,13 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
             currentFontRef = glyphFontRef;
             // 从 Font 获取底层的 MinikinFont
             currentMinikinFont = glyphFontRef->typeface().get();
-            if (mTypeface != nullptr && mMinikinPaint != nullptr) {
+            /* setTypeface(nullptr) is the AOSP-legal "use the default" state:
+               resolve through effectiveTypeface() like every metrics reader —
+               the old raw mTypeface gate dropped the run's first glyph and
+               drew the rest in whatever scaled font cairo had left set. */
+            if (mMinikinPaint != nullptr) {
                 // 使用 Typeface::getScaledFont，传入布局中实际使用的 MinikinFont
-                auto scaledFont = mTypeface->getScaledFont(*mMinikinPaint, currentMinikinFont);
+                auto scaledFont = effectiveTypeface()->getScaledFont(*mMinikinPaint, currentMinikinFont);
                 currentCairoFontFace = std::dynamic_pointer_cast<Cairo::FtScaledFont>(scaledFont);
                 if (currentCairoFontFace) {
                     c.set_scaled_font(currentCairoFontFace);
@@ -457,8 +461,8 @@ void Paint::drawTextOnPath(Canvas& canvas, const char16_t* text, int index, int 
         const std::shared_ptr<const minikin::Font>& glyphFontRef = layout.getFontRef(glyphIdx);
         const minikin::MinikinFont* minikinFont = glyphFontRef->typeface().get();
         
-        if (mTypeface != nullptr && mMinikinPaint != nullptr) {
-            auto scaledFont = mTypeface->getScaledFont(*mMinikinPaint, minikinFont);
+        if (mMinikinPaint != nullptr) {
+            auto scaledFont = effectiveTypeface()->getScaledFont(*mMinikinPaint, minikinFont);
             Cairo::RefPtr<Cairo::FtScaledFont> cairoFont = std::dynamic_pointer_cast<Cairo::FtScaledFont>(scaledFont);
             if (cairoFont) {
                 canvas.set_scaled_font(cairoFont);

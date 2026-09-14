@@ -58,10 +58,15 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
         mEllipsizedCount = 0;
         trust = true;
     } else {
-        replaceWith(TextUtils::ellipsize(source, *paint, ellipsizedWidth, ellipsize, true,
-                    [this](int start, int end){ ellipsized(start, end); }),
-                paint, outerWidth, align, spacingMult, spacingAdd);
-        mOwnsText = true;   // the ellipsized copy came from us
+        CharSequence* ellipsizedText = TextUtils::ellipsize(source, *paint,
+                ellipsizedWidth, ellipsize, true,
+                [this](int start, int end){ ellipsized(start, end); });
+        replaceWith(ellipsizedText, paint, outerWidth, align, spacingMult, spacingAdd);
+        /* ellipsize returns the SOURCE pointer itself when the text already
+           fits (width <= avail) — claim ownership only of a copy it actually
+           allocated; claiming the caller's text double-frees it at teardown
+           (AOSP is GC-safe returning the same reference). */
+        mOwnsText = (ellipsizedText != source);
 
         mEllipsizedWidth = ellipsizedWidth;
         trust = false;
@@ -179,10 +184,13 @@ BoringLayout::BoringLayout(CharSequence* text, TextPaint* paint, int width, Alig
         mEllipsizedCount = 0;
         trust = true;
     } else {
-        replaceWith(TextUtils::ellipsize(text, *paint, ellipsizedWidth, ellipsize, true,
-                    [this](int start, int end){ ellipsized(start, end); }),
-                    paint, width, align, spacingMult, spacingAdd);
-        mOwnsText = true;   // the ellipsized copy came from us; ~BoringLayout frees it
+        CharSequence* ellipsizedText = TextUtils::ellipsize(text, *paint,
+                ellipsizedWidth, ellipsize, true,
+                [this](int start, int end){ ellipsized(start, end); });
+        replaceWith(ellipsizedText, paint, width, align, spacingMult, spacingAdd);
+        /* Same fit-early-out as above: only a genuinely allocated ellipsized
+           copy is ours to free (~BoringLayout); the input pointer is not. */
+        mOwnsText = (ellipsizedText != text);
 
         mEllipsizedWidth = ellipsizedWidth;
         trust = false;

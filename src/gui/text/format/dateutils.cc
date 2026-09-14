@@ -97,12 +97,20 @@ std::string formatElapsedTime(std::string* recycle, int64_t elapsedSeconds) {
             cache.reset(new i18n::DateTimeFormat(i18n::AvailableDateTimeFormatPattern::FULL, info));
         }
         i18n::I18nStatus status = i18n::I18nStatus::ISUCCESS;
-        // The engine takes milliseconds; H:MM:SS when hours are present,
-        // MM:SS otherwise (AOSP's two format strings).
-        out = cache->FormatElapsedDuration(
-                (int32_t)((hours * 3600 + minutes * 60 + seconds) * 1000),
-                (hours > 0) ? i18n::ELAPSED_HOUR_MINUTE_SECOND : i18n::ELAPSED_MINUTE_SECOND,
-                status);
+        // The engine takes int32 milliseconds; totalMs overflows past
+        // 2147483 s (~24.86 days) — embedded uptimes reach that in weeks.
+        // Take the localized engine only inside its range, plain fallback
+        // beyond (AOSP formats the broken-down longs directly, so this only
+        // affects which formatter spells the same H:MM:SS).
+        const int64_t totalMs =
+                (int64_t)(hours * 3600 + minutes * 60 + seconds) * 1000;
+        if (totalMs <= INT32_MAX) {
+            out = cache->FormatElapsedDuration(
+                    (int32_t)totalMs,
+                    (hours > 0) ? i18n::ELAPSED_HOUR_MINUTE_SECOND
+                                : i18n::ELAPSED_MINUTE_SECOND,
+                    status);
+        }
         if (status == i18n::I18nStatus::ISUCCESS && !out.empty()) {
             if (recycle) { *recycle = out; return *recycle; }
             return out;

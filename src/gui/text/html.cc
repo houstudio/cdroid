@@ -550,7 +550,14 @@ private:
             // bounds. Without this the bare U+FFFC replacement char renders as a
             // tofu box where the picture belongs.
             d = App::getInstance().getDrawable(internal::R::drawable::unknown_image);
-            d->setBounds(0, 0, d->getIntrinsicWidth(), d->getIntrinsicHeight());
+            /* AOSP throws NotFoundException here; CDROID's getDrawable returns
+               nullptr on a resolution miss (an app pak built from stripped res,
+               a density-bucket miss — unknown_image has no default bucket), and
+               dereferencing that crashed HTML inflation itself. Fall back to the
+               U+FFFC glyph, the documented old behavior, instead. */
+            if (d != nullptr) {
+                d->setBounds(0, 0, d->getIntrinsicWidth(), d->getIntrinsicHeight());
+            }
         }
 
         // 解析对齐参数：优先使用 img 的 align 属性，其次在 style 中解析 vertical-align
@@ -577,8 +584,12 @@ private:
 
         const int len = (int)mBuilder.length();
         mBuilder.append(u'￼');/*0xFFFC*/
-        mBuilder.setSpan(new ImageSpan(d, valign), len, (int)mBuilder.length(),
-                            Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (d != nullptr) {
+            mBuilder.setSpan(new ImageSpan(d, valign), len, (int)mBuilder.length(),
+                                Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        /* d == nullptr: no ImageGetter result AND no resolvable placeholder —
+           the bare U+FFFC glyph stands in (the pre-placeholder behavior). */
         (void)mImageGetter;
     }
 
