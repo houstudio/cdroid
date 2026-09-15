@@ -89,6 +89,11 @@ void PropertyValuesHolder::setupSetterAndGetter(void*target){
     if(mPropertyName.empty())return;
     if(mProperty==nullptr){
         mProperty = Property::fromName(mPropertyName);
+        if (mProperty == nullptr) {
+            // AOSP: loud error, the animation becomes a no-op instead of crashing.
+            LOGE("No property named \"%s\" registered in Property::fromName", mPropertyName.c_str());
+            return;
+        }
         mValueType= mProperty->getType();
     }
 }

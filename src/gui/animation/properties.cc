@@ -140,12 +140,15 @@ public:
     __BACKGROUND_COLOR():Property("backgroundColor",COLOR_TYPE){}
     AnimateValue get(void* object)const override{
         ColorDrawable*cd = dynamic_cast<ColorDrawable*>(((View*)object)->getBackground());
-        LOGV("%p backgroundColor=%x",object,cd->getColor());
+        if (cd == nullptr) {
+            LOGE("backgroundColor property: background is not a ColorDrawable");
+            return 0;
+        }
         return cd->getColor();
     }
     void set(void* object,const AnimateValue& value)const override{
         ColorDrawable*cd = dynamic_cast<ColorDrawable*>(((View*)object)->getBackground());
-        LOGV("%p color=%.3f",object,GET_VARIANT(value,int));
+        if (cd == nullptr) return;
         cd->mutate()->setColor(GET_VARIANT(value,int));
     }
 };
