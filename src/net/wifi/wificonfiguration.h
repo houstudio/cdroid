@@ -89,6 +89,13 @@ public:
         static constexpr int SAE    = 3;
     };
 
+    /* Soft AP band selection (WifiConfiguration#AP_BAND_*, @deprecated in
+     * favor of SoftApConfiguration but kept for the legacy startSoftAp). */
+    static constexpr int AP_BAND_2GHZ  = 0;
+    static constexpr int AP_BAND_5GHZ  = 1;
+    static constexpr int AP_BAND_60GHZ = 2;
+    static constexpr int AP_BAND_ANY   = -1;
+
     /* Canonical security type list (shared with WifiInfo). */
     static constexpr int SECURITY_TYPE_UNKNOWN = -1;
     static constexpr int SECURITY_TYPE_OPEN = 0;
@@ -136,6 +143,9 @@ public:
 
     std::string dhcpServer;
     std::string defaultGwMacAddress;
+    /* Soft AP operating band/channel (AP_BAND_*; channel 0 = auto). */
+    int apBand = AP_BAND_2GHZ;
+    int apChannel = 0;
     bool validatedInternetAccess = false;
     int creatorUid = -1;
     int lastConnectUid = -1;

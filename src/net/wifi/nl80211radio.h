@@ -23,6 +23,18 @@ public:
 
     std::vector<ScanResult> getScanResults(const std::string& iface) override;
 
+    /*
+     * Create a dedicated AP-mode interface (AOSP's wificond
+     * createApIface counterpart, the product shape behind WifiManager's
+     * ap0). Issues NL80211_CMD_NEW_INTERFACE (IFTYPE_AP) on the wiphy that
+     * owns radioInterface; hostapd then manages the new interface. Uses
+     * its own socket + family resolve so privilege failure cannot disturb
+     * the scan instance.
+     * @return false with *error filled (kernel wording preserved).
+     */
+    static bool createApInterface(const std::string& radioInterface,
+            const std::string& apInterface, std::string* error);
+
     /* ---- pure IE helpers (unit-testable) ---- */
     /* Split a beacon/probe IE stream (id, len, bytes...) into records. */
     static std::vector<ScanResult::InformationElement> parseIeStream(

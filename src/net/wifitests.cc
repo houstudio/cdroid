@@ -1,18 +1,32 @@
 /*
  * wifitests — self-contained pure-logic tests for the cdwifi stack: reply
- * parsers, WifiSsid codec, signal-level math, auth-type mapping. No
- * wpa_supplicant needed. Exit code = number of failed checks.
+ * parsers, WifiSsid codec, signal-level math, auth-type mapping, SoftAp
+ * configuration + hostapd.conf rendering. No wpa_supplicant/hostapd daemon
+ * needed. Exit code = number of failed checks.
  */
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fstream>
+#include <functional>
 #include <sstream>
 #include <string>
 
+#include <macaddress.h>
+#include <natcontroller.h>
+#include <wifi/hostapdclient.h>
+#include <wifi/softapcapability.h>
+#include <wifi/softapconfigstore.h>
+#include <wifi/softapconfiguration.h>
 #include <wifi/supplicantclient.h>
 #include <wifi/supplicantstate.h>
 #include <wifi/wifimanager.h>
 #include <wifi/wparesponseparser.h>
 
+using cdroid::HostapdClient;
+using cdroid::MacAddress;
 using cdroid::ScanResult;
+using cdroid::SoftApConfiguration;
 using cdroid::SupplicantClient;
 using cdroid::SupplicantEvent;
 using cdroid::SupplicantState;
@@ -300,6 +314,505 @@ static void testSupplicantState() {
     CHECK(threw);
 }
 
+static void testMacAddress() {
+    CHECK_EQ(MacAddress::fromString("02:00:11:22:33:44").toString(),
+             std::string("02:00:11:22:33:44"));
+    /* dash and bare-hex forms canonicalize to colon-separated lowercase */
+    CHECK_EQ(MacAddress::fromString("02-00-11-22-33-44").toString(),
+             std::string("02:00:11:22:33:44"));
+    CHECK_EQ(MacAddress::fromString("020011223344").toString(),
+             std::string("02:00:11:22:33:44"));
+    /* malformed inputs are the Java-null sentinel (empty) */
+    CHECK_EQ(MacAddress::fromString("02:00:11:22:33").toString(), std::string());
+    CHECK_EQ(MacAddress::fromString("zz:00:11:22:33:44").toString(), std::string());
+    CHECK_EQ(MacAddress::fromString("02-00:11:22:33:44").toString(), std::string());
+    CHECK_EQ(MacAddress::fromBytes(std::string("short")).toString(), std::string());
+    CHECK_EQ(MacAddress::fromBytes(std::string("\x02\x00\x11\x22\x33\x44", 6)).toString(),
+             std::string("02:00:11:22:33:44"));
+    /* address classification + local-administration bit */
+    CHECK_EQ(MacAddress::fromString("02:00:11:22:33:44").getAddressType(),
+             (int)MacAddress::TYPE_UNICAST);
+    CHECK(MacAddress::fromString("02:00:11:22:33:44").isLocallyAssigned());
+    CHECK(!MacAddress::fromString("04:00:11:22:33:44").isLocallyAssigned());
+    CHECK_EQ(MacAddress::fromString("01:00:5e:00:00:01").getAddressType(),
+             (int)MacAddress::TYPE_MULTICAST);
+    CHECK_EQ(MacAddress::fromString("ff:ff:ff:ff:ff:ff").getAddressType(),
+             (int)MacAddress::TYPE_BROADCAST);
+    CHECK_EQ(MacAddress::ALL_ZEROS_MAC_ADDRESS.toString(),
+             std::string("00:00:00:00:00:00"));
+    CHECK_EQ(MacAddress::fromString("aabbccddeeff").toOuiString(),
+             std::string("aabbcc"));
+    CHECK(MacAddress::fromString("aabbccddeeff")
+            == MacAddress::fromString("AA:BB:CC:DD:EE:FF"));
+}
+
+static void testSoftApConfigurationDefaults() {
+    const SoftApConfiguration config = SoftApConfiguration::Builder().build();
+    /* Builder defaults (android-36 resolved): open, 2GHz auto channel. */
+    CHECK(config.getWifiSsid().getBytes().empty());   /* Java null SSID */
+    CHECK_EQ(config.getSsid(), std::string());
+    CHECK(config.getBssid().getBytes().empty());
+    CHECK_EQ(config.getBand(), (int)SoftApConfiguration::BAND_2GHZ);
+    CHECK_EQ(config.getChannel(), 0);
+    /* copy the vector first: CHECK_EQ's reference bind must not dangle into
+     * the temporary returned by getBands() */
+    const std::vector<int> defaultBands = config.getBands();
+    CHECK_EQ(defaultBands.size(), (size_t)1);
+    CHECK_EQ(defaultBands[0], (int)SoftApConfiguration::BAND_2GHZ);
+    CHECK_EQ(config.getSecurityType(), (int)SoftApConfiguration::SECURITY_TYPE_OPEN);
+    CHECK_EQ(config.getMaxNumberOfClients(), 0);
+    CHECK(config.isAutoShutdownEnabled());
+    CHECK_EQ((int)config.getShutdownTimeoutMillis(),
+             (int)SoftApConfiguration::DEFAULT_TIMEOUT);
+    CHECK(!config.isClientControlByUserEnabled());
+    CHECK(config.getBlockedClientList().empty());
+    CHECK(config.getAllowedClientList().empty());
+    CHECK_EQ(config.getMacRandomizationSetting(),
+             (int)SoftApConfiguration::RANDOMIZATION_NON_PERSISTENT);
+    CHECK(config.isBridgedModeOpportunisticShutdownEnabled());
+    CHECK(config.isIeee80211axEnabled());
+    CHECK(config.isIeee80211beEnabled());
+    CHECK(config.isUserConfiguration());
+    CHECK(config.getVendorElements().empty());
+    CHECK_EQ(config.getMaxChannelBandwidth(), 0);   /* CHANNEL_WIDTH_AUTO */
+    CHECK(!config.isClientIsolationEnabled());
+    CHECK(!config.toString().empty());
+
+    /* A DEFAULT-CONSTRUCTED (unset, flag-paired) instance carries an empty
+     * mChannels — the accessors must answer the documented defaults instead
+     * of dereferencing end() (the old getBand()/getChannel() were UB on it). */
+    const SoftApConfiguration unset;
+    CHECK_EQ(unset.getBand(), (int)SoftApConfiguration::BAND_2GHZ);
+    CHECK_EQ(unset.getChannel(), 0);
+}
+
+static bool builderThrew(const std::function<void()>& fn) {
+    try { fn(); return false; } catch (const std::invalid_argument&) { return true; }
+}
+
+static void testSoftApConfigurationBuilder() {
+    const SoftApConfiguration config = SoftApConfiguration::Builder()
+            .setSsid("MyAP")
+            .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+            .setChannel(6, SoftApConfiguration::BAND_2GHZ)
+            .setHiddenSsid(true)
+            .setMaxNumberOfClients(4)
+            .setClientIsolationEnabled(true)
+            .build();
+    CHECK_EQ(config.getSsid(), std::string("MyAP"));
+    CHECK_EQ(config.getPassphrase(), std::string("pass12345"));
+    CHECK_EQ(config.getSecurityType(), (int)SoftApConfiguration::SECURITY_TYPE_WPA2_PSK);
+    CHECK_EQ(config.getChannel(), 6);
+    CHECK(config.isHiddenSsid());
+    CHECK_EQ(config.getMaxNumberOfClients(), 4);
+    CHECK(config.isClientIsolationEnabled());
+
+    /* copy construction via Builder(other) round-trips every field */
+    const SoftApConfiguration copy = SoftApConfiguration::Builder(config).build();
+    CHECK(copy == config);
+    CHECK(!(copy != config));
+
+    /* A BSSID requires explicit RANDOMIZATION_NONE (the FORCE_MUTUAL_EXCLUSIVE
+     * compat change, enabled since S); Builder(other) then auto-preserves it. */
+    const SoftApConfiguration withBssid = SoftApConfiguration::Builder()
+            .setSsid("BssidAp")
+            .setBssid(MacAddress::fromString("02:11:22:33:44:55"))
+            .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+            .setMacRandomizationSetting(SoftApConfiguration::RANDOMIZATION_NONE)
+            .build();
+    CHECK_EQ(SoftApConfiguration::Builder(withBssid).build()
+                    .getMacRandomizationSetting(),
+             (int)SoftApConfiguration::RANDOMIZATION_NONE);
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder()
+                .setSsid("BssidAp")
+                .setBssid(MacAddress::fromString("02:11:22:33:44:55"))
+                .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+                .build();   /* randomization still NON_PERSISTENT */
+    }));
+    /* the working pairing: explicit BSSID + explicit RANDOMIZATION_NONE
+     * (what withRandomizedBssid produces; Builder(other)'s auto-fix only
+     * fires when the SOURCE config already carries a bssid) */
+    bool bssidWithNoneOk = false;
+    try {
+        SoftApConfiguration::Builder()
+                .setSsid("BssidAp")
+                .setBssid(MacAddress::fromString("02:11:22:33:44:55"))
+                .setMacRandomizationSetting(SoftApConfiguration::RANDOMIZATION_NONE)
+                .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+                .build();
+        bssidWithNoneOk = true;
+    } catch (const std::invalid_argument&) {
+    }
+    CHECK(bssidWithNoneOk);
+
+    /* validation: IllegalArgumentException paths */
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder().setBand(0);
+    }));
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder().setBand(SoftApConfiguration::BAND_2GHZ
+                | (1 << 4));   /* not a band */
+    }));
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder().setChannel(15, SoftApConfiguration::BAND_2GHZ);
+    }));
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder().setChannel(13, SoftApConfiguration::BAND_5GHZ);
+    }));
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder().setPassphrase(
+                "", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK);
+    }));
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder().setPassphrase(
+                "secret", SoftApConfiguration::SECURITY_TYPE_OPEN);
+    }));
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder().setMaxNumberOfClients(-1);
+    }));
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder().setShutdownTimeoutMillis(-2);
+    }));
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder().setBssid(
+                MacAddress::fromString("ff:ff:ff:ff:ff:ff"));
+    }));
+    CHECK(builderThrew([] {
+        MacAddress blocked = MacAddress::fromString("02:00:00:00:00:01");
+        SoftApConfiguration::Builder()
+                .setAllowedClientList({blocked})
+                .setBlockedClientList({blocked})
+                .build();
+    }));
+    CHECK(builderThrew([] {
+        ScanResult::InformationElement ie;   /* id -1, not EID_VSA */
+        SoftApConfiguration::Builder().setVendorElements({ie});
+    }));
+    CHECK(builderThrew([] {
+        ScanResult::InformationElement ie;
+        ie.id = ScanResult::InformationElement::EID_VSA;
+        SoftApConfiguration::Builder().setVendorElements({ie, ie});
+    }));
+    CHECK(builderThrew([] {
+        SoftApConfiguration::Builder().setAllowedAcsChannels(
+                SoftApConfiguration::BAND_60GHZ, {1});
+    }));
+    /* 11be depends on 11ax (BAKLAVA resolution in build()) */
+    CHECK(!SoftApConfiguration::Builder()
+            .setIeee80211axEnabled(false)
+            .setIeee80211beEnabled(true)
+            .build().isIeee80211beEnabled());
+
+    /* toWifiConfiguration bridging */
+    WifiConfiguration* bridged = config.toWifiConfiguration();
+    CHECK(bridged != nullptr);
+    CHECK_EQ(bridged->SSID, std::string("MyAP"));   /* unquoted utf-8 */
+    CHECK_EQ(bridged->preSharedKey, std::string("pass12345"));
+    CHECK_EQ(bridged->apBand, (int)WifiConfiguration::AP_BAND_2GHZ);
+    CHECK_EQ(bridged->apChannel, 6);
+    CHECK(bridged->allowedKeyManagement.test(WifiConfiguration::KeyMgmt::WPA2_PSK));
+    delete bridged;
+    /* WPA3_SAE_TRANSITION bridges onto the legacy WPA2_PSK surface too */
+    const SoftApConfiguration saeTransition = SoftApConfiguration::Builder()
+            .setSsid("SaeAp")
+            .setPassphrase("pass12345",
+                    SoftApConfiguration::SECURITY_TYPE_WPA3_SAE_TRANSITION)
+            .build();
+    bridged = saeTransition.toWifiConfiguration();
+    CHECK(bridged != nullptr);
+    CHECK(bridged->allowedKeyManagement.test(WifiConfiguration::KeyMgmt::WPA2_PSK));
+    delete bridged;
+    /* OWE has no legacy representation (Java null) */
+    bridged = SoftApConfiguration::Builder()
+            .setPassphrase("", SoftApConfiguration::SECURITY_TYPE_WPA3_OWE)
+            .build().toWifiConfiguration();
+    CHECK(bridged == nullptr);
+}
+
+static std::string readTextFile(const std::string& path) {
+    std::ifstream in(path);
+    std::ostringstream ss;
+    ss << in.rdbuf();
+    return ss.str();
+}
+
+static bool fileContains(const std::string& text, const std::string& needle) {
+    return text.find(needle) != std::string::npos;
+}
+
+static void testHostapdConfigWriter() {
+    const std::string path = "/tmp/cdroid-wifitests-hostapd.conf";
+    unlink(path.c_str());
+    std::string error;
+
+    /* WPA2 on channel 6 with all the renderable extras */
+    const SoftApConfiguration wpa2 = SoftApConfiguration::Builder()
+            .setSsid("MyAP")
+            .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+            .setChannel(6, SoftApConfiguration::BAND_2GHZ)
+            .setHiddenSsid(true)
+            .setMaxNumberOfClients(4)
+            .setClientIsolationEnabled(true)
+            .build();
+    CHECK(HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl", wpa2, &error));
+    const std::string conf = readTextFile(path);
+    CHECK(fileContains(conf, "interface=wlan1\n"));
+    CHECK(fileContains(conf, "driver=nl80211\n"));
+    CHECK(fileContains(conf, "ctrl_interface=/tmp/ctrl\n"));
+    CHECK(fileContains(conf, "ssid=MyAP\n"));
+    CHECK(fileContains(conf, "hw_mode=g\n"));
+    CHECK(fileContains(conf, "channel=6\n"));
+    CHECK(fileContains(conf, "ignore_broadcast_ssid=1\n"));
+    CHECK(fileContains(conf, "wpa=2\n"));
+    CHECK(fileContains(conf, "wpa_key_mgmt=WPA-PSK\n"));
+    CHECK(fileContains(conf, "rsn_pairwise=CCMP\n"));
+    CHECK(fileContains(conf, "wpa_passphrase=pass12345\n"));
+    CHECK(fileContains(conf, "max_num_sta=4\n"));
+    CHECK(fileContains(conf, "ap_isolate=1\n"));
+    /* band -> hw_mode mapping */
+    const SoftApConfiguration band5 = SoftApConfiguration::Builder()
+            .setSsid("Ap5G")
+            .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+            .setChannel(36, SoftApConfiguration::BAND_5GHZ)
+            .build();
+    CHECK(HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl", band5, &error));
+    CHECK(fileContains(readTextFile(path), "hw_mode=a\n"));
+    CHECK(fileContains(readTextFile(path), "channel=36\n"));
+    /* open network: no wpa lines at all */
+    const SoftApConfiguration openNet = SoftApConfiguration::Builder()
+            .setSsid("OpenAp")
+            .setBand(SoftApConfiguration::BAND_2GHZ)
+            .build();
+    CHECK(HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl", openNet, &error));
+    const std::string openConf = readTextFile(path);
+    CHECK(!fileContains(openConf, "wpa="));
+    CHECK(!fileContains(openConf, "wpa_passphrase="));
+    /* SAE: sae_password + mandatory MFP */
+    const SoftApConfiguration sae = SoftApConfiguration::Builder()
+            .setSsid("SaeAp")
+            .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA3_SAE)
+            .setBand(SoftApConfiguration::BAND_2GHZ)
+            .build();
+    CHECK(HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl", sae, &error));
+    const std::string saeConf = readTextFile(path);
+    CHECK(fileContains(saeConf, "wpa_key_mgmt=SAE\n"));
+    CHECK(fileContains(saeConf, "sae_password=pass12345\n"));
+    CHECK(fileContains(saeConf, "ieee80211w=2\n"));
+    /* blocked client list renders a deny file + macaddr_acl=0 */
+    const SoftApConfiguration blocked = SoftApConfiguration::Builder()
+            .setSsid("DenyAp")
+            .setBand(SoftApConfiguration::BAND_2GHZ)
+            .setBlockedClientList({MacAddress::fromString("02:00:00:00:00:09")})
+            .build();
+    CHECK(HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl", blocked, &error));
+    CHECK(fileContains(readTextFile(path), "macaddr_acl=0\n"));
+    CHECK(fileContains(readTextFile(path), "deny_mac_file=" + path + ".deny\n"));
+    CHECK(fileContains(readTextFile(path + ".deny"), "02:00:00:00:00:09\n"));
+    /* rejections: OWE security, bridged bands, SSID-less config */
+    CHECK(!HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl",
+            SoftApConfiguration::Builder()
+                    .setPassphrase("", SoftApConfiguration::SECURITY_TYPE_WPA3_OWE)
+                    .build(), &error));
+    CHECK(!error.empty());
+    CHECK(!HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl",
+            SoftApConfiguration::Builder()
+                    .setBands({SoftApConfiguration::BAND_2GHZ,
+                               SoftApConfiguration::BAND_5GHZ})
+                    .build(), &error));
+    CHECK(!HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl",
+            SoftApConfiguration::Builder().build(), &error));
+    unlink(path.c_str());
+    unlink((path + ".deny").c_str());
+    unlink((path + ".accept").c_str());
+}
+
+static void testHostapdEventParse() {
+    /* hostapd events: no priority prefix, positional mac argument */
+    const SupplicantEvent connected = SupplicantClient::parseEventMessage(
+            "AP-STA-CONNECTED 02:11:22:33:44:55");
+    CHECK_EQ(connected.name, std::string("AP-STA-CONNECTED"));
+    CHECK_EQ(connected.args.size(), (size_t)0);
+    CHECK_EQ(connected.raw,
+             std::string("AP-STA-CONNECTED 02:11:22:33:44:55"));
+    const SupplicantEvent disconnected = SupplicantClient::parseEventMessage(
+            "AP-STA-DISCONNECTED 02:11:22:33:44:55");
+    CHECK_EQ(disconnected.name, std::string("AP-STA-DISCONNECTED"));
+}
+
+static void testSoftApSupportClasses() {
+    /* WifiClient: identity + rendering */
+    const cdroid::WifiClient client(
+            MacAddress::fromString("02:00:00:00:00:09"), "wlan1");
+    CHECK_EQ(client.getInterfaceName(), std::string("wlan1"));
+    CHECK_EQ(client.getMacAddress().toString(), std::string("02:00:00:00:00:09"));
+    CHECK(client == cdroid::WifiClient(
+            MacAddress::fromString("02:00:00:00:00:09"), "wlan1"));
+    CHECK(client != cdroid::WifiClient(
+            MacAddress::fromString("02:00:00:00:00:0a"), "wlan1"));
+    CHECK(!client.toString().empty());
+
+    /* SoftApCapability: feature-bit semantics */
+    cdroid::SoftApCapability caps((int64_t)cdroid::SoftApCapability::SOFTAP_FEATURE_CLIENT_FORCE_DISCONNECT);
+    CHECK(caps.areFeaturesSupported(
+            (int64_t)cdroid::SoftApCapability::SOFTAP_FEATURE_CLIENT_FORCE_DISCONNECT));
+    CHECK(!caps.areFeaturesSupported(
+            (int64_t)cdroid::SoftApCapability::SOFTAP_FEATURE_ACS_OFFLOAD));
+    caps.setMaxSupportedClients(8);
+    CHECK_EQ(caps.getMaxSupportedClients(), 8);
+    cdroid::SoftApCapability none;
+    CHECK(!none.areFeaturesSupported(
+            (int64_t)cdroid::SoftApCapability::SOFTAP_FEATURE_IEEE80211_AX));
+}
+
+static void testSoftApConfigStore() {
+    using cdroid::SoftApConfigStore;
+    /* full roundtrip of the persistable field set, on a test-owned path
+     * (the runtime store dir may be root-owned from an E2E run) */
+    const std::string path = "/tmp/cdroid-wifitests-store.conf";
+    unlink(path.c_str());
+    SoftApConfigStore::Record record;
+    record.hasConfig = true;
+    record.iface = "wlan1";
+    record.config = SoftApConfiguration::Builder()
+            .setSsid("StoredAp")
+            .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+            .setChannel(11, SoftApConfiguration::BAND_2GHZ)
+            .setHiddenSsid(true)
+            .setMaxNumberOfClients(3)
+            .setClientIsolationEnabled(true)
+            .build();
+    CHECK(SoftApConfigStore::save(record, path));
+    SoftApConfigStore::Record loaded;
+    CHECK(SoftApConfigStore::load(&loaded, path));
+    CHECK_EQ(loaded.iface, std::string("wlan1"));
+    CHECK(loaded.hasConfig);
+    CHECK(loaded.config == record.config);
+
+    /* open-network record: passphrase empty, security OPEN */
+    SoftApConfigStore::Record openRecord;
+    openRecord.hasConfig = true;
+    openRecord.iface = "wlan1";
+    openRecord.config = SoftApConfiguration::Builder()
+            .setSsid("OpenStored")
+            .setBand(SoftApConfiguration::BAND_2GHZ)
+            .build();
+    CHECK(SoftApConfigStore::save(openRecord, path));
+    CHECK(SoftApConfigStore::load(&loaded, path));
+    CHECK(loaded.config == openRecord.config);
+    CHECK_EQ(loaded.config.getSecurityType(),
+             (int)SoftApConfiguration::SECURITY_TYPE_OPEN);
+
+    /* client-control lists round-trip: a blocked client must stay blocked
+     * across a process restart (the store used to drop the lists — the
+     * blocked client silently rejoined). */
+    SoftApConfigStore::Record aclRecord;
+    aclRecord.hasConfig = true;
+    aclRecord.iface = "wlan1";
+    aclRecord.config = SoftApConfiguration::Builder()
+            .setSsid("AclAp")
+            .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+            .setBand(SoftApConfiguration::BAND_2GHZ)
+            .setClientControlByUserEnabled(true)
+            .setBlockedClientList({MacAddress::fromString("aa:bb:cc:00:00:01"),
+                                   MacAddress::fromString("aa:bb:cc:00:00:02")})
+            .build();
+    CHECK(SoftApConfigStore::save(aclRecord, path));
+    CHECK(SoftApConfigStore::load(&loaded, path));
+    CHECK(loaded.config == aclRecord.config);
+    CHECK_EQ(loaded.config.getBlockedClientList().size(), (size_t)2);
+    CHECK(loaded.config.isClientControlByUserEnabled());
+
+    unlink(path.c_str());
+    CHECK(!SoftApConfigStore::load(&loaded, path));   /* no store = first boot */
+
+    /* A pre-planted/corrupt store (the runtime dir is under world-writable
+     * /tmp) must come back as "no config", not as an escaping
+     * std::invalid_argument that terminated the process. */
+    {
+        FILE* f = fopen(path.c_str(), "w");
+        CHECK(f != nullptr);
+        /* passphrase with securityType absent (atoi("")/garbage -> 0 = OPEN)
+         * is the exact combination setPassphrase rejects */
+        fputs("iface=ap0\nssid=\"Evil\"\npassphrase=evilpass\nband=1\nchannel=165\n", f);
+        fclose(f);
+        SoftApConfigStore::Record evil;
+        CHECK(!SoftApConfigStore::load(&evil, path));   /* rejected, not fatal */
+        unlink(path.c_str());
+    }
+}
+
+static void testHostapdChannelAutoSelect() {
+    /* channel 0 (framework auto) renders the band default on the
+     * classic-daemon backend (no ACS offload) */
+    const std::string path = "/tmp/cdroid-wifitests-hostapd.conf";
+    std::string error;
+    const SoftApConfiguration auto2g = SoftApConfiguration::Builder()
+            .setSsid("AutoAp")
+            .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+            .setBand(SoftApConfiguration::BAND_2GHZ)
+            .build();
+    CHECK(HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl", auto2g, &error));
+    const std::string conf2g = readTextFile(path);
+    CHECK(fileContains(conf2g, "channel=6\n"));
+    CHECK(fileContains(conf2g, "# channel auto-selected (no ACS offload on this backend)\n"));
+    const SoftApConfiguration auto5g = SoftApConfiguration::Builder()
+            .setSsid("AutoAp5")
+            .setPassphrase("pass12345", SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+            .setBand(SoftApConfiguration::BAND_5GHZ)
+            .build();
+    CHECK(HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl", auto5g, &error));
+    CHECK(fileContains(readTextFile(path), "channel=36\n"));
+    unlink(path.c_str());
+
+    /* Configuration injection: the renderer writes a hostapd.conf FILE, so a
+     * line break in the SSID or passphrase would smuggle extra config lines
+     * (e.g. "Guest\nwpa_passphrase=evil12345" re-securing an open network).
+     * Both must be rejected outright. */
+    std::string injectError;
+    const SoftApConfiguration injectSsid = SoftApConfiguration::Builder()
+            .setSsid("Guest\nwpa_passphrase=evil12345")
+            .build();
+    CHECK(!HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl",
+                injectSsid, &injectError));
+    CHECK(!injectError.empty());
+    const SoftApConfiguration injectPass = SoftApConfiguration::Builder()
+            .setSsid("Ok")
+            .setPassphrase("p1234567\nmacaddr_acl=0",
+                    SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+            .build();
+    CHECK(!HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl",
+                injectPass, &injectError));
+    CHECK(!injectError.empty());
+    /* and the written (legit) conf must not be world-readable: 0600 */
+    struct stat st = {};
+    CHECK(HostapdClient::writeConfigFile(path, "wlan1", "/tmp/ctrl", auto2g, &error));
+    CHECK(stat(path.c_str(), &st) == 0);
+    CHECK_EQ(st.st_mode & 0777, (mode_t)0600);
+    unlink(path.c_str());
+}
+
+static void testNatControllerRules() {
+    /* rule builders: exact netd-style wording */
+    CHECK_EQ(cdroid::NatController::masqueradeRule("eno1"),
+             std::string("-t nat -A POSTROUTING -o eno1 -j MASQUERADE"));
+    const std::vector<std::string> fwd =
+            cdroid::NatController::forwardingRules("wlan1", "eno1");
+    CHECK_EQ(fwd.size(), (size_t)2);
+    CHECK_EQ(fwd[0], std::string("-A FORWARD -i eno1 -o wlan1 -m state "
+                                 "--state RELATED,ESTABLISHED -j ACCEPT"));
+    CHECK_EQ(fwd[1], std::string("-A FORWARD -i wlan1 -o eno1 -j ACCEPT"));
+    /* default-route parse: whatever it returns must be a real /proc entry */
+    const std::string upstream = cdroid::NatController::defaultRouteInterface();
+    if (!upstream.empty()) {
+        std::ifstream route("/proc/net/route");
+        std::string line, found;
+        while (std::getline(route, line))
+            if (line.compare(0, upstream.size(), upstream) == 0) { found = line; break; }
+        CHECK(!found.empty());
+    }
+}
+
 int main() {
     testParseEventMessage();
     testWifiSsid();
@@ -313,6 +826,15 @@ int main() {
     testSignalLevels();
     testGetAuthType();
     testSupplicantState();
+    testMacAddress();
+    testSoftApConfigurationDefaults();
+    testSoftApConfigurationBuilder();
+    testHostapdConfigWriter();
+    testHostapdEventParse();
+    testSoftApSupportClasses();
+    testSoftApConfigStore();
+    testHostapdChannelAutoSelect();
+    testNatControllerRules();
     printf("%d checks, %d failures\n", gChecks, gFailures);
     return gFailures;
 }

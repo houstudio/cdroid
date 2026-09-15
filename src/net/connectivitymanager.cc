@@ -5,7 +5,10 @@
 #include <linux/if.h>   /* IFF_LOWER_UP */
 #include <regex>
 
+#include <natcontroller.h>
+
 #include <algorithm>
+#include <cstdio>
 
 namespace cdroid {
 
@@ -20,9 +23,24 @@ ConnectivityManager::ConnectivityManager() {
      * same delivery contract as the WifiManager listeners. */
     WifiManager::getInstance().addNetworkStateListener(this);
     EthernetManager::getInstance().addListener(this);
+    /* AP state: any path that brings the Soft AP down (stopSoftAp, hostapd
+     * death, the idle-shutdown worker) must also drop the NAT — netd's
+     * IpServer does this on its tethering teardown. Sticky registration
+     * immediately reports the current state; the DISABLED callback is a
+     * no-op while no NAT pair is recorded. */
+    WifiManager::getInstance().addWifiApStateListener(this);
 }
 
 ConnectivityManager::~ConnectivityManager() {
+    /* Tethering ownership mirrors the Soft AP's (module phase: this process
+     * is the service): leaving without stopTethering would strand kernel NAT
+     * rules past the AP they served. Reverse-construction order guarantees
+     * WifiManager outlives this teardown. Detach the AP listener FIRST so
+     * the teardown below cannot re-enter the callback. */
+    WifiManager::getInstance().removeWifiApStateListener(this);
+    if (WifiManager::getInstance().getWifiApState()
+            != WifiManager::WIFI_AP_STATE_DISABLED)
+        stopTethering(TETHERING_WIFI);
     EthernetManager::getInstance().removeListener(this);
     WifiManager::getInstance().removeNetworkStateListener(this);
 }
@@ -144,6 +162,77 @@ void ConnectivityManager::removeNetworkStateListener(NetworkStateListener* liste
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mListeners.erase(std::remove(mListeners.begin(), mListeners.end(), listener),
                      mListeners.end());
+}
+
+/* --- tethering --------------------------------------------------------------- */
+
+std::string ConnectivityManager::tetheringUpstreamIface() {
+    /* AOSP tethers toward the default network: the default-route owner. */
+    const std::string route = NatController::defaultRouteInterface();
+    if (!route.empty()) return route;
+    /* No default route yet: first link-up ethernet port (the aggregation
+     * preference order — ETHERNET > WIFI — applied to tethering). */
+    for (const std::string& iface : EthernetManager::getInstance().getAvailableInterfaces())
+        return iface;
+    return std::string();
+}
+
+bool ConnectivityManager::startTethering(int type) {
+    if (type != TETHERING_WIFI) {
+        fprintf(stderr, "ConnectivityManager E: tethering type %d has no "
+                "interface owner yet (wifi only)\n", type);
+        return false;
+    }
+    WifiManager& wifi = WifiManager::getInstance();
+    if (!wifi.startTetheredHotspot(nullptr)) return false;
+    const std::string internal = wifi.getSoftApInterfaceName();
+    const std::string external = tetheringUpstreamIface();
+    if (external.empty()) {
+        fprintf(stderr, "ConnectivityManager E: no upstream interface for "
+                "tethering (AP stays up, no NAT)\n");
+        return true;
+    }
+    if (!NatController::enableNat(internal, external)) {
+        wifi.stopSoftAp();
+        return false;
+    }
+    /* Record the pair that was actually programmed — netd's enabled-iface
+     * pair ledger: stop must remove exactly these rules, not whatever the
+     * default route resolves to at stop time. */
+    {
+        std::lock_guard<std::mutex> lock(mNatMutex);
+        mNatInternal = internal;
+        mNatExternal = external;
+    }
+    return true;
+}
+
+bool ConnectivityManager::stopTethering(int type) {
+    if (type != TETHERING_WIFI) return false;
+    teardownRecordedNat();
+    return WifiManager::getInstance().stopSoftAp();
+}
+
+void ConnectivityManager::teardownRecordedNat() {
+    std::string internal, external;
+    {
+        std::lock_guard<std::mutex> lock(mNatMutex);
+        internal = mNatInternal;
+        external = mNatExternal;
+        mNatInternal.clear();
+        mNatExternal.clear();
+    }
+    if (!internal.empty() && !external.empty())
+        NatController::disableNat(internal, external);
+}
+
+void ConnectivityManager::onWifiApStateChanged(int wifiApState) {
+    /* The AP the NAT served is gone by any road (explicit stop — which
+     * already tore the NAT down and left the record empty — idle shutdown,
+     * hostapd death): drop the recorded pair so its rules cannot outlive
+     * the interface they forward for. */
+    if (wifiApState == WifiManager::WIFI_AP_STATE_DISABLED)
+        teardownRecordedNat();
 }
 
 } // namespace cdroid

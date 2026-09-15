@@ -130,6 +130,11 @@ private:
     std::condition_variable mReqSlotCv;
     bool mReqInFlight = false;
     std::thread mMonitorThread;
+    /* A monitor thread that called close() on itself (see close()'s
+     * self-join guard) parks its handle here; the next close()/connect()/
+     * destructor joins it before anything move-assigns over it, so it is
+     * joined-before-destruction by construction. */
+    std::thread mRetiredMonitorThread;
     std::atomic<bool> mRunning;
     std::atomic<bool> mConnected;
     EventCallback* mCallback;

@@ -27,7 +27,8 @@ namespace cdroid {
  * interim NetworkStateListener mirrors CONNECTIVITY_ACTION delivery.
  */
 class ConnectivityManager : private WifiManager::NetworkStateListener,
-                            private EthernetManager::Listener {
+                            private EthernetManager::Listener,
+                            private WifiManager::WifiApStateListener {
 public:
     static constexpr int TYPE_NONE          = -1;
     static constexpr int TYPE_MOBILE        = 0;
@@ -54,6 +55,16 @@ public:
         virtual void onNetworkStateChanged(const NetworkInfo& networkInfo) = 0;
     };
 
+    /* Tethering types (TetheringManager#TETHERING_*); ConnectivityManager
+     * carries the start/stop entry points that AOSP routes through
+     * TetheringManager.startTethering(TetheringRequest). */
+    static constexpr int TETHERING_WIFI      = 0;
+    static constexpr int TETHERING_USB       = 1;
+    static constexpr int TETHERING_BLUETOOTH = 2;
+    static constexpr int TETHERING_WIFI_P2P  = 3;
+    static constexpr int TETHERING_NCM       = 4;
+    static constexpr int TETHERING_ETHERNET  = 5;
+
     static ConnectivityManager& getInstance();
 
     /* The connected network with the highest preference, or an offline
@@ -67,6 +78,17 @@ public:
     void addNetworkStateListener(NetworkStateListener* listener);
     void removeNetworkStateListener(NetworkStateListener* listener);
 
+    /*
+     * Tethered hotspot (TETHERING_WIFI): starts the Soft AP with the stored
+     * SoftApConfiguration (setSoftApConfiguration), then brings up NAT
+     * toward the default-route interface (netd enableNat semantics). The
+     * AOSP binder path is async with callbacks — this port is synchronous,
+     * like the WifiManager Soft AP entries. USB/Bluetooth tethering need
+     * their own interface owners and stay TODO (faithful-stub rule).
+     */
+    bool startTethering(int type);
+    bool stopTethering(int type);
+
 private:
     ConnectivityManager();
     ~ConnectivityManager() override;
@@ -77,13 +99,31 @@ private:
      * delivered on the supplicant monitor / ethernet poll threads. */
     void onNetworkStateChanged(const WifiInfo& info) override;
     void onAvailabilityChanged(const std::string& iface, bool isAvailable) override;
+    /* WifiManager::WifiApStateListener — delivered on whichever thread
+     * brings the AP down (stopSoftAp main call, hostapd monitor, the
+     * Soft-Ap idle-shutdown worker). */
+    void onWifiApStateChanged(int wifiApState) override;
 
     NetworkInfo buildWifiNetworkInfo();
     NetworkInfo buildEthernetNetworkInfo();
     void dispatch(const NetworkInfo& info);
+    /* Default-route interface, else first link-up ethernet port. */
+    std::string tetheringUpstreamIface();
+    /* Removes the recorded NAT pair (if any) — the "enabled iface pair"
+     * ledger netd keeps; called by stopTethering and by the AP-down
+     * callback. */
+    void teardownRecordedNat();
 
     std::mutex mListenersMutex;
     std::vector<NetworkStateListener*> mListeners;
+    /* The (internal, external) pair enableNat actually programmed. stop
+     * must remove what was installed, not whatever the default route
+     * points at by stop time — it may have moved or vanished mid-session,
+     * which stranded the MASQUERADE/FORWARD rules in the kernel while
+     * ip_forward still got cleared for everyone else. */
+    std::mutex mNatMutex;
+    std::string mNatInternal;
+    std::string mNatExternal;
 };
 
 } // namespace cdroid

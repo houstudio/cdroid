@@ -4,13 +4,20 @@
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>   // inet_ntop (wpa_control sockaddr dump)
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <ipapplicator.h>
+#include <dhcpserver.h>
+#include <wifi/softapconfigstore.h>
 
 #include <algorithm>
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fcntl.h>
+#include <random>
 
 #include <wifi/wparesponseparser.h>
 #include <linkaddress.h>
@@ -51,6 +58,7 @@ WifiManager& WifiManager::getInstance() {
 
 WifiManager::WifiManager() {
     mClient.setEventCallback(this);
+    mHostapd.setEventCallback(this);
     /* Address events drive the COMPLETED -> (has IP) CONNECTED promotion
      * the way AOSP's IpClient callback does. */
     mAddressMonitor = NetworkEventMonitor::create();
@@ -64,7 +72,22 @@ WifiManager::WifiManager() {
 }
 
 WifiManager::~WifiManager() {
+    /* The process owns the Soft AP it started (module phase: WifiManager IS
+     * the WifiService) — teardown order: AP daemons (hostapd + dnsmasq +
+     * address), then the STA side. Without this hostapd outlives the
+     * process while dnsmasq dies with it — the 14:50 E2E orphan.
+     * Join the idle worker FIRST: stopSoftAp() early-returns at DISABLED
+     * (so an AP already down never reaches its cancel), and the unlocked
+     * mApDhcpServer delete below raced the worker's locked teardown when
+     * the idle timer happened to fire near shutdown. */
+    cancelSoftApIdleShutdown();
+    stopSoftAp();
     stopDhcpAndRelease();
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        delete mApDhcpServer;   /* stops dnsmasq + clears the AP address */
+        mApDhcpServer = nullptr;
+    }
     if (mAddressMonitor) {
         mAddressMonitor->stop();
         delete mAddressMonitor;
@@ -74,6 +97,7 @@ WifiManager::~WifiManager() {
     mRadioData = nullptr;
     stopRssiPolling();
     mClient.close();
+    mHostapd.close();
 }
 
 bool WifiManager::initialize(const std::string& ctrlPath) {
@@ -808,6 +832,672 @@ void WifiManager::stopDhcpAndRelease() {
         client->releaseLease(lease);   /* best effort */
         delete client;
     }
+}
+
+/* --- Soft AP (hostapd-backed SoftApManager path) ----------------------------- */
+
+const MacAddress WifiManager::ALL_ZEROS_MAC_ADDRESS = MacAddress::ALL_ZEROS_MAC_ADDRESS;
+
+std::string WifiManager::softApInterface() {
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    if (!mSoftApIface.empty()) return mSoftApIface;
+    ensureSoftApStoreLoaded();
+    if (!mSoftApIface.empty()) return mSoftApIface;
+    return mIfaceName;
+}
+
+void WifiManager::configureSoftApInterface(const std::string& iface) {
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mSoftApIface = iface;
+    }
+    /* the choice must survive the process (wpatest apiface | apstart are
+     * separate invocations) — persist alongside the stored configuration */
+    persistSoftApConfiguration(getSoftApConfiguration());
+}
+
+void WifiManager::ensureSoftApStoreLoaded() {
+    if (mSoftApStoreLoaded) return;
+    mSoftApStoreLoaded = true;
+    SoftApConfigStore::Record record;
+    if (!SoftApConfigStore::load(&record)) return;
+    mSoftApIface = record.iface;
+    if (record.hasConfig && !mSoftApConfigSet) {
+        mSoftApConfig = record.config;
+        mSoftApConfigSet = true;
+    }
+}
+
+int WifiManager::getWifiApState() {
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    return mWifiApState;
+}
+
+bool WifiManager::isWifiApEnabled() {
+    return getWifiApState() == WIFI_AP_STATE_ENABLED;
+}
+
+SoftApConfiguration WifiManager::getSoftApConfiguration() {
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        ensureSoftApStoreLoaded();
+        if (mSoftApConfigSet) return mSoftApConfig;
+    }
+    /* Framework default, stored like WifiApConfigStore stores its generated
+     * default so a rebooted process serves the same SSID. WifiApConfigStore
+     * generates the default ONCE and serves it forever; caching it in
+     * mSoftApConfig makes this idempotent in-process too — the old path
+     * generated a NEW random default (and rewrote the store) on EVERY call
+     * while nothing was user-configured, so the SSID shown to the user never
+     * matched the one a subsequent startTetheredHotspot(nullptr) ran. */
+    const SoftApConfiguration config = defaultSoftApConfiguration();
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mSoftApConfig = config;
+        mSoftApConfigSet = true;
+    }
+    persistSoftApConfiguration(config);
+    return config;
+}
+
+bool WifiManager::setSoftApConfiguration(const SoftApConfiguration& config) {
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mSoftApConfig = config;
+        mSoftApConfigSet = true;
+    }
+    persistSoftApConfiguration(config);
+    return true;
+}
+
+void WifiManager::persistSoftApConfiguration(const SoftApConfiguration& config) {
+    SoftApConfigStore::Record record;
+    record.hasConfig = true;
+    record.config = config;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        record.iface = !mSoftApIface.empty() ? mSoftApIface : std::string();
+        if (record.iface.empty()) {
+            /* keep whatever the store already carries */
+            SoftApConfigStore::Record existing;
+            if (SoftApConfigStore::load(&existing)) record.iface = existing.iface;
+        }
+    }
+    SoftApConfigStore::save(record);
+}
+
+/* AOSP draws the default hotspot SSID suffix and WPA2 passphrase from
+ * SecureRandom. Plain rand() here was never seeded on the Soft AP path
+ * (the only srand in src/net is the STA-side DHCP client's), so every
+ * process on every device produced the SAME "random" default SSID and
+ * passphrase — glibc's fixed seed-1 sequence, a universally known default
+ * hotspot password. This engine is seeded from /dev/urandom instead
+ * (std::random_device is permitted to be deterministic on some targets;
+ * the explicit read is not). */
+static int softApRandom() {
+    static thread_local std::mt19937 engine = [] {
+        std::random_device::result_type seed = 0;
+        const int fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
+        if (fd >= 0) {
+            const ssize_t n = read(fd, &seed, sizeof(seed));
+            (void)n;
+            close(fd);
+        }
+        return std::mt19937(seed);
+    }();
+    return static_cast<int>(engine());
+}
+
+SoftApConfiguration WifiManager::defaultSoftApConfiguration() {
+    /* WifiApConfigStore default shape: "AndroidAP_" + 4 random digits with
+     * a random WPA2 passphrase. */
+    char ssid[16];
+    snprintf(ssid, sizeof(ssid), "AndroidAP_%04d", 1000 + softApRandom() % 9000);
+    static const char kPassChars[] =
+            "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    char pass[11];
+    for (int i = 0; i < 10; ++i)
+        pass[i] = kPassChars[softApRandom() % (sizeof(kPassChars) - 1)];
+    pass[10] = '\0';
+    return SoftApConfiguration::Builder()
+            .setSsid(ssid)
+            .setPassphrase(pass, SoftApConfiguration::SECURITY_TYPE_WPA2_PSK)
+            .setBand(SoftApConfiguration::BAND_2GHZ)
+            .build();
+}
+
+bool WifiManager::validateSoftApConfiguration(const SoftApConfiguration& config) {
+    /* The module's validity test = renderability by the hostapd backend
+     * (AOSP validates against HAL features + country channels; the nl80211
+     * country channel list is TODO along with the interface work). */
+    return HostapdClient::writeConfigFile("/tmp/cdroid-softap-validate.conf",
+            "wlan0", "/tmp/cdroid-softap-validate", config, nullptr);
+}
+
+bool WifiManager::startTetheredHotspot(const SoftApConfiguration* softApConfig) {
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (mWifiApState == WIFI_AP_STATE_ENABLING
+                || mWifiApState == WIFI_AP_STATE_ENABLED)
+            return false;   /* only from down, like SoftApManager */
+    }
+    const SoftApConfiguration config = withRandomizedBssid(softApConfig
+            ? *softApConfig : getSoftApConfiguration());
+    const std::string iface = softApInterface();
+    if (iface.empty()) {
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mWifiApFailureReason = SAP_START_FAILURE_GENERAL;
+        }
+        setWifiApStateAndNotify(WIFI_AP_STATE_FAILED);
+        return false;
+    }
+    const std::string dir = HostapdClient::configDirectory(iface);
+    const std::string confPath = dir + "/hostapd.conf";
+    const std::string pidFile = dir + "/hostapd.pid";
+    const std::string logFile = dir + "/hostapd.log";
+    const std::string ctrlDir = dir + "/ctrl";
+    /* 0700: this tree carries hostapd.conf with the WPA passphrase (AOSP
+     * keeps WifiApConfigStore data under /data/misc with restrictive
+     * permissions) — /tmp's 1777 must not make it world-readable. chmod
+     * after each mkdir so a directory left 0755 by an older build is
+     * tightened too (mkdir alone never rewrites an existing dir). */
+    mkdir("/tmp/cdroid-softap", 0700);
+    chmod("/tmp/cdroid-softap", 0700);
+    mkdir(dir.c_str(), 0700);
+    chmod(dir.c_str(), 0700);
+    mkdir(ctrlDir.c_str(), 0700);
+    chmod(ctrlDir.c_str(), 0700);
+
+    std::string error;
+    if (!HostapdClient::writeConfigFile(confPath, iface, ctrlDir, config, &error)) {
+        fprintf(stderr, "WifiManager E: SoftApConfiguration rejected: %s\n",
+                error.c_str());
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mWifiApFailureReason = SAP_START_FAILURE_UNSUPPORTED_CONFIGURATION;
+        }
+        setWifiApStateAndNotify(WIFI_AP_STATE_FAILED);
+        return false;
+    }
+
+    setWifiApStateAndNotify(WIFI_AP_STATE_ENABLING);
+    HostapdClient::stopDaemon(pidFile);   /* stale daemon from an earlier run */
+    const pid_t pid = HostapdClient::startDaemon(iface, confPath, pidFile, logFile);
+    if (pid < 0) {
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mWifiApFailureReason = SAP_START_FAILURE_GENERAL;
+        }
+        setWifiApStateAndNotify(WIFI_AP_STATE_FAILED);
+        return false;
+    }
+    /* Readiness = ctrl socket answering PING; -B daemonizes before the
+     * interface is fully up, so the socket appearing IS the ready signal.
+     * Radio bring-up on slow radios (hwsim: nl80211 init + channel config)
+     * takes multiple seconds — AOSP's SoftApManager start timeout is the
+     * 30 s class; anything shorter fails healthy setups. */
+    mHostapd.close();
+    mHostapd.setCtrlPath(ctrlDir + "/" + iface);
+    bool ready = false;
+    for (int waited = 0; waited < 30000 && !ready; waited += 100) {
+        if (!mHostapd.isConnected()) mHostapd.connect();
+        std::string reply;
+        /* compare(pos, len, s) matches the len-char substring: "PONG" is
+         * four characters (a 3 here compares "PON" vs "PONG" — never equal). */
+        if (mHostapd.request("PING", reply)
+                && reply.compare(0, 4, "PONG") == 0)
+            ready = true;
+        else
+            usleep(100 * 1000);
+    }
+    if (!ready) {
+        fprintf(stderr,
+                "WifiManager E: hostapd ctrl socket never came up (log: %s)\n",
+                logFile.c_str());
+        mHostapd.close();
+        HostapdClient::stopDaemon(pidFile);
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mWifiApFailureReason = SAP_START_FAILURE_GENERAL;
+        }
+        setWifiApStateAndNotify(WIFI_AP_STATE_FAILED);
+        return false;
+    }
+    /* Operating info + client seed (AOSP reports these as the AP comes up). */
+    refreshSoftApInfoFromHostapd();
+    refreshSoftApClientsFromHostapd();
+    setWifiApStateAndNotify(WIFI_AP_STATE_ENABLED);
+    notifySoftApCallbacksInfo();
+    bool startIdleTimer = false;
+    int64_t idleTimeout = 0;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        mActiveSoftApConfig = config;
+        mActiveSoftApConfigValid = true;
+        mSoftApAutoShutdownEnabled = config.isAutoShutdownEnabled();
+        /* DEFAULT_TIMEOUT resolves to the framework's soft-ap idle delay
+         * (config_wifi_framework_soft_ap_timeout_delay; TODO(porting):
+         * verify against frameworks/base res values — 10 min used here). */
+        mSoftApShutdownTimeoutMillis = config.getShutdownTimeoutMillis()
+                == SoftApConfiguration::DEFAULT_TIMEOUT
+                ? 600000 : config.getShutdownTimeoutMillis();
+        startIdleTimer = mSoftApAutoShutdownEnabled && mSoftApClients.empty();
+        idleTimeout = mSoftApShutdownTimeoutMillis;
+    }
+    /* outside the lock: cancel joins the timer thread, which itself takes
+     * mStateMutex inside its idle poll */
+    if (startIdleTimer) {
+        cancelSoftApIdleShutdown();
+        scheduleSoftApIdleShutdown(idleTimeout);
+    }
+    /* AP-side DHCP (AOSP IpServer starts the tethering DHCP server once the
+     * interface is up). Failure is logged, not fatal for the AP itself —
+     * the tethering integration (P2) owns the teardown policy. */
+    {
+        DhcpServer::Config dhcp;
+        dhcp.iface = iface;
+        dhcp.workDir = dir;
+        DhcpServer* server = DhcpServer::create(dhcp);
+        if (server->start()) {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            mApDhcpServer = server;
+        } else {
+            fprintf(stderr, "WifiManager E: AP dhcp server failed to start\n");
+            delete server;
+        }
+    }
+    return true;
+}
+
+bool WifiManager::stopSoftAp() {
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (mWifiApState != WIFI_AP_STATE_ENABLED
+                && mWifiApState != WIFI_AP_STATE_ENABLING
+                && mWifiApState != WIFI_AP_STATE_FAILED)
+            return false;   /* not up */
+    }
+    cancelSoftApIdleShutdown();
+    setWifiApStateAndNotify(WIFI_AP_STATE_DISABLING);
+    mHostapd.close();
+    const std::string iface = softApInterface();
+    const bool stopped = HostapdClient::stopDaemon(
+            HostapdClient::configDirectory(iface) + "/hostapd.pid");
+    /* DHCP teardown + client/info reset (IpServer teardown order). */
+    {
+        DhcpServer* server = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            server = mApDhcpServer;
+            mApDhcpServer = nullptr;
+            mSoftApClients.clear();
+            mSoftApInfo = SoftApInfo();
+        }
+        delete server;
+    }
+    if (!iface.empty()) clearIpConfiguration(iface);
+    setWifiApStateAndNotify(WIFI_AP_STATE_DISABLED);
+    return stopped;
+}
+
+bool WifiManager::startSoftAp(const WifiConfiguration* wifiConfig) {
+    if (!wifiConfig) return startTetheredHotspot(nullptr);
+    SoftApConfiguration::Builder builder;
+    /* WifiConfiguration.SSID is the quoted toString form — WifiSsid::fromString
+     * is the parser for exactly that shape.
+     * Every Builder setter validates and THROWS std::invalid_argument on a
+     * bad value (setChannel rejects channel/band pairs like 165@2GHz, exactly
+     * the IllegalArgumentException AOSP surfaces to the caller). This is a
+     * public API on the process's main path, so the whole build is guarded:
+     * a rejected caller value returns false instead of terminating the
+     * process through an escaping exception. */
+    try {
+        builder.setWifiSsid(WifiSsid::fromString(wifiConfig->SSID));
+        int band = SoftApConfiguration::BAND_2GHZ;
+        if (wifiConfig->apBand == WifiConfiguration::AP_BAND_5GHZ)
+            band = SoftApConfiguration::BAND_5GHZ;
+        /* AP_BAND_ANY / AP_BAND_60GHZ collapse to 2GHz: the v1 backend is a
+         * single-interface AP (bridged bands rejected at render). */
+        if (wifiConfig->apChannel > 0)
+            builder.setChannel(wifiConfig->apChannel, band);
+        else
+            builder.setBand(band);
+        if (wifiConfig->allowedKeyManagement.test(WifiConfiguration::KeyMgmt::WPA2_PSK)) {
+            if (wifiConfig->preSharedKey.empty()) return false;
+            builder.setPassphrase(wifiConfig->preSharedKey,
+                    SoftApConfiguration::SECURITY_TYPE_WPA2_PSK);
+        } else if (!wifiConfig->allowedKeyManagement.test(WifiConfiguration::KeyMgmt::NONE)) {
+            return false;   /* key management the backend cannot render */
+        }
+        builder.setHiddenSsid(wifiConfig->hiddenSSID);
+    } catch (const std::invalid_argument& e) {
+        fprintf(stderr, "WifiManager E: startSoftAp config rejected: %s\n", e.what());
+        return false;
+    }
+    const SoftApConfiguration config = builder.build();
+    return startTetheredHotspot(&config);
+}
+
+void WifiManager::addWifiApStateListener(WifiApStateListener* listener) {
+    /* Sticky dispatch like addWifiStateListener (AOSP sticky broadcast). */
+    const int state = getWifiApState();
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        mWifiApListeners.push_back(listener);
+    }
+    listener->onWifiApStateChanged(state);
+}
+
+void WifiManager::removeWifiApStateListener(WifiApStateListener* listener) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    mWifiApListeners.erase(std::remove(mWifiApListeners.begin(),
+            mWifiApListeners.end(), listener), mWifiApListeners.end());
+}
+
+void WifiManager::setWifiApStateAndNotify(int newState) {
+    int previous;
+    int failureCode = 0;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        previous = mWifiApState;
+        if (previous == newState) return;
+        mWifiApState = newState;
+        if (newState == WIFI_AP_STATE_FAILED)
+            failureCode = mWifiApFailureReason;
+    }
+    notifyWifiApStateListeners(newState);
+    /* SoftApCallback#onStateChanged rides the same transitions (AOSP fans
+     * the single SoftApManager state into both surfaces). */
+    std::vector<SoftApCallback*> callbacks;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        callbacks = mSoftApCallbacks;
+    }
+    for (SoftApCallback* callback : callbacks)
+        callback->onStateChanged(newState, failureCode);
+}
+
+void WifiManager::notifyWifiApStateListeners(int state) {
+    std::vector<WifiApStateListener*> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mWifiApListeners;
+    }
+    for (WifiApStateListener* listener : listeners)
+        listener->onWifiApStateChanged(state);
+}
+
+/* --- SoftApCallback plumbing --------------------------------------------------- */
+
+void WifiManager::registerSoftApCallback(SoftApCallback* callback) {
+    /* sticky: current state, info and capability arrive at registration
+     * (the binder path replays them from SoftApManager). */
+    int state;
+    int failureCode = 0;
+    SoftApInfo info;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        mSoftApCallbacks.push_back(callback);
+    }
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        state = mWifiApState;
+        if (state == WIFI_AP_STATE_FAILED) failureCode = mWifiApFailureReason;
+        info = mSoftApInfo;
+    }
+    callback->onStateChanged(state, failureCode);
+    callback->onInfoChanged({info});
+    callback->onCapabilityChanged(SoftApCapability());
+}
+
+void WifiManager::unregisterSoftApCallback(SoftApCallback* callback) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    mSoftApCallbacks.erase(std::remove(mSoftApCallbacks.begin(),
+            mSoftApCallbacks.end(), callback), mSoftApCallbacks.end());
+}
+
+void WifiManager::notifySoftApClientsChanged(int reasonCode) {
+    std::vector<WifiClient> clients;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        clients = mSoftApClients;
+    }
+    std::vector<SoftApCallback*> callbacks;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        callbacks = mSoftApCallbacks;
+    }
+    for (SoftApCallback* callback : callbacks)
+        callback->onConnectedClientsChanged(clients, reasonCode);
+}
+
+void WifiManager::notifySoftApCallbacksInfo() {
+    SoftApInfo info;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        info = mSoftApInfo;
+    }
+    std::vector<SoftApCallback*> callbacks;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        callbacks = mSoftApCallbacks;
+    }
+    for (SoftApCallback* callback : callbacks) callback->onInfoChanged({info});
+}
+
+void WifiManager::notifySoftApCallbacksCapability() {
+    std::vector<SoftApCallback*> callbacks;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        callbacks = mSoftApCallbacks;
+    }
+    for (SoftApCallback* callback : callbacks)
+        callback->onCapabilityChanged(SoftApCapability());
+}
+
+/* --- Soft AP P3: enforcement, randomization, idle shutdown ------------------- */
+
+void WifiManager::enforceBlockedClient(const MacAddress& mac) {
+    std::vector<MacAddress> blocked;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (!mActiveSoftApConfigValid) return;
+        blocked = mActiveSoftApConfig.getBlockedClientList();
+    }
+    if (std::find(blocked.begin(), blocked.end(), mac) == blocked.end()) return;
+    /* deny_mac_file normally rejects these at association already — this is
+     * the runtime half (list changes without restart) + the callback. */
+    mHostapd.request("DISASSOCIATE " + mac.toString());
+    std::vector<SoftApCallback*> callbacks;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        callbacks = mSoftApCallbacks;
+    }
+    for (SoftApCallback* callback : callbacks)
+        callback->onBlockedClientConnecting(
+                WifiClient(mac, softApInterface()),
+                SoftApCallback::SAP_CLIENT_BLOCK_REASON_CODE_BLOCKED_BY_USER);
+}
+
+SoftApConfiguration WifiManager::withRandomizedBssid(
+        const SoftApConfiguration& config) {
+    if (config.getBssid().getBytes().size() == 6) return config;   /* explicit */
+    if (config.getMacRandomizationSetting()
+            == SoftApConfiguration::RANDOMIZATION_NONE)
+        return config;
+    /* RANDOMIZATION_PERSISTENT needs the per-SSID persisted address —
+     * TODO(porting); a fresh random address each start is the
+     * NON_PERSISTENT behavior applied in its place. */
+    char text[18];
+    snprintf(text, sizeof(text), "02:%02x:%02x:%02x:%02x:%02x",
+             rand() & 0xff, rand() & 0xff, rand() & 0xff,
+             rand() & 0xff, rand() & 0xff);
+    return SoftApConfiguration::Builder(config)
+            .setBssid(MacAddress::fromString(text))
+            /* an explicit BSSID voids randomization (build() enforces the
+             * exclusivity; Builder(other)'s auto-fix only fires when the
+             * SOURCE already carries a bssid, not on a later setBssid) */
+            .setMacRandomizationSetting(SoftApConfiguration::RANDOMIZATION_NONE)
+            .build();
+}
+
+void WifiManager::scheduleSoftApIdleShutdown(int64_t timeoutMillis) {
+    bool expected = false;
+    if (!mSoftApIdleTimerActive.compare_exchange_strong(expected, true)) return;
+    mSoftApIdleThread = std::thread([this, timeoutMillis]() {
+        const auto deadline = std::chrono::steady_clock::now()
+                + std::chrono::milliseconds(timeoutMillis);
+        while (mSoftApIdleTimerActive.load()
+                && std::chrono::steady_clock::now() < deadline)
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        if (!mSoftApIdleTimerActive.load()) return;   /* cancelled */
+        mSoftApIdleTimerActive.store(false);
+        fprintf(stdout, "WifiManager: soft ap idle timeout, shutting down\n");
+        softApIdleShutdown();
+    });
+}
+
+void WifiManager::cancelSoftApIdleShutdown() {
+    mSoftApIdleTimerActive.exchange(false);
+    /* Join whenever the worker is joinable — not only right after arming it.
+     * A NATURAL timer expiry finishes the thread while mSoftApIdleTimerActive
+     * is already false (the worker stores false itself before tearing down),
+     * so the old exchange-gated join never ran: the finished thread stayed
+     * joinable forever, and the next scheduleSoftApIdleShutdown move-assign
+     * (or ~WifiManager's member destruction) aborted the process on it.
+     * The flag still makes the poll loop exit promptly, so the wait is
+     * bounded by one teardown. The self-guard keeps a callback running ON
+     * the idle thread (via softApIdleShutdown's notifications) from joining
+     * itself — in that case the next cancel joins it. */
+    if (mSoftApIdleThread.joinable()
+            && mSoftApIdleThread.get_id() != std::this_thread::get_id())
+        mSoftApIdleThread.join();
+}
+
+void WifiManager::softApIdleShutdown() {
+    setWifiApStateAndNotify(WIFI_AP_STATE_DISABLING);
+    const std::string iface = softApInterface();
+    HostapdClient::stopDaemon(
+            HostapdClient::configDirectory(iface) + "/hostapd.pid");
+    DhcpServer* server = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        server = mApDhcpServer;
+        mApDhcpServer = nullptr;
+        mSoftApClients.clear();
+        mSoftApInfo = SoftApInfo();
+        mActiveSoftApConfigValid = false;
+    }
+    delete server;   /* dnsmasq SIGTERM — no thread joins inside */
+    if (!iface.empty()) clearIpConfiguration(iface);
+    setWifiApStateAndNotify(WIFI_AP_STATE_DISABLED);
+}
+
+void WifiManager::refreshSoftApClientsFromHostapd() {
+    /* Seed from LIST_CLIENTS (a "MAC ..." line per associated STA); the
+     * AP-STA-* event stream keeps it current afterwards. */
+    const std::string reply = mHostapd.request("LIST_CLIENTS");
+    if (reply.empty() || reply.compare(0, 4, "FAIL") == 0) return;
+    const std::string iface = softApInterface();
+    std::vector<WifiClient> clients;
+    size_t pos = 0;
+    while (pos < reply.size()) {
+        const size_t nl = reply.find('\n', pos);
+        std::string line = reply.substr(pos, nl == std::string::npos
+                ? std::string::npos : nl - pos);
+        const size_t blank = line.find(' ');
+        const std::string first = line.substr(0, blank == std::string::npos
+                ? std::string::npos : blank);
+        const MacAddress mac = MacAddress::fromString(first);
+        if (mac.getBytes().size() == 6)
+            clients.push_back(WifiClient(mac, iface));
+        if (nl == std::string::npos) break;
+        pos = nl + 1;
+    }
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    mSoftApClients = std::move(clients);
+}
+
+void WifiManager::refreshSoftApInfoFromHostapd() {
+    /* hostapd STATUS carries state/freq/ssid/bssid[channel]; the frequency
+     * is what SoftApInfo reports (bandwidth stays AUTO until the nl80211
+     * operating-channel query lands). */
+    const std::string status = mHostapd.request("STATUS");
+    if (status.empty()) return;
+    SoftApInfo info;
+    size_t pos = 0;
+    while (pos < status.size()) {
+        const size_t nl = status.find('\n', pos);
+        const std::string line = status.substr(pos, nl == std::string::npos
+                ? std::string::npos : nl - pos);
+        if (line.compare(0, 5, "freq=") == 0)
+            info.frequency = atoi(line.c_str() + 5);
+        pos = (nl == std::string::npos) ? status.size() : nl + 1;
+    }
+    std::lock_guard<std::mutex> lock(mStateMutex);
+    mSoftApInfo = info;
+}
+
+void WifiManager::onHostapdEvent(const HostapdClient::HostapdEvent& event) {
+    if (eventIs(event, AP_STA_CONNECTED) || eventIs(event, AP_STA_DISCONNECTED)) {
+        /* Positional argument: "<event> <mac>". */
+        std::string macText = event.raw;
+        if (macText.size() > event.name.size() + 1)
+            macText = macText.substr(event.name.size() + 1);
+        else
+            macText.clear();
+        const MacAddress mac = MacAddress::fromString(macText);
+        const bool connected = eventIs(event, AP_STA_CONNECTED);
+        const std::string iface = softApInterface();
+        if (connected) enforceBlockedClient(mac);
+        bool becameIdle = false;
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            const auto it = std::find_if(mSoftApClients.begin(),
+                    mSoftApClients.end(),
+                    [&mac](const WifiClient& c) { return c.getMacAddress() == mac; });
+            if (connected) {
+                if (it == mSoftApClients.end())
+                    mSoftApClients.push_back(WifiClient(mac, iface));
+            } else if (it != mSoftApClients.end()) {
+                mSoftApClients.erase(it);
+            }
+            becameIdle = mSoftApClients.empty();
+        }
+        /* Idle-shutdown bookkeeping (outside mStateMutex: joining). */
+        if (connected) {
+            cancelSoftApIdleShutdown();
+        } else if (becameIdle) {
+            bool autoShutdown;
+            int64_t timeout;
+            {
+                std::lock_guard<std::mutex> lock(mStateMutex);
+                autoShutdown = mSoftApAutoShutdownEnabled;
+                timeout = mSoftApShutdownTimeoutMillis;
+            }
+            if (autoShutdown) {
+                cancelSoftApIdleShutdown();
+                scheduleSoftApIdleShutdown(timeout);
+            }
+        }
+        notifySoftApClientsChanged(0);
+    }
+}
+
+void WifiManager::onHostapdDisconnected() {
+    /* Daemon loss while up is the SoftApManager failure path (AOSP reports
+     * WIFI_AP_STATE_FAILED with the last failure reason). */
+    {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        if (mWifiApState != WIFI_AP_STATE_ENABLED) return;
+    }
+    setWifiApStateAndNotify(WIFI_AP_STATE_FAILED);
+}
+
+void WifiManager::onHostapdReconnected() {
+    /* ctrl socket back after a loss: the state machine stays where it was;
+     * without a live daemon query we do not resurrect ENABLED here. */
 }
 
 } // namespace cdroid

@@ -91,8 +91,16 @@ public:
      */
     class InformationElement {
     public:
+        /* Element IDs referenced by the framework (InformationElement#EID_*). */
+        static constexpr int EID_SSID = 0;
+        static constexpr int EID_VSA  = 221;   /* vendor-specific */
+
         int id = -1;                          /* element id */
         std::vector<unsigned char> bytes;     /* payload after the length byte */
+
+        bool operator==(const InformationElement& other) const {
+            return id == other.id && bytes == other.bytes;
+        }
     };
 
     /* The network name (quoted legacy form + WifiSsid form). */

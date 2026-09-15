@@ -65,6 +65,164 @@ static void appendJoined(std::string& out, const std::vector<std::string>& names
     }
 }
 
+/* --- dedicated AP interface (NL80211_CMD_NEW_INTERFACE) ---------------------- */
+
+/* family-id resolve over a caller-provided socket (shared by the scan
+ * instance and the one-shot createApInterface path) */
+static int resolveFamilyIdOn(int sock) {
+    unsigned char buffer[8192];
+    memset(buffer, 0, sizeof(buffer));
+    auto* nlh = reinterpret_cast<struct nlmsghdr*>(buffer);
+    nlh->nlmsg_type = GENL_ID_CTRL;
+    nlh->nlmsg_flags = NLM_F_REQUEST;
+    auto* genl = static_cast<struct genlmsghdr*>(NLMSG_DATA(nlh));
+    genl->cmd = CTRL_CMD_GETFAMILY;
+    genl->version = 1;
+    size_t offset = NLMSG_ALIGN(NLMSG_LENGTH(GENL_HDRLEN));
+    auto* rta = reinterpret_cast<struct rtattr*>(buffer + offset);
+    rta->rta_type = CTRL_ATTR_FAMILY_NAME;
+    rta->rta_len = RTA_LENGTH(strlen("nl80211") + 1);
+    memcpy(RTA_DATA(rta), "nl80211", strlen("nl80211") + 1);
+    offset += RTA_ALIGN(rta->rta_len);
+    nlh->nlmsg_len = static_cast<unsigned int>(offset);
+    if (send(sock, buffer, offset, 0) < 0) return -1;
+    const ssize_t len = recv(sock, buffer, sizeof(buffer), 0);
+    if (len <= 0) return -1;
+    const auto* reply = reinterpret_cast<const struct nlmsghdr*>(buffer);
+    if (!NLMSG_OK(reply, static_cast<int>(len))) return -1;
+    if (reply->nlmsg_type == NLMSG_ERROR) return -1;
+    const auto* replyGenl = static_cast<const struct genlmsghdr*>(NLMSG_DATA(reply));
+    const size_t attrLen = reply->nlmsg_len - NLMSG_HDRLEN - GENL_HDRLEN;
+    const auto* idAttr = findAttr(replyGenl + 1, attrLen, CTRL_ATTR_FAMILY_ID);
+    if (!idAttr || RTA_PAYLOAD(idAttr) < 2) return -1;
+    return getU16(static_cast<const unsigned char*>(RTA_DATA(idAttr)));
+}
+
+bool Nl80211Radio::createApInterface(const std::string& radioInterface,
+        const std::string& apInterface, std::string* error) {
+    const auto fail = [error](const std::string& why) {
+        if (error) *error = why;
+        return false;
+    };
+    /* The interface name is memcpy'd into a 256-byte stack buffer below
+     * (NL80211_ATTR_IFNAME) with no bound of its own; the kernel caps names
+     * at IFNAMSIZ-1 = 15 chars, so anything longer could only ever fail at
+     * the kernel — after the oversized copy smashed the stack. Reject up
+     * front (argv from "wpatest apifacenew" reaches here unchecked). */
+    if (apInterface.size() >= IFNAMSIZ)
+        return fail("interface name longer than " + std::to_string(IFNAMSIZ - 1)
+                + " characters: " + apInterface);
+    const unsigned int radioIfindex = if_nametoindex(radioInterface.c_str());
+    if (radioIfindex == 0)
+        return fail("radio interface " + radioInterface + " does not exist");
+
+    const int sock = socket(AF_NETLINK, SOCK_RAW | SOCK_CLOEXEC, NETLINK_GENERIC);
+    if (sock < 0) return fail(std::string("netlink socket: ") + strerror(errno));
+    struct sockaddr_nl local;
+    memset(&local, 0, sizeof(local));
+    local.nl_family = AF_NETLINK;
+    if (bind(sock, reinterpret_cast<struct sockaddr*>(&local), sizeof(local)) != 0) {
+        const std::string why = strerror(errno);
+        close(sock);
+        return fail("bind: " + why);
+    }
+    const int familyId = resolveFamilyIdOn(sock);
+    if (familyId <= 0) {
+        close(sock);
+        return fail("cannot resolve nl80211 family");
+    }
+
+    /* wiphy of the radio interface: NL80211_CMD_GET_INTERFACE(ifindex) */
+    unsigned char request[256];
+    memset(request, 0, sizeof(request));
+    auto* nlh = reinterpret_cast<struct nlmsghdr*>(request);
+    nlh->nlmsg_type = static_cast<unsigned short>(familyId);
+    nlh->nlmsg_flags = NLM_F_REQUEST;
+    auto* genl = static_cast<struct genlmsghdr*>(NLMSG_DATA(nlh));
+    genl->cmd = NL80211_CMD_GET_INTERFACE;
+    genl->version = 1;
+    size_t offset = NLMSG_ALIGN(NLMSG_LENGTH(GENL_HDRLEN));
+    auto* rta = reinterpret_cast<struct rtattr*>(request + offset);
+    rta->rta_type = NL80211_ATTR_IFINDEX;
+    rta->rta_len = RTA_LENGTH(sizeof(unsigned int));
+    memcpy(RTA_DATA(rta), &radioIfindex, sizeof(radioIfindex));
+    offset += RTA_ALIGN(rta->rta_len);
+    nlh->nlmsg_len = static_cast<unsigned int>(offset);
+    if (send(sock, request, offset, 0) < 0) {
+        const std::string why = strerror(errno);
+        close(sock);
+        return fail("GET_INTERFACE send: " + why);
+    }
+    unsigned char reply[8192];
+    const ssize_t len = recv(sock, reply, sizeof(reply), 0);
+    uint32_t wiphy = 0;
+    if (len <= 0) {
+        close(sock);
+        return fail("GET_INTERFACE: no reply");
+    }
+    {
+        const auto* msg = reinterpret_cast<const struct nlmsghdr*>(reply);
+        if (!NLMSG_OK(msg, static_cast<int>(len)) || msg->nlmsg_type == NLMSG_ERROR) {
+            close(sock);
+            return fail("GET_INTERFACE: kernel refused");
+        }
+        const auto* replyGenl = static_cast<const struct genlmsghdr*>(NLMSG_DATA(msg));
+        const size_t attrLen = msg->nlmsg_len - NLMSG_HDRLEN - GENL_HDRLEN;
+        const auto* wiphyAttr = findAttr(replyGenl + 1, attrLen, NL80211_ATTR_WIPHY);
+        if (!wiphyAttr || RTA_PAYLOAD(wiphyAttr) < 4) {
+            close(sock);
+            return fail("GET_INTERFACE: no wiphy attribute");
+        }
+        memcpy(&wiphy, RTA_DATA(wiphyAttr), sizeof(wiphy));
+    }
+
+    /* NEW_INTERFACE(wiphy, ifname, iftype=AP) */
+    memset(request, 0, sizeof(request));
+    nlh = reinterpret_cast<struct nlmsghdr*>(request);
+    nlh->nlmsg_type = static_cast<unsigned short>(familyId);
+    nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
+    genl = static_cast<struct genlmsghdr*>(NLMSG_DATA(nlh));
+    genl->cmd = NL80211_CMD_NEW_INTERFACE;
+    genl->version = 1;
+    offset = NLMSG_ALIGN(NLMSG_LENGTH(GENL_HDRLEN));
+    rta = reinterpret_cast<struct rtattr*>(request + offset);
+    rta->rta_type = NL80211_ATTR_WIPHY;
+    rta->rta_len = RTA_LENGTH(sizeof(uint32_t));
+    memcpy(RTA_DATA(rta), &wiphy, sizeof(wiphy));
+    offset += RTA_ALIGN(rta->rta_len);
+    rta = reinterpret_cast<struct rtattr*>(request + offset);
+    rta->rta_type = NL80211_ATTR_IFNAME;
+    rta->rta_len = RTA_LENGTH(apInterface.size() + 1);
+    memcpy(RTA_DATA(rta), apInterface.c_str(), apInterface.size() + 1);
+    offset += RTA_ALIGN(rta->rta_len);
+    rta = reinterpret_cast<struct rtattr*>(request + offset);
+    rta->rta_type = NL80211_ATTR_IFTYPE;
+    const uint32_t iftypeAp = NL80211_IFTYPE_AP;
+    rta->rta_len = RTA_LENGTH(sizeof(uint32_t));
+    memcpy(RTA_DATA(rta), &iftypeAp, sizeof(iftypeAp));
+    offset += RTA_ALIGN(rta->rta_len);
+    nlh->nlmsg_len = static_cast<unsigned int>(offset);
+    if (send(sock, request, offset, 0) < 0) {
+        const std::string why = strerror(errno);
+        close(sock);
+        return fail("NEW_INTERFACE send: " + why);
+    }
+    const ssize_t ack = recv(sock, reply, sizeof(reply), 0);
+    close(sock);
+    if (ack <= 0) return fail("NEW_INTERFACE: no ack");
+    const auto* msg = reinterpret_cast<const struct nlmsghdr*>(reply);
+    if (!NLMSG_OK(msg, static_cast<int>(ack)))
+        return fail("NEW_INTERFACE: malformed ack");
+    if (msg->nlmsg_type == NLMSG_ERROR) {
+        const auto* err = static_cast<const struct nlmsgerr*>(NLMSG_DATA(msg));
+        if (err->error != 0)
+            return fail("NEW_INTERFACE: " + std::string(strerror(-err->error)));
+    }
+    if (if_nametoindex(apInterface.c_str()) == 0)
+        return fail("NEW_INTERFACE acknowledged but " + apInterface + " absent");
+    return true;
+}
+
 /* --- pure IE helpers (unit-testable) ---------------------------------------- */
 
 std::vector<ScanResult::InformationElement> Nl80211Radio::parseIeStream(
@@ -225,37 +383,9 @@ Nl80211Radio::~Nl80211Radio() {
 }
 
 int Nl80211Radio::resolveFamilyId() {
-    /* The GETFAMILY reply embeds the full nl80211 policy and runs a few KB
-     * on a stock kernel (2.3KB observed); buffer for it and never trust
-     * nlmsg_len beyond the bytes actually received. */
-    unsigned char buffer[8192];
-    memset(buffer, 0, sizeof(buffer));
-    auto* nlh = reinterpret_cast<struct nlmsghdr*>(buffer);
-    nlh->nlmsg_type = GENL_ID_CTRL;
-    nlh->nlmsg_flags = NLM_F_REQUEST;
-    auto* genl = static_cast<struct genlmsghdr*>(NLMSG_DATA(nlh));
-    genl->cmd = CTRL_CMD_GETFAMILY;
-    genl->version = 1;
-    size_t offset = NLMSG_ALIGN(NLMSG_LENGTH(GENL_HDRLEN));
-    auto* rta = reinterpret_cast<struct rtattr*>(buffer + offset);
-    rta->rta_type = CTRL_ATTR_FAMILY_NAME;
-    rta->rta_len = RTA_LENGTH(strlen("nl80211") + 1);
-    memcpy(RTA_DATA(rta), "nl80211", strlen("nl80211") + 1);
-    offset += RTA_ALIGN(rta->rta_len);
-    nlh->nlmsg_len = static_cast<unsigned int>(offset);
-    if (send(mSock, buffer, offset, 0) < 0) return -1;
-    const ssize_t len = recv(mSock, buffer, sizeof(buffer), 0);
-    if (len <= 0) return -1;
-    const auto* reply = reinterpret_cast<const struct nlmsghdr*>(buffer);
-    /* NLMSG_OK bounds nlmsg_len by the received length: a truncated reply
-     * (nlmsg_len > len) is rejected instead of walked off the buffer. */
-    if (!NLMSG_OK(reply, static_cast<int>(len))) return -1;
-    if (reply->nlmsg_type == NLMSG_ERROR) return -1;
-    const auto* replyGenl = static_cast<const struct genlmsghdr*>(NLMSG_DATA(reply));
-    const size_t attrLen = reply->nlmsg_len - NLMSG_HDRLEN - GENL_HDRLEN;
-    const auto* idAttr = findAttr(replyGenl + 1, attrLen, CTRL_ATTR_FAMILY_ID);
-    if (!idAttr || RTA_PAYLOAD(idAttr) < 2) return -1;
-    return getU16(static_cast<const unsigned char*>(RTA_DATA(idAttr)));
+    /* the shared resolver keeps the GETFAMILY quirks (multi-KB policy
+     * reply, never trust nlmsg_len past the received length) in one place */
+    return resolveFamilyIdOn(mSock);
 }
 
 bool Nl80211Radio::ensureStarted() {

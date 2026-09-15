@@ -47,9 +47,17 @@ SupplicantClient::SupplicantClient(const std::string& ctrlPath)
 
 SupplicantClient::~SupplicantClient() {
     close();
+    /* A self-close from the monitor thread may have parked a retired handle
+     * (its thread has long finished by now); join it so no std::thread
+     * member is destroyed joinable. */
+    if (mRetiredMonitorThread.joinable()) mRetiredMonitorThread.join();
 }
 
 bool SupplicantClient::connect() {
+    /* Never move-assign over a joinable handle (see close()): retire any
+     * self-closed monitor first — the join is immediate, that thread ended
+     * before this monitor could be started. */
+    if (mRetiredMonitorThread.joinable()) mRetiredMonitorThread.join();
     acquireRequestSlot();
     bool opened = false;
     bool alreadyRunning;
@@ -73,7 +81,20 @@ bool SupplicantClient::connect() {
 void SupplicantClient::close() {
     if (mMonitorThread.joinable()) {
         mRunning.store(false);
-        mMonitorThread.join();
+        if (mMonitorThread.get_id() == std::this_thread::get_id()) {
+            /* close() called FROM the monitor thread: with no dispatcher
+             * installed the owner's callbacks run inline here (e.g.
+             * WifiManager::onHostapdDisconnected -> app callback ->
+             * stopSoftAp -> close), and joining ourselves would throw
+             * resource_deadlock_would_occur and terminate the process.
+             * Park the handle instead: monitorLoop exits once this dispatch
+             * returns (mRunning is now false), and the next
+             * close()/connect()/destructor joins it. */
+            if (mRetiredMonitorThread.joinable()) mRetiredMonitorThread.join();
+            mRetiredMonitorThread = std::move(mMonitorThread);
+        } else {
+            mMonitorThread.join();
+        }
     }
     acquireRequestSlot();
     {

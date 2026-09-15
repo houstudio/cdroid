@@ -76,6 +76,7 @@ add_library(cdnet
     wifi/supplicantclient.cc
     linkaddress.cc
     hexencoding.cc
+    macaddress.cc
     dhcpinfo.cc
     networkinfo.cc
     networkcapabilities.cc
@@ -83,14 +84,20 @@ add_library(cdnet
     ipconfiguration.cc
     ethernet/ethernetmanager.cc
     dhcpclient.cc
+    dhcpserver.cc
     ipapplicator.cc
     netlinkmonitor.cc
+    natcontroller.cc
     connectivitymanager.cc
     wifi/wifissid.cc
     wifi/supplicantstate.cc
     wifi/scanresult.cc
     wifi/wifiinfo.cc
     wifi/wificonfiguration.cc
+    wifi/softapinfo.cc
+    wifi/softapconfiguration.cc
+    wifi/softapconfigstore.cc
+    wifi/hostapdclient.cc
     wifi/nl80211radio.cc
     wifi/wparesponseparser.cc
     wifi/wifimanager.cc)
