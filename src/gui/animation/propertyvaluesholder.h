@@ -53,6 +53,9 @@ public:
     };
     static AnimateValue& ArgbEvaluator(float fraction,AnimateValue& out,const AnimateValue&from,const AnimateValue&to);
     static AnimateValue& PathDataEvaluator(float fraction,AnimateValue& out,const AnimateValue&from,const AnimateValue&to);
+    // AOSP LayoutTransition reads pvh.mKeyframes (package-private); the C++
+    // equivalent needs an accessor.
+    Keyframes*getKeyframes()const{return mKeyframes;}
 protected:
     int mValueType;
     std::string mPropertyName;

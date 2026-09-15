@@ -75,6 +75,31 @@ LayoutTransition::LayoutTransition() {
 }
 
 LayoutTransition::~LayoutTransition(){
+    // Cancel in-flight animators before teardown (AOSP relies on GC): their
+    // end listeners delete the animators and drain the maps, so nothing stays
+    // registered with the AnimationHandler against freed targets/`this`.
+    if (mCleanupObserver && mCleanupObserver->isAlive() && mPreDrawCleanup) {
+        mCleanupObserver->removeOnPreDrawListener(*mPreDrawCleanup);
+    }
+    if (mCleanupParent && mAttachStateCleanup) {
+        mCleanupParent->removeOnAttachStateChangeListener(*mAttachStateCleanup);
+    }
+    std::vector<Animator*> inFlight;
+    for (auto& it : currentChangingAnimations)     inFlight.push_back(it.second);
+    for (auto& it : currentAppearingAnimations)    inFlight.push_back(it.second);
+    for (auto& it : currentDisappearingAnimations) inFlight.push_back(it.second);
+    for (Animator* remover : mPendingAnimRemovers) inFlight.push_back(remover);
+    for (Animator* anim : inFlight) anim->cancel();
+    // Sweep whatever never started (cancel() no-ops on those).
+    for (auto& it : pendingAnimations)             delete it.second;
+    for (auto& it : currentChangingAnimations)     delete it.second;
+    for (auto& it : currentAppearingAnimations)    delete it.second;
+    for (auto& it : currentDisappearingAnimations) delete it.second;
+    pendingAnimations.clear();
+    currentChangingAnimations.clear();
+    currentAppearingAnimations.clear();
+    currentDisappearingAnimations.clear();
+    mPendingAnimRemovers.clear();
     if(mChangingAppearingAnim!=defaultChangeIn)delete mChangingAppearingAnim;
     if(mChangingDisappearingAnim!=defaultChangeOut)delete mChangingDisappearingAnim;
     if(mChangingAnim!=defaultChange)delete mChangingAnim;
@@ -382,35 +407,66 @@ void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int
 
     // This is the cleanup step. When we get this rendering event, we know that all of
     // the appropriate animations have been set up and run. Now we can clear out the
-    // layout listeners.
-    ViewTreeObserver::OnPreDrawListener onPreDrawListener;
-    View::OnAttachStateChangeListener onAttachStateListener;
-    onPreDrawListener=[this,parent,onPreDrawListener,onAttachStateListener](){
-        parent->getViewTreeObserver()->removeOnPreDrawListener(onPreDrawListener);
-        parent->removeOnAttachStateChangeListener(onAttachStateListener);
-        for (auto it:layoutChangeListenerMap){
-            View*view = it.first;
-            view->removeOnLayoutChangeListener(it.second);
-        }
-        layoutChangeListenerMap.clear();
-        return true;
-    };
-    onAttachStateListener.onViewAttachedToWindow = [](View& v){};
-    onAttachStateListener.onViewDetachedFromWindow=[this,parent,onPreDrawListener,onAttachStateListener](View& v){
-        parent->getViewTreeObserver()->removeOnPreDrawListener(onPreDrawListener);
-        parent->removeOnAttachStateChangeListener(onAttachStateListener);
-        for (auto it:layoutChangeListenerMap){
-            View*view = it.first;
-            view->removeOnLayoutChangeListener(it.second);
-        }
-        layoutChangeListenerMap.clear();
-    };
-    observer->addOnPreDrawListener(onPreDrawListener);
-    parent->addOnAttachStateChangeListener(onAttachStateListener);
+    // layout listeners. They capture themselves through shared_ptrs so the callbacks
+    // remove the registered copies (a by-value self-capture would hold the empty
+    // pre-assignment functor and never match on removal).
+    if (!mPreDrawCleanup) {
+        auto onPreDrawListener = std::make_shared<ViewTreeObserver::OnPreDrawListener>();
+        auto onAttachStateListener = std::make_shared<View::OnAttachStateChangeListener>();
+        auto sweep = [this](){
+            for (auto it:layoutChangeListenerMap){
+                View*view = it.first;
+                view->removeOnLayoutChangeListener(it.second);
+            }
+            layoutChangeListenerMap.clear();
+        };
+        auto detach = [this,parent,onPreDrawListener,onAttachStateListener](){
+            parent->getViewTreeObserver()->removeOnPreDrawListener(*onPreDrawListener);
+            parent->removeOnAttachStateChangeListener(*onAttachStateListener);
+            mPreDrawCleanup.reset();
+            mAttachStateCleanup.reset();
+            mCleanupParent = nullptr;
+            mCleanupObserver = nullptr;
+        };
+        *onPreDrawListener = [sweep,detach](){
+            detach();
+            sweep();
+            return true;
+        };
+        onAttachStateListener->onViewAttachedToWindow = [](View& v){};
+        onAttachStateListener->onViewDetachedFromWindow=[sweep,detach](View& v){
+            detach();
+            sweep();
+        };
+        mCleanupParent = parent;
+        mCleanupObserver = observer;
+        mPreDrawCleanup = onPreDrawListener;
+        mAttachStateCleanup = onAttachStateListener;
+        observer->addOnPreDrawListener(*onPreDrawListener);
+        parent->addOnAttachStateChangeListener(*onAttachStateListener);
+    }
 }
 
 void LayoutTransition::setAnimateParentHierarchy(bool animateParentHierarchy) {
     mAnimateParentHierarchy = animateParentHierarchy;
+}
+
+// AOSP skips change animations whose every holder has equal start/end
+// keyframe values; missing keyframes count as differing (path-based sets).
+static bool keyframeEndpointsDiffer(PropertyValuesHolder* pvh){
+    std::vector<Keyframe*>& kfs = pvh->getKeyframes()->getKeyframes();
+    if (kfs.size() < 2) return true;
+    const Keyframe* first = kfs.front();
+    const Keyframe* last  = kfs.back();
+    if (!first->hasValue() || !last->hasValue()) return true;
+    const AnimateValue va = first->getValue();
+    const AnimateValue vb = last->getValue();
+    if (va.index() != vb.index()) return true;
+    switch (va.index()) {
+    case 0: return GET_VARIANT(va,int)   != GET_VARIANT(vb,int);
+    case 1: return GET_VARIANT(va,float) != GET_VARIANT(vb,float);
+    default: return true;
+    }
 }
 
 void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason, Animator* baseAnimator,int64_t duration, View* child){
@@ -439,8 +495,11 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
     // handling layout events which start them.
     ValueAnimator* pendingAnimRemover = ValueAnimator::ofFloat({0.f, 1.f});
     pendingAnimRemover->setDuration(duration + 100);
+    mPendingAnimRemovers.push_back(pendingAnimRemover);
     Animator::AnimatorListener al;
     al.onAnimationEnd=[this,child](Animator&anim,bool){
+        auto itr = std::find(mPendingAnimRemovers.begin(), mPendingAnimRemovers.end(), &anim);
+        if (itr != mPendingAnimRemovers.end()) mPendingAnimRemovers.erase(itr);
         auto it = pendingAnimations.find(child);
         delete &anim;
         if(it != pendingAnimations.end()){
@@ -452,7 +511,7 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
     pendingAnimRemover->start();
 
     View::OnLayoutChangeListener listener;
-    listener = [this,anim,parent,child,changeReason,duration,listener](View& v, int left, int top, int width, int height,
+    listener = [this,anim,parent,child,changeReason,duration](View& v, int left, int top, int width, int height,
                     int oldLeft, int oldTop, int oldWidth, int oldHeight){
 
         anim->setupEndValues();
@@ -460,19 +519,10 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
             bool valuesDiffer = false;
             ValueAnimator* valueAnim = (ValueAnimator*)anim;
             std::vector<PropertyValuesHolder*> oldValues = valueAnim->getValues();
-            for (int i = 0; i < oldValues.size(); ++i) {
-                PropertyValuesHolder* pvh = oldValues[i];
-                /*if (dynamic_cast<KeyframeSet*>(pvh)) {
-                    KeyframeSet keyframeSet = (KeyframeSet) pvh->mKeyframes;
-                    if (keyframeSet.mFirstKeyframe == nullptr ||
-                            keyframeSet.mLastKeyframe == nullptr ||
-                            !keyframeSet.mFirstKeyframe.getValue().equals(
-                                    keyframeSet.mLastKeyframe.getValue())) {
-                        valuesDiffer = true;
-                    }
-                } else if (!pvh.mKeyframes.getValue(0).equals(pvh.mKeyframes.getValue(1))) {
+            for (PropertyValuesHolder* pvh : oldValues) {
+                if (keyframeEndpointsDiffer(pvh)) {
                     valuesDiffer = true;
-                }*/
+                }
             }
             if (!valuesDiffer) {
                 return;
@@ -514,12 +564,12 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
             prevAnimation->cancel();
             //delete prevAnimation;
         }
-        //Animator* pendingAnimation = pendingAnimations.get(child);
+        // AOSP removes the pending entry without deleting it: ownership of the
+        // promoted animator moves to currentChangingAnimations (deleted on
+        // animation end); the pendingAnimRemover no longer finds it.
         it = pendingAnimations.find(child);
-        if (it!=pendingAnimations.end()){//pendingAnimation != nullptr) {
-            Animator*pendingAnimation = it->second;
-            pendingAnimations.erase(it);//pendingAnimations->remove(child);
-            delete pendingAnimation;
+        if (it!=pendingAnimations.end()) {
+            pendingAnimations.erase(it);
         }
         // Cache the animation in case we need to cancel it later
         currentChangingAnimations.insert({child,anim});//put(child, anim);
@@ -528,9 +578,11 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
 
         // this only removes listeners whose views changed - must clear the
         // other listeners later
-        child->removeOnLayoutChangeListener(listener);
-        auto itc = layoutChangeListenerMap.find(child);
-        layoutChangeListenerMap.erase(itc);//layoutChangeListenerMap.remove(child);
+        auto itl = layoutChangeListenerMap.find(child);
+        if (itl != layoutChangeListenerMap.end()) {
+            child->removeOnLayoutChangeListener(itl->second);
+            layoutChangeListenerMap.erase(itl);
+        }
     };
   
     al.onAnimationStart = [this,parent,child,changeReason](Animator& animator,bool) {
@@ -544,10 +596,12 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
         }
     };
 
-    al.onAnimationCancel = [this,child,listener](Animator& animator) {
+    al.onAnimationCancel = [this,child](Animator& animator) {
         auto it = layoutChangeListenerMap.find(child);
-        child->removeOnLayoutChangeListener(listener);
-        layoutChangeListenerMap.erase(it);
+        if (it != layoutChangeListenerMap.end()) {
+            child->removeOnLayoutChangeListener(it->second);
+            layoutChangeListenerMap.erase(it);
+        }
     };
 
     al.onAnimationEnd = [this,parent,child,changeReason](Animator& animator,bool) {

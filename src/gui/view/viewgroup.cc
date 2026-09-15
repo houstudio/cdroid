@@ -232,6 +232,10 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet*atts){
 }
 
 ViewGroup::~ViewGroup() {
+    // Cancel layout transitions before destroying children: in-flight
+    // disappearing/changing animations would otherwise outlive their targets.
+    delete mTransition;
+    mTransition = nullptr;
     while(mChildren.size()){
         View*v = mChildren[0];
         removeViewAt(0);
@@ -241,7 +245,6 @@ ViewGroup::~ViewGroup() {
     delete mChildTransformation;
     delete mInvalidationTransformation;
     delete mLayoutAnimationController;
-    delete mTransition;
 }
 
 bool ViewGroup::ensureTouchMode(bool){
