@@ -47,9 +47,11 @@ ObjectAnimator::ObjectAnimator(void* target,const std::string& propertyName)
 void ObjectAnimator::initAnimation(){
     if(!mInitialized){
         void* target = getTarget();
-        for(auto value:mValues){
-            value->setupSetterAndGetter(target);
-            value->setupStartValue(target);
+        if (target != nullptr) {
+            for(auto value:mValues){
+                value->setupSetterAndGetter(target);
+                value->setupStartValue(target);
+            }
         }
         ValueAnimator::initAnimation();
     }

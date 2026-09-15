@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <animation/valueanimator.h>
 #include <animation/interpolators.h>
+#include <animation/animationutils.h>
 #include <systemclock.h>
 #include <cmath>
 #include <stdarg.h>
@@ -263,7 +264,7 @@ void ValueAnimator::setCurrentFraction(float fraction) {
     mStartTimeCommitted = true; // do not allow start time to be compensated for jank
     if (isPulsingInternal()) {
         const int64_t seekTime = int64_t(getScaledDuration()) * fraction;
-        const int64_t currentTime = SystemClock::uptimeMillis();
+        const int64_t currentTime = AnimationUtils::currentAnimationTimeMillis();
         // Only modify the start time when the animation is running. Seek fraction will ensure
         // non-running animations skip to the correct start time.
         mStartTime = currentTime - seekTime;
@@ -331,7 +332,7 @@ int64_t ValueAnimator::getCurrentPlayTime() {
     if (durationScale == 0.f) {
         durationScale = 1.f;
     }
-    return ((SystemClock::uptimeMillis() - mStartTime) / durationScale);
+    return ((AnimationUtils::currentAnimationTimeMillis() - mStartTime) / durationScale);
 }
 
 int64_t ValueAnimator::getStartDelay() {
@@ -412,6 +413,9 @@ bool ValueAnimator::isPulsingInternal(){
 }
 
 void ValueAnimator::setEvaluator(TypeEvaluator value){
+    if (value && mValues.size() > 0) {
+        mValues[0]->setEvaluator(value);
+    }
 }
 
 void ValueAnimator::notifyStartListeners() {
@@ -540,7 +544,7 @@ bool ValueAnimator::isStarted() {
 
 void ValueAnimator::reverse() {
     if (isPulsingInternal()) {
-        const int64_t currentTime = SystemClock::uptimeMillis();
+        const int64_t currentTime = AnimationUtils::currentAnimationTimeMillis();
         const int64_t currentPlayTime = currentTime - mStartTime;
         const int64_t timeLeft = getScaledDuration() - currentPlayTime;
         mStartTime = currentTime - timeLeft;

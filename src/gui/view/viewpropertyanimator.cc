@@ -299,7 +299,7 @@ ViewPropertyAnimator& ViewPropertyAnimator::z(float value){
 }
 
 ViewPropertyAnimator& ViewPropertyAnimator::zBy(float value){
-    animatePropertyBy(Y, value);
+    animatePropertyBy(Z, value);
     return *this;
 }
 
@@ -408,7 +408,7 @@ bool ViewPropertyAnimator::hasActions()const{
     return  (mPendingSetupAction!=nullptr)
                 || (mPendingCleanupAction!=nullptr)
                 || (mPendingOnStartAction!=nullptr)
-                || (mPendingOnEndAction==nullptr);
+                || (mPendingOnEndAction!=nullptr);
 }
 
 void ViewPropertyAnimator::startAnimation(){
