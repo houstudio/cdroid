@@ -453,27 +453,9 @@ static const float BEZIERSCURVE_VALUES[] ={
         0.9981f, 0.9986f, 0.9992f, 0.9995f, 0.9998f, 1.0f, 1.0f
 };
 #define BEZIERSCURVE_LENGH (sizeof(BEZIERSCURVE_VALUES)/sizeof(BEZIERSCURVE_VALUES[0]))
-#define BEZIERSCURVE_STEP_SIZE (1.0f / float(BEZIERSCURVE_LENGH - 1))
 
-BezierSCurveInterpolator::BezierSCurveInterpolator() {
-}
-
-float BezierSCurveInterpolator::getInterpolation(float input)const{
-    if (input >= 1.0f) {
-        return 1.0f;
-    }
-
-    if (input <= 0.f) {
-        return 0.f;
-    }
-
-    int position = std::min( int(input * (BEZIERSCURVE_LENGH - 1)), int(BEZIERSCURVE_LENGH - 2));
-
-    float quantized = position * BEZIERSCURVE_STEP_SIZE;
-    float difference = input - quantized;
-    float weight = difference / BEZIERSCURVE_STEP_SIZE;
-
-    return BEZIERSCURVE_VALUES[position] + weight * (BEZIERSCURVE_VALUES[position + 1] - BEZIERSCURVE_VALUES[position]);
+BezierSCurveInterpolator::BezierSCurveInterpolator()
+    :LookupTableInterpolator(BEZIERSCURVE_VALUES, BEZIERSCURVE_LENGH) {
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

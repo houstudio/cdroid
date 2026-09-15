@@ -79,7 +79,7 @@ ValueAnimator::ValueAnimator(const ValueAnimator&o){
     // every cloned animator (AVD animators are always cloned on start).
     mInterpolator = o.mInterpolator ? o.mInterpolator : sDefaultInterpolator;
     mDuration   = o.mDuration;
-    mReversing  = o.mReversing;
+    mReversing  = false; // clone()/newInstance() semantics: fresh runtime state
     mRepeatMode = o.mRepeatMode;
     mRepeatCount= o.mRepeatCount;
     mStartDelay = o.mStartDelay;
@@ -799,27 +799,11 @@ void ValueAnimator::animateValue(float fraction) {
 ValueAnimator*ValueAnimator::clone()const {
     ValueAnimator*anim= new ValueAnimator(*this);
 
+    // The copy ctor already resets the runtime state (AOSP resets it here
+    // only because Object.clone() copies every field verbatim).
     if (!mUpdateListeners.empty()) {
         anim->mUpdateListeners = mUpdateListeners;
     }
-    anim->mSeekFraction = -1;
-    anim->mReversing = false;
-    anim->mInitialized = false;
-    anim->mStarted = false;
-    anim->mRunning = false;
-    anim->mPaused = false;
-    anim->mResumed = false;
-    anim->mStartListenersCalled = false;
-    anim->mStartTime = -1;
-    anim->mStartTimeCommitted = false;
-    anim->mAnimationEndRequested = false;
-    anim->mPauseTime = -1;
-    anim->mLastFrameTime = -1;
-    anim->mFirstFrameTime = -1;
-    anim->mOverallFraction = 0;
-    anim->mCurrentFraction = 0;
-    anim->mSelfPulse = true;
-    anim->mSuppressSelfPulseRequested = false;
     return anim;
 }
 

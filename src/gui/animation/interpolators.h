@@ -184,12 +184,11 @@ public:
     FastOutLinearInInterpolator();
 };
 
-class BezierSCurveInterpolator:public TimeInterpolator {
+class BezierSCurveInterpolator:public LookupTableInterpolator{
 public:
     static const BezierSCurveInterpolator*const Instance;
 public:
     BezierSCurveInterpolator();
-    float getInterpolation(float input)const override;
 };
 }//namespace 
 

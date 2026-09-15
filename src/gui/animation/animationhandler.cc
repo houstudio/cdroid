@@ -65,7 +65,6 @@ AnimationHandler::~AnimationHandler(){
 
 
 void AnimationHandler::doFrame(int64_t frameTimeNanos){
-    LOGV("not used,frame refresh callback");
     doAnimationFrame(getProvider()->getFrameTime());
     if( mAnimationCallbacks.size() ){
         getProvider()->postFrameCallback(mFrameCallback);

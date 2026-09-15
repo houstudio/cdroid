@@ -657,7 +657,6 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
         mFirstFrame = frameTime;
     }
 
-    LOGV("%p frameTime=(%lld-%lld)=%d",this,frameTime,mFirstFrame,int(frameTime-mFirstFrame));
     // Handle pause/resume
     if (mPaused) {
         // Note: Child animations don't receive pause events. Since it's never a contract that
@@ -698,7 +697,6 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
     const int latestId = findLatestEventIdForTime(unscaledPlayTime);
     const int startId = mLastEventId;
 
-    LOGV("%p startId=%d latestId=%d mEvents.size=%d",this,startId,latestId,mEvents.size());
     handleAnimationEvents(startId, latestId, unscaledPlayTime);
 
     mLastEventId = latestId;
