@@ -73,8 +73,12 @@ void AnimationHandler::doFrame(int64_t frameTimeNanos){
 }
 
 void AnimationHandler::doAnimationFrame(int64_t frameTime){
-    const int size = mAnimationCallbacks.size();
-    for (auto callback:mAnimationCallbacks) {
+    // AOSP captures the count first: callbacks added during the pulse (start()
+    // from a listener) join next frame; removals only null slots.
+    const int size = (int)mAnimationCallbacks.size();
+    auto itc = mAnimationCallbacks.begin();
+    for (int i = 0; i < size; i++, ++itc) {
+        AnimationFrameCallback* callback = *itc;
         if (callback == nullptr) continue;
 
         if (isCallbackDue(callback, frameTime)) {

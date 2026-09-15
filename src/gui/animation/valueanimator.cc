@@ -84,6 +84,10 @@ ValueAnimator::ValueAnimator(const ValueAnimator&o){
     mRepeatCount= o.mRepeatCount;
     mStartDelay = o.mStartDelay;
     mDurationScale = o.mDurationScale;
+    // AOSP Animator.clone() copies the listener lists; the Animator base
+    // subobject is default-constructed here, so copy them explicitly.
+    mListeners = o.mListeners;
+    mPauseListeners = o.mPauseListeners;
     auto& oldValues = o.mValues;
     if (oldValues.size()) {
         const int numValues = (int)oldValues.size();
@@ -628,7 +632,8 @@ bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
             done = true;
         } else if (newIteration && !lastIterationFinished) {
             // Time to repeat
-            for (AnimatorListener l:mListeners) {
+            std::vector<AnimatorListener>tmpListeners = mListeners;
+            for (auto l:tmpListeners) {
                 if(l.onAnimationRepeat)l.onAnimationRepeat(*this);
             }
         } else if (lastIterationFinished) {
@@ -656,7 +661,8 @@ void ValueAnimator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t last
         lastIteration = std::min(lastIteration, mRepeatCount);
 
         if (iteration != lastIteration) {
-            for (AnimatorListener l:mListeners) {
+            std::vector<AnimatorListener>tmpListeners = mListeners;
+            for (auto l:tmpListeners) {
                 if(l.onAnimationRepeat)l.onAnimationRepeat(*this);
             }
         }
@@ -784,7 +790,8 @@ void ValueAnimator::animateValue(float fraction) {
     for (auto v:mValues) {
         v->calculateValue(fraction);
     }
-    for (auto l:mUpdateListeners) {
+    std::vector<AnimatorUpdateListener>tmpListeners = mUpdateListeners;
+    for (auto l:tmpListeners) {
         l(*this);
     }
 }
