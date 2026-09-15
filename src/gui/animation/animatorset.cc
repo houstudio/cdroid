@@ -420,6 +420,10 @@ void AnimatorSet::initAnimation() {
 }
 
 void AnimatorSet::start(bool inReverse, bool selfPulse) {
+    // android-36: an identical re-start of a started set is a complete no-op.
+    if ((inReverse == mReversing) && (selfPulse == mSelfPulse) && mStarted) {
+        return;
+    }
     mStarted = true;
     mSelfPulse = selfPulse;
     mPaused = false;
@@ -1314,6 +1318,8 @@ void AnimatorSet::SeekState::setPlayTime(int64_t playTime, bool inReverse) {
     // Clamp the play time
     if (mAnimSet->getTotalDuration() != DURATION_INFINITE) {
         mPlayTime = std::min(playTime, int64_t(mAnimSet->getTotalDuration() - mAnimSet->mStartDelay));
+    } else {
+        mPlayTime = playTime;
     }
     mPlayTime = std::max(int64_t(0), mPlayTime);
     mSeekingInReverse = inReverse;
