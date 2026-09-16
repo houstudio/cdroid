@@ -102,26 +102,26 @@ void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts
 // resolves the base Drawable attrs only (AOSP 4-arg default body; no
 // re-dispatch).
 void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
-    auto ta = theme ? obtainAttributes(r, theme, atts, R::styleable::Drawable)
-                    : r.obtainStyledAttributes(&atts, R::styleable::Drawable);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::Drawable);
     mVisible = ta->getBoolean(R::styleable::Drawable_visible, mVisible);
 }
 
-// AOSP Drawable.applyTheme(@NonNull Theme): no-op here (the mThemeAttrs
-// deferred-resolution machinery is not ported; themed inflation happens up
-// front through the 4-arg inflate instead).
+// AOSP Drawable.applyTheme(@NonNull Theme): no-op at this layer — the base
+// Drawable carries no pending attrs; subclasses owning mThemeAttrs
+// (ColorDrawable) re-resolve them here.
 void Drawable::applyTheme(const Resources::Theme& t){
     (void)t;
 }
 
-// AOSP Drawable.obtainAttributes(res, @Nullable Theme, set, attrs).
+// AOSP Drawable.obtainAttributes(res, @Nullable Theme, set, attrs)
+// (Drawable.java:1609-1615): a null theme means the THEME-LESS read —
+// Resources.obtainAttributes keeps ?attr values raw (TYPE_ATTRIBUTE) so
+// TypedArray.extractThemeAttrs() can record them as pending for a later
+// applyTheme(); only a non-null theme resolves through the theme.
 std::unique_ptr<TypedArray> Drawable::obtainAttributes(Resources& r,const Resources::Theme* theme,
         const AttributeSet& set,const uint32_t* attrs){
     if (theme) return theme->obtainStyledAttributes(&set, attrs);
-    // AOSP falls back to the theme-less Resources.obtainAttributes(set, attrs);
-    // CDROID keeps the default-theme styled resolution so unthemed loads
-    // behave exactly as before.
-    return r.obtainStyledAttributes(&set, attrs);
+    return r.obtainAttributes(&set, attrs);
 }
 
 void Drawable::inflateWithAttributes(XmlPullParser&parser,const AttributeSet&atts){

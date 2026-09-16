@@ -178,6 +178,7 @@ TEST_F(ASSETS, theme_face){
     const int colorPrimary = (int)cdroid::internal::R::attr::colorPrimary;
     auto own = app.getResources().newTheme();
     own.setTo(theme);   // this snapshot becomes the rebase base
+    const int snapshotMask = own.getChangingConfigurations();
     TypedValue v2;
     ASSERT_TRUE(own.resolveAttribute(colorPrimary,&v2,true));
     own.applyStyle(gui_test::R::style::theme_face_probe, /*force=*/true); // non-force would keep Theme.Material's value
@@ -186,6 +187,28 @@ TEST_F(ASSETS, theme_face){
     own.rebase();      // erases the probe overlay, restores the setTo snapshot
     ASSERT_TRUE(own.resolveAttribute(colorPrimary,&v2,true));
     ASSERT_NE(v2.data,(uint32_t)0xFF123456) << "rebase did not restore the setTo state";
+    // getChangingConfigurations follows the restored snapshot, not the overlay.
+    ASSERT_EQ(own.getChangingConfigurations(), snapshotMask)
+        << "rebase did not restore the setTo type-spec mask";
+
+    // Cache-generation seam: a themed drawable cached under the probe overlay
+    // must NOT be served from cache after rebase() bumps the generation — the
+    // load re-resolves through the restored Material entries instead.
+    own.applyStyle(gui_test::R::style::theme_face_probe, /*force=*/true);
+    Drawable* probeCached = own.getDrawable(gui_test::R::drawable::cts_apply_theme_color);
+    ASSERT_NE(probeCached, nullptr);
+    auto* probeCd = dynamic_cast<ColorDrawable*>(probeCached);
+    ASSERT_NE(probeCd, nullptr);
+    ASSERT_EQ(probeCd->getColor(), (int)0xFF123456);   // ?colorPrimary -> probe overlay
+    delete probeCached;
+
+    own.rebase();
+    Drawable* restored = own.getDrawable(gui_test::R::drawable::cts_apply_theme_color);
+    ASSERT_NE(restored, nullptr);
+    auto* restoredCd = dynamic_cast<ColorDrawable*>(restored);
+    ASSERT_NE(restoredCd, nullptr);
+    ASSERT_NE(restoredCd->getColor(), (int)0xFF123456) << "stale themed-cache entry survived rebase";
+    delete restored;
 
     theme.dump("theme_face");
 }

@@ -94,8 +94,17 @@ void ColorDrawable::applyTheme(const Resources::Theme& t){
     Drawable::applyTheme(t);
     if (mColorState && !mColorState->mThemeAttrs.empty()) {
         auto a = t.resolveAttributes(mColorState->mThemeAttrs, R::styleable::ColorDrawable);
-        if (a) mColorState->mBaseColor = a->getColor(R::styleable::ColorDrawable_color, mColorState->mBaseColor);
-        mColorState->mThemeAttrs.clear();
+        if (a) {
+            mColorState->mBaseColor = a->getColor(R::styleable::ColorDrawable_color, mColorState->mBaseColor);
+            // AOSP (ColorDrawable.java:329-333 + :309) re-extracts from the
+            // resolved array: an attr the theme could not resolve stays
+            // pending instead of being dropped. (Sibling subclasses still
+            // clear unconditionally — a per-class re-extract port is a
+            // separate family-wide pass.)
+            mColorState->mThemeAttrs = a->extractThemeAttrs();
+        } else {
+            mColorState->mThemeAttrs.clear();
+        }
     }
     mColorState->mUseColor = mColorState->mBaseColor;
 }

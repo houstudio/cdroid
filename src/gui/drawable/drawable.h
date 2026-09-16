@@ -137,9 +137,9 @@ public:
     // instead of the AttributeSet Context's default theme. The default
     // implementation resolves the base Drawable attrs only (no dispatch).
     virtual void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&,const Resources::Theme* theme);
-    // AOSP Drawable.applyTheme(@NonNull Theme): no-op at this layer (AOSP's
-    // mThemeAttrs re-resolution machinery is not ported; themed inflation
-    // happens up front through the 4-arg inflate instead).
+    // AOSP Drawable.applyTheme(@NonNull Theme): no-op at this layer — the
+    // base carries no pending attrs; subclasses owning mThemeAttrs
+    // (ColorDrawable) re-resolve them through the theme here.
     virtual void applyTheme(const Resources::Theme& t);
     void inflateWithAttributes(XmlPullParser&parser,const AttributeSet&);
     static Drawable*createFromXmlInner(Resources& r,XmlPullParser&parser,const AttributeSet&);
@@ -187,10 +187,10 @@ public:
     virtual bool isAutoMirrored()const;
     virtual bool canApplyTheme(){return false;}
 protected:
-    // AOSP Drawable.obtainAttributes(res, @Nullable Theme, set, attrs):
-    // theme==null keeps the current default-theme resolution (AOSP uses a
-    // theme-less Resources.obtainAttributes there; CDROID keeps the default
-    // theme chain so unthemed loads behave exactly as before).
+    // AOSP Drawable.obtainAttributes(res, @Nullable Theme, set, attrs)
+    // (Drawable.java:1609-1615): theme==null takes the theme-less
+    // Resources.obtainAttributes — ?attr values stay raw (TYPE_ATTRIBUTE)
+    // so extractThemeAttrs() records them as pending for applyTheme().
     static std::unique_ptr<TypedArray> obtainAttributes(Resources& r,const Resources::Theme* theme,
             const AttributeSet& set,const uint32_t* attrs);
 public:

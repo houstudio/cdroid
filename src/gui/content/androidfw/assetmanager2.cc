@@ -1282,6 +1282,16 @@ void Theme::Clear() {
   cache_generation_ = NextThemeGeneration();
 }
 
+void Theme::RebaseToBase() {
+  // Restore the last SetTo snapshot (or the empty initial state). The
+  // generation bump is mandatory, not cosmetic: the themed drawable /
+  // ComplexColor / animator caches key on (id, cacheGeneration()) and would
+  // otherwise keep serving pre-rebase values.
+  entries_ = base_entries_;
+  type_spec_flags_ = base_type_spec_flags_;
+  cache_generation_ = NextThemeGeneration();
+}
+
 void Theme::GetAllAttributes(std::vector<uint32_t>& out) const {
   out.clear();
   out.reserve(entries_.size());
@@ -1295,10 +1305,14 @@ base::expected<base::monostate, IOError> Theme::SetTo(const Theme& source) {
     return base::expected<base::monostate, IOError>();
   }
 
-  type_spec_flags_ = source.type_spec_flags_;
-
   if (asset_manager_ == source.asset_manager_) {
     entries_ = source.entries_;
+    type_spec_flags_ = source.type_spec_flags_;
+    // The last SetTo state becomes the new RebaseToBase() base. Everything
+    // stays inside the success branch so the failure path below leaves
+    // entries/flags/base coherent.
+    base_entries_ = entries_;
+    base_type_spec_flags_ = type_spec_flags_;
     cache_generation_ = NextThemeGeneration();
     return base::expected<base::monostate, IOError>();
   }

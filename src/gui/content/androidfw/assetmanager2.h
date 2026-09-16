@@ -562,6 +562,15 @@ class Theme {
   // this theme currently has values for), vector out-param form.
   void GetAllAttributes(std::vector<uint32_t>& out) const;
 
+  // CDROID seam: restore the last SetTo snapshot (or the empty initial
+  // state), erasing ApplyStyle changes made since — the engine behind
+  // Resources::Theme.rebase(). NOT AOSP's 4-arg Rebase(): that one replays
+  // the applyStyle history for configuration re-resolution (the history
+  // lives Java-side in ThemeKey there); never wire this snapshot restore
+  // into a config-change path, a snapshot cannot re-resolve against a new
+  // configuration.
+  void RebaseToBase();
+
   void Dump() const;
 
   struct Entry;
@@ -576,6 +585,14 @@ class Theme {
   uint32_t cache_generation_ = 0u;   // CDROID seam (themed cache key)
 
   std::vector<Entry> entries_;
+
+  // CDROID seam: the base snapshot for RebaseToBase() — the state at the
+  // last SetTo (empty until the first SetTo; the initial state IS the base).
+  // Recorded engine-side because theme identity is engine identity (wrapper
+  // copies share the engine). Clear() deliberately leaves it alone: the
+  // contract is "the last setTo state", not "empty".
+  std::vector<Entry> base_entries_;
+  uint32_t base_type_spec_flags_ = 0u;
 };
 
 inline const ResolvedBag::Entry* begin(const ResolvedBag* bag) {

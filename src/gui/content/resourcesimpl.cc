@@ -691,12 +691,10 @@ cdroid::Drawable* ResourcesImpl::getDrawableForDensity(int id, int /*density*/, 
         // is the file path; .xml → DrawableInflater (id-based parser + inflateFromXml,
         // which already takes Resources&), else → ImageDecoder::decodeDrawable(id).
         // AOSP ResourcesImpl.loadDrawable delegates TYPE_STRING entirely to
-        // DrawableInflater.loadDrawableForDensity: .xml inflates themed (AOSP
-        // loadDrawableForCookie inflates null-themed then re-applies
-        // applyTheme(); CDROID has no mThemeAttrs deferred machinery, so the
-        // theme goes straight into the inflation — the same route AOSP uses
-        // for ColorStateList), other files decode through ImageDecoder
-        // (createSource(Resources, id)).
+        // DrawableInflater.loadDrawableForDensity: .xml inflates through the
+        // caller's theme (android-36 threads it into inflate; a null theme
+        // keeps ?attr values pending for a later applyTheme()), other files
+        // decode through ImageDecoder (createSource(Resources, id)).
         if (themeEngine) {
             Resources::Theme themed(mCtx->getResources(),
                                     const_cast<void*>(themeEngine));

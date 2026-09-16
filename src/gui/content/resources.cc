@@ -537,9 +537,12 @@ int Resources::Theme::getChangingConfigurations() const {
 }
 
 void Resources::Theme::rebase() {
-    // The AM2 engine keeps no setTo snapshot to roll back to (the retired
-    // legacy engine's rebase feature); no in-tree callers — documented no-op.
-    if (mEngine) LOGW("Theme::rebase() is a no-op on the AM2 engine");
+    // Reset to the last setTo() state (or the initial empty state), erasing
+    // applyStyle() changes made since — the engine keeps the snapshot.
+    // (AOSP's rebase() is a different animal: a configuration re-resolution
+    // REPLAY of the applyStyle history; this port's declared contract above
+    // is the stricter snapshot restore. See Theme::RebaseToBase.)
+    if (mEngine) static_cast<cdroid::Theme*>(mEngine)->RebaseToBase();
 }
 
 void Resources::Theme::dump(const char* tag, const char* prefix) const {
