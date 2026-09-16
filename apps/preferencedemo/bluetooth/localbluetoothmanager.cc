@@ -18,9 +18,30 @@ LocalBluetoothManager::LocalBluetoothManager()
     : mLocalAdapter(cdroid::BluetoothAdapter::getDefaultAdapter()),
       mDeviceManager(std::make_unique<CachedBluetoothDeviceManager>(&mLocalAdapter)),
       mEventManager(mDeviceManager.get()) {
-    mLocalAdapter.raw().addAdapterStateListener(&mEventManager);
-    mLocalAdapter.raw().addDiscoveryListener(&mEventManager);
-    mLocalAdapter.raw().addBondStateListener(&mEventManager);
+    // Listener slots (value semantics): lambdas forwarding into the
+    // event manager, registered as copies.
+    mEventManager.mStateListener =
+            [this](int newState, int prevState) {
+                mEventManager.onAdapterStateChanged(newState, prevState);
+            };
+    mEventManager.mDiscoveryListener.onDiscoveryStarted = [this] {
+        mEventManager.onDiscoveryStarted();
+    };
+    mEventManager.mDiscoveryListener.onDeviceFound =
+            [this](const cdroid::BluetoothDevice& device) {
+                mEventManager.onDeviceFound(device);
+            };
+    mEventManager.mDiscoveryListener.onDiscoveryFinished = [this] {
+        mEventManager.onDiscoveryFinished();
+    };
+    mEventManager.mBondListener =
+            [this](const cdroid::BluetoothDevice& device,
+                   int bondState, int prevState) {
+                mEventManager.onBondStateChanged(device, bondState, prevState);
+            };
+    mLocalAdapter.raw().addAdapterStateListener(mEventManager.mStateListener);
+    mLocalAdapter.raw().addDiscoveryListener(mEventManager.mDiscoveryListener);
+    mLocalAdapter.raw().addBondStateListener(mEventManager.mBondListener);
     // AOSP seeds the bonded cache at manager creation.
     mEventManager.readPairedDevices();
 }
@@ -28,11 +49,11 @@ LocalBluetoothManager::LocalBluetoothManager()
 LocalBluetoothManager::~LocalBluetoothManager() {
     // The manager is a function-local static destroyed before the adapter
     // static (reverse construction order) while the BlueZ monitor thread may
-    // still be dispatching — detach the listeners first or their next fan-out
-    // calls into the dying BluetoothEventManager.
-    mLocalAdapter.raw().removeAdapterStateListener(&mEventManager);
-    mLocalAdapter.raw().removeDiscoveryListener(&mEventManager);
-    mLocalAdapter.raw().removeBondStateListener(&mEventManager);
+    // still be dispatching — detach the listener copies first or their
+    // lambdas call into the dying BluetoothEventManager.
+    mLocalAdapter.raw().removeAdapterStateListener(mEventManager.mStateListener);
+    mLocalAdapter.raw().removeDiscoveryListener(mEventManager.mDiscoveryListener);
+    mLocalAdapter.raw().removeBondStateListener(mEventManager.mBondListener);
 }
 
 // --- BluetoothEventManager ----------------------------------------------------

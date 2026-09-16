@@ -2,9 +2,12 @@
 #define __CDROID_BLUETOOTH_GATT_H__
 
 #include <cstdint>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <vector>
+
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
 
 #include <bluetoothdevice.h>
 #include <bluetoothuuid.h>
@@ -84,23 +87,26 @@ private:
 /**
  * Port of android.bluetooth.BluetoothGattCallback (android-36). All
  * callbacks arrive on the monitor thread (the cdnet convention — marshal
- * through the app's Handler/View::post for UI work).
+ * through the app's Handler/View::post for UI work). Listener shape:
+ * EventSet + std::function slots (identity in EventSet, unset slots are
+ * no-ops). @NonNull params are references: gatt is the dispatching
+ * session itself, and characteristic is null-checked by the callers
+ * before the callbacks fire.
  */
-class BluetoothGattCallback {
+class BluetoothGattCallback : public EventSet {
 public:
-    virtual ~BluetoothGattCallback() = default;
-    virtual void onConnectionStateChange(BluetoothGatt* gatt, int status,
-                                         int newState) {}
-    virtual void onServicesDiscovered(BluetoothGatt* gatt, int status) {}
-    virtual void onCharacteristicRead(BluetoothGatt* gatt,
-                                      BluetoothGattCharacteristic* characteristic,
-                                      int status) {}
-    virtual void onCharacteristicWrite(BluetoothGatt* gatt,
-                                       BluetoothGattCharacteristic* characteristic,
-                                       int status) {}
+    std::function<void(BluetoothGatt& gatt, int status,
+                       int newState)> onConnectionStateChange;
+    std::function<void(BluetoothGatt& gatt, int status)> onServicesDiscovered;
+    std::function<void(BluetoothGatt& gatt,
+                       BluetoothGattCharacteristic& characteristic,
+                       int status)> onCharacteristicRead;
+    std::function<void(BluetoothGatt& gatt,
+                       BluetoothGattCharacteristic& characteristic,
+                       int status)> onCharacteristicWrite;
     /* Value arrived via notification/indication. */
-    virtual void onCharacteristicChanged(BluetoothGatt* gatt,
-                                         BluetoothGattCharacteristic* characteristic) {}
+    std::function<void(BluetoothGatt& gatt,
+                       BluetoothGattCharacteristic& characteristic)> onCharacteristicChanged;
 };
 
 /**
@@ -131,10 +137,10 @@ public:
      * callback (close()-then-delete while a callback is in flight was
      * a use-after-free — review round 2). Factories return the shared
      * pointer; AOSP's own binder callback path holds a strong ref the
-     * same way. */
+     * same way. The callback is stored as a value copy (EventSet). */
     static std::shared_ptr<BluetoothGatt> create(const BluetoothDevice& device,
                                                  bool autoConnect,
-                                                 BluetoothGattCallback* callback);
+                                                 const BluetoothGattCallback& callback);
 
     bool connect();
     void disconnect();
@@ -156,13 +162,15 @@ private:
     friend class BluetoothDevice;
     friend class BluetoothAdapter;   /* characteristic-changed fan-out */
     explicit BluetoothGatt(const BluetoothDevice& device,
-                           BluetoothGattCallback* callback);
+                           const BluetoothGattCallback& callback);
     /* BlueZ characteristic Value/Notifying flip (monitor thread). */
     void onCharacteristicChangedInternal(const std::string& objectPath,
                                          const std::vector<uint8_t>& value);
 
     BluetoothDevice mDevice;
-    BluetoothGattCallback* mCallback;
+    /* Ctor-set value copy, immutable afterwards: read from the app and
+     * monitor threads without a lock (unset slots are no-ops). */
+    BluetoothGattCallback mCallback;
     class BluezClient& mClient;      /* shared transport (via the adapter) */
     /* Services/state are mutated by the app thread (discoverServices/
      * close) and read by the monitor thread (notification fan-out):

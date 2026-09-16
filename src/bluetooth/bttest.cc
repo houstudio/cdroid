@@ -71,26 +71,29 @@ static const char* bondName(int s) {
     }
 }
 
-/* Event pump: prints listener callbacks so bench runs show live signal flow. */
-class Printer : public BluetoothAdapter::AdapterStateListener,
-                public BluetoothAdapter::DiscoveryListener,
-                public BluetoothAdapter::BondStateListener {
-public:
-    void onAdapterStateChanged(int newState, int prevState) override {
-        printf("[state] %s -> %s\n", stateName(prevState), stateName(newState));
-    }
-    void onDiscoveryStarted() override { printf("[discovery] started\n"); }
-    void onDeviceFound(const BluetoothDevice& device) override {
-        printf("[found] %s  name='%s' class=0x%06x bond=%s\n",
-               device.getAddress().c_str(), device.getName().c_str(),
-               device.getBluetoothClass().getClassOfDevice(),
-               bondName(device.getBondState()));
-    }
-    void onDiscoveryFinished() override { printf("[discovery] finished\n"); }
-    void onBondStateChanged(const BluetoothDevice& device, int bond,
-                            int prev) override {
-        printf("[bond] %s %s -> %s\n", device.getAddress().c_str(),
-               bondName(prev), bondName(bond));
+/* Event pump: prints listener callbacks so bench runs show live signal
+ * flow. Value-semantics listeners (CallbackBase / EventSet + lambdas). */
+struct Printer {
+    BluetoothAdapter::AdapterStateListener state{
+        [](int newState, int prevState) {
+            printf("[state] %s -> %s\n", stateName(prevState), stateName(newState));
+        }};
+    BluetoothAdapter::DiscoveryListener discovery;
+    BluetoothAdapter::BondStateListener bond{
+        [](const BluetoothDevice& device, int bond, int prev) {
+            printf("[bond] %s %s -> %s\n", device.getAddress().c_str(),
+                   bondName(prev), bondName(bond));
+        }};
+
+    Printer() {
+        discovery.onDiscoveryStarted = [] { printf("[discovery] started\n"); };
+        discovery.onDeviceFound = [](const BluetoothDevice& device) {
+            printf("[found] %s  name='%s' class=0x%06x bond=%s\n",
+                   device.getAddress().c_str(), device.getName().c_str(),
+                   device.getBluetoothClass().getClassOfDevice(),
+                   bondName(device.getBondState()));
+        };
+        discovery.onDiscoveryFinished = [] { printf("[discovery] finished\n"); };
     }
 };
 
@@ -163,18 +166,16 @@ int main(int argc, char** argv) {
     if (cmd == "pair" && argc >= 3) {
         /* Register an agent that auto-answers PIN requests — the bench
          * stand-in for the settings-app pairing dialog. */
-        class AutoPin : public BluetoothPairingListener {
-        public:
-            void onPairingRequest(const BluetoothDevice& device,
-                                  int variant, uint32_t passkey) override {
-                printf("[pair] agent asked %s variant=%d passkey=%u -> setPin(1234)\n",
-                       device.getAddress().c_str(), variant, passkey);
-                BluetoothDevice d = device;   /* setPin is non-const (AOSP) */
-                d.setPin("1234");
-            }
-        } agent;
+        BluetoothPairingListener agent;
+        agent.onPairingRequest = [](const BluetoothDevice& device,
+                                    int variant, uint32_t passkey) {
+            printf("[pair] agent asked %s variant=%d passkey=%u -> setPin(1234)\n",
+                   device.getAddress().c_str(), variant, passkey);
+            BluetoothDevice d = device;   /* setPin is non-const (AOSP) */
+            d.setPin("1234");
+        };
         adapter.registerPairingAgent("DisplayYesNo");
-        adapter.addPairingListener(&agent);
+        adapter.addPairingListener(agent);
         const bool ok = adapter.getRemoteDevice(argv[2]).createBond();
         printf("pair: %s\n", ok ? "ok (agent negotiation follows)" : "FAILED (discover it first?)");
         /* createBond is fire-and-forget (AOSP): stay alive for the agent
@@ -183,7 +184,7 @@ int main(int argc, char** argv) {
                           != BluetoothDevice::BOND_BONDED; i++) usleep(500 * 1000);
         const int bond = adapter.getRemoteDevice(argv[2]).getBondState();
         printf("bond: %s\n", bondName(bond));
-        adapter.removePairingListener(&agent);
+        adapter.removePairingListener(agent);
         return bond == BluetoothDevice::BOND_BONDED ? 0 : 1;
     }
     if (cmd == "remove" && argc >= 3) {
@@ -195,9 +196,9 @@ int main(int argc, char** argv) {
         int seconds = 10;
         if (argc >= 3) seconds = atoi(argv[2]);
         Printer printer;
-        adapter.addAdapterStateListener(&printer);
-        adapter.addDiscoveryListener(&printer);
-        adapter.addBondStateListener(&printer);
+        adapter.addAdapterStateListener(printer.state);
+        adapter.addDiscoveryListener(printer.discovery);
+        adapter.addBondStateListener(printer.bond);
         printf("listening for %ds (self-driving: discovery at +1s, cancel at "
                "+4s, pair of the first found device at +6s)\n", seconds);
         /* self-driving sequence so one process exercises the listener
@@ -275,66 +276,63 @@ int main(int argc, char** argv) {
     }
     if (cmd == "blescan" && argc >= 3) {
         const int seconds = atoi(argv[2]);
-        class LePrinter : public ScanCallback {
-        public:
-            void onScanResult(int, const ScanResult& r) override {
-                printf("[ble] %s  rssi=%d  name='%s'\n",
-                       r.getDevice().getAddress().c_str(), r.getRssi(),
-                       r.getDevice().getName().c_str());
-            }
-            void onScanFailed(int err) override {
-                printf("[ble] scan failed err=%d\n", err);
-            }
-        } printer;
+        ScanCallback printer;
+        printer.onScanResult = [](int, const ScanResult& r) {
+            printf("[ble] %s  rssi=%d  name='%s'\n",
+                   r.getDevice().getAddress().c_str(), r.getRssi(),
+                   r.getDevice().getName().c_str());
+        };
+        printer.onScanFailed = [](int err) {
+            printf("[ble] scan failed err=%d\n", err);
+        };
         std::vector<ScanFilter> filters;   /* empty = all */
         ScanSettings settings;
         settings.setScanMode(ScanSettings::SCAN_MODE_LOW_LATENCY);
         BluetoothLeScanner* scanner = adapter.getBluetoothLeScanner();
-        if (scanner == nullptr || !scanner->startScan(filters, settings, &printer)) {
+        if (scanner == nullptr || !scanner->startScan(filters, settings, printer)) {
             printf("blescan: start failed (no adapter?)\n");
             return 1;
         }
         for (int i = 0; i < seconds * 2; i++) usleep(500 * 1000);
-        scanner->stopScan(&printer);
+        scanner->stopScan(printer);
         return 0;
     }
     if (cmd == "gatt" && argc >= 3) {
         /* connect -> discover -> read -> notify -> write, then exit */
-        class GattPrinter : public BluetoothGattCallback {
-        public:
-            void onConnectionStateChange(BluetoothGatt* g, int status,
-                                         int newState) override {
-                printf("[gatt] state %d -> %d (status %d)\n",
-                       g ? 0 : 0, newState, status);
+        BluetoothGattCallback printer;
+        printer.onConnectionStateChange = [](BluetoothGatt&, int status,
+                                             int newState) {
+            printf("[gatt] state -> %d (status %d)\n", newState, status);
+        };
+        printer.onServicesDiscovered = [](BluetoothGatt& g, int status) {
+            printf("[gatt] services discovered (status %d):\n", status);
+            for (BluetoothGattService* s : g.getServices()) {
+                printf("  service %s\n", s->getUuid().toString().c_str());
+                for (BluetoothGattCharacteristic* c :
+                        s->getCharacteristics())
+                    printf("    char %s props=0x%02x\n",
+                           c->getUuid().toString().c_str(),
+                           c->getProperties());
             }
-            void onServicesDiscovered(BluetoothGatt* g, int status) override {
-                printf("[gatt] services discovered (status %d):\n", status);
-                for (BluetoothGattService* s : g->getServices()) {
-                    printf("  service %s\n", s->getUuid().toString().c_str());
-                    for (BluetoothGattCharacteristic* c :
-                            s->getCharacteristics())
-                        printf("    char %s props=0x%02x\n",
-                               c->getUuid().toString().c_str(),
-                               c->getProperties());
-                }
-            }
-            void onCharacteristicRead(BluetoothGatt*, BluetoothGattCharacteristic* c,
-                                      int status) override {
-                std::string v((const char*)c->getValue().data(), c->getValue().size());
-                printf("[gatt] read '%s' (status %d)\n", v.c_str(), status);
-            }
-            void onCharacteristicWrite(BluetoothGatt*, BluetoothGattCharacteristic*,
-                                       int status) override {
-                printf("[gatt] write status %d\n", status);
-            }
-            void onCharacteristicChanged(BluetoothGatt*,
-                                         BluetoothGattCharacteristic* c) override {
-                std::string v((const char*)c->getValue().data(), c->getValue().size());
-                printf("[gatt] notify '%s'\n", v.c_str());
-            }
-        } printer;
+        };
+        printer.onCharacteristicRead = [](BluetoothGatt&,
+                                          BluetoothGattCharacteristic& c,
+                                          int status) {
+            std::string v((const char*)c.getValue().data(), c.getValue().size());
+            printf("[gatt] read '%s' (status %d)\n", v.c_str(), status);
+        };
+        printer.onCharacteristicWrite = [](BluetoothGatt&,
+                                           BluetoothGattCharacteristic&,
+                                           int status) {
+            printf("[gatt] write status %d\n", status);
+        };
+        printer.onCharacteristicChanged = [](BluetoothGatt&,
+                                             BluetoothGattCharacteristic& c) {
+            std::string v((const char*)c.getValue().data(), c.getValue().size());
+            printf("[gatt] notify '%s'\n", v.c_str());
+        };
         BluetoothDevice remote = adapter.getRemoteDevice(argv[2]);
-        auto gatt = remote.connectGatt(false, &printer);
+        auto gatt = remote.connectGatt(false, printer);
         if (!gatt->connect()) { printf("gatt: connect failed\n"); return 1; }
         gatt->discoverServices();
         for (BluetoothGattService* s : gatt->getServices()) {
@@ -353,28 +351,24 @@ int main(int argc, char** argv) {
     }
     if (cmd == "profiles") {
         /* stub surface check: proxy hand-off + disconnected defaults */
-        class ProxyPrinter : public BluetoothProfile::ServiceListener {
-        public:
-            void onServiceConnected(int profile,
-                                    BluetoothProfile* proxy) override {
-                printf("[proxy] profile %d connected: devices=%d state=%d\n",
-                       profile,
-                       (int)(profile == BluetoothProfile::A2DP
-                             ? ((BluetoothA2dp*)proxy)->getConnectedDevices().size()
-                             : ((BluetoothHeadset*)proxy)->getConnectedDevices().size()),
-                       proxy->getConnectionState(BluetoothDevice("00:00:00:00:00:00")));
-                adapter->closeProfileProxy(profile, proxy);
-            }
-            void onServiceDisconnected(int profile) override {
-                printf("[proxy] profile %d disconnected\n", profile);
-            }
-            BluetoothAdapter* adapter = nullptr;
-        } printer;
-        printer.adapter = &adapter;
+        BluetoothProfile::ServiceListener printer;
+        printer.onServiceConnected = [&adapter](int profile,
+                                                BluetoothProfile* proxy) {
+            printf("[proxy] profile %d connected: devices=%d state=%d\n",
+                   profile,
+                   (int)(profile == BluetoothProfile::A2DP
+                         ? ((BluetoothA2dp*)proxy)->getConnectedDevices().size()
+                         : ((BluetoothHeadset*)proxy)->getConnectedDevices().size()),
+                   proxy->getConnectionState(BluetoothDevice("00:00:00:00:00:00")));
+            adapter.closeProfileProxy(profile, proxy);
+        };
+        printer.onServiceDisconnected = [](int profile) {
+            printf("[proxy] profile %d disconnected\n", profile);
+        };
         const bool a2dp = adapter.getProfileProxy(
-                &printer, BluetoothProfile::A2DP);
+                printer, BluetoothProfile::A2DP);
         const bool hfp = adapter.getProfileProxy(
-                &printer, BluetoothProfile::HEADSET);
+                printer, BluetoothProfile::HEADSET);
         printf("profiles: a2dp=%d hfp=%d (stubs until the audio "
                "pipeline lands)\n", (int)a2dp, (int)hfp);
         return (a2dp && hfp) ? 0 : 1;
@@ -383,21 +377,16 @@ int main(int argc, char** argv) {
         /* PAN: "pan on|off|status" (NAP tethering — bridge bt-pan must
          * exist: see scripts/bt-bench.sh), "pan connect|disconnect <addr>"
          * (PANU client over a bonded peer). */
-        class PanGetter : public BluetoothProfile::ServiceListener {
-        public:
-            void onServiceConnected(int profile,
-                                    BluetoothProfile* proxy) override {
-                pan = (BluetoothPan*)proxy;
-            }
-            void onServiceDisconnected(int profile) override {}
-            BluetoothPan* pan = nullptr;
-        } getter;
-        if (!adapter.getProfileProxy(&getter, BluetoothProfile::PAN)
-                || getter.pan == nullptr) {
+        BluetoothPan* pan = nullptr;
+        BluetoothProfile::ServiceListener getter;
+        getter.onServiceConnected = [&pan](int, BluetoothProfile* proxy) {
+            pan = (BluetoothPan*)proxy;
+        };
+        if (!adapter.getProfileProxy(getter, BluetoothProfile::PAN)
+                || pan == nullptr) {
             printf("pan: proxy failed\n");
             return 1;
         }
-        BluetoothPan* pan = getter.pan;
         const std::string sub = argv[2];
         if (sub == "on") {
             const bool ok = pan->setBluetoothTethering(true);

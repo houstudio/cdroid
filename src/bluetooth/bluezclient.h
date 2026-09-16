@@ -12,6 +12,8 @@
 #include <thread>
 #include <vector>
 
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
+
 #include <bluetoothdevice.h>
 
 struct sd_bus;
@@ -79,44 +81,49 @@ struct BluezDevice {
  */
 class BluezClient {
 public:
-    class Events {
+    /* Multi-callback surface: EventSet + std::function slots (see
+     * SupplicantClient::EventCallback in src/net/wifi for the shape) —
+     * fill the members with lambdas and hand a copy to the constructor;
+     * unset slots are no-ops. Identity (==) lives in EventSet. The set
+     * is ctor-once and never swapped, so mEvents needs no locking. */
+    class Events : public EventSet {
     public:
-        virtual ~Events() = default;
         /* Adapter-level property flips with their VALUES. Handlers run on
          * the monitor thread inside the bus lock — they must never issue
          * a synchronous bus call back into this client (self-deadlock);
          * that is why the values ride along instead of being re-read. */
-        virtual void onAdapterBoolChanged(const std::string& name, bool value) {}
-        virtual void onAdapterStringChanged(const std::string& name,
-                                            const std::string& value) {}
+        std::function<void(const std::string& name, bool value)> onAdapterBoolChanged;
+        std::function<void(const std::string& name,
+                           const std::string& value)> onAdapterStringChanged;
         /* A Device1 object appeared (discovery result or paired device
          * coming back into the cache). */
-        virtual void onDeviceAdded(const BluezDevice& device) {}
+        std::function<void(const BluezDevice& device)> onDeviceAdded;
         /* A Device1 property changed (Name/Alias/Paired/RSSI/Connected...). */
-        virtual void onDevicePropertyChanged(const BluezDevice& device,
-                                             const std::string& name) {}
+        std::function<void(const BluezDevice& device,
+                           const std::string& name)> onDevicePropertyChanged;
         /* A Device1 object disappeared (unpaired/removed). */
-        virtual void onDeviceRemoved(const std::string& objectPath) {}
+        std::function<void(const std::string& objectPath)> onDeviceRemoved;
         /* A GATT characteristic's Value/Notifying property changed. */
-        virtual void onGattCharacteristicChanged(const BluezGattCharacteristic& ch) {}
+        std::function<void(const BluezGattCharacteristic& ch)> onGattCharacteristicChanged;
         /* D-Bus/bluez service lost and re-established (daemon restart). */
-        virtual void onBluezDisconnected() {}
-        virtual void onBluezReconnected() {}
+        std::function<void()> onBluezDisconnected;
+        std::function<void()> onBluezReconnected;
         /* Pairing agent requests (org.bluez.Agent1). The pending daemon
          * request is held until replyPairing*() answers it. */
-        virtual void onPairingPinRequested(const std::string& address) {}
-        virtual void onPairingPasskeyRequested(const std::string& address) {}
-        virtual void onPairingConfirmationRequested(const std::string& address,
-                                                   uint32_t passkey) {}
+        std::function<void(const std::string& address)> onPairingPinRequested;
+        std::function<void(const std::string& address)> onPairingPasskeyRequested;
+        std::function<void(const std::string& address,
+                           uint32_t passkey)> onPairingConfirmationRequested;
         /* BlueZ consent-only methods (RequestAuthorization /
          * AuthorizeService): no passkey exists — AOSP surfaces these
          * as PAIRING_VARIANT_CONSENT. */
-        virtual void onPairingConsentRequested(const std::string& address) {}
-        virtual void onDisplayPasskey(const std::string& address, uint32_t passkey) {}
-        virtual void onPairingCancelled() {}
+        std::function<void(const std::string& address)> onPairingConsentRequested;
+        std::function<void(const std::string& address,
+                           uint32_t passkey)> onDisplayPasskey;
+        std::function<void()> onPairingCancelled;
     };
 
-    explicit BluezClient(Events* events);
+    explicit BluezClient(const Events& events);
     ~BluezClient();
 
     BluezClient(const BluezClient&) = delete;
@@ -214,9 +221,10 @@ public:
 private:
     /* Deferred Events dispatch: every callback is queued while the bus
      * lock is held (processBus) and run after it releases, so listener
-     * code may make synchronous client calls freely. */
-    std::vector<std::function<void(Events*)>> mDeferredEvents;
-    void queueEvent(std::function<void(Events*)> fn);
+     * code may make synchronous client calls freely. The closures carry
+     * copies of the slots (mEvents is ctor-once, safe to read). */
+    std::vector<std::function<void()>> mDeferredEvents;
+    void queueEvent(std::function<void()> fn);
     void flushDeferredEvents();
     /* shared adapter-request preamble (connect + non-empty path) */
     bool ensureAdapter(std::string& path);
@@ -264,7 +272,7 @@ private:
     static int onNameOwnerChangedStatic(sd_bus_message* m, void* userdata,
                                         sd_bus_error* retError);
 
-    Events* mEvents;
+    Events mEvents;   /* ctor-set value copy, immutable afterwards */
     sd_bus* mBus = nullptr;
     sd_bus_slot* mSlotProperties = nullptr;
     sd_bus_slot* mSlotIfAdded = nullptr;

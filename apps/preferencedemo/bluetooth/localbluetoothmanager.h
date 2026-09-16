@@ -68,10 +68,7 @@ private:
 
 /** SettingsLib BluetoothEventManager: cdblue listeners -> BluetoothCallback
  *  fan-out on the main looper + CachedBluetoothDeviceManager bookkeeping. */
-class BluetoothEventManager
-        : private cdroid::BluetoothAdapter::AdapterStateListener,
-          private cdroid::BluetoothAdapter::DiscoveryListener,
-          private cdroid::BluetoothAdapter::BondStateListener {
+class BluetoothEventManager {
 public:
     void registerCallback(BluetoothCallback* callback);
     void unregisterCallback(BluetoothCallback* callback);
@@ -83,13 +80,17 @@ private:
     /* AOSP readPairedDevices: seed + dispatch onDeviceAdded per bonded. */
     void readPairedDevices();
 
-    // cdroid::BluetoothAdapter listeners (BlueZ monitor thread).
-    void onAdapterStateChanged(int newState, int prevState) override;
-    void onDiscoveryStarted() override;
-    void onDeviceFound(const cdroid::BluetoothDevice& device) override;
-    void onDiscoveryFinished() override;
+    // cdblue adapter listener slots (BlueZ monitor thread; value
+    // semantics — the members hold the lambdas, registered as copies).
+    void onAdapterStateChanged(int newState, int prevState);
+    void onDiscoveryStarted();
+    void onDeviceFound(const cdroid::BluetoothDevice& device);
+    void onDiscoveryFinished();
     void onBondStateChanged(const cdroid::BluetoothDevice& device,
-                            int bondState, int prevState) override;
+                            int bondState, int prevState);
+    cdroid::BluetoothAdapter::AdapterStateListener mStateListener;
+    cdroid::BluetoothAdapter::DiscoveryListener mDiscoveryListener;
+    cdroid::BluetoothAdapter::BondStateListener mBondListener;
 
     CachedBluetoothDeviceManager* mDeviceManager;
     std::vector<BluetoothCallback*> mCallbacks;   // main thread only

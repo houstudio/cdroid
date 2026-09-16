@@ -26,12 +26,63 @@ BluetoothAdapter& BluetoothAdapter::getDefaultAdapter() {
 }
 
 BluetoothAdapter::BluetoothAdapter()
-    : mClient(*new BluezClient(this)) {
+    : mClient(*makeClient(this)) {
     mClient.connect();
 }
 
 BluetoothAdapter::~BluetoothAdapter() {
     delete &mClient;
+}
+
+BluezClient* BluetoothAdapter::makeClient(BluetoothAdapter* adapter) {
+    /* BluezClient event slot (EventSet + lambdas — value semantics, no
+     * listener object to own). Runs in the ctor's member-init list: only
+     * the adapter POINTER is captured here, never dereferenced before
+     * the constructor body runs. */
+    BluezClient::Events events;
+    events.onAdapterBoolChanged =
+            [adapter](const std::string& name, bool value) {
+                adapter->onAdapterBoolChanged(name, value);
+            };
+    events.onAdapterStringChanged =
+            [adapter](const std::string& name, const std::string& value) {
+                adapter->onAdapterStringChanged(name, value);
+            };
+    events.onDeviceAdded = [adapter](const BluezDevice& device) {
+        adapter->onDeviceAdded(device);
+    };
+    events.onDevicePropertyChanged =
+            [adapter](const BluezDevice& device, const std::string& name) {
+                adapter->onDevicePropertyChanged(device, name);
+            };
+    events.onDeviceRemoved = [adapter](const std::string& objectPath) {
+        adapter->onDeviceRemoved(objectPath);
+    };
+    events.onBluezDisconnected = [adapter] { adapter->onBluezDisconnected(); };
+    events.onBluezReconnected = [adapter] { adapter->onBluezReconnected(); };
+    events.onGattCharacteristicChanged =
+            [adapter](const BluezGattCharacteristic& ch) {
+                adapter->onGattCharacteristicChanged(ch);
+            };
+    events.onPairingPinRequested = [adapter](const std::string& address) {
+        adapter->onPairingPinRequested(address);
+    };
+    events.onPairingPasskeyRequested = [adapter](const std::string& address) {
+        adapter->onPairingPasskeyRequested(address);
+    };
+    events.onPairingConfirmationRequested =
+            [adapter](const std::string& address, uint32_t passkey) {
+                adapter->onPairingConfirmationRequested(address, passkey);
+            };
+    events.onPairingConsentRequested = [adapter](const std::string& address) {
+        adapter->onPairingConsentRequested(address);
+    };
+    events.onDisplayPasskey =
+            [adapter](const std::string& address, uint32_t passkey) {
+                adapter->onDisplayPasskey(address, passkey);
+            };
+    events.onPairingCancelled = [adapter] { adapter->onPairingCancelled(); };
+    return new BluezClient(events);
 }
 
 /* --- radio power ----------------------------------------------------- */
@@ -116,9 +167,7 @@ bool BluetoothAdapter::startDiscovery() {
         mDiscovering = true;
     }
     if (!was) {
-        std::lock_guard<std::mutex> lock(mListenersMutex);
-        for (DiscoveryListener* l : mDiscoveryListeners)
-            l->onDiscoveryStarted();
+        notifyDiscoveryStarted();
     }
     return true;
 }
@@ -133,9 +182,7 @@ bool BluetoothAdapter::cancelDiscovery() {
         mDiscovering = false;
     }
     if (was) {
-        std::lock_guard<std::mutex> lock(mListenersMutex);
-        for (DiscoveryListener* l : mDiscoveryListeners)
-            l->onDiscoveryFinished();
+        notifyDiscoveryFinished();
     }
     return true;
 }
@@ -221,17 +268,19 @@ void BluetoothAdapter::onGattCharacteristicChanged(
 /* --- profile proxies ----------------------------------------------------------- */
 
 bool BluetoothAdapter::getProfileProxy(
-        BluetoothProfile::ServiceListener* listener, int profile) {
-    if (listener == nullptr) return false;
+        const BluetoothProfile::ServiceListener& listener, int profile) {
+    /* The proxy is minted fresh per call; only fire the slot when the
+     * caller set one (an all-empty listener is a valid no-op). */
+    if (!listener.onServiceConnected) return false;
     switch (profile) {
     case BluetoothProfile::A2DP:
-        listener->onServiceConnected(profile, new BluetoothA2dp());
+        listener.onServiceConnected(profile, new BluetoothA2dp());
         return true;
     case BluetoothProfile::HEADSET:
-        listener->onServiceConnected(profile, new BluetoothHeadset());
+        listener.onServiceConnected(profile, new BluetoothHeadset());
         return true;
     case BluetoothProfile::PAN:
-        listener->onServiceConnected(profile,
+        listener.onServiceConnected(profile,
                 new BluetoothPan(*this));
         return true;
     default:
@@ -250,12 +299,12 @@ bool BluetoothAdapter::registerPairingAgent(const std::string& capability) {
     return mClient.registerAgent(capability);
 }
 
-void BluetoothAdapter::addPairingListener(BluetoothPairingListener* listener) {
+void BluetoothAdapter::addPairingListener(const BluetoothPairingListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mPairingListeners.push_back(listener);
 }
 
-void BluetoothAdapter::removePairingListener(BluetoothPairingListener* listener) {
+void BluetoothAdapter::removePairingListener(const BluetoothPairingListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mPairingListeners.erase(std::remove(mPairingListeners.begin(),
                                         mPairingListeners.end(), listener),
@@ -279,47 +328,35 @@ void BluetoothAdapter::cancelPairingUserInput() {
 }
 
 void BluetoothAdapter::onPairingPinRequested(const std::string& address) {
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    for (BluetoothPairingListener* l : mPairingListeners)
-        l->onPairingRequest(BluetoothDevice(address),
-                            BluetoothDevice::PAIRING_VARIANT_PIN, 0);
+    notifyPairingRequest(BluetoothDevice(address),
+                         BluetoothDevice::PAIRING_VARIANT_PIN, 0);
 }
 
 void BluetoothAdapter::onPairingPasskeyRequested(const std::string& address) {
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    for (BluetoothPairingListener* l : mPairingListeners)
-        l->onPairingRequest(BluetoothDevice(address),
-                BluetoothDevice::PAIRING_VARIANT_PASSKEY, 0);
+    notifyPairingRequest(BluetoothDevice(address),
+                         BluetoothDevice::PAIRING_VARIANT_PASSKEY, 0);
 }
 
 void BluetoothAdapter::onPairingConfirmationRequested(const std::string& address,
                                                     uint32_t passkey) {
     /* The passkey rides along (AOSP carries it as EXTRA_PAIRING_KEY on
      * ACTION_PAIRING_REQUEST) — the dialog shows the 6-digit code. */
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    for (BluetoothPairingListener* l : mPairingListeners)
-        l->onPairingRequest(BluetoothDevice(address),
-                BluetoothDevice::PAIRING_VARIANT_PASSKEY_CONFIRMATION, passkey);
+    notifyPairingRequest(BluetoothDevice(address),
+            BluetoothDevice::PAIRING_VARIANT_PASSKEY_CONFIRMATION, passkey);
 }
 
 void BluetoothAdapter::onPairingConsentRequested(const std::string& address) {
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    for (BluetoothPairingListener* l : mPairingListeners)
-        l->onPairingRequest(BluetoothDevice(address),
-                BluetoothDevice::PAIRING_VARIANT_CONSENT, 0);
+    notifyPairingRequest(BluetoothDevice(address),
+                         BluetoothDevice::PAIRING_VARIANT_CONSENT, 0);
 }
 
 void BluetoothAdapter::onDisplayPasskey(const std::string& address,
                                         uint32_t passkey) {
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    for (BluetoothPairingListener* l : mPairingListeners)
-        l->onDisplayPasskey(BluetoothDevice(address), passkey, 0);
+    notifyDisplayPasskey(BluetoothDevice(address), passkey, 0);
 }
 
 void BluetoothAdapter::onPairingCancelled() {
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    for (BluetoothPairingListener* l : mPairingListeners)
-        l->onPairingCancelled(BluetoothDevice(std::string()));
+    notifyPairingCancelled(BluetoothDevice(std::string()));
 }
 
 /* --- remote devices ------------------------------------------------------- */
@@ -336,37 +373,119 @@ std::vector<BluetoothDevice> BluetoothAdapter::getBondedDevices() {
     return out;
 }
 
-/* --- listener plumbing ------------------------------------------------------ */
+/* --- listener plumbing (value semantics) -------------------------------------- */
 
-void BluetoothAdapter::addAdapterStateListener(AdapterStateListener* listener) {
+void BluetoothAdapter::addAdapterStateListener(const AdapterStateListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mStateListeners.push_back(listener);
 }
-void BluetoothAdapter::removeAdapterStateListener(AdapterStateListener* listener) {
+void BluetoothAdapter::removeAdapterStateListener(const AdapterStateListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mStateListeners.erase(std::remove(mStateListeners.begin(),
                                       mStateListeners.end(), listener),
                           mStateListeners.end());
 }
-void BluetoothAdapter::addDiscoveryListener(DiscoveryListener* listener) {
+void BluetoothAdapter::addDiscoveryListener(const DiscoveryListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mDiscoveryListeners.push_back(listener);
 }
-void BluetoothAdapter::removeDiscoveryListener(DiscoveryListener* listener) {
+void BluetoothAdapter::removeDiscoveryListener(const DiscoveryListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mDiscoveryListeners.erase(std::remove(mDiscoveryListeners.begin(),
                                           mDiscoveryListeners.end(), listener),
                               mDiscoveryListeners.end());
 }
-void BluetoothAdapter::addBondStateListener(BondStateListener* listener) {
+void BluetoothAdapter::addBondStateListener(const BondStateListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mBondListeners.push_back(listener);
 }
-void BluetoothAdapter::removeBondStateListener(BondStateListener* listener) {
+void BluetoothAdapter::removeBondStateListener(const BondStateListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mBondListeners.erase(std::remove(mBondListeners.begin(),
                                      mBondListeners.end(), listener),
                          mBondListeners.end());
+}
+
+/* --- notify tails: snapshot under the lock, invoke without it ----------------- */
+
+void BluetoothAdapter::notifyAdapterStateChanged(int newState, int prevState) {
+    std::vector<AdapterStateListener> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mStateListeners;
+    }
+    /* Writable copies: CallbackBase::operator() is non-const. */
+    for (AdapterStateListener l : listeners) l(newState, prevState);
+}
+
+void BluetoothAdapter::notifyDiscoveryStarted() {
+    std::vector<DiscoveryListener> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mDiscoveryListeners;
+    }
+    for (const DiscoveryListener& l : listeners) l.onDiscoveryStarted();
+}
+
+void BluetoothAdapter::notifyDiscoveryFinished() {
+    std::vector<DiscoveryListener> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mDiscoveryListeners;
+    }
+    for (const DiscoveryListener& l : listeners) l.onDiscoveryFinished();
+}
+
+void BluetoothAdapter::notifyDeviceFound(const BluetoothDevice& device) {
+    std::vector<DiscoveryListener> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mDiscoveryListeners;
+    }
+    for (const DiscoveryListener& l : listeners) l.onDeviceFound(device);
+}
+
+void BluetoothAdapter::notifyBondStateChanged(const BluetoothDevice& device,
+                                              int bondState, int prevState) {
+    std::vector<BondStateListener> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mBondListeners;
+    }
+    /* Writable copies: CallbackBase::operator() is non-const. */
+    for (BondStateListener l : listeners) l(device, bondState, prevState);
+}
+
+void BluetoothAdapter::notifyPairingRequest(const BluetoothDevice& device,
+                                            int pairingVariant, uint32_t passkey) {
+    std::vector<BluetoothPairingListener> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mPairingListeners;
+    }
+    for (const BluetoothPairingListener& l : listeners)
+        l.onPairingRequest(device, pairingVariant, passkey);
+}
+
+void BluetoothAdapter::notifyDisplayPasskey(const BluetoothDevice& device,
+                                            uint32_t passkey, int pairedDuration) {
+    std::vector<BluetoothPairingListener> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mPairingListeners;
+    }
+    for (const BluetoothPairingListener& l : listeners)
+        l.onDisplayPasskey(device, passkey, pairedDuration);
+}
+
+void BluetoothAdapter::notifyPairingCancelled(const BluetoothDevice& device) {
+    std::vector<BluetoothPairingListener> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mPairingListeners;
+    }
+    for (const BluetoothPairingListener& l : listeners)
+        l.onPairingCancelled(device);
 }
 
 /* --- device resolve path (BluetoothDevice getters land here) ---------------- */
@@ -443,13 +562,9 @@ void BluetoothAdapter::onAdapterBoolChanged(const std::string& name, bool value)
             mDiscovering = value;
         }
         if (was && !value) {
-            std::lock_guard<std::mutex> lock(mListenersMutex);
-            for (DiscoveryListener* l : mDiscoveryListeners)
-                l->onDiscoveryFinished();
+            notifyDiscoveryFinished();
         } else if (!was && value) {
-            std::lock_guard<std::mutex> lock(mListenersMutex);
-            for (DiscoveryListener* l : mDiscoveryListeners)
-                l->onDiscoveryStarted();
+            notifyDiscoveryStarted();
         }
     }
 }
@@ -483,9 +598,7 @@ void BluetoothAdapter::onDevicePropertyChanged(const BluezDevice& device,
             mBondStates[device.objectPath] = bond;
         }
         if (prev != bond) {
-            std::lock_guard<std::mutex> lock(mListenersMutex);
-            for (BondStateListener* l : mBondListeners)
-                l->onBondStateChanged(BluetoothDevice(device.address), bond, prev);
+            notifyBondStateChanged(BluetoothDevice(device.address), bond, prev);
         }
         return;
     }
@@ -516,15 +629,11 @@ void BluetoothAdapter::setStateAndNotify(int newState) {
         prev = mAdapterState;
         mAdapterState = newState;
     }
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    for (AdapterStateListener* l : mStateListeners)
-        l->onAdapterStateChanged(newState, prev);
+    notifyAdapterStateChanged(newState, prev);
 }
 
 void BluetoothAdapter::dispatchFound(const BluezDevice& device) {
-    std::lock_guard<std::mutex> lock(mListenersMutex);
-    for (DiscoveryListener* l : mDiscoveryListeners)
-        l->onDeviceFound(BluetoothDevice(device.address));
+    notifyDeviceFound(BluetoothDevice(device.address));
 }
 
 } // namespace cdroid

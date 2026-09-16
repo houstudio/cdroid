@@ -11,39 +11,27 @@
 
 namespace cdroid {
 
-namespace {
-
-/* Bridge: the scanner keeps one adapter DiscoveryListener registration
- * (bluetoothle.h cannot include bluetoothadapter.h — the adapter header
- * includes this module's types indirectly). */
-class ScannerBridge : public BluetoothAdapter::DiscoveryListener {
-public:
-    explicit ScannerBridge(BluetoothLeScanner* owner) : mOwner(owner) {}
-    void onDeviceFound(const BluetoothDevice& device) override {
-        mOwner->onDeviceFound(device);
-    }
-private:
-    BluetoothLeScanner* mOwner;
-};
-
-} // namespace
-
 BluetoothLeScanner::BluetoothLeScanner(BluetoothAdapter& adapter)
-    : mAdapter(adapter), mBridge(new ScannerBridge(this)) {
-    mAdapter.addDiscoveryListener(static_cast<ScannerBridge*>(mBridge));
+    : mAdapter(adapter) {
+    /* Bridge into the adapter's discovery stream (was a heap
+     * ScannerBridge subclass + void* pair). */
+    mDiscoveryBridge.onDeviceFound = [this](const BluetoothDevice& device) {
+        onDeviceFound(device);
+    };
+    mAdapter.addDiscoveryListener(mDiscoveryBridge);
 }
 
 bool BluetoothLeScanner::startScan(const std::vector<ScanFilter>& filters,
                                    const ScanSettings& settings,
-                                   ScanCallback* callback) {
-    if (callback == nullptr) return false;
+                                   const ScanCallback& callback) {
     bool already = false;
     {
         std::lock_guard<std::mutex> lock(mScanMutex);
-        already = mCallback != nullptr;
+        already = mScanActive;
     }
     if (already) {
-        callback->onScanFailed(ScanCallback::SCAN_FAILED_ALREADY_STARTED);
+        if (callback.onScanFailed)
+            callback.onScanFailed(ScanCallback::SCAN_FAILED_ALREADY_STARTED);
         return false;
     }
     /* Push the service-UUID filter list down to BlueZ when the filters
@@ -54,39 +42,45 @@ bool BluetoothLeScanner::startScan(const std::vector<ScanFilter>& filters,
         if (f.hasServiceUuid()) uuidFilter.push_back(f.getServiceUuid().toString());
     }
     if (!mAdapter.client().startLeDiscovery(uuidFilter, INT16_MIN)) {
-        callback->onScanFailed(ScanCallback::SCAN_FAILED_INTERNAL_ERROR);
+        if (callback.onScanFailed)
+            callback.onScanFailed(ScanCallback::SCAN_FAILED_INTERNAL_ERROR);
         return false;
     }
     {
         std::lock_guard<std::mutex> lock(mScanMutex);
         mFilters = filters;
         mCallback = callback;
+        mScanActive = true;
     }
     return true;
 }
 
-bool BluetoothLeScanner::stopScan(ScanCallback* /*callback*/) {
+bool BluetoothLeScanner::stopScan(const ScanCallback& callback) {
     {
         std::lock_guard<std::mutex> lock(mScanMutex);
-        if (mCallback == nullptr) return false;
-        mCallback = nullptr;
+        if (!mScanActive) return false;
+        /* Remove by handle: only the registration that started the scan
+         * stops it (EventSet identity — copies compare equal). */
+        if (!(mCallback == callback)) return false;
+        mScanActive = false;
+        mCallback = ScanCallback();
         mFilters.clear();
     }
     return mAdapter.cancelDiscovery();
 }
 
 void BluetoothLeScanner::onDeviceFound(const BluetoothDevice& device) {
-    /* Snapshot the scan config under the lock; the (caller-owned)
-     * callback runs outside it. One findDevice serves name/uuids/rssi
-     * — the review's triple-lookup note fixed in passing. */
-    ScanCallback* callback = nullptr;
+    /* Snapshot the scan config under the lock; the callback copy runs
+     * outside it. One findDevice serves name/uuids/rssi — the review's
+     * triple-lookup note fixed in passing. */
+    ScanCallback callback;
     std::vector<ScanFilter> filters;
     {
         std::lock_guard<std::mutex> lock(mScanMutex);
+        if (!mScanActive) return;
         callback = mCallback;
         filters = mFilters;
     }
-    if (callback == nullptr) return;
 
     BluezDevice snapshot;
     mAdapter.client().findDevice(device.getAddress(), snapshot);
@@ -114,9 +108,9 @@ void BluetoothLeScanner::onDeviceFound(const BluetoothDevice& device) {
         matched = true;   /* first matching filter wins (AOSP semantics) */
         break;
     }
-    if (matched)
-        callback->onScanResult(1 /* CALLBACK_TYPE_ALL_MATCHES */,
-                               ScanResult(device, rssi, now));
+    if (matched && callback.onScanResult)
+        callback.onScanResult(1 /* CALLBACK_TYPE_ALL_MATCHES */,
+                              ScanResult(device, rssi, now));
 }
 
 void BluetoothLeScanner::onDiscoveryFinished() {
@@ -124,7 +118,10 @@ void BluetoothLeScanner::onDiscoveryFinished() {
 }
 
 BluetoothLeScanner::~BluetoothLeScanner() {
-    delete static_cast<ScannerBridge*>(mBridge);
+    /* Detach: the adapter holds a copy of the bridge whose lambda
+     * captures this (the old code deleted the bridge WITHOUT removing
+     * the registration — a dangling entry). */
+    mAdapter.removeDiscoveryListener(mDiscoveryBridge);
 }
 
 } // namespace cdroid

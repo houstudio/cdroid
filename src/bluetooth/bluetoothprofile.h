@@ -1,7 +1,10 @@
 #ifndef __CDROID_BLUETOOTH_PROFILE_H__
 #define __CDROID_BLUETOOTH_PROFILE_H__
 
+#include <functional>
 #include <vector>
+
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
 
 #include <bluetoothdevice.h>
 
@@ -57,16 +60,17 @@ public:
 
     /**
      * Port of BluetoothProfile.ServiceListener: proxy attach/detach
-     * notification. With in-process profiles the callback fires
-     * synchronously from getProfileProxy(), the AOSP timing contract
-     * (async delivery) is kept for parity.
+     * notification. EventSet + std::function slots (identity in EventSet,
+     * unset slots are no-ops); the proxy stays a raw pointer because its
+     * identity is what closeProfileProxy() deletes. With in-process
+     * profiles the callback fires synchronously from getProfileProxy(),
+     * the AOSP timing contract (async delivery) is kept for parity.
      */
-    class ServiceListener {
+    class ServiceListener : public EventSet {
     public:
-        virtual ~ServiceListener() = default;
-        virtual void onServiceConnected(int profile,
-                                        BluetoothProfile* proxy) = 0;
-        virtual void onServiceDisconnected(int profile) = 0;
+        std::function<void(int profile,
+                          BluetoothProfile* proxy)> onServiceConnected;
+        std::function<void(int profile)> onServiceDisconnected;
     };
 
     /* Interface methods (AOSP BluetoothProfile is an interface). */

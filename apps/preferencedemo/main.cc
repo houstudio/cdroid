@@ -100,8 +100,7 @@ class SettingsActivity;
 class SettingsFragment : public PreferenceFragment,
                           public cdroid::WifiManager::NetworkStateListener,
                           public preferencedemo::BluetoothCallback,
-                          public preferencedemo::DeviceListPreferenceFragment::Host,
-                          public cdroid::BluetoothPairingListener {
+                          public preferencedemo::DeviceListPreferenceFragment::Host {
 public:
     void onCreatePreferences(cdroid::Bundle* /*savedInstanceState*/,
             const std::string& rootKey) override {
@@ -176,7 +175,8 @@ public:
                     cdroid::BluetoothProfile::PAN, mBtPan);
             mBtPan = nullptr;
         }
-        cdroid::BluetoothAdapter::getDefaultAdapter().removePairingListener(this);
+        cdroid::BluetoothAdapter::getDefaultAdapter().removePairingListener(
+                mPairingListener);
         PreferenceFragment::onDestroy();
     }
 
@@ -210,12 +210,28 @@ public:
      * only the first occurrence, so a second registerCallback would leave a
      * stale pointer behind onDestroy's single unregister). */
     bool mBtCallbacksRegistered = false;
+    /* Pairing listener slot (value semantics — EventSet + lambdas). */
+    cdroid::BluetoothPairingListener mPairingListener;
     void ensureBluetoothCallbacks() {
         if (mBtCallbacksRegistered) return;
         // Interactive pairing: the dialogs answer the agent's requests
         // (PIN / passkey / confirmation). Just-works peers never ask.
+        mPairingListener.onPairingRequest =
+                [this](const cdroid::BluetoothDevice& device,
+                       int pairingVariant, uint32_t passkey) {
+                    onPairingRequest(device, pairingVariant, passkey);
+                };
+        mPairingListener.onDisplayPasskey =
+                [this](const cdroid::BluetoothDevice& device,
+                       uint32_t passkey, int pairedDuration) {
+                    onDisplayPasskey(device, passkey, pairedDuration);
+                };
+        mPairingListener.onPairingCancelled =
+                [this](const cdroid::BluetoothDevice& device) {
+                    onPairingCancelled(device);
+                };
         cdroid::BluetoothAdapter::getDefaultAdapter().registerPairingAgent("DisplayYesNo");
-        cdroid::BluetoothAdapter::getDefaultAdapter().addPairingListener(this);
+        cdroid::BluetoothAdapter::getDefaultAdapter().addPairingListener(mPairingListener);
         preferencedemo::LocalBluetoothManager::getInstance()
                 ->getEventManager()->registerCallback(this);
         mBtCallbacksRegistered = true;
@@ -241,12 +257,13 @@ public:
         return PreferenceFragment::findPreference(key);
     }
     cdroid::Context* prefContext() override { return requireContext(); }
-    // BluetoothPairingListener (agent thread).
+    // BluetoothPairingListener handlers (agent thread; forwarded from
+    // mPairingListener's slots).
     void onPairingRequest(const cdroid::BluetoothDevice& device,
-                          int pairingVariant, uint32_t passkey) override;
+                          int pairingVariant, uint32_t passkey);
     void onDisplayPasskey(const cdroid::BluetoothDevice& device,
-                          uint32_t passkey, int pairedDuration) override;
-    void onPairingCancelled(const cdroid::BluetoothDevice& device) override;
+                          uint32_t passkey, int pairedDuration);
+    void onPairingCancelled(const cdroid::BluetoothDevice& device);
 
     /** AUTOCYCLE walker (see onCreatePreferences). Each step is a fresh
      *  lambda capturing values only — no self-referencing runnable. */
@@ -473,17 +490,14 @@ void SettingsFragment::setupNetworkScreen() {
     if (auto* tether = dynamic_cast<cdroid::SwitchPreference*>(
             findPreference("bluetooth_tethering"))) {
         const bool btOn = cdroid::BluetoothAdapter::getDefaultAdapter().isEnabled();
-        class PanGetter : public cdroid::BluetoothProfile::ServiceListener {
-        public:
-            void onServiceConnected(int, cdroid::BluetoothProfile* proxy) override {
-                pan = (cdroid::BluetoothPan*)proxy;
-            }
-            void onServiceDisconnected(int) override {}
-            cdroid::BluetoothPan* pan = nullptr;
-        } getter;
+        cdroid::BluetoothPan* pan = nullptr;
+        cdroid::BluetoothProfile::ServiceListener getter;
+        getter.onServiceConnected = [&pan](int, cdroid::BluetoothProfile* proxy) {
+            pan = (cdroid::BluetoothPan*)proxy;
+        };
         if (cdroid::BluetoothAdapter::getDefaultAdapter().getProfileProxy(
-                &getter, cdroid::BluetoothProfile::PAN) && getter.pan != nullptr) {
-            mBtPan = getter.pan;
+                getter, cdroid::BluetoothProfile::PAN) && pan != nullptr) {
+            mBtPan = pan;
             tether->setEnabled(btOn);
             tether->setChecked(mBtPan->isTetheringOn());
             refreshTetheringSummary();

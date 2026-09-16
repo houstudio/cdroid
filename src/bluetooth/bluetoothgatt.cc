@@ -47,7 +47,7 @@ BluetoothGattCharacteristic* BluetoothGattService::getCharacteristic(
 
 std::shared_ptr<BluetoothGatt> BluetoothGatt::create(
         const BluetoothDevice& device, bool autoConnect,
-        BluetoothGattCallback* callback) {
+        const BluetoothGattCallback& callback) {
     /* shared_ptr from the start: enable_shared_from_this needs the
      * object to be owned by one at construction. autoConnect is
      * accepted for API parity (background reconnect is not wired). */
@@ -57,7 +57,7 @@ std::shared_ptr<BluetoothGatt> BluetoothGatt::create(
 }
 
 BluetoothGatt::BluetoothGatt(const BluetoothDevice& device,
-                             BluetoothGattCallback* callback)
+                             const BluetoothGattCallback& callback)
     : mDevice(device), mCallback(callback),
       mClient(BluetoothAdapter::getDefaultAdapter().client()) {}
 
@@ -84,13 +84,13 @@ bool BluetoothGatt::connect() {
     if (mClosed) return false;
     {std::lock_guard<std::mutex> lock(mStateMutex);
      mConnectionState = STATE_CONNECTING;}
-    if (mCallback)
-        mCallback->onConnectionStateChange(this, GATT_SUCCESS, STATE_CONNECTING);
+    if (mCallback.onConnectionStateChange)
+        mCallback.onConnectionStateChange(*this, GATT_SUCCESS, STATE_CONNECTING);
     if (!mClient.connectDevice(mDevice.getAddress())) {
         {std::lock_guard<std::mutex> lock(mStateMutex);
          mConnectionState = STATE_DISCONNECTED;}
-        if (mCallback)
-            mCallback->onConnectionStateChange(this, GATT_FAILURE,
+        if (mCallback.onConnectionStateChange)
+            mCallback.onConnectionStateChange(*this, GATT_FAILURE,
                                                STATE_DISCONNECTED);
         return false;
     }
@@ -98,8 +98,8 @@ bool BluetoothGatt::connect() {
      mConnectionState = STATE_CONNECTED;}
     auto self = shared_from_this();
     BluetoothAdapter::getDefaultAdapter().registerGattSession(self);
-    if (mCallback)
-        mCallback->onConnectionStateChange(this, GATT_SUCCESS,
+    if (mCallback.onConnectionStateChange)
+        mCallback.onConnectionStateChange(*this, GATT_SUCCESS,
                                            STATE_CONNECTED);
     return true;
 }
@@ -109,8 +109,8 @@ void BluetoothGatt::disconnect() {
     mClient.disconnectDevice(mDevice.getAddress());
     {std::lock_guard<std::mutex> lock(mStateMutex);
      mConnectionState = STATE_DISCONNECTED;}
-    if (mCallback)
-        mCallback->onConnectionStateChange(this, GATT_SUCCESS,
+    if (mCallback.onConnectionStateChange)
+        mCallback.onConnectionStateChange(*this, GATT_SUCCESS,
                                            STATE_DISCONNECTED);
 }
 
@@ -158,7 +158,7 @@ bool BluetoothGatt::discoverServices() {
     }
     }   /* mStateMutex released before the callback: listeners call
         * getServices()/getCharacteristics() and would self-deadlock */
-    if (mCallback) mCallback->onServicesDiscovered(this, GATT_SUCCESS);
+    if (mCallback.onServicesDiscovered) mCallback.onServicesDiscovered(*this, GATT_SUCCESS);
     return true;
 }
 
@@ -175,13 +175,13 @@ bool BluetoothGatt::readCharacteristic(
     if (mClosed || characteristic == nullptr) return false;
     std::vector<uint8_t> value;
     if (!mClient.gattRead(characteristic->mObjectPath, value)) {
-        if (mCallback)
-            mCallback->onCharacteristicRead(this, characteristic, GATT_FAILURE);
+        if (mCallback.onCharacteristicRead)
+            mCallback.onCharacteristicRead(*this, *characteristic, GATT_FAILURE);
         return false;
     }
     characteristic->setValue(value);
-    if (mCallback)
-        mCallback->onCharacteristicRead(this, characteristic, GATT_SUCCESS);
+    if (mCallback.onCharacteristicRead)
+        mCallback.onCharacteristicRead(*this, *characteristic, GATT_SUCCESS);
     return true;
 }
 
@@ -192,13 +192,13 @@ bool BluetoothGatt::writeCharacteristic(
             & BluetoothGattCharacteristic::PROPERTY_WRITE_NO_RESPONSE) != 0;
     if (!mClient.gattWrite(characteristic->mObjectPath,
                            characteristic->getValue(), withoutResponse)) {
-        if (mCallback)
-            mCallback->onCharacteristicWrite(this, characteristic,
+        if (mCallback.onCharacteristicWrite)
+            mCallback.onCharacteristicWrite(*this, *characteristic,
                                              GATT_FAILURE);
         return false;
     }
-    if (mCallback)
-        mCallback->onCharacteristicWrite(this, characteristic, GATT_SUCCESS);
+    if (mCallback.onCharacteristicWrite)
+        mCallback.onCharacteristicWrite(*this, *characteristic, GATT_SUCCESS);
     return true;
 }
 
@@ -229,7 +229,8 @@ void BluetoothGatt::onCharacteristicChangedInternal(
      * are the only paths that free it, and both run on the app thread
      * which is not this (monitor) thread; the adapter's session
      * registry plus mClosed gate the teardown ordering. */
-    if (hit && mCallback) mCallback->onCharacteristicChanged(this, hit);
+    if (hit && mCallback.onCharacteristicChanged)
+        mCallback.onCharacteristicChanged(*this, *hit);
 }
 
 } // namespace cdroid

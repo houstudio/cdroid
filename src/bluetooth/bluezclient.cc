@@ -48,7 +48,7 @@ static const char* kDeviceIface = "org.bluez.Device1";
 /* construction / teardown                                             */
 /* ------------------------------------------------------------------ */
 
-BluezClient::BluezClient(Events* events) : mEvents(events) {}
+BluezClient::BluezClient(const Events& events) : mEvents(events) {}
 
 BluezClient::~BluezClient() {
     stopMonitor();
@@ -198,15 +198,14 @@ bool BluezClient::connect() {
  * monitor otherwise. The pairing handlers were the first users; this
  * generalizes the same queue to the whole Events surface (review
  * round 2). */
-void BluezClient::queueEvent(std::function<void(Events*)> fn) {
+void BluezClient::queueEvent(std::function<void()> fn) {
     mDeferredEvents.emplace_back(std::move(fn));
 }
 
 void BluezClient::flushDeferredEvents() {
-    std::vector<std::function<void(Events*)>> pending;
+    std::vector<std::function<void()>> pending;
     pending.swap(mDeferredEvents);
-    if (mEvents == nullptr) return;
-    for (auto& fn : pending) fn(mEvents);
+    for (auto& fn : pending) fn();
 }
 
 static const char* kAgentPath = "/org/cdroid/agent";
@@ -250,7 +249,7 @@ int BluezClient::agentRequestPinCode(sd_bus_message* m, void* userdata,
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, PendingPairing::PIN);
     LOGD("agent: RequestPinCode for %s (held)", addr.c_str());
-    self->queueEvent([addr](Events* e) { e->onPairingPinRequested(addr); });
+    self->queueEvent([fn = self->mEvents.onPairingPinRequested, addr] { if (fn) fn(addr); });
     /* Return 1: the reply is DEFERRED (setPin answers later). A vtable
      * method handler returning 0 tells sd-bus "done, nothing owed" and
      * 260 auto-replies UnknownMethod to the caller — the deferred-reply
@@ -265,7 +264,7 @@ int BluezClient::agentRequestPasskey(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "o", &dev);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, PendingPairing::PASSKEY);
-    self->queueEvent([addr](Events* e) { e->onPairingPasskeyRequested(addr); });
+    self->queueEvent([fn = self->mEvents.onPairingPasskeyRequested, addr] { if (fn) fn(addr); });
     return 1;   /* deferred reply — see RequestPinCode */
 }
 
@@ -279,9 +278,8 @@ int BluezClient::agentRequestConfirmation(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "ou", &dev, &passkey);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, PendingPairing::CONFIRMATION);
-    self->queueEvent([addr, passkey](Events* e) {
-        e->onPairingConfirmationRequested(addr, passkey);
-    });
+    self->queueEvent([fn = self->mEvents.onPairingConfirmationRequested,
+                      addr, passkey] { if (fn) fn(addr, passkey); });
     return 1;   /* deferred reply */
 }
 
@@ -292,7 +290,7 @@ int BluezClient::agentRequestAuthorization(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "o", &dev);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, PendingPairing::CONSENT);
-    self->queueEvent([addr](Events* e) { e->onPairingConsentRequested(addr); });
+    self->queueEvent([fn = self->mEvents.onPairingConsentRequested, addr] { if (fn) fn(addr); });
     return 1;   /* deferred reply */
 }
 
@@ -303,7 +301,7 @@ int BluezClient::agentAuthorizeService(sd_bus_message* m, void* userdata,
     sd_bus_message_read(m, "os", &dev, nullptr);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
     self->holdPendingPairing(m, addr, PendingPairing::CONSENT);
-    self->queueEvent([addr](Events* e) { e->onPairingConsentRequested(addr); });
+    self->queueEvent([fn = self->mEvents.onPairingConsentRequested, addr] { if (fn) fn(addr); });
     return 1;   /* deferred reply */
 }
 
@@ -315,9 +313,8 @@ int BluezClient::agentDisplayPasskey(sd_bus_message* m, void* userdata,
     uint16_t entered = 0;
     sd_bus_message_read(m, "ouq", &dev, &passkey, &entered);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
-    self->queueEvent([addr, passkey](Events* e) {
-        e->onDisplayPasskey(addr, passkey);
-    });
+    self->queueEvent([fn = self->mEvents.onDisplayPasskey,
+                      addr, passkey] { if (fn) fn(addr, passkey); });
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -327,7 +324,7 @@ int BluezClient::agentDisplayPinCode(sd_bus_message* m, void* userdata,
     const char* dev = nullptr;
     sd_bus_message_read(m, "os", &dev, nullptr);
     const std::string addr = self->addressForDevicePath(dev ? dev : "");
-    self->queueEvent([addr](Events* e) { e->onDisplayPasskey(addr, 0); });
+    self->queueEvent([fn = self->mEvents.onDisplayPasskey, addr] { if (fn) fn(addr, 0); });
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -341,7 +338,7 @@ int BluezClient::agentCancel(sd_bus_message* m, void* userdata, sd_bus_error*) {
             self->mPendingPairing.kind = PendingPairing::NONE;
         }
     }
-    self->queueEvent([](Events* e) { e->onPairingCancelled(); });
+    self->queueEvent([fn = self->mEvents.onPairingCancelled] { if (fn) fn(); });
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -499,7 +496,7 @@ void BluezClient::monitorLoop() {
             /* connect() attached the matches; rebuild the cache and let
              * the adapter resync its state from the fresh snapshot. */
             refreshManagedObjects();
-            if (mEvents) mEvents->onBluezReconnected();
+            if (mEvents.onBluezReconnected) mEvents.onBluezReconnected();
         }
 
         while (mRunning.load() && mConnected.load() && processBus()) {
@@ -588,7 +585,7 @@ void BluezClient::onDaemonLost() {
         std::lock_guard<std::mutex> lock(mCacheMutex);
         resetAdapterPropsLocked();
     }
-    queueEvent([](Events* e) { e->onBluezDisconnected(); });
+    queueEvent([fn = mEvents.onBluezDisconnected] { if (fn) fn(); });
 }
 
 namespace {
@@ -785,11 +782,13 @@ bool BluezClient::refreshManagedObjects() {
     }
     /* Resync the adapter state from the snapshot — values ride along so
      * handlers never need a synchronous bus call (self-deadlock guard). */
-    if (mEvents && !adapterPath.empty()) {
-        mEvents->onAdapterBoolChanged("Powered", adapterPowered);
-        mEvents->onAdapterBoolChanged("Discovering", adapterDiscovering);
-        if (!adapterAlias.empty())
-            mEvents->onAdapterStringChanged("Alias", adapterAlias);
+    if (!adapterPath.empty()) {
+        if (mEvents.onAdapterBoolChanged) {
+            mEvents.onAdapterBoolChanged("Powered", adapterPowered);
+            mEvents.onAdapterBoolChanged("Discovering", adapterDiscovering);
+        }
+        if (!adapterAlias.empty() && mEvents.onAdapterStringChanged)
+            mEvents.onAdapterStringChanged("Alias", adapterAlias);
     }
     return true;
 }
@@ -825,8 +824,8 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
                         if (name == "Powered") mPowered = v != 0;
                         else if (name == "Discovering") mDiscovering = v != 0;
                     }
-                    queueEvent([name, v](Events* e) {
-                        e->onAdapterBoolChanged(name, v != 0);
+                    queueEvent([fn = mEvents.onAdapterBoolChanged, name, v] {
+                        if (fn) fn(name, v != 0);
                     });
                 }
                 sd_bus_message_exit_container(m);
@@ -838,8 +837,8 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
                         if (name == "Alias") mAlias = s;
                         else if (name == "Address") mAdapterAddress = s;
                     }
-                    queueEvent([name, s](Events* e) {
-                        e->onAdapterStringChanged(name, s);
+                    queueEvent([fn = mEvents.onAdapterStringChanged, name, s] {
+                        if (fn) fn(name, s);
                     });
                 }
                 sd_bus_message_exit_container(m);
@@ -870,8 +869,8 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
             sd_bus_message_exit_container(m);
             it->second = snapshot;
         }
-        queueEvent([snapshot](Events* e) {
-            e->onGattCharacteristicChanged(snapshot);
+        queueEvent([fn = mEvents.onGattCharacteristicChanged, snapshot] {
+            if (fn) fn(snapshot);
         });
         return;
     }
@@ -906,8 +905,8 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
      * under the lock this thread is about to release. */
     for (const std::string& name : changedNames) {
         BluezDevice snap = snapshot;
-        queueEvent([snap, name](Events* e) {
-            e->onDevicePropertyChanged(snap, name);
+        queueEvent([fn = mEvents.onDevicePropertyChanged, snap, name] {
+            if (fn) fn(snap, name);
         });
     }
 }
@@ -978,7 +977,7 @@ void BluezClient::handleInterfacesAdded(sd_bus_message* m) {
         }
         {
         BluezDevice added = dev;
-        queueEvent([added](Events* e) { e->onDeviceAdded(added); });
+        queueEvent([fn = mEvents.onDeviceAdded, added] { if (fn) fn(added); });
     }
     }
     {
@@ -1029,8 +1028,8 @@ int BluezClient::onInterfacesRemovedStatic(sd_bus_message* m, void* userdata,
         }
     }
     if (wasDevice) {
-        self->queueEvent([objPath](Events* e) {
-            e->onDeviceRemoved(objPath);
+        self->queueEvent([fn = self->mEvents.onDeviceRemoved, objPath] {
+            if (fn) fn(objPath);
         });
     }
     return 0;

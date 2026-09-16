@@ -2,7 +2,10 @@
 #define __CDROID_BLUETOOTH_PAIRING_H__
 
 #include <cstdint>
+#include <functional>
 #include <string>
+
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
 
 #include <bluetoothdevice.h>
 
@@ -18,22 +21,22 @@ namespace cdroid {
  * listener (the monitor thread — marshal for UI work); the application
  * answers with BluetoothDevice.setPin()/setPairingConfirmation() or
  * cancels, and the pending agent request replies to BlueZ.
+ *
+ * Listener shape: EventSet + std::function slots — identity (==) for
+ * add/removePairingListener lives in EventSet; unset slots are no-ops.
  */
-class BluetoothPairingListener {
+class BluetoothPairingListener : public EventSet {
 public:
-    virtual ~BluetoothPairingListener() = default;
     /* Pairing input required. pairingVariant is one of
      * BluetoothDevice::PAIRING_VARIANT_*; passkey carries the 6-digit
      * code for PASSKEY_CONFIRMATION (AOSP's EXTRA_PAIRING_KEY) and is
      * 0 otherwise. */
-    virtual void onPairingRequest(const BluetoothDevice& device,
-                                  int pairingVariant, uint32_t passkey) {}
+    std::function<void(const BluetoothDevice&, int, uint32_t)> onPairingRequest;
     /* A 6-digit passkey should be shown for the user to compare /
      * type (PAIRING_VARIANT_DISPLAY_PASSKEY / _PIN). */
-    virtual void onDisplayPasskey(const BluetoothDevice& device,
-                                  uint32_t passkey, int pairedDuration) {}
+    std::function<void(const BluetoothDevice&, uint32_t, int)> onDisplayPasskey;
     /* Pairing was cancelled by the remote / stack. */
-    virtual void onPairingCancelled(const BluetoothDevice& device) {}
+    std::function<void(const BluetoothDevice&)> onPairingCancelled;
 };
 
 } // namespace cdroid

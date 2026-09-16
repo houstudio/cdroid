@@ -1,16 +1,21 @@
 #ifndef __CDROID_BLUETOOTH_LE_H__
 #define __CDROID_BLUETOOTH_LE_H__
 
+#include <functional>
 #include <mutex>
 #include <string>
 #include <vector>
+
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
+
+/* BluetoothAdapter only forward-declares this class, so including its
+ * header here forms no cycle — needed for the DiscoveryListener member. */
+#include <bluetoothadapter.h>
 
 #include <bluetoothdevice.h>
 #include <bluetoothuuid.h>
 
 namespace cdroid {
-
-class BluetoothAdapter;
 
 /**
  * Port of android.bluetooth.le.ScanFilter (android-36): a filter on LE
@@ -84,17 +89,18 @@ private:
 
 /**
  * Port of android.bluetooth.le.ScanCallback (android-36): the result
- * surface for BluetoothLeScanner. Callbacks arrive on the monitor
- * thread (cdnet marshaling convention).
+ * surface for BluetoothLeScanner. EventSet + std::function slots —
+ * identity (==) is what stopScan(callback) matches on; unset slots are
+ * no-ops. Callbacks arrive on the monitor thread (cdnet marshaling
+ * convention).
  */
-class ScanCallback {
+class ScanCallback : public EventSet {
 public:
     static constexpr int SCAN_FAILED_ALREADY_STARTED = 1;
     static constexpr int SCAN_FAILED_INTERNAL_ERROR = 3;
-    virtual ~ScanCallback() = default;
-    virtual void onScanResult(int callbackType, const ScanResult& result) {}
-    virtual void onBatchScanResults(const std::vector<ScanResult>& results) {}
-    virtual void onScanFailed(int errorCode) {}
+    std::function<void(int callbackType, const ScanResult&)> onScanResult;
+    std::function<void(const std::vector<ScanResult>&)> onBatchScanResults;
+    std::function<void(int errorCode)> onScanFailed;
 };
 
 /**
@@ -106,14 +112,15 @@ public:
 class BluetoothLeScanner {
 public:
     /* startScan with filters/settings; an empty filter list accepts
-     * everything (AOSP semantics). */
+     * everything (AOSP semantics). The callback is stored as a value
+     * copy; stopScan matches it by EventSet identity. */
     bool startScan(const std::vector<ScanFilter>& filters,
-                   const ScanSettings& settings, ScanCallback* callback);
-    bool stopScan(ScanCallback* callback);
+                   const ScanSettings& settings, const ScanCallback& callback);
+    bool stopScan(const ScanCallback& callback);
 
     /* adapter-found devices flow through the filter set into the scan
-     * callback (the .cc wires these to the adapter's DiscoveryListener
-     * through the bridge) */
+     * callback (wired to the adapter's discovery stream through
+     * mDiscoveryBridge) */
     void onDeviceFound(const BluetoothDevice& device);
     void onDiscoveryFinished();
 
@@ -122,12 +129,15 @@ private:
     explicit BluetoothLeScanner(BluetoothAdapter& adapter);
 
     BluetoothAdapter& mAdapter;
-    void* mBridge = nullptr;   /* ScannerBridge (defined in the .cc) */
+    /* adapter discovery registration (was a heap ScannerBridge subclass
+     * + a void* mBridge pair) */
+    BluetoothAdapter::DiscoveryListener mDiscoveryBridge;
     /* Written by startScan/stopScan (caller thread), read by
      * onDeviceFound (monitor thread) — guarded (review's UAF). */
     mutable std::mutex mScanMutex;
     std::vector<ScanFilter> mFilters;
-    ScanCallback* mCallback = nullptr;
+    bool mScanActive = false;   /* an active registration exists (mScanMutex) */
+    ScanCallback mCallback;     /* the active registration (mScanMutex) */
 public:
     ~BluetoothLeScanner();
 };

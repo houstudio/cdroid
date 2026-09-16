@@ -118,7 +118,7 @@ public:
      * across callbacks, so close()-then-release is safe (AOSP holds a
      * strong ref over its binder callbacks the same way). */
     std::shared_ptr<BluetoothGatt> connectGatt(
-            bool autoConnect, BluetoothGattCallback* callback) const;
+            bool autoConnect, const BluetoothGattCallback& callback) const;
 
     /* --- RFCOMM socket factories -------------------------------------- */
 

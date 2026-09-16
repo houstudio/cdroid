@@ -1,11 +1,14 @@
 #ifndef __CDROID_BLUETOOTH_ADAPTER_H__
 #define __CDROID_BLUETOOTH_ADAPTER_H__
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
+
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
 
 #include <bluetoothpairing.h>
 #include <bluetoothprofile.h>
@@ -38,7 +41,7 @@ class BluetoothLeScanner;
  * single-controller nicety of AOSP's dual-stack; they are never reported
  * here.
  */
-class BluetoothAdapter : private BluezClient::Events {
+class BluetoothAdapter {
 public:
     /* --- adapter state (getState) ------------------------------------- */
     static constexpr int STATE_OFF = 10;
@@ -122,44 +125,38 @@ public:
     /* The BLE scanner (AOSP entry point); null-analog when no adapter. */
     BluetoothLeScanner* getBluetoothLeScanner();
 
-    /* --- listeners (not owned; add/remove pairs, thread-safe) ------------
+    /* --- listeners (value semantics: add/remove const&, copies stored) ---
      * Interim listener surfaces — one per broadcast action — until the
-     * broadcast/receiver system exists (the cdnet module-phase decision). */
-    class AdapterStateListener {
+     * broadcast/receiver system exists (the cdnet module-phase decision).
+     * Single-callback surfaces are comparable CallbackBase typedefs
+     * (identity via the shared functor — remove matches on it);
+     * multi-callback ones are EventSet + std::function slots (identity
+     * via EventSet ==). */
+    using AdapterStateListener = CallbackBase<void,int,int>;
+    class DiscoveryListener : public EventSet {
     public:
-        virtual ~AdapterStateListener() = default;
-        virtual void onAdapterStateChanged(int newState, int prevState) = 0;
-    };
-    class DiscoveryListener {
-    public:
-        virtual ~DiscoveryListener() = default;
         /* ACTION_DISCOVERY_STARTED. */
-        virtual void onDiscoveryStarted() {}
+        std::function<void()> onDiscoveryStarted;
         /* ACTION_FOUND — also fired on Name/RSSI updates of an already
          * known device while discovering, like the Java sticky updates. */
-        virtual void onDeviceFound(const BluetoothDevice& device) {}
+        std::function<void(const BluetoothDevice&)> onDeviceFound;
         /* ACTION_DISCOVERY_FINISHED. */
-        virtual void onDiscoveryFinished() {}
+        std::function<void()> onDiscoveryFinished;
     };
-    class BondStateListener {
-    public:
-        virtual ~BondStateListener() = default;
-        virtual void onBondStateChanged(const BluetoothDevice& device,
-                                        int bondState, int prevState) = 0;
-    };
+    using BondStateListener = CallbackBase<void,const BluetoothDevice&,int,int>;
 
-    void addAdapterStateListener(AdapterStateListener* listener);
-    void removeAdapterStateListener(AdapterStateListener* listener);
-    void addDiscoveryListener(DiscoveryListener* listener);
-    void removeDiscoveryListener(DiscoveryListener* listener);
-    void addBondStateListener(BondStateListener* listener);
-    void removeBondStateListener(BondStateListener* listener);
+    void addAdapterStateListener(const AdapterStateListener& listener);
+    void removeAdapterStateListener(const AdapterStateListener& listener);
+    void addDiscoveryListener(const DiscoveryListener& listener);
+    void removeDiscoveryListener(const DiscoveryListener& listener);
+    void addBondStateListener(const BondStateListener& listener);
+    void removeBondStateListener(const BondStateListener& listener);
 
     /* --- profile proxies ----------------------------------------------------- */
     /* AOSP getProfileProxy: hands the caller the profile proxy through
      * the ServiceListener (synchronously here — in-process profiles).
      * A2DP/HEADSET are faithful stubs until the audio pipeline lands. */
-    bool getProfileProxy(BluetoothProfile::ServiceListener* listener,
+    bool getProfileProxy(const BluetoothProfile::ServiceListener& listener,
                          int profile);
     void closeProfileProxy(int profile, BluetoothProfile* proxy);
 
@@ -168,8 +165,8 @@ public:
      * answer pairing) or "NoInputNoOutput" (just-works). Must be called
      * before createBond() when interactive pairing is wanted. */
     bool registerPairingAgent(const std::string& capability);
-    void addPairingListener(BluetoothPairingListener* listener);
-    void removePairingListener(BluetoothPairingListener* listener);
+    void addPairingListener(const BluetoothPairingListener& listener);
+    void removePairingListener(const BluetoothPairingListener& listener);
     /* BluetoothDevice.setPin / setPairingConfirmation land here (the
      * ACTION_PAIRING_REQUEST answer API). replyPairingPasskey serves the
      * BlueZ RequestPasskey seam (no android-36 device-side setter). */
@@ -194,31 +191,50 @@ public:
 
 private:
     BluetoothAdapter();
-    ~BluetoothAdapter() override;
+    ~BluetoothAdapter();
     BluetoothAdapter(const BluetoothAdapter&) = delete;
     BluetoothAdapter& operator=(const BluetoothAdapter&) = delete;
 
-    /* BluezClient::Events — monitor thread. */
-    void onAdapterBoolChanged(const std::string& name, bool value) override;
+    /* Builds the transport with its Events slot filled from these
+     * handlers (lambdas capturing the adapter — called from the ctor's
+     * member-init list, before anything touches the object). */
+    static BluezClient* makeClient(BluetoothAdapter* adapter);
+
+    /* BluezClient event slot — monitor thread. */
+    void onAdapterBoolChanged(const std::string& name, bool value);
     void onAdapterStringChanged(const std::string& name,
-                                const std::string& value) override;
-    void onDeviceAdded(const BluezDevice& device) override;
+                                const std::string& value);
+    void onDeviceAdded(const BluezDevice& device);
     void onDevicePropertyChanged(const BluezDevice& device,
-                                 const std::string& name) override;
-    void onDeviceRemoved(const std::string& objectPath) override;
-    void onBluezDisconnected() override;
-    void onBluezReconnected() override;
-    void onGattCharacteristicChanged(const BluezGattCharacteristic& ch) override;
-    void onPairingPinRequested(const std::string& address) override;
-    void onPairingPasskeyRequested(const std::string& address) override;
+                                 const std::string& name);
+    void onDeviceRemoved(const std::string& objectPath);
+    void onBluezDisconnected();
+    void onBluezReconnected();
+    void onGattCharacteristicChanged(const BluezGattCharacteristic& ch);
+    void onPairingPinRequested(const std::string& address);
+    void onPairingPasskeyRequested(const std::string& address);
     void onPairingConfirmationRequested(const std::string& address,
-                                        uint32_t passkey) override;
-    void onPairingConsentRequested(const std::string& address) override;
-    void onDisplayPasskey(const std::string& address, uint32_t passkey) override;
-    void onPairingCancelled() override;
+                                        uint32_t passkey);
+    void onPairingConsentRequested(const std::string& address);
+    void onDisplayPasskey(const std::string& address, uint32_t passkey);
+    void onPairingCancelled();
 
     void setStateAndNotify(int newState);
     void dispatchFound(const BluezDevice& device);
+    /* Snapshot-then-dispatch tails: copy the listener list under
+     * mListenersMutex, call out without it (listener code may re-enter
+     * add/remove). */
+    void notifyAdapterStateChanged(int newState, int prevState);
+    void notifyDiscoveryStarted();
+    void notifyDiscoveryFinished();
+    void notifyDeviceFound(const BluetoothDevice& device);
+    void notifyBondStateChanged(const BluetoothDevice& device,
+                                int bondState, int prevState);
+    void notifyPairingRequest(const BluetoothDevice& device,
+                              int pairingVariant, uint32_t passkey);
+    void notifyDisplayPasskey(const BluetoothDevice& device,
+                              uint32_t passkey, int pairedDuration);
+    void notifyPairingCancelled(const BluetoothDevice& device);
 
     BluezClient& mClient;
 
@@ -230,11 +246,11 @@ private:
     std::map<std::string, int> mBondStates;
 
     std::mutex mListenersMutex;
-    std::vector<AdapterStateListener*> mStateListeners;
-    std::vector<DiscoveryListener*> mDiscoveryListeners;
-    std::vector<BondStateListener*> mBondListeners;
+    std::vector<AdapterStateListener> mStateListeners;
+    std::vector<DiscoveryListener> mDiscoveryListeners;
+    std::vector<BondStateListener> mBondListeners;
     std::vector<std::weak_ptr<BluetoothGatt>> mGattSessions;   /* guarded by mStateMutex */
-    std::vector<BluetoothPairingListener*> mPairingListeners;
+    std::vector<BluetoothPairingListener> mPairingListeners;
     BluetoothLeScanner* mLeScanner = nullptr;
 };
 
