@@ -41,8 +41,7 @@ SupplicantClient::SupplicantClient(const std::string& ctrlPath)
       mCtrl(nullptr),
       mMonitor(nullptr),
       mRunning(false),
-      mConnected(false),
-      mCallback(nullptr) {
+      mConnected(false) {
 }
 
 SupplicantClient::~SupplicantClient() {
@@ -112,9 +111,14 @@ void SupplicantClient::setCtrlPath(const std::string& ctrlPath) {
         mCtrlPath = ctrlPath;
 }
 
-void SupplicantClient::setEventCallback(EventCallback* callback) {
+void SupplicantClient::setEventCallback(const EventCallback& callback) {
     std::lock_guard<std::mutex> lock(mCallbackMutex);
     mCallback = callback;
+}
+
+SupplicantClient::EventCallback SupplicantClient::snapshotCallback() {
+    std::lock_guard<std::mutex> lock(mCallbackMutex);
+    return mCallback;
 }
 
 void SupplicantClient::setDispatcher(std::function<void(std::function<void()>)> dispatcher) {
@@ -272,12 +276,9 @@ void SupplicantClient::monitorLoop() {
             /* never connected / lost: report once, then retry with backoff */
             if (!reportedDisconnect) {
                 reportedDisconnect = true;
-                EventCallback* cb;
-                {
-                    std::lock_guard<std::mutex> lock(mCallbackMutex);
-                    cb = mCallback;
-                }
-                if (cb) dispatch([cb] { cb->onSupplicantDisconnected(); });
+                EventCallback cb = snapshotCallback();
+                if (cb.onSupplicantDisconnected)
+                    dispatch([cb] { cb.onSupplicantDisconnected(); });
             }
             usleep(RECONNECT_BACKOFF_MS * 1000);
             if (!mRunning.load()) break;
@@ -290,12 +291,9 @@ void SupplicantClient::monitorLoop() {
             releaseRequestSlot();
             if (reconnected) {
                 reportedDisconnect = false;
-                EventCallback* cb;
-                {
-                    std::lock_guard<std::mutex> lock(mCallbackMutex);
-                    cb = mCallback;
-                }
-                if (cb) dispatch([cb] { cb->onSupplicantReconnected(); });
+                EventCallback cb = snapshotCallback();
+                if (cb.onSupplicantReconnected)
+                    dispatch([cb] { cb.onSupplicantReconnected(); });
             }
             continue;
         }
@@ -336,13 +334,9 @@ void SupplicantClient::monitorLoop() {
         for (char* line = strtok_r(buf, "\n", &saveptr); line;
              line = strtok_r(nullptr, "\n", &saveptr)) {
             const SupplicantEvent event = parseEventMessage(line);
-            EventCallback* cb;
-            {
-                std::lock_guard<std::mutex> lock(mCallbackMutex);
-                cb = mCallback;
-            }
-            if (cb && !event.name.empty())
-                dispatch([cb, event] { cb->onSupplicantEvent(event); });
+            EventCallback cb = snapshotCallback();
+            if (!event.name.empty() && cb.onSupplicantEvent)
+                dispatch([cb, event] { cb.onSupplicantEvent(event); });
         }
     }
 }

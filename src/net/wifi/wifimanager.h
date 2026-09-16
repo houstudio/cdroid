@@ -40,9 +40,7 @@ class DhcpServer;
  * that does not exist yet: setWifiEnabled is supplicant-client scoped, see
  * the TODO inside.
  */
-class WifiManager : private SupplicantClient::EventCallback,
-                    private NetworkEventMonitor::Events,
-                    private HostapdClient::EventCallback {
+class WifiManager : private NetworkEventMonitor::Events {
 public:
     /* Broadcast intents, kept as constants for the future broadcast system. */
     static constexpr const char* WIFI_STATE_CHANGED_ACTION =
@@ -312,15 +310,15 @@ private:
     WifiManager(const WifiManager&) = delete;
     WifiManager& operator=(const WifiManager&) = delete;
 
-    /* SupplicantClient::EventCallback — monitor thread (or dispatcher). */
-    void onSupplicantEvent(const SupplicantEvent& event) override;
-    void onSupplicantDisconnected() override;
-    void onSupplicantReconnected() override;
+    /* SupplicantClient event slot — monitor thread (or dispatcher). */
+    void onSupplicantEvent(const SupplicantEvent& event);
+    void onSupplicantDisconnected();
+    void onSupplicantReconnected();
 
-    /* HostapdClient::EventCallback — monitor thread (or dispatcher). */
-    void onHostapdEvent(const HostapdClient::HostapdEvent& event) override;
-    void onHostapdDisconnected() override;
-    void onHostapdReconnected() override;
+    /* HostapdClient event slot — monitor thread (or dispatcher). */
+    void onHostapdEvent(const HostapdClient::HostapdEvent& event);
+    void onHostapdDisconnected();
+    void onHostapdReconnected();
 
     /* NetworkEventMonitor::Events — IP acquisition has no supplicant event
      * (AOSP: IpClient callback); the platform address push plays that role.

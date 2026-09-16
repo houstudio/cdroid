@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
+
 #include <wifi/softapconfiguration.h>
 #include <wifi/supplicantclient.h>
 
@@ -32,12 +34,14 @@ public:
      * match them through SupplicantClient-style length-aware comparison,
      * see WifiManager::onHostapdEvent). */
 
-    class EventCallback {
+    /* Same EventSet + std::function shape as SupplicantClient::EventCallback
+     * (see there): fill the members with lambdas, hand a copy to
+     * setEventCallback, unset slots are no-ops. */
+    class EventCallback : public EventSet {
     public:
-        virtual ~EventCallback() = default;
-        virtual void onHostapdEvent(const HostapdEvent& event) = 0;
-        virtual void onHostapdDisconnected() {}
-        virtual void onHostapdReconnected() {}
+        std::function<void(const HostapdEvent&)> onHostapdEvent;
+        std::function<void()> onHostapdDisconnected;
+        std::function<void()> onHostapdReconnected;
     };
 
     explicit HostapdClient(const std::string& ctrlPath = defaultCtrlPath());
@@ -53,7 +57,7 @@ public:
     bool request(const std::string& cmd, std::string& reply);
     std::string request(const std::string& cmd);
 
-    void setEventCallback(EventCallback* callback);
+    void setEventCallback(const EventCallback& callback);
     /* Marshals event delivery off the monitor thread (see SupplicantClient). */
     void setDispatcher(std::function<void(std::function<void()>)> dispatcher);
 
@@ -92,13 +96,9 @@ public:
     static bool stopDaemon(const std::string& pidFile);
 
 private:
-    /* SupplicantClient::EventCallback forwarding into EventCallback. */
-    class TransportCallback;
-    friend class TransportCallback;
-
     SupplicantClient mTransport;
-    TransportCallback* mTransportCallback;
-    EventCallback* mCallback = nullptr;   /* not owned */
+    EventCallback mCallback;    /* guarded by mCallbackMutex */
+    std::mutex mCallbackMutex; /* forwarding lambdas vs setEventCallback */
 };
 
 } // namespace cdroid

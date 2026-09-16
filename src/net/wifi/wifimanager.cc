@@ -57,8 +57,24 @@ WifiManager& WifiManager::getInstance() {
 }
 
 WifiManager::WifiManager() {
-    mClient.setEventCallback(this);
-    mHostapd.setEventCallback(this);
+    /* Transport event slots (EventSet + lambdas — value semantics, no
+     * listener objects to own). */
+    SupplicantClient::EventCallback supplicantEvents;
+    supplicantEvents.onSupplicantEvent =
+            [this](const SupplicantEvent& event) { onSupplicantEvent(event); };
+    supplicantEvents.onSupplicantDisconnected =
+            [this]() { onSupplicantDisconnected(); };
+    supplicantEvents.onSupplicantReconnected =
+            [this]() { onSupplicantReconnected(); };
+    mClient.setEventCallback(supplicantEvents);
+
+    HostapdClient::EventCallback hostapdEvents;
+    hostapdEvents.onHostapdEvent = [this](const HostapdClient::HostapdEvent& event) {
+        onHostapdEvent(event);
+    };
+    hostapdEvents.onHostapdDisconnected = [this]() { onHostapdDisconnected(); };
+    hostapdEvents.onHostapdReconnected = [this]() { onHostapdReconnected(); };
+    mHostapd.setEventCallback(hostapdEvents);
     /* Address events drive the COMPLETED -> (has IP) CONNECTED promotion
      * the way AOSP's IpClient callback does. */
     mAddressMonitor = NetworkEventMonitor::create();
@@ -96,6 +112,11 @@ WifiManager::~WifiManager() {
     delete mRadioData;
     mRadioData = nullptr;
     stopRssiPolling();
+    /* Retire the transport event slots before the members go — their
+     * lambdas capture this, and the monitors are only joined inside
+     * ~SupplicantClient / ~HostapdClient, i.e. after this body. */
+    mClient.setEventCallback(SupplicantClient::EventCallback());
+    mHostapd.setEventCallback(HostapdClient::EventCallback());
     mClient.close();
     mHostapd.close();
 }

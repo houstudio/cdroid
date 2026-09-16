@@ -70,34 +70,47 @@ bool hostapdSupports11axConfig() {
 
 /* --- ctrl-interface client (composition over SupplicantClient) ------------- */
 
-class HostapdClient::TransportCallback : public SupplicantClient::EventCallback {
-public:
-    explicit TransportCallback(HostapdClient* owner) : mOwner(owner) {}
-
-    void onSupplicantEvent(const SupplicantEvent& event) override {
-        /* hostapd events carry no priority prefix and a positional tail —
-         * the shared parser tolerates both shapes. */
-        if (mOwner->mCallback) mOwner->mCallback->onHostapdEvent(event);
-    }
-    void onSupplicantDisconnected() override {
-        if (mOwner->mCallback) mOwner->mCallback->onHostapdDisconnected();
-    }
-    void onSupplicantReconnected() override {
-        if (mOwner->mCallback) mOwner->mCallback->onHostapdReconnected();
-    }
-
-private:
-    HostapdClient* mOwner;
-};
-
 HostapdClient::HostapdClient(const std::string& ctrlPath)
-    : mTransport(ctrlPath), mTransportCallback(new TransportCallback(this)) {
-    mTransport.setEventCallback(mTransportCallback);
+    : mTransport(ctrlPath) {
+    /* Forward the shared transport's supplicant-shaped events into this
+     * client's callback slot (was an internal TransportCallback class —
+     * the lambda form keeps it allocation-free on this side). hostapd
+     * events carry no priority prefix and a positional tail; the shared
+     * parser tolerates both shapes. */
+    SupplicantClient::EventCallback transport;
+    transport.onSupplicantEvent = [this](const SupplicantEvent& event) {
+        EventCallback cb;
+        {
+            std::lock_guard<std::mutex> lock(mCallbackMutex);
+            cb = mCallback;
+        }
+        cb.onHostapdEvent(event);
+    };
+    transport.onSupplicantDisconnected = [this]() {
+        EventCallback cb;
+        {
+            std::lock_guard<std::mutex> lock(mCallbackMutex);
+            cb = mCallback;
+        }
+        cb.onHostapdDisconnected();
+    };
+    transport.onSupplicantReconnected = [this]() {
+        EventCallback cb;
+        {
+            std::lock_guard<std::mutex> lock(mCallbackMutex);
+            cb = mCallback;
+        }
+        cb.onHostapdReconnected();
+    };
+    mTransport.setEventCallback(transport);
 }
 
 HostapdClient::~HostapdClient() {
     close();
-    delete mTransportCallback;
+    /* Retire the forwarding lambdas (they capture this) — close() already
+     * stopped the monitor, this keeps the transport slot from outliving
+     * the object it forwards to. */
+    mTransport.setEventCallback(SupplicantClient::EventCallback());
 }
 
 bool HostapdClient::connect() {
@@ -116,7 +129,8 @@ std::string HostapdClient::request(const std::string& cmd) {
     return mTransport.request(cmd);
 }
 
-void HostapdClient::setEventCallback(EventCallback* callback) {
+void HostapdClient::setEventCallback(const EventCallback& callback) {
+    std::lock_guard<std::mutex> lock(mCallbackMutex);
     mCallback = callback;
 }
 

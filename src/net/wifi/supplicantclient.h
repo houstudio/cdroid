@@ -9,6 +9,8 @@
 #include <thread>
 #include <unordered_map>
 
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
+
 struct wpa_ctrl;
 
 namespace cdroid {
@@ -49,15 +51,18 @@ struct SupplicantEvent {
  */
 class SupplicantClient {
 public:
-    class EventCallback {
+    /* Multi-callback surface: EventSet carries the identity (==), so the
+     * slots are plain std::function — fill them with lambdas and hand a
+     * copy to setEventCallback (value semantics, nothing to own or free;
+     * unset slots are no-ops). */
+    class EventCallback : public EventSet {
     public:
-        virtual ~EventCallback() = default;
         /* CTRL-EVENT-* / WPA: / "Trying to ..." unsolicited message */
-        virtual void onSupplicantEvent(const SupplicantEvent& event) = 0;
+        std::function<void(const SupplicantEvent&)> onSupplicantEvent;
         /* ctrl+monitor connection lost (daemon exit / socket removed) */
-        virtual void onSupplicantDisconnected() {}
+        std::function<void()> onSupplicantDisconnected;
         /* connection re-established after a loss */
-        virtual void onSupplicantReconnected() {}
+        std::function<void()> onSupplicantReconnected;
     };
 
     explicit SupplicantClient(const std::string& ctrlPath = defaultCtrlPath());
@@ -81,8 +86,10 @@ public:
     /* Convenience overload: empty string on transport failure. */
     std::string request(const std::string& cmd);
 
-    /* Not owned. May be installed before connect() or swapped at runtime. */
-    void setEventCallback(EventCallback* callback);
+    /* Value-semantics callback slot: stores a copy of `callback`. May be
+     * installed before connect() or swapped at runtime; a
+     * default-constructed EventCallback clears the slot. */
+    void setEventCallback(const EventCallback& callback);
     /*
      * Marshals event delivery off the monitor thread (default: direct call
      * from the monitor thread). The cdroid integration installs a
@@ -110,6 +117,10 @@ private:
     void acquireRequestSlot();
     void releaseRequestSlot();
     void dispatch(std::function<void()> runnable);
+    /* Copy of the current callback for invocation outside mCallbackMutex
+     * (a consistent snapshot — a later setEventCallback cannot touch it;
+     * the slots hold small stateless lambdas, cheap to copy). */
+    EventCallback snapshotCallback();
 
     std::string mCtrlPath;
     struct wpa_ctrl* mCtrl;
@@ -137,7 +148,7 @@ private:
     std::thread mRetiredMonitorThread;
     std::atomic<bool> mRunning;
     std::atomic<bool> mConnected;
-    EventCallback* mCallback;
+    EventCallback mCallback;   /* guarded by mCallbackMutex */
     std::function<void(std::function<void()>)> mDispatcher;
 };
 
