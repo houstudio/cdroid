@@ -98,7 +98,6 @@ int screenXmlFor(const std::string& key) {
 class SettingsActivity;
 
 class SettingsFragment : public PreferenceFragment,
-                          public cdroid::WifiManager::NetworkStateListener,
                           public preferencedemo::BluetoothCallback,
                           public preferencedemo::DeviceListPreferenceFragment::Host {
 public:
@@ -160,7 +159,8 @@ public:
 
     void onDestroy() override {
         *mNetAlive = false;
-        cdroid::WifiManager::getInstance().removeNetworkStateListener(this);
+        cdroid::WifiManager::getInstance().removeNetworkStateListener(
+                mWifiNetworkListener);
         preferencedemo::LocalBluetoothManager::getInstance()
                 ->getEventManager()->unregisterCallback(this);
         *mBtAlive = false;
@@ -196,6 +196,7 @@ public:
      * after the fragment is destroyed reads *mNetAlive==false and returns
      * without touching the freed fragment. */
     std::shared_ptr<bool> mNetAlive = std::make_shared<bool>(false);
+    cdroid::WifiManager::NetworkStateListener mWifiNetworkListener;
 
     // --- Bluetooth screens (AOSP Settings bluetooth, see bluetooth/) ------
     void setupConnectedScreen();          // BluetoothSettings-shaped
@@ -246,8 +247,9 @@ public:
                 : std::string("Off"));
     }
 
-    // WifiManager::NetworkStateListener (monitor thread).
-    void onNetworkStateChanged(const cdroid::WifiInfo&) override;
+    // WifiManager network-state handler (monitor thread; forwarded from
+    // the mWifiNetworkListener slot).
+    void onNetworkStateChanged(const cdroid::WifiInfo&);
 
     // preferencedemo::BluetoothCallback (main thread; BluetoothEventManager).
     void onBluetoothStateChanged(int bluetoothState) override;
@@ -523,7 +525,10 @@ void SettingsFragment::setupNetworkScreen() {
     // starts the event pump; idempotent.
     cdroid::WifiManager& wifi = cdroid::WifiManager::getInstance();
     wifi.initialize();
-    wifi.addNetworkStateListener(this);
+    mWifiNetworkListener = [this](const cdroid::WifiInfo& info) {
+        onNetworkStateChanged(info);
+    };
+    wifi.addNetworkStateListener(mWifiNetworkListener);
     ensureBluetoothCallbacks();
     if (wifi.isWifiEnabled()) wifi.startScan();   // warm the scan cache
 

@@ -11,6 +11,8 @@
 #include <thread>
 #include <vector>
 
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
+
 #include <networkeventmonitor.h>
 #include <dhcpclient.h>
 #include <ipconfiguration.h>
@@ -43,12 +45,9 @@ public:
     static constexpr int STATE_LINK_DOWN = 1;
     static constexpr int STATE_LINK_UP   = 2;
 
-    /** AOSP EthernetManager.Listener. */
-    class Listener {
-    public:
-        virtual ~Listener() = default;
-        virtual void onAvailabilityChanged(const std::string& iface, bool isAvailable) = 0;
-    };
+    /** AOSP EthernetManager.Listener — single-callback surface, so a
+     * comparable CallbackBase typedef (identity via the shared functor). */
+    using Listener = CallbackBase<void,const std::string&,bool>;
 
     static EthernetManager& getInstance();
 
@@ -66,8 +65,8 @@ public:
     bool enableInterface(const std::string& iface);
     bool disableInterface(const std::string& iface);
 
-    void addListener(Listener* listener);
-    void removeListener(Listener* listener);
+    void addListener(const Listener& listener);
+    void removeListener(const Listener& listener);
 
     /* Interface-name filter, AOSP config_ethernet_iface_regex (default
      * "eth\d"). Must be set before the poll thread observes anything. */
@@ -134,7 +133,7 @@ private:
     };
     std::map<std::string, DhcpSession*> mDhcpSessions;
     std::mutex mListenersMutex;
-    std::vector<Listener*> mListeners;
+    std::vector<Listener> mListeners;
     /* dedup snapshot per interface: link availability + IPv4 presence */
     struct InterfaceSnapshot {
         bool available = false;

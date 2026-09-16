@@ -409,51 +409,57 @@ bool WifiManager::saveConfiguration() {
 
 /* --- async operations ----------------------------------------------------------- */
 
-void WifiManager::connect(int networkId, ActionListener* listener) {
+void WifiManager::connect(int networkId, const ActionListener& listener) {
     if (!enableNetwork(networkId, true)) {
-        if (listener) listener->onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
+        if (listener.onFailure)
+        listener.onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
         return;
     }
-    if (listener) listener->onSuccess();
+    if (listener.onSuccess) listener.onSuccess();
 }
 
-void WifiManager::connect(const WifiConfiguration& config, ActionListener* listener) {
+void WifiManager::connect(const WifiConfiguration& config, const ActionListener& listener) {
     const int networkId = addOrUpdateNetwork(config);
     if (networkId == -1) {
-        if (listener) listener->onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
+        if (listener.onFailure)
+        listener.onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
         return;
     }
     if (!requestOk("SELECT_NETWORK " + std::to_string(networkId))) {
-        if (listener) listener->onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
+        if (listener.onFailure)
+        listener.onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
         return;
     }
     saveConfiguration();
-    if (listener) listener->onSuccess();
+    if (listener.onSuccess) listener.onSuccess();
 }
 
-void WifiManager::forget(int networkId, ActionListener* listener) {
+void WifiManager::forget(int networkId, const ActionListener& listener) {
     if (!removeNetwork(networkId)) {
-        if (listener) listener->onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
+        if (listener.onFailure)
+        listener.onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
         return;
     }
     saveConfiguration();
-    if (listener) listener->onSuccess();
+    if (listener.onSuccess) listener.onSuccess();
 }
 
-void WifiManager::disable(int networkId, ActionListener* listener) {
+void WifiManager::disable(int networkId, const ActionListener& listener) {
     if (!disableNetwork(networkId)) {
-        if (listener) listener->onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
+        if (listener.onFailure)
+        listener.onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
         return;
     }
-    if (listener) listener->onSuccess();
+    if (listener.onSuccess) listener.onSuccess();
 }
 
-void WifiManager::save(ActionListener* listener) {
+void WifiManager::save(const ActionListener& listener) {
     if (!saveConfiguration()) {
-        if (listener) listener->onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
+        if (listener.onFailure)
+        listener.onFailure(ActionListener::FAILURE_INTERNAL_ERROR);
         return;
     }
-    if (listener) listener->onSuccess();
+    if (listener.onSuccess) listener.onSuccess();
 }
 
 bool WifiManager::disconnect() {
@@ -499,7 +505,7 @@ int WifiManager::compareSignalLevel(int rssiA, int rssiB) {
 
 /* --- listeners ---------------------------------------------------------------- */
 
-void WifiManager::addWifiStateListener(WifiStateListener* listener) {
+void WifiManager::addWifiStateListener(const WifiStateListener& listener) {
     /* Resolve BEFORE enlisting: the resolve's notify chain must not
      * already contain this listener, or it receives the sticky state
      * twice (one delivery, like AOSP's sticky broadcast). */
@@ -508,27 +514,30 @@ void WifiManager::addWifiStateListener(WifiStateListener* listener) {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         mWifiStateListeners.push_back(listener);
     }
-    if (state != WIFI_STATE_UNKNOWN) listener->onWifiStateChanged(state);
+    if (state != WIFI_STATE_UNKNOWN) {
+        WifiStateListener replay = listener;   /* operator() is non-const */
+        replay(state);
+    }
 }
 
-void WifiManager::removeWifiStateListener(WifiStateListener* listener) {
+void WifiManager::removeWifiStateListener(const WifiStateListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mWifiStateListeners.erase(std::remove(mWifiStateListeners.begin(),
             mWifiStateListeners.end(), listener), mWifiStateListeners.end());
 }
 
-void WifiManager::addScanResultsListener(ScanResultsListener* listener) {
+void WifiManager::addScanResultsListener(const ScanResultsListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mScanResultsListeners.push_back(listener);
 }
 
-void WifiManager::removeScanResultsListener(ScanResultsListener* listener) {
+void WifiManager::removeScanResultsListener(const ScanResultsListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mScanResultsListeners.erase(std::remove(mScanResultsListeners.begin(),
             mScanResultsListeners.end(), listener), mScanResultsListeners.end());
 }
 
-void WifiManager::addNetworkStateListener(NetworkStateListener* listener) {
+void WifiManager::addNetworkStateListener(const NetworkStateListener& listener) {
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         mNetworkStateListeners.push_back(listener);
@@ -537,22 +546,24 @@ void WifiManager::addNetworkStateListener(NetworkStateListener* listener) {
      * registration — but only once something real was reported: replaying
      * a pristine default WifiInfo is a spurious "not connected" event. */
     const WifiInfo info = getConnectionInfo();
-    if (info.getSupplicantState() != SupplicantState::UNINITIALIZED)
-        listener->onNetworkStateChanged(info);
+    if (info.getSupplicantState() != SupplicantState::UNINITIALIZED) {
+        NetworkStateListener replay = listener;   /* operator() is non-const */
+        replay(info);
+    }
 }
 
-void WifiManager::removeNetworkStateListener(NetworkStateListener* listener) {
+void WifiManager::removeNetworkStateListener(const NetworkStateListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mNetworkStateListeners.erase(std::remove(mNetworkStateListeners.begin(),
             mNetworkStateListeners.end(), listener), mNetworkStateListeners.end());
 }
 
-void WifiManager::addRssiListener(RssiListener* listener) {
+void WifiManager::addRssiListener(const RssiListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mRssiListeners.push_back(listener);
 }
 
-void WifiManager::removeRssiListener(RssiListener* listener) {
+void WifiManager::removeRssiListener(const RssiListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mRssiListeners.erase(std::remove(mRssiListeners.begin(),
             mRssiListeners.end(), listener), mRssiListeners.end());
@@ -675,21 +686,21 @@ void WifiManager::setWifiStateAndNotify(int newState) {
 }
 
 void WifiManager::notifyWifiStateListeners(int state) {
-    std::vector<WifiStateListener*> listeners;
+    std::vector<WifiStateListener> listeners;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         listeners = mWifiStateListeners;
     }
-    for (WifiStateListener* listener : listeners) listener->onWifiStateChanged(state);
+    for (WifiStateListener listener : listeners) listener(state);
 }
 
 void WifiManager::notifyScanResultsListeners() {
-    std::vector<ScanResultsListener*> listeners;
+    std::vector<ScanResultsListener> listeners;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         listeners = mScanResultsListeners;
     }
-    for (ScanResultsListener* listener : listeners) listener->onScanResultsAvailable();
+    for (ScanResultsListener listener : listeners) listener();
 }
 
 void WifiManager::notifyNetworkStateListeners() {
@@ -698,21 +709,21 @@ void WifiManager::notifyNetworkStateListeners() {
         std::lock_guard<std::mutex> lock(mStateMutex);
         info = mConnectionInfo;
     }
-    std::vector<NetworkStateListener*> listeners;
+    std::vector<NetworkStateListener> listeners;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         listeners = mNetworkStateListeners;
     }
-    for (NetworkStateListener* listener : listeners) listener->onNetworkStateChanged(info);
+    for (NetworkStateListener listener : listeners) listener(info);
 }
 
 void WifiManager::notifyRssiListeners(int rssi) {
-    std::vector<RssiListener*> listeners;
+    std::vector<RssiListener> listeners;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         listeners = mRssiListeners;
     }
-    for (RssiListener* listener : listeners) listener->onRssiChanged(rssi);
+    for (RssiListener listener : listeners) listener(rssi);
 }
 
 void WifiManager::updateConnectionInfoFromStatus() {
@@ -1200,17 +1211,18 @@ bool WifiManager::startSoftAp(const WifiConfiguration* wifiConfig) {
     return startTetheredHotspot(&config);
 }
 
-void WifiManager::addWifiApStateListener(WifiApStateListener* listener) {
+void WifiManager::addWifiApStateListener(const WifiApStateListener& listener) {
     /* Sticky dispatch like addWifiStateListener (AOSP sticky broadcast). */
     const int state = getWifiApState();
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         mWifiApListeners.push_back(listener);
     }
-    listener->onWifiApStateChanged(state);
+    WifiApStateListener replay = listener;   /* operator() is non-const */
+    replay(state);
 }
 
-void WifiManager::removeWifiApStateListener(WifiApStateListener* listener) {
+void WifiManager::removeWifiApStateListener(const WifiApStateListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mWifiApListeners.erase(std::remove(mWifiApListeners.begin(),
             mWifiApListeners.end(), listener), mWifiApListeners.end());
@@ -1230,28 +1242,27 @@ void WifiManager::setWifiApStateAndNotify(int newState) {
     notifyWifiApStateListeners(newState);
     /* SoftApCallback#onStateChanged rides the same transitions (AOSP fans
      * the single SoftApManager state into both surfaces). */
-    std::vector<SoftApCallback*> callbacks;
+    std::vector<SoftApCallback> callbacks;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         callbacks = mSoftApCallbacks;
     }
-    for (SoftApCallback* callback : callbacks)
-        callback->onStateChanged(newState, failureCode);
+    for (const SoftApCallback& callback : callbacks)
+        callback.onStateChanged(newState, failureCode);
 }
 
 void WifiManager::notifyWifiApStateListeners(int state) {
-    std::vector<WifiApStateListener*> listeners;
+    std::vector<WifiApStateListener> listeners;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         listeners = mWifiApListeners;
     }
-    for (WifiApStateListener* listener : listeners)
-        listener->onWifiApStateChanged(state);
+    for (WifiApStateListener listener : listeners) listener(state);
 }
 
 /* --- SoftApCallback plumbing --------------------------------------------------- */
 
-void WifiManager::registerSoftApCallback(SoftApCallback* callback) {
+void WifiManager::registerSoftApCallback(const SoftApCallback& callback) {
     /* sticky: current state, info and capability arrive at registration
      * (the binder path replays them from SoftApManager). */
     int state;
@@ -1267,12 +1278,12 @@ void WifiManager::registerSoftApCallback(SoftApCallback* callback) {
         if (state == WIFI_AP_STATE_FAILED) failureCode = mWifiApFailureReason;
         info = mSoftApInfo;
     }
-    callback->onStateChanged(state, failureCode);
-    callback->onInfoChanged({info});
-    callback->onCapabilityChanged(SoftApCapability());
+    callback.onStateChanged(state, failureCode);
+    callback.onInfoChanged({info});
+    callback.onCapabilityChanged(SoftApCapability());
 }
 
-void WifiManager::unregisterSoftApCallback(SoftApCallback* callback) {
+void WifiManager::unregisterSoftApCallback(const SoftApCallback& callback) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mSoftApCallbacks.erase(std::remove(mSoftApCallbacks.begin(),
             mSoftApCallbacks.end(), callback), mSoftApCallbacks.end());
@@ -1284,13 +1295,13 @@ void WifiManager::notifySoftApClientsChanged(int reasonCode) {
         std::lock_guard<std::mutex> lock(mStateMutex);
         clients = mSoftApClients;
     }
-    std::vector<SoftApCallback*> callbacks;
+    std::vector<SoftApCallback> callbacks;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         callbacks = mSoftApCallbacks;
     }
-    for (SoftApCallback* callback : callbacks)
-        callback->onConnectedClientsChanged(clients, reasonCode);
+    for (const SoftApCallback& callback : callbacks)
+        callback.onConnectedClientsChanged(clients, reasonCode);
 }
 
 void WifiManager::notifySoftApCallbacksInfo() {
@@ -1299,22 +1310,23 @@ void WifiManager::notifySoftApCallbacksInfo() {
         std::lock_guard<std::mutex> lock(mStateMutex);
         info = mSoftApInfo;
     }
-    std::vector<SoftApCallback*> callbacks;
+    std::vector<SoftApCallback> callbacks;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         callbacks = mSoftApCallbacks;
     }
-    for (SoftApCallback* callback : callbacks) callback->onInfoChanged({info});
+    for (const SoftApCallback& callback : callbacks)
+        callback.onInfoChanged({info});
 }
 
 void WifiManager::notifySoftApCallbacksCapability() {
-    std::vector<SoftApCallback*> callbacks;
+    std::vector<SoftApCallback> callbacks;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         callbacks = mSoftApCallbacks;
     }
-    for (SoftApCallback* callback : callbacks)
-        callback->onCapabilityChanged(SoftApCapability());
+    for (const SoftApCallback& callback : callbacks)
+        callback.onCapabilityChanged(SoftApCapability());
 }
 
 /* --- Soft AP P3: enforcement, randomization, idle shutdown ------------------- */
@@ -1330,13 +1342,13 @@ void WifiManager::enforceBlockedClient(const MacAddress& mac) {
     /* deny_mac_file normally rejects these at association already — this is
      * the runtime half (list changes without restart) + the callback. */
     mHostapd.request("DISASSOCIATE " + mac.toString());
-    std::vector<SoftApCallback*> callbacks;
+    std::vector<SoftApCallback> callbacks;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         callbacks = mSoftApCallbacks;
     }
-    for (SoftApCallback* callback : callbacks)
-        callback->onBlockedClientConnecting(
+    for (const SoftApCallback& callback : callbacks)
+        callback.onBlockedClientConnecting(
                 WifiClient(mac, softApInterface()),
                 SoftApCallback::SAP_CLIENT_BLOCK_REASON_CODE_BLOCKED_BY_USER);
 }

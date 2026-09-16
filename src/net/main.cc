@@ -45,23 +45,22 @@ using cdroid::WifiManager;
 
 namespace {
 
-class DemoListeners : public WifiManager::WifiStateListener,
-                      public WifiManager::ScanResultsListener,
-                      public WifiManager::NetworkStateListener,
-                      public WifiManager::RssiListener {
-public:
-    void onWifiStateChanged(int wifiState) override {
-        printf("[listener] wifi state -> %d\n", wifiState);
-    }
-    void onScanResultsAvailable() override {
-        printf("[listener] scan results available\n");
-    }
-    void onNetworkStateChanged(const cdroid::WifiInfo& info) override {
-        printf("[listener] network state: %s\n", info.toString().c_str());
-    }
-    void onRssiChanged(int newRssi) override {
-        printf("[listener] rssi -> %d\n", newRssi);
-    }
+/* Value-semantics listener set (CallbackBase typedefs + lambdas). */
+struct DemoListeners {
+    WifiManager::WifiStateListener wifiState{
+        [](int wifiState) {
+            printf("[listener] wifi state -> %d\n", wifiState);
+        }};
+    WifiManager::ScanResultsListener scanResults{
+        [] { printf("[listener] scan results available\n"); }};
+    WifiManager::NetworkStateListener networkState{
+        [](const cdroid::WifiInfo& info) {
+            printf("[listener] network state: %s\n", info.toString().c_str());
+        }};
+    WifiManager::RssiListener rssi{
+        [](int newRssi) {
+            printf("[listener] rssi -> %d\n", newRssi);
+        }};
 };
 
 void printScanResults(WifiManager& wifi) {
@@ -230,32 +229,32 @@ int main(int argc, char* argv[]) {
                         SoftApConfiguration::SECURITY_TYPE_WPA2_PSK);
             config = builder.build();
         }
-        struct ApPrinter : public WifiManager::WifiApStateListener,
-                           public WifiManager::SoftApCallback {
-            void onWifiApStateChanged(int state) override {
-                printf("[listener] wifi ap state -> %d\n", state);
-            }
-            void onStateChanged(int state, int failureCode) override {
-                printf("[softap-cb] state=%d failure=%d\n", state, failureCode);
-            }
-            void onConnectedClientsChanged(
-                    const std::vector<cdroid::WifiClient>& clients,
-                    int reasonCode) override {
-                printf("[softap-cb] clients=%zu (reason %d):\n",
-                       clients.size(), reasonCode);
-                for (const cdroid::WifiClient& client : clients)
-                    printf("    %s\n", client.toString().c_str());
-            }
-            void onInfoChanged(const std::vector<cdroid::SoftApInfo>& infos) override {
-                for (const cdroid::SoftApInfo& info : infos)
-                    printf("[softap-cb] info: %s\n", info.toString().c_str());
-            }
-            void onCapabilityChanged(const cdroid::SoftApCapability& cap) override {
-                printf("[softap-cb] capability: %s\n", cap.toString().c_str());
-            }
-        } printer;
-        wifi.addWifiApStateListener(&printer);
-        wifi.registerSoftApCallback(&printer);
+        WifiManager::WifiApStateListener apState = [](int state) {
+            printf("[listener] wifi ap state -> %d\n", state);
+        };
+        WifiManager::SoftApCallback printer;
+        printer.onStateChanged =
+                [](int state, int failureCode) {
+                    printf("[softap-cb] state=%d failure=%d\n", state, failureCode);
+                };
+        printer.onConnectedClientsChanged =
+                [](const std::vector<cdroid::WifiClient>& clients, int reasonCode) {
+                    printf("[softap-cb] clients=%zu (reason %d):\n",
+                           clients.size(), reasonCode);
+                    for (const cdroid::WifiClient& client : clients)
+                        printf("    %s\n", client.toString().c_str());
+                };
+        printer.onInfoChanged =
+                [](const std::vector<cdroid::SoftApInfo>& infos) {
+                    for (const cdroid::SoftApInfo& info : infos)
+                        printf("[softap-cb] info: %s\n", info.toString().c_str());
+                };
+        printer.onCapabilityChanged =
+                [](const cdroid::SoftApCapability& cap) {
+                    printf("[softap-cb] capability: %s\n", cap.toString().c_str());
+                };
+        wifi.addWifiApStateListener(apState);
+        wifi.registerSoftApCallback(printer);
         const bool ok = wifi.startTetheredHotspot(
                 first < argc ? &config : nullptr);
         printf("startTetheredHotspot: %s (state %d)\n", ok ? "OK" : "FAIL",
@@ -266,8 +265,8 @@ int main(int argc, char* argv[]) {
             printf("listening for softap events 20s...\n");
             sleep(20);
         }
-        wifi.unregisterSoftApCallback(&printer);
-        wifi.removeWifiApStateListener(&printer);
+        wifi.unregisterSoftApCallback(printer);
+        wifi.removeWifiApStateListener(apState);
         result = ok ? 0 : 1;
     } else if (command == "apstop") {
         const bool ok = wifi.stopSoftAp();
@@ -280,10 +279,10 @@ int main(int argc, char* argv[]) {
         printf("%s\n", wifi.getSoftApConfiguration().toString().c_str());
     } else if (command == "events") {
         DemoListeners listeners;
-        wifi.addWifiStateListener(&listeners);
-        wifi.addScanResultsListener(&listeners);
-        wifi.addNetworkStateListener(&listeners);
-        wifi.addRssiListener(&listeners);
+        wifi.addWifiStateListener(listeners.wifiState);
+        wifi.addScanResultsListener(listeners.scanResults);
+        wifi.addNetworkStateListener(listeners.networkState);
+        wifi.addRssiListener(listeners.rssi);
         printf("listening (ctrl-c to stop)\n");
         while (true) sleep(1);
     } else {

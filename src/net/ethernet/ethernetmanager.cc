@@ -225,25 +225,25 @@ void EthernetManager::stopDhcp(const std::string& iface) {
 
 /* --- listeners -------------------------------------------------------------- */
 
-void EthernetManager::addListener(Listener* listener) {
+void EthernetManager::addListener(const Listener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mListeners.push_back(listener);
 }
 
-void EthernetManager::removeListener(Listener* listener) {
+void EthernetManager::removeListener(const Listener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mListeners.erase(std::remove(mListeners.begin(), mListeners.end(), listener),
                      mListeners.end());
 }
 
 void EthernetManager::notifyAvailability(const std::string& iface, bool available) {
-    std::vector<Listener*> listeners;
+    std::vector<Listener> listeners;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         listeners = mListeners;
     }
-    for (Listener* listener : listeners)
-        listener->onAvailabilityChanged(iface, available);
+    /* Writable copies: CallbackBase::operator() is non-const. */
+    for (Listener listener : listeners) listener(iface, available);
 }
 
 void EthernetManager::onLinkStateChanged(const std::string&, bool, bool) {

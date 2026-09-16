@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
+
 #include <ethernet/ethernetmanager.h>
 #include <networkcapabilities.h>
 #include <networkinfo.h>
@@ -26,9 +28,7 @@ namespace cdroid {
  * full NetworkAgent machinery and stay TODO (faithful-stub rule); the
  * interim NetworkStateListener mirrors CONNECTIVITY_ACTION delivery.
  */
-class ConnectivityManager : private WifiManager::NetworkStateListener,
-                            private EthernetManager::Listener,
-                            private WifiManager::WifiApStateListener {
+class ConnectivityManager {
 public:
     static constexpr int TYPE_NONE          = -1;
     static constexpr int TYPE_MOBILE        = 0;
@@ -48,12 +48,9 @@ public:
     static constexpr const char* EXTRA_NETWORK_INFO = "networkInfo";
     static constexpr const char* EXTRA_NO_CONNECTIVITY = "noConnectivity";
 
-    /* Interim stand-in for the CONNECTIVITY_ACTION broadcast. */
-    class NetworkStateListener {
-    public:
-        virtual ~NetworkStateListener() = default;
-        virtual void onNetworkStateChanged(const NetworkInfo& networkInfo) = 0;
-    };
+    /* Interim stand-in for the CONNECTIVITY_ACTION broadcast —
+     * single-callback surface, so a comparable CallbackBase typedef. */
+    using NetworkStateListener = CallbackBase<void,const NetworkInfo&>;
 
     /* Tethering types (TetheringManager#TETHERING_*); ConnectivityManager
      * carries the start/stop entry points that AOSP routes through
@@ -75,8 +72,8 @@ public:
     /* No metered policy exists in the module phase: never metered. */
     bool isActiveNetworkMetered() { return false; }
 
-    void addNetworkStateListener(NetworkStateListener* listener);
-    void removeNetworkStateListener(NetworkStateListener* listener);
+    void addNetworkStateListener(const NetworkStateListener& listener);
+    void removeNetworkStateListener(const NetworkStateListener& listener);
 
     /*
      * Tethered hotspot (TETHERING_WIFI): starts the Soft AP with the stored
@@ -91,18 +88,22 @@ public:
 
 private:
     ConnectivityManager();
-    ~ConnectivityManager() override;
+    ~ConnectivityManager();
     ConnectivityManager(const ConnectivityManager&) = delete;
     ConnectivityManager& operator=(const ConnectivityManager&) = delete;
 
-    /* WifiManager::NetworkStateListener / EthernetManager::Listener —
-     * delivered on the supplicant monitor / ethernet poll threads. */
-    void onNetworkStateChanged(const WifiInfo& info) override;
-    void onAvailabilityChanged(const std::string& iface, bool isAvailable) override;
-    /* WifiManager::WifiApStateListener — delivered on whichever thread
+    /* Upstream listener slots (value semantics — the members hold the
+     * lambdas, registered as copies). WifiManager::NetworkStateListener
+     * / EthernetManager::Listener arrive on the supplicant monitor /
+     * ethernet poll threads; WifiApStateListener on whichever thread
      * brings the AP down (stopSoftAp main call, hostapd monitor, the
      * Soft-Ap idle-shutdown worker). */
-    void onWifiApStateChanged(int wifiApState) override;
+    void onNetworkStateChanged(const WifiInfo& info);
+    void onAvailabilityChanged(const std::string& iface, bool isAvailable);
+    void onWifiApStateChanged(int wifiApState);
+    WifiManager::NetworkStateListener mWifiNetworkListener;
+    EthernetManager::Listener mEthernetListener;
+    WifiManager::WifiApStateListener mWifiApListener;
 
     NetworkInfo buildWifiNetworkInfo();
     NetworkInfo buildEthernetNetworkInfo();
@@ -115,7 +116,7 @@ private:
     void teardownRecordedNat();
 
     std::mutex mListenersMutex;
-    std::vector<NetworkStateListener*> mListeners;
+    std::vector<NetworkStateListener> mListeners;
     /* The (internal, external) pair enableNat actually programmed. stop
      * must remove what was installed, not whatever the default route
      * points at by stop time — it may have moved or vanished mid-session,

@@ -98,20 +98,16 @@ int main(int argc, char* argv[]) {
         printf("down %s: %s\n", args[0],
                EthernetManager::getInstance().disableInterface(args[0]) ? "OK" : "FAIL");
     } else if (command == "events") {
-        struct AvailabilityPrinter : public EthernetManager::Listener {
-            void onAvailabilityChanged(const std::string& iface, bool isAvailable) override {
-                printf("[eth] %s available=%s\n", iface.c_str(), isAvailable ? "true" : "false");
-            }
+        EthernetManager::Listener ethPrinter =
+                [](const std::string& iface, bool isAvailable) {
+            printf("[eth] %s available=%s\n", iface.c_str(), isAvailable ? "true" : "false");
         };
-        struct ConnectivityPrinter : public ConnectivityManager::NetworkStateListener {
-            void onNetworkStateChanged(const NetworkInfo& info) override {
-                printf("[cm ] %s\n", info.toString().c_str());
-            }
+        ConnectivityManager::NetworkStateListener cmPrinter =
+                [](const NetworkInfo& info) {
+            printf("[cm ] %s\n", info.toString().c_str());
         };
-        AvailabilityPrinter ethPrinter;
-        ConnectivityPrinter cmPrinter;
-        EthernetManager::getInstance().addListener(&ethPrinter);
-        ConnectivityManager::getInstance().addNetworkStateListener(&cmPrinter);
+        EthernetManager::getInstance().addListener(ethPrinter);
+        ConnectivityManager::getInstance().addNetworkStateListener(cmPrinter);
         printf("listening 30s...\n");
         sleep(30);
     } else {

@@ -2,6 +2,7 @@
 #define __WIFI_MANAGER_H__
 
 #include <atomic>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -66,56 +67,41 @@ public:
     /* @deprecated passed with ActionListener#onFailure during connect. */
     static constexpr int ERROR_AUTHENTICATING = 1;
 
-    /** Interface for answer-bearing async operations (connect/forget/save). */
-    class ActionListener {
+    /** Interface for answer-bearing async operations (connect/forget/save).
+     * EventSet + std::function slots — fill with lambdas and pass a copy;
+     * unset slots are no-ops (the null-listener analog). */
+    class ActionListener : public EventSet {
     public:
         static constexpr int FAILURE_INTERNAL_ERROR = 0;
         static constexpr int FAILURE_IN_PROGRESS    = 1;
         static constexpr int FAILURE_BUSY           = 2;
         static constexpr int FAILURE_INVALID_ARGS   = 3;
         static constexpr int FAILURE_NOT_AUTHORIZED = 4;
-        virtual ~ActionListener() = default;
         /** The operation succeeded. */
-        virtual void onSuccess() = 0;
+        std::function<void()> onSuccess;
         /** The operation failed. @param reason one of the FAILURE_* above. */
-        virtual void onFailure(int reason) = 0;
+        std::function<void(int reason)> onFailure;
     };
 
     /*
      * Interim listener surfaces — one per broadcast action — until the
      * broadcast/receiver system exists (per-module-phase decision).
+     * Single-callback surfaces are comparable CallbackBase typedefs
+     * (identity via the shared functor — remove matches on it).
      */
-    class WifiStateListener {
-    public:
-        virtual ~WifiStateListener() = default;
-        virtual void onWifiStateChanged(int wifiState) = 0;
-    };
-    class ScanResultsListener {
-    public:
-        virtual ~ScanResultsListener() = default;
-        virtual void onScanResultsAvailable() = 0;
-    };
-    class NetworkStateListener {
-    public:
-        virtual ~NetworkStateListener() = default;
-        virtual void onNetworkStateChanged(const WifiInfo& info) = 0;
-    };
-    class RssiListener {
-    public:
-        virtual ~RssiListener() = default;
-        virtual void onRssiChanged(int newRssi) = 0;
-    };
-    /* Interim surface for WIFI_AP_STATE_CHANGED_ACTION (broadcast system is
-     * future work, same decision as the STA listeners above). */
-    class WifiApStateListener : public EventSet {
-    public:
-        virtual ~WifiApStateListener() = default;
-        virtual void onWifiApStateChanged(int wifiApState) = 0;
-    };
+    using WifiStateListener = CallbackBase<void,int>;
+    using ScanResultsListener = CallbackBase<void>;
+    using NetworkStateListener = CallbackBase<void,const WifiInfo&>;
+    using RssiListener = CallbackBase<void,int>;
+    /* Interim surface for WIFI_AP_STATE_CHANGED_ACTION (broadcast system
+     * is future work, same decision as the STA listeners above). */
+    using WifiApStateListener = CallbackBase<void,int>;
     /**
-     * Port of WifiManager.SoftApCallback (@SystemApi, android-36). The
-     * Executor marshaling folds into the shared dispatcher seam: callbacks
-     * arrive on the hostapd monitor thread unless a dispatcher is installed.
+     * Port of WifiManager.SoftApCallback (@SystemApi, android-36) —
+     * EventSet + std::function slots (identity in EventSet, unset slots
+     * are no-ops). The Executor marshaling folds into the shared
+     * dispatcher seam: callbacks arrive on the hostapd monitor thread
+     * unless a dispatcher is installed.
      */
     class SoftApCallback : public EventSet {
     public:
@@ -129,20 +115,19 @@ public:
          * onBlockedClientConnecting). */
         static constexpr int SAP_CLIENT_BLOCK_REASON_CODE_BLOCKED_BY_USER = 0;
 
-        virtual ~SoftApCallback() = default;
         /** AP state change; failureCode is a SAP_START_FAILURE_* when state
          * is SAP_STATE_FAILED, 0 otherwise. */
-        virtual void onStateChanged(int state, int failureCode) = 0;
+        std::function<void(int state, int failureCode)> onStateChanged;
         /** Connected-client list changed (full list, like the binder array). */
-        virtual void onConnectedClientsChanged(
-                const std::vector<WifiClient>& clients, int reasonCode) {}
+        std::function<void(const std::vector<WifiClient>& clients,
+                           int reasonCode)> onConnectedClientsChanged;
         /** Operating info changed (frequency/bandwidth of the AP). */
-        virtual void onInfoChanged(const std::vector<SoftApInfo>& infoList) {}
+        std::function<void(const std::vector<SoftApInfo>& infoList)> onInfoChanged;
         /** Backend capabilities (static for the hostapd backend). */
-        virtual void onCapabilityChanged(const SoftApCapability& capability) {}
+        std::function<void(const SoftApCapability& capability)> onCapabilityChanged;
         /** A blocked client attempted to associate. */
-        virtual void onBlockedClientConnecting(
-                const WifiClient& client, int blockedReason) {}
+        std::function<void(const WifiClient& client,
+                           int blockedReason)> onBlockedClientConnecting;
     };
 
     /* Process singleton (Context#getSystemService lands at graduation). */
@@ -191,15 +176,15 @@ public:
 
     /* --- async operations ---------------------------------------------------- */
     /* Connect to a configured network. */
-    void connect(int networkId, ActionListener* listener);
+    void connect(int networkId, const ActionListener& listener);
     /* Add or update config, then connect to it. */
-    void connect(const WifiConfiguration& config, ActionListener* listener);
+    void connect(const WifiConfiguration& config, const ActionListener& listener);
     /* Remove and forget networkId. */
-    void forget(int networkId, ActionListener* listener);
+    void forget(int networkId, const ActionListener& listener);
     /* Disable networkId. */
-    void disable(int networkId, ActionListener* listener);
+    void disable(int networkId, const ActionListener& listener);
     /* @deprecated persist the running configuration. */
-    void save(ActionListener* listener);
+    void save(const ActionListener& listener);
 
     bool disconnect();
     bool reconnect();
@@ -289,20 +274,21 @@ public:
     /* RegisterSoftApCallback: registration immediately delivers the current
      * state, info and capabilities (the binder AOSP path does the same).
      * Not owned; pair with unregisterSoftApCallback. */
-    void registerSoftApCallback(SoftApCallback* callback);
-    void unregisterSoftApCallback(SoftApCallback* callback);
+    void registerSoftApCallback(const SoftApCallback& callback);
+    void unregisterSoftApCallback(const SoftApCallback& callback);
 
-    /* --- listeners (not owned; add/remove pairs, thread-safe) ---------------- */
-    void addWifiStateListener(WifiStateListener* listener);
-    void removeWifiStateListener(WifiStateListener* listener);
-    void addScanResultsListener(ScanResultsListener* listener);
-    void removeScanResultsListener(ScanResultsListener* listener);
-    void addNetworkStateListener(NetworkStateListener* listener);
-    void removeNetworkStateListener(NetworkStateListener* listener);
-    void addRssiListener(RssiListener* listener);
-    void removeRssiListener(RssiListener* listener);
-    void addWifiApStateListener(WifiApStateListener* listener);
-    void removeWifiApStateListener(WifiApStateListener* listener);
+    /* --- listeners (value semantics: add/remove const&, copies stored,
+     * thread-safe) ------------------------------------------------------------- */
+    void addWifiStateListener(const WifiStateListener& listener);
+    void removeWifiStateListener(const WifiStateListener& listener);
+    void addScanResultsListener(const ScanResultsListener& listener);
+    void removeScanResultsListener(const ScanResultsListener& listener);
+    void addNetworkStateListener(const NetworkStateListener& listener);
+    void removeNetworkStateListener(const NetworkStateListener& listener);
+    void addRssiListener(const RssiListener& listener);
+    void removeRssiListener(const RssiListener& listener);
+    void addWifiApStateListener(const WifiApStateListener& listener);
+    void removeWifiApStateListener(const WifiApStateListener& listener);
 
 private:
     WifiManager();
@@ -334,7 +320,9 @@ private:
     int addOrUpdateNetwork(const WifiConfiguration& config);
     void setWifiStateAndNotify(int newState);
     /* Copy-then-dispatch tails shared by the event branches: snapshot the
-     * state under its lock, snapshot the listeners, then call out. */
+     * state under its lock, snapshot the listener copies, then call out.
+     * (CallbackBase copies are invoked on writable copies — operator()
+     * is non-const.) */
     void notifyWifiStateListeners(int state);
     void notifyScanResultsListeners();
     void notifyNetworkStateListeners();
@@ -421,12 +409,12 @@ private:
     bool mConfigsDirty = true;
 
     std::mutex mListenersMutex;
-    std::vector<WifiStateListener*> mWifiStateListeners;
-    std::vector<ScanResultsListener*> mScanResultsListeners;
-    std::vector<NetworkStateListener*> mNetworkStateListeners;
-    std::vector<RssiListener*> mRssiListeners;
-    std::vector<WifiApStateListener*> mWifiApListeners;
-    std::vector<SoftApCallback*> mSoftApCallbacks;
+    std::vector<WifiStateListener> mWifiStateListeners;
+    std::vector<ScanResultsListener> mScanResultsListeners;
+    std::vector<NetworkStateListener> mNetworkStateListeners;
+    std::vector<RssiListener> mRssiListeners;
+    std::vector<WifiApStateListener> mWifiApListeners;
+    std::vector<SoftApCallback> mSoftApCallbacks;
 
     /* --- Soft AP state (mStateMutex) ----------------------------------------- */
     int mWifiApState = WIFI_AP_STATE_DISABLED;

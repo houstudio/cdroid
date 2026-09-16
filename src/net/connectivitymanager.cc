@@ -18,17 +18,27 @@ ConnectivityManager& ConnectivityManager::getInstance() {
 }
 
 ConnectivityManager::ConnectivityManager() {
-    /* Bridge both sources into the interim NetworkStateListener surface.
-     * Callbacks arrive on the supplicant monitor / ethernet poll threads —
-     * same delivery contract as the WifiManager listeners. */
-    WifiManager::getInstance().addNetworkStateListener(this);
-    EthernetManager::getInstance().addListener(this);
+    /* Bridge both sources into the interim NetworkStateListener surface
+     * (value-semantics slots: lambdas registered as copies). Callbacks
+     * arrive on the supplicant monitor / ethernet poll threads — same
+     * delivery contract as the WifiManager listeners. */
+    mWifiNetworkListener = [this](const WifiInfo& info) {
+        onNetworkStateChanged(info);
+    };
+    mEthernetListener = [this](const std::string& iface, bool isAvailable) {
+        onAvailabilityChanged(iface, isAvailable);
+    };
     /* AP state: any path that brings the Soft AP down (stopSoftAp, hostapd
      * death, the idle-shutdown worker) must also drop the NAT — netd's
      * IpServer does this on its tethering teardown. Sticky registration
      * immediately reports the current state; the DISABLED callback is a
      * no-op while no NAT pair is recorded. */
-    WifiManager::getInstance().addWifiApStateListener(this);
+    mWifiApListener = [this](int wifiApState) {
+        onWifiApStateChanged(wifiApState);
+    };
+    WifiManager::getInstance().addNetworkStateListener(mWifiNetworkListener);
+    EthernetManager::getInstance().addListener(mEthernetListener);
+    WifiManager::getInstance().addWifiApStateListener(mWifiApListener);
 }
 
 ConnectivityManager::~ConnectivityManager() {
@@ -37,12 +47,12 @@ ConnectivityManager::~ConnectivityManager() {
      * rules past the AP they served. Reverse-construction order guarantees
      * WifiManager outlives this teardown. Detach the AP listener FIRST so
      * the teardown below cannot re-enter the callback. */
-    WifiManager::getInstance().removeWifiApStateListener(this);
+    WifiManager::getInstance().removeWifiApStateListener(mWifiApListener);
     if (WifiManager::getInstance().getWifiApState()
             != WifiManager::WIFI_AP_STATE_DISABLED)
         stopTethering(TETHERING_WIFI);
-    EthernetManager::getInstance().removeListener(this);
-    WifiManager::getInstance().removeNetworkStateListener(this);
+    EthernetManager::getInstance().removeListener(mEthernetListener);
+    WifiManager::getInstance().removeNetworkStateListener(mWifiNetworkListener);
 }
 
 void ConnectivityManager::onNetworkStateChanged(const WifiInfo&) {
@@ -54,13 +64,13 @@ void ConnectivityManager::onAvailabilityChanged(const std::string&, bool) {
 }
 
 void ConnectivityManager::dispatch(const NetworkInfo& info) {
-    std::vector<NetworkStateListener*> listeners;
+    std::vector<NetworkStateListener> listeners;
     {
         std::lock_guard<std::mutex> lock(mListenersMutex);
         listeners = mListeners;
     }
-    for (NetworkStateListener* listener : listeners)
-        listener->onNetworkStateChanged(info);
+    /* Writable copies: CallbackBase::operator() is non-const. */
+    for (NetworkStateListener listener : listeners) listener(info);
 }
 
 NetworkInfo ConnectivityManager::buildWifiNetworkInfo() {

@@ -51,11 +51,7 @@ static bool isSecured(const std::string& capabilities) {
         || capabilities.find("SAE") != std::string::npos;
 }
 
-class WifiFragment : public cdroid::Fragment,
-                     public WifiManager::NetworkStateListener,
-                     public WifiManager::ScanResultsListener,
-                     public WifiManager::WifiStateListener,
-                     public WifiManager::ActionListener {
+class WifiFragment : public cdroid::Fragment {
 public:
     void onCreate(cdroid::Bundle* savedInstanceState) override {
         cdroid::Fragment::onCreate(savedInstanceState);
@@ -78,9 +74,18 @@ public:
         // starts the event pump; idempotent.
         WifiManager& wifi = WifiManager::getInstance();
         wifi.initialize();
-        wifi.addNetworkStateListener(this);
-        wifi.addScanResultsListener(this);
-        wifi.addWifiStateListener(this);
+        /* Listener slots (CallbackBase typedefs — lambdas capturing this,
+         * registered as copies). */
+        mNetworkStateListener = [this](const cdroid::WifiInfo&) {
+            onNetworkStateChanged();
+        };
+        mScanResultsListener = [this] { onScanResultsAvailable(); };
+        mWifiStateListener = [this](int wifiState) {
+            onWifiStateChanged(wifiState);
+        };
+        wifi.addNetworkStateListener(mNetworkStateListener);
+        wifi.addScanResultsListener(mScanResultsListener);
+        wifi.addWifiStateListener(mWifiStateListener);
 
         mState = (cdroid::TextView*)view->findViewById(printerdemo::R::id::tv_wifi_state);
         mDetail = (cdroid::TextView*)view->findViewById(printerdemo::R::id::tv_wifi_detail);
@@ -113,25 +118,24 @@ public:
         cdroid::Fragment::onDestroyView();
     }
 
-    // --- WifiManager::NetworkStateListener (monitor thread) -----------------
-    void onNetworkStateChanged(const cdroid::WifiInfo&) override {
+    // --- WifiManager listener handlers (monitor/app threads; forwarded
+    //     from the slot members wired in onViewCreated) ----------------------
+    void onNetworkStateChanged() {
         cdroid::View* root = mRoot;
         if (root == nullptr || !mAlive) return;
         root->post([this]{ if (mAlive) { refreshStatus(); refreshConnectedRow(); } });
     }
 
-    // --- WifiManager::ScanResultsListener (monitor thread) ------------------
-    void onScanResultsAvailable() override {
+    void onScanResultsAvailable() {
         cdroid::View* root = mRoot;
         if (root == nullptr || !mAlive) return;
         root->post([this]{ if (mAlive) refreshList(); });
     }
 
-    // --- WifiManager::WifiStateListener (monitor/app threads) ---------------
-    void onWifiStateChanged(int wifiState) override {
+    void onWifiStateChanged(int wifiState) {
         cdroid::View* root = mRoot;
         if (root == nullptr || !mAlive) return;
-        root->post([this]{
+        root->post([this, wifiState]{
             if (!mAlive) return;
             mSyncingSwitch = true;   /* keep the echo out of the toggle handler */
             if (mSwitch) mSwitch->setChecked(WifiManager::getInstance().isWifiEnabled());
@@ -140,18 +144,13 @@ public:
         });
     }
 
-    // --- WifiManager::ActionListener (connect result; called back on the
-    //     caller thread for connect(config) — we only call it from the UI) ---
-    void onSuccess() override { toast("已连接"); }
-    void onFailure(int) override { toast("连接失败"); }
-
 private:
     void detach() {
         mAlive = false;
         WifiManager& wifi = WifiManager::getInstance();
-        wifi.removeNetworkStateListener(this);
-        wifi.removeScanResultsListener(this);
-        wifi.removeWifiStateListener(this);
+        wifi.removeNetworkStateListener(mNetworkStateListener);
+        wifi.removeScanResultsListener(mScanResultsListener);
+        wifi.removeWifiStateListener(mWifiStateListener);
     }
 
     void doScan() {
@@ -245,11 +244,20 @@ private:
         }
     }
 
+    /* connect() answers through the ActionListener synchronously on the
+     * caller (UI) thread, so a stack-local value is enough. */
+    WifiManager::ActionListener connectListener() {
+        WifiManager::ActionListener listener;
+        listener.onSuccess = [this] { toast("已连接"); };
+        listener.onFailure = [this](int) { toast("连接失败"); };
+        return listener;
+    }
+
     void connectTo(const std::string& ssid, bool secured) {
         WifiConfiguration config;
         config.SSID = quoted(ssid);
         if (!secured) {
-            WifiManager::getInstance().connect(config, this);
+            WifiManager::getInstance().connect(config, connectListener());
             toast("连接 " + ssid + " …");
             return;
         }
@@ -264,7 +272,7 @@ private:
                 WifiConfiguration cfg;
                 cfg.SSID = quoted(ssid);
                 cfg.preSharedKey = quoted(psk);
-                WifiManager::getInstance().connect(cfg, this);
+                WifiManager::getInstance().connect(cfg, connectListener());
                 toast("连接 " + ssid + " …");
             })
             .setNegativeButton("取消", [](cdroid::DialogInterface&, int){})
@@ -277,6 +285,9 @@ private:
     }
 
     std::atomic<bool> mAlive { false };
+    WifiManager::NetworkStateListener mNetworkStateListener;
+    WifiManager::ScanResultsListener mScanResultsListener;
+    WifiManager::WifiStateListener mWifiStateListener;
     cdroid::Switch* mSwitch = nullptr;   /* cached like mState/mDetail/mList */
     /* Set while the WifiStateListener drives setChecked, so the toggle
      * handler ignores the resulting change-callback echo. */
