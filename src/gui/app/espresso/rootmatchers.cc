@@ -8,11 +8,11 @@
 namespace cdroid {
 namespace espresso {
 
-// AOSP WindowManager.LayoutParams flag bits (CDROID LayoutParams carries the
-// field; nothing sets these today, so the matchers reduce to true until an
-// app opts in).
-static constexpr int FLAG_NOT_FOCUSABLE = 0x00000002;
-static constexpr int FLAG_NOT_TOUCHABLE = 0x00000010;
+// AOSP WindowManager.LayoutParams flag bits — the canonical LayoutParams
+// constants (the local FLAG_NOT_FOCUSABLE here used to carry the wrong value
+// 0x2; AOSP's is 0x8, which popup computeFlags now stamps for !mFocusable).
+static constexpr int FLAG_NOT_FOCUSABLE = WindowManager::LayoutParams::FLAG_NOT_FOCUSABLE;
+static constexpr int FLAG_NOT_TOUCHABLE = WindowManager::LayoutParams::FLAG_NOT_TOUCHABLE;
 
 // AOSP window-layer values (Window::window_type mirrors them into
 // LayoutParams.type — see cdwindow.cc initWindow).

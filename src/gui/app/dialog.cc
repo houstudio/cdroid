@@ -49,6 +49,10 @@ Dialog::Dialog(Context* context,int themeResId,bool createContextThemeWrapper){
     mShowing = false;
     mCancelable = true;
     mWindow = new Window(mContext, 0, 0, 640, 320);
+    // AOSP DecorView forwards the decor's unhandled touches to the Dialog via
+    // the Window.Callback; CDROID's fused Window carries the hook (cleared in
+    // dismissDialog — the window teardown is posted and may outlive the Dialog).
+    mWindow->setUnhandledTouchEventCallback([this](MotionEvent& e){ return onTouchEvent(e); });
 }
 
 Dialog::~Dialog(){
@@ -163,6 +167,7 @@ void Dialog::dismissDialog(){
         mOnDismissListener(*this);
     }
     if(mWindow){
+        mWindow->setUnhandledTouchEventCallback(nullptr);  // drop the `this` capture before the posted teardown
         mWindow->setVisibility(View::INVISIBLE);
         mWindow->close();          // proper window lifecycle cleanup (posts remove + onDestroy)
         mDismissedWindow = mWindow; // keep the arbitration handle (see dialog.h)
@@ -192,12 +197,31 @@ void Dialog::setCancelable(bool flag){
 }
 
 void Dialog::setCanceledOnTouchOutside(bool cancel) {
+    // AOSP Dialog.setCanceledOnTouchOutside (Dialog.java:1338-1344).
     if (cancel && !mCancelable) {
         mCancelable = true;
-        //updateWindowForCancelable();
     }
-        
-    //mWindow.setCloseOnTouchOutside(cancel);
+    if (mWindow == nullptr) return;
+    mWindow->setCloseOnTouchOutside(cancel);
+    /* CDROID stage-1 substitution: AOSP dialog windows are touch-modal, so an
+       out-of-frame tap is delivered as the real gesture and consumed by
+       shouldCloseOnTouch's UP-out-of-bounds clause. CDROID dispatch is
+       topmost-hit only (non-modal), so the dialog window instead opts into
+       the OUTSIDE notification — WindowManager synthesizes ACTION_OUTSIDE for
+       a DOWN outside it, and shouldCloseOnTouch's ACTION_OUTSIDE clause fires.
+       Same consumption point, same Dialog.cancel() dismissal. */
+    mWindow->setFlags(cancel ? WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH : 0,
+                      WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH);
+}
+
+bool Dialog::onTouchEvent(MotionEvent& event) {
+    // AOSP Dialog.onTouchEvent (Dialog.java:802-807).
+    if (mCancelable && mShowing && mWindow
+            && mWindow->shouldCloseOnTouch(mContext, event)) {
+        cancel();
+        return true;
+    }
+    return false;
 }
 
 void Dialog::cancel(){

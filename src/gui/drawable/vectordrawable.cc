@@ -71,9 +71,9 @@ void VectorDrawable::clearMutated() {
     mMutated = false;
 }
 
-void* VectorDrawable::getTargetByName(const std::string& name) {
+VectorDrawable::VGTarget VectorDrawable::getTargetByName(const std::string& name) {
     auto it = mVectorState->mVGTargetsMap.find(name);
-    return (it==mVectorState->mVGTargetsMap.end())?nullptr:it->second;
+    return (it==mVectorState->mVGTargetsMap.end())?VGTarget():it->second;
 }
 
 std::shared_ptr<Drawable::ConstantState> VectorDrawable::getConstantState() {
@@ -777,7 +777,7 @@ VectorDrawable::VGroup::~VGroup(){
 }
 
 // Temp array to store transform values obtained from native.
-VectorDrawable::VGroup::VGroup(const VGroup* copy,std::unordered_map<std::string, void*>& targetsMap) {
+VectorDrawable::VGroup::VGroup(const VGroup* copy,std::unordered_map<std::string, VectorDrawable::VGTarget>& targetsMap) {
 
     mIsStateful = copy->mIsStateful;
     mThemeAttrs = copy->mThemeAttrs;

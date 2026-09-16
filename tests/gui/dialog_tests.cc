@@ -6,6 +6,9 @@
 #include <core/activityfactory.h>
 #include <app/alertdialog.h>
 #include <core/windowmanager.h>
+#include <core/systemclock.h>
+#include <core/inputdevice.h>
+#include <view/motionevent.h>
 #include <menu/menubuilder.h>
 #include <menu/menupopuphelper.h>
 #include <menu/popupmenu.h>
@@ -628,4 +631,38 @@ TEST_F(DIALOG,PopupMenuItemClickWithRecreate){
        pumpFor(400);
    }
    pumpFor(800);
+}
+
+/* FLAG_WATCH_OUTSIDE_TOUCH / ACTION_OUTSIDE: a cancelable dialog stamps the
+   flag (setCanceledOnTouchOutside), the dispatcher synthesizes ACTION_OUTSIDE
+   for a DOWN outside its window, and Dialog.onTouchEvent cancels it. The tap
+   at (20,20) lands inside the fullscreen base window but outside the centered
+   dialog frame. (Non-modality stage 1: the base window still receives the
+   real DOWN — the dialog additionally gets the OUTSIDE notification.) */
+TEST_F(DIALOG,OutsideTouchCancels){
+   App&app=App::getInstance();
+   bool canceled=false;
+   AlertDialog*dlg=AlertDialog::Builder(&app)
+         .setTitle("outside")
+         .setMessage("tap outside to cancel")
+         .setPositiveButton("OK",nullptr)
+         .setOnCancelListener([&canceled](DialogInterface&){ canceled=true; })
+         .show();
+   ASSERT_NE(dlg,nullptr);
+   ASSERT_TRUE(dlg->isShowing());
+   pumpFor(300);   // show(): measure + relayoutWindow places the centered frame
+
+   const Rect b=dlg->getWindow()->getBound();
+   ASSERT_TRUE(b.contains(400,300));        // dialog frame covers the center...
+   ASSERT_FALSE(b.contains(20,20));         // ...and not the corner we tap
+
+   const nsecs_t now=SystemClock::uptimeMillis();
+   MotionEvent*ev=MotionEvent::obtain(now,now,MotionEvent::ACTION_DOWN,20.f,20.f,0);
+   ev->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+   WindowManager::getInstance().processEvent(*ev);   // public entry: key policy -> onMotion
+   ev->recycle();
+   pumpFor(200);
+
+   EXPECT_TRUE(canceled);
+   EXPECT_FALSE(dlg->isShowing());
 }

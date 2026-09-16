@@ -267,23 +267,22 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
         // Per-animator invariants hoisted out of the holder loop (the lookups are
         // side-effect free; AOSP repeats them only because Java has no shared_ptr
         // atomic tax to save).
-        void* targetNameObj = vectorDrawable->getTargetByName(targetName);
-        void* vectorState = vectorDrawable->getConstantState().get();
-        if (targetNameObj == nullptr) {
+        VectorDrawable::VGTarget targetNameObj = vectorDrawable->getTargetByName(targetName);
+        if (!targetNameObj) {
             return;
         }
         for (int i = 0; i < holders.size(); i++) {
             PropertyValuesHolder* pvh = holders[i];
             const std::string& propertyName = pvh->getPropertyName();
             const Property* property = nullptr;
-            /* AOSP: the two instanceof branches both fail for a null target —
-               property stays null and the holder is skipped. The pointer
-               comparisons here let null fall into the VObject branch and
-               crashed on nullptr->getProperty(). */
-            if (targetNameObj == vectorState){
-                property = ((VectorDrawable::VectorDrawableState*) targetNameObj)->getProperty(propertyName);
-            }else {
-                property = ((VectorDrawable::VObject*) targetNameObj)->getProperty(propertyName);
+            /* AOSP's two instanceof branches (AnimatedVectorDrawable.java:805-810):
+               the ConstantState target answers from its property table, a
+               VObject target from its own. The typed pair makes the dispatch
+               direct — no identity comparison against the state pointer. */
+            if (targetNameObj.state != nullptr) {
+                property = targetNameObj.state->getProperty(propertyName);
+            } else {
+                property = targetNameObj.object->getProperty(propertyName);
             }
             if (property != nullptr) {
                 LOGV("pvh=%p %s.%s",pvh,targetName.c_str(),propertyName.c_str());
@@ -526,17 +525,17 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
         return nullptr;
     }
     std::string targetName = it->second;
-    void* target = mVectorDrawable->getTargetByName(targetName);
+    VectorDrawable::VGTarget target = mVectorDrawable->getTargetByName(targetName);
     if (!mShouldIgnoreInvalidAnim) {
-        if (target == nullptr) {
+        if (!target) {
             LOGE("Target with the name %s cannot be found in the VectorDrawable to be animated.",targetName.c_str());
         }
-        // AOSP also validates instanceof(VGroup|VPath|ConstantState) here
-        // (java:849); getTargetByName's void* values cannot express that test
-        // until mVGTargetsMap is typed (porting backlog) — updateAnimatorProperty
-        // covers the working identity check against the state pointer.
+        // AOSP java:840-848: an entry that is neither VectorDrawableState nor
+        // VObject is rejected (UnsupportedOperationException). The typed map
+        // makes both branches the only representable values, so the
+        // instanceof validation holds by construction.
     }
-    localAnimator->setTarget(target);
+    localAnimator->setTarget(target.asVoid());
     return localAnimator;
 }
 

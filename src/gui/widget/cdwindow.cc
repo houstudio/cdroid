@@ -53,6 +53,19 @@ Window::Window(Context*ctx,const AttributeSet*atts)
     mAttachInfo->mPlaySoundEffect = std::bind(&Window::playSoundImpl,this,std::placeholders::_1);
     loadThemeWindowAnimations();
     loadThemeWindowBackground();
+    loadThemeCloseOnTouchOutside();
+}
+
+void Window::loadThemeCloseOnTouchOutside() {
+    // AOSP PhoneWindow.generateLayout (PhoneWindow.java:2737-2745): a themed
+    // windowCloseOnTouchOutside=true opts this window into outside-close.
+    // (PopupDecorView paths skip the theme read — popups drive flags through
+    // PopupWindow.computeFlags instead.)
+    if (mContext == nullptr) return;
+    static const uint32_t attrs[] = {R::attr::windowCloseOnTouchOutside, 0};
+    auto ta = mContext->getTheme().obtainStyledAttributes(attrs);
+    if (!ta) return;
+    setCloseOnTouchOutsideIfNotSet(ta->getBoolean(0, false));
 }
 
 Window::Window(int x,int y,int width,int height,int type)
@@ -647,6 +660,59 @@ int Window::getSoftInputMode()const{
     return mWindowAttributes.softInputMode;
 }
 
+void Window::setFlags(int flags, int mask){
+    // AOSP Window.setFlags (Window.java:1089-1113).
+    mWindowAttributes.flags = (mWindowAttributes.flags & ~mask) | (flags & mask);
+}
+
+void Window::addFlags(int flags){
+    setFlags(flags, flags);
+}
+
+void Window::clearFlags(int flags){
+    setFlags(0, flags);
+}
+
+void Window::setCloseOnTouchOutside(bool close){
+    // AOSP Window.setCloseOnTouchOutside (Window.java:1618-1621).
+    mCloseOnTouchOutside = close;
+    mSetCloseOnTouchOutside = true;
+}
+
+void Window::setCloseOnTouchOutsideIfNotSet(bool close){
+    // AOSP Window.setCloseOnTouchOutsideIfNotSet (Window.java:1625-1631).
+    if (mSetCloseOnTouchOutside) return;
+    setCloseOnTouchOutside(close);
+}
+
+bool Window::shouldCloseOnTouchOutside() const{
+    // AOSP Window.shouldCloseOnTouchOutside (Window.java:1633-1635).
+    return mCloseOnTouchOutside;
+}
+
+bool Window::shouldCloseOnTouch(Context* context, MotionEvent& event){
+    // AOSP Window.shouldCloseOnTouch (Window.java:1644-1652): the ACTION_OUTSIDE
+    // clause serves WATCH_OUTSIDE_TOUCH windows; the UP-out-of-bounds clause
+    // serves touch-modal windows that receive the real gesture (kept for
+    // parity). The Window IS the decor here, so the attached check is trivial.
+    const bool isOutside = (event.getAction() == MotionEvent::ACTION_UP
+                                && isOutOfBounds(context, event))
+                          || event.getAction() == MotionEvent::ACTION_OUTSIDE;
+    return mCloseOnTouchOutside && isAttachedToWindow() && isOutside;
+}
+
+bool Window::isOutOfBounds(Context* context, const MotionEvent& event){
+    // AOSP Window.isOutOfBounds (Window.java:1663-1669): outside = beyond the
+    // decor frame with windowTouchSlop slack.
+    const int slop = ViewConfiguration::get(context).getScaledWindowTouchSlop();
+    return event.getX() < -slop || event.getY() < -slop
+        || event.getX() > getWidth() + slop || event.getY() > getHeight() + slop;
+}
+
+void Window::setUnhandledTouchEventCallback(std::function<bool(MotionEvent&)> cb){
+    mUnhandledTouchEvent = std::move(cb);
+}
+
 void Window::setAttributes(const WindowManager::LayoutParams& a){
     mWindowAttributes = a;
 }
@@ -1222,6 +1288,17 @@ void Window::doTraversal(){
 
 bool Window::dispatchTouchEvent(MotionEvent& event){
     return FrameLayout::dispatchTouchEvent(event);
+}
+
+bool Window::onTouchEvent(MotionEvent& event){
+    // AOSP: DecorView hands the decor's unhandled pointer events to the
+    // Window.Callback (Dialog).dispatchTouchEvent -> Dialog.onTouchEvent
+    // (Dialog.java:802). Reached through the normal ViewGroup miss path
+    // (children first — matching AOSP superDispatchTouchEvent-before-
+    // onTouchEvent ordering); the fused Window plays DecorView, and the
+    // owning Dialog hangs off the installable hook instead.
+    if (mUnhandledTouchEvent && mUnhandledTouchEvent(event)) return true;
+    return FrameLayout::onTouchEvent(event);
 }
 
 void Window::dispatchInvalidateOnAnimation(View*view){

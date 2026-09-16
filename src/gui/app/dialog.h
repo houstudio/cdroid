@@ -84,7 +84,10 @@ public:
     void onBackPressed();
     void setCancelable(bool flag);
     void setCanceledOnTouchOutside(bool);
-    void cancel()override;  
+    // AOSP Dialog.onTouchEvent (Dialog.java:802-807): outside-touch close
+    // consumption, reached through the Window's unhandled-touch hook.
+    virtual bool onTouchEvent(MotionEvent& event);
+    void cancel()override;
     void setOnCancelListener(OnCancelListener listener);
     void setOnDismissListener(OnDismissListener listener);
     void setOnShowListener(OnShowListener listener);

@@ -705,6 +705,33 @@ WindowManager::LayoutParams* PopupWindow::createPopupLayoutParams(long token){
 }
 
 int PopupWindow::computeFlags(int curFlags){
+    // AOSP PopupWindow.computeFlags (PopupWindow.java:1670-1690), trimmed to
+    // the flag bits CDROID defines (FLAG_IGNORE_CHEEK_PRESSES and the
+    // FLAG_LAYOUT_* family are layout-only bits not ported; mSplitTouchEnabled
+    // rides SPLIT_TOUCH where set). This is what brings the popup decor's
+    // ACTION_OUTSIDE branch to life for outside-touchable popups.
+    using LP = WindowManager::LayoutParams;
+    curFlags &= ~(LP::FLAG_NOT_FOCUSABLE | LP::FLAG_NOT_TOUCHABLE
+                  | LP::FLAG_WATCH_OUTSIDE_TOUCH | LP::FLAG_ALT_FOCUSABLE_IM
+                  | LP::FLAG_SPLIT_TOUCH | LP::FLAG_NOT_TOUCH_MODAL);
+    if (!mFocusable) {
+        curFlags |= LP::FLAG_NOT_FOCUSABLE;
+        if (mInputMethodMode == INPUT_METHOD_NEEDED) {
+            curFlags |= LP::FLAG_ALT_FOCUSABLE_IM;
+        }
+    }
+    if (!mTouchable) {
+        curFlags |= LP::FLAG_NOT_TOUCHABLE;
+    }
+    if (mOutsideTouchable) {
+        curFlags |= LP::FLAG_WATCH_OUTSIDE_TOUCH;
+    }
+    if (mNotTouchModal) {
+        curFlags |= LP::FLAG_NOT_TOUCH_MODAL;
+    }
+    if (mSplitTouchEnabled) {
+        curFlags |= LP::FLAG_SPLIT_TOUCH;
+    }
     return curFlags;
 }
 

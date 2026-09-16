@@ -82,6 +82,12 @@ private:
     bool mInTransition      = false; // close()/re-enter re-entrancy guard
     bool mDestroyed         = false; // set in ~Window so the animator end-callback skips finishClose
     bool mClosePending      = false; // close() idempotence: a second close must not post a second delete
+    // AOSP Window.java:316-317.
+    bool mCloseOnTouchOutside = false;
+    bool mSetCloseOnTouchOutside = false;
+    // The DecorView->Window.Callback unhandled-touch tail (see the public
+    // setUnhandledTouchEventCallback note). Invoked from onTouchEvent.
+    std::function<bool(MotionEvent&)> mUnhandledTouchEvent;
     // AOSP LayoutParams.windowAnimations source: an explicit animation STYLE overriding the
     // theme's windowAnimationStyle (setWindowAnimations). 0 -> resolve from the theme.
     int mWindowAnimationStyle = 0;
@@ -161,6 +167,8 @@ private:
     // the final themed context like the animations; popup decor windows opt out with the
     // same flag (AOSP popup decors never take a theme window background).
     void loadThemeWindowBackground();
+    // AOSP PhoneWindow.generateLayout's windowCloseOnTouchOutside read.
+    void loadThemeCloseOnTouchOutside();
     // AOSP DecorView.setBackgroundFallback (its BackgroundFallback member folded into the
     // fused Window). Owns the drawable — Java's GC becomes a delete.
     void setBackgroundFallback(Drawable* fallbackDrawable);
@@ -253,6 +261,27 @@ public:
      * windowSoftInputMode). */
     void setSoftInputMode(int mode);
     int getSoftInputMode()const;
+    // AOSP Window.setFlags/addFlags/clearFlags (Window.java:1089-1113).
+    void setFlags(int flags, int mask);
+    void addFlags(int flags);
+    void clearFlags(int flags);
+    // AOSP Window close-on-touch-outside face (Window.java:316-317, :1618-1669):
+    // Dialog.setCanceledOnTouchOutside drives these; shouldCloseOnTouch is the
+    // consumption point (the ACTION_OUTSIDE clause — the UP-out-of-bounds
+    // clause serves touch-modal windows, kept for parity).
+    void setCloseOnTouchOutside(bool close);
+    void setCloseOnTouchOutsideIfNotSet(bool close);
+    bool shouldCloseOnTouchOutside() const;
+    bool shouldCloseOnTouch(Context* context, MotionEvent& event);
+    bool isOutOfBounds(Context* context, const MotionEvent& event);
+    // AOSP: DecorView forwards the decor's unhandled pointer events to the
+    // Window.Callback (Dialog).dispatchTouchEvent -> Dialog.onTouchEvent
+    // (Dialog.java:802). CDROID's Window fuses DecorView+PhoneWindow and the
+    // owning Dialog is outside the view tree, so the callback slot is this
+    // installable single-consumer hook (the windowcallback.h documented
+    // extension path; std::function like the mTeardownCb precedent). Clear it
+    // before tearing the consumer down — dispatch may run from posted code.
+    void setUnhandledTouchEventCallback(std::function<bool(MotionEvent&)> cb);
     bool ensureTouchMode(bool inTouchMode)override;
     View& setAlpha(float a);
     void sendToBack();
@@ -385,6 +414,7 @@ public:
     void dispatchInvalidateDelayed(View*, long delayMilliseconds)override;
     void dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*,long delayMilliseconds)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
+    bool onTouchEvent(MotionEvent& event)override;
     ActionMode* startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type)override;
     void cancelInvalidate(View* view)override;
     void requestTransitionStart(LayoutTransition* transition)override;

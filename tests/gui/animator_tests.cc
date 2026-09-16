@@ -187,3 +187,31 @@ TEST_F(ANIMATOR,scale){
     pumpUntilEnd(*anim, 5500);
 }
 
+
+// AOSP ofFloat(target, x, y, path) / PropertyValuesHolder.ofPointF(property,
+// path): the programmatic PathKeyframes route (Path::approximate's
+// error-bounded sampling, X/Y projections) — the same machinery the XML
+// pathxy route uses, replacing the retired uniform N=32 sampling.
+TEST_F(ANIMATOR,pathKeyframesProgrammatic){
+    App&app=App::getInstance();
+    auto path=Cairo::RefPtr<cdroid::Path>(new cdroid::Path());
+    path->moveTo(0,0);
+    path->lineTo(100,100);
+
+    MyProperty propX("pathX"), propY("pathY");
+    ObjectAnimator*anim=ObjectAnimator::ofFloat(nullptr,&propX,&propY,path);
+    anim->setCurrentFraction(0.5f);
+    const std::vector<PropertyValuesHolder*>&holders=anim->getValues();
+    ASSERT_EQ(holders.size(),(size_t)2);
+    // Midpoint of the diagonal: (50, 50).
+    EXPECT_NEAR(GET_VARIANT(holders[0]->getAnimatedValue(),float),50.f,0.5f);
+    EXPECT_NEAR(GET_VARIANT(holders[1]->getAnimatedValue(),float),50.f,0.5f);
+
+    MyProperty pointProp("pathPoint");
+    PropertyValuesHolder*point=PropertyValuesHolder::ofPointF(&pointProp,path);
+    ValueAnimator*pointAnim=ValueAnimator::ofPropertyValuesHolder({point});
+    pointAnim->setCurrentFraction(0.5f);
+    const PointF&p=GET_VARIANT(point->getAnimatedValue(),PointF);
+    EXPECT_NEAR(p.x,50.f,0.5f);
+    EXPECT_NEAR(p.y,50.f,0.5f);
+}

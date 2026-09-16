@@ -501,6 +501,8 @@ void WindowManager::onMotion(MotionEvent&event) {
    const int action = event.getActionMasked();
    // If this is a touchscreen/stylus/touchpad event, keep existing behavior.
    if (event.isFromSource(InputDevice::SOURCE_CLASS_POINTER)){
+       Window* hitTarget = nullptr;
+       std::vector<Window*> outsideWatchers;   // FLAG_WATCH_OUTSIDE_TOUCH windows above the target
        for (auto itr = mWindows.rbegin(); itr != mWindows.rend(); itr++) {
            auto w = (*itr);
            /* Enter touch mode on ACTION_DOWN. Per Android, ACTION_UP does NOT
@@ -513,10 +515,40 @@ void WindowManager::onMotion(MotionEvent&event) {
            }
            LOGV_IF(action != MotionEvent::ACTION_MOVE, "%s at(%d,%d)", MotionEvent::actionToString(action).c_str(), x, y);
            if ((w->getVisibility() == View::VISIBLE) && w->getBound().contains(x, y)) {
+               hitTarget = w;
                event.offsetLocation(-w->getLeft(), -w->getTop());
                w->dispatchPointerEvent(event);
                event.offsetLocation(w->getLeft(), w->getTop());
                break;
+           }
+           /* AOSP InputDispatcher.findTouchedWindowAtLocked (InputDispatcher.cpp:1030-1047):
+              on a gesture DOWN, VISIBLE windows above the target that watch outside
+              touch are collected for an ACTION_OUTSIDE notification (dispatched as
+              FLAG_DISPATCH_AS_OUTSIDE — the resolvedAction rewrite, :2966-2968). The
+              visibility gate matters: a dismissed-but-not-yet-removed dialog window
+              (teardown is posted) must not be notified. DOWN only — no UP/POINTER_DOWN
+              notification (:2022 addOutsideTargets=isDown). */
+           if ((action == MotionEvent::ACTION_DOWN)
+                   && (w->getVisibility() == View::VISIBLE)
+                   && (w->getAttributes().flags
+                            & WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH)) {
+               outsideWatchers.push_back(w);
+           }
+       }
+       /* Deliver ACTION_OUTSIDE only when a target exists: AOSP drops the whole
+          dispatch on a target-less DOWN ("no touched foreground window",
+          InputDispatcher.cpp:2249-2253, :2320 — zero watchers notified).
+          Deviation from AOSP's watcher-first order (tempTouchState lists outside
+          targets before the target): the real event is dispatched above, THEN the
+          watchers — an OUTSIDE handler may cancel/dismiss its window, mutating
+          mWindows mid-iteration, so the copy is iterated after the fact. */
+       if (hitTarget != nullptr) {
+           for (Window* w : outsideWatchers) {
+               MotionEvent*outside = MotionEvent::obtain(event);   // owned copy (hover-synthesis pattern)
+               outside->setAction(MotionEvent::ACTION_OUTSIDE);
+               outside->offsetLocation(-w->getLeft(), -w->getTop());
+               w->dispatchPointerEvent(*outside);
+               outside->recycle();
            }
        }
        return;

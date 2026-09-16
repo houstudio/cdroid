@@ -88,7 +88,8 @@ public:
     int getIntrinsicWidth() override;
     int getIntrinsicHeight() override;
     Insets getOpticalInsets() override;
-    void* getTargetByName(const std::string& name);
+    struct VGTarget;   // defined below, after VObject (its two member types)
+    VGTarget getTargetByName(const std::string& name);
     /*
      * Update local dimensions to adjust for a target density that may differ
      * from the source density against which the constant state was loaded.
@@ -131,6 +132,24 @@ public:
         virtual bool hasFocusStateSpecified()const=0;
         virtual const Property* getProperty(const std::string& propertyName)=0;
     };
+
+    // AOSP mVGTargetsMap is ArrayMap<String, Object> (VectorDrawable.java:946):
+    // a named animation target is either the drawable's ConstantState (the
+    // root entry, java:814/:1005) or a VObject (VGroup/VPath). This pair is
+    // the C++ spelling of AnimatedVectorDrawable's instanceof dispatch
+    // (java:840-848); the "unsupported type" branch is unrepresentable by
+    // construction — only these two ever enter the map.
+    struct VGTarget {
+        VObject* object = nullptr;
+        VectorDrawableState* state = nullptr;
+        VGTarget() = default;
+        VGTarget(VObject* o) : object(o) {}
+        VGTarget(VectorDrawableState* s) : state(s) {}
+        explicit operator bool() const { return object != nullptr || state != nullptr; }
+        void* asVoid() const {
+            return object != nullptr ? static_cast<void*>(object) : static_cast<void*>(state);
+        }
+    };
 };
 
 class VectorDrawable::VectorDrawableState:public std::enable_shared_from_this<VectorDrawableState> ,public ConstantState {
@@ -152,7 +171,7 @@ protected:
     hwui::Tree* mNativeTree = nullptr;
 
     int mDensity = DisplayMetrics::DENSITY_DEFAULT;
-    std::unordered_map<std::string,void*> mVGTargetsMap;
+    std::unordered_map<std::string,VectorDrawable::VGTarget> mVGTargetsMap;
 
     // Fields for cache
     std::vector<int> mCachedThemeAttrs;
@@ -246,7 +265,7 @@ private:
 public:
     VGroup();
     ~VGroup();
-    VGroup(const VGroup* copy,std::unordered_map<std::string, void*>& targetsMap);
+    VGroup(const VGroup* copy,std::unordered_map<std::string, VectorDrawable::VGTarget>& targetsMap);
     const Property* getProperty(const std::string& propertyName)override;
 
     std::string getGroupName()const;

@@ -18,7 +18,7 @@
 #include <animation/propertyvaluesholder.h>
 #include <porting/cdlog.h>
 #include <animation/typeevaluators.h>   // PointFEvaluator
-#include <core/pathmeasure.h>           // Path sampling for ofPointF
+#include <animation/pathkeyframes.h>    // ofPointF keyframes (AOSP KeyframeSet.ofPath)
 
 namespace cdroid{
 
@@ -365,26 +365,14 @@ PropertyValuesHolder*PropertyValuesHolder::ofObject(const Property*prop,TypeEval
     return pvh;
 }
 
-// Sample the Path into N+1 PointF keyframes; PointFEvaluator interpolates between neighbours.
-// (AOSP uses PathKeyframes with an error-bounded sampling; CDROID keeps the
-// uniform N-sample scheme, now expressed as keyframes with values — so
-// setupStartValue/setupEndValue never overwrite them, matching AOSP's
-// hasValue() behavior without the old mPathBased guard.)
+// AOSP ofPoint(property, null, path): the keyframes ARE the PathKeyframes —
+// Path::approximate's error-bounded sampling (default error 0.5f), replacing
+// the old uniform N=32 PathMeasure scheme. Raw-owned like KeyframeSet.ofPath's
+// Java new; do NOT call createX/YKeyframes() on this instance (those need
+// shared_ptr ownership — the ObjectAnimator/X-Y routes create their own).
 PropertyValuesHolder*PropertyValuesHolder::ofPointF(const Property*prop,const Cairo::RefPtr<cdroid::Path>& path){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
-    PathMeasure measure(path, false);
-    const double length = measure.getLength();
-    const int N = 32; // fine enough that linear segments approximate curved paths
-    std::vector<AnimateValue> points;
-    for (int i = 0; i <= N; i++) {
-        double pos[2] = {0,0}, tan[2] = {0,0};
-        measure.getPosTan(length * i / N, pos, tan);
-        PointF p; p.x = (float)pos[0]; p.y = (float)pos[1];
-        points.push_back(p);
-    }
-    pvh->mKeyframes = KeyframeSet::ofObject(points);
-    pvh->mEvaluator = PointFEvaluator;
-    pvh->mAnimateValue = points.front();
+    pvh->mKeyframes = new PathKeyframes(path);
     return pvh;
 }
 

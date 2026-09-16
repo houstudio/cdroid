@@ -80,6 +80,16 @@ public:
         static constexpr int SOFT_INPUT_ADJUST_PAN         = 0x20;
         static constexpr int SOFT_INPUT_ADJUST_RESIZE      = 0x30;
         static constexpr int SOFT_INPUT_MASK_ADJUST        = 0xf0;
+        /* AOSP WindowManager.LayoutParams flag bits (values match
+         * android.view.WindowManager.LayoutParams, android-36:2798-3089).
+         * Only FLAG_WATCH_OUTSIDE_TOUCH is read by the dispatcher today —
+         * the rest are the canonical values for API parity. */
+        static constexpr int FLAG_NOT_FOCUSABLE       = 0x00000008;   // :2798
+        static constexpr int FLAG_NOT_TOUCHABLE       = 0x00000010;   // :2819
+        static constexpr int FLAG_NOT_TOUCH_MODAL     = 0x00000020;   // :2864
+        static constexpr int FLAG_ALT_FOCUSABLE_IM    = 0x00020000;   // :2935
+        static constexpr int FLAG_WATCH_OUTSIDE_TOUCH = 0x00040000;   // :3003 — receive ACTION_OUTSIDE for downs outside the window
+        static constexpr int FLAG_SPLIT_TOUCH         = 0x00800000;   // :3089
         int type = 0;
         int format = 0;
         int x = 0, y = 0;
