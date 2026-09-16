@@ -45,20 +45,53 @@ std::unordered_map<std::string, ConstraintSet::CustomAttributeHandler>& customHa
     return handlers;
 }
 
-// Parse a ratio string ("16:9", "1.5", "W,16:9") into a float ratio (0 if unparseable).
-float parseRatio(const std::string& s) {
-    if (s.empty()) return 0;
-    std::string str = s;
-    if (str.size() > 2 && str[1] == ',') str = str.substr(2); // strip "W,"/"H," side hint
-    size_t colon = str.find(':');
-    if (colon != std::string::npos) {
-        float num = std::stof(str.substr(0, colon));
-        float den = std::stof(str.substr(colon + 1));
-        return (den != 0) ? num / den : 0;
-    }
-    return std::stof(str);
-}
 } // namespace
+
+// Parse a ratio string ("16:9", "1.5", "W,16:9", "H,3:2") into (ratio, side) — the faithful
+// port of ConstraintSet.java:970-1021 (the two former hand-rolled copies had both lost the
+// VERTICAL fraction inversion and the positive-endpoint guard).
+void ConstraintSet::parseDimensionRatioString(const std::string& value, float& ratio, int& side) {
+    float ratioValue = std::nanf("");
+    int ratioSide = -1;   // UNKNOWN
+    const size_t len = value.size();
+    size_t commaIndex = value.find(',');
+    if (commaIndex != std::string::npos && commaIndex > 0 && commaIndex < len - 1) {
+        const std::string dimension = value.substr(0, commaIndex);
+        if (dimension == "W" || dimension == "w")      ratioSide = 0;  // HORIZONTAL
+        else if (dimension == "H" || dimension == "h") ratioSide = 1;  // VERTICAL
+        commaIndex++;   // any recognized-or-not "x," prefix skips its own character
+    } else {
+        commaIndex = 0;
+    }
+    const size_t colonIndex = value.find(':');
+    // (colon >= commaIndex guards Java's substring(begin,end) index throw on inputs like
+    // ":W,1" — AndroidX would crash there; we fall through to the single-number branch.)
+    if (colonIndex != std::string::npos && colonIndex < len - 1 && colonIndex >= commaIndex) {
+        const std::string nominator = value.substr(commaIndex, colonIndex - commaIndex);
+        const std::string denominator = value.substr(colonIndex + 1);
+        if (!nominator.empty() && !denominator.empty()) {
+            try {
+                const float nominatorValue = std::stof(nominator);
+                const float denominatorValue = std::stof(denominator);
+                if (nominatorValue > 0 && denominatorValue > 0) {
+                    // The VERTICAL side animates height against width — the fraction inverts.
+                    ratioValue = (ratioSide == 1)
+                            ? std::fabs(denominatorValue / nominatorValue)
+                            : std::fabs(nominatorValue / denominatorValue);
+                }
+            } catch (const std::exception&) {
+                // Ignore — Java swallows NumberFormatException and keeps NaN.
+            }
+        }
+    } else {
+        const std::string r = value.substr(commaIndex);
+        if (!r.empty()) {
+            try { ratioValue = std::stof(r); } catch (const std::exception&) { }
+        }
+    }
+    ratio = ratioValue;   // NaN on parse failure (Java writes it unconditionally)
+    side = ratioSide;
+}
 
 // ===========================================================================
 // Constraint
@@ -75,6 +108,14 @@ void ConstraintSet::Constraint::fillFrom(int viewId, const ConstraintLayout::Lay
     l.bottomToTop = param.bottomToTop;
     l.bottomToBottom = param.bottomToBottom;
     l.baselineToBaseline = param.baselineToBaseline;
+    // AndroidX fillFrom (ConstraintSet.java:2351-2353): the RTL-aware start/end anchors
+    // round-trip too — dropping them here meant a captureState -> applyTo cycle silently
+    // stripped every Start_toStartOf-style constraint (the view collapsed to (0,0)).
+    // (baselineToTop/Bottom also map in AndroidX; the LayoutParams port has no such fields yet.)
+    l.startToEnd = param.startToEnd;
+    l.startToStart = param.startToStart;
+    l.endToStart = param.endToStart;
+    l.endToEnd = param.endToEnd;
     l.horizontalBias = param.horizontalBias;
     l.verticalBias = param.verticalBias;
     l.orientation = param.orientation;
@@ -103,6 +144,10 @@ void ConstraintSet::Constraint::fillFrom(int viewId, const ConstraintLayout::Lay
     l.heightMin = param.matchConstraintMinHeight;
     l.widthPercent = param.matchConstraintPercentWidth;
     l.heightPercent = param.matchConstraintPercentHeight;
+    // AndroidX fillFrom (ConstraintSet.java:2359-2361).
+    l.circleConstraint = param.circleConstraint;
+    l.circleRadius = param.circleRadius;
+    l.circleAngle = param.circleAngle;
 }
 
 void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) const {
@@ -116,6 +161,12 @@ void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) c
     param.bottomToTop = l.bottomToTop;
     param.bottomToBottom = l.bottomToBottom;
     param.baselineToBaseline = l.baselineToBaseline;
+    // AndroidX applyTo (ConstraintSet.java:2426-2429): the start/end anchors ride back out
+    // (the mirror of fillFrom above).
+    param.startToEnd = l.startToEnd;
+    param.startToStart = l.startToStart;
+    param.endToStart = l.endToStart;
+    param.endToEnd = l.endToEnd;
     param.horizontalBias = l.horizontalBias;
     param.verticalBias = l.verticalBias;
     param.orientation = l.orientation;
@@ -132,6 +183,10 @@ void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) c
     param.goneTopMargin = l.goneTopMargin;
     param.goneRightMargin = l.goneRightMargin;
     param.goneBottomMargin = l.goneBottomMargin;
+    // AndroidX applyTo (ConstraintSet.java:2440-2442).
+    param.circleConstraint = l.circleConstraint;
+    param.circleRadius = l.circleRadius;
+    param.circleAngle = l.circleAngle;
     param.verticalWeight = l.verticalWeight;
     param.horizontalWeight = l.horizontalWeight;
     param.verticalChainStyle = l.verticalChainStyle;
@@ -145,7 +200,10 @@ void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) c
     param.matchConstraintPercentWidth = l.widthPercent;
     param.matchConstraintPercentHeight = l.heightPercent;
     if (!l.dimensionRatio.empty()) {
-        param.dimensionRatio = parseRatio(l.dimensionRatio);
+        // ConstraintSet.java:970 — the shared parser, threading the side through
+        // (the old local parseRatio dropped it, so "H,3:2"-style ratios lost their flip here).
+        ConstraintSet::parseDimensionRatioString(l.dimensionRatio, param.dimensionRatio,
+                                                 param.dimensionRatioSide);
     }
     if (propertySet.visibility == (int)View::GONE) {
         param.width = 0;

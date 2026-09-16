@@ -56,6 +56,24 @@ class XmlPullParser;
 class MotionScene {
   public:
     static constexpr int UNSET = -1;
+    // AndroidX MotionScene.MIN_DURATION (MotionScene.java:64).
+    static constexpr int MIN_DURATION = 8;
+    // AndroidX MotionScene.setDisableAutoTransition: kill-switch for the autoTransition pass.
+    void setDisableAutoTransition(bool disable) {
+        mDisableAutoTransition = disable;
+    }
+
+    // AndroidX MotionScene.getDuration (MotionScene.java:1862): the current transition's
+    // duration, else the default — in milliseconds.
+    int getDuration() const {
+        return (mCurrentTransition != nullptr) ? mCurrentTransition->getDuration() : mDefaultDuration;
+    }
+    // AndroidX MotionScene.setDuration (MotionScene.java:1874): the current transition if
+    // there is one (clamped to MIN_DURATION by Transition::setDuration), else the default.
+    void setDuration(int duration) {
+        if (mCurrentTransition != nullptr) mCurrentTransition->setDuration(duration);
+        else                               mDefaultDuration = duration;
+    }
 
     // A click handler: when `targetId` is clicked, perform `clickAction` on the transition.
     struct OnClick {
@@ -109,6 +127,13 @@ class MotionScene {
         // autoTransition: fire this transition automatically once the layout rests at an endpoint.
         static constexpr int AUTO_NONE = 0, AUTO_JUMP_TO_START = 1, AUTO_JUMP_TO_END = 2,
                              AUTO_ANIMATE_TO_START = 3, AUTO_ANIMATE_TO_END = 4;
+        // AndroidX Transition.TRANSITION_FLAG_INTRA_AUTO (MotionScene.java:584): skip the
+        // autoTransition pass while this is the current transition (a transition that feeds
+        // itself would loop).
+        static constexpr int TRANSITION_FLAG_INTRA_AUTO = 2;
+        bool isTransitionFlag(int flag) const {
+            return (mTransitionFlags & flag) != 0;
+        }
 
         // Read the <Transition> element's own attributes from `attrs` (the parser is at the
         // START_TAG). Child elements (<KeyFrameSet>/<OnClick>) are handled by MotionScene::load
@@ -117,6 +142,10 @@ class MotionScene {
 
         int getDuration() const {
             return mDuration;
+        }
+        // AndroidX Transition.setDuration (MotionScene.java:720): clamped to MIN_DURATION.
+        void setDuration(int duration) {
+            mDuration = std::max(duration, (int)MIN_DURATION);   // (int) cast: max binds a const int& — a bare constexpr would be odr-used
         }
         float getStagger() const {
             return mStagger;
@@ -138,6 +167,11 @@ class MotionScene {
         }
         int getAutoTransition() const {
             return mAutoTransition;
+        }
+        // AndroidX INTERPOLATOR_REFERENCE_ID: motionInterpolator resolved to an @anim/...
+        // resource id (else -1 and getInterpolatorString() carries the spline string).
+        int getDefaultInterpolatorID() const {
+            return mDefaultInterpolatorID;
         }
         bool isAbstract() const {
             return mIsAbstract;
@@ -175,8 +209,10 @@ class MotionScene {
         int mDuration = 400;
         float mStagger = 0;
         std::string mDefaultInterpolatorString;
+        int mDefaultInterpolatorID = -1;   // <Transition motionInterpolator="@anim/...">
         int mPathMotionArc = UNSET;
         int mAutoTransition = AUTO_NONE;
+        int mTransitionFlags = 0;   // <Transition transitionFlags="intraAuto">
         bool mIsAbstract = false;
         std::unique_ptr<KeyFrames> mKeyFrames;
         std::vector<OnClick> mOnClicks;
@@ -249,6 +285,7 @@ class MotionScene {
     int parseConstraintSet(Context* ctx, XmlPullParser& parser);
 
     MotionLayout* mMotionLayout;
+    bool mDisableAutoTransition = false;   // AndroidX mDisableAutoTransition
     int mDefaultDuration = 400;
     std::vector<std::unique_ptr<Transition>> mTransitionList;
     Transition* mCurrentTransition = nullptr;

@@ -102,6 +102,15 @@ void Carousel::onAttachedToWindow() {
 
 void Carousel::onDetachedFromWindow() {
     ConstraintHelper::onDetachedFromWindow();
+    // AndroidX leaves the listener registered (GC keeps `this` reachable);
+    // CDROID's pointer semantics must unsubscribe or a detach+delete leaves a
+    // dangling copy in mTransitionListeners and a detach+reattach duplicates it
+    // (same EventSet mID fires twice per completion). Remove by handle, then
+    // drop the parent pointer so post-detach calls fail the null checks.
+    if (mMotionLayout != nullptr) {
+        mMotionLayout->removeTransitionListener(mListener);
+        mMotionLayout = nullptr;
+    }
     mList.clear();
 }
 
@@ -154,7 +163,11 @@ void Carousel::onTransitionCompleted(int currentId) {
         if (mIndex < 0)      mIndex = 0;
     }
     if (mPreviousIndex != mIndex) {
-        mMotionLayout->post([this] { runUpdate(); });
+        std::weak_ptr<bool> alive = mSelfAlive;
+        mMotionLayout->post([this, alive] {
+            if (alive.expired()) return;   // the carousel died while this was queued
+            runUpdate();
+        });
     }
 }
 
@@ -168,7 +181,10 @@ void Carousel::runUpdate() {    if (mAdapter == nullptr || mMotionLayout == null
         const float v = velocity * mDampening;
         if (mIndex == 0 && mPreviousIndex > mIndex) return;                    // reached the first
         if (mIndex == mAdapter->count() - 1 && mPreviousIndex < mIndex) return; // reached the last
-        mMotionLayout->post([this, v] {
+        std::weak_ptr<bool> alive = mSelfAlive;
+        mMotionLayout->post([this, v, alive] {
+            if (alive.expired()) return;   // the carousel died while this was queued
+            if (mMotionLayout == nullptr) return;
             mMotionLayout->touchAnimateTo(MotionLayout::TOUCH_UP_DECELERATE_AND_COMPLETE, 1.0f, v);
         });
     }
@@ -210,7 +226,10 @@ void Carousel::updateItems() {
 
     // Continue toward mTargetIndex if we haven't reached it yet.
     if (mTargetIndex != -1 && mTargetIndex != mIndex) {
-        mMotionLayout->post([this] {
+        std::weak_ptr<bool> alive = mSelfAlive;
+        mMotionLayout->post([this, alive] {
+            if (alive.expired()) return;   // the carousel died while this was queued
+            if (mMotionLayout == nullptr) return;
             mMotionLayout->setTransitionDuration(mAnimateTargetDelay);
             if (mTargetIndex < mIndex) mMotionLayout->transitionToState(mPreviousState, mAnimateTargetDelay);
             else                       mMotionLayout->transitionToState(mNextState, mAnimateTargetDelay);
@@ -222,13 +241,22 @@ void Carousel::updateItems() {
     if (mBackwardTransition == -1 || mForwardTransition == -1) return;
     if (mInfiniteCarousel) return;
 
-    // AndroidX Carousel only calls enableTransition here — NOT setTransition.
-    // setTransition triggers a full captureAndBuild + setProgress(0) on every swipe,
-    // which is unnecessary (pickTransitionForDrag selects the right transition on touch
-    // based on drag direction + isEnabled) and caused subtle state issues.
+    // AndroidX Carousel.updateItems (Carousel.java:461-472): each enabled direction also
+    // setTransition()s itself (the forward one runs last), so the motion layout's current
+    // transition rests on the forward direction — at-rest setProgress consumers scrub it.
     const int count = mAdapter->count();
-    enableTransition(mBackwardTransition, mIndex > 0);
-    enableTransition(mForwardTransition, mIndex < count - 1);
+    if (mIndex == 0) {
+        enableTransition(mBackwardTransition, false);
+    } else {
+        enableTransition(mBackwardTransition, true);
+        mMotionLayout->setTransition(mBackwardTransition);
+    }
+    if (mIndex == count - 1) {
+        enableTransition(mForwardTransition, false);
+    } else {
+        enableTransition(mForwardTransition, true);
+        mMotionLayout->setTransition(mForwardTransition);
+    }
 }
 
 bool Carousel::updateViewVisibility(View* view, int visibility) {

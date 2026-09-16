@@ -144,6 +144,13 @@ bool ViewTransitionController::applyViewTransition(int id, Motion* mc) {
     return false;
 }
 
+void ViewTransitionController::onViewRemoved(View* view) {
+    mRelatedDirty = true;  // the touch cache holds raw View*: rebuild on the next touch
+    for (auto& a : mAnimations) {
+        if (a->mView == view) removeAnimation(a.get());   // flagged; reaped on the next tick
+    }
+}
+
 void ViewTransitionController::touchEvent(const MotionEvent& evt) {
     const int currentId = mMotionLayout->getCurrentState();
     if (currentId == -1) return; // faithful: no ViewTransition support while a transition is running.
@@ -166,7 +173,10 @@ void ViewTransitionController::touchEvent(const MotionEvent& evt) {
     const int action = evt.getActionMasked();
 
     // Let active Animates react first (reverse on release / when the finger leaves the target).
-    for (auto& a : mAnimations) a->reactTo(action, x, y);
+    // Retired ones (view left the layout) must not touch their target again.
+    for (auto& a : mAnimations) {
+        if (!a->mRemove) a->reactTo(action, x, y);
+    }
 
     if (action == MotionEvent::ACTION_DOWN || action == MotionEvent::ACTION_UP) {
         ConstraintSet* current = mMotionLayout->getConstraintSet(currentId); // null → delta modes no-op
@@ -215,12 +225,16 @@ static void reapAndMaybeStop(std::vector<std::unique_ptr<ViewTransition::Animate
 }
 
 void ViewTransitionController::animate() {
-    for (auto& a : mAnimations) a->mutate();
+    for (auto& a : mAnimations) {
+        if (!a->mRemove) a->mutate();
+    }   // retired: never touch the target again
     reapAndMaybeStop(mAnimations, mAnimator);
 }
 
 void ViewTransitionController::stepAnimations(long elapsedMs) {
-    for (auto& a : mAnimations) a->stepMutate(elapsedMs);
+    for (auto& a : mAnimations) {
+        if (!a->mRemove) a->stepMutate(elapsedMs);
+    }
     reapAndMaybeStop(mAnimations, mAnimator);
 }
 

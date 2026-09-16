@@ -189,7 +189,10 @@ void ViewTransition::applyTransition(ViewTransitionController* controller, Motio
         layout->captureState(&deltaSet, endFrames);
     }
     for (View* v : views) {
-        if (v == nullptr) continue;
+        // AndroidX animates only targets it could frame — a view with no id never enters
+        // start/endFrames, and its fallback below would build the Motion while the layout
+        // still rests at the delta'd state, pinning the view to the delta frame forever.
+        if (v == nullptr || v->getId() == View::NO_ID) continue;
         const auto s = startFrames.find(v->getId());
         const auto e = endFrames.find(v->getId());
         if (s != startFrames.end() && e != endFrames.end()) {

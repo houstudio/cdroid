@@ -33,6 +33,7 @@ namespace cdroid {
 
 class Schlick;
 class StepCurve;
+class TimeInterpolator;
 
 class Easing {
   public:
@@ -60,6 +61,20 @@ class Easing {
     static const std::string LINEAR;
     static const std::string ANTICIPATE;
     static const std::string OVERSHOOT;
+};
+
+// Adapts a platform TimeInterpolator (a MotionScene transition easing loaded from an
+// @anim/... reference, AndroidX INTERPOLATOR_REFERENCE_ID) to the Easing face the Motion
+// engine samples. The interpolator is borrowed (AnimationUtils' cache keeps loaded ones
+// process-resident).
+class InterpolatorEasing : public Easing {
+  public:
+    explicit InterpolatorEasing(const TimeInterpolator* interpolator) : mInterpolator(interpolator) {}
+    double get(double x) const override;
+    std::string toString() const override;
+
+  private:
+    const TimeInterpolator* mInterpolator;
 };
 
 // Cubic-bezier easing solved by binary search on the parametric x(t).

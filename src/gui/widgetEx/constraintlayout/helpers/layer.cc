@@ -172,9 +172,15 @@ void Layer::reCacheViews() {
     if (mIds.empty()) {
         return;
     }
-    mViews.resize(mIds.size());
+    /* Cache only views that resolve: setReferencedIds admits ids that name
+     * an id resource but have no child in this layout (typo / removed), and
+     * calcCenters dereferences mViews[0] before its per-view null guard —
+     * a stale nullptr there was a SIGSEGV (Java survives via filtered ids). */
+    mViews.clear();
     for (size_t i = 0; i < mIds.size(); i++) {
-        mViews[i] = mContainer->findViewById(mIds[i]);
+        if (View* view = mContainer->findViewById(mIds[i])) {
+            mViews.push_back(view);
+        }
     }
 }
 

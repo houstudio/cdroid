@@ -44,6 +44,12 @@ class XmlPullParser; // expat-backed pull parser (src/gui/core/xmlpullparser.h);
 
 class ConstraintSet {
   public:
+    // AndroidX ConstraintSet.parseDimensionRatioString (ConstraintSet.java:970-1021): parses
+    // "16:9", "1.5", "W,16:9", "H,3:2" into (ratio, side). The VERTICAL side inverts the
+    // fraction; a non-positive endpoint or unparseable number leaves NaN (Java keeps NaN;
+    // consumers test with `> 0`). side: -1 UNKNOWN, 0 HORIZONTAL, 1 VERTICAL. The single
+    // shared parser — ConstraintLayout's LayoutParams parsing calls it too.
+    static void parseDimensionRatioString(const std::string& value, float& ratio, int& side);
     // Anchor/side constants used by connect()/setMargin() (Android ConstraintSet values).
     static const int LEFT    = 3;
     static const int RIGHT   = 4;

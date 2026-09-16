@@ -87,7 +87,18 @@ int ConstraintLayoutStates::parseConstraintSet(Context* ctx, XmlPullParser& pars
     const int count = parser.getAttributeCount();
     for (int i = 0; i < count; i++) {
         if (parser.getAttributeName(i) == "id") {
-            const int id = parser.getAttributeResourceValue(i, -1);
+            int id = (int)parser.getAttributeResourceValue(i, (uint32_t)-1);
+            if (id == -1) {
+                // AndroidX fallback (ConstraintLayoutStates.java:371-377): when the typed
+                // read misses — a raw numeric id, or a text-XML name with no arsc entry —
+                // parse the attribute's own text (AndroidX does Integer.parseInt on the
+                // string minus its first character, i.e. "@12345" -> 12345). Dropping this
+                // path discarded whole state sets with no warning.
+                const std::string s = parser.getAttributeValue(i);
+                if (s.size() > 1) {
+                    try { id = std::stoi(s.substr(1)); } catch (const std::exception&) { id = -1; }
+                }
+            }
             auto set = std::make_unique<ConstraintSet>();
             set->load(ctx, parser); // consumes through </ConstraintSet>
             mConstraintSetMap[id] = std::move(set);

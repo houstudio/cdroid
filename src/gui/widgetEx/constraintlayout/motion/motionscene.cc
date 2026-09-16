@@ -45,14 +45,51 @@ MotionScene::Transition::Transition(MotionScene& scene, Context* ctx, const Attr
     if (ta) {
         namespace TR = R::styleable;
         mId = (int)ta->getResourceId(TR::Transition_id, UNSET);                     // <Transition android:id="@+id/...">
-        mConstraintSetStart = (int)ta->getResourceId(TR::Transition_constraintSetStart, UNSET);
-        mConstraintSetEnd   = (int)ta->getResourceId(TR::Transition_constraintSetEnd, UNSET);
+        // AndroidX Transition fillFromAttributeList (MotionScene.java:1104-1126): a
+        // constraintSetStart/End reference is dispatched on its resource type — "@layout/x"
+        // loads the ConstraintSet into the scene's map right here (without this the
+        // transition never animates and nothing warns), "@xml/x" expands via parseInclude.
+        auto constraintSetRef = [&](size_t attr, int& target) {
+            target = (int)ta->getResourceId(attr, (uint32_t)target);
+            if (target == UNSET) return;
+            std::string type;
+            if (!ctx->getResources().getResourceTypeName(target, &type)) return;
+            if (type == "layout") {
+                auto set = std::make_unique<ConstraintSet>();
+                auto parser = ctx->getResources().getXml(target);
+                set->load(ctx, *parser);
+                scene.mConstraintSetMap[target] = std::move(set);
+            }
+            // "xml" (MotionScene.parseInclude) is not ported yet.
+        };
+        constraintSetRef(TR::Transition_constraintSetStart, mConstraintSetStart);
+        constraintSetRef(TR::Transition_constraintSetEnd, mConstraintSetEnd);
         mDuration = ta->getInt(TR::Transition_duration, mDuration);
         if (mDuration < 8) mDuration = 8;
         mStagger = ta->getFloat(TR::Transition_staggered, mStagger);
-        mDefaultInterpolatorString = ta->getString(TR::Transition_motionInterpolator);
+        // AndroidX Transition_motionInterpolator (MotionScene.java:1126-1142): a TYPE_REFERENCE
+        // (or path-ish string) resolves to an interpolator resource id — the old bare getString
+        // turned "@anim/..." into an empty string and the transition silently kept the default.
+        {
+            TypedValue type;
+            if (ta->peekValue(TR::Transition_motionInterpolator, &type)) {
+                if (type.type == TypedValue::TYPE_REFERENCE) {
+                    mDefaultInterpolatorID = (int)ta->getResourceId(
+                            TR::Transition_motionInterpolator, (uint32_t)-1);
+                    mDefaultInterpolatorString.clear();
+                } else if (type.type == TypedValue::TYPE_STRING) {
+                    mDefaultInterpolatorString = ta->getString(TR::Transition_motionInterpolator);
+                    if (mDefaultInterpolatorString.find('/') != std::string::npos) {
+                        mDefaultInterpolatorID = (int)ta->getResourceId(
+                                TR::Transition_motionInterpolator, (uint32_t)-1);
+                        mDefaultInterpolatorString.clear();
+                    }
+                }
+            }
+        }
         mPathMotionArc = ta->getInt(TR::Transition_pathMotionArc, mPathMotionArc);
         mAutoTransition = ta->getInt(TR::Transition_autoTransition, mAutoTransition);
+        mTransitionFlags = ta->getInt(TR::Transition_transitionFlags, mTransitionFlags);
     }
     if (mConstraintSetStart == UNSET) mIsAbstract = true;
 }
@@ -231,10 +268,19 @@ MotionScene::Transition* MotionScene::bestTransitionFor(int currentState, float 
 }
 
 bool MotionScene::autoTransition(MotionLayout* layout, int currentState) {
+    // AndroidX MotionScene.autoTransition (MotionScene.java:441-451): no auto firing while a
+    // touch sequence is being processed (its velocity tracker is alive) or when disabled.
     if (layout == nullptr) return false;
+    if (layout->isProcessingTouch()) return false;
+    if (mDisableAutoTransition) return false;
     for (const auto& t : mTransitionList) {
         const int mode = t->getAutoTransition();
         if (mode == Transition::AUTO_NONE) continue;
+        // A transition flagged intraAuto must not feed itself while current (java:453-456).
+        if (mCurrentTransition == t.get()
+                && t->isTransitionFlag(Transition::TRANSITION_FLAG_INTRA_AUTO)) {
+            continue;
+        }
         if (currentState == t->getStartId()
                 && (mode == Transition::AUTO_ANIMATE_TO_END || mode == Transition::AUTO_JUMP_TO_END)) {
             layout->applyTransitionForAuto(t.get(), /*toEnd=*/true,

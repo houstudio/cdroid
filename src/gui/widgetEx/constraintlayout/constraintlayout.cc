@@ -26,6 +26,7 @@
 #include <widgetEx/widgetex_styleable.h>
 #include <core/xmlpullparser.h>
 #include <widgetEx/constraintlayout/constraintlayoutstates.h>
+#include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/constraintlayout/sharedvalues.h>
 
 #include <algorithm>
@@ -54,27 +55,6 @@ using namespace cdroid::internal;
 
 // out-of-line definition (PARENT_ID is odr-used as a map key)
 constexpr int ConstraintLayout::PARENT_ID;
-
-namespace {
-// Parse a ratio string like "16:9", "1.5", "W,16:9", "H,3:2" into (ratio, side).
-void parseDimensionRatio(const std::string& str, float& ratio, int& side) {
-    side = -1; // UNKNOWN
-    std::string s = str;
-    if (s.size() > 2 && s[1] == ',') {
-        if (s[0] == 'W' || s[0] == 'w') side = ConstraintWidget::HORIZONTAL;
-        else if (s[0] == 'H' || s[0] == 'h') side = ConstraintWidget::VERTICAL;
-        s = s.substr(2);
-    }
-    size_t colon = s.find(':');
-    if (colon != std::string::npos) {
-        float num = std::stof(s.substr(0, colon));
-        float den = std::stof(s.substr(colon + 1));
-        ratio = (den != 0) ? num / den : 0;
-    } else {
-        ratio = std::stof(s);
-    }
-}
-} // anonymous namespace
 
 // ===========================================================================
 // ConstraintLayout::LayoutParams
@@ -170,7 +150,7 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
 
     // Post-loop: parse ratio string ("16:9", "1.5", "W,16:9", "H,3:2").
     if (!ratioStr.empty()) {
-        parseDimensionRatio(ratioStr, dimensionRatio, dimensionRatioSide);
+        ConstraintSet::parseDimensionRatioString(ratioStr, dimensionRatio, dimensionRatioSide);
     }
 
     validate();
@@ -226,7 +206,11 @@ ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int d
         case SCL::ConstraintLayoutLayout_minHeight: mMinHeight = ta->getDimensionPixelSize(i, 0); break;
         case SCL::ConstraintLayoutLayout_maxWidth:  mMaxWidth  = ta->getDimensionPixelSize(i, INT_MAX); break;
         case SCL::ConstraintLayoutLayout_maxHeight: mMaxHeight = ta->getDimensionPixelSize(i, INT_MAX); break;
-        case SCL::ConstraintLayoutLayout_layout_optimizationLevel: /* TODO */ break;
+        // AndroidX ConstraintLayout.init (ConstraintLayout.java:1062): aapt compiles
+        // "none"/"standard"/"direct|barrier|..." into a flag mask — plain getInt.
+        case SCL::ConstraintLayoutLayout_layout_optimizationLevel:
+            mLayoutWidget.setOptimizationLevel(ta->getInt(i, mLayoutWidget.getOptimizationLevel()));
+            break;
         case SCL::ConstraintLayoutLayout_layoutDescription: layoutDesc = ta->getResourceId(i, 0); break;
         default: break;
         }
@@ -612,11 +596,27 @@ void ConstraintLayout::measure(ConstraintWidget* widget, BasicMeasure::Measure* 
 }
 
 void ConstraintLayout::didMeasures() {
-    // No-op: Placeholder/helper post-measure work is driven directly from onMeasure
-    // (Placeholder::updatePostMeasure loop + the helper updatePostLayout pass in onLayout).
+    // AndroidX Measurer.didMeasures (ConstraintLayout.java:1022-1035): placeholders adopt
+    // their resolved size, then every ConstraintHelper gets its updatePostMeasure. (The old
+    // body was a no-op whose comment claimed onMeasure drove this — it never did, so
+    // updatePostMeasure had zero callers module-wide.)
+    const int n = getChildCount();
+    for (int i = 0; i < n; i++) {
+        if (auto* placeholder = dynamic_cast<Placeholder*>(getChildAt(i))) {
+            placeholder->updatePostMeasure(this);
+        }
+    }
+    for (ConstraintHelper* helper : mConstraintHelpers) {
+        helper->updatePostMeasure(this);
+    }
 }
 
 void ConstraintLayout::dispatchDraw(Canvas& canvas) {
+    // AndroidX dispatchDraw (ConstraintLayout.java:2165-2174): helpers prepare their draw
+    // state before the children render (e.g. Layer's group rotation).
+    for (ConstraintHelper* helper : mConstraintHelpers) {
+        helper->updatePreDraw(this);
+    }
     ViewGroup::dispatchDraw(canvas);
     if (debugDraw()) {
         drawDebugOverlays(canvas);
@@ -847,14 +847,9 @@ void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     mLayoutWidget.setRtl(isLayoutRtl());
     setChildrenConstraints();
     resolveSystem(widthMeasureSpec, heightMeasureSpec);
-    // Placeholders adopt their content's resolved size post-solve (BasicMeasure's match-constraint
-    // convergence loop runs before this; Placeholder itself needs a single post-solve adoption).
-    const int count = getChildCount();
-    for (int i = 0; i < count; i++) {
-        if (auto* placeholder = dynamic_cast<Placeholder*>(getChildAt(i))) {
-            placeholder->updatePostMeasure(this);
-        }
-    }
+    // Placeholders adopt their content's resolved size post-solve — driven from
+    // didMeasures() (the BasicMeasure completion callback) like AndroidX's Measurer.didMeasures
+    // (ConstraintLayout.java:1027); no second call here.
     // For a WRAP_CONTENT dimension (AT_MOST/UNSPECIFIED spec) the solver pins the container to its
     // desired (AT_MOST max) size; shrink it to the actual content extent of the solved children so a
     // WRAP container sizes to its content. EXACTLY dimensions keep the solver's size. Virtual helpers

@@ -26,7 +26,9 @@
 
 #include <algorithm> // std::find (removeTransitionListener)
 #include <porting/cdlog.h>
+#include <animation/animationutils.h>
 #include <animation/valueanimator.h>
+#include <widgetEx/constraintlayout/core/motion/easing.h>
 #include <view/motionevent.h>
 #include <view/view.h>
 #include <widgetEx/constraintlayout/motion/keyframes.h>
@@ -215,6 +217,11 @@ void MotionLayout::animateTo(float target) {
         return;
     }
     stopSpringAnimation(); // a ValueAnimator transition supersedes any running spring
+    // Retire the outgoing animator's listener BEFORE cancel(): cancel fires onAnimationEnd
+    // synchronously, and that must not read as a completion (AndroidX tells the events apart
+    // by listener identity; the generation token covers queued ticks as well).
+    ++mAnimatorGeneration;
+    const int64_t gen = mAnimatorGeneration;
     const float start = mProgress;
     if (mAnimator != nullptr) {
         mAnimator->cancel();
@@ -233,7 +240,8 @@ void MotionLayout::animateTo(float target) {
     });
     // Notify listeners once on natural completion (animator reaches its end).
     Animator::AnimatorListener al;
-    al.onAnimationEnd = [this, target](Animator&, bool) {
+    al.onAnimationEnd = [this, target, gen](Animator&, bool) {
+        if (gen != mAnimatorGeneration) return;   // superseded: this end came from cancel()
         mProgress = target;
         if (target <= 0.0f) mCurrentState = mBeginState;
         else if (target >= 1.0f) mCurrentState = mEndState;
@@ -488,6 +496,12 @@ void MotionLayout::setTransitionEasing(int viewId, const std::string& easing) {
     if (it != mMotions.end()) it->second->setValue(TypedValues::MotionType::TYPE_EASING, easing);
 }
 
+void MotionLayout::setTransitionInterpolator(const Interpolator* interpolator) {
+    for (auto& kv : mMotions) {
+        kv.second->setEasing(std::make_unique<InterpolatorEasing>(interpolator));
+    }
+}
+
 void MotionLayout::applyMotion() {
     const int count = getChildCount();
     for (int i = 0; i < count; i++) {
@@ -537,7 +551,14 @@ void MotionLayout::applyTransition(MotionScene::Transition* t) {
     ConstraintSet* end   = mScene->getConstraintSet(t->getEndId());
     if (start == nullptr || end == nullptr) return;
     setTransitionDuration(t->getDuration());
-    if (!t->getInterpolatorString().empty()) setTransitionEasing(t->getInterpolatorString());
+    // AndroidX setInterpolatorInfo / applyTransition: an @anim/... motionInterpolator reference
+    // (INTERPOLATOR_REFERENCE_ID) loads the platform interpolator; a spline string parses.
+    if (t->getDefaultInterpolatorID() != -1) {
+        Interpolator* ip = AnimationUtils::loadInterpolator(getContext(), t->getDefaultInterpolatorID());
+        if (ip != nullptr) setTransitionInterpolator(ip);
+    } else if (!t->getInterpolatorString().empty()) {
+        setTransitionEasing(t->getInterpolatorString());
+    }
     mKeyFramesToApply = t->getKeyFrames();
     mSceneArcMode = t->getPathMotionArc();
     mBeginState = t->getStartId();
@@ -614,6 +635,25 @@ ViewTransitionController* MotionLayout::getViewTransitionController() const {
     return mScene ? mScene->getViewTransitionController() : nullptr;
 }
 
+// AndroidX MotionLayout.setTransitionDuration (MotionLayout.java:4951): the write goes
+// through the scene; the member is synced here so CDROID's internal consumers (animateTo's
+// animator, Motion::setup) see it without waiting for a read-through.
+void MotionLayout::setTransitionDuration(int64_t durationMs) {
+    if (mScene == nullptr) {
+        LOGE("MotionScene not defined");
+        return;
+    }
+    mScene->setDuration((int)durationMs);
+    mTransitionDuration = durationMs;
+}
+
+// AndroidX MotionLayout.getTransitionTimeMs (MotionLayout.java:4481): the scene's duration
+// (current transition, else the default) is read through on every call.
+int64_t MotionLayout::getTransitionTimeMs() {
+    if (mScene != nullptr) mTransitionDuration = mScene->getDuration();
+    return mTransitionDuration;
+}
+
 void MotionLayout::setScene(std::unique_ptr<MotionScene> scene) {
     mScene = std::move(scene);
     mSceneBuilt = true; // do not rebuild from layoutDescription on the next measure
@@ -681,6 +721,16 @@ void MotionLayout::wireOnClicks(MotionScene::Transition* t) {
 // OnSwipe drag-to-progress is delegated to TouchResponse (anchor geometry + auto-complete). We
 // intercept only once the drag exceeds touch slop, so taps still reach <OnClick> children. Touches
 // are also forwarded to the ViewTransitionController (fires <ViewTransition> press/release effects).
+// A direct child is leaving the layout (ViewGroup::removeView calls this while the
+// child object is still alive): drop the ViewTransitionController's raw references
+// to it — the touch cache and any in-flight Animate writing onto it each tick.
+void MotionLayout::onViewRemoved(View* child) {
+    ConstraintLayout::onViewRemoved(child);
+    if (mScene != nullptr) {
+        if (auto* c = mScene->getViewTransitionController()) c->onViewRemoved(child);
+    }
+}
+
 bool MotionLayout::onInterceptTouchEvent(MotionEvent& evt) {
     if (mScene) {
         if (auto* c = mScene->getViewTransitionController()) c->touchEvent(evt);
@@ -699,6 +749,7 @@ bool MotionLayout::onTouchEvent(MotionEvent& evt) {
     if (mTouchResponse == nullptr) return ConstraintLayout::onTouchEvent(evt);
     const int action = evt.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {
+        mProcessingTouch = true;   // velocity-tracker lifetime (isProcessingTouch)
         mLastTouchX = evt.getX();
         mLastTouchY = evt.getY();
         mTouchResponse->onDown(evt);
@@ -718,6 +769,7 @@ bool MotionLayout::onTouchEvent(MotionEvent& evt) {
         return true;
     }
     if (action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_CANCEL) {
+        mProcessingTouch = false;  // gesture over (isProcessingTouch)
         mTouchResponse->onUp(evt);
         return true;
     }
