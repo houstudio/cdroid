@@ -40,7 +40,7 @@ Flow::Flow(Context* ctx):Flow(ctx,nullptr){}
 Flow::Flow(Context* ctx,const AttributeSet* attrs):Flow(ctx,attrs,0){}
 
 Flow::Flow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
-    : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
+    : VirtualLayout(ctx, pAttrs, defStyleAttr) {
     mHelperWidget = std::make_unique<clcore::Flow>();
     auto* f = asFlow(mHelperWidget.get());
     // TypedArray reads typed binary AXML values directly (AOSP pattern). AndroidX Flow reuses the
@@ -112,14 +112,20 @@ void Flow::setVerticalBias(float bias)     {
 
 
 void Flow::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    // AndroidX Flow.onMeasure (helper Flow.java:168-192).
-    auto* f = asFlow(mHelperWidget.get());
-    if (f != nullptr) {
-        f->measure(View::MeasureSpec::getMode(widthMeasureSpec),
-                   View::MeasureSpec::getSize(widthMeasureSpec),
-                   View::MeasureSpec::getMode(heightMeasureSpec),
-                   View::MeasureSpec::getSize(heightMeasureSpec));
-        setMeasuredDimension(f->getMeasuredWidth(), f->getMeasuredHeight());
+    // AndroidX Flow.onMeasure (helper Flow.java:166-171): delegate to the 3-arg overload.
+    onMeasure(asFlow(mHelperWidget.get()), widthMeasureSpec, heightMeasureSpec);
+}
+
+void Flow::onMeasure(clcore::VirtualLayout* layout, int widthMeasureSpec, int heightMeasureSpec) {
+    // AndroidX Flow.onMeasure (helper Flow.java:177-192): translate the specs and hand them
+    // to the core Flow, then adopt its measured size.
+    int widthMode  = View::MeasureSpec::getMode(widthMeasureSpec);
+    int widthSize  = View::MeasureSpec::getSize(widthMeasureSpec);
+    int heightMode = View::MeasureSpec::getMode(heightMeasureSpec);
+    int heightSize = View::MeasureSpec::getSize(heightMeasureSpec);
+    if (layout != nullptr) {
+        layout->measure(widthMode, widthSize, heightMode, heightSize);
+        setMeasuredDimension(layout->getMeasuredWidth(), layout->getMeasuredHeight());
     } else {
         setMeasuredDimension(0, 0);
     }

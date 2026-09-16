@@ -562,51 +562,228 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
 }
 
 // --- BasicMeasure::Measurer ---
+// AndroidX Measurer.measure (ConstraintLayout.java:656-945), including the virtual-layout
+// routing (:853-860): a child whose core widget is a VirtualLayout is measured through the
+// helper view's onMeasure(VirtualLayout*, ...) entry instead of View::measure — that path
+// both bypasses the View measure cache and hands the core layout the specs directly.
 void ConstraintLayout::measure(ConstraintWidget* widget, BasicMeasure::Measure* m) {
-    if (widget->getVisibility() == ConstraintWidget::GONE) {
+    if (widget == nullptr) {
+        return;
+    }
+    if (widget->getVisibility() == ConstraintWidget::GONE && !widget->isInPlaceholder()) {
         m->measuredWidth = 0;
         m->measuredHeight = 0;
         m->measuredBaseline = 0;
-        m->measuredHasBaseline = false;
-        m->measuredNeedsSolverPass = false;
         return;
     }
-    View* child = static_cast<View*>(widget->getCompanionWidget());
-    if (child == nullptr || child->getParent() == nullptr) return;
+    if (widget->getParent() == nullptr) {
+        return;
+    }
 
-    auto specFor = [&](ConstraintWidget::DimensionBehaviour b, int dim, bool horizontal) -> int {
-        int parentSpec = horizontal ? mWidthSpec : mHeightSpec;
-        int padding   = horizontal ? mPaddingWidth : mPaddingHeight;
-        if (b == ConstraintWidget::DimensionBehaviour::FIXED) {
-            return View::MeasureSpec::makeMeasureSpec(dim, View::MeasureSpec::EXACTLY);
-        } else if (b == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT) {
-            return ViewGroup::getChildMeasureSpec(parentSpec, padding, LayoutParams::WRAP_CONTENT);
-        } else if (b == ConstraintWidget::DimensionBehaviour::MATCH_PARENT) {
-            return ViewGroup::getChildMeasureSpec(parentSpec, padding, LayoutParams::MATCH_PARENT);
-        }
-        // MATCH_CONSTRAINT (0dp). `dim` is widget->getWidth()/Height() — after a solve it is the
-        // resolved size; honor the measure strategy so the child's content-dependent dimension
-        // (e.g. text height under the resolved width) can adapt, then re-solve if it changed.
+    ConstraintWidget::DimensionBehaviour horizontalBehavior = m->horizontalBehavior;
+    ConstraintWidget::DimensionBehaviour verticalBehavior   = m->verticalBehavior;
+    int horizontalDimension = m->horizontalDimension;
+    int verticalDimension   = m->verticalDimension;
+
+    int horizontalSpec = 0;
+    int verticalSpec   = 0;
+
+    const int heightPadding = mPaddingHeight;
+    const int widthPadding  = mPaddingWidth;
+
+    View* child = static_cast<View*>(widget->getCompanionWidget());
+
+    switch (horizontalBehavior) {
+    case ConstraintWidget::DimensionBehaviour::FIXED:
+        horizontalSpec = View::MeasureSpec::makeMeasureSpec(horizontalDimension,
+                                                            View::MeasureSpec::EXACTLY);
+        break;
+    case ConstraintWidget::DimensionBehaviour::WRAP_CONTENT:
+        horizontalSpec = ViewGroup::getChildMeasureSpec(mWidthSpec, widthPadding,
+                                                        LayoutParams::WRAP_CONTENT);
+        break;
+    case ConstraintWidget::DimensionBehaviour::MATCH_PARENT:
+        // Horizontal spec must account for margin as well as padding here (java:706-711).
+        horizontalSpec = ViewGroup::getChildMeasureSpec(mWidthSpec,
+                widthPadding + widget->getAnchor(ConstraintAnchor::Type::LEFT)->getMargin()
+                            + widget->getAnchor(ConstraintAnchor::Type::RIGHT)->getMargin(),
+                LayoutParams::MATCH_PARENT);
+        break;
+    case ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT: {
+        horizontalSpec = ViewGroup::getChildMeasureSpec(mWidthSpec, widthPadding,
+                                                        LayoutParams::WRAP_CONTENT);
+        const bool shouldDoWrap =
+                widget->mMatchConstraintDefaultWidth == ConstraintWidget::MATCH_CONSTRAINT_WRAP;
         if (m->measureStrategy == BasicMeasure::Measure::TRY_GIVEN_DIMENSIONS
                 || m->measureStrategy == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS) {
-            return View::MeasureSpec::makeMeasureSpec(dim, View::MeasureSpec::EXACTLY);
+            // The solver gives us our new dimension, but if we previously measured it with a
+            // wrap, it can be incorrect if the other side was also variable — double-check
+            // the other side is stable before trusting the wrap value (java:718-739).
+            const bool otherDimensionStable =
+                    child != nullptr && child->getMeasuredHeight() == widget->getHeight();
+            const bool useCurrent = m->measureStrategy
+                                            == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS
+                                    || !shouldDoWrap
+                                    || (shouldDoWrap && otherDimensionStable)
+                                    || dynamic_cast<Placeholder*>(child) != nullptr
+                                    || widget->isResolvedHorizontally();
+            if (useCurrent) {
+                horizontalSpec = View::MeasureSpec::makeMeasureSpec(widget->getWidth(),
+                                                                    View::MeasureSpec::EXACTLY);
+            }
         }
-        // SELF_DIMENSIONS: not solved yet — measure wrap to seed the solver.
-        return ViewGroup::getChildMeasureSpec(parentSpec, padding, LayoutParams::WRAP_CONTENT);
-    };
+        break;
+    }
+    }
 
-    int wSpec = specFor(m->horizontalBehavior, m->horizontalDimension, true);
-    int hSpec = specFor(m->verticalBehavior, m->verticalDimension, false);
-    child->measure(wSpec, hSpec);
+    switch (verticalBehavior) {
+    case ConstraintWidget::DimensionBehaviour::FIXED:
+        verticalSpec = View::MeasureSpec::makeMeasureSpec(verticalDimension,
+                                                          View::MeasureSpec::EXACTLY);
+        break;
+    case ConstraintWidget::DimensionBehaviour::WRAP_CONTENT:
+        verticalSpec = ViewGroup::getChildMeasureSpec(mHeightSpec, heightPadding,
+                                                      LayoutParams::WRAP_CONTENT);
+        break;
+    case ConstraintWidget::DimensionBehaviour::MATCH_PARENT:
+        verticalSpec = ViewGroup::getChildMeasureSpec(mHeightSpec,
+                heightPadding + widget->getAnchor(ConstraintAnchor::Type::TOP)->getMargin()
+                              + widget->getAnchor(ConstraintAnchor::Type::BOTTOM)->getMargin(),
+                LayoutParams::MATCH_PARENT);
+        break;
+    case ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT: {
+        verticalSpec = ViewGroup::getChildMeasureSpec(mHeightSpec, heightPadding,
+                                                      LayoutParams::WRAP_CONTENT);
+        const bool shouldDoWrap =
+                widget->mMatchConstraintDefaultHeight == ConstraintWidget::MATCH_CONSTRAINT_WRAP;
+        if (m->measureStrategy == BasicMeasure::Measure::TRY_GIVEN_DIMENSIONS
+                || m->measureStrategy == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS) {
+            const bool otherDimensionStable =
+                    child != nullptr && child->getMeasuredWidth() == widget->getWidth();
+            const bool useCurrent = m->measureStrategy
+                                            == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS
+                                    || !shouldDoWrap
+                                    || (shouldDoWrap && otherDimensionStable)
+                                    || dynamic_cast<Placeholder*>(child) != nullptr
+                                    || widget->isResolvedVertically();
+            if (useCurrent) {
+                verticalSpec = View::MeasureSpec::makeMeasureSpec(widget->getHeight(),
+                                                                  View::MeasureSpec::EXACTLY);
+            }
+        }
+        break;
+    }
+    }
 
-    int w = child->getMeasuredWidth();
-    int h = child->getMeasuredHeight();
-    int baseline = child->getBaseline();
-    m->measuredWidth = w;
-    m->measuredHeight = h;
+    // OPTIMIZATION_CACHE_MEASURES reuse block (java:793-821) is not ported: the core widget
+    // carries no last-spec bookkeeping and the flag is off in every shipped optimization level.
+
+    const bool horizontalMatchConstraints =
+            (horizontalBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
+    const bool verticalMatchConstraints =
+            (verticalBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
+    const bool verticalDimensionKnown =
+            verticalBehavior == ConstraintWidget::DimensionBehaviour::MATCH_PARENT
+            || verticalBehavior == ConstraintWidget::DimensionBehaviour::FIXED;
+    const bool horizontalDimensionKnown =
+            horizontalBehavior == ConstraintWidget::DimensionBehaviour::MATCH_PARENT
+            || horizontalBehavior == ConstraintWidget::DimensionBehaviour::FIXED;
+    const bool horizontalUseRatio =
+            horizontalMatchConstraints && widget->mDimensionRatio > 0;
+    const bool verticalUseRatio =
+            verticalMatchConstraints && widget->mDimensionRatio > 0;
+
+    if (child == nullptr) {
+        return;
+    }
+
+    int width = 0;
+    int height = 0;
+    int baseline = 0;
+
+    // Under SELF_DIMENSIONS a fully solver-determined 0dp/0dp (spread) widget is left
+    // unmeasured (java:846-851) — the solver will size it; the strategy passes measure it.
+    if ((m->measureStrategy == BasicMeasure::Measure::TRY_GIVEN_DIMENSIONS
+                || m->measureStrategy == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS)
+            || !(horizontalMatchConstraints
+                    && widget->mMatchConstraintDefaultWidth
+                            == ConstraintWidget::MATCH_CONSTRAINT_SPREAD
+                    && verticalMatchConstraints
+                    && widget->mMatchConstraintDefaultHeight
+                            == ConstraintWidget::MATCH_CONSTRAINT_SPREAD)) {
+
+        auto* coreVirtualLayout = dynamic_cast<clcore::VirtualLayout*>(widget);
+        auto* childVirtualLayout = dynamic_cast<VirtualLayout*>(child);
+        if (childVirtualLayout != nullptr && coreVirtualLayout != nullptr) {
+            // Virtual-layout routing (java:853-860): measure through the helper entry.
+            childVirtualLayout->onMeasure(coreVirtualLayout, horizontalSpec, verticalSpec);
+        } else {
+            child->measure(horizontalSpec, verticalSpec);
+        }
+
+        const int w = child->getMeasuredWidth();
+        const int h = child->getMeasuredHeight();
+        baseline = child->getBaseline();
+
+        width  = w;
+        height = h;
+
+        if (widget->mMatchConstraintMinWidth > 0) {
+            width = std::max(widget->mMatchConstraintMinWidth, width);
+        }
+        if (widget->mMatchConstraintMaxWidth > 0) {
+            width = std::min(widget->mMatchConstraintMaxWidth, width);
+        }
+        if (widget->mMatchConstraintMinHeight > 0) {
+            height = std::max(widget->mMatchConstraintMinHeight, height);
+        }
+        if (widget->mMatchConstraintMaxHeight > 0) {
+            height = std::min(widget->mMatchConstraintMaxHeight, height);
+        }
+
+        const bool optimizeDirect = Optimizer::enabled(
+                mLayoutWidget.getOptimizationLevel(), Optimizer::OPTIMIZATION_DIRECT);
+        if (!optimizeDirect) {
+            if (horizontalUseRatio && verticalDimensionKnown) {
+                const float ratio = widget->mDimensionRatio;
+                width = (int) (0.5f + height * ratio);
+            } else if (verticalUseRatio && horizontalDimensionKnown) {
+                const float ratio = widget->mDimensionRatio;
+                height = (int) (0.5f + width / ratio);
+            }
+        }
+
+        if (w != width || h != height) {
+            // A clamp (match min/max or the ratio re-derive) changed a dimension — re-measure
+            // with the enforced size (java:903-923).
+            if (w != width) {
+                horizontalSpec = View::MeasureSpec::makeMeasureSpec(width,
+                                                                    View::MeasureSpec::EXACTLY);
+            }
+            if (h != height) {
+                verticalSpec = View::MeasureSpec::makeMeasureSpec(height,
+                                                                  View::MeasureSpec::EXACTLY);
+            }
+            child->measure(horizontalSpec, verticalSpec);
+
+            width  = child->getMeasuredWidth();
+            height = child->getMeasuredHeight();
+            baseline = child->getBaseline();
+        }
+    }
+
+    const bool hasBaseline = baseline != -1;
+
+    m->measuredNeedsSolverPass = (width != horizontalDimension) || (height != verticalDimension);
+    // LayoutParams.mNeedsBaseline (java:931-933) is not in CDROID's LayoutParams — no
+    // consumer reads it, so the forced-baseline bit is omitted.
+    if (hasBaseline && baseline != -1 && widget->getBaselineDistance() != baseline) {
+        m->measuredNeedsSolverPass = true;
+    }
+    m->measuredWidth = width;
+    m->measuredHeight = height;
+    m->measuredHasBaseline = hasBaseline;
     m->measuredBaseline = baseline;
-    m->measuredHasBaseline = (baseline != -1);
-    m->measuredNeedsSolverPass = (w != m->horizontalDimension) || (h != m->verticalDimension);
 }
 
 void ConstraintLayout::didMeasures() {

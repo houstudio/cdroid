@@ -109,7 +109,7 @@ void ConstraintWidget::createObjectVariables(LinearSystem* system) {
 
 // AndroidX addFirst (ConstraintWidget.java:2888): VirtualLayout/Guideline first.
 bool ConstraintWidget::addFirst() const {
-    return dynamic_cast<const VirtualLayout*>(this) != nullptr
+    return dynamic_cast<const clcore::VirtualLayout*>(this) != nullptr
             || dynamic_cast<const clcore::Guideline*>(this) != nullptr;
 }
 

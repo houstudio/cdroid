@@ -449,7 +449,7 @@ bool ConstraintWidgetContainer::addChildrenToSolverInner(LinearSystem* system) {
     for (int i = 0; i < count; i++) {
         ConstraintWidget* widget = mChildren[i];
         if (widget->addFirst()) {
-            if (dynamic_cast<VirtualLayout*>(widget) != nullptr) {
+            if (dynamic_cast<clcore::VirtualLayout*>(widget) != nullptr) {
                 widgetsToAdd.push_back(widget);
             } else {
                 widget->addToSolver(system, /*optimize=*/false);
@@ -460,7 +460,7 @@ bool ConstraintWidgetContainer::addChildrenToSolverInner(LinearSystem* system) {
         const int numLayouts = (int) widgetsToAdd.size();
         bool progressed = false;
         for (auto it = widgetsToAdd.begin(); it != widgetsToAdd.end(); ++it) {
-            auto* layout = dynamic_cast<VirtualLayout*>(*it);
+            auto* layout = dynamic_cast<clcore::VirtualLayout*>(*it);
             if (layout->contains(widgetsToAdd)) {
                 layout->addToSolver(system, /*optimize=*/false);
                 widgetsToAdd.erase(it);

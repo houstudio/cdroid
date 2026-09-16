@@ -30,7 +30,7 @@
 #include <widgetEx/constraintlayout/core/widgets/analyzer/basicmeasure.h>
 #include <widgetEx/constraintlayout/core/widgets/helperwidget.h>
 
-namespace cdroid {
+namespace cdroid::clcore {
 
 class VirtualLayout : public HelperWidget {
   public:
@@ -111,6 +111,6 @@ class VirtualLayout : public HelperWidget {
     BasicMeasure::Measurer* mMeasurer = nullptr;
 };
 
-} // namespace cdroid
+} // namespace cdroid::clcore
 
 #endif // CDROID_CONSTRAINTLAYOUT_CORE_WIDGETS_VIRTUAL_LAYOUT_H

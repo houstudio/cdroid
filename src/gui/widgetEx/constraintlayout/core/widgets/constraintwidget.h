@@ -290,6 +290,9 @@ class ConstraintWidget {
     int getY() const;
     int getWidth() const;
     int getHeight() const;
+    // AndroidX getRight/getBottom (ConstraintWidget.java): x + width / y + height.
+    int getRight() const { return getX() + getWidth(); }
+    int getBottom() const { return getY() + getHeight(); }
     int getLength(int orientation) const;
     int getMinWidth() const;
     int getMinHeight() const;
