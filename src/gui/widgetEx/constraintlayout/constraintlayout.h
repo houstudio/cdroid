@@ -163,11 +163,12 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
     // Process-wide registry of shared integer values (for ViewTransition sharedValue triggers).
     static SharedValues& getSharedValues();
     // AndroidX getViewById (ConstraintLayout.java:2157): a DIRECT child by id from the
-    // mChildrenByIds mirror. API surface only for now — switching the helpers to it flips
-    // CLConstraintLayout.GridArrangesTwoByTwo red even though the map provably holds every
-    // id (gdb-verified) and the returned views are identical; some interaction with the
-    // solver pass is unresolved, revisit with batch 4. Helpers keep the recursive
-    // View::findViewById meanwhile (androidx Placeholder also uses the recursive form).
+    // mChildrenByIds mirror. The helper lookups route through this (androidX
+    // ConstraintHelper.getViews/updatePreLayout, Layer, CircularFlow, Carousel all call
+    // it); Placeholder keeps the recursive View::findViewById (androidX does the same).
+    // The one historical red case (GridArrangesTwoByTwo) was an id collision in the test
+    // itself: manually-set ids 1..4 vs the Grid box views' generateViewId() allocations,
+    // which start at 1 (AOSP sNextGeneratedId) — the map resolves the box, not the view.
     View* getViewById(int id);
 
   protected:

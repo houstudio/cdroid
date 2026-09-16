@@ -149,7 +149,7 @@ void CircularFlow::anchorReferences() {
         return;
     }
     for (size_t i = 0; i < mIds.size(); i++) {
-        View* view = mContainer->findViewById(mIds[i]);
+        View* view = mContainer->getViewById(mIds[i]);
         if (view == nullptr) {
             continue;
         }

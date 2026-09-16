@@ -320,6 +320,17 @@ void ConstraintWidget::setFrame(int left, int top, int right, int bottom) {
             && mListDimensionBehaviors[VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT) {
         mHeight = std::min(mHeight, mMatchConstraintMaxHeight);
     }
+
+    // AndroidX setFrame tail (ConstraintWidget.java:1723-1728): when the clamps above moved
+    // a dimension, flag it as the one-shot layout override — the next addToSolver pins the
+    // clamped size as FIXED instead of re-solving the raw spread (consumed at the top of
+    // applyConstraints, java:3040-3054).
+    if (w != mWidth) {
+        mWidthOverride = mWidth;
+    }
+    if (h != mHeight) {
+        mHeightOverride = mHeight;
+    }
 }
 
 ConstraintWidget::DimensionBehaviour ConstraintWidget::getHorizontalDimensionBehaviour() const {
@@ -881,17 +892,6 @@ void ConstraintWidget::updateFromSolver(LinearSystem* system, bool optimize) {
         bottom = 0;
     }
     setFrame(left, top, right, bottom);
-
-    // AndroidX updateFromSolver tail (ConstraintWidget.java:1707-1728): when setFrame's
-    // min/match-max clamping moved a dimension, flag it as the one-shot override — the
-    // next addToSolver pass pins the clamped size as FIXED instead of re-solving the
-    // raw spread (layout override 1; consumed at the top of applyConstraints).
-    if (w != mWidth) {
-        mWidthOverride = mWidth;
-    }
-    if (h != mHeight) {
-        mHeightOverride = mHeight;
-    }
 }
 
 void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,

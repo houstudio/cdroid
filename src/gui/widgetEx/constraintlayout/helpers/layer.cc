@@ -73,7 +73,7 @@ void Layer::onAttachedToWindow() {
     if (mContainer != nullptr && (mApplyVisibilityOnAttach || mApplyElevationOnAttach)) {
         int visibility = getVisibility();
         for (int id : mIds) {
-            View* view = mContainer->findViewById(id);
+            View* view = mContainer->getViewById(id);
             if (view != nullptr) {
                 if (mApplyVisibilityOnAttach) {
                     view->setVisibility(visibility);
@@ -178,7 +178,7 @@ void Layer::reCacheViews() {
      * a stale nullptr there was a SIGSEGV (Java survives via filtered ids). */
     mViews.clear();
     for (size_t i = 0; i < mIds.size(); i++) {
-        if (View* view = mContainer->findViewById(mIds[i])) {
+        if (View* view = mContainer->getViewById(mIds[i])) {
             mViews.push_back(view);
         }
     }

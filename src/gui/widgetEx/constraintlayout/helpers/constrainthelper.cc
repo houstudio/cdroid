@@ -241,7 +241,7 @@ void ConstraintHelper::updatePreLayout(ConstraintLayout* container) {
     }
     mHelperWidget->removeAllIds();
     for (int id : mIds) {
-        View* view = container->findViewById(id);
+        View* view = container->getViewById(id);
         if (view != nullptr) {
             ConstraintWidget* widget = container->getViewWidget(view);
             if (widget != nullptr) {
@@ -269,7 +269,7 @@ void ConstraintHelper::applyLayoutFeatures(ConstraintLayout* container) {
     }
     int visibility = getVisibility();
     for (int id : mIds) {
-        View* view = container->findViewById(id);
+        View* view = container->getViewById(id);
         if (view != nullptr) {
             view->setVisibility(visibility);
             // TODO: elevation/translationZ propagation (CDROID View lacks setElevation).

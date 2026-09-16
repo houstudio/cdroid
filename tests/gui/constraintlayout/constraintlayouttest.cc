@@ -463,16 +463,20 @@ TEST(CLConstraintLayout, MotionEffectVotesDirection) {
 // the container is measured twice.
 TEST(CLConstraintLayout, GridArrangesTwoByTwo) {
     ConstraintLayout* cl = new ConstraintLayout(&App::getInstance());
-    // Four 0dp (match_constraint) views that will fill their cells.
-    int ids[4] = {1, 2, 3, 4};
+    // Four 0dp (match_constraint) views that will fill their cells. Ids come from
+    // generateViewId(): manually-set small ids would collide with the Grid box views'
+    // allocations from the same global counter (AOSP sNextGeneratedId starts at 1) —
+    // the id map (getViewById) would then resolve the box, not the referenced view.
+    int ids[4] = {View::generateViewId(), View::generateViewId(),
+                  View::generateViewId(), View::generateViewId()};
     for (int i = 0; i < 4; i++) {
         TextView* v = new TextView(&App::getInstance()); v->setText("X"); v->setId(ids[i]);
         cl->addView(v, new ConstraintLayout::LayoutParams(0, 0));
     }
     // Grid fills the container and references the four views in a 2×2 layout.
     auto* grid = new Grid(&App::getInstance(), nullptr);
-    grid->setId(10);
-    grid->setReferencedIds({1, 2, 3, 4});
+    grid->setId(View::generateViewId());
+    grid->setReferencedIds({ids[0], ids[1], ids[2], ids[3]});
     grid->setColumns(2);  // rows auto-computed = 2 from 4 referenced views
     auto* glp = new ConstraintLayout::LayoutParams(0, 0);
     glp->leftToLeft = ConstraintLayout::PARENT_ID;
@@ -486,10 +490,10 @@ TEST(CLConstraintLayout, GridArrangesTwoByTwo) {
     cl->measure(exactly(400), exactly(400));
     cl->layout(0, 0, 400, 400);
 
-    TextView* v0 = (TextView*) cl->findViewById(1);
-    TextView* v1 = (TextView*) cl->findViewById(2);
-    TextView* v2 = (TextView*) cl->findViewById(3);
-    TextView* v3 = (TextView*) cl->findViewById(4);
+    TextView* v0 = (TextView*) cl->findViewById(ids[0]);
+    TextView* v1 = (TextView*) cl->findViewById(ids[1]);
+    TextView* v2 = (TextView*) cl->findViewById(ids[2]);
+    TextView* v3 = (TextView*) cl->findViewById(ids[3]);
     ASSERT_NE(v0, nullptr);
     // Cell (row,col): (0,0)=0..200, (0,1)=200..400, (1,0)=0..200y, (1,1)=200..400y.
     EXPECT_NEAR(v0->getLeft(), 0,   2);   EXPECT_NEAR(v0->getTop(), 0,   2);

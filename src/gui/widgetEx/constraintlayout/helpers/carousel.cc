@@ -75,7 +75,7 @@ void Carousel::onAttachedToWindow() {
 
     mList.clear();
     for (int id : mIds) {
-        View* view = container->findViewById(id);
+        View* view = container->getViewById(id);
         if (mFirstViewReference == id) mStartIndex = (int) mList.size();
         mList.push_back(view);
     }

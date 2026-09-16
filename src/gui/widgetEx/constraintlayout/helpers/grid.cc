@@ -263,7 +263,7 @@ void Grid::connectView(View* view, int row, int column, int rowSpan, int columnS
 std::vector<View*> Grid::getViews() {
     std::vector<View*> views;
     if (mContainer == nullptr) return views;
-    for (int id : mIds) views.push_back(mContainer->findViewById(id));
+    for (int id : mIds) views.push_back(mContainer->getViewById(id));
     return views;
 }
 

@@ -312,13 +312,20 @@ void ConstraintWidgetContainer::layout() {
         }
 
         // AndroidX registers the container's anchors (java:851), then addChildrenToSolver
-        // adds the container ITSELF to the solve first (java:334) — its applyConstraints
-        // brings the WRAP_CONTENT min/max constraints. CDROID keeps the hand-pinned origin
-        // instead (the root's WRAP shrink is driven by the per-child wrap constraints from
-        // ConstraintWidget::applyConstraints; the container's own wrap pass interacts with
-        // the BasicMeasure match-constraint convergence in ways upstream does not exercise
-        // the same way — WrapContainerWithMatchConstraintMax is the sentinel). Revisit with
-        // the measured-too-small reporting hookup below.
+        // adds the container ITSELF to the solve first (java:334). CDROID keeps the
+        // hand-pinned origin instead. ROOT CAUSE of the divergence (gdb-verified): a WRAP
+        // root's self-join emits end-begin=0 at STRENGTH_HIGH (ConstraintWidget.java:3075)
+        // while a 0dp SPREAD child carries no floor — its dimension is zeroed
+        // (USE_WRAP_DIMENSION_FOR_SPREAD is false upstream too) and matchMin is 0 — so
+        // every constraint is satisfiable at zero and the collapse wins; the BasicMeasure
+        // convergence then re-measures the child with EXACTLY(0) and the loop deadlocks
+        // at 0 (WrapContainerWithMatchConstraintMax is the sentinel). Upstream escapes via
+        // machinery CDROID defers: the analyzer's graph wrap resolution, or the
+        // FLAG_RECOMPUTE_BOUNDS growth block (java:891-929 — dead code upstream, the flag
+        // is only ever cleared at java:456) plus the View-layer measurer's matchMin/Max
+        // clamp (ConstraintLayout.java:942-986, which also measures 0dp-in-wrap as
+        // wrap-content rather than this suite's spread-to-cap semantics). Revisit together
+        // with the analyzer port (Stage 3).
         mSystem.addEquality(mSystem.createObjectVariable(&mLeft), 0);
         mSystem.addEquality(mSystem.createObjectVariable(&mTop), 0);
         const bool wrapH = (mListDimensionBehaviors[DIMENSION_HORIZONTAL]
