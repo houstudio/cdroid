@@ -360,18 +360,27 @@ void ConstraintWidgetContainer::layout() {
 
         // AndroidX "layout override 2" (java:931-953, unconditional there): the solved size
         // respects mMinWidth/mMinHeight — clamp, flip to FIXED and re-solve so the chains
-        // spread their MATCH_CONSTRAINT elements across the enforced size. (The former
-        // custom variant re-derived the trigger from the anchor variables; with the
-        // container itself in the solve the plain width/height comparison is faithful.)
-        int width = std::max(mMinWidth, getWidth());
-        if (width > getWidth()) {
+        // spread their MATCH_CONSTRAINT elements across the enforced size. Upstream the min
+        // also holds IN the solve (the self-joined container's wrap branch carries a
+        // FIXED-strength minDimension floor, java:3077-3079); here the self-join is deferred
+        // (see the pin note above), and the self-readback's setFrame already clamps mWidth
+        // to mMinWidth — a plain max(mMinWidth, getWidth()) comparison could never fire.
+        // Compare against the SOLVED extent from the anchor variables instead (the system
+        // still holds it); the re-solve then re-pins at the enforced size, and the flip to
+        // FIXED makes the next pass's solved extent equal it, ending the loop.
+        int solvedWidth = mSystem.getObjectVariableValue(&mRight)
+                - mSystem.getObjectVariableValue(&mLeft);
+        int width = std::max(mMinWidth, solvedWidth);
+        if (width > solvedWidth) {
             setWidth(width);
             mListDimensionBehaviors[DIMENSION_HORIZONTAL] = DimensionBehaviour::FIXED;
             wrapOverride = true;
             needsSolving = true;
         }
-        int height = std::max(mMinHeight, getHeight());
-        if (height > getHeight()) {
+        int solvedHeight = mSystem.getObjectVariableValue(&mBottom)
+                - mSystem.getObjectVariableValue(&mTop);
+        int height = std::max(mMinHeight, solvedHeight);
+        if (height > solvedHeight) {
             setHeight(height);
             mListDimensionBehaviors[VERTICAL] = DimensionBehaviour::FIXED;
             wrapOverride = true;
