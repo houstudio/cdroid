@@ -652,7 +652,11 @@ void SettingsFragment::showWifiPicker() {
             cdroid::WifiConfiguration cfg;
             cfg.SSID = "\"" + r.SSID + "\"";
             if (!secured) {
-                cdroid::WifiManager::getInstance().connect(cfg, nullptr);
+                /* ActionListener is a value-typed listener now (const ref +
+                 * function slots): an empty one is the old null-listener
+                 * no-op. */
+                cdroid::WifiManager::getInstance().connect(cfg,
+                        cdroid::WifiManager::ActionListener());
                 cdroid::Toast::makeText(requireContext(), "连接 " + r.SSID + " …",
                                         cdroid::Toast::LENGTH_SHORT)->show();
                 return;
@@ -668,7 +672,8 @@ void SettingsFragment::showWifiPicker() {
                     [this, input, cfg](cdroid::DialogInterface&, int) {
                     cdroid::WifiConfiguration withPsk = cfg;
                     withPsk.preSharedKey = "\"" + std::string(input->getText()) + "\"";
-                    cdroid::WifiManager::getInstance().connect(withPsk, nullptr);
+                    cdroid::WifiManager::getInstance().connect(withPsk,
+                            cdroid::WifiManager::ActionListener());
                     cdroid::Toast::makeText(requireContext(), "连接 …",
                                             cdroid::Toast::LENGTH_SHORT)->show();
                 })
