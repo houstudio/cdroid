@@ -198,6 +198,17 @@ class ConstraintWidget {
     virtual ConstraintAnchor* getAnchor(ConstraintAnchor::Type anchorType);
     const std::vector<ConstraintAnchor*>& getAnchors() const;
     virtual void resetSolverVariables(Cache* cache);
+    // AndroidX createObjectVariables (ConstraintWidget.java:1056-1064): register the
+    // anchors (and baseline when set) as solver object variables ahead of addToSolver.
+    void createObjectVariables(LinearSystem* system);
+    // AndroidX addFirst (ConstraintWidget.java:2888): VirtualLayout/Guideline resolve
+    // before their dependents.
+    bool addFirst() const;
+    // AndroidX hasDimensionOverride (ConstraintWidget.java:789): setFrame flagged a
+    // measured-too-small dimension this pass (layout override 3's bookkeeping).
+    bool hasDimensionOverride() const {
+        return mWidthOverride != -1 || mHeightOverride != -1;
+    }
 
     // --- visibility ---
     int  getVisibility() const;

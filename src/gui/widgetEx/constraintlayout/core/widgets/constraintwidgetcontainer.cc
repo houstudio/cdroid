@@ -21,9 +21,11 @@
  * SKELETON (Stage 2) — see header.
  */
 #include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
+#include <widgetEx/constraintlayout/core/widgets/barrier.h>
 #include <widgetEx/constraintlayout/core/widgets/chain.h>
 #include <widgetEx/constraintlayout/core/widgets/helperwidget.h>
 #include <widgetEx/constraintlayout/core/widgets/optimizer.h>
+#include <widgetEx/constraintlayout/core/widgets/virtuallayout.h>
 
 namespace cdroid {
 
@@ -286,6 +288,14 @@ void ConstraintWidgetContainer::layout() {
         }
     }
 
+    // AndroidX pre-pass sizes (ConstraintWidgetContainer.java:682-687): what the measure
+    // pass handed us; layout override 3 compares against these to flag measured-too-small.
+    const int preW = std::max(0, getWidth());
+    const int preH = std::max(0, getHeight());
+
+    mWidthMeasuredTooSmall = false;
+    mHeightMeasuredTooSmall = false;
+
     constexpr int MAX_ITERATIONS = 8;
     int countSolve = 0;
     bool needsSolving = true;
@@ -294,19 +304,27 @@ void ConstraintWidgetContainer::layout() {
         mSystem.reset();
         clearChains(); // rebuilt by child addToSolver -> isChainHead -> addChain
 
-        // Pin the root container's origin to (0,0). A FIXED dimension pins its far edge to the
-        // current size; a WRAP_CONTENT dimension is left free so the per-widget wrap constraints
-        // added in ConstraintWidget::applyConstraints (addGreaterThan(parentMax, childEnd)) can
-        // solve the container down to its children's bounding box. Pinning mRight/mBottom to
-        // mWidth/mHeight on a WRAP dimension (the previous behaviour) overrode those wrap
-        // constraints with a hard equality, so the container never collapsed. AndroidX layout()
-        // does not pin the root at all — the wrap constraints alone fix its size.
-        const bool wrapH = (mListDimensionBehaviors[ConstraintWidget::DIMENSION_HORIZONTAL]
-                == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT);
-        const bool wrapV = (mListDimensionBehaviors[ConstraintWidget::DIMENSION_VERTICAL]
-                == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT);
+        // AndroidX (java:851-855): register the container's and every child's anchor
+        // variables ahead of the solve.
+        createObjectVariables(&mSystem);
+        for (int i = 0; i < count; i++) {
+            mChildren[i]->createObjectVariables(&mSystem);
+        }
+
+        // AndroidX registers the container's anchors (java:851), then addChildrenToSolver
+        // adds the container ITSELF to the solve first (java:334) — its applyConstraints
+        // brings the WRAP_CONTENT min/max constraints. CDROID keeps the hand-pinned origin
+        // instead (the root's WRAP shrink is driven by the per-child wrap constraints from
+        // ConstraintWidget::applyConstraints; the container's own wrap pass interacts with
+        // the BasicMeasure match-constraint convergence in ways upstream does not exercise
+        // the same way — WrapContainerWithMatchConstraintMax is the sentinel). Revisit with
+        // the measured-too-small reporting hookup below.
         mSystem.addEquality(mSystem.createObjectVariable(&mLeft), 0);
         mSystem.addEquality(mSystem.createObjectVariable(&mTop), 0);
+        const bool wrapH = (mListDimensionBehaviors[DIMENSION_HORIZONTAL]
+                == DimensionBehaviour::WRAP_CONTENT);
+        const bool wrapV = (mListDimensionBehaviors[VERTICAL]
+                == DimensionBehaviour::WRAP_CONTENT);
         if (!wrapH) {
             mSystem.addEquality(mSystem.createObjectVariable(&mRight), mWidth);
         }
@@ -314,70 +332,69 @@ void ConstraintWidgetContainer::layout() {
             mSystem.addEquality(mSystem.createObjectVariable(&mBottom), mHeight);
         }
 
-        // Add every child to the solver. HelperWidget children (Flow/Barrier/...) run FIRST so they
-        // can wire their referenced children's anchor targets before those children solve.
-        for (int i = 0; i < count; i++) {
-            if (dynamic_cast<HelperWidget*>(mChildren[i]) != nullptr) {
-                Optimizer::checkMatchParent(this, &mSystem, mChildren[i]);
-                mChildren[i]->addToSolver(&mSystem, /*optimize=*/false);
+        // AndroidX addChildrenToSolver (java:334-448): barriers mark, addFirst widgets
+        // (Guidelines) resolve, virtual layouts dependency-order, nested containers join at
+        // WRAP->FIXED (java:414-431 — the old helpers-first split flattened a nested wrap
+        // container's freshly-solved size back to zero), and the chains apply.
+        needsSolving = addChildrenToSolverInner(&mSystem);
+        if (needsSolving) {
+            mSystem.minimize();
+        }
+
+        if (needsSolving) {
+            needsSolving = updateChildrenFromSolver(&mSystem);
+        } else {
+            updateFromSolver(&mSystem, /*optimize=*/false);
+            for (int i = 0; i < count; i++) {
+                mChildren[i]->updateFromSolver(&mSystem, /*optimize=*/false);
             }
-        }
-        for (int i = 0; i < count; i++) {
-            if (dynamic_cast<HelperWidget*>(mChildren[i]) == nullptr) {
-                Optimizer::checkMatchParent(this, &mSystem, mChildren[i]);
-                mChildren[i]->addToSolver(&mSystem, /*optimize=*/false);
-            }
+            needsSolving = false;
         }
 
-        // The Direct chain fast-path needs the container's anchors finalized to satisfy
-        // isResolvedHorizontally/Vertically (Direct.solveChain returns false otherwise). The
-        // container is FIXED at [0,mWidth]x[0,mHeight] (pinned by the equalities above), so mark
-        // its anchors final before chain resolution. Gated by the flag; only sets the anchor
-        // final values (not mResolvedHorizontal) so addToSolver is unaffected.
-        if (Chain::USE_CHAIN_OPTIMIZATION) {
-            mLeft.setFinalValue(0);
-            mTop.setFinalValue(0);
-            if (!wrapH) mRight.setFinalValue(mWidth);
-            if (!wrapV) mBottom.setFinalValue(mHeight);
+        // AndroidX "layout override 2" (java:931-953, unconditional there): the solved size
+        // respects mMinWidth/mMinHeight — clamp, flip to FIXED and re-solve so the chains
+        // spread their MATCH_CONSTRAINT elements across the enforced size. (The former
+        // custom variant re-derived the trigger from the anchor variables; with the
+        // container itself in the solve the plain width/height comparison is faithful.)
+        int width = std::max(mMinWidth, getWidth());
+        if (width > getWidth()) {
+            setWidth(width);
+            mListDimensionBehaviors[DIMENSION_HORIZONTAL] = DimensionBehaviour::FIXED;
+            wrapOverride = true;
+            needsSolving = true;
+        }
+        int height = std::max(mMinHeight, getHeight());
+        if (height > getHeight()) {
+            setHeight(height);
+            mListDimensionBehaviors[VERTICAL] = DimensionBehaviour::FIXED;
+            wrapOverride = true;
+            needsSolving = true;
         }
 
-        // Apply chain constraints (built above via addChain).
-        Chain::applyChainConstraints(this, &mSystem, nullptr, ConstraintWidget::HORIZONTAL);
-        Chain::applyChainConstraints(this, &mSystem, nullptr, ConstraintWidget::VERTICAL);
-
-        mSystem.minimize();
-
-        // Read back positions.
-        updateFromSolver(&mSystem, /*optimize=*/false);
-        for (int i = 0; i < count; i++) {
-            mChildren[i]->updateFromSolver(&mSystem, /*optimize=*/false);
-        }
-        needsSolving = false; // per-iteration flag (BasicMeasure drives the outer match-constraint loop)
-
-        // AndroidX "layout override 2" (ConstraintWidgetContainer.java:931-951): the solved
-        // size must respect mMinWidth/mMinHeight. setFrame() already floors mWidth/mHeight
-        // at the min during the read-back, but the children were solved against the smaller
-        // wrap extent — so when the wrap pass solved below the min, enforce it: set the size,
-        // flip that dimension to FIXED and re-solve (the chains then spread their
-        // MATCH_CONSTRAINT elements across the enforced size). The solved extent is read
-        // from the anchor variables because mWidth/mHeight are already clamped by now.
-        if (mMinWidth > 0) {
-            const int solvedRight = mSystem.getObjectVariableValue(&mRight);
-            if (solvedRight != INT_MIN && solvedRight != INT_MAX && solvedRight < mMinWidth) {
-                setWidth(mMinWidth);
+        // AndroidX "layout override 3" (java:955-986): a WRAP dimension that solved LARGER
+        // than the measure-pass size reports measured-too-small and re-solves pinned to the
+        // measured size — the caller learns the content did not fit.
+        if (!wrapOverride) {
+            if (mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::WRAP_CONTENT
+                    && preW > 0 && getWidth() > preW) {
+                mWidthMeasuredTooSmall = true;
+                wrapOverride = true;
                 mListDimensionBehaviors[DIMENSION_HORIZONTAL] = DimensionBehaviour::FIXED;
+                setWidth(preW);
+                needsSolving = true;
+            }
+            if (mListDimensionBehaviors[VERTICAL] == DimensionBehaviour::WRAP_CONTENT
+                    && preH > 0 && getHeight() > preH) {
+                mHeightMeasuredTooSmall = true;
                 wrapOverride = true;
+                mListDimensionBehaviors[VERTICAL] = DimensionBehaviour::FIXED;
+                setHeight(preH);
                 needsSolving = true;
             }
         }
-        if (mMinHeight > 0) {
-            const int solvedBottom = mSystem.getObjectVariableValue(&mBottom);
-            if (solvedBottom != INT_MIN && solvedBottom != INT_MAX && solvedBottom < mMinHeight) {
-                setHeight(mMinHeight);
-                mListDimensionBehaviors[VERTICAL] = DimensionBehaviour::FIXED;
-                wrapOverride = true;
-                needsSolving = true;
-            }
+
+        if (countSolve > MAX_ITERATIONS) {
+            needsSolving = false;
         }
     }
 
@@ -388,6 +405,116 @@ void ConstraintWidgetContainer::layout() {
         mListDimensionBehaviors[DIMENSION_HORIZONTAL] = originalHorizontal;
         mListDimensionBehaviors[VERTICAL] = originalVertical;
     }
+}
+
+
+// AndroidX addChildrenToSolver (ConstraintWidgetContainer.java:334-448). USE_DEPENDENCY_ORDERING
+// is false upstream, so the plain ordered branch runs (java:412-438).
+bool ConstraintWidgetContainer::addChildrenToSolverInner(LinearSystem* system) {
+    const int count = (int) mChildren.size();
+    bool hasBarriers = false;
+    for (int i = 0; i < count; i++) {
+        ConstraintWidget* widget = mChildren[i];
+        widget->setIsInBarrier(HORIZONTAL, false);
+        widget->setIsInBarrier(VERTICAL, false);
+        if (dynamic_cast<clcore::Barrier*>(widget) != nullptr) hasBarriers = true;
+    }
+    if (hasBarriers) {
+        for (int i = 0; i < count; i++) {
+            if (auto* barrier = dynamic_cast<clcore::Barrier*>(mChildren[i])) {
+                barrier->markWidgets();
+            }
+        }
+    }
+
+    // addFirst widgets: Guidelines solve immediately; virtual layouts collect for
+    // dependency ordering (a layout referencing another layout solves first, java:356-391).
+    std::vector<ConstraintWidget*> widgetsToAdd;
+    for (int i = 0; i < count; i++) {
+        ConstraintWidget* widget = mChildren[i];
+        if (widget->addFirst()) {
+            if (dynamic_cast<VirtualLayout*>(widget) != nullptr) {
+                widgetsToAdd.push_back(widget);
+            } else {
+                widget->addToSolver(system, /*optimize=*/false);
+            }
+        }
+    }
+    while (!widgetsToAdd.empty()) {
+        const int numLayouts = (int) widgetsToAdd.size();
+        bool progressed = false;
+        for (auto it = widgetsToAdd.begin(); it != widgetsToAdd.end(); ++it) {
+            auto* layout = dynamic_cast<VirtualLayout*>(*it);
+            if (layout->contains(widgetsToAdd)) {
+                layout->addToSolver(system, /*optimize=*/false);
+                widgetsToAdd.erase(it);
+                progressed = true;
+                break;
+            }
+        }
+        if (!progressed) {
+            // no dependency found among the rest — add them all (java:384-390)
+            for (ConstraintWidget* widget : widgetsToAdd) {
+                widget->addToSolver(system, /*optimize=*/false);
+            }
+            widgetsToAdd.clear();
+        }
+    }
+
+    for (int i = 0; i < count; i++) {
+        ConstraintWidget* widget = mChildren[i];
+        if (auto* nested = dynamic_cast<ConstraintWidgetContainer*>(widget)) {
+            // java:414-431: a nested container joins the parent solve at its own resolved
+            // size — WRAP_CONTENT temporarily becomes FIXED around its addToSolver, then
+            // the caller's behaviour is restored. Without the flip the wrap branch zeroes
+            // the size the child's own layout() just resolved.
+            const DimensionBehaviour horizontalBehaviour =
+                    nested->mListDimensionBehaviors[DIMENSION_HORIZONTAL];
+            const DimensionBehaviour verticalBehaviour =
+                    nested->mListDimensionBehaviors[VERTICAL];
+            if (horizontalBehaviour == DimensionBehaviour::WRAP_CONTENT) {
+                nested->setHorizontalDimensionBehaviour(DimensionBehaviour::FIXED);
+            }
+            if (verticalBehaviour == DimensionBehaviour::WRAP_CONTENT) {
+                nested->setVerticalDimensionBehaviour(DimensionBehaviour::FIXED);
+            }
+            nested->addToSolver(system, /*optimize=*/false);
+            if (horizontalBehaviour == DimensionBehaviour::WRAP_CONTENT) {
+                nested->setHorizontalDimensionBehaviour(horizontalBehaviour);
+            }
+            if (verticalBehaviour == DimensionBehaviour::WRAP_CONTENT) {
+                nested->setVerticalDimensionBehaviour(verticalBehaviour);
+            }
+        } else {
+            Optimizer::checkMatchParent(this, system, widget);
+            if (!widget->addFirst()) {
+                widget->addToSolver(system, /*optimize=*/false);
+            }
+        }
+    }
+
+    if (!mHorizontalChainsArray.empty()) {
+        Chain::applyChainConstraints(this, system, nullptr, HORIZONTAL);
+    }
+    if (!mVerticalChainsArray.empty()) {
+        Chain::applyChainConstraints(this, system, nullptr, VERTICAL);
+    }
+    return true;
+}
+
+// AndroidX updateChildrenFromSolver (ConstraintWidgetContainer.java:455-469).
+bool ConstraintWidgetContainer::updateChildrenFromSolver(LinearSystem* system) {
+    updateFromSolver(system, /*optimize=*/false);
+    const int count = (int) mChildren.size();
+    bool hasOverride = false;
+    for (int i = 0; i < count; i++) {
+        ConstraintWidget* widget = mChildren[i];
+        widget->updateFromSolver(system, /*optimize=*/false);
+        if (widget->hasDimensionOverride()) {
+            hasOverride = true;
+        }
+    }
+    return hasOverride;
 }
 
 } // namespace cdroid

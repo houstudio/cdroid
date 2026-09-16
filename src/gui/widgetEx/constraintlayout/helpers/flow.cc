@@ -110,4 +110,18 @@ void Flow::setVerticalBias(float bias)     {
     asFlow(mHelperWidget.get())->setVerticalBias(bias);
 }
 
+
+void Flow::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    // AndroidX Flow.onMeasure (helper Flow.java:168-192).
+    auto* f = asFlow(mHelperWidget.get());
+    if (f != nullptr) {
+        f->measure(View::MeasureSpec::getMode(widthMeasureSpec),
+                   View::MeasureSpec::getSize(widthMeasureSpec),
+                   View::MeasureSpec::getMode(heightMeasureSpec),
+                   View::MeasureSpec::getSize(heightMeasureSpec));
+        setMeasuredDimension(f->getMeasuredWidth(), f->getMeasuredHeight());
+    } else {
+        setMeasuredDimension(0, 0);
+    }
+}
 } // namespace cdroid

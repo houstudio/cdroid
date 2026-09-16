@@ -52,6 +52,11 @@ class Flow : public ConstraintHelper {
     Flow(Context* ctx, const AttributeSet* attrs);
     Flow(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
+    // AndroidX Flow.onMeasure (helper Flow.java:168-192): hand the specs straight to the
+    // core Flow (it consumes View MeasureSpec modes), then adopt its measured size — this is
+    // what lets the BasicMeasure Measurer strategy drive a Flow like any other child.
+    void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
+
     // configuration (delegate to the core Flow)
     void setWrapMode(int wrapMode);
     void setMaxElementsWrap(int max);

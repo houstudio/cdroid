@@ -75,6 +75,13 @@ std::vector<int> CircularFlow::getRadius() const {
 
 void CircularFlow::setAngles(const std::vector<float>& angles) {
     mAngles = angles;
+    // Runtime angle changes must re-anchor the ring on the next layout pass. The
+    // ConstraintLayout hierarchy capture is dirty-gated (AndroidX mDirtyHierarchy,
+    // ConstraintLayout.java:1784-1803): a container-level requestLayout alone does not
+    // re-run it — the helper itself requests layout so the container's child scan
+    // (isLayoutRequested) flags the hierarchy dirty and updatePreLayout re-anchors.
+    // Without this the capture stays clean and the ring never moves.
+    requestLayout();
 }
 
 void CircularFlow::setAngles(const std::string& angleList) {
@@ -90,6 +97,7 @@ void CircularFlow::setAngles(const std::string& angleList) {
 
 void CircularFlow::setRadius(const std::vector<int>& radius) {
     mRadius = radius;
+    requestLayout();   // same re-anchor contract as setAngles (see there)
 }
 
 void CircularFlow::setRadius(const std::string& radiusList) {

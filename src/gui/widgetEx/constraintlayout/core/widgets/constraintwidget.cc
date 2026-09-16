@@ -23,6 +23,7 @@
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
 #include <widgetEx/constraintlayout/core/widgets/guideline.h>
+#include <widgetEx/constraintlayout/core/widgets/virtuallayout.h>   // addFirst's instanceof pair
 #include <widgetEx/constraintlayout/core/arrayrow.h>
 #include <widgetEx/constraintlayout/core/cache.h>
 #include <widgetEx/constraintlayout/core/linearsystem.h>
@@ -93,6 +94,23 @@ ConstraintAnchor* ConstraintWidget::getAnchor(ConstraintAnchor::Type anchorType)
 
 const std::vector<ConstraintAnchor*>& ConstraintWidget::getAnchors() const {
     return mAnchors;
+}
+
+// AndroidX createObjectVariables (ConstraintWidget.java:1056-1064).
+void ConstraintWidget::createObjectVariables(LinearSystem* system) {
+    system->createObjectVariable(&mLeft);
+    system->createObjectVariable(&mTop);
+    system->createObjectVariable(&mRight);
+    system->createObjectVariable(&mBottom);
+    if (mBaselineDistance > 0) {
+        system->createObjectVariable(&mBaseline);
+    }
+}
+
+// AndroidX addFirst (ConstraintWidget.java:2888): VirtualLayout/Guideline first.
+bool ConstraintWidget::addFirst() const {
+    return dynamic_cast<const VirtualLayout*>(this) != nullptr
+            || dynamic_cast<const clcore::Guideline*>(this) != nullptr;
 }
 
 void ConstraintWidget::resetSolverVariables(Cache* cache) {
@@ -863,6 +881,17 @@ void ConstraintWidget::updateFromSolver(LinearSystem* system, bool optimize) {
         bottom = 0;
     }
     setFrame(left, top, right, bottom);
+
+    // AndroidX updateFromSolver tail (ConstraintWidget.java:1707-1728): when setFrame's
+    // min/match-max clamping moved a dimension, flag it as the one-shot override — the
+    // next addToSolver pass pins the clamped size as FIXED instead of re-solving the
+    // raw spread (layout override 1; consumed at the top of applyConstraints).
+    if (w != mWidth) {
+        mWidthOverride = mWidth;
+    }
+    if (h != mHeight) {
+        mHeightOverride = mHeight;
+    }
 }
 
 void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,

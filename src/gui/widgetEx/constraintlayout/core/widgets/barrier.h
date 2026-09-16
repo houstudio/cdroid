@@ -67,9 +67,11 @@ class Barrier : public HelperWidget {
 
     std::string getType() const override; // "Barrier"
 
-  private:
+    // AndroidX package-private (same-package caller: ConstraintWidgetContainer
+    // .addChildrenToSolver) — public here, the C++ "package" equivalent.
     void markWidgets();
 
+  private:
     int  mBarrierType = LEFT;
     bool mAllowsGoneWidget = true;
     int  mMargin = 0;

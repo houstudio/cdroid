@@ -37,6 +37,18 @@ class VirtualLayout : public HelperWidget {
     VirtualLayout();
     ~VirtualLayout() override;
 
+    // AndroidX contains (VirtualLayout.java:241-249): true when any of this layout's
+    // referenced widgets is in `widgets` — the dependency test that orders virtual
+    // layouts ahead of their dependents in addChildrenToSolver.
+    bool contains(const std::vector<ConstraintWidget*>& widgets) const {
+        for (ConstraintWidget* w : mWidgets) {
+            for (ConstraintWidget* candidate : widgets) {
+                if (w == candidate) return true;
+            }
+        }
+        return false;
+    }
+
     bool isVirtualLayout() const override {
         return true;
     }

@@ -201,10 +201,14 @@ long BasicMeasure::solverMeasure(ConstraintWidgetContainer* layout, int /*optimi
     // the faithful fix for the Flow "max=0" bug (previously Flow measured itself from addToSolver
     // with an unresolved size and fell back to the parent's width).
     bool needSolverPass = false;
-    // Measure each VirtualLayout with a mode matching its dimension behaviour: EXACTLY for a
-    // resolved/fixed dimension, UNSPECIFIED for WRAP_CONTENT so the helper computes that dimension
-    // from its content (e.g. a WRAP-height Flow derives its height from the wrapped rows instead of
-    // being forced to the unresolved getHeight()==0).
+    // DEFERRED (batch-4 B4): AndroidX routes VirtualLayouts through the shared Measurer
+    // strategy (BasicMeasure.java:316-348, TRY_GIVEN_DIMENSIONS) like every match-constraint
+    // widget. CDROID's VL wrap semantics are expressed through the core measure() call with
+    // BasicMeasure::UNSPECIFIED for WRAP dimensions (core Flow maps UNSPECIFIED → unbounded
+    // wrap) — switching to the View-spec Measurer channel flips the whole Flow family red
+    // because the core layer speaks BasicMeasure modes, not View MeasureSpec modes. Routing
+    // VLs through the Measurer needs that mode-vocabulary unified first (a dedicated pass);
+    // until then the direct core call stays, which the Flow tests pin.
     auto modeFor = [](ConstraintWidget::DimensionBehaviour b) {
         return (b == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT)
                ? BasicMeasure::UNSPECIFIED : BasicMeasure::EXACTLY;
