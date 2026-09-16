@@ -163,12 +163,12 @@ std::vector<NetworkInfo> ConnectivityManager::getAllNetworkInfo() {
     return all;
 }
 
-void ConnectivityManager::addNetworkStateListener(NetworkStateListener* listener) {
+void ConnectivityManager::addNetworkStateListener(const NetworkStateListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mListeners.push_back(listener);
 }
 
-void ConnectivityManager::removeNetworkStateListener(NetworkStateListener* listener) {
+void ConnectivityManager::removeNetworkStateListener(const NetworkStateListener& listener) {
     std::lock_guard<std::mutex> lock(mListenersMutex);
     mListeners.erase(std::remove(mListeners.begin(), mListeners.end(), listener),
                      mListeners.end());
