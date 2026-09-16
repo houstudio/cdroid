@@ -374,7 +374,8 @@ void Grid::setRows(int rows) {
     updateActualRowsAndColumns();
     initVariables();
     mGridBuilt = false; // force rebuild on next layout pass
-}
+    requestLayout();    // the deferred rebuild rides the next hierarchy capture — dirty-gated,
+}                       // so the helper itself must flag it (see CircularFlow::setAngles)
 
 void Grid::setColumns(int columns) {
     if (columns > mMaxColumns || mColumnsSet == columns) return;
@@ -382,6 +383,7 @@ void Grid::setColumns(int columns) {
     updateActualRowsAndColumns();
     initVariables();
     mGridBuilt = false;
+    requestLayout();    // same dirty-gate contract as setRows
 }
 
 void Grid::setOrientation(int orientation) {
@@ -389,13 +391,14 @@ void Grid::setOrientation(int orientation) {
     if (mOrientation == orientation) return;
     mOrientation = orientation;
     if (mGridBuilt) generateGrid(true);
+    requestLayout();    // same dirty-gate contract as setRows
 }
 
-void Grid::setSpans(const std::string& spans) { if (mStrSpans != spans) { mStrSpans = spans; if (mGridBuilt) generateGrid(true); } }
-void Grid::setSkips(const std::string& skips) { if (mStrSkips != skips) { mStrSkips = skips; if (mGridBuilt) generateGrid(true); } }
-void Grid::setRowWeights(const std::string& w) { if (mStrRowWeights != w) { mStrRowWeights = w; if (mGridBuilt) generateGrid(true); } }
-void Grid::setColumnWeights(const std::string& w) { if (mStrColumnWeights != w) { mStrColumnWeights = w; if (mGridBuilt) generateGrid(true); } }
-void Grid::setHorizontalGaps(float gaps) { if (gaps >= 0 && mHorizontalGaps != gaps) { mHorizontalGaps = gaps; if (mGridBuilt) generateGrid(true); } }
-void Grid::setVerticalGaps(float gaps) { if (gaps >= 0 && mVerticalGaps != gaps) { mVerticalGaps = gaps; if (mGridBuilt) generateGrid(true); } }
+void Grid::setSpans(const std::string& spans) { if (mStrSpans != spans) { mStrSpans = spans; if (mGridBuilt) generateGrid(true); requestLayout(); } }
+void Grid::setSkips(const std::string& skips) { if (mStrSkips != skips) { mStrSkips = skips; if (mGridBuilt) generateGrid(true); requestLayout(); } }
+void Grid::setRowWeights(const std::string& w) { if (mStrRowWeights != w) { mStrRowWeights = w; if (mGridBuilt) generateGrid(true); requestLayout(); } }
+void Grid::setColumnWeights(const std::string& w) { if (mStrColumnWeights != w) { mStrColumnWeights = w; if (mGridBuilt) generateGrid(true); requestLayout(); } }
+void Grid::setHorizontalGaps(float gaps) { if (gaps >= 0 && mHorizontalGaps != gaps) { mHorizontalGaps = gaps; if (mGridBuilt) generateGrid(true); requestLayout(); } }
+void Grid::setVerticalGaps(float gaps) { if (gaps >= 0 && mVerticalGaps != gaps) { mVerticalGaps = gaps; if (mGridBuilt) generateGrid(true); requestLayout(); } }
 
 } // namespace cdroid
