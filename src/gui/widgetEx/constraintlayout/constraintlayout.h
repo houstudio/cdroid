@@ -162,6 +162,13 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
 
     // Process-wide registry of shared integer values (for ViewTransition sharedValue triggers).
     static SharedValues& getSharedValues();
+    // AndroidX getViewById (ConstraintLayout.java:2157): a DIRECT child by id from the
+    // mChildrenByIds mirror. API surface only for now — switching the helpers to it flips
+    // CLConstraintLayout.GridArrangesTwoByTwo red even though the map provably holds every
+    // id (gdb-verified) and the returned views are identical; some interaction with the
+    // solver pass is unresolved, revisit with batch 4. Helpers keep the recursive
+    // View::findViewById meanwhile (androidx Placeholder also uses the recursive form).
+    View* getViewById(int id);
 
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
@@ -184,6 +191,14 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
   private:
     ConstraintWidgetContainer mLayoutWidget;
     std::unordered_map<int, ConstraintWidget*> mIdToWidget; // id -> widget (PARENT_ID/own id -> mLayoutWidget)
+    // AndroidX mChildrenByIds (ConstraintLayout.java:1116-1136): the View-level id map kept
+    // by onViewAdded/onViewRemoved. findViewById consults it first — helpers resolving many
+    // referenced ids (Layer/Barrier reCacheViews) skip the per-id tree DFS.
+    std::unordered_map<int, View*> mChildrenByIds;
+    // AndroidX mDirtyHierarchy (ConstraintLayout.java:565): set on child add/remove (or any
+    // child requesting layout, scanned in onMeasure) — gates the setChildrenConstraints()
+    // capture so repeated measure passes don't rebuild the constraint hierarchy.
+    bool mDirtyHierarchy = true;
     std::vector<ConstraintHelper*> mConstraintHelpers; // Barrier/Group/... children
     std::unique_ptr<ConstraintLayoutStates> mConstraintLayoutStates; // <StateSet> adaptive layout
     int mMinWidth = 0;

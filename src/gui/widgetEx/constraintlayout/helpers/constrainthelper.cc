@@ -22,6 +22,7 @@
 #include <widgetEx/constraintlayout/helpers/constrainthelper.h>
 
 #include <porting/cdlog.h>
+#include <text/textutils.h>   // TextUtils::trim (the module's four hand-rolled copies retired)
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <widget/internal_R.h>
@@ -78,20 +79,12 @@ void ConstraintHelper::setIds(const std::string& idList) {
         return;
     }
     mIds.clear();
-    auto trim = [](std::string s) -> std::string {
-        auto notspace = [](unsigned char c) {
-            return !std::isspace(c);
-        };
-        s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
-        s.erase(std::find_if(s.rbegin(), s.rend(), notspace).base(), s.end());
-        return s;
-    };
     size_t begin = 0;
     while (true) {
         size_t end = idList.find(',', begin);
-        std::string token = trim((end == std::string::npos)
-                                 ? idList.substr(begin)
-                                 : idList.substr(begin, end - begin));
+        std::string raw = (end == std::string::npos)
+                ? idList.substr(begin) : idList.substr(begin, end - begin);
+        std::string token = TextUtils::trim(raw);   // trimmed (shared helper)
         if (!token.empty()) {
             // getIdentifier resolves bare names through the arsc — not the
             // retired text id-table. Not-found is 0, not View::NO_ID (-1).
@@ -130,18 +123,13 @@ void ConstraintHelper::setReferenceTags(ConstraintLayout* container, const std::
     if (container == nullptr || tagList.empty()) {
         return;
     }
-    auto trim = [](std::string s) -> std::string {
-        auto notspace = [](unsigned char c) { return !std::isspace(c); };
-        s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
-        s.erase(std::find_if(s.rbegin(), s.rend(), notspace).base(), s.end());
-        return s;
-    };
     size_t begin = 0;
     while (true) {
         size_t end = tagList.find(',', begin);
-        std::string token = trim((end == std::string::npos)
+        std::string raw = (end == std::string::npos)
                                  ? tagList.substr(begin)
-                                 : tagList.substr(begin, end - begin));
+                                 : tagList.substr(begin, end - begin);
+        std::string token = TextUtils::trim(raw);   // trimmed (shared helper)
         if (!token.empty()) {
             addTag(container, token);
         }

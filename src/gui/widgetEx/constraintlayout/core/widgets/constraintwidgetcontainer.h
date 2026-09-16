@@ -91,11 +91,10 @@ class ConstraintWidgetContainer : public WidgetContainer {
     void layout() override; // linear-solve driver (≤8 iters, nested-first, chain rebuild); only the OPTIMIZATION_GRAPH fast-paths (Direct/Grouping/graph) are deferred
 
     // --- chain bookkeeping (read by Chain.applyChainConstraints) ---
-    // Java: ChainHead[4] + mHorizontalChainsSize; here a vector + active count.
+    // Java: ChainHead[4] + mHorizontalChainsSize; here the vector's size IS the
+    // active count (the two int mirrors of it are retired).
     std::vector<ChainHead*> mHorizontalChainsArray;
-    int mHorizontalChainsSize = 0;
     std::vector<ChainHead*> mVerticalChainsArray;
-    int mVerticalChainsSize = 0;
 
     bool mSkipSolver = false;
 

@@ -48,12 +48,12 @@ void MotionEffect::init(const AttributeSet* attrs) {
     if (attrs == nullptr) return;
     // TypedArray reads typed binary AXML values directly (AOSP getContext().obtainStyledAttributes).
     auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::MotionEffect);
-    mMotionEffectStart = std::max(0, std::min(99, ta->hasValue(R::styleable::MotionEffect_motionEffect_start) ? ta->getInt(R::styleable::MotionEffect_motionEffect_start, mMotionEffectStart) : mMotionEffectStart));
-    mMotionEffectEnd   = std::max(0, std::min(99, ta->hasValue(R::styleable::MotionEffect_motionEffect_end) ? ta->getInt(R::styleable::MotionEffect_motionEffect_end, mMotionEffectEnd) : mMotionEffectEnd));
-    mMotionEffectTranslationX = ta->hasValue(R::styleable::MotionEffect_motionEffect_translationX) ? ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationX, mMotionEffectTranslationX) : mMotionEffectTranslationX;
-    mMotionEffectTranslationY = ta->hasValue(R::styleable::MotionEffect_motionEffect_translationY) ? ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationY, mMotionEffectTranslationY) : mMotionEffectTranslationY;
-    mMotionEffectAlpha  = ta->hasValue(R::styleable::MotionEffect_motionEffect_alpha) ? ta->getFloat(R::styleable::MotionEffect_motionEffect_alpha, mMotionEffectAlpha) : mMotionEffectAlpha;
-    mMotionEffectStrictMove = ta->hasValue(R::styleable::MotionEffect_motionEffect_strict) ? ta->getBoolean(R::styleable::MotionEffect_motionEffect_strict, mMotionEffectStrictMove) : mMotionEffectStrictMove;
+    mMotionEffectStart = std::max(0, std::min(99, ta->getInt(R::styleable::MotionEffect_motionEffect_start, mMotionEffectStart)));
+    mMotionEffectEnd   = std::max(0, std::min(99, ta->getInt(R::styleable::MotionEffect_motionEffect_end, mMotionEffectEnd)));
+    mMotionEffectTranslationX = ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationX, mMotionEffectTranslationX);
+    mMotionEffectTranslationY = ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationY, mMotionEffectTranslationY);
+    mMotionEffectAlpha  = ta->getFloat(R::styleable::MotionEffect_motionEffect_alpha, mMotionEffectAlpha);
+    mMotionEffectStrictMove = ta->getBoolean(R::styleable::MotionEffect_motionEffect_strict, mMotionEffectStrictMove);
     mViewTransitionId  = ta->hasValue(R::styleable::MotionEffect_motionEffect_viewTransition) ? (int)ta->getResourceId(R::styleable::MotionEffect_motionEffect_viewTransition, UNSET) : UNSET;
     mFadeMove = ta->hasValue(R::styleable::MotionEffect_motionEffect_move) ? ta->getInt(R::styleable::MotionEffect_motionEffect_move, mFadeMove) : mFadeMove;
     if (mMotionEffectStart == mMotionEffectEnd) {

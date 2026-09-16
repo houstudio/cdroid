@@ -28,6 +28,7 @@
 #include <widget/internal_R.h>
 #include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
+#include <text/textutils.h>
 
 DECLARE_WIDGET2(CircularFlow, "androidx.constraintlayout.helper.widget.CircularFlow");
 
@@ -81,11 +82,9 @@ void CircularFlow::setAngles(const std::string& angleList) {
     std::stringstream ss(angleList);
     std::string token;
     while (std::getline(ss, token, ',')) {
-        // trim whitespace
-        size_t s = 0; while (s < token.size() && std::isspace((unsigned char) token[s])) s++;
-        size_t e = token.size(); while (e > s && std::isspace((unsigned char) token[e - 1])) e--;
-        if (s == e) continue;
-        mAngles.push_back((float) std::atof(token.substr(s, e - s).c_str()));
+        TextUtils::trim(token);   // shared helper (was a hand-rolled scan)
+        if (token.empty()) continue;
+        mAngles.push_back((float) std::atof(token.c_str()));
     }
 }
 
@@ -103,11 +102,10 @@ void CircularFlow::setRadius(const std::string& radiusList) {
     std::stringstream ss(radiusList);
     std::string token;
     while (std::getline(ss, token, ',')) {
-        size_t s = 0; while (s < token.size() && std::isspace((unsigned char) token[s])) s++;
-        size_t e = token.size(); while (e > s && std::isspace((unsigned char) token[e - 1])) e--;
-        if (s == e) continue;
+        TextUtils::trim(token);   // shared helper (was a hand-rolled scan)
+        if (token.empty()) continue;
         // radiusInDP values are in dp → px (AndroidX applies display density).
-        mRadius.push_back((int) (std::atoi(token.substr(s, e - s).c_str()) * density));
+        mRadius.push_back((int) (std::atoi(token.c_str()) * density));
     }
 }
 

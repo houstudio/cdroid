@@ -201,17 +201,13 @@ void ConstraintWidgetContainer::clearChains() {
     }
     mHorizontalChainsArray.clear();
     mVerticalChainsArray.clear();
-    mHorizontalChainsSize = 0;
-    mVerticalChainsSize = 0;
 }
 
 void ConstraintWidgetContainer::addChain(ConstraintWidget* widget, int type) {
     if (type == ConstraintWidget::HORIZONTAL) {
         mHorizontalChainsArray.push_back(new ChainHead(widget, ConstraintWidget::HORIZONTAL, mIsRtl));
-        mHorizontalChainsSize = (int) mHorizontalChainsArray.size();
     } else if (type == ConstraintWidget::VERTICAL) {
         mVerticalChainsArray.push_back(new ChainHead(widget, ConstraintWidget::VERTICAL, mIsRtl));
-        mVerticalChainsSize = (int) mVerticalChainsArray.size();
     }
 }
 

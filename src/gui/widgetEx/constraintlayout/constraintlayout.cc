@@ -274,6 +274,10 @@ ConstraintWidget* ConstraintLayout::getViewWidget(View* view) {
 }
 
 void ConstraintLayout::onViewAdded(View* child) {
+    // AndroidX onViewAdded (ConstraintLayout.java:1116-1124): the hierarchy capture is stale,
+    // and the View-level id map gains the child.
+    mDirtyHierarchy = true;
+    mChildrenByIds[child->getId()] = child;
     if (auto* helper = dynamic_cast<ConstraintHelper*>(child)) {
         helper->validateParams();
         if (auto* lp = dynamic_cast<LayoutParams*>(child->getLayoutParams())) {
@@ -288,10 +292,20 @@ void ConstraintLayout::onViewAdded(View* child) {
 }
 
 void ConstraintLayout::onViewRemoved(View* child) {
+    // AndroidX onViewRemoved (ConstraintLayout.java:1130-1138): the hierarchy capture is stale,
+    // and the View-level id map loses the child.
+    mDirtyHierarchy = true;
+    mChildrenByIds.erase(child->getId());
     if (auto* helper = dynamic_cast<ConstraintHelper*>(child)) {
         auto it = std::find(mConstraintHelpers.begin(), mConstraintHelpers.end(), helper);
         if (it != mConstraintHelpers.end()) mConstraintHelpers.erase(it);
     }
+}
+
+View* ConstraintLayout::getViewById(int id) {
+    // AndroidX getViewById (ConstraintLayout.java:2157-2159): mChildrenByIds.get(id).
+    auto it = mChildrenByIds.find(id);
+    return (it != mChildrenByIds.end()) ? it->second : nullptr;
 }
 
 void ConstraintLayout::setChildrenConstraints() {
@@ -845,7 +859,24 @@ void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     // ahead of updateHierarchy — Start/End anchor resolution, chains (ChainHead) and helpers
     // (Barrier.resolveRtl) all read mLayoutWidget.isRtl() during setChildrenConstraints().
     mLayoutWidget.setRtl(isLayoutRtl());
-    setChildrenConstraints();
+    // AndroidX onMeasure (ConstraintLayout.java:1776-1858): the hierarchy capture only reruns
+    // when dirty — a child was added/removed, or any child still requests layout (an already-
+    // flagged relayout may swallow a child's request). The solver itself always reruns.
+    // (AndroidX's sameSpecsAsPreviousMeasure and OPTIMIZE_HEIGHT_CHANGE shortcuts are
+    // disabled upstream by `false &&` / a false constant — not ported.)
+    if (!mDirtyHierarchy) {
+        const int n = getChildCount();
+        for (int i = 0; i < n; i++) {
+            if (getChildAt(i)->isLayoutRequested()) {
+                mDirtyHierarchy = true;
+                break;
+            }
+        }
+    }
+    if (mDirtyHierarchy) {
+        mDirtyHierarchy = false;   // cleared BEFORE the capture (java:1854-1858) — a view added
+        setChildrenConstraints(); // during it (Grid's box views) re-marks dirty and is captured
+    }                             // on the next pass instead of being lost.
     resolveSystem(widthMeasureSpec, heightMeasureSpec);
     // Placeholders adopt their content's resolved size post-solve — driven from
     // didMeasures() (the BasicMeasure completion callback) like AndroidX's Measurer.didMeasures

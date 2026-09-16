@@ -28,6 +28,7 @@
 #include <widget/internal_R.h>
 #include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
+#include <text/textutils.h>
 
 DECLARE_WIDGET2(Grid, "androidx.constraintlayout.helper.widget.Grid");
 
@@ -340,18 +341,18 @@ bool Grid::handleSpans(const std::vector<int>& ids, const std::vector<std::vecto
 std::vector<float> Grid::parseWeights(int size, const std::string& str) {
     std::vector<float> arr;
     if (str.empty()) return arr;
-    std::stringstream ss(str);
-    std::string token;
-    while (std::getline(ss, token, ',')) arr.push_back((float) std::atof(token.c_str()));
+    // TextUtils::split matches Java's String.split (a trailing comma yields no empty token;
+    // getline produced one and the size check below killed the whole list).
+    for (const std::string& token : TextUtils::split(str, ",")) {
+        arr.push_back((float) std::atof(token.c_str()));
+    }
     if ((int) arr.size() != size) arr.clear(); // mismatch → treat as unspecified
     return arr;
 }
 
 std::vector<std::vector<int>> Grid::parseSpans(const std::string& str) {
     std::vector<std::vector<int>> matrix;
-    std::stringstream ss(str);
-    std::string span;
-    while (std::getline(ss, span, ',')) {
+    for (const std::string& span : TextUtils::split(str, ",")) {
         // format: index:rowSpanxcolSpan
         size_t colon = span.find(':');
         if (colon == std::string::npos) continue;
