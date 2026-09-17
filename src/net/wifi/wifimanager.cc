@@ -621,7 +621,7 @@ void WifiManager::onSupplicantEvent(const SupplicantEvent& event) {
             try {
                 info.setSupplicantState(SupplicantState::fromString(
                         WpaResponseParser::unquote(value)));
-            } catch (const std::invalid_argument&) {
+            } catch (const std::invalid_argument&e) {
             }
         }
         if (event.getArg("BSSID", value)) info.setBSSID(WpaResponseParser::unquote(value));
@@ -632,7 +632,7 @@ void WifiManager::onSupplicantEvent(const SupplicantEvent& event) {
              * text like AOSP's WifiMonitor (createFromAsciiEncoded). */
             try {
                 info.setSSID(WifiSsid::fromString(value));
-            } catch (const std::invalid_argument&) {
+            } catch (const std::invalid_argument&e) {
                 info.setSSID(WifiSsid::fromUtf8Text(value));
             }
         }

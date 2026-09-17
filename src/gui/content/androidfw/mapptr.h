@@ -13,7 +13,7 @@
 // Licensed under the Apache License, Version 2.0.
 #ifndef __CDROID_ANDROIDFW_MAP_PTR_H__
 #define __CDROID_ANDROIDFW_MAP_PTR_H__
-
+#include <cstdint>
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
