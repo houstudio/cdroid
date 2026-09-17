@@ -1,5 +1,5 @@
 #include <weekdays.h>
-
+#include <cstdint>
 #include <R.h>
 
 #include <core/calendar.h>

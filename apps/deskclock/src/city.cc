@@ -1,5 +1,5 @@
 #include <city.h>
-
+#include <cstdint>
 #include <R.h>
 
 #include <cctype>

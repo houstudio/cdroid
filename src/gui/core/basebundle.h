@@ -2,6 +2,7 @@
 #define __CDROID_BASEBUNDLE_H__
 
 #include <string>
+#include <cstdint>
 #include <stdexcept>
 #include <typeinfo>
 #include <vector>

@@ -56,6 +56,7 @@ include(cmake/options.cmake)
 include(cmake/check_cdroiddeps.cmake)
 
 add_compile_options(-Wno-deprecated-declarations)
+add_compile_options(-Wno-unused-parameter)
 
 set(DISABLE_FORCE_DEBUG_POSTFIX ON)
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
