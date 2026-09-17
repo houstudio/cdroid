@@ -139,8 +139,17 @@ DEPLIBS_DIR=${DEPLIBS[$PRODUCT]}
 
 
 #Debug version'sDEPLIB seems has some trouble in some platform(r818)
+#Colon-join is only valid for the PATH/PKG_CONFIG exports below (environment
+#semantics). CMAKE_PREFIX_PATH is a CMake LIST whose separator is a SEMICOLON —
+#a colon-joined string is taken as one nonexistent path and silently disables
+#the whole vcpkg tree resolution on fresh configures (cached old trees keep
+#working off stale found-paths, which is why this survived so long: it shows
+#up as -lXXX-NOTFOUND link errors on clean checkouts).
 if [ "${BUILD_TYPE,,}" = "debug" ]; then
+   CMAKE_DEPLIBS_DIR="${DEPLIBS_DIR}/debug;${DEPLIBS_DIR}"
    DEPLIBS_DIR="${DEPLIBS_DIR}/debug:${DEPLIBS_DIR}"
+else
+   CMAKE_DEPLIBS_DIR="${DEPLIBS_DIR}"
 fi
 
 echo "DEPLIBS_DIR=${DEPLIBS_DIR} product=$PRODUCT"
@@ -185,8 +194,8 @@ cmake ${BUILDWITHNINJA} \
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5  \
     -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
     -DCMAKE_INSTALL_PREFIX=./ \
-    -DCMAKE_PREFIX_PATH=${DEPLIBS_DIR} \
-    -DCMAKE_MODULE_PATH=${DEPLIBS_DIR} \
+    -DCMAKE_PREFIX_PATH=${CMAKE_DEPLIBS_DIR} \
+    -DCMAKE_MODULE_PATH=${CMAKE_DEPLIBS_DIR} \
     -DCDROID_CHIPSET=${PRODUCT,,} \
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
     ${CMAKE_SWITCHES} \
