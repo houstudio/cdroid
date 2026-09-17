@@ -99,6 +99,9 @@ WindowManager::~WindowManager() {
     // every captured TransitionValues were definite-lost at every exit that
     // tore a window down mid-transition.
     Looper::getMainLooper()->drainMessageQueue();
+    // Ghost layers (removed windows' exit snapshots) have no owner window left
+    // to sweep them — free them here, with the looper already quitting.
+    GraphDevice::getInstance().clearGhosts();
     LOGD("%p Destroied",this);
 }
 
@@ -306,6 +309,19 @@ void WindowManager::exposeRegionBelow(Window*w,const Rect&grc){
         Rect local = grc;
         local.offset(-(*it)->getLeft(), -(*it)->getTop());
         (*it)->mPendingRgn->do_union((Cairo::RectangleInt&)local);
+    }
+}
+
+void WindowManager::damageRegion(const Rect&grc){
+    // Repaint a global rect from EVERY window — ghost-layer support: the region
+    // under a compositor ghost (a removed window's snapshot) must re-blit from
+    // the windows below before the ghost's next frame. The compose pass
+    // intersects each union with the window's visible region, so over-covering
+    // is clipped away.
+    for(auto w : mWindows){
+        Rect local = grc;
+        local.offset(-w->getLeft(), -w->getTop());
+        w->mPendingRgn->do_union((Cairo::RectangleInt&)local);
     }
 }
 

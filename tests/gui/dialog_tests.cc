@@ -666,3 +666,52 @@ TEST_F(DIALOG,OutsideTouchCancels){
    EXPECT_TRUE(canceled);
    EXPECT_FALSE(dlg->isShowing());
 }
+
+/* PopupWindow's own outside-touch dismissal (AOSP PopupDecorView.onTouchEvent
+   ACTION_OUTSIDE -> dismiss). Two things must hold:
+   1. computeFlags' FLAG_WATCH_OUTSIDE_TOUCH lands on the DECOR's WindowManager
+      attributes (invokePopup mirrors p->flags via setFlags) — the dispatcher's
+      OUTSIDE pass reads getAttributes().flags, not the View-level LayoutParams;
+   2. the decor's owner back-pointer is wired (attachOwner in createDecorView —
+      AOSP's PopupDecorView is an inner class calling the outer dismiss()
+      directly; unwired, every OUTSIDE/BACK handler saw mPop==null and the
+      whole dismissal chain was dead code). The tap at (20,20) is outside the
+   dropdown frame (below the 48px anchor) but inside the fullscreen base
+   window, so the base window gets the real DOWN and the popup the OUTSIDE. */
+TEST_F(DIALOG,PopupWindowOutsideTouchDismisses){
+   App&app=App::getInstance();
+   TextView*anchor=new TextView(&app); anchor->setText("anchor");
+   GUIEnvironment::content()->addView(anchor, new ViewGroup::LayoutParams(200,48));
+   pumpFor(100);
+
+   PopupWindow*popup=new PopupWindow(&app,nullptr,(int)cdroid::internal::R::attr::popupMenuStyle,0);
+   TextView*content=new TextView(&app); content->setText("popup");
+   popup->setContentView(content);
+   popup->setWidth(200);
+   popup->setHeight(300);
+   popup->setOutsideTouchable(true);
+   bool dismissed=false;
+   popup->setOnDismissListener([&dismissed](){ dismissed=true; });
+   popup->showAsDropDown(anchor,0,0);
+   pumpFor(100);
+
+   Window*decor=(Window*)popup->getContentView()->getRootView();
+   ASSERT_NE(decor,nullptr);
+   EXPECT_TRUE(decor->getAttributes().flags
+           & WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH);
+   const Rect b=decor->getBound();
+   ASSERT_TRUE(b.top>=40);            // dropdown opens BELOW the 48px anchor
+   ASSERT_FALSE(b.contains(20,20));   // the corner we tap is outside the frame
+
+   const nsecs_t now=SystemClock::uptimeMillis();
+   MotionEvent*ev=MotionEvent::obtain(now,now,MotionEvent::ACTION_DOWN,20.f,20.f,0);
+   ev->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+   WindowManager::getInstance().processEvent(*ev);
+   ev->recycle();
+   pumpFor(200);
+
+   EXPECT_TRUE(dismissed);
+   EXPECT_FALSE(popup->isShowing());
+   // NB: the PopupWindow object is intentionally leaked like real apps (the
+   // fire-and-forget menu contract); only its window needed to close here.
+}

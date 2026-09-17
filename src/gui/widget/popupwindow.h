@@ -35,6 +35,11 @@ private:
     private:
         PopupWindow*mPop;
     public:
+        // Wire the owner at decor creation (AOSP's PopupDecorView is an inner
+        // class calling the outer PopupWindow's dismiss() directly; the port's
+        // back-pointer equivalent). Without this every dispatch handler below
+        // sees mPop == null and outside-touch/BACK dismissal is dead code.
+        void attachOwner(PopupWindow* pop){ mPop = pop; }
         // Neutralize the back-pointer once the owner PopupWindow is gone: the
         // decor's own delete is posted (Window::close) and may run later than
         // the owner's destruction, so its dispatch handlers must not touch mPop.
@@ -60,7 +65,6 @@ private:
     Context* mContext = nullptr;
     View* mParentRootView;
     bool mIsShowing;
-    bool mIsTransitioningToDismiss;
     bool mIsDropdown;
 
     /** View that handles event dispatch and content transitions. maby we can use it as Window??*/
@@ -79,7 +83,7 @@ private:
 
     int mInputMethodMode = INPUT_METHOD_FROM_FOCUSABLE;
     int mSoftInputMode;//= WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED;
-    int mSplitTouchEnabled;
+    int mSplitTouchEnabled = -1;   // -1 = unset sentinel (computeFlags: only explicit true counts)
     bool mFocusable;
     bool mTouchable;
     bool mOutsideTouchable;
@@ -88,7 +92,7 @@ private:
     bool mClipToScreen;
     bool mAllowScrollingAnchorParent;
     bool mLayoutInsetDecor;
-    bool mNotTouchModal;
+    bool mNotTouchModal = false;   // AOSP default; also fixes an uninitialized read in computeFlags
     bool mAttachedInDecor;
     bool mAttachedInDecorSet;
 
@@ -132,10 +136,6 @@ private:
     bool mOverlapAnchor;
     bool mIsAnchorRootAttached;
     bool mPopupViewInitialLayoutDirectionInherited;
-    // Alive-flag (the Fragment idiom): the animated-exit deferred teardown
-    // callback outlives this popup (the decor is self-owned) and must skip
-    // the dismiss notification when this object is already gone.
-    std::shared_ptr<bool> mAliveFlag;
 private:
     void init();
     int computeGravity();

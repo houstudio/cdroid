@@ -26,6 +26,8 @@
 #include <widget/framework_styleable.h>
 #include <content/typedvalue.h>
 #include <core/windowmanager.h>
+#include <core/graphdevice.h>
+#include <cairomm/surface.h>
 #include <animation/animator.h>
 #include <animation/objectanimator.h>
 #include <animation/valueanimator.h>
@@ -54,6 +56,15 @@ void Window::setEnterTransition(ActivityTransition* t) {
         // getLeft()/getTop() stay the resting position — no capture dance needed.
         mPendingEnterAnim = true;
         snapEnterStart(t);  // pre-snap to the start state before the first frame (no full-show flash)
+    } else {
+        // setEnterTransition(nullptr) / NONE must fully UNDO the previous install
+        // (AOSP: "no enter transition" shows the window at rest). Without this,
+        // a themed snap (alpha 0 / offscreen translation) stays applied while
+        // mPendingEnterAnim stays true — runActivityTransition's null/NONE
+        // early-return restores neither, leaving the window invisible forever.
+        mPendingEnterAnim = false;
+        setSurfaceTranslation(0, 0);
+        setAlpha(1.f);
     }
 }
 
@@ -107,9 +118,14 @@ void Window::retireFromCompositor() {
 // AOSP window animations are usually <set>s of alpha/translate/extend children; the
 // whole-surface model can express one effect, so a translate child (the dominant motion)
 // drives a SLIDE — edge from the offset delta's axis/sign — and an alpha-only set drives
-// a FADE. Returns nullptr when the animation expresses nothing mappable.
-static ActivityTransition* transitionFromAnimation(Animation* anim, bool enter) {
-    if (anim == nullptr) return nullptr;
+// a FADE. Returns an empty spec when the animation expresses nothing mappable.
+struct AnimSpec {
+    ActivityTransition::Type type = ActivityTransition::Type::NONE;
+    int slideEdge = 0;      // Gravity::LEFT/RIGHT/TOP/BOTTOM (SLIDE only)
+    int64_t duration = 0;
+};
+static AnimSpec extractAnimSpec(Animation* anim, bool enter) {
+    if (anim == nullptr) return AnimSpec();
     // OWNS anim: the caller loads a fresh Animation just for this parameter
     // extraction (AnimationUtils::loadAnimation), and ~AnimationSet frees the
     // child parts - free the whole tree on every exit or every window-style
@@ -214,9 +230,69 @@ void Window::startEnterAnimation() {
     runActivityTransition(mEnterTransition, true, std::function<void()>());
 }
 
-void Window::startExitAnimation(const std::function<void()>& onEnd) {
-    ActivityTransition* t = mReturnTransition ? mReturnTransition : mExitTransition;
-    runActivityTransition(t, false, onEnd);
+GraphDevice::GhostLayer* Window::captureGhost() {
+    // Snapshot the window's own surface — the same ImageSurface composeSurfaces
+    // blits from. The compose-time translation is NOT baked into the pixels
+    // (it is compose-side), so the ghost carries dx/dy separately, starting
+    // from any in-flight enter offset to continue from what is on screen now.
+    if (mAttachInfo == nullptr || mAttachInfo->mCanvas == nullptr) return nullptr;
+    Cairo::RefPtr<Cairo::ImageSurface> snap = Cairo::ImageSurface::create(
+            Cairo::Surface::Format::ARGB32, getWidth(), getHeight());
+    Cairo::RefPtr<Cairo::Context> ctx = Cairo::Context::create(snap);
+    ctx->set_source(mAttachInfo->mCanvas->get_target(), 0, 0);
+    ctx->set_operator(Cairo::Context::Operator::SOURCE);
+    ctx->paint();
+    GraphDevice::GhostLayer* g = GraphDevice::getInstance().addGhost(snap, getBound());
+    g->dx = mSurfaceDx;
+    g->dy = mSurfaceDy;
+    if (mSurfaceDx != 0 || mSurfaceDy != 0) {
+        g->lastRect = getBound();
+        g->lastRect.offset(mSurfaceDx, mSurfaceDy);
+    }
+    return g;
+}
+
+void Window::startGhostExit(ActivityTransition* t) {
+    // AOSP WMS: the exit animation plays on the REMOVED window's surface
+    // (WindowStateAnimator) while the view tree is already gone — the ghost IS
+    // that surface here. The tree below tears down synchronously; this animator
+    // touches compositor state only (no View, no this-capture, so the Window's
+    // death mid-flight is a non-event).
+    GraphDevice::GhostLayer* ghost = captureGhost();
+    if (ghost == nullptr) return;
+    const int64_t duration = t->getDuration();
+    Animator::AnimatorListener endListener;
+    endListener.onAnimationEnd = [ghost](Animator&, bool) {
+        GraphDevice::getInstance().removeGhost(ghost);  // frees the animator too
+    };
+    if (t->getType() == ActivityTransition::Type::FADE) {
+        ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{1.f, 0.f});
+        anim->setDuration(duration);
+        anim->addUpdateListener([ghost](ValueAnimator& a) {
+            ghost->alpha = 1.f - a.getAnimatedFraction();
+            GraphDevice::getInstance().composeGhosts();
+        });
+        anim->addListener(endListener);
+        ghost->animator = anim;
+        anim->start();
+    } else {  // SLIDE — translate the snapshot out toward the exit edge.
+        int offX, offY;
+        computeSlidePos(t->getSlideEdge(), ghost->bounds.left, ghost->bounds.top,
+                        ghost->bounds.width, ghost->bounds.height, true, offX, offY);
+        const int startX = ghost->dx, startY = ghost->dy;
+        const int endX = offX - ghost->bounds.left, endY = offY - ghost->bounds.top;
+        ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
+        anim->setDuration(duration);
+        anim->addUpdateListener([ghost, startX, startY, endX, endY](ValueAnimator& a) {
+            const float f = a.getAnimatedFraction();
+            ghost->dx = (int)(startX + (endX - startX) * f);
+            ghost->dy = (int)(startY + (endY - startY) * f);
+            GraphDevice::getInstance().composeGhosts();
+        });
+        anim->addListener(endListener);
+        ghost->animator = anim;
+        anim->start();
+    }
 }
 
 void Window::computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y) {

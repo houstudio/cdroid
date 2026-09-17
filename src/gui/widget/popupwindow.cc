@@ -23,6 +23,17 @@
 namespace cdroid{
 using namespace cdroid::internal;
 
+namespace {
+// Clone a drawable through its ConstantState; null when the drawable has none
+// (base Drawable::getConstantState returns null — only ConstantState-capable
+// subclasses override it). Callers treat null as "cannot clone".
+Drawable* newDrawableOrNull(Drawable* d) {
+    if (d == nullptr) return nullptr;
+    auto cs = d->getConstantState();   // shared_ptr<ConstantState>
+    return cs ? cs->newDrawable() : nullptr;
+}
+} // namespace
+
 PopupWindow::PopupWindow(Context*ctx)
     :PopupWindow(ctx,nullptr){}
 
@@ -76,13 +87,11 @@ PopupWindow::~PopupWindow(){
     // dangling mPop back-pointer. Mechanical teardown only, mirroring
     // dismissImmediate: no dismiss notification fires (the owner is destroying
     // the object, not closing it).
-    // An already-DISMISSED popup (mIsShowing false) must NOT close again: its
-    // decor is self-owned and mid-way through its own teardown (the sync path
-    // already removed it and posted the delete; the animated path's
-    // finishClose is still pending) - calling close() on that half-torn state
-    // re-enters WindowManager::removeWindow on a window that is no longer in a
-    // consistent state. Cancel the pending teardown notification and let the
-    // decor finish itself.
+    // An already-DISMISSED popup (mIsShowing false) must NOT close again:
+    // dismissImmediate already closed the decor (synchronously) and detached
+    // its back-pointer; the decor lives until its own posted delete. Calling
+    // close() on that half-torn state re-enters WindowManager::removeWindow on
+    // a window that is no longer in a consistent state.
     if ((mDecorView != nullptr) && mIsShowing) {
         if (!mOwnsContentView && (mContentView != nullptr)
                 && (mContentView->getParent() != nullptr)) {
@@ -100,9 +109,6 @@ PopupWindow::~PopupWindow(){
         // memory (valgrind: invalid write in detachOwner from ~PopupWindow).
         mDecorView->detachOwner();
     }
-    if (mAliveFlag != nullptr) {
-        *mAliveFlag = false;
-    }
     mDecorView = nullptr;
     // Symmetric unregister of the anchor/anchor-root listeners (they capture
     // this) - dismiss() normally does this, the destructor must too.
@@ -114,7 +120,6 @@ PopupWindow::~PopupWindow(){
 }
 
 void PopupWindow::init(){
-    mAliveFlag = std::make_shared<bool>(true);
     mIsShowing = false;
     mIsDropdown= false;
     mFocusable = true;
@@ -127,7 +132,6 @@ void PopupWindow::init(){
     mWindowLayoutType = 0;
     mGravity = Gravity::NO_GRAVITY;
     mInputMethodMode = INPUT_METHOD_FROM_FOCUSABLE;
-    mIsTransitioningToDismiss = false;
     mAllowScrollingAnchorParent= true;
     mLayoutInsetDecor = false;
     mAttachedInDecor  = true;
@@ -438,9 +442,6 @@ void PopupWindow::showAtLocation(View* parent, int gravity, int x, int y){
     if (isShowing() || (mContentView == nullptr)) {
         return;
     }
-    // Fresh show: clear the exit-transition state (see showAsDropDown).
-    mIsTransitioningToDismiss = false;
-    //TransitionManager.endTransitions(mDecorView);
 
     detachFromAnchor();
 
@@ -468,12 +469,6 @@ void PopupWindow::showAsDropDown(View* anchor, int xoff, int yoff,int gravity){
     if (isShowing() || !hasContentView()) {
         return;
     }
-    // Fresh show: clear the transitioning-to-dismiss state left by an exit-
-    // animated dismiss (its callback deliberately does not touch this object -
-    // see dismiss(); the sync path resets the flag in dismissImmediate).
-    mIsTransitioningToDismiss = false;
-
-    //TransitionManager::endTransitions(mDecorView);
 
     attachToAnchor(anchor, xoff, yoff, gravity);
 
@@ -498,27 +493,24 @@ void PopupWindow::preparePopup(WindowManager::LayoutParams*p){
     // When a background is available, we embed the content view within
     // another view that owns the background drawable.
     if (mBackground) {
-        Drawable* bg = mBackground->getConstantState()->newDrawable();
+        // setBackground takes ownership, so hand the wrapper a clone — mBackground
+        // itself survives for updateAboveAnchor's state swap. A drawable without
+        // ConstantState support cannot be cloned (base returns null): fall back to
+        // a transparent placeholder so the wrapper structure and ownership stay
+        // intact instead of dereferencing null.
+        Drawable* bg = newDrawableOrNull(mBackground);
+        if (bg == nullptr) bg = new ColorDrawable(Color::TRANSPARENT);
         mBackgroundView = createBackgroundView(mContentView);
         mBackgroundView->setBackground(bg);//mBackground);
     } else {
         mBackgroundView = mContentView;
-        // No explicit background drawable (style provided none): the window
-        // surface underneath is opaque black, and any unpainted area of the
-        // popup would surface it (dropdowns/dialogs read as black under a
-        // Light theme). Fall back to the live theme's colorBackground so the
-        // popup base follows the theme — Light shows light, Dark shows dark.
-        if (mContext != nullptr) {
-            TypedValue bgValue;
-            if (mContext->getTheme().resolveAttribute(
-                    (int)internal::R::attr::colorBackground, &bgValue, true)) {
-                int bgColor = bgValue.data;
-                if (bgValue.resourceId != 0) {
-                    bgColor = mContext->getColor((int)bgValue.resourceId);
-                }
-                mBackgroundView->setBackground(new ColorDrawable(bgColor));
-            }
-        }
+        // AOSP preparePopup with no background drawable installs NOTHING: the
+        // window surface is transparent (the geometric Window ctor sets no
+        // window background), so a setBackgroundDrawable(null) popup composes
+        // its content directly over the anchor window. The old theme
+        // colorBackground injection here overwrote the app-owned background ON
+        // the content view (View::setBackground deletes the previous drawable)
+        // — destroying transparent-popup setups and mutating borrowed content.
     }
 
     mDecorView = createDecorView(mBackgroundView);
@@ -578,6 +570,7 @@ PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){
      * can raise the popup (e.g. KeyboardView sets TYPE_SYSTEM_ALERT). */
     const int wtype = mWindowLayoutType ? mWindowLayoutType : Window::TYPE_APPLICATION;
     PopupDecorView* decorView = new PopupDecorView(mContext,mWidth,mHeight,wtype);
+    decorView->attachOwner(this);
     decorView->addView(contentView, LayoutParams::MATCH_PARENT, height);
     //decorView->setClipChildren(false);
     //decorView->setClipToPadding(false);
@@ -597,13 +590,14 @@ void PopupWindow::updateAboveAnchor(bool aboveAnchor){
         if (mAboveAnchorBackgroundDrawable) {
             // The two anchors are children borrowed from the mBackground container;
             // setBackground takes ownership, so hand it a clone (preparePopup does
-            // the same for the initial background).
-            if (mAboveAnchor) {
-                mBackgroundView->setBackground(
-                        mAboveAnchorBackgroundDrawable->getConstantState()->newDrawable());
+            // the same for the initial background). A child without ConstantState
+            // support cannot be cloned — degrade to the state-refresh path.
+            Drawable* bg = newDrawableOrNull(mAboveAnchor ? mAboveAnchorBackgroundDrawable
+                                                          : mBelowAnchorBackgroundDrawable);
+            if (bg != nullptr) {
+                mBackgroundView->setBackground(bg);
             } else {
-                mBackgroundView->setBackground(
-                        mBelowAnchorBackgroundDrawable->getConstantState()->newDrawable());
+                mBackgroundView->refreshDrawableState();
             }
         } else {
             mBackgroundView->refreshDrawableState();
@@ -617,6 +611,19 @@ void PopupWindow::invokePopup(WindowManager::LayoutParams* p){
     WindowManager::getInstance().moveWindow(mDecorView,p->x,p->y);
     LOGD("invokePopup(%d,%d,%d,%d)",p->x,p->y,mDecorView->getWidth(),mDecorView->getHeight());
     mDecorView->setLayoutParams(p);
+    // The computed window flags must land on the DECOR's WindowManager
+    // attributes — the dispatcher's ACTION_OUTSIDE pass reads
+    // w->getAttributes().flags (windowmanager.cc onMotion), not this View-level
+    // LayoutParams. AOSP: the flags ride the very params handed to
+    // WindowManager.addView; CDROID's Window IS the decor, so mirror them into
+    // mWindowAttributes (this is what brings outside-touch dismissal to life).
+    ((Window*)mDecorView)->setFlags(p->flags,
+        WindowManager::LayoutParams::FLAG_NOT_FOCUSABLE
+        | WindowManager::LayoutParams::FLAG_NOT_TOUCHABLE
+        | WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH
+        | WindowManager::LayoutParams::FLAG_ALT_FOCUSABLE_IM
+        | WindowManager::LayoutParams::FLAG_SPLIT_TOUCH
+        | WindowManager::LayoutParams::FLAG_NOT_TOUCH_MODAL);
     // AOSP carries the animation style on params.windowAnimations and the WindowManager
     // starts the popup's enter/exit from it. CDROID resolves it onto the decor Window
     // HERE — after the anchor alignment above — so an enter snap captures the final
@@ -716,7 +723,7 @@ int PopupWindow::computeFlags(int curFlags){
                   | LP::FLAG_SPLIT_TOUCH | LP::FLAG_NOT_TOUCH_MODAL);
     if (!mFocusable) {
         curFlags |= LP::FLAG_NOT_FOCUSABLE;
-        if (mInputMethodMode == INPUT_METHOD_NEEDED) {
+        if (mInputMethodMode == INPUT_METHOD_NOT_NEEDED) {
             curFlags |= LP::FLAG_ALT_FOCUSABLE_IM;
         }
     }
@@ -729,7 +736,8 @@ int PopupWindow::computeFlags(int curFlags){
     if (mNotTouchModal) {
         curFlags |= LP::FLAG_NOT_TOUCH_MODAL;
     }
-    if (mSplitTouchEnabled) {
+    if (mSplitTouchEnabled == 1) {   // explicit setSplitTouchEnabled(true) only;
+                                     // the -1 "unset" sentinel must not read as true
         curFlags |= LP::FLAG_SPLIT_TOUCH;
     }
     return curFlags;
@@ -986,96 +994,31 @@ int PopupWindow::getMaxAvailableHeight(View* anchor, int yOffset,bool ignoreBott
 }
 
 void PopupWindow::dismiss(){
-    if (!isShowing() || mIsTransitioningToDismiss) {   // AOSP's second guard restored
+    // AOSP PopupWindow.dismiss(): synchronous end to end —
+    // WindowManagerGlobal.removeViewImmediate(decor) -> ViewRootImpl.die(true)
+    // tears the window down NOW; any exit animation plays on a compositor
+    // ghost snapshot (the WMS surface-outlives-view analog — see
+    // Window::close), so nothing here is deferred and there is no re-show
+    // window to race, no generation to track, no mid-flight state.
+    // The listener fires from a stack copy: the owner may DELETE this popup
+    // inside it (delete-at-any-time), which would destroy the member
+    // std::function while it is still executing. The member itself is NOT
+    // cleared — AOSP never clears it; a reused popup keeps notifying.
+    if (!isShowing() || (mDecorView == nullptr)) {   // AOSP's guards
         return;
     }
     PopupDecorView* decorView = mDecorView;
     View* contentView = mContentView;
-
-    ViewGroup* contentHolder;
-    ViewGroup* contentParent = contentView->getParent();
-    contentHolder = ((ViewGroup*) contentParent);
-
-    // Ensure any ongoing or pending transitions are canceled.
-    //decorView->cancelTransitions();
+    ViewGroup* contentHolder = (ViewGroup*) contentView->getParent();
 
     mIsShowing = false;
-    mIsTransitioningToDismiss = true;
-    // This method may be called as part of window detachment, in which
-    // case the anchor view (and its root) will still return true from
-    // isAttachedToWindow() during execution of this method; however, we
-    // can expect the OnAttachStateChangeListener to have been called prior
-    // to executing this method, so we can rely on that instead.
-    //
-    // AOSP exit branch (restored, on the window-level animation machinery):
-    // when the decor carries an exit transition, the teardown is DEFERRED to
-    // the transition end - the decor stays visible, animating out, with the
-    // content still attached. Window::close(onTeardown) starts the exit
-    // animation and invokes the callback at finishClose time - after the
-    // animation, while the view tree is still intact - which is exactly
-    // AOSP's onTransitionEnd -> dismissImmediate point: the borrowed content
-    // returns to its owner then, and the owned content is freed with the
-    // decor's teardown cascade.
-    // DEVIATION from AOSP (documented): the dismiss LISTENER fires at
-    // teardown-complete instead of immediately. Firing it immediately would
-    // let the whole owner chain (a menu's fire-and-forget self-delete) free
-    // the content while the decor is still animating it - AOSP survives that
-    // only because GC keeps everything reachable until the real detach. With
-    // the deferred fire, borrowed-resource owners get the natural contract:
-    // free adapters and other borrowed state in or after onDismiss.
-    // The callback MUST NOT capture this: the PopupWindow may legitimately be
-    // destroyed before the animation ends, and the decor outlives it
-    // self-owned. The listener copy holds the shared functor (CallbackBase
-    // copies alias), so it fires safely post-free. mIsTransitioningToDismiss
-    // is reset at the next show entry (the sync path resets it in
-    // dismissImmediate).
-    ActivityTransition* exitT = ((Window*)decorView)->getExitTransition();
-    if (exitT && exitT->getType() != ActivityTransition::Type::NONE
-            && decorView->isLaidOut()
-            && (mIsAnchorRootAttached || mAnchorRoot == nullptr)) {
-        const bool ownsContent = mOwnsContentView;
-        OnDismissListener onDismissListener = mOnDismissListener;
-        mOnDismissListener = OnDismissListener();
-        // The deferred fire runs from the decor's finishClose, AFTER this
-        // popup may legitimately be destroyed (the decor is self-owned) - the
-        // dismiss listener copy can capture owner state (the ListPopupWindow
-        // wrapper captures its this), so gate it on the alive-flag. The
-        // borrowed-content return touches only by-value captures and the
-        // still-intact decor tree, and always runs.
-        //
-        // CAUTION: close() may run finishClose - and thus the deferred fire,
-        // which can DELETE this popup (a listener like
-        // setOnDismissListener([p]{delete p;})) - SYNCHRONOUSLY when the exit
-        // transition cannot start (an enter transition still running trips
-        // close()'s mInTransition guard). Every member access therefore
-        // happens BEFORE close(); nothing may follow it.
-        std::weak_ptr<bool> aliveGuard = mAliveFlag;
-        mDecorView = nullptr;   // the decor is self-owned from here: its posted
-                                // delete may run before this popup dies
-        detachFromAnchor();     // AOSP clears the anchor before the transition
-        ((Window*)decorView)->close([ownsContent, contentHolder, contentView,
-                                     onDismissListener, aliveGuard](){
-            if (!ownsContent && (contentHolder != nullptr)) {
-                // Give the borrowed content back to its owner for reuse.
-                contentHolder->removeView(contentView);
-            }
-            const auto alive = aliveGuard.lock();
-            if (alive && *alive && onDismissListener != nullptr) {
-                onDismissListener();
-            }
-        });
-        return;
-    }
+
     dismissImmediate(decorView, contentHolder, contentView);
 
     // Clears the anchor view.
     detachFromAnchor();
-    // Fire the dismiss listener from a stack copy, clearing the member first:
-    // the owner may delete this PopupWindow inside the listener
-    // (delete-at-any-time), which would destroy the member std::function while
-    // it is still executing. Nothing below touches members.
+
     OnDismissListener onDismissListener = mOnDismissListener;
-    mOnDismissListener = OnDismissListener();
     if (onDismissListener != nullptr) {
         onDismissListener();
     }
@@ -1105,24 +1048,22 @@ Rect PopupWindow::getTransitionEpicenter(){
 }
 
 void PopupWindow::dismissImmediate(View* decorView, ViewGroup* contentHolder, View* contentView){
-    if (decorView->getParent()!=nullptr) {
-        //mWindowManager.removeViewImmediate(decorView);
-    }
-
-    // When we own the content view, leave it in the decor tree so the window
-    // teardown cascade (~ViewGroup) frees it; otherwise detach it for reuse.
+    // AOSP dismissImmediate: removeViewImmediate(decorView) FIRST — the window
+    // teardown is synchronous and any exit animation plays on a ghost SNAPSHOT
+    // taken while the content is still in the tree — then hand the borrowed
+    // content back to its owner for reuse (owned content dies with the decor's
+    // teardown cascade).
+    ((PopupDecorView*)decorView)->detachOwner();   // neutralize the back-pointer:
+                                // the decor lives until its posted delete, and the
+                                // popup may be deleted inside the dismiss listener
+                                // before that fires
+    ((Window*)decorView)->close();
+    LOGD("%p close mDecorView %p which its contentView=%p",this,decorView,contentView);
     if (!mOwnsContentView && (contentHolder != nullptr)) {
-        ViewGroup*vg=dynamic_cast<ViewGroup*>(contentView);
         contentHolder->removeView(contentView);
     }
-
-    // This needs to stay until after all transitions have ended since we
-    // need the reference to cancel transitions in preparePopup().
-    ((Window*)(mDecorView))->close();
-    LOGD("%p close mDecorView %p which its contentView=%p",this,mDecorView,contentView);
     mDecorView = nullptr;
     mBackgroundView = nullptr;
-    mIsTransitioningToDismiss = false;
 }
 
 void PopupWindow::setOnDismissListener(const OnDismissListener& onDismissListener) {
@@ -1151,6 +1092,15 @@ void PopupWindow::update(){
     const int newFlags = computeFlags(p->flags);
     if (newFlags != p->flags) {
         p->flags = newFlags;
+        // Keep the decor's window attributes in step (see invokePopup): the
+        // dispatcher reads getAttributes().flags, not the View LayoutParams.
+        ((Window*)mDecorView)->setFlags(newFlags,
+            WindowManager::LayoutParams::FLAG_NOT_FOCUSABLE
+            | WindowManager::LayoutParams::FLAG_NOT_TOUCHABLE
+            | WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH
+            | WindowManager::LayoutParams::FLAG_ALT_FOCUSABLE_IM
+            | WindowManager::LayoutParams::FLAG_SPLIT_TOUCH
+            | WindowManager::LayoutParams::FLAG_NOT_TOUCH_MODAL);
         bUpdate = true;
     }
 

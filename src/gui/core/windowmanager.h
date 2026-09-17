@@ -113,6 +113,7 @@ public:
     void moveWindow(Window*w,int x,int y,int width,int height);
     /* Dirty a global rect on the windows below w — surface-animation vacate damage. */
     void exposeRegionBelow(Window*w,const Rect&grc);
+    void damageRegion(const Rect&grc);
     /* AOSP WindowState.applyGravityAndUpdateFrame (the placement half of WMS
      * window layout), driven by the window's WindowManager::LayoutParams:
      * resolve the size (MATCH_PARENT -> display, else the value the host

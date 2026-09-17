@@ -36,9 +36,23 @@
 #include <malloc.h>
 #include <fstream>
 #include <mutex>
+#include <algorithm>
+#include <animation/animator.h>
+#include <core/handler.h>
 using namespace Cairo;
 
 namespace cdroid{
+
+namespace {
+// Bounding box of two screen-space rects (cdroid Rect stores left/top/width/height).
+Rect unionRect(const Rect& a, const Rect& b) {
+    const int l = std::min(a.left, b.left);
+    const int t = std::min(a.top, b.top);
+    const int r = std::max(a.left + a.width, b.left + b.width);
+    const int bo = std::max(a.top + a.height, b.top + b.height);
+    return Rect::MakeLTRB(l, t, r, bo);
+}
+} // namespace
 
 GraphDevice&GraphDevice::getInstance(){
     static GraphDevice* mInstance = nullptr;
@@ -414,8 +428,98 @@ void GraphDevice::composeSurfaces(){
         }
         rgn->subtract(rgn);
     }/*endif for wSurfaces.size*/
+    // Compositor ghosts: snapshots of REMOVED windows playing their exit
+    // animation (AOSP: WMS keeps animating the surface after the view detach).
+    // Painted after every window — popups/activity windows sit at the top of
+    // their stacks when they exit, so no z-interleaving is needed. NB: like the
+    // window fade path above, this blit is un-rotated (rotated-display exit
+    // fades/slides fall back to the resting orientation).
+    if (mPrimaryContext != nullptr) {
+        for (GhostLayer* g : mGhosts) {
+            if (!g->snapshot) continue;
+            mPrimaryContext->save();
+            mPrimaryContext->reset_clip();
+            mPrimaryContext->set_operator(Cairo::Context::Operator::OVER);
+            mPrimaryContext->set_source(g->snapshot,
+                    g->bounds.left + g->dx, g->bounds.top + g->dy);
+            if (g->alpha < 1.f) {
+                mPrimaryContext->paint_with_alpha(g->alpha);
+            } else {
+                mPrimaryContext->paint();
+            }
+            mPrimaryContext->restore();
+            commitedRects++;
+        }
+    }
     if(commitedRects)GFXFlip(mPrimarySurface);
     mLastComposeTime = SystemClock::uptimeMillis();
     mPendingCompose = 0;
 }
+
+GraphDevice::GhostLayer* GraphDevice::addGhost(
+        const Cairo::RefPtr<Cairo::ImageSurface>& snap, const Rect& bounds) {
+    LOGD("ghost add %dx%d at (%d,%d)", bounds.width, bounds.height, bounds.left, bounds.top);
+    GhostLayer* g = new GhostLayer();
+    g->snapshot = snap;
+    g->bounds = bounds;
+    g->lastRect = bounds;   // the first compose damages from the resting bounds
+    mGhosts.push_back(g);
+    return g;
+}
+
+void GraphDevice::removeGhost(GhostLayer* g) {
+    LOGD("ghost remove alpha=%.2f dx=%d dy=%d", g->alpha, g->dx, g->dy);
+    const auto it = std::find(mGhosts.begin(), mGhosts.end(), g);
+    if (it == mGhosts.end()) return;  // idempotent: animator cancel() re-fires end
+    mGhosts.erase(it);
+    // Clear the ghost's last frame: repaint its swept region from the windows
+    // below (the frame still sits on the primary), then compose once without it.
+    Rect cur = g->bounds;
+    cur.offset(g->dx, g->dy);
+    WindowManager::getInstance().damageRegion(unionRect(g->lastRect, cur));
+    if (g->animator != nullptr) {
+        Animator* a = g->animator;
+        g->animator = nullptr;
+        a->cancel();   // may re-enter removeGhost — the erase above made it a no-op
+        // Never free the animator mid-dispatch: this runs FROM its end callback
+        // (same discipline as Window::finishClose's posted deletes).
+        Handler* h = new Handler();
+        h->post([h, a]() { delete a; delete h; });
+    }
+    delete g;
+    composeSurfaces();
+}
+
+void GraphDevice::clearGhosts() {
+    // Process teardown: no compose, no posts — cancel and free (the looper may
+    // already be quitting). cancel() re-fires the end listener -> removeGhost,
+    // which no-ops on the already-emptied list.
+    std::vector<GhostLayer*> ghosts;
+    ghosts.swap(mGhosts);
+    for (GhostLayer* g : ghosts) {
+        if (g->animator != nullptr) {
+            Animator* a = g->animator;
+            g->animator = nullptr;
+            a->cancel();   // after cancel() returns, the dispatch stack is unwound
+            delete a;      // — ~Window's cancel-then-delete discipline
+        }
+        delete g;
+    }
+}
+
+void GraphDevice::composeGhosts() {
+    if (mGhosts.empty()) return;
+    // A ghost frame: repaint the swept region (previous ∪ current placement)
+    // from the windows below — the last painted frame still sits on the
+    // primary — then compose with the ghosts on top. The exit animator drives
+    // this from the Choreographer, independent of any window traversal.
+    for (GhostLayer* g : mGhosts) {
+        Rect cur = g->bounds;
+        cur.offset(g->dx, g->dy);
+        WindowManager::getInstance().damageRegion(unionRect(g->lastRect, cur));
+        g->lastRect = cur;
+    }
+    composeSurfaces();
+}
+
 }//end namespace

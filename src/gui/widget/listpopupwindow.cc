@@ -400,27 +400,14 @@ void ListPopupWindow::show() {
 }
 
 void ListPopupWindow::dismiss() {
-    // AOSP dismiss() is synchronous (mPopup.dismiss(); removePromptView();
-    // mPopup.setContentView(null); mDropDownList = null) and its body may
-    // touch members after the inner dismiss because GC keeps everything
-    // reachable. Here the inner teardown can fire the app dismiss listener
-    // synchronously - and that listener may DELETE this ListPopupWindow -
-    // even when the teardown LOOKS deferred: an in-flight enter transition
-    // trips Window::close's mInTransition guard and collapses the exit
-    // animation to a synchronous finishClose (see PopupWindow::dismiss's
-    // CAUTION). NOTHING may follow mPopup->dismiss(); run this object's
-    // cleanup BEFORE it instead.
-    //
-    // The drop-down list is released up front (not via the wrapper's
-    // completeDismiss, whose setContentView(nullptr) early-returns while
-    // showing): a re-show inside the deferred exit-animation window
-    // (Spinner's global-layout listener re-shows on the selection's layout
-    // pass) must not find a list still parented to the dying decor ("child
-    // already has a parent"). The wrapper still runs completeDismiss()
-    // before the app listener on BOTH teardown branches for the rest of the
-    // cleanup (prompt view, content view, resize runnable) - idempotent with
-    // the early release below.
-    releaseDropDownList();
+    // AOSP dismiss() is synchronous: mPopup.dismiss() removes the window NOW
+    // (any exit animation plays on a compositor ghost), and the inner dismiss
+    // fires the wrapper — completeDismiss() (prompt view, content view,
+    // drop-down release, resize runnable) then the app listener — before
+    // returning. An app listener that DELETES this ListPopupWindow is safe:
+    // nothing follows mPopup->dismiss() here. The early drop-down release the
+    // deferred-exit world needed (a re-show racing the dying decor) is gone —
+    // the decor is already removed by the time the wrapper runs.
     mPopup->dismiss();
 }
 
@@ -695,13 +682,24 @@ int ListPopupWindow::buildDropDown() {
 
         mDropDownList = createDropDownListView(context, !mModal);
         if (mDropDownListHighlight != nullptr) {
-            mDropDownList->setSelector(mDropDownListHighlight);
-            // Ownership transfers with the install: AbsListView owns (and
-            // deletes) mSelector. Keeping the member set made the list AND
-            // ~ListPopupWindow both delete it — a double free that only
-            // survived on allocator luck (a recycled chunk handed to a live
-            // view's drawable turns it into a guaranteed UAF).
-            mDropDownListHighlight = nullptr;
+            // Clone per build: the drop-down list is rebuilt on every show and
+            // dies with the decor, and AbsListView deletes whatever setSelector
+            // received — so the MEMBER stays as ~ListPopupWindow's owned
+            // template and is re-installed as a fresh clone on every re-built
+            // list (AOSP: setSelector(mDropDownListHighlight) per build; the
+            // old null-the-member fix kept ownership safe but lost the themed
+            // selector on every second and later open).
+            Drawable* selector = nullptr;
+            auto cs = mDropDownListHighlight->getConstantState();
+            if (cs) selector = cs->newDrawable();
+            if (selector != nullptr) {
+                mDropDownList->setSelector(selector);
+            } else {
+                // No ConstantState support (cannot clone): install the member
+                // itself and surrender our reference — the list owns it now.
+                mDropDownList->setSelector(mDropDownListHighlight);
+                mDropDownListHighlight = nullptr;
+            }
         }
         mDropDownList->setAdapter(mAdapter);
         mDropDownList->setOnItemClickListener(mItemClickListener);

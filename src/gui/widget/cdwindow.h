@@ -3,6 +3,7 @@
 #include <widget/framelayout.h>
 #include <core/handler.h>
 #include <core/windowmanager.h>
+#include <core/graphdevice.h>
 #include <view/choreographer.h>
 #include <view/actionmode.h>
 #include <widget/windowcallback.h>
@@ -49,6 +50,11 @@ private:
     // (static, longer-lived) AccessibilityManager: the manager fires listeners
     // at exit-time service unregistration, after windows may be gone.
     std::shared_ptr<bool> mA11yListenerAlive;
+    // The exact functor handed to addAccessibilityStateChangeListener (CallbackBase
+    // copies alias the shared functor, so this member compares equal to the vector
+    // entry) — ~Window unregisters by identity instead of leaving one dead
+    // closure per window in the manager's list.
+    AccessibilityManager::AccessibilityStateChangeListener mA11yStateListener;
     friend SendWindowContentChangedAccessibilityEvent;
     bool mInLayout;
     bool mHandingLayoutInLayoutRequest;
@@ -79,7 +85,7 @@ private:
     int  mSurfaceDx = 0;
     int  mSurfaceDy = 0;
     bool mPendingEnterAnim  = false; // run mEnterTransition after the first doTraversal (content drawn)
-    bool mInTransition      = false; // close()/re-enter re-entrancy guard
+    bool mInTransition      = false; // enter-transition re-entrancy flag (runActivityTransition)
     bool mDestroyed         = false; // set in ~Window so the animator end-callback skips finishClose
     bool mClosePending      = false; // close() idempotence: a second close must not post a second delete
     // AOSP Window.java:316-317.
@@ -140,7 +146,10 @@ private:
     // one. onEnd (may be empty) runs when the animation completes (or immediately if NONE).
     void runActivityTransition(ActivityTransition* t, bool enter, const std::function<void()>& onEnd);
     void startEnterAnimation();
-    void startExitAnimation(const std::function<void()>& onEnd);
+    // Ghost-exit support (AOSP: WMS animates the removed window's surface):
+    // snapshot this window's surface into a compositor ghost, then animate IT.
+    GraphDevice::GhostLayer* captureGhost();
+    void startGhostExit(ActivityTransition* t);
     void snapEnterStart(ActivityTransition* t); // pre-snap to the start state so the first frame isn't a fully-shown flash
     static void computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y);
     void finishClose(); // close()'s tail: post (onDestroy + delete) + removeWindow

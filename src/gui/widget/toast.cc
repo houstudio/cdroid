@@ -26,41 +26,27 @@ using namespace cdroid::internal;
 
 class ToastWindow:public Window{
 private:
-    int mDuration;
-    int mTimeElapsed;
     Runnable mTimer;
     Toast* mToast;
 public:
-    ToastWindow(Toast*t,int,int,int ,int);
+    ToastWindow(Toast*t,int x,int y,int w,int h,int duration);
     ~ToastWindow();
-    void timeElapsed();
-    void setDuration(int dur);
 };
 
-ToastWindow::ToastWindow(Toast*toast,int x,int y,int w,int h):Window(x,y,w,h){
-    mDuration = INT_MAX;
-    mTimeElapsed = 100;
+ToastWindow::ToastWindow(Toast*toast,int x,int y,int w,int h,int duration)
+    :Window(x,y,w,h){
     mToast = toast;
-    mTimer = [this](){timeElapsed();};
-    postDelayed(mTimer,100);
+    // AOSP Toast.TN.handleShow: schedule ONE delayed hide for the full
+    // duration (postDelayed(mHide, mDuration)). The 100ms-first-hop +
+    // 500ms self-reposting poll this replaces woke the looper ~5x/s per
+    // toast and delivered close() up to half a second late.
+    mTimer = [this](){ close(); };
+    postDelayed(mTimer, duration > 0 ? duration : Toast::LENGTH_SHORT);
 }
 
 ToastWindow::~ToastWindow(){
     LOGD("Window=%p mToast=%p",this,mToast);
     delete mToast;
-}
-
-void ToastWindow::timeElapsed(){
-    if(mTimeElapsed <mDuration){
-        postDelayed(mTimer,500);
-	    mTimeElapsed += 500;
-	    return;
-    }
-    close();
-}
-
-void ToastWindow::setDuration(int dur){
-    mDuration = dur;
 }
 
 Toast::Toast(Context*context){
@@ -92,11 +78,11 @@ void Toast::show(){
     Rect outRect;
     Rect displayRect = Rect::MakeWH(pt.x,pt.y);
     Gravity::apply(mGravity,frame->getMeasuredWidth(),frame->getMeasuredHeight(),displayRect,outRect);
-    ToastWindow*w = new ToastWindow(this,outRect.left+mX,outRect.top+mY,frame->getMeasuredWidth(),frame->getMeasuredHeight());
+    ToastWindow*w = new ToastWindow(this,outRect.left+mX,outRect.top+mY,
+            frame->getMeasuredWidth(),frame->getMeasuredHeight(),mDuration);
     mWindow = w;
     mWindow->addView(mNextView);
     mWindow->requestLayout();
-    w->setDuration(mDuration);
 }
 
 void Toast::cancel(){

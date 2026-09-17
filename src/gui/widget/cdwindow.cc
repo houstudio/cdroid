@@ -81,10 +81,8 @@ Window::Window(int x,int y,int width,int height,int type)
     if(height<0) height= size.y;
     mWindowAttributes.x = x;
     mWindowAttributes.y = y;
-    // AOSP carries the window type in LayoutParams.type (the ctor's type
-    // parameter) — it was only landing in the parallel window_type member,
-    // so every getAttributes().type read saw 0 (application).
-    mWindowAttributes.type = type;
+    // initWindow() already mirrors window_type into LayoutParams.type for
+    // every ctor (the compositor layers on it) — no second write needed here.
     mWindowAttributes.width  = width;
     mWindowAttributes.height = height;
     setFrame(x, y, width, height);
@@ -149,7 +147,9 @@ void Window::initWindow(){
     // Shared-element liveness token: other windows' return flights weak_ptr-watch it to see
     // this window die without dereferencing it (see ActivityTransitionCoordinator).
     mSceneLiveness = std::make_shared<bool>(true);
-    AccessibilityManager::AccessibilityStateChangeListener acsl(
+    // Stored in the member so ~Window can remove the exact entry: CallbackBase
+    // copies alias, so the vector entry and mA11yStateListener compare equal.
+    mA11yStateListener = AccessibilityManager::AccessibilityStateChangeListener(
             [this, alive = mA11yListenerAlive](bool enabled) {
         if (!*alive) return;  // the window is gone (exit-time unbind order)
         LOGD("%d",enabled);
@@ -166,12 +166,15 @@ void Window::initWindow(){
             //mHandler.obtainMessage(MSG_CLEAR_ACCESSIBILITY_FOCUS_HOST).sendToTarget();
         }
     });
-    mAccessibilityManager->addAccessibilityStateChangeListener(acsl);
+    mAccessibilityManager->addAccessibilityStateChangeListener(mA11yStateListener);
 }
 
 Window::~Window(){
     *mA11yListenerAlive = false;  // detach the manager's state listener
-    if (mOwnsContext) delete mContext;   // the auto-wrapped ContextThemeWrapper
+    // Unregister the exact functor (the member copy aliases the stored entry) —
+    // previously only the alive-flag dropped, leaking one dead closure per
+    // window in the manager's vector (every popup show creates a window).
+    mAccessibilityManager->removeAccessibilityStateChangeListener(mA11yStateListener);
     if (mActionMode != nullptr) {
         ActionMode* mode = mActionMode;
         mActionMode = nullptr;
@@ -186,7 +189,11 @@ Window::~Window(){
         mSendWindowContentChangedAccessibilityEvent->removeCallbacks();
     }
     delete mSendWindowContentChangedAccessibilityEvent;
-    delete mAccessibilityFocusedVirtualView;  // the host View dies with the tree; the node is ours
+    if (mAccessibilityFocusedVirtualView != nullptr) {
+        // The host View dies with the tree; the node is ours — return it to
+        // the a11y node pool (recycle, not a bare delete: pool bookkeeping).
+        mAccessibilityFocusedVirtualView->recycle();
+    }
     mDestroyed = true;  // the transition end-callback skips finishClose during teardown
     if (mCurrentTransitionAnimator) {
         Animator* a = mCurrentTransitionAnimator;
@@ -203,6 +210,10 @@ Window::~Window(){
     delete mExitTransition;
     delete mReturnTransition;
     delete mReenterTransition;
+    // The auto-wrapped ContextThemeWrapper goes LAST: the teardown above
+    // (ActionMode::finish, ActionBar, MenuInflater, scene/enter/exit
+    // transitions) still reads themes/resources through mContext.
+    if (mOwnsContext) delete mContext;
     // The AttachInfo was stashed by finishClose()'s post, which frees it — ~Window
     // must not touch mAttachInfo (removeWindow has already detached it).
     LOGD("%p:%d destroied!",this,mID);
@@ -310,6 +321,17 @@ void Window::dispatchDetachedFromWindow(){
     // nulls only in run — removeCallbacks drops the post instead).
     removeSendWindowContentChangedCallback();
     ViewGroup::dispatchDetachedFromWindow();
+    // Drop the scheduled traversal AFTER the child detach cascade above: a
+    // child's onDetachedFromWindow can requestLayout/invalidate its way back
+    // up to this root and RE-POST a traversal (the coalescing flag was reset),
+    // so purging before the cascade leaves a token=this callback queued past
+    // the delete — the next doFrame then wrote mTraversalScheduled on freed
+    // memory (valgrind: invalid write, DIALOG.ListPopupWindowBorrowedAdapter
+    // Dismiss). finishClose's posted delete purges AGAIN after onDestroy()
+    // (app teardown code may re-post there too); both spots are load-bearing.
+    Choreographer::getInstance().removeCallbacks(
+        Choreographer::CALLBACK_TRAVERSAL, nullptr, this);
+    mTraversalScheduled = false;
 }
 
 void Window::requestTransitionStart(LayoutTransition* transition){
@@ -389,7 +411,7 @@ void Window::handleWindowContentChangedEvent(AccessibilityEvent& event){
     // Refresh the node for the focused virtual view.
     Rect oldBounds;
     mAccessibilityFocusedVirtualView->getBoundsInScreen(oldBounds);
-    delete mAccessibilityFocusedVirtualView;  // AOSP recycles the replaced node
+    mAccessibilityFocusedVirtualView->recycle();  // AOSP recycles the replaced node
     mAccessibilityFocusedVirtualView = provider->createAccessibilityNodeInfo(focusedChildId);
     if (mAccessibilityFocusedVirtualView == nullptr) {
         // Error state: The node no longer exists. Clear focus.
@@ -641,6 +663,10 @@ void Window::draw(){
 void Window::setPos(int x,int y){
     const bool changed =(x!=mLeft)||(mTop!=y);
     if( changed && isAttachedToWindow()){
+        // Keep LayoutParams in sync (AOSP: the window frame lives in
+        // WindowManager.LayoutParams; relayout writes it back).
+        mWindowAttributes.x = x;
+        mWindowAttributes.y = y;
         WindowManager::getInstance().moveWindow(this,x,y);
         FrameLayout::layout(x,y,getWidth(),getHeight());
         mAttachInfo->mWindowLeft= x;
@@ -1033,12 +1059,16 @@ bool Window::performFocusNavigation(KeyEvent& event){
 
 bool Window::onKeyDown(int keyCode,KeyEvent& evt){
     switch(keyCode){
+    case KeyEvent::KEYCODE_ESCAPE:
     case KeyEvent::KEYCODE_BACK:
         // AOSP DecorView/View: BACK tracks on DOWN; the UP side fires
         // onBackPressed (the overridden chain: FragmentActivity pops its
-        // back stack, the Window default finishes). ESC used to stand in
-        // for BACK — a desktop-testing convenience that made KEYCODE_BACK
-        // itself a dead key.
+        // back stack, the Window default finishes). ESC additionally stands
+        // in for BACK on keyboards without a BACK key (x64 qwerty.kl maps Esc
+        // to KEYCODE_ESCAPE and no key produces KEYCODE_BACK) — AOSP TV and
+        // embedded builds do the same remap in their keylayout; accepting
+        // both here keeps desktop dismiss working without resurrecting the
+        // dead-BACK problem the swap fixed.
         evt.startTracking();
         LOGD("recv %d %s flags=%x",keyCode,KeyEvent::keyCodeToString(keyCode).c_str(),evt.getFlags());
         return true;
@@ -1054,6 +1084,7 @@ bool Window::onKeyUp(int keyCode,KeyEvent& evt){
     LOGV("recv %d %s flags=%x track=%d cance=%d",keyCode,KeyEvent::keyCodeToString(keyCode).c_str(),
             evt.getFlags(),evt.isTracking(),evt.isCanceled());
     switch(keyCode){
+    case KeyEvent::KEYCODE_ESCAPE:
     case KeyEvent::KEYCODE_BACK:
         if(evt.isTracking()&&!evt.isCanceled()){
             onBackPressed();
@@ -1207,28 +1238,42 @@ void Window::close(){
 }
 
 void Window::close(const std::function<void()>& onTeardown){
-    // Deliver the pending activity result synchronously, play the close transition
-    // (returnTransition, else exitTransition) if one is configured, then finishClose()
-    // runs removeWindow + posts the deletes. Idempotent: a re-entered close (dismiss
-    // listener, second close during the animation) must not post a second delete —
-    // mirrors Dialog::dismiss's mShowing guard.
+    // AOSP removal semantics: the view tree and every callback tear down
+    // SYNCHRONOUSLY (ViewRootImpl.die(true) -> doDie -> dispatchDetachedFromWindow;
+    // PopupWindow.dismiss/Dialog.dismiss ride removeViewImmediate). The exit
+    // transition stays purely VISUAL — WMS keeps animating the REMOVED window's
+    // surface (WindowStateAnimator); the CDROID analog is a compositor ghost
+    // snapshot that outlives the tree. Nothing is deferred: no re-show window,
+    // no mid-flight state, and mTeardownCb runs now (finishClose consumes it).
+    // Idempotent: a re-entered close (dismiss listener, second close) must not
+    // post a second delete — mirrors Dialog::dismiss's mShowing guard.
     if (mClosePending) return;
     mClosePending = true;
     mTeardownCb = onTeardown;
     App::getInstance().dispatchPendingResult(this);
-    // Shared-element return flight (B route): ghosts fly in the caller's overlay while this
-    // window hides at once; finishClose runs on landing. No valid pair (caller gone / no
-    // view matches) falls through to the window-level path below.
+    // AOSP PopupWindow.dismiss cancels the decor's in-flight transitions BEFORE
+    // the exit branch; the enter animator here would keep ticking (and its end
+    // listener re-touch this window) while the teardown below proceeds. Cancel
+    // it now — its end listener lands the surface at rest (identity), which is
+    // also what the ghost snapshot wants to capture.
+    if (mCurrentTransitionAnimator != nullptr) {
+        Animator* prev = mCurrentTransitionAnimator;
+        mCurrentTransitionAnimator = nullptr;
+        prev->cancel();   // cancel-then-delete, off the dispatch stack (~Window's discipline)
+        delete prev;
+    }
+    // Shared-element return flight (B route): ghosts fly in the caller's overlay
+    // while this window hides at once; finishClose runs on landing. No valid pair
+    // (caller gone / no view matches) falls through to the window-level path below.
     if (mSceneTransition && mSceneTransition->startReturn([this](){ finishClose(); })) {
         return;
     }
     ActivityTransition* t = mReturnTransition ? mReturnTransition : mExitTransition;
     if (t && t->getType() != ActivityTransition::Type::NONE
-        && !mInTransition && isAttachedToWindow() && getVisibility() == VISIBLE) {
-        startExitAnimation([this](){ finishClose(); });
-    } else {
-        finishClose();
+            && isAttachedToWindow() && getVisibility() == VISIBLE) {
+        startGhostExit(t);   // pure visual; an in-flight ENTER no longer blocks close
     }
+    finishClose();
 }
 
 void Window::finishClose(){
@@ -1257,8 +1302,9 @@ void Window::finishClose(){
     Handler* h = new Handler();
     h->post([h, self, info](){
         self->onDestroy();
-        // Last safe point before the delete: purge by token, the queue is separate
-        // from the UIEventHandler's.
+        // Last safe point before the delete: purge by token again — onDestroy()
+        // (app teardown code) may have re-posted a traversal on this still-alive
+        // window; the queue is separate from the UIEventHandler's.
         Choreographer::getInstance().removeCallbacks(
             Choreographer::CALLBACK_TRAVERSAL, nullptr, self);
         self->mTraversalScheduled = false;
@@ -1289,6 +1335,12 @@ void Window::scheduleTraversals(){
 }
 
 void Window::doTraversal(){
+    // Guard FIRST, member writes after: a stale traversal record must not even
+    // touch this object (detached-but-alive windows — retireFromCompositor —
+    // have nothing to traverse).
+    if (!isAttachedToWindow()) {
+        return;
+    }
     mTraversalScheduled = false;
     GraphDevice::getInstance().lock();
     if(isAttachedToWindow()){
