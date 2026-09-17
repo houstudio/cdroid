@@ -36,6 +36,7 @@
 #include <animation/alphaanimation.h>
 #include <animation/translateanimation.h>
 #include <view/gravity.h>
+#include <unordered_map>
 
 namespace cdroid {
 using namespace cdroid::internal;
@@ -149,6 +150,7 @@ static AnimSpec extractAnimSpec(Animation* anim, bool enter) {
         if (slide == nullptr) slide = dynamic_cast<TranslateAnimation*>(a);
         if (dynamic_cast<AlphaAnimation*>(a) != nullptr) fades = true;
     }
+    AnimSpec spec;
     if (slide != nullptr) {
         // The nonzero delta gives the motion axis+direction: an enter animation's from-delta is
         // the side the window comes FROM; an exit animation's to-delta is the side it leaves TO.
@@ -161,18 +163,42 @@ static AnimSpec extractAnimSpec(Animation* anim, bool enter) {
         if      (dx < 0) edge = Gravity::LEFT;
         else if (dx == 0 && dy < 0) edge = Gravity::TOP;
         else if (dx == 0 && dy > 0) edge = Gravity::BOTTOM;
-        return ActivityTransition::slide(edge, duration > 0 ? duration : 300);
-    }
-    if (fades) {
+        spec.type = ActivityTransition::Type::SLIDE;
+        spec.slideEdge = edge;
+        spec.duration = duration > 0 ? duration : 300;
+    } else if (fades) {
         // A bare whole-surface fade is nearly imperceptible at the resource's own
         // 150-220ms — the scale component it normally pairs with (the visible part of
         // grow_fade_in) is not expressible window-level, so hold the fade long enough
         // to read (window scaling is unsupported).
         constexpr int64_t MIN_FADE_DURATION_MS = 350;
-        return ActivityTransition::fade(std::max<int64_t>(duration, MIN_FADE_DURATION_MS));
+        spec.type = ActivityTransition::Type::FADE;
+        spec.duration = std::max<int64_t>(duration, MIN_FADE_DURATION_MS);
     }
+    return spec;
+}
+
+// Rebuild the owned value object from a spec (Window::setEnterTransition etc. take
+// ownership; specs are cheap to re-apply, the style query + loadAnimation
+// extraction they came from is not).
+static ActivityTransition* transitionFromSpec(const AnimSpec& spec) {
+    if (spec.type == ActivityTransition::Type::FADE) return ActivityTransition::fade(spec.duration);
+    if (spec.type == ActivityTransition::Type::SLIDE) return ActivityTransition::slide(spec.slideEdge, spec.duration);
     return nullptr;
 }
+
+// Per-styleId resolution cache: applyWindowAnimationStyle runs on EVERY popup show
+// (invokePopup -> setWindowAnimations), and a style's extracted content is a pure
+// function of the resId — the theme only picks WHICH style id (that lookup stays
+// per-window in loadThemeWindowAnimations). Cache the style query + the two
+// loadAnimation extractions; rebuild the tiny value objects per window.
+// Main-thread only (window show/relayout never runs on the input thread).
+struct ResolvedAnimStyle {
+    bool resolved = false;           // first-touch marker (a style may legitimately map to nothing)
+    int enterRes = 0, exitRes = 0;   // 0 = the style names no animation for that leg
+    AnimSpec enter, exit;
+};
+static std::unordered_map<int, ResolvedAnimStyle> sAnimStyleCache;
 
 void Window::setWindowAnimations(int resId, bool enableExit) {
     mWindowAnimationStyle = resId;
@@ -182,29 +208,40 @@ void Window::setWindowAnimations(int resId, bool enableExit) {
 
 void Window::applyWindowAnimationStyle(int styleRes) {
     if (styleRes == 0 || mContext == nullptr) return;
-    // AOSP R.styleable.WindowAnimation: the plain window names, falling back to the Activity
-    // open/close names Animation.Activity carries (the windowAnimationStyle target). The
-    // generated styleable array carries its terminating 0 sentinel (gen_styleable.py appends
-    // one), so the hand-maintained attr list and sentinel are gone.
-    auto ta = mContext->getTheme().obtainStyledAttributes(styleRes, R::styleable::WindowAnimation);
-    if (!ta) return;
-    const int enterRes = ta->getResourceId(R::styleable::WindowAnimation_windowEnterAnimation,
-                          ta->getResourceId(R::styleable::WindowAnimation_activityOpenEnterAnimation, 0));
-    const int exitRes  = ta->getResourceId(R::styleable::WindowAnimation_windowExitAnimation,
-                          ta->getResourceId(R::styleable::WindowAnimation_activityCloseExitAnimation, 0));
+    // Resolve through the per-styleId cache — every popup show passes here with
+    // the same dropdown style, and only the FIRST visit pays the style query +
+    // the two AnimationUtils::loadAnimation extraction trees.
+    ResolvedAnimStyle& rs = sAnimStyleCache[styleRes];
+    if (!rs.resolved) {
+        // AOSP R.styleable.WindowAnimation: the plain window names, falling back to the Activity
+        // open/close names Animation.Activity carries (the windowAnimationStyle target). The
+        // generated styleable array carries its terminating 0 sentinel (gen_styleable.py appends
+        // one), so the hand-maintained attr list and sentinel are gone.
+        auto ta = mContext->getTheme().obtainStyledAttributes(styleRes, R::styleable::WindowAnimation);
+        if (!ta) return;
+        rs.enterRes = ta->getResourceId(R::styleable::WindowAnimation_windowEnterAnimation,
+                        ta->getResourceId(R::styleable::WindowAnimation_activityOpenEnterAnimation, 0));
+        rs.exitRes  = ta->getResourceId(R::styleable::WindowAnimation_windowExitAnimation,
+                        ta->getResourceId(R::styleable::WindowAnimation_activityCloseExitAnimation, 0));
+        rs.enter = rs.enterRes != 0
+            ? extractAnimSpec(AnimationUtils::loadAnimation(mContext, rs.enterRes), true) : AnimSpec();
+        // The exit spec is cached unconditionally (style content): the
+        // enableExit=false flavor of setWindowAnimations just skips APPLYING it.
+        rs.exit = rs.exitRes != 0
+            ? extractAnimSpec(AnimationUtils::loadAnimation(mContext, rs.exitRes), false) : AnimSpec();
+        rs.resolved = true;
+    }
 
     // Install like setEnterTransition would — the snap is visual-only, so re-installing on a
     // window whose snap already ran just re-snaps the offset (getLeft()/getTop() never corrupted).
-    auto enterT = enterRes != 0
-        ? transitionFromAnimation(AnimationUtils::loadAnimation(mContext, enterRes), true) : nullptr;
+    auto enterT = transitionFromSpec(rs.enter);
     if (enterT != nullptr) {
         delete mEnterTransition;
         mEnterTransition = enterT;
         mPendingEnterAnim = true;
         snapEnterStart(enterT);
     }
-    auto exitT = (exitRes != 0 && mWindowExitAnimationsEnabled)
-        ? transitionFromAnimation(AnimationUtils::loadAnimation(mContext, exitRes), false) : nullptr;
+    auto exitT = mWindowExitAnimationsEnabled ? transitionFromSpec(rs.exit) : nullptr;
     if (exitT != nullptr) {
         delete mExitTransition;
         mExitTransition = exitT;
