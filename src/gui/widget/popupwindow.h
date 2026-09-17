@@ -143,7 +143,7 @@ private:
     PopupDecorView* createDecorView(View* contentView);
     void invokePopup(WindowManager::LayoutParams* p);
     void setLayoutDirectionFromAnchor();
-    const int computeAnimationResource();
+    int computeAnimationResource();
     void update(View* anchor, bool updateLocation, int xoff, int yoff, int width, int height);
     bool tryFitVertical(WindowManager::LayoutParams* outParams, int yOffset, int height, int anchorHeight,
            int drawingLocationY, int screenLocationY, int displayFrameTop,int displayFrameBottom, bool allowResize);

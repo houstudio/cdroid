@@ -841,7 +841,7 @@ bool PopupWindow::positionInDisplayHorizontal(WindowManager::LayoutParams* outPa
     return fitsInDisplay;
 }
 
-const int PopupWindow::computeAnimationResource() {
+int PopupWindow::computeAnimationResource() {
     // AOSP PopupWindow.computeAnimationResource: an explicitly set style wins; dropdowns get
     // the framework default grow/shrink-fade pair, above vs below the anchor. CDROID treats
     // 0 (@empty — Material's popupMenuStyle chain) like ANIMATION_STYLE_DEFAULT: on AOSP the
