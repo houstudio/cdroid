@@ -788,8 +788,6 @@ void SettingsFragment::buildEthernetSection() {
 
 void SettingsFragment::setupConnectedScreen() {
     *mBtAlive = true;
-    preferencedemo::LocalBluetoothManager* manager =
-            preferencedemo::LocalBluetoothManager::getInstance();
     cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
 
     // BluetoothEnabler: the switch drives the radio; adapter flips come back
@@ -830,9 +828,6 @@ void SettingsFragment::setupConnectedScreen() {
 
 void SettingsFragment::setupBluetoothPairingScreen() {
     *mBtAlive = true;
-    preferencedemo::LocalBluetoothManager* manager =
-            preferencedemo::LocalBluetoothManager::getInstance();
-    cdroid::BluetoothAdapter& bt = cdroid::BluetoothAdapter::getDefaultAdapter();
     ensureBluetoothCallbacks();
 
     // DevicePickerFragment shape: the available-devices ProgressCategory

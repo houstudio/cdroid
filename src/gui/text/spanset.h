@@ -17,7 +17,7 @@ public:
 
     void init(Spanned* spanned, int start, int limit) {
         auto allSpans = spanned->getSpans(start, limit, classType);
-        const int length = allSpans.size();
+        const auto length = allSpans.size();
 
         if (length > 0 && (spans.empty() || spans.size() < length)) {
             // These arrays may end up being too large because of the discarded empty spans
@@ -29,7 +29,7 @@ public:
 
         const int prevNumberOfSpans = numberOfSpans;
         numberOfSpans = 0;
-        for (int i = 0; i < length; i++) {
+        for (size_t i = 0; i < length; i++) {
             auto span = allSpans[i];
 
             const int spanStart = spanned->getSpanStart(span);
