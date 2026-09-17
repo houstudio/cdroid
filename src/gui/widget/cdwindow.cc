@@ -321,6 +321,12 @@ void Window::dispatchDetachedFromWindow(){
     // nulls only in run — removeCallbacks drops the post instead).
     removeSendWindowContentChangedCallback();
     ViewGroup::dispatchDetachedFromWindow();
+    // AOSP DecorView.onDetachedFromWindow -> mWindow.getCallback()
+    // .onDetachedFromWindow(). After the cascade, like the traversal purge
+    // below — the owner may do teardown work of its own.
+    if (mCallback != nullptr && mCallback != this) {
+        mCallback->onDetachedFromWindow();
+    }
     // Drop the scheduled traversal AFTER the child detach cascade above: a
     // child's onDetachedFromWindow can requestLayout/invalidate its way back
     // up to this root and RE-POST a traversal (the coalescing flag was reset),
@@ -756,8 +762,58 @@ bool Window::isOutOfBounds(Context* context, const MotionEvent& event){
         || event.getX() > getWidth() + slop || event.getY() > getHeight() + slop;
 }
 
-void Window::setUnhandledTouchEventCallback(std::function<bool(MotionEvent&)> cb){
-    mUnhandledTouchEvent = std::move(cb);
+void Window::setCallback(WindowCallback* callback){
+    // AOSP Window.setCallback: replace wholesale (null clears).
+    mCallback = callback;
+}
+
+WindowCallback* Window::getCallback(){
+    return mCallback;
+}
+
+bool Window::superDispatchKeyEvent(KeyEvent& event){
+    // AOSP Window.superDispatchKeyEvent -> mDecor.superDispatchKeyEvent: the
+    // decor tree's own dispatch, bypassing the callback seam.
+    return FrameLayout::dispatchKeyEvent(event);
+}
+
+bool Window::superDispatchKeyShortcutEvent(KeyEvent& event){
+    return FrameLayout::dispatchKeyShortcutEvent(event);
+}
+
+bool Window::superDispatchTouchEvent(MotionEvent& event){
+    return FrameLayout::dispatchTouchEvent(event);
+}
+
+bool Window::superDispatchTrackballEvent(MotionEvent& event){
+    return FrameLayout::dispatchTrackballEvent(event);
+}
+
+bool Window::superDispatchGenericMotionEvent(MotionEvent& event){
+    return FrameLayout::dispatchGenericMotionEvent(event);
+}
+
+bool Window::dispatchKeyShortcutEvent(KeyEvent& event){
+    // Same DecorView seam as dispatchKeyEvent.
+    if (mCallback != nullptr && mCallback != this) {
+        return mCallback->dispatchKeyShortcutEvent(event);
+    }
+    return FrameLayout::dispatchKeyShortcutEvent(event);
+}
+
+bool Window::dispatchGenericMotionEvent(MotionEvent& event){
+    if (mCallback != nullptr && mCallback != this) {
+        return mCallback->dispatchGenericMotionEvent(event);
+    }
+    return FrameLayout::dispatchGenericMotionEvent(event);
+}
+
+void Window::dispatchAttachedToWindow(AttachInfo* info, int visibility){
+    // AOSP DecorView.onAttachedToWindow -> mWindow.getCallback().onAttachedToWindow.
+    FrameLayout::dispatchAttachedToWindow(info, visibility);
+    if (mCallback != nullptr && mCallback != this) {
+        mCallback->onAttachedToWindow();
+    }
 }
 
 void Window::setAttributes(const WindowManager::LayoutParams& a){
@@ -959,6 +1015,14 @@ int Window::processKeyEvent(KeyEvent&event){
 }
 
 bool Window::dispatchKeyEvent(KeyEvent&event){
+    // AOSP DecorView.dispatchKeyEvent (PhoneWindow.java):
+    //   cb != null ? cb.dispatchKeyEvent(event) : super.dispatchKeyEvent(event)
+    // — full delegation when a callback owner is installed (Dialog); the cb's
+    // own dispatch chain re-enters the tree through superDispatchKeyEvent, so
+    // there is deliberately NO local fallback in this branch.
+    if (mCallback != nullptr && mCallback != this) {
+        return mCallback->dispatchKeyEvent(event);
+    }
     View* focused = getFocusedChild();
     bool handled  = false;
     const int action = event.getAction();
@@ -1370,17 +1434,16 @@ void Window::doTraversal(){
 }
 
 bool Window::dispatchTouchEvent(MotionEvent& event){
+    // AOSP DecorView.dispatchTouchEvent: cb != null -> cb.dispatchTouchEvent
+    // (the Dialog chain = superDispatchTouchEvent || onTouchEvent covers both
+    // the tree pass and the owner's own handling).
+    if (mCallback != nullptr && mCallback != this) {
+        return mCallback->dispatchTouchEvent(event);
+    }
     return FrameLayout::dispatchTouchEvent(event);
 }
 
 bool Window::onTouchEvent(MotionEvent& event){
-    // AOSP: DecorView hands the decor's unhandled pointer events to the
-    // Window.Callback (Dialog).dispatchTouchEvent -> Dialog.onTouchEvent
-    // (Dialog.java:802). Reached through the normal ViewGroup miss path
-    // (children first — matching AOSP superDispatchTouchEvent-before-
-    // onTouchEvent ordering); the fused Window plays DecorView, and the
-    // owning Dialog hangs off the installable hook instead.
-    if (mUnhandledTouchEvent && mUnhandledTouchEvent(event)) return true;
     return FrameLayout::onTouchEvent(event);
 }
 

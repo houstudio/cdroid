@@ -49,10 +49,11 @@ Dialog::Dialog(Context* context,int themeResId,bool createContextThemeWrapper){
     mShowing = false;
     mCancelable = true;
     mWindow = new Window(mContext, 0, 0, 640, 320);
-    // AOSP DecorView forwards the decor's unhandled touches to the Dialog via
-    // the Window.Callback; CDROID's fused Window carries the hook (cleared in
-    // dismissDialog — the window teardown is posted and may outlive the Dialog).
-    mWindow->setUnhandledTouchEventCallback([this](MotionEvent& e){ return onTouchEvent(e); });
+    // AOSP Dialog ctor: mWindow.setCallback(this) — the Dialog receives the
+    // window's input dispatch + lifecycle through the Window.Callback seam
+    // (cleared in dismissDialog: the window teardown is posted and may outlive
+    // the Dialog).
+    mWindow->setCallback(this);
 }
 
 Dialog::~Dialog(){
@@ -167,7 +168,7 @@ void Dialog::dismissDialog(){
         mOnDismissListener(*this);
     }
     if(mWindow){
-        mWindow->setUnhandledTouchEventCallback(nullptr);  // drop the `this` capture before the posted teardown
+        mWindow->setCallback(nullptr);  // drop the `this` back-pointer before the posted teardown
         mWindow->setVisibility(View::INVISIBLE);
         mWindow->close();          // proper window lifecycle cleanup (posts remove + onDestroy)
         mDismissedWindow = mWindow; // keep the arbitration handle (see dialog.h)
@@ -280,6 +281,15 @@ void Dialog::setTitle(const std::string&title){
 }
 
 bool Dialog::onKeyDown(int keyCode,KeyEvent& event){
+    // AOSP Dialog.onKeyDown (Dialog.java:1163-1169): track BACK so the UP side
+    // can cancel. Without startTracking, onKeyUp's isTracking() is always false
+    // and BACK-to-cancel never fires. ESC additionally stands in for BACK on
+    // desktop keylayouts (same x64 convenience Window::onKeyDown carries — no
+    // key produces KEYCODE_BACK there).
+    if (keyCode == KeyEvent::KEYCODE_BACK || keyCode == KeyEvent::KEYCODE_ESCAPE) {
+        event.startTracking();
+        return true;
+    }
     return false;
 }
 
@@ -288,7 +298,9 @@ bool Dialog::onKeyLongPress(int keyCode,KeyEvent& event){
 }
 
 bool Dialog::onKeyUp(int keyCode,KeyEvent& event){
-    if (keyCode == KeyEvent::KEYCODE_BACK && event.isTracking() && !event.isCanceled()) {
+    // ESC pairs with the DOWN-side tracking above (desktop BACK stand-in).
+    if ((keyCode == KeyEvent::KEYCODE_BACK || keyCode == KeyEvent::KEYCODE_ESCAPE)
+            && event.isTracking() && !event.isCanceled()) {
         onBackPressed();
         return true;
     }
@@ -303,6 +315,141 @@ void Dialog::onBackPressed(){
     if (mCancelable) {
         cancel();
     }
+}
+
+/*================ WindowCallback graft (AOSP Dialog.java:832-1005) ================*/
+
+bool Dialog::dispatchKeyEvent(KeyEvent& event){
+    // AOSP Dialog.dispatchKeyEvent (Dialog.java:832-841). The onKeyListener is
+    // CDROID's void-flavored DialogInterface event (AOSP's returns boolean and
+    // can consume) — notify-only here, no consumption branch (recorded
+    // deviation; the listener still observes every key first).
+    if (mOnKeyListener) {
+        mOnKeyListener(*this, event.getKeyCode(), event);
+    }
+    if (mWindow->superDispatchKeyEvent(event)) {
+        return true;
+    }
+    return event.dispatch(this, mWindow->getKeyDispatcherState(), this);
+}
+
+bool Dialog::dispatchKeyShortcutEvent(KeyEvent& event){
+    // AOSP Dialog.dispatchKeyShortcutEvent (Dialog.java:851-857).
+    if (mWindow->superDispatchKeyShortcutEvent(event)) {
+        return true;
+    }
+    return onKeyShortcut(event.getKeyCode(), event);
+}
+
+bool Dialog::dispatchTouchEvent(MotionEvent& event){
+    // AOSP Dialog.dispatchTouchEvent (Dialog.java:871-875): the decor tree
+    // first, the Dialog's own onTouchEvent (outside-touch cancel) last.
+    if (mWindow->superDispatchTouchEvent(event)) {
+        return true;
+    }
+    return onTouchEvent(event);
+}
+
+bool Dialog::dispatchTrackballEvent(MotionEvent& event){
+    // AOSP Dialog.dispatchTrackballEvent (Dialog.java:889-893); CDROID has no
+    // trackball source, so the super pass is the whole story in practice.
+    if (mWindow->superDispatchTrackballEvent(event)) {
+        return true;
+    }
+    return onTrackballEvent(event);
+}
+
+bool Dialog::dispatchGenericMotionEvent(MotionEvent& event){
+    // AOSP Dialog.dispatchGenericMotionEvent (Dialog.java:907-911).
+    if (mWindow->superDispatchGenericMotionEvent(event)) {
+        return true;
+    }
+    return onGenericMotionEvent(event);
+}
+
+bool Dialog::dispatchPopulateAccessibilityEvent(AccessibilityEvent& event){
+    // AOSP Dialog.dispatchPopulateAccessibilityEvent (Dialog.java:918-921)
+    // stamps the concrete class name; CDROID's AccessibilityEvent has no
+    // className field yet — shape only.
+    (void)event;
+    return false;
+}
+
+View* Dialog::onCreatePanelView(int featureId){
+    // AOSP Dialog.onCreatePanelView (Dialog.java:931-933).
+    (void)featureId;
+    return nullptr;
+}
+
+bool Dialog::onCreatePanelMenu(int featureId, Menu& menu){
+    // AOSP Dialog.onCreatePanelMenu (Dialog.java:939-945).
+    if (featureId == Window::FEATURE_OPTIONS_PANEL) {
+        return onCreateOptionsMenu(menu);
+    }
+    return false;
+}
+
+bool Dialog::onPreparePanel(int featureId, View* view, Menu& menu){
+    // AOSP Dialog.onPreparePanel (Dialog.java:951-957).
+    if (featureId == Window::FEATURE_OPTIONS_PANEL) {
+        return onPrepareOptionsMenu(menu) && menu.hasVisibleItems();
+    }
+    return true;
+}
+
+bool Dialog::onMenuOpened(int featureId, Menu& menu){
+    // AOSP Dialog.onMenuOpened (Dialog.java:962-967) also notifies an
+    // ActionBar; dialogs carry none.
+    (void)featureId; (void)menu;
+    return true;
+}
+
+bool Dialog::onMenuItemSelected(int featureId, MenuItem& item){
+    // AOSP Dialog.onMenuItemSelected (Dialog.java:973-976).
+    (void)featureId; (void)item;
+    return false;
+}
+
+void Dialog::onPanelClosed(int featureId, Menu& menu){
+    // AOSP Dialog.onPanelClosed (Dialog.java:981-986) — ActionBar visibility
+    // only; nothing to do without one.
+    (void)featureId; (void)menu;
+}
+
+void Dialog::onWindowDismissed(bool finishTask, bool suppressWindowTransition){
+    // AOSP Dialog.onWindowDismissed (Dialog.java:818-820).
+    (void)finishTask; (void)suppressWindowTransition;
+    dismiss();
+}
+
+bool Dialog::onKeyShortcut(int keyCode, KeyEvent& event){
+    // AOSP Dialog.onKeyShortcut (Dialog.java:1049-1051).
+    (void)keyCode; (void)event;
+    return false;
+}
+
+bool Dialog::onTrackballEvent(MotionEvent& event){
+    // AOSP Dialog.onTrackballEvent (Dialog.java:1106-1108).
+    (void)event;
+    return false;
+}
+
+bool Dialog::onGenericMotionEvent(MotionEvent& event){
+    // AOSP Dialog.onGenericMotionEvent (Dialog.java:1113-1115).
+    (void)event;
+    return false;
+}
+
+bool Dialog::onCreateOptionsMenu(Menu& menu){
+    // AOSP Dialog.onCreateOptionsMenu (Dialog.java:991-996).
+    (void)menu;
+    return true;
+}
+
+bool Dialog::onPrepareOptionsMenu(Menu& menu){
+    // AOSP Dialog.onPrepareOptionsMenu (Dialog.java:1001-1006).
+    (void)menu;
+    return true;
 }
 
 }//endof namespace

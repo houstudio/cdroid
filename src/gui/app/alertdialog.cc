@@ -154,8 +154,12 @@ void AlertDialog::onCreate(){
 }
 
 bool AlertDialog::onKeyDown(int keyCode, KeyEvent& event){
-    if (mAlert->onKeyUp(keyCode, event)) return true;
-    return Dialog::onKeyUp(keyCode, event);
+    // AOSP AlertDialog.onKeyDown (AlertDialog.java:443-446): the DOWN side
+    // forwards to the controller's onKeyDown and the Dialog's onKeyDown —
+    // both were misrouted to the UP pair before, so the Dialog's
+    // BACK-startTracking never ran and BACK-to-cancel stayed dead.
+    if (mAlert->onKeyDown(keyCode, event)) return true;
+    return Dialog::onKeyDown(keyCode, event);
 }
 
 bool AlertDialog::onKeyUp(int keyCode, KeyEvent& event){

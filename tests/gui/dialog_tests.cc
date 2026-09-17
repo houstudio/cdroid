@@ -9,6 +9,7 @@
 #include <core/systemclock.h>
 #include <core/inputdevice.h>
 #include <view/motionevent.h>
+#include <view/keyevent.h>
 #include <menu/menubuilder.h>
 #include <menu/menupopuphelper.h>
 #include <menu/popupmenu.h>
@@ -714,4 +715,77 @@ TEST_F(DIALOG,PopupWindowOutsideTouchDismisses){
    EXPECT_FALSE(popup->isShowing());
    // NB: the PopupWindow object is intentionally leaked like real apps (the
    // fire-and-forget menu contract); only its window needed to close here.
+}
+
+/* The WindowCallback graft: AOSP Dialog implements Window.Callback, installs
+   itself via mWindow.setCallback(this), and its key chain comes ALIVE —
+   onKeyDown BACK/ESC startTracking, onKeyUp isTracking -> onBackPressed ->
+   cancel (listener fires, proper dismiss state machine). Before the graft the
+   dialog's KeyEvent::Callback overrides were dead code (View::dispatchKeyEvent
+   dispatches to the VIEW, which the out-of-tree Dialog never was) and BACK
+   fell to Window::onBackPressed -> close() — no OnCancelListener, no cancel
+   semantics. */
+static void injectKey(int action, int keyCode){
+   const nsecs_t now=SystemClock::uptimeMillis();
+   KeyEvent*ev=KeyEvent::obtain(now,now,action,keyCode,0,0,0,0,0,InputDevice::SOURCE_KEYBOARD);
+   WindowManager::getInstance().processEvent(*ev);
+   ev->recycle();
+}
+
+TEST_F(DIALOG,BackKeyCancels){
+   bool canceled=false;
+   AlertDialog*dlg=AlertDialog::Builder(&App::getInstance())
+         .setTitle("back")
+         .setMessage("press back to cancel")
+         .setPositiveButton("OK",nullptr)
+         .setOnCancelListener([&canceled](DialogInterface&){ canceled=true; })
+         .show();
+   ASSERT_TRUE(dlg->isShowing());
+   pumpFor(300);   // show(): the window joins the manager, focus settles
+
+   injectKey(KeyEvent::ACTION_DOWN,KeyEvent::KEYCODE_BACK);
+   injectKey(KeyEvent::ACTION_UP,  KeyEvent::KEYCODE_BACK);
+   pumpFor(300);
+
+   EXPECT_TRUE(canceled);        // the cancel listener fired (Dialog.cancel path)
+   EXPECT_FALSE(dlg->isShowing());// the dismiss state machine ran
+}
+
+TEST_F(DIALOG,BackKeyNonCancelable){
+   AlertDialog*dlg=AlertDialog::Builder(&App::getInstance())
+         .setTitle("locked")
+         .setMessage("back does nothing")
+         .setPositiveButton("OK",nullptr)
+         .setCancelable(false)
+         .show();
+   ASSERT_TRUE(dlg->isShowing());
+   pumpFor(300);
+
+   injectKey(KeyEvent::ACTION_DOWN,KeyEvent::KEYCODE_BACK);
+   injectKey(KeyEvent::ACTION_UP,  KeyEvent::KEYCODE_BACK);
+   pumpFor(300);
+
+   EXPECT_TRUE(dlg->isShowing());  // AOSP: non-cancelable dialog swallows BACK
+}
+
+TEST_F(DIALOG,EscapeKeyCancels){
+   /* ESC stands in for BACK on desktop keylayouts (no key produces
+      KEYCODE_BACK there) — the same convenience Window::onKeyDown carries;
+      the graft must keep it working on dialogs. */
+   bool canceled=false;
+   AlertDialog*dlg=AlertDialog::Builder(&App::getInstance())
+         .setTitle("esc")
+         .setMessage("press escape to cancel")
+         .setPositiveButton("OK",nullptr)
+         .setOnCancelListener([&canceled](DialogInterface&){ canceled=true; })
+         .show();
+   ASSERT_TRUE(dlg->isShowing());
+   pumpFor(300);
+
+   injectKey(KeyEvent::ACTION_DOWN,KeyEvent::KEYCODE_ESCAPE);
+   injectKey(KeyEvent::ACTION_UP,  KeyEvent::KEYCODE_ESCAPE);
+   pumpFor(300);
+
+   EXPECT_TRUE(canceled);
+   EXPECT_FALSE(dlg->isShowing());
 }

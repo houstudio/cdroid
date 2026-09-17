@@ -91,9 +91,13 @@ private:
     // AOSP Window.java:316-317.
     bool mCloseOnTouchOutside = false;
     bool mSetCloseOnTouchOutside = false;
-    // The DecorView->Window.Callback unhandled-touch tail (see the public
-    // setUnhandledTouchEventCallback note). Invoked from onTouchEvent.
-    std::function<bool(MotionEvent&)> mUnhandledTouchEvent;
+    // AOSP Window.mCallback (Window.java:529-531): the owner installed via
+    // setCallback() — AOSP's Activity/Dialog implement Window.Callback and
+    // graft themselves onto their window this way. NOT owned. Window itself
+    // is the fallback WindowCallback (this class derives from it), so an
+    // unset callback means "Window plays its own Activity" — exactly the
+    // pre-graft behavior.
+    WindowCallback* mCallback = nullptr;
     // AOSP LayoutParams.windowAnimations source: an explicit animation STYLE overriding the
     // theme's windowAnimationStyle (setWindowAnimations). 0 -> resolve from the theme.
     int mWindowAnimationStyle = 0;
@@ -283,14 +287,27 @@ public:
     bool shouldCloseOnTouchOutside() const;
     bool shouldCloseOnTouch(Context* context, MotionEvent& event);
     bool isOutOfBounds(Context* context, const MotionEvent& event);
-    // AOSP: DecorView forwards the decor's unhandled pointer events to the
-    // Window.Callback (Dialog).dispatchTouchEvent -> Dialog.onTouchEvent
-    // (Dialog.java:802). CDROID's Window fuses DecorView+PhoneWindow and the
-    // owning Dialog is outside the view tree, so the callback slot is this
-    // installable single-consumer hook (the windowcallback.h documented
-    // extension path; std::function like the mTeardownCb precedent). Clear it
-    // before tearing the consumer down — dispatch may run from posted code.
-    void setUnhandledTouchEventCallback(std::function<bool(MotionEvent&)> cb);
+    // AOSP Window.setCallback / getCallback (Window.java:781-789): installs the
+    // owner that receives the window's input dispatch + lifecycle callbacks
+    // (AOSP Dialog: mWindow.setCallback(this) in the ctor). The dispatch entry
+    // points below consult it BEFORE the window's own fallback — DecorView's
+    // `cb != null ? cb.dispatchXxx(event) : super.dispatchXxx(event)` shape.
+    // Not owned; clear it (setCallback(nullptr)) before the consumer dies —
+    // dispatch may run from posted code.
+    void setCallback(WindowCallback* callback);
+    WindowCallback* getCallback();
+    // AOSP Window.superDispatchKeyEvent / ...Touch / ...GenericMotion / ...
+    // KeyShortcut / ...Trackball (Window.java:1364-1408): the callback's
+    // re-entry into the DECOR TREE dispatch, bypassing the callback seam the
+    // public dispatchXxx consults (AOSP Dialog.dispatchKeyEvent =
+    // onKeyListener -> superDispatchKeyEvent -> event.dispatch(this)).
+    // CDROID's Window is its own decor, so these jump straight to the
+    // FrameLayout/View dispatch.
+    bool superDispatchKeyEvent(KeyEvent& event);
+    bool superDispatchKeyShortcutEvent(KeyEvent& event);
+    bool superDispatchTouchEvent(MotionEvent& event);
+    bool superDispatchTrackballEvent(MotionEvent& event);
+    bool superDispatchGenericMotionEvent(MotionEvent& event);
     bool ensureTouchMode(bool inTouchMode)override;
     View& setAlpha(float a);
     void sendToBack();
@@ -301,6 +318,12 @@ public:
     // SendWindowContentChangedAccessibilityEvent before tearing the tree down —
     // the posted runnable keeps a raw source-view pointer that would dangle.
     void dispatchDetachedFromWindow()override;
+    // The remaining dispatch entries with a callback seam (see dispatchKeyEvent).
+    bool dispatchKeyShortcutEvent(KeyEvent& event)override;
+    bool dispatchGenericMotionEvent(MotionEvent& event)override;
+    // AOSP DecorView notifies the Window.Callback of attach/detach; the fused
+    // Window forwards at its own tree-attach/detach points.
+    void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;
     virtual void onBackPressed();

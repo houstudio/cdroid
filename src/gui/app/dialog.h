@@ -26,7 +26,7 @@ namespace cdroid{
    and is idempotent; ~Dialog also removes a still-live window itself, so
    deleting an undismissed dialog is safe. dismiss is FINAL - showing again
    after it is not supported (build a new dialog instead). */
-class Dialog:public DialogInterface,KeyEvent::Callback{
+class Dialog:public DialogInterface,public WindowCallback,KeyEvent::Callback{
 private:
     Context*mContext;
     bool mOwnsContext;   // true when mContext is a ContextThemeWrapper we new'd
@@ -81,11 +81,35 @@ public:
     bool onKeyLongPress(int keyCode,KeyEvent& event)override;
     bool onKeyUp(int keyCode,KeyEvent& event)override;
     bool onKeyMultiple(int keyCode, int repeatCount,KeyEvent& event)override;
+    // --- WindowCallback graft (AOSP Dialog implements Window.Callback and
+    // installs itself via mWindow.setCallback(this); Dialog.java:832-917) ---
+    bool dispatchKeyEvent(KeyEvent& event)override;
+    bool dispatchKeyShortcutEvent(KeyEvent& event)override;
+    bool dispatchTouchEvent(MotionEvent& event)override;
+    bool dispatchTrackballEvent(MotionEvent& event)override;
+    bool dispatchGenericMotionEvent(MotionEvent& event)override;
+    bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event)override;
+    View* onCreatePanelView(int featureId)override;
+    bool onCreatePanelMenu(int featureId, Menu& menu)override;
+    bool onPreparePanel(int featureId, View* view, Menu& menu)override;
+    bool onMenuOpened(int featureId, Menu& menu)override;
+    bool onMenuItemSelected(int featureId, MenuItem& item)override;
+    void onPanelClosed(int featureId, Menu& menu)override;
+    void onWindowDismissed(bool finishTask, bool suppressWindowTransition)override;
+    // AOSP Dialog's own (non-Callback) key/motion tails reached from the
+    // dispatch chain above.
+    bool onKeyShortcut(int keyCode, KeyEvent& event);
+    bool onTrackballEvent(MotionEvent& event);
+    bool onGenericMotionEvent(MotionEvent& event);
+    // AOSP Dialog panel helpers behind onPreparePanel/onCreatePanelMenu.
+    bool onCreateOptionsMenu(Menu& menu);
+    bool onPrepareOptionsMenu(Menu& menu);
     void onBackPressed();
     void setCancelable(bool flag);
     void setCanceledOnTouchOutside(bool);
     // AOSP Dialog.onTouchEvent (Dialog.java:802-807): outside-touch close
-    // consumption, reached through the Window's unhandled-touch hook.
+    // consumption, reached through the Window.Callback graft
+    // (dispatchTouchEvent -> superDispatchTouchEvent miss -> here).
     virtual bool onTouchEvent(MotionEvent& event);
     void cancel()override;
     void setOnCancelListener(OnCancelListener listener);
