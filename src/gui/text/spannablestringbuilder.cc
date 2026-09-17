@@ -79,6 +79,16 @@ void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta
     // TextView and the selection highlight never repainted. (selectAll still
     // worked because its query starts at offset 0, which overlaps even [0, 0].)
     const int newEnd = end + delta;
+    // Same-length in-place replacement: every offset maps to itself. Android's
+    // change() anchors edges at the region start (SPAN_*_AT_START) or at the
+    // new region end (end + nbNewChars == end when nbNewChars == 0), so each
+    // in-region edge keeps its own position — the geometric POINT-push below
+    // would instead move a POINT start edge from `start` to `end`, collapsing a
+    // 1-char selection and killing the multi-tap cycle on the second press
+    // (CTS MultiTapKeyListenerTest: the third press started a fresh session).
+    if (delta == 0) {
+        return;
+    }
     for (auto& r : mSpans) {
         const int oldStart = r.start;
         const int oldEnd = r.end;
@@ -266,20 +276,32 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
       cast/call. (Divergence from AOSP: a watcher detached during this change does
       not receive the remaining phases; Java's object stays callable, a deleted C++
       one cannot.)
-      getSpanStart() is O(spans) and fires per watcher per keystroke, so each
-      phase baselines mMutationEpoch (bumped by every structural mSpans change):
-      while no callback has touched the span set the whole phase skips the
-      rescan. The baseline is re-taken per phase — phase 2's own erase/insert
-      shifts the epoch by design and must not penalize phases 3/4.*/
+      getSpanStart() is O(spans) and fires per watcher per keystroke, so the
+      guard baselines mMutationEpoch against the value captured when the
+      SNAPSHOT was taken (bumped by every structural mSpans change): while no
+      callback has touched the span set the phases skip the rescan. A
+      per-phase baseline is NOT sufficient — a callback inside an earlier
+      phase can free a watcher and leave the phase-local epoch untouched
+      afterwards, wrongly validating the stale snapshot entry.*/
     auto isRecorded = [this](uint64_t epoch, const ParcelableSpan* p) {
         return mMutationEpoch == epoch || getSpanStart(p) >= 0;
     };
+    /*Baseline the guard against the SNAPSHOT's epoch, not per-phase epochs: a
+      phase-3 onTextChanged callback may tear down the TextView layout chain,
+      whose ~DynamicLayout removes and deletes its ChangeWatcher span, and then
+      take a fresh baseline at phase 4 — the phase-local epoch would match with
+      no further mutation, short-circuit the membership check, and cast the
+      dead watcher from the snapshot (CTS BaseKeyListenerTest.Backspace_withAlt
+      crashed exactly there). Comparing against snapEpoch makes "no structural
+      change since the snapshot" the shortcut condition; any mid-change
+      mutation falls back to the getSpanStart liveness lookup. The common
+      no-mutation edit still skips every rescan.*/
+    const uint64_t snapEpoch = mMutationEpoch;
 
     // 1) beforeTextChanged
     {
-        const uint64_t epoch0 = mMutationEpoch;
         for (const ParcelableSpan* p : watchers) {
-            if (!isRecorded(epoch0, p)) continue;
+            if (!isRecorded(snapEpoch, p)) continue;
             if (TextWatcher* w = asWatcher(p)) {
                 if (w->beforeTextChanged) w->beforeTextChanged(*this, st, replacedLen, insertLen);
             }
@@ -419,9 +441,8 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
 
     // 3) onTextChanged
     {
-        const uint64_t epoch0 = mMutationEpoch;   // fresh baseline: phase 2 shifted it
         for (const ParcelableSpan* p : watchers) {
-            if (!isRecorded(epoch0, p)) continue;
+            if (!isRecorded(snapEpoch, p)) continue;
             if (TextWatcher* w = asWatcher(p)) {
                 if (w->onTextChanged) w->onTextChanged(*this, st, replacedLen, insertLen);
             }
@@ -429,9 +450,8 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
     }
     // 4) afterTextChanged
     {
-        const uint64_t epoch0 = mMutationEpoch;
         for (const ParcelableSpan* p : watchers) {
-            if (!isRecorded(epoch0, p)) continue;
+            if (!isRecorded(snapEpoch, p)) continue;
             if (TextWatcher* w = asWatcher(p)) {
                 if (w->afterTextChanged) w->afterTextChanged(*this);
             }

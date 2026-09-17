@@ -6,6 +6,7 @@
 #include <text/packedintvector.h>
 #include <text/packedobjectvector.h>
 #include <text/textwatcher.h>
+#include <text/parcelablespan.h>   // NoCopySpan (ChangeWatcher ownership)
 #include <text/spanwatcher.h>
 #include <text/method/offsetmapping.h>
 namespace cdroid{
@@ -131,7 +132,8 @@ private:
     // span stays classified as borrowed. The SpanWatcher overrides carry the
     // interface signatures; the TextWatcher side is dispatched through the
     // std::function members (bound in the ctor to the member functions below).
-    class ChangeWatcher : virtual public TextWatcher, virtual public SpanWatcher {
+    class ChangeWatcher : virtual public TextWatcher, virtual public SpanWatcher,
+                          virtual public NoCopySpan {
     private:
         DynamicLayout* mLayout;
         void reflow(CharSequence* s, int where, int before, int after);

@@ -22,6 +22,7 @@
 #include <core/typeface.h>
 #include <widget/scroller.h>
 #include <text/spanwatcher.h>
+#include <text/parcelablespan.h>   // NoCopySpan (ChangeWatcher ownership)
 #include <text/textwatcher.h>
 #include <text/textutils.h>
 #include <text/spannablestring.h>
@@ -740,7 +741,14 @@ public:
             int offset, int cursorOpt, Paint& p);
 };
 
-class TextView::ChangeWatcher:virtual public TextWatcher,virtual public SpanWatcher {
+// NoCopySpan base is required by the span ownership model: ChangeWatcher is
+// allocated once per TextView and re-installed on every spannable setText, so
+// the Spannable container must treat it as BORROWED. Without it the owned-span
+// sweep in ~SpannableStringInternal deletes the live member whenever a
+// buffer-replacing setText frees the previous Editable, and the next setText
+// re-installs the dangling pointer (crash later in replace()'s watcher
+// snapshot). Same recipe as the watcher-family fix 37a8edce3.
+class TextView::ChangeWatcher:virtual public TextWatcher,virtual public SpanWatcher,virtual public NoCopySpan {
 private:
     CharSequence* mBeforeText;
     TextView*mTV;

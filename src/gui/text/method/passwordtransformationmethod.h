@@ -12,10 +12,15 @@
 #include <text/method/transformationmethod.h>
 #include <text/textwatcher.h>
 #include <text/charsequence.h>
+#include <text/parcelablespan.h>   // NoCopySpan (span-installed watcher ownership)
 
 namespace cdroid{
 
-class PasswordTransformationMethod : public TransformationMethod, public TextWatcher {
+// NoCopySpan base required: TextView installs mTransformation as a span on
+// every setText, and PasswordTransformationMethod is process-shared
+// (getInstance) — the container's owned-span sweep must never delete it.
+class PasswordTransformationMethod : public TransformationMethod, public TextWatcher,
+                                     virtual public NoCopySpan {
 public:
     static constexpr char16_t DOT = 0x2022;   // '•'
 

@@ -65,7 +65,12 @@ constexpr int ORDER_SELECT_ALL = 8;
 //  path is wired (and sendUpdateSelection is itself a deferred no-op). The
 //  structure is kept for parity and so future IME / EasyEdit work drops in.
 // =====================================================================================
-class Editor::SpanController : public SpanWatcher {
+// NoCopySpan base required: SpanController is an Editor member re-installed on
+// every spannable text (addSpanWatchers), so the container must treat it as
+// borrowed — without it the owned-span sweep in ~SpannableStringInternal
+// deletes the live member when a buffer is replaced (same family as the
+// ChangeWatcher fix; see textview.h).
+class Editor::SpanController : virtual public SpanWatcher, virtual public NoCopySpan {
 public:
     explicit SpanController(Editor* editor) : mEditor(editor) {}
 
