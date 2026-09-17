@@ -3293,8 +3293,16 @@ void ViewGroup::setLayoutAnimationListener(const Animation::AnimationListener& a
 }
 
 void ViewGroup::requestTransitionStart(LayoutTransition* transition){
-    ViewGroup*root = getRootView();
-    if(root)root->requestTransitionStart(transition);
+    // AOSP hands the request to the ViewRootImpl host above the tree. CDROID's
+    // host is the Window itself (a ViewGroup subclass whose override records
+    // the pending transition). The walk must stop at the tree root: when the
+    // root is a plain ViewGroup with no Window host (gui_test trees, detached
+    // subtrees) recursing into it re-enters this same method forever —
+    // getRootView() keeps returning the same root — and overflows the stack.
+    ViewGroup* root = getRootView();
+    if (root != nullptr && root != this) {
+        root->requestTransitionStart(transition);
+    }
 }
 
 bool ViewGroup::resolveRtlPropertiesIfNeeded(){

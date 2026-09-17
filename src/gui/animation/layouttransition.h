@@ -137,6 +137,7 @@ public:
     void setDuration(int64_t duration);
     void setDuration(int transitionType, int64_t duration);
     int64_t getDuration(int transitionType)const;
+    Animator* getAnimator(int transitionType)const;   // AOSP public getter (java:308)
     void enableTransitionType(int transitionType);
     void disableTransitionType(int transitionType);
     bool isTransitionTypeEnabled(int transitionType)const;

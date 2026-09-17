@@ -152,6 +152,22 @@ int64_t LayoutTransition::getDuration(int transitionType) const{
     return 0;
 }
 
+Animator* LayoutTransition::getAnimator(int transitionType) const {
+    switch (transitionType) {
+    case CHANGE_APPEARING:
+        return mChangingAppearingAnim;
+    case CHANGE_DISAPPEARING:
+        return mChangingDisappearingAnim;
+    case CHANGING:
+        return mChangingAnim;
+    case APPEARING:
+        return mAppearingAnim;
+    case DISAPPEARING:
+        return mDisappearingAnim;
+    }
+    return nullptr;
+}
+
 void LayoutTransition::enableTransitionType(int transitionType) {
     switch (transitionType) {
     case APPEARING:
@@ -398,10 +414,17 @@ void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int
     if (mAnimateParentHierarchy) {
         ViewGroup* tempParent = parent;
         while (tempParent != nullptr) {
-            ViewGroup* parentParent = tempParent->getParent();
-            setupChangeAnimation(parentParent, changeReason, parentAnimator, duration, tempParent);
-            tempParent = parentParent;
-
+            // AOSP guards with `parentParent instanceof ViewGroup` (java:786-792): at the
+            // top of the hierarchy getParent() is null (or a non-ViewGroup), and walking into
+            // setupChangeAnimation with a null parent leaves the layout listener capturing it —
+            // the next layout pass dereferences it in requestTransitionStart. Missing here,
+            // this crashed the sample on the first Add click.
+            if (ViewGroup* parentParent = dynamic_cast<ViewGroup*>(tempParent->getParent())) {
+                setupChangeAnimation(parentParent, changeReason, parentAnimator, duration, tempParent);
+                tempParent = parentParent;
+            } else {
+                tempParent = nullptr;
+            }
         }
     }
 
@@ -505,6 +528,16 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
         if(it != pendingAnimations.end()){
             delete it->second;
             pendingAnimations.erase(it);
+            // The layout listener still registered on the child captured that
+            // now-deleted animator — the pending window is over, so detach it.
+            // (AOSP leaves the listener in place; GC makes that harmless there.
+            // If the animation was promoted to currentChangingAnimations, the
+            // entry is already erased and this block stays out of the way.)
+            auto itl = layoutChangeListenerMap.find(child);
+            if (itl != layoutChangeListenerMap.end()) {
+                child->removeOnLayoutChangeListener(itl->second);
+                layoutChangeListenerMap.erase(itl);
+            }
         }
     };
     pendingAnimRemover->addListener(al);
