@@ -180,6 +180,11 @@ Window::~Window(){
     delete mActionBar;
     delete mMenuInflater;
     delete mBackgroundFallbackDrawable;
+    if (mSendWindowContentChangedAccessibilityEvent != nullptr) {
+        // Unpost the run() bound to this callback object before freeing it
+        // (quit path deletes the window with the post still queued).
+        mSendWindowContentChangedAccessibilityEvent->removeCallbacks();
+    }
     delete mSendWindowContentChangedAccessibilityEvent;
     delete mAccessibilityFocusedVirtualView;  // the host View dies with the tree; the node is ours
     mDestroyed = true;  // the transition end-callback skips finishClose during teardown
@@ -288,7 +293,23 @@ void Window::removeSendWindowContentChangedCallback(){
 }
 
 void Window::notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType){
+    // The tree is on its way down: a posted a11y run (the interval branch of
+    // runOrPost) would outlive the window — removeWindow purges the UI queue
+    // only up to the purge moment, and notifications fired DURING the detach
+    // dispatch enqueue after it, landing on freed views/window. Drop instead.
+    if (mClosePending) return;
     postSendWindowContentChangedCallback(source, changeType);
+}
+
+void Window::dispatchDetachedFromWindow(){
+    // AOSP ViewRootImpl.dispatchDetachedFromWindow removes the pending
+    // SendWindowContentChangedAccessibilityEvent callbacks here: the posted
+    // runnable holds a raw source-view pointer, and once the tree is detached
+    // (or torn down by the posted close) running it would reach through freed
+    // memory. removeCallbacks() lets an already-queued run() no-op (mSource
+    // nulls only in run — removeCallbacks drops the post instead).
+    removeSendWindowContentChangedCallback();
+    ViewGroup::dispatchDetachedFromWindow();
 }
 
 void Window::requestTransitionStart(LayoutTransition* transition){
@@ -1228,6 +1249,9 @@ void Window::finishClose(){
         mTeardownCb = nullptr;
         cb();
     }
+    // Drop any a11y run posted before the close (its mSource/mRunnable capture
+    // this window and tree views); the deletes below free both.
+    removeSendWindowContentChangedCallback();
     auto* info = mAttachInfo;
     Window* self = this;
     Handler* h = new Handler();
@@ -1238,6 +1262,13 @@ void Window::finishClose(){
         Choreographer::getInstance().removeCallbacks(
             Choreographer::CALLBACK_TRAVERSAL, nullptr, self);
         self->mTraversalScheduled = false;
+        // Posts made mid-detach-dispatch (e.g. a11y scrolled/content-changed runs
+        // queued through AttachInfo.mHandler after View::dispatchDetachedFromWindow
+        // cancelled its own callbacks) would dispatch on freed views — drain the
+        // handler's pending messages before the tree and the AttachInfo die.
+        if (info != nullptr && info->mHandler != nullptr) {
+            info->mHandler->removeCallbacksAndMessages(nullptr);
+        }
         delete self;   // before info: the tree's belts need the live observer
         delete info;
         delete h;
@@ -1491,6 +1522,13 @@ void Window::SendWindowContentChangedAccessibilityEvent::run(){
     mSource = nullptr;
     if (source == nullptr) {
         LOGE("Accessibility content change has no source");
+        return;
+    }
+    if (!source->isAttachedToWindow()) {
+        // Detached between the post and the run (Window::dispatchDetachedFromWindow
+        // normally removes the pending callback; this guards teardowns that free
+        // the tree without the detach dispatch). Reading the freed subtree from
+        // here crashed AdapterView::onInitializeAccessibilityEventInternal.
         return;
     }
     // The accessibility may be turned off while we were waiting so check again.

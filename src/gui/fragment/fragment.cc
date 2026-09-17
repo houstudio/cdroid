@@ -110,6 +110,12 @@ Fragment::~Fragment(){
         // scheduleViewReclaim/reclaimDeferredExitViews, before the delete.
         endAnimatorsOver(mView);
         endTransitionsOver(mView);
+        // The exit effect's removeView may have parked this tree in the parent's
+        // mDisappearingChildren (mParent cleared, no detach dispatch): posted
+        // callbacks holding raw view pointers (a11y scrolled/content-changed)
+        // would fire after the delete and read freed memory. Dispatch the detach
+        // so onDetachedFromWindowInternal cancels them before we free the tree.
+        if (mView->isAttachedToWindow()) mView->dispatchDetachedFromWindow();
         delete mView;
         mView = nullptr;
     }

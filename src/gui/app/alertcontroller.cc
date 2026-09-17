@@ -684,6 +684,17 @@ AlertController::~AlertController() {
     if (mOwnsAdapter) delete mAdapter;  // AOSP relies on GC for the list adapter
 }
 
+void AlertController::unbindListAdapter() {
+    // Runs synchronously inside dismissDialog() (via AlertDialog::onStop),
+    // while the window and its view tree are unquestionably alive: the
+    // ListView drops the adapter reference here, so the window's later posted
+    // teardown cannot reach through mAdapter after ~AlertController freed it
+    // (AbsListView::onDetachedFromWindow unregisters its DataSetObserver).
+    if (mListView != nullptr && mAdapter != nullptr) {
+        mListView->setAdapter(nullptr);
+    }
+}
+
 AlertController::AlertParams::AlertParams(Context*context){
     mContext = context;
     mCancelable = true;

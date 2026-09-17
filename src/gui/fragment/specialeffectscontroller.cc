@@ -200,6 +200,9 @@ void SpecialEffectsController::reclaimDeferredExitViews(){
         endAnimatorsOver(v);
         endTransitionsOver(v);
         if(v->getParent()) v->getParent()->removeView(v);
+        // Disappearing-children shape (mParent null, never dispatch-detached):
+        // cancel posted callbacks holding raw view pointers before the delete.
+        if(v->isAttachedToWindow()) v->dispatchDetachedFromWindow();
         delete v;
     }
     mLingeryExitViews.clear();

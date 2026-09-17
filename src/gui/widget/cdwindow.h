@@ -288,6 +288,10 @@ public:
     void bringToFront();
     void notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType)override;
     bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event)override;
+    // AOSP ViewRootImpl.dispatchDetachedFromWindow drops the pending
+    // SendWindowContentChangedAccessibilityEvent before tearing the tree down —
+    // the posted runnable keeps a raw source-view pointer that would dangle.
+    void dispatchDetachedFromWindow()override;
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;
     virtual void onBackPressed();

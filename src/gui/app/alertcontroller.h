@@ -36,6 +36,13 @@ class AlertController{
 public:
     // Public like ~Dialog (74f99a303): ~AlertDialog deletes the controller.
     ~AlertController();
+    // Detach the list ListView from the adapter WITHOUT freeing either (the
+    // controller still owns the adapter until ~AlertController). Called from
+    // AlertDialog::onStop — synchronously inside dismissDialog(), BEFORE the
+    // window's posted close — so the later detach dispatch finds mAdapter null
+    // even if the dialog object (and with it the adapter) is destroyed before
+    // the posted teardown runs.
+    void unbindListAdapter();
     DECLARE_UIEVENT(void,OnPrepareListViewListener,ListView&);
     class RecycleListView:public ListView {
     private:

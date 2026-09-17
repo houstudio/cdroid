@@ -90,6 +90,18 @@ AlertDialog::~AlertDialog(){
     delete P;
 }
 
+void AlertDialog::onStop(){
+    // Runs synchronously inside dismissDialog() — the window and its view tree
+    // are still alive here, before close() posts the removeWindow teardown.
+    // Unbinding the list ListView from the controller's adapter closes the
+    // dismiss/teardown race: the posted finishClose may run after ~AlertDialog
+    // freed the adapter, and AbsListView::onDetachedFromWindow would then
+    // unregister its DataSetObserver through freed memory (deskclock auto-test
+    // crashed on the select_dialog_listview of a dismissed item dialog).
+    mAlert->unbindListAdapter();
+    Dialog::onStop();
+}
+
 void AlertDialog::setTitle(const std::string& title){
     Dialog::setTitle(title);
     mAlert->setTitle(title);

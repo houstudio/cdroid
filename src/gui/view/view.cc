@@ -10764,6 +10764,14 @@ View::AttachInfo::AttachInfo(Context*ctx){
 }
 
 View::AttachInfo::~AttachInfo(){
+    // The handler dies with the AttachInfo: drain its pending messages first.
+    // Posts made mid-detach-dispatch (a11y scrolled/content-changed runs that
+    // View::dispatchDetachedFromWindow's cancel() runs too early to catch, and
+    // anything posted during the quit-path window sweep, which never runs
+    // finishClose) would otherwise dispatch on views of the freed tree.
+    if (mHandler != nullptr) {
+        mHandler->removeCallbacksAndMessages(nullptr);
+    }
     delete mHandler;
     delete mTreeObserver;
     delete mAutofilledDrawable;

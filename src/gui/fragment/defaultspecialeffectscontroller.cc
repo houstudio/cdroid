@@ -163,6 +163,12 @@ void scheduleViewReclaim(ViewGroup* cont, View* view, Fragment* fragment,
         // listed in mDisappearingChildren — so ~View wouldn't pull it out, leaving the
         // parent drawing a freed view. Remove explicitly so neither list retains it.
         if(view->getParent()) view->getParent()->removeView(view);
+        // A view parked in mDisappearingChildren has mParent==null (the removeView above
+        // was skipped) but was never dispatch-detached — its mAttachInfo still points at
+        // the window. Posted runnables holding raw view pointers (accessibility scrolled/
+        // content-changed) would fire after this delete and read freed memory; dispatch
+        // the detach now so View::onDetachedFromWindowInternal cancels them.
+        if(view->isAttachedToWindow()) view->dispatchDetachedFromWindow();
         delete view;
         if(hook) hook();
         }
@@ -244,6 +250,10 @@ void AnimationEffect::onCommit(ViewGroup* container){
                     endAnimatorsOver(v);
                     endTransitionsOver(v);
                     if(v->getParent()) cont->removeView(v);
+                    // Same disappearing-children shape as scheduleViewReclaim: without a
+                    // parent the removeView above was skipped, so dispatch the detach
+                    // (cancels posted callbacks holding raw view pointers) before delete.
+                    if(v->isAttachedToWindow()) v->dispatchDetachedFromWindow();
                     delete v;
                 }
             });

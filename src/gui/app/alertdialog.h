@@ -90,6 +90,12 @@ protected:
     // ?attr/alertDialogTheme from the context theme.
     static int resolveDialogTheme(Context* context,int themeResId);
     void onCreate()override;
+    // Dialog.dismissDialog() calls onStop() synchronously BEFORE posting the
+    // window close — the one point where the view tree is unquestionably alive
+    // and the controller's list adapter can be unbound, so the later posted
+    // detach dispatch finds ListView.mAdapter null even if the dialog object
+    // is destroyed before the posted teardown runs (AOSP relies on GC there).
+    void onStop()override;
 public:
     /* Dialog documents the owner-managed contract (dismiss() then delete,
        public ~Dialog); this override used to sit in the protected section,

@@ -869,7 +869,13 @@ protected:
     virtual void onFinishInflate();
     virtual void dispatchSetActivated(bool activated);
     virtual void dispatchAttachedToWindow(AttachInfo*info,int visibility);
+public:
+    // AOSP View.dispatchDetachedFromWindow is public (View.java) — teardown
+    // owners outside the View hierarchy (fragment special-effects reclamation)
+    // dispatch it before freeing a tree that was parked in mDisappearingChildren
+    // and never received the detach dispatch.
     virtual void dispatchDetachedFromWindow();
+protected:
     virtual void dispatchCancelPendingInputEvents();
     virtual void onCancelPendingInputEvents();
     bool canReceivePointerEvents()const;
