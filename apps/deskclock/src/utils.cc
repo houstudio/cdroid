@@ -5,6 +5,7 @@
 using namespace ::deskclock; // generated R.h namespace
 
 #include <algorithm>
+#include <cstdint>   // INT64_MAX
 #include <cstdio>
 
 #include <drawable/colordrawable.h>

@@ -2,6 +2,7 @@
 
 #include <porting/cdlog.h>
 
+#include <cstdint>   // INT64_MAX
 #include <core/app.h>
 #include <core/looper.h>
 #include <core/intent.h>

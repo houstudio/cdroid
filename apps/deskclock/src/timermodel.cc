@@ -3,6 +3,7 @@
 #include <R.h>
 #include <algorithm>
 
+#include <cstdint>   // INT64_MIN
 #include <content/sharedpreferences.h>
 #include <core/context.h>
 #include <core/intent.h>

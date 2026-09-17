@@ -1,5 +1,6 @@
 #include <timerdao.h>
 
+#include <cstdint>   // INT64_MIN
 #include <content/sharedpreferences.h>
 
 namespace cdroid {

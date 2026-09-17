@@ -4,6 +4,7 @@
  * Port of com.android.deskclock.StopwatchTextController — formats accumulated
  * time into the main time + hundredths TextView pair, skipping no-op updates.
  *********************************************************************************/
+#include <cstdint>   // int64_t / INT64_MIN (self-sufficient header)
 #include <widget/textview.h>
 
 namespace cdroid {

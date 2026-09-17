@@ -4,6 +4,7 @@
  * Port of com.android.deskclock.data.Timer — a read-only domain object
  * representing a countdown timer; state transitions return copies.
  *********************************************************************************/
+#include <cstdint>   // int64_t / INT64_MIN (self-sufficient header)
 #include <string>
 
 namespace cdroid {
