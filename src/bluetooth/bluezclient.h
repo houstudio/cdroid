@@ -16,10 +16,14 @@
 
 #include <bluetoothdevice.h>
 
-struct sd_bus;
-struct sd_bus_message;
-struct sd_bus_slot;
-struct sd_bus_error;
+/* sd-bus types are needed by the vtable callback declarations below. Unlike
+ * sd_bus/sd_bus_message/sd_bus_slot (typedefs of TAGGED structs, which could
+ * be forward-declared as "struct sd_bus;" etc.), sd_bus_error is a typedef of
+ * an ANONYMOUS struct in sd-bus.h — it has no tag, so no forward declaration
+ * is possible: gcc >= 13 rejects "struct sd_bus_error;" outright once the
+ * typedef is visible ("using typedef-name after 'struct'"). Include the real
+ * header instead. */
+#include <systemd/sd-bus.h>
 
 namespace cdroid {
 

@@ -11,9 +11,10 @@
  *   Adapter1.RemoveDevice       removeBond()
  *   ObjectManager signals       ACTION_FOUND / state changes
  *
- * Include order note: sd-bus.h must come first inside its own guard block
- * because it pulls <errno-style> system macros; keeping it isolated avoids
- * polluting the port headers.
+ * Include order note: sd-bus.h now also arrives via bluezclient.h (sd_bus_error
+ * is a typedef of an anonymous struct — not forward-declarable, see the header
+ * comment); the early include below predates that and stays for the errno-style
+ * system macros isolation.
  */
 #include <errno.h>
 #include <poll.h>
