@@ -85,6 +85,7 @@ private:
     static std::once_flag sDecodeOnce;
     static std::mutex sDecodeMutex;
     static std::condition_variable sDecodeCV;
+    static std::atomic<bool> sDecodeShutdown;   // process-exit reaper flips this (see the .cc)
     void postOnAnimationStart();
     void postOnAnimationEnd();
     void updateStateFromTypedArray(Resources&r,const AttributeSet&atts,const Resources::Theme* theme,int srcDensityOverride);
@@ -112,6 +113,10 @@ public:
     static constexpr int REPEAT_INFINITE=-1;
     static constexpr int LOOP_INFINITE = REPEAT_INFINITE;
     static constexpr int REPEAT_UNDEFINED = -2;
+    // Process-exit hook for the shared decode daemon (AOSP relies on the JVM
+    // reaping daemon threads; C++ must collect the thread itself). The .cc's
+    // file-scope reaper calls this while the sDecode* statics are still alive.
+    static void stopDecodeWorker();
 public:
     // AOSP surface: a public no-arg ctor only. Loading is ImageDecoder's job
     // ("Created by ImageDecoder#decodeDrawable" — the P-era setInputStream is

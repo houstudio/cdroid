@@ -58,6 +58,7 @@ std::thread AnimatedImageDrawable::sDecodeThread;
 std::once_flag AnimatedImageDrawable::sDecodeOnce;
 std::mutex AnimatedImageDrawable::sDecodeMutex;
 std::condition_variable AnimatedImageDrawable::sDecodeCV;
+std::atomic<bool> AnimatedImageDrawable::sDecodeShutdown{false};
 
 AnimatedImageDrawable::AnimatedImageDrawable()
   :AnimatedImageDrawable(std::make_shared<AnimatedImageState>()){
@@ -617,7 +618,17 @@ void AnimatedImageDrawable::decodeWorker() {
         DecodeTask task;
         {
             std::unique_lock<std::mutex> lock(sDecodeMutex);
-            sDecodeCV.wait(lock, []{ return !sDecodeQueue.empty(); });
+            // Bounded wait: the shutdown sentinel below flips sDecodeShutdown and
+            // notify_all's, but the timeout is the belt-and-suspenders exit path —
+            // the thread must never permanently reside in the cv's waiter set,
+            // or the process-exit static destruction of sDecodeCV deadlocks
+            // (glibc pthread_cond_destroy spins while waiters remain).
+            sDecodeCV.wait_for(lock, std::chrono::milliseconds(200),
+                               []{ return !sDecodeQueue.empty(); });
+            if (sDecodeQueue.empty()) {
+                if (sDecodeShutdown.load()) return;   // idle + shutdown: daemon exits
+                continue;                             // spurious/timeout: re-park
+            }
             task = sDecodeQueue.front();
             sDecodeQueue.pop();
             task.instance->mDecodeInProgress = true;
@@ -643,5 +654,29 @@ void AnimatedImageDrawable::decodeWorker() {
         instance->mDecodeInProgress = false;
     }
 }
+
+void AnimatedImageDrawable::stopDecodeWorker() {
+    sDecodeShutdown.store(true);
+    {
+        std::lock_guard<std::mutex> lock(sDecodeMutex);
+        sDecodeCV.notify_all();   // wake the parked worker now, not via the 200ms timeout
+    }
+    if (sDecodeThread.joinable()) sDecodeThread.join();
+}
+
+/*Process-exit reaping for the decode daemon. AOSP's AnimatedImageDrawable
+  decodes on framework threads the JVM reclaims at process death (daemon
+  threads never block exit); a raw C++ thread must be collected explicitly.
+  Defined AFTER the sDecode* statics it touches: same-TU static destruction
+  runs in REVERSE definition order, so this destructor runs FIRST — the
+  thread is stopped and joined while sDecodeMutex/sDecodeCV/sDecodeThread are
+  still alive. Without it, ~sDecodeCV (glibc pthread_cond_destroy) waits for
+  the parked waiter forever: the main thread hangs in _dl_fini after the last
+  test (full-suite exit hang, gdb: cond_destroy <-> cond_wait deadlock).*/
+static struct DecodeThreadReaper {
+    ~DecodeThreadReaper() {
+        AnimatedImageDrawable::stopDecodeWorker();
+    }
+} sDecodeThreadReaper;
 
 }
