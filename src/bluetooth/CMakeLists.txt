@@ -15,6 +15,16 @@ project(cdblue CXX)
 
 find_path(SDBUS_INCLUDE_DIR systemd/sd-bus.h)
 find_library(SDBUS_LIBRARY NAMES systemd)
+# sd-bus has no library of its own — its symbols live inside libsystemd (see
+# bluezclient.h). Without this guard a missing libsystemd leaks the literal
+# "SDBUS_LIBRARY-NOTFOUND" into the link line (-lSDBUS_LIBRARY-NOTFOUND).
+if(NOT SDBUS_INCLUDE_DIR OR NOT SDBUS_LIBRARY)
+    message(FATAL_ERROR
+        "cdblue needs libsystemd (sd-bus lives inside libsystemd, there is no "
+        "separate sdbus library). Install it into the resolution paths "
+        "(vcpkg: 'vcpkg install libsystemd --triplet <triplet>'; "
+        "Debian/Ubuntu: 'apt install libsystemd-dev') and re-run CMake.")
+endif()
 
 add_library(cdblue
     internal/sdppdu.cc
