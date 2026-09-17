@@ -93,6 +93,7 @@ void CircularFlow::setAngles(const std::string& angleList) {
         if (token.empty()) continue;
         mAngles.push_back((float) std::atof(token.c_str()));
     }
+    requestLayout();   // string variant is public API too — same re-anchor contract as the vector form
 }
 
 void CircularFlow::setRadius(const std::vector<int>& radius) {
@@ -115,6 +116,7 @@ void CircularFlow::setRadius(const std::string& radiusList) {
         // radiusInDP values are in dp → px (AndroidX applies display density).
         mRadius.push_back((int) (std::atoi(token.c_str()) * density));
     }
+    requestLayout();   // string variant is public API too — same re-anchor contract as the vector form
 }
 
 void CircularFlow::setDefaultAngle(float angle) {

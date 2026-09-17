@@ -76,38 +76,53 @@ Flow::Flow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
     validateParams();
 }
 
+// AndroidX Flow setters each end with requestLayout() (Flow.java:305-373+) — the data only
+// takes effect on the next layout pass, so runtime changes must flag the hierarchy: the
+// ConstraintLayout capture is dirty-gated and re-runs when a child (this helper) requests
+// layout. Without this a runtime call silently no-ops until something else re-lays-out.
 void Flow::setWrapMode(int wrapMode)       {
     asFlow(mHelperWidget.get())->setWrapMode(wrapMode);
+    requestLayout();
 }
 void Flow::setMaxElementsWrap(int max)     {
     asFlow(mHelperWidget.get())->setMaxElementsWrap(max);
+    requestLayout();
 }
 void Flow::setOrientation(int orientation) {
     asFlow(mHelperWidget.get())->setOrientation(orientation);
+    requestLayout();
 }
 void Flow::setHorizontalAlign(int align)   {
     asFlow(mHelperWidget.get())->setHorizontalAlign(align);
+    requestLayout();
 }
 void Flow::setVerticalAlign(int align)     {
     asFlow(mHelperWidget.get())->setVerticalAlign(align);
+    requestLayout();
 }
 void Flow::setHorizontalGap(int gap)       {
     asFlow(mHelperWidget.get())->setHorizontalGap(gap);
+    requestLayout();
 }
 void Flow::setVerticalGap(int gap)         {
     asFlow(mHelperWidget.get())->setVerticalGap(gap);
+    requestLayout();
 }
 void Flow::setHorizontalStyle(int style)   {
     asFlow(mHelperWidget.get())->setHorizontalStyle(style);
+    requestLayout();
 }
 void Flow::setVerticalStyle(int style)     {
     asFlow(mHelperWidget.get())->setVerticalStyle(style);
+    requestLayout();
 }
 void Flow::setHorizontalBias(float bias)   {
     asFlow(mHelperWidget.get())->setHorizontalBias(bias);
+    requestLayout();
 }
 void Flow::setVerticalBias(float bias)     {
     asFlow(mHelperWidget.get())->setVerticalBias(bias);
+    requestLayout();
 }
 
 

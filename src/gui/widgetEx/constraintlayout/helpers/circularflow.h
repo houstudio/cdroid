@@ -49,7 +49,10 @@ class CircularFlow : public ConstraintHelper {
     void setRadius(const std::vector<int>& radius);
     void setDefaultAngle(float angle);
     void setDefaultRadius(int radius);
-    void setViewCenter(int id) { mViewCenter = id; }
+    // CDROID extension (no AndroidX runtime setter for viewCenter): re-anchoring on the
+    // new center rides the next hierarchy capture — request the layout so the dirty gate
+    // reopens it (same contract as setAngles/setRadius).
+    void setViewCenter(int id) { mViewCenter = id; requestLayout(); }
     void addViewToCircularFlow(View* view, int radius, float angle);
 
   protected:
