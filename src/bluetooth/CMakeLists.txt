@@ -16,21 +16,19 @@ project(cdblue CXX)
 find_path(SDBUS_INCLUDE_DIR systemd/sd-bus.h)
 find_library(SDBUS_LIBRARY NAMES systemd)
 # sd-bus has no library of its own — its symbols live inside libsystemd (see
-# bluezclient.h), which this project takes from the vcpkg installed tree via
-# classic-mode CMAKE_PREFIX_PATH. Without this guard a missing libsystemd
-# leaks the literal "SDBUS_LIBRARY-NOTFOUND" into the link line
-# (-lSDBUS_LIBRARY-NOTFOUND) — and a tree that has the headers but not the
-# library half-resolves (find_path ok, find_library NOTFOUND), so report what
-# was found.
-if(NOT SDBUS_INCLUDE_DIR OR NOT SDBUS_LIBRARY)
-    message(FATAL_ERROR
-        "cdblue needs libsystemd from the vcpkg installed tree (sd-bus lives "
-        "inside libsystemd, there is no separate sdbus library). Install it "
-        "with 'vcpkg install libsystemd --triplet <triplet>' and configure "
-        "with the tree on CMAKE_PREFIX_PATH. Found: "
-        "SDBUS_INCLUDE_DIR='${SDBUS_INCLUDE_DIR}', "
-        "SDBUS_LIBRARY='${SDBUS_LIBRARY}'")
-endif()
+# bluezclient.h). Resolution order: the vcpkg installed tree via classic-mode
+# CMAKE_PREFIX_PATH (this project's convention), then the distro libsystemd.so
+# (libsystemd-dev), then the distro RUNTIME soname libsystemd.so.0 — the
+# libsystemd0 package ships it on every systemd host, and linking the full
+# versioned path works without the dev package's .so symlink. sd-bus symbols
+# are append-only stable, so a .so.0 link is ABI-safe. This fallback keeps
+# checkouts whose installed tree carries the headers but not the library
+# (find_path ok, find_library NOTFOUND -> -lSDBUS_LIBRARY-NOTFOUND) linking.
+find_library(SDBUS_LIBRARY
+             NAMES systemd libsystemd.so.0
+             PATHS /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}
+                   /lib/${CMAKE_LIBRARY_ARCHITECTURE}
+                   /usr/lib /lib /usr/lib64 /lib64)
 
 add_library(cdblue
     internal/sdppdu.cc
