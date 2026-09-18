@@ -132,6 +132,15 @@ int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
             if(transparentCount&&opaqueCount) return PixelFormat::TRANSLUCENT;
         }
     }
+    // Reaching here the surface holds only alpha==0 and/or alpha==255 pixels
+    // (any partial alpha returned TRANSLUCENT inside the loop, and a mix of the
+    // two returned TRANSLUCENT at the pair check). All-opaque -> OPAQUE; but
+    // ALL-TRANSPARENT is TRANSPARENT, never OPAQUE: BitmapDrawable's draw fast
+    // path switches to the SOURCE operator on OPAQUE, and a fully-transparent
+    // snapshot drawn with SOURCE erases the backdrop underneath it (the
+    // fragment-exit copyViewImage snapshot during a Slide transition blanked
+    // the whole content area to transparent-black, composing as a black flash).
+    if (transparentCount > 0) return PixelFormat::TRANSPARENT;
     return PixelFormat::OPAQUE;
 }
 
