@@ -96,9 +96,10 @@ CDroid 是一个庞大的移植工程 —— 永远有更多 AOSP 代码等着�
 * 5 make you project(SeeAlso **Building CDROID**)
 
 # **Building CDROID:**
-###  1.install dependencs(Ubuntu 22+):
-sudo apt install autoconf libtool build-essential aapt2 cmake gdb pkg-config zip gettext libx11-dev libxcursor-dev libxcb1-dev libxcb-image0-dev libxcb-cursor-dev bison python>=3.7 pip3-python python3-lxml meson
-pip install lxml Pillow polib requests xlrd xlwt
+###  1.install dependencies(Ubuntu 22+):
+sudo apt install autoconf libtool build-essential aapt cmake gdb pkg-config zip curl unzip gettext libx11-dev libxcursor-dev libxcb1-dev libxcb-image0-dev libxcb-cursor-dev bison python3 python3-pip python3-lxml python3-pil meson
+# 说明:aapt 包即提供 /usr/bin/aapt2;构建脚本的 Python 依赖(lxml + Pillow)由上面的
+# python3-lxml / python3-pil 覆盖,无需 pip 安装(Ubuntu 23.04+ 也已禁用裸 pip install)。
 ###  2.install vcpkg:
 * git clone https://www.github.com/microsoft/vcpkg.git
 * cd vcpkg
