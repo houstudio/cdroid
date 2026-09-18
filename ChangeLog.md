@@ -1,68 +1,16 @@
-# **5.
-  - android.transition framework (31 classes: scene transitions, shared elements)
-  - androidx.navigation (NavHost / NavController / NavGraph)
-  - Fragment / FragmentManager / FragmentStateManager (nested hosts, back stack)
-  - ConstraintLayout and MotionLayout (full features: chains, helpers, Carousel)
-  - new TextView fully compatible with Android, spannable rich text
-  - text layout family on minikin: StaticLayout, DynamicLayout, BoringLayout
-  
-  - FlexboxLayout and FlexboxLayoutManager
-  - Binary AXML resources end to end: androidfw AssetManager port, PakBuilder (aapt2-compiled
-    AXML + resources.arsc + cdNp 9-patch chunks), R.h from real arsc ids; idgen retired
-  - AttributeSet migrated to int resource ids tree-wide (DECLARE_WIDGET2, int defStyle,
-    framework-private attr block); string-key attribute lookups retired
-  - TypedArray/TypedValue aligned with AOSP ResourcesImpl; styleable generation; theme attr
-    chain and themed-cache keys fixed; ResourcesImpl density initialized
-  - Build-time resource overlay (AOSP static-overlay semantics); slim framework-res base;
-    i18n.dat packed into pak; build-time fonts.xml; multi-pak 0x7f id pinning policy
-  - AOSP Music app facade port (apps/music) plus the core fixes it surfaced
-  - Preference listener interfaces moved to value semantics (EventSet/CallbackBase)
-  - Teardown/UAF/leak campaign under valgrind: exit sentinel, window teardown ordering,
-    observer pinning, AbsListView touchMode death-belt, RecycleBin same-key overwrite,
-    AlertController GC points; preferencedemo dialog crashes eliminated
-  - Drawable module audited against AOSP (47 findings); tint/PorterDuff emulation hardened;
-    VectorDrawable cache/tint fixes; AnimatedVectorDrawable leak closed
-  - ContextImpl split into three layers with Context as a pure interface
-  - View/ViewGroup refreshed against android-36; ScrollView/NestedScrollView fixes
-  - Tests: libutils Looper suite, coretests text/ and i18n, key-navigation suite,
-    drawable/os CTS ports, gui_test shared-looper harness
-  - In-process accessibility service end to end: AccessibilityService/
-    AccessibilityServiceInfo port, AccessibilityManager as the in-process AMS
-    (registry + dual-layer event filtering), walkable node tree (providers/
-    virtual views included), ByText/ByViewId search, focus highlight, full
-    event/node recycle contract (zoo valgrind 3.2MB -> 256B)
-  - android.app.UiAutomation port + semantic test drivers: --auto-test sweep
-    (per-step snapshot follows pager/tab navigation, node isVisibleToUser
-    filtering, auto-scroll between cycles) and --test-script line DSL
-    (Tokenizer lexer, wait/click/assert/dump, CI exit code)
-  - androidx ViewCompat a11y action API collapsed onto View
-    (add/remove/replaceAccessibilityAction + hasAccessibilityDelegate),
-    wired into ViewPager2 / DrawerLayout / SlidingPaneLayout /
-    AppBarLayout / ViewPager
-  - Material default styles (defStyleRes) for AppBarLayout / CollapsingToolbarLayout /
-    BottomNavigationView / NavigationView / TabLayout: per-module Widget_Design_* styles
-    with pinned 0x0209xxxx ids; gen_styleable emits typed public pins (style/layout/id/
-    drawable); widgetex.pak ships compiled res files (uses-sdk added — without it aapt2
-    strips attributes into -v1 variants); wear ConfirmationOverlay on pinned R constants
-  - preferencedemo: portrait settings chrome, Slide fragment transitions (legacy animation
-    path kept behind PREFDEMO_ANIM), AUTOCYCLE valgrind driver
-  - Emoji editing semantics on a par with Android: myicu binary properties now generated
-    from UCD emoji-data.txt (Emoji/Modifier/Component/Extended_Pictographic/Variation_
-    Selector; accessor enum-numbering fixed), BaseKeyListener deletes by emoji state
-    machine (flag pairs, ZWJ sequences, variation selectors, keycaps, skin tones, tags),
-    grapheme-cluster cursor movement verified; coretests text battery 276 passed
-  - Emoji display end to end: Paint::getFontMetricsInt fills real top/bottom/leading from
-    the font file, TypedArray::getString astral-codepoint UTF-8 fixed (was mangling emoji
-    into tofu + garbage), TextView renders emoji through the fonts.xml fallback chain;
-    widgetsDemo Text page gained an Emoji card
-  - CBDT color emoji (Noto Color Emoji): color bitmap glyphs render as scaled images —
-    Typeface serves per-glyph ARGB32 bitmaps (dedicated FT faces, strike-bound, cached),
-    Paint::drawTextRun does the blit; requires a freetype built with PNG support
-  - Font system reduced to fonts.xml + R.font: fontconfig-era matching retired
-    (parseStyle/fetchProps/isSameFamily/SYSLANG hack; fallback chain deduped by font file,
-    one mmap per file), legacy string-array PAK font loader removed, TextView resolves
-    android:fontFamily="@font/x" resources with no app code (android-36 parity), plain
-    family names no longer leak into the font asset loader
+# **V5.8**
+  - binary AXML resources end to end (aapt2 AXML + resources.arsc + 9-patch chunks in pak, R.h from real arsc ids)
+  - AttributeSet and attributes on int resource ids; TypedArray/TypedValue aligned with AOSP
+  - build-time resource overlay; multi-pak 0x7f id pinning; i18n.dat packed into pak
+  - new TextView with spannable rich text; StaticLayout/DynamicLayout/BoringLayout on minikin
+  - fonts.xml + R.font replace fontconfig matching; emoji editing/display parity; CBDT color emoji
+  - android.transition; androidx.navigation; Fragment/FragmentManager back stack
+  - ConstraintLayout/MotionLayout complete; FlexboxLayout; Material default styles for design widgets
+  - AlarmManager (suspend-aware BOOTTIME timerfds on the main looper) + in-process PendingIntent
+  - in-process accessibility service; UiAutomation test drivers (--auto-test / --test-script)
+  - AOSP Music facade app; preferencedemo settings chrome, transitions, AUTOCYCLE driver
+  - valgrind campaigns: teardown/UAF/leak fixes, drawable audit vs AOSP, window ghost sweep
+  - tests: Looper, coretests text/i18n, key navigation, CTS (KeyListener/drawable/os); gui_test pure/visual modes
 # **4.9.6
   - some memleaks
   - add TouchDevice VirtualKeyMap support
