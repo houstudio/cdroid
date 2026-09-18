@@ -735,7 +735,12 @@ void Typeface::loadPreinstalledSystemFontMap() {
     bool loadedFromXml = false;
     std::vector<std::string> candidates;
     if (!sFontConfigXml.empty()) candidates.push_back(sFontConfigXml);
+    /* $CDROID_FONTS_XML: explicit fonts.xml location, ahead of the search. */
+    if (const char* env = getenv("CDROID_FONTS_XML")) candidates.push_back(env);
     candidates.push_back(findFontsXmlNearExecutable());
+    /* System install locations, aligned with the shared-pak probe paths. */
+    candidates.push_back("/usr/share/cdroid/fonts.xml");
+    candidates.push_back("/opt/cdroid/fonts.xml");
     candidates.push_back("/system/etc/font_fallback.xml");
     candidates.push_back("/system/etc/fonts.xml");
     candidates.push_back("/etc/fonts/fonts.xml");

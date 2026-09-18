@@ -126,6 +126,9 @@ public:
      // from its own cxxopts pass — this only merges the help listing.
      static bool addAppOptions(const std::string& group,
              const std::function<void(cxxopts::OptionAdder&)>& adder);
+     // NOT the AOSP data directory: this is the read-only "beside the
+     // executable" resource dir (own <app>.pak lives there; --data overrides).
+     // App data lives under Context::getDataDir() instead.
      const std::string getDataPath()const;
      virtual void setOpacity(unsigned char alpha);
      virtual const std::string getName()const;
