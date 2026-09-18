@@ -746,26 +746,23 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::start() {
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::end() {
-    if (mSet == nullptr) {
-        return;
+    if (mSet != nullptr) {
+        mSet->end();
     }
-    mSet->end();
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::reset() {
-    if (mSet == nullptr) {
-        return;
+    if (mSet != nullptr) {
+        start();
+        mSet->cancel();
     }
-    start();
-    mSet->cancel();
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::reverse() {
-    if (mSet == nullptr) {
-        return;
+    if (mSet != nullptr) {
+        mSet->reverse();
+        invalidateOwningView();
     }
-    mSet->reverse();
-    invalidateOwningView();
 }
 
 bool AnimatedVectorDrawable::VectorDrawableAnimatorUI::canReverse() {
@@ -774,9 +771,6 @@ bool AnimatedVectorDrawable::VectorDrawableAnimatorUI::canReverse() {
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::setListener(const Animator::AnimatorListener& listener) {
     if (mSet == nullptr) {
-        /*if (mListenerArray == null) {
-            mListenerArray = new ArrayList<AnimatorListener>();
-        }*/
         mListenerArray.push_back(listener);
     } else {
         mSet->addListener(listener);
@@ -785,7 +779,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::setListener(const Animato
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::removeListener(const Animator::AnimatorListener& listener) {
     if (mSet == nullptr) {
-        if (mListenerArray.empty()){// == null) {
+        if (mListenerArray.empty()){
             return;
         }
         auto it =std::find(mListenerArray.begin(),mListenerArray.end(),listener);
@@ -816,17 +810,15 @@ bool AnimatedVectorDrawable::VectorDrawableAnimatorUI::isInfinite() {
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::pause() {
-    if (mSet == nullptr) {
-        return;
+    if (mSet != nullptr) {
+        mSet->pause();
     }
-    mSet->pause();
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::resume() {
-    if (mSet == nullptr) {
-        return;
+    if (mSet != nullptr) {
+        mSet->resume();
     }
-    mSet->resume();
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::invalidateOwningView() {
