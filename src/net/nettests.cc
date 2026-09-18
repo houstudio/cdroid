@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <arpa/inet.h>
+#include <unistd.h>
 #include <linux/rtnetlink.h>
 #include <net/if.h>
 
@@ -514,6 +515,37 @@ static void testDhcpCodecs() {
     CHECK_EQ(filled.leaseDuration, 43200);
 }
 
+
+/* TETHERING_BLUETOOTH owner contract: the enabler seam is only invoked after
+ * the data plane is up, and never on the no-root failure path; stopTethering
+ * is safe with nothing provisioned. Root-only provisioning itself is covered
+ * on the bench (scripts/bt-bench.sh); here as non-root the bridge ioctl
+ * fails, which is itself the documented ordering. */
+static void testBluetoothTetheringSeam() {
+    bool enablerCalled = false;
+    ConnectivityManager::setBluetoothPanEnabler(
+            [&enablerCalled](bool) { enablerCalled = true; return true; });
+    const bool started = ConnectivityManager::getInstance().startTethering(
+            ConnectivityManager::TETHERING_BLUETOOTH);
+    if (geteuid() == 0) {
+        /* Root: the full netd half must come up and the seam must fire. */
+        CHECK(started);
+        CHECK(enablerCalled);
+        CHECK(access("/sys/class/net/bt-pan", F_OK) == 0);
+        CHECK(ConnectivityManager::getInstance().stopTethering(
+                ConnectivityManager::TETHERING_BLUETOOTH));
+        CHECK(access("/sys/class/net/bt-pan", F_OK) != 0);
+    } else {
+        /* No CAP_NET_ADMIN: bridge creation fails before the seam fires. */
+        CHECK(!started);
+        CHECK(!enablerCalled);
+    }
+    /* stop with nothing provisioned must stay a clean no-op. */
+    CHECK(ConnectivityManager::getInstance().stopTethering(
+            ConnectivityManager::TETHERING_BLUETOOTH));
+    ConnectivityManager::setBluetoothPanEnabler(nullptr);
+}
+
 int main() {
     testHexEncoding();
     testLinkAddress();
@@ -527,6 +559,7 @@ int main() {
     testNetlinkRouteMessage();
     testDhcpCodecs();
     testNl80211IeHelpers();
+    testBluetoothTetheringSeam();
     printf("%d checks, %d failures\n", gChecks, gFailures);
     return gFailures;
 }
