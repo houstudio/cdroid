@@ -1,7 +1,7 @@
 #include <cdroid.h>
 class MyView:public View{
 public:
-   MyView(int w,int h):View(w,h){
+   MyView(Context*ctx,int w,int h):View(ctx){
        setMinimumWidth(w);
        setMinimumHeight(h);
    }
@@ -28,8 +28,8 @@ public:
     View*getDropDownView(int position, View* convertView, ViewGroup* parent)override{
         View*tv=(View*)convertView;
         if(convertView==nullptr){
-            if(mType==0)tv=new TextView("",300,36);
-            else tv= new MyView(300,36);
+            if(mType==0)tv=new TextView(&App::getInstance());
+            else tv= new MyView(&App::getInstance(),300,36);
             tv->setFocusable(false);
         }
         tv->setId(1000+position);
@@ -48,14 +48,15 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,800,600);
     MyAdapter*adapter=new MyAdapter(argc>1?atoi(argv[1]):0);
     for(int i=0;i<20;i++)adapter->add("");
-    LinearLayout*linear = new LinearLayout(0,0);
+    LinearLayout*linear = new LinearLayout(&app);
     linear->setOrientation(LinearLayout::VERTICAL);
     w->addView(linear);
 #if ENABLE(SPINNER)
-    Spinner*spinner=new Spinner(300,40);
+    Spinner*spinner=new Spinner(&app);
     spinner->setAdapter(adapter);
     spinner->setId(100);
-    linear->addView(new TextView("Hello world!",200,40));
+    TextView*tv0=new TextView(&app); tv0->setText("Hello world!");
+    linear->addView(tv0);
     LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);
     linear->addView(spinner,lp);
     ((View*)spinner)->layout(100,100,300,40);

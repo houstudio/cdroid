@@ -1,28 +1,35 @@
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/radiogroup.h>
+#include <widget/framework_styleable.h>
 #include <widget/radiobutton.h>
 #include <porting/cdlog.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(RadioGroup)
+DECLARE_WIDGET2(RadioGroup, "android.widget.RadioGroup");
 
-RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
-    init();
-    setOrientation(VERTICAL);
+RadioGroup::RadioGroup(Context*ctx)
+    :RadioGroup(ctx,nullptr){}
+
+RadioGroup::RadioGroup(Context* context,const AttributeSet* attrs)
+    :RadioGroup(context,attrs,R::attr::radioButtonStyle){
 }
 
-RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
-    :LinearLayout(context,attrs){
+RadioGroup::RadioGroup(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :LinearLayout(context,pAttrs, defStyleAttr){
     init();
-    const int value = attrs.getResourceId("checkedButton",View::NO_ID);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::RadioGroup, defStyleAttr);
+    
+    const int value = (int)ta->getResourceId(R::styleable::RadioGroup_checkedButton,(uint32_t)View::NO_ID);
     if(value!=View::NO_ID){
         mCheckedId = value;
         mInitialCheckedId = value;
     }
-    const int index = attrs.getInt("orientation",std::unordered_map<std::string,int>{
-             {"horizontal",HORIZONTAL},
-             {"vertical",VERTICAL} },VERTICAL);
+    const int index = ta->getInt(R::styleable::RadioGroup_orientation,VERTICAL);
     setOrientation(index);
 }
 
@@ -44,7 +51,7 @@ void RadioGroup::onRadioChecked(CompoundButton&c,bool checked){
     if (mCheckedId != -1) {
         setCheckedStateForView(mCheckedId, false);
     }
-    LOGD("onRadioChecked %d",c.getId());
+    LOGD("onRadioChecked %x checkedid=%x",c.getId(),mCheckedId);
     mProtectFromCheckedChange = false;
     setCheckedId(c.getId());
 }
@@ -55,6 +62,14 @@ void RadioGroup::onChildViewAdded(View& parent, View* child){
 	    if(id==View::NO_ID){
 	        id = child->generateViewId();
 	        child->setId(id);
+	    }
+	    // Hardening beyond AOSP: addView() records mCheckedId = button.getId()
+	    // BEFORE this listener generates a missing id, so a RadioButton that is
+	    // checked in XML without an android:id recorded NO_ID and could then
+	    // never be unchecked by the group (two checked at once). Backfill the
+	    // record now that the id exists.
+	    if (((RadioButton*)child)->isChecked() && mCheckedId == View::NO_ID) {
+	        setCheckedId(id);
 	    }
 	    ((RadioButton*)child)->setOnCheckedChangeWidgetListener(mChildOnCheckedChangeListener);
         if(mOnHierarchyChangeListener.onChildViewAdded)
@@ -74,6 +89,7 @@ void RadioGroup::init(){
     ViewGroup::OnHierarchyChangeListener lhs;
     mCheckedId = View::NO_ID;
     mInitialCheckedId = false;
+    mProtectFromCheckedChange = false;
     mChildOnCheckedChangeListener=[this](CompoundButton&view,bool checked){
         onRadioChecked(view,checked);
     };
@@ -105,8 +121,15 @@ std::string RadioGroup::getAccessibilityClassName()const{
 
 void RadioGroup::setCheckedId(int id){
     mCheckedId = id;
-    if (mOnCheckedChangeListener != nullptr) {
-        mOnCheckedChangeListener((CompoundButton&)*this, mCheckedId);
+    if (mOnCheckedChangeListener != nullptr && id != View::NO_ID) {
+        // Report the newly checked RadioButton (a CompoundButton), NOT *this:
+        // RadioGroup is a LinearLayout, not a CompoundButton, so the old
+        // (CompoundButton&)*this cast was invalid and crashed listeners that
+        // dereferenced the button (e.g. ->getText()).
+        CompoundButton* cb = dynamic_cast<CompoundButton*>(findViewById(id));
+        if (cb != nullptr) {
+            mOnCheckedChangeListener(*cb, true);
+        }
     }
 }
 

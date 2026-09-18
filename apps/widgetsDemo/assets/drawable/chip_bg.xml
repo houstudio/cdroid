@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Selectable chip: filled accent when selected, outlined otherwise. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <gradient android:startColor="@color/grad_violet_a" android:endColor="@color/grad_violet_b" android:angle="0" />
+            <corners android:radius="@dimen/chip_corner" />
+        </shape>
+    </item>
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#332E5FE0" />
+            <stroke android:width="1dp" android:color="@color/accent" />
+            <corners android:radius="@dimen/chip_corner" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#12FFFFFF" />
+            <stroke android:width="1dp" android:color="@color/card_stroke" />
+            <corners android:radius="@dimen/chip_corner" />
+        </shape>
+    </item>
+</selector>

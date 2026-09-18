@@ -63,6 +63,10 @@ public:
         RIGHT=2
     };
 private:
+    // AOSP Paint.setTypeface(null) "clears" the face: the field stays null
+    // (getTypeface() keeps the contract) while text ops resolve the default
+    // typeface. Every mTypeface consumer goes through here.
+    Typeface* effectiveTypeface() const;
     Typeface*mTypeface;
     std::shared_ptr<minikin::MinikinPaint>mMinikinPaint;
     int mColor;
@@ -71,7 +75,7 @@ private:
     int mTextAlign;
     int mStartHyphenEdit;
     int mEndHyphenEdit;
-    Style mStyle;
+    Style mStyle=FILL;
     bool mAntialias;
     bool mFakeBoldText;
     bool mStrikeThruText;
@@ -86,6 +90,16 @@ private:
     bool mElegantTextHeight = false;   // stored; minikin's MinikinPaint has no
                                        // `elegant` field in this version, so not yet
                                        // propagated to layout (CJK elegant height).
+    /*Per-instance last-result cache for the glyph-box part of
+      getFontMetricsInt (top/bottom/leading depend only on the typeface and
+      the size). mutable — the paint is value-copied freely and a copied
+      cache stays correct because the key travels with the values; a shared
+      cache would need a lock (fillGlyphBoxMetrics locks the FT face).*/
+    mutable const void* mGlyphBoxFace = nullptr;
+    mutable float mGlyphBoxSize = -1.0f;
+    mutable int mGlyphBoxTop = 0;
+    mutable int mGlyphBoxBottom = 0;
+    mutable int mGlyphBoxLeading = 0;
     float mUnderlinePosition;
     float mUnderlineThickness;
     float mStrikeThruPosition;
@@ -96,7 +110,7 @@ public:
     Paint(const Paint&);
     virtual ~Paint();
     Typeface* getTypeface()const{return mTypeface;}
-    void setTypeface(Typeface*face){mTypeface=face;}
+    void setTypeface(Typeface*face);
     minikin::MinikinPaint* getMinikinPaint()const{return mMinikinPaint.get();}
     virtual void set(const Paint&);
     bool hasEqualAttributes(const Paint&other)const;

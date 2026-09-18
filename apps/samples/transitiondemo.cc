@@ -19,21 +19,21 @@ int main(int argc, const char* argv[]){
     w->setBackgroundColor(0xFF223344);
 
     // Vertical root holding the toggle button + the sceneRoot.
-    LinearLayout* root = new LinearLayout(-1, -1);
+    LinearLayout* root = new LinearLayout(&app);
     root->setOrientation(LinearLayout::VERTICAL);
     w->addView(root);
 
-    Button* toggle = new Button("Toggle Fade", 480, 140);
+    Button* toggle =new Button(&app); toggle->setText("Toggle Fade" );
     toggle->setTextSize(36);
     root->addView(toggle);
 
     // sceneRoot: the ViewGroup whose child visibility changes are transitioned.
-    LinearLayout* sceneRoot = new LinearLayout(-1, -1);
+    LinearLayout* sceneRoot = new LinearLayout(&app);
     sceneRoot->setOrientation(LinearLayout::VERTICAL);
     root->addView(sceneRoot);
 
     // The box that fades in/out.
-    View* box = new View(640, 480);
+    View* box = new View(&app);
     box->setBackgroundColor(0xFFFF4081);
     box->setId(1001);
     sceneRoot->addView(box);

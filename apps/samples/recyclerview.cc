@@ -25,7 +25,7 @@ public:
         this->items = items;
     }
     MyAdapter::ViewHolder* onCreateViewHolder(ViewGroup* parent, int viewType) {
-        TextView* view = new TextView("",200,64);
+        TextView* view =new TextView(&App::getInstance()); view->setText("" );
         view->setBackgroundColor(0xff234567);
         view->setGravity(Gravity::CENTER);
         view->setFocusableInTouchMode(true);
@@ -109,7 +109,7 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
     w->setBackgroundColor(0xFF112233);
-    RecyclerView*rv=new RecyclerView(800,480);
+    RecyclerView*rv=new RecyclerView(&App::getInstance());
     rv->setLayoutManager(std::make_unique<GridLayoutManager>(&app,argc));
     rv->getLayoutManager()->setItemPrefetchEnabled(true);
     auto ps = new LinearSnapHelper();//PagerSnapHelper();

@@ -19,15 +19,14 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(Space)
-Space::Space(int w,int h):View(w,h){
-    if (getVisibility() == VISIBLE) {
-        setVisibility(INVISIBLE);
-    }
-}
+DECLARE_WIDGET2(Space, "android.widget.Space");
+Space::Space(Context*ctx)
+    :Space(ctx,nullptr){}
 
-Space::Space(Context*context,const AttributeSet& attrs)
-  :View(context,attrs){
+Space::Space(Context*context,const AttributeSet* attrs):Space(context,attrs,0){}
+
+Space::Space(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
+  :View(context,pAttrs, defStyleAttr){
     if (getVisibility() == VISIBLE) {
         setVisibility(INVISIBLE);
     }

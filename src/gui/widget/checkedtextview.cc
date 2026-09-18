@@ -1,33 +1,46 @@
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/checkedtextview.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(CheckedTextView)
+DECLARE_WIDGET2(CheckedTextView, "android.widget.CheckedTextView");
 
-CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextView(context,a){
-    Drawable* d = context->getDrawable(a.getString("checkMark"));
+// AOSP CheckedTextView.CHECKED_STATE_SET = { android.R.attr.state_checked }.
+static const std::vector<int> CHECKED_STATE_SET = { R::attr::state_checked };
+
+CheckedTextView::CheckedTextView(Context*ctx)
+    :CheckedTextView(ctx,nullptr){}
+
+CheckedTextView::CheckedTextView(Context* context,const AttributeSet* a):CheckedTextView(context,a,0){}
+
+CheckedTextView::CheckedTextView(Context* context,const AttributeSet* pAttrs,int defStyleAttr):TextView(context,pAttrs, defStyleAttr){
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::CheckedTextView, defStyleAttr);
+
     mCheckMarkDrawable = nullptr;
     mCheckMarkTintList = nullptr;
-    mHasCheckMarkTintMode=false;
+    mHasCheckMarkTintMode = false;
     mHasCheckMarkTint = false;
-    if (d)setCheckMarkDrawable(d);
 
-    if (a.hasAttribute("checkMarkTintMode")) {
-        /* getTintMode decodes the 6-value tintMode enum; the value is valid as a
-         * BlendMode (PorterDuff and BlendMode coincide for these 6). */
-        mCheckMarkBlendMode = a.getTintMode("checkMarkTintMode", -1);
+    Drawable* d = ta->getDrawable(R::styleable::CheckedTextView_checkMark);
+    if (d) setCheckMarkDrawable(d);
+
+    if (ta->hasValue(R::styleable::CheckedTextView_checkMarkTintMode)) {
+        mCheckMarkBlendMode = ta->getInt(R::styleable::CheckedTextView_checkMarkTintMode, -1);
         mHasCheckMarkTintMode = true;
     }
-
-    if (a.hasAttribute("checkMarkTint")) {
-        mCheckMarkTintList = a.getColorStateList("checkMarkTint");
-        mHasCheckMarkTint = (mCheckMarkTintList!=nullptr);
+    if (ta->hasValue(R::styleable::CheckedTextView_checkMarkTint)) {
+        mCheckMarkTintList = ta->getColorStateList(R::styleable::CheckedTextView_checkMarkTint);
+        mHasCheckMarkTint = (mCheckMarkTintList != nullptr);
     }
     mChecked = false;
-    mCheckMarkGravity = a.getGravity("checkMarkGravity", Gravity::END);
+    mCheckMarkGravity = ta->getInt(R::styleable::CheckedTextView_checkMarkGravity, Gravity::END);
 
-    const bool checked = a.getBoolean("checked", false);
+    const bool checked = ta->getBoolean(R::styleable::CheckedTextView_checked, false);
     setChecked(checked);
     applyCheckMarkTint();
+
 }
 
 CheckedTextView::~CheckedTextView(){
@@ -54,20 +67,20 @@ void CheckedTextView::doSetChecked(bool checked) {
     }
 }
 
-void CheckedTextView::setCheckMarkDrawable(const std::string&resId) {
-    if (resId.empty()==false && resId == mCheckMarkResource) {
+void CheckedTextView::setCheckMarkDrawable(int resId) {
+    if (resId != 0 && resId == mCheckMarkResource) {
         return;
     }
 
-    Drawable* d = resId.empty()==false ? getContext()->getDrawable(resId) : nullptr;
+    Drawable* d = resId != 0 ? getContext()->getDrawable(resId) : nullptr;
     setCheckMarkDrawableInternal(d, resId);
 }
 
 void CheckedTextView::setCheckMarkDrawable(Drawable* d) {
-    setCheckMarkDrawableInternal(d, "");
+    setCheckMarkDrawableInternal(d, 0);
 }
 
-void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,const std::string&resId){
+void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,int resId){
     if (mCheckMarkDrawable) {
         mCheckMarkDrawable->setCallback(nullptr);
         unscheduleDrawable(*mCheckMarkDrawable);
@@ -75,10 +88,17 @@ void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,const std::string
 
     mNeedRequestlayout = (d != mCheckMarkDrawable);
 
+    // AOSP's GC reclaims the replaced check mark; ours is an owned pointer
+    // (see ~CheckedTextView) — delete it unless the same instance was re-set.
+    if (mCheckMarkDrawable && d != mCheckMarkDrawable) {
+        delete mCheckMarkDrawable;
+        mCheckMarkDrawable = nullptr;
+    }
+
     if (d != nullptr) {
         d->setCallback(this);
         d->setVisible(getVisibility() == VISIBLE, false);
-        d->setState(StateSet::get(StateSet::VIEW_STATE_CHECKED));
+        d->setState(CHECKED_STATE_SET);
 
         // Record the intrinsic dimensions when in "checked" state.
         setMinHeight(d->getIntrinsicHeight());
@@ -243,7 +263,7 @@ void CheckedTextView::onDraw(Canvas& canvas) {
 std::vector<int> CheckedTextView::onCreateDrawableState(int extraSpace){
     std::vector<int> drawableState = TextView::onCreateDrawableState(extraSpace);
     if (isChecked()) {
-        mergeDrawableStates(drawableState, StateSet::get(StateSet::VIEW_STATE_CHECKED));
+        mergeDrawableStates(drawableState, CHECKED_STATE_SET);
     }
     return drawableState;
 }

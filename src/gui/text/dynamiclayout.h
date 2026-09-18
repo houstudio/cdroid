@@ -5,6 +5,9 @@
 #include <text/staticlayout.h>
 #include <text/packedintvector.h>
 #include <text/packedobjectvector.h>
+#include <text/textwatcher.h>
+#include <text/parcelablespan.h>   // NoCopySpan (ChangeWatcher ownership)
+#include <text/spanwatcher.h>
 #include <text/method/offsetmapping.h>
 namespace cdroid{
 class Editable;
@@ -121,13 +124,16 @@ public:
     int getEllipsisCount(int line) const override;
     LineBreakConfig getLineBreakConfig() const;
 private:
-    // NoCopySpan so the Spannable treats this as BORROWED: it never deletes
-    // mWatcher (DynamicLayout owns it solely and deletes it in its destructor).
-    // Note: not literally inheriting TextWatcher+SpanWatcher here — both derive
-    // NoCopySpan non-virtually, so multiple-inheriting them would duplicate the
-    // NoCopySpan base and make dynamic_cast<NoCopySpan*> ambiguous (treated as
-    // owned → double-free). The reflow callbacks stay plain methods for now.
-    class ChangeWatcher : public NoCopySpan {//implements TextWatcher, SpanWatcher {
+    // NoCopySpan (via TextWatcher/SpanWatcher) so the Spannable treats this as
+    // BORROWED: it never deletes mWatcher (DynamicLayout owns it solely and
+    // deletes it in its destructor). AOSP: `private class ChangeWatcher
+    // implements TextWatcher, SpanWatcher`. Both interfaces derive NoCopySpan
+    // VIRTUALLY, so joining them keeps a single NoCopySpan subobject and the
+    // span stays classified as borrowed. The SpanWatcher overrides carry the
+    // interface signatures; the TextWatcher side is dispatched through the
+    // std::function members (bound in the ctor to the member functions below).
+    class ChangeWatcher : virtual public TextWatcher, virtual public SpanWatcher,
+                          virtual public NoCopySpan {
     private:
         DynamicLayout* mLayout;
         void reflow(CharSequence* s, int where, int before, int after);
@@ -142,9 +148,10 @@ private:
         void onTextChanged(CharSequence* s, int where, int before, int after);
 
         void afterTextChanged(Editable* s);
-        void onSpanAdded(Spannable* s, ParcelableSpan* o, int start, int end);
-        void onSpanRemoved(Spannable* s, ParcelableSpan* o, int start, int end);
-        void onSpanChanged(Spannable* s, ParcelableSpan* o, int start, int end, int nstart, int nend);
+        void onSpanAdded(Spannable& s, const ParcelableSpan* o, int start, int end) override;
+        void onSpanRemoved(Spannable& s, const ParcelableSpan* o, int start, int end) override;
+        void onSpanChanged(Spannable& s, const ParcelableSpan* o, int start, int end,
+                int nstart, int nend) override;
     };
 private:
     CharSequence* mBase;
@@ -171,9 +178,14 @@ private:
     // Set of blocks that always need to be redrawn.
     std::set<int> mBlocksAlwaysNeedToBeRedrawn;
     // Number of items actually currently being used in the above 2 arrays
-    int mNumberOfBlocks;
+    // (=0 in-class: Java field-default zeroing — the ctor's first reflow runs
+    // updateBlocks before createBlocks ever assigns it, and the firstBlock/
+    // lastBlock scans used to read a garbage bound, indexing mBlockEndLines
+    // out of range.)
+    int mNumberOfBlocks = 0;
     // The first index of the blocks whose locations are changed
-    int mIndexFirstChangedBlock;
+    // (=0 likewise: updateBlocks min()'s against it before any assignment.)
+    int mIndexFirstChangedBlock = 0;
 
     int mTopPadding, mBottomPadding;
 

@@ -60,12 +60,17 @@ protected:
     void onLayout(bool changed, int left, int top, int width, int height)override;
 
 public:
-    DayPickerView(Context* context,const AttributeSet&atts);
+    DayPickerView(Context*ctx);   // AOSP DayPickerView(Context)
+    DayPickerView(Context* context,const AttributeSet*atts);
+    DayPickerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    DayPickerView(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~DayPickerView()override;
-    void setDayOfWeekTextAppearance(const std::string& resId);
-    const std::string getDayOfWeekTextAppearance();
-    void  setDayTextAppearance(const std::string& resId);
-    const std::string getDayTextAppearance();
+    void setDayOfWeekTextAppearance(int resId);
+    void setDayOfWeekNameLength(int length);
+    void onConfigurationChanged(Configuration& newConfig)override;
+    int getDayOfWeekTextAppearance();
+    void  setDayTextAppearance(int resId);
+    int getDayTextAppearance();
     void setDate(int64_t timeInMillis);
     void setDate(int64_t timeInMillis, bool animate);
     int64_t getDate();

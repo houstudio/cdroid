@@ -18,10 +18,12 @@
 #include <widgetEx/wear/swipedismissframelayout.h>
 namespace cdroid{
 
-DECLARE_WIDGET(SwipeDismissFrameLayout);
+DECLARE_WIDGET2(SwipeDismissFrameLayout, "androidx.wear.widget.SwipeDismissFrameLayout");
 
-SwipeDismissFrameLayout::SwipeDismissFrameLayout(Context* context,const AttributeSet& attrs)
-    :DismissibleFrameLayout(context, attrs){
+SwipeDismissFrameLayout::SwipeDismissFrameLayout(Context* context,const AttributeSet* attrs):SwipeDismissFrameLayout(context,attrs,0){}
+
+SwipeDismissFrameLayout::SwipeDismissFrameLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :DismissibleFrameLayout(context, pAttrs, defStyleAttr){
 }
 
 void SwipeDismissFrameLayout::addCallback(const SwipeDismissFrameLayout::Callback& callback) {

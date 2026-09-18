@@ -30,10 +30,23 @@ public:
     DECLARE_UIEVENT(void,OnDismissListener);
 private:
     class PopupDecorView:public Window{
+    public:
+        PopupDecorView(Context*ctx,int w,int h,int type);
     private:
         PopupWindow*mPop;
     public:
-        PopupDecorView(int w,int h,int type);
+        // Wire the owner at decor creation (AOSP's PopupDecorView is an inner
+        // class calling the outer PopupWindow's dismiss() directly; the port's
+        // back-pointer equivalent). Without this every dispatch handler below
+        // sees mPop == null and outside-touch/BACK dismissal is dead code.
+        void attachOwner(PopupWindow* pop){ mPop = pop; }
+        // Neutralize the back-pointer once the owner PopupWindow is gone: the
+        // decor's own delete is posted (Window::close) and may run later than
+        // the owner's destruction, so its dispatch handlers must not touch mPop.
+        // (The pending teardown callback is NOT cancelled here: the decor may
+        // already be freed when the owner dies - the callback self-guards on
+        // the owner's alive-flag instead. Only call this on a live decor.)
+        void detachOwner(){ mPop = nullptr; }
         bool dispatchKeyEvent(KeyEvent& event)override;
         bool dispatchTouchEvent(MotionEvent& ev)override;
         bool onTouchEvent(MotionEvent& event)override;
@@ -45,10 +58,13 @@ private:
 private:
     static constexpr int DEFAULT_ANCHORED_GRAVITY = Gravity::TOP | Gravity::START;
     static constexpr int ANIMATION_STYLE_DEFAULT = -1;
-    Context* mContext;
+    // Java field default (null). The (int,int) -> (nullptr,...) ctor chain
+    // reaches setContentView without ever assigning mContext, and its
+    // null-check there read an indeterminate value (valgrind: KeyboardView's
+    // popup, 155 conditional-jump errors on the pref sweep).
+    Context* mContext = nullptr;
     View* mParentRootView;
     bool mIsShowing;
-    bool mIsTransitioningToDismiss;
     bool mIsDropdown;
 
     /** View that handles event dispatch and content transitions. maby we can use it as Window??*/
@@ -67,7 +83,7 @@ private:
 
     int mInputMethodMode = INPUT_METHOD_FROM_FOCUSABLE;
     int mSoftInputMode;//= WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED;
-    int mSplitTouchEnabled;
+    int mSplitTouchEnabled = -1;   // -1 = unset sentinel (computeFlags: only explicit true counts)
     bool mFocusable;
     bool mTouchable;
     bool mOutsideTouchable;
@@ -76,7 +92,7 @@ private:
     bool mClipToScreen;
     bool mAllowScrollingAnchorParent;
     bool mLayoutInsetDecor;
-    bool mNotTouchModal;
+    bool mNotTouchModal = false;   // AOSP default; also fixes an uninitialized read in computeFlags
     bool mAttachedInDecor;
     bool mAttachedInDecorSet;
 
@@ -127,7 +143,7 @@ private:
     PopupDecorView* createDecorView(View* contentView);
     void invokePopup(WindowManager::LayoutParams* p);
     void setLayoutDirectionFromAnchor();
-    const std::string computeAnimationResource();
+    int computeAnimationResource();
     void update(View* anchor, bool updateLocation, int xoff, int yoff, int width, int height);
     bool tryFitVertical(WindowManager::LayoutParams* outParams, int yOffset, int height, int anchorHeight,
            int drawingLocationY, int screenLocationY, int displayFrameTop,int displayFrameBottom, bool allowResize);
@@ -159,9 +175,10 @@ protected:
             int xOffset, int yOffset, int width, int height, int gravity, bool allowScroll);
      Rect getTransitionEpicenter();
 public:
-    PopupWindow(Context* context,const AttributeSet& attrs);
-    PopupWindow(Context* context,const AttributeSet& attrs, const std::string& defStyleAttr);
-    PopupWindow(Context* context,const AttributeSet& attrs, const std::string& defStyleAttr, const std::string& defStyleRes);
+    PopupWindow(Context* context);   // AOSP PopupWindow(Context)
+    PopupWindow(Context* context,const AttributeSet* attrs);
+    PopupWindow(Context* context,const AttributeSet* attrs, int defStyleAttr);
+    PopupWindow(Context* context,const AttributeSet* attrs, int defStyleAttr, int defStyleRes);
     PopupWindow(View* contentView, int width, int height,bool focusable=false);
     PopupWindow(int width, int height);
     virtual ~PopupWindow();
@@ -169,6 +186,12 @@ public:
     Transition* getEnterTransition()const;
     void setExitTransition(Transition* exitTransition);
     Transition* getExitTransition()const;
+    // AOSP setAnimationStyle/getAnimationStyle (public API): an explicit
+    // animation STYLE res id (0 = explicitly none) overriding the dropdown
+    // default; resolved onto the decor window at invokePopup time
+    // (computeAnimationResource).
+    void setAnimationStyle(int animationStyle);
+    int getAnimationStyle() const;
     void setEpicenterBounds(const Rect& bounds);
     Drawable* getBackground();
     void  setBackgroundDrawable(Drawable* background);
@@ -213,6 +236,7 @@ public:
     int  getHeight()const;
     void setHeight(int);
     bool isShowing()const;
+
     void showAtLocation(View* parent, int gravity, int x, int y);
     void showAsDropDown(View* anchor);
     void showAsDropDown(View* anchor, int xoff, int yoff);

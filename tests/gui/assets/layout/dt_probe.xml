@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Picker battery for datetime_widgets_tests: the pickers of the demo
+     date/time page (minus the private-attr material CalendarView). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TimePicker
+        android:id="@+id/probe_tp_clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:timePickerMode="clock" />
+
+    <TimePicker
+        android:id="@+id/probe_tp_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:timePickerMode="spinner" />
+
+    <DatePicker
+        android:id="@+id/probe_dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:datePickerMode="spinner" />
+
+    <DatePicker
+        android:id="@+id/probe_dp_cal"
+        android:layout_width="560dp"
+        android:layout_height="420dp"
+        android:datePickerMode="calendar" />
+
+    <CalendarView
+        android:id="@+id/probe_calview"
+        android:layout_width="match_parent"
+        android:layout_height="300dp" />
+</LinearLayout>

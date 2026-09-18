@@ -15,7 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/simplemonthview.h>
+#include <content/numberformat.h>
+#include <content/Locale.h>
+#include <widget/framework_styleable.h>
+#include <content/dateformatsymbols.h>
+#include <content/simpledateformat.h>
 #include <cmath>
 #include <text/paint.h>
 #include <text/textutils.h>
@@ -27,64 +34,60 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
-DECLARE_WIDGET(SimpleMonthView);
-SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
-    setFocusable(true);
-    initMonthView();
-    mPaddedWidth = w;
-    mPaddedHeight = h;
+using namespace cdroid::internal;
+DECLARE_WIDGET2(SimpleMonthView, "android.widget.SimpleMonthView");
+SimpleMonthView::SimpleMonthView(Context*ctx)
+    :SimpleMonthView(ctx,nullptr){}
 
-    // We may have been laid out smaller than our preferred size. If so,
-    // scale all dimensions to fit.
-    //const int measuredPaddedHeight = h;// - paddingTop - paddingBottom;
-    const float scaleH = 1.0f;//paddedHeight / (float) measuredPaddedHeight;
-    int monthHeight = (int) (mDesiredMonthHeight * scaleH);
-    int cellWidth = mPaddedWidth / DAYS_IN_WEEK;
-    mMonthHeight = monthHeight;
-    mMonth=0;
-    mDayOfWeekHeight = (int) (mDesiredDayOfWeekHeight * scaleH);
-    mDayHeight = (int) (mDesiredDayHeight * scaleH);
-    mCellWidth = cellWidth;
-    mWeekStart = Calendar::SUNDAY;
-    // Compute the largest day selector radius that's still within the clip
-    // bounds and desired selector radius.
-    const int maxSelectorWidth = cellWidth / 2 + 0;//std::min(paddingLeft, paddingRight);
-    const int maxSelectorHeight = mDayHeight / 2 + 0;//paddingBottom;
-    mDaySelectorRadius = std::min(mDesiredDaySelectorRadius,std::min(maxSelectorWidth, maxSelectorHeight));
-}
+SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* atts):SimpleMonthView(ctx,atts,0){}
 
-SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
-   :View(ctx,atts){
+SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+   :View(ctx,pAttrs, defStyleAttr){
     initMonthView();
     // Faithful to AOSP SimpleMonthView: the desired dimensions come from
     // R.dimen.date_picker_* resources, NOT from XML attributes (the month-item
     // layout declares none). Reading the missing attrs returned 0, leaving
     // mDayHeight==0 and dividing by zero in getDayAtLocation.
-    mDesiredMonthHeight = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_month_height");
-    mDesiredDayOfWeekHeight = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_of_week_height");
-    mDesiredDayHeight = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_height");
-    mDesiredCellWidth  = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_width");
-    mDesiredDaySelectorRadius = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_selector_radius");
+    // AOSP reads R.dimen.date_picker_* and the values always resolve. CDROID's
+    // runtime table may not carry these framework dimens yet (getDimensionPixelSize
+    // returns 0), which collapsed the whole month grid to zero height — keep the
+    // material defaults from dimens_material.xml when resolution fails.
+    auto dimenOr = [this](int resId, int fallbackPx) {
+        const int v = mContext->getDimensionPixelSize(resId);
+        return v > 0 ? v : fallbackPx;
+    };
+    const float density = mContext->getResources().getDisplayMetrics().density;
+    mDesiredMonthHeight = dimenOr(R::dimen::date_picker_month_height, (int)(56 * density));
+    mDesiredDayOfWeekHeight = dimenOr(R::dimen::date_picker_day_of_week_height, (int)(36 * density));
+    mDesiredDayHeight = dimenOr(R::dimen::date_picker_day_height, (int)(40 * density));
+    mDesiredCellWidth  = dimenOr(R::dimen::date_picker_day_width, (int)(44 * density));
+    mDesiredDaySelectorRadius = dimenOr(R::dimen::date_picker_day_selector_radius, (int)(20 * density));
 
     // Set up accessibility components.
     setAccessibilityDelegate(mTouchHelper);
     setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
 
-    std::string res = atts.getString("monthTextAppearance");
-    if(!res.empty())setMonthTextAppearance(res);
-    res = atts.getString("dayOfWeekTextAppearance");
-    if(!res.empty())setDayOfWeekTextAppearance(res);
-    res = atts.getString("dayTextAppearance");
-    if(!res.empty())setDayTextAppearance(res);
+    int res = pAttrs ? pAttrs->getAttributeResourceValue(std::string(), "monthTextAppearance", 0) : 0;
+    if(res) setMonthTextAppearance(res);
+    res = pAttrs ? pAttrs->getAttributeResourceValue(std::string(), "dayOfWeekTextAppearance", 0) : 0;
+    if(res) setDayOfWeekTextAppearance(res);
+    { auto ta2 = mContext->obtainStyledAttributes(pAttrs, R::styleable::SimpleMonthViewCdroid);
+      const int dayTA = ta2->getResourceId(R::styleable::SimpleMonthViewCdroid_dayTextAppearance, 0);
+      if(dayTA) setDayTextAppearance(dayTA);
+    }
     updateMonthYearLabel();
     updateDayOfWeekLabels();
 }
 
 SimpleMonthView::~SimpleMonthView(){
-    delete mTouchHelper;
+    // mTouchHelper is a refcounted member (also set on View as the owning
+    // accessibility delegate) — released with its last ref automatically.
 }
 
 void SimpleMonthView::initMonthView(){
+    // AOSP: mLocale = res config locale; mDayFormatter = NumberFormat.
+    // getIntegerInstance(mLocale) — right after the Calendar init.
+    mDayFormatter = NumberFormat::getIntegerInstance(Locale::getDefault());
     mOnDayClickListener = nullptr;
     mDayTextColor = nullptr;
     mDesiredMonthHeight = 30;
@@ -92,10 +95,11 @@ void SimpleMonthView::initMonthView(){
     mDesiredDayOfWeekHeight = 30;
     mDesiredDaySelectorRadius= 15;
     mMonth = 0;
+    mYear  = 1970;
     mDayHeight=20;
     mPaddedWidth = 0;
     mPaddedHeight= 0;
-    mTouchHelper = new MonthViewTouchHelper(this);
+    mTouchHelper = std::make_shared<MonthViewTouchHelper>(this);
     initPaints();
 }
 
@@ -140,27 +144,58 @@ void SimpleMonthView::initPaints(){
 }
 
 void SimpleMonthView::updateMonthYearLabel(){
-    mMonthYearLabel = std::to_string(mYear)+"/"+std::to_string(mMonth+(1-Calendar::JANUARY));//mCalendar.get(Calendar::YEAR));
+    // AOSP builds the label from the "MMMMy" skeleton via
+    // DateFormat.getBestDateTimePattern; CDROID has no DTPG, so use the
+    // equivalent standalone-month pattern (LLLL keeps the header form
+    // correct for locales whose standalone months differ from format months).
+    const Locale locale = Locale::getDefault();
+    SimpleDateFormat formatter("LLLL yyyy", locale);
+    mMonthYearLabel = formatter.format(mCalendar.getTimeInMillis());
+}
+
+void SimpleMonthView::onLocaleChanged() {
+    // AOSP rebuilds the whole view on a locale change; CDROID re-localizes
+    // in place, so the day formatter rebuilds here too.
+    mDayFormatter = NumberFormat::getIntegerInstance(Locale::getDefault());
+    updateMonthYearLabel();
+    updateDayOfWeekLabels();
+    invalidate();
+}
+
+void SimpleMonthView::setDayOfWeekNameLength(int length) {
+    mDayOfWeekNameLength = length;
+    updateDayOfWeekLabels();
+    invalidate();
 }
 
 void SimpleMonthView::updateDayOfWeekLabels(){
-    // TODO: ICU DateFormatSymbols.getWeekdays(NARROW) gives locale tiny names;
-    // cdroid has no ICU, so use a static English table. The column for index i
-    // is the weekday (mWeekStart + i) mapped to a 0-based table (SUNDAY=1 -> 0).
-    const char*tinyWeekdayNames[]={"SUN","MON","TUE","WED","THU","FRI","SAT"};
+    // AOSP SimpleMonthView.updateDayOfWeekLabels: tiny (single-character)
+    // weekday names from DateFormatSymbols (ICU NARROW; the i18n engine
+    // approximates narrow from the short name). The table layout matches
+    // Calendar days, e.g. SUNDAY is index 1; the column for index i is the
+    // weekday mWeekStart + i. The name length is a CDROID extension
+    // (0 narrow = AOSP, 1 abbreviated, 2 wide).
+    const Locale locale = Locale::getDefault();
+    // The symbols object must outlive the references (getters return refs
+    // into it; binding to the temporary directly dangles).
+    const DateFormatSymbols dfs(locale);
+    const std::vector<std::string>* names = &dfs.getTinyWeekdays();
+    if (mDayOfWeekNameLength == 1) names = &dfs.getShortWeekdays();
+    else if (mDayOfWeekNameLength == 2) names = &dfs.getWeekdays();
     for (int i = 0; i < DAYS_IN_WEEK; i++) {
-        mDayOfWeekLabels[i] = tinyWeekdayNames[(mWeekStart - Calendar::SUNDAY + i) % DAYS_IN_WEEK];
+        mDayOfWeekLabels[i] = (*names)[(mWeekStart + i - 1) % DAYS_IN_WEEK + 1];
     }
 }
 
-const cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Paint& p, const std::string& resId){
-    AttributeSet attrs = mContext->obtainStyledAttributes(resId);
-    const std::string fontFamily = attrs.getString("fontFamily");
+const cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Paint& p, int resId){
+    auto ta = mContext->obtainStyledAttributes(resId, R::styleable::TextAppearance);
+    if (!ta) return nullptr;
+    const std::string fontFamily = ta->getString(R::styleable::TextAppearance_fontFamily);
     if (!fontFamily.empty()) {
         p.setTypeface(Typeface::create(fontFamily, 0));
     }
-    p.setTextSize(attrs.getDimensionPixelSize("textSize", (int) p.getTextSize()));
-    const auto textColor = attrs.getColorStateList("textColor");
+    p.setTextSize(ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, (int) p.getTextSize()));
+    const auto textColor = ta->getColorStateList(R::styleable::TextAppearance_textColor);
     if (textColor != nullptr) {
         const int enabledColor = textColor->getColorForState(
                 StateSet::get(StateSet::VIEW_STATE_ENABLED), 0);
@@ -169,17 +204,17 @@ const cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Paint&
     return textColor;
 }
 
-void SimpleMonthView::setMonthTextAppearance(const std::string& resId) {
+void SimpleMonthView::setMonthTextAppearance(int resId) {
     applyTextAppearance(mMonthPaint, resId);
     invalidate();
 }
 
-void SimpleMonthView::setDayOfWeekTextAppearance(const std::string& resId) {
+void SimpleMonthView::setDayOfWeekTextAppearance(int resId) {
     applyTextAppearance(mDayOfWeekPaint, resId);
     invalidate();
 }
 
-void SimpleMonthView::setDayTextAppearance(const std::string& resId) {
+void SimpleMonthView::setDayTextAppearance(int resId) {
     const auto textColor = applyTextAppearance(mDayPaint, resId);
     if (textColor != nullptr) {
         mDayTextColor = textColor;
@@ -583,7 +618,7 @@ void SimpleMonthView::drawDays(Canvas& canvas){
         }
         mDayPaint.setColor(dayTextColor);
 
-        const std::u16string u16 = TextUtils::utf8_utf16(std::to_string(day));
+        const std::u16string u16 = TextUtils::utf8_utf16(mDayFormatter->format(day));
         mDayPaint.drawTextRun(canvas, (const char16_t*) u16.c_str(),
                 0, u16.length(), 0, 0, colCenterRtl, rowCenter - halfLineHeight, false);
 
@@ -893,7 +928,7 @@ void SimpleMonthView::MonthViewTouchHelper::onPopulateNodeForVirtualView(int vir
 
     const bool isDayEnabled = mSMV->isDayEnabled(virtualViewId);
     if (isDayEnabled) {
-        node.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK.getId());
+        node.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK);
     }
 
     node.setEnabled(isDayEnabled);
@@ -938,7 +973,7 @@ std::string SimpleMonthView::MonthViewTouchHelper::getDayDescription(int id) {
  */
 std::string SimpleMonthView::MonthViewTouchHelper::getDayText(int id) {
     if (mSMV->isValidDayOfMonth(id)) {
-        return "";//mDayFormatter.format(id);
+        return mSMV->mDayFormatter->format(id);
     }
 
     return "";

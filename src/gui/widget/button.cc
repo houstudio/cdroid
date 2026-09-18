@@ -16,20 +16,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/button.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(Button,"cdroid:attr/buttonStyle")
+DECLARE_WIDGET2(Button, "android.widget.Button");
 
-Button::Button(Context*ctx,const AttributeSet& attrs):TextView(ctx,attrs){
-}
+Button::Button(Context*ctx)
+    :Button(ctx,nullptr){}
 
-Button::Button(int32_t w, int32_t h):Button(std::string(),w,h){
-}
+Button::Button(Context*ctx,const AttributeSet* attrs):Button(ctx,attrs,cdroid::internal::R::attr::buttonStyle){}
 
-Button::Button(const std::string& text, int32_t w, int32_t h)
-  :TextView(text, w, h){
-    setGravity(Gravity::CENTER);
+Button::Button(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):TextView(ctx,pAttrs, defStyleAttr){
 }
 
 Button::~Button() {

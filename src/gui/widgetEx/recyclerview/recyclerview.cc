@@ -15,7 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widgetEx/recyclerview/recyclerview.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/recyclerview/gapworker.h>
 #include <widgetEx/recyclerview/childhelper.h>
 #include <widgetEx/recyclerview/viewinfostore.h>
@@ -32,6 +35,7 @@
 #include <cassert>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 //public class RecyclerView extends ViewGroup implements ScrollingView, NestedScrollingChild2 {
 class QuinticInterpolator:public Interpolator{
@@ -46,83 +50,70 @@ bool RecyclerView::sDebugAssertionsEnabled= false;
 bool RecyclerView::sVerboseLoggingEnabled = false;
 static QuinticInterpolator sQuinticInterpolator;
 
-DECLARE_WIDGET2(RecyclerView,"cdroid:attr/recyclerviewStyle")
+// androidx inflation path: RecyclerView(context, attrs) ->
+// defStyleAttr = R.attr.recyclerViewStyle (library attr, 0x02 shared-lib).
+DECLARE_WIDGET2(RecyclerView, "androidx.recyclerview.widget.RecyclerView");
 
-RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
-    initRecyclerView();
-    initAdapterManager();
-    initChildrenHelper();
-    initAutofill();
-    // If not explicitly specified this view is important for accessibility.
-    if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
-        setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
-    }
-    setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
-    
-    //Create the layoutManager if specified.
-    AttributeSet attrs(getContext(),getContext()->getPackageName());
-    std::string layoutManagerName = attrs.getString("layoutManager","LinearLayoutManager");
-    const int descendantFocusability = attrs.getInt("descendantFocusability", -1);
-    if (descendantFocusability == -1) {
-        setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
-    }
-    mEnableFastScroller = attrs.getBoolean("fastScrollEnabled", false);
-    if (mEnableFastScroller) {
-        StateListDrawable* verticalThumbDrawable = (StateListDrawable*) attrs.getDrawable("fastScrollVerticalThumbDrawable");
-        Drawable* verticalTrackDrawable = attrs.getDrawable("fastScrollVerticalTrackDrawable");
-        StateListDrawable* horizontalThumbDrawable = (StateListDrawable*) attrs.getDrawable("fastScrollHorizontalThumbDrawable");
-        Drawable* horizontalTrackDrawable = attrs.getDrawable("fastScrollHorizontalTrackDrawable");
-        initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable,attrs);
-    }
-    createLayoutManager(getContext(), layoutManagerName, attrs);//, defStyle, defStyleRes);
-    setDescendantFocusability(descendantFocusability==-1?ViewGroup::FOCUS_AFTER_DESCENDANTS:ViewGroup::FOCUS_AFTER_DESCENDANTS);
+RecyclerView::RecyclerView(Context*ctx):RecyclerView(ctx,nullptr){}
 
-    // Re-set whether nested scrolling is enabled so that it is set on all API levels
-    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled", true));
-    setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
+RecyclerView::RecyclerView(Context* context,const AttributeSet* attrs)
+    // androidx: this(context, attrs, R.attr.recyclerViewStyle). The attr id is
+    // pinned in widgetEx/recyclerview public.xml and surfaced by gen_styleable
+    // as a standalone R::attr constant (single source).
+    :RecyclerView(context,attrs,(int)R::attr::recyclerViewStyle){
 }
 
-RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
-   :ViewGroup(context, attrs){
+RecyclerView::RecyclerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+   :ViewGroup(context, pAttrs, defStyleAttr){
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::RecyclerView, defStyleAttr);
 
     initRecyclerView();
     initAdapterManager();
     initChildrenHelper();
     initAutofill();
-    mClipToPadding = attrs.getBoolean("clipToPadding", true);
+    mClipToPadding = ta->getBoolean(R::styleable::RecyclerView_clipToPadding, true);
     // If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
-    setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
-    // Create the layoutManager if specified.
+    mAccessibilityDelegate = std::make_shared<RecyclerViewAccessibilityDelegate>(this);
 
-    std::string layoutManagerName = attrs.getString("layoutManager");
-    const int descendantFocusability = attrs.getInt("descendantFocusability", -1);
+    std::string layoutManagerName = ta->getString(R::styleable::RecyclerView_layoutManager);
+    const int descendantFocusability = ta->getInt(R::styleable::RecyclerView_descendantFocusability, -1);
     if (descendantFocusability == -1) {
         setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
     }
-    mEnableFastScroller = attrs.getBoolean("fastScrollEnabled", false);
+    mEnableFastScroller = ta->getBoolean(R::styleable::RecyclerView_fastScrollEnabled, false);
     if (mEnableFastScroller) {
-        StateListDrawable* verticalThumbDrawable = (StateListDrawable*) attrs.getDrawable("fastScrollVerticalThumbDrawable");
-        Drawable* verticalTrackDrawable = attrs.getDrawable("fastScrollVerticalTrackDrawable");
-        StateListDrawable* horizontalThumbDrawable = (StateListDrawable*) attrs.getDrawable("fastScrollHorizontalThumbDrawable");
-        Drawable* horizontalTrackDrawable = attrs.getDrawable("fastScrollHorizontalTrackDrawable");
-        initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable,attrs);
+        StateListDrawable* verticalThumbDrawable = (StateListDrawable*) (ta->getDrawable(R::styleable::RecyclerView_fastScrollVerticalThumbDrawable));
+        Drawable* verticalTrackDrawable = ta->getDrawable(R::styleable::RecyclerView_fastScrollVerticalTrackDrawable);
+        StateListDrawable* horizontalThumbDrawable = (StateListDrawable*) (ta->getDrawable(R::styleable::RecyclerView_fastScrollHorizontalThumbDrawable));
+        Drawable* horizontalTrackDrawable = ta->getDrawable(R::styleable::RecyclerView_fastScrollHorizontalTrackDrawable);
+        initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable);
     }
-    createLayoutManager(context, layoutManagerName, attrs);//, defStyle, defStyleRes);
-    setDescendantFocusability(descendantFocusability==-1?ViewGroup::FOCUS_AFTER_DESCENDANTS:ViewGroup::FOCUS_AFTER_DESCENDANTS);
+    // Create the layoutManager if specified.
+    createLayoutManager(context, layoutManagerName, pAttrs, defStyleAttr, 0);
 
-    // Re-set whether nested scrolling is enabled so that it is set on all API levels
-    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled", true));
+    // nestedScrollingEnabled is a framework View attr (not in the RecyclerView styleable) — attrs bridge.
+    setNestedScrollingEnabled(pAttrs
+            ? pAttrs->getAttributeBooleanValue(std::string(), "nestedScrollingEnabled", true)
+            : true);
     setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 
 RecyclerView::~RecyclerView(){
-    for(ItemDecoration*id:mItemDecorations){
+    // CDROID ownership design: the RecyclerView owns its registered
+    // ItemDecorations. Sever ownership (mOwnerRV = null) BEFORE each delete:
+    // the decoration dtor's self-detach must be a no-op here — it would
+    // otherwise re-enter this half-destructed RV, and erasing from the list
+    // being iterated would be UB. Moving the list out first is the second
+    // belt (self-detach finds an empty list).
+    std::vector<ItemDecoration*> ownedDecorations = std::move(mItemDecorations);
+    for(ItemDecoration*id:ownedDecorations){
+        id->mOwnerRV = nullptr;
         delete id;
     }
-    mItemDecorations.clear();
     if(mVelocityTracker)
         mVelocityTracker->recycle();
     delete mChildHelper;
@@ -142,7 +133,8 @@ RecyclerView::~RecyclerView(){
     delete mScrollingChildHelper;
     delete mScrollFeedbackProvider;
     delete mPendingSavedState;
-    delete mAccessibilityDelegate;
+    // mAccessibilityDelegate is refcounted now — freed with its last ref
+    // (item views may still hold the shared ItemDelegate during teardown).
     delete (GapWorker::LayoutPrefetchRegistryImpl*)mPrefetchRegistry;
     delete (ViewInfoStore::ProcessCallback*)mViewInfoProcessCallback;
 }
@@ -289,21 +281,54 @@ void RecyclerView::doAnimatorFinished(ViewHolder& item) {
 }
 
 RecyclerViewAccessibilityDelegate* RecyclerView::getCompatAccessibilityDelegate() {
-    return mAccessibilityDelegate;
+    return mAccessibilityDelegate.get();
 }
 
 void RecyclerView::setAccessibilityDelegate(RecyclerViewAccessibilityDelegate* accessibilityDelegate) {
-    mAccessibilityDelegate = accessibilityDelegate;
+    // Borrowed (AOSP contract): the caller keeps ownership of a raw-pointer
+    // replacement; assigning drops the previous owning ref (the ctor-created
+    // delegate) automatically.
+    mAccessibilityDelegate = std::shared_ptr<RecyclerViewAccessibilityDelegate>(
+            accessibilityDelegate, [](RecyclerViewAccessibilityDelegate*) {});
 }
 
+// java createLayoutManager resolves the class by reflection — the 4-arg ctor
+// (Context, AttributeSet, defStyleAttr, defStyleRes) first, then the no-arg
+// ctor. CDROID has no reflection; the built-in managers register their 4-arg
+// ctor by the androidx full name that getFullClassName() builds.
+static const std::unordered_map<std::string,
+        std::function<RecyclerView::LayoutManager*(Context*,const AttributeSet*,int,int)>>
+        layoutManagerParsers = {
+    {"androidx.recyclerview.widget.LinearLayoutManager",
+        [](Context* c,const AttributeSet* a,int da,int dr){ return new LinearLayoutManager(c,a,da,dr); }},
+    {"androidx.recyclerview.widget.GridLayoutManager",
+        [](Context* c,const AttributeSet* a,int da,int dr){ return new GridLayoutManager(c,a,da,dr); }},
+    {"androidx.recyclerview.widget.StaggeredGridLayoutManager",
+        [](Context* c,const AttributeSet* a,int da,int dr){ return new StaggeredGridLayoutManager(c,a,da,dr); }},
+};
+
+/**
+ * Instantiate and set a LayoutManager, if specified in the attributes.
+ */
 void RecyclerView::createLayoutManager(Context* context,const std::string& className,
-	const AttributeSet& attrs/*,int defStyleAttr, int defStyleRes*/) {
-    if(!className.compare("LinearLayoutManager")){
-        setLayoutManager(std::make_unique<LinearLayoutManager>(context,attrs));
-    }else if(!className.compare("GridLayoutManager")){
-        setLayoutManager(std::make_unique<GridLayoutManager>(context,attrs));
-    }else if(!className.compare("StaggeredGridLayoutManager")){
-        setLayoutManager(std::make_unique<StaggeredGridLayoutManager>(context,attrs));
+        const AttributeSet* attrs,int defStyleAttr,int defStyleRes) {
+    if (!className.empty()) {
+        std::string name = className;
+        const size_t b = name.find_first_not_of(" \t\n\r\f");  // java String.trim()
+        const size_t e = name.find_last_not_of(" \t\n\r\f");
+        name = (b == std::string::npos) ? std::string() : name.substr(b, e - b + 1);
+        if (!name.empty()) {
+            name = getFullClassName(context, name);
+            auto it = layoutManagerParsers.find(name);
+            if (it != layoutManagerParsers.end()) {
+                setLayoutManager(std::unique_ptr<LayoutManager>(
+                        it->second(context, attrs, defStyleAttr, defStyleRes)));
+            } else {
+                // java: IllegalStateException "Unable to find LayoutManager".
+                const std::string pos = attrs ? attrs->getPositionDescription() : std::string();
+                throw std::runtime_error(pos + ": Unable to find LayoutManager " + name);
+            }
+        }
     }
 }
 
@@ -311,10 +336,10 @@ std::string RecyclerView::getFullClassName(Context* context, const std::string& 
     if (className[0] == '.') {
         return context->getPackageName() + className;
     }
-    if (className.find(".")!=std::string::npos){//contains(".")) {
+    if (className.find(".") != std::string::npos) {
         return className;
     }
-    return className;//RecyclerView.class.getPackage().getName() + '.' + className;
+    return std::string("androidx.recyclerview.widget.") + className;
 }
 
 void RecyclerView::initChildrenHelper() {
@@ -788,8 +813,21 @@ void RecyclerView::addItemDecoration(ItemDecoration* decor, int index) {
     } else {
         mItemDecorations.insert(mItemDecorations.begin()+index,decor);//add(index, decor);
     }
+    decor->mOwnerRV = this;   // registered: the RV owns it until detach
     markItemDecorInsetsDirty();
     requestLayout();
+}
+
+void RecyclerView::detachItemDecoration(ItemDecoration* decor) {
+    if (decor != nullptr) decor->mOwnerRV = nullptr;
+    auto it = std::find(mItemDecorations.begin(), mItemDecorations.end(), decor);
+    if (it != mItemDecorations.end()) {
+        mItemDecorations.erase(it);
+    }
+    if (mItemDecorations.empty()) {
+        setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
+    }
+    markItemDecorInsetsDirty();
 }
 
 void RecyclerView::addItemDecoration(ItemDecoration* decor) {
@@ -2624,6 +2662,12 @@ bool RecyclerView::shouldDeferAccessibilityEvent(AccessibilityEvent& event) {
 
 void RecyclerView::sendAccessibilityEventUnchecked(AccessibilityEvent& event) {
     if (shouldDeferAccessibilityEvent(event)) {
+        // androidx accumulates the change types into mEatenAccessibilityChangeFlags
+        // (dispatchContentChangedIfNecessary re-emits them after layout) — the
+        // port dropped both the accumulation AND the event; AOSP relies on GC
+        // for the discarded object, here it must be recycled.
+        mEatenAccessibilityChangeFlags |= event.getContentChangeTypes();
+        event.recycle();
         return;
     }
     ViewGroup::sendAccessibilityEventUnchecked(event);
@@ -3279,7 +3323,7 @@ RecyclerView::LayoutParams* RecyclerView::generateDefaultLayoutParams()const {
 
 RecyclerView::LayoutParams* RecyclerView::generateLayoutParams(const AttributeSet& attrs)const {
     LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager");
-    return mLayout->generateLayoutParams(getContext(), attrs);
+    return mLayout->generateLayoutParams(getContext(), &attrs);
 }
 
 RecyclerView::LayoutParams* RecyclerView::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
@@ -4273,6 +4317,13 @@ RecyclerView::Recycler::Recycler(RecyclerView*rv){
 }
 
 RecyclerView::Recycler::~Recycler(){
+    // The item cache (DEFAULT_CACHE_SIZE per type + prefetch) never entered the
+    // pool, and AOSP frees it via GC. ViewHolder owns its (detached) itemView,
+    // so deleting the holders frees the whole view trees — direct deletion,
+    // not recycleCachedViewAt(), to avoid adapter onViewRecycled callbacks
+    // during teardown. The pool frees its own set in its destructor.
+    for (ViewHolder* vh : mCachedViews) delete vh;
+    mCachedViews.clear();
     delete mRecyclerPool;
     delete mChangedScrap;
 }
@@ -4559,14 +4610,12 @@ void RecyclerView::Recycler::attachAccessibilityDelegateOnBind(ViewHolder& holde
             return;
         }
         AccessibilityDelegate* itemDelegate = mRV->mAccessibilityDelegate->getItemDelegate();
-        if (!itemView->getAccessibilityDelegate()){//hasAccessibilityDelegate()) {
-            //holder.addFlags(ViewHolder::FLAG_SET_A11Y_ITEM_DELEGATE);
-            //temView->setAccessibilityDelegate( mRV->mAccessibilityDelegate->getItemDelegate());
-            // If there was already an a11y delegate set on the itemView, store it in the
-            // itemDelegate and then set the itemDelegate as the a11y delegate.
-            ((RecyclerViewAccessibilityDelegate::ItemDelegate*) itemDelegate)->saveOriginalDelegate(itemView);
-        }
-        itemView->setAccessibilityDelegate(itemDelegate);
+        // androidx: saveOriginalDelegate runs whenever the delegate IS an ItemDelegate
+        // (self/null originals are ignored inside), NOT only when none was set —
+        // the old guard skipped saving app-installed delegates, so chaining broke.
+        ((RecyclerViewAccessibilityDelegate::ItemDelegate*) itemDelegate)->saveOriginalDelegate(itemView);
+        // Owning set: the shared ItemDelegate outlives any single item view.
+        itemView->setAccessibilityDelegate(mRV->mAccessibilityDelegate->getItemDelegateRef());
     }
 }
 
@@ -5594,8 +5643,8 @@ RecyclerView::LayoutParams* RecyclerView::LayoutManager::generateLayoutParams(co
     return new LayoutParams(lp);
 }
 
-RecyclerView::LayoutParams* RecyclerView::LayoutManager::generateLayoutParams(Context *c, const AttributeSet& attrs)const {
-    return new LayoutParams(c, attrs);
+RecyclerView::LayoutParams* RecyclerView::LayoutManager::generateLayoutParams(Context *c, const AttributeSet* attrs)const {
+    return new LayoutParams(c, *attrs);
 }
 
 int RecyclerView::LayoutManager::scrollHorizontallyBy(int dx, Recycler& recycler, State& state) {
@@ -6631,17 +6680,15 @@ bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler& recycler,
 
     float granularScrollAmount = 1.F; // The default value.
 
-    /*if (args != nullptr) {
-        granularScrollAmount = args.getFloat(AccessibilityNodeInfo::ACTION_ARGUMENT_SCROLL_AMOUNT_FLOAT, 1.F);
+    if (args != nullptr) {
+        granularScrollAmount = args->getFloat(
+                AccessibilityNodeInfo::ACTION_ARGUMENT_SCROLL_AMOUNT_FLOAT, 1.F);
         if (granularScrollAmount < 0) {
-            if (sDebugAssertionsEnabled) {
-                throw new IllegalArgumentException(
-                        "attempting to use ACTION_ARGUMENT_SCROLL_AMOUNT_FLOAT with a "
-                                + "negative value (" + granularScrollAmount + ")");
-            }
+            LOGE("attempting to use ACTION_ARGUMENT_SCROLL_AMOUNT_FLOAT with a negative value (%f)",
+                 granularScrollAmount);
             return false;
         }
-    }*/
+    }
 
     if (floatCompare(granularScrollAmount, INFINITY) == 0) {
         // Assume that the client wants to scroll as far as possible. For
@@ -6681,14 +6728,14 @@ bool RecyclerView::LayoutManager::performAccessibilityActionForItem(Recycler& re
 }
 
 
-RecyclerView::LayoutManager::Properties RecyclerView::LayoutManager::getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes) {
+RecyclerView::LayoutManager::Properties RecyclerView::LayoutManager::getProperties(Context* context,
+        const AttributeSet* attrs,int defStyleAttr, int defStyleRes) {
     Properties properties;
-    properties.orientation = attrs.getInt("orientation",std::unordered_map<std::string,int>{
-            {"horizontal",LinearLayout::HORIZONTAL},
-            {"vertical",LinearLayout::VERTICAL}}, DEFAULT_ORIENTATION);//a.getInt(R.styleable.RecyclerView_android_orientation, DEFAULT_ORIENTATION);
-    properties.spanCount = attrs.getInt("spanCount",1);//a.getInt(R.styleable.RecyclerView_spanCount, 1);
-    properties.reverseLayout = attrs.getBoolean("reverseLayout",false);//a.getBoolean(R.styleable.RecyclerView_reverseLayout, false);
-    properties.stackFromEnd = attrs.getBoolean("stackFromEnd",false);//a.getBoolean(R.styleable.RecyclerView_stackFromEnd, false);
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::RecyclerView, defStyleAttr, defStyleRes);
+    properties.orientation = a->getInt(R::styleable::RecyclerView_orientation, DEFAULT_ORIENTATION);
+    properties.spanCount = a->getInt(R::styleable::RecyclerView_spanCount, 1);
+    properties.reverseLayout = a->getBoolean(R::styleable::RecyclerView_reverseLayout, false);
+    properties.stackFromEnd = a->getBoolean(R::styleable::RecyclerView_stackFromEnd, false);
     return properties;
 }
 
@@ -7088,16 +7135,16 @@ int RecyclerView::getAdapterPositionInRecyclerView(const ViewHolder* viewHolder)
 }
 
 void RecyclerView::initFastScroller(StateListDrawable* verticalThumb, Drawable* verticalTrack,
-   StateListDrawable* horizontalThumb,Drawable* horizontalTrack,const AttributeSet&atts) {
+   StateListDrawable* horizontalThumb,Drawable* horizontalTrack) {
     if (verticalThumb == nullptr || verticalTrack == nullptr
             || horizontalThumb == nullptr || horizontalTrack == nullptr) {
         throw std::runtime_error("Trying to set fast scroller without both required drawables.");
     }
-    //Resources resources = getContext().getResources();
+    // AOSP reads R.dimen.fastscroll_default_thickness / fastscroll_minimum_range /
+    // fastscroll_margin (not shipped in the CDROID framework res) — keep the CDROID
+    // values the old string reads fell through to.
     new FastScroller(this, verticalThumb, verticalTrack, horizontalThumb, horizontalTrack,
-            atts.getDimensionPixelSize("default_thickness",4),//R.dimen.fastscroll_default_thickness),
-            atts.getDimensionPixelSize("minimum_range",32),//R.dimen.fastscroll_minimum_range),
-            atts.getDimensionPixelOffset("margin"));//R.dimen.fastscroll_margin));
+            4, 32, 0);
 }
 
 //////////////////////////////RecyclerView::NestedScrollingChild//////////////////////////////////////

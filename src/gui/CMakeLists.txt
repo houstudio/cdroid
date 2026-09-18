@@ -10,7 +10,7 @@ endif()
 file(GLOB_RECURSE SRCS_WIDGETEX RELATIVE "${PROJECT_SOURCE_DIR}" "widgetEx/*")
 
 if( ENABLE_I18N )
-    aux_source_directory(i18n SRCS_I18N)
+    aux_source_directory(content/i18n SRCS_I18N)
 endif()
 aux_source_directory(cairomm  SRCS_CAIROMM)
 aux_source_directory(utils SRCS_UTILS)
@@ -34,6 +34,7 @@ set(SOURCES_GUI
 
 add_subdirectory(text)
 add_library(cdroid SHARED ${SOURCES_GUI})
+# cdroid compilation must wait for internal_R.h (generated from R.h + styleables)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_definitions(--include gui_features.h)
@@ -53,7 +54,7 @@ target_include_directories(
     cdroid
     PRIVATE
     ${PROJECT_SOURCE_DIR}/
-    ${PROJECT_SOURCE_DIR}/i18n
+    ${PROJECT_SOURCE_DIR}/content/i18n
     ${PROJECT_SOURCE_DIR}/private
     ${PROJECT_SOURCE_DIR}/core
     ${PROJECT_SOURCE_DIR}/view
@@ -73,9 +74,24 @@ target_include_directories(
 
 CreatePAK(cdroid ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
 
+# widgetEx shared resource pak (package-id 0x02; attrs + compiled res files; built once, loaded by all apps).
+add_custom_target(widgetex)
+CreatePAK(widgetex ${PROJECT_SOURCE_DIR}/widgetEx  ${PROJECT_BINARY_DIR}/widgetex.pak ${PROJECT_BINARY_DIR}/widgetex_R.h)
+add_dependencies(cdroid widgetex_assets)
+# Deploy widgetex.apk (intermediate) to binary root so app aapt2 link can use -I.
+add_custom_command(TARGET widgetex_assets POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_BINARY_DIR}/widgetex.apk ${CMAKE_BINARY_DIR}/widgetex.apk
+    COMMENT "Deploy widgetex.apk to binary root for app linking")
+
 file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
 
-SET(exclude_dirs private image-decoders)
+# i18n headers are internal: the java.text face (content/) wraps the engine,
+# so the vendored i18n/*.h must not be copied into the public include tree.
+# image-decoders stays private (codec internals) except imagedecoder.h below —
+# android.graphics.ImageDecoder is public SDK and apps load drawables through
+# ImageDecoder::decodeDrawable.
+SET(exclude_dirs private image-decoders content/i18n)
+set(filtered_files "")
 set(filtered_files "")
 
 foreach(file ${allfiles})
@@ -91,6 +107,9 @@ foreach(file ${allfiles})
         list(APPEND filtered_files ${file})
     endif()
 endforeach()
+# Public-SDK exception: ImageDecoder is the app-facing decode entry
+# (decodeDrawable); the rest of image-decoders stays private.
+list(APPEND filtered_files "image-decoders/imagedecoder.h")
 # Re-run the header copy below whenever any tracked header changes. file(COPY) only runs at
 # configure time; without this, editing a src header leaves the ${CMAKE_BINARY_DIR}/include/gui
 # copy stale (apps include the copy) until you touch CMakeLists / re-run cmake by hand.
@@ -126,7 +145,7 @@ set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
 target_link_libraries(cdroid
-    PUBLIC  ${CDROID_PUBLIC_DEPLIBS} tvhal cdtext            # cdtext PUBLIC: apps linking cdroid get Html/text + expat transitively (cdtext is not exposed directly)
+    PUBLIC  ${CDROID_PUBLIC_DEPLIBS} tvhal cdtext androidfw  # androidfw PUBLIC: symbols exported from cdroid.so so tests/apps link ONE copy
     PRIVATE image-decoders ${CDROID_PRIVATE_DEPLIBS})
 # Prune libcdroid.so's DT_NEEDED to only the libs it actually references. The Find*.cmake modules
 # are old-style (return flat ${LIBS}, not imported targets with INTERFACE_LINK_LIBRARIES), so

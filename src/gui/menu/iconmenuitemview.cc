@@ -17,23 +17,32 @@
  *********************************************************************************/
 #include <menu/iconmenuitemview.h>
 #include <menu/menuitemimpl.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(IconMenuItemView)
+DECLARE_WIDGET2(IconMenuItemView, "androidx.appcompat.view.menu.IconMenuItemView");
 std::string IconMenuItemView::sPrependShortcutLabel;
-IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet& attrs)
-    :TextView(context, attrs){
+IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet* attrs):IconMenuItemView(context,attrs,0){}
+
+IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :TextView(context, pAttrs, defStyleAttr){
 
     if (sPrependShortcutLabel.empty()) {
         /*
          * Views should only be constructed from the UI thread, so no
          * synchronization needed
          */
-        sPrependShortcutLabel = attrs.getString("android:string/prepend_shortcut_label");
+        // AOSP: getResources().getString(R.string.prepend_shortcut_label).
+        sPrependShortcutLabel = context->getString(R::string::prepend_shortcut_label);
     }
 
-    mDisabledAlpha = attrs.getFloat("itemIconDisabledAlpha", 0.8f);
-    mTextAppearance = attrs.getString("itemTextAppearance");
+    // AOSP: obtainStyledAttributes(pAttrs, R.styleable.IconMenuItemView, defStyleAttr).
+    static const uint32_t ICON_MENU_ITEM_ATTRS[] = {
+        (uint32_t)R::attr::itemIconDisabledAlpha, (uint32_t)R::attr::itemTextAppearance, 0 };
+    auto ta = context->obtainStyledAttributes(pAttrs, ICON_MENU_ITEM_ATTRS, defStyleAttr);
+    mDisabledAlpha = ta->getFloat(0, 0.8f);
+    mTextAppearance = ta->getResourceId(1, 0);
     mTextAppearanceContext = context;
 }
 
@@ -41,7 +50,7 @@ void IconMenuItemView::initialize(const std::string& title, Drawable* icon) {
     setClickable(true);
     setFocusable(true);
 
-    if (!mTextAppearance.empty()) {
+    if (mTextAppearance != 0) {
         setTextAppearance(mTextAppearanceContext, mTextAppearance);
     }
 
@@ -131,6 +140,11 @@ void IconMenuItemView::setIcon(Drawable* icon) {
     mIcon = icon;
 
     if (icon != nullptr) {
+        // The icon belongs to the MenuItemImpl; setCompoundDrawables OWNS what
+        // it is handed, so derive a private copy from the constant state.
+        auto cs = icon->getConstantState();
+        if (cs != nullptr) icon = cs->newDrawable();
+        else LOGE("IconMenuItemView: icon without constant state");
 
         /* Set the bounds of the icon since setCompoundDrawables needs it. */
         icon->setBounds(0, 0, icon->getIntrinsicWidth(), icon->getIntrinsicHeight());

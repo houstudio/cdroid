@@ -1,6 +1,8 @@
 #include<cdroid.h>
 #include<cdlog.h>
 #include <text/inputtype.h>
+#include <widget/editorinfo.h>
+#include <widget/scrollview.h>
 struct TestString{
     const char*text;
     bool singleline;
@@ -57,16 +59,20 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
 
-    LinearLayout*layout=new LinearLayout(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
+    // The stack of demo fields outgrows one window; scroll to reach them.
+    ScrollView*scroll=new ScrollView(&App::getInstance());
+    w->addView(scroll);
+    LinearLayout*layout=new LinearLayout(&App::getInstance());
     layout->setOrientation(LinearLayout::VERTICAL);
     layout->setBackgroundColor(0xFF334455);
-    w->addView(layout);
+    scroll->addView(layout, new ViewGroup::LayoutParams(
+            LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
 
     for(int i=0;i<sizeof(testStrings)/sizeof(testStrings[0]);i++){
         TestString*ts=testStrings+i;
         LinearLayout::LayoutParams*layoutParams=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
         layoutParams->setMargins(0,8,0,8);
-        EditText*edt=new EditText(ts->text,0,0);
+        EditText*edt=new EditText(&App::getInstance()); edt->setText(ts->text);
         edt->setTextColor(i?0xffff0000:0xFF44FFaa);
         edt->setFocusable(true);
         edt->setClickable(true);
@@ -78,12 +84,16 @@ int main(int argc,const char*argv[]){
         int cc=i*10+8;
         edt->setTextSize(22+i);
         edt->setInputType(ts->intputType);
+        if(i < 3){
+            // IME action chain demo: NEXT advances focus down the list, DONE on
+            // the third hides the keyboard (AOSP defaults; no listener installed).
+            edt->setImeOptions(i < 2 ? EditorInfo::IME_ACTION_NEXT
+                                     : EditorInfo::IME_ACTION_DONE);
+        }
         layout->addView(edt,layoutParams);
     }
 
-    auto tv=new EditText("textview with leftdrawable",0,0);
-    tv->setBackgroundResource("cdroid:drawable/progress_horizontal.xml");
-    tv->setCompoundDrawablesWithIntrinsicBounds("cdroid:drawable/progress_large.xml","","cdroid:drawable/progress_small.xml","");
+    auto tv=new EditText(&app); tv->setText("textview with leftdrawable" );
     layout->addView(tv);
     tv->setFocusable(true);
 
@@ -101,12 +111,12 @@ int main(int argc,const char*argv[]){
         { "Hebrew RTL",              "שלום עולם" },
     };
     for (int i = 0; i < (int)(sizeof(bidiCases) / sizeof(bidiCases[0])); i++) {
-        auto* lbl = new TextView(bidiCases[i].label, 0, 0);
+        auto* lbl = new TextView(&App::getInstance()); lbl->setText(bidiCases[i].label);
         lbl->setTextSize(14);
         lbl->setTextColor(0xFFAABBCC);
         layout->addView(lbl, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
 
-        EditText* edt = new EditText(bidiCases[i].text, 0, 0);
+        EditText* edt = new EditText(&App::getInstance()); edt->setText(bidiCases[i].text);
         edt->setTextSize(24);
         edt->setFocusable(true);
         edt->setClickable(true);
@@ -126,13 +136,13 @@ int main(int argc,const char*argv[]){
         { "RTL layout: pure RTL (Arabic)", "مرحبا بالعالم" },
     };
     for (int i = 0; i < (int)(sizeof(bidiRtlCases) / sizeof(bidiRtlCases[0])); i++) {
-        auto* lbl = new TextView(bidiRtlCases[i].label, 0, 0);
+        auto* lbl = new TextView(&App::getInstance()); lbl->setText(bidiRtlCases[i].label);
         lbl->setTextSize(14);
         lbl->setTextColor(0xFFCCBBAA);
         lbl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
         layout->addView(lbl, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
 
-        EditText* edt = new EditText(bidiRtlCases[i].text, 0, 0);
+        EditText* edt = new EditText(&App::getInstance()); edt->setText(bidiRtlCases[i].text);
         edt->setTextSize(24);
         edt->setFocusable(true);
         edt->setClickable(true);
@@ -143,6 +153,23 @@ int main(int argc,const char*argv[]){
         edt->setId(210000+i);
         edt->setInputType(InputType::TYPE_CLASS_TEXT);
         layout->addView(edt, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
+    }
+
+    // ---- IME action chain (imeOptions -> soft-keyboard action key) ----
+    for (int i = 0; i < 2; i++) {
+        EditText* edt = new EditText(&App::getInstance());
+        edt->setText(i == 0 ? "action next field" : "action done field");
+        edt->setTextSize(22);
+        edt->setSingleLine(true);
+        edt->setFocusableInTouchMode(true);
+        edt->setId(220000+i);
+        edt->setInputType(InputType::TYPE_CLASS_TEXT);
+        // NEXT: tapping the relabeled enter key must advance focus to the next
+        // field; DONE on the last one hides the keyboard (AOSP defaults).
+        edt->setImeOptions(i == 0 ? EditorInfo::IME_ACTION_NEXT
+                                  : EditorInfo::IME_ACTION_DONE);
+        layout->addView(edt, new LinearLayout::LayoutParams(
+                LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
     }
 
     w->requestLayout();//addView by code must call requestLayout ,auto call only used by Window::inflate.

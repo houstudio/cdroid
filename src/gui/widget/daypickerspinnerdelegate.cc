@@ -15,40 +15,46 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
+#include <content/dateformat.h>
+#include <content/Locale.h>
 #include <widget/numberpicker.h>
 #include <widget/calendarview.h>
 #include <view/layoutinflater.h>
 #include <core/systemclock.h>
 #include <widget/daypickerspinnerdelegate.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
+#include <content/dateformatsymbols.h>
 #include <cstdio>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DatePickerSpinnerDelegate::DatePickerSpinnerDelegate(DatePicker* delegator, Context* context,
-        const AttributeSet& attrs)
+        const AttributeSet* attrs, int defStyleAttr, int defStyleRes)
     : AbstractDatePickerDelegate(delegator, context) {
     mDelegator = delegator;
     mContext = context;
 
-    // DEFERRED: setCurrentLocale(Locale.getDefault()) -- CDROID has no Locale.
-    // Bootstrap the locale-dependent fields directly with numeric months.
-    mNumberOfMonths = 12; // mTempDate.getActualMaximum(Calendar.MONTH) + 1
-    mShortMonths.clear();
-    for (int i = 0; i < mNumberOfMonths; ++i) {
-        mShortMonths.push_back(std::to_string(i + 1)); // TODO: DateFormatSymbols.getShortMonths()
-    }
+    // The Java base ctor's setCurrentLocale(Locale.getDefault()) dispatches
+    // virtually into our override; C++ base construction skips it, so re-run
+    // it here now that our members are live.
+    setCurrentLocale(Locale::getDefault());
 
-    const bool spinnersShown = attrs.getBoolean("spinnersShown", DEFAULT_SPINNERS_SHOWN);
-    const bool calendarViewShown = attrs.getBoolean("calendarViewShown", DEFAULT_CALENDAR_VIEW_SHOWN);
-    const int startYear = attrs.getInt("startYear", DEFAULT_START_YEAR);
-    const int endYear = attrs.getInt("endYear", DEFAULT_END_YEAR);
-    const std::string minDate = attrs.getString("minDate");
-    const std::string maxDate = attrs.getString("maxDate");
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::DatePicker, defStyleAttr, defStyleRes);
+    const bool spinnersShown = a->getBoolean(R::styleable::DatePicker_spinnersShown, DEFAULT_SPINNERS_SHOWN);
+    const bool calendarViewShown = a->getBoolean(R::styleable::DatePicker_calendarViewShown, DEFAULT_CALENDAR_VIEW_SHOWN);
+    const int startYear = a->getInt(R::styleable::DatePicker_startYear, DEFAULT_START_YEAR);
+    const int endYear = a->getInt(R::styleable::DatePicker_endYear, DEFAULT_END_YEAR);
+    const std::string minDate = a->getString(R::styleable::DatePicker_minDate);
+    const std::string maxDate = a->getString(R::styleable::DatePicker_maxDate);
+    const int layoutResourceId = a->getResourceId(R::styleable::DatePicker_legacyLayout,
+            R::layout::date_picker_legacy);
 
     LayoutInflater* inflater = LayoutInflater::from(mContext);
-    View* content = inflater->inflate("cdroid:layout/date_picker_legacy", nullptr, false);
-    mDelegator->addView(content);
+    View* content = inflater->inflate(layoutResourceId, mDelegator, true);
+    content->setSaveFromParentEnabled(false);
 
     NumberPicker::OnValueChangeListener onChangeListener =
         [this](NumberPicker& picker, int oldVal, int newVal) {
@@ -175,9 +181,17 @@ void DatePickerSpinnerDelegate::updateDate(int year, int month, int dayOfMonth) 
     notifyDateChanged();
 }
 
-int DatePickerSpinnerDelegate::getYear() { return mCurrentDate.get(Calendar::YEAR); }
-int DatePickerSpinnerDelegate::getMonth() { return mCurrentDate.get(Calendar::MONTH); }
-int DatePickerSpinnerDelegate::getDayOfMonth() { return mCurrentDate.get(Calendar::DAY_OF_MONTH); }
+int DatePickerSpinnerDelegate::getYear() {
+    return mCurrentDate.get(Calendar::YEAR);
+}
+
+int DatePickerSpinnerDelegate::getMonth() {
+    return mCurrentDate.get(Calendar::MONTH);
+}
+
+int DatePickerSpinnerDelegate::getDayOfMonth() {
+    return mCurrentDate.get(Calendar::DAY_OF_MONTH);
+}
 
 void DatePickerSpinnerDelegate::setFirstDayOfWeek(int firstDayOfWeek) {
     mCalendarView->setFirstDayOfWeek(firstDayOfWeek);
@@ -271,21 +285,46 @@ void DatePickerSpinnerDelegate::onRestoreInstanceState(Parcelable& state) {
     }
 }
 
-bool DatePickerSpinnerDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEvent&) {
-    // DEFERRED: accessibility.
+bool DatePickerSpinnerDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    onPopulateAccessibilityEvent(event);  // AOSP formats the selected date here
     return true;
 }
 
 bool DatePickerSpinnerDelegate::usingNumericMonths() const {
-    // DEFERRED: real check is Character.isDigit(mShortMonths[0].charAt(0)).
-    // No DateFormatSymbols -> months are numeric ("1".."12").
-    return true;
+    // AOSP: Character.isDigit(mShortMonths[Calendar.JANUARY].charAt(0)) — a
+    // locale whose month names start with a digit reports all-numeric dates.
+    return !mShortMonths.empty() && !mShortMonths[0].empty()
+            && isdigit((unsigned char)mShortMonths[0][0]);
 }
 
 void DatePickerSpinnerDelegate::reorderSpinners() {
-    // DEFERRED: Android reorders spinners to the locale date format via
-    // android.text.format.DateFormat. CDROID has no DateFormat -- the inflated
-    // layout's default order is kept. TODO: accept a date-format order attr.
+    mSpinners->removeAllViews();
+    // We use numeric spinners for year and day, but textual months. Ask the
+    // pattern generator what order the user's locale uses for that
+    // combination (AOSP b/7207103).
+    const std::string pattern = DateFormat::getBestDateTimePattern(
+            Locale::getDefault(), "yyyyMMMdd");
+    const std::array<char, 3> order = DateFormat::getDateFormatOrder(pattern);
+    const int spinnerCount = order.size();
+    for (int i = 0; i < spinnerCount; i++) {
+        switch (order[i]) {
+        case 'd':
+            mSpinners->addView(mDaySpinner);
+            setImeOptions(mDaySpinner, spinnerCount, i);
+            break;
+        case 'M':
+            mSpinners->addView(mMonthSpinner);
+            setImeOptions(mMonthSpinner, spinnerCount, i);
+            break;
+        case 'y':
+            mSpinners->addView(mYearSpinner);
+            setImeOptions(mYearSpinner, spinnerCount, i);
+            break;
+        default:
+            LOGE("Unexpected date format order char '%c' from pattern %s",
+                 order[i], pattern.c_str());
+        }
+    }
 }
 
 bool DatePickerSpinnerDelegate::parseDate(const std::string& date, Calendar& outDate) {
@@ -368,8 +407,19 @@ void DatePickerSpinnerDelegate::updateCalendarView() {
     mCalendarView->setDate(mCurrentDate.getTimeInMillis(), false, false);
 }
 
+// AOSP DatePickerSpinnerDelegate.onPopulateAccessibilityEvent: the selected
+// date, formatted with the locale's short month, joins the event text.
+void DatePickerSpinnerDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    const std::string month = usingNumericMonths()
+            ? std::to_string(getMonth() + 1)
+            : (mShortMonths.empty() ? std::to_string(getMonth() + 1) : mShortMonths[getMonth()]);
+    char buf[64];
+    snprintf(buf, sizeof buf, "%s %d, %d", month.c_str(), getDayOfMonth(), getYear());
+    event.getText().push_back(buf);
+}
+
 void DatePickerSpinnerDelegate::notifyDateChanged() {
-    // DEFERRED: mDelegator->sendAccessibilityEvent(TYPE_VIEW_SELECTED).
+    mDelegator->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
     if (mOnDateChangedListener) {
         mOnDateChangedListener(*mDelegator, getYear(), getMonth(), getDayOfMonth());
     }
@@ -383,15 +433,70 @@ void DatePickerSpinnerDelegate::setImeOptions(NumberPicker*, int, int) {
 }
 
 void DatePickerSpinnerDelegate::setContentDescriptions() {
-    // DEFERRED: accessibility content descriptions.
+    // Day
+    trySetContentDescription(mDaySpinner, cdroid::R::id::increment,
+            internal::R::string::date_picker_increment_day_button);
+    trySetContentDescription(mDaySpinner, cdroid::R::id::decrement,
+            internal::R::string::date_picker_decrement_day_button);
+    // Month
+    trySetContentDescription(mMonthSpinner, cdroid::R::id::increment,
+            internal::R::string::date_picker_increment_month_button);
+    trySetContentDescription(mMonthSpinner, cdroid::R::id::decrement,
+            internal::R::string::date_picker_decrement_month_button);
+    // Year
+    trySetContentDescription(mYearSpinner, cdroid::R::id::increment,
+            internal::R::string::date_picker_increment_year_button);
+    trySetContentDescription(mYearSpinner, cdroid::R::id::decrement,
+            internal::R::string::date_picker_decrement_year_button);
 }
 
-void DatePickerSpinnerDelegate::trySetContentDescription(View*, int, int) {
-    // DEFERRED: accessibility content descriptions.
+void DatePickerSpinnerDelegate::trySetContentDescription(View* root, int viewId, int contDescResId) {
+    View* target = root->findViewById(viewId);
+    if (target != nullptr) {
+        target->setContentDescription(mContext->getString(contDescResId));
+    }
 }
 
 void DatePickerSpinnerDelegate::updateInputState() {
     // DEFERRED: hide the IME when the user changes a value via the spinners.
+}
+
+void DatePickerSpinnerDelegate::onConfigurationChanged(Configuration& newConfig) {
+    setCurrentLocale(newConfig.getLocales().get(0));
+}
+
+void DatePickerSpinnerDelegate::setCurrentLocale(const Locale& locale) {
+    AbstractDatePickerDelegate::setCurrentLocale(locale);
+
+    mTempDate = getCalendarForLocale(mTempDate, locale);
+    mMinDate = getCalendarForLocale(mMinDate, locale);
+    mMaxDate = getCalendarForLocale(mMaxDate, locale);
+    mCurrentDate = getCalendarForLocale(mCurrentDate, locale);
+    mNumberOfMonths = mTempDate.getActualMaximum(Calendar::MONTH) + 1;
+    mShortMonths.clear();
+    // The symbols object must outlive the reference (getShortMonths returns a ref into it).
+    const DateFormatSymbols dfs(locale);
+    const auto& shortMonths = dfs.getShortMonths();
+    for (int i = 0; i < mNumberOfMonths; i++) {
+        mShortMonths.push_back(shortMonths[i]);
+    }
+    if (usingNumericMonths()) {
+        // We're in a locale where a date should either be all-numeric, or all-text.
+        // All-text would require custom NumberPicker formatters for day and year.
+        mShortMonths.clear();
+        for (int i = 0; i < mNumberOfMonths; i++) {
+            mShortMonths.push_back(std::to_string(i + 1));
+        }
+    }
+}
+
+Calendar DatePickerSpinnerDelegate::getCalendarForLocale(Calendar& oldCalendar, const Locale& locale) {
+    // AOSP's null-oldCalendar branch is unreachable here (value member; a
+    // fresh Calendar is what Calendar::getInstance(locale) yields anyway).
+    const int64_t currentTimeMillis = oldCalendar.getTimeInMillis();
+    Calendar newCalendar = *Calendar::getInstance(locale);
+    newCalendar.setTimeInMillis(currentTimeMillis);
+    return newCalendar;
 }
 
 } // namespace cdroid

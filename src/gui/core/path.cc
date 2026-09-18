@@ -23,7 +23,16 @@
 #include <map>
 namespace cdroid{
 
-static Cairo::RefPtr<Cairo::ImageSurface> mPathSurface =Cairo::ImageSurface::create(Cairo::Surface::Format::A8,1,1);
+// Process-wide 1x1 A8 dummy surface every Path's cairo context binds to.
+// RAII holder: released during static destruction (deterministic order),
+// so the underlying pixman/cairo blocks don't outlive valgrind's count.
+struct PathSurfaceHolder {
+    Cairo::RefPtr<Cairo::ImageSurface> surface =
+        Cairo::ImageSurface::create(Cairo::Surface::Format::A8, 1, 1);
+    ~PathSurfaceHolder() { surface.reset(); }
+};
+static PathSurfaceHolder sPathSurfaceHolder;
+static Cairo::RefPtr<Cairo::ImageSurface>& mPathSurface = sPathSurfaceHolder.surface;
 Path::Path(){
     mCTX = Cairo::Context::create(mPathSurface);
 }
@@ -110,11 +119,13 @@ bool Path::isConvex()const{
 
     // 至少需要三个点才能构成多边形
     if (num_points < 3) {
+        cairo_path_destroy(path);
         return false;
     }
 
     points = (double *)malloc(num_points * 2 * sizeof(double));
     if (points == NULL) {
+        cairo_path_destroy(path);
         return false;
     }
 
@@ -143,6 +154,7 @@ bool Path::isConvex()const{
         if (sign == 0) {
             sign = (cross_product > 0) ? 1 : -1;
         } else if ((cross_product > 0 && sign < 0) || (cross_product < 0 && sign > 0)) {
+            cairo_path_destroy(path);
             free(points);
             return false;
         }

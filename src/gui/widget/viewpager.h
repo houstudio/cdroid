@@ -99,6 +99,7 @@ private:
     Drawable* mMarginDrawable;
     int mExpectedAdapterCount;
     int mRestoredCurItem = -1;
+    Parcelable* mRestoredAdapterState = nullptr; /* master also has mRestoredClassLoader */
     int mPageMargin;
     int mScrollState;
     int mTopPageBounds;
@@ -159,6 +160,17 @@ private:
     PagerAdapter* mAdapter;
     std::vector<OnAdapterChangeListener> mAdapterChangeListeners;
 private:
+    static constexpr const char* ACCESSIBILITY_CLASS_NAME = "androidx.viewpager.widget.ViewPager";
+
+    /*androidx ViewPager.MyAccessibilityDelegate: scroll actions + page counts
+      on events; the anonymous inner class reaches the outer pager directly.*/
+    class MyAccessibilityDelegate:public View::AccessibilityDelegate {
+    public:
+        void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event)override;
+        void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
+        bool performAccessibilityAction(View& host, int action, Bundle* arguments)override;
+    };
+
     void removeNonDecorViews();
     int getClientWidth();
     bool isGutterDrag(float x, float dx);
@@ -220,9 +232,18 @@ protected:
     LayoutParams* generateLayoutParams(ViewGroup::LayoutParams* p);
     bool checkLayoutParams(ViewGroup::LayoutParams* p);
 public:
-    ViewPager(int w,int h);
-    ViewPager(Context* context,const AttributeSet& attrs);
+    ViewPager(Context*ctx);   // AOSP ViewPager(Context)
+    ViewPager(Context* context,const AttributeSet* attrs);
+    ViewPager(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~ViewPager()override;
+    class SavedState:public AbsSavedState{
+    public:
+        int position;
+        Parcelable* adapterState;
+        SavedState(Parcelable* superState);
+    };
+    Parcelable* onSaveInstanceState()override;
+    void onRestoreInstanceState(Parcelable& state)override;
     void setAdapter(PagerAdapter* adapter);
     PagerAdapter* getAdapter();
     void addOnAdapterChangeListener(const OnAdapterChangeListener& listener);
@@ -246,7 +267,7 @@ public:
     int getPageMargin()const;
     void setPageMargin(int marginPixels);
     void setPageMarginDrawable(Drawable* d);
-    void setPageMarginDrawable(const std::string&resId);
+    void setPageMarginDrawable(int resId);
     void smoothScrollTo(int x, int y);
     void smoothScrollTo(int x, int y, int velocity);
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;

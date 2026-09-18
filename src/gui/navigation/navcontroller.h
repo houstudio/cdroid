@@ -55,7 +55,7 @@ public:
     // the NavController owns its listeners (stored by value in mOnDestinationChangedListeners), so no
     // caller new/delete. Identity for removeOnDestinationChangedListener is the CallbackBase shared-
     // functor pointer — a copy compares equal to its original.
-    using OnDestinationChangedListener = CallbackBase<void, NavController*, NavDestination*, Bundle*>;
+    using OnDestinationChangedListener = CallbackBase<void, NavController&, NavDestination&, Bundle*>;
 
     NavController(Context* context);
     ~NavController();
@@ -68,7 +68,7 @@ public:
     // mirrors androidx NavController#setGraph(@NavigationRes int). Used by NavHostFragment
     // so declaring the graph (with its startDestination) loads the first destination with
     // no app-side inflate/navigate code.
-    void setGraph(const std::string& graphRef, Bundle* startDestinationArgs = nullptr);
+    void setGraph(int graphResId, Bundle* startDestinationArgs = nullptr);
 
     NavDestination* getCurrentDestination();
     NavBackStackEntry* getCurrentBackStackEntry() const;

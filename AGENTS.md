@@ -23,7 +23,12 @@
 - 构建目录：outX64-Debug 或 outX64-Release
 - 构建命令：cd outX64-Debug && make cdroid -j44
 - 完成任何修改后，必须重新执行构建验证；只有拿到明确构建结果，才能认为任务完成。
-
+##常用测试应用apps/
+   kaidu_ms7 需要 export SCREEN_SIZE=1920*440
+   printerdemo   export SCREEN_SIZE=1280*960
+   preferencedemo export SCREEN_SIZE=1280*960
+   hauswirt_63343 不需要SCREEN_SIZE
 ## 参考路径
 - Android SDK 来源：/opt/android-sdk/sources/android-36/
-- AndroidX /home/houzh/research/androidx
+- AndroidX $HOME/research/androidx
+- material-components-android $HOME/research/material-components-android/

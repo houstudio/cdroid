@@ -5,7 +5,7 @@
 #include <core/rect.h>   // Rect is a typedef (CRect<int>), so it must be included, not forward-declared
 namespace cdroid{
 class View;
-class TransformationMethod:public NoCopySpan{
+class TransformationMethod:virtual public NoCopySpan{
 public:
     virtual ~TransformationMethod()=default;
     virtual CharSequence* getTransformation(CharSequence& source, View& view)=0;

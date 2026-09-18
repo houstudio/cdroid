@@ -32,7 +32,7 @@
 #include <core/attributeset.h>
 #include <porting/cdlog.h>
 namespace cdroid{
-namespace fragment{ class FragmentManager; }
+class FragmentManager;
 class FragmentNavigator : public Navigator{
 public:
     class Destination : public NavDestination{
@@ -46,7 +46,7 @@ public:
         std::string mClassName;
     };
 
-    FragmentNavigator(fragment::FragmentManager* fm, int containerId);
+    FragmentNavigator(FragmentManager* fm, int containerId);
     NavDestination* createDestination() override;
     // androidx FragmentNavigator.navigate(entries, navOptions, navigatorExtras): swap a Fragment
     // in for each entry via FragmentTransaction.replace, skipping addToBackStack on the initial
@@ -63,7 +63,7 @@ public:
     Bundle onSaveState() override;
     void onRestoreState(const Bundle& savedState) override;
 private:
-    fragment::FragmentManager* mFragmentManager;
+    FragmentManager* mFragmentManager;
     int mContainerId;
     // androidx FragmentNavigator.savedIds: entry ids saved via saveBackStack and thus eligible for
     // restoreBackStack (gates the navigate restoreState path).

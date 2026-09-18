@@ -36,7 +36,7 @@ Drawable* ImageSpan::getDrawable() const{
     Drawable* drawable = nullptr;
     if (mDrawable != nullptr) {
         drawable = mDrawable;
-    } else if (!mContentUri.empty()) {
+    } else if (mContentUri!=0) {
         drawable = mContext->getDrawable(mContentUri);
         drawable->setBounds(0, 0, drawable->getIntrinsicWidth(),
                 drawable->getIntrinsicHeight());
@@ -44,11 +44,11 @@ Drawable* ImageSpan::getDrawable() const{
     return drawable;
 }
 
-ImageSpan::ImageSpan(Context* context, const std::string& resourceId)
+ImageSpan::ImageSpan(Context* context, int resourceId)
     :ImageSpan(context, resourceId, ALIGN_BOTTOM){
 }
 
-ImageSpan::ImageSpan(Context* context, const std::string& resourceId, int verticalAlignment)
+ImageSpan::ImageSpan(Context* context, int resourceId, int verticalAlignment)
    :DynamicDrawableSpan(verticalAlignment){
     mContext = context;
     mContentUri = resourceId;

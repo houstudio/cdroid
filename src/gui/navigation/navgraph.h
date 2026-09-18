@@ -60,6 +60,9 @@ public:
     void clear();
 
     int getStartDestination() const;
+    // androidx NavGraph.findStartDestination(): the ACTUAL start destination,
+    // walking nested graphs (a graph whose start destination is itself a graph).
+    static NavDestination* findStartDestination(NavGraph* graph);
     void setStartDestination(int startDestId);
     const std::string& getStartDestinationRoute() const { return mStartDestinationRoute; }
     void setStartDestination(const std::string& route) { mStartDestinationRoute = route; }

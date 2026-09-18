@@ -5,6 +5,7 @@
 // public getChildCount()/getChild(i).
 //
 // Original: cts/tests/tests/graphics/src/android/graphics/drawable/cts/LevelListDrawableTest.java (Apache 2.0)
+#include "R.h"
 #include <gtest/gtest.h>
 #include <memory>
 #include <limits.h>
@@ -94,7 +95,7 @@ TEST_F(CtsLevelListDrawableTest, testOnLevelChange) {
 
 TEST_F(CtsLevelListDrawableTest, testInflate) {
     // cts_level_list_correct.xml: [100,200]→child[0], [200,300]→child[1] (png refs → <color>).
-    Drawable* d = App::getInstance().getDrawable("@drawable/cts_level_list_correct");
+    Drawable* d = App::getInstance().getDrawable(gui_test::R::drawable::cts_level_list_correct);
     ASSERT_NE(nullptr, d);
     auto* ld = dynamic_cast<LevelListDrawable*>(d);
     ASSERT_NE(nullptr, ld);

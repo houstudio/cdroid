@@ -30,7 +30,6 @@
 #include <drawable/drawables.h>
 #include <drawable/statelistdrawable.h>
 #include <drawable/stateset.h>
-#include <core/app.h>
 #include <core/porterduff.h>
 #include <core/rect.h>
 #include <view/view.h>

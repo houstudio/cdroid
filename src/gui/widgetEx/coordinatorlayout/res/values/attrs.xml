@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CoordinatorLayout custom attrs (androidx port). Source for gen_styleable.py. -->
+<resources>
+    <attr name="layout_anchorGravity">
+            
+            <flag name="top" value="0x30" />
+            
+            <flag name="bottom" value="0x50" />
+            
+            <flag name="left" value="0x03" />
+            
+            <flag name="right" value="0x05" />
+            
+            <flag name="center_vertical" value="0x10" />
+            
+            <flag name="fill_vertical" value="0x70" />
+            
+            <flag name="center_horizontal" value="0x01" />
+            
+            <flag name="fill_horizontal" value="0x07" />
+            
+            <flag name="center" value="0x11" />
+            
+            <flag name="fill" value="0x77" />
+            
+            <flag name="clip_vertical" value="0x80" />
+            
+            <flag name="clip_horizontal" value="0x08" />
+            
+            <flag name="start" value="0x00800003" />
+            
+            <flag name="end" value="0x00800005" />
+        </attr>
+    <attr name="layout_dodgeInsetEdges">
+            
+            <flag name="none" value="0x0" />
+            
+            <flag name="top" value="0x30" />
+            
+            <flag name="bottom" value="0x50" />
+            
+            <flag name="left" value="0x03" />
+            
+            <flag name="right" value="0x05" />
+            
+            <flag name="start" value="0x00800003" />
+            
+            <flag name="end" value="0x00800005" />
+            
+            <flag name="all" value="0x77" />
+        </attr>
+    <!-- ===== CoordinatorLayout (from androidx coordinatorlayout) ===== -->
+    <declare-styleable name="CoordinatorLayout">
+        <attr name="keylines" format="reference"/>
+        <attr name="statusBarBackground" format="color|reference"/>
+    </declare-styleable>
+
+    <declare-styleable name="CoordinatorLayout_Layout">
+        <attr name="android:layout_gravity"/>
+        <attr name="layout_behavior" format="string"/>
+        <attr name="layout_anchor" format="reference"/>
+        <attr name="layout_keyline" format="integer"/>
+        <attr name="layout_anchorGravity"/>
+        <attr name="layout_insetEdge" format="enum"/>
+        <attr name="layout_dodgeInsetEdges"/>
+    </declare-styleable>
+</resources>

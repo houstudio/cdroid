@@ -39,7 +39,6 @@
 #include <savedstate/savedstate.h>
 #include <lifecycle/lifecycle.h>
 namespace cdroid{
-namespace fragment{
 
 struct FragmentState{
     // --- androidx FragmentState fields (FragmentState.java:29-43), exact port ---
@@ -80,7 +79,7 @@ struct BackStackRecordState{
     struct OpState{
         int cmd = 0;                                       // FragmentTransaction OP_* code
         std::string fragmentWho;                           // mWho of the op's fragment ("" if none)
-        std::string enterAnim, exitAnim, popEnterAnim, popExitAnim;
+        int enterAnim = 0, exitAnim = 0, popEnterAnim = 0, popExitAnim = 0;
         lifecycle::Lifecycle::State currentMaxState = lifecycle::Lifecycle::State::RESUMED;
         lifecycle::Lifecycle::State oldMaxState     = lifecycle::Lifecycle::State::RESUMED;
     };
@@ -95,6 +94,5 @@ struct BackStackState{
     std::vector<BackStackRecordState> transactions;
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif/*__FRAGMENTSTATE_H__*/

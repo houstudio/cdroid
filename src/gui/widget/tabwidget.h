@@ -23,6 +23,8 @@ namespace cdroid{
 
 class TabWidget:public LinearLayout{
 public:
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     DECLARE_UIEVENT(void,OnTabSelectionChanged,int,bool);
 private:
     Rect mBounds;
@@ -49,18 +51,19 @@ protected:
           int heightMeasureSpec, int totalHeight)override;
     void measureHorizontal(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
-    TabWidget(int w,int h);
-    TabWidget(Context*ctx,const AttributeSet&atts);
+    TabWidget(Context*ctx);   // AOSP TabWidget(Context)
+    TabWidget(Context*ctx,const AttributeSet*atts);
+    TabWidget(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~TabWidget()override;
     View*getChildTabViewAt(int index);
     int getTabCount()const;
     void setDividerDrawable(Drawable* drawable);
-    void setDividerDrawable(const std::string&);
+    void setDividerDrawable(int resId);
     void setLeftStripDrawable(Drawable* drawable);
-    void setLeftStripDrawable(const std::string&);
+    void setLeftStripDrawable(int resId);
     Drawable*getLeftStripDrawable();
     void setRightStripDrawable(Drawable* drawable);
-    void setRightStripDrawable(const std::string& resId);
+    void setRightStripDrawable(int resId);
     Drawable*getRightStripDrawable();
     void setStripEnabled(bool stripEnabled);
     bool isStripEnabled()const;

@@ -18,15 +18,14 @@
 #include <fragment/fragmenttransaction.h>
 #include <fragment/fragment.h>
 namespace cdroid{
-namespace fragment{
 
 FragmentTransaction& FragmentTransaction::addOp(const Op& op){
     Op o = op;
-    if(!mEnterAnim.empty() || !mExitAnim.empty() || !mPopEnterAnim.empty() || !mPopExitAnim.empty()){
-        if(o.mEnterAnim.empty())     o.mEnterAnim = mEnterAnim;
-        if(o.mExitAnim.empty())      o.mExitAnim = mExitAnim;
-        if(o.mPopEnterAnim.empty())  o.mPopEnterAnim = mPopEnterAnim;
-        if(o.mPopExitAnim.empty())   o.mPopExitAnim = mPopExitAnim;
+    if(mEnterAnim != 0 || mExitAnim != 0 || mPopEnterAnim != 0 || mPopExitAnim != 0){
+        if(o.mEnterAnim == 0)     o.mEnterAnim = mEnterAnim;
+        if(o.mExitAnim == 0)      o.mExitAnim = mExitAnim;
+        if(o.mPopEnterAnim == 0)  o.mPopEnterAnim = mPopEnterAnim;
+        if(o.mPopExitAnim == 0)   o.mPopExitAnim = mPopExitAnim;
     }
     mOps.push_back(o);
     return *this;
@@ -126,7 +125,7 @@ FragmentTransaction& FragmentTransaction::setReorderingAllowed(bool reorderingAl
     return *this;
 }
 
-FragmentTransaction& FragmentTransaction::setCustomAnimations(const std::string& enterAnim, const std::string& exitAnim, const std::string& popEnterAnim, const std::string& popExitAnim){
+FragmentTransaction& FragmentTransaction::setCustomAnimations(int enterAnim, int exitAnim, int popEnterAnim, int popExitAnim){
     mEnterAnim = enterAnim;
     mExitAnim = exitAnim;
     mPopEnterAnim = popEnterAnim; mPopExitAnim = popExitAnim;
@@ -140,5 +139,4 @@ FragmentTransaction& FragmentTransaction::addSharedElement(cdroid::View* sharedE
     return *this;
 }
 
-}//namespace fragment
 }//namespace cdroid

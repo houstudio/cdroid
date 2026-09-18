@@ -142,18 +142,22 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     Cairo::RefPtr<cdroid::Path> tempStagingPath = std::make_shared<cdroid::Path>();
     const FullPathProperties& properties = useStagingData ? mStagingProperties : mProperties;
     const Cairo::RefPtr<cdroid::Path> renderPath = getUpdatedPath(useStagingData, tempStagingPath);
-    // Draw path's fill, if fill color or gradient is valid
-    const uint32_t fillAlpha  = uint32_t(properties.getFillAlpha()*255.f)<<24;
-    const uint32_t strokeAlpha= uint32_t(properties.getStrokeAlpha()*255.f)<<24;
-    const bool needsFill  = (properties.getFillGradient() != nullptr) || fillAlpha;
-    const bool needsStroke= (properties.getStrokeGradient()!=nullptr) || strokeAlpha;
+    // AOSP gates fill/stroke on color != TRANSPARENT and applies alpha via
+    // applyAlpha() (multiplies the alpha channel), not by OR-ing a pre-shifted
+    // alpha byte. The old alpha-truthiness gate + `color | alphaByte` filled
+    // stroke-only paths (btn_radio ring) as solid discs AND made fillAlpha=0
+    // paths (checkbox box_inner/box_outer) opaque instead of transparent.
+    const bool needsFill  = (properties.getFillGradient() != nullptr)
+            || (properties.getFillColor() != (uint32_t)Color::TRANSPARENT);
+    const bool needsStroke= (properties.getStrokeGradient()!= nullptr)
+            || (properties.getStrokeColor() != (uint32_t)Color::TRANSPARENT);
 
     outCanvas.set_antialias(mAntiAlias?Cairo::ANTIALIAS_GRAY:Cairo::ANTIALIAS_NONE);
     renderPath->append_to_context(&outCanvas);
     if (needsFill) {
         if(properties.getFillGradient())
             outCanvas.set_source(properties.getFillGradient());
-        else outCanvas.set_color(properties.getFillColor()|fillAlpha);
+        else outCanvas.set_color(applyAlpha(properties.getFillColor(), properties.getFillAlpha()));
         outCanvas.set_fill_rule((Cairo::Context::FillRule)properties.getFillType());// EVEN_ODD WINDING
         if(needsStroke)
             outCanvas.fill_preserve();
@@ -163,7 +167,7 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     if (needsStroke) {
         if(properties.getStrokeGradient())
             outCanvas.set_source(properties.getStrokeGradient());
-        else outCanvas.set_color(properties.getStrokeColor()|strokeAlpha);
+        else outCanvas.set_color(applyAlpha(properties.getStrokeColor(), properties.getStrokeAlpha()));
         outCanvas.set_line_join((Cairo::Context::LineJoin)properties.getStrokeLineJoin());
         //paint.setStrokeJoin(SkPaint::Join(properties.getStrokeLineJoin()));
         outCanvas.set_line_cap((Cairo::Context::LineCap)properties.getStrokeLineCap());
@@ -409,6 +413,15 @@ void Tree::drawStaging(Canvas& outCanvas) {
         updateBitmapCache(mStagingCache.bitmap, true);
         mStagingCache.dirty = false;
     }
+    // No destination clear here: on this rendering model draw() composites
+    // straight onto the window surface, so erasing the bounds (CLEAR or
+    // SOURCE) punches transparent holes into the already-painted host content
+    // beneath — printerdemo's home icons showed as glyphs on black boxes, and
+    // even a "transparent" clear renders black once the surface is flipped
+    // without alpha compositing. Previous-frame leftovers within an animating
+    // vector's bounds are handled by invalidation instead: AVD ticks call
+    // invalidateSelf() (full bounds), the view repaints its background and
+    // the OVER blit lands on fresh content.
 
     /*SkPaint tmpPaint;
     SkPaint* paint = updatePaint(&tmpPaint, &mStagingProperties);
@@ -456,6 +469,20 @@ void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
     const float scaleY = cacheHeight / viewportHeight;
     outCanvas.scale(scaleX, scaleY);
     mRootNode->draw(outCanvas, useStagingData);
+
+    // AOSP applies the color filter on the paint during the single cache
+    // blit (Tree::draw's colorFilter argument); cairo has no per-pixel source
+    // filter, so bake it into the cache instead: one full-surface pass
+    // whenever the cache is (re)built, zero per-draw cost. apply() paints the
+    // whole target (CTM-independent), and setColorFilter() already dirties
+    // the cache when the filter object changes, so a tint/state change
+    // re-bakes.
+    const TreeProperties& props = useStagingData ? mStagingProperties : mProperties;
+    if (ColorFilter* filter = props.getColorFilter()) {
+        Rect filterRect;   // (l,t,w,h); apply() targets the whole surface
+        filterRect.set(0, 0, cacheWidth, cacheHeight);
+        filter->apply(outCanvas, filterRect);
+    }
 }
 
 bool Tree::allocateBitmapIfNeeded(Cache& cache, int width, int height) {

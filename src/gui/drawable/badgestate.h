@@ -17,7 +17,9 @@
  *********************************************************************************/
 #ifndef __BADGE_STATE_H__
 #define __BADGE_STATE_H__
+#include <memory>
 namespace cdroid{
+class XmlPullParser;
 class BadgeState {
 public:
     class State;
@@ -37,11 +39,14 @@ protected:
     int mOffsetAlignmentMode;
     int mBadgeFixedEdge;
 private:
-    AttributeSet generateTypedArray(Context* context, const std::string& badgeResId,
-        const std::string& defStyleAttr, const std::string& defStyleRes);
+    // Parses the badge XML up to its start tag and keeps the live parser alive,
+    // so obtainStyledAttributes can read the element attrs on BOTH paths (text
+    // map and binary ResXMLTree — a value-copy snapshot would lose the latter).
+    std::unique_ptr<XmlPullParser> generateTypedArray(Context* context, int badgeResId,
+        int defStyleAttr, int defStyleRes);
 public:
-    BadgeState(Context* context, const std::string& badgeResId,const std::string& defStyleAttr,
-            const std::string& defStyleRes,State* storedState);
+    BadgeState(Context* context, int badgeResId, int defStyleAttr,
+            int defStyleRes,State* storedState);
     ~BadgeState();
     State* getOverridingState() const;
     bool isVisible() const;
@@ -72,8 +77,8 @@ public:
     int getBadgeTextColor() const;
     void setBadgeTextColor(int badgeTextColor);
 
-    std::string getTextAppearanceResId() const;
-    void setTextAppearanceResId(const std::string& textAppearanceResId);
+    int getTextAppearanceResId() const;
+    void setTextAppearanceResId(int textAppearanceResId);
 
     std::string getBadgeShapeAppearanceResId()const;
     void setBadgeShapeAppearanceResId(const std::string& shapeAppearanceResId);
@@ -156,11 +161,11 @@ private:
     static constexpr int BADGE_NUMBER_NONE = -1;
     static constexpr int NOT_SET = -2;
     friend BadgeState;
-    std::string badgeResId;
+    int badgeResId = 0;
     int backgroundColor;
     int badgeTextColor;
 
-    std::string badgeTextAppearanceResId;
+    int badgeTextAppearanceResId = 0;
     std::string badgeShapeAppearanceResId;
     std::string badgeShapeAppearanceOverlayResId;
     std::string badgeWithTextShapeAppearanceResId;

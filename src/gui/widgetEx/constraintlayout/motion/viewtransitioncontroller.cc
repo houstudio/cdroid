@@ -144,6 +144,13 @@ bool ViewTransitionController::applyViewTransition(int id, Motion* mc) {
     return false;
 }
 
+void ViewTransitionController::onViewRemoved(View* view) {
+    mRelatedDirty = true;  // the touch cache holds raw View*: rebuild on the next touch
+    for (auto& a : mAnimations) {
+        if (a->mView == view) removeAnimation(a.get());   // flagged; reaped on the next tick
+    }
+}
+
 void ViewTransitionController::touchEvent(const MotionEvent& evt) {
     const int currentId = mMotionLayout->getCurrentState();
     if (currentId == -1) return; // faithful: no ViewTransition support while a transition is running.
@@ -166,7 +173,10 @@ void ViewTransitionController::touchEvent(const MotionEvent& evt) {
     const int action = evt.getActionMasked();
 
     // Let active Animates react first (reverse on release / when the finger leaves the target).
-    for (auto& a : mAnimations) a->reactTo(action, x, y);
+    // Retired ones (view left the layout) must not touch their target again.
+    for (auto& a : mAnimations) {
+        if (!a->mRemove) a->reactTo(action, x, y);
+    }
 
     if (action == MotionEvent::ACTION_DOWN || action == MotionEvent::ACTION_UP) {
         ConstraintSet* current = mMotionLayout->getConstraintSet(currentId); // null → delta modes no-op
@@ -189,9 +199,13 @@ void ViewTransitionController::addAnimation(std::unique_ptr<ViewTransition::Anim
     ViewTransition::Animate* raw = a.get();
     mAnimations.push_back(std::move(a));
     raw->mutate(); // first frame immediately (the Animate constructor in Android calls mutate()).
-    if (mAnimator == nullptr) {
+    if (mAnimator == nullptr && mMotionLayout && mMotionLayout->isAttachedToWindow()) {
         // Start a repeating animator as the frame source (the per-draw animate() analog). Each tick
         // advances every active Animate by the elapsed wall-clock; cancelled once all finish.
+        // Gated on attach: Android ticks animate() from MotionLayout.dispatchDraw — a detached
+        // layout never draws and never ticks (tests drive detached scenes with stepAnimations()).
+        // Without the gate, a fire-and-forget on a detached layout (e.g. a hold-at-100 Animate
+        // that never receives ACTION_UP) leaves the INFINITE animator spinning forever.
         mAnimator = ValueAnimator::ofFloat({0.0f, 1.0f});
         mAnimator->setDuration(1000);
         mAnimator->setRepeatCount(ValueAnimator::INFINITE);
@@ -215,12 +229,16 @@ static void reapAndMaybeStop(std::vector<std::unique_ptr<ViewTransition::Animate
 }
 
 void ViewTransitionController::animate() {
-    for (auto& a : mAnimations) a->mutate();
+    for (auto& a : mAnimations) {
+        if (!a->mRemove) a->mutate();
+    }   // retired: never touch the target again
     reapAndMaybeStop(mAnimations, mAnimator);
 }
 
 void ViewTransitionController::stepAnimations(long elapsedMs) {
-    for (auto& a : mAnimations) a->stepMutate(elapsedMs);
+    for (auto& a : mAnimations) {
+        if (!a->mRemove) a->stepMutate(elapsedMs);
+    }
     reapAndMaybeStop(mAnimations, mAnimator);
 }
 

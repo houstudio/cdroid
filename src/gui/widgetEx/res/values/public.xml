@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared widgetEx/res attr id pinning (0x02 shared-lib) for the simple views
+     (qrcodeview/...). Source of truth; consumed by _compile_shared_lib (aapt2
+     <public id=>) and gen_styleable. Watermark-allocated: next free 0x02010138. -->
+<resources>
+    <public type="attr" name="eccLevel" id="0x02010133"/>
+    <public type="attr" name="encodeMode" id="0x02010134"/>
+    <public type="attr" name="dotColor" id="0x02010135"/>
+    <public type="attr" name="barBgColor" id="0x02010136"/>
+    <public type="attr" name="logo" id="0x02010137"/>
+</resources>

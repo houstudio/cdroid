@@ -19,7 +19,6 @@ private:
     std::string m_hash;
     bool        m_hash_valid;
 public:
-    HtmlView(int,int);
     virtual ~HtmlView();
 
     void open_page(const std::string& url, const std::string& hash);

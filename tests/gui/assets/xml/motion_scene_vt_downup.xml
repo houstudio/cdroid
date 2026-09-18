@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionNoStateDownUpHolds: actionDownUp holds at progress 1.0 (awaiting the
+     release that reverses over upDuration), unlike actionDown which removes. -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <ViewTransition android:id="@+id/vt_hold" app:motionTarget="@+id/vtd_target"
+                    app:onStateTransition="actionDownUp" app:duration="400" app:upDuration="200"
+                    app:viewTransitionMode="noState">
+        <KeyFrameSet>
+            <KeyAttribute app:motionTarget="@+id/vtd_target" app:framePosition="50"
+                          android:scaleX="1.5" android:scaleY="1.5" />
+        </KeyFrameSet>
+    </ViewTransition>
+</MotionScene>

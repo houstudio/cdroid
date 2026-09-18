@@ -23,6 +23,8 @@
 #include <vector>
 namespace cdroid{
 
+class Locale;
+
 class Calendar{
 public:
     virtual ~Calendar() = default;
@@ -192,6 +194,11 @@ public:
     static int getDaysInMonth(int year, int month);
     static int getDaysInYear(int year);
     static std::unique_ptr<Calendar> getInstance();
+    // AOSP picks the calendar type by locale (BuddhistCalendar for th,
+    // JapaneseImperialCalendar for the ja-JP-JP variant). CDROID's calendar
+    // libc has a single Gregorian implementation, so this forwards; the
+    // locale still travels with callers that format per-locale.
+    static std::unique_ptr<Calendar> getInstance(const Locale& locale);
     static std::unique_ptr<Calendar> getInstance(int zoneOffsetSeconds);
     static std::unique_ptr<Calendar> getInstance(int64_t instantMillis);
     static std::unique_ptr<Calendar> getInstance(int64_t instantMillis, int zoneOffsetSeconds);

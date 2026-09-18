@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ConstraintLayoutStatesSwitchesOnResize: like stateset_match but bound to a live
+     layout — the dimension-selected set is applied + re-measured. -->
+<StateSet xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+          xmlns:android="http://schemas.android.com/apk/res/android"
+          app:defaultState="@+id/sw_base">
+    <State android:id="@+id/sw_base" app:constraints="@+id/sw_small">
+        <Variant app:region_widthMoreThan="600px" app:constraints="@+id/sw_large" />
+    </State>
+    <ConstraintSet android:id="@+id/sw_small">
+        <Constraint android:id="@+id/sw_target" android:layout_width="100px" android:layout_height="50px" />
+    </ConstraintSet>
+    <ConstraintSet android:id="@+id/sw_large">
+        <Constraint android:id="@+id/sw_target" android:layout_width="200px" android:layout_height="50px" />
+    </ConstraintSet>
+</StateSet>

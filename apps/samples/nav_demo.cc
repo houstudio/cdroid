@@ -28,9 +28,9 @@ int main(int argc, const char* argv[]){
     graph->setStartDestination("a");
 
     controller.addOnDestinationChangedListener(
-        [](cdroid::NavController*, cdroid::NavDestination* destination, cdroid::Bundle*){
+        [](cdroid::NavController&, cdroid::NavDestination& destination, cdroid::Bundle*){
             LOGD("[nav_demo] navigated -> route=%s",
-                 destination ? destination->getRoute().c_str() : "(null)");
+                 destination.getRoute().c_str());
         });
 
     LOGD("[nav_demo] setGraph (expect 'a')");

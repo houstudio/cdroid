@@ -56,7 +56,7 @@ public:
         return *this;
     }
 
-    SubMenu& setIcon(const std::string& iconRes) override{
+    SubMenu& setIcon(int iconRes) override{
         mItem->setIcon(iconRes);
         return *this;
     }
@@ -65,7 +65,7 @@ public:
         return (SubMenu&) MenuBuilder::setHeaderIconInt(icon);
     }
 
-    SubMenu& setHeaderIcon(const std::string& iconRes) override{
+    SubMenu& setHeaderIcon(int iconRes) override{
         return (SubMenu&) MenuBuilder::setHeaderIconInt(iconRes);
     }
 

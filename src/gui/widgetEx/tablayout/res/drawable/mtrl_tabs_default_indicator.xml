@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Default tab indicator (material/tabs/res/drawable/mtrl_tabs_default_indicator.xml). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+  <item>
+    <shape
+        android:shape="rectangle">
+      <solid android:color="@android:color/white"/>
+      <size android:height="2dp"/>
+    </shape>
+  </item>
+</selector>

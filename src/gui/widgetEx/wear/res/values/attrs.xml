@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- androidx wear widget styleables (verbatim, trimmed to the ported set). -->
+<resources>
+    <declare-styleable name="WearableRecyclerView">
+        <attr name="bezelWidth" format="fraction" />
+        <attr name="circularScrollingGestureEnabled" format="boolean" />
+        <attr name="scrollDegreesPerScreen" format="float" />
+    </declare-styleable>
+    <declare-styleable name="CircularProgressLayout">
+        <attr name="backgroundColor" format="color" />
+        <attr name="strokeWidth" format="dimension" />
+        <attr name="colorSchemeColors" format="reference|color" />
+        <attr name="indeterminate" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="RoundedDrawable">
+        <attr name="android:src" />
+        <attr name="radius" format="dimension" />
+        <attr name="backgroundColor" />
+        <attr name="clipEnabled" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="BoxInsetLayout_Layout">
+        <attr name="boxedEdges">
+            <flag name="none" value="0x00" />
+            <flag name="left" value="0x01" />
+            <flag name="top" value="0x02" />
+            <flag name="right" value="0x04" />
+            <flag name="bottom" value="0x08" />
+            <flag name="all" value="0x0F" />
+        </attr>
+        <attr name="layout_boxedEdges">
+            <flag name="none" value="0x00" />
+            <flag name="left" value="0x01" />
+            <flag name="top" value="0x02" />
+            <flag name="right" value="0x04" />
+            <flag name="bottom" value="0x08" />
+            <flag name="all" value="0x0F" />
+        </attr>
+    </declare-styleable>
+</resources>

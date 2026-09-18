@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionDeltaAppliesDefaultValuedField: a delta that explicitly resets to the default. -->
+<ConstraintOverride xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    app:motionTarget="@+id/vdd_target" android:rotation="0" />

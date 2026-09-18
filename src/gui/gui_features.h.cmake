@@ -27,6 +27,7 @@
 #cmakedefine ENABLE_DAYTIME_WIDGETS 1
 #cmakedefine ENABLE_NAVIGATION 1
 #cmakedefine ENABLE_BARCODE 1
+#cmakedefine ENABLE_I18N 1
 #cmakedefine ENABLE_QRCODE 1
 #cmakedefine ENABLE_COORDINATORLAYOUT 1
 #cmakedefine ENABLE_CONSTRAINTLAYOUT 1

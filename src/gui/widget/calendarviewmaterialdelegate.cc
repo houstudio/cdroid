@@ -19,10 +19,11 @@
 #include <widget/calendarviewmaterialdelegate.h>
 namespace cdroid{
 
-CalendarViewMaterialDelegate::CalendarViewMaterialDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs)
+CalendarViewMaterialDelegate::CalendarViewMaterialDelegate(CalendarView* delegator, Context* context,
+        const AttributeSet* attrs, int defStyleAttr, int defStyleRes)
     :CalendarView::AbstractCalendarViewDelegate(delegator,context){
-    mDayPickerView = new DayPickerView(context, attrs);
-    mDayPickerView->setId(View::NO_ID); 
+    mDayPickerView = new DayPickerView(context, attrs, defStyleAttr, defStyleRes);
+    mDayPickerView->setId(View::NO_ID);
     DayPickerView::OnDaySelectedListener dsl= [this](DayPickerView& view, Calendar& day){
         if (mOnDateChangeListener) {
             const int year  = day.get(Calendar::YEAR);
@@ -36,19 +37,23 @@ CalendarViewMaterialDelegate::CalendarViewMaterialDelegate(CalendarView* delegat
     delegator->addView(mDayPickerView);
 }
 
-void CalendarViewMaterialDelegate::setWeekDayTextAppearance(const std::string& resId){
+void CalendarViewMaterialDelegate::setWeekDayTextAppearance(int resId){
     mDayPickerView->setDayOfWeekTextAppearance(resId);
 }
 
-std::string CalendarViewMaterialDelegate::getWeekDayTextAppearance() const{
+int CalendarViewMaterialDelegate::getWeekDayTextAppearance() const{
     return mDayPickerView->getDayOfWeekTextAppearance();
 }
 
-void CalendarViewMaterialDelegate::setDateTextAppearance(const std::string&resId){
+void CalendarViewMaterialDelegate::setDateTextAppearance(int resId){
     mDayPickerView->setDayTextAppearance(resId);
 }
 
-std::string CalendarViewMaterialDelegate::getDateTextAppearance() const{
+void CalendarViewMaterialDelegate::setWeekDayNameLength(int length){
+    mDayPickerView->setDayOfWeekNameLength(length);
+}
+
+int CalendarViewMaterialDelegate::getDateTextAppearance() const{
     return mDayPickerView->getDayTextAppearance();
 }
 

@@ -26,12 +26,12 @@
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_FLOW_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_FLOW_H
 
-#include <widgetEx/constraintlayout/helpers/constrainthelper.h>
+#include <widgetEx/constraintlayout/helpers/virtuallayout.h>
 #include <widgetEx/constraintlayout/core/widgets/flow.h>
 
 namespace cdroid {
 
-class Flow : public ConstraintHelper {
+class Flow : public VirtualLayout {
   public:
     // wrap mode (mirrors clcore::Flow)
     static constexpr int WRAP_NONE      = clcore::Flow::WRAP_NONE;
@@ -48,8 +48,18 @@ class Flow : public ConstraintHelper {
     static constexpr int VERTICAL_ALIGN_CENTER   = clcore::Flow::VERTICAL_ALIGN_CENTER;
     static constexpr int VERTICAL_ALIGN_BASELINE = clcore::Flow::VERTICAL_ALIGN_BASELINE;
 
-    Flow(Context* ctx, const AttributeSet& attrs);
-    explicit Flow(int width, int height);
+    Flow(Context* ctx);   // AOSP Flow(Context)
+    Flow(Context* ctx, const AttributeSet* attrs);
+    Flow(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
+
+    // AndroidX Flow.onMeasure (helper Flow.java:166-192): hand the specs straight to the
+    // core Flow (it consumes View MeasureSpec modes), then adopt its measured size — this is
+    // what lets the BasicMeasure Measurer strategy drive a Flow like any other child.
+    void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
+    // The Measurer's virtual-layout entry (Flow.java:177-192): same translation against an
+    // explicit core layout — ConstraintLayout.java:853-860 routes VL children here.
+    void onMeasure(clcore::VirtualLayout* layout,
+                   int widthMeasureSpec, int heightMeasureSpec) override;
 
     // configuration (delegate to the core Flow)
     void setWrapMode(int wrapMode);

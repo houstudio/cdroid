@@ -35,7 +35,7 @@ protected:
 public:
     RoundedDrawable();
     ~RoundedDrawable()override;
-    void inflate(XmlPullParser& parser,const AttributeSet& attrs)override;
+    void inflate(Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme)override;
 
     void setDrawable(Drawable* drawable);
     Drawable* getDrawable();

@@ -21,6 +21,7 @@
 #include <mutex>
 #include <iostream>
 #include <exception>
+#include <stdexcept>
 
 namespace cdroid{
 static const std::map<const std::string ,unsigned int>sColorNameMap={
@@ -123,8 +124,12 @@ unsigned int Color::parseColor(const std::string& colorString){
 
 unsigned int Color::getHtmlColor(const std::string&colorname){
      auto it = sColorNameMap.find(colorname);
-     if(it== sColorNameMap.end())/*return -1;*/
-         throw std::invalid_argument("invalid color");
+     /*AOSP Color.parseColor ends with `throw new IllegalArgumentException("Unknown color")`
+       when the name is not in sColorNameMap — the old silent 0xFFFF0000 rendered every
+       typo'd name as opaque red instead of failing.*/
+     if(it== sColorNameMap.end()){
+         throw std::invalid_argument("Unknown color");
+     }
      return it->second;
 }
 

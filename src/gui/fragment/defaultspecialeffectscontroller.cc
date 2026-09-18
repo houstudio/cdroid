@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <porting/cdlog.h>
 #include <fragment/defaultspecialeffectscontroller.h>
 #include <fragment/fragment.h>
 #include <fragment/fragmentanim.h>
@@ -26,12 +27,13 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <core/context.h>
+#include <core/handler.h>
 #include <memory>
 
 namespace cdroid{
-namespace fragment{
 
 void DefaultSpecialEffectsController::collectEffects(std::vector<Operation*>& operations, bool isPop){
+    roundClones().clear();   // per-round: effects of one burst share one clone per container
     // syncAnimations: the last operation's anims propagate to every fragment in the batch (androidx),
     // so sibling fragments in one transaction share the same enter/exit set.
     if(!operations.empty()){
@@ -85,6 +87,95 @@ void DefaultSpecialEffectsController::collectEffects(std::vector<Operation*>& op
     }
 }
 
+namespace { // file-local: retry-until-idle view reclaim
+
+// The reclaim chain's home: a process-lifetime Handler on the main looper.
+// Posting on the CONTAINER (cont->post) dropped the whole chain whenever the
+// container detached before a hop ran — a detached View's posts land in its
+// HandlerActionQueue, which is only flushed by a dispatchAttachedToWindow that
+// a dying tree never gets — so an off-tree fragment view (sole-owned by this
+// closure; applyState already removed it, ~Fragment never deletes mView) was
+// never freed (valgrind: a whole DemoPageFragment inflation, 2.2KB root +
+// 1.28MB subtree, definitely lost on every window recreate that landed while a
+// page-switch exit transition was still settling). First call is post-App
+// (fragment machinery), so the main looper exists. Never deleted: one fixed
+// block, and ~WindowManager's quit-time drainMessageQueue runs any hop still
+// pending at exit instead of leaking it with the dropped message.
+Handler* viewReclaimHandler(){
+    static Handler* h = new Handler();
+    return h;
+}
+
+} // anonymous namespace
+
+// Self-repost WITHOUT a self-referencing closure. A closure cannot reference
+// itself safely:
+//  - capturing its own shared_ptr<function> is an unbreakable cycle (leak);
+//  - capturing its own Runnable BY VALUE copies the PRE-assignment (empty)
+//    functor — CallbackBase copies share mFunctor and the capture happens
+//    before operator= installs the real one, so the in-body repost no-ops
+//    (repro'd: the reclaim body never runs at all);
+//  - capturing by reference dangles once the enclosing lambda returns.
+// Recursion sidesteps all three: each hop builds a FRESH Runnable from the
+// by-value state and posts it, so no closure ever references itself.
+void scheduleViewReclaim(ViewGroup* cont, View* view, Fragment* fragment,
+                         std::weak_ptr<bool> fragAlive, std::weak_ptr<bool> ctrlAlive,
+                         std::function<void()> hook, bool soleOwner) {
+    Runnable retry;
+    retry = [cont, view, fragment, fragAlive, ctrlAlive, hook, soleOwner](){
+        // Superseded generation (shared-owner path only): the fragment moved on
+        // to a NEW view (stepUp's stale-view hand-off already gave this tree to
+        // a sole-owner hop) or died (~Fragment already freed it). Nothing left
+        // to wait for — exit instead of polling a doomed container's
+        // transitions forever (the unbounded repost storm), and never touch
+        // `view`: its sole owner already ran. A soleOwner hop IS the owner
+        // regardless of what the fragment points at now — never exit early.
+        if(!soleOwner && (fragAlive.expired() || (fragment && fragment->mView != view))){
+            if(hook) hook();
+            return;
+        }
+        // Retry until NO transition is pending/running on the container:
+        // a still-active clone (e.g. a dialog round's Fade that captured the
+        // whole tree) dereferences this view from its startValues at preDraw.
+        // The SEC is tag-owned by the container: once it is gone the container
+        // itself is dead (or dying), so don't touch cont — and there is nobody
+        // left to wait for: the doomed-subtree teardown already ended every
+        // transition over this view, so fall through and free it.
+        const bool ctrlLive = !ctrlAlive.expired();
+        if(ctrlLive && TransitionManager::hasActiveTransitions(cont)){
+            scheduleViewReclaim(cont, view, fragment, fragAlive, ctrlAlive, hook, soleOwner); // next hop: fresh Runnable
+            return;
+        }
+        {
+        // Free path. Shared-owner: fragAlive holds and mView == view (or the
+        // view is ownerless) — this hop is the sole surviving deleter; it also
+        // runs the view lifecycle. Sole-owner: the caller (stepUp's stale-view
+        // hand-off) already ran performDestroyView and cleared mView — the hop
+        // owns the tree unconditionally and must free it even then.
+        endAnimatorsOver(view);
+        endTransitionsOver(view);
+        if(!soleOwner && fragment && fragment->mView == view){
+            fragment->performDestroyView();
+            fragment->mView = nullptr;
+        }
+        // Detach from the parent BEFORE delete: ~View only does mParent->removeViewInternal
+        // (mChildren), and an addDisappearingView'd view has mParent==null while still
+        // listed in mDisappearingChildren — so ~View wouldn't pull it out, leaving the
+        // parent drawing a freed view. Remove explicitly so neither list retains it.
+        if(view->getParent()) view->getParent()->removeView(view);
+        // A view parked in mDisappearingChildren has mParent==null (the removeView above
+        // was skipped) but was never dispatch-detached — its mAttachInfo still points at
+        // the window. Posted runnables holding raw view pointers (accessibility scrolled/
+        // content-changed) would fire after this delete and read freed memory; dispatch
+        // the detach now so View::onDetachedFromWindowInternal cancels them.
+        if(view->isAttachedToWindow()) view->dispatchDetachedFromWindow();
+        delete view;
+        if(hook) hook();
+        }
+    };
+    viewReclaimHandler()->post(retry);
+}
+
 void AnimationEffect::onCommit(ViewGroup* container){
     Fragment* f = mOperation->mFragment;
     if(!f || !f->mView || !mAnimation){ mOperation->completeEffect(this); return; }
@@ -121,6 +212,14 @@ void AnimationEffect::onCommit(ViewGroup* container){
             // freed view whose mParent is null — the navdemo crash).
             cont->post([cont, v, op, self, hook](){
                 v->setAnimation(nullptr);              // delete the ended animClone; clear mCurrentAnimation
+                // Mirror TransitionEffect's scheduleDelete: destroy the fragment's
+                // view lifecycle BEFORE freeing the tree, so a later pop re-add
+                // cannot observe a dangling fragment->mView.
+                Fragment* frag = op->mFragment;
+                if(frag && frag->mView == v){
+                    frag->performDestroyView();
+                    frag->mView = nullptr;
+                }
                 op->completeEffect(self);
                 if(hook) hook();                       // reclaim fragment now (independent of the view)
                 if(op->mController && op->mController->hasTransitionEffect()){
@@ -131,13 +230,30 @@ void AnimationEffect::onCommit(ViewGroup* container){
                     // CALLBACK_ANIMATION -> UAF. Keep v alive (GONE, still parented) and hand it to the
                     // controller; the clone's true end (TransitionEffect listener) reclaims it once
                     // nothing references it anymore.
+                    // The clone's ObjectAnimator only needs v ALIVE (setTransitionAlpha), not
+                    // parented. Detach v now and hand sole ownership to the controller: while it
+                    // stays in mChildren, a window/host teardown that deletes the tree races the
+                    // clone-end reclaim post (whoever runs second touches a freed view). Off-tree,
+                    // the tree delete can never reach it and the reclaim (removeView-belt +
+                    // delete) stays single-owner.
                     v->setVisibility(cdroid::View::GONE);
+                    if(v->getParent()) v->getParent()->removeView(v);
                     op->mController->deferExitViewDelete(v);
                 } else {
                     // No Transition clone on this container -> nothing references v post-anim. Safe to
                     // detach + free now (mCurrentAnimation already cleared above so removeView takes
                     // the plain detach branch instead of addDisappearingView).
+                    // hasTransitionEffect() only sees THIS controller's effects; a clone started by
+                    // another operation/controller (round-sharing, sibling container) can still hold a
+                    // running animator over v — end anything still ticking over the subtree (no-op
+                    // when nothing runs), same guard as scheduleViewReclaim.
+                    endAnimatorsOver(v);
+                    endTransitionsOver(v);
                     if(v->getParent()) cont->removeView(v);
+                    // Same disappearing-children shape as scheduleViewReclaim: without a
+                    // parent the removeView above was skipped, so dispatch the detach
+                    // (cancels posted callbacks holding raw view pointers) before delete.
+                    if(v->isAttachedToWindow()) v->dispatchDetachedFromWindow();
                     delete v;
                 }
             });
@@ -153,7 +269,21 @@ void TransitionEffect::onCommit(ViewGroup* container){
     // animates). clone() no longer inherits the original's listeners (copyCloneFields clears them),
     // so to reclaim the fragment view when the clone truly ends we addListener() on the returned
     // clone directly — not on mTransition, not on op-completion.
-    Transition* clone = TransitionManager::beginDelayedTransition(container, mTransition);
+    //
+    // Round-sharing: a replace produces enter+exit effects on the SAME container; the second
+    // beginDelayedTransition would return null (container pending) and its else-branch would
+    // delete the view immediately while the first clone's captured startValues still reference
+    // it (UAF in Visibility::onDisappear). Every effect of the round reuses the first clone.
+    auto* controller = static_cast<DefaultSpecialEffectsController*>(mOperation->mController);
+    Transition* clone = nullptr;
+    auto& roundClones = controller->roundClones();
+    auto cached = roundClones.find(container);
+    if (cached != roundClones.end()) {
+        clone = cached->second;                      // this round's shared clone
+    } else {
+        clone = TransitionManager::beginDelayedTransition(container, mTransition);
+        if (clone != nullptr) roundClones[container] = clone;
+    }
     // Reclaim legacy-Animation exit views (deferred by a sibling AnimationEffect) when this clone
     // truly ends — by then its ObjectAnimator no longer dereferences them, so freeing is safe.
     // The alive-guard makes the callback a no-op if the controller is already destroyed.
@@ -187,33 +317,33 @@ void TransitionEffect::onCommit(ViewGroup* container){
             auto hook = mOperation->mReclaimHook;
             std::weak_ptr<bool> fragAlive = fragment ? std::weak_ptr<bool>(fragment->mAliveFlag)
                                                      : std::weak_ptr<bool>();
-            auto scheduleDelete = [cont, view, fragment, fragAlive, fired, hook](){
+            std::weak_ptr<bool> ctrlAlive2 = ctrl ? ctrl->getAlive() : std::weak_ptr<bool>();
+            auto scheduleDelete = [cont, view, fragment, fragAlive, ctrlAlive2, fired, hook](){
                 if(*fired) return; *fired = true;
-                cont->post([cont, view, fragment, fragAlive, hook]{
-                    // Detach from the parent BEFORE delete: ~View only does mParent->removeViewInternal
-                    // (mChildren), and an addDisappearingView'd view has mParent==null while still
-                    // listed in mDisappearingChildren — so ~View wouldn't pull it out, leaving the
-                    // parent drawing a freed view. Remove explicitly so neither list retains it.
-                    if(fragAlive.lock()){
-                        if(fragment){ fragment->performDestroyView(); fragment->mView = nullptr; }
-                        if(view->getParent()) view->getParent()->removeView(view);
-                        delete view;
-                    }
-                    if(hook) hook();
-                });
+                // Retry-until-no-transitions lives in scheduleViewReclaim():
+                // recursion gives the self-repost without any closure referencing
+                // itself (see the rationale there).
+                scheduleViewReclaim(cont, view, fragment, fragAlive, ctrlAlive2, hook);
             };
             if(clone){
                 Transition::TransitionListener lst;
                 lst.onTransitionEnd = [scheduleDelete](Transition&){ scheduleDelete(); };
                 lst.onTransitionCancel = [scheduleDelete](Transition&){ scheduleDelete(); };
                 clone->addListener(lst);
-            } else {
-                // no-op (not laid out / already pending): no clone, no animator referencing the view.
+            } else if (roundClones.find(container) == roundClones.end()) {
+                // No clone at all (not laid out): nothing animates the view.
                 scheduleDelete();
+            } else {
+                // Shared round clone exists: defer this view's delete to that clone's end,
+                // exactly like the clone-owner path above.
+                Transition::TransitionListener lst;
+                lst.onTransitionEnd = [scheduleDelete](Transition&){ scheduleDelete(); };
+                lst.onTransitionCancel = [scheduleDelete](Transition&){ scheduleDelete(); };
+                roundClones[container]->addListener(lst);
             }
         }
     }
     mOperation->completeEffect(this);  // synchronous: retire op now (running->completed), dodge the clamp
 }
 
-}}//namespace fragment::cdroid
+}//namespace cdroid

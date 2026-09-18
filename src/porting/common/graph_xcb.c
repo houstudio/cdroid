@@ -412,7 +412,7 @@ static void* XCBEventProc(void*p) {
     xcb_destroy_window(xcbConnection, xcbWindow);
     xcb_disconnect(xcbConnection);
     LOGD("XCBEventProc End.");
-    exit(0);
-    return NULL;
+    return NULL;   /* never exit(0) from the event thread — it preempts the
+                      process exit code (e.g. --test-script's failure count) */
 }
 

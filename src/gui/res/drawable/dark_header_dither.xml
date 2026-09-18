@@ -15,5 +15,6 @@
 -->
 
 <nine-patch xmlns:android="http://schemas.android.com/apk/res/android"
-    android:src="@mipmap/dark_header"
-    android:dither="true"/>
+    android:src="@drawable/dark_header"
+    android:dither="true"
+/>

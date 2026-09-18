@@ -127,8 +127,9 @@ protected:
     Parcelable* onSaveInstanceState() override;
     void onRestoreInstanceState(Parcelable& state)override;
 public:
-    SlidingPaneLayout(int w,int h);
-    SlidingPaneLayout(Context* context, const AttributeSet& attrs);
+    SlidingPaneLayout(Context*ctx);   // AOSP SlidingPaneLayout(Context)
+    SlidingPaneLayout(Context* context, const AttributeSet* attrs);
+    SlidingPaneLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~SlidingPaneLayout()override;
 
     void setLockMode(int);
@@ -162,8 +163,8 @@ public:
     void setShadowDrawableLeft(Drawable* d);
     void setShadowDrawableRight(Drawable* d);
 
-    void setShadowResourceLeft(const std::string& resId);
-    void setShadowResourceRight(const std::string& resId);
+    void setShadowResourceLeft(int resId);
+    void setShadowResourceRight(int resId);
     void draw(Canvas& c)override;
 
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
@@ -193,10 +194,11 @@ public:
 };
 
 class SlidingPaneLayout::SavedState:public AbsSavedState {
+public:
     bool isOpen;
     int mLockMode;
 public:
-    SavedState(Parcelable superState);
+    SavedState(Parcelable* superState);
     //SavedState(Parcel in, ClassLoader loader);
     void writeToParcel(Parcel& out, int flags)override;
 };
@@ -209,12 +211,12 @@ public:
     void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event) override;
     bool onRequestSendAccessibilityEvent(ViewGroup& host, View& child, AccessibilityEvent& event) override;
 
-    bool filter(View child);
+    bool filter(View* child);
 };
 
 class SlidingPaneLayout::TouchBlocker:public FrameLayout {
 public:
-    TouchBlocker(View* view):FrameLayout(1,1){
+    TouchBlocker(View* view):FrameLayout(view->getContext()){
         addView(view);
     }
     bool onTouchEvent(MotionEvent& event) override{

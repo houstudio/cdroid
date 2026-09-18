@@ -18,10 +18,12 @@
 #ifndef __TYPEFACE_H__
 #define __TYPEFACE_H__
 #include <string>
+namespace cdroid{ class Asset; }  // content/asset.h (finishAssetTypeface param, fwd-only here)
 #include <unordered_map>
 #include <vector>
 #include <memory>
 #include <cairomm/scaledfont.h>
+#include <cairomm/surface.h>
 namespace minikin{
     class FontFamily;
     class FontCollection;
@@ -30,6 +32,7 @@ namespace minikin{
 }
 namespace cdroid{
 class Context;
+class FontData;  // core/typeface.cc (blob holder: Asset-backed mmap font bytes)
 class FontFamily{};
 class Typeface{
 public:
@@ -52,12 +55,15 @@ public:
     static Typeface* SERIF;
     /** The NORMAL style of the default monospace typeface. */
     static Typeface* MONOSPACE;
+    // AOSP Typeface.getDefault(): public @NonNull — "the default NORMAL
+    // typeface object" (returns sDefaults[NORMAL]). Paint's null-face
+    // fallback resolves through here.
+    static Typeface* getDefault();
 private:
     static constexpr int STYLE_MASK  = 0x03;
     static std::string mFallbackFamilyName;
     static std::string sFontConfigXml;  // optional Android fonts.xml/font_fallback.xml path
     std::string mFamily;
-    std::string mStyleName;
     std::string mFileName;
     int mFaceIndex = 0;
     int mStyle;
@@ -66,6 +72,10 @@ private:
     Cairo::RefPtr<Cairo::FontFace>mFontFace;
     mutable std::shared_ptr<minikin::FontCollection>mFontCollection;
     std::shared_ptr<minikin::MinikinFont> mMinikinFont;
+    // The font bytes backing every FT_Face of this Typeface (file mmap or pak
+    // window). FT memory faces read lazily, so the blob must outlive them —
+    // it is held here and pinned process-lifetime inside FontData.
+    std::shared_ptr<FontData> mFontData;
     static cdroid::Context*mContext;
     static std::string mSystemLang;
     static Typeface* sDefaultTypeface;
@@ -74,27 +84,23 @@ private:
     static std::unordered_map<std::string,std::shared_ptr<Typeface>> sSystemFontMap;
     static std::unordered_map<std::string,std::vector<FontFamily>>systemFallbackMap;
     static std::unordered_map<void*,Typeface*>sStyledTypefaceCache;
-    static std::vector<Cairo::RefPtr<Cairo::FontFace>>mFontFaces;
 private:
     struct Deleter;
     static void setDefault(Typeface* t);
-    static Typeface* getDefault();
     static bool hasFontFamily(const std::string&familyName);
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
     //Typeface(Cairo::RefPtr<Cairo::FontFace>face);
-    Typeface(const FcPattern&);
     // Build a Typeface directly from font fields (Android fonts.xml path) — no fontconfig.
     // If `family` is empty (a fallback <family lang=...>), the real family is read from the
     // font file's family_name so buildSystemFallback/buildFamily can group it correctly.
     Typeface(const std::string& family, int weight, bool italic, const std::string& fileName, int faceIndex);
-    // Memory-backed Typeface (e.g. PAK @font): font bytes live in `fontData`.
+    // Memory-backed Typeface (e.g. PAK @font): font bytes live in the FontData
+    // mapping held by this instance (AOSP Font.createBuffer mmap model).
     Typeface(const std::string& family, int weight, bool italic,
-             std::shared_ptr<std::vector<uint8_t>> fontData, int faceIndex);
+             std::shared_ptr<FontData> fontData, int faceIndex);
     static int loadFromFontsXml(const std::string& fontDir, const std::string& xmlPath);
     ~Typeface()=default;
-    static int parseStyle(const std::string&style,std::string&normalizedName);
-    void fetchProps(FT_Face);
     static std::shared_ptr<minikin::FontFamily>buildFamily(const std::string&family,const std::vector<std::shared_ptr<Typeface>>&faces);
 public:
     int getWeight()const;
@@ -102,15 +108,12 @@ public:
     bool isBold() const;
     bool isItalic() const;
     std::string getFamily()const;
-    std::string getStyleName()const;
     Cairo::RefPtr<Cairo::FontFace>getFontFace()const;
     std::shared_ptr<minikin::MinikinFont> getMinikinFont() const;
     std::shared_ptr<Cairo::ScaledFont> getScaledFont(const minikin::MinikinPaint&,
             const minikin::MinikinFont* minikinFont = nullptr) const;
     std::shared_ptr<minikin::FontCollection> getFontCollection() const;
     // ScaledFont cache statistics
-    static void getScaledFontCacheStats(uint64_t& hits, uint64_t& misses);
-    static void resetScaledFontCacheStats();
     static void setContext(cdroid::Context*);
     static void setFallback(const std::string&);
     // Optional: set an Android fonts.xml / font_fallback.xml path. If set and the file
@@ -120,17 +123,22 @@ public:
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
     static void buildSystemFallback();
     //static Typeface* findFromCache(AssetManager mgr, const std::string& path);
-    static std::shared_ptr<Typeface> make(const FcPattern& pat);
     static Typeface* create(const std::string& familyName,int style);
     static Typeface* create(Typeface* family,int style);
     static Typeface* create(Typeface* family,int weight, bool italic);
     static Typeface* defaultFromStyle(int style);
     static Typeface* createFromAsset(const std::string path);
+    // AOSP Typeface.createFromResources: the R.font/<name> resource route.
+    // The arsc value for a raw ttf font resource is the pak-relative file
+    // path; loaded via AssetManager.openNonAsset (zip root path, no assets/
+    // prefix) and cached per path like createFromAsset.
+    static Typeface* createFromResourcePath(const std::string path);
     static void loadPreinstalledSystemFontMap();
-    static int loadFromFontConfig();
-    static int loadFromPath(const std::string&path);
-    static int loadFaceFromResource(cdroid::Context*context);
-    static std::vector<Cairo::RefPtr<Cairo::FontFace>>getFontFaces();
+    void initFace(FT_Face ftFace, const std::string& family);
+private:
+    // Shared tail of the two pak-font factories: adopt the Asset's mapping as
+    // the FontData blob, build the memory-backed face, store it per path.
+    static Typeface* finishAssetTypeface(const std::string& path, Asset* asset, const char* tag);
 };
 
 class FontStyle {

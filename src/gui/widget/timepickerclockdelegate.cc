@@ -1,15 +1,26 @@
+#include <widget/internal_R.h>
 #include <climits>
-#include <widget/R.h>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
+#include <text/format/dateutils.h>
+#include <text/textutils.h>   // getLayoutDirectionFromLocale (setAmPmStart)
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
+#include <drawable/colorstatelist.h>
+#include <drawable/stateset.h>
 #include <widget/radialtimepickerview.h>
 #include <widget/textinputtimepickerview.h>
 #include <widget/relativelayout.h>
 #include <view/layoutinflater.h>
 #include <view/viewgroup.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
+
+// AOSP TimePickerClockDelegate ATTRS_TEXT_COLOR / ATTRS_DISABLED_ALPHA.
+static const uint32_t ATTRS_TEXT_COLOR[] = { R::attr::textColor, 0 };
+static const uint32_t ATTRS_DISABLED_ALPHA[] = { R::attr::disabledAlpha, 0 };
 
 namespace {
 // Ported from Java private static class NearestTouchDelegate implements View.OnTouchListener.
@@ -68,21 +79,20 @@ public:
 };
 } // namespace
 
-TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs)
+TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context* context,
+        const AttributeSet* attrs, int defStyleAttr, int defStyleRes)
     :AbstractTimePickerDelegate(delegator, context){
 
-    // Accessibility contentDescription strings are not wired (deferred); the values are only
-    // used by onPopulateAccessibilityEvent / setContentDescription, which are accessibility-only.
-    mSelectHours = "";
-    mSelectMinutes = "";
-
+    // process style attributes
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, defStyleAttr, defStyleRes);
     LayoutInflater* inflater = LayoutInflater::from(mContext);
 
-    // CDROID reads style attributes by name from AttributeSet; the legacy TypedArray
-    // path (R.styleable.TimePicker_*) is not wired here.
-    const std::string layoutResourceId = attrs.getString("internalLayout",
-            "cdroid:layout/time_picker_material");
-    View* mainView = inflater->inflate(layoutResourceId, delegator);
+    mSelectHours = mContext->getString(R::string::select_hours);
+    mSelectMinutes = mContext->getString(R::string::select_minutes);
+    mIs24Hour = false;
+    const int layoutResourceId = a->getResourceId(R::styleable::TimePicker_internalLayout, 0);
+    const int layoutRes = layoutResourceId ? layoutResourceId : R::layout::time_picker_material;
+    View* mainView = inflater->inflate(layoutRes, delegator);
     mainView->setSaveFromParentEnabled(false);
     mRadialTimePickerHeader = mainView->findViewById(R::id::time_header);
     mRadialTimePickerHeader->setOnTouchListener(NearestTouchDelegate());
@@ -207,13 +217,39 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     mPmLabel->setOnClickListener(mClickListener);
     ensureMinimumTextWidth(mPmLabel);
 
-    // DEFERRED: legacy header text color extracted from headerTimeTextAppearance and
-    // R.styleable.TimePicker_headerTextColor / headerBackground styling. Depends on
-    // ColorStateList / obtainStyledAttributes not wired; views keep their XML styling.
+    // For the sake of backwards compatibility, attempt to extract the text
+    // color from the header time text appearance. If it's set, we'll let
+    // that override the "real" header text color.
+    RefPtr<ColorStateList> headerTextColor;
+    const int timeHeaderTextAppearance = a->getResourceId(R::styleable::TimePicker_headerTimeTextAppearance, 0);
+    if (timeHeaderTextAppearance != 0) {
+        auto textAppearance = mContext->obtainStyledAttributes(nullptr, ATTRS_TEXT_COLOR, 0, timeHeaderTextAppearance);
+        RefPtr<ColorStateList> legacyHeaderTextColor = textAppearance->getColorStateList(0);
+        headerTextColor = applyLegacyColorFixes(legacyHeaderTextColor);
+    }
+
+    if (!headerTextColor) {
+        headerTextColor = a->getColorStateList(R::styleable::TimePicker_headerTextColor);
+    }
+
     mTextInputPickerHeader = mainView->findViewById(R::id::input_header);
 
+    if (headerTextColor) {
+        mHourView->setTextColor(headerTextColor);
+        mSeparatorView->setTextColor(headerTextColor);
+        mMinuteView->setTextColor(headerTextColor);
+        mAmLabel->setTextColor(headerTextColor);
+        mPmLabel->setTextColor(headerTextColor);
+    }
+
+    // Set up header background, if available.
+    if (a && a->hasValueOrEmpty(R::styleable::TimePicker_headerBackground)) {
+        mRadialTimePickerHeader->setBackground(a->getDrawable(R::styleable::TimePicker_headerBackground));
+        mTextInputPickerHeader->setBackground(a->getDrawable(R::styleable::TimePicker_headerBackground));
+    }
+
     mRadialTimePickerView = (RadialTimePickerView*) mainView->findViewById(R::id::radial_picker);
-    mRadialTimePickerView->applyAttributes(attrs);
+    mRadialTimePickerView->applyAttributes(attrs, defStyleAttr, defStyleRes);
     mRadialTimePickerView->setOnValueSelectedListener(mOnValueSelectedListener);
 
     mTextInputPickerView = (TextInputTimePickerView*) mainView->findViewById(R::id::input_mode);
@@ -223,18 +259,17 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     mRadialTimePickerModeButton->setOnClickListener([this](View& /*v*/) {
          toggleRadialPickerMode();
     });
-    // Accessibility contentDescription strings are not wired (deferred).
-    mRadialTimePickerModeEnabledDescription = "";
-    mTextInputPickerModeEnabledDescription = "";
+    mRadialTimePickerModeEnabledDescription = mContext->getString(R::string::time_picker_radial_mode_description);
+    mTextInputPickerModeEnabledDescription = mContext->getString(R::string::time_picker_text_input_mode_description);
 
     mAllowAutoAdvance = true;
 
     updateHourFormat();
 
     // Initialize with current time (mTempCalendar defaults to now).
-    // AOSP uses Calendar.getInstance(locale) (local TZ); mirror the local-TZ
-    // part here since the default ctor leaves zone=0/UTC.
-    mTempCalendar.setTimeZone(Calendar::getInstance()->getTimeZone());
+    // Calendar.getInstance(mLocale) carries the local time zone (the locale is
+    // a no-op selector for CDROID's single-Gregorian calendar libc).
+    mTempCalendar = *Calendar::getInstance(mLocale);
     const int currentHour = mTempCalendar.get(Calendar::HOUR_OF_DAY);
     const int currentMinute = mTempCalendar.get(Calendar::MINUTE);
     initialize(currentHour, currentMinute, mIs24Hour, HOUR_INDEX);
@@ -249,7 +284,7 @@ void TimePickerClockDelegate::toggleRadialPickerMode() {
         mRadialTimePickerHeader->setVisibility(View::GONE);
         mTextInputPickerHeader->setVisibility(View::VISIBLE);
         mTextInputPickerView->setVisibility(View::VISIBLE);
-        mRadialTimePickerModeButton->setImageResource("cdroid:drawable/btn_clock_material");
+        mRadialTimePickerModeButton->setImageResource(R::drawable::btn_clock_material);
         mRadialTimePickerModeButton->setContentDescription(mRadialTimePickerModeEnabledDescription);
         mRadialPickerModeEnabled = false;
     } else {
@@ -257,7 +292,7 @@ void TimePickerClockDelegate::toggleRadialPickerMode() {
         mRadialTimePickerHeader->setVisibility(View::VISIBLE);
         mTextInputPickerHeader->setVisibility(View::GONE);
         mTextInputPickerView->setVisibility(View::GONE);
-        mRadialTimePickerModeButton->setImageResource("cdroid:drawable/btn_keyboard_key_material");
+        mRadialTimePickerModeButton->setImageResource(R::drawable::btn_keyboard_key_material);
         mRadialTimePickerModeButton->setContentDescription(mTextInputPickerModeEnabledDescription);
         updateTextInputPicker();
         // DEFERRED: InputMethodManager.hideSoftInputFromWindow not wired.
@@ -279,11 +314,32 @@ void TimePickerClockDelegate::ensureMinimumTextWidth(TextView* v) {
     v->setMinimumWidth(minWidth);
 }
 
+void TimePickerClockDelegate::onConfigurationChanged(Configuration& newConfig) {
+    (void)newConfig;
+    // CDROID runtime-locale extension (AOSP rebuilds the activity instead):
+    // re-localize the AM/PM labels, the accessibility strings and the hour format.
+    const std::vector<std::string> amPmStrings = TimePicker::getAmPmStrings(mContext);
+    if (mAmLabel) {
+        mAmLabel->setText(obtainVerbatim(amPmStrings[0]));
+        ensureMinimumTextWidth(mAmLabel);
+    }
+    if (mPmLabel) {
+        mPmLabel->setText(obtainVerbatim(amPmStrings[1]));
+        ensureMinimumTextWidth(mPmLabel);
+    }
+    mSelectHours = mContext->getString(R::string::select_hours);
+    mSelectMinutes = mContext->getString(R::string::select_minutes);
+    mRadialTimePickerModeEnabledDescription = mContext->getString(R::string::time_picker_radial_mode_description);
+    mTextInputPickerModeEnabledDescription = mContext->getString(R::string::time_picker_text_input_mode_description);
+    updateHourFormat();
+}
+
 void TimePickerClockDelegate::updateHourFormat() {
     // DEFERRED: android.text.format.DateFormat.getBestDateTimePattern(Locale, skeleton) not
-    // ported. Default to a two-digit pattern that also yields a sensible ':' separator in
-    // updateHeaderSeparator / getHourMinSeparatorFromPattern.
-    const std::string bestDateTimePattern = mIs24Hour ? "HH:mm" : "hh:mm";
+    // ported. Single 'h' matches the 12-hour skeleton of most locales (en "h:mm a",
+    // zh "ah:mm") so the leading zero stays off; double 'HH' matches the common
+    // 24-hour patterns. Also yields a sensible ':' separator downstream.
+    const std::string bestDateTimePattern = mIs24Hour ? "HH:mm" : "h:mm";
     const int lengthPattern = (int) bestDateTimePattern.length();
     bool showLeadingZero = false;
     char hourFormat = '\0';
@@ -318,9 +374,38 @@ std::string TimePickerClockDelegate::obtainVerbatim(const std::string& text) {
     return text;
 }
 
-ColorStateList* TimePickerClockDelegate::applyLegacyColorFixes(ColorStateList* color) {
-    // DEFERRED: legacy header-text-color fixes depend on ColorStateList state manipulation.
-    return color;
+RefPtr<ColorStateList> TimePickerClockDelegate::applyLegacyColorFixes(RefPtr<ColorStateList> color) {
+    // The legacy text color might have been poorly defined. Ensures that it
+    // has an appropriate activated state, using the selected state if one
+    // exists or modifying the default text color otherwise.
+    if (!color || color->hasState(R::attr::state_activated)) {
+        return color;
+    }
+
+    int activatedColor;
+    int defaultColor;
+    if (color->hasState(R::attr::state_selected)) {
+        activatedColor = color->getColorForState(StateSet::get(
+                StateSet::VIEW_STATE_ENABLED | StateSet::VIEW_STATE_SELECTED), 0);
+        defaultColor = color->getColorForState(StateSet::get(
+                StateSet::VIEW_STATE_ENABLED), 0);
+    } else {
+        activatedColor = color->getDefaultColor();
+
+        // Generate a non-activated color using the disabled alpha.
+        auto ta = mContext->obtainStyledAttributes(ATTRS_DISABLED_ALPHA);
+        const float disabledAlpha = ta->getFloat(0, 0.30f);
+        defaultColor = multiplyAlphaComponent(activatedColor, disabledAlpha);
+    }
+
+    if (activatedColor == 0 || defaultColor == 0) {
+        // We somehow failed to obtain the colors.
+        return nullptr;
+    }
+
+    const std::vector<std::vector<int>> states = { { R::attr::state_activated }, {} };
+    const std::vector<int> colors = { activatedColor, defaultColor };
+    return RefPtr<ColorStateList>(new ColorStateList(states, colors));
 }
 
 int TimePickerClockDelegate::multiplyAlphaComponent(int color, float alphaMod) {
@@ -337,7 +422,7 @@ void TimePickerClockDelegate::initialize(int hourOfDay, int minute, bool is24Hou
     updateUI(index);
 }
 
- void TimePickerClockDelegate::updateUI(int index) {
+void TimePickerClockDelegate::updateUI(int index) {
     updateHeaderAmPm();
     updateHeaderHour(mCurrentHour, false);
     updateHeaderSeparator();
@@ -377,8 +462,7 @@ void TimePickerClockDelegate::setAmPmStart(bool isAmPmAtStart) {
         const int margin = (int) (mContext->getDisplayMetrics().density * 8);
         // Horizontal mode, with AM/PM appearing to left/right of hours and minutes.
         bool isAmPmAtLeft;
-        // DEFERRED: TextUtils.getLayoutDirectionFromLocale(mLocale); assume LTR.
-        const int layoutDirection = View::LAYOUT_DIRECTION_LTR;
+        const int layoutDirection = TextUtils::getLayoutDirectionFromLocale(mLocale);
         if (layoutDirection == View::LAYOUT_DIRECTION_LTR) {
             isAmPmAtLeft = isAmPmAtStart;
         } else {
@@ -563,8 +647,18 @@ bool TimePickerClockDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEv
     return true;
 }
 
-void TimePickerClockDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& /*event*/) {
-    // DEFERRED: DateUtils.formatDateTime not ported.
+void TimePickerClockDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    int flags = DateUtils::FORMAT_SHOW_TIME;
+    if (mIs24Hour) {
+        flags |= DateUtils::FORMAT_24HOUR;
+    } else {
+        flags |= DateUtils::FORMAT_12HOUR;
+    }
+    mTempCalendar.set(Calendar::HOUR_OF_DAY, getHour());
+    mTempCalendar.set(Calendar::MINUTE, getMinute());
+    const std::string selectedDateUtterance = DateUtils::formatDateTime(mDelegator->getContext(),
+            mTempCalendar.getTimeInMillis(), flags);
+    event.getText().push_back(selectedDateUtterance);
 }
 
 View* TimePickerClockDelegate::getHourView() {

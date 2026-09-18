@@ -13,12 +13,13 @@
 #include <core/rect.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 
 #include <transition/circularpropagation.h>
 #include <transition/translationanimationcreator.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 namespace {
 DecelerateInterpolator sDecelerate;
@@ -26,12 +27,12 @@ AccelerateInterpolator sAccelerate;
 } // anonymous namespace
 
 Explode::Explode() {
-    setPropagation(new CircularPropagation());
+    setPropagation(std::make_shared<CircularPropagation>());
 }
 
 Explode::Explode(Context* context, AttributeSet* attrs)
     : Visibility(context, attrs) {
-    setPropagation(new CircularPropagation());
+    setPropagation(std::make_shared<CircularPropagation>());
 }
 
 void Explode::captureValues(TransitionValues& transitionValues) {

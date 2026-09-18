@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/privacy_dashboard_settings.xml fragments. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="privacy_dashboard_screen"
+    android:title="Privacy">
+
+    <PreferenceCategory android:title="Permissions &amp; usage">
+
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="permission_usage" android:title="Privacy dashboard" android:summary="See when apps use the mic or camera" />
+
+        <SwitchPreference
+            android:key="usage_diagnostics"
+            android:title="Use &amp; diagnostics"
+            android:summary="Share diagnostic data"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Network &amp; internet privacy">
+
+        <SwitchPreference
+            android:key="private_dns"
+            android:title="Private DNS"
+            android:summaryOff="Off"
+            android:defaultValue="false" />
+
+        <Preference android:key="private_dns_host" android:title="Private DNS provider hostname" android:dependency="private_dns" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Ads">
+
+        <SwitchPreference
+            android:key="ad_privacy_optout"
+            android:title="Opt out of Ads Personalization"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -17,11 +17,11 @@ class CtxMenuActivity : public Window {
     TextView* mBody = nullptr;
 public:
     CtxMenuActivity() : Window(0, 0, -1, -1){
-        LinearLayout* root = new LinearLayout(0, 0);
+        LinearLayout* root = new LinearLayout(&App::getInstance());
         root->setOrientation(LinearLayout::VERTICAL);
         addView(root);
 
-        TextView* tv = new TextView("Long-press me", 800, 600);
+        TextView* tv =new TextView(&App::getInstance()); tv->setText("Long-press me" );
         tv->setTextSize(32);
         tv->setBackgroundColor(0xFF223344);
         tv->setTextColor(0xFFFFFFFF);
@@ -30,7 +30,7 @@ public:
 
         registerForContextMenu(tv); // long-press tv triggers the context menu
 
-        mBody = new TextView("context item shows here", 800, 200);
+        mBody =new TextView(&App::getInstance()); mBody->setText("context item shows here" );
         mBody->setTextSize(24);
         mBody->setGravity(Gravity::CENTER);
         root->addView(mBody);

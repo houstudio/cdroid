@@ -15,13 +15,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/nestedscrollview.h>
+#include <widget/framework_styleable.h>
 #include <widget/nestedscrollinghelper.h>
 #include <view/focusfinder.h>
 #include <view/hapticscrollfeedbackprovider.h>
 #include <core/build.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 // Port of androidx NestedScrollView.DifferentialMotionFlingTargetImpl (inner class).
 // Holds a back-pointer to the outer NestedScrollView. Friend of NestedScrollView so it can reach
@@ -45,15 +49,20 @@ private:
     NestedScrollView* mOuter;
 };
 
-DECLARE_WIDGET2(NestedScrollView,"cdroid:attr/scrollViewStyle")
+DECLARE_WIDGET2(NestedScrollView, "androidx.core.widget.NestedScrollView");
 
-NestedScrollView::NestedScrollView(int w,int h):FrameLayout(w,h){
-    initScrollView(nullptr);
-}
+NestedScrollView::NestedScrollView(Context*ctx)
+    :NestedScrollView(ctx,nullptr){}
 
-NestedScrollView::NestedScrollView(Context* context,const AttributeSet&attrs):FrameLayout(context,attrs){
-    initScrollView(&attrs);
-    setFillViewport(attrs.getBoolean("fillViewport",false));
+NestedScrollView::NestedScrollView(Context* context,const AttributeSet* attrs):NestedScrollView(context,attrs,R::attr::scrollViewStyle){}
+
+NestedScrollView::NestedScrollView(Context* context,const AttributeSet* pAttrs,int defStyleAttr):FrameLayout(context,pAttrs, defStyleAttr){
+    initScrollView(pAttrs);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::ScrollView, defStyleAttr);
+    
+setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport,false));
+
 }
 
 NestedScrollView::~NestedScrollView(){
@@ -897,13 +906,21 @@ bool NestedScrollView::onGenericMotionEvent(MotionEvent& event) {
 
 float NestedScrollView::getVerticalScrollFactorCompat() {
     if (mVerticalScrollFactor == 0) {
-        /*TypedValue outValue = new TypedValue();
+        // AOSP reads ?android:attr/listPreferredItemHeight from the theme; fall
+        // back to 1.f when the attr/theme/metrics are unavailable.
         Context* context = getContext();
-        if (!context->getTheme().resolveAttribute(android.R.attr.listPreferredItemHeight, outValue, true)) {
-            throw std::runtime_error("Expected theme to define listPreferredItemHeight.");
+        // AOSP resolves ?android:attr/listPreferredItemHeight straight from its framework
+        // attr id (com.android.internal.R.attr.listPreferredItemHeight == 0x0101004d).
+        // CDROID's R::attr::listPreferredItemHeight is that same constant — use it directly
+        // rather than a runtime name lookup (getId hardcodes type=id and misses; getIdentifier
+        // works but needlessly re-resolves a compile-time constant).
+        const int attr = R::attr::listPreferredItemHeight;
+        TypedValue tv;
+        if (context && context->getTheme().resolveAttribute(attr, &tv, true) &&
+            tv.type == TypedValue::TYPE_DIMENSION) {
+            mVerticalScrollFactor = tv.complexToDimension(context->getResources().getDisplayMetrics());
         }
-        mVerticalScrollFactor = outValue.getDimension(context->getResources().getDisplayMetrics());*/
-        mVerticalScrollFactor=1.f;
+        if (mVerticalScrollFactor == 0) mVerticalScrollFactor = 1.f;
     }
     return mVerticalScrollFactor;
 }
@@ -1927,3 +1944,70 @@ int NestedScrollView::scrollBy(int verticalScrollDistance, int verticalScrollAxi
     return totalScrollOffset;
 }
 }/*endof namespace*/
+
+// androidx NestedScrollView: the a11y surface is identical in shape to the
+// framework ScrollView twin (already ported) — page-height scroll actions,
+// scrollable flag with directional actions, event scroll bounds.
+bool NestedScrollView::performAccessibilityActionInternal(int action, Bundle* arguments) {
+    if (FrameLayout::performAccessibilityActionInternal(action, arguments)) {
+        return true;
+    }
+    if (!isEnabled()) {
+        return false;
+    }
+    switch (action) {
+    case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD:
+    case internal::R::id::accessibilityActionScrollDown: {
+        const int viewportHeight = getHeight() - mPaddingBottom - mPaddingTop;
+        const int targetScrollY = std::min(mScrollY + viewportHeight, getScrollRange());
+        if (targetScrollY != mScrollY) {
+            smoothScrollTo(0, targetScrollY);
+            return true;
+        }
+        return false;
+    }
+    case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD:
+    case internal::R::id::accessibilityActionScrollUp: {
+        const int viewportHeight = getHeight() - mPaddingBottom - mPaddingTop;
+        const int targetScrollY = std::max(mScrollY - viewportHeight, 0);
+        if (targetScrollY != mScrollY) {
+            smoothScrollTo(0, targetScrollY);
+            return true;
+        }
+        return false;
+    }
+    }
+    return false;
+}
+
+void NestedScrollView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
+    FrameLayout::onInitializeAccessibilityNodeInfoInternal(info);
+    if (isEnabled()) {
+        const int scrollRange = getScrollRange();
+        if (scrollRange > 0) {
+            info.setScrollable(true);
+            if (mScrollY > 0) {
+                info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP);
+            }
+            if (mScrollY < scrollRange) {
+                info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN);
+            }
+        }
+    }
+}
+
+void NestedScrollView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event) {
+    FrameLayout::onInitializeAccessibilityEventInternal(event);
+    const bool scrollable = getScrollRange() > 0;
+    event.setScrollable(scrollable);
+    event.setScrollX(mScrollX);
+    event.setScrollY(mScrollY);
+    event.setMaxScrollX(mScrollX);
+    event.setMaxScrollY(getScrollRange());
+}
+
+std::string NestedScrollView::getAccessibilityClassName() const {
+    return "NestedScrollView";
+}

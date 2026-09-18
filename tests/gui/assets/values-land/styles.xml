@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Same style in a -land config: marks CONFIG_ORIENTATION on the type. -->
+    <style name="Theme_OrientationDependent">
+        <item name="testString">landscape</item>
+    </style>
+</resources>

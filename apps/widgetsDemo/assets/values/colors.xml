@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Surface palette -->
+    <color name="demo_bg">#FF0B0E14</color>
+    <color name="card_bg">#FF161C26</color>
+    <color name="card_bg2">#FF1E2634</color>
+    <color name="card_stroke">#FF2B3442</color>
+    <color name="divider">#FF232A33</color>
+
+    <!-- Text -->
+    <color name="text_primary">#FFECEFF2</color>
+    <color name="text_secondary">#FF9BA6B2</color>
+    <color name="text_disabled">#FF5A6472</color>
+
+    <!-- Accents -->
+    <color name="accent">#FF4EA1FF</color>
+    <color name="accent_pressed">#FF2E7FE0</color>
+    <color name="accent2">#FF7C5CFF</color>
+    <color name="btn_normal">#FF274B6D</color>
+    <color name="good">#FF46C46C</color>
+    <color name="warn">#FFFFB23E</color>
+    <color name="danger">#FFFF5D6C</color>
+
+    <!-- Gradient stops -->
+    <color name="grad_blue_a">#FF4EA1FF</color>
+    <color name="grad_blue_b">#FF2E5FE0</color>
+    <color name="grad_violet_a">#FF9B5CFF</color>
+    <color name="grad_violet_b">#FF5C6BFF</color>
+    <color name="grad_teal_a">#FF2EE6C4</color>
+    <color name="grad_teal_b">#FF17A2C4</color>
+    <color name="grad_amber_a">#FFFFC24E</color>
+    <color name="grad_amber_b">#FFFF7A3D</color>
+</resources>

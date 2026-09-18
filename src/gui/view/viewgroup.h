@@ -82,6 +82,9 @@ public:
 public:
     using LayoutParams =cdroid::LayoutParams;
     using MarginLayoutParams=cdroid::MarginLayoutParams;
+    // AOSP ViewGroup.requestSendAccessibilityEvent is public (ViewParent
+    // surface) — ExploreByTouchHelper and other non-child callers rely on it.
+    virtual bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
     typedef struct{
         std::function<void(View&/*parent*/,View* /*child*/)>onChildViewAdded;
         std::function<void(View&/*parent*/,View* /*child*/)>onChildViewRemoved;
@@ -123,7 +126,7 @@ private:
     View* mTooltipHoverTarget;
     Transformation* mChildTransformation;
     void initGroup();
-    void initFromAttributes(Context*,const AttributeSet&);
+    void initFromAttributes(Context*,const AttributeSet*);
     void setBooleanFlag(int flag, bool value);
     bool hasBooleanFlag(int flag)const;
     bool hasChildWithZ()const;
@@ -223,7 +226,6 @@ protected:
     bool dispatchTooltipHoverEvent(MotionEvent& event)override;
     virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);
-    virtual bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
     virtual ActionMode* startActionModeForChild(View* child, const ActionMode::Callback& callback);
     virtual ActionMode* startActionModeForChild(View* child, const ActionMode::Callback& callback, int type);
     virtual bool onRequestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
@@ -285,6 +287,7 @@ protected:
     void dispatchDrawableHotspotChanged(float x,float y)override;
     bool hasHoveredChild()const override;
     void addChildrenForAccessibility(std::vector<View*>& outChildren)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     bool pointInHoveredChild(MotionEvent& event)override;
     virtual int getChildDrawingOrder(int childCount, int i);
     std::vector<View*> buildOrderedChildList();
@@ -302,9 +305,10 @@ protected:
 
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
 public:
-    ViewGroup(int w,int h);
-    ViewGroup(int x,int y,int w,int h);
-    ViewGroup(Context*ctx,const AttributeSet& attrs);
+    ViewGroup(Context*ctx);   // AOSP ViewGroup(Context)
+    ViewGroup(Context*ctx,const AttributeSet* attrs);
+    ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
+    ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     virtual ~ViewGroup();
     virtual bool ensureTouchMode(bool);
     bool getTouchscreenBlocksFocus()const;

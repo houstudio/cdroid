@@ -43,8 +43,26 @@ private:
     void clearScrap(std::vector<View*>& scrap);
     void clearScrapForRebind(View* view);
     void removeDetachedView(View* child, bool animate) ;
+    // Full-detach before an explicit delete: a scrap view taken by
+    // trackMotionScroll is only TEMP-detached and still sits in mChildren —
+    // AOSP's removeDetachedView assumes it left the array already. Deleting
+    // without removing left a dangling child entry.
+    void removeFromTreeIfPresent(View* v);
 public:
     RecycleBin(AbsListView*);
+    // Death-belt: dialog teardown deletes view trees without the detach
+    // dispatch, so onDetachedFromWindow's mRecycler->clear() never runs —
+    // every scrap/skipped/transient view still held here would leak
+    // (AOSP frees them via GC). mActiveViews aliases the ListView's live
+    // children, which ~ViewGroup owns: release them without deleting.
+    ~RecycleBin();
+    // CDROID ownership: an owner deleting views outside the RecycleBin
+    // (AbsListView::resetList deletes the old children) must purge every
+    // array reference first — a surviving entry hands the corpse back out
+    // (getActiveView/getScrapView -> resurrection into mChildren) or
+    // double-deletes it later. AOSP needs none of this: GC keeps the objects
+    // alive under the stale references.
+    void forgetViews(const std::vector<View*>& views);
     void setViewTypeCount(int viewTypeCount);
     void markChildrenDirty();
     bool shouldRecycleViewType(int viewType) {

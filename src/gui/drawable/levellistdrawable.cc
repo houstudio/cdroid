@@ -15,13 +15,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/levellistdrawable.h>
+#include <content/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-LevelListDrawable::LevelListState::LevelListState(const LevelListState*orig,LevelListDrawable*own)
-    :DrawableContainerState(orig,own){
+LevelListDrawable::LevelListState::LevelListState(const LevelListState*orig,LevelListDrawable*own,Resources*res)
+    :DrawableContainerState(orig,own,res){
     if(orig!=nullptr){
         mLows = orig->mLows;
         mHighs= orig->mHighs;
@@ -29,14 +33,19 @@ LevelListDrawable::LevelListState::LevelListState(const LevelListState*orig,Leve
 }
 
 void LevelListDrawable::LevelListState::mutate(){
+    // AOSP runs super.mutate() (mutates every child) before cloning the arrays;
+    // an empty override suppressed the base chain entirely.
+    DrawableContainerState::mutate();
     //mLows = mLows.clone();
     //mHighs = mHighs.clone();
 }
 
 void LevelListDrawable::LevelListState::addLevel(int low,int high,Drawable*drawable){
-    addChild(drawable);
-    mLows.push_back(low);
-    mHighs.push_back(high);
+    const int pos = addChild(drawable);
+    // Keep the parallel arrays in lockstep with addChild's dedupe (see
+    // StateListState::addStateSet).
+    if (pos == (int)mLows.size()) { mLows.push_back(low); mHighs.push_back(high); }
+    else { mLows[pos] = low; mHighs[pos] = high; }
 }
 
 int LevelListDrawable::LevelListState::indexOfLevel(int level)const{
@@ -50,18 +59,22 @@ int LevelListDrawable::LevelListState::indexOfLevel(int level)const{
 }
 
 LevelListDrawable*LevelListDrawable::LevelListState::newDrawable(){
-    return new LevelListDrawable(std::dynamic_pointer_cast<LevelListState>(shared_from_this()));
+    return new LevelListDrawable(std::dynamic_pointer_cast<LevelListState>(shared_from_this()), nullptr);
+}
+
+Drawable*LevelListDrawable::LevelListState::newDrawable(Resources* res){
+    return new LevelListDrawable(std::dynamic_pointer_cast<LevelListState>(shared_from_this()), res);
 }
 
 LevelListDrawable::LevelListDrawable():DrawableContainer(){
     mMutated = false;
-    auto state = std::make_shared<LevelListState>(nullptr,this);
+    auto state = std::make_shared<LevelListState>(nullptr,this,nullptr);
     setConstantState(state);
     onLevelChange(getLevel());
 }
 
-LevelListDrawable::LevelListDrawable(std::shared_ptr<LevelListState>state){
-    auto newState = std::make_shared<LevelListState>(state.get(),this);
+LevelListDrawable::LevelListDrawable(std::shared_ptr<LevelListState>state,Resources*res){
+    auto newState = std::make_shared<LevelListState>(state.get(),this,res);
     mMutated = false;
     setConstantState(newState);
     onLevelChange(getLevel());
@@ -77,7 +90,7 @@ bool LevelListDrawable::onLevelChange(int level){
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState> LevelListDrawable::cloneConstantState(){
-    return std::make_shared<LevelListState>(mLevelListState.get(),this);
+    return std::make_shared<LevelListState>(mLevelListState.get(),this,nullptr);
 }
 
 void LevelListDrawable::setConstantState(std::shared_ptr<DrawableContainerState> state){
@@ -104,12 +117,12 @@ void LevelListDrawable::addLevel(int low,int high,Drawable* drawable) {
         onLevelChange(getLevel());
     }
 }
-void LevelListDrawable::inflate(XmlPullParser& parser,const AttributeSet& atts){
-    DrawableContainer::inflate(parser,atts);
-    inflateChildElements(parser,atts);
+void LevelListDrawable::inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts, const Resources::Theme* theme){
+    DrawableContainer::inflate(r,parser,atts, theme);
+    inflateChildElements(r,parser,atts,theme);
 }
 
-void LevelListDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& atts){
+void LevelListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts,const Resources::Theme* theme){
     int type,depth,low = 0;
     const int innerDepth = parser.getDepth()+1;
     while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
@@ -121,9 +134,10 @@ void LevelListDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
         if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-        low = atts.getInt("minLevel", 0);
-        int high = atts.getInt("maxLevel", 0);
-        Drawable*dr = atts.getDrawable("drawable");
+        auto ta = r.obtainStyledAttributes(&atts, R::styleable::LevelListDrawableItem);
+        low = ta->getInt(R::styleable::LevelListDrawableItem_minLevel, 0);
+        int high = ta->getInt(R::styleable::LevelListDrawableItem_maxLevel, 0);
+        Drawable* dr = ta->getDrawable(R::styleable::LevelListDrawableItem_drawable);
 
         if (high < 0) {
             throw std::logic_error(parser.getPositionDescription()+
@@ -137,7 +151,7 @@ void LevelListDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            dr = Drawable::createFromXmlInner(parser,atts);
+            dr = Drawable::createFromXmlInner(r,parser,atts,theme);
         }
         mLevelListState->addLevel(low, high, dr);
     }

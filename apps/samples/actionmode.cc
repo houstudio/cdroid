@@ -13,9 +13,9 @@ using namespace cdroid;
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window* w = new Window(0,0,-1,-1);
-    LinearLayout*ll=new LinearLayout(0,0);
+    LinearLayout*ll=new LinearLayout(&App::getInstance());
     w->addView(ll);
-    TextView* tv = new TextView("Long-press me", 800, 240);
+    TextView* tv =new TextView(&App::getInstance()); tv->setText("Long-press me" );
     tv->setTextSize(36);
     tv->setBackgroundColor(0xFF223344);
     tv->setTextColor(0xFFFFFFFF);

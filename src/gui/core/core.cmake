@@ -1,7 +1,8 @@
 SET(CORE_SOURCES
     core/app.cc
-    core/assets.cc
     core/attributeset.cc
+    core/context.cc         # cdroid::Context AOSP ID-based resource getters (defaults)
+    core/environment.cc     # android.os.Environment port (data/storage roots)
     #core/basebundle.cc
     #core/bundle.cc
     core/transform.cc
@@ -21,7 +22,6 @@ SET(CORE_SOURCES
     core/hebrewcalendar.cc
     core/canvas.cc
     core/color.cc
-    core/numberformat.cc
     core/display.cc
     core/displaymetrics.cc
     core/epollwrapper.cc
@@ -29,6 +29,7 @@ SET(CORE_SOURCES
     core/graphdevice.cc
     core/googlepinyin.cc
     core/handler.cc
+    core/handlerthread.cc   # android.os.HandlerThread
     core/inputdevice.cc
     #core/virtualinputdevice.cc
     core/inputeventsource.cc
@@ -54,18 +55,17 @@ SET(CORE_SOURCES
     core/porterduff.cc
     core/preferences.cc
     core/process.cc
+    core/queuedwork.cc       # android.app.QueuedWork (core placement: generic infra)
     core/countdowntimer.cc
     core/scheduler.cc
     core/systemclock.cc
     core/tokenizer.cc
     core/xmlpullparser.cc
-    core/typedvalue.cc
     core/typeface.cc
     core/fontlistparser.cc
     #core/uieventsource.cc
     core/virtualkeymap.cc
     core/windowmanager.cc
-    core/ziparchive.cc
 )
 
 list(APPEND CORE_SOURCES

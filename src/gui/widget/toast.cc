@@ -17,49 +17,42 @@
  *********************************************************************************/
 #include <widget/toast.h>
 #include <widget/textview.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <core/app.h>
 #include <core/windowmanager.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 class ToastWindow:public Window{
 private:
-    int mDuration;
-    int mTimeElapsed;
     Runnable mTimer;
     Toast* mToast;
 public:
-    ToastWindow(Toast*t,int,int,int ,int);
+    ToastWindow(Toast*t,int x,int y,int w,int h,int duration);
     ~ToastWindow();
-    void timeElapsed();
-    void setDuration(int dur);
 };
 
-ToastWindow::ToastWindow(Toast*toast,int x,int y,int w,int h):Window(x,y,w,h){
-    mDuration = INT_MAX;
-    mTimeElapsed = 100;
+ToastWindow::ToastWindow(Toast*toast,int x,int y,int w,int h,int duration)
+    :Window(x,y,w,h){
     mToast = toast;
-    mTimer = [this](){timeElapsed();};
-    postDelayed(mTimer,100);
+    // AOSP Toast.TN: params.windowAnimations = R.style.Animation_Toast — the
+    // toast_enter/toast_exit fades ship in the framework pak. The geometric
+    // ctor deliberately loads no theme dressing, so wire the style explicitly:
+    // the enter fade rides the compose-time alpha path, the timeout close()
+    // plays the themed ghost-exit fade.
+    setWindowAnimations((int)internal::R::style::Animation_Toast);
+    // AOSP Toast.TN.handleShow: schedule ONE delayed hide for the full
+    // duration (postDelayed(mHide, mDuration)). The 100ms-first-hop +
+    // 500ms self-reposting poll this replaces woke the looper ~5x/s per
+    // toast and delivered close() up to half a second late.
+    mTimer = [this](){ close(); };
+    postDelayed(mTimer, duration > 0 ? duration : Toast::LENGTH_SHORT);
 }
 
 ToastWindow::~ToastWindow(){
     LOGD("Window=%p mToast=%p",this,mToast);
     delete mToast;
-}
-
-void ToastWindow::timeElapsed(){
-    if(mTimeElapsed <mDuration){
-        postDelayed(mTimer,500);
-	    mTimeElapsed += 500;
-	    return;
-    }
-    close();
-}
-
-void ToastWindow::setDuration(int dur){
-    mDuration = dur;
 }
 
 Toast::Toast(Context*context){
@@ -74,7 +67,19 @@ Toast::Toast(Context*context){
 }
 
 void Toast::show(){
+    // AOSP throws on a toast with no view and re-schedules on a re-show; the
+    // no-GC analog: no-op a re-show (a second ToastWindow would double-own
+    // mToast — both ~ToastWindow delete it) and refuse a viewless show instead
+    // of dereferencing null.
+    if (mWindow != nullptr) {
+        LOGW("Toast::show: already showing; ignoring re-show");
+        return;
+    }
     ViewGroup* frame = dynamic_cast<ViewGroup*>(mNextView);
+    if (frame == nullptr) {
+        LOGE("Toast::show: no view set (call setView/makeText first)");
+        return;
+    }
     MarginLayoutParams*lp=(MarginLayoutParams*)frame->getLayoutParams();
     const int horzMargin = lp->leftMargin+ lp->rightMargin;
     const int vertMargin = lp->topMargin + lp->bottomMargin;
@@ -91,11 +96,11 @@ void Toast::show(){
     Rect outRect;
     Rect displayRect = Rect::MakeWH(pt.x,pt.y);
     Gravity::apply(mGravity,frame->getMeasuredWidth(),frame->getMeasuredHeight(),displayRect,outRect);
-    ToastWindow*w = new ToastWindow(this,outRect.left+mX,outRect.top+mY,frame->getMeasuredWidth(),frame->getMeasuredHeight());
+    ToastWindow*w = new ToastWindow(this,outRect.left+mX,outRect.top+mY,
+            frame->getMeasuredWidth(),frame->getMeasuredHeight(),mDuration);
     mWindow = w;
     mWindow->addView(mNextView);
     mWindow->requestLayout();
-    w->setDuration(mDuration);
 }
 
 void Toast::cancel(){
@@ -158,8 +163,8 @@ int  Toast::getYOffset()const{
 Toast*Toast::makeText(Context*context,const std::string&text,int duration){
     Toast* result = new Toast(context);
     LayoutInflater*inflater=LayoutInflater::from(result->mContext);
-    View*v = inflater->inflate("cdroid:layout/transient_notification",nullptr);
-    TextView*tv = (TextView*)v->findViewById(cdroid::R::id::message);
+    View*v = inflater->inflate(cdroid::internal::R::layout::transient_notification,nullptr);
+    TextView*tv = (TextView*)v->findViewById(R::id::message);
     tv->setText(text);
     result->mNextView = v;
     result->mDuration = duration;
@@ -169,7 +174,7 @@ Toast*Toast::makeText(Context*context,const std::string&text,int duration){
 Toast& Toast::setText(const std::string&text){
     TextView* tv = nullptr;
     if(mNextView){
-        tv = (TextView*)mNextView->findViewById(cdroid::R::id::message);
+        tv = (TextView*)mNextView->findViewById(R::id::message);
         if(tv)tv->setText(text);
     }
     LOGE_IF(tv==nullptr,"This Toast was not created by Toast::makeText");

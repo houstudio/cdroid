@@ -7,8 +7,7 @@ namespace cdroid{
 
 class RLottieView : public View {
 public:
-    RLottieView(Context *ctx, const AttributeSet &attrs);
-    RLottieView(int width, int height);
+    RLottieView(Context *ctx, const AttributeSet *attrs);
     ~RLottieView();
     void   loadFromFile(const std::string &path);
     size_t getTotalFrame();

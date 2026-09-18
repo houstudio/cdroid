@@ -57,8 +57,9 @@ protected:
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
     void onDraw(Canvas&canvas)override;
 public:
-    AnalogClock(int w,int h);
-    AnalogClock(Context*ctx,const AttributeSet& attrs);
+    AnalogClock(Context*ctx);   // AOSP AnalogClock(Context)
+    AnalogClock(Context*ctx,const AttributeSet* attrs);
+    AnalogClock(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~AnalogClock();
     void setDial(Icon icon);
     void setDialTintList(const cdroid::RefPtr<ColorStateList>&);

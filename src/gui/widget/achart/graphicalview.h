@@ -68,7 +68,8 @@ protected:
     void notifyZoomListeners(float zoomrate,bool isZoomin);
     void notifyZoomResetListeners();
 public:
-    GraphicalView(Context*,const AttributeSet&);
+    GraphicalView(Context*,const AttributeSet*);
+    GraphicalView(Context*,const AttributeSet* attrs,int defStyleAttr);
     ~GraphicalView()override;
     /**
      * Creates a new graphical view.

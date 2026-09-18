@@ -146,5 +146,6 @@ bool SpringAnimation::isAtEquilibrium(float value, float velocity) const{
 }
 
 void SpringAnimation::setValueThreshold(float threshold) {
+    if (mSpring) mSpring->setValueThreshold(threshold);
 }
 }

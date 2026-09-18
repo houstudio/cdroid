@@ -213,6 +213,13 @@ public:
     static constexpr int CONTENT_CHANGE_TYPE_PANE_DISAPPEARED = 0x00000020;
 
     /**
+     * Change type for {@link #TYPE_WINDOW_CONTENT_CHANGED} event:
+     * The source node changed its state description
+     * (see {@link android.view.View#setStateDescription}).
+     */
+    static constexpr int CONTENT_CHANGE_TYPE_STATE_DESCRIPTION = 0x00000040;
+
+    /**
      * Change type for {@link #TYPE_WINDOWS_CHANGED} event:
      * The window was added.
      */

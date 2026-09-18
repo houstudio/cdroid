@@ -30,8 +30,9 @@ private:
 protected:
     void drawableStateChanged()override;
 public:
-    ToggleButton(int w,int h);
-    ToggleButton(Context*ctx,const AttributeSet& attrs);
+    ToggleButton(Context*ctx);
+    ToggleButton(Context*ctx,const AttributeSet* attrs);
+    ToggleButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     const std::string getTextOn()const;
     void setTextOn(const std::string& textOn);
     const std::string getTextOff()const;
@@ -39,7 +40,7 @@ public:
     float getDisabledAlpha() const;
     void setChecked(bool checked)override;
     void setBackground(Drawable* d)override;
-    std::string getAccessibilityName()const;
+    std::string getAccessibilityClassName()const override;
     std::string getButtonStateDescription()override;
 };
 }

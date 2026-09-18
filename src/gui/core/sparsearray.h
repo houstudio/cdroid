@@ -36,7 +36,7 @@ public:
         mKeys.clear();
         mValues.clear();
     }
-    void put(int key, T value){
+    void put(K key, T value){
         auto itr = std::lower_bound(mKeys.begin(), mKeys.end(), key);
         if( (itr != mKeys.end()) && (*itr == key) ){
             mValues[itr - mKeys.begin()] = value;
@@ -47,16 +47,16 @@ public:
             mValues.insert(mValues.begin()+pos,value);
         }
     }
-    T get( int key,T def)const{
+    T get(K key, T def)const{
         auto itr = std::lower_bound(mKeys.begin(), mKeys.end(), key);
         if( (itr != mKeys.end()) && (*itr == key) )
             return mValues[itr-mKeys.begin()];
         return def;
     }
-    T get( int key)const{
+    T get(K key)const{
         return get(key,static_cast<T>(0));
     }
-    int indexOfKey(int key)const{
+    int indexOfKey(K key)const{
         auto itr = std::lower_bound(mKeys.begin(), mKeys.end(), key);
         return (itr!=mKeys.end())&&(*itr == key)?int(itr-mKeys.begin()):-1;
     }
@@ -64,14 +64,14 @@ public:
         auto itr = std::find(mValues.begin(), mValues.end(), value);
         return (itr!=mValues.end())?int(itr-mValues.begin()):-1;
     }
-    int keyAt(size_t index)const{
+    K keyAt(size_t index)const{
         return mKeys[index];
     }
 
     T valueAt(size_t index)const{
         return mValues[index];
     }
-    void remove(int key){
+    void remove(K key){
         int idx=indexOfKey(key);
         if(idx>=0){
             mKeys.erase(mKeys.begin()+idx);
@@ -84,7 +84,7 @@ public:
             mValues.erase(mValues.begin()+idx);
         }
     }
-    void append(int key, T value) {
+    void append(K key, T value) {
         if (size() && (key <= mKeys.back())) {
             put(key, value);
             return;

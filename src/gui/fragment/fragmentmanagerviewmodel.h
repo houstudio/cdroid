@@ -30,7 +30,6 @@
 #include <lifecycle/viewmodel.h>
 namespace cdroid{
 namespace lifecycle{ class ViewModelStore; }
-namespace fragment{
 
 class Fragment;
 
@@ -70,6 +69,5 @@ private:
     std::unordered_map<std::string, lifecycle::ViewModelStore*> mViewModelStores; // owned
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

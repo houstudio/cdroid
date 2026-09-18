@@ -15,22 +15,36 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/framelayout.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(FrameLayout)
+DECLARE_WIDGET2(FrameLayout, "android.widget.FrameLayout");
 
-FrameLayout::FrameLayout(int w,int h):ViewGroup(w,h){
+FrameLayout::FrameLayout(Context*ctx)
+    :FrameLayout(ctx,nullptr){}
+
+FrameLayout::FrameLayout(Context* context,const AttributeSet* attrs):FrameLayout(context,attrs,0){}
+
+FrameLayout::FrameLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :FrameLayout(context,pAttrs,defStyleAttr,0){}
+
+FrameLayout::FrameLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+    :ViewGroup(context,pAttrs, defStyleAttr, defStyleRes){
     mMeasureAllChildren = false;
-    mForegroundPaddingLeft= mForegroundPaddingRight = 0;
-    mForegroundPaddingTop = mForegroundPaddingBottom= 0;
-}
 
-FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs)
-    :ViewGroup(context,attrs){
-    mMeasureAllChildren = attrs.getBoolean("measureAllChildren",false);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::FrameLayout, defStyleAttr, defStyleRes);
+    for (size_t n = ta->getIndexCount(); n > 0; ) {
+        size_t i = ta->getIndex(--n);
+        if (i == R::styleable::FrameLayout_measureAllChildren)
+            mMeasureAllChildren = ta->getBoolean(i, false);
+    }
+
     mForegroundPaddingLeft = mForegroundPaddingRight  = 0;
     mForegroundPaddingTop  = mForegroundPaddingBottom = 0;
 }
@@ -150,35 +164,37 @@ void FrameLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
                 resolveSizeAndState(maxHeight, heightMeasureSpec,childState << MEASURED_HEIGHT_STATE_SHIFT));
 
     count = mMatchParentChildren.size();
-    for (int i = 0; i < count; i++) {
-        View* child = mMatchParentChildren.at(i);
-        MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
+    if (count > 1) {
+        for (int i = 0; i < count; i++) {
+            View* child = mMatchParentChildren.at(i);
+            MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
 
-        int childWidthMeasureSpec;
-        if (lp->width == LayoutParams::MATCH_PARENT) {
-            const int width = std::max(0, getMeasuredWidth()
-                        - getPaddingLeftWithForeground() - getPaddingRightWithForeground()
-                        - lp->leftMargin - lp->rightMargin);
-            childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY);
-        } else {
-            childWidthMeasureSpec = getChildMeasureSpec(widthMeasureSpec,
-                        getPaddingLeftWithForeground() + getPaddingRightWithForeground() +
-                        lp->leftMargin + lp->rightMargin,lp->width);
+            int childWidthMeasureSpec;
+            if (lp->width == LayoutParams::MATCH_PARENT) {
+                const int width = std::max(0, getMeasuredWidth()
+                            - getPaddingLeftWithForeground() - getPaddingRightWithForeground()
+                            - lp->leftMargin - lp->rightMargin);
+                childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY);
+            } else {
+                childWidthMeasureSpec = getChildMeasureSpec(widthMeasureSpec,
+                            getPaddingLeftWithForeground() + getPaddingRightWithForeground() +
+                            lp->leftMargin + lp->rightMargin,lp->width);
+            }
+
+            int childHeightMeasureSpec;
+            if (lp->height == LayoutParams::MATCH_PARENT) {
+                const int height = std::max(0, getMeasuredHeight()
+                            - getPaddingTopWithForeground() - getPaddingBottomWithForeground()
+                            - lp->topMargin - lp->bottomMargin);
+                childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(height, MeasureSpec::EXACTLY);
+            } else {
+                childHeightMeasureSpec = getChildMeasureSpec(heightMeasureSpec,
+                            getPaddingTopWithForeground() + getPaddingBottomWithForeground() +
+                            lp->topMargin + lp->bottomMargin,lp->height);
+            }
+
+            child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
         }
-
-        int childHeightMeasureSpec;
-        if (lp->height == LayoutParams::MATCH_PARENT) {
-            const int height = std::max(0, getMeasuredHeight()
-                        - getPaddingTopWithForeground() - getPaddingBottomWithForeground()
-                        - lp->topMargin - lp->bottomMargin);
-            childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(height, MeasureSpec::EXACTLY);
-        } else {
-            childHeightMeasureSpec = getChildMeasureSpec(heightMeasureSpec,
-                        getPaddingTopWithForeground() + getPaddingBottomWithForeground() +
-                        lp->topMargin + lp->bottomMargin,lp->height);
-        }
-
-        child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
 }
 
@@ -267,7 +283,10 @@ std::string FrameLayout::getAccessibilityClassName()const{
 
 FrameLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     :MarginLayoutParams(c,attrs){
-    gravity = attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    // layout_gravity is shared with LinearLayout's styleable (same framework attr).
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::LinearLayoutLayout);
+    gravity = ta->getInt(R::styleable::LinearLayoutLayout_layout_gravity, UNSPECIFIED_GRAVITY);
 }
 
 FrameLayout::LayoutParams::LayoutParams(int width, int height)

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MotionSceneTransitionLookup: multi-transition state machine — t1 (A->B), t2 (B->C).
+     Lookups by android:id and by start/end endpoints. -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <Transition android:id="@+id/t1" app:constraintSetStart="@+id/trA" app:constraintSetEnd="@+id/trB" />
+    <Transition android:id="@+id/t2" app:constraintSetStart="@+id/trB" app:constraintSetEnd="@+id/trC" />
+    <ConstraintSet android:id="@+id/trA">
+        <Constraint android:id="@+id/lu_target" android:layout_width="100px" android:layout_height="50px"
+                    app:layout_constraintLeft_toLeftOf="parent" />
+    </ConstraintSet>
+    <ConstraintSet android:id="@+id/trB">
+        <Constraint android:id="@+id/lu_target" android:layout_width="100px" android:layout_height="50px"
+                    app:layout_constraintRight_toRightOf="parent" />
+    </ConstraintSet>
+    <ConstraintSet android:id="@+id/trC">
+        <Constraint android:id="@+id/lu_target" android:layout_width="100px" android:layout_height="50px"
+                    app:layout_constraintTop_toTopOf="parent" />
+    </ConstraintSet>
+</MotionScene>

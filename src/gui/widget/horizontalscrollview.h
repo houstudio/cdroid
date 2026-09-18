@@ -91,8 +91,9 @@ protected:
     void onRestoreInstanceState(Parcelable& state)override;
     Parcelable*onSaveInstanceState()override;
 public:
-    HorizontalScrollView(int w,int h);
-    HorizontalScrollView(Context*ctx,const AttributeSet&atts);
+    HorizontalScrollView(Context*ctx);   // AOSP HorizontalScrollView(Context)
+    HorizontalScrollView(Context*ctx,const AttributeSet*atts);
+    HorizontalScrollView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~HorizontalScrollView()override;
     void setEdgeEffectColor(int color);
     void setLeftEdgeEffectColor(int color);
@@ -120,6 +121,9 @@ public:
     bool arrowScroll(int direction);
     void smoothScrollBy(int dx, int dy);
     void smoothScrollTo(int x, int y);
+    bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     void computeScroll()override;
     void requestChildFocus(View* child, View* focused)override;
     bool requestChildRectangleOnScreen(View* child, Rect rectangle,bool immediate);

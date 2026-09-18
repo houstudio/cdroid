@@ -16,8 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <animation/animationset.h>
+#include <content/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <limits.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 static constexpr int PROPERTY_FILL_AFTER_MASK         = 0x1;
 static constexpr int PROPERTY_FILL_BEFORE_MASK        = 0x2;
@@ -39,21 +42,22 @@ AnimationSet::AnimationSet(Context* context,const AttributeSet& attrs)
  :Animation(context, attrs){
 
     init();
-    setFlag(PROPERTY_SHARE_INTERPOLATOR_MASK, attrs.getBoolean("shareInterpolator", true));
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::AnimationSet);
+    setFlag(PROPERTY_SHARE_INTERPOLATOR_MASK, a->getBoolean(R::styleable::AnimationSet_shareInterpolator, true));
 
-    if (attrs.hasAttribute("duration")) {
+    if (a->hasValue(R::styleable::AnimationSet_duration)) {
         mFlags |= PROPERTY_DURATION_MASK;
     }
-    if (attrs.hasAttribute("fillBefore")) {
+    if (a->hasValue(R::styleable::AnimationSet_fillBefore)) {
         mFlags |= PROPERTY_FILL_BEFORE_MASK;
     }
-    if (attrs.hasAttribute("fillAfter")) {
+    if (a->hasValue(R::styleable::AnimationSet_fillAfter)) {
         mFlags |= PROPERTY_FILL_AFTER_MASK;
     }
-    if (attrs.hasAttribute("repeatMode")) {
+    if (a->hasValue(R::styleable::AnimationSet_repeatMode)) {
         mFlags |= PROPERTY_REPEAT_MODE_MASK;
     }
-    if (attrs.hasAttribute("startOffset")) {
+    if (a->hasValue(R::styleable::AnimationSet_startOffset)) {
         mFlags |= PROPERTY_START_OFFSET_MASK;
     }
 }

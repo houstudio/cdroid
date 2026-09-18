@@ -12,8 +12,10 @@
 #include <core/any.h>
 #include <core/attributeset.h>
 #include <core/context.h>
+#include <content/typedarray.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <widget/framework_styleable.h>
 
 #include <transition/sidepropagation.h>
 #include <transition/translationanimationcreator.h>
@@ -88,11 +90,8 @@ Slide::Slide(int slideEdge) {
 
 Slide::Slide(Context* context, AttributeSet* attrs)
     : Visibility(context, attrs) {
-    int edge = Gravity::BOTTOM;
-    if (attrs != nullptr) {
-        std::string e = attrs->getAttributeValue("slideEdge");
-        if (!e.empty()) edge = atoi(e.c_str());
-    }
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::Slide);
+    const int edge = a->getInt(internal::R::styleable::Slide_slideEdge, Gravity::BOTTOM);
     setSlideEdge(edge);
 }
 
@@ -120,7 +119,7 @@ void Slide::setSlideEdge(int slideEdge) {
         throw std::invalid_argument("Invalid slide direction");
     }
     mSlideEdge = slideEdge;
-    SidePropagation* propagation = new SidePropagation();
+    auto propagation = std::make_shared<SidePropagation>();
     propagation->setSide(slideEdge);
     setPropagation(propagation);
 }

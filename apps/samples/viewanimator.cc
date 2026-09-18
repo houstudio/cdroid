@@ -15,9 +15,9 @@ void onClick(View&v){
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
-    LinearLayout*root = new LinearLayout(0,0);
-    LinearLayout*left = new LinearLayout(0,0);
-    LinearLayout*right= new LinearLayout(0,0);
+    LinearLayout*root = new LinearLayout(&app);
+    LinearLayout*left = new LinearLayout(&app);
+    LinearLayout*right= new LinearLayout(&app);
     root->setOrientation(LinearLayout::HORIZONTAL);
     root->setBackgroundColor(0xFF221133);
     left->setOrientation(LinearLayout::VERTICAL);
@@ -30,14 +30,14 @@ int main(int argc,const char*argv[]){
     right->setBackgroundColor(0xFF112233);
     w->addView(root);root->setId(100);
 
-    Button*btn=new Button("Alpha",100,32);
+    Button*btn=new Button(&app); btn->setText("Alpha" );
     left->addView(btn);btn->setId(1);
     btn->setOnClickListener(onClick);
-    btn=new Button("Translate",100,32);
+    btn=new Button(&app); btn->setText("Translate" );
     left->addView(btn);btn->setId(2);
     btn->setOnClickListener(onClick);
 
-    btn = new Button("Hello world!",200,200);
+    btn =new Button(&app); btn->setText("Hello world!" );
     right->addView(btn,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
     btn->setId(0x12345);
     w->requestLayout();

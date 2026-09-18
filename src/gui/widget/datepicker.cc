@@ -15,43 +15,52 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/datepicker.h>
+#include <text/format/dateutils.h>
 #include <widget/daypickerspinnerdelegate.h>
 #include <widget/daypickercalendardelegate.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(DatePicker);
-DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
-    :FrameLayout(context, attrs){
+DECLARE_WIDGET2(DatePicker, "android.widget.DatePicker");
+DatePicker::DatePicker(Context*ctx)
+    :DatePicker(ctx,nullptr){}
+
+DatePicker::DatePicker(Context* context,const AttributeSet* attrs):DatePicker(context,attrs,cdroid::internal::R::attr::datePickerStyle){}
+
+DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :DatePicker(context,pAttrs,defStyleAttr,0){}
+
+DatePicker::DatePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+    :FrameLayout(context, pAttrs, defStyleAttr, defStyleRes){
 
     if (getImportantForAutofill() == IMPORTANT_FOR_AUTOFILL_AUTO) {
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);
     }
 
-    const bool isDialogMode = attrs.getBoolean("dialogMode", false);
-    const int requestedMode = attrs.getInt("datePickerMode", MODE_SPINNER);
-    const int firstDayOfWeek = attrs.getInt("firstDayOfWeek", 0);
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::DatePicker, defStyleAttr, defStyleRes);
+    const bool isDialogMode = a->getBoolean(R::styleable::DatePicker_dialogMode, false);
+    const int requestedMode = a->getInt(R::styleable::DatePicker_datePickerMode, MODE_SPINNER);
+    const int firstDayOfWeek = a->getInt(R::styleable::DatePicker_firstDayOfWeek, 0);
 
     if (requestedMode == MODE_CALENDAR && isDialogMode) {
         // You want MODE_CALENDAR? YOU CAN'T HANDLE MODE_CALENDAR! Well,
         // maybe you can depending on your screen size. Let's check...
-        mMode = requestedMode;//context.getResources().getInteger(R.integer.date_picker_mode);
+        mMode = context->getInteger(R::integer::date_picker_mode);
     } else {
         mMode = requestedMode;
     }
 
     switch (mMode) {
     case MODE_CALENDAR:
-        mDelegate = createCalendarUIDelegate(context, attrs);
-        if (mDelegate == nullptr) {
-            // DEFERRED: calendar delegate not ported yet; fall back to spinner.
-            mMode = MODE_SPINNER;
-            mDelegate = createSpinnerUIDelegate(context, attrs);
-        }
+        mDelegate = createCalendarUIDelegate(context, pAttrs, defStyleAttr, defStyleRes);
         break;
     case MODE_SPINNER:
     default:
-        mDelegate = createSpinnerUIDelegate(context, attrs);
+        mDelegate = createSpinnerUIDelegate(context, pAttrs, defStyleAttr, defStyleRes);
         break;
     }
 
@@ -67,12 +76,21 @@ DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
     });*/
 }
 
-DatePicker::DatePickerDelegate* DatePicker::createSpinnerUIDelegate(Context* context,const AttributeSet& attrs) {
-    return new DatePickerSpinnerDelegate(this, context, attrs);
+DatePicker::~DatePicker(){
+    // mDelegate is created by (and solely owned by) the ctor — without this
+    // every DatePicker leaks its whole delegate subtree (valgrind ~1.2-1.7KB).
+    delete mDelegate;
+    mDelegate = nullptr;
 }
 
-DatePicker::DatePickerDelegate* DatePicker::createCalendarUIDelegate(Context* context,const AttributeSet& attrs) {
-    return new DatePickerCalendarDelegate(this, context, attrs);
+DatePicker::DatePickerDelegate* DatePicker::createSpinnerUIDelegate(Context* context,
+        const AttributeSet* attrs, int defStyleAttr, int defStyleRes) {
+    return new DatePickerSpinnerDelegate(this, context, attrs, defStyleAttr, defStyleRes);
+}
+
+DatePicker::DatePickerDelegate* DatePicker::createCalendarUIDelegate(Context* context,
+        const AttributeSet* attrs, int defStyleAttr, int defStyleRes) {
+    return new DatePickerCalendarDelegate(this, context, attrs, defStyleAttr, defStyleRes);
 }
 
 int DatePicker::getMode() {
@@ -148,10 +166,10 @@ std::string DatePicker::getAccessibilityClassName() const{
     return "DatePicker";
 }
 
-/*void DatePicker::onConfigurationChanged(Configuration newConfig) {
+void DatePicker::onConfigurationChanged(Configuration& newConfig) {
     FrameLayout::onConfigurationChanged(newConfig);
     mDelegate->onConfigurationChanged(newConfig);
-}*/
+}
 
 void DatePicker::setFirstDayOfWeek(int firstDayOfWeek) {
     if (firstDayOfWeek < Calendar::SUNDAY || firstDayOfWeek > Calendar::SATURDAY) {
@@ -204,15 +222,15 @@ void DatePicker::onRestoreInstanceState(Parcelable& state) {
 DatePicker::AbstractDatePickerDelegate::AbstractDatePickerDelegate(DatePicker* delegator, Context* context) {
     mDelegator = delegator;
     mContext = context;
-    //setCurrentLocale(Locale.getDefault());
+    setCurrentLocale(Locale::getDefault());
 }
 
-/*void DatePicker::AbstractDatePickerDelegate::setCurrentLocale(Locale& locale) {
-    if (!locale.equals(mCurrentLocale)) {
+void DatePicker::AbstractDatePickerDelegate::setCurrentLocale(const Locale& locale) {
+    if (!(locale == mCurrentLocale)) {
         mCurrentLocale = locale;
         onLocaleChanged(locale);
     }
-}*/
+}
 
 void DatePicker::AbstractDatePickerDelegate::setOnDateChangedListener(const OnDateChangedListener& callback) {
     mOnDateChangedListener = callback;
@@ -256,18 +274,19 @@ void DatePicker::AbstractDatePickerDelegate::onValidationChanged(bool valid) {
     }
 }
 
-/*void DatePicker::AbstractDatePickerDelegate::onLocaleChanged(Locale& locale) {
+void DatePicker::AbstractDatePickerDelegate::onLocaleChanged(const Locale& locale) {
     // Stub.
-}*/
+    (void)locale;
+}
 
 void DatePicker::AbstractDatePickerDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& event) {
     //event.getText().add(getFormattedCurrentDate());
 }
 
 std::string DatePicker::AbstractDatePickerDelegate::getFormattedCurrentDate() {
-   return "";/*DateUtils::formatDateTime(mContext, mCurrentDate.getTimeInMillis(),
+   return DateUtils::formatDateTime(mContext, mCurrentDate.getTimeInMillis(),
            DateUtils::FORMAT_SHOW_DATE | DateUtils::FORMAT_SHOW_YEAR
-                   | DateUtils::FORMAT_SHOW_WEEKDAY);*/
+                   | DateUtils::FORMAT_SHOW_WEEKDAY);
 }
 
 /////////////////DatePicker::AbstractDatePickerDelegate::SavedState///////////////////////

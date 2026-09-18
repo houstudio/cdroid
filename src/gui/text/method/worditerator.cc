@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <text/method/worditerator.h>
+#include <stdexcept>
 #include <text/character.h>      // Character::codePointAt/codePointBefore/isLetter/isDigit
 #include <text/textutils.h>      // TextUtils::getChars, TextUtils::isPunctuation
 #include <unicode/ubrk.h>        // UBreakIterator (C API — matches minikin/myicu convention)
@@ -59,9 +60,16 @@ WordIterator::~WordIterator() {
 //  whose begin index is mStart).
 // =====================================================================================
 void WordIterator::setCharSequence(const CharSequence* charSequence, int start, int end) {
+    /*AOSP: `if (0 <= start && end <= charSequence.length()) { ... } else
+      throw new IndexOutOfBoundsException("input indexes are outside the
+      CharSequence")` — the old silent return hid invalid windows from callers
+      (and the CTS test). nullptr stays a no-op like the AOSP @NonNull fast
+      path is not expressible in the C++ signature.*/
     if (charSequence == nullptr) return;
     const int len = (int)charSequence->length();
-    if (!(0 <= start && end <= len)) return;
+    if (!(0 <= start && end <= len)) {
+        throw std::out_of_range("input indexes are outside the CharSequence");
+    }
 
     mCharSeq = charSequence;
     mStart = std::max(0, start - WINDOW_WIDTH);

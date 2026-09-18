@@ -15,25 +15,30 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/animatedstatelistdrawable.h>
 #include <drawable/animatedrotatedrawable.h>
 #include <drawable/animatedimagedrawable.h>
 #include <drawable/animatedvectordrawable.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 AnimatedStateListDrawable::AnimatedStateListDrawable():StateListDrawable(){
-    std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(nullptr,this);
+    std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(nullptr,this,nullptr);
     setConstantState(newState);
     onStateChange(getState());
     mTransition = nullptr;
     jumpToCurrentState();
 }
 
-AnimatedStateListDrawable::AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListDrawable::AnimatedStateListState> state)
-  :StateListDrawable(state){
-    std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(state.get(), this);
+AnimatedStateListDrawable::AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListDrawable::AnimatedStateListState> state, Resources* res)
+  :StateListDrawable(nullptr, nullptr){
+    // AOSP java:669-676: super(null) — every animated state list drawable has
+    // its own constant state; the copy is made exactly once, right here.
+    std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(state.get(), this, res);
     mTransition = nullptr;
     setConstantState(newState);
     onStateChange(getState());
@@ -182,10 +187,25 @@ void AnimatedStateListDrawable::clearMutated(){
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState> AnimatedStateListDrawable::cloneConstantState(){
-    return std::make_shared<AnimatedStateListState>(mState.get(), this);
+    return std::make_shared<AnimatedStateListState>(mState.get(), this, nullptr);
 }
 
 void AnimatedStateListDrawable::setConstantState(std::shared_ptr<DrawableContainerState> state){
+    // No-GC seam, BEFORE the base call installs the new state: swapping the
+    // constant state destroys the old one, which hard-deletes every
+    // materialized child. A RUNNING Transition wrapper captured one of those
+    // children (mAvd / the ObjectAnimator's target) — using it after the swap
+    // is a use-after-free (vptr already zeroed: crash in
+    // AnimatedVectorDrawableTransition::stop after a mid-animation tint
+    // mutate()). AOSP needs nothing here: the old child stays reachable for
+    // the wrapper until GC. Stop the transition while its target is still
+    // alive, then drop it — the teardown half of jumpToCurrentState().
+    if (mTransition != nullptr) {
+        mTransition->stop();
+        mTransition = nullptr;
+        mTransitionFromIndex = -1;
+        mTransitionToIndex = -1;
+    }
     StateListDrawable::setConstantState(state);
 
     if (dynamic_cast<AnimatedStateListState*>(state.get())) {
@@ -193,16 +213,18 @@ void AnimatedStateListDrawable::setConstantState(std::shared_ptr<DrawableContain
     }
 }
 
-void AnimatedStateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void AnimatedStateListDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
+    (void)r;
     StateListDrawable::inflateWithAttributes(parser,atts);
 
-    updateStateFromTypedArray(atts);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::AnimatedStateListDrawable);
+    if (ta) updateStateFromTypedArray(*ta);
     //updateDensity();
-    inflateChildElement(parser,atts);
+    inflateChildElement(r,parser,atts,theme);
     init();
 }
 
-void AnimatedStateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
+void AnimatedStateListDrawable::updateStateFromTypedArray(const TypedArray& a) {
     auto state = mState;
 
     // Account for any configuration changes.
@@ -210,19 +232,19 @@ void AnimatedStateListDrawable::updateStateFromTypedArray(const AttributeSet&att
     // Extract the theme attributes, if any.
     //state->mThemeAttrs = a.extractThemeAttrs();
 
-    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
-    state->mConstantSize = atts.getBoolean("constantSize", state->mConstantSize);
-    state->mEnterFadeDuration = atts.getInt("enterFadeDuration", state->mEnterFadeDuration);
-    state->mExitFadeDuration = atts.getInt("exitFadeDuration", state->mExitFadeDuration);
-    state->mDither = atts.getBoolean("dither", state->mDither);
-    state->mAutoMirrored = atts.getBoolean("autoMirrored", state->mAutoMirrored);
+    state->mVariablePadding = a.getBoolean(R::styleable::AnimatedStateListDrawable_variablePadding, state->mVariablePadding);
+    state->mConstantSize = a.getBoolean(R::styleable::AnimatedStateListDrawable_constantSize, state->mConstantSize);
+    state->mEnterFadeDuration = a.getInt(R::styleable::AnimatedStateListDrawable_enterFadeDuration, state->mEnterFadeDuration);
+    state->mExitFadeDuration = a.getInt(R::styleable::AnimatedStateListDrawable_exitFadeDuration, state->mExitFadeDuration);
+    state->mDither = a.getBoolean(R::styleable::AnimatedStateListDrawable_dither, state->mDither);
+    state->mAutoMirrored = a.getBoolean(R::styleable::AnimatedStateListDrawable_autoMirrored, state->mAutoMirrored);
 }
 
 void AnimatedStateListDrawable::init(){
     onStateChange(getState());
 }
 
-void AnimatedStateListDrawable::inflateChildElement(XmlPullParser&parser,const AttributeSet&atts){
+void AnimatedStateListDrawable::inflateChildElement(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
     while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
@@ -232,19 +254,19 @@ void AnimatedStateListDrawable::inflateChildElement(XmlPullParser&parser,const A
         }
         const std::string tagName = parser.getName();
         if (tagName.compare(ELEMENT_ITEM)==0) {
-            parseItem(parser, atts);
+            parseItem(r,parser, atts, theme);
         } else if (tagName.compare(ELEMENT_TRANSITION)==0) {
-            parseTransition(parser, atts);
+            parseTransition(r,parser, atts, theme);
         }
     }
 }
 
-int AnimatedStateListDrawable::parseItem(XmlPullParser&parser,const AttributeSet&atts){
-    const int keyframeId = atts.getResourceId("id", 0);
-    Drawable* dr = atts.getDrawable("drawable");
+int AnimatedStateListDrawable::parseItem(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = Drawable::obtainAttributes(r, theme, atts, R::styleable::AnimatedStateListDrawableItem);
+    const int keyframeId = ta->getResourceId(R::styleable::AnimatedStateListDrawableItem_id, 0);
+    Drawable* dr = ta->getDrawable(R::styleable::AnimatedStateListDrawableItem_drawable);
 
-    std::vector<int> states;
-    StateSet::parseState(states,atts);
+    std::vector<int> states = extractStateSet(atts);
 
     // Loading child elements modifies the state of the AttributeSet's
     // underlying parser, so it needs to happen after obtaining
@@ -257,17 +279,18 @@ int AnimatedStateListDrawable::parseItem(XmlPullParser&parser,const AttributeSet
             throw std::logic_error(parser.getPositionDescription()+
                     ": <item> tag requires a 'drawable' attribute or child tag defining a drawable");
         }
-        dr = Drawable::createFromXmlInner(parser,atts);
+        dr = Drawable::createFromXmlInner(r,parser,atts,theme);
     }
 
     return mState->addStateSet(states, dr, keyframeId);
 }
 
-int AnimatedStateListDrawable::parseTransition(XmlPullParser&parser,const AttributeSet&atts){
-    const int fromId = atts.getResourceId("fromId", 0);
-    const int toId = atts.getResourceId("toId", 0);
-    const bool reversible = atts.getBoolean("reversible", false);
-    Drawable* dr = atts.getDrawable("drawable");
+int AnimatedStateListDrawable::parseTransition(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = Drawable::obtainAttributes(r, theme, atts, R::styleable::AnimatedStateListDrawableTransition);
+    const int fromId = ta->getResourceId(R::styleable::AnimatedStateListDrawableTransition_fromId, 0);
+    const int toId = ta->getResourceId(R::styleable::AnimatedStateListDrawableTransition_toId, 0);
+    const bool reversible = ta->getBoolean(R::styleable::AnimatedStateListDrawableTransition_reversible, false);
+    Drawable* dr = ta->getDrawable(R::styleable::AnimatedStateListDrawableTransition_drawable);
 
     // Loading child elements modifies the state of the AttributeSet's
     // underlying parser, so it needs to happen after obtaining
@@ -280,18 +303,28 @@ int AnimatedStateListDrawable::parseTransition(XmlPullParser&parser,const Attrib
             throw std::logic_error(parser.getPositionDescription()+
                             ": <transition> tag requires a 'drawable' attribute or child tag defining a drawable");
         }
-        dr = Drawable::createFromXmlInner(parser, atts);
+        dr = Drawable::createFromXmlInner(r,parser, atts, theme);
     }
 
     return mState->addTransition(fromId, toId, dr, reversible);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-AnimatedStateListDrawable::AnimatedStateListState::AnimatedStateListState(const AnimatedStateListDrawable::AnimatedStateListState* orig,AnimatedStateListDrawable* owner)
-  :StateListState(orig,owner){
+AnimatedStateListDrawable::AnimatedStateListState::AnimatedStateListState(const AnimatedStateListDrawable::AnimatedStateListState* orig,AnimatedStateListDrawable* owner,Resources* res)
+  :StateListState(orig,owner,res){
+    if (orig != nullptr) {
+        // AOSP clones both arrays (shallow copy). Without this, cloneConstantState()
+        // copies lost every keyframe id and transition, so selectTransition() bailed
+        // at "Missing a keyframe ID" and such copies never animated (e.g. every
+        // RadioButton after the first one sharing a drawable resource).
+        mTransitions = orig->mTransitions;
+        mStateIds = orig->mStateIds;
+    }
 }
 
 void AnimatedStateListDrawable::AnimatedStateListState::mutate() {
+    // AOSP runs super.mutate() (mutates every child) before cloning its arrays.
+    DrawableContainerState::mutate();
     //mTransitions = mTransitions->clone();
     //mStateIds = mStateIds.clone();
 }
@@ -346,7 +379,11 @@ bool AnimatedStateListDrawable::AnimatedStateListState::transitionHasReversibleF
 
 //bool canApplyTheme() {return mAnimThemeAttrs != null || super.canApplyTheme();}
 AnimatedStateListDrawable* AnimatedStateListDrawable::AnimatedStateListState::newDrawable(){
-    return new AnimatedStateListDrawable(std::dynamic_pointer_cast<AnimatedStateListState>(shared_from_this()));
+    return new AnimatedStateListDrawable(std::dynamic_pointer_cast<AnimatedStateListState>(shared_from_this()), nullptr);
+}
+
+Drawable* AnimatedStateListDrawable::AnimatedStateListState::newDrawable(Resources* res){
+    return new AnimatedStateListDrawable(std::dynamic_pointer_cast<AnimatedStateListState>(shared_from_this()), res);
 }
 
 int64_t AnimatedStateListDrawable::AnimatedStateListState::generateTransitionKey(int fromId, int toId) {
@@ -378,7 +415,7 @@ int  AnimatedStateListDrawable::FrameInterpolator::updateFrames(AnimationDrawabl
     return totalDuration;
 }
 
-int  AnimatedStateListDrawable::FrameInterpolator::getTotalDuration(){
+int  AnimatedStateListDrawable::FrameInterpolator::getTotalDuration()const{
     return mTotalDuration;
 }
 
@@ -431,13 +468,15 @@ void AnimatedStateListDrawable::AnimatableTransition::stop() {
 namespace{
     class PROP_CURRENT_INDEX:public Property{
     public:
-        PROP_CURRENT_INDEX():Property("currentIndex"){
+        // Property::get/set are const virtuals: a signature without `const`
+        // hides them instead of overriding, so every animator tick landed in
+        // the (empty) base bodies and the transition froze on its first frame.
+        PROP_CURRENT_INDEX():Property("currentIndex",INT_TYPE){
         }
-        AnimateValue get(void* object){
-            AnimateValue v = ((AnimationDrawable*)object)->getCurrentIndex();
-            return v;
+        AnimateValue get(void* object) const override {
+            return ((AnimationDrawable*)object)->getCurrentIndex();
         }
-        void set(void* object,const AnimateValue& value){
+        void set(void* object,const AnimateValue& value) const override {
             AnimationDrawable*ad=(AnimationDrawable*)object;
             ad->setCurrentIndex(GET_VARIANT(value,int));
         }
@@ -462,8 +501,12 @@ AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransit
 
 AnimatedStateListDrawable::AnimationDrawableTransition::~AnimationDrawableTransition(){
     delete mFrameInterpolator;
-	delete mAnim;
-	delete mDrawable;
+    delete mAnim;
+    // mDrawable is the container's own child (mDrawables[transitionIndex] == getCurrent()),
+    // owned and freed by DrawableContainer's ConstantState (~DrawableContainer). Do NOT delete
+    // here: matches AOSP (GC owns it) and the sibling AnimatedVectorDrawableTransition (no dtor).
+    // Deleting here freed mCurrDrawable mid-flight (jumpToCurrentState UAF via selectDrawable)
+    // and double-freed the same child when ~DrawableContainer ran afterwards.
 }
 
 bool AnimatedStateListDrawable::AnimationDrawableTransition::canReverse() {

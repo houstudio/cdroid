@@ -15,37 +15,61 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/compoundbutton.h>
+#include <widget/radiogroup.h>
+#include <widget/framework_styleable.h>
 #include <widget/checkbox.h>
 #include <widget/radiobutton.h>
 #include <porting/cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(CompoundButton)
+DECLARE_WIDGET2(CompoundButton, "android.widget.CompoundButton");
 
-CompoundButton::CompoundButton(Context*ctx,const AttributeSet& attrs)
-  :Button(ctx,attrs){
+CompoundButton::CompoundButton(Context*ctx)
+    :CompoundButton(ctx,nullptr){}
+
+CompoundButton::CompoundButton(Context*ctx,const AttributeSet* attrs):CompoundButton(ctx,attrs,0){}
+
+CompoundButton::CompoundButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :Button(ctx,pAttrs, defStyleAttr){
     initCompoundButton();
-    setButtonDrawable(attrs.getString("button"));
-    setChecked(attrs.getBoolean("checked"));
-    mButtonTintList = attrs.getColorStateList("buttonTint");
+    // AOSP CompoundButton ctor: obtainStyledAttributes(pAttrs, styleable, defStyleAttr, 0);
+    // reads button, buttonTintMode, buttonTint, checked in that order, then applyButtonTint().
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::CompoundButton, defStyleAttr, 0);
+    Drawable* d = ta->getDrawable(R::styleable::CompoundButton_button);
+    if (d) setButtonDrawable(d);
+
+    if (ta->hasValue(R::styleable::CompoundButton_buttonTintMode)) {
+        mButtonBlendMode = Drawable::parseTintMode(ta->getInt(
+                R::styleable::CompoundButton_buttonTintMode, -1), mButtonBlendMode);
+        mHasButtonBlendMode = true;
+    }
+
+    if (ta->hasValue(R::styleable::CompoundButton_buttonTint)) {
+        mButtonTintList = ta->getColorStateList(R::styleable::CompoundButton_buttonTint);
+        mHasButtonTint = true;
+    }
+
+    setChecked(ta->getBoolean(R::styleable::CompoundButton_checked, false));
+    mCheckedFromResource = true;
+
     applyButtonTint();
-}
-
-CompoundButton::CompoundButton(const std::string&txt,int width,int height)
-    :Button(txt,width,height){
-    initCompoundButton();
 }
 
 void CompoundButton::initCompoundButton(){
     mChecked = false;
     mBroadcasting = false;
-    mCheckedFromResource = false;
     mButtonDrawable = nullptr;
+    mButtonTintList = nullptr;
+    mButtonBlendMode = PorterDuff::Mode::NOOP;
+    mHasButtonTint = false;
+    mHasButtonBlendMode = false;
     mOnCheckedChangeListener = nullptr;
     mOnCheckedChangeWidgetListener = nullptr;
-    mButtonTintMode = PorterDuff::Mode::NOOP;
-    mButtonTintList = nullptr;
+    mCheckedFromResource = false;
 }
 
 void CompoundButton::setChecked(bool checked){
@@ -81,9 +105,9 @@ CompoundButton::~CompoundButton(){
 
 std::string CompoundButton::getButtonStateDescription() {
     if (isChecked()) {
-        return mContext->getString("cdroid:string/checked");
+        return mContext->getString(R::string::checked);
     } else {
-        return mContext->getString("cdroid:string/not_checked");
+        return mContext->getString(R::string::not_checked);
     }
 }
 
@@ -106,7 +130,7 @@ void CompoundButton::setDefaultStateDescription() {
 std::vector<int>CompoundButton::onCreateDrawableState(int extraSpace){
     std::vector<int>drawableState = Button::onCreateDrawableState(extraSpace);
     if (isChecked()) {
-        mergeDrawableStates(drawableState,StateSet::get(StateSet::VIEW_STATE_CHECKED));
+        mergeDrawableStates(drawableState,{cdroid::internal::R::attr::state_checked});
     }
     return drawableState;
 }
@@ -135,7 +159,7 @@ bool CompoundButton::performClick(){
     return handled;
 }
 
-void CompoundButton::setButtonDrawable(const std::string&resid){
+void CompoundButton::setButtonDrawable(int resid){
     Drawable* d= getContext()->getDrawable(resid);
     setButtonDrawable(d);
 }
@@ -182,10 +206,10 @@ void CompoundButton::jumpDrawablesToCurrentState(){
 }
 
 void CompoundButton::setButtonTintList(const cdroid::RefPtr<ColorStateList>& tint) {
-    if(mButtonTintList!=tint){
-        mButtonTintList = tint;
-        applyButtonTint();
-    }
+    mButtonTintList = tint;
+    mHasButtonTint = true;
+
+    applyButtonTint();
 }
 
 /**
@@ -198,24 +222,36 @@ const cdroid::RefPtr<ColorStateList> CompoundButton::getButtonTintList() const{
 }
 
 void CompoundButton::setButtonTintMode(PorterDuffMode tintMode){
-    mButtonTintMode = tintMode;
-    applyButtonTint();
+    // AOSP: setButtonTintBlendMode(tintMode != null ? BlendMode.fromValue(tintMode.nativeInt) : null);
+    setButtonTintBlendMode(tintMode);
 }
 
 PorterDuffMode CompoundButton::getButtonTintMode() const {
-    return (PorterDuffMode)mButtonTintMode;
+    // AOSP: mButtonBlendMode != null ? BlendMode.blendModeToPorterDuffMode(mButtonBlendMode) : null;
+    return getButtonTintBlendMode();
+}
+
+void CompoundButton::setButtonTintBlendMode(PorterDuffMode tintMode){
+    mButtonBlendMode = tintMode;
+    mHasButtonBlendMode = true;
+
+    applyButtonTint();
+}
+
+PorterDuffMode CompoundButton::getButtonTintBlendMode() const{
+    return mButtonBlendMode;
 }
 
 void CompoundButton::applyButtonTint() {
-    if (mButtonDrawable  && (mButtonTintList || mButtonTintMode!=PorterDuff::Mode::NOOP)) {
+    if (mButtonDrawable != nullptr && (mHasButtonTint || mHasButtonBlendMode)) {
         mButtonDrawable = mButtonDrawable->mutate();
 
-        if (mButtonTintList) {
+        if (mHasButtonTint) {
             mButtonDrawable->setTintList(mButtonTintList);
         }
 
-        if (mButtonTintMode!=PorterDuff::Mode::NOOP) {
-            mButtonDrawable->setTintMode(mButtonTintMode);
+        if (mHasButtonBlendMode) {
+            mButtonDrawable->setTintMode(mButtonBlendMode);
         }
 
         // The drawable (or one of its children) may not have been
@@ -303,14 +339,15 @@ void CompoundButton::onDraw(Canvas&canvas){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-DECLARE_WIDGET2(CheckBox,"cdroid:attr/checkboxStyle")
-CheckBox::CheckBox(Context*ctx,const AttributeSet& attrs)
-    :CompoundButton(ctx,attrs){
+DECLARE_WIDGET2(CheckBox, "android.widget.CheckBox");
+CheckBox::CheckBox(Context*ctx):CheckBox(ctx,nullptr){}
+
+CheckBox::CheckBox(Context*ctx,const AttributeSet* attrs)
+    :CheckBox(ctx,attrs,cdroid::internal::R::attr::checkboxStyle){
 }
 
-CheckBox::CheckBox(const std::string&txt,int w,int h)
-    :CompoundButton(txt,w,h){
-    setButtonDrawable("cdroid:drawable/btn_check.xml");
+CheckBox::CheckBox(Context*ctx,const AttributeSet* attrs,int defStyleAttr)
+    :CompoundButton(ctx,attrs,defStyleAttr){
 }
 
 std::string CheckBox::getAccessibilityClassName()const{
@@ -319,13 +356,15 @@ std::string CheckBox::getAccessibilityClassName()const{
 //////////////////////////////////////////////////////////////
 //class RadioButton:public CompoundButton
 
-DECLARE_WIDGET2(RadioButton,"cdroid:attr/radioButtonStyle")
-RadioButton::RadioButton(const std::string&txt,int w,int h)
-  :CompoundButton(txt,w,h){
+DECLARE_WIDGET2(RadioButton, "android.widget.RadioButton");
+RadioButton::RadioButton(Context*ctx):RadioButton(ctx,nullptr){}
+
+RadioButton::RadioButton(Context*ctx,const AttributeSet* attrs)
+   :RadioButton(ctx,attrs, R::attr::radioButtonStyle){
 }
 
-RadioButton::RadioButton(Context*ctx,const AttributeSet& attrs)
-   :CompoundButton(ctx,attrs){
+RadioButton::RadioButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr)
+   :CompoundButton(ctx,attrs,defStyleAttr){
 }
 
 void RadioButton::toggle(){
@@ -334,6 +373,24 @@ void RadioButton::toggle(){
 
 std::string RadioButton::getAccessibilityClassName()const{
     return "RadioButton";
+}
+
+// AOSP RadioButton.onInitializeAccessibilityNodeInfo: inside a RadioGroup the
+// button reports its collection item info (row/column per group orientation,
+// selection flag from the checked state).
+void RadioButton::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) {
+    CompoundButton::onInitializeAccessibilityNodeInfo(info);
+    if (dynamic_cast<RadioGroup*>(getParent())) {
+        RadioGroup* radioGroup = (RadioGroup*) getParent();
+        if (radioGroup->getOrientation() == LinearLayout::HORIZONTAL) {
+            info.setCollectionItemInfo(AccessibilityNodeInfo::CollectionItemInfo::obtain(0, 1,
+                    radioGroup->getIndexWithinVisibleButtons(this), 1, false, isChecked()));
+        } else {
+            info.setCollectionItemInfo(AccessibilityNodeInfo::CollectionItemInfo::obtain(
+                    radioGroup->getIndexWithinVisibleButtons(this), 1, 0, 1,
+                    false, isChecked()));
+        }
+    }
 }
 
 }/*endof namespace*/

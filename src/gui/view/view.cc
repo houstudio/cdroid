@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <cstring>
 #include <algorithm>
 #include <cfloat>
@@ -23,33 +24,38 @@
 #include <view/ghostview.h>
 #include <view/viewgroup.h>
 #include <view/floatingactionmode.h>
+#include <widget/framework_styleable.h>
+#include <content/androidfw/resourcetypes.h>  // Res_value (getFocusableAttribute)
+#include <content/typedarray.h>
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
 #include <view/handleractionqueue.h>
 #include <view/hapticscrollfeedbackprovider.h>
 #include <view/accessibility/accessibilitywindowinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
+#include <view/accessibility/accessibilityviewcommand.h>
+#include <view/accessibilityiterators.h>
 #include <view/focusfinder.h>
 #include <menu/menubuilder.h>
-#include <widget/R.h>
 #include <widget/scrollbardrawable.h>
 #include <widget/edgeeffect.h>
 #include <widget/cdwindow.h>
 #include <widget/scrollbarutils.h>
 #include <animation/animationutils.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <core/systemclock.h>
 #include <core/windowmanager.h>
 #include <core/inputmethodmanager.h>
-#include <core/app.h>
+#include <core/context.h>
 #include <core/color.h>
 #include <core/handler.h>
 #include <porting/cdlog.h>
 #define UNDEFINED_PADDING INT_MIN
 using namespace Cairo;
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(View)
+DECLARE_WIDGET2(View, "android.view.View");
 
 bool View::sIgnoreMeasureCache = false;//targetSdkVersion < Build.VERSION_CODES.KITKAT;
 bool View::sAlwaysRemeasureExactly = false;//targetSdkVersion <= Build.VERSION_CODES.M;
@@ -57,275 +63,592 @@ bool View::sPreserveMarginParamsInLayoutParamConversion = true;
 
 bool View::VIEW_DEBUG = false;
 int View::mViewCount = 0;
-View::View(int w,int h){
-    initView();
-    mContext=&App::getInstance();
-    mRight  = w;
-    mBottom = h;
-    mLeft = mTop =0;
-    if((w > 0) && (h>0) ){
-        mPrivateFlags |= PFLAG_HAS_BOUNDS;
-    }
-    setBackgroundColor(0xFF000000);
-    if(ViewConfiguration::isScreenRound())
-        mRoundScrollbarRenderer = new RoundScrollbarRenderer(this);
-    mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
+
+View::View(Context*ctx)
+    :View(ctx,nullptr){}
+
+View::View(Context*ctx,const AttributeSet*attrs):View(ctx,attrs,0){
 }
 
-View::View(Context*ctx,const AttributeSet&attrs){
-    int viewFlagValues= 0;
-    int viewFlagMasks = 0;
-    initView();
+// AOSP View.getFocusableAttribute: android:focusable is stored as TYPE_INT_BOOLEAN
+// by aapt2 ("true"/"false") so a plain getInt() would mis-read it; numeric/auto are
+// TYPE_INT_DEC. Mirrors frameworks/base View.java.
+int View::getFocusableAttribute(const TypedArray& a) {
+    TypedValue val;
+    if (a.peekValue(R::styleable::View_focusable, &val)) {
+        if (val.type == TypedValue::TYPE_INT_BOOLEAN) {
+            return (val.data == 0) ? NOT_FOCUSABLE : FOCUSABLE;
+        } else {
+            return val.data;
+        }
+    } else {
+        return FOCUSABLE_AUTO;
+    }
+}
+
+// AOSP View(Context, AttributeSet, int defStyleAttr, int defStyleRes).
+// Line-by-line port of frameworks/base/core/java/android/view/View.java. The single
+// TypedArray switch is the only inflation path; binary AXML is resolved by aapt2 so
+// TypedArray getters return ints directly (no string→enum map). The legacy string-keyed
+// fallback has been retired (apps are migrated to binary AXML).
+View::View(Context*ctx,const AttributeSet*pAttrs,int defStyleAttr,int defStyleRes){
+    initView();                       // == this(context)
 
     mContext = ctx;
-    mID = attrs.getResourceId("id",View::NO_ID);
-    mMinWidth  = attrs.getDimensionPixelSize("minWidth",0);
-    mMinHeight = attrs.getDimensionPixelSize("minHeight",0);
-    setLayerType(attrs.getInt("layerType",std::unordered_map<std::string,int>{
-           {"software",(int)LAYER_TYPE_SOFTWARE},{"hardware",(int)LAYER_TYPE_HARDWARE}
-        },LAYER_TYPE_NONE));
-    const int quality=attrs.getInt("drawingCacheQuality",std::unordered_map<std::string,int>{
-           {"auto",(int)DRAWING_CACHE_QUALITY_AUTO},
-           {"low" ,(int)DRAWING_CACHE_QUALITY_LOW },
-           {"high",(int)DRAWING_CACHE_QUALITY_HIGH}
-    },DRAWING_CACHE_QUALITY_AUTO);
-    if(quality){
-        viewFlagValues |= quality;
-        viewFlagMasks  |= DRAWING_CACHE_QUALITY_MASK;
-    }
-    mContentDescription = attrs.getString("contentDescription");
-    setVisibility(attrs.getInt("visibility",std::unordered_map<std::string,int>{
-           {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}   },(int)VISIBLE));
-
-    if(!attrs.getBoolean("soundEffectsEnabled",true)){
-        viewFlagValues &= ~SOUND_EFFECTS_ENABLED;
-        viewFlagMasks |= SOUND_EFFECTS_ENABLED;
-    }
-    if(!attrs.getBoolean("hapticFeedbackEnabled",true)){
-        viewFlagValues &= ~HAPTIC_FEEDBACK_ENABLED;
-        viewFlagMasks |= HAPTIC_FEEDBACK_ENABLED;
-    }
-    mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK);
-    const int layoutDirection = attrs.getInt("layoutDirection",std::unordered_map<std::string,int>{
-           {"ltr"    ,(int)LAYOUT_DIRECTION_LTR}    ,{"rtl",(int)LAYOUT_DIRECTION_RTL},
-           {"inherit",(int)LAYOUT_DIRECTION_INHERIT},{"local",(int)LAYOUT_DIRECTION_LOCALE}
-	},LAYOUT_DIRECTION_DEFAULT);
-    mPrivateFlags2 |= (layoutDirection << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
-
-    const int textDirection = attrs.getInt("textDirection",std::unordered_map<std::string,int>{
-		 {"inherit",(int)TEXT_DIRECTION_INHERIT}, {"locale",(int)TEXT_DIRECTION_LOCALE},
-		 {"anyRtl" ,(int)TEXT_DIRECTION_ANY_RTL}, {"ltr",(int)TEXT_DIRECTION_LTR},
-         {"rtl",(int)TEXT_DIRECTION_RTL},         {"firstStrong",(int)TEXT_DIRECTION_FIRST_STRONG},
-         {"fisrtStringLtr",(int)TEXT_DIRECTION_FIRST_STRONG_LTR},
-		 {"firstStrongRtl",(int)TEXT_DIRECTION_FIRST_STRONG_RTL}},-1);
-    if (textDirection != -1) {
-        mPrivateFlags2 |= textDirection<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
-    }
-    const int textAlignment = attrs.getInt("textAlignment",std::unordered_map<std::string,int>{
-        {"inherit" , (int)TEXT_ALIGNMENT_INHERIT},    {"gravity" , (int)TEXT_ALIGNMENT_GRAVITY},
-        {"textStart",(int)TEXT_ALIGNMENT_TEXT_START}, {"textEnd" , (int)TEXT_ALIGNMENT_TEXT_END},
-        {"center"  , (int)TEXT_ALIGNMENT_CENTER},     {"viewStart",(int)TEXT_ALIGNMENT_VIEW_START},
-        {"viewEnd"  ,(int)TEXT_ALIGNMENT_VIEW_END}    },(int)TEXT_ALIGNMENT_DEFAULT);
-    // Clear any text alignment flag already set
-    mPrivateFlags2 &= ~PFLAG2_TEXT_ALIGNMENT_MASK;
-    // Set the text alignment flag depending on the value of the attribute
-    mPrivateFlags2 |= (textAlignment<<PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT);
-    //setTextAlignment( textAlignment );
-
-    setImportantForAccessibility(attrs.getInt("importantForAccessibility",std::unordered_map<std::string,int>{
-                {"auto",(int)IMPORTANT_FOR_ACCESSIBILITY_AUTO},
-                {"yes" ,(int)IMPORTANT_FOR_ACCESSIBILITY_YES },
-                {"no"  ,(int)IMPORTANT_FOR_ACCESSIBILITY_NO}
-        },IMPORTANT_FOR_ACCESSIBILITY_DEFAULT));
     mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
 
-    setForegroundGravity( attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY) );
-    setForegroundTintList(attrs.getColorStateList("foregroundTint"));
+    // AOSP @Nullable AttributeSet: a null set (code construction) resolves through
+    // the defStyleAttr/defStyleRes/theme chain only.
+    auto a = ctx->obtainStyledAttributes(pAttrs, R::styleable::View, defStyleAttr, defStyleRes);
 
-    //setClickable( attrs.getBoolean("clickable",false) );
-    //setLongClickable( attrs.getBoolean("longclickable",false) );
-    //setFocusableInTouchMode( attrs.getBoolean("focusableInTouchMode",false) );
-    //setFocusedByDefault( attrs.getBoolean("focusedByDefault",false) );
-  
-    mNextFocusLeftId = attrs.getResourceId("nextFocusLeft",View::NO_ID);
-    mNextFocusRightId= attrs.getResourceId("nextFocusRight",View::NO_ID);
-    mNextFocusUpId   = attrs.getResourceId("nextFocusUp",View::NO_ID);
-    mNextFocusDownId = attrs.getResourceId("nextFocusDown",View::NO_ID);
-    mNextFocusForwardId  = attrs.getResourceId("nextFocusForward",View::NO_ID);
-    mNextClusterForwardId= attrs.getResourceId("nextClusterFoward",View::NO_ID);
+    Drawable* background = nullptr;
 
-    setRotation( attrs.getFloat("rotation",0) );
-    setTranslationX( attrs.getDimensionPixelSize("translationX",0) );
-    setTranslationY( attrs.getDimensionPixelSize("translationY",0) );
-    setTranslationZ( attrs.getDimensionPixelSize("translationZ",0) );
-    setRotationX( attrs.getFloat("rotationX",0) );
-    setRotationY( attrs.getFloat("rotationY",0) );
-    setScaleX( attrs.getFloat("scaleX",1.f) );
-    setScaleY( attrs.getFloat("scaleY",1.f) );
-    if(attrs.hasAttribute("transformPivotX"))
-        setPivotX(attrs.getDimensionPixelSize("transformPivotX",0));
-    if(attrs.hasAttribute("transformPivotY"))
-        setPivotY(attrs.getDimensionPixelSize("transformPivotY",0));
+    int leftPadding = -1;
+    int topPadding = -1;
+    int rightPadding = -1;
+    int bottomPadding = -1;
+    int startPadding = UNDEFINED_PADDING;
+    int endPadding = UNDEFINED_PADDING;
 
-    setKeyboardNavigationCluster( attrs.getBoolean("keyboardNavigationCluster",false) );
-    if(attrs.getBoolean("filterTouchesWhenObscured",false)){
-        viewFlagValues |= FILTER_TOUCHES_WHEN_OBSCURED;
-        viewFlagMasks |= FILTER_TOUCHES_WHEN_OBSCURED;
-    } 
-    if( attrs.getBoolean( "focusableInTouchMode" , false ) ){
-        viewFlagValues &= ~FOCUSABLE_AUTO;
-        viewFlagValues |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE;
-        viewFlagMasks  |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK;
-    }
-    const int focusable = attrs.getInt("focusable",{
-            {"true",(int)FOCUSABLE},{"false",(int)NOT_FOCUSABLE},
-            {"auto",(int)FOCUSABLE_AUTO}},0);
-    viewFlagValues = (viewFlagValues & ~FOCUSABLE_MASK)|focusable;
-    if((viewFlagValues & FOCUSABLE_AUTO) == 0){
-        viewFlagMasks |= FOCUSABLE_MASK;
-    }
-    if( attrs.hasAttribute("focusable") ){
-        viewFlagValues|= attrs.getBoolean("focusable",false)?FOCUSABLE : NOT_FOCUSABLE;
-        viewFlagMasks |= FOCUSABLE_MASK;
-    }
-    if( attrs.getBoolean("clickable",false) ){
-        viewFlagValues |= CLICKABLE;
-        viewFlagMasks  |= CLICKABLE;
-    }
-    if( attrs.getBoolean("longClickable",false) ){
-        viewFlagValues |= LONG_CLICKABLE;
-        viewFlagMasks  |= LONG_CLICKABLE;
-    }
-    setAllowClickWhenDisabled(attrs.getBoolean("allowClickWhenDisabled", false));
-    if( !attrs.getBoolean("saveEnabled",true)){
-         viewFlagValues |=SAVE_DISABLED;
-         viewFlagMasks |=SAVE_DISABLED_MASK;
-    }
-    if(attrs.getBoolean("duplicateParentState",false)){
-        viewFlagValues |= DUPLICATE_PARENT_STATE;
-        viewFlagMasks  |= DUPLICATE_PARENT_STATE;
-    }
-    setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
+    int padding = -1;
+    int paddingHorizontal = -1;
+    int paddingVertical = -1;
 
-    const int fadingEdges = attrs.getInt("requiresFadingEdge",std::unordered_map<std::string,int>({
-	   {"none",(int)FADING_EDGE_NONE},
-	   {"horizontal",(int)FADING_EDGE_HORIZONTAL},
-	   {"vertical"  ,(int)FADING_EDGE_VERTICAL}
-	}),FADING_EDGE_NONE);
-    if( fadingEdges != FADING_EDGE_NONE ){
-        viewFlagValues |= fadingEdges;
-        viewFlagMasks |= FADING_EDGE_MASK;
-        initScrollCache();
-        mScrollCache->fadingEdgeLength = attrs.getInt("fadingEdgeLength",ViewConfiguration::get(mContext).getScaledFadingEdgeLength());
-    }
+    int viewFlagValues = 0;
+    int viewFlagMasks = 0;
 
+    // NOTE: named scrollContainerSet (not setScrollContainer) to avoid shadowing
+    // the setScrollContainer(bool) member method that this flag gates.
+    bool scrollContainerSet = false;
 
-    const int scrollbars = attrs.getInt("scrollbars",std::unordered_map<std::string,int>({
-           {"none",(int)SCROLLBARS_NONE}, {"horizontal",(int)SCROLLBARS_HORIZONTAL},
-           {"vertical",(int)SCROLLBARS_VERTICAL} }),SCROLLBARS_NONE);
-    if(scrollbars != SCROLLBARS_NONE){
-        viewFlagValues |= scrollbars;
-        viewFlagMasks  |= SCROLLBARS_MASK;
-    }
-    const int scrollbarStyle = attrs.getInt("scrollbarStyle",std::unordered_map<std::string,int>({ 
-        {"insideOverlay" ,(int)SCROLLBARS_INSIDE_OVERLAY },
-        {"insideInset"   ,(int)SCROLLBARS_INSIDE_INSET },
-        {"outsideOverlay",(int)SCROLLBARS_OUTSIDE_OVERLAY},
-        {"outsideInset"  ,(int)SCROLLBARS_OUTSIDE_INSET} }),SCROLLBARS_INSIDE_OVERLAY);
+    int x = 0;
+    int y = 0;
 
-    mOverScrollMode = attrs.getInt("overScrollMode",std::unordered_map<std::string,int>{
-           {"never",(int)OVER_SCROLL_NEVER} , {"always",(int)OVER_SCROLL_ALWAYS},
-           {"ifContentScrolls",(int)OVER_SCROLL_IF_CONTENT_SCROLLS}
-         },mOverScrollMode);
+    float tx = 0;
+    float ty = 0;
+    float tz = 0;
+    float elevation = 0;
+    float rotation = 0;
+    float rotationX = 0;
+    float rotationY = 0;
+    float sx = 1.f;
+    float sy = 1.f;
+    bool transformSet = false;
 
-    mVerticalScrollbarPosition = attrs.getInt("verticalScrollbarPosition",std::unordered_map<std::string,int>{
-           {"defaultPosition",(int)SCROLLBAR_POSITION_DEFAULT}, {"left",(int)SCROLLBAR_POSITION_LEFT},
-           {"right",(int)SCROLLBAR_POSITION_RIGHT} },(int)SCROLLBAR_POSITION_DEFAULT);
+    int scrollbarStyle = SCROLLBARS_INSIDE_OVERLAY;
+    int overScrollMode = mOverScrollMode;
+    bool initializeScrollbars = false;
+    bool initializeScrollIndicators = false;
 
-    if (scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) {
-        viewFlagValues |= scrollbarStyle & SCROLLBARS_STYLE_MASK;
-        viewFlagMasks  |= SCROLLBARS_STYLE_MASK;
-    }
+    bool startPaddingDefined = false;
+    bool endPaddingDefined = false;
+    bool leftPaddingDefined = false;
+    bool rightPaddingDefined = false;
 
-    const int scrollIndicators = (attrs.getInt("scrollIndicators",std::unordered_map<std::string,int>({
-           {"top"  ,(int)SCROLL_INDICATOR_TOP}  , {"left"  ,(int)SCROLL_INDICATOR_LEFT},
-           {"right",(int)SCROLL_INDICATOR_RIGHT}, {"bottom",(int)SCROLL_INDICATOR_BOTTOM}
-           }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
-    if(scrollIndicators) mPrivateFlags3 |= scrollIndicators;
-    if(attrs.getBoolean("isScrollContainer",false)) setScrollContainer(true);
-    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled",false));
-    setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster", false));
-    setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
-    setTransitionName(attrs.getString("transitionName"));
-    std::string animatorResId = attrs.getString("stateListAnimator");
-    if(!animatorResId.empty()){
-        setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,animatorResId));
-    }
+    // AOSP enum→flag lookup tables (View.java static finals).
+    static constexpr int VISIBILITY_FLAGS[]            = {VISIBLE, INVISIBLE, GONE};
+    static constexpr int DRAWING_CACHE_QUALITY_FLAGS[] = {DRAWING_CACHE_QUALITY_AUTO,
+                                                          DRAWING_CACHE_QUALITY_LOW,
+                                                          DRAWING_CACHE_QUALITY_HIGH};
+    static constexpr int LAYOUT_DIRECTION_FLAGS[]      = {LAYOUT_DIRECTION_LTR,
+                                                          LAYOUT_DIRECTION_RTL,
+                                                          LAYOUT_DIRECTION_INHERIT,
+                                                          LAYOUT_DIRECTION_LOCALE};
+    static constexpr int PFLAG2_TEXT_DIRECTION_FLAGS[] = {
+            TEXT_DIRECTION_INHERIT          << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_FIRST_STRONG     << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_ANY_RTL          << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_LTR              << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_RTL              << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_LOCALE           << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_FIRST_STRONG_LTR << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+            TEXT_DIRECTION_FIRST_STRONG_RTL << PFLAG2_TEXT_DIRECTION_MASK_SHIFT};
+    static constexpr int PFLAG2_TEXT_ALIGNMENT_FLAGS[] = {
+            TEXT_ALIGNMENT_INHERIT   << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_GRAVITY   << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_TEXT_START<< PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_TEXT_END  << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_CENTER    << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_VIEW_START<< PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+            TEXT_ALIGNMENT_VIEW_END  << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT};
 
-    if(viewFlagMasks){
-        setFlags(viewFlagValues, viewFlagMasks);
-    }
+    // Set default values.
+    viewFlagValues |= FOCUSABLE_AUTO;
+    viewFlagMasks |= FOCUSABLE_AUTO;
 
-    auto csl = attrs.getColorStateList("backgroundTint");
-    if( (mBackgroundTint == nullptr) && csl){
-        mBackgroundTint = new TintInfo;
-        mBackgroundTint->mTintList = csl;
-        mBackgroundTint->mHasTintList = true;
-    }
-    const int bgTintMode = attrs.getTintMode("backgroundTintMode",PorterDuff::Mode::NOOP);
-    if( bgTintMode != PorterDuff::Mode::NOOP ){
-        if(mBackgroundTint == nullptr) mBackgroundTint=new TintInfo;
-        mBackgroundTint->mTintMode = bgTintMode;
-        mBackgroundTint->mHasTintMode = true;
-    }
-    setBackground(attrs.getDrawable("background"));
-    const int providerInt = attrs.getInt("outlineProvider",std::unordered_map<std::string,int>{
-            {"none", (int)PROVIDER_NONE},    {"background",(int)PROVIDER_BACKGROUND},
-            {"bounds",(int)PROVIDER_BOUNDS}, {"paddedBounds",(int)PROVIDER_PADDED_BOUNDS}
-        },(int)PROVIDER_BACKGROUND);
-    setOutlineProviderFromAttribute(providerInt);
-
-    setForeground(attrs.getDrawable("foreground"));
-    const int fgTintMode = attrs.getTintMode("foregroundTintMode",PorterDuff::Mode::NOOP);
-    setForegroundTintMode(fgTintMode);
-    mForegroundInfo->mInsidePadding = attrs.getBoolean("foregroundInsidePadding",mForegroundInfo->mInsidePadding);
-
-    int leftPadding,topPadding,rightPadding,bottomPadding;
-    const int padding = attrs.getDimensionPixelSize("padding",-1);
-    if( padding >= 0 ){
-        leftPadding= rightPadding = padding;
-        topPadding = bottomPadding= padding;
-        mUserPaddingLeftInitial   = padding;
-        mUserPaddingRightInitial  = padding;
-        mLeftPaddingDefined = true;
-        mRightPaddingDefined = true;
-    }else{
-        const int paddingHorizontal = attrs.getDimensionPixelSize("paddingHorizontal",-1);
-        const int paddingVertical   = attrs.getDimensionPixelSize("paddingVertical",-1);
-        if( paddingHorizontal >= 0){
-            leftPadding = rightPadding = paddingHorizontal;
-            mLeftPaddingDefined = mRightPaddingDefined = true;
-            mUserPaddingLeftInitial = mUserPaddingRightInitial = paddingHorizontal;
-        }else{
-            leftPadding  = attrs.getDimensionPixelSize("paddingLeft",0);
-            rightPadding = attrs.getDimensionPixelSize("paddingRight",0);
-            mLeftPaddingDefined  = (leftPadding != 0);
-            mRightPaddingDefined = (rightPadding != 0);
-            mUserPaddingLeftInitial = mLeftPaddingDefined?leftPadding:0;
-            mUserPaddingRightInitial= mRightPaddingDefined?rightPadding:0;
+    const int N = a ? (int)a->getIndexCount() : 0;
+    for (int i = 0; i < N; i++) {
+        const int attr = (int)a->getIndex(i);
+        switch (attr) {
+        case R::styleable::View_background:
+            background = a->getDrawable(attr);
+            break;
+        case R::styleable::View_padding:
+            padding = a->getDimensionPixelSize(attr, -1);
+            mUserPaddingLeftInitial = padding;
+            mUserPaddingRightInitial = padding;
+            leftPaddingDefined = true;
+            rightPaddingDefined = true;
+            break;
+        case R::styleable::View_paddingHorizontal:
+            paddingHorizontal = a->getDimensionPixelSize(attr, -1);
+            mUserPaddingLeftInitial = paddingHorizontal;
+            mUserPaddingRightInitial = paddingHorizontal;
+            leftPaddingDefined = true;
+            rightPaddingDefined = true;
+            break;
+        case R::styleable::View_paddingVertical:
+            paddingVertical = a->getDimensionPixelSize(attr, -1);
+            break;
+        case R::styleable::View_paddingLeft:
+            leftPadding = a->getDimensionPixelSize(attr, -1);
+            mUserPaddingLeftInitial = leftPadding;
+            leftPaddingDefined = true;
+            break;
+        case R::styleable::View_paddingTop:
+            topPadding = a->getDimensionPixelSize(attr, -1);
+            break;
+        case R::styleable::View_paddingRight:
+            rightPadding = a->getDimensionPixelSize(attr, -1);
+            mUserPaddingRightInitial = rightPadding;
+            rightPaddingDefined = true;
+            break;
+        case R::styleable::View_paddingBottom:
+            bottomPadding = a->getDimensionPixelSize(attr, -1);
+            break;
+        case R::styleable::View_paddingStart:
+            startPadding = a->getDimensionPixelSize(attr, UNDEFINED_PADDING);
+            startPaddingDefined = (startPadding != UNDEFINED_PADDING);
+            break;
+        case R::styleable::View_paddingEnd:
+            endPadding = a->getDimensionPixelSize(attr, UNDEFINED_PADDING);
+            endPaddingDefined = (endPadding != UNDEFINED_PADDING);
+            break;
+        case R::styleable::View_scrollX:
+            x = a->getDimensionPixelOffset(attr, 0);
+            break;
+        case R::styleable::View_scrollY:
+            y = a->getDimensionPixelOffset(attr, 0);
+            break;
+        case R::styleable::View_alpha:
+            setAlpha(a->getFloat(attr, 1.f));
+            break;
+        case R::styleable::View_transformPivotX:
+            setPivotX(a->getDimension(attr, 0));
+            break;
+        case R::styleable::View_transformPivotY:
+            setPivotY(a->getDimension(attr, 0));
+            break;
+        case R::styleable::View_translationX:
+            tx = a->getDimension(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_translationY:
+            ty = a->getDimension(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_translationZ:
+            tz = a->getDimension(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_elevation:
+            elevation = a->getDimension(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_rotation:
+            rotation = a->getFloat(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_rotationX:
+            rotationX = a->getFloat(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_rotationY:
+            rotationY = a->getFloat(attr, 0);
+            transformSet = true;
+            break;
+        case R::styleable::View_scaleX:
+            sx = a->getFloat(attr, 1.f);
+            transformSet = true;
+            break;
+        case R::styleable::View_scaleY:
+            sy = a->getFloat(attr, 1.f);
+            transformSet = true;
+            break;
+        case R::styleable::View_id:
+            mID = a->getResourceId(attr, NO_ID);
+            break;
+        case R::styleable::View_tag:
+            // AOSP: mTag = a.getText(attr). CDROID mTag is void* (programmatic setTag);
+            // string-tag storage is TODO.
+            break;
+        case R::styleable::View_fitsSystemWindows:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= FITS_SYSTEM_WINDOWS;
+                viewFlagMasks |= FITS_SYSTEM_WINDOWS;
+            }
+            break;
+        case R::styleable::View_focusable:
+            viewFlagValues = (viewFlagValues & ~FOCUSABLE_MASK) | getFocusableAttribute(*a);
+            if ((viewFlagValues & FOCUSABLE_AUTO) == 0) {
+                viewFlagMasks |= FOCUSABLE_MASK;
+            }
+            break;
+        case R::styleable::View_focusableInTouchMode:
+            if (a->getBoolean(attr, false)) {
+                // unset auto focus since focusableInTouchMode implies explicit focusable
+                viewFlagValues &= ~FOCUSABLE_AUTO;
+                viewFlagValues |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE;
+                viewFlagMasks |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK;
+            }
+            break;
+        case R::styleable::View_clickable:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= CLICKABLE;
+                viewFlagMasks |= CLICKABLE;
+            }
+            break;
+        case R::styleable::View_allowClickWhenDisabled:
+            setAllowClickWhenDisabled(a->getBoolean(attr, false));
+            break;
+        case R::styleable::View_longClickable:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= LONG_CLICKABLE;
+                viewFlagMasks |= LONG_CLICKABLE;
+            }
+            break;
+        case R::styleable::View_contextClickable:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= CONTEXT_CLICKABLE;
+                viewFlagMasks |= CONTEXT_CLICKABLE;
+            }
+            break;
+        case R::styleable::View_saveEnabled:
+            if (!a->getBoolean(attr, true)) {
+                viewFlagValues |= SAVE_DISABLED;
+                viewFlagMasks |= SAVE_DISABLED_MASK;
+            }
+            break;
+        case R::styleable::View_duplicateParentState:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= DUPLICATE_PARENT_STATE;
+                viewFlagMasks |= DUPLICATE_PARENT_STATE;
+            }
+            break;
+        case R::styleable::View_visibility: {
+            const int visibility = a->getInt(attr, 0);
+            if (visibility != 0) {
+                viewFlagValues |= VISIBILITY_FLAGS[visibility];
+                viewFlagMasks |= VISIBILITY_MASK;
+            }
+            break;
         }
-        if( paddingVertical >= 0){
-            topPadding = bottomPadding = paddingVertical;
-        }else{
-            topPadding   = attrs.getDimensionPixelSize("paddingTop",0);
-            bottomPadding= attrs.getDimensionPixelSize("paddingBottom",0);
+        case R::styleable::View_layoutDirection:
+            // Clear any layout direction flags (including resolved bits) already set
+            mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK);
+            {
+                const int layoutDirection = a->getInt(attr, -1);
+                const int value = (layoutDirection != -1)
+                        ? LAYOUT_DIRECTION_FLAGS[layoutDirection] : LAYOUT_DIRECTION_DEFAULT;
+                mPrivateFlags2 |= (value << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
+            }
+            break;
+        case R::styleable::View_drawingCacheQuality: {
+            const int cacheQuality = a->getInt(attr, 0);
+            if (cacheQuality != 0) {
+                viewFlagValues |= DRAWING_CACHE_QUALITY_FLAGS[cacheQuality];
+                viewFlagMasks |= DRAWING_CACHE_QUALITY_MASK;
+            }
+            break;
+        }
+        case R::styleable::View_contentDescription:
+            setContentDescription(a->getString(attr));
+            break;
+        case R::styleable::View_accessibilityTraversalBefore:
+            setAccessibilityTraversalBefore(a->getResourceId(attr, NO_ID));
+            break;
+        case R::styleable::View_accessibilityTraversalAfter:
+            setAccessibilityTraversalAfter(a->getResourceId(attr, NO_ID));
+            break;
+        case R::styleable::View_labelFor:
+            setLabelFor(a->getResourceId(attr, NO_ID));
+            break;
+        case R::styleable::View_soundEffectsEnabled:
+            if (!a->getBoolean(attr, true)) {
+                viewFlagValues &= ~SOUND_EFFECTS_ENABLED;
+                viewFlagMasks |= SOUND_EFFECTS_ENABLED;
+            }
+            break;
+        case R::styleable::View_hapticFeedbackEnabled:
+            if (!a->getBoolean(attr, true)) {
+                viewFlagValues &= ~HAPTIC_FEEDBACK_ENABLED;
+                viewFlagMasks |= HAPTIC_FEEDBACK_ENABLED;
+            }
+            break;
+        case R::styleable::View_scrollbars: {
+            const int scrollbars = a->getInt(attr, SCROLLBARS_NONE);
+            if (scrollbars != SCROLLBARS_NONE) {
+                viewFlagValues |= scrollbars;
+                viewFlagMasks |= SCROLLBARS_MASK;
+                initializeScrollbars = true;
+            }
+            break;
+        }
+        //noinspection deprecation
+        case R::styleable::View_fadingEdge:
+            break;
+        case R::styleable::View_requiresFadingEdge: {
+            const int fadingEdge = a->getInt(attr, FADING_EDGE_NONE);
+            if (fadingEdge != FADING_EDGE_NONE) {
+                viewFlagValues |= fadingEdge;
+                viewFlagMasks |= FADING_EDGE_MASK;
+                // AOSP initializeFadingEdgeInternal(a):
+                initScrollCache();
+                mScrollCache->fadingEdgeLength = a->getDimensionPixelSize(
+                        R::styleable::View_fadingEdgeLength,
+                        ViewConfiguration::get(mContext).getScaledFadingEdgeLength());
+            }
+            break;
+        }
+        case R::styleable::View_scrollbarStyle:
+            scrollbarStyle = a->getInt(attr, SCROLLBARS_INSIDE_OVERLAY);
+            if (scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) {
+                viewFlagValues |= scrollbarStyle & SCROLLBARS_STYLE_MASK;
+                viewFlagMasks |= SCROLLBARS_STYLE_MASK;
+            }
+            break;
+        case R::styleable::View_isScrollContainer:
+            scrollContainerSet = true;
+            if (a->getBoolean(attr, false)) {
+                setScrollContainer(true);
+            }
+            break;
+        case R::styleable::View_keepScreenOn:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= KEEP_SCREEN_ON;
+                viewFlagMasks |= KEEP_SCREEN_ON;
+            }
+            break;
+        case R::styleable::View_filterTouchesWhenObscured:
+            if (a->getBoolean(attr, false)) {
+                viewFlagValues |= FILTER_TOUCHES_WHEN_OBSCURED;
+                viewFlagMasks |= FILTER_TOUCHES_WHEN_OBSCURED;
+            }
+            break;
+        case R::styleable::View_nextFocusLeft:
+            mNextFocusLeftId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_nextFocusRight:
+            mNextFocusRightId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_nextFocusUp:
+            mNextFocusUpId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_nextFocusDown:
+            mNextFocusDownId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_nextFocusForward:
+            mNextFocusForwardId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_nextClusterForward:
+            mNextClusterForwardId = a->getResourceId(attr, View::NO_ID);
+            break;
+        case R::styleable::View_minWidth:
+            mMinWidth = a->getDimensionPixelSize(attr, 0);
+            break;
+        case R::styleable::View_minHeight:
+            mMinHeight = a->getDimensionPixelSize(attr, 0);
+            break;
+        case R::styleable::View_onClick:
+            // android:onClick uses Java reflection (DeclaredOnClickListener); not
+            // supported in C++. Wire clicks via setOnClickListener in code instead.
+            break;
+        case R::styleable::View_overScrollMode:
+            overScrollMode = a->getInt(attr, OVER_SCROLL_IF_CONTENT_SCROLLS);
+            break;
+        case R::styleable::View_verticalScrollbarPosition:
+            mVerticalScrollbarPosition = a->getInt(attr, SCROLLBAR_POSITION_DEFAULT);
+            break;
+        case R::styleable::View_layerType:
+            setLayerType(a->getInt(attr, LAYER_TYPE_NONE));
+            break;
+        case R::styleable::View_textDirection:
+            // Clear any text direction flag already set
+            mPrivateFlags2 &= ~PFLAG2_TEXT_DIRECTION_MASK;
+            {
+                const int textDirection = a->getInt(attr, -1);
+                if (textDirection != -1) {
+                    mPrivateFlags2 |= PFLAG2_TEXT_DIRECTION_FLAGS[textDirection];
+                }
+            }
+            break;
+        case R::styleable::View_textAlignment:
+            // Clear any text alignment flag already set
+            mPrivateFlags2 &= ~PFLAG2_TEXT_ALIGNMENT_MASK;
+            {
+                const int textAlignment = a->getInt(attr, TEXT_ALIGNMENT_DEFAULT);
+                mPrivateFlags2 |= PFLAG2_TEXT_ALIGNMENT_FLAGS[textAlignment];
+            }
+            break;
+        case R::styleable::View_importantForAccessibility:
+            setImportantForAccessibility(a->getInt(attr, IMPORTANT_FOR_ACCESSIBILITY_DEFAULT));
+            break;
+        case R::styleable::View_transitionName:
+            setTransitionName(a->getString(attr));
+            break;
+        case R::styleable::View_nestedScrollingEnabled:
+            setNestedScrollingEnabled(a->getBoolean(attr, false));
+            break;
+        case R::styleable::View_stateListAnimator:
+            setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,
+                    a->getResourceId(attr, 0)));
+            break;
+        case R::styleable::View_backgroundTint:
+            // This will get applied later during setBackground().
+            if (mBackgroundTint == nullptr) {
+                mBackgroundTint = new TintInfo();
+            }
+            mBackgroundTint->mTintList = a->getColorStateList(R::styleable::View_backgroundTint);
+            mBackgroundTint->mHasTintList = true;
+            break;
+        case R::styleable::View_backgroundTintMode:
+            // This will get applied later during setBackground().
+            if (mBackgroundTint == nullptr) {
+                mBackgroundTint = new TintInfo();
+            }
+            mBackgroundTint->mTintMode = Drawable::parseBlendMode(
+                    a->getInt(R::styleable::View_backgroundTintMode, -1), PorterDuff::Mode::NOOP);
+            mBackgroundTint->mHasTintMode = true;
+            break;
+        case R::styleable::View_outlineProvider:
+            setOutlineProviderFromAttribute(a->getInt(R::styleable::View_outlineProvider,
+                    PROVIDER_BACKGROUND));
+            break;
+        case R::styleable::View_foreground:
+            setForeground(a->getDrawable(attr));
+            break;
+        case R::styleable::View_foregroundGravity:
+            setForegroundGravity(a->getInt(attr, Gravity::NO_GRAVITY));
+            break;
+        case R::styleable::View_foregroundTintMode:
+            setForegroundTintBlendMode(Drawable::parseBlendMode(a->getInt(attr, -1),
+                    PorterDuff::Mode::NOOP));
+            break;
+        case R::styleable::View_foregroundTint:
+            setForegroundTintList(a->getColorStateList(attr));
+            break;
+        // TODO: View_foregroundInsidePadding is not in CDROID's R.styleable.View
+        // (and its auto-assigned framework attr id is absent from public-final.xml,
+        // so the View[] id can't be derived). Add the styleable entry + View[] id
+        // to re-enable. AOSP logic preserved:
+        //   case R::styleable::View_foregroundInsidePadding:
+        //       if (mForegroundInfo == nullptr) {
+        //           mForegroundInfo = new ForegroundInfo();
+        //       }
+        //       mForegroundInfo->mInsidePadding = a->getBoolean(attr, mForegroundInfo->mInsidePadding);
+        //       break;
+        case R::styleable::View_scrollIndicators: {
+            const int scrollIndicators =
+                    (a->getInt(attr, 0) << SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)
+                            & SCROLL_INDICATORS_PFLAG3_MASK;
+            if (scrollIndicators != 0) {
+                mPrivateFlags3 |= scrollIndicators;
+                initializeScrollIndicators = true;
+            }
+            break;
+        }
+        case R::styleable::View_tooltipText:
+            setTooltipText(a->getText(attr));
+            break;
+        case R::styleable::View_keyboardNavigationCluster:
+            setKeyboardNavigationCluster(a->getBoolean(attr, true));
+            break;
+        case R::styleable::View_focusedByDefault:
+            setFocusedByDefault(a->getBoolean(attr, true));
+            break;
+        case R::styleable::View_defaultFocusHighlightEnabled:
+            setDefaultFocusHighlightEnabled(a->getBoolean(attr, true));
+            break;
+        case R::styleable::View_clipToOutline:
+            setClipToOutline(a->getBoolean(attr, false));
+            break;
+        case R::styleable::View_accessibilityHeading:
+            setAccessibilityHeading(a->getBoolean(attr, false));
+            break;
+        case R::styleable::View_forceHasOverlappingRendering: {
+            TypedValue value;
+            if (a->peekValue(attr, &value)) {
+                forceHasOverlappingRendering(a->getBoolean(attr, true));
+            }
+            break;
+        }
+        // --- not supported (deps not ported): AOSP structure preserved, no-op ---
+        case R::styleable::View_pointerIcon:                 // PointerIcon not ported
+        case R::styleable::View_outlineSpotShadowColor:      // shadows unsupported
+        case R::styleable::View_outlineAmbientShadowColor:   // shadows unsupported
+        case R::styleable::View_forceDarkAllowed:            // RenderNode
+        case R::styleable::View_autofillHints:               // AutofillManager not ported
+        case R::styleable::View_importantForAutofill:        // AutofillManager not ported
+        case R::styleable::View_importantForContentCapture:  // ContentCapture not ported
+        case R::styleable::View_isCredential:                // credential framework
+        case R::styleable::View_screenReaderFocusable:       // accessibility-only
+        case R::styleable::View_accessibilityPaneTitle:      // accessibility-only
+        case R::styleable::View_accessibilityLiveRegion:     // accessibility-only
+        case R::styleable::View_accessibilityDataSensitive:  // accessibility-only
+        case R::styleable::View_supplementalDescription:     // accessibility-only
+        case R::styleable::View_preferKeepClear:             // KeepClear not ported
+        case R::styleable::View_autoHandwritingEnabled:      // Handwriting not ported
+        case R::styleable::View_handwritingBoundsOffsetLeft:
+        case R::styleable::View_handwritingBoundsOffsetTop:
+        case R::styleable::View_handwritingBoundsOffsetRight:
+        case R::styleable::View_handwritingBoundsOffsetBottom:
+        case R::styleable::View_contentSensitivity:          // content sensitivity
+        case R::styleable::View_theme:                       // internal attr
+            break;
+        default:
+            break;
         }
     }
 
-    mUserPaddingStart= attrs.getDimensionPixelSize("paddingStart",UNDEFINED_PADDING);
-    mUserPaddingEnd  = attrs.getDimensionPixelSize("paddingEnd", UNDEFINED_PADDING);
-    const bool startPaddingDefined= (mUserPaddingStart != UNDEFINED_PADDING);
-    const bool endPaddingDefined  = (mUserPaddingEnd != UNDEFINED_PADDING);
+    setOverScrollMode(overScrollMode);
+
+    // Cache start/end user padding as we cannot fully resolve padding here (we don't have yet
+    // the resolved layout direction). Those cached values will be used later during padding
+    // resolution.
+    mUserPaddingStart = startPadding;
+    mUserPaddingEnd = endPadding;
+
+    if (background != nullptr) {
+        setBackground(background);
+    }
+
+    // setBackground above will record that padding is currently provided by the background.
+    // If we have padding specified via xml, record that here instead and use it.
+    mLeftPaddingDefined = leftPaddingDefined;
+    mRightPaddingDefined = rightPaddingDefined;
+
+    // Valid paddingHorizontal/paddingVertical beats leftPadding, rightPadding, topPadding,
+    // bottomPadding, and padding set by background.  Valid padding beats everything.
+    if (padding >= 0) {
+        leftPadding = padding;
+        topPadding = padding;
+        rightPadding = padding;
+        bottomPadding = padding;
+        mUserPaddingLeftInitial = padding;
+        mUserPaddingRightInitial = padding;
+    } else {
+        if (paddingHorizontal >= 0) {
+            leftPadding = paddingHorizontal;
+            rightPadding = paddingHorizontal;
+            mUserPaddingLeftInitial = paddingHorizontal;
+            mUserPaddingRightInitial = paddingHorizontal;
+        }
+        if (paddingVertical >= 0) {
+            topPadding = paddingVertical;
+            bottomPadding = paddingVertical;
+        }
+    }
+
     if (isRtlCompatibilityMode()) {
         // RTL compatibility mode: pre Jelly Bean MR1 case OR no RTL support case.
         // left / right padding are used if defined (meaning here nothing to do). If they are not
@@ -335,11 +658,11 @@ View::View(Context*ctx,const AttributeSet&attrs){
         // and mUserPaddingRightInitial) so drawable padding will be used as ultimate default if
         // defined.
         if (!mLeftPaddingDefined && startPaddingDefined) {
-            leftPadding  = mUserPaddingStart;
+            leftPadding = startPadding;
         }
         mUserPaddingLeftInitial = (leftPadding >= 0) ? leftPadding : mUserPaddingLeftInitial;
         if (!mRightPaddingDefined && endPaddingDefined) {
-            rightPadding = mUserPaddingEnd;
+            rightPadding = endPadding;
         }
         mUserPaddingRightInitial = (rightPadding >= 0) ? rightPadding : mUserPaddingRightInitial;
     } else {
@@ -358,14 +681,53 @@ View::View(Context*ctx,const AttributeSet&attrs){
         }
     }
 
-    internalSetPadding( mUserPaddingLeftInitial, topPadding > 0 ? topPadding : mPaddingTop,
-                mUserPaddingRightInitial, bottomPadding > 0 ? bottomPadding : mPaddingBottom);
-    const int x = attrs.getInt("scrollX",0);
-    const int y = attrs.getInt("scrollY",0);
-    if( x || y ) scrollTo(x,y);
-    if(scrollbars != SCROLLBARS_NONE) initializeScrollbarsInternal(attrs);
-    if(scrollIndicators) initializeScrollIndicatorsInternal();
-    if(scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) recomputePadding();
+    // mPaddingTop and mPaddingBottom may have been set by setBackground(Drawable) so must pass
+    // them on if topPadding or bottomPadding are not valid.
+    internalSetPadding(
+            mUserPaddingLeftInitial,
+            topPadding >= 0 ? topPadding : mPaddingTop,
+            mUserPaddingRightInitial,
+            bottomPadding >= 0 ? bottomPadding : mPaddingBottom);
+
+    if (viewFlagMasks != 0) {
+        setFlags(viewFlagValues, viewFlagMasks);
+    }
+
+    if (initializeScrollbars) {
+        initializeScrollbarsInternal(*a);
+    }
+
+    if (initializeScrollIndicators) {
+        initializeScrollIndicatorsInternal();
+    }
+
+    // `a` is a unique_ptr<TypedArray>; reclaimed at scope exit (no recycle()).
+
+    // Needs to be called after mViewFlags is set
+    if (scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) {
+        recomputePadding();
+    }
+
+    if (x != 0 || y != 0) {
+        scrollTo(x, y);
+    }
+
+    if (transformSet) {
+        setTranslationX(tx);
+        setTranslationY(ty);
+        setTranslationZ(tz);
+        setElevation(elevation);
+        setRotation(rotation);
+        setRotationX(rotationX);
+        setRotationY(rotationY);
+        setScaleX(sx);
+        setScaleY(sy);
+    }
+
+    if (!scrollContainerSet && (viewFlagValues & SCROLLBARS_VERTICAL) != 0) {
+        setScrollContainer(true);
+    }
+
     computeOpaqueFlags();
 }
 
@@ -440,7 +802,7 @@ void View::initView(){
     mScrollCache  = nullptr;
     mRoundScrollbarRenderer=nullptr;
     mTop = mLeft = mRight = mBottom = 0;
-    mOverScrollMode = OVER_SCROLL_NEVER;
+    mOverScrollMode = OVER_SCROLL_IF_CONTENT_SCROLLS;
     mVerticalScrollbarPosition = 0;
     mUserPaddingLeft = mUserPaddingRight  = 0;
     mUserPaddingTop  = mUserPaddingBottom = 0;
@@ -467,6 +829,12 @@ void View::initView(){
 }
 
 View::~View(){
+    // Flip the liveness flag FIRST: transition/animation end-listeners hold a
+    // weak_ptr to it and must no-op against this view from here on (the
+    // no-GC counterpart of Android's animator-target keeping the view
+    // reachable — valgrind --auto-test: SIGSEGV in setTransitionVisibility /
+    // setTransitionAlpha from Visibility/Fade listeners firing after teardown).
+    if (mAliveFlag) *mAliveFlag = false;
     mViewCount --;
     LOGD_IF(View::VIEW_DEBUG||(mViewCount>1000),"%p:%d mViewCount=%d",this,mID,mViewCount);
 
@@ -498,6 +866,7 @@ View::~View(){
     delete mScrollFeedbackProvider;
     delete mInputEventConsistencyVerifier;
     delete mSendViewScrolledAccessibilityEvent;
+    for (auto* action : mAccessibilityActions) delete action;
 
     delete mBackground;
     delete mBackgroundTint;
@@ -511,7 +880,8 @@ View::~View(){
     delete mOverlay;
     delete mAnimator;
     delete mFloatingTreeObserver;
-    delete mAccessibilityDelegate;
+    // mAccessibilityDelegate is refcounted: an owning setter's last ref frees
+    // it here automatically; borrowed (raw-set) delegates are the caller's.
     delete mRunQueue;
 }
 
@@ -1072,6 +1442,21 @@ void View::setLayerType(int layerType){
     invalidate();
 }
 
+void View::forceHasOverlappingRendering(bool hasOverlappingRendering){
+    mPrivateFlags3 |= PFLAG3_HAS_OVERLAPPING_RENDERING_FORCED;
+    if (hasOverlappingRendering) {
+        mPrivateFlags3 |= PFLAG3_OVERLAPPING_RENDERING_FORCED_VALUE;
+    } else {
+        mPrivateFlags3 &= ~PFLAG3_OVERLAPPING_RENDERING_FORCED_VALUE;
+    }
+}
+
+bool View::getHasOverlappingRendering()const{
+    return (mPrivateFlags3 & PFLAG3_HAS_OVERLAPPING_RENDERING_FORCED) != 0 ?
+            (mPrivateFlags3 & PFLAG3_OVERLAPPING_RENDERING_FORCED_VALUE) != 0 :
+            hasOverlappingRendering();
+}
+
 void View::onAnimationStart() {
     mPrivateFlags |= PFLAG_ANIMATION_STARTED;
 }
@@ -1341,7 +1726,7 @@ void View::setOverScrollMode(int overScrollMode){
     mOverScrollMode = overScrollMode;
 }
 
-View* View::inflate(Context*context,const std::string& resource, ViewGroup* root){
+View* View::inflate(Context*context,int resource, ViewGroup* root){
     LayoutInflater* factory = LayoutInflater::from(context);
     return factory->inflate(resource, root);
 }
@@ -1454,8 +1839,15 @@ void View::transformFromViewToWindowSpace(int*inOutLocation){
 }
 
 void View::mapRectFromViewToScreenCoords(RectF& rect, bool clipToParent){
+    // The matrix transforms need a real cairo Rectangle (4 doubles); punning the
+    // RectF (4 floats) to RectangleInt reinterprets float bit patterns as ints —
+    // every transformed view reported garbage bounds (a11y dumps showed the
+    // scaled SLA tab at INT_MIN). Same trap and pattern as getHitRect below.
+    Rectangle tmp;
     if (!hasIdentityMatrix()) {
-        getMatrix().transform_rectangle((RectangleInt&)rect);//mapRect(rect);
+        tmp.x = rect.left; tmp.y = rect.top; tmp.width = rect.width; tmp.height = rect.height;
+        getMatrix().transform_rectangle(tmp);
+        rect.set((float)tmp.x, (float)tmp.y, (float)tmp.width, (float)tmp.height);
     }
     rect.offset(mLeft, mTop);
 
@@ -1471,7 +1863,9 @@ void View::mapRectFromViewToScreenCoords(RectF& rect, bool clipToParent){
             rect.height=std::min(rect.height,(float)parentView->getHeight());//rect.bottom = std::min(rect.bottom, parentView->getHeight());
         }
         if (!parentView->hasIdentityMatrix()) {
-            parentView->getMatrix().transform_rectangle((RectangleInt&)rect);//mapRect(rect);
+            tmp.x = rect.left; tmp.y = rect.top; tmp.width = rect.width; tmp.height = rect.height;
+            parentView->getMatrix().transform_rectangle(tmp);
+            rect.set((float)tmp.x, (float)tmp.y, (float)tmp.width, (float)tmp.height);
         }
         rect.offset(parentView->mLeft, parentView->mTop);
         parent = parentView->mParent;
@@ -2014,55 +2408,60 @@ bool View::dispatchNestedPreFling(float velocityX, float velocityY) {
     return false;
 }
 
-void View::initializeScrollbarsInternal(const AttributeSet&a){
+void View::initializeScrollbarsInternal(const TypedArray& a) {
     initScrollCache();
 
     ScrollabilityCache* scrollabilityCache = mScrollCache;
- 
+
     if (scrollabilityCache->scrollBar == nullptr) {
         scrollabilityCache->scrollBar = new ScrollBarDrawable();
         scrollabilityCache->scrollBar->setState(getDrawableState());
         scrollabilityCache->scrollBar->setCallback(this);
     }
- 
-    scrollabilityCache->fadeScrollBars = a.getBoolean("fadeScrollbars", true);
- 
-    if (!scrollabilityCache->fadeScrollBars) {
+
+    const bool fadeScrollbars = a.getBoolean(R::styleable::View_fadeScrollbars, true);
+
+    if (!fadeScrollbars) {
         scrollabilityCache->state = ScrollabilityCache::ON;
     }
- 
-    scrollabilityCache->scrollBarFadeDuration = a.getInt("scrollbarFadeDuration", ViewConfiguration::getScrollBarFadeDuration());
-    scrollabilityCache->scrollBarDefaultDelayBeforeFade = a.getInt("scrollbarDefaultDelayBeforeFade",ViewConfiguration::getScrollDefaultDelay());
- 
- 
-    scrollabilityCache->scrollBarSize = a.getDimensionPixelSize("scrollbarSize",ViewConfiguration::get(mContext).getScaledScrollBarSize());
- 
-    Drawable* track = a.getDrawable("scrollbarTrackHorizontal");
+    scrollabilityCache->fadeScrollBars = fadeScrollbars;
+
+    scrollabilityCache->scrollBarFadeDuration = a.getInt(
+            R::styleable::View_scrollbarFadeDuration, ViewConfiguration::getScrollBarFadeDuration());
+    scrollabilityCache->scrollBarDefaultDelayBeforeFade = a.getInt(
+            R::styleable::View_scrollbarDefaultDelayBeforeFade,
+            ViewConfiguration::getScrollDefaultDelay());
+
+    scrollabilityCache->scrollBarSize = a.getDimensionPixelSize(
+            R::styleable::View_scrollbarSize,
+            ViewConfiguration::get(mContext).getScaledScrollBarSize());
+
+    Drawable* track = a.getDrawable(R::styleable::View_scrollbarTrackHorizontal);
     scrollabilityCache->scrollBar->setHorizontalTrackDrawable(track);
- 
-    Drawable* thumb = a.getDrawable("scrollbarThumbHorizontal");
+
+    Drawable* thumb = a.getDrawable(R::styleable::View_scrollbarThumbHorizontal);
     if (thumb) {
         scrollabilityCache->scrollBar->setHorizontalThumbDrawable(thumb);
     }
- 
-    bool alwaysDraw = a.getBoolean("scrollbarAlwaysDrawHorizontalTrack",false);
+
+    bool alwaysDraw = a.getBoolean(R::styleable::View_scrollbarAlwaysDrawHorizontalTrack, false);
     if (alwaysDraw) {
         scrollabilityCache->scrollBar->setAlwaysDrawHorizontalTrack(true);
     }
- 
-    track = a.getDrawable("scrollbarTrackVertical");
+
+    track = a.getDrawable(R::styleable::View_scrollbarTrackVertical);
     scrollabilityCache->scrollBar->setVerticalTrackDrawable(track);
- 
-    thumb = a.getDrawable("scrollbarThumbVertical");
+
+    thumb = a.getDrawable(R::styleable::View_scrollbarThumbVertical);
     if (thumb) {
         scrollabilityCache->scrollBar->setVerticalThumbDrawable(thumb);
     }
- 
-    alwaysDraw = a.getBoolean("scrollbarAlwaysDrawVerticalTrack",false);
+
+    alwaysDraw = a.getBoolean(R::styleable::View_scrollbarAlwaysDrawVerticalTrack, false);
     if (alwaysDraw) {
         scrollabilityCache->scrollBar->setAlwaysDrawVerticalTrack(true);
     }
- 
+
     // Apply layout direction to the new Drawables if needed
     const int layoutDirection = getLayoutDirection();
     if (track) {
@@ -2071,9 +2470,9 @@ void View::initializeScrollbarsInternal(const AttributeSet&a){
     if (thumb) {
         thumb->setLayoutDirection(layoutDirection);
     }
- 
+
     // Re-apply user/background padding so that scrollbar(s) get added
-    resolvePadding(); 
+    resolvePadding();
 }
 
 void View::initScrollCache(){
@@ -2545,7 +2944,7 @@ bool View::isDraggingScrollBar() const{
 
 void View::initializeScrollIndicatorsInternal(){
     if (mScrollIndicatorDrawable == nullptr) {
-        mScrollIndicatorDrawable = mContext->getDrawable("cdroid:drawable/scroll_indicator_material");
+        mScrollIndicatorDrawable = mContext->getDrawable(R::drawable::scroll_indicator_material);
     }
     if( mScrollIndicatorDrawable == nullptr){
         Shape*sp=new RectShape();
@@ -2618,7 +3017,7 @@ void View::onDrawScrollIndicators(Canvas& canvas){
     if ((mPrivateFlags3 & PFLAG3_SCROLL_INDICATOR_BOTTOM) != 0) {
         const bool canScrollDown = canScrollVertically(1);
         if (canScrollDown) {
-            dr->setBounds(rect.left, rect.bottom() - h, rect.width, rect.height);
+            dr->setBounds(rect.left, rect.bottom() - h, rect.width, h);
             dr->draw(canvas);
         }
     }
@@ -3474,6 +3873,14 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
             if ((mPrivateFlags & PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) {
                 mPrivateFlags &= ~PFLAG_DIRTY_MASK;
                 dispatchDraw(canvas);
+                drawAutofilledHighlight(canvas);
+                // android View.java:24347: the overlay must be drawn on this fast path
+                // too -- without it, views added to a skip-draw host's overlay (e.g.
+                // TransitionUtils.copyViewImage snapshots under Visibility) are never
+                // painted at all.
+                if (mOverlay && !mOverlay->isEmpty()) {
+                    mOverlay->getOverlayView()->draw(canvas);
+                }
             } else {
                 draw(canvas);
             }
@@ -3531,14 +3938,8 @@ const Rect View::getBound()const{
     return Rect::MakeLTRB(mLeft,mTop,mRight,mBottom);
 }
 
-const Rect View::getDrawingRect()const{
-    Rect ret;
-    ret.set(mScrollX,mScrollY,mScrollX+getWidth(),mScrollY+getHeight());
-    return ret;
-}
-
 void View::getFocusedRect(Rect&r){
-    r.set(mLeft,mTop,mRight-mLeft,mBottom-mTop);
+    getDrawingRect(r);
 }
 
 void View::setId(int id){
@@ -3589,15 +3990,25 @@ int View::getAccessibilityTraversalAfter()const{
 }
 
 int View::generateViewId(){
-    static int sNextGeneratedId = 0x0;
-    int newValue = sNextGeneratedId + 1;
-    if(newValue>0xFFFFFF)newValue=1;
+    // AOSP View.generateViewId: counter starts at 1, returns the pre-increment
+    // value, clamped under 0x01000000 ("aapt-generated IDs have the high byte
+    // nonzero; clamp to the range under it"). The id must stay a POSITIVE int —
+    // androidx guards like FragmentManager.getFragmentContainer's
+    // (mContainerId <= 0) reject 0xFFxxxxxx-style values, which are negative
+    // as signed ints (a generated-id container then looks container-less and
+    // its fragment's view is never added — black pager pages).
+    static int sNextGeneratedId = 1;
+    const int result = sNextGeneratedId;
+    int newValue = result + 1;
+    if(newValue > 0x00FFFFFF) newValue = 1; // Roll over to 1, not 0.
     sNextGeneratedId = newValue;
-    return newValue|0xFF000000;
+    return result;
 }
 
+// Note that if the function returns true, it indicates aapt did not generate this id.
+// However false value does not indicate that aapt did generated this id.
 bool View::isViewIdGenerated(int id){
-    return (id&0xFF000000)==0xFF000000;
+    return (id&0xFF000000)==0 && (id&0x00FFFFFF)!=0;
 }
 
 bool View::getKeepScreenOn()const{
@@ -3769,11 +4180,146 @@ void View::setKeyedTag(int key,void* tag, std::function<void(void*)> dtor){
 }
 
 View::AccessibilityDelegate* View::getAccessibilityDelegate() const{
-    return mAccessibilityDelegate;
+    return mAccessibilityDelegate.get();
 }
 
 void View::setAccessibilityDelegate(AccessibilityDelegate* delegate) {
-    mAccessibilityDelegate = delegate;
+    // AOSP contract: a raw-pointer delegate stays owned by the caller — the
+    // view never frees it. Wrap it with a no-op deleter; replacing the field
+    // releases the previous ref without touching a borrowed raw pointer.
+    mAccessibilityDelegate = std::shared_ptr<AccessibilityDelegate>(delegate,
+            [](AccessibilityDelegate*) {});
+}
+
+void View::setAccessibilityDelegate(std::shared_ptr<AccessibilityDelegate> delegate) {
+    // Owning variant for framework-internal delegates that outlive individual
+    // hosts (RecyclerViewAccessibilityDelegate::ItemDelegate is set on every
+    // item view); the last reference frees the delegate.
+    mAccessibilityDelegate = std::move(delegate);
+}
+
+// ---------------------------------------------------------------------------
+// androidx.core.view.ViewCompat accessibility-action helpers (collapsed onto
+// View per the Compat-strip rule; android-36 View itself has no such API).
+// android.R has no accessibility_custom_action_* ids either (verified
+// android-12..36) — CDROID pins the 32 ids right past the AOSP watermark.
+// ---------------------------------------------------------------------------
+
+// androidx ViewCompat.ACCESSIBILITY_ACTIONS_RESOURCE_IDS
+static const int ACCESSIBILITY_ACTIONS_RESOURCE_IDS[] = {
+    R::id::accessibility_custom_action_0,  R::id::accessibility_custom_action_1,
+    R::id::accessibility_custom_action_2,  R::id::accessibility_custom_action_3,
+    R::id::accessibility_custom_action_4,  R::id::accessibility_custom_action_5,
+    R::id::accessibility_custom_action_6,  R::id::accessibility_custom_action_7,
+    R::id::accessibility_custom_action_8,  R::id::accessibility_custom_action_9,
+    R::id::accessibility_custom_action_10, R::id::accessibility_custom_action_11,
+    R::id::accessibility_custom_action_12, R::id::accessibility_custom_action_13,
+    R::id::accessibility_custom_action_14, R::id::accessibility_custom_action_15,
+    R::id::accessibility_custom_action_16, R::id::accessibility_custom_action_17,
+    R::id::accessibility_custom_action_18, R::id::accessibility_custom_action_19,
+    R::id::accessibility_custom_action_20, R::id::accessibility_custom_action_21,
+    R::id::accessibility_custom_action_22, R::id::accessibility_custom_action_23,
+    R::id::accessibility_custom_action_24, R::id::accessibility_custom_action_25,
+    R::id::accessibility_custom_action_26, R::id::accessibility_custom_action_27,
+    R::id::accessibility_custom_action_28, R::id::accessibility_custom_action_29,
+    R::id::accessibility_custom_action_30, R::id::accessibility_custom_action_31,
+};
+
+bool View::hasAccessibilityDelegate() const {
+    // androidx: getAccessibilityDelegateInternal(view) != null
+    return mAccessibilityDelegate != nullptr;
+}
+
+void View::ensureAccessibilityDelegateForActions() {
+    // androidx ViewCompat.ensureAccessibilityDelegateCompat: with no delegate
+    // set, install a plain default one so the delegate-driven population path
+    // (which is what surfaces mAccessibilityActions) is active.
+    if (mAccessibilityDelegate == nullptr) {
+        setAccessibilityDelegate(std::make_shared<AccessibilityDelegate>());
+    }
+}
+
+int View::getAvailableActionId(const std::string& label) const {
+    // androidx getAvailableActionIdFromResources: reuse the id of an existing
+    // action with the same label, else the first free custom-action id.
+    int result = View::NO_ID;
+    for (const auto* action : mAccessibilityActions) {
+        if (action->getLabel() == label) {
+            return action->getId();
+        }
+    }
+    for (int id : ACCESSIBILITY_ACTIONS_RESOURCE_IDS) {
+        bool idAvailable = true;
+        for (const auto* action : mAccessibilityActions) {
+            idAvailable &= (action->getId() != id);
+        }
+        if (idAvailable) {
+            result = id;
+            break;
+        }
+    }
+    return result;
+}
+
+void View::removeActionWithId(int actionId) {
+    for (size_t i = 0; i < mAccessibilityActions.size(); i++) {
+        if (mAccessibilityActions[i]->getId() == actionId) {
+            delete mAccessibilityActions[i]; // CDROID: the view owns its list entries
+            mAccessibilityActions.erase(mAccessibilityActions.begin() + i);
+            break;
+        }
+    }
+}
+
+void View::addAccessibilityAction(AccessibilityNodeInfo::AccessibilityAction* action) {
+    // androidx private addAccessibilityAction(view, action)
+    ensureAccessibilityDelegateForActions();
+    removeActionWithId(action->getId());
+    mAccessibilityActions.push_back(action);
+    notifyViewAccessibilityStateChangedIfNeeded(
+            AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+}
+
+int View::addAccessibilityAction(const std::string& label, AccessibilityViewCommand* command) {
+    int actionId = getAvailableActionId(label);
+    if (actionId != View::NO_ID) {
+        addAccessibilityAction(new AccessibilityNodeInfo::AccessibilityAction(actionId, label, command));
+    }
+    return actionId;
+}
+
+void View::removeAccessibilityAction(int actionId) {
+    removeActionWithId(actionId);
+    notifyViewAccessibilityStateChangedIfNeeded(
+            AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+}
+
+void View::replaceAccessibilityAction(const AccessibilityNodeInfo::AccessibilityAction& replacedAction,
+        const char* label, AccessibilityViewCommand* command) {
+    // androidx: label==null && command==null removes the action; otherwise the
+    // replacement keeps the source id and carries the new label/command
+    // (createReplacementAction).
+    if (command == nullptr && label == nullptr) {
+        removeAccessibilityAction(replacedAction.getId());
+    } else {
+        addAccessibilityAction(new AccessibilityNodeInfo::AccessibilityAction(
+                replacedAction.getId(), label ? std::string(label) : std::string(), command));
+    }
+}
+
+bool View::dispatchViewCommandAction(int action, Bundle* arguments) {
+    // androidx AccessibilityDelegateCompat.performAccessibilityAction: the
+    // matching action's command runs before the delegate/internal handling.
+    for (auto* candidate : mAccessibilityActions) {
+        if (candidate->getId() != action) continue;
+        AccessibilityViewCommand* command = candidate->getCommand();
+        if (command == nullptr) return false; // matched, but nothing to run here
+        std::unique_ptr<AccessibilityViewCommand::CommandArguments> commandArguments(
+                createCommandArguments(action));
+        if (commandArguments) commandArguments->setBundle(arguments);
+        return command->perform(*this, commandArguments.get());
+    }
+    return false;
 }
 
 AccessibilityNodeProvider* View::getAccessibilityNodeProvider(){
@@ -3829,11 +4375,28 @@ void View::setStateDescription(const std::string& stateDescription) {
             && getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
-    if (AccessibilityManager::getInstance(mContext).isEnabled()) {
-        AccessibilityEvent* event = AccessibilityEvent::obtain();
-        event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
-        //event->setContentChangeTypes(AccessibilityEvent::CONTENT_CHANGE_TYPE_STATE_DESCRIPTION);
-        sendAccessibilityEventUnchecked(*event);
+    // AOSP routes the change through notifySubtreeAccessibilityStateChanged-
+    // IfNeeded (CONTENT_CHANGE_TYPE_STATE_DESCRIPTION) — the throttled,
+    // source-deduplicated pipeline — NOT a direct obtain+send. The direct
+    // send leaked the event on every drop exit the pipeline has.
+    notifyViewAccessibilityStateChangedIfNeeded(
+            AccessibilityEvent::CONTENT_CHANGE_TYPE_STATE_DESCRIPTION);
+}
+
+std::string View::getStateDescription() const{
+    return mStateDescription;
+}
+
+void View::announceForAccessibility(const std::string& text) {
+    // AOSP View.announceForAccessibility: gate on the manager and a parent
+    // (the event travels the requestSendAccessibilityEvent chain), build a
+    // TYPE_ANNOUNCEMENT, initialize it, and put the text in the event text.
+    if (AccessibilityManager::getInstance(mContext).isEnabled() && mParent != nullptr) {
+        AccessibilityEvent* event = AccessibilityEvent::obtain(
+                AccessibilityEvent::TYPE_ANNOUNCEMENT);
+        onInitializeAccessibilityEventInternal(*event);
+        event->getText().push_back(text);
+        mParent->requestSendAccessibilityEvent(this, *event);
     }
 }
 
@@ -3866,7 +4429,13 @@ void View::notifyViewAccessibilityStateChangedIfNeeded(int changeType){
             event->setSource(this);
             onPopulateAccessibilityEvent(*event);
             if (mParent != nullptr) {
-                mParent->requestSendAccessibilityEvent(this, *event);
+                if (!mParent->requestSendAccessibilityEvent(this, *event)) {
+                    // Dropped in the bubble — recycle (obtain-then-drop).
+                    event->recycle();
+                }
+            } else {
+                // Unattached pane: nobody will dispatch this event.
+                event->recycle();
             }
             return;
         }
@@ -3927,6 +4496,11 @@ bool View::dispatchNestedPrePerformAccessibilityAction(int action, Bundle* argum
 }
 
 bool View::performAccessibilityAction(int action, Bundle* arguments) {
+    // androidx AccessibilityDelegateCompat's bridge dispatches the ViewCompat
+    // view-command actions before falling through to the delegate/internal path.
+    if (dispatchViewCommandAction(action, arguments)) {
+        return true;
+    }
     if (mAccessibilityDelegate != nullptr) {
         return mAccessibilityDelegate->performAccessibilityAction(*this, action, arguments);
     } else {
@@ -3997,33 +4571,34 @@ bool View::performAccessibilityActionInternal(int action, Bundle* arguments) {
             return true;
         }
         break;
-#if 0
     case AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY: {
         if (arguments != nullptr) {
-            const int granularity = arguments.getInt(
+            const int granularity = arguments->getInt(
                     AccessibilityNodeInfo::ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
-            const bool extendSelection = arguments.getBoolean(
-                    AccessibilityNodeInfo::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
+            // Java's getBoolean(key) defaults to false when the key is absent;
+            // the single-arg CDROID getter throws instead, so pass the default.
+            const bool extendSelection = arguments->getBoolean(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN, false);
             return traverseAtGranularity(granularity, true, extendSelection);
         }
     } break;
     case AccessibilityNodeInfo::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY: {
         if (arguments != nullptr) {
-            const int granularity = arguments.getInt(
+            const int granularity = arguments->getInt(
                     AccessibilityNodeInfo::ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
-            const bool extendSelection = arguments.getBoolean(
-                    AccessibilityNodeInfo::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
+            const bool extendSelection = arguments->getBoolean(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN, false);
             return traverseAtGranularity(granularity, false, extendSelection);
         }
     } break;
     case AccessibilityNodeInfo::ACTION_SET_SELECTION: {
-        std::string text = getIterableTextForAccessibility();
+        const std::string text = getIterableTextForAccessibility();
         if (text.empty()) {
             return false;
         }
-        const int start = (arguments != nullptr) ? arguments.getInt(
+        const int start = (arguments != nullptr) ? arguments->getInt(
                 AccessibilityNodeInfo::ACTION_ARGUMENT_SELECTION_START_INT, -1) : -1;
-        const int end = (arguments != nullptr) ? arguments.getInt(
+        const int end = (arguments != nullptr) ? arguments->getInt(
         AccessibilityNodeInfo::ACTION_ARGUMENT_SELECTION_END_INT, -1) : -1;
         // Only cursor position can be specified (selection length == 0)
         if ((getAccessibilitySelectionStart() != start
@@ -4052,7 +4627,7 @@ bool View::performAccessibilityActionInternal(int action, Bundle* arguments) {
             return false;
         }
         return showLongClickTooltip(0, 0);
-    }
+    } break;
     case R::id::accessibilityActionHideTooltip: {
         if ((mTooltipInfo == nullptr) || (mTooltipInfo->mTooltipPopup == nullptr)) {
             // No tooltip showing
@@ -4060,49 +4635,106 @@ bool View::performAccessibilityActionInternal(int action, Bundle* arguments) {
         }
         hideTooltip();
         return true;
-    }
-#endif
+    } break;
     }
     return false;
 }
 
 bool View::traverseAtGranularity(int granularity, bool forward,  bool extendSelection) {
-    std::string text = getIterableTextForAccessibility();
-    if (text.empty()) {
+    const std::string utf8Text = getIterableTextForAccessibility();
+    if (utf8Text.empty()) {
         return false;
     }
-#if 0
-    TextSegmentIterator iterator = getIteratorForGranularity(granularity);
-    if (iterator == null) {
+    // Iterator/cursor coordinates are UTF-16 code units (Android String
+    // coordinates), so measure the text in UTF-16 here.
+    const std::u16string text = TextUtils::utf8_utf16(utf8Text);
+    TextSegmentIterator* iterator = getIteratorForGranularity(granularity);
+    if (iterator == nullptr) {
         return false;
     }
     int current = getAccessibilitySelectionEnd();
     if (current == ACCESSIBILITY_CURSOR_POSITION_UNDEFINED) {
-        current = forward ? 0 : text.length();
+        current = forward ? 0 : (int)text.length();
     }
-    final int[] range = forward ? iterator.following(current) : iterator.preceding(current);
-    if (range == null) {
+    int* range = forward ? iterator->following(current) : iterator->preceding(current);
+    if (range == nullptr) {
         return false;
     }
-    final int segmentStart = range[0];
-    final int segmentEnd = range[1];
+    const int segmentStart = range[0];
+    const int segmentEnd = range[1];
     int selectionStart;
     int selectionEnd;
     if (extendSelection && isAccessibilitySelectionExtendable()) {
+        prepareForExtendedAccessibilitySelection();
         selectionStart = getAccessibilitySelectionStart();
         if (selectionStart == ACCESSIBILITY_CURSOR_POSITION_UNDEFINED) {
             selectionStart = forward ? segmentStart : segmentEnd;
         }
         selectionEnd = forward ? segmentEnd : segmentStart;
     } else {
-        selectionStart = selectionEnd= forward ? segmentEnd : segmentStart;
+        selectionStart = selectionEnd = forward ? segmentEnd : segmentStart;
     }
     setAccessibilitySelection(selectionStart, selectionEnd);
     const int action = forward ? AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY
             : AccessibilityNodeInfo::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY;
     sendViewTextTraversedAtGranularityEvent(action, granularity, segmentStart, segmentEnd);
-#endif
-    return false;//true
+    return true;
+}
+
+void View::sendViewTextTraversedAtGranularityEvent(int action, int granularity,
+        int fromIndex, int toIndex) {
+    if (mParent == nullptr) {
+        return;
+    }
+    AccessibilityEvent* event = AccessibilityEvent::obtain(
+            AccessibilityEvent::TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+    onInitializeAccessibilityEvent(*event);
+    onPopulateAccessibilityEvent(*event);
+    event->setFromIndex(fromIndex);
+    event->setToIndex(toIndex);
+    event->setAction(action);
+    event->setMovementGranularity(granularity);
+    mParent->requestSendAccessibilityEvent(this, *event);
+}
+
+TextSegmentIterator* View::getIteratorForGranularity(int granularity) {
+    switch (granularity) {
+        case AccessibilityNodeInfo::MOVEMENT_GRANULARITY_CHARACTER: {
+            const std::string text = getIterableTextForAccessibility();
+            if (text.length() > 0) {
+                CharacterTextSegmentIterator* iterator =
+                    CharacterTextSegmentIterator::getInstance(
+                            getContext()->getResources().getConfiguration().getLocales().get(0));
+                iterator->initialize(TextUtils::utf8_utf16(text));
+                return iterator;
+            }
+        } break;
+        case AccessibilityNodeInfo::MOVEMENT_GRANULARITY_WORD: {
+            const std::string text = getIterableTextForAccessibility();
+            if (text.length() > 0) {
+                WordTextSegmentIterator* iterator =
+                    WordTextSegmentIterator::getInstance(
+                            getContext()->getResources().getConfiguration().getLocales().get(0));
+                iterator->initialize(TextUtils::utf8_utf16(text));
+                return iterator;
+            }
+        } break;
+        case AccessibilityNodeInfo::MOVEMENT_GRANULARITY_PARAGRAPH: {
+            const std::string text = getIterableTextForAccessibility();
+            if (text.length() > 0) {
+                ParagraphTextSegmentIterator* iterator =
+                    ParagraphTextSegmentIterator::getInstance();
+                iterator->initialize(TextUtils::utf8_utf16(text));
+                return iterator;
+            }
+        } break;
+    }
+    return nullptr;
+}
+
+void View::prepareForExtendedAccessibilitySelection() {
+    // Base implementation does nothing; TextView overrides to focus non-editable
+    // selectable text before an extended selection starts.
 }
 
 std::string View::getIterableTextForAccessibility(){
@@ -4125,7 +4757,10 @@ void View::setAccessibilitySelection(int start, int end){
     if (start ==  end && end == mAccessibilityCursorPosition) {
         return;
     }
-    if ((start >= 0) && (start == end) && (end <= getIterableTextForAccessibility().length())) {
+    // Cursor positions are UTF-16 code-unit offsets (Android String
+    // coordinates), so validate against the UTF-16 length.
+    if ((start >= 0) && (start == end)
+            && (end <= (int)TextUtils::utf8_utf16(getIterableTextForAccessibility()).length())) {
         mAccessibilityCursorPosition = start;
     } else {
         mAccessibilityCursorPosition = ACCESSIBILITY_CURSOR_POSITION_UNDEFINED;
@@ -4539,6 +5174,16 @@ bool View::setFrame(int left,int top,int width,int height){
         LOGV("%p:%d (%d,%d %d,%d)",this,mID,left,top,width,height);
         mPrivateFlags |= PFLAG_HAS_BOUNDS;
 
+        // AOSP setFrame flags these on every frame assignment (not only on
+        // size change): a background REPLACED while the view keeps its size
+        // (e.g. pooled nav items rebound in place) otherwise never gets its
+        // bounds and draws 0x0.
+        mBackgroundSizeChanged = true;
+        mDefaultFocusHighlightSizeChanged = true;
+        if (mForegroundInfo != nullptr) {
+            mForegroundInfo->mBoundsChanged = true;
+        }
+
         if (sizeChanged)
             sizeChange(newWidth, newHeight, oldWidth, oldHeight);
 
@@ -4747,8 +5392,8 @@ Drawable*View::getBackground()const{
     return mBackground;
 }
 
-void View::setBackgroundResource(const std::string&resid){
-    Drawable*d=getContext()->getDrawable(resid);
+void View::setBackgroundResource(int resId){
+    Drawable*d=getContext()->getDrawable(resId);
     return setBackground(d);
 }
 
@@ -5504,7 +6149,15 @@ bool View::isShown()const{
         }
         ViewGroup* parent = current->mParent;
         if (parent == nullptr) {
-            return (current->mViewFlags&VISIBILITY_MASK)==VISIBLE;
+            // AOSP: an unattached view (parent null mid-inflation) is NOT shown;
+            // the loop returns true only at the ViewRootImpl boundary. CDROID's
+            // tree root IS the Window (no ViewRootImpl wrapper), so the boundary
+            // is the attach state — a null parent means either a still-inflating
+            // partial tree (not attached: not shown) or the attached Window root.
+            // Returning the view's own visibility here (the old port) let
+            // construction-time events past the gate — TimePicker's delegate
+            // ctor crashed the pipeline with that door open.
+            return current->mAttachInfo != nullptr;
         }
         if (dynamic_cast<View*>(parent)==nullptr) {
             return true;
@@ -6078,8 +6731,13 @@ void View::setAutofilled(bool autofilled) {
 
 Drawable* View::getAutofilledDrawable(){
     if (mAttachInfo->mAutofilledDrawable == nullptr) {
-        Drawable*dr=getContext()->getDrawable("cdroid:attr/autofilled_highlight");
-        mAttachInfo->mAutofilledDrawable = dr;
+        // AOSP: theme.obtainStyledAttributes({android.R.attr.autofilledHighlight}) ->
+        // getResourceId(0) -> getDrawable(int). autofilledHighlight is an attr whose
+        // theme value points to @drawable/autofilled_highlight.
+        static const uint32_t kAttrs[] = { R::attr::autofilledHighlight, 0 };
+        auto ta = getContext()->obtainStyledAttributes(kAttrs);
+        int resId = ta->getResourceId(0, 0);
+        if (resId) mAttachInfo->mAutofilledDrawable = getContext()->getDrawable(resId);
     }
     return mAttachInfo->mAutofilledDrawable;
 }
@@ -6454,7 +7112,7 @@ void View::transformMatrixToLocal(Matrix& matrix){
 
 View*View::focusSearch(int direction)const{
     if(mParent)
-        mParent->focusSearch((View*)this,direction);
+        return mParent->focusSearch((View*)this,direction);
     return nullptr;
 }
 
@@ -6573,6 +7231,12 @@ void View::sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event){
     const bool isWindowDisappearedEvent = isWindowStateChanged && ((event.getContentChangeTypes()
             & AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_DISAPPEARED) != 0);
     if (!isShown() && !isWindowDisappearedEvent) {
+        // The event is consumed by the send pipeline (recycled once handed
+        // off); AOSP drops it for GC here. CDROID must recycle on every drop
+        // path — this gate fires for construction-time/unattached senders
+        // (e.g. CompoundButton::setChecked during inflate) and was the last
+        // big obtain-then-leak family.
+        event.recycle();
         return ;
     }
     onInitializeAccessibilityEvent(event);
@@ -6583,7 +7247,17 @@ void View::sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event){
     // In the beginning we called #isShown(), so we know that getParent() is not null.
     ViewGroup* parent = getParent();
     if (parent != nullptr) {
-        getParent()->requestSendAccessibilityEvent(this, event);
+        if (!parent->requestSendAccessibilityEvent(this, event)) {
+            // The bubble refused (unattached subtree or an onRequestSend
+            // filter): the event was dropped mid-pipeline. AOSP leans on GC
+            // here; CDROID must recycle (the obtain-then-drop contract).
+            event.recycle();
+        }
+    } else {
+        // Mid-teardown (parent already cleared, mAttachInfo not yet): a
+        // delayed event (e.g. SendViewScrolledAccessibilityEvent) fires after
+        // the tree detached this view — nobody will ever dispatch it.
+        event.recycle();
     }
 }
 
@@ -6678,6 +7352,11 @@ void View::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info){
     } else {
         onInitializeAccessibilityNodeInfoInternal(info);
     }
+    // androidx AccessibilityDelegateCompat's bridge appends the ViewCompat
+    // action list (custom + replacement actions) after the standard population.
+    for (AccessibilityNodeInfo::AccessibilityAction* action : mAccessibilityActions) {
+        info.addAction(action);
+    }
 }
 
 void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
@@ -6706,8 +7385,12 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
         if ((mAttachInfo->mAccessibilityFetchFlags
                & AccessibilityNodeInfo::FLAG_REPORT_VIEW_IDS) != 0
                /*&& Resources.resourceHasPackage(mID)*/) {
-           //std::string viewId = getResources().getResourceName(mID);
-           //info.setViewIdResourceName(viewId);
+            // AOSP Resources.getResourceName(mID) — the same string
+            // findAccessibilityNodeInfosByViewId matches on.
+            std::string viewId;
+            if (getResources().getResourceName(mID, &viewId)) {
+                info.setViewIdResourceName(viewId);
+            }
         }
     }
     if (mLabelForId != View::NO_ID) {
@@ -6744,6 +7427,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     info.setImportantForAccessibility(isImportantForAccessibility());
     info.setPackageName(mContext->getPackageName());
     info.setClassName(getAccessibilityClassName());
+    info.setStateDescription(getStateDescription());
     info.setContentDescription(getContentDescription());
     info.setEnabled(isEnabled());
     info.setClickable(isClickable());
@@ -6758,8 +7442,8 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     if (mTooltipInfo && mTooltipInfo->mTooltipText.size()) {
         info.setTooltipText(mTooltipInfo->mTooltipText);
         info.addAction((mTooltipInfo->mTooltipPopup == nullptr)
-                ? R::id::accessibilityActionShowTooltip/*AccessibilityNodeInfo::ACTION_SHOW_TOOLTIP*/
-                : R::id::accessibilityActionHideTooltip/*AccessibilityNodeInfo::ACTION_HIDE_TOOLTIP*/);
+                ? &AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP
+                : &AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP);
     }
     // TODO: These make sense only if we are in an AdapterView but all
     // views can be selected. Maybe from accessibility perspective
@@ -6785,7 +7469,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
         info.addAction(AccessibilityNodeInfo::ACTION_LONG_CLICK);
     }
     if (isContextClickable() && isEnabled()) {
-        info.addAction(R::id::accessibilityActionContextClick/*AccessibilityNodeInfo::ACTION_CONTEXT_CLICK*/);
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_CONTEXT_CLICK);
     }
     std::string text = getIterableTextForAccessibility();
     if (text.length()) {
@@ -6797,7 +7481,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
                | AccessibilityNodeInfo::MOVEMENT_GRANULARITY_WORD
                | AccessibilityNodeInfo::MOVEMENT_GRANULARITY_PARAGRAPH);
     }
-    info.addAction(R::id::accessibilityActionShowOnScreen/*AccessibilityNodeInfo::ACTION_SHOW_ON_SCREEN*/);
+    info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_ON_SCREEN);
     populateAccessibilityNodeInfoDrawingOrderInParent(info);
     info.setPaneTitle(mAccessibilityPaneTitle);
     info.setHeading(isAccessibilityHeading());
@@ -6820,8 +7504,8 @@ void View::populateAccessibilityNodeInfoDrawingOrderInParent(AccessibilityNodeIn
 
     while (viewAtDrawingLevel != parent) {
         ViewGroup* currentParent = viewAtDrawingLevel->getParent();
-        if (0/*!(currentParent instanceof ViewGroup)*/) {
-            // Should only happen for the Decor
+        if (currentParent == nullptr/*!(currentParent instanceof ViewGroup)*/) {
+            // Should only happen for the Decor (the root view: mParent is null)
             drawingOrderInParent = 0;
             break;
         } else {
@@ -7451,8 +8135,23 @@ bool View::hasParentWantsFocus()const{
 }
 
 bool View::isInLayout()const{
-    ViewGroup* viewRoot = getRootView();
-    return (viewRoot && viewRoot->isInLayout());
+    // AOSP: ViewRootImpl viewRoot = getViewRootImpl() — null when the view is
+    // detached, so isInLayout() is false. CDROID's ViewRootImpl analog is the
+    // Window at the tree root (AttachInfo.mRootView; Window overrides
+    // isInLayout with mInLayout). The old getRootView() parent-walk fallback
+    // recursed forever on detached subtrees: their root is a plain ViewGroup,
+    // so viewRoot->isInLayout() dispatched back into View::isInLayout with
+    // viewRoot == getRootView() == itself.
+    ViewGroup* viewRoot = (mAttachInfo && mAttachInfo->mRootView)
+                          ? mAttachInfo->mRootView : nullptr;
+    // A self-rooted dispatch means the tree root is not a live Window: either
+    // a detached subtree (stale AttachInfo) or a Window mid-destruction whose
+    // vtable has already rewound past the Window override — dispatching
+    // virtually would land right back here and recurse forever (the teardown
+    // stack overflow). Both cases mean "not in layout", matching AOSP's
+    // detached-viewRoot==null result.
+    if (viewRoot == nullptr || viewRoot == this) return false;
+    return viewRoot->isInLayout();
 }
 
 void View::onLayout(bool change,int l,int t,int w,int h){
@@ -8798,6 +9497,13 @@ ViewOverlay*View::getOverlay(){
     if (mOverlay == nullptr) {
         mOverlay = new ViewOverlay(mContext, this);
         mOverlay->getOverlayView()->setFrame(mLeft,mTop,mRight-mLeft,mBottom-mTop);
+        // android OverlayViewGroup ctor: mAttachInfo = mHostView.mAttachInfo. The host is
+        // usually already attached when its overlay is created lazily, and its
+        // dispatchAttachedToWindow will not fire again -- without this the overlay group
+        // (and views added to it) never get AttachInfo, so their invalidations dead-end
+        // in ViewGroup::invalidateChild's mAttachInfo guard and overlay content is
+        // never repainted.
+        mOverlay->getOverlayView()->mAttachInfo = mAttachInfo;
     }
     return mOverlay;
 }
@@ -9091,6 +9797,11 @@ int View::getMinimumWidth() {
 void View::setMinimumWidth(int minWidth) {
     mMinWidth = minWidth;
     requestLayout();
+}
+
+// AOSP View.getResources(): the Resources of the attached context.
+Resources& View::getResources() {
+    return mContext->getResources();
 }
 
 void View::setSoundEffectsEnabled(bool soundEffectsEnabled) {
@@ -10053,6 +10764,14 @@ View::AttachInfo::AttachInfo(Context*ctx){
 }
 
 View::AttachInfo::~AttachInfo(){
+    // The handler dies with the AttachInfo: drain its pending messages first.
+    // Posts made mid-detach-dispatch (a11y scrolled/content-changed runs that
+    // View::dispatchDetachedFromWindow's cancel() runs too early to catch, and
+    // anything posted during the quit-path window sweep, which never runs
+    // finishClose) would otherwise dispatch on views of the freed tree.
+    if (mHandler != nullptr) {
+        mHandler->removeCallbacksAndMessages(nullptr);
+    }
     delete mHandler;
     delete mTreeObserver;
     delete mAutofilledDrawable;

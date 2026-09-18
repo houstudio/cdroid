@@ -113,9 +113,9 @@ void NavController::setGraph(NavGraph* graph, Bundle* startDestinationArgs){
     }
 }
 
-void NavController::setGraph(const std::string& graphRef, Bundle* startDestinationArgs){
+void NavController::setGraph(int graphResId, Bundle* startDestinationArgs){
     NavInflater inflater(mContext, mNavigatorProvider);
-    NavGraph* graph = inflater.inflate(graphRef);
+    NavGraph* graph = inflater.inflate(graphResId);
     setGraph(graph, startDestinationArgs);
 }
 
@@ -388,7 +388,7 @@ void NavController::addOnDestinationChangedListener(const OnDestinationChangedLi
     // copy: CallbackBase::operator() is non-const, and the stored element is a mutable value.
     if(!mBackStack.empty()){
         NavBackStackEntry* top = mBackStack.back();
-        mOnDestinationChangedListeners.back()(this, top->getDestination(), top->getArguments());
+        mOnDestinationChangedListeners.back()(*this, *top->getDestination(), top->getArguments());
     }
 }
 void NavController::removeOnDestinationChangedListener(const OnDestinationChangedListener& listener){
@@ -410,8 +410,9 @@ void NavController::dispatchOnDestinationChanged(NavDestination* destination, Bu
         destination = mBackStack.back()->getDestination();
         args = mBackStack.back()->getArguments();
     }
+    if (destination == nullptr) return;
     for(auto& l : mOnDestinationChangedListeners){
-        l(this, destination, args);
+        l(*this, *destination, args);
     }
 }
 

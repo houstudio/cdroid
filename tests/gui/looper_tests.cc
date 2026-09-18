@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 #include <core/systemclock.h>
-#include <utils/atexit.h>
 #include <cdlog.h>
 #include <functional>
 #include <thread>
@@ -47,50 +46,15 @@ public:
    int getCount()const{return count;}
 };
 
-TEST_F(LOOPER,pollonce){
-   int64_t t1=SystemClock::uptimeMillis();
-   mLooper->pollOnce(1000);
-   int64_t t2=SystemClock::uptimeMillis();
-   ASSERT_TRUE((t2-t1)>=1000&&(t2-t2)<1005);
-}
+// pollonce dropped: it polled the SHARED main looper, which Choreographer frame
+// messages wake early — flaky by construction. The official private-looper port
+// (looper_libutils_tests.cc LooperTest.PollOnce_WhenNonZeroTimeoutAndNotAwoken_
+// WaitsForTimeout) covers the same assertion deterministically.
+// sendMessage / sendMessageDelayed / removeMessages coverage moved to CtsHandlerTest
+// (handler_tests.cc) and the official LooperTest (looper_libutils_tests.cc);
+// this file keeps the CDROID-specific surfaces (handler/eventhandler removal,
+// async messages, timerfd fds).
 
-TEST_F(LOOPER,sendMessage){
-   Message*msg=Message::obtain(); msg->what=100;
-   int  processed=0;
-   TestHandler ft;
-   mLooper->sendMessage(&ft,*msg);
-   msg->recycle();
-   mLooper->pollOnce(10);
-   ASSERT_EQ(ft.getCount(),1);
-}
-
-TEST_F(LOOPER,sendMessageDelay){
-   Message*msg=Message::obtain(); msg->what=100;
-   TestHandler ft;
-   int64_t t1=SystemClock::uptimeMillis();
-   mLooper->sendMessageDelayed(1000,&ft,*msg);
-   msg->recycle();
-   while(!ft.getCount()) mLooper->pollOnce(10);
-   int64_t t2=SystemClock::uptimeMillis();
-   ASSERT_TRUE((t2-t1)>=1000&&(t2-t2)<1005);
-}
-
-TEST_F(LOOPER,removeMessage){
-   Message*msg=Message::obtain(); msg->what=100;
-   Message*msg2=Message::obtain(); msg2->what=200;
-   TestHandler ft;
-   int64_t t2,t1=SystemClock::uptimeMillis();
-   mLooper->sendMessageDelayed(1000,&ft,*msg);
-   mLooper->sendMessageDelayed(1000,&ft,*msg2);
-   msg->recycle(); msg2->recycle();
-   t2=t1;
-   mLooper->removeMessages(&ft,100);
-   while(t2-t1<1100){
-       mLooper->pollOnce(10);
-       t2=SystemClock::uptimeMillis();
-   }
-   ASSERT_EQ(ft.getCount(),1);
-}
 class SelfDestroyHandler:public MessageHandler{
 private:
     Looper*mLooper;
@@ -142,23 +106,40 @@ TEST_F(LOOPER,removeHandler){
     mLooper->addHandler(sd2);
     mLooper->addEventHandler(se);
     mLooper->addEventHandler(se2);
-    mLooper->sendMessageDelayed(10,sd,*msg);
-    mLooper->sendMessageDelayed(10,sd2,*msg);
-    msg->recycle();
-    printf("HANDLE:%p ,%p  EventHandler:%p ,%p\r\n",sd,sd2,se,se2);
     EXPECT_EQ(SelfDestroyHandler::Count,2);
     EXPECT_EQ(SelfDestroyEventHandler::Count,2);
-    for(int i=0;i<2;i++){
-        mLooper->pollOnce(100);
-    }
-    mLooper->removeHandler(sd);
-    EXPECT_EQ(SelfDestroyHandler::Count,1);
-    mLooper->removeHandler(sd2);
+    printf("HANDLE:%p ,%p  EventHandler:%p ,%p\r\n",sd,sd2,se,se2);
+
+    /* 500ms delay: the removal EXPECTs below must not ride the 1ms-truncation
+       edge of the old 10ms delay — two pollOnce(100) could leave the messages a
+       fraction short of due, the deletes would then strand due envelopes, and the
+       listener's pump would dispatch them into freed handlers. */
+    mLooper->sendMessageDelayed(500,sd,*msg);
+    mLooper->sendMessageDelayed(500,sd2,*msg);
+    msg->recycle();
+    mLooper->pollOnce(50);
+
+    mLooper->removeHandler(sd);      // looper-owned: flagged, freed by a later walk
+    EXPECT_EQ(SelfDestroyHandler::Count,2);
+    mLooper->removeHandler(sd2);     // app-owned: unlinked at once
+    mLooper->removeMessages(sd);     // ~Handler discipline: no envelope may outlive
+    mLooper->removeMessages(sd2);    // its handler
     delete sd2;
+    EXPECT_EQ(SelfDestroyHandler::Count,1);
     mLooper->removeEventHandler(se);
     EXPECT_EQ(SelfDestroyEventHandler::Count,1);
     mLooper->removeEventHandler(se2);
     delete se2;
+    EXPECT_EQ(SelfDestroyEventHandler::Count,0);
+
+    /* Dispatch-path self-removal: handleMessage() -> removeHandler(this) is why
+       removeHandler defers the delete of owned handlers. */
+    SelfDestroyHandler*sd3 = new SelfDestroyHandler(mLooper,true);
+    mLooper->addHandler(sd3);
+    Message m3; m3.what=100;
+    mLooper->sendMessageDelayed(20,sd3,m3);
+    mLooper->pollOnce(100);          // returns on the enqueue wake, message not yet due
+    mLooper->pollOnce(100);          // waits out the delay, dispatches, walk frees sd3
     EXPECT_EQ(SelfDestroyHandler::Count,0);
     EXPECT_EQ(SelfDestroyEventHandler::Count,0);
     printf("#### END ####\r\n\r\n");
@@ -230,8 +211,8 @@ TEST_F(LOOPER,handler){
         mLooper->pollAll(10);
     mLooper->removeHandler(handler);
     while(count++<6)mLooper->pollAll(10);
+    ASSERT_EQ(handler->count,2);   // assert BEFORE delete — reading a freed member is UB
     delete handler;
-    ASSERT_EQ(handler->count,2);
 }
 
 TEST_F(LOOPER,asyncmsg){
@@ -294,8 +275,3 @@ TEST_F(LOOPER,timerfd){
 }
 #endif
 
-TEST_F(LOOPER,atexit){
-    AtExit::registerCallback([](){std::cout<<"__1"<<std::endl;});
-    AtExit::registerCallback([](){std::cout<<"__2"<<std::endl;});
-    AtExit::registerCallback([](){std::cout<<"__3"<<std::endl;});
-}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app's real manifest: pakbuilder passes it to aapt2 link AND stores the
+     compiled binary back into the pak; App parses it at boot (the PackageManager
+     role) for the application theme/label, per-activity theme + configChanges,
+     and the MAIN/LAUNCHER window. package MUST match the arsc package name
+     (cdroid.<namespace>) so runtime resource lookups keep resolving. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cdroid.printerdemo">
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>
+    <application android:label="CDROID MFP" android:theme="@style/AppTheme">
+        <activity android:name="PrinterDemoWindow"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

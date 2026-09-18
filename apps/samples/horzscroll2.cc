@@ -7,21 +7,20 @@ int main(int argc,const char*argv[]){
     options.add_options()("scroll","scroll",cxxopts::value<int>()->default_value("1"));
     auto result = options.parse(argc,argv);
     Window*w = new Window(0,0,-1,-1);
-    HorizontalScrollView* hs=new HorizontalScrollView(-1,-1);
+    HorizontalScrollView* hs=new HorizontalScrollView(&app);
     hs->setOverScrollMode(result.count("scroll")?View::OVER_SCROLL_ALWAYS:View::OVER_SCROLL_NEVER);
     hs->setHorizontalFadingEdgeEnabled(true);
     hs->setFadingEdgeLength(200);
     hs->setHorizontalScrollBarEnabled(true);
     hs->setHorizontalScrollbarThumbDrawable(new ColorDrawable(0xFF334455));
-    LinearLayout*layout=new LinearLayout(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);
+    LinearLayout*layout=new LinearLayout(&App::getInstance());
     layout->setOrientation(LinearLayout::HORIZONTAL);
 
     auto click=[](View&v){
        LOGD("You clicked Button %d",v.getId());
     };
     for(int i=0;i<30;i++){
-        TextView*tv=new TextView(150,30);
-        tv->setText("Hello"+std::to_string(i));
+        TextView*tv=new TextView(&app); tv->setText("Hello"+std::to_string(i));
         tv->setBackgroundColor(0xFF000000|i*632);
         LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(120/*LayoutParams::WRAP_CONTENT*/,LayoutParams::MATCH_PARENT);
         lp->setMarginsRelative(20,0,20,0);

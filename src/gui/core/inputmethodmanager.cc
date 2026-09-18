@@ -22,24 +22,28 @@
 #include <chrono>
 #include <fstream>
 #include <keycharactermap.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <widget/candidateview.h>
-#include <widget/R.h>
+#include <widget/editorinfo.h>
+#include <widget/textview.h>
+#include <widget/internal_R.h>
 #include <core/app.h>
 #include <core/englishinputmethod.h>
 #include <core/googlepinyin.h>
 #include <core/imeselectioncontroller.h>
 #include <core/windowmanager.h>
+#include <widget/cdwindow.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 #define NOW std::chrono::steady_clock::now().time_since_epoch().count()
 class IMEWindow:public Window{
 protected:
    friend InputMethodManager;
-   View* mBuddy;
+   View* mBuddy=nullptr;
    KeyboardView* kbdView;
-   CandidateView* candidateView;
+   CandidateView* candidateView=nullptr;
    /* Owns all the 1/2-level selection logic (search/choose/predict/backspace),
     * decoupled from this window so other keyboards can reuse it. */
    ImeSelectionController* mController = nullptr;
@@ -75,8 +79,10 @@ public:
    bool onKeyUp(int keyCode,KeyEvent& evt)override{
        LOGD("...%d flags=%x",keyCode,evt.getFlags());
        switch(keyCode){
-       case KeyEvent::KEYCODE_ESCAPE:setVisibility(View::INVISIBLE);return true;
-       default: return Window::onKeyDown(keyCode,evt);
+       // AOSP InputMethodService.onBackPressed: BACK hides the IME (the app
+       // below must NOT see it). ESC was the desktop-testing stand-in.
+       case KeyEvent::KEYCODE_BACK:setVisibility(View::INVISIBLE);return true;
+       default: return Window::onKeyUp(keyCode,evt);
        }
    }
    /* Deliver a committed UTF-8 string to the editor (the controller's committer
@@ -85,6 +91,19 @@ public:
        const std::wstring uniTxt = TextUtils::utf8tounicode(txt);
        if(mBuddy)mBuddy->commitText(uniTxt);
    }
+   /* AOSP: an IME that finds an action in the editor's EditorInfo calls
+    * performEditorAction(actionId) instead of delivering a plain enter. This
+    * is the in-process equivalent: hand the focused editor its explicit ime
+    * action. Returns false when the editor has no explicit action (< GO), so
+    * the caller keeps the legacy behavior (hide on DONE, newline on enter). */
+   bool deliverEditorAction(){
+       TextView* tv = dynamic_cast<TextView*>(mBuddy);
+       if(tv == nullptr) return false;
+       const int actionId = tv->getImeOptions() & EditorInfo::IME_MASK_ACTION;
+       if(actionId < EditorInfo::IME_ACTION_GO) return false;
+       tv->onEditorAction(actionId);
+       return true;
+   }
    void changeCapital(){
        Keyboard*keyboard = kbdView->getKeyboard();
        std::vector<Keyboard::Key*>&keys = keyboard->getKeys();
@@ -92,6 +111,17 @@ public:
            Keyboard::Key& k = *keys[i];
            if((isalpha(k.codes[0])==false)||k.modifier||k.sticky)continue;
            k.codes[0]=islower(k.codes[0])?toupper(k.codes[0]):tolower(k.codes[0]);
+       }
+   }
+   void onVisibilityChanged(View& changedView,int visibility)override{
+       Window::onVisibilityChanged(changedView,visibility);
+       // windowSoftInputMode driving (AOSP adjustResize): the WMS lays every
+       // visible application window out inside the area left above us while we
+       // are up, and restores their frames when we go away.
+       if(&changedView==this){
+           WindowManager& wms = WindowManager::getInstance();
+           if(visibility==View::VISIBLE)      wms.onSoftInputShown(this);
+           else if(visibility==View::INVISIBLE) wms.onSoftInputHidden(this);
        }
    }
    void onCloseKeyboard(View&v){
@@ -111,9 +141,20 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     // does not keep eating events.
     KeyboardView::OnKeyboardActionListener listener;
     InputMethodManager&imm = InputMethodManager::getInstance();
-    View*vg=LayoutInflater::from(mContext)->inflate("@cdroid:layout/ime_pinyin_keyboard",this,false);
-    kbdView = (KeyboardView*)vg->findViewById(cdroid::R::id::keyboardview);
-    candidateView = (CandidateView*)vg->findViewById(cdroid::R::id::predict2);
+    // The pinyin IME layout ships in the IME module's pak — resolve by name.
+    // A broken IME layout must not abort the whole process (inflate throws);
+    // degrade to a text-less window instead.
+    kbdView = nullptr;
+    candidateView = nullptr;
+    View*vg = nullptr;
+    try {
+        vg = LayoutInflater::from(mContext)->inflate(cdroid::R::layout::ime_pinyin_keyboard,this,false);
+    } catch (std::exception&e) {
+        LOGE("IME layout inflate failed: %s", e.what());
+        return;
+    }
+    kbdView = (KeyboardView*)vg->findViewById(R::id::keyboardview);
+    candidateView = (CandidateView*)vg->findViewById(R::id::predict2);
     // The controller owns the 1/2-level selection logic; the committer delivers
     // each committed phrase/word to the focused editor via this->commitText.
     mController = new ImeSelectionController(candidateView,
@@ -121,7 +162,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     candidateView->setPredictListener([this](CandidateView&,const std::string&s,int id){
         mController->onCandidateSelected(s,id);
     });
-    View* closeKbd = vg->findViewById(cdroid::R::id::closekeyboard);
+    View* closeKbd = vg->findViewById(R::id::closekeyboard);
     closeKbd->setOnClickListener(std::bind(&IMEWindow::onCloseKeyboard,this,std::placeholders::_1));
     addView(vg);//layout(0,0,getWidth(),h);
     vg->requestLayout();
@@ -146,7 +187,12 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
         switch(primaryCode){
         case Keyboard::KEYCODE_MODE_CHANGE: imm.toggleSymbolMode(); break;
         case Keyboard::KEYCODE_SHIFT    :  changeCapital();break;
-        case Keyboard::KEYCODE_DONE     :  break;
+        case Keyboard::KEYCODE_DONE     :
+             // The keyboard's done key: deliver the editor's ime action when it
+             // declared one (AOSP: performEditorAction); otherwise same as
+             // BACK — hide the IME (the editor keeps focus; tapping the field
+             // brings it back).
+             if(!deliverEditorAction()) setVisibility(View::INVISIBLE); break;
         case Keyboard::KEYCODE_DELETE:
         case Keyboard::KEYCODE_BACKSPACE:
              // Composing-aware: while a pinyin is in progress the backspace edits
@@ -164,6 +210,17 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
              // accent arrives here while the popup is still showing -- commit
              // it directly (pickChar) instead of composing (onChar).
              if(primaryCode>0){
+                 // The enter key (codes=10): with an explicit ime action it IS
+                 // the action key (AOSP relabels the enter key and calls
+                 // performEditorAction), not a newline.
+                 if(primaryCode=='\n'){
+                     if(deliverEditorAction()) break;
+                     if(mDirectCommit)
+                         // Numeric/phone/datetime are single-line fields: no
+                         // action declared, so treat the return key as DONE
+                         // (hide the IME) rather than commit a newline.
+                         { setVisibility(View::INVISIBLE); break; }
+                 }
                  if(mDirectCommit)
                      // Numeric/phone/datetime: commit straight to the editor,
                      // no composition / candidate strip (a digit through onChar
@@ -181,9 +238,9 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
 
 InputMethodManager*InputMethodManager::mInst=nullptr;
 
-int InputMethodManager::registeMethod(const std::string&name,InputMethod*method,const std::string&layout){
-    imeMethods.push_back({name,method,layout});
-    LOGD("registeInputMethod(%s)%p layout=%s",name.c_str(),method,layout.c_str());
+int InputMethodManager::registeMethod(const std::string&name,InputMethod*method,int layoutResId){
+    imeMethods.push_back({name,method,layoutResId});
+    LOGD("registeInputMethod(%s)%p layout=0x%08x",name.c_str(),method,layoutResId);
     return 0;
 }
 
@@ -244,11 +301,11 @@ InputMethodManager& InputMethodManager::getInstance(){
         // override file is absent it simply keeps the built-in list.
         InputMethod*m = new EnglishInputMethod();
         m->loadDicts(App::getInstance().getDataPath() + "english_words.txt", "");
-        mInst->registeMethod("English",m,"@cdroid:xml/qwerty.xml");
+        mInst->registeMethod("English",m,cdroid::internal::R::xml::qwerty);
 #ifdef ENABLE_PINYIN2HZ
         m = new GooglePinyin();
         m->loadDicts("dict_pinyin.dat","userdict.dat");
-        mInst->registeMethod("GooglePinyin26",m,"@cdroid:xml/qwerty.xml");
+        mInst->registeMethod("GooglePinyin26",m,cdroid::internal::R::xml::qwerty);
 #endif
         // Default the active method to the first registered one so the
         // composition controller always has an engine before any explicit
@@ -268,6 +325,7 @@ void InputMethodManager::viewClicked(View*view){
 
 void InputMethodManager::focusIn(View*view){
     if(imeWindow)imeWindow->mBuddy = view;
+    refreshImeAction();
     LOGD("imeWindow=%d buddy=%p %d",imeWindow,view,view->getId());
 }
 
@@ -327,29 +385,34 @@ void InputMethodManager::setInputType(int inputType){
     // whether keys commit straight to the editor (numeric/phone/datetime, no
     // composition). The active InputMethod is asked FIRST for a custom layout
     // for THIS inputType (getKeyboardLayout(int) -- it may vary by class AND
-    // variation, e.g. password); empty -> built-in default. This is the
+    // variation, e.g. password); 0 -> built-in default. This is the
     // customization hook: a product subclass overrides getKeyboardLayout to ship
     // its own keyboards. Android's full design routes this through EditorInfo +
     // onCreateInputConnection; this is the in-process equivalent (path A).
     const int cls = inputType & InputType::TYPE_MASK_CLASS;
     if(im==nullptr && !imeMethods.empty()) im = imeMethods.begin()->method;
-    const std::string custom = im ? im->getKeyboardLayout(inputType) : std::string();
-    std::string layout;
+    const int custom = im ? im->getKeyboardLayout(inputType) : 0;
+    int layout;
     bool directCommit = false;
     switch(cls){
     case InputType::TYPE_CLASS_NUMBER:
-        layout = !custom.empty()?custom:"@cdroid:xml/keyboard_number.xml";
-        directCommit = true; break;
     case InputType::TYPE_CLASS_PHONE:
-        layout = !custom.empty()?custom:"@cdroid:xml/keyboard_phone.xml";
-        directCommit = true; break;
     case InputType::TYPE_CLASS_DATETIME:
-        layout = !custom.empty()?custom:"@cdroid:xml/keyboard_datetime.xml";
+        // A product-supplied layout (getKeyboardLayout) wins; otherwise the
+        // standard keyboard's symbol page (the "123" page: digits +
+        // punctuation, ABC switches back) — AOSP ships no dedicated numeric
+        // IME layout in the framework. Layout 0 parses zero keys, which was
+        // the "no buttons on the numeric keyboard" bug.
+        if(custom) layout = custom;
+        else {
+            layout = cdroid::internal::R::xml::symbols;
+            if(imeWindow) imeWindow->mSymbolMode = true;   // keep 123/ABC consistent
+        }
         directCommit = true; break;
     default:
         // TYPE_CLASS_TEXT (and anything else): the method's custom layout, else
         // its registered layout, else qwerty.
-        layout = !custom.empty()?custom:activeTextLayout();
+        layout = custom ? custom : activeTextLayout();
         directCommit = false;
         // Ensure the composition controller has an engine (see the null-guard
         // above); without it onChar() bails and text keys never reach the editor.
@@ -364,7 +427,7 @@ void InputMethodManager::setInputType(int inputType){
     // the focus/touch flow (viewClicked/focusIn/showSoftInput).
 }
 
-void InputMethodManager::applyKeyboard(const std::string&layout){
+void InputMethodManager::applyKeyboard(int xmlLayoutResId){
     if(imeWindow==nullptr) return;
     // AOSP sizes a Keyboard from the display metrics (the %p base). CDROID's
     // Keyboard ctor takes that width explicitly; imeWindow->getWidth() can be 0
@@ -377,20 +440,29 @@ void InputMethodManager::applyKeyboard(const std::string&layout){
     const int rot = dp.getRotation();
     dp.getRealSize(dspSize);
     const int screenW = (rot==Display::ROTATION_90||rot==Display::ROTATION_270) ? dspSize.y : dspSize.x;
-    Keyboard*kbd = new Keyboard(imeWindow->getContext(),layout,screenW,240);
+    Keyboard*kbd = new Keyboard(imeWindow->getContext(), xmlLayoutResId, screenW, 240);
     imeWindow->kbdView->setKeyboard(kbd);
     // A product's InputMethod may supply a custom long-press popup container
     // (getKeyboardLayout(POPUP)); apply it as the KeyboardView's popup layout so
-    // the accent mini-keyboard window is customizable. Empty -> keep the
+    // the accent mini-keyboard window is customizable. 0 -> keep the
     // popupLayout declared in the IME layout (keyboard_popup_keyboard.xml).
     if(im){
-        const std::string popup = im->getKeyboardLayout(InputMethod::POPUP);
-        if(!popup.empty()) imeWindow->kbdView->setPopupLayout(popup);
+        const int popup = im->getKeyboardLayout(InputMethod::POPUP);
+        if(popup != 0) imeWindow->kbdView->setPopupLayout(popup);
     }
-    LOGD("applyKeyboard layout='%s' w=%d %p %d keys",layout.c_str(),screenW,kbd,kbd->getKeys().size());
+    // AOSP keyboards relabel the enter key after the focused editor's ime action.
+    refreshImeAction();
+    LOGD("applyKeyboard layout=0x%08x w=%d %p %d keys",xmlLayoutResId,screenW,kbd,kbd->getKeys().size());
 }
 
-std::string InputMethodManager::activeTextLayout() const {
+void InputMethodManager::refreshImeAction(){
+    if(imeWindow==nullptr || imeWindow->kbdView==nullptr) return;
+    TextView* tv = dynamic_cast<TextView*>(imeWindow->mBuddy);
+    imeWindow->kbdView->setImeAction(
+            tv ? (tv->getImeOptions() & EditorInfo::IME_MASK_ACTION) : 0);
+}
+
+int InputMethodManager::activeTextLayout() const {
     // The method's custom layout for the field is resolved by the caller (via
     // getKeyboardLayout(inputType)); here we only fall back to the method's
     // registered ImMethod layout, then the first registered, then qwerty.
@@ -398,13 +470,13 @@ std::string InputMethodManager::activeTextLayout() const {
         for(const auto&mthd:imeMethods){ if(mthd.method==im) return mthd.layout; }
     }
     if(!imeMethods.empty()) return imeMethods.begin()->layout;
-    return "@cdroid:xml/qwerty.xml";
+    return cdroid::internal::R::xml::qwerty;
 }
 
 void InputMethodManager::toggleSymbolMode(){
     if(imeWindow==nullptr) return;
     imeWindow->mSymbolMode = !imeWindow->mSymbolMode;
-    std::string layout;
+    int layout;
     if(imeWindow->mSymbolMode){
         // 123 pressed on the text keyboard: show the built-in symbols page
         // (digits + punctuation, with an ABC key to switch back). The symbol
@@ -412,12 +484,12 @@ void InputMethodManager::toggleSymbolMode(){
         // through getKeyboardLayout. The field is still text, so keys still go
         // through the composition engine (directCommit stays off); a digit/
         // symbol commits via the engine's word-boundary flush.
-        layout = "@cdroid:xml/symbols.xml";
+        layout = cdroid::internal::R::xml::symbols;
     } else {
         // ABC pressed: restore the field's text layout (custom if the method
         // supplies one for the current inputType, else its registered layout).
-        const std::string c = im?im->getKeyboardLayout(mInputType):std::string();
-        layout = !c.empty()?c:activeTextLayout();
+        const int c = im?im->getKeyboardLayout(mInputType):0;
+        layout = c?c:activeTextLayout();
     }
     applyKeyboard(layout);
     LOGD("toggleSymbolMode -> %d", (int)imeWindow->mSymbolMode);
@@ -451,7 +523,7 @@ int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name
     // The keyboard layout is a UI concern owned by the registered ImMethod, not
     // by the InputMethod engine (the base engine has no layout of its own); look
     // it up by the method name here.
-    std::string layout;
+    int layout = 0;
     for(const auto&mthd:imeMethods){
         if(mthd.name==name){ layout = mthd.layout; break; }
     }
@@ -459,7 +531,7 @@ int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name
     // engine drives composition/candidates.
     if(imeWindow) imeWindow->setDirectCommit(false);
     applyKeyboard(layout);
-    LOGD("inputmethod '%s':%p keyboardlayout:'%s'",name.c_str(),im,layout.c_str());
+    LOGD("inputmethod '%s':%p keyboardlayout:0x%08x",name.c_str(),im,layout);
     return 0;
 }
 

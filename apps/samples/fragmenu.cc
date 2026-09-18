@@ -24,8 +24,8 @@
 #include <core/attributeset.h>
 #include <porting/cdlog.h>
 
-using cdroid::fragment::Fragment;
-using cdroid::fragment::FragmentActivity;
+using cdroid::Fragment;
+using cdroid::FragmentActivity;
 
 // A headless Fragment (no UI) that contributes toolbar menu items via the dispatch chain.
 class MenuFragment : public Fragment{
@@ -53,14 +53,14 @@ public:
         root->setOrientation(cdroid::LinearLayout::VERTICAL);
         addView(root);
 
-        cdroid::Toolbar* tb = new cdroid::Toolbar(getContext(), cdroid::AttributeSet(getContext(), "cdroid"));
+        cdroid::Toolbar* tb = new cdroid::Toolbar(getContext());
         tb->setLayoutParams(new cdroid::LinearLayout::LayoutParams(
                 cdroid::ViewGroup::LayoutParams::MATCH_PARENT, cdroid::ViewGroup::LayoutParams::WRAP_CONTENT));
         root->addView(tb);
         setActionBar(tb);                 // Toolbar becomes the Activity's ActionBar
         getActionBar()->setTitle("Fragment Menu Demo");
 
-        mBody = new cdroid::TextView("Fragment owns the toolbar menu (overflow)", 800, 600);
+        mBody = new cdroid::TextView(getContext()); mBody->setText("Fragment owns the toolbar menu (overflow)");
         mBody->setTextSize(28);
         mBody->setTextColor(0xFFFFFFFF);
         mBody->setBackgroundColor(0xFF102030);

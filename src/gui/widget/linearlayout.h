@@ -103,9 +103,9 @@ protected:
     void drawDividersVertical(Canvas& canvas);
     void onDraw(Canvas& canvas)override;
 public:
-    LinearLayout(int w,int h);
-    LinearLayout(int x,int y,int w,int h);
-    LinearLayout(Context* context,const AttributeSet& attrs);
+    LinearLayout(Context*ctx);   // AOSP LinearLayout(Context)
+    LinearLayout(Context* context,const AttributeSet* attrs);
+    LinearLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~LinearLayout()override;
     LayoutParams* generateLayoutParams(const AttributeSet&)const override;
     void setShowDividers(int showDividers);

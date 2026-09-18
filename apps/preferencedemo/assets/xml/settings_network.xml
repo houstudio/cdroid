@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/network_and_internet.xml (standard
+     preference classes only, fragment navigation flattened). -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="network_and_internet_screen"
+    android:title="Network &amp; internet">
+
+    <Preference
+        android:key="ip_address"
+        android:title="IP 地址"
+        android:summary="点按查看网络详情" />
+
+    <SwitchPreference
+        android:key="wifi_enabled"
+        android:title="Wi&#8209;Fi"
+        android:summaryOn="On"
+        android:summaryOff="Off"
+        android:defaultValue="true" />
+
+    <Preference
+        android:key="wifi_status"
+        android:title="Wi&#8209;Fi status"
+        android:summary="…"
+        android:dependency="wifi_enabled"
+        android:selectable="false" />
+
+    <Preference
+        android:key="wifi_pick"
+        android:title="选择网络"
+        android:summary="扫描可用网络并连接"
+        android:dependency="wifi_enabled" />
+
+    <ListPreference
+        android:key="wifi_sleep_policy"
+        android:title="Wi&#8209;Fi during sleep"
+        android:entries="@array/prefdemo_wifi_sleep_entries"
+        android:entryValues="@array/prefdemo_wifi_sleep_values"
+        android:defaultValue="2" />
+
+    <SwitchPreference
+        android:key="wifi_network_available"
+        android:title="Network notification"
+        android:summary="Notify me whenever a network is available"
+        android:dependency="wifi_enabled"
+        android:defaultValue="true" />
+
+    <PreferenceCategory android:title="Hotspot &amp; tethering">
+
+        <SwitchPreference
+            android:key="wifi_hotspot"
+            android:title="Wi&#8209;Fi hotspot"
+            android:summaryOff="Off"
+            android:defaultValue="false" />
+
+        <Preference
+            android:key="usb_tethering"
+            android:title="USB tethering"
+            android:dependency="wifi_hotspot" />
+
+        <!-- AOSP: a SwitchPreference (BluetoothTetherPreferenceController);
+             enabled only while Bluetooth is on. The PAN profile is not
+             ported in cdblue yet — the toggle answers with a notice. -->
+        <!-- No wifi_hotspot dependency (AOSP ties this row to the Bluetooth
+             radio, driven from code in setupNetworkScreen). The switch drives
+             BluetoothPan::setBluetoothTethering; the bt-pan bridge/DHCP/NAT
+             data plane comes from scripts/bt-bench.sh (AOSP: Tethering/netd). -->
+        <SwitchPreference
+            android:key="bluetooth_tethering"
+            android:title="Bluetooth tethering"
+            android:summaryOff="Off" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Mobile network">
+
+        <SwitchPreference
+            android:key="airplane_mode"
+            android:title="Airplane mode"
+            android:defaultValue="false" />
+
+        <Preference
+            android:key="mobile_data"
+            android:title="Mobile data"
+            android:dependency="airplane_mode" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

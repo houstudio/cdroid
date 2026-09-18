@@ -61,9 +61,6 @@ void BasicMeasure::measureChildren(ConstraintWidgetContainer* layout) {
         if (child->isBarrier()) {
             continue;
         }
-        if (child->isVirtualLayout()) {
-            continue; // VirtualLayout (Flow/Layer) sizes itself via its own measure()
-        }
         if (child->isInVirtualLayout()) {
             continue;
         }
@@ -85,8 +82,8 @@ void BasicMeasure::measureChildren(ConstraintWidgetContainer* layout) {
                 && heightBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
                 && child->mMatchConstraintDefaultHeight != ConstraintWidget::MATCH_CONSTRAINT_WRAP;
 
-        if (!skip && layout->optimizeFor(Optimizer::OPTIMIZATION_DIRECT)) {
-            // (child instanceof VirtualLayout) guard omitted — VirtualLayout not ported.
+        if (!skip && layout->optimizeFor(Optimizer::OPTIMIZATION_DIRECT)
+                && !child->isVirtualLayout()) {
             if (widthBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
                     && child->mMatchConstraintDefaultWidth == ConstraintWidget::MATCH_CONSTRAINT_SPREAD
                     && heightBehavior != ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
@@ -171,12 +168,15 @@ long BasicMeasure::solverMeasure(ConstraintWidgetContainer* layout, int /*optimi
                                  int /*widthMode*/, int /*widthSize*/,
                                  int /*heightMode*/, int /*heightSize*/,
                                  int /*lastMeasureWidth*/, int /*lastMeasureHeight*/) {
-    // measureChildren -> updateHierarchy -> solveLinearSystem (first pass), then a VirtualLayout
-    // pass (Flow/etc. derive their content size), then the match-constraint convergence loop below
-    // (maxIterations=2, TRY→USE_GIVEN_DIMENSIONS, early-exit on convergence). Only the
-    // OPTIMIZATION_GRAPH optimize-path (directMeasure / DependencyGraph run-system) remains
-    // deferred — it is a performance path (off by default in AndroidX) and does not affect the
-    // standard linear-solve correctness exercised here.
+    // measureChildren -> updateHierarchy -> solveLinearSystem (first pass), then the
+    // size-dependent block (Android BasicMeasure.java 305-445): VirtualLayouts first
+    // (TRY_GIVEN_DIMENSIONS through the shared Measurer — the B4 mode vocabulary: the core
+    // Flow consumes the same mode encoding BasicMeasure declares), then the match-constraint
+    // convergence loop (maxIterations=2, TRY→USE_GIVEN_DIMENSIONS, early-exit on convergence).
+    // Only the OPTIMIZATION_GRAPH optimize-path (directMeasure / DependencyGraph run-system)
+    // remains deferred — it is a performance path (off by default in AndroidX) and does not
+    // affect the standard linear-solve correctness exercised here.
+    Measurer* measurer = layout->getMeasurer();
     const int childCount = (int) layout->mChildren.size();
     int startingWidth = layout->getWidth();
     int startingHeight = layout->getHeight();
@@ -193,72 +193,112 @@ long BasicMeasure::solverMeasure(ConstraintWidgetContainer* layout, int /*optimi
         solveLinearSystem(layout, "First pass", 0, startingWidth, startingHeight);
     }
 
-    // VirtualLayout measure (Android BasicMeasure.java 319-352): the first solve above resolved
-    // every 0dp dimension, including a MATCH_CONSTRAINT helper's (Flow). Now build each helper's
-    // rows with its size (resolved for 0dp, fixed otherwise), then re-solve so its addToSolver can
-    // emit the row constraints it could not emit in the first pass (mChainList was empty then).
-    // measureChildren() skips all VirtualLayouts, so we measure every VirtualLayout here — this is
-    // the faithful fix for the Flow "max=0" bug (previously Flow measured itself from addToSolver
-    // with an unresolved size and fell back to the parent's width).
-    bool needSolverPass = false;
-    // Measure each VirtualLayout with a mode matching its dimension behaviour: EXACTLY for a
-    // resolved/fixed dimension, UNSPECIFIED for WRAP_CONTENT so the helper computes that dimension
-    // from its content (e.g. a WRAP-height Flow derives its height from the wrapped rows instead of
-    // being forced to the unresolved getHeight()==0).
-    auto modeFor = [](ConstraintWidget::DimensionBehaviour b) {
-        return (b == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT)
-               ? BasicMeasure::UNSPECIFIED : BasicMeasure::EXACTLY;
-    };
-    for (ConstraintWidget* widget : layout->mChildren) {
-        auto* vl = dynamic_cast<VirtualLayout*>(widget);
-        if (vl == nullptr) {
-            continue;
-        }
-        vl->measure(modeFor(widget->getHorizontalDimensionBehaviour()), widget->getWidth(),
-                    modeFor(widget->getVerticalDimensionBehaviour()), widget->getHeight());
-        if (vl->needSolverPass()) {
-            needSolverPass = true;
-        }
-    }
-    if (needSolverPass) {
-        solveLinearSystem(layout, "VirtualLayout pass", 1, startingWidth, startingHeight);
-    }
+    const int sizeDependentWidgetsCount = (int) mVariableDimensionsWidgets.size();
+    if (sizeDependentWidgetsCount > 0) {
+        bool needSolverPass = false;
+        const bool containerWrapWidth =
+                layout->getHorizontalDimensionBehaviour()
+                        == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT;
+        const bool containerWrapHeight =
+                layout->getVerticalDimensionBehaviour()
+                        == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT;
+        int minWidth = std::max(layout->getWidth(),
+                                mConstraintWidgetContainer->getMinWidth());
+        int minHeight = std::max(layout->getHeight(),
+                                 mConstraintWidgetContainer->getMinHeight());
 
-    // Generic match-constraint convergence loop (Android BasicMeasure.java 355-445): re-measure
-    // non-helper 0dp widgets with their solver-resolved size so a content-dependent dimension
-    // (e.g. text height under the resolved width) can adapt, then re-solve. Bounded to
-    // maxIterations=2; exits early on convergence. Additive over the single pass above — typical
-    // widgets (height independent of width) converge in one iteration.
-    Measurer* measurer = layout->getMeasurer();
-    const int maxIterations = 2;
-    for (int j = 0; j < maxIterations && measurer != nullptr; j++) {
-        bool isLast = (j == maxIterations - 1);
-        int strategy = isLast ? Measure::USE_GIVEN_DIMENSIONS : Measure::TRY_GIVEN_DIMENSIONS;
-        bool needPass = false;
-        for (ConstraintWidget* widget : mVariableDimensionsWidgets) {
-            if (dynamic_cast<VirtualLayout*>(widget) != nullptr) continue;  // VL block owns these
-            if (dynamic_cast<HelperWidget*>(widget) != nullptr)   continue;  // Barrier/Group/Guideline
-            if (widget->isInVirtualLayout())                      continue;  // Flow measures its own
-            if (widget->getVisibility() == ConstraintWidget::GONE) continue;  // GONE: skip (AndroidX 360)
-
-            int preWidth    = widget->getWidth();
-            int preHeight   = widget->getHeight();
-            int preBaseline = widget->getBaselineDistance();
-            if (measure(measurer, widget, strategy)) {
-                needPass = true;
+        ////////////////////////////////////////////////////////////////////////////////////
+        // Let's first apply sizes for VirtualLayouts if any (Android BasicMeasure.java 316-352)
+        ////////////////////////////////////////////////////////////////////////////////////
+        for (int i = 0; i < sizeDependentWidgetsCount; i++) {
+            ConstraintWidget* widget = mVariableDimensionsWidgets[i];
+            auto* virtualLayout = dynamic_cast<clcore::VirtualLayout*>(widget);
+            if (virtualLayout == nullptr) {
+                continue;
             }
-            // Independent size/baseline-change checks (AndroidX 398-436): robustness if a measurer
-            // forgets measuredNeedsSolverPass — a changed dimension or baseline still forces a re-solve.
-            if (widget->getWidth()  != preWidth
-                    || widget->getHeight() != preHeight
-                    || (widget->hasBaseline() && preBaseline != widget->getBaselineDistance())) {
-                needPass = true;
+            const int preWidth = widget->getWidth();
+            const int preHeight = widget->getHeight();
+            needSolverPass |= measure(measurer, widget, Measure::TRY_GIVEN_DIMENSIONS);
+            const int measuredWidth = widget->getWidth();
+            const int measuredHeight = widget->getHeight();
+            if (measuredWidth != preWidth) {
+                widget->setWidth(measuredWidth);
+                if (containerWrapWidth && widget->getRight() > minWidth) {
+                    const int w = widget->getRight()
+                            + widget->getAnchor(ConstraintAnchor::Type::RIGHT)->getMargin();
+                    minWidth = std::max(minWidth, w);
+                }
+                needSolverPass = true;
             }
+            if (measuredHeight != preHeight) {
+                widget->setHeight(measuredHeight);
+                if (containerWrapHeight && widget->getBottom() > minHeight) {
+                    const int h = widget->getBottom()
+                            + widget->getAnchor(ConstraintAnchor::Type::BOTTOM)->getMargin();
+                    minHeight = std::max(minHeight, h);
+                }
+                needSolverPass = true;
+            }
+            needSolverPass |= virtualLayout->needSolverPass();
         }
-        if (needPass) {
-            solveLinearSystem(layout, "match-constraint pass", 2 + j, startingWidth, startingHeight);
-        } else {
-            break;  // converged
+        ////////////////////////////////////////////////////////////////////////////////////
+
+        const int maxIterations = 2;
+        for (int j = 0; j < maxIterations; j++) {
+            for (int i = 0; i < sizeDependentWidgetsCount; i++) {
+                ConstraintWidget* widget = mVariableDimensionsWidgets[i];
+                if ((dynamic_cast<HelperWidget*>(widget) != nullptr
+                            && dynamic_cast<clcore::VirtualLayout*>(widget) == nullptr)
+                        || dynamic_cast<clcore::Guideline*>(widget) != nullptr) {
+                    continue;  // Barrier/Group/Guideline — no self measurement
+                }
+                if (widget->getVisibility() == ConstraintWidget::GONE) {
+                    continue;  // GONE: skip (AndroidX 363)
+                }
+                // optimize && runs-resolved skip (AndroidX 366-369) rides with the run system.
+                if (dynamic_cast<clcore::VirtualLayout*>(widget) != nullptr) {
+                    continue;  // the VL block above owns these
+                }
+
+                const int preWidth = widget->getWidth();
+                const int preHeight = widget->getHeight();
+                const int preBaselineDistance = widget->getBaselineDistance();
+
+                const int measureStrategy = (j == maxIterations - 1)
+                        ? Measure::USE_GIVEN_DIMENSIONS : Measure::TRY_GIVEN_DIMENSIONS;
+                needSolverPass |= measure(measurer, widget, measureStrategy);
+
+                const int measuredWidth = widget->getWidth();
+                const int measuredHeight = widget->getHeight();
+                if (measuredWidth != preWidth) {
+                    widget->setWidth(measuredWidth);
+                    if (containerWrapWidth && widget->getRight() > minWidth) {
+                        const int w = widget->getRight()
+                                + widget->getAnchor(ConstraintAnchor::Type::RIGHT)->getMargin();
+                        minWidth = std::max(minWidth, w);
+                    }
+                    needSolverPass = true;
+                }
+                if (measuredHeight != preHeight) {
+                    widget->setHeight(measuredHeight);
+                    if (containerWrapHeight && widget->getBottom() > minHeight) {
+                        const int h = widget->getBottom()
+                                + widget->getAnchor(ConstraintAnchor::Type::BOTTOM)->getMargin();
+                        minHeight = std::max(minHeight, h);
+                    }
+                    needSolverPass = true;
+                }
+                // A baseline move alone can invalidate the solve (AndroidX 427-436).
+                if (widget->hasBaseline() && preBaselineDistance != widget->getBaselineDistance()) {
+                    needSolverPass = true;
+                }
+            }
+            if (needSolverPass) {
+                solveLinearSystem(layout, "intermediate pass", 1 + j, startingWidth, startingHeight);
+                needSolverPass = false;
+            } else {
+                break;  // converged
+            }
         }
     }
     return 0;

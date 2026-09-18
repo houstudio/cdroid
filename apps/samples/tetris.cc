@@ -129,7 +129,7 @@ public:
 TetrisWindow::TetrisWindow(int x,int y,int w,int h):Window(x,y,w,h){
     setText("Tetris");
     InitGame();
-    mLevelSelector=new Spinner(300,30);
+    mLevelSelector=new Spinner(&App::getInstance());
     mTopLeft=300;
     const int timeIntervals[]={700,600,500,400,300};
     /*for(int i=0;i<5;i++){
@@ -141,7 +141,7 @@ TetrisWindow::TetrisWindow(int x,int y,int w,int h):Window(x,y,w,h){
     mLevelSelector->setSelection(0);*/
     int cx=mTopLeft+AREA_COL*BLOCK_SIZE+MARGIN*5;
     addView(mLevelSelector);((View*)mLevelSelector)->layout(cx,300,300,30);
-    mStartButton=new Button("Start",300,30);
+    mStartButton=new Button(&App::getInstance()); mStartButton->setText("Start" );
     addView(mStartButton);
     mStartButton->layout(cx,350,300,30);
     mStartButton->setOnClickListener([this](View&v){

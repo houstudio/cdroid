@@ -50,7 +50,9 @@ public:
          CallbackBase<void,Animator&> onAnimationResume;
     };
 private:
-    std::shared_ptr<AnimatorConstantState> mConstantState;
+    // weak on purpose: the constant state owns this animator (see
+    // AnimatorConstantState), a shared back-ref would form a cycle and leak.
+    std::weak_ptr<AnimatorConstantState> mConstantState;
 protected:
     friend class AnimatorSet;
     bool mPaused = false;
@@ -107,7 +109,11 @@ public:
 };
 
 class Animator::AnimatorConstantState:public std::enable_shared_from_this<AnimatorConstantState>,public ConstantState<Animator*> {
-    Animator* mAnimator;
+    // AOSP relies on GC; in C++ the constant state OWNS the source animator
+    // (shared_ptr adopts the raw pointer) so cached entries stay valid and are
+    // freed when the last cache/clone reference goes away. Callers must not
+    // delete an animator after handing it to createConstantState().
+    std::shared_ptr<Animator> mAnimator;
     int mChangingConf;
 public:
     AnimatorConstantState(Animator* animator);

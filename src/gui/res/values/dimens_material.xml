@@ -1,3 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2014 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
 <resources>
     <!-- Preference activity, vertical padding for the header list -->
     <dimen name="preference_screen_header_vertical_padding_material">0dp</dimen>
@@ -102,6 +117,9 @@
     <!-- Default rounded corner for controls -->
     <dimen name="control_corner_material">2dp</dimen>
 
+    <!-- Size of icon shown beside a preference locked by admin -->
+    <dimen name="restricted_icon_size_material">16dp</dimen>
+
     <dimen name="edit_text_inset_horizontal_material">4dp</dimen>
     <dimen name="edit_text_inset_top_material">10dp</dimen>
     <dimen name="edit_text_inset_bottom_material">7dp</dimen>
@@ -131,7 +149,7 @@
     <dimen name="timepicker_am_top_padding">4dp</dimen>
     <dimen name="timepicker_pm_top_padding">4dp</dimen>
     <dimen name="timepicker_separator_padding">2dp</dimen>
-    <dimen name="timepicker_header_height">96dp</dimen>
+    <dimen name="timepicker_header_height">100dp</dimen>
     <dimen name="timepicker_radial_picker_dimen">296dp</dimen>
     <dimen name="timepicker_radial_picker_top_margin">16dp</dimen>
     <dimen name="timepicker_radial_picker_horizontal_margin">16dp</dimen>
@@ -186,4 +204,9 @@
     <dimen name="progress_bar_size_small">16dip</dimen>
     <dimen name="progress_bar_size_medium">48dp</dimen>
     <dimen name="progress_bar_size_large">76dp</dimen>
+
+    <dimen name="tooltip_corner_radius_material">4dp</dimen>
+    <dimen name="tooltip_horizontal_padding_material">8dp</dimen>
+    <dimen name="tooltip_vertical_padding_material">4dp</dimen>
+    <dimen name="tooltip_font_size_material">12sp</dimen>
 </resources>

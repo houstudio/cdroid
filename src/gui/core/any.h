@@ -40,8 +40,15 @@
 
 // any selection and configuration:
 
+// CDROID: pin to the vendored any-lite regardless of the TU's C++ standard. With the
+// default auto-selection, a C++17 TU (tests/ sets CMAKE_CXX_STANDARD 17 while the library
+// is C++14) gets nonstd::any == std::any while cdroid.so compiled it as any-lite — one
+// type name, two layouts, and any member crossing the boundary (e.g. NavArgument's
+// nonstd::any default value, written by an inline Builder setter in the app/test TU and
+// read by the library) is reinterpreted garbage. Always using any-lite keeps the layout
+// identical everywhere.
 #if !defined( any_CONFIG_SELECT_ANY )
-# define any_CONFIG_SELECT_ANY  ( any_HAVE_STD_ANY ? any_ANY_STD : any_ANY_NONSTD )
+# define any_CONFIG_SELECT_ANY  any_ANY_NONSTD
 #endif
 
 // Control presence of exception handling (try and auto discover):

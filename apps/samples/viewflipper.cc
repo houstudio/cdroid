@@ -5,7 +5,7 @@
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,1280,640);
-    ViewFlipper*vfp=new ViewFlipper(400,600);
+    ViewFlipper*vfp=new ViewFlipper(&app);
     w->addView(vfp);
     vfp->setFlipInterval(1500);
     ScaleAnimation*anim=new ScaleAnimation(0,1.f,0.f,1.f,200,300);
@@ -15,7 +15,7 @@ int main(int argc,const char*argv[]){
     anim2->setDuration(1000);
     vfp->setOutAnimation(anim2); 
     for(int i=0;i<10;i++){
-        TextView*tv=new TextView(std::to_string(i),400,600);
+        TextView*tv=new TextView(&App::getInstance()); tv->setText(std::to_string(i));
         tv->setTextSize(120);
         tv->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);//setGravity(Gravity::CENTER);
         tv->setTextColor(0xFFFFFFFF);

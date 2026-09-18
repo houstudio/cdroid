@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MotionSceneAutoTransitionParse: autoTransition="animateToEnd" is parsed onto the
+     Transition. -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <Transition app:constraintSetStart="@+id/at_A" app:constraintSetEnd="@+id/at_B"
+                app:autoTransition="animateToEnd" />
+    <ConstraintSet android:id="@+id/at_A">
+        <Constraint android:id="@+id/at_target" android:layout_width="100px" android:layout_height="50px" />
+    </ConstraintSet>
+    <ConstraintSet android:id="@+id/at_B">
+        <Constraint android:id="@+id/at_target" android:layout_width="100px" android:layout_height="50px" />
+    </ConstraintSet>
+</MotionScene>

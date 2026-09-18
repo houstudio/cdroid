@@ -18,7 +18,7 @@
 #ifndef __SWIPE_DISMISS_CONTROLLER_H__
 #define __SWIPE_DISMISS_CONTROLLER_H__
 #include <widgetEx/wear/dismisscontroller.h>
-#include <widgetEx/wear/dismissableframelayout.h>
+#include <widgetEx/wear/dismissibleframelayout.h>
 
 namespace cdroid{
 class DismissibleFrameLayout;

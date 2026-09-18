@@ -15,12 +15,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/layerdrawable.h>
 #include <drawable/ninepatchdrawable.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 #include <limits.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 #define INSET_UNDEFINED INT_MIN
 
 LayerDrawable::ChildDrawable::ChildDrawable(int density){
@@ -34,7 +37,7 @@ LayerDrawable::ChildDrawable::ChildDrawable(int density){
     mId=-1;
 }
 
-LayerDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig,LayerDrawable*owner):ChildDrawable(160){
+LayerDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig,LayerDrawable*owner,Resources*res):ChildDrawable(orig->mDensity){
     Drawable*dr = orig->mDrawable;
     Drawable*clone=nullptr;
     if(dr){
@@ -43,6 +46,8 @@ LayerDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig,LayerDrawable*ow
             clone=dr;
             LOGW_IF((dr->getCallback()==nullptr),"Invalid drawable added to LayerDrawable Drawable already "
                             "belongs to another owner but does not expose a constant state");
+        }else if (res != nullptr) {
+            clone=cs->newDrawable(res);
         }else
             clone=cs->newDrawable();
         clone->setLayoutDirection(dr->getLayoutDirection());
@@ -51,6 +56,7 @@ LayerDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig,LayerDrawable*ow
         clone->setCallback(owner);
     }
     mDrawable=clone;
+    mThemeAttrs = orig->mThemeAttrs;
     mInsetL = orig->mInsetL;
     mInsetT = orig->mInsetT;
     mInsetR = orig->mInsetR;
@@ -61,6 +67,12 @@ LayerDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig,LayerDrawable*ow
     mHeight = orig->mHeight;
     mGravity = orig->mGravity;
     mId = orig->mId;
+    // AOSP java:1890-1893: re-resolve the child's density against the target
+    // resources, scaling the density-carrying insets when they differ.
+    mDensity = Drawable::resolveDensity(res, orig->mDensity);
+    if (orig->mDensity != mDensity) {
+        applyDensityScaling(orig->mDensity, mDensity);
+    }
 }
 
 LayerDrawable::ChildDrawable::~ChildDrawable(){
@@ -92,18 +104,14 @@ void LayerDrawable::ChildDrawable::applyDensityScaling(int sourceDensity, int ta
 LayerDrawable::LayerState::LayerState(){
 #if 0
     if(attrs){
-        mPaddingTop  = attrs->getInt("paddingTop");
-        mPaddingLeft = attrs->getInt("paddingLeft");
-        mPaddingRight= attrs->getInt("paddingRight");
-        mPaddingBottom=attrs->getInt("paddingBottom");
-        mPaddingStart =attrs->getInt("paddingStart");
-        mPaddingEnd  = attrs->getInt("paddingEnd");
-        mPaddingMode = attrs->getInt("paddingMode",std::unordered_map<std::string,int>{
-	        {"nest",PADDING_MODE_NEST},
-	        {"inner",PADDING_MODE_INNER},
-	        {"stack",PADDING_MODE_STACK}
-        },PADDING_MODE_NEST);
-        mAutoMirrored= attrs->getBoolean("paddingMode");
+        mPaddingTop  = attrs->getAttributeIntValue(std::string(), "paddingTop", 0);
+        mPaddingLeft = attrs->getAttributeIntValue(std::string(), "paddingLeft", 0);
+        mPaddingRight= attrs->getAttributeIntValue(std::string(), "paddingRight", 0);
+        mPaddingBottom=attrs->getAttributeIntValue(std::string(), "paddingBottom", 0);
+        mPaddingStart =attrs->getAttributeIntValue(std::string(), "paddingStart", 0);
+        mPaddingEnd  = attrs->getAttributeIntValue(std::string(), "paddingEnd", 0);
+        mPaddingMode = attrs->getAttributeIntValue(std::string(), "paddingMode", PADDING_MODE_NEST);
+        mAutoMirrored= attrs->getAttributeBooleanValue(std::string(), "paddingMode", false);
     }else
 #endif
     mChangingConfigurations = 0;
@@ -120,17 +128,16 @@ LayerDrawable::LayerState::LayerState(){
     mOpacityOverride = PixelFormat::UNKNOWN;
 }
 
-LayerDrawable::LayerState::LayerState(const LayerState*orig,LayerDrawable*owner):LayerState(){
-    mDensity = Drawable::resolveDensity( orig ? orig->mDensity : 0);
+LayerDrawable::LayerState::LayerState(const LayerState*orig,LayerDrawable*owner,Resources*res):LayerState(){
+    mDensity = Drawable::resolveDensity(res, orig ? orig->mDensity : 0);
     if (orig == nullptr) return;
 
     mChangingConfigurations = orig->mChangingConfigurations;
     mChildrenChangingConfigurations = orig->mChildrenChangingConfigurations;
     mChildren.reserve(orig->mChildren.size());
     for (auto child:orig->mChildren){
-        mChildren.push_back(new ChildDrawable(child, owner));
+        mChildren.push_back(new ChildDrawable(child, owner, res));
     }
-    mDensity = orig->mDensity;
     mCheckedOpacity = orig->mCheckedOpacity;
     mOpacity = orig->mOpacity;
     mCheckedStateful = orig->mCheckedStateful;
@@ -157,7 +164,37 @@ LayerDrawable::LayerState::~LayerState(){
 }
 
 LayerDrawable*LayerDrawable::LayerState::newDrawable(){
-    return new LayerDrawable(shared_from_this());
+    // AOSP LayerDrawable(LayerState, Resources) routes through
+    // createConstantState() → new LayerState(orig, owner): the copy ctor
+    // deep-copies every ChildDrawable (fresh child instances via each child's
+    // ConstantState). C++ cannot virtually dispatch to a subclass's
+    // createConstantState from the base ctor, so the copy is made HERE, where
+    // the concrete drawable type is already known. Adopting the shared state
+    // instead made every clone from the drawable cache share one
+    // ChildDrawable array: per-view setLevel/setBounds on a layer (e.g. a
+    // ProgressBar's progress layer) poisoned every other view using the same
+    // resource (two SeekBars bled 40% ↔ 80%).
+    LayerDrawable* dr = new LayerDrawable();
+    dr->mLayerState = std::make_shared<LayerState>(this, dr, nullptr);
+    // AOSP LayerDrawable(LayerState, Resources) refreshes padding only when
+    // the copied state has children.
+    if (!dr->mLayerState->mChildren.empty()) {
+        dr->ensurePadding();
+        dr->refreshPadding();
+    }
+    return dr;
+}
+
+Drawable*LayerDrawable::LayerState::newDrawable(Resources* res){
+    // Same copy-here structure as newDrawable() (see the comment above);
+    // AOSP routes both through LayerDrawable(state, res) → createConstantState.
+    LayerDrawable* dr = new LayerDrawable();
+    dr->mLayerState = std::make_shared<LayerState>(this, dr, res);
+    if (!dr->mLayerState->mChildren.empty()) {
+        dr->ensurePadding();
+        dr->refreshPadding();
+    }
+    return dr;
 }
 
 int LayerDrawable::LayerState::getChangingConfigurations()const{
@@ -287,14 +324,45 @@ LayerDrawable::LayerDrawable(std::shared_ptr<LayerState>state){
     // dispatch targets the base, unlike Java), so a TransitionDrawable/RippleDrawable would end up
     // with a plain LayerState and getConstantState()->newDrawable() would yield a LayerDrawable.
     mLayerState = state;
+    // CDROID has no GC. newDrawable() shares this LayerState — and therefore the very same child
+    // Drawable instances — across every LayerDrawable built from it, and each child holds a raw
+    // callback pointer to whichever owner last wired it. AOSP keeps that owner alive via GC while
+    // siblings share the children; CDROID deletes drawables manually, so repoint the shared
+    // children's callbacks to THIS instance (the one actually taking ownership) and clear them in
+    // the destructor when this is still their target. Otherwise deleting one owner dangles the
+    // survivors' child callbacks and the next setVisible()->invalidateSelf() dispatches through
+    // freed memory (__cxa_pure_virtual). The vector ctor (children added after this base ctor,
+    // each wired via setCallback(this)) is unaffected — mChildren is empty here for that path.
+    for (auto child : mLayerState->mChildren) {
+        if (child->mDrawable != nullptr) {
+            child->mDrawable->setCallback(this);
+        }
+    }
     if (mLayerState->mChildren.size()) {
         ensurePadding();
         refreshPadding();
     }
 }
 
-std::shared_ptr<LayerDrawable::LayerState> LayerDrawable::createConstantState(LayerState* state,const AttributeSet*){
-    return std::make_shared<LayerState>(state, this);
+LayerDrawable::~LayerDrawable(){
+    // Companion to the callback repoint in the ctor above. If this instance is still the callback
+    // target of the shared children, drop the reference so a sibling that keeps the (refcounted)
+    // LayerState alive is left with a null — and therefore guarded (see invalidateSelf/scheduleSelf)
+    // — callback rather than a dangling one. Children whose callback already points at another
+    // (e.g. a newer) owner are left untouched. Drawable::Callback is a separate inheritance
+    // subobject, so compare via its subobject address, not the LayerDrawable primary 'this'.
+    if (mLayerState != nullptr) {
+        Drawable::Callback* const self = static_cast<Drawable::Callback*>(this);
+        for (auto child : mLayerState->mChildren) {
+            if (child->mDrawable != nullptr && child->mDrawable->getCallback() == self) {
+                child->mDrawable->setCallback(nullptr);
+            }
+        }
+    }
+}
+
+std::shared_ptr<LayerDrawable::LayerState> LayerDrawable::createConstantState(LayerState* state,Resources*res){
+    return std::make_shared<LayerState>(state, this, res);
 }
 
 void LayerDrawable::setLayerSize(int index, int w, int h){
@@ -573,19 +641,6 @@ bool LayerDrawable::getPadding(Rect& padding){
     if (paddingR >= 0) padding.width = paddingR;
     if (paddingB >= 0) padding.height = paddingB;
     return padding.left != 0 || padding.top != 0 || padding.width != 0 || padding.height != 0;
-}
-
-void LayerDrawable::setPadding(const AttributeSet&atts){
-    const int left = atts.getDimensionPixelOffset("paddingLeft",0);
-    const int top = atts.getDimensionPixelOffset("paddingTop",0);
-    const int right= atts.getDimensionPixelOffset("paddingRight",0);
-    const int bottom= atts.getDimensionPixelOffset("paddingBottom",0);
-    const int start= atts.getDimensionPixelOffset("paddingStart",INSET_UNDEFINED);
-    const int end  = atts.getDimensionPixelOffset("paddingEnd",INSET_UNDEFINED);
-    if((start==INSET_UNDEFINED)&&(end==INSET_UNDEFINED)) 
-        setPadding(left,top,right,bottom);
-    else
-        setPaddingRelative(start,top,end,bottom);
 }
 
 void LayerDrawable::setPadding(int left, int top, int right, int bottom){
@@ -1074,21 +1129,80 @@ void LayerDrawable::draw(Canvas&canvas){
     }
 }
 
-void LayerDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(parser,atts);
-    const int density = Drawable::resolveDensity( 0);
+// AOSP LayerDrawable.ChildDrawable.canApplyTheme (1896-1899).
+bool LayerDrawable::ChildDrawable::canApplyTheme() const {
+    return !mThemeAttrs.empty()
+            || (mDrawable != nullptr && mDrawable->canApplyTheme());
+}
+
+// AOSP LayerDrawable.LayerState.canApplyTheme (2045-2052).
+bool LayerDrawable::LayerState::canApplyTheme() {
+    if (!mThemeAttrs.empty() || ConstantState::canApplyTheme()) {
+        return true;
+    }
+    for (ChildDrawable* child : mChildren) {
+        if (child != nullptr && child->canApplyTheme()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// AOSP LayerDrawable.canApplyTheme/applyTheme: re-resolve the layer-level
+// and per-child recorded ?attr ids, forward to each child drawable.
+bool LayerDrawable::canApplyTheme(){
+    return (mLayerState != nullptr && mLayerState->canApplyTheme()) || Drawable::canApplyTheme();
+}
+
+void LayerDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    if (mLayerState) {
+        // AOSP java:208-211: the density may have changed since the last
+        // update — re-resolve before handling theme attrs.
+        const int density = Drawable::resolveDensity(&t.getResources(), 0);
+        mLayerState->setDensity(density);
+
+        if (!mLayerState->mThemeAttrs.empty()) {
+            auto a = t.resolveAttributes(mLayerState->mThemeAttrs, R::styleable::LayerDrawable);
+            if (a) updateStateFromTypedArray(*a);
+            mLayerState->mThemeAttrs.clear();
+        }
+        for (ChildDrawable* child : mLayerState->mChildren) {
+            if (child == nullptr) continue;
+            child->setDensity(density); // AOSP java:221
+            if (!child->mThemeAttrs.empty()) {
+                auto a = t.resolveAttributes(child->mThemeAttrs, R::styleable::LayerDrawableItem);
+                if (a) updateLayerFromTypedArray(child, *a);
+                child->mThemeAttrs.clear();
+            }
+            if (child->mDrawable && child->mDrawable->canApplyTheme()) {
+                child->mDrawable->mutate();
+                child->mDrawable->applyTheme(t);
+                child->mDrawable->clearMutated();
+            }
+        }
+        ensurePadding();
+        refreshPadding();
+    }
+}
+
+void LayerDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    Drawable::inflate(r,parser,atts, theme);
+    const int density = Drawable::resolveDensity(&r, 0);
     mLayerState->setDensity(density);
 
-    updateStateFromTypedArray(atts);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::LayerDrawable);
+    if (ta) updateStateFromTypedArray(*ta);
+
     for (ChildDrawable*layer:mLayerState->mChildren) {
         layer->setDensity(density);
     }
-    inflateLayers(parser,atts);
+    inflateLayers(r,parser,atts, theme);
     ensurePadding();
     refreshPadding();
 }
 
-void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts){
+void LayerDrawable::inflateLayers(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     int type,depth,low = 0;
     const int innerDepth = parser.getDepth()+1;
     while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
@@ -1100,9 +1214,10 @@ void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts
         if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-
         ChildDrawable*layer = new ChildDrawable(mLayerState->mDensity);
-        updateLayerFromTypedArray(layer,atts);
+        // AOSP inflateLayers: obtainAttributes(R.styleable.LayerDrawableItem) per <item>.
+        auto ta = obtainAttributes(r, theme, atts, R::styleable::LayerDrawableItem);
+        if (ta) updateLayerFromTypedArray(layer, *ta);
 
         if (layer->mDrawable==nullptr) {
             while ((type = parser.next()) == XmlPullParser::TEXT) {
@@ -1112,51 +1227,53 @@ void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            layer->mDrawable = Drawable::createFromXmlInner(parser,atts);
+            layer->mDrawable = Drawable::createFromXmlInner(r,parser,atts, theme);
             layer->mDrawable->setCallback(this);
         }
         addLayer(layer);
     }
 }
 
-void LayerDrawable::updateStateFromTypedArray(const AttributeSet&a) {
+void LayerDrawable::updateStateFromTypedArray(const TypedArray& a) {
     auto state = mLayerState;
 
     // Account for any configuration changes.
     //state->mChangingConfigurations |= a.getChangingConfigurations();
     // Extract the theme attributes, if any.
-    //state->mThemeAttrs = a.extractThemeAttrs();
+    state->mThemeAttrs = a.extractThemeAttrs();
 
-    state->mOpacityOverride = a.getInt("opacity", state->mOpacityOverride);
-    state->mPaddingTop = a.getDimensionPixelOffset("paddingTop", state->mPaddingTop);
-    state->mPaddingBottom = a.getDimensionPixelOffset("paddingBottom", state->mPaddingBottom);
-    state->mPaddingLeft = a.getDimensionPixelOffset("paddingLeft", state->mPaddingLeft);
-    state->mPaddingRight = a.getDimensionPixelOffset("paddingRight", state->mPaddingRight);
-    state->mPaddingStart = a.getDimensionPixelOffset("paddingStart", state->mPaddingStart);
-    state->mPaddingEnd = a.getDimensionPixelOffset("paddingEnd", state->mPaddingEnd);
-    state->mAutoMirrored = a.getBoolean("autoMirrored", state->mAutoMirrored);
-    state->mPaddingMode = a.getInt("paddingMode", state->mPaddingMode);
+    state->mOpacityOverride = a.getInt(R::styleable::LayerDrawable_opacity, state->mOpacityOverride);
+    state->mPaddingTop = a.getDimensionPixelOffset(R::styleable::LayerDrawable_paddingTop, state->mPaddingTop);
+    state->mPaddingBottom = a.getDimensionPixelOffset(R::styleable::LayerDrawable_paddingBottom, state->mPaddingBottom);
+    state->mPaddingLeft = a.getDimensionPixelOffset(R::styleable::LayerDrawable_paddingLeft, state->mPaddingLeft);
+    state->mPaddingRight = a.getDimensionPixelOffset(R::styleable::LayerDrawable_paddingRight, state->mPaddingRight);
+    state->mPaddingStart = a.getDimensionPixelOffset(R::styleable::LayerDrawable_paddingStart, state->mPaddingStart);
+    state->mPaddingEnd = a.getDimensionPixelOffset(R::styleable::LayerDrawable_paddingEnd, state->mPaddingEnd);
+    state->mAutoMirrored = a.getBoolean(R::styleable::LayerDrawable_autoMirrored, state->mAutoMirrored);
+    state->mPaddingMode = a.getInt(R::styleable::LayerDrawable_paddingMode, state->mPaddingMode);
 }
 
-void LayerDrawable::updateLayerFromTypedArray(ChildDrawable*layer,const AttributeSet&atts){
+void LayerDrawable::updateLayerFromTypedArray(ChildDrawable*layer,const TypedArray& a){
     auto state = mLayerState;
 
     // Account for any configuration changes.
     //state->mChildrenChangingConfigurations |= a.getChangingConfigurations();
-    //layer->mThemeAttrs = a.extractThemeAttrs();
+    layer->mThemeAttrs = a.extractThemeAttrs();
 
-    layer->mInsetL = atts.getDimensionPixelOffset("left", layer->mInsetL);
-    layer->mInsetT = atts.getDimensionPixelOffset("top", layer->mInsetT);
-    layer->mInsetR = atts.getDimensionPixelOffset("right", layer->mInsetR);
-    layer->mInsetB = atts.getDimensionPixelOffset("bottom", layer->mInsetB);
-    layer->mInsetS = atts.getDimensionPixelOffset("start", layer->mInsetS);
-    layer->mInsetE = atts.getDimensionPixelOffset("end", layer->mInsetE);
-    layer->mWidth  = atts.getDimensionPixelSize("width", layer->mWidth);
-    layer->mHeight = atts.getDimensionPixelSize("height", layer->mHeight);
-    layer->mGravity= atts.getGravity("gravity", layer->mGravity);
-    layer->mId = atts.getResourceId("id", layer->mId);
+    layer->mInsetL = a.getDimensionPixelOffset(R::styleable::LayerDrawableItem_left, layer->mInsetL);
+    layer->mInsetT = a.getDimensionPixelOffset(R::styleable::LayerDrawableItem_top, layer->mInsetT);
+    layer->mInsetR = a.getDimensionPixelOffset(R::styleable::LayerDrawableItem_right, layer->mInsetR);
+    layer->mInsetB = a.getDimensionPixelOffset(R::styleable::LayerDrawableItem_bottom, layer->mInsetB);
+    layer->mInsetS = a.getDimensionPixelOffset(R::styleable::LayerDrawableItem_start, layer->mInsetS);
+    layer->mInsetE = a.getDimensionPixelOffset(R::styleable::LayerDrawableItem_end, layer->mInsetE);
+    layer->mWidth  = a.getDimensionPixelSize(R::styleable::LayerDrawableItem_width, layer->mWidth);
+    layer->mHeight = a.getDimensionPixelSize(R::styleable::LayerDrawableItem_height, layer->mHeight);
+    // TypedArray has no getGravity; aapt2 pre-resolves Gravity flag enums,
+    // matching AOSP updateLayerFromTypedArray (a.getInteger).
+    layer->mGravity= a.getInteger(R::styleable::LayerDrawableItem_gravity, layer->mGravity);
+    layer->mId = a.getResourceId(R::styleable::LayerDrawableItem_id, layer->mId);
 
-    Drawable* dr = atts.getDrawable("drawable");
+    Drawable* dr = a.getDrawable(R::styleable::LayerDrawableItem_drawable);
     if (dr != nullptr) {
         if (layer->mDrawable != nullptr) {
             // It's possible that a drawable was already set, in which case

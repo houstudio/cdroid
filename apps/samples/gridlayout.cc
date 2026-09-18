@@ -6,7 +6,7 @@
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,1280,720);
-    GridLayout*gl=new GridLayout(800,640);
+    GridLayout*gl=new GridLayout(&app);
     w->addView(gl);
     gl->setRowCount(3);
     gl->setColumnCount(3);
@@ -14,7 +14,7 @@ int main(int argc,const char*argv[]){
     auto colspec=GridLayout::spec(GridLayout::UNDEFINED,1,1.f);
     for(int i=0;i<9;i++){
         std::string txt=std::string("Text")+std::to_string(i);
-        TextView*tv =new TextView(txt,100,100);
+        TextView*tv =new TextView(&App::getInstance()); tv->setText(txt);
         tv->setId(1000+i);
         tv->setTextSize(64);
         GridLayout::LayoutParams*lp=new GridLayout::LayoutParams(rowspec,colspec);

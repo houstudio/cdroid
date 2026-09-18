@@ -15,10 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/clipdrawable.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 ClipDrawable::ClipState::ClipState():DrawableWrapperState(){
     mGravity = Gravity::LEFT;
@@ -32,21 +35,27 @@ ClipDrawable::ClipState::ClipState(const ClipState& state)
 }
 
 ClipDrawable*ClipDrawable::ClipState::newDrawable(){
-    return new ClipDrawable(std::dynamic_pointer_cast<ClipState>(shared_from_this()));
+    // AOSP overrides only newDrawable(Resources); the no-arg form is the
+    // DrawableWrapperState forward (newDrawable(null)).
+    return (ClipDrawable*)newDrawable(nullptr);
+}
+
+Drawable*ClipDrawable::ClipState::newDrawable(Resources* res){
+    return new ClipDrawable(std::dynamic_pointer_cast<ClipState>(shared_from_this()), res);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 ClipDrawable::ClipDrawable()
-    :ClipDrawable(std::make_shared<ClipState>()){
+    :ClipDrawable(std::make_shared<ClipState>(), nullptr){
 }
 
-ClipDrawable::ClipDrawable(std::shared_ptr<ClipState>state):DrawableWrapper(state){
+ClipDrawable::ClipDrawable(std::shared_ptr<ClipState>state,Resources*res):DrawableWrapper(state,res){
     mState = state;
 }
 
 ClipDrawable::ClipDrawable(Drawable* drawable, int gravity,int orientation)
-    :ClipDrawable(std::make_shared<ClipState>()){
+    :ClipDrawable(std::make_shared<ClipState>(), nullptr){
     mState->mGravity = gravity;
     mState->mOrientation = orientation;
     setDrawable(drawable);
@@ -115,17 +124,32 @@ void ClipDrawable::draw(Canvas& canvas){
     }
 }
 
-void ClipDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    updateStateFromTypedArray(atts);
-    DrawableWrapper::inflate(parser,atts);
+void ClipDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::ClipDrawable);
+    if (ta) {
+        mState->mThemeAttrs = ta->extractThemeAttrs();
+        updateStateFromTypedArray(*ta);
+    }
+    DrawableWrapper::inflate(r,parser,atts, theme);
 }
 
-void ClipDrawable::updateStateFromTypedArray(const AttributeSet&atts){
-    mState->mOrientation = atts.getInt("clipOrientation",std::unordered_map<std::string,int>{
-            {"horizontal",(int)HORIZONTAL},
-            {"vertical",(int)VERTICAL}
-        }, mState->mOrientation);
-    mState->mGravity = atts.getGravity("gravity", mState->mGravity);
+// AOSP ClipDrawable.canApplyTheme/applyTheme.
+bool ClipDrawable::canApplyTheme(){
+    return (mState && !mState->mThemeAttrs.empty()) || DrawableWrapper::canApplyTheme();
+}
+
+void ClipDrawable::applyTheme(const Resources::Theme& t){
+    DrawableWrapper::applyTheme(t);
+    if (mState && !mState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mState->mThemeAttrs, R::styleable::ClipDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        mState->mThemeAttrs.clear();
+    }
+}
+
+void ClipDrawable::updateStateFromTypedArray(const TypedArray& a){
+    mState->mOrientation = a.getInt(R::styleable::ClipDrawable_clipOrientation, mState->mOrientation);
+    mState->mGravity = a.getInt(R::styleable::ClipDrawable_gravity, mState->mGravity);
 }
 
 }/*endof namespace*/

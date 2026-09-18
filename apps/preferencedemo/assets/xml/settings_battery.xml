@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/power_usage_summary.xml fragments. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="battery_screen"
+    android:title="Battery">
+
+    <Preference
+        android:key="battery_level"
+        android:title="Battery level"
+        android:summary="86% &#8212; about 14 hr left"
+        android:selectable="false" />
+
+    <PreferenceCategory android:title="Power management">
+
+        <SwitchPreference
+            android:key="battery_saver"
+            android:title="Battery Saver"
+            android:summaryOff="Off"
+            android:defaultValue="false" />
+
+        <Preference
+            android:key="battery_saver_pct"
+            android:title="Set a schedule"
+            android:dependency="battery_saver" />
+
+        <SwitchPreference
+            android:key="adaptive_battery"
+            android:title="Adaptive Battery"
+            android:summary="Limit battery for apps you don't use often"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Battery share">
+
+        <SwitchPreference
+            android:key="battery_share"
+            android:title="Reverse wireless charging"
+            android:summaryOff="Off"
+            android:defaultValue="false" />
+
+        <Preference
+            android:key="battery_share_pct"
+            android:title="Battery share limit"
+            android:dependency="battery_share" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -20,13 +20,13 @@
 #include <view/keyevent.h>
 #include <porting/cdlog.h>
 
-using cdroid::fragment::Fragment;
-using cdroid::fragment::FragmentActivity;
+using cdroid::Fragment;
+using cdroid::FragmentActivity;
 
 class AFrag : public Fragment{
 public:
     cdroid::View* onCreateView(cdroid::LayoutInflater*, cdroid::ViewGroup*, cdroid::Bundle*) override{
-        cdroid::TextView* tv = new cdroid::TextView("Fragment A\n(press a key -> B)", 800, 600);
+        cdroid::TextView* tv = new cdroid::TextView(getContext()); tv->setText("Fragment A\n(press a key -> B)");
         tv->setTextColor(0xFFFFFFFF);
         tv->setBackgroundColor(0xFF102030);
         return tv;
@@ -37,7 +37,7 @@ REGISTER_FRAGMENT(AFrag);
 class BFrag : public Fragment{
 public:
     cdroid::View* onCreateView(cdroid::LayoutInflater*, cdroid::ViewGroup*, cdroid::Bundle*) override{
-        cdroid::TextView* tv = new cdroid::TextView("Fragment B", 800, 600);
+        cdroid::TextView* tv = new cdroid::TextView(getContext()); tv->setText("Fragment B");
         tv->setTextColor(0xFFFFFFFF);
         tv->setBackgroundColor(0xFF301020);
         return tv;

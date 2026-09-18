@@ -1,6 +1,6 @@
 project (allwinner C CXX)
 set(ALLWINNER_SRCS 
-     input_linux.cc
+     ../common/input_linux.cc
      graph_nx5fb.c
     )
 include(CheckIncludeFile)

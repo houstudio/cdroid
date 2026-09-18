@@ -16,7 +16,7 @@ public:
 
        TextView*tv=(TextView*)convertView;
        if(convertView==nullptr)
-           tv=new TextView("",600,20);
+           tv=new TextView(&App::getInstance());
 	   tv->setPadding(20,0,0,0);
        tv->setId(position);
        tv->setText("position :"+std::to_string(position));
@@ -33,7 +33,7 @@ public:
     void* instantiateItem(ViewGroup* container, int position) {
 #if ENABLE(DAYTIME_WIDGETS)
         if(position!=2){
-            SimpleMonthView*sm=new  SimpleMonthView(100,100);
+            SimpleMonthView*sm=new  SimpleMonthView(&App::getInstance());
             sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
             container->addView(sm);
             sm->setId(position);
@@ -41,7 +41,7 @@ public:
         }else
 #endif
         {
-            ListView*lv=new  ListView(100,100);
+            ListView*lv=new ListView(&App::getInstance());
             MyAdapter*ma=new MyAdapter();
             for(int i=0;i<50;i++)ma->add("");
             container->addView(lv);
@@ -77,7 +77,7 @@ int main(int argc,const char*argv[]){
         LOGV("scrollState=%d",scrollState);
     };
 
-    ViewPager*pager=new ViewPager(800,400);
+    ViewPager*pager=new ViewPager(&App::getInstance());
     pager->setHorizontalFadingEdgeEnabled(true);
     pager->setFadingEdgeLength(200);
 

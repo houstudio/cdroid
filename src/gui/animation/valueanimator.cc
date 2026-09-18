@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <animation/valueanimator.h>
 #include <animation/interpolators.h>
+#include <animation/animationutils.h>
 #include <systemclock.h>
 #include <cmath>
 #include <stdarg.h>
@@ -73,13 +74,20 @@ ValueAnimator::ValueAnimator(const ValueAnimator&o){
     mCurrentFraction = 0;
     mSelfPulse = true;
     mSuppressSelfPulseRequested = false;
-    mInterpolator = sDefaultInterpolator;
+    // AOSP clone() is a shallow copy that keeps the source interpolator;
+    // resetting to the default here silently linearized/accel-decelerated
+    // every cloned animator (AVD animators are always cloned on start).
+    mInterpolator = o.mInterpolator ? o.mInterpolator : sDefaultInterpolator;
     mDuration   = o.mDuration;
-    mReversing  = o.mReversing;
+    mReversing  = false; // clone()/newInstance() semantics: fresh runtime state
     mRepeatMode = o.mRepeatMode;
     mRepeatCount= o.mRepeatCount;
     mStartDelay = o.mStartDelay;
     mDurationScale = o.mDurationScale;
+    // AOSP Animator.clone() copies the listener lists; the Animator base
+    // subobject is default-constructed here, so copy them explicitly.
+    mListeners = o.mListeners;
+    mPauseListeners = o.mPauseListeners;
     auto& oldValues = o.mValues;
     if (oldValues.size()) {
         const int numValues = (int)oldValues.size();
@@ -172,6 +180,15 @@ void ValueAnimator::setFloatValues(const std::vector<float>&values){
 }
 
 void ValueAnimator::setValues(const std::vector<PropertyValuesHolder*>&values){
+    // mValues is owned storage (the copy ctor deep-clones it, the dtor deletes
+    // it), so replacing it must free the old holders — AOSP drops the array for
+    // GC here. The raw-pointer port leaked them (valgrind: AnimatorInflater
+    // getPVH holders lost whenever an <objectAnimator>'s values are parsed
+    // twice — the tag's own valueFrom/valueTo first, then its
+    // <propertyValuesHolder> children calling setValues again).
+    if (&values != &mValues) {
+        for (auto old : mValues) delete old;
+    }
     mValues = values;
     mValuesMap.clear();
     for(auto prop:values){
@@ -251,7 +268,7 @@ void ValueAnimator::setCurrentFraction(float fraction) {
     mStartTimeCommitted = true; // do not allow start time to be compensated for jank
     if (isPulsingInternal()) {
         const int64_t seekTime = int64_t(getScaledDuration()) * fraction;
-        const int64_t currentTime = SystemClock::uptimeMillis();
+        const int64_t currentTime = AnimationUtils::currentAnimationTimeMillis();
         // Only modify the start time when the animation is running. Seek fraction will ensure
         // non-running animations skip to the correct start time.
         mStartTime = currentTime - seekTime;
@@ -319,7 +336,7 @@ int64_t ValueAnimator::getCurrentPlayTime() {
     if (durationScale == 0.f) {
         durationScale = 1.f;
     }
-    return ((SystemClock::uptimeMillis() - mStartTime) / durationScale);
+    return ((AnimationUtils::currentAnimationTimeMillis() - mStartTime) / durationScale);
 }
 
 int64_t ValueAnimator::getStartDelay() {
@@ -400,6 +417,9 @@ bool ValueAnimator::isPulsingInternal(){
 }
 
 void ValueAnimator::setEvaluator(TypeEvaluator value){
+    if (value && mValues.size() > 0) {
+        mValues[0]->setEvaluator(value);
+    }
 }
 
 void ValueAnimator::notifyStartListeners() {
@@ -528,7 +548,7 @@ bool ValueAnimator::isStarted() {
 
 void ValueAnimator::reverse() {
     if (isPulsingInternal()) {
-        const int64_t currentTime = SystemClock::uptimeMillis();
+        const int64_t currentTime = AnimationUtils::currentAnimationTimeMillis();
         const int64_t currentPlayTime = currentTime - mStartTime;
         const int64_t timeLeft = getScaledDuration() - currentPlayTime;
         mStartTime = currentTime - timeLeft;
@@ -612,7 +632,8 @@ bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
             done = true;
         } else if (newIteration && !lastIterationFinished) {
             // Time to repeat
-            for (AnimatorListener l:mListeners) {
+            std::vector<AnimatorListener>tmpListeners = mListeners;
+            for (auto l:tmpListeners) {
                 if(l.onAnimationRepeat)l.onAnimationRepeat(*this);
             }
         } else if (lastIterationFinished) {
@@ -640,7 +661,8 @@ void ValueAnimator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t last
         lastIteration = std::min(lastIteration, mRepeatCount);
 
         if (iteration != lastIteration) {
-            for (AnimatorListener l:mListeners) {
+            std::vector<AnimatorListener>tmpListeners = mListeners;
+            for (auto l:tmpListeners) {
                 if(l.onAnimationRepeat)l.onAnimationRepeat(*this);
             }
         }
@@ -768,7 +790,8 @@ void ValueAnimator::animateValue(float fraction) {
     for (auto v:mValues) {
         v->calculateValue(fraction);
     }
-    for (auto l:mUpdateListeners) {
+    std::vector<AnimatorUpdateListener>tmpListeners = mUpdateListeners;
+    for (auto l:tmpListeners) {
         l(*this);
     }
 }
@@ -776,27 +799,11 @@ void ValueAnimator::animateValue(float fraction) {
 ValueAnimator*ValueAnimator::clone()const {
     ValueAnimator*anim= new ValueAnimator(*this);
 
+    // The copy ctor already resets the runtime state (AOSP resets it here
+    // only because Object.clone() copies every field verbatim).
     if (!mUpdateListeners.empty()) {
         anim->mUpdateListeners = mUpdateListeners;
     }
-    anim->mSeekFraction = -1;
-    anim->mReversing = false;
-    anim->mInitialized = false;
-    anim->mStarted = false;
-    anim->mRunning = false;
-    anim->mPaused = false;
-    anim->mResumed = false;
-    anim->mStartListenersCalled = false;
-    anim->mStartTime = -1;
-    anim->mStartTimeCommitted = false;
-    anim->mAnimationEndRequested = false;
-    anim->mPauseTime = -1;
-    anim->mLastFrameTime = -1;
-    anim->mFirstFrameTime = -1;
-    anim->mOverallFraction = 0;
-    anim->mCurrentFraction = 0;
-    anim->mSelfPulse = true;
-    anim->mSuppressSelfPulseRequested = false;
     return anim;
 }
 

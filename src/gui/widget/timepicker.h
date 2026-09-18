@@ -37,9 +37,13 @@ protected:
     Parcelable* onSaveInstanceState() override;
     void onRestoreInstanceState(Parcelable& state) override;
 public:
-    TimePicker(Context* context,const AttributeSet& attrs);
+    TimePicker(Context*ctx);   // AOSP TimePicker(Context)
+    TimePicker(Context* context,const AttributeSet* attrs);
+    TimePicker(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    TimePicker(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~TimePicker()override;
     int getMode() const;
+    void onConfigurationChanged(Configuration& newConfig)override;
 
     void setHour(int hour);
     int getHour();
@@ -79,6 +83,10 @@ public:
 class TimePicker::TimePickerDelegate {
 public:
     virtual ~TimePickerDelegate()=default;
+
+    /* CDROID runtime-locale extension (AOSP android-36 removed locale
+       handling from this interface; it rebuilds the activity instead). */
+    virtual void onConfigurationChanged(Configuration& newConfig){(void)newConfig;}
     virtual void setHour(int hour)=0;
     virtual int getHour()=0;
 
@@ -119,7 +127,7 @@ class TimePicker::AbstractTimePickerDelegate:public TimePicker::TimePickerDelega
 protected:
     TimePicker* mDelegator;
     Context* mContext;
-    //Locale mLocale;
+    Locale mLocale;
 
     OnTimeChangedListener mOnTimeChangedListener;
     OnTimeChangedListener mAutoFillChangeListener;

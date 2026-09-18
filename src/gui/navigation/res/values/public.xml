@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Navigation component attr id pinning (0x02 shared-lib). Continues the
+     widgetEx attr type block (widgetEx components use 0x02010000-0x02010110).
+     Source of truth consumed by _compile_shared_lib (aapt2 public entries). -->
+<resources>
+    <public type="attr" name="startDestination" id="0x02010120"/>
+    <public type="attr" name="route"            id="0x02010121"/>
+    <public type="attr" name="destination"      id="0x02010122"/>
+    <public type="attr" name="popUpTo"          id="0x02010123"/>
+    <public type="attr" name="popUpToInclusive" id="0x02010124"/>
+    <public type="attr" name="popUpToSaveState" id="0x02010125"/>
+    <public type="attr" name="restoreState"     id="0x02010126"/>
+    <public type="attr" name="launchSingleTop"  id="0x02010127"/>
+    <public type="attr" name="enterAnim"        id="0x02010128"/>
+    <public type="attr" name="exitAnim"         id="0x02010129"/>
+    <public type="attr" name="popEnterAnim"     id="0x0201012a"/>
+    <public type="attr" name="popExitAnim"      id="0x0201012b"/>
+    <public type="attr" name="graph"            id="0x0201012c"/>
+    <public type="attr" name="defaultValue"     id="0x0201012d"/>
+    <public type="attr" name="argType"          id="0x0201012e"/>
+    <public type="attr" name="nullable"         id="0x0201012f"/>
+    <public type="attr" name="action"           id="0x02010130"/>
+    <public type="attr" name="data"             id="0x02010131"/>
+    <public type="attr" name="dataPattern"      id="0x02010132"/>
+    <!-- uri/targetPackage defined with format in attrs.xml (a format-less
+         styleable reference alone is not a symbol definition for <public>). -->
+    <public type="attr" name="targetPackage"  id="0x0201014e"/>
+    <public type="attr" name="uri"            id="0x0201014f"/>
+</resources>

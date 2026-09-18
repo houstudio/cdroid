@@ -3,7 +3,7 @@
 #include <widget/toolbar.h>
 #include <widget/cdwindow.h>
 #include <widget/actionbar.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <menu/menu.h>
 #include <menu/menubuilder.h>
 #include <menu/menupresenter.h>
@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 ToolbarActionBar::ToolbarActionBar(Toolbar* toolbar, const std::string& title,
                                    WindowCallback* windowCallback)
@@ -178,13 +179,18 @@ Menu* ToolbarActionBar::getMenu(){
         MenuPresenter::Callback pcb;
         pcb.onCloseMenu = [this](MenuBuilder& menu, bool){
             if(mClosingActionMenu) return;
+            if(mWindowCallback == nullptr) return;
             mClosingActionMenu = true;
             mDecorToolbar->dismissPopupMenus();
             mWindowCallback->onPanelClosed(Window::FEATURE_SUPPORT_ACTION_BAR, menu);
             mClosingActionMenu = false;
         };
-        pcb.onOpenSubMenu = [this](MenuBuilder& subMenu)->bool{
-            mWindowCallback->onMenuOpened(Window::FEATURE_SUPPORT_ACTION_BAR, subMenu);
+        // androidx ActionMenuPresenterCallback.onOpenSubMenu: guards on mWindowCallback;
+        // subMenu may be null (overflow-opening advertisement) — upstream forwards null to
+        // onMenuOpened, whose cdroid WindowCallback takes Menu&, so the null sentinel ends here.
+        pcb.onOpenSubMenu = [this](MenuBuilder* subMenu)->bool{
+            if(mWindowCallback == nullptr || subMenu == nullptr) return false;
+            mWindowCallback->onMenuOpened(Window::FEATURE_SUPPORT_ACTION_BAR, *subMenu);
             return true;
         };
         MenuBuilder::Callback mcb;

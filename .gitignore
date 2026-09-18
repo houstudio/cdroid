@@ -1,5 +1,11 @@
 out*
+/build/
 apps/*
+!apps/printerdemo
+!apps/preferencedemo
+!apps/deskclock
+!apps/widgetsDemo
+!apps/remusic
 !apps/createPrj.py
 !apps/samples
 *.bak
@@ -16,3 +22,9 @@ appdevops*
 **/__pycache__/
 src/tools/po2json.py
 docs/*worklog.*
+
+# CMake in-tree artifacts (cwd-drift guard; real builds live in out*/)
+CMakeFiles/
+CTestTestfile.cmake
+cmake_install.cmake
+CMakeCache.txt

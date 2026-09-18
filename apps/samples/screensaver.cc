@@ -9,7 +9,7 @@ int main(int argc,const char*argv[]){
 
     w->setId(10000);
     w->setBackgroundColor(0xFF111111);
-    TextView*edit=new TextView("ScreenSaver test",680,200);
+    TextView*edit=new TextView(&App::getInstance()); edit->setText("ScreenSaver test" );
     edit->setSingleLine(false);
     edit->setClickable(true);
     edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
@@ -21,7 +21,7 @@ int main(int argc,const char*argv[]){
        if(bEnabled&&ws==nullptr){
            ws=new Window(200,200,200,80);
 	   LOGD("Create ScreenSaver %d",bEnabled);
-	   Button*btn=new Button("Close",0,0);
+	   Button*btn=new Button(&App::getInstance()); btn->setText("Close" );
 	   ws->addView(btn);
 	   btn->setOnClickListener([&ws](View&v){
 		ws->close();

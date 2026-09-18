@@ -20,6 +20,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <transition/transition.h>
 #include <transition/transitionlisteneradapter.h>
@@ -101,6 +102,12 @@ class Visibility: public Transition {
         bool mSuppressLayout = false;
         bool mLayoutSuppressed = false;
         bool mCanceled = false;
+        // No-GC seam: the end-listeners fire when the LAST animator ends,
+        // which can be after the view's tree was torn down. The weak flag
+        // (flipped at the top of ~View) makes every touch a no-op instead of
+        // a use-after-free (valgrind --auto-test: SIGSEGV in
+        // setTransitionVisibility from disappearHideWhenNotCanceled).
+        std::weak_ptr<bool> mViewAlive;
     };
 
   private:

@@ -98,6 +98,12 @@ class Motion : public TypedValues {
     bool setValue(int id, const std::string& value) override;
     bool setValue(int id, bool value) override;
     int  getId(const std::string& name) override;
+    // Install a prebuilt easing (e.g. the InterpolatorEasing over a platform interpolator
+    // resolved from a MotionScene @anim/... reference) — replaces the parsed-string path.
+    void setEasing(std::unique_ptr<Easing> easing) {
+        mEasing = std::move(easing);
+        mEasingDirty = false;
+    }
 
     MotionWidget* getView() const {
         return mView;

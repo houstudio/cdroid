@@ -27,7 +27,6 @@
 #include <lifecycle/lifecycle.h>
 namespace cdroid{
 class View;
-namespace fragment{
 
 class Fragment;
 class FragmentFactory;
@@ -51,10 +50,10 @@ public:
         int mCmd = OP_NULL;
         Fragment* mFragment = nullptr;
         Fragment* mOldFragment = nullptr; // OP_REPLACE: the fragment removed, restored on pop
-        std::string mEnterAnim;
-        std::string mExitAnim;
-        std::string mPopEnterAnim;
-        std::string mPopExitAnim;
+        int mEnterAnim = 0;
+        int mExitAnim = 0;
+        int mPopEnterAnim = 0;
+        int mPopExitAnim = 0;
         // OP_SET_MAX_LIFECYCLE: the new ceiling (and the prior one, restored on pop).
         lifecycle::Lifecycle::State mCurrentMaxState = lifecycle::Lifecycle::State::RESUMED;
         lifecycle::Lifecycle::State mOldMaxState     = lifecycle::Lifecycle::State::RESUMED;
@@ -75,11 +74,16 @@ public:
     FragmentTransaction& setPrimaryNavigationFragment(Fragment* fragment);
     FragmentTransaction& setMaxLifecycle(Fragment* fragment, lifecycle::Lifecycle::State state);
     FragmentTransaction& addToBackStack(const std::string& name);
+    // AOSP addToBackStack(@Nullable String): a null name is a legal unnamed
+    // back-stack entry (e.g. LabelDialogFragment's addToBackStack(null)).
+    // std::string(nullptr) throws, so nullptr needs its own route.
+    FragmentTransaction& addToBackStack(std::nullptr_t) {
+        return addToBackStack(std::string());
+    }
     FragmentTransaction& disallowAddToBackStack();
     FragmentTransaction& setReorderingAllowed(bool reorderingAllowed);
-    FragmentTransaction& setCustomAnimations(const std::string& enterAnim, const std::string& exitAnim,
-                                             const std::string& popEnterAnim = std::string(),
-                                             const std::string& popExitAnim = std::string());
+    FragmentTransaction& setCustomAnimations(int enterAnim, int exitAnim,
+                                             int popEnterAnim = 0, int popExitAnim = 0);
     // Declare a shared element (used by shared-element transitions via FragmentTransitionImpl).
     FragmentTransaction& addSharedElement(cdroid::View* sharedElement, const std::string& name);
 
@@ -104,9 +108,8 @@ protected:
     std::string mName;
     bool mReorderingAllowed = false;
     std::vector<SharedElement> mSharedElements;
-    std::string mEnterAnim, mExitAnim, mPopEnterAnim, mPopExitAnim;
+    int mEnterAnim = 0, mExitAnim = 0, mPopEnterAnim = 0, mPopExitAnim = 0;
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

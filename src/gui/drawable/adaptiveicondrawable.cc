@@ -15,17 +15,21 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/adaptiveicondrawable.h>
 #include <drawable/pathparser.h>
+#include <core/context.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 using namespace Cairo;
 
 AdaptiveIconDrawable::AdaptiveIconDrawable()
-    :AdaptiveIconDrawable((LayerState*) nullptr){
+    :AdaptiveIconDrawable((LayerState*) nullptr, nullptr){
 }
 
-AdaptiveIconDrawable::AdaptiveIconDrawable(LayerState* state) {
-    mLayerState = createConstantState(state);
+AdaptiveIconDrawable::AdaptiveIconDrawable(LayerState* state, Resources* res) {
+    mLayerState = createConstantState(state, res);
     // config_icon_mask from context bound resource may have been chaged using
     // OverlayManager. Read that one first.
     /*Resources r = ActivityThread.currentActivityThread() == nullptr
@@ -49,8 +53,8 @@ AdaptiveIconDrawable::ChildDrawable*AdaptiveIconDrawable::createChildDrawable(Dr
     return layer;
 }
 
-std::shared_ptr<AdaptiveIconDrawable::LayerState> AdaptiveIconDrawable::createConstantState(LayerState* state) {
-    return std::make_shared<LayerState>(state, this);
+std::shared_ptr<AdaptiveIconDrawable::LayerState> AdaptiveIconDrawable::createConstantState(LayerState* state, Resources* res) {
+    return std::make_shared<LayerState>(state, this, res);
 }
 
 AdaptiveIconDrawable::AdaptiveIconDrawable(Drawable* backgroundDrawable,Drawable* foregroundDrawable)
@@ -59,7 +63,7 @@ AdaptiveIconDrawable::AdaptiveIconDrawable(Drawable* backgroundDrawable,Drawable
 
 AdaptiveIconDrawable::AdaptiveIconDrawable(Drawable* backgroundDrawable,
         Drawable* foregroundDrawable, Drawable* monochromeDrawable)
-    :AdaptiveIconDrawable((LayerState*)nullptr){
+    :AdaptiveIconDrawable((LayerState*)nullptr, nullptr){
     if (backgroundDrawable != nullptr) {
         addLayer(BACKGROUND_ID, createChildDrawable(backgroundDrawable));
     }
@@ -76,8 +80,8 @@ void AdaptiveIconDrawable::addLayer(int index,ChildDrawable* layer) {
     mLayerState->invalidateCache();
 }
 
-void AdaptiveIconDrawable::inflate(XmlPullParser& parser,AttributeSet& attrs){
-    Drawable::inflate(parser, attrs);
+void AdaptiveIconDrawable::inflate(Resources& r, XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme){
+    Drawable::inflate(r, parser, attrs, theme);
 
     auto state = mLayerState;
     if (state == nullptr) {
@@ -86,7 +90,7 @@ void AdaptiveIconDrawable::inflate(XmlPullParser& parser,AttributeSet& attrs){
 
     // The density may have changed since the last update. This will
     // apply scaling to any existing constant state properties.
-    const int deviceDensity = Drawable::resolveDensity(0);
+    const int deviceDensity = Drawable::resolveDensity(&r, 0);
     state->setDensity(deviceDensity);
     state->mSrcDensityOverride = mSrcDensityOverride;
     //state->mSourceDrawableId = Resources.getAttributeSetSourceResId(attrs);
@@ -96,7 +100,7 @@ void AdaptiveIconDrawable::inflate(XmlPullParser& parser,AttributeSet& attrs){
         array[i]->setDensity(deviceDensity);
     }
 
-    inflateLayers(parser, attrs);
+    inflateLayers(r,parser,attrs,theme);
 }
 
 float AdaptiveIconDrawable::getExtraInsetFraction() {
@@ -112,15 +116,15 @@ Path AdaptiveIconDrawable::getIconMask() {
 }
 
 Drawable* AdaptiveIconDrawable::getForeground() {
-    return mLayerState->mChildren[FOREGROUND_ID]->mDrawable;
+    return mLayerState->childAt(FOREGROUND_ID);
 }
 
 Drawable* AdaptiveIconDrawable::getBackground() {
-    return mLayerState->mChildren[BACKGROUND_ID]->mDrawable;
+    return mLayerState->childAt(BACKGROUND_ID);
 }
 
 Drawable* AdaptiveIconDrawable::getMonochrome() {
-    return mLayerState->mChildren[MONOCHROME_ID]->mDrawable;
+    return mLayerState->childAt(MONOCHROME_ID);
 }
 
 void AdaptiveIconDrawable::onBoundsChange(const Rect& bounds) {
@@ -145,8 +149,7 @@ void AdaptiveIconDrawable::updateLayerBoundsInternal(const Rect& bounds) {
     int cY = bounds.height / 2;
 
     for (int i = 0, count = LayerState::N_CHILDREN; i < count; i++) {
-        ChildDrawable* r = mLayerState->mChildren[i];
-        Drawable* d = r->mDrawable;
+        Drawable* d = mLayerState->childAt(i);
         if (d == nullptr) {
             continue;
         }
@@ -230,7 +233,8 @@ Cairo::RefPtr<Cairo::Region> AdaptiveIconDrawable::getTransparentRegion() {
     return mTransparentRegion;
 }
 
-/*void AdaptiveIconDrawable::applyTheme() {
+// AOSP AdaptiveIconDrawable.applyTheme(Theme).
+void AdaptiveIconDrawable::applyTheme(const Resources::Theme& t) {
     Drawable::applyTheme(t);
 
     auto state = mLayerState;
@@ -238,18 +242,19 @@ Cairo::RefPtr<Cairo::Region> AdaptiveIconDrawable::getTransparentRegion() {
         return;
     }
 
-    const int density = Drawable::resolveDensity(t.getResources(), 0);
+    const int density = Drawable::resolveDensity(&t.getResources(), 0);
     state->setDensity(density);
 
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
         ChildDrawable* layer = state->mChildren[i];
+        if (layer == nullptr) continue;
         layer->setDensity(density);
 
-        if (layer->mThemeAttrs != nullptr) {
-            TypedArray a = t.resolveAttributes(
-                layer.mThemeAttrs, R.styleable.AdaptiveIconDrawableLayer);
-            updateLayerFromTypedArray(layer, a);
-            a.recycle();
+        if (!layer->mThemeAttrs.empty()) {
+            auto a = t.resolveAttributes(layer->mThemeAttrs,
+                                         R::styleable::AdaptiveIconDrawableLayer);
+            if (a) updateLayerFromTypedArray(layer, *a);
+            layer->mThemeAttrs.clear();
         }
 
         Drawable* d = layer->mDrawable;
@@ -260,13 +265,13 @@ Cairo::RefPtr<Cairo::Region> AdaptiveIconDrawable::getTransparentRegion() {
             state->mChildrenChangingConfigurations |= d->getChangingConfigurations();
         }
     }
-}*/
+}
 
 int AdaptiveIconDrawable::getSourceDrawableResId() {
     return 0;//mLayerState == nullptr ? Resources.ID_NULL : mLayerState->mSourceDrawableId;
 }
 
-void AdaptiveIconDrawable::inflateLayers(XmlPullParser& parser,AttributeSet& attrs) {
+void AdaptiveIconDrawable::inflateLayers(Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme) {
     auto state = mLayerState;
 
     const int innerDepth = parser.getDepth() + 1;
@@ -298,14 +303,18 @@ void AdaptiveIconDrawable::inflateLayers(XmlPullParser& parser,AttributeSet& att
         }
 
         ChildDrawable* layer = new ChildDrawable(state->mDensity);
-        //final TypedArray a = obtainAttributes(r, theme, attrs,R.styleable.AdaptiveIconDrawableLayer);
-        updateLayerFromTypedArray(layer, attrs);
+        // Resolve this child tag's attributes against the framework arsc,
+        // matching AOSP's obtainAttributes(r, theme, attrs, R.styleable.AdaptiveIconDrawableLayer).
+        auto a = Drawable::obtainAttributes(r, theme, attrs, R::styleable::AdaptiveIconDrawableLayer);
+        if (a) {
+            updateLayerFromTypedArray(layer, *a);
+        }
 
         // If the layer doesn't have a drawable or unresolved theme
         // attribute for a drawable, attempt to parse one from the child
         // element. If multiple child elements exist, we'll only use the
         // first one.
-        if (layer->mDrawable == nullptr && (layer->mThemeAttrs == nullptr)) {
+        if (layer->mDrawable == nullptr && layer->mThemeAttrs.empty()) {
             while ((type = parser.next()) == XmlPullParser::TEXT) {
             }
             if (type != XmlPullParser::START_TAG) {
@@ -315,7 +324,7 @@ void AdaptiveIconDrawable::inflateLayers(XmlPullParser& parser,AttributeSet& att
             }
 
             // We found a child drawable. Take ownership.
-            layer->mDrawable = Drawable::createFromXmlInnerForDensity(parser, attrs, mLayerState->mSrcDensityOverride);
+            layer->mDrawable = Drawable::createFromXmlInnerForDensity(r,parser, attrs, mLayerState->mSrcDensityOverride, theme);
             layer->mDrawable->setCallback(this);
             state->mChildrenChangingConfigurations |= layer->mDrawable->getChangingConfigurations();
         }
@@ -323,16 +332,16 @@ void AdaptiveIconDrawable::inflateLayers(XmlPullParser& parser,AttributeSet& att
     }
 }
 
-void AdaptiveIconDrawable::updateLayerFromTypedArray(ChildDrawable* layer,AttributeSet& a) {
+void AdaptiveIconDrawable::updateLayerFromTypedArray(ChildDrawable* layer,const TypedArray& a) {
     auto state = mLayerState;
 
     // Account for any configuration changes.
     //state->mChildrenChangingConfigurations |= a.getChangingConfigurations();
 
     // Extract the theme attributes, if any.
-    //layer->mThemeAttrs = a.extractThemeAttrs();
+    layer->mThemeAttrs = a.extractThemeAttrs();
 
-    Drawable* dr = a.getDrawable("drawable");//a.getDrawableForDensity("drawable",state->mSrcDensityOverride);
+    Drawable* dr = a.getDrawable(R::styleable::AdaptiveIconDrawableLayer_drawable);//a.getDrawableForDensity(R::styleable::AdaptiveIconDrawableLayer_drawable, state->mSrcDensityOverride);
     if (dr != nullptr) {
         if (layer->mDrawable != nullptr) {
             // It's possible that a drawable was already set, in which case
@@ -402,7 +411,7 @@ int AdaptiveIconDrawable::getChangingConfigurations() const{
 
 void AdaptiveIconDrawable::setHotspot(float x, float y) {
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr) {
             dr->setHotspot(x, y);
         }
@@ -411,7 +420,7 @@ void AdaptiveIconDrawable::setHotspot(float x, float y) {
 
 void AdaptiveIconDrawable::setHotspotBounds(int left, int top, int width, int height) {
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr) {
             dr->setHotspotBounds(left, top, width, height);
         }
@@ -432,7 +441,7 @@ bool AdaptiveIconDrawable::setVisible(bool visible, bool restart) {
     const bool changed = Drawable::setVisible(visible, restart);
 
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr) {
             dr->setVisible(visible, restart);
         }
@@ -443,7 +452,7 @@ bool AdaptiveIconDrawable::setVisible(bool visible, bool restart) {
 
 void AdaptiveIconDrawable::setDither(bool dither) {
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr) {
             dr->setDither(dither);
         }
@@ -461,7 +470,7 @@ int AdaptiveIconDrawable::getAlpha()const {
 
 void AdaptiveIconDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter) {
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr) {
             dr->setColorFilter(colorFilter);
         }
@@ -470,7 +479,7 @@ void AdaptiveIconDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& col
 
 void AdaptiveIconDrawable::setTintList(const cdroid::RefPtr<ColorStateList>& tint) {
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr) {
             dr->setTintList(tint);
         }
@@ -479,7 +488,7 @@ void AdaptiveIconDrawable::setTintList(const cdroid::RefPtr<ColorStateList>& tin
 
 void AdaptiveIconDrawable::setTintBlendMode(int blendMode) {
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr) {
             dr->setTintBlendMode(blendMode);
         }
@@ -498,7 +507,7 @@ void AdaptiveIconDrawable::setAutoMirrored(bool mirrored) {
     mLayerState->mAutoMirrored = mirrored;
 
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr) {
             dr->setAutoMirrored(mirrored);
         }
@@ -511,7 +520,7 @@ bool AdaptiveIconDrawable::isAutoMirrored() const{
 
 void AdaptiveIconDrawable::jumpToCurrentState() {
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr) {
             dr->jumpToCurrentState();
         }
@@ -530,7 +539,7 @@ bool AdaptiveIconDrawable::onStateChange(const std::vector<int>& state) {
     bool changed = false;
 
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr && dr->isStateful() && dr->setState(state)) {
             changed = true;
         }
@@ -547,7 +556,7 @@ bool AdaptiveIconDrawable::onLevelChange(int level) {
     bool changed = false;
 
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr && dr->setLevel(level)) {
             changed = true;
         }
@@ -608,9 +617,9 @@ std::shared_ptr<Drawable::ConstantState> AdaptiveIconDrawable::getConstantState(
 
 Drawable* AdaptiveIconDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
-        mLayerState = createConstantState(mLayerState.get());
+        mLayerState = createConstantState(mLayerState.get(), nullptr);
         for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-            Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+            Drawable* dr = mLayerState->childAt(i);
             if (dr != nullptr) {
                 dr->mutate();
             }
@@ -623,7 +632,7 @@ Drawable* AdaptiveIconDrawable::mutate() {
 void AdaptiveIconDrawable::clearMutated() {
     Drawable::clearMutated();
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
-        Drawable* dr = mLayerState->mChildren[i]->mDrawable;
+        Drawable* dr = mLayerState->childAt(i);
         if (dr != nullptr) {
             dr->clearMutated();
         }
@@ -637,10 +646,9 @@ void AdaptiveIconDrawable::clearMutated() {
 
 AdaptiveIconDrawable::ChildDrawable::ChildDrawable(int density) {
     mDensity = density;
-    mThemeAttrs = nullptr;
 }
 
-AdaptiveIconDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig, AdaptiveIconDrawable* owner) {
+AdaptiveIconDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig, AdaptiveIconDrawable* owner, Resources* res) {
 
     Drawable* dr = orig->mDrawable;
     Drawable* clone;
@@ -648,9 +656,9 @@ AdaptiveIconDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig, Adaptive
         auto cs = dr->getConstantState();
         if (cs == nullptr) {
             clone = dr;
-        }/* else if (res != nullptr) {
+        } else if (res != nullptr) {
             clone = cs->newDrawable(res);
-        }*/ else {
+        } else {
             clone = cs->newDrawable();
         }
         clone->setCallback(owner);
@@ -663,11 +671,12 @@ AdaptiveIconDrawable::ChildDrawable::ChildDrawable(ChildDrawable* orig, Adaptive
     mDrawable = clone;
     mThemeAttrs = orig->mThemeAttrs;
 
-    mDensity = Drawable::resolveDensity(orig->mDensity);
+    mDensity = Drawable::resolveDensity(res, orig->mDensity);
 }
 
 bool AdaptiveIconDrawable::ChildDrawable::canApplyTheme() const{
-    return false;//(mThemeAttrs != nullptr)|| (mDrawable != nullptr && mDrawable->canApplyTheme());
+    return !mThemeAttrs.empty()
+            || (mDrawable != nullptr && mDrawable->canApplyTheme());
 }
 
 void AdaptiveIconDrawable::ChildDrawable::setDensity(int targetDensity) {
@@ -679,8 +688,8 @@ void AdaptiveIconDrawable::ChildDrawable::setDensity(int targetDensity) {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 //static class LayerState extends ConstantState
-AdaptiveIconDrawable::LayerState::LayerState(LayerState* orig, AdaptiveIconDrawable* owner) {
-    mDensity = Drawable::resolveDensity(orig != nullptr ? orig->mDensity : 0);
+AdaptiveIconDrawable::LayerState::LayerState(LayerState* orig, AdaptiveIconDrawable* owner, Resources* res) {
+    mDensity = Drawable::resolveDensity(res, orig != nullptr ? orig->mDensity : 0);
     mChildren.resize(N_CHILDREN);// = new ChildDrawable[N_CHILDREN];
     if (orig != nullptr) {
         std::vector<ChildDrawable*>& origChildDrawable = orig->mChildren;
@@ -691,7 +700,9 @@ AdaptiveIconDrawable::LayerState::LayerState(LayerState* orig, AdaptiveIconDrawa
 
         for (int i = 0; i < N_CHILDREN; i++) {
             ChildDrawable* orcd = origChildDrawable[i];
-            mChildren[i] = new ChildDrawable(orcd, owner);
+            // Sparse slots (unset layer) copy as sparse; ChildDrawable's copy
+            // ctor dereferences orig.
+            mChildren[i] = orcd != nullptr ? new ChildDrawable(orcd, owner, res) : nullptr;
         }
 
         mCheckedOpacity = orig->mCheckedOpacity;
@@ -699,7 +710,7 @@ AdaptiveIconDrawable::LayerState::LayerState(LayerState* orig, AdaptiveIconDrawa
         mCheckedStateful = orig->mCheckedStateful;
         mIsStateful = orig->mIsStateful;
         mAutoMirrored = orig->mAutoMirrored;
-        //mThemeAttrs = orig->mThemeAttrs;
+        mThemeAttrs = orig->mThemeAttrs;
         mOpacityOverride = orig->mOpacityOverride;
         mSrcDensityOverride = orig->mSrcDensityOverride;
     } else {
@@ -715,22 +726,26 @@ void AdaptiveIconDrawable::LayerState::setDensity(int targetDensity) {
     }
 }
 
-bool AdaptiveIconDrawable::LayerState::canApplyTheme() const{
-    /*if (mThemeAttrs != nullptr || Drawable::ConstantState::canApplyTheme()) {
+bool AdaptiveIconDrawable::LayerState::canApplyTheme(){
+    if (!mThemeAttrs.empty() || Drawable::ConstantState::canApplyTheme()) {
         return true;
     }
 
     for (int i = 0; i < N_CHILDREN; i++) {
         ChildDrawable* layer = mChildren[i];
-        if (layer->canApplyTheme()) {
+        if (layer != nullptr && layer->canApplyTheme()) {
             return true;
         }
-    }*/
+    }
     return false;
 }
 
 Drawable* AdaptiveIconDrawable::LayerState::newDrawable() {
-    return new AdaptiveIconDrawable(this);
+    return new AdaptiveIconDrawable(this, nullptr);
+}
+
+Drawable* AdaptiveIconDrawable::LayerState::newDrawable(Resources* res) {
+    return new AdaptiveIconDrawable(this, res);
 }
 
 int AdaptiveIconDrawable::LayerState::getChangingConfigurations() const{
@@ -745,7 +760,7 @@ int AdaptiveIconDrawable::LayerState::getOpacity() {
     // Seek to the first non-nullptr drawable.
     int firstIndex = -1;
     for (int i = 0; i < N_CHILDREN; i++) {
-        if (mChildren[i]->mDrawable != nullptr) {
+        if (childAt(i) != nullptr) {
             firstIndex = i;
             break;
         }
@@ -760,7 +775,7 @@ int AdaptiveIconDrawable::LayerState::getOpacity() {
 
     // Merge all remaining non-nullptr drawables.
     for (int i = firstIndex + 1; i < N_CHILDREN; i++) {
-        Drawable* dr = mChildren[i]->mDrawable;
+        Drawable* dr = childAt(i);
         if (dr != nullptr) {
             op = Drawable::resolveOpacity(op, dr->getOpacity());
         }
@@ -771,6 +786,10 @@ int AdaptiveIconDrawable::LayerState::getOpacity() {
     return op;
 }
 
+Drawable* AdaptiveIconDrawable::LayerState::childAt(int i) const {
+    return (size_t)i < mChildren.size() && mChildren[i] ? mChildren[i]->mDrawable : nullptr;
+}
+
 bool AdaptiveIconDrawable::LayerState::isStateful() {
     if (mCheckedStateful) {
         return mIsStateful;
@@ -778,7 +797,7 @@ bool AdaptiveIconDrawable::LayerState::isStateful() {
 
     bool isStateful = false;
     for (int i = 0; i < N_CHILDREN; i++) {
-        Drawable* dr = mChildren[i]->mDrawable;
+        Drawable* dr = childAt(i);
         if (dr != nullptr && dr->isStateful()) {
             isStateful = true;
             break;
@@ -792,7 +811,7 @@ bool AdaptiveIconDrawable::LayerState::isStateful() {
 
 bool AdaptiveIconDrawable::LayerState::hasFocusStateSpecified() const{
     for (int i = 0; i < N_CHILDREN; i++) {
-        Drawable* dr = mChildren[i]->mDrawable;
+        Drawable* dr = childAt(i);
         if (dr != nullptr && dr->hasFocusStateSpecified()) {
             return true;
         }
@@ -802,7 +821,7 @@ bool AdaptiveIconDrawable::LayerState::hasFocusStateSpecified() const{
 
 bool AdaptiveIconDrawable::LayerState::canConstantState() {
     for (int i = 0; i < N_CHILDREN; i++) {
-        Drawable* dr = mChildren[i]->mDrawable;
+        Drawable* dr = childAt(i);
         if (dr != nullptr && dr->getConstantState() == nullptr) {
             return false;
         }

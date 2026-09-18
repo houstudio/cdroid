@@ -41,7 +41,7 @@ static void onClick(View&v){
 }
 
 TEST_F(WIDGET,View){
-    View v(400,80);
+    View v(&App::getInstance());
     v.setTextAlignment((int)View::TEXT_ALIGNMENT_CENTER);//no (int) will caused link error
     ASSERT_EQ(v.getTextAlignment(),(int)View::TEXT_ALIGNMENT_CENTER);
 
@@ -54,8 +54,8 @@ TEST_F(WIDGET,View){
 TEST_F(WIDGET,TextView){
     ViewGroup*w=GUIEnvironment::content();
     const char*strings[]={"LEFT","CENTER","RIGHT","LEFT|TOP","CENTER|TOP","RIGHT|TOP"};
-    TextView*t1=new TextView("",400,200);
-    TextView*t2=new TextView(std::string(),400,300);
+    TextView*t1=new TextView(&App::getInstance());
+    TextView*t2=new TextView(&App::getInstance());
     w->addView(t1);
     w->addView(t2);
     pumpFor(500);
@@ -63,9 +63,9 @@ TEST_F(WIDGET,TextView){
 
 TEST_F(WIDGET,Button){
    ViewGroup*w=GUIEnvironment::content();
-   LinearLayout*layout=new LinearLayout(800,600);
-   Button*btn1=new Button("OK",100,30);
-   Button*btn2=new Button("Cancel",100,30);
+   LinearLayout*layout=new LinearLayout(&App::getInstance());
+   Button*btn1=new Button(&App::getInstance()); btn1->setText("OK");
+   Button*btn2=new Button(&App::getInstance()); btn2->setText("Cancel");
    btn1->setId(ID_OK);
    btn1->setOnClickListener(onClick); //it's same as following lambda segment
    btn1->setOnClickListener([](View&v){
@@ -84,8 +84,12 @@ TEST_F(WIDGET,Button){
 
 TEST_F(WIDGET,ImageView){
    ViewGroup*w=GUIEnvironment::content();
-   ImageView*iv=new ImageView(400,400);
-   Drawable*d=new BitmapDrawable(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/light2.jpg");
+   ImageView*iv=new ImageView(&App::getInstance());
+   /* BitmapDrawable(ctx, path) with ctx==nullptr segfaults in the DEBUG
+      opacity probe (ctx->getDisplayMetrics()) — always pass a real context.
+      Path is relative to the pak dir the harness chdir()s to. */
+   Drawable*d=new BitmapDrawable(&App::getInstance(),
+        "../../../tests/gui/assets/drawable/ninepatch_1.9.png");
    iv->setImageDrawable(d);
    w->addView(iv);
    iv->layout(100,100,400,400);
@@ -96,23 +100,23 @@ TEST_F(WIDGET,ProgressBar){
     int pos=0,ticks=0;
     ViewGroup*w=GUIEnvironment::content();
     ProgressBar*pb;
-    LinearLayout*ll=new LinearLayout(800,600);
-    pb=new ProgressBar(800,20);
-    ll->addView(pb);pb->setId(100);
+    LinearLayout*ll=new LinearLayout(&App::getInstance());
+    pb=new ProgressBar(&App::getInstance());
+    ll->addView(pb,new LinearLayout::LayoutParams(800,20));pb->setId(100);
     pb->setProgress(30);
 
-    pb = new ProgressBar(30,200);
-    ll->addView(pb);
+    pb = new ProgressBar(&App::getInstance());
+    ll->addView(pb,new LinearLayout::LayoutParams(30,200));
     pb->setId(101);
 
-    pb=new ProgressBar(800,20);
-    ll->addView(pb);
+    pb=new ProgressBar(&App::getInstance());
+    ll->addView(pb,new LinearLayout::LayoutParams(800,20));
     pb->setIndeterminate(true);
 
-    pb=new ProgressBar(200,200);
-    w->addView(pb);pb->setId(102);
-    pb=new ProgressBar(200,200);
-    ll->addView(pb);
+    pb=new ProgressBar(&App::getInstance());
+    w->addView(pb,new ViewGroup::LayoutParams(200,200));pb->setId(102);
+    pb=new ProgressBar(&App::getInstance());
+    ll->addView(pb,new LinearLayout::LayoutParams(200,200));
     pb->setIndeterminate(true);
     w->addView(ll);
 
@@ -132,8 +136,8 @@ TEST_F(WIDGET,ProgressBar){
 
 TEST_F(WIDGET,SeekBar){
     ViewGroup*w=GUIEnvironment::content();
-    SeekBar*sb=new SeekBar(400,40);
-    w->addView(sb);
+    SeekBar*sb=new SeekBar(&App::getInstance());
+    w->addView(sb,new ViewGroup::LayoutParams(400,40));
     pumpFor(500);
 }
 
@@ -157,9 +161,10 @@ TEST_F(WIDGET,ListView){
 TEST_F(WIDGET,Keyboard){
     App&app=App::getInstance();
     ViewGroup*w=GUIEnvironment::content();
-    KeyboardView*kbv=new KeyboardView(800,300);
+    KeyboardView*kbv=new KeyboardView(&App::getInstance());
     kbv->setBackgroundColor(0xFFEEEEEE);
-    Keyboard*kbd=new Keyboard(&app,"cdroid:xml/qwerty.xml",800,200);
+    const int qwertyRes = app.getResources().getIdentifier("qwerty", "xml", "android");
+    Keyboard*kbd=new Keyboard(&app,qwertyRes,800,200);
     kbv->setKeyboard(kbd);
     w->addView(kbv);
     kbv->layout(20,10,800,300);

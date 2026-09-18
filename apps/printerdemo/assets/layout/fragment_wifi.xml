@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WiFi trial page: status card + actions + scan-result rows built in code
+     (the app's card/row idiom; one TextView row per ScanResult). -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" android:text="网络状态" android:textSize="13sp"
+            android:textColor="?android:attr/textColorSecondary"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="?attr/cardBackground" android:padding="16dp">
+            <TextView android:id="@+id/tv_wifi_state"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Wi-Fi" android:textSize="15sp" android:textStyle="bold"
+                android:textColor="?android:attr/textColorPrimary"/>
+            <TextView android:id="@+id/tv_wifi_detail"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="4dp" android:text="未连接" android:textSize="12sp"
+                android:textColor="?android:attr/textColorSecondary"/>
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <Button android:id="@+id/btn_scan" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:text="扫描"/>
+            <Button android:id="@+id/btn_disconnect" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginStart="10dp"
+                android:text="断开"/>
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:orientation="horizontal"
+                android:gravity="end|center_vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Wi-Fi" android:textSize="14sp"
+                    android:textColor="?android:attr/textColorPrimary"/>
+                <Switch android:id="@+id/sw_wifi" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginStart="8dp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="14dp" android:layout_marginBottom="8dp"
+            android:text="可用网络" android:textSize="13sp"
+            android:textColor="?android:attr/textColorSecondary"/>
+        <LinearLayout android:id="@+id/list_wifi"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="?attr/cardBackground"
+            android:padding="6dp"/>
+    </LinearLayout>
+</ScrollView>

@@ -1,20 +1,26 @@
 #if 10
 #include <widget/mediacontroller.h>
 #include <widget/cdwindow.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(MediaController)
+DECLARE_WIDGET2(MediaController, "android.widget.MediaController");
 
-MediaController::MediaController(Context* context,const AttributeSet& attrs)
- :FrameLayout(context,attrs){
+MediaController::MediaController(Context*ctx)
+    :MediaController(ctx,nullptr){}
+
+MediaController::MediaController(Context* context,const AttributeSet* attrs):MediaController(context,attrs,0){}
+
+MediaController::MediaController(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+ :FrameLayout(context,pAttrs, defStyleAttr){
     mRoot = this;
     mUseFastForward = true;
     mFromXml = true;
 }
 
 MediaController::MediaController(Context* context, bool useFastForward)
-  :FrameLayout(context,AttributeSet()){
+  :FrameLayout(context){
     mContext = context;
     mUseFastForward = useFastForward;
     initFloatingWindowLayout();
@@ -35,7 +41,7 @@ void MediaController::initFloatingWindow() {
     //mDecor.setOnTouchListener(mTouchListener);
     //mDecor.addOnAttachStateChangeListener(mAttachStateListener);
     //mWindow.setContentView(this);
-    mWindow->setBackgroundResource("@null");
+    mWindow->setBackgroundResource(0);
 
     // While the media controller is up, the volume control keys should
     // affect the media stream type
@@ -106,21 +112,21 @@ void MediaController::setAnchorView(View* view) {
 
 View* MediaController::makeControllerView() {
     LayoutInflater* inflate = LayoutInflater::from(mContext);
-    mRoot = inflate->inflate("cdroid:layout/media_controller", nullptr);
+    mRoot = inflate->inflate(cdroid::internal::R::layout::media_controller, nullptr);
     initControllerView(mRoot);
     return mRoot;
 }
 
 void MediaController::initControllerView(View* v) {
-    mPlayDescription = mContext->getString("cdroid:string/lockscreen_transport_play_description");
-    mPauseDescription = mContext->getString("cdroid:string/lockscreen_transport_pause_description");
-    mPauseButton = (ImageButton*)v->findViewById(cdroid::R::id::pause);
+    mPlayDescription = mContext->getString(R::string::lockscreen_transport_play_description);
+    mPauseDescription = mContext->getString(R::string::lockscreen_transport_pause_description);
+    mPauseButton = (ImageButton*)v->findViewById(R::id::pause);
     if (mPauseButton) {
         mPauseButton->requestFocus();
         mPauseButton->setOnClickListener(mPauseListener);
     }
 
-    mFfwdButton = (ImageButton*)v->findViewById(cdroid::R::id::ffwd);
+    mFfwdButton = (ImageButton*)v->findViewById(R::id::ffwd);
     if (mFfwdButton) {
         mFfwdButton->setOnClickListener(mFfwdListener);
         if (!mFromXml) {
@@ -128,7 +134,7 @@ void MediaController::initControllerView(View* v) {
         }
     }
 
-    mRewButton = (ImageButton*)v->findViewById(cdroid::R::id::rew);
+    mRewButton = (ImageButton*)v->findViewById(R::id::rew);
     if (mRewButton) {
         mRewButton->setOnClickListener(mRewListener);
         if (!mFromXml) {
@@ -137,16 +143,16 @@ void MediaController::initControllerView(View* v) {
     }
 
     // By default these are hidden. They will be enabled when setPrevNextListeners() is called
-    mNextButton = (ImageButton*)v->findViewById(cdroid::R::id::next);
+    mNextButton = (ImageButton*)v->findViewById(R::id::next);
     if (mNextButton && !mFromXml && !mListenersSet) {
         mNextButton->setVisibility(View::GONE);
     }
-    mPrevButton = (ImageButton*)v->findViewById(cdroid::R::id::prev);
+    mPrevButton = (ImageButton*)v->findViewById(R::id::prev);
     if (mPrevButton && !mFromXml && !mListenersSet) {
         mPrevButton->setVisibility(View::GONE);
     }
 
-    mProgress = (ProgressBar*)v->findViewById(cdroid::R::id::mediacontroller_progress);
+    mProgress = (ProgressBar*)v->findViewById(R::id::mediacontroller_progress);
     if (mProgress) {
         if (dynamic_cast<SeekBar*>(mProgress)) {
             SeekBar* seeker = (SeekBar*) mProgress;
@@ -155,8 +161,8 @@ void MediaController::initControllerView(View* v) {
         mProgress->setMax(1000);
     }
 
-    mEndTime = (TextView*)v->findViewById(cdroid::R::id::time);
-    mCurrentTime = (TextView*)v->findViewById(cdroid::R::id::time_current);
+    mEndTime = (TextView*)v->findViewById(R::id::time);
+    mCurrentTime = (TextView*)v->findViewById(R::id::time_current);
     //mFormatBuilder = new StringBuilder();
     //mFormatter = new Formatter(mFormatBuilder, Locale.getDefault());
 
@@ -342,10 +348,10 @@ void MediaController::updatePausePlay() {
         return;
 
     if (mPlayer.isPlaying()) {
-        mPauseButton->setImageResource("cdroid:drawable/ic_media_pause");
+        mPauseButton->setImageResource(R::drawable::ic_media_pause);
         mPauseButton->setContentDescription(mPauseDescription);
     } else {
-        mPauseButton->setImageResource("cdroid:drawable/ic_media_play");
+        mPauseButton->setImageResource(R::drawable::ic_media_play);
         mPauseButton->setContentDescription(mPlayDescription);
     }
 }
@@ -430,3 +436,7 @@ void MediaController::registerOnBackInvokedCallback() {
 
 }/*endof namespace*/
 #endif
+
+std::string MediaController::getAccessibilityClassName()const{  // AOSP MediaController.getAccessibilityClassName
+    return "MediaController";
+}

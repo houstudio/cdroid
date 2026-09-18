@@ -26,6 +26,15 @@ class ColorFilter{
 public:
     virtual void apply(Canvas&canvas,const Rect&)=0;
     virtual ~ColorFilter()=default;
+    /*Bake-cache generation. AOSP applies a ColorFilter live on the paint each
+      draw; CDROID drawables memoize a filtered bitmap copy instead, so in-place
+      mutators (setColor/setMode/setColorMultiply/setColorAdd) must bump this
+      to invalidate the memoized bake.*/
+    int getGeneration()const{return mGeneration;}
+protected:
+    void bumpGeneration(){mGeneration++;}
+private:
+    int mGeneration=0;
 };
 
 class ColorMatrixColorFilter:public ColorFilter{

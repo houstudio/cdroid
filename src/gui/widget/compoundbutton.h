@@ -23,16 +23,23 @@ namespace cdroid{
 class CompoundButton:public Button,public Checkable{
 public:
     DECLARE_UIEVENT(void,OnCheckedChangeListener,CompoundButton&view,bool);
-private: 
-    bool mChecked;
-    bool mBroadcasting;
-    bool mCheckedFromResource;
-    int  mButtonTintMode;
+private:
     Drawable* mButtonDrawable;
     cdroid::RefPtr<ColorStateList>mButtonTintList;
-    std::string mCustomStateDescription;
+    /* AOSP: BlendMode mButtonBlendMode. CDROID has no BlendMode class; the
+       PorterDuff::Mode union covers the legacy modes and NOOP stands in for null. */
+    PorterDuffMode mButtonBlendMode;
+    bool mChecked;
+    bool mBroadcasting;
+    bool mHasButtonTint;
+    bool mHasButtonBlendMode;
+    // Indicates whether the toggle state was set from resources or dynamically, so it can be used
+    // to sanitize autofill requests.
+    bool mCheckedFromResource;
     OnCheckedChangeListener mOnCheckedChangeListener;
     OnCheckedChangeListener mOnCheckedChangeWidgetListener;
+
+    std::string mCustomStateDescription;
     void initCompoundButton();
     void applyButtonTint();
 protected:
@@ -44,10 +51,11 @@ protected:
     void onDraw(Canvas&canvas)override;
     void setDefaultStateDescription();
 public:
-    CompoundButton(const std::string&txt,int width,int height);
-    CompoundButton(Context*ctx,const AttributeSet&attrs);
+    CompoundButton(Context*ctx);   // AOSP CompoundButton(Context)
+    CompoundButton(Context*ctx,const AttributeSet*attrs);
+    CompoundButton(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~CompoundButton()override;
-    void setButtonDrawable(const std::string&resid);
+    void setButtonDrawable(int resid);
     void setButtonDrawable(Drawable*d);
     bool performClick()override;
     Drawable* getButtonDrawable()const;
@@ -56,6 +64,8 @@ public:
     const cdroid::RefPtr<ColorStateList> getButtonTintList()const;
     void setButtonTintMode(PorterDuffMode tintMode);
     PorterDuffMode getButtonTintMode()const;
+    void setButtonTintBlendMode(PorterDuffMode tintMode);
+    PorterDuffMode getButtonTintBlendMode()const;
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;

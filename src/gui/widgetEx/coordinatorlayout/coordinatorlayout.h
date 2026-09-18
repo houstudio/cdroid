@@ -34,6 +34,10 @@ public:
         bool mDidChangeAfterNestedScroll;
     protected:
         Behavior* mBehavior;
+        /** True when the params created the behavior from XML (parseBehavior) and
+         *  must free it; AttachedBehavior pointers stay owned by their view
+         *  (upstream relies on GC — AppBarLayout deletes its own member). */
+        bool mBehaviorOwned = false;
         friend class CoordinatorLayout;
         bool mBehaviorResolved = false;
     public: 
@@ -101,13 +105,13 @@ private:
     std::vector<int> mKeylines;
     std::vector<View*> mTempDependenciesList;
 
-    View* mBehaviorTouchView;
-    View* mNestedScrollingTarget;
+    View* mBehaviorTouchView = nullptr;
+    View* mNestedScrollingTarget = nullptr;
 
     ViewTreeObserver::OnPreDrawListener mOnPreDrawListener;
 
-    WindowInsets* mLastInsets;
-    Drawable* mStatusBarBackground;
+    WindowInsets* mLastInsets = nullptr;
+    Drawable* mStatusBarBackground = nullptr;
 
     ViewGroup::OnHierarchyChangeListener mOnHierarchyChangeListener;
     View::OnApplyWindowInsetsListener mApplyWindowInsetsListener;
@@ -144,7 +148,9 @@ protected:
     int getSuggestedMinimumWidth()override;
     int getSuggestedMinimumHeight()override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-    void onLayout(bool changed, int l, int t, int r, int b)override;
+    // View::layout(l, t, w, h) forwards the SAME axes to onLayout — the last
+    // two ints are width/height, not right/bottom as AOSP names suggest.
+    void onLayout(bool changed, int x, int y, int width, int height)override;
     void recordLastChildRect(View* child, Rect& r);
     void getLastChildRect(View* child, Rect& out);
     void getChildRect(View* child, bool transform, Rect& out);
@@ -163,8 +169,9 @@ protected:
     void onRestoreInstanceState(Parcelable& state)override;
     Parcelable* onSaveInstanceState() override;
 public:
-    CoordinatorLayout(int w, int h);
-    CoordinatorLayout(Context* context,const AttributeSet& attrs);
+    CoordinatorLayout(Context*ctx);   // AOSP CoordinatorLayout(Context)
+    CoordinatorLayout(Context* context,const AttributeSet* attrs);
+    CoordinatorLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~CoordinatorLayout()override;
     void setOnHierarchyChangeListener(const OnHierarchyChangeListener& onHierarchyChangeListener)override;
     void onAttachedToWindow()override;
@@ -172,14 +179,14 @@ public:
     void setStatusBarBackground(Drawable* bg);
     Drawable* getStatusBarBackground()const;
     void setVisibility(int visibility) override;
-    void setStatusBarBackgroundResource(const std::string& resId);
+    void setStatusBarBackgroundResource(int resId);
     void setStatusBarBackgroundColor(int color);
     WindowInsets getLastWindowInsets();
     bool onInterceptTouchEvent(MotionEvent& ev) override;
     bool onTouchEvent(MotionEvent& ev)override;
     void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
 
-    static Behavior* parseBehavior(Context* context,const AttributeSet& attrs,const std::string& name);
+    static Behavior* parseBehavior(Context* context,const AttributeSet* attrs,const std::string& name);
     LayoutParams* getResolvedLayoutParams(View* child);
 
     void getDescendantRect(View* descendant, Rect& out);
@@ -220,6 +227,23 @@ public:
     struct AttachedBehavior {
         std::function<Behavior*()> getBehavior;
     };
+
+    /**
+     * Static factory registry for XML-declared Behaviors. AOSP
+     * CoordinatorLayout.parseBehavior reflects the Behavior subclass by its
+     * fully-qualified name; CDROID replaces the reflection with constructors
+     * self-registered at static-init (the DECLARE_WIDGET pattern). A lookup
+     * accepts the registered key or any fully-qualified name whose last
+     * '.'-segment matches one (upstream XML values are FQCNs such as
+     * "com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior").
+     */
+    class BehaviorFactory {
+    public:
+        typedef std::function<Behavior*(Context*, const AttributeSet*)> Constructor;
+        static void registerBehavior(const std::string& className, const Constructor& ctor);
+        static Behavior* create(const std::string& className, Context* context,
+                                const AttributeSet* attrs);
+    };
 };
 
 /**
@@ -235,7 +259,7 @@ class CoordinatorLayout::Behavior{//; :public View {//<V extends View> {
     //static_assert(std::is_base_of<View, V>::value, "V must be a subclass of View");
 public:
     Behavior() {}
-    Behavior(Context* context, const AttributeSet& attrs) {}
+    Behavior(Context* context, const AttributeSet* attrs) {}
     virtual ~Behavior()=default;
     virtual void onAttachedToLayoutParams(CoordinatorLayout::LayoutParams& params) {}
     virtual void onDetachedFromLayoutParams() {}
@@ -370,4 +394,16 @@ class CoordinatorLayout::SavedState extends AbsSavedState {
 }
 #endif
 }/*endof namespace*/
+
+/** Registers a CoordinatorLayout::Behavior constructor under the given class-name
+ *  key (see CoordinatorLayout::BehaviorFactory). `id` is an identifier-safe suffix
+ *  for the static registrar ($ is legal in the upstream key, not in C++). */
+#define REGISTER_BEHAVIOR(Class, id, registeredName)                                    \
+    static const int _cdroid_behavior_reg_##id =                                        \
+        (::cdroid::CoordinatorLayout::BehaviorFactory::registerBehavior(registeredName, \
+            [](::cdroid::Context* c, const ::cdroid::AttributeSet* a)                   \
+                    -> ::cdroid::CoordinatorLayout::Behavior* {                         \
+                return new Class(c, a);                                                 \
+            }), 0)
+
 #endif/*__COORDINATOR_LAYOUT_H__*/

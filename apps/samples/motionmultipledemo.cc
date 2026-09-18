@@ -14,7 +14,7 @@
 using namespace cdroid;
 
 static TextView* makeBox(const char* label, int id, uint32_t color) {
-    auto* tv = new TextView(label, 120, 80);
+    auto* tv = new TextView(&App::getInstance()); tv->setText(label);
     tv->setId(id);
     tv->setBackgroundColor(color);
     tv->setGravity(Gravity::CENTER);
@@ -27,7 +27,7 @@ int main(int argc, const char* argv[]) {
     App app(argc, argv);
     Window* win = new Window(0, 0, -1, -1);
 
-    MotionLayout* ml = new MotionLayout(-1, -1);
+    MotionLayout* ml = new MotionLayout(&app);
     ml->setBackgroundColor(0xFF1B1B2F);
     win->addView(ml);
 

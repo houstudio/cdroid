@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <widgetEx/wear/backbuttondismisscontroller.h>
-#include <widgetEx/wear/dismissableframelayout.h>
+#include <widgetEx/wear/dismissibleframelayout.h>
 namespace cdroid{
 
 BackButtonDismissController::BackButtonDismissController(Context* context, DismissibleFrameLayout* layout)

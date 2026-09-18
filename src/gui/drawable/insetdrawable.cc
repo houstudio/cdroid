@@ -15,9 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/insetdrawable.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 void InsetDrawable::InsetValue::set(float f,int d){
     mFraction = f;
@@ -52,14 +55,18 @@ void InsetDrawable::InsetState::onDensityChanged(int sourceDensity, int targetDe
 }
 
 InsetDrawable*InsetDrawable::InsetState::newDrawable(){
-    return new InsetDrawable(std::dynamic_pointer_cast<InsetState>(shared_from_this()));
+    return (InsetDrawable*)newDrawable(nullptr);
 }
 
-InsetDrawable::InsetDrawable():DrawableWrapper(std::make_shared<InsetState>()){
+Drawable*InsetDrawable::InsetState::newDrawable(Resources* res){
+    return new InsetDrawable(std::dynamic_pointer_cast<InsetState>(shared_from_this()), res);
+}
+
+InsetDrawable::InsetDrawable():DrawableWrapper(std::make_shared<InsetState>(), nullptr){
     mState = std::dynamic_pointer_cast<InsetState>(DrawableWrapper::mState);
 }
 
-InsetDrawable::InsetDrawable(std::shared_ptr<InsetState>state):DrawableWrapper(state){
+InsetDrawable::InsetDrawable(std::shared_ptr<InsetState>state,Resources*res):DrawableWrapper(state,res){
     mState = state;
 }
 
@@ -68,7 +75,7 @@ InsetDrawable::InsetDrawable(Drawable*drawable,int inset)
 }
 
 InsetDrawable::InsetDrawable(Drawable* drawable,int insetLeft,int insetTop,int insetRight,int insetBottom)
-    :InsetDrawable(std::make_shared<InsetState>()){
+    :InsetDrawable(std::make_shared<InsetState>(), nullptr){
     setDrawable(drawable);
     mState->mInset.set(insetLeft,insetTop,insetRight,insetBottom);
     mState->mInsetLeft.set(0.f, insetLeft);
@@ -127,11 +134,19 @@ int InsetDrawable::getOpacity() const{
 
 void InsetDrawable::onBoundsChange(const Rect&bounds){
     Rect r = bounds;
-  
-    r.left  += mState->mInsetLeft.getDimension(bounds.width);
-    r.top   += mState->mInsetTop.getDimension(bounds.height);
-    r.width -= mState->mInsetRight.getDimension(bounds.width);
-    r.height-= mState->mInsetBottom.getDimension(bounds.height);
+
+    // AOSP builds an ltrb rect (left+insetL, top+insetT, right-insetR,
+    // bottom-insetB); cdroid's Rect is left/top/width/height, so BOTH insets
+    // come off each axis — subtracting only the trailing one shrank the rect
+    // by half and left it flush against the far edge.
+    const int il = (int)mState->mInsetLeft.getDimension(bounds.width);
+    const int it = (int)mState->mInsetTop.getDimension(bounds.height);
+    const int ir = (int)mState->mInsetRight.getDimension(bounds.width);
+    const int ib = (int)mState->mInsetBottom.getDimension(bounds.height);
+    r.left   += il;
+    r.top    += it;
+    r.width  -= il + ir;
+    r.height -= it + ib;
     DrawableWrapper::onBoundsChange(r);
 }
 
@@ -163,11 +178,29 @@ std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){
     return mState;
 }
 
-void InsetDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void InsetDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     // Inset attribute may be overridden by more specific attributes.
-    updateStateFromTypedArray(atts);
-    DrawableWrapper::inflate(parser,atts);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::InsetDrawable);
+    if (ta) {
+        mState->mThemeAttrs = ta->extractThemeAttrs();
+        updateStateFromTypedArray(*ta);
+    }
+    DrawableWrapper::inflate(r,parser,atts, theme);
     verifyRequiredAttributes();
+}
+
+// AOSP InsetDrawable.canApplyTheme/applyTheme.
+bool InsetDrawable::canApplyTheme(){
+    return (mState && !mState->mThemeAttrs.empty()) || DrawableWrapper::canApplyTheme();
+}
+
+void InsetDrawable::applyTheme(const Resources::Theme& t){
+    DrawableWrapper::applyTheme(t);
+    if (mState && !mState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mState->mThemeAttrs, R::styleable::InsetDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        mState->mThemeAttrs.clear();
+    }
 }
 
 void InsetDrawable::verifyRequiredAttributes(){
@@ -178,18 +211,31 @@ void InsetDrawable::verifyRequiredAttributes(){
     }
 }
 
-void InsetDrawable::updateStateFromTypedArray(const AttributeSet&atts){
-    if (atts.hasAttribute("inset")) {
-        const float inset = atts.getFloat("inset", 0);
-        mState->mInsetLeft.set(inset);
-        mState->mInsetTop.set(inset);
-        mState->mInsetRight.set(inset);
-        mState->mInsetBottom.set(inset);
+void InsetDrawable::updateStateFromTypedArray(const TypedArray& a){
+    // AOSP getInset(): a fraction value (%) sets the fraction field, anything
+    // else reads as a density-applied dimension offset. The old plain
+    // getFloat lost density scaling (16dp stayed 16px on a 2x display) and
+    // fed the f<1 heuristic in InsetValue::set(float). Absent attributes keep
+    // the existing value (AOSP behavior; android:inset must not be wiped).
+    auto setInset = [&a](InsetDrawable::InsetValue& v, size_t idx) {
+        TypedValue tv;
+        if (!a.getValue(idx, &tv)) return;
+        if (tv.type == TypedValue::TYPE_FRACTION) {
+            v.set(a.getFraction(idx, 1, 1, 0.f), 0);
+        } else {
+            v.set(0.f, a.getDimensionPixelOffset(idx, 0));
+        }
+    };
+    if (a.hasValue(R::styleable::InsetDrawable_inset)) {
+        setInset(mState->mInsetLeft,   R::styleable::InsetDrawable_inset);
+        setInset(mState->mInsetTop,    R::styleable::InsetDrawable_inset);
+        setInset(mState->mInsetRight,  R::styleable::InsetDrawable_inset);
+        setInset(mState->mInsetBottom, R::styleable::InsetDrawable_inset);
     }
-    mState->mInsetLeft.set(atts.getFloat("insetLeft", 0.f));
-    mState->mInsetTop.set(atts.getFloat("insetTop", 0.f));
-    mState->mInsetRight.set(atts.getFloat("insetRight", 0.f));
-    mState->mInsetBottom.set(atts.getFloat("insetBottom", 0.f));
+    setInset(mState->mInsetLeft,   R::styleable::InsetDrawable_insetLeft);
+    setInset(mState->mInsetTop,    R::styleable::InsetDrawable_insetTop);
+    setInset(mState->mInsetRight,  R::styleable::InsetDrawable_insetRight);
+    setInset(mState->mInsetBottom, R::styleable::InsetDrawable_insetBottom);
 }
 }/*endof namespace*/
 

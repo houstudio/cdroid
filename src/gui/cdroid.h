@@ -15,9 +15,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA.
  */
-#include <core/app.h>
 //#include <core/build.h>
 #include <gui/gui_features.h>
+#include <core/app.h>
 #include <view/viewgroup.h>
 #include <view/viewoverlay.h>
 #include <widget/viewpager.h>

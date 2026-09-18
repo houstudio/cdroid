@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionNoStateAnimates: a noState ViewTransition that animates one view
+     independently of the main transition (KeyAttribute alpha=0 @frame50). -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <ViewTransition android:id="@+id/vt_anim" app:motionTarget="@+id/vtn_target"
+                    app:onStateTransition="actionDown" app:duration="400"
+                    app:viewTransitionMode="noState">
+        <KeyFrameSet>
+            <KeyAttribute app:motionTarget="@+id/vtn_target" app:framePosition="50"
+                          android:alpha="0" />
+        </KeyFrameSet>
+    </ViewTransition>
+</MotionScene>

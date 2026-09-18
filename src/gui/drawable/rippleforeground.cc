@@ -41,7 +41,10 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
     clampStartingPosition();
     mAnimationListener.onAnimationEnd=[this](Animator&anim,bool isReverse){
         mHasFinishedExit = true;
-        pruneSwFinished();
+        // AOSP only prunes the animator list here (GC reaps the animator);
+        // C++ owns the animators, so pass the firing one — freeing it from
+        // inside its own onAnimationEnd would unwind into freed memory.
+        pruneSwFinished(&anim);
     };
 }
 
@@ -70,17 +73,27 @@ void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
     }
 }
 
-void RippleForeground::pruneSwFinished() {
-    if( mRunningSwAnimators.size()==0)return;
+void RippleForeground::pruneSwFinished(Animator* firing) {
+    // AOSP walks the list backwards removing finished animators (GC reaps
+    // them). C++ owns the animators, so erase them first and only end()/delete
+    // after the pass: end() can synchronously fire mAnimationListener, whose
+    // reentrant pruneSwFinished() must never run against a vector being
+    // iterated. The animator whose notification is on the stack stays in the
+    // list (skipped) — a later draw()/end()/destructor reaps it.
+    if (mRunningSwAnimators.size()==0)return;
+    std::vector<Animator*> finished;
     for (auto it =mRunningSwAnimators.begin();it!=mRunningSwAnimators.end();){
         Animator*anim = *it;
-        if (!anim->isRunning()) {
+        if (anim != firing && !anim->isRunning()) {
             it = mRunningSwAnimators.erase(it);
-            anim->end();
-            delete anim;
+            finished.push_back(anim);
         }else{
             it++;
         }
+    }
+    for (auto anim : finished) {
+        anim->end(); // detaches a startDelay-pending animator from the frame clock
+        delete anim;
     }
 }
 
@@ -154,12 +167,17 @@ public:
 const RippleForeground::COPACITY RippleForeground::OPACITY;
 
 void RippleForeground::startSoftwareEnter() {
-    for (auto anim:mRunningSwAnimators) {
+    // cancel() fires onAnimationEnd synchronously (the exit animator carries
+    // mAnimationListener -> pruneSwFinished()); with owned pointers the old
+    // cancel-then-delete loop left deleted entries in the vector for the
+    // reentrant prune to touch. Take the list out first so any reentry sees
+    // an empty list; delete only after cancel() has fully returned.
+    std::vector<Animator*> stale;
+    stale.swap(mRunningSwAnimators);
+    for (auto anim : stale) {
         anim->cancel();
-        //LOGD("delete anim %p of %d",anim,mRunningSwAnimators.size());
         delete anim;
     }
-    mRunningSwAnimators.clear();
     ValueAnimator* tweenRadius = ObjectAnimator::ofFloat(this, &TWEEN_RADIUS, {1.f});
     tweenRadius->setDuration(RIPPLE_ENTER_DURATION);
     tweenRadius->setInterpolator(DecelerateInterpolator::Instance);
@@ -214,12 +232,18 @@ float RippleForeground::getCurrentRadius() {
 }
 
 void RippleForeground::end(){
-    for (auto anim:mRunningSwAnimators) {
+    // Same reentrancy as startSoftwareEnter(): anim->end() fires
+    // onAnimationEnd synchronously, and the listener's pruneSwFinished()
+    // erased/deleted from this very vector while the loop held dangling
+    // iterators and already-freed entries (double delete at the delete below
+    // — the cancelExitingRipples crash during fragment detach). Swap the list
+    // out first; every delete happens after its end() has fully returned.
+    std::vector<Animator*> animators;
+    animators.swap(mRunningSwAnimators);
+    for (auto anim:animators) {
         anim->end();
-        //LOGD("delete %d anim %p",mRunningSwAnimators.size(),anim);
         delete anim;
     }
-    mRunningSwAnimators.clear();
 }
 
 void RippleForeground::onAnimationPropertyChanged() {

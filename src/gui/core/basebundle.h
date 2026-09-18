@@ -2,14 +2,17 @@
 #define __CDROID_BASEBUNDLE_H__
 
 #include <string>
+#include <cstdint>
 #include <stdexcept>
 #include <typeinfo>
 #include <vector>
 #include <unordered_map>
 #include <core/any.h>
+#include <core/sparsearray.h>
 
 namespace cdroid {
 using namespace nonstd;
+class Parcelable;
 class BaseBundle {
 protected:
     std::unordered_map<std::string, any> data_; // protected: mirrors Android's package-private (Bundle subclass needs direct access for putBundle/getBundle)
@@ -81,6 +84,17 @@ public:
         data_[key] = value;
     }
 
+    // AOSP Bundle.putSparseParcelableArray — keyed presenter/view state. The
+    // stored pointers are borrowed (the producer keeps them alive), matching
+    // the existing pointer-semantic getters.
+    void putSparseParcelableArray(const std::string& key, const SparseArray<Parcelable*>& value) {
+        data_[key] = value;
+    }
+    SparseArray<Parcelable*> getSparseParcelableArray(const std::string& key) const{
+        return containsKey(key) ? getValue<SparseArray<Parcelable*>>(key)
+                                : SparseArray<Parcelable*>();
+    }
+
     // Get methods for single values
     int8_t getByte(const std::string& key) const{
         return getValue<int8_t>(key);
@@ -91,6 +105,22 @@ public:
     }
     int getInt(const std::string& key) const {
         return getValue<int>(key);
+    }
+
+    // android.os.Bundle getXxx(key, defaultValue) overloads: return the
+    // default when the key is absent (AOSP semantics; the single-arg form
+    // above cannot express "missing").
+    int getInt(const std::string& key, int def) const {
+        return containsKey(key) ? getValue<int>(key) : def;
+    }
+    int64_t getLong(const std::string& key, int64_t def) const {
+        return containsKey(key) ? getValue<int64_t>(key) : def;
+    }
+    float getFloat(const std::string& key, float def) const {
+        return containsKey(key) ? getValue<float>(key) : def;
+    }
+    bool getBoolean(const std::string& key, bool def) const {
+        return containsKey(key) ? getValue<bool>(key) : def;
     }
 
     int64_t getLong(const std::string& key) const {

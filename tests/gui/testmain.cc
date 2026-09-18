@@ -9,14 +9,12 @@
 #include <core/callbackbase.h>     // Runnable
 #include <widget/cdwindow.h>
 #include <widget/textview.h>
-#include <widget/button.h>
 #include <widget/linearlayout.h>
 #include <widget/framelayout.h>
 #include <widget/scrollview.h>
 #include <widget/listview.h>
 #include <widget/adapterview.h>
 #include <widget/adapter.h>
-#include <widget/drawerlayout.h>
 #include <drawable/colordrawable.h>
 #include <text/spannablestringbuilder.h>
 #include <text/spannablestring.h>       // Spanned flags
@@ -29,15 +27,14 @@ namespace cdroid{ class Window; }
 
 GUIEnvironment* GUIEnvironment::mInst=nullptr;
 Window*         GUIEnvironment::mStage=nullptr;
-DrawerLayout*   GUIEnvironment::mDrawerLayout=nullptr;
+LinearLayout*   GUIEnvironment::mPanel=nullptr;
 ViewGroup*      GUIEnvironment::mContent=nullptr;
-LinearLayout*   GUIEnvironment::mDrawerPanel=nullptr;
 
-/* The result drawer interior + its data. The drawer follows the currently
-   running case: the upper suite list auto-selects (and scrolls to) the running
-   case's suite; the lower detail shows only that suite's cases — colored per
-   result (+ green / x red / ~ gray running). Global pass/fail totals are shown
-   in the header. */
+/* The results pane (left) + its data. The pane follows the currently running
+   case: the upper suite list auto-selects (and scrolls to) the running case's
+   suite; the lower detail shows only that suite's cases — colored per result
+   (+ green / x red / ~ gray running). Global pass/fail totals are shown in
+   the header. */
 namespace{
 constexpr int COL_PASS = 0xFF66BB6A; // green
 constexpr int COL_FAIL = 0xFFEF5350; // red
@@ -78,7 +75,7 @@ void rebuildDetail(){
     if(!gDetail) return;
     SpannableStringBuilder* b=new SpannableStringBuilder();
     const auto& src=selectedCases();
-    const size_t cap=200;
+    const size_t cap=50; // viewport-worth; keeps the per-case rebuild cheap
     for(size_t i = src.size()>cap? src.size()-cap : 0; i<src.size(); i++){
         const CaseRec&c=src[i];
         int col = c.status==ST_PASS?COL_PASS : c.status==ST_FAIL?COL_FAIL : COL_RUN;
@@ -104,7 +101,8 @@ public:
     View*getView(int position,View*convertView,ViewGroup*/*parent*/)override{
         TextView*tv=dynamic_cast<TextView*>(convertView);
         if(!tv){
-            tv=new TextView("",-1,52);
+            tv=new TextView(&App::getInstance());
+            tv->setLayoutParams(new AbsListView::LayoutParams(-1,52));
             tv->setTextSize(15);
             tv->setPadding(28,10,16,10);
             tv->setFocusable(false);
@@ -152,38 +150,35 @@ int indexOfSuite(const std::string&sn){
 
 void buildDrawer(){
     if(gBuilt) return; gBuilt=true;
-    LinearLayout*panel=GUIEnvironment::drawerPanel();
+    LinearLayout*panel=GUIEnvironment::panel();
     panel->setBackgroundColor(0xEE0E1419);
 
     // header bar: title + global totals + close button
-    LinearLayout*head=new LinearLayout(-1,56);
+    LinearLayout*head=new LinearLayout(&App::getInstance());
     head->setOrientation(LinearLayout::HORIZONTAL);
     head->setBackgroundColor(0xFF1B262C);
-    TextView*title=new TextView("Test Results",-2,56);
+    TextView*title=new TextView(&App::getInstance()); title->setText("Test Results");
     title->setTextSize(18);
     title->setTextColor(0xFFECEFF1);
     title->setPadding(24,0,0,0);
     title->setGravity(Gravity::START|Gravity::CENTER_VERTICAL);
-    head->addView(title);
-    gHeaderSum=new TextView("",-2,56);
+    head->addView(title,new LinearLayout::LayoutParams(-2,56));
+    gHeaderSum=new TextView(&App::getInstance());
     gHeaderSum->setTextSize(15);
     gHeaderSum->setTextColor(0xFFB0BEC5);
     gHeaderSum->setPadding(12,0,0,0);
     gHeaderSum->setGravity(Gravity::START|Gravity::CENTER_VERTICAL);
-    head->addView(gHeaderSum);
-    View*spacer=new View(0,0);
+    head->addView(gHeaderSum,new LinearLayout::LayoutParams(-2,56));
+    View*spacer=new View(&App::getInstance());
     head->addView(spacer,new LinearLayout::LayoutParams(0,0,1.0f));
-    Button*close=new Button("X",72,56);
-    close->setTextSize(16);
-    close->setOnClickListener([](View&){
-        DrawerLayout*dl=GUIEnvironment::drawerLayout();
-        if(dl) dl->closeDrawer(Gravity::START);
-    });
-    head->addView(close);
     panel->addView(head,new LinearLayout::LayoutParams(-1,56));
 
-    // upper: suite list (selectable) — auto-follows the running case
-    gSuiteList=new ListView(-1,-1);
+    // upper: suite list (selectable) — auto-follows the running case.
+    // Scrollbars off for the same reason as gScroller below: setSelection
+    // re-arms the fade-delay message on every case.
+    gSuiteList=new ListView(&App::getInstance());
+    gSuiteList->setVerticalScrollBarEnabled(false);
+    gSuiteList->setHorizontalScrollBarEnabled(false);
     gSuiteList->setBackgroundColor(0xFF141B22);
     gAdapter=new SuiteAdapter();
     gSuiteList->setAdapter(gAdapter);
@@ -193,10 +188,16 @@ void buildDrawer(){
     gSuiteList->setSelector(new ColorDrawable(0x22FFFFFF));
     panel->addView(gSuiteList,new LinearLayout::LayoutParams(-1,0,1.0f));
 
-    // lower: per-case detail for the current suite (scrollable, span-colored)
-    gScroller=new ScrollView(-1,-1);
+    // lower: per-case detail for the current suite (scrollable, span-colored).
+    // Scrollbars off: the pane auto-follows via fullScroll, so they are pure
+    // noise — and awakenScrollBars keeps a ~1.6s fade-delay message armed in
+    // the queue after every rebuild, which makes pumpUntilIdle() grind its
+    // full timeout in every test that waits on it.
+    gScroller=new ScrollView(&App::getInstance());
+    gScroller->setVerticalScrollBarEnabled(false);
+    gScroller->setHorizontalScrollBarEnabled(false);
     gScroller->setBackgroundColor(0xFF0C1116);
-    gDetail=new TextView("",-1,-2);
+    gDetail=new TextView(&App::getInstance());
     gDetail->setTextSize(13);
     gDetail->setTextColor(0xFFECEFF1);
     gDetail->setPadding(24,14,16,14);
@@ -209,7 +210,7 @@ void buildDrawer(){
    ready; the first OnTestStart (which always runs after SetUp) finishes the job. */
 void ensureReady(const testing::UnitTest*unit){
     if(gReady) return;
-    if(!GUIEnvironment::drawerPanel()) return;
+    if(!GUIEnvironment::panel()) return;
     buildDrawer();
     /* CDROID's AttachInfo defaults mInTouchMode=true (Android defaults false).
        With no input in this harness the ListView stays in touch mode, which
@@ -228,8 +229,6 @@ void ensureReady(const testing::UnitTest*unit){
     }
     refreshSummary();
     rebuildDetail();
-    DrawerLayout*dl=GUIEnvironment::drawerLayout();
-    if(dl) dl->openDrawer(Gravity::START,false); // open, no slide-in animation
     pumpFor(40);
     gReady=true;
 }
@@ -253,8 +252,10 @@ public:
         g.selected=suite;
         int idx=indexOfSuite(suite);
         if(gSuiteList && idx>=0) gSuiteList->setSelection(idx);
-        refreshSummary();
-        rebuildDetail();
+        /* Light touch only: the detail rebuild and the suite-list rebind run
+           at OnTestEnd with the settled result — at OnTestStart they would
+           just repaint a "~ running" line and cost a full rebind each, twice
+           per case across 1500+ cases. */
     }
     void OnTestEnd(const testing::TestInfo&info)override{
         const std::string suite=info.test_suite_name();
@@ -272,7 +273,7 @@ public:
         refreshSummary();
         if(g.selected==suite) rebuildDetail();
 
-        // reset the test screen for the next case (the drawer is a sibling → untouched)
+        // reset the test screen for the next case (the results pane is a sibling → untouched)
         ViewGroup*content=GUIEnvironment::content();
         if(content) content->removeAllViews();
         // drop stray windows (dialogs / edge windows) the case may have created
@@ -282,14 +283,59 @@ public:
         if(wm.getWindows(wins)>0){
             for(auto* w: wins) if(w!=stage) wm.removeWindow(w);
         }
-        pumpFor(20);
+        pumpFor(5);
     }
 };
 
+/* Suites whose cases show UI on screen for human inspection (demo-style:
+   build a screen, pumpFor, look at it). They are excluded from the default
+   pure-logic regression run — run them alone with -visual, or mix everything
+   back in with -all. When adding a new visual test, add its suite name here.
+   Suite names must stay unique vs the pure suites (they are used verbatim in
+   the gtest filter). */
+const char*const VISUAL_SUITES[]={
+    "LAYOUT","EDITTEXT","EDGEEFFECT","WIDGET","APP","DIALOG","CDCONTEXT",
+    "FOCUS","ANIMATOR","ANIMATORINFLATOR","DRAWABLE_CDT","SCENE","IMAGE",
+    "BaseKeyListenerTest","MultiTapKeyListenerTest",
+};
+
+std::string visualFilter(){
+    std::string f;
+    for(const char*s:VISUAL_SUITES){
+        if(!f.empty()) f+=':';
+        f+=std::string(s)+".*";
+    }
+    return f;
+}
+
+/* Run-mode selection, applied via the gtest filter:
+     (default)  pure-logic regression — visual suites excluded
+     -visual    only the on-screen suites
+     -all       everything (pre-split behavior)
+   An explicit --gtest_filter on the command line always wins. */
 int main(int argc,char*argv[])
 {
+    bool visual=false, all=false;
+    /* Strip our own mode flags first so neither LogParseModules, gtest, nor
+       App ever sees them (unknown flags are not tolerated everywhere). */
+    int kept=0;
+    for(int i=0;i<argc;i++){
+        if(!strcmp(argv[i],"-visual")){ visual=true; continue; }
+        if(!strcmp(argv[i],"-all"))   { all=true;    continue; }
+        argv[kept++]=argv[i];
+    }
+    argc=kept;
+    /* Must scan before InitGoogleTest — gtest removes its own args from argv. */
+    bool explicitFilter=false;
+    for(int i=0;i<argc;i++)
+        if(!strncmp(argv[i],"--gtest_filter",14)){ explicitFilter=true; break; }
+
     LogParseModules(argc,(const char**)argv);
     testing::InitGoogleTest(&argc,argv);
+    if(!explicitFilter){
+        if(visual)      testing::GTEST_FLAG(filter)=visualFilter();
+        else if(!all)   testing::GTEST_FLAG(filter)="-"+visualFilter();
+    }
     ::testing::AddGlobalTestEnvironment(new GUIEnvironment(argc,(const char**)argv));
     ::testing::UnitTest::GetInstance()->listeners().Append(new GuiTestListener);
     return RUN_ALL_TESTS();

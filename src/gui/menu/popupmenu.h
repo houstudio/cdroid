@@ -21,8 +21,18 @@
 #include <menu/menubuilder.h>
 #include <menu/menupopuphelper.h>
 #include <widget/forwardinglistener.h>
+#include <core/handler.h>
+#include <memory>
 namespace cdroid{
 
+/* AOSP-style fire-and-forget (the unified transient-popup lifetime contract,
+   shared with Dialog/AlertDialog): allocate, populate, show(), then drop the
+   pointer - after a successful show() the menu owns itself and self-destructs
+   on the next looper drain once its dismiss cascade completes. NEVER delete a
+   shown menu (a legacy delete-after-dismiss is tolerated - the destructor
+   purges the pending self-delete - but keep no owning members). show() is
+   ONE-SHOT: after dismissal, create a new instance. Inside dismiss/item-click
+   listeners only read the passed references. */
 class PopupMenu{
 public:
     DECLARE_UIEVENT(bool,OnMenuItemClickListener,MenuItem&);
@@ -31,6 +41,7 @@ private:
     class MenuForwardingListener:public ForwardingListener{
     private:
         PopupMenu*mPopupMenu;
+        std::shared_ptr<bool> mAlive;
     public:
         MenuForwardingListener(PopupMenu*pm,View*v);
         bool onForwardingStarted()override;
@@ -47,6 +58,14 @@ private:
     OnDismissListener mOnDismissListener;
     MenuForwardingListener *mMenuForwardingListener;
     View::OnTouchListener mDragListener;
+
+    // Non-null once the dismiss cascade posted the self-delete; doubles as the
+    // one-shot flag for show().
+    Handler* mDeleteHandler = nullptr;
+    // Alive-flag (the Fragment idiom): the drag-to-open touch listener and the
+    // ShowableListMenu closures handed to the anchor outlive this menu and must
+    // become no-ops once it dies.
+    std::shared_ptr<bool> mAliveFlag;
 public:
     PopupMenu(Context* context, View* anchor);
     PopupMenu(Context* context, View* anchor, int gravity);
@@ -68,8 +87,16 @@ public:
      *        popupStyleAttr is 0 or can not be found in the theme. Can be 0
      *        to not look for defaults.
      */
-    PopupMenu(Context* context, View* anchor, int gravity, const std::string& popupStyleAttr,const std::string& popupStyleRes);
+    PopupMenu(Context* context, View* anchor, int gravity, int popupStyleAttr, int popupStyleRes);
+
+    /** Protected on purpose (mirrors Dialog): PopupMenu is fire-and-forget -
+        after show() it owns itself and self-destructs once its dismiss cascade
+        completes. Deleting a shown menu is prevented at compile time; the
+        destructor's purge guard keeps derived classes that expose a public
+        destructor (or never-shown menus) safe at runtime. */
+protected:
     virtual ~PopupMenu();
+public:
 
     /**
      * Sets the gravity used to align the popup window to its anchor view.
@@ -124,7 +151,7 @@ public:
      *
      * @param menuRes Menu resource to inflate
      */
-    void inflate(const std::string& menuRes);
+    void inflate(int menuRes);
 
     void show();
     void dismiss();

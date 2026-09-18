@@ -3,9 +3,8 @@
  *
  * (LGPL 2.1+) — ported from android-36 android.transition.TransitionInflater.
  *
- * Resource note: android resolves by int resource id; CDROID is string-reference based
- * ("@transition/foo"), so inflateTransition takes a string resource id (XmlPullParser takes
- * a string resid). Custom <transition class="..."> uses java reflection, which CDROID lacks —
+ * Resource note: resolves by int resource id (AOSP @TransitionRes), same as
+ * android. Custom <transition class="..."> uses java reflection, which CDROID lacks —
  * that path throws (custom transitions must be constructed in code).
  *********************************************************************************/
 #ifndef __CDROID_TRANSITION_TRANSITIONINFLATER_H__
@@ -33,8 +32,8 @@ class TransitionInflater {
   public:
     static TransitionInflater* from(Context* context);
 
-    Transition* inflateTransition(const std::string& resource);
-    TransitionManager* inflateTransitionManager(const std::string& resource, ViewGroup* sceneRoot);
+    Transition* inflateTransition(int resourceId);
+    TransitionManager* inflateTransitionManager(int resourceId, ViewGroup* sceneRoot);
 
   private:
     explicit TransitionInflater(Context* context): mContext(context) {}

@@ -16,47 +16,48 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/edittext.h>
+#include <widget/internal_R.h>
 #include <widget/editor.h>
+#include <widget/editorinfo.h>
 #include <text/selection.h>
-#include <text/inputtype.h>
+#include <text/method/textkeylistener.h>
 #include <text/method/arrowkeymovementmethod.h>
 #include <core/inputmethodmanager.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(EditText,"cdroid:attr/editTextStyle")
+DECLARE_WIDGET2(EditText, "android.widget.EditText");
 
-EditText::EditText(int w,int h):EditText(std::string(),w,h){
+EditText::EditText(Context*ctx)
+    :EditText(ctx,nullptr){
 }
 
-EditText::EditText(Context*ctx,const AttributeSet& attrs)
-  :TextView(ctx,attrs){
+EditText::EditText(Context*ctx,const AttributeSet* attrs):EditText(ctx,attrs,cdroid::internal::R::attr::editTextStyle){
+}
+
+EditText::EditText(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :TextView(ctx,pAttrs, defStyleAttr){
+    // TextView's ctor evaluates virtual getDefaultEditable() while only the
+    // base subobject exists, so C++ dispatches statically to TextView's
+    // (false) where Java's super() would reach this override (true). Re-apply
+    // AOSP TextView's editable branch (TextView.java "else if (editable)":
+    // TextKeyListener + TYPE_CLASS_TEXT) here: setKeyListener installs the
+    // listener and derives mInputType from it (= TYPE_CLASS_TEXT). The guard
+    // keeps the ctor's branch priority — attrs that already configured the
+    // editor (inputType/digits/numeric/phone/autotext) are left untouched.
+    // Without this mEditor->mInputType stays TYPE_NULL, onCheckIsTextEditor()
+    // is false and the soft keyboard never shows on focus.
+    if (getInputType() == EditorInfo::TYPE_NULL) {
+        setKeyListener(TextKeyListener::getInstance());
+    }
     initEditText();
-    setInputType(attrs.getInt("inputType",std::unordered_map<std::string,int>{
-		    {"none",  (int)InputType::TYPE_NULL},
-		    {"any",   (int)InputType::TYPE_CLASS_TEXT},
-		    {"text",  (int)InputType::TYPE_CLASS_TEXT},
-		    {"number",(int)InputType::TYPE_CLASS_NUMBER},
-		    {"textPassword",        InputType::TYPE_CLASS_TEXT | (int)InputType::TYPE_TEXT_VARIATION_PASSWORD},
-		    {"textVisiblePassword", InputType::TYPE_CLASS_TEXT | (int)InputType::TYPE_TEXT_VARIATION_PASSWORD},
-		    {"ip",   (int)InputType::TYPE_CLASS_TEXT}
-	  }, (int)InputType::TYPE_CLASS_TEXT));
     // Android-aligned: an EditText's buffer is Editable from construction via
     // setText(EDITABLE) — not a runtime setEditable() conversion. setText also
     // creates the Editor and syncs mTransformed, so the Layout draws the same
     // buffer Editor edits.
-    setText(mText, BufferType::EDITABLE);
-}
-
-EditText::EditText(const std::string&txt,int w,int h):TextView(txt,w,h){
-    initEditText();
-    setFocusable(true);
-    setFocusableInTouchMode(true);
-    // Android-aligned: build the Editable buffer via setText(EDITABLE) instead of
-    // a setEditable() conversion (not an Android API). setText creates the Editor
-    // and keeps mText/mTransformed/Layout on the same live SpannableStringBuilder.
     setText(mText, BufferType::EDITABLE);
 }
 

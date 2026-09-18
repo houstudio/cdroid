@@ -19,6 +19,7 @@
 #ifndef __DRAWABLE_WRAPPER_H__
 #define __DRAWABLE_WRAPPER_H__
 #include <drawable/drawable.h>
+#include <content/typedarray.h>
 namespace cdroid{
 
 class DrawableWrapper:public Drawable,public Drawable::Callback{
@@ -36,6 +37,10 @@ protected:
         void setDensity(int targetDensity);
         virtual void onDensityChanged(int sourceDensity, int targetDensity);
         DrawableWrapper* newDrawable()override;
+        // AOSP declares newDrawable(Resources) abstract here; C++ needs a
+        // concrete default for a directly-instantiated DrawableWrapperState
+        // (mirroring the no-arg body) — every subclass overrides both.
+        Drawable* newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
         virtual bool canConstantState()const;
     };
@@ -43,15 +48,16 @@ protected:
     bool mMutated;
     Drawable*mDrawable;
     std::shared_ptr<DrawableWrapperState>mState;
-    void updateLocalState();
-    void updateStateFromTypedArray(const AttributeSet&atts);
-    void inflateChildDrawable(XmlPullParser& parser,const AttributeSet& attrs);
+    void updateLocalState(Resources* res);
+    void updateStateFromTypedArray(const TypedArray& a);
+    void inflateChildDrawable(Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme);
 protected:
     virtual std::shared_ptr<DrawableWrapperState> mutateConstantState();
-    DrawableWrapper(std::shared_ptr<DrawableWrapperState>state);
+    DrawableWrapper(std::shared_ptr<DrawableWrapperState>state,Resources*res);
     bool onStateChange(const std::vector<int>& state)override;
     bool onLevelChange(int level)override;
     void onBoundsChange(const Rect& bounds)override;
+    bool onLayoutDirectionChanged(int layoutDirection)override;
 public:
     DrawableWrapper(Drawable*d=nullptr);
     ~DrawableWrapper()override;
@@ -59,6 +65,13 @@ public:
     int getIntrinsicHeight() override;
     void getOutline(Outline&) override;
     int getChangingConfigurations()const override;
+    // AOSP DrawableWrapper forwards these to the wrapped drawable: without
+    // them a ripple nested in an <inset>/<scale>/<rotate> never received the
+    // hotspot (feedback anchored at 0,0) and wrappers reported UNKNOWN
+    // opacity / never propagated RTL direction changes.
+    int getOpacity()const override;
+    void setHotspot(float x,float y)override;
+    void setHotspotBounds(int left,int top,int width,int height)override;
     void getHotspotBounds(Rect& outRect)const override;
     void setDrawable(Drawable* dr);
     Drawable* getDrawable()const;
@@ -81,7 +94,9 @@ public:
     void setTintMode(int)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
-    void inflate(XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 
 }

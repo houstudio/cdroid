@@ -2,7 +2,7 @@
 #include <widget/toolbar.h>
 #include <widget/cdwindow.h>
 #include <widget/actionbar.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <menu/menu.h>
 #include <menu/menubuilder.h>
 #include <menu/menupresenter.h>
@@ -12,6 +12,7 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 ToolbarWidgetWrapper::ToolbarWidgetWrapper(Toolbar* toolbar, bool style)
   : mToolbar(toolbar){
@@ -23,7 +24,7 @@ ToolbarWidgetWrapper::ToolbarWidgetWrapper(Toolbar* toolbar, bool style)
     mSubtitle = mToolbar->getSubtitle();
     mTitleSet = !mTitle.empty();
     mNavIcon = mToolbar->getNavigationIcon();
-    mDefaultNavigationIcon = mToolbar->getContext()->getDrawable("cdroid:drawable/ic_ab_back_holo_dark");
+    mDefaultNavigationIcon = mToolbar->getContext()->getDrawable(R::drawable::ic_ab_back_holo_dark);
     // style==true reads the ActionBar style theme attrs; it is intentionally not ported (the only
     // call site, ToolbarActionBar, passes false). For style==false upstream runs detectDisplayOptions().
     if(!style){

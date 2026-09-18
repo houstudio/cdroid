@@ -39,8 +39,9 @@ protected:
     void onAttachedToWindow() override;
     void onDetachedFromWindow() override;
 public:
-    WearableRecyclerView(int w,int h);
-    WearableRecyclerView(Context* context, const AttributeSet& attrs);
+    WearableRecyclerView(Context*ctx);   // AOSP WearableRecyclerView(Context)
+    WearableRecyclerView(Context* context, const AttributeSet* attrs);
+    WearableRecyclerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~WearableRecyclerView()override;
     void setupCenteredPadding();
 

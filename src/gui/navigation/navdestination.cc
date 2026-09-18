@@ -15,7 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
 #include <navigation/navdestination.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <navigation/navaction.h>
 #include <navigation/navgraph.h>
 #include <navigation/navigator.h>
@@ -53,9 +56,13 @@ void NavDestination::removeArgument(const std::string& name) {
 }
 
 void NavDestination::onInflate(Context* context, const AttributeSet& attrs) {
-    setId(attrs.getResourceId("id", 0));
-    setLabel(attrs.getString("label"));
-    const std::string route = attrs.getString("route");
+    // androidx reads R.styleable.NavDestination (android:id/label framework,
+    // route is a 0x02 navigation attr).
+    namespace ns = internal::R::styleable;
+    auto ta = context->obtainStyledAttributes(attrs, ns::NavDestination);
+    setId(ta->getResourceId(ns::NavDestination_id, 0));
+    setLabel(ta->getText(ns::NavDestination_label));
+    const std::string route = ta->getString(ns::NavDestination_route);
     if(!route.empty()) setRoute(route);
 }
 

@@ -15,34 +15,40 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/calendarview.h>
 #include <widget/calendarviewlegacydelegate.h>
 #include <widget/calendarviewmaterialdelegate.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
 #include <cstdio>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(CalendarView);
-CalendarView::CalendarView(int w,int h):FrameLayout(w,h){
-    LOGD("%p",this);
-}
+DECLARE_WIDGET2(CalendarView, "android.widget.CalendarView");
+CalendarView::CalendarView(Context*ctx)
+    :CalendarView(ctx,nullptr){}
 
-CalendarView::CalendarView(Context*context,const AttributeSet&attrs)
-  :FrameLayout(context,attrs){
-    const int mode = attrs.getInt("calendarViewMode",std::unordered_map<std::string,int>{
-            {"holo",(int)MODE_HOLO},{"material",(int)MODE_MATERIAL}
-            }, MODE_HOLO);
+CalendarView::CalendarView(Context*context,const AttributeSet* attrs):CalendarView(context,attrs,cdroid::internal::R::attr::calendarViewStyle){}
+
+CalendarView::CalendarView(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
+  :CalendarView(context,pAttrs,defStyleAttr,0){}
+
+CalendarView::CalendarView(Context*context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+  :FrameLayout(context,pAttrs, defStyleAttr, defStyleRes){
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::CalendarView, defStyleAttr, defStyleRes);
+    const int mode = a->getInt(R::styleable::CalendarView_calendarViewMode, (int)MODE_HOLO);
     switch (mode) {
     case MODE_HOLO:
-        mDelegate = new CalendarViewLegacyDelegate(this, context, attrs);
+        mDelegate = new CalendarViewLegacyDelegate(this, context, pAttrs, defStyleAttr, defStyleRes);
         break;
     case MODE_MATERIAL:
-        mDelegate = new CalendarViewMaterialDelegate(this, context, attrs);
+        mDelegate = new CalendarViewMaterialDelegate(this, context, pAttrs, defStyleAttr, defStyleRes);
         break;
     default:
         mDelegate = nullptr;
         throw std::invalid_argument("invalid calendarViewMode attribute");
     }
-    LOGD("%p mode=%d mDelegate=%p",this,mode,mDelegate);
 }
 
 CalendarView::~CalendarView(){
@@ -97,7 +103,7 @@ int CalendarView::getWeekSeparatorLineColor() const{
     return mDelegate->getWeekSeparatorLineColor();
 }
 
-void CalendarView::setSelectedDateVerticalBar(const std::string& resourceId) {
+void CalendarView::setSelectedDateVerticalBar(int resourceId) {
     mDelegate->setSelectedDateVerticalBar(resourceId);
 }
 
@@ -109,20 +115,24 @@ Drawable* CalendarView::getSelectedDateVerticalBar() const{
     return mDelegate->getSelectedDateVerticalBar();
 }
 
-void CalendarView::setWeekDayTextAppearance(const std::string& resourceId) {
+void CalendarView::setWeekDayTextAppearance(int resourceId) {
     mDelegate->setWeekDayTextAppearance(resourceId);
 }
 
-std::string CalendarView::getWeekDayTextAppearance() const{
+int CalendarView::getWeekDayTextAppearance() const{
     return mDelegate->getWeekDayTextAppearance();
 }
 
-void CalendarView::setDateTextAppearance(const std::string& resourceId) {
+void CalendarView::setDateTextAppearance(int resourceId) {
     mDelegate->setDateTextAppearance(resourceId);
 }
 
-std::string CalendarView::getDateTextAppearance() const{
+int CalendarView::getDateTextAppearance() const{
     return mDelegate->getDateTextAppearance();
+}
+
+void CalendarView::setWeekDayNameLength(int length) {
+    mDelegate->setWeekDayNameLength(length);
 }
 
 int64_t CalendarView::getMinDate() const{
@@ -177,10 +187,10 @@ bool CalendarView::getBoundsForDate(int64_t date, Rect& outBounds) {
     return mDelegate->getBoundsForDate(date, outBounds);
 }
 
-/*void CalendarView::onConfigurationChanged(Configuration newConfig {
+void CalendarView::onConfigurationChanged(Configuration& newConfig) {
     FrameLayout::onConfigurationChanged(newConfig);
     mDelegate->onConfigurationChanged(newConfig);
-}*/
+}
 
 std::string CalendarView::getAccessibilityClassName() const{
     return "CalendarView";

@@ -21,7 +21,6 @@
 #include <vector>
 #include <drawable/drawable.h>
 #include <drawable/drawables.h>
-#include <core/app.h>
 #include <guienvironment.h>
 
 using namespace cdroid;

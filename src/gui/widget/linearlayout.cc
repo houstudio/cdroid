@@ -15,19 +15,27 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/linearlayout.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
  
 namespace cdroid {
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(LinearLayout)
+DECLARE_WIDGET2(LinearLayout, "android.widget.LinearLayout");
 
 LinearLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :ViewGroup::MarginLayoutParams(c,attrs){
-    weight = attrs.getFloat("layout_weight", 0);
-    gravity= attrs.getGravity("layout_gravity", -1);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::LinearLayoutLayout);
+    if (ta) {
+    weight = ta->getFloat(R::styleable::LinearLayoutLayout_layout_weight, 0);
+    gravity= ta->getInt(R::styleable::LinearLayoutLayout_layout_gravity, -1);
     LOGV("width=%d,height=%d weight=%.2f gravity=%x margin=%d,%d,%d,%d",width,height,
 	    weight,gravity,topMargin,bottomMargin,leftMargin,rightMargin);
+    }
 }
 
 LinearLayout::LayoutParams::LayoutParams(int width, int height)
@@ -62,15 +70,6 @@ LinearLayout::LayoutParams::LayoutParams(const LayoutParams&source)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-LinearLayout::LinearLayout(int w,int h):LinearLayout(0,0,w,h){
-    initView();
-}
-
-LinearLayout::LinearLayout(int x,int y,int w,int h)
-  :ViewGroup(x,y,w,h){
-    initView();
-}
-
 void LinearLayout::initView(){
     mWeightSum   = -1.0;
     mOrientation = HORIZONTAL;
@@ -88,31 +87,53 @@ void LinearLayout::initView(){
     mAllowInconsistentMeasurement= false;//version <= Build::VERSION_CODES::M;
 }
 
-LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
-  :ViewGroup(context,attrs){
+LinearLayout::LinearLayout(Context*ctx)
+    :LinearLayout(ctx,nullptr){}
+
+LinearLayout::LinearLayout(Context* context,const AttributeSet* attrs)
+    :LinearLayout(context,attrs,0){
+}
+
+LinearLayout::LinearLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :ViewGroup(context,pAttrs, defStyleAttr){
     initView();
 
-    int index = attrs.getInt("orientation",std::unordered_map<std::string,int>{
-             {"horizontal",LinearLayout::HORIZONTAL},
-             {"vertical",LinearLayout::VERTICAL} },-1);
-    if(index>=0)setOrientation(index);
-    index = attrs.getGravity("gravity",-1);
-    if(index>=0)setGravity(index);
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::LinearLayout, defStyleAttr);
 
-    const bool baselineAligned=attrs.getBoolean("baselineAligned",true);
-    if(baselineAligned)setBaselineAligned(baselineAligned);
+    // Defaults
+    setBaselineAligned(true);
+    mWeightSum = -1.f;
+    mBaselineAlignedChildIndex = -1;
+    mUseLargestChild = false;
+    mShowDividers = SHOW_DIVIDER_NONE;
+    mDividerPadding = 0;
 
-    mWeightSum = attrs.getFloat("weightSum",-1.f);
-    mBaselineAlignedChildIndex=attrs.getInt("baselineAlignedChildIndex",-1);
-    mUseLargestChild = attrs.getBoolean("measureWithLargestChild",false);
+    
+    for (size_t n = ta->getIndexCount(); n > 0; ) {
+        size_t i = ta->getIndex(--n);
+        switch (i) {
+        case R::styleable::LinearLayout_orientation:
+            setOrientation(ta->getInt(i, (int)HORIZONTAL)); break;
+        case R::styleable::LinearLayout_gravity:
+            setGravity(ta->getInt(i, Gravity::NO_GRAVITY)); break;
+        case R::styleable::LinearLayout_baselineAligned:
+            setBaselineAligned(ta->getBoolean(i, true)); break;
+        case R::styleable::LinearLayout_baselineAlignedChildIndex:
+            mBaselineAlignedChildIndex = ta->getInt(i, -1); break;
+        case R::styleable::LinearLayout_weightSum:
+            mWeightSum = ta->getFloat(i, -1.f); break;
+        case R::styleable::LinearLayout_measureWithLargestChild:
+            mUseLargestChild = ta->getBoolean(i, false); break;
+        case R::styleable::LinearLayout_showDividers:
+            mShowDividers = ta->getInt(i, SHOW_DIVIDER_NONE); break;
+        case R::styleable::LinearLayout_divider:
+            setDividerDrawable(ta->getDrawable(i)); break;
+        case R::styleable::LinearLayout_dividerPadding:
+            mDividerPadding = ta->getInt(i, 0); break;
+        default: break;
+        }
+    }
 
-    mShowDividers = attrs.getInt("showDividers",std::unordered_map<std::string,int>{
-	   {"none",SHOW_DIVIDER_NONE},
-	   {"beginning",SHOW_DIVIDER_BEGINNING},
-	   {"middle",SHOW_DIVIDER_MIDDLE},
-	   {"end",SHOW_DIVIDER_END} },SHOW_DIVIDER_NONE);
-    mDividerPadding = attrs.getInt("dividerPadding",0);
-    setDividerDrawable(attrs.getDrawable("divider"));
 }
 
 LinearLayout::~LinearLayout() {

@@ -24,6 +24,8 @@
 #include <core/context.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
 
 namespace cdroid {
 
@@ -35,14 +37,9 @@ TransitionSet::TransitionSet() = default;
 
 TransitionSet::TransitionSet(Context* context, AttributeSet* attrs)
     : Transition(context, attrs) {
-    // android: obtainStyledAttributes(attrs, R.styleable.TransitionSet) → transitionOrdering.
-    // CDROID reads the attribute directly.
-    int ordering = ORDERING_TOGETHER;
-    if (attrs != nullptr) {
-        std::string ord = attrs->getAttributeValue("transitionOrdering");
-        if (ord == "sequential") ordering = ORDERING_SEQUENTIAL;
-        else if (ord == "together") ordering = ORDERING_TOGETHER;
-    }
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::TransitionSet);
+    const int ordering = a->getInt(internal::R::styleable::TransitionSet_transitionOrdering,
+            TransitionSet::ORDERING_TOGETHER);
     setOrdering(ordering);
 }
 
@@ -82,7 +79,7 @@ TransitionSet& TransitionSet::addTransition(Transition* transition) {
             transition->setInterpolator(getInterpolator());
         }
         if ((mChangeFlags & FLAG_CHANGE_PROPAGATION) != 0) {
-            transition->setPropagation(getPropagation());
+            transition->setPropagation(mPropagation); // share the same shared_ptr, not a re-wrap
         }
         if ((mChangeFlags & FLAG_CHANGE_PATH_MOTION) != 0) {
             transition->setPathMotion(getPathMotion());
@@ -138,11 +135,11 @@ void TransitionSet::setPathMotion(PathMotion* pathMotion) {
     }
 }
 
-void TransitionSet::setPropagation(TransitionPropagation* transitionPropagation) {
+void TransitionSet::setPropagation(std::shared_ptr<TransitionPropagation> transitionPropagation) {
     Transition::setPropagation(transitionPropagation);
     mChangeFlags |= FLAG_CHANGE_PROPAGATION;
     for (Transition* child : mTransitions) {
-        child->setPropagation(transitionPropagation);
+        child->setPropagation(transitionPropagation); // share ONE refcounted object across children
     }
 }
 

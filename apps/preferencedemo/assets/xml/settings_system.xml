@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/system_dashboard.xml. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="system_dashboard_screen"
+    android:title="System">
+
+    <PreferenceCategory android:title="Languages &amp; input">
+
+        <ListPreference
+            android:key="system_language"
+            android:title="Language"
+            android:entries="@array/prefdemo_language_entries"
+            android:entryValues="@array/prefdemo_language_values"
+            android:defaultValue="en" />
+
+        <Preference android:key="virtual_keyboard" android:title="On-screen keyboard" />
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="physical_keyboard" android:title="Physical keyboard" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Gestures">
+
+        <SwitchPreference android:key="gesture_double_tap_power" android:title="Double press power for camera" android:defaultValue="true" />
+        <SwitchPreference android:key="gesture_swipe_fingerprint" android:title="Swipe fingerprint for notifications" android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Date &amp; time">
+
+        <SwitchPreference
+            android:key="time_auto"
+            android:title="Set time automatically"
+            android:defaultValue="true" />
+
+        <Preference android:key="time_manual" android:title="Set time" android:dependency="time_auto" android:summary="12:00" />
+
+        <SwitchPreference
+            android:key="time_24h"
+            android:title="Use 24-hour format"
+            android:defaultValue="false" />
+
+        <ListPreference
+            android:key="timezone"
+            android:title="Select time zone"
+            android:entries="@array/prefdemo_timezone_entries"
+            android:entryValues="@array/prefdemo_timezone_values"
+            android:defaultValue="gmt8" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Backup">
+
+        <SwitchPreference
+            android:key="backup_auto"
+            android:title="Back up to cloud"
+            android:summary="Save app data, Wi-Fi passwords and settings"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Reset options">
+
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="reset_network" android:title="Reset Wi-Fi, mobile &amp; Bluetooth" />
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="reset_apps" android:title="Reset app preferences" />
+        <Preference android:key="factory_reset" android:title="Erase all data (factory reset)" android:summary="Reset all settings on this device" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

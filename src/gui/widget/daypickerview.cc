@@ -15,40 +15,66 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/daypickerview.h>
 #include <widget/simplemonthview.h>
 #include <widget/calendarview.h>
-#include <widget/R.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
+#include <porting/cdlog.h>
 #include <utils/mathutils.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(DayPickerView);
+DECLARE_WIDGET2(DayPickerView, "android.widget.DayPickerView");
 
-DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
-    :ViewGroup(context, attrs){
+DayPickerView::DayPickerView(Context*ctx)
+    :DayPickerView(ctx,nullptr){}
+
+// AOSP DayPickerView(Context, AttributeSet) chains to defStyleAttr
+// R.attr.calendarViewStyle, so Widget.Material.CalendarView's text appearances
+// and day selector color apply from the theme.
+DayPickerView::DayPickerView(Context* context,const AttributeSet* attrs)
+    :DayPickerView(context, attrs, cdroid::internal::R::attr::calendarViewStyle){}
+
+DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :DayPickerView(context,pAttrs,defStyleAttr,0){}
+
+DayPickerView::DayPickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+    :ViewGroup(context, pAttrs, defStyleAttr, defStyleRes){
 
     Calendar tempDate;
-    const int firstDayOfWeek = attrs.getInt("firstDayOfWeek", tempDate.getFirstDayOfWeek());
+    auto a = mContext->obtainStyledAttributes(pAttrs, R::styleable::CalendarView, defStyleAttr, defStyleRes);
+    const int firstDayOfWeek = a->getInt(R::styleable::CalendarView_firstDayOfWeek, tempDate.getFirstDayOfWeek());
 
-    const std::string minDate = attrs.getString("minDate");
-    const std::string maxDate = attrs.getString("maxDate");
+    const std::string minDate = a->getString(R::styleable::CalendarView_minDate);
+    const std::string maxDate = a->getString(R::styleable::CalendarView_maxDate);
 
-    std::string monthTextAppearanceResId = attrs.getString("monthTextAppearance");//R.style.TextAppearance_Material_Widget_Calendar_Month);
-    std::string dayOfWeekTextAppearanceResId = attrs.getString("weekDayTextAppearance");//R.style.TextAppearance_Material_Widget_Calendar_DayOfWeek);
-    std::string dayTextAppearanceResId = attrs.getString("dateTextAppearance");//,R.style.TextAppearance_Material_Widget_Calendar_Day);
+    // AOSP DayPickerView defaults these to the material calendar text
+    // appearances when the styleable doesn't carry them; without the defaults
+    // every text falls back to Paint's plain black (invisible on dark themes).
+    const int monthTextAppearanceResId = a->getResourceId(
+            R::styleable::CalendarView_monthTextAppearance,
+            R::style::TextAppearance_Material_Widget_Calendar_Month);
+    const int dayOfWeekTextAppearanceResId = a->getResourceId(
+            R::styleable::CalendarView_weekDayTextAppearance,
+            R::style::TextAppearance_Material_Widget_Calendar_DayOfWeek);
+    const int dayTextAppearanceResId = a->getResourceId(
+            R::styleable::CalendarView_dateTextAppearance,
+            R::style::TextAppearance_Material_Widget_Calendar_Day);
 
-    auto daySelectorColor = attrs.getColorStateList("daySelectorColor");
+    auto daySelectorColor = a->getColorStateList(R::styleable::CalendarView_daySelectorColor);
 
     // Set up adapter.
-    mAdapter = new DayPickerPagerAdapter(context,"cdroid:layout/date_picker_month_item_material", R::id::month_view);
+    mAdapter = new DayPickerPagerAdapter(context, R::layout::date_picker_month_item_material, R::id::month_view);
     mAdapter->setMonthTextAppearance(monthTextAppearanceResId);
     mAdapter->setDayOfWeekTextAppearance(dayOfWeekTextAppearanceResId);
     mAdapter->setDayTextAppearance(dayTextAppearanceResId);
     mAdapter->setDaySelectorColor(daySelectorColor);
 
     LayoutInflater* inflater = LayoutInflater::from(context);
-    ViewGroup* content = (ViewGroup*) inflater->inflate("cdroid:layout/day_picker_content_material", this, false);
+    ViewGroup* content = (ViewGroup*) inflater->inflate(R::layout::day_picker_content_material, this, false);
 
     // Transfer all children from content to here.
     while (content->getChildCount() > 0) {
@@ -56,6 +82,9 @@ DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
         content->removeViewAt(0);
         addView(child);
     }
+    // attachToRoot=false leaves the inflated root owned by this caller; the
+    // emptied shell must be freed (no GC — otherwise it leaks per DayPickerView).
+    delete content;
 
     mPrevButton = (ImageButton*)findViewById(R::id::prev);
     auto clickListener =[this](View&view){onButtonClick(view);};
@@ -79,9 +108,16 @@ DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
     mViewPager->addOnPageChangeListener(pcl);
 
     // Proxy the month text color into the previous and next buttons.
-    if (!monthTextAppearanceResId.empty()) {
-        auto ta = mContext->obtainStyledAttributes("cdroid:attr/textColor");
-        auto monthColor = ta.getColorStateList(0);
+    if (monthTextAppearanceResId != 0) {
+        // AOSP: mPrevNextButtonColor = textAppearance.getTextColor(); resolve the
+        // style's textColor through its own typed resolution.
+        static const uint32_t kTextColor[] = { R::attr::textColor, 0 };
+        auto taStyle = mContext->obtainStyledAttributes(monthTextAppearanceResId, R::styleable::TextAppearance);
+        auto monthColor = taStyle->getColorStateList(R::styleable::TextAppearance_textColor);
+        if (monthColor == nullptr) {
+            auto ta = mContext->obtainStyledAttributes(kTextColor);
+            monthColor = ta->getColorStateList(0);
+        }
         if (monthColor != nullptr) {
             mPrevButton->setImageTintList(monthColor);
             mNextButton->setImageTintList(monthColor);
@@ -178,33 +214,45 @@ void DayPickerView::onLayout(bool changed, int left, int top, int width, int hei
 
     // Vertically center the previous/next buttons within the month
     // header, horizontally center within the day cell.
+    // NOTE: CDROID View::layout takes (left, top, width, height), unlike
+    // AOSP's (left, top, right, bottom) — pass sizes, not edges.
     int leftDW = leftButton->getMeasuredWidth();
     int leftDH = leftButton->getMeasuredHeight();
     int leftIconTop = monthView->getPaddingTop() + (monthHeight - leftDH) / 2;
     int leftIconLeft = monthView->getPaddingLeft() + (cellWidth - leftDW) / 2;
-        leftButton->layout(leftIconLeft, leftIconTop, leftIconLeft + leftDW, leftIconTop + leftDH);
+        leftButton->layout(leftIconLeft, leftIconTop, leftDW, leftDH);
 
     int rightDW = rightButton->getMeasuredWidth();
     int rightDH = rightButton->getMeasuredHeight();
     int rightIconTop = monthView->getPaddingTop() + (monthHeight - rightDH) / 2;
     int rightIconRight = width - monthView->getPaddingRight() - (cellWidth - rightDW) / 2;
-    rightButton->layout(rightIconRight - rightDW, rightIconTop,
-                rightIconRight, rightIconTop + rightDH);
+    rightButton->layout(rightIconRight - rightDW, rightIconTop, rightDW, rightDH);
 }
 
-void DayPickerView::setDayOfWeekTextAppearance(const std::string& resId) {
+void DayPickerView::setDayOfWeekTextAppearance(int resId) {
     mAdapter->setDayOfWeekTextAppearance(resId);
 }
 
-const std::string DayPickerView::getDayOfWeekTextAppearance() {
+void DayPickerView::setDayOfWeekNameLength(int length) {
+    mAdapter->setDayOfWeekNameLength(length);
+}
+
+void DayPickerView::onConfigurationChanged(Configuration& newConfig) {
+    ViewGroup::onConfigurationChanged(newConfig);
+    // CDROID runtime-locale extension: re-localize the instantiated month
+    // pages (month-year titles, weekday headers).
+    mAdapter->onLocaleChanged();
+}
+
+int DayPickerView::getDayOfWeekTextAppearance() {
     return mAdapter->getDayOfWeekTextAppearance();
 }
 
-void DayPickerView::setDayTextAppearance(const std::string& resId) {
+void DayPickerView::setDayTextAppearance(int resId) {
     mAdapter->setDayTextAppearance(resId);
 }
 
-const std::string DayPickerView::getDayTextAppearance() {
+int DayPickerView::getDayTextAppearance() {
     return mAdapter->getDayTextAppearance();
 }
 

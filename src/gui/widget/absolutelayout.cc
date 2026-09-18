@@ -16,40 +16,49 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/absolutelayout.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(AbsoluteLayout)
+DECLARE_WIDGET2(AbsoluteLayout, "android.widget.AbsoluteLayout");
 
 AbsoluteLayout::LayoutParams::LayoutParams(int width, int height, int x, int y)
     :ViewGroup::LayoutParams(width,height){
-    this->x=x;
-    this->y=y;
+    this->x = x;
+    this->y = y;
 }
 
 AbsoluteLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     :ViewGroup::LayoutParams(c,attrs){
-    x=attrs.getDimensionPixelOffset("layout_x");
-    y=attrs.getDimensionPixelOffset("layout_y");
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::AbsoluteLayoutLayout);
+    x = ta->getDimensionPixelOffset(R::styleable::AbsoluteLayoutLayout_layout_x, 0);
+    y = ta->getDimensionPixelOffset(R::styleable::AbsoluteLayoutLayout_layout_y, 0);
 }
 
 AbsoluteLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
     :ViewGroup::LayoutParams(source){
-    x=0;
-    y=0;
+    x = 0;
+    y = 0;
 }
 AbsoluteLayout::LayoutParams::LayoutParams(const LayoutParams& source)
     :ViewGroup::LayoutParams(source){
-    x=source.x;
-    y=source.y;
+    x = source.x;
+    y = source.y;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-AbsoluteLayout::AbsoluteLayout(int w,int h):ViewGroup(w,h){
+AbsoluteLayout::AbsoluteLayout(Context*ctx)
+    :AbsoluteLayout(ctx,nullptr){
 }
 
-AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet& attrs)
-    :ViewGroup(context,attrs){
+AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet* attrs)
+    :AbsoluteLayout(context,attrs,0){
+}
+
+AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(context,pAttrs, defStyleAttr){
 }
 
 void AbsoluteLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){

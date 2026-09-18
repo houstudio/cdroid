@@ -24,14 +24,26 @@
  *********************************************************************************/
 #include <fragment/specialeffectscontroller.h>
 #include <animation/animation.h>
+#include <map>
 #include <transition/transition.h>
 namespace cdroid{
-namespace fragment{
 
 class DefaultSpecialEffectsController : public SpecialEffectsController{
 public:
     using SpecialEffectsController::SpecialEffectsController;
     void collectEffects(std::vector<Operation*>& operations, bool isPop) override;
+
+    // androidx merges all operations of a round into ONE beginDelayedTransition
+    // per container. CDROID commits per-op, so a second TransitionEffect on the
+    // same container would get a null clone from beginDelayedTransition (the
+    // container is already pending) and fall into its delete-immediately path
+    // while the first clone still references that view tree -> UAF in
+    // Visibility::onDisappear. This cache makes every effect of the round
+    // share the round's clone; cleared when the round starts.
+    std::map<ViewGroup*, Transition*>& roundClones() { return mRoundClones; }
+
+private:
+    std::map<ViewGroup*, Transition*> mRoundClones;
 };
 
 // Runs a custom Animation via View.startAnimation. ADDING/show completes synchronously (no
@@ -58,5 +70,5 @@ private:
     Transition* mTransition;
 };
 
-}}//namespace fragment::cdroid
+}//namespace cdroid
 #endif/*__DEFAULTSPECIALEFFECTSCONTROLLER_H__*/

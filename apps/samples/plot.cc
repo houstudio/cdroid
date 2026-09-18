@@ -9,7 +9,7 @@ int main(int argc,const char*argv[]){
     setenv("LANG","zh.CN",1);
     App app(argc,argv);
     Window*w=new Window(100,100,800,600);
-    PlotView*plv=new PlotView(640,480);
+    PlotView*plv=new PlotView(&app);
     plstream*pls=plv->getStream();
     if(argc==1){
         pls->sori( 1 );

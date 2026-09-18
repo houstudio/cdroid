@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CDROID port of the AOSP Music app (com.android.music) — UI-only facade.
+     Trampoline launcher MusicBrowserActivity + the browser/playback screens.
+     The playback service is an in-process fake (no audio backend on x64),
+     the media store is a hardcoded mock DB; see src/ for the deviations. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cdroid.music">
+
+    <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="36" />
+
+    <application android:label="@string/musicbrowserlabel">
+        <activity android:name=".MusicBrowserActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".ArtistAlbumBrowserActivity" />
+        <activity android:name=".AlbumBrowserActivity" />
+        <activity android:name=".TrackBrowserActivity" />
+        <activity android:name=".PlaylistBrowserActivity" />
+        <activity android:name=".MediaPlaybackActivity" />
+    </application>
+</manifest>

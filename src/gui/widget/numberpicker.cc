@@ -15,91 +15,96 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/numberpicker.h>
+#include <widget/framework_styleable.h>
 #include <text/inputtype.h>
+#include <widget/editorinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
-#include <widget/R.h>
 #include <core/color.h>
-#include <utils/textutils.h>
+#include <content/Locale.h>
+#include <content/numberformat.h>
+#include <text/textutils.h>
 #include <utils/mathutils.h>
 #include <porting/cdlog.h>
 
 //https://gitee.com/awang/WheelView/blob/master/src/com/wangjie/wheelview/WheelView.java
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(NumberPicker,"cdroid:attr/numberPickerStyle")
-const std::string DEFAULT_LAYOUT_VERT="cdroid:layout/number_picker";
-const std::string DEFAULT_LAYOUT_HORZ="cdroid:layout/number_picker_horz";
+DECLARE_WIDGET2(NumberPicker, "android.widget.NumberPicker");
+
+// AOSP's NumberPicker$CustomEditText (a static inner EditText subclass; AOSP also
+// overrides onEditorAction to clearFocus() on IME_ACTION_DONE, which CDROID's
+// EditText has no dispatch path for, so this is a plain EditText). Kept file-local
+// (not in the header): it exists only so the <view class="android.widget.NumberPicker
+// $CustomEditText"> tag in number_picker_material.xml / number_picker_with_selector_wheel.xml
+// resolves. Registered under "NumberPicker$CustomEditText" — getInflater() strips the
+// package prefix (text after the last '.') from "android.widget.NumberPicker$CustomEditText".
+namespace {
+class NumberPickerCustomEditText : public EditText {
+public:
+    NumberPickerCustomEditText(Context* context, const AttributeSet* attrs)
+        : NumberPickerCustomEditText(context, attrs, 0) {}
+    NumberPickerCustomEditText(Context* context, const AttributeSet* pAttrs, int defStyleAttr)
+        : EditText(context, pAttrs, defStyleAttr) {}
+};
+} // namespace
+DECLARE_WIDGET2(NumberPickerCustomEditText, "android.widget.NumberPicker$CustomEditText");
 
 namespace {
-    static NumberPicker::Formatter sTwoDigitFormatter=[](int value){
-        return TextUtils::stringPrintf("%02d",value);
-    };
+// AOSP formatNumberWithLocale: String.format(Locale.getDefault(), "%d", value).
+// The engine-backed NumberFormat localizes the DIGITS (ar ٠١٢, hi ०१٢), which
+// the old std::to_string weakening never did. Formatters are cached per
+// default-locale tag and rebuilt when the locale changes (CONFIG_LOCALE) —
+// the wheel calls formatNumber every scroll frame.
+struct LocaleFormatterCache {
+    std::string tag;
+    std::unique_ptr<cdroid::NumberFormat> plain;      // "%d"
+    std::unique_ptr<cdroid::NumberFormat> twoDigit;   // "%02d"
+};
+static LocaleFormatterCache& formatterCache() {
+    static LocaleFormatterCache cache;
+    const std::string tag = Locale::getDefault().toLanguageTag();
+    if (cache.tag != tag || cache.plain == nullptr) {
+        cache.tag = tag;
+        cache.plain = NumberFormat::getIntegerInstance(Locale::getDefault());
+        cache.twoDigit = NumberFormat::getIntegerInstance(Locale::getDefault());
+        cache.twoDigit->setMinimumIntegerDigits(2);
+    }
+    return cache;
 }
-NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
-    initView();
-    setOrientation(h>w?VERTICAL:HORIZONTAL);
+static std::string formatNumberWithLocale(int value) {
+    return formatterCache().plain->format(value);
+}
+// AOSP TwoDigitFormatter: locale-aware "%02d" (minutes "01".."59", ar "٠١").
+static NumberPicker::Formatter sTwoDigitFormatter=[](int value){
+    return formatterCache().twoDigit->format(value);
+};
+}
+NumberPicker::NumberPicker(Context*ctx)
+    :NumberPicker(ctx,nullptr){}
 
-    const std::string layoutres = (getOrientation()==VERTICAL)?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ;
-    LayoutInflater::from(mContext)->inflate(layoutres,this,true);
- 
-    mInputText =(EditText*)findViewById(R::id::numberpicker_input);
-    if(mInputText){
-        mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
-        mTextSize2 = mInputText->getTextSize();
-        mTextSize  = mTextSize2;
-        mSelectorElementSize = mTextSize2;
-    }
-    mIncrementButton =(ImageButton*)findViewById(cdroid::R::id::increment);
-    mDecrementButton =(ImageButton*)findViewById(cdroid::R::id::decrement);
-    const View::OnClickListener onClick= [this](View& v) {
-        hideSoftInput();
-        mInputText->clearFocus();
-        if (v.getId() == R::id::increment) {
-            changeValueByOne(true);
-        } else {
-            changeValueByOne(false);
-        }
-    };
-    const View::OnLongClickListener onLongClick=[this](View& v) {
-        hideSoftInput();
-        mInputText->clearFocus();
-        if (v.getId() == R::id::increment) {
-            postChangeCurrentByOneFromLongPress(true, 0);
-        } else {
-            postChangeCurrentByOneFromLongPress(false, 0);
-        }
-        return true;
-    };
-
-    if(mIncrementButton){
-        mIncrementButton->setOnClickListener(onClick);
-        mIncrementButton->setOnLongClickListener(onLongClick);
-    }
-    if(mDecrementButton){
-        mDecrementButton->setOnClickListener(onClick);
-        mDecrementButton->setOnLongClickListener(onLongClick);
-    }
-
-    setWidthAndHeight();
-    mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
-    measure(MeasureSpec::makeMeasureSpec(w,MeasureSpec::EXACTLY),MeasureSpec::makeMeasureSpec(h,MeasureSpec::EXACTLY));
-    layout(0,0,getMeasuredWidth(),getMeasuredHeight());
-    mSelectorWheelPaint.setTypeface(mInputText->getTypeface());
-    mSelectorWheelPaint.setTextSize(mTextSize);
-    updateInputTextView();
-    setFocusable(int(View::FOCUSABLE));
-    setFocusableInTouchMode(true);
+NumberPicker::NumberPicker(Context* context,const AttributeSet* atts)
+    :NumberPicker(context,atts,cdroid::internal::R::attr::numberPickerStyle){
 }
 
-NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
-  :LinearLayout(context,atts){
+NumberPicker::NumberPicker(Context* context,const AttributeSet* attrs,int defStyleAttr)
+  :LinearLayout(context,attrs, defStyleAttr){
     initView();
-    mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
-    mWrapSelectorWheelPreferred= atts.getBoolean("wrapSelectorWheel",mWrapSelectorWheelPreferred);
-    mDividerDrawable = atts.getDrawable("selectionDivider");
-    mTextSize2 = atts.getDimensionPixelSize("selectedTextSize",mTextSize2);
+    // Framework attrs resolve typed via the NumberPicker styleable; CDROID-specific
+    // attrs (textColor2/selectedTextSize/wheelItemCount/...) via NumberPickerCdroid —
+    // both public in the framework arsc (0x01011000+ block), so binary AXML works.
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::NumberPicker, defStyleAttr);
+    // One NumberPickerCdroid TypedArray for the whole ctor (values are resolved
+    // at obtain time; the getters below just pick them out, so a single array
+    // replaces the seven per-attr obtainStyledAttributes calls).
+    auto taCd = context->obtainStyledAttributes(attrs, R::styleable::NumberPickerCdroid);
+    mHideWheelUntilFocused = ta->getBoolean(R::styleable::NumberPicker_hideWheelUntilFocused, false);
+    mWrapSelectorWheelPreferred = taCd->getBoolean(R::styleable::NumberPickerCdroid_wrapSelectorWheel, mWrapSelectorWheelPreferred);
+    mDividerDrawable = ta->getDrawable(R::styleable::NumberPicker_selectionDivider);
     if (mDividerDrawable) {
         mDividerDrawable->setCallback(this);
         mDividerDrawable->setLayoutDirection(getLayoutDirection());
@@ -107,39 +112,60 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
             mDividerDrawable->setState(getDrawableState());
         }
     }
-    mItemBackground =  atts.getDrawable("itemBackground");
+    mItemBackground =  ta->getDrawable(R::styleable::NumberPicker_itemBackground);
     if(mItemBackground){
         mItemBackground->setCallback(this);
         mItemBackground->setLayoutDirection(getLayoutDirection());
     }
     mOrder = ASCENDING;
     if(!isHorizontalMode()){
-        mDividerThickness= atts.getDimensionPixelSize("selectionDividerHeight",UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT);
-        mDividerDistance = atts.getDimensionPixelSize("selectionDividersDistance",UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
+        mDividerThickness= ta->getDimensionPixelSize(R::styleable::NumberPicker_selectionDividerHeight,UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT);
+        mDividerDistance = ta->getDimensionPixelSize(R::styleable::NumberPicker_selectionDividersDistance, UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
     }else{
-        mDividerThickness= atts.getDimensionPixelSize("selectionDividerWidth",UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT);
-        mDividerDistance = atts.getDimensionPixelSize("selectionDividersDistance",UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
+        mDividerThickness= ta->getDimensionPixelSize(R::styleable::NumberPicker_selectionDividerHeight, UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT);
+        mDividerDistance = ta->getDimensionPixelSize(R::styleable::NumberPicker_selectionDividersDistance, UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
     }
-    mMinHeight = atts.getDimensionPixelSize("internalMinHeight",SIZE_UNSPECIFIED);
-    mMaxHeight = atts.getDimensionPixelSize("internalMaxHeight",SIZE_UNSPECIFIED);
+    mMinHeight = ta->getDimensionPixelSize(R::styleable::NumberPicker_internalMinHeight, SIZE_UNSPECIFIED);
+    mMaxHeight = ta->getDimensionPixelSize(R::styleable::NumberPicker_internalMaxHeight, SIZE_UNSPECIFIED);
     
-    mMinWidth = atts.getDimensionPixelSize("internalMinWidth", SIZE_UNSPECIFIED);
-    mMaxWidth = atts.getDimensionPixelSize("internalMaxWidth", SIZE_UNSPECIFIED);
+    mMinWidth = ta->getDimensionPixelSize(R::styleable::NumberPicker_internalMinWidth, SIZE_UNSPECIFIED);
+    mMaxWidth = ta->getDimensionPixelSize(R::styleable::NumberPicker_internalMaxWidth, SIZE_UNSPECIFIED);
 
     if ((mMinWidth != SIZE_UNSPECIFIED) && (mMaxWidth != SIZE_UNSPECIFIED) && (mMinWidth > mMaxWidth) ){
         LOGE("minWidth(%d)  > maxWidth(%d)",mMinWidth,mMaxWidth);
     }
-    const std::string defaultLayoutRes = (getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ);
-    const std::string layoutRes = atts.getString("internalLayout",defaultLayoutRes);
-    setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
-    mHasSelectorWheel = (defaultLayoutRes!=layoutRes)||(mWheelItemCount!=DEFAULT_WHEEL_ITEM_COUNT);
+    // AOSP reads internalLayout as a resource id and inflates the int. The old
+    // getString path broke under binary AXML: the style item is a reference and
+    // getString rendered it as the arsc file path ("res/layout/..."), which the
+    // string inflate path cannot open.
+    // internalLayout is the single layout switch (element attr > theme style >
+    // the vertical-button fallback). number_picker (vertical up/down buttons)
+    // is the only non-wheel framework layout; anything else — the
+    // Material/selector-wheel twins or an app's custom layout (e.g. an app
+    // horizontal -/+ stepper built on @android:id/increment/decrement) —
+    // means the wheel renders on this view's canvas.
+    int layoutRes = (int)ta->getResourceId(R::styleable::NumberPicker_internalLayout, 0);
+    if (layoutRes == 0) layoutRes = R::layout::number_picker;
+    setWheelItemCount(taCd->getInt(R::styleable::NumberPickerCdroid_wheelItemCount, mWheelItemCount));
     LayoutInflater::from(mContext)->inflate(layoutRes,this);
+    // Wheel vs buttons, decided by what the layout actually supplies: a layout
+    // with the increment/decrement button views is a button layout (the
+    // framework number_picker, or an app's custom stepper via
+    // android:internalLayout); a button-less layout (the Material/selector
+    // wheel twins, an app wheel layout) renders the canvas wheel. A
+    // wheelItemCount != default still forces the wheel (dreame-style layouts).
+    mHasSelectorWheel = (findViewById(R::id::increment) == nullptr)
+            || (findViewById(R::id::decrement) == nullptr)
+            || (mWheelItemCount != DEFAULT_WHEEL_ITEM_COUNT);
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
-    mVirtualButtonPressedDrawable = atts.getDrawable("virtualButtonPressedDrawable");
+    mVirtualButtonPressedDrawable = ta->getDrawable(R::styleable::NumberPicker_virtualButtonPressedDrawable);
+    // AOSP parity: the ripple animates its frames through the callback —
+    // without it the manually-drawn press feedback stays on frame 0 (invisible).
+    if (mVirtualButtonPressedDrawable) mVirtualButtonPressedDrawable->setCallback(this);
     setWillNotDraw(false);
 
-    mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
+    mInputText =(EditText*)findViewById(R::id::numberpicker_input);
 
     View::OnClickListener onClick= [this](View& v) {
         hideSoftInput();
@@ -161,8 +187,8 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         return true;
     };
     if(!mHasSelectorWheel){
-        mIncrementButton =(ImageButton*)findViewById(cdroid::R::id::increment);
-        mDecrementButton =(ImageButton*)findViewById(cdroid::R::id::decrement);
+        mIncrementButton =(ImageButton*)findViewById(R::id::increment);
+        mDecrementButton =(ImageButton*)findViewById(R::id::decrement);
         if(mIncrementButton){
             mIncrementButton->setOnClickListener(onClick);
             mIncrementButton->setOnLongClickListener(onLongClick);
@@ -176,45 +202,78 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         mDecrementButton = nullptr;
     }
 
+    // AOSP ctor (NumberPicker.java:777-778): the input accepts digits only and
+    // the IME shows the number panel with a DONE action. Without this the input
+    // keeps the EditText default (TEXT class + TextKeyListener): an ENTER from
+    // the soft keyboard walks the text path and inserts '\n' — the single-line
+    // edit box turns multi-line (Android never shows this because the number
+    // pad + IME_ACTION_DONE produce no newline).
+    mInputText->setInputType(EditorInfo::TYPE_CLASS_NUMBER);
+    mInputText->setImeOptions(EditorInfo::IME_ACTION_DONE);
     mInputText->setEnabled(false);
     mInputText->setFocusable(false);
-    mUpdateInputTextInFling = atts.getBoolean("updateInputTextInFling",mUpdateInputTextInFling);
+    mUpdateInputTextInFling = taCd->getBoolean(R::styleable::NumberPickerCdroid_updateInputTextInFling, mUpdateInputTextInFling);
     mTextAlign = mInputText->getGravity();
     mTextSize2 = mInputText->getTextSize();
-    mTypeface = Typeface::create(atts.getString("fontFamily"),Typeface::NORMAL);
-    auto selectedTypeface = Typeface::create(atts.getString("selectedfontFamily"),Typeface::NORMAL);
-    if(selectedTypeface!=nullptr){
-        setSelectedTypeface(selectedTypeface);
+    mTypeface = Typeface::create(ta->getString(R::styleable::NumberPicker_fontFamily),Typeface::NORMAL);
+    {
+        auto selectedTypeface = Typeface::create(taCd->getString(R::styleable::NumberPickerCdroid_selectedfontFamily),Typeface::NORMAL);
+        if(selectedTypeface!=nullptr){
+            setSelectedTypeface(selectedTypeface);
+        }
     }
     //ViewConfiguration configuration = ViewConfiguration::get(context);
-    setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
-    mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
-    if(atts.hasAttribute("selectedTextSize"))
-        mTextSize2 = atts.getDimensionPixelSize("selectedTextSize");
-    else if(!atts.hasAttribute("internalLayout"))
-        mTextSize2 =std::max(mTextSize2,mTextSize);
+    setTextSize(ta->getDimensionPixelSize(R::styleable::NumberPicker_textSize,mTextSize));
+    // selectedTextSize (NumberPickerCdroid): explicit value wins, else default to textSize
+    // (the old "textSize2" name read was dead — that attr was never declared anywhere).
+    mTextSize2 = taCd->getDimensionPixelSize(R::styleable::NumberPickerCdroid_selectedTextSize, mTextSize);
     setSelectedTextSize(mTextSize2);
-    setTextColor(atts.getColor("textColor"));
-    setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
-    setSelectedTextColor(atts.getColor("selectedTextColor"));
-    auto colors = mInputText->getTextColors();
-    if(colors&&colors->isStateful())
-        setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),mInputTextColor));
-    else
-        setSelectedTextColor(mInputText->getCurrentTextColor());
+    // AOSP derives the wheel paint's default color from the input's THEMED
+    // text color (NumberPicker ctor: mInputText.getTextColors().getColorForState(
+    // ENABLED_STATE_SET, Color.WHITE)); a hardcoded white painted invisible
+    // neighbor values on light themes. An explicit android:textColor still wins.
+    if (ta && ta->hasValue(R::styleable::NumberPicker_textColor)) {
+        setTextColor(ta->getColor(R::styleable::NumberPicker_textColor, 0xFFFFFFFF));
+    } else {
+        auto colors = mInputText->getTextColors();
+        setTextColor(colors
+                ? colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), 0xFFFFFFFF)
+                : (int)0xFFFFFFFF);
+    }
+    setTextColor(mTextColor, taCd->getColor(R::styleable::NumberPickerCdroid_textColor2, mTextColor));
+    // selectedTextColor: an explicit XML attr wins. Otherwise derive it from the
+    // input text's THEMED colors — and read them BEFORE any setSelectedTextColor
+    // call, because setSelectedTextColor() also does mInputText->setTextColor(),
+    // which replaces the themed ColorStateList with a flat color. The old order
+    // (set from attr with default 0 first, then re-read from mInputText) made
+    // the absent-attr case fall back to that transparent 0 — the static center
+    // value turned invisible.
+    if (taCd && taCd->hasValue(R::styleable::NumberPickerCdroid_selectedTextColor)) {
+        setSelectedTextColor(taCd->getColor(R::styleable::NumberPickerCdroid_selectedTextColor, 0));
+    } else {
+        auto colors = mInputText->getTextColors();
+        if (colors && colors->isStateful())
+            setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), mInputTextColor));
+        else
+            setSelectedTextColor(mInputText->getCurrentTextColor());
+    }
     
     mSelectorWheelPaint.setTypeface(mInputText->getTypeface());
     mSelectorWheelPaint.setTextSize(mTextSize);
     
     updateInputTextView();
 
-    //setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
-    setValue(atts.getInt("value",0));
-    setMinValue(atts.getInt("min",0));
-    setMaxValue(atts.getInt("max",0));
+    // min → max → value: setValueInternal clamps to [min,max], so setting the
+    // value first would clamp it to the initial [0,0] range and the XML
+    // android:value would be lost (value=7, min=1, max=12 ended up as 1).
+    setMinValue(ta->getInt(R::styleable::NumberPicker_min, 0));
+    setMaxValue(ta->getInt(R::styleable::NumberPicker_max, 0));
+    setValue(ta->getInt(R::styleable::NumberPicker_value, 0));
 
+    // displayedValues has no XML attr (not in AOSP, declared nowhere, no layout uses
+    // it) — set programmatically via setDisplayedValues() only. The old name-based
+    // getArray read is gone (dead under binary AXML).
     std::vector<std::string>displayedValues;
-    atts.getArray("displayedValues",displayedValues);
     const int valueCount = std::abs(getMinValue()-getMaxValue())+1;
     if(displayedValues.size()){
         if(displayedValues.size()==valueCount)
@@ -359,13 +418,16 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
             mIncrementButton->layout( 0, 0, width, btnh);
             mDecrementButton->layout( 0, height - btnh, width, btnh);
         }else{
-            const int btnw = mIncrementButton->getMeasuredWidth();
-            if(!isLayoutRtl()){
-                mIncrementButton->layout( 0, 0, btnw, height);
-                mDecrementButton->layout( width - btnw, 0, btnw, height);
+            // Stepper order: - on the leading edge, + on the trailing one
+            // (number_picker_horz declares its children in the same order).
+            const int incw = mIncrementButton->getMeasuredWidth();
+            const int decw = mDecrementButton->getMeasuredWidth();
+            if(isLayoutRtl()){
+                mIncrementButton->layout( 0, 0, incw, height);
+                mDecrementButton->layout( width - decw, 0, decw, height);
             }else{
-                mDecrementButton->layout( 0, 0, btnw, height);
-                mIncrementButton->layout( width - btnw, 0, btnw, height);
+                mDecrementButton->layout( 0, 0, decw, height);
+                mIncrementButton->layout( width - incw, 0, incw, height);
             }
         }
     }
@@ -582,6 +644,9 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
         removeBeginSoftInputCommand();
         removeChangeCurrentByOneFromLongPress();
         mPressedStateHelper->cancel();
+        // AOSP leaks this and leans on GC; CDROID has none — return the tracker.
+        mVelocityTracker->recycle();
+        mVelocityTracker = nullptr;
         break;
     case MotionEvent::ACTION_UP:
         removeBeginSoftInputCommand();
@@ -608,8 +673,10 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                         int selectorIndexOffset = (eventX / mSelectorElementSize) - mWheelMiddleItemIndex;
                         if (selectorIndexOffset > 0) {
                             changeValueByOne(true);
+                            mPressedStateHelper->buttonTapped(PressedStateHelper::BUTTON_INCREMENT);
                         } else if (selectorIndexOffset < 0) {
                             changeValueByOne(false);
+                            mPressedStateHelper->buttonTapped(PressedStateHelper::BUTTON_DECREMENT);
                         } else {
                             ensureScrollWheelAdjusted();
                         }
@@ -939,8 +1006,8 @@ void NumberPicker::tryComputeMaxWidth(){
     if (mDisplayedValues.size() == 0) {
         float maxDigitWidth = 0;
         for (int i = 0; i <= 9; i++) {
-            char16_t num='0'+i;
-            const float digitWidth = mSelectorWheelPaint.measureText(&num,0,1);
+            const auto num = TextUtils::utf8_utf16(formatNumberWithLocale(i));
+            const float digitWidth = mSelectorWheelPaint.measureText(num.c_str(),0,num.size());
             if (digitWidth > maxDigitWidth) {
                 maxDigitWidth = digitWidth;
             }
@@ -1107,15 +1174,28 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
     mDisplayedDrawableSize = 0;
     int drsize=0;
     for(auto s:mDisplayedValues){
-        Drawable*dr = s.find("/")==std::string::npos?nullptr:mContext->getDrawable(s);
+        // Display values may carry drawable refs as "type/name" — resolve through
+        // arsc (getDrawable is id-keyed now).
+        Drawable*dr = nullptr;
+        const size_t slash = s.find('/');
+        if (slash != std::string::npos) {
+            std::string t = s.substr(0, slash), n = s.substr(slash + 1), pkg;
+            const size_t colon = t.rfind(':');
+            if (colon != std::string::npos) { pkg = t.substr(0, colon); t = t.substr(colon + 1); }
+            const int resId = mContext->getResources().getIdentifier(n, t, pkg);
+            if (resId) dr = mContext->getDrawable(resId);
+        }
         mDisplayedDrawables.push_back(dr);
         if(dr){
             drsize += (isHorizontalMode()?dr->getIntrinsicWidth():dr->getIntrinsicHeight());
             mDisplayedDrawableCount++;
         }
     }
-    if(mDisplayedDrawableCount==mDisplayedValues.size())
-        mInputText->setVisibility(View::INVISIBLE); 
+    // All-drawable values hide the input text (nothing textual to show) — but
+    // a later setDisplayedValues with text values must restore it, or the
+    // selected center value stays invisible forever.
+    mInputText->setVisibility(mDisplayedDrawableCount == (int)mDisplayedValues.size()
+                              ? View::INVISIBLE : View::VISIBLE);
     if(mDisplayedDrawableCount)
         mDisplayedDrawableSize = drsize/mDisplayedDrawableCount;
 }
@@ -1180,14 +1260,15 @@ void NumberPicker::onResolveDrawables(int layoutDirection){
 }
 
 void NumberPicker::setTextColor(int color){
-    mTextColor = color;
-    mTextColor2= color;
-    invalidate();
+    setTextColor(color, color);
 }
 
 void NumberPicker::setTextColor(int color,int color2){
     mTextColor  = color;
     mTextColor2 = color2;
+    // The onDraw gradient shader (mPat) bakes the colors in when first built;
+    // a runtime color change must drop it or the wheel keeps the old gradient.
+    mPat = nullptr;
     invalidate();
 }
 
@@ -1196,9 +1277,7 @@ int  NumberPicker::getTextColor()const{
 }
 
 void NumberPicker::setTextSize(int size){
-    mTextSize  = size;
-    mTextSize2 = size;
-    invalidate();
+    setTextSize(size, size);
 }
 void NumberPicker::setTextSize(int size,int size2){
     mTextSize  = size;
@@ -1287,22 +1366,33 @@ void NumberPicker::onDraw(Canvas&canvas){
             canvas.clip();
         }
     }
-    if (showSelectorWheel && mVirtualButtonPressedDrawable && (mScrollState == OnScrollListener::SCROLL_STATE_IDLE)){
+    // Virtual-button press feedback: a flat translucent wash over the pressed
+    // zone (the theme's colorControlHighlight). AOSP hands this to the style's
+    // ripple drawable, but its enabled&&pressed gate never opens for the bare
+    // PRESSED_STATE_SET NumberPicker passes — a long-standing AOSP quirk that
+    // leaves the stock virtual buttons with no visible feedback; and driving a
+    // full ripple lifecycle from this manual draw leaves unpainted ghost frames
+    // on damage-composited surfaces. A single fill is deterministic and
+    // self-clearing (the parent background repaints the zone on release).
+    if (showSelectorWheel && (mScrollState == OnScrollListener::SCROLL_STATE_IDLE)
+            && (mDecrementVirtualButtonPressed || mIncrementVirtualButtonPressed)) {
+        const uint32_t highlightAttrs[1] = {(uint32_t) internal::R::attr::colorControlHighlight};
+        auto ta = getContext()->obtainStyledAttributes(highlightAttrs);
+        const int highlight = ta->getColor(0, 0x1F000000);   // AOSP ripple_material_light
+        canvas.set_color(highlight);
         if (mDecrementVirtualButtonPressed) {
-            mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
-            if(!isHorizontalMode())
-                mVirtualButtonPressedDrawable->setBounds(0, 0, getWidth() , mStartDividerStart);
+            if (isHorizontalMode())
+                canvas.rectangle(0, 0, mStartDividerStart, getHeight());
             else
-                mVirtualButtonPressedDrawable->setBounds(0, 0, mStartDividerStart , getHeight());
-            mVirtualButtonPressedDrawable->draw(canvas);
+                canvas.rectangle(0, 0, getWidth(), mStartDividerStart);
+            canvas.fill();
         }
         if (mIncrementVirtualButtonPressed) {
-            mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
-            if(!isHorizontalMode())
-                mVirtualButtonPressedDrawable->setBounds(0, mEndDividerEnd, getWidth(), getHeight() - mEndDividerEnd);
+            if (isHorizontalMode())
+                canvas.rectangle(mEndDividerEnd, 0, getWidth() - mEndDividerEnd, getHeight());
             else
-                mVirtualButtonPressedDrawable->setBounds(mEndDividerEnd, 0, getWidth() - mEndDividerEnd, getHeight());
-            mVirtualButtonPressedDrawable->draw(canvas);
+                canvas.rectangle(0, mEndDividerEnd, getWidth(), getHeight() - mEndDividerEnd);
+            canvas.fill();
         }
     }
     if( mTextColor != mTextColor2 ){
@@ -1388,7 +1478,7 @@ void NumberPicker::onDraw(Canvas&canvas){
                     if(mItemBackground->isStateful()){
                         std::vector<int>state = getDrawableState();
                         if(i==mWheelMiddleItemIndex)
-                            state.push_back(StateSet::SELECTED);
+                            state.push_back((int)cdroid::internal::R::attr::state_selected);
                         mItemBackground->setState(state);
                     }
                     mItemBackground->draw(canvas);
@@ -1408,7 +1498,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     canvas.restore();
 
     // draw the dividers
-    if (showSelectorWheel && mDividerDrawable) {
+    if (showSelectorWheel && mDividerDrawable && (mDividerThickness>0) ) {
         if (isHorizontalMode())
             drawHorizontalDividers(canvas);
         else
@@ -1421,12 +1511,16 @@ void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
 
     switch (mDividerType) {
     case SIDE_LINES:
-        if (mDividerThickness > 0 && mDividerDistance <= mMaxHeight) {
-            top = (mMaxHeight - mDividerDistance) / 2;
+        // AOSP draws the dividers against the VIEW's height (the selected
+        // slot centered in the picker); the old mMaxHeight math styled the
+        // slot for the style's internalMaxHeight (180dp) and landed entirely
+        // outside a short horizontal picker.
+        if (mDividerThickness > 0 && mDividerDistance <= getHeight()) {
+            top = (getHeight() - mDividerDistance) / 2;
             bottom = top + mDividerDistance;
         } else {
             top = 0;
-            bottom = getBottom();
+            bottom = getHeight();
         }
         // draw the left divider
         mDividerDrawable->setBounds(mStartDividerStart, top, mDividerThickness, bottom-top);
@@ -1455,7 +1549,7 @@ void NumberPicker::drawVerticalDividers(Canvas& canvas) {
     switch (mDividerType) {
     case SIDE_LINES:
         // draw the top divider
-        mDividerDrawable->setBounds(0, mStartDividerStart, right-left, mDividerThickness);
+        mDividerDrawable->setBounds(left, mStartDividerStart, right-left, mDividerThickness);
         mDividerDrawable->draw(canvas);
         // draw the bottom divider
         mDividerDrawable->setBounds(left,mEndDividerEnd - mDividerThickness,right - left, mDividerThickness);
@@ -1482,6 +1576,7 @@ void NumberPicker::drawText(const std::string& text,const Rect&r,int gravity,Can
     case Gravity::RIGHT:
         x = r.left + r.width-textWidth;
         break;
+    default: x = r.left + (r.width - textWidth)/2; break; // FILL et al → center
     }
     switch(gravity&Gravity::VERTICAL_GRAVITY_MASK){
     case Gravity::TOP: y = r.top; break;
@@ -1491,6 +1586,7 @@ void NumberPicker::drawText(const std::string& text,const Rect&r,int gravity,Can
     case Gravity::BOTTOM:
         y = r.top + r.height - textHeight;
         break;
+    default: y = r.top + (r.height - textHeight)/2; break; // FILL et al → center
     }
     y-=fm.ascent;
     //mSelectorWheelPaint.setTextAlign(Paint::Align::LEFT);
@@ -1722,7 +1818,7 @@ void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
 }
 
 std::string NumberPicker::formatNumber(int value){
-    return (mFormatter != nullptr) ? mFormatter(value):std::to_string(value);
+    return (mFormatter != nullptr) ? mFormatter(value):formatNumberWithLocale(value);
 }
 
 void NumberPicker::validateInputTextView(View* v){
@@ -1736,7 +1832,14 @@ void NumberPicker::validateInputTextView(View* v){
 }
 
 bool NumberPicker::updateInputTextView(){
-    std::string text = mDisplayedValues.empty() ? formatNumber(mValue) : mDisplayedValues[mValue - mMinValue];
+    // Bounds guard: setDisplayedValues() can be called before setMin/MaxValue()
+    // narrows the range (order-sensitive API contract in AOSP too, but AOSP
+    // throws IndexOutOfBounds under GC land — here it would be UB). Fall back
+    // to the formatted number until the range matches the displayed array.
+    const int displayedIndex = mValue - mMinValue;
+    const bool inRange = !mDisplayedValues.empty()
+            && displayedIndex >= 0 && displayedIndex < (int)mDisplayedValues.size();
+    std::string text = inRange ? mDisplayedValues[displayedIndex] : formatNumber(mValue);
     if (!text.empty() ){
         std::string beforeText = mInputText->getText();
         if (text != beforeText){//!text.equals(beforeText.toString())) {
@@ -1750,7 +1853,7 @@ bool NumberPicker::updateInputTextView(){
                 event->setAddedCount(text.length());
                 event->setBeforeText(beforeText);
                 event->setSource(this, AccessibilityNodeProviderImpl::VIRTUAL_VIEW_ID_INPUT);
-                requestSendAccessibilityEvent(this, *event);
+                if (!requestSendAccessibilityEvent(this, *event)) event->recycle();  // AOSP: GC on drop
             }
             return true;
         }
@@ -2174,7 +2277,7 @@ void NumberPicker::AccessibilityNodeProviderImpl::sendAccessibilityEventForVirtu
         mNP->mInputText->onInitializeAccessibilityEvent(*event);
         mNP->mInputText->onPopulateAccessibilityEvent(*event);
         event->setSource(mNP, VIRTUAL_VIEW_ID_INPUT);
-        mNP->requestSendAccessibilityEvent(mNP, *event);
+        if (!mNP->requestSendAccessibilityEvent(mNP, *event)) event->recycle();  // AOSP: GC on drop
     }
 }
 
@@ -2186,7 +2289,7 @@ void NumberPicker::AccessibilityNodeProviderImpl::sendAccessibilityEventForVirtu
         event->getText().push_back(text);
         event->setEnabled(mNP->isEnabled());
         event->setSource(mNP, virtualViewId);
-        mNP->requestSendAccessibilityEvent(mNP, *event);
+        if (!mNP->requestSendAccessibilityEvent(mNP, *event)) event->recycle();  // AOSP: GC on drop
     }
 }
 

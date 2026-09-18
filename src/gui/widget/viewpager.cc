@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/viewpager.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 #include <focusfinder.h>
 #include <porting/cdtypes.h>
 #include <utils/mathutils.h>
@@ -25,6 +27,8 @@
 
 //https://www.androidos.net.cn/android/9.0.0_r8/xref/frameworks/support/viewpager/src/main/java/androidx/viewpager/widget/ViewPager.java
 namespace cdroid{
+using namespace cdroid::internal;
+
 class VPInterpolator:public Interpolator{
 public:
     float getInterpolation(float t)const override{
@@ -35,11 +39,7 @@ public:
 
 static VPInterpolator sVPInterpolator;
 
-DECLARE_WIDGET(ViewPager);
-
-ViewPager::ViewPager(int w,int h):ViewGroup(w,h){
-    initViewPager(nullptr); 
-}
+DECLARE_WIDGET2(ViewPager, "androidx.viewpager.widget.ViewPager");
 
 ViewPager::~ViewPager(){
     delete mObserver;
@@ -56,9 +56,14 @@ ViewPager::~ViewPager(){
     }
 }
 
-ViewPager::ViewPager(Context* context,const AttributeSet& attrs)
-  :ViewGroup(context,attrs){
-    initViewPager(&attrs);
+ViewPager::ViewPager(Context*ctx)
+    :ViewPager(ctx,nullptr){}
+
+ViewPager::ViewPager(Context* context,const AttributeSet* attrs):ViewPager(context,attrs,0){}
+
+ViewPager::ViewPager(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :ViewGroup(context,pAttrs, defStyleAttr){
+    initViewPager(pAttrs);
 }
 
 void ViewPager::initViewPager(const AttributeSet*atts){
@@ -108,10 +113,44 @@ void ViewPager::initViewPager(const AttributeSet*atts){
     mCloseEnough   = (int) (CLOSE_ENOUGH * density);
     mDefaultGutterSize = (int) (DEFAULT_GUTTER_SIZE * density);
     mGutterSize = 0;
+
+    setAccessibilityDelegate(std::make_shared<ViewPager::MyAccessibilityDelegate>());
+    if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
     mEndScrollRunnable=[this](){
         setScrollState(SCROLL_STATE_IDLE);
         populate();	
     };
+}
+
+ViewPager::SavedState::SavedState(Parcelable* superState)
+  :AbsSavedState(superState){
+    position = -1;
+    adapterState = nullptr;
+}
+
+Parcelable* ViewPager::onSaveInstanceState() {
+    Parcelable* superState = ViewGroup::onSaveInstanceState();
+    SavedState* ss = new SavedState(superState);
+    ss->position = mCurItem;
+    if (mAdapter != nullptr) {
+        ss->adapterState = mAdapter->saveState();
+    }
+    return ss;
+}
+
+void ViewPager::onRestoreInstanceState(Parcelable& state) {
+    SavedState* ss = dynamic_cast<SavedState*>(&state);
+    if (ss == nullptr) {
+        ViewGroup::onRestoreInstanceState(state);
+        return;
+    }
+    ViewGroup::onRestoreInstanceState(*ss->getSuperState());
+    if (ss->adapterState != nullptr) {
+        mRestoredAdapterState = ss->adapterState;
+        mRestoredCurItem = ss->position;
+    }
 }
 
 ViewPager::ItemInfo::ItemInfo(){
@@ -172,11 +211,10 @@ void ViewPager::setAdapter(PagerAdapter* adapter){
         mFirstLayout = true;
         mExpectedAdapterCount = mAdapter->getCount();
         if (mRestoredCurItem >= 0) {
-            //mAdapter->restoreState(mRestoredAdapterState, mRestoredClassLoader);
+            mAdapter->restoreState(mRestoredAdapterState);
             setCurrentItemInternal(mRestoredCurItem, false, true);
             mRestoredCurItem = -1;
-            //mRestoredAdapterState = nullptr;
-            //mRestoredClassLoader = nullptr;
+            mRestoredAdapterState = nullptr;
         } else if (!wasFirstLayout) {
             populate();
         } else {
@@ -184,7 +222,7 @@ void ViewPager::setAdapter(PagerAdapter* adapter){
         }
     }
     for(auto listener:mAdapterChangeListeners)
-        if(listener&&oldAdapter != adapter)
+        if(listener)
            listener(*this, oldAdapter, adapter);
 }
 
@@ -421,13 +459,16 @@ void ViewPager::setPageMargin(int marginPixels){
 }
 
 void ViewPager::setPageMarginDrawable(Drawable* d){
+    if (mMarginDrawable != d) {
+        delete mMarginDrawable;
+    }
     mMarginDrawable = d;
     if (d != nullptr) refreshDrawableState();
     setWillNotDraw(d == nullptr);
     invalidate();    
 }
 
-void ViewPager::setPageMarginDrawable(const std::string&resId){
+void ViewPager::setPageMarginDrawable(int resId){
     setPageMarginDrawable(getContext()->getDrawable(resId));
 }
 
@@ -438,8 +479,8 @@ bool ViewPager::verifyDrawable(Drawable* who)const{
 void ViewPager::drawableStateChanged(){
     ViewGroup::drawableStateChanged();
     Drawable* d = mMarginDrawable;
-    if (d  && d->isStateful() && d->setState(getDrawableState())){
-        invalidateDrawable(*d);
+    if (d != nullptr && d->isStateful()) {
+        d->setState(getDrawableState());
     }
 }
 
@@ -521,6 +562,11 @@ ViewPager::ItemInfo* ViewPager::addNewItem(int position, int index){
     // for which isViewFromObject() is true. Casting ii->object straight to View*
     // only works for adapters that return the view itself and crashes adapters
     // that return a key (e.g. DayPickerPagerAdapter -> ViewHolder).
+    // This also flips isDecor=false for the page; LayoutParams default it to
+    // true (CDROID's stand-in for the missing @DecorView annotation). NOTE: it
+    // relies on the adapter having added the view during instantiateItem() —
+    // an adapter that defers addView to finishUpdate() (FragmentPagerAdapter
+    // style) would leave the page flagged as decor.
     View* view = findViewFromObject(ii->object);
     if (view != nullptr) {
         LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
@@ -1187,7 +1233,9 @@ bool ViewPager::pageScrolled(int scrollX){
 
     mCalledSuper = false;
     onPageScrolled(currentPage, pageOffset, offsetPixels);
-    LOGE_IF(!mCalledSuper,"onPageScrolled did not call superclass implementation");
+    if (!mCalledSuper) {
+        throw std::runtime_error("onPageScrolled did not call superclass implementation");
+    }
     return true;
 }
 
@@ -1989,8 +2037,8 @@ bool ViewPager::arrowScroll(int direction){
             for (ViewGroup* parent = currentFocused->getParent(); parent;parent = parent->getParent()) {
                 sb<<" => "<<typeid(parent).name();
             }
-            LOGD("arrowScroll tried to find focus based on non-child "
-                  "current focused view ",sb.str().c_str());
+            LOGE("arrowScroll tried to find focus based on non-child "
+                  "current focused view %s",sb.str().c_str());
             currentFocused = nullptr;
         }
     }
@@ -2169,7 +2217,10 @@ bool ViewPager::canScroll() {
 
 ViewPager::LayoutParams::LayoutParams()
   :ViewGroup::LayoutParams(MATCH_PARENT, MATCH_PARENT){
-    isDecor = true;
+    // AOSP default: false. Decor views are the ones carrying @ViewPager.DecorView;
+    // CDROID has no runtime annotations, so the XML (attrs) constructor below is the
+    // stand-in: children inflated inside a <ViewPager> element default to decor.
+    isDecor = false;
     gravity = Gravity::NO_GRAVITY;
     widthFactor = .0f;//.0f wil ask adapter for this value
     needsMeasure= true;
@@ -2180,11 +2231,65 @@ ViewPager::LayoutParams::LayoutParams()
 ViewPager::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts)
   :ViewGroup::LayoutParams(ctx,atts){
     isDecor = true;
-    gravity = Gravity::TOP;
+    // layout_gravity is shared with LinearLayout's styleable (same framework attr).
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::LinearLayoutLayout);
+    gravity = ta->getInt(R::styleable::LinearLayoutLayout_layout_gravity, Gravity::TOP);
     widthFactor = .0f;
     needsMeasure= true;
     position  = -1;
     childIndex= -1;
+}
+
+//androidx ViewPager.MyAccessibilityDelegate
+void ViewPager::MyAccessibilityDelegate::onInitializeAccessibilityEvent(View& host,
+        AccessibilityEvent& event) {
+    View::AccessibilityDelegate::onInitializeAccessibilityEvent(host, event);
+    ViewPager& pager = (ViewPager&)host;
+    event.setClassName(ACCESSIBILITY_CLASS_NAME);
+    event.setScrollable(pager.canScroll());
+    if (event.getEventType() == AccessibilityEvent::TYPE_VIEW_SCROLLED
+            && pager.mAdapter != nullptr) {
+        event.setItemCount(pager.mAdapter->getCount());
+        event.setFromIndex(pager.mCurItem);
+        event.setToIndex(pager.mCurItem);
+    }
+}
+
+void ViewPager::MyAccessibilityDelegate::onInitializeAccessibilityNodeInfo(View& host,
+        AccessibilityNodeInfo& info) {
+    View::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, info);
+    ViewPager& pager = (ViewPager&)host;
+    info.setClassName(ACCESSIBILITY_CLASS_NAME);
+    info.setScrollable(pager.canScroll());
+    if (pager.canScrollHorizontally(1)) {
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD);
+    }
+    if (pager.canScrollHorizontally(-1)) {
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD);
+    }
+}
+
+bool ViewPager::MyAccessibilityDelegate::performAccessibilityAction(View& host,
+        int action, Bundle* arguments) {
+    if (View::AccessibilityDelegate::performAccessibilityAction(host, action, arguments)) {
+        return true;
+    }
+    ViewPager& pager = (ViewPager&)host;
+    switch (action) {
+    case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD: {
+        if (pager.canScrollHorizontally(1)) {
+            pager.setCurrentItem(pager.mCurItem + 1);
+            return true;
+        }
+    } return false;
+    case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD: {
+        if (pager.canScrollHorizontally(-1)) {
+            pager.setCurrentItem(pager.mCurItem - 1);
+            return true;
+        }
+    } return false;
+    }
+    return false;
 }
 
 }//endof namespace

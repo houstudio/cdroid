@@ -33,8 +33,8 @@ TEST_F(APP,exec){
 }
 TEST_F(APP,add){
    ViewGroup*w=GUIEnvironment::content();
-   w->addView(new TextView("",100,20));
-   w->addView(new TextView("",100,20));
+   w->addView(new TextView(&App::getInstance()));
+   w->addView(new TextView(&App::getInstance()));
    ASSERT_EQ(2,w->getChildCount());
    pumpFor(100);
 }

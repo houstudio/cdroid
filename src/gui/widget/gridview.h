@@ -67,8 +67,9 @@ protected:
     int computeVerticalScrollOffset()override;
     int computeVerticalScrollRange()override;
 public:
-    GridView(int w,int h);
-    GridView(Context*ctx,const AttributeSet&atts);
+    GridView(Context*ctx);   // AOSP GridView(Context)
+    GridView(Context*ctx,const AttributeSet*atts);
+    GridView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     Adapter*getAdapter()override;
     void setAdapter(Adapter* adapter)override;
     void setSelection(int position)override;

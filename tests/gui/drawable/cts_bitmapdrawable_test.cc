@@ -222,15 +222,50 @@ TEST_F(CtsBitmapDrawableTest, testGetOpacity) {
     // with known transparency; skipped along with the other Bitmap-API cases.
 }
 
-// Skipped (pixel/density/Activity-dependent, see header):
+// Skipped (pixel/Activity-dependent, see header):
 //   testBitmapDrawableOpticalInset  — needs R.raw.testimage + optical-bounds decoding.
 //   testAccessMipMap                — CDROID's hasMipMap() always returns (bitmap != nullptr),
 //                                      not the real mip state; Bitmap.hasMipMap() is not ported.
-//   testSetTargetDensity            — Bitmap density scaling; no Bitmap in CDROID.
 //   testInflate                     — needs R.xml.bitmapdrawable; verify separately with an
 //                                      added asset if desired.
 //   testDraw                        — pixel test on a Canvas.
 //   testSetBitmap                   — needs android.graphics.Bitmap.
+
+// Density scaling of the intrinsic sizes — the android-36 computeBitmapSize contract
+// (bitmap.getScaledWidth/Height(targetDensity) = Bitmap.scaleFromDensity: unknown/equal
+// densities keep the raw size, otherwise scale rounding up). CDROID stands in for
+// Bitmap.mDensity with BitmapDrawable::setSourceDensity (ImageSurface carries no density
+// metadata); 0 = Bitmap.DENSITY_NONE. CTS's testSetTargetDensity clause is pixel-based and
+// stays skipped; the size math is fully verifiable here.
+TEST_F(CtsBitmapDrawableTest, testIntrinsicDensityScaling) {
+    Cairo::RefPtr<Cairo::ImageSurface> img = Cairo::ImageSurface::create(
+            Cairo::Surface::Format::ARGB32, 100, 100);
+    BitmapDrawable d(img);
+
+    // No source density reported (programmatic bitmap): raw pixels at any target.
+    d.setTargetDensity(240);
+    EXPECT_EQ(100, d.getIntrinsicWidth());
+    EXPECT_EQ(100, d.getIntrinsicHeight());
+
+    // Source == target: raw.
+    d.setSourceDensity(240);
+    EXPECT_EQ(100, d.getIntrinsicWidth());
+
+    // 160 -> 240: 100 * 240 / 160 = 150 (round-up formula ((100*240)+80)/160).
+    d.setSourceDensity(160);
+    EXPECT_EQ(150, d.getIntrinsicWidth());
+    EXPECT_EQ(150, d.getIntrinsicHeight());
+
+    // 240 -> 160: 100 * 160 / 240 = 66.67 -> 67 (rounds up, not half-away 67/66 tie).
+    d.setTargetDensity(160);
+    d.setSourceDensity(240);
+    EXPECT_EQ(67, d.getIntrinsicWidth());
+
+    // DENSITY_NONE source (0): raw at any target.
+    d.setSourceDensity(0);
+    EXPECT_EQ(100, d.getIntrinsicWidth());
+    EXPECT_EQ(100, d.getIntrinsicHeight());
+}
 
 TEST_F(CtsBitmapDrawableTest, testMutate) {
     // copy-on-write via getConstantState().newDrawable() + mutate(); default-instance (AOSP uses

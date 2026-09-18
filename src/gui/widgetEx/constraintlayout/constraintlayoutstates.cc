@@ -21,10 +21,12 @@
  */
 #include <widgetEx/constraintlayout/constraintlayoutstates.h>
 #include <widgetEx/constraintlayout/constraintset.h>
+#include <widgetEx/widgetex_styleable.h>
 
 #include <core/xmlpullparser.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 // ===========================================================================
 // Variant / State (dimension matching)
@@ -45,31 +47,8 @@ int ConstraintLayoutStates::State::findMatch(float widthDp, float heightDp) cons
 }
 
 // ===========================================================================
-// id helpers (mirror MotionScene: stable scene-local ints from "@+id/name")
+// id helpers
 // ===========================================================================
-std::string ConstraintLayoutStates::stripId(const std::string& idString) {
-    // "@+id/name", "@id/name", "name" -> "name". CDROID may encode a resource ref's leading '@' as
-    // ':' in attribute values, so accept both markers.
-    std::string s = idString;
-    if (s.empty()) return s;
-    if (s[0] == '@' || s[0] == ':') {
-        const size_t slash = s.find('/');
-        if (slash != std::string::npos) return s.substr(slash + 1);
-        return s.substr(1);
-    }
-    return s;
-}
-
-int ConstraintLayoutStates::getId(const std::string& idString) const {
-    if (idString.empty()) return -1;
-    const std::string name = stripId(idString);
-    auto it = mIdMap.find(name);
-    if (it != mIdMap.end()) return it->second;
-    const int id = mNextLocalId++;
-    mIdMap[name] = id;
-    return id;
-}
-
 ConstraintLayoutStates::State* ConstraintLayoutStates::findState(int id) {
     for (auto& s : mStates) if (s.mId == id) return &s;
     return nullptr;
@@ -84,10 +63,10 @@ const ConstraintLayoutStates::State* ConstraintLayoutStates::findState(int id) c
 // construction / parse
 // ===========================================================================
 ConstraintLayoutStates::ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout,
-        const std::string& resourceId)
+        int resourceId)
     : mLayout(layout), mContext(ctx) {
-    XmlPullParser parser(ctx, resourceId);
-    parse(ctx, parser);
+    auto parser = ctx->getResources().getXml(resourceId);
+    parse(ctx, *parser);
 }
 
 ConstraintLayoutStates::ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout,
@@ -98,13 +77,35 @@ ConstraintLayoutStates::ConstraintLayoutStates(Context* ctx, ConstraintLayout* l
 
 int ConstraintLayoutStates::parseConstraintSet(Context* ctx, XmlPullParser& parser) {
     // <ConstraintSet android:id="@+id/cs1"> ...children... </ConstraintSet>
-    const std::string idStr = parser.getAttributeValue("id");
-    const int id = getId(idStr);
-    if (id == -1) return -1;
-    auto set = std::make_unique<ConstraintSet>();
-    set->load(ctx, parser); // consumes through </ConstraintSet>
-    mConstraintSetMap[id] = std::move(set);
-    return id;
+    // androidx scans (getAttributeName(i), getAttributeValue(i)) and re-resolves
+    // the "@+id/name" string through getIdentifier — sound on Android, where
+    // aapt keeps the rawValue and getPackageName() names the single package.
+    // CDROID's render drops the package ("@id/x") and getPackageName() may be
+    // a path, so the string round-trip cannot resolve; the equivalent is the
+    // typed index read, which serves both parsers (binary: the aapt2 resId;
+    // text: the by-name reference resolver).
+    const int count = parser.getAttributeCount();
+    for (int i = 0; i < count; i++) {
+        if (parser.getAttributeName(i) == "id") {
+            int id = (int)parser.getAttributeResourceValue(i, (uint32_t)-1);
+            if (id == -1) {
+                // AndroidX fallback (ConstraintLayoutStates.java:371-377): when the typed
+                // read misses — a raw numeric id, or a text-XML name with no arsc entry —
+                // parse the attribute's own text (AndroidX does Integer.parseInt on the
+                // string minus its first character, i.e. "@12345" -> 12345). Dropping this
+                // path discarded whole state sets with no warning.
+                const std::string s = parser.getAttributeValue(i);
+                if (s.size() > 1) {
+                    try { id = std::stoi(s.substr(1)); } catch (const std::exception&) { id = -1; }
+                }
+            }
+            auto set = std::make_unique<ConstraintSet>();
+            set->load(ctx, parser); // consumes through </ConstraintSet>
+            mConstraintSetMap[id] = std::move(set);
+            return id;
+        }
+    }
+    return -1;
 }
 
 void ConstraintLayoutStates::parse(Context* ctx, XmlPullParser& parser) {
@@ -115,23 +116,37 @@ void ConstraintLayoutStates::parse(Context* ctx, XmlPullParser& parser) {
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();
             if (tag == "StateSet" || tag == "layoutDescription" || tag == "ConstraintLayoutStates") {
-                mDefaultState = getId(parser.getAttributeValue("defaultState"));
+                // androidx's StateSet case reads no attrs; defaultState is the CDROID extension.
+                auto ta = ctx->obtainStyledAttributes(parser, R::styleable::StateSet);
+                if (ta) {
+                    mDefaultState = (int)ta->getResourceId(R::styleable::StateSet_defaultState,
+                                                            mDefaultState);
+                }
             } else if (tag == "State") {
+                // androidx State ctor: TypedArray with android:id + constraints resource ids.
                 State s;
-                s.mId = getId(parser.getAttributeValue("id"));
-                s.mConstraintsAttr = parser.getAttributeValue("constraints");
-                s.mConstraintID = getId(s.mConstraintsAttr);
+                auto ta = ctx->obtainStyledAttributes(parser, R::styleable::State);
+                if (ta) {
+                    namespace ST = R::styleable;
+                    s.mId           = (int)ta->getResourceId(ST::State_id, s.mId);
+                    s.mConstraintID = (int)ta->getResourceId(ST::State_constraints, s.mConstraintID);
+                }
                 mStates.push_back(s);
                 currentState = &mStates.back();
             } else if (tag == "Variant") {
                 if (currentState != nullptr) {
+                    // androidx Variant ctor: TypedArray getDimension on the region_* attrs.
                     Variant v;
-                    v.mConstraintsAttr = parser.getAttributeValue("constraints");
-                    v.mConstraintID = getId(v.mConstraintsAttr);
-                    v.mMinWidth  = parser.getFloat("region_widthMoreThan",  v.mMinWidth);
-                    v.mMaxWidth  = parser.getFloat("region_widthLessThan",  v.mMaxWidth);
-                    v.mMinHeight = parser.getFloat("region_heightMoreThan", v.mMinHeight);
-                    v.mMaxHeight = parser.getFloat("region_heightLessThan", v.mMaxHeight);
+                    auto ta = ctx->obtainStyledAttributes(parser, R::styleable::Variant);
+                    if (ta) {
+                        namespace VA = R::styleable;
+                        v.mConstraintID = (int)ta->getResourceId(VA::Variant_constraints,
+                                                                 v.mConstraintID);
+                        v.mMinWidth  = ta->getDimension(VA::Variant_region_widthMoreThan,  v.mMinWidth);
+                        v.mMaxWidth  = ta->getDimension(VA::Variant_region_widthLessThan,  v.mMaxWidth);
+                        v.mMinHeight = ta->getDimension(VA::Variant_region_heightMoreThan, v.mMinHeight);
+                        v.mMaxHeight = ta->getDimension(VA::Variant_region_heightLessThan, v.mMaxHeight);
+                    }
                     currentState->mVariants.push_back(v);
                 }
             } else if (tag == "ConstraintSet") {
@@ -149,31 +164,33 @@ void ConstraintLayoutStates::parse(Context* ctx, XmlPullParser& parser) {
     resolveConstraintRefs();
 }
 
-ConstraintSet* ConstraintLayoutStates::resolveConstraintRef(const std::string& attr) {
-    if (attr.empty()) return nullptr;
-    // A layout-resource ref ("@layout/foo" / ":layout/foo") -> clone the layout offscreen.
-    // An inline <ConstraintSet> ref ("@+id/x") -> look up the parsed map by scene-local id.
-    std::string body = attr;
-    if (!body.empty() && (body[0] == '@' || body[0] == ':')) body = body.substr(1); // "layout/foo" | "+id/x"
-    if (body.rfind("layout/", 0) == 0 && mContext != nullptr) {
-        auto set = std::make_shared<ConstraintSet>();
-        set->clone(mContext, body); // body == "layout/foo"
-        ConstraintSet* raw = set.get();
-        mClonedSets.push_back(std::move(set));
-        return raw;
+ConstraintSet* ConstraintLayoutStates::resolveConstraintRef(int constraintId) {
+    if (constraintId == -1) return nullptr;
+    auto it = mConstraintSetMap.find(constraintId);
+    if (it != mConstraintSetMap.end()) return it->second.get();
+    // Not an inline set: a layout resource ref (androidx checks getResourceTypeName=="layout"
+    // in the State/Variant ctors and clones there; CDROID resolves lazily after the parse).
+    if (mContext != nullptr) {
+        std::string type, entry;
+        if (mContext->getResources().getResourceTypeName(constraintId, &type) && type == "layout"
+                && mContext->getResources().getResourceEntryName(constraintId, &entry)) {
+            auto set = std::make_shared<ConstraintSet>();
+            set->clone(mContext, "layout/" + entry);
+            ConstraintSet* raw = set.get();
+            mClonedSets.push_back(std::move(set));
+            return raw;
+        }
     }
-    const int id = getId(attr);
-    auto it = mConstraintSetMap.find(id);
-    return (it != mConstraintSetMap.end()) ? it->second.get() : nullptr;
+    return nullptr;
 }
 
 void ConstraintLayoutStates::resolveConstraintRefs() {
     // Wire each State/Variant `constraints` ref to its ConstraintSet (inline ref or layout-resource
     // clone). Done after the full parse so inline sets defined later in the file resolve too.
     for (auto& s : mStates) {
-        s.mConstraintSet = resolveConstraintRef(s.mConstraintsAttr);
+        s.mConstraintSet = resolveConstraintRef(s.mConstraintID);
         for (auto& v : s.mVariants) {
-            v.mConstraintSet = resolveConstraintRef(v.mConstraintsAttr);
+            v.mConstraintSet = resolveConstraintRef(v.mConstraintID);
         }
     }
 }

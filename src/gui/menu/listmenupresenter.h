@@ -33,7 +33,7 @@ protected:
     MenuBuilder* mMenu = nullptr;
     ExpandedMenuView* mMenuView = nullptr;
     int mThemeRes = 0;
-    std::string mItemLayoutRes;
+    int mItemLayoutRes = 0;
     MenuAdapter* mAdapter = nullptr;
 private:
     int mItemIndexOffset = 0;
@@ -42,8 +42,8 @@ private:
 public:
     static constexpr const char* VIEWS_TAG = "android:menu:list";
 
-    ListMenuPresenter(Context* context,const std::string& itemLayoutRes);
-    ListMenuPresenter(const std::string& itemLayoutRes, int themeRes);
+    ListMenuPresenter(Context* context,int itemLayoutRes);
+    ListMenuPresenter(int itemLayoutRes, int themeRes);
 
     void initForMenu(Context* context,MenuBuilder* menu)override;
 

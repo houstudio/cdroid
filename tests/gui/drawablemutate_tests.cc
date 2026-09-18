@@ -1,11 +1,12 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <core/assets.h>
+#include <core/app.h>
 #include <drawable/drawables.h>
 #include <drawable/drawableinflater.h>
 #include <fstream>
 #include <sstream>
 #include <core/systemclock.h>
+#include <widget/internal_R.h>
 using namespace Cairo;
 class MUTATE:public testing::Test{
 protected:
@@ -45,7 +46,7 @@ TEST_F(MUTATE,bitmap){
 }
 
 TEST_F(MUTATE,bitmap2){
-    cdroid::RefPtr<ImageSurface>img=mContext->loadImage("@cdroid:mipmap/seek_thumb_selected");
+    cdroid::RefPtr<ImageSurface>img=mContext->loadImage(cdroid::internal::R::drawable::seek_thumb_selected);
     BitmapDrawable*d1=new BitmapDrawable(img);
     BitmapDrawable*d2=(BitmapDrawable*)d1->getConstantState()->newDrawable();
     ASSERT_NE(dynamic_cast<BitmapDrawable*>(d2),(void*)nullptr);
@@ -58,8 +59,13 @@ TEST_F(MUTATE,bitmap2){
 }
 
 TEST_F(MUTATE,ninepatch){
-    cdroid::RefPtr<ImageSurface>img=mContext->loadImage("@cdroid:mipmap/btn_default_pressed");
-    NinePatchDrawable*d1=new NinePatchDrawable(img);
+    /* A .9.png resource must go through getDrawable: the pak's cdNp chunk is
+       parsed there. loadImage returns the bare decoded surface with no chunk,
+       and NinePatchDrawable's ctor rejects a null chunk - the same contract
+       as AOSP's NinePatch NPE on a null chunk. */
+    NinePatchDrawable*d1=dynamic_cast<NinePatchDrawable*>(
+            mContext->getDrawable(cdroid::internal::R::drawable::btn_default_pressed));
+    ASSERT_NE(d1,(void*)nullptr);
     NinePatchDrawable*d2=(NinePatchDrawable*)d1->getConstantState()->newDrawable();
     printf("intrinsicsize d1=%dx%d d2=%dx%d\r\n",d1->getIntrinsicWidth(),d1->getIntrinsicHeight(),
            d2->getIntrinsicWidth(),d2->getIntrinsicHeight());
@@ -108,7 +114,7 @@ TEST_F(MUTATE,statelist){
 }
 
 TEST_F(MUTATE,statelist2){
-    StateListDrawable*d1=(StateListDrawable*)DrawableInflater::loadDrawable(mContext,"@cdroid:drawable/seek_thumb");
+    StateListDrawable*d1=(StateListDrawable*)mContext->getDrawable(cdroid::internal::R::drawable::seek_thumb);
     StateListDrawable*d2=dynamic_cast<StateListDrawable*>(d1->getConstantState()->newDrawable());
     ASSERT_TRUE(d2->getChildCount()>0);
 
@@ -134,7 +140,7 @@ TEST_F(MUTATE,statelist2){
 }
 
 TEST_F(MUTATE,layer){
-    LayerDrawable*d1=(LayerDrawable*)DrawableInflater::loadDrawable(mContext,"@cdroid:drawable/progress_horizontal");
+    LayerDrawable*d1=(LayerDrawable*)mContext->getDrawable(cdroid::internal::R::drawable::progress_horizontal);
     LayerDrawable*d2=dynamic_cast<LayerDrawable*>(d1->getConstantState()->newDrawable());
 
     ASSERT_GT(d2->getNumberOfLayers(),0);
@@ -155,8 +161,11 @@ TEST_F(MUTATE,layer){
         ASSERT_EQ(nd1->getMinimumHeight(),nd2->getMinimumHeight());
         ASSERT_EQ(nd1->getLevel(),nd2->getLevel());
         if(i==0){
-            ASSERT_NE(dynamic_cast<ShapeDrawable*>(nd1),(void*)nullptr);
-            ASSERT_NE(dynamic_cast<ShapeDrawable*>(nd2),(void*)nullptr);
+            /* layer 0 (background) is a <shape>, which inflates to
+               GradientDrawable - on AOSP and here alike; it is NOT a
+               ShapeDrawable subclass. */
+            ASSERT_NE(dynamic_cast<GradientDrawable*>(nd1),(void*)nullptr);
+            ASSERT_NE(dynamic_cast<GradientDrawable*>(nd2),(void*)nullptr);
         }else{
             ASSERT_NE(dynamic_cast<ClipDrawable*>(nd1),(void*)nullptr);
             ASSERT_NE(dynamic_cast<ClipDrawable*>(nd2),(void*)nullptr);
@@ -168,11 +177,19 @@ TEST_F(MUTATE,layer){
 
 TEST_F(MUTATE,parsexml){
     Drawable*d1,*d2;
-    d1=DrawableInflater::loadDrawable(mContext,"@cdroid:drawable/progress_horizontal");
-    ASSERT_EQ(d1->getConstantState().use_count(),1);
-    d2=d1->getConstantState()->newDrawable();
+    d1=mContext->getDrawable(cdroid::internal::R::drawable::progress_horizontal);
+    /* getConstantState() hands out the shared_ptr BY VALUE, so the observed
+       use_count includes the expression's own temporary: a sole owner reads
+       2 (member + temporary), never 1 - there is no Java-GC raw-pointer
+       reading of the count here. */
     ASSERT_EQ(d1->getConstantState().use_count(),2);
-    ASSERT_EQ(d1->getConstantState(),d2->getConstantState());
+    d2=d1->getConstantState()->newDrawable();
+    /* AOSP LayerState.newDrawable hands the new drawable a COPY of the state
+       (the cached state is the template), so d1's count is unchanged and the
+       two drawables carry distinct state objects - unlike ColorDrawable,
+       whose state is shared between instances. */
+    ASSERT_EQ(d1->getConstantState().use_count(),2);
+    ASSERT_NE(d1->getConstantState(),d2->getConstantState());
     //delete d1;
     //delete d2;
 }

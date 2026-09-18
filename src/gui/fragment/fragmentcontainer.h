@@ -24,7 +24,6 @@
  *********************************************************************************/
 #include <view/view.h>
 namespace cdroid{
-namespace fragment{
 
 class FragmentContainer{
 public:
@@ -35,6 +34,5 @@ public:
     virtual bool onHasView() = 0;
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

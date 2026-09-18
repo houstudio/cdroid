@@ -30,7 +30,6 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
-namespace fragment{
 
 // Map a Lifecycle::State ceiling to the Fragment int-state it permits (androidx
 // FragmentStateManager.computeExpectedState clamps managerState by mFragment.mMaxState).
@@ -166,6 +165,10 @@ int FragmentStateManager::computeExpectedState(){
     maxState = std::min(maxState, maxStateToInt(mFragment->mMaxState));
     // Fragments not currently added sit at no higher than CREATED.
     if(!mFragment->mAdded) maxState = std::min(maxState, (int)Fragment::CREATED);
+    // Detached fragments keep their instance + FM registration but lose the
+    // view (androidx FragmentTransaction.detach: view destroyed, instance
+    // retained; attach() re-creates the view by lifting this cap).
+    if(mFragment->mDetached) maxState = std::min(maxState, (int)Fragment::CREATED);
     // SpecialEffectsController awaiting-effect clamp (androidx :220-240):
     // A fragment mid-add-effect can't pass AWAITING_ENTER_EFFECTS; mid-remove can't drop below
     // AWAITING_EXIT_EFFECTS. This is what freezes the fragment while its Animation/Transition runs.
@@ -214,6 +217,29 @@ void FragmentStateManager::moveToState(int explicitTarget){
     mMovingToState = false;
 }
 
+void FragmentStateManager::ensureInflatedView(){
+    // androidx FragmentStateManager.ensureInflatedView. CDROID has no
+    // mPerformedCreateView flag — a non-null mView is the equivalent
+    // "already performed" witness (performCreateView assigns it).
+    if(mFragment->mFromLayout && mFragment->mInLayout && mFragment->mView == nullptr){
+        cdroid::LayoutInflater* inflater = mFragmentManager->mHost
+            ? mFragmentManager->mHost->onGetLayoutInflater() : nullptr;
+        // Null container on purpose: the LayoutInflater places the returned view
+        // into the XML parent itself (androidx passes null here too).
+        mFragment->performCreateView(inflater, nullptr, savedInstanceState());
+        if(mFragment->mView != nullptr){
+            // The fragment's view is parented by the layout XML, so parent-mediated
+            // view-state saving must not save/restore through it (androidx
+            // setSaveFromParentEnabled(false); the androidx container-view tag
+            // R.id.fragment_container_view_tag has no CDROID equivalent — skipped).
+            mFragment->mView->setSaveFromParentEnabled(false);
+            if(mFragment->mHidden) mFragment->mView->setVisibility(cdroid::View::GONE);
+            mFragment->performViewCreated(savedInstanceState());
+            mFragment->mState = Fragment::VIEW_CREATED;
+        }
+    }
+}
+
 void FragmentStateManager::stepUp(){
     switch(mFragment->mState){
         case Fragment::INITIALIZING:
@@ -221,17 +247,50 @@ void FragmentStateManager::stepUp(){
         case Fragment::ATTACHED:
             mFragment->performCreate(savedInstanceState()); mFragment->mState = Fragment::CREATED; break;
         case Fragment::CREATED: {
+            // androidx stepUp case VIEW_CREATED runs ensureInflatedView() first: a
+            // <fragment>-tag fragment (mFromLayout) creates its view through the
+            // XML-inflation path and never takes the container/addView route below.
+            ensureInflatedView();
+            if(mFragment->mFromLayout){
+                // An androidx <fragment>-tag fragment must return a view — the
+                // FragmentManager::onCreateView caller throws "did not create a view".
+                // Advance regardless so the state machine never stalls on CREATED.
+                mFragment->mState = Fragment::VIEW_CREATED;
+                break;
+            }
             // Resolve the container ViewGroup at view-creation time, by id (androidx
             // FragmentManager.getFragmentContainer): a fragment added before its host's view
             // exists — e.g. a deferred commit drained during the host's onCreate, when the host
             // has no mView yet — had mContainer resolved to null at addFragment() time. Re-resolve
             // now so the view can be added; by then the host's view tree is built.
-            if(mFragmentManager->mContainer){
+            // Same cid > 0 guard as androidx getFragmentContainer (see addFragment) — a
+            // container-less fragment must re-resolve to null, not to an id-less view.
+            if(mFragmentManager->mContainer && mFragment->mContainerId > 0){
                 mFragment->mContainer = dynamic_cast<cdroid::ViewGroup*>(
                     mFragmentManager->mContainer->onFindViewById(mFragment->mContainerId));
             }
             cdroid::LayoutInflater* inflater = mFragmentManager->mHost
                 ? mFragmentManager->mHost->onGetLayoutInflater() : nullptr;
+            // Stale-view guard: a deferred-SEC stepDown (VIEW_CREATED→CREATED with the
+            // exit chain still holding the view) leaves mView set BELOW the VIEW_CREATED
+            // state. Re-entering here — pager re-attach during a window recreate, or a
+            // transaction drained after dispatchDestroy — would overwrite the pointer and
+            // drop the whole inflation (the ~692KB definite root). Run the view lifecycle
+            // now (while the tree is alive), then hand the tree to a sole-owner reclaim
+            // hop: it frees once no pending/running clone still references it. Deleting
+            // inline here SEGVs — a still-pending clone captured this subtree in its
+            // startValues and dereferences it at the next preDraw (widgetsDemo sweep:
+            // Visibility::onDisappear -> resolvePadding on a freed view).
+            if(mFragment->mView != nullptr){
+                mFragment->performDestroyView();
+                std::weak_ptr<bool> ctrlAlive;
+                if(SpecialEffectsController* sec = getSpecialEffectsController())
+                    ctrlAlive = sec->getAlive();
+                scheduleViewReclaim(mFragment->mContainer, mFragment->mView, mFragment,
+                                    std::weak_ptr<bool>(mFragment->mAliveFlag), ctrlAlive,
+                                    {}, /*soleOwner=*/true);
+                mFragment->mView = nullptr;
+            }
             mFragment->performCreateView(inflater, mFragment->mContainer, savedInstanceState());
             LOGD("FSM.stepUp CREATED: who=%s mView=%p mContainer=%p",
                  mFragment->mWho.c_str(), mFragment->mView, mFragment->mContainer);
@@ -325,12 +384,26 @@ void FragmentStateManager::stepDown(){
                     mFragment->mState = Fragment::CREATED;
                     break;
                 } else {
-                    TransitionManager::beginDelayedTransition(mFragment->mContainer,
-                        FragmentTransitionImpl::makeExitTransition());
+                    // No SEC to run the deferred-delete chain: this branch owns the
+                    // view. Starting an exit clone here would capture the very view
+                    // the shared delete below frees (UAF at its onDisappear) — plain
+                    // remove, no transition.
                     mFragment->mContainer->removeView(mFragment->mView);
                 }
             }
             mFragment->performDestroyView();
+            // Fall-through = sole ownership of mView (the SEC path breaks above and
+            // hands the view to scheduleViewReclaim). ~Fragment never sees it again
+            // — mView is nulled right below — so free it HERE or the whole
+            // inflation leaks (valgrind: ~692KB definite root whenever a window
+            // recreate stepped fragments down with no container/SEC, e.g. pages
+            // already detached). end*Over first: a still-ticking animator or
+            // transition clone over this subtree must not outlive the views.
+            if (mFragment->mView) {
+                endAnimatorsOver(mFragment->mView);
+                endTransitionsOver(mFragment->mView);
+                delete mFragment->mView;
+            }
             mFragment->mView = nullptr;
             mFragment->mState = Fragment::CREATED;
             break;
@@ -342,5 +415,4 @@ void FragmentStateManager::stepDown(){
     }
 }
 
-}//namespace fragment
 }//namespace cdroid

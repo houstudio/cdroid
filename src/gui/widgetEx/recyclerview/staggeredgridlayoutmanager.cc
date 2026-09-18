@@ -28,9 +28,9 @@
 
 namespace cdroid{
 
-StaggeredGridLayoutManager::StaggeredGridLayoutManager(Context* context,const AttributeSet& attrs)
-	:LayoutManager(){//, int defStyleAttr,int defStyleRes) {
-    Properties properties = getProperties(context, attrs,0,0);//, defStyleAttr, defStyleRes);
+StaggeredGridLayoutManager::StaggeredGridLayoutManager(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+	:LayoutManager(){
+    Properties properties = getProperties(context, pAttrs, defStyleAttr, defStyleRes);
     initLayoutManager();
     setOrientation(properties.orientation);
 
@@ -872,38 +872,38 @@ Parcelable* StaggeredGridLayoutManager::onSaveInstanceState() {
     return nullptr;
 #endif
 }
-#if 0
+// androidx SGlM.java:1301-1333 — span-aware collection item info + visible
+// range in the scrolled event (translated from the blocked Java below).
 void StaggeredGridLayoutManager::onInitializeAccessibilityNodeInfoForItem(RecyclerView::Recycler& recycler,
-        RecyclerView::State& state, View host, AccessibilityNodeInfoCompat info) {
-    ViewGroup::LayoutParams lp = host.getLayoutParams();
-    if (!(lp instanceof LayoutParams)) {
-        super.onInitializeAccessibilityNodeInfoForItem(host, info);
+        RecyclerView::State& state, View* host, AccessibilityNodeInfo& info) {
+    (void) recycler; (void) state;  // androidx signatures take them; unused here
+    ViewGroup::LayoutParams* lp = host->getLayoutParams();
+    if (dynamic_cast<StaggeredGridLayoutManager::LayoutParams*>(lp) == nullptr) {
+        RecyclerView::LayoutManager::onInitializeAccessibilityNodeInfoForItem(host, info);
         return;
     }
-    LayoutParams sglp = (LayoutParams) lp;
+    StaggeredGridLayoutManager::LayoutParams* sglp = (StaggeredGridLayoutManager::LayoutParams*) lp;
     if (mOrientation == HORIZONTAL) {
-        info.setCollectionItemInfo(AccessibilityNodeInfoCompat.CollectionItemInfoCompat.obtain(
-                sglp.getSpanIndex(), sglp.mFullSpan ? mSpanCount : 1,
-                -1, -1,
-                sglp.mFullSpan, false));
+        info.setCollectionItemInfo(AccessibilityNodeInfo::CollectionItemInfo::obtain(
+                sglp->getSpanIndex(), sglp->mFullSpan ? mSpanCount : 1,
+                -1, -1, false, false));
     } else { // VERTICAL
-        info.setCollectionItemInfo(AccessibilityNodeInfoCompat.CollectionItemInfoCompat.obtain(
+        info.setCollectionItemInfo(AccessibilityNodeInfo::CollectionItemInfo::obtain(
                 -1, -1,
-                sglp.getSpanIndex(), sglp.mFullSpan ? mSpanCount : 1,
-                sglp.mFullSpan, false));
+                sglp->getSpanIndex(), sglp->mFullSpan ? mSpanCount : 1, false, false));
     }
 }
 
-void StaggeredGridLayoutManager::onInitializeAccessibilityEvent(AccessibilityEvent event) {
-    super.onInitializeAccessibilityEvent(event);
+void StaggeredGridLayoutManager::onInitializeAccessibilityEvent(AccessibilityEvent& event) {
+    RecyclerView::LayoutManager::onInitializeAccessibilityEvent(event);
     if (getChildCount() > 0) {
-        final View start = findFirstVisibleItemClosestToStart(false);
-        final View end = findFirstVisibleItemClosestToEnd(false);
-        if (start == null || end == null) {
+        View* start = findFirstVisibleItemClosestToStart(false);
+        View* end = findFirstVisibleItemClosestToEnd(false);
+        if (start == nullptr || end == nullptr) {
             return;
         }
-        final int startPos = getPosition(start);
-        final int endPos = getPosition(end);
+        const int startPos = getPosition(start);
+        const int endPos = getPosition(end);
         if (startPos < endPos) {
             event.setFromIndex(startPos);
             event.setToIndex(endPos);
@@ -913,7 +913,6 @@ void StaggeredGridLayoutManager::onInitializeAccessibilityEvent(AccessibilityEve
         }
     }
 }
-#endif
 int StaggeredGridLayoutManager::findFirstVisibleItemPositionInt() {
     View* first = mShouldReverseLayout ? findFirstVisibleItemClosestToEnd(true) :
             findFirstVisibleItemClosestToStart(true);
@@ -1750,8 +1749,8 @@ StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateDe
     }
 }
 
-StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateLayoutParams(Context* c,const AttributeSet& attrs)const{
-    return new LayoutParams(c, attrs);
+StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateLayoutParams(Context* c,const AttributeSet* attrs)const{
+    return new LayoutParams(c, *attrs);
 }
 
 StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateLayoutParams(const ViewGroup::LayoutParams& lp)const{

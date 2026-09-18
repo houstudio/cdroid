@@ -11,7 +11,10 @@ U_CAPI UCharDirection U_EXPORT2 u_charDirection(UChar32 c) {
 
 U_CAPI UBool U_EXPORT2 u_isMirrored(UChar32 c) {
     const auto* range = findUnicodeRange(c);
-    return range->hasBinaryProperty(1);  // UCHAR_BIDI_MIRRORED = 1
+    // Named constant, not a literal: bit 1 is UCHAR_ASCII_HEX_DIGIT in the
+    // myicu numbering (BIDI_MIRRORED = 3), so the old hardcoded 1 made
+    // isMirrored true only for hex digits.
+    return range->hasBinaryProperty(UCHAR_BIDI_MIRRORED);
 }
 
 U_CAPI UChar32 U_EXPORT2 u_charMirror(UChar32 c) {
@@ -23,35 +26,41 @@ U_CAPI UChar32 U_EXPORT2 u_charMirror(UChar32 c) {
 
 U_CAPI int32_t U_EXPORT2 u_getIntPropertyValue(UChar32 c, UProperty property) {
     const auto* range = findUnicodeRange(c);
-    
+
     switch (property) {
         case UCHAR_BIDI_CLASS:
             return range->directionality;
-        
+
         case UCHAR_GENERAL_CATEGORY:
             return range->category;
-        
+
         case UCHAR_GRAPHEME_CLUSTER_BREAK:
             return range->gcb;
-        
+
         case UCHAR_LINE_BREAK:
             return range->lb;
-        
+
         case UCHAR_CANONICAL_COMBINING_CLASS:
             return range->ccc;
-        
+
+        // UAX#29 Word_Break: authoritative in the data table (the wbp field
+        // ubrk.cpp reads) — the old default swallowed it to 0, leaving
+        // worditerator.cc's mid-word-punctuation logic dead.
+        case UCHAR_WORD_BREAK:
+            return range->wbp;
+
+        // Binary properties: pass the myicu enum value itself — the earlier
+        // hardcoded 8/151/149/150 were upstream ICU numbering, which indexes
+        // unrelated bits (and 151 is beyond the 0..127 bitmap, always false).
         case UCHAR_EMOJI:
-            return range->hasBinaryProperty(8) ? 1 : 0;
-        
-        case UCHAR_EXTENDED_PICTOGRAPHIC:
-            return range->hasBinaryProperty(151) ? 1 : 0;
-        
+        case UCHAR_EMOJI_PRESENTATION:
         case UCHAR_EMOJI_MODIFIER:
-            return range->hasBinaryProperty(149) ? 1 : 0;
-        
         case UCHAR_EMOJI_MODIFIER_BASE:
-            return range->hasBinaryProperty(150) ? 1 : 0;
-        
+        case UCHAR_EMOJI_COMPONENT:
+        case UCHAR_REGIONAL_INDICATOR:
+        case UCHAR_EXTENDED_PICTOGRAPHIC:
+            return range->hasBinaryProperty(property) ? 1 : 0;
+
         default:
             return 0;
     }
@@ -111,7 +120,9 @@ U_CAPI UBool U_EXPORT2 u_isUUppercase(UChar32 c) {
 
 U_CAPI UBool U_EXPORT2 u_isWhiteSpace(UChar32 c) {
     const auto* range = findUnicodeRange(c);
-    return range->hasBinaryProperty(40);  // U_WHITE_SPACE = 40
+    // Same disease as u_isMirrored: 40 is not WHITE_SPACE (= 31) in the
+    // myicu numbering — Character::isWhitespace answered by the wrong bit.
+    return range->hasBinaryProperty(UCHAR_WHITE_SPACE);
 }
 
 U_CAPI UBool U_EXPORT2 u_isSpaceChar(UChar32 c) {

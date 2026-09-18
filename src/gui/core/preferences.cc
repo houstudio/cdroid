@@ -21,7 +21,7 @@
 #include <core/preferences.h>
 #include <porting/cdtypes.h>
 #include <porting/cdlog.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <core/attributeset.h>
 #include <core/iostreams.h>
 #include <core/xmlpullparser.h>
@@ -57,19 +57,19 @@ void Preferences::load(const char*buf,size_t len){
 
 void Preferences::load(std::istream&istream){
     auto strm = std::make_unique<std::istream>(istream.rdbuf());
-    XmlPullParser parser(nullptr,std::move(strm));
-    const AttributeSet& attrs = parser;
+    auto parser = XmlPullParser::detectAndCreate(nullptr, std::move(strm));
+    const AttributeSet& attrs = *parser;
     int type;
     std::string section,key,value;
     istream.rdbuf(nullptr);
-    while(((type=parser.next())!=XmlPullParser::END_DOCUMENT)&&(type!=XmlPullParser::BAD_DOCUMENT)){
-        std::string tagName = parser.getName();
+    while(((type=parser->next())!=XmlPullParser::END_DOCUMENT)&&(type!=XmlPullParser::BAD_DOCUMENT)){
+        std::string tagName = parser->getName();
         switch(type){
         case XmlPullParser::START_TAG:
             if(tagName.compare("item")==0){
-                key = attrs.getString("name");
+                key = attrs.getAttributeValue(std::string(), "name");
             }else if(tagName.compare("section")==0){
-                section = attrs.getString("name");
+                section = attrs.getAttributeValue(std::string(), "name");
             }
             break;
         case XmlPullParser::END_TAG:
@@ -80,7 +80,7 @@ void Preferences::load(std::istream&istream){
             }
             break;
         case XmlPullParser::TEXT:
-            value.append(parser.getText());
+            value.append(parser->getText());
             break;
         }
     }
@@ -126,6 +126,22 @@ void Preferences::removeSection(const std::string&section){
 
 bool Preferences::hasSection(const std::string&section)const{
     return mPrefs.find(section) != mPrefs.end();
+}
+
+int Preferences::getKeys(const std::string&section, std::vector<std::string>&keys) const{
+    keys.clear();
+    auto sec = mPrefs.find(section);
+    if(sec == mPrefs.end()) return 0;
+    for(auto& kv : sec->second)
+        keys.push_back(kv.first);
+    return keys.size();
+}
+
+void Preferences::remove(const std::string&section, const std::string&key){
+    auto sec = mPrefs.find(section);
+    if(sec == mPrefs.end()) return;
+    if(sec->second.erase(key) > 0)
+        updates++;
 }
 
 int Preferences::getUpdates()const{

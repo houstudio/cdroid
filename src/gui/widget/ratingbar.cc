@@ -15,38 +15,43 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/ratingbar.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(RatingBar,"cdroid:attr/ratingBarStyle")
+DECLARE_WIDGET2(RatingBar, "android.widget.RatingBar");
 
-RatingBar::RatingBar(int w,int h):AbsSeekBar(w,h){
-    mNumStars = 5;
-    mIsUserSeekable = true;
-    mProgressOnStartTracking=0;
-    mTouchProgressOffset = 0.6f;
-    setStepSize(0.5f);
-}
+RatingBar::RatingBar(Context*ctx)
+    :RatingBar(ctx,nullptr){}
 
-RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
-    :AbsSeekBar(ctx,atts){
+RatingBar::RatingBar(Context*ctx,const AttributeSet* atts):RatingBar(ctx,atts,cdroid::internal::R::attr::ratingBarStyle){}
+
+RatingBar::RatingBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    :AbsSeekBar(ctx,pAttrs, defStyleAttr){
     mNumStars = 5;
     mIsUserSeekable = true;
     mProgressOnStartTracking =0;
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::RatingBar, defStyleAttr);
+    
 
-    setIsIndicator(atts.getBoolean("isIndicator",!mIsUserSeekable));
-    const int numStars  = atts.getInt("numStars",mNumStars);
-    const float rating  = atts.getFloat("rating",-1);
-    const float stepSize= atts.getFloat("stepSize",-1);
-    if( (numStars>0) && (numStars!=mNumStars) )
-        setNumStars(numStars);
-    setStepSize((stepSize>=0)?stepSize:0.5f);
-    if(rating>=0)setRating(rating);
+setIsIndicator(ta->getBoolean(R::styleable::RatingBar_isIndicator,!mIsUserSeekable));
+const int numStars  = ta->getInt(R::styleable::RatingBar_numStars,mNumStars);
+const float rating  = ta->getFloat(R::styleable::RatingBar_rating,-1);
+const float stepSize= ta->getFloat(R::styleable::RatingBar_stepSize,-1);
+if( (numStars>0) && (numStars!=mNumStars) )
+    setNumStars(numStars);
+setStepSize((stepSize>=0)?stepSize:0.5f);
+if(rating>=0)setRating(rating);
 
-    // A touch inside a star fill up to that fractional area (slightly more
-    // than 0.5 so boundaries round up).
-    mTouchProgressOffset = 0.6f;
+// A touch inside a star fill up to that fractional area (slightly more
+// than 0.5 so boundaries round up).
+mTouchProgressOffset = 0.6f;
+
 }
 
 void RatingBar::setOnRatingBarChangeListener(const OnRatingBarChangeListener& listener){
@@ -185,7 +190,7 @@ void RatingBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo&
     AbsSeekBar::onInitializeAccessibilityNodeInfoInternal(info);
 
     if (canUserSetProgress()) {
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS.getId());
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS);
     }
 }
 }

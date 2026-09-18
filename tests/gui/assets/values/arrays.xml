@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- gui_test's own string-array resource (int-face getStringArray test asset). -->
+<resources>
+    <string-array name="string_array_test">
+        <item>alpha</item>
+        <item>beta</item>
+        <item>gamma</item>
+    </string-array>
+    <string-array name="difficulty">
+        <item>Easy</item>
+        <item>Medium</item>
+        <item>Hard</item>
+    </string-array>
+</resources>

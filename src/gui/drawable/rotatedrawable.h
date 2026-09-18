@@ -36,10 +36,11 @@ private:
        RotateState();
        RotateState(const RotateState& orig);
        RotateDrawable*newDrawable()override;
+       Drawable*newDrawable(Resources* res)override;
     };
     std::shared_ptr<RotateState>mState;
-    RotateDrawable(std::shared_ptr<RotateState>state);
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    RotateDrawable(std::shared_ptr<RotateState>state,Resources*res);
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
@@ -61,7 +62,8 @@ public:
     void setPivotYRelative(bool relative);
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas& canvas)override;
-    void inflate(XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 
 }

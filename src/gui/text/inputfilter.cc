@@ -64,7 +64,7 @@ CharSequence* InputFilter::AllCaps::filter(CharSequence* source, int start, int 
     const bool copySpans = (dynamic_cast<Spanned*>(source) != nullptr);
     CharSequence* upper = TextUtils::toUpperCase(slice, copySpans);
     delete slice;
-    return upper; // toUpperCase returns a fresh object (never == slice)
+    return upper; // toUpperCase returns a fresh OWNED object (never aliases slice).
 }
 
 }

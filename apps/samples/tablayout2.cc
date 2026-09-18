@@ -4,7 +4,7 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
 
-    TabLayout* tab=new TabLayout(1280,40);
+    TabLayout* tab=new TabLayout(&App::getInstance());
     tab->setSelectedTabIndicatorColor(0xFF00FF00);
     tab->setSelectedTabIndicatorHeight(4);
     for(int i=0;i<6;i++){

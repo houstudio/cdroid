@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings chrome, landscape variant: compact header bar (48dp, larger
+     title via values-land) above the preference list — the pane split
+    itself lives in layout-land/prefdemo_main.xml. Same ids and view types
+    as the portrait twin, so one C++ wiring path serves both. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/prefdemo_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout android:id="@+id/prefdemo_header"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/prefdemo_header_height"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="8dp">
+
+        <TextView android:id="@+id/prefdemo_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/prefdemo_back_size"
+            android:paddingStart="12dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="4dp" />
+
+        <TextView android:id="@+id/prefdemo_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/prefdemo_title_size" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/prefdemo_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical" />
+</LinearLayout>

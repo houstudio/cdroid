@@ -43,11 +43,11 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* constraintWidgetCon
     std::vector<ChainHead*>* chainsArray = nullptr;
     if (orientation == ConstraintWidget::HORIZONTAL) {
         offset = 0;
-        chainsSize = constraintWidgetContainer->mHorizontalChainsSize;
+        chainsSize = (int) constraintWidgetContainer->mHorizontalChainsArray.size();
         chainsArray = &constraintWidgetContainer->mHorizontalChainsArray;
     } else {
         offset = 2;
-        chainsSize = constraintWidgetContainer->mVerticalChainsSize;
+        chainsSize = (int) constraintWidgetContainer->mVerticalChainsArray.size();
         chainsArray = &constraintWidgetContainer->mVerticalChainsArray;
     }
 

@@ -13,6 +13,8 @@ SET(FRAGMENT_SOURCES
     fragment/fragmentactivity.cc
     fragment/listfragment.cc
     fragment/dialogfragment.cc
+    fragment/fragmentpageradapter.cc
+    fragment/fragmentstatepageradapter.cc
     fragment/fragmentanim.cc
     fragment/fragmenttransitionimpl.cc
     fragment/fragmentviewlifecycleowner.cc

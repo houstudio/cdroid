@@ -29,7 +29,7 @@ public:
         this->items = items;
     }
     MyPagerAdapter::ViewHolder* onCreateViewHolder(ViewGroup* parent, int viewType) {
-        TextView* view = new TextView("",-1,-1);
+        TextView* view =new TextView(&App::getInstance()); view->setText("" );
         view->setBackgroundColor(0xff234567);
         //view->setGravity(Gravity::CENTER);
         view->setLayoutParams(new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
@@ -82,7 +82,7 @@ int main(int argc,const char*argv[]){
         LOGV("scrollState=%d",scrollState);
     };
 
-    ViewPager2*pager=new ViewPager2(-1,-1);
+    ViewPager2*pager=new ViewPager2(&App::getInstance());
     pager->setHorizontalFadingEdgeEnabled(true);
     pager->setFadingEdgeLength(200);
 

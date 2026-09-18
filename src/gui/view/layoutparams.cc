@@ -1,15 +1,24 @@
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <view/layoutparams.h>
+#include <widget/framework_styleable.h>
 #include <view/viewgroup.h>
 #include <cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 LayoutParams::LayoutParams(){
+    // AOSP LayoutParams() defaults - width/height left uninitialized here were
+    // read downstream (e.g. PopupWindow::createDecorView's WRAP_CONTENT check)
+    // with garbage (valgrind: conditional jump on uninitialised value).
+    width = WRAP_CONTENT;
+    height= WRAP_CONTENT;
     layoutAnimationParameters =nullptr;
 }
 
 LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs):LayoutParams(){
-    width =attrs.getLayoutDimension("layout_width" ,WRAP_CONTENT);
-    height=attrs.getLayoutDimension("layout_height",WRAP_CONTENT);
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::Layout);
+    setBaseAttributes(*ta, R::styleable::Layout_layout_width, R::styleable::Layout_layout_height);
 }
 
 LayoutParams::LayoutParams(int w, int h):LayoutParams(){
@@ -26,9 +35,9 @@ LayoutParams::~LayoutParams(){
     delete layoutAnimationParameters;
 }
 
-void LayoutParams::setBaseAttributes(const AttributeSet& a, int widthAttr, int heightAttr){
-    width = a.getLayoutDimension("layout_width",WRAP_CONTENT);
-    height= a.getLayoutDimension("layout_height",WRAP_CONTENT);
+void LayoutParams::setBaseAttributes(const TypedArray& a, int widthAttr, int heightAttr){
+    width = a.getLayoutDimension(widthAttr, WRAP_CONTENT);
+    height= a.getLayoutDimension(heightAttr,WRAP_CONTENT);
 }
 
 void LayoutParams::resolveLayoutDirection(int layoutDirection){
@@ -48,19 +57,21 @@ const std::string LayoutParams::sizeToString(int size) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
    :LayoutParams(c,attrs){
-    const int margin=attrs.getDimensionPixelSize("layout_margin",-1);
+    auto a = c->obtainStyledAttributes(attrs, R::styleable::MarginLayout);
+
+    const int margin = a->getDimensionPixelSize(R::styleable::MarginLayout_layout_margin, -1);
     mMarginFlags = 0;
     if(margin>=0){
         leftMargin = topMargin = rightMargin = bottomMargin = margin;
         startMargin= endMargin = DEFAULT_MARGIN_RELATIVE;
     }else{
-        int horizontalMargin = attrs.getDimensionPixelSize("layout_marginHorizontal",-1);
-        int verticalMargin = attrs.getDimensionPixelSize("layout_marginVertical",-1);
+        int horizontalMargin = a->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginHorizontal, -1);
+        int verticalMargin   = a->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginVertical, -1);
         if(horizontalMargin>=0){
             leftMargin= rightMargin = horizontalMargin;
         }else{
-            leftMargin = attrs.getDimensionPixelSize("layout_marginLeft", UNDEFINED_MARGIN);
-            rightMargin= attrs.getDimensionPixelSize("layout_marginRight",UNDEFINED_MARGIN);
+            leftMargin = a->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginLeft, UNDEFINED_MARGIN);
+            rightMargin= a->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginRight,UNDEFINED_MARGIN);
             if(leftMargin==UNDEFINED_MARGIN){
                 mMarginFlags |= LEFT_MARGIN_UNDEFINED_MASK;
                 leftMargin = DEFAULT_MARGIN_RESOLVED;
@@ -70,19 +81,19 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
                 rightMargin = DEFAULT_MARGIN_RESOLVED;
             }
         }
-        startMargin = attrs.getDimensionPixelSize("layout_marginStart",DEFAULT_MARGIN_RELATIVE);
-        endMargin   = attrs.getDimensionPixelSize("layout_marginEnd",DEFAULT_MARGIN_RELATIVE);
+        startMargin = a->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginStart,DEFAULT_MARGIN_RELATIVE);
+        endMargin   = a->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginEnd,  DEFAULT_MARGIN_RELATIVE);
         if(verticalMargin >=0 ){
             topMargin = bottomMargin = verticalMargin;
         }else{
-            topMargin   = attrs.getDimensionPixelSize("layout_marginTop",DEFAULT_MARGIN_RESOLVED);
-            bottomMargin= attrs.getDimensionPixelSize("layout_marginBottom",DEFAULT_MARGIN_RESOLVED);
+            topMargin   = a->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginTop,   DEFAULT_MARGIN_RESOLVED);
+            bottomMargin= a->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginBottom,DEFAULT_MARGIN_RESOLVED);
         }
         if (isMarginRelative()) {
             mMarginFlags |= NEED_RESOLUTION_MASK;
         }
     }
-    //mMarginFlags |= RTL_COMPATIBILITY_MODE_MASK;
+    // CDROID: no ApplicationInfo RTL support flag; always resolved (no RTL_COMPATIBILITY_MODE_MASK).
     mMarginFlags |= View::LAYOUT_DIRECTION_LTR;
 }
 

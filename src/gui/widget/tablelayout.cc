@@ -20,7 +20,7 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(TableLayout)
+DECLARE_WIDGET2(TableLayout, "android.widget.TableLayout");
 
 TableLayout::LayoutParams::LayoutParams()
     :LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT){
@@ -52,12 +52,13 @@ TableLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams& sou
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TableLayout::TableLayout(int w,int h):LinearLayout(w,h){
-    initTableLayout();
-}
+TableLayout::TableLayout(Context*ctx)
+    :TableLayout(ctx,nullptr){}
 
-TableLayout::TableLayout(Context*ctx,const AttributeSet&atts)
-  :LinearLayout(ctx,atts){
+TableLayout::TableLayout(Context*ctx,const AttributeSet* atts):TableLayout(ctx,atts,0){}
+
+TableLayout::TableLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :LinearLayout(ctx,pAttrs, defStyleAttr){
     initTableLayout();
 }
 

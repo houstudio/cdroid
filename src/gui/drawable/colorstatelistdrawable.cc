@@ -49,6 +49,14 @@ bool ColorStateListDrawable::canApplyTheme(){
     return Drawable::canApplyTheme() || mState->canApplyTheme();
 }
 
+// AOSP ColorStateListDrawable.applyTheme(Theme): re-obtain the color and
+// tint lists through the theme. Theme-preloaded ColorStateLists are not
+// ported (canApplyTheme() is always false), so there is nothing to
+// re-resolve today.
+void ColorStateListDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+}
+
 void ColorStateListDrawable::setAlpha(int alpha){
     mState->mAlpha = alpha;
     onStateChange(getState());

@@ -1,0 +1,301 @@
+/*********************************************************************************
+ * WifiFragment — trial wiring of the cdnet WifiManager (android.net.wifi port
+ * over wpa_supplicant ctrl_iface) into a real app page: state/SSID/RSSI card,
+ * scan list, tap-to-connect (password dialog for secured networks), enable
+ * switch, disconnect. The supplicant control socket defaults to
+ * SupplicantClient::defaultCtrlPath(); WPA_CTRL_PATH overrides it (the
+ * mac80211_hwsim bench runs the supplicant at /tmp/wpa-hwsim/wlan0).
+ *
+ * Threading: WifiManager callbacks arrive on the supplicant monitor thread —
+ * every listener marshals through View::post and re-checks mAlive; listeners
+ * are removed in onDestroyView.
+ *********************************************************************************/
+#include <core/app.h>
+#include <cdroid.h>
+#include <fragment/fragment.h>
+#include <fragment/fragmentfactory.h>
+#include <transition/slide.h>
+#include <widget/textview.h>
+#include <widget/button.h>
+#include <widget/switch.h>
+#include <widget/edittext.h>
+#include <widget/toast.h>
+#include <app/alertdialog.h>
+#include <wifi/wifimanager.h>
+#include <wifi/scanresult.h>
+#include <wifi/wifiinfo.h>
+#include <wifi/wificonfiguration.h>
+#include <dhcpinfo.h>
+#include "printer_common.h"
+#include "R.h"
+
+#include <atomic>
+#include <cstdlib>
+#include <vector>
+
+using cdroid::WifiManager;
+using cdroid::ScanResult;
+using cdroid::WifiConfiguration;
+
+static std::string quoted(const std::string& s) { return "\"" + s + "\""; }
+
+// Trim the quotes WifiSsid#toString carries ("\"MyNetwork\"").
+static std::string unquoted(const std::string& s) {
+    if (s.size() >= 2 && s.front() == '"' && s.back() == '"') return s.substr(1, s.size() - 2);
+    return s;
+}
+
+static bool isSecured(const std::string& capabilities) {
+    return capabilities.find("WPA") != std::string::npos
+        || capabilities.find("WEP") != std::string::npos
+        || capabilities.find("SAE") != std::string::npos;
+}
+
+class WifiFragment : public cdroid::Fragment {
+public:
+    void onCreate(cdroid::Bundle* savedInstanceState) override {
+        cdroid::Fragment::onCreate(savedInstanceState);
+        setEnterTransition(new cdroid::Slide(cdroid::Gravity::END));
+        setExitTransition(new cdroid::Slide(cdroid::Gravity::END));
+    }
+
+    cdroid::View* onCreateView(cdroid::LayoutInflater* inflater, cdroid::ViewGroup* container,
+                               cdroid::Bundle*) override {
+        return inflater->inflate(printerdemo::R::layout::fragment_wifi, container, false);
+    }
+
+    void onViewCreated(cdroid::View* view, cdroid::Bundle*) override {
+        cdroid::Fragment::onViewCreated(view, nullptr);
+        mRoot = view;
+        mAlive = true;
+
+        // The transport binds the library default (SupplicantClient::
+        // defaultCtrlPath: WPA_CTRL_PATH if set, else the system socket) and
+        // starts the event pump; idempotent.
+        WifiManager& wifi = WifiManager::getInstance();
+        wifi.initialize();
+        /* Listener slots (CallbackBase typedefs — lambdas capturing this,
+         * registered as copies). */
+        mNetworkStateListener = [this](const cdroid::WifiInfo&) {
+            onNetworkStateChanged();
+        };
+        mScanResultsListener = [this] { onScanResultsAvailable(); };
+        mWifiStateListener = [this](int wifiState) {
+            onWifiStateChanged(wifiState);
+        };
+        wifi.addNetworkStateListener(mNetworkStateListener);
+        wifi.addScanResultsListener(mScanResultsListener);
+        wifi.addWifiStateListener(mWifiStateListener);
+
+        mState = (cdroid::TextView*)view->findViewById(printerdemo::R::id::tv_wifi_state);
+        mDetail = (cdroid::TextView*)view->findViewById(printerdemo::R::id::tv_wifi_detail);
+        mList = (cdroid::LinearLayout*)view->findViewById(printerdemo::R::id::list_wifi);
+        if (cdroid::Button* scan = (cdroid::Button*)view->findViewById(printerdemo::R::id::btn_scan)) {
+            scan->setOnClickListener([this](cdroid::View&){ doScan(); });
+        }
+        if (cdroid::Button* disc = (cdroid::Button*)view->findViewById(printerdemo::R::id::btn_disconnect)) {
+            disc->setOnClickListener([](cdroid::View&){ WifiManager::getInstance().disconnect(); });
+        }
+        if (cdroid::Switch* sw = (cdroid::Switch*)view->findViewById(printerdemo::R::id::sw_wifi)) {
+            mSwitch = sw;
+            sw->setChecked(wifi.isWifiEnabled());
+            sw->setOnCheckedChangeListener([this](cdroid::CompoundButton&, bool on){
+                if (mSyncingSwitch) return;   /* programmatic setChecked echo */
+                if (!WifiManager::getInstance().setWifiEnabled(on)) {
+                    /* failed toggle: roll the knob back to the real state —
+                     * no state event fires on failure, so we correct here */
+                    mSyncingSwitch = true;
+                    if (mSwitch) mSwitch->setChecked(WifiManager::getInstance().isWifiEnabled());
+                    mSyncingSwitch = false;
+                }
+            });
+        }
+        doScan();
+    }
+
+    void onDestroyView() override {
+        detach();
+        cdroid::Fragment::onDestroyView();
+    }
+
+    // --- WifiManager listener handlers (monitor/app threads; forwarded
+    //     from the slot members wired in onViewCreated) ----------------------
+    void onNetworkStateChanged() {
+        cdroid::View* root = mRoot;
+        if (root == nullptr || !mAlive) return;
+        root->post([this]{ if (mAlive) { refreshStatus(); refreshConnectedRow(); } });
+    }
+
+    void onScanResultsAvailable() {
+        cdroid::View* root = mRoot;
+        if (root == nullptr || !mAlive) return;
+        root->post([this]{ if (mAlive) refreshList(); });
+    }
+
+    void onWifiStateChanged(int wifiState) {
+        cdroid::View* root = mRoot;
+        if (root == nullptr || !mAlive) return;
+        root->post([this, wifiState]{
+            if (!mAlive) return;
+            mSyncingSwitch = true;   /* keep the echo out of the toggle handler */
+            if (mSwitch) mSwitch->setChecked(WifiManager::getInstance().isWifiEnabled());
+            mSyncingSwitch = false;
+            refreshStatus();
+        });
+    }
+
+private:
+    void detach() {
+        mAlive = false;
+        WifiManager& wifi = WifiManager::getInstance();
+        wifi.removeNetworkStateListener(mNetworkStateListener);
+        wifi.removeScanResultsListener(mScanResultsListener);
+        wifi.removeWifiStateListener(mWifiStateListener);
+    }
+
+    void doScan() {
+        if (mDetail) mDetail->setText("扫描中…");
+        WifiManager::getInstance().startScan();
+        if (mRoot) mRoot->postDelayed([this]{ if (mAlive) refreshList(); }, 2500);
+        refreshStatus();
+    }
+
+    void refreshStatus() {
+        WifiManager& wifi = WifiManager::getInstance();
+        if (!wifi.isWifiEnabled()) {
+            if (mState) mState->setText("Wi-Fi 已关闭");
+            if (mDetail) mDetail->setText("");
+            return;
+        }
+        cdroid::WifiInfo info = wifi.getConnectionInfo();
+        const std::string ssid = unquoted(info.getSSID());
+        /* SSID validity is the display signal: roaming keeps the SSID with a
+         * live lease, and a COMPLETED-only gate would flap the card through
+         * every SCANNING/ASSOCIATING event. */
+        const bool connected = !ssid.empty() && ssid != WifiManager::UNKNOWN_SSID;
+        if (mState) {
+            mState->setText(connected ? "已连接: " + ssid : "Wi-Fi 未连接");
+        }
+        if (!mDetail) return;
+        if (!connected) {
+            /* Placeholder values (INVALID_RSSI, empty BSSID, -1 MHz, the
+             * 02:00.. default MAC) must not reach the screen — they belong
+             * to association-time snapshots. */
+            mDetail->setText("");
+            return;
+        }
+        std::string detail;
+        if (info.getRssi() != cdroid::WifiInfo::INVALID_RSSI)
+            detail += "信号 " + std::to_string(info.getRssi()) + " dBm   ";
+        detail += "状态 " + cdroid::SupplicantState::toString(info.getSupplicantState());
+        if (const uint32_t ip = (uint32_t)info.getIpAddress())
+            detail += "   IP " + cdroid::DhcpInfo::intToStr((int) ip);
+        if (!info.getBSSID().empty())
+            detail += "\nBSSID " + info.getBSSID();
+        if (info.getFrequency() > 0)
+            detail += "   " + std::to_string(info.getFrequency()) + " MHz";
+        if (!info.getMacAddress().empty() && info.getMacAddress() != "02:00:00:00:00:00")
+            detail += "\nMAC " + info.getMacAddress();
+        mDetail->setText(detail);
+    }
+
+    // Mark the connected network's row in the scan list.
+    void refreshConnectedRow() { refreshList(); }
+
+    void refreshList() {
+        if (mList == nullptr) return;
+        refreshStatus();
+        mList->removeAllViews();
+        cdroid::Context* ctx = getContext();
+
+        const std::vector<ScanResult> results = WifiManager::getInstance().getScanResults();
+        if (results.empty()) {
+            auto* empty = new cdroid::TextView(ctx);
+            empty->setText("(无扫描结果 — 点“扫描”)");
+            empty->setTextSize(13);
+            empty->setPadding(28, 20, 28, 20);
+            mList->addView(empty);
+            return;
+        }
+        // Strongest first.
+        std::vector<ScanResult> sorted(results);
+        std::sort(sorted.begin(), sorted.end(),
+                  [](const ScanResult& a, const ScanResult& b){ return a.level > b.level; });
+        const std::string cur = unquoted(WifiManager::getInstance().getConnectionInfo().getSSID());
+        bool first = true;
+        for (const ScanResult& r : sorted) {
+            const std::string ssid = unquoted(r.SSID);
+            if (ssid.empty()) continue;   // hidden APs — out of scope for the trial
+            first = false;
+            auto* row = new cdroid::TextView(ctx);
+            row->setText((ssid == cur ? "✓ " : "") + ssid
+                         + (isSecured(r.capabilities) ? "  🔒" : "")
+                         + "   " + std::to_string(r.level) + " dBm");
+            row->setTextSize(15);
+            row->setPadding(28, 22, 28, 22);
+            row->setClickable(true);
+            // Copy what the click needs — the ScanResult itself outlives the loop.
+            const std::string ssidCopy = ssid;
+            const bool secured = isSecured(r.capabilities);
+            row->setOnClickListener([this, ssidCopy, secured](cdroid::View&){
+                connectTo(ssidCopy, secured);
+            });
+            mList->addView(row);
+        }
+    }
+
+    /* connect() answers through the ActionListener synchronously on the
+     * caller (UI) thread, so a stack-local value is enough. */
+    WifiManager::ActionListener connectListener() {
+        WifiManager::ActionListener listener;
+        listener.onSuccess = [this] { toast("已连接"); };
+        listener.onFailure = [this](int) { toast("连接失败"); };
+        return listener;
+    }
+
+    void connectTo(const std::string& ssid, bool secured) {
+        WifiConfiguration config;
+        config.SSID = quoted(ssid);
+        if (!secured) {
+            WifiManager::getInstance().connect(config, connectListener());
+            toast("连接 " + ssid + " …");
+            return;
+        }
+        cdroid::Context* ctx = getContext();
+        auto* input = new cdroid::EditText(ctx);
+        input->setHint("密码");
+        cdroid::AlertDialog::Builder(ctx)
+            .setTitle("连接 " + ssid)
+            .setView(input)
+            .setPositiveButton("连接", [this, input, ssid](cdroid::DialogInterface&, int){
+                const std::string psk = input->getText();
+                WifiConfiguration cfg;
+                cfg.SSID = quoted(ssid);
+                cfg.preSharedKey = quoted(psk);
+                WifiManager::getInstance().connect(cfg, connectListener());
+                toast("连接 " + ssid + " …");
+            })
+            .setNegativeButton("取消", [](cdroid::DialogInterface&, int){})
+            .show();
+    }
+
+    void toast(const std::string& text) {
+        if (cdroid::Context* ctx = getContext())
+            cdroid::Toast::makeText(ctx, text, cdroid::Toast::LENGTH_SHORT)->show();
+    }
+
+    std::atomic<bool> mAlive { false };
+    WifiManager::NetworkStateListener mNetworkStateListener;
+    WifiManager::ScanResultsListener mScanResultsListener;
+    WifiManager::WifiStateListener mWifiStateListener;
+    cdroid::Switch* mSwitch = nullptr;   /* cached like mState/mDetail/mList */
+    /* Set while the WifiStateListener drives setChecked, so the toggle
+     * handler ignores the resulting change-callback echo. */
+    bool mSyncingSwitch = false;
+    cdroid::View* mRoot = nullptr;
+    cdroid::TextView* mState = nullptr;
+    cdroid::TextView* mDetail = nullptr;
+    cdroid::LinearLayout* mList = nullptr;
+};
+
+REGISTER_FRAGMENT(WifiFragment);

@@ -16,8 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include<animation/alphaanimation.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 AlphaAnimation::AlphaAnimation(const AlphaAnimation&o)
 	:Animation(o){
@@ -26,8 +30,9 @@ AlphaAnimation::AlphaAnimation(const AlphaAnimation&o)
 }
 
 AlphaAnimation::AlphaAnimation(Context* context,const AttributeSet& attrs):Animation(context,attrs){
-    mFromAlpha = attrs.getFloat("fromAlpha",1.f);
-    mToAlpha   = attrs.getFloat("toAlpha",1.f);
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::AlphaAnimation);
+    mFromAlpha = a->getFloat(R::styleable::AlphaAnimation_fromAlpha, 1.f);
+    mToAlpha   = a->getFloat(R::styleable::AlphaAnimation_toAlpha, 1.f);
 }
 
 AlphaAnimation::AlphaAnimation(float fromAlpha, float toAlpha){

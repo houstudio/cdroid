@@ -1,11 +1,16 @@
-# **5.
-  - add Transition
-  - add Navigation
-  - add Fragment FragmentManger
-  - add ConstrainLayout and MotionLayout(full features)
-  - new TextView(full compatible with andoird) Span support for full feature richtext
-  - add new text Layout StatlicLayout and BoringLayout baseon minikin
-  - add FlexBoxLayut and FlexboxLayoutManager
+# **V5.8**
+  - binary AXML resources end to end (aapt2 AXML + resources.arsc + 9-patch chunks in pak, R.h from real arsc ids)
+  - AttributeSet and attributes on int resource ids; TypedArray/TypedValue aligned with AOSP
+  - build-time resource overlay; multi-pak 0x7f id pinning; i18n.dat packed into pak
+  - new TextView with spannable rich text; StaticLayout/DynamicLayout/BoringLayout on minikin
+  - fonts.xml + R.font replace fontconfig matching; emoji editing/display parity; CBDT color emoji
+  - android.transition; androidx.navigation; Fragment/FragmentManager back stack
+  - ConstraintLayout/MotionLayout complete; FlexboxLayout; Material default styles for design widgets
+  - AlarmManager (suspend-aware BOOTTIME timerfds on the main looper) + in-process PendingIntent
+  - in-process accessibility service; UiAutomation test drivers (--auto-test / --test-script)
+  - AOSP Music facade app; preferencedemo settings chrome, transitions, AUTOCYCLE driver
+  - valgrind campaigns: teardown/UAF/leak fixes, drawable audit vs AOSP, window ghost sweep
+  - tests: Looper, coretests text/i18n, key navigation, CTS (KeyListener/drawable/os); gui_test pure/visual modes
 # **4.9.6
   - some memleaks
   - add TouchDevice VirtualKeyMap support

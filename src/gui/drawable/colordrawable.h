@@ -24,6 +24,8 @@ class ColorDrawable:public Drawable{
 private:
     class ColorState:public std::enable_shared_from_this<ColorState>,public ConstantState{
     public:
+        // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
+        std::vector<int> mThemeAttrs;
         uint32_t mBaseColor;// base color, independent of setAlpha()
         uint32_t mUseColor; // basecolor modulated by setAlpha()
         RefPtr<ColorStateList>mTint;
@@ -32,13 +34,14 @@ private:
         ColorState();
         ColorState(const ColorState& state);
         ColorDrawable* newDrawable()override;
+        Drawable* newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
     };
 private:
     bool mMutated;
     std::shared_ptr<ColorState>mColorState;
     cdroid::RefPtr<PorterDuffColorFilter> mTintFilter;
-    ColorDrawable(std::shared_ptr<ColorState> state);
+    ColorDrawable(std::shared_ptr<ColorState> state, Resources* res);
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
 public:
@@ -55,7 +58,9 @@ public:
     void setTintMode(int tintMode)override;
     bool isStateful()const override;
     int getChangingConfigurations()const override;
-    void inflate(XmlPullParser&,const AttributeSet&)override;
+    void inflate(Resources&,XmlPullParser&,const AttributeSet&,const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
     ColorDrawable*mutate()override;
     void clearMutated()override;
     bool hasFocusStateSpecified()const override;

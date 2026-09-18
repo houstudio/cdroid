@@ -17,33 +17,34 @@
  *********************************************************************************/
 #include <drawable/stateset.h>
 #include <bitset.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal::R;
 
 const std::vector<int> StateSet::NOTHING = {0};
 const std::vector<int> StateSet::WILD_CARD = {};
-const std::vector<int>StateSet::PRESSED_STATE_SET = {PRESSED};
-const std::vector<int>StateSet::ENABLED_STATE_SET = {ENABLED};
-const std::vector<int>StateSet::FOCUSED_STATE_SET = {FOCUSED};
-const std::vector<int>StateSet::SELECTED_STATE_SET= {SELECTED};
-const std::vector<int>StateSet::CHECKED_STATE_SET = {CHECKED};
+// State-set constants use the real R::attr IDs (AOSP-aligned). These are the same
+// values that StateListDrawable items carry and that stateSetMatches compares.
+const std::vector<int>StateSet::PRESSED_STATE_SET = {(int)attr::state_pressed};
+const std::vector<int>StateSet::ENABLED_STATE_SET = {(int)attr::state_enabled};
+const std::vector<int>StateSet::FOCUSED_STATE_SET = {(int)attr::state_focused};
+const std::vector<int>StateSet::SELECTED_STATE_SET= {(int)attr::state_selected};
+const std::vector<int>StateSet::CHECKED_STATE_SET = {(int)attr::state_checked};
 
+// AOSP StateSet.VIEW_STATE_IDS: pairs of (R.attr.state_xxx, VIEW_STATE_bit) —
+// exactly the base View set (10 states). checked/checkable/single/first/
+// middle/last are NOT here; subclasses merge them via View.mergeDrawableStates().
 std::vector<int>StateSet::VIEW_STATE_IDS={
-    WINDOW_FOCUSED , VIEW_STATE_WINDOW_FOCUSED,
-    SELECTED       , VIEW_STATE_SELECTED ,
-    FOCUSED        , VIEW_STATE_FOCUSED  ,
-    ENABLED        , VIEW_STATE_ENABLED  ,
-    PRESSED        , VIEW_STATE_PRESSED  ,
-    ACTIVATED      , VIEW_STATE_ACTIVATED,
-    HOVERED        , VIEW_STATE_HOVERED  ,
-    CHECKED        , VIEW_STATE_CHECKED  ,
-    CHECKABLE      , VIEW_STATE_CHECKABLE,
-    DRAG_ACCPETABLE, VIEW_STATE_DRAG_CAN_ACCEPT,
-    DRAG_HOVERED   , VIEW_STATE_DRAG_HOVERED,
-
-    SINGLE         , VIEW_STATE_SINGLE,
-    FIRST          , VIEW_STATE_FIRST,
-    MIDDLE         , VIEW_STATE_MIDDLE,
-    LAST           , VIEW_STATE_LAST
+    (int)attr::state_window_focused,  VIEW_STATE_WINDOW_FOCUSED,
+    (int)attr::state_selected     ,  VIEW_STATE_SELECTED ,
+    (int)attr::state_focused      ,  VIEW_STATE_FOCUSED  ,
+    (int)attr::state_enabled      ,  VIEW_STATE_ENABLED  ,
+    (int)attr::state_pressed      ,  VIEW_STATE_PRESSED  ,
+    (int)attr::state_activated    ,  VIEW_STATE_ACTIVATED,
+    (int)attr::state_accelerated  ,  VIEW_STATE_ACCELERATED,
+    (int)attr::state_hovered      ,  VIEW_STATE_HOVERED  ,
+    (int)attr::state_drag_can_accept, VIEW_STATE_DRAG_CAN_ACCEPT,
+    (int)attr::state_drag_hovered ,  VIEW_STATE_DRAG_HOVERED,
 };
 
 void StateSet::trimStateSet(std::vector<int>&states,int newsize){
@@ -52,7 +53,7 @@ void StateSet::trimStateSet(std::vector<int>&states,int newsize){
 
 std::vector<int> StateSet::get(int mask){
     std::vector<int> states;
-    for( int i = 0 ; i < VIEW_STATE_IDS.size() ; i += 2 ){
+    for( int i = 0 ; i < (int)VIEW_STATE_IDS.size() ; i += 2 ){
         if( mask & VIEW_STATE_IDS[i+1] )
            states.push_back(VIEW_STATE_IDS[i]);
     }
@@ -79,7 +80,7 @@ bool StateSet::stateSetMatches(const std::vector<int>& stateSpec,const std::vect
             stateSpecState = -stateSpecState;
         }
         bool found = false;
-        for (int j = 0; j < stateSetSize; j++) {
+        for (int j = 0; j < (int)stateSetSize; j++) {
             const int state = stateSet[j];
             if (state == 0) {  // We've reached the end of states to match.
                 if (mustMatch){// We didn't find this must-match state.
@@ -131,32 +132,7 @@ bool StateSet::containsAttribute(const std::vector<std::vector<int>>& stateSpecs
                 return true;
         }
     }
-    return false;    
-}
-
-void StateSet::appendState(std::vector<int>& states,const std::string&s,int value){
-    if(s.empty())return;
-    states.push_back(s.compare("true") ? -value : value);
-}
-
-int StateSet::parseState(std::vector<int>&states,const AttributeSet&atts){
-    appendState(states,atts.getString("state_enabled") , ENABLED );
-    appendState(states,atts.getString("state_focused") , FOCUSED );
-    appendState(states,atts.getString("state_selected"), SELECTED);
-    appendState(states,atts.getString("state_checked") , CHECKED );
-    appendState(states,atts.getString("state_checkable"),CHECKABLE);
-    appendState(states,atts.getString("state_pressed") , PRESSED );
-    appendState(states,atts.getString("state_hovered") , HOVERED );
-    appendState(states,atts.getString("state_activated") , ACTIVATED);
-    appendState(states,atts.getString("state_window_focused") , WINDOW_FOCUSED);
-    appendState(states,atts.getString("state_drag_hoved") , DRAG_HOVERED);
-    appendState(states,atts.getString("state_drag_acceptable") , DRAG_ACCPETABLE);
-
-    appendState(states,atts.getString("state_single") , SINGLE);
-    appendState(states,atts.getString("state_first") , FIRST);
-    appendState(states,atts.getString("state_middle") , MIDDLE);
-    appendState(states,atts.getString("state_last") , LAST);
-    return states.size();
+    return false;
 }
 
 }

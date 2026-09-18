@@ -17,8 +17,8 @@ private:
 protected:
    void onSizeChanged(int w,int h,int ow,int oh)override;
 public:
-   PLPlotView(int w,int h);
-   PLPlotView(Context*,const AttributeSet&attrs);
+   PLPlotView(Context*,const AttributeSet*attrs);
+    PLPlotView(Context*,const AttributeSet* attrs,int defStyleAttr);
    ~PLPlotView();
    void onDraw(Canvas&canvas)override;
    plstream*getStream()const;

@@ -32,9 +32,9 @@ private:
     class CascadingMenuInfo;
 private:
     Context* mContext;
-    int mMenuMaxWidth;
-    std::string mPopupStyleAttr;
-    std::string mPopupStyleRes;
+    int mMenuMaxWidth = 0;
+    int mPopupStyleAttr = 0;
+    int mPopupStyleRes = 0;
     Handler* mSubMenuHoverHandler;
     std::vector<MenuBuilder*> mPendingMenus;
     std::vector<CascadingMenuInfo*> mShowingMenus;
@@ -52,21 +52,21 @@ private:
     int mDropDownGravity = Gravity::NO_GRAVITY;
     View* mAnchorView;
     View* mShownAnchorView;
-    int mLastPosition;
-    int mXOffset;
-    int mYOffset;
-    bool mOverflowOnly;
-    bool mHasXOffset;
-    bool mHasYOffset;
-    bool mForceShowIcon;
-    bool mShowTitle;
+    int mLastPosition = 0;
+    int mXOffset = 0;
+    int mYOffset = 0;
+    bool mOverflowOnly = false;
+    bool mHasXOffset = false;
+    bool mHasYOffset = false;
+    bool mForceShowIcon = false;
+    bool mShowTitle = false;
     Callback mPresenterCallback;
-    ViewTreeObserver* mTreeObserver;
+    ViewTreeObserver* mTreeObserver=nullptr;
     PopupWindow::OnDismissListener mOnDismissListener;
-    std::string mItemLayout;
+    int mItemLayout = 0;
 
     /** Whether popup menus should disable exit animations when closing. */
-    bool mShouldCloseImmediately;
+    bool mShouldCloseImmediately = false;
 private:
     void onGlobalLayout();
     void onViewAttachedToWindow(View&);
@@ -81,7 +81,7 @@ private:
     View* findParentViewForSubmenu(CascadingMenuInfo* parentInfo, MenuBuilder* submenu);
     int findIndexOfAddedMenu(MenuBuilder* menu);
 public:
-    CascadingMenuPopup(Context* context,View* anchor, const std::string& popupStyleAttr, const std::string& popupStyleRes, bool overflowOnly);
+    CascadingMenuPopup(Context* context,View* anchor, int popupStyleAttr, int popupStyleRes, bool overflowOnly);
     ~CascadingMenuPopup()override;
     void setForceShowIcon(bool forceShow)override;
 

@@ -17,6 +17,9 @@
  *********************************************************************************/
 #include <animation/animation.h>
 #include <animation/animationutils.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>   // TypedValue (Description::parseValue)
 #include <systemclock.h>
 #include <limits>
 #include <cdtypes.h>
@@ -24,6 +27,7 @@
 
 using namespace Cairo;
 namespace cdroid{
+using namespace cdroid::internal;
 
 Animation::Animation() {
     mStartTime    =-1;
@@ -62,16 +66,18 @@ Animation::Animation(const Animation&o){
 }
 
 Animation::Animation(Context* context, const AttributeSet& attrs){
-    setDuration(attrs.getInt("duration",0));
-    setStartOffset(attrs.getInt("startOffset",0));
-    setFillEnabled(attrs.getBoolean("fillEnabled",mFillEnabled));
-    setFillBefore (attrs.getBoolean("fillBefore",mFillBefore));
-    setFillAfter  (attrs.getBoolean("fillAfter",mFillAfter));
-    setRepeatCount(attrs.getInt("repeatCount",mRepeatCount));
-    setRepeatMode (attrs.getInt("repeatMode",RESTART));
-    //setBackgroundColor(Color::parseColor(attrs.getString("background")));
-    const std::string resid=attrs.getString("interpolator");
-    if(!resid.empty())setInterpolator(context,resid);else mInterpolator=nullptr;
+    // AOSP Animation: single obtainStyledAttributes(attrs, Animation).
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::Animation);
+    setDuration(a->getInt(R::styleable::Animation_duration,0));
+    setStartOffset(a->getInt(R::styleable::Animation_startOffset,0));
+    setFillEnabled(a->getBoolean(R::styleable::Animation_fillEnabled,mFillEnabled));
+    setFillBefore (a->getBoolean(R::styleable::Animation_fillBefore,mFillBefore));
+    setFillAfter  (a->getBoolean(R::styleable::Animation_fillAfter,mFillAfter));
+    setRepeatCount(a->getInt(R::styleable::Animation_repeatCount,mRepeatCount));
+    setRepeatMode (a->getInt(R::styleable::Animation_repeatMode,RESTART));
+    //setBackgroundColor(Color::parseColor(attrs.getAttributeValue("background")));
+    const int resid=a->getResourceId(R::styleable::Animation_interpolator,0);
+    if(resid)setInterpolator(context,resid);else mInterpolator=nullptr;
 }
 
 Animation::~Animation(){
@@ -84,6 +90,36 @@ Animation::Description Animation::Description::parseValue(const std::string&v){
     else if(v.find("%")!=std::string::npos)d.type= RELATIVE_TO_SELF;
     else d.type = ABSOLUTE;
     d.value =  (d.type==ABSOLUTE)?ret:(ret/100.f);
+    return d;
+}
+
+Animation::Description Animation::Description::parseValue(const TypedValue* value, Context* context){
+    // AOSP Animation.Description.parseValue(TypedValue, Context), verbatim.
+    Description d;
+    if (value != nullptr) {
+        if (value->type == TypedValue::TYPE_FRACTION) {
+            d.type = (value->data & TypedValue::COMPLEX_UNIT_MASK) ==
+                    TypedValue::COMPLEX_UNIT_FRACTION_PARENT ?
+                            RELATIVE_TO_PARENT : RELATIVE_TO_SELF;
+            d.value = TypedValue::complexToFloat(value->data);
+            return d;
+        } else if (value->type == TypedValue::TYPE_FLOAT) {
+            d.type = ABSOLUTE;
+            d.value = value->getFloat();
+            return d;
+        } else if (value->type >= TypedValue::TYPE_FIRST_INT &&
+                value->type <= TypedValue::TYPE_LAST_INT) {
+            d.type = ABSOLUTE;
+            d.value = value->data;
+            return d;
+        } else if (value->type == TypedValue::TYPE_DIMENSION) {
+            d.type = ABSOLUTE;
+            d.value = value->complexToDimension(context->getDisplayMetrics());
+            return d;
+        }
+    }
+    d.type = ABSOLUTE;
+    d.value = 0.0f;
     return d;
 }
 
@@ -145,7 +181,7 @@ void Animation::initialize(int width, int height, int parentWidth, int parentHei
 
 //void Animation::setListenerHandler(Handler handler){}
 
-void Animation::setInterpolator(Context* context,const std::string&resID) {
+void Animation::setInterpolator(Context* context,int resID) {
     setInterpolator(AnimationUtils::loadInterpolator(context, resID));
 }
 

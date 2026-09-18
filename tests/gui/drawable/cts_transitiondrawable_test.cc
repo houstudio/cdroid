@@ -15,7 +15,6 @@
 #include <drawable/transitiondrawable.h>
 #include <drawable/drawables.h>   // ColorDrawable
 #include <drawable/colordrawable.h>
-#include <core/app.h>
 #include <core/rect.h>
 #include <guienvironment.h>
 

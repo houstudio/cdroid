@@ -20,6 +20,12 @@
 #include <image-decoders/gifframesequence.h>
 #include <image-decoders/pngframesequence.h>
 #include <image-decoders/webpframesequence.h>
+#include <core/iostreams.h>   // AssetInputStream / MemoryInputStream
+#include <content/asset.h>
+#include <content/resources.h>
+#include <core/context.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <fstream>
 #include <png.h>
 #include <cdlog.h>
@@ -51,9 +57,12 @@ int FrameSequence::registerFactory(const std::string&mime,uint32_t magicSize,Ver
 }
 
 size_t FrameSequence::registerAllFrameSequences(std::map<const std::string,Registry>&entis){
-#ifdef PNG_APNG_SUPPORTED 
+#ifdef PNG_APNG_SUPPORTED
+    // Sniff window large enough for the isPNG verifier to find the acTL chunk
+    // (signature 8 + IHDR 25 puts the acTL type at ~37; aapt2 writes it right
+    // behind IHDR) — PNG_HEADER_SIZE (8) only proved the plain png signature.
     FrameSequence::registerFactory(std::string("mime/apng"),
-            PngFrameSequence::PNG_HEADER_SIZE,
+            256,
             PngFrameSequence::isPNG,
             [](std::istream&stream){
                 return new PngFrameSequence(stream);
@@ -79,26 +88,57 @@ size_t FrameSequence::registerAllFrameSequences(std::map<const std::string,Regis
     return entis.size();
 }
 
-FrameSequence* FrameSequence::create(cdroid::Context*ctx,const std::string&resid) {
-    uint8_t header[32]={0};
-    std::unique_ptr<std::istream>stream;
+FrameSequence* FrameSequence::create(const void* data, size_t size) {
     if((mHeaderBytesRequired==0)||(mFactories.size()==0)){
         registerAllFrameSequences(mFactories);
     }
-    if(ctx)
-        stream = ctx->getInputStream(resid);
-    else
-        stream = std::make_unique<std::ifstream>(resid);
-    if((stream==nullptr)||(!*stream))
-        return nullptr;
-    stream->read((char*)header,mHeaderBytesRequired);
-    stream->seekg(int(-mHeaderBytesRequired),std::ios::cur);
+    if((data==nullptr)||(size<mHeaderBytesRequired)) return nullptr;
+    // Zero-copy view over the caller's buffer (the AOSP ImageDecoder
+    // createSource(ByteBuffer) shape): the stream lives only inside this call.
+    auto stream = std::make_unique<MemoryInputStream>((const char*)data, size);
     for(auto& f:mFactories){
         auto& dec = f.second;
-        if(dec.verifier(header,mHeaderBytesRequired))
-           return dec.factory(*stream);
+        if(dec.verifier((const uint8_t*)data,mHeaderBytesRequired)){
+           FrameSequence* fs = dec.factory(*stream);
+           if(fs) fs->mOwnedStream = std::move(stream);
+           return fs;
+        }
     }
     return nullptr;
+}
+
+bool FrameSequence::isAnimated(const void* data, size_t size) {
+    if((mHeaderBytesRequired==0)||(mFactories.size()==0)){
+        registerAllFrameSequences(mFactories);
+    }
+    if((data==nullptr)||(size<mHeaderBytesRequired)) return false;
+    const uint8_t* header = (const uint8_t*)data;
+    for(auto& f:mFactories){
+        if(f.second.verifier(header,mHeaderBytesRequired)) return true;
+    }
+    return false;
+}
+
+FrameSequence* FrameSequence::create(cdroid::Context*ctx,int resid) {
+    if(ctx==nullptr) return nullptr;
+    // Zero-copy resource open: stored pak entries hand getBuffer() a view
+    // straight into the archive; the backends slurp it inside create(data),
+    // so the Asset (RAII) may close as soon as this returns.
+    std::unique_ptr<Asset> asset(ctx->getResources().openRawResource(resid));
+    if(asset==nullptr) return nullptr;
+    const void* data = asset->getBuffer(false);
+    const size_t size = (size_t)asset->getLength();
+    return (data&&size) ? create(data,size) : nullptr;
+}
+
+FrameSequence* FrameSequence::create(const std::string& path) {
+    const int fd = ::open(path.c_str(), O_RDONLY);
+    if(fd<0) return nullptr;
+    std::unique_ptr<Asset> asset(Asset::createFromFd(fd,path.c_str(),Asset::ACCESS_BUFFER));
+    if(asset==nullptr) return nullptr;
+    const void* data = asset->getBuffer(false);
+    const size_t size = (size_t)asset->getLength();
+    return (data&&size) ? create(data,size) : nullptr;
 }
 
 }/*endof namespace*/

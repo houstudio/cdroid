@@ -19,6 +19,7 @@
 #define __SHAPE_DRAWABLE_H__
 #include <drawable/drawable.h>
 #include <drawable/shape.h>
+#include <content/typedarray.h>
 
 namespace cdroid{
 
@@ -39,16 +40,17 @@ private:
         ShapeState(const ShapeState&orig);
         ~ShapeState();
         ShapeDrawable* newDrawable()override;
+        Drawable* newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
     };
     bool mMutated;
     cdroid::RefPtr<PorterDuffColorFilter>mTintFilter;
     std::shared_ptr<ShapeState>mShapeState;
     void updateShape();
-    ShapeDrawable(std::shared_ptr<ShapeState>state);
+    ShapeDrawable(std::shared_ptr<ShapeState>state, Resources* res);
     void updateLocalState();
-    void updateStateFromTypedArray(const AttributeSet&a);
-    int inflateTag(const std::string&,XmlPullParser&,const AttributeSet&);
+    void updateStateFromTypedArray(const TypedArray& a);
+    int inflateTag(const std::string&,Resources&,XmlPullParser&,const AttributeSet&);
 protected:
     void onBoundsChange(const Rect&bounds)override;
     bool onStateChange(const std::vector<int>&stateset)override;
@@ -78,7 +80,7 @@ public:
     ShapeDrawable*mutate()override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;
-    void inflate(XmlPullParser&,const AttributeSet&)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&,const Resources::Theme* theme)override;
 };
 
 }

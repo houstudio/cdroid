@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NavigationView attributes (material NavigationView, widgetEx 0x02 shared-lib
+     ids pinned in public.xml). Android:-namespaced attrs (maxWidth, background)
+     resolve from the framework package and are read by their fw ids. -->
+<resources>
+    <declare-styleable name="NavigationView">
+        <attr name="menu" format="reference" />
+        <attr name="headerLayout" format="reference" />
+        <attr name="itemIconSize" format="dimension" />
+        <attr name="itemIconTint" format="color" />
+        <attr name="itemTextAppearance" format="reference" />
+        <attr name="itemTextColor" format="color" />
+        <attr name="itemBackground" format="reference|color" />
+        <attr name="itemHorizontalPadding" format="dimension" />
+        <attr name="itemVerticalPadding" format="dimension" />
+        <attr name="itemIconPadding" format="dimension" />
+        <attr name="itemMaxLines" format="integer" />
+        <attr name="subheaderColor" format="color" />
+        <attr name="subheaderTextAppearance" format="reference" />
+        <attr name="subheaderInsetStart" format="dimension" />
+        <attr name="subheaderInsetEnd" format="dimension" />
+        <attr name="dividerInsetStart" format="dimension" />
+        <attr name="dividerInsetEnd" format="dimension" />
+        <attr name="itemTextAppearanceActiveBoldEnabled" format="boolean" />
+        <attr name="topInsetScrimEnabled" format="boolean" />
+        <attr name="bottomInsetScrimEnabled" format="boolean" />
+    </declare-styleable>
+
+    <!-- NavigationBarView (shared by BottomNavigationView); attrs reuse the
+         NavigationView declarations above. -->
+    <declare-styleable name="NavigationBarView">
+        <attr name="itemIconTint" />
+        <attr name="itemIconSize" />
+        <attr name="itemTextColor" />
+        <attr name="itemBackground" />
+        <attr name="menu" />
+        <attr name="itemGravity">
+            <!-- Gravity.TOP | Gravity.CENTER_HORIZONTAL -->
+            <enum name="top_center" value="49"/>
+            <!-- Gravity.CENTER -->
+            <enum name="center" value="17"/>
+            <!-- Gravity.START | Gravity.CENTER_VERTICAL -->
+            <enum name="start_center" value="8388627"/>
+        </attr>
+        <!-- The item's icon gravity which determines the layout configuration
+             of the navigation item. -->
+        <attr name="itemIconGravity">
+            <enum name="top" value="0"/>
+            <enum name="start" value="1"/>
+        </attr>
+        <attr name="labelVisibilityMode">
+            <!-- Label behaves as "labeled" when there are 3 items or less, or
+                 "selected" when there are 4 items or more. -->
+            <enum name="auto" value="-1"/>
+            <!-- Label is shown on the selected navigation item. -->
+            <enum name="selected" value="0"/>
+            <!-- Label is shown on all navigation items. -->
+            <enum name="labeled" value="1"/>
+            <!-- Label is not shown on any navigation items. -->
+            <enum name="unlabeled" value="2"/>
+        </attr>
+        <attr name="itemTextAppearanceInactive" format="reference" />
+        <attr name="itemTextAppearanceActive" format="reference" />
+        <attr name="horizontalItemTextAppearanceInactive" format="reference" />
+        <attr name="horizontalItemTextAppearanceActive" format="reference" />
+        <attr name="itemTextAppearanceActiveBoldEnabled" />
+        <attr name="itemRippleColor" format="color" />
+        <attr name="itemPaddingTop" format="dimension" />
+        <attr name="itemPaddingBottom" format="dimension" />
+        <attr name="activeIndicatorLabelPadding" format="dimension" />
+        <attr name="iconLabelHorizontalSpacing" format="dimension" />
+        <attr name="itemActiveIndicatorStyle" format="reference" />
+    </declare-styleable>
+
+    <!-- The active indicator's pill (simplified from material's shape-based
+         BottomNavigationActiveIndicator: shapeAppearance machinery is not
+         ported, the pill is a rounded rectangle). -->
+    <declare-styleable name="BottomNavigationActiveIndicator">
+        <attr name="width" format="dimension" />
+        <attr name="height" format="dimension" />
+        <attr name="marginX" format="dimension" />
+        <attr name="color" format="color" />
+    </declare-styleable>
+    <declare-styleable name="BottomNavigationView">
+        <attr name="itemHorizontalTranslationEnabled" format="boolean" />
+    </declare-styleable>
+</resources>

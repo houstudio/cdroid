@@ -6,6 +6,7 @@
  * through Paint::drawTextRun (which honors Paint::Align), shapes/colors are
  * drawn straight onto the cairo context (Canvas is-a Cairo::Context).
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -13,6 +14,10 @@
 #include <vector>
 
 #include <widget/radialtimepickerview.h>
+#include <content/numberformat.h>
+#include <content/Locale.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
 #include <core/calendar.h>
 #include <core/typeface.h>
 #include <core/attributeset.h>
@@ -32,6 +37,7 @@
 #include <porting/cdlog.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 namespace {
 #define NUM_POSITIONS 12
@@ -88,10 +94,30 @@ float lerpDeg(float start, float end, float amount) {
     return minAngle * amount + start;
 }
 
-std::string fmtInt(const char* spec, int value) {
-    char buf[8];
-    std::snprintf(buf, sizeof(buf), spec, value);
-    return std::string(buf);
+// AOSP String.format("%d") / ("%02d"): the DEFAULT-locale formatter, so the
+// clock digits localize (ar ٠١٢). Cached per default-locale tag, rebuilt on
+// CONFIG_LOCALE — the wheel text tables fill once per picker build.
+struct LocaleIntCache {
+    std::string tag;
+    std::unique_ptr<cdroid::NumberFormat> plain;
+    std::unique_ptr<cdroid::NumberFormat> twoDigit;
+};
+static LocaleIntCache& intCache() {
+    static LocaleIntCache cache;
+    const std::string tag = Locale::getDefault().toLanguageTag();
+    if (cache.tag != tag || cache.plain == nullptr) {
+        cache.tag = tag;
+        cache.plain = NumberFormat::getIntegerInstance(Locale::getDefault());
+        cache.twoDigit = NumberFormat::getIntegerInstance(Locale::getDefault());
+        cache.twoDigit->setMinimumIntegerDigits(2);
+    }
+    return cache;
+}
+static std::string formatWithLocale(int value) {
+    return intCache().plain->format(value);
+}
+static std::string formatTwoDigitsWithLocale(int value) {
+    return intCache().twoDigit->format(value);
 }
 } // namespace
 
@@ -136,10 +162,19 @@ int RadialTimePickerView::snapOnly30s(int degrees, int forceHigherOrLower) {
     return degrees;
 }
 
-DECLARE_WIDGET(RadialTimePickerView);
+DECLARE_WIDGET2(RadialTimePickerView, "android.widget.RadialTimePickerView");
 
-RadialTimePickerView::RadialTimePickerView(Context* context, const AttributeSet& attrs)
-    : View(context, attrs) {
+RadialTimePickerView::RadialTimePickerView(Context*ctx)
+    :RadialTimePickerView(ctx,nullptr){}
+
+RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* attrs)
+    :RadialTimePickerView(context,attrs,cdroid::internal::R::attr::timePickerStyle){}
+
+RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :RadialTimePickerView(context,pAttrs,defStyleAttr,0){}
+
+RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+    : View(context, pAttrs) {
     staticInit();
 
     mHours12Texts.resize(12);
@@ -147,11 +182,12 @@ RadialTimePickerView::RadialTimePickerView(Context* context, const AttributeSet&
     mInnerHours24Texts.resize(12);
     mMinutesTexts.resize(12);
 
-    applyAttributes(attrs);
+    applyAttributes(pAttrs, defStyleAttr, defStyleRes);
 
-    // TODO: theme.resolveAttribute(android.R.attr.disabledAlpha) is not wired in
-    // cdroid; use the platform default disabled alpha until it is.
-    mDisabledAlpha = 0.3f;
+    // Pull disabled alpha from theme (AOSP: getTheme().resolveAttribute(disabledAlpha)).
+    static const uint32_t ATTRS_DISABLED_ALPHA[] = { R::attr::disabledAlpha, 0 };
+    auto ta = getContext()->obtainStyledAttributes(ATTRS_DISABLED_ALPHA);
+    mDisabledAlpha = ta->getFloat(0, 0.30f);
 
     mTypeface = Typeface::create("sans-serif", Typeface::NORMAL);
 
@@ -161,26 +197,27 @@ RadialTimePickerView::RadialTimePickerView(Context* context, const AttributeSet&
     mPaint[MINUTES].setTextAlign(Paint::Align::CENTER);
 
     Context* ctx = getContext();
-    mSelectorRadius   = ctx->getDimensionPixelSize("timepicker_selector_radius", 20);
-    mSelectorStroke   = ctx->getDimensionPixelSize("timepicker_selector_stroke", 2);
-    mSelectorDotRadius= ctx->getDimensionPixelSize("timepicker_selector_dot_radius", 4);
-    mCenterDotRadius  = ctx->getDimensionPixelSize("timepicker_center_dot_radius", 3);
-    mTextSize[HOURS]       = ctx->getDimensionPixelSize("timepicker_text_size_normal", 16);
+    mSelectorRadius   = ctx->getDimensionPixelSize(R::dimen::timepicker_selector_radius);
+    mSelectorStroke   = ctx->getDimensionPixelSize(R::dimen::timepicker_selector_stroke);
+    mSelectorDotRadius= ctx->getDimensionPixelSize(R::dimen::timepicker_selector_dot_radius);
+    mCenterDotRadius  = ctx->getDimensionPixelSize(R::dimen::timepicker_center_dot_radius);
+    mTextSize[HOURS]       = ctx->getDimensionPixelSize(R::dimen::timepicker_text_size_normal);
     mTextSize[MINUTES]     = mTextSize[HOURS];
-    mTextSize[HOURS_INNER] = ctx->getDimensionPixelSize("timepicker_text_size_inner", 14);
-    mTextInset[HOURS]      = ctx->getDimensionPixelSize("timepicker_text_inset_normal", 22);
+    mTextSize[HOURS_INNER] = ctx->getDimensionPixelSize(R::dimen::timepicker_text_size_inner);
+    mTextInset[HOURS]      = ctx->getDimensionPixelSize(R::dimen::timepicker_text_inset_normal);
     mTextInset[MINUTES]    = mTextInset[HOURS];
-    mTextInset[HOURS_INNER]= ctx->getDimensionPixelSize("timepicker_text_inset_inner", 10);
+    mTextInset[HOURS_INNER]= ctx->getDimensionPixelSize(R::dimen::timepicker_text_inset_inner);
 
     mShowHours = true;
     mHoursToMinutes = (float) HOURS;
     mIs24HourMode = false;
+    mIsOnInnerCircle = false;
     mAmOrPm = AM;
     mHoursToMinutesAnimator = nullptr;
     mSelectorPath = new Path();
 
     // Set up accessibility components.
-    mTouchHelper = new RadialPickerTouchHelper(this);
+    mTouchHelper = std::make_shared<RadialPickerTouchHelper>(this);
     setAccessibilityDelegate(mTouchHelper);
     if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -205,20 +242,22 @@ RadialTimePickerView::~RadialTimePickerView() {
         delete mHoursToMinutesAnimator;
         mHoursToMinutesAnimator = nullptr;
     }
-    delete mTouchHelper;
+    // mTouchHelper is a refcounted member (also set on View as the owning
+    // accessibility delegate) — released with its last ref automatically.
     delete mSelectorPath;
 }
 
-void RadialTimePickerView::applyAttributes(const AttributeSet& attrs) {
-    RefPtr<ColorStateList> numbersTextColor = attrs.getColorStateList("numbersTextColor");
-    RefPtr<ColorStateList> numbersInnerTextColor = attrs.getColorStateList("numbersInnerTextColor");
+void RadialTimePickerView::applyAttributes(const AttributeSet* attrs,int defStyleAttr,int defStyleRes) {
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, defStyleAttr, defStyleRes);
+    RefPtr<ColorStateList> numbersTextColor = a->getColorStateList(R::styleable::TimePicker_numbersTextColor);
+    RefPtr<ColorStateList> numbersInnerTextColor = a->getColorStateList(R::styleable::TimePicker_numbersInnerTextColor);
     mTextColor[HOURS] = numbersTextColor ? numbersTextColor : ColorStateList::valueOf(MISSING_COLOR);
     mTextColor[HOURS_INNER] = numbersInnerTextColor ? numbersInnerTextColor
                                                     : ColorStateList::valueOf(MISSING_COLOR);
     mTextColor[MINUTES] = mTextColor[HOURS];
 
     // Set up various colors derived from the selector "activated" state.
-    RefPtr<ColorStateList> selectorColors = attrs.getColorStateList("numbersSelectorColor");
+    RefPtr<ColorStateList> selectorColors = a->getColorStateList(R::styleable::TimePicker_numbersSelectorColor);
     int selectorActivatedColor;
     if (selectorColors) {
         const std::vector<int> stateSetEnabledActivated = StateSet::get(
@@ -234,7 +273,7 @@ void RadialTimePickerView::applyAttributes(const AttributeSet& attrs) {
     mSelectorColor = selectorActivatedColor;
     mSelectorDotColor = mTextColor[HOURS]->getColorForState(stateSetActivated, 0);
 
-    mBackgroundColor = attrs.getColor("numbersBackgroundColor", 0);
+    mBackgroundColor = a->getColor(R::styleable::TimePicker_numbersBackgroundColor, 0);
 }
 
 void RadialTimePickerView::initialize(int hour, int minute, bool is24HourMode) {
@@ -363,10 +402,10 @@ void RadialTimePickerView::showMinutes(bool animate) { showPicker(false, animate
 
 void RadialTimePickerView::initHoursAndMinutesText() {
     for (int i = 0; i < 12; i++) {
-        mHours12Texts[i]      = fmtInt("%d",  HOURS_NUMBERS[i]);
-        mInnerHours24Texts[i] = fmtInt("%02d", HOURS_NUMBERS_24[i]);
-        mOuterHours24Texts[i] = fmtInt("%d",  HOURS_NUMBERS[i]);
-        mMinutesTexts[i]      = fmtInt("%02d", MINUTES_NUMBERS[i]);
+        mHours12Texts[i]      = formatWithLocale(HOURS_NUMBERS[i]);
+        mInnerHours24Texts[i] = formatTwoDigitsWithLocale(HOURS_NUMBERS_24[i]);
+        mOuterHours24Texts[i] = formatWithLocale(HOURS_NUMBERS[i]);
+        mMinutesTexts[i]      = formatTwoDigitsWithLocale(MINUTES_NUMBERS[i]);
     }
 }
 

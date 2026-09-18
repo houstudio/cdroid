@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widgetEx wear attr id pinning (0x02 shared-lib). Watermark-allocated from
+     0x0201016c (navigationview ends at 0x0201016b). -->
+<resources>
+    <public type="attr" name="bezelWidth" id="0x0201016c"/>
+    <public type="attr" name="circularScrollingGestureEnabled" id="0x0201016d"/>
+    <public type="attr" name="scrollDegreesPerScreen" id="0x0201016e"/>
+    <public type="attr" name="backgroundColor" id="0x0201016f"/>
+    <public type="attr" name="strokeWidth" id="0x02010170"/>
+    <public type="attr" name="colorSchemeColors" id="0x02010171"/>
+    <public type="attr" name="indeterminate" id="0x02010172"/>
+    <public type="attr" name="radius" id="0x02010173"/>
+    <public type="attr" name="clipEnabled" id="0x02010174"/>
+    <public type="attr" name="boxedEdges" id="0x02010175"/>
+    <public type="attr" name="layout_boxedEdges" id="0x02010176"/>
+    <!-- ConfirmationOverlay resources (androidx wear references them as compile-time
+         R constants; ids pinned at the values aapt2 already assigns) -->
+    <public type="layout" name="ws_overlay_confirmation" id="0x02080000"/>
+    <public type="id" name="wearable_support_confirmation_overlay_image" id="0x020600b5"/>
+    <public type="id" name="wearable_support_confirmation_overlay_message" id="0x020600b6"/>
+    <public type="drawable" name="confirmation_animation" id="0x0204003a"/>
+    <public type="drawable" name="failure_animation" id="0x0204003b"/>
+    <public type="drawable" name="open_on_phone_animation" id="0x0204003d"/>
+</resources>

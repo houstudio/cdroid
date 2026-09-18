@@ -52,6 +52,7 @@ public:
     bool hasFocusStateSpecified()const override;
     Drawable* getCurrent()override;
     bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
     void setAlpha(int alpha)override;
     void clearAlpha(); // androidx: clearAlpha is non-virtual on Drawable; CDROID base lacks it
     void setTintList(const cdroid::RefPtr<ColorStateList>& tint)override;

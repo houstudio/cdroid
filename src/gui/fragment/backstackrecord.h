@@ -27,7 +27,6 @@
 #include <unordered_map>
 #include <fragment/fragmentmanager.h>
 namespace cdroid{
-namespace fragment{
 
 class BackStackRecord : public FragmentTransaction, public FragmentManager::OpGenerator{
 public:
@@ -68,6 +67,5 @@ private:
     int mIndex = -1;
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

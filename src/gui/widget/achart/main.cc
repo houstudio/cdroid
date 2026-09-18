@@ -48,7 +48,7 @@ std::string buildPageLabel(const std::string& title, size_t index, size_t total)
 }
 
 cdroid::TextView* createInstructionsView() {
-    auto* instructions = new cdroid::TextView(-1, cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* instructions = new cdroid::TextView(&cdroid::App::getInstance());
     instructions->setText(
         "当前页只显示一个图表，点击 next_button 切换到下一个。\n"
         "折线图检查: tooltip、pan、pinch zoom、标签避让。\n"
@@ -280,13 +280,12 @@ cdroid::GraphicalView* createPieChart(cdroid::Context* context) {
 }
 
 cdroid::LinearLayout* createZoomButtons(const std::string& prefix, cdroid::GraphicalView& chartView) {
-    auto* row = new cdroid::LinearLayout(0, 0,
-        cdroid::ViewGroup::LayoutParams::MATCH_PARENT,
-        cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* row = new cdroid::LinearLayout(&cdroid::App::getInstance());
     row->setOrientation(cdroid::LinearLayout::HORIZONTAL);
 
     auto makeButton = [&](const std::string& text, const cdroid::View::OnClickListener& onClick) {
-        auto* button = new cdroid::Button(text, 0, cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+        auto* button = new cdroid::Button(&cdroid::App::getInstance());
+        button->setText(text);
         button->setOnClickListener(onClick);
         row->addView(button, new cdroid::LinearLayout::LayoutParams(
             0, cdroid::ViewGroup::LayoutParams::WRAP_CONTENT, 1.0f));
@@ -307,12 +306,10 @@ cdroid::LinearLayout* createZoomButtons(const std::string& prefix, cdroid::Graph
 }
 
 cdroid::LinearLayout* createChartPage(const std::string& pageTitle, cdroid::GraphicalView& chartView, bool showZoomButtons) {
-    auto* page = new cdroid::LinearLayout(0, 0,
-        cdroid::ViewGroup::LayoutParams::MATCH_PARENT,
-        cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* page = new cdroid::LinearLayout(&cdroid::App::getInstance());
     page->setOrientation(cdroid::LinearLayout::VERTICAL);
 
-    auto* titleView = new cdroid::TextView(-1, cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* titleView = new cdroid::TextView(&cdroid::App::getInstance());
     titleView->setText(pageTitle);
     titleView->setTextSize(18);
     titleView->setTextColor(0xFFF5F7FA);
@@ -334,7 +331,7 @@ cdroid::LinearLayout* createChartPage(const std::string& pageTitle, cdroid::Grap
 }
 
 cdroid::TextView* createStatusView() {
-    auto* statusView = new cdroid::TextView(-1, cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* statusView = new cdroid::TextView(&cdroid::App::getInstance());
     statusView->setText("Status: waiting for pan / zoom / move / click verification");
     statusView->setTextSize(15);
     statusView->setTextColor(0xFFFFF3B0);
@@ -343,7 +340,7 @@ cdroid::TextView* createStatusView() {
 }
 
 cdroid::TextView* createInstructionsViewAll(size_t pageCount) {
-    auto* instructions = new cdroid::TextView(-1, cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* instructions = new cdroid::TextView(&cdroid::App::getInstance());
     instructions->setText(
         "This regression page rotates through all migrated charts, " + std::to_string(pageCount)
             + " pages total. Click next_button to view the next chart.\n"
@@ -433,12 +430,10 @@ void attachPanZoomListeners(cdroid::GraphicalView& chartView) {
 }
 
 cdroid::LinearLayout* createChartPage(const ChartPageSpec& spec) {
-    auto* page = new cdroid::LinearLayout(0, 0,
-        cdroid::ViewGroup::LayoutParams::MATCH_PARENT,
-        cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* page = new cdroid::LinearLayout(&cdroid::App::getInstance());
     page->setOrientation(cdroid::LinearLayout::VERTICAL);
 
-    auto* titleView = new cdroid::TextView(-1, cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* titleView = new cdroid::TextView(&cdroid::App::getInstance());
     titleView->setText(spec.title);
     titleView->setTextSize(18);
     titleView->setTextColor(argb(0xFFF5F7FA));
@@ -855,32 +850,28 @@ int main(int argc,const char*argv[]){
     cdroid::App app(argc,argv);
     auto* window = new cdroid::Window(0,0,-1,-1);
 
-    auto* root = new cdroid::LinearLayout(0, 0, -1, -1);
+    auto* root = new cdroid::LinearLayout(&cdroid::App::getInstance());
     root->setOrientation(cdroid::LinearLayout::VERTICAL);
     root->setBackgroundColor(0xFF101820);
 
     auto* statusView = createStatusView();
     const std::vector<ChartPageSpec> chartSpecs = createChartPages(&app);
 
-    auto* pageTitle = new cdroid::TextView(-1, cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* pageTitle = new cdroid::TextView(&cdroid::App::getInstance());
     pageTitle->setText(buildPageLabel(chartSpecs.front().title, 0, chartSpecs.size()));
     pageTitle->setTextSize(17);
     pageTitle->setTextColor(argb(0xFFFFF3B0));
     pageTitle->setPadding(16, 6, 16, 10);
 
-    auto* nextButton = new cdroid::Button("next_button", 0,
-        cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
-    auto* buttonRow = new cdroid::LinearLayout(0, 0,
-        cdroid::ViewGroup::LayoutParams::MATCH_PARENT,
-        cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* nextButton = new cdroid::Button(&cdroid::App::getInstance());
+    nextButton->setText("next_button");
+    auto* buttonRow = new cdroid::LinearLayout(&cdroid::App::getInstance());
     buttonRow->setOrientation(cdroid::LinearLayout::HORIZONTAL);
     buttonRow->addView(nextButton, new cdroid::LinearLayout::LayoutParams(
         cdroid::ViewGroup::LayoutParams::MATCH_PARENT,
         cdroid::ViewGroup::LayoutParams::WRAP_CONTENT));
 
-    auto* chartHost = new cdroid::LinearLayout(0, 0,
-        cdroid::ViewGroup::LayoutParams::MATCH_PARENT,
-        cdroid::ViewGroup::LayoutParams::WRAP_CONTENT);
+    auto* chartHost = new cdroid::LinearLayout(&cdroid::App::getInstance());
     chartHost->setOrientation(cdroid::LinearLayout::VERTICAL);
 
     std::vector<cdroid::View*> pages;

@@ -311,6 +311,17 @@ bool  Choreographer::CallbackRecord::compare(void*vaction,void*vtoken)const{
     }
 }
 
+Choreographer::CallbackQueue::~CallbackQueue(){
+    // Records still chained at teardown (an animation mid-flight, a marquee tick
+    // posted for a frame that never comes) would leak — release the chain. Records
+    // peeled off the normal way are recycled to the pool, which ~Choreographer frees.
+    while(mHead){
+        CallbackRecord* next = mHead->next;
+        delete mHead;
+        mHead = next;
+    }
+}
+
 Choreographer::CallbackQueue::CallbackQueue(Choreographer*choreographer){
     mHead = nullptr;
     mChoreographer = choreographer;

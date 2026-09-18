@@ -18,9 +18,11 @@
 #include <drawable/badgeutils.h>
 #include <widget/framelayout.h>
 #include <widget/toolbar.h>
+#include <widget/internal_R.h>
 #include <gui_features.h>
 #include <menu/actionmenupresenter.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
   /**
    * Updates a badge's bounds using its center coordinate, {@code halfWidth} and {@code halfHeight}.
@@ -81,11 +83,11 @@ void BadgeUtils::attachBadgeDrawable(BadgeDrawable* badgeDrawable,
                 badgeDrawable->setHorizontalOffset(
                     badgeDrawable->getHorizontalOffset()
                        + toolbar->getContext()
-                       ->getDimensionPixelSize("cdroid:dimen/mtrl_badge_toolbar_action_menu_item_horizontal_offset"));
+                       ->getDimensionPixelSize(R::dimen::mtrl_badge_toolbar_action_menu_item_horizontal_offset));
                 badgeDrawable->setVerticalOffset(
                     badgeDrawable->getVerticalOffset()
                        + toolbar->getContext()
-                       ->getDimensionPixelSize("cdroid:dimen/mtrl_badge_toolbar_action_menu_item_vertical_offset"));
+                       ->getDimensionPixelSize(R::dimen::mtrl_badge_toolbar_action_menu_item_vertical_offset));
                 BadgeUtils::attachBadgeDrawable(badgeDrawable, menuItemView, customBadgeParent);
             }
         });

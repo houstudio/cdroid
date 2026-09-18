@@ -24,6 +24,7 @@
 #include <media/soundpool.h>
 #include <media/audiomanager.h>
 #include <view/soundeffectconstants.h>
+#include <widget/internal_R.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -40,8 +41,13 @@ AudioManager::AudioManager(Context*ctx):mContext(ctx){
 void AudioManager::loadSoundEffects(){
     mSoundPool = std::make_unique<SoundPool>((int)NUM_SOUND_EFFECTS,0,0);
     SOUND_EFFECT_FILES_MAP.resize((int)NUM_SOUND_EFFECTS);
-    auto parser = std::make_unique<XmlPullParser>(mContext,"@xml/audio_assets");
-    if(!(*parser)) parser = std::make_unique<XmlPullParser>(mContext,"@cdroid:xml/audio_assets");
+    // AOSP AudioService reads android.R.xml.audio_assets from the framework
+    // package; an app may ship its own override (checked first, matching the
+    // old string-ref fallback order).
+    Resources& res = mContext->getResources();
+    int audioAssetsRes = res.getIdentifier("audio_assets", "xml", mContext->getPackageName());
+    if(audioAssetsRes == 0) audioAssetsRes = cdroid::internal::R::xml::audio_assets;
+    auto parser = res.getXml(audioAssetsRes);
     int type;
     std::unordered_map<std::string,std::string> sounds;
     const AttributeSet& attrs =(*parser);
@@ -49,8 +55,8 @@ void AudioManager::loadSoundEffects(){
         if(type!=XmlPullParser::START_TAG)continue;
         std::string tagName = parser->getName();
         if(tagName.compare("asset")==0){
-            const std::string id = attrs.getString("id");
-            const std::string file = attrs.getString("file");
+            const std::string id = attrs.getAttributeValue(std::string(), "id");
+            const std::string file = attrs.getAttributeValue(std::string(), "file");
             sounds.emplace(id,file);
             LOGD("%s:%s",id.c_str(),file.c_str());;
         }

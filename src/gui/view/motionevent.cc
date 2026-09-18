@@ -19,7 +19,7 @@
 #include <private/inputeventlabels.h>
 #include <core/inputdevice.h>
 #include <utils/mathutils.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <porting/cdlog.h>
 #include <sstream>
 

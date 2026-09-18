@@ -21,6 +21,8 @@
 
 namespace cdroid{
 
+class Uri;
+
 enum ScaleType{
     MATRIX       =0,
     FIT_XY       =1,
@@ -43,13 +45,22 @@ private:
     int mViewAlphaScale;
     void initImageView();
     void resolveUri();
+    /*AOSP getDrawableFromUri: scheme-dispatched drawable load (android.resource
+      / content / file / plain path). Uri is core/uri.h (abstract; const ref
+      stands in for AOSP's pass-by-value).*/
+    Drawable* getDrawableFromUri(const Uri& uri);
     int resolveAdjustedSize(int desiredSize, int maxSize,int measureSpec);
     void applyImageTint();
     void applyColorMod();
     bool isFilledByImage()const;
-    void imageDrawableCallback(Drawable*d,const std::string&uri,const std::string resid);
+    /*AOSP ImageDrawableCallback (async apply); empty uri + resId 0 = none*/
+    void imageDrawableCallback(Drawable*d,const std::string&uri,int resId);
 protected:
     std::string mResource;
+    /*resource id from setImageResource(int); 0 = none (AOSP mResource int)*/
+    int mResourceId;
+    /*image uri from setImageURI; empty = null (AOSP mUri)*/
+    std::string mUri;
     int mScaleType;
     int mLevel;
     int mMaxWidth;
@@ -79,8 +90,10 @@ protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
 public:
-    explicit ImageView(int w, int h);
-    ImageView(Context*ctx,const AttributeSet&attrs);
+    std::string getAccessibilityClassName()const override;
+    ImageView(Context*ctx);   // AOSP ImageView(Context)
+    ImageView(Context*ctx,const AttributeSet*attrs);
+    ImageView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~ImageView()override;
     bool verifyDrawable(Drawable* dr)const override;
     void jumpDrawablesToCurrentState()override;
@@ -92,6 +105,9 @@ public:
     void setScaleType(int st);
     void setImageMatrix(const Cairo::Matrix& matrix);
     Cairo::Matrix getImageMatrix()const;
+    bool hasOverlappingRendering()const override {
+        return (getBackground() != nullptr && getBackground()->getCurrent() != nullptr);
+    }
 
     bool getCropToPadding()const;
     void setCropToPadding(bool cropToPadding);
@@ -107,9 +123,13 @@ public:
     void onPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
     bool getAdjustViewBounds()const;
     void setAdjustViewBounds(bool adjustViewBounds);
+    void setImageResource(int resid);
+    Runnable setImageResourceAsync(int resid);
     /*resid can be assets's resource or local filepath*/
     void setImageResource(const std::string&resid);
     Runnable setImageResourceAsync(const std::string&resid);
+    /*uri empty = null (clear); schemes: android.resource/content/file, or a
+      plain path (see getDrawableFromUri)*/
     void setImageURI(const std::string&uri);
     Runnable setImageURIAsync(const std::string&uri);
     void setImageDrawable(Drawable* drawable);

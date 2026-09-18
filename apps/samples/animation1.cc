@@ -6,7 +6,7 @@ class TestView:public View{
 private:
     std::string mText;
 public:
-    TestView(const std::string&txt,int w,int h):View(w,h){
+    TestView(Context*ctx,const std::string&txt):View(ctx){
         mText=txt;
     }
     void onDraw(Canvas&canvas)override{    
@@ -21,7 +21,7 @@ public:
 };
 class MyGroup:public ViewGroup{
 public:
-    MyGroup(int w,int h):ViewGroup(w,h){}
+    MyGroup(Context*ctx):ViewGroup(ctx){}
     void onDraw(Canvas&canvas)override{
         canvas.set_color(SystemClock::uptimeMillis()+time(nullptr));
         canvas.rectangle(0,0,getWidth(),getHeight());
@@ -39,7 +39,7 @@ int main(int argc,const char*argv[]){
     cxxopts::Options options("main","application");
     options.add_options()("T,type","dialog type",cxxopts::value<int>()->default_value("1"));
     Window*w = new Window(0,0,800,600);
-    ViewGroup*grp=new MyGroup(400,400);
+    ViewGroup*grp=new MyGroup(&app);
     //grp->setId(10).setRotation(45);
     w->addView(grp);
     grp->setBackgroundColor(0xFFFF0000);
@@ -50,9 +50,9 @@ int main(int argc,const char*argv[]){
     LOGD("type=%d",result["type"].as<int>());
     switch(result["type"].as<int>()){
     default://pass throught
-    case 0:  tv=new TextView("TestButton",160,60); break;
-    case 1:  tv=new TestView("TestButton",160,60); break;
-    case 2:  tv=new ImageView(160,160);
+    case 0:  {TextView*t0=new TextView(&app); t0->setText("TestButton"); tv=t0;} break;
+    case 1:  tv=new TestView(&app,"TestButton"); break;
+    case 2:  tv=new ImageView(&app);
              ((ImageView*)tv)->setImageResource("/home/houzh/images/1.png");
              break;
     }

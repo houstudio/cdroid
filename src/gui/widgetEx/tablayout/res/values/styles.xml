@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TabLayout default styles (material-components port; source:
+     material/tabs/res/values/styles.xml). Serves as TabLayout's
+     DEF_STYLE_RES (R.style.Widget_Design_TabLayout), so every attr read in
+     the TabLayout styleable obtainStyledAttributes falls back to these values.
+     Base.* is the private parent chain, kept 1:1. -->
+<resources>
+
+  <style name="Base.Widget.Design.TabLayout" parent="android:Widget">
+    <item name="android:background">@null</item>
+    <item name="tabIconTint">@null</item>
+    <item name="tabMaxWidth">@dimen/design_tab_max_width</item>
+    <item name="tabIndicatorAnimationDuration">@integer/design_tab_indicator_anim_duration_ms</item>
+    <item name="tabIndicatorColor">?android:attr/colorAccent</item>
+    <item name="tabIndicatorGravity">bottom</item>
+    <item name="tabIndicatorAnimationMode">linear</item>
+    <item name="tabIndicator">@drawable/mtrl_tabs_default_indicator</item>
+    <item name="tabPaddingStart">12dp</item>
+    <item name="tabPaddingEnd">12dp</item>
+    <item name="tabTextAppearance">@style/TextAppearance.Design.Tab</item>
+    <item name="tabTextColor">@null</item>
+    <item name="tabRippleColor">?android:attr/colorControlHighlight</item>
+    <item name="tabUnboundedRipple">false</item>
+  </style>
+
+  <style name="Widget.Design.TabLayout" parent="Base.Widget.Design.TabLayout">
+    <item name="tabGravity">fill</item>
+    <item name="tabMode">fixed</item>
+    <item name="tabIndicatorFullWidth">true</item>
+  </style>
+
+  <!-- TextAppearance.Design.Tab; parent TextAppearance.AppCompat.Button trimmed
+       (appcompat layer does not exist here — textSize/textColor are set
+       explicitly below, which is all TabLayout resolves from it). The un-prefixed
+       appcompat attr spellings (?attr/colorAccent, textAllCaps) are re-spelled
+       android: — the compat layer is collapsed into the framework here. -->
+  <style name="TextAppearance.Design.Tab" parent="">
+    <item name="android:textSize">@dimen/design_tab_text_size</item>
+    <item name="android:textColor">@color/mtrl_tabs_legacy_text_color_selector</item>
+    <item name="android:textAllCaps">true</item>
+  </style>
+
+</resources>

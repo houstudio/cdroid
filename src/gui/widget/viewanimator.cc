@@ -16,34 +16,55 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/viewanimator.h>
+#include <core/context.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+#include <animation/animationutils.h>
 #include <cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(ViewAnimator)
+DECLARE_WIDGET2(ViewAnimator, "android.widget.ViewAnimator");
 
-ViewAnimator::ViewAnimator(int w,int h):FrameLayout(w,h){
+ViewAnimator::ViewAnimator(Context*ctx):ViewAnimator(ctx,nullptr){}
+
+ViewAnimator::ViewAnimator(Context* context,const AttributeSet* attrs):ViewAnimator(context,attrs,0){}
+
+ViewAnimator::ViewAnimator(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :FrameLayout(context,pAttrs, defStyleAttr){
     mInAnimation = nullptr;
     mOutAnimation= nullptr;
-    setMeasureAllChildren(true);
-}
-
-ViewAnimator::ViewAnimator(Context* context,const AttributeSet& attrs)
-  :FrameLayout(context,attrs){
-    mInAnimation = nullptr;
-    mOutAnimation= nullptr;
+    // AOSP ViewAnimator ctor: in/out animations and animateFirstView from XML.
+    // The ViewAnimator styleable is not generated in this tree; AdapterViewAnimator
+    // declares the same attrs with identical ids (in=0, out=1, animateFirstView=3).
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::AdapterViewAnimator, defStyleAttr);
+    if (ta) {
+        const int resource = ta->getResourceId(R::styleable::AdapterViewAnimator_inAnimation, 0);
+        if (resource > 0) setInAnimation(context, resource);
+        const int resource2 = ta->getResourceId(R::styleable::AdapterViewAnimator_outAnimation, 0);
+        if (resource2 > 0) setOutAnimation(context, resource2);
+        setAnimateFirstView(ta->getBoolean(R::styleable::AdapterViewAnimator_animateFirstView, true));
+    }
+    initViewAnimator(context, pAttrs);
 }
 ViewAnimator::~ViewAnimator(){
     delete mInAnimation;
     delete mOutAnimation;
 }
 
-void ViewAnimator::initViewAnimator(Context* context, const AttributeSet& attrs) {
+void ViewAnimator::initViewAnimator(Context* context, const AttributeSet* attrs) {
+    if (attrs == nullptr) {
+        // For compatibility, always measure children when undefined.
+        setMeasureAllChildren(true);
+        return;
+    }
     // For compatibility, default to measure children, but allow XML
     // attribute to override.
-    setMeasureAllChildren(attrs.getBoolean("measureAllChildren", true));
-    mInAnimation  = nullptr;
-    mOutAnimation = nullptr;
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::FrameLayout, 0);
+    if (ta) {
+        setMeasureAllChildren(ta->getBoolean(R::styleable::FrameLayout_measureAllChildren, true));
+    }
 }
 void ViewAnimator::setDisplayedChild(int whichChild) {
     mWhichChild = whichChild;
@@ -185,6 +206,14 @@ void ViewAnimator::setOutAnimation(Animation* outAnimation){
     mOutAnimation = outAnimation;
 }
 
+void ViewAnimator::setInAnimation(Context* context, int resourceID) {
+    setInAnimation(AnimationUtils::loadAnimation(context, resourceID));
+}
+
+void ViewAnimator::setOutAnimation(Context* context, int resourceID) {
+    setOutAnimation(AnimationUtils::loadAnimation(context, resourceID));
+}
+
 bool ViewAnimator::getAnimateFirstView() const{
     return mAnimateFirstTime;
 }
@@ -195,6 +224,10 @@ void ViewAnimator::setAnimateFirstView(bool animate) {
 
 int ViewAnimator::getBaseline() {
     return getCurrentView() ? getCurrentView()->getBaseline() : FrameLayout::getBaseline();
+}
+
+std::string ViewAnimator::getAccessibilityClassName()const{
+    return "ViewAnimator";
 }
 
 }//endofnamespace

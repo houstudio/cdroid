@@ -21,6 +21,7 @@ SET(NAVIGATION_SOURCES
     #navigation/navdeeplinkbuilder.cc      # dead (#if 0 Java paste), rewritten in stage 3-6
     navigation/navdestination.cc
     navigation/navgraph.cc
+    navigation/appbarconfiguration.cc
     navigation/navgraphnavigator.cc
     navigation/navigation.cc
     navigation/navigator.cc

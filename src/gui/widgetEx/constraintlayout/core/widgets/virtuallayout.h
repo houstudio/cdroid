@@ -30,12 +30,24 @@
 #include <widgetEx/constraintlayout/core/widgets/analyzer/basicmeasure.h>
 #include <widgetEx/constraintlayout/core/widgets/helperwidget.h>
 
-namespace cdroid {
+namespace cdroid::clcore {
 
 class VirtualLayout : public HelperWidget {
   public:
     VirtualLayout();
     ~VirtualLayout() override;
+
+    // AndroidX contains (VirtualLayout.java:241-249): true when any of this layout's
+    // referenced widgets is in `widgets` — the dependency test that orders virtual
+    // layouts ahead of their dependents in addChildrenToSolver.
+    bool contains(const std::vector<ConstraintWidget*>& widgets) const {
+        for (ConstraintWidget* w : mWidgets) {
+            for (ConstraintWidget* candidate : widgets) {
+                if (w == candidate) return true;
+            }
+        }
+        return false;
+    }
 
     bool isVirtualLayout() const override {
         return true;
@@ -99,6 +111,6 @@ class VirtualLayout : public HelperWidget {
     BasicMeasure::Measurer* mMeasurer = nullptr;
 };
 
-} // namespace cdroid
+} // namespace cdroid::clcore
 
 #endif // CDROID_CONSTRAINTLAYOUT_CORE_WIDGETS_VIRTUAL_LAYOUT_H

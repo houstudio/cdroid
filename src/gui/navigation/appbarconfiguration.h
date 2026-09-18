@@ -24,35 +24,55 @@
  *********************************************************************************/
 #include <set>
 #include <string>
+#include <functional>
 namespace cdroid{
 class DrawerLayout;
+class Openable;
 
 class AppBarConfiguration{
 public:
+    // androidx AppBarConfiguration.OnNavigateUpListener: called when navigateUp
+    // can't pop any further (fallback for the Up button).
+    using OnNavigateUpListener = std::function<bool()>;
+
     class Builder;
     AppBarConfiguration() = default;
 
     const std::set<std::string>& getTopLevelDestinationRoutes() const { return mTopLevelRoutes; }
-    DrawerLayout* getDrawerLayout() const { return mDrawerLayout; }
+    // androidx getOpenableLayout(): the Openable (DrawerLayout) that should open
+    // from the Up button on a top-level destination.
+    Openable* getOpenableLayout() const { return mOpenableLayout; }
+    // Legacy CDROID face (pre-Openable): the same layout typed as DrawerLayout
+    // (defined out-of-line in appbarconfiguration.cc — needs the full type).
+    DrawerLayout* getDrawerLayout() const;  // dynamic_cast<DrawerLayout*>(mOpenableLayout)
+    const OnNavigateUpListener& getFallbackOnNavigateUpListener() const { return mFallbackOnNavigateUpListener; }
     bool isTopLevelDestination(const std::string& route) const {
         return mTopLevelRoutes.find(route) != mTopLevelRoutes.end();
     }
 private:
-    AppBarConfiguration(std::set<std::string> routes, DrawerLayout* drawer)
-        : mTopLevelRoutes(std::move(routes)), mDrawerLayout(drawer){}
+    AppBarConfiguration(std::set<std::string> routes, Openable* openable, OnNavigateUpListener fallback)
+        : mTopLevelRoutes(std::move(routes)), mOpenableLayout(openable),
+          mFallbackOnNavigateUpListener(std::move(fallback)){}
     std::set<std::string> mTopLevelRoutes;
-    DrawerLayout* mDrawerLayout = nullptr;
+    Openable* mOpenableLayout = nullptr;
+    OnNavigateUpListener mFallbackOnNavigateUpListener;
 };
 
 class AppBarConfiguration::Builder{
 public:
     Builder& addTopLevelRoute(const std::string& route){ mTopLevelRoutes.insert(route); return *this; }
     Builder& setTopLevelRoutes(const std::set<std::string>& routes){ mTopLevelRoutes = routes; return *this; }
-    Builder& setDrawerLayout(DrawerLayout* drawer){ mDrawerLayout = drawer; return *this; }
-    AppBarConfiguration* build(){ return new AppBarConfiguration(mTopLevelRoutes, mDrawerLayout); }
+    // androidx setOpenableLayout(Openable) — DrawerLayout implements Openable.
+    Builder& setOpenableLayout(Openable* openable){ mOpenableLayout = openable; return *this; }
+    Builder& setDrawerLayout(DrawerLayout* drawer);
+    Builder& setFallbackOnNavigateUpListener(OnNavigateUpListener fallback){
+        mFallbackOnNavigateUpListener = std::move(fallback); return *this; }
+    AppBarConfiguration* build(){ return new AppBarConfiguration(mTopLevelRoutes, mOpenableLayout,
+                                                                 mFallbackOnNavigateUpListener); }
 private:
     std::set<std::string> mTopLevelRoutes;
-    DrawerLayout* mDrawerLayout = nullptr;
+    Openable* mOpenableLayout = nullptr;
+    OnNavigateUpListener mFallbackOnNavigateUpListener;
 };
 
 }//namespace cdroid
