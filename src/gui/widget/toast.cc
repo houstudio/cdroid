@@ -171,6 +171,16 @@ Toast*Toast::makeText(Context*context,const std::string&text,int duration){
     return result;
 }
 
+/* Toast.java:529-531 -- setText(@StringRes int) */
+Toast& Toast::setText(int resId){
+    return setText(mContext->getString(resId));
+}
+
+/* Toast.java:520-522 -- makeText(context, resId, duration) */
+Toast*Toast::makeText(Context*context,int resId,int duration){
+    return makeText(context, context->getString(resId), duration);
+}
+
 Toast& Toast::setText(const std::string&text){
     TextView* tv = nullptr;
     if(mNextView){

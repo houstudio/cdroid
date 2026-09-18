@@ -296,6 +296,11 @@ void Dialog::setTitle(const std::string&title){
     mWindow->setText(title);
 }
 
+/* Dialog.java:635-637 -- setTitle(@StringRes int) */
+void Dialog::setTitle(int titleId){
+    setTitle(mContext->getString(titleId));
+}
+
 bool Dialog::onKeyDown(int keyCode,KeyEvent& event){
     // AOSP Dialog.onKeyDown (Dialog.java:1163-1169): track BACK so the UP side
     // can cancel. Without startTracking, onKeyUp's isTracking() is always false

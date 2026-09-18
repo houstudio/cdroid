@@ -144,6 +144,14 @@ void AlertDialog::setIcon(Drawable*icon){
     mAlert->setIcon(icon);
 }
 
+/* AlertDialog.java:426-431 -- setIconAttribute(@AttrRes int): resolve the
+ * theme attribute to a drawable resId and apply setIcon(resId). */
+void AlertDialog::setIconAttribute(int attrId){
+    TypedValue outValue;
+    getContext()->getTheme().resolveAttribute(attrId,&outValue,true);
+    setIcon(outValue.resourceId);
+}
+
 void AlertDialog::setInverseBackgroundForced(bool forceInverseBackground){
     mAlert->setInverseBackgroundForced(forceInverseBackground);
 }
@@ -223,6 +231,16 @@ AlertDialog::Builder& AlertDialog::Builder::setIcon(int iconId){
 
 AlertDialog::Builder& AlertDialog::Builder::setIcon(Drawable*icon){
     P->mIcon =icon;
+    return *this;
+}
+
+/* AlertDialog.java:612-618 -- Builder.setIconAttribute(@AttrRes int): the
+ * theme-attribute icon form; the resolved resId takes precedence when
+ * applied (same P.mIconId slot setIcon(int) fills). */
+AlertDialog::Builder& AlertDialog::Builder::setIconAttribute(int attrId){
+    TypedValue outValue;
+    P->mContext->getTheme().resolveAttribute(attrId,&outValue,true);
+    P->mIconId = outValue.resourceId;
     return *this;
 }
 

@@ -49,6 +49,7 @@ public:
         Builder& setMessage(int messageId);
         Builder& setIcon(int iconId);
         Builder& setIcon(Drawable*icon);
+        Builder& setIconAttribute(int attrId);
         Builder& setPositiveButton(const std::string& text,OnClickListener listener);
         Builder& setPositiveButton(int textId,OnClickListener listener);
         Builder& setNegativeButton(const std::string& text, OnClickListener listener);
@@ -112,6 +113,7 @@ public:
     void setButton(int whichButton,const std::string&text, OnClickListener listener);
     void setIcon(int iconId);
     void setIcon(Drawable*);
+    void setIconAttribute(int attrId);
     void setInverseBackgroundForced(bool forceInverseBackground);
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;
